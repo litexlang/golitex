@@ -81,7 +81,7 @@ impl Runtime {
                 vec![],
             ));
         }
-        let expected_argument_count = definition.params_def_with_type.number_of_params();
+        let expected_argument_count = definition.typed_parameters.number_of_params();
         if normal_fact.body.len() != expected_argument_count {
             return Err(short_exec_error(
                 stmt.clone().into(),

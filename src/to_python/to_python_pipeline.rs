@@ -349,13 +349,15 @@ impl PythonExtractor {
     fn extract_stmt(&mut self, stmt: &Stmt, runtime: &Runtime) -> Result<(), RuntimeError> {
         match stmt {
             Stmt::Fact(fact) => self.reject_native_complex_fact(fact),
-            Stmt::DefObjStmt(DefObjStmt::HaveObjEqualStmt(s)) => {
+            Stmt::Definition(DefinitionStmt::HaveObjEqualStmt(s)) => {
                 self.extract_have_obj_equal_stmt(s)
             }
-            Stmt::DefObjStmt(DefObjStmt::HaveFnEqualStmt(s)) => {
+            Stmt::Definition(DefinitionStmt::HaveFnEqualStmt(s)) => {
                 self.reject_native_complex_function(s)
             }
-            Stmt::DefAlgoStmt(s) => self.extract_def_algo_stmt(s, runtime),
+            Stmt::Definition(DefinitionStmt::DefAlgoStmt(s)) => {
+                self.extract_def_algo_stmt(s, runtime)
+            }
             _ => Ok(()),
         }
     }
@@ -460,31 +462,32 @@ impl PythonExtractor {
         stmt: &DefAlgoStmt,
         runtime: &Runtime,
     ) -> Result<(), RuntimeError> {
-        let function = runtime.declared_identifier_obj(&stmt.name);
+        let function = runtime.definition_identifier_obj(&stmt.name);
         let Some(fn_set) = runtime.get_fn_range_function_body(&function) else {
             return Err(python_extract_error(
                 &stmt.line_file,
                 format!(
-                    "python extractor v1 cannot find the function declaration for implementation `{}`",
+                    "python extractor v1 cannot find the function definition for implementation `{}`",
                     stmt.name
                 ),
             ));
         };
         self.validate_real_function_signature(
             &stmt.name,
-            &fn_set.params_def_with_set,
+            &fn_set.set_bound_parameters,
             &fn_set.dom_facts,
             fn_set.ret_set.as_ref(),
             &stmt.line_file,
         )?;
 
-        let expected_params = ParamGroupWithSet::collect_param_names(&fn_set.params_def_with_set);
+        let expected_params =
+            SetBoundParameterGroup::collect_param_names(&fn_set.set_bound_parameters);
         let params = stmt.param_names().collect::<Vec<_>>();
         if params.len() != expected_params.len() {
             return Err(python_extract_error(
                 &stmt.line_file,
                 format!(
-                    "python extractor v1 found {} algorithm parameters for `{}`, but its function declaration has {}",
+                    "python extractor v1 found {} algorithm parameters for `{}`, but its function definition has {}",
                     params.len(),
                     stmt.name,
                     expected_params.len()
@@ -540,7 +543,7 @@ impl PythonExtractor {
     fn validate_real_function_signature(
         &self,
         name: &str,
-        params_def: &ParamDefWithSet,
+        params_def: &SetBoundParameterList,
         dom_facts: &[QuantifierFreeFact],
         ret_set: &Obj,
         line_file: &LineFile,

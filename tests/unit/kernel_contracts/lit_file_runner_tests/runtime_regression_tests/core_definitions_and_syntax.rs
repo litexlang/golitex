@@ -1027,7 +1027,7 @@ claim:
                 render_run_output(&runtime, &stmt_results, &runtime_error);
             assert!(
                 run_succeeded,
-                "an exact pointwise forall over the same declared function carrier should prove fn_eq:\n{}",
+                "an exact pointwise forall over the same defined function carrier should prove fn_eq:\n{}",
                 run_output
             );
         },
@@ -1741,7 +1741,7 @@ pub(super) fn latex_output_is_fragment_without_default_packages() {
 }
 
 #[test]
-fn latex_chained_field_access_uses_earlier_struct_declarations() {
+fn latex_chained_field_access_uses_earlier_struct_definitions() {
     let source_code = r#"
 struct Leaf:
     value R
@@ -1755,7 +1755,7 @@ forall node &Node:
     node.leaf.value $in R
 "#;
     let mut runtime = Runtime::new();
-    runtime.start_isolated_source("latex_chained_field_access_uses_earlier_struct_declarations");
+    runtime.start_isolated_source("latex_chained_field_access_uses_earlier_struct_definitions");
     let output = crate::to_latex::to_latex(source_code, &mut runtime)
         .expect("LaTeX conversion should retain parsed struct metadata for field chains");
 
@@ -2111,8 +2111,8 @@ $leaf(y)
                 "obtain should expose its direct predicate body:\n{}",
                 run_output
             );
-            let StmtResult::Success(SuccessStmtResult::DefObjStmt(
-                SuccessDefObjStmtResult::ObtainObjFromExistFact(result),
+            let StmtResult::Success(SuccessStmtResult::Definition(
+                SuccessDefinitionStmtResult::ObtainObjFromExistFact(result),
             )) = &stmt_results[3]
             else {
                 panic!("literal `exist` must parse as ObtainObjFromExistFact")
@@ -2188,8 +2188,8 @@ unique_copy = 3
     assert!(run_output.contains("obtain copy from $has_copy(2)"));
     assert!(run_output.contains("obtain unique_copy from $has_unique_copy(3)"));
     assert!(run_output.contains("existential projection from prop definition `has_copy`"));
-    let StmtResult::Success(SuccessStmtResult::DefObjStmt(
-        SuccessDefObjStmtResult::ObtainObjFromAtomicFact(result),
+    let StmtResult::Success(SuccessStmtResult::Definition(
+        SuccessDefinitionStmtResult::ObtainObjFromAtomicFact(result),
     )) = &stmt_results[3]
     else {
         panic!("prop source must parse as ObtainObjFromAtomicFact")
@@ -2315,8 +2315,8 @@ copy = 2
         "theorem-backed obtain should apply and eliminate in one statement:\n{}",
         run_output
     );
-    let StmtResult::Success(SuccessStmtResult::DefObjStmt(
-        SuccessDefObjStmtResult::ObtainObjFromThm(result),
+    let StmtResult::Success(SuccessStmtResult::Definition(
+        SuccessDefinitionStmtResult::ObtainObjFromThm(result),
     )) = &stmt_results[1]
     else {
         panic!("theorem-backed obtain should retain its exact IR node and elimination evidence")
@@ -2884,7 +2884,7 @@ trust Ambient = \selected<R>
             rt.fresh_param_group_with_type(vec!["x".to_string()], ParamType::Obj(ambient.clone()))?;
         let binding = group.params[0].clone();
         rt.define_params_with_type(
-            &ParamDefWithType::new(vec![group]),
+            &TypedParameterList::new(vec![group]),
             false,
             BindingScope::LocalBinder,
         )?;

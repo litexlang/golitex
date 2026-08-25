@@ -4,7 +4,7 @@ use crate::prelude::*;
 
 #[derive(Clone)]
 pub struct FnSetBody {
-    pub params_def_with_set: ParamDefWithSet,
+    pub set_bound_parameters: SetBoundParameterList,
     pub dom_facts: Vec<QuantifierFreeFact>,
     /// The return set may depend on the function's parameters and is instantiated at application.
     pub ret_set: Box<Obj>,
@@ -12,22 +12,22 @@ pub struct FnSetBody {
 
 impl FnSetBody {
     pub fn new(
-        params_def_with_set: impl Into<ParamDefWithSet>,
+        set_bound_parameters: impl Into<SetBoundParameterList>,
         dom_facts: Vec<QuantifierFreeFact>,
         ret_set: Obj,
     ) -> Self {
         Self {
-            params_def_with_set: params_def_with_set.into(),
+            set_bound_parameters: set_bound_parameters.into(),
             dom_facts,
             ret_set: Box::new(ret_set),
         }
     }
 
     pub fn get_params(&self) -> Vec<String> {
-        let mut ret = Vec::with_capacity(ParamGroupWithSet::number_of_params(
-            &self.params_def_with_set,
+        let mut ret = Vec::with_capacity(SetBoundParameterGroup::number_of_params(
+            &self.set_bound_parameters,
         ));
-        for param_def_with_set in self.params_def_with_set.iter() {
+        for param_def_with_set in self.set_bound_parameters.iter() {
             ret.extend(
                 param_def_with_set
                     .params
@@ -39,7 +39,7 @@ impl FnSetBody {
     }
 
     pub fn get_param_bindings(&self) -> Vec<SymbolBinding> {
-        self.params_def_with_set.collect_param_bindings()
+        self.set_bound_parameters.collect_param_bindings()
     }
 }
 
@@ -50,7 +50,7 @@ pub struct FnSet {
 
 impl FnSet {
     pub fn new(
-        params_and_their_sets: impl Into<ParamDefWithSet>,
+        params_and_their_sets: impl Into<SetBoundParameterList>,
         dom_facts: Vec<QuantifierFreeFact>,
         ret_set: Obj,
     ) -> Result<Self, RuntimeError> {
@@ -89,7 +89,7 @@ pub struct AnonymousFn {
 
 impl AnonymousFn {
     pub fn new(
-        params_and_their_sets: impl Into<ParamDefWithSet>,
+        params_and_their_sets: impl Into<SetBoundParameterList>,
         dom_facts: Vec<QuantifierFreeFact>,
         ret_set: Obj,
         equal_to: Obj,
@@ -104,7 +104,7 @@ impl AnonymousFn {
     }
 
     pub fn new_with_source_occurrence_id(
-        params_and_their_sets: impl Into<ParamDefWithSet>,
+        params_and_their_sets: impl Into<SetBoundParameterList>,
         dom_facts: Vec<QuantifierFreeFact>,
         ret_set: Obj,
         equal_to: Obj,
@@ -129,10 +129,10 @@ pub enum FnSetSpace {
 }
 
 impl FnSetSpace {
-    pub fn params(&self) -> &ParamDefWithSet {
+    pub fn params(&self) -> &SetBoundParameterList {
         match self {
-            FnSetSpace::Set(f) => &f.body.params_def_with_set,
-            FnSetSpace::Anon(a) => &a.body.params_def_with_set,
+            FnSetSpace::Set(f) => &f.body.set_bound_parameters,
+            FnSetSpace::Anon(a) => &a.body.set_bound_parameters,
         }
     }
 
@@ -167,7 +167,7 @@ impl FnSetSpace {
 impl fmt::Display for FnSetBody {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         let params_with_sets_display: Vec<String> = self
-            .params_def_with_set
+            .set_bound_parameters
             .iter()
             .map(|g| g.to_string())
             .collect();

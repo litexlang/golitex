@@ -20,7 +20,7 @@ forall candidate &NonzeroRealView:
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     assert!(
         run_succeeded,
-        "an earlier struct equivalent fact should justify later well-definedness both at declaration and carrier use:\n{run_output}"
+        "an earlier struct equivalent fact should justify later well-definedness both at definition and carrier use:\n{run_output}"
     );
 
     for (name, source) in [
@@ -194,7 +194,7 @@ forall p &Pair<R>, a, b R:
                 render_run_output(&negative_runtime, &negative_results, &negative_error);
             assert!(
                 !negative_succeeded,
-                "field reduction must preserve the declared component index:\n{negative_output}"
+                "field reduction must preserve the defined component index:\n{negative_output}"
             );
         },
     );
@@ -405,26 +405,26 @@ template id_on_set<s set>:
 }
 
 #[test]
-fn template_body_is_still_checked_when_declared() {
+fn template_body_is_still_checked_when_defined() {
     let source_code = r#"
 template<S set>:
     have broken S = 1
 "#;
 
     let mut runtime = Runtime::new();
-    runtime.start_isolated_source("template_body_is_still_checked_when_declared");
+    runtime.start_isolated_source("template_body_is_still_checked_when_defined");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
         !run_succeeded,
-        "an invalid generic template body must fail at declaration time:\n{}",
+        "an invalid generic template body must fail at definition time:\n{}",
         run_output
     );
 }
 
 #[test]
-fn template_result_separates_header_parameters_from_body_declaration_parameters() {
+fn template_result_separates_header_parameters_from_body_definition_parameters() {
     let source_code = r#"
 template<S set>:
     have sequence set = fn(n N+) S
@@ -435,13 +435,13 @@ template<S set>:
 
     let mut runtime = Runtime::new();
     runtime.start_isolated_source(
-        "template_result_separates_header_parameters_from_body_declaration_parameters",
+        "template_result_separates_header_parameters_from_body_definition_parameters",
     );
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     assert!(
         run_succeeded,
-        "the Template declaration and Created/Reused applications must verify:\n{run_output}"
+        "the Template definition and Created/Reused applications must verify:\n{run_output}"
     );
     assert_eq!(
         stmt_results.len(),
@@ -456,9 +456,8 @@ template<S set>:
         template_success.common().is_none(),
         "Template must not fabricate a generic common result"
     );
-    let SuccessStmtResult::DefInterfaceStmt(SuccessDefInterfaceStmtResult::DefTemplateStmt(
-        template,
-    )) = template_success
+    let SuccessStmtResult::Definition(SuccessDefinitionStmtResult::DefTemplateStmt(template)) =
+        template_success
     else {
         panic!("first Result is not a successful Template definition: {run_output}");
     };
@@ -472,7 +471,7 @@ template<S set>:
         .symbol_id
         .expect("Template header parameter S must retain its SymbolId");
 
-    let SuccessStmtResult::DefObjStmt(SuccessDefObjStmtResult::HaveObjEqualStmt(body)) =
+    let SuccessStmtResult::Definition(SuccessDefinitionStmtResult::HaveObjEqualStmt(body)) =
         template.body_statement_result.as_ref()
     else {
         panic!("Template body must retain its own successful set-alias statement Result");
@@ -493,7 +492,7 @@ template<S set>:
     assert_ne!(
         template_parameter_id,
         body_parameter.id(),
-        "Template parameter S and body-declaration parameter n are different binders"
+        "Template parameter S and body-definition parameter n are different binders"
     );
     assert!(
         body.common
@@ -501,7 +500,7 @@ template<S set>:
             .store_fact_outputs
             .iter()
             .all(|store| store.fact_id.is_some()),
-        "the declaration-time body Result must freeze its local FactIds before the local environment is popped"
+        "the definition-time body Result must freeze its local FactIds before the local environment is popped"
     );
 
     let created_fact = stmt_results[1]
@@ -531,7 +530,7 @@ template<S set>:
     assert!(created.template_domain_results.is_empty());
     assert_eq!(created.public_value_equalities.len(), 1);
     assert!(created.public_value_equalities[0].fact_id.is_some());
-    let SuccessStmtResult::DefObjStmt(SuccessDefObjStmtResult::HaveObjEqualStmt(created_body)) =
+    let SuccessStmtResult::Definition(SuccessDefinitionStmtResult::HaveObjEqualStmt(created_body)) =
         created.body_statement_result.as_ref()
     else {
         panic!("Created instance must retain its preverified body Result");
@@ -667,7 +666,7 @@ $marked(x)
 }
 
 #[test]
-fn preverified_template_body_still_rejects_a_template_declaration() {
+fn preverified_template_body_still_rejects_a_template_definition() {
     let source_code = r#"
 template<S set>:
     have copied set = S
@@ -683,10 +682,10 @@ template<S set>:
     runtime.start_isolated_source("preverified_nested_template_boundary");
     let stmt = runtime
         .parse_statement(&mut blocks[0])
-        .expect("parse template declaration");
+        .expect("parse template definition");
     let error = runtime
         .execute_preverified_statement(&stmt)
-        .expect_err("a template instance body must not become a nested template declaration");
+        .expect_err("a template instance body must not become a nested template definition");
 
     assert!(error
         .trace_message()
@@ -758,7 +757,7 @@ have b &Box<R> = (0, 0)
 }
 
 #[test]
-fn declared_struct_membership_materializes_named_and_positional_projections() {
+fn defined_struct_membership_materializes_named_and_positional_projections() {
     let source_code = r#"
 struct Pair<S set>:
     first S
@@ -771,13 +770,13 @@ p.second $in R
 
     let mut runtime = Runtime::new();
     runtime.start_isolated_source(
-        "declared_struct_membership_materializes_named_and_positional_projections",
+        "defined_struct_membership_materializes_named_and_positional_projections",
     );
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     assert!(
         run_succeeded,
-        "declared struct fields and their Cartesian positions should both be available:\n{}",
+        "defined struct fields and their Cartesian positions should both be available:\n{}",
         run_output
     );
 
@@ -993,7 +992,7 @@ by struct def raw
         let (results, error) = execute_source(raw_membership, &mut raw_runtime);
         let (succeeded, output) = render_run_output(&raw_runtime, &results, &error);
         assert!(
-            !succeeded && output.contains("declaration-time struct carrier"),
+            !succeeded && output.contains("definition-time struct carrier"),
             "membership alone must not supply the struct selected by `by struct def`:\n{output}"
         );
 
@@ -1209,9 +1208,9 @@ claim:
 }
 
 #[test]
-fn declaration_struct_carrier_is_stable_across_other_memberships() {
+fn definition_struct_carrier_is_stable_across_other_memberships() {
     run_with_large_stack(
-        "declaration_struct_carrier_is_stable_across_other_memberships",
+        "definition_struct_carrier_is_stable_across_other_memberships",
         || {
             let source_code = r#"
 struct Point:
@@ -1235,7 +1234,7 @@ p2.first = 1
 
             let mut runtime = Runtime::new();
             runtime.start_isolated_source(
-                "declaration_struct_carrier_is_stable_across_other_memberships",
+                "definition_struct_carrier_is_stable_across_other_memberships",
             );
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
@@ -1243,12 +1242,12 @@ p2.first = 1
 
             assert!(
                 run_succeeded,
-                "a later membership must not change the fields selected by the declaration carrier:\n{}",
+                "a later membership must not change the fields selected by the definition carrier:\n{}",
                 run_output
             );
             assert!(
                 run_output.contains("\"statement\": \"p.y = 2\""),
-                "field output should use only declaration-owned surface syntax:\n{}",
+                "field output should use only definition-owned surface syntax:\n{}",
                 run_output
             );
         },
@@ -1256,9 +1255,9 @@ p2.first = 1
 }
 
 #[test]
-fn struct_unfold_spreads_declared_fields_through_call_argument_lists() {
+fn struct_unfold_spreads_defined_fields_through_call_argument_lists() {
     run_with_large_stack(
-        "struct_unfold_spreads_declared_fields_through_call_argument_lists",
+        "struct_unfold_spreads_defined_fields_through_call_argument_lists",
         || {
             let source_code = r#"
 struct GroupData<S nonempty_set>:
@@ -1341,7 +1340,7 @@ template<n N>:
 
             let mut runtime = Runtime::new();
             runtime.start_isolated_source(
-                "struct_unfold_spreads_declared_fields_through_call_argument_lists",
+                "struct_unfold_spreads_defined_fields_through_call_argument_lists",
             );
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
@@ -1376,7 +1375,7 @@ template<n N>:
 }
 
 #[test]
-fn struct_unfold_rejects_missing_declaration_carriers_and_explicit_selection() {
+fn struct_unfold_rejects_missing_definition_carriers_and_explicit_selection() {
     let scalar_source = r#"
 have fn identity(x R) R = x
 identity(unfold 1) = 1
@@ -1389,7 +1388,7 @@ identity(unfold 1) = 1
     assert!(
         !run_succeeded
             && run_output.contains(
-                "unfold expects a tuple with compile-time arity or an object whose declaration has a direct `&Struct` carrier"
+                "unfold expects a tuple with compile-time arity or an object whose definition has a direct `&Struct` carrier"
             ),
         "unfold must reject an object without a compile-time tuple or struct view:\n{}",
         run_output
@@ -1431,7 +1430,7 @@ first(unfold ProductSet) = first(unfold ProductSet)
     assert!(
         !run_succeeded
             && run_output.contains(
-                "unfold expects a tuple with compile-time arity or an object whose declaration has a direct `&Struct` carrier"
+                "unfold expects a tuple with compile-time arity or an object whose definition has a direct `&Struct` carrier"
             ),
         "a set equal to cart(A, B) is not itself a tuple value and must not unfold:\n{}",
         run_output
@@ -1526,8 +1525,8 @@ p.x = p.x
         run_output
     );
     assert!(
-        run_output.contains("declaration-time struct carrier"),
-        "missing declaration carrier syntax should have a focused diagnostic:\n{}",
+        run_output.contains("definition-time struct carrier"),
+        "missing definition carrier syntax should have a focused diagnostic:\n{}",
         run_output
     );
 }
@@ -1642,12 +1641,12 @@ prop share_scalar_system(s, v, w nonempty_set, Vspace &VectorSpace<s, v>, Wspace
 
             assert!(
                 run_succeeded,
-                "a directly declared struct-valued field should supply the next view:\n{}",
+                "a directly defined struct-valued field should supply the next view:\n{}",
                 run_output
             );
             assert!(
                 run_output.contains("space.scalars.mul(a, b)"),
-                "the chained field output should remain in declaration-owned syntax:\n{}",
+                "the chained field output should remain in definition-owned syntax:\n{}",
                 run_output
             );
         },
@@ -1655,9 +1654,9 @@ prop share_scalar_system(s, v, w nonempty_set, Vspace &VectorSpace<s, v>, Wspace
 }
 
 #[test]
-fn chained_field_access_continues_from_the_declared_struct_carrier() {
+fn chained_field_access_continues_from_the_defined_struct_carrier() {
     run_with_large_stack(
-        "chained_field_access_continues_from_the_declared_struct_carrier",
+        "chained_field_access_continues_from_the_defined_struct_carrier",
         || {
             let source_code = r#"
 struct Leaf:
@@ -1674,7 +1673,7 @@ node.leaf.value $in R
 
             let mut runtime = Runtime::new();
             runtime.start_isolated_source(
-                "chained_field_access_continues_from_the_declared_struct_carrier",
+                "chained_field_access_continues_from_the_defined_struct_carrier",
             );
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
@@ -1682,7 +1681,7 @@ node.leaf.value $in R
 
             assert!(
                 run_succeeded,
-                "a declared struct-valued field should carry its carrier into the next hop:\n{}",
+                "a defined struct-valued field should carry its carrier into the next hop:\n{}",
                 run_output
             );
             assert!(
@@ -1721,7 +1720,7 @@ projected_entry(identity_entry, 1) $in N
 
             assert!(
                 run_succeeded,
-                "a function result declared with a struct carrier should expose its callable field:\n{run_output}"
+                "a function result defined with a struct carrier should expose its callable field:\n{run_output}"
             );
             assert!(
                 run_output.contains(
@@ -1797,8 +1796,8 @@ have fn invalid_scalar_call(f fn(k N+) N, idx N+) N = boxed(f).tag(idx)
             );
             assert!(
                 run_output.contains("struct field `tag` is not callable")
-                    && run_output.contains("declared carrier is N"),
-                "the rejected scalar field call should name its declared carrier:\n{run_output}"
+                    && run_output.contains("defined carrier is N"),
+                "the rejected scalar field call should name its defined carrier:\n{run_output}"
             );
         },
     );
@@ -1835,12 +1834,12 @@ claim:
 
             assert!(
                 run_succeeded,
-                "a module-qualified declared field type should supply the next view:\n{}",
+                "a module-qualified defined field type should supply the next view:\n{}",
                 run_output
             );
             assert!(
                 run_output.contains("bundle.scalars.one $in s"),
-                "the nested access should preserve its direct declared carrier:\n{}",
+                "the nested access should preserve its direct defined carrier:\n{}",
                 run_output
             );
         },
@@ -1876,8 +1875,8 @@ point.x.value = 1
             );
             assert!(
                 run_output.contains("point.x")
-                    && run_output.contains("declared field carrier is not a struct"),
-                "a non-struct intermediate field should report the declaration boundary:\n{}",
+                    && run_output.contains("defined field carrier is not a struct"),
+                "a non-struct intermediate field should report the definition boundary:\n{}",
                 run_output
             );
         },
@@ -1920,8 +1919,8 @@ holder.point.x = 1
             );
             assert!(
                 run_output.contains("holder.point")
-                    && run_output.contains("declared field carrier is not a struct"),
-                "only a direct struct field declaration should continue the chain:\n{}",
+                    && run_output.contains("defined field carrier is not a struct"),
+                "only a direct struct field definition should continue the chain:\n{}",
                 run_output
             );
         },
@@ -1955,7 +1954,7 @@ endomorphism.apply(1).value = 2
             );
             assert!(
                 run_output.contains("has no direct struct return carrier"),
-                "the rejected scalar return should have a focused declaration-carrier diagnostic:\n{}",
+                "the rejected scalar return should have a focused definition-carrier diagnostic:\n{}",
                 run_output
             );
         },
@@ -1993,7 +1992,7 @@ raw(1).x = 1
             );
             assert!(
                 run_output.contains("has no direct struct return carrier"),
-                "the rejection should point to the function's declared return carrier:\n{}",
+                "the rejection should point to the function's defined return carrier:\n{}",
                 run_output
             );
         },

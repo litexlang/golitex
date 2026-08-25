@@ -5,7 +5,7 @@ use std::fmt;
 
 #[derive(Clone)]
 pub struct ForallFact {
-    pub params_def_with_type: ParamDefWithType,
+    pub typed_parameters: TypedParameterList,
     pub dom_facts: Vec<Fact>,
     pub then_facts: Vec<ExistOrAndChainAtomicFact>,
     pub line_file: LineFile,
@@ -18,13 +18,13 @@ impl ForallFact {
     /// parameter belongs in this forall's header, so a stored conclusion can
     /// never contain a nested `forall` or `not forall` fact.
     pub fn new_canonical_forall(
-        params_def_with_type: ParamDefWithType,
+        typed_parameters: TypedParameterList,
         dom_facts: Vec<Fact>,
         then_facts: Vec<ExistOrAndChainAtomicFact>,
         line_file: LineFile,
     ) -> Result<Self, RuntimeError> {
         let forall_fact = ForallFact {
-            params_def_with_type,
+            typed_parameters,
             dom_facts,
             then_facts,
             line_file,
@@ -63,7 +63,7 @@ impl fmt::Display for ForallFact {
                 f,
                 "{} {}{}\n{}",
                 FORALL,
-                self.params_def_with_type.to_string(),
+                self.typed_parameters.to_string(),
                 COLON,
                 vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.then_facts, 1)
             ),
@@ -71,7 +71,7 @@ impl fmt::Display for ForallFact {
                 f,
                 "{} {}{}\n{}\n{}{}\n{}",
                 FORALL,
-                self.params_def_with_type.to_string(),
+                self.typed_parameters.to_string(),
                 COLON,
                 vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.dom_facts, 1),
                 to_string_and_add_four_spaces_at_beginning_of_each_line(&RIGHT_ARROW, 1),

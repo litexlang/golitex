@@ -1097,7 +1097,7 @@ fn compound_anonymous_functions_replay_their_owned_wd_scope() {
         "unsupported_anonymous_return.lit",
     )
     .expect_err("an anonymous body without checked return membership must be rejected");
-    assert!(boundary.contains("not verified to belong to declared return set"));
+    assert!(boundary.contains("not verified to belong to defined return set"));
 }
 
 #[test]
@@ -1358,7 +1358,7 @@ fn abstract_predicate_and_explicit_trust_emit_only_source_axioms() {
         "abstract_prop unproved(x)\n\n$unproved(1)\n",
         "unproved_abstract_predicate.lit",
     )
-    .expect_err("an abstract interface declaration must not prove an application");
+    .expect_err("an abstract interface definition must not prove an application");
     assert!(
         unproved.contains("verification failed") || unproved.contains("unknown result"),
         "{unproved}"
@@ -1658,7 +1658,7 @@ fn template_sequence_alias_compiles_from_recursive_results_without_index_shift()
         SOURCE,
         "55_TemplateSequenceInstantiationResult.lit",
     )
-    .expect("capture Template declaration and Created/Reused Result JSON v2");
+    .expect("capture Template definition and Created/Reused Result JSON v2");
     for retained_field in [
         "\"template_parameter_groups\"",
         "\"body_statement_result\"",

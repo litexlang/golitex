@@ -16,7 +16,7 @@ fn param_def_with_type_records_flat_cited_param_indices() {
         BoundParamObj::new(&first_group.params[1]).into(),
     ])
     .into();
-    let param_def = ParamDefWithType::new(vec![
+    let param_def = TypedParameterList::new(vec![
         first_group,
         runtime
             .fresh_param_group_with_type(vec!["f".to_string()], ParamType::Obj(cited_type))
@@ -38,7 +38,7 @@ fn param_def_with_set_records_flat_cited_param_indices() {
         BoundParamObj::new(&first_group.params[0]).into(),
     )
     .into();
-    let param_def = ParamDefWithSet::new(vec![
+    let param_def = SetBoundParameterList::new(vec![
         first_group,
         runtime
             .fresh_param_group_with_set(vec!["x".to_string()], dependent_set)
@@ -60,7 +60,7 @@ fn dependent_param_set_instantiates_with_previous_arg() {
         BoundParamObj::new(&first_group.params[0]).into(),
     )
     .into();
-    let param_def = ParamDefWithSet::new(vec![
+    let param_def = SetBoundParameterList::new(vec![
         first_group,
         runtime
             .fresh_param_group_with_set(vec!["x".to_string()], dependent_set)

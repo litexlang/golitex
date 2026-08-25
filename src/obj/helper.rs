@@ -2,7 +2,7 @@ use crate::prelude::*;
 
 impl FnSetBody {
     pub fn contains_native_complex_syntax(&self) -> bool {
-        self.params_def_with_set
+        self.set_bound_parameters
             .iter()
             .any(|group| group.set_obj().contains_native_complex_syntax())
             || self.dom_facts.iter().any(|fact| {
@@ -14,7 +14,7 @@ impl FnSetBody {
     }
 
     pub fn contains_native_transcendental_syntax(&self) -> bool {
-        self.params_def_with_set
+        self.set_bound_parameters
             .iter()
             .any(|group| group.set_obj().contains_native_transcendental_syntax())
             || self.dom_facts.iter().any(|fact| {

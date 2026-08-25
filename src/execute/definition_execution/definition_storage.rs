@@ -8,16 +8,16 @@ impl Runtime {
         let name = def_setting_stmt.name.clone();
         if self
             .top_level_env()
-            .declarations
-            .defined_settings
+            .definitions
+            .setting_definitions
             .contains_key(&name)
         {
             return Err(name_already_used_error(&name, "setting"));
         }
-        self.register_declared_symbol(&name, SymbolRole::Setting)?;
+        self.register_definition_symbol(&name, SymbolRole::Setting)?;
         self.top_level_env()
-            .declarations
-            .defined_settings
+            .definitions
+            .setting_definitions
             .insert(name, def_setting_stmt.clone());
         Ok(())
     }
@@ -25,16 +25,20 @@ impl Runtime {
     pub fn store_def_prop(&mut self, def_prop_stmt: &DefPropStmt) -> Result<(), RuntimeError> {
         let name = def_prop_stmt.name.clone();
         let env = self.top_level_env();
-        if env.declarations.defined_def_props.contains_key(&name) {
+        if env.definitions.predicate_definitions.contains_key(&name) {
             return Err(name_already_used_error(&name, "prop"));
         }
-        if env.declarations.defined_abstract_props.contains_key(&name) {
+        if env
+            .definitions
+            .abstract_predicate_definitions
+            .contains_key(&name)
+        {
             return Err(name_already_used_error(&name, "abstract_prop"));
         }
-        self.register_declared_symbol(&name, SymbolRole::Predicate)?;
+        self.register_definition_symbol(&name, SymbolRole::Predicate)?;
         let env = self.top_level_env();
-        env.declarations
-            .defined_def_props
+        env.definitions
+            .predicate_definitions
             .insert(name, def_prop_stmt.clone());
         Ok(())
     }
@@ -45,16 +49,20 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         let name = def_abstract_prop_stmt.name.clone();
         let env = self.top_level_env();
-        if env.declarations.defined_abstract_props.contains_key(&name) {
+        if env
+            .definitions
+            .abstract_predicate_definitions
+            .contains_key(&name)
+        {
             return Err(name_already_used_error(&name, "abstract_prop"));
         }
-        if env.declarations.defined_def_props.contains_key(&name) {
+        if env.definitions.predicate_definitions.contains_key(&name) {
             return Err(name_already_used_error(&name, "prop"));
         }
-        self.register_declared_symbol(&name, SymbolRole::AbstractPredicate)?;
+        self.register_definition_symbol(&name, SymbolRole::AbstractPredicate)?;
         let env = self.top_level_env();
-        env.declarations
-            .defined_abstract_props
+        env.definitions
+            .abstract_predicate_definitions
             .insert(name, def_abstract_prop_stmt.clone());
         Ok(())
     }
@@ -62,11 +70,11 @@ impl Runtime {
     pub fn store_def_algo(&mut self, def_algo_stmt: &DefAlgoStmt) -> Result<(), RuntimeError> {
         let name = def_algo_stmt.name.clone();
         let env = self.top_level_env();
-        if env.declarations.defined_algorithms.contains_key(&name) {
+        if env.definitions.algorithm_definitions.contains_key(&name) {
             return Err(name_already_used_error(&name, "algorithm implementation"));
         }
-        env.declarations
-            .defined_algorithms
+        env.definitions
+            .algorithm_definitions
             .insert(name, def_algo_stmt.clone());
         Ok(())
     }
@@ -77,13 +85,13 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         let name = def_struct_stmt.name.clone();
         let env = self.top_level_env();
-        if env.declarations.defined_structs.contains_key(&name) {
+        if env.definitions.structure_definitions.contains_key(&name) {
             return Err(name_already_used_error(&name, "struct"));
         }
-        self.register_declared_symbol(&name, SymbolRole::Structure)?;
+        self.register_definition_symbol(&name, SymbolRole::Structure)?;
         let env = self.top_level_env();
-        env.declarations
-            .defined_structs
+        env.definitions
+            .structure_definitions
             .insert(name, def_struct_stmt.clone());
         Ok(())
     }
@@ -94,13 +102,13 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         let name = def_template_stmt.template_name.clone();
         let env = self.top_level_env();
-        if env.declarations.defined_templates.contains_key(&name) {
+        if env.definitions.template_definitions.contains_key(&name) {
             return Err(name_already_used_error(&name, "template"));
         }
-        self.register_declared_symbol(&name, SymbolRole::Template)?;
+        self.register_definition_symbol(&name, SymbolRole::Template)?;
         let env = self.top_level_env();
-        env.declarations
-            .defined_templates
+        env.definitions
+            .template_definitions
             .insert(name, def_template_stmt.clone());
         Ok(())
     }
@@ -108,16 +116,16 @@ impl Runtime {
     pub fn store_def_thm(&mut self, def_thm_stmt: &DefThmStmt) -> Result<(), RuntimeError> {
         if self
             .top_level_env()
-            .declarations
-            .defined_thm_stmts
+            .definitions
+            .theorem_definitions
             .contains_key(&def_thm_stmt.name)
         {
             return Err(name_already_used_error(&def_thm_stmt.name, "thm"));
         }
-        self.register_declared_symbol(&def_thm_stmt.name, SymbolRole::Theorem)?;
+        self.register_definition_symbol(&def_thm_stmt.name, SymbolRole::Theorem)?;
         let env = self.top_level_env();
-        env.declarations
-            .defined_thm_stmts
+        env.definitions
+            .theorem_definitions
             .insert(def_thm_stmt.name.clone(), def_thm_stmt.clone());
         Ok(())
     }
@@ -125,16 +133,16 @@ impl Runtime {
     pub fn store_axiom(&mut self, axiom_stmt: &AxiomStmt) -> Result<(), RuntimeError> {
         if self
             .top_level_env()
-            .declarations
-            .defined_axiom_stmts
+            .definitions
+            .axiom_definitions
             .contains_key(&axiom_stmt.name)
         {
             return Err(name_already_used_error(&axiom_stmt.name, "axiom"));
         }
-        self.register_declared_symbol(&axiom_stmt.name, SymbolRole::Axiom)?;
+        self.register_definition_symbol(&axiom_stmt.name, SymbolRole::Axiom)?;
         let env = self.top_level_env();
-        env.declarations
-            .defined_axiom_stmts
+        env.definitions
+            .axiom_definitions
             .insert(axiom_stmt.name.clone(), axiom_stmt.clone());
         Ok(())
     }
@@ -145,16 +153,16 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         if self
             .top_level_env()
-            .declarations
-            .defined_strategy_stmts
+            .definitions
+            .strategy_definitions
             .contains_key(&def_strategy_stmt.name)
         {
             return Err(name_already_used_error(&def_strategy_stmt.name, "strategy"));
         }
-        self.register_declared_symbol(&def_strategy_stmt.name, SymbolRole::Strategy)?;
+        self.register_definition_symbol(&def_strategy_stmt.name, SymbolRole::Strategy)?;
         let env = self.top_level_env();
-        env.declarations
-            .defined_strategy_stmts
+        env.definitions
+            .strategy_definitions
             .insert(def_strategy_stmt.name.clone(), def_strategy_stmt.clone());
         Ok(())
     }
@@ -173,7 +181,7 @@ impl Runtime {
             }
         }
         let role = match scope {
-            BindingScope::DeclaredObject => SymbolRole::Object,
+            BindingScope::DefinitionBinding => SymbolRole::Object,
             BindingScope::StructureField => SymbolRole::StructureField,
             BindingScope::LocalBinder | BindingScope::ReuseActiveBinder => SymbolRole::Binder,
         };

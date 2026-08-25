@@ -373,10 +373,10 @@ impl Runtime {
                 },
                 _ => continue,
             };
-            if ParamGroupWithSet::number_of_params(&af.body.params_def_with_set) != 1 {
+            if SetBoundParameterGroup::number_of_params(&af.body.set_bound_parameters) != 1 {
                 continue;
             }
-            let names = ParamGroupWithSet::collect_param_names(&af.body.params_def_with_set);
+            let names = SetBoundParameterGroup::collect_param_names(&af.body.set_bound_parameters);
             let pname = match names.first() {
                 Some(n) => n.as_str(),
                 None => continue,
@@ -838,12 +838,13 @@ impl Runtime {
             }
             _ => return None,
         };
-        if ParamGroupWithSet::number_of_params(&af.body.params_def_with_set) != 1 {
+        if SetBoundParameterGroup::number_of_params(&af.body.set_bound_parameters) != 1 {
             return None;
         }
-        let param_names = ParamGroupWithSet::collect_param_names(&af.body.params_def_with_set);
+        let param_names =
+            SetBoundParameterGroup::collect_param_names(&af.body.set_bound_parameters);
         let param_name = param_names.first()?;
-        Self::set_for_unary_param(&af.body.params_def_with_set, param_name.as_str())
+        Self::set_for_unary_param(&af.body.set_bound_parameters, param_name.as_str())
     }
 
     pub(super) fn verify_set_pointwise_atomic_fact_by_known_atomic_or_builtin_only(
@@ -854,7 +855,7 @@ impl Runtime {
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<StmtResult, RuntimeError> {
         self.run_in_local_env(|rt| {
-            let params_def = ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+            let params_def = TypedParameterList::new(vec![TypedParameterGroup::new(
                 vec![param_binding],
                 ParamType::Obj(set),
             )]);
@@ -889,15 +890,15 @@ impl Runtime {
             },
             _ => return Ok(None),
         };
-        if ParamGroupWithSet::number_of_params(&af.body.params_def_with_set) != 1 {
+        if SetBoundParameterGroup::number_of_params(&af.body.set_bound_parameters) != 1 {
             return Ok(None);
         }
-        let param_bindings = af.body.params_def_with_set.collect_param_bindings();
+        let param_bindings = af.body.set_bound_parameters.collect_param_bindings();
         let Some(param_binding) = param_bindings.first() else {
             return Ok(None);
         };
         let Some(index_set) =
-            Self::set_for_unary_param(&af.body.params_def_with_set, param_binding.name())
+            Self::set_for_unary_param(&af.body.set_bound_parameters, param_binding.name())
         else {
             return Ok(None);
         };
@@ -935,16 +936,16 @@ impl Runtime {
         let Some(outer_body) = self.get_fn_range_function_body(&outer_function) else {
             return Ok(None);
         };
-        if ParamGroupWithSet::number_of_params(&outer_body.params_def_with_set) != 1 {
+        if SetBoundParameterGroup::number_of_params(&outer_body.set_bound_parameters) != 1 {
             return Ok(None);
         }
         let outer_param_names =
-            ParamGroupWithSet::collect_param_names(&outer_body.params_def_with_set);
+            SetBoundParameterGroup::collect_param_names(&outer_body.set_bound_parameters);
         let Some(outer_param_name) = outer_param_names.first() else {
             return Ok(None);
         };
         let Some(target_set) =
-            Self::set_for_unary_param(&outer_body.params_def_with_set, outer_param_name.as_str())
+            Self::set_for_unary_param(&outer_body.set_bound_parameters, outer_param_name.as_str())
         else {
             return Ok(None);
         };
@@ -952,16 +953,16 @@ impl Runtime {
         let Some(enumerator_body) = self.get_fn_range_function_body(&enumerator) else {
             return Ok(None);
         };
-        if ParamGroupWithSet::number_of_params(&enumerator_body.params_def_with_set) != 1 {
+        if SetBoundParameterGroup::number_of_params(&enumerator_body.set_bound_parameters) != 1 {
             return Ok(None);
         }
         let enumerator_param_names =
-            ParamGroupWithSet::collect_param_names(&enumerator_body.params_def_with_set);
+            SetBoundParameterGroup::collect_param_names(&enumerator_body.set_bound_parameters);
         let Some(enumerator_param_name) = enumerator_param_names.first() else {
             return Ok(None);
         };
         let Some(enumerator_index_set) = Self::set_for_unary_param(
-            &enumerator_body.params_def_with_set,
+            &enumerator_body.set_bound_parameters,
             enumerator_param_name.as_str(),
         ) else {
             return Ok(None);
@@ -980,7 +981,7 @@ impl Runtime {
             return Ok(None);
         }
 
-        let declared_domain_matches = self
+        let definition_domain_matches = self
             .verify_equal_fact_as_builtin_premise(
                 &EqualFact::new_from_refs(&enumerator_index_set, &index_set, line_file.clone()),
                 builtin_state,
@@ -991,7 +992,7 @@ impl Runtime {
         // `closed_range(1, n)`.  An explicit bijection over that exact range
         // is the public certificate that these are the same usable domain.
         // Accept it here instead of requiring the internal carrier spelling.
-        if !declared_domain_matches
+        if !definition_domain_matches
             && !self.has_known_builtin_bijection(
                 &index_set,
                 &target_set,
@@ -1041,12 +1042,12 @@ impl Runtime {
         let body_fact: AtomicFact =
             EqualFact::new(enumerator_at_i, x_obj, line_file.clone()).into();
         let exist_body = ExistentialSpec::new(
-            ParamDefWithType::new(vec![i_group]),
+            TypedParameterList::new(vec![i_group]),
             vec![QuantifierFreeFact::AtomicFact(body_fact)],
             line_file.clone(),
         )?;
         let forall_fact = ForallFact::new_canonical_forall(
-            ParamDefWithType::new(vec![x_group]),
+            TypedParameterList::new(vec![x_group]),
             vec![],
             vec![ExistFactEnum::ExistUniqueFact(exist_body).into()],
             line_file,
@@ -1059,7 +1060,7 @@ impl Runtime {
     }
 
     pub(super) fn set_for_unary_param(
-        params_def: &ParamDefWithSet,
+        params_def: &SetBoundParameterList,
         param_name: &str,
     ) -> Option<Obj> {
         for group in params_def.iter() {

@@ -220,10 +220,10 @@ impl Runtime {
                 },
                 _ => continue,
             };
-            if ParamGroupWithSet::number_of_params(&af.body.params_def_with_set) != 1 {
+            if SetBoundParameterGroup::number_of_params(&af.body.set_bound_parameters) != 1 {
                 continue;
             }
-            let names = ParamGroupWithSet::collect_param_names(&af.body.params_def_with_set);
+            let names = SetBoundParameterGroup::collect_param_names(&af.body.set_bound_parameters);
             let pname = match names.first() {
                 Some(n) => n.as_str(),
                 None => continue,

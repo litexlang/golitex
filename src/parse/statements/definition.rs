@@ -94,7 +94,7 @@ impl Runtime {
                 Vec::new(),
                 tb.line_file.clone(),
             );
-            let mut groups: Vec<ParamGroupWithParamType> = Vec::new();
+            let mut groups: Vec<TypedParameterGroup> = Vec::new();
             loop {
                 if header_block.current_token_is_equal_to(COLON)
                     || header_block.exceed_end_of_head()
@@ -106,7 +106,7 @@ impl Runtime {
                     BindingScope::LocalBinder,
                 )?);
             }
-            let template_arg_def = ParamDefWithType::new(groups);
+            let template_arg_def = TypedParameterList::new(groups);
             let template_arg_names = template_arg_def.collect_param_names();
 
             let mut template_arg_dom = Vec::new();
@@ -471,7 +471,7 @@ impl Runtime {
 
     pub fn parse_trust_have_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(HAVE)?;
-        let mut param_def: Vec<ParamGroupWithParamType> = vec![];
+        let mut param_def: Vec<TypedParameterGroup> = vec![];
         loop {
             match tb.current() {
                 Ok(t) if t == COLON => break,
@@ -480,10 +480,10 @@ impl Runtime {
             }
             param_def.push(self.parse_param_def_with_param_type_and_skip_comma(
                 tb,
-                BindingScope::DeclaredObject,
+                BindingScope::DefinitionBinding,
             )?);
         }
-        let param_def = ParamDefWithType::new(param_def);
+        let param_def = TypedParameterList::new(param_def);
         let all_param_names = param_def.collect_param_names();
         self.register_collected_param_names_for_def_parse(&all_param_names, tb.line_file.clone())?;
 
@@ -538,7 +538,7 @@ impl Runtime {
             )));
         }
 
-        let symbol_binding = self.allocate_declared_symbol_binding(name.clone())?;
+        let symbol_binding = self.allocate_definition_symbol_binding(name.clone())?;
         self.register_local_existing_identifier_bindings_for_parse(
             &[symbol_binding.clone()],
             tb.line_file.clone(),
@@ -578,7 +578,7 @@ impl Runtime {
         right_token: &str,
         target_scope: BindingScope,
         definition_kind: &str,
-    ) -> Result<(ParamDefWithType, Vec<Fact>), RuntimeError> {
+    ) -> Result<(TypedParameterList, Vec<Fact>), RuntimeError> {
         tb.skip_token(left_token)?;
         let mut groups = Vec::new();
         let mut setting_facts = Vec::new();
@@ -605,7 +605,7 @@ impl Runtime {
             }
         }
         tb.skip_token(right_token)?;
-        let param_defs = ParamDefWithType::new(groups);
+        let param_defs = TypedParameterList::new(groups);
         let names = param_defs.collect_param_names();
         self.register_collected_param_names_for_def_parse(&names, tb.line_file.clone())?;
         Ok((param_defs, setting_facts))
@@ -616,7 +616,7 @@ impl Runtime {
     fn parse_def_prop_parameter_bundles(
         &mut self,
         tb: &mut TokenBlock,
-    ) -> Result<(ParamDefWithType, Vec<Fact>), RuntimeError> {
+    ) -> Result<(TypedParameterList, Vec<Fact>), RuntimeError> {
         self.parse_def_parameter_bundles_between(
             tb,
             LEFT_BRACE,
@@ -658,52 +658,52 @@ impl Runtime {
     ) -> Result<TemplateDefEnum, RuntimeError> {
         let stmt = self.parse_statement(tb)?;
         match stmt {
-            Stmt::DefObjStmt(DefObjStmt::HaveObjInNonemptySetStmt(stmt)) => {
+            Stmt::Definition(DefinitionStmt::HaveObjInNonemptySetStmt(stmt)) => {
                 Ok(TemplateDefEnum::HaveObjInNonemptySetStmt(stmt))
             }
-            Stmt::DefObjStmt(DefObjStmt::HaveObjEqualStmt(stmt)) => {
+            Stmt::Definition(DefinitionStmt::HaveObjEqualStmt(stmt)) => {
                 Ok(TemplateDefEnum::HaveObjEqualStmt(stmt))
             }
-            Stmt::DefObjStmt(DefObjStmt::HaveObjByExistFactsStmt(stmt)) => {
+            Stmt::Definition(DefinitionStmt::HaveObjByExistFactsStmt(stmt)) => {
                 Ok(TemplateDefEnum::HaveObjByExistFactsStmt(stmt))
             }
             Stmt::UnsafeStmt(UnsafeStmt::TrustHaveStmt(stmt)) => {
                 Ok(TemplateDefEnum::TrustHaveStmt(stmt))
             }
-            Stmt::DefObjStmt(DefObjStmt::ObtainObjFromExistFact(stmt)) => {
+            Stmt::Definition(DefinitionStmt::ObtainObjFromExistFact(stmt)) => {
                 Ok(TemplateDefEnum::ObtainObjFromExistFact(stmt))
             }
-            Stmt::DefObjStmt(DefObjStmt::ObtainObjFromAtomicFact(stmt)) => {
+            Stmt::Definition(DefinitionStmt::ObtainObjFromAtomicFact(stmt)) => {
                 Ok(TemplateDefEnum::ObtainObjFromAtomicFact(stmt))
             }
-            Stmt::DefObjStmt(DefObjStmt::ObtainObjFromThm(stmt)) => {
+            Stmt::Definition(DefinitionStmt::ObtainObjFromThm(stmt)) => {
                 Ok(TemplateDefEnum::ObtainObjFromThm(stmt))
             }
-            Stmt::DefObjStmt(DefObjStmt::HaveFnEqualStmt(stmt)) => {
+            Stmt::Definition(DefinitionStmt::HaveFnEqualStmt(stmt)) => {
                 Ok(TemplateDefEnum::HaveFnEqualStmt(stmt))
             }
-            Stmt::DefObjStmt(DefObjStmt::HaveFnEqualCaseByCaseStmt(stmt)) => {
+            Stmt::Definition(DefinitionStmt::HaveFnEqualCaseByCaseStmt(stmt)) => {
                 Ok(TemplateDefEnum::HaveFnEqualCaseByCaseStmt(stmt))
             }
-            Stmt::DefObjStmt(DefObjStmt::HaveFnByInducStmt(stmt)) => {
+            Stmt::Definition(DefinitionStmt::HaveFnByInducStmt(stmt)) => {
                 Ok(TemplateDefEnum::HaveFnByInducStmt(stmt))
             }
-            Stmt::DefObjStmt(DefObjStmt::HaveFnByForallExistUniqueStmt(stmt)) => {
+            Stmt::Definition(DefinitionStmt::HaveFnByForallExistUniqueStmt(stmt)) => {
                 Ok(TemplateDefEnum::HaveFnByForallExistUniqueStmt(stmt))
             }
-            Stmt::DefObjStmt(DefObjStmt::HaveTupleStmt(stmt)) => {
+            Stmt::Definition(DefinitionStmt::HaveTupleStmt(stmt)) => {
                 Ok(TemplateDefEnum::HaveTupleStmt(stmt))
             }
-            Stmt::DefObjStmt(DefObjStmt::HaveCartStmt(stmt)) => {
+            Stmt::Definition(DefinitionStmt::HaveCartStmt(stmt)) => {
                 Ok(TemplateDefEnum::HaveCartStmt(stmt))
             }
-            Stmt::DefObjStmt(DefObjStmt::HaveSeqStmt(stmt)) => {
+            Stmt::Definition(DefinitionStmt::HaveSeqStmt(stmt)) => {
                 Ok(TemplateDefEnum::HaveSeqStmt(stmt))
             }
-            Stmt::DefObjStmt(DefObjStmt::HaveFiniteSeqStmt(stmt)) => {
+            Stmt::Definition(DefinitionStmt::HaveFiniteSeqStmt(stmt)) => {
                 Ok(TemplateDefEnum::HaveFiniteSeqStmt(stmt))
             }
-            Stmt::DefObjStmt(DefObjStmt::HaveMatrixStmt(stmt)) => {
+            Stmt::Definition(DefinitionStmt::HaveMatrixStmt(stmt)) => {
                 Ok(TemplateDefEnum::HaveMatrixStmt(stmt))
             }
             _ => Err(RuntimeError::from(ParseRuntimeError(

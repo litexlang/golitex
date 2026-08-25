@@ -16,7 +16,7 @@ impl Runtime {
                 ),
             )));
         }
-        if not_exist.params_def_with_type().number_of_params() == 0 {
+        if not_exist.typed_parameters().number_of_params() == 0 {
             return Err(RuntimeError::from(NewFactRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
                     "not exist: cannot derive forall (no parameters)".to_string(),
@@ -36,13 +36,13 @@ impl Runtime {
         }
 
         let lf = not_exist.line_file();
-        let source_bindings = not_exist.params_def_with_type().collect_param_bindings();
+        let source_bindings = not_exist.typed_parameters().collect_param_bindings();
         let (forall_names, full_param_to_forall_obj) =
             self.fresh_binder_retag_plan_for_bindings(&source_bindings);
         let mut param_to_forall_obj: HashMap<String, Obj> = HashMap::new();
-        let mut forall_groups: Vec<ParamGroupWithParamType> = Vec::new();
+        let mut forall_groups: Vec<TypedParameterGroup> = Vec::new();
         let mut name_index = 0;
-        for group in not_exist.params_def_with_type().groups.iter() {
+        for group in not_exist.typed_parameters().groups.iter() {
             let param_type = self.inst_param_type(
                 &group.param_type,
                 &param_to_forall_obj,
@@ -59,7 +59,7 @@ impl Runtime {
                 );
             }
             name_index += group.params.len();
-            forall_groups.push(ParamGroupWithParamType::new(group_forall_names, param_type));
+            forall_groups.push(TypedParameterGroup::new(group_forall_names, param_type));
         }
 
         let mut disjuncts: Vec<AndChainAtomicFact> = Vec::new();
@@ -80,7 +80,7 @@ impl Runtime {
             ExistOrAndChainAtomicFact::OrFact(OrFact::new(disjuncts, lf.clone()))
         };
         Ok(ForallFact::new_canonical_forall(
-            ParamDefWithType::new(forall_groups),
+            TypedParameterList::new(forall_groups),
             vec![],
             vec![then_fact],
             lf,

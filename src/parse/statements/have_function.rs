@@ -7,7 +7,7 @@ impl Runtime {
         tb.skip_token(HAVE)?;
         tb.skip_token(FN_LOWER_CASE)?;
         let name = self.parse_name_and_insert_into_top_parsing_time_name_scope(tb)?;
-        let symbol_binding = self.allocate_declared_symbol_binding(name.clone())?;
+        let symbol_binding = self.allocate_definition_symbol_binding(name.clone())?;
         if tb.current_token_is_equal_to(BY) {
             tb.skip_token(BY)?;
             if tb.current_token_is_equal_to(EXIST) && tb.token_at_add_index(1) == "!" {
@@ -35,12 +35,12 @@ impl Runtime {
 
         let fs = self.parse_fn_set_clause(tb)?;
         let fn_param_bindings = fs.collect_all_param_bindings_including_nested_ret_fn_sets();
-        let top_level_fn_param_bindings = fs.params_def_with_set.collect_param_bindings();
+        let top_level_fn_param_bindings = fs.set_bound_parameters.collect_param_bindings();
 
         // A nested proof block is parsed before any of its statements execute.
         // Record a direct, non-dependent struct return carrier now so a later
         // statement in that same block can parse `local_fn(args).field` from
-        // the declaration alone. Dependent carriers keep using the executed
+        // the definition alone. Dependent carriers keep using the executed
         // function signature, whose parameter substitution is exact.
         if let Obj::StructObj(struct_obj) = &fs.ret_set {
             let return_fn_param_names = fs.ret_set.collect_bound_param_names();
@@ -66,7 +66,7 @@ impl Runtime {
                 |this| this.parse_obj(tb),
             )?;
             let equal_to_anonymous_fn = AnonymousFn::new(
-                fs.params_def_with_set.clone(),
+                fs.set_bound_parameters.clone(),
                 fs.dom_facts.clone(),
                 fs.ret_set.clone(),
                 equal_to,
@@ -164,7 +164,7 @@ impl Runtime {
                 "`have fn <name> by exist!:`",
             )?
         };
-        let bindings = forall.params_def_with_type.collect_param_bindings();
+        let bindings = forall.typed_parameters.collect_param_bindings();
         let prove_process: Vec<Stmt> = self.parse_stmts_with_existing_free_param_bindings(
             BindingScope::LocalBinder,
             &bindings,
@@ -339,7 +339,7 @@ impl Runtime {
 
         let function_names = vec![name.clone()];
         self.current_parse_context_mut().free_params.begin_scope(
-            BindingScope::DeclaredObject,
+            BindingScope::DefinitionBinding,
             std::slice::from_ref(&symbol_binding),
             block.line_file.clone(),
         )?;

@@ -189,7 +189,7 @@ impl Runtime {
         if self.current_parse_context().local_binding_scope_depth == 0 || names.is_empty() {
             return Ok(());
         }
-        self.begin_parsing_scope(BindingScope::DeclaredObject, names, line_file)
+        self.begin_parsing_scope(BindingScope::DefinitionBinding, names, line_file)
             .map(|_| ())
     }
 
@@ -220,7 +220,7 @@ impl Runtime {
             }
         }
         self.current_parse_context_mut().free_params.begin_scope(
-            BindingScope::DeclaredObject,
+            BindingScope::DefinitionBinding,
             bindings,
             line_file,
         )?;

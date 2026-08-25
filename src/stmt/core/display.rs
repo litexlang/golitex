@@ -14,13 +14,7 @@ impl fmt::Display for Stmt {
         match self {
             Stmt::Fact(x) => write!(f, "{}", x),
             Stmt::UnsafeStmt(x) => write!(f, "{}", x),
-            Stmt::DefObjStmt(x) => write!(f, "{}", x),
-            Stmt::DefPredicateStmt(x) => write!(f, "{}", x),
-            Stmt::DefInterfaceStmt(x) => write!(f, "{}", x),
-            Stmt::DefAlgoStmt(x) => write!(f, "{}", x),
-            Stmt::DefThmStmt(x) => write!(f, "{}", x),
-            Stmt::AxiomStmt(x) => write!(f, "{}", x),
-            Stmt::DefStrategyStmt(x) => write!(f, "{}", x),
+            Stmt::Definition(x) => write!(f, "{}", x),
             Stmt::By(x) => write!(f, "{}", x),
             Stmt::Witness(x) => write!(f, "{}", x),
             Stmt::ProofBlock(x) => write!(f, "{}", x),
@@ -38,45 +32,35 @@ impl fmt::Display for UnsafeStmt {
     }
 }
 
-impl fmt::Display for DefObjStmt {
+impl fmt::Display for DefinitionStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
-            DefObjStmt::LetObjStmt(x) => write!(f, "{}", x),
-            DefObjStmt::HaveObjInNonemptySetStmt(x) => write!(f, "{}", x),
-            DefObjStmt::HaveObjEqualStmt(x) => write!(f, "{}", x),
-            DefObjStmt::HaveObjByExistFactsStmt(x) => write!(f, "{}", x),
-            DefObjStmt::ObtainObjFromExistFact(x) => write!(f, "{}", x),
-            DefObjStmt::ObtainObjFromAtomicFact(x) => write!(f, "{}", x),
-            DefObjStmt::ObtainObjFromThm(x) => write!(f, "{}", x),
-            DefObjStmt::HaveByPreimageStmt(x) => write!(f, "{}", x),
-            DefObjStmt::HaveFnEqualStmt(x) => write!(f, "{}", x),
-            DefObjStmt::HaveFnEqualCaseByCaseStmt(x) => write!(f, "{}", x),
-            DefObjStmt::HaveFnByInducStmt(x) => write!(f, "{}", x),
-            DefObjStmt::HaveFnByForallExistUniqueStmt(x) => write!(f, "{}", x),
-            DefObjStmt::HaveTupleStmt(x) => write!(f, "{}", x),
-            DefObjStmt::HaveCartStmt(x) => write!(f, "{}", x),
-            DefObjStmt::HaveSeqStmt(x) => write!(f, "{}", x),
-            DefObjStmt::HaveFiniteSeqStmt(x) => write!(f, "{}", x),
-            DefObjStmt::HaveMatrixStmt(x) => write!(f, "{}", x),
-        }
-    }
-}
-
-impl fmt::Display for DefPredicateStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        match self {
-            DefPredicateStmt::DefPropStmt(x) => write!(f, "{}", x),
-            DefPredicateStmt::DefAbstractPropStmt(x) => write!(f, "{}", x),
-        }
-    }
-}
-
-impl fmt::Display for DefInterfaceStmt {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        match self {
-            DefInterfaceStmt::DefSettingStmt(x) => write!(f, "{}", x),
-            DefInterfaceStmt::DefTemplateStmt(x) => write!(f, "{}", x),
-            DefInterfaceStmt::DefStructStmt(x) => write!(f, "{}", x),
+            DefinitionStmt::LetObjStmt(x) => write!(f, "{}", x),
+            DefinitionStmt::HaveObjInNonemptySetStmt(x) => write!(f, "{}", x),
+            DefinitionStmt::HaveObjEqualStmt(x) => write!(f, "{}", x),
+            DefinitionStmt::HaveObjByExistFactsStmt(x) => write!(f, "{}", x),
+            DefinitionStmt::ObtainObjFromExistFact(x) => write!(f, "{}", x),
+            DefinitionStmt::ObtainObjFromAtomicFact(x) => write!(f, "{}", x),
+            DefinitionStmt::ObtainObjFromThm(x) => write!(f, "{}", x),
+            DefinitionStmt::HaveByPreimageStmt(x) => write!(f, "{}", x),
+            DefinitionStmt::HaveFnEqualStmt(x) => write!(f, "{}", x),
+            DefinitionStmt::HaveFnEqualCaseByCaseStmt(x) => write!(f, "{}", x),
+            DefinitionStmt::HaveFnByInducStmt(x) => write!(f, "{}", x),
+            DefinitionStmt::HaveFnByForallExistUniqueStmt(x) => write!(f, "{}", x),
+            DefinitionStmt::HaveTupleStmt(x) => write!(f, "{}", x),
+            DefinitionStmt::HaveCartStmt(x) => write!(f, "{}", x),
+            DefinitionStmt::HaveSeqStmt(x) => write!(f, "{}", x),
+            DefinitionStmt::HaveFiniteSeqStmt(x) => write!(f, "{}", x),
+            DefinitionStmt::HaveMatrixStmt(x) => write!(f, "{}", x),
+            DefinitionStmt::DefPropStmt(x) => write!(f, "{}", x),
+            DefinitionStmt::DefAbstractPropStmt(x) => write!(f, "{}", x),
+            DefinitionStmt::DefSettingStmt(x) => write!(f, "{}", x),
+            DefinitionStmt::DefTemplateStmt(x) => write!(f, "{}", x),
+            DefinitionStmt::DefStructStmt(x) => write!(f, "{}", x),
+            DefinitionStmt::DefAlgoStmt(x) => write!(f, "{}", x),
+            DefinitionStmt::DefThmStmt(x) => write!(f, "{}", x),
+            DefinitionStmt::AxiomStmt(x) => write!(f, "{}", x),
+            DefinitionStmt::DefStrategyStmt(x) => write!(f, "{}", x),
         }
     }
 }

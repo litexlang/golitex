@@ -210,14 +210,14 @@ impl Runtime {
             forall_fact.error_messages_if_forall_param_missing_in_some_then_clause();
         let mut projected_forall_facts = Vec::new();
         if !coverage_error_detail_lines.is_empty()
-            && !forall_fact.params_def_with_type.has_dependent_param_type()
+            && !forall_fact.typed_parameters.has_dependent_param_type()
         {
             for (then_index, _) in coverage_error_detail_lines.iter() {
                 let then_fact = &forall_fact.then_facts[*then_index];
                 let coverage = forall_fact.forall_param_coverage_for_then_clause(then_fact);
                 let mut retained_groups = Vec::new();
                 let mut omitted_types_are_nonempty = true;
-                for group in forall_fact.params_def_with_type.groups.iter() {
+                for group in forall_fact.typed_parameters.groups.iter() {
                     let mut retained_params = Vec::new();
                     for binding in group.params.iter() {
                         if coverage.get(binding.name()).copied().unwrap_or(false) {
@@ -231,7 +231,7 @@ impl Runtime {
                         }
                     }
                     if !retained_params.is_empty() {
-                        retained_groups.push(ParamGroupWithParamType::new(
+                        retained_groups.push(TypedParameterGroup::new(
                             retained_params,
                             group.param_type.clone(),
                         ));
@@ -247,7 +247,7 @@ impl Runtime {
                     // Example: `forall a,b R, x,y E: norm(a • x)=...` exposes
                     // `forall a R, x E: norm(a • x)=...` when `E` is nonempty.
                     projected_forall_facts.push(ForallFact::new_canonical_forall(
-                        ParamDefWithType::new(retained_groups),
+                        TypedParameterList::new(retained_groups),
                         forall_fact.dom_facts.clone(),
                         vec![then_fact.clone()],
                         forall_fact.line_file.clone(),

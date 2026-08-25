@@ -10,7 +10,7 @@ impl Runtime {
         self.exec_def_prop_stmt_verify_process(def_prop_stmt)?;
         let infer_result = self.exec_def_prop_stmt_affect_environment(def_prop_stmt)?;
         Ok(
-            SuccessDefPredicateStmtResult::DefPropStmt(Box::new(SuccessDefPropStmtResult {
+            SuccessDefinitionStmtResult::DefPropStmt(Box::new(SuccessDefPropStmtResult {
                 statement: def_prop_stmt.clone(),
                 common: SuccessStmtCommonResult::new(infer_result),
             }))
@@ -37,7 +37,7 @@ impl Runtime {
         def_prop_stmt: &DefPropStmt,
     ) -> Result<(), RuntimeError> {
         self.define_params_with_type(
-            &def_prop_stmt.params_def_with_type,
+            &def_prop_stmt.typed_parameters,
             false,
             BindingScope::LocalBinder,
         )
@@ -61,10 +61,14 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         let name = def_prop_stmt.name.clone();
         let env = self.top_level_env();
-        if env.declarations.defined_def_props.contains_key(&name) {
+        if env.definitions.predicate_definitions.contains_key(&name) {
             return Err(def_prop_name_already_used_error(&name, "prop"));
         }
-        if env.declarations.defined_abstract_props.contains_key(&name) {
+        if env
+            .definitions
+            .abstract_predicate_definitions
+            .contains_key(&name)
+        {
             return Err(def_prop_name_already_used_error(&name, "abstract_prop"));
         }
         Ok(())
@@ -84,7 +88,7 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         let infer_result = self.exec_def_prop_stmt_affect_environment(def_prop_stmt)?;
         Ok(
-            SuccessDefPredicateStmtResult::DefPropStmt(Box::new(SuccessDefPropStmtResult {
+            SuccessDefinitionStmtResult::DefPropStmt(Box::new(SuccessDefPropStmtResult {
                 statement: def_prop_stmt.clone(),
                 common: SuccessStmtCommonResult::new(infer_result),
             }))

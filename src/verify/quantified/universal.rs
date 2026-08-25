@@ -49,7 +49,7 @@ impl Runtime {
     ) -> Result<SuccessInferResult, RuntimeError> {
         let mut assumption_infer_result = self
             .define_params_with_type(
-                &forall_fact.params_def_with_type,
+                &forall_fact.typed_parameters,
                 false,
                 BindingScope::LocalBinder,
             )
@@ -228,7 +228,7 @@ impl Runtime {
         };
 
         let mut parameter_assumptions = Vec::new();
-        for parameter_group in &forall_fact.params_def_with_type.groups {
+        for parameter_group in &forall_fact.typed_parameters.groups {
             for binding in &parameter_group.params {
                 let fact = self.parameter_type_fact_for_binding(
                     binding,
@@ -297,7 +297,7 @@ impl Runtime {
 
     fn forall_has_literal_empty_obj_parameter_domain(forall_fact: &ForallFact) -> bool {
         forall_fact
-            .params_def_with_type
+            .typed_parameters
             .groups
             .iter()
             .any(|group| match &group.param_type {

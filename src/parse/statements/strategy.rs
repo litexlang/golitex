@@ -1,4 +1,4 @@
-//! Strategy declaration and proof-body statements.
+//! Strategy definitions and proof-body statements.
 
 use crate::prelude::*;
 
@@ -43,7 +43,7 @@ impl Runtime {
         };
         validate_strategy_forall_fact(&forall_fact)?;
 
-        let bindings = forall_fact.params_def_with_type.collect_param_bindings();
+        let bindings = forall_fact.typed_parameters.collect_param_bindings();
         let lf = tb.line_file.clone();
         let prove_process: Vec<Stmt> = self.parse_stmts_with_existing_free_param_bindings(
             BindingScope::LocalBinder,

@@ -308,7 +308,7 @@ fn collect_forall_free_param_names_in_fn_set_body(
     body: &FnSetBody,
     collector: &mut FreeParamNameCollector,
 ) {
-    for group in body.params_def_with_set.iter() {
+    for group in body.set_bound_parameters.iter() {
         for name in &group.params {
             collector.insert_binder(name.name());
         }

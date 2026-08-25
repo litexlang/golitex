@@ -16,7 +16,7 @@ impl Runtime {
     // - Products and quotients: `0 <= a * b`, `0 < a * b`, `0 <= a / b` (denominator strictly
     //   positive), `0 < a / b`, each with recursive sub-goals on operands.
     // Difference/order bridges and strict-square facts are checked below as target rules, without
-    // loading trusted Lit declarations. This path bridges `0 <= u - v` / `0 < u - v` and
+    // loading trusted Lit definitions. This path bridges `0 <= u - v` / `0 < u - v` and
     // `v <= u` / `v < u` in both directions.
     // Algebraic closure (+, -, *, /) on general `a <= b` / `a < b` is in `order_algebra_builtin.rs`.
     pub fn verify_order_atomic_fact_numeric_builtin_only(

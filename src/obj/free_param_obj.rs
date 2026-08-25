@@ -7,7 +7,7 @@ use std::fmt;
 /// binder came from `forall`, `exist`, a set builder, or a function set.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum BindingScope {
-    DeclaredObject,
+    DefinitionBinding,
     LocalBinder,
     StructureField,
     ReuseActiveBinder,
@@ -25,8 +25,8 @@ pub enum SubstitutionMode {
 }
 
 impl BindingScope {
-    pub fn is_declared_object(self) -> bool {
-        self == Self::DeclaredObject
+    pub fn is_definition_binding(self) -> bool {
+        self == Self::DefinitionBinding
     }
 
     pub fn reuses_active_binding(self) -> bool {
@@ -161,7 +161,7 @@ pub fn param_binding_element_obj_for_store(
     binding: &SymbolBinding,
     binding_scope: BindingScope,
 ) -> Obj {
-    if binding_scope.is_declared_object() {
+    if binding_scope.is_definition_binding() {
         Identifier::new_bound(binding.name().to_string(), binding.as_ref()).into()
     } else {
         obj_for_bound_param_in_scope(binding)

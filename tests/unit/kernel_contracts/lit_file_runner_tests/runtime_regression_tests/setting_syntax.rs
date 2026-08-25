@@ -177,7 +177,7 @@ forall S nonempty_set, left, right S, item &EqualPairWitness<S, left, right>:
     let struct_stmt = runtime
         .parse_statement(&mut blocks[1])
         .expect("parse struct");
-    let Stmt::DefInterfaceStmt(DefInterfaceStmt::DefStructStmt(struct_def)) = struct_stmt else {
+    let Stmt::Definition(DefinitionStmt::DefStructStmt(struct_def)) = struct_stmt else {
         panic!("expected struct definition");
     };
     let (params, header_dom) = struct_def
@@ -291,8 +291,8 @@ forall [OneElement]:
     let Stmt::Fact(Fact::ForallFact(second)) = second else {
         panic!("expected second forall");
     };
-    let first_bindings = first.params_def_with_type.collect_param_bindings();
-    let second_bindings = second.params_def_with_type.collect_param_bindings();
+    let first_bindings = first.typed_parameters.collect_param_bindings();
+    let second_bindings = second.typed_parameters.collect_param_bindings();
     assert_eq!(first_bindings.len(), second_bindings.len());
     for (left, right) in first_bindings.iter().zip(second_bindings.iter()) {
         assert_eq!(left.name(), right.name());
@@ -341,10 +341,10 @@ forall [OneElement(Y, y)]:
         panic!("expected second forall");
     };
     for (left, right) in first
-        .params_def_with_type
+        .typed_parameters
         .collect_param_bindings()
         .iter()
-        .zip(second.params_def_with_type.collect_param_bindings().iter())
+        .zip(second.typed_parameters.collect_param_bindings().iter())
     {
         assert_eq!(left.name(), right.name());
         assert_ne!(
@@ -396,7 +396,7 @@ forall [UntypedPoint]:
         "an untyped setting parameter must not acquire a default struct view:\n{}",
         output
     );
-    assert!(output.contains("declaration-time struct carrier"));
+    assert!(output.contains("definition-time struct carrier"));
 }
 
 #[test]

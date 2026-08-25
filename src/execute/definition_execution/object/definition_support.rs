@@ -1,9 +1,9 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn object_introduction_nonempty_checks_for_param_def(
+    pub fn object_definition_nonempty_checks_for_param_def(
         &mut self,
-        param_defs: &ParamDefWithType,
+        param_defs: &TypedParameterList,
     ) -> Result<Vec<StmtResult>, RuntimeError> {
         let mut checks = Vec::new();
         for param_def in param_defs.groups.iter() {
@@ -16,22 +16,22 @@ impl Runtime {
         Ok(checks)
     }
 
-    pub fn object_introduction_items_for_defined_params(
+    pub fn object_definition_items_for_defined_params(
         &self,
-        param_defs: &ParamDefWithType,
+        param_defs: &TypedParameterList,
         line_file: LineFile,
         binding_scope: BindingScope,
-    ) -> Vec<ObjectIntroductionItem> {
+    ) -> Vec<ObjectDefinitionItem> {
         let mut items = Vec::new();
         for (binding, param_type) in param_defs.collect_param_bindings_with_types() {
             let obj = param_binding_element_obj_for_store(&binding, binding_scope);
-            let fact = self.object_introduction_fact_for_param_type(
+            let fact = self.object_definition_fact_for_param_type(
                 obj,
                 &param_type,
                 line_file.clone(),
                 true,
             );
-            items.push(ObjectIntroductionItem::new(
+            items.push(ObjectDefinitionItem::new(
                 binding.name().to_string(),
                 vec![fact],
             ));
@@ -39,33 +39,33 @@ impl Runtime {
         items
     }
 
-    pub fn object_introduction_items_for_named_args(
+    pub fn object_definition_items_for_named_args(
         &self,
-        param_defs: &ParamDefWithType,
+        param_defs: &TypedParameterList,
         names: &[String],
         args: &Vec<Obj>,
         line_file: LineFile,
         substitution_mode: SubstitutionMode,
-    ) -> Result<Vec<ObjectIntroductionItem>, RuntimeError> {
+    ) -> Result<Vec<ObjectDefinitionItem>, RuntimeError> {
         let instantiated_types =
             self.inst_param_def_with_type_one_by_one(param_defs, args, substitution_mode)?;
         let mut items = Vec::new();
         for ((name, arg), param_type) in
             names.iter().zip(args.iter()).zip(instantiated_types.iter())
         {
-            let fact = self.object_introduction_fact_for_param_type(
+            let fact = self.object_definition_fact_for_param_type(
                 arg.clone(),
                 param_type,
                 line_file.clone(),
                 false,
             );
-            items.push(ObjectIntroductionItem::new(name.clone(), vec![fact]));
+            items.push(ObjectDefinitionItem::new(name.clone(), vec![fact]));
         }
         Ok(items)
     }
 
-    pub fn add_facts_to_object_introduction_items(
-        items: &mut Vec<ObjectIntroductionItem>,
+    pub fn add_facts_to_object_definition_items(
+        items: &mut Vec<ObjectDefinitionItem>,
         facts: &[Fact],
     ) {
         for item in items.iter_mut() {
@@ -75,7 +75,7 @@ impl Runtime {
         }
     }
 
-    fn object_introduction_fact_for_param_type(
+    fn object_definition_fact_for_param_type(
         &self,
         obj: Obj,
         param_type: &ParamType,

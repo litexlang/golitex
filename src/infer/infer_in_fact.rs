@@ -409,7 +409,7 @@ impl Runtime {
         )
         .into();
         let coordinate_forall_fact: Fact = ForallFact::new_canonical_forall(
-            ParamDefWithType::new(vec![index_group]),
+            TypedParameterList::new(vec![index_group]),
             vec![],
             vec![coordinate_fact.into()],
             in_fact.line_file.clone(),
@@ -935,7 +935,7 @@ impl Runtime {
                     return Ok(equal_fn_set_infer);
                 }
                 // Follow checked set-valued definitions to their set builder for
-                // inference too. Besides `circle(5)`, this covers a declared
+                // inference too. Besides `circle(5)`, this covers a defined
                 // family such as `rows(n)(K) = row(K)`.
                 if let Some(set_builder) = self.unfold_known_fn_application_to_set_builder(
                     set_obj,
@@ -991,7 +991,7 @@ impl Runtime {
         function: &Obj,
         body: &FnSetBody,
     ) -> Result<Option<Fact>, RuntimeError> {
-        let param_names = body.params_def_with_set.collect_param_names();
+        let param_names = body.set_bound_parameters.collect_param_names();
         if param_names.is_empty() {
             return Ok(None);
         }
@@ -1006,20 +1006,20 @@ impl Runtime {
             .map(|binding| obj_for_bound_param_in_scope(binding))
             .collect();
         let instantiated_param_sets = self.inst_param_def_with_set_one_by_one(
-            &body.params_def_with_set,
+            &body.set_bound_parameters,
             &preimage_objs,
             SubstitutionMode::Exact,
         )?;
 
-        let mut param_groups = Vec::with_capacity(body.params_def_with_set.len());
+        let mut param_groups = Vec::with_capacity(body.set_bound_parameters.len());
         let mut binding_offset = 0;
         for (param_def, param_set) in body
-            .params_def_with_set
+            .set_bound_parameters
             .iter()
             .zip(instantiated_param_sets.iter())
         {
             let next_offset = binding_offset + param_def.params.len();
-            param_groups.push(ParamGroupWithParamType::new(
+            param_groups.push(TypedParameterGroup::new(
                 preimage_bindings[binding_offset..next_offset].to_vec(),
                 ParamType::Obj(param_set.clone()),
             ));
@@ -1027,7 +1027,7 @@ impl Runtime {
         }
 
         let param_to_obj_map = body
-            .params_def_with_set
+            .set_bound_parameters
             .param_defs_and_args_to_param_to_arg_map(&preimage_objs);
         let mut facts = Vec::with_capacity(body.dom_facts.len() + 1);
         for dom_fact in body.dom_facts.iter() {
@@ -1054,7 +1054,7 @@ impl Runtime {
         );
 
         let exist_body = ExistentialSpec::new(
-            ParamDefWithType::new(param_groups),
+            TypedParameterList::new(param_groups),
             facts,
             in_fact.line_file.clone(),
         )?;
@@ -1079,7 +1079,7 @@ impl Runtime {
         )
         .into();
         let exist_body = ExistentialSpec::new(
-            ParamDefWithType::new(vec![member_group]),
+            TypedParameterList::new(vec![member_group]),
             vec![element_in_member.into()],
             in_fact.line_file.clone(),
         )?;
@@ -1142,7 +1142,7 @@ impl Runtime {
         let element_in_fiber: AtomicFact =
             InFact::new(in_fact.element.clone(), fiber, in_fact.line_file.clone()).into();
         let exist_fact: Fact = ExistFactEnum::ExistFact(ExistentialSpec::new(
-            ParamDefWithType::new(vec![index_group]),
+            TypedParameterList::new(vec![index_group]),
             vec![element_in_fiber.into()],
             in_fact.line_file.clone(),
         )?)
@@ -1189,7 +1189,7 @@ impl Runtime {
         let element_in_fiber: AtomicFact =
             InFact::new(in_fact.element.clone(), fiber, in_fact.line_file.clone()).into();
         let forall_fact: Fact = ForallFact::new_canonical_forall(
-            ParamDefWithType::new(vec![index_group]),
+            TypedParameterList::new(vec![index_group]),
             vec![],
             vec![element_in_fiber.into()],
             in_fact.line_file.clone(),
@@ -1222,7 +1222,7 @@ impl Runtime {
         )
         .into();
         let exist_body = ExistentialSpec::new(
-            ParamDefWithType::new(vec![preimage_group]),
+            TypedParameterList::new(vec![preimage_group]),
             vec![relation_fact.into()],
             in_fact.line_file.clone(),
         )?;

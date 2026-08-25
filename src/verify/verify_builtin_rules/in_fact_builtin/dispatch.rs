@@ -206,7 +206,7 @@ impl Runtime {
             }
         }
         if let Obj::ObjAsStructInstanceWithFieldAccess(field_access) = &in_fact.element {
-            let field_try = self.verify_in_fact_struct_field_in_declared_carrier(
+            let field_try = self.verify_in_fact_struct_field_in_definition_carrier(
                 in_fact,
                 field_access,
                 builtin_state,

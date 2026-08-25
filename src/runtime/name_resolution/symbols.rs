@@ -43,18 +43,18 @@ impl Runtime {
         Ok(SymbolBinding::new(id, name.clone(), name))
     }
 
-    pub fn allocate_declared_symbol_binding(
+    pub fn allocate_definition_symbol_binding(
         &self,
         name: String,
     ) -> Result<SymbolBinding, RuntimeError> {
         Ok(SymbolBinding::new(
             self.allocate_symbol_id()?,
             name.clone(),
-            self.canonical_display_name_for_declaration(name.as_str()),
+            self.canonical_display_name_for_definition(name.as_str()),
         ))
     }
 
-    fn canonical_display_name_for_declaration(&self, name: &str) -> String {
+    fn canonical_display_name_for_definition(&self, name: &str) -> String {
         let canonical_owner = self
             .execution_stack
             .last()
@@ -80,7 +80,7 @@ impl Runtime {
 
     pub fn visible_symbol_definition(&self, name: &str) -> Option<&SymbolDefinition> {
         self.iter_environments_from_top()
-            .find_map(|environment| environment.declarations.symbols.get(name))
+            .find_map(|environment| environment.definitions.symbols.get(name))
     }
 
     pub fn resolved_identifier_symbol(&self, name: &str) -> Option<SymbolRef> {
@@ -98,7 +98,7 @@ impl Runtime {
         }
         self.imported_module_environments(module_name)
             .into_iter()
-            .find_map(|environment| environment.declarations.symbols.get(name))
+            .find_map(|environment| environment.definitions.symbols.get(name))
             .map(|definition| definition.binding().as_ref())
     }
 
@@ -127,7 +127,7 @@ impl Runtime {
             .or_else(|| {
                 self.iter_environments_from_top().find_map(|environment| {
                     environment
-                        .declarations
+                        .definitions
                         .symbols
                         .get_by_id(symbol.id())
                         .and_then(SymbolDefinition::default_struct_view)
@@ -138,7 +138,7 @@ impl Runtime {
                 self.module_manager.modules.values().find_map(|module| {
                     module
                         .main_environment
-                        .declarations
+                        .definitions
                         .symbols
                         .get_by_id(symbol.id())
                         .and_then(SymbolDefinition::default_struct_view)
@@ -146,7 +146,7 @@ impl Runtime {
                         .or_else(|| {
                             module.files.iter().find_map(|file| {
                                 file.environment
-                                    .declarations
+                                    .definitions
                                     .symbols
                                     .get_by_id(symbol.id())
                                     .and_then(SymbolDefinition::default_struct_view)
@@ -174,7 +174,7 @@ impl Runtime {
             .or_else(|| {
                 self.iter_environments_from_top().find_map(|environment| {
                     environment
-                        .declarations
+                        .definitions
                         .symbols
                         .get_by_id(symbol.id())
                         .and_then(SymbolDefinition::default_tuple_view)
@@ -185,7 +185,7 @@ impl Runtime {
                 self.module_manager.modules.values().find_map(|module| {
                     module
                         .main_environment
-                        .declarations
+                        .definitions
                         .symbols
                         .get_by_id(symbol.id())
                         .and_then(SymbolDefinition::default_tuple_view)
@@ -193,7 +193,7 @@ impl Runtime {
                         .or_else(|| {
                             module.files.iter().find_map(|file| {
                                 file.environment
-                                    .declarations
+                                    .definitions
                                     .symbols
                                     .get_by_id(symbol.id())
                                     .and_then(SymbolDefinition::default_tuple_view)
@@ -256,7 +256,7 @@ impl Runtime {
         Ok((binding, obj))
     }
 
-    pub fn register_declared_symbol(
+    pub fn register_definition_symbol(
         &mut self,
         name: &str,
         role: SymbolRole,
@@ -274,9 +274,9 @@ impl Runtime {
             return Err(symbol_name_already_used_error(name, "builtin"));
         }
 
-        let binding = self.allocate_declared_symbol_binding(name.to_string())?;
+        let binding = self.allocate_definition_symbol_binding(name.to_string())?;
         self.top_level_env()
-            .declarations
+            .definitions
             .symbols
             .insert(SymbolDefinition::new(binding.clone(), role))
             .expect("symbol was checked absent before registration");
@@ -301,8 +301,7 @@ impl Runtime {
         let binding = if role == SymbolRole::Object
             && !binding.name().starts_with(TEMPLATE_INSTANCE_PREFIX)
         {
-            let canonical_display_name =
-                self.canonical_display_name_for_declaration(binding.name());
+            let canonical_display_name = self.canonical_display_name_for_definition(binding.name());
             binding.with_canonical_display_name(canonical_display_name)
         } else {
             binding
@@ -334,7 +333,7 @@ impl Runtime {
             definition.remember_default_tuple_view_if_absent(cart);
         }
         self.top_level_env()
-            .declarations
+            .definitions
             .symbols
             .insert(definition)
             .expect("symbol was checked absent before registration");
@@ -391,8 +390,8 @@ impl Runtime {
                     ));
                 }
             }
-            let binding = if scope.is_declared_object() {
-                self.allocate_declared_symbol_binding(name.clone())?
+            let binding = if scope.is_definition_binding() {
+                self.allocate_definition_symbol_binding(name.clone())?
             } else {
                 self.allocate_local_symbol_binding(name.clone())?
             };
@@ -417,8 +416,8 @@ impl Runtime {
         &self,
         names: Vec<String>,
         param_type: ParamType,
-    ) -> Result<ParamGroupWithParamType, RuntimeError> {
-        Ok(ParamGroupWithParamType::new(
+    ) -> Result<TypedParameterGroup, RuntimeError> {
+        Ok(TypedParameterGroup::new(
             self.allocate_local_symbol_bindings(&names)?,
             param_type,
         ))
@@ -428,8 +427,8 @@ impl Runtime {
         &self,
         names: Vec<String>,
         set: Obj,
-    ) -> Result<ParamGroupWithSet, RuntimeError> {
-        Ok(ParamGroupWithSet::new(
+    ) -> Result<SetBoundParameterGroup, RuntimeError> {
+        Ok(SetBoundParameterGroup::new(
             self.allocate_local_symbol_bindings(&names)?,
             set,
         ))

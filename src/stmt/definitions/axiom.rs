@@ -20,7 +20,7 @@ impl AxiomStmt {
     }
 
     pub fn store_reason() -> &'static str {
-        "declared axiom"
+        "defined axiom"
     }
 
     pub fn strict_mode_rejection_message() -> &'static str {

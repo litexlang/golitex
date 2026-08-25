@@ -11,7 +11,7 @@ impl Runtime {
     }
 
     /// Mathematical contract implementation: `trust have` has no separate
-    /// well-definedness preflight. Its environment phase defines the declared
+    /// well-definedness preflight. Its environment phase defines the defined
     /// parameters and, outside the explicit trusted-file boundary, checks each
     /// attached fact before assuming it. The bindings, facts, and inferred
     /// consequences are committed atomically; strict mode rejects it first.
@@ -44,13 +44,13 @@ impl Runtime {
         let mut infer_result = if self.current_execution_is_trusted_file() {
             self.define_params_with_type_trusted(
                 &trust_have_stmt.param_def,
-                BindingScope::DeclaredObject,
+                BindingScope::DefinitionBinding,
             )
         } else {
             self.define_params_with_type(
                 &trust_have_stmt.param_def,
                 false,
-                BindingScope::DeclaredObject,
+                BindingScope::DefinitionBinding,
             )
         }
         .map_err(|e| exec_stmt_error_with_stmt_and_cause(trust_have_stmt.clone().into(), e))?;

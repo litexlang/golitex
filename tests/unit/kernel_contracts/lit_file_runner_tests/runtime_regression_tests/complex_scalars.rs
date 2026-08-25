@@ -469,7 +469,7 @@ fn native_complex_names_are_hard_reserved_in_binding_positions() {
         || {
             for name in [C, I, RE, IMG, C_ABS] {
                 let cases = [
-                    ("declaration", format!("have {name} R")),
+                    ("definition", format!("have {name} R")),
                     ("forall binder", format!("forall {name} R:\n    1 = 1")),
                     ("function parameter", format!("have fn f({name} R) R = 0")),
                     (

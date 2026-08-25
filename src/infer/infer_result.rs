@@ -386,7 +386,7 @@ impl SuccessInferResult {
     }
 
     pub fn add_parameter_definition(&mut self, fact: &Fact) {
-        self.add_store_fact_output(fact, ParamDefWithType::store_reason(), Vec::new());
+        self.add_store_fact_output(fact, TypedParameterList::store_reason(), Vec::new());
     }
 
     pub fn add_fact_with_reason(&mut self, reason: InferReason, fact: &Fact) {
@@ -503,7 +503,7 @@ impl InferReason {
             }
             InferReason::InferRule(rule) => format!("inferred by infer rule `{}`", rule),
             InferReason::Evaluation => EvalStmt::store_reason().to_string(),
-            InferReason::ParameterDefinition => ParamDefWithType::store_reason().to_string(),
+            InferReason::ParameterDefinition => TypedParameterList::store_reason().to_string(),
             InferReason::Other(s) => s.clone(),
         }
     }

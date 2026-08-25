@@ -32,9 +32,9 @@ pub fn to_latex(source_code: &str, runtime: &mut Runtime) -> Result<String, Runt
     let mut math_blocks: Vec<String> = Vec::new();
     for mut block in blocks {
         let stmt = runtime.parse_statement(&mut block)?;
-        // Chained field parsing needs earlier declarations, but LaTeX output
+        // Chained field parsing needs earlier definitions, but LaTeX output
         // must not place unverified structs in the checked environment.
-        if let Stmt::DefInterfaceStmt(DefInterfaceStmt::DefStructStmt(def)) = &stmt {
+        if let Stmt::Definition(DefinitionStmt::DefStructStmt(def)) = &stmt {
             runtime.register_parsed_struct_definition(def);
         }
         math_blocks.push(stmt.to_latex_string());

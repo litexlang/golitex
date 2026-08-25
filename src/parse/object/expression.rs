@@ -256,7 +256,7 @@ impl Runtime {
                     },
                 )?;
                 self.new_anonymous_fn(
-                    fn_set.body.params_def_with_set.clone(),
+                    fn_set.body.set_bound_parameters.clone(),
                     fn_set.body.dom_facts.clone(),
                     (*fn_set.body.ret_set).clone(),
                     equal_to,
@@ -286,7 +286,7 @@ impl Runtime {
     pub fn parse_fn_set(&mut self, tb: &mut TokenBlock) -> Result<FnSet, RuntimeError> {
         let fn_set = self.run_in_local_parsing_time_name_scope(|this| {
             tb.skip_token(LEFT_BRACE)?;
-            let mut params_def_with_set: Vec<ParamGroupWithSet> = vec![];
+            let mut set_bound_parameters: Vec<SetBoundParameterGroup> = vec![];
             loop {
                 let param = parse_synthetically_correct_identifier_string(tb)?;
                 let mut current_params = vec![param];
@@ -309,7 +309,7 @@ impl Runtime {
                 if let Obj::Cart(cart) = &param_set {
                     this.register_default_tuple_view(&bindings, cart);
                 }
-                params_def_with_set.push(ParamGroupWithSet::new(bindings, param_set));
+                set_bound_parameters.push(SetBoundParameterGroup::new(bindings, param_set));
 
                 if tb.current_token_is_equal_to(COMMA) {
                     tb.skip_token(COMMA)?;
@@ -328,7 +328,7 @@ impl Runtime {
                 }
             }
 
-            let all_fn_names = ParamGroupWithSet::collect_param_names(&params_def_with_set);
+            let all_fn_names = SetBoundParameterGroup::collect_param_names(&set_bound_parameters);
 
             let mut dom_facts = vec![];
             if tb.current_token_is_equal_to(COLON) {
@@ -345,7 +345,7 @@ impl Runtime {
             tb.skip_token(RIGHT_BRACE)?;
             let ret_set_parsed = this.parse_obj(tb)?;
             this.end_parsing_scope(&all_fn_names);
-            let built = this.new_fn_set(params_def_with_set, dom_facts, ret_set_parsed);
+            let built = this.new_fn_set(set_bound_parameters, dom_facts, ret_set_parsed);
             Ok(FnSetOrFnSetClause::FnSet(built?))
         });
         match fn_set {
@@ -365,7 +365,7 @@ impl Runtime {
     ) -> Result<FnSetClause, RuntimeError> {
         let clause = self.run_in_local_parsing_time_name_scope(|this| {
             tb.skip_token(LEFT_BRACE)?;
-            let mut params_def_with_set: Vec<ParamGroupWithSet> = vec![];
+            let mut set_bound_parameters: Vec<SetBoundParameterGroup> = vec![];
             loop {
                 let param = parse_synthetically_correct_identifier_string(tb)?;
                 let mut current_params = vec![param];
@@ -388,7 +388,7 @@ impl Runtime {
                 if let Obj::Cart(cart) = &param_set {
                     this.register_default_tuple_view(&bindings, cart);
                 }
-                params_def_with_set.push(ParamGroupWithSet::new(bindings, param_set));
+                set_bound_parameters.push(SetBoundParameterGroup::new(bindings, param_set));
 
                 if tb.current_token_is_equal_to(COMMA) {
                     tb.skip_token(COMMA)?;
@@ -407,7 +407,7 @@ impl Runtime {
                 }
             }
 
-            let all_fn_names = ParamGroupWithSet::collect_param_names(&params_def_with_set);
+            let all_fn_names = SetBoundParameterGroup::collect_param_names(&set_bound_parameters);
 
             let mut dom_facts = vec![];
             if tb.current_token_is_equal_to(COLON) {
@@ -424,7 +424,7 @@ impl Runtime {
             tb.skip_token(RIGHT_BRACE)?;
             let ret_set_parsed = this.parse_obj(tb)?;
             this.end_parsing_scope(&all_fn_names);
-            let clause_ok = FnSetClause::new(params_def_with_set, dom_facts, ret_set_parsed)?;
+            let clause_ok = FnSetClause::new(set_bound_parameters, dom_facts, ret_set_parsed)?;
             Ok(FnSetOrFnSetClause::FnSetClause(clause_ok))
         });
         match clause {
@@ -542,7 +542,7 @@ impl Runtime {
         // 2. Parse a primary object; builtin standard-set names are reclassified later.
         let result = self.parse_primary_obj(tb)?;
 
-        // 3. Calls and declared-field projections are ordinary composable postfixes.
+        // 3. Calls and defined-field projections are ordinary composable postfixes.
         self.parse_field_and_call_postfixes(tb, result)
     }
 

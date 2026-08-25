@@ -49,7 +49,7 @@ impl Runtime {
         // Binary union is monotone componentwise. This direct leaf is also
         // what lets a checked anonymous family certify
         // `union(C, A(i)) subset union(C, X)` from `A(i) subset X` without
-        // adding another builtin hop or weakening its declared return set.
+        // adding another builtin hop or weakening its defined return set.
         if let (Obj::Union(left_union), Obj::Union(right_union)) =
             (&subset_fact.left, &subset_fact.right)
         {

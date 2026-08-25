@@ -110,7 +110,7 @@ fn regularity_axiom_exist_fact(
         line_file.clone(),
     );
     let body = ExistentialSpec::new(
-        ParamDefWithType::new(vec![x_group]),
+        TypedParameterList::new(vec![x_group]),
         vec![disjoint_fact.into()],
         line_file,
     )?;

@@ -79,9 +79,9 @@ impl ByForStmt {
     /// `range` / `closed_range` (possibly several parameters) or exactly one parameter with type
     /// `cart({...}, {...}, ...)` (each factor must be a list set; at least two factors).
     pub fn expansion(&self) -> Result<ByForExpansion, String> {
-        let groups = &self.forall_fact.params_def_with_type.groups;
+        let groups = &self.forall_fact.typed_parameters.groups;
         if groups.is_empty() {
-            return Err("by for: forall must declare at least one parameter".to_string());
+            return Err("by for: forall must bind at least one parameter".to_string());
         }
 
         if groups.len() == 1 && groups[0].params.len() == 1 {
@@ -119,7 +119,7 @@ impl ByForStmt {
             }
         }
         if params.is_empty() {
-            return Err("by for: forall must declare at least one parameter".to_string());
+            return Err("by for: forall must bind at least one parameter".to_string());
         }
         Ok(ByForExpansion::Ranges { params, ranges })
     }

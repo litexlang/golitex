@@ -24,41 +24,8 @@ impl SuccessStmtResult {
         if let Self::ProofBlock(proof_block) = self {
             proof_block.visit_named_child_results(visitor);
         }
-        if let Self::DefObjStmt(def_obj) = self {
-            def_obj.visit_named_child_results(visitor);
-        }
-        if let Self::DefThmStmt(result) = self {
-            if let Some(verification) = &result.verification {
-                for step in &verification.proof_steps {
-                    visitor(step);
-                }
-                for check in &verification.conclusion_checks {
-                    visitor(check);
-                }
-            }
-        }
-        if let Self::DefStrategyStmt(result) = self {
-            if let Some(verification) = &result.verification {
-                for step in &verification.proof_steps {
-                    visitor(step);
-                }
-                for check in &verification.conclusion_checks {
-                    visitor(check);
-                }
-            }
-        }
-        if let Self::DefAlgoStmt(result) = self {
-            if let Some(verification) = &result.run_in_local_env {
-                for case in &verification.cases {
-                    visitor(&case.verification);
-                }
-                if let Some(default_return) = &verification.default_return {
-                    visitor(&default_return.verification);
-                }
-                if let Some(coverage) = &verification.coverage {
-                    visitor(&coverage.verification);
-                }
-            }
+        if let Self::Definition(definition) = self {
+            definition.visit_named_child_results(visitor);
         }
         if let Self::Command(SuccessCommandStmtResult::ImportStmt(result)) = self {
             if let SuccessImportExecutionResult::Executed(execution) = &result.execution {
@@ -82,41 +49,8 @@ impl SuccessStmtResult {
         if let Self::ProofBlock(proof_block) = self {
             proof_block.try_visit_named_child_results_mut(visitor)?;
         }
-        if let Self::DefObjStmt(def_obj) = self {
-            def_obj.try_visit_named_child_results_mut(visitor)?;
-        }
-        if let Self::DefThmStmt(result) = self {
-            if let Some(verification) = &mut result.verification {
-                for step in &mut verification.proof_steps {
-                    visitor(step)?;
-                }
-                for check in &mut verification.conclusion_checks {
-                    visitor(check)?;
-                }
-            }
-        }
-        if let Self::DefStrategyStmt(result) = self {
-            if let Some(verification) = &mut result.verification {
-                for step in &mut verification.proof_steps {
-                    visitor(step)?;
-                }
-                for check in &mut verification.conclusion_checks {
-                    visitor(check)?;
-                }
-            }
-        }
-        if let Self::DefAlgoStmt(result) = self {
-            if let Some(verification) = &mut result.run_in_local_env {
-                for case in &mut verification.cases {
-                    visitor(&mut case.verification)?;
-                }
-                if let Some(default_return) = &mut verification.default_return {
-                    visitor(&mut default_return.verification)?;
-                }
-                if let Some(coverage) = &mut verification.coverage {
-                    visitor(&mut coverage.verification)?;
-                }
-            }
+        if let Self::Definition(definition) = self {
+            definition.try_visit_named_child_results_mut(visitor)?;
         }
         if let Self::Command(SuccessCommandStmtResult::ImportStmt(result)) = self {
             if let SuccessImportExecutionResult::Executed(execution) = &mut result.execution {
@@ -135,8 +69,7 @@ impl SuccessStmtResult {
     }
 
     pub fn visit_success_child_results(&self, visitor: &mut impl FnMut(&SuccessStmtResult)) {
-        if let Self::DefInterfaceStmt(SuccessDefInterfaceStmtResult::DefTemplateStmt(result)) = self
-        {
+        if let Self::Definition(SuccessDefinitionStmtResult::DefTemplateStmt(result)) = self {
             visitor(&result.body_statement_result);
         }
     }
@@ -145,8 +78,7 @@ impl SuccessStmtResult {
         &mut self,
         visitor: &mut impl FnMut(&mut SuccessStmtResult) -> Result<(), E>,
     ) -> Result<(), E> {
-        if let Self::DefInterfaceStmt(SuccessDefInterfaceStmtResult::DefTemplateStmt(result)) = self
-        {
+        if let Self::Definition(SuccessDefinitionStmtResult::DefTemplateStmt(result)) = self {
             visitor(&mut result.body_statement_result)?;
         }
         Ok(())
@@ -156,13 +88,7 @@ impl SuccessStmtResult {
         match self {
             Self::Fact(statement) => statement.fact().into(),
             Self::UnsafeStmt(statement) => statement.statement(),
-            Self::DefObjStmt(statement) => statement.statement(),
-            Self::DefPredicateStmt(statement) => statement.statement(),
-            Self::DefInterfaceStmt(statement) => statement.statement(),
-            Self::DefAlgoStmt(result) => result.statement.clone().into(),
-            Self::DefThmStmt(result) => result.statement.clone().into(),
-            Self::AxiomStmt(result) => result.statement.clone().into(),
-            Self::DefStrategyStmt(result) => result.statement.clone().into(),
+            Self::Definition(statement) => statement.statement(),
             Self::By(statement) => statement.statement(),
             Self::Witness(statement) => statement.statement(),
             Self::ProofBlock(statement) => statement.statement(),
@@ -188,13 +114,7 @@ impl SuccessStmtResult {
         match self {
             Self::Fact(_) => None,
             Self::UnsafeStmt(statement) => Some(statement.common()),
-            Self::DefObjStmt(statement) => Some(statement.common()),
-            Self::DefPredicateStmt(statement) => Some(statement.common()),
-            Self::DefInterfaceStmt(statement) => statement.common(),
-            Self::DefAlgoStmt(result) => Some(&result.common),
-            Self::DefThmStmt(result) => Some(&result.common),
-            Self::AxiomStmt(result) => Some(&result.common),
-            Self::DefStrategyStmt(result) => Some(&result.common),
+            Self::Definition(statement) => statement.common(),
             Self::By(statement) => Some(statement.common()),
             Self::Witness(statement) => Some(statement.common()),
             Self::ProofBlock(statement) => Some(statement.common()),
@@ -206,13 +126,7 @@ impl SuccessStmtResult {
         match self {
             Self::Fact(_) => None,
             Self::UnsafeStmt(statement) => Some(statement.common_mut()),
-            Self::DefObjStmt(statement) => Some(statement.common_mut()),
-            Self::DefPredicateStmt(statement) => Some(statement.common_mut()),
-            Self::DefInterfaceStmt(statement) => statement.common_mut(),
-            Self::DefAlgoStmt(result) => Some(&mut result.common),
-            Self::DefThmStmt(result) => Some(&mut result.common),
-            Self::AxiomStmt(result) => Some(&mut result.common),
-            Self::DefStrategyStmt(result) => Some(&mut result.common),
+            Self::Definition(statement) => statement.common_mut(),
             Self::By(statement) => Some(statement.common_mut()),
             Self::Witness(statement) => Some(statement.common_mut()),
             Self::ProofBlock(statement) => Some(statement.common_mut()),
@@ -224,13 +138,7 @@ impl SuccessStmtResult {
         match self {
             Self::Fact(_) => None,
             Self::UnsafeStmt(statement) => Some(statement.into_common()),
-            Self::DefObjStmt(statement) => Some(statement.into_common()),
-            Self::DefPredicateStmt(statement) => Some(statement.into_common()),
-            Self::DefInterfaceStmt(statement) => statement.into_common(),
-            Self::DefAlgoStmt(result) => Some(result.common),
-            Self::DefThmStmt(result) => Some(result.common),
-            Self::AxiomStmt(result) => Some(result.common),
-            Self::DefStrategyStmt(result) => Some(result.common),
+            Self::Definition(statement) => statement.into_common(),
             Self::By(statement) => Some(statement.into_common()),
             Self::Witness(statement) => Some(statement.into_common()),
             Self::ProofBlock(statement) => Some(statement.into_common()),
@@ -242,43 +150,7 @@ impl SuccessStmtResult {
         match self {
             Self::Fact(_) => Vec::new(),
             Self::ProofBlock(proof_block) => proof_block.into_child_results(),
-            Self::DefObjStmt(def_obj) => def_obj.into_child_results(),
-            Self::DefInterfaceStmt(SuccessDefInterfaceStmtResult::DefTemplateStmt(result)) => {
-                vec![(*result.body_statement_result).into()]
-            }
-            Self::DefThmStmt(result) => result
-                .verification
-                .map(|verification| {
-                    let mut children = verification.proof_steps;
-                    children.extend(verification.conclusion_checks);
-                    children
-                })
-                .unwrap_or_default(),
-            Self::DefStrategyStmt(result) => result
-                .verification
-                .map(|verification| {
-                    let mut children = verification.proof_steps;
-                    children.extend(verification.conclusion_checks);
-                    children
-                })
-                .unwrap_or_default(),
-            Self::DefAlgoStmt(result) => result
-                .run_in_local_env
-                .map(|verification| {
-                    let mut children = verification
-                        .cases
-                        .into_iter()
-                        .map(|case| *case.verification)
-                        .collect::<Vec<_>>();
-                    if let Some(default_return) = verification.default_return {
-                        children.push(*default_return.verification);
-                    }
-                    if let Some(coverage) = verification.coverage {
-                        children.push(*coverage.verification);
-                    }
-                    children
-                })
-                .unwrap_or_default(),
+            Self::Definition(definition) => definition.into_child_results(),
             Self::Command(SuccessCommandStmtResult::ImportStmt(result)) => match result.execution {
                 SuccessImportExecutionResult::Executed(execution) => execution.statement_results,
                 SuccessImportExecutionResult::Reused(_) => Vec::new(),
@@ -1284,7 +1156,7 @@ impl SuccessVerifyClaimResult {
     }
 }
 
-impl SuccessDefObjStmtResult {
+impl SuccessDefinitionStmtResult {
     fn visit_named_child_results(&self, visitor: &mut impl FnMut(&StmtResult)) {
         match self {
             Self::HaveObjByExistFactsStmt(result) => {
@@ -1373,6 +1245,39 @@ impl SuccessDefObjStmtResult {
             }
             Self::HaveMatrixStmt(result) => {
                 visit_indexed_function_children(result.verification.as_ref(), visitor)
+            }
+            Self::DefThmStmt(result) => {
+                if let Some(verification) = &result.verification {
+                    for step in &verification.proof_steps {
+                        visitor(step);
+                    }
+                    for check in &verification.conclusion_checks {
+                        visitor(check);
+                    }
+                }
+            }
+            Self::DefStrategyStmt(result) => {
+                if let Some(verification) = &result.verification {
+                    for step in &verification.proof_steps {
+                        visitor(step);
+                    }
+                    for check in &verification.conclusion_checks {
+                        visitor(check);
+                    }
+                }
+            }
+            Self::DefAlgoStmt(result) => {
+                if let Some(verification) = &result.run_in_local_env {
+                    for case in &verification.cases {
+                        visitor(&case.verification);
+                    }
+                    if let Some(default_return) = &verification.default_return {
+                        visitor(&default_return.verification);
+                    }
+                    if let Some(coverage) = &verification.coverage {
+                        visitor(&coverage.verification);
+                    }
+                }
             }
             _ => {}
         }
@@ -1470,6 +1375,39 @@ impl SuccessDefObjStmtResult {
             Self::HaveMatrixStmt(result) => {
                 try_visit_indexed_function_children_mut(result.verification.as_mut(), visitor)?
             }
+            Self::DefThmStmt(result) => {
+                if let Some(verification) = &mut result.verification {
+                    for step in &mut verification.proof_steps {
+                        visitor(step)?;
+                    }
+                    for check in &mut verification.conclusion_checks {
+                        visitor(check)?;
+                    }
+                }
+            }
+            Self::DefStrategyStmt(result) => {
+                if let Some(verification) = &mut result.verification {
+                    for step in &mut verification.proof_steps {
+                        visitor(step)?;
+                    }
+                    for check in &mut verification.conclusion_checks {
+                        visitor(check)?;
+                    }
+                }
+            }
+            Self::DefAlgoStmt(result) => {
+                if let Some(verification) = &mut result.run_in_local_env {
+                    for case in &mut verification.cases {
+                        visitor(&mut case.verification)?;
+                    }
+                    if let Some(default_return) = &mut verification.default_return {
+                        visitor(&mut default_return.verification)?;
+                    }
+                    if let Some(coverage) = &mut verification.coverage {
+                        visitor(&mut coverage.verification)?;
+                    }
+                }
+            }
             _ => {}
         }
         Ok(())
@@ -1564,6 +1502,40 @@ impl SuccessDefObjStmtResult {
             Self::HaveMatrixStmt(result) => {
                 into_indexed_function_children(result.common, result.verification)
             }
+            Self::DefTemplateStmt(result) => vec![(*result.body_statement_result).into()],
+            Self::DefThmStmt(result) => result
+                .verification
+                .map(|verification| {
+                    let mut children = verification.proof_steps;
+                    children.extend(verification.conclusion_checks);
+                    children
+                })
+                .unwrap_or_default(),
+            Self::DefStrategyStmt(result) => result
+                .verification
+                .map(|verification| {
+                    let mut children = verification.proof_steps;
+                    children.extend(verification.conclusion_checks);
+                    children
+                })
+                .unwrap_or_default(),
+            Self::DefAlgoStmt(result) => result
+                .run_in_local_env
+                .map(|verification| {
+                    let mut children = verification
+                        .cases
+                        .into_iter()
+                        .map(|case| *case.verification)
+                        .collect::<Vec<_>>();
+                    if let Some(default_return) = verification.default_return {
+                        children.push(*default_return.verification);
+                    }
+                    if let Some(coverage) = verification.coverage {
+                        children.push(*coverage.verification);
+                    }
+                    children
+                })
+                .unwrap_or_default(),
             _other => Vec::new(),
         }
     }
@@ -1802,26 +1774,35 @@ impl SuccessUnsafeStmtResult {
     }
 }
 
-impl SuccessDefObjStmtResult {
-    fn into_common(self) -> SuccessStmtCommonResult {
+impl SuccessDefinitionStmtResult {
+    fn into_common(self) -> Option<SuccessStmtCommonResult> {
         match self {
-            Self::LetObjStmt(result) => result.common,
-            Self::HaveObjInNonemptySetStmt(result) => result.common,
-            Self::HaveObjEqualStmt(result) => result.common,
-            Self::HaveObjByExistFactsStmt(result) => result.common,
-            Self::ObtainObjFromExistFact(result) => result.common,
-            Self::ObtainObjFromAtomicFact(result) => result.common,
-            Self::ObtainObjFromThm(result) => result.common,
-            Self::HaveByPreimageStmt(result) => result.common,
-            Self::HaveFnEqualStmt(result) => result.common,
-            Self::HaveFnEqualCaseByCaseStmt(result) => result.common,
-            Self::HaveFnByInducStmt(result) => result.common,
-            Self::HaveFnByForallExistUniqueStmt(result) => result.common,
-            Self::HaveTupleStmt(result) => result.common,
-            Self::HaveCartStmt(result) => result.common,
-            Self::HaveSeqStmt(result) => result.common,
-            Self::HaveFiniteSeqStmt(result) => result.common,
-            Self::HaveMatrixStmt(result) => result.common,
+            Self::LetObjStmt(result) => Some(result.common),
+            Self::HaveObjInNonemptySetStmt(result) => Some(result.common),
+            Self::HaveObjEqualStmt(result) => Some(result.common),
+            Self::HaveObjByExistFactsStmt(result) => Some(result.common),
+            Self::ObtainObjFromExistFact(result) => Some(result.common),
+            Self::ObtainObjFromAtomicFact(result) => Some(result.common),
+            Self::ObtainObjFromThm(result) => Some(result.common),
+            Self::HaveByPreimageStmt(result) => Some(result.common),
+            Self::HaveFnEqualStmt(result) => Some(result.common),
+            Self::HaveFnEqualCaseByCaseStmt(result) => Some(result.common),
+            Self::HaveFnByInducStmt(result) => Some(result.common),
+            Self::HaveFnByForallExistUniqueStmt(result) => Some(result.common),
+            Self::HaveTupleStmt(result) => Some(result.common),
+            Self::HaveCartStmt(result) => Some(result.common),
+            Self::HaveSeqStmt(result) => Some(result.common),
+            Self::HaveFiniteSeqStmt(result) => Some(result.common),
+            Self::HaveMatrixStmt(result) => Some(result.common),
+            Self::DefPropStmt(result) => Some(result.common),
+            Self::DefAbstractPropStmt(result) => Some(result.common),
+            Self::DefSettingStmt(result) => Some(result.common),
+            Self::DefTemplateStmt(_) => None,
+            Self::DefStructStmt(result) => Some(result.common),
+            Self::DefAlgoStmt(result) => Some(result.common),
+            Self::DefThmStmt(result) => Some(result.common),
+            Self::AxiomStmt(result) => Some(result.common),
+            Self::DefStrategyStmt(result) => Some(result.common),
         }
     }
 
@@ -1844,114 +1825,77 @@ impl SuccessDefObjStmtResult {
             Self::HaveSeqStmt(result) => result.statement.clone().into(),
             Self::HaveFiniteSeqStmt(result) => result.statement.clone().into(),
             Self::HaveMatrixStmt(result) => result.statement.clone().into(),
-        }
-    }
-
-    fn common(&self) -> &SuccessStmtCommonResult {
-        match self {
-            Self::LetObjStmt(result) => &result.common,
-            Self::HaveObjInNonemptySetStmt(result) => &result.common,
-            Self::HaveObjEqualStmt(result) => &result.common,
-            Self::HaveObjByExistFactsStmt(result) => &result.common,
-            Self::ObtainObjFromExistFact(result) => &result.common,
-            Self::ObtainObjFromAtomicFact(result) => &result.common,
-            Self::ObtainObjFromThm(result) => &result.common,
-            Self::HaveByPreimageStmt(result) => &result.common,
-            Self::HaveFnEqualStmt(result) => &result.common,
-            Self::HaveFnEqualCaseByCaseStmt(result) => &result.common,
-            Self::HaveFnByInducStmt(result) => &result.common,
-            Self::HaveFnByForallExistUniqueStmt(result) => &result.common,
-            Self::HaveTupleStmt(result) => &result.common,
-            Self::HaveCartStmt(result) => &result.common,
-            Self::HaveSeqStmt(result) => &result.common,
-            Self::HaveFiniteSeqStmt(result) => &result.common,
-            Self::HaveMatrixStmt(result) => &result.common,
-        }
-    }
-
-    fn common_mut(&mut self) -> &mut SuccessStmtCommonResult {
-        match self {
-            Self::LetObjStmt(result) => &mut result.common,
-            Self::HaveObjInNonemptySetStmt(result) => &mut result.common,
-            Self::HaveObjEqualStmt(result) => &mut result.common,
-            Self::HaveObjByExistFactsStmt(result) => &mut result.common,
-            Self::ObtainObjFromExistFact(result) => &mut result.common,
-            Self::ObtainObjFromAtomicFact(result) => &mut result.common,
-            Self::ObtainObjFromThm(result) => &mut result.common,
-            Self::HaveByPreimageStmt(result) => &mut result.common,
-            Self::HaveFnEqualStmt(result) => &mut result.common,
-            Self::HaveFnEqualCaseByCaseStmt(result) => &mut result.common,
-            Self::HaveFnByInducStmt(result) => &mut result.common,
-            Self::HaveFnByForallExistUniqueStmt(result) => &mut result.common,
-            Self::HaveTupleStmt(result) => &mut result.common,
-            Self::HaveCartStmt(result) => &mut result.common,
-            Self::HaveSeqStmt(result) => &mut result.common,
-            Self::HaveFiniteSeqStmt(result) => &mut result.common,
-            Self::HaveMatrixStmt(result) => &mut result.common,
-        }
-    }
-}
-
-impl SuccessDefPredicateStmtResult {
-    fn into_common(self) -> SuccessStmtCommonResult {
-        match self {
-            Self::DefPropStmt(result) => result.common,
-            Self::DefAbstractPropStmt(result) => result.common,
-        }
-    }
-
-    fn statement(&self) -> Stmt {
-        match self {
             Self::DefPropStmt(result) => result.statement.clone().into(),
             Self::DefAbstractPropStmt(result) => result.statement.clone().into(),
-        }
-    }
-
-    fn common(&self) -> &SuccessStmtCommonResult {
-        match self {
-            Self::DefPropStmt(result) => &result.common,
-            Self::DefAbstractPropStmt(result) => &result.common,
-        }
-    }
-
-    fn common_mut(&mut self) -> &mut SuccessStmtCommonResult {
-        match self {
-            Self::DefPropStmt(result) => &mut result.common,
-            Self::DefAbstractPropStmt(result) => &mut result.common,
-        }
-    }
-}
-
-impl SuccessDefInterfaceStmtResult {
-    fn into_common(self) -> Option<SuccessStmtCommonResult> {
-        match self {
-            Self::DefSettingStmt(result) => Some(result.common),
-            Self::DefTemplateStmt(_) => None,
-            Self::DefStructStmt(result) => Some(result.common),
-        }
-    }
-
-    fn statement(&self) -> Stmt {
-        match self {
             Self::DefSettingStmt(result) => result.statement.clone().into(),
             Self::DefTemplateStmt(result) => result.statement.clone().into(),
             Self::DefStructStmt(result) => result.statement.clone().into(),
+            Self::DefAlgoStmt(result) => result.statement.clone().into(),
+            Self::DefThmStmt(result) => result.statement.clone().into(),
+            Self::AxiomStmt(result) => result.statement.clone().into(),
+            Self::DefStrategyStmt(result) => result.statement.clone().into(),
         }
     }
 
     fn common(&self) -> Option<&SuccessStmtCommonResult> {
         match self {
+            Self::LetObjStmt(result) => Some(&result.common),
+            Self::HaveObjInNonemptySetStmt(result) => Some(&result.common),
+            Self::HaveObjEqualStmt(result) => Some(&result.common),
+            Self::HaveObjByExistFactsStmt(result) => Some(&result.common),
+            Self::ObtainObjFromExistFact(result) => Some(&result.common),
+            Self::ObtainObjFromAtomicFact(result) => Some(&result.common),
+            Self::ObtainObjFromThm(result) => Some(&result.common),
+            Self::HaveByPreimageStmt(result) => Some(&result.common),
+            Self::HaveFnEqualStmt(result) => Some(&result.common),
+            Self::HaveFnEqualCaseByCaseStmt(result) => Some(&result.common),
+            Self::HaveFnByInducStmt(result) => Some(&result.common),
+            Self::HaveFnByForallExistUniqueStmt(result) => Some(&result.common),
+            Self::HaveTupleStmt(result) => Some(&result.common),
+            Self::HaveCartStmt(result) => Some(&result.common),
+            Self::HaveSeqStmt(result) => Some(&result.common),
+            Self::HaveFiniteSeqStmt(result) => Some(&result.common),
+            Self::HaveMatrixStmt(result) => Some(&result.common),
+            Self::DefPropStmt(result) => Some(&result.common),
+            Self::DefAbstractPropStmt(result) => Some(&result.common),
             Self::DefSettingStmt(result) => Some(&result.common),
             Self::DefTemplateStmt(_) => None,
             Self::DefStructStmt(result) => Some(&result.common),
+            Self::DefAlgoStmt(result) => Some(&result.common),
+            Self::DefThmStmt(result) => Some(&result.common),
+            Self::AxiomStmt(result) => Some(&result.common),
+            Self::DefStrategyStmt(result) => Some(&result.common),
         }
     }
 
     fn common_mut(&mut self) -> Option<&mut SuccessStmtCommonResult> {
         match self {
+            Self::LetObjStmt(result) => Some(&mut result.common),
+            Self::HaveObjInNonemptySetStmt(result) => Some(&mut result.common),
+            Self::HaveObjEqualStmt(result) => Some(&mut result.common),
+            Self::HaveObjByExistFactsStmt(result) => Some(&mut result.common),
+            Self::ObtainObjFromExistFact(result) => Some(&mut result.common),
+            Self::ObtainObjFromAtomicFact(result) => Some(&mut result.common),
+            Self::ObtainObjFromThm(result) => Some(&mut result.common),
+            Self::HaveByPreimageStmt(result) => Some(&mut result.common),
+            Self::HaveFnEqualStmt(result) => Some(&mut result.common),
+            Self::HaveFnEqualCaseByCaseStmt(result) => Some(&mut result.common),
+            Self::HaveFnByInducStmt(result) => Some(&mut result.common),
+            Self::HaveFnByForallExistUniqueStmt(result) => Some(&mut result.common),
+            Self::HaveTupleStmt(result) => Some(&mut result.common),
+            Self::HaveCartStmt(result) => Some(&mut result.common),
+            Self::HaveSeqStmt(result) => Some(&mut result.common),
+            Self::HaveFiniteSeqStmt(result) => Some(&mut result.common),
+            Self::HaveMatrixStmt(result) => Some(&mut result.common),
+            Self::DefPropStmt(result) => Some(&mut result.common),
+            Self::DefAbstractPropStmt(result) => Some(&mut result.common),
             Self::DefSettingStmt(result) => Some(&mut result.common),
             Self::DefTemplateStmt(_) => None,
             Self::DefStructStmt(result) => Some(&mut result.common),
+            Self::DefAlgoStmt(result) => Some(&mut result.common),
+            Self::DefThmStmt(result) => Some(&mut result.common),
+            Self::AxiomStmt(result) => Some(&mut result.common),
+            Self::DefStrategyStmt(result) => Some(&mut result.common),
         }
     }
 }

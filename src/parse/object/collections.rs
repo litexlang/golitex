@@ -24,7 +24,7 @@ impl Runtime {
     }
 
     /// `unfold value` is an argument-list spread. A tuple literal contributes
-    /// its elements; a struct-declared value contributes its declared fields in source
+    /// its elements; a struct-defined value contributes its defined fields in source
     /// order. Struct header parameters and `<=>:` facts are never arguments.
     /// Example: `f(unfold pair, unfold group)`.
     fn parse_call_argument_or_unfold(
@@ -55,7 +55,7 @@ impl Runtime {
         {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "unfold expects a tuple value or an object declared with a struct carrier"
+                    "unfold expects a tuple value or an object defined with a struct carrier"
                         .to_string(),
                     line_file,
                 ),
@@ -68,10 +68,10 @@ impl Runtime {
             return Ok(tuple.args.iter().map(|arg| arg.as_ref().clone()).collect());
         }
 
-        // A declaration-owned struct carrier wins over tuple facts learned
+        // A definition-owned struct carrier wins over tuple facts learned
         // later. In particular, materializing a template instance may expose
         // its tuple constructor, but `unfold` must still preserve the fields
-        // selected by the template body's direct declaration.
+        // selected by the template body's direct definition.
         if let Ok(struct_obj) = self.struct_view_for_field_access_receiver(&obj, line_file.clone())
         {
             return self.struct_field_arguments_for_unfold(&obj, struct_obj, line_file);
@@ -102,7 +102,7 @@ impl Runtime {
             .map_err(|cause| {
                 RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
                     None,
-                    "unfold expects a tuple with compile-time arity or an object whose declaration has a direct `&Struct` carrier"
+                    "unfold expects a tuple with compile-time arity or an object whose definition has a direct `&Struct` carrier"
                         .to_string(),
                     line_file.clone(),
                     Some(cause),

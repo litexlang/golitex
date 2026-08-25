@@ -179,22 +179,22 @@ fn flat_forall_computes_dependent_parameter_indices() {
     let Fact::ForallFact(forall_fact) = fact else {
         panic!("expected a flat forall fact");
     };
-    assert_eq!(forall_fact.params_def_with_type.number_of_params(), 3);
+    assert_eq!(forall_fact.typed_parameters.number_of_params(), 3);
     assert_eq!(
         forall_fact
-            .params_def_with_type
+            .typed_parameters
             .cited_param_indices_for_group(0),
         []
     );
     assert_eq!(
         forall_fact
-            .params_def_with_type
+            .typed_parameters
             .cited_param_indices_for_group(1),
         [0]
     );
     assert_eq!(
         forall_fact
-            .params_def_with_type
+            .typed_parameters
             .cited_param_indices_for_group(2),
         [0]
     );

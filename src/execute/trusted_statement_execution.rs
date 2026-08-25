@@ -2,15 +2,14 @@ use super::statement_execution::StatementExecutionContext;
 use crate::error::{exec_stmt_error_with_stmt_and_cause, short_exec_error, RuntimeError};
 use crate::infer::SuccessInferResult;
 use crate::result::{
-    StmtResult, SuccessCommandStmtResult, SuccessDefAlgoStmtResult, SuccessDefInterfaceStmtResult,
-    SuccessDefSettingStmtResult, SuccessDefStructStmtResult, SuccessEvalStmtExecutionResult,
+    StmtResult, SuccessCommandStmtResult, SuccessDefAlgoStmtResult, SuccessDefSettingStmtResult,
+    SuccessDefStructStmtResult, SuccessDefinitionStmtResult, SuccessEvalStmtExecutionResult,
     SuccessEvalStmtResult, SuccessExampleStmtResult, SuccessProofBlockStmtResult,
     SuccessSketchStmtResult, SuccessStmtCommonResult, SuccessStmtResult, SuccessTryStmtResult,
 };
 use crate::runtime::{ExecutionMode, Runtime};
 use crate::stmt::{
-    ByStmt, CommandStmt, DefInterfaceStmt, DefObjStmt, DefPredicateStmt, ProofBlockStmt, Stmt,
-    UnsafeStmt, WitnessStmt,
+    ByStmt, CommandStmt, DefinitionStmt, ProofBlockStmt, Stmt, UnsafeStmt, WitnessStmt,
 };
 
 impl Runtime {
@@ -18,10 +17,10 @@ impl Runtime {
         &mut self,
         stmt: &Stmt,
     ) -> Result<StmtResult, RuntimeError> {
-        if let Stmt::DefInterfaceStmt(DefInterfaceStmt::DefTemplateStmt(s)) = stmt {
+        if let Stmt::Definition(DefinitionStmt::DefTemplateStmt(s)) = stmt {
             return Err(short_exec_error(
                 s.clone().into(),
-                "a template declaration cannot be replayed as a preverified template body",
+                "a template definition cannot be replayed as a preverified template body",
                 None,
                 vec![],
             ));
@@ -48,79 +47,79 @@ impl Runtime {
             Stmt::UnsafeStmt(UnsafeStmt::TrustHaveStmt(s)) => {
                 self.exec_trust_have_stmt_affect_environment_only(s)
             }
-            Stmt::DefObjStmt(DefObjStmt::LetObjStmt(s)) => {
+            Stmt::Definition(DefinitionStmt::LetObjStmt(s)) => {
                 self.exec_let_obj_stmt_affect_environment_only(s)
             }
-            Stmt::DefObjStmt(DefObjStmt::HaveObjInNonemptySetStmt(s)) => {
+            Stmt::Definition(DefinitionStmt::HaveObjInNonemptySetStmt(s)) => {
                 self.exec_have_obj_in_nonempty_set_or_param_type_stmt_affect_environment_only(s)
             }
-            Stmt::DefObjStmt(DefObjStmt::HaveObjEqualStmt(s)) => {
+            Stmt::Definition(DefinitionStmt::HaveObjEqualStmt(s)) => {
                 self.exec_have_obj_equal_stmt_affect_environment_only(s)
             }
-            Stmt::DefObjStmt(DefObjStmt::HaveObjByExistFactsStmt(s)) => {
+            Stmt::Definition(DefinitionStmt::HaveObjByExistFactsStmt(s)) => {
                 self.exec_have_obj_by_exist_facts_stmt_affect_environment_only(s)
             }
-            Stmt::DefObjStmt(DefObjStmt::ObtainObjFromExistFact(s)) => {
+            Stmt::Definition(DefinitionStmt::ObtainObjFromExistFact(s)) => {
                 self.exec_obtain_obj_from_exist_fact_affect_environment_only(s)
             }
-            Stmt::DefObjStmt(DefObjStmt::ObtainObjFromAtomicFact(s)) => {
+            Stmt::Definition(DefinitionStmt::ObtainObjFromAtomicFact(s)) => {
                 self.exec_obtain_obj_from_atomic_fact_affect_environment_only(s)
             }
-            Stmt::DefObjStmt(DefObjStmt::ObtainObjFromThm(s)) => {
+            Stmt::Definition(DefinitionStmt::ObtainObjFromThm(s)) => {
                 self.exec_obtain_obj_from_thm_affect_environment_only(s)
             }
-            Stmt::DefObjStmt(DefObjStmt::HaveByPreimageStmt(s)) => {
+            Stmt::Definition(DefinitionStmt::HaveByPreimageStmt(s)) => {
                 self.exec_have_by_preimage_stmt_affect_environment_only(s)
             }
-            Stmt::DefObjStmt(DefObjStmt::HaveFnEqualStmt(s)) => {
+            Stmt::Definition(DefinitionStmt::HaveFnEqualStmt(s)) => {
                 self.exec_have_fn_equal_stmt_affect_environment_only(s)
             }
-            Stmt::DefObjStmt(DefObjStmt::HaveFnEqualCaseByCaseStmt(s)) => {
+            Stmt::Definition(DefinitionStmt::HaveFnEqualCaseByCaseStmt(s)) => {
                 self.exec_have_fn_equal_case_by_case_stmt_affect_environment_only(s)
             }
-            Stmt::DefObjStmt(DefObjStmt::HaveFnByInducStmt(s)) => {
+            Stmt::Definition(DefinitionStmt::HaveFnByInducStmt(s)) => {
                 self.exec_have_fn_by_induc_stmt_affect_environment_only(s)
             }
-            Stmt::DefObjStmt(DefObjStmt::HaveFnByForallExistUniqueStmt(s)) => {
+            Stmt::Definition(DefinitionStmt::HaveFnByForallExistUniqueStmt(s)) => {
                 self.exec_have_fn_by_forall_exist_unique_stmt_affect_environment_only(s)
             }
-            Stmt::DefObjStmt(DefObjStmt::HaveTupleStmt(s)) => {
+            Stmt::Definition(DefinitionStmt::HaveTupleStmt(s)) => {
                 self.exec_have_tuple_stmt_affect_environment_only(s)
             }
-            Stmt::DefObjStmt(DefObjStmt::HaveCartStmt(s)) => {
+            Stmt::Definition(DefinitionStmt::HaveCartStmt(s)) => {
                 self.exec_have_cart_stmt_affect_environment_only(s)
             }
-            Stmt::DefObjStmt(DefObjStmt::HaveSeqStmt(s)) => {
+            Stmt::Definition(DefinitionStmt::HaveSeqStmt(s)) => {
                 self.exec_have_seq_stmt_affect_environment_only(s)
             }
-            Stmt::DefObjStmt(DefObjStmt::HaveFiniteSeqStmt(s)) => {
+            Stmt::Definition(DefinitionStmt::HaveFiniteSeqStmt(s)) => {
                 self.exec_have_finite_seq_stmt_affect_environment_only(s)
             }
-            Stmt::DefObjStmt(DefObjStmt::HaveMatrixStmt(s)) => {
+            Stmt::Definition(DefinitionStmt::HaveMatrixStmt(s)) => {
                 self.exec_have_matrix_stmt_affect_environment_only(s)
             }
-            Stmt::DefPredicateStmt(DefPredicateStmt::DefPropStmt(s)) => {
+            Stmt::Definition(DefinitionStmt::DefPropStmt(s)) => {
                 self.exec_def_prop_stmt_affect_environment_only(s)
             }
-            Stmt::DefPredicateStmt(DefPredicateStmt::DefAbstractPropStmt(s)) => {
+            Stmt::Definition(DefinitionStmt::DefAbstractPropStmt(s)) => {
                 self.exec_def_abstract_prop_stmt_affect_environment_only(s)
             }
             // A trusted file still reconstructs the retained verification
-            // evidence for a public template declaration. Template instances
+            // evidence for a public template definition. Template instances
             // consume that generic evidence after capture-avoiding
             // substitution, so storing only the syntax would make the Result
             // contract incomplete.
-            Stmt::DefInterfaceStmt(DefInterfaceStmt::DefTemplateStmt(s)) => {
+            Stmt::Definition(DefinitionStmt::DefTemplateStmt(s)) => {
                 let previous_execution_mode =
                     self.replace_current_execution_mode(ExecutionMode::Verified);
                 let result = self.exec_def_template_stmt(s);
                 self.replace_current_execution_mode(previous_execution_mode);
                 result
             }
-            Stmt::DefInterfaceStmt(DefInterfaceStmt::DefSettingStmt(s)) => {
+            Stmt::Definition(DefinitionStmt::DefSettingStmt(s)) => {
                 self.store_def_setting(s)
                     .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone(), e))?;
-                Ok(SuccessDefInterfaceStmtResult::DefSettingStmt(Box::new(
+                Ok(SuccessDefinitionStmtResult::DefSettingStmt(Box::new(
                     SuccessDefSettingStmtResult {
                         statement: s.clone(),
                         common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
@@ -128,10 +127,10 @@ impl Runtime {
                 ))
                 .into())
             }
-            Stmt::DefInterfaceStmt(DefInterfaceStmt::DefStructStmt(s)) => {
+            Stmt::Definition(DefinitionStmt::DefStructStmt(s)) => {
                 self.store_def_struct(s)
                     .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone(), e))?;
-                Ok(SuccessDefInterfaceStmtResult::DefStructStmt(Box::new(
+                Ok(SuccessDefinitionStmtResult::DefStructStmt(Box::new(
                     SuccessDefStructStmtResult {
                         statement: s.clone(),
                         common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
@@ -140,21 +139,29 @@ impl Runtime {
                 ))
                 .into())
             }
-            Stmt::DefAlgoStmt(s) => {
+            Stmt::Definition(DefinitionStmt::DefAlgoStmt(s)) => {
                 self.store_def_algo(s)
                     .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone(), e))?;
                 Ok(
-                    SuccessStmtResult::DefAlgoStmt(Box::new(SuccessDefAlgoStmtResult {
-                        statement: s.clone(),
-                        common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
-                        run_in_local_env: None,
-                    }))
+                    SuccessStmtResult::Definition(SuccessDefinitionStmtResult::DefAlgoStmt(
+                        Box::new(SuccessDefAlgoStmtResult {
+                            statement: s.clone(),
+                            common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
+                            run_in_local_env: None,
+                        }),
+                    ))
                     .into(),
                 )
             }
-            Stmt::DefThmStmt(s) => self.exec_def_thm_stmt_affect_environment_only(s),
-            Stmt::AxiomStmt(s) => self.exec_axiom_stmt_affect_environment_only(s),
-            Stmt::DefStrategyStmt(s) => self.exec_def_strategy_stmt_affect_environment_only(s),
+            Stmt::Definition(DefinitionStmt::DefThmStmt(s)) => {
+                self.exec_def_thm_stmt_affect_environment_only(s)
+            }
+            Stmt::Definition(DefinitionStmt::AxiomStmt(s)) => {
+                self.exec_axiom_stmt_affect_environment_only(s)
+            }
+            Stmt::Definition(DefinitionStmt::DefStrategyStmt(s)) => {
+                self.exec_def_strategy_stmt_affect_environment_only(s)
+            }
             Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(s)) => {
                 self.exec_claim_stmt_affect_environment_only(s)
             }

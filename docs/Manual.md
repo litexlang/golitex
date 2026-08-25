@@ -138,8 +138,8 @@ defines a set of all objects.
 
 ### Names, numbers, and arithmetic
 
-Names refer to builtin objects, earlier declarations, local binders, or
-module-qualified declarations. Arithmetic uses ordinary precedence:
+Names refer to builtin objects, earlier definitions, local binders, or
+module-qualified definitions. Arithmetic uses ordinary precedence:
 parentheses and indexing bind tightly, then powers, multiplication and
 division, then addition and subtraction.
 
@@ -220,7 +220,7 @@ before equality verification.
 
 `e` and `pi` are primitive scalar objects. They are parsed directly into
 dedicated object forms: neither is a decimal `Number`, an ordinary `Atom`, nor
-a name introduced by a Litex declaration. In particular, `std/basics` does not
+a name introduced by a Litex definition. In particular, `std/basics` does not
 define or trust either constant.
 
 The kernel provides their carrier, positivity, and nonzero facts:
@@ -238,7 +238,7 @@ e != 0
 pi != 0
 ```
 
-Both names are hard-reserved and cannot be rebound as declarations,
+Both names are hard-reserved and cannot be rebound as definitions,
 parameters, indices, or fields. Longer names such as `e1`, `epsilon`, and
 `pi_value` remain ordinary identifiers.
 
@@ -383,7 +383,7 @@ i^(1 / 2)
 ```
 
 `C`, `i`, `re`, `img`, and `C_abs` are hard-reserved builtin names and cannot
-be rebound as declarations, parameters, indices, or fields.
+be rebound as definitions, parameters, indices, or fields.
 
 ### Sets and set-forming objects
 
@@ -522,7 +522,7 @@ nonemptiness, and finiteness are recognized in their existing fact-family
 owners. A rule with a mathematical premise consumes an already available
 membership, nonempty, subset, `forall`, or `exist` fact and records it in the
 proof result; it does not launch recursive theorem search. No wrapper `thm`
-declarations are installed for these identities.
+definitions are installed for these identities.
 
 For example:
 
@@ -567,7 +567,7 @@ forall x set, F set:
 ```
 
 Replacement deliberately requires a previously established functionality
-fact. In this example the two `trust` statements declare external background:
+fact. In this example the two `trust` statements provide external background:
 the relation has at most one set-valued output, and one particular pair is
 related. Everything after those assumptions is checked normally.
 
@@ -634,7 +634,7 @@ set-theoretic function model. It does not make the binder kinds `set`,
 `nonempty_set`, or `finite_set` into ordinary function domains; use `template`
 for a family parameterized by an arbitrary set.
 
-A declared codomain does not waive the input condition:
+A defined codomain does not waive the input condition:
 
 ```text
 have fn reciprocal(x R: x != 0) R = 1 / x
@@ -643,11 +643,11 @@ reciprocal(0) = 0
 
 The call is an `error` because `0 != 0` cannot be established.
 
-`fn_range(f)` records the actual image, not merely the declared codomain. The
+`fn_range(f)` records the actual image, not merely the defined codomain. The
 object is well-defined only when Litex can recover a checked function-set
 signature for `f`. A well-defined application belongs to the range; stored
 range membership then exposes both codomain membership and an existential
-preimage. The range itself is a subset of the declared codomain.
+preimage. The range itself is a subset of the defined codomain.
 
 ```litex
 have fn shift(x Z) Z = x + 1
@@ -773,10 +773,10 @@ finite_set_reduce({3, 1, 2}, fn(i1 Z) Z {i1}, fn(x, y Z) Z {x + y}, 0) = 6
 | `'(a, b)`, `'(a, b]`, `'[a, b)`, `'[a, b]` | Bounded real intervals |
 | `'(a,)`, `'[a,)`, `'(,b)`, `'(,b]` | Real rays |
 
-All four aggregate forms require the iterand to be unary and to declare a
+All four aggregate forms require a unary iterand whose definition specifies a
 scalar return carrier: Litex must prove `return_set $subset C` under the
 function's parameter and domain assumptions. The function body must separately
-belong to that declared return carrier. Range `sum` and `product` also require
+belong to that defined return carrier. Range `sum` and `product` also require
 integer endpoints with `first <= last`; finite-set aggregates require a finite
 set and a function defined on the aggregated domain.
 Consequently, `finite_set_sum(3...1, fn(k Z) Z {0}) = 0` and the analogous
@@ -824,24 +824,24 @@ sums and products remain `0` and `1`. The interval forms still require the
 first index to be at most the last. Ordered, positive, and absolute-value
 aggregate rules still require a real-valued iterand.
 
-### Struct objects and declaration-owned field access
+### Struct objects and definition-owned field access
 
-A `struct` defines a named set together with one declaration-owned field view.
+A `struct` defines a named set together with one definition-owned field view.
 Once its header parameters are fixed, `&Name<args>` is one ordinary set, not a
 set of sets. Every binder and function signature position that accepts a set
 therefore also accepts a struct carrier.
 
 #### Tuple representation
 
-A structure with two or more fields is represented by a tuple in declaration
-order. If `Point` declares `x` and then `y`, opening a `Point` value `p`
+A structure with two or more fields is represented by a tuple in definition
+order. If `Point` defines `x` and then `y`, opening a `Point` value `p`
 establishes `p.x = p[1]` and `p.y = p[2]`. The field-to-index relation belongs
-to the struct declaration; Litex does not guess it from field names.
+to the struct definition; Litex does not guess it from field names.
 
 A one-field structure is instead an identity view of the sole field carrier.
 Opening `v &ScalarView` establishes `v.value = v`, not `v.value = v[1]`.
 This supports objects such as a metric space carrying only its distance
-operation without inventing a dummy field. A structure must declare at least
+operation without inventing a dummy field. A structure must define at least
 one field.
 
 The tuple representation is deliberately opaque outside two places:
@@ -855,8 +855,8 @@ field carriers, field-to-index equalities, or struct laws.
 
 #### Explicit property release: `by struct def`
 
-`by struct def e` opens exactly one declaration-owned struct layer. It has no
-`as &Struct` form: the struct must already be fixed by the declaration of `e`,
+`by struct def e` opens exactly one definition-owned struct layer. It has no
+`as &Struct` form: the struct must already be fixed by the definition of `e`,
 by a function's explicit return carrier, or by the direct struct carrier of the
 previous field in a chain.
 
@@ -880,9 +880,9 @@ properties are needed.
 #### Field-access well-definedness
 
 Field syntax and property release are separate. To decide whether `e.y` is a
-well-defined object, Litex only determines the declaration-owned struct view
-of `e` and checks that this struct declares `y`. To decide `e.y.z`, it also
-checks that `y` is declared directly with a struct carrier that declares `z`.
+well-defined object, Litex only determines the definition-owned struct view
+of `e` and checks that this struct defines `y`. To decide `e.y.z`, it also
+checks that `y` is defined directly with a struct carrier that defines `z`.
 This WD traversal does not store any field carrier, tuple bridge, or struct
 law. The final field's carrier matters only when a surrounding operation needs
 it, for example when calling a function-valued field.
@@ -899,10 +899,10 @@ A direct syntactic symbol binding written with a struct carrier, such as
 properties of a directly bound `p` are immediately available.
 
 No other form opens properties automatically. In particular, a function
-result declared as `&Point`, a nested struct-valued field, an equality, and a
-later proof of membership still require `by struct def ...`. Those declarations
+result defined as `&Point`, a nested struct-valued field, an equality, and a
+later proof of membership still require `by struct def ...`. Those definitions
 are sufficient for field-access WD, but not for importing the struct laws.
-Named fields therefore belong to declarations, never to membership search.
+Named fields therefore belong to definitions, never to membership search.
 Litex has no `&Point{p}.x` form for selecting another view later.
 
 #### Examples
@@ -931,7 +931,7 @@ struct Point:
 
 have fn make_point(x, y R) &Point = (x, y)
 
-# The declared return makes the field path well-defined, but does not release
+# The defined return makes the field path well-defined, but does not release
 # Point's tuple bridge or properties.
 make_point(1, 2).x = make_point(1, 2).x
 by struct def make_point(1, 2)
@@ -940,7 +940,7 @@ make_point(1, 2).x = 1
 
 Inside a parenthesized function, proposition, or theorem argument list,
 `unfold` is a compile-time argument spread. For a struct value it contributes
-all declared fields, strictly in declaration order:
+all defined fields, strictly in definition order:
 
 ```litex
 struct Point:
@@ -970,8 +970,8 @@ to satisfy `$is_tuple(t)` has no static arity and is rejected. `unfold` is not
 a runtime object, and ordinary arity, membership, and function-domain checks
 run on the expanded arguments.
 
-If a selected field is itself declared directly with a struct type, field
-notation may continue through that declared view:
+If a selected field is itself defined directly with a struct type, field
+notation may continue through that defined view:
 
 ```litex
 struct Coordinates:
@@ -989,14 +989,14 @@ by struct def item.point
 item.point.x $in R
 ```
 
-Here the declaration of `TaggedPoint.point` supplies the owner of the next
+Here the definition of `TaggedPoint.point` supplies the owner of the next
 field, so the entire path is well-defined before the `by` statement. The
 explicit opening is needed only to release `Coordinates`' field-carrier and
 representation facts. Parameterized and module-qualified struct field types
 work the same way. A final field may be called, as in
 `space.scalars.mul(a, b)`. Fields also work after a call when the function's
-declared return carrier is a struct, as in `make_box(f).entries(i)`. A callable
-field's declared carrier must be a function set.
+defined return carrier is a struct, as in `make_box(f).entries(i)`. A callable
+field's defined carrier must be a function set.
 
 When `expr` is a materialized template-selected struct object, a callable
 field projects through the selected tuple value before application. Thus an
@@ -1026,7 +1026,7 @@ The last line is a parse `error`. The membership still exposes the ordinary
 struct-membership proposition for later proof use, but it exposes neither
 positional Cartesian facts nor `Point` field names. There is deliberately no
 `by struct def p as &Point` escape hatch. To use those names, construct a new
-declaration-owned object explicitly:
+definition-owned object explicitly:
 
 ```litex
 struct Point:
@@ -1039,9 +1039,9 @@ p2.x = p[1]
 ```
 
 Likewise, if `p &Point` later also belongs to `&ComplexPair`, `p.x` remains the
-field chosen by its `Point` declaration. Write
+field chosen by its `Point` definition. Write
 `have p2 &ComplexPair = (p.x, p.y)` to obtain `p2.real` and `p2.img`.
-Chained notation follows only directly declared struct carriers; it does not
+Chained notation follows only directly defined struct carriers; it does not
 follow named set aliases, equalities, or later membership facts.
 
 ### Template instances
@@ -1149,7 +1149,7 @@ facts do not escape the quantified or existential check.
 The equivalent facts in a `struct` `<=>:` block are also checked from left to
 right in a temporary field scope. Each successful fact is staged without
 definition inference before the next fact is checked. This lets a filter guard
-justify a later partial expression, both when the struct is declared and when
+justify a later partial expression, both when the struct is defined and when
 an instantiated struct carrier is checked:
 
 ```litex
@@ -1197,11 +1197,11 @@ Every row also requires its subobjects to be well-defined.
 | `f(args)` | `f` has a known function set and the arguments satisfy all domains. |
 | `fn_range(f)` | `f` has a known function set. |
 | Tuple or product projection | The product shape, dimension, and index are valid. |
-| Sequence or matrix access | The index lies in the declared bounds. |
-| A finite sum or product | The index domain is suitable, the unary iterand is defined throughout it, and its declared return set is a subset of `C`. |
+| Sequence or matrix access | The index lies in the defined bounds. |
+| A finite sum or product | The index domain is suitable, the unary iterand is defined throughout it, and its defined return set is a subset of `C`. |
 | A real interval | Finite endpoints are real; reversed endpoints denote an empty interval rather than an ill-defined object. |
 | `&Struct<args>` or field access | The struct, arguments, field, and membership obligations check. |
-| `unfold value` in an argument list | The value has a compile-time tuple arity or a declaration-owned struct carrier; every expanded argument then passes its ordinary checks. |
+| `unfold value` in an argument list | The value has a compile-time tuple arity or a definition-owned struct carrier; every expanded argument then passes its ordinary checks. |
 | `\Template<args>` | The template exists and its parameter obligations check. |
 
 After `fn(...) T {body}` has passed these checks, Litex can prove that it
@@ -1471,7 +1471,7 @@ forall X nonempty_set, x, y X, z X:
         z = z
 ```
 
-Parameters are declared in parentheses in the `setting` header; the indented
+Parameters are defined in parentheses in the `setting` header; the indented
 body contains only shared assumptions. A setting with no shared assumptions
 omits both the colon and body, for example `setting OneElement(X nonempty_set,
 x X)`. A setting does not introduce global objects and does not assert its
@@ -1479,8 +1479,8 @@ assumptions; it only abbreviates the corresponding `forall` prefix. Every use
 allocates fresh binders, even when the same setting is used several times.
 Extra parameters require a comma after the closing bracket.
 
-The optional argument list renames the freshly declared binders positionally:
-`[EqualPair(Y, a, b)]` declares new `Y`, `a`, and `b` parameters and
+The optional argument list renames the freshly defined binders positionally:
+`[EqualPair(Y, a, b)]` binds new `Y`, `a`, and `b` parameters and
 instantiates the stored parameter types and assumptions with those names. The
 arguments are exact bare binder names, not expressions and not references to
 outer objects. Their count must equal the setting's parameter count; an active
@@ -1518,7 +1518,7 @@ setting GroupHomomorphismSetting([GroupSetting(A, mul_A, one_A, inv_A)], [GroupS
         f(mul_A(x, y)) = mul_B(f(x), f(y))
 ```
 
-The stored and displayed declarations use the equivalent flat parameter list,
+The stored and displayed definitions use the equivalent flat parameter list,
 followed by the two instantiated `GroupSetting` condition lists and the
 explicit homomorphism condition.
 
@@ -1678,7 +1678,7 @@ ordinary equality `f = g`. Normal known-equality congruence can therefore reuse
 it inside a larger object, such as `power_set(f) = power_set(g)`. The local
 predicate `$fn_eq_in(f, g, S)` does not imply global equality.
 
-For named functions with alpha-equivalent declared function carriers, a bare
+For named functions with alpha-equivalent defined function carriers, a bare
 `$fn_eq(f, g)` can also consume the exact already-known pointwise `forall`
 directly. It does not synthesize pointwise equalities or bridge different
 domain or return carriers.
@@ -1708,7 +1708,7 @@ have known function sets.
 
 ### User-defined predicates
 
-`prop` gives a predicate a concrete definition. `abstract_prop` declares only
+`prop` gives a predicate a concrete definition. `abstract_prop` defines only
 its name and parameter shape.
 
 ```litex
@@ -1723,7 +1723,7 @@ abstract_prop prime(n)
 $prime(17)
 ```
 
-The second line is `unknown`: declaring an abstract predicate does not prove
+The second line is `unknown`: defining an abstract predicate does not prove
 any instance.
 
 ---
@@ -1753,7 +1753,7 @@ Common binder forms are:
 
 | Form | Effect |
 |---|---|
-| `let x = value` | Preview: introduce `x` without declaring a set or type, then store `x = value`. |
+| `let x = value` | Preview: bind `x` without defining a set or type, then store `x = value`. |
 | `have x S` | Introduce `x $in S`; `S` must be nonempty. |
 | `have x S = value` | Introduce `x`, its membership, and its defining equality. |
 | `have x S:` followed by facts | Introduce a witness satisfying a supported body. |
@@ -1765,8 +1765,8 @@ For `have x S = value`, Litex checks `value $in S` before committing `x`. A
 carrier-mismatch error names the required carrier,
 the narrowest standard numeric carrier currently provable for `value` when one
 is available, and confirms that the binding was not stored. For example,
-`q * x % p` is declaration-time `Z` data even when `p`, `q`, and `x` are
-positive naturals; declaring it directly as `N` is rejected rather than
+`q * x % p` is definition-time `Z` data even when `p`, `q`, and `x` are
+positive naturals; defining it directly as `N` is rejected rather than
 silently narrowed.
 
 `let` is the minimal form for naming an already well-defined object:
@@ -1777,8 +1777,8 @@ x = 1
 ```
 
 Litex checks the right side before committing the new name, then records the
-ordinary equality `x = value`. The declaration itself does not require or
-create a declared type or membership fact. It accepts exactly one fresh name
+ordinary equality `x = value`. The definition itself does not require or
+create a defined type or membership fact. It accepts exactly one fresh name
 and one value: `let x = x` fails when there was no earlier `x`, and multiple
 bindings, destructuring, recursive definitions, and template-body `let` forms
 are not part of this preview. The word `let` is reserved and cannot be reused
@@ -1797,7 +1797,7 @@ mathematical atom. Prefer a role-based name such as `event_union`,
 `probability_terms`, or `negative_x` over a name that only reports its source
 syntax. Use `let name = value` for a pure abbreviation whose carrier is not a
 new proof fact; use `have name S = value` when later steps consume `name $in S`
-or the declared carrier `S`. Keep a public theorem statement in its canonical
+or the defined carrier `S`. Keep a public theorem statement in its canonical
 mathematical form and introduce the shorter name inside the proof body.
 
 Do not apply this by character count alone. A one-use transparent calculation
@@ -1821,7 +1821,7 @@ parameterized by an arbitrary set.
 
 ### Predicate and struct definitions
 
-`prop` defines a predicate by its conditions. `abstract_prop` declares an
+`prop` defines a predicate by its conditions. `abstract_prop` defines an
 uninterpreted predicate interface. `struct` defines a named product view with
 fields and optional membership filters.
 
@@ -1838,7 +1838,7 @@ by def $is_origin(0, 0)
 by thm struct_member((0, 0), &Point)
 ```
 
-An abstract declaration adds no instances:
+An abstract definition adds no instances:
 
 ```text
 abstract_prop connected(x, y)
@@ -1874,7 +1874,7 @@ M(2, 3) = 3
 | `have finite_seq s finite_seq(S, n) for i1 <= n, ...` | Finite sequence entries |
 | `have matrix M matrix(S, r, c) for i1 <= r, j <= c, ...` | Matrix entries |
 
-The declared bounds and object type must agree:
+The defined bounds and object type must agree:
 
 ```text
 have matrix M matrix(Z, 2, 3) for i1 <= 3, j <= 2, M(i1, j) = 0
@@ -2016,7 +2016,7 @@ statement and one family name.
 ### Executable implementations and `eval`
 
 `have algo for f(args)` attaches an executable presentation to an already
-declared function. `eval expr` evaluates supported concrete expressions using
+defined function. `eval expr` evaluates supported concrete expressions using
 exact symbolic arithmetic.
 
 ```litex
@@ -2040,7 +2040,7 @@ have algo for f(x):
     x + 1
 ```
 
-This is an `error`; the implementation does not agree with the declared
+This is an `error`; the implementation does not agree with the defined
 function.
 
 ### Local proof blocks: `claim`, `example`, `sketch`, and `try`
@@ -2282,7 +2282,7 @@ Explicit `A::b` always resolves `A` in the module namespace and bypasses the
 bare index. Module aliases and symbols are separate, so a local symbol may also
 be named `A`; field selection such as `obj.b` likewise remains in the field
 namespace. Once external bare `b` is active, however, the source file may not
-declare or bind another symbol named `b` at any level. Struct field names are
+define or bind another symbol named `b` at any level. Struct field names are
 the exception because they are selected through a struct/field namespace. An
 enabled export is unavailable while it is still loading, so an earlier file
 cannot cite a later export by its bare name. These permissions inherit into
@@ -2330,7 +2330,7 @@ introductions.
 |---|---|---|
 | Bare fact | Well-definedness, then known facts/builtin rules/definitions/universals/strategies. | The fact and its ordinary inferred consequences. |
 | `let x = value` | `value` is well-defined and `x` is fresh. | One untyped name and `x = value`. |
-| `have x S`, `have x S = value`, `have x S: ...` | Nonemptiness or concrete membership, declared carrier, and any witness body. | A fresh object, its carrier facts, equality/body facts, and inference. |
+| `have x S`, `have x S = value`, `have x S: ...` | Nonemptiness or concrete membership, defined carrier, and any witness body. | A fresh object, its carrier facts, equality/body facts, and inference. |
 | `trust fact`, `trust have ...` | Parsing, binding, well-definedness, and transactional staging still run; proof truth is assumed. | One trusted transaction. Failure commits nothing. |
 | `obtain ... from exist ...` | The source existential is known; names, count, and dependent parameter types match. | Opaque witness names plus their type and direct body facts. |
 | `obtain ... from $P(args)` | `$P(args)` is known and its concrete definition has exactly one positive `exist`/`exist!` clause. | The same witness facts after checked definition projection. |
@@ -2341,9 +2341,9 @@ introductions.
 | `have fn ... by induc` | Integer measure/lower bound and strictly decreasing in-domain recursive calls. | A callable recursive function and checked case equations. |
 | `have fn ... by exist!` | The displayed universal unique-existence goal, including uniqueness. | A selected callable function and its defining property. |
 | `have tuple/cart/seq/finite_seq/matrix ... for ...` | Symbolic dimensions, index bounds, coordinate carriers, and formulas. | A named indexed object, its type, and coordinate equations. |
-| `prop`, `abstract_prop` | Parameter declarations; concrete `prop` clauses must be well-defined. | A foldable concrete definition or an uninterpreted predicate interface. |
+| `prop`, `abstract_prop` | Parameter definitions; concrete `prop` clauses must be well-defined. | A foldable concrete definition or an uninterpreted predicate interface. |
 | `struct`, `setting`, `template` | Field/setting/template parameters and body contracts. | A named view, reusable binder prefix, or one parameterized definition family. |
-| `have algo for ...` | A declared function exists and the implementation agrees on its cases/results. | An executable presentation; it does not replace the mathematical function facts. |
+| `have algo for ...` | A defined function exists and the implementation agrees on its cases/results. | An executable presentation; it does not replace the mathematical function facts. |
 | `claim` | One target is proved in a lexical child scope. | Only the target; helper statements do not escape. |
 | `example` | One target is proved in a lexical child scope. | Nothing; the target and helper statements do not escape. |
 | `sketch` | Every contained statement checks. | Nothing outside the block. |
@@ -2357,7 +2357,7 @@ introductions.
 | `by cases`, `by contra` | Every branch closes the target, or an explicit contradiction is produced. | The requested target only. |
 | Enumeration, induction, `by for`, `by extension` | The target has the exact finite/range/discrete/extensional shape and every generated subgoal closes. | The requested universal/equality/atomic target. |
 | `by def` | One positive concrete/builtin definitional target and every defining clause. | The target with explicit definition provenance. |
-| `by struct def e` | `e` has a declaration-owned struct view and `e $in &Struct` verifies. | Exactly one layer of tuple/identity bridges, field carriers, and instantiated struct laws. |
+| `by struct def e` | `e` has a definition-owned struct view and `e $in &Struct` verifies. | Exactly one layer of tuple/identity bridges, field carriers, and instantiated struct laws. |
 | Predicate-property registrations | The proof has the exact reflexive/symmetric/transitive/antisymmetric predicate shape. | A reusable property route; antisymmetry may later close equality. |
 | `by regularity_axiom` | Its displayed set/nonemptiness obligations. | An explicitly trusted set-theoretic conclusion; strict mode rejects the step. |
 | `by axiom_of_choice` | The family is a set and every member is proved nonempty. | Stores `exist f fn(A S)big_union(S) st {$is_choice_function_for(S,S,fn(A S)S {A},f)}`. The existential body is atomic. |
@@ -2386,7 +2386,7 @@ explanation; this index does not repeat its examples.
 | Domain condition | `x R: x != 0` | [Domain obligations](#domain-obligations) |
 | Parameterized definition | `template<S set, x S>:` | [Templates](#templates) |
 | Named universal prefix | `setting Name(params): ...`, then `forall [Name]`, `forall [Name(fresh_names)]`, or a `prop`/`setting`/`struct` parameter bundle | [Named universal settings](#named-universal-settings) |
-| Struct parameter | `struct Group<S nonempty_set>:` | [Struct objects](#struct-objects-and-declaration-owned-field-access) |
+| Struct parameter | `struct Group<S nonempty_set>:` | [Struct objects](#struct-objects-and-definition-owned-field-access) |
 
 ### Object syntax index
 
@@ -2397,7 +2397,7 @@ explanation; this index does not repeat its examples.
 | Functions | `fn`, anonymous functions, application, `fn_range` | [Functions, application, and range](#functions-application-and-range) |
 | Structured data | `cart`, `proj`, tuples, sequences, matrices, indexing | [Products, tuples, sequences, and matrices](#products-tuples-sequences-and-matrices) |
 | Finite objects | size, extrema, sums, products, integer and real intervals | [Cardinality, finite aggregation, and intervals](#cardinality-finite-aggregation-and-intervals) |
-| Named struct carriers | `&Struct<args>`, field access, `\Template<args>` | [Struct objects](#struct-objects-and-declaration-owned-field-access) and [Template instances](#template-instances) |
+| Named struct carriers | `&Struct<args>`, field access, `\Template<args>` | [Struct objects](#struct-objects-and-definition-owned-field-access) and [Template instances](#template-instances) |
 
 ### Fact syntax index
 
@@ -2496,7 +2496,7 @@ For a proof route written as `by ...:` followed by one or more `?` goals, the
 ordinary proof-statement list may be empty. In that case Litex installs the
 route's generated assumptions, runs zero user proof statements, and immediately
 performs the same final goal checks. This is not an admission: an unclosed goal
-still fails. Structural declarations remain required where the method needs
+still fails. Structural definitions remain required where the method needs
 them, such as `case` arms and the base/step headers of finite-set induction.
 `by contra` is the sole exception to the empty-tail rule: its last statement
 must always be an explicit `impossible fact`.
@@ -3589,7 +3589,7 @@ The type-predicate layer classifies set structure separately:
 
 | Predicate | Automatic positive cases | Automatic negative/boundary cases |
 |---|---|---|
-| `$is_nonempty_set(S)` | Standard numeric sets; nonempty displays; every power set; ordered nonempty ranges; a union with a nonempty side; Cartesian/function/sequence/matrix sets with the required nonempty factors or codomain; an equal known-nonempty structural set; positive finite cardinality. | Equality with `{}` and finite cardinality zero imply not nonempty. Nonemptiness is never inferred for an arbitrary declared `set`. |
+| `$is_nonempty_set(S)` | Standard numeric sets; nonempty displays; every power set; ordered nonempty ranges; a union with a nonempty side; Cartesian/function/sequence/matrix sets with the required nonempty factors or codomain; an equal known-nonempty structural set; positive finite cardinality. | Equality with `{}` and finite cardinality zero imply not nonempty. Nonemptiness is never inferred for an arbitrary defined `set`. |
 | `$is_finite_set(S)` | Displays, integer ranges, builders over finite bases, finite-domain function ranges, finite unions/intersections/differences/power sets, and Cartesian products of finite factors. | An infinite set minus a finite set remains infinite. No rule makes an arbitrary set finite from its use in another expression. |
 | Empty structure | Empty display; `closed_range(a,b)` when `b<a`; `range(a,b)` when `b<=a`; equality with `{}`; finite cardinality zero. | Ordered endpoints in the opposite direction establish the matching nonempty range. |
 | `$is_tuple` / `$is_cart` | Tuple syntax and known tuple objects; `cart(...)` and `cart_dim(...)` syntax. | A similarly printed ordinary set does not become a tuple or Cartesian object without the structural fact. |
@@ -3912,7 +3912,7 @@ Main families are:
 | `x $in index_union(I,X,A)` | `x $in X` and `exist i I st {x $in A(i)}` |
 | `x $in index_intersect(I,X,A)` | `x $in X` and `forall i I: x $in A(i)` |
 | `y $in replacement(P,A)` | `exist x A st {$P(x,y)}` |
-| `y $in fn_range(f)` | Membership in the declared codomain plus an existential preimage carrying every instantiated domain condition and `y=f(args)` |
+| `y $in fn_range(f)` | Membership in the defined codomain plus an existential preimage carrying every instantiated domain condition and `y=f(args)` |
 | `A $in power_set(B)` | `A $subset B` |
 | `x $in cart(A, B, ...)` | Tuple shape, dimension, and coordinate memberships |
 | `f $in general_cart(I,S,g)` | `f $in fn(index I) big_union(S)`, `$is_choice_function_for(I,S,g,f)`, and its pointwise factor-membership universal |
@@ -3921,7 +3921,7 @@ Main families are:
 | `x` in a real interval | Real membership and endpoint bounds |
 | `x $in {y S: filters}` | `x $in S` and instantiated filters |
 | Function/sequence/matrix type membership | A callable function interface; sequence and matrix sets are expanded to their corresponding function set, while matrix metadata also records its entry carrier and dimensions. |
-| `x $in &Struct<...>` | No eager public consequences. The membership verifier checks the instantiated tuple carrier and `<=>:` conditions internally; use a declaration-owned `by struct def x` to release one layer. |
+| `x $in &Struct<...>` | No eager public consequences. The membership verifier checks the instantiated tuple carrier and `<=>:` conditions internally; use a definition-owned `by struct def x` to release one layer. |
 
 Membership inference also transports through concrete equal set
 representatives and through one checked set-valued function or template

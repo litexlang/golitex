@@ -53,7 +53,7 @@ impl Runtime {
         let pointwise_goal: AtomicFact =
             EqualFact::new(left_at_x, right_at_x, fact.line_file.clone()).into();
         let pointwise_result = self.run_in_local_env(|rt| {
-            let params_def = ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+            let params_def = TypedParameterList::new(vec![TypedParameterGroup::new(
                 vec![x_binding],
                 ParamType::Obj(left.set.as_ref().clone()),
             )]);

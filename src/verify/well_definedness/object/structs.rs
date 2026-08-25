@@ -257,7 +257,7 @@ impl Runtime {
             verify_state,
             WellDefinedObjChildRole::ConstructorArgument { argument_index: 1 },
         )?);
-        // The parser records the declaration-owned struct view in the field
+        // The parser records the definition-owned struct view in the field
         // access node. Runtime instantiation may alpha-rename dependent header
         // parameters, so WD validates that recorded struct and field directly
         // instead of rediscovering the view from membership or equality facts.
@@ -283,9 +283,9 @@ impl Runtime {
         Ok(steps)
     }
 
-    /// Mathematical contract: a struct instantiation names a declared struct,
+    /// Mathematical contract: a struct instantiation names a defined struct,
     /// supplies exactly its header arity, and gives well-defined arguments
-    /// satisfying every declared parameter type and domain condition.
+    /// satisfying every defined parameter type and domain condition.
     pub fn struct_header_param_to_arg_map(
         &mut self,
         struct_obj: &StructObj,
@@ -394,7 +394,7 @@ impl Runtime {
     }
 
     /// Mathematical contract: field carriers of a struct instance are the
-    /// declared field expressions after sound header-parameter substitution.
+    /// defined field expressions after sound header-parameter substitution.
     pub fn instantiated_struct_field_types(
         &mut self,
         struct_obj: &StructObj,
@@ -414,8 +414,8 @@ impl Runtime {
     }
 
     /// Mathematical contract: the carrier of `value.field` is the field's
-    /// declared carrier after substituting both struct header arguments and
-    /// declaration-owned field projections of `value`.
+    /// defined carrier after substituting both struct header arguments and
+    /// definition-owned field projections of `value`.
     pub fn instantiated_struct_field_type_for_access(
         &mut self,
         field_access: &ObjAsStructInstanceWithFieldAccess,
@@ -468,7 +468,7 @@ impl Runtime {
     }
 
     /// Mathematical contract: a field projection index exists exactly when
-    /// the instantiated struct names a declared field of that name.
+    /// the instantiated struct names a defined field of that name.
     pub fn struct_field_index(
         &self,
         struct_obj: &StructObj,

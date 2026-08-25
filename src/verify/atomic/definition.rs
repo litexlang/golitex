@@ -212,7 +212,7 @@ impl Runtime {
             ParamType::Obj(subset_fact.left.clone()),
         )?;
         let membership_forall_fact = ForallFact::new_canonical_forall(
-            ParamDefWithType::new(vec![bound_param.clone()]),
+            TypedParameterList::new(vec![bound_param.clone()]),
             vec![],
             vec![InFact::new(
                 obj_for_bound_param_in_scope(&bound_param.params[0]),
@@ -249,7 +249,7 @@ impl Runtime {
             ParamType::Obj(superset_fact.right.clone()),
         )?;
         let membership_forall_fact = ForallFact::new_canonical_forall(
-            ParamDefWithType::new(vec![bound_param.clone()]),
+            TypedParameterList::new(vec![bound_param.clone()]),
             vec![],
             vec![InFact::new(
                 obj_for_bound_param_in_scope(&bound_param.params[0]),
@@ -369,7 +369,7 @@ impl Runtime {
     ) -> Result<(VerifyArgsSatisfyParamDefResult, Vec<(Fact, StmtResult)>), RuntimeError> {
         let predicate_name = normal_atomic_fact.predicate.to_string();
         let full_param_type_result = self.verify_args_satisfy_param_def_flat_types(
-            &definition.params_def_with_type,
+            &definition.typed_parameters,
             &normal_atomic_fact.body,
             verify_state,
             SubstitutionMode::Exact,
@@ -389,7 +389,7 @@ impl Runtime {
         if matches!(&full_param_type_result, Ok(result) if !result.is_unknown()) {
             let args_param_types = full_param_type_result.map_err(map_param_type_error)?;
             let param_to_arg_map = definition
-                .params_def_with_type
+                .typed_parameters
                 .param_defs_and_args_to_param_to_arg_map(normal_atomic_fact.body.as_slice());
             let mut clause_checks = Vec::with_capacity(definition.iff_facts.len());
             for iff_fact in definition.iff_facts.iter() {
@@ -422,7 +422,7 @@ impl Runtime {
             return Ok((result, vec![]));
         }
         let param_to_arg_map = definition
-            .params_def_with_type
+            .typed_parameters
             .param_defs_and_args_to_param_to_arg_map(normal_atomic_fact.body.as_slice());
         let instantiated_clause = self
             .inst_fact(
@@ -455,7 +455,7 @@ impl Runtime {
         };
         let args_param_types = self
             .verify_args_satisfy_param_def_known_or_builtin_only(
-                &definition.params_def_with_type,
+                &definition.typed_parameters,
                 &normal_atomic_fact.body,
                 verify_state,
                 SubstitutionMode::Exact,

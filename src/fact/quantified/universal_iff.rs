@@ -53,7 +53,7 @@ impl ForallFactWithIff {
                 .map(ExistOrAndChainAtomicFact::to_fact),
         );
         let forall_then_implies_iff = ForallFact::new_canonical_forall(
-            f.params_def_with_type.clone(),
+            f.typed_parameters.clone(),
             dom_then,
             self.iff_facts.clone(),
             self.line_file.clone(),
@@ -67,7 +67,7 @@ impl ForallFactWithIff {
                 .map(ExistOrAndChainAtomicFact::to_fact),
         );
         let forall_iff_implies_then = ForallFact::new_canonical_forall(
-            f.params_def_with_type.clone(),
+            f.typed_parameters.clone(),
             dom_iff,
             f.then_facts.clone(),
             self.line_file.clone(),

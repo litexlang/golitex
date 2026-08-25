@@ -140,7 +140,7 @@ impl UnknownFactResult {
             Fact::ExistFact(exist_fact) => {
                 UnknownFactResult::ExistFact(Box::new(UnknownExistFactResult {
                     goal,
-                    witness_params: params_for_output(exist_fact.params_def_with_type()),
+                    witness_params: params_for_output(exist_fact.typed_parameters()),
                     body: exist_fact
                         .facts()
                         .iter()
@@ -171,7 +171,7 @@ impl UnknownFactResult {
             Fact::ForallFact(forall_fact) => {
                 UnknownFactResult::ForallFact(Box::new(UnknownForallFactResult {
                     goal,
-                    params: params_for_output(&forall_fact.params_def_with_type),
+                    params: params_for_output(&forall_fact.typed_parameters),
                     requirements: forall_fact.dom_facts.clone(),
                     failed_prove: None,
                     detail,
@@ -180,7 +180,7 @@ impl UnknownFactResult {
             Fact::ForallFactWithIff(forall_iff) => {
                 UnknownFactResult::ForallFactWithIff(Box::new(UnknownForallFactWithIffResult {
                     goal,
-                    params: params_for_output(&forall_iff.forall_fact.params_def_with_type),
+                    params: params_for_output(&forall_iff.forall_fact.typed_parameters),
                     requirements: forall_iff.forall_fact.dom_facts.clone(),
                     failed_direction: None,
                     child_unknown: None,
@@ -232,7 +232,7 @@ impl UnknownFactResult {
     ) -> Self {
         UnknownFactResult::ForallFact(Box::new(UnknownForallFactResult {
             goal: forall_fact.clone().into(),
-            params: params_for_output(&forall_fact.params_def_with_type),
+            params: params_for_output(&forall_fact.typed_parameters),
             requirements: forall_fact.dom_facts.clone(),
             failed_prove: Some(UnknownFactPart::new(index, count, stmt, child_unknown)),
             detail: normalize_detail_lines(detail_lines),
@@ -246,7 +246,7 @@ impl UnknownFactResult {
     ) -> Self {
         UnknownFactResult::ForallFactWithIff(Box::new(UnknownForallFactWithIffResult {
             goal: forall_iff.clone().into(),
-            params: params_for_output(&forall_iff.forall_fact.params_def_with_type),
+            params: params_for_output(&forall_iff.forall_fact.typed_parameters),
             requirements: forall_iff.forall_fact.dom_facts.clone(),
             failed_direction: Some(failed_direction),
             child_unknown: child_unknown.map(Box::new),
@@ -281,7 +281,7 @@ impl UnknownFactResult {
     }
 }
 
-fn params_for_output(param_defs: &ParamDefWithType) -> Vec<UnknownFactParam> {
+fn params_for_output(param_defs: &TypedParameterList) -> Vec<UnknownFactParam> {
     let mut params = Vec::new();
     for (name, param_type) in param_defs.collect_param_names_with_types() {
         params.push(UnknownFactParam::new(name, param_type.to_string()));

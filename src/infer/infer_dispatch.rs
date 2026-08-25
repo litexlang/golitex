@@ -50,8 +50,7 @@ impl Runtime {
         exist_fact: &ExistFactEnum,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let mut out = SuccessInferResult::new();
-        if exist_fact.is_exist_unique() && exist_fact.params_def_with_type().number_of_params() > 0
-        {
+        if exist_fact.is_exist_unique() && exist_fact.typed_parameters().number_of_params() > 0 {
             // Infer uniqueness from a stored `exist!`.
             // Example: `exist! c Z, d N+ st {p(c, d)}` infers
             // `forall c1 Z, d1 N+, c2 Z, d2 N+: p(c1,d1) p(c2,d2) => c1=c2 and d1=d2`.
@@ -65,8 +64,7 @@ impl Runtime {
             out.new_infer_result_inside(
                 self.store_forall_fact_without_well_defined_verified_and_infer(uniq)?,
             );
-        } else if exist_fact.is_not_exist()
-            && exist_fact.params_def_with_type().number_of_params() > 0
+        } else if exist_fact.is_not_exist() && exist_fact.typed_parameters().number_of_params() > 0
         {
             let forall = self.build_not_exist_demorgan_forall_fact(exist_fact)?;
             if forall

@@ -7,7 +7,7 @@ fn insert_object(environment: &mut Environment, name: &str, symbol_id: u64) {
 fn insert_symbol(environment: &mut Environment, name: &str, symbol_id: u64, role: SymbolRole) {
     let binding = SymbolBinding::new(SymbolId::new(symbol_id), name.to_string(), name.to_string());
     environment
-        .declarations
+        .definitions
         .symbols
         .insert(SymbolDefinition::new(binding, role))
         .expect("test symbol name should be fresh");
@@ -26,7 +26,7 @@ fn committed_child_reuses_exact_symbol_identity_idempotently() {
 
     assert_eq!(
         parent
-            .declarations
+            .definitions
             .symbols
             .get("\\template_instance<X>")
             .expect("parent symbol remains present")
@@ -36,7 +36,7 @@ fn committed_child_reuses_exact_symbol_identity_idempotently() {
     );
     assert_eq!(
         parent
-            .declarations
+            .definitions
             .object_symbol("\\template_instance<X>")
             .map(SymbolDefinition::role),
         Some(SymbolRole::Object)
@@ -44,13 +44,13 @@ fn committed_child_reuses_exact_symbol_identity_idempotently() {
 }
 
 #[test]
-fn committed_child_preserves_missing_declaration_type_views_for_the_same_symbol() {
+fn committed_child_preserves_missing_definition_type_views_for_the_same_symbol() {
     let mut parent = Environment::new_empty_env();
     let mut child = Environment::new_empty_env();
     insert_object(&mut parent, "shared", 17);
     insert_object(&mut child, "shared", 17);
     child
-        .declarations
+        .definitions
         .symbols
         .get_by_id_mut(SymbolId::new(17))
         .expect("the child symbol should exist")
@@ -61,11 +61,11 @@ fn committed_child_preserves_missing_declaration_type_views_for_the_same_symbol(
 
     parent
         .merge_committed_child(child)
-        .expect("matching symbol identity should merge declaration metadata");
+        .expect("matching symbol identity should merge definition metadata");
 
     assert_eq!(
         parent
-            .declarations
+            .definitions
             .symbols
             .get_by_id(SymbolId::new(17))
             .and_then(SymbolDefinition::default_struct_view)
@@ -98,7 +98,7 @@ fn committed_child_still_rejects_same_symbol_identity_with_distinct_role() {
 
     let error = parent
         .merge_committed_child(child)
-        .expect_err("one symbol identity cannot change declaration role during commit");
+        .expect_err("one symbol identity cannot change definition role during commit");
 
     assert!(matches!(error, RuntimeError::NameAlreadyUsedError(_)));
 }
@@ -125,7 +125,7 @@ fn committed_child_keeps_a_function_definition_signature_paired_with_its_rhs() {
     let child_binding = SymbolBinding::new(SymbolId::new(18), "x".to_string(), "x".to_string());
     let body = |binding: &SymbolBinding| {
         FnSetBody::new(
-            vec![ParamGroupWithSet::new(
+            vec![SetBoundParameterGroup::new(
                 vec![binding.clone()],
                 StandardSet::R.into(),
             )],

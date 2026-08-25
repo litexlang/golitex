@@ -9,7 +9,7 @@ impl Runtime {
         let binding_kind = if has_fact_body {
             BindingScope::LocalBinder
         } else {
-            BindingScope::DeclaredObject
+            BindingScope::DefinitionBinding
         };
         let param_defs = self.parse_have_obj_param_defs_until_header_delimiter(tb, binding_kind)?;
         if param_defs.is_empty() {
@@ -20,7 +20,7 @@ impl Runtime {
                 ),
             )));
         }
-        let param_defs = ParamDefWithType::new(param_defs);
+        let param_defs = TypedParameterList::new(param_defs);
         let have_param_names = param_defs.collect_param_names();
 
         if has_fact_body {
@@ -94,7 +94,7 @@ impl Runtime {
         self.run_in_local_parsing_time_name_scope(|this| {
             let param_defs = this.parse_have_obj_param_defs_until_header_delimiter(
                 &mut dry_tb,
-                BindingScope::DeclaredObject,
+                BindingScope::DefinitionBinding,
             )?;
             if param_defs.is_empty() {
                 return Err(RuntimeError::from(ParseRuntimeError(
@@ -112,8 +112,8 @@ impl Runtime {
         &mut self,
         tb: &mut TokenBlock,
         binding_scope: BindingScope,
-    ) -> Result<Vec<ParamGroupWithParamType>, RuntimeError> {
-        let mut param_defs: Vec<ParamGroupWithParamType> = vec![];
+    ) -> Result<Vec<TypedParameterGroup>, RuntimeError> {
+        let mut param_defs: Vec<TypedParameterGroup> = vec![];
         loop {
             match tb.current() {
                 Ok(t) if t == EQUAL || t == COLON => break,
@@ -130,7 +130,7 @@ impl Runtime {
         tb.skip_token(HAVE)?;
         tb.skip_token(TUPLE)?;
         let name = parse_have_tuple_or_cart_name(tb)?;
-        let symbol_binding = self.allocate_declared_symbol_binding(name.clone())?;
+        let symbol_binding = self.allocate_definition_symbol_binding(name.clone())?;
         skip_have_indexed_definition_keyword(tb, "have tuple")?;
         let index_name = parse_have_tuple_or_cart_name(tb)?;
         tb.skip_token(LESS_EQUAL)?;
@@ -177,7 +177,7 @@ impl Runtime {
         tb.skip_token(HAVE)?;
         tb.skip_token(CART)?;
         let name = parse_have_tuple_or_cart_name(tb)?;
-        let symbol_binding = self.allocate_declared_symbol_binding(name.clone())?;
+        let symbol_binding = self.allocate_definition_symbol_binding(name.clone())?;
         skip_have_indexed_definition_keyword(tb, "have cart")?;
         let index_name = parse_have_tuple_or_cart_name(tb)?;
         tb.skip_token(LESS_EQUAL)?;
@@ -224,7 +224,7 @@ impl Runtime {
         tb.skip_token(HAVE)?;
         tb.skip_token(SEQ)?;
         let name = parse_have_tuple_or_cart_name(tb)?;
-        let symbol_binding = self.allocate_declared_symbol_binding(name.clone())?;
+        let symbol_binding = self.allocate_definition_symbol_binding(name.clone())?;
         let seq_set = match self.parse_obj(tb)? {
             Obj::SeqSet(seq_set) => seq_set,
             _ => {
@@ -283,7 +283,7 @@ impl Runtime {
         tb.skip_token(HAVE)?;
         tb.skip_token(FINITE_SEQ)?;
         let name = parse_have_tuple_or_cart_name(tb)?;
-        let symbol_binding = self.allocate_declared_symbol_binding(name.clone())?;
+        let symbol_binding = self.allocate_definition_symbol_binding(name.clone())?;
         let finite_seq_set = match self.parse_obj(tb)? {
             Obj::FiniteSeqSet(finite_seq_set) => finite_seq_set,
             _ => {
@@ -342,7 +342,7 @@ impl Runtime {
         tb.skip_token(HAVE)?;
         tb.skip_token(MATRIX)?;
         let name = parse_have_tuple_or_cart_name(tb)?;
-        let symbol_binding = self.allocate_declared_symbol_binding(name.clone())?;
+        let symbol_binding = self.allocate_definition_symbol_binding(name.clone())?;
         let matrix_set = match self.parse_obj(tb)? {
             Obj::MatrixSet(matrix_set) => matrix_set,
             _ => {

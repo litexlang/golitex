@@ -16,15 +16,15 @@ impl Environment {
     }
 
     fn merge_defined_names(&mut self, child: &Environment) -> Result<(), RuntimeError> {
-        for (name, definition) in child.declarations.symbols.iter() {
-            if let Some(existing) = self.declarations.symbols.get(name) {
+        for (name, definition) in child.definitions.symbols.iter() {
+            if let Some(existing) = self.definitions.symbols.get(name) {
                 if same_symbol_definition(existing, definition) {
                     let existing_symbol_id = existing.binding().id();
-                    self.declarations
+                    self.definitions
                         .symbols
                         .get_by_id_mut(existing_symbol_id)
                         .expect("the matching parent symbol should remain present")
-                        .merge_missing_declaration_type_views_from(definition);
+                        .merge_missing_definition_type_views_from(definition);
                     continue;
                 }
                 return Err(merge_name_conflict_error(
@@ -32,96 +32,104 @@ impl Environment {
                     existing.role().description(),
                 ));
             }
-            self.declarations
+            self.definitions
                 .symbols
                 .insert(definition.clone())
                 .expect("symbol was checked absent before merge");
         }
 
-        for (name, stmt) in child.declarations.defined_def_props.iter() {
-            if self.declarations.defined_def_props.contains_key(name) {
+        for (name, stmt) in child.definitions.predicate_definitions.iter() {
+            if self.definitions.predicate_definitions.contains_key(name) {
                 return Err(merge_name_conflict_error(name, "prop"));
             }
-            if self.declarations.defined_abstract_props.contains_key(name) {
+            if self
+                .definitions
+                .abstract_predicate_definitions
+                .contains_key(name)
+            {
                 return Err(merge_name_conflict_error(name, "abstract_prop"));
             }
-            self.declarations
-                .defined_def_props
+            self.definitions
+                .predicate_definitions
                 .insert(name.clone(), stmt.clone());
         }
 
-        for (name, stmt) in child.declarations.defined_abstract_props.iter() {
-            if self.declarations.defined_abstract_props.contains_key(name) {
+        for (name, stmt) in child.definitions.abstract_predicate_definitions.iter() {
+            if self
+                .definitions
+                .abstract_predicate_definitions
+                .contains_key(name)
+            {
                 return Err(merge_name_conflict_error(name, "abstract_prop"));
             }
-            if self.declarations.defined_def_props.contains_key(name) {
+            if self.definitions.predicate_definitions.contains_key(name) {
                 return Err(merge_name_conflict_error(name, "prop"));
             }
-            self.declarations
-                .defined_abstract_props
+            self.definitions
+                .abstract_predicate_definitions
                 .insert(name.clone(), stmt.clone());
         }
 
-        for (name, stmt) in child.declarations.defined_algorithms.iter() {
-            if self.declarations.defined_algorithms.contains_key(name) {
+        for (name, stmt) in child.definitions.algorithm_definitions.iter() {
+            if self.definitions.algorithm_definitions.contains_key(name) {
                 return Err(merge_name_conflict_error(name, "algo"));
             }
-            self.declarations
-                .defined_algorithms
+            self.definitions
+                .algorithm_definitions
                 .insert(name.clone(), stmt.clone());
         }
 
-        for (name, stmt) in child.declarations.defined_structs.iter() {
-            if self.declarations.defined_structs.contains_key(name) {
+        for (name, stmt) in child.definitions.structure_definitions.iter() {
+            if self.definitions.structure_definitions.contains_key(name) {
                 return Err(merge_name_conflict_error(name, "struct"));
             }
-            self.declarations
-                .defined_structs
+            self.definitions
+                .structure_definitions
                 .insert(name.clone(), stmt.clone());
         }
 
-        for (name, stmt) in child.declarations.defined_templates.iter() {
-            if self.declarations.defined_templates.contains_key(name) {
+        for (name, stmt) in child.definitions.template_definitions.iter() {
+            if self.definitions.template_definitions.contains_key(name) {
                 return Err(merge_name_conflict_error(name, "template"));
             }
-            self.declarations
-                .defined_templates
+            self.definitions
+                .template_definitions
                 .insert(name.clone(), stmt.clone());
         }
 
-        for (name, stmt) in child.declarations.defined_settings.iter() {
-            if self.declarations.defined_settings.contains_key(name) {
+        for (name, stmt) in child.definitions.setting_definitions.iter() {
+            if self.definitions.setting_definitions.contains_key(name) {
                 return Err(merge_name_conflict_error(name, "setting"));
             }
-            self.declarations
-                .defined_settings
+            self.definitions
+                .setting_definitions
                 .insert(name.clone(), stmt.clone());
         }
 
-        for (name, stmt) in child.declarations.defined_thm_stmts.iter() {
-            if self.declarations.defined_thm_stmts.contains_key(name) {
+        for (name, stmt) in child.definitions.theorem_definitions.iter() {
+            if self.definitions.theorem_definitions.contains_key(name) {
                 return Err(merge_name_conflict_error(name, "thm"));
             }
-            self.declarations
-                .defined_thm_stmts
+            self.definitions
+                .theorem_definitions
                 .insert(name.clone(), stmt.clone());
         }
 
-        for (name, stmt) in child.declarations.defined_axiom_stmts.iter() {
-            if self.declarations.defined_axiom_stmts.contains_key(name) {
+        for (name, stmt) in child.definitions.axiom_definitions.iter() {
+            if self.definitions.axiom_definitions.contains_key(name) {
                 return Err(merge_name_conflict_error(name, "axiom"));
             }
-            self.declarations
-                .defined_axiom_stmts
+            self.definitions
+                .axiom_definitions
                 .insert(name.clone(), stmt.clone());
         }
 
-        for (name, stmt) in child.declarations.defined_strategy_stmts.iter() {
-            if self.declarations.defined_strategy_stmts.contains_key(name) {
+        for (name, stmt) in child.definitions.strategy_definitions.iter() {
+            if self.definitions.strategy_definitions.contains_key(name) {
                 return Err(merge_name_conflict_error(name, "strategy"));
             }
-            self.declarations
-                .defined_strategy_stmts
+            self.definitions
+                .strategy_definitions
                 .insert(name.clone(), stmt.clone());
         }
 
@@ -227,14 +235,14 @@ impl Environment {
         child: Environment,
     ) -> Result<(), RuntimeError> {
         let Environment {
-            declarations: _,
+            definitions: _,
             facts,
             objects,
             predicate_properties,
             caches,
             strategies,
         } = child;
-        let EnvironmentFactDatabase {
+        let EnvironmentFactStore {
             known_equality: _,
             known_atomic_facts_with_0_or_more_than_2_args,
             known_atomic_facts_with_1_arg,
@@ -362,8 +370,8 @@ impl Environment {
     }
 
     fn validate_committed_child(&self, child: &Environment) -> Result<(), RuntimeError> {
-        for (name, child_definition) in child.declarations.symbols.iter() {
-            if let Some(existing) = self.declarations.symbols.get(name) {
+        for (name, child_definition) in child.definitions.symbols.iter() {
+            if let Some(existing) = self.definitions.symbols.get(name) {
                 if same_symbol_definition(existing, child_definition) {
                     continue;
                 }
@@ -374,54 +382,62 @@ impl Environment {
             }
         }
 
-        for name in child.declarations.defined_def_props.keys() {
-            if self.declarations.defined_def_props.contains_key(name) {
+        for name in child.definitions.predicate_definitions.keys() {
+            if self.definitions.predicate_definitions.contains_key(name) {
                 return Err(merge_name_conflict_error(name, "prop"));
             }
-            if self.declarations.defined_abstract_props.contains_key(name) {
+            if self
+                .definitions
+                .abstract_predicate_definitions
+                .contains_key(name)
+            {
                 return Err(merge_name_conflict_error(name, "abstract_prop"));
             }
         }
-        for name in child.declarations.defined_abstract_props.keys() {
-            if self.declarations.defined_abstract_props.contains_key(name) {
+        for name in child.definitions.abstract_predicate_definitions.keys() {
+            if self
+                .definitions
+                .abstract_predicate_definitions
+                .contains_key(name)
+            {
                 return Err(merge_name_conflict_error(name, "abstract_prop"));
             }
-            if self.declarations.defined_def_props.contains_key(name) {
+            if self.definitions.predicate_definitions.contains_key(name) {
                 return Err(merge_name_conflict_error(name, "prop"));
             }
         }
-        for name in child.declarations.defined_algorithms.keys() {
-            if self.declarations.defined_algorithms.contains_key(name) {
+        for name in child.definitions.algorithm_definitions.keys() {
+            if self.definitions.algorithm_definitions.contains_key(name) {
                 return Err(merge_name_conflict_error(name, "algo"));
             }
         }
-        for name in child.declarations.defined_structs.keys() {
-            if self.declarations.defined_structs.contains_key(name) {
+        for name in child.definitions.structure_definitions.keys() {
+            if self.definitions.structure_definitions.contains_key(name) {
                 return Err(merge_name_conflict_error(name, "struct"));
             }
         }
-        for name in child.declarations.defined_templates.keys() {
-            if self.declarations.defined_templates.contains_key(name) {
+        for name in child.definitions.template_definitions.keys() {
+            if self.definitions.template_definitions.contains_key(name) {
                 return Err(merge_name_conflict_error(name, "template"));
             }
         }
-        for name in child.declarations.defined_settings.keys() {
-            if self.declarations.defined_settings.contains_key(name) {
+        for name in child.definitions.setting_definitions.keys() {
+            if self.definitions.setting_definitions.contains_key(name) {
                 return Err(merge_name_conflict_error(name, "setting"));
             }
         }
-        for name in child.declarations.defined_thm_stmts.keys() {
-            if self.declarations.defined_thm_stmts.contains_key(name) {
+        for name in child.definitions.theorem_definitions.keys() {
+            if self.definitions.theorem_definitions.contains_key(name) {
                 return Err(merge_name_conflict_error(name, "thm"));
             }
         }
-        for name in child.declarations.defined_axiom_stmts.keys() {
-            if self.declarations.defined_axiom_stmts.contains_key(name) {
+        for name in child.definitions.axiom_definitions.keys() {
+            if self.definitions.axiom_definitions.contains_key(name) {
                 return Err(merge_name_conflict_error(name, "axiom"));
             }
         }
-        for name in child.declarations.defined_strategy_stmts.keys() {
-            if self.declarations.defined_strategy_stmts.contains_key(name) {
+        for name in child.definitions.strategy_definitions.keys() {
+            if self.definitions.strategy_definitions.contains_key(name) {
                 return Err(merge_name_conflict_error(name, "strategy"));
             }
         }

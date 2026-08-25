@@ -123,15 +123,15 @@ impl Runtime {
         if let Some(body) = self.get_cloned_object_in_fn_set(obj) {
             return vec![body];
         }
-        self.declaration_owned_one_field_callable_body(obj)
+        self.definition_owned_one_field_callable_body(obj)
             .into_iter()
             .collect()
     }
 
     /// A one-field struct is an identity view of its sole carrier.  For WD,
-    /// recover a callable carrier directly from the bound symbol's declared
+    /// recover a callable carrier directly from the bound symbol's definition
     /// struct view without storing membership, tuple bridges, or struct laws.
-    fn declaration_owned_one_field_callable_body(&self, obj: &Obj) -> Option<FnSetBody> {
+    fn definition_owned_one_field_callable_body(&self, obj: &Obj) -> Option<FnSetBody> {
         let struct_obj = self.known_struct_carrier_for_obj(obj)?;
         let def = self.get_struct_definition_by_name(&struct_obj.name.to_string())?;
         if def.fields.len() != 1 {
@@ -362,8 +362,8 @@ impl Runtime {
             return Ok(None);
         };
 
-        let param_defs = &fn_set_body.params_def_with_set;
-        let n_params = ParamGroupWithSet::number_of_params(param_defs);
+        let param_defs = &fn_set_body.set_bound_parameters;
+        let n_params = SetBoundParameterGroup::number_of_params(param_defs);
         if n_params == 0 {
             return Ok(None);
         }
@@ -373,11 +373,11 @@ impl Runtime {
             return Ok(None);
         };
         let param_to_arg_map =
-            ParamGroupWithSet::param_defs_and_args_to_param_to_arg_map(param_defs, &args);
+            SetBoundParameterGroup::param_defs_and_args_to_param_to_arg_map(param_defs, &args);
 
         if !verify_state.well_definedness_verified {
             let param_membership_facts =
-                ParamGroupWithSet::facts_for_args_satisfy_param_def_with_set_vec(
+                SetBoundParameterGroup::facts_for_args_satisfy_param_def_with_set_vec(
                     self,
                     param_defs,
                     &args,
@@ -417,7 +417,7 @@ impl Runtime {
     }
 
     /// Follow a short chain of checked `have fn` definitions until its value is
-    /// a set builder. This is intentionally bounded: it exposes a declared
+    /// a set builder. This is intentionally bounded: it exposes a defined
     /// carrier through set-valued function families without turning definition
     /// unfolding into unbounded proof search.
     pub fn unfold_known_fn_application_to_set_builder(
@@ -464,8 +464,8 @@ impl Runtime {
         let FnObjHead::AnonymousFnLiteral(anonymous_fn) = fn_obj.head.as_ref() else {
             return Ok(None);
         };
-        let param_defs = &anonymous_fn.body.params_def_with_set;
-        let n_params = ParamGroupWithSet::number_of_params(param_defs);
+        let param_defs = &anonymous_fn.body.set_bound_parameters;
+        let n_params = SetBoundParameterGroup::number_of_params(param_defs);
         if n_params == 0 {
             return Ok(None);
         }
@@ -475,7 +475,7 @@ impl Runtime {
             return Ok(None);
         };
         let param_to_arg_map =
-            ParamGroupWithSet::param_defs_and_args_to_param_to_arg_map(param_defs, &args);
+            SetBoundParameterGroup::param_defs_and_args_to_param_to_arg_map(param_defs, &args);
         let reduced = self.inst_obj(
             anonymous_fn.equal_to.as_ref(),
             &param_to_arg_map,
@@ -757,7 +757,7 @@ impl Runtime {
             .find_map(|env| env.facts.stored_facts.lookup(key))
     }
 
-    pub fn stored_fact(&self, fact_id: FactId) -> Option<&EnvironmentStoredFact> {
+    pub fn stored_fact(&self, fact_id: FactId) -> Option<&StoredFactRecord> {
         self.iter_environments_from_top()
             .find_map(|environment| environment.facts.stored_facts.stored_fact(fact_id))
             .map(Rc::as_ref)
@@ -1520,7 +1520,7 @@ fn collect_module_names_from_fn_obj_head(head: &FnObjHead, module_names: &mut Ve
 }
 
 fn collect_module_names_from_fn_set_body(body: &FnSetBody, module_names: &mut Vec<String>) {
-    for group in body.params_def_with_set.iter() {
+    for group in body.set_bound_parameters.iter() {
         collect_module_names_from_obj(group.set_obj(), module_names);
     }
     for fact in body.dom_facts.iter() {

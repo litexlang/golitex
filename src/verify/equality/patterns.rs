@@ -195,7 +195,7 @@ pub fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
         }
         Obj::Atom(AtomObj::IdentifierWithMod(_)) => false,
         Obj::AnonymousFn(anon) => {
-            for g in anon.body.params_def_with_set.iter() {
+            for g in anon.body.set_bound_parameters.iter() {
                 let mentions = obj_expr_mentions_bare_id(g.set_obj(), id);
                 if mentions {
                     return true;

@@ -594,7 +594,7 @@ impl fmt::Debug for SuccessVerifyByDefinitionResult {
 }
 
 #[derive(Clone, Debug)]
-pub struct ObjectIntroductionItem {
+pub struct ObjectDefinitionItem {
     pub name: String,
     pub facts: Vec<Fact>,
 }

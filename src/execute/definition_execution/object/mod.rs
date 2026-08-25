@@ -1,14 +1,13 @@
+mod definition_support;
+mod existential_elimination;
 mod function_cases;
 mod function_equality;
 pub mod function_equality_support;
 mod function_induction;
 mod function_unique_existence;
-mod introduction_support;
 mod let_binding;
 mod object_equality;
 mod object_membership;
-mod obtain;
 mod preimage;
 mod sequence_and_matrix;
 mod tuple_and_cartesian;
-mod witness;

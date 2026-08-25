@@ -3,14 +3,14 @@ use crate::prelude::*;
 impl Runtime {
     pub fn define_params_with_set(
         &mut self,
-        param_def: &ParamGroupWithSet,
+        param_def: &SetBoundParameterGroup,
     ) -> Result<SuccessInferResult, RuntimeError> {
         self.define_params_with_set_in_scope(param_def, BindingScope::LocalBinder)
     }
 
     pub fn define_params_with_set_in_scope(
         &mut self,
-        param_def: &ParamGroupWithSet,
+        param_def: &SetBoundParameterGroup,
         binding_scope: BindingScope,
     ) -> Result<SuccessInferResult, RuntimeError> {
         if self.current_execution_is_trusted_file() {
@@ -42,7 +42,7 @@ impl Runtime {
                     RuntimeError::from(DefineParamsRuntimeError(
                         RuntimeErrorStruct::new_with_msg_and_cause(
                             format!(
-                                "define params with set: failed to declare parameter `{}`",
+                                "define params with set: failed to bind parameter `{}`",
                                 name
                             ),
                             runtime_error,
@@ -76,7 +76,7 @@ impl Runtime {
 
     fn define_params_with_set_in_scope_trusted(
         &mut self,
-        param_def: &ParamGroupWithSet,
+        param_def: &SetBoundParameterGroup,
         binding_scope: BindingScope,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let mut infer_result = SuccessInferResult::new();
@@ -88,7 +88,7 @@ impl Runtime {
                     RuntimeError::from(DefineParamsRuntimeError(
                         RuntimeErrorStruct::new_with_msg_and_cause(
                             format!(
-                                "define params with set: failed to declare parameter `{}`",
+                                "define params with set: failed to bind parameter `{}`",
                                 name
                             ),
                             runtime_error,

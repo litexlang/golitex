@@ -401,9 +401,9 @@ impl SuccessInstantiateKnownForallResult {
     }
 }
 
-impl ObjectIntroductionItem {
+impl ObjectDefinitionItem {
     pub fn new(name: String, facts: Vec<Fact>) -> Self {
-        ObjectIntroductionItem { name, facts }
+        ObjectDefinitionItem { name, facts }
     }
 }
 

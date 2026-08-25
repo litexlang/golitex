@@ -108,7 +108,7 @@ fn fn_set_has_exact_standard_signature(
     }
 
     let mut param_index = 0;
-    for group in fn_set.body.params_def_with_set.iter() {
+    for group in fn_set.body.set_bound_parameters.iter() {
         for _ in group.params.iter() {
             let Some(expected_set) = param_sets.get(param_index) else {
                 return false;

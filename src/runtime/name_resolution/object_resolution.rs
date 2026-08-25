@@ -285,10 +285,10 @@ impl Runtime {
                                 args.push((**arg).clone());
                             }
                         }
-                        let param_defs = &anonymous_fn.body.params_def_with_set;
-                        if args.len() == ParamGroupWithSet::number_of_params(param_defs) {
+                        let param_defs = &anonymous_fn.body.set_bound_parameters;
+                        if args.len() == SetBoundParameterGroup::number_of_params(param_defs) {
                             let param_to_arg_map =
-                                ParamGroupWithSet::param_defs_and_args_to_param_to_arg_map(
+                                SetBoundParameterGroup::param_defs_and_args_to_param_to_arg_map(
                                     param_defs, &args,
                                 );
                             if let Ok(reduced) = self.inst_obj(

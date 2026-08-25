@@ -600,7 +600,7 @@ impl Runtime {
         Ok(())
     }
 
-    /// Mathematical contract: instantiate a callable's declared return carrier
+    /// Mathematical contract: instantiate a callable's defined return carrier
     /// through every supplied argument group; intermediate carriers must remain
     /// function-like for a curried application to continue.
     pub fn fn_obj_return_set_after_application(

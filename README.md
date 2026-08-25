@@ -192,6 +192,8 @@ Useful next steps:
   full design argument and comparisons;
 - [System map](docs/Litex_System_Map.md) — how parsing, verification, evidence,
   and output fit together;
+- [Developer terminology](docs/Developer_Terminology.md) — canonical names for
+  definitions, bindings, logical introduction, and storage ownership;
 - [Repository layout](docs/Repository_Layout.md) — source, test, Lean,
   translation-workspace, and Git ownership boundaries; and
 - [Contributing](docs/How_To_Contribute.md) — how to report gaps and contribute.
@@ -199,7 +201,7 @@ Useful next steps:
 ## What a successful result means
 
 A successful run means that the current Litex parser, runtime, verifier,
-accepted rules, imported libraries, and declared context accepted the
+accepted rules, imported libraries, and current mathematical context accepted the
 statement. It does **not** mean that the implementation is bug-free or has the
 audit history of a mature proof assistant.
 

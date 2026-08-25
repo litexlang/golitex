@@ -663,7 +663,7 @@ impl Runtime {
         )
         .into();
         let exist_body = ExistentialSpec::new(
-            ParamDefWithType::new(vec![member_group]),
+            TypedParameterList::new(vec![member_group]),
             vec![element_in_member.into()],
             in_fact.line_file.clone(),
         )?;
@@ -704,7 +704,7 @@ impl Runtime {
         let element_in_fiber: AtomicFact =
             InFact::new(in_fact.element.clone(), fiber, in_fact.line_file.clone()).into();
         Ok(Some(ExistFactEnum::ExistFact(ExistentialSpec::new(
-            ParamDefWithType::new(vec![index_group]),
+            TypedParameterList::new(vec![index_group]),
             vec![element_in_fiber.into()],
             in_fact.line_file.clone(),
         )?)))
@@ -826,7 +826,7 @@ impl Runtime {
         let element_in_fiber: AtomicFact =
             InFact::new(in_fact.element.clone(), fiber, in_fact.line_file.clone()).into();
         Ok(Some(ForallFact::new_canonical_forall(
-            ParamDefWithType::new(vec![index_group]),
+            TypedParameterList::new(vec![index_group]),
             vec![],
             vec![element_in_fiber.into()],
             in_fact.line_file.clone(),
@@ -1000,7 +1000,7 @@ impl Runtime {
         )
         .into();
         let exist_body = ExistentialSpec::new(
-            ParamDefWithType::new(vec![preimage_group]),
+            TypedParameterList::new(vec![preimage_group]),
             vec![relation_fact.into()],
             in_fact.line_file.clone(),
         )?;
@@ -1154,7 +1154,7 @@ impl Runtime {
             return Ok((UnknownGenericStmtResult::new()).into());
         };
         if fn_obj.body.len() != 1
-            || fn_obj.body[0].len() != body.params_def_with_set.number_of_params()
+            || fn_obj.body[0].len() != body.set_bound_parameters.number_of_params()
         {
             return Ok((UnknownGenericStmtResult::new()).into());
         }

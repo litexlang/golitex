@@ -379,10 +379,7 @@ impl DefinitionGraphBuilder {
     }
 
     fn add_identifiers(&mut self, environment: &Environment) {
-        let mut identifiers = environment
-            .declarations
-            .object_symbols()
-            .collect::<Vec<_>>();
+        let mut identifiers = environment.definitions.object_symbols().collect::<Vec<_>>();
         identifiers.sort_by(|left, right| left.0.cmp(right.0));
         for (name, definition) in identifiers {
             self.ensure_node(
@@ -403,8 +400,8 @@ impl DefinitionGraphBuilder {
 
     fn add_props(&mut self, environment: &Environment) {
         let mut abstract_props = environment
-            .declarations
-            .defined_abstract_props
+            .definitions
+            .abstract_predicate_definitions
             .iter()
             .collect::<Vec<_>>();
         abstract_props.sort_by(|left, right| left.0.cmp(right.0));
@@ -421,8 +418,8 @@ impl DefinitionGraphBuilder {
         }
 
         let mut props = environment
-            .declarations
-            .defined_def_props
+            .definitions
+            .predicate_definitions
             .iter()
             .collect::<Vec<_>>();
         props.sort_by(|left, right| left.0.cmp(right.0));
@@ -438,11 +435,11 @@ impl DefinitionGraphBuilder {
                 Some(&definition.to_string()),
             );
             let mut signature = DepCollector::new();
-            signature.collect_param_def_with_type_deps(&definition.params_def_with_type);
+            signature.collect_param_def_with_type_deps(&definition.typed_parameters);
             self.add_dependency_edges(&node_id, signature, "signature");
 
             let mut definition_body = DepCollector::new();
-            definition_body.add_param_def_with_type(&definition.params_def_with_type);
+            definition_body.add_param_def_with_type(&definition.typed_parameters);
             for fact in &definition.iff_facts {
                 definition_body.collect_fact(fact);
             }
@@ -486,11 +483,11 @@ impl DefinitionGraphBuilder {
             let mut well_definedness = DepCollector::new();
             well_definedness.add_local_name(name.as_str());
             if let Some((fn_set, _)) = definition.fn_set.as_ref() {
-                signature.collect_param_def_with_set_deps(&fn_set.params_def_with_set);
-                signature.add_param_def_with_set(&fn_set.params_def_with_set);
+                signature.collect_param_def_with_set_deps(&fn_set.set_bound_parameters);
+                signature.add_param_def_with_set(&fn_set.set_bound_parameters);
                 signature.collect_obj(&fn_set.ret_set);
 
-                well_definedness.add_param_def_with_set(&fn_set.params_def_with_set);
+                well_definedness.add_param_def_with_set(&fn_set.set_bound_parameters);
                 for fact in fn_set.dom_facts.iter() {
                     well_definedness.collect_quantifier_free_fact(fact);
                 }
@@ -509,8 +506,8 @@ impl DefinitionGraphBuilder {
 
     fn add_algorithms(&mut self, environment: &Environment) {
         let mut algorithms = environment
-            .declarations
-            .defined_algorithms
+            .definitions
+            .algorithm_definitions
             .iter()
             .collect::<Vec<_>>();
         algorithms.sort_by(|left, right| left.0.cmp(right.0));
@@ -542,8 +539,8 @@ impl DefinitionGraphBuilder {
 
     fn add_structs(&mut self, environment: &Environment) {
         let mut structs = environment
-            .declarations
-            .defined_structs
+            .definitions
+            .structure_definitions
             .iter()
             .collect::<Vec<_>>();
         structs.sort_by(|left, right| left.0.cmp(right.0));
@@ -587,8 +584,8 @@ impl DefinitionGraphBuilder {
 
     fn add_templates(&mut self, environment: &Environment) {
         let mut templates = environment
-            .declarations
-            .defined_templates
+            .definitions
+            .template_definitions
             .iter()
             .collect::<Vec<_>>();
         templates.sort_by(|left, right| left.0.cmp(right.0));
@@ -626,8 +623,8 @@ impl DefinitionGraphBuilder {
 
     fn add_theorems(&mut self, environment: &Environment) {
         let mut theorems = environment
-            .declarations
-            .defined_thm_stmts
+            .definitions
+            .theorem_definitions
             .iter()
             .collect::<Vec<_>>();
         theorems.sort_by(|left, right| left.0.cmp(right.0));
@@ -643,16 +640,15 @@ impl DefinitionGraphBuilder {
                 Some(&definition.to_string()),
             );
             let mut signature = DepCollector::new();
-            signature
-                .collect_param_def_with_type_deps(&definition.forall_fact.params_def_with_type);
-            signature.add_param_def_with_type(&definition.forall_fact.params_def_with_type);
+            signature.collect_param_def_with_type_deps(&definition.forall_fact.typed_parameters);
+            signature.add_param_def_with_type(&definition.forall_fact.typed_parameters);
             for fact in definition.forall_fact.then_facts.iter() {
                 signature.collect_exist_or_and_chain_atomic_fact(fact);
             }
             self.add_dependency_edges(&node_id, signature, "signature");
 
             let mut well_definedness = DepCollector::new();
-            well_definedness.add_param_def_with_type(&definition.forall_fact.params_def_with_type);
+            well_definedness.add_param_def_with_type(&definition.forall_fact.typed_parameters);
             for fact in definition.forall_fact.dom_facts.iter() {
                 well_definedness.collect_fact(fact);
             }
@@ -660,8 +656,8 @@ impl DefinitionGraphBuilder {
         }
 
         let mut axioms = environment
-            .declarations
-            .defined_axiom_stmts
+            .definitions
+            .axiom_definitions
             .iter()
             .collect::<Vec<_>>();
         axioms.sort_by(|left, right| left.0.cmp(right.0));
@@ -677,16 +673,15 @@ impl DefinitionGraphBuilder {
                 Some(&definition.to_string()),
             );
             let mut signature = DepCollector::new();
-            signature
-                .collect_param_def_with_type_deps(&definition.forall_fact.params_def_with_type);
-            signature.add_param_def_with_type(&definition.forall_fact.params_def_with_type);
+            signature.collect_param_def_with_type_deps(&definition.forall_fact.typed_parameters);
+            signature.add_param_def_with_type(&definition.forall_fact.typed_parameters);
             for fact in definition.forall_fact.then_facts.iter() {
                 signature.collect_exist_or_and_chain_atomic_fact(fact);
             }
             self.add_dependency_edges(&node_id, signature, "signature");
 
             let mut well_definedness = DepCollector::new();
-            well_definedness.add_param_def_with_type(&definition.forall_fact.params_def_with_type);
+            well_definedness.add_param_def_with_type(&definition.forall_fact.typed_parameters);
             for fact in definition.forall_fact.dom_facts.iter() {
                 well_definedness.collect_fact(fact);
             }
@@ -696,8 +691,8 @@ impl DefinitionGraphBuilder {
 
     fn add_strategies(&mut self, environment: &Environment) {
         let mut strategies = environment
-            .declarations
-            .defined_strategy_stmts
+            .definitions
+            .strategy_definitions
             .iter()
             .collect::<Vec<_>>();
         strategies.sort_by(|left, right| left.0.cmp(right.0));
@@ -713,16 +708,15 @@ impl DefinitionGraphBuilder {
                 Some(&definition.to_string()),
             );
             let mut signature = DepCollector::new();
-            signature
-                .collect_param_def_with_type_deps(&definition.forall_fact.params_def_with_type);
-            signature.add_param_def_with_type(&definition.forall_fact.params_def_with_type);
+            signature.collect_param_def_with_type_deps(&definition.forall_fact.typed_parameters);
+            signature.add_param_def_with_type(&definition.forall_fact.typed_parameters);
             for fact in definition.forall_fact.then_facts.iter() {
                 signature.collect_exist_or_and_chain_atomic_fact(fact);
             }
             self.add_dependency_edges(&node_id, signature, "signature");
 
             let mut well_definedness = DepCollector::new();
-            well_definedness.add_param_def_with_type(&definition.forall_fact.params_def_with_type);
+            well_definedness.add_param_def_with_type(&definition.forall_fact.typed_parameters);
             for fact in definition.forall_fact.dom_facts.iter() {
                 well_definedness.collect_fact(fact);
             }
@@ -850,7 +844,7 @@ impl DefinitionGraphBuilder {
         };
         let source_stmt = success.statement();
         match &source_stmt {
-            Stmt::DefThmStmt(statement) => {
+            Stmt::Definition(DefinitionStmt::DefThmStmt(statement)) => {
                 let previous_canonical_name = self.active_canonical_name.clone();
                 self.active_canonical_name = self
                     .canonical_name_by_source
@@ -870,7 +864,7 @@ impl DefinitionGraphBuilder {
                 }
                 self.active_canonical_name = previous_canonical_name;
             }
-            Stmt::DefObjStmt(DefObjStmt::HaveFnByForallExistUniqueStmt(statement)) => {
+            Stmt::Definition(DefinitionStmt::HaveFnByForallExistUniqueStmt(statement)) => {
                 self.add_selection_certificate(statement, success);
             }
             Stmt::UnsafeStmt(UnsafeStmt::TrustHaveStmt(statement)) => {
@@ -925,15 +919,15 @@ impl DefinitionGraphBuilder {
             .get(statement.line_file.1.as_ref())
             .cloned();
         let mut signature = DepCollector::new();
-        signature.collect_param_def_with_type_deps(&statement.forall.params_def_with_type);
-        signature.add_param_def_with_type(&statement.forall.params_def_with_type);
+        signature.collect_param_def_with_type_deps(&statement.forall.typed_parameters);
+        signature.add_param_def_with_type(&statement.forall.typed_parameters);
         for fact in statement.forall.then_facts.iter() {
             signature.collect_exist_or_and_chain_atomic_fact(fact);
         }
         self.add_dependency_edges(&certificate_id, signature, "signature");
 
         let mut well_definedness = DepCollector::new();
-        well_definedness.add_param_def_with_type(&statement.forall.params_def_with_type);
+        well_definedness.add_param_def_with_type(&statement.forall.typed_parameters);
         for fact in statement.forall.dom_facts.iter() {
             well_definedness.collect_fact(fact);
         }
@@ -1018,7 +1012,7 @@ impl DefinitionGraphBuilder {
                     &statement.line_file,
                 ));
             }
-            Stmt::AxiomStmt(statement) => {
+            Stmt::Definition(DefinitionStmt::AxiomStmt(statement)) => {
                 let name = self.normalized_dependency_name(&statement.name);
                 let source_id = definition_id("theorem", name.as_str());
                 self.ensure_node(
@@ -1107,7 +1101,7 @@ impl DefinitionGraphBuilder {
 
     fn collect_cited_stmt_source_ids(&mut self, statement: &Stmt, source_ids: &mut Vec<String>) {
         match statement {
-            Stmt::DefThmStmt(statement) => {
+            Stmt::Definition(DefinitionStmt::DefThmStmt(statement)) => {
                 let name = self.normalized_dependency_name(&statement.name);
                 let source_id = definition_id("theorem", name.as_str());
                 self.ensure_node(
@@ -1121,7 +1115,7 @@ impl DefinitionGraphBuilder {
                 );
                 source_ids.push(source_id);
             }
-            Stmt::AxiomStmt(statement) => {
+            Stmt::Definition(DefinitionStmt::AxiomStmt(statement)) => {
                 let name = self.normalized_dependency_name(&statement.name);
                 let source_id = definition_id("theorem", name.as_str());
                 self.ensure_node(
@@ -1135,7 +1129,7 @@ impl DefinitionGraphBuilder {
                 );
                 source_ids.push(source_id);
             }
-            Stmt::DefPredicateStmt(DefPredicateStmt::DefPropStmt(statement)) => {
+            Stmt::Definition(DefinitionStmt::DefPropStmt(statement)) => {
                 let name = self.normalized_dependency_name(&statement.name);
                 let source_id = definition_id("prop", &name);
                 self.ensure_node(
@@ -1149,7 +1143,7 @@ impl DefinitionGraphBuilder {
                 );
                 source_ids.push(source_id);
             }
-            Stmt::DefPredicateStmt(DefPredicateStmt::DefAbstractPropStmt(statement)) => {
+            Stmt::Definition(DefinitionStmt::DefAbstractPropStmt(statement)) => {
                 let name = self.normalized_dependency_name(&statement.name);
                 let source_id = definition_id("prop", &name);
                 self.ensure_node(

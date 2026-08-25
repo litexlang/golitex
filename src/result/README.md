@@ -37,7 +37,7 @@ to `AtomicFact`, not to a statement execution result.
 | Successful statements | [`statement/success.rs`](statement/success.rs) | Retains statement-specific fields and proof evidence. |
 | Result navigation | [`statement/traversal.rs`](statement/traversal.rs) | Traverses and consumes recursive statement-result children. |
 | Verification evidence | [`verification/success.rs`](verification/success.rs) | Defines citations, forall instantiations, cases, induction, and other checked proof routes. |
-| Evidence access | [`verification/success_access.rs`](verification/success_access.rs) | Constructs and inspects proof routes without mixing behavior into their declarations. |
+| Evidence access | [`verification/success_access.rs`](verification/success_access.rs) | Constructs and inspects proof routes without mixing behavior into their definitions. |
 | Builtin rules | [`verification/builtin_evidence.rs`](verification/builtin_evidence.rs) | Represents evidence such as `RationalNormalization` and `ComplexAlgebraicNormalization`. |
 | Well-definedness | [`well_definedness/proof.rs`](well_definedness/proof.rs) | Records why an expression such as `x / 2` is well-defined. |
 | Object evaluation | [`object_evaluation.rs`](object_evaluation.rs) | Records literal, unary, binary, and shape evaluation steps. |

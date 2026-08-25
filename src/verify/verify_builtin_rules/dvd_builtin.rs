@@ -36,7 +36,7 @@ impl Runtime {
         )
         .into();
         let multiple_witness: Fact = ExistFactEnum::ExistFact(ExistentialSpec::new(
-            ParamDefWithType::new(vec![witness_group]),
+            TypedParameterList::new(vec![witness_group]),
             vec![multiple_equality.into()],
             line_file,
         )?)

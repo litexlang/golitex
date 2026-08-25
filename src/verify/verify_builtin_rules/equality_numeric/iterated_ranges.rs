@@ -96,12 +96,12 @@ impl Runtime {
                 },
                 _ => return None,
             };
-            if af.body.params_def_with_set.number_of_params() != 1
-                || af.body.params_def_with_set.len() != 1
+            if af.body.set_bound_parameters.number_of_params() != 1
+                || af.body.set_bound_parameters.len() != 1
             {
                 return None;
             }
-            Some(af.body.params_def_with_set.as_slice()[0].set_obj().clone())
+            Some(af.body.set_bound_parameters.as_slice()[0].set_obj().clone())
         };
         let index_param_set = match (
             unary_param_set(left_sum.func.as_ref()),
@@ -141,7 +141,7 @@ impl Runtime {
             LessEqualFact::new(x_obj, (*left_sum.end).clone(), line_file.clone()).into();
 
         let pointwise_result = self.run_in_local_env(|rt| {
-            let params_def = ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+            let params_def = TypedParameterList::new(vec![TypedParameterGroup::new(
                 vec![x_binding],
                 ParamType::Obj(index_param_set),
             )]);
@@ -379,13 +379,13 @@ impl Runtime {
             }
             _ => return Ok(None),
         };
-        if ParamGroupWithSet::number_of_params(&af.body.params_def_with_set) != 1 {
+        if SetBoundParameterGroup::number_of_params(&af.body.set_bound_parameters) != 1 {
             return Ok(None);
         }
-        let param_defs = &af.body.params_def_with_set;
+        let param_defs = &af.body.set_bound_parameters;
         let args = vec![x.clone()];
         let param_to_arg_map =
-            ParamGroupWithSet::param_defs_and_args_to_param_to_arg_map(param_defs, &args);
+            SetBoundParameterGroup::param_defs_and_args_to_param_to_arg_map(param_defs, &args);
         Ok(Some(self.inst_obj(
             af.equal_to.as_ref(),
             &param_to_arg_map,
@@ -401,7 +401,7 @@ impl Runtime {
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<StmtResult, RuntimeError> {
         self.run_in_local_env(|rt| {
-            let params_def = ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+            let params_def = TypedParameterList::new(vec![TypedParameterGroup::new(
                 vec![param_binding],
                 ParamType::Obj(StandardSet::Z.into()),
             )]);
@@ -1123,10 +1123,10 @@ impl Runtime {
                 },
                 _ => continue,
             };
-            if ParamGroupWithSet::number_of_params(&af.body.params_def_with_set) != 1 {
+            if SetBoundParameterGroup::number_of_params(&af.body.set_bound_parameters) != 1 {
                 continue;
             }
-            let names = ParamGroupWithSet::collect_param_names(&af.body.params_def_with_set);
+            let names = SetBoundParameterGroup::collect_param_names(&af.body.set_bound_parameters);
             let pname = match names.first() {
                 Some(n) => n.as_str(),
                 None => continue,

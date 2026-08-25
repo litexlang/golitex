@@ -4,7 +4,7 @@ use std::collections::HashMap;
 /// Turn a [`FnSet`] (parser-level function-space type) into a [`FnSetClause`]-shaped bundle.
 pub fn fn_set_to_fn_set_clause(fs: &FnSet) -> FnSetClause {
     FnSetClause::new(
-        fs.body.params_def_with_set.clone(),
+        fs.body.set_bound_parameters.clone(),
         fs.body.dom_facts.clone(),
         (*fs.body.ret_set).clone(),
     )
@@ -16,15 +16,15 @@ pub fn fn_set_to_fn_set_clause(fs: &FnSet) -> FnSetClause {
 pub fn forall_binders_dom_and_curried_layers_from_fn_set_clause(
     runtime: &Runtime,
     clause: &FnSetClause,
-) -> Result<(ParamDefWithType, Vec<Fact>, Vec<Vec<SymbolBinding>>), RuntimeError> {
-    let mut type_groups: Vec<ParamGroupWithParamType> = Vec::new();
+) -> Result<(TypedParameterList, Vec<Fact>, Vec<Vec<SymbolBinding>>), RuntimeError> {
+    let mut type_groups: Vec<TypedParameterGroup> = Vec::new();
     let mut dom_facts: Vec<Fact> = Vec::new();
     let mut layers: Vec<Vec<SymbolBinding>> = Vec::new();
     let mut fn_set_param_to_forall_param: HashMap<String, Obj> = HashMap::new();
 
     let first_layer_names = append_fn_set_param_groups_as_forall_param_type_groups(
         runtime,
-        &clause.params_def_with_set,
+        &clause.set_bound_parameters,
         &mut fn_set_param_to_forall_param,
         &mut type_groups,
     )?;
@@ -46,7 +46,7 @@ pub fn forall_binders_dom_and_curried_layers_from_fn_set_clause(
     while let Obj::FnSet(inner) = ret_set {
         let layer_names = append_fn_set_param_groups_as_forall_param_type_groups(
             runtime,
-            &inner.body.params_def_with_set,
+            &inner.body.set_bound_parameters,
             &mut fn_set_param_to_forall_param,
             &mut type_groups,
         )?;
@@ -73,7 +73,7 @@ pub fn forall_binders_dom_and_curried_layers_from_fn_set_clause(
         )?;
     }
 
-    Ok((ParamDefWithType::new(type_groups), dom_facts, layers))
+    Ok((TypedParameterList::new(type_groups), dom_facts, layers))
 }
 
 pub fn build_curried_function_obj_from_layers_with_binding(
@@ -158,12 +158,12 @@ pub fn build_curried_fn_value_apply_for_fn_eq(
     None
 }
 
-pub fn build_declared_function_obj_with_param_bindings(
+pub fn build_defined_function_obj_with_parameter_bindings(
     function_identifier_obj: Obj,
     param_bindings: &[SymbolBinding],
 ) -> Obj {
     let function_head = FnObjHead::given_an_atom_return_a_fn_obj_head(function_identifier_obj)
-        .expect("declared function identifier should be an atom");
+        .expect("defined function identifier should be an atom");
     let params = param_bindings
         .iter()
         .map(|binding| Box::new(obj_for_bound_param_in_scope(binding)))
@@ -174,13 +174,13 @@ pub fn build_declared_function_obj_with_param_bindings(
 pub fn forall_param_defs_dom_and_map_from_have_fn_clause(
     runtime: &Runtime,
     clause: &FnSetClause,
-) -> Result<(ParamDefWithType, Vec<Fact>, HashMap<String, Obj>), RuntimeError> {
-    let mut groups: Vec<ParamGroupWithParamType> =
-        Vec::with_capacity(clause.params_def_with_set.len());
+) -> Result<(TypedParameterList, Vec<Fact>, HashMap<String, Obj>), RuntimeError> {
+    let mut groups: Vec<TypedParameterGroup> =
+        Vec::with_capacity(clause.set_bound_parameters.len());
     let mut fn_set_param_to_forall_param: HashMap<String, Obj> = HashMap::new();
     append_fn_set_param_groups_as_forall_param_type_groups(
         runtime,
-        &clause.params_def_with_set,
+        &clause.set_bound_parameters,
         &mut fn_set_param_to_forall_param,
         &mut groups,
     )?;
@@ -200,7 +200,7 @@ pub fn forall_param_defs_dom_and_map_from_have_fn_clause(
     }
 
     Ok((
-        ParamDefWithType::new(groups),
+        TypedParameterList::new(groups),
         dom_facts,
         fn_set_param_to_forall_param,
     ))
@@ -208,12 +208,12 @@ pub fn forall_param_defs_dom_and_map_from_have_fn_clause(
 
 fn append_fn_set_param_groups_as_forall_param_type_groups(
     runtime: &Runtime,
-    params_def_with_set: &ParamDefWithSet,
+    set_bound_parameters: &SetBoundParameterList,
     fn_set_param_to_forall_param: &mut HashMap<String, Obj>,
-    groups: &mut Vec<ParamGroupWithParamType>,
+    groups: &mut Vec<TypedParameterGroup>,
 ) -> Result<Vec<SymbolBinding>, RuntimeError> {
     let mut forall_names = Vec::new();
-    for param_def_with_set in params_def_with_set.iter() {
+    for param_def_with_set in set_bound_parameters.iter() {
         let param_set = runtime.inst_obj(
             param_def_with_set.set_obj(),
             fn_set_param_to_forall_param,
@@ -221,7 +221,7 @@ fn append_fn_set_param_groups_as_forall_param_type_groups(
         )?;
         let (group_forall_names, group_map) =
             runtime.fresh_binder_retag_plan_for_bindings(&param_def_with_set.params);
-        groups.push(ParamGroupWithParamType::new(
+        groups.push(TypedParameterGroup::new(
             group_forall_names.clone(),
             ParamType::Obj(param_set),
         ));
@@ -327,9 +327,9 @@ fn flatten_and_chain_to_atomic_facts(fact: &AndChainAtomicFact) -> Vec<AtomicFac
 }
 
 impl Runtime {
-    // Parser and executor must use the same object form for declarations in a
+    // Parser and executor must use the same object form for definitions in a
     // named module. Example: `have fn f ...` in `m` stores facts about `m::f`.
-    pub fn declared_identifier_obj(&self, name: &str) -> Obj {
+    pub fn definition_identifier_obj(&self, name: &str) -> Obj {
         let symbol = self
             .visible_symbol_definition(name)
             .map(|definition| definition.binding().as_ref());

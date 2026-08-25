@@ -15,19 +15,19 @@ pub enum ExistFactEnum {
 
 #[derive(Clone)]
 pub struct ExistentialSpec {
-    pub params_def_with_type: ParamDefWithType,
+    pub typed_parameters: TypedParameterList,
     pub facts: Vec<QuantifierFreeFact>,
     pub line_file: LineFile,
 }
 
 impl ExistentialSpec {
     pub fn new(
-        params_def_with_type: ParamDefWithType,
+        typed_parameters: TypedParameterList,
         facts: Vec<QuantifierFreeFact>,
         line_file: LineFile,
     ) -> Result<Self, RuntimeError> {
         let spec = ExistentialSpec {
-            params_def_with_type,
+            typed_parameters,
             facts,
             line_file,
         };
@@ -38,12 +38,12 @@ impl ExistentialSpec {
     }
 
     pub fn exist_fact_string_without_exist_as_prefix(&self) -> String {
-        exist_fact_string_without_exist_as_prefix(&self.params_def_with_type, &self.facts)
+        exist_fact_string_without_exist_as_prefix(&self.typed_parameters, &self.facts)
     }
 
     pub fn get_args_from_fact(&self) -> Vec<Obj> {
         let mut args: Vec<Obj> = Vec::new();
-        for param_def_with_type in self.params_def_with_type.groups.iter() {
+        for param_def_with_type in self.typed_parameters.groups.iter() {
             if let ParamType::Obj(obj) = &param_def_with_type.param_type {
                 args.push(obj.clone());
             }
@@ -60,7 +60,7 @@ impl ExistentialSpec {
 
     pub fn get_args_from_fact_ref(&self) -> Vec<&Obj> {
         let mut args: Vec<&Obj> = Vec::new();
-        for param_def_with_type in self.params_def_with_type.groups.iter() {
+        for param_def_with_type in self.typed_parameters.groups.iter() {
             if let ParamType::Obj(obj) = &param_def_with_type.param_type {
                 args.push(obj);
             }
@@ -155,7 +155,7 @@ impl ExistFactEnum {
         format!(
             "#exist-alpha-bucket:{}:{}:{}",
             self.keyword_prefix(),
-            b.params_def_with_type.number_of_params(),
+            b.typed_parameters.number_of_params(),
             fact_shape
         )
     }
@@ -164,8 +164,8 @@ impl ExistFactEnum {
         self.spec().line_file.clone()
     }
 
-    pub fn params_def_with_type(&self) -> &ParamDefWithType {
-        &self.spec().params_def_with_type
+    pub fn typed_parameters(&self) -> &TypedParameterList {
+        &self.spec().typed_parameters
     }
 
     pub fn facts(&self) -> &Vec<QuantifierFreeFact> {
@@ -182,7 +182,7 @@ impl ExistFactEnum {
 }
 
 fn exist_fact_string_without_exist_as_prefix(
-    param_defs: &ParamDefWithType,
+    param_defs: &TypedParameterList,
     facts: &Vec<QuantifierFreeFact>,
 ) -> String {
     format!(

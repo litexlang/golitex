@@ -11,19 +11,21 @@ impl Runtime {
         let infer_result = self.exec_have_obj_equal_stmt_affect_environment(have_obj_equal_stmt)?;
 
         Ok(
-            SuccessDefObjStmtResult::HaveObjEqualStmt(Box::new(SuccessHaveObjEqualStmtResult {
-                statement: have_obj_equal_stmt.clone(),
-                common: SuccessStmtCommonResult::new(infer_result),
-                verification: Some(SuccessVerifyHaveObjEqualResult {
-                    type_checks: check_results,
-                }),
-            }))
+            SuccessDefinitionStmtResult::HaveObjEqualStmt(Box::new(
+                SuccessHaveObjEqualStmtResult {
+                    statement: have_obj_equal_stmt.clone(),
+                    common: SuccessStmtCommonResult::new(infer_result),
+                    verification: Some(SuccessVerifyHaveObjEqualResult {
+                        type_checks: check_results,
+                    }),
+                },
+            ))
             .into(),
         )
     }
 
-    /// Mathematical contract: an equality-backed object introduction has one
-    /// defining value per declared parameter and meaningful dependent
+    /// Mathematical contract: an equality-backed object definition has one
+    /// defining value per defined parameter and meaningful dependent
     /// parameter types; value/type compatibility is proved immediately after
     /// this scope-construction check.
     fn exec_have_obj_equal_stmt_verify_well_definedness(
@@ -46,7 +48,7 @@ impl Runtime {
             rt.define_params_with_type(
                 &have_obj_equal_stmt.param_def,
                 false,
-                BindingScope::DeclaredObject,
+                BindingScope::DefinitionBinding,
             )
             .map_err(|define_params_error| {
                 short_exec_error(
@@ -101,7 +103,7 @@ impl Runtime {
                         )
                     })?;
                 let mut known_source_sets = Vec::new();
-                // A `have x T = y` declaration may transport `y` across a
+                // A `have x T = y` definition may transport `y` across a
                 // propositionally equal indexed carrier.  Typical examples
                 // are `FiniteList<A, m>` and `FiniteList<A, n>` after the
                 // proof has established `m = n`.  Ordinary membership lookup
@@ -131,7 +133,7 @@ impl Runtime {
                     // carrier was derived rather than stored as a direct
                     // membership fact, find the narrowest standard numeric
                     // carrier that the ordinary type checker can establish.
-                    // This does not accept the failed declaration or store a
+                    // This does not accept the failed definition or store a
                     // new fact.
                     if known_source_sets.is_empty() {
                         for standard_set in [
@@ -208,17 +210,17 @@ impl Runtime {
         let mut param_infer_result = if self.current_execution_is_trusted_file() {
             self.define_params_with_type_trusted(
                 &have_obj_equal_stmt.param_def,
-                BindingScope::DeclaredObject,
+                BindingScope::DefinitionBinding,
             )
         } else {
             // `verify_process` has already proved each right-hand side is in
-            // its declared type. That proof is a witness of nonemptiness, so
+            // its defined type. That proof is a witness of nonemptiness, so
             // requiring a separate prior nonempty fact would reject a first
             // concrete object of a newly defined structure.
             self.define_params_with_type(
                 &have_obj_equal_stmt.param_def,
                 false,
-                BindingScope::DeclaredObject,
+                BindingScope::DefinitionBinding,
             )
         }
         .map_err(|define_params_error| {
@@ -300,11 +302,13 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         let infer_result = self.exec_have_obj_equal_stmt_affect_environment(have_obj_equal_stmt)?;
         Ok(
-            SuccessDefObjStmtResult::HaveObjEqualStmt(Box::new(SuccessHaveObjEqualStmtResult {
-                statement: have_obj_equal_stmt.clone(),
-                common: SuccessStmtCommonResult::new(infer_result),
-                verification: None,
-            }))
+            SuccessDefinitionStmtResult::HaveObjEqualStmt(Box::new(
+                SuccessHaveObjEqualStmtResult {
+                    statement: have_obj_equal_stmt.clone(),
+                    common: SuccessStmtCommonResult::new(infer_result),
+                    verification: None,
+                },
+            ))
             .into(),
         )
     }

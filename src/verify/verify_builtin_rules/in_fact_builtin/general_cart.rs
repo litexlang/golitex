@@ -51,7 +51,7 @@ pub fn general_cart_member_pointwise_fact(
         .unwrap_or(family_at_param_raw);
     Ok(Some(
         ForallFact::new_canonical_forall(
-            ParamDefWithType::new(vec![param_group]),
+            TypedParameterList::new(vec![param_group]),
             vec![],
             vec![InFact::new(member_at_param, family_at_param, line_file.clone()).into()],
             line_file.clone(),

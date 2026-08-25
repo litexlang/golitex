@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use std::collections::HashMap;
 
-use super::function_equality_support::build_declared_function_obj_with_param_bindings;
+use super::function_equality_support::build_defined_function_obj_with_parameter_bindings;
 
 struct HaveFnByForallExistUniqueShape {
     fn_set_clause: FnSetClause,
@@ -22,7 +22,7 @@ impl Runtime {
             self.exec_have_fn_by_forall_exist_unique_affect_environment(stmt, shape)?;
 
         Ok(
-            SuccessDefObjStmtResult::HaveFnByForallExistUniqueStmt(Box::new(
+            SuccessDefinitionStmtResult::HaveFnByForallExistUniqueStmt(Box::new(
                 SuccessHaveFnByForallExistUniqueStmtResult {
                     statement: stmt.clone(),
                     common: SuccessStmtCommonResult::new(infer_result),
@@ -95,7 +95,7 @@ impl Runtime {
 
         self.run_in_local_env(|rt| {
             rt.define_params_with_type(
-                &stmt.forall.params_def_with_type,
+                &stmt.forall.typed_parameters,
                 false,
                 BindingScope::LocalBinder,
             )
@@ -190,7 +190,7 @@ impl Runtime {
             .fn_set_from_fn_set_clause(&shape.fn_set_clause)
             .map_err(|e| Self::have_fn_by_forall_exist_unique_err(stmt, e))?;
 
-        self.store_parameter_binding(&stmt.symbol_binding, BindingScope::DeclaredObject)
+        self.store_parameter_binding(&stmt.symbol_binding, BindingScope::DefinitionBinding)
             .map_err(|e| Self::have_fn_by_forall_exist_unique_err(stmt, e))?;
         let function_binding = self
             .visible_symbol_definition(stmt.fn_name())
@@ -202,10 +202,10 @@ impl Runtime {
             .define_parameter_by_binding_param_type(
                 &function_binding,
                 &ParamType::Obj(fn_set.clone().into()),
-                BindingScope::DeclaredObject,
+                BindingScope::DefinitionBinding,
             )
             .map_err(|e| Self::have_fn_by_forall_exist_unique_err(stmt, e))?;
-        let function_identifier_obj = self.declared_identifier_obj(stmt.fn_name());
+        let function_identifier_obj = self.definition_identifier_obj(stmt.fn_name());
         let bind_fact: Fact = InFact::new(
             function_identifier_obj,
             fn_set.clone().into(),
@@ -249,7 +249,7 @@ impl Runtime {
         let infer_result =
             self.exec_have_fn_by_forall_exist_unique_affect_environment(stmt, shape)?;
         Ok(
-            SuccessDefObjStmtResult::HaveFnByForallExistUniqueStmt(Box::new(
+            SuccessDefinitionStmtResult::HaveFnByForallExistUniqueStmt(Box::new(
                 SuccessHaveFnByForallExistUniqueStmtResult {
                     statement: stmt.clone(),
                     common: SuccessStmtCommonResult::new(infer_result),
@@ -268,8 +268,8 @@ impl Runtime {
         // be an Obj; the forall must have exactly one then fact; that then fact must be an exist!;
         // and the exist! must bind exactly one Obj-typed witness. Effect: define f as a set-theoretic
         // function and store that f satisfies the witness body for each input.
-        let (params_def_with_set, forall_param_to_fn_set_param) = self
-            .param_groups_with_set_from_obj_param_defs(stmt, &stmt.forall.params_def_with_type)?;
+        let (set_bound_parameters, forall_param_to_fn_set_param) =
+            self.param_groups_with_set_from_obj_param_defs(stmt, &stmt.forall.typed_parameters)?;
         if stmt.forall.then_facts.len() != 1 {
             return Err(Self::have_fn_by_forall_exist_unique_msg(
                 stmt,
@@ -287,7 +287,7 @@ impl Runtime {
             }
         };
 
-        if exist_body.params_def_with_type.number_of_params() != 1 {
+        if exist_body.typed_parameters.number_of_params() != 1 {
             return Err(Self::have_fn_by_forall_exist_unique_msg(
                 stmt,
                 "exist! must bind exactly one witness".to_string(),
@@ -298,7 +298,7 @@ impl Runtime {
         let mut witness_binding: Option<SymbolBinding> = None;
         let mut witness_param_type: Option<ParamType> = None;
         let mut ret_set: Option<Obj> = None;
-        for group in exist_body.params_def_with_type.groups.iter() {
+        for group in exist_body.typed_parameters.groups.iter() {
             match &group.param_type {
                 ParamType::Obj(obj) => {
                     if !group.params.is_empty() {
@@ -349,7 +349,7 @@ impl Runtime {
         }
 
         Ok(HaveFnByForallExistUniqueShape {
-            fn_set_clause: FnSetClause::new(params_def_with_set, dom_facts, ret_set)?,
+            fn_set_clause: FnSetClause::new(set_bound_parameters, dom_facts, ret_set)?,
             witness_name,
             witness_binding,
             witness_param_type,
@@ -365,7 +365,7 @@ impl Runtime {
             .have_fn_by_forall_exist_unique_shape(stmt)?
             .fn_set_clause;
         Ok(FnSetBody::new(
-            clause.params_def_with_set,
+            clause.set_bound_parameters,
             clause.dom_facts,
             clause.ret_set,
         ))
@@ -376,9 +376,9 @@ impl Runtime {
         stmt: &HaveFnByForallExistUniqueStmt,
         shape: &HaveFnByForallExistUniqueShape,
     ) -> Result<ForallFact, RuntimeError> {
-        let forall_param_bindings = stmt.forall.params_def_with_type.collect_param_bindings();
-        let function_obj = build_declared_function_obj_with_param_bindings(
-            self.declared_identifier_obj(stmt.fn_name()),
+        let forall_param_bindings = stmt.forall.typed_parameters.collect_param_bindings();
+        let function_obj = build_defined_function_obj_with_parameter_bindings(
+            self.definition_identifier_obj(stmt.fn_name()),
             &forall_param_bindings,
         );
         self.have_fn_by_forall_exist_unique_property_forall_with_function(stmt, shape, function_obj)
@@ -407,7 +407,7 @@ impl Runtime {
         }
 
         ForallFact::new_canonical_forall(
-            stmt.forall.params_def_with_type.clone(),
+            stmt.forall.typed_parameters.clone(),
             stmt.forall.dom_facts.clone(),
             then_facts,
             stmt.line_file.clone(),
@@ -421,7 +421,7 @@ impl Runtime {
         template_obj: &InstantiatedTemplateObj,
     ) -> Result<SuccessStoreFactResult, RuntimeError> {
         let shape = self.have_fn_by_forall_exist_unique_shape(stmt)?;
-        let forall_param_bindings = stmt.forall.params_def_with_type.collect_param_bindings();
+        let forall_param_bindings = stmt.forall.typed_parameters.collect_param_bindings();
         let head = FnObjHead::InstantiatedTemplateObj(template_obj.clone());
         let args = forall_param_bindings
             .iter()
@@ -453,17 +453,17 @@ impl Runtime {
         stmt: &HaveFnByForallExistUniqueStmt,
         shape: &HaveFnByForallExistUniqueShape,
     ) -> Result<ForallFact, RuntimeError> {
-        let forall_param_bindings = stmt.forall.params_def_with_type.collect_param_bindings();
-        let function_obj = build_declared_function_obj_with_param_bindings(
-            self.declared_identifier_obj(stmt.fn_name()),
+        let forall_param_bindings = stmt.forall.typed_parameters.collect_param_bindings();
+        let function_obj = build_defined_function_obj_with_parameter_bindings(
+            self.definition_identifier_obj(stmt.fn_name()),
             &forall_param_bindings,
         );
         let (witness_names, witness_map) =
             self.fresh_binder_retag_plan_for_bindings(std::slice::from_ref(&shape.witness_binding));
         let witness_obj = witness_map[&shape.witness_name].clone();
 
-        let mut params = stmt.forall.params_def_with_type.groups.clone();
-        params.push(ParamGroupWithParamType::new(
+        let mut params = stmt.forall.typed_parameters.groups.clone();
+        params.push(TypedParameterGroup::new(
             witness_names,
             shape.witness_param_type.clone(),
         ));
@@ -483,7 +483,7 @@ impl Runtime {
 
         let equal_fact = EqualFact::new(witness_obj, function_obj, stmt.line_file.clone());
         ForallFact::new_canonical_forall(
-            ParamDefWithType::new(params),
+            TypedParameterList::new(params),
             dom_facts,
             vec![ExistOrAndChainAtomicFact::AtomicFact(equal_fact.into())],
             stmt.line_file.clone(),
@@ -494,8 +494,8 @@ impl Runtime {
     fn param_groups_with_set_from_obj_param_defs(
         &self,
         stmt: &HaveFnByForallExistUniqueStmt,
-        param_defs: &ParamDefWithType,
-    ) -> Result<(Vec<ParamGroupWithSet>, HashMap<String, Obj>), RuntimeError> {
+        param_defs: &TypedParameterList,
+    ) -> Result<(Vec<SetBoundParameterGroup>, HashMap<String, Obj>), RuntimeError> {
         let mut result = Vec::with_capacity(param_defs.groups.len());
         // The source signature uses Forall binders; its stored function type uses FnSet binders.
         let source_bindings = param_defs.collect_param_bindings();
@@ -510,7 +510,7 @@ impl Runtime {
                         self.inst_obj(obj, &forall_param_to_fn_set_param, SubstitutionMode::Exact)?;
                     let group_fn_set_names =
                         fn_set_names[name_index..name_index + group.params.len()].to_vec();
-                    result.push(ParamGroupWithSet::new(
+                    result.push(SetBoundParameterGroup::new(
                         group_fn_set_names,
                         rebound_param_set,
                     ));

@@ -19,7 +19,7 @@ impl Runtime {
             .map_err(|e| exec_stmt_error_with_stmt_and_cause(def_struct_stmt.clone().into(), e))?;
         self.store_def_struct(def_struct_stmt)?;
         Ok(
-            SuccessDefInterfaceStmtResult::DefStructStmt(Box::new(SuccessDefStructStmtResult {
+            SuccessDefinitionStmtResult::DefStructStmt(Box::new(SuccessDefStructStmtResult {
                 statement: def_struct_stmt.clone(),
                 common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
                 run_in_local_env,
@@ -28,7 +28,7 @@ impl Runtime {
         )
     }
 
-    /// Mathematical contract: a struct declaration has meaningful header
+    /// Mathematical contract: a struct definition has meaningful header
     /// parameters and domain facts, meaningful field carriers, and meaningful
     /// equivalent facts under locally bound fields of those carriers.
     fn def_struct_stmt_check_well_defined_without_result(
@@ -50,8 +50,10 @@ impl Runtime {
 
         self.run_in_local_env(|rt| {
             for field in def_struct_stmt.fields.iter() {
-                let param_def =
-                    ParamGroupWithSet::new(vec![field.binding.clone()], field.field_type.clone());
+                let param_def = SetBoundParameterGroup::new(
+                    vec![field.binding.clone()],
+                    field.field_type.clone(),
+                );
                 rt.define_params_with_set_in_scope(&param_def, BindingScope::StructureField)?;
             }
 
@@ -67,7 +69,7 @@ impl Runtime {
         Ok(())
     }
 
-    /// Result-producing form of the declaration check. Each field is the
+    /// Result-producing form of the definition check. Each field is the
     /// direct output of the matching semantic operation; no verification or
     /// store is replayed merely to assemble the statement Result.
     fn def_struct_stmt_check_well_defined_result(
@@ -115,8 +117,10 @@ impl Runtime {
         let field_scope_run_in_local_env = self.run_in_local_env(|rt| {
             let mut field_definitions = Vec::with_capacity(def_struct_stmt.fields.len());
             for (field_index, field) in def_struct_stmt.fields.iter().enumerate() {
-                let param_def =
-                    ParamGroupWithSet::new(vec![field.binding.clone()], field.field_type.clone());
+                let param_def = SetBoundParameterGroup::new(
+                    vec![field.binding.clone()],
+                    field.field_type.clone(),
+                );
                 let mut infers =
                     rt.define_params_with_set_in_scope(&param_def, BindingScope::StructureField)?;
                 rt.attach_known_fact_ids_to_infer_result(&mut infers)?;

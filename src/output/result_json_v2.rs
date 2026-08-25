@@ -58,116 +58,7 @@ impl StmtResultJsonV2 {
                     vec![],
                 ),
             },
-            SuccessStmtResult::DefObjStmt(result) => self.def_obj_stmt(result),
-            SuccessStmtResult::DefPredicateStmt(result) => match result {
-                SuccessDefPredicateStmtResult::DefPropStmt(result) => self.non_fact_stmt(
-                    "DefPropStmt",
-                    result.statement.to_string(),
-                    &result.common,
-                    vec![],
-                ),
-                SuccessDefPredicateStmtResult::DefAbstractPropStmt(result) => self.non_fact_stmt(
-                    "DefAbstractPropStmt",
-                    result.statement.to_string(),
-                    &result.common,
-                    vec![],
-                ),
-            },
-            SuccessStmtResult::DefInterfaceStmt(result) => match result {
-                SuccessDefInterfaceStmtResult::DefSettingStmt(result) => self.non_fact_stmt(
-                    "DefSettingStmt",
-                    result.statement.to_string(),
-                    &result.common,
-                    vec![],
-                ),
-                SuccessDefInterfaceStmtResult::DefTemplateStmt(result) => object(vec![
-                    string_field("kind", "DefTemplateStmt"),
-                    string_field("statement", result.statement.to_string()),
-                    (
-                        "template_parameter_groups".to_string(),
-                        self.fact_parameter_groups(&result.template_parameter_groups),
-                    ),
-                    (
-                        "template_domain_results".to_string(),
-                        array(
-                            result
-                                .template_domain_results
-                                .iter()
-                                .map(|domain| self.local_fact_wd_result(domain))
-                                .collect(),
-                        ),
-                    ),
-                    (
-                        "body_statement_result".to_string(),
-                        self.success_stmt(&result.body_statement_result),
-                    ),
-                ]),
-                SuccessDefInterfaceStmtResult::DefStructStmt(result) => {
-                    self.def_struct_stmt(result)
-                }
-            },
-            SuccessStmtResult::DefAlgoStmt(result) => self.def_algo_stmt(result),
-            SuccessStmtResult::DefThmStmt(result) => {
-                let verification = result
-                    .verification
-                    .as_ref()
-                    .map(|result| self.theorem_verification(result))
-                    .unwrap_or(JsonValue::Null);
-                self.non_fact_stmt(
-                    "DefThmStmt",
-                    result.statement.to_string(),
-                    &result.common,
-                    vec![("verification".to_string(), verification)],
-                )
-            }
-            SuccessStmtResult::AxiomStmt(result) => {
-                let well_definedness = result
-                    .well_definedness
-                    .as_ref()
-                    .map(|well_definedness| self.fact_well_definedness(well_definedness))
-                    .unwrap_or(JsonValue::Null);
-                self.non_fact_stmt(
-                    "AxiomStmt",
-                    result.statement.to_string(),
-                    &result.common,
-                    vec![("well_definedness".to_string(), well_definedness)],
-                )
-            }
-            SuccessStmtResult::DefStrategyStmt(result) => {
-                let verification = result
-                    .verification
-                    .as_ref()
-                    .map(|verification| {
-                        object(vec![
-                            string_field("kind", "SuccessVerifyStrategyDefinitionResult"),
-                            string_field("name", verification.name.clone()),
-                            string_field("forall_fact", verification.forall_fact.to_string()),
-                            (
-                                "well_definedness".to_string(),
-                                self.fact_well_definedness(&verification.well_definedness),
-                            ),
-                            (
-                                "proof_scope".to_string(),
-                                self.local_proof_scope(&verification.proof_scope),
-                            ),
-                            (
-                                "proof_steps".to_string(),
-                                self.stmt_results(&verification.proof_steps),
-                            ),
-                            (
-                                "conclusion_checks".to_string(),
-                                self.stmt_results(&verification.conclusion_checks),
-                            ),
-                        ])
-                    })
-                    .unwrap_or(JsonValue::Null);
-                self.non_fact_stmt(
-                    "DefStrategyStmt",
-                    result.statement.to_string(),
-                    &result.common,
-                    vec![("verification".to_string(), verification)],
-                )
-            }
+            SuccessStmtResult::Definition(result) => self.definition_stmt(result),
             SuccessStmtResult::By(result) => self.by_stmt(result),
             SuccessStmtResult::Witness(result) => self.witness_stmt(result),
             SuccessStmtResult::ProofBlock(result) => self.proof_block_stmt(result),
@@ -305,7 +196,7 @@ impl StmtResultJsonV2 {
                     string_field("kind", "SuccessVerifyDefAlgoLocalEnvResult"),
                     string_field(
                         "declared_function_set",
-                        local.declared_function_set.to_string(),
+                        local.definition_function_set.to_string(),
                     ),
                     (
                         "parameter_retagging".to_string(),
@@ -692,15 +583,15 @@ impl StmtResultJsonV2 {
         )
     }
 
-    fn def_obj_stmt(&mut self, result: &SuccessDefObjStmtResult) -> JsonValue {
+    fn definition_stmt(&mut self, result: &SuccessDefinitionStmtResult) -> JsonValue {
         match result {
-            SuccessDefObjStmtResult::LetObjStmt(result) => self.non_fact_stmt(
+            SuccessDefinitionStmtResult::LetObjStmt(result) => self.non_fact_stmt(
                 "LetObjStmt",
                 result.statement.to_string(),
                 &result.common,
                 vec![],
             ),
-            SuccessDefObjStmtResult::HaveObjInNonemptySetStmt(result) => {
+            SuccessDefinitionStmtResult::HaveObjInNonemptySetStmt(result) => {
                 let verification = result
                     .verification
                     .as_ref()
@@ -713,7 +604,7 @@ impl StmtResultJsonV2 {
                     vec![("verification".to_string(), verification)],
                 )
             }
-            SuccessDefObjStmtResult::HaveObjEqualStmt(result) => {
+            SuccessDefinitionStmtResult::HaveObjEqualStmt(result) => {
                 let verification = result
                     .verification
                     .as_ref()
@@ -734,7 +625,7 @@ impl StmtResultJsonV2 {
                     vec![("verification".to_string(), verification)],
                 )
             }
-            SuccessDefObjStmtResult::HaveObjByExistFactsStmt(result) => {
+            SuccessDefinitionStmtResult::HaveObjByExistFactsStmt(result) => {
                 let verification =
                     optional_existential_elimination(self, result.verification.as_ref());
                 self.non_fact_stmt(
@@ -744,7 +635,7 @@ impl StmtResultJsonV2 {
                     vec![("verification".to_string(), verification)],
                 )
             }
-            SuccessDefObjStmtResult::ObtainObjFromExistFact(result) => {
+            SuccessDefinitionStmtResult::ObtainObjFromExistFact(result) => {
                 let verification =
                     optional_existential_elimination(self, result.verification.as_ref());
                 self.non_fact_stmt(
@@ -754,7 +645,7 @@ impl StmtResultJsonV2 {
                     vec![("verification".to_string(), verification)],
                 )
             }
-            SuccessDefObjStmtResult::ObtainObjFromAtomicFact(result) => {
+            SuccessDefinitionStmtResult::ObtainObjFromAtomicFact(result) => {
                 let verification =
                     optional_existential_elimination(self, result.verification.as_ref());
                 self.non_fact_stmt(
@@ -764,7 +655,7 @@ impl StmtResultJsonV2 {
                     vec![("verification".to_string(), verification)],
                 )
             }
-            SuccessDefObjStmtResult::ObtainObjFromThm(result) => {
+            SuccessDefinitionStmtResult::ObtainObjFromThm(result) => {
                 let verification =
                     optional_existential_elimination(self, result.verification.as_ref());
                 self.non_fact_stmt(
@@ -774,7 +665,7 @@ impl StmtResultJsonV2 {
                     vec![("verification".to_string(), verification)],
                 )
             }
-            SuccessDefObjStmtResult::HaveByPreimageStmt(result) => {
+            SuccessDefinitionStmtResult::HaveByPreimageStmt(result) => {
                 let verification = result
                     .verification
                     .as_ref()
@@ -795,7 +686,7 @@ impl StmtResultJsonV2 {
                     vec![("verification".to_string(), verification)],
                 )
             }
-            SuccessDefObjStmtResult::HaveFnEqualStmt(result) => {
+            SuccessDefinitionStmtResult::HaveFnEqualStmt(result) => {
                 let verification = result
                     .verification
                     .as_ref()
@@ -808,7 +699,7 @@ impl StmtResultJsonV2 {
                     vec![("verification".to_string(), verification)],
                 )
             }
-            SuccessDefObjStmtResult::HaveFnEqualCaseByCaseStmt(result) => {
+            SuccessDefinitionStmtResult::HaveFnEqualCaseByCaseStmt(result) => {
                 let verification = result
                     .verification
                     .as_ref()
@@ -833,10 +724,10 @@ impl StmtResultJsonV2 {
                     vec![("verification".to_string(), verification)],
                 )
             }
-            SuccessDefObjStmtResult::HaveFnByInducStmt(result) => {
+            SuccessDefinitionStmtResult::HaveFnByInducStmt(result) => {
                 self.have_fn_by_induc_stmt(result)
             }
-            SuccessDefObjStmtResult::HaveFnByForallExistUniqueStmt(result) => {
+            SuccessDefinitionStmtResult::HaveFnByForallExistUniqueStmt(result) => {
                 let verification = result
                     .verification
                     .as_ref()
@@ -869,36 +760,139 @@ impl StmtResultJsonV2 {
                     vec![("verification".to_string(), verification)],
                 )
             }
-            SuccessDefObjStmtResult::HaveTupleStmt(result) => self.tuple_or_cart_stmt(
+            SuccessDefinitionStmtResult::HaveTupleStmt(result) => self.tuple_or_cart_stmt(
                 "HaveTupleStmt",
                 result.statement.to_string(),
                 &result.common,
                 result.verification.as_ref(),
             ),
-            SuccessDefObjStmtResult::HaveCartStmt(result) => self.tuple_or_cart_stmt(
+            SuccessDefinitionStmtResult::HaveCartStmt(result) => self.tuple_or_cart_stmt(
                 "HaveCartStmt",
                 result.statement.to_string(),
                 &result.common,
                 result.verification.as_ref(),
             ),
-            SuccessDefObjStmtResult::HaveSeqStmt(result) => self.indexed_function_stmt(
+            SuccessDefinitionStmtResult::HaveSeqStmt(result) => self.indexed_function_stmt(
                 "HaveSeqStmt",
                 result.statement.to_string(),
                 &result.common,
                 result.verification.as_ref(),
             ),
-            SuccessDefObjStmtResult::HaveFiniteSeqStmt(result) => self.indexed_function_stmt(
+            SuccessDefinitionStmtResult::HaveFiniteSeqStmt(result) => self.indexed_function_stmt(
                 "HaveFiniteSeqStmt",
                 result.statement.to_string(),
                 &result.common,
                 result.verification.as_ref(),
             ),
-            SuccessDefObjStmtResult::HaveMatrixStmt(result) => self.indexed_function_stmt(
+            SuccessDefinitionStmtResult::HaveMatrixStmt(result) => self.indexed_function_stmt(
                 "HaveMatrixStmt",
                 result.statement.to_string(),
                 &result.common,
                 result.verification.as_ref(),
             ),
+            SuccessDefinitionStmtResult::DefPropStmt(result) => self.non_fact_stmt(
+                "DefPropStmt",
+                result.statement.to_string(),
+                &result.common,
+                vec![],
+            ),
+            SuccessDefinitionStmtResult::DefAbstractPropStmt(result) => self.non_fact_stmt(
+                "DefAbstractPropStmt",
+                result.statement.to_string(),
+                &result.common,
+                vec![],
+            ),
+            SuccessDefinitionStmtResult::DefSettingStmt(result) => self.non_fact_stmt(
+                "DefSettingStmt",
+                result.statement.to_string(),
+                &result.common,
+                vec![],
+            ),
+            SuccessDefinitionStmtResult::DefTemplateStmt(result) => object(vec![
+                string_field("kind", "DefTemplateStmt"),
+                string_field("statement", result.statement.to_string()),
+                (
+                    "template_parameter_groups".to_string(),
+                    self.fact_parameter_groups(&result.template_parameter_groups),
+                ),
+                (
+                    "template_domain_results".to_string(),
+                    array(
+                        result
+                            .template_domain_results
+                            .iter()
+                            .map(|domain| self.local_fact_wd_result(domain))
+                            .collect(),
+                    ),
+                ),
+                (
+                    "body_statement_result".to_string(),
+                    self.success_stmt(&result.body_statement_result),
+                ),
+            ]),
+            SuccessDefinitionStmtResult::DefStructStmt(result) => self.def_struct_stmt(result),
+            SuccessDefinitionStmtResult::DefAlgoStmt(result) => self.def_algo_stmt(result),
+            SuccessDefinitionStmtResult::DefThmStmt(result) => {
+                let verification = result
+                    .verification
+                    .as_ref()
+                    .map(|result| self.theorem_verification(result))
+                    .unwrap_or(JsonValue::Null);
+                self.non_fact_stmt(
+                    "DefThmStmt",
+                    result.statement.to_string(),
+                    &result.common,
+                    vec![("verification".to_string(), verification)],
+                )
+            }
+            SuccessDefinitionStmtResult::AxiomStmt(result) => {
+                let well_definedness = result
+                    .well_definedness
+                    .as_ref()
+                    .map(|well_definedness| self.fact_well_definedness(well_definedness))
+                    .unwrap_or(JsonValue::Null);
+                self.non_fact_stmt(
+                    "AxiomStmt",
+                    result.statement.to_string(),
+                    &result.common,
+                    vec![("well_definedness".to_string(), well_definedness)],
+                )
+            }
+            SuccessDefinitionStmtResult::DefStrategyStmt(result) => {
+                let verification = result
+                    .verification
+                    .as_ref()
+                    .map(|verification| {
+                        object(vec![
+                            string_field("kind", "SuccessVerifyStrategyDefinitionResult"),
+                            string_field("name", verification.name.clone()),
+                            string_field("forall_fact", verification.forall_fact.to_string()),
+                            (
+                                "well_definedness".to_string(),
+                                self.fact_well_definedness(&verification.well_definedness),
+                            ),
+                            (
+                                "proof_scope".to_string(),
+                                self.local_proof_scope(&verification.proof_scope),
+                            ),
+                            (
+                                "proof_steps".to_string(),
+                                self.stmt_results(&verification.proof_steps),
+                            ),
+                            (
+                                "conclusion_checks".to_string(),
+                                self.stmt_results(&verification.conclusion_checks),
+                            ),
+                        ])
+                    })
+                    .unwrap_or(JsonValue::Null);
+                self.non_fact_stmt(
+                    "DefStrategyStmt",
+                    result.statement.to_string(),
+                    &result.common,
+                    vec![("verification".to_string(), verification)],
+                )
+            }
         }
     }
 

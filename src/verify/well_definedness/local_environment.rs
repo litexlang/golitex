@@ -8,7 +8,7 @@ impl Runtime {
     /// those bound variables or assumptions to the caller's environment.
     pub fn verify_obj_well_defined_with_its_local_def(
         &mut self,
-        params_def: impl Into<ParamDefWithSet>,
+        params_def: impl Into<SetBoundParameterList>,
         binding_scope: BindingScope,
         obj: Obj,
     ) -> Result<(), RuntimeError> {

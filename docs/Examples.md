@@ -1447,7 +1447,7 @@ $can_be_divided_by_2(8)
 ### 33. Named Theorems With `thm`
 
 - Category: `stmt`
-- Purpose: Shows theorem declaration and theorem application.
+- Purpose: Shows theorem definition and theorem application.
 
 ```litex
 ## Basic named theorem with no domain facts.
@@ -3574,7 +3574,7 @@ by def $fn_eq(fn(x R) R {x}, fn(y R) R {y})
 #### 8. Function Images
 
 Mathematical meaning: `fn_range(f)` is the image of a function over its
-declared domain. To image a larger-domain function only on `S`, first make the
+defined domain. To image a larger-domain function only on `S`, first make the
 restriction explicit as `fn(x S) T {f(x)}`.
 
 ```litex
@@ -3655,7 +3655,7 @@ eval (1 / 3) *' [[3, 6], [9, 12]]
 
 Mathematical meaning: a `struct` names a record-shaped subset of tuples, with
 typed fields and optional defining conditions. Once parameters are fixed,
-`&Point` is one ordinary set. A symbol declared directly in that carrier owns
+`&Point` is one ordinary set. A symbol defined directly in that carrier owns
 the corresponding field names.
 
 ```litex

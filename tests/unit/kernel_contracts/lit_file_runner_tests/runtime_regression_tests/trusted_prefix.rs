@@ -112,7 +112,7 @@ fn trust_before_line_still_rejects_prefix_syntax_errors() {
 }
 
 #[test]
-fn trust_before_line_still_rejects_duplicate_prefix_declarations() {
+fn trust_before_line_still_rejects_duplicate_prefix_definitions() {
     let fixture = TrustedPrefixFixture::new(
         "duplicate",
         r#"have duplicate_object R
@@ -127,7 +127,7 @@ have duplicate_object R
     assert_eq!(results.len(), 1);
     assert!(
         error.is_some(),
-        "trusted declarations must still update the environment"
+        "trusted definitions must still update the environment"
     );
     assert_trace(&results[0], "trusted_prefix");
     assert_eq!(runtime.current_execution_mode(), ExecutionMode::Verified);
@@ -149,7 +149,7 @@ fn trust_before_line_reconstructs_template_verification_before_later_use() {
 
     assert!(
         error.is_none(),
-        "a trusted template declaration must remain usable by the verified suffix: {error:?}"
+        "a trusted template definition must remain usable by the verified suffix: {error:?}"
     );
     assert_eq!(results.len(), 2);
     assert!(!setup_rejected);
@@ -161,7 +161,7 @@ fn trust_before_line_reconstructs_template_verification_before_later_use() {
 }
 
 #[test]
-fn trust_before_line_still_rejects_duplicate_template_declarations() {
+fn trust_before_line_still_rejects_duplicate_template_definitions() {
     let fixture = TrustedPrefixFixture::new(
         "duplicate_template_definition",
         r#"template<S set>:
@@ -179,7 +179,7 @@ template<S set>:
     assert_eq!(results.len(), 1);
     let message = format!(
         "{:?}",
-        error.expect("a duplicate trusted template declaration must fail")
+        error.expect("a duplicate trusted template definition must fail")
     );
     assert!(
         message.contains("already active") && message.contains("cannot be rebound"),
@@ -364,7 +364,7 @@ y = y
 }
 
 #[test]
-fn trust_before_line_top_level_try_commits_its_declarations() {
+fn trust_before_line_top_level_try_commits_its_definitions() {
     let fixture = TrustedPrefixFixture::new(
         "try_commit",
         r#"try:

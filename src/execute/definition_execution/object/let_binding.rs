@@ -7,7 +7,7 @@ impl Runtime {
 
         let infer_result = self.exec_let_obj_stmt_affect_environment(stmt)?;
         Ok(
-            SuccessDefObjStmtResult::LetObjStmt(Box::new(SuccessLetObjStmtResult {
+            SuccessDefinitionStmtResult::LetObjStmt(Box::new(SuccessLetObjStmtResult {
                 statement: stmt.clone(),
                 common: SuccessStmtCommonResult::new(infer_result),
             }))
@@ -19,7 +19,7 @@ impl Runtime {
         &mut self,
         stmt: &LetObjStmt,
     ) -> Result<SuccessInferResult, RuntimeError> {
-        self.store_parameter_binding(&stmt.symbol_binding, BindingScope::DeclaredObject)
+        self.store_parameter_binding(&stmt.symbol_binding, BindingScope::DefinitionBinding)
             .map_err(|error| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), error))?;
 
         let equal_fact: AtomicFact = EqualFact::new(
@@ -45,7 +45,7 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         let infer_result = self.exec_let_obj_stmt_affect_environment(stmt)?;
         Ok(
-            SuccessDefObjStmtResult::LetObjStmt(Box::new(SuccessLetObjStmtResult {
+            SuccessDefinitionStmtResult::LetObjStmt(Box::new(SuccessLetObjStmtResult {
                 statement: stmt.clone(),
                 common: SuccessStmtCommonResult::new(infer_result),
             }))

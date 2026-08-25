@@ -107,7 +107,7 @@ impl Runtime {
                     .map_err(|_| {
                         RuntimeError::from(WellDefinedRuntimeError(
                             RuntimeErrorStruct::new_with_just_msg(format!(
-                                "struct field `{}` is not callable; its declared carrier is {field_type}",
+                                "struct field `{}` is not callable; its defined carrier is {field_type}",
                                 field_access.field_name
                             )),
                         ))
@@ -293,7 +293,7 @@ impl Runtime {
         source_application: &Obj,
         layer_index: usize,
         arguments: &[Box<Obj>],
-        parameters: &ParamDefWithSet,
+        parameters: &SetBoundParameterList,
         domains: &[QuantifierFreeFact],
         substitution_mode: SubstitutionMode,
         verify_state: &ProofSearchState,
@@ -457,16 +457,16 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         if self.is_current_parse_module(&x.mod_name) {
             for env in self.iter_environments_from_top() {
-                if env.declarations.object_symbol(&x.name).is_some()
-                    || env.declarations.defined_structs.contains_key(&x.name)
+                if env.definitions.object_symbol(&x.name).is_some()
+                    || env.definitions.structure_definitions.contains_key(&x.name)
                 {
                     return Ok(());
                 }
             }
         } else {
             for env in self.imported_module_environments(&x.mod_name) {
-                if env.declarations.object_symbol(&x.name).is_some()
-                    || env.declarations.defined_structs.contains_key(&x.name)
+                if env.definitions.object_symbol(&x.name).is_some()
+                    || env.definitions.structure_definitions.contains_key(&x.name)
                 {
                     return Ok(());
                 }

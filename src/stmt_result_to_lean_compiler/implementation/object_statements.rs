@@ -373,7 +373,7 @@ impl StmtResultToLeanCompiler {
         for group in statement
             .equal_to_anonymous_fn
             .body
-            .params_def_with_set
+            .set_bound_parameters
             .iter()
         {
             expected_parameter_facts.extend(group.facts());
@@ -925,9 +925,7 @@ impl StmtResultToLeanCompiler {
         let Fact::ForallFact(forall) = &coordinate_output.itself_and_why_itself_is_stored.0 else {
             return Err("indexed tuple coordinate store is not a forall fact".into());
         };
-        let parameters = forall
-            .params_def_with_type
-            .collect_param_bindings_with_types();
+        let parameters = forall.typed_parameters.collect_param_bindings_with_types();
         let [(binding, param_type)] = parameters.as_slice() else {
             return Err("indexed tuple coordinate store changed its one-index binder".into());
         };
@@ -1027,7 +1025,7 @@ impl StmtResultToLeanCompiler {
             return Err("unbounded sequence retained unexpected bound checks".into());
         }
         let statement = &result.statement;
-        let parameter_group = ParamGroupWithSet::new(
+        let parameter_group = SetBoundParameterGroup::new(
             vec![statement.index_binding.clone()],
             StandardSet::NPos.into(),
         );
@@ -1479,7 +1477,7 @@ impl StmtResultToLeanCompiler {
         )
         .into();
         let expected_domain_fact: Fact = expected_domain_atomic_fact.clone().into();
-        let parameter_group = ParamGroupWithSet::new(
+        let parameter_group = SetBoundParameterGroup::new(
             vec![statement.index_binding.clone()],
             StandardSet::NPos.into(),
         );
@@ -2010,11 +2008,11 @@ impl StmtResultToLeanCompiler {
         }
 
         let parameter_groups = [
-            ParamGroupWithSet::new(
+            SetBoundParameterGroup::new(
                 vec![statement.row_index_binding.clone()],
                 StandardSet::NPos.into(),
             ),
-            ParamGroupWithSet::new(
+            SetBoundParameterGroup::new(
                 vec![statement.col_index_binding.clone()],
                 StandardSet::NPos.into(),
             ),
@@ -2561,7 +2559,7 @@ impl StmtResultToLeanCompiler {
         let mut binders = Vec::new();
         let mut requirements = Vec::new();
         let mut parameter_count = 0;
-        for group in &definition.params_def_with_type.groups {
+        for group in &definition.typed_parameters.groups {
             for binding in &group.params {
                 parameter_count += 1;
                 let parameter_name = lean_identifier(binding.name());

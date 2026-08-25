@@ -900,7 +900,7 @@ impl StmtResultToLeanCompiler {
             self.construct_well_definedness_to_lean_compilation_context(&result.well_definedness)?;
 
         let source_parameters = source_forall
-            .params_def_with_type
+            .typed_parameters
             .collect_param_bindings_with_types();
         let source_well_defined_parameters = well_definedness
             .binder

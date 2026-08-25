@@ -8,19 +8,19 @@ use std::rc::Rc;
 /// `FactId` for its proposition-equivalence class, while every independently
 /// stored fact identity remains available through `facts_by_id`.
 #[derive(Clone)]
-pub struct EnvironmentStoredFact {
+pub struct StoredFactRecord {
     pub fact_id: FactId,
     pub fact: Fact,
     pub equivalent_proposition_lookup_key: FactString,
 }
 
 #[derive(Clone, Default)]
-pub struct EnvironmentStoredFactRepository {
-    facts_by_id: HashMap<FactId, Rc<EnvironmentStoredFact>>,
+pub struct EnvironmentStoredFactStore {
+    facts_by_id: HashMap<FactId, Rc<StoredFactRecord>>,
     fact_lookup_by_key: HashMap<FactString, CachedKnownFact>,
 }
 
-impl EnvironmentStoredFactRepository {
+impl EnvironmentStoredFactStore {
     pub fn stored_fact_count(&self) -> usize {
         self.facts_by_id.len()
     }
@@ -29,7 +29,7 @@ impl EnvironmentStoredFactRepository {
         self.fact_lookup_by_key.len()
     }
 
-    pub fn stored_fact(&self, fact_id: FactId) -> Option<&Rc<EnvironmentStoredFact>> {
+    pub fn stored_fact(&self, fact_id: FactId) -> Option<&Rc<StoredFactRecord>> {
         self.facts_by_id.get(&fact_id)
     }
 
@@ -73,7 +73,7 @@ impl EnvironmentStoredFactRepository {
         }
         self.facts_by_id.insert(
             fact_id,
-            Rc::new(EnvironmentStoredFact {
+            Rc::new(StoredFactRecord {
                 fact_id,
                 fact,
                 equivalent_proposition_lookup_key,
@@ -152,10 +152,7 @@ impl EnvironmentStoredFactRepository {
         Ok(())
     }
 
-    pub fn merge_from(
-        &mut self,
-        child: EnvironmentStoredFactRepository,
-    ) -> Result<(), RuntimeError> {
+    pub fn merge_from(&mut self, child: EnvironmentStoredFactStore) -> Result<(), RuntimeError> {
         for (_, stored_fact) in child.facts_by_id {
             self.record_fact_with_equivalent_proposition_key(
                 stored_fact.fact.clone(),

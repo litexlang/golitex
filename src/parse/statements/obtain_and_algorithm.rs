@@ -99,7 +99,7 @@ impl Runtime {
                     source_prop
                 )));
             }
-            let expected_args = definition.params_def_with_type.number_of_params();
+            let expected_args = definition.typed_parameters.number_of_params();
             if source_prop.body.len() != expected_args {
                 return Err(obtain_source_error(format!(
                     "`obtain ... from {}` expected {} prop argument(s), got {}",
@@ -109,7 +109,7 @@ impl Runtime {
                 )));
             }
             let param_to_arg_map = self
-                .params_to_arg_map(&definition.params_def_with_type, &source_prop.body)
+                .params_to_arg_map(&definition.typed_parameters, &source_prop.body)
                 .map_err(|cause| {
                     RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
                         None,
@@ -157,12 +157,15 @@ impl Runtime {
         let equal_to_bindings = self.allocate_local_symbol_bindings(&equal_tos)?;
 
         if let Some(true_fact) = true_fact.as_ref() {
-            let exist_param_defs = true_fact.params_def_with_type();
+            let exist_param_defs = true_fact.typed_parameters();
             if exist_param_defs.number_of_params() == equal_to_bindings.len() {
                 let equal_to_objs = equal_to_bindings
                     .iter()
                     .map(|binding| {
-                        param_binding_element_obj_for_store(binding, BindingScope::DeclaredObject)
+                        param_binding_element_obj_for_store(
+                            binding,
+                            BindingScope::DefinitionBinding,
+                        )
                     })
                     .collect::<Vec<_>>();
                 let param_to_arg_map =
@@ -265,7 +268,7 @@ impl Runtime {
                 ),
             )));
         }
-        let Ok(param_to_arg_map) = self.params_to_arg_map(&forall_fact.params_def_with_type, args)
+        let Ok(param_to_arg_map) = self.params_to_arg_map(&forall_fact.typed_parameters, args)
         else {
             // Preview data is optional. The executor owns theorem arity and
             // argument diagnostics through the ordinary `by thm` path.

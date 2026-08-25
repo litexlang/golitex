@@ -70,10 +70,10 @@ impl Runtime {
         let Some(mut body) = self.get_fn_range_function_body(function) else {
             return Ok(None);
         };
-        if body.params_def_with_set.number_of_params() != 1 {
+        if body.set_bound_parameters.number_of_params() != 1 {
             return Ok(None);
         }
-        let bindings = body.params_def_with_set.collect_param_bindings();
+        let bindings = body.set_bound_parameters.collect_param_bindings();
         let rename_map = self.visible_binding_conflict_rename_map(&bindings)?;
         if !rename_map.is_empty() {
             body = self.alpha_rename_fn_set_body(&body, &rename_map)?;
@@ -81,7 +81,7 @@ impl Runtime {
         self.run_in_local_env(|runtime| {
             let (parameter_carriers, parameters, domains) = runtime
                 .verify_fn_binder_inputs_result(
-                    &body.params_def_with_set,
+                    &body.set_bound_parameters,
                     &body.dom_facts,
                     verify_state,
                 )?;
@@ -228,22 +228,22 @@ impl Runtime {
         verify_state: &ProofSearchState,
         operation: &str,
     ) -> Result<SuccessVerifyIterationIntervalResult, RuntimeError> {
-        if body.params_def_with_set.number_of_params() != 1 {
+        if body.set_bound_parameters.number_of_params() != 1 {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new_with_just_msg(format!(
                     "{operation}: the function in the function set must be unary (one index)"
                 )),
             )));
         }
-        let parameter_binding = body.params_def_with_set.collect_param_bindings()[0].clone();
+        let parameter_binding = body.set_bound_parameters.collect_param_bindings()[0].clone();
         let parameter_set = Self::unary_param_set_from_params_def(
-            &body.params_def_with_set,
+            &body.set_bound_parameters,
             parameter_binding.name(),
         )
         .ok_or_else(|| {
             RuntimeError::from(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new_with_just_msg(format!(
-                    "{operation}: could not find index parameter in params_def_with_set"
+                    "{operation}: could not find index parameter in set_bound_parameters"
                 )),
             ))
         })?;
@@ -258,7 +258,7 @@ impl Runtime {
         self.run_in_local_env(|runtime| {
             let (parameter_carriers, parameters, _) = runtime
                 .verify_fn_binder_inputs_result(
-                    &body.params_def_with_set,
+                    &body.set_bound_parameters,
                     &[],
                     verify_state,
                 )
@@ -384,13 +384,13 @@ impl Runtime {
                 if result.is_unknown() {
                     return Err(RuntimeError::from(WellDefinedRuntimeError(
                         RuntimeErrorStruct::new_with_just_msg(format!(
-                            "{operation}: iterand body {anonymous_body} is not verified to belong to declared return set {}",
+                            "{operation}: iterand body {anonymous_body} is not verified to belong to defined return set {}",
                             body.ret_set
                         )),
                     )));
                 }
                 let parent: Obj = AnonymousFn::new(
-                    body.params_def_with_set.clone(),
+                    body.set_bound_parameters.clone(),
                     body.dom_facts.clone(),
                     (*body.ret_set).clone(),
                     anonymous_body.clone(),
@@ -571,8 +571,8 @@ impl Runtime {
         let mut checks = Vec::with_capacity(list.list.len());
         for element in &list.list {
             let arguments = vec![element.as_ref().clone()];
-            let substitutions = ParamGroupWithSet::param_defs_and_args_to_param_to_arg_map(
-                &anonymous.body.params_def_with_set,
+            let substitutions = SetBoundParameterGroup::param_defs_and_args_to_param_to_arg_map(
+                &anonymous.body.set_bound_parameters,
                 &arguments,
             );
             let body =
@@ -588,7 +588,7 @@ impl Runtime {
             if result.is_unknown() {
                 return Err(RuntimeError::from(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new_with_just_msg(format!(
-                        "{operation}: iterand body {body} is not verified to belong to declared return set {return_set} at {element}"
+                        "{operation}: iterand body {body} is not verified to belong to defined return set {return_set} at {element}"
                     )),
                 )));
             }
@@ -617,7 +617,7 @@ impl Runtime {
                     )),
                 ))
             })?;
-            if body.params_def_with_set.number_of_params() != 1 {
+            if body.set_bound_parameters.number_of_params() != 1 {
                 let role = if operation == "finite_set_sum" {
                     "summand"
                 } else {
@@ -817,7 +817,7 @@ impl Runtime {
                 )),
             ))
         })?;
-        if body.params_def_with_set.number_of_params() != 2 || !body.dom_facts.is_empty() {
+        if body.set_bound_parameters.number_of_params() != 2 || !body.dom_facts.is_empty() {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new_with_just_msg(format!(
                     "{operation_name}: operation {operation} must have an unconditional homogeneous signature fn(x, y T) T"
@@ -825,7 +825,7 @@ impl Runtime {
             )));
         }
         let parameter_carriers = body
-            .params_def_with_set
+            .set_bound_parameters
             .iter()
             .flat_map(|group| {
                 group
@@ -868,7 +868,7 @@ impl Runtime {
                 )),
             ))
         })?;
-        if body.params_def_with_set.number_of_params() != 1 {
+        if body.set_bound_parameters.number_of_params() != 1 {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new_with_just_msg(format!(
                     "{operation_name}: iterand {function} must be unary"
@@ -1176,14 +1176,14 @@ impl Runtime {
                 )),
             ))
         })?;
-        if body.params_def_with_set.number_of_params() != 1 || !body.dom_facts.is_empty() {
+        if body.set_bound_parameters.number_of_params() != 1 || !body.dom_facts.is_empty() {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new_with_just_msg(format!(
                     "finite_set_reduce: {function} must be an unconditional unary function; use an explicit restriction for a conditional domain"
                 )),
             )));
         }
-        let binding = body.params_def_with_set.collect_param_bindings();
+        let binding = body.set_bound_parameters.collect_param_bindings();
         let binding = binding.first().ok_or_else(|| {
             RuntimeError::from(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new_with_just_msg(
@@ -1192,7 +1192,7 @@ impl Runtime {
             ))
         })?;
         let domain =
-            Self::unary_param_set_from_params_def(&body.params_def_with_set, binding.name())
+            Self::unary_param_set_from_params_def(&body.set_bound_parameters, binding.name())
                 .ok_or_else(|| {
                     RuntimeError::from(WellDefinedRuntimeError(
                         RuntimeErrorStruct::new_with_just_msg(
@@ -1387,7 +1387,7 @@ impl Runtime {
 
     /// Mathematical contract: `reduce(a,b,f,op,seed)` is an ascending left
     /// fold over the closed integer interval. It has the homogeneous carrier
-    /// `T` declared by `op : T x T -> T`; `f` returns `T`, and `seed` is in
+    /// `T` defined by `op : T x T -> T`; `f` returns `T`, and `seed` is in
     /// `T`. Unlike the legacy `sum`/`product`, an empty interval is valid.
     pub(in crate::verify) fn verify_reduce_obj_well_defined(
         &mut self,
@@ -1584,14 +1584,14 @@ impl Runtime {
                 )),
             )));
         };
-        if body.params_def_with_set.number_of_params() != 1 || !body.dom_facts.is_empty() {
+        if body.set_bound_parameters.number_of_params() != 1 || !body.dom_facts.is_empty() {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new_with_just_msg(format!(
                     "{operation_name}: {function} must be an unconditional unary function; use an explicit restriction for a conditional domain"
                 )),
             )));
         }
-        let binding = body.params_def_with_set.collect_param_bindings();
+        let binding = body.set_bound_parameters.collect_param_bindings();
         let Some(binding) = binding.first() else {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new_with_just_msg(format!(
@@ -1600,7 +1600,7 @@ impl Runtime {
             )));
         };
         let Some(domain) =
-            Self::unary_param_set_from_params_def(&body.params_def_with_set, binding.name())
+            Self::unary_param_set_from_params_def(&body.set_bound_parameters, binding.name())
         else {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new_with_just_msg(format!(
@@ -1630,11 +1630,11 @@ impl Runtime {
     /// The two parameter carriers and the return carrier must be the same set.
     pub fn reduce_carrier_from_operation(&self, operation: &Obj) -> Option<Obj> {
         let body = self.get_fn_range_function_body(operation)?;
-        if body.params_def_with_set.number_of_params() != 2 || !body.dom_facts.is_empty() {
+        if body.set_bound_parameters.number_of_params() != 2 || !body.dom_facts.is_empty() {
             return None;
         }
         let mut parameter_sets = Vec::with_capacity(2);
-        for group in body.params_def_with_set.iter() {
+        for group in body.set_bound_parameters.iter() {
             for _ in &group.params {
                 parameter_sets.push(group.set_obj().clone());
             }
@@ -1677,7 +1677,7 @@ impl Runtime {
                 )),
             )));
         };
-        if body.params_def_with_set.number_of_params() != 1 {
+        if body.set_bound_parameters.number_of_params() != 1 {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new_with_just_msg(format!(
                     "{operation_name}: iterand {function} must be unary"
@@ -1756,12 +1756,12 @@ impl Runtime {
         args: &[Obj],
     ) -> Result<Option<Obj>, RuntimeError> {
         if let Some(anonymous) = Self::summand_as_anonymous_fn(function) {
-            if anonymous.body.params_def_with_set.number_of_params() != args.len() {
+            if anonymous.body.set_bound_parameters.number_of_params() != args.len() {
                 return Ok(None);
             }
             let args = args.to_vec();
-            let substitutions = ParamGroupWithSet::param_defs_and_args_to_param_to_arg_map(
-                &anonymous.body.params_def_with_set,
+            let substitutions = SetBoundParameterGroup::param_defs_and_args_to_param_to_arg_map(
+                &anonymous.body.set_bound_parameters,
                 &args,
             );
             return Ok(Some(self.inst_obj(
@@ -1807,7 +1807,7 @@ impl Runtime {
             let (x_binding, x) = rt.fresh_bound_param(x_name)?;
             let (y_binding, y) = rt.fresh_bound_param(y_name)?;
             let (z_binding, z) = rt.fresh_bound_param(z_name)?;
-            let params = ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+            let params = TypedParameterList::new(vec![TypedParameterGroup::new(
                 vec![x_binding, y_binding, z_binding],
                 ParamType::Obj(carrier.clone()),
             )]);
@@ -2015,7 +2015,7 @@ impl Runtime {
     }
 
     /// Mathematical contract: a symbolic finite-set aggregate accepts only a
-    /// unary, unconditional function whose declared domain is syntactically
+    /// unary, unconditional function whose defined domain is syntactically
     /// the aggregate set; callers can construct an explicit restriction when
     /// starting from a function on a larger carrier.
     fn verify_finite_set_iterand_has_exact_domain(
@@ -2032,7 +2032,7 @@ impl Runtime {
                 )),
             )));
         };
-        if body.params_def_with_set.number_of_params() != 1 || !body.dom_facts.is_empty() {
+        if body.set_bound_parameters.number_of_params() != 1 || !body.dom_facts.is_empty() {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new_with_just_msg(format!(
                     "{}: {} must have domain {} exactly; pass an explicit restriction such as fn(x {}) T {{{}(x)}}",
@@ -2040,7 +2040,7 @@ impl Runtime {
                 )),
             )));
         }
-        let Some(domain) = body.params_def_with_set.first() else {
+        let Some(domain) = body.set_bound_parameters.first() else {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new_with_just_msg(format!(
                     "{}: {} must have domain {} exactly",
@@ -2060,7 +2060,7 @@ impl Runtime {
     }
 
     /// Mathematical contract: a sum or product combines scalar values, so its
-    /// unary iterand must declare a return set contained in `C`.  For a
+    /// unary iterand definition must specify a return set contained in `C`. For a
     /// dependent function set, the containment obligation is checked under
     /// the parameter memberships and domain assumptions of that function set.
     fn verify_iterated_function_has_scalar_return_set(
@@ -2074,18 +2074,18 @@ impl Runtime {
             // precise diagnostic when the object has no known function set.
             return Ok(());
         };
-        if body.params_def_with_set.number_of_params() != 1 {
+        if body.set_bound_parameters.number_of_params() != 1 {
             return Ok(());
         }
 
-        let bindings = body.params_def_with_set.collect_param_bindings();
+        let bindings = body.set_bound_parameters.collect_param_bindings();
         let rename_map = self.visible_binding_conflict_rename_map(&bindings)?;
         if !rename_map.is_empty() {
             body = self.alpha_rename_fn_set_body(&body, &rename_map)?;
         }
 
         self.run_in_local_env(|rt| {
-            for param in body.params_def_with_set.iter() {
+            for param in body.set_bound_parameters.iter() {
                 rt.define_params_with_set_in_scope(param, BindingScope::LocalBinder)?;
             }
             for domain_fact in body.dom_facts.iter() {
@@ -2132,7 +2132,7 @@ impl Runtime {
                 )),
             )));
         };
-        if body.params_def_with_set.number_of_params() != 1 {
+        if body.set_bound_parameters.number_of_params() != 1 {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new_with_just_msg(format!(
                     "{operation}: iterand must be unary (one parameter)"
@@ -2159,7 +2159,7 @@ impl Runtime {
                 )),
             )));
         };
-        if ParamGroupWithSet::number_of_params(&body.params_def_with_set) != 1 {
+        if SetBoundParameterGroup::number_of_params(&body.set_bound_parameters) != 1 {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new_with_just_msg(
                     "finite_set_sum: summand must be unary (one parameter)".to_string(),
@@ -2314,7 +2314,7 @@ impl Runtime {
                 )),
             )));
         };
-        if ParamGroupWithSet::number_of_params(&body.params_def_with_set) != 1 {
+        if SetBoundParameterGroup::number_of_params(&body.set_bound_parameters) != 1 {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new_with_just_msg(
                     "finite_set_product: factor must be unary (one parameter)".to_string(),
@@ -2415,9 +2415,9 @@ impl Runtime {
         )
     }
 
-    /// Resolve the set `S` in `pname S` for the unary param from `params_def_with_set`.
+    /// Resolve the set `S` in `pname S` for the unary param from `set_bound_parameters`.
     pub(in crate::verify) fn unary_param_set_from_params_def(
-        params_def: &[ParamGroupWithSet],
+        params_def: &[SetBoundParameterGroup],
         pname: &str,
     ) -> Option<Obj> {
         for g in params_def {
@@ -2429,7 +2429,7 @@ impl Runtime {
     }
 
     /// Mathematical contract: every integer of the requested closed interval
-    /// must lie in the iterand's declared parameter carrier. Example: a `N`
+    /// must lie in the iterand's defined parameter carrier. Example: a `N`
     /// iterand accepts `sum(m,n,f)` only when the nonnegative lower endpoint is
     /// provable.
     pub(in crate::verify) fn verify_closed_range_each_integer_satisfies_unary_param_set(
@@ -2515,7 +2515,7 @@ impl Runtime {
     }
 
     /// Mathematical contract: a stored range iterand is unary, covers the
-    /// complete integer interval, satisfies every declared domain predicate
+    /// complete integer interval, satisfies every defined domain predicate
     /// there, and has a meaningful return carrier under those assumptions.
     pub(in crate::verify) fn verify_iterated_op_summand_with_stored_fn_set_body(
         &mut self,
@@ -2525,22 +2525,22 @@ impl Runtime {
         verify_state: &ProofSearchState,
         op: &str,
     ) -> Result<(), RuntimeError> {
-        if ParamGroupWithSet::number_of_params(&fs_body.params_def_with_set) != 1 {
+        if SetBoundParameterGroup::number_of_params(&fs_body.set_bound_parameters) != 1 {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new_with_just_msg(format!(
                     "{op}: the function in the function set must be unary (one index)"
                 )),
             )));
         }
-        let param_bindings = fs_body.params_def_with_set.collect_param_bindings();
+        let param_bindings = fs_body.set_bound_parameters.collect_param_bindings();
         let param_binding = param_bindings[0].clone();
         let Some(param_set_for_index) = Self::unary_param_set_from_params_def(
-            &fs_body.params_def_with_set,
+            &fs_body.set_bound_parameters,
             param_binding.name(),
         ) else {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new_with_just_msg(format!(
-                    "{op}: could not find index parameter in params_def_with_set"
+                    "{op}: could not find index parameter in set_bound_parameters"
                 )),
             )));
         };
@@ -2554,7 +2554,7 @@ impl Runtime {
         let start_c = start.clone();
         let end_c = end.clone();
         self.run_in_local_env(|rt| {
-            for g in fs_body.params_def_with_set.iter() {
+            for g in fs_body.set_bound_parameters.iter() {
                 rt.define_params_with_set_in_scope(g, BindingScope::LocalBinder)
                     .map_err(|e| {
                         RuntimeError::from(WellDefinedRuntimeError(
@@ -2717,7 +2717,7 @@ impl Runtime {
 
     /// Mathematical contract: an anonymous range iterand is unary, its
     /// parameter carrier covers the interval, each domain condition holds
-    /// throughout it, and its body is meaningful and belongs to the declared
+    /// throughout it, and its body is meaningful and belongs to the defined
     /// return set under those local assumptions.
     pub(in crate::verify) fn verify_unary_iterated_anonymous_in_interval(
         &mut self,
@@ -2727,22 +2727,22 @@ impl Runtime {
         verify_state: &ProofSearchState,
         op: &str,
     ) -> Result<(), RuntimeError> {
-        if ParamGroupWithSet::number_of_params(&af.body.params_def_with_set) != 1 {
+        if SetBoundParameterGroup::number_of_params(&af.body.set_bound_parameters) != 1 {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new_with_just_msg(format!(
                     "{op}: summation/product index function must be unary (one parameter)"
                 )),
             )));
         }
-        let param_bindings = af.body.params_def_with_set.collect_param_bindings();
+        let param_bindings = af.body.set_bound_parameters.collect_param_bindings();
         let param_binding = param_bindings[0].clone();
         let Some(param_set_for_index) = Self::unary_param_set_from_params_def(
-            &af.body.params_def_with_set,
+            &af.body.set_bound_parameters,
             param_binding.name(),
         ) else {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new_with_just_msg(format!(
-                    "{op}: could not find index parameter in params_def_with_set"
+                    "{op}: could not find index parameter in set_bound_parameters"
                 )),
             )));
         };
@@ -2754,7 +2754,7 @@ impl Runtime {
             op,
         )?;
         self.run_in_local_env(|rt| {
-            for g in af.body.params_def_with_set.iter() {
+            for g in af.body.set_bound_parameters.iter() {
                 rt.define_params_with_set_in_scope(g, BindingScope::LocalBinder)
                     .map_err(|e| {
                         RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!("{op}: could not bind index parameter in local well-defined check"), e)))
@@ -2824,7 +2824,7 @@ impl Runtime {
             if return_result.is_unknown() {
                 return Err(RuntimeError::from(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new_with_just_msg(format!(
-                        "{op}: iterand body {} is not verified to belong to declared return set {}",
+                        "{op}: iterand body {} is not verified to belong to defined return set {}",
                         af.equal_to, af.body.ret_set
                     )),
                 )));
@@ -2898,8 +2898,8 @@ impl Runtime {
         }
         for element in &list_set.list {
             let args = vec![element.as_ref().clone()];
-            let substitutions = ParamGroupWithSet::param_defs_and_args_to_param_to_arg_map(
-                &anonymous.body.params_def_with_set,
+            let substitutions = SetBoundParameterGroup::param_defs_and_args_to_param_to_arg_map(
+                &anonymous.body.set_bound_parameters,
                 &args,
             );
             let body =
@@ -2915,7 +2915,7 @@ impl Runtime {
             if result.is_unknown() {
                 return Err(RuntimeError::from(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new_with_just_msg(format!(
-                        "{op}: iterand body {body} is not verified to belong to declared return set {return_set} at {}",
+                        "{op}: iterand body {body} is not verified to belong to defined return set {return_set} at {}",
                         element
                     )),
                 )));
@@ -2937,13 +2937,13 @@ impl Runtime {
             return Ok(());
         };
         self.run_in_local_env(|rt| {
-            for param in anonymous.body.params_def_with_set.iter() {
+            for param in anonymous.body.set_bound_parameters.iter() {
                 rt.define_params_with_set_in_scope(param, BindingScope::LocalBinder)?;
             }
-            let bindings = anonymous.body.params_def_with_set.collect_param_bindings();
+            let bindings = anonymous.body.set_bound_parameters.collect_param_bindings();
             if let [binding] = bindings.as_slice() {
                 if let Some(param_set) = Self::unary_param_set_from_params_def(
-                    &anonymous.body.params_def_with_set,
+                    &anonymous.body.set_bound_parameters,
                     binding.name(),
                 ) {
                     if rt.verify_iterand_domain_is_contained_in_return_set(
@@ -2987,7 +2987,7 @@ impl Runtime {
             {
                 return Err(RuntimeError::from(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new_with_just_msg(format!(
-                        "{op}: iterand body {} is not verified to belong to declared return set {}",
+                        "{op}: iterand body {} is not verified to belong to defined return set {}",
                         anonymous.equal_to, anonymous.body.ret_set
                     )),
                 )));
@@ -2997,7 +2997,7 @@ impl Runtime {
     }
 
     /// Mathematical contract: prove that every element admitted by the
-    /// iterand domain also belongs to its declared return set, using either a
+    /// iterand domain also belongs to its defined return set, using either a
     /// subset proof or sound structural reductions of the domain expression.
     fn verify_iterand_domain_is_contained_in_return_set(
         &mut self,

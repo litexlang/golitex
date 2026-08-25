@@ -27,11 +27,13 @@ impl Runtime {
 
         let infer_result = self.exec_axiom_stmt_affect_environment(stmt)?;
         Ok(
-            SuccessStmtResult::AxiomStmt(Box::new(SuccessAxiomStmtResult {
-                statement: stmt.clone(),
-                common: SuccessStmtCommonResult::new(infer_result),
-                well_definedness: Some(well_definedness),
-            }))
+            SuccessStmtResult::Definition(SuccessDefinitionStmtResult::AxiomStmt(Box::new(
+                SuccessAxiomStmtResult {
+                    statement: stmt.clone(),
+                    common: SuccessStmtCommonResult::new(infer_result),
+                    well_definedness: Some(well_definedness),
+                },
+            )))
             .into(),
         )
     }
@@ -60,11 +62,13 @@ impl Runtime {
             InferReason::Other(AxiomStmt::store_reason().to_string()),
         )?;
         Ok(
-            SuccessStmtResult::AxiomStmt(Box::new(SuccessAxiomStmtResult {
-                statement: stmt.clone(),
-                common: SuccessStmtCommonResult::new(infer_result),
-                well_definedness: None,
-            }))
+            SuccessStmtResult::Definition(SuccessDefinitionStmtResult::AxiomStmt(Box::new(
+                SuccessAxiomStmtResult {
+                    statement: stmt.clone(),
+                    common: SuccessStmtCommonResult::new(infer_result),
+                    well_definedness: None,
+                },
+            )))
             .into(),
         )
     }

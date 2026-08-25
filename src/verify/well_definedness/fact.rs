@@ -143,7 +143,7 @@ impl Runtime {
         exist_fact: &ExistFactEnum,
         verify_state: &ProofSearchState,
     ) -> Result<SuccessVerifyFactWellDefinedProofResult, RuntimeError> {
-        let bindings = exist_fact.params_def_with_type().collect_param_bindings();
+        let bindings = exist_fact.typed_parameters().collect_param_bindings();
         let rename_map = self.visible_binding_conflict_rename_map(&bindings)?;
         let working = if rename_map.is_empty() {
             exist_fact.clone()
@@ -152,7 +152,7 @@ impl Runtime {
         };
         let (binder, body) = self.run_in_local_env(|runtime| -> Result<_, RuntimeError> {
             let binder = runtime.verify_fact_binder_result(
-                working.params_def_with_type(),
+                working.typed_parameters(),
                 BindingScope::LocalBinder,
                 verify_state,
             )?;
@@ -185,7 +185,7 @@ impl Runtime {
 
     pub fn verify_fact_binder_result(
         &mut self,
-        parameter_definition: &ParamDefWithType,
+        parameter_definition: &TypedParameterList,
         binding_scope: BindingScope,
         verify_state: &ProofSearchState,
     ) -> Result<SuccessVerifyFactBinderResult, RuntimeError> {
@@ -355,7 +355,7 @@ impl Runtime {
         let expected_len = if is_builtin_predicate(&name_string) {
             atomic_fact.is_builtin_predicate_and_return_expected_args_len()
         } else if let Some(predicate_definition) = self.get_prop_definition_by_name(&name_string) {
-            predicate_definition.params_def_with_type.number_of_params()
+            predicate_definition.typed_parameters.number_of_params()
         } else if let Some(abstract_prop_definition) =
             self.get_abstract_prop_definition_by_name(&name_string)
         {
@@ -617,7 +617,7 @@ impl Runtime {
         ),
         RuntimeError,
     > {
-        let bindings = forall_fact.params_def_with_type.collect_param_bindings();
+        let bindings = forall_fact.typed_parameters.collect_param_bindings();
         let rename_map = self.visible_binding_conflict_rename_map(&bindings)?;
         let working = if rename_map.is_empty() {
             forall_fact.clone()
@@ -628,7 +628,7 @@ impl Runtime {
 
         self.run_in_local_env(|rt| {
             let binder = rt.verify_fact_binder_result(
-                &working.params_def_with_type,
+                &working.typed_parameters,
                 BindingScope::LocalBinder,
                 verify_state,
             )?;
@@ -731,7 +731,7 @@ impl Runtime {
         verify_state: &ProofSearchState,
     ) -> Result<(), RuntimeError> {
         let _parameter_infers = match self.define_params_with_type(
-            &forall_fact.params_def_with_type,
+            &forall_fact.typed_parameters,
             false,
             BindingScope::LocalBinder,
         ) {

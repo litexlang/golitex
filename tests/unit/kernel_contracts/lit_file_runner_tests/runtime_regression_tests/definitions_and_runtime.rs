@@ -569,7 +569,7 @@ prop SharedName(x R)
 
     assert!(
         !run_succeeded,
-        "same spelling across declaration kinds should fail:\n{}",
+        "same spelling across definition kinds should fail:\n{}",
         run_output
     );
     assert!(run_output.contains("NameAlreadyUsedError"));
@@ -577,7 +577,7 @@ prop SharedName(x R)
 }
 
 #[test]
-fn completed_binder_scope_releases_its_spelling_for_a_global_declaration() {
+fn completed_binder_scope_releases_its_spelling_for_a_global_definition() {
     let source_code = r#"
 forall x R:
     x = x
@@ -588,7 +588,7 @@ x = 1
 
     let mut runtime = Runtime::new();
     runtime.start_isolated_source(
-        "completed_binder_scope_releases_its_spelling_for_a_global_declaration",
+        "completed_binder_scope_releases_its_spelling_for_a_global_definition",
     );
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -825,7 +825,7 @@ fn theorem_axiom_and_strategy_reject_multiple_names() {
             render_run_output(&runtime, &stmt_results, &runtime_error);
         assert!(
             !run_succeeded,
-            "multiple declaration names should fail:\n{}",
+            "multiple definition names should fail:\n{}",
             run_output
         );
     }
@@ -1184,8 +1184,8 @@ stop strategy use_target_strategy
 
     let env = &runtime.current_module().main_environment;
     assert!(env
-        .declarations
-        .defined_strategy_stmts
+        .definitions
+        .strategy_definitions
         .contains_key("use_target_strategy"));
     assert_eq!(
         env.strategies
@@ -1959,19 +1959,19 @@ fn stored_fact_lookup_still_rejects_a_different_proposition() {
         .collect();
     assert_eq!(stored.len(), 2, "both facts should have stable identities");
 
-    let mut repository = EnvironmentStoredFactRepository::default();
-    repository
+    let mut store = EnvironmentStoredFactStore::default();
+    store
         .record_fact(stored[0].0.clone(), stored[0].1)
         .expect("the first canonical fact should register");
-    repository
+    store
         .record_fact(stored[1].0.clone(), stored[1].1)
         .expect("the second canonical fact should register");
 
-    let mut canonical_repository = EnvironmentStoredFactRepository::default();
-    canonical_repository
+    let mut canonical_store = EnvironmentStoredFactStore::default();
+    canonical_store
         .record_fact(stored[0].0.clone(), stored[0].1)
         .expect("the first canonical fact should register");
-    let canonical_error = canonical_repository
+    let canonical_error = canonical_store
         .record_fact(stored[1].0.clone(), stored[0].1)
         .expect_err("one FactId must not identify a different proposition");
     let RuntimeError::StoreFactError(canonical_detail) = canonical_error else {
@@ -1983,14 +1983,14 @@ fn stored_fact_lookup_still_rejects_a_different_proposition() {
         canonical_detail.msg
     );
 
-    repository
+    store
         .record_lookup_key(
             "shared-test-key".to_string(),
             default_line_file(),
             stored[0].1,
         )
         .expect("the first lookup should register");
-    let error = repository
+    let error = store
         .record_lookup_key(
             "shared-test-key".to_string(),
             default_line_file(),
@@ -2036,11 +2036,11 @@ fn(beta_index Z) Z {beta_index}(1) $in Z
         "alpha-equivalent lookup should reuse the original FactId"
     );
 
-    let mut repository = EnvironmentStoredFactRepository::default();
-    repository
+    let mut store = EnvironmentStoredFactStore::default();
+    store
         .record_fact(stored[0].0.clone(), stored[0].1)
         .expect("the first spelling should register");
-    repository
+    store
         .record_fact(stored[1].0.clone(), stored[1].1)
         .expect("the alpha-equivalent spelling should preserve the FactId");
 }

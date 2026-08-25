@@ -94,7 +94,7 @@ impl Runtime {
         )
         .into();
         let coordinate_forall: Fact = ForallFact::new_canonical_forall(
-            ParamDefWithType::new(vec![index_group]),
+            TypedParameterList::new(vec![index_group]),
             vec![],
             vec![coordinate_fact.into()],
             in_fact.line_file.clone(),

@@ -160,7 +160,7 @@ impl Runtime {
         if fact.is_not_exist() != other.is_not_exist() {
             return Ok(None);
         }
-        if fact.params_def_with_type().groups.len() != other.params_def_with_type().groups.len() {
+        if fact.typed_parameters().groups.len() != other.typed_parameters().groups.len() {
             return Ok(None);
         }
         if fact.facts().len() != other.facts().len() {
@@ -170,10 +170,10 @@ impl Runtime {
         let mut matched_args: Vec<(Obj, Obj)> = Vec::new();
 
         for (fact_param_def, other_param_def) in fact
-            .params_def_with_type()
+            .typed_parameters()
             .groups
             .iter()
-            .zip(other.params_def_with_type().groups.iter())
+            .zip(other.typed_parameters().groups.iter())
         {
             if fact_param_def.params.len() != other_param_def.params.len() {
                 return Ok(None);
@@ -222,15 +222,15 @@ impl Runtime {
         other: &ForallFact,
         next_forall_scope_id: &mut usize,
     ) -> Result<Option<Vec<(Obj, Obj)>>, RuntimeError> {
-        if fact.params_def_with_type.groups.len() != other.params_def_with_type.groups.len()
+        if fact.typed_parameters.groups.len() != other.typed_parameters.groups.len()
             || fact.dom_facts.len() != other.dom_facts.len()
             || fact.then_facts.len() != other.then_facts.len()
         {
             return Ok(None);
         }
 
-        let fact_bindings = fact.params_def_with_type.collect_param_bindings();
-        let other_bindings = other.params_def_with_type.collect_param_bindings();
+        let fact_bindings = fact.typed_parameters.collect_param_bindings();
+        let other_bindings = other.typed_parameters.collect_param_bindings();
         if fact_bindings.len() != other_bindings.len() {
             return Ok(None);
         }
@@ -256,10 +256,10 @@ impl Runtime {
 
         let mut matched_args = Vec::new();
         for (fact_group, other_group) in fact
-            .params_def_with_type
+            .typed_parameters
             .groups
             .iter()
-            .zip(other.params_def_with_type.groups.iter())
+            .zip(other.typed_parameters.groups.iter())
         {
             if fact_group.params.len() != other_group.params.len() {
                 return Ok(None);

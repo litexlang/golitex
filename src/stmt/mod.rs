@@ -12,7 +12,7 @@ pub mod eval_stmt;
 #[path = "proof_blocks/example.rs"]
 pub mod example_stmt;
 #[path = "definitions/parameters.rs"]
-pub mod parameter_def;
+pub mod parameters;
 #[path = "proof_blocks/sketch.rs"]
 pub mod sketch_stmt;
 #[path = "commands/tooling.rs"]
@@ -48,9 +48,7 @@ pub use by_stmt::ByStructDefStmt;
 pub use by_stmt::ByThmStmt;
 pub use statement_types::ByStmt;
 pub use statement_types::CommandStmt;
-pub use statement_types::DefInterfaceStmt;
-pub use statement_types::DefObjStmt;
-pub use statement_types::DefPredicateStmt;
+pub use statement_types::DefinitionStmt;
 pub use statement_types::ProofBlockStmt;
 pub use statement_types::Stmt;
 pub use statement_types::UnsafeStmt;

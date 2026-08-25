@@ -19,14 +19,16 @@ impl Runtime {
             &fn_set_stored,
         )?;
 
-        Ok(SuccessDefObjStmtResult::HaveFnEqualCaseByCaseStmt(Box::new(
-            SuccessHaveFnEqualCaseByCaseStmtResult {
-                statement: have_fn_equal_case_by_case_stmt.clone(),
-                common: SuccessStmtCommonResult::new(infer_result),
-                verification: Some(verification),
-            },
-        ))
-        .into())
+        Ok(
+            SuccessDefinitionStmtResult::HaveFnEqualCaseByCaseStmt(Box::new(
+                SuccessHaveFnEqualCaseByCaseStmtResult {
+                    statement: have_fn_equal_case_by_case_stmt.clone(),
+                    common: SuccessStmtCommonResult::new(infer_result),
+                    verification: Some(verification),
+                },
+            ))
+            .into(),
+        )
     }
 
     pub fn store_have_fn_equal_case_by_case_stmt_facts(
@@ -36,11 +38,11 @@ impl Runtime {
     ) -> Result<SuccessInferResult, RuntimeError> {
         self.store_parameter_binding(
             &have_fn_equal_case_by_case_stmt.symbol_binding,
-            BindingScope::DeclaredObject,
+            BindingScope::DefinitionBinding,
         )?;
 
         let function_identifier_obj =
-            self.declared_identifier_obj(have_fn_equal_case_by_case_stmt.name());
+            self.definition_identifier_obj(have_fn_equal_case_by_case_stmt.name());
         let function_set_obj = fn_set_stored.clone().into();
         let function_in_function_set_fact = InFact::new(
             function_identifier_obj.clone(),
@@ -71,7 +73,7 @@ impl Runtime {
         let param_bindings = param_defs_with_type.collect_param_bindings();
         let function_head =
             FnObjHead::given_an_atom_return_a_fn_obj_head(function_identifier_obj.clone())
-                .expect("declared function identifier should be an atom");
+                .expect("defined function identifier should be an atom");
         let function_args = param_bindings
             .iter()
             .map(|binding| Box::new(obj_for_bound_param_in_scope(binding)))
@@ -243,14 +245,16 @@ impl Runtime {
             have_fn_equal_case_by_case_stmt,
             &fn_set_stored,
         )?;
-        Ok(SuccessDefObjStmtResult::HaveFnEqualCaseByCaseStmt(Box::new(
-            SuccessHaveFnEqualCaseByCaseStmtResult {
-                statement: have_fn_equal_case_by_case_stmt.clone(),
-                common: SuccessStmtCommonResult::new(infer_result),
-                verification: None,
-            },
-        ))
-        .into())
+        Ok(
+            SuccessDefinitionStmtResult::HaveFnEqualCaseByCaseStmt(Box::new(
+                SuccessHaveFnEqualCaseByCaseStmtResult {
+                    statement: have_fn_equal_case_by_case_stmt.clone(),
+                    common: SuccessStmtCommonResult::new(infer_result),
+                    verification: None,
+                },
+            ))
+            .into(),
+        )
     }
 
     /// A casewise function is total and unambiguous: its cases cover the domain and are pairwise
@@ -274,7 +278,7 @@ impl Runtime {
             .map_err(|e| {
                 short_exec_error(
                     stmt.clone().into(),
-                    "have fn by cases: cases do not cover the declared domain".to_string(),
+                    "have fn by cases: cases do not cover the defined domain".to_string(),
                     Some(e),
                     vec![],
                 )
@@ -310,7 +314,7 @@ impl Runtime {
         &mut self,
         stmt: &HaveFnEqualCaseByCaseStmt,
     ) -> Result<(), RuntimeError> {
-        for param_def_with_set in stmt.fn_set_clause.params_def_with_set.iter() {
+        for param_def_with_set in stmt.fn_set_clause.set_bound_parameters.iter() {
             self.define_params_with_set(param_def_with_set)
                 .map_err(|define_params_error| {
                     short_exec_error(stmt.clone().into(), "", Some(define_params_error), vec![])
@@ -329,9 +333,9 @@ impl Runtime {
         Ok(())
     }
 
-    /// Mathematical contract: under the declared function domain and this
+    /// Mathematical contract: under the defined function domain and this
     /// case condition, the selected branch value is well-defined and belongs
-    /// to the declared return carrier.
+    /// to the defined return carrier.
     fn have_fn_equal_case_by_case_stmt_verify_well_defined_body(
         &mut self,
         have_fn_equal_case_by_case_stmt: &HaveFnEqualCaseByCaseStmt,

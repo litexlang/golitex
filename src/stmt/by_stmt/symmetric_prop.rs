@@ -50,10 +50,10 @@ fn symmetric_prop_shape_from_forall(
     forall_fact: &ForallFact,
 ) -> Result<(String, Vec<usize>), String> {
     let params = forall_fact
-        .params_def_with_type
+        .typed_parameters
         .collect_param_names_with_types();
     if params.len() < 2 {
-        return Err("by symmetric_prop: forall must declare at least two parameters".to_string());
+        return Err("by symmetric_prop: forall must bind at least two parameters".to_string());
     }
     for (_, param_type) in params.iter() {
         match param_type {

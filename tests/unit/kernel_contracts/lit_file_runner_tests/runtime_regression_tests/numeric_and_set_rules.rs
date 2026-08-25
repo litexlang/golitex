@@ -1529,10 +1529,10 @@ trust d = 1 / (2 / 3 * 4)
         run_output
     );
 
-    let a_key = runtime.declared_identifier_obj("a").to_string();
-    let b_key = runtime.declared_identifier_obj("b").to_string();
-    let c_key = runtime.declared_identifier_obj("c").to_string();
-    let d_key = runtime.declared_identifier_obj("d").to_string();
+    let a_key = runtime.definition_identifier_obj("a").to_string();
+    let b_key = runtime.definition_identifier_obj("b").to_string();
+    let c_key = runtime.definition_identifier_obj("c").to_string();
+    let d_key = runtime.definition_identifier_obj("d").to_string();
     let env = &runtime.current_module().main_environment;
     match env
         .objects

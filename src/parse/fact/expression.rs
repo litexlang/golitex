@@ -123,7 +123,7 @@ impl Runtime {
                 .into());
             }
 
-            let mut groups: Vec<ParamGroupWithParamType> = vec![];
+            let mut groups: Vec<TypedParameterGroup> = vec![];
             loop {
                 let cur = tb.current()?;
                 if cur == COLON || cur == RIGHT_ARROW || cur == LEFT_CURLY_BRACE {
@@ -145,7 +145,7 @@ impl Runtime {
                     ),
                 )));
             }
-            let param_def = ParamDefWithType::new(groups);
+            let param_def = TypedParameterList::new(groups);
             let forall_param_names = param_def.collect_param_names();
             this.register_collected_param_names_for_def_parse(
                 &forall_param_names,
@@ -358,7 +358,7 @@ impl Runtime {
                     BindingScope::LocalBinder,
                 )?);
             }
-            let param_def = ParamDefWithType::new(groups);
+            let param_def = TypedParameterList::new(groups);
             let forall_param_names = param_def.collect_param_names();
             this.register_collected_param_names_for_def_parse(
                 &forall_param_names,
@@ -388,7 +388,7 @@ impl Runtime {
     fn parse_forall_with_iff(
         &mut self,
         tb: &mut TokenBlock,
-        param_def: ParamDefWithType,
+        param_def: TypedParameterList,
         mut dom_facts: Vec<Fact>,
     ) -> Result<Fact, RuntimeError> {
         if tb.body.len() < 2 {
@@ -448,7 +448,7 @@ impl Runtime {
     fn parse_forall(
         &mut self,
         tb: &mut TokenBlock,
-        param_def: ParamDefWithType,
+        param_def: TypedParameterList,
         mut initial_dom_facts: Vec<Fact>,
     ) -> Result<Fact, RuntimeError> {
         let last_body = tb.body.last().ok_or_else(|| {
@@ -548,14 +548,14 @@ impl Runtime {
                     ),
                 )));
             };
-            let mut groups: Vec<ParamGroupWithParamType> = vec![];
+            let mut groups: Vec<TypedParameterGroup> = vec![];
             while tb.current()? != ST {
                 groups.push(this.parse_param_def_with_param_type_and_skip_comma(
                     tb,
                     BindingScope::LocalBinder,
                 )?);
             }
-            let param_def = ParamDefWithType::new(groups);
+            let param_def = TypedParameterList::new(groups);
             let exist_param_names = param_def.collect_param_names();
             this.run_in_local_parsing_time_name_scope(move |inner| {
                 inner.register_collected_param_names_for_def_parse(

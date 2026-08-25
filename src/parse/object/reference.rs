@@ -54,7 +54,7 @@ impl Runtime {
         if !tb.exceed_end_of_head() && tb.current()? == LEFT_CURLY_BRACE {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "explicit struct selection `&Struct{object}.field` has been removed; declare the object or function return directly with `&Struct` and write `object.field`"
+                    "explicit struct selection `&Struct{object}.field` has been removed; define the object or function return directly with `&Struct` and write `object.field`"
                         .to_string(),
                     tb.line_file.clone(),
                 ),
@@ -90,7 +90,7 @@ impl Runtime {
                 RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
                         format!(
-                            "no declaration-time struct carrier is recorded for `{}`; declare it directly with a type such as `{} &Struct`",
+                            "no definition-time struct carrier is recorded for `{}`; define it directly with a type such as `{} &Struct`",
                             symbol.display_name(),
                             symbol.display_name()
                         ),
@@ -109,7 +109,7 @@ impl Runtime {
             // Local proof blocks are parsed before their `have fn` statements
             // execute. For a non-dependent direct struct return, the signature
             // parser records the carrier by the function symbol so field access
-            // remains declaration-owned even in that pre-execution window.
+            // remains definition-owned even in that pre-execution window.
             let head_obj: Obj = (*fn_obj.head).clone().into();
             if let Obj::Atom(atom) = head_obj {
                 if let Some(struct_obj) = atom
@@ -134,7 +134,7 @@ impl Runtime {
         let Obj::ObjAsStructInstanceWithFieldAccess(field_access) = obj else {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "field access requires a symbol, field, or function result whose declaration has a direct `&Struct` carrier"
+                    "field access requires a symbol, field, or function result whose definition has a direct `&Struct` carrier"
                         .to_string(),
                     line_file,
                 ),
@@ -142,12 +142,12 @@ impl Runtime {
         };
 
         let instantiated_field_type =
-            self.declared_struct_field_type(field_access, line_file.clone())?;
+            self.struct_field_type_from_definition(field_access, line_file.clone())?;
         let Obj::StructObj(struct_obj) = instantiated_field_type else {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
                     format!(
-                        "cannot continue field access after `{}` because its declared field carrier is not a struct",
+                        "cannot continue field access after `{}` because its defined field carrier is not a struct",
                         field_access
                     ),
                     line_file,
@@ -157,9 +157,9 @@ impl Runtime {
         Ok(struct_obj)
     }
 
-    /// A template application owns the carrier written on its body declaration
+    /// A template application owns the carrier written on its body definition
     /// after the template arguments have been substituted. This is deliberately
-    /// declaration-only: an equality or a later membership fact cannot supply a
+    /// definition-only: an equality or a later membership fact cannot supply a
     /// named-field carrier.
     fn direct_struct_carrier_for_instantiated_template(
         &mut self,
@@ -223,7 +223,7 @@ impl Runtime {
             FnObjHead::AnonymousFnLiteral(anonymous_fn) => anonymous_fn.body.clone(),
             FnObjHead::ObjAsStructInstanceWithFieldAccess(field_access) => {
                 let field_type =
-                    self.declared_struct_field_type(field_access, default_line_file())?;
+                    self.struct_field_type_from_definition(field_access, default_line_file())?;
                 match field_type {
                     Obj::FnSet(fn_set) => fn_set.body,
                     Obj::AnonymousFn(anonymous_fn) => anonymous_fn.body,
@@ -250,7 +250,7 @@ impl Runtime {
         for (index, args) in fn_obj.body.iter().enumerate() {
             let args_as_obj: Vec<Obj> = args.iter().map(|arg| (**arg).clone()).collect();
             let param_to_arg_map = fn_body
-                .params_def_with_set
+                .set_bound_parameters
                 .param_defs_and_args_to_param_to_arg_map(&args_as_obj);
             let return_set =
                 self.inst_obj(&fn_body.ret_set, &param_to_arg_map, SubstitutionMode::Exact)?;
@@ -282,12 +282,12 @@ impl Runtime {
         let raw_body = match &def.template_def_stmt {
             TemplateDefEnum::HaveFnEqualStmt(stmt) => stmt.equal_to_anonymous_fn.body.clone(),
             TemplateDefEnum::HaveFnEqualCaseByCaseStmt(stmt) => FnSetBody::new(
-                stmt.fn_set_clause.params_def_with_set.clone(),
+                stmt.fn_set_clause.set_bound_parameters.clone(),
                 stmt.fn_set_clause.dom_facts.clone(),
                 stmt.fn_set_clause.ret_set.clone(),
             ),
             TemplateDefEnum::HaveFnByInducStmt(stmt) => FnSetBody::new(
-                stmt.fn_set_clause.params_def_with_set.clone(),
+                stmt.fn_set_clause.set_bound_parameters.clone(),
                 stmt.fn_set_clause.dom_facts.clone(),
                 stmt.fn_set_clause.ret_set.clone(),
             ),
@@ -306,13 +306,13 @@ impl Runtime {
             SubstitutionMode::Exact,
         )?;
         Ok(Some(FnSetBody::new(
-            raw_body.params_def_with_set,
+            raw_body.set_bound_parameters,
             raw_body.dom_facts,
             instantiated_return,
         )))
     }
 
-    fn declared_struct_field_type(
+    fn struct_field_type_from_definition(
         &mut self,
         field_access: &ObjAsStructInstanceWithFieldAccess,
         line_file: LineFile,

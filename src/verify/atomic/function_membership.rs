@@ -5,25 +5,25 @@ use std::collections::HashMap;
 
 struct FnMembershipProofFlow {
     in_fact: InFact,
-    forall_params: ParamDefWithType,
+    forall_params: TypedParameterList,
     forall_dom_facts: Vec<Fact>,
     pointwise_ret_set: Obj,
     applied_fn_obj: Obj,
 }
 
 impl Runtime {
-    /// Verify a value against a declared return set, including anonymous functions whose
-    /// declared carrier is equal to a function space or set builder.
-    pub fn verify_value_in_declared_return_set(
+    /// Verify a value against a definition return set, including anonymous functions whose
+    /// definition carrier is equal to a function space or set builder.
+    pub fn verify_value_in_definition_return_set(
         &mut self,
         value: Obj,
-        declared_return_set: Obj,
+        definition_return_set: Obj,
         line_file: LineFile,
         verify_state: &ProofSearchState,
     ) -> Result<StmtResult, RuntimeError> {
         let direct_result = self.verify_obj_satisfies_param_type(
             value.clone(),
-            &ParamType::Obj(declared_return_set.clone()),
+            &ParamType::Obj(definition_return_set.clone()),
             verify_state,
         )?;
         if !direct_result.is_unknown() {
@@ -31,9 +31,9 @@ impl Runtime {
         }
 
         if let Some(indexed_result) = self
-            .verify_indexed_value_in_declared_return_set_via_cart_projection(
+            .verify_indexed_value_in_definition_return_set_via_cart_projection(
                 &value,
-                &declared_return_set,
+                &definition_return_set,
                 &line_file,
                 verify_state,
             )?
@@ -44,9 +44,9 @@ impl Runtime {
         let Obj::AnonymousFn(value_fn) = value else {
             return Ok(direct_result);
         };
-        let mut return_set_representatives = vec![declared_return_set.clone()];
+        let mut return_set_representatives = vec![definition_return_set.clone()];
         return_set_representatives
-            .extend(self.get_all_obj_representatives_equal_to_given(&declared_return_set));
+            .extend(self.get_all_obj_representatives_equal_to_given(&definition_return_set));
         for return_set_representative in return_set_representatives {
             let representative_kind = match &return_set_representative {
                 Obj::FnSet(_) => "equal function-space representative",
@@ -62,12 +62,12 @@ impl Runtime {
                 continue;
             }
             let membership_fact: Fact =
-                InFact::new(value_fn.clone().into(), declared_return_set, line_file).into();
+                InFact::new(value_fn.clone().into(), definition_return_set, line_file).into();
             return Ok(
                 SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                     membership_fact,
                     format!(
-                        "anonymous fn satisfies a declared return set through an equal {}",
+                        "anonymous fn satisfies a definition return set through an equal {}",
                         representative_kind
                     ),
                     vec![representative_result],
@@ -81,12 +81,12 @@ impl Runtime {
 
     /// Recover the carrier of a symbolic Cartesian coordinate when validating a
     /// function result. For `p $in C`, the cart contract gives
-    /// `p[i] $in proj(C, i)`; an equal or wider declared return set can then be
+    /// `p[i] $in proj(C, i)`; an equal or wider definition return set can then be
     /// used without requiring the definition site to restate those two facts.
-    fn verify_indexed_value_in_declared_return_set_via_cart_projection(
+    fn verify_indexed_value_in_definition_return_set_via_cart_projection(
         &mut self,
         value: &Obj,
-        declared_return_set: &Obj,
+        definition_return_set: &Obj,
         line_file: &LineFile,
         verify_state: &ProofSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
@@ -113,7 +113,7 @@ impl Runtime {
 
             let equal_set_fact: AtomicFact = EqualFact::new(
                 coordinate_set.clone(),
-                declared_return_set.clone(),
+                definition_return_set.clone(),
                 line_file.clone(),
             )
             .into();
@@ -135,7 +135,7 @@ impl Runtime {
             } else {
                 let subset_fact: AtomicFact = SubsetFact::new(
                     coordinate_set,
-                    declared_return_set.clone(),
+                    definition_return_set.clone(),
                     line_file.clone(),
                 )
                 .into();
@@ -154,7 +154,7 @@ impl Runtime {
 
             let membership_fact: Fact = InFact::new(
                 value.clone(),
-                declared_return_set.clone(),
+                definition_return_set.clone(),
                 line_file.clone(),
             )
             .into();
@@ -287,7 +287,7 @@ impl Runtime {
         };
         let expected_flat_param_bindings = expected_fn_set
             .body
-            .params_def_with_set
+            .set_bound_parameters
             .iter()
             .flat_map(|group| group.params.iter().cloned())
             .collect::<Vec<_>>();
@@ -296,7 +296,7 @@ impl Runtime {
         let mut active_param_to_forall_obj = HashMap::new();
         let mut forall_param_type_groups = Vec::new();
         let mut name_index = 0;
-        for group in expected_fn_set.body.params_def_with_set.iter() {
+        for group in expected_fn_set.body.set_bound_parameters.iter() {
             let param_set = self.inst_obj(
                 group.set_obj(),
                 &active_param_to_forall_obj,
@@ -304,7 +304,7 @@ impl Runtime {
             )?;
             let group_forall_names =
                 forall_param_names[name_index..name_index + group.params.len()].to_vec();
-            forall_param_type_groups.push(ParamGroupWithParamType::new(
+            forall_param_type_groups.push(TypedParameterGroup::new(
                 group_forall_names,
                 ParamType::Obj(param_set),
             ));
@@ -336,7 +336,7 @@ impl Runtime {
         )?;
         let applied_fn_obj = if let Obj::AnonymousFn(function) = element {
             let known_bindings = known_fn_body
-                .params_def_with_set
+                .set_bound_parameters
                 .iter()
                 .flat_map(|group| group.params.iter())
                 .collect::<Vec<_>>();
@@ -368,7 +368,7 @@ impl Runtime {
 
         Ok(Some(FnMembershipProofFlow {
             in_fact: in_fact.clone(),
-            forall_params: ParamDefWithType::new(forall_param_type_groups),
+            forall_params: TypedParameterList::new(forall_param_type_groups),
             forall_dom_facts,
             pointwise_ret_set,
             applied_fn_obj,
@@ -384,12 +384,12 @@ impl Runtime {
             self.generate_random_unused_names(Self::collect_fn_param_names(known_fn_body).len());
         let shared_return_set: Obj = StandardSet::R.into();
         let known_with_expected_return = FnSetBody::new(
-            known_fn_body.params_def_with_set.clone(),
+            known_fn_body.set_bound_parameters.clone(),
             known_fn_body.dom_facts.clone(),
             shared_return_set.clone(),
         );
         let expected_with_shared_return = FnSetBody::new(
-            expected_fn_set.body.params_def_with_set.clone(),
+            expected_fn_set.body.set_bound_parameters.clone(),
             expected_fn_set.body.dom_facts.clone(),
             shared_return_set,
         );
@@ -426,7 +426,7 @@ impl Runtime {
 
     fn collect_fn_param_names(body: &FnSetBody) -> Vec<String> {
         let mut out = Vec::new();
-        for group in body.params_def_with_set.iter() {
+        for group in body.set_bound_parameters.iter() {
             for binding in group.params.iter() {
                 out.push(binding.name().to_string());
             }
@@ -440,7 +440,7 @@ impl Runtime {
     ) -> Vec<Vec<Box<Obj>>> {
         let mut args = Vec::new();
         let mut index = 0;
-        for group in known_fn_body.params_def_with_set.iter() {
+        for group in known_fn_body.set_bound_parameters.iter() {
             for _ in group.params.iter() {
                 args.push(Box::new(obj_for_bound_param_in_scope(
                     &expected_flat_param_names[index],

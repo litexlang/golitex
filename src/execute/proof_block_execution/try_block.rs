@@ -78,15 +78,19 @@ fn first_disallowed_control_stmt(stmt: &Stmt) -> Option<(Stmt, &'static str)> {
     }
 
     match stmt {
-        Stmt::DefObjStmt(DefObjStmt::HaveFnByForallExistUniqueStmt(s)) => {
+        Stmt::Definition(DefinitionStmt::HaveFnByForallExistUniqueStmt(s)) => {
             first_disallowed_control_stmt_in_stmts(&s.prove_process)
         }
-        Stmt::DefInterfaceStmt(DefInterfaceStmt::DefTemplateStmt(s)) => {
+        Stmt::Definition(DefinitionStmt::DefTemplateStmt(s)) => {
             first_disallowed_control_stmt_in_template_def(&s.template_def_stmt)
         }
-        Stmt::DefThmStmt(s) => first_disallowed_control_stmt_in_stmts(&s.prove_process),
-        Stmt::AxiomStmt(_) => None,
-        Stmt::DefStrategyStmt(s) => first_disallowed_control_stmt_in_stmts(&s.prove_process),
+        Stmt::Definition(DefinitionStmt::DefThmStmt(s)) => {
+            first_disallowed_control_stmt_in_stmts(&s.prove_process)
+        }
+        Stmt::Definition(DefinitionStmt::AxiomStmt(_)) => None,
+        Stmt::Definition(DefinitionStmt::DefStrategyStmt(s)) => {
+            first_disallowed_control_stmt_in_stmts(&s.prove_process)
+        }
         Stmt::By(ByStmt::ByCasesStmt(s)) => {
             for proof in s.proofs.iter() {
                 if let Some(found) = first_disallowed_control_stmt_in_stmts(proof) {

@@ -1,7 +1,7 @@
 use super::*;
 
 impl Runtime {
-    /// A generic reduce inhabits the homogeneous carrier declared by its
+    /// A generic reduce inhabits the homogeneous carrier defined by its
     /// binary operation. This rule is intentionally carrier-generic rather
     /// than restricted to the standard number hierarchy.
     pub(super) fn verify_reduce_membership_from_operation_carrier(
@@ -92,8 +92,8 @@ impl Runtime {
     }
 
     // A nonempty integer-range sum/product inherits the narrowest standard scalar carrier
-    // declared by its iterand. The anonymous-function checker separately verifies the body
-    // against that declaration.
+    // defined by its iterand. The anonymous-function checker separately verifies the body
+    // against that definition.
     // Example: `sum(1, 2, fn(k Z) C {i}) $in C`, but not in R.
     pub(super) fn verify_in_fact_sum_or_product_by_iterand_ret_set(
         &mut self,
@@ -219,7 +219,7 @@ impl Runtime {
         ))
     }
 
-    // `sum(start, end, f)` / `product(start, end, f)` in `N+` when the iterand's declared
+    // `sum(start, end, f)` / `product(start, end, f)` in `N+` when the iterand's defined
     // return set is `N+` and the whole iterated object is well-defined on the integer interval.
     // Example: `product(1, a, fn(x N+) N+ {x}) $in N+`.
     pub(super) fn verify_in_fact_sum_or_product_in_n_pos_by_iterand_ret_set(
@@ -243,7 +243,7 @@ impl Runtime {
         ))
     }
 
-    /// `f(args) $in S` when the head's declared return set is `S`, or a standard numeric
+    /// `f(args) $in S` when the head's defined return set is `S`, or a standard numeric
     /// subset of `S`, and the application is well-defined in the current environment.
     /// This also covers function-valued returns, e.g. `seq_add_R(a, b) $in fn(k N+) R`.
     /// Example: if `floor fn(x R) Z`, then `floor(x) $in R` because `Z subset R`.
@@ -279,10 +279,12 @@ impl Runtime {
             .is_success();
         let ret_matches_alpha_renamed_fn_set =
             if let (Obj::FnSet(typed_fn_set), Obj::FnSet(target_fn_set)) = (&typed_ret, target) {
-                let flat_typed =
-                    ParamGroupWithSet::collect_param_names(&typed_fn_set.body.params_def_with_set);
-                let flat_target =
-                    ParamGroupWithSet::collect_param_names(&target_fn_set.body.params_def_with_set);
+                let flat_typed = SetBoundParameterGroup::collect_param_names(
+                    &typed_fn_set.body.set_bound_parameters,
+                );
+                let flat_target = SetBoundParameterGroup::collect_param_names(
+                    &target_fn_set.body.set_bound_parameters,
+                );
                 if flat_typed.len() == flat_target.len() {
                     let shared_names = self.generate_random_unused_names(flat_typed.len());
                     let typed_norm = self.fn_set_alpha_renamed_for_display_compare(
@@ -326,7 +328,7 @@ impl Runtime {
             return Ok(
                 SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     target_fact.clone(),
-                    "fn application in its exact instantiated declared return set".to_string(),
+                    "fn application in its exact instantiated defined return set".to_string(),
                     BuiltinRuleEvidence::FunctionApplicationReturnMembership(
                         FunctionApplicationReturnMembershipBuiltinRuleEvidence::new(
                             typed_ret,
@@ -342,7 +344,7 @@ impl Runtime {
         Ok(
             SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
-                "fn application in declared return set or standard numeric superset (well-defined under typing)".to_string(),
+                "fn application in defined return set or standard numeric superset (well-defined under typing)".to_string(),
                 Vec::new(),
             )
             .into(),

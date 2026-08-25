@@ -1,4 +1,4 @@
-//! Parameter declarations, carriers, and binding metadata.
+//! Parameter definitions, carriers, and binding metadata.
 
 use crate::prelude::*;
 use std::collections::HashMap;
@@ -13,18 +13,18 @@ pub enum ParamType {
     Obj(Obj),
 }
 
-/// Full parameter list with types, e.g. `a, b T, c E` as a sequence of [`ParamGroupWithParamType`].
+/// Full parameter list with types, e.g. `a, b T, c E` as a sequence of [`TypedParameterGroup`].
 #[derive(Clone)]
-pub struct ParamDefWithType {
-    pub groups: Vec<ParamGroupWithParamType>,
+pub struct TypedParameterList {
+    pub groups: Vec<TypedParameterGroup>,
     /// For each parameter group, the flat indices of earlier parameters cited by that group's type.
     param_type_cited_param_indices: Vec<Vec<usize>>,
 }
 
-impl ParamDefWithType {
-    pub fn new(groups: Vec<ParamGroupWithParamType>) -> Self {
+impl TypedParameterList {
+    pub fn new(groups: Vec<TypedParameterGroup>) -> Self {
         let param_type_cited_param_indices = cited_param_indices_for_param_type_groups(&groups);
-        ParamDefWithType {
+        TypedParameterList {
             groups,
             param_type_cited_param_indices,
         }
@@ -42,11 +42,11 @@ impl ParamDefWithType {
         self.groups.is_empty()
     }
 
-    pub fn iter(&self) -> std::slice::Iter<'_, ParamGroupWithParamType> {
+    pub fn iter(&self) -> std::slice::Iter<'_, TypedParameterGroup> {
         self.groups.iter()
     }
 
-    pub fn as_slice(&self) -> &[ParamGroupWithParamType] {
+    pub fn as_slice(&self) -> &[TypedParameterGroup] {
         self.groups.as_slice()
     }
 
@@ -175,22 +175,22 @@ impl ParamDefWithType {
     }
 }
 
-impl fmt::Display for ParamDefWithType {
+impl fmt::Display for TypedParameterList {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{}", vec_to_string_join_by_comma(&self.groups))
     }
 }
 
-impl From<Vec<ParamGroupWithParamType>> for ParamDefWithType {
-    fn from(groups: Vec<ParamGroupWithParamType>) -> Self {
-        ParamDefWithType::new(groups)
+impl From<Vec<TypedParameterGroup>> for TypedParameterList {
+    fn from(groups: Vec<TypedParameterGroup>) -> Self {
+        TypedParameterList::new(groups)
     }
 }
 
 /// Full function parameter list with set-valued parameter domains.
 #[derive(Clone)]
-pub struct ParamDefWithSet {
-    pub groups: Vec<ParamGroupWithSet>,
+pub struct SetBoundParameterList {
+    pub groups: Vec<SetBoundParameterGroup>,
     /// For each parameter group, the flat indices of earlier parameters cited by that group's set.
     ///
     /// Later parameter sets may depend on earlier arguments, e.g.
@@ -200,10 +200,10 @@ pub struct ParamDefWithSet {
     param_set_cited_param_indices: Vec<Vec<usize>>,
 }
 
-impl ParamDefWithSet {
-    pub fn new(groups: Vec<ParamGroupWithSet>) -> Self {
+impl SetBoundParameterList {
+    pub fn new(groups: Vec<SetBoundParameterGroup>) -> Self {
         let param_set_cited_param_indices = cited_param_indices_for_param_set_groups(&groups);
-        ParamDefWithSet {
+        SetBoundParameterList {
             groups,
             param_set_cited_param_indices,
         }
@@ -217,11 +217,11 @@ impl ParamDefWithSet {
         self.groups.is_empty()
     }
 
-    pub fn iter(&self) -> std::slice::Iter<'_, ParamGroupWithSet> {
+    pub fn iter(&self) -> std::slice::Iter<'_, SetBoundParameterGroup> {
         self.groups.iter()
     }
 
-    pub fn as_slice(&self) -> &[ParamGroupWithSet] {
+    pub fn as_slice(&self) -> &[SetBoundParameterGroup] {
         self.groups.as_slice()
     }
 
@@ -230,11 +230,11 @@ impl ParamDefWithSet {
     }
 
     pub fn number_of_params(&self) -> usize {
-        ParamGroupWithSet::number_of_params(&self.groups)
+        SetBoundParameterGroup::number_of_params(&self.groups)
     }
 
     pub fn collect_param_names(&self) -> Vec<String> {
-        ParamGroupWithSet::collect_param_names(&self.groups)
+        SetBoundParameterGroup::collect_param_names(&self.groups)
     }
 
     pub fn collect_param_bindings(&self) -> Vec<SymbolBinding> {
@@ -245,7 +245,7 @@ impl ParamDefWithSet {
     }
 
     pub fn param_defs_and_args_to_param_to_arg_map(&self, args: &Vec<Obj>) -> HashMap<String, Obj> {
-        ParamGroupWithSet::param_defs_and_args_to_param_to_arg_map(&self.groups, args)
+        SetBoundParameterGroup::param_defs_and_args_to_param_to_arg_map(&self.groups, args)
     }
 
     pub fn flat_instantiated_param_sets_for_args(
@@ -304,37 +304,37 @@ impl ParamDefWithSet {
     }
 }
 
-impl Deref for ParamDefWithSet {
-    type Target = Vec<ParamGroupWithSet>;
+impl Deref for SetBoundParameterList {
+    type Target = Vec<SetBoundParameterGroup>;
 
     fn deref(&self) -> &Self::Target {
         &self.groups
     }
 }
 
-impl IntoIterator for ParamDefWithSet {
-    type Item = ParamGroupWithSet;
-    type IntoIter = std::vec::IntoIter<ParamGroupWithSet>;
+impl IntoIterator for SetBoundParameterList {
+    type Item = SetBoundParameterGroup;
+    type IntoIter = std::vec::IntoIter<SetBoundParameterGroup>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.groups.into_iter()
     }
 }
 
-impl From<Vec<ParamGroupWithSet>> for ParamDefWithSet {
-    fn from(groups: Vec<ParamGroupWithSet>) -> Self {
-        ParamDefWithSet::new(groups)
+impl From<Vec<SetBoundParameterGroup>> for SetBoundParameterList {
+    fn from(groups: Vec<SetBoundParameterGroup>) -> Self {
+        SetBoundParameterList::new(groups)
     }
 }
 
 #[derive(Clone)]
-pub struct ParamGroupWithSet {
+pub struct SetBoundParameterGroup {
     pub params: Vec<SymbolBinding>,
     pub param_type: Box<Obj>,
 }
 
 #[derive(Clone)]
-pub struct ParamGroupWithParamType {
+pub struct TypedParameterGroup {
     pub params: Vec<SymbolBinding>,
     pub param_type: ParamType,
 }
@@ -395,7 +395,7 @@ impl fmt::Display for FiniteSet {
     }
 }
 
-impl fmt::Display for ParamGroupWithSet {
+impl fmt::Display for SetBoundParameterGroup {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
@@ -406,7 +406,7 @@ impl fmt::Display for ParamGroupWithSet {
     }
 }
 
-impl fmt::Display for ParamGroupWithParamType {
+impl fmt::Display for TypedParameterGroup {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
@@ -417,9 +417,9 @@ impl fmt::Display for ParamGroupWithParamType {
     }
 }
 
-impl ParamGroupWithParamType {
+impl TypedParameterGroup {
     pub fn new(params: Vec<SymbolBinding>, param_type: ParamType) -> Self {
-        ParamGroupWithParamType { params, param_type }
+        TypedParameterGroup { params, param_type }
     }
 
     pub fn param_names(&self) -> Vec<&str> {
@@ -427,9 +427,9 @@ impl ParamGroupWithParamType {
     }
 }
 
-impl ParamGroupWithSet {
+impl SetBoundParameterGroup {
     pub fn new(params: Vec<SymbolBinding>, set: Obj) -> Self {
-        ParamGroupWithSet {
+        SetBoundParameterGroup {
             params,
             param_type: Box::new(set),
         }
@@ -457,7 +457,7 @@ impl ParamGroupWithSet {
     // Example: given fn(x R, y Q(x)), we want to verify x = 1, y = 2 can be used as argument to this function. This function returns the facts that 1 $in R, 2 $in Q(1).
     pub fn facts_for_args_satisfy_param_def_with_set_vec(
         runtime: &Runtime,
-        param_defs: &ParamDefWithSet,
+        param_defs: &SetBoundParameterList,
         args: &Vec<Obj>,
         substitution_mode: SubstitutionMode,
     ) -> Result<Vec<AtomicFact>, RuntimeError> {
@@ -476,7 +476,7 @@ impl ParamGroupWithSet {
         self.params.iter().map(SymbolBinding::name).collect()
     }
 
-    pub fn collect_param_names(param_defs: &Vec<ParamGroupWithSet>) -> Vec<String> {
+    pub fn collect_param_names(param_defs: &Vec<SetBoundParameterGroup>) -> Vec<String> {
         let mut names: Vec<String> = Vec::with_capacity(Self::number_of_params(param_defs));
         for def in param_defs.iter() {
             for binding in def.params.iter() {
@@ -486,7 +486,7 @@ impl ParamGroupWithSet {
         names
     }
 
-    pub fn number_of_params(param_defs: &Vec<ParamGroupWithSet>) -> usize {
+    pub fn number_of_params(param_defs: &Vec<SetBoundParameterGroup>) -> usize {
         let mut total_param_count: usize = 0;
         for p in param_defs.iter() {
             total_param_count += p.params.len();
@@ -495,7 +495,7 @@ impl ParamGroupWithSet {
     }
 
     pub fn param_defs_and_args_to_param_to_arg_map(
-        param_defs: &Vec<ParamGroupWithSet>,
+        param_defs: &Vec<SetBoundParameterGroup>,
         args: &Vec<Obj>,
     ) -> HashMap<String, Obj> {
         if Self::number_of_params(param_defs) != args.len() {
@@ -514,9 +514,7 @@ impl ParamGroupWithSet {
     }
 }
 
-fn cited_param_indices_for_param_type_groups(
-    groups: &[ParamGroupWithParamType],
-) -> Vec<Vec<usize>> {
+fn cited_param_indices_for_param_type_groups(groups: &[TypedParameterGroup]) -> Vec<Vec<usize>> {
     let mut previous_param_indices: HashMap<String, usize> = HashMap::new();
     let mut result = Vec::with_capacity(groups.len());
     let mut flat_index: usize = 0;
@@ -533,7 +531,7 @@ fn cited_param_indices_for_param_type_groups(
     result
 }
 
-fn cited_param_indices_for_param_set_groups(groups: &[ParamGroupWithSet]) -> Vec<Vec<usize>> {
+fn cited_param_indices_for_param_set_groups(groups: &[SetBoundParameterGroup]) -> Vec<Vec<usize>> {
     let mut previous_param_indices: HashMap<String, usize> = HashMap::new();
     let mut result = Vec::with_capacity(groups.len());
     let mut flat_index: usize = 0;
@@ -928,7 +926,7 @@ fn collect_cited_param_indices_from_obj(
                 shadowed_names,
                 out,
             );
-            let added = push_param_names_to_shadow(&x.body.params_def_with_set, shadowed_names);
+            let added = push_param_names_to_shadow(&x.body.set_bound_parameters, shadowed_names);
             collect_cited_param_indices_from_obj(
                 &x.equal_to,
                 previous_param_indices,
@@ -1378,7 +1376,7 @@ fn collect_cited_param_indices_from_anonymous_fn(
         shadowed_names,
         out,
     );
-    let added = push_param_names_to_shadow(&anonymous_fn.body.params_def_with_set, shadowed_names);
+    let added = push_param_names_to_shadow(&anonymous_fn.body.set_bound_parameters, shadowed_names);
     collect_cited_param_indices_from_obj(
         &anonymous_fn.equal_to,
         previous_param_indices,
@@ -1395,7 +1393,7 @@ fn collect_cited_param_indices_from_fn_set_body(
     out: &mut Vec<usize>,
 ) {
     let original_shadow_len = shadowed_names.len();
-    for group in body.params_def_with_set.iter() {
+    for group in body.set_bound_parameters.iter() {
         collect_cited_param_indices_from_obj(
             group.set_obj(),
             previous_param_indices,
@@ -1448,7 +1446,7 @@ fn collect_cited_param_indices_from_quantifier_free_fact(
 }
 
 fn push_param_names_to_shadow(
-    param_defs: &ParamDefWithSet,
+    param_defs: &SetBoundParameterList,
     shadowed_names: &mut Vec<String>,
 ) -> usize {
     let mut count = 0;

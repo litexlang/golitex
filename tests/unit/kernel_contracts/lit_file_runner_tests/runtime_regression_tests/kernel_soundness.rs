@@ -137,7 +137,7 @@ have fn h(x R) R by cases:
     case $fn_eq(f, g): 0
     case $fn_eq(g, f): 1
 "#,
-                "cases do not cover the declared domain",
+                "cases do not cover the defined domain",
             ),
             (
                 "fn_eq_eval_case",
@@ -498,7 +498,7 @@ claim:
 "#,
         ),
         (
-            "algorithm_default_return_matches_declared_function",
+            "algorithm_default_return_matches_defined_function",
             r#"
 have fn f(x R) R = 0
 have algo for f(x):

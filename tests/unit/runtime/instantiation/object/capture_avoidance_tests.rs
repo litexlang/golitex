@@ -203,10 +203,10 @@ fn function_binder_instantiation_preserves_outer_argument_and_concrete_type() {
     let Obj::FnSet(instantiated) = instantiated else {
         panic!("expected function set");
     };
-    let fresh_name = instantiated.body.params_def_with_set[0].params[0].name();
+    let fresh_name = instantiated.body.set_bound_parameters[0].params[0].name();
     assert_ne!(fresh_name, "n");
     assert!(matches!(
-        instantiated.body.params_def_with_set[0].set_obj(),
+        instantiated.body.set_bound_parameters[0].set_obj(),
         Obj::Atom(AtomObj::Identifier(identifier)) if identifier.name == "n"
     ));
     let QuantifierFreeFact::AtomicFact(AtomicFact::EqualFact(equality)) =
@@ -264,7 +264,7 @@ fn anonymous_function_restores_binder_only_after_collision_disappears() {
         panic!("expected anonymous function");
     };
     assert_ne!(
-        instantiated.body.params_def_with_set[0].param_names(),
+        instantiated.body.set_bound_parameters[0].param_names(),
         vec!["x"]
     );
 
@@ -296,7 +296,7 @@ fn anonymous_function_restores_binder_only_after_collision_disappears() {
         panic!("expected anonymous function");
     };
     assert_eq!(
-        restored.body.params_def_with_set[0].param_names(),
+        restored.body.set_bound_parameters[0].param_names(),
         vec!["x"]
     );
 }
@@ -390,19 +390,19 @@ fn function_alpha_rename_respects_dependent_parameter_scope() {
         .alpha_rename_fn_set_body(&body, &rename_map)
         .unwrap();
     assert!(matches!(
-        renamed.params_def_with_set[0].set_obj(),
+        renamed.set_bound_parameters[0].set_obj(),
         Obj::Atom(AtomObj::Bound(param)) if param.name() == "n"
     ));
     assert!(matches!(
-        renamed.params_def_with_set[1].set_obj(),
+        renamed.set_bound_parameters[1].set_obj(),
         Obj::Atom(AtomObj::Bound(param)) if param.name() == "n_fresh"
     ));
     assert_eq!(
-        renamed.params_def_with_set[0].param_names(),
+        renamed.set_bound_parameters[0].param_names(),
         vec!["n_fresh"]
     );
     assert_eq!(
-        renamed.params_def_with_set[1].param_names(),
+        renamed.set_bound_parameters[1].param_names(),
         vec!["m_fresh"]
     );
     assert!(matches!(

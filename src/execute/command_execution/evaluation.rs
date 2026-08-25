@@ -398,7 +398,7 @@ impl Runtime {
                 vec![],
             ));
         };
-        if ParamGroupWithSet::number_of_params(&af.body.params_def_with_set) != 1 {
+        if SetBoundParameterGroup::number_of_params(&af.body.set_bound_parameters) != 1 {
             return Err(short_exec_error(
                 eval_stmt.clone().into(),
                 "eval: sum/product index function must be unary".to_string(),
@@ -406,7 +406,7 @@ impl Runtime {
                 vec![],
             ));
         }
-        let param_bindings = af.body.params_def_with_set.collect_param_bindings();
+        let param_bindings = af.body.set_bound_parameters.collect_param_bindings();
         let param_binding = &param_bindings[0];
         let mut acc_obj: Obj = if is_product {
             Number::new("1".to_string()).into()

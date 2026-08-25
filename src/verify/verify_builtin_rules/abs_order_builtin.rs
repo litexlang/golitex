@@ -320,7 +320,7 @@ impl Runtime {
         let dom_hi: Fact =
             LessEqualFact::new(x_obj, (*left_sum.end).clone(), f.line_file.clone()).into();
         let pointwise_result = self.run_in_local_env(|rt| {
-            let params_def = ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+            let params_def = TypedParameterList::new(vec![TypedParameterGroup::new(
                 vec![x_binding],
                 ParamType::Obj(StandardSet::Z.into()),
             )]);
@@ -386,7 +386,7 @@ impl Runtime {
         let pointwise_fact: AtomicFact =
             EqualFact::new(right_inst, abs_obj(left_inst), f.line_file.clone()).into();
         let pointwise_result = self.run_in_local_env(|rt| {
-            let params_def = ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+            let params_def = TypedParameterList::new(vec![TypedParameterGroup::new(
                 vec![x_binding],
                 ParamType::Obj(left_sum.set.as_ref().clone()),
             )]);

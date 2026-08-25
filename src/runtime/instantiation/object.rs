@@ -381,10 +381,10 @@ impl Runtime {
                     .iter()
                     .flat_map(|group| group.iter().map(|arg| (**arg).clone()))
                     .collect();
-                let param_defs = &anonymous_fn.body.params_def_with_set;
-                if args.len() == ParamGroupWithSet::number_of_params(param_defs) {
+                let param_defs = &anonymous_fn.body.set_bound_parameters;
+                if args.len() == SetBoundParameterGroup::number_of_params(param_defs) {
                     let param_to_arg_map =
-                        ParamGroupWithSet::param_defs_and_args_to_param_to_arg_map(
+                        SetBoundParameterGroup::param_defs_and_args_to_param_to_arg_map(
                             param_defs, &args,
                         );
                     // A theorem application substitutes a function-valued parameter into a
@@ -794,7 +794,7 @@ impl Runtime {
     ) -> Result<Obj, RuntimeError> {
         let param_bindings = fn_set_with_params
             .body
-            .params_def_with_set
+            .set_bound_parameters
             .iter()
             .flat_map(|group| group.params.iter().cloned())
             .collect::<Vec<_>>();
@@ -812,7 +812,7 @@ impl Runtime {
             unreachable!("function-set instantiation must return a function set");
         };
         let restored = self.alpha_rename_fn_set(&instantiated, &restore_map)?;
-        let restored_bindings = restored.body.params_def_with_set.collect_param_bindings();
+        let restored_bindings = restored.body.set_bound_parameters.collect_param_bindings();
         let visible_rename_map = self.visible_binding_conflict_rename_map(&restored_bindings)?;
         Ok(self
             .alpha_rename_fn_set(&restored, &visible_rename_map)?
@@ -827,14 +827,14 @@ impl Runtime {
     ) -> Result<Obj, RuntimeError> {
         let param_bindings = fn_set_with_params
             .body
-            .params_def_with_set
+            .set_bound_parameters
             .collect_param_bindings();
         let filtered_param_to_arg_map =
             remove_param_bindings_from_param_to_arg_map(param_to_arg_map, &param_bindings);
-        let mut params_def_with_set =
-            Vec::with_capacity(fn_set_with_params.body.params_def_with_set.len());
-        for param_def_with_set in fn_set_with_params.body.params_def_with_set.iter() {
-            params_def_with_set.push(ParamGroupWithSet::new(
+        let mut set_bound_parameters =
+            Vec::with_capacity(fn_set_with_params.body.set_bound_parameters.len());
+        for param_def_with_set in fn_set_with_params.body.set_bound_parameters.iter() {
+            set_bound_parameters.push(SetBoundParameterGroup::new(
                 param_def_with_set.params.clone(),
                 self.inst_obj(
                     param_def_with_set.set_obj(),
@@ -853,7 +853,7 @@ impl Runtime {
             )?);
         }
         Ok(FnSet::new(
-            params_def_with_set,
+            set_bound_parameters,
             dom_facts,
             self.inst_obj(
                 &fn_set_with_params.body.ret_set,
@@ -872,7 +872,7 @@ impl Runtime {
     ) -> Result<Obj, RuntimeError> {
         let param_bindings = af
             .body
-            .params_def_with_set
+            .set_bound_parameters
             .iter()
             .flat_map(|group| group.params.iter().cloned())
             .collect::<Vec<_>>();
@@ -890,7 +890,7 @@ impl Runtime {
             unreachable!("anonymous-function instantiation must return an anonymous function");
         };
         let restored = self.alpha_rename_anonymous_fn(&instantiated, &restore_map)?;
-        let restored_bindings = restored.body.params_def_with_set.collect_param_bindings();
+        let restored_bindings = restored.body.set_bound_parameters.collect_param_bindings();
         let visible_rename_map = self.visible_binding_conflict_rename_map(&restored_bindings)?;
         Ok(self
             .alpha_rename_anonymous_fn(&restored, &visible_rename_map)?
@@ -903,12 +903,12 @@ impl Runtime {
         param_to_arg_map: &HashMap<String, Obj>,
         param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
-        let param_bindings = af.body.params_def_with_set.collect_param_bindings();
+        let param_bindings = af.body.set_bound_parameters.collect_param_bindings();
         let filtered_param_to_arg_map =
             remove_param_bindings_from_param_to_arg_map(param_to_arg_map, &param_bindings);
-        let mut params_def_with_set = Vec::with_capacity(af.body.params_def_with_set.len());
-        for param_def_with_set in af.body.params_def_with_set.iter() {
-            params_def_with_set.push(ParamGroupWithSet::new(
+        let mut set_bound_parameters = Vec::with_capacity(af.body.set_bound_parameters.len());
+        for param_def_with_set in af.body.set_bound_parameters.iter() {
+            set_bound_parameters.push(SetBoundParameterGroup::new(
                 param_def_with_set.params.clone(),
                 self.inst_obj(
                     param_def_with_set.set_obj(),
@@ -927,7 +927,7 @@ impl Runtime {
             )?);
         }
         Ok(AnonymousFn::new_with_source_occurrence_id(
-            params_def_with_set,
+            set_bound_parameters,
             dom_facts,
             self.inst_obj(
                 af.body.ret_set.as_ref(),
@@ -1029,7 +1029,7 @@ impl Runtime {
         }
         let body = self.alpha_rename_fn_set_body(&anonymous_fn.body, rename_map)?;
         AnonymousFn::new_with_source_occurrence_id(
-            body.params_def_with_set,
+            body.set_bound_parameters,
             body.dom_facts,
             *body.ret_set,
             self.inst_obj(
@@ -1068,9 +1068,9 @@ impl Runtime {
         body: &FnSetBody,
         rename_map: &HashMap<String, Obj>,
     ) -> Result<FnSetBody, RuntimeError> {
-        let mut params_def_with_set = Vec::with_capacity(body.params_def_with_set.len());
+        let mut set_bound_parameters = Vec::with_capacity(body.set_bound_parameters.len());
         let mut active_rename_map = HashMap::new();
-        for group in body.params_def_with_set.iter() {
+        for group in body.set_bound_parameters.iter() {
             let param_set =
                 self.inst_obj(group.set_obj(), &active_rename_map, SubstitutionMode::Exact)?;
             let params = group
@@ -1078,7 +1078,7 @@ impl Runtime {
                 .iter()
                 .map(|binding| renamed_bound_param_binding(binding, rename_map))
                 .collect::<Vec<_>>();
-            params_def_with_set.push(ParamGroupWithSet::new(params, param_set));
+            set_bound_parameters.push(SetBoundParameterGroup::new(params, param_set));
             for binding in group.params.iter() {
                 if let Some(replacement) = rename_map.get(&binding.substitution_key()) {
                     insert_symbol_substitution(
@@ -1099,7 +1099,7 @@ impl Runtime {
             )?);
         }
         Ok(FnSetBody::new(
-            params_def_with_set,
+            set_bound_parameters,
             dom_facts,
             self.inst_obj(body.ret_set.as_ref(), rename_map, SubstitutionMode::Exact)?,
         ))
@@ -1499,7 +1499,7 @@ impl Runtime {
 
     pub fn inst_param_def_with_set_one_by_one(
         &self,
-        param_defs: &ParamDefWithSet,
+        param_defs: &SetBoundParameterList,
         args: &Vec<Obj>,
         param_obj_type: SubstitutionMode,
     ) -> Result<Vec<Obj>, RuntimeError> {
@@ -1540,7 +1540,7 @@ impl Runtime {
 
     pub fn inst_param_def_with_type_one_by_one(
         &self,
-        param_defs: &ParamDefWithType,
+        param_defs: &TypedParameterList,
         args: &Vec<Obj>,
         param_obj_type: SubstitutionMode,
     ) -> Result<Vec<ParamType>, RuntimeError> {
