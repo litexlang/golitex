@@ -850,13 +850,14 @@ thm example_123_real_open_interval_is_ball:
         I = '(3, 7)
         =>:
             \metric_ball<R, real_distance>(5, 2) = I
+    let ball = \metric_ball<R, real_distance>
     # Proof idea: rewrite the metric-ball condition as abs(x-5) < 2,
     # translate both strict bounds explicitly, and close the two inclusions
     # with the native set-extensionality surface.
     by extension:
-        ? \metric_ball<R, real_distance>(5, 2) = I
+        ? ball(5, 2) = I
         claim:
-            ? forall x \metric_ball<R, real_distance>(5, 2):
+            ? forall x ball(5, 2):
                 x $in I
             x $in {y R: real_distance(y, 5) < 2}
             real_distance(x, 5) < 2
@@ -874,7 +875,7 @@ thm example_123_real_open_interval_is_ball:
             x $in I
         claim:
             ? forall x I:
-                x $in \metric_ball<R, real_distance>(5, 2)
+                x $in ball(5, 2)
             x $in R
             3 < x
             x < 7
@@ -887,6 +888,7 @@ thm example_123_real_open_interval_is_ball:
             by thm real_distance_eq_abs(x, 5)
             real_distance(x, 5) < 2
             by thm metric_distance_lt_implies_ball_member(R, real_distance, 5, x, 2)
+    \metric_ball<R, real_distance>(5, 2) = ball(5, 2) = I
 
 # Definition 1.2.5 (Interior, exterior, and boundary).
 prop is_metric_interior_point(X set, dist fn(x, y X) R, E power_set(X), x X):

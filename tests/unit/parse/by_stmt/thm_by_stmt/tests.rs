@@ -18,6 +18,7 @@ fn by_thm_parses_optional_selected_atomic_fact() {
         panic!("expected by thm statement")
     };
     assert!(legacy.selected_facts.is_none());
+    assert_eq!(legacy.to_string(), "release thm T(a)");
 
     let selected =
         parse_one("by thm T(a) => not $P(a)").expect("parse by thm with selected atomic fact");
@@ -38,6 +39,39 @@ fn by_thm_parses_optional_selected_atomic_fact() {
         |facts| matches!(facts.as_slice(), [Fact::AtomicFact(fact)] if !fact.has_positive_polarity())
     ));
     assert_eq!(goal_block.to_string(), "by thm T(a) => not $P(a)");
+}
+
+#[test]
+fn release_thm_parses_as_bare_by_thm_and_rejects_selection_or_proof_bodies() {
+    let released = parse_one("release thm T(a)").expect("parse release thm");
+    let Stmt::By(ByStmt::ByThmStmt(released)) = released else {
+        panic!("expected existing by thm statement")
+    };
+    assert!(released.selected_facts.is_none());
+    assert_eq!(released.to_string(), "release thm T(a)");
+
+    for source in [
+        "release thm T(a) => $P(a)",
+        "release thm T(a):\n    ? $P(a)",
+    ] {
+        let error = parse_one(source).expect_err("non-bare release thm should fail");
+        let RuntimeError::ParseError(error) = error else {
+            panic!("{source}: expected parse error")
+        };
+        assert!(
+            error
+                .msg
+                .contains("release thm accepts only a bare theorem call"),
+            "{source}: {}",
+            error.msg
+        );
+    }
+
+    let error = parse_one("release claim T(a)").expect_err("non-thm release should fail");
+    let RuntimeError::ParseError(error) = error else {
+        panic!("expected parse error")
+    };
+    assert_eq!(error.msg, "release: expected `thm name(args)`");
 }
 
 #[test]

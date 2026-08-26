@@ -113,3 +113,231 @@ thm kernel_is_normal_subgroup:
         f(mul_A(mul_A(conjugator, kernel_h), inv_A(conjugator))) = mul_B(f(mul_A(conjugator, kernel_h)), f(inv_A(conjugator))) = mul_B(mul_B(f(conjugator), f(kernel_h)), inv_B(f(conjugator))) = mul_B(mul_B(f(conjugator), one_B), inv_B(f(conjugator))) = mul_B(f(conjugator), inv_B(f(conjugator))) = one_B
         by thm set_builder_member(mul_A(mul_A(conjugator, kernel_h), inv_A(conjugator)), {candidate A: f(candidate) = one_B}) => mul_A(mul_A(conjugator, kernel_h), inv_A(conjugator)) $in {candidate A: f(candidate) = one_B}
     by def $is_normal_subgroup(A, mul_A, one_A, inv_A, {candidate A: f(candidate) = one_B})
+
+# Commutative rings, ideals, and quotient presentations.
+#
+# The setting records the familiar additive and multiplicative laws. The two
+# zero-multiplication equations are kept in the operational interface because
+# every quotient and domain proof below consumes them directly.
+setting CommutativeRingSetting(A nonempty_set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A):
+    forall x, y, z A:
+        add(add(x, y), z) = add(x, add(y, z))
+        mul(mul(x, y), z) = mul(x, mul(y, z))
+        mul(x, add(y, z)) = add(mul(x, y), mul(x, z))
+        mul(add(x, y), z) = add(mul(x, z), mul(y, z))
+    forall x, y A:
+        add(x, y) = add(y, x)
+        mul(x, y) = mul(y, x)
+    forall x A:
+        add(zero, x) = x
+        add(x, zero) = x
+        add(x, neg(x)) = zero
+        add(neg(x), x) = zero
+        mul(one, x) = x
+        mul(x, one) = x
+        mul(zero, x) = zero
+        mul(x, zero) = zero
+    neg(zero) = zero
+
+prop is_commutative_ring([CommutativeRingSetting])
+
+setting RingHomomorphismSetting([CommutativeRingSetting(A, add_A, zero_A, neg_A, mul_A, one_A)], [CommutativeRingSetting(B, add_B, zero_B, neg_B, mul_B, one_B)], map fn(x A) B):
+    forall x, y A:
+        map(add_A(x, y)) = add_B(map(x), map(y))
+        map(mul_A(x, y)) = mul_B(map(x), map(y))
+    forall x A:
+        map(neg_A(x)) = neg_B(map(x))
+    map(zero_A) = zero_B
+    map(one_A) = one_B
+
+prop is_ring_homomorphism([RingHomomorphismSetting])
+
+prop is_ideal([CommutativeRingSetting], I power_set(A)):
+    zero $in I
+    forall x, y I:
+        add(x, y) $in I
+    forall x I:
+        neg(x) $in I
+    forall scalar A, x I:
+        mul(scalar, x) $in I
+
+prop is_prime_ideal([CommutativeRingSetting], I power_set(A)):
+    $is_ideal(A, add, zero, neg, mul, one, I)
+    not one $in I
+    forall x, y A:
+        mul(x, y) $in I
+        =>:
+            x $in I or y $in I
+
+prop is_integral_domain([CommutativeRingSetting]):
+    zero != one
+    forall x, y A:
+        mul(x, y) = zero
+        =>:
+            x = zero or y = zero
+
+prop is_field([CommutativeRingSetting]):
+    $is_integral_domain(A, add, zero, neg, mul, one)
+    forall x A:
+        x != zero
+        =>:
+            exist inverse A st {mul(x, inverse) = one}
+
+# A quotient ring is represented by the universal data actually used below:
+# a surjective ring homomorphism whose kernel is exactly the chosen ideal.
+setting QuotientRingPresentationSetting([RingHomomorphismSetting], I power_set(A)):
+    $is_ideal(A, add_A, zero_A, neg_A, mul_A, one_A, I)
+    forall kernel_element I:
+        map(kernel_element) = zero_B
+    forall x A:
+        map(x) = zero_B
+        =>:
+            x $in I
+    forall quotient_element B:
+        exist representative A st {map(representative) = quotient_element}
+
+prop is_quotient_ring_presentation([QuotientRingPresentationSetting])
+
+# The kernel construction connects ring homomorphisms to ideal theory.
+thm ring_homomorphism_kernel_is_ideal:
+    ? forall [RingHomomorphismSetting]:
+        $is_ideal(A, add_A, zero_A, neg_A, mul_A, one_A, {candidate A: map(candidate) = zero_B})
+    claim:
+        ? zero_A $in {candidate A: map(candidate) = zero_B}
+        map(zero_A) = zero_B
+        by thm set_builder_member(zero_A, {candidate A: map(candidate) = zero_B}) => zero_A $in {candidate A: map(candidate) = zero_B}
+    claim:
+        ? forall kernel_x, kernel_y {candidate A: map(candidate) = zero_B}:
+            add_A(kernel_x, kernel_y) $in {candidate A: map(candidate) = zero_B}
+        map(add_A(kernel_x, kernel_y)) = add_B(map(kernel_x), map(kernel_y)) = add_B(zero_B, zero_B) = zero_B
+        by thm set_builder_member(add_A(kernel_x, kernel_y), {candidate A: map(candidate) = zero_B}) => add_A(kernel_x, kernel_y) $in {candidate A: map(candidate) = zero_B}
+    claim:
+        ? forall kernel_x {candidate A: map(candidate) = zero_B}:
+            neg_A(kernel_x) $in {candidate A: map(candidate) = zero_B}
+        map(neg_A(kernel_x)) = neg_B(map(kernel_x)) = neg_B(zero_B) = zero_B
+        by thm set_builder_member(neg_A(kernel_x), {candidate A: map(candidate) = zero_B}) => neg_A(kernel_x) $in {candidate A: map(candidate) = zero_B}
+    claim:
+        ? forall scalar A, kernel_x {candidate A: map(candidate) = zero_B}:
+            mul_A(scalar, kernel_x) $in {candidate A: map(candidate) = zero_B}
+        map(mul_A(scalar, kernel_x)) = mul_B(map(scalar), map(kernel_x)) = mul_B(map(scalar), zero_B) = zero_B
+        by thm set_builder_member(mul_A(scalar, kernel_x), {candidate A: map(candidate) = zero_B}) => mul_A(scalar, kernel_x) $in {candidate A: map(candidate) = zero_B}
+    by def $is_ideal(A, add_A, zero_A, neg_A, mul_A, one_A, {candidate A: map(candidate) = zero_B})
+
+thm field_is_integral_domain:
+    ? forall [CommutativeRingSetting]:
+        $is_field(A, add, zero, neg, mul, one)
+        =>:
+            $is_integral_domain(A, add, zero, neg, mul, one)
+    by def $is_field(A, add, zero, neg, mul, one)
+
+thm prime_ideal_gives_integral_domain_quotient:
+    ? forall [QuotientRingPresentationSetting]:
+        $is_prime_ideal(A, add_A, zero_A, neg_A, mul_A, one_A, I)
+        =>:
+            $is_integral_domain(B, add_B, zero_B, neg_B, mul_B, one_B)
+    by def $is_prime_ideal(A, add_A, zero_A, neg_A, mul_A, one_A, I)
+    claim:
+        ? zero_B != one_B
+        by contra:
+            ? zero_B != one_B
+            zero_B = one_B
+            map(one_A) = one_B = zero_B
+            one_A $in I
+            impossible not one_A $in I
+    claim:
+        ? forall quotient_x, quotient_y B:
+            mul_B(quotient_x, quotient_y) = zero_B
+            =>:
+                quotient_x = zero_B or quotient_y = zero_B
+        obtain representative_x from exist representative A st {map(representative) = quotient_x}
+        obtain representative_y from exist representative A st {map(representative) = quotient_y}
+        map(mul_A(representative_x, representative_y)) = mul_B(map(representative_x), map(representative_y)) = mul_B(quotient_x, quotient_y) = zero_B
+        mul_A(representative_x, representative_y) $in I
+        representative_x $in I or representative_y $in I
+        by cases:
+            ? quotient_x = zero_B or quotient_y = zero_B
+            case representative_x $in I:
+                map(representative_x) = zero_B
+                quotient_x = zero_B
+            case representative_y $in I:
+                map(representative_y) = zero_B
+                quotient_y = zero_B
+    by def $is_integral_domain(B, add_B, zero_B, neg_B, mul_B, one_B)
+
+thm integral_domain_quotient_gives_prime_ideal:
+    ? forall [QuotientRingPresentationSetting]:
+        $is_integral_domain(B, add_B, zero_B, neg_B, mul_B, one_B)
+        =>:
+            $is_prime_ideal(A, add_A, zero_A, neg_A, mul_A, one_A, I)
+    by def $is_integral_domain(B, add_B, zero_B, neg_B, mul_B, one_B)
+    $is_ideal(A, add_A, zero_A, neg_A, mul_A, one_A, I)
+    claim:
+        ? not one_A $in I
+        by contra:
+            ? not one_A $in I
+            one_A $in I
+            map(one_A) = zero_B
+            map(one_A) = one_B
+            zero_B = one_B
+            impossible zero_B != one_B
+    claim:
+        ? forall x, y A:
+            mul_A(x, y) $in I
+            =>:
+                x $in I or y $in I
+        map(mul_A(x, y)) = zero_B
+        map(mul_A(x, y)) = mul_B(map(x), map(y))
+        mul_B(map(x), map(y)) = zero_B
+        map(x) = zero_B or map(y) = zero_B
+        by cases:
+            ? x $in I or y $in I
+            case map(x) = zero_B:
+                x $in I
+            case map(y) = zero_B:
+                y $in I
+    by def $is_prime_ideal(A, add_A, zero_A, neg_A, mul_A, one_A, I)
+
+# Concrete consumer: the ordinary integer operations satisfy the ring setting.
+have fn integer_ring_add(x, y Z) Z = x + y
+have fn integer_ring_neg(x Z) Z = -x
+have fn integer_ring_mul(x, y Z) Z = x * y
+
+thm integers_form_a_commutative_ring:
+    ? forall:
+        $is_commutative_ring(Z, integer_ring_add, 0, integer_ring_neg, integer_ring_mul, 1)
+    claim:
+        ? forall x, y, z Z:
+            integer_ring_add(integer_ring_add(x, y), z) = integer_ring_add(x, integer_ring_add(y, z))
+            integer_ring_mul(integer_ring_mul(x, y), z) = integer_ring_mul(x, integer_ring_mul(y, z))
+            integer_ring_mul(x, integer_ring_add(y, z)) = integer_ring_add(integer_ring_mul(x, y), integer_ring_mul(x, z))
+            integer_ring_mul(integer_ring_add(x, y), z) = integer_ring_add(integer_ring_mul(x, z), integer_ring_mul(y, z))
+        integer_ring_add(integer_ring_add(x, y), z) = (x + y) + z = x + (y + z) = integer_ring_add(x, integer_ring_add(y, z))
+        integer_ring_mul(integer_ring_mul(x, y), z) = (x * y) * z = x * (y * z) = integer_ring_mul(x, integer_ring_mul(y, z))
+        integer_ring_mul(x, integer_ring_add(y, z)) = x * (y + z) = x * y + x * z = integer_ring_add(integer_ring_mul(x, y), integer_ring_mul(x, z))
+        integer_ring_mul(integer_ring_add(x, y), z) = (x + y) * z = x * z + y * z = integer_ring_add(integer_ring_mul(x, z), integer_ring_mul(y, z))
+    claim:
+        ? forall x, y Z:
+            integer_ring_add(x, y) = integer_ring_add(y, x)
+            integer_ring_mul(x, y) = integer_ring_mul(y, x)
+        integer_ring_add(x, y) = x + y = y + x = integer_ring_add(y, x)
+        integer_ring_mul(x, y) = x * y = y * x = integer_ring_mul(y, x)
+    claim:
+        ? forall x Z:
+            integer_ring_add(0, x) = x
+            integer_ring_add(x, 0) = x
+            integer_ring_add(x, integer_ring_neg(x)) = 0
+            integer_ring_add(integer_ring_neg(x), x) = 0
+            integer_ring_mul(1, x) = x
+            integer_ring_mul(x, 1) = x
+            integer_ring_mul(0, x) = 0
+            integer_ring_mul(x, 0) = 0
+        integer_ring_add(0, x) = 0 + x = x
+        integer_ring_add(x, 0) = x + 0 = x
+        integer_ring_add(x, integer_ring_neg(x)) = x + (-x) = 0
+        integer_ring_add(integer_ring_neg(x), x) = (-x) + x = 0
+        integer_ring_mul(1, x) = 1 * x = x
+        integer_ring_mul(x, 1) = x * 1 = x
+        integer_ring_mul(0, x) = 0 * x = 0
+        integer_ring_mul(x, 0) = x * 0 = 0
+    integer_ring_neg(0) = -0 = 0
+    by def $is_commutative_ring(Z, integer_ring_add, 0, integer_ring_neg, integer_ring_mul, 1)

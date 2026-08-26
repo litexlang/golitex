@@ -20,6 +20,10 @@ general category-theory library. Limits, colimits, adjunctions, Yoneda, comma
 categories, monads, functor categories as first-class categories, proper
 classes, and universe hierarchies are explicit non-goals for this version.
 
+The entire displayed slice is now implemented in `main.lit`. The terminal
+category is the concrete consumer of the generic identity-functor theorem;
+the two-object chaotic category remains a second checked category instance.
+
 ## Core modeling decision
 
 The data remain supplied explicitly and theorem contexts are bundled with
@@ -44,6 +48,8 @@ single definition-facing projection of the same setting data and laws.
 | natural transformation | `setting NaturalTransformationSetting([FunctorSetting(F)], [FunctorSetting(G)], component)` | parallel functors, typed components, and naturality |
 | natural-transformation predicate | `prop is_natural_transformation([NaturalTransformationSetting])` | definition-facing projection of the transformation setting |
 | identity/vertical composition | checked theorems | the first nontrivial algebra of natural transformations |
+| associativity instance | `prop composition_is_associative_at(...)` | exact fact shape for diagram calculations before equality unfolding |
+| naturality square | `prop naturality_square_commutes(...)` | exact fact shape shared by transformation settings and composition proofs |
 
 ## Important interfaces
 
@@ -74,8 +80,9 @@ single definition-facing projection of the same setting data and laws.
 
 - **Ordinary meaning:** `F : C -> D` maps objects and typed arrows and
   preserves identities and composition.
-- **Signature sketch:** two renamed `CategorySetting` bundles, followed by
-  `object_map : CObj -> DObj` and a dependent `arrow_map` from
+- **Signature sketch:** one `CategoriesSetting` containing two renamed
+  `CategorySetting` bundles, followed by `object_map : CObj -> DObj` and a
+  dependent `arrow_map` from
   `CHom(X,Y)` to `DHom(FX,FY)`.
 - **Nearest wrong alternative:** a flat predicate repeating two full category
   ABIs in every theorem. A struct is also premature because no current theorem
@@ -90,8 +97,10 @@ single definition-facing projection of the same setting data and laws.
 - **Ordinary meaning:** for parallel functors `F,G : C -> D`, every object
   `X` has a component `eta_X : F(X) -> G(X)`, and every arrow in `C` makes the
   naturality square commute.
-- **Signature sketch:** two renamed `FunctorSetting` bundles sharing the same
-  source and target category data, plus a dependent component function.
+- **Signature sketch:** `ParallelFunctorsSetting` reuses one complete functor
+  and adds only the second functor's maps and laws, avoiding rebinding shared
+  categories; `NaturalTransformationSetting` then adds a dependent component
+  function and named naturality-square facts.
 - **Nearest wrong alternative:** an untyped `component : CObj -> DMor` plus
   separate endpoint predicates. The dependent hom carrier is both shorter and
   stronger.
@@ -137,4 +146,3 @@ definition and theorem matching do not depend on reversing an alias.
 5. Reuse the checked terminal category as a concrete end-to-end consumer.
 6. Stop at the explicit boundary above; do not add speculative wrappers for
    limits, adjunctions, or first-class category/functor records.
-

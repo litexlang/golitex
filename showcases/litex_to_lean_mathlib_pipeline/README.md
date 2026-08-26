@@ -1,80 +1,104 @@
-# Litex to Mathlib Pipeline
+# Litex → Lean, Then an External Mathlib Adapter
 
-This showcase is a small, executable vertical slice. It starts from one piece
-of natural mathematics, verifies a readable Litex theorem, compiles the typed
-verification evidence into Lean, and ends with a separate Mathlib-facing file
-that imports the generated theorem for a downstream result.
+This showcase fixes a strict ownership boundary around the theorem
 
 ```text
-┌─ Human or AI: mathematical authoring ───────────────────────────┐
-│ natural_mathematics.md                                          │
-│        ↓ formalize the statement and readable proof             │
-│ main.lit                                                        │
-└─────────────────────────────────────────────────────────────────┘
-        ↓ submit for verification
-┌─ Litex: verification and automatic translation ────────────────┐
-│ Litex verifier checks main.lit                                  │
-│        ↓ produces                                               │
-│ typed proof evidence                                            │
-│        ↓ consumed by                                            │
-│ Litex-to-Lean compiler                                          │
-│        ↓ generates; this file is not handwritten                │
-│ LitexToMathlibPipelineGenerated.lean                            │
-└─────────────────────────────────────────────────────────────────┘
-        ↓
-┌─ Lean: generated-proof checking ────────────────────────────────┐
-│ Lean kernel checks the generated proof terms                    │
-└─────────────────────────────────────────────────────────────────┘
-        ↓ accepted theorem available for import
-┌─ Human or AI: downstream use ───────────────────────────────────┐
-│ write LitexToMathlibPipelineDownstream.lean                     │
-│ using the generated theorem and Mathlib definitions             │
-└─────────────────────────────────────────────────────────────────┘
-        ↓
-┌─ Lean: downstream checking ─────────────────────────────────────┐
-│ Lean kernel checks closedIntervalNonemptyOfLt                   │
-└─────────────────────────────────────────────────────────────────┘
-        ↓
-reusable ordinary Lean/Mathlib theorem about Set.Icc
+1 + 3 + 5 + ⋯ + (2n - 1) = n²,  for every integer n ≥ 1.
 ```
 
-Human or AI authors choose the mathematics, write the Litex source, and choose
-the downstream application. Litex verifies the Litex source and translates
-its typed evidence into Lean. Lean independently checks both the generated
-proof and the downstream theorem.
+ToLean translates the `.lit` declarations and their verified proof routes. It
+does not invent a second theorem merely because a native Mathlib signature
+would be convenient. Any such interface is a separate artifact authored by an
+external AI or human.
 
-The generated file is not a handwritten “same theorem in Lean” comparison.
-It is compiler output and is checked into the showcase so the translation can
-be inspected, imported, and protected by a drift test.
+## Artifact ownership
 
-## What the MVP proves
+| File | Owner and role |
+| --- | --- |
+| `main.lit` | mathematical source verified by Litex |
+| `LitexToMathlibPipelineGenerated.lean` | generated ToLean translation; never hand-edited |
+| `LitexToMathlibPipelineAdapter.lean` | external-AI Lean adapter; not compiler output |
+| `LitexToMathlibPipelineDownstream.lean` | ordinary Mathlib consumer of the adapter |
 
-`main.lit` verifies that `a < b` implies `a <= b` for real numbers. The
-compiler preserves its canonical Litex-facing theorem and additionally emits
-the native signature
+The flow is deliberately explicit:
+
+```text
+main.lit
+   ↓ Litex verification and ToLean translation
+LitexToMathlibPipelineGenerated.lean
+   └─ source-owned declarations only
+
+external AI reads the mathematical/generated context
+   ↓ writes a separate Lean module
+LitexToMathlibPipelineAdapter.lean
+   ↓ imported by
+LitexToMathlibPipelineDownstream.lean
+```
+
+The generated module contains the canonical `Litex.Same` theorems
+`__Compiler_main.sum_first_odds` and
+`__Compiler_main.sum_first_ten_odds`. It contains no `namespace Native`,
+private native certificate, Mathlib corollary, or consumer.
+
+The adapter exposes the independent native theorem
 
 ```lean
-theorem litex_real_lt_to_le (a b : ℝ) (h : a < b) : a ≤ b
+theorem LitexToMathlibPipeline.ExternalAI.sum_first_odds
+    (n : ℤ) (one_le_n : 1 ≤ n) :
+    ∑ k ∈ Finset.Icc (1 : ℤ) n, (2 * k - 1) = n ^ 2
 ```
 
-under the generated `Native` namespace.
-`LitexToMathlibPipelineDownstream.lean` imports that theorem and uses it to
-construct a member of `Set.Icc a b`. Passing `lake build` means both the
-generated theorem and its downstream use were accepted by the real Lean kernel
-in the repository's Mathlib environment.
+Its Lean proof is owned by that adapter. Importing the generated module gives
+the external author context; it does not falsely claim that ToLean synthesized
+or derived this new public statement.
 
-The native theorem is not obtained by pretending that the canonical
-`Litex.In.rep` choice definitionally equals the caller's real value. Both Lean
-views are generated from the same typed strict-to-weak order evidence; the
-native view replays that rule through the allowlisted real-order bridges.
+## The Litex proof
 
-## Deliberate boundary
+Both induction cases contain their calculations directly. The base is:
 
-This is one closed compiler slice, not a claim of general native export. It
-accepts exactly a named theorem with two direct `R` binders, the premise
-`a < b`, the conclusion `a <= b`, and matching typed verifier evidence. Other
-shapes continue to emit only their canonical Lean view. In particular, native
-equality export is outside this MVP because it requires separately reviewed
-wrapper elimination.
+```litex
+? from n = 1:
+    kth_odd(1) = 2 * 1 - 1 = 1
+    sum(1, 1, kth_odd) = kth_odd(1) = 2 * 1 - 1 = 1 = 1^2
+```
 
-There is no project axiom, `sorry`, `admit`, or silent fallback in this chain.
+There is no one-use singleton, sum-step, or square-step theorem and no explicit
+theorem invocation. The verifier retains checked function reduction,
+registered integer-sum rules, the exact induction-hypothesis `FactId`, and
+arithmetic normalization. ToLean replays that evidence only for the source
+declarations.
+
+The source then specializes its own universal result without `by thm`:
+
+```litex
+thm sum_first_ten_odds:
+    ? forall:
+        sum(1, 10, kth_odd) = 100
+    sum(1, 10, kth_odd) = 10^2 = 100
+```
+
+Ordinary known-`forall` matching selects `sum_first_odds(10)` for the first
+edge, and checked numeric normalization closes `10^2 = 100`. The generated
+Lean theorem cites the generated universal theorem directly.
+
+## Reproduce it
+
+From the repository root:
+
+```bash
+cargo build --release
+target/release/litex -compact -strict -runner -isolated \
+  -f showcases/litex_to_lean_mathlib_pipeline/main.lit
+target/release/stmt_result_to_lean_compiler compile \
+  showcases/litex_to_lean_mathlib_pipeline/main.lit \
+  showcases/litex_to_lean_mathlib_pipeline/LitexToMathlibPipelineGenerated.lean
+cargo test --release --test stmt_result_to_lean_compiler_tracers \
+  litex_to_mathlib_pipeline_showcase_generated_lean_has_not_drifted
+cd lean
+lake build LitexToMathlibPipeline
+```
+
+The Litex runner must exit `0` with top-level `ok: true`; the drift test must
+reproduce the checked-in generated file; and Lake must accept the generated
+translation, external adapter, and downstream consumer as three visibly
+separate layers.

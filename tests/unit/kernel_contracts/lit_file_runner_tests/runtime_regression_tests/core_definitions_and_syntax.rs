@@ -2328,7 +2328,7 @@ copy = 2
     assert_eq!(result.statement.args[0].to_string(), "2");
     assert!(run_output.contains("\"kind\": \"ByThmStmt\""));
     assert!(run_output.contains("\"kind\": \"SuccessVerifyByTheoremResult\""));
-    assert!(run_output.contains("\"statement\": \"by thm self_exists(2)\""));
+    assert!(run_output.contains("\"statement\": \"release thm self_exists(2)\""));
     assert!(matches!(
         elimination.source_result.as_ref(),
         StmtResult::Success(SuccessStmtResult::By(SuccessByStmtResult::ByThmStmt(

@@ -15,3 +15,8 @@ fn by_def_uses_a_contextual_keyword() {
 fn let_is_a_source_keyword() {
     assert!(is_keyword(LET));
 }
+
+#[test]
+fn release_is_a_source_keyword() {
+    assert!(is_keyword(RELEASE));
+}

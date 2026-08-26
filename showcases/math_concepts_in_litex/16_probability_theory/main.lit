@@ -1473,7 +1473,6 @@ thm equal_arguments_have_equal_function_values:
         x = y
         =>:
             f(x) = f(y)
-    f(x) = f(y)
 
 thm equal_binary_arguments_have_equal_function_values:
     ? forall Domain, Codomain set, f fn (x, y Domain) Codomain, x1, x2, y1, y2 Domain:
@@ -1481,7 +1480,6 @@ thm equal_binary_arguments_have_equal_function_values:
         y1 = y2
         =>:
             f(x1, y1) = f(x2, y2)
-    f(x1, y1) = f(x2, y2)
 
 thm equalities_compose:
     ? forall Domain set, x, y, z Domain:
@@ -1489,7 +1487,6 @@ thm equalities_compose:
         y = z
         =>:
             x = z
-    x = z
 
 thm probability_of_next_increasing_stage:
     ? forall Omega set, events power_set(power_set(Omega)), probability fn (event events) R, event_sequence fn (index N+) events, k N+:
@@ -1735,7 +1732,6 @@ thm complement_union_of_event_sequence_is_intersection:
 thm one_minus_one_minus:
     ? forall x R:
         1 - (1 - x) = x
-    1 - (1 - x) = x
 
 thm probability_continuous_from_above:
     ? forall Omega set, events power_set(power_set(Omega)), probability fn (event events) R, event_sequence fn (n N+) events:
@@ -2016,7 +2012,6 @@ thm add_left_preserves_strict_order:
         x < y
         =>:
             z + x < z + y
-    z + x < z + y
 
 thm two_thirds_gap_stays_below_upper:
     ? forall A, B R:
@@ -2041,7 +2036,6 @@ thm add_left_preserves_order:
         x <= y
         =>:
             z + x <= z + y
-    z + x <= z + y
 
 thm two_equal_thirds_gap_stays_below_upper:
     ? forall A, B, epsilon R:
@@ -2942,7 +2936,6 @@ thm reciprocal_left_mul_equals_division:
         denominator != 0
         =>:
             (1 / denominator) * x = x / denominator
-    (1 / denominator) * x = x / denominator
 
 thm conditioned_probability_countable_additivity:
     ? forall Omega set, events power_set(power_set(Omega)), probability fn(event events) R, evidence events, family fn(n N+) events:

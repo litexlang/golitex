@@ -936,8 +936,10 @@ $target_thm_prop(1)
 }
 
 #[test]
-fn by_thm_releases_instantiated_then_facts() {
-    run_with_large_stack("by_thm_releases_instantiated_then_facts", || {
+fn release_thm_releases_instantiated_then_facts() {
+    // Acceptance artifact: target/release/litex -compact -isolated -runner -f
+    // examples/01_proof_patterns/release_theorem_consequences.lit
+    run_with_large_stack("release_thm_releases_instantiated_then_facts", || {
         let source_code = r#"
 abstract_prop target_thm_prop(x)
 
@@ -949,19 +951,19 @@ thm use_target_thm:
 
     trust $target_thm_prop(x)
 
-by thm use_target_thm(1)
+release thm use_target_thm(1)
 $target_thm_prop(1)
 "#;
 
         let mut runtime = Runtime::default();
-        runtime.start_isolated_source("by_thm_releases_instantiated_then_facts");
+        runtime.start_isolated_source("release_thm_releases_instantiated_then_facts");
         let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_output(&runtime, &stmt_results, &runtime_error);
 
         assert!(
             run_succeeded,
-            "explicit by thm should release the instantiated then-fact:\n{}",
+            "release thm should release the instantiated then-fact:\n{}",
             run_output
         );
     });

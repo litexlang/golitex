@@ -11,3 +11,7 @@
 
 The first version stops before total derivatives, Jacobians, chain rules,
 multiple integration, and vector calculus.
+
+A later extension may add Euclidean total derivatives, Jacobians, chain rules,
+and elementary curves, then stops. It will not silently expand into a general
+manifold, tangent-bundle, differential-form, metric, or connection library.

@@ -1,25 +1,45 @@
-# Natural statement: for real a and b, a < b implies a <= b.
+# The first n positive odd integers sum to n^2.
 #
-# Before this MVP, the compiler emitted only Litex's canonical wrapper theorem
-# for this source. There was no generated native-real theorem that an ordinary
-# Mathlib file could import and use.
+# Both induction cases deliberately contain their calculations. There are no
+# one-use sum/square-step wrappers and no explicit theorem invocation: Litex
+# matches the checked function reductions, registered sum rules, exact
+# induction hypothesis, and arithmetic facts automatically.
 #
-# Now the same typed verifier evidence produces both the canonical theorem and
-# a `Native` theorem over Mathlib's `Real`. The native proof replays the checked
-# strict-to-weak order rule through reviewed Litex order bridges.
-#
-# Boundary: this MVP recognizes exactly two direct R binders with the premise
-# `a < b`, conclusion `a <= b`, and allowlisted strict-to-weak order evidence.
-# Other theorem shapes remain canonical-only and fail closed at this export
-# layer. No Same-to-equality shortcut, axiom, `sorry`, or `admit` is introduced.
-#
-# Evidence:
-# target/release/litex -compact -runner -f showcases/litex_to_mathlib_pipeline/main.lit
-# target/release/stmt_result_to_lean_compiler compile showcases/litex_to_mathlib_pipeline/main.lit showcases/litex_to_mathlib_pipeline/LitexToMathlibPipelineGenerated.lean
-# (cd lean && lake build LitexToMathlibPipeline)
+# ToLean translates only the declarations and proof in this file. The native
+# Mathlib adapter in this showcase is authored separately by external AI and
+# is not part of compiler output.
 
-thm litex_real_lt_to_le:
-    ? forall a, b R:
-        a < b
+have fn kth_odd(k Z) Z = 2 * k - 1
+
+thm odd_sum_integer:
+    ? forall n Z:
+        n >= 1
         =>:
-            a <= b
+            sum(1, n, kth_odd) $in Z
+    sum(1, n, kth_odd) $in Z
+
+thm square_integer:
+    ? forall n Z:
+        n^2 $in Z
+    n^2 $in Z
+
+thm sum_first_odds:
+    ? forall n Z:
+        n >= 1
+        =>:
+            sum(1, n, kth_odd) = n^2
+    by induc n from 1:
+        ? sum(1, n, kth_odd) = n^2
+
+        ? from n = 1:
+            kth_odd(1) = 2 * 1 - 1 = 1
+            sum(1, 1, kth_odd) = kth_odd(1) = 2 * 1 - 1 = 1 = 1^2
+
+        ? induc:
+            kth_odd(n + 1) = 2 * (n + 1) - 1
+            sum(1, n + 1, kth_odd) = sum(1, n, kth_odd) + kth_odd(n + 1) = n^2 + kth_odd(n + 1) = n^2 + (2 * (n + 1) - 1) = (n + 1)^2
+
+thm sum_first_ten_odds:
+    ? forall:
+        sum(1, 10, kth_odd) = 100
+    sum(1, 10, kth_odd) = 10^2 = 100

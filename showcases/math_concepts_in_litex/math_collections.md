@@ -28,6 +28,30 @@ classic examples.
 The arrows mean suggested reading order only. Shared interfaces should move to
 `std` only after at least two real consumers need the same stable shape.
 
+## Completion contract and stop lines
+
+“Complete” in this collection means a vertical slice, not a survey course:
+setting or structure, morphism or subobject, construction, consuming theorem,
+and concrete instance. Once those five layers are checked, adding adjacent
+chapters is optional rather than necessary cleanup.
+
+| Direction | First-version stopping line |
+| --- | --- |
+| linear algebra | kernels and zero-kernel iff injective; no bases, dimension, rank-nullity, or quotients |
+| abstract algebra | normal group kernels; ring kernels; prime ideal iff supplied quotient presentation is a domain; no maximal-ideal correspondence, modules, or extension theory |
+| topology | closed-preimage continuity and compact images; no filters, separation hierarchy, or connectedness |
+| calculus / real analysis | grow at most through Rolle/MVT and elementary consequences; integration/FTC are a later independent slice |
+| multivariable / differential geometry | Euclidean total derivatives, Jacobians, gradients, and elementary curves only; no manifold machinery |
+| ODE | explicit checked IVPs; Picard--Lindelof optional, with systems/stability/BVPs outside the first version |
+| category theory | categories, functors, natural transformations, identity/composition, terminal consumer; no limits, adjunctions, Yoneda, monads, or general functor categories |
+| functional analysis (future) | normed and Banach spaces, bounded linear maps, Banach fixed point |
+| PDE (future) | a few explicit classical solutions only; no weak/Sobolev/general existence theory |
+
+Algebraic geometry, homological algebra, representation theory, model theory,
+and universal algebra are not planned collection directions. A future row does
+not justify an empty project: create a directory only when its first checked
+vertical slice exists.
+
 ## Cross-cutting interface choices
 
 - Reuse native number systems, sets, tuples, finite sequences, arithmetic,

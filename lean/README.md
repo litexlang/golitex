@@ -67,18 +67,23 @@ The implemented scope is deliberately small:
 - custom `Litex.Lt` and `Litex.Le` reduce to native real `<` and `≤` through
   `OrderValue`; verifier-owned `R` evidence controls source admission.
 
-The first Mathlib-native export slice is executable in
-[`showcases/litex_to_mathlib_pipeline`](../showcases/litex_to_mathlib_pipeline/README.md).
-It compiles one checked Litex theorem into both the canonical wrapper view and
-a native real-order view, then builds a separate consumer that imports the
-generated theorem to prove a `Set.Icc` result. Run its real kernel gate with:
+The declaration-preserving compiler showcase is executable in
+[`showcases/litex_to_lean_mathlib_pipeline`](../showcases/litex_to_lean_mathlib_pipeline/README.md).
+It proves that the first `n` positive odd integers sum to `n^2` and compiles
+the source Result only into the declarations represented by the `.lit` file.
+A separate, non-generated adapter authored outside ToLean exposes the optional
+integer/`Finset.Icc` interface, and a downstream consumer specializes that
+adapter at `n = 100`. Run the real kernel gate with:
 
 ```sh
 lake build LitexToMathlibPipeline
 ```
 
-This is a closed first slice, not general native coverage: unsupported theorem
-or evidence shapes remain canonical-only.
+Both Litex induction cases are inline: there is no singleton, sum-step, or
+square-step wrapper theorem and no explicit theorem-invocation command. The
+generated module contains no source-less `Native` theorem, certificate, or
+consumer. Mathlib API design is owned by external AI or human-authored adapter
+files, not the compiler.
 
 Every compiler example is a checked-in generated pair:
 

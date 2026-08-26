@@ -25,6 +25,12 @@ are not assumed. General limits and continuity, compact-interval theorems, the
 Mean Value Theorem, Riemann integration, and the Fundamental Theorem of
 Calculus remain later gates, not current API claims.
 
+The planned first-version ceiling for the calculus/real-analysis family is
+Rolle's theorem, the Mean Value Theorem, and elementary consequences such as
+monotonicity. Once that chain is checked, this direction stops. Riemann or
+Lebesgue integration and the Fundamental Theorem of Calculus would be a later
+independent slice; they are not required to finish this one.
+
 `same_math_in_lean.lean` defines the same epsilon-delta relation over
 Mathlib's `ℝ`, proves the square and affine difference quotients directly,
 and also connects the square result to `HasDerivAt`. No derivative identity

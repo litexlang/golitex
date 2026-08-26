@@ -22,6 +22,11 @@ asserted: the current verifier does not yet fold that lambda representation
 back into the derivative predicate reliably. The published Litex file adds no
 trust or axiom to hide that boundary.
 
+This explicit IVP family is the first-version ODE stopping point. A later
+Picard--Lindelof existence/uniqueness theorem is one optional flagship, not a
+current completion blocker. Systems, stability, phase portraits, numerical
+methods, and boundary-value problems remain outside this module.
+
 `same_math_in_lean.lean` now works over `ℝ`, defines the same punctured
 epsilon-delta derivative predicate, proves the quadratic difference-quotient
 calculation directly, and also exposes the result through Mathlib's standard

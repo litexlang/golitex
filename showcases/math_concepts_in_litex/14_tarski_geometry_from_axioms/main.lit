@@ -945,7 +945,6 @@ thm euclid_postulate_supplies_intersections:
         euclid_a != euclid_d
         =>:
             $euclid_intersection_witness_exists(Point, Bet, euclid_a, euclid_b, euclid_c, euclid_e)
-    $euclid_intersection_witness_exists(Point, Bet, euclid_a, euclid_b, euclid_c, euclid_e)
 
 # Each side is congruent to itself, so every triangle is congruent to itself.
 thm triangle_congruence_reflexive:

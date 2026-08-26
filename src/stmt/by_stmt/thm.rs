@@ -35,10 +35,15 @@ impl ByThmStmt {
 
 impl fmt::Display for ByThmStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        let introducer = if self.selected_facts.is_none() {
+            RELEASE
+        } else {
+            BY
+        };
         write!(
             f,
             "{} {} {}{}",
-            BY,
+            introducer,
             THM,
             self.name,
             braced_vec_to_string(&self.args)

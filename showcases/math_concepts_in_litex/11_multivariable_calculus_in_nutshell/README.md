@@ -16,3 +16,9 @@ The Lean comparison likewise works over `ℝ × ℝ`, proves both partial
 derivatives from their epsilon-delta definitions, and checks the corresponding
 Mathlib coordinate derivatives. A general total-derivative/Jacobian interface
 is deliberately outside this first version.
+
+The eventual ceiling for this direction is still Euclidean: total
+derivatives, Jacobians, gradients, and a few elementary curve calculations.
+General manifolds, tangent bundles, differential forms, metrics, connections,
+and curvature belong to a separate differential-geometry project and are not
+required for this showcase to be complete.

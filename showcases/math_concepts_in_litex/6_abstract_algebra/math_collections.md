@@ -3,11 +3,12 @@
 ## Purpose and scope
 
 This standalone module models three linked elementary-algebra slices. Group
-theory ends at homomorphisms, normal kernels, and finite-group/coset
-vocabulary. Commutative-ring theory adds ring homomorphisms, ideals, prime
-ideals, and a supplied quotient presentation. Field theory adds integral
-domains, fields, and the finite-integral-domain theorem when the existing
-finite-set map interface supports its checked proof.
+theory ends at homomorphisms and normal kernels. Commutative-ring theory adds
+ring homomorphisms, ideals, prime
+ideals, and a supplied quotient presentation. Field theory adds
+integral-domain and field interfaces and the checked implication from field
+to integral domain. A finite-integral-domain theorem is an optional later
+extension, not part of this version's completion contract.
 
 The point is not to accumulate every standard definition. Each slice must
 reach one theorem that consumes its objects:
@@ -15,7 +16,7 @@ reach one theorem that consumes its objects:
 ```text
 groups -> homomorphism -> kernel -> normal subgroup
 rings  -> ideal/prime ideal -> quotient presentation -> prime iff quotient domain
-fields -> integral domain -> finite multiplication map -> finite domain is field
+fields -> integral domain -> field interface -> field implies domain
 ```
 
 The module then stops. Sylow theory, group actions and classification,
@@ -148,10 +149,11 @@ objects. No parallel arithmetic or container interface is introduced.
 - **Ordinary meaning:** a quotient of `A` by `I` is presented by a
   commutative ring `Q` and a surjective ring homomorphism `q : A -> Q` whose
   kernel is exactly `I`.
-- **Semantic role:** `setting QuotientRingSetting(...)`; it packages ordinary
-  quotient data, not the theorem to be proved.
+- **Semantic role:** `setting QuotientRingPresentationSetting(...)`; it
+  packages ordinary quotient data, not the theorem to be proved.
 - **Interface sketch:** two ring settings, `I`, `q`, preservation laws,
-  `forall x: x in I <=> q(x)=0_Q`, and surjectivity of `q`.
+  the two implications `x in I => q(x)=0_Q` and `q(x)=0_Q => x in I`, and
+  surjectivity of `q`.
 - **Nearest wrong alternative:** defining the quotient as an arbitrary
   carrier already satisfying “domain iff prime” would smuggle the desired
   result into the interface. Constructing equivalence classes and choice of
@@ -173,11 +175,9 @@ objects. No parallel arithmetic or container interface is introduced.
 - **Nearest wrong alternative:** putting an inverse function into the base
   ring setting would exclude rings that are not fields and conflate supplied
   data with existential field structure.
-- **Dependencies:** commutative-ring laws; the finite theorem additionally
-  needs native finite cardinality, function range, injectivity, and preimage
-  interfaces.
-- **Downstream uses:** the quotient characterization and the finite-domain
-  theorem.
+- **Dependencies:** commutative-ring laws.
+- **Downstream uses:** the quotient characterization and the explicit
+  field-to-domain implication.
 - **Allowable hole:** field extensions and Galois theory are beyond the stop
   line.
 
@@ -204,13 +204,13 @@ two CommutativeRingSetting bundles + supplied function
   -> ideal / prime-ideal vocabulary         [definitions]
 
 source ring + ideal + target ring + quotient map
-  -> QuotientRingSetting                    [surjective map, exact kernel]
+  -> QuotientRingPresentationSetting        [surjective map, exact kernel]
   -> prime ideal iff quotient domain        [flagship proof]
 
-finite commutative ring + zero-product law
-  -> injective multiplication by nonzero    [proof]
-  -> full finite range / preimage of one    [finite-set bridge]
-  -> inverse for every nonzero element      [field theorem]
+commutative ring + zero-product law
+  -> integral domain                        [definition]
+  -> field adds nonzero inverses             [definition]
+  -> every field is an integral domain       [checked projection]
 ```
 
 ## Intended build order
@@ -219,8 +219,9 @@ Retain the checked group slice. Then define the commutative-ring setting and
 its map setting, prove preservation lemmas and kernel ideality, add ideals and
 prime ideals, define a quotient presentation through a surjective map with
 exact kernel, and prove the quotient-domain characterization. Add domains and
-fields before attempting the finite-domain theorem so its proof consumes the
-public interfaces rather than rebuilding them locally.
+fields, then stop after the field-to-domain projection. If a later
+finite-domain theorem is added, it must consume these public interfaces and a
+checked finite-set map bridge rather than rebuilding either locally.
 
 ## Interface decisions and permissible gaps
 

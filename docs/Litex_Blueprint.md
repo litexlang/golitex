@@ -603,6 +603,8 @@ The two roles of ecosystem reuse and independent rechecking point to a natural t
 
 Making that route concrete requires a mapping to Lean and Mathlib. For verification, the compiler maps each supported Litex verification path to the corresponding Lean proof construction. For mathematical objects, it maps each Litex object to a Lean representation—not by translating it directly, but by using designed wrappers as an intermediary. This mapping is feasible, but it takes time to develop and verify. The intermediary code lives at https://github.com/litexlang/golitex/blob/main/lean/Litex/Core.lean and remains under active development.
 
+The executable [Litex-to-Lean-to-Mathlib pipeline](../showcases/litex_to_lean_mathlib_pipeline/README.md) shows the concrete Rust call spine, the recursive `StmtResult` evidence retained at the kernel boundary, the generated Lean proof, a separate external adapter, and its downstream Mathlib consumer. The Blueprint keeps the stable architecture; that showcase owns the implementation-level source map and runnable gates.
+
 A small numerical theorem illustrates both the evidence-preserving mapping and
 the desired ecosystem interface. Consider this checked Litex theorem:
 
@@ -623,25 +625,27 @@ classification and verification evidence:
     ((Litex.In.rep b hb : ℝ) + (Litex.In.rep a ha : ℝ))
 ```
 
-When those wrappers have a reviewed, lossless elimination route, the compiler
-should additionally expose the ordinary Lean corollary:
+The compiler stops at that source-owned declaration. It does not additionally
+invent the ordinary Lean corollary
 
 ```text
 theorem litex_real_add_comm (a b : ℝ) : a + b = b + a
 ```
 
-The canonical theorem preserves Litex proof provenance; the native corollary
-is what a Lean user can apply, rewrite with, and combine with Mathlib. The
-corollary must be derived through proved wrapper bridges, not fresh Lean proof
-search, and is omitted when no lossless route exists. This two-layer public
-interface is a confirmed compiler direction, not yet a fully implemented
-capability.
+because no such declaration exists in the `.lit` file. This
+declaration-preserving boundary keeps generated Lean auditable: theorem names,
+statements, and proof routes all trace back to source-owned facts.
 
-**The practical payoff of that second interface is interoperability: once a Litex definition
-or theorem is within the compiler's supported, losslessly unwrappable surface,
-it can enter the Lean ecosystem through the generated native interface. Lean users can import
-and reuse its native interface without leaving their familiar Lean/Mathlib
-workflow or first learning Litex from the ground up.**
+If an ordinary Mathlib interface is useful, an external AI or human writes it
+in a separate, non-generated Lean module. That adapter may import and inspect
+the generated module, but it owns the new statement and its Lean proof. The
+compiler does not hide API design or fresh target-language mathematics inside
+translation.
+
+**Interoperability therefore has two explicit artifacts: ToLean supplies the
+kernel-checkable translation of the Litex source, while an external adapter
+supplies any additional Lean/Mathlib-facing API. Lean users can import the
+adapter without confusing it with compiler output.**
 
 This example also exposes the compiler's two underlying design problems. The first is theoretical: how to represent Litex mathematics in Lean and Mathlib. The same mathematical object or statement can often be expressed by several Lean formulations with the same mathematical meaning, but the choice has long-term consequences for whether generated code can reuse Mathlib naturally, how later Litex features can be extended, and how well the Litex and Lean ecosystems can work together. Foundational concepts such as functions, sets, membership, and well-definedness therefore need a consistent and sustainable representation—not merely one that makes today's examples pass.
 
@@ -663,9 +667,9 @@ These three roles correspond to the following concrete outputs:
 | --- | --- |
 | Front end for readable reasoning | Mathematical objects, conditions, intermediate facts, and conclusions that people can inspect directly |
 | Production layer for trustworthy reasoning data | Machine-checked facts and verification sources, explicit stopping boundaries, and explicitly marked uses of `trust` and other trust boundaries |
-| Connection to the existing ecosystem | Lean proof terms for currently supported routes and, when wrappers can be eliminated losslessly, native interfaces for Lean and Mathlib |
+| Connection to the existing ecosystem | Lean proof terms for currently supported source routes, plus explicitly separate AI- or human-authored adapters for additional Lean/Mathlib interfaces |
 
-“Trustworthy reasoning data” does not mean that every Litex output already has the same trust guarantees as a mature proof assistant. It first means that the data carries machine-checking results, verification sources, and explicit boundaries. Litex's own builtin and infer rules, uses of `trust`, and implementation remain part of the surface that must be audited. Only when a verification route is compiled in full and accepted by the Lean kernel does that covered route gain an additional, smaller, and relatively independent kernel check. Compiler coverage and native interfaces are still expanding.
+“Trustworthy reasoning data” does not mean that every Litex output already has the same trust guarantees as a mature proof assistant. It first means that the data carries machine-checking results, verification sources, and explicit boundaries. Litex's own builtin and infer rules, uses of `trust`, and implementation remain part of the surface that must be audited. Only when a verification route is compiled in full and accepted by the Lean kernel does that covered route gain an additional, smaller, and relatively independent kernel check. Compiler coverage and the separate adapter ecosystem are still expanding.
 
 The amount of Litex code and the size of its datasets are therefore intermediate measures. What matters is whether people can understand the resulting artifacts, machines can check them, later reasoning can reuse them, and—within the currently supported surface—they can enter an existing formal-mathematics toolchain. Only through those outcomes could Litex grow from a language experiment into reasoning infrastructure shared by mathematics, AI, engineering, and other fields.
 

@@ -10,6 +10,12 @@ that the continuous image of a compact subset is compact.
 laws. `TopologicalMapSetting` and `ContinuousMapSetting` compose renamed
 topology bundles into the reusable map contexts consumed by the theorems.
 
+This is the topology stopping boundary for the first collection version:
+topological setting, continuous maps, the closed-preimage characterization,
+indexed compactness, and compact images. Bases, filters, separation axioms,
+connectedness, quotient topology, and algebraic topology are optional later
+subjects rather than gaps in this module.
+
 `main.lit` contains no `trust`. Both the independent release file runner and
 module runner return top-level `ok: true`. See `math_collections.md` for the
 fixed scope and interface decisions.

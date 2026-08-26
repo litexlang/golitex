@@ -729,6 +729,7 @@ pub use crate::common::keywords::RE;
 pub use crate::common::keywords::REDUCE;
 pub use crate::common::keywords::REFLEXIVE_PROP;
 pub use crate::common::keywords::REGULARITY_AXIOM;
+pub use crate::common::keywords::RELEASE;
 pub use crate::common::keywords::REPLACEMENT;
 pub use crate::common::keywords::RIGHT_ARROW;
 pub use crate::common::keywords::RIGHT_BRACE;

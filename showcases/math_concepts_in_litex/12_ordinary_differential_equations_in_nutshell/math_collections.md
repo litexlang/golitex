@@ -16,3 +16,7 @@ solution existence/uniqueness theorems, systems, stability, phase portraits,
 and boundary-value problems. The selected derivative function is intentionally
 guarded by `is_differentiable_at`; it is not an unconditional total derivative
 operator on every function and point.
+
+The checked explicit IVP is already a complete vertical slice. If this module
+is expanded, Picard--Lindelof is the single optional next ceiling; it does not
+open an obligation to cover the excluded ODE subjects above.

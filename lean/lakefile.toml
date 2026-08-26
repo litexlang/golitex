@@ -12,12 +12,16 @@ name = "Litex"
 
 [[lean_lib]]
 name = "LitexToMathlibPipeline"
-srcDir = "../showcases/litex_to_mathlib_pipeline"
+srcDir = "../showcases/litex_to_lean_mathlib_pipeline"
 
 [[lean_lib]]
 name = "LitexToMathlibPipelineGenerated"
-srcDir = "../showcases/litex_to_mathlib_pipeline"
+srcDir = "../showcases/litex_to_lean_mathlib_pipeline"
+
+[[lean_lib]]
+name = "LitexToMathlibPipelineAdapter"
+srcDir = "../showcases/litex_to_lean_mathlib_pipeline"
 
 [[lean_lib]]
 name = "LitexToMathlibPipelineDownstream"
-srcDir = "../showcases/litex_to_mathlib_pipeline"
+srcDir = "../showcases/litex_to_lean_mathlib_pipeline"

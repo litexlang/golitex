@@ -782,52 +782,85 @@ fn theorem_backed_obtain_consumes_but_does_not_publish_its_local_conclusion() {
 
 fn execute_odd_sum_to_square_flagship() -> Vec<StmtResult> {
     crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
-        include_str!("../../../../lean/examples/60_OddSumToSquare.lit"),
-        "60_OddSumToSquare.lit",
+        include_str!("../../../../showcases/litex_to_lean_mathlib_pipeline/main.lit"),
+        "main.lit",
     )
     .expect("execute the odd-sum flagship")
 }
 
 #[test]
-fn odd_sum_flagship_exports_canonical_native_and_mathlib_views() {
+fn odd_sum_flagship_exports_only_source_owned_declarations() {
+    let litex_source =
+        include_str!("../../../../showcases/litex_to_lean_mathlib_pipeline/main.lit");
+    assert!(litex_source.contains("have fn kth_odd"));
+    assert!(!litex_source.contains("thm odd_sum_single"));
+    assert!(!litex_source.contains("thm odd_sum_step"));
+    assert!(!litex_source.contains("thm odd_square_step"));
+    assert!(!litex_source.contains("by thm"));
+    assert!(litex_source.contains("kth_odd(1) = 2 * 1 - 1 = 1"));
+    assert!(litex_source.contains("n^2 + kth_odd(n + 1) = n^2 + (2 * (n + 1) - 1) = (n + 1)^2"));
+    assert!(litex_source.contains("thm sum_first_ten_odds"));
+    assert!(litex_source.contains("sum(1, 10, kth_odd) = 10^2 = 100"));
+
     let results = execute_odd_sum_to_square_flagship();
     let result_audit = results
         .iter()
         .map(crate::output::display_stmt_result_json_v2)
         .collect::<Vec<_>>()
         .join("\n");
-    let lean = StmtResultToLeanCompiler::new("60_OddSumToSquare.lit")
+    let lean = StmtResultToLeanCompiler::new("main.lit")
         .compile_stmt_results_to_lean_source(&results)
         .expect("compile the complete odd-sum Result DAG");
+    let checked_in = include_str!(
+        "../../../../showcases/litex_to_lean_mathlib_pipeline/LitexToMathlibPipelineGenerated.lean"
+    );
 
+    assert_eq!(lean, checked_in);
     assert!(lean.contains("theorem sum_first_odds :"));
-    assert!(lean.contains("Litex.sum (1 : ℤ) n odd"));
-    assert!(lean.contains("namespace Native"));
-    assert!(lean.contains("∑ k ∈ Finset.Icc (1 : ℤ) n, (2 * k - 1) = n ^ 2"));
-    assert!(lean.contains("namespace MathlibConsumer"));
-    assert!(lean.contains("rw [Native.sum_first_odds n __domain1]"));
-    assert!(lean.contains("Litex.Same.addCongrRightInt"));
+    assert!(lean.contains("theorem sum_first_ten_odds :"));
+    assert!(lean.contains("sum_first_odds (10 : ℤ)"));
+    assert!(lean.contains("Litex.sum (1 : ℤ) n kth_odd"));
+    assert!(!lean.contains("private theorem __native_certificate"));
+    assert!(!lean.contains("namespace Native"));
+    assert!(!lean.contains("namespace MathlibConsumer"));
+    assert!(!lean.contains("Finset.Icc"));
     assert!(lean.contains("Litex.Same.intAddComplex"));
+    assert!(lean.contains("unfold Litex.fnApplyCarrier kth_odd"));
+    assert!(!lean.contains("unfold Litex.fnApplyOwn kth_odd"));
     assert!(result_audit.contains("StructuralKnownEqualityCongruence"));
+    assert!(result_audit.contains("CheckedFunctionDefinitionReduction"));
+    assert!(result_audit.contains("IntegralPolynomialNormalization"));
     assert!(result_audit.contains("IntegerRangeSumMembership"));
     assert!(result_audit.contains("PowNat"));
     assert!(result_audit.contains("\"kind\": \"Iteration\""));
+    assert!(result_audit.contains("\"argument\": \"10\""));
     assert!(!lean.contains("SumExpr"));
+    assert!(!lean.contains("theorem odd_sum_step"));
+    assert!(!lean.contains("theorem odd_square_step"));
     assert!(!lean.contains("LitexObject"));
     assert!(!lean.contains("sorry"));
 }
 
 #[test]
-fn odd_sum_native_export_requires_the_structured_induction_result() {
+fn odd_sum_canonical_translation_rejects_changed_proof_step_order() {
     let mut results = execute_odd_sum_to_square_flagship();
-    let StmtResult::Success(SuccessStmtResult::Definition(
-        SuccessDefinitionStmtResult::DefThmStmt(theorem),
-    )) = results
-        .last_mut()
-        .expect("flagship retains its final theorem")
-    else {
-        panic!("flagship final Result is a named theorem")
-    };
+    let theorem = results
+        .iter_mut()
+        .find_map(|result| {
+            let StmtResult::Success(SuccessStmtResult::Definition(
+                SuccessDefinitionStmtResult::DefThmStmt(theorem),
+            )) = result
+            else {
+                return None;
+            };
+            match theorem.verification.as_ref() {
+                Some(verification) if verification.name == "sum_first_odds" => {
+                    Some(theorem.as_mut())
+                }
+                _ => None,
+            }
+        })
+        .expect("flagship retains the induction theorem");
     theorem
         .verification
         .as_mut()
@@ -835,8 +868,8 @@ fn odd_sum_native_export_requires_the_structured_induction_result() {
         .proof_steps
         .clear();
 
-    let error = StmtResultToLeanCompiler::new("60_OddSumToSquare.lit")
+    let error = StmtResultToLeanCompiler::new("main.lit")
         .compile_stmt_results_to_lean_source(&results)
-        .expect_err("native export cannot survive deletion of its structured Result");
+        .expect_err("canonical translation cannot survive a changed verified proof-step order");
     assert!(error.contains("proof-step order"), "{error}");
 }
