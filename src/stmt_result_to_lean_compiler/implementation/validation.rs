@@ -147,6 +147,13 @@ pub(super) fn infer_rule_name(rule: &InferRule) -> &'static str {
         InferRule::DefinedPredicateDefinitionClauseProjection(_) => {
             "DefinedPredicateDefinitionClauseProjection"
         }
+        InferRule::EqualityChainClosure(_) => "EqualityChainClosure",
+        InferRule::ClosedPositivePowerEqualityImpliesEqualSideMembership(_) => {
+            "ClosedPositivePowerEqualityImpliesEqualSideMembership"
+        }
+        InferRule::PositiveIntegerBaseNaturalPowerEqualityImpliesEqualSideMembership(_) => {
+            "PositiveIntegerBaseNaturalPowerEqualityImpliesEqualSideMembership"
+        }
         InferRule::RegisteredTransitivePredicateChainClosure(_) => {
             "RegisteredTransitivePredicateChainClosure"
         }
@@ -156,6 +163,7 @@ pub(super) fn infer_rule_name(rule: &InferRule) -> &'static str {
         InferRule::ListSetMembershipImpliesEqualityAlternatives(_) => {
             "ListSetMembershipImpliesEqualityAlternatives"
         }
+        InferRule::NumericOrderBoundImpliesZeroSign => "NumericOrderBoundImpliesZeroSign",
         InferRule::MultiplicationByNegativeOneReversesOrderAgainstZero => {
             "MultiplicationByNegativeOneReversesOrderAgainstZero"
         }
@@ -706,12 +714,10 @@ pub(super) fn validate_success_store_fact_result_allowing_well_definedness_infer
         validate_conjunction_well_definedness_preflight_store(store, and_fact, result_layer)?;
         return Ok(fact_id);
     }
-    if store
-        .infers
-        .rule_applications
-        .iter()
-        .any(|application| !defined_predicate_infer_rule(&application.rule))
-    {
+    if store.infers.rule_applications.iter().any(|application| {
+        !defined_predicate_infer_rule(&application.rule)
+            && !infer_rule_has_direct_compiler_environment_consumer(&application.rule)
+    }) {
         return Err(format!(
             "{result_layer} retained an unsupported typed inference rule"
         ));
@@ -1155,12 +1161,16 @@ pub(super) fn direct_builtin_rule_compiler_limitation(
         | BuiltinRuleEvidence::ObjectReflexivity(_)
         | BuiltinRuleEvidence::RationalNormalization(_)
         | BuiltinRuleEvidence::ComplexAlgebraicNormalization(_)
+        | BuiltinRuleEvidence::StructuralDefinitionCongruence(_)
+        | BuiltinRuleEvidence::StructuralKnownEqualityCongruence(_)
+        | BuiltinRuleEvidence::IntegralPolynomialNormalization(_)
         | BuiltinRuleEvidence::StandardSetNonempty(_)
         | BuiltinRuleEvidence::DisjunctionIntroduction(_)
         | BuiltinRuleEvidence::FunctionApplicationReturnMembership(_)
         | BuiltinRuleEvidence::KnownEqualityPath(_)
         | BuiltinRuleEvidence::Arithmetic(_)
         | BuiltinRuleEvidence::IntegerMembershipClosure(_)
+        | BuiltinRuleEvidence::IntegerRangeSumMembership
         | BuiltinRuleEvidence::NaturalMembershipClosure(_)
         | BuiltinRuleEvidence::RationalMembershipClosure(_)
         | BuiltinRuleEvidence::ComplexArithmeticMembershipClosure(_)
@@ -1949,6 +1959,7 @@ pub(super) fn collect_well_definedness_to_lean_context_from_object_result(
     if let Some(binder) = &direct.steps.binder {
         collect_well_definedness_to_lean_context_from_object_binder(
             source_object,
+            direct,
             binder,
             context,
             visited,
@@ -1972,6 +1983,7 @@ pub(super) fn collect_well_definedness_to_lean_context_from_object_child(
 
 pub(super) fn collect_well_definedness_to_lean_context_from_object_binder(
     owner_object: &Obj,
+    owner_result: &SuccessVerifyDirectObjWellDefinedResult,
     binder: &SuccessVerifyBinderObjectWellDefinedResult,
     context: &mut StmtResultWellDefinednessToLeanCompilationContext,
     visited: &mut HashSet<usize>,
@@ -2043,15 +2055,86 @@ pub(super) fn collect_well_definedness_to_lean_context_from_object_binder(
                 context,
             )?;
         }
+        SuccessVerifyBinderObjectWellDefinedResult::Iteration(result) => {
+            collect_iteration_well_definedness_to_lean_context(
+                owner_object,
+                owner_result,
+                result,
+                context,
+            )?;
+        }
         // These constructor-specific binders already publish every object
         // dependency through `steps.children`; they do not introduce
         // parameter aliases consumed by the current Lean surface.
-        SuccessVerifyBinderObjectWellDefinedResult::Iteration(_)
-        | SuccessVerifyBinderObjectWellDefinedResult::FiniteAggregate(_)
+        SuccessVerifyBinderObjectWellDefinedResult::FiniteAggregate(_)
         | SuccessVerifyBinderObjectWellDefinedResult::Reduce(_)
         | SuccessVerifyBinderObjectWellDefinedResult::Structure(_) => {}
     }
     Ok(())
+}
+
+pub(super) fn collect_iteration_well_definedness_to_lean_context(
+    owner_object: &Obj,
+    owner_result: &SuccessVerifyDirectObjWellDefinedResult,
+    result: &SuccessVerifyIterationWellDefinedResult,
+    context: &mut StmtResultWellDefinednessToLeanCompilationContext,
+) -> Result<(), String> {
+    let Obj::Sum(sum) = owner_object else {
+        return Ok(());
+    };
+    let occurrence_id = sum
+        .source_occurrence_id
+        .ok_or_else(|| "sum WD Result has no parser-owned source occurrence id".to_string())?;
+    if !matches!(&owner_result.object, Obj::Sum(_)) {
+        return Err("sum Iteration WD Result changed its owner object".into());
+    }
+    if obj_equality_key(owner_object) != obj_equality_key(&owner_result.object) {
+        return Err("sum Iteration WD Result changed its owner semantic key".into());
+    }
+    let interval = result.interval.as_ref();
+    let return_carrier = interval.return_carrier.source_object.clone();
+    let retained = StmtResultIterationWellDefinednessToLeanCompilationContext {
+        source_aggregate: owner_object.clone(),
+        operation: result.operation.clone(),
+        parameter_set: interval.parameter_set.clone(),
+        return_carrier,
+        parameter_count: interval.parameters.len(),
+        domain_count: interval.domains.len(),
+        has_body: interval.body.is_some(),
+        has_body_membership: interval.body_membership.is_some(),
+        has_exact_integer_coverage: matches!(
+            interval.coverage,
+            SuccessVerifyIterationCoverageResult::UniversalIntegerCarrier(_)
+                | SuccessVerifyIterationCoverageResult::Enumerated(_)
+        ),
+    };
+    if let Some(previous) = context.iterations.insert(occurrence_id, retained) {
+        if obj_equality_key(&previous.source_aggregate) != obj_equality_key(owner_object) {
+            return Err(format!(
+                "sum occurrence {} selected two different Iteration WD Results",
+                occurrence_id.value()
+            ));
+        }
+    }
+    Ok(())
+}
+
+pub(super) fn iteration_has_reviewed_integer_callable_contract(
+    iteration: &StmtResultIterationWellDefinednessToLeanCompilationContext,
+) -> bool {
+    let Obj::Sum(sum) = &iteration.source_aggregate else {
+        return false;
+    };
+    match sum.func.as_ref() {
+        Obj::AnonymousFn(_) => iteration.has_body && iteration.has_body_membership,
+        // A named callable has no interval-local body in the verifier Result.
+        // Its exact unary Z-to-Z contract is instead selected by the stored
+        // function-membership FactId when the target renderer lowers it.
+        Obj::Atom(atom) if atom.symbol_ref().is_some() => {
+            !iteration.has_body && !iteration.has_body_membership
+        }
+        _ => false,
+    }
 }
 
 pub(super) fn collect_well_definedness_to_lean_context_from_binder_premises(
@@ -2109,6 +2192,8 @@ pub(super) fn collect_anonymous_function_well_definedness_to_lean_context(
         occurrence_id,
         StmtResultAnonymousFunctionWellDefinednessToLeanCompilationContext {
             source_function: owner_object.clone(),
+            body_source_object: result.body.source_object.clone(),
+            body_well_definedness: result.body.result.clone(),
             parameters,
             domains,
             assumption_infers,
@@ -2234,21 +2319,80 @@ pub(super) fn install_fact_well_definedness_proof_store_results_in_active_enviro
     result: &SuccessVerifyFactWellDefinedProofResult,
     environment_stack: &mut StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<(), String> {
-    let SuccessVerifyFactWellDefinedProofResult::AtomicFact(atomic) = result else {
-        return Ok(());
-    };
-    let mut visited = HashSet::new();
-    for argument in &atomic.arguments {
-        install_object_well_definedness_store_results(
-            argument.result.as_ref(),
-            environment_stack,
-            &mut visited,
-        )?;
+    match result {
+        SuccessVerifyFactWellDefinedProofResult::AtomicFact(atomic) => {
+            let mut visited = HashSet::new();
+            for argument in &atomic.arguments {
+                install_object_well_definedness_store_results_for_source(
+                    &argument.source_object,
+                    argument.result.as_ref(),
+                    environment_stack,
+                    &mut visited,
+                )?;
+            }
+        }
+        SuccessVerifyFactWellDefinedProofResult::AndFact(and) => {
+            for conjunct in &and.conjuncts {
+                install_fact_well_definedness_proof_store_results_in_active_environment(
+                    conjunct,
+                    environment_stack,
+                )?;
+            }
+        }
+        SuccessVerifyFactWellDefinedProofResult::ChainFact(chain) => {
+            for comparison in &chain.comparisons {
+                install_fact_well_definedness_proof_store_results_in_active_environment(
+                    comparison,
+                    environment_stack,
+                )?;
+            }
+        }
+        SuccessVerifyFactWellDefinedProofResult::OrFact(or) => {
+            for branch in &or.branches {
+                install_fact_well_definedness_proof_store_results_in_active_environment(
+                    branch,
+                    environment_stack,
+                )?;
+            }
+        }
+        SuccessVerifyFactWellDefinedProofResult::NotForallFact(not_forall) => {
+            install_fact_well_definedness_proof_store_results_in_active_environment(
+                &not_forall.inner,
+                environment_stack,
+            )?;
+        }
+        // Binder bodies own a different lexical environment. Their stores are
+        // installed only after the corresponding parameter aliases have been
+        // introduced by the forall/existential compiler.
+        SuccessVerifyFactWellDefinedProofResult::ExistFact(_)
+        | SuccessVerifyFactWellDefinedProofResult::ForallFact(_)
+        | SuccessVerifyFactWellDefinedProofResult::ForallFactWithIff(_) => {}
     }
     Ok(())
 }
 
 pub(super) fn install_object_well_definedness_store_results(
+    result: &SuccessVerifyObjWellDefinedResult,
+    environment_stack: &mut StmtResultToLeanCompilerEnvironmentStack,
+    visited: &mut HashSet<usize>,
+) -> Result<(), String> {
+    let source_object = match result {
+        SuccessVerifyObjWellDefinedResult::Direct(direct) => direct.object.clone(),
+        SuccessVerifyObjWellDefinedResult::Reuse(reuse) => reuse.object.clone(),
+        SuccessVerifyObjWellDefinedResult::RecursiveReference(recursive) => {
+            recursive.object.clone()
+        }
+    };
+    install_object_well_definedness_store_results_for_source(
+        &source_object,
+        result,
+        environment_stack,
+        visited,
+    )
+}
+
+pub(super) fn install_object_well_definedness_store_results_for_source(
+    source_object: &Obj,
     result: &SuccessVerifyObjWellDefinedResult,
     environment_stack: &mut StmtResultToLeanCompilerEnvironmentStack,
     visited: &mut HashSet<usize>,
@@ -2259,9 +2403,23 @@ pub(super) fn install_object_well_definedness_store_results(
     }
     match result {
         SuccessVerifyObjWellDefinedResult::Direct(direct) => {
+            if obj_equality_key(source_object) != obj_equality_key(&direct.object) {
+                return Err(format!(
+                    "object WD store source changed `{source_object}` to `{}`",
+                    direct.object
+                ));
+            }
             for child in &direct.steps.children {
-                install_object_well_definedness_store_results(
+                install_object_well_definedness_store_results_for_source(
+                    &child.source_object,
                     child.result.as_ref(),
+                    environment_stack,
+                    visited,
+                )?;
+            }
+            if let Some(binder) = direct.steps.binder.as_deref() {
+                install_object_binder_well_definedness_store_results(
+                    binder,
                     environment_stack,
                     visited,
                 )?;
@@ -2312,11 +2470,11 @@ pub(super) fn install_object_well_definedness_store_results(
                 // and constructs this membership with `Litex.In.own`; do not
                 // invent a parser occurrence merely to publish a duplicate
                 // compiler binding for the synthetic prefix.
-                if matches!(&direct.object, Obj::FnObj(application) if application.source_occurrence_id.is_none())
+                if matches!(source_object, Obj::FnObj(application) if application.source_occurrence_id.is_none())
                 {
                     continue;
                 }
-                let rendered_object = render_obj(&direct.object, environment_stack)?;
+                let rendered_object = render_obj(source_object, environment_stack)?;
                 let rendered_set = render_obj(result_set, environment_stack)?;
                 let proof = format!("Litex.In.own {rendered_set} {rendered_object}");
                 if let Some(existing) = environment_stack.fact_propositions.get(&fact_id) {
@@ -2345,7 +2503,8 @@ pub(super) fn install_object_well_definedness_store_results(
             Ok(())
         }
         SuccessVerifyObjWellDefinedResult::Reuse(reuse) => {
-            install_object_well_definedness_store_results(
+            install_object_well_definedness_store_results_for_source(
+                source_object,
                 reuse.source.as_ref(),
                 environment_stack,
                 visited,
@@ -2353,6 +2512,241 @@ pub(super) fn install_object_well_definedness_store_results(
         }
         SuccessVerifyObjWellDefinedResult::RecursiveReference(_) => Ok(()),
     }
+}
+
+fn install_binder_premise_well_definedness_store_results(
+    premise: &SuccessVerifyBinderPremiseResult,
+    environment_stack: &mut StmtResultToLeanCompilerEnvironmentStack,
+) -> Result<(), String> {
+    if let Some(recursive) = premise.well_definedness.recursive.as_deref() {
+        install_fact_well_definedness_proof_store_results_in_active_environment(
+            recursive,
+            environment_stack,
+        )?;
+    }
+    Ok(())
+}
+
+fn install_child_object_well_definedness_store_results(
+    child: &SuccessVerifyChildObjWellDefinedResult,
+    environment_stack: &mut StmtResultToLeanCompilerEnvironmentStack,
+    visited: &mut HashSet<usize>,
+) -> Result<(), String> {
+    install_object_well_definedness_store_results_for_source(
+        &child.source_object,
+        child.result.as_ref(),
+        environment_stack,
+        visited,
+    )
+}
+
+fn install_iteration_scalar_return_well_definedness_store_results(
+    result: &SuccessVerifyIterationScalarReturnResult,
+    environment_stack: &mut StmtResultToLeanCompilerEnvironmentStack,
+    visited: &mut HashSet<usize>,
+) -> Result<(), String> {
+    for child in &result.parameter_carriers {
+        install_child_object_well_definedness_store_results(child, environment_stack, visited)?;
+    }
+    for premise in result.parameters.iter().chain(result.domains.iter()) {
+        install_binder_premise_well_definedness_store_results(premise, environment_stack)?;
+    }
+    install_child_object_well_definedness_store_results(
+        &result.return_carrier,
+        environment_stack,
+        visited,
+    )
+}
+
+fn install_iteration_interval_well_definedness_store_results(
+    result: &SuccessVerifyIterationIntervalResult,
+    environment_stack: &mut StmtResultToLeanCompilerEnvironmentStack,
+    visited: &mut HashSet<usize>,
+) -> Result<(), String> {
+    for child in &result.parameter_carriers {
+        install_child_object_well_definedness_store_results(child, environment_stack, visited)?;
+    }
+    for premise in &result.parameters {
+        install_binder_premise_well_definedness_store_results(premise, environment_stack)?;
+    }
+    install_child_object_well_definedness_store_results(
+        &result.return_carrier,
+        environment_stack,
+        visited,
+    )?;
+    // An interval body is checked under the iteration parameter. Its
+    // intrinsic stores are binder-local (and, for the current exact Sum
+    // lowering, are replayed through the retained anonymous-function WD
+    // context). Installing them in the surrounding scope would either render
+    // an unbound symbol or publish a FactId outside its lexical owner.
+    Ok(())
+}
+
+fn install_object_binder_well_definedness_store_results(
+    binder: &SuccessVerifyBinderObjectWellDefinedResult,
+    environment_stack: &mut StmtResultToLeanCompilerEnvironmentStack,
+    visited: &mut HashSet<usize>,
+) -> Result<(), String> {
+    match binder {
+        SuccessVerifyBinderObjectWellDefinedResult::SetBuilder(result) => {
+            install_child_object_well_definedness_store_results(
+                &result.parameter_carrier,
+                environment_stack,
+                visited,
+            )?;
+            install_binder_premise_well_definedness_store_results(
+                &result.parameter,
+                environment_stack,
+            )?;
+            for condition in &result.conditions {
+                if let Some(recursive) = condition.well_definedness.recursive.as_deref() {
+                    install_fact_well_definedness_proof_store_results_in_active_environment(
+                        recursive,
+                        environment_stack,
+                    )?;
+                }
+            }
+        }
+        SuccessVerifyBinderObjectWellDefinedResult::FunctionSet(result) => {
+            for child in &result.parameter_carriers {
+                install_child_object_well_definedness_store_results(
+                    child,
+                    environment_stack,
+                    visited,
+                )?;
+            }
+            for premise in result.parameters.iter().chain(result.domains.iter()) {
+                install_binder_premise_well_definedness_store_results(premise, environment_stack)?;
+            }
+            install_child_object_well_definedness_store_results(
+                &result.return_carrier,
+                environment_stack,
+                visited,
+            )?;
+        }
+        SuccessVerifyBinderObjectWellDefinedResult::AnonymousFunction(result) => {
+            for child in &result.parameter_carriers {
+                install_child_object_well_definedness_store_results(
+                    child,
+                    environment_stack,
+                    visited,
+                )?;
+            }
+            for premise in result.parameters.iter().chain(result.domains.iter()) {
+                install_binder_premise_well_definedness_store_results(premise, environment_stack)?;
+            }
+            install_child_object_well_definedness_store_results(
+                &result.return_carrier,
+                environment_stack,
+                visited,
+            )?;
+            // `result.body` may cite the anonymous parameter. Its intrinsic
+            // stores are installed by
+            // `compile_anonymous_function_well_definedness_context` after the
+            // exact binder aliases exist; publishing them here would leak a
+            // binder-local FactId into the surrounding scope.
+        }
+        SuccessVerifyBinderObjectWellDefinedResult::Iteration(result) => {
+            if let Some(scalar_return) = result.scalar_return.as_deref() {
+                install_iteration_scalar_return_well_definedness_store_results(
+                    scalar_return,
+                    environment_stack,
+                    visited,
+                )?;
+            }
+            install_iteration_interval_well_definedness_store_results(
+                result.interval.as_ref(),
+                environment_stack,
+                visited,
+            )?;
+        }
+        SuccessVerifyBinderObjectWellDefinedResult::FiniteAggregate(result) => {
+            if let Some(scalar_return) = result.scalar_return.as_deref() {
+                install_iteration_scalar_return_well_definedness_store_results(
+                    scalar_return,
+                    environment_stack,
+                    visited,
+                )?;
+            }
+            match &result.mode {
+                SuccessVerifyFiniteAggregateModeResult::Elements(elements) => {
+                    for application in &elements.applications {
+                        install_child_object_well_definedness_store_results(
+                            application,
+                            environment_stack,
+                            visited,
+                        )?;
+                    }
+                }
+                SuccessVerifyFiniteAggregateModeResult::ClosedRange(range) => {
+                    install_child_object_well_definedness_store_results(
+                        &range.aggregate_dependency,
+                        environment_stack,
+                        visited,
+                    )?;
+                }
+                SuccessVerifyFiniteAggregateModeResult::Empty(_)
+                | SuccessVerifyFiniteAggregateModeResult::Symbolic(_) => {}
+            }
+        }
+        SuccessVerifyBinderObjectWellDefinedResult::Reduce(result) => {
+            if let Some(laws) = result.operation_laws.as_deref() {
+                install_child_object_well_definedness_store_results(
+                    &laws.parameter_carrier,
+                    environment_stack,
+                    visited,
+                )?;
+                for premise in &laws.parameters {
+                    install_binder_premise_well_definedness_store_results(
+                        premise,
+                        environment_stack,
+                    )?;
+                }
+            }
+            match &result.mode {
+                SuccessVerifyReduceModeResult::Interval(interval) => {
+                    install_iteration_interval_well_definedness_store_results(
+                        interval.interval.as_ref(),
+                        environment_stack,
+                        visited,
+                    )?;
+                }
+                SuccessVerifyReduceModeResult::Elements(elements) => {
+                    for application in &elements.applications {
+                        install_child_object_well_definedness_store_results(
+                            application,
+                            environment_stack,
+                            visited,
+                        )?;
+                    }
+                }
+                SuccessVerifyReduceModeResult::Empty(_)
+                | SuccessVerifyReduceModeResult::Symbolic(_) => {}
+            }
+        }
+        SuccessVerifyBinderObjectWellDefinedResult::Structure(result) => {
+            for field in &result.fields {
+                install_child_object_well_definedness_store_results(
+                    &field.carrier,
+                    environment_stack,
+                    visited,
+                )?;
+                install_binder_premise_well_definedness_store_results(
+                    &field.premise,
+                    environment_stack,
+                )?;
+            }
+            for equivalent in &result.equivalent_facts {
+                if let Some(recursive) = equivalent.well_definedness.recursive.as_deref() {
+                    install_fact_well_definedness_proof_store_results_in_active_environment(
+                        recursive,
+                        environment_stack,
+                    )?;
+                }
+            }
+        }
+    }
+    Ok(())
 }
 
 pub(super) fn object_well_definedness_result_contains_intrinsic_store(
@@ -2370,6 +2764,41 @@ pub(super) fn object_well_definedness_result_contains_intrinsic_store(
             object_well_definedness_result_contains_intrinsic_store(reuse.source.as_ref())
         }
         SuccessVerifyObjWellDefinedResult::RecursiveReference(_) => false,
+    }
+}
+
+/// Whether this fact-WD layer owns an intrinsic object store in the current
+/// lexical environment. Binder bodies are deliberately excluded: their
+/// stores become visible only inside the corresponding forall/existential
+/// frame, whereas conjunction, disjunction, comparison-chain, and negation
+/// children share their parent's statement scope.
+pub(super) fn fact_well_definedness_result_contains_outer_intrinsic_store(
+    result: &SuccessVerifyFactWellDefinedProofResult,
+) -> bool {
+    match result {
+        SuccessVerifyFactWellDefinedProofResult::AtomicFact(atomic) => {
+            atomic.arguments.iter().any(|argument| {
+                object_well_definedness_result_contains_intrinsic_store(argument.result.as_ref())
+            })
+        }
+        SuccessVerifyFactWellDefinedProofResult::AndFact(and) => and
+            .conjuncts
+            .iter()
+            .any(fact_well_definedness_result_contains_outer_intrinsic_store),
+        SuccessVerifyFactWellDefinedProofResult::ChainFact(chain) => chain
+            .comparisons
+            .iter()
+            .any(fact_well_definedness_result_contains_outer_intrinsic_store),
+        SuccessVerifyFactWellDefinedProofResult::OrFact(or) => or
+            .branches
+            .iter()
+            .any(fact_well_definedness_result_contains_outer_intrinsic_store),
+        SuccessVerifyFactWellDefinedProofResult::NotForallFact(not_forall) => {
+            fact_well_definedness_result_contains_outer_intrinsic_store(&not_forall.inner)
+        }
+        SuccessVerifyFactWellDefinedProofResult::ExistFact(_)
+        | SuccessVerifyFactWellDefinedProofResult::ForallFact(_)
+        | SuccessVerifyFactWellDefinedProofResult::ForallFactWithIff(_) => false,
     }
 }
 

@@ -119,6 +119,8 @@ pub enum IntegerMembershipClosureBuiltinRule {
     Sub,
     Mul,
     Mod,
+    /// Integer base raised to a checked natural exponent.
+    PowNat,
 }
 
 /// Stable identities for closure of the natural carrier under binary
@@ -328,6 +330,46 @@ pub struct ComplexAlgebraicNormalizationBuiltinRuleEvidence {
     pub expected_nonzero_premises: Vec<Fact>,
 }
 
+/// One exact named-function unfolding used below a reviewed structural
+/// equality context. The defining equality is retained by `FactId`; the
+/// application and its substituted body make the reduction independently
+/// replayable after the verifier Runtime has been dropped.
+#[derive(Clone)]
+pub struct NestedCheckedFunctionDefinitionReductionEvidence {
+    pub definition_object: Obj,
+    pub defining_equality: Fact,
+    pub defining_equality_fact_id: FactId,
+    pub application: Obj,
+    pub reduced: Obj,
+}
+
+/// Equality obtained only by applying the retained named-function reductions
+/// below matching object constructors. No calculation or ambient equality
+/// search is hidden in this certificate.
+#[derive(Clone)]
+pub struct StructuralDefinitionCongruenceBuiltinRuleEvidence {
+    pub expected_target: Fact,
+    pub reductions: Vec<NestedCheckedFunctionDefinitionReductionEvidence>,
+}
+
+/// Equality obtained by applying reviewed addition congruence to exact child
+/// Results. Identical leaves are reflexive; every non-identical leaf is
+/// retained as one ordered child Result instead of being rediscovered from a
+/// verifier environment after compilation.
+#[derive(Clone)]
+pub struct StructuralKnownEqualityCongruenceBuiltinRuleEvidence {
+    pub expected_target: Fact,
+}
+
+/// A zero-premise identity in the deliberately small integral-polynomial
+/// fragment: atoms and integer literals closed under `+`, `-`, `*`, and
+/// nonnegative literal powers. Both verifier and compiler independently
+/// recheck the exact target against that fragment.
+#[derive(Clone)]
+pub struct IntegralPolynomialNormalizationBuiltinRuleEvidence {
+    pub expected_target: Fact,
+}
+
 /// A standard carrier is inhabited by its reviewed canonical witness. The
 /// target is retained explicitly so consumers never recover this rule from a
 /// diagnostic label.
@@ -343,6 +385,47 @@ impl fmt::Debug for StandardSetNonemptyBuiltinRuleEvidence {
             .debug_struct("StandardSetNonemptyBuiltinRuleEvidence")
             .field("expected_target", &self.expected_target.to_string())
             .field("target_set", &self.target_set)
+            .finish()
+    }
+}
+
+impl fmt::Debug for NestedCheckedFunctionDefinitionReductionEvidence {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        formatter
+            .debug_struct("NestedCheckedFunctionDefinitionReductionEvidence")
+            .field("definition_object", &self.definition_object.to_string())
+            .field("defining_equality", &self.defining_equality.to_string())
+            .field("defining_equality_fact_id", &self.defining_equality_fact_id)
+            .field("application", &self.application.to_string())
+            .field("reduced", &self.reduced.to_string())
+            .finish()
+    }
+}
+
+impl fmt::Debug for StructuralDefinitionCongruenceBuiltinRuleEvidence {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        formatter
+            .debug_struct("StructuralDefinitionCongruenceBuiltinRuleEvidence")
+            .field("expected_target", &self.expected_target.to_string())
+            .field("reductions", &self.reductions)
+            .finish()
+    }
+}
+
+impl fmt::Debug for StructuralKnownEqualityCongruenceBuiltinRuleEvidence {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        formatter
+            .debug_struct("StructuralKnownEqualityCongruenceBuiltinRuleEvidence")
+            .field("expected_target", &self.expected_target.to_string())
+            .finish()
+    }
+}
+
+impl fmt::Debug for IntegralPolynomialNormalizationBuiltinRuleEvidence {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        formatter
+            .debug_struct("IntegralPolynomialNormalizationBuiltinRuleEvidence")
+            .field("expected_target", &self.expected_target.to_string())
             .finish()
     }
 }
@@ -889,6 +972,9 @@ pub enum BuiltinRuleEvidence {
     ObjectReflexivity(ObjectReflexivityBuiltinRuleEvidence),
     RationalNormalization(RationalNormalizationBuiltinRuleEvidence),
     ComplexAlgebraicNormalization(ComplexAlgebraicNormalizationBuiltinRuleEvidence),
+    StructuralDefinitionCongruence(StructuralDefinitionCongruenceBuiltinRuleEvidence),
+    StructuralKnownEqualityCongruence(StructuralKnownEqualityCongruenceBuiltinRuleEvidence),
+    IntegralPolynomialNormalization(IntegralPolynomialNormalizationBuiltinRuleEvidence),
     StandardSetNonempty(StandardSetNonemptyBuiltinRuleEvidence),
     DisjunctionIntroduction(DisjunctionIntroductionBuiltinRuleEvidence),
     FunctionApplicationReturnMembership(FunctionApplicationReturnMembershipBuiltinRuleEvidence),
@@ -897,6 +983,9 @@ pub enum BuiltinRuleEvidence {
     DivNotEqualZero(DivNotEqualZeroBuiltinRuleEvidence),
     Arithmetic(ArithmeticBuiltinRule),
     IntegerMembershipClosure(IntegerMembershipClosureBuiltinRule),
+    /// An inclusive integer-range sum whose checked iterand returns exactly
+    /// `Z` belongs to the exact `Z` carrier.
+    IntegerRangeSumMembership,
     NaturalMembershipClosure(NaturalMembershipClosureBuiltinRule),
     RationalMembershipClosure(RationalMembershipClosureBuiltinRule),
     ComplexArithmeticMembershipClosure(ComplexArithmeticMembershipClosureBuiltinRule),
@@ -987,6 +1076,18 @@ impl fmt::Debug for BuiltinRuleEvidence {
                 .debug_tuple("ComplexAlgebraicNormalization")
                 .field(evidence)
                 .finish(),
+            BuiltinRuleEvidence::StructuralDefinitionCongruence(evidence) => f
+                .debug_tuple("StructuralDefinitionCongruence")
+                .field(evidence)
+                .finish(),
+            BuiltinRuleEvidence::StructuralKnownEqualityCongruence(evidence) => f
+                .debug_tuple("StructuralKnownEqualityCongruence")
+                .field(evidence)
+                .finish(),
+            BuiltinRuleEvidence::IntegralPolynomialNormalization(evidence) => f
+                .debug_tuple("IntegralPolynomialNormalization")
+                .field(evidence)
+                .finish(),
             BuiltinRuleEvidence::StandardSetNonempty(evidence) => f
                 .debug_tuple("StandardSetNonempty")
                 .field(evidence)
@@ -1016,6 +1117,9 @@ impl fmt::Debug for BuiltinRuleEvidence {
                 .debug_tuple("IntegerMembershipClosure")
                 .field(rule)
                 .finish(),
+            BuiltinRuleEvidence::IntegerRangeSumMembership => {
+                f.write_str("IntegerRangeSumMembership")
+            }
             BuiltinRuleEvidence::NaturalMembershipClosure(rule) => f
                 .debug_tuple("NaturalMembershipClosure")
                 .field(rule)

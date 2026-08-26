@@ -9,6 +9,12 @@ struct RegisteredTransitivePredicateChainClosureInference {
     conclusion: AtomicFact,
 }
 
+struct EqualityChainClosureInference {
+    rule: EqualityChainClosureInferRule,
+    premises: Vec<Fact>,
+    conclusion: AtomicFact,
+}
+
 impl Runtime {
     /// Mathematical contract: outside an explicitly trusted source boundary,
     /// a fact is stored and used for inference only after central
@@ -365,6 +371,10 @@ impl Runtime {
             Fact::ChainFact(chain_fact) => chain_fact.facts_with_order_transitive_closure()?,
             _ => Vec::new(),
         };
+        let equality_chain_facts = match &fact {
+            Fact::ChainFact(chain_fact) => Self::equality_chain_closure_facts(chain_fact)?,
+            _ => Vec::new(),
+        };
         let transitive_chain_facts = match &fact {
             Fact::ChainFact(chain_fact) => self.transitive_prop_chain_closure_facts(chain_fact)?,
             _ => Vec::new(),
@@ -380,7 +390,10 @@ impl Runtime {
             )?;
         self.store_chain_atomic_facts_to_cache(chain_atomic_facts)?;
         let mut transitive_chain_infers =
-            self.store_transitive_prop_chain_atomic_facts(transitive_chain_facts)?;
+            self.store_equality_chain_atomic_facts(equality_chain_facts)?;
+        transitive_chain_infers.new_infer_result_inside(
+            self.store_transitive_prop_chain_atomic_facts(transitive_chain_facts)?,
+        );
         self.store_fact_cache_keys_with_nested_obj_binders_and_fact_id(&fact_for_infer, fact_id)?;
         if let Some(alpha_key) = alpha_normalized_forall_key {
             if alpha_key != fact_string {
@@ -421,6 +434,12 @@ impl Runtime {
             }
             _ => Vec::new(),
         };
+        let equality_chain_facts = match &fact {
+            AndChainAtomicFact::ChainFact(chain_fact) => {
+                Self::equality_chain_closure_facts(chain_fact)?
+            }
+            _ => Vec::new(),
+        };
         let transitive_chain_facts = match &fact {
             AndChainAtomicFact::ChainFact(chain_fact) => {
                 self.transitive_prop_chain_closure_facts(chain_fact)?
@@ -430,7 +449,10 @@ impl Runtime {
         self.top_level_env().store_and_chain_atomic_fact(fact)?;
         self.store_chain_atomic_facts_to_cache(chain_atomic_facts)?;
         let mut transitive_chain_infers =
-            self.store_transitive_prop_chain_atomic_facts(transitive_chain_facts)?;
+            self.store_equality_chain_atomic_facts(equality_chain_facts)?;
+        transitive_chain_infers.new_infer_result_inside(
+            self.store_transitive_prop_chain_atomic_facts(transitive_chain_facts)?,
+        );
 
         self.store_fact_cache_keys_with_nested_obj_binders(&fact_for_infer)?;
 
@@ -515,6 +537,12 @@ impl Runtime {
             }
             _ => Vec::new(),
         };
+        let equality_chain_facts = match &fact {
+            ExistOrAndChainAtomicFact::ChainFact(chain_fact) => {
+                Self::equality_chain_closure_facts(chain_fact)?
+            }
+            _ => Vec::new(),
+        };
         let transitive_chain_facts = match &fact {
             ExistOrAndChainAtomicFact::ChainFact(chain_fact) => {
                 self.transitive_prop_chain_closure_facts(chain_fact)?
@@ -525,7 +553,10 @@ impl Runtime {
             .store_exist_or_and_chain_atomic_fact(fact)?;
         self.store_chain_atomic_facts_to_cache(chain_atomic_facts)?;
         let mut transitive_chain_infers =
-            self.store_transitive_prop_chain_atomic_facts(transitive_chain_facts)?;
+            self.store_equality_chain_atomic_facts(equality_chain_facts)?;
+        transitive_chain_infers.new_infer_result_inside(
+            self.store_transitive_prop_chain_atomic_facts(transitive_chain_facts)?,
+        );
 
         let output_fact = fact_for_infer.clone().to_fact();
         self.store_fact_cache_keys_with_nested_obj_binders(&output_fact)?;
@@ -564,6 +595,12 @@ impl Runtime {
             }
             _ => Vec::new(),
         };
+        let equality_chain_facts = match &fact {
+            QuantifierFreeFact::ChainFact(chain_fact) => {
+                Self::equality_chain_closure_facts(chain_fact)?
+            }
+            _ => Vec::new(),
+        };
         let transitive_chain_facts = match &fact {
             QuantifierFreeFact::ChainFact(chain_fact) => {
                 self.transitive_prop_chain_closure_facts(chain_fact)?
@@ -573,7 +610,10 @@ impl Runtime {
         self.top_level_env().store_quantifier_free_fact(fact)?;
         self.store_chain_atomic_facts_to_cache(chain_atomic_facts)?;
         let mut transitive_chain_infers =
-            self.store_transitive_prop_chain_atomic_facts(transitive_chain_facts)?;
+            self.store_equality_chain_atomic_facts(equality_chain_facts)?;
+        transitive_chain_infers.new_infer_result_inside(
+            self.store_transitive_prop_chain_atomic_facts(transitive_chain_facts)?,
+        );
 
         let output_fact = fact_for_infer.clone().to_fact();
         self.store_fact_cache_keys_with_nested_obj_binders(&output_fact)?;
@@ -605,6 +645,29 @@ impl Runtime {
             result.new_infer_result_inside(conclusion_infers);
             result.add_rule_application_with_premises(
                 InferRule::RegisteredTransitivePredicateChainClosure(inference.rule),
+                inference.premises,
+                vec![conclusion],
+            );
+        }
+        Ok(result)
+    }
+
+    fn store_equality_chain_atomic_facts(
+        &mut self,
+        inferences: Vec<EqualityChainClosureInference>,
+    ) -> Result<SuccessInferResult, RuntimeError> {
+        let mut result = SuccessInferResult::new();
+        for inference in inferences {
+            let conclusion_fact: Fact = inference.conclusion.clone().into();
+            let conclusion_infers = self.store_derived_atomic_fact_without_infer(
+                inference.conclusion,
+                InferReason::InferredFact.store_reason(),
+            )?;
+            let conclusion =
+                SuccessStoreFactResult::new(conclusion_fact, conclusion_infers.clone());
+            result.new_infer_result_inside(conclusion_infers);
+            result.add_rule_application_with_premises(
+                InferRule::EqualityChainClosure(inference.rule),
                 inference.premises,
                 vec![conclusion],
             );
@@ -852,6 +915,43 @@ impl Runtime {
         }
         false
     }
+
+    fn equality_chain_closure_facts(
+        chain_fact: &ChainFact,
+    ) -> Result<Vec<EqualityChainClosureInference>, RuntimeError> {
+        if chain_fact.objs.len() < 3
+            || chain_fact
+                .prop_names
+                .iter()
+                .any(|name| name.to_string() != EQUAL)
+        {
+            return Ok(Vec::new());
+        }
+        let adjacent_facts = chain_fact.facts()?;
+        let mut inferences = Vec::new();
+        for start_object_index in 0..chain_fact.objs.len() {
+            for end_object_index in start_object_index + 2..chain_fact.objs.len() {
+                inferences.push(EqualityChainClosureInference {
+                    rule: EqualityChainClosureInferRule {
+                        start_object_index,
+                        end_object_index,
+                    },
+                    premises: adjacent_facts[start_object_index..end_object_index]
+                        .iter()
+                        .cloned()
+                        .map(Fact::from)
+                        .collect(),
+                    conclusion: EqualFact::new(
+                        chain_fact.objs[start_object_index].clone(),
+                        chain_fact.objs[end_object_index].clone(),
+                        chain_fact.line_file.clone(),
+                    )
+                    .into(),
+                });
+            }
+        }
+        Ok(inferences)
+    }
 }
 
 /// Template materialization sometimes changes a callable conclusion from an
@@ -896,3 +996,7 @@ fn forall_conclusion_contains_instantiated_template_callable_application(
 #[cfg(test)]
 #[path = "../../tests/unit/runtime/fact_storage/registered_transitive_predicate_chain_result_tests.rs"]
 mod registered_transitive_predicate_chain_result_tests;
+
+#[cfg(test)]
+#[path = "../../tests/unit/runtime/fact_storage/equality_chain_result_tests.rs"]
+mod equality_chain_result_tests;

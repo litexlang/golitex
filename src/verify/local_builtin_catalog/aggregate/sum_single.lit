@@ -1,0 +1,2 @@
+forall a Z, f fn(k Z) Z:
+    sum(a, a, f) = f(a)

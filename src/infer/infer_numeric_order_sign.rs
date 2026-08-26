@@ -188,7 +188,7 @@ impl Runtime {
                     compare_normalized_number_str_to_zero(&k.normalized_value),
                     NumberCompareResult::Greater
                 ) {
-                    self.infer_store_gt_zero(f.left.clone(), f.line_file.clone())
+                    self.infer_store_gt_zero(f.left.clone(), f.line_file.clone(), f.clone().into())
                 } else {
                     Ok(SuccessInferResult::new())
                 }
@@ -199,7 +199,7 @@ impl Runtime {
                     compare_normalized_number_str_to_zero(&k.normalized_value),
                     NumberCompareResult::Less
                 ) {
-                    self.infer_store_le_zero(f.right.clone(), f.line_file.clone())
+                    self.infer_store_le_zero(f.right.clone(), f.line_file.clone(), f.clone().into())
                 } else {
                     Ok(SuccessInferResult::new())
                 }
@@ -221,7 +221,7 @@ impl Runtime {
                     compare_normalized_number_str_to_zero(&k.normalized_value),
                     NumberCompareResult::Greater
                 ) {
-                    self.infer_store_gt_zero(f.left.clone(), f.line_file.clone())
+                    self.infer_store_gt_zero(f.left.clone(), f.line_file.clone(), f.clone().into())
                 } else {
                     Ok(SuccessInferResult::new())
                 }
@@ -232,7 +232,7 @@ impl Runtime {
                     compare_normalized_number_str_to_zero(&k.normalized_value),
                     NumberCompareResult::Less | NumberCompareResult::Equal
                 ) {
-                    self.infer_store_le_zero(f.right.clone(), f.line_file.clone())
+                    self.infer_store_le_zero(f.right.clone(), f.line_file.clone(), f.clone().into())
                 } else {
                     Ok(SuccessInferResult::new())
                 }
@@ -254,7 +254,7 @@ impl Runtime {
                     compare_normalized_number_str_to_zero(&k.normalized_value),
                     NumberCompareResult::Less
                 ) {
-                    self.infer_store_le_zero(f.left.clone(), f.line_file.clone())
+                    self.infer_store_le_zero(f.left.clone(), f.line_file.clone(), f.clone().into())
                 } else {
                     Ok(SuccessInferResult::new())
                 }
@@ -265,7 +265,7 @@ impl Runtime {
                     compare_normalized_number_str_to_zero(&k.normalized_value),
                     NumberCompareResult::Greater
                 ) {
-                    self.infer_store_gt_zero(f.right.clone(), f.line_file.clone())
+                    self.infer_store_gt_zero(f.right.clone(), f.line_file.clone(), f.clone().into())
                 } else {
                     Ok(SuccessInferResult::new())
                 }
@@ -292,7 +292,7 @@ impl Runtime {
                     compare_normalized_number_str_to_zero(&k.normalized_value),
                     NumberCompareResult::Less
                 ) {
-                    self.infer_store_le_zero(f.left.clone(), f.line_file.clone())
+                    self.infer_store_le_zero(f.left.clone(), f.line_file.clone(), f.clone().into())
                 } else {
                     Ok(SuccessInferResult::new())
                 }
@@ -303,7 +303,7 @@ impl Runtime {
                     compare_normalized_number_str_to_zero(&k.normalized_value),
                     NumberCompareResult::Greater
                 ) {
-                    self.infer_store_gt_zero(f.right.clone(), f.line_file.clone())
+                    self.infer_store_gt_zero(f.right.clone(), f.line_file.clone(), f.clone().into())
                 } else {
                     Ok(SuccessInferResult::new())
                 }
@@ -343,23 +343,33 @@ impl Runtime {
         &mut self,
         x: Obj,
         line_file: LineFile,
+        source: AtomicFact,
     ) -> Result<SuccessInferResult, RuntimeError> {
-        let fact_to_store =
+        let conclusion_atomic: AtomicFact =
             LessFact::new(Number::new("0".to_string()).into(), x, line_file.clone()).into();
+        let fact_to_store: Fact = conclusion_atomic.clone().into();
         let mut infer_result = SuccessInferResult::new();
-        infer_result.new_fact(&fact_to_store);
-        self.store_with_well_defined_verification_and_infer_with_default_verify_state(
-            fact_to_store,
-        )
-        .map_err(|previous_error| {
-            RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
-                None,
-                "infer numeric order sign: failed to store inferred (0 < x) bound".to_string(),
-                line_file,
-                Some(previous_error),
-                vec![],
-            )))
-        })?;
+        let conclusion_infers = self
+            .store_with_well_defined_verification_and_infer_with_default_verify_state(
+                fact_to_store.clone(),
+            )
+            .map_err(|previous_error| {
+                RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    "infer numeric order sign: failed to store inferred (0 < x) bound".to_string(),
+                    line_file,
+                    Some(previous_error),
+                    vec![],
+                )))
+            })?;
+        infer_result.add_rule_application_preserving_conclusion_result_structure(
+            InferRule::NumericOrderBoundImpliesZeroSign,
+            vec![source.into()],
+            vec![SuccessStoreFactResult::new(
+                fact_to_store,
+                conclusion_infers,
+            )],
+        );
         Ok(infer_result)
     }
 
@@ -367,23 +377,33 @@ impl Runtime {
         &mut self,
         x: Obj,
         line_file: LineFile,
+        source: AtomicFact,
     ) -> Result<SuccessInferResult, RuntimeError> {
-        let fact_to_store =
+        let conclusion_atomic: AtomicFact =
             LessEqualFact::new(x, Number::new("0".to_string()).into(), line_file.clone()).into();
+        let fact_to_store: Fact = conclusion_atomic.clone().into();
         let mut infer_result = SuccessInferResult::new();
-        infer_result.new_fact(&fact_to_store);
-        self.store_with_well_defined_verification_and_infer_with_default_verify_state(
-            fact_to_store,
-        )
-        .map_err(|previous_error| {
-            RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
-                None,
-                "infer numeric order sign: failed to store inferred <= 0 bound".to_string(),
-                line_file,
-                Some(previous_error),
-                vec![],
-            )))
-        })?;
+        let conclusion_infers = self
+            .store_with_well_defined_verification_and_infer_with_default_verify_state(
+                fact_to_store.clone(),
+            )
+            .map_err(|previous_error| {
+                RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    "infer numeric order sign: failed to store inferred <= 0 bound".to_string(),
+                    line_file,
+                    Some(previous_error),
+                    vec![],
+                )))
+            })?;
+        infer_result.add_rule_application_preserving_conclusion_result_structure(
+            InferRule::NumericOrderBoundImpliesZeroSign,
+            vec![source.into()],
+            vec![SuccessStoreFactResult::new(
+                fact_to_store,
+                conclusion_infers,
+            )],
+        );
         Ok(infer_result)
     }
 }

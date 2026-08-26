@@ -8,13 +8,15 @@ mod infer_result;
 mod infer_set_relations;
 
 pub use infer_result::{
+    ClosedPositivePowerEqualityImpliesEqualSideMembershipInferRule,
     ConjunctionImpliesComponentInferRule, DefinedPredicateDefinitionClauseProjectionInferRule,
-    DefinedPredicateParameterRequirementProjectionInferRule, InferReason, InferRule,
-    KnownSetEqualityOrientation, KnownTupleEqualitySide,
+    DefinedPredicateParameterRequirementProjectionInferRule, EqualityChainClosureInferRule,
+    InferReason, InferRule, KnownSetEqualityOrientation, KnownTupleEqualitySide,
     ListSetMembershipImpliesEqualityAlternativesInferRule,
     MembershipInSetWithKnownEqualityImpliesMembershipInEqualSetInferRule,
     NegativeStandardSetMembershipImpliesNegativeInferRule,
     NonzeroStandardSetMembershipImpliesNonzeroInferRule,
+    PositiveIntegerBaseNaturalPowerEqualityImpliesEqualSideMembershipInferRule,
     PositiveStandardSetMembershipImpliesPositiveInferRule,
     RegisteredTransitivePredicateChainClosureInferRule,
     SubsetImpliesElementwiseMembershipForallInferRule, SuccessInferPremiseResult,

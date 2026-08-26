@@ -1,0 +1,54 @@
+# End-to-end exact-carrier aggregate example:
+# Litex source -> canonical Lean -> Native theorem -> Mathlib consumer.
+
+have fn odd(k Z) Z = 2 * k - 1
+
+thm odd_sum_single:
+    ? forall:
+        sum(1, 1, odd) = 1
+    odd(1) = 2 * 1 - 1 = 1
+    sum(1, 1, odd) = odd(1) = 2 * 1 - 1 = 1
+
+thm odd_sum_step:
+    ? forall n Z:
+        n >= 1
+        =>:
+            sum(1, n + 1, odd) = sum(1, n, odd) + odd(n + 1)
+    sum(1, n + 1, odd) = sum(1, n, odd) + odd(n + 1)
+
+thm odd_sum_integer:
+    ? forall n Z:
+        n >= 1
+        =>:
+            sum(1, n, odd) $in Z
+    sum(1, n, odd) $in Z
+
+thm square_integer:
+    ? forall n Z:
+        n^2 $in Z
+    n^2 $in Z
+
+thm odd_square_step:
+    ? forall n Z:
+        n >= 1
+        =>:
+            n^2 + odd(n + 1) = (n + 1)^2
+    odd(n + 1) = 2 * (n + 1) - 1
+    n^2 + odd(n + 1) = n^2 + (2 * (n + 1) - 1) = (n + 1)^2
+
+thm sum_first_odds:
+    ? forall n Z:
+        n >= 1
+        =>:
+            sum(1, n, odd) = n^2
+    by induc n from 1:
+        ? sum(1, n, odd) = n^2
+
+        ? from n = 1:
+            by thm odd_sum_single()
+            sum(1, 1, odd) = 1 = 1^2
+
+        ? induc:
+            by thm odd_sum_step(n)
+            by thm odd_square_step(n)
+            sum(1, n + 1, odd) = sum(1, n, odd) + odd(n + 1) = n^2 + odd(n + 1) = (n + 1)^2

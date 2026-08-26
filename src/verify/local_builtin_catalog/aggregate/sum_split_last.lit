@@ -1,0 +1,4 @@
+forall a, b Z, f fn(k Z) Z:
+    a <= b
+    =>:
+        sum(a, b + 1, f) = sum(a, b, f) + f(b + 1)

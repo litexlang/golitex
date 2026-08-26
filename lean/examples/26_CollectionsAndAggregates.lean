@@ -32,8 +32,8 @@ theorem __fact4 : Litex.Same (Litex.range (1 : ℤ) (4 : ℤ)) (Litex.range (1 :
 theorem __fact5 : Litex.Same (Litex.closedRange (1 : ℤ) (4 : ℤ)) (Litex.closedRange (1 : ℤ) (4 : ℤ)) := by
   exact Litex.Same.refl (Litex.closedRange (1 : ℤ) (4 : ℤ))
 
-theorem __fact6 : Litex.Same (Litex.sum (1 : ℂ) (3 : ℂ) ({ call := fun {__alpha} (__arg : __alpha) __arg_in => Litex.In.rep __arg (__arg_in) } : Litex.Fn Litex.Z Litex.Z)) (Litex.sum (1 : ℂ) (3 : ℂ) ({ call := fun {__alpha} (__arg : __alpha) __arg_in => Litex.In.rep __arg (__arg_in) } : Litex.Fn Litex.Z Litex.Z)) := by
-  exact Litex.Same.refl (Litex.sum (1 : ℂ) (3 : ℂ) ({ call := fun {__alpha} (__arg : __alpha) __arg_in => Litex.In.rep __arg (__arg_in) } : Litex.Fn Litex.Z Litex.Z))
+theorem __fact6 : Litex.Same (Litex.sum (1 : ℤ) (3 : ℤ) ({ call := fun {__alpha} (__arg : __alpha) __arg_in => Litex.In.rep __arg (__arg_in) } : Litex.Fn Litex.Z Litex.Z)) (Litex.sum (1 : ℤ) (3 : ℤ) ({ call := fun {__alpha} (__arg : __alpha) __arg_in => Litex.In.rep __arg (__arg_in) } : Litex.Fn Litex.Z Litex.Z)) := by
+  exact Litex.Same.refl (Litex.sum (1 : ℤ) (3 : ℤ) ({ call := fun {__alpha} (__arg : __alpha) __arg_in => Litex.In.rep __arg (__arg_in) } : Litex.Fn Litex.Z Litex.Z))
 
 theorem __fact7 : Litex.Same (Litex.product (1 : ℂ) (3 : ℂ) ({ call := fun {__alpha} (__arg : __alpha) __arg_in => Litex.In.rep __arg (__arg_in) } : Litex.Fn Litex.Z Litex.Z)) (Litex.product (1 : ℂ) (3 : ℂ) ({ call := fun {__alpha} (__arg : __alpha) __arg_in => Litex.In.rep __arg (__arg_in) } : Litex.Fn Litex.Z Litex.Z)) := by
   exact Litex.Same.refl (Litex.product (1 : ℂ) (3 : ℂ) ({ call := fun {__alpha} (__arg : __alpha) __arg_in => Litex.In.rep __arg (__arg_in) } : Litex.Fn Litex.Z Litex.Z))

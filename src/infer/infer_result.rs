@@ -27,6 +27,13 @@ pub enum InferRule {
         DefinedPredicateParameterRequirementProjectionInferRule,
     ),
     DefinedPredicateDefinitionClauseProjection(DefinedPredicateDefinitionClauseProjectionInferRule),
+    EqualityChainClosure(EqualityChainClosureInferRule),
+    ClosedPositivePowerEqualityImpliesEqualSideMembership(
+        ClosedPositivePowerEqualityImpliesEqualSideMembershipInferRule,
+    ),
+    PositiveIntegerBaseNaturalPowerEqualityImpliesEqualSideMembership(
+        PositiveIntegerBaseNaturalPowerEqualityImpliesEqualSideMembershipInferRule,
+    ),
     RegisteredTransitivePredicateChainClosure(RegisteredTransitivePredicateChainClosureInferRule),
     TupleEqualityWithKnownTupleImpliesTupleShape(
         TupleEqualityWithKnownTupleImpliesTupleShapeInferRule,
@@ -34,6 +41,7 @@ pub enum InferRule {
     ListSetMembershipImpliesEqualityAlternatives(
         ListSetMembershipImpliesEqualityAlternativesInferRule,
     ),
+    NumericOrderBoundImpliesZeroSign,
     MultiplicationByNegativeOneReversesOrderAgainstZero,
     StrictOrderComparedToZeroImpliesWeakOrder,
     MembershipInSetWithKnownEqualityImpliesMembershipInEqualSet(
@@ -109,6 +117,21 @@ pub struct PositiveStandardSetMembershipImpliesPositiveInferRule {
     pub source_set: StandardSet,
 }
 
+/// A checked equality transports the closed positive-real membership of one
+/// literal polynomial power to its opposite endpoint.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ClosedPositivePowerEqualityImpliesEqualSideMembershipInferRule {
+    pub power_is_left_endpoint: bool,
+}
+
+/// A checked equality transports `R+` membership from a positive integer base
+/// raised to a closed natural exponent to the opposite equality endpoint. The
+/// application additionally cites the exact base-positivity and `Z` premises.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct PositiveIntegerBaseNaturalPowerEqualityImpliesEqualSideMembershipInferRule {
+    pub power_is_left_endpoint: bool,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct NegativeStandardSetMembershipImpliesNegativeInferRule {
     pub source_set: StandardSet,
@@ -134,6 +157,18 @@ pub struct DefinedPredicateDefinitionClauseProjectionInferRule {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct RegisteredTransitivePredicateChainClosureInferRule {
     pub predicate_name: String,
+    pub start_object_index: usize,
+    pub end_object_index: usize,
+}
+
+/// One non-adjacent equality exposed by an exact source relation chain.
+///
+/// The object interval is half-open over the chain edges and closed over its
+/// endpoint objects: `[start_object_index, end_object_index]` consumes exactly
+/// the adjacent equalities at edge indexes `start..end`. Consumers must check
+/// those premises against the source chain before folding transitivity.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct EqualityChainClosureInferRule {
     pub start_object_index: usize,
     pub end_object_index: usize,
 }

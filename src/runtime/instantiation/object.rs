@@ -29,9 +29,13 @@ fn source_occurrence_after_instantiation(
     param_to_arg_map: &HashMap<String, Obj>,
     substitution_mode: SubstitutionMode,
 ) -> Option<SourceObjectOccurrenceId> {
-    (param_to_arg_map.is_empty() || substitution_mode == SubstitutionMode::TransparentDefinition)
-        .then_some(source_occurrence_id)
-        .flatten()
+    (param_to_arg_map.is_empty()
+        || matches!(
+            substitution_mode,
+            SubstitutionMode::TransparentDefinition | SubstitutionMode::ResultProjection
+        ))
+    .then_some(source_occurrence_id)
+    .flatten()
 }
 
 impl Runtime {
@@ -1261,10 +1265,17 @@ impl Runtime {
         param_to_arg_map: &HashMap<String, Obj>,
         param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
-        Ok(Sum::new(
+        Ok(Sum::new_with_source_occurrence_id(
             self.inst_obj(&sum.start, param_to_arg_map, param_obj_type)?,
             self.inst_obj(&sum.end, param_to_arg_map, param_obj_type)?,
             self.inst_obj(&sum.func, param_to_arg_map, param_obj_type)?,
+            // A range aggregate's occurrence names the source constructor,
+            // not the current binder values in its arguments. Instantiating a
+            // theorem or induction motive must therefore keep this identity;
+            // the Result-owned Iteration certificate separately freezes the
+            // instantiated start/end/function and the compiler checks their
+            // full semantic key before reuse.
+            sum.source_occurrence_id,
         )
         .into())
     }

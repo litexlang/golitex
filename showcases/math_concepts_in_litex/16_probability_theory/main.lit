@@ -879,9 +879,8 @@ thm probability_of_disjoint_union:
             union(A, B) $in union_probability_events
             union_probability(union(A, B)) = union_probability(A) + union_probability(B)
     let event_union = index_union(N+, union_probability_Omega, fn(n N+) power_set(union_probability_Omega) {\two_event_sequence<union_probability_Omega, union_probability_events>(A, B, n)})
-    have probability_terms seq(R) = fn(n N+) R {union_probability(\two_event_sequence<union_probability_Omega, union_probability_events>(A, B, n))}
-    by thm two_event_sequence_countable_union(union_probability_Omega, union_probability_events, A, B) => index_union(N+, union_probability_Omega, fn(n N+) power_set(union_probability_Omega) {\two_event_sequence<union_probability_Omega, union_probability_events>(A, B, n)}) = union(A, B)
-    event_union = union(A, B)
+    let probability_terms = fn(n N+) R {union_probability(\two_event_sequence<union_probability_Omega, union_probability_events>(A, B, n))}
+    by thm two_event_sequence_countable_union(union_probability_Omega, union_probability_events, A, B) => event_union = union(A, B)
     by thm event_countable_union_is_event(union_probability_Omega, union_probability_events, fn(n N+) union_probability_events {\two_event_sequence<union_probability_Omega, union_probability_events>(A, B, n)}) => index_union(N+, union_probability_Omega, fn(n N+) power_set(union_probability_Omega) {\two_event_sequence<union_probability_Omega, union_probability_events>(A, B, n)}) $in union_probability_events
     union(A, B) $in union_probability_events
     by thm two_event_sequence_pairwise_disjoint(union_probability_Omega, union_probability_events, A, B) => $pairwise_disjoint_event_sequence(union_probability_Omega, union_probability_events, fn(n N+) union_probability_events {\two_event_sequence<union_probability_Omega, union_probability_events>(A, B, n)})
@@ -2935,28 +2934,29 @@ thm conditioned_probability_is_probability_space:
         $is_conditioning_data(Omega, events, probability, evidence)
         =>:
             $is_probability_space(Omega, events, \conditioned_probability_measure<Omega, events, probability, evidence>)
+    let conditioned_probability = \conditioned_probability_measure<Omega, events, probability, evidence>
     by def $is_conditioning_data(Omega, events, probability, evidence)
     $is_probability_space(Omega, events, probability)
     probability(evidence) > 0
     by thm event_is_subset_of_sample_space(Omega, events, evidence) => evidence $subset Omega
     intersect({}, evidence) = {}
-    \conditioned_probability_measure<Omega, events, probability, evidence>({}) = probability(intersect({}, evidence)) / probability(evidence) = probability({}) / probability(evidence) = 0
+    conditioned_probability({}) = probability(intersect({}, evidence)) / probability(evidence) = probability({}) / probability(evidence) = 0
     intersect(Omega, evidence) = evidence
-    \conditioned_probability_measure<Omega, events, probability, evidence>(Omega) = probability(intersect(Omega, evidence)) / probability(evidence) = probability(evidence) / probability(evidence) = 1
+    conditioned_probability(Omega) = probability(intersect(Omega, evidence)) / probability(evidence) = probability(evidence) / probability(evidence) = 1
     claim:
         ? forall event events:
             \conditioned_probability_measure<Omega, events, probability, evidence>(event) >= 0
         intersect(event, evidence) $in events
         probability(intersect(event, evidence)) >= 0
         probability(evidence) > 0
-        \conditioned_probability_measure<Omega, events, probability, evidence>(event) = probability(intersect(event, evidence)) / probability(evidence)
+        conditioned_probability(event) = probability(intersect(event, evidence)) / probability(evidence)
         probability(intersect(event, evidence)) / probability(evidence) >= 0
     claim:
         ? forall family fn(n N+) events:
             $pairwise_disjoint_event_sequence(Omega, events, family)
             =>:
                 $has_series_sum(fn(n N+) R {\conditioned_probability_measure<Omega, events, probability, evidence>(family(n))}, \conditioned_probability_measure<Omega, events, probability, evidence>(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)})))
-        by thm conditioned_probability_countable_additivity(Omega, events, probability, evidence, family) => $has_series_sum(fn(n N+) R {\conditioned_probability_measure<Omega, events, probability, evidence>(family(n))}, \conditioned_probability_measure<Omega, events, probability, evidence>(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)})))
+        by thm conditioned_probability_countable_additivity(Omega, events, probability, evidence, family) => $has_series_sum(fn(n N+) R {conditioned_probability(family(n))}, conditioned_probability(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)})))
     by def $is_probability_space(Omega, events, \conditioned_probability_measure<Omega, events, probability, evidence>)
 
 prop is_finite_atomic_probability_data(Omega set, events power_set(power_set(Omega)), atom_indices finite_set, atom fn (atom_index atom_indices) Omega, weight fn (atom_index atom_indices) R):

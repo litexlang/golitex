@@ -779,3 +779,64 @@ fn theorem_backed_obtain_consumes_but_does_not_publish_its_local_conclusion() {
     assert_eq!(compiler.declarations.len(), 4);
     assert!(compiler.declarations[1].contains("noncomputable def selected"));
 }
+
+fn execute_odd_sum_to_square_flagship() -> Vec<StmtResult> {
+    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
+        include_str!("../../../../lean/examples/60_OddSumToSquare.lit"),
+        "60_OddSumToSquare.lit",
+    )
+    .expect("execute the odd-sum flagship")
+}
+
+#[test]
+fn odd_sum_flagship_exports_canonical_native_and_mathlib_views() {
+    let results = execute_odd_sum_to_square_flagship();
+    let result_audit = results
+        .iter()
+        .map(crate::output::display_stmt_result_json_v2)
+        .collect::<Vec<_>>()
+        .join("\n");
+    let lean = StmtResultToLeanCompiler::new("60_OddSumToSquare.lit")
+        .compile_stmt_results_to_lean_source(&results)
+        .expect("compile the complete odd-sum Result DAG");
+
+    assert!(lean.contains("theorem sum_first_odds :"));
+    assert!(lean.contains("Litex.sum (1 : ℤ) n odd"));
+    assert!(lean.contains("namespace Native"));
+    assert!(lean.contains("∑ k ∈ Finset.Icc (1 : ℤ) n, (2 * k - 1) = n ^ 2"));
+    assert!(lean.contains("namespace MathlibConsumer"));
+    assert!(lean.contains("rw [Native.sum_first_odds n __domain1]"));
+    assert!(lean.contains("Litex.Same.addCongrRightInt"));
+    assert!(lean.contains("Litex.Same.intAddComplex"));
+    assert!(result_audit.contains("StructuralKnownEqualityCongruence"));
+    assert!(result_audit.contains("IntegerRangeSumMembership"));
+    assert!(result_audit.contains("PowNat"));
+    assert!(result_audit.contains("\"kind\": \"Iteration\""));
+    assert!(!lean.contains("SumExpr"));
+    assert!(!lean.contains("LitexObject"));
+    assert!(!lean.contains("sorry"));
+}
+
+#[test]
+fn odd_sum_native_export_requires_the_structured_induction_result() {
+    let mut results = execute_odd_sum_to_square_flagship();
+    let StmtResult::Success(SuccessStmtResult::Definition(
+        SuccessDefinitionStmtResult::DefThmStmt(theorem),
+    )) = results
+        .last_mut()
+        .expect("flagship retains its final theorem")
+    else {
+        panic!("flagship final Result is a named theorem")
+    };
+    theorem
+        .verification
+        .as_mut()
+        .expect("flagship theorem retains verification")
+        .proof_steps
+        .clear();
+
+    let error = StmtResultToLeanCompiler::new("60_OddSumToSquare.lit")
+        .compile_stmt_results_to_lean_source(&results)
+        .expect_err("native export cannot survive deletion of its structured Result");
+    assert!(error.contains("proof-step order"), "{error}");
+}

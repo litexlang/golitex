@@ -140,6 +140,16 @@ fn atom_scalars(atom: &AtomObj) -> Vec<CanonicalScalar> {
     }
 }
 
+fn callable_atom_head_scalars(
+    head: &FnObjHead,
+) -> Result<Vec<CanonicalScalar>, CanonicalMatchError> {
+    let head_object: Obj = head.clone().into();
+    let Obj::Atom(atom) = &head_object else {
+        return Err(CanonicalMatchError::unsupported(&head_object));
+    };
+    Ok(atom_scalars(atom))
+}
+
 fn standard_set_variant(set: &StandardSet) -> u8 {
     match set {
         StandardSet::NPos => 0,
@@ -287,6 +297,32 @@ pub fn canonical_obj_view(obj: &Obj) -> Result<CanonicalObjView<'_>, CanonicalMa
             scalars: vec![CanonicalScalar::Arity(x.objs.len())],
             children: x.objs.iter().map(Box::as_ref).collect(),
         },
+        Obj::FnObj(x) => {
+            let mut scalars = callable_atom_head_scalars(x.head.as_ref())?;
+            scalars.push(CanonicalScalar::Arity(x.body.len()));
+            scalars.extend(
+                x.body
+                    .iter()
+                    .map(|layer| CanonicalScalar::Arity(layer.len())),
+            );
+            CanonicalObjView {
+                tag: ObjKind::FnObj,
+                scalars,
+                children: x
+                    .body
+                    .iter()
+                    .flat_map(|layer| layer.iter().map(Box::as_ref))
+                    .collect(),
+            }
+        }
+        // Function-set carriers are fixed parameter requirements in the
+        // schema language. Keep their binder structure opaque while retaining
+        // the kernel's occurrence-free, alpha-aware semantic key.
+        Obj::FnSet(_) => CanonicalObjView {
+            tag: ObjKind::FnSet,
+            scalars: vec![CanonicalScalar::Text(obj_equality_key(obj))],
+            children: Vec::new(),
+        },
         Obj::Sum(x) => CanonicalObjView {
             tag: ObjKind::Sum,
             scalars: Vec::new(),
@@ -372,10 +408,8 @@ pub fn canonical_obj_view(obj: &Obj) -> Result<CanonicalObjView<'_>, CanonicalMa
         // Fixed matching below binders and callable heads is intentionally
         // outside the local-schema language. A complete object may still be a
         // pattern-variable binding; the matcher stops before decomposing it.
-        Obj::FnObj(_)
-        | Obj::SetBuilder(_)
-        | Obj::FnSet(_)
-        | Obj::AnonymousFn(_)
-        | Obj::MatrixListObj(_) => return Err(CanonicalMatchError::unsupported(obj)),
+        Obj::SetBuilder(_) | Obj::AnonymousFn(_) | Obj::MatrixListObj(_) => {
+            return Err(CanonicalMatchError::unsupported(obj))
+        }
     })
 }

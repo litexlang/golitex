@@ -34,6 +34,13 @@ pub fn canonical_objs_equal(
     right: &Obj,
     limits: MatchLimits,
 ) -> Result<bool, CanonicalMatchError> {
+    // Binder/callable literals are deliberately opaque to the local schema
+    // language, but one complete variable binding may occur more than once.
+    // Their occurrence-free semantic keys provide that exact repeated-value
+    // comparison without opening the binder as fixed schema structure.
+    if obj_equality_key(left) == obj_equality_key(right) {
+        return Ok(true);
+    }
     let mut work = vec![(left, right, 0usize)];
     let mut consumed = 0usize;
     while let Some((left, right, depth)) = work.pop() {
@@ -99,6 +106,48 @@ pub fn match_conclusion(
                 None => bindings[index] = Some(goal.clone()),
             }
             continue;
+        }
+
+        match (pattern, goal) {
+            (Obj::FnObj(pattern_application), Obj::FnObj(goal_application)) => {
+                if pattern_application.body.len() != goal_application.body.len()
+                    || pattern_application
+                        .body
+                        .iter()
+                        .zip(&goal_application.body)
+                        .any(|(pattern_layer, goal_layer)| pattern_layer.len() != goal_layer.len())
+                {
+                    return Ok(None);
+                }
+                let pattern_head: Obj = pattern_application.head.as_ref().clone().into();
+                let goal_head: Obj = goal_application.head.as_ref().clone().into();
+                if let Some(index) = variable_index(schema, &pattern_head) {
+                    match &bindings[index] {
+                        Some(previous) if !canonical_objs_equal(previous, &goal_head, limits)? => {
+                            return Ok(None);
+                        }
+                        Some(_) => {}
+                        None => bindings[index] = Some(goal_head),
+                    }
+                } else if !canonical_objs_equal(&pattern_head, &goal_head, limits)? {
+                    return Ok(None);
+                }
+                work.extend(
+                    pattern_application
+                        .body
+                        .iter()
+                        .zip(&goal_application.body)
+                        .flat_map(|(pattern_layer, goal_layer)| {
+                            pattern_layer
+                                .iter()
+                                .zip(goal_layer)
+                                .map(|(pattern, goal)| (pattern.as_ref(), goal.as_ref(), depth + 1))
+                        }),
+                );
+                continue;
+            }
+            (Obj::FnObj(_), _) | (_, Obj::FnObj(_)) => return Ok(None),
+            _ => {}
         }
 
         let pattern = canonical_obj_view(pattern)?;

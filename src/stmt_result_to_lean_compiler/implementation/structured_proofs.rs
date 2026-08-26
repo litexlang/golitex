@@ -1135,6 +1135,7 @@ impl StmtResultToLeanCompiler {
             );
         }
 
+        self.install_structured_integer_induction_iteration_occurrence_aliases(verification)?;
         self.validate_structured_integer_induction_generated_forall(verification)?;
         let target: Fact = verification.generated_forall.clone().into();
         let expected_start_membership: Fact = InFact::new(
@@ -1193,7 +1194,7 @@ impl StmtResultToLeanCompiler {
         let proposition =
             render_forall_fact_type(&verification.generated_forall, &self.environment_stack)?;
         let proof_expression = format!(
-            "by\n  intro __p1 __type1 __domain1\n  let __target_value : ℤ := Litex.In.rep __p1 __type1\n  have __target_ge_start_real : (({start_integer}) : ℝ) ≤ (__target_value : ℝ) := by\n    simpa [Litex.Le, Litex.OrderValue, __target_value] using __domain1\n  have __target_ge_start : {start_integer} ≤ __target_value := by\n    exact_mod_cast __target_ge_start_real\n  exact Litex.Rules.integerInductionFrom (motive := fun __induction_value : ℤ => {motive}) ({base}) ({step}) __target_value __target_ge_start"
+            "by\n  intro __target_value __domain1\n  have __target_ge_start_real : (({start_integer}) : ℝ) ≤ (__target_value : ℝ) := by\n    simpa [Litex.Le, Litex.OrderValue] using __domain1\n  have __target_ge_start : {start_integer} ≤ __target_value := by\n    exact_mod_cast __target_ge_start_real\n  exact Litex.Rules.integerInductionFrom (motive := fun __induction_value : ℤ => {motive}) ({base}) ({step}) __target_value __target_ge_start"
         );
         Ok(Some(CompiledFactProofBody {
             fact: target,
@@ -1268,6 +1269,103 @@ impl StmtResultToLeanCompiler {
         Ok(())
     }
 
+    fn install_structured_integer_induction_iteration_occurrence_aliases(
+        &mut self,
+        verification: &SuccessVerifyByInducResult,
+    ) -> Result<(), String> {
+        fn collect_from_object(
+            object: &Obj,
+            aggregates: &mut Vec<(SourceObjectOccurrenceId, String)>,
+        ) {
+            if let Obj::Sum(sum) = object {
+                if let Some(occurrence_id) = sum.source_occurrence_id {
+                    aggregates.push((occurrence_id, obj_equality_key(object)));
+                }
+            }
+            let _: Result<bool, ()> = Runtime::same_shape_and_corresponding_args_match(
+                object,
+                object,
+                &mut |child, _| {
+                    collect_from_object(child, aggregates);
+                    Ok(true)
+                },
+            );
+        }
+
+        fn collect_from_fact(
+            fact: &Fact,
+            aggregates: &mut Vec<(SourceObjectOccurrenceId, String)>,
+        ) -> Result<(), String> {
+            let arguments = match fact {
+                Fact::AtomicFact(fact) => fact.get_args_from_fact_ref(),
+                Fact::ExistFact(fact) => fact.get_args_from_fact_ref(),
+                Fact::OrFact(fact) => fact.get_args_from_fact_ref(),
+                Fact::AndFact(fact) => fact.get_args_from_fact_ref(),
+                Fact::ChainFact(fact) => fact.get_args_from_fact_ref(),
+                Fact::ForallFact(_) | Fact::ForallFactWithIff(_) | Fact::NotForall(_) => {
+                    return Err(
+                        "structured induction iteration aliasing does not accept a quantified goal"
+                            .into(),
+                    );
+                }
+            };
+            for argument in arguments {
+                collect_from_object(argument, aggregates);
+            }
+            Ok(())
+        }
+
+        let mut aggregates = Vec::new();
+        for goal in &verification.prove_goals {
+            collect_from_fact(goal, &mut aggregates)?;
+        }
+        aggregates.sort_by_key(|(occurrence_id, _)| occurrence_id.value());
+        aggregates.dedup_by_key(|(occurrence_id, _)| occurrence_id.value());
+        if aggregates.is_empty() {
+            return Ok(());
+        }
+
+        let context = self
+            .environment_stack
+            .well_definedness
+            .as_mut()
+            .ok_or_else(|| {
+                "structured induction aggregate goal has no active theorem WD Result".to_string()
+            })?;
+        for (source_occurrence_id, semantic_key) in aggregates {
+            if context.iterations.contains_key(&source_occurrence_id) {
+                continue;
+            }
+            let matching_owners = context
+                .iterations
+                .iter()
+                .filter_map(|(owner_id, iteration)| {
+                    (obj_equality_key(&iteration.source_aggregate) == semantic_key)
+                        .then_some(*owner_id)
+                })
+                .collect::<Vec<_>>();
+            let [owner_occurrence_id] = matching_owners.as_slice() else {
+                return Err(format!(
+                    "structured induction sum occurrence {} has {} exact theorem-WD owners",
+                    source_occurrence_id.value(),
+                    matching_owners.len()
+                ));
+            };
+            if let Some(previous) = context
+                .iteration_occurrence_aliases
+                .insert(source_occurrence_id, *owner_occurrence_id)
+            {
+                if previous != *owner_occurrence_id {
+                    return Err(format!(
+                        "structured induction sum occurrence {} changed its WD owner",
+                        source_occurrence_id.value()
+                    ));
+                }
+            }
+        }
+        Ok(())
+    }
+
     pub(super) fn render_structured_integer_induction_motive(
         &self,
         verification: &SuccessVerifyByInducResult,
@@ -1321,23 +1419,40 @@ impl StmtResultToLeanCompiler {
             result.statement.line_file.clone(),
         )
         .into();
-        if parameter_assumption.fact.to_string() != expected_parameter.to_string()
-            || equality_assumption.fact.to_string() != expected_equality.to_string()
-            || !infer_result_retains_fact_id(
-                &proof.base.assumption_infers,
-                &parameter_assumption.fact,
-                parameter_assumption.fact_id,
-            )
-            || !infer_result_retains_fact_id(
-                &proof.base.assumption_infers,
-                &equality_assumption.fact,
-                equality_assumption.fact_id,
-            )
-        {
+        if parameter_assumption.fact.to_string() != expected_parameter.to_string() {
             return Err(
-                "structured induction base assumptions changed their propositions or FactIds"
-                    .into(),
+                "structured induction base parameter assumption changed its proposition".into(),
             );
+        }
+        if equality_assumption.fact.to_string() != expected_equality.to_string() {
+            return Err(
+                "structured induction base equality assumption changed its proposition".into(),
+            );
+        }
+        let parameter_fact_id_is_retained_or_inherited = infer_result_retains_fact_id(
+            &proof.base.assumption_infers,
+            &parameter_assumption.fact,
+            parameter_assumption.fact_id,
+        ) || self
+            .environment_stack
+            .fact_propositions
+            .get(&parameter_assumption.fact_id)
+            .is_some_and(|fact| fact.to_string() == parameter_assumption.fact.to_string());
+        if !parameter_fact_id_is_retained_or_inherited {
+            return Err(format!(
+                "structured induction base parameter assumption lost FactId `{}`",
+                parameter_assumption.fact_id
+            ));
+        }
+        if !infer_result_retains_fact_id(
+            &proof.base.assumption_infers,
+            &equality_assumption.fact,
+            equality_assumption.fact_id,
+        ) {
+            return Err(format!(
+                "structured induction base equality assumption lost FactId `{}`",
+                equality_assumption.fact_id
+            ));
         }
 
         self.environment_stack.push_inherited_environment();
@@ -1347,7 +1462,7 @@ impl StmtResultToLeanCompiler {
                 start_integer,
                 &mut self.environment_stack,
             );
-            let parameter_proof = format!("Litex.Rules.complexIntInZ ({start_integer})");
+            let parameter_proof = format!("Litex.In.own Litex.Z ({start_integer})");
             self.environment_stack
                 .fact_names
                 .insert(parameter_assumption.fact_id, parameter_proof.clone());
@@ -1355,8 +1470,7 @@ impl StmtResultToLeanCompiler {
                 parameter_assumption.fact_id,
                 parameter_assumption.fact.clone(),
             );
-            let equality_proof =
-                format!("(by simpa using (Litex.Same.refl ((({start_integer}) : ℂ))))");
+            let equality_proof = format!("Litex.Same.intComplex ({start_integer})");
             self.environment_stack
                 .fact_names
                 .insert(equality_assumption.fact_id, equality_proof);
@@ -1441,11 +1555,16 @@ impl StmtResultToLeanCompiler {
             }
         }
         for assumption in &proof.step.assumptions {
-            if !infer_result_retains_fact_id(
+            let retained_or_inherited = infer_result_retains_fact_id(
                 &proof.step.assumption_infers,
                 &assumption.fact,
                 assumption.fact_id,
-            ) {
+            ) || self
+                .environment_stack
+                .fact_propositions
+                .get(&assumption.fact_id)
+                .is_some_and(|fact| fact.to_string() == assumption.fact.to_string());
+            if !retained_or_inherited {
                 return Err(format!(
                     "structured induction step assumption `{}` lost FactId `{}`",
                     assumption.fact, assumption.fact_id
@@ -1462,18 +1581,42 @@ impl StmtResultToLeanCompiler {
             );
             self.environment_stack.fact_names.insert(
                 parameter_assumption.fact_id,
-                "Litex.Rules.complexIntInZ __induction_value".into(),
+                "Litex.In.own Litex.Z __induction_value".into(),
             );
             self.environment_stack.fact_propositions.insert(
                 parameter_assumption.fact_id,
                 parameter_assumption.fact.clone(),
             );
-            self.environment_stack.fact_names.insert(
-                domain_assumption.fact_id,
-                format!(
-                    "(by\n  have __induction_ge_start_real : (({start_integer}) : ℝ) ≤ (__induction_value : ℝ) := by\n    exact_mod_cast __induction_ge_start\n  simpa [Litex.Le, Litex.OrderValue] using __induction_ge_start_real)"
-                ),
+            let domain_proof = format!(
+                "(by\n  have __induction_ge_start_real : (({start_integer}) : ℝ) ≤ (__induction_value : ℝ) := by\n    exact_mod_cast __induction_ge_start\n  simpa [Litex.Le, Litex.OrderValue] using __induction_ge_start_real)"
             );
+            // Inference Results inside the step may retain the theorem-domain
+            // FactId inherited from the enclosing forall rather than the
+            // freshly introduced induction-domain FactId.  They denote the
+            // same checked proposition after the exact parameter rebinding,
+            // so every exact-proposition alias must point at the local proof.
+            // Do not use rendered-text or shape matching here: a different
+            // proposition must continue to fail closed.
+            let domain_fact_aliases = self
+                .environment_stack
+                .fact_propositions
+                .iter()
+                .filter_map(|(fact_id, proposition)| {
+                    (proposition.to_string() == domain_assumption.fact.to_string())
+                        .then_some(*fact_id)
+                })
+                .collect::<Vec<_>>();
+            for fact_id in domain_fact_aliases {
+                self.environment_stack
+                    .fact_names
+                    .insert(fact_id, domain_proof.clone());
+                self.environment_stack
+                    .fact_propositions
+                    .insert(fact_id, domain_assumption.fact.clone());
+            }
+            self.environment_stack
+                .fact_names
+                .insert(domain_assumption.fact_id, domain_proof);
             self.environment_stack
                 .fact_propositions
                 .insert(domain_assumption.fact_id, domain_assumption.fact.clone());
@@ -1493,12 +1636,35 @@ impl StmtResultToLeanCompiler {
                 .iter()
                 .map(|assumption| (assumption.fact_id, assumption.fact.clone()))
                 .collect::<Vec<_>>();
+            // The enclosing forall may already have compiled the same typed
+            // inference FactIds using its binder name.  Those proof strings
+            // cannot be inherited into the induction lambda: replay the exact
+            // retained inference DAG from the newly rebound assumptions.
+            let mut rebound_inference_conclusions = HashSet::new();
+            collect_supported_typed_infer_conclusions(
+                &proof.step.assumption_infers,
+                &mut rebound_inference_conclusions,
+            );
+            for (fact_id, proposition) in &rebound_inference_conclusions {
+                if let Some(retained) = self.environment_stack.fact_propositions.get(&fact_id) {
+                    if retained.to_string() != *proposition {
+                        return Err(format!(
+                            "structured induction step inference FactId `{fact_id}` changed its proposition"
+                        ));
+                    }
+                }
+            }
+            let rebound_inference_fact_ids = rebound_inference_conclusions
+                .into_iter()
+                .map(|(fact_id, _)| fact_id)
+                .collect::<HashSet<_>>();
             let mut lines = Vec::new();
-            self.compile_typed_inference_results_as_local_have_statements(
+            self.compile_typed_inference_results_as_local_have_statements_replaying_visible(
                 &proof.step.assumption_infers,
                 &sources,
                 &mut lines,
                 "structured induction step assumptions",
+                &rebound_inference_fact_ids,
             )?;
             for (index, proof_step) in proof.step.proof_steps.iter().enumerate() {
                 let Some(step_lines) =

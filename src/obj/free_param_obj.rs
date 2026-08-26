@@ -26,6 +26,10 @@ pub enum SubstitutionMode {
     /// definition while retaining parser occurrence provenance on the
     /// surrounding syntax tree.
     TransparentDefinition,
+    /// Project a parser-owned source theorem/WD tree through an exact checked
+    /// substitution while retaining occurrence identity for target replay.
+    /// This mode is compiler provenance projection, never Runtime proof search.
+    ResultProjection,
 }
 
 impl BindingScope {

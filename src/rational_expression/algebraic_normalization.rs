@@ -16,6 +16,41 @@ pub fn objs_equal_by_rational_expression_evaluation(left: &Obj, right: &Obj) -> 
     objs_equal_by_algebraic_normalization(left, right, AlgebraicNormalizationMode::Ordinary)
 }
 
+/// The source fragment whose successful ordinary normalization is exported as
+/// a proof-carrying integral-polynomial certificate.  Keep this narrower than
+/// the normalizer itself: division, functions, transcendental constructors,
+/// and symbolic exponents require different evidence paths.
+pub fn obj_is_integral_polynomial_fragment(object: &Obj) -> bool {
+    match object {
+        Obj::Atom(_) => true,
+        Obj::Number(number) => number.normalized_value.parse::<i128>().is_ok(),
+        Obj::Add(add) => {
+            obj_is_integral_polynomial_fragment(&add.left)
+                && obj_is_integral_polynomial_fragment(&add.right)
+        }
+        Obj::Sub(sub) => {
+            obj_is_integral_polynomial_fragment(&sub.left)
+                && obj_is_integral_polynomial_fragment(&sub.right)
+        }
+        Obj::Mul(mul) => {
+            obj_is_integral_polynomial_fragment(&mul.left)
+                && obj_is_integral_polynomial_fragment(&mul.right)
+        }
+        Obj::Pow(pow) => {
+            obj_is_integral_polynomial_fragment(&pow.base)
+                && matches!(pow.exponent.as_ref(), Obj::Number(number)
+                    if number.normalized_value.parse::<u64>().is_ok())
+        }
+        _ => false,
+    }
+}
+
+pub fn objs_form_verified_integral_polynomial_identity(left: &Obj, right: &Obj) -> bool {
+    obj_is_integral_polynomial_fragment(left)
+        && obj_is_integral_polynomial_fragment(right)
+        && objs_equal_by_rational_expression_evaluation(left, right)
+}
+
 /// Proves exact polynomial/rational identities after reducing every pair of
 /// imaginary-unit factors by `i * i = -1`.
 /// Example: `(1 + i) * (1 - i) = 2`.

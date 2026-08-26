@@ -329,6 +329,105 @@ theorem complexMulInZ
       (Litex.Same.ofEq (by norm_cast : (za : ℝ) * (zb : ℝ) = ((za * zb : ℤ) : ℝ)))
       (realSameInt (za * zb)))⟩
 
+/-- A rational observation of an integer base raised to a natural exponent
+still has an exact integer representative. This matches the compiler's
+canonical rendering of source powers with a checked `Z` base. -/
+theorem complexIntPowNatInZ
+    (base : ℤ)
+    (exponent : ℕ) :
+    Litex.In ((((base : ℚ) ^ (exponent : ℤ) : ℚ) : ℂ)) Litex.Z := by
+  have power_cast :
+      ((((base : ℚ) ^ (exponent : ℤ) : ℚ) : ℂ)) =
+        (((base ^ exponent : ℤ) : ℂ)) := by
+    norm_cast
+  exact ⟨base ^ exponent,
+    Litex.Same.trans (Litex.Same.ofEq power_cast)
+      (Litex.Same.complexInt (base ^ exponent))⟩
+
+private theorem integerRangeSumSingleNative
+    (start : ℤ)
+    (function : Litex.Fn Litex.Z Litex.Z) :
+    Litex.sum start start function =
+      function.callOwn start := by
+  simp [Litex.sum, Litex.integerRangeSum]
+
+/-- Registered `aggregate.sum_single` adapter for an exact function carrier. -/
+theorem integerRangeSumSingleOwn
+    (start : ℤ)
+    (function : Litex.Fn Litex.Z Litex.Z) :
+    Litex.Same (Litex.sum start start function)
+      (Litex.fnApplyCarrier function
+        (Litex.In.own (Litex.fnSet Litex.Z Litex.Z) function)
+        start) := by
+  apply Litex.Same.ofEq
+  simpa [Litex.fnApplyCarrier] using
+    integerRangeSumSingleNative start function
+
+/-- Registered `aggregate.sum_single` adapter for a heterogeneous function
+parameter with its exact `fnSet Z Z` membership certificate. -/
+theorem integerRangeSumSingle
+    {alpha : Type 1}
+    (start : ℤ)
+    (function : alpha)
+    (functionMembership : Litex.In function (Litex.fnSet Litex.Z Litex.Z)) :
+    Litex.Same
+      (Litex.sum start start (Litex.In.rep function functionMembership))
+      (Litex.fnApplySelectedCarrier function functionMembership start) := by
+  apply Litex.Same.ofEq
+  simpa [Litex.fnApplySelectedCarrier] using
+    integerRangeSumSingleNative start (Litex.In.rep function functionMembership)
+
+private theorem integerRangeSumSplitLastNative
+    (start finish : ℤ)
+    (function : Litex.Fn Litex.Z Litex.Z)
+    (startLeFinish : start ≤ finish) :
+    Litex.sum start (finish + 1) function =
+      Litex.sum start finish function +
+        function.callOwn (finish + 1) := by
+  have endpointNotInPrevious : finish + 1 ∉ Finset.Icc start finish := by
+    simp
+  have intervalInsert :
+      insert (finish + 1) (Finset.Icc start finish) =
+        Finset.Icc start (finish + 1) := by
+    simpa using
+      (Finset.insert_Icc_sub_one_right_eq_Icc
+        (a := start) (b := finish + 1) (by omega : start ≤ finish + 1))
+  simp only [Litex.sum, Litex.integerRangeSum]
+  rw [← intervalInsert, Finset.sum_insert endpointNotInPrevious]
+  simp [add_comm]
+
+/-- Registered `aggregate.sum_split_last` adapter for an exact function carrier. -/
+theorem integerRangeSumSplitLastOwn
+    (start finish : ℤ)
+    (function : Litex.Fn Litex.Z Litex.Z)
+    (startLeFinish : Litex.Le (start : ℂ) (finish : ℂ)) :
+    Litex.Same (Litex.sum start (finish + 1) function)
+      (Litex.sum start finish function +
+        Litex.fnApplyCarrier function
+          (Litex.In.own (Litex.fnSet Litex.Z Litex.Z) function)
+          (finish + 1)) := by
+  apply Litex.Same.ofEq
+  apply integerRangeSumSplitLastNative
+  simpa [Litex.Le, Litex.OrderValue] using startLeFinish
+
+/-- Registered `aggregate.sum_split_last` adapter for a heterogeneous
+function parameter. -/
+theorem integerRangeSumSplitLast
+    {alpha : Type 1}
+    (start finish : ℤ)
+    (function : alpha)
+    (functionMembership : Litex.In function (Litex.fnSet Litex.Z Litex.Z))
+    (startLeFinish : Litex.Le (start : ℂ) (finish : ℂ)) :
+    Litex.Same
+      (Litex.sum start (finish + 1) (Litex.In.rep function functionMembership))
+      (Litex.sum start finish (Litex.In.rep function functionMembership) +
+        Litex.fnApplySelectedCarrier function functionMembership (finish + 1)) := by
+  apply Litex.Same.ofEq
+  simpa [Litex.fnApplySelectedCarrier] using
+    integerRangeSumSplitLastNative start finish
+      (Litex.In.rep function functionMembership)
+      (by simpa [Litex.Le, Litex.OrderValue] using startLeFinish)
+
 /-- Addition preserves natural membership for complex-carrier source values. -/
 theorem complexAddInN
     {a b : ℂ}
@@ -718,6 +817,26 @@ theorem complexEqRealInRPos
   inSetBuilder
     (Litex.Same.trans (Litex.Same.ofEq hz) (Litex.Same.complexReal r))
     h
+
+/-- A positive native integer base raised to a nonnegative integral exponent
+has an exact positive-real representative through Mathlib's rational `zpow`.
+This is the fixed target adapter for the verifier's typed power/equality
+transport certificate. -/
+theorem positiveIntegerRationalPowInRPos
+    (base : ℤ)
+    (exponent : ℤ)
+    (basePositive : Litex.Lt (0 : ℂ) (base : ℂ))
+    (exponentNonnegative : 0 ≤ exponent) :
+    Litex.In ((((base : ℚ) ^ exponent : ℚ) : ℂ)) Litex.RPos := by
+  apply complexEqRealInRPos
+      ((((base : ℚ) ^ exponent : ℚ) : ℂ))
+      ((((base : ℚ) ^ exponent : ℚ) : ℝ))
+  · norm_cast
+  · have basePositiveInteger : 0 < base := by
+      simpa [Litex.Lt, Litex.OrderValue] using basePositive
+    have basePositiveRational : (0 : ℚ) < (base : ℚ) := by
+      exact_mod_cast basePositiveInteger
+    exact_mod_cast zpow_pos basePositiveRational exponent
 
 theorem eInRPos : Litex.In ((Real.exp 1 : ℝ) : ℂ) Litex.RPos :=
   inSetBuilder (Litex.Same.complexReal (Real.exp 1)) (Real.exp_pos 1)

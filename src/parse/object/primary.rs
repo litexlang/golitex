@@ -741,7 +741,7 @@ impl Runtime {
                     ),
                 ))
             })?;
-            return Ok(Sum::new(start, end, func).into());
+            return self.new_parsed_sum(start, end, func);
         }
         if tok == FINITE_SET_SUM {
             tb.skip()?;

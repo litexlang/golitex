@@ -136,6 +136,15 @@ impl StmtResultToLeanCompiler {
                         &builtin.subgoals,
                     );
                 }
+                if matches!(
+                    builtin.evidence.typed(),
+                    Some(BuiltinRuleEvidence::IntegerRangeSumMembership)
+                ) {
+                    return self.construct_lean_integer_range_sum_membership_from_result(
+                        &source_fact,
+                        &builtin.subgoals,
+                    );
+                }
                 if let Some(BuiltinRuleEvidence::NaturalMembershipClosure(rule)) =
                     builtin.evidence.typed()
                 {
@@ -217,6 +226,33 @@ impl StmtResultToLeanCompiler {
                     builtin.evidence.typed()
                 {
                     return self.construct_lean_registered_antisymmetric_predicate_from_result(
+                        &source_fact,
+                        evidence,
+                        &builtin.subgoals,
+                    );
+                }
+                if let Some(BuiltinRuleEvidence::StructuralDefinitionCongruence(evidence)) =
+                    builtin.evidence.typed()
+                {
+                    return self.construct_lean_structural_definition_congruence_from_result(
+                        &source_fact,
+                        evidence,
+                        &builtin.subgoals,
+                    );
+                }
+                if let Some(BuiltinRuleEvidence::StructuralKnownEqualityCongruence(evidence)) =
+                    builtin.evidence.typed()
+                {
+                    return self.construct_lean_structural_known_equality_congruence_from_result(
+                        &source_fact,
+                        evidence,
+                        &builtin.subgoals,
+                    );
+                }
+                if let Some(BuiltinRuleEvidence::IntegralPolynomialNormalization(evidence)) =
+                    builtin.evidence.typed()
+                {
+                    return self.construct_lean_integral_polynomial_normalization_from_result(
                         &source_fact,
                         evidence,
                         &builtin.subgoals,
@@ -451,24 +487,22 @@ impl StmtResultToLeanCompiler {
         }
     }
 
-    /// Temporarily exposes this statement's retained WD tree while its proof
-    /// Result renders objects. Nested callers that already own a binder/WD
-    /// environment keep that environment unchanged.
+    /// Temporarily exposes this exact statement Result's retained WD tree
+    /// while its proof renders objects. The parent Result's WD certificate is
+    /// restored afterwards; bindings and FactIds remain inherited separately.
     pub(super) fn construct_lean_proof_from_direct_fact_result_using_its_well_definedness(
         &mut self,
         result: &SuccessFactStmtResult,
     ) -> Result<Option<String>, String> {
-        if self.environment_stack.well_definedness.is_some()
-            || result.well_definedness.recursive.is_none()
-        {
+        if result.well_definedness.recursive.is_none() {
             return self.construct_lean_proof_from_direct_fact_result(result);
         }
 
         let certificate =
             self.construct_well_definedness_to_lean_compilation_context(&result.well_definedness)?;
-        self.environment_stack.well_definedness = Some(certificate);
+        let parent = self.environment_stack.well_definedness.replace(certificate);
         let construction = self.construct_lean_proof_from_direct_fact_result(result);
-        self.environment_stack.well_definedness = None;
+        self.environment_stack.well_definedness = parent;
         construction
     }
 }

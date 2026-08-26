@@ -1947,6 +1947,13 @@ fn infer_rule_role(rule: &InferRule) -> &'static str {
         InferRule::DefinedPredicateDefinitionClauseProjection(_) => {
             "DefinedPredicateDefinitionClauseProjection"
         }
+        InferRule::EqualityChainClosure(_) => "EqualityChainClosure",
+        InferRule::ClosedPositivePowerEqualityImpliesEqualSideMembership(_) => {
+            "ClosedPositivePowerEqualityImpliesEqualSideMembership"
+        }
+        InferRule::PositiveIntegerBaseNaturalPowerEqualityImpliesEqualSideMembership(_) => {
+            "PositiveIntegerBaseNaturalPowerEqualityImpliesEqualSideMembership"
+        }
         InferRule::RegisteredTransitivePredicateChainClosure(_) => {
             "RegisteredTransitivePredicateChainClosure"
         }
@@ -1956,6 +1963,7 @@ fn infer_rule_role(rule: &InferRule) -> &'static str {
         InferRule::ListSetMembershipImpliesEqualityAlternatives(_) => {
             "ListSetMembershipImpliesEqualityAlternatives"
         }
+        InferRule::NumericOrderBoundImpliesZeroSign => "NumericOrderBoundImpliesZeroSign",
         InferRule::MultiplicationByNegativeOneReversesOrderAgainstZero => {
             "MultiplicationByNegativeOneReversesOrderAgainstZero"
         }
