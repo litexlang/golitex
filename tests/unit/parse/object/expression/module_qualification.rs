@@ -279,9 +279,9 @@ fn module_qualification_qualifies_bare_thm_strategy_template_and_struct_refs() {
     let mut rt = Runtime::default();
     set_test_module_name(&mut rt, "Nat");
 
-    let thm_stmt = parse_one_stmt_line_with_runtime(&mut rt, "by thm T(a)");
-    let Stmt::By(ByStmt::ByThmStmt(thm_stmt)) = thm_stmt else {
-        panic!("expected by thm stmt");
+    let thm_stmt = parse_one_stmt_line_with_runtime(&mut rt, "release thm T(a)");
+    let Stmt::ReleaseThmStmt(thm_stmt) = thm_stmt else {
+        panic!("expected release thm stmt");
     };
     assert_with_mod(&thm_stmt.name, "Nat", "T");
 
@@ -312,9 +312,9 @@ fn module_qualification_preserves_explicit_reference_module_names() {
     let mut rt = Runtime::default();
     set_test_module_name(&mut rt, "Nat");
 
-    let thm_stmt = parse_one_stmt_line_with_runtime(&mut rt, "by thm Other::T(a)");
-    let Stmt::By(ByStmt::ByThmStmt(thm_stmt)) = thm_stmt else {
-        panic!("expected by thm stmt");
+    let thm_stmt = parse_one_stmt_line_with_runtime(&mut rt, "release thm Other::T(a)");
+    let Stmt::ReleaseThmStmt(thm_stmt) = thm_stmt else {
+        panic!("expected release thm stmt");
     };
     assert_with_mod(&thm_stmt.name, "Other", "T");
 
@@ -344,9 +344,9 @@ fn module_qualification_preserves_explicit_reference_module_names() {
 fn standard_library_namespace_is_valid_only_as_a_qualified_module_root() {
     let mut rt = Runtime::default();
 
-    let thm_stmt = parse_one_stmt_line_with_runtime(&mut rt, "by thm basics::T(a)");
-    let Stmt::By(ByStmt::ByThmStmt(thm_stmt)) = thm_stmt else {
-        panic!("expected by thm stmt");
+    let thm_stmt = parse_one_stmt_line_with_runtime(&mut rt, "release thm basics::T(a)");
+    let Stmt::ReleaseThmStmt(thm_stmt) = thm_stmt else {
+        panic!("expected release thm stmt");
     };
     assert_with_mod(&thm_stmt.name, "basics", "T");
 
@@ -383,13 +383,13 @@ fn standard_library_namespace_is_valid_only_as_a_qualified_module_root() {
 
     let tokenizer = Tokenizer::new();
     let mut blocks = tokenizer
-        .parse_blocks("by thm std(a)", Rc::from("test.lit"))
+        .parse_blocks("release thm std(a)", Rc::from("test.lit"))
         .expect("tokenize theorem reference");
     assert_eq!(blocks.len(), 1);
     assert!(rt.parse_statement(&mut blocks[0]).is_err());
 
     let mut blocks = tokenizer
-        .parse_blocks("by thm Other::std::T(a)", Rc::from("test.lit"))
+        .parse_blocks("release thm Other::std::T(a)", Rc::from("test.lit"))
         .expect("tokenize nested module reference");
     assert_eq!(blocks.len(), 1);
     assert!(rt.parse_statement(&mut blocks[0]).is_err());
@@ -428,9 +428,9 @@ fn module_qualification_keeps_names_bare_without_module_context() {
     };
     assert_eq!(name, "some_prop");
 
-    let thm_stmt = parse_one_stmt_line_with_runtime(&mut rt, "by thm T(a)");
-    let Stmt::By(ByStmt::ByThmStmt(thm_stmt)) = thm_stmt else {
-        panic!("expected by thm stmt");
+    let thm_stmt = parse_one_stmt_line_with_runtime(&mut rt, "release thm T(a)");
+    let Stmt::ReleaseThmStmt(thm_stmt) = thm_stmt else {
+        panic!("expected release thm stmt");
     };
     assert_without_mod(&thm_stmt.name, "T");
 

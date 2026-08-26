@@ -13,6 +13,7 @@ pub mod eval_stmt;
 pub mod example_stmt;
 #[path = "definitions/parameters.rs"]
 pub mod parameters;
+mod release_thm;
 #[path = "proof_blocks/sketch.rs"]
 pub mod sketch_stmt;
 #[path = "commands/tooling.rs"]
@@ -46,6 +47,7 @@ pub use by_stmt::ByDefStmt;
 pub use by_stmt::ByEnumerateRangeStmt;
 pub use by_stmt::ByStructDefStmt;
 pub use by_stmt::ByThmStmt;
+pub use release_thm::ReleaseThmStmt;
 pub use statement_types::ByStmt;
 pub use statement_types::CommandStmt;
 pub use statement_types::DefinitionStmt;

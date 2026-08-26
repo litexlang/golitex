@@ -314,7 +314,7 @@ struct StoredFamily:
     values set
     marker N
 
-by thm struct_member(({1, 2}, 0), &StoredFamily)
+release thm struct_member(({1, 2}, 0), &StoredFamily)
 have family &StoredFamily = ({1, 2}, 0)
 family.values(1) = 1
 ```
@@ -328,7 +328,7 @@ struct RealFamily:
     marker N
 
 have fn table(k {1, 2}) R = k
-by thm struct_member((table, 0), &RealFamily)
+release thm struct_member((table, 0), &RealFamily)
 have family &RealFamily = (table, 0)
 
 family.values(1) = table(1) = 1
@@ -381,7 +381,7 @@ have g fn(alpha I) S
 trust forall X S:
     $is_nonempty_set(X)
 
-by thm general_cart_nonempty_by_choice_from_family(general_cart(I, S, g))
+release thm general_cart_nonempty_by_choice_from_family(general_cart(I, S, g))
 ```
 
 ### 3.1. General Cartesian Products As Choice Functions
@@ -398,7 +398,7 @@ have g fn(alpha I) s
 trust forall X s:
     $is_nonempty_set(X)
 
-by thm general_cart_nonempty_by_choice_from_family(general_cart(I, s, g))
+release thm general_cart_nonempty_by_choice_from_family(general_cart(I, s, g))
 
 have c general_cart(I, s, g)
 c $in fn(t I)big_union(s)
@@ -1070,15 +1070,15 @@ forall a, b, c R:
 have fn circle(r R+) power_set(cart(R, R)) = {x cart(R, R): x[1]^2 + x[2]^2 = r^2}
 have fn line(a, b, c R: a != 0 or b != 0) power_set(cart(R, R)) = {x cart(R, R): a * x[1] + b * x[2] + c = 0}
 
-by thm defined_set_member((3, 4), circle(5))
-by thm defined_set_member((2, 2), line(1, (-1), 0))
+release thm defined_set_member((3, 4), circle(5))
+release thm defined_set_member((2, 2), line(1, (-1), 0))
 
 claim:
     ? forall a, b R:
         a != 0 or b != 0
         =>:
             (0, 0) $in line(a, b, 0)
-    by thm defined_set_member((0, 0), line(a, b, 0))
+    release thm defined_set_member((0, 0), line(a, b, 0))
 
 forall p cart(R, R):
     p $in circle(5)
@@ -1495,7 +1495,7 @@ claim:
         x = 1
         =>:
             x + 1 = 2
-    by thm thm_one_succ(x)
+    release thm thm_one_succ(x)
 
 ## A named theorem may use another named theorem in its proof.
 thm thm_use_thm_inside_thm:
@@ -1503,10 +1503,10 @@ thm thm_use_thm_inside_thm:
         x = 1
         =>:
             x + 2 = 3
-    by thm thm_one_succ(x)
+    release thm thm_one_succ(x)
     x + 2 = 1 + 2 = 3
 
-by thm thm_use_thm_inside_thm(1)
+release thm thm_use_thm_inside_thm(1)
 1 + 2 = 3
 
 ## Argument type checking still applies for theorem calls.
@@ -1514,7 +1514,7 @@ thm thm_nat_refl:
     ? forall n N:
         n = n
 
-by thm thm_nat_refl(1)
+release thm thm_nat_refl(1)
 1 = 1
 
 ## A proved theorem is also stored as a forall fact. After the domain fact is
@@ -1537,7 +1537,7 @@ $thm_match_q(1)
 
 ## The explicit theorem call remains available when theorem-instantiation
 ## output is useful.
-by thm thm_stored_forall(1)
+release thm thm_stored_forall(1)
 ```
 
 ### 34. Facts Verified by Builtin Rules
@@ -1843,13 +1843,13 @@ struct InnerProductAccessProbe:
 
 have fn real_mul(x, y R) R = x * y
 have fn real_neg(x R) R = (-x)
-by thm struct_member((0, real_mul), &ScalarSystem)
+release thm struct_member((0, real_mul), &ScalarSystem)
 have scalar_system &ScalarSystem = (0, real_mul)
-by thm struct_member((scalar_system, 0, real_mul), &VectorSpace)
+release thm struct_member((scalar_system, 0, real_mul), &VectorSpace)
 have vector_space &VectorSpace = (scalar_system, 0, real_mul)
-by thm struct_member((scalar_system, real_neg), &InnerProductScalarGeometry)
+release thm struct_member((scalar_system, real_neg), &InnerProductScalarGeometry)
 have scalar_geometry &InnerProductScalarGeometry = (scalar_system, real_neg)
-by thm struct_member((scalar_geometry, 0), &InnerProductAccessProbe)
+release thm struct_member((scalar_geometry, 0), &InnerProductAccessProbe)
 have inner_space &InnerProductAccessProbe = (scalar_geometry, 0)
 
 inner_space.scalar_geometry.scalars.mul(2, 3) $in R
@@ -3243,7 +3243,7 @@ claim:
                 f(i1) <= g(i1)
         =>:
             sum(1, 3, fn(x Z) R {f(x)}) <= sum(1, 3, fn(x Z) R {g(x)})
-    by thm sum_le_sum_from_pointwise(sum(1, 3, fn(x Z) R {f(x)}), sum(1, 3, fn(x Z) R {g(x)}))
+    release thm sum_le_sum_from_pointwise(sum(1, 3, fn(x Z) R {f(x)}), sum(1, 3, fn(x Z) R {g(x)}))
 
 ## Finite-sum triangle inequality.
 forall f fn(x Z) R:
@@ -3281,7 +3281,7 @@ thm finite_set_sum_pointwise_substitution_example:
         $is_finite_set(X)
         =>:
             finite_set_sum(X, fn(x X) Z {x + 0}) = finite_set_sum(X, fn(x X) Z {x})
-    by thm finite_set_sum_substitution(finite_set_sum(X, fn(x X) Z {x + 0}), finite_set_sum(X, fn(x X) Z {x}))
+    release thm finite_set_sum_substitution(finite_set_sum(X, fn(x X) Z {x + 0}), finite_set_sum(X, fn(x X) Z {x}))
 ```
 
 ```litex
@@ -3290,7 +3290,7 @@ thm finite_set_sum_substitution_example:
         $bijective(Y, X, g)
         =>:
             finite_set_sum(X, f) = finite_set_sum(Y, fn(y Y) R {f(g(y))})
-    by thm finite_set_sum_substitution(finite_set_sum(X, f), finite_set_sum(Y, fn(y Y) R {f(g(y))}))
+    release thm finite_set_sum_substitution(finite_set_sum(X, f), finite_set_sum(Y, fn(y Y) R {f(g(y))}))
 
 thm finite_set_sum_range_bridge_example:
     ? forall a fn(i1 Z) R, m, n Z:
@@ -3322,7 +3322,7 @@ thm finite_set_sum_monotone_example:
             f(x) <= g(x)
         =>:
             finite_set_sum(X, f) <= finite_set_sum(X, g)
-    by thm finite_set_sum_le_from_pointwise(finite_set_sum(X, f), finite_set_sum(X, g))
+    release thm finite_set_sum_le_from_pointwise(finite_set_sum(X, f), finite_set_sum(X, g))
 
 thm finite_set_sum_triangle_example:
     ? forall X finite_set, f fn(x X) R:
@@ -3351,7 +3351,7 @@ thm finite_set_sum_enumeration_well_defined:
         =>:
             \self_finite_set_sum<X, f, g> = \self_finite_set_sum<X, f, h>
     \self_finite_set_sum<X, f, g> = sum(1, finite_set_size(X), fn(i1 closed_range(1, finite_set_size(X))) R {f(g(i1))})
-    by thm sum_over_bijective_finite_set_enumerations(sum(1, finite_set_size(X), fn(i1 closed_range(1, finite_set_size(X))) R {f(g(i1))}), sum(1, finite_set_size(X), fn(i1 closed_range(1, finite_set_size(X))) R {f(h(i1))}))
+    release thm sum_over_bijective_finite_set_enumerations(sum(1, finite_set_size(X), fn(i1 closed_range(1, finite_set_size(X))) R {f(g(i1))}), sum(1, finite_set_size(X), fn(i1 closed_range(1, finite_set_size(X))) R {f(h(i1))}))
     \self_finite_set_sum<X, f, h> = sum(1, finite_set_size(X), fn(i1 closed_range(1, finite_set_size(X))) R {f(h(i1))})
     \self_finite_set_sum<X, f, g> = sum(1, finite_set_size(X), fn(i1 closed_range(1, finite_set_size(X))) R {f(g(i1))}) = sum(1, finite_set_size(X), fn(i1 closed_range(1, finite_set_size(X))) R {f(h(i1))}) = \self_finite_set_sum<X, f, h>
 
@@ -3465,10 +3465,10 @@ builder is best read as ordinary set-comprehension notation.
 ```litex
 1 $in {1, 2, 3}
 $is_finite_set({1, 2})
-by thm set_builder_member(1, {x R: x > 0})
+release thm set_builder_member(1, {x R: x > 0})
 
 have positive_reals set = {x R: x > 0}
-by thm defined_set_member(1, positive_reals)
+release thm defined_set_member(1, positive_reals)
 ```
 
 #### 4. Set Operations
@@ -3623,7 +3623,7 @@ struct Point:
     x R
     y R
 
-by thm struct_member((1, 2), &Point)
+release thm struct_member((1, 2), &Point)
 have p &Point = (1, 2)
 p.x = p[1]
 p.x = 1
@@ -3649,7 +3649,7 @@ make_point(1, 2).x = 1
 A direct symbol binding such as `p &Point` is the sole automatic opening case.
 It releases one layer: tuple shape and dimension, Cartesian membership,
 field-to-index bridges, field carriers, and struct laws. In contrast,
-`by thm struct_member((1, 2), &Point)` checks and stores only the named
+`release thm struct_member((1, 2), &Point)` checks and stores the named
 membership of that tuple. Generic membership never selects field names or
 releases the tuple representation.
 
@@ -3658,7 +3658,7 @@ struct Point:
     x R
     y R
 
-by thm struct_member((1, 2), &Point)
+release thm struct_member((1, 2), &Point)
 have p &Point = (1, 2)
 p.x = p[1]
 p.x = 1
@@ -3918,7 +3918,7 @@ struct Point:
     x R
     y R
 
-by thm struct_member((1, 2), &Point)
+release thm struct_member((1, 2), &Point)
 have p &Point = (1, 2)
 p.x = 1
 p.y = 2
@@ -3940,7 +3940,7 @@ template<S set, z S>:
 \const_on_S<R, 0> $in fn(x R) R
 ```
 
-#### 17. Named Theorems With `thm` And `by thm`
+#### 17. Named Theorems With `thm`, `release thm`, And Selected `by thm`
 
 Purpose: store a reusable theorem and instantiate it later.
 
@@ -3950,7 +3950,7 @@ thm add_zero_right:
         x + 0 = x
     x + 0 = x
 
-by thm add_zero_right(2)
+release thm add_zero_right(2)
 2 + 0 = 2
 ```
 
@@ -4087,7 +4087,7 @@ struct Point:
 prop lies_on_x_axis(p &Point):
     p.y = 0
 
-by thm struct_member((0, 0), &Point)
+release thm struct_member((0, 0), &Point)
 have origin &Point = (0, 0)
 
 origin.x = 0
@@ -4115,7 +4115,7 @@ struct PointedOperation<s nonempty_set>:
 
 by def $HasAdditiveIdentity(Z, fn(x, y Z) Z {x + y}, 0)
 
-by thm struct_member((fn(x, y Z) Z {x + y}, 0), &PointedOperation<Z>)
+release thm struct_member((fn(x, y Z) Z {x + y}, 0), &PointedOperation<Z>)
 ```
 
 ### 3. A Template Family
@@ -4252,7 +4252,7 @@ thm group_inv_inv:
     g.op(g.inv(a), g.inv(g.inv(a))) = g.identity
     g.op(g.inv(a), a) = g.identity
     g.op(g.inv(a), g.inv(g.inv(a))) = g.op(g.inv(a), a)
-    by thm group_left_cancel(s, g, g.inv(a), g.inv(g.inv(a)), a)
+    release thm group_left_cancel(s, g, g.inv(a), g.inv(g.inv(a)), a)
 ```
 
 The quotient set above is obtained by unique existence. The two named theorems
@@ -4336,7 +4336,7 @@ struct Field<s nonempty_set>:
 
 by def $is_group(Z, fn(x Z) Z {(-x)}, fn(x, y Z) Z {x + y}, 0)
 by def $is_abelian_group(Z, fn(x Z) Z {(-x)}, fn(x, y Z) Z {x + y}, 0)
-by thm struct_member((fn(x Z) Z {(-x)}, fn(x, y Z) Z {x + y}, 0), &AbelianGroup<Z>)
+release thm struct_member((fn(x Z) Z {(-x)}, fn(x, y Z) Z {x + y}, 0), &AbelianGroup<Z>)
 have Z_additive_group &AbelianGroup<Z> = (fn(x Z) Z {(-x)}, fn(x, y Z) Z {x + y}, 0)
 ```
 

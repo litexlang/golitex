@@ -13,11 +13,11 @@ thm left_distrib:
     ? forall a, b, c R:
         a * (b + c) = a * b + a * c
 
-by thm add_comm(2, 3)
+release thm add_comm(2, 3)
 2 + 3 = 3 + 2
 
-by thm zero_add(5)
+release thm zero_add(5)
 0 + 5 = 5
 
-by thm left_distrib(2, 3, 4)
+release thm left_distrib(2, 3, 4)
 2 * (3 + 4) = 2 * 3 + 2 * 4

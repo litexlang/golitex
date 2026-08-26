@@ -41,6 +41,13 @@ impl StmtResultToLeanCompiler {
     fn compile_success_stmt_result(&mut self, success: &SuccessStmtResult) -> Result<(), String> {
         match success {
             SuccessStmtResult::Fact(result) => self.compile_fact_stmt_result_to_lean_source(result),
+            SuccessStmtResult::ReleaseThmStmt(result) => {
+                if self.compile_litex_theorem_instantiation_stmt_result_to_lean_source(result)? {
+                    Ok(())
+                } else {
+                    self.unsupported_success_stmt_result(success)
+                }
+            }
             SuccessStmtResult::UnsafeStmt(SuccessUnsafeStmtResult::TrustStmt(result)) => {
                 if self.compile_trust_stmt_result_to_lean_source(result)? {
                     Ok(())
@@ -191,14 +198,8 @@ impl StmtResultToLeanCompiler {
                         self.unsupported_success_stmt_result(success)
                     }
                 }
-                SuccessByStmtResult::ByThmStmt(result) => {
-                    if self
-                        .compile_litex_theorem_instantiation_stmt_result_to_lean_source(result)?
-                    {
-                        Ok(())
-                    } else {
-                        self.unsupported_success_stmt_result(success)
-                    }
+                SuccessByStmtResult::ByThmStmt(_) => {
+                    self.unsupported_success_stmt_result(success)
                 }
                 SuccessByStmtResult::ByReflexivePropStmt(result) => self
                     .compile_registered_predicate_property_stmt_result_to_lean_source(

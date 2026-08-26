@@ -68,7 +68,7 @@ fn definition_graph_records_selection_certificate_and_actual_trust_source() {
 #[test]
 fn definition_graph_proof_edges_follow_actual_by_theorem_results() {
     let output = definition_graph_output(
-            "abstract_prop P(x)\naxiom base_p:\n    ? forall x R:\n        $P(x)\nthm derived_p:\n    ? forall x R:\n        $P(x)\n    by thm base_p(x)\n",
+            "abstract_prop P(x)\naxiom base_p:\n    ? forall x R:\n        $P(x)\nthm derived_p:\n    ? forall x R:\n        $P(x)\n    release thm base_p(x)\n",
         );
 
     assert!(
@@ -199,7 +199,7 @@ fn definition_graph_project_proof_sources_normalize_local_qualifier() {
     let target = fixture.path("target.lit");
     write_file(
             &target,
-            "thm local_base:\n    ? forall x R:\n        x = x\nthm local_derived:\n    ? forall x R:\n        x = x\n    by thm local_base(x)\n",
+            "thm local_base:\n    ? forall x R:\n        x = x\nthm local_derived:\n    ? forall x R:\n        x = x\n    release thm local_base(x)\n",
         );
     let target_string = target.to_str().expect("fixture path is UTF-8").to_string();
     let output = std::thread::Builder::new()

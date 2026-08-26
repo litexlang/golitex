@@ -1111,7 +1111,7 @@ impl StmtResultToLeanCompiler {
     /// retained by this statement Result.
     pub(super) fn compile_litex_theorem_instantiation_stmt_result_to_lean_source(
         &mut self,
-        result: &SuccessByThmStmtResult,
+        result: &SuccessReleaseThmStmtResult,
     ) -> Result<bool, String> {
         let Some(conclusions) =
             self.construct_lean_proofs_from_litex_theorem_instantiation_stmt_result(result)?
@@ -1121,7 +1121,7 @@ impl StmtResultToLeanCompiler {
         for conclusion in conclusions {
             let fact_id = conclusion.retained_fact_id.ok_or_else(|| {
                 format!(
-                    "top-level by-thm conclusion `{}` has no retained FactId",
+                    "top-level release-thm conclusion `{}` has no retained FactId",
                     conclusion.fact
                 )
             })?;
@@ -1147,14 +1147,13 @@ impl StmtResultToLeanCompiler {
     /// remain local to another proof layer.
     pub(super) fn construct_lean_proofs_from_litex_theorem_instantiation_stmt_result(
         &mut self,
-        result: &SuccessByThmStmtResult,
+        result: &SuccessReleaseThmStmtResult,
     ) -> Result<Option<Vec<CompiledLitexTheoremInstantiationConclusionProofBody>>, String> {
         let Some(verification) = &result.verification else {
             return Ok(None);
         };
         if verification.theorem_source != "litex"
             || verification.mode != "release_all"
-            || result.statement.selected_facts.is_some()
             || verification.selected_fact.is_some()
             || !verification.temporary_then_facts.is_empty()
             || !verification.requirement_roles.is_empty()
@@ -1171,19 +1170,19 @@ impl StmtResultToLeanCompiler {
                     .map(ToString::to_string)
                     .collect::<Vec<_>>()
         {
-            return Err("by-thm Result changed its theorem name or argument order".into());
+            return Err("release-thm Result changed its theorem name or argument order".into());
         }
         let source_fact_id = verification
             .source_fact_id
-            .ok_or_else(|| "by-thm Result has no source theorem FactId".to_string())?;
+            .ok_or_else(|| "release-thm Result has no source theorem FactId".to_string())?;
         let source_fact = self
             .environment_stack
             .fact_propositions
             .get(&source_fact_id)
             .cloned()
-            .ok_or_else(|| format!("by-thm cited unavailable source FactId `{source_fact_id}`"))?;
+            .ok_or_else(|| format!("release-thm cited unavailable source FactId `{source_fact_id}`"))?;
         let Fact::ForallFact(source_forall) = &source_fact else {
-            return Err("by-thm source FactId does not identify a forall fact".into());
+            return Err("release-thm source FactId does not identify a forall fact".into());
         };
         let source_parameters = source_forall
             .typed_parameters
@@ -1199,7 +1198,7 @@ impl StmtResultToLeanCompiler {
             || source_forall.then_facts.len() != verification.direct_conclusions.len()
             || verification.direct_conclusions.is_empty()
         {
-            return Err("by-thm Result changed its source theorem arity".into());
+            return Err("release-thm Result changed its source theorem arity".into());
         }
         let source_substitutions = source_parameters
             .iter()
@@ -1207,7 +1206,7 @@ impl StmtResultToLeanCompiler {
             .map(|((binding, _), argument)| (binding.id().substitution_key(), argument.clone()))
             .collect::<HashMap<_, _>>();
         let Some(argument_verification) = &verification.argument_verification else {
-            return Err("by-thm Result has no argument verification children".into());
+            return Err("release-thm Result has no argument verification children".into());
         };
         if !argument_verification.infers.is_empty()
             || argument_verification.checks.len() != source_parameters.len()
@@ -1223,7 +1222,7 @@ impl StmtResultToLeanCompiler {
         if verification.stored_then_facts != direct_conclusion_strings
             || verification.parent_stored_facts != direct_conclusion_strings
         {
-            return Err("by-thm Result changed its direct conclusion order".into());
+            return Err("release-thm Result changed its direct conclusion order".into());
         }
         if result
             .common
@@ -1236,7 +1235,7 @@ impl StmtResultToLeanCompiler {
             return Ok(None);
         }
         if result.common.infers.store_fact_outputs.len() != verification.direct_conclusions.len() {
-            return Err("by-thm Result changed its direct conclusion store count".into());
+            return Err("release-thm Result changed its direct conclusion store count".into());
         }
         let conclusion_fact_ids = result
             .common
@@ -1247,7 +1246,7 @@ impl StmtResultToLeanCompiler {
             .map(|(stored, expected)| {
                 if stored.itself_and_why_itself_is_stored.0.to_string() != expected.to_string() {
                     return Err(
-                        "by-thm Result changed a direct conclusion store proposition".into(),
+                        "release-thm Result changed a direct conclusion store proposition".into(),
                     );
                 }
                 Ok(stored.fact_id)
@@ -1259,7 +1258,7 @@ impl StmtResultToLeanCompiler {
             .fact_names
             .get(&source_fact_id)
             .cloned()
-            .ok_or_else(|| format!("by-thm source FactId `{source_fact_id}` has no Lean name"))?;
+            .ok_or_else(|| format!("release-thm source FactId `{source_fact_id}` has no Lean name"))?;
         let mut application_parts = vec![theorem_name];
         let mut source_parameter_rendering_aliases = Vec::with_capacity(source_parameters.len());
         for (parameter_index, (((_, parameter_type), argument), check)) in source_parameters
@@ -1269,7 +1268,7 @@ impl StmtResultToLeanCompiler {
             .enumerate()
         {
             let parameter_set = parameter_set(parameter_type)
-                .map_err(|error| format!("by-thm parameter {parameter_index}: {error}"))?;
+                .map_err(|error| format!("release-thm parameter {parameter_index}: {error}"))?;
             let native_integer_parameter =
                 matches!(parameter_set, Obj::StandardSet(StandardSet::Z));
             let rendered_argument = render_obj(argument, &self.environment_stack)?;
@@ -1279,13 +1278,13 @@ impl StmtResultToLeanCompiler {
             );
             let factual_check = check
                 .factual_success()
-                .ok_or_else(|| format!("by-thm argument check {parameter_index} is not factual"))?;
+                .ok_or_else(|| format!("release-thm argument check {parameter_index} is not factual"))?;
             if render_fact(&factual_check.fact(), &self.environment_stack)?
                 != expected_parameter_fact
                 || !factual_check.store.infers.is_empty()
             {
                 return Err(format!(
-                    "by-thm argument check {parameter_index} changed its parameter obligation"
+                    "release-thm argument check {parameter_index} changed its parameter obligation"
                 ));
             }
             let Some(parameter_proof) =
@@ -1319,7 +1318,7 @@ impl StmtResultToLeanCompiler {
         // the Runtime's visible-definition frame even though compilation does
         // not execute or search for any proof. Give this isolated structural
         // instantiator the same mandatory empty frame as an ordinary source.
-        instantiator.start_isolated_source("stmt-result-to-lean by-thm projection");
+        instantiator.start_isolated_source("stmt-result-to-lean release-thm projection");
         for (domain_index, ((source_domain, retained_domain), check)) in source_forall
             .dom_facts
             .iter()
@@ -1336,23 +1335,23 @@ impl StmtResultToLeanCompiler {
                 )
                 .map_err(|error| {
                     format!(
-                        "by-thm could not instantiate domain {domain_index}: {}",
+                        "release-thm could not instantiate domain {domain_index}: {}",
                         error.trace_message()
                     )
                 })?;
             if expected_domain.to_string() != retained_domain.to_string() {
                 return Err(format!(
-                    "by-thm domain {domain_index} changed under exact parameter substitution"
+                    "release-thm domain {domain_index} changed under exact parameter substitution"
                 ));
             }
             let factual_check = check
                 .factual_success()
-                .ok_or_else(|| format!("by-thm domain check {domain_index} is not factual"))?;
+                .ok_or_else(|| format!("release-thm domain check {domain_index} is not factual"))?;
             if factual_check.fact().to_string() != retained_domain.to_string()
                 || !factual_check.store.infers.is_empty()
             {
                 return Err(format!(
-                    "by-thm domain check {domain_index} changed its retained obligation"
+                    "release-thm domain check {domain_index} changed its retained obligation"
                 ));
             }
             let Some(domain_proof) =
@@ -1426,7 +1425,7 @@ impl StmtResultToLeanCompiler {
                     )
                     .map_err(|error| {
                         format!(
-                            "by-thm could not specialize a WD application: {}",
+                            "release-thm could not specialize a WD application: {}",
                             error.trace_message()
                         )
                     })?;
@@ -1440,7 +1439,7 @@ impl StmtResultToLeanCompiler {
                             )
                             .map_err(|error| {
                                 format!(
-                                    "by-thm could not specialize an anonymous application head: {}",
+                                    "release-thm could not specialize an anonymous application head: {}",
                                     error.trace_message()
                                 )
                             })?,
@@ -1455,7 +1454,7 @@ impl StmtResultToLeanCompiler {
                         )
                         .map_err(|error| {
                             format!(
-                                "by-thm could not specialize an application prefix: {}",
+                                "release-thm could not specialize an application prefix: {}",
                                 error.trace_message()
                             )
                         })?;
@@ -1469,7 +1468,7 @@ impl StmtResultToLeanCompiler {
                                 )
                                 .map_err(|error| {
                                     format!(
-                                        "by-thm could not specialize an application return set: {}",
+                                        "release-thm could not specialize an application return set: {}",
                                         error.trace_message()
                                     )
                                 })?,
@@ -1485,7 +1484,7 @@ impl StmtResultToLeanCompiler {
                             )
                             .map_err(|error| {
                                 format!(
-                                    "by-thm could not specialize an application WD requirement: {}",
+                                    "release-thm could not specialize an application WD requirement: {}",
                                     error.trace_message()
                                 )
                             })?;
@@ -1501,7 +1500,7 @@ impl StmtResultToLeanCompiler {
                     )
                     .map_err(|error| {
                         format!(
-                            "by-thm could not specialize an Iteration WD owner: {}",
+                            "release-thm could not specialize an Iteration WD owner: {}",
                             error.trace_message()
                         )
                     })?;
@@ -1545,13 +1544,13 @@ impl StmtResultToLeanCompiler {
                 )
                 .map_err(|error| {
                     format!(
-                        "by-thm could not project conclusion {conclusion_index} WD provenance: {}",
+                        "release-thm could not project conclusion {conclusion_index} WD provenance: {}",
                         error.trace_message()
                     )
                 })?;
             if projected_conclusion.to_string() != conclusion.to_string() {
                 return Err(format!(
-                    "by-thm projected conclusion {conclusion_index} changed its proposition"
+                    "release-thm projected conclusion {conclusion_index} changed its proposition"
                 ));
             }
             let proposition = render_fact(&projected_conclusion, &conclusion_rendering_context)?;
@@ -1653,45 +1652,45 @@ impl StmtResultToLeanCompiler {
                 .compile_fact_stmt_result_as_local_proof_step(factual, proof_step_index)
                 .map(|line| line.map(|line| vec![line]));
         }
+        if let StmtResult::Success(SuccessStmtResult::ReleaseThmStmt(result)) = result {
+            let Some(conclusions) = self
+                .construct_lean_proofs_from_litex_theorem_instantiation_stmt_result(result)?
+            else {
+                return Ok(None);
+            };
+            let multiple_outputs = conclusions.len() > 1;
+            let mut lines = Vec::with_capacity(conclusions.len());
+            for (output_index, conclusion) in conclusions.into_iter().enumerate() {
+                let fact_id = conclusion.retained_fact_id.ok_or_else(|| {
+                    format!(
+                        "local release-thm conclusion `{}` has no retained FactId",
+                        conclusion.fact
+                    )
+                })?;
+                let name = if multiple_outputs {
+                    format!("__step{proof_step_index}_{}", output_index + 1)
+                } else {
+                    format!("__step{proof_step_index}")
+                };
+                self.environment_stack
+                    .fact_names
+                    .insert(fact_id, name.clone());
+                self.environment_stack
+                    .fact_propositions
+                    .insert(fact_id, conclusion.fact);
+                lines.push(format!(
+                    "have {name} : {} := by\n  exact {}",
+                    conclusion.proposition, conclusion.proof_expression
+                ));
+            }
+            return Ok(Some(lines));
+        }
         if let StmtResult::Success(SuccessStmtResult::By(by_result)) = result {
             if let SuccessByStmtResult::ByDefStmt(result) = by_result {
                 return self.compile_by_definition_stmt_result_as_local_proof_steps(
                     result,
                     proof_step_index,
                 );
-            }
-            if let SuccessByStmtResult::ByThmStmt(result) = by_result {
-                let Some(conclusions) = self
-                    .construct_lean_proofs_from_litex_theorem_instantiation_stmt_result(result)?
-                else {
-                    return Ok(None);
-                };
-                let multiple_outputs = conclusions.len() > 1;
-                let mut lines = Vec::with_capacity(conclusions.len());
-                for (output_index, conclusion) in conclusions.into_iter().enumerate() {
-                    let fact_id = conclusion.retained_fact_id.ok_or_else(|| {
-                        format!(
-                            "local by-thm conclusion `{}` has no retained FactId",
-                            conclusion.fact
-                        )
-                    })?;
-                    let name = if multiple_outputs {
-                        format!("__step{proof_step_index}_{}", output_index + 1)
-                    } else {
-                        format!("__step{proof_step_index}")
-                    };
-                    self.environment_stack
-                        .fact_names
-                        .insert(fact_id, name.clone());
-                    self.environment_stack
-                        .fact_propositions
-                        .insert(fact_id, conclusion.fact);
-                    lines.push(format!(
-                        "have {name} : {} := by\n  exact {}",
-                        conclusion.proposition, conclusion.proof_expression
-                    ));
-                }
-                return Ok(Some(lines));
             }
             if let SuccessByStmtResult::ByEnumerateFiniteSetStmt(result) = by_result {
                 let Some(proof) =

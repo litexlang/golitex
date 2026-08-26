@@ -82,7 +82,7 @@ trust forall target_element X:
     exist! preimage_index closed_range(1, finite_set_size(X)) st {g(preimage_index) = target_element}
 trust forall target_element X:
     exist! preimage_index closed_range(1, finite_set_size(X)) st {h(preimage_index) = target_element}
-by thm finite_set_sum_substitution(finite_set_sum(X, f), finite_set_sum(closed_range(1, finite_set_size(X)), fn(enum_index closed_range(1, finite_set_size(X))) R {f(g(enum_index))}))
+release thm finite_set_sum_substitution(finite_set_sum(X, f), finite_set_sum(closed_range(1, finite_set_size(X)), fn(enum_index closed_range(1, finite_set_size(X))) R {f(g(enum_index))}))
 sum(1, finite_set_size(X), fn(left_index closed_range(1, finite_set_size(X))) R {f(g(left_index))}) = sum(1, finite_set_size(X), fn(right_index closed_range(1, finite_set_size(X))) R {f(h(right_index))})
 "#;
 
@@ -257,7 +257,7 @@ have X finite_set
 trust finite_set_size(X) >= 1
 have f fn(element X) R
 have g fn(enum_index closed_range(1, finite_set_size(X))) X
-by thm finite_set_sum_substitution(finite_set_sum(X, f), finite_set_sum(closed_range(1, finite_set_size(X)), fn(enum_index closed_range(1, finite_set_size(X))) R {f(g(enum_index))}))
+release thm finite_set_sum_substitution(finite_set_sum(X, f), finite_set_sum(closed_range(1, finite_set_size(X)), fn(enum_index closed_range(1, finite_set_size(X))) R {f(g(enum_index))}))
 "#,
                 ),
                 (

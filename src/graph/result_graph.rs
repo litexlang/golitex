@@ -1897,6 +1897,7 @@ fn success_stmt_role(success: &SuccessStmtResult) -> &'static str {
             SuccessDefinitionStmtResult::AxiomStmt(_) => "AxiomStmt",
             SuccessDefinitionStmtResult::DefStrategyStmt(_) => "DefStrategyStmt",
         },
+        SuccessStmtResult::ReleaseThmStmt(_) => "ReleaseThmStmt",
         SuccessStmtResult::By(_) => "ByStmt",
         SuccessStmtResult::Witness(_) => "WitnessStmt",
         SuccessStmtResult::ProofBlock(_) => "ProofBlockStmt",

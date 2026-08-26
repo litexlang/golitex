@@ -398,6 +398,7 @@ pub use crate::result::{
     SuccessLetObjStmtResult, SuccessObtainObjFromAtomicFactResult,
     SuccessObtainObjFromExistFactResult, SuccessObtainObjFromThmResult,
     SuccessProofBlockStmtResult, SuccessRecursiveObjWellDefinedResult,
+    SuccessReleaseThmStmtResult,
     SuccessReuseObjWellDefinedResult, SuccessReusedImportResult,
     SuccessReusedTemplateInstanceResult, SuccessSketchProofResult, SuccessSketchStmtResult,
     SuccessStmtCommonResult, SuccessStoreFactResult, SuccessTemplateInstantiationResult,
@@ -547,7 +548,7 @@ pub use crate::stmt::ByDefStmt;
 pub use crate::stmt::ByEnumerateRangeStmt;
 pub use crate::stmt::ByStmt;
 pub use crate::stmt::ByStructDefStmt;
-pub use crate::stmt::ByThmStmt;
+pub use crate::stmt::{ByThmStmt, ReleaseThmStmt};
 pub use crate::stmt::CommandStmt;
 pub use crate::stmt::DefStrategyStmt;
 pub use crate::stmt::DefStructStmt;

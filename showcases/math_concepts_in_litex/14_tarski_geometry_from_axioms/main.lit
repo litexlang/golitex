@@ -540,7 +540,7 @@ thm isosceles_triangle_has_equal_base_angles:
         $are_segments_congruent(Point, Cong, b, a, b, c)
         =>:
             $are_angles_congruent(Point, Bet, Cong, b, a, c, b, c, a)
-    by thm noncollinear_points_are_pairwise_distinct(Point, Bet, Cong, lower_a, lower_b, lower_c, a, b, c)
+    release thm noncollinear_points_are_pairwise_distinct(Point, Bet, Cong, lower_a, lower_b, lower_c, a, b, c)
     b != a
     c != a
     by thm segment_congruence_endpoint_commutative(Point, Bet, Cong, lower_a, lower_b, lower_c, b, a, b, c) => $are_segments_congruent(Point, Cong, a, b, c, b)
@@ -561,7 +561,7 @@ thm isosceles_triangle_has_equal_base_angles:
     by def $is_between(Point, Bet, c, a, f_ext)
     by def $are_segments_congruent(Point, Cong, a, f_ext, a, c)
 
-    by thm opposite_extensions_preserve_distances(Point, Bet, Cong, lower_a, lower_b, lower_c, a, b, c, c_ext, f_ext)
+    release thm opposite_extensions_preserve_distances(Point, Bet, Cong, lower_a, lower_b, lower_c, a, b, c, c_ext, f_ext)
     by thm segment_congruence_symmetric(Point, Bet, Cong, lower_a, lower_b, lower_c, a, b, c, b) => $are_segments_congruent(Point, Cong, c, b, a, b)
     by thm segment_congruence_symmetric(Point, Bet, Cong, lower_a, lower_b, lower_c, b, d_ext, a, b) => $are_segments_congruent(Point, Cong, a, b, b, d_ext)
     by thm segment_congruence_transitive(Point, Bet, Cong, lower_a, lower_b, lower_c, b, a_ext, c, b, a, b) => $are_segments_congruent(Point, Cong, b, a_ext, a, b)
@@ -621,7 +621,7 @@ thm inner_five_segment:
             a2 = b2
             by def $are_segments_congruent(Point, Cong, b, d, b2, d2)
         case a != c:
-            by thm point_has_strict_extension(Point, Bet, Cong, lower_a, lower_b, lower_c, a, c)
+            release thm point_has_strict_extension(Point, Bet, Cong, lower_a, lower_b, lower_c, a, c)
             obtain extended_c from exist selected Point st {$is_between(Point, Bet, a, c, selected), c != selected}
             obtain extended_c2 from exist selected Point st {(a2, c2, selected) $in Bet, (c2, selected, c, extended_c) $in Cong}
             by def $is_between(Point, Bet, a2, c2, extended_c2)
@@ -690,7 +690,7 @@ thm triangle_congruence_sss_gives_angles:
         $are_triangles_congruent(Point, Cong, a, b, c, a2, b2, c2)
         =>:
             $are_angles_congruent(Point, Bet, Cong, a, b, c, a2, b2, c2)
-    by thm triangle_congruence_has_three_sides(Point, Cong, a, b, c, a2, b2, c2)
+    release thm triangle_congruence_has_three_sides(Point, Cong, a, b, c, a2, b2, c2)
     claim:
         ? a2 != b2
         by contra:
@@ -962,7 +962,7 @@ thm triangle_congruence_symmetric:
         $are_triangles_congruent(Point, Cong, a, b, c, a2, b2, c2)
         =>:
             $are_triangles_congruent(Point, Cong, a2, b2, c2, a, b, c)
-    by thm triangle_congruence_has_three_sides(Point, Cong, a, b, c, a2, b2, c2)
+    release thm triangle_congruence_has_three_sides(Point, Cong, a, b, c, a2, b2, c2)
     by thm segment_congruence_symmetric(Point, Bet, Cong, lower_a, lower_b, lower_c, a, b, a2, b2) => $are_segments_congruent(Point, Cong, a2, b2, a, b)
     by thm segment_congruence_symmetric(Point, Bet, Cong, lower_a, lower_b, lower_c, a, c, a2, c2) => $are_segments_congruent(Point, Cong, a2, c2, a, c)
     by thm segment_congruence_symmetric(Point, Bet, Cong, lower_a, lower_b, lower_c, b, c, b2, c2) => $are_segments_congruent(Point, Cong, b2, c2, b, c)
@@ -975,8 +975,8 @@ thm triangle_congruence_transitive:
         $are_triangles_congruent(Point, Cong, a2, b2, c2, a3, b3, c3)
         =>:
             $are_triangles_congruent(Point, Cong, a, b, c, a3, b3, c3)
-    by thm triangle_congruence_has_three_sides(Point, Cong, a, b, c, a2, b2, c2)
-    by thm triangle_congruence_has_three_sides(Point, Cong, a2, b2, c2, a3, b3, c3)
+    release thm triangle_congruence_has_three_sides(Point, Cong, a, b, c, a2, b2, c2)
+    release thm triangle_congruence_has_three_sides(Point, Cong, a2, b2, c2, a3, b3, c3)
     by thm segment_congruence_transitive(Point, Bet, Cong, lower_a, lower_b, lower_c, a, b, a2, b2, a3, b3) => $are_segments_congruent(Point, Cong, a, b, a3, b3)
     by thm segment_congruence_transitive(Point, Bet, Cong, lower_a, lower_b, lower_c, a, c, a2, c2, a3, c3) => $are_segments_congruent(Point, Cong, a, c, a3, c3)
     by thm segment_congruence_transitive(Point, Bet, Cong, lower_a, lower_b, lower_c, b, c, b2, c2, b3, c3) => $are_segments_congruent(Point, Cong, b, c, b3, c3)
@@ -998,7 +998,7 @@ thm out_on_ray_symmetric:
         $is_out_on_ray(Point, Bet, vertex, first_point, second_point)
         =>:
             $is_out_on_ray(Point, Bet, vertex, second_point, first_point)
-    by thm out_on_ray_is_nondegenerate_and_ordered(Point, Bet, vertex, first_point, second_point)
+    release thm out_on_ray_is_nondegenerate_and_ordered(Point, Bet, vertex, first_point, second_point)
     by cases:
         ? $is_out_on_ray(Point, Bet, vertex, second_point, first_point)
         case $is_between(Point, Bet, vertex, first_point, second_point):
@@ -1013,7 +1013,7 @@ thm out_on_ray_implies_collinear:
         $is_out_on_ray(Point, Bet, vertex, first_point, second_point)
         =>:
             $are_collinear(Point, Bet, vertex, first_point, second_point)
-    by thm out_on_ray_is_nondegenerate_and_ordered(Point, Bet, vertex, first_point, second_point)
+    release thm out_on_ray_is_nondegenerate_and_ordered(Point, Bet, vertex, first_point, second_point)
     by cases:
         ? $are_collinear(Point, Bet, vertex, first_point, second_point)
         case $is_between(Point, Bet, vertex, first_point, second_point):
@@ -1040,6 +1040,6 @@ thm perpendicular_lines_are_nondegenerate:
         =>:
             line1_a != line1_b
             line2_a != line2_b
-    by thm perpendicular_lines_have_intersection(Point, Bet, Cong, line1_a, line1_b, line2_a, line2_b)
+    release thm perpendicular_lines_have_intersection(Point, Bet, Cong, line1_a, line1_b, line2_a, line2_b)
     obtain intersection from exist selected Point st {$is_perpendicular_at(Point, Bet, Cong, selected, line1_a, line1_b, line2_a, line2_b)}
-    by thm perpendicular_at_has_nondegenerate_lines_and_incidence(Point, Bet, Cong, intersection, line1_a, line1_b, line2_a, line2_b)
+    release thm perpendicular_at_has_nondegenerate_lines_and_incidence(Point, Bet, Cong, intersection, line1_a, line1_b, line2_a, line2_b)

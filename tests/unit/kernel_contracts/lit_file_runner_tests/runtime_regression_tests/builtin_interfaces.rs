@@ -17,23 +17,23 @@ fn all_explicit_builtin_theorem_interfaces_succeed() {
     run_with_large_stack("all_explicit_builtin_theorem_interfaces", || {
         let source = r#"
 have q Q
-by thm rational_has_unique_reduced_fraction(q)
+release thm rational_has_unique_reduced_fraction(q)
 
 by def {1} $subset {1, 2}
-by thm subset_of_finite_set_is_finite({1}, {1, 2})
-by thm finite_set_has_bijective_index({})
+release thm subset_of_finite_set_is_finite({1}, {1, 2})
+release thm finite_set_has_bijective_index({})
 
-by thm fn_set_member(fn(x R) R {x}, fn(y R) R)
-by thm set_builder_member(1, {x R: x > 0})
+release thm fn_set_member(fn(x R) R {x}, fn(y R) R)
+release thm set_builder_member(1, {x R: x > 0})
 
 have fn circle(r R+) power_set(cart(R, R)) = {x cart(R, R): x[1] ^ 2 + x[2] ^ 2 = r ^ 2}
-by thm defined_set_member((3, 4), circle(5))
+release thm defined_set_member((3, 4), circle(5))
 
 struct Point:
     first R
     second R
-by thm struct_member((1, 2), &Point)
-by thm cart_member_from_coordinates((1, 2), cart(R, R))
+release thm struct_member((1, 2), &Point)
+release thm cart_member_from_coordinates((1, 2), cart(R, R))
 
 have I set
 have S nonempty_set
@@ -46,41 +46,41 @@ trust forall X S:
     $is_nonempty_set(X)
 trust forall alpha I:
     $is_nonempty_set(g(alpha))
-by thm general_cart_member(f, general_cart(I, S, g))
-by thm general_cart_nonempty_by_choice_from_family(general_cart(I, S, g))
-by thm general_cart_nonempty_by_choice_from_pointwise(general_cart(I, S, g))
+release thm general_cart_member(f, general_cart(I, S, g))
+release thm general_cart_nonempty_by_choice_from_family(general_cart(I, S, g))
+release thm general_cart_nonempty_by_choice_from_pointwise(general_cart(I, S, g))
 
-by thm sum_le_sum_from_pointwise(sum(1, 2, fn(k Z) R {k}), sum(1, 2, fn(k Z) R {k}))
+release thm sum_le_sum_from_pointwise(sum(1, 2, fn(k Z) R {k}), sum(1, 2, fn(k Z) R {k}))
 trust forall k {1, 2}:
     k <= k
-by thm finite_set_sum_le_from_pointwise(finite_set_sum({1, 2}, fn(k {1, 2}) R {k}), finite_set_sum({1, 2}, fn(k {1, 2}) R {k}))
+release thm finite_set_sum_le_from_pointwise(finite_set_sum({1, 2}, fn(k {1, 2}) R {k}), finite_set_sum({1, 2}, fn(k {1, 2}) R {k}))
 have fn nonnegative_term(k {1, 2}) R = k
 trust forall k {1, 2}:
     0 <= nonnegative_term(k)
-by thm finite_set_summand_le_sum(nonnegative_term(1), finite_set_sum({1, 2}, nonnegative_term))
+release thm finite_set_summand_le_sum(nonnegative_term(1), finite_set_sum({1, 2}, nonnegative_term))
 have tuple t for k <= 2, t[k] = k
-by thm tuple_equal_from_coordinates(t, (1, 2))
+release thm tuple_equal_from_coordinates(t, (1, 2))
 
 have X finite_set = {1}
 have Y finite_set = {1}
 have fn value(x X) R = x
 have fn index(y Y) X = y
 trust $bijective(Y, X, index)
-by thm finite_set_sum_substitution(finite_set_sum(X, value), finite_set_sum(Y, fn(y Y) R {value(index(y))}))
+release thm finite_set_sum_substitution(finite_set_sum(X, value), finite_set_sum(Y, fn(y Y) R {value(index(y))}))
 
 have fn literal_value(x {1}) R = x
 have fn enum(k closed_range(1, finite_set_size({1}))) {1} = 1
 trust finite_set_size({1}) >= 1
 trust $bijective(closed_range(1, finite_set_size({1})), {1}, enum)
-by thm sum_over_bijective_finite_set_enumerations(sum(1, finite_set_size({1}), fn(k closed_range(1, finite_set_size({1}))) R {literal_value(enum(k))}), sum(1, finite_set_size({1}), fn(k closed_range(1, finite_set_size({1}))) R {literal_value(enum(k))}))
+release thm sum_over_bijective_finite_set_enumerations(sum(1, finite_set_size({1}), fn(k closed_range(1, finite_set_size({1}))) R {literal_value(enum(k))}), sum(1, finite_set_size({1}), fn(k closed_range(1, finite_set_size({1}))) R {literal_value(enum(k))}))
 
-by thm finite_set_has_bijective_index({1})
+release thm finite_set_has_bijective_index({1})
 obtain builtin_enum from exist builtin_enum finite_seq({1}, finite_set_size({1})) st {$bijective(closed_range(1, finite_set_size({1})), {1}, builtin_enum)}
 have indexed_value {1}
 exist! indexed_position closed_range(1, finite_set_size({1})) st {builtin_enum(indexed_position) = indexed_value}
 have fn range_index(zero_index {0}) closed_range(1, finite_set_size({1})) = 1
 builtin_enum(range_index(0)) $in {1}
-by thm sum_over_bijective_finite_set_enumerations(sum(1, finite_set_size({1}), fn(k closed_range(1, finite_set_size({1}))) R {literal_value(builtin_enum(k))}), sum(1, finite_set_size({1}), fn(k closed_range(1, finite_set_size({1}))) R {literal_value(builtin_enum(k))}))
+release thm sum_over_bijective_finite_set_enumerations(sum(1, finite_set_size({1}), fn(k closed_range(1, finite_set_size({1}))) R {literal_value(builtin_enum(k))}), sum(1, finite_set_size({1}), fn(k closed_range(1, finite_set_size({1}))) R {literal_value(builtin_enum(k))}))
 "#;
         let (_, succeeded, output) = run_source(source, "builtin_theorem_interfaces", true);
         assert!(
@@ -109,47 +109,47 @@ fn builtin_theorem_rejects_arity_shape_and_qualified_names() {
     let cases = [
         (
             "arity",
-            "by thm fn_set_member(1)",
+            "release thm fn_set_member(1)",
             "expects 2 argument(s), but got 1",
         ),
         (
             "shape",
-            "by thm set_builder_member(1, R)",
+            "release thm set_builder_member(1, R)",
             "invalid target shape",
         ),
         (
             "qualified",
-            "by thm M::fn_set_member(fn(x R) R {x}, fn(y R) R)",
+            "release thm M::fn_set_member(fn(x R) R {x}, fn(y R) R)",
             "cannot use keyword as name: fn_set_member",
         ),
         (
             "rational arity",
-            "have q Q\nby thm rational_has_unique_reduced_fraction(q, q)",
+            "have q Q\nrelease thm rational_has_unique_reduced_fraction(q, q)",
             "expects 1 argument(s), but got 2",
         ),
         (
             "qualified rational",
-            "have q Q\nby thm M::rational_has_unique_reduced_fraction(q)",
+            "have q Q\nrelease thm M::rational_has_unique_reduced_fraction(q)",
             "cannot use keyword as name: rational_has_unique_reduced_fraction",
         ),
         (
             "finite subset arity",
-            "by thm subset_of_finite_set_is_finite({1})",
+            "release thm subset_of_finite_set_is_finite({1})",
             "expects 2 argument(s), but got 1",
         ),
         (
             "finite index arity",
-            "by thm finite_set_has_bijective_index({}, {})",
+            "release thm finite_set_has_bijective_index({}, {})",
             "expects 1 argument(s), but got 2",
         ),
         (
             "qualified finite subset",
-            "by thm M::subset_of_finite_set_is_finite({1}, {1})",
+            "release thm M::subset_of_finite_set_is_finite({1}, {1})",
             "cannot use keyword as name: subset_of_finite_set_is_finite",
         ),
         (
             "qualified finite index",
-            "by thm M::finite_set_has_bijective_index({})",
+            "release thm M::finite_set_has_bijective_index({})",
             "cannot use keyword as name: finite_set_has_bijective_index",
         ),
     ];
@@ -174,7 +174,7 @@ exist! p Z, d N+ st {q = p / d, gcd(p, d) = 1}
     );
     assert!(!output.contains("unique rational reduced fraction with positive denominator"));
 
-    let explicit = "have q Q\nby thm rational_has_unique_reduced_fraction(q)";
+    let explicit = "have q Q\nrelease thm rational_has_unique_reduced_fraction(q)";
     let (_, succeeded, output) = run_source(explicit, "rational_reduced_fraction_theorem", false);
     assert!(succeeded, "the explicit theorem should succeed:\n{output}");
     assert!(output.contains("\"theorem\": \"rational_has_unique_reduced_fraction\""));
@@ -188,7 +188,7 @@ fn rational_reduced_fraction_builtin_theorem_requires_a_rational_argument_and_do
     let (setup_succeeded, setup_output) = render_run_output(&runtime, &setup_results, &setup_error);
     assert!(setup_succeeded, "setup should succeed:\n{setup_output}");
 
-    let call = "by thm rational_has_unique_reduced_fraction(x)";
+    let call = "release thm rational_has_unique_reduced_fraction(x)";
     let (results, error) = execute_source(call, &mut runtime);
     let (succeeded, output) = render_run_output(&runtime, &results, &error);
     assert!(!succeeded, "a merely real argument must fail:\n{output}");
@@ -218,7 +218,7 @@ fn finite_set_builtin_theorems_check_requirements_and_do_not_leak() {
     );
 
     let (results, error) = execute_source(
-        "by thm subset_of_finite_set_is_finite(A, B)",
+        "release thm subset_of_finite_set_is_finite(A, B)",
         &mut subset_runtime,
     );
     let (succeeded, output) = render_run_output(&subset_runtime, &results, &error);
@@ -251,7 +251,7 @@ fn finite_set_builtin_theorems_check_requirements_and_do_not_leak() {
     );
 
     let (results, error) = execute_source(
-        "by thm finite_set_has_bijective_index(S)",
+        "release thm finite_set_has_bijective_index(S)",
         &mut index_runtime,
     );
     let (succeeded, output) = render_run_output(&index_runtime, &results, &error);
@@ -269,7 +269,7 @@ fn failed_builtin_theorem_call_does_not_leak_its_conclusion() {
     let mut runtime = Runtime::default();
     runtime.start_isolated_source("builtin_theorem_no_leak");
     let target = "0 $in {x R: x = 1}";
-    let failed_call = format!("by thm set_builder_member(0, {{x R: x = 1}})");
+    let failed_call = format!("release thm set_builder_member(0, {{x R: x = 1}})");
     let (results, error) = execute_source(&failed_call, &mut runtime);
     let (succeeded, output) = render_run_output(&runtime, &results, &error);
     assert!(
@@ -331,7 +331,7 @@ thm local_reflexivity:
     ? forall x R:
         x = x
     x = x
-by thm local_reflexivity(1)
+release thm local_reflexivity(1)
 "#;
     let (_, succeeded, output) = run_source(ordinary, "normal_theorem_fallback", true);
     assert!(

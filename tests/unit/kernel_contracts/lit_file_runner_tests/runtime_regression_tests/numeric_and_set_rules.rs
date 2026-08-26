@@ -3428,9 +3428,9 @@ thm finite_subset_chain:
         B $subset c
         =>:
             $is_finite_set(A)
-    by thm subset_of_finite_set_is_finite(B, c)
+    release thm subset_of_finite_set_is_finite(B, c)
     $is_finite_set(B)
-    by thm subset_of_finite_set_is_finite(A, B)
+    release thm subset_of_finite_set_is_finite(A, B)
     $is_finite_set(A)
 "#;
             let mut finite_chain_runtime = Runtime::default();

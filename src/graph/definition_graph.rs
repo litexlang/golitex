@@ -997,6 +997,22 @@ impl DefinitionGraphBuilder {
                 source_ids.push(source_id);
             }
         }
+        if let SuccessStmtResult::ReleaseThmStmt(result) = success {
+            if let Some(verification) = result.verification.as_ref() {
+                let theorem_name = self.normalized_dependency_name(verification.theorem.as_str());
+                let source_id = definition_id("theorem", theorem_name.as_str());
+                self.ensure_node(
+                    source_id.clone(),
+                    "theorem",
+                    "theorem",
+                    theorem_name.as_str(),
+                    false,
+                    None,
+                    None,
+                );
+                source_ids.push(source_id);
+            }
+        }
         match &success.statement() {
             Stmt::UnsafeStmt(UnsafeStmt::TrustStmt(statement)) => {
                 source_ids.push(self.ensure_direct_trust_source(

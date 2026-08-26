@@ -40,6 +40,9 @@ impl SuccessStmtResult {
         if let Self::By(by) = self {
             by.visit_named_child_results(visitor);
         }
+        if let Self::ReleaseThmStmt(result) = self {
+            result.visit_named_child_results(visitor);
+        }
     }
 
     pub fn try_visit_child_results_mut<E>(
@@ -65,6 +68,9 @@ impl SuccessStmtResult {
         if let Self::By(by) = self {
             by.try_visit_named_child_results_mut(visitor)?;
         }
+        if let Self::ReleaseThmStmt(result) = self {
+            result.try_visit_named_child_results_mut(visitor)?;
+        }
         Ok(())
     }
 
@@ -89,6 +95,7 @@ impl SuccessStmtResult {
             Self::Fact(statement) => statement.fact().into(),
             Self::UnsafeStmt(statement) => statement.statement(),
             Self::Definition(statement) => statement.statement(),
+            Self::ReleaseThmStmt(statement) => statement.statement.clone().into(),
             Self::By(statement) => statement.statement(),
             Self::Witness(statement) => statement.statement(),
             Self::ProofBlock(statement) => statement.statement(),
@@ -115,6 +122,7 @@ impl SuccessStmtResult {
             Self::Fact(_) => None,
             Self::UnsafeStmt(statement) => Some(statement.common()),
             Self::Definition(statement) => statement.common(),
+            Self::ReleaseThmStmt(statement) => Some(&statement.common),
             Self::By(statement) => Some(statement.common()),
             Self::Witness(statement) => Some(statement.common()),
             Self::ProofBlock(statement) => Some(statement.common()),
@@ -127,6 +135,7 @@ impl SuccessStmtResult {
             Self::Fact(_) => None,
             Self::UnsafeStmt(statement) => Some(statement.common_mut()),
             Self::Definition(statement) => statement.common_mut(),
+            Self::ReleaseThmStmt(statement) => Some(&mut statement.common),
             Self::By(statement) => Some(statement.common_mut()),
             Self::Witness(statement) => Some(statement.common_mut()),
             Self::ProofBlock(statement) => Some(statement.common_mut()),
@@ -139,6 +148,7 @@ impl SuccessStmtResult {
             Self::Fact(_) => None,
             Self::UnsafeStmt(statement) => Some(statement.into_common()),
             Self::Definition(statement) => statement.into_common(),
+            Self::ReleaseThmStmt(statement) => Some(statement.common),
             Self::By(statement) => Some(statement.into_common()),
             Self::Witness(statement) => Some(statement.into_common()),
             Self::ProofBlock(statement) => Some(statement.into_common()),
@@ -157,8 +167,59 @@ impl SuccessStmtResult {
             },
             Self::Witness(witness) => witness.into_child_results(),
             Self::By(by) => by.into_child_results(),
+            Self::ReleaseThmStmt(result) => result.into_child_results(),
             _other => Vec::new(),
         }
+    }
+}
+
+impl SuccessReleaseThmStmtResult {
+    fn visit_named_child_results(&self, visitor: &mut impl FnMut(&StmtResult)) {
+        if let Some(verification) = &self.verification {
+            if let Some(arguments) = &verification.argument_verification {
+                for check in &arguments.checks {
+                    visitor(check);
+                }
+            }
+            for check in &verification.requirement_checks {
+                visitor(check);
+            }
+            for check in &verification.domain_checks {
+                visitor(check);
+            }
+        }
+    }
+
+    fn try_visit_named_child_results_mut<E>(
+        &mut self,
+        visitor: &mut impl FnMut(&mut StmtResult) -> Result<(), E>,
+    ) -> Result<(), E> {
+        if let Some(verification) = &mut self.verification {
+            if let Some(arguments) = &mut verification.argument_verification {
+                for check in &mut arguments.checks {
+                    visitor(check)?;
+                }
+            }
+            for check in &mut verification.requirement_checks {
+                visitor(check)?;
+            }
+            for check in &mut verification.domain_checks {
+                visitor(check)?;
+            }
+        }
+        Ok(())
+    }
+
+    fn into_child_results(self) -> Vec<StmtResult> {
+        let mut children = Vec::new();
+        if let Some(verification) = self.verification {
+            if let Some(arguments) = verification.argument_verification {
+                children.extend(arguments.checks);
+            }
+            children.extend(verification.requirement_checks);
+            children.extend(verification.domain_checks);
+        }
+        children
     }
 }
 

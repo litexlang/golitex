@@ -91,6 +91,7 @@ impl Runtime {
             Stmt::Witness(WitnessStmt::WitnessExistFact(s)) => self.exec_witness_exist_fact(s),
             Stmt::Witness(WitnessStmt::WitnessAtomicFact(s)) => self.exec_witness_atomic_fact(s),
             Stmt::Witness(WitnessStmt::WitnessNonemptySet(s)) => self.exec_witness_nonempty_set(s),
+            Stmt::ReleaseThmStmt(s) => self.exec_release_thm_stmt(s),
             Stmt::By(ByStmt::ByCasesStmt(s)) => self.exec_by_cases_stmt(s),
             Stmt::By(ByStmt::ByContraStmt(s)) => self.exec_by_contra_stmt(s),
             Stmt::By(ByStmt::ByEnumerateFiniteSetStmt(s)) => {

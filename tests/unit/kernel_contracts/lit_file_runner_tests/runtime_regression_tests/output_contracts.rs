@@ -959,7 +959,7 @@ axiom axiom_prop_all:
         $axiom_prop(x)
 
 $axiom_prop(2)
-by thm axiom_prop_all(3)
+release thm axiom_prop_all(3)
 $axiom_prop(3)
 "#;
 
@@ -1759,7 +1759,7 @@ thm one_eq_one:
         1 = 1
     1 = 1
 
-by thm one_eq_one()
+release thm one_eq_one()
 
 by cases:
     ? 1 = 1
@@ -1825,8 +1825,8 @@ by cases:
                 run_output
             );
             assert!(
-                run_output.contains("\"kind\": \"ByThmStmt\""),
-                "by thm statements should expose their semantic statement type:\n{}",
+                run_output.contains("\"kind\": \"ReleaseThmStmt\""),
+                "release thm statements should expose their semantic statement type:\n{}",
                 run_output
             );
             assert!(
@@ -1960,7 +1960,7 @@ thm local_one_eq_one:
         1 = 1
     1 = 1
 
-by thm local_one_eq_one()
+release thm local_one_eq_one()
 
 by enumerate finite_set:
     ? forall a {1, 2}:

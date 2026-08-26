@@ -73,7 +73,7 @@ have fn discrete_distance(x, y R) R = 0
 forall x, y R:
     discrete_distance(x, y) = 0
     discrete_distance(x, y) >= 0
-by thm struct_member(discrete_distance, &MetricSpace<R>)
+release thm struct_member(discrete_distance, &MetricSpace<R>)
 have metric &MetricSpace<R> = discrete_distance
 metric.dist(1, 0) = discrete_distance(1, 0) = 0
 forall candidate &MetricSpace<R>, x, y R:
@@ -1283,7 +1283,7 @@ thm default_struct_unfold_reaches_function_prop_and_theorem:
     ? forall G &GroupData<R>:
         consume(unfold G) = G.identity
         $has_group_fields(unfold G)
-    by thm consume_group_fields(unfold G)
+    release thm consume_group_fields(unfold G)
     by def $has_group_fields(unfold G)
 
 have fn first_of_three(x, y, z R) R = x
@@ -2216,7 +2216,7 @@ template<S nonempty_set>:
     have fn selected_self by exist!:
         ? forall x S:
             exist! y S st {y = x}
-        by thm unique_self(S, x)
+        release thm unique_self(S, x)
 
 forall S nonempty_set, x S:
     \selected_self<S>(x) = x
@@ -2251,7 +2251,7 @@ template<S nonempty_set, wrap fn(value S) S>:
     have fn selected_wrapped_self by exist!:
         ? forall x S:
             exist! y S st {wrap(y) = wrap(x)}
-        by thm unique_wrapped_self(S, wrap, x)
+        release thm unique_wrapped_self(S, wrap, x)
 
 forall S nonempty_set, wrap fn(value S) S, x S:
     wrap(\selected_wrapped_self<S, wrap>(x)) = wrap(x)
@@ -3697,9 +3697,9 @@ thm symbolic_template_as_dependent_claim_type:
     claim:
         ? forall point \metric_ball<X, dist>(center, small):
             point $in \metric_ball<X, dist>(center, large)
-        by thm metric_ball_member_implies_distance_lt(X, dist, center, small, point)
+        release thm metric_ball_member_implies_distance_lt(X, dist, center, small, point)
         dist(point, center) < small <= large
-        by thm metric_distance_lt_implies_ball_member(X, dist, center, point, large)
+        release thm metric_distance_lt_implies_ball_member(X, dist, center, point, large)
     trust \metric_ball<X, dist>(center, small) $subset \metric_ball<X, dist>(center, large)
 
 have fn real_distance(x, y R) R = abs(x - y)

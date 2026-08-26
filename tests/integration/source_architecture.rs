@@ -802,6 +802,9 @@ fn cli_dispatch_delegates_execution_and_path_resolution_to_their_owners() {
     assert!(run.contains("pub struct RunOptions"));
     assert!(run.contains("pub struct RunRequest"));
     assert!(run.contains("pub fn run(request: RunRequest)"));
+    assert!(run.contains("runtime.run_code_target("));
+    assert!(run.contains("runtime.run_file_target("));
+    assert!(run.contains("runtime.run_repository_target("));
     assert!(source_execution.contains("pub fn execute_source("));
     assert!(source_execution.contains("self.parse_statement(&mut block)"));
     assert!(!source_execution.contains("pub struct RunRequest"));

@@ -401,7 +401,7 @@ impl SuccessInferResult {
     }
 
     pub fn add_theorem_instantiation(&mut self, fact: &Fact) {
-        self.add_store_fact_output(fact, ByThmStmt::store_reason(), Vec::new());
+        self.add_store_fact_output(fact, ReleaseThmStmt::store_reason(), Vec::new());
     }
 
     pub fn add_fact_by_definition(&mut self, fact: &Fact) {
@@ -531,7 +531,7 @@ impl InferReason {
             }
             InferReason::FunctionDefinition => HaveFnEqualStmt::store_reason().to_string(),
             InferReason::ExistElimination => ObtainObjFromExistFact::store_reason().to_string(),
-            InferReason::TheoremInstantiation => ByThmStmt::store_reason().to_string(),
+            InferReason::TheoremInstantiation => ReleaseThmStmt::store_reason().to_string(),
             InferReason::ByDefinition => "inferred by definition".to_string(),
             InferReason::BuiltinInference(rule) => {
                 format!("inferred by builtin rule `{}`", rule)

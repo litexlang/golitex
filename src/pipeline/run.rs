@@ -104,42 +104,12 @@ pub fn run(request: RunRequest) -> RunOutcome {
         RunTarget::Code {
             source,
             source_label,
-        } => {
-            runtime.start_isolated_source(source_label.as_str());
-            let (results, error) = runtime
-                .execute_source(
-                    remove_windows_carriage_from_str(source.as_str()).as_str(),
-                    SourceImportPolicy::UseRuntimePolicy,
-                )
-                .into_parts();
-            ("code", source_label, results, error)
+        } => runtime.run_code_target(source, source_label),
+        RunTarget::File { path } => {
+            runtime.run_file_target(path, options.force_isolated, &mut target_error)
         }
-        RunTarget::File { path } => match resolve_source_file_path(path.as_str()) {
-            Ok(resolved_path) => {
-                let (results, error) = execute_file_in_runtime(
-                    resolved_path.as_str(),
-                    &mut runtime,
-                    FileExecutionOptions {
-                        force_isolated: options.force_isolated,
-                    },
-                );
-                ("file", resolved_path, results, error)
-            }
-            Err(message) => {
-                target_error = Some(message);
-                ("file", path, Vec::new(), None)
-            }
-        },
         RunTarget::Repository { path } => {
-            let normalized_path = remove_windows_carriage_from_str(path.as_str());
-            match discover_repository(&mut runtime, normalized_path.as_str()) {
-                Ok(target) => {
-                    selected_repository_target = Some(target);
-                    let (results, error) = execute_repository_target(&mut runtime, target);
-                    ("repo", normalized_path, results, error)
-                }
-                Err(error) => ("repo", normalized_path, Vec::new(), Some(error)),
-            }
+            runtime.run_repository_target(path, &mut selected_repository_target)
         }
     };
 
@@ -171,5 +141,60 @@ pub fn run(request: RunRequest) -> RunOutcome {
         output,
         target_error,
         selected_repository_target,
+    }
+}
+
+impl Runtime {
+    fn run_code_target(
+        &mut self,
+        source: String,
+        source_label: String,
+    ) -> (&'static str, String, Vec<StmtResult>, Option<RuntimeError>) {
+        self.start_isolated_source(source_label.as_str());
+        let (results, error) = self
+            .execute_source(
+                remove_windows_carriage_from_str(source.as_str()).as_str(),
+                SourceImportPolicy::UseRuntimePolicy,
+            )
+            .into_parts();
+        ("code", source_label, results, error)
+    }
+
+    fn run_file_target(
+        &mut self,
+        path: String,
+        force_isolated: bool,
+        target_error: &mut Option<String>,
+    ) -> (&'static str, String, Vec<StmtResult>, Option<RuntimeError>) {
+        match resolve_source_file_path(path.as_str()) {
+            Ok(resolved_path) => {
+                let (results, error) = execute_file_in_runtime(
+                    resolved_path.as_str(),
+                    self,
+                    FileExecutionOptions { force_isolated },
+                );
+                ("file", resolved_path, results, error)
+            }
+            Err(message) => {
+                *target_error = Some(message);
+                ("file", path, Vec::new(), None)
+            }
+        }
+    }
+
+    fn run_repository_target(
+        &mut self,
+        path: String,
+        selected_repository_target: &mut Option<RepositoryFileTarget>,
+    ) -> (&'static str, String, Vec<StmtResult>, Option<RuntimeError>) {
+        let normalized_path = remove_windows_carriage_from_str(path.as_str());
+        match discover_repository(self, normalized_path.as_str()) {
+            Ok(target) => {
+                *selected_repository_target = Some(target);
+                let (results, error) = execute_repository_target(self, target);
+                ("repo", normalized_path, results, error)
+            }
+            Err(error) => ("repo", normalized_path, Vec::new(), Some(error)),
+        }
     }
 }

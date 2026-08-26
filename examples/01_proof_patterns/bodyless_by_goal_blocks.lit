@@ -1,18 +1,16 @@
-# Tracer: bodyless `by ...:` goal blocks
+# Tracer: bodyless `by ...:` goal blocks and inline theorem selection
 #
-# Before (did not work for the selected-theorem route):
+# Boundary: selected theorem calls are not bodyless goal blocks:
 # thm bodyless_zero_sides:
 #     ? forall x R:
 #         x + 0 = x
 #         0 + x = x
 #     x + 0 = x
 #     0 + x = x
-# by thm bodyless_zero_sides(2):
-#     ? 2 + 0 = 0 + 2
-# Former behavior: `by thm does not accept an indented body`.
+# by thm bodyless_zero_sides(2) => 2 + 0 = 0 + 2
 #
-# Now (verified): each route below runs zero user proof statements after its
-# goal and still performs the route's ordinary final verification.
+# The theorem call uses its required inline selection; the remaining routes run
+# zero user proof statements after their goal and perform final verification.
 
 thm bodyless_zero_sides:
     ? forall x R:
@@ -22,8 +20,7 @@ thm bodyless_zero_sides:
     x + 0 = x
     0 + x = x
 
-by thm bodyless_zero_sides(2):
-    ? 2 + 0 = 0 + 2
+by thm bodyless_zero_sides(2) => 2 + 0 = 0 + 2
 
 by def:
     ? {1} $subset {1}
