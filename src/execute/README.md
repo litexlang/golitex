@@ -14,11 +14,10 @@ execute_statement(Stmt::Fact(1 + 1 = 2))
   return StmtResult::Success
 ```
 
-`ExecutionMode` says whether the current source is verified or trusted.
-`StatementExecutionContext` separately says whether this statement belongs to
-an ordinary run or a trusted-prefix run. Keeping those two axes named prevents
-the executor from threading unexplained `true` and `false` values through the
-statement lifecycle.
+`ExecutionMode` says whether the current source is verified or is a configured
+trusted import. There is no second per-statement execution context: every
+statement follows the same lifecycle and only the source frame selects its
+verification mode.
 
 ## Examples and boundaries
 

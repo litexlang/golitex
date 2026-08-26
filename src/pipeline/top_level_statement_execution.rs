@@ -12,30 +12,15 @@ use crate::runtime::{ExecutionMode, Runtime};
 use crate::stmt::tooling_stmt::ImportStmt;
 use crate::stmt::{CommandStmt, Stmt};
 
-pub fn execute_top_level_statement(
-    stmt: &Stmt,
-    runtime: &mut Runtime,
-) -> Result<StmtResult, RuntimeError> {
-    match stmt {
-        Stmt::Command(CommandStmt::ImportStmt(import)) => {
-            let result = run_isolated_import(import, runtime);
-            runtime.finish_statement_execution(result, ExecutionMode::Verified)
+impl Runtime {
+    pub fn execute_top_level_statement(&mut self, stmt: &Stmt) -> Result<StmtResult, RuntimeError> {
+        match stmt {
+            Stmt::Command(CommandStmt::ImportStmt(import)) => {
+                let result = run_isolated_import(import, self);
+                self.finish_statement_execution(result, ExecutionMode::Verified)
+            }
+            _ => self.execute_statement(stmt),
         }
-        _ => runtime.execute_statement(stmt),
-    }
-}
-
-pub fn execute_top_level_statement_in_trusted_prefix_run(
-    stmt: &Stmt,
-    runtime: &mut Runtime,
-) -> Result<StmtResult, RuntimeError> {
-    match stmt {
-        Stmt::Command(CommandStmt::ImportStmt(import)) => {
-            let result = run_isolated_import(import, runtime);
-            runtime
-                .finish_statement_execution_in_trusted_prefix_run(result, ExecutionMode::Verified)
-        }
-        _ => runtime.execute_statement_in_trusted_prefix_run(stmt),
     }
 }
 
@@ -97,7 +82,6 @@ fn run_isolated_import(
             runtime,
             module_id,
             execution_mode,
-            None,
         );
     if let Some(error) = runtime_error {
         runtime.module_manager = module_manager_before;

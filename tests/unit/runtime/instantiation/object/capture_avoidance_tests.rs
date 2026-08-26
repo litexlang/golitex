@@ -5,7 +5,7 @@ use std::collections::HashMap;
 
 #[test]
 fn exact_symbol_substitution_does_not_replace_a_same_name_binding() {
-    let runtime = Runtime::new();
+    let runtime = Runtime::default();
     let target_binding = runtime
         .allocate_local_symbol_binding("x".to_string())
         .unwrap();
@@ -32,7 +32,7 @@ fn exact_symbol_substitution_does_not_replace_a_same_name_binding() {
 
 #[test]
 fn set_builder_instantiation_alpha_renames_only_its_own_symbol() {
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("set_builder_capture_avoidance");
     let a_binding = runtime
         .allocate_local_symbol_binding("a".to_string())
@@ -90,7 +90,7 @@ fn set_builder_instantiation_alpha_renames_only_its_own_symbol() {
 
 #[test]
 fn surviving_closed_set_builder_replacement_keeps_outer_binder_fresh() {
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("closed_set_builder_replacement");
     let a_binding = runtime
         .allocate_local_symbol_binding("a".to_string())
@@ -162,7 +162,7 @@ fn surviving_closed_set_builder_replacement_keeps_outer_binder_fresh() {
 
 #[test]
 fn function_binder_instantiation_preserves_outer_argument_and_concrete_type() {
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("function_binder_capture_avoidance");
     let a_binding = runtime
         .allocate_local_symbol_binding("a".to_string())
@@ -226,7 +226,7 @@ fn function_binder_instantiation_preserves_outer_argument_and_concrete_type() {
 
 #[test]
 fn anonymous_function_restores_binder_only_after_collision_disappears() {
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("closed_anonymous_function_replacement");
     let f_binding = runtime
         .allocate_local_symbol_binding("f".to_string())
@@ -303,7 +303,7 @@ fn anonymous_function_restores_binder_only_after_collision_disappears() {
 
 #[test]
 fn set_builder_alpha_rename_updates_a_dependent_parameter_set() {
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("set_builder_dependent_type_alpha_rename");
     let n_binding = runtime
         .allocate_local_symbol_binding("n".to_string())
@@ -348,7 +348,7 @@ fn set_builder_alpha_rename_updates_a_dependent_parameter_set() {
 
 #[test]
 fn function_alpha_rename_respects_dependent_parameter_scope() {
-    let runtime = Runtime::new();
+    let runtime = Runtime::default();
     let external_n = runtime
         .allocate_local_symbol_binding("n".to_string())
         .unwrap();

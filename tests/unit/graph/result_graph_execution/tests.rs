@@ -1,5 +1,6 @@
 use super::render_result_graph_from_stmt_results;
 use crate::prelude::*;
+use crate::test_support::execute_source;
 
 fn graph_output(source: &'static str) -> String {
     std::thread::Builder::new()
@@ -98,7 +99,7 @@ have fn iterate(n N) R+ by induc n from 0:
 
 #[test]
 fn completed_result_graph_does_not_need_runtime() {
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("runtime_free_result_graph");
     let (results, error) = execute_source("2 + 3 $in N", &mut runtime);
     assert!(error.is_none());

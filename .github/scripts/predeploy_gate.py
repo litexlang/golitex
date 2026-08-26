@@ -472,7 +472,6 @@ def run_textbook_file(
 ) -> FileResult:
     command = textbook_file_command(binary, textbook_file.path)
     environment = os.environ.copy()
-    environment["LITEX_PROFILE_REPOSITORY"] = "1"
     start = time.perf_counter()
     if controller is not None:
         outcome = controller.run(

@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn collects_forall_name_from_function_head() {
-    let runtime = Runtime::new();
+    let runtime = Runtime::default();
     let function_binding = runtime
         .allocate_local_symbol_binding("function".to_string())
         .unwrap();
@@ -20,7 +20,7 @@ fn collects_forall_name_from_function_head() {
 
 #[test]
 fn collects_bound_function_head_names_without_source_kinds() {
-    let runtime = Runtime::new();
+    let runtime = Runtime::default();
     let builder_head = runtime
         .allocate_local_symbol_binding("builder_head".to_string())
         .unwrap();
@@ -58,7 +58,7 @@ fn collects_bound_function_head_names_without_source_kinds() {
 
 #[test]
 fn collects_fn_set_and_anonymous_function_binder_headers() {
-    let runtime = Runtime::new();
+    let runtime = Runtime::default();
     let fn_set: Obj = FnSet::new(
         vec![runtime
             .fresh_param_group_with_set(vec!["fn_bound".to_string()], StandardSet::R.into())

@@ -38,7 +38,11 @@ pub struct Runtime {
 }
 
 impl Runtime {
-    pub fn new() -> Self {
+    pub fn new(
+        output_style: OutputStyle,
+        strict_mode: bool,
+        output_language: OutputLanguage,
+    ) -> Self {
         Runtime {
             module_manager: Box::new(ModuleManager::new()),
             execution_stack: vec![],
@@ -46,10 +50,16 @@ impl Runtime {
             symbol_id_allocator: Rc::new(SymbolIdAllocator::new()),
             template_instance_interner: RefCell::new(HashMap::new()),
             statement_proof_state: StatementProofStateStack::new(),
-            output_style: OutputStyle::Normal,
-            strict_mode: false,
-            output_language: OutputLanguage::English,
+            output_style,
+            strict_mode,
+            output_language,
         }
+    }
+}
+
+impl Default for Runtime {
+    fn default() -> Self {
+        Self::new(OutputStyle::Normal, false, OutputLanguage::English)
     }
 }
 

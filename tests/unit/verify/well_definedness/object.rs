@@ -4,7 +4,7 @@ use super::*;
 
 #[test]
 fn compositional_well_definedness_cache_returns_exact_reuse_source() {
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("compositional-wd-reuse.lit");
     let object: Obj = Number::new("1".to_string()).into();
     let verify_state = ProofSearchState::initial();
@@ -29,7 +29,7 @@ fn compositional_well_definedness_cache_returns_exact_reuse_source() {
 
 #[test]
 fn ordinary_well_definedness_keeps_historical_active_reentry_suppression() {
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("ordinary-active-wd-reentry.lit");
     let object: Obj = Number::new("1".to_string()).into();
     runtime.begin_well_defined_object(&obj_equality_key(&object));

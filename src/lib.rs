@@ -23,6 +23,9 @@ pub mod runtime;
 pub mod stmt;
 pub mod stmt_result_to_lean_compiler;
 pub mod symbol;
+#[cfg(test)]
+#[path = "../tests/unit/test_support.rs"]
+pub mod test_support;
 pub mod to_latex;
 pub mod to_python;
 pub mod verify;

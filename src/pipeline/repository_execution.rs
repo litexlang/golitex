@@ -1,8 +1,7 @@
-use super::source_execution::SourceRunOptions;
+use super::source_execution::SourceImportPolicy;
 use crate::prelude::*;
 use std::fs;
 use std::rc::Rc;
-use std::time::Instant;
 
 #[derive(Clone, Copy)]
 enum RepositoryModuleRun {
@@ -21,26 +20,15 @@ impl RepositoryModuleRun {
     }
 }
 
-#[derive(Clone, Debug, Default)]
-pub struct RepositoryExecutionOptions {
-    pub trusted_prefix: Option<TrustedPrefixPolicy>,
-}
-
 pub fn execute_repository_target(
     runtime: &mut Runtime,
     target: RepositoryFileTarget,
-    options: RepositoryExecutionOptions,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
-    let trusted_prefix = options.trusted_prefix.as_ref();
     match target {
-        RepositoryFileTarget::Module(module_id) => {
-            run_repository_module_prefix(runtime, module_id, trusted_prefix)
+        RepositoryFileTarget::Module(module_id) => run_repository_module_prefix(runtime, module_id),
+        RepositoryFileTarget::File { .. } => {
+            run_repository_prefix(runtime, RepositoryModuleRun::Through(target))
         }
-        RepositoryFileTarget::File { .. } => run_repository_prefix(
-            runtime,
-            RepositoryModuleRun::Through(target),
-            trusted_prefix,
-        ),
     }
 }
 
@@ -71,7 +59,7 @@ pub fn run_repository_before_file_target(
     };
 
     let execution_mode = runtime.current_execution_mode();
-    let result = run_repository_prefix(runtime, RepositoryModuleRun::Before(target), None);
+    let result = run_repository_prefix(runtime, RepositoryModuleRun::Before(target));
     if result.1.is_none() {
         runtime.push_file_execution_frame_with_mode(
             module_id,
@@ -90,7 +78,6 @@ pub fn run_repository_before_file_target(
 fn run_repository_module_prefix(
     runtime: &mut Runtime,
     target_module_id: ModuleId,
-    trusted_prefix: Option<&TrustedPrefixPolicy>,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
     let root_module_id = runtime
         .module_manager
@@ -98,24 +85,17 @@ fn run_repository_module_prefix(
         .unwrap_or(target_module_id);
     if root_module_id == target_module_id {
         let execution_mode = runtime.current_execution_mode();
-        return run_repository_module_target_with_mode(
-            runtime,
-            root_module_id,
-            execution_mode,
-            trusted_prefix,
-        );
+        return run_repository_module_target_with_mode(runtime, root_module_id, execution_mode);
     }
     run_repository_prefix(
         runtime,
         RepositoryModuleRun::Through(RepositoryFileTarget::Module(target_module_id)),
-        trusted_prefix,
     )
 }
 
 fn run_repository_prefix(
     runtime: &mut Runtime,
     module_run: RepositoryModuleRun,
-    trusted_prefix: Option<&TrustedPrefixPolicy>,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
     let Some((target, _)) = module_run.selected_target() else {
         unreachable!("repository prefix requires a selected target")
@@ -140,27 +120,19 @@ fn run_repository_prefix(
             )),
         );
     }
-    run_repository_module_with_mode(
-        runtime,
-        root_module_id,
-        execution_mode,
-        module_run,
-        trusted_prefix,
-    )
+    run_repository_module_with_mode(runtime, root_module_id, execution_mode, module_run)
 }
 
 pub fn run_repository_module_target_with_mode(
     runtime: &mut Runtime,
     module_id: ModuleId,
     execution_mode: ExecutionMode,
-    trusted_prefix: Option<&TrustedPrefixPolicy>,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
     run_repository_module_with_mode(
         runtime,
         module_id,
         execution_mode,
         RepositoryModuleRun::Complete,
-        trusted_prefix,
     )
 }
 
@@ -169,7 +141,6 @@ fn run_repository_module_with_mode(
     module_id: ModuleId,
     execution_mode: ExecutionMode,
     module_run: RepositoryModuleRun,
-    trusted_prefix: Option<&TrustedPrefixPolicy>,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
     let Some(module) = runtime.module_manager.module(module_id) else {
         return (
@@ -180,13 +151,7 @@ fn run_repository_module_with_mode(
         );
     };
     if runtime.current_module_id() == module_id {
-        return run_repository_module_plan(
-            runtime,
-            module_id,
-            execution_mode,
-            module_run,
-            trusted_prefix,
-        );
+        return run_repository_module_plan(runtime, module_id, execution_mode, module_run);
     }
     if module.status == ModuleStatus::Loaded {
         if matches!(module_run, RepositoryModuleRun::Complete)
@@ -230,13 +195,7 @@ fn run_repository_module_with_mode(
         .expect("registered project module should exist")
         .execution_mode = execution_mode;
     runtime.push_module_execution_frame_with_mode(module_id, module_path.as_str(), execution_mode);
-    let result = run_repository_module_plan(
-        runtime,
-        module_id,
-        execution_mode,
-        module_run,
-        trusted_prefix,
-    );
+    let result = run_repository_module_plan(runtime, module_id, execution_mode, module_run);
     runtime.pop_execution_frame();
     if result.1.is_some() {
         runtime.module_manager = module_manager_before;
@@ -251,7 +210,6 @@ fn run_repository_module_plan(
     module_id: ModuleId,
     execution_mode: ExecutionMode,
     module_run: RepositoryModuleRun,
-    trusted_prefix: Option<&TrustedPrefixPolicy>,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
     let (mut results, import_error) = run_config_imports(runtime, module_id);
     if let Some(error) = import_error {
@@ -271,7 +229,7 @@ fn run_repository_module_plan(
     let source_path = module.main_file_path.clone();
     if source_path.ends_with(".lit") {
         let (mut source_results, source_error) =
-            run_repository_source_file(runtime, source_path.as_str(), trusted_prefix);
+            run_repository_source_file(runtime, source_path.as_str());
         results.append(&mut source_results);
         return (results, source_error);
     }
@@ -308,15 +266,9 @@ fn run_repository_module_plan(
                         child_module_id,
                         target_execution_mode,
                         module_run,
-                        trusted_prefix,
                     )
                 } else {
-                    run_repository_import_target(
-                        runtime,
-                        target,
-                        target_execution_mode,
-                        if target_matches { trusted_prefix } else { None },
-                    )
+                    run_repository_import_target(runtime, target, target_execution_mode)
                 };
                 (
                     target_results,
@@ -325,7 +277,7 @@ fn run_repository_module_plan(
                 )
             } else {
                 let (target_results, runtime_error) =
-                    run_repository_import_target(runtime, target, execution_mode, None);
+                    run_repository_import_target(runtime, target, execution_mode);
                 (target_results, runtime_error, false)
             };
 
@@ -357,7 +309,6 @@ fn run_repository_import_target(
     runtime: &mut Runtime,
     target: ImportTarget,
     execution_mode: ExecutionMode,
-    trusted_prefix: Option<&TrustedPrefixPolicy>,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
     match target {
         ImportTarget::File { module_id, file_id } => run_repository_exported_file_target_with_mode(
@@ -365,14 +316,10 @@ fn run_repository_import_target(
             module_id,
             file_id,
             execution_mode,
-            trusted_prefix,
         ),
-        ImportTarget::Module(module_id) => run_repository_module_target_with_mode(
-            runtime,
-            module_id,
-            execution_mode,
-            trusted_prefix,
-        ),
+        ImportTarget::Module(module_id) => {
+            run_repository_module_target_with_mode(runtime, module_id, execution_mode)
+        }
     }
 }
 
@@ -432,7 +379,6 @@ fn run_config_imports(
             runtime,
             config_import.module_id,
             import_execution_mode,
-            None,
         );
         results.append(&mut import_results);
         if let Some(error) = import_error {
@@ -487,7 +433,6 @@ fn run_repository_exported_file_target_with_mode(
     module_id: ModuleId,
     file_id: FileId,
     execution_mode: ExecutionMode,
-    trusted_prefix: Option<&TrustedPrefixPolicy>,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
     let Some(file) = runtime
         .module_manager
@@ -515,10 +460,7 @@ fn run_repository_exported_file_target_with_mode(
         );
     }
 
-    let profile_repository_run = std::env::var_os("LITEX_PROFILE_REPOSITORY").is_some();
-    let snapshot_start = profile_repository_run.then(Instant::now);
     let module_manager_before = runtime.module_manager.clone();
-    let snapshot_duration = snapshot_start.map(|start| start.elapsed());
     runtime
         .module_manager
         .module_mut(module_id)
@@ -542,21 +484,8 @@ fn run_repository_exported_file_target_with_mode(
         runtime.module_manager = module_manager_before;
         return (vec![], Some(error));
     }
-    let execution_start = profile_repository_run.then(Instant::now);
-    let result = run_repository_source_file(runtime, source_path.as_str(), trusted_prefix);
-    let execution_duration = execution_start.map(|start| start.elapsed());
+    let result = run_repository_source_file(runtime, source_path.as_str());
     runtime.pop_execution_frame();
-    if let (Some(snapshot_duration), Some(execution_duration)) =
-        (snapshot_duration, execution_duration)
-    {
-        eprintln!(
-            "repository file {}: snapshot {:.2} ms, execute {:.2} ms{}",
-            source_path,
-            snapshot_duration.as_secs_f64() * 1000.0,
-            execution_duration.as_secs_f64() * 1000.0,
-            if result.1.is_some() { ", failed" } else { "" },
-        );
-    }
     if result.1.is_some() {
         runtime.module_manager = module_manager_before;
         return result;
@@ -573,7 +502,6 @@ fn run_repository_exported_file_target_with_mode(
 fn run_repository_source_file(
     runtime: &mut Runtime,
     source_path: &str,
-    trusted_prefix: Option<&TrustedPrefixPolicy>,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
     let source_code = match fs::read_to_string(source_path) {
         Ok(content) => content,
@@ -590,18 +518,9 @@ fn run_repository_source_file(
             )
         }
     };
-    let trust_before_line = runtime.execution_stack.last().and_then(|frame| {
-        trusted_prefix
-            .filter(|policy| policy.matches(frame.module_id, frame.layer))
-            .map(|policy| policy.before_line)
-    });
-    let outcome = super::source_execution::execute_source_with_options(
-        remove_windows_carriage_return(source_code.as_str()).as_str(),
-        runtime,
-        SourceRunOptions {
-            trust_before_line,
-            ..SourceRunOptions::default()
-        },
+    let outcome = runtime.execute_source(
+        remove_windows_carriage_from_str(source_code.as_str()).as_str(),
+        SourceImportPolicy::UseRuntimePolicy,
     );
     (outcome.stmt_results, outcome.runtime_error)
 }

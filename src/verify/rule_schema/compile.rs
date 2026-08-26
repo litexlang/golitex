@@ -66,7 +66,7 @@ pub fn compile_local_builtin_schema(
     rule_id: RuleId,
     semantic_fingerprint: RuleFingerprint,
 ) -> Result<CompiledRuleSchema, RuntimeError> {
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source(&format!("local_builtin::{}", rule_id.as_str()));
     let mut blocks =
         Tokenizer::new().parse_blocks(source, Rc::from(format!("{}.lit", rule_id.as_str())))?;

@@ -35,3 +35,8 @@ Start with [`target_execution.rs`](target_execution.rs). `run_runner` is the onl
 runner entry; code, file, and repository differences live in
 `RunRequest.target`, while strictness, language, isolation, output style, and
 summary behavior live in `RunRequest.options`.
+
+The JSON key `target.label` is runner metadata, not an execution tag. For
+inline code it is the synthetic `source_label` used in diagnostics because
+there is no file path; for file and repository targets it is their display
+path/name. When file paths are hidden, non-code labels become `entry`.

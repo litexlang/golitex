@@ -28,7 +28,7 @@ fn two_an_plus_bm_squared_equals_expanded_rhs() {
         let line_file = (1, Rc::from("test.lit"));
         let tokens = tokenizer.tokenize_line(line, line_file.clone()).unwrap();
         let mut tb = TokenBlock::new(tokens, vec![], line_file);
-        let mut rt = Runtime::new();
+        let mut rt = Runtime::default();
         rt.parse_obj(&mut tb).expect("parse")
     }
 

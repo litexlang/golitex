@@ -2,8 +2,9 @@ use std::fs;
 use std::path::PathBuf;
 use std::time::Instant;
 
-use crate::pipeline::{execute_source, render_run_output};
+use crate::pipeline::render_run_output;
 use crate::prelude::*;
+use crate::test_support::execute_source;
 use crate::to_latex::to_latex_from_source;
 use crate::to_python::to_python_from_source;
 
@@ -61,7 +62,7 @@ pub(super) fn run_runtime_contract_suite_impl() {
 fn runtime_contract_builtin() {
     let source_code = "1 = 1";
 
-    let mut import_runtime = Runtime::new();
+    let mut import_runtime = Runtime::default();
     import_runtime.start_isolated_source("runtime_contract_import");
     import_runtime.strict_mode = true;
     let (import_stmt_results, import_runtime_error) =
@@ -99,4 +100,3 @@ mod quantifier_free_builtin_premises;
 mod sequence_semantics;
 mod setting_syntax;
 mod structural_definitions;
-mod trusted_prefix;

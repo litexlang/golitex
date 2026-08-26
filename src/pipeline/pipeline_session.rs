@@ -1,4 +1,4 @@
-use super::source_execution::{SourceRunFailureKind, SourceRunOptions, SourceRunOutcome};
+use super::source_execution::{SourceRunFailureKind, SourceRunOutcome};
 use crate::prelude::*;
 use std::env;
 use std::io::{self, BufRead, Write};
@@ -73,10 +73,7 @@ fn run_session_loop_with_readers_and_preload(
     force_isolated: bool,
     preload: SessionPreload,
 ) -> io::Result<()> {
-    let mut runtime = Runtime::new();
-    runtime.set_output_style(output_style);
-    runtime.strict_mode = strict_mode;
-    runtime.output_language = output_language;
+    let mut runtime = Runtime::new(output_style, strict_mode, output_language);
 
     let (startup_mode, mut all_results) =
         match initialize_session_runtime(&mut runtime, directory, force_isolated, preload) {
@@ -167,10 +164,9 @@ fn run_session_loop_with_readers_and_preload(
                     stmt_results: mut results,
                     runtime_error,
                     failure_kind,
-                } = super::source_execution::execute_source_with_options(
+                } = runtime.execute_source(
                     source.replace('\r', "").as_str(),
-                    &mut runtime,
-                    SourceRunOptions::default(),
+                    SourceImportPolicy::UseRuntimePolicy,
                 );
                 let (ok, trace) = render_run_output(&runtime, &results, &runtime_error);
                 all_results.append(&mut results);
@@ -222,7 +218,6 @@ fn run_session_loop_with_readers_and_preload(
                     runtime: &runtime,
                     stmt_results: all_results.as_slice(),
                     runtime_error: &no_error,
-                    trusted_prefix_report: None,
                 });
                 let (_, graph) = render_graph_from_stmt_results(
                     "session",
@@ -288,13 +283,10 @@ fn initialize_session_runtime(
             directory.join(path)
         };
         let path_string = path.to_string_lossy().into_owned();
-        let (stmt_results, runtime_error, _, _) = execute_file_in_runtime(
+        let (stmt_results, runtime_error) = execute_file_in_runtime(
             path_string.as_str(),
             runtime,
-            FileExecutionOptions {
-                force_isolated,
-                trust_before_line: None,
-            },
+            FileExecutionOptions { force_isolated },
         );
         if let Some(error) = runtime_error {
             return Err((stmt_results, error));

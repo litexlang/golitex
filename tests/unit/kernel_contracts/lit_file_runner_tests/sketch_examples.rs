@@ -3,9 +3,10 @@ use std::io::Write;
 use std::path::PathBuf;
 use std::time::Instant;
 
-use crate::pipeline::{execute_source, render_run_output};
+use crate::pipeline::render_run_output;
 use crate::prelude::*;
 use crate::stmt_result_to_lean_compiler::compile_litex_source_to_lean_source;
+use crate::test_support::execute_source;
 
 use super::helper::{run_with_large_stack, source_has_isolated_import};
 
@@ -26,9 +27,9 @@ fn run_example_lit_file(relative_path: &str) {
         None => panic!("{:?} must be valid UTF-8", lit_path),
     };
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source(path_str);
-    let normalized_source = remove_windows_carriage_return(lit_content.as_str());
+    let normalized_source = remove_windows_carriage_from_str(lit_content.as_str());
     runtime.set_current_source_allows_inline_imports(source_has_isolated_import(
         normalized_source.as_str(),
     ));
@@ -77,7 +78,7 @@ fn compile_tmp_to_lean() {
     let path_str = lit_path
         .to_str()
         .unwrap_or_else(|| panic!("{:?} must be valid UTF-8", lit_path));
-    let normalized_source = remove_windows_carriage_return(lit_source);
+    let normalized_source = remove_windows_carriage_from_str(lit_source);
     let generated_lean = compile_litex_source_to_lean_source(normalized_source.as_str(), path_str)
         .unwrap_or_else(|error| panic!("failed to generate Lean from {path_str}:\n{error}"));
 

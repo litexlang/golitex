@@ -454,43 +454,6 @@ impl RunSummary {
         ])
     }
 
-    fn to_json_value_with_trusted_prefix(
-        &self,
-        ok: bool,
-        report: &TrustedPrefixReport,
-    ) -> JsonValue {
-        let JsonValue::Object(mut fields) = self.to_json_value(ok) else {
-            unreachable!("run summary must be a JSON object")
-        };
-        fields.push(("execution_ok".to_string(), JsonValue::Bool(ok)));
-        fields.push((
-            "verification_status".to_string(),
-            JsonValue::JsonString("trusted_prefix".to_string()),
-        ));
-        fields.push((
-            "trusted_prefix".to_string(),
-            JsonValue::Object(vec![
-                (
-                    "file".to_string(),
-                    JsonValue::JsonString(report.file.clone()),
-                ),
-                (
-                    "before_line".to_string(),
-                    JsonValue::Number(report.before_line),
-                ),
-                (
-                    "trusted_top_level_statements".to_string(),
-                    JsonValue::Number(report.trusted_top_level_statements),
-                ),
-                (
-                    "first_verified_statement_line".to_string(),
-                    JsonValue::Number(report.first_verified_statement_line),
-                ),
-            ]),
-        ));
-        JsonValue::Object(fields)
-    }
-
     fn main_environment_json_value(&self) -> JsonValue {
         match &self.main_environment {
             Some(summary) => summary.json_value(),
@@ -886,7 +849,6 @@ pub struct RunSummaryRequest<'a> {
     pub runtime: &'a Runtime,
     pub stmt_results: &'a [StmtResult],
     pub runtime_error: &'a Option<RuntimeError>,
-    pub trusted_prefix_report: Option<&'a TrustedPrefixReport>,
 }
 
 pub fn render_run_summary(request: RunSummaryRequest<'_>) -> String {
@@ -896,10 +858,7 @@ pub fn render_run_summary(request: RunSummaryRequest<'_>) -> String {
         request.stmt_results,
         request.runtime_error,
     );
-    let json = match request.trusted_prefix_report {
-        None => summary.to_json_value(success),
-        Some(report) => summary.to_json_value_with_trusted_prefix(success, report),
-    };
+    let json = summary.to_json_value(success);
     render_json_value(&json, 0)
 }
 

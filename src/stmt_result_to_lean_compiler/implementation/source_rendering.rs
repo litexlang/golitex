@@ -2014,7 +2014,7 @@ fn matches_directly_or_after_one_transparent_definition_pass(
     if substitutions.is_empty() {
         return Ok(false);
     }
-    let reduced = Runtime::new()
+    let reduced = Runtime::default()
         .inst_obj(source, &substitutions, SubstitutionMode::Exact)
         .map_err(|error| {
             format!(

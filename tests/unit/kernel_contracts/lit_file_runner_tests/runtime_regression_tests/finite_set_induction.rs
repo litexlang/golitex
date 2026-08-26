@@ -1,4 +1,5 @@
 use super::*;
+use crate::test_support::execute_source;
 
 #[test]
 fn finite_set_induction_checks_empty_and_insertion_cases() {
@@ -25,7 +26,7 @@ by induc P:
 $finite_set_induction_test({1, 2})
 "#;
 
-            let mut runtime = Runtime::new();
+            let mut runtime = Runtime::default();
             runtime.start_isolated_source("finite_set_induction_positive");
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
@@ -78,7 +79,7 @@ by induc P in A:
 $finite_set_induction_carrier_test(A)
 "#;
 
-        let mut runtime = Runtime::new();
+        let mut runtime = Runtime::default();
         runtime.start_isolated_source("finite_set_induction_carrier");
         let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
@@ -109,7 +110,7 @@ by induc P:
     ? induc x, S
 "#;
 
-            let mut runtime = Runtime::new();
+            let mut runtime = Runtime::default();
             runtime.start_isolated_source("finite_set_induction_bodyless_closed_branches");
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
@@ -147,7 +148,7 @@ by induc P:
     ? induc x, S
 "#;
 
-            let mut runtime = Runtime::new();
+            let mut runtime = Runtime::default();
             runtime.start_isolated_source("finite_set_induction_bodyless_negative");
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =

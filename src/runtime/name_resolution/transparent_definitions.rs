@@ -9,21 +9,21 @@ pub struct TransparentObjectDefinitionUse {
     pub definition: TransparentObjectDefinition,
 }
 
-pub(crate) struct TransparentObjectSubstitutionPass {
+pub struct TransparentObjectSubstitutionPass {
     substitutions: HashMap<String, Obj>,
     definitions: Vec<TransparentObjectDefinitionUse>,
 }
 
 impl TransparentObjectSubstitutionPass {
-    pub(crate) fn substitutions(&self) -> &HashMap<String, Obj> {
+    pub fn substitutions(&self) -> &HashMap<String, Obj> {
         &self.substitutions
     }
 
-    pub(crate) fn definitions(&self) -> &[TransparentObjectDefinitionUse] {
+    pub fn definitions(&self) -> &[TransparentObjectDefinitionUse] {
         &self.definitions
     }
 
-    pub(crate) fn changed(&self) -> bool {
+    pub fn changed(&self) -> bool {
         !self.definitions.is_empty()
     }
 }
@@ -50,7 +50,7 @@ impl Runtime {
     /// Each candidate is tested against the original objects, and the final
     /// substitution map is applied only once by the caller. Consequently a
     /// definition inserted by this pass is never rescanned for another alias.
-    pub(crate) fn transparent_object_substitutions_once<'a>(
+    pub fn transparent_object_substitutions_once<'a>(
         &self,
         objects: impl IntoIterator<Item = &'a Obj>,
     ) -> Result<TransparentObjectSubstitutionPass, RuntimeError> {

@@ -55,7 +55,7 @@ fn assert_without_mod(name: &AtomicName, expected_name: &str) {
 
 #[test]
 fn parses_angle_bracketed_struct_params_and_defined_field_access() {
-    let mut rt = Runtime::new();
+    let mut rt = Runtime::default();
 
     let stmt = parse_one_stmt_line_with_runtime(
         &mut rt,
@@ -112,7 +112,7 @@ fn parses_angle_bracketed_struct_params_and_defined_field_access() {
 
 #[test]
 fn parses_comma_separated_set_builder_facts() {
-    let mut rt = Runtime::new();
+    let mut rt = Runtime::default();
 
     let obj = parse_one_obj_line_with_runtime(&mut rt, "{d N+: d > 0, d < 2}");
     let Obj::SetBuilder(set_builder) = obj else {
@@ -123,7 +123,7 @@ fn parses_comma_separated_set_builder_facts() {
 
 #[test]
 fn module_qualification_keeps_definition_name_bare() {
-    let mut rt = Runtime::new();
+    let mut rt = Runtime::default();
     set_test_module_name(&mut rt, "Nat");
 
     let stmt = parse_one_stmt_line_with_runtime(&mut rt, "abstract_prop some_prop(x)");
@@ -136,7 +136,7 @@ fn module_qualification_keeps_definition_name_bare() {
 
 #[test]
 fn parses_replacement_object_prop_name_arguments() {
-    let mut rt = Runtime::new();
+    let mut rt = Runtime::default();
 
     let obj = parse_one_obj_line_with_runtime(&mut rt, "replacement(P, A)");
     let Obj::Replacement(replacement) = obj else {
@@ -155,7 +155,7 @@ fn parses_replacement_object_prop_name_arguments() {
 
 #[test]
 fn replacement_rejects_non_name_first_argument() {
-    let mut rt = Runtime::new();
+    let mut rt = Runtime::default();
     let tokenizer = Tokenizer::new();
     let mut blocks = tokenizer
         .parse_blocks("replacement(1, A)", Rc::from("test.lit"))
@@ -178,7 +178,7 @@ fn replacement_rejects_non_name_first_argument() {
 
 #[test]
 fn module_qualification_qualifies_bare_predicate_but_not_bound_arg() {
-    let mut rt = Runtime::new();
+    let mut rt = Runtime::default();
     set_test_module_name(&mut rt, "Nat");
 
     let fact = parse_one_fact_line_with_runtime(&mut rt, "forall x Z:\n    $some_prop(x)");
@@ -205,7 +205,7 @@ fn module_qualification_qualifies_bare_predicate_but_not_bound_arg() {
 
 #[test]
 fn module_qualification_qualifies_bare_identifier() {
-    let mut rt = Runtime::new();
+    let mut rt = Runtime::default();
     set_test_module_name(&mut rt, "Nat");
 
     let obj = parse_one_obj_line_with_runtime(&mut rt, "a");
@@ -219,7 +219,7 @@ fn module_qualification_qualifies_bare_identifier() {
 
 #[test]
 fn backtick_infix_function_syntax_is_rejected() {
-    let mut rt = Runtime::new();
+    let mut rt = Runtime::default();
     let tokenizer = Tokenizer::new();
     let mut blocks = tokenizer
         .parse_blocks("a ` f b = c", Rc::from("test.lit"))
@@ -230,7 +230,7 @@ fn backtick_infix_function_syntax_is_rejected() {
 
 #[test]
 fn module_qualification_keeps_native_constants_structural() {
-    let mut rt = Runtime::new();
+    let mut rt = Runtime::default();
     set_test_module_name(&mut rt, "Nat");
 
     let euler = parse_one_obj_line_with_runtime(&mut rt, "e");
@@ -254,17 +254,17 @@ fn native_constants_are_hard_reserved_only_as_exact_names() {
             .expect("tokenize reserved-name statement");
         assert_eq!(blocks.len(), 1, "{source:?}");
         assert!(
-            Runtime::new().parse_statement(&mut blocks[0]).is_err(),
+            Runtime::default().parse_statement(&mut blocks[0]).is_err(),
             "{source:?} should reject the reserved binding"
         );
     }
 
-    parse_one_stmt_line_with_runtime(&mut Runtime::new(), "have e1, pi1 R");
+    parse_one_stmt_line_with_runtime(&mut Runtime::default(), "have e1, pi1 R");
 }
 
 #[test]
 fn module_qualification_keeps_finite_set_size_builtin_bare() {
-    let mut rt = Runtime::new();
+    let mut rt = Runtime::default();
     set_test_module_name(&mut rt, "Nat");
 
     let obj = parse_one_obj_line_with_runtime(&mut rt, "finite_set_size({1, 2})");
@@ -276,7 +276,7 @@ fn module_qualification_keeps_finite_set_size_builtin_bare() {
 
 #[test]
 fn module_qualification_qualifies_bare_thm_strategy_template_and_struct_refs() {
-    let mut rt = Runtime::new();
+    let mut rt = Runtime::default();
     set_test_module_name(&mut rt, "Nat");
 
     let thm_stmt = parse_one_stmt_line_with_runtime(&mut rt, "by thm T(a)");
@@ -309,7 +309,7 @@ fn module_qualification_qualifies_bare_thm_strategy_template_and_struct_refs() {
 
 #[test]
 fn module_qualification_preserves_explicit_reference_module_names() {
-    let mut rt = Runtime::new();
+    let mut rt = Runtime::default();
     set_test_module_name(&mut rt, "Nat");
 
     let thm_stmt = parse_one_stmt_line_with_runtime(&mut rt, "by thm Other::T(a)");
@@ -342,7 +342,7 @@ fn module_qualification_preserves_explicit_reference_module_names() {
 
 #[test]
 fn standard_library_namespace_is_valid_only_as_a_qualified_module_root() {
-    let mut rt = Runtime::new();
+    let mut rt = Runtime::default();
 
     let thm_stmt = parse_one_stmt_line_with_runtime(&mut rt, "by thm basics::T(a)");
     let Stmt::By(ByStmt::ByThmStmt(thm_stmt)) = thm_stmt else {
@@ -397,7 +397,7 @@ fn standard_library_namespace_is_valid_only_as_a_qualified_module_root() {
 
 #[test]
 fn module_qualification_preserves_explicit_module_names() {
-    let mut rt = Runtime::new();
+    let mut rt = Runtime::default();
     set_test_module_name(&mut rt, "Nat");
 
     let obj = parse_one_obj_line_with_runtime(&mut rt, "Other::a");
@@ -411,7 +411,7 @@ fn module_qualification_preserves_explicit_module_names() {
 
 #[test]
 fn module_qualification_keeps_names_bare_without_module_context() {
-    let mut rt = Runtime::new();
+    let mut rt = Runtime::default();
 
     let obj = parse_one_obj_line_with_runtime(&mut rt, "a");
     let Obj::Atom(AtomObj::Identifier(id)) = obj else {

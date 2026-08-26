@@ -2,10 +2,11 @@
 
 use crate::output::display_stmt_result_json_v2;
 use crate::prelude::*;
+use crate::test_support::execute_source;
 
 #[test]
 fn equality_chain_store_returns_typed_exact_interval_closure() {
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("equality_chain_result_test.lit");
 
     let (mut results, error) = execute_source("1+0=1=0+1", &mut runtime);

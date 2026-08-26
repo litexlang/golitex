@@ -2847,13 +2847,14 @@ thm index_union_evidence_intersections:
         $is_probability_space(Omega, events, probability)
         =>:
             index_union(N+, Omega, fn(n N+) power_set(Omega) {\evidence_intersection_sequence<Omega, events, probability, evidence, family>(n)}) = intersect(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)}), evidence)
+    let eis = \evidence_intersection_sequence<Omega, events, probability, evidence, family>
     by extension:
         ? index_union(N+, Omega, fn(n N+) power_set(Omega) {\evidence_intersection_sequence<Omega, events, probability, evidence, family>(n)}) = intersect(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)}), evidence)
         claim:
             ? forall point index_union(N+, Omega, fn(n N+) power_set(Omega) {\evidence_intersection_sequence<Omega, events, probability, evidence, family>(n)}):
                 point $in intersect(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)}), evidence)
             obtain idx from exist idx N+ st {point $in \evidence_intersection_sequence<Omega, events, probability, evidence, family>(idx)}
-            \evidence_intersection_sequence<Omega, events, probability, evidence, family>(idx) = intersect(family(idx), evidence)
+            eis(idx) = intersect(family(idx), evidence)
             point $in intersect(family(idx), evidence)
             point $in family(idx)
             point $in evidence
@@ -2867,7 +2868,7 @@ thm index_union_evidence_intersections:
             point $in evidence
             obtain idx from exist idx N+ st {point $in family(idx)}
             point $in intersect(family(idx), evidence)
-            \evidence_intersection_sequence<Omega, events, probability, evidence, family>(idx) = intersect(family(idx), evidence)
+            eis(idx) = intersect(family(idx), evidence)
             point $in \evidence_intersection_sequence<Omega, events, probability, evidence, family>(idx)
             witness exist candidate_index N+ st {point $in \evidence_intersection_sequence<Omega, events, probability, evidence, family>(candidate_index)} from idx
             point $in index_union(N+, Omega, fn(n N+) power_set(Omega) {\evidence_intersection_sequence<Omega, events, probability, evidence, family>(n)})

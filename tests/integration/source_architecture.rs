@@ -781,7 +781,7 @@ fn cli_dispatch_delegates_execution_and_path_resolution_to_their_owners() {
         .expect("graph execution source should be readable");
 
     assert!(dispatch.contains("run_code_command("));
-    assert!(!dispatch.contains("Runtime::new()"));
+    assert!(!dispatch.contains("Runtime::default()"));
     assert!(!dispatch.contains("compile_litex_file_to_lean_file("));
     assert!(!dispatch.contains("compile_litex_markdown_code_blocks_to_lean_file("));
     assert!(!dispatch.contains("compile_code_to_latex("));
@@ -803,7 +803,7 @@ fn cli_dispatch_delegates_execution_and_path_resolution_to_their_owners() {
     assert!(run.contains("pub struct RunRequest"));
     assert!(run.contains("pub fn run(request: RunRequest)"));
     assert!(source_execution.contains("pub fn execute_source("));
-    assert!(source_execution.contains("runtime.parse_statement(&mut block)"));
+    assert!(source_execution.contains("self.parse_statement(&mut block)"));
     assert!(!source_execution.contains("pub struct RunRequest"));
     assert!(!source_execution.contains("pub fn execute_file_in_runtime("));
     assert!(!source_execution.contains("pub fn render_run_output("));
@@ -908,7 +908,7 @@ fn atomic_and_equality_route_controls_use_semantic_names() {
 }
 
 #[test]
-fn statement_execution_context_is_named_instead_of_threaded_as_booleans() {
+fn source_execution_is_owned_by_runtime_without_a_secondary_context() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let statement_execution = fs::read_to_string(root.join("src/execute/statement_execution.rs"))
         .expect("statement execution source should be readable");
@@ -918,10 +918,12 @@ fn statement_execution_context_is_named_instead_of_threaded_as_booleans() {
     let source_execution = fs::read_to_string(root.join("src/pipeline/source_execution.rs"))
         .expect("source execution source should be readable");
 
-    assert!(statement_execution.contains("enum StatementExecutionContext"));
-    assert!(!statement_execution.contains("in_trusted_prefix_run: bool"));
-    assert!(!trusted_execution.contains("in_trusted_prefix_run: bool"));
-    assert!(!source_execution.contains("fn failure_kind_for_try"));
+    assert!(!statement_execution.contains("StatementExecutionContext"));
+    assert!(!trusted_execution.contains("StatementExecutionContext"));
+    assert!(source_execution.contains("impl Runtime"));
+    assert!(source_execution.contains("pub fn execute_source("));
+    assert!(source_execution.contains("fn execute_source_blocks("));
+    assert!(!source_execution.contains("execute_source_with_options"));
 }
 
 #[test]

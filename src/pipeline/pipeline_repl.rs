@@ -102,10 +102,7 @@ fn run_repl_loop_with_readers_and_mode(
     )?;
     writeln!(stdout_writer, "Ctrl+D to exit.")?;
 
-    let mut runtime = Runtime::new();
-    runtime.set_output_style(output_style);
-    runtime.strict_mode = strict_mode;
-    runtime.output_language = output_language;
+    let mut runtime = Runtime::new(output_style, strict_mode, output_language);
     initialize_isolated_repl_runtime(&mut runtime);
     writeln!(stdout_writer, "Isolated REPL.")?;
 
@@ -219,10 +216,15 @@ fn run_repl_source_if_not_empty(
         return String::new();
     }
 
-    let normalized_source = remove_windows_carriage_return(source);
+    let normalized_source = remove_windows_carriage_from_str(source);
     match output_mode {
         ReplOutputMode::Json => {
-            let (stmt_results, runtime_error) = execute_source(normalized_source.as_str(), runtime);
+            let (stmt_results, runtime_error) = runtime
+                .execute_source(
+                    normalized_source.as_str(),
+                    SourceImportPolicy::UseRuntimePolicy,
+                )
+                .into_parts();
             let (_, output_text) = render_run_output(runtime, &stmt_results, &runtime_error);
             output_text.trim().to_string()
         }

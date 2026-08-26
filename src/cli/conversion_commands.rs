@@ -1,12 +1,12 @@
 use super::arguments::{read_any_value_after_flag, read_non_flag_value_after_flag};
 use super::command_handlers::VERSION;
 use super::messages::print_help_message;
-use crate::common::helper::remove_windows_carriage_return;
+use crate::common::helper::remove_windows_carriage_from_str;
 use crate::common::output_language::OutputLanguage;
 use crate::error::RuntimeError;
 use crate::output::display_runtime_error_json;
 use crate::pipeline::run_latex_repl;
-use crate::runtime::Runtime;
+use crate::runtime::{OutputStyle, Runtime};
 use crate::to_latex::{to_latex_from_file, to_latex_from_repository, to_latex_from_source};
 use crate::to_python::{to_python_from_file, to_python_from_repository, to_python_from_source};
 use std::fs;
@@ -133,7 +133,7 @@ pub(super) fn run_python_command(
 }
 
 pub(super) fn compile_code_to_latex(code: &str, output_language: OutputLanguage) -> String {
-    let code = remove_windows_carriage_return(code);
+    let code = remove_windows_carriage_from_str(code);
     match to_latex_from_source(code.as_str(), "-latex -e") {
         Ok(s) => s,
         Err(error) => render_conversion_error(output_language, &error),
@@ -152,7 +152,7 @@ pub(super) fn compile_file_to_latex(
         };
     }
     let source = match fs::read_to_string(file_path) {
-        Ok(content) => remove_windows_carriage_return(&content),
+        Ok(content) => remove_windows_carriage_from_str(&content),
         Err(e) => return format!("Could not read file {:?}: {}", file_path, e),
     };
     match to_latex_from_source(source.as_str(), file_path) {
@@ -169,7 +169,7 @@ pub(super) fn compile_repo_to_latex(repo_path: &str, output_language: OutputLang
 }
 
 pub(super) fn compile_code_to_python(code: &str, output_language: OutputLanguage) -> String {
-    let code = remove_windows_carriage_return(code);
+    let code = remove_windows_carriage_from_str(code);
     match to_python_from_source(code.as_str(), "-python -e") {
         Ok(s) => s,
         Err(error) => render_conversion_error(output_language, &error),
@@ -188,7 +188,7 @@ pub(super) fn compile_file_to_python(
         };
     }
     let source = match fs::read_to_string(file_path) {
-        Ok(content) => remove_windows_carriage_return(&content),
+        Ok(content) => remove_windows_carriage_from_str(&content),
         Err(e) => return format!("Could not read file {:?}: {}", file_path, e),
     };
     match to_python_from_source(source.as_str(), file_path) {
@@ -205,7 +205,6 @@ pub(super) fn compile_repo_to_python(repo_path: &str, output_language: OutputLan
 }
 
 fn render_conversion_error(output_language: OutputLanguage, error: &RuntimeError) -> String {
-    let mut runtime = Runtime::new();
-    runtime.output_language = output_language;
+    let runtime = Runtime::new(OutputStyle::Normal, false, output_language);
     display_runtime_error_json(&runtime, error, true)
 }

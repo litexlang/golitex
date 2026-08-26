@@ -10,7 +10,7 @@ fn parse_obj_line(source: &str) -> Obj {
         .parse_blocks(source, Rc::from("test.lit"))
         .expect("tokenize object line");
     assert_eq!(blocks.len(), 1, "{source:?}");
-    Runtime::new()
+    Runtime::default()
         .parse_obj(&mut blocks[0])
         .expect("parse object line")
 }

@@ -4,13 +4,13 @@
 
 ```text
 run(RunRequest { target, options })
-  create and configure Runtime once
+  Runtime::new(output_style, strict_mode, output_language)
   match target: Code | File | Repository
-  execute_source(source, runtime)               # default options adapter
-    execute_source_with_options(source, runtime)
+  Runtime::execute_source(source, import_policy)
+    Runtime::execute_source_blocks
     Tokenizer::parse_blocks
     Runtime::parse_statement
-    execute_top_level_statement
+    Runtime::execute_top_level_statement
     Runtime::execute_statement -> verify -> Result
   render output and optional summary once
 ```
@@ -37,7 +37,7 @@ or `module_manager` without first expanding the crate-wide prelude.
 | [`run.rs`](run.rs) | Owns the single batch entry `run(RunRequest)`, its request/target types, Runtime creation, and target dispatch. |
 | [`source_execution.rs`](source_execution.rs) | Tokenizes, parses, and executes source inside an already initialized Runtime. |
 | [`file_execution.rs`](file_execution.rs) | Resolves `-f`, discovers project context, and selects repository-prefix or isolated-file execution. |
-| [`output_rendering.rs`](output_rendering.rs) | Renders statement results, errors, trusted-prefix metadata, and unverified-import warnings. |
+| [`output_rendering.rs`](output_rendering.rs) | Renders statement results, errors, and unverified-import warnings. |
 | [`top_level_statement_execution.rs`](top_level_statement_execution.rs) | Executes one parsed top-level statement and owns isolated terminal imports. |
 | [`repository_execution.rs`](repository_execution.rs) | Runs ordered project imports, module trees, file targets, and registered prefixes. |
 | [`pipeline_session.rs`](pipeline_session.rs) | Keeps one runtime alive for `-session`. |

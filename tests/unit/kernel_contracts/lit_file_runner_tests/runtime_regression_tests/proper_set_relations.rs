@@ -1,4 +1,5 @@
 use super::*;
+use crate::test_support::execute_source;
 
 #[test]
 fn proper_set_relations_expand_from_components_and_expose_components() {
@@ -246,7 +247,7 @@ x $in big_intersect(F)
 }
 
 fn run_proper_relation_source(source_code: &str, label: &str) -> (bool, String) {
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source(label);
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     render_run_output(&runtime, &stmt_results, &runtime_error)

@@ -3,35 +3,7 @@ use crate::error::RuntimeError;
 use crate::obj::strip_free_param_numeric_tags_in_display;
 use crate::output::{display_runtime_error_json, display_stmt_exec_result_json};
 use crate::result::StmtResult;
-use crate::runtime::{Runtime, TrustedPrefixReport};
-
-pub fn display_trusted_prefix_report_json(report: &TrustedPrefixReport) -> String {
-    render_json_value(
-        &JsonValue::Object(vec![
-            (
-                "type".to_string(),
-                JsonValue::JsonString("trusted_prefix".to_string()),
-            ),
-            (
-                "file".to_string(),
-                JsonValue::JsonString(report.file.clone()),
-            ),
-            (
-                "before_line".to_string(),
-                JsonValue::Number(report.before_line),
-            ),
-            (
-                "trusted_top_level_statements".to_string(),
-                JsonValue::Number(report.trusted_top_level_statements),
-            ),
-            (
-                "first_verified_statement_line".to_string(),
-                JsonValue::Number(report.first_verified_statement_line),
-            ),
-        ]),
-        0,
-    )
-}
+use crate::runtime::Runtime;
 
 /// Render finished user output. Internal symbol identities are always removed;
 /// callers cannot opt into leaking runtime-local IDs.

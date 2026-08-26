@@ -1,4 +1,3 @@
-use super::statement_execution::StatementExecutionContext;
 use crate::error::{exec_stmt_error_with_stmt_and_cause, short_exec_error, RuntimeError};
 use crate::infer::SuccessInferResult;
 use crate::result::{
@@ -28,8 +27,7 @@ impl Runtime {
         // Reuse the no-verification environment path for a statement whose
         // generic form was already checked before capture-avoiding substitution.
         let previous_execution_mode = self.replace_current_execution_mode(ExecutionMode::Trusted);
-        let result = self
-            .execute_statement_without_verification(stmt, StatementExecutionContext::OrdinaryRun);
+        let result = self.execute_statement_without_verification(stmt);
         self.replace_current_execution_mode(previous_execution_mode);
         result
     }
@@ -37,7 +35,6 @@ impl Runtime {
     pub(super) fn execute_statement_without_verification(
         &mut self,
         stmt: &Stmt,
-        context: StatementExecutionContext,
     ) -> Result<StmtResult, RuntimeError> {
         match stmt {
             Stmt::Fact(fact) => self.execute_trusted_fact(fact),
@@ -165,11 +162,6 @@ impl Runtime {
             Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(s)) => {
                 self.exec_claim_stmt_affect_environment_only(s)
             }
-            Stmt::ProofBlock(ProofBlockStmt::TryStmt(s))
-                if context == StatementExecutionContext::TrustedPrefixRun =>
-            {
-                self.exec_try_stmt(s)
-            }
             Stmt::ProofBlock(ProofBlockStmt::ExampleStmt(s)) => Ok(
                 SuccessProofBlockStmtResult::ExampleStmt(Box::new(SuccessExampleStmtResult {
                     statement: s.clone(),
@@ -198,7 +190,7 @@ impl Runtime {
                 Box::new(SuccessEvalStmtResult {
                     statement: s.clone(),
                     common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
-                    execution: SuccessEvalStmtExecutionResult::SkippedByTrustedPrefix,
+                    execution: SuccessEvalStmtExecutionResult::SkippedByTrustedExecution,
                 }),
             )
             .into()),

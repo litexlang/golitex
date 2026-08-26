@@ -2,12 +2,28 @@
 
 ## Purpose and scope
 
-This standalone first version models the theorem-facing core of elementary
-group theory. It is for readers learning how Litex represents an ambient
-mathematical structure without requiring that structure to be passed as a
-first-class record. The flagship theorem proves that the kernel of a group
-homomorphism is a normal subgroup. Rings, modules, quotients, actions, and
-classification results are outside this checkpoint.
+This standalone module models three linked elementary-algebra slices. Group
+theory ends at homomorphisms, normal kernels, and finite-group/coset
+vocabulary. Commutative-ring theory adds ring homomorphisms, ideals, prime
+ideals, and a supplied quotient presentation. Field theory adds integral
+domains, fields, and the finite-integral-domain theorem when the existing
+finite-set map interface supports its checked proof.
+
+The point is not to accumulate every standard definition. Each slice must
+reach one theorem that consumes its objects:
+
+```text
+groups -> homomorphism -> kernel -> normal subgroup
+rings  -> ideal/prime ideal -> quotient presentation -> prime iff quotient domain
+fields -> integral domain -> finite multiplication map -> finite domain is field
+```
+
+The module then stops. Sylow theory, group actions and classification,
+polynomial rings, Noetherian/PID/UFD theory, the Chinese remainder theorem,
+modules and algebras, field extensions, and Galois theory are explicit
+non-goals. Algebraic geometry, homological algebra, representation theory,
+model theory, and universal algebra are collection-level non-goals rather than
+future sections of this module.
 
 ## Modeling conventions
 
@@ -86,8 +102,84 @@ objects. No parallel arithmetic or container interface is introduced.
 - **Dependencies:** Group laws, native subsets and set builders, and the two
   homomorphism preservation theorems.
 - **Downstream uses:** `kernel_is_normal_subgroup`.
-- **Allowable hole:** Cosets, quotient groups, and the first isomorphism
-  theorem remain later work.
+- **Allowable hole:** A full quotient-group construction and the first
+  isomorphism theorem remain beyond this version's group stop line.
+
+### Commutative rings and ring homomorphisms
+
+- **Ordinary meaning:** the carrier is an additive abelian group with a
+  commutative unital multiplication distributing over addition; a
+  homomorphism preserves zero, one, addition, negation, and multiplication.
+- **Semantic role:** `CommutativeRingSetting` is the ambient theorem context;
+  `RingHomomorphismSetting` composes source and target ring settings with the
+  preservation laws.
+- **Ideal Litex form:** settings plus the definition-facing projections
+  `prop is_commutative_ring([CommutativeRingSetting])` and
+  `prop is_ring_homomorphism([RingHomomorphismSetting])`.
+- **Nearest wrong alternative:** a `Ring` struct is premature because current
+  consumers do not construct or return ring values. Repeating both complete
+  law lists in every map theorem obscures the map itself.
+- **Dependencies:** native equality and functions; no parallel arithmetic
+  object is introduced.
+- **Downstream uses:** preservation of zero/negation, kernel is an ideal, and
+  quotient presentations.
+- **Allowable hole:** noncommutative rings are intentionally outside this
+  elementary slice.
+
+### Ideals and prime ideals
+
+- **Ordinary meaning:** an ideal is an additive subgroup absorbing
+  multiplication by arbitrary ring elements. A proper ideal is prime when a
+  product in it forces one factor into it.
+- **Semantic role:** properties of a supplied subset, represented by
+  `prop is_ideal([CommutativeRingSetting], I power_set(A))` and
+  `prop is_prime_ideal(...)`.
+- **Nearest wrong alternative:** a first-class ideal struct would package a
+  subset no current theorem stores or projects. Defining primality as “the
+  quotient is a domain” would make the flagship equivalence tautological.
+- **Dependencies:** commutative-ring laws and native subsets.
+- **Downstream uses:** homomorphism kernels and the quotient-domain theorem.
+- **Allowable hole:** maximal ideals are named only after a checked theorem
+  consumes them; the full maximal-ideal/quotient-field equivalence needs the
+  ideal-correspondence or generated-ideal layer and is beyond this version.
+
+### Supplied quotient presentation
+
+- **Ordinary meaning:** a quotient of `A` by `I` is presented by a
+  commutative ring `Q` and a surjective ring homomorphism `q : A -> Q` whose
+  kernel is exactly `I`.
+- **Semantic role:** `setting QuotientRingSetting(...)`; it packages ordinary
+  quotient data, not the theorem to be proved.
+- **Interface sketch:** two ring settings, `I`, `q`, preservation laws,
+  `forall x: x in I <=> q(x)=0_Q`, and surjectivity of `q`.
+- **Nearest wrong alternative:** defining the quotient as an arbitrary
+  carrier already satisfying “domain iff prime” would smuggle the desired
+  result into the interface. Constructing equivalence classes and choice of
+  operations locally would add a large representation layer unrelated to the
+  theorem's mathematical proof.
+- **Dependencies:** ideals, ring homomorphisms, and native existential facts.
+- **Downstream uses:** prime ideal iff the supplied quotient is an integral
+  domain.
+- **Allowable hole:** existence of a quotient presentation for every ideal is
+  a separate construction theorem and is not claimed here.
+
+### Integral domains and fields
+
+- **Ordinary meaning:** an integral domain is a nontrivial commutative ring
+  with the zero-product property; a field is a nontrivial commutative ring in
+  which every nonzero element has a multiplicative inverse.
+- **Ideal Litex form:** `prop is_integral_domain([CommutativeRingSetting])` and
+  `prop is_field([CommutativeRingSetting])`.
+- **Nearest wrong alternative:** putting an inverse function into the base
+  ring setting would exclude rings that are not fields and conflate supplied
+  data with existential field structure.
+- **Dependencies:** commutative-ring laws; the finite theorem additionally
+  needs native finite cardinality, function range, injectivity, and preimage
+  interfaces.
+- **Downstream uses:** the quotient characterization and the finite-domain
+  theorem.
+- **Allowable hole:** field extensions and Galois theory are beyond the stop
+  line.
 
 ## Dependency map
 
@@ -105,14 +197,30 @@ two GroupSetting bundles + supplied function
   -> kernel set builder                     [native construction]
   -> subgroup and normal-subgroup laws      [definition]
   -> kernel is normal                       [flagship proof]
+
+two CommutativeRingSetting bundles + supplied function
+  -> RingHomomorphismSetting                [universal context]
+  -> kernel ideal                           [proof]
+  -> ideal / prime-ideal vocabulary         [definitions]
+
+source ring + ideal + target ring + quotient map
+  -> QuotientRingSetting                    [surjective map, exact kernel]
+  -> prime ideal iff quotient domain        [flagship proof]
+
+finite commutative ring + zero-product law
+  -> injective multiplication by nonzero    [proof]
+  -> full finite range / preimage of one    [finite-set bridge]
+  -> inverse for every nonzero element      [field theorem]
 ```
 
 ## Intended build order
 
-Define the candidate group relation, expose its setting, prove cancellation
-and the identity/inverse uniqueness toolkit, define the homomorphism relation
-and setting, prove identity and inverse preservation, then use the native
-kernel set builder to prove the kernel is a normal subgroup.
+Retain the checked group slice. Then define the commutative-ring setting and
+its map setting, prove preservation lemmas and kernel ideality, add ideals and
+prime ideals, define a quotient presentation through a surjective map with
+exact kernel, and prove the quotient-domain characterization. Add domains and
+fields before attempting the finite-domain theorem so its proof consumes the
+public interfaces rather than rebuilding them locally.
 
 ## Interface decisions and permissible gaps
 
@@ -120,3 +228,7 @@ Settings are the default theorem surface. Introduce a struct only when a real
 consumer constructs, transports, compares, or returns a whole algebraic
 system. Do not retain both representations through wrappers merely for
 convenience.
+
+General quotient construction, maximal-ideal correspondence, modules,
+algebras, and extension theory are not permissible hidden trust holes. They
+remain explicit non-goals until a later vertical slice is separately designed.

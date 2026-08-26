@@ -79,6 +79,8 @@ thread_local! {
         const { RefCell::new(None) };
 }
 
+/// Return the generated Litex builtin rule schemas, compiling them once per
+/// thread and then cloning the cached handles for verifier searches.
 pub fn registered_local_builtin_rules() -> Result<Vec<RegisteredLocalBuiltinRule>, RuntimeError> {
     COMPILED_RULES.with(|cache| {
         if cache.borrow().is_none() {

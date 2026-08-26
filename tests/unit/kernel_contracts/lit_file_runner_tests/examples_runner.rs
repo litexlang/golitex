@@ -2,8 +2,9 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
-use crate::pipeline::{execute_source, render_run_output};
+use crate::pipeline::render_run_output;
 use crate::prelude::*;
+use crate::test_support::execute_source;
 
 use super::helper::{
     collect_lit_files_recursive_under_excluding, collect_markdown_files_under_dir_sorted,
@@ -189,7 +190,7 @@ fn collect_full_suite_result(
 fn run_examples_impl() {
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let runtime_setup_start = Instant::now();
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     let runtime_setup_duration_ms = runtime_setup_start.elapsed().as_secs_f64() * 1000.0;
 
     let examples_summary = run_examples_phase1_with_runtime(&manifest_dir, &mut runtime, true);
@@ -208,7 +209,7 @@ fn run_examples_impl() {
 fn run_examples_dataset_impl() {
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let runtime_setup_start = Instant::now();
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     let runtime_setup_duration_ms = runtime_setup_start.elapsed().as_secs_f64() * 1000.0;
     let examples_summary = run_examples_phase1_with_runtime(&manifest_dir, &mut runtime, false);
     print_examples_dataset_timing_summary(runtime_setup_duration_ms, &examples_summary, false);
@@ -217,7 +218,7 @@ fn run_examples_dataset_impl() {
 fn run_docs_markdown_impl(include_manual_docs: bool) {
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let runtime_setup_start = Instant::now();
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     let runtime_setup_duration_ms = runtime_setup_start.elapsed().as_secs_f64() * 1000.0;
     let docs_summary =
         run_docs_markdown_with_runtime(&manifest_dir, &mut runtime, include_manual_docs, true);
@@ -385,7 +386,7 @@ fn run_examples_phase1_sequential_with_runtime(
                 runtime.set_current_user_lit_file_path(item.path_for_runtime.as_str());
             }
 
-            let normalized_source = remove_windows_carriage_return(item.source.as_str());
+            let normalized_source = remove_windows_carriage_from_str(item.source.as_str());
             runtime.set_current_source_allows_inline_imports(source_has_isolated_import(
                 normalized_source.as_str(),
             ));
@@ -519,7 +520,7 @@ fn run_docs_markdown_with_runtime(
         }
         runtime.set_current_user_lit_file_path(source_path.as_str());
 
-        let normalized_source = remove_windows_carriage_return(source_code);
+        let normalized_source = remove_windows_carriage_from_str(source_code);
         let start_snippet = Instant::now();
         let (stmt_results, runtime_error) = execute_source(normalized_source.as_str(), runtime);
         let duration_ms = start_snippet.elapsed().as_secs_f64() * 1000.0;
@@ -686,7 +687,7 @@ fn push_markdown_run_groups(
 }
 
 fn run_litex_run_group(group: LitexRunGroup) -> LitexRunGroupSummary {
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     let mut run_durations_ms: Vec<(String, f64)> = Vec::new();
     let mut failed_labels: Vec<String> = Vec::new();
     let mut failure_outputs: Vec<String> = Vec::new();
@@ -716,7 +717,7 @@ fn run_litex_run_group(group: LitexRunGroup) -> LitexRunGroupSummary {
             runtime.set_current_user_lit_file_path(item.path_for_runtime.as_str());
         }
 
-        let normalized_source = remove_windows_carriage_return(item.source.as_str());
+        let normalized_source = remove_windows_carriage_from_str(item.source.as_str());
         runtime.set_current_source_allows_inline_imports(source_has_isolated_import(
             normalized_source.as_str(),
         ));

@@ -44,7 +44,7 @@ pub fn to_latex(source_code: &str, runtime: &mut Runtime) -> Result<String, Runt
 
 pub fn to_latex_from_file(file_path: &str) -> Result<String, RuntimeError> {
     let resolved_path = resolve_file_path(file_path)?;
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     match discover_repository_for_file(&mut runtime, resolved_path.as_str())? {
         Some(target) => to_latex_project_run(&mut runtime, target),
         None => {
@@ -57,13 +57,13 @@ pub fn to_latex_from_file(file_path: &str) -> Result<String, RuntimeError> {
 
 pub fn to_latex_from_source(source_code: &str, entry_label: &str) -> Result<String, RuntimeError> {
     let normalized = source_code.replace('\r', "");
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source(entry_label);
     to_latex(normalized.as_str(), &mut runtime)
 }
 
 pub fn to_latex_from_repository(repository_path: &str) -> Result<String, RuntimeError> {
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     let target = discover_repository(&mut runtime, repository_path)?;
     to_latex_project_run(&mut runtime, target)
 }

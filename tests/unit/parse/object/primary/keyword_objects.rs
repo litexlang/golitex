@@ -8,7 +8,7 @@ fn parse_obj_line(source: &str) -> Result<Obj, RuntimeError> {
     let tokenizer = Tokenizer::new();
     let mut blocks = tokenizer.parse_blocks(source, Rc::from("test.lit"))?;
     assert_eq!(blocks.len(), 1, "{source:?}");
-    Runtime::new().parse_obj(&mut blocks[0])
+    Runtime::default().parse_obj(&mut blocks[0])
 }
 
 #[test]
@@ -69,7 +69,7 @@ fn parsed_sum_occurrences_are_present_and_distinct() {
         .expect("two sum objects should tokenize");
     assert_eq!(blocks.len(), 2);
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     let first = runtime
         .parse_obj(&mut blocks[0])
         .expect("first sum should parse");

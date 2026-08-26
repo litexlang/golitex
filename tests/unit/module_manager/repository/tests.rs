@@ -1,5 +1,6 @@
 use super::*;
 use crate::output::display_stmt_result_json_v2;
+use crate::test_support::execute_source;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 #[test]
@@ -501,9 +502,9 @@ after = "./after.lit"
         );
         assert!(project_output.contains("1 = 0"), "{project_output}");
 
-        let mut strict_runtime = Runtime::new();
+        let mut strict_runtime = Runtime::default();
         strict_runtime.strict_mode = true;
-        let (_, strict_error, _, _) = execute_file_in_runtime(
+        let (_, strict_error) = execute_file_in_runtime(
             target.as_str(),
             &mut strict_runtime,
             FileExecutionOptions::default(),
@@ -587,14 +588,13 @@ main = "./main.lit"
         write_file(&file_path, "have seed R = 1\n");
 
         with_standard_library_root(&std_root, || {
-            let mut runtime = Runtime::new();
+            let mut runtime = Runtime::default();
             let file = path_string_for_test(&file_path);
-            let (_, file_error, _, _) = execute_file_in_runtime(
+            let (_, file_error) = execute_file_in_runtime(
                 file.as_str(),
                 &mut runtime,
                 FileExecutionOptions {
                     force_isolated: true,
-                    trust_before_line: None,
                 },
             );
             assert!(file_error.is_none(), "{file_error:?}");
@@ -729,14 +729,13 @@ main2 = "./main2.lit"
         );
         write_file(&file_path, "have seed R = 1\n");
 
-        let mut runtime = Runtime::new();
+        let mut runtime = Runtime::default();
         let file = path_string_for_test(&file_path);
-        let (_, file_error, _, _) = execute_file_in_runtime(
+        let (_, file_error) = execute_file_in_runtime(
             file.as_str(),
             &mut runtime,
             FileExecutionOptions {
                 force_isolated: true,
-                trust_before_line: None,
             },
         );
         assert!(file_error.is_none(), "{file_error:?}");
@@ -786,14 +785,13 @@ have ProductSet set = cart(R, R)
         );
         write_file(&file_path, "have seed R = 1\n");
 
-        let mut runtime = Runtime::new();
+        let mut runtime = Runtime::default();
         let file = path_string_for_test(&file_path);
-        let (_, file_error, _, _) = execute_file_in_runtime(
+        let (_, file_error) = execute_file_in_runtime(
             file.as_str(),
             &mut runtime,
             FileExecutionOptions {
                 force_isolated: true,
-                trust_before_line: None,
             },
         );
         assert!(file_error.is_none(), "{file_error:?}");
@@ -907,15 +905,14 @@ assumption = "./assumption.lit"
         write_file(&module_root.join("assumption.lit"), "1 = 0\n");
         write_file(&file_path, "have seed R = 1\n");
 
-        let mut runtime = Runtime::new();
+        let mut runtime = Runtime::default();
         runtime.strict_mode = true;
         let file = path_string_for_test(&file_path);
-        let (_, file_error, _, _) = execute_file_in_runtime(
+        let (_, file_error) = execute_file_in_runtime(
             file.as_str(),
             &mut runtime,
             FileExecutionOptions {
                 force_isolated: true,
-                trust_before_line: None,
             },
         );
         assert!(file_error.is_none(), "{file_error:?}");
@@ -1313,7 +1310,7 @@ main = "./main.lit"
         );
 
         let root_string = path_string_for_test(&root);
-        let mut runtime = Runtime::new();
+        let mut runtime = Runtime::default();
         discover_repository(&mut runtime, root_string.as_str()).expect("discover diamond");
         let left_id = runtime.module_manager.module_id_by_name("Left").unwrap();
         let right_id = runtime.module_manager.module_id_by_name("Right").unwrap();

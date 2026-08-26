@@ -1076,8 +1076,8 @@ pub(super) fn eval_stmt_execution_result_value(
     result: &SuccessEvalStmtExecutionResult,
 ) -> JsonValue {
     match result {
-        SuccessEvalStmtExecutionResult::SkippedByTrustedPrefix => {
-            object(vec![string_field("kind", "SkippedByTrustedPrefix")])
+        SuccessEvalStmtExecutionResult::SkippedByTrustedExecution => {
+            object(vec![string_field("kind", "SkippedByTrustedExecution")])
         }
         SuccessEvalStmtExecutionResult::Evaluated(result) => object(vec![
             string_field("kind", "Evaluated"),

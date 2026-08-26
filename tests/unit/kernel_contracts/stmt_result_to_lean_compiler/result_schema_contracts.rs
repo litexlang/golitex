@@ -165,10 +165,10 @@ have fn iterate(n N) R+ by induc n from 0:
 
 #[test]
 fn trusted_definition_results_do_not_invent_verification_evidence() {
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("trusted_definition_results.lit");
     runtime.replace_current_execution_mode(ExecutionMode::Trusted);
-    let (results, error) = crate::pipeline::execute_source(
+    let (results, error) = crate::test_support::execute_source(
         r#"struct TrustedBox:
     value R
 have fn trustedIdentity(x R) R = x

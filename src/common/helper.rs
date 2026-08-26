@@ -144,6 +144,6 @@ pub fn todo_error_message(context: String) -> String {
     format!("TODO: {} is not implemented yet", context)
 }
 
-pub fn remove_windows_carriage_return(source_code: &str) -> String {
+pub fn remove_windows_carriage_from_str(source_code: &str) -> String {
     source_code.replace('\r', "")
 }

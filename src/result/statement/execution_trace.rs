@@ -66,24 +66,6 @@ impl StatementExecutionTrace {
         }
     }
 
-    pub fn trusted_prefix() -> Self {
-        Self::trusted().with_trusted_prefix()
-    }
-
-    pub fn with_trusted_prefix(mut self) -> Self {
-        let message = Some("trusted_prefix".to_string());
-        self.verify_well_definedness =
-            ExecutionPhaseTrace::new(StatementPhaseStatus::Skipped, message.clone());
-        self.verify_process = ExecutionPhaseTrace::new(StatementPhaseStatus::Skipped, message);
-        self.verification_status = Some("trusted_prefix".to_string());
-        self
-    }
-
-    pub fn with_verified_status(mut self) -> Self {
-        self.verification_status = Some("verified".to_string());
-        self
-    }
-
     pub fn unknown() -> Self {
         StatementExecutionTrace {
             verify_well_definedness: ExecutionPhaseTrace::new(StatementPhaseStatus::Success, None),

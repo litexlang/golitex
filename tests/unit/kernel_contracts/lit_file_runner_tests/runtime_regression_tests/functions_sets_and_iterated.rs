@@ -1,4 +1,5 @@
 use super::*;
+use crate::test_support::execute_source;
 
 #[test]
 fn checked_definition_reduction_uses_only_terminating_equality_leaves() {
@@ -13,7 +14,7 @@ have value R = 1 + (1 + 1)
 value = combined(1)
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime
         .start_isolated_source("checked_definition_reduction_uses_stored_function_leaf_equalities");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
@@ -32,7 +33,7 @@ have fn combined(k N+) R = left(k) + right(k)
 have value R = 1 + (1 + 1)
 value = combined(1)
 "#;
-    let mut recursive_unfold_runtime = Runtime::new();
+    let mut recursive_unfold_runtime = Runtime::default();
     recursive_unfold_runtime.start_isolated_source(
         "checked_definition_reduction_does_not_unfold_named_child_definitions",
     );
@@ -51,7 +52,7 @@ have q R
 have fn with_zero(t R) cart(R, R) = (0 + t, t)
 with_zero(q) = (q, q)
 "#;
-    let mut normalization_leaf_runtime = Runtime::new();
+    let mut normalization_leaf_runtime = Runtime::default();
     normalization_leaf_runtime.start_isolated_source(
         "checked_definition_reduction_uses_bounded_normalization_for_structural_leaves",
     );
@@ -69,7 +70,7 @@ with_zero(q) = (q, q)
 have a, t R
 a * t = a * t + 0
 "#;
-    let mut direct_normalization_runtime = Runtime::new();
+    let mut direct_normalization_runtime = Runtime::default();
     direct_normalization_runtime
         .start_isolated_source("terminating_equality_leaf_uses_bounded_normalization");
     let (stmt_results, runtime_error) = execute_source(
@@ -92,7 +93,7 @@ have fn wrapped(t R) cart(R, R) = (h(f(t)), t)
 have value cart(R, R) = wrapped(1)
 value = (f(1), 1)
 "#;
-    let mut forall_leaf_runtime = Runtime::new();
+    let mut forall_leaf_runtime = Runtime::default();
     forall_leaf_runtime.start_isolated_source(
         "checked_definition_reduction_does_not_use_forall_for_structural_leaves",
     );
@@ -110,7 +111,7 @@ value = (f(1), 1)
 have fn guarded(k N+: 2 <= k) R = k
 guarded(1) = 1
 "#;
-    let mut invalid_runtime = Runtime::new();
+    let mut invalid_runtime = Runtime::default();
     invalid_runtime.start_isolated_source("definition_reduction_does_not_bypass_domain_facts");
     let (stmt_results, runtime_error) = execute_source(invalid_source, &mut invalid_runtime);
     let (run_succeeded, _) = render_run_output(&invalid_runtime, &stmt_results, &runtime_error);
@@ -126,7 +127,7 @@ trust a = 1
 have selected R = f(a, 0)
 selected = f(1, 0)
 "#;
-    let mut implicit_alias_runtime = Runtime::new();
+    let mut implicit_alias_runtime = Runtime::default();
     implicit_alias_runtime
         .start_isolated_source("known_congruence_does_not_reopen_an_alias_representative");
     let (stmt_results, runtime_error) =
@@ -146,7 +147,7 @@ trust a = 1
 have selected R = f(a, 0)
 selected = f(a, 0) = f(1, 0)
 "#;
-    let mut one_argument_runtime = Runtime::new();
+    let mut one_argument_runtime = Runtime::default();
     one_argument_runtime
         .start_isolated_source("explicit_alias_bridge_then_known_argument_congruence");
     let (stmt_results, runtime_error) =
@@ -167,7 +168,7 @@ trust b = 2
 have selected R = f(a, b)
 selected = f(a, b) = f(1, 2)
 "#;
-    let mut two_argument_runtime = Runtime::new();
+    let mut two_argument_runtime = Runtime::default();
     two_argument_runtime
         .start_isolated_source("explicit_alias_bridge_then_two_argument_congruence");
     let (stmt_results, runtime_error) =
@@ -186,7 +187,7 @@ trust have a, b R
 trust a = 1
 f(a, b) = f(1, 2)
 "#;
-    let mut missing_argument_equality_runtime = Runtime::new();
+    let mut missing_argument_equality_runtime = Runtime::default();
     missing_argument_equality_runtime
         .start_isolated_source("known_congruence_requires_every_corresponding_argument_equality");
     let (stmt_results, runtime_error) = execute_source(
@@ -213,7 +214,7 @@ trust b = 4
 trust f = g(1, 2)
 f(a, b) = g(1, 2)(3, 4)
 "#;
-    let mut curried_runtime = Runtime::new();
+    let mut curried_runtime = Runtime::default();
     curried_runtime.start_isolated_source("known_congruence_aligns_curried_applications");
     let (stmt_results, runtime_error) = execute_source(curried_source, &mut curried_runtime);
     let (run_succeeded, run_output) =
@@ -246,7 +247,7 @@ have expected cart(VSet, WSet) = (V.add(x[1], y[1]), W.add(x[2], y[2]))
 "#;
 
     let implicit_source = format!("{setup}\nxy = expected\n");
-    let mut implicit_runtime = Runtime::new();
+    let mut implicit_runtime = Runtime::default();
     implicit_runtime
         .start_isolated_source("template_aliases_do_not_open_an_equality_representative_graph");
     let (stmt_results, runtime_error) = execute_source(&implicit_source, &mut implicit_runtime);
@@ -265,7 +266,7 @@ xy = expected
 xy = (V.add(x[1], y[1]), W.add(x[2], y[2]))
 "#
     );
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("explicit_template_definition_reduction");
     let (stmt_results, runtime_error) = execute_source(&explicit_source, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -282,7 +283,7 @@ fn checked_definition_reduction_allows_direct_pure_computation() {
 have fn square(t R) R = t^2
 square(2) = 4
 "#;
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("checked_definition_reduction_allows_direct_pure_computation");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -303,7 +304,7 @@ trust b = d
 '(,a] = '(,c]
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("structural_known_congruence_compares_interval_endpoints");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -328,7 +329,7 @@ forall p, q cart(N, N):
     pair_N(p, q)[2] $in N
 "#;
 
-            let mut runtime = Runtime::new();
+            let mut runtime = Runtime::default();
             runtime.start_isolated_source(
                 "cart_valued_function_membership_does_not_reenter_projection_well_definedness",
             );
@@ -365,7 +366,7 @@ claim:
     by def $simplex_shape(n, fn(i1 range(0, n)) R {(a(i1) + b(i1)) / 2})
 "#;
 
-            let mut runtime = Runtime::new();
+            let mut runtime = Runtime::default();
             runtime.start_isolated_source(
                 "anonymous_function_application_in_unfolded_forall_uses_pointwise_fact",
             );
@@ -409,7 +410,7 @@ claim:
     x = x
 "#;
 
-            let mut runtime = Runtime::new();
+            let mut runtime = Runtime::default();
             runtime.start_isolated_source("obtain_body_well_defined_can_use_forall_domain_fact");
             runtime.set_output_style(OutputStyle::Detailed);
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
@@ -453,7 +454,7 @@ claim:
     f $in fn(alpha I) X
 "#;
 
-            let mut runtime = Runtime::new();
+            let mut runtime = Runtime::default();
             runtime.start_isolated_source(
                 "function_space_membership_uses_same_domain_pointwise_values",
             );
@@ -484,7 +485,7 @@ claim:
     f $in fn(x R) {0}
 "#;
 
-            let mut invalid_runtime = Runtime::new();
+            let mut invalid_runtime = Runtime::default();
             invalid_runtime
                 .start_isolated_source("function_space_membership_rejects_captured_outer_value");
             let (invalid_results, invalid_error) =
@@ -512,7 +513,7 @@ claim:
     f $in fn(z R) {z}
 "#;
 
-            let mut valid_runtime = Runtime::new();
+            let mut valid_runtime = Runtime::default();
             valid_runtime.start_isolated_source(
                 "function_space_membership_accepts_full_pointwise_proof_with_same_name",
             );
@@ -545,7 +546,7 @@ forall y R:
 f $in fn(x R: x >= 0) {0}
 "#;
 
-            let mut runtime = Runtime::new();
+            let mut runtime = Runtime::default();
             runtime.start_isolated_source(
                 "function_space_membership_assumes_generated_domain_facts_before_application_check",
             );
@@ -573,7 +574,7 @@ have x0 S0
 x0 $in T0
 "#;
 
-            let mut runtime = Runtime::new();
+            let mut runtime = Runtime::default();
             runtime
                 .start_isolated_source("parameter_membership_uses_direct_known_subset_on_demand");
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
@@ -597,7 +598,7 @@ fn membership_builtin_does_not_rewrite_positive_order_goals() {
 forall A power_set(R+), x A:
     0 < x
 "#;
-            let mut order_only_runtime = Runtime::new();
+            let mut order_only_runtime = Runtime::default();
             order_only_runtime
                 .start_isolated_source("membership_builtin_does_not_rewrite_positive_order_goals");
             let (stmt_results, runtime_error) =
@@ -615,7 +616,7 @@ forall A power_set(R+), x A:
     x $in R+
     0 < x
 "#;
-            let mut explicit_runtime = Runtime::new();
+            let mut explicit_runtime = Runtime::default();
             explicit_runtime
                 .start_isolated_source("explicit_positive_membership_can_keep_inference_moving");
             let (stmt_results, runtime_error) =
@@ -656,7 +657,7 @@ trust x $in A
             ];
 
             for (label, source_code) in cases {
-                let mut runtime = Runtime::new();
+                let mut runtime = Runtime::default();
                 runtime.start_isolated_source(label);
                 let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
                 let (run_succeeded, run_output) =
@@ -733,7 +734,7 @@ trust x $in A
             ];
 
             for (label, source_code) in cases {
-                let mut runtime = Runtime::new();
+                let mut runtime = Runtime::default();
                 runtime.start_isolated_source(label);
                 let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
                 let (run_succeeded, run_output) =
@@ -786,7 +787,7 @@ trust A $subset B
 trust B $subset U
 "#;
 
-            let mut runtime = Runtime::new();
+            let mut runtime = Runtime::default();
             runtime
                 .start_isolated_source("restricted_membership_builtin_is_direct_and_forward_only");
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
@@ -850,7 +851,7 @@ have y, S, T set
 trust y $in T
 trust S $subset T
 "#;
-            let mut reverse_runtime = Runtime::new();
+            let mut reverse_runtime = Runtime::default();
             reverse_runtime
                 .start_isolated_source("restricted_membership_builtin_does_not_reverse_subset");
             let (stmt_results, runtime_error) =
@@ -904,7 +905,7 @@ trust B = B_equal
 trust x $in A
 trust A $subset B
 "#;
-            let mut equal_sets_runtime = Runtime::new();
+            let mut equal_sets_runtime = Runtime::default();
             equal_sets_runtime
                 .start_isolated_source("restricted_membership_builtin_uses_equal_sets");
             let (stmt_results, runtime_error) =
@@ -959,7 +960,7 @@ trust S $subset T
                 ),
             ];
             for (label, source_code) in negative_cases {
-                let mut runtime = Runtime::new();
+                let mut runtime = Runtime::default();
                 runtime.start_isolated_source(label);
                 let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
                 let (run_succeeded, run_output) =
@@ -1009,7 +1010,7 @@ try:
     trust x $in A
     trust A $subset B
 "#;
-        let mut committed_runtime = Runtime::new();
+        let mut committed_runtime = Runtime::default();
         committed_runtime.start_isolated_source("membership_indexes_follow_try_commit");
         let (stmt_results, runtime_error) =
             execute_source(committed_source, &mut committed_runtime);
@@ -1051,7 +1052,7 @@ try:
     trust failed_A $subset failed_B
     0 = 1
 "#;
-        let mut failed_runtime = Runtime::new();
+        let mut failed_runtime = Runtime::default();
         failed_runtime.start_isolated_source("membership_indexes_follow_try_rollback");
         let before_counts = {
             let environment = failed_runtime.top_level_env();
@@ -1138,7 +1139,7 @@ thm membership_from_trusted_owner:
             ];
 
             for (label, source_code) in cases {
-                let mut runtime = Runtime::new();
+                let mut runtime = Runtime::default();
                 runtime.start_isolated_source(label);
                 let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
                 let (run_succeeded, run_output) =
@@ -1214,7 +1215,7 @@ claim:
     0 = 0
 "#;
 
-            let mut runtime = Runtime::new();
+            let mut runtime = Runtime::default();
             runtime.start_isolated_source("set_builder_parameter_inherits_known_numeric_carrier");
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
@@ -1241,7 +1242,7 @@ claim:
     0 = 0
 "#;
 
-            let mut runtime = Runtime::new();
+            let mut runtime = Runtime::default();
             runtime.start_isolated_source("set_builder_parameter_does_not_invent_numeric_carrier");
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
@@ -1271,7 +1272,7 @@ claim:
     0 = 0
 "#;
 
-            let mut runtime = Runtime::new();
+            let mut runtime = Runtime::default();
             runtime.start_isolated_source(
                 "parameter_over_set_builder_inherits_builder_domain_carrier",
             );
@@ -1300,7 +1301,7 @@ claim:
     0 = 0
 "#;
 
-            let mut runtime = Runtime::new();
+            let mut runtime = Runtime::default();
             runtime
                 .start_isolated_source("punctured_domain_parameter_inherits_ambient_real_carrier");
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
@@ -1331,7 +1332,7 @@ forall S set, f \FunctionCarrier<S>:
     \keep<S>(f) $in \FunctionCarrier<S>
 "#;
 
-            let mut runtime = Runtime::new();
+            let mut runtime = Runtime::default();
             runtime.start_isolated_source(
                 "template_named_function_space_accepts_anonymous_function_return",
             );
@@ -1354,7 +1355,7 @@ fn anonymous_function_body_must_belong_to_definition_return_set() {
 fn(x R) N {x}(1 / 2) $in N
 "#;
 
-    let mut invalid_runtime = Runtime::new();
+    let mut invalid_runtime = Runtime::default();
     invalid_runtime
         .start_isolated_source("anonymous_function_body_must_belong_to_definition_return_set");
     let (stmt_results, runtime_error) = execute_source(invalid_source, &mut invalid_runtime);
@@ -1376,7 +1377,7 @@ fn(x R) N {x}(1 / 2) $in N
     let valid_source = r#"
 fn(x R) R {x}(1 / 2) = 1 / 2
 "#;
-    let mut valid_runtime = Runtime::new();
+    let mut valid_runtime = Runtime::default();
     valid_runtime
         .start_isolated_source("anonymous_function_body_in_definition_return_set_is_well_defined");
     let (stmt_results, runtime_error) = execute_source(valid_source, &mut valid_runtime);
@@ -1393,7 +1394,7 @@ have n N+ = 3
 have cart c for i1 <= n, proj(c, i1) = R
 have fn coordinate_fn(p c) fn(i1 closed_range(1, n)) R = fn(j closed_range(1, n)) R {p[j]}
 "#;
-    let mut symbolic_cart_runtime = Runtime::new();
+    let mut symbolic_cart_runtime = Runtime::default();
     symbolic_cart_runtime
         .start_isolated_source("anonymous_function_cart_coordinate_in_definition_return_set");
     let (stmt_results, runtime_error) =
@@ -1433,7 +1434,7 @@ fn iterated_operators_require_scalar_return_sets() {
     ];
 
     for (label, source_code, expected_error) in invalid_cases {
-        let mut runtime = Runtime::new();
+        let mut runtime = Runtime::default();
         runtime.start_isolated_source(label);
         let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
@@ -1456,7 +1457,7 @@ finite_set_product({1, 2}, fn(k {1, 2}) Z {k}) = finite_set_product({1, 2}, fn(k
 finite_set_sum(3...1, fn(k Z) Z {0}) = 0
 finite_set_product(3...1, fn(k Z) Z {1}) = 1
 "#;
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("iterated_scalar_return_sets_remain_valid");
     let (stmt_results, runtime_error) = execute_source(valid_source, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -1476,7 +1477,7 @@ forall E2 set, E power_set(E2), f fn(x E2) R:
     fn_range(fn(x E) R {f(x)}) $subset R
 "#;
 
-            let mut runtime = Runtime::new();
+            let mut runtime = Runtime::default();
             runtime.start_isolated_source(
                 "anonymous_fn_restriction_over_abstract_subset_is_well_defined",
             );
@@ -1513,7 +1514,7 @@ claim:
     fn(y '[1, 2)) R {piece(y)}(x) = fn(y '[1, 2)) R {y^2}(x)
 "#;
 
-            let mut runtime = Runtime::new();
+            let mut runtime = Runtime::default();
             runtime.start_isolated_source(
                 "restricted_lambda_can_apply_function_on_larger_numeric_interval",
             );
@@ -1579,7 +1580,7 @@ have fn f(x R) R by cases:
             ];
 
             for (label, source_code, expected_error) in invalid_cases {
-                let mut runtime = Runtime::new();
+                let mut runtime = Runtime::default();
                 runtime.start_isolated_source(label);
                 let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
                 let (run_succeeded, run_output) =
@@ -1619,7 +1620,7 @@ have fn only_nonnegative(x R: x >= 0) R by cases:
 
 only_nonnegative(0) = 0
 "#;
-            let mut runtime = Runtime::new();
+            let mut runtime = Runtime::default();
             runtime.start_isolated_source("casewise_function_domain_coverage");
             let (stmt_results, runtime_error) =
                 execute_source(domain_relative_source, &mut runtime);
@@ -1638,7 +1639,7 @@ have fn rational_indicator(x R) R by cases:
 
 rational_indicator(0) = 1
 "#;
-            let mut runtime = Runtime::new();
+            let mut runtime = Runtime::default();
             runtime.start_isolated_source("casewise_function_negated_membership_condition");
             let (stmt_results, runtime_error) =
                 execute_source(negated_membership_source, &mut runtime);
@@ -1664,7 +1665,7 @@ have fn ambient(x '[1, 3]) R = x
 fn(x {2}) R {ambient(x)} = fn(x {2}) R {ambient(x)}
 "#;
 
-            let mut runtime = Runtime::new();
+            let mut runtime = Runtime::default();
             runtime.start_isolated_source("anonymous_fn_body_can_use_singleton_parameter_equality");
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
@@ -1743,7 +1744,7 @@ fn(J P) R {0} = c
 finite_set_sum(P, fn(J P) R {0}) = finite_set_sum(P, c)
 "#;
 
-            let mut runtime = Runtime::new();
+            let mut runtime = Runtime::default();
             runtime.start_isolated_source(
                 "conditional_contribution_family_reindexes_to_equal_finite_sum",
             );
@@ -1775,7 +1776,7 @@ forall f, g fn(x R) R, a R:
         fn(x R) R {f(x) * g(x)}(a) = fn(x R) R {f(x) * g(x)}(-a)
 "#;
 
-            let mut positive_runtime = Runtime::new();
+            let mut positive_runtime = Runtime::default();
             positive_runtime.start_isolated_source(
                 "anonymous_fn_applications_beta_reduce_before_structural_equality_comparison_positive",
             );
@@ -1799,7 +1800,7 @@ forall f, g fn(x R) R, a, b R:
         fn(x R) R {f(x) * g(x)}(a) = fn(x R) R {f(x) * g(x)}(b)
 "#;
 
-            let mut negative_runtime = Runtime::new();
+            let mut negative_runtime = Runtime::default();
             negative_runtime.start_isolated_source(
                 "anonymous_fn_applications_beta_reduce_before_structural_equality_comparison_negative",
             );
@@ -1828,7 +1829,7 @@ forall a, b seq(R), k N+:
     seq_add(a, b)(k) = a(k) + b(k)
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("curried_have_fn_equal_unfolds_pointwise");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -1849,7 +1850,7 @@ forall a, b seq(R):
     seq_add(a, b) $in seq(R)
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("fn_application_returning_fn_set_verifies_sequence_membership");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -1881,7 +1882,7 @@ forall p cart(R, R):
         p[1]^2 + p[2]^2 = 5^2
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("set_valued_have_fn_application_unfolds_for_membership");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -1903,7 +1904,7 @@ forall n, K N+, point rows(n)(K):
     point[1] $in N+
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("function_valued_set_family_preserves_member_cart_carrier");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -1925,7 +1926,7 @@ forall n, K N+, point scalar_rows(n)(K):
     point[1] $in N+
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime
         .start_isolated_source("function_valued_scalar_set_family_does_not_invent_tuple_carrier");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
@@ -1945,7 +1946,7 @@ have nonnegative_reals power_set(R) = {x R: x >= 0}
 1 $in nonnegative_reals
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("exactly_indexed_named_set_builder_unfolds_for_membership");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -1963,7 +1964,7 @@ have positive_reals power_set(R) = {x R: x > 0}
 0 $in positive_reals
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("exactly_indexed_named_set_builder_keeps_predicate_obligation");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -1983,7 +1984,7 @@ template<s set>:
 1 $in \selected<R>({1})
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("template_set_valued_have_fn_application_unfolds_for_membership");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -2003,7 +2004,7 @@ have fn line(a, b, c R: a != 0 or b != 0) power_set(cart(R, R)) = {x cart(R, R):
 (0, 0) $in line(0, 0, 0)
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("set_valued_have_fn_application_keeps_side_conditions");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -2024,7 +2025,7 @@ forall x, y R:
         abs(x) = abs(y)
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("unary_numeric_objects_respect_argument_equality");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -2049,7 +2050,7 @@ forall f, g fn(x Z) Z:
     sum(1, 3, fn(x Z) Z {f(x) + g(x)}) = sum(1, 3, fn(y Z) Z {g(y) + f(y)})
 "#;
 
-            let mut positive_runtime = Runtime::new();
+            let mut positive_runtime = Runtime::default();
             positive_runtime.start_isolated_source("iterated_operator_equality_fn_eq_positive");
             let (positive_stmt_results, positive_runtime_error) =
                 execute_source(positive_source_code, &mut positive_runtime);
@@ -2068,7 +2069,7 @@ forall f, g fn(x Z) Z:
 product(1, 3, fn(x Z) Z {x}) = product(1, 4, fn(y Z) Z {y})
 "#;
 
-            let mut negative_runtime = Runtime::new();
+            let mut negative_runtime = Runtime::default();
             negative_runtime.start_isolated_source("iterated_operator_equality_fn_eq_negative");
             let (negative_stmt_results, negative_runtime_error) =
                 execute_source(negative_source_code, &mut negative_runtime);
@@ -2131,7 +2132,7 @@ thm finite_series_scalar_mul_test:
     sum(m, n, fn(i1 Z) R {c * a(i1)}) = c * sum(m, n, fn(i1 Z) R {a(i1)})
 "#;
 
-        let mut runtime = Runtime::new();
+        let mut runtime = Runtime::default();
         runtime.start_isolated_source("finite_sum_order_uses_pointwise_bounds");
         let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
@@ -2178,7 +2179,7 @@ thm bad_symbolic_empty_product:
             ];
 
             for (name, source_code, expected_message) in cases {
-                let mut runtime = Runtime::new();
+                let mut runtime = Runtime::default();
                 runtime.start_isolated_source(name);
                 let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
                 let (run_succeeded, run_output) =
@@ -2209,7 +2210,7 @@ fn nested_iterated_operator_with_positive_index_is_well_defined() {
 eval sum(1, 3, fn(x N+) N+ {sum(1, x, fn(y N+) N+ {x + y})})
 "#;
 
-            let mut runtime = Runtime::new();
+            let mut runtime = Runtime::default();
             runtime.start_isolated_source(
                 "nested_iterated_operator_with_positive_index_is_well_defined",
             );
@@ -2274,7 +2275,7 @@ thm builtin_bijective_unfolds:
     $surjective(A, B, f)
 "#;
 
-        let mut runtime = Runtime::new();
+        let mut runtime = Runtime::default();
         runtime.start_isolated_source("builtin_function_properties_verify_and_unfold");
         runtime.set_output_style(OutputStyle::Detailed);
         let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
@@ -2309,7 +2310,7 @@ by contra:
     impossible 1 = 2
 "#;
 
-        let mut runtime = Runtime::new();
+        let mut runtime = Runtime::default();
         runtime.start_isolated_source("builtin_function_property_negation_uses_by_contra");
         let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
@@ -2341,7 +2342,7 @@ forall:
         $q(1, {z R: $q(1 + 2, z)})
 "#;
 
-            let mut runtime = Runtime::new();
+            let mut runtime = Runtime::default();
             runtime
                 .start_isolated_source("known_forall_matches_alpha_equivalent_set_builder_binders");
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
@@ -2387,7 +2388,7 @@ thm finite_bijection_preserves_size:
     finite_set_size(A) = finite_set_size(B)
 "#;
 
-        let mut runtime = Runtime::new();
+        let mut runtime = Runtime::default();
         runtime.start_isolated_source("finite_source_function_property_rules");
         runtime.set_output_style(OutputStyle::Detailed);
         let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
@@ -2421,7 +2422,7 @@ fn builtin_function_properties_reject_malformed_arguments() {
 $injective({1}, {1}, 1)
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime
         .start_isolated_source("builtin_function_properties_require_matching_function_signature");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
@@ -2442,7 +2443,7 @@ $injective({1}, {1}, 1)
 have fn mismatched_codomain(x {1}) {2} = 2
 $injective({1}, {1}, mismatched_codomain)
 "#;
-    let mut mismatch_runtime = Runtime::new();
+    let mut mismatch_runtime = Runtime::default();
     mismatch_runtime
         .start_isolated_source("builtin_function_properties_reject_mismatched_codomain");
     let (stmt_results, runtime_error) = execute_source(mismatch_source_code, &mut mismatch_runtime);
@@ -2460,7 +2461,7 @@ $injective({1}, {1}, mismatched_codomain)
         run_output
     );
 
-    let mut arity_runtime = Runtime::new();
+    let mut arity_runtime = Runtime::default();
     arity_runtime.start_isolated_source("builtin_function_properties_reject_wrong_arity");
     let (stmt_results, runtime_error) = execute_source("$injective({1}, {1})", &mut arity_runtime);
     let (run_succeeded, run_output) =
@@ -2489,7 +2490,7 @@ trust $surjective(B, A, g)
 $is_finite_set(A)
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("finite_surjection_rules_do_not_bootstrap_finiteness_cycle");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -2590,7 +2591,7 @@ thm finite_set_sum_triangle_tmp:
     abs(finite_set_sum(X, f)) <= finite_set_sum(X, fn(x X) R {abs(f(x))})
 "#;
 
-        let mut runtime = Runtime::new();
+        let mut runtime = Runtime::default();
         runtime.start_isolated_source("finite_set_sum_core_rules");
         let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
@@ -2641,7 +2642,7 @@ claim:
 by thm finite_set_sum_substitution(finite_set_sum(selected, fn(x selected) R {source_term(x)}), finite_set_sum(selected, fn(x selected) R {rect(x)}))
 "#;
 
-            let mut runtime = Runtime::new();
+            let mut runtime = Runtime::default();
             runtime.start_isolated_source(
                 "finite_set_sum_pointwise_equality_uses_obtained_function_on_subset",
             );
@@ -2667,7 +2668,7 @@ have fn source_term(x ambient) R = x
 finite_set_sum(selected, fn(x selected) R {source_term(x)}) $in R
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("finite_set_sum_dependent_restriction_still_requires_subset");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -2698,7 +2699,7 @@ thm finite_set_sum_disjoint_union_restriction:
     finite_set_sum(union(X, Y), f) = finite_set_sum(X, fn(x X) R {f(x)}) + finite_set_sum(Y, fn(y Y) R {f(y)})
 "#;
 
-            let mut runtime = Runtime::new();
+            let mut runtime = Runtime::default();
             runtime.start_isolated_source(
                 "restricting_a_function_from_a_union_domain_is_well_defined",
             );
@@ -2735,7 +2736,7 @@ thm finite_fubini_tmp:
     finite_set_sum(X, fn(x X) R {finite_set_sum(Y, fn(y Y) R {f((x, y))})}) = finite_set_sum(Y, fn(y Y) R {finite_set_sum(X, fn(x X) R {f((x, y))})})
 "#;
 
-        let mut runtime = Runtime::new();
+        let mut runtime = Runtime::default();
         runtime.start_isolated_source("finite_set_sum_cartesian_product_and_fubini");
         let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
@@ -2777,7 +2778,7 @@ thm finite_set_sum_template_enumeration_well_defined:
     \self_finite_set_sum<X, f, g> = \self_finite_set_sum<X, f, h>
 "#;
 
-            let mut runtime = Runtime::new();
+            let mut runtime = Runtime::default();
             runtime.start_isolated_source("finite_set_sum_bijective_enumerations_are_well_defined");
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
@@ -2841,7 +2842,7 @@ thm finite_set_product_remove_member:
     finite_set_product(A, fn(y A) Z {y}) = finite_set_product(set_minus(A, {x}), fn(y set_minus(A, {x})) Z {y}) * x
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("finite_set_product_core_rules");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -2869,7 +2870,7 @@ have f fn(n N+, x closed_range(1, n)) R
 f(3, 2) = f(3, 2)
 "#;
 
-            let mut runtime = Runtime::new();
+            let mut runtime = Runtime::default();
             runtime.start_isolated_source("dependent_fn_param_set_uses_previous_arg");
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
@@ -2897,7 +2898,7 @@ have fn difference_quotient(X power_set(R), f fn(z X) R, x0 X) fn(y set_minus(X,
 difference_quotient(R, fn(z R) R {z}, 0)(1) = 1
 "#;
 
-            let mut runtime = Runtime::new();
+            let mut runtime = Runtime::default();
             runtime.start_isolated_source("dependent_fn_return_set_instantiates_with_arguments");
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
@@ -2921,7 +2922,7 @@ a <= b
 a >= b
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("known_equality_implies_weak_order");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -2948,7 +2949,7 @@ x $in Q
 x $in R
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("known_forall_membership_uses_standard_set_subset_direction");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -2974,7 +2975,7 @@ trust $p(x)
 x $in Z
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("known_forall_membership_narrowing_requires_known_fact");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -3000,7 +3001,7 @@ claim:
     $p(1, T)
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("known_forall_does_not_substitute_captured_outer_param");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -3026,7 +3027,7 @@ claim:
     $p(1, S)
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("known_forall_accepts_identical_captured_outer_param");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -3052,7 +3053,7 @@ witness exist S, T set st {$all_p(S), $p(1, T)} from N, {}:
     $p(1, T)
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("known_forall_does_not_substitute_captured_exist_param");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -3077,7 +3078,7 @@ trust:
 exist y S st {$p(y)}
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source(
         "parser_rejects_same_name_forall_and_exist_bindings_while_both_are_active",
     );
@@ -3248,7 +3249,7 @@ $p(1, S)
     ];
 
     for (name, source_code, expected_success) in cases {
-        let mut runtime = Runtime::new();
+        let mut runtime = Runtime::default();
         runtime.start_isolated_source(name);
         let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
@@ -3414,7 +3415,7 @@ claim:
     ];
 
     for (name, source_code, expected_success) in cases {
-        let mut runtime = Runtime::new();
+        let mut runtime = Runtime::default();
         runtime.start_isolated_source(name);
         let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
@@ -3459,7 +3460,7 @@ witness exist n R st {$q(n)} from 0:
     ];
 
     for (name, source_code, expected_success) in cases {
-        let mut runtime = Runtime::new();
+        let mut runtime = Runtime::default();
         runtime.start_isolated_source(name);
         let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
@@ -3480,7 +3481,7 @@ trust forall a R:
 f(1) = 1
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("known_forall_equality_uses_indexed_function_head");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -3501,7 +3502,7 @@ trust forall a R:
 1 + 1 = f(1 + 1)
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("known_forall_equality_indexes_forall_param_side_as_wildcard");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -3522,7 +3523,7 @@ trust forall f fn(x R) R, a R:
 g(1) = 1
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source(
         "known_forall_equality_with_forall_param_function_head_uses_fallback_bucket",
     );
@@ -3545,7 +3546,7 @@ trust forall x R:
 $p(1)
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("known_forall_prop_indexes_forall_param_arg_as_wildcard");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -3566,7 +3567,7 @@ trust forall x R:
 $p(1 + 1)
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("known_forall_prop_indexes_expression_arg_shape");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -3587,7 +3588,7 @@ trust forall a, b R:
 $p(2, 3 + 1)
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("known_forall_prop_indexes_multi_arg_shape");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -3609,7 +3610,7 @@ trust forall f fn(x R) R:
 $p(g(2))
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source(
         "known_forall_prop_with_forall_param_function_head_uses_fallback_bucket",
     );
@@ -3644,7 +3645,7 @@ claim:
     $p(fn(x R) R {b(x) + c(x)})
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source(
         "known_forall_matches_function_param_application_inside_anonymous_fn_body",
     );
@@ -3684,7 +3685,7 @@ claim:
     $p(fn(x {1}) N {finite_set_size(rows(a)(x))})
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source(
         "known_forall_binds_named_function_prefix_inside_different_codomain_anonymous_body",
     );
@@ -3724,7 +3725,7 @@ claim:
     $p(fn(x {1}) N {finite_set_size(rows(a)(1))})
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("known_forall_does_not_strip_nonmatching_named_function_suffix");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -3748,7 +3749,7 @@ have h fn(x R) R
 $p(fn(x R) R {h(x)})
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source(
         "known_forall_does_not_infer_function_from_single_point_application",
     );
@@ -3796,7 +3797,7 @@ sketch:
     fib(25) = 75025
 "#;
 
-            let mut runtime = Runtime::new();
+            let mut runtime = Runtime::default();
             runtime.start_isolated_source("eval_recursive_algo_memoizes_overlapping_calls");
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
@@ -3891,7 +3892,7 @@ forall T set, op fn(x, y T) T, seed T, A, B finite_set, f fn(x A) T, g fn(y B) A
     =>:
         finite_set_reduce(A, f, op, seed) = finite_set_reduce(B, fn(y B) T {f(g(y))}, op, seed)
 "#;
-            let mut runtime = Runtime::new();
+            let mut runtime = Runtime::default();
             runtime.start_isolated_source("reduce_positive_contracts");
             let (stmt_results, runtime_error) = execute_source(positive_source, &mut runtime);
             let (run_succeeded, run_output) =
@@ -3905,7 +3906,7 @@ forall T set, op fn(x, y T) T, seed T, A, B finite_set, f fn(x A) T, g fn(y B) A
             let noncommutative_source = r#"
 finite_set_reduce({1, 2}, fn(x Z) Z {x}, fn(x, y Z) Z {x - y}, 0) = finite_set_reduce({1, 2}, fn(x Z) Z {x}, fn(x, y Z) Z {x - y}, 0)
 "#;
-            let mut rejected_runtime = Runtime::new();
+            let mut rejected_runtime = Runtime::default();
             rejected_runtime.start_isolated_source("finite_set_reduce_rejects_subtraction");
             let (stmt_results, runtime_error) =
                 execute_source(noncommutative_source, &mut rejected_runtime);
@@ -3927,7 +3928,7 @@ have fn id_z(x Z) Z = x
 have fn add_z(x, y Z) Z = x + y
 reduce(1, 3, id_z, add_z, 1) = sum(1, 3, id_z)
 "#;
-            let mut wrong_seed_runtime = Runtime::new();
+            let mut wrong_seed_runtime = Runtime::default();
             wrong_seed_runtime.start_isolated_source("reduce_wrong_sum_seed");
             let (stmt_results, runtime_error) =
                 execute_source(wrong_seed_source, &mut wrong_seed_runtime);
@@ -3944,7 +3945,7 @@ have fn add_z(x, y Z) Z = x + y
 forall A, B finite_set, f fn(x A) Z, g fn(y B) A:
     finite_set_reduce(A, f, add_z, 0) = finite_set_reduce(B, fn(y B) Z {f(g(y))}, add_z, 0)
 "#;
-            let mut missing_bijection_runtime = Runtime::new();
+            let mut missing_bijection_runtime = Runtime::default();
             missing_bijection_runtime
                 .start_isolated_source("reduce_requires_bijection_for_reindexing");
             let (stmt_results, runtime_error) =
@@ -3962,7 +3963,7 @@ have fn id_z(x Z) Z = x
 have fn decimal_append_z(x, y Z) Z = 10 * x + y
 reduce(1, 2, id_z, decimal_append_z, 0) = reduce(1, 2, fn(k Z) Z {id_z(3 - k)}, decimal_append_z, 0)
 "#;
-            let mut reversed_order_runtime = Runtime::new();
+            let mut reversed_order_runtime = Runtime::default();
             reversed_order_runtime.start_isolated_source("reduce_rejects_order_reversal");
             let (stmt_results, runtime_error) =
                 execute_source(reversed_order_source, &mut reversed_order_runtime);

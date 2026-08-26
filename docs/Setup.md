@@ -338,7 +338,6 @@ Basic behavior:
 | `-compact` | Show only result, statement type, line, and source statement for successful results; any `RuntimeError` is always detailed. |
 | `-detail` | Include the full audit trace for successful results and errors, plus raw source paths. |
 | `-strict` | Verify configured dependencies and reject user trust or axiom statements. |
-| `-trust-before-line <X>` | Preview direct-file development mode: trust top-level statements before the exact header line `X`, then verify from `X`. |
 | `-summarize` | Append one final run-summary JSON object after ordinary verifier output. |
 | `-lang <code>` | Localize JSON keys and explanatory labels without changing Litex source text. |
 
@@ -351,22 +350,6 @@ REPL.
 
 Litex supports multiple output languages through `-lang <code>`. See
 [`docs/cli.md`](cli.md) for the current list of supported language codes.
-
-For a faster check after editing the latter part of a long file:
-
-```bash
-litex -compact -f chapter.lit -trust-before-line 420
-```
-
-`420` must be the exact one-based line of a top-level statement header.
-Earlier top-level statements are still parsed and added to the environment,
-but their proofs and well-definedness checks are skipped. Verification resumes
-at line 420. The option is available only for direct `-f` and
-`-isolated -f` runs, cannot be combined with `-strict`, and produces explicit
-`trusted_prefix` statement statuses rather than a fully checkable result. It
-does not propagate trust metadata into the verified suffix. See
-[`docs/cli.md`](cli.md#trusted-prefix-file-checks-preview) for the full
-contract.
 
 Hint: if your Litex code contains spaces, newlines, or shell-sensitive characters, wrap it in quotes when using `-e`, or put it in a `.lit` file and run it with `-f`.
 

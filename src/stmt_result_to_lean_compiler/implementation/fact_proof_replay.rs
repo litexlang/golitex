@@ -205,7 +205,7 @@ impl StmtResultToLeanCompiler {
                     )
                 })
                 .collect::<HashMap<_, _>>();
-            let reproduced = Runtime::new()
+            let reproduced = Runtime::default()
                 .inst_obj(
                     &binding.source_body,
                     &substitutions,
@@ -815,7 +815,7 @@ impl StmtResultToLeanCompiler {
             definition_names.push(lean_name);
         }
 
-        let reduced_target = Runtime::new()
+        let reduced_target = Runtime::default()
             .inst_fact(
                 target,
                 &substitutions,
@@ -1058,7 +1058,7 @@ impl StmtResultToLeanCompiler {
         let substitutions = source_forall
             .typed_parameters
             .param_defs_and_args_to_param_to_arg_map(&arguments);
-        let substitution_runtime = Runtime::new();
+        let substitution_runtime = Runtime::default();
 
         let mut application_terms = vec![source_theorem];
         for (parameter_index, (((_, parameter_type), argument), requirement)) in source_parameters

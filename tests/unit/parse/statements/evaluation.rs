@@ -4,7 +4,7 @@ use std::rc::Rc;
 
 #[test]
 fn eval_rejects_trailing_tokens() {
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     let tokenizer = Tokenizer::new();
     let mut blocks = tokenizer
         .parse_blocks("eval a extra", Rc::from("evaluation_trailing_tokens.lit"))
