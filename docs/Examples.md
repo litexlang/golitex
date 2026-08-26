@@ -1407,7 +1407,7 @@ $can_be_divided_by_2(8)
 ### 33. Named Theorems With `thm`
 
 - Category: `stmt`
-- Purpose: Shows theorem definition and theorem application.
+- Purpose: Shows theorem definition, full-consequence release, and selected theorem application.
 
 ```litex
 ## Basic named theorem with no domain facts.
@@ -1415,7 +1415,7 @@ thm thm_refl_r:
     ? forall x R:
         x = x
 
-by thm thm_refl_r(0)
+release thm thm_refl_r(0)
 0 = 0
 
 ## The theorem name can use the same Unicode identifier syntax as other names.
@@ -1424,7 +1424,7 @@ thm 自反等式:
         x = x
     x = x
 
-by thm 自反等式(1)
+release thm 自反等式(1)
 1 = 1
 
 ## A theorem with one domain fact.
@@ -1435,7 +1435,7 @@ thm thm_one_succ:
             x + 1 = 2
     x + 1 = 1 + 1 = 2
 
-by thm thm_one_succ(1)
+release thm thm_one_succ(1)
 1 + 1 = 2
 
 ## Multiple arguments and multiple domain facts.
@@ -1447,7 +1447,7 @@ thm thm_add_equal_with_unit:
             a + c = b + 1
     a + c = b + c = b + 1
 
-by thm thm_add_equal_with_unit(2, 2, 1)
+release thm thm_add_equal_with_unit(2, 2, 1)
 2 + 1 = 2 + 1
 
 ## Multiple then-facts are all released by the named theorem call.
@@ -1462,7 +1462,7 @@ thm thm_many_then:
     x + 1 = 1 + 1 = 2
     x + 2 = 1 + 2 = 3
 
-by thm thm_many_then(1)
+release thm thm_many_then(1)
 1 + 2 = 3
 
 ## A theorem can release an and-fact.
@@ -1475,7 +1475,7 @@ thm thm_and_then:
     x + 1 = 0 + 1 = 1
     x = 0 and x + 1 = 1
 
-by thm thm_and_then(0)
+release thm thm_and_then(0)
 0 + 1 = 1
 
 ## A theorem can release a chain fact.
@@ -1486,7 +1486,7 @@ thm thm_chain_then:
             x + 1 = 1 + 1 = 2
     x + 1 = 1 + 1 = 2
 
-by thm thm_chain_then(1)
+release thm thm_chain_then(1)
 1 + 1 = 2
 
 ## The explicit call works inside a claim proof.

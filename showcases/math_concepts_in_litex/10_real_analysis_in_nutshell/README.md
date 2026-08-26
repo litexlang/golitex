@@ -13,3 +13,8 @@ lake env lean ../showcases/math_concepts_in_litex/10_real_analysis_in_nutshell/s
 The Lean comparison defines closeness as the actual real inequality
 `|a n - L| < ε` and derives uniqueness with `Nat.max` and the triangle
 inequality. The published Litex file contains no direct trust or local axiom.
+
+This module itself stops at sequence-limit existence, uniqueness, and safe
+selection. The broader calculus/real-analysis direction may later grow through
+Rolle and MVT, then stops; uniform convergence, integration, measure theory,
+and functional analysis are separate slices, not completion requirements here.

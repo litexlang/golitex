@@ -65,25 +65,18 @@ fn capture_stmt_results_json_v2_on_verifier_stack(
 }
 
 #[test]
-fn named_real_less_to_less_equal_emits_native_mathlib_corollary() {
+fn named_real_less_to_less_equal_emits_only_its_source_declaration() {
     let generated = compile_on_verifier_stack(
         "thm order_bridge:\n    ? forall a, b R:\n        a < b\n        =>:\n            a <= b\n",
         "native_real_order.lit",
     )
-    .expect("compile the canonical theorem and its native real-order corollary");
+    .expect("compile the source theorem");
 
     assert!(generated.contains("theorem order_bridge :"), "{generated}");
-    assert!(generated.contains("namespace Native"), "{generated}");
+    assert_eq!(generated.matches("theorem order_bridge").count(), 1);
+    assert!(!generated.contains("namespace Native"), "{generated}");
     assert!(
-        generated.contains("theorem order_bridge (a b : ℝ) (__domain1 : a < b) : a ≤ b := by"),
-        "{generated}"
-    );
-    assert!(
-        generated.contains("exact Litex.OrderBridge.real_le_iff.mp"),
-        "{generated}"
-    );
-    assert!(
-        generated.contains("Litex.Lt.toLe (Litex.OrderBridge.ltOfReal __domain1)"),
+        !generated.contains("private theorem __native_certificate"),
         "{generated}"
     );
     assert!(!generated.contains("axiom "), "{generated}");
@@ -101,10 +94,29 @@ fn litex_to_mathlib_pipeline_showcase_generated_lean_has_not_drifted() {
         compile_on_verifier_stack(SOURCE, "main.lit").expect("compile the pipeline showcase");
 
     assert_eq!(generated, CHECKED_IN);
+    assert!(generated.contains("theorem sum_first_odds :"));
+    assert!(generated.contains("theorem sum_first_ten_odds :"));
+    assert!(generated.contains("sum_first_odds (10 : ℤ)"));
+    assert!(!generated.contains("private theorem __native_certificate"));
+    assert!(!generated.contains("namespace Native"));
+    assert!(!generated.contains("namespace MathlibConsumer"));
+    assert!(!generated.contains("Finset.Icc"));
+    assert!(!SOURCE.contains("thm odd_sum_single"));
+    assert!(!SOURCE.contains("thm odd_sum_step"));
+    assert!(!SOURCE.contains("thm odd_square_step"));
+    assert!(!SOURCE.contains("by thm"));
+    assert!(SOURCE.contains("n^2 + kth_odd(n + 1) = n^2 + (2 * (n + 1) - 1) = (n + 1)^2"));
+    assert!(SOURCE.contains("sum(1, 10, kth_odd) = 10^2 = 100"));
+    assert!(generated.contains("unfold Litex.fnApplyCarrier kth_odd"));
+    assert!(!generated.contains("unfold Litex.fnApplyOwn kth_odd"));
+    assert!(!generated.contains("theorem odd_sum_step"));
+    assert!(!generated.contains("theorem odd_square_step"));
+    assert!(!generated.contains("axiom "));
+    assert!(!generated.contains("sorry"));
 }
 
 #[test]
-fn named_real_same_equality_remains_outside_native_corollary_surface() {
+fn named_real_same_equality_emits_only_its_source_declaration() {
     let generated = compile_on_verifier_stack(
         "thm real_reflexivity:\n    ? forall a R:\n        a = a\n    a = a\n",
         "native_real_equality_boundary.lit",

@@ -165,47 +165,26 @@ When the target carrier is not forced unambiguously by the operator, another
 operand, or an expected type, Lean source construction must retain an explicit coercion or
 fail closed rather than rely on unstable elaboration.
 
-## Native Mathlib Corollaries
+## Declaration-Preserving Output Boundary
 
-Status: the first closed native-export slice was implemented on 2026-08-25;
-the general interface remains ongoing.
+ToLean translates the declarations, facts, scope effects, and verified proof
+routes present in its `.lit` input. It may introduce generated names such as
+`__fact0` when that is necessary to represent a source-owned fact, but it must
+not invent an additional public mathematical statement.
 
-The implemented slice recognizes exactly a named theorem with two direct
-`R` binders, the premise `a < b`, the conclusion `a <= b`, and allowlisted
-typed strict-to-weak order evidence. It emits
-`theorem name (a b : ℝ) (h : a < b) : a ≤ b` under the generated `Native`
-namespace. The executable source, generated artifact, real Lean gate, and
-ordinary Mathlib consumer live in
-[`showcases/litex_to_mathlib_pipeline`](../../showcases/litex_to_mathlib_pipeline/README.md).
+In particular, theorem shape must never trigger a sibling `Native` theorem, a
+Mathlib corollary, a consumer, or a theorem-specific certificate that has no
+source declaration. This applies equally to easy order implications and to
+large examples such as the first-odd-integers sum. Generated files are an
+auditable translation of their corresponding `.lit` files, not a place for
+compiler-authored API design.
 
-A supported user theorem should have two Lean views. Its canonical theorem is
-the exact FactId/proof-provenance target and retains implicit host carriers,
-`Litex.In`, `Litex.Same`, and the verifier-selected representatives. When
-reviewed elimination theorems can remove those wrappers without changing the
-statement, compiler may additionally expose an ordinary Mathlib-facing
-corollary. For example:
-
-```litex
-thm litex_real_add_comm:
-    ? forall a, b R:
-        a + b = b + a
-```
-
-has the intended Lean-facing corollary type:
-
-```text
-theorem litex_real_add_comm (a b : ℝ) : a + b = b + a
-```
-
-The native view must be generated from the same typed Result as the canonical
-view. When wrapper elimination is lossless it may specialize the canonical
-theorem through fully proved bridges. When a canonical parameter contains an
-opaque `In.rep` choice, it may instead replay the exact allowlisted verifier
-evidence through native introduction and elimination bridges. It must not ask
-Lean to rediscover the proof, substitute a different proof route, add an axiom
-or proof hole, or force a native statement when the evidence and wrappers do
-not support one. If no reviewed route exists, compiler emits only the canonical
-theorem.
+Mathlib interoperability remains a separate layer. An external AI or human may
+import the generated module and write an ordinary Lean adapter in a distinct,
+non-generated file. That file owns the new interface and its proof route; the
+ToLean compiler neither synthesizes it nor suggests that it came from the
+source Result. The executable separation is demonstrated in
+[`showcases/litex_to_lean_mathlib_pipeline`](../../showcases/litex_to_lean_mathlib_pipeline/README.md).
 
 ## Direct Recursive Result Architecture
 

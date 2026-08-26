@@ -10,3 +10,7 @@
 
 The first version stops before Cauchy completeness, continuity, series,
 uniform convergence, and measure theory.
+
+At collection level, elementary real analysis may later meet the calculus
+slice at Rolle/MVT. Integration and functional analysis still require their
+own vertical-slice decisions and do not extend this module's completion line.

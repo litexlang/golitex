@@ -11,5 +11,7 @@
 
 by induc n from -1:
     ? n + 1 = n + 1
-    ? from n = -1
-    ? induc
+    ? from n = -1:
+        -1 + 1 = -1 + 1
+    ? induc:
+        n + 1 + 1 = n + 1 + 1

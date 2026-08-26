@@ -56,6 +56,12 @@ module intentionally stops before bases, dimension, rank-nullity, matrices,
 and quotients. `LinearMap` and `Subspace` also remain propositions in this
 gate; they have not been promoted to structures.
 
+That stop is the collection's completion boundary for linear algebra: the
+field/space setting, linear-map relation, kernel construction, consuming
+kernel theorems, and concrete real-plane projection already form one complete
+vertical slice. More chapters are optional extensions, not prerequisites for
+calling this showcase finished.
+
 `same_math_in_lean.lean` is a handwritten Prelude-only comparison covering the
 same generic field, vector-space, linear-map, subspace, kernel, injectivity, and
 coordinate-plane mathematics. Run it separately with:

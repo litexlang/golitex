@@ -2805,11 +2805,17 @@ thm row_partial_sums_bounded_by_finite_double_bound:
         sum(1, k, fn(m N+) R {row(m)}) = finite_set_sum(closed_range(1, k), fn(m closed_range(1, k)) R {row(m)})
         claim:
             ? forall m closed_range(1, k):
-                fn(j closed_range(1, k)) R {row(j)}(m) = fn(j closed_range(1, k)) R {rect((n, j))}(m)
+                row(m) = rect((n, m))
             row(m) = f((n, m))
-            # trust: evaluation of the restricted-domain helper at the
-            # reconstructed pair is not replayed automatically.
+            # The restricted-domain helper needs an explicit carrier witness
+            # before its defining equality can be instantiated at this pair.
+            n $in {n}
+            (n, m) $in cart({n}, closed_range(1, k))
+            rect((n, m)) = fn(q cart({n}, closed_range(1, k))) R {f(q)}((n, m))
+            fn(q cart({n}, closed_range(1, k))) R {f(q)}((n, m)) = f((n, m))
+            rect((n, m)) = f((n, m))
             f((n, m)) = rect((n, m))
+            row(m) = f((n, m)) = rect((n, m))
         by def:
             ? $fn_eq(fn(m closed_range(1, k)) R {row(m)}, fn(m closed_range(1, k)) R {rect((n, m))})
         $fn_eq(fn(m closed_range(1, k)) R {row(m)}, fn(m closed_range(1, k)) R {rect((n, m))})
@@ -2818,7 +2824,8 @@ thm row_partial_sums_bounded_by_finite_double_bound:
         finite_set_sum(cart({n}, closed_range(1, k)), rect) = chap7::partial_sum(row, k)
     claim:
         ? forall m N+:
-            row(m) = fn(j N+) R {f((n, j))}(m)
+            row(m) = f((n, m))
+        row(m) = fn(j N+) R {f((n, j))}(m) = f((n, m))
     by def:
         ? $fn_eq(row, fn(m N+) R {f((n, m))})
     $fn_eq(row, fn(m N+) R {f((n, m))})
@@ -3539,7 +3546,7 @@ thm enumerated_absolute_convergence_from_bounded_finite_subsums:
             $chap7::is_absolutely_convergent_series(\countable_set_series_terms<X, f, g>)
     obtain M from $has_bounded_finite_absolute_subsums(X, f)
     have fn absolute_family(x X) R = abs(f(x))
-    have fn absolute_terms(n N+) R = \countable_set_series_terms<X, absolute_family, g>(n)
+    let absolute_terms = \countable_set_series_terms<X, absolute_family, g>
     claim:
         ? $chap7::is_nonnegative_sequence(absolute_terms)
         claim:
@@ -3566,8 +3573,8 @@ thm enumerated_absolute_convergence_from_bounded_finite_subsums:
                     ? $fn_eq(fn(y A) R {absolute_family(y)}, fn(y A) R {abs(f(y))})
                 $fn_eq(fn(y A) R {absolute_family(y)}, fn(y A) R {abs(f(y))})
                 finite_set_sum(A, fn(y A) R {absolute_family(y)}) = finite_set_sum(A, fn(y A) R {abs(f(y))}) <= M
-                # trust: the local absolute_terms alias does not unfold to the
-                # enumerated finite-prefix sum in project mode.
+                # trust: retain the existing finite-prefix compatibility
+                # boundary; the transparent name adds no nested proof.
                 trust chap7::partial_sum(absolute_terms, k) = finite_set_sum(A, fn(x A) R {absolute_family(x)}) <= M
             by def:
                 ? $chap7::is_partial_sum_bound(absolute_terms, M)

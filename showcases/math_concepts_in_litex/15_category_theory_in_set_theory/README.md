@@ -1,8 +1,8 @@
 # Small Categories in Set Theory: Generic Data and Examples
 
-This standalone showcase first gives the generic structure of a small
-category, then instantiates it as the terminal category and as the chaotic
-category on two objects. Its generic main line is:
+This standalone showcase gives a checked first vertical slice of category
+theory, then consumes it with the terminal category and the chaotic category
+on two objects. Its main line is:
 
 ```text
 Obj set
@@ -11,6 +11,10 @@ Obj set
   -> identity(A) in Hom(A, A)
   -> compose(A, B, D, f, g) in Hom(A, D)
   -> two unit laws and associativity
+  -> typed object and arrow maps
+  -> identity and composite functors
+  -> typed components and naturality squares
+  -> identity and vertical composition of natural transformations
 ```
 
 Run the checked Litex module from the repository root:
@@ -79,11 +83,18 @@ its object argument, and the result set of `compose` depends on its three
 object arguments. Consequently identity typing and composition closure are
 part of the function signatures rather than extra axioms.
 
-The implementation uses flat propositions and universal parameters, not a
-new Litex `struct`. This matches the intended reading "for every possible
-`Obj`, `Mor`, `Hom`, identity, and composition operation, test whether these
-data form a category." It also avoids making a global foundational choice for
-all Litex mathematics.
+`CategorySetting` is the theorem-facing bundle for these data and laws;
+`is_category` is its definition-facing projection. `FunctorSetting` adds a
+typed object map and dependent arrow map with the two preservation laws.
+`NaturalTransformationSetting` adds components in the exact hom-sets and a
+named naturality-square property. These are settings rather than structs
+because current theorems quantify over supplied structures and maps; no
+consumer stores or returns a first-class category record.
+
+The identity and composite functor theorems and the identity and vertical
+natural-transformation theorems are genuine constructions. Their callable
+maps and component families use local `let` names so diagram proofs remain
+readable without adding public one-use adapters.
 
 ## Explicit relation names
 
@@ -104,6 +115,9 @@ concept mapping explicit for readers.
 The three tracer theorems verify that the selected identity has the identity
 property, dependent composition produces a morphism with the expected
 endpoints, and the selected composition value satisfies `is_composite`.
+Named `composition_is_associative_at` and `naturality_square_commutes`
+properties let larger diagram proofs select an exact instance before
+unfolding it to an equality.
 
 ## Two concrete categories
 
@@ -120,7 +134,8 @@ compose(A, B, C, f, g) = 0
 There is one object and one arrow, so both unit laws and associativity reduce
 to uniqueness of the member of `{0}`. The theorem
 `terminal_data_forms_a_category` checks these data against the generic
-`is_category` predicate.
+`is_category` predicate. `terminal_identity_functor_exists` then reuses the
+generic identity-functor construction as an end-to-end concrete consumer.
 
 The two-object chaotic example chooses
 
@@ -140,12 +155,14 @@ laws through the same generic interface.
 
 ## Exact scope boundary
 
-This module defines the reusable structure of a set-coded small category and
-checks two finite instances. It does not define:
+This module is complete at the following boundary: small categories, functors,
+identity/composite functors, natural transformations, identity/vertical
+composition, and a concrete terminal-category consumer. It does not define:
 
 - the large category of all sets, groups, or categories;
 - proper classes or universe-level stratification;
-- functors, natural transformations, limits, or adjunctions;
+- limits, colimits, adjunctions, Yoneda, comma categories, monads, or a
+  general functor category;
 - a first-class stored `Category` value; or
 - automatic category instances for existing Litex structures.
 

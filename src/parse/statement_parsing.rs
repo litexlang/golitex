@@ -1,7 +1,7 @@
 use crate::common::keywords::{
     ABSTRACT_PROP, ALGO, AXIOM, BY, CART, CLAIM, EVAL, EXAMPLE, FINITE_SEQ, FN_LOWER_CASE, FOR,
-    HAVE, IMPORT, LET, MATRIX, OBTAIN, PREIMAGE, PROP, QUESTION_GOAL, SEQ, SETTING, SKETCH,
-    STRATEGY, STRONG_INDUC, STRUCT, TEMPLATE, THM, TRUST, TRY, TUPLE, WITNESS,
+    HAVE, IMPORT, LET, MATRIX, OBTAIN, PREIMAGE, PROP, QUESTION_GOAL, RELEASE, SEQ, SETTING,
+    SKETCH, STRATEGY, STRONG_INDUC, STRUCT, TEMPLATE, THM, TRUST, TRY, TUPLE, WITNESS,
 };
 use crate::error::{ParseRuntimeError, RuntimeError, RuntimeErrorStruct};
 use crate::parse::TokenBlock;
@@ -76,6 +76,13 @@ impl Runtime {
                 tb,
                 "strong_induc is only valid after `by`",
             )),
+            RELEASE => match tb.token_at_add_index(1) {
+                THM => self.parse_release_thm_stmt(tb),
+                _ => Err(statement_dispatch_error(
+                    tb,
+                    "release: expected `thm name(args)`",
+                )),
+            },
             BY => self.parse_by_prefixed_stmt(tb),
             _ => {
                 let fact = self.parse_fact(tb)?;

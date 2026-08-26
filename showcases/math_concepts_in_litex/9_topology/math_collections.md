@@ -128,3 +128,7 @@ Use settings for ordinary ambient theorems and reuse the same setting bundles
 in predicates and larger settings. Introduce a struct only when a later
 construction needs a topological space as data. Do not create aliases for
 native set operations.
+
+This checkpoint is complete at continuous compact images. Bases, filters,
+separation hierarchies, connectedness, quotient constructions, and algebraic
+topology are outside its first-version boundary.

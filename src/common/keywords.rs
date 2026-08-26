@@ -162,6 +162,7 @@ pub const SKETCH: &str = "sketch";
 pub const TRY: &str = "try";
 pub const THM: &str = "thm";
 pub const AXIOM: &str = "axiom";
+pub const RELEASE: &str = "release";
 
 pub const BY: &str = "by";
 /// Contextual keyword used only after `by`; intentionally not globally reserved.
@@ -373,6 +374,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         TRY,
         THM,
         AXIOM,
+        RELEASE,
         BY,
         CASES,
         CONTRA,

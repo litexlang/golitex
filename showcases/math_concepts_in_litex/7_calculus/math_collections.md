@@ -8,6 +8,11 @@ candidate existence, and the exact quadratic error from the tangent to `x^2`
 at `3`. It contains no direct `trust` and does not select a derivative before
 uniqueness is proved.
 
+The completion target for this direction ends at Rolle/MVT and elementary
+consequences. The integration cards later in this document are a deferred,
+independent design sketch; they are not current claims and are not required
+for the first-version stop line.
+
 ## Core interface cards
 
 ### Sequence limit candidate
@@ -65,6 +70,8 @@ uniqueness is proved.
 - **Rejected form:** a default derivative at nondifferentiable or isolated
   points.
 - **Use:** derivative-sign theorems and familiar calculated notation.
+
+## Deferred integration slice (outside the first-version boundary)
 
 ### Riemann partition and sums
 
@@ -134,7 +141,7 @@ finite ordered partitions + finite sums
   -> FTC I and FTC II                              [proof]
 ```
 
-## Topological implementation order
+## Long-range dependency order
 
 1. Candidate sequence limit and constant/`1/n` probes.
 2. Sequence-limit uniqueness and selected limit.
@@ -149,6 +156,10 @@ finite ordered partitions + finite sums
     application.
 
 ## Boundaries and unresolved dependencies
+
+- The first-version boundary stops after a checked Rolle/MVT chain and a
+  concrete consequence. Integration and FTC require a separate scope
+  decision and are not completion blockers for this module family.
 
 - Builtin real arithmetic is a source/trust boundary of the whole project; its
   completeness story must be cited honestly rather than rederived casually.

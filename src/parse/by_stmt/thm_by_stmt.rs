@@ -1,6 +1,22 @@
 use crate::prelude::*;
 
 impl Runtime {
+    pub fn parse_release_thm_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
+        tb.skip_token(RELEASE)?;
+        tb.skip_token(THM)?;
+        let (name, args) = self.parse_theorem_call(tb)?;
+        if !tb.exceed_end_of_head() || !tb.body.is_empty() {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "release thm accepts only a bare theorem call; use `by thm name(args) => fact` to select one consequence"
+                        .to_string(),
+                    tb.line_file.clone(),
+                ),
+            )));
+        }
+        Ok(ByThmStmt::new(name, args, None, tb.line_file.clone()).into())
+    }
+
     pub fn parse_by_thm_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(THM)?;
         let (name, args) = self.parse_theorem_call(tb)?;
