@@ -469,7 +469,7 @@ have S nonempty_set
 trust forall A S => $is_nonempty_set(A)
 have g fn(alpha I) S
 
-by thm general_cart_nonempty_by_choice_from_family(general_cart(I, S, g))
+release thm general_cart_nonempty_by_choice_from_family(general_cart(I, S, g))
 have f general_cart(I, S, g)
 $is_choice_function_for(I, S, g, f)
 forall alpha I:
@@ -730,22 +730,22 @@ claim:
             A '- B $in matrix(R, m, n)
             c *' A $in matrix(R, m, n)
             (A '+ B)(i1, j) = A(i1, j) + B(i1, j)
-    by thm fn_set_member(A '+ B, matrix(R, m, n))
-    by thm fn_set_member(A '- B, matrix(R, m, n))
-    by thm fn_set_member(c *' A, matrix(R, m, n))
+    release thm fn_set_member(A '+ B, matrix(R, m, n))
+    release thm fn_set_member(A '- B, matrix(R, m, n))
+    release thm fn_set_member(c *' A, matrix(R, m, n))
     (A '+ B)(i1, j) = A(i1, j) + B(i1, j)
 
 claim:
     ? forall m, n, p N+, A matrix(R, m, n), B matrix(R, n, p):
         A '* B $in matrix(R, m, p)
-    by thm fn_set_member(A '* B, matrix(R, m, p))
+    release thm fn_set_member(A '* B, matrix(R, m, p))
 
 claim:
     ? forall n, k N+, A matrix(R, n, n):
         A '^ k $in matrix(R, n, n)
         A '^ 1 = A
         A '^ (k + 1) = (A '^ k) '* A
-    by thm fn_set_member(A '^ k, matrix(R, n, n))
+    release thm fn_set_member(A '^ k, matrix(R, n, n))
     A '^ 1 = A
     A '^ (k + 1) = (A '^ k) '* A
 ```
@@ -921,7 +921,7 @@ struct Point:
     x R
     y R
 
-by thm struct_member((1, 2), &Point)
+release thm struct_member((1, 2), &Point)
 have p &Point = (1, 2)
 
 # `p &Point` opened one layer automatically.
@@ -956,7 +956,7 @@ struct Point:
     x R
     y R
 
-by thm struct_member((1, 2), &Point)
+release thm struct_member((1, 2), &Point)
 have p &Point = (1, 2)
 
 prop has_point_coordinates(x, y R):
@@ -991,8 +991,8 @@ struct TaggedPoint:
     point &Coordinates
     tag N
 
-by thm struct_member((1, 2), &Coordinates)
-by thm struct_member(((1, 2), 0), &TaggedPoint)
+release thm struct_member((1, 2), &Coordinates)
+release thm struct_member(((1, 2), 0), &TaggedPoint)
 have item &TaggedPoint = ((1, 2), 0)
 by struct def item.point
 item.point.x $in R
@@ -1027,7 +1027,7 @@ struct Point:
     y R
 
 have p cart(R, R) = (1, 2)
-by thm struct_member(p, &Point)
+release thm struct_member(p, &Point)
 p.x = 1
 ```
 
@@ -1080,7 +1080,7 @@ template<S set>:
     have marked_elements power_set(S) = {x S: $marked(x)}
 
 trust $marked(1)
-by thm defined_set_member(1, \marked_elements<R>)
+release thm defined_set_member(1, \marked_elements<R>)
 ```
 
 Conversely, known membership in `\marked_elements<R>` exposes `$marked(1)`.
@@ -1916,7 +1916,7 @@ struct Point:
     y R
 
 by def $is_origin(0, 0)
-by thm struct_member((0, 0), &Point)
+release thm struct_member((0, 0), &Point)
 ```
 
 An abstract definition adds no instances:
@@ -2188,12 +2188,11 @@ release thm positive_is_nonzero(1)
 `release thm` checks argument types and theorem premises, instantiates every
 conclusion, and stores all of them with the existing theorem-instantiation
 provenance. It accepts only the bare call: no `=>` selection and no indented
-goal or proof body. The older bare spelling `by thm name(args)` remains a
-parser alias and is rendered canonically as `release thm name(args)`.
+goal or proof body. A bare `by thm name(args)` is rejected: `by thm` is
+reserved for selecting one atomic consequence.
 
 The preview selection form keeps the ordinary theorem application explicit but
-commits only one requested atomic consequence. It accepts either the inline
-arrow or the uniform bodyless goal-block spelling:
+commits only one requested atomic consequence. It requires the inline arrow:
 
 ```litex
 thm expose_zero_sides:
@@ -2204,23 +2203,19 @@ thm expose_zero_sides:
     0 + x = x
 
 by thm expose_zero_sides(2) => 2 + 0 = 0 + 2
-
-by thm expose_zero_sides(2):
-    ? 2 + 0 = 0 + 2
 ```
 
-For `by thm name(args) => fact`, or its `:` plus one `? fact` equivalent,
-`fact` must already be well-defined in the parent context. Litex then applies
-the theorem with the existing `by thm` semantics in a temporary child
+For `by thm name(args) => fact`, `fact` must already be well-defined in the
+parent context. Litex then applies
+the theorem with the existing `release thm` semantics in a temporary child
 environment, so all instantiated conclusions and their ordinary inferred
 consequences are available while the full atomic verifier checks `fact`. The
 child is discarded afterward. On success, only `fact` is committed as the
 parent seed and ordinary inference runs from that seed; on failure, the parent
 environment is unchanged. The target may be a positive or negative atomic fact
 and need not be a direct theorem conclusion, but compound, quantified,
-existential, disjunctive, conjunctive, and chain targets are not accepted. The
-goal-block form is intentionally bodyless: it accepts no proof statements after
-the single atomic goal.
+existential, disjunctive, conjunctive, and chain targets are not accepted. A
+missing `=>`, indented goal, or proof body is rejected.
 
 A bare `release thm name(args)` stores all instantiated conclusions. A
 selected `by thm` call stores only the requested atomic fact and its ordinary
@@ -2423,7 +2418,7 @@ introductions.
 | `trust fact`, `trust have ...` | Parsing, binding, well-definedness, and transactional staging still run; proof truth is assumed. | One trusted transaction. Failure commits nothing. |
 | `obtain ... from exist ...` | The source existential is known; names, count, and dependent parameter types match. | Opaque witness names plus their type and direct body facts. |
 | `obtain ... from $P(args)` | `$P(args)` is known and its concrete definition has exactly one positive `exist`/`exist!` clause. | The same witness facts after checked definition projection. |
-| `obtain ... from thm name(args)` | The named user, imported, or reserved builtin theorem passes the ordinary `by thm` argument/premise checks and has exactly one direct positive `exist`/`exist!` conclusion. | The theorem application remains scoped; only the eliminated witnesses, types, body facts, and `exist!` uniqueness interface escape. |
+| `obtain ... from thm name(args)` | The named user, imported, or reserved builtin theorem passes the ordinary `release thm` argument/premise checks and has exactly one direct positive `exist`/`exist!` conclusion. | The theorem application remains scoped; only the eliminated witnesses, types, body facts, and `exist!` uniqueness interface escape. |
 | `have by preimage ...` | Known membership in `fn_range(f)` or `replacement(P,A)` and matching source shape. | Opaque preimage names and the application/relation witness facts. |
 | `have fn ... = ...` | Ordered parameter domains, return carrier, body membership, and side conditions. | A callable function, its signature, and checked defining equation. |
 | `have fn ... by cases` | Cases are exhaustive, pairwise disjoint, and every result belongs to the return set. | A callable piecewise function and guarded case equations. |
@@ -2667,11 +2662,11 @@ Do not add a theorem call merely to repeat the same fact after it has already
 matched:
 
 ```text
-by thm positive_is_nonzero(a)
+release thm positive_is_nonzero(a)
 a != 0
 ```
 
-The second line is usually redundant if `by thm` already stored its
+The second line is usually redundant if `release thm` already stored its
 conclusions. Keep an explicit restatement only when a verifier run shows that a
 bridge fact is needed.
 
@@ -2794,7 +2789,7 @@ ordinary nonexistential definitions, and multi-clause definitions are rejected.
 inside a temporary child environment, then eliminates its sole direct positive
 `exist` or `exist!` conclusion. The theorem may be local, module-qualified and
 imported, or a reserved builtin theorem interface. Argument types, theorem
-domain facts, and builtin requirements are checked exactly as for `by thm`.
+domain facts, and builtin requirements are checked exactly as for `release thm`.
 Zero or multiple direct conclusions, a nonexistential conclusion, `not exist`,
 or a witness-count mismatch are errors. The intermediate existential does not
 enter the parent context; detailed output retains the nested named-theorem
@@ -3191,23 +3186,23 @@ its stated requirements before storing the conclusion:
 
 | Explicit call | Conclusion shape |
 |---|---|
-| `by thm fn_set_member(f, F)` | `f $in F` |
-| `by thm set_builder_member(x, B)` | `x $in B` |
-| `by thm defined_set_member(x, S)` | `x $in S` after one stored set-valued definition |
-| `by thm struct_member(x, S)` | `x $in S` |
-| `by thm cart_member_from_coordinates(x, C)` | `x $in C` |
-| `by thm general_cart_member(x, G)` | `x $in G` |
-| `by thm general_cart_nonempty_by_choice_from_family(G)` | `$is_nonempty_set(G)` |
-| `by thm general_cart_nonempty_by_choice_from_pointwise(G)` | `$is_nonempty_set(G)` |
-| `by thm sum_le_sum_from_pointwise(L, R)` | `L <= R` |
-| `by thm finite_set_sum_le_from_pointwise(L, R)` | `L <= R` |
-| `by thm finite_set_summand_le_sum(L, R)` | `L <= R` |
-| `by thm tuple_equal_from_coordinates(L, R)` | `L = R` |
-| `by thm finite_set_sum_substitution(L, R)` | `L = R` |
-| `by thm sum_over_bijective_finite_set_enumerations(L, R)` | `L = R` |
-| `by thm rational_has_unique_reduced_fraction(q)` | `exist! p Z, d N+ st {q = p / d, gcd(p, d) = 1}` |
-| `by thm subset_of_finite_set_is_finite(A, B)` | `$is_finite_set(A)` after checking `A $subset B` and finite `B` |
-| `by thm finite_set_has_bijective_index(s)` | `exist idx finite_seq(s, finite_set_size(s)) st {$bijective(closed_range(1, finite_set_size(s)), s, idx)}` |
+| `release thm fn_set_member(f, F)` | `f $in F` |
+| `release thm set_builder_member(x, B)` | `x $in B` |
+| `release thm defined_set_member(x, S)` | `x $in S` after one stored set-valued definition |
+| `release thm struct_member(x, S)` | `x $in S` |
+| `release thm cart_member_from_coordinates(x, C)` | `x $in C` |
+| `release thm general_cart_member(x, G)` | `x $in G` |
+| `release thm general_cart_nonempty_by_choice_from_family(G)` | `$is_nonempty_set(G)` |
+| `release thm general_cart_nonempty_by_choice_from_pointwise(G)` | `$is_nonempty_set(G)` |
+| `release thm sum_le_sum_from_pointwise(L, R)` | `L <= R` |
+| `release thm finite_set_sum_le_from_pointwise(L, R)` | `L <= R` |
+| `release thm finite_set_summand_le_sum(L, R)` | `L <= R` |
+| `release thm tuple_equal_from_coordinates(L, R)` | `L = R` |
+| `release thm finite_set_sum_substitution(L, R)` | `L = R` |
+| `release thm sum_over_bijective_finite_set_enumerations(L, R)` | `L = R` |
+| `release thm rational_has_unique_reduced_fraction(q)` | `exist! p Z, d N+ st {q = p / d, gcd(p, d) = 1}` |
+| `release thm subset_of_finite_set_is_finite(A, B)` | `$is_finite_set(A)` after checking `A $subset B` and finite `B` |
+| `release thm finite_set_has_bijective_index(s)` | `exist idx finite_seq(s, finite_set_size(s)) st {$bijective(closed_range(1, finite_set_size(s)), s, idx)}` |
 
 These names are bare global reserved names. They cannot be rebound by user
 objects, parameters, theorems, or axioms, and a qualified spelling is rejected.
@@ -3875,7 +3870,7 @@ a rational number with positive denominator. The public named form is:
 
 ```litex
 have a Q
-by thm rational_has_unique_reduced_fraction(a)
+release thm rational_has_unique_reduced_fraction(a)
 exist! p Z, q N+ st {a = p / q, gcd(p, q) = 1}
 ```
 

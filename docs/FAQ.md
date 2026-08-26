@@ -438,11 +438,11 @@ A strict positive premise also proves a square root is nonzero:
 
 When a rule needs a universal, existential, or compound premise, the proof uses
 an explicit reserved builtin theorem call such as
-`by thm set_builder_member(x, B)` or
-`by thm tuple_equal_from_coordinates(L, R)`. These calls check their
+`release thm set_builder_member(x, B)` or
+`release thm tuple_equal_from_coordinates(L, R)`. These calls check their
 requirements with the full verifier and commit no conclusion on failure.
 The canonical rational interface is
-`by thm rational_has_unique_reduced_fraction(q)`. For a known `q $in Q`, it
+`release thm rational_has_unique_reduced_fraction(q)`. For a known `q $in Q`, it
 stores `exist! p Z, d N+ st {q = p / d, gcd(p, d) = 1}`. The name is bare and
 reserved and accepts exactly one argument. This conclusion is available only
 through the explicit theorem handler; writing the existential directly does
@@ -450,21 +450,20 @@ not trigger an implicit reduced-fraction rule, and no trusted `std/basics`
 theorem is required.
 Finite-set foundations use the same explicit style. After checking
 `A $subset B` with finite `B`, call
-`by thm subset_of_finite_set_is_finite(A, B)`; Litex deliberately does not
+`release thm subset_of_finite_set_is_finite(A, B)`; Litex deliberately does not
 search arbitrary subset chains. For finite `s`,
-`by thm finite_set_has_bijective_index(s)` stores a noncanonical existential
+`release thm finite_set_has_bijective_index(s)` stores a noncanonical existential
 index in `finite_seq(s, finite_set_size(s))`, bijective from
 `closed_range(1, finite_set_size(s))`. These are bare kernel names, not
 `basics::` definitions, and an arbitrary finite sequence is not thereby
 defined bijective.
 When only one atomic consequence should escape, use the preview form
-`by thm name(args) => atomic_fact`, or the equivalent bodyless goal block
-`by thm name(args):` followed by one `? atomic_fact`. Litex applies the ordinary
+`by thm name(args) => atomic_fact`. Litex applies the ordinary
 theorem in a temporary child context, checks the selected fact there, and then
 discards all other theorem conclusions. Only the selected fact is committed to
 the parent; its normal inferred consequences may still be stored. The selected
-fact must already be well-defined in the parent, and a compound target or proof
-body is rejected.
+fact must already be well-defined in the parent, and a compound target, missing
+`=>`, or proof body is rejected.
 Mathematical definitions similarly use explicit `by def A $subset B` and
 `by def $injective(A, B, f)` statements. New code should use this inline
 spelling; the older `by def:` plus one `? fact` goal remains accepted for
@@ -492,7 +491,7 @@ There are two main design answers.
 First, use `thm` for named theorems that should be called explicitly. A
 `thm` proves and stores a named theorem, but it does not add its `forall` body
 as an ordinary automatic `forall` matching fact. To use it, the proof says
-`by thm name(args...)`. That makes large, classic, expensive, or
+`release thm name(args...)`. That makes large, classic, expensive, or
 parameter-sensitive results explicit proof dependencies instead of background
 noise.
 
@@ -530,7 +529,8 @@ A practical rule of thumb is:
   instantiation is obvious from the goal shape;
 - use `claim:` with a `? forall ...` goal, or direct `forall` facts, when you want a helper to behave
   like local reusable context;
-- use `thm` plus `by thm` when the theorem name and arguments should be visible
+- use `thm` plus `release thm` when every conclusion should be visible, or
+  selected `by thm ... => fact` when only one atomic consequence should escape
   in the proof;
 - put unfinished background in a source-local cite package and import only
   the facts needed for the current file.
@@ -825,7 +825,7 @@ struct FirstQuadrant:
         x > 0
         y > 0
 
-by thm struct_member((1, 2), &FirstQuadrant)
+release thm struct_member((1, 2), &FirstQuadrant)
 have p &FirstQuadrant = (1, 2)
 p.x = 1
 p.y = 2
@@ -1276,7 +1276,7 @@ helper facts that should behave like part of the current mathematical
 environment.
 
 A `thm` is good for important named results whose use should be visible. A
-theorem is stored under a name and used explicitly with `by thm name(args...)`.
+theorem is stored under a name and used explicitly with `release thm name(args...)`.
 This keeps large, classic, parameter-sensitive, or source-package results
 from silently becoming background search noise.
 
@@ -1389,7 +1389,7 @@ have q Q
 obtain p, d from thm rational_has_unique_reduced_fraction(q)
 ```
 
-This runs the same argument and premise checks as `by thm`. The theorem call is
+This runs the same argument and premise checks as `release thm`. The theorem call is
 temporary, so its existential does not leak into the surrounding context; the
 named witnesses, their types and body facts, and the `exist!` uniqueness
 interface do. Multiple conclusions, a nonexistential or negated existential

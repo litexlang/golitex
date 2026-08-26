@@ -5,7 +5,7 @@ prop is_integer_endomorphism(f fn(x Z) Z):
 have fn g(x R) Z = 0
 
 # A function expected on Z is passed as the explicit value g | Z.
-by thm fn_set_member(fn(x Z) Z {g(x)}, fn(x Z) Z)
+release thm fn_set_member(fn(x Z) Z {g(x)}, fn(x Z) Z)
 by def $is_integer_endomorphism(fn(x Z) Z {g(x)})
 $is_integer_endomorphism(fn(x Z) Z {g(x)})
 
@@ -17,4 +17,4 @@ thm function_space_membership_from_pointwise_values:
             f $in fn(alpha I) X
     forall alpha I:
         f(alpha) $in X
-    by thm fn_set_member(f, fn(alpha I) X)
+    release thm fn_set_member(f, fn(alpha I) X)

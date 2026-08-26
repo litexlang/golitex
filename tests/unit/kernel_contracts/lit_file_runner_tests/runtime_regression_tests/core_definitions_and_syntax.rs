@@ -671,10 +671,10 @@ fn have_tuple_can_equal_literal_tuple_by_dimension_and_projections() {
 have n N+ = 3
 
 have tuple index_tuple for i1 <= n, index_tuple[i1] = i1
-by thm tuple_equal_from_coordinates(index_tuple, (1, 2, 3))
+release thm tuple_equal_from_coordinates(index_tuple, (1, 2, 3))
 
 have tuple real_tuple for i1 <= n, real_tuple[i1] = R
-by thm tuple_equal_from_coordinates((R, R, R), real_tuple)
+release thm tuple_equal_from_coordinates((R, R, R), real_tuple)
 "#;
 
             let mut runtime = Runtime::default();
@@ -1640,7 +1640,7 @@ trust forall alpha I:
 $is_choice_function_for(I, X, g, d)
 d $in general_cart(I, X, g)
 
-by thm general_cart_nonempty_by_choice_from_family(general_cart(I, X, g))
+release thm general_cart_nonempty_by_choice_from_family(general_cart(I, X, g))
 $is_nonempty_set(general_cart(I, X, g))
 have c general_cart(I, X, g)
 c $in fn(t I)big_union(X)
@@ -1652,7 +1652,7 @@ have J set
 have h fn(beta J) X
 forall beta J:
     $is_nonempty_set(h(beta))
-by thm general_cart_nonempty_by_choice_from_pointwise(general_cart(J, X, h))
+release thm general_cart_nonempty_by_choice_from_pointwise(general_cart(J, X, h))
 $is_nonempty_set(general_cart(J, X, h))
 "#;
 
@@ -2326,14 +2326,13 @@ copy = 2
     assert_eq!(result.statement.equal_tos[0].name(), "copy");
     assert_eq!(result.statement.thm_name.to_string(), "self_exists");
     assert_eq!(result.statement.args[0].to_string(), "2");
-    assert!(run_output.contains("\"kind\": \"ByThmStmt\""));
+    assert!(run_output.contains("\"kind\": \"ReleaseThmStmt\""));
     assert!(run_output.contains("\"kind\": \"SuccessVerifyByTheoremResult\""));
     assert!(run_output.contains("\"statement\": \"release thm self_exists(2)\""));
     assert!(matches!(
         elimination.source_result.as_ref(),
-        StmtResult::Success(SuccessStmtResult::By(SuccessByStmtResult::ByThmStmt(
-            theorem_result
-        ))) if theorem_result.verification.is_some()
+        StmtResult::Success(SuccessStmtResult::ReleaseThmStmt(theorem_result))
+            if theorem_result.verification.is_some()
     ));
 
     // The application runs in a child environment: its instantiated

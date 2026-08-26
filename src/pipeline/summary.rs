@@ -348,6 +348,12 @@ impl RunSummary {
                     self.visit_infer_result(&result.proof_scope.assumption_infers);
                 }
             }
+            SuccessStmtResult::ReleaseThmStmt(result) => {
+                bump_count(&mut self.proof_method_counts, "theorem release");
+                if let Some(verification) = &result.verification {
+                    bump_count(&mut self.by_theorem_counts, verification.theorem.as_str());
+                }
+            }
             SuccessStmtResult::By(by) => self.visit_by_ir(by),
             _ => {}
         }
@@ -389,7 +395,7 @@ impl RunSummary {
             SuccessByStmtResult::ByDefStmt(_) => self.bump_by_method("def"),
             SuccessByStmtResult::ByStructDefStmt(_) => self.bump_by_method("struct def"),
             SuccessByStmtResult::ByThmStmt(result) => {
-                self.bump_by_method("theorem");
+                self.bump_by_method("theorem selection");
                 if let Some(verification) = &result.verification {
                     bump_count(&mut self.by_theorem_counts, verification.theorem.as_str());
                 }

@@ -68,7 +68,7 @@ registered integer-sum rules, the exact induction-hypothesis `FactId`, and
 arithmetic normalization. ToLean replays that evidence only for the source
 declarations.
 
-The source then specializes its own universal result without `by thm`:
+The source then specializes its own universal result without `release thm`:
 
 ```litex
 thm sum_first_ten_odds:

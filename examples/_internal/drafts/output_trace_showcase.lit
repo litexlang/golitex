@@ -31,7 +31,7 @@ thm tmp_one_eq_one:
     ? forall:
         1 = 1
 
-by thm tmp_one_eq_one()
+release thm tmp_one_eq_one()
 
 # By enumerate finite_set: each finite assignment is checked separately.
 by enumerate finite_set:
@@ -118,4 +118,4 @@ have tmp_factors nonempty_set
 have tmp_family fn(tmp_coordinate tmp_index) tmp_factors
 trust forall X tmp_factors:
     $is_nonempty_set(X)
-by thm general_cart_nonempty_by_choice_from_family(general_cart(tmp_index, tmp_factors, tmp_family))
+release thm general_cart_nonempty_by_choice_from_family(general_cart(tmp_index, tmp_factors, tmp_family))

@@ -1728,7 +1728,7 @@ claim:
         =>:
             $synthetic_ordinary_contribution(J, c(J))
     $synthetic_stieltjes_contribution(J, c(J))
-    by thm synthetic_stieltjes_contribution_to_ordinary(J, c(J))
+    release thm synthetic_stieltjes_contribution_to_ordinary(J, c(J))
     $synthetic_ordinary_contribution(J, c(J))
 
 claim:
@@ -2639,7 +2639,7 @@ claim:
     rect(x) = source_term(x)
     source_term(x) = rect(x)
 
-by thm finite_set_sum_substitution(finite_set_sum(selected, fn(x selected) R {source_term(x)}), finite_set_sum(selected, fn(x selected) R {rect(x)}))
+release thm finite_set_sum_substitution(finite_set_sum(selected, fn(x selected) R {source_term(x)}), finite_set_sum(selected, fn(x selected) R {rect(x)}))
 "#;
 
             let mut runtime = Runtime::default();
@@ -3299,7 +3299,7 @@ claim:
         $p(n, n)
         =>:
             $q(n)
-    by thm t(n)
+    release thm t(n)
     $q(n)
 "#,
             false,
@@ -3320,7 +3320,7 @@ claim:
         $p(n + 0, n)
         =>:
             $q(n + 0)
-    by thm t(n + 0)
+    release thm t(n + 0)
     $q(n + 0)
 "#,
             false,
@@ -3364,7 +3364,7 @@ claim:
         $p(n, n)
         =>:
             $q(n)
-    by thm t(n)
+    release thm t(n)
     $q(n)
 "#,
             false,
@@ -3407,7 +3407,7 @@ claim:
             $p(n, k)
         =>:
             $q(n)
-    by thm t(n)
+    release thm t(n)
     $q(n)
 "#,
             true,

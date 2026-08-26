@@ -895,7 +895,7 @@ thm probability_of_disjoint_union:
     by thm event_countable_union_is_event(union_probability_Omega, union_probability_events, fn(n N+) union_probability_events {two_events(A, B, n)}) => index_union(N+, union_probability_Omega, fn(n N+) power_set(union_probability_Omega) {two_events(A, B, n)}) $in union_probability_events
     union(A, B) $in union_probability_events
     by thm two_event_sequence_pairwise_disjoint(union_probability_Omega, union_probability_events, A, B) => $pairwise_disjoint_event_sequence(union_probability_Omega, union_probability_events, fn(n N+) union_probability_events {two_events(A, B, n)})
-    by thm kolmogorov_countable_additivity(union_probability_Omega, union_probability_events, union_probability, fn(n N+) union_probability_events {two_events(A, B, n)})
+    release thm kolmogorov_countable_additivity(union_probability_Omega, union_probability_events, union_probability, fn(n N+) union_probability_events {two_events(A, B, n)})
     by thm two_event_probability_series_has_sum(union_probability_Omega, union_probability_events, union_probability, A, B) => $has_series_sum(fn(n N+) R {union_probability(two_events(A, B, n))}, union_probability(A) + union_probability(B))
     by thm series_sum_unique(probability_terms, union_probability(event_union), union_probability(A) + union_probability(B)) => union_probability(event_union) = union_probability(A) + union_probability(B)
     union_probability(union(A, B)) = union_probability(event_union) = union_probability(A) + union_probability(B)
@@ -989,7 +989,7 @@ thm probability_mono:
         A $subset B
         =>:
             probability(A) <= probability(B)
-    by thm probability_of_difference_under_subset(Omega, events, probability, B, A)
+    release thm probability_of_difference_under_subset(Omega, events, probability, B, A)
     set_minus(B, A) $in events
     probability(set_minus(B, A)) = probability(B) - probability(A)
     probability(set_minus(B, A)) >= 0
@@ -1020,13 +1020,13 @@ thm probability_inclusion_exclusion:
     by thm event_difference_is_event(Omega, events, B, A) => set_minus(B, A) $in events
     by thm set_intersect_relative_complement_is_empty(A, B) => intersect(A, set_minus(B, A)) = {}
     by thm union_with_relative_complement(A, B) => union(A, set_minus(B, A)) = union(A, B)
-    by thm probability_of_disjoint_union(Omega, events, probability, A, set_minus(B, A))
+    release thm probability_of_disjoint_union(Omega, events, probability, A, set_minus(B, A))
     union(A, set_minus(B, A)) $in events
     probability(union(A, set_minus(B, A))) = probability(A) + probability(set_minus(B, A))
     union(A, B) $in events
     intersect(A, B) $in events
     intersect(A, B) $subset B
-    by thm probability_of_difference_under_subset(Omega, events, probability, B, intersect(A, B))
+    release thm probability_of_difference_under_subset(Omega, events, probability, B, intersect(A, B))
     probability(set_minus(B, intersect(A, B))) = probability(B) - probability(intersect(A, B))
     by thm remove_intersection_equals_remove_set(A, B) => set_minus(B, intersect(A, B)) = set_minus(B, A)
     probability(set_minus(B, A)) = probability(set_minus(B, intersect(A, B))) = probability(B) - probability(intersect(A, B))
@@ -1037,7 +1037,7 @@ thm probability_union_bound:
     ? forall [ProbabilitySpaceSetting], A, B events:
         union(A, B) $in events
         probability(union(A, B)) <= probability(A) + probability(B)
-    by thm probability_inclusion_exclusion(Omega, events, probability, A, B)
+    release thm probability_inclusion_exclusion(Omega, events, probability, A, B)
     union(A, B) $in events
     probability(union(A, B)) = probability(A) + probability(B) - probability(intersect(A, B))
     intersect(A, B) $in events
@@ -1505,7 +1505,7 @@ thm probability_of_next_increasing_stage:
             probability(event_sequence(k + 1)) = probability(event_sequence(k)) + probability(\increasing_event_increment<Omega, events>(event_sequence, k + 1))
     let increment = \increasing_event_increment<Omega, events>
     by thm previous_event_disjoint_from_next_increment(Omega, events, event_sequence, k) => intersect(event_sequence(k), increment(event_sequence, k + 1)) = {}
-    by thm probability_of_disjoint_union(Omega, events, probability, event_sequence(k), increment(event_sequence, k + 1))
+    release thm probability_of_disjoint_union(Omega, events, probability, event_sequence(k), increment(event_sequence, k + 1))
     union(event_sequence(k), increment(event_sequence, k + 1)) $in events
     probability(union(event_sequence(k), increment(event_sequence, k + 1))) = probability(event_sequence(k)) + probability(increment(event_sequence, k + 1))
     by thm increasing_event_increment_partitions_next(Omega, events, event_sequence, k) => union(event_sequence(k), increment(event_sequence, k + 1)) = event_sequence(k + 1)
@@ -1627,13 +1627,13 @@ thm probability_continuous_from_below:
     claim:
         ? $is_sigma_algebra(Omega, events)
         by def $is_sigma_algebra(Omega, events)
-    by thm increasing_event_sequence_has_probability_disjointification(Omega, events, probability, event_sequence)
+    release thm increasing_event_sequence_has_probability_disjointification(Omega, events, probability, event_sequence)
     obtain increments from exist increments fn (increment_index N+) events st {$is_probability_disjointification_of(Omega, events, probability, event_sequence, increments)}
     by def $is_probability_disjointification_of(Omega, events, probability, event_sequence, increments)
     have increment_union events = index_union(N+, Omega, fn (n N+) power_set(Omega) {increments(n)})
     have source_union events = index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})
     increment_union = source_union
-    by thm kolmogorov_countable_additivity(Omega, events, probability, increments)
+    release thm kolmogorov_countable_additivity(Omega, events, probability, increments)
     $has_series_sum(fn (n N+) R {probability(increments(n))}, probability(increment_union))
     by def $has_series_sum(fn (n N+) R {probability(increments(n))}, probability(increment_union))
     by thm pointwise_equal_sequences_preserve_limit(fn (k N+) R {probability(event_sequence(k))}, fn (k N+) R {partial_sum(fn (n N+) R {probability(increments(n))}, k)}, probability(increment_union)) => $has_sequence_limit(fn (k N+) R {probability(event_sequence(k))}, probability(increment_union))
@@ -2363,7 +2363,7 @@ thm probability_event_tail_union_after_le_series_remainder:
         =>:
             probability(\event_tail_union_after<Omega, events>(event_sequence, skipped)) <= total - partial_sum(fn (n N+) R {probability(event_sequence(n))}, skipped)
     let tail_union = \event_tail_union_after<Omega, events>
-    by thm real_series_tail_after_has_sum(fn (n N+) R {probability(event_sequence(n))}, total, skipped)
+    release thm real_series_tail_after_has_sum(fn (n N+) R {probability(event_sequence(n))}, total, skipped)
     claim:
         ? forall offset N+:
             probability(event_sequence(skipped + offset)) = real_sequence_tail_after(fn (n N+) R {probability(event_sequence(n))}, skipped, offset)
@@ -3299,7 +3299,7 @@ thm finite_atomic_probability_is_probability_space:
                 case not atom(component) $in event:
                     atomic_term(component, event) = 0
                     0 >= 0
-        by thm finite_set_sum_le_from_pointwise(finite_set_sum(atom_indices, fn(component atom_indices) R {0}), finite_set_sum(atom_indices, fn(component atom_indices) R {atomic_term(component, event)}))
+        release thm finite_set_sum_le_from_pointwise(finite_set_sum(atom_indices, fn(component atom_indices) R {0}), finite_set_sum(atom_indices, fn(component atom_indices) R {atomic_term(component, event)}))
         finite_set_sum(atom_indices, fn(component atom_indices) R {0}) = 0
         finite_set_sum(atom_indices, fn(component atom_indices) R {atomic_term(component, event)}) >= 0
         atomic_probability(event) = finite_set_sum(atom_indices, fn(component atom_indices) R {atomic_term(component, event)})

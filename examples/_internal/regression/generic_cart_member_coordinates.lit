@@ -43,7 +43,7 @@ forall i1 closed_range(1, n):
     proj(c, i1) = R
     q[i1] $in proj(c, i1)
 
-by thm cart_member_from_coordinates(q, c)
+release thm cart_member_from_coordinates(q, c)
 q $in c
 
 have tuple r for i1 <= n, r[i1] = 0
@@ -53,7 +53,7 @@ forall i1 closed_range(1, n):
     r[i1] = 0
     q[i1] = r[i1]
 
-by thm tuple_equal_from_coordinates(q, r)
+release thm tuple_equal_from_coordinates(q, r)
 q = r
 
 have fn X(i1 closed_range(1, n)) power_set(R) = R
@@ -79,7 +79,7 @@ claim:
         p[i1] $in X(i1)
     by def $has_X_values(raw_choice_tuple_encode(p))
     $has_X_values(raw_choice_tuple_encode(p))
-    by thm set_builder_member(raw_choice_tuple_encode(p), {f fn(i1 closed_range(1, n)) R: $has_X_values(f)})
+    release thm set_builder_member(raw_choice_tuple_encode(p), {f fn(i1 closed_range(1, n)) R: $has_X_values(f)})
     raw_choice_tuple_encode(p) $in {f fn(i1 closed_range(1, n)) R: $has_X_values(f)}
 
 have fn choice_tuple_encode(p c) P = raw_choice_tuple_encode(p)

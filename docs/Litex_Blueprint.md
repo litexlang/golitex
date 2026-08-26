@@ -421,7 +421,7 @@ In the convergence example, `abs(c) + 1 > 0`, `epsilon / (abs(c) + 1) $in R+`, a
 
 More concretely, the Litex kernel searches for proof support that matches the result and explains the verification path it finds. Lean's elaboration process instead follows the user's tactic commands to construct the corresponding proof term, the Infoview displays the transformed Goals, and the kernel checks that term.
 
-This does not mean that Litex forbids naming. Classic theorems, standard-library interfaces, and dependencies the author wishes to make explicit can still be written as named Litex `thm` definitions and invoked with `by thm`.
+This does not mean that Litex forbids naming. Classic theorems, standard-library interfaces, and dependencies the author wishes to make explicit can still be written as named Litex `thm` definitions and invoked with `release thm`, or selected with `by thm ... => fact`.
 
 Ordinary facts need neither names nor explicit tactic calls because the Litex kernel searches for a verification path from the fact's predicate, argument shape, and current context. Common sources of verification include universal facts, whether builtin or user-provided, as well as known concrete facts and equality information. Litex also has more elaborate optimizations and strategies, but they do not change this core division of labor.
 

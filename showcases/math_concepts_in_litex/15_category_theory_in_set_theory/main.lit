@@ -99,7 +99,7 @@ thm identity_functor_exists:
                 identity_on_arrows(chosen_source, chosen_target, compose(chosen_source, chosen_middle, chosen_target, first_arrow, second_arrow)) = compose(identity_on_objects(chosen_source), identity_on_objects(chosen_middle), identity_on_objects(chosen_target), identity_on_arrows(chosen_source, chosen_middle, first_arrow), identity_on_arrows(chosen_middle, chosen_target, second_arrow))
             identity_on_arrows(chosen_source, chosen_target, compose(chosen_source, chosen_middle, chosen_target, first_arrow, second_arrow)) = compose(chosen_source, chosen_middle, chosen_target, first_arrow, second_arrow)
             compose(identity_on_objects(chosen_source), identity_on_objects(chosen_middle), identity_on_objects(chosen_target), identity_on_arrows(chosen_source, chosen_middle, first_arrow), identity_on_arrows(chosen_middle, chosen_target, second_arrow)) = compose(chosen_source, chosen_middle, chosen_target, first_arrow, second_arrow)
-        by thm functor_from_preservation_laws(Obj, Mor, Hom, identity, compose, Obj, Mor, Hom, identity, compose, identity_on_objects, identity_on_arrows)
+        release thm functor_from_preservation_laws(Obj, Mor, Hom, identity, compose, Obj, Mor, Hom, identity, compose, identity_on_objects, identity_on_arrows)
 
 # The middle category is already supplied by the first functor setting, so this
 # setting adds only the third category and the second functor's maps and laws.
@@ -140,7 +140,7 @@ thm composition_of_functors_exists:
                 composite_on_arrows(chosen_source, chosen_target, Ccompose(chosen_source, chosen_middle, chosen_target, source_arrow, target_arrow)) = Ecompose(composite_on_objects(chosen_source), composite_on_objects(chosen_middle), composite_on_objects(chosen_target), composite_on_arrows(chosen_source, chosen_middle, source_arrow), composite_on_arrows(chosen_middle, chosen_target, target_arrow))
             by thm composite_functor_preserves_composition(CObj, CMor, CHom, Cidentity, Ccompose, DObj, DMor, DHom, Didentity, Dcompose, F_object, F_arrow, EObj, EMor, EHom, Eidentity, Ecompose, G_object, G_arrow, chosen_source, chosen_middle, chosen_target, source_arrow, target_arrow) => G_arrow(F_object(chosen_source), F_object(chosen_target), F_arrow(chosen_source, chosen_target, Ccompose(chosen_source, chosen_middle, chosen_target, source_arrow, target_arrow))) = Ecompose(G_object(F_object(chosen_source)), G_object(F_object(chosen_middle)), G_object(F_object(chosen_target)), G_arrow(F_object(chosen_source), F_object(chosen_middle), F_arrow(chosen_source, chosen_middle, source_arrow)), G_arrow(F_object(chosen_middle), F_object(chosen_target), F_arrow(chosen_middle, chosen_target, target_arrow)))
             composite_on_arrows(chosen_source, chosen_target, Ccompose(chosen_source, chosen_middle, chosen_target, source_arrow, target_arrow)) = G_arrow(F_object(chosen_source), F_object(chosen_target), F_arrow(chosen_source, chosen_target, Ccompose(chosen_source, chosen_middle, chosen_target, source_arrow, target_arrow))) = Ecompose(G_object(F_object(chosen_source)), G_object(F_object(chosen_middle)), G_object(F_object(chosen_target)), G_arrow(F_object(chosen_source), F_object(chosen_middle), F_arrow(chosen_source, chosen_middle, source_arrow)), G_arrow(F_object(chosen_middle), F_object(chosen_target), F_arrow(chosen_middle, chosen_target, target_arrow))) = Ecompose(composite_on_objects(chosen_source), composite_on_objects(chosen_middle), composite_on_objects(chosen_target), composite_on_arrows(chosen_source, chosen_middle, source_arrow), composite_on_arrows(chosen_middle, chosen_target, target_arrow))
-        by thm functor_from_preservation_laws(CObj, CMor, CHom, Cidentity, Ccompose, EObj, EMor, EHom, Eidentity, Ecompose, composite_on_objects, composite_on_arrows)
+        release thm functor_from_preservation_laws(CObj, CMor, CHom, Cidentity, Ccompose, EObj, EMor, EHom, Eidentity, Ecompose, composite_on_objects, composite_on_arrows)
 
 setting ParallelFunctorsSetting([FunctorSetting(CObj, CMor, CHom, Cidentity, Ccompose, DObj, DMor, DHom, Didentity, Dcompose, F_object, F_arrow)], G_object fn(g_object CObj) DObj, G_arrow fn(g_source, g_target CObj, g_arrow CHom(g_source, g_target)) DHom(G_object(g_source), G_object(g_target))):
     forall mapped_object CObj:
@@ -170,8 +170,8 @@ thm natural_transformation_from_naturality:
 thm identity_component_is_natural:
     ? forall [FunctorSetting(CObj, CMor, CHom, Cidentity, Ccompose, DObj, DMor, DHom, Didentity, Dcompose, F_object, F_arrow)], chosen_source, chosen_target CObj, chosen_arrow CHom(chosen_source, chosen_target):
         $naturality_square_commutes(CObj, CMor, CHom, Cidentity, Ccompose, DObj, DMor, DHom, Didentity, Dcompose, F_object, F_arrow, F_object, F_arrow, fn(chosen_object CObj) DHom(F_object(chosen_object), F_object(chosen_object)) {Didentity(F_object(chosen_object))}, chosen_source, chosen_target, chosen_arrow)
-    by thm category_identity_is_identity_morphism(DObj, DMor, DHom, Didentity, Dcompose, F_object(chosen_target))
-    by thm category_identity_is_identity_morphism(DObj, DMor, DHom, Didentity, Dcompose, F_object(chosen_source))
+    release thm category_identity_is_identity_morphism(DObj, DMor, DHom, Didentity, Dcompose, F_object(chosen_target))
+    release thm category_identity_is_identity_morphism(DObj, DMor, DHom, Didentity, Dcompose, F_object(chosen_source))
     Dcompose(F_object(chosen_source), F_object(chosen_target), F_object(chosen_target), F_arrow(chosen_source, chosen_target, chosen_arrow), Didentity(F_object(chosen_target))) = F_arrow(chosen_source, chosen_target, chosen_arrow) = Dcompose(F_object(chosen_source), F_object(chosen_source), F_object(chosen_target), Didentity(F_object(chosen_source)), F_arrow(chosen_source, chosen_target, chosen_arrow))
     fn(chosen_object CObj) DHom(F_object(chosen_object), F_object(chosen_object)) {Didentity(F_object(chosen_object))}(chosen_target) = Didentity(F_object(chosen_target))
     fn(chosen_object CObj) DHom(F_object(chosen_object), F_object(chosen_object)) {Didentity(F_object(chosen_object))}(chosen_source) = Didentity(F_object(chosen_source))
@@ -186,8 +186,8 @@ thm identity_natural_transformation_exists:
         claim:
             ? forall chosen_source, chosen_target CObj, chosen_arrow CHom(chosen_source, chosen_target):
                 $naturality_square_commutes(CObj, CMor, CHom, Cidentity, Ccompose, DObj, DMor, DHom, Didentity, Dcompose, F_object, F_arrow, F_object, F_arrow, identity_on_components, chosen_source, chosen_target, chosen_arrow)
-            by thm identity_component_is_natural(CObj, CMor, CHom, Cidentity, Ccompose, DObj, DMor, DHom, Didentity, Dcompose, F_object, F_arrow, chosen_source, chosen_target, chosen_arrow)
-        by thm natural_transformation_from_naturality(CObj, CMor, CHom, Cidentity, Ccompose, DObj, DMor, DHom, Didentity, Dcompose, F_object, F_arrow, F_object, F_arrow, identity_on_components)
+            release thm identity_component_is_natural(CObj, CMor, CHom, Cidentity, Ccompose, DObj, DMor, DHom, Didentity, Dcompose, F_object, F_arrow, chosen_source, chosen_target, chosen_arrow)
+        release thm natural_transformation_from_naturality(CObj, CMor, CHom, Cidentity, Ccompose, DObj, DMor, DHom, Didentity, Dcompose, F_object, F_arrow, F_object, F_arrow, identity_on_components)
 
 setting ComposableNaturalTransformationsSetting([NaturalTransformationSetting(CObj, CMor, CHom, Cidentity, Ccompose, DObj, DMor, DHom, Didentity, Dcompose, F_object, F_arrow, G_object, G_arrow, alpha)], H_object fn(h_object CObj) DObj, H_arrow fn(h_source, h_target CObj, h_arrow CHom(h_source, h_target)) DHom(H_object(h_source), H_object(h_target)), beta fn(component_object CObj) DHom(G_object(component_object), H_object(component_object))):
     forall mapped_object CObj:
@@ -249,7 +249,7 @@ thm vertical_composition_of_natural_transformations_exists:
             Dcompose(F_object(chosen_source), H_object(chosen_source), H_object(chosen_target), Dcompose(F_object(chosen_source), G_object(chosen_source), H_object(chosen_source), alpha(chosen_source), beta(chosen_source)), H_arrow(chosen_source, chosen_target, chosen_arrow)) = Dcompose(F_object(chosen_source), H_object(chosen_source), H_object(chosen_target), vertical_components(chosen_source), H_arrow(chosen_source, chosen_target, chosen_arrow))
             Dcompose(F_object(chosen_source), F_object(chosen_target), H_object(chosen_target), F_arrow(chosen_source, chosen_target, chosen_arrow), vertical_components(chosen_target)) = Dcompose(F_object(chosen_source), H_object(chosen_source), H_object(chosen_target), vertical_components(chosen_source), H_arrow(chosen_source, chosen_target, chosen_arrow))
             by def $naturality_square_commutes(CObj, CMor, CHom, Cidentity, Ccompose, DObj, DMor, DHom, Didentity, Dcompose, F_object, F_arrow, H_object, H_arrow, vertical_components, chosen_source, chosen_target, chosen_arrow)
-        by thm natural_transformation_from_naturality(CObj, CMor, CHom, Cidentity, Ccompose, DObj, DMor, DHom, Didentity, Dcompose, F_object, F_arrow, H_object, H_arrow, vertical_components)
+        release thm natural_transformation_from_naturality(CObj, CMor, CHom, Cidentity, Ccompose, DObj, DMor, DHom, Didentity, Dcompose, F_object, F_arrow, H_object, H_arrow, vertical_components)
 
 # Concrete example 1: the terminal category has one object and one arrow. Every
 # hom-set is the singleton {0}; identity and composition must therefore return
@@ -299,7 +299,7 @@ thm terminal_identity_functor_exists:
         exist identity_object_map fn(chosen_object terminal_objects) terminal_objects, identity_arrow_map fn(chosen_source, chosen_target terminal_objects, chosen_arrow terminal_hom(chosen_source, chosen_target)) terminal_hom(identity_object_map(chosen_source), identity_object_map(chosen_target)) st {$is_functor(terminal_objects, terminal_morphisms, terminal_hom, terminal_identity, terminal_compose, terminal_objects, terminal_morphisms, terminal_hom, terminal_identity, terminal_compose, identity_object_map, identity_arrow_map)}
     by thm terminal_data_forms_a_category() => $is_category(terminal_objects, terminal_morphisms, terminal_hom, terminal_identity, terminal_compose)
     by def $is_category(terminal_objects, terminal_morphisms, terminal_hom, terminal_identity, terminal_compose)
-    by thm identity_functor_exists(terminal_objects, terminal_morphisms, terminal_hom, terminal_identity, terminal_compose)
+    release thm identity_functor_exists(terminal_objects, terminal_morphisms, terminal_hom, terminal_identity, terminal_compose)
 
 # Concrete example 2: the chaotic category on two objects. Its objects are 0
 # and 1, and the unique arrow source -> target is encoded by (source, target).

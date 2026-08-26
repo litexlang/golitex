@@ -588,9 +588,7 @@ impl StmtResultToLeanCompiler {
                 "theorem-backed existential elimination source is not a statement Result"
                     .to_string()
             })?;
-        let SuccessStmtResult::By(SuccessByStmtResult::ByThmStmt(theorem_application)) =
-            source_result
-        else {
+        let SuccessStmtResult::ReleaseThmStmt(theorem_application) = source_result else {
             return Err(
                 "theorem-backed existential elimination retained another source statement".into(),
             );

@@ -59,6 +59,19 @@ impl StmtResultJsonV2 {
                 ),
             },
             SuccessStmtResult::Definition(result) => self.definition_stmt(result),
+            SuccessStmtResult::ReleaseThmStmt(result) => {
+                let verification = result
+                    .verification
+                    .as_ref()
+                    .map(|verification| by_theorem_verification_value(self, verification))
+                    .unwrap_or(JsonValue::Null);
+                self.non_fact_stmt(
+                    "ReleaseThmStmt",
+                    result.statement.to_string(),
+                    &result.common,
+                    vec![("verification".to_string(), verification)],
+                )
+            }
             SuccessStmtResult::By(result) => self.by_stmt(result),
             SuccessStmtResult::Witness(result) => self.witness_stmt(result),
             SuccessStmtResult::ProofBlock(result) => self.proof_block_stmt(result),

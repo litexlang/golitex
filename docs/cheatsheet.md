@@ -103,7 +103,7 @@ agents must insert these parentheses rather than infer an unstated intention.
 | Properties of a definition-owned struct expression | `by struct def expression` | Verifies membership, then opens exactly one layer; direct `x &Struct` symbols are the only automatic case |
 | Every conclusion of a named theorem | `release thm name(args)` | Bare-only: no `=>` selection and no indented goal/proof body |
 | One atomic consequence of a named theorem | `by thm name(args) => fact` | This selection form commits only the requested atomic fact |
-| A semantic constructor with compound requirements | Its reserved `by thm` interface | One-layer automation does not invent quantified premises |
+| A semantic constructor with compound requirements | Its reserved `release thm` interface | One-layer automation does not invent quantified premises |
 | An existential target | `witness ... from ...` | Match the target's witnesses and carriers exactly |
 | A known existential whose witnesses are needed | `obtain ... from ...` | The source existential must already be known |
 | A universal fact over `range` / `closed_range` | `by for` | This is bounded integer iteration, not arbitrary quantifier automation |

@@ -21,7 +21,7 @@ have fn zero_distance(x, y R) R = 0
 forall x, y R:
     zero_distance(x, y) = 0
     zero_distance(x, y) >= 0
-by thm struct_member(zero_distance, &MetricSpace<R>)
+release thm struct_member(zero_distance, &MetricSpace<R>)
 have metric &MetricSpace<R> = zero_distance
 zero_distance(1, 0) = 0
 metric(1, 0) = zero_distance(1, 0)

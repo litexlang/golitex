@@ -415,7 +415,7 @@ fn known_set_equality_transports_across_alpha_equivalent_set_builders() {
         let source_code = r#"
 by contra:
     ? {a N: a % 4 = 0} != {a N: a % 2 = 0}
-    by thm set_builder_member(2, {b N: b % 2 = 0})
+    release thm set_builder_member(2, {b N: b % 2 = 0})
     2 $in {c N: c % 4 = 0}
     impossible 2 % 4 = 0
 "#;
@@ -808,7 +808,7 @@ thm 自反等式:
     ? forall x R:
         x = x
     x = x
-by thm 自反等式(1)
+release thm 自反等式(1)
 "#;
 
         let mut runtime = Runtime::default();
@@ -903,8 +903,8 @@ $target_thm_prop(1)
 }
 
 #[test]
-fn thm_definition_can_still_be_used_by_thm() {
-    run_with_large_stack("thm_definition_can_still_be_used_by_thm", || {
+fn thm_definition_can_still_be_released() {
+    run_with_large_stack("thm_definition_can_still_be_released", || {
         let source_code = r#"
 prop target_thm_prop(x R):
     x = 1
@@ -917,19 +917,19 @@ thm use_target_thm:
 
     by def $target_thm_prop(x)
 
-by thm use_target_thm(1)
+release thm use_target_thm(1)
 $target_thm_prop(1)
 "#;
 
         let mut runtime = Runtime::default();
-        runtime.start_isolated_source("thm_definition_can_still_be_used_by_thm");
+        runtime.start_isolated_source("thm_definition_can_still_be_released");
         let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_output(&runtime, &stmt_results, &runtime_error);
 
         assert!(
             run_succeeded,
-            "thm should remain available through explicit by thm calls:\n{}",
+            "thm should remain available through explicit release thm calls:\n{}",
             run_output
         );
     });

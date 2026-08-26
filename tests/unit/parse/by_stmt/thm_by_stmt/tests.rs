@@ -12,42 +12,28 @@ fn parse_one(source: &str) -> Result<Stmt, RuntimeError> {
 }
 
 #[test]
-fn by_thm_parses_optional_selected_atomic_fact() {
-    let legacy = parse_one("by thm T(a)").expect("parse legacy by thm");
-    let Stmt::By(ByStmt::ByThmStmt(legacy)) = legacy else {
-        panic!("expected by thm statement")
-    };
-    assert!(legacy.selected_facts.is_none());
-    assert_eq!(legacy.to_string(), "release thm T(a)");
-
+fn by_thm_requires_and_parses_one_selected_atomic_fact() {
     let selected =
         parse_one("by thm T(a) => not $P(a)").expect("parse by thm with selected atomic fact");
     let Stmt::By(ByStmt::ByThmStmt(selected)) = selected else {
         panic!("expected by thm statement")
     };
-    assert!(selected.selected_facts.as_ref().is_some_and(
-        |facts| matches!(facts.as_slice(), [Fact::AtomicFact(fact)] if !fact.has_positive_polarity())
-    ));
+    assert!(!selected.selected_fact.has_positive_polarity());
     assert_eq!(selected.to_string(), "by thm T(a) => not $P(a)");
 
-    let goal_block =
-        parse_one("by thm T(a):\n    ? not $P(a)").expect("parse bodyless by thm goal");
-    let Stmt::By(ByStmt::ByThmStmt(goal_block)) = goal_block else {
-        panic!("expected by thm statement")
+    let error = parse_one("by thm T(a)").expect_err("bare by thm should fail");
+    let RuntimeError::ParseError(error) = error else {
+        panic!("expected parse error")
     };
-    assert!(goal_block.selected_facts.as_ref().is_some_and(
-        |facts| matches!(facts.as_slice(), [Fact::AtomicFact(fact)] if !fact.has_positive_polarity())
-    ));
-    assert_eq!(goal_block.to_string(), "by thm T(a) => not $P(a)");
+    assert!(error.msg.contains("use `release thm name(args)`"));
 }
 
 #[test]
-fn release_thm_parses_as_bare_by_thm_and_rejects_selection_or_proof_bodies() {
+fn release_thm_parses_as_its_own_statement_and_rejects_selection_or_proof_bodies() {
     let released = parse_one("release thm T(a)").expect("parse release thm");
-    let Stmt::By(ByStmt::ByThmStmt(released)) = released else {
-        panic!("expected existing by thm statement")
+    let Stmt::ReleaseThmStmt(released) = released else {
+        panic!("expected release thm statement")
     };
-    assert!(released.selected_facts.is_none());
     assert_eq!(released.to_string(), "release thm T(a)");
 
     for source in [
@@ -84,11 +70,11 @@ fn by_thm_selected_fact_rejects_missing_compound_and_indented_targets() {
         ),
         (
             "by thm T(a):\n    1 = 1",
-            "by thm: expects a `? <fact>` goal block",
+            "by thm requires `=>` followed by one selected atomic fact",
         ),
         (
             "by thm T(a):\n    ? $P(a)\n    1 = 1",
-            "by thm: expects exactly one `? <atomic fact>` goal block and no proof body",
+            "by thm requires `=>` followed by one selected atomic fact",
         ),
     ];
     for (source, expected) in cases {

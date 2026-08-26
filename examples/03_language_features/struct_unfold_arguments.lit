@@ -32,7 +32,7 @@ thm struct_unfold_reaches_function_prop_and_theorem:
     ? forall G &GroupData<R>:
         consume(unfold G) = G.identity
         $has_group_fields(unfold G)
-    by thm consume_group_fields(unfold G)
+    release thm consume_group_fields(unfold G)
     by def $has_group_fields(unfold G)
 
 have fn first_of_three(x, y, z R) R = x

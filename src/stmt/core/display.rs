@@ -15,6 +15,7 @@ impl fmt::Display for Stmt {
             Stmt::Fact(x) => write!(f, "{}", x),
             Stmt::UnsafeStmt(x) => write!(f, "{}", x),
             Stmt::Definition(x) => write!(f, "{}", x),
+            Stmt::ReleaseThmStmt(x) => write!(f, "{}", x),
             Stmt::By(x) => write!(f, "{}", x),
             Stmt::Witness(x) => write!(f, "{}", x),
             Stmt::ProofBlock(x) => write!(f, "{}", x),

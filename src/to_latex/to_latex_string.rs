@@ -2448,6 +2448,7 @@ impl Stmt {
             Stmt::By(ByStmt::ByDefStmt(x)) => latex_texttt_escape(&x.to_string()),
             Stmt::By(ByStmt::ByStructDefStmt(x)) => latex_texttt_escape(&x.to_string()),
             Stmt::By(ByStmt::ByThmStmt(x)) => latex_texttt_escape(&x.to_string()),
+            Stmt::ReleaseThmStmt(x) => latex_texttt_escape(&x.to_string()),
         }
     }
 }

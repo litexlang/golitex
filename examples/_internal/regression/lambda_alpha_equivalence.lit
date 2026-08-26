@@ -23,5 +23,5 @@ claim:
 
 trust $alpha_assumption(fn(i1 R) R {i1 + 1})
 $alpha_conclusion(fn(i1 R) R {i1 + 1})
-by thm alpha_theorem(1)
+release thm alpha_theorem(1)
 $alpha_conclusion(fn(j R) R {j + 1})

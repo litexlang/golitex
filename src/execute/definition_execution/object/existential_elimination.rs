@@ -44,14 +44,13 @@ impl Runtime {
         obtain: &ObtainObjFromThm,
     ) -> Result<StmtResult, RuntimeError> {
         let stmt: Stmt = obtain.clone().into();
-        let theorem_call = ByThmStmt::new(
+        let theorem_call = ReleaseThmStmt::new(
             obtain.thm_name.clone(),
             obtain.args.clone(),
-            None,
             obtain.line_file.clone(),
         );
         let application_result = self
-            .run_in_local_env(|rt| rt.exec_by_thm_stmt(&theorem_call))
+            .run_in_local_env(|rt| rt.exec_release_thm_stmt(&theorem_call))
             .map_err(|cause| exec_stmt_error_with_stmt_and_cause(stmt.clone(), cause))?;
         let (source_exist_fact, application_result) =
             self.extract_obtain_existential_from_theorem_result(stmt.clone(), application_result)?;
@@ -120,14 +119,13 @@ impl Runtime {
         obtain: &ObtainObjFromThm,
     ) -> Result<StmtResult, RuntimeError> {
         let stmt: Stmt = obtain.clone().into();
-        let theorem_call = ByThmStmt::new(
+        let theorem_call = ReleaseThmStmt::new(
             obtain.thm_name.clone(),
             obtain.args.clone(),
-            None,
             obtain.line_file.clone(),
         );
         let application_result = self
-            .run_in_local_env(|rt| rt.exec_by_thm_stmt_affect_environment_only(&theorem_call))
+            .run_in_local_env(|rt| rt.exec_release_thm_stmt_affect_environment_only(&theorem_call))
             .map_err(|cause| exec_stmt_error_with_stmt_and_cause(stmt.clone(), cause))?;
         let (source_exist_fact, _) =
             self.extract_obtain_existential_from_theorem_result(stmt.clone(), application_result)?;
@@ -150,7 +148,7 @@ impl Runtime {
     }
 
     /// Recover the exact direct theorem conclusion selected by the existing
-    /// `by thm` executor. The theorem application result is returned intact so
+    /// `release thm` executor. The theorem application result is returned intact so
     /// it remains the sole proof source retained by existential elimination.
     fn extract_obtain_existential_from_theorem_result(
         &self,
@@ -162,7 +160,7 @@ impl Runtime {
                 "obtain from thm: theorem application did not return a statement success"
                     .to_string()
             })?;
-            let SuccessStmtResult::By(SuccessByStmtResult::ByThmStmt(result)) = success else {
+            let SuccessStmtResult::ReleaseThmStmt(result) = success else {
                 return Err(
                     "obtain from thm: theorem application did not retain theorem verification evidence"
                         .to_string(),

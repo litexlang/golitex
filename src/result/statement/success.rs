@@ -344,6 +344,7 @@ pub enum SuccessStmtResult {
     Fact(Box<SuccessFactStmtResult>),
     UnsafeStmt(SuccessUnsafeStmtResult),
     Definition(SuccessDefinitionStmtResult),
+    ReleaseThmStmt(Box<SuccessReleaseThmStmtResult>),
     By(SuccessByStmtResult),
     Witness(SuccessWitnessStmtResult),
     ProofBlock(SuccessProofBlockStmtResult),
@@ -773,6 +774,12 @@ pub struct SuccessByStructDefStmtResult {
 
 pub struct SuccessByThmStmtResult {
     pub statement: ByThmStmt,
+    pub common: SuccessStmtCommonResult,
+    pub verification: Option<SuccessVerifyByTheoremResult>,
+}
+
+pub struct SuccessReleaseThmStmtResult {
+    pub statement: ReleaseThmStmt,
     pub common: SuccessStmtCommonResult,
     pub verification: Option<SuccessVerifyByTheoremResult>,
 }

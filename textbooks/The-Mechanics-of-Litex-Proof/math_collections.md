@@ -27,8 +27,8 @@ visible known forall
 user-defined strategy
 
 proved definition body --by def--> positive named predicate
-proved semantic premises --by thm builtin interface--> concrete object fact
-qualified imported theorem --by thm--> local fact or local forall bridge
+proved semantic premises --release thm builtin interface--> concrete object fact
+qualified imported theorem --release thm--> local fact or local forall bridge
 ```
 
 The first chain is automatic atomic verification. The last three arrows are
@@ -104,7 +104,7 @@ stored function definition. Tuple extensionality is a semantic object theorem,
 not arithmetic normalization:
 
 ```litex
-by thm tuple_equal_from_coordinates(t, (t[1], t[2]))
+release thm tuple_equal_from_coordinates(t, (t[1], t[2]))
 ```
 
 Compound function concepts are built from the inside out:
@@ -137,7 +137,7 @@ base carrier and substituted predicate. Introduction is explicit when those
 requirements need full verification:
 
 ```litex
-by thm set_builder_member(x, {n S: P(n)})
+release thm set_builder_member(x, {n S: P(n)})
 ```
 
 Union, intersection, displayed finite-set, set-difference, power-set, and
@@ -162,7 +162,7 @@ Equivalence classes demonstrate composition of the two explicit interfaces:
 
 ```litex
 $rel(a2, x)
-by thm set_builder_member(x, {b X: $rel(a2, b)})
+release thm set_builder_member(x, {b X: $rel(a2, b)})
 ```
 
 Relation registration proves the predicate premise; the builtin theorem then
@@ -171,13 +171,13 @@ introduces the set-builder membership.
 ## Universal facts and module boundaries
 
 A bare top-level `forall` is appropriate when its body is automatically
-verifiable. If the proof requires `by cases`, `by def`, `by thm`, witnesses, or
+verifiable. If the proof requires `by cases`, `by def`, `release thm`, witnesses, or
 another proof-control statement, use a `claim` whose goal is that universal
 fact.
 
 Automatic known-forall matching uses candidates visible in the current runtime.
 Those candidates may come from the current proof scope, an earlier export, or a
-referenced imported module. A qualified `by thm` remains preferable when the
+referenced imported module. A qualified `release thm` remains preferable when the
 dependency should be explicit or automatic matching does not select the
 intended theorem. If several nearby steps benefit from the same instance, a
 local `claim` forall can make that bridge explicit and reusable.
@@ -197,6 +197,6 @@ numeric carriers and equality/order rules
 ```
 
 Later chapters may reuse earlier named theorems either through visible
-known-forall matching or explicitly with qualified `by thm`. They must not
+known-forall matching or explicitly with qualified `release thm`. They must not
 duplicate an earlier theorem as a trusted local axiom merely to change the
 search route.

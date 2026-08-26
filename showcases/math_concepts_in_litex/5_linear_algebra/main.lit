@@ -89,7 +89,7 @@ template<K nonempty_set, field &Field<K>, V nonempty_set, space &VectorSpace<K, 
     have fn vector_neg by exist!:
         ? forall x V:
             exist! y V st {space.add(x, y) = space.zero}
-        by thm additive_inverse_exists_unique(K, field, V, space, x)
+        release thm additive_inverse_exists_unique(K, field, V, space, x)
 
 thm vector_neg_spec:
     ? forall [VectorSpaceSetting], x V:
@@ -132,7 +132,7 @@ thm zero_scalar_times_vector:
     p = space.add(p, p)
     space.add(p, space.zero) = space.add(space.zero, p) = p
     space.add(p, p) = space.add(p, space.zero)
-    by thm add_left_cancel(K, field, V, space, p, p, space.zero)
+    release thm add_left_cancel(K, field, V, space, p, p, space.zero)
     p = space.zero
 
 # Distribute a scalar over 0+0, then cancel the repeated term.
@@ -420,7 +420,7 @@ claim:
     ? forall a, b R, x cart(R, R):
         plane_smul(real_field.mul(a, b), x) = plane_smul(a, plane_smul(b, x))
         plane_smul(real_field.add(a, b), x) = plane_add(plane_smul(a, x), plane_smul(b, x))
-    by thm real_field_adapter_values(a, b)
+    release thm real_field_adapter_values(a, b)
     plane_smul(b, x) = (b * x[1], b * x[2])
     plane_smul(b, x)[1] = b * x[1]
     plane_smul(b, x)[2] = b * x[2]
@@ -454,11 +454,11 @@ claim:
 claim:
     ? forall x cart(R, R):
         plane_smul(real_field.one, x) = x
-    by thm real_field_adapter_values(0, 0)
+    release thm real_field_adapter_values(0, 0)
     x = (x[1], x[2])
     plane_smul(real_field.one, x) = (x[1], x[2]) = x
 
-by thm struct_member(((0, 0), plane_add, plane_smul), &VectorSpace<R, real_field, cart(R, R)>)
+release thm struct_member(((0, 0), plane_add, plane_smul), &VectorSpace<R, real_field, cart(R, R)>)
 have real_plane &VectorSpace<R, real_field, cart(R, R)> = ((0, 0), plane_add, plane_smul)
 
 have fn projection_x_axis(v cart(R, R)) cart(R, R) = (v[1], 0)

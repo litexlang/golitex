@@ -129,7 +129,7 @@ have fn derivative_at by exist!:
             $has_derivative_at(f, x0, slope2)
             =>:
                 slope1 = slope2
-        by thm derivative_value_unique(f, x0, slope1, slope2)
+        release thm derivative_value_unique(f, x0, slope1, slope2)
     exist! slope R st {$has_derivative_at(f, x0, slope)}
 
 # Bridge the relational derivative predicate to the uniquely selected value.
@@ -153,14 +153,14 @@ thm ode_solution_derivative_value:
         $is_differentiable_at(ode_solution, x)
         derivative_at(ode_solution, x) = 2 * x
     by thm ode_solution_has_derivative(x) => $has_derivative_at(ode_solution, x, 2 * x)
-    by thm has_derivative_at_to_derivative_value(ode_solution, x, 2 * x)
+    release thm has_derivative_at_to_derivative_value(ode_solution, x, 2 * x)
 
 # Restate the ODE using the callable derivative interface rather than an
 # existential slope witness.
 thm ode_solution_solves_equation_by_derivative:
     ? forall x R:
         $solves_ode_at_by_derivative(ode_solution, ode_rhs, x)
-    by thm ode_solution_derivative_value(x)
+    release thm ode_solution_derivative_value(x)
     ode_rhs(x, ode_solution(x)) = 2 * x
     derivative_at(ode_solution, x) = ode_rhs(x, ode_solution(x))
     by def $solves_ode_at_by_derivative(ode_solution, ode_rhs, x)

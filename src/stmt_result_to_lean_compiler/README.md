@@ -1582,7 +1582,7 @@ conclusion. Dependent/refined binders, domain premises, the other non-atomic
 conclusion families, and exported theorem projections remain on the explicit
 compatibility path.
 
-The matching direct `by thm` route closes the reference loop. Execution stores
+The matching direct `release thm` route closes the reference loop. Execution stores
 the exact source theorem `FactId` in `SuccessVerifyByTheoremResult`; the
 compiler resolves only that ID, combines the recursively retained argument
 membership checks, applies the Lean theorem, and registers each direct
@@ -1625,7 +1625,7 @@ proposition-string fact lookup or live `Runtime` lookup is involved.
 The theorem-backed adapter demonstrates proof construction versus
 publication more explicitly. A named
 `CompiledLitexTheoremInstantiationConclusionProofBody` is constructed from
-the nested `SuccessByThmStmtResult`. A top-level `by thm` requires and
+the nested `SuccessReleaseThmStmtResult`. A top-level `release thm` requires and
 publishes each conclusion's retained FactId. Inside `obtain from thm`, the
 temporary conclusion may intentionally have no publishable FactId after its
 execution-local environment is popped; the parent consumes its exact proof

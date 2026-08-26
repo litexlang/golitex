@@ -209,6 +209,7 @@ impl Runtime {
             Stmt::Witness(WitnessStmt::WitnessNonemptySet(s)) => {
                 self.exec_witness_nonempty_set_stmt_affect_environment_only(s)
             }
+            Stmt::ReleaseThmStmt(s) => self.exec_release_thm_stmt_affect_environment_only(s),
             Stmt::By(ByStmt::ByCasesStmt(s)) => self.exec_by_cases_stmt_affect_environment_only(s),
             Stmt::By(ByStmt::ByContraStmt(s)) => {
                 self.exec_by_contra_stmt_affect_environment_only(s)

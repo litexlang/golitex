@@ -478,8 +478,7 @@ thm bodyless_zero_sides:
     x + 0 = x
     0 + x = x
 
-by thm bodyless_zero_sides(2):
-    ? 2 + 0 = 0 + 2
+by thm bodyless_zero_sides(2) => 2 + 0 = 0 + 2
 
 by induc n from 0:
     ? n = n
@@ -494,11 +493,11 @@ by strong_induc m from 0:
         let (succeeded, output) = render_run_output(&runtime, &results, &error);
         assert!(
             succeeded,
-            "a bodyless by-thm goal should use the selected-fact verifier:\n{output}"
+            "an inline by-thm selection should use the selected-fact verifier:\n{output}"
         );
         assert!(
             output.contains("by thm bodyless_zero_sides(2) => 2 + 0 = 0 + 2"),
-            "bodyless by-thm output should retain the selected atomic target:\n{output}"
+            "inline by-thm output should retain the selected atomic target:\n{output}"
         );
         assert!(
             output.contains("by induc n from 0:\\n    ? n = n\"")

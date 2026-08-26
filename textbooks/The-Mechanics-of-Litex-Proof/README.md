@@ -57,7 +57,7 @@ The corresponding source interfaces are:
   uses explicit `witness exist! ...` plus `by def`. Raw existentials, abstract
   predicates, nested local definitions, and multi-clause definitions also keep
   their explicit forms.
-- `by thm <builtin-name>(...)` invokes a named semantic object rule, such as
+- `release thm <builtin-name>(...)` invokes a named semantic object rule, such as
   `set_builder_member` or `tuple_equal_from_coordinates`. These interfaces are
   not silently included in automatic atomic search.
 - A nested function application is unfolded one function definition at a time.
@@ -65,7 +65,7 @@ The corresponding source interfaces are:
   when the domain check needs it as a known leaf.
 - Automatic known-forall instantiation uses the candidates visible in the
   current runtime, which may include earlier exports or referenced imported
-  modules. Use qualified `by thm` when the dependency should be explicit or
+  modules. Use qualified `release thm` when the dependency should be explicit or
   automatic matching does not supply the intended instance; a local claim may
   deliberately turn that result into a nearby reusable forall.
 - `let name = value` is used for a proof-local equality alias when the value's

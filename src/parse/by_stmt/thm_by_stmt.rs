@@ -14,74 +14,48 @@ impl Runtime {
                 ),
             )));
         }
-        Ok(ByThmStmt::new(name, args, None, tb.line_file.clone()).into())
+        Ok(ReleaseThmStmt::new(name, args, tb.line_file.clone()).into())
     }
 
     pub fn parse_by_thm_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(THM)?;
         let (name, args) = self.parse_theorem_call(tb)?;
-        let selected_facts = if tb.current_token_is_equal_to(RIGHT_ARROW) {
-            if !tb.body.is_empty() {
-                return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "by thm: `=>` does not accept an indented body".to_string(),
-                        tb.line_file.clone(),
-                    ),
-                )));
-            }
-            tb.skip_token(RIGHT_ARROW)?;
-            if tb.exceed_end_of_head() {
-                return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "by thm: `=>` expects one atomic fact".to_string(),
-                        tb.line_file.clone(),
-                    ),
-                )));
-            }
-            let fact = self.parse_atomic_fact(tb, true)?;
-            if !tb.exceed_end_of_head() {
-                return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "by thm: `=>` expects exactly one atomic fact".to_string(),
-                        tb.line_file.clone(),
-                    ),
-                )));
-            }
-            Some(vec![fact.into()])
-        } else if tb.current_token_is_equal_to(COLON) {
-            tb.skip_token(COLON)?;
-            if !tb.exceed_end_of_head() || tb.body.len() != 1 {
-                return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "by thm: expects exactly one `? <atomic fact>` goal block and no proof body"
-                            .to_string(),
-                        tb.line_file.clone(),
-                    ),
-                )));
-            }
-            Some(vec![self
-                .parse_goal_atomic_fact_block(&mut tb.body[0], "by thm")?
-                .into()])
-        } else {
-            if !tb.body.is_empty() {
-                return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "by thm does not accept an indented body".to_string(),
-                        tb.line_file.clone(),
-                    ),
-                )));
-            }
-            None
-        };
-        if !tb.exceed_end_of_head() {
+        if !tb.current_token_is_equal_to(RIGHT_ARROW) {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "by thm: unexpected token after theorem call".to_string(),
+                    "by thm requires `=>` followed by one selected atomic fact; use `release thm name(args)` to release every conclusion"
+                        .to_string(),
                     tb.line_file.clone(),
                 ),
             )));
         }
-        Ok(ByThmStmt::new(name, args, selected_facts, tb.line_file.clone()).into())
+        if !tb.body.is_empty() {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "by thm: `=>` does not accept an indented body".to_string(),
+                    tb.line_file.clone(),
+                ),
+            )));
+        }
+        tb.skip_token(RIGHT_ARROW)?;
+        if tb.exceed_end_of_head() {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "by thm: `=>` expects one atomic fact".to_string(),
+                    tb.line_file.clone(),
+                ),
+            )));
+        }
+        let selected_fact = self.parse_atomic_fact(tb, true)?;
+        if !tb.exceed_end_of_head() {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "by thm: `=>` expects exactly one atomic fact".to_string(),
+                    tb.line_file.clone(),
+                ),
+            )));
+        }
+        Ok(ByThmStmt::new(name, args, selected_fact, tb.line_file.clone()).into())
     }
 
     /// Parse the shared `name(args)` portion of an explicit theorem call.

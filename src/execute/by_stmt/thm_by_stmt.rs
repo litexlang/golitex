@@ -1,10 +1,10 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn exec_by_thm_stmt(&mut self, stmt: &ByThmStmt) -> Result<StmtResult, RuntimeError> {
-        if stmt.selected_facts.is_some() {
-            return self.exec_by_thm_stmt_select_atomic_fact(stmt);
-        }
+    pub fn exec_release_thm_stmt(
+        &mut self,
+        stmt: &ReleaseThmStmt,
+    ) -> Result<StmtResult, RuntimeError> {
         if let Some(result) = self.exec_builtin_thm_stmt(stmt)? {
             return Ok(result);
         }
@@ -14,7 +14,7 @@ impl Runtime {
             .ok_or_else(|| {
                 short_exec_error(
                     stmt.clone().into(),
-                    format!("by thm: theorem `{}` is not defined", stmt.name),
+                    format!("release thm: theorem `{}` is not defined", stmt.name),
                     None,
                     vec![],
                 )
@@ -33,7 +33,7 @@ impl Runtime {
                 short_exec_error(
                     stmt.clone().into(),
                     format!(
-                        "by thm `{}`: arguments do not match theorem parameters",
+                        "release thm `{}`: arguments do not match theorem parameters",
                         stmt.name
                     ),
                     Some(e),
@@ -46,7 +46,7 @@ impl Runtime {
                 return Err(short_exec_error(
                     stmt.clone().into(),
                     format!(
-                        "by thm `{}`: could not verify argument parameter types",
+                        "release thm `{}`: could not verify argument parameter types",
                         stmt.name
                     ),
                     None,
@@ -75,7 +75,7 @@ impl Runtime {
                     short_exec_error(
                         stmt.clone().into(),
                         format!(
-                            "by thm `{}`: failed to instantiate domain fact `{}`",
+                            "release thm `{}`: failed to instantiate domain fact `{}`",
                             stmt.name, dom_fact
                         ),
                         Some(e),
@@ -88,7 +88,7 @@ impl Runtime {
                     short_exec_error(
                         stmt.clone().into(),
                         format!(
-                            "by thm `{}`: failed to verify domain fact `{}`",
+                            "release thm `{}`: failed to verify domain fact `{}`",
                             stmt.name, instantiated_dom
                         ),
                         Some(e),
@@ -99,7 +99,7 @@ impl Runtime {
                 return Err(short_exec_error(
                     stmt.clone().into(),
                     format!(
-                        "by thm `{}`: domain fact `{}` is not verified",
+                        "release thm `{}`: domain fact `{}` is not verified",
                         stmt.name, instantiated_dom
                     ),
                     None,
@@ -125,7 +125,7 @@ impl Runtime {
                     short_exec_error(
                         stmt.clone().into(),
                         format!(
-                            "by thm `{}`: failed to instantiate then fact `{}`",
+                            "release thm `{}`: failed to instantiate then fact `{}`",
                             stmt.name, then_fact
                         ),
                         Some(e),
@@ -144,7 +144,7 @@ impl Runtime {
                     short_exec_error(
                         stmt.clone().into(),
                         format!(
-                            "by thm `{}`: failed to store instantiated then fact `{}`",
+                            "release thm `{}`: failed to store instantiated then fact `{}`",
                             stmt.name, instantiated_then
                         ),
                         Some(e),
@@ -165,7 +165,7 @@ impl Runtime {
             domain_checks,
         );
         Ok(
-            SuccessByStmtResult::ByThmStmt(Box::new(SuccessByThmStmtResult {
+            SuccessStmtResult::ReleaseThmStmt(Box::new(SuccessReleaseThmStmtResult {
                 statement: stmt.clone(),
                 common: SuccessStmtCommonResult::new(infer_result),
                 verification: Some(by_verification),
@@ -174,13 +174,10 @@ impl Runtime {
         )
     }
 
-    pub fn exec_by_thm_stmt_affect_environment_only(
+    pub fn exec_release_thm_stmt_affect_environment_only(
         &mut self,
-        stmt: &ByThmStmt,
+        stmt: &ReleaseThmStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        if stmt.selected_facts.is_some() {
-            return self.exec_by_thm_stmt_select_atomic_fact_affect_environment_only(stmt);
-        }
         if let Some(result) = self.exec_builtin_thm_stmt_affect_environment_only(stmt)? {
             return Ok(result);
         }
@@ -190,7 +187,7 @@ impl Runtime {
             .ok_or_else(|| {
                 short_exec_error(
                     stmt.clone().into(),
-                    format!("by thm: theorem `{}` is not defined", stmt.name),
+                    format!("release thm: theorem `{}` is not defined", stmt.name),
                     None,
                     vec![],
                 )
@@ -216,7 +213,7 @@ impl Runtime {
                     short_exec_error(
                         stmt.clone().into(),
                         format!(
-                            "by thm `{}`: failed to instantiate then fact `{}`",
+                            "release thm `{}`: failed to instantiate then fact `{}`",
                             stmt.name, then_fact
                         ),
                         Some(e),
@@ -234,7 +231,7 @@ impl Runtime {
                     short_exec_error(
                         stmt.clone().into(),
                         format!(
-                            "by thm `{}`: failed to store instantiated then fact `{}`",
+                            "release thm `{}`: failed to store instantiated then fact `{}`",
                             stmt.name, instantiated_then
                         ),
                         Some(e),
@@ -255,7 +252,7 @@ impl Runtime {
             Vec::new(),
         );
         Ok(
-            SuccessByStmtResult::ByThmStmt(Box::new(SuccessByThmStmtResult {
+            SuccessStmtResult::ReleaseThmStmt(Box::new(SuccessReleaseThmStmtResult {
                 statement: stmt.clone(),
                 common: SuccessStmtCommonResult::new(infer_result),
                 verification: Some(by_verification),
@@ -264,24 +261,22 @@ impl Runtime {
         )
     }
 
+    pub fn exec_by_thm_stmt(&mut self, stmt: &ByThmStmt) -> Result<StmtResult, RuntimeError> {
+        self.exec_by_thm_stmt_select_atomic_fact(stmt)
+    }
+
+    pub fn exec_by_thm_stmt_affect_environment_only(
+        &mut self,
+        stmt: &ByThmStmt,
+    ) -> Result<StmtResult, RuntimeError> {
+        self.exec_by_thm_stmt_select_atomic_fact_affect_environment_only(stmt)
+    }
+
     fn exec_by_thm_stmt_select_atomic_fact(
         &mut self,
         stmt: &ByThmStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        let selected_fact = stmt
-            .selected_facts
-            .as_ref()
-            .expect("selected by thm execution requires a target")
-            .as_slice();
-        let [Fact::AtomicFact(selected_fact)] = selected_fact else {
-            return Err(short_exec_error(
-                stmt.clone().into(),
-                "by thm: selected targets currently require exactly one atomic fact".to_string(),
-                None,
-                vec![],
-            ));
-        };
-        let selected_fact = selected_fact.clone();
+        let selected_fact = stmt.selected_fact.clone();
         let verify_state = ProofSearchState::initial();
         self.verify_atomic_fact_well_defined(&selected_fact, &verify_state)
             .map_err(|error| {
@@ -296,14 +291,13 @@ impl Runtime {
                 )
             })?;
 
-        let expanded_stmt = ByThmStmt::new(
+        let expanded_stmt = ReleaseThmStmt::new(
             stmt.name.clone(),
             stmt.args.clone(),
-            None,
             stmt.line_file.clone(),
         );
         let (expanded_success, target_result) = self.run_in_local_env(|rt| {
-            let expanded_result = rt.exec_by_thm_stmt(&expanded_stmt).map_err(|error| {
+            let expanded_result = rt.exec_release_thm_stmt(&expanded_stmt).map_err(|error| {
                 short_exec_error(
                     stmt.clone().into(),
                     format!(
@@ -366,10 +360,10 @@ impl Runtime {
                 )
             })?;
 
-        let SuccessStmtResult::By(SuccessByStmtResult::ByThmStmt(result)) = expanded_success else {
+        let SuccessStmtResult::ReleaseThmStmt(result) = expanded_success else {
             unreachable!("by thm application must contain theorem verification metadata")
         };
-        let SuccessByThmStmtResult {
+        let SuccessReleaseThmStmtResult {
             verification: Some(mut verification),
             ..
         } = *result
@@ -392,28 +386,14 @@ impl Runtime {
         &mut self,
         stmt: &ByThmStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        let selected_fact = stmt
-            .selected_facts
-            .as_ref()
-            .expect("selected by thm execution requires a target")
-            .as_slice();
-        let [Fact::AtomicFact(selected_fact)] = selected_fact else {
-            return Err(short_exec_error(
-                stmt.clone().into(),
-                "by thm: selected targets currently require exactly one atomic fact".to_string(),
-                None,
-                vec![],
-            ));
-        };
-        let selected_fact = selected_fact.clone();
-        let expanded_stmt = ByThmStmt::new(
+        let selected_fact = stmt.selected_fact.clone();
+        let expanded_stmt = ReleaseThmStmt::new(
             stmt.name.clone(),
             stmt.args.clone(),
-            None,
             stmt.line_file.clone(),
         );
         let expanded_success = self.run_in_local_env(|rt| {
-            rt.exec_by_thm_stmt_affect_environment_only(&expanded_stmt)
+            rt.exec_release_thm_stmt_affect_environment_only(&expanded_stmt)
                 .map_err(|error| {
                     short_exec_error(
                         stmt.clone().into(),
@@ -455,10 +435,10 @@ impl Runtime {
                 )
             })?;
 
-        let SuccessStmtResult::By(SuccessByStmtResult::ByThmStmt(result)) = expanded_success else {
+        let SuccessStmtResult::ReleaseThmStmt(result) = expanded_success else {
             unreachable!("by thm application must contain theorem verification metadata")
         };
-        let SuccessByThmStmtResult {
+        let SuccessReleaseThmStmtResult {
             verification: Some(mut verification),
             ..
         } = *result
@@ -482,21 +462,21 @@ impl Runtime {
 
     fn exec_builtin_thm_stmt(
         &mut self,
-        stmt: &ByThmStmt,
+        stmt: &ReleaseThmStmt,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         self.exec_builtin_thm_stmt_impl(stmt, true)
     }
 
     fn exec_builtin_thm_stmt_affect_environment_only(
         &mut self,
-        stmt: &ByThmStmt,
+        stmt: &ReleaseThmStmt,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         self.exec_builtin_thm_stmt_impl(stmt, false)
     }
 
     fn exec_builtin_thm_stmt_impl(
         &mut self,
-        stmt: &ByThmStmt,
+        stmt: &ReleaseThmStmt,
         verify_requirements: bool,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let name = match &stmt.name {
@@ -599,7 +579,7 @@ impl Runtime {
                 None,
             );
             return Ok(Some(
-                SuccessByStmtResult::ByThmStmt(Box::new(SuccessByThmStmtResult {
+                SuccessStmtResult::ReleaseThmStmt(Box::new(SuccessReleaseThmStmtResult {
                     statement: stmt.clone(),
                     common: SuccessStmtCommonResult::new(infer_result),
                     verification: Some(verification),
@@ -681,7 +661,7 @@ impl Runtime {
                 None,
             );
             return Ok(Some(
-                SuccessByStmtResult::ByThmStmt(Box::new(SuccessByThmStmtResult {
+                SuccessStmtResult::ReleaseThmStmt(Box::new(SuccessReleaseThmStmtResult {
                     statement: stmt.clone(),
                     common: SuccessStmtCommonResult::new(infer_result),
                     verification: Some(verification),
@@ -779,7 +759,7 @@ impl Runtime {
                 None,
             );
             return Ok(Some(
-                SuccessByStmtResult::ByThmStmt(Box::new(SuccessByThmStmtResult {
+                SuccessStmtResult::ReleaseThmStmt(Box::new(SuccessReleaseThmStmtResult {
                     statement: stmt.clone(),
                     common: SuccessStmtCommonResult::new(infer_result),
                     verification: Some(verification),
@@ -1423,7 +1403,7 @@ impl Runtime {
             provenance,
         );
         Ok(Some(
-            SuccessByStmtResult::ByThmStmt(Box::new(SuccessByThmStmtResult {
+            SuccessStmtResult::ReleaseThmStmt(Box::new(SuccessReleaseThmStmtResult {
                 statement: stmt.clone(),
                 common: SuccessStmtCommonResult::new(infer_result),
                 verification: Some(verification),
@@ -1434,14 +1414,14 @@ impl Runtime {
 }
 
 fn builtin_thm_exec_error(
-    stmt: &ByThmStmt,
+    stmt: &ReleaseThmStmt,
     message: String,
     inside_results: Vec<StmtResult>,
 ) -> RuntimeError {
     short_exec_error(stmt.clone().into(), message, None, inside_results)
 }
 
-fn builtin_thm_shape_error(stmt: &ByThmStmt, name: &str, expected: &str) -> RuntimeError {
+fn builtin_thm_shape_error(stmt: &ReleaseThmStmt, name: &str, expected: &str) -> RuntimeError {
     builtin_thm_exec_error(
         stmt,
         format!(

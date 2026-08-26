@@ -7,6 +7,7 @@ pub enum Stmt {
     Fact(Fact),
     UnsafeStmt(UnsafeStmt),
     Definition(DefinitionStmt),
+    ReleaseThmStmt(ReleaseThmStmt),
     By(ByStmt),
     Witness(WitnessStmt),
     ProofBlock(ProofBlockStmt),

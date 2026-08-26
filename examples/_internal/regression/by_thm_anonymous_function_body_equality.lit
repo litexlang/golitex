@@ -35,11 +35,11 @@ thm probe_subtraction:
         $is_probe_integrable(g)
         =>:
             probe_integral(fn(x R) R {f(x) - g(x)}) = probe_integral(f) - probe_integral(g)
-    by thm probe_scalar_multiplication(g, -1)
+    release thm probe_scalar_multiplication(g, -1)
     $is_probe_integrable(fn(x R) R {-1 * g(x)})
     probe_integral(fn(x R) R {-1 * g(x)}) = -1 * probe_integral(g)
-    by thm fn_set_member(fn(x R) R {-1 * g(x)}, fn(x R) R)
-    by thm probe_addition(f, fn(x R) R {-1 * g(x)})
+    release thm fn_set_member(fn(x R) R {-1 * g(x)}, fn(x R) R)
+    release thm probe_addition(f, fn(x R) R {-1 * g(x)})
     $is_probe_integrable(fn(x R) R {f(x) + (-1 * g(x))})
     probe_integral(fn(x R) R {f(x) + (-1 * g(x))}) = probe_integral(f) + probe_integral(fn(x R) R {-1 * g(x)})
     trust:

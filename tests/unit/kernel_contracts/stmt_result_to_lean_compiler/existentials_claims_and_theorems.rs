@@ -664,35 +664,35 @@ fn existential_theorem_compiles_nested_witness_in_two_child_environments() {
 
 fn execute_named_theorem_and_instantiation() -> Vec<StmtResult> {
     crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
-            "thm local_reflexivity:\n    ? forall x R:\n        x = x\n    x = x\n\nby thm local_reflexivity(1)\n",
+            "thm local_reflexivity:\n    ? forall x R:\n        x = x\n    x = x\n\nrelease thm local_reflexivity(1)\n",
             "direct_theorem_instantiation.lit",
         )
         .expect("execute named theorem and its instantiation")
 }
 
-fn theorem_instantiation_result_mut(results: &mut [StmtResult]) -> &mut SuccessByThmStmtResult {
-    let [_, StmtResult::Success(SuccessStmtResult::By(SuccessByStmtResult::ByThmStmt(result)))] =
-        results
+fn theorem_instantiation_result_mut(
+    results: &mut [StmtResult],
+) -> &mut SuccessReleaseThmStmtResult {
+    let [_, StmtResult::Success(SuccessStmtResult::ReleaseThmStmt(result))] = results
     else {
-        panic!("expected a named theorem followed by by-thm")
+        panic!("expected a named theorem followed by release-thm")
     };
     result
 }
 
 #[test]
-fn by_thm_uses_the_exact_source_fact_id_and_argument_check_result() {
+fn release_thm_uses_the_exact_source_fact_id_and_argument_check_result() {
     let results = execute_named_theorem_and_instantiation();
-    let StmtResult::Success(SuccessStmtResult::By(SuccessByStmtResult::ByThmStmt(by_theorem))) =
-        &results[1]
+    let StmtResult::Success(SuccessStmtResult::ReleaseThmStmt(release_theorem)) = &results[1]
     else {
-        panic!("second Result is by-thm")
+        panic!("second Result is release-thm")
     };
-    let source_fact_id = by_theorem
+    let source_fact_id = release_theorem
         .verification
         .as_ref()
-        .expect("by-thm retains verification")
+        .expect("release-thm retains verification")
         .source_fact_id
-        .expect("by-thm retains its source theorem FactId");
+        .expect("release-thm retains its source theorem FactId");
     let json = crate::output::display_stmt_result_json_v2(&results[1]);
     assert!(json.contains(&format!("\"source_fact_id\": \"{source_fact_id}\"")));
 
@@ -707,18 +707,18 @@ fn by_thm_uses_the_exact_source_fact_id_and_argument_check_result() {
 }
 
 #[test]
-fn by_thm_rejects_a_missing_source_theorem_fact_id() {
+fn release_thm_rejects_a_missing_source_theorem_fact_id() {
     let mut results = execute_named_theorem_and_instantiation();
     theorem_instantiation_result_mut(&mut results)
         .verification
         .as_mut()
-        .expect("by-thm retains verification")
+        .expect("release-thm retains verification")
         .source_fact_id = None;
 
     let error = StmtResultToLeanCompiler::new("direct_theorem_instantiation.lit")
         .compile_stmt_results_to_lean_source(&results)
-        .expect_err("by-thm without its source FactId must fail closed");
-    assert!(error.contains("by-thm Result has no source theorem FactId"));
+        .expect_err("release-thm without its source FactId must fail closed");
+    assert!(error.contains("release-thm Result has no source theorem FactId"));
 }
 
 #[test]
@@ -743,8 +743,8 @@ fn theorem_backed_obtain_consumes_but_does_not_publish_its_local_conclusion() {
         .source_result
         .non_factual_success()
         .expect("obtain source is a statement Result");
-    let SuccessStmtResult::By(SuccessByStmtResult::ByThmStmt(application)) = source else {
-        panic!("obtain source is a by-thm Result")
+    let SuccessStmtResult::ReleaseThmStmt(application) = source else {
+        panic!("obtain source is a release-thm Result")
     };
     assert_eq!(
         application.common.infers.store_fact_outputs[0].fact_id, None,

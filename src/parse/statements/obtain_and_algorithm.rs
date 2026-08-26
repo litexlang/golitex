@@ -271,7 +271,7 @@ impl Runtime {
         let Ok(param_to_arg_map) = self.params_to_arg_map(&forall_fact.typed_parameters, args)
         else {
             // Preview data is optional. The executor owns theorem arity and
-            // argument diagnostics through the ordinary `by thm` path.
+            // argument diagnostics through the ordinary `release thm` path.
             return Ok(None);
         };
         Ok(self

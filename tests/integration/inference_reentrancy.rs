@@ -50,7 +50,7 @@ thm obtain_basis_without_reentering_space_membership:
         =>:
             exist selected v st {$basis(s, v, space, selected)}
     by def $spans(s, v, space)
-    by thm spanning_value_gives_basis(s, v, space)
+    release thm spanning_value_gives_basis(s, v, space)
     obtain value from exist value v st {$basis(s, v, space, value)}
     witness exist selected v st {$basis(s, v, space, selected)} from value
 "#,
