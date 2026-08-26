@@ -1800,6 +1800,72 @@ checked signature and `g(a) = result` can replay the checked definition of
 `f(a)`. The verifier records this as transparent-definition proof evidence;
 it is not an unrecorded parser rewrite.
 
+This becomes especially useful when a `template` has many fixed parameters.
+The first `let` below fixes the template parameter while retaining the three
+ordinary function parameters; the second fixes the complete application
+result. The template returns a parameterized `struct`, so this is more than an
+ordinary function-alias example:
+
+```litex
+struct Triple<X set>:
+    first X
+    second X
+    third X
+
+template<X set>:
+    have fn triple(a, b, c X) &Triple<X> = (a, b, c)
+
+# The `let tx = \T<X>` pattern: specialize the declaration family once.
+let triple_R = \triple<R>
+
+# The `let u = \T<X>(a, b, c)` pattern: name one complete result.
+let chosen = \triple<R>(1, 2, 3)
+
+triple_R(4, 5, 6) = (4, 5, 6)
+chosen = (1, 2, 3)
+
+have chosen_struct &Triple<R> = chosen
+chosen_struct.first = 1
+```
+
+The design separates global parameterization from local notation:
+`template` defines the reusable family, while `let` freezes the part of that
+family that the current proof treats as one mathematical atom. This shortens
+repeated expressions, prevents accidental variation in the fixed parameter
+bundle, and gives the specialized object a role-based local name without
+introducing another theorem or opaque definition.
+
+The last two lines also show the carrier boundary. `let` records only the
+transparent equality; it does not declare `chosen $in &Triple<R>` or attach a
+definition-owned struct view to `chosen`. Consequently, `chosen.first` and
+`triple_R(4, 5, 6).first` are errors. When field projection is needed, bind the
+result with the exact struct carrier, as `chosen_struct` does above. See the
+[complete runnable example](../examples/03_language_features/let_template_struct_aliases.lit).
+
+A callable struct field keeps its function parameters when it is named with
+`let`, including through nested field access:
+
+```litex
+struct ScalarOps:
+    add fn(x, y R) R
+
+struct Space:
+    scalars &ScalarOps
+
+thm use_short_operation_name:
+    ? forall space &Space, x, y R:
+        space.scalars.add(x, y) = space.scalars.add(x, y)
+    let scalar_add = space.scalars.add
+    scalar_add(x, y) = space.scalars.add(x, y)
+```
+
+Here `scalar_add` is not registered as a second function. Well-definedness
+reduces the `let` once, reads the frozen `ScalarOps` field view carried by
+`space.scalars.add`, and derives its original function space. The usual arity
+and argument-domain checks therefore still apply. The statement result records
+the existing transparent-definition reduction, including the defining equality
+and its `FactId`; ordinary equality does not activate this path.
+
 This reduction is deterministic and directional: it follows the definition of
 the `let` symbol being inspected. It does not search an equality class,
 instantiate a `forall`, recursively unfold arbitrary definitions, or skip the

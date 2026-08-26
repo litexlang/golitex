@@ -151,3 +151,96 @@ g(1, 2) = 3
         output
     );
 }
+
+#[test]
+fn let_alias_derives_callable_space_from_nested_struct_field_shape() {
+    let source = r#"
+struct ScalarOps:
+    add fn(x, y R) R
+    marker R
+
+struct VectorSpace:
+    scalars &ScalarOps
+
+thm local_struct_field_alias:
+    ? forall space &VectorSpace, x, y R:
+        space.scalars.add(x, y) = space.scalars.add(x, y)
+    let scalar_add = space.scalars.add
+    scalar_add(x, y) = space.scalars.add(x, y)
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.start_isolated_source("nested_struct_field_callable_alias");
+    let (results, error) = execute_source(source, &mut runtime);
+    let (succeeded, output) = render_run_output(&runtime, &results, &error);
+
+    assert!(succeeded, "struct field callable alias failed:\n{output}");
+    let theorem = results.last().expect("the theorem result");
+    let json = crate::output::display_stmt_result_json_v2(theorem);
+    assert!(
+        json.contains(r#""kind": "TransparentDefinitionReduction""#),
+        "the theorem must retain the let reduction:\n{json}"
+    );
+    assert!(json.contains(r#""defining_equality":"#), "{json}");
+    assert!(json.contains("scalar_add"), "{json}");
+    assert!(json.contains("space.scalars.add"), "{json}");
+}
+
+#[test]
+fn struct_field_callable_alias_still_checks_application_arity() {
+    let source = r#"
+struct ScalarOps:
+    add fn(x, y R) R
+
+struct VectorSpace:
+    scalars &ScalarOps
+
+thm local_struct_field_alias_arity:
+    ? forall space &VectorSpace, x R:
+        x = x
+    let scalar_add = space.scalars.add
+    scalar_add(x) = x
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.start_isolated_source("nested_struct_field_callable_alias_arity");
+    let (results, error) = execute_source(source, &mut runtime);
+    let (succeeded, output) = render_run_output(&runtime, &results, &error);
+
+    assert!(!succeeded, "wrong arity unexpectedly passed:\n{output}");
+    assert!(
+        output.contains("number of args (1) does not match"),
+        "the aliased field's original arity must be enforced:\n{output}"
+    );
+}
+
+#[test]
+fn let_alias_of_non_callable_struct_field_remains_non_callable() {
+    let source = r#"
+struct ScalarOps:
+    marker R
+
+struct VectorSpace:
+    scalars &ScalarOps
+
+thm local_non_callable_field_alias:
+    ? forall space &VectorSpace:
+        0 = 0
+    let marker = space.scalars.marker
+    marker(0) = 0
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.start_isolated_source("nested_struct_field_non_callable_alias");
+    let (results, error) = execute_source(source, &mut runtime);
+    let (succeeded, output) = render_run_output(&runtime, &results, &error);
+
+    assert!(
+        !succeeded,
+        "a scalar field alias must not become callable:\n{output}"
+    );
+    assert!(
+        output.contains("function `marker` not defined"),
+        "the failure should stay localized to callable lookup:\n{output}"
+    );
+}

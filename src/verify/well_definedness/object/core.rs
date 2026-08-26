@@ -4,6 +4,29 @@ use crate::prelude::*;
 use std::collections::HashMap;
 
 impl Runtime {
+    /// Recover callable contracts carried by the submitted object's own
+    /// shape. This lookup does not search equality representatives or unfold
+    /// definitions: callers decide explicitly when one transparent `let`
+    /// reduction is permitted before submitting the resulting object here.
+    pub(in crate::verify) fn derive_callable_space_candidates_from_obj_shape(
+        &mut self,
+        obj: &Obj,
+    ) -> Result<Vec<FnSetSpace>, RuntimeError> {
+        if let Some(body) = self.get_direct_object_in_fn_set(obj) {
+            return Ok(vec![FnSetSpace::Set(FnSet::from_body(body)?)]);
+        }
+
+        let Obj::ObjAsStructInstanceWithFieldAccess(field_access) = obj else {
+            return Ok(Vec::new());
+        };
+        let field_type = self.instantiated_struct_field_type_after_well_defined(field_access)?;
+        Ok(self
+            .fn_set_space_from_return_set_obj(field_type)
+            .ok()
+            .into_iter()
+            .collect())
+    }
+
     pub(in crate::verify) fn verify_fn_obj_well_defined_result(
         &mut self,
         fn_obj: &FnObj,
@@ -137,7 +160,19 @@ impl Runtime {
             _ => {
                 let function: Obj = (*fn_obj.head).clone().into();
                 let bodies = self.get_cloned_object_in_fn_set_candidates(&function);
-                if bodies.is_empty() {
+                let mut candidate_spaces = bodies
+                    .into_iter()
+                    .map(|body| FnSet::from_body(body).map(FnSetSpace::Set))
+                    .collect::<Result<Vec<_>, _>>()?;
+                if candidate_spaces.is_empty() {
+                    let (resolved, transparent_definitions) =
+                        self.resolve_transparent_obj_once(&function)?;
+                    if !transparent_definitions.is_empty() {
+                        candidate_spaces =
+                            self.derive_callable_space_candidates_from_obj_shape(&resolved)?;
+                    }
+                }
+                if candidate_spaces.is_empty() {
                     return Err(RuntimeError::from(WellDefinedRuntimeError(
                         RuntimeErrorStruct::new_with_just_msg(format!(
                             "function `{}` not defined",
@@ -145,10 +180,7 @@ impl Runtime {
                         )),
                     )));
                 }
-                bodies
-                    .into_iter()
-                    .map(|body| FnSet::from_body(body).map(FnSetSpace::Set))
-                    .collect::<Result<Vec<_>, _>>()?
+                candidate_spaces
             }
         };
 

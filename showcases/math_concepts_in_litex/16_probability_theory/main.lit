@@ -300,13 +300,15 @@ thm pushforward_probability_is_distribution:
         $is_measurable_map(Omega, Target, events, target_events, X)
         =>:
             $is_distribution_of(Omega, events, probability, Target, target_events, X, \pushforward_probability<Omega, events, probability, Target, target_events, X>)
+    let pushforward = \pushforward_probability<Omega, events, probability, Target, target_events, X>
     claim:
         ? forall target_event target_events:
             {omega Omega: X(omega) $in target_event} $in events
-            \pushforward_probability<Omega, events, probability, Target, target_events, X>(target_event) = probability({omega Omega: X(omega) $in target_event})
+            pushforward(target_event) = probability({omega Omega: X(omega) $in target_event})
         {omega Omega: X(omega) $in target_event} $in events
-        \pushforward_probability<Omega, events, probability, Target, target_events, X>(target_event) = probability({omega Omega: X(omega) $in target_event})
-    by def $is_distribution_of(Omega, events, probability, Target, target_events, X, \pushforward_probability<Omega, events, probability, Target, target_events, X>)
+        pushforward(target_event) = probability({omega Omega: X(omega) $in target_event})
+    by def $is_distribution_of(Omega, events, probability, Target, target_events, X, pushforward)
+    $is_distribution_of(Omega, events, probability, Target, target_events, X, \pushforward_probability<Omega, events, probability, Target, target_events, X>)
 
 # Preimages preserve the set operations needed by a probability measure.
 thm preimage_of_empty_is_empty:
@@ -378,18 +380,19 @@ thm measurable_preimage_sequence_is_pairwise_disjoint:
         $pairwise_disjoint_event_sequence(Target, target_events, family)
         =>:
             $pairwise_disjoint_event_sequence(Source, source_events, \measurable_preimage_sequence<Source, Target, source_events, target_events, f, family>)
+    let preimages = \measurable_preimage_sequence<Source, Target, source_events, target_events, f, family>
     claim:
         ? forall idx, j N+:
             idx != j
             =>:
-                intersect(\measurable_preimage_sequence<Source, Target, source_events, target_events, f, family>(idx), \measurable_preimage_sequence<Source, Target, source_events, target_events, f, family>(j)) = {}
+                intersect(preimages(idx), preimages(j)) = {}
         intersect(family(idx), family(j)) = {}
-        \measurable_preimage_sequence<Source, Target, source_events, target_events, f, family>(idx) = {x Source: f(x) $in family(idx)}
-        \measurable_preimage_sequence<Source, Target, source_events, target_events, f, family>(j) = {x Source: f(x) $in family(j)}
+        preimages(idx) = {x Source: f(x) $in family(idx)}
+        preimages(j) = {x Source: f(x) $in family(j)}
         by extension:
-            ? intersect(\measurable_preimage_sequence<Source, Target, source_events, target_events, f, family>(idx), \measurable_preimage_sequence<Source, Target, source_events, target_events, f, family>(j)) = {}
+            ? intersect(preimages(idx), preimages(j)) = {}
             claim:
-                ? forall point intersect(\measurable_preimage_sequence<Source, Target, source_events, target_events, f, family>(idx), \measurable_preimage_sequence<Source, Target, source_events, target_events, f, family>(j)):
+                ? forall point intersect(preimages(idx), preimages(j)):
                     point $in {}
                 by contra:
                     ? point $in {}
@@ -403,12 +406,13 @@ thm measurable_preimage_sequence_is_pairwise_disjoint:
                     impossible f(point) $in {}
             claim:
                 ? forall point {}:
-                    point $in intersect(\measurable_preimage_sequence<Source, Target, source_events, target_events, f, family>(idx), \measurable_preimage_sequence<Source, Target, source_events, target_events, f, family>(j))
+                    point $in intersect(preimages(idx), preimages(j))
                 by contra:
-                    ? point $in intersect(\measurable_preimage_sequence<Source, Target, source_events, target_events, f, family>(idx), \measurable_preimage_sequence<Source, Target, source_events, target_events, f, family>(j))
-                    not point $in intersect(\measurable_preimage_sequence<Source, Target, source_events, target_events, f, family>(idx), \measurable_preimage_sequence<Source, Target, source_events, target_events, f, family>(j))
+                    ? point $in intersect(preimages(idx), preimages(j))
+                    not point $in intersect(preimages(idx), preimages(j))
                     impossible point $in {}
-    by def $pairwise_disjoint_event_sequence(Source, source_events, \measurable_preimage_sequence<Source, Target, source_events, target_events, f, family>)
+    by def $pairwise_disjoint_event_sequence(Source, source_events, preimages)
+    $pairwise_disjoint_event_sequence(Source, source_events, \measurable_preimage_sequence<Source, Target, source_events, target_events, f, family>)
 
 thm pushforward_probability_is_probability_space:
     ? forall [ProbabilitySpaceSetting], Target set, target_events power_set(power_set(Target)), X fn(omega Omega) Target:
@@ -416,33 +420,35 @@ thm pushforward_probability_is_probability_space:
         $is_measurable_map(Omega, Target, events, target_events, X)
         =>:
             $is_probability_space(Target, target_events, \pushforward_probability<Omega, events, probability, Target, target_events, X>)
+    let pushforward = \pushforward_probability<Omega, events, probability, Target, target_events, X>
     by thm preimage_of_empty_is_empty(Omega, Target, X) => {omega Omega: X(omega) $in {}} = {}
-    \pushforward_probability<Omega, events, probability, Target, target_events, X>({}) = probability({omega Omega: X(omega) $in {}}) = probability({}) = 0
+    pushforward({}) = probability({omega Omega: X(omega) $in {}}) = probability({}) = 0
     by thm preimage_of_universe_is_source(Omega, Target, X) => {omega Omega: X(omega) $in Target} = Omega
-    \pushforward_probability<Omega, events, probability, Target, target_events, X>(Target) = probability({omega Omega: X(omega) $in Target}) = probability(Omega) = 1
+    pushforward(Target) = probability({omega Omega: X(omega) $in Target}) = probability(Omega) = 1
     claim:
         ? forall target_event target_events:
-            \pushforward_probability<Omega, events, probability, Target, target_events, X>(target_event) >= 0
+            pushforward(target_event) >= 0
         {omega Omega: X(omega) $in target_event} $in events
-        \pushforward_probability<Omega, events, probability, Target, target_events, X>(target_event) = probability({omega Omega: X(omega) $in target_event})
+        pushforward(target_event) = probability({omega Omega: X(omega) $in target_event})
         probability({omega Omega: X(omega) $in target_event}) >= 0
     claim:
         ? forall family fn(n N+) target_events:
             $pairwise_disjoint_event_sequence(Target, target_events, family)
             =>:
-                $has_series_sum(fn(n N+) R {\pushforward_probability<Omega, events, probability, Target, target_events, X>(family(n))}, \pushforward_probability<Omega, events, probability, Target, target_events, X>(index_union(N+, Target, fn(n N+) power_set(Target) {family(n)})))
-        have source_union events = index_union(N+, Omega, fn(n N+) power_set(Omega) {\measurable_preimage_sequence<Omega, Target, events, target_events, X, family>(n)})
-        by thm measurable_preimage_sequence_is_pairwise_disjoint(Omega, Target, events, target_events, X, family) => $pairwise_disjoint_event_sequence(Omega, events, \measurable_preimage_sequence<Omega, Target, events, target_events, X, family>)
-        by thm kolmogorov_countable_additivity(Omega, events, probability, \measurable_preimage_sequence<Omega, Target, events, target_events, X, family>) => $has_series_sum(fn(n N+) R {probability(\measurable_preimage_sequence<Omega, Target, events, target_events, X, family>(n))}, probability(index_union(N+, Omega, fn(n N+) power_set(Omega) {\measurable_preimage_sequence<Omega, Target, events, target_events, X, family>(n)})))
-        source_union = index_union(N+, Omega, fn(n N+) power_set(Omega) {\measurable_preimage_sequence<Omega, Target, events, target_events, X, family>(n)})
-        $has_series_sum(fn(n N+) R {probability(\measurable_preimage_sequence<Omega, Target, events, target_events, X, family>(n))}, probability(source_union))
+                $has_series_sum(fn(n N+) R {pushforward(family(n))}, pushforward(index_union(N+, Target, fn(n N+) power_set(Target) {family(n)})))
+        let preimages = \measurable_preimage_sequence<Omega, Target, events, target_events, X, family>
+        have source_union events = index_union(N+, Omega, fn(n N+) power_set(Omega) {preimages(n)})
+        by thm measurable_preimage_sequence_is_pairwise_disjoint(Omega, Target, events, target_events, X, family) => $pairwise_disjoint_event_sequence(Omega, events, preimages)
+        by thm kolmogorov_countable_additivity(Omega, events, probability, preimages) => $has_series_sum(fn(n N+) R {probability(preimages(n))}, probability(index_union(N+, Omega, fn(n N+) power_set(Omega) {preimages(n)})))
+        source_union = index_union(N+, Omega, fn(n N+) power_set(Omega) {preimages(n)})
+        $has_series_sum(fn(n N+) R {probability(preimages(n))}, probability(source_union))
         claim:
             ? forall n N+:
-                probability(\measurable_preimage_sequence<Omega, Target, events, target_events, X, family>(n)) = \pushforward_probability<Omega, events, probability, Target, target_events, X>(family(n))
-            \measurable_preimage_sequence<Omega, Target, events, target_events, X, family>(n) = {omega Omega: X(omega) $in family(n)}
-            \pushforward_probability<Omega, events, probability, Target, target_events, X>(family(n)) = probability({omega Omega: X(omega) $in family(n)})
-        by def $fn_eq(fn(n N+) R {probability(\measurable_preimage_sequence<Omega, Target, events, target_events, X, family>(n))}, fn(n N+) R {\pushforward_probability<Omega, events, probability, Target, target_events, X>(family(n))})
-        fn(n N+) R {probability(\measurable_preimage_sequence<Omega, Target, events, target_events, X, family>(n))} = fn(n N+) R {\pushforward_probability<Omega, events, probability, Target, target_events, X>(family(n))}
+                probability(preimages(n)) = pushforward(family(n))
+            preimages(n) = {omega Omega: X(omega) $in family(n)}
+            pushforward(family(n)) = probability({omega Omega: X(omega) $in family(n)})
+        by def $fn_eq(fn(n N+) R {probability(preimages(n))}, fn(n N+) R {pushforward(family(n))})
+        fn(n N+) R {probability(preimages(n))} = fn(n N+) R {pushforward(family(n))}
         claim:
             ? {omega Omega: X(omega) $in index_union(N+, Target, fn(n N+) power_set(Target) {family(n)})} = source_union
             by extension:
@@ -452,28 +458,29 @@ thm pushforward_probability_is_probability_space:
                         point $in source_union
                     X(point) $in index_union(N+, Target, fn(n N+) power_set(Target) {family(n)})
                     obtain idx from exist idx N+ st {X(point) $in family(idx)}
-                    \measurable_preimage_sequence<Omega, Target, events, target_events, X, family>(idx) = {omega Omega: X(omega) $in family(idx)}
+                    preimages(idx) = {omega Omega: X(omega) $in family(idx)}
                     by thm set_builder_member(point, {omega Omega: X(omega) $in family(idx)}) => point $in {omega Omega: X(omega) $in family(idx)}
-                    point $in \measurable_preimage_sequence<Omega, Target, events, target_events, X, family>(idx)
-                    witness exist candidate_index N+ st {point $in \measurable_preimage_sequence<Omega, Target, events, target_events, X, family>(candidate_index)} from idx
-                    point $in index_union(N+, Omega, fn(n N+) power_set(Omega) {\measurable_preimage_sequence<Omega, Target, events, target_events, X, family>(n)})
-                    source_union = index_union(N+, Omega, fn(n N+) power_set(Omega) {\measurable_preimage_sequence<Omega, Target, events, target_events, X, family>(n)})
+                    point $in preimages(idx)
+                    witness exist candidate_index N+ st {point $in preimages(candidate_index)} from idx
+                    point $in index_union(N+, Omega, fn(n N+) power_set(Omega) {preimages(n)})
+                    source_union = index_union(N+, Omega, fn(n N+) power_set(Omega) {preimages(n)})
                     point $in source_union
                 claim:
                     ? forall point source_union:
                         point $in {omega Omega: X(omega) $in index_union(N+, Target, fn(n N+) power_set(Target) {family(n)})}
-                    source_union = index_union(N+, Omega, fn(n N+) power_set(Omega) {\measurable_preimage_sequence<Omega, Target, events, target_events, X, family>(n)})
-                    point $in index_union(N+, Omega, fn(n N+) power_set(Omega) {\measurable_preimage_sequence<Omega, Target, events, target_events, X, family>(n)})
-                    obtain idx from exist idx N+ st {point $in \measurable_preimage_sequence<Omega, Target, events, target_events, X, family>(idx)}
-                    \measurable_preimage_sequence<Omega, Target, events, target_events, X, family>(idx) = {omega Omega: X(omega) $in family(idx)}
+                    source_union = index_union(N+, Omega, fn(n N+) power_set(Omega) {preimages(n)})
+                    point $in index_union(N+, Omega, fn(n N+) power_set(Omega) {preimages(n)})
+                    obtain idx from exist idx N+ st {point $in preimages(idx)}
+                    preimages(idx) = {omega Omega: X(omega) $in family(idx)}
                     point $in {omega Omega: X(omega) $in family(idx)}
                     X(point) $in family(idx)
                     witness exist candidate_index N+ st {X(point) $in family(candidate_index)} from idx
                     X(point) $in index_union(N+, Target, fn(n N+) power_set(Target) {family(n)})
                     by thm set_builder_member(point, {omega Omega: X(omega) $in index_union(N+, Target, fn(n N+) power_set(Target) {family(n)})}) => point $in {omega Omega: X(omega) $in index_union(N+, Target, fn(n N+) power_set(Target) {family(n)})}
-        \pushforward_probability<Omega, events, probability, Target, target_events, X>(index_union(N+, Target, fn(n N+) power_set(Target) {family(n)})) = probability({omega Omega: X(omega) $in index_union(N+, Target, fn(n N+) power_set(Target) {family(n)})}) = probability(source_union)
-        $has_series_sum(fn(n N+) R {\pushforward_probability<Omega, events, probability, Target, target_events, X>(family(n))}, \pushforward_probability<Omega, events, probability, Target, target_events, X>(index_union(N+, Target, fn(n N+) power_set(Target) {family(n)})))
-    by def $is_probability_space(Target, target_events, \pushforward_probability<Omega, events, probability, Target, target_events, X>)
+        pushforward(index_union(N+, Target, fn(n N+) power_set(Target) {family(n)})) = probability({omega Omega: X(omega) $in index_union(N+, Target, fn(n N+) power_set(Target) {family(n)})}) = probability(source_union)
+        $has_series_sum(fn(n N+) R {pushforward(family(n))}, pushforward(index_union(N+, Target, fn(n N+) power_set(Target) {family(n)})))
+    by def $is_probability_space(Target, target_events, pushforward)
+    $is_probability_space(Target, target_events, \pushforward_probability<Omega, events, probability, Target, target_events, X>)
 
 # A distribution package already contains every preimage-event obligation, so
 # it immediately exposes the underlying measurable map.
@@ -746,34 +753,36 @@ thm two_event_sequence_pairwise_disjoint:
 thm probability_of_two_event_sequence:
     ? forall [ProbabilitySpaceSetting(sequence_Omega, sequence_events, sequence_probability)], A, B sequence_events, n N+:
         sequence_probability(\two_event_sequence<sequence_Omega, sequence_events>(A, B, n)) = two_term_sequence(sequence_probability(A), sequence_probability(B), n)
+    let two_events = \two_event_sequence<sequence_Omega, sequence_events>
     n = 1 or n > 1
     by cases:
-        ? sequence_probability(\two_event_sequence<sequence_Omega, sequence_events>(A, B, n)) = two_term_sequence(sequence_probability(A), sequence_probability(B), n)
+        ? sequence_probability(two_events(A, B, n)) = two_term_sequence(sequence_probability(A), sequence_probability(B), n)
         case n = 1:
-            \two_event_sequence<sequence_Omega, sequence_events>(A, B, n) = A
+            two_events(A, B, n) = A
             two_term_sequence(sequence_probability(A), sequence_probability(B), n) = sequence_probability(A)
-            sequence_probability(\two_event_sequence<sequence_Omega, sequence_events>(A, B, n)) = sequence_probability(A) = two_term_sequence(sequence_probability(A), sequence_probability(B), n)
+            sequence_probability(two_events(A, B, n)) = sequence_probability(A) = two_term_sequence(sequence_probability(A), sequence_probability(B), n)
         case n > 1:
             n - 1 $in N+
             n - 1 = 1 or n - 1 > 1
             by cases:
-                ? sequence_probability(\two_event_sequence<sequence_Omega, sequence_events>(A, B, n)) = two_term_sequence(sequence_probability(A), sequence_probability(B), n)
+                ? sequence_probability(two_events(A, B, n)) = two_term_sequence(sequence_probability(A), sequence_probability(B), n)
                 case n - 1 = 1:
                     n = (n - 1) + 1 = 1 + 1 = 2
-                    \two_event_sequence<sequence_Omega, sequence_events>(A, B, n) = B
+                    two_events(A, B, n) = B
                     one_term_sequence(sequence_probability(B), n - 1) = sequence_probability(B)
                     two_term_sequence(sequence_probability(A), sequence_probability(B), n) = one_term_sequence(sequence_probability(B), n - 1) = sequence_probability(B)
-                    sequence_probability(\two_event_sequence<sequence_Omega, sequence_events>(A, B, n)) = sequence_probability(B) = two_term_sequence(sequence_probability(A), sequence_probability(B), n)
+                    sequence_probability(two_events(A, B, n)) = sequence_probability(B) = two_term_sequence(sequence_probability(A), sequence_probability(B), n)
                 case n - 1 > 1:
                     (n - 1) + 1 > 1 + 1
                     n = (n - 1) + 1
                     1 + 1 = 2
                     n > 2
-                    \two_event_sequence<sequence_Omega, sequence_events>(A, B, n) = {}
-                    sequence_probability(\two_event_sequence<sequence_Omega, sequence_events>(A, B, n)) = sequence_probability({}) = 0
+                    two_events(A, B, n) = {}
+                    sequence_probability(two_events(A, B, n)) = sequence_probability({}) = 0
                     one_term_sequence(sequence_probability(B), n - 1) = 0
                     two_term_sequence(sequence_probability(A), sequence_probability(B), n) = one_term_sequence(sequence_probability(B), n - 1) = 0
-                    sequence_probability(\two_event_sequence<sequence_Omega, sequence_events>(A, B, n)) = 0 = two_term_sequence(sequence_probability(A), sequence_probability(B), n)
+                    sequence_probability(two_events(A, B, n)) = 0 = two_term_sequence(sequence_probability(A), sequence_probability(B), n)
+    sequence_probability(\two_event_sequence<sequence_Omega, sequence_events>(A, B, n)) = sequence_probability(two_events(A, B, n)) = two_term_sequence(sequence_probability(A), sequence_probability(B), n)
 
 # Induction transports pointwise equality through every finite partial sum.
 thm pointwise_equal_sequences_have_equal_partial_sums:
@@ -828,18 +837,19 @@ thm pointwise_equal_sequences_preserve_series_sum:
 thm two_event_probability_series_has_sum:
     ? forall [ProbabilitySpaceSetting(series_Omega, series_events, series_probability)], A, B series_events:
         $has_series_sum(fn(n N+) R {series_probability(\two_event_sequence<series_Omega, series_events>(A, B, n))}, series_probability(A) + series_probability(B))
-    have probability_terms seq(R) = fn(n N+) R {series_probability(\two_event_sequence<series_Omega, series_events>(A, B, n))}
+    let two_events = \two_event_sequence<series_Omega, series_events>
+    have probability_terms seq(R) = fn(n N+) R {series_probability(two_events(A, B, n))}
     claim:
         ? forall term_index N+:
             probability_terms(term_index) = two_term_sequence(series_probability(A), series_probability(B), term_index)
-        probability_terms(term_index) = series_probability(\two_event_sequence<series_Omega, series_events>(A, B, term_index))
+        probability_terms(term_index) = series_probability(two_events(A, B, term_index))
         term_index = 1 or term_index > 1
         by cases:
             ? probability_terms(term_index) = two_term_sequence(series_probability(A), series_probability(B), term_index)
             case term_index = 1:
-                \two_event_sequence<series_Omega, series_events>(A, B, term_index) = A
+                two_events(A, B, term_index) = A
                 two_term_sequence(series_probability(A), series_probability(B), term_index) = series_probability(A)
-                probability_terms(term_index) = series_probability(\two_event_sequence<series_Omega, series_events>(A, B, term_index)) = series_probability(A) = two_term_sequence(series_probability(A), series_probability(B), term_index)
+                probability_terms(term_index) = series_probability(two_events(A, B, term_index)) = series_probability(A) = two_term_sequence(series_probability(A), series_probability(B), term_index)
             case term_index > 1:
                 term_index - 1 $in N+
                 term_index - 1 = 1 or term_index - 1 > 1
@@ -847,23 +857,23 @@ thm two_event_probability_series_has_sum:
                     ? probability_terms(term_index) = two_term_sequence(series_probability(A), series_probability(B), term_index)
                     case term_index - 1 = 1:
                         term_index = (term_index - 1) + 1 = 1 + 1 = 2
-                        \two_event_sequence<series_Omega, series_events>(A, B, term_index) = B
+                        two_events(A, B, term_index) = B
                         one_term_sequence(series_probability(B), term_index - 1) = series_probability(B)
                         two_term_sequence(series_probability(A), series_probability(B), term_index) = one_term_sequence(series_probability(B), term_index - 1) = series_probability(B)
-                        probability_terms(term_index) = series_probability(\two_event_sequence<series_Omega, series_events>(A, B, term_index)) = series_probability(B) = two_term_sequence(series_probability(A), series_probability(B), term_index)
+                        probability_terms(term_index) = series_probability(two_events(A, B, term_index)) = series_probability(B) = two_term_sequence(series_probability(A), series_probability(B), term_index)
                     case term_index - 1 > 1:
                         (term_index - 1) + 1 > 1 + 1
                         term_index = (term_index - 1) + 1
                         1 + 1 = 2
                         term_index > 2
-                        \two_event_sequence<series_Omega, series_events>(A, B, term_index) = {}
-                        series_probability(\two_event_sequence<series_Omega, series_events>(A, B, term_index)) = series_probability({}) = 0
+                        two_events(A, B, term_index) = {}
+                        series_probability(two_events(A, B, term_index)) = series_probability({}) = 0
                         one_term_sequence(series_probability(B), term_index - 1) = 0
                         two_term_sequence(series_probability(A), series_probability(B), term_index) = one_term_sequence(series_probability(B), term_index - 1) = 0
-                        probability_terms(term_index) = series_probability(\two_event_sequence<series_Omega, series_events>(A, B, term_index)) = 0 = two_term_sequence(series_probability(A), series_probability(B), term_index)
+                        probability_terms(term_index) = series_probability(two_events(A, B, term_index)) = 0 = two_term_sequence(series_probability(A), series_probability(B), term_index)
     by thm two_term_series_has_sum(series_probability(A), series_probability(B)) => $has_series_sum(fn(n N+) R {two_term_sequence(series_probability(A), series_probability(B), n)}, series_probability(A) + series_probability(B))
     by thm pointwise_equal_sequences_preserve_series_sum(probability_terms, fn(n N+) R {two_term_sequence(series_probability(A), series_probability(B), n)}, series_probability(A) + series_probability(B)) => $has_series_sum(probability_terms, series_probability(A) + series_probability(B))
-    probability_terms = fn(n N+) R {series_probability(\two_event_sequence<series_Omega, series_events>(A, B, n))}
+    probability_terms = fn(n N+) R {series_probability(two_events(A, B, n))}
     $has_series_sum(fn(n N+) R {series_probability(\two_event_sequence<series_Omega, series_events>(A, B, n))}, series_probability(A) + series_probability(B))
 
 thm event_countable_union_is_event:
@@ -878,14 +888,15 @@ thm probability_of_disjoint_union:
         =>:
             union(A, B) $in union_probability_events
             union_probability(union(A, B)) = union_probability(A) + union_probability(B)
-    let event_union = index_union(N+, union_probability_Omega, fn(n N+) power_set(union_probability_Omega) {\two_event_sequence<union_probability_Omega, union_probability_events>(A, B, n)})
-    let probability_terms = fn(n N+) R {union_probability(\two_event_sequence<union_probability_Omega, union_probability_events>(A, B, n))}
+    let two_events = \two_event_sequence<union_probability_Omega, union_probability_events>
+    let event_union = index_union(N+, union_probability_Omega, fn(n N+) power_set(union_probability_Omega) {two_events(A, B, n)})
+    let probability_terms = fn(n N+) R {union_probability(two_events(A, B, n))}
     by thm two_event_sequence_countable_union(union_probability_Omega, union_probability_events, A, B) => event_union = union(A, B)
-    by thm event_countable_union_is_event(union_probability_Omega, union_probability_events, fn(n N+) union_probability_events {\two_event_sequence<union_probability_Omega, union_probability_events>(A, B, n)}) => index_union(N+, union_probability_Omega, fn(n N+) power_set(union_probability_Omega) {\two_event_sequence<union_probability_Omega, union_probability_events>(A, B, n)}) $in union_probability_events
+    by thm event_countable_union_is_event(union_probability_Omega, union_probability_events, fn(n N+) union_probability_events {two_events(A, B, n)}) => index_union(N+, union_probability_Omega, fn(n N+) power_set(union_probability_Omega) {two_events(A, B, n)}) $in union_probability_events
     union(A, B) $in union_probability_events
-    by thm two_event_sequence_pairwise_disjoint(union_probability_Omega, union_probability_events, A, B) => $pairwise_disjoint_event_sequence(union_probability_Omega, union_probability_events, fn(n N+) union_probability_events {\two_event_sequence<union_probability_Omega, union_probability_events>(A, B, n)})
-    by thm kolmogorov_countable_additivity(union_probability_Omega, union_probability_events, union_probability, fn(n N+) union_probability_events {\two_event_sequence<union_probability_Omega, union_probability_events>(A, B, n)})
-    by thm two_event_probability_series_has_sum(union_probability_Omega, union_probability_events, union_probability, A, B) => $has_series_sum(fn(n N+) R {union_probability(\two_event_sequence<union_probability_Omega, union_probability_events>(A, B, n))}, union_probability(A) + union_probability(B))
+    by thm two_event_sequence_pairwise_disjoint(union_probability_Omega, union_probability_events, A, B) => $pairwise_disjoint_event_sequence(union_probability_Omega, union_probability_events, fn(n N+) union_probability_events {two_events(A, B, n)})
+    by thm kolmogorov_countable_additivity(union_probability_Omega, union_probability_events, union_probability, fn(n N+) union_probability_events {two_events(A, B, n)})
+    by thm two_event_probability_series_has_sum(union_probability_Omega, union_probability_events, union_probability, A, B) => $has_series_sum(fn(n N+) R {union_probability(two_events(A, B, n))}, union_probability(A) + union_probability(B))
     by thm series_sum_unique(probability_terms, union_probability(event_union), union_probability(A) + union_probability(B)) => union_probability(event_union) = union_probability(A) + union_probability(B)
     union_probability(union(A, B)) = union_probability(event_union) = union_probability(A) + union_probability(B)
 
@@ -1206,14 +1217,15 @@ thm raw_increasing_event_increment_is_event:
         $is_sigma_algebra(Omega, events)
         =>:
             \raw_increasing_event_increment<Omega, events>(event_sequence, n) $in events
+    let raw_increment = \raw_increasing_event_increment<Omega, events>
     n = 1 or n > 1
     by cases:
-        ? \raw_increasing_event_increment<Omega, events>(event_sequence, n) $in events
+        ? raw_increment(event_sequence, n) $in events
         case n = 1:
-            \raw_increasing_event_increment<Omega, events>(event_sequence, n) = event_sequence(1)
+            raw_increment(event_sequence, n) = event_sequence(1)
             event_sequence(1) $in events
         case n > 1:
-            \raw_increasing_event_increment<Omega, events>(event_sequence, n) = set_minus(event_sequence(n), event_sequence(n - 1))
+            raw_increment(event_sequence, n) = set_minus(event_sequence(n), event_sequence(n - 1))
             by thm event_difference_is_event(Omega, events, event_sequence(n), event_sequence(n - 1)) => set_minus(event_sequence(n), event_sequence(n - 1)) $in events
 template<Omega set, events power_set(power_set(Omega)): $is_sigma_algebra(Omega, events)>:
     have fn increasing_event_increment by exist!:
@@ -1259,17 +1271,19 @@ thm increasing_event_increment_is_subset:
         $is_sigma_algebra(Omega, events)
         =>:
             \increasing_event_increment<Omega, events>(event_sequence, n) $subset event_sequence(n)
-    \increasing_event_increment<Omega, events>(event_sequence, n) = \raw_increasing_event_increment<Omega, events>(event_sequence, n)
+    let increment = \increasing_event_increment<Omega, events>
+    let raw_increment = \raw_increasing_event_increment<Omega, events>
+    increment(event_sequence, n) = raw_increment(event_sequence, n)
     n = 1 or n > 1
     by cases:
-        ? \increasing_event_increment<Omega, events>(event_sequence, n) $subset event_sequence(n)
+        ? increment(event_sequence, n) $subset event_sequence(n)
         case n = 1:
-            \raw_increasing_event_increment<Omega, events>(event_sequence, n) = event_sequence(1)
+            raw_increment(event_sequence, n) = event_sequence(1)
             event_sequence(1) = event_sequence(n)
-            \increasing_event_increment<Omega, events>(event_sequence, n) = event_sequence(n)
+            increment(event_sequence, n) = event_sequence(n)
             event_sequence(n) $subset event_sequence(n)
         case n > 1:
-            \raw_increasing_event_increment<Omega, events>(event_sequence, n) = set_minus(event_sequence(n), event_sequence(n - 1))
+            raw_increment(event_sequence, n) = set_minus(event_sequence(n), event_sequence(n - 1))
             set_minus(event_sequence(n), event_sequence(n - 1)) $subset event_sequence(n)
             \increasing_event_increment<Omega, events>(event_sequence, n) $subset event_sequence(n)
 thm increasing_event_increment_partitions_next:
@@ -1278,17 +1292,18 @@ thm increasing_event_increment_partitions_next:
         $is_increasing_event_sequence(Omega, events, event_sequence)
         =>:
             union(event_sequence(k), \increasing_event_increment<Omega, events>(event_sequence, k + 1)) = event_sequence(k + 1)
+    let increment = \increasing_event_increment<Omega, events>
     by def $is_increasing_event_sequence(Omega, events, event_sequence)
     event_sequence(k) $subset event_sequence(k + 1)
-    \increasing_event_increment<Omega, events>(event_sequence, k + 1) = \raw_increasing_event_increment<Omega, events>(event_sequence, k + 1)
+    increment(event_sequence, k + 1) = \raw_increasing_event_increment<Omega, events>(event_sequence, k + 1)
     k + 1 > 1
     \raw_increasing_event_increment<Omega, events>(event_sequence, k + 1) = set_minus(event_sequence(k + 1), event_sequence((k + 1) - 1))
     (k + 1) - 1 = k
-    \increasing_event_increment<Omega, events>(event_sequence, k + 1) = set_minus(event_sequence(k + 1), event_sequence(k))
-    union(event_sequence(k), \increasing_event_increment<Omega, events>(event_sequence, k + 1)) = union(event_sequence(k), set_minus(event_sequence(k + 1), event_sequence(k)))
+    increment(event_sequence, k + 1) = set_minus(event_sequence(k + 1), event_sequence(k))
+    union(event_sequence(k), increment(event_sequence, k + 1)) = union(event_sequence(k), set_minus(event_sequence(k + 1), event_sequence(k)))
     union(event_sequence(k), set_minus(event_sequence(k + 1), event_sequence(k))) = union(event_sequence(k), event_sequence(k + 1))
     union(event_sequence(k), event_sequence(k + 1)) = event_sequence(k + 1)
-    union(event_sequence(k), \increasing_event_increment<Omega, events>(event_sequence, k + 1)) = event_sequence(k + 1)
+    union(event_sequence(k), \increasing_event_increment<Omega, events>(event_sequence, k + 1)) = union(event_sequence(k), increment(event_sequence, k + 1)) = event_sequence(k + 1)
 
 thm increasing_event_sequence_mono:
     ? forall Omega set, events power_set(power_set(Omega)), event_sequence fn (index N+) events, earlier, later N+:
@@ -1308,19 +1323,20 @@ thm earlier_increasing_event_increment_disjoint_from_later:
         earlier < later
         =>:
             intersect(\increasing_event_increment<Omega, events>(event_sequence, earlier), \increasing_event_increment<Omega, events>(event_sequence, later)) = {}
+    let increment = \increasing_event_increment<Omega, events>
     earlier >= 1
     later > earlier
     later > 1
     later - 1 $in N+
     earlier <= later - 1
-    by thm increasing_event_increment_is_subset(Omega, events, event_sequence, earlier) => \increasing_event_increment<Omega, events>(event_sequence, earlier) $subset event_sequence(earlier)
+    by thm increasing_event_increment_is_subset(Omega, events, event_sequence, earlier) => increment(event_sequence, earlier) $subset event_sequence(earlier)
     by thm increasing_event_sequence_mono(Omega, events, event_sequence, earlier, later - 1) => event_sequence(earlier) $subset event_sequence(later - 1)
-    \increasing_event_increment<Omega, events>(event_sequence, earlier) $subset event_sequence(later - 1)
-    \increasing_event_increment<Omega, events>(event_sequence, later) = \raw_increasing_event_increment<Omega, events>(event_sequence, later)
+    increment(event_sequence, earlier) $subset event_sequence(later - 1)
+    increment(event_sequence, later) = \raw_increasing_event_increment<Omega, events>(event_sequence, later)
     \raw_increasing_event_increment<Omega, events>(event_sequence, later) = set_minus(event_sequence(later), event_sequence(later - 1))
-    \increasing_event_increment<Omega, events>(event_sequence, later) = set_minus(event_sequence(later), event_sequence(later - 1))
-    intersect(\increasing_event_increment<Omega, events>(event_sequence, earlier), set_minus(event_sequence(later), event_sequence(later - 1))) = {}
-    intersect(\increasing_event_increment<Omega, events>(event_sequence, earlier), \increasing_event_increment<Omega, events>(event_sequence, later)) = intersect(\increasing_event_increment<Omega, events>(event_sequence, earlier), set_minus(event_sequence(later), event_sequence(later - 1))) = {}
+    increment(event_sequence, later) = set_minus(event_sequence(later), event_sequence(later - 1))
+    intersect(increment(event_sequence, earlier), set_minus(event_sequence(later), event_sequence(later - 1))) = {}
+    intersect(\increasing_event_increment<Omega, events>(event_sequence, earlier), \increasing_event_increment<Omega, events>(event_sequence, later)) = intersect(increment(event_sequence, earlier), increment(event_sequence, later)) = intersect(increment(event_sequence, earlier), set_minus(event_sequence(later), event_sequence(later - 1))) = {}
 
 thm equal_event_pairs_preserve_empty_intersection:
     ? forall left_event, right_event, source_left_event, source_right_event set:
@@ -1441,14 +1457,15 @@ thm previous_event_disjoint_from_next_increment:
         $is_increasing_event_sequence(Omega, events, event_sequence)
         =>:
             intersect(event_sequence(k), \increasing_event_increment<Omega, events>(event_sequence, k + 1)) = {}
+    let increment = \increasing_event_increment<Omega, events>
     by def $is_increasing_event_sequence(Omega, events, event_sequence)
     event_sequence(k) $subset event_sequence(k + 1)
     by thm subset_intersect_complement_is_empty(event_sequence(k + 1), event_sequence(k)) => intersect(event_sequence(k), set_minus(event_sequence(k + 1), event_sequence(k))) = {}
-    \increasing_event_increment<Omega, events>(event_sequence, k + 1) = \raw_increasing_event_increment<Omega, events>(event_sequence, k + 1)
+    increment(event_sequence, k + 1) = \raw_increasing_event_increment<Omega, events>(event_sequence, k + 1)
     k + 1 > 1
     \raw_increasing_event_increment<Omega, events>(event_sequence, k + 1) = set_minus(event_sequence(k + 1), event_sequence((k + 1) - 1))
     (k + 1) - 1 = k
-    \increasing_event_increment<Omega, events>(event_sequence, k + 1) = set_minus(event_sequence(k + 1), event_sequence(k))
+    increment(event_sequence, k + 1) = set_minus(event_sequence(k + 1), event_sequence(k))
     by thm equal_event_pairs_preserve_empty_intersection(event_sequence(k), \increasing_event_increment<Omega, events>(event_sequence, k + 1), event_sequence(k), set_minus(event_sequence(k + 1), event_sequence(k))) => intersect(event_sequence(k), \increasing_event_increment<Omega, events>(event_sequence, k + 1)) = {}
 
 thm equal_arguments_have_equal_function_values:
@@ -1489,13 +1506,15 @@ thm probability_of_next_increasing_stage:
         $is_increasing_event_sequence(Omega, events, event_sequence)
         =>:
             probability(event_sequence(k + 1)) = probability(event_sequence(k)) + probability(\increasing_event_increment<Omega, events>(event_sequence, k + 1))
-    by thm previous_event_disjoint_from_next_increment(Omega, events, event_sequence, k) => intersect(event_sequence(k), \increasing_event_increment<Omega, events>(event_sequence, k + 1)) = {}
-    by thm probability_of_disjoint_union(Omega, events, probability, event_sequence(k), \increasing_event_increment<Omega, events>(event_sequence, k + 1))
-    union(event_sequence(k), \increasing_event_increment<Omega, events>(event_sequence, k + 1)) $in events
-    probability(union(event_sequence(k), \increasing_event_increment<Omega, events>(event_sequence, k + 1))) = probability(event_sequence(k)) + probability(\increasing_event_increment<Omega, events>(event_sequence, k + 1))
-    by thm increasing_event_increment_partitions_next(Omega, events, event_sequence, k) => union(event_sequence(k), \increasing_event_increment<Omega, events>(event_sequence, k + 1)) = event_sequence(k + 1)
-    by thm equal_arguments_have_equal_function_values(events, R, probability, union(event_sequence(k), \increasing_event_increment<Omega, events>(event_sequence, k + 1)), event_sequence(k + 1)) => probability(union(event_sequence(k), \increasing_event_increment<Omega, events>(event_sequence, k + 1))) = probability(event_sequence(k + 1))
-    by thm equalities_compose(R, probability(event_sequence(k + 1)), probability(union(event_sequence(k), \increasing_event_increment<Omega, events>(event_sequence, k + 1))), probability(event_sequence(k)) + probability(\increasing_event_increment<Omega, events>(event_sequence, k + 1))) => probability(event_sequence(k + 1)) = probability(event_sequence(k)) + probability(\increasing_event_increment<Omega, events>(event_sequence, k + 1))
+    let increment = \increasing_event_increment<Omega, events>
+    by thm previous_event_disjoint_from_next_increment(Omega, events, event_sequence, k) => intersect(event_sequence(k), increment(event_sequence, k + 1)) = {}
+    by thm probability_of_disjoint_union(Omega, events, probability, event_sequence(k), increment(event_sequence, k + 1))
+    union(event_sequence(k), increment(event_sequence, k + 1)) $in events
+    probability(union(event_sequence(k), increment(event_sequence, k + 1))) = probability(event_sequence(k)) + probability(increment(event_sequence, k + 1))
+    by thm increasing_event_increment_partitions_next(Omega, events, event_sequence, k) => union(event_sequence(k), increment(event_sequence, k + 1)) = event_sequence(k + 1)
+    by thm equal_arguments_have_equal_function_values(events, R, probability, union(event_sequence(k), increment(event_sequence, k + 1)), event_sequence(k + 1)) => probability(union(event_sequence(k), increment(event_sequence, k + 1))) = probability(event_sequence(k + 1))
+    by thm equalities_compose(R, probability(event_sequence(k + 1)), probability(union(event_sequence(k), increment(event_sequence, k + 1))), probability(event_sequence(k)) + probability(increment(event_sequence, k + 1))) => probability(event_sequence(k + 1)) = probability(event_sequence(k)) + probability(increment(event_sequence, k + 1))
+    probability(event_sequence(k + 1)) = probability(event_sequence(k)) + probability(increment(event_sequence, k + 1)) = probability(event_sequence(k)) + probability(\increasing_event_increment<Omega, events>(event_sequence, k + 1))
 
 thm increasing_event_increment_probability_partial_sum:
     ? forall Omega set, events power_set(power_set(Omega)), probability fn (event events) R, event_sequence fn (index N+) events, k N+:
@@ -1512,32 +1531,42 @@ thm increasing_event_increment_probability_partial_sum:
         $is_increasing_event_sequence(Omega, events, event_sequence)
         =>:
             partial_sum(fn (n N+) R {probability(\increasing_event_increment<Omega, events>(event_sequence, n))}, k) = probability(event_sequence(k))
+    let increment = \increasing_event_increment<Omega, events>
+    have increment_probabilities seq(R) = fn (n N+) R {probability(increment(event_sequence, n))}
     by induc k from 1:
-        ? partial_sum(fn (n N+) R {probability(\increasing_event_increment<Omega, events>(event_sequence, n))}, k) = probability(event_sequence(k))
+        ? partial_sum(increment_probabilities, k) = probability(event_sequence(k))
         ? from k = 1:
-            partial_sum(fn (n N+) R {probability(\increasing_event_increment<Omega, events>(event_sequence, n))}, 1) = partial_sum(fn (n N+) R {probability(\increasing_event_increment<Omega, events>(event_sequence, n))}, 0) + fn (n N+) R {probability(\increasing_event_increment<Omega, events>(event_sequence, n))}(1)
-            partial_sum(fn (n N+) R {probability(\increasing_event_increment<Omega, events>(event_sequence, n))}, 0) = 0
-            fn (n N+) R {probability(\increasing_event_increment<Omega, events>(event_sequence, n))}(1) = probability(\increasing_event_increment<Omega, events>(event_sequence, 1))
-            by thm equal_binary_arguments_have_equal_function_values(R, R, fn (x, y R) R {x + y}, partial_sum(fn (n N+) R {probability(\increasing_event_increment<Omega, events>(event_sequence, n))}, 0), 0, fn (n N+) R {probability(\increasing_event_increment<Omega, events>(event_sequence, n))}(1), probability(\increasing_event_increment<Omega, events>(event_sequence, 1))) => partial_sum(fn (n N+) R {probability(\increasing_event_increment<Omega, events>(event_sequence, n))}, 0) + fn (n N+) R {probability(\increasing_event_increment<Omega, events>(event_sequence, n))}(1) = 0 + probability(\increasing_event_increment<Omega, events>(event_sequence, 1))
-            by thm equalities_compose(R, partial_sum(fn (n N+) R {probability(\increasing_event_increment<Omega, events>(event_sequence, n))}, 1), partial_sum(fn (n N+) R {probability(\increasing_event_increment<Omega, events>(event_sequence, n))}, 0) + fn (n N+) R {probability(\increasing_event_increment<Omega, events>(event_sequence, n))}(1), 0 + probability(\increasing_event_increment<Omega, events>(event_sequence, 1))) => partial_sum(fn (n N+) R {probability(\increasing_event_increment<Omega, events>(event_sequence, n))}, 1) = 0 + probability(\increasing_event_increment<Omega, events>(event_sequence, 1))
-            0 + probability(\increasing_event_increment<Omega, events>(event_sequence, 1)) = probability(\increasing_event_increment<Omega, events>(event_sequence, 1))
-            by thm equalities_compose(R, partial_sum(fn (n N+) R {probability(\increasing_event_increment<Omega, events>(event_sequence, n))}, 1), 0 + probability(\increasing_event_increment<Omega, events>(event_sequence, 1)), probability(\increasing_event_increment<Omega, events>(event_sequence, 1))) => partial_sum(fn (n N+) R {probability(\increasing_event_increment<Omega, events>(event_sequence, n))}, 1) = probability(\increasing_event_increment<Omega, events>(event_sequence, 1))
-            \increasing_event_increment<Omega, events>(event_sequence, 1) = \raw_increasing_event_increment<Omega, events>(event_sequence, 1)
+            partial_sum(increment_probabilities, 1) = partial_sum(increment_probabilities, 0) + increment_probabilities(1)
+            partial_sum(increment_probabilities, 0) = 0
+            increment_probabilities(1) = probability(increment(event_sequence, 1))
+            by thm equal_binary_arguments_have_equal_function_values(R, R, fn (x, y R) R {x + y}, partial_sum(increment_probabilities, 0), 0, increment_probabilities(1), probability(increment(event_sequence, 1))) => partial_sum(increment_probabilities, 0) + increment_probabilities(1) = 0 + probability(increment(event_sequence, 1))
+            by thm equalities_compose(R, partial_sum(increment_probabilities, 1), partial_sum(increment_probabilities, 0) + increment_probabilities(1), 0 + probability(increment(event_sequence, 1))) => partial_sum(increment_probabilities, 1) = 0 + probability(increment(event_sequence, 1))
+            0 + probability(increment(event_sequence, 1)) = probability(increment(event_sequence, 1))
+            by thm equalities_compose(R, partial_sum(increment_probabilities, 1), 0 + probability(increment(event_sequence, 1)), probability(increment(event_sequence, 1))) => partial_sum(increment_probabilities, 1) = probability(increment(event_sequence, 1))
+            increment(event_sequence, 1) = \raw_increasing_event_increment<Omega, events>(event_sequence, 1)
             \raw_increasing_event_increment<Omega, events>(event_sequence, 1) = event_sequence(1)
-            \increasing_event_increment<Omega, events>(event_sequence, 1) = event_sequence(1)
-            by thm equal_arguments_have_equal_function_values(events, R, probability, \increasing_event_increment<Omega, events>(event_sequence, 1), event_sequence(1)) => probability(\increasing_event_increment<Omega, events>(event_sequence, 1)) = probability(event_sequence(1))
-            by thm equalities_compose(R, partial_sum(fn (n N+) R {probability(\increasing_event_increment<Omega, events>(event_sequence, n))}, 1), probability(\increasing_event_increment<Omega, events>(event_sequence, 1)), probability(event_sequence(1))) => partial_sum(fn (n N+) R {probability(\increasing_event_increment<Omega, events>(event_sequence, n))}, 1) = probability(event_sequence(1))
+            increment(event_sequence, 1) = event_sequence(1)
+            by thm equal_arguments_have_equal_function_values(events, R, probability, increment(event_sequence, 1), event_sequence(1)) => probability(increment(event_sequence, 1)) = probability(event_sequence(1))
+            by thm equalities_compose(R, partial_sum(increment_probabilities, 1), probability(increment(event_sequence, 1)), probability(event_sequence(1))) => partial_sum(increment_probabilities, 1) = probability(event_sequence(1))
         ? induc:
-            partial_sum(fn (n N+) R {probability(\increasing_event_increment<Omega, events>(event_sequence, n))}, k + 1) = partial_sum(fn (n N+) R {probability(\increasing_event_increment<Omega, events>(event_sequence, n))}, (k + 1) - 1) + fn (n N+) R {probability(\increasing_event_increment<Omega, events>(event_sequence, n))}(k + 1)
+            partial_sum(increment_probabilities, k + 1) = partial_sum(increment_probabilities, (k + 1) - 1) + increment_probabilities(k + 1)
             (k + 1) - 1 = k
-            by thm equal_arguments_have_equal_function_values(N, R, fn (m N) R {partial_sum(fn (n N+) R {probability(\increasing_event_increment<Omega, events>(event_sequence, n))}, m)}, (k + 1) - 1, k) => partial_sum(fn (n N+) R {probability(\increasing_event_increment<Omega, events>(event_sequence, n))}, (k + 1) - 1) = partial_sum(fn (n N+) R {probability(\increasing_event_increment<Omega, events>(event_sequence, n))}, k)
-            by thm equalities_compose(R, partial_sum(fn (n N+) R {probability(\increasing_event_increment<Omega, events>(event_sequence, n))}, (k + 1) - 1), partial_sum(fn (n N+) R {probability(\increasing_event_increment<Omega, events>(event_sequence, n))}, k), probability(event_sequence(k))) => partial_sum(fn (n N+) R {probability(\increasing_event_increment<Omega, events>(event_sequence, n))}, (k + 1) - 1) = probability(event_sequence(k))
-            fn (n N+) R {probability(\increasing_event_increment<Omega, events>(event_sequence, n))}(k + 1) = probability(\increasing_event_increment<Omega, events>(event_sequence, k + 1))
-            by thm equal_binary_arguments_have_equal_function_values(R, R, fn (x, y R) R {x + y}, partial_sum(fn (n N+) R {probability(\increasing_event_increment<Omega, events>(event_sequence, n))}, (k + 1) - 1), probability(event_sequence(k)), fn (n N+) R {probability(\increasing_event_increment<Omega, events>(event_sequence, n))}(k + 1), probability(\increasing_event_increment<Omega, events>(event_sequence, k + 1))) => partial_sum(fn (n N+) R {probability(\increasing_event_increment<Omega, events>(event_sequence, n))}, (k + 1) - 1) + fn (n N+) R {probability(\increasing_event_increment<Omega, events>(event_sequence, n))}(k + 1) = probability(event_sequence(k)) + probability(\increasing_event_increment<Omega, events>(event_sequence, k + 1))
-            by thm equalities_compose(R, partial_sum(fn (n N+) R {probability(\increasing_event_increment<Omega, events>(event_sequence, n))}, k + 1), partial_sum(fn (n N+) R {probability(\increasing_event_increment<Omega, events>(event_sequence, n))}, (k + 1) - 1) + fn (n N+) R {probability(\increasing_event_increment<Omega, events>(event_sequence, n))}(k + 1), probability(event_sequence(k)) + probability(\increasing_event_increment<Omega, events>(event_sequence, k + 1))) => partial_sum(fn (n N+) R {probability(\increasing_event_increment<Omega, events>(event_sequence, n))}, k + 1) = probability(event_sequence(k)) + probability(\increasing_event_increment<Omega, events>(event_sequence, k + 1))
-            by thm probability_of_next_increasing_stage(Omega, events, probability, event_sequence, k) => probability(event_sequence(k + 1)) = probability(event_sequence(k)) + probability(\increasing_event_increment<Omega, events>(event_sequence, k + 1))
-            probability(event_sequence(k)) + probability(\increasing_event_increment<Omega, events>(event_sequence, k + 1)) = probability(event_sequence(k + 1))
-            by thm equalities_compose(R, partial_sum(fn (n N+) R {probability(\increasing_event_increment<Omega, events>(event_sequence, n))}, k + 1), probability(event_sequence(k)) + probability(\increasing_event_increment<Omega, events>(event_sequence, k + 1)), probability(event_sequence(k + 1))) => partial_sum(fn (n N+) R {probability(\increasing_event_increment<Omega, events>(event_sequence, n))}, k + 1) = probability(event_sequence(k + 1))
+            by thm equal_arguments_have_equal_function_values(N, R, fn (m N) R {partial_sum(increment_probabilities, m)}, (k + 1) - 1, k) => partial_sum(increment_probabilities, (k + 1) - 1) = partial_sum(increment_probabilities, k)
+            by thm equalities_compose(R, partial_sum(increment_probabilities, (k + 1) - 1), partial_sum(increment_probabilities, k), probability(event_sequence(k))) => partial_sum(increment_probabilities, (k + 1) - 1) = probability(event_sequence(k))
+            increment_probabilities(k + 1) = probability(increment(event_sequence, k + 1))
+            by thm equal_binary_arguments_have_equal_function_values(R, R, fn (x, y R) R {x + y}, partial_sum(increment_probabilities, (k + 1) - 1), probability(event_sequence(k)), increment_probabilities(k + 1), probability(increment(event_sequence, k + 1))) => partial_sum(increment_probabilities, (k + 1) - 1) + increment_probabilities(k + 1) = probability(event_sequence(k)) + probability(increment(event_sequence, k + 1))
+            by thm equalities_compose(R, partial_sum(increment_probabilities, k + 1), partial_sum(increment_probabilities, (k + 1) - 1) + increment_probabilities(k + 1), probability(event_sequence(k)) + probability(increment(event_sequence, k + 1))) => partial_sum(increment_probabilities, k + 1) = probability(event_sequence(k)) + probability(increment(event_sequence, k + 1))
+            by thm probability_of_next_increasing_stage(Omega, events, probability, event_sequence, k) => probability(event_sequence(k + 1)) = probability(event_sequence(k)) + probability(increment(event_sequence, k + 1))
+            probability(event_sequence(k)) + probability(increment(event_sequence, k + 1)) = probability(event_sequence(k + 1))
+            by thm equalities_compose(R, partial_sum(increment_probabilities, k + 1), probability(event_sequence(k)) + probability(increment(event_sequence, k + 1)), probability(event_sequence(k + 1))) => partial_sum(increment_probabilities, k + 1) = probability(event_sequence(k + 1))
+    claim:
+        ? forall n N+:
+            fn (index N+) R {probability(\increasing_event_increment<Omega, events>(event_sequence, index))}(n) = increment_probabilities(n)
+        fn (index N+) R {probability(\increasing_event_increment<Omega, events>(event_sequence, index))}(n) = probability(\increasing_event_increment<Omega, events>(event_sequence, n))
+        increment_probabilities(n) = probability(increment(event_sequence, n))
+        probability(\increasing_event_increment<Omega, events>(event_sequence, n)) = probability(increment(event_sequence, n))
+    by thm pointwise_equal_sequences_have_equal_partial_sums(fn (n N+) R {probability(\increasing_event_increment<Omega, events>(event_sequence, n))}, increment_probabilities, k) => partial_sum(fn (n N+) R {probability(\increasing_event_increment<Omega, events>(event_sequence, n))}, k) = partial_sum(increment_probabilities, k)
+    partial_sum(fn (n N+) R {probability(\increasing_event_increment<Omega, events>(event_sequence, n))}, k) = partial_sum(increment_probabilities, k) = probability(event_sequence(k))
 
 thm pointwise_equal_families_have_equal_index_union:
     ? forall index_set, Omega set, left_family, right_family fn (index index_set) power_set(Omega):
@@ -1561,27 +1590,28 @@ thm increasing_event_sequence_has_probability_disjointification:
         $is_increasing_event_sequence(Omega, events, event_sequence)
         =>:
             exist increments fn (increment_index N+) events st {$is_probability_disjointification_of(Omega, events, probability, event_sequence, increments)}
-    witness exist increments fn (increment_index N+) events st {$is_probability_disjointification_of(Omega, events, probability, event_sequence, increments)} from fn (n N+) events {\increasing_event_increment<Omega, events>(event_sequence, n)}:
-        by thm increasing_event_increments_pairwise_disjoint(Omega, events, event_sequence) => $pairwise_disjoint_event_sequence(Omega, events, fn (n N+) events {\increasing_event_increment<Omega, events>(event_sequence, n)})
+    let increment = \increasing_event_increment<Omega, events>
+    witness exist increments fn (increment_index N+) events st {$is_probability_disjointification_of(Omega, events, probability, event_sequence, increments)} from fn (n N+) events {increment(event_sequence, n)}:
+        by thm increasing_event_increments_pairwise_disjoint(Omega, events, event_sequence) => $pairwise_disjoint_event_sequence(Omega, events, fn (n N+) events {increment(event_sequence, n)})
         claim:
             ? forall union_index N+:
-                fn (n N+) events {\increasing_event_increment<Omega, events>(event_sequence, n)}(union_index) = \increasing_event_increment<Omega, events>(event_sequence, union_index)
-            fn (n N+) events {\increasing_event_increment<Omega, events>(event_sequence, n)}(union_index) = \increasing_event_increment<Omega, events>(event_sequence, union_index)
-        by thm pointwise_equal_families_have_equal_index_union(N+, Omega, fn (union_index N+) power_set(Omega) {fn (n N+) events {\increasing_event_increment<Omega, events>(event_sequence, n)}(union_index)}, fn (union_index N+) power_set(Omega) {\increasing_event_increment<Omega, events>(event_sequence, union_index)}) => index_union(N+, Omega, fn (union_index N+) power_set(Omega) {fn (n N+) events {\increasing_event_increment<Omega, events>(event_sequence, n)}(union_index)}) = index_union(N+, Omega, fn (union_index N+) power_set(Omega) {\increasing_event_increment<Omega, events>(event_sequence, union_index)})
-        by thm increasing_event_increment_union_equals_source_union(Omega, events, event_sequence) => index_union(N+, Omega, fn (source_index N+) power_set(Omega) {\increasing_event_increment<Omega, events>(event_sequence, source_index)}) = index_union(N+, Omega, fn (source_index N+) power_set(Omega) {event_sequence(source_index)})
-        by thm equalities_compose(power_set(Omega), index_union(N+, Omega, fn (union_index N+) power_set(Omega) {fn (n N+) events {\increasing_event_increment<Omega, events>(event_sequence, n)}(union_index)}), index_union(N+, Omega, fn (union_index N+) power_set(Omega) {\increasing_event_increment<Omega, events>(event_sequence, union_index)}), index_union(N+, Omega, fn (union_index N+) power_set(Omega) {event_sequence(union_index)})) => index_union(N+, Omega, fn (union_index N+) power_set(Omega) {fn (n N+) events {\increasing_event_increment<Omega, events>(event_sequence, n)}(union_index)}) = index_union(N+, Omega, fn (union_index N+) power_set(Omega) {event_sequence(union_index)})
+                fn (n N+) events {increment(event_sequence, n)}(union_index) = increment(event_sequence, union_index)
+            fn (n N+) events {increment(event_sequence, n)}(union_index) = increment(event_sequence, union_index)
+        by thm pointwise_equal_families_have_equal_index_union(N+, Omega, fn (union_index N+) power_set(Omega) {fn (n N+) events {increment(event_sequence, n)}(union_index)}, fn (union_index N+) power_set(Omega) {increment(event_sequence, union_index)}) => index_union(N+, Omega, fn (union_index N+) power_set(Omega) {fn (n N+) events {increment(event_sequence, n)}(union_index)}) = index_union(N+, Omega, fn (union_index N+) power_set(Omega) {increment(event_sequence, union_index)})
+        by thm increasing_event_increment_union_equals_source_union(Omega, events, event_sequence) => index_union(N+, Omega, fn (source_index N+) power_set(Omega) {increment(event_sequence, source_index)}) = index_union(N+, Omega, fn (source_index N+) power_set(Omega) {event_sequence(source_index)})
+        by thm equalities_compose(power_set(Omega), index_union(N+, Omega, fn (union_index N+) power_set(Omega) {fn (n N+) events {increment(event_sequence, n)}(union_index)}), index_union(N+, Omega, fn (union_index N+) power_set(Omega) {increment(event_sequence, union_index)}), index_union(N+, Omega, fn (union_index N+) power_set(Omega) {event_sequence(union_index)})) => index_union(N+, Omega, fn (union_index N+) power_set(Omega) {fn (n N+) events {increment(event_sequence, n)}(union_index)}) = index_union(N+, Omega, fn (union_index N+) power_set(Omega) {event_sequence(union_index)})
         claim:
             ? forall term_index N+:
-                probability(fn (n N+) events {\increasing_event_increment<Omega, events>(event_sequence, n)}(term_index)) = probability(\increasing_event_increment<Omega, events>(event_sequence, term_index))
-            fn (n N+) events {\increasing_event_increment<Omega, events>(event_sequence, n)}(term_index) = \increasing_event_increment<Omega, events>(event_sequence, term_index)
-            by thm equal_arguments_have_equal_function_values(events, R, probability, fn (n N+) events {\increasing_event_increment<Omega, events>(event_sequence, n)}(term_index), \increasing_event_increment<Omega, events>(event_sequence, term_index)) => probability(fn (n N+) events {\increasing_event_increment<Omega, events>(event_sequence, n)}(term_index)) = probability(\increasing_event_increment<Omega, events>(event_sequence, term_index))
+                probability(fn (n N+) events {increment(event_sequence, n)}(term_index)) = probability(increment(event_sequence, term_index))
+            fn (n N+) events {increment(event_sequence, n)}(term_index) = increment(event_sequence, term_index)
+            by thm equal_arguments_have_equal_function_values(events, R, probability, fn (n N+) events {increment(event_sequence, n)}(term_index), increment(event_sequence, term_index)) => probability(fn (n N+) events {increment(event_sequence, n)}(term_index)) = probability(increment(event_sequence, term_index))
         claim:
             ? forall k N+:
-                partial_sum(fn (wrapper_term N+) R {probability(fn (n N+) events {\increasing_event_increment<Omega, events>(event_sequence, n)}(wrapper_term))}, k) = probability(event_sequence(k))
-            by thm pointwise_equal_sequences_have_equal_partial_sums(fn (wrapper_term N+) R {probability(fn (n N+) events {\increasing_event_increment<Omega, events>(event_sequence, n)}(wrapper_term))}, fn (canonical_term N+) R {probability(\increasing_event_increment<Omega, events>(event_sequence, canonical_term))}, k) => partial_sum(fn (wrapper_term N+) R {probability(fn (n N+) events {\increasing_event_increment<Omega, events>(event_sequence, n)}(wrapper_term))}, k) = partial_sum(fn (canonical_term N+) R {probability(\increasing_event_increment<Omega, events>(event_sequence, canonical_term))}, k)
-            by thm increasing_event_increment_probability_partial_sum(Omega, events, probability, event_sequence, k) => partial_sum(fn (canonical_term N+) R {probability(\increasing_event_increment<Omega, events>(event_sequence, canonical_term))}, k) = probability(event_sequence(k))
-            by thm equalities_compose(R, partial_sum(fn (wrapper_term N+) R {probability(fn (n N+) events {\increasing_event_increment<Omega, events>(event_sequence, n)}(wrapper_term))}, k), partial_sum(fn (canonical_term N+) R {probability(\increasing_event_increment<Omega, events>(event_sequence, canonical_term))}, k), probability(event_sequence(k))) => partial_sum(fn (wrapper_term N+) R {probability(fn (n N+) events {\increasing_event_increment<Omega, events>(event_sequence, n)}(wrapper_term))}, k) = probability(event_sequence(k))
-        by def $is_probability_disjointification_of(Omega, events, probability, event_sequence, fn (n N+) events {\increasing_event_increment<Omega, events>(event_sequence, n)})
+                partial_sum(fn (wrapper_term N+) R {probability(fn (n N+) events {increment(event_sequence, n)}(wrapper_term))}, k) = probability(event_sequence(k))
+            by thm pointwise_equal_sequences_have_equal_partial_sums(fn (wrapper_term N+) R {probability(fn (n N+) events {increment(event_sequence, n)}(wrapper_term))}, fn (canonical_term N+) R {probability(increment(event_sequence, canonical_term))}, k) => partial_sum(fn (wrapper_term N+) R {probability(fn (n N+) events {increment(event_sequence, n)}(wrapper_term))}, k) = partial_sum(fn (canonical_term N+) R {probability(increment(event_sequence, canonical_term))}, k)
+            by thm increasing_event_increment_probability_partial_sum(Omega, events, probability, event_sequence, k) => partial_sum(fn (canonical_term N+) R {probability(increment(event_sequence, canonical_term))}, k) = probability(event_sequence(k))
+            by thm equalities_compose(R, partial_sum(fn (wrapper_term N+) R {probability(fn (n N+) events {increment(event_sequence, n)}(wrapper_term))}, k), partial_sum(fn (canonical_term N+) R {probability(increment(event_sequence, canonical_term))}, k), probability(event_sequence(k))) => partial_sum(fn (wrapper_term N+) R {probability(fn (n N+) events {increment(event_sequence, n)}(wrapper_term))}, k) = probability(event_sequence(k))
+        by def $is_probability_disjointification_of(Omega, events, probability, event_sequence, fn (n N+) events {increment(event_sequence, n)})
 
 thm probability_continuous_from_below:
     ? forall Omega set, events power_set(power_set(Omega)), probability fn (event events) R, event_sequence fn (n N+) events:
@@ -1722,39 +1752,40 @@ thm probability_continuous_from_above:
         $is_decreasing_event_sequence(Omega, events, event_sequence)
         =>:
             $has_sequence_limit(fn (n N+) R {probability(event_sequence(n))}, probability(index_intersect(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})))
+    let complement_events = \complement_event_sequence<Omega, events>
     claim:
         ? $is_sigma_algebra(Omega, events)
         by def $is_sigma_algebra(Omega, events)
-    by thm event_countable_union_is_event(Omega, events, fn (n N+) events {\complement_event_sequence<Omega, events>(event_sequence, n)}) => index_union(N+, Omega, fn (n N+) power_set(Omega) {\complement_event_sequence<Omega, events>(event_sequence, n)}) $in events
+    by thm event_countable_union_is_event(Omega, events, fn (n N+) events {complement_events(event_sequence, n)}) => index_union(N+, Omega, fn (n N+) power_set(Omega) {complement_events(event_sequence, n)}) $in events
     by thm event_countable_intersection_is_event(Omega, events, event_sequence) => index_intersect(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)}) $in events
-    have complement_union events = index_union(N+, Omega, fn (n N+) power_set(Omega) {\complement_event_sequence<Omega, events>(event_sequence, n)})
+    have complement_union events = index_union(N+, Omega, fn (n N+) power_set(Omega) {complement_events(event_sequence, n)})
     have source_intersection events = index_intersect(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})
-    by thm complements_of_decreasing_events_are_increasing(Omega, events, event_sequence) => $is_increasing_event_sequence(Omega, events, fn (n N+) events {\complement_event_sequence<Omega, events>(event_sequence, n)})
-    by thm probability_continuous_from_below(Omega, events, probability, fn (n N+) events {\complement_event_sequence<Omega, events>(event_sequence, n)}) => $has_sequence_limit(fn (n N+) R {probability(\complement_event_sequence<Omega, events>(event_sequence, n))}, probability(index_union(N+, Omega, fn (n N+) power_set(Omega) {\complement_event_sequence<Omega, events>(event_sequence, n)})))
-    by thm equal_arguments_have_equal_function_values(events, R, probability, index_union(N+, Omega, fn (n N+) power_set(Omega) {\complement_event_sequence<Omega, events>(event_sequence, n)}), complement_union) => probability(index_union(N+, Omega, fn (n N+) power_set(Omega) {\complement_event_sequence<Omega, events>(event_sequence, n)})) = probability(complement_union)
-    by thm equal_values_preserve_sequence_limit(fn (n N+) R {probability(\complement_event_sequence<Omega, events>(event_sequence, n))}, probability(index_union(N+, Omega, fn (n N+) power_set(Omega) {\complement_event_sequence<Omega, events>(event_sequence, n)})), probability(complement_union)) => $has_sequence_limit(fn (n N+) R {probability(\complement_event_sequence<Omega, events>(event_sequence, n))}, probability(complement_union))
+    by thm complements_of_decreasing_events_are_increasing(Omega, events, event_sequence) => $is_increasing_event_sequence(Omega, events, fn (n N+) events {complement_events(event_sequence, n)})
+    by thm probability_continuous_from_below(Omega, events, probability, fn (n N+) events {complement_events(event_sequence, n)}) => $has_sequence_limit(fn (n N+) R {probability(complement_events(event_sequence, n))}, probability(index_union(N+, Omega, fn (n N+) power_set(Omega) {complement_events(event_sequence, n)})))
+    by thm equal_arguments_have_equal_function_values(events, R, probability, index_union(N+, Omega, fn (n N+) power_set(Omega) {complement_events(event_sequence, n)}), complement_union) => probability(index_union(N+, Omega, fn (n N+) power_set(Omega) {complement_events(event_sequence, n)})) = probability(complement_union)
+    by thm equal_values_preserve_sequence_limit(fn (n N+) R {probability(complement_events(event_sequence, n))}, probability(index_union(N+, Omega, fn (n N+) power_set(Omega) {complement_events(event_sequence, n)})), probability(complement_union)) => $has_sequence_limit(fn (n N+) R {probability(complement_events(event_sequence, n))}, probability(complement_union))
     claim:
         ? forall n N+:
-            probability(\complement_event_sequence<Omega, events>(event_sequence, n)) = 1 - probability(event_sequence(n))
-        \complement_event_sequence<Omega, events>(event_sequence, n) = set_minus(Omega, event_sequence(n))
+            probability(complement_events(event_sequence, n)) = 1 - probability(event_sequence(n))
+        complement_events(event_sequence, n) = set_minus(Omega, event_sequence(n))
         by thm probability_of_event_complement(Omega, events, probability, event_sequence(n)) => probability(set_minus(Omega, event_sequence(n))) = 1 - probability(event_sequence(n))
-        probability(\complement_event_sequence<Omega, events>(event_sequence, n)) = probability(set_minus(Omega, event_sequence(n))) = 1 - probability(event_sequence(n))
-    by thm one_minus_sequence_preserves_limit(fn (n N+) R {probability(\complement_event_sequence<Omega, events>(event_sequence, n))}, probability(complement_union)) => $has_sequence_limit(fn (n N+) R {1 - probability(\complement_event_sequence<Omega, events>(event_sequence, n))}, 1 - probability(complement_union))
+        probability(complement_events(event_sequence, n)) = probability(set_minus(Omega, event_sequence(n))) = 1 - probability(event_sequence(n))
+    by thm one_minus_sequence_preserves_limit(fn (n N+) R {probability(complement_events(event_sequence, n))}, probability(complement_union)) => $has_sequence_limit(fn (n N+) R {1 - probability(complement_events(event_sequence, n))}, 1 - probability(complement_union))
     claim:
         ? forall n N+:
-            probability(event_sequence(n)) = 1 - probability(\complement_event_sequence<Omega, events>(event_sequence, n))
-        probability(\complement_event_sequence<Omega, events>(event_sequence, n)) = 1 - probability(event_sequence(n))
-        by thm equal_arguments_have_equal_function_values(R, R, fn (x R) R {1 - x}, probability(\complement_event_sequence<Omega, events>(event_sequence, n)), 1 - probability(event_sequence(n))) => fn (x R) R {1 - x}(probability(\complement_event_sequence<Omega, events>(event_sequence, n))) = fn (x R) R {1 - x}(1 - probability(event_sequence(n)))
-        1 - probability(\complement_event_sequence<Omega, events>(event_sequence, n)) = 1 - (1 - probability(event_sequence(n)))
+            probability(event_sequence(n)) = 1 - probability(complement_events(event_sequence, n))
+        probability(complement_events(event_sequence, n)) = 1 - probability(event_sequence(n))
+        by thm equal_arguments_have_equal_function_values(R, R, fn (x R) R {1 - x}, probability(complement_events(event_sequence, n)), 1 - probability(event_sequence(n))) => fn (x R) R {1 - x}(probability(complement_events(event_sequence, n))) = fn (x R) R {1 - x}(1 - probability(event_sequence(n)))
+        1 - probability(complement_events(event_sequence, n)) = 1 - (1 - probability(event_sequence(n)))
         by thm one_minus_one_minus(probability(event_sequence(n))) => 1 - (1 - probability(event_sequence(n))) = probability(event_sequence(n))
-        1 - probability(\complement_event_sequence<Omega, events>(event_sequence, n)) = 1 - (1 - probability(event_sequence(n))) = probability(event_sequence(n))
-        probability(event_sequence(n)) = 1 - probability(\complement_event_sequence<Omega, events>(event_sequence, n))
-    by thm pointwise_equal_sequences_preserve_limit(fn (n N+) R {probability(event_sequence(n))}, fn (n N+) R {1 - probability(\complement_event_sequence<Omega, events>(event_sequence, n))}, 1 - probability(complement_union)) => $has_sequence_limit(fn (n N+) R {probability(event_sequence(n))}, 1 - probability(complement_union))
-    by thm complement_union_of_event_sequence_is_intersection(Omega, events, event_sequence) => set_minus(Omega, index_union(N+, Omega, fn (n N+) power_set(Omega) {\complement_event_sequence<Omega, events>(event_sequence, n)})) = index_intersect(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})
-    by thm equal_arguments_have_equal_function_values(power_set(Omega), power_set(Omega), fn (event power_set(Omega)) power_set(Omega) {set_minus(Omega, event)}, complement_union, index_union(N+, Omega, fn (n N+) power_set(Omega) {\complement_event_sequence<Omega, events>(event_sequence, n)})) => fn (event power_set(Omega)) power_set(Omega) {set_minus(Omega, event)}(complement_union) = fn (event power_set(Omega)) power_set(Omega) {set_minus(Omega, event)}(index_union(N+, Omega, fn (n N+) power_set(Omega) {\complement_event_sequence<Omega, events>(event_sequence, n)}))
-    set_minus(Omega, complement_union) = set_minus(Omega, index_union(N+, Omega, fn (n N+) power_set(Omega) {\complement_event_sequence<Omega, events>(event_sequence, n)}))
+        1 - probability(complement_events(event_sequence, n)) = 1 - (1 - probability(event_sequence(n))) = probability(event_sequence(n))
+        probability(event_sequence(n)) = 1 - probability(complement_events(event_sequence, n))
+    by thm pointwise_equal_sequences_preserve_limit(fn (n N+) R {probability(event_sequence(n))}, fn (n N+) R {1 - probability(complement_events(event_sequence, n))}, 1 - probability(complement_union)) => $has_sequence_limit(fn (n N+) R {probability(event_sequence(n))}, 1 - probability(complement_union))
+    by thm complement_union_of_event_sequence_is_intersection(Omega, events, event_sequence) => set_minus(Omega, index_union(N+, Omega, fn (n N+) power_set(Omega) {complement_events(event_sequence, n)})) = index_intersect(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})
+    by thm equal_arguments_have_equal_function_values(power_set(Omega), power_set(Omega), fn (event power_set(Omega)) power_set(Omega) {set_minus(Omega, event)}, complement_union, index_union(N+, Omega, fn (n N+) power_set(Omega) {complement_events(event_sequence, n)})) => fn (event power_set(Omega)) power_set(Omega) {set_minus(Omega, event)}(complement_union) = fn (event power_set(Omega)) power_set(Omega) {set_minus(Omega, event)}(index_union(N+, Omega, fn (n N+) power_set(Omega) {complement_events(event_sequence, n)}))
+    set_minus(Omega, complement_union) = set_minus(Omega, index_union(N+, Omega, fn (n N+) power_set(Omega) {complement_events(event_sequence, n)}))
     index_intersect(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)}) = source_intersection
-    set_minus(Omega, complement_union) = set_minus(Omega, index_union(N+, Omega, fn (n N+) power_set(Omega) {\complement_event_sequence<Omega, events>(event_sequence, n)})) = index_intersect(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)}) = source_intersection
+    set_minus(Omega, complement_union) = set_minus(Omega, index_union(N+, Omega, fn (n N+) power_set(Omega) {complement_events(event_sequence, n)})) = index_intersect(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)}) = source_intersection
     by thm probability_of_event_complement(Omega, events, probability, complement_union) => probability(set_minus(Omega, complement_union)) = 1 - probability(complement_union)
     by thm equal_arguments_have_equal_function_values(events, R, probability, set_minus(Omega, complement_union), source_intersection) => probability(set_minus(Omega, complement_union)) = probability(source_intersection)
     1 - probability(complement_union) = probability(set_minus(Omega, complement_union)) = probability(source_intersection)
@@ -1771,8 +1802,9 @@ thm event_union_is_event:
         $is_sigma_algebra(Omega, events)
         =>:
             union(A, B) $in events
-    by thm event_countable_union_is_event(Omega, events, fn (n N+) events {\two_event_sequence<Omega, events>(A, B, n)}) => index_union(N+, Omega, fn (n N+) power_set(Omega) {\two_event_sequence<Omega, events>(A, B, n)}) $in events
-    by thm two_event_sequence_countable_union(Omega, events, A, B) => index_union(N+, Omega, fn (n N+) power_set(Omega) {\two_event_sequence<Omega, events>(A, B, n)}) = union(A, B)
+    let two_events = \two_event_sequence<Omega, events>
+    by thm event_countable_union_is_event(Omega, events, fn (n N+) events {two_events(A, B, n)}) => index_union(N+, Omega, fn (n N+) power_set(Omega) {two_events(A, B, n)}) $in events
+    by thm two_event_sequence_countable_union(Omega, events, A, B) => index_union(N+, Omega, fn (n N+) power_set(Omega) {two_events(A, B, n)}) = union(A, B)
     union(A, B) $in events
 
 template<Omega set, events power_set(power_set(Omega)): $is_sigma_algebra(Omega, events)>:
@@ -1800,12 +1832,13 @@ thm event_prefix_union_successor:
         $is_sigma_algebra(Omega, events)
         =>:
             \event_prefix_union<Omega, events>(event_sequence, k + 1) = union(\event_prefix_union<Omega, events>(event_sequence, k), event_sequence(k + 1))
+    let prefix_union = \event_prefix_union<Omega, events>
     k + 1 > 1
     (k + 1) - 1 = k
-    \event_prefix_union<Omega, events>(event_sequence, k + 1) = \exact_event_union<Omega, events>(\event_prefix_union<Omega, events>(event_sequence, (k + 1) - 1), event_sequence(k + 1))
-    \event_prefix_union<Omega, events>(event_sequence, (k + 1) - 1) = \event_prefix_union<Omega, events>(event_sequence, k)
-    \exact_event_union<Omega, events>(\event_prefix_union<Omega, events>(event_sequence, k), event_sequence(k + 1)) = union(\event_prefix_union<Omega, events>(event_sequence, k), event_sequence(k + 1))
-    \event_prefix_union<Omega, events>(event_sequence, k + 1) = union(\event_prefix_union<Omega, events>(event_sequence, k), event_sequence(k + 1))
+    prefix_union(event_sequence, k + 1) = \exact_event_union<Omega, events>(prefix_union(event_sequence, (k + 1) - 1), event_sequence(k + 1))
+    prefix_union(event_sequence, (k + 1) - 1) = prefix_union(event_sequence, k)
+    \exact_event_union<Omega, events>(prefix_union(event_sequence, k), event_sequence(k + 1)) = union(prefix_union(event_sequence, k), event_sequence(k + 1))
+    \event_prefix_union<Omega, events>(event_sequence, k + 1) = prefix_union(event_sequence, k + 1) = union(prefix_union(event_sequence, k), event_sequence(k + 1)) = union(\event_prefix_union<Omega, events>(event_sequence, k), event_sequence(k + 1))
 
 thm event_prefix_union_sequence_is_increasing:
     ? forall Omega set, events power_set(power_set(Omega)), event_sequence fn (n N+) events:
@@ -1864,34 +1897,38 @@ thm event_prefix_union_subset_source_union:
                             point $in event_sequence(k + 1)
                         point $in index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})
             by def \event_prefix_union<Omega, events>(event_sequence, k + 1) $subset index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})
+    \event_prefix_union<Omega, events>(event_sequence, k) $subset index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})
 
 thm source_event_subset_same_prefix_union:
     ? forall Omega set, events power_set(power_set(Omega)), event_sequence fn (n N+) events, k N+:
         $is_sigma_algebra(Omega, events)
         =>:
             event_sequence(k) $subset \event_prefix_union<Omega, events>(event_sequence, k)
+    let prefix_union = \event_prefix_union<Omega, events>
     k = 1 or k > 1
     by cases:
-        ? event_sequence(k) $subset \event_prefix_union<Omega, events>(event_sequence, k)
+        ? event_sequence(k) $subset prefix_union(event_sequence, k)
         case k = 1:
-            \event_prefix_union<Omega, events>(event_sequence, k) = event_sequence(1) = event_sequence(k)
+            prefix_union(event_sequence, k) = event_sequence(1) = event_sequence(k)
             claim:
                 ? forall point event_sequence(k):
-                    point $in \event_prefix_union<Omega, events>(event_sequence, k)
+                    point $in prefix_union(event_sequence, k)
                 point $in event_sequence(k)
-                point $in \event_prefix_union<Omega, events>(event_sequence, k)
-            by def event_sequence(k) $subset \event_prefix_union<Omega, events>(event_sequence, k)
+                point $in prefix_union(event_sequence, k)
+            by def event_sequence(k) $subset prefix_union(event_sequence, k)
         case k > 1:
             k - 1 $in N+
             k - 1 + 1 = k
-            by thm event_prefix_union_successor(Omega, events, event_sequence, k - 1) => \event_prefix_union<Omega, events>(event_sequence, k - 1 + 1) = union(\event_prefix_union<Omega, events>(event_sequence, k - 1), event_sequence(k - 1 + 1))
-            \event_prefix_union<Omega, events>(event_sequence, k) = union(\event_prefix_union<Omega, events>(event_sequence, k - 1), event_sequence(k))
+            by thm event_prefix_union_successor(Omega, events, event_sequence, k - 1) => prefix_union(event_sequence, k - 1 + 1) = union(prefix_union(event_sequence, k - 1), event_sequence(k - 1 + 1))
+            prefix_union(event_sequence, k) = union(prefix_union(event_sequence, k - 1), event_sequence(k))
             claim:
                 ? forall point event_sequence(k):
-                    point $in \event_prefix_union<Omega, events>(event_sequence, k)
-                point $in union(\event_prefix_union<Omega, events>(event_sequence, k - 1), event_sequence(k))
-                point $in \event_prefix_union<Omega, events>(event_sequence, k)
-            by def event_sequence(k) $subset \event_prefix_union<Omega, events>(event_sequence, k)
+                    point $in prefix_union(event_sequence, k)
+                point $in union(prefix_union(event_sequence, k - 1), event_sequence(k))
+                point $in prefix_union(event_sequence, k)
+            by def event_sequence(k) $subset prefix_union(event_sequence, k)
+    \event_prefix_union<Omega, events>(event_sequence, k) = prefix_union(event_sequence, k)
+    event_sequence(k) $subset \event_prefix_union<Omega, events>(event_sequence, k)
 
 thm event_prefix_union_countable_union_equals_source_union:
     ? forall Omega set, events power_set(power_set(Omega)), event_sequence fn (n N+) events:
@@ -1948,28 +1985,31 @@ thm probability_event_prefix_union_le_partial_sum:
         $is_sigma_algebra(Omega, events)
         =>:
             probability(\event_prefix_union<Omega, events>(event_sequence, k)) <= partial_sum(fn (n N+) R {probability(event_sequence(n))}, k)
+    let prefix_union = \event_prefix_union<Omega, events>
     by induc k from 1:
-        ? probability(\event_prefix_union<Omega, events>(event_sequence, k)) <= partial_sum(fn (n N+) R {probability(event_sequence(n))}, k)
+        ? probability(prefix_union(event_sequence, k)) <= partial_sum(fn (n N+) R {probability(event_sequence(n))}, k)
         ? from k = 1:
-            \event_prefix_union<Omega, events>(event_sequence, 1) = event_sequence(1)
-            probability(\event_prefix_union<Omega, events>(event_sequence, 1)) = probability(event_sequence(1))
+            prefix_union(event_sequence, 1) = event_sequence(1)
+            probability(prefix_union(event_sequence, 1)) = probability(event_sequence(1))
             by thm partial_sum_one(fn (n N+) R {probability(event_sequence(n))}) => partial_sum(fn (n N+) R {probability(event_sequence(n))}, 1) = fn (n N+) R {probability(event_sequence(n))}(1)
             fn (n N+) R {probability(event_sequence(n))}(1) = probability(event_sequence(1))
             partial_sum(fn (n N+) R {probability(event_sequence(n))}, 1) = fn (n N+) R {probability(event_sequence(n))}(1) = probability(event_sequence(1))
-            probability(\event_prefix_union<Omega, events>(event_sequence, 1)) = partial_sum(fn (n N+) R {probability(event_sequence(n))}, 1)
-            probability(\event_prefix_union<Omega, events>(event_sequence, 1)) <= partial_sum(fn (n N+) R {probability(event_sequence(n))}, 1)
+            probability(prefix_union(event_sequence, 1)) = partial_sum(fn (n N+) R {probability(event_sequence(n))}, 1)
+            probability(prefix_union(event_sequence, 1)) <= partial_sum(fn (n N+) R {probability(event_sequence(n))}, 1)
         ? induc:
-            by thm event_prefix_union_successor(Omega, events, event_sequence, k) => \event_prefix_union<Omega, events>(event_sequence, k + 1) = union(\event_prefix_union<Omega, events>(event_sequence, k), event_sequence(k + 1))
-            by thm probability_union_bound(Omega, events, probability, \event_prefix_union<Omega, events>(event_sequence, k), event_sequence(k + 1)) => probability(union(\event_prefix_union<Omega, events>(event_sequence, k), event_sequence(k + 1))) <= probability(\event_prefix_union<Omega, events>(event_sequence, k)) + probability(event_sequence(k + 1))
-            probability(\event_prefix_union<Omega, events>(event_sequence, k + 1)) = probability(union(\event_prefix_union<Omega, events>(event_sequence, k), event_sequence(k + 1)))
-            probability(\event_prefix_union<Omega, events>(event_sequence, k + 1)) <= probability(\event_prefix_union<Omega, events>(event_sequence, k)) + probability(event_sequence(k + 1))
-            probability(\event_prefix_union<Omega, events>(event_sequence, k)) + probability(event_sequence(k + 1)) <= partial_sum(fn (n N+) R {probability(event_sequence(n))}, k) + probability(event_sequence(k + 1))
+            by thm event_prefix_union_successor(Omega, events, event_sequence, k) => prefix_union(event_sequence, k + 1) = union(prefix_union(event_sequence, k), event_sequence(k + 1))
+            by thm probability_union_bound(Omega, events, probability, prefix_union(event_sequence, k), event_sequence(k + 1)) => probability(union(prefix_union(event_sequence, k), event_sequence(k + 1))) <= probability(prefix_union(event_sequence, k)) + probability(event_sequence(k + 1))
+            probability(prefix_union(event_sequence, k + 1)) = probability(union(prefix_union(event_sequence, k), event_sequence(k + 1)))
+            probability(prefix_union(event_sequence, k + 1)) <= probability(prefix_union(event_sequence, k)) + probability(event_sequence(k + 1))
+            probability(prefix_union(event_sequence, k)) + probability(event_sequence(k + 1)) <= partial_sum(fn (n N+) R {probability(event_sequence(n))}, k) + probability(event_sequence(k + 1))
             by thm partial_sum_successor(fn (n N+) R {probability(event_sequence(n))}, k) => partial_sum(fn (n N+) R {probability(event_sequence(n))}, k + 1) = partial_sum(fn (n N+) R {probability(event_sequence(n))}, k) + fn (n N+) R {probability(event_sequence(n))}(k + 1)
             fn (n N+) R {probability(event_sequence(n))}(k + 1) = probability(event_sequence(k + 1))
             by thm equal_binary_arguments_have_equal_function_values(R, R, fn (x, y R) R {x + y}, partial_sum(fn (n N+) R {probability(event_sequence(n))}, k), partial_sum(fn (n N+) R {probability(event_sequence(n))}, k), fn (n N+) R {probability(event_sequence(n))}(k + 1), probability(event_sequence(k + 1))) => partial_sum(fn (n N+) R {probability(event_sequence(n))}, k) + fn (n N+) R {probability(event_sequence(n))}(k + 1) = partial_sum(fn (n N+) R {probability(event_sequence(n))}, k) + probability(event_sequence(k + 1))
             partial_sum(fn (n N+) R {probability(event_sequence(n))}, k + 1) = partial_sum(fn (n N+) R {probability(event_sequence(n))}, k) + fn (n N+) R {probability(event_sequence(n))}(k + 1) = partial_sum(fn (n N+) R {probability(event_sequence(n))}, k) + probability(event_sequence(k + 1))
             partial_sum(fn (n N+) R {probability(event_sequence(n))}, k) + probability(event_sequence(k + 1)) = partial_sum(fn (n N+) R {probability(event_sequence(n))}, k + 1)
             probability(\event_prefix_union<Omega, events>(event_sequence, k + 1)) <= probability(\event_prefix_union<Omega, events>(event_sequence, k)) + probability(event_sequence(k + 1)) <= partial_sum(fn (n N+) R {probability(event_sequence(n))}, k) + probability(event_sequence(k + 1)) = partial_sum(fn (n N+) R {probability(event_sequence(n))}, k + 1)
+    \event_prefix_union<Omega, events>(event_sequence, k) = prefix_union(event_sequence, k)
+    probability(\event_prefix_union<Omega, events>(event_sequence, k)) = probability(prefix_union(event_sequence, k)) <= partial_sum(fn (n N+) R {probability(event_sequence(n))}, k)
 
 thm add_left_preserves_strict_order:
     ? forall x, y, z R:
@@ -2077,20 +2117,21 @@ thm probability_countable_subadditivity:
         $has_series_sum(fn (n N+) R {probability(event_sequence(n))}, total)
         =>:
             probability(index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})) <= total
+    let prefix_union = \event_prefix_union<Omega, events>
     claim:
         ? $is_sigma_algebra(Omega, events)
         by def $is_sigma_algebra(Omega, events)
-    by thm event_prefix_union_sequence_is_increasing(Omega, events, event_sequence) => $is_increasing_event_sequence(Omega, events, fn (prefix_index N+) events {\event_prefix_union<Omega, events>(event_sequence, prefix_index)})
-    by thm event_countable_union_is_event(Omega, events, fn (prefix_index N+) events {\event_prefix_union<Omega, events>(event_sequence, prefix_index)}) => index_union(N+, Omega, fn (prefix_index N+) power_set(Omega) {\event_prefix_union<Omega, events>(event_sequence, prefix_index)}) $in events
-    by thm probability_continuous_from_below(Omega, events, probability, fn (prefix_index N+) events {\event_prefix_union<Omega, events>(event_sequence, prefix_index)}) => $has_sequence_limit(fn (prefix_index N+) R {probability(\event_prefix_union<Omega, events>(event_sequence, prefix_index))}, probability(index_union(N+, Omega, fn (prefix_index N+) power_set(Omega) {\event_prefix_union<Omega, events>(event_sequence, prefix_index)})))
+    by thm event_prefix_union_sequence_is_increasing(Omega, events, event_sequence) => $is_increasing_event_sequence(Omega, events, fn (prefix_index N+) events {prefix_union(event_sequence, prefix_index)})
+    by thm event_countable_union_is_event(Omega, events, fn (prefix_index N+) events {prefix_union(event_sequence, prefix_index)}) => index_union(N+, Omega, fn (prefix_index N+) power_set(Omega) {prefix_union(event_sequence, prefix_index)}) $in events
+    by thm probability_continuous_from_below(Omega, events, probability, fn (prefix_index N+) events {prefix_union(event_sequence, prefix_index)}) => $has_sequence_limit(fn (prefix_index N+) R {probability(prefix_union(event_sequence, prefix_index))}, probability(index_union(N+, Omega, fn (prefix_index N+) power_set(Omega) {prefix_union(event_sequence, prefix_index)})))
     by def $has_series_sum(fn (n N+) R {probability(event_sequence(n))}, total)
     claim:
         ? forall k N+:
-            probability(\event_prefix_union<Omega, events>(event_sequence, k)) <= partial_sum(fn (n N+) R {probability(event_sequence(n))}, k)
-        by thm probability_event_prefix_union_le_partial_sum(Omega, events, probability, event_sequence, k) => probability(\event_prefix_union<Omega, events>(event_sequence, k)) <= partial_sum(fn (n N+) R {probability(event_sequence(n))}, k)
-    by thm pointwise_le_sequences_preserve_limit_order(fn (prefix_index N+) R {probability(\event_prefix_union<Omega, events>(event_sequence, prefix_index))}, fn (k N+) R {partial_sum(fn (n N+) R {probability(event_sequence(n))}, k)}, probability(index_union(N+, Omega, fn (prefix_index N+) power_set(Omega) {\event_prefix_union<Omega, events>(event_sequence, prefix_index)})), total) => probability(index_union(N+, Omega, fn (prefix_index N+) power_set(Omega) {\event_prefix_union<Omega, events>(event_sequence, prefix_index)})) <= total
-    by thm event_prefix_union_countable_union_equals_source_union(Omega, events, event_sequence) => index_union(N+, Omega, fn (prefix_index N+) power_set(Omega) {\event_prefix_union<Omega, events>(event_sequence, prefix_index)}) = index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})
-    by thm equal_arguments_have_equal_function_values(events, R, probability, index_union(N+, Omega, fn (prefix_index N+) power_set(Omega) {\event_prefix_union<Omega, events>(event_sequence, prefix_index)}), index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})) => probability(index_union(N+, Omega, fn (prefix_index N+) power_set(Omega) {\event_prefix_union<Omega, events>(event_sequence, prefix_index)})) = probability(index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)}))
+            probability(prefix_union(event_sequence, k)) <= partial_sum(fn (n N+) R {probability(event_sequence(n))}, k)
+        by thm probability_event_prefix_union_le_partial_sum(Omega, events, probability, event_sequence, k) => probability(prefix_union(event_sequence, k)) <= partial_sum(fn (n N+) R {probability(event_sequence(n))}, k)
+    by thm pointwise_le_sequences_preserve_limit_order(fn (prefix_index N+) R {probability(prefix_union(event_sequence, prefix_index))}, fn (k N+) R {partial_sum(fn (n N+) R {probability(event_sequence(n))}, k)}, probability(index_union(N+, Omega, fn (prefix_index N+) power_set(Omega) {prefix_union(event_sequence, prefix_index)})), total) => probability(index_union(N+, Omega, fn (prefix_index N+) power_set(Omega) {prefix_union(event_sequence, prefix_index)})) <= total
+    by thm event_prefix_union_countable_union_equals_source_union(Omega, events, event_sequence) => index_union(N+, Omega, fn (prefix_index N+) power_set(Omega) {prefix_union(event_sequence, prefix_index)}) = index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})
+    by thm equal_arguments_have_equal_function_values(events, R, probability, index_union(N+, Omega, fn (prefix_index N+) power_set(Omega) {prefix_union(event_sequence, prefix_index)}), index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})) => probability(index_union(N+, Omega, fn (prefix_index N+) power_set(Omega) {prefix_union(event_sequence, prefix_index)})) = probability(index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)}))
     probability(index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})) = probability(index_union(N+, Omega, fn (prefix_index N+) power_set(Omega) {\event_prefix_union<Omega, events>(event_sequence, prefix_index)})) <= total
 
 prop is_null_event(Omega set, events power_set(power_set(Omega)), probability fn (event events) R, event events):
@@ -2327,6 +2368,7 @@ thm probability_event_tail_union_after_le_series_remainder:
         $has_series_sum(fn (n N+) R {probability(event_sequence(n))}, total)
         =>:
             probability(\event_tail_union_after<Omega, events>(event_sequence, skipped)) <= total - partial_sum(fn (n N+) R {probability(event_sequence(n))}, skipped)
+    let tail_union = \event_tail_union_after<Omega, events>
     by thm real_series_tail_after_has_sum(fn (n N+) R {probability(event_sequence(n))}, total, skipped)
     claim:
         ? forall offset N+:
@@ -2336,8 +2378,8 @@ thm probability_event_tail_union_after_le_series_remainder:
     by thm pointwise_equal_sequences_preserve_series_sum(fn (offset N+) R {probability(event_sequence(skipped + offset))}, fn (offset N+) R {real_sequence_tail_after(fn (n N+) R {probability(event_sequence(n))}, skipped, offset)}, total - partial_sum(fn (n N+) R {probability(event_sequence(n))}, skipped)) => $has_series_sum(fn (offset N+) R {probability(event_sequence(skipped + offset))}, total - partial_sum(fn (n N+) R {probability(event_sequence(n))}, skipped))
     by thm event_countable_union_is_event(Omega, events, fn (offset N+) events {event_sequence(skipped + offset)}) => index_union(N+, Omega, fn (offset N+) power_set(Omega) {event_sequence(skipped + offset)}) $in events
     by thm probability_countable_subadditivity(Omega, events, probability, fn (offset N+) events {event_sequence(skipped + offset)}, total - partial_sum(fn (n N+) R {probability(event_sequence(n))}, skipped)) => probability(index_union(N+, Omega, fn (offset N+) power_set(Omega) {event_sequence(skipped + offset)})) <= total - partial_sum(fn (n N+) R {probability(event_sequence(n))}, skipped)
-    \event_tail_union_after<Omega, events>(event_sequence, skipped) = index_union(N+, Omega, fn (offset N+) power_set(Omega) {event_sequence(skipped + offset)})
-    by thm equal_arguments_have_equal_function_values(events, R, probability, \event_tail_union_after<Omega, events>(event_sequence, skipped), index_union(N+, Omega, fn (offset N+) power_set(Omega) {event_sequence(skipped + offset)})) => probability(\event_tail_union_after<Omega, events>(event_sequence, skipped)) = probability(index_union(N+, Omega, fn (offset N+) power_set(Omega) {event_sequence(skipped + offset)}))
+    tail_union(event_sequence, skipped) = index_union(N+, Omega, fn (offset N+) power_set(Omega) {event_sequence(skipped + offset)})
+    by thm equal_arguments_have_equal_function_values(events, R, probability, tail_union(event_sequence, skipped), index_union(N+, Omega, fn (offset N+) power_set(Omega) {event_sequence(skipped + offset)})) => probability(tail_union(event_sequence, skipped)) = probability(index_union(N+, Omega, fn (offset N+) power_set(Omega) {event_sequence(skipped + offset)}))
     probability(\event_tail_union_after<Omega, events>(event_sequence, skipped)) = probability(index_union(N+, Omega, fn (offset N+) power_set(Omega) {event_sequence(skipped + offset)})) <= total - partial_sum(fn (n N+) R {probability(event_sequence(n))}, skipped)
 
 thm one_step_delay_preserves_N_indexed_sequence_limit:
@@ -2472,6 +2514,7 @@ thm first_borel_cantelli:
         $has_series_sum(fn (n N+) R {probability(event_sequence(n))}, total)
         =>:
             $is_null_event(Omega, events, probability, \event_limsup<Omega, events>(event_sequence))
+    let tail_union = \event_tail_union_after<Omega, events>
     claim:
         ? $is_sigma_algebra(Omega, events)
         by def $is_sigma_algebra(Omega, events)
@@ -2480,22 +2523,22 @@ thm first_borel_cantelli:
     by thm constant_minus_convergent_sequence_converges_to_zero(fn (n N+) R {partial_sum(fn (term_index N+) R {probability(event_sequence(term_index))}, n - 1)}, total) => $has_sequence_limit(fn (n N+) R {total - partial_sum(fn (term_index N+) R {probability(event_sequence(term_index))}, n - 1)}, 0)
     claim:
         ? forall n N+:
-            probability(\event_tail_union_after<Omega, events>(event_sequence, n - 1)) >= 0
-        \event_tail_union_after<Omega, events>(event_sequence, n - 1) $in events
-        probability(\event_tail_union_after<Omega, events>(event_sequence, n - 1)) >= 0
+            probability(tail_union(event_sequence, n - 1)) >= 0
+        tail_union(event_sequence, n - 1) $in events
+        probability(tail_union(event_sequence, n - 1)) >= 0
     claim:
         ? forall n N+:
-            probability(\event_tail_union_after<Omega, events>(event_sequence, n - 1)) <= total - partial_sum(fn (term_index N+) R {probability(event_sequence(term_index))}, n - 1)
-        by thm probability_event_tail_union_after_le_series_remainder(Omega, events, probability, event_sequence, total, n - 1) => probability(\event_tail_union_after<Omega, events>(event_sequence, n - 1)) <= total - partial_sum(fn (term_index N+) R {probability(event_sequence(term_index))}, n - 1)
-    by thm nonnegative_sequence_below_zero_limit_converges_to_zero(fn (n N+) R {probability(\event_tail_union_after<Omega, events>(event_sequence, n - 1))}, fn (n N+) R {total - partial_sum(fn (term_index N+) R {probability(event_sequence(term_index))}, n - 1)}) => $has_sequence_limit(fn (n N+) R {probability(\event_tail_union_after<Omega, events>(event_sequence, n - 1))}, 0)
-    by thm event_tail_union_sequence_is_decreasing(Omega, events, event_sequence) => $is_decreasing_event_sequence(Omega, events, fn (n N+) events {\event_tail_union_after<Omega, events>(event_sequence, n - 1)})
-    by thm event_countable_intersection_is_event(Omega, events, fn (n N+) events {\event_tail_union_after<Omega, events>(event_sequence, n - 1)}) => index_intersect(N+, Omega, fn (n N+) power_set(Omega) {\event_tail_union_after<Omega, events>(event_sequence, n - 1)}) $in events
-    by thm probability_continuous_from_above(Omega, events, probability, fn (n N+) events {\event_tail_union_after<Omega, events>(event_sequence, n - 1)}) => $has_sequence_limit(fn (n N+) R {probability(\event_tail_union_after<Omega, events>(event_sequence, n - 1))}, probability(index_intersect(N+, Omega, fn (n N+) power_set(Omega) {\event_tail_union_after<Omega, events>(event_sequence, n - 1)})))
-    by thm sequence_limit_unique(fn (n N+) R {probability(\event_tail_union_after<Omega, events>(event_sequence, n - 1))}, 0, probability(index_intersect(N+, Omega, fn (n N+) power_set(Omega) {\event_tail_union_after<Omega, events>(event_sequence, n - 1)}))) => 0 = probability(index_intersect(N+, Omega, fn (n N+) power_set(Omega) {\event_tail_union_after<Omega, events>(event_sequence, n - 1)}))
-    probability(index_intersect(N+, Omega, fn (n N+) power_set(Omega) {\event_tail_union_after<Omega, events>(event_sequence, n - 1)})) = 0
-    \event_limsup<Omega, events>(event_sequence) = index_intersect(N+, Omega, fn (n N+) power_set(Omega) {\event_tail_union_after<Omega, events>(event_sequence, n - 1)})
-    by thm equal_arguments_have_equal_function_values(events, R, probability, \event_limsup<Omega, events>(event_sequence), index_intersect(N+, Omega, fn (n N+) power_set(Omega) {\event_tail_union_after<Omega, events>(event_sequence, n - 1)})) => probability(\event_limsup<Omega, events>(event_sequence)) = probability(index_intersect(N+, Omega, fn (n N+) power_set(Omega) {\event_tail_union_after<Omega, events>(event_sequence, n - 1)}))
-    probability(\event_limsup<Omega, events>(event_sequence)) = probability(index_intersect(N+, Omega, fn (n N+) power_set(Omega) {\event_tail_union_after<Omega, events>(event_sequence, n - 1)})) = 0
+            probability(tail_union(event_sequence, n - 1)) <= total - partial_sum(fn (term_index N+) R {probability(event_sequence(term_index))}, n - 1)
+        by thm probability_event_tail_union_after_le_series_remainder(Omega, events, probability, event_sequence, total, n - 1) => probability(tail_union(event_sequence, n - 1)) <= total - partial_sum(fn (term_index N+) R {probability(event_sequence(term_index))}, n - 1)
+    by thm nonnegative_sequence_below_zero_limit_converges_to_zero(fn (n N+) R {probability(tail_union(event_sequence, n - 1))}, fn (n N+) R {total - partial_sum(fn (term_index N+) R {probability(event_sequence(term_index))}, n - 1)}) => $has_sequence_limit(fn (n N+) R {probability(tail_union(event_sequence, n - 1))}, 0)
+    by thm event_tail_union_sequence_is_decreasing(Omega, events, event_sequence) => $is_decreasing_event_sequence(Omega, events, fn (n N+) events {tail_union(event_sequence, n - 1)})
+    by thm event_countable_intersection_is_event(Omega, events, fn (n N+) events {tail_union(event_sequence, n - 1)}) => index_intersect(N+, Omega, fn (n N+) power_set(Omega) {tail_union(event_sequence, n - 1)}) $in events
+    by thm probability_continuous_from_above(Omega, events, probability, fn (n N+) events {tail_union(event_sequence, n - 1)}) => $has_sequence_limit(fn (n N+) R {probability(tail_union(event_sequence, n - 1))}, probability(index_intersect(N+, Omega, fn (n N+) power_set(Omega) {tail_union(event_sequence, n - 1)})))
+    by thm sequence_limit_unique(fn (n N+) R {probability(tail_union(event_sequence, n - 1))}, 0, probability(index_intersect(N+, Omega, fn (n N+) power_set(Omega) {tail_union(event_sequence, n - 1)}))) => 0 = probability(index_intersect(N+, Omega, fn (n N+) power_set(Omega) {tail_union(event_sequence, n - 1)}))
+    probability(index_intersect(N+, Omega, fn (n N+) power_set(Omega) {tail_union(event_sequence, n - 1)})) = 0
+    \event_limsup<Omega, events>(event_sequence) = index_intersect(N+, Omega, fn (n N+) power_set(Omega) {tail_union(event_sequence, n - 1)})
+    by thm equal_arguments_have_equal_function_values(events, R, probability, \event_limsup<Omega, events>(event_sequence), index_intersect(N+, Omega, fn (n N+) power_set(Omega) {tail_union(event_sequence, n - 1)})) => probability(\event_limsup<Omega, events>(event_sequence)) = probability(index_intersect(N+, Omega, fn (n N+) power_set(Omega) {tail_union(event_sequence, n - 1)}))
+    probability(\event_limsup<Omega, events>(event_sequence)) = probability(index_intersect(N+, Omega, fn (n N+) power_set(Omega) {tail_union(event_sequence, n - 1)})) = 0
     by def $is_null_event(Omega, events, probability, \event_limsup<Omega, events>(event_sequence))
 
 template<Omega set, events power_set(power_set(Omega)), point Omega>:
@@ -2655,9 +2698,10 @@ thm dirac_probability_countable_additivity:
         $pairwise_disjoint_event_sequence(Omega, events, family)
         =>:
             $has_series_sum(fn(n N+) R {\dirac_probability<Omega, events, point>(family(n))}, \dirac_probability<Omega, events, point>(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)})))
+    let point_mass = \dirac_probability<Omega, events, point>
     point $in index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)}) or not point $in index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)})
     by cases:
-        ? $has_series_sum(fn(n N+) R {\dirac_probability<Omega, events, point>(family(n))}, \dirac_probability<Omega, events, point>(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)})))
+        ? $has_series_sum(fn(n N+) R {point_mass(family(n))}, point_mass(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)})))
         case not point $in index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)}):
             claim:
                 ? forall n N+:
@@ -2670,27 +2714,27 @@ thm dirac_probability_countable_additivity:
                     impossible not point $in index_union(N+, Omega, fn(index N+) power_set(Omega) {family(index)})
             claim:
                 ? forall n N+:
-                    \dirac_probability<Omega, events, point>(family(n)) = 0
+                    point_mass(family(n)) = 0
                 not point $in family(n)
-                \dirac_probability<Omega, events, point>(family(n)) = 0
-            by thm pointwise_zero_series_has_sum(fn(n N+) R {\dirac_probability<Omega, events, point>(family(n))}) => $has_series_sum(fn(n N+) R {\dirac_probability<Omega, events, point>(family(n))}, 0)
-            \dirac_probability<Omega, events, point>(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)})) = 0
-            0 = \dirac_probability<Omega, events, point>(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)}))
-            by thm equal_values_preserve_series_sum(fn(n N+) R {\dirac_probability<Omega, events, point>(family(n))}, 0, \dirac_probability<Omega, events, point>(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)}))) => $has_series_sum(fn(n N+) R {\dirac_probability<Omega, events, point>(family(n))}, \dirac_probability<Omega, events, point>(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)})))
+                point_mass(family(n)) = 0
+            by thm pointwise_zero_series_has_sum(fn(n N+) R {point_mass(family(n))}) => $has_series_sum(fn(n N+) R {point_mass(family(n))}, 0)
+            point_mass(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)})) = 0
+            0 = point_mass(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)}))
+            by thm equal_values_preserve_series_sum(fn(n N+) R {point_mass(family(n))}, 0, point_mass(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)}))) => $has_series_sum(fn(n N+) R {point_mass(family(n))}, point_mass(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)})))
         case point $in index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)}):
             obtain hit from exist hit N+ st {point $in family(hit)}
             claim:
                 ? forall n N+:
-                    \dirac_probability<Omega, events, point>(family(n)) = single_one_sequence(hit, n)
+                    point_mass(family(n)) = single_one_sequence(hit, n)
                 n = hit or n != hit
                 by cases:
-                    ? \dirac_probability<Omega, events, point>(family(n)) = single_one_sequence(hit, n)
+                    ? point_mass(family(n)) = single_one_sequence(hit, n)
                     case n = hit:
                         by thm equal_arguments_have_equal_function_values(N+, events, family, n, hit) => family(n) = family(hit)
                         point $in family(n)
-                        \dirac_probability<Omega, events, point>(family(n)) = 1
+                        point_mass(family(n)) = 1
                         single_one_sequence(hit, n) = 1
-                        \dirac_probability<Omega, events, point>(family(n)) = 1 = single_one_sequence(hit, n)
+                        point_mass(family(n)) = 1 = single_one_sequence(hit, n)
                     case n != hit:
                         by def $pairwise_disjoint_event_sequence(Omega, events, family)
                         intersect(family(hit), family(n)) = {}
@@ -2702,13 +2746,13 @@ thm dirac_probability_countable_additivity:
                                 point $in intersect(family(hit), family(n))
                                 point $in {}
                                 impossible point $in {}
-                        \dirac_probability<Omega, events, point>(family(n)) = 0
+                        point_mass(family(n)) = 0
                         single_one_sequence(hit, n) = 0
-                        \dirac_probability<Omega, events, point>(family(n)) = 0 = single_one_sequence(hit, n)
+                        point_mass(family(n)) = 0 = single_one_sequence(hit, n)
             by thm single_one_sequence_has_series_sum_one(hit) => $has_series_sum(fn(n N+) R {single_one_sequence(hit, n)}, 1)
-            by thm pointwise_equal_sequences_preserve_series_sum(fn(n N+) R {\dirac_probability<Omega, events, point>(family(n))}, fn(n N+) R {single_one_sequence(hit, n)}, 1) => $has_series_sum(fn(n N+) R {\dirac_probability<Omega, events, point>(family(n))}, 1)
-            \dirac_probability<Omega, events, point>(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)})) = 1
-            1 = \dirac_probability<Omega, events, point>(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)}))
+            by thm pointwise_equal_sequences_preserve_series_sum(fn(n N+) R {point_mass(family(n))}, fn(n N+) R {single_one_sequence(hit, n)}, 1) => $has_series_sum(fn(n N+) R {point_mass(family(n))}, 1)
+            point_mass(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)})) = 1
+            1 = point_mass(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)}))
             by thm equal_values_preserve_series_sum(fn(n N+) R {\dirac_probability<Omega, events, point>(family(n))}, 1, \dirac_probability<Omega, events, point>(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)}))) => $has_series_sum(fn(n N+) R {\dirac_probability<Omega, events, point>(family(n))}, \dirac_probability<Omega, events, point>(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)})))
 
 thm dirac_probability_is_probability_space:
@@ -2723,30 +2767,32 @@ thm dirac_probability_is_probability_space:
             index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)}) $in events
         =>:
             $is_probability_space(Omega, events, \dirac_probability<Omega, events, point>)
+    let point_mass = \dirac_probability<Omega, events, point>
     not point $in {}
-    \dirac_probability<Omega, events, point>({}) = 0
+    point_mass({}) = 0
     point $in Omega
-    \dirac_probability<Omega, events, point>(Omega) = 1
+    point_mass(Omega) = 1
     claim:
         ? forall event events:
-            \dirac_probability<Omega, events, point>(event) >= 0
+            point_mass(event) >= 0
         point $in event or not point $in event
         by cases:
-            ? \dirac_probability<Omega, events, point>(event) >= 0
+            ? point_mass(event) >= 0
             case point $in event:
-                \dirac_probability<Omega, events, point>(event) = 1
+                point_mass(event) = 1
                 1 >= 0
             case not point $in event:
-                \dirac_probability<Omega, events, point>(event) = 0
+                point_mass(event) = 0
                 0 >= 0
     claim:
         ? forall family fn(n N+) events:
             $pairwise_disjoint_event_sequence(Omega, events, family)
             =>:
-                $has_series_sum(fn(n N+) R {\dirac_probability<Omega, events, point>(family(n))}, \dirac_probability<Omega, events, point>(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)})))
+                $has_series_sum(fn(n N+) R {point_mass(family(n))}, point_mass(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)})))
         index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)}) $in events
-        by thm dirac_probability_countable_additivity(Omega, events, point, family) => $has_series_sum(fn(n N+) R {\dirac_probability<Omega, events, point>(family(n))}, \dirac_probability<Omega, events, point>(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)})))
-    by def $is_probability_space(Omega, events, \dirac_probability<Omega, events, point>)
+        by thm dirac_probability_countable_additivity(Omega, events, point, family) => $has_series_sum(fn(n N+) R {point_mass(family(n))}, point_mass(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)})))
+    by def $is_probability_space(Omega, events, point_mass)
+    $is_probability_space(Omega, events, \dirac_probability<Omega, events, point>)
 
 prop is_conditioning_data(Omega set, events power_set(power_set(Omega)), probability fn (event events) R, evidence events):
     $is_probability_space(Omega, events, probability)
@@ -2763,22 +2809,23 @@ thm evidence_intersection_sequence_is_pairwise_disjoint:
         $pairwise_disjoint_event_sequence(Omega, events, family)
         =>:
             $pairwise_disjoint_event_sequence(Omega, events, \evidence_intersection_sequence<Omega, events, probability, evidence, family>)
+    let evidence_intersections = \evidence_intersection_sequence<Omega, events, probability, evidence, family>
     by def $pairwise_disjoint_event_sequence(Omega, events, family)
     claim:
         ? forall idx, j N+:
             idx != j
             =>:
-                intersect(\evidence_intersection_sequence<Omega, events, probability, evidence, family>(idx), \evidence_intersection_sequence<Omega, events, probability, evidence, family>(j)) = {}
+                intersect(evidence_intersections(idx), evidence_intersections(j)) = {}
         intersect(family(idx), family(j)) = {}
-        \evidence_intersection_sequence<Omega, events, probability, evidence, family>(idx) = intersect(family(idx), evidence)
-        \evidence_intersection_sequence<Omega, events, probability, evidence, family>(j) = intersect(family(j), evidence)
+        evidence_intersections(idx) = intersect(family(idx), evidence)
+        evidence_intersections(j) = intersect(family(j), evidence)
         by extension:
-            ? intersect(\evidence_intersection_sequence<Omega, events, probability, evidence, family>(idx), \evidence_intersection_sequence<Omega, events, probability, evidence, family>(j)) = {}
+            ? intersect(evidence_intersections(idx), evidence_intersections(j)) = {}
             claim:
-                ? forall point intersect(\evidence_intersection_sequence<Omega, events, probability, evidence, family>(idx), \evidence_intersection_sequence<Omega, events, probability, evidence, family>(j)):
+                ? forall point intersect(evidence_intersections(idx), evidence_intersections(j)):
                     point $in {}
-                point $in \evidence_intersection_sequence<Omega, events, probability, evidence, family>(idx)
-                point $in \evidence_intersection_sequence<Omega, events, probability, evidence, family>(j)
+                point $in evidence_intersections(idx)
+                point $in evidence_intersections(j)
                 point $in intersect(family(idx), evidence)
                 point $in intersect(family(j), evidence)
                 point $in family(idx)
@@ -2787,12 +2834,13 @@ thm evidence_intersection_sequence_is_pairwise_disjoint:
                 point $in {}
             claim:
                 ? forall point {}:
-                    point $in intersect(\evidence_intersection_sequence<Omega, events, probability, evidence, family>(idx), \evidence_intersection_sequence<Omega, events, probability, evidence, family>(j))
+                    point $in intersect(evidence_intersections(idx), evidence_intersections(j))
                 by contra:
-                    ? point $in intersect(\evidence_intersection_sequence<Omega, events, probability, evidence, family>(idx), \evidence_intersection_sequence<Omega, events, probability, evidence, family>(j))
-                    not point $in intersect(\evidence_intersection_sequence<Omega, events, probability, evidence, family>(idx), \evidence_intersection_sequence<Omega, events, probability, evidence, family>(j))
+                    ? point $in intersect(evidence_intersections(idx), evidence_intersections(j))
+                    not point $in intersect(evidence_intersections(idx), evidence_intersections(j))
                     impossible point $in {}
-    by def $pairwise_disjoint_event_sequence(Omega, events, \evidence_intersection_sequence<Omega, events, probability, evidence, family>)
+    by def $pairwise_disjoint_event_sequence(Omega, events, evidence_intersections)
+    $pairwise_disjoint_event_sequence(Omega, events, \evidence_intersection_sequence<Omega, events, probability, evidence, family>)
 
 thm index_union_evidence_intersections:
     ? forall Omega set, events power_set(power_set(Omega)), probability fn(event events) R, evidence events, family fn(n N+) events:
@@ -3151,16 +3199,17 @@ thm finite_atomic_term_as_weighted_dirac:
         $is_finite_atomic_probability_data(Omega, events, atom_indices, atom, weight)
         =>:
             \finite_atomic_term<Omega, events, atom_indices, atom, weight>(atom_index, event) = weight(atom_index) * \dirac_probability<Omega, events, atom(atom_index)>(event)
+    let atomic_term = \finite_atomic_term<Omega, events, atom_indices, atom, weight>
     atom(atom_index) $in event or not atom(atom_index) $in event
     by cases:
-        ? \finite_atomic_term<Omega, events, atom_indices, atom, weight>(atom_index, event) = weight(atom_index) * \dirac_probability<Omega, events, atom(atom_index)>(event)
+        ? atomic_term(atom_index, event) = weight(atom_index) * \dirac_probability<Omega, events, atom(atom_index)>(event)
         case atom(atom_index) $in event:
-            \finite_atomic_term<Omega, events, atom_indices, atom, weight>(atom_index, event) = weight(atom_index)
+            atomic_term(atom_index, event) = weight(atom_index)
             \dirac_probability<Omega, events, atom(atom_index)>(event) = 1
             weight(atom_index) * 1 = weight(atom_index)
-            \finite_atomic_term<Omega, events, atom_indices, atom, weight>(atom_index, event) = weight(atom_index) = weight(atom_index) * 1 = weight(atom_index) * \dirac_probability<Omega, events, atom(atom_index)>(event)
+            atomic_term(atom_index, event) = weight(atom_index) = weight(atom_index) * 1 = weight(atom_index) * \dirac_probability<Omega, events, atom(atom_index)>(event)
         case not atom(atom_index) $in event:
-            \finite_atomic_term<Omega, events, atom_indices, atom, weight>(atom_index, event) = 0
+            atomic_term(atom_index, event) = 0
             \dirac_probability<Omega, events, atom(atom_index)>(event) = 0
             weight(atom_index) * 0 = 0
             \finite_atomic_term<Omega, events, atom_indices, atom, weight>(atom_index, event) = 0 = weight(atom_index) * 0 = weight(atom_index) * \dirac_probability<Omega, events, atom(atom_index)>(event)
@@ -3171,6 +3220,8 @@ thm finite_atomic_probability_countable_additivity:
         $pairwise_disjoint_event_sequence(Omega, events, family)
         =>:
             $has_series_sum(fn(n N+) R {\finite_atomic_probability<Omega, events, atom_indices, atom, weight>(family(n))}, \finite_atomic_probability<Omega, events, atom_indices, atom, weight>(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)})))
+    let atomic_probability = \finite_atomic_probability<Omega, events, atom_indices, atom, weight>
+    let atomic_term = \finite_atomic_term<Omega, events, atom_indices, atom, weight>
     by def $is_finite_atomic_probability_data(Omega, events, atom_indices, atom, weight)
     $is_sigma_algebra(Omega, events)
     index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)}) $in events
@@ -3189,26 +3240,26 @@ thm finite_atomic_probability_countable_additivity:
     $has_series_sum(fn(n N+) R {finite_set_sum(atom_indices, fn(component atom_indices) R {weighted_atom_series(component)(n)})}, finite_set_sum(atom_indices, weighted_atom_value))
     claim:
         ? forall n N+:
-            finite_set_sum(atom_indices, fn(component atom_indices) R {weighted_atom_series(component)(n)}) = \finite_atomic_probability<Omega, events, atom_indices, atom, weight>(family(n))
+            finite_set_sum(atom_indices, fn(component atom_indices) R {weighted_atom_series(component)(n)}) = atomic_probability(family(n))
         claim:
             ? forall component atom_indices:
-                \finite_atomic_term<Omega, events, atom_indices, atom, weight>(component, family(n)) = weighted_atom_series(component)(n)
-            by thm finite_atomic_term_as_weighted_dirac(Omega, events, atom_indices, atom, weight, component, family(n)) => \finite_atomic_term<Omega, events, atom_indices, atom, weight>(component, family(n)) = weight(component) * \dirac_probability<Omega, events, atom(component)>(family(n))
+                atomic_term(component, family(n)) = weighted_atom_series(component)(n)
+            by thm finite_atomic_term_as_weighted_dirac(Omega, events, atom_indices, atom, weight, component, family(n)) => atomic_term(component, family(n)) = weight(component) * \dirac_probability<Omega, events, atom(component)>(family(n))
             weighted_atom_series(component)(n) = weight(component) * \dirac_probability<Omega, events, atom(component)>(family(n))
-            \finite_atomic_term<Omega, events, atom_indices, atom, weight>(component, family(n)) = weighted_atom_series(component)(n)
-        finite_set_sum(atom_indices, fn(component atom_indices) R {\finite_atomic_term<Omega, events, atom_indices, atom, weight>(component, family(n))}) = finite_set_sum(atom_indices, fn(component atom_indices) R {weighted_atom_series(component)(n)})
-        \finite_atomic_probability<Omega, events, atom_indices, atom, weight>(family(n)) = finite_set_sum(atom_indices, fn(component atom_indices) R {\finite_atomic_term<Omega, events, atom_indices, atom, weight>(component, family(n))})
-        finite_set_sum(atom_indices, fn(component atom_indices) R {weighted_atom_series(component)(n)}) = finite_set_sum(atom_indices, fn(component atom_indices) R {\finite_atomic_term<Omega, events, atom_indices, atom, weight>(component, family(n))}) = \finite_atomic_probability<Omega, events, atom_indices, atom, weight>(family(n))
-    by thm pointwise_equal_sequences_preserve_series_sum(fn(n N+) R {\finite_atomic_probability<Omega, events, atom_indices, atom, weight>(family(n))}, fn(n N+) R {finite_set_sum(atom_indices, fn(component atom_indices) R {weighted_atom_series(component)(n)})}, finite_set_sum(atom_indices, weighted_atom_value)) => $has_series_sum(fn(n N+) R {\finite_atomic_probability<Omega, events, atom_indices, atom, weight>(family(n))}, finite_set_sum(atom_indices, weighted_atom_value))
+            atomic_term(component, family(n)) = weighted_atom_series(component)(n)
+        finite_set_sum(atom_indices, fn(component atom_indices) R {atomic_term(component, family(n))}) = finite_set_sum(atom_indices, fn(component atom_indices) R {weighted_atom_series(component)(n)})
+        atomic_probability(family(n)) = finite_set_sum(atom_indices, fn(component atom_indices) R {atomic_term(component, family(n))})
+        finite_set_sum(atom_indices, fn(component atom_indices) R {weighted_atom_series(component)(n)}) = finite_set_sum(atom_indices, fn(component atom_indices) R {atomic_term(component, family(n))}) = atomic_probability(family(n))
+    by thm pointwise_equal_sequences_preserve_series_sum(fn(n N+) R {atomic_probability(family(n))}, fn(n N+) R {finite_set_sum(atom_indices, fn(component atom_indices) R {weighted_atom_series(component)(n)})}, finite_set_sum(atom_indices, weighted_atom_value)) => $has_series_sum(fn(n N+) R {atomic_probability(family(n))}, finite_set_sum(atom_indices, weighted_atom_value))
     claim:
         ? forall component atom_indices:
-            \finite_atomic_term<Omega, events, atom_indices, atom, weight>(component, index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)})) = weighted_atom_value(component)
-        by thm finite_atomic_term_as_weighted_dirac(Omega, events, atom_indices, atom, weight, component, index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)})) => \finite_atomic_term<Omega, events, atom_indices, atom, weight>(component, index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)})) = weight(component) * \dirac_probability<Omega, events, atom(component)>(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)}))
+            atomic_term(component, index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)})) = weighted_atom_value(component)
+        by thm finite_atomic_term_as_weighted_dirac(Omega, events, atom_indices, atom, weight, component, index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)})) => atomic_term(component, index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)})) = weight(component) * \dirac_probability<Omega, events, atom(component)>(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)}))
         weighted_atom_value(component) = weight(component) * \dirac_probability<Omega, events, atom(component)>(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)}))
-        \finite_atomic_term<Omega, events, atom_indices, atom, weight>(component, index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)})) = weighted_atom_value(component)
-    finite_set_sum(atom_indices, fn(component atom_indices) R {\finite_atomic_term<Omega, events, atom_indices, atom, weight>(component, index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)}))}) = finite_set_sum(atom_indices, weighted_atom_value)
-    \finite_atomic_probability<Omega, events, atom_indices, atom, weight>(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)})) = finite_set_sum(atom_indices, fn(component atom_indices) R {\finite_atomic_term<Omega, events, atom_indices, atom, weight>(component, index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)}))})
-    finite_set_sum(atom_indices, weighted_atom_value) = \finite_atomic_probability<Omega, events, atom_indices, atom, weight>(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)}))
+        atomic_term(component, index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)})) = weighted_atom_value(component)
+    finite_set_sum(atom_indices, fn(component atom_indices) R {atomic_term(component, index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)}))}) = finite_set_sum(atom_indices, weighted_atom_value)
+    atomic_probability(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)})) = finite_set_sum(atom_indices, fn(component atom_indices) R {atomic_term(component, index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)}))})
+    finite_set_sum(atom_indices, weighted_atom_value) = atomic_probability(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)}))
     by thm equal_values_preserve_series_sum(fn(n N+) R {\finite_atomic_probability<Omega, events, atom_indices, atom, weight>(family(n))}, finite_set_sum(atom_indices, weighted_atom_value), \finite_atomic_probability<Omega, events, atom_indices, atom, weight>(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)}))) => $has_series_sum(fn(n N+) R {\finite_atomic_probability<Omega, events, atom_indices, atom, weight>(family(n))}, \finite_atomic_probability<Omega, events, atom_indices, atom, weight>(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)})))
 
 thm finite_atomic_probability_is_probability_space:
@@ -3216,50 +3267,53 @@ thm finite_atomic_probability_is_probability_space:
         $is_finite_atomic_probability_data(Omega, events, atom_indices, atom, weight)
         =>:
             $is_probability_space(Omega, events, \finite_atomic_probability<Omega, events, atom_indices, atom, weight>)
+    let atomic_probability = \finite_atomic_probability<Omega, events, atom_indices, atom, weight>
+    let atomic_term = \finite_atomic_term<Omega, events, atom_indices, atom, weight>
     by def $is_finite_atomic_probability_data(Omega, events, atom_indices, atom, weight)
     claim:
-        ? \finite_atomic_probability<Omega, events, atom_indices, atom, weight>({}) = 0
+        ? atomic_probability({}) = 0
         claim:
             ? forall component atom_indices:
-                \finite_atomic_term<Omega, events, atom_indices, atom, weight>(component, {}) = 0
+                atomic_term(component, {}) = 0
             not atom(component) $in {}
-            \finite_atomic_term<Omega, events, atom_indices, atom, weight>(component, {}) = 0
-        finite_set_sum(atom_indices, fn(component atom_indices) R {\finite_atomic_term<Omega, events, atom_indices, atom, weight>(component, {})}) = finite_set_sum(atom_indices, fn(component atom_indices) R {0})
+            atomic_term(component, {}) = 0
+        finite_set_sum(atom_indices, fn(component atom_indices) R {atomic_term(component, {})}) = finite_set_sum(atom_indices, fn(component atom_indices) R {0})
         finite_set_sum(atom_indices, fn(component atom_indices) R {0}) = 0
-        \finite_atomic_probability<Omega, events, atom_indices, atom, weight>({}) = finite_set_sum(atom_indices, fn(component atom_indices) R {\finite_atomic_term<Omega, events, atom_indices, atom, weight>(component, {})}) = 0
+        atomic_probability({}) = finite_set_sum(atom_indices, fn(component atom_indices) R {atomic_term(component, {})}) = 0
     claim:
-        ? \finite_atomic_probability<Omega, events, atom_indices, atom, weight>(Omega) = 1
+        ? atomic_probability(Omega) = 1
         claim:
             ? forall component atom_indices:
-                \finite_atomic_term<Omega, events, atom_indices, atom, weight>(component, Omega) = weight(component)
+                atomic_term(component, Omega) = weight(component)
             atom(component) $in Omega
-            \finite_atomic_term<Omega, events, atom_indices, atom, weight>(component, Omega) = weight(component)
-        finite_set_sum(atom_indices, fn(component atom_indices) R {\finite_atomic_term<Omega, events, atom_indices, atom, weight>(component, Omega)}) = finite_set_sum(atom_indices, weight)
+            atomic_term(component, Omega) = weight(component)
+        finite_set_sum(atom_indices, fn(component atom_indices) R {atomic_term(component, Omega)}) = finite_set_sum(atom_indices, weight)
         finite_set_sum(atom_indices, weight) = 1
-        \finite_atomic_probability<Omega, events, atom_indices, atom, weight>(Omega) = finite_set_sum(atom_indices, fn(component atom_indices) R {\finite_atomic_term<Omega, events, atom_indices, atom, weight>(component, Omega)}) = 1
+        atomic_probability(Omega) = finite_set_sum(atom_indices, fn(component atom_indices) R {atomic_term(component, Omega)}) = 1
     claim:
         ? forall event events:
-            \finite_atomic_probability<Omega, events, atom_indices, atom, weight>(event) >= 0
+            atomic_probability(event) >= 0
         claim:
             ? forall component atom_indices:
-                \finite_atomic_term<Omega, events, atom_indices, atom, weight>(component, event) >= 0
+                atomic_term(component, event) >= 0
             atom(component) $in event or not atom(component) $in event
             by cases:
-                ? \finite_atomic_term<Omega, events, atom_indices, atom, weight>(component, event) >= 0
+                ? atomic_term(component, event) >= 0
                 case atom(component) $in event:
-                    \finite_atomic_term<Omega, events, atom_indices, atom, weight>(component, event) = weight(component)
+                    atomic_term(component, event) = weight(component)
                     weight(component) >= 0
                 case not atom(component) $in event:
-                    \finite_atomic_term<Omega, events, atom_indices, atom, weight>(component, event) = 0
+                    atomic_term(component, event) = 0
                     0 >= 0
-        by thm finite_set_sum_le_from_pointwise(finite_set_sum(atom_indices, fn(component atom_indices) R {0}), finite_set_sum(atom_indices, fn(component atom_indices) R {\finite_atomic_term<Omega, events, atom_indices, atom, weight>(component, event)}))
+        by thm finite_set_sum_le_from_pointwise(finite_set_sum(atom_indices, fn(component atom_indices) R {0}), finite_set_sum(atom_indices, fn(component atom_indices) R {atomic_term(component, event)}))
         finite_set_sum(atom_indices, fn(component atom_indices) R {0}) = 0
-        finite_set_sum(atom_indices, fn(component atom_indices) R {\finite_atomic_term<Omega, events, atom_indices, atom, weight>(component, event)}) >= 0
-        \finite_atomic_probability<Omega, events, atom_indices, atom, weight>(event) = finite_set_sum(atom_indices, fn(component atom_indices) R {\finite_atomic_term<Omega, events, atom_indices, atom, weight>(component, event)})
+        finite_set_sum(atom_indices, fn(component atom_indices) R {atomic_term(component, event)}) >= 0
+        atomic_probability(event) = finite_set_sum(atom_indices, fn(component atom_indices) R {atomic_term(component, event)})
     claim:
         ? forall family fn(n N+) events:
             $pairwise_disjoint_event_sequence(Omega, events, family)
             =>:
-                $has_series_sum(fn(n N+) R {\finite_atomic_probability<Omega, events, atom_indices, atom, weight>(family(n))}, \finite_atomic_probability<Omega, events, atom_indices, atom, weight>(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)})))
-        by thm finite_atomic_probability_countable_additivity(Omega, events, atom_indices, atom, weight, family) => $has_series_sum(fn(n N+) R {\finite_atomic_probability<Omega, events, atom_indices, atom, weight>(family(n))}, \finite_atomic_probability<Omega, events, atom_indices, atom, weight>(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)})))
-    by def $is_probability_space(Omega, events, \finite_atomic_probability<Omega, events, atom_indices, atom, weight>)
+                $has_series_sum(fn(n N+) R {atomic_probability(family(n))}, atomic_probability(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)})))
+        by thm finite_atomic_probability_countable_additivity(Omega, events, atom_indices, atom, weight, family) => $has_series_sum(fn(n N+) R {atomic_probability(family(n))}, atomic_probability(index_union(N+, Omega, fn(n N+) power_set(Omega) {family(n)})))
+    by def $is_probability_space(Omega, events, atomic_probability)
+    $is_probability_space(Omega, events, \finite_atomic_probability<Omega, events, atom_indices, atom, weight>)
