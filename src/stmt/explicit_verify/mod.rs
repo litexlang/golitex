@@ -1,4 +1,6 @@
-//! Surface syntax for `by …` proof statements (one submodule per form).
+//! Statements that explicitly choose a verifier operation.
+//!
+//! This includes both `by …` selection forms and `release thm …`.
 mod antisymmetric_prop;
 mod axiom_of_choice;
 mod cases;
@@ -14,7 +16,8 @@ mod reflexive_prop;
 mod regularity_axiom;
 mod struct_definition;
 mod symmetric_prop;
-mod thm;
+mod theorem_release;
+mod theorem_selection;
 mod transitive_prop;
 mod zorn_lemma;
 pub use antisymmetric_prop::ByAntisymmetricPropStmt;
@@ -32,6 +35,7 @@ pub use reflexive_prop::ByReflexivePropStmt;
 pub use regularity_axiom::ByRegularityAxiomStmt;
 pub use struct_definition::ByStructDefStmt;
 pub use symmetric_prop::BySymmetricPropStmt;
-pub use thm::ByThmStmt;
+pub use theorem_release::ReleaseThmStmt;
+pub use theorem_selection::ByThmStmt;
 pub use transitive_prop::ByTransitivePropStmt;
 pub use zorn_lemma::ByZornLemmaStmt;

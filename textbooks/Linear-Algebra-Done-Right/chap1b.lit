@@ -75,11 +75,11 @@ thm vector_space_scalar_operation_values:
             G.scalars.one = 1
             G.scalars.add(a, b) = a + b
             G.scalars.mul(a, b) = a * b
-    by thm chap1a::equal_scalar_systems_have_equal_operation_fields(C, G.scalars, chap1a::complex_scalars)
+1release thm chap1a::equal_scalar_systems_have_equal_operation_fields(C, G.scalars, chap1a::complex_scalars)
     G.scalars.one = chap1a::complex_scalars.one
     G.scalars.add = chap1a::complex_scalars.add
     G.scalars.mul = chap1a::complex_scalars.mul
-    by thm chap1a::complex_scalar_adapter_values(a, b)
+1release thm chap1a::complex_scalar_adapter_values(a, b)
     G.scalars.one = chap1a::complex_scalars.one = 1
     G.scalars.add(a, b) = chap1a::complex_scalars.add(a, b) = a + b
     G.scalars.mul(a, b) = chap1a::complex_scalars.mul(a, b) = a * b
@@ -95,7 +95,7 @@ thm vector_space_as_c_vector_space_well_defined:
         ? forall a, b C, x VSet:
             G.smul(a * b, x) = G.smul(a, G.smul(b, x))
             G.smul(a + b, x) = G.add(G.smul(a, x), G.smul(b, x))
-        by thm vector_space_scalar_operation_values(VSet, G, a, b)
+1release thm vector_space_scalar_operation_values(VSet, G, a, b)
         G.scalars.mul(a, b) = a * b
         G.scalars.add(a, b) = a + b
         G.smul(a * b, x) = G.smul(G.scalars.mul(a, b), x) = G.smul(a, G.smul(b, x))
@@ -103,10 +103,10 @@ thm vector_space_as_c_vector_space_well_defined:
     claim:
         ? forall x VSet:
             G.smul(1, x) = x
-        by thm vector_space_scalar_operation_values(VSet, G, 0, 0)
+1release thm vector_space_scalar_operation_values(VSet, G, 0, 0)
         G.scalars.one = 1
         G.smul(1, x) = G.smul(G.scalars.one, x) = x
-    by thm struct_member((G.zero, G.add, G.smul, G), &CVectorSpace<VSet>)
+1release thm struct_member((G.zero, G.add, G.smul, G), &CVectorSpace<VSet>)
 
 # The forward bridge is a stored object lookup, not a reconstructed structure.
 template<VSet nonempty_set, V &CVectorSpace<VSet>>:
@@ -160,7 +160,7 @@ thm coordinate_space_tuple_is_vector_space:
     claim:
         ? forall x, y finite_seq(s, n):
             \chap1a::coordinate_add<s, scalars, n>(x, y) = \chap1a::coordinate_add<s, scalars, n>(y, x)
-        by thm chap1a::coordinate_add_commutative(s, scalars, n, x, y)
+1release thm chap1a::coordinate_add_commutative(s, scalars, n, x, y)
     claim:
         ? forall x finite_seq(s, n):
             \chap1a::coordinate_add<s, scalars, n>(\chap1a::coordinate_zero<s, scalars, n>, x) = x
@@ -271,7 +271,7 @@ thm coordinate_space_tuple_is_vector_space:
             left(idx) = \chap1a::coordinate_smul<s, scalars, n>(scalars.one, x)(idx) = scalars.mul(scalars.one, x(idx)) = x(idx)
         by def $fn_eq(left, x)
         left = x
-    by thm struct_member((scalars, \chap1a::coordinate_zero<s, scalars, n>, \chap1a::coordinate_add<s, scalars, n>, \chap1a::coordinate_smul<s, scalars, n>), &VectorSpace<s, finite_seq(s, n)>)
+1release thm struct_member((scalars, \chap1a::coordinate_zero<s, scalars, n>, \chap1a::coordinate_add<s, scalars, n>, \chap1a::coordinate_smul<s, scalars, n>), &VectorSpace<s, finite_seq(s, n)>)
 
 template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N+>:
     have coordinate_space &VectorSpace<s, finite_seq(s, n)> = (scalars, \chap1a::coordinate_zero<s, scalars, n>, \chap1a::coordinate_add<s, scalars, n>, \chap1a::coordinate_smul<s, scalars, n>)
@@ -347,7 +347,7 @@ template<s nonempty_set, v nonempty_set, space &VectorSpace<s, v>>:
     have fn vector_neg by exist!:
         ? forall x v:
             exist! y v st {space.add(x, y) = space.zero}
-        by thm additive_inverse_exists_unique(s, v, space, x)
+1release thm additive_inverse_exists_unique(s, v, space, x)
 # The selected witness equation is registered when this template is
 # instantiated, so the notation's defining specification is checked directly.
 thm vector_neg_spec:
@@ -362,7 +362,7 @@ thm add_left_cancel:
         space.add(x, y) = space.add(x, z)
         =>:
             y = z
-    by thm vector_neg_spec(s, v, space, x)
+1release thm vector_neg_spec(s, v, space, x)
     space.add(\vector_neg<s, v, space>(x), x) = space.add(x, \vector_neg<s, v, space>(x)) = space.zero
     space.add(\vector_neg<s, v, space>(x), space.add(x, y)) = space.add(space.add(\vector_neg<s, v, space>(x), x), y)
     space.add(space.add(\vector_neg<s, v, space>(x), x), y) = space.add(space.zero, y) = y
@@ -376,7 +376,7 @@ thm add_right_cancel:
         =>:
             x = y
     space.add(z, x) = space.add(x, z) = space.add(y, z) = space.add(z, y)
-    by thm add_left_cancel(s, v, space, z, x, y)
+1release thm add_left_cancel(s, v, space, z, x, y)
 # Notation 1.29. From this point onward, the formal standing context is `s`,
 # `v`, and `space`; the selected ScalarSystem is available as
 # `space.scalars`.
@@ -409,7 +409,7 @@ thm zero_scalar_times_vector:
     p = space.add(p, p)
     space.add(p, space.zero) = space.add(space.zero, p) = p
     space.add(p, p) = space.add(p, space.zero)
-    by thm add_left_cancel(s, v, space, p, p, space.zero)
+1release thm add_left_cancel(s, v, space, p, p, space.zero)
     p = space.zero
 # Result 1.31. Every scalar times the vector zero equals the vector zero.  The
 # same cancellation calculation now starts from a(0+0)=a0+a0.
@@ -424,7 +424,7 @@ thm scalar_times_zero_vector:
     q = space.add(q, q)
     space.add(q, space.zero) = space.add(space.zero, q) = q
     space.add(q, q) = space.add(q, space.zero)
-    by thm add_left_cancel(s, v, space, q, q, space.zero)
+1release thm add_left_cancel(s, v, space, q, q, space.zero)
     q = space.zero
 # Result 1.32. Multiplication by scalar -1 gives the canonical additive
 # inverse selected in Notation 1.28.  Scalar distributivity makes it an
@@ -433,7 +433,7 @@ thm minus_one_times_vector:
     ? forall s nonempty_set, v nonempty_set, space &VectorSpace<s, v>, x v:
         space.smul(space.scalars.neg(space.scalars.one), x) = \vector_neg<s, v, space>(x)
     have scalar_system &chap1a::ScalarSystem<s> = space.scalars
-    by thm vector_neg_spec(s, v, space, x)
+1release thm vector_neg_spec(s, v, space, x)
     scalar_system.add(scalar_system.one, scalar_system.neg(scalar_system.one)) = scalar_system.zero
     space.scalars.add(space.scalars.one, space.scalars.neg(space.scalars.one)) = scalar_system.add(scalar_system.one, scalar_system.neg(scalar_system.one)) = scalar_system.zero = space.scalars.zero
     space.smul(space.scalars.add(space.scalars.one, space.scalars.neg(space.scalars.one)), x) = space.add(space.smul(space.scalars.one, x), space.smul(space.scalars.neg(space.scalars.one), x))
@@ -444,4 +444,4 @@ thm minus_one_times_vector:
     space.add(x, space.smul(space.scalars.neg(space.scalars.one), x)) = space.zero
     space.add(x, \vector_neg<s, v, space>(x)) = space.zero
     space.add(x, space.smul(space.scalars.neg(space.scalars.one), x)) = space.add(x, \vector_neg<s, v, space>(x))
-    by thm add_left_cancel(s, v, space, x, space.smul(space.scalars.neg(space.scalars.one), x), \vector_neg<s, v, space>(x))
+1release thm add_left_cancel(s, v, space, x, space.smul(space.scalars.neg(space.scalars.one), x), \vector_neg<s, v, space>(x))

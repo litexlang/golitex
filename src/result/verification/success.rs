@@ -532,7 +532,7 @@ pub struct SuccessVerifyByChoiceObligationResult {
 }
 
 #[derive(Debug)]
-pub struct SuccessVerifyByTheoremResult {
+pub struct SuccessVerifyTheoremApplicationResult {
     pub theorem: String,
     pub theorem_source: String,
     /// Exact stored identity of the Litex theorem/axiom being instantiated.

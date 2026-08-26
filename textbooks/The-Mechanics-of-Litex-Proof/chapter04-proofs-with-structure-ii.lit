@@ -714,7 +714,7 @@ claim:
         =>:
             exist r Z st {a = m * r + k}
     quot(a, m) $in Z
-    by thm citation::quot_euclidean(a, m)
+1release thm citation::quot_euclidean(a, m)
     witness exist q Z st {a = m * q + a % m} from quot(a, m):
         a = m * quot(a, m) + a % m
     obtain r from exist q Z st {a = m * q + a % m}

@@ -71,9 +71,13 @@ The declaration-preserving compiler showcase is executable in
 [`showcases/litex_to_lean_mathlib_pipeline`](../showcases/litex_to_lean_mathlib_pipeline/README.md).
 It proves that the first `n` positive odd integers sum to `n^2` and compiles
 the source Result only into the declarations represented by the `.lit` file.
-A separate, non-generated adapter authored outside ToLean exposes the optional
-integer/`Finset.Icc` interface, and a downstream consumer specializes that
-adapter at `n = 100`. Run the real kernel gate with:
+The same showcase now includes a verifier-complete `property_flow.lit`
+companion that defines `is_square_of`, proves a general nonnegativity law,
+constructs the odd-sum instance, and composes a new conclusion. It is kept out
+of generated output until named predicate consumers are supported. A separate,
+non-generated adapter authored outside ToLean mirrors that property over the
+native integer/`Finset.Icc` interface, and a downstream consumer specializes
+it at `n = 100`. Run the real kernel gate with:
 
 ```sh
 lake build LitexToMathlibPipeline

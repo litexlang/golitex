@@ -3,7 +3,7 @@ mod tokenizer;
 pub use token_block::TokenBlock;
 pub use tokenizer::Tokenizer;
 
-mod by_stmt;
+mod explicit_verify;
 #[path = "fact/expression.rs"]
 mod fact_expression;
 #[path = "fact/parameter_definition.rs"]

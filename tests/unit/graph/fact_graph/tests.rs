@@ -7,10 +7,7 @@ fn fact_graph_output(source: &'static str) -> String {
         .spawn(move || {
             run_graph(GraphRequest::new(
                 GraphKind::Fact,
-                RunRequest::new(
-                    RunTarget::code(source, "fact_graph_test"),
-                    RunOptions::default(),
-                ),
+                RunRequest::new(RunTarget::code(source), RunOptions::default()),
                 true,
             ))
             .1
@@ -24,7 +21,7 @@ fn fact_graph_output(source: &'static str) -> String {
 fn fact_graph_uses_runtime_fact_evidence_without_definition_nodes() {
     let output = fact_graph_output(
             "abstract_prop p(x)\nabstract_prop q(x)\ntrust forall x R:\n    $p(x)\n    =>:\n        $q(x)\nthm fact_graph_chain:\n    ? forall x R:\n        $p(x)\n        =>:\n            $q(x)\n    $q(x)\nclaim:\n    ? forall x R:\n        $p(x)\n        =>:\n            $q(x)\n    $q(x)\n",
-        );
+    );
 
     assert!(output.contains(r#""graph": "litex-fact-graph""#));
     assert!(output.contains(r#""fact_kind": "thm""#));
@@ -34,6 +31,15 @@ fn fact_graph_uses_runtime_fact_evidence_without_definition_nodes() {
     assert!(output.contains(r#""longest_chain""#));
     assert!(!output.contains(r#""kind": "prop""#));
     assert!(!output.contains(r#""kind": "fn""#));
+}
+
+#[test]
+fn fact_graph_keeps_the_command_label_out_of_runtime_source_identity() {
+    let output = fact_graph_output("1 = 1\n");
+
+    assert!(output.contains(r#""label": "-factgraph -e""#), "{output}");
+    assert!(output.contains("fact:entry:1:1 = 1"), "{output}");
+    assert!(!output.contains("fact:-factgraph -e:"), "{output}");
 }
 
 #[test]

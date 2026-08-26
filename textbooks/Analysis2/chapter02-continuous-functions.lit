@@ -158,8 +158,8 @@ thm metric_continuous_implies_preserves_all_limits:
             $chap1::has_metric_limit(X, dist_X, u, a)
             =>:
                 $chap1::has_metric_limit(Y, dist_Y, fn(n N+) Y {f(u(n))}, f(a))
-        by thm metric_continuous_implies_continuous_at(X, Y, dist_X, dist_Y, f, a)
-        by thm metric_continuous_at_implies_preserves_limits(X, Y, dist_X, dist_Y, f, a)
+1release thm metric_continuous_implies_continuous_at(X, Y, dist_X, dist_Y, f, a)
+1release thm metric_continuous_at_implies_preserves_limits(X, Y, dist_X, dist_Y, f, a)
         by def $preserves_metric_limits_at(X, Y, dist_X, dist_Y, f, a)
     by def $preserves_metric_limits(X, Y, dist_X, dist_Y, f)
 
@@ -182,7 +182,7 @@ thm preserves_all_limits_implies_metric_continuous:
                         $chap1::has_metric_limit(Y, dist_Y, fn(n N+) Y {f(u(n))}, f(a))
                 by def $preserves_metric_limits(X, Y, dist_X, dist_Y, f)
             by def $preserves_metric_limits_at(X, Y, dist_X, dist_Y, f, a)
-        by thm preserves_limits_implies_metric_continuous_at(X, Y, dist_X, dist_Y, f, a)
+1release thm preserves_limits_implies_metric_continuous_at(X, Y, dist_X, dist_Y, f, a)
     by def $is_metric_continuous(X, Y, dist_X, dist_Y, f)
 
 thm metric_continuous_implies_pulls_back_open_sets:
@@ -268,9 +268,9 @@ thm metric_continuous_composition:
     claim:
         ? forall a X:
             $is_metric_continuous_at(X, W, dist_X, dist_W, fn(x X) W {g(f(x))}, a)
-        by thm metric_continuous_implies_continuous_at(X, Y, dist_X, dist_Y, f, a)
-        by thm metric_continuous_implies_continuous_at(Y, W, dist_Y, dist_W, g, f(a))
-        by thm metric_continuous_at_composition(X, Y, W, dist_X, dist_Y, dist_W, f, g, a)
+1release thm metric_continuous_implies_continuous_at(X, Y, dist_X, dist_Y, f, a)
+1release thm metric_continuous_implies_continuous_at(Y, W, dist_Y, dist_W, g, f(a))
+1release thm metric_continuous_at_composition(X, Y, W, dist_X, dist_Y, dist_W, f, g, a)
     by def $is_metric_continuous(X, W, dist_X, dist_W, fn(x X) W {g(f(x))})
 
 # Lemma 2.2.1. A real-valued function pair is represented in the existing
@@ -316,16 +316,16 @@ thm real_function_pair_continuous_implies_components:
         claim:
             ? forall a X:
                 $is_metric_continuous_at(X, R, dist, chap1::real_distance, f, a)
-            by thm metric_continuous_implies_continuous_at(X, \chap1::finite_real_vector<2>, dist, \chap1::l2_distance<2>, \real_function_pair<X, f, g>, a)
-            by thm real_function_pair_continuous_at_implies_components(X, dist, f, g, a)
+1release thm metric_continuous_implies_continuous_at(X, \chap1::finite_real_vector<2>, dist, \chap1::l2_distance<2>, \real_function_pair<X, f, g>, a)
+1release thm real_function_pair_continuous_at_implies_components(X, dist, f, g, a)
         by def $is_metric_continuous(X, R, dist, chap1::real_distance, f)
     claim:
         ? $is_metric_continuous(X, R, dist, chap1::real_distance, g)
         claim:
             ? forall a X:
                 $is_metric_continuous_at(X, R, dist, chap1::real_distance, g, a)
-            by thm metric_continuous_implies_continuous_at(X, \chap1::finite_real_vector<2>, dist, \chap1::l2_distance<2>, \real_function_pair<X, f, g>, a)
-            by thm real_function_pair_continuous_at_implies_components(X, dist, f, g, a)
+1release thm metric_continuous_implies_continuous_at(X, \chap1::finite_real_vector<2>, dist, \chap1::l2_distance<2>, \real_function_pair<X, f, g>, a)
+1release thm real_function_pair_continuous_at_implies_components(X, dist, f, g, a)
         by def $is_metric_continuous(X, R, dist, chap1::real_distance, g)
 
 thm real_components_continuous_imply_pair:
@@ -338,9 +338,9 @@ thm real_components_continuous_imply_pair:
     claim:
         ? forall a X:
             $is_metric_continuous_at(X, \chap1::finite_real_vector<2>, dist, \chap1::l2_distance<2>, \real_function_pair<X, f, g>, a)
-        by thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, f, a)
-        by thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, g, a)
-        by thm real_components_continuous_at_imply_pair(X, dist, f, g, a)
+1release thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, f, a)
+1release thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, g, a)
+1release thm real_components_continuous_at_imply_pair(X, dist, f, g, a)
     by def $is_metric_continuous(X, \chap1::finite_real_vector<2>, dist, \chap1::l2_distance<2>, \real_function_pair<X, f, g>)
 
 # Lemma 2.2.2. These are the concrete arithmetic maps whose continuity the
@@ -457,9 +457,9 @@ thm continuous_real_function_sum:
     claim:
         ? forall a X:
             $is_metric_continuous_at(X, R, dist, chap1::real_distance, \real_function_sum<X, f, g>, a)
-        by thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, f, a)
-        by thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, g, a)
-        by thm continuous_at_real_function_sum(X, dist, f, g, a)
+1release thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, f, a)
+1release thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, g, a)
+1release thm continuous_at_real_function_sum(X, dist, f, g, a)
     by def $is_metric_continuous(X, R, dist, chap1::real_distance, \real_function_sum<X, f, g>)
 
 thm continuous_at_real_function_difference:
@@ -532,9 +532,9 @@ thm continuous_real_function_difference:
     claim:
         ? forall a X:
             $is_metric_continuous_at(X, R, dist, chap1::real_distance, \real_function_difference<X, f, g>, a)
-        by thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, f, a)
-        by thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, g, a)
-        by thm continuous_at_real_function_difference(X, dist, f, g, a)
+1release thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, f, a)
+1release thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, g, a)
+1release thm continuous_at_real_function_difference(X, dist, f, g, a)
     by def $is_metric_continuous(X, R, dist, chap1::real_distance, \real_function_difference<X, f, g>)
 
 thm continuous_real_function_product:
@@ -547,9 +547,9 @@ thm continuous_real_function_product:
     claim:
         ? forall a X:
             $is_metric_continuous_at(X, R, dist, chap1::real_distance, \real_function_product<X, f, g>, a)
-        by thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, f, a)
-        by thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, g, a)
-        by thm continuous_at_real_function_product(X, dist, f, g, a)
+1release thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, f, a)
+1release thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, g, a)
+1release thm continuous_at_real_function_product(X, dist, f, g, a)
     by def $is_metric_continuous(X, R, dist, chap1::real_distance, \real_function_product<X, f, g>)
 
 thm continuous_real_function_maximum:
@@ -562,9 +562,9 @@ thm continuous_real_function_maximum:
     claim:
         ? forall a X:
             $is_metric_continuous_at(X, R, dist, chap1::real_distance, \real_function_maximum<X, f, g>, a)
-        by thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, f, a)
-        by thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, g, a)
-        by thm continuous_at_real_function_maximum(X, dist, f, g, a)
+1release thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, f, a)
+1release thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, g, a)
+1release thm continuous_at_real_function_maximum(X, dist, f, g, a)
     by def $is_metric_continuous(X, R, dist, chap1::real_distance, \real_function_maximum<X, f, g>)
 
 thm continuous_real_function_minimum:
@@ -577,9 +577,9 @@ thm continuous_real_function_minimum:
     claim:
         ? forall a X:
             $is_metric_continuous_at(X, R, dist, chap1::real_distance, \real_function_minimum<X, f, g>, a)
-        by thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, f, a)
-        by thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, g, a)
-        by thm continuous_at_real_function_minimum(X, dist, f, g, a)
+1release thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, f, a)
+1release thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, g, a)
+1release thm continuous_at_real_function_minimum(X, dist, f, g, a)
     by def $is_metric_continuous(X, R, dist, chap1::real_distance, \real_function_minimum<X, f, g>)
 
 thm continuous_real_function_scalar_multiple:
@@ -591,8 +591,8 @@ thm continuous_real_function_scalar_multiple:
     claim:
         ? forall a X:
             $is_metric_continuous_at(X, R, dist, chap1::real_distance, \real_function_scalar_multiple<X, f, c>, a)
-        by thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, f, a)
-        by thm continuous_at_real_function_scalar_multiple(X, dist, f, c, a)
+1release thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, f, a)
+1release thm continuous_at_real_function_scalar_multiple(X, dist, f, c, a)
     by def $is_metric_continuous(X, R, dist, chap1::real_distance, \real_function_scalar_multiple<X, f, c>)
 
 thm continuous_real_function_quotient:
@@ -606,9 +606,9 @@ thm continuous_real_function_quotient:
     claim:
         ? forall a X:
             $is_metric_continuous_at(X, R, dist, chap1::real_distance, \real_function_quotient<X, f, g>, a)
-        by thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, f, a)
-        by thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, g, a)
-        by thm continuous_at_real_function_quotient(X, dist, f, g, a)
+1release thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, f, a)
+1release thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, g, a)
+1release thm continuous_at_real_function_quotient(X, dist, f, g, a)
     by def $is_metric_continuous(X, R, dist, chap1::real_distance, \real_function_quotient<X, f, g>)
 
 # Theorem 2.3.1 (Continuous maps preserve compactness).
@@ -898,7 +898,7 @@ thm example_253_metric_ball_is_neighborhood:
         $is_topology_induced_by_metric(X, dist, T)
         =>:
             $is_topological_neighborhood(X, T, center, \chap1::metric_ball<X, dist>(center, radius))
-    by thm chap1::metric_open_and_closed_ball_properties(X, dist, center, radius)
+1release thm chap1::metric_open_and_closed_ball_properties(X, dist, center, radius)
     $chap1::is_metric_open(X, dist, \chap1::metric_ball<X, dist>(center, radius))
     by def $is_topology_induced_by_metric(X, dist, T)
     \chap1::metric_ball<X, dist>(center, radius) $in T

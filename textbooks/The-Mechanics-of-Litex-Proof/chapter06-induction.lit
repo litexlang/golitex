@@ -65,7 +65,7 @@ sketch:
             ? $even(n) or $odd(n)
             case n % 2 = 0:
                 quot(n, 2) $in Z
-                by thm citation::quot_euclidean(n, 2)
+1release thm citation::quot_euclidean(n, 2)
                 witness exist q Z st {n = 2 * q + n % 2} from quot(n, 2):
                     n = 2 * quot(n, 2) + n % 2
                 obtain k from exist k Z st {n = 2 * k + n % 2}
@@ -77,7 +77,7 @@ sketch:
                 $even(n) or $odd(n)
             case n % 2 = 1:
                 quot(n, 2) $in Z
-                by thm citation::quot_euclidean(n, 2)
+1release thm citation::quot_euclidean(n, 2)
                 witness exist q Z st {n = 2 * q + n % 2} from quot(n, 2):
                     n = 2 * quot(n, 2) + n % 2
                 obtain k from exist k Z st {n = 2 * k + n % 2}
@@ -1147,14 +1147,14 @@ sketch:
                         obtain d from exist p N+ st {$prime(p), c % p = 0}
 
                         quot(n + 1, c) $in Z
-                        by thm citation::quot_euclidean(n + 1, c)
+1release thm citation::quot_euclidean(n + 1, c)
                         witness exist q Z st {n + 1 = c * q + (n + 1) % c} from quot(n + 1, c):
                             n + 1 = c * quot(n + 1, c) + (n + 1) % c
                         obtain e1 from exist q Z st {n + 1 = c * q + (n + 1) % c}
                         n + 1 = c * e1 + (n + 1) % c = c * e1 = e1 * c
 
                         quot(c, d) $in Z
-                        by thm citation::quot_euclidean(c, d)
+1release thm citation::quot_euclidean(c, d)
                         witness exist q Z st {c = d * q + c % d} from quot(c, d):
                             c = d * quot(c, d) + c % d
                         obtain f from exist r Z st {c = d * r + c % d}
@@ -1180,7 +1180,7 @@ sketch:
         obtain p from exist p N+ st {$prime(p), n % p = 0}
         p != 0
         quot(n, p) $in Z
-        by thm citation::quot_euclidean(n, p)
+1release thm citation::quot_euclidean(n, p)
         witness exist q Z st {n = p * q + n % p} from quot(n, p):
             n = p * quot(n, p) + n % p
         obtain k from exist q Z st {n = p * q + n % p}

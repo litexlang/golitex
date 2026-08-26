@@ -219,7 +219,7 @@ general theorem already handles both cases.
 """
 
 have some_number Z = (253 + 142) * 123 - (423 + 198) * 342 + 538 - 213
-by thm integer_product_successor_even(some_number)
+1release thm integer_product_successor_even(some_number)
 by def:
     ? $is_even(some_number * (some_number + 1))
 

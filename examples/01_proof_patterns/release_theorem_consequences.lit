@@ -1,11 +1,11 @@
 # Tracer: release every instantiated conclusion of a named theorem.
 #
-# Before (did not parse):
+# Before (mixed statement model):
 # release thm release_two_results(1)
-# Former behavior: `release` was not a statement keyword.
+# Former behavior: this parsed and emitted as a proofless ByThmStmt.
 #
-# Now (verified): the active call below parses to the existing proofless
-# ByThmStmt and stores both instantiated conclusions.
+# Now (verified): the active call below parses and emits as an independent
+# ReleaseThmStmt and stores both instantiated conclusions.
 
 prop release_left(x R):
     x = 1

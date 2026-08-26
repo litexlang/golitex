@@ -37,8 +37,8 @@ thm scalar_add_right_cancel:
         =>:
             x = y
     scalars.add(scalars.add(x, z), scalars.neg(z)) = scalars.add(scalars.add(y, z), scalars.neg(z))
-    by thm scalar_cancel_reduction(s, scalars, x, z)
-    by thm scalar_cancel_reduction(s, scalars, y, z)
+1release thm scalar_cancel_reduction(s, scalars, x, z)
+1release thm scalar_cancel_reduction(s, scalars, y, z)
 
 thm zero_difference_implies_lists_equal:
     ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N, left, right, negated, difference &chap1a::FiniteList<s, n>:
@@ -54,8 +54,8 @@ thm zero_difference_implies_lists_equal:
             position <= n
             =>:
                 left.entries(position) = right.entries(position)
-        by thm chap2a::coefficient_list_add_entry(s, scalars, n, left, negated, difference, position)
-        by thm chap2a::coefficient_list_neg_entry(s, scalars, n, right, negated, position)
+1release thm chap2a::coefficient_list_add_entry(s, scalars, n, left, negated, difference, position)
+1release thm chap2a::coefficient_list_neg_entry(s, scalars, n, right, negated, position)
         difference.entries(position) = scalars.zero
         difference.entries(position) = scalars.add(left.entries(position), negated.entries(position))
         negated.entries(position) = scalars.neg(right.entries(position))
@@ -63,10 +63,10 @@ thm zero_difference_implies_lists_equal:
         difference.entries(position) = scalars.add(left.entries(position), negated.entries(position)) = scalars.add(left.entries(position), scalars.neg(right.entries(position)))
         scalars.add(right.entries(position), scalars.neg(right.entries(position))) = scalars.zero
         scalars.add(left.entries(position), scalars.neg(right.entries(position))) = difference.entries(position) = scalars.zero = scalars.add(right.entries(position), scalars.neg(right.entries(position)))
-        by thm scalar_add_right_cancel(s, scalars, left.entries(position), right.entries(position), scalars.neg(right.entries(position)))
+1release thm scalar_add_right_cancel(s, scalars, left.entries(position), right.entries(position), scalars.neg(right.entries(position)))
     by def:
         ? $chap1a::have_same_finite_list_entries(s, n, left, right)
-    by thm chap1a::finite_list_extensionality(s, n, left, right)
+1release thm chap1a::finite_list_extensionality(s, n, left, right)
 
 thm coordinate_difference_has_zero_value:
     ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, n N, vectors &chap1a::FiniteList<v, n>, value v, left, right, negated, difference &chap1a::FiniteList<s, n>:
@@ -76,15 +76,15 @@ thm coordinate_difference_has_zero_value:
         difference = \chap2a::coefficient_list_add<s, space.scalars, n>(left, negated)
         =>:
             \chap2a::linear_combination_value<s, v, space, n>(difference, vectors) = space.zero
-    by thm chap2a::linear_combination_value_neg_coefficients(s, v, space, n, right, vectors)
+1release thm chap2a::linear_combination_value_neg_coefficients(s, v, space, n, right, vectors)
     \chap2a::linear_combination_value<s, v, space, n>(negated, vectors) = \chap2a::linear_combination_value<s, v, space, n>(\chap2a::coefficient_list_neg<s, space.scalars, n>(right), vectors)
     \chap1b::vector_neg<s, v, space>(\chap2a::linear_combination_value<s, v, space, n>(right, vectors)) = \chap1b::vector_neg<s, v, space>(value)
     \chap2a::linear_combination_value<s, v, space, n>(negated, vectors) = \chap2a::linear_combination_value<s, v, space, n>(\chap2a::coefficient_list_neg<s, space.scalars, n>(right), vectors) = \chap1b::vector_neg<s, v, space>(\chap2a::linear_combination_value<s, v, space, n>(right, vectors)) = \chap1b::vector_neg<s, v, space>(value)
-    by thm chap2a::linear_combination_value_add_coefficients(s, v, space, n, left, negated, vectors)
+1release thm chap2a::linear_combination_value_add_coefficients(s, v, space, n, left, negated, vectors)
     \chap2a::linear_combination_value<s, v, space, n>(difference, vectors) = \chap2a::linear_combination_value<s, v, space, n>(\chap2a::coefficient_list_add<s, space.scalars, n>(left, negated), vectors)
     space.add(\chap2a::linear_combination_value<s, v, space, n>(left, vectors), \chap2a::linear_combination_value<s, v, space, n>(negated, vectors)) = space.add(value, \chap1b::vector_neg<s, v, space>(value))
     \chap2a::linear_combination_value<s, v, space, n>(difference, vectors) = \chap2a::linear_combination_value<s, v, space, n>(\chap2a::coefficient_list_add<s, space.scalars, n>(left, negated), vectors) = space.add(\chap2a::linear_combination_value<s, v, space, n>(left, vectors), \chap2a::linear_combination_value<s, v, space, n>(negated, vectors)) = space.add(value, \chap1b::vector_neg<s, v, space>(value))
-    by thm chap1b::vector_neg_spec(s, v, space, value)
+1release thm chap1b::vector_neg_spec(s, v, space, value)
 
 thm independent_coordinates_unique:
     ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, n N, vectors &chap1a::FiniteList<v, n>, value v, left, right &chap1a::FiniteList<s, n>:
@@ -95,11 +95,11 @@ thm independent_coordinates_unique:
             left = right
     have negated &chap1a::FiniteList<s, n> = \chap2a::coefficient_list_neg<s, space.scalars, n>(right)
     have difference &chap1a::FiniteList<s, n> = \chap2a::coefficient_list_add<s, space.scalars, n>(left, negated)
-    by thm coordinate_difference_has_zero_value(s, v, space, n, vectors, value, left, right, negated, difference)
+1release thm coordinate_difference_has_zero_value(s, v, space, n, vectors, value, left, right, negated, difference)
     by def:
         ? $chap2a::is_linearly_independent(s, v, space, n, vectors)
     $chap2a::has_only_zero_coefficients(s, space.scalars, n, difference)
-    by thm zero_difference_implies_lists_equal(s, space.scalars, n, left, right, negated, difference)
+1release thm zero_difference_implies_lists_equal(s, space.scalars, n, left, right, negated, difference)
 
 thm basis_iff_unique_coordinates:
     ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, n N, vectors &chap1a::FiniteList<v, n>:
@@ -127,7 +127,7 @@ thm basis_iff_unique_coordinates:
                     value = \chap2a::linear_combination_value<s, v, space, n>(right, vectors)
                     =>:
                         left = right
-                by thm independent_coordinates_unique(s, v, space, n, vectors, value, left, right)
+1release thm independent_coordinates_unique(s, v, space, n, vectors, value, left, right)
             witness exist! coefficients &chap1a::FiniteList<s, n> st {value = \chap2a::linear_combination_value<s, v, space, n>(coefficients, vectors)} from chosen
         by def:
             ? $has_unique_coordinates(s, v, space, n, vectors)
@@ -167,7 +167,7 @@ thm basis_iff_unique_coordinates:
                     =>:
                         $chap2a::has_only_zero_coefficients(s, space.scalars, n, coefficients)
                 have zero_coefficients &chap1a::FiniteList<s, n> = \chap2a::zero_coefficient_list<s, space.scalars, n>
-                by thm chap2a::linear_combination_value_zero_coefficients(s, v, space, n, vectors)
+1release thm chap2a::linear_combination_value_zero_coefficients(s, v, space, n, vectors)
                 obtain chosen from exist! candidate &chap1a::FiniteList<s, n> st {space.zero = \chap2a::linear_combination_value<s, v, space, n>(candidate, vectors)}
                 forall first, second &chap1a::FiniteList<s, n>:
                     space.zero = \chap2a::linear_combination_value<s, v, space, n>(first, vectors)
@@ -183,7 +183,7 @@ thm basis_iff_unique_coordinates:
                         idx <= n
                         =>:
                             coefficients.entries(idx) = space.scalars.zero
-                    by thm chap2a::zero_coefficient_list_entry(s, space.scalars, n, zero_coefficients, idx)
+1release thm chap2a::zero_coefficient_list_entry(s, space.scalars, n, zero_coefficients, idx)
                     coefficients.entries(idx) = zero_coefficients.entries(idx) = space.scalars.zero
                 by def:
                     ? $chap2a::has_only_zero_coefficients(s, space.scalars, n, coefficients)
@@ -288,7 +288,7 @@ thm equal_length_order_preserving_sublist_equal:
         short_list.entries(idx) = long_list.entries(selected_indices.entries(idx)) = long_list.entries(idx)
     by def:
         ? $chap1a::have_same_finite_list_entries(v, n, long_list, short_list)
-    by thm chap1a::finite_list_extensionality(v, n, long_list, short_list)
+1release thm chap1a::finite_list_extensionality(v, n, long_list, short_list)
 
 # The same theorem across propositionally equal dependent length indices.
 # This isolates the current dependent-record transport boundary once instead
@@ -340,7 +340,7 @@ thm equal_length_order_preserving_sublist_dependent_equal:
         witness exist chosen_indices &chap1a::FiniteList<N+, long_length> st {$is_sublist_index_selection(v, long_length, long_length, long_list, transported_short, chosen_indices)} from transported_indices
         by def:
             ? $is_order_preserving_sublist(v, long_length, long_length, long_list, transported_short)
-    by thm equal_length_order_preserving_sublist_equal(v, long_length, long_list, transported_short)
+1release thm equal_length_order_preserving_sublist_equal(v, long_length, long_list, transported_short)
     long_list = transported_short = short_list
 # Unnumbered example before Result 2.30. The spanning list
 # (1,2),(3,6),(4,7),(5,9) reduces in source order to (1,2),(4,7) after the
@@ -363,7 +363,7 @@ thm removed_entry_of_order_preserving_sublist_is_order_preserving:
             idx <= short_length - 1
             =>:
                 idx + 1 <= short_length
-        by thm chap2a::successor_le_from_le_predecessor(idx, short_length)
+1release thm chap2a::successor_le_from_le_predecessor(idx, short_length)
     have fn total_selected_index(position N+) N+ by cases:
         case position <= short_length: selected.entries(position)
         case position > short_length: selected.entries(1)
@@ -386,7 +386,7 @@ thm removed_entry_of_order_preserving_sublist_is_order_preserving:
                     reduced_indices.entries(idx) = reduced_index_entries(idx) = selected.entries(idx)
                     selected.entries(idx) <= long_length
                 case idx >= k:
-                    by thm chap2a::successor_le_from_le_predecessor(idx, short_length)
+1release thm chap2a::successor_le_from_le_predecessor(idx, short_length)
                     idx <= short_length - 1 < short_length
                     total_selected_index(idx + 1) = selected.entries(idx + 1)
                     reduced_index_entries(idx) = total_selected_index(idx + 1)
@@ -408,7 +408,7 @@ thm removed_entry_of_order_preserving_sublist_is_order_preserving:
                     long_list.entries(selected.entries(idx)) = long_list.entries(reduced_indices.entries(idx))
                     reduced.entries(idx) = short_list.entries(idx) = long_list.entries(selected.entries(idx)) = long_list.entries(reduced_indices.entries(idx))
                 case idx >= k:
-                    by thm chap2a::successor_le_from_le_predecessor(idx, short_length)
+1release thm chap2a::successor_le_from_le_predecessor(idx, short_length)
                     idx <= short_length - 1 < short_length
                     total_selected_index(idx + 1) = selected.entries(idx + 1)
                     reduced_index_entries(idx) = total_selected_index(idx + 1)
@@ -423,7 +423,7 @@ thm removed_entry_of_order_preserving_sublist_is_order_preserving:
                 j <= short_length - 1
                 =>:
                     reduced_indices.entries(idx) < reduced_indices.entries(j)
-            by thm chap2a::successor_le_from_le_predecessor(j, short_length)
+1release thm chap2a::successor_le_from_le_predecessor(j, short_length)
             by cases:
                 ? reduced_indices.entries(idx) < reduced_indices.entries(j)
                 case j < k:
@@ -446,7 +446,7 @@ thm removed_entry_of_order_preserving_sublist_is_order_preserving:
                             selected.entries(idx) < selected.entries(j + 1)
                         case idx >= k:
                             idx + 1 < j + 1
-                            by thm chap2a::successor_le_from_le_predecessor(idx, short_length)
+1release thm chap2a::successor_le_from_le_predecessor(idx, short_length)
                             total_selected_index(idx + 1) = selected.entries(idx + 1)
                             total_selected_index(j + 1) = selected.entries(j + 1)
                             reduced_index_entries(idx) = total_selected_index(idx + 1)
@@ -543,9 +543,9 @@ thm spanning_list_reduces_to_basis:
             ? $chap2a::is_linearly_independent(s, v, space, m, basis_vectors)
             by def:
                 ? $chap2a::is_linearly_dependent(s, v, space, m, basis_vectors)
-            by thm chap2a::linear_dependence_lemma(s, v, space, m, basis_vectors)
+1release thm chap2a::linear_dependence_lemma(s, v, space, m, basis_vectors)
             obtain k, predecessors, reduced from exist selected_k N+, selected_predecessors &chap1a::FiniteList<v, selected_k - 1>, selected_reduced &chap1a::FiniteList<v, m - 1> st {selected_k <= m, $chap2a::is_prefix_of_length(v, m, selected_k - 1, basis_vectors, selected_predecessors), basis_vectors.entries(selected_k) $in \chap2a::span_carrier<s, v, space, selected_k - 1, selected_predecessors>, $chap2a::is_list_with_index_removed(v, m, basis_vectors, selected_k, selected_reduced), \chap2a::span_carrier<s, v, space, m - 1, selected_reduced> = \chap2a::span_carrier<s, v, space, m, basis_vectors>}
-            by thm removed_entry_of_order_preserving_sublist_is_order_preserving(v, n, m, vectors, basis_vectors, k, reduced)
+1release thm removed_entry_of_order_preserving_sublist_is_order_preserving(v, n, m, vectors, basis_vectors, k, reduced)
             by def:
                 ? $chap2a::spans(s, v, space, m, basis_vectors)
             \chap2a::span_carrier<s, v, space, m - 1, reduced> = \chap2a::span_carrier<s, v, space, m, basis_vectors> = v
@@ -579,7 +579,7 @@ thm finite_dimensional_has_basis:
     by def:
         ? $chap2a::is_finite_dimensional(s, v, space)
     obtain n, vectors from exist n N, vectors &chap1a::FiniteList<v, n> st {$chap2a::spans(s, v, space, n, vectors)}
-    by thm spanning_list_reduces_to_basis(s, v, space, n, vectors)
+1release thm spanning_list_reduces_to_basis(s, v, space, n, vectors)
     obtain m, basis_vectors from exist m N, basis_vectors &chap1a::FiniteList<v, m> st {$is_order_preserving_sublist(v, n, m, vectors, basis_vectors), $is_basis(s, v, space, m, basis_vectors)}
     witness exist basis_length N, basis &chap1a::FiniteList<v, basis_length> st {$is_basis(s, v, space, basis_length, basis)} from m, basis_vectors
 
@@ -745,7 +745,7 @@ thm order_preserving_sublist_span_is_contained:
         $is_order_preserving_sublist(v, long_length, short_length, long_list, short_list)
         =>:
             \chap2a::span_carrier<s, v, space, short_length, short_list> $subset \chap2a::span_carrier<s, v, space, long_length, long_list>
-    by thm chap2a::span_contains_list_entries(s, v, space, long_length, long_list)
+1release thm chap2a::span_contains_list_entries(s, v, space, long_length, long_list)
     by def:
         ? $is_order_preserving_sublist(v, long_length, short_length, long_list, short_list)
     obtain selected_indices from exist indices &chap1a::FiniteList<N+, short_length> st {$is_sublist_index_selection(v, long_length, short_length, long_list, short_list, indices)}
@@ -763,8 +763,8 @@ thm order_preserving_sublist_span_is_contained:
             short_list.entries(idx) = long_list.entries(selected_indices.entries(idx))
         by def:
             ? $chap2a::contains_list_entries(v, short_length, short_list, \chap2a::span_carrier<s, v, space, long_length, long_list>)
-    by thm chap2a::span_is_subspace(s, v, space, long_length, long_list)
-    by thm chap2a::span_is_smallest_subspace(s, v, space, short_length, short_list, \chap2a::span_carrier<s, v, space, long_length, long_list>)
+1release thm chap2a::span_is_subspace(s, v, space, long_length, long_list)
+1release thm chap2a::span_is_smallest_subspace(s, v, space, short_length, short_list, \chap2a::span_carrier<s, v, space, long_length, long_list>)
 
 thm mutual_subset_implies_set_equal:
     ? forall A, B set:
@@ -781,16 +781,16 @@ thm spanning_sublist_makes_long_list_spanning:
         $chap2a::spans(s, v, space, short_length, short_list)
         =>:
             $chap2a::spans(s, v, space, long_length, long_list)
-    by thm order_preserving_sublist_span_is_contained(s, v, space, long_length, short_length, long_list, short_list)
+1release thm order_preserving_sublist_span_is_contained(s, v, space, long_length, short_length, long_list, short_list)
     by def:
         ? $chap2a::spans(s, v, space, short_length, short_list)
-    by thm chap2a::span_carrier_spec(s, v, space, short_length, short_list)
+1release thm chap2a::span_carrier_spec(s, v, space, short_length, short_list)
     \chap2a::span_carrier<s, v, space, short_length, short_list> = v
     v $subset \chap2a::span_carrier<s, v, space, long_length, long_list>
     \chap2a::span_carrier<s, v, space, long_length, long_list> $subset v
-    by thm mutual_subset_implies_set_equal(\chap2a::span_carrier<s, v, space, long_length, long_list>, v)
+1release thm mutual_subset_implies_set_equal(\chap2a::span_carrier<s, v, space, long_length, long_list>, v)
     \chap2a::span_carrier<s, v, space, long_length, long_list> = v
-    by thm chap2a::span_carrier_spec(s, v, space, long_length, long_list)
+1release thm chap2a::span_carrier_spec(s, v, space, long_length, long_list)
     \chap2a::span<s, v, space, long_length, long_list> = v
     by def:
         ? $chap2a::spans(s, v, space, long_length, long_list)
@@ -800,9 +800,9 @@ thm spanning_list_can_be_appended_to_prefix:
         $chap2a::spans(s, v, space, right_length, right)
         =>:
             exist combined &chap1a::FiniteList<v, left_length + right_length> st {$chap2a::is_prefix_of_length(v, left_length + right_length, left_length, combined, left), $chap2a::spans(s, v, space, left_length + right_length, combined)}
-    by thm finite_lists_have_ordered_concatenation(s, v, space, left_length, right_length, left, right)
+1release thm finite_lists_have_ordered_concatenation(s, v, space, left_length, right_length, left, right)
     obtain combined from exist selected &chap1a::FiniteList<v, left_length + right_length> st {$chap2a::is_prefix_of_length(v, left_length + right_length, left_length, selected, left), $is_order_preserving_sublist(v, left_length + right_length, left_length, selected, left), $is_order_preserving_sublist(v, left_length + right_length, right_length, selected, right)}
-    by thm spanning_sublist_makes_long_list_spanning(s, v, space, left_length + right_length, right_length, combined, right)
+1release thm spanning_sublist_makes_long_list_spanning(s, v, space, left_length + right_length, right_length, combined, right)
     witness exist selected &chap1a::FiniteList<v, left_length + right_length> st {$chap2a::is_prefix_of_length(v, left_length + right_length, left_length, selected, left), $chap2a::spans(s, v, space, left_length + right_length, selected)} from combined
 
 thm independent_entry_not_in_predecessor_span:
@@ -814,14 +814,14 @@ thm independent_entry_not_in_predecessor_span:
             not vectors.entries(k) $in \chap2a::span_carrier<s, v, space, k - 1, predecessors>
     by contra:
         ? not vectors.entries(k) $in \chap2a::span_carrier<s, v, space, k - 1, predecessors>
-        by thm chap2a::span_carrier_spec(s, v, space, k - 1, predecessors)
+1release thm chap2a::span_carrier_spec(s, v, space, k - 1, predecessors)
         vectors.entries(k) $in \chap2a::span<s, v, space, k - 1, predecessors>
         \chap2a::span<s, v, space, k - 1, predecessors> = {value v: $chap2a::is_linear_combination(s, v, space, k - 1, value, predecessors)}
         $chap2a::is_linear_combination(s, v, space, k - 1, vectors.entries(k), predecessors)
         by def:
             ? $chap2a::is_linear_combination(s, v, space, k - 1, vectors.entries(k), predecessors)
         obtain predecessor_coefficients from exist coefficients &chap1a::FiniteList<s, k - 1> st {vectors.entries(k) = \chap2a::linear_combination_value<s, v, space, k - 1>(coefficients, predecessors)}
-        by thm chap2a::linear_combination_value_satisfies_spec(s, v, space, k - 1, predecessor_coefficients, predecessors)
+1release thm chap2a::linear_combination_value_satisfies_spec(s, v, space, k - 1, predecessor_coefficients, predecessors)
         obtain predecessor_trace from exist trace fn(j closed_range(0, k - 1)) v st {$chap2a::is_linear_combination_partial_sum_sequence(s, v, space, k - 1, predecessor_coefficients, predecessors, trace), \chap2a::linear_combination_value<s, v, space, k - 1>(predecessor_coefficients, predecessors) = trace(k - 1)}
         predecessor_trace(k - 1) = vectors.entries(k)
         have fn tail_coefficient(idx N+) s by cases:
@@ -874,8 +874,8 @@ thm independent_entry_not_in_predecessor_span:
                         full_coefficient_entries(j) = tail_coefficient(j)
                         tail_coefficient(j) = space.scalars.neg(space.scalars.one)
                         coefficients.entries(j) = full_coefficient_entries(j) = tail_coefficient(j) = space.scalars.neg(space.scalars.one)
-                        by thm chap1b::minus_one_times_vector(s, v, space, vectors.entries(j))
-                        by thm chap1b::vector_neg_spec(s, v, space, vectors.entries(j))
+1release thm chap1b::minus_one_times_vector(s, v, space, vectors.entries(j))
+1release thm chap1b::vector_neg_spec(s, v, space, vectors.entries(j))
                         space.smul(coefficients.entries(j), vectors.entries(j)) = space.smul(space.scalars.neg(space.scalars.one), vectors.entries(j)) = \chap1b::vector_neg<s, v, space>(vectors.entries(j))
                         space.add(full_trace(j - 1), space.smul(coefficients.entries(j), vectors.entries(j))) = space.add(vectors.entries(j), space.smul(coefficients.entries(j), vectors.entries(j)))
                         space.add(vectors.entries(j), space.smul(coefficients.entries(j), vectors.entries(j))) = space.add(vectors.entries(j), \chap1b::vector_neg<s, v, space>(vectors.entries(j)))
@@ -889,7 +889,7 @@ thm independent_entry_not_in_predecessor_span:
                         full_coefficient_entries(j) = tail_coefficient(j)
                         tail_coefficient(j) = space.scalars.zero
                         coefficients.entries(j) = full_coefficient_entries(j) = tail_coefficient(j) = space.scalars.zero
-                        by thm chap1b::zero_scalar_times_vector(s, v, space, vectors.entries(j))
+1release thm chap1b::zero_scalar_times_vector(s, v, space, vectors.entries(j))
                         space.smul(coefficients.entries(j), vectors.entries(j)) = space.smul(space.scalars.zero, vectors.entries(j)) = space.zero
                         space.add(full_trace(j - 1), space.smul(coefficients.entries(j), vectors.entries(j))) = space.add(space.zero, space.smul(coefficients.entries(j), vectors.entries(j)))
                         space.add(space.zero, space.smul(coefficients.entries(j), vectors.entries(j))) = space.add(space.zero, space.zero)
@@ -903,8 +903,8 @@ thm independent_entry_not_in_predecessor_span:
                 witness exist trace fn(j closed_range(0, n)) v st {$chap2a::is_linear_combination_partial_sum_sequence(s, v, space, n, coefficients, vectors, trace), space.zero = trace(n)} from full_trace
                 by def:
                     ? $chap2a::has_linear_combination_value(s, v, space, n, coefficients, vectors, space.zero)
-            by thm chap2a::linear_combination_value_satisfies_spec(s, v, space, n, coefficients, vectors)
-            by thm chap2a::linear_combination_value_exists_unique(s, v, space, n, coefficients, vectors)
+1release thm chap2a::linear_combination_value_satisfies_spec(s, v, space, n, coefficients, vectors)
+1release thm chap2a::linear_combination_value_exists_unique(s, v, space, n, coefficients, vectors)
             obtain chosen_value from exist! value v st {$chap2a::has_linear_combination_value(s, v, space, n, coefficients, vectors, value)}
             \chap2a::linear_combination_value<s, v, space, n>(coefficients, vectors) = space.zero
         by def:
@@ -955,7 +955,7 @@ thm dependent_deletion_after_independent_prefix:
                 predecessors.entries(idx) = long_list.entries(idx) = prefix.entries(idx)
             by def:
                 ? $chap2a::is_prefix_of_length(v, prefix_length, k - 1, prefix, predecessors)
-        by thm independent_entry_not_in_predecessor_span(s, v, space, prefix_length, prefix, k, predecessors)
+1release thm independent_entry_not_in_predecessor_span(s, v, space, prefix_length, prefix, k, predecessors)
         not prefix.entries(k) $in \chap2a::span_carrier<s, v, space, k - 1, predecessors>
         by def:
             ? $chap2a::is_prefix_of_length(v, long_length, prefix_length, long_list, prefix)
@@ -1041,7 +1041,7 @@ thm independent_list_extends_to_prefix_basis:
     by def:
         ? $chap2a::is_finite_dimensional(s, v, space)
     obtain spanning_length, spanning_vectors from exist selected_length N, selected_vectors &chap1a::FiniteList<v, selected_length> st {$chap2a::spans(s, v, space, selected_length, selected_vectors)}
-    by thm spanning_list_can_be_appended_to_prefix(s, v, space, n, spanning_length, vectors, spanning_vectors)
+1release thm spanning_list_can_be_appended_to_prefix(s, v, space, n, spanning_length, vectors, spanning_vectors)
     obtain initial_extension from exist combined &chap1a::FiniteList<v, n + spanning_length> st {$chap2a::is_prefix_of_length(v, n + spanning_length, n, combined, vectors), $chap2a::spans(s, v, space, n + spanning_length, combined)}
     have maximum_length N = n + spanning_length
     have inadmissible_lengths set = {m N: not $is_spanning_prefix_extension_length(s, v, space, n, maximum_length, vectors, m)}
@@ -1098,10 +1098,10 @@ thm independent_list_extends_to_prefix_basis:
             ? $chap2a::is_linearly_independent(s, v, space, m, basis_vectors)
             by def:
                 ? $chap2a::is_linearly_dependent(s, v, space, m, basis_vectors)
-            by thm chap2a::linear_dependence_lemma(s, v, space, m, basis_vectors)
+1release thm chap2a::linear_dependence_lemma(s, v, space, m, basis_vectors)
             obtain k, predecessors, reduced from exist selected_k N+, selected_predecessors &chap1a::FiniteList<v, selected_k - 1>, selected_reduced &chap1a::FiniteList<v, m - 1> st {selected_k <= m, $chap2a::is_prefix_of_length(v, m, selected_k - 1, basis_vectors, selected_predecessors), basis_vectors.entries(selected_k) $in \chap2a::span_carrier<s, v, space, selected_k - 1, selected_predecessors>, $chap2a::is_list_with_index_removed(v, m, basis_vectors, selected_k, selected_reduced), \chap2a::span_carrier<s, v, space, m - 1, selected_reduced> = \chap2a::span_carrier<s, v, space, m, basis_vectors>}
-            by thm dependent_deletion_after_independent_prefix(s, v, space, m, n, basis_vectors, vectors, k, predecessors)
-            by thm deletion_after_prefix_preserves_prefix(v, m, n, basis_vectors, vectors, k, reduced)
+1release thm dependent_deletion_after_independent_prefix(s, v, space, m, n, basis_vectors, vectors, k, predecessors)
+1release thm deletion_after_prefix_preserves_prefix(v, m, n, basis_vectors, vectors, k, reduced)
             by def:
                 ? $chap2a::spans(s, v, space, m, basis_vectors)
             \chap2a::span_carrier<s, v, space, m - 1, reduced> = v
@@ -1125,7 +1125,7 @@ thm independent_list_extends_to_prefix_basis:
             m $in N+
             m - 1 < m
             impossible m <= m - 1
-    by thm prefix_is_order_preserving_sublist(v, m, n, basis_vectors, vectors)
+1release thm prefix_is_order_preserving_sublist(v, m, n, basis_vectors, vectors)
     by def:
         ? $is_basis(s, v, space, m, basis_vectors)
     witness exist selected_length N, selected_basis &chap1a::FiniteList<v, selected_length> st {$chap2a::is_prefix_of_length(v, selected_length, n, selected_basis, vectors), $is_order_preserving_sublist(v, selected_length, n, selected_basis, vectors), $is_basis(s, v, space, selected_length, selected_basis)} from m, basis_vectors
@@ -1136,7 +1136,7 @@ thm independent_list_extends_to_basis:
         $chap2a::is_linearly_independent(s, v, space, n, vectors)
         =>:
             exist m N, basis_vectors &chap1a::FiniteList<v, m> st {$is_order_preserving_sublist(v, m, n, basis_vectors, vectors), $is_basis(s, v, space, m, basis_vectors)}
-    by thm independent_list_extends_to_prefix_basis(s, v, space, n, vectors)
+1release thm independent_list_extends_to_prefix_basis(s, v, space, n, vectors)
     obtain m, basis_vectors from exist selected_length N, selected_basis &chap1a::FiniteList<v, selected_length> st {$chap2a::is_prefix_of_length(v, selected_length, n, selected_basis, vectors), $is_order_preserving_sublist(v, selected_length, n, selected_basis, vectors), $is_basis(s, v, space, selected_length, selected_basis)}
     witness exist selected_length N, selected_basis &chap1a::FiniteList<v, selected_length> st {$is_order_preserving_sublist(v, selected_length, n, selected_basis, vectors), $is_basis(s, v, space, selected_length, selected_basis)} from m, basis_vectors
 
@@ -1191,7 +1191,7 @@ thm finite_list_has_prefix_tail_split:
             left.entries(idx) = left_entries(idx) = full.entries(idx)
         by def:
             ? $chap2a::is_prefix_of_length(X, left_length + right_length, left_length, full, left)
-    by thm prefix_has_complementary_tail(X, left_length, right_length, full, left)
+1release thm prefix_has_complementary_tail(X, left_length, right_length, full, left)
     obtain right from exist selected &chap1a::FiniteList<X, right_length> st {$is_prefix_tail_split(X, left_length, right_length, full, left, selected)}
     witness exist selected_left &chap1a::FiniteList<X, left_length>, selected_right &chap1a::FiniteList<X, right_length> st {$is_prefix_tail_split(X, left_length, right_length, full, selected_left, selected_right)} from left, right
 
@@ -1257,9 +1257,9 @@ thm linear_combination_splits_over_prefix_and_tail:
         $is_prefix_tail_split(s, left_length, right_length, full_coefficients, left_coefficients, right_coefficients)
         =>:
             \chap2a::linear_combination_value<s, v, space, left_length + right_length>(full_coefficients, full_vectors) = space.add(\chap2a::linear_combination_value<s, v, space, left_length>(left_coefficients, left_vectors), \chap2a::linear_combination_value<s, v, space, right_length>(right_coefficients, right_vectors))
-    by thm chap2a::linear_combination_value_satisfies_spec(s, v, space, left_length + right_length, full_coefficients, full_vectors)
+1release thm chap2a::linear_combination_value_satisfies_spec(s, v, space, left_length + right_length, full_coefficients, full_vectors)
     obtain full_trace from exist trace fn(j closed_range(0, left_length + right_length)) v st {$chap2a::is_linear_combination_partial_sum_sequence(s, v, space, left_length + right_length, full_coefficients, full_vectors, trace), \chap2a::linear_combination_value<s, v, space, left_length + right_length>(full_coefficients, full_vectors) = trace(left_length + right_length)}
-    by thm chap2a::linear_combination_value_satisfies_spec(s, v, space, right_length, right_coefficients, right_vectors)
+1release thm chap2a::linear_combination_value_satisfies_spec(s, v, space, right_length, right_coefficients, right_vectors)
     obtain right_trace from exist trace fn(j closed_range(0, right_length)) v st {$chap2a::is_linear_combination_partial_sum_sequence(s, v, space, right_length, right_coefficients, right_vectors, trace), \chap2a::linear_combination_value<s, v, space, right_length>(right_coefficients, right_vectors) = trace(right_length)}
     by def:
         ? $is_prefix_tail_split(v, left_length, right_length, full_vectors, left_vectors, right_vectors)
@@ -1273,7 +1273,7 @@ thm linear_combination_splits_over_prefix_and_tail:
         ? $chap2a::is_prefix_of_length(s, left_length + right_length, left_length, full_coefficients, left_coefficients)
         by def:
             ? $chap2a::is_prefix_of_length(s, left_length + right_length, left_length, full_coefficients, left_coefficients)
-    by thm chap2a::linear_combination_trace_prefix_value(s, v, space, left_length + right_length, left_length, full_coefficients, full_vectors, full_trace, left_coefficients, left_vectors)
+1release thm chap2a::linear_combination_trace_prefix_value(s, v, space, left_length + right_length, left_length, full_coefficients, full_vectors, full_trace, left_coefficients, left_vectors)
     have left_value v = \chap2a::linear_combination_value<s, v, space, left_length>(left_coefficients, left_vectors)
     left_value = full_trace(left_length)
     by def:
@@ -1345,22 +1345,22 @@ thm spanning_list_split_spans_subspace_sum:
         by def:
             ? $chap2a::is_linear_combination(s, v, space, left_length + right_length, x, full)
         obtain full_coefficients from exist selected &chap1a::FiniteList<s, left_length + right_length> st {x = \chap2a::linear_combination_value<s, v, space, left_length + right_length>(selected, full)}
-        by thm finite_list_has_prefix_tail_split(s, left_length, right_length, full_coefficients)
+1release thm finite_list_has_prefix_tail_split(s, left_length, right_length, full_coefficients)
         obtain left_coefficients, right_coefficients from exist selected_left &chap1a::FiniteList<s, left_length>, selected_right &chap1a::FiniteList<s, right_length> st {$is_prefix_tail_split(s, left_length, right_length, full_coefficients, selected_left, selected_right)}
-        by thm linear_combination_splits_over_prefix_and_tail(s, v, space, left_length, right_length, full, left, right, full_coefficients, left_coefficients, right_coefficients)
+1release thm linear_combination_splits_over_prefix_and_tail(s, v, space, left_length, right_length, full, left, right, full_coefficients, left_coefficients, right_coefficients)
         have u v = \chap2a::linear_combination_value<s, v, space, left_length>(left_coefficients, left)
         have w v = \chap2a::linear_combination_value<s, v, space, right_length>(right_coefficients, right)
         witness exist coefficients &chap1a::FiniteList<s, left_length> st {u = \chap2a::linear_combination_value<s, v, space, left_length>(coefficients, left)} from left_coefficients
         by def:
             ? $chap2a::is_linear_combination(s, v, space, left_length, u, left)
         u $in \chap2a::span<s, v, space, left_length, left>
-        by thm chap2a::span_carrier_spec(s, v, space, left_length, left)
+1release thm chap2a::span_carrier_spec(s, v, space, left_length, left)
         u $in \chap2a::span_carrier<s, v, space, left_length, left>
         witness exist coefficients &chap1a::FiniteList<s, right_length> st {w = \chap2a::linear_combination_value<s, v, space, right_length>(coefficients, right)} from right_coefficients
         by def:
             ? $chap2a::is_linear_combination(s, v, space, right_length, w, right)
         w $in \chap2a::span<s, v, space, right_length, right>
-        by thm chap2a::span_carrier_spec(s, v, space, right_length, right)
+1release thm chap2a::span_carrier_spec(s, v, space, right_length, right)
         w $in \chap2a::span_carrier<s, v, space, right_length, right>
         space.add(\chap2a::linear_combination_value<s, v, space, left_length>(left_coefficients, left), \chap2a::linear_combination_value<s, v, space, right_length>(right_coefficients, right)) = space.add(u, \chap2a::linear_combination_value<s, v, space, right_length>(right_coefficients, right))
         space.add(u, \chap2a::linear_combination_value<s, v, space, right_length>(right_coefficients, right)) = space.add(u, w)
@@ -1388,8 +1388,8 @@ thm independent_list_split_has_zero_span_intersection:
             x $in {space.zero}
         x $in \chap2a::span_carrier<s, v, space, left_length, left>
         x $in \chap2a::span_carrier<s, v, space, right_length, right>
-        by thm chap2a::span_carrier_spec(s, v, space, left_length, left)
-        by thm chap2a::span_carrier_spec(s, v, space, right_length, right)
+1release thm chap2a::span_carrier_spec(s, v, space, left_length, left)
+1release thm chap2a::span_carrier_spec(s, v, space, right_length, right)
         x $in \chap2a::span<s, v, space, left_length, left>
         x $in \chap2a::span<s, v, space, right_length, right>
         by def:
@@ -1401,14 +1401,14 @@ thm independent_list_split_has_zero_span_intersection:
         have negated_right &chap1a::FiniteList<s, right_length> = \chap2a::coefficient_list_neg<s, space.scalars, right_length>(right_coefficients)
         negated_right = \chap2a::coefficient_list_neg<s, space.scalars, right_length>(right_coefficients)
         \chap2a::linear_combination_value<s, v, space, right_length>(negated_right, right) = \chap2a::linear_combination_value<s, v, space, right_length>(\chap2a::coefficient_list_neg<s, space.scalars, right_length>(right_coefficients), right)
-        by thm chap2a::linear_combination_value_neg_coefficients(s, v, space, right_length, right_coefficients, right)
+1release thm chap2a::linear_combination_value_neg_coefficients(s, v, space, right_length, right_coefficients, right)
         \chap2a::linear_combination_value<s, v, space, right_length>(\chap2a::coefficient_list_neg<s, space.scalars, right_length>(right_coefficients), right) = \chap1b::vector_neg<s, v, space>(\chap2a::linear_combination_value<s, v, space, right_length>(right_coefficients, right))
         \chap1b::vector_neg<s, v, space>(\chap2a::linear_combination_value<s, v, space, right_length>(right_coefficients, right)) = \chap1b::vector_neg<s, v, space>(x)
         \chap2a::linear_combination_value<s, v, space, right_length>(negated_right, right) = \chap2a::linear_combination_value<s, v, space, right_length>(\chap2a::coefficient_list_neg<s, space.scalars, right_length>(right_coefficients), right) = \chap1b::vector_neg<s, v, space>(\chap2a::linear_combination_value<s, v, space, right_length>(right_coefficients, right)) = \chap1b::vector_neg<s, v, space>(x)
-        by thm finite_lists_have_prefix_tail_join(s, left_length, right_length, left_coefficients, negated_right, space.scalars.zero)
+1release thm finite_lists_have_prefix_tail_join(s, left_length, right_length, left_coefficients, negated_right, space.scalars.zero)
         obtain full_coefficients from exist selected &chap1a::FiniteList<s, left_length + right_length> st {$is_prefix_tail_split(s, left_length, right_length, selected, left_coefficients, negated_right)}
-        by thm linear_combination_splits_over_prefix_and_tail(s, v, space, left_length, right_length, full, left, right, full_coefficients, left_coefficients, negated_right)
-        by thm chap1b::vector_neg_spec(s, v, space, x)
+1release thm linear_combination_splits_over_prefix_and_tail(s, v, space, left_length, right_length, full, left, right, full_coefficients, left_coefficients, negated_right)
+1release thm chap1b::vector_neg_spec(s, v, space, x)
         space.add(\chap2a::linear_combination_value<s, v, space, left_length>(left_coefficients, left), \chap2a::linear_combination_value<s, v, space, right_length>(negated_right, right)) = space.add(x, \chap2a::linear_combination_value<s, v, space, right_length>(negated_right, right))
         space.add(x, \chap2a::linear_combination_value<s, v, space, right_length>(negated_right, right)) = space.add(x, \chap1b::vector_neg<s, v, space>(x))
         \chap2a::linear_combination_value<s, v, space, left_length + right_length>(full_coefficients, full) = space.add(\chap2a::linear_combination_value<s, v, space, left_length>(left_coefficients, left), \chap2a::linear_combination_value<s, v, space, right_length>(negated_right, right)) = space.add(x, \chap2a::linear_combination_value<s, v, space, right_length>(negated_right, right)) = space.add(x, \chap1b::vector_neg<s, v, space>(x)) = space.zero
@@ -1426,22 +1426,22 @@ thm independent_list_split_has_zero_span_intersection:
                 =>:
                     left_coefficients.entries(idx) = zero_left.entries(idx)
             left_coefficients.entries(idx) = full_coefficients.entries(idx) = space.scalars.zero
-            by thm chap2a::zero_coefficient_list_entry(s, space.scalars, left_length, zero_left, idx)
+1release thm chap2a::zero_coefficient_list_entry(s, space.scalars, left_length, zero_left, idx)
             zero_left.entries(idx) = space.scalars.zero
         by def:
             ? $chap1a::have_same_finite_list_entries(s, left_length, left_coefficients, zero_left)
-        by thm chap1a::finite_list_extensionality(s, left_length, left_coefficients, zero_left)
+1release thm chap1a::finite_list_extensionality(s, left_length, left_coefficients, zero_left)
         zero_left = \chap2a::zero_coefficient_list<s, space.scalars, left_length>
         \chap2a::linear_combination_value<s, v, space, left_length>(zero_left, left) = \chap2a::linear_combination_value<s, v, space, left_length>(\chap2a::zero_coefficient_list<s, space.scalars, left_length>, left)
-        by thm chap2a::linear_combination_value_zero_coefficients(s, v, space, left_length, left)
+1release thm chap2a::linear_combination_value_zero_coefficients(s, v, space, left_length, left)
         \chap2a::linear_combination_value<s, v, space, left_length>(\chap2a::zero_coefficient_list<s, space.scalars, left_length>, left) = space.zero
         x = \chap2a::linear_combination_value<s, v, space, left_length>(left_coefficients, left) = \chap2a::linear_combination_value<s, v, space, left_length>(zero_left, left) = \chap2a::linear_combination_value<s, v, space, left_length>(\chap2a::zero_coefficient_list<s, space.scalars, left_length>, left) = space.zero
     claim:
         ? forall x {space.zero}:
             x $in intersect(\chap2a::span_carrier<s, v, space, left_length, left>, \chap2a::span_carrier<s, v, space, right_length, right>)
         x = space.zero
-        by thm chap2a::span_is_subspace(s, v, space, left_length, left)
-        by thm chap2a::span_is_subspace(s, v, space, right_length, right)
+1release thm chap2a::span_is_subspace(s, v, space, left_length, left)
+1release thm chap2a::span_is_subspace(s, v, space, right_length, right)
         space.zero $in \chap2a::span_carrier<s, v, space, left_length, left>
         space.zero $in \chap2a::span_carrier<s, v, space, right_length, right>
     by extension:
@@ -1454,14 +1454,14 @@ thm basis_prefix_span_has_complement:
         =>:
             exist W power_set(v) st {$chap1c::is_subspace(s, v, space, W), \chap1c::subspace_sum_pair<s, v, space>(\chap2a::span_carrier<s, v, space, left_length, left>, W) = v, $chap1c::is_direct_sum_pair(s, v, space, \chap2a::span_carrier<s, v, space, left_length, left>, W)}
     have W power_set(v) = \chap2a::span_carrier<s, v, space, right_length, right>
-    by thm chap2a::span_is_subspace(s, v, space, right_length, right)
+1release thm chap2a::span_is_subspace(s, v, space, right_length, right)
     by def:
         ? $is_basis(s, v, space, left_length + right_length, full)
-    by thm spanning_list_split_spans_subspace_sum(s, v, space, left_length, right_length, full, left, right)
-    by thm independent_list_split_has_zero_span_intersection(s, v, space, left_length, right_length, full, left, right)
-    by thm chap2a::span_is_subspace(s, v, space, left_length, left)
+1release thm spanning_list_split_spans_subspace_sum(s, v, space, left_length, right_length, full, left, right)
+1release thm independent_list_split_has_zero_span_intersection(s, v, space, left_length, right_length, full, left, right)
+1release thm chap2a::span_is_subspace(s, v, space, left_length, left)
     intersect(\chap2a::span_carrier<s, v, space, left_length, left>, W) = intersect(\chap2a::span_carrier<s, v, space, left_length, left>, \chap2a::span_carrier<s, v, space, right_length, right>) = {space.zero}
-    by thm chap1c::zero_intersection_implies_direct_sum_pair(s, v, space, \chap2a::span_carrier<s, v, space, left_length, left>, W)
+1release thm chap1c::zero_intersection_implies_direct_sum_pair(s, v, space, \chap2a::span_carrier<s, v, space, left_length, left>, W)
     witness exist selected power_set(v) st {$chap1c::is_subspace(s, v, space, selected), \chap1c::subspace_sum_pair<s, v, space>(\chap2a::span_carrier<s, v, space, left_length, left>, selected) = v, $chap1c::is_direct_sum_pair(s, v, space, \chap2a::span_carrier<s, v, space, left_length, left>, selected)} from W
 
 thm inherited_partial_trace_lifts_to_ambient:
@@ -1498,11 +1498,11 @@ thm inherited_linear_combination_equals_ambient_lift:
         lifted = (n, fn(idx N+: idx <= n) v {source.entries(idx)})
         =>:
             \chap2a::linear_combination_value<s, v, space, n>(coefficients, lifted) = \chap2a::linear_combination_value<s, U, \chap1c::subspace_vector_space<s, v, space, U>, n>(coefficients, source)
-    by thm chap2a::linear_combination_value_satisfies_spec(s, U, \chap1c::subspace_vector_space<s, v, space, U>, n, coefficients, source)
+1release thm chap2a::linear_combination_value_satisfies_spec(s, U, \chap1c::subspace_vector_space<s, v, space, U>, n, coefficients, source)
     by def:
         ? $chap2a::has_linear_combination_value(s, U, \chap1c::subspace_vector_space<s, v, space, U>, n, coefficients, source, \chap2a::linear_combination_value<s, U, \chap1c::subspace_vector_space<s, v, space, U>, n>(coefficients, source))
     obtain inherited_trace from exist trace fn(j closed_range(0, n)) U st {$chap2a::is_linear_combination_partial_sum_sequence(s, U, \chap1c::subspace_vector_space<s, v, space, U>, n, coefficients, source, trace), \chap2a::linear_combination_value<s, U, \chap1c::subspace_vector_space<s, v, space, U>, n>(coefficients, source) = trace(n)}
-    by thm inherited_partial_trace_lifts_to_ambient(s, v, space, U, n, source, lifted, coefficients, inherited_trace)
+1release thm inherited_partial_trace_lifts_to_ambient(s, v, space, U, n, source, lifted, coefficients, inherited_trace)
     have inherited_value v = \chap2a::linear_combination_value<s, U, \chap1c::subspace_vector_space<s, v, space, U>, n>(coefficients, source)
     claim:
         ? $chap2a::has_linear_combination_value(s, v, space, n, coefficients, lifted, inherited_value)
@@ -1510,8 +1510,8 @@ thm inherited_linear_combination_equals_ambient_lift:
         witness exist trace fn(j closed_range(0, n)) v st {$chap2a::is_linear_combination_partial_sum_sequence(s, v, space, n, coefficients, lifted, trace), inherited_value = trace(n)} from fn(j closed_range(0, n)) v {inherited_trace(j)}
         by def:
             ? $chap2a::has_linear_combination_value(s, v, space, n, coefficients, lifted, inherited_value)
-    by thm chap2a::linear_combination_value_satisfies_spec(s, v, space, n, coefficients, lifted)
-    by thm chap2a::linear_combination_value_exists_unique(s, v, space, n, coefficients, lifted)
+1release thm chap2a::linear_combination_value_satisfies_spec(s, v, space, n, coefficients, lifted)
+1release thm chap2a::linear_combination_value_exists_unique(s, v, space, n, coefficients, lifted)
     \chap2a::linear_combination_value<s, v, space, n>(coefficients, lifted) = inherited_value = \chap2a::linear_combination_value<s, U, \chap1c::subspace_vector_space<s, v, space, U>, n>(coefficients, source)
 
 thm lifted_inherited_basis_span_is_subspace:

@@ -673,8 +673,7 @@ fn execute_named_theorem_and_instantiation() -> Vec<StmtResult> {
 fn theorem_instantiation_result_mut(
     results: &mut [StmtResult],
 ) -> &mut SuccessReleaseThmStmtResult {
-    let [_, StmtResult::Success(SuccessStmtResult::ReleaseThmStmt(result))] = results
-    else {
+    let [_, StmtResult::Success(SuccessStmtResult::ReleaseThmStmt(result))] = results else {
         panic!("expected a named theorem followed by release-thm")
     };
     result

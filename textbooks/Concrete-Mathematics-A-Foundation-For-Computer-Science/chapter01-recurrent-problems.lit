@@ -47,7 +47,7 @@ thm shifted_hanoi_recurrence:
     shifted_hanoi_moves(n - 1) = hanoi_moves(n - 1) + 1
     shifted_hanoi_moves(n) = hanoi_moves(n) + 1 = 2 * hanoi_moves(n - 1) + 1 + 1 = 2 * (hanoi_moves(n - 1) + 1) = 2 * shifted_hanoi_moves(n - 1)
 
-by thm hanoi_moves_closed_form(4)
+release thm hanoi_moves_closed_form(4)
 shifted_hanoi_moves(4) = hanoi_moves(4) + 1 = 2^4 - 1 + 1 = 16
 
 # Section 1.2. Lines in the Plane.
@@ -105,7 +105,7 @@ thm triangular_sum_closed_form:
         case n = 0:
             triangular_sum(n) = triangular_sum(0) = 0 = 0 * (0 + 1) / 2 = n * (n + 1) / 2
         case n > 0:
-            by thm triangular_sum_closed_form_positive(n)
+            release thm triangular_sum_closed_form_positive(n)
 
 # Equation (1.6). The region recurrence has the closed form
 # n(n+1)/2+1. This is the same triangular-number algebra as equation (1.5),

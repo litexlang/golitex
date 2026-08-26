@@ -725,7 +725,7 @@ sketch:
 # `forall` matches while checking its assumptions, the search space would grow very
 # quickly. Litex keeps each known-`forall` application bounded. The candidates
 # visible to that stage can come from the current scope, earlier exports, or a
-# referenced imported module; a qualified `by thm` makes a particular dependency
+# referenced imported module; a qualified `release thm` makes a particular dependency
 # explicit when that is clearer.
 
 # Matching a builtin rule and a builtin strategy

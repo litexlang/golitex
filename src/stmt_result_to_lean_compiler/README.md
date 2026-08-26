@@ -1583,7 +1583,7 @@ conclusion families, and exported theorem projections remain on the explicit
 compatibility path.
 
 The matching direct `release thm` route closes the reference loop. Execution stores
-the exact source theorem `FactId` in `SuccessVerifyByTheoremResult`; the
+the exact source theorem `FactId` in `SuccessVerifyTheoremApplicationResult`; the
 compiler resolves only that ID, combines the recursively retained argument
 membership checks, applies the Lean theorem, and registers each direct
 conclusion under its own store FactId. A theorem name or proposition string is

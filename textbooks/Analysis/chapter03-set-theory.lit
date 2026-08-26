@@ -496,7 +496,7 @@ sketch:
             n < 4
             =>:
                 n $in {k N: k < 4}
-        by thm set_builder_member(n, {k N: k < 4})
+1release thm set_builder_member(n, {k N: k < 4})
 """
 Example 3.1.22. If S = {1, 2, 3, 4, 5}, then {n in S : n < 4} is
 {1, 2, 3}; the predicates n < 7 and n < 1 give S and the empty set.
@@ -506,9 +506,9 @@ Example 3.1.22. If S = {1, 2, 3, 4, 5}, then {n in S : n < 4} is
 # ambient set or type, then state the filtering condition.
 
 sketch:
-    by thm set_builder_member(1, {n N: n $in {1, 2, 3, 4, 5} and n < 4})
-    by thm set_builder_member(2, {n N: n $in {1, 2, 3, 4, 5} and n < 4})
-    by thm set_builder_member(3, {n N: n $in {1, 2, 3, 4, 5} and n < 4})
+1release thm set_builder_member(1, {n N: n $in {1, 2, 3, 4, 5} and n < 4})
+1release thm set_builder_member(2, {n N: n $in {1, 2, 3, 4, 5} and n < 4})
+1release thm set_builder_member(3, {n N: n $in {1, 2, 3, 4, 5} and n < 4})
 
     by contra:
         ? not 4 $in {n N: n $in {1, 2, 3, 4, 5} and n < 4}
@@ -518,7 +518,7 @@ sketch:
         ? not 5 $in {n N: n $in {1, 2, 3, 4, 5} and n < 4}
         impossible 5 < 4
 
-    by thm set_builder_member(5, {n N: n $in {1, 2, 3, 4, 5} and n < 7})
+1release thm set_builder_member(5, {n N: n $in {1, 2, 3, 4, 5} and n < 7})
 
     by contra:
         ? not 1 $in {n N: n $in {1, 2, 3, 4, 5} and n < 1}
@@ -849,8 +849,8 @@ sketch:
         3 $in {1, 2}
         impossible not 3 $in {1, 2}
 
-    by thm set_builder_member(2, {n N: n < 4})
-    by thm set_builder_member(2, {n N: n + 1 < 5})
+1release thm set_builder_member(2, {n N: n < 4})
+1release thm set_builder_member(2, {n N: n + 1 < 5})
 
     by contra:
         ? not 5 $in {n N: n < 4}
@@ -1481,7 +1481,7 @@ sketch:
 
     witness $has_preimage_in_subset(N, N, {1, 2, 3}, double_nat, double_nat(1)) from 1
     \restricted_image<N, N, double_nat, {1, 2, 3}> = {y N: $has_preimage_in_subset(N, N, {1, 2, 3}, double_nat, y)}
-    by thm set_builder_member(double_nat(1), {y N: $has_preimage_in_subset(N, N, {1, 2, 3}, double_nat, y)})
+1release thm set_builder_member(double_nat(1), {y N: $has_preimage_in_subset(N, N, {1, 2, 3}, double_nat, y)})
     double_nat(1) $in \restricted_image<N, N, double_nat, {1, 2, 3}>
 
     claim:
@@ -2299,7 +2299,7 @@ sketch:
         ? forall n N:
             2 * n $in even_N
         witness $is_even_nat(2 * n) from n
-        by thm set_builder_member(2 * n, {m N: $is_even_nat(m)})
+1release thm set_builder_member(2 * n, {m N: $is_even_nat(m)})
 
     have fn double_to_even(n N) even_N = 2 * n
     forall n N:
@@ -2611,7 +2611,7 @@ sketch:
             =>:
                 $is_finite_set(Y)
                 finite_set_size(Y) <= finite_set_size(X)
-        by thm subset_of_finite_set_is_finite(Y, X)
+1release thm subset_of_finite_set_is_finite(Y, X)
 
     have fn double_on_three(n {1, 2, 3}) {2, 4, 6} by cases:
         case n = 1: 2

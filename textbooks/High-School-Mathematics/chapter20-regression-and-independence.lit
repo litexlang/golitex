@@ -24,7 +24,7 @@ thm sample_covariance_square_bound3:
     sample_variance3(x) * sample_variance3(y) = (((x(1) - mean_of_three_data(x)) / 3)^2 + ((x(2) - mean_of_three_data(x)) / 3)^2 + ((x(3) - mean_of_three_data(x)) / 3)^2) * ((y(1) - mean_of_three_data(y))^2 + (y(2) - mean_of_three_data(y))^2 + (y(3) - mean_of_three_data(y))^2)
     claim:
         ? ((x(1) - mean_of_three_data(x)) / 3 * (y(1) - mean_of_three_data(y)) + (x(2) - mean_of_three_data(x)) / 3 * (y(2) - mean_of_three_data(y)) + (x(3) - mean_of_three_data(x)) / 3 * (y(3) - mean_of_three_data(y)))^2 <= (((x(1) - mean_of_three_data(x)) / 3)^2 + ((x(2) - mean_of_three_data(x)) / 3)^2 + ((x(3) - mean_of_three_data(x)) / 3)^2) * ((y(1) - mean_of_three_data(y))^2 + (y(2) - mean_of_three_data(y))^2 + (y(3) - mean_of_three_data(y))^2)
-        by thm HighSchoolCite::combinatorics_probability::cauchy_schwarz_three((x(1) - mean_of_three_data(x)) / 3, (x(2) - mean_of_three_data(x)) / 3, (x(3) - mean_of_three_data(x)) / 3, y(1) - mean_of_three_data(y), y(2) - mean_of_three_data(y), y(3) - mean_of_three_data(y))
+1release thm HighSchoolCite::combinatorics_probability::cauchy_schwarz_three((x(1) - mean_of_three_data(x)) / 3, (x(2) - mean_of_three_data(x)) / 3, (x(3) - mean_of_three_data(x)) / 3, y(1) - mean_of_three_data(y), y(2) - mean_of_three_data(y), y(3) - mean_of_three_data(y))
     sample_covariance3(x, y)^2 <= sample_variance3(x) * sample_variance3(y)
 have fn regression_slope3(x, y finite_seq(R, 3): sample_variance3(x) != 0) R = sample_covariance3(x, y) / sample_variance3(x)
 have fn regression_intercept3(x, y finite_seq(R, 3): sample_variance3(x) != 0) R = mean_of_three_data(y) - regression_slope3(x, y) * mean_of_three_data(x)
@@ -75,7 +75,7 @@ claim:
             -1 <= correlation_coefficient3(x, y) <= 1
     sample_covariance3(x, y)^2 <= sample_variance3(x) * sample_variance3(y)
     correlation_coefficient3(x, y) * sqrt(sample_variance3(x) * sample_variance3(y)) = sample_covariance3(x, y)
-    by thm HighSchoolCite::combinatorics_probability::correlation_bound_from_covariance(sample_variance3(x), sample_variance3(y), sample_covariance3(x, y), correlation_coefficient3(x, y))
+1release thm HighSchoolCite::combinatorics_probability::correlation_bound_from_covariance(sample_variance3(x), sample_variance3(y), sample_covariance3(x, y), correlation_coefficient3(x, y))
 
 forall x, y finite_seq(R, 3):
     sample_variance3(x) != 0

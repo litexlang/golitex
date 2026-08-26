@@ -685,7 +685,7 @@ main = "./main.lit"
             assert!(reused_json.contains("\"kind\": \"Reused\""));
             assert!(!reused_json.contains("\"statement_results\""));
             let import_graph = crate::graph::render_result_graph_from_stmt_results(
-                "code",
+                RunTargetKind::Code,
                 "isolated-import-result-contract",
                 true,
                 &stmt_results,

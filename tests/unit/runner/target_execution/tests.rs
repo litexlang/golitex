@@ -4,7 +4,7 @@ const LARGE_TEST_STACK_SIZE: usize = 64 * 1024 * 1024;
 
 fn run_runner_for_test(code: &str, options: RunOptions) -> (bool, String) {
     run_runner(RunnerRequest::new(
-        RunRequest::new(RunTarget::code(code, "-runner-test"), options),
+        RunRequest::new(RunTarget::code(code), options),
         true,
     ))
 }
@@ -26,6 +26,7 @@ fn runner_success_returns_trace() {
     assert!(ok, "runner success run failed:\n{}", output);
     assert!(output.contains("\"runner\": \"litex-runner\""));
     assert!(output.contains("\"result\": \"success\""));
+    assert!(output.contains("\"kind\": \"code\",\n    \"label\": \"-runner -e\""));
     assert!(output.contains("\"trace\""));
     assert!(!output.contains("\"pipeline_trace\""));
 }

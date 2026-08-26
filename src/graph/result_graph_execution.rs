@@ -21,7 +21,7 @@ pub struct DepCollector {
 /// Render a result graph while a runtime is still available for error text.
 /// Successful graph semantics come only from `stmt_results`.
 pub fn render_graph_from_stmt_results(
-    target_kind: &str,
+    target_kind: RunTargetKind,
     target_label: &str,
     hide_file_paths: bool,
     runtime: &Runtime,
@@ -45,7 +45,7 @@ pub fn render_graph_from_stmt_results(
 
 /// Render a completed successful result graph without a live `Runtime`.
 pub fn render_result_graph_from_stmt_results(
-    target_kind: &str,
+    target_kind: RunTargetKind,
     target_label: &str,
     hide_file_paths: bool,
     stmt_results: &[StmtResult],
@@ -61,7 +61,7 @@ pub fn render_result_graph_from_stmt_results(
 }
 
 fn render_result_graph_document(
-    target_kind: &str,
+    target_kind: RunTargetKind,
     target_label: &str,
     hide_file_paths: bool,
     stmt_results: &[StmtResult],
@@ -106,7 +106,7 @@ fn render_result_graph_document(
 }
 
 pub fn graph_target_error_output(
-    target_kind: &str,
+    target_kind: RunTargetKind,
     target_label: &str,
     hide_file_paths: bool,
     message: String,
@@ -145,8 +145,12 @@ pub fn graph_target_error_output(
     (false, render_json_value(&output, 0))
 }
 
-fn target_json_value(target_kind: &str, target_label: &str, hide_file_paths: bool) -> JsonValue {
-    let label = if hide_file_paths && target_kind != "code" {
+fn target_json_value(
+    target_kind: RunTargetKind,
+    target_label: &str,
+    hide_file_paths: bool,
+) -> JsonValue {
+    let label = if hide_file_paths && target_kind != RunTargetKind::Code {
         "entry".to_string()
     } else {
         target_label.to_string()
@@ -155,7 +159,7 @@ fn target_json_value(target_kind: &str, target_label: &str, hide_file_paths: boo
     JsonValue::Object(vec![
         (
             "kind".to_string(),
-            JsonValue::JsonString(target_kind.to_string()),
+            JsonValue::JsonString(target_kind.json_name().to_string()),
         ),
         ("label".to_string(), JsonValue::JsonString(label)),
     ])

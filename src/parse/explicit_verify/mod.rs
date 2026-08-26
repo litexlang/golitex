@@ -1,4 +1,4 @@
-//! Parsing for `by …` statements (one file per keyword).
+//! Parsing for statements that explicitly choose a verifier operation.
 use crate::prelude::*;
 
 mod antisymmetric_prop_by_stmt;
@@ -16,7 +16,7 @@ mod reflexive_prop_by_stmt;
 mod regularity_axiom_by_stmt;
 mod struct_definition_by_stmt;
 mod symmetric_prop_by_stmt;
-mod thm_by_stmt;
+mod theorem_application;
 mod transitive_prop_by_stmt;
 mod zorn_lemma_by_stmt;
 

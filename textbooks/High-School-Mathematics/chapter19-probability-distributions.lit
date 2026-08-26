@@ -24,7 +24,7 @@ claim:
         $HighSchoolCite::combinatorics_probability::is_probability_vector2(p)
         =>:
             HighSchoolCite::combinatorics_probability::expectation2(HighSchoolCite::combinatorics_probability::affine_combine2(X, Y, a, b), p) = a * HighSchoolCite::combinatorics_probability::expectation2(X, p) + b * HighSchoolCite::combinatorics_probability::expectation2(Y, p)
-    by thm HighSchoolCite::combinatorics_probability::expectation_affine_two(X, Y, p, a, b)
+1release thm HighSchoolCite::combinatorics_probability::expectation_affine_two(X, Y, p, a, b)
 
 claim:
     ? $HighSchoolCite::combinatorics_probability::is_bernoulli_distribution(1 / 2, bernoulli_values, fair_bernoulli_probs)
@@ -33,7 +33,7 @@ claim:
     bernoulli_values(2) = 1
     fair_bernoulli_probs(1) = 1 / 2 = 1 - 1 / 2
     fair_bernoulli_probs(2) = 1 / 2
-    by thm HighSchoolCite::combinatorics_probability::bernoulli_distribution_from_entries(1 / 2, bernoulli_values, fair_bernoulli_probs)
+1release thm HighSchoolCite::combinatorics_probability::bernoulli_distribution_from_entries(1 / 2, bernoulli_values, fair_bernoulli_probs)
 
 claim:
     ? forall n, k N, p, mass R:
@@ -42,4 +42,4 @@ claim:
         mass = HighSchoolCite::combinatorics_probability::choose_fn(n, k) * p^k * (1 - p)^(n - k)
         =>:
             $HighSchoolCite::combinatorics_probability::binomial_probability_mass(n, k, p, mass)
-    by thm HighSchoolCite::combinatorics_probability::binomial_probability_mass_formula(n, k, p, mass)
+1release thm HighSchoolCite::combinatorics_probability::binomial_probability_mass_formula(n, k, p, mass)

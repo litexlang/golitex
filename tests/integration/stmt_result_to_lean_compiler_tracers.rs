@@ -116,6 +116,26 @@ fn litex_to_mathlib_pipeline_showcase_generated_lean_has_not_drifted() {
 }
 
 #[test]
+fn litex_to_mathlib_pipeline_property_companion_verifies_without_trust() {
+    const SOURCE: &str =
+        include_str!("../../showcases/litex_to_lean_mathlib_pipeline/property_flow.lit");
+
+    let results = capture_stmt_results_json_v2_on_verifier_stack(SOURCE, "property_flow.lit")
+        .expect("verify the property-centered companion source");
+
+    assert!(results.contains("DefPropStmt"), "{results}");
+    assert!(results.contains("is_square_of"), "{results}");
+    assert!(results.contains("square_of_is_nonnegative"), "{results}");
+    assert!(
+        results.contains("sum_first_odds_is_square_of_n"),
+        "{results}"
+    );
+    assert!(results.contains("sum_first_odds_nonnegative"), "{results}");
+    assert!(!SOURCE.contains("trust"));
+    assert!(!SOURCE.contains("abstract_prop"));
+}
+
+#[test]
 fn named_real_same_equality_emits_only_its_source_declaration() {
     let generated = compile_on_verifier_stack(
         "thm real_reflexivity:\n    ? forall a R:\n        a = a\n    a = a\n",

@@ -63,7 +63,7 @@ impl StmtResultJsonV2 {
                 let verification = result
                     .verification
                     .as_ref()
-                    .map(|verification| by_theorem_verification_value(self, verification))
+                    .map(|verification| theorem_application_verification_value(self, verification))
                     .unwrap_or(JsonValue::Null);
                 self.non_fact_stmt(
                     "ReleaseThmStmt",
@@ -1220,7 +1220,7 @@ impl StmtResultJsonV2 {
                 let verification = result
                     .verification
                     .as_ref()
-                    .map(|verification| by_theorem_verification_value(self, verification))
+                    .map(|verification| theorem_application_verification_value(self, verification))
                     .unwrap_or(JsonValue::Null);
                 self.non_fact_stmt(
                     "ByThmStmt",

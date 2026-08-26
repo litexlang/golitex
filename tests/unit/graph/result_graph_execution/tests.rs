@@ -9,7 +9,7 @@ fn graph_output(source: &'static str) -> String {
         .spawn(move || {
             run_graph(GraphRequest::new(
                 GraphKind::Result,
-                RunRequest::new(RunTarget::code(source, "graph_test"), RunOptions::default()),
+                RunRequest::new(RunTarget::code(source), RunOptions::default()),
                 true,
             ))
             .1
@@ -25,6 +25,7 @@ fn result_graph_records_statement_verification_proof_and_store_layers() {
 
     assert!(output.contains(r#""graph": "litex-result-graph""#));
     assert!(output.contains(r#""graph_version": "2""#));
+    assert!(output.contains(r#""label": "-graph -e""#));
     assert!(output.contains(r#""kind": "statement""#));
     assert!(output.contains(r#""kind": "well_definedness""#));
     assert!(output.contains(r#""kind": "verification""#));
@@ -105,7 +106,8 @@ fn completed_result_graph_does_not_need_runtime() {
     assert!(error.is_none());
     drop(runtime);
 
-    let output = render_result_graph_from_stmt_results("code", "dropped", true, &results);
+    let output =
+        render_result_graph_from_stmt_results(RunTargetKind::Code, "dropped", true, &results);
     assert!(output.contains(r#""graph": "litex-result-graph""#));
     assert!(output.contains(r#""role": "NaturalMembershipImpliesNonnegative""#));
     assert!(output.contains(r#""kind": "well_definedness""#));

@@ -166,9 +166,9 @@ thm inverse_graph_reflection:
             f(g(p[1])) = p[1]
             f(p[2]) = f(g(p[1])) = p[1]
             p[1] = f(p[2])
-            by thm set_builder_member((p[2], p[1]), {q cart(R, R): q[2] = f(q[1])})
+1release thm set_builder_member((p[2], p[1]), {q cart(R, R): q[2] = f(q[1])})
             (p[2], p[1]) $in graph_of(f)
-            by thm set_builder_member(p, {q cart(R, R): (q[2], q[1]) $in graph_of(f)})
+1release thm set_builder_member(p, {q cart(R, R): (q[2], q[1]) $in graph_of(f)})
             p $in reflected_graph(graph_of(f))
         claim:
             ? forall p reflected_graph(graph_of(f)):
@@ -180,7 +180,7 @@ thm inverse_graph_reflection:
             g(f(p[2])) = p[2]
             g(p[1]) = g(f(p[2])) = p[2]
             p[2] = g(p[1])
-            by thm set_builder_member(p, {q cart(R, R): q[2] = g(q[1])})
+1release thm set_builder_member(p, {q cart(R, R): q[2] = g(q[1])})
             p $in graph_of(g)
 
 thm intermediate_value_zero:

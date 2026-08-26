@@ -51,9 +51,9 @@ template<K set, zero K>:
     have fn shifted_scalar_polynomial by exist!:
         ? forall scalar K, shift N:
             exist! p \polynomial_ring<K, zero> st {$is_shifted_scalar_polynomial(K, zero, scalar, shift, p)}
-        by thm shifted_scalar_coefficients_have_finite_support(K, zero, scalar, shift)
+1release thm shifted_scalar_coefficients_have_finite_support(K, zero, scalar, shift)
         \polynomial_ring<K, zero> = {candidate_polynomial fn(n N) K: $polynomial_has_finite_support(K, zero, candidate_polynomial)}
-        by thm set_builder_member(fn(n N) K {\shifted_scalar_coefficient<K, zero>(scalar, shift, n)}, {candidate_polynomial fn(n N) K: $polynomial_has_finite_support(K, zero, candidate_polynomial)})
+1release thm set_builder_member(fn(n N) K {\shifted_scalar_coefficient<K, zero>(scalar, shift, n)}, {candidate_polynomial fn(n N) K: $polynomial_has_finite_support(K, zero, candidate_polynomial)})
         fn(n N) K {\shifted_scalar_coefficient<K, zero>(scalar, shift, n)} $in \polynomial_ring<K, zero>
         witness exist p \polynomial_ring<K, zero> st {$is_shifted_scalar_polynomial(K, zero, scalar, shift, p)} from fn(n N) K {\shifted_scalar_coefficient<K, zero>(scalar, shift, n)}:
             by def:
@@ -80,7 +80,7 @@ thm shifted_scalar_polynomial_coefficients:
 thm shifted_scalar_polynomial_at_shift:
     ? forall K set, zero K, scalar K, shift N:
         \shifted_scalar_polynomial<K, zero>(scalar, shift)(shift) = scalar
-    by thm shifted_scalar_polynomial_coefficients(K, zero, scalar, shift, shift)
+1release thm shifted_scalar_polynomial_coefficients(K, zero, scalar, shift, shift)
     \shifted_scalar_coefficient<K, zero>(scalar, shift, shift) = scalar
 
 prop polynomial_sum(K set, zero K, add fn(x, y K) K, p, q, result_poly \polynomial_ring<K, zero>):
@@ -133,9 +133,9 @@ template<K set, zero, one K, add, mul fn(x, y K) K>:
             $section6::is_field(K, add, mul, zero, one)
             =>:
                 exist! result_poly \polynomial_ring<K, zero> st {$polynomial_sum(K, zero, add, p, q, result_poly)}
-        by thm polynomial_sum_coefficients_have_finite_support(K, zero, one, add, mul, p, q)
+1release thm polynomial_sum_coefficients_have_finite_support(K, zero, one, add, mul, p, q)
         \polynomial_ring<K, zero> = {candidate_polynomial fn(n N) K: $polynomial_has_finite_support(K, zero, candidate_polynomial)}
-        by thm set_builder_member(fn(n N) K {add(p(n), q(n))}, {candidate_polynomial fn(n N) K: $polynomial_has_finite_support(K, zero, candidate_polynomial)})
+1release thm set_builder_member(fn(n N) K {add(p(n), q(n))}, {candidate_polynomial fn(n N) K: $polynomial_has_finite_support(K, zero, candidate_polynomial)})
         fn(n N) K {add(p(n), q(n))} $in \polynomial_ring<K, zero>
         witness exist result_poly \polynomial_ring<K, zero> st {$polynomial_sum(K, zero, add, p, q, result_poly)} from fn(n N) K {add(p(n), q(n))}:
             forall n N:
@@ -192,7 +192,7 @@ thm polynomial_negation_coefficients_have_finite_support:
                         p(n) != zero
                         n $in support
                         impossible n $in support
-                by thm section5::additive_inverse_of_zero(K, add, zero)
+1release thm section5::additive_inverse_of_zero(K, add, zero)
                 \section5::additive_inverse<K, add, zero>(p(n)) = \section5::additive_inverse<K, add, zero>(zero) = zero
                 impossible \section5::additive_inverse<K, add, zero>(p(n)) != zero
         by def $supports_polynomial(K, zero, fn(n N) K {\section5::additive_inverse<K, add, zero>(p(n))}, support)
@@ -204,9 +204,9 @@ template<K set, zero, one K, add, mul fn(x, y K) K>:
             $section6::is_field(K, add, mul, zero, one)
             =>:
                 exist! result_poly \polynomial_ring<K, zero> st {$polynomial_negation(K, zero, add, p, result_poly)}
-        by thm polynomial_negation_coefficients_have_finite_support(K, zero, one, add, mul, p)
+1release thm polynomial_negation_coefficients_have_finite_support(K, zero, one, add, mul, p)
         \polynomial_ring<K, zero> = {candidate_polynomial fn(n N) K: $polynomial_has_finite_support(K, zero, candidate_polynomial)}
-        by thm set_builder_member(fn(n N) K {\section5::additive_inverse<K, add, zero>(p(n))}, {candidate_polynomial fn(n N) K: $polynomial_has_finite_support(K, zero, candidate_polynomial)})
+1release thm set_builder_member(fn(n N) K {\section5::additive_inverse<K, add, zero>(p(n))}, {candidate_polynomial fn(n N) K: $polynomial_has_finite_support(K, zero, candidate_polynomial)})
         fn(n N) K {\section5::additive_inverse<K, add, zero>(p(n))} $in \polynomial_ring<K, zero>
         witness exist result_poly \polynomial_ring<K, zero> st {$polynomial_negation(K, zero, add, p, result_poly)} from fn(n N) K {\section5::additive_inverse<K, add, zero>(p(n))}:
             by def:
@@ -241,8 +241,8 @@ thm polynomial_subtract_coefficients:
         =>:
             \polynomial_subtract<K, zero, one, add, mul>(p, q)(n) = add(p(n), \section5::additive_inverse<K, add, zero>(q(n)))
     \polynomial_subtract<K, zero, one, add, mul>(p, q) = \polynomial_add<K, zero, one, add, mul>(p, \polynomial_negate<K, zero, one, add, mul>(q))
-    by thm polynomial_add_satisfies_sum(K, zero, one, add, mul, p, \polynomial_negate<K, zero, one, add, mul>(q))
-    by thm polynomial_negate_satisfies_negation(K, zero, one, add, mul, q)
+1release thm polynomial_add_satisfies_sum(K, zero, one, add, mul, p, \polynomial_negate<K, zero, one, add, mul>(q))
+1release thm polynomial_negate_satisfies_negation(K, zero, one, add, mul, q)
     \polynomial_add<K, zero, one, add, mul>(p, \polynomial_negate<K, zero, one, add, mul>(q))(n) = add(p(n), \polynomial_negate<K, zero, one, add, mul>(q)(n))
     \polynomial_negate<K, zero, one, add, mul>(q)(n) = \section5::additive_inverse<K, add, zero>(q(n))
     \polynomial_subtract<K, zero, one, add, mul>(p, q)(n) = \polynomial_add<K, zero, one, add, mul>(p, \polynomial_negate<K, zero, one, add, mul>(q))(n) = add(p(n), \polynomial_negate<K, zero, one, add, mul>(q)(n)) = add(p(n), \section5::additive_inverse<K, add, zero>(q(n)))
@@ -253,8 +253,8 @@ thm polynomial_subtract_equal_coefficients_is_zero:
         p(n) = q(n)
         =>:
             \polynomial_subtract<K, zero, one, add, mul>(p, q)(n) = zero
-    by thm polynomial_subtract_coefficients(K, zero, one, add, mul, p, q, n)
-    by thm section5::additive_inverse_satisfies_inverse(K, add, zero, q(n))
+1release thm polynomial_subtract_coefficients(K, zero, one, add, mul, p, q, n)
+1release thm section5::additive_inverse_satisfies_inverse(K, add, zero, q(n))
     \polynomial_subtract<K, zero, one, add, mul>(p, q)(n) = add(p(n), \section5::additive_inverse<K, add, zero>(q(n))) = add(q(n), \section5::additive_inverse<K, add, zero>(q(n))) = zero
 
 # The trace at degree n is the finite convolution
@@ -322,7 +322,7 @@ thm polynomial_nonzero_support_is_finite:
             n $in support
         by def:
             ? \polynomial_nonzero_support<K, zero>(p) $subset support
-    by thm section1::subset_finite_background(\polynomial_nonzero_support<K, zero>(p), support)
+1release thm section1::subset_finite_background(\polynomial_nonzero_support<K, zero>(p), support)
 
 thm polynomial_convolution_term_zero_outside_product_support:
     ? forall K set, zero, one K, add, mul fn(x, y K) K, p, q \polynomial_ring<K, zero>, support_p, support_q finite_set, degree N, idx_i N:
@@ -339,7 +339,7 @@ thm polynomial_convolution_term_zero_outside_product_support:
     by cases:
         ? \polynomial_convolution_term<K, zero, one, add, mul>(p, q, degree, idx_i) = zero
         case p(idx_i) = zero:
-            by thm section6::commutative_ring_multiplication_by_zero(K, add, mul, zero, q(degree - idx_i))
+1release thm section6::commutative_ring_multiplication_by_zero(K, add, mul, zero, q(degree - idx_i))
             mul(q(degree - idx_i), zero) = zero
             mul(p(idx_i), q(degree - idx_i)) = mul(zero, q(degree - idx_i)) = mul(q(degree - idx_i), zero) = zero
         case p(idx_i) != zero:
@@ -349,10 +349,10 @@ thm polynomial_convolution_term_zero_outside_product_support:
                     ? q(degree - idx_i) = zero
                     support_p = \polynomial_nonzero_support<K, zero>(p) = {n N: p(n) != zero}
                     support_q = \polynomial_nonzero_support<K, zero>(q) = {n N: q(n) != zero}
-                    by thm set_builder_member(idx_i, {n N: p(n) != zero})
+1release thm set_builder_member(idx_i, {n N: p(n) != zero})
                     idx_i $in {n N: p(n) != zero}
                     idx_i $in support_p
-                    by thm set_builder_member(degree - idx_i, {n N: q(n) != zero})
+1release thm set_builder_member(degree - idx_i, {n N: q(n) != zero})
                     degree - idx_i $in {n N: q(n) != zero}
                     degree - idx_i $in support_q
                     (idx_i, degree - idx_i) $in cart(support_p, support_q)
@@ -360,7 +360,7 @@ thm polynomial_convolution_term_zero_outside_product_support:
                     fn(pair cart(support_p, support_q)) N {pair[1] + pair[2]}((idx_i, degree - idx_i)) = idx_i + (degree - idx_i) = degree
                     degree $in fn_range(fn(pair cart(support_p, support_q)) N {pair[1] + pair[2]})
                     impossible degree $in fn_range(fn(pair cart(support_p, support_q)) N {pair[1] + pair[2]})
-            by thm section6::commutative_ring_multiplication_by_zero(K, add, mul, zero, p(idx_i))
+1release thm section6::commutative_ring_multiplication_by_zero(K, add, mul, zero, p(idx_i))
             mul(p(idx_i), q(degree - idx_i)) = mul(p(idx_i), zero) = zero
 
 thm polynomial_convolution_term_within_degree:
@@ -403,8 +403,8 @@ thm polynomial_convolution_partial_zero_outside_product_support:
                         0 <= degree
                         =>:
                             \polynomial_convolution_partial<K, zero, one, add, mul>(p, q, degree, 0) = zero
-                    by thm polynomial_convolution_term_zero_outside_product_support(K, zero, one, add, mul, p, q, support_p, support_q, degree, 0)
-                    by thm polynomial_convolution_term_within_degree(K, zero, one, add, mul, p, q, degree, 0)
+1release thm polynomial_convolution_term_zero_outside_product_support(K, zero, one, add, mul, p, q, support_p, support_q, degree, 0)
+1release thm polynomial_convolution_term_within_degree(K, zero, one, add, mul, p, q, degree, 0)
                     \polynomial_convolution_term<K, zero, one, add, mul>(p, q, degree, 0) = mul(p(0), q(degree))
                     mul(p(0), q(degree)) = \polynomial_convolution_term<K, zero, one, add, mul>(p, q, degree, 0)
                     \polynomial_convolution_partial<K, zero, one, add, mul>(p, q, degree, 0) = mul(p(0), q(degree)) = \polynomial_convolution_term<K, zero, one, add, mul>(p, q, degree, 0) = zero
@@ -419,8 +419,8 @@ thm polynomial_convolution_partial_zero_outside_product_support:
                     idx_i < idx_i + 1 <= degree
                     idx_i <= degree
                     \polynomial_convolution_partial<K, zero, one, add, mul>(p, q, degree, idx_i) = zero
-                    by thm polynomial_convolution_term_zero_outside_product_support(K, zero, one, add, mul, p, q, support_p, support_q, degree, idx_i + 1)
-                    by thm polynomial_convolution_partial_successor(K, zero, one, add, mul, p, q, degree, idx_i)
+1release thm polynomial_convolution_term_zero_outside_product_support(K, zero, one, add, mul, p, q, support_p, support_q, degree, idx_i + 1)
+1release thm polynomial_convolution_partial_successor(K, zero, one, add, mul, p, q, degree, idx_i)
                     \polynomial_convolution_term<K, zero, one, add, mul>(p, q, degree, idx_i + 1) = zero
                     \polynomial_convolution_partial<K, zero, one, add, mul>(p, q, degree, idx_i + 1) = add(\polynomial_convolution_partial<K, zero, one, add, mul>(p, q, degree, idx_i), \polynomial_convolution_term<K, zero, one, add, mul>(p, q, degree, idx_i + 1))
                     \polynomial_convolution_partial<K, zero, one, add, mul>(p, q, degree, idx_i + 1) = add(\polynomial_convolution_partial<K, zero, one, add, mul>(p, q, degree, idx_i), \polynomial_convolution_term<K, zero, one, add, mul>(p, q, degree, idx_i + 1)) = add(zero, zero) = zero
@@ -436,9 +436,9 @@ thm polynomial_product_coefficients_have_finite_support:
             $polynomial_has_finite_support(K, zero, fn(degree N) K {\polynomial_convolution_partial<K, zero, one, add, mul>(p, q, degree, degree)})
     by def:
         ? $section6::is_field(K, add, mul, zero, one)
-    by thm polynomial_nonzero_support_is_finite(K, zero, p)
+1release thm polynomial_nonzero_support_is_finite(K, zero, p)
     have support_p finite_set = \polynomial_nonzero_support<K, zero>(p)
-    by thm polynomial_nonzero_support_is_finite(K, zero, q)
+1release thm polynomial_nonzero_support_is_finite(K, zero, q)
     have support_q finite_set = \polynomial_nonzero_support<K, zero>(q)
     have product_support finite_set = fn_range(fn(pair cart(support_p, support_q)) N {pair[1] + pair[2]})
     claim:
@@ -451,7 +451,7 @@ thm polynomial_product_coefficients_have_finite_support:
             by contra:
                 ? degree $in product_support
                 product_support = fn_range(fn(pair cart(support_p, support_q)) N {pair[1] + pair[2]})
-                by thm polynomial_convolution_partial_zero_outside_product_support(K, zero, one, add, mul, p, q, support_p, support_q, degree)
+1release thm polynomial_convolution_partial_zero_outside_product_support(K, zero, one, add, mul, p, q, support_p, support_q, degree)
                 \polynomial_convolution_partial<K, zero, one, add, mul>(p, q, degree, degree) = zero
                 impossible \polynomial_convolution_partial<K, zero, one, add, mul>(p, q, degree, degree) != zero
         by def:
@@ -508,15 +508,15 @@ template<K set, zero, one K, add, mul fn(x, y K) K>:
             $section6::is_field(K, add, mul, zero, one)
             =>:
                 exist! result_poly \polynomial_ring<K, zero> st {$polynomial_product(K, zero, add, mul, p, q, result_poly)}
-        by thm polynomial_product_coefficients_have_finite_support(K, zero, one, add, mul, p, q)
+1release thm polynomial_product_coefficients_have_finite_support(K, zero, one, add, mul, p, q)
         \polynomial_ring<K, zero> = {candidate_polynomial fn(n N) K: $polynomial_has_finite_support(K, zero, candidate_polynomial)}
-        by thm set_builder_member(fn(degree N) K {\polynomial_convolution_partial<K, zero, one, add, mul>(p, q, degree, degree)}, {candidate_polynomial fn(n N) K: $polynomial_has_finite_support(K, zero, candidate_polynomial)})
+1release thm set_builder_member(fn(degree N) K {\polynomial_convolution_partial<K, zero, one, add, mul>(p, q, degree, degree)}, {candidate_polynomial fn(n N) K: $polynomial_has_finite_support(K, zero, candidate_polynomial)})
         fn(degree N) K {\polynomial_convolution_partial<K, zero, one, add, mul>(p, q, degree, degree)} $in \polynomial_ring<K, zero>
         witness exist result_poly \polynomial_ring<K, zero> st {$polynomial_product(K, zero, add, mul, p, q, result_poly)} from fn(degree N) K {\polynomial_convolution_partial<K, zero, one, add, mul>(p, q, degree, degree)}:
             claim:
                 ? forall degree N:
                     exist partial_sums fn(idx_i N) K st {$polynomial_convolution_trace(K, add, mul, p, q, degree, partial_sums), fn(n N) K {\polynomial_convolution_partial<K, zero, one, add, mul>(p, q, n, n)}(degree) = partial_sums(degree)}
-                by thm polynomial_convolution_partial_satisfies_trace(K, zero, one, add, mul, p, q, degree)
+1release thm polynomial_convolution_partial_satisfies_trace(K, zero, one, add, mul, p, q, degree)
                 witness exist partial_sums fn(idx_i N) K st {$polynomial_convolution_trace(K, add, mul, p, q, degree, partial_sums), fn(n N) K {\polynomial_convolution_partial<K, zero, one, add, mul>(p, q, n, n)}(degree) = partial_sums(degree)} from fn(idx_i N) K {\polynomial_convolution_partial<K, zero, one, add, mul>(p, q, degree, idx_i)}:
                     fn(n N) K {\polynomial_convolution_partial<K, zero, one, add, mul>(p, q, n, n)}(degree) = \polynomial_convolution_partial<K, zero, one, add, mul>(p, q, degree, degree)
                     fn(idx_i N) K {\polynomial_convolution_partial<K, zero, one, add, mul>(p, q, degree, idx_i)}(degree) = \polynomial_convolution_partial<K, zero, one, add, mul>(p, q, degree, degree)
@@ -533,7 +533,7 @@ template<K set, zero, one K, add, mul fn(x, y K) K>:
                     result1(degree) = result2(degree)
                 obtain left_trace from exist partial_sums fn(idx_i N) K st {$polynomial_convolution_trace(K, add, mul, p, q, degree, partial_sums), result1(degree) = partial_sums(degree)}
                 obtain right_trace from exist partial_sums fn(idx_i N) K st {$polynomial_convolution_trace(K, add, mul, p, q, degree, partial_sums), result2(degree) = partial_sums(degree)}
-                by thm polynomial_convolution_trace_terminal_unique(K, add, mul, p, q, degree, left_trace, right_trace)
+1release thm polynomial_convolution_trace_terminal_unique(K, add, mul, p, q, degree, left_trace, right_trace)
                 result1(degree) = left_trace(degree) = right_trace(degree) = result2(degree)
             by def:
                 ? $fn_eq(result1, result2)
@@ -592,10 +592,10 @@ thm shifted_scalar_convolution_trace_zero_before_shift:
                         0 < shift
                         =>:
                             partial_sums(0) = zero
-                    by thm shifted_scalar_polynomial_coefficients(K, zero, scalar, shift, 0)
+1release thm shifted_scalar_polynomial_coefficients(K, zero, scalar, shift, 0)
                     \shifted_scalar_coefficient<K, zero>(scalar, shift, 0) = zero
                     \shifted_scalar_polynomial<K, zero>(scalar, shift)(0) = zero
-                    by thm section6::commutative_ring_multiplication_by_zero(K, add, mul, zero, p(shift + degree))
+1release thm section6::commutative_ring_multiplication_by_zero(K, add, mul, zero, p(shift + degree))
                     mul(p(shift + degree), zero) = zero
                     mul(zero, p(shift + degree)) = mul(p(shift + degree), zero) = zero
                     partial_sums(0) = mul(\shifted_scalar_polynomial<K, zero>(scalar, shift)(0), p(shift + degree)) = mul(zero, p(shift + degree)) = zero
@@ -616,10 +616,10 @@ thm shifted_scalar_convolution_trace_zero_before_shift:
                     index + 1 $in N+
                     partial_sums(index + 1) = add(partial_sums(index + 1 - 1), mul(\shifted_scalar_polynomial<K, zero>(scalar, shift)(index + 1), p(shift + degree - (index + 1))))
                     index + 1 - 1 = index
-                    by thm shifted_scalar_polynomial_coefficients(K, zero, scalar, shift, index + 1)
+1release thm shifted_scalar_polynomial_coefficients(K, zero, scalar, shift, index + 1)
                     \shifted_scalar_coefficient<K, zero>(scalar, shift, index + 1) = zero
                     \shifted_scalar_polynomial<K, zero>(scalar, shift)(index + 1) = zero
-                    by thm section6::commutative_ring_multiplication_by_zero(K, add, mul, zero, p(shift + degree - (index + 1)))
+1release thm section6::commutative_ring_multiplication_by_zero(K, add, mul, zero, p(shift + degree - (index + 1)))
                     mul(p(shift + degree - (index + 1)), zero) = zero
                     mul(zero, p(shift + degree - (index + 1))) = mul(p(shift + degree - (index + 1)), zero) = zero
                     partial_sums(index + 1) = add(partial_sums(index), mul(\shifted_scalar_polynomial<K, zero>(scalar, shift)(index + 1), p(shift + degree - (index + 1))))
@@ -658,8 +658,8 @@ thm shifted_scalar_convolution_trace_constant_after_shift:
                         =>:
                             partial_sums(0) = mul(scalar, p(degree))
                     shift = 0
-                    by thm shifted_scalar_polynomial_at_shift(K, zero, scalar, shift)
-                    by thm nat_add_sub_self_right(shift, degree)
+1release thm shifted_scalar_polynomial_at_shift(K, zero, scalar, shift)
+1release thm nat_add_sub_self_right(shift, degree)
                     shift + degree - shift = degree
                     shift + degree = degree
                     \shifted_scalar_polynomial<K, zero>(scalar, shift)(0) = scalar
@@ -683,12 +683,12 @@ thm shifted_scalar_convolution_trace_constant_after_shift:
                         case index + 1 = shift:
                             index < index + 1 = shift
                             index < shift
-                            by thm shifted_scalar_convolution_trace_zero_before_shift(K, zero, one, add, mul, scalar, shift, degree, p, partial_sums, index)
+1release thm shifted_scalar_convolution_trace_zero_before_shift(K, zero, one, add, mul, scalar, shift, degree, p, partial_sums, index)
                             partial_sums(index) = zero
-                            by thm shifted_scalar_polynomial_at_shift(K, zero, scalar, shift)
+1release thm shifted_scalar_polynomial_at_shift(K, zero, scalar, shift)
                             \shifted_scalar_polynomial<K, zero>(scalar, shift)(shift) = scalar
                             \shifted_scalar_polynomial<K, zero>(scalar, shift)(index + 1) = \shifted_scalar_polynomial<K, zero>(scalar, shift)(shift) = scalar
-                            by thm nat_add_sub_self_right(shift, degree)
+1release thm nat_add_sub_self_right(shift, degree)
                             shift + degree - shift = degree
                             shift + degree - (index + 1) = degree
                             p(shift + degree - (index + 1)) = p(degree)
@@ -703,10 +703,10 @@ thm shifted_scalar_convolution_trace_constant_after_shift:
                             index <= shift + degree
                             $trace_constant_after(index)
                             partial_sums(index) = mul(scalar, p(degree))
-                            by thm shifted_scalar_polynomial_coefficients(K, zero, scalar, shift, index + 1)
+1release thm shifted_scalar_polynomial_coefficients(K, zero, scalar, shift, index + 1)
                             \shifted_scalar_coefficient<K, zero>(scalar, shift, index + 1) = zero
                             \shifted_scalar_polynomial<K, zero>(scalar, shift)(index + 1) = zero
-                            by thm section6::commutative_ring_multiplication_by_zero(K, add, mul, zero, p(shift + degree - (index + 1)))
+1release thm section6::commutative_ring_multiplication_by_zero(K, add, mul, zero, p(shift + degree - (index + 1)))
                             mul(p(shift + degree - (index + 1)), zero) = zero
                             mul(zero, p(shift + degree - (index + 1))) = mul(p(shift + degree - (index + 1)), zero) = zero
                             partial_sums(index + 1) = add(partial_sums(index), mul(\shifted_scalar_polynomial<K, zero>(scalar, shift)(index + 1), p(shift + degree - (index + 1))))
@@ -722,16 +722,16 @@ thm shifted_scalar_convolution_trace_terminal:
         $polynomial_convolution_trace(K, add, mul, \shifted_scalar_polynomial<K, zero>(scalar, shift), p, shift + degree, partial_sums)
         =>:
             partial_sums(shift + degree) = mul(scalar, p(degree))
-    by thm shifted_scalar_convolution_trace_constant_after_shift(K, zero, one, add, mul, scalar, shift, degree, p, partial_sums, shift + degree)
+1release thm shifted_scalar_convolution_trace_constant_after_shift(K, zero, one, add, mul, scalar, shift, degree, p, partial_sums, shift + degree)
 
 thm shifted_scalar_polynomial_times_coefficient:
     ? forall K set, zero, one K, add, mul fn(x, y K) K, scalar K, shift, degree N, p \polynomial_ring<K, zero>:
         $section6::is_field(K, add, mul, zero, one)
         =>:
             \polynomial_multiply<K, zero, one, add, mul>(\shifted_scalar_polynomial<K, zero>(scalar, shift), p)(shift + degree) = mul(scalar, p(degree))
-    by thm polynomial_multiply_satisfies_product(K, zero, one, add, mul, \shifted_scalar_polynomial<K, zero>(scalar, shift), p)
+1release thm polynomial_multiply_satisfies_product(K, zero, one, add, mul, \shifted_scalar_polynomial<K, zero>(scalar, shift), p)
     obtain partial_sums from exist trace fn(idx_i N) K st {$polynomial_convolution_trace(K, add, mul, \shifted_scalar_polynomial<K, zero>(scalar, shift), p, shift + degree, trace), \polynomial_multiply<K, zero, one, add, mul>(\shifted_scalar_polynomial<K, zero>(scalar, shift), p)(shift + degree) = trace(shift + degree)}
-    by thm shifted_scalar_convolution_trace_terminal(K, zero, one, add, mul, scalar, shift, degree, p, partial_sums)
+1release thm shifted_scalar_convolution_trace_terminal(K, zero, one, add, mul, scalar, shift, degree, p, partial_sums)
     \polynomial_multiply<K, zero, one, add, mul>(\shifted_scalar_polynomial<K, zero>(scalar, shift), p)(shift + degree) = partial_sums(shift + degree) = mul(scalar, p(degree))
 
 thm leading_coefficient_scalar_matches:
@@ -742,7 +742,7 @@ thm leading_coefficient_scalar_matches:
             mul(mul(dividend_coefficient, \section6::multiplicative_inverse<K, add, mul, zero, one>(divisor_coefficient)), divisor_coefficient) = dividend_coefficient
     by def:
         ? $section6::is_field(K, add, mul, zero, one)
-    by thm section6::multiplicative_inverse_satisfies_inverse(K, add, mul, zero, one, divisor_coefficient)
+1release thm section6::multiplicative_inverse_satisfies_inverse(K, add, mul, zero, one, divisor_coefficient)
     mul(divisor_coefficient, \section6::multiplicative_inverse<K, add, mul, zero, one>(divisor_coefficient)) = one
     mul(mul(dividend_coefficient, \section6::multiplicative_inverse<K, add, mul, zero, one>(divisor_coefficient)), divisor_coefficient) = mul(dividend_coefficient, mul(\section6::multiplicative_inverse<K, add, mul, zero, one>(divisor_coefficient), divisor_coefficient))
     mul(dividend_coefficient, mul(\section6::multiplicative_inverse<K, add, mul, zero, one>(divisor_coefficient), divisor_coefficient)) = mul(mul(\section6::multiplicative_inverse<K, add, mul, zero, one>(divisor_coefficient), divisor_coefficient), dividend_coefficient)
@@ -757,9 +757,9 @@ thm leading_term_product_matches_dividend:
         dividend_degree >= divisor_degree
         =>:
             \polynomial_multiply<K, zero, one, add, mul>(\shifted_scalar_polynomial<K, zero>(mul(f(dividend_degree), \section6::multiplicative_inverse<K, add, mul, zero, one>(g(divisor_degree))), dividend_degree - divisor_degree), g)(dividend_degree) = f(dividend_degree)
-    by thm shifted_scalar_polynomial_times_coefficient(K, zero, one, add, mul, mul(f(dividend_degree), \section6::multiplicative_inverse<K, add, mul, zero, one>(g(divisor_degree))), dividend_degree - divisor_degree, divisor_degree, g)
+1release thm shifted_scalar_polynomial_times_coefficient(K, zero, one, add, mul, mul(f(dividend_degree), \section6::multiplicative_inverse<K, add, mul, zero, one>(g(divisor_degree))), dividend_degree - divisor_degree, divisor_degree, g)
     dividend_degree - divisor_degree + divisor_degree = dividend_degree
-    by thm leading_coefficient_scalar_matches(K, zero, one, add, mul, f(dividend_degree), g(divisor_degree))
+1release thm leading_coefficient_scalar_matches(K, zero, one, add, mul, f(dividend_degree), g(divisor_degree))
     \polynomial_multiply<K, zero, one, add, mul>(\shifted_scalar_polynomial<K, zero>(mul(f(dividend_degree), \section6::multiplicative_inverse<K, add, mul, zero, one>(g(divisor_degree))), dividend_degree - divisor_degree), g)(dividend_degree - divisor_degree + divisor_degree) = mul(mul(f(dividend_degree), \section6::multiplicative_inverse<K, add, mul, zero, one>(g(divisor_degree))), g(divisor_degree)) = f(dividend_degree)
     \polynomial_multiply<K, zero, one, add, mul>(\shifted_scalar_polynomial<K, zero>(mul(f(dividend_degree), \section6::multiplicative_inverse<K, add, mul, zero, one>(g(divisor_degree))), dividend_degree - divisor_degree), g)(dividend_degree) = \polynomial_multiply<K, zero, one, add, mul>(\shifted_scalar_polynomial<K, zero>(mul(f(dividend_degree), \section6::multiplicative_inverse<K, add, mul, zero, one>(g(divisor_degree))), dividend_degree - divisor_degree), g)(dividend_degree - divisor_degree + divisor_degree) = mul(mul(f(dividend_degree), \section6::multiplicative_inverse<K, add, mul, zero, one>(g(divisor_degree))), g(divisor_degree)) = f(dividend_degree)
 
@@ -771,8 +771,8 @@ thm leading_term_subtraction_cancels:
         dividend_degree >= divisor_degree
         =>:
             \polynomial_subtract<K, zero, one, add, mul>(f, \polynomial_multiply<K, zero, one, add, mul>(\shifted_scalar_polynomial<K, zero>(mul(f(dividend_degree), \section6::multiplicative_inverse<K, add, mul, zero, one>(g(divisor_degree))), dividend_degree - divisor_degree), g))(dividend_degree) = zero
-    by thm leading_term_product_matches_dividend(K, zero, one, add, mul, f, g, dividend_degree, divisor_degree)
-    by thm polynomial_subtract_equal_coefficients_is_zero(K, zero, one, add, mul, f, \polynomial_multiply<K, zero, one, add, mul>(\shifted_scalar_polynomial<K, zero>(mul(f(dividend_degree), \section6::multiplicative_inverse<K, add, mul, zero, one>(g(divisor_degree))), dividend_degree - divisor_degree), g), dividend_degree)
+1release thm leading_term_product_matches_dividend(K, zero, one, add, mul, f, g, dividend_degree, divisor_degree)
+1release thm polynomial_subtract_equal_coefficients_is_zero(K, zero, one, add, mul, f, \polynomial_multiply<K, zero, one, add, mul>(\shifted_scalar_polynomial<K, zero>(mul(f(dividend_degree), \section6::multiplicative_inverse<K, add, mul, zero, one>(g(divisor_degree))), dividend_degree - divisor_degree), g), dividend_degree)
 
 prop is_zero_polynomial(K set, zero K, p \polynomial_ring<K, zero>):
     forall n N:
@@ -806,7 +806,7 @@ template<K set, zero K>:
                 by def:
                     ? $supports_polynomial(K, zero, candidate, {0})
             witness $polynomial_has_finite_support(K, zero, candidate) from {0}
-        by thm set_builder_member(candidate, {candidate_polynomial fn(n N) K: $polynomial_has_finite_support(K, zero, candidate_polynomial)})
+1release thm set_builder_member(candidate, {candidate_polynomial fn(n N) K: $polynomial_has_finite_support(K, zero, candidate_polynomial)})
         candidate $in {candidate_polynomial fn(n N) K: $polynomial_has_finite_support(K, zero, candidate_polynomial)}
         candidate $in \polynomial_ring<K, zero>
         witness exist p \polynomial_ring<K, zero> st {$is_zero_polynomial(K, zero, p)} from candidate:
@@ -858,7 +858,7 @@ thm polynomial_nonzero_support_is_nonempty:
             by contra:
                 ? p(n) = zero
                 \polynomial_nonzero_support<K, zero>(p) = {idx_i N: p(idx_i) != zero}
-                by thm set_builder_member(n, {idx_i N: p(idx_i) != zero})
+1release thm set_builder_member(n, {idx_i N: p(idx_i) != zero})
                 n $in {idx_i N: p(idx_i) != zero}
                 n $in \polynomial_nonzero_support<K, zero>(p)
                 witness $is_nonempty_set(\polynomial_nonzero_support<K, zero>(p)) from n
@@ -872,9 +872,9 @@ thm polynomial_degree_exists_unique:
         not $is_zero_polynomial(K, zero, p)
         =>:
             exist! degree N st {$has_polynomial_degree(K, zero, p, degree)}
-    by thm polynomial_nonzero_support_is_finite(K, zero, p)
+1release thm polynomial_nonzero_support_is_finite(K, zero, p)
     have support finite_set = \polynomial_nonzero_support<K, zero>(p)
-    by thm polynomial_nonzero_support_is_nonempty(K, zero, p)
+1release thm polynomial_nonzero_support_is_nonempty(K, zero, p)
     $is_nonempty_set(support)
     support $subset N
     claim:
@@ -897,7 +897,7 @@ thm polynomial_degree_exists_unique:
                 p(n) = zero
         by contra:
             ? p(n) = zero
-            by thm set_builder_member(n, {idx_i N: p(idx_i) != zero})
+1release thm set_builder_member(n, {idx_i N: p(idx_i) != zero})
             n $in {idx_i N: p(idx_i) != zero}
             n $in support
             n <= finite_set_max(support)
@@ -931,7 +931,7 @@ template<K set, zero K>:
             not $is_zero_polynomial(K, zero, p)
             =>:
                 exist! degree N st {$has_polynomial_degree(K, zero, p, degree)}
-        by thm polynomial_degree_exists_unique(K, zero, p)
+1release thm polynomial_degree_exists_unique(K, zero, p)
 
 thm polynomial_degree_satisfies_degree:
     ? forall K set, zero K, p \polynomial_ring<K, zero>:
@@ -946,7 +946,7 @@ thm polynomial_degree_eq_selected:
         $has_polynomial_degree(K, zero, p, degree)
         =>:
             degree = \polynomial_degree<K, zero>(p)
-    by thm polynomial_degree_satisfies_degree(K, zero, p)
+1release thm polynomial_degree_satisfies_degree(K, zero, p)
     degree < \polynomial_degree<K, zero>(p) or degree = \polynomial_degree<K, zero>(p) or degree > \polynomial_degree<K, zero>(p)
     by cases:
         ? degree = \polynomial_degree<K, zero>(p)

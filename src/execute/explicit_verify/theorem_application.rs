@@ -154,7 +154,7 @@ impl Runtime {
             );
         }
 
-        let by_verification = SuccessVerifyByTheoremResult::new(
+        let theorem_verification = SuccessVerifyTheoremApplicationResult::new(
             thm_name,
             source_fact_id,
             stmt.args.iter().map(|arg| arg.to_string()).collect(),
@@ -168,7 +168,7 @@ impl Runtime {
             SuccessStmtResult::ReleaseThmStmt(Box::new(SuccessReleaseThmStmtResult {
                 statement: stmt.clone(),
                 common: SuccessStmtCommonResult::new(infer_result),
-                verification: Some(by_verification),
+                verification: Some(theorem_verification),
             }))
             .into(),
         )
@@ -241,7 +241,7 @@ impl Runtime {
             );
         }
 
-        let by_verification = SuccessVerifyByTheoremResult::new(
+        let theorem_verification = SuccessVerifyTheoremApplicationResult::new(
             thm_name,
             source_fact_id,
             stmt.args.iter().map(|arg| arg.to_string()).collect(),
@@ -255,7 +255,7 @@ impl Runtime {
             SuccessStmtResult::ReleaseThmStmt(Box::new(SuccessReleaseThmStmtResult {
                 statement: stmt.clone(),
                 common: SuccessStmtCommonResult::new(infer_result),
-                verification: Some(by_verification),
+                verification: Some(theorem_verification),
             }))
             .into(),
         )
@@ -291,11 +291,8 @@ impl Runtime {
                 )
             })?;
 
-        let expanded_stmt = ReleaseThmStmt::new(
-            stmt.name.clone(),
-            stmt.args.clone(),
-            stmt.line_file.clone(),
-        );
+        let expanded_stmt =
+            ReleaseThmStmt::new(stmt.name.clone(), stmt.args.clone(), stmt.line_file.clone());
         let (expanded_success, target_result) = self.run_in_local_env(|rt| {
             let expanded_result = rt.exec_release_thm_stmt(&expanded_stmt).map_err(|error| {
                 short_exec_error(
@@ -387,11 +384,8 @@ impl Runtime {
         stmt: &ByThmStmt,
     ) -> Result<StmtResult, RuntimeError> {
         let selected_fact = stmt.selected_fact.clone();
-        let expanded_stmt = ReleaseThmStmt::new(
-            stmt.name.clone(),
-            stmt.args.clone(),
-            stmt.line_file.clone(),
-        );
+        let expanded_stmt =
+            ReleaseThmStmt::new(stmt.name.clone(), stmt.args.clone(), stmt.line_file.clone());
         let expanded_success = self.run_in_local_env(|rt| {
             rt.exec_release_thm_stmt_affect_environment_only(&expanded_stmt)
                 .map_err(|error| {
@@ -568,7 +562,7 @@ impl Runtime {
                     store_reason,
                 )?
             };
-            let verification = SuccessVerifyByTheoremResult::new_builtin(
+            let verification = SuccessVerifyTheoremApplicationResult::new_builtin(
                 name.to_string(),
                 stmt.args.iter().map(ToString::to_string).collect(),
                 requirement_facts,
@@ -650,7 +644,7 @@ impl Runtime {
                     store_reason,
                 )?
             };
-            let verification = SuccessVerifyByTheoremResult::new_builtin(
+            let verification = SuccessVerifyTheoremApplicationResult::new_builtin(
                 name.to_string(),
                 stmt.args.iter().map(ToString::to_string).collect(),
                 requirement_facts,
@@ -748,7 +742,7 @@ impl Runtime {
                     store_reason,
                 )?
             };
-            let verification = SuccessVerifyByTheoremResult::new_builtin(
+            let verification = SuccessVerifyTheoremApplicationResult::new_builtin(
                 name.to_string(),
                 stmt.args.iter().map(ToString::to_string).collect(),
                 requirement_facts,
@@ -1392,7 +1386,7 @@ impl Runtime {
             self.store_trusted_fact_and_infer_with_reason(conclusion.clone().into(), store_reason)?
         };
         let stored_then_facts = vec![conclusion.to_string()];
-        let verification = SuccessVerifyByTheoremResult::new_builtin(
+        let verification = SuccessVerifyTheoremApplicationResult::new_builtin(
             name.to_string(),
             stmt.args.iter().map(ToString::to_string).collect(),
             requirement_facts,

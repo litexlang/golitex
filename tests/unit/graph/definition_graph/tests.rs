@@ -11,10 +11,7 @@ fn definition_graph_output(source: &'static str) -> String {
         .spawn(move || {
             run_graph(GraphRequest::new(
                 GraphKind::Definition,
-                RunRequest::new(
-                    RunTarget::code(source, "definition_graph_test"),
-                    RunOptions::default(),
-                ),
+                RunRequest::new(RunTarget::code(source), RunOptions::default()),
                 true,
             ))
             .1
@@ -31,6 +28,7 @@ fn definition_graph_reads_environment_stored_props_and_functions() {
     );
 
     assert!(output.contains(r#""graph": "litex-definition-graph""#));
+    assert!(output.contains(r#""label": "-defgraph -e""#));
     assert!(output.contains(r#""id": "definition:prop:p""#));
     assert!(output.contains(r#""id": "definition:prop:q""#));
     assert!(output.contains(r#""id": "definition:fn:f""#));

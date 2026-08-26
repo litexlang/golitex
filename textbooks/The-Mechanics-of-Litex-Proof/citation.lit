@@ -70,7 +70,7 @@ thm gcd_divides_left:
     gcd(a, b) $in N+
     a % gcd(a, b) = 0
     quot(a, gcd(a, b)) $in Z
-    by thm quot_euclidean(a, gcd(a, b))
+1release thm quot_euclidean(a, gcd(a, b))
     witness exist k Z st {a = gcd(a, b) * k} from quot(a, gcd(a, b)):
         a = gcd(a, b) * quot(a, gcd(a, b)) + a % gcd(a, b) = gcd(a, b) * quot(a, gcd(a, b))
 
@@ -82,7 +82,7 @@ thm gcd_divides_right:
     gcd(a, b) $in N+
     b % gcd(a, b) = 0
     quot(b, gcd(a, b)) $in Z
-    by thm quot_euclidean(b, gcd(a, b))
+1release thm quot_euclidean(b, gcd(a, b))
     witness exist k Z st {b = gcd(a, b) * k} from quot(b, gcd(a, b)):
         b = gcd(a, b) * quot(b, gcd(a, b)) + b % gcd(a, b) = gcd(a, b) * quot(b, gcd(a, b))
 
@@ -103,9 +103,9 @@ thm gcd_euclidean_base:
         a != 0
         =>:
             gcd(a, 0) = abs(a)
-    by thm gcd_positive(a, 0)
-    by thm gcd_divides_left(a, 0)
-    by thm _positive_divisor_le_abs(gcd(a, 0), a)
+1release thm gcd_positive(a, 0)
+1release thm gcd_divides_left(a, 0)
+1release thm _positive_divisor_le_abs(gcd(a, 0), a)
     gcd(a, 0) <= abs(a)
     abs(a) > 0
     abs(a) $in N+
@@ -124,7 +124,7 @@ thm gcd_euclidean_base:
     witness exist k Z st {0 = abs(a) * k} from 0:
         0 = abs(a) * 0
     $divides(abs(a), 0)
-    by thm common_divisor_le_gcd(a, 0, abs(a))
+1release thm common_divisor_le_gcd(a, 0, abs(a))
     abs(a) <= gcd(a, 0)
 
 thm gcd_euclidean_step:
@@ -148,42 +148,42 @@ thm gcd_euclidean_step:
                 abs(z) = -z = -(d * k) = d * (-k)
                 witness exist t Z st {abs(z) = d * t} from -k
 
-    by thm gcd_positive(b, a % abs(b))
-    by thm gcd_divides_left(b, a % abs(b))
-    by thm gcd_divides_right(b, a % abs(b))
+1release thm gcd_positive(b, a % abs(b))
+1release thm gcd_divides_left(b, a % abs(b))
+1release thm gcd_divides_right(b, a % abs(b))
     $divides(gcd(b, a % abs(b)), abs(b))
     obtain x from exist k Z st {abs(b) = gcd(b, a % abs(b)) * k}
     obtain y from exist k Z st {a % abs(b) = gcd(b, a % abs(b)) * k}
     abs(b) > 0
     abs(b) $in N+
     quot(a, abs(b)) $in Z
-    by thm quot_euclidean(a, abs(b))
+1release thm quot_euclidean(a, abs(b))
     witness exist q Z st {a = abs(b) * q + a % abs(b)} from quot(a, abs(b)):
         a = abs(b) * quot(a, abs(b)) + a % abs(b)
     obtain q from exist q Z st {a = abs(b) * q + a % abs(b)}
     witness exist t Z st {a = gcd(b, a % abs(b)) * t} from x * q + y:
         a = abs(b) * q + a % abs(b) = (gcd(b, a % abs(b)) * x) * q + gcd(b, a % abs(b)) * y = gcd(b, a % abs(b)) * (x * q + y)
     $divides(gcd(b, a % abs(b)), a)
-    by thm common_divisor_le_gcd(a, b, gcd(b, a % abs(b)))
+1release thm common_divisor_le_gcd(a, b, gcd(b, a % abs(b)))
     gcd(b, a % abs(b)) <= gcd(a, b)
 
-    by thm gcd_positive(a, b)
-    by thm gcd_divides_left(a, b)
-    by thm gcd_divides_right(a, b)
+1release thm gcd_positive(a, b)
+1release thm gcd_divides_left(a, b)
+1release thm gcd_divides_right(a, b)
     $divides(gcd(a, b), abs(b))
     obtain u from exist k Z st {a = gcd(a, b) * k}
     obtain v from exist k Z st {abs(b) = gcd(a, b) * k}
     abs(b) > 0
     abs(b) $in N+
     quot(a, abs(b)) $in Z
-    by thm quot_euclidean(a, abs(b))
+1release thm quot_euclidean(a, abs(b))
     witness exist r Z st {a = abs(b) * r + a % abs(b)} from quot(a, abs(b)):
         a = abs(b) * quot(a, abs(b)) + a % abs(b)
     obtain r from exist r Z st {a = abs(b) * r + a % abs(b)}
     witness exist t Z st {a % abs(b) = gcd(a, b) * t} from u - v * r:
         a % abs(b) = a - abs(b) * r = gcd(a, b) * u - (gcd(a, b) * v) * r = gcd(a, b) * (u - v * r)
     $divides(gcd(a, b), a % abs(b))
-    by thm common_divisor_le_gcd(b, a % abs(b), gcd(a, b))
+1release thm common_divisor_le_gcd(b, a % abs(b), gcd(a, b))
     gcd(a, b) <= gcd(b, a % abs(b))
 
 # The Euclidean remainder has strictly smaller absolute value than a nonzero divisor.
@@ -235,7 +235,7 @@ thm bezout_identity:
             case u != 0
             case v != 0:
                 impossible v = 0
-        by thm gcd_euclidean_base(u)
+1release thm gcd_euclidean_base(u)
         by cases:
             ? euclid_bezout_l(u, v) * u + euclid_bezout_r(u, v) * v = gcd(u, v)
             case u >= 0:
@@ -304,7 +304,7 @@ thm bezout_identity:
             v != 0 or r != 0
             abs(r) = abs(r)
             $euclid_bezout_identity_at_measure(abs(r))
-            by thm gcd_euclidean_step(u, v)
+1release thm gcd_euclidean_step(u, v)
             by cases:
                 ? euclid_bezout_l(u, v) * u + euclid_bezout_r(u, v) * v = gcd(u, v)
                 case v >= 0:
@@ -391,14 +391,14 @@ thm gcd_of_prime_is_one_or_prime:
         $prime(p)
         =>:
             gcd(a, p) = 1 or gcd(a, p) = p
-    by thm gcd_positive(a, p)
-    by thm gcd_divides_right(a, p)
+1release thm gcd_positive(a, p)
+1release thm gcd_divides_right(a, p)
     obtain k from exist k Z st {p = gcd(a, p) * k}
     gcd(a, p) * k + 0 = gcd(a, p) * k
     p = gcd(a, p) * k
     p = gcd(a, p) * k + 0
     p % gcd(a, p) = 0
-    by thm _positive_divisor_le_abs(gcd(a, p), p)
+1release thm _positive_divisor_le_abs(gcd(a, p), p)
     abs(p) = p
     gcd(a, p) <= p
     gcd(a, p) = p or gcd(a, p) < p

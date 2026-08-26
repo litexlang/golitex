@@ -1,26 +1,24 @@
-# Litex → Lean, Then an External Mathlib Adapter
+# Litex → Lean, with a Property-Centered Companion
 
-This showcase fixes a strict ownership boundary around the theorem
+This showcase now explains two related ideas without blurring their ownership:
 
-```text
-1 + 3 + 5 + ⋯ + (2n - 1) = n²,  for every integer n ≥ 1.
-```
-
-ToLean translates the `.lit` declarations and their verified proof routes. It
-does not invent a second theorem merely because a native Mathlib signature
-would be convenient. Any such interface is a separate artifact authored by an
-external AI or human.
+1. `main.lit` is the production Litex → generated Lean pipeline for
+   `1 + 3 + ⋯ + (2n - 1) = n²`.
+2. `property_flow.lit` shows the fuller mathematical lifecycle the source
+   language should encourage: define a `prop`, prove a reusable law about it,
+   prove an instance, and compose those results into a new conclusion.
 
 ## Artifact ownership
 
 | File | Owner and role |
 | --- | --- |
-| `main.lit` | mathematical source verified by Litex |
-| `LitexToMathlibPipelineGenerated.lean` | generated ToLean translation; never hand-edited |
-| `LitexToMathlibPipelineAdapter.lean` | external-AI Lean adapter; not compiler output |
+| `main.lit` | production mathematical source verified by Litex and translated by ToLean |
+| `property_flow.lit` | Litex-verified companion for the complete property lifecycle |
+| `LitexToMathlibPipelineGenerated.lean` | generated translation of `main.lit`; never hand-edited |
+| `LitexToMathlibPipelineAdapter.lean` | external-AI native Mathlib adapter; not compiler output |
 | `LitexToMathlibPipelineDownstream.lean` | ordinary Mathlib consumer of the adapter |
 
-The flow is deliberately explicit:
+The executable ownership flow is:
 
 ```text
 main.lit
@@ -28,8 +26,12 @@ main.lit
 LitexToMathlibPipelineGenerated.lean
    └─ source-owned declarations only
 
-external AI reads the mathematical/generated context
-   ↓ writes a separate Lean module
+property_flow.lit
+   ↓ Litex verification
+prop definition → reusable law → odd-sum instance → nonnegative conclusion
+
+external AI reads both mathematical contexts
+   ↓ writes a separate native Lean mirror
 LitexToMathlibPipelineAdapter.lean
    ↓ imported by
 LitexToMathlibPipelineDownstream.lean
@@ -40,46 +42,100 @@ The generated module contains the canonical `Litex.Same` theorems
 `__Compiler_main.sum_first_ten_odds`. It contains no `namespace Native`,
 private native certificate, Mathlib corollary, or consumer.
 
-The adapter exposes the independent native theorem
+## The property flow
 
-```lean
-theorem LitexToMathlibPipeline.ExternalAI.sum_first_odds
-    (n : ℤ) (one_le_n : 1 ≤ n) :
-    ∑ k ∈ Finset.Icc (1 : ℤ) n, (2 * k - 1) = n ^ 2
-```
-
-Its Lean proof is owned by that adapter. Importing the generated module gives
-the external author context; it does not falsely claim that ToLean synthesized
-or derived this new public statement.
-
-## The Litex proof
-
-Both induction cases contain their calculations directly. The base is:
+The companion source defines a relation with a supplied witness:
 
 ```litex
-? from n = 1:
-    kth_odd(1) = 2 * 1 - 1 = 1
-    sum(1, 1, kth_odd) = kth_odd(1) = 2 * 1 - 1 = 1 = 1^2
+prop is_square_of(value, root Z):
+    value = root^2
 ```
 
-There is no one-use singleton, sum-step, or square-step theorem and no explicit
-theorem invocation. The verifier retains checked function reduction,
-registered integer-sum rules, the exact induction-hypothesis `FactId`, and
-arithmetic normalization. ToLean replays that evidence only for the source
-declarations.
+This is a `prop`, not a function: callers provide `value` and `root`, and the
+relation says whether they fit. It is also intentionally not yet the
+existential property “there exists some root”; retaining the witness makes the
+constructor and consumer interfaces visible.
 
-The source then specializes its own universal result without `release thm`:
+The reusable consumer is:
 
 ```litex
-thm sum_first_ten_odds:
-    ? forall:
-        sum(1, 10, kth_odd) = 100
-    sum(1, 10, kth_odd) = 10^2 = 100
+thm square_of_is_nonnegative:
+    ? forall value, root Z:
+        $is_square_of(value, root)
+        =>:
+            value >= 0
+    root^2 >= 0
 ```
 
-Ordinary known-`forall` matching selects `sum_first_odds(10)` for the first
-edge, and checked numeric normalization closes `10^2 = 100`. The generated
-Lean theorem cites the generated universal theorem directly.
+The source then packages the established odd-sum equality as a property fact:
+
+```litex
+thm sum_first_odds_is_square_of_n:
+    ? forall n Z:
+        n >= 1
+        =>:
+            $is_square_of(sum(1, n, kth_odd), n)
+    by thm sum_first_odds(n) => sum(1, n, kth_odd) = n^2
+    by def $is_square_of(sum(1, n, kth_odd), n)
+```
+
+Finally it composes the constructor and consumer:
+
+```litex
+thm sum_first_odds_nonnegative:
+    ? forall n Z:
+        n >= 1
+        =>:
+            sum(1, n, kth_odd) >= 0
+    by thm sum_first_odds_is_square_of_n(n) => $is_square_of(sum(1, n, kth_odd), n)
+    by thm square_of_is_nonnegative(sum(1, n, kth_odd), n) => sum(1, n, kth_odd) >= 0
+```
+
+Those two explicit calls are reader bridges: one constructs the property and
+one consumes its general law. Liveness probes show that either call can be
+inferred after the other is made explicit, but the bodyless theorem fails; the
+two-line form best exposes the intended architecture.
+
+## Generated and native sides
+
+ToLean currently translates `main.lit` only. The native adapter separately
+defines `ExternalAI.IsSquareOf`, proves `square_of_is_nonnegative`, packages
+the native odd-sum result, and derives nonnegativity. This mirrors the
+mathematics but does not falsely claim that the adapter was synthesized from
+the companion source.
+
+The current production compiler fails closed on the companion's named local
+predicate consumers. In particular, it does not yet consume the local
+`by thm`/`by def` steps in `sum_first_odds_is_square_of_n`, or the
+predicate-projected equality used by `square_of_is_nonnegative`. A stronger
+existential wrapper such as
+
+```litex
+prop is_integer_square(value Z):
+    exist root Z st {value = root^2}
+```
+
+is already Litex-verifiable, but its predicate-backed local `obtain` is one
+more compiler consumer still required. These are compiler Result-consumer
+gaps, not unproved mathematics.
+
+## Suggested next examples
+
+1. Make `property_flow.lit` a second generated module after adding named
+   predicate-premise, `by thm`, `by def`, and local `obtain` consumers. This is
+   the highest-value next pipeline example because it completes the exact
+   prop lifecycle above.
+2. Generalize `is_square_of(value, root)` to existential
+   `is_integer_square(value)`, then prove closure under multiplication and
+   nonnegativity. This tests witness introduction and elimination rather than
+   only equality transport.
+3. Add a set property example modeled after
+   `lean/examples/50_SetExtensionResultComposition.lit`: define a membership
+   property, prove two inclusions, then conclude set equality.
+4. Add a finite classification example modeled after
+   `lean/examples/51_FiniteEnumerationResultComposition.lit`: define a finite
+   admissibility prop, prove candidates belong, then derive an exhaustive
+   conclusion.
 
 ## Reproduce it
 
@@ -89,6 +145,8 @@ From the repository root:
 cargo build --release
 target/release/litex -compact -strict -runner -isolated \
   -f showcases/litex_to_lean_mathlib_pipeline/main.lit
+target/release/litex -compact -strict -runner -isolated \
+  -f showcases/litex_to_lean_mathlib_pipeline/property_flow.lit
 target/release/stmt_result_to_lean_compiler compile \
   showcases/litex_to_lean_mathlib_pipeline/main.lit \
   showcases/litex_to_lean_mathlib_pipeline/LitexToMathlibPipelineGenerated.lean
@@ -98,7 +156,6 @@ cd lean
 lake build LitexToMathlibPipeline
 ```
 
-The Litex runner must exit `0` with top-level `ok: true`; the drift test must
-reproduce the checked-in generated file; and Lake must accept the generated
-translation, external adapter, and downstream consumer as three visibly
-separate layers.
+Both Litex runners must exit `0` with top-level `ok: true`; the drift test must
+reproduce the checked-in generated file; and Lake must accept the generated,
+adapter, and downstream layers as visibly separate artifacts.

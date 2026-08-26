@@ -765,7 +765,7 @@ impl SuccessVerifyByChoiceResult {
     }
 }
 
-impl SuccessVerifyByTheoremResult {
+impl SuccessVerifyTheoremApplicationResult {
     pub fn new(
         theorem: String,
         source_fact_id: Option<FactId>,
@@ -777,7 +777,7 @@ impl SuccessVerifyByTheoremResult {
         domain_checks: Vec<StmtResult>,
     ) -> Self {
         let parent_stored_facts = stored_then_facts.clone();
-        SuccessVerifyByTheoremResult {
+        SuccessVerifyTheoremApplicationResult {
             theorem,
             theorem_source: "litex".to_string(),
             source_fact_id,
@@ -809,7 +809,7 @@ impl SuccessVerifyByTheoremResult {
         provenance: Option<String>,
     ) -> Self {
         let parent_stored_facts = stored_then_facts.clone();
-        SuccessVerifyByTheoremResult {
+        SuccessVerifyTheoremApplicationResult {
             theorem,
             theorem_source: "builtin_rule".to_string(),
             source_fact_id: None,

@@ -578,9 +578,9 @@ pub(super) fn optional_choice_verification(
         .unwrap_or(JsonValue::Null)
 }
 
-pub(super) fn by_theorem_verification_value(
+pub(super) fn theorem_application_verification_value(
     renderer: &mut StmtResultJsonV2,
-    result: &SuccessVerifyByTheoremResult,
+    result: &SuccessVerifyTheoremApplicationResult,
 ) -> JsonValue {
     object(vec![
         string_field("kind", "SuccessVerifyByTheoremResult"),

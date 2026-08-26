@@ -198,9 +198,7 @@ impl StmtResultToLeanCompiler {
                         self.unsupported_success_stmt_result(success)
                     }
                 }
-                SuccessByStmtResult::ByThmStmt(_) => {
-                    self.unsupported_success_stmt_result(success)
-                }
+                SuccessByStmtResult::ByThmStmt(_) => self.unsupported_success_stmt_result(success),
                 SuccessByStmtResult::ByReflexivePropStmt(result) => self
                     .compile_registered_predicate_property_stmt_result_to_lean_source(
                         &result.statement.forall_fact,

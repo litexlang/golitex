@@ -75,5 +75,5 @@ impl Runtime {
 }
 
 #[cfg(test)]
-#[path = "../../../tests/unit/parse/by_stmt/thm_by_stmt/tests.rs"]
+#[path = "../../../tests/unit/parse/explicit_verify/theorem_application/tests.rs"]
 mod tests;

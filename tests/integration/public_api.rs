@@ -1,7 +1,7 @@
 use litex::api::{
     compile_litex_source_to_lean_compilation_report, compile_litex_source_to_lean_source, run,
-    OutputLanguage, OutputStyle, RunOptions, RunOutcome, RunRequest, RunTarget, Runtime,
-    SourceImportPolicy, SourceRunOutcome, StmtResult, StmtResultToLeanCompilationReport,
+    OutputLanguage, OutputStyle, RunOptions, RunOutcome, RunRequest, RunTarget, RunTargetKind,
+    Runtime, SourceImportPolicy, SourceRunOutcome, StmtResult, StmtResultToLeanCompilationReport,
 };
 
 #[test]
@@ -21,12 +21,15 @@ fn curated_api_executes_litex_inside_an_existing_runtime() {
 #[test]
 fn curated_api_exposes_one_owned_run_entry_for_every_target_kind() {
     let code = run(RunRequest::new(
-        RunTarget::code("1 = 1", "public-code.lit"),
+        RunTarget::code("1 = 1"),
         RunOptions::default(),
     ));
     assert!(code.ok, "{}", code.output);
+    assert_eq!(code.target_kind, RunTargetKind::Code);
+    assert!(code.target_path.is_none());
 
     let _: fn(RunRequest) -> RunOutcome = run;
+    let _: fn(&str) -> RunTarget = RunTarget::code;
     let _: fn(&str) -> RunTarget = RunTarget::file;
     let _: fn(&str) -> RunTarget = RunTarget::repository;
 }
