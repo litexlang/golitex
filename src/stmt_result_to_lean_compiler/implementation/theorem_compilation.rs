@@ -1332,7 +1332,7 @@ impl StmtResultToLeanCompiler {
                 native_integer_argument,
             ));
         }
-        let mut instantiator = Runtime::new();
+        let mut instantiator = Runtime::default();
         // Capture-avoiding substitution for existential conclusions consults
         // the Runtime's visible-definition frame even though compilation does
         // not execute or search for any proof. Give this isolated structural

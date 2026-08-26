@@ -1,9 +1,10 @@
 use crate::output::display_stmt_result_json_v2;
 use crate::prelude::*;
+use crate::test_support::execute_source;
 
 #[test]
 fn conjunction_store_returns_typed_component_results_with_exact_fact_ids() {
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("conjunction_component_result_test.lit");
     let (mut results, error) = execute_source("1 = 1 and 2 = 2", &mut runtime);
     assert!(error.is_none(), "{error:?}");

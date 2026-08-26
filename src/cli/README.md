@@ -23,7 +23,7 @@ invalid combination -> print help and exit 2
 | `litex -compact -runner -f example.lit` | Emits one compact runner wrapper for a file. |
 | `litex -lang zh-Hans -e '1 = 2'` | Selects Simplified Chinese diagnostics such as `验证错误`; `zh-Hant` selects Traditional Chinese. |
 | `litex -compact -detail -e '1 = 1'` | Rejected because compact and detailed output conflict. |
-| `litex -strict -trust-before-line 10 -f example.lit` | Rejected because strict mode cannot use a trusted prefix. |
+| `litex -strict -f example.lit` | Verifies configured dependencies and rejects source-level trust or axioms. |
 
 ## Start here
 

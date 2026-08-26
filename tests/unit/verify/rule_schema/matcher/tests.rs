@@ -1,5 +1,6 @@
 use super::*;
 use crate::parse::Tokenizer;
+use crate::test_support::execute_source;
 use crate::verify::local_builtin_catalog::registered_local_builtin_rules;
 use std::rc::Rc;
 
@@ -53,7 +54,7 @@ fn sum_single_schema_matches_two_alpha_equivalent_anonymous_occurrences() {
                 .iter()
                 .find(|rule| rule.id().as_str() == "aggregate.sum_single")
                 .expect("sum-single rule");
-            let mut runtime = Runtime::new();
+            let mut runtime = Runtime::default();
             runtime.start_isolated_source("sum-single-matcher-test.lit");
             let (_, setup_error) = execute_source("have fn odd(k Z) Z = 2 * k - 1", &mut runtime);
             assert!(setup_error.is_none(), "{setup_error:?}");

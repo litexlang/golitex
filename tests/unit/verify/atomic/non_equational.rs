@@ -5,13 +5,13 @@ use crate::fact::{AtomicFact, Fact, InFact};
 use crate::infer::SuccessInferResult;
 use crate::obj::{Add, Number, Obj, StandardSet};
 use crate::parse::Tokenizer;
-use crate::pipeline::execute_source;
 use crate::result::{
     BuiltinRuleEvidence, EvaluateBinaryObjOperator, StmtResult, SuccessEvaluateObjStepResult,
     SuccessFactProofResult, SuccessFactStmtResult, SuccessStmtResult,
 };
 use crate::runtime::Runtime;
 use crate::stmt::Stmt;
+use crate::test_support::execute_source;
 use std::rc::Rc;
 
 #[test]
@@ -24,7 +24,7 @@ fn direct_numeric_membership_retains_recursive_evaluation_evidence() {
     let fact: AtomicFact =
         InFact::new(expression, StandardSet::N.into(), default_line_file()).into();
 
-    let result = Runtime::new().verify_non_equational_atomic_fact_by_direct_evaluation(&fact);
+    let result = Runtime::default().verify_non_equational_atomic_fact_by_direct_evaluation(&fact);
     let StmtResult::Success(SuccessStmtResult::Fact(success)) = result else {
         panic!("2 + 3 in N should be a successful fact result");
     };
@@ -68,7 +68,7 @@ fn anonymous_function_membership_is_not_dispatched_by_the_generic_orchestrator()
 
 #[test]
 fn registered_symmetric_predicate_verifier_wraps_the_exact_reordered_child_result() {
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("registered_symmetric_result_test.lit");
     let (_, setup_error) = execute_source("prop any_set(x set, y set):\n    x = x", &mut runtime);
     assert!(setup_error.is_none(), "{setup_error:?}");

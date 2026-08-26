@@ -1,17 +1,17 @@
 use litex::api::{
-    compile_litex_source_to_lean_compilation_report, compile_litex_source_to_lean_source,
-    execute_source, run, OutputLanguage, OutputStyle, RunOptions, RunOutcome, RunRequest,
-    RunTarget, Runtime, StmtResult, StmtResultToLeanCompilationReport,
+    compile_litex_source_to_lean_compilation_report, compile_litex_source_to_lean_source, run,
+    OutputLanguage, OutputStyle, RunOptions, RunOutcome, RunRequest, RunTarget, Runtime,
+    SourceImportPolicy, SourceRunOutcome, StmtResult, StmtResultToLeanCompilationReport,
 };
 
 #[test]
 fn curated_api_executes_litex_inside_an_existing_runtime() {
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::new(OutputStyle::Compact, false, OutputLanguage::English);
     runtime.start_isolated_source("public-api.lit");
-    runtime.set_output_style(OutputStyle::Compact);
-    runtime.output_language = OutputLanguage::English;
 
-    let (results, error) = execute_source("1 = 1", &mut runtime);
+    let (results, error) = runtime
+        .execute_source("1 = 1", SourceImportPolicy::UseRuntimePolicy)
+        .into_parts();
 
     assert!(error.is_none(), "{error:?}");
     assert_eq!(results.len(), 1);
@@ -34,13 +34,7 @@ fn curated_api_exposes_one_owned_run_entry_for_every_target_kind() {
 #[test]
 fn curated_api_keeps_only_canonical_execution_paths_public() {
     let _: fn(&mut Runtime, &str) = Runtime::start_isolated_source;
-    let _: fn(
-        &str,
-        &mut litex::runtime::Runtime,
-    ) -> (
-        Vec<litex::result::StmtResult>,
-        Option<litex::error::RuntimeError>,
-    ) = litex::pipeline::execute_source;
+    let _: fn(&mut Runtime, &str, SourceImportPolicy) -> SourceRunOutcome = Runtime::execute_source;
     let _: fn(RunRequest) -> RunOutcome = litex::pipeline::run;
     let _: fn(&str) -> Result<String, String> = litex::pipeline::resolve_source_file_path;
     let _: fn(&str, &str) -> Result<String, String> = compile_litex_source_to_lean_source;

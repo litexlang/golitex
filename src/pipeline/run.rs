@@ -1,26 +1,34 @@
 use super::{
-    display_trusted_prefix_report_json, execute_file_in_runtime, execute_repository_target,
-    execute_source, render_run_output, render_run_summary, resolve_source_file_path,
-    FileExecutionOptions, RepositoryExecutionOptions, RunSummaryRequest,
+    execute_file_in_runtime, execute_repository_target, render_run_output, render_run_summary,
+    resolve_source_file_path, FileExecutionOptions, RunSummaryRequest, SourceImportPolicy,
 };
-use crate::common::{helper::remove_windows_carriage_return, output_language::OutputLanguage};
+use crate::common::{helper::remove_windows_carriage_from_str, output_language::OutputLanguage};
 use crate::error::RuntimeError;
 use crate::module_manager::{discover_repository, RepositoryFileTarget};
 use crate::result::StmtResult;
-use crate::runtime::{OutputStyle, Runtime, TrustedPrefixReport};
+use crate::runtime::{OutputStyle, Runtime};
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum RunTarget {
-    Code { source: String, label: String },
-    File { path: String },
-    Repository { path: String },
+    Code {
+        source: String,
+        source_label: String,
+    },
+    File {
+        path: String,
+    },
+    Repository {
+        path: String,
+    },
 }
 
 impl RunTarget {
-    pub fn code(source: &str, label: &str) -> Self {
+    /// Create an inline source target. `source_label` is the synthetic file name
+    /// used in diagnostics because inline code has no filesystem path.
+    pub fn code(source: &str, source_label: &str) -> Self {
         Self::Code {
             source: source.to_string(),
-            label: label.to_string(),
+            source_label: source_label.to_string(),
         }
     }
 
@@ -44,7 +52,6 @@ pub struct RunOptions {
     pub output_language: OutputLanguage,
     pub summarize: bool,
     pub force_isolated: bool,
-    pub trust_before_line: Option<usize>,
 }
 
 impl Default for RunOptions {
@@ -55,7 +62,6 @@ impl Default for RunOptions {
             output_language: OutputLanguage::English,
             summarize: false,
             force_isolated: false,
-            trust_before_line: None,
         }
     }
 }
@@ -81,43 +87,42 @@ pub struct RunOutcome {
     pub output: String,
     pub target_error: Option<String>,
     pub selected_repository_target: Option<RepositoryFileTarget>,
-    pub trusted_prefix_report: Option<TrustedPrefixReport>,
-    pub trusted_prefix_setup_rejected: bool,
 }
 
 pub fn run(request: RunRequest) -> RunOutcome {
     let RunRequest { target, options } = request;
 
-    let mut runtime = Runtime::new();
-    runtime.set_output_style(options.output_style);
-    runtime.strict_mode = options.strict_mode;
-    runtime.output_language = options.output_language;
+    let mut runtime = Runtime::new(
+        options.output_style,
+        options.strict_mode,
+        options.output_language,
+    );
 
     let mut target_error = None;
     let mut selected_repository_target = None;
-    let mut trusted_prefix_report = None;
-    let mut trusted_prefix_setup_rejected = false;
     let (target_kind, target_label, stmt_results, runtime_error) = match target {
-        RunTarget::Code { source, label } => {
-            runtime.start_isolated_source(label.as_str());
-            let (results, error) = execute_source(
-                remove_windows_carriage_return(source.as_str()).as_str(),
-                &mut runtime,
-            );
-            ("code", label, results, error)
+        RunTarget::Code {
+            source,
+            source_label,
+        } => {
+            runtime.start_isolated_source(source_label.as_str());
+            let (results, error) = runtime
+                .execute_source(
+                    remove_windows_carriage_from_str(source.as_str()).as_str(),
+                    SourceImportPolicy::UseRuntimePolicy,
+                )
+                .into_parts();
+            ("code", source_label, results, error)
         }
         RunTarget::File { path } => match resolve_source_file_path(path.as_str()) {
             Ok(resolved_path) => {
-                let (results, error, report, setup_rejected) = execute_file_in_runtime(
+                let (results, error) = execute_file_in_runtime(
                     resolved_path.as_str(),
                     &mut runtime,
                     FileExecutionOptions {
                         force_isolated: options.force_isolated,
-                        trust_before_line: options.trust_before_line,
                     },
                 );
-                trusted_prefix_report = report;
-                trusted_prefix_setup_rejected = setup_rejected;
                 ("file", resolved_path, results, error)
             }
             Err(message) => {
@@ -126,15 +131,11 @@ pub fn run(request: RunRequest) -> RunOutcome {
             }
         },
         RunTarget::Repository { path } => {
-            let normalized_path = remove_windows_carriage_return(path.as_str());
+            let normalized_path = remove_windows_carriage_from_str(path.as_str());
             match discover_repository(&mut runtime, normalized_path.as_str()) {
                 Ok(target) => {
                     selected_repository_target = Some(target);
-                    let (results, error) = execute_repository_target(
-                        &mut runtime,
-                        target,
-                        RepositoryExecutionOptions::default(),
-                    );
+                    let (results, error) = execute_repository_target(&mut runtime, target);
                     ("repo", normalized_path, results, error)
                 }
                 Err(error) => ("repo", normalized_path, Vec::new(), Some(error)),
@@ -147,32 +148,13 @@ pub fn run(request: RunRequest) -> RunOutcome {
     } else {
         render_run_output(&runtime, &stmt_results, &runtime_error)
     };
-    if let Some(report) = trusted_prefix_report.as_ref() {
-        let mut trusted_prefix_output = display_trusted_prefix_report_json(report);
-        if !output.trim().is_empty() {
-            trusted_prefix_output.push('\n');
-            trusted_prefix_output.push_str(output.trim());
-        }
-        output = trusted_prefix_output;
+    if options.summarize {
         output.push('\n');
         output.push_str(
             render_run_summary(RunSummaryRequest {
                 runtime: &runtime,
                 stmt_results: &stmt_results,
                 runtime_error: &runtime_error,
-                trusted_prefix_report: Some(report),
-            })
-            .as_str(),
-        );
-        output.push('\n');
-    } else if options.summarize {
-        output.push('\n');
-        output.push_str(
-            render_run_summary(RunSummaryRequest {
-                runtime: &runtime,
-                stmt_results: &stmt_results,
-                runtime_error: &runtime_error,
-                trusted_prefix_report: None,
             })
             .as_str(),
         );
@@ -189,7 +171,5 @@ pub fn run(request: RunRequest) -> RunOutcome {
         output,
         target_error,
         selected_repository_target,
-        trusted_prefix_report,
-        trusted_prefix_setup_rejected,
     }
 }

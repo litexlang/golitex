@@ -3,7 +3,7 @@ use crate::prelude::*;
 use std::rc::Rc;
 
 fn parse_one_stmt_error_message(source_code: &str) -> String {
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     let tokenizer = Tokenizer::new();
     let mut blocks = tokenizer
         .parse_blocks(source_code, Rc::from("parse_stmt_diagnostic_test.lit"))
@@ -17,7 +17,7 @@ fn parse_one_stmt_error_message(source_code: &str) -> String {
 }
 
 fn parse_one_stmt(source_code: &str) -> Result<Stmt, RuntimeError> {
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     let tokenizer = Tokenizer::new();
     let mut blocks = tokenizer
         .parse_blocks(source_code, Rc::from("parse_stmt_diagnostic_test.lit"))
@@ -61,7 +61,7 @@ fn trust_forms_and_import_boundaries_parse_as_expected() {
         "{message}"
     );
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("isolated_import_test.lit");
     runtime.set_current_source_allows_inline_imports(true);
     let tokenizer = Tokenizer::new();

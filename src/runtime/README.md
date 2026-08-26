@@ -6,7 +6,7 @@ execution and statement-proof stacks that are cleared or popped at their
 actual lifecycle boundaries.
 
 ```text
-Runtime::new()
+Runtime::new(output_style, strict_mode, output_language)
   module_manager = one shared module world
   execution_stack = []
   next_fact_id = 1
@@ -28,7 +28,7 @@ run source `1 = 1`
 | `ParseContext` | Free binders and temporary struct/tuple views needed before the current statement executes. A source binder such as `a &Pair` can therefore parse later `a.left` syntax within the same recursive statement. |
 | `Environment` | Checked definitions, facts, and persistent mathematical caches. A stored `SymbolDefinition` owns its definition-time struct/tuple views, so exact `SymbolId` references keep working across exported files and imported modules. Child-environment merge commits this mathematical state; transient statement-proof cache entries and recursion guards are not part of the merge. |
 | `ModuleManager` | Repository/module lifecycle plus parse-only struct definitions and unverified-import diagnostics shared by files in that module world. |
-| Local matcher/runner values | Recursive forall-argument bindings and trusted-prefix policy/report live only for the operation using them; they are not ambient `Runtime` state. |
+| Local matcher values | Recursive forall-argument bindings live only for the operation using them; they are not ambient `Runtime` state. |
 
 Start with [`state.rs`](state.rs) for the `Runtime` fields, run initialization,
 output configuration, and active execution frames. The remaining code is

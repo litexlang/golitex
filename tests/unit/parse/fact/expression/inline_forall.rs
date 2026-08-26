@@ -5,7 +5,7 @@ use crate::prelude::*;
 use std::rc::Rc;
 
 fn parse_one_fact_line(line: &str) -> Result<Fact, RuntimeError> {
-    let mut rt = Runtime::new();
+    let mut rt = Runtime::default();
     let tokenizer = Tokenizer::new();
     let mut blocks = tokenizer.parse_blocks(line, Rc::from("test.lit"))?;
     assert_eq!(blocks.len(), 1, "{line:?}");

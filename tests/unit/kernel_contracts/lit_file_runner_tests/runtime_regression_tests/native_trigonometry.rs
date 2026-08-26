@@ -1,4 +1,5 @@
 use super::*;
+use crate::test_support::execute_source;
 
 #[test]
 fn native_trigonometric_objects_have_reserved_syntax_and_stable_kinds() {
@@ -545,14 +546,14 @@ fn native_trigonometry_has_explicit_backend_boundaries() {
 }
 
 fn run_trigonometric_source(source_code: &str, label: &str) -> (bool, String) {
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source(label);
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     render_run_output(&runtime, &stmt_results, &runtime_error)
 }
 
 fn run_trigonometric_source_detailed(source_code: &str, label: &str) -> (bool, String) {
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.set_output_style(OutputStyle::Detailed);
     runtime.start_isolated_source(label);
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);

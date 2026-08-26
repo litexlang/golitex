@@ -2,7 +2,7 @@ use super::*;
 
 #[test]
 fn fn_eq_infers_ordinary_equality() {
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("fn_eq_infers_ordinary_equality");
 
     let f: Obj = Identifier::new("f".to_string()).into();

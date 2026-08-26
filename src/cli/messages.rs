@@ -34,7 +34,6 @@ pub(super) fn help_message() -> String {
     let result = r#"litex : start an isolated persistent REPL; terminal import is available
 litex -f <file> : require a direct-parent litex.config and run the module prefix through this file
 litex -isolated -f <file> : run any standalone file and continue in an isolated REPL
-litex -f <file> -trust-before-line <X> : trust top-level statements before the exact header line X, then verify from X
 litex -r <folder> : run a module's recursive [export] tree, or the root prefix through a selected submodule
 litex -e <code> : execute the given code
 litex -runner -f <file> : run a file and return one wrapper JSON object
@@ -68,7 +67,6 @@ litex -compact : show minimal success output; RuntimeError output always uses fu
 litex : show normal success output with internal statements and direct verification reasons; RuntimeError output is detailed
 litex -detail : include full audit trace details and raw source paths for both success and RuntimeError JSON output
 litex -strict : verify configured imports and -f prefix entries, and reject user trust, trust have, and axiom statements
-litex -trust-before-line <X> : preview development tool for direct -f runs; X must name an exact top-level statement header line, cannot be used with -strict, and an isolated cutoff run exits after its summary
 litex -summarize : append one run summary JSON object after ordinary verifier command output
 litex -lang <en|zh|zh-Hans|zh-Hant|ja|ko|es|fr|de|pt|ru|ar|hi|vi|id> : choose output language
 "#;

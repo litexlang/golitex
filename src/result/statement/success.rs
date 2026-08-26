@@ -895,15 +895,15 @@ pub struct SuccessReusedImportResult {
 pub struct SuccessEvalStmtResult {
     pub statement: EvalStmt,
     pub common: SuccessStmtCommonResult,
-    /// The execution layer selected for this `eval`. A trusted-prefix pass can
-    /// deliberately skip evaluation; ordinary execution owns the exact source
+    /// The execution layer selected for this `eval`. A configured trusted
+    /// source can deliberately skip evaluation; verified execution owns the exact source
     /// and resulting object and, when available, the recursive numeric
     /// computation selected by the evaluator.
     pub execution: SuccessEvalStmtExecutionResult,
 }
 
 pub enum SuccessEvalStmtExecutionResult {
-    SkippedByTrustedPrefix,
+    SkippedByTrustedExecution,
     Evaluated(Box<SuccessEvaluatedEvalStmtResult>),
 }
 

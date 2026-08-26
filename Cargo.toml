@@ -81,10 +81,6 @@ path = "tests/integration/stmt_result_to_lean_compiler_tracers.rs"
 name = "stmt_result_to_lean_markdown_code_blocks_cli"
 path = "tests/integration/stmt_result_to_lean_markdown_code_blocks_cli.rs"
 
-[[test]]
-name = "trust_before_line_project"
-path = "tests/integration/trust_before_line_project.rs"
-
 [dependencies]
 
 [profile.dev]

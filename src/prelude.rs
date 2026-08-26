@@ -228,14 +228,12 @@ pub use crate::obj::{
 };
 pub use crate::parse::{TokenBlock, Tokenizer};
 pub use crate::pipeline::{
-    display_runtime_error_json, display_stmt_exec_result_json, display_trusted_prefix_report_json,
-    execute_file_in_runtime, execute_repository_target, execute_source,
-    execute_source_with_options, execute_top_level_statement,
-    execute_top_level_statement_in_trusted_prefix_run, render_run_output, render_run_summary,
-    resolve_source_file_path, run, run_isolated_repl_with_runtime, run_latex_repl, run_repl,
-    run_repository_before_file_target, run_session, FileExecutionOptions, ReplOptions,
-    RepositoryExecutionOptions, RunOptions, RunOutcome, RunRequest, RunSummary, RunSummaryRequest,
-    RunTarget, SessionPreload, SessionRequest, SourceImportPolicy, SourceRunOptions,
+    display_runtime_error_json, display_stmt_exec_result_json, execute_file_in_runtime,
+    execute_repository_target, render_run_output, render_run_summary, resolve_source_file_path,
+    run, run_isolated_repl_with_runtime, run_latex_repl, run_repl,
+    run_repository_before_file_target, run_session, FileExecutionOptions, ReplOptions, RunOptions,
+    RunOutcome, RunRequest, RunSummary, RunSummaryRequest, RunTarget, SessionPreload,
+    SessionRequest, SourceImportPolicy, SourceRunFailureKind, SourceRunOutcome,
 };
 pub use crate::rational_expression::gcd_decimal_str_and_normalize;
 pub use crate::rational_expression::mul_signed_decimal_str;
@@ -476,7 +474,6 @@ pub use crate::runtime::ParseContext;
 pub use crate::runtime::ScopeFrame;
 pub use crate::runtime::{
     BareSymbol, ExecutionFrame, ExecutionLayer, OutputStyle, Runtime, StatementProofStateStack,
-    TrustedPrefixPolicy, TrustedPrefixReport,
 };
 pub use crate::stmt::by_stmt::ByAntisymmetricPropStmt;
 pub use crate::stmt::by_stmt::ByAxiomOfChoiceStmt;
@@ -582,7 +579,7 @@ pub use crate::common::helper::comma_separated_stored_fn_params_as_user_source;
 pub use crate::common::helper::curly_braced_vec_to_string;
 pub use crate::common::helper::curly_braced_vec_to_string_with_sep;
 pub use crate::common::helper::is_number_string_literally_integer_without_dot;
-pub use crate::common::helper::remove_windows_carriage_return;
+pub use crate::common::helper::remove_windows_carriage_from_str;
 pub use crate::common::helper::to_string_and_add_four_spaces_at_beginning_of_each_line;
 pub use crate::common::helper::todo_error_message;
 pub use crate::common::helper::vec_pair_to_string;

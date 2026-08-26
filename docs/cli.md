@@ -21,7 +21,7 @@ primary command. Prefer putting them before the command for readability:
 ```bash
 litex -detail -strict -isolated -f examples/tmp.lit
 litex -summarize -isolated -f examples/tmp.lit
-litex -compact -f chapter.lit -trust-before-line 420
+litex -compact -session -before chapter.lit
 litex -lang zh -runner -e "1 = 1"
 ```
 
@@ -38,7 +38,6 @@ parser.
 | *(no output flag)* | Use the normal reading view for successful results: internal statements plus assumptions, conclusions, and direct `why_verified` reasons, without audit duplication. Any `RuntimeError` is always detailed. |
 | `-detail` | Include fuller JSON trace details for both successful results and errors, including well-definedness, verification, and environment phases. For runner output, this also keeps raw file paths instead of replacing file targets with `entry`. |
 | `-strict` | Verify every configured import and every export loaded by `-f`, then reject user `trust`, `trust have`, and `axiom`. `-r` already verifies its complete export tree. Use it for CI or a complete dependency audit. |
-| `-trust-before-line <X>` | Preview development option for a direct `-f` or `-isolated -f` run. Trust top-level statements whose header is before line `X`, then verify normally from the statement whose header is exactly line `X`. |
 | `-summarize` | Append one final run-summary JSON object after ordinary verifier command output. |
 | `-lang <code>` | Localize JSON keys and explanatory labels. Mathematical source strings inside fields such as `statement`, `fact`, and `cited_statement` stay in Litex syntax. |
 
@@ -108,9 +107,6 @@ Because `-compact`, `-detail`, `-strict`, and `-summarize` are removed globally
 before command parsing, do not use a standalone command value exactly equal to
 any of those flags. `-lang` also consumes the next token globally.
 
-`-trust-before-line` consumes a positive ASCII decimal line number globally,
-so it may appear before or after `-f`. It may appear only once.
-
 ## Verifier Commands
 
 | Command | Behavior |
@@ -146,41 +142,6 @@ Declaration-bearing `sketch` blocks compile into isolated Lean namespaces.
 This preserves source order without leaking names between examples. Unsupported
 or trusted routes fail closed; the compiler does not emit `sorry` or project
 axioms.
-
-### Trusted prefix file checks (preview)
-
-When editing the latter part of a long file, use:
-
-```bash
-litex -compact -f chapter.lit -trust-before-line 420
-```
-
-Line `X` must be the physical, one-based line of an exact top-level statement
-header in the target file. A comment, blank line, nested proof line, line
-inside a multiline statement, or an end-of-file sentinel is rejected before
-any statement runs. Litex does not move the boundary to the next statement.
-
-Every top-level statement whose header is before `X` is parsed and applied to
-the environment in trusted mode. Names, definitions, facts, and inferred facts
-remain available to the suffix, and syntax or duplicate-name errors still
-fail. Litex skips only well-definedness and proof verification for those
-statements. The statement beginning exactly at `X` and every later top-level
-statement are verified normally.
-
-The cutoff applies only to the file named by the direct `-f`. Configured
-imports and earlier exports keep their ordinary execution policy. It is not
-supported by `-r`, `-e`, `-session`, `-runner`, graph output, Python, or LaTeX,
-and it cannot be combined with `-strict` or extra positional arguments.
-
-A cutoff run emits a leading `trusted_prefix` boundary record and always ends
-with one run summary, even without `-summarize`. Statement objects retain their
-normal `type` and report `verification_status`: prefix statements report
-`trusted_prefix`, while suffix statements report `verified`. The runtime does
-not attach transitive trust metadata to suffix statements that use prefix
-facts. The run is still not fully checkable because the prefix proofs were
-skipped. `-compact` retains the statement status needed to see that boundary.
-An `-isolated -f` cutoff run exits after this summary instead of continuing
-into the interactive REPL.
 
 Declare local project files and child submodules in recursive ordered
 `[export]` entries. Only a `[hierarchy] module` declares non-standard packages

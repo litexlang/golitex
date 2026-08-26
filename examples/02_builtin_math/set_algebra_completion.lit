@@ -8,7 +8,7 @@
 #
 # Now the rule and its reverse/commuted surface verify directly. The remaining
 # blocks cover the same elementary family plus its exact premise boundaries.
-# Evidence: target/release/litex -compact -runner -isolated -f examples/02_builtin_math/set_algebra_completion.lit
+# Covered by the publishable example suite and the set-algebra regressions.
 
 forall A, B set:
     union(A, set_minus(B, A)) = union(A, B)

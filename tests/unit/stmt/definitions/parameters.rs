@@ -4,7 +4,7 @@ use super::*;
 
 #[test]
 fn param_def_with_type_records_flat_cited_param_indices() {
-    let runtime = Runtime::new();
+    let runtime = Runtime::default();
     let first_group = runtime
         .fresh_param_group_with_type(
             vec!["a".to_string(), "b".to_string()],
@@ -29,7 +29,7 @@ fn param_def_with_type_records_flat_cited_param_indices() {
 
 #[test]
 fn param_def_with_set_records_flat_cited_param_indices() {
-    let runtime = Runtime::new();
+    let runtime = Runtime::default();
     let first_group = runtime
         .fresh_param_group_with_set(vec!["n".to_string()], StandardSet::NPos.into())
         .unwrap();
@@ -51,7 +51,7 @@ fn param_def_with_set_records_flat_cited_param_indices() {
 
 #[test]
 fn dependent_param_set_instantiates_with_previous_arg() {
-    let runtime = Runtime::new();
+    let runtime = Runtime::default();
     let first_group = runtime
         .fresh_param_group_with_set(vec!["n".to_string()], StandardSet::NPos.into())
         .unwrap();

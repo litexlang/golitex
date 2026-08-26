@@ -14,6 +14,4 @@
 # Boundary: the bare spelling above exists only to regress parser compatibility.
 # Authored Litex must write `-(t^2)` (or `-1 * (t^2)`) and `(-t)^2` explicitly;
 # negative exponents must use `t^(-1)`.
-# Evidence: `target/release/litex -compact -isolated -runner -f
-# examples/01_proof_patterns/unary_power_precedence.lit` and
-# `cargo test --release --lib precedence_tests -- --nocapture`.
+# Covered by the publishable example suite and the parser precedence regressions.

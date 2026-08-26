@@ -6,7 +6,6 @@ mod name_resolution;
 mod parse_context;
 mod state;
 mod statement_proof_state;
-mod trusted_prefix;
 
 pub use execution_frame::{ExecutionFrame, ExecutionLayer, ExecutionMode};
 pub use name_resolution::{
@@ -16,5 +15,3 @@ pub use name_resolution::{
 pub use parse_context::{ParseContext, ScopeFrame};
 pub use state::{OutputStyle, Runtime};
 pub use statement_proof_state::StatementProofStateStack;
-pub use trusted_prefix::TrustedPrefixPolicy;
-pub use trusted_prefix::TrustedPrefixReport;

@@ -2,8 +2,9 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
-use crate::pipeline::{execute_source, render_run_output};
+use crate::pipeline::render_run_output;
 use crate::prelude::*;
+use crate::test_support::execute_source;
 
 use super::helper::{print_slowest_run_labels, run_with_large_stack, source_has_isolated_import};
 
@@ -100,7 +101,7 @@ fn run_math500_tmp() {
         None => panic!("{:?} must be valid UTF-8", math500_tmp_path),
     };
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source(path_for_runtime);
 
     let mut durations_ms: Vec<(String, f64)> = Vec::new();
@@ -110,7 +111,7 @@ fn run_math500_tmp() {
             runtime.set_current_user_lit_file_path(path_for_runtime);
         }
 
-        let normalized_source = remove_windows_carriage_return(snippet.source.as_str());
+        let normalized_source = remove_windows_carriage_from_str(snippet.source.as_str());
         runtime.set_current_source_allows_inline_imports(source_has_isolated_import(
             normalized_source.as_str(),
         ));
@@ -232,7 +233,7 @@ fn run_math500_litex_lit_dir(base_dir: &Path) {
     let base_dir_str = base_dir.to_string_lossy().to_string();
 
     let runtime_setup_start = Instant::now();
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     let runtime_setup_duration_ms = runtime_setup_start.elapsed().as_secs_f64() * 1000.0;
     runtime.start_isolated_source(base_dir_str.as_str());
 
@@ -262,7 +263,7 @@ fn run_math500_litex_lit_dir(base_dir: &Path) {
             continue;
         }
 
-        let normalized_source = remove_windows_carriage_return(litex_code);
+        let normalized_source = remove_windows_carriage_from_str(litex_code);
         runtime.set_current_source_allows_inline_imports(source_has_isolated_import(
             normalized_source.as_str(),
         ));

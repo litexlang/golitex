@@ -22,7 +22,6 @@ pub fn run_cli() {
         summarize_output,
         force_isolated,
         output_language,
-        trust_before_line,
     } = match parse_global_options(&mut args) {
         Ok(options) => options,
         Err(message) => {
@@ -37,7 +36,6 @@ pub fn run_cli() {
         output_language,
         summarize: summarize_output,
         force_isolated,
-        trust_before_line,
     };
     let mut index: usize = 0;
 
@@ -109,7 +107,6 @@ pub fn run_cli() {
                     &mut index,
                     RunOptions {
                         summarize: false,
-                        trust_before_line: None,
                         ..run_options
                     },
                 ) {
@@ -140,7 +137,6 @@ pub fn run_cli() {
                     &mut index,
                     RunOptions {
                         summarize: false,
-                        trust_before_line: None,
                         ..run_options
                     },
                 ) {
@@ -180,7 +176,6 @@ pub fn run_cli() {
                 run_session(SessionRequest::new(
                     RunOptions {
                         summarize: false,
-                        trust_before_line: None,
                         ..run_options
                     },
                     preload,

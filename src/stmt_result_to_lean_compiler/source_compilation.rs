@@ -34,18 +34,14 @@ pub fn execute_litex_source_for_lean_compilation(
     source_label: &str,
 ) -> Result<Vec<StmtResult>, RuntimeError> {
     let normalized = source.replace('\r', "");
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source(source_label);
     runtime.set_current_source_allows_inline_imports(true);
-    let outcome = execute_source_with_options(
+    let outcome = runtime.execute_source(
         &normalized,
-        &mut runtime,
-        SourceRunOptions {
-            import_policy: SourceImportPolicy::Reject(
-                "single-file StmtResult-to-Lean compilation does not support `import`".to_string(),
-            ),
-            ..SourceRunOptions::default()
-        },
+        SourceImportPolicy::Reject(
+            "single-file StmtResult-to-Lean compilation does not support `import`".to_string(),
+        ),
     );
     if let Some(error) = outcome.runtime_error {
         return Err(error);

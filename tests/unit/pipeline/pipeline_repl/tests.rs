@@ -2,9 +2,10 @@ use super::{
     run_isolated_repl_with_runtime_and_readers, run_latex_repl_loop_with_readers,
     run_repl_loop_with_readers_and_mode, ReplOutputMode,
 };
-use crate::pipeline::{execute_file_in_runtime, execute_source, FileExecutionOptions};
+use crate::pipeline::{execute_file_in_runtime, FileExecutionOptions};
 use crate::prelude::OutputLanguage;
 use crate::runtime::{OutputStyle, Runtime};
+use crate::test_support::execute_source;
 use std::fs;
 use std::io::{self, BufRead, Cursor, Write};
 
@@ -109,13 +110,12 @@ fn isolated_file_continues_in_the_same_repl_runtime() {
     let file = directory.join("session.lit");
     fs::write(&file, "have from_file R = 1\n").expect("write isolated source file");
 
-    let mut runtime = Runtime::new();
-    let (_, file_error, _, _) = execute_file_in_runtime(
+    let mut runtime = Runtime::default();
+    let (_, file_error) = execute_file_in_runtime(
         file.to_str().expect("file path is UTF-8"),
         &mut runtime,
         FileExecutionOptions {
             force_isolated: true,
-            trust_before_line: None,
         },
     );
     assert!(file_error.is_none(), "{file_error:?}");

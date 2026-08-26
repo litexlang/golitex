@@ -21,5 +21,4 @@ fn_range(g) = fn_range(f)
 # transparency does not bypass arity or domain checks; `g(1, 2)` remains
 # rejected by executable Rust regressions.
 # Evidence:
-# target/release/litex -compact -isolated -runner -f examples/03_language_features/let_callable_alias.lit
 # tests/unit/kernel_contracts/lit_file_runner_tests/runtime_regression_tests/callable_aliases.rs

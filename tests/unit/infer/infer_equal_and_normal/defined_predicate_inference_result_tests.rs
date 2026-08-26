@@ -1,9 +1,10 @@
 use crate::output::display_stmt_result_json_v2;
 use crate::prelude::*;
+use crate::test_support::execute_source;
 
 #[test]
 fn defined_predicate_inference_retains_parameter_and_clause_projection_results() {
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("defined_predicate_inference_result_test.lit");
     let (results, error) = execute_source(
         "prop same_set(x set, y set):\n    x = y\ntrust R $same_set C",

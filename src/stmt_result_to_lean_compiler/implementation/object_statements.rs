@@ -3302,9 +3302,9 @@ impl StmtResultToLeanCompiler {
         result: &SuccessEvalStmtResult,
     ) -> Result<(), String> {
         match &result.execution {
-            SuccessEvalStmtExecutionResult::SkippedByTrustedPrefix => {
+            SuccessEvalStmtExecutionResult::SkippedByTrustedExecution => {
                 if !result.common.infers.is_empty() {
-                    return Err("trusted-prefix `eval` unexpectedly published effects".into());
+                    return Err("trusted `eval` unexpectedly published effects".into());
                 }
                 return Ok(());
             }
@@ -3342,7 +3342,7 @@ impl StmtResultToLeanCompiler {
             return Err("numeric eval equality retained unexpected inferred consequences".into());
         }
         let SuccessEvalStmtExecutionResult::Evaluated(execution) = &result.execution else {
-            unreachable!("trusted-prefix eval returned before store validation")
+            unreachable!("trusted eval returned before store validation")
         };
         let expected_equality: Fact = EqualFact::new(
             execution.source_object.clone(),

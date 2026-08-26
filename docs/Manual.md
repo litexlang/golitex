@@ -2383,9 +2383,8 @@ basics
 
 This manifest is invalid because a `submodule` cannot declare imports.
 
-Project execution, persistent sessions, output modes, graph commands, and the
-development-only `-trust-before-line` option are CLI contracts rather than
-language syntax. See the [CLI reference](cli.md) for the current command set
+Project execution, persistent sessions, output modes, and graph commands are
+CLI contracts rather than language syntax. See the [CLI reference](cli.md) for the current command set
 and [Setup](Setup.md) for installation and project-running examples.
 
 ### Utility statements
@@ -4082,7 +4081,6 @@ inventory that can drift out of sync.
 | `trust have` | Accepted and reported as trusted | Rejected |
 | `axiom` | Accepted and reported as trusted | Rejected |
 | Trusted preview set-theoretic step | Accepted as an explicit trusted proof step | Rejected |
-| `-trust-before-line` file prefix | Accepted and marked `trusted_prefix` statement by statement | Incompatible with `-strict` |
 
 Strict mode reduces user-supplied trust; it does not turn the Litex checker and
 its builtin rules into a separately verified small kernel.

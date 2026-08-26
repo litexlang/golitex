@@ -3,14 +3,16 @@
 //! Prefer this module over importing the kernel's implementation modules or
 //! the broad internal [`crate::prelude`].
 //!
-//! `execute_source` executes inside an explicit source context:
+//! `Runtime::execute_source` executes inside an explicit source context:
 //!
 //! ```
-//! use litex::api::{execute_source, Runtime};
+//! use litex::api::{Runtime, SourceImportPolicy};
 //!
-//! let mut runtime = Runtime::new();
+//! let mut runtime = Runtime::default();
 //! runtime.start_isolated_source("embedded.lit");
-//! let (results, error) = execute_source("1 = 1", &mut runtime);
+//! let (results, error) = runtime
+//!     .execute_source("1 = 1", SourceImportPolicy::UseRuntimePolicy)
+//!     .into_parts();
 //! assert!(error.is_none());
 //! assert_eq!(results.len(), 1);
 //! ```
@@ -19,11 +21,12 @@
 pub use crate::common::output_language::OutputLanguage;
 pub use crate::error::RuntimeError;
 pub use crate::result::StmtResult;
-pub use crate::runtime::{OutputStyle, Runtime, TrustedPrefixReport};
+pub use crate::runtime::{OutputStyle, Runtime};
 
 // Source, file, and repository execution entry points.
 pub use crate::pipeline::{
-    execute_source, run, RunOptions, RunOutcome, RunRequest, RunSummary, RunTarget,
+    run, RunOptions, RunOutcome, RunRequest, RunSummary, RunTarget, SourceImportPolicy,
+    SourceRunFailureKind, SourceRunOutcome,
 };
 
 // Stable rendering entry points for embedding and machine-readable output.

@@ -4,7 +4,7 @@ use super::*;
 
 #[test]
 fn detects_nested_exist_witness_dependency() {
-    let runtime = Runtime::new();
+    let runtime = Runtime::default();
     let binding = runtime
         .allocate_local_symbol_binding("x".to_string())
         .unwrap();
@@ -25,7 +25,7 @@ fn detects_nested_exist_witness_dependency() {
 
 #[test]
 fn detects_function_call_on_exist_witness() {
-    let runtime = Runtime::new();
+    let runtime = Runtime::default();
     let binding = runtime
         .allocate_local_symbol_binding("x".to_string())
         .unwrap();
@@ -42,7 +42,7 @@ fn detects_function_call_on_exist_witness() {
 
 #[test]
 fn existential_binding_validation_uses_exact_symbol_identity() {
-    let runtime = Runtime::new();
+    let runtime = Runtime::default();
     let exist_binding = runtime
         .allocate_local_symbol_binding("x".to_string())
         .unwrap();

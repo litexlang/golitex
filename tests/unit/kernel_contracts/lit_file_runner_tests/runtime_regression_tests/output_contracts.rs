@@ -1,4 +1,5 @@
 use super::*;
+use crate::test_support::execute_source;
 
 #[test]
 fn by_def_output_and_summary_report_definition_checks() {
@@ -9,7 +10,7 @@ prop unit(x R):
 by def $unit(1)
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("by_def_output_contract");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -17,7 +18,6 @@ by def $unit(1)
         runtime: &runtime,
         stmt_results: &stmt_results,
         runtime_error: &runtime_error,
-        trusted_prefix_report: None,
     });
 
     assert!(
@@ -43,7 +43,7 @@ fn hidden_file_path_output_omits_source_fields() {
     let source_code = "1 = 0";
     let path = "/private/tmp/litex-hidden-source-test.lit";
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source(path);
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -59,7 +59,7 @@ fn hidden_file_path_output_omits_source_fields() {
 fn json_v2_normal_output_keeps_structural_empty_arrays() {
     let source_code = "have a R\nhave a R";
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("normal_output_omits_empty_fields");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -80,7 +80,7 @@ have a R = sum(1, 2, fn(z N+: z <= 2) R {z})
 eval a
 "#;
 
-        let mut runtime = Runtime::new();
+        let mut runtime = Runtime::default();
         runtime.start_isolated_source("eval_output_reports_final_equality");
         let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
@@ -116,7 +116,7 @@ eval 3 *' [[1, 2], [4, 5]]
 eval [[2, 0], [0, 2]] '^ 2
 "#;
 
-        let mut runtime = Runtime::new();
+        let mut runtime = Runtime::default();
         runtime.start_isolated_source("matrix_operator_eval_output");
         let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
@@ -163,7 +163,7 @@ fn matrix_operator_latex_escapes_the_apostrophe_power_token() {
 fn json_v2_detailed_output_keeps_the_same_structural_empty_arrays() {
     let source_code = "have a R\nhave a R";
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("detail_output_keeps_empty_fields");
     runtime.set_output_style(OutputStyle::Detailed);
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
@@ -199,7 +199,7 @@ witness exist z R st {z = 1} from 1:
     1 = 1
 "#;
 
-        let mut runtime = Runtime::new();
+        let mut runtime = Runtime::default();
         runtime.start_isolated_source("run_summary_counts");
         let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let summary = RunSummary::from_run(&stmt_results, &runtime_error);
@@ -207,7 +207,6 @@ witness exist z R st {z = 1} from 1:
             runtime: &runtime,
             stmt_results: &stmt_results,
             runtime_error: &runtime_error,
-            trusted_prefix_report: None,
         });
 
         assert!(
@@ -268,14 +267,13 @@ trust:
     777 = 778
     1 / 0 = 0
 "#;
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("failed_atomic_trust_audit");
     let (stmt_results, runtime_error) = execute_source(failed_trust, &mut runtime);
     let summary_output = render_run_summary(RunSummaryRequest {
         runtime: &runtime,
         stmt_results: &stmt_results,
         runtime_error: &runtime_error,
-        trusted_prefix_report: None,
     });
 
     assert!(runtime_error.is_some());
@@ -331,7 +329,7 @@ witness exist x R st {x = 1} from 1:
     1 = 1
 "#;
 
-        let mut runtime = Runtime::new();
+        let mut runtime = Runtime::default();
         runtime.start_isolated_source("normal_output_folds_proof_trace");
         let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
@@ -366,7 +364,7 @@ sketch:
         $is_set(z)
     $is_set(1)
 "#;
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("output_styles_project_full_trace");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
 
@@ -405,7 +403,7 @@ thm theorem_trace_self_eq:
     x = x
 "#;
 
-            let mut runtime = Runtime::new();
+            let mut runtime = Runtime::default();
             runtime.start_isolated_source("normal_theorem_output_proof_route");
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
@@ -457,7 +455,7 @@ witness exist x R st {x = 1} from 1:
     1 = 1
 "#;
 
-        let mut runtime = Runtime::new();
+        let mut runtime = Runtime::default();
         runtime.start_isolated_source("detail_output_expands_proof_trace");
         runtime.set_output_style(OutputStyle::Detailed);
         let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
@@ -501,7 +499,7 @@ by induc n from 0:
         $p(n + 1)
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("by_induc_normal_trace");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -519,7 +517,7 @@ by induc n from 0:
         run_output
     );
 
-    let mut detail_runtime = Runtime::new();
+    let mut detail_runtime = Runtime::default();
     detail_runtime.start_isolated_source("by_induc_detail_trace");
     detail_runtime.set_output_style(OutputStyle::Detailed);
     let (detail_stmt_results, detail_runtime_error) =
@@ -553,7 +551,7 @@ witness exist x R st {x = 1} from 1:
     1 = 1
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("witness_detail_output_keeps_trace");
     runtime.set_output_style(OutputStyle::Detailed);
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
@@ -587,7 +585,7 @@ claim:
         0 = 0
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("witness_exist_unique_requires_uniqueness");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -622,7 +620,7 @@ claim:
             u = v
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("witness_exist_unique_with_uniqueness");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -636,7 +634,7 @@ claim:
 
 #[test]
 fn source_execution_requires_an_active_context() {
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     let (stmt_results, runtime_error) = execute_source("1 = 1", &mut runtime);
     assert!(
         stmt_results.is_empty(),
@@ -655,7 +653,7 @@ fn source_execution_requires_an_active_context() {
 #[test]
 fn zh_output_localizes_unproved_trust_labels() {
     let source_code = "abstract_prop tmp_rel(m, n)\ntrust exist! m, n R st {$tmp_rel(m, n)}\n";
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("zh_output_localizes_unproved_trust_labels");
     runtime.output_language = OutputLanguage::SimplifiedChinese;
 
@@ -672,7 +670,7 @@ fn zh_output_localizes_unproved_trust_labels() {
 #[test]
 fn zh_output_localizes_citation_evidence_but_keeps_litex_statement() {
     let source_code = "prop is_one_tmp(t R):\n    t = 1\n\n$is_one_tmp(1)\n";
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime
         .start_isolated_source("zh_output_localizes_citation_evidence_but_keeps_litex_statement");
     runtime.output_language = OutputLanguage::SimplifiedChinese;
@@ -720,7 +718,7 @@ $can_be_divided_by_8(x)
 $can_be_divided_by_2(x)
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("zh_forall_output_uses_short_conclusions_and_compact_citation");
     runtime.output_language = OutputLanguage::SimplifiedChinese;
 
@@ -929,7 +927,7 @@ fn non_english_languages_localize_unproved_trust_labels() {
         _reason_text,
     ) in cases
     {
-        let mut runtime = Runtime::new();
+        let mut runtime = Runtime::default();
         runtime.start_isolated_source("non_english_languages_localize_unproved_trust_labels");
         runtime.output_language = language;
 
@@ -965,7 +963,7 @@ by thm axiom_prop_all(3)
 $axiom_prop(3)
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("axiom_declares_named_theorem_like_forall_fact");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -1013,7 +1011,7 @@ axiom bad_axiom:
     trust $axiom_body_prop(1)
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("axiom_rejects_proof_body");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -1032,7 +1030,7 @@ axiom bad_axiom:
 
 #[test]
 fn strict_mode_rejects_user_trust() {
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("strict_mode_rejects_user_trust");
     runtime.strict_mode = true;
 
@@ -1054,7 +1052,7 @@ fn strict_mode_rejects_user_trust() {
 #[test]
 fn strict_mode_rejects_user_trust_have() {
     run_with_large_stack("strict_mode_rejects_user_trust_have", || {
-        let mut runtime = Runtime::new();
+        let mut runtime = Runtime::default();
         runtime.start_isolated_source("strict_mode_rejects_user_trust_have");
         runtime.strict_mode = true;
 
@@ -1077,7 +1075,7 @@ fn strict_mode_rejects_user_trust_have() {
 
 #[test]
 fn strict_mode_rejects_user_axiom() {
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("strict_mode_rejects_user_axiom");
     runtime.strict_mode = true;
 
@@ -1116,7 +1114,7 @@ prop q(x R):
 $q(1)
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("citation_verified_by_type_reflects_cited_stmt_kind");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -1145,7 +1143,7 @@ forall x R:
     x = x
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("factual_verified_by_stable_shape");
     runtime.set_output_style(OutputStyle::Detailed);
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
@@ -1222,7 +1220,7 @@ trust $sym_p(A, B)
 $sym_p(B, A)
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source(
         "atomic_fact_verification_output_omits_method_and_reports_route_types",
     );
@@ -1264,7 +1262,7 @@ forall x R+:
         x = 2^1 = 2
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("builtin_rule_subgoals_are_nested");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -1308,7 +1306,7 @@ have a, b, c, d R+
 (a + b) + (c + d) > 0
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("recursive_builtin_result_chain");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -1385,7 +1383,7 @@ prop q(x R):
 $q(1)
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("detail_output_moves_store_facts_into_environment_effects");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -1400,7 +1398,7 @@ $q(1)
     assert!(run_output.contains(format!("\"reason\": \"{}\"", ClaimStmt::store_reason()).as_str()));
     assert!(run_output.contains(format!("\"reason\": \"{}\"", TrustStmt::store_reason()).as_str()));
 
-    let mut detail_runtime = Runtime::new();
+    let mut detail_runtime = Runtime::default();
     detail_runtime.set_output_style(OutputStyle::Detailed);
     detail_runtime
         .start_isolated_source("detail_output_moves_store_facts_into_environment_effects_detail");
@@ -1443,7 +1441,7 @@ forall b R:
     =>:
         b^2 = 4
 "#;
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.set_output_style(OutputStyle::Detailed);
     runtime.start_isolated_source("detail_output_exposes_statement_execution_phases");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
@@ -1473,7 +1471,7 @@ fn detail_output_marks_failed_phase_and_does_not_claim_environment_effects() {
 }
 
 fn detail_output_marks_failed_phase_and_does_not_claim_environment_effects_impl() {
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.set_output_style(OutputStyle::Detailed);
     runtime.start_isolated_source(
         "detail_output_marks_failed_phase_and_does_not_claim_environment_effects",
@@ -1497,7 +1495,7 @@ fn object_definition_carrier_mismatch_names_phase_and_known_carrier() {
 template<p, q, x N+>:
     have remainder N = q * x % p
 "#;
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime
         .start_isolated_source("object_definition_carrier_mismatch_names_phase_and_known_carrier");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
@@ -1539,7 +1537,7 @@ trust exist x R st {x = x}
 obtain c from exist x R st {x = x}
 "#;
 
-            let mut runtime = Runtime::new();
+            let mut runtime = Runtime::default();
             runtime.set_output_style(OutputStyle::Detailed);
             runtime
                 .start_isolated_source("object_definition_output_exposes_checks_and_defined_facts");
@@ -1584,7 +1582,7 @@ forall n N:
     n $in N
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("forall_parameter_assumption_output");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -1623,7 +1621,7 @@ forall a, b, c, d, e1, f R:
         $p(d, e1, f)
 "#;
 
-            let mut runtime = Runtime::new();
+            let mut runtime = Runtime::default();
             runtime.start_isolated_source("forall_output_exposes_assumption_store_facts");
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
@@ -1672,7 +1670,7 @@ claim:
     x = x
 "#;
 
-            let mut runtime = Runtime::new();
+            let mut runtime = Runtime::default();
             runtime.start_isolated_source("claim_forall_output_explains_proof");
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
@@ -1716,7 +1714,7 @@ claim:
     1 = 1
 "#;
 
-            let mut runtime = Runtime::new();
+            let mut runtime = Runtime::default();
             runtime.start_isolated_source("claim_fact_output_explains_goal");
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
@@ -1770,7 +1768,7 @@ by cases:
         impossible 1 = 1
 "#;
 
-            let mut runtime = Runtime::new();
+            let mut runtime = Runtime::default();
             runtime.start_isolated_source(
                 "output_contract_covers_composite_facts_and_control_statements",
             );
@@ -1859,7 +1857,7 @@ by cases:
         impossible 1 = 1
 "#;
 
-            let mut runtime = Runtime::new();
+            let mut runtime = Runtime::default();
             runtime.start_isolated_source("by_cases_normal_output_lists_readable_internal_results");
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
@@ -1894,7 +1892,7 @@ by cases:
         impossible 1 = 1
 "#;
 
-        let mut runtime = Runtime::new();
+        let mut runtime = Runtime::default();
         runtime.start_isolated_source("by_cases_detail_output_expands_cases");
         runtime.set_output_style(OutputStyle::Detailed);
         let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
@@ -1924,7 +1922,7 @@ by contra:
     impossible 1 != 1
 "#;
 
-            let mut runtime = Runtime::new();
+            let mut runtime = Runtime::default();
             runtime.start_isolated_source("by_contra_output_explains_steps");
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
@@ -1986,7 +1984,7 @@ by extension:
     ? {1} = {1}
 "#;
 
-            let mut runtime = Runtime::new();
+            let mut runtime = Runtime::default();
             runtime.start_isolated_source(
                 "by_iteration_range_extension_and_theorem_outputs_explain_processes",
             );
@@ -2058,7 +2056,7 @@ by symmetric_prop:
 
 "#;
 
-            let mut runtime = Runtime::new();
+            let mut runtime = Runtime::default();
             runtime.start_isolated_source(
                 "by_induc_prop_bridge_and_trusted_outputs_explain_processes",
             );
@@ -2096,7 +2094,7 @@ by symmetric_prop:
 pub(super) fn unknown_fact_failure_has_structured_output_fields() {
     let source_code = "1 = 2";
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("unknown_fact_failure_structured_output");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -2137,7 +2135,7 @@ thm dependent_application_probe:
             \trace<n>(q)(row) = row
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime
         .start_isolated_source("dependent_application_unknown_names_outer_head_and_known_prefix");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
@@ -2172,7 +2170,7 @@ pub(super) fn detail_output_keeps_composite_fact_step_metadata() {
 1 = 1 = 1
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("detail_output_keeps_composite_fact_step_metadata");
     runtime.set_output_style(OutputStyle::Detailed);
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
@@ -2195,7 +2193,7 @@ pub(super) fn detail_output_keeps_composite_fact_step_metadata() {
 fn and_fact_unknown_reports_failed_part() {
     let source_code = "1 = 1 and 1 = 2";
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("and_fact_unknown_reports_failed_part");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -2229,7 +2227,7 @@ fn and_fact_unknown_reports_failed_part() {
 fn chain_fact_unknown_reports_failed_chain_step() {
     let source_code = "1 = 0 = 1";
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("chain_fact_unknown_reports_failed_chain_step");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -2272,7 +2270,7 @@ forall x R:
     x = 0
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("forall_fact_unknown_reports_failed_prove");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -2303,7 +2301,7 @@ forall x R:
     x = 0 = 1
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("forall_chain_unknown_nests_failed_chain_step");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -2331,7 +2329,7 @@ forall x R:
     x = 0 = 1
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("detail_unknown_output_keeps_failed_part_position_metadata");
     runtime.set_output_style(OutputStyle::Detailed);
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
@@ -2360,7 +2358,7 @@ forall x R:
         x = 1
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("forall_iff_unknown_reports_failed_direction");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -2384,7 +2382,7 @@ claim:
     1 = 1
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("proof_block_failure_structured_then_clause");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -2416,7 +2414,7 @@ claim:
     1 = 1
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("detail_proof_block_failure_keeps_then_clause_position_metadata");
     runtime.set_output_style(OutputStyle::Detailed);
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
@@ -2442,7 +2440,7 @@ by cases:
     case 1 = 2
 "#;
 
-            let mut runtime = Runtime::new();
+            let mut runtime = Runtime::default();
             runtime.start_isolated_source("by_cases_failure_context");
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
@@ -2566,7 +2564,7 @@ fn error_output_does_not_change_the_style_of_earlier_successes() {
         OutputStyle::Normal,
         OutputStyle::Detailed,
     ] {
-        let mut runtime = Runtime::new();
+        let mut runtime = Runtime::default();
         runtime.start_isolated_source("error_output_previous_success");
         runtime.set_output_style(output_style);
         let (stmt_results, runtime_error) = execute_source("1 = 1\n1 = 0", &mut runtime);
@@ -2593,7 +2591,7 @@ fn error_output_does_not_change_the_style_of_earlier_successes() {
 
 #[test]
 fn error_output_preserves_failed_step_and_step_indexes_in_all_styles() {
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("error_output_failed_step");
     let (stmt_results, runtime_error) = execute_source("1 = 1", &mut runtime);
     assert!(runtime_error.is_none());
@@ -2637,7 +2635,7 @@ fn error_output_preserves_failed_step_and_step_indexes_in_all_styles() {
 #[test]
 fn by_thm_selected_fact_output_distinguishes_temporary_and_parent_facts() {
     let source_code = "by thm set_builder_member(1, {x R: x > 0}) => 1 $in {x R: x > 0}";
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("by_thm_selected_fact_output");
     runtime.set_output_style(OutputStyle::Detailed);
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
@@ -2662,7 +2660,7 @@ fn render_failure_for_output_style(
     source_label: &str,
     output_style: OutputStyle,
 ) -> String {
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source(source_label);
     runtime.set_output_style(output_style);
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);

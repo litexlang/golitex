@@ -3,7 +3,7 @@ use crate::prelude::*;
 use std::rc::Rc;
 
 fn parse_one(source: &str) -> Result<Stmt, RuntimeError> {
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     let mut blocks = Tokenizer::new()
         .parse_blocks(source, Rc::from("by_thm_selected_fact_test.lit"))
         .expect("tokenize by thm statement");

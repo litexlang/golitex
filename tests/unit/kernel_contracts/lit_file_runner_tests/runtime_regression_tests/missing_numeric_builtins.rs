@@ -1,4 +1,5 @@
 use super::*;
+use crate::test_support::execute_source;
 
 #[test]
 fn requested_numeric_builtin_rules_verify_with_explicit_provenance() {
@@ -85,7 +86,7 @@ by thm finite_set_sum_substitution(finite_set_sum(X, f), finite_set_sum(closed_r
 sum(1, finite_set_size(X), fn(left_index closed_range(1, finite_set_size(X))) R {f(g(left_index))}) = sum(1, finite_set_size(X), fn(right_index closed_range(1, finite_set_size(X))) R {f(h(right_index))})
 "#;
 
-            let mut runtime = Runtime::new();
+            let mut runtime = Runtime::default();
             runtime.start_isolated_source(
                 "requested_numeric_builtin_rules_verify_with_explicit_provenance",
             );
@@ -133,7 +134,7 @@ forall a, b, c R:
         a <= b / c
 "#;
 
-            let mut runtime = Runtime::new();
+            let mut runtime = Runtime::default();
             runtime.start_isolated_source(
                 "numeric_builtin_rules_consume_complete_disjunction_premises",
             );
@@ -276,7 +277,7 @@ forall a R, b C:
             ];
 
             for (name, source_code) in cases {
-                let mut runtime = Runtime::new();
+                let mut runtime = Runtime::default();
                 runtime.start_isolated_source(name);
                 let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
                 let (run_succeeded, run_output) =

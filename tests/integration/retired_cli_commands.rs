@@ -10,6 +10,7 @@ fn retired_placeholder_commands_are_rejected_and_absent_from_help() {
         "-update",
         "-tutorial",
         "-trace-pipeline",
+        "-trust-before-line",
     ] {
         let output = Command::new(env!("CARGO_BIN_EXE_litex"))
             .arg(flag)

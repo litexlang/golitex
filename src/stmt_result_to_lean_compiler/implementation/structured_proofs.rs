@@ -2803,7 +2803,7 @@ impl StmtResultToLeanCompiler {
         let substitutions = &self
             .environment_stack
             .runtime_resolved_numeric_substitutions;
-        let substitution_runtime = Runtime::new();
+        let substitution_runtime = Runtime::default();
         let evaluate_substituted = |source: &Obj| -> Result<String, String> {
             let substituted = substitution_runtime
                 .inst_obj(source, substitutions, SubstitutionMode::Exact)

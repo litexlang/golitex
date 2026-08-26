@@ -30,11 +30,7 @@ pub(super) fn run_lean_file_command(
         print_help_message();
         process::exit(2);
     }
-    if options.strict_mode
-        || options.summarize
-        || options.output_style != OutputStyle::Normal
-        || options.trust_before_line.is_some()
-    {
+    if options.strict_mode || options.summarize || options.output_style != OutputStyle::Normal {
         eprintln!(
             "single-file Litex-to-Lean accepts only `-f <input.lit> -isolated -lean <output.lean>`"
         );

@@ -8,7 +8,7 @@ fn parse_obj_line(source: &str) -> Result<Obj, RuntimeError> {
     let tokenizer = Tokenizer::new();
     let mut blocks = tokenizer.parse_blocks(source, Rc::from("test.lit"))?;
     assert_eq!(blocks.len(), 1, "{source:?}");
-    Runtime::new().parse_obj(&mut blocks[0])
+    Runtime::default().parse_obj(&mut blocks[0])
 }
 
 #[test]

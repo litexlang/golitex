@@ -188,7 +188,7 @@ fn exec_stmt_clears_temporary_successes_but_keeps_the_proof_evidence() {
 }
 
 fn new_test_runtime() -> Runtime {
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("statement_proof_cache_test.lit");
     runtime
 }

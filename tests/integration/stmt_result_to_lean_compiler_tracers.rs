@@ -35,7 +35,7 @@ fn capture_stmt_results_json_v2_on_verifier_stack(
         .name(format!("stmt-result-json-v2-test-{label}"))
         .stack_size(32 * 1024 * 1024)
         .spawn(move || {
-            let mut runtime = Runtime::new();
+            let mut runtime = Runtime::default();
             runtime.start_isolated_source(label);
             runtime.set_current_source_allows_inline_imports(true);
             let tokenizer = Tokenizer::new();
@@ -47,7 +47,8 @@ fn capture_stmt_results_json_v2_on_verifier_stack(
                 let statement = runtime
                     .parse_statement(&mut block)
                     .map_err(|error| format!("{error:?}"))?;
-                let result = execute_top_level_statement(&statement, &mut runtime)
+                let result = runtime
+                    .execute_top_level_statement(&statement)
                     .map_err(|error| format!("{error:?}"))?;
                 results.push(result);
             }
@@ -91,9 +92,9 @@ fn named_real_less_to_less_equal_emits_native_mathlib_corollary() {
 
 #[test]
 fn litex_to_mathlib_pipeline_showcase_generated_lean_has_not_drifted() {
-    const SOURCE: &str = include_str!("../../showcases/litex_to_mathlib_pipeline/main.lit");
+    const SOURCE: &str = include_str!("../../showcases/litex_to_lean_mathlib_pipeline/main.lit");
     const CHECKED_IN: &str = include_str!(
-        "../../showcases/litex_to_mathlib_pipeline/LitexToMathlibPipelineGenerated.lean"
+        "../../showcases/litex_to_lean_mathlib_pipeline/LitexToMathlibPipelineGenerated.lean"
     );
 
     let generated =

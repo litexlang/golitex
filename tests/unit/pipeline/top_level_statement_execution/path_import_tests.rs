@@ -1,9 +1,9 @@
-use crate::pipeline::execute_source;
 use crate::runtime::Runtime;
+use crate::test_support::execute_source;
 
 #[test]
 fn fresh_runtime_has_no_preloaded_source_modules() {
-    let runtime = Runtime::new();
+    let runtime = Runtime::default();
 
     assert!(runtime.module_manager.modules.is_empty());
     assert!(runtime.module_manager.module_by_name.is_empty());
@@ -12,7 +12,7 @@ fn fresh_runtime_has_no_preloaded_source_modules() {
 #[test]
 fn non_isolated_source_imports_require_the_terminal_boundary() {
     for source in ["import \"./Demo\" as Demo", "import std basics"] {
-        let mut runtime = Runtime::new();
+        let mut runtime = Runtime::default();
         runtime.start_isolated_source("repl");
 
         let (_, runtime_error) = execute_source(source, &mut runtime);
@@ -25,7 +25,7 @@ fn non_isolated_source_imports_require_the_terminal_boundary() {
 
 #[test]
 fn strict_mode_rejects_user_trust() {
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.strict_mode = true;
     runtime.start_isolated_source("repl");
 

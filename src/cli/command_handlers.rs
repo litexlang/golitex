@@ -4,7 +4,6 @@ use crate::pipeline::{run, run_isolated_repl_with_runtime, RunOptions, RunReques
 use crate::runner::{run_runner, RunnerRequest};
 use std::fs;
 use std::path::Path;
-use std::process;
 
 pub(super) const VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -20,13 +19,7 @@ pub(super) fn run_file_command(file_flag: &str, options: RunOptions) {
         return;
     }
     println!("{}", outcome.output.trim());
-    if outcome.trusted_prefix_setup_rejected {
-        process::exit(2);
-    }
-    if outcome.ok
-        && outcome.runtime.current_source_allows_inline_imports()
-        && options.trust_before_line.is_none()
-    {
+    if outcome.ok && outcome.runtime.current_source_allows_inline_imports() {
         run_isolated_repl_with_runtime(VERSION, &mut outcome.runtime);
     }
 }

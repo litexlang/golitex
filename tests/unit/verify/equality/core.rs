@@ -8,7 +8,7 @@ use crate::verify::ProofSearchState;
 
 #[test]
 fn zero_premise_structural_equality_still_requires_known_equal_leaves() {
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("zero_premise_structural_boundary.lit");
 
     let x: Obj = Identifier::new("x".to_string()).into();
@@ -31,7 +31,7 @@ fn zero_premise_structural_equality_still_requires_known_equal_leaves() {
 
 #[test]
 fn structural_equality_runs_only_from_the_outer_round() {
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("structural_equality_outer_round");
 
     let a: Obj = Identifier::new("A".to_string()).into();
@@ -135,7 +135,7 @@ fn checked_definition_reduction_has_no_candidate_graph_or_ambient_mode() {
 
 #[test]
 fn terminating_comparator_allows_computation_and_bounded_symbolic_normalization() {
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("terminating_structural_computation");
     let one: Obj = Number::new("1".to_string()).into();
     let two: Obj = Number::new("2".to_string()).into();

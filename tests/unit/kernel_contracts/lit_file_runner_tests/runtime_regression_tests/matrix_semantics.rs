@@ -1,9 +1,10 @@
 use super::*;
+use crate::test_support::execute_source;
 
 #[test]
 fn matrix_literals_require_positive_row_and_column_counts() {
     let source_code = "[[]] = [[]]";
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("matrix_literal_positive_shape");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -22,7 +23,7 @@ fn matrix_operators_reject_entries_without_real_arithmetic() {
 forall S set, a, b S:
     [[a]] '+ [[b]] = [[a]] '+ [[b]]
 "#;
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("matrix_operator_real_entries");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -76,7 +77,7 @@ forall n, k N+, A matrix(R, n, n), i1, j N+:
 [[2]] '^ 2 $in matrix(R, 1, 1)
 "#;
 
-        let mut runtime = Runtime::new();
+        let mut runtime = Runtime::default();
         runtime.start_isolated_source("real_matrix_operators_have_symbolic_semantics");
         let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
@@ -93,7 +94,7 @@ forall n, k N+, A matrix(R, n, n), i1, j N+:
 #[test]
 fn matrix_operator_shape_errors_remain_explicit() {
     let source_code = "[[1, 2]] '+ [[1]] = [[1, 2]] '+ [[1]]";
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("matrix_operator_shape_error");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);

@@ -1,7 +1,8 @@
 use super::*;
+use crate::test_support::execute_source;
 
 fn run_source(source: &str, label: &str, detailed: bool) -> (Runtime, bool, String) {
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source(label);
     if detailed {
         runtime.set_output_style(OutputStyle::Detailed);
@@ -181,7 +182,7 @@ exist! p Z, d N+ st {q = p / d, gcd(p, d) = 1}
 
 #[test]
 fn rational_reduced_fraction_builtin_theorem_requires_a_rational_argument_and_does_not_leak() {
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("rational_reduced_fraction_no_leak");
     let (setup_results, setup_error) = execute_source("have x R", &mut runtime);
     let (setup_succeeded, setup_output) = render_run_output(&runtime, &setup_results, &setup_error);
@@ -205,7 +206,7 @@ fn rational_reduced_fraction_builtin_theorem_requires_a_rational_argument_and_do
 
 #[test]
 fn finite_set_builtin_theorems_check_requirements_and_do_not_leak() {
-    let mut subset_runtime = Runtime::new();
+    let mut subset_runtime = Runtime::default();
     subset_runtime.start_isolated_source("finite_subset_builtin_no_leak");
     let (setup_results, setup_error) =
         execute_source("have A set\nhave B finite_set = {1}", &mut subset_runtime);
@@ -239,7 +240,7 @@ fn finite_set_builtin_theorems_check_requirements_and_do_not_leak() {
         "a failed subset theorem must not store its conclusion:\n{probe_output}"
     );
 
-    let mut index_runtime = Runtime::new();
+    let mut index_runtime = Runtime::default();
     index_runtime.start_isolated_source("finite_index_builtin_no_leak");
     let (setup_results, setup_error) = execute_source("have S set", &mut index_runtime);
     let (setup_succeeded, setup_output) =
@@ -265,7 +266,7 @@ fn finite_set_builtin_theorems_check_requirements_and_do_not_leak() {
 
 #[test]
 fn failed_builtin_theorem_call_does_not_leak_its_conclusion() {
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("builtin_theorem_no_leak");
     let target = "0 $in {x R: x = 1}";
     let failed_call = format!("by thm set_builder_member(0, {{x R: x = 1}})");

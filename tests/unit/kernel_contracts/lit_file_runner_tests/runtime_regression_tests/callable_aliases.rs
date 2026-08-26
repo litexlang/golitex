@@ -1,4 +1,5 @@
 use super::*;
+use crate::test_support::execute_source;
 
 #[test]
 fn let_callable_alias_reduces_once_with_typed_definition_evidence() {
@@ -8,7 +9,7 @@ let g = f
 g(1) = 2
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("transparent_callable_alias");
     let (results, error) = execute_source(source, &mut runtime);
     let (succeeded, output) = render_run_output(&runtime, &results, &error);
@@ -43,7 +44,7 @@ g(1) = 2
 #[test]
 fn ordinary_have_equality_does_not_register_a_transparent_definition() {
     let source = "have a R = 1\n";
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("ordinary_have_is_not_transparent");
     let (results, error) = execute_source(source, &mut runtime);
     assert!(error.is_none(), "ordinary have failed: {error:?}");
@@ -62,7 +63,7 @@ fn ordinary_have_equality_does_not_register_a_transparent_definition() {
 #[test]
 fn transparent_definition_reduction_applies_to_non_equality_atomic_facts() {
     let source = "let S = R\n1 $in S\n";
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("transparent_non_equality_atomic_fact");
     let (results, error) = execute_source(source, &mut runtime);
     let (succeeded, output) = render_run_output(&runtime, &results, &error);
@@ -78,7 +79,7 @@ fn transparent_definition_reduction_applies_to_non_equality_atomic_facts() {
 #[test]
 fn transparent_lookup_is_exact_by_symbol_id_and_one_layer_per_pass() {
     let source = "let a = R\nlet b = a\n";
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("transparent_lookup_boundaries");
     let (_, error) = execute_source(source, &mut runtime);
     assert!(error.is_none(), "transparent aliases failed: {error:?}");
@@ -135,7 +136,7 @@ let g = f
 g(1, 2) = 3
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("callable_alias_arity_boundary");
     let (results, error) = execute_source(source, &mut runtime);
     let (succeeded, output) = render_run_output(&runtime, &results, &error);
@@ -169,7 +170,7 @@ thm local_struct_field_alias:
     scalar_add(x, y) = space.scalars.add(x, y)
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("nested_struct_field_callable_alias");
     let (results, error) = execute_source(source, &mut runtime);
     let (succeeded, output) = render_run_output(&runtime, &results, &error);
@@ -202,7 +203,7 @@ thm local_struct_field_alias_arity:
     scalar_add(x) = x
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("nested_struct_field_callable_alias_arity");
     let (results, error) = execute_source(source, &mut runtime);
     let (succeeded, output) = render_run_output(&runtime, &results, &error);
@@ -230,7 +231,7 @@ thm local_non_callable_field_alias:
     marker(0) = 0
 "#;
 
-    let mut runtime = Runtime::new();
+    let mut runtime = Runtime::default();
     runtime.start_isolated_source("nested_struct_field_non_callable_alias");
     let (results, error) = execute_source(source, &mut runtime);
     let (succeeded, output) = render_run_output(&runtime, &results, &error);
