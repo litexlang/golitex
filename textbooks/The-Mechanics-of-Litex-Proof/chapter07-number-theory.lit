@@ -80,12 +80,12 @@ claim:
             have whole_product N+ = product(1, a, fn(x N+) N+ {x})
             product(1, k, fn(x N+) N+ {x}) % k = 0
             quot(product(1, k, fn(x N+) N+ {x}), k) $in Z
-            by thm citation::quot_euclidean(product(1, k, fn(x N+) N+ {x}), k)
+1release thm citation::quot_euclidean(product(1, k, fn(x N+) N+ {x}), k)
             witness exist q Z st {product(1, k, fn(x N+) N+ {x}) = k * q + product(1, k, fn(x N+) N+ {x}) % k} from quot(product(1, k, fn(x N+) N+ {x}), k):
                 product(1, k, fn(x N+) N+ {x}) = k * quot(product(1, k, fn(x N+) N+ {x}), k) + product(1, k, fn(x N+) N+ {x}) % k
             obtain r from exist q Z st {product(1, k, fn(x N+) N+ {x}) = k * q + product(1, k, fn(x N+) N+ {x}) % k}
             prefix_product = product(1, k, fn(x N+) N+ {x}) = k * r + product(1, k, fn(x N+) N+ {x}) % k = k * r + 0 = k * r = r * k
-            by thm citation::mul_swap_tail(r, k, product(k + 1, a, fn(x N+) N+ {x}))
+1release thm citation::mul_swap_tail(r, k, product(k + 1, a, fn(x N+) N+ {x}))
             witness exist t Z st {whole_product = t * k} from r * product(k + 1, a, fn(x N+) N+ {x}):
                 whole_product = product(1, a, fn(x N+) N+ {x}) = product(1, k, fn(x N+) N+ {x}) * product(k + 1, a, fn(x N+) N+ {x}) = (r * k) * product(k + 1, a, fn(x N+) N+ {x}) = (r * product(k + 1, a, fn(x N+) N+ {x})) * k
             obtain whole_quotient from exist t Z st {whole_product = t * k}
@@ -169,14 +169,14 @@ claim:
                     obtain d from exist k N+ st {$prime(k), c % k = 0}
 
                     quot(n + 1, c) $in Z
-                    by thm citation::quot_euclidean(n + 1, c)
+1release thm citation::quot_euclidean(n + 1, c)
                     witness exist q Z st {n + 1 = c * q + (n + 1) % c} from quot(n + 1, c):
                         n + 1 = c * quot(n + 1, c) + (n + 1) % c
                     obtain e1 from exist q Z st {n + 1 = c * q + (n + 1) % c}
                     n + 1 = c * e1 + (n + 1) % c = c * e1 = e1 * c
 
                     quot(c, d) $in Z
-                    by thm citation::quot_euclidean(c, d)
+1release thm citation::quot_euclidean(c, d)
                     witness exist q Z st {c = d * q + c % d} from quot(c, d):
                         c = d * quot(c, d) + c % d
                     obtain f from exist r Z st {c = d * r + c % d}
@@ -320,7 +320,7 @@ thm bezout_of_coprime:
         $gcd_eq_one(a, d)
         =>:
             exist x Z, y Z st {1 = x * a + y * d}
-    by thm citation::bezout_identity(a, d)
+1release thm citation::bezout_identity(a, d)
     obtain x, y from exist x Z, y Z st {gcd(a, d) = x * a + y * d}
     witness exist u Z, v Z st {1 = u * a + v * d} from x, y:
         1 = gcd(a, d) = x * a + y * d
@@ -337,7 +337,7 @@ claim:
         =>:
             $citation::divides(d, b)
 
-    by thm bezout_of_coprime(a, d)
+1release thm bezout_of_coprime(a, d)
     obtain u, v from exist x Z, y Z st {1 = x * a + y * d}
     obtain z from exist z Z st {a * b = d * z}
     witness $citation::divides(d, b) from u * z + b * v:
@@ -375,7 +375,7 @@ sketch:
             =>:
                 $citation::divides(d, b)
 
-        by thm bezout_of_coprime(a, d)
+1release thm bezout_of_coprime(a, d)
         obtain u, v from exist u Z, v Z st {1 = u * a + v * d}
         obtain z from exist z Z st {a * b = d * z}
         witness exist k Z st {b = d * k} from u * z + b * v:
@@ -391,22 +391,22 @@ sketch:
         a $in Z
         b $in Z
         p $in Z
-        by thm citation::gcd_positive(a, p)
+1release thm citation::gcd_positive(a, p)
         1 <= gcd(a, p)
-        by thm citation::gcd_divides_right(a, p)
-        by thm citation::gcd_of_prime_is_one_or_prime(a, p)
+1release thm citation::gcd_divides_right(a, p)
+1release thm citation::gcd_of_prime_is_one_or_prime(a, p)
         by cases:
             ? $citation::divides(p, a) or $citation::divides(p, b)
             case gcd(a, p) = 1:
                 by def $gcd_eq_one(a, p)
-                by thm bezout_of_coprime(a, p)
+1release thm bezout_of_coprime(a, p)
                 obtain u, v from exist u Z, v Z st {1 = u * a + v * p}
                 obtain z from exist z Z st {a * b = p * z}
                 witness $citation::divides(p, b) from u * z + b * v:
                     b = b * 1 = b * (u * a + v * p) = u * (a * b) + b * v * p = u * (p * z) + b * v * p = p * (u * z + b * v)
                 $citation::divides(p, a) or $citation::divides(p, b)
             case gcd(a, p) = p:
-                by thm citation::gcd_divides_left(a, p)
+1release thm citation::gcd_divides_left(a, p)
                 obtain q from exist q Z st {a = gcd(a, p) * q}
                 witness $citation::divides(p, a) from q:
                     a = gcd(a, p) * q = p * q
@@ -494,7 +494,7 @@ sketch:
             a > 0
             =>:
                 exist p, q N+ st {a = p / q, gcd(p, q) = 1}
-        by thm rational_has_unique_reduced_fraction(a)
+1release thm rational_has_unique_reduced_fraction(a)
         obtain p, q from exist! p Z, q N+ st {a = p / q, gcd(p, q) = 1}
         q > 0
         a * q = (p / q) * q = p
@@ -511,7 +511,7 @@ sketch:
             k^2 % a = 0
             =>:
                 k % a = 0
-        by thm citation::gcd_of_prime_is_one_or_prime(k, a)
+1release thm citation::gcd_of_prime_is_one_or_prime(k, a)
         by cases:
             ? k % a = 0
             case gcd(k, a) = 1:
@@ -519,10 +519,10 @@ sketch:
                     ? k % a = 0
                     k % a != 0
                     by def $gcd_eq_one(k, a)
-                    by thm bezout_of_coprime(k, a)
+1release thm bezout_of_coprime(k, a)
                     obtain x, y from exist x Z, y Z st {1 = x * k + y * a}
                     quot(k^2, a) $in Z
-                    by thm citation::quot_euclidean(k^2, a)
+1release thm citation::quot_euclidean(k^2, a)
                     witness exist q Z st {k^2 = a * q + k^2 % a} from quot(k^2, a):
                         k^2 = a * quot(k^2, a) + k^2 % a
                     obtain q from exist q Z st {k^2 = a * q + k^2 % a}
@@ -537,7 +537,7 @@ sketch:
                 by contra:
                     ? k % a = 0
                     k % a != 0
-                    by thm citation::gcd_divides_left(k, a)
+1release thm citation::gcd_divides_left(k, a)
                     obtain t from exist t Z st {k = gcd(k, a) * t}
                     k = gcd(k, a) * t = a * t
                     k = a * t + 0
@@ -568,7 +568,7 @@ sketch:
         p^2 % 2 = 0
         p % 2 = 0
         quot(p, 2) $in Z
-        by thm citation::quot_euclidean(p, 2)
+1release thm citation::quot_euclidean(p, 2)
         witness exist quotient_p Z st {p = 2 * quotient_p + p % 2} from quot(p, 2):
             p = 2 * quot(p, 2) + p % 2
         obtain c from exist quotient_p Z st {p = 2 * quotient_p + p % 2}
@@ -582,13 +582,13 @@ sketch:
         q % 2 = 0
         witness $citation::divides(2, p) from c
         quot(q, 2) $in Z
-        by thm citation::quot_euclidean(q, 2)
+1release thm citation::quot_euclidean(q, 2)
         witness exist t Z st {q = 2 * t + q % 2} from quot(q, 2):
             q = 2 * quot(q, 2) + q % 2
         obtain d from exist t Z st {q = 2 * t + q % 2}
         q = 2 * d + q % 2 = 2 * d
         witness $citation::divides(2, q) from d
-        by thm citation::common_divisor_le_gcd(p, q, 2)
+1release thm citation::common_divisor_le_gcd(p, q, 2)
         2 <= gcd(p, q) = 1
         impossible 2 <= 1
 
@@ -605,7 +605,7 @@ sketch:
 #   lowest-terms fraction.
 
 # The implementation also makes two proof-engineering boundaries visible. A
-# theorem or positive mathematical predicate is crossed explicitly with `by thm`
+# theorem or positive mathematical predicate is crossed explicitly with `release thm`
 # or `by def`; it is not rediscovered by automatic atomic search. And when a
 # later remainder rule consumes an integer as a known leaf, the relevant carrier
 # fact is stated explicitly even if an earlier witness was locally type-checked.

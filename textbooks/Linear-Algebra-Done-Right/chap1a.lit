@@ -138,7 +138,7 @@ claim:
     real_add(x, real_neg(x)) = x + real_neg(x) = x + (-x) = 0
     real_mul(1, x) = 1 * x = x
 
-by thm struct_member((0, 1, real_add, real_neg, real_mul, real_inv), &ScalarSystem<R>)
+1release thm struct_member((0, 1, real_add, real_neg, real_mul, real_inv), &ScalarSystem<R>)
 have real_scalars &ScalarSystem<R> = (0, 1, real_add, real_neg, real_mul, real_inv)
 
 # Export the declaration-owned real adapter value for later chapters. A `have`
@@ -192,7 +192,7 @@ claim:
 
 # The generic complex adapter structure is checked from builtin field laws.
 # Two later-use operation-value bridges below remain localized proof debt.
-by thm struct_member((0, 1, complex_scalar_add, complex_scalar_neg, complex_scalar_mul, complex_scalar_inv), &ScalarSystem<C>)
+1release thm struct_member((0, 1, complex_scalar_add, complex_scalar_neg, complex_scalar_mul, complex_scalar_inv), &ScalarSystem<C>)
 have complex_scalars &ScalarSystem<C> = (0, 1, complex_scalar_add, complex_scalar_neg, complex_scalar_mul, complex_scalar_inv)
 
 thm complex_scalar_adapter_value:
@@ -314,8 +314,8 @@ thm finite_list_extensionality:
     x.entries = left_entries = right_entries = y.entries
     x[1] = x.length = n = y.length = y[1]
     x[2] = x.entries = y.entries = y[2]
-    by thm tuple_equal_from_coordinates(x, (x[1], x[2]))
-    by thm tuple_equal_from_coordinates(y, (y[1], y[2]))
+1release thm tuple_equal_from_coordinates(x, (x[1], x[2]))
+1release thm tuple_equal_from_coordinates(y, (y[1], y[2]))
     (x[1], x[2]) = (y[1], y[2])
     x = (x[1], x[2]) = (y[1], y[2]) = y
 # Example 1.9. Order and repetition are observable in lists through coordinate
@@ -377,8 +377,8 @@ thm coordinate_add_commutative:
             idx <= n
             =>:
                 left(idx) = right(idx)
-        by thm coordinate_add_entry(s, scalars, n, x, y, left, idx)
-        by thm coordinate_add_entry(s, scalars, n, y, x, right, idx)
+1release thm coordinate_add_entry(s, scalars, n, x, y, left, idx)
+1release thm coordinate_add_entry(s, scalars, n, y, x, right, idx)
         left(idx) = scalars.add(x(idx), y(idx))
         scalars.add(x(idx), y(idx)) = scalars.add(y(idx), x(idx))
         scalars.add(y(idx), x(idx)) = right(idx)

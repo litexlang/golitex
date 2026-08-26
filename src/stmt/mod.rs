@@ -1,6 +1,5 @@
 #[path = "definitions/axiom.rs"]
 mod axiom_stmt;
-pub mod by_stmt;
 #[path = "proof_blocks/claim.rs"]
 pub mod claim_stmt;
 #[path = "definitions/algorithm.rs"]
@@ -11,9 +10,9 @@ pub mod definition_stmt;
 pub mod eval_stmt;
 #[path = "proof_blocks/example.rs"]
 pub mod example_stmt;
+pub mod explicit_verify;
 #[path = "definitions/parameters.rs"]
 pub mod parameters;
-mod release_thm;
 #[path = "proof_blocks/sketch.rs"]
 pub mod sketch_stmt;
 #[path = "commands/tooling.rs"]
@@ -42,12 +41,12 @@ mod struct_stmt;
 #[path = "definitions/theorem.rs"]
 mod thm_stmt;
 pub use axiom_stmt::AxiomStmt;
-pub use by_stmt::ByClosedRangeAsCasesStmt;
-pub use by_stmt::ByDefStmt;
-pub use by_stmt::ByEnumerateRangeStmt;
-pub use by_stmt::ByStructDefStmt;
-pub use by_stmt::ByThmStmt;
-pub use release_thm::ReleaseThmStmt;
+pub use explicit_verify::ByClosedRangeAsCasesStmt;
+pub use explicit_verify::ByDefStmt;
+pub use explicit_verify::ByEnumerateRangeStmt;
+pub use explicit_verify::ByStructDefStmt;
+pub use explicit_verify::ByThmStmt;
+pub use explicit_verify::ReleaseThmStmt;
 pub use statement_types::ByStmt;
 pub use statement_types::CommandStmt;
 pub use statement_types::DefinitionStmt;

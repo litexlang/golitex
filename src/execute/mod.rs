@@ -1,7 +1,7 @@
 mod attach_fact_ids_to_stmt_result;
-mod by_stmt;
 mod command_execution;
 mod definition_execution;
+mod explicit_verify;
 mod proof_block_execution;
 mod statement_execution;
 mod strategy_execution;

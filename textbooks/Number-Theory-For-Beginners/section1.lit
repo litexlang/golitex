@@ -272,7 +272,7 @@ thm finite_N_subset_size_one_has_least:
     finite_set_size(T) >= 1
     $is_nonempty_set(T)
     have a T
-    by thm intersect_with_singleton(T, a)
+1release thm intersect_with_singleton(T, a)
     finite_set_size({a}) = 1
     $is_finite_set(set_minus(T, {a}))
     finite_set_size(set_minus(T, {a})) = finite_set_size(T) - finite_set_size(intersect(T, {a})) = 1 - 1 = 0
@@ -305,7 +305,7 @@ thm finite_N_subset_successor_has_least:
             exist a N st {$is_least_element_of_N_set(T, a)}
     n $in N+
     have a T
-    by thm intersect_with_singleton(T, a)
+1release thm intersect_with_singleton(T, a)
     finite_set_size({a}) = 1
     finite_set_size(intersect(T, {a})) = finite_set_size({a}) = 1
     $is_finite_set(set_minus(T, {a}))
@@ -367,7 +367,7 @@ thm every_N_finite_subset_has_least_by_count_induction:
                     $is_nonempty_set(T)
                     =>:
                         exist a N st {$is_least_element_of_N_set(T, a)}
-                by thm finite_N_subset_size_one_has_least(T)
+1release thm finite_N_subset_size_one_has_least(T)
             by def:
                 ? $every_N_finite_subset_of_n_elements_has_least(1)
             $every_N_finite_subset_of_n_elements_has_least(n)
@@ -379,7 +379,7 @@ thm every_N_finite_subset_has_least_by_count_induction:
                     $is_nonempty_set(T)
                     =>:
                         exist a N st {$is_least_element_of_N_set(T, a)}
-                by thm finite_N_subset_successor_has_least(n, T)
+1release thm finite_N_subset_successor_has_least(n, T)
             by def:
                 ? $every_N_finite_subset_of_n_elements_has_least(n + 1)
 
@@ -410,7 +410,7 @@ thm positive_integer_set_has_least_element:
     witness $is_nonempty_set(T) from a
     finite_set_size(T) >= 1
     finite_set_size(T) $in N+
-    by thm every_N_finite_subset_has_least_by_count_induction(finite_set_size(T))
+1release thm every_N_finite_subset_has_least_by_count_induction(finite_set_size(T))
     exist m N st {$is_least_element_of_N_set(T, m)}
     obtain m from exist m N st {$is_least_element_of_N_set(T, m)}
     m $in T
@@ -460,7 +460,7 @@ thm section_I_strong_induction:
         ? n $in S
         not n $in S
         have bad power_set(Z) = {t N: not t $in S}
-        by thm set_builder_member(n, {t N: not t $in S})
+1release thm set_builder_member(n, {t N: not t $in S})
         witness $is_nonempty_set(bad) from n
         claim:
             ? $is_positive_integer_set(bad)
@@ -479,7 +479,7 @@ thm section_I_strong_induction:
                     impossible not x $in S
             by def:
                 ? $is_positive_integer_set(bad)
-        by thm positive_integer_set_has_least_element(bad)
+1release thm positive_integer_set_has_least_element(bad)
         obtain m from exist m Z st {$is_least_element_of_integer_set(bad, m)}
         claim:
             ? forall k N:
@@ -489,7 +489,7 @@ thm section_I_strong_induction:
             by contra:
                 ? k $in S
                 not k $in S
-                by thm set_builder_member(k, {t N: not t $in S})
+1release thm set_builder_member(k, {t N: not t $in S})
                 k $in bad
                 m <= k
                 impossible k < m

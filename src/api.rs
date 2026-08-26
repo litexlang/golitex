@@ -25,8 +25,8 @@ pub use crate::runtime::{OutputStyle, Runtime};
 
 // Source, file, and repository execution entry points.
 pub use crate::pipeline::{
-    run, RunOptions, RunOutcome, RunRequest, RunSummary, RunTarget, SourceImportPolicy,
-    SourceRunFailureKind, SourceRunOutcome,
+    run, RunOptions, RunOutcome, RunRequest, RunSummary, RunTarget, RunTargetKind,
+    SourceImportPolicy, SourceRunFailureKind, SourceRunOutcome,
 };
 
 // Stable rendering entry points for embedding and machine-readable output.

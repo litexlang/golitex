@@ -232,8 +232,8 @@ pub use crate::pipeline::{
     execute_repository_target, render_run_output, render_run_summary, resolve_source_file_path,
     run, run_isolated_repl_with_runtime, run_latex_repl, run_repl,
     run_repository_before_file_target, run_session, FileExecutionOptions, ReplOptions, RunOptions,
-    RunOutcome, RunRequest, RunSummary, RunSummaryRequest, RunTarget, SessionPreload,
-    SessionRequest, SourceImportPolicy, SourceRunFailureKind, SourceRunOutcome,
+    RunOutcome, RunRequest, RunSummary, RunSummaryRequest, RunTarget, RunTargetKind,
+    SessionPreload, SessionRequest, SourceImportPolicy, SourceRunFailureKind, SourceRunOutcome,
 };
 pub use crate::rational_expression::gcd_decimal_str_and_normalize;
 pub use crate::rational_expression::mul_signed_decimal_str;
@@ -309,7 +309,6 @@ pub use crate::result::SuccessVerifyByInducResult;
 pub use crate::result::SuccessVerifyByPropRegistrationResult;
 pub use crate::result::SuccessVerifyByStructuredIntegerInducCaseResult;
 pub use crate::result::SuccessVerifyByStructuredIntegerInducResult;
-pub use crate::result::SuccessVerifyByTheoremResult;
 pub use crate::result::SuccessVerifyByUnstructuredIntegerInducResult;
 pub use crate::result::SuccessVerifyCaseFunctionDefinitionResult;
 pub use crate::result::SuccessVerifyClaimFactResult;
@@ -328,6 +327,7 @@ pub use crate::result::SuccessVerifyObjectChoiceGroupResult;
 pub use crate::result::SuccessVerifyObjectChoiceResult;
 pub use crate::result::SuccessVerifyPreimageResult;
 pub use crate::result::SuccessVerifyStrategyDefinitionResult;
+pub use crate::result::SuccessVerifyTheoremApplicationResult;
 pub use crate::result::SuccessVerifyTheoremResult;
 pub use crate::result::SuccessVerifyTupleOrCartDefinitionResult;
 pub use crate::result::SuccessVerifyTupleOrCartDimensionResult;
@@ -397,8 +397,7 @@ pub use crate::result::{
     SuccessHaveTupleStmtResult, SuccessImportExecutionResult, SuccessImportStmtResult,
     SuccessLetObjStmtResult, SuccessObtainObjFromAtomicFactResult,
     SuccessObtainObjFromExistFactResult, SuccessObtainObjFromThmResult,
-    SuccessProofBlockStmtResult, SuccessRecursiveObjWellDefinedResult,
-    SuccessReleaseThmStmtResult,
+    SuccessProofBlockStmtResult, SuccessRecursiveObjWellDefinedResult, SuccessReleaseThmStmtResult,
     SuccessReuseObjWellDefinedResult, SuccessReusedImportResult,
     SuccessReusedTemplateInstanceResult, SuccessSketchProofResult, SuccessSketchStmtResult,
     SuccessStmtCommonResult, SuccessStoreFactResult, SuccessTemplateInstantiationResult,
@@ -476,22 +475,6 @@ pub use crate::runtime::ScopeFrame;
 pub use crate::runtime::{
     BareSymbol, ExecutionFrame, ExecutionLayer, OutputStyle, Runtime, StatementProofStateStack,
 };
-pub use crate::stmt::by_stmt::ByAntisymmetricPropStmt;
-pub use crate::stmt::by_stmt::ByAxiomOfChoiceStmt;
-pub use crate::stmt::by_stmt::ByCasesStmt;
-pub use crate::stmt::by_stmt::ByContraStmt;
-pub use crate::stmt::by_stmt::ByEnumerateFiniteSetStmt;
-pub use crate::stmt::by_stmt::ByExtensionStmt;
-pub use crate::stmt::by_stmt::ByFiniteSetInducStmt;
-pub use crate::stmt::by_stmt::ByForExpansion;
-pub use crate::stmt::by_stmt::ByForStmt;
-pub use crate::stmt::by_stmt::ByInducStmt;
-pub use crate::stmt::by_stmt::ByReflexivePropStmt;
-pub use crate::stmt::by_stmt::ByRegularityAxiomStmt;
-pub use crate::stmt::by_stmt::BySymmetricPropStmt;
-pub use crate::stmt::by_stmt::ByTransitivePropStmt;
-pub use crate::stmt::by_stmt::ByZornLemmaStmt;
-pub use crate::stmt::by_stmt::ClosedRangeOrRange;
 pub use crate::stmt::claim_stmt::ClaimStmt;
 pub use crate::stmt::define_algorithm_stmt::AlgoCase;
 pub use crate::stmt::define_algorithm_stmt::AlgoReturn;
@@ -525,6 +508,22 @@ pub use crate::stmt::definition_stmt::TemplateDefEnum;
 pub use crate::stmt::definition_stmt::TrustHaveStmt;
 pub use crate::stmt::eval_stmt::EvalStmt;
 pub use crate::stmt::example_stmt::ExampleStmt;
+pub use crate::stmt::explicit_verify::ByAntisymmetricPropStmt;
+pub use crate::stmt::explicit_verify::ByAxiomOfChoiceStmt;
+pub use crate::stmt::explicit_verify::ByCasesStmt;
+pub use crate::stmt::explicit_verify::ByContraStmt;
+pub use crate::stmt::explicit_verify::ByEnumerateFiniteSetStmt;
+pub use crate::stmt::explicit_verify::ByExtensionStmt;
+pub use crate::stmt::explicit_verify::ByFiniteSetInducStmt;
+pub use crate::stmt::explicit_verify::ByForExpansion;
+pub use crate::stmt::explicit_verify::ByForStmt;
+pub use crate::stmt::explicit_verify::ByInducStmt;
+pub use crate::stmt::explicit_verify::ByReflexivePropStmt;
+pub use crate::stmt::explicit_verify::ByRegularityAxiomStmt;
+pub use crate::stmt::explicit_verify::BySymmetricPropStmt;
+pub use crate::stmt::explicit_verify::ByTransitivePropStmt;
+pub use crate::stmt::explicit_verify::ByZornLemmaStmt;
+pub use crate::stmt::explicit_verify::ClosedRangeOrRange;
 pub use crate::stmt::parameters::FiniteSet;
 pub use crate::stmt::parameters::NonemptySet;
 pub use crate::stmt::parameters::ParamType;
@@ -548,7 +547,6 @@ pub use crate::stmt::ByDefStmt;
 pub use crate::stmt::ByEnumerateRangeStmt;
 pub use crate::stmt::ByStmt;
 pub use crate::stmt::ByStructDefStmt;
-pub use crate::stmt::{ByThmStmt, ReleaseThmStmt};
 pub use crate::stmt::CommandStmt;
 pub use crate::stmt::DefStrategyStmt;
 pub use crate::stmt::DefStructStmt;
@@ -559,6 +557,7 @@ pub use crate::stmt::Stmt;
 pub use crate::stmt::StructFieldDef;
 pub use crate::stmt::UnsafeStmt;
 pub use crate::stmt::WitnessStmt;
+pub use crate::stmt::{ByThmStmt, ReleaseThmStmt};
 pub use crate::symbol::{
     builtin_symbol_ref, insert_symbol_substitution, IntoSymbolRef, SymbolBinding, SymbolDefinition,
     SymbolId, SymbolIdAllocator, SymbolRef, SymbolRole, SymbolTable, TransparentObjectDefinition,

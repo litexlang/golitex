@@ -2166,7 +2166,7 @@ x = 1
 This is a parse `error`. Put the target under `claim`, `example`, `thm`,
 `strategy`, or a statement that explicitly expects a goal.
 
-### Named interfaces: `thm`, `axiom`, `release thm`, and `by thm`
+### Named interfaces: `thm`, `axiom`, `release thm`, and `by thm ... => fact`
 
 `thm` proves and names a reusable fact. A universal theorem is available both
 for explicit theorem calls and ordinary known-`forall` matching. `axiom` gives
@@ -2188,7 +2188,7 @@ release thm positive_is_nonzero(1)
 `release thm` checks argument types and theorem premises, instantiates every
 conclusion, and stores all of them with the existing theorem-instantiation
 provenance. It accepts only the bare call: no `=>` selection and no indented
-goal or proof body. A bare `by thm name(args)` is rejected: `by thm` is
+goal or proof body. Omitting `=> fact` is rejected: `by thm ... => fact` is
 reserved for selecting one atomic consequence.
 
 The preview selection form keeps the ordinary theorem application explicit but
@@ -2218,7 +2218,7 @@ existential, disjunctive, conjunctive, and chain targets are not accepted. A
 missing `=>`, indented goal, or proof body is rejected.
 
 A bare `release thm name(args)` stores all instantiated conclusions. A
-selected `by thm` call stores only the requested atomic fact and its ordinary
+selected `by thm ... => fact` call stores only the requested atomic fact and its ordinary
 inferred consequences.
 
 There is no separate `lemma` keyword:
@@ -2434,7 +2434,7 @@ introductions.
 | `try` | The whole block succeeds transactionally. | All block effects on success; none on failure. |
 | `thm`, `axiom` | `thm` proves its target; `axiom` checks its interface but trusts truth. | A named reusable theorem interface; universal facts also enter ordinary matching. |
 | `release thm` | Arity/domains/premises; the form is bare and has no goal/proof body. | All instantiated conclusions and their ordinary inferred consequences. |
-| `by thm ... => fact` or bodyless `? fact` block | Arity/domains/premises and one selected atomic target. | Only the requested atomic selection and its ordinary inferred consequences. |
+| `by thm ... => fact` | Arity/domains/premises and one selected atomic target. | Only the requested atomic selection and its ordinary inferred consequences. |
 | `strategy` | The statement proves its restricted atomic universal pattern. | A named definition whose proved `forall` enters ordinary matching. |
 | `witness exist/exist!` | Witness count/types/body; `exist!` additionally verifies the generated two-candidate uniqueness universal. | The exact existential fact. Binder names stay local. |
 | `witness $P(args)` | The concrete prop has one positive ordinary `exist` clause; ordinary witness checks run after substitution. `exist!` uses explicit `witness exist! ...` followed by `by def`. | `$P(args)` as the primary fact, then definition inference. |

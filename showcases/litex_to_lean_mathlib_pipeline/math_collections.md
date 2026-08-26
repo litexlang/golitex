@@ -2,9 +2,9 @@
 
 ## Owned interface
 
-This showcase owns one dependency-closed theorem and one downstream Mathlib
-use. Its completion criterion is executable reuse, not the number of helper
-lemmas.
+This showcase owns one dependency-closed equality proof, one property-centered
+Litex companion, and one downstream Mathlib use. Its completion criterion is
+executable reuse, not the number of helper lemmas.
 
 ### `kth_odd`
 
@@ -33,6 +33,39 @@ lemmas.
   separate non-generated Lean module.
 - Downstream consumer: specialization of that external adapter at `n = 100`.
 
+### `is_square_of`
+
+- Natural meaning: `value` is the square represented by the supplied integer
+  `root`.
+- Litex interface: `prop is_square_of(value, root Z): value = root^2`.
+- Form choice: concrete `prop`, because it tests supplied candidates; not a
+  function, because no canonical root is being computed.
+- Current extension: an existential `is_integer_square(value)` is the natural
+  next wrapper once predicate-backed local `obtain` has a ToLean consumer.
+
+### `square_of_is_nonnegative`
+
+- Natural meaning: any value represented by `is_square_of` is nonnegative.
+- Property use: the premise exposes `value = root^2`; the proof adds only the
+  genuine mathematical fact `root^2 >= 0`.
+- Reuse direction: this is a consumer/eliminator for every future constructor
+  of `is_square_of`.
+
+### `sum_first_odds_is_square_of_n`
+
+- Natural meaning: the odd sum carries `n` as its square witness.
+- Dependencies: `sum_first_odds` plus one exact `by def` fold.
+- Interface role: constructor theorem; downstream proofs can consume the
+  property without reopening the induction.
+
+### `sum_first_odds_nonnegative`
+
+- Natural meaning: every positive-prefix odd sum is nonnegative.
+- Proof architecture: construct `is_square_of(sum(...), n)`, then apply
+  `square_of_is_nonnegative`.
+- Reader bridges: both theorem selections remain explicit so the property
+  lifecycle is visible.
+
 ### `sum_first_ten_odds`
 
 - Natural meaning: the first ten positive odd integers sum to `100`.
@@ -57,11 +90,24 @@ generated canonical sum_first_odds theorem
              ↓ automatic specialization at 10 + numeric normalization
 generated canonical sum_first_ten_odds theorem
 
+property_flow.lit
+  is_square_of definition
+             ↓
+  square_of_is_nonnegative (general consumer)
+             ↑
+  sum_first_odds equality → sum_first_odds_is_square_of_n (constructor)
+             ↓
+  sum_first_odds_nonnegative (composed conclusion)
+
 external AI-authored Lean proof
              ↓
 ExternalAI.sum_first_odds
+             ↓ package as ExternalAI.IsSquareOf
+ExternalAI.sum_first_odds_is_square_of_n
+             ↓ reusable property law
+ExternalAI.sum_first_odds_nonnegative
              ↓ downstream import
-firstHundredPositiveOddIntegersSum
+firstHundredPositiveOddIntegersSum / ...SumNonnegative
 ```
 
 ## Export boundary
@@ -75,3 +121,8 @@ does not emit a native certificate, namespace, or consumer.
 Lean proof. Keeping that artifact separate makes the provenance honest: the
 adapter is useful downstream, but it is not compiler output and is not
 presented as a replay of the Litex Result.
+
+`property_flow.lit` is verifier-complete but is not included in the generated
+module yet. The production compiler still fails closed on named local
+predicate consumers; this boundary is recorded rather than hidden behind an
+axiom, `sorry`, or hand-edited generated file.

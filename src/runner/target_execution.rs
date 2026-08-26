@@ -25,15 +25,15 @@ pub fn run_runner(request: RunnerRequest) -> (bool, String) {
     let outcome = run(run_request);
     if let Some(message) = outcome.target_error {
         return runner_target_error_output(
-            outcome.target_kind.as_str(),
-            outcome.target_label.as_str(),
+            outcome.target_kind,
+            outcome.target_path.as_deref(),
             hide_file_paths,
             message,
         );
     }
     runner_output_from_trace(
-        outcome.target_kind.as_str(),
-        outcome.target_label.as_str(),
+        outcome.target_kind,
+        outcome.target_path.as_deref(),
         hide_file_paths,
         outcome.ok,
         outcome.output,
@@ -41,8 +41,8 @@ pub fn run_runner(request: RunnerRequest) -> (bool, String) {
 }
 
 fn runner_output_from_trace(
-    target_kind: &str,
-    target_label: &str,
+    target_kind: RunTargetKind,
+    target_path: Option<&str>,
     hide_file_paths: bool,
     ok: bool,
     trace_output: String,
@@ -65,7 +65,7 @@ fn runner_output_from_trace(
         ("ok".to_string(), JsonValue::Bool(ok)),
         (
             "target".to_string(),
-            target_json_value(target_kind, target_label, hide_file_paths),
+            target_json_value(target_kind, target_path, hide_file_paths),
         ),
         ("error".to_string(), JsonValue::Null),
         (
@@ -77,8 +77,8 @@ fn runner_output_from_trace(
 }
 
 fn runner_target_error_output(
-    target_kind: &str,
-    target_label: &str,
+    target_kind: RunTargetKind,
+    target_path: Option<&str>,
     hide_file_paths: bool,
     message: String,
 ) -> (bool, String) {
@@ -105,7 +105,7 @@ fn runner_target_error_output(
         ("ok".to_string(), JsonValue::Bool(false)),
         (
             "target".to_string(),
-            target_json_value(target_kind, target_label, hide_file_paths),
+            target_json_value(target_kind, target_path, hide_file_paths),
         ),
         ("error".to_string(), error),
         ("trace".to_string(), JsonValue::JsonString(String::new())),
@@ -117,17 +117,23 @@ fn render_runner_json_value(value: JsonValue) -> String {
     render_json_value(&value, 0)
 }
 
-fn target_json_value(target_kind: &str, target_label: &str, hide_file_paths: bool) -> JsonValue {
-    let label = if hide_file_paths && target_kind != "code" {
+fn target_json_value(
+    target_kind: RunTargetKind,
+    target_path: Option<&str>,
+    hide_file_paths: bool,
+) -> JsonValue {
+    let label = if target_kind == RunTargetKind::Code {
+        "-runner -e".to_string()
+    } else if hide_file_paths {
         "entry".to_string()
     } else {
-        target_label.to_string()
+        target_path.unwrap_or("entry").to_string()
     };
 
     JsonValue::Object(vec![
         (
             "kind".to_string(),
-            JsonValue::JsonString(target_kind.to_string()),
+            JsonValue::JsonString(target_kind.json_name().to_string()),
         ),
         ("label".to_string(), JsonValue::JsonString(label)),
     ])

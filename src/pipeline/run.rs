@@ -8,27 +8,36 @@ use crate::module_manager::{discover_repository, RepositoryFileTarget};
 use crate::result::StmtResult;
 use crate::runtime::{OutputStyle, Runtime};
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum RunTargetKind {
+    Code,
+    File,
+    Repository,
+    Session,
+}
+
+impl RunTargetKind {
+    pub fn json_name(self) -> &'static str {
+        match self {
+            Self::Code => "code",
+            Self::File => "file",
+            Self::Repository => "repo",
+            Self::Session => "session",
+        }
+    }
+}
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum RunTarget {
-    Code {
-        source: String,
-        source_label: String,
-    },
-    File {
-        path: String,
-    },
-    Repository {
-        path: String,
-    },
+    Code { source: String },
+    File { path: String },
+    Repository { path: String },
 }
 
 impl RunTarget {
-    /// Create an inline source target. `source_label` is the synthetic file name
-    /// used in diagnostics because inline code has no filesystem path.
-    pub fn code(source: &str, source_label: &str) -> Self {
+    pub fn code(source: &str) -> Self {
         Self::Code {
             source: source.to_string(),
-            source_label: source_label.to_string(),
         }
     }
 
@@ -79,8 +88,8 @@ impl RunRequest {
 
 pub struct RunOutcome {
     pub ok: bool,
-    pub target_kind: String,
-    pub target_label: String,
+    pub target_kind: RunTargetKind,
+    pub target_path: Option<String>,
     pub runtime: Runtime,
     pub stmt_results: Vec<StmtResult>,
     pub runtime_error: Option<RuntimeError>,
@@ -100,16 +109,30 @@ pub fn run(request: RunRequest) -> RunOutcome {
 
     let mut target_error = None;
     let mut selected_repository_target = None;
-    let (target_kind, target_label, stmt_results, runtime_error) = match target {
-        RunTarget::Code {
-            source,
-            source_label,
-        } => runtime.run_code_target(source, source_label),
+    let (target_kind, target_path, stmt_results, runtime_error) = match target {
+        RunTarget::Code { source } => {
+            let (stmt_results, runtime_error) = runtime.run_code_target(source);
+            (RunTargetKind::Code, None, stmt_results, runtime_error)
+        }
         RunTarget::File { path } => {
-            runtime.run_file_target(path, options.force_isolated, &mut target_error)
+            let (target_path, stmt_results, runtime_error) =
+                runtime.run_file_target(path, options.force_isolated, &mut target_error);
+            (
+                RunTargetKind::File,
+                Some(target_path),
+                stmt_results,
+                runtime_error,
+            )
         }
         RunTarget::Repository { path } => {
-            runtime.run_repository_target(path, &mut selected_repository_target)
+            let (target_path, stmt_results, runtime_error) =
+                runtime.run_repository_target(path, &mut selected_repository_target);
+            (
+                RunTargetKind::Repository,
+                Some(target_path),
+                stmt_results,
+                runtime_error,
+            )
         }
     };
 
@@ -133,8 +156,8 @@ pub fn run(request: RunRequest) -> RunOutcome {
 
     RunOutcome {
         ok,
-        target_kind: target_kind.to_string(),
-        target_label,
+        target_kind,
+        target_path,
         runtime,
         stmt_results,
         runtime_error,
@@ -145,19 +168,15 @@ pub fn run(request: RunRequest) -> RunOutcome {
 }
 
 impl Runtime {
-    fn run_code_target(
-        &mut self,
-        source: String,
-        source_label: String,
-    ) -> (&'static str, String, Vec<StmtResult>, Option<RuntimeError>) {
-        self.start_isolated_source(source_label.as_str());
+    fn run_code_target(&mut self, source: String) -> (Vec<StmtResult>, Option<RuntimeError>) {
+        self.start_isolated_source("entry");
         let (results, error) = self
             .execute_source(
                 remove_windows_carriage_from_str(source.as_str()).as_str(),
                 SourceImportPolicy::UseRuntimePolicy,
             )
             .into_parts();
-        ("code", source_label, results, error)
+        (results, error)
     }
 
     fn run_file_target(
@@ -165,7 +184,7 @@ impl Runtime {
         path: String,
         force_isolated: bool,
         target_error: &mut Option<String>,
-    ) -> (&'static str, String, Vec<StmtResult>, Option<RuntimeError>) {
+    ) -> (String, Vec<StmtResult>, Option<RuntimeError>) {
         match resolve_source_file_path(path.as_str()) {
             Ok(resolved_path) => {
                 let (results, error) = execute_file_in_runtime(
@@ -173,11 +192,11 @@ impl Runtime {
                     self,
                     FileExecutionOptions { force_isolated },
                 );
-                ("file", resolved_path, results, error)
+                (resolved_path, results, error)
             }
             Err(message) => {
                 *target_error = Some(message);
-                ("file", path, Vec::new(), None)
+                (path, Vec::new(), None)
             }
         }
     }
@@ -186,15 +205,15 @@ impl Runtime {
         &mut self,
         path: String,
         selected_repository_target: &mut Option<RepositoryFileTarget>,
-    ) -> (&'static str, String, Vec<StmtResult>, Option<RuntimeError>) {
+    ) -> (String, Vec<StmtResult>, Option<RuntimeError>) {
         let normalized_path = remove_windows_carriage_from_str(path.as_str());
         match discover_repository(self, normalized_path.as_str()) {
             Ok(target) => {
                 *selected_repository_target = Some(target);
                 let (results, error) = execute_repository_target(self, target);
-                ("repo", normalized_path, results, error)
+                (normalized_path, results, error)
             }
-            Err(error) => ("repo", normalized_path, Vec::new(), Some(error)),
+            Err(error) => (normalized_path, Vec::new(), Some(error)),
         }
     }
 }

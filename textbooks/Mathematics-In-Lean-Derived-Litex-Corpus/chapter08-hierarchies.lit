@@ -62,7 +62,7 @@ thm group_inverse_eq_of_right_inverse:
 thm group_right_inverse:
     ? forall s nonempty_set, group &TwoSidedGroup<s>, a s:
         group.mul(a, group.inv(a)) = group.one
-    by thm group_inverse_eq_of_right_inverse(s, group, group.inv(a), a)
+1release thm group_inverse_eq_of_right_inverse(s, group, group.inv(a), a)
     group.inv(group.inv(a)) = a
     group.mul(group.inv(group.inv(a)), group.inv(a)) = group.one
     group.mul(a, group.inv(a)) = group.mul(group.inv(group.inv(a)), group.inv(a)) = group.one
@@ -151,14 +151,14 @@ thm integer_ring_laws:
     by def:
         ? $MILAlternative::chap2_struct::ring_laws(Z, fn(x, y Z) Z {x + y}, 0, fn(x Z) Z {-x}, fn(x, y Z) Z {x * y}, 1)
 
-by thm integer_ring_laws(0)
-by thm fn_set_member(fn(x, y Z) Z {x + y}, fn(x, y Z) Z)
+1release thm integer_ring_laws(0)
+1release thm fn_set_member(fn(x, y Z) Z {x + y}, fn(x, y Z) Z)
 0 $in Z
-by thm fn_set_member(fn(x Z) Z {-x}, fn(x Z) Z)
-by thm fn_set_member(fn(x, y Z) Z {x * y}, fn(x, y Z) Z)
+1release thm fn_set_member(fn(x Z) Z {-x}, fn(x Z) Z)
+1release thm fn_set_member(fn(x, y Z) Z {x * y}, fn(x, y Z) Z)
 1 $in Z
-by thm cart_member_from_coordinates((fn(x, y Z) Z {x + y}, 0, fn(x Z) Z {-x}, fn(x, y Z) Z {x * y}, 1), cart(fn(x, y Z) Z, Z, fn(x Z) Z, fn(x, y Z) Z, Z))
-by thm struct_member((fn(x, y Z) Z {x + y}, 0, fn(x Z) Z {-x}, fn(x, y Z) Z {x * y}, 1), &MILAlternative::chap2_struct::Ring<Z>)
+1release thm cart_member_from_coordinates((fn(x, y Z) Z {x + y}, 0, fn(x Z) Z {-x}, fn(x, y Z) Z {x * y}, 1), cart(fn(x, y Z) Z, Z, fn(x Z) Z, fn(x, y Z) Z, Z))
+1release thm struct_member((fn(x, y Z) Z {x + y}, 0, fn(x Z) Z {-x}, fn(x, y Z) Z {x * y}, 1), &MILAlternative::chap2_struct::Ring<Z>)
 have integer_ring &MILAlternative::chap2_struct::Ring<Z> = (fn(x, y Z) Z {x + y}, 0, fn(x Z) Z {-x}, fn(x, y Z) Z {x * y}, 1)
 
 # The source's LE1/Preorder1/PartialOrder1/OrderedCommMonoid1 block is an
@@ -261,13 +261,13 @@ thm integer_additive_monoid_with_nsmul_closed:
         ? forall n N, x Z:
             fn(k N, a Z) Z {k * a}(n + 1, x) = fn(a, b Z) Z {a + b}(x, fn(k N, a Z) Z {k * a}(n, x))
         fn(k N, a Z) Z {k * a}(n + 1, x) = (n + 1) * x = x + n * x = fn(a, b Z) Z {a + b}(x, fn(k N, a Z) Z {k * a}(n, x))
-    by thm fn_set_member(fn(x, y Z) Z {x + y}, fn(x, y Z) Z)
+1release thm fn_set_member(fn(x, y Z) Z {x + y}, fn(x, y Z) Z)
     0 $in Z
-    by thm fn_set_member(fn(n N, x Z) Z {n * x}, fn(n N, x Z) Z)
-    by thm cart_member_from_coordinates((fn(x, y Z) Z {x + y}, 0, fn(n N, x Z) Z {n * x}), cart(fn(x, y Z) Z, Z, fn(n N, x Z) Z))
-    by thm struct_member((fn(x, y Z) Z {x + y}, 0, fn(n N, x Z) Z {n * x}), &AdditiveMonoidWithNSmul<Z>)
+1release thm fn_set_member(fn(n N, x Z) Z {n * x}, fn(n N, x Z) Z)
+1release thm cart_member_from_coordinates((fn(x, y Z) Z {x + y}, 0, fn(n N, x Z) Z {n * x}), cart(fn(x, y Z) Z, Z, fn(n N, x Z) Z))
+1release thm struct_member((fn(x, y Z) Z {x + y}, 0, fn(n N, x Z) Z {n * x}), &AdditiveMonoidWithNSmul<Z>)
 
-by thm integer_additive_monoid_with_nsmul_closed(0)
+1release thm integer_additive_monoid_with_nsmul_closed(0)
 have integer_additive_monoid_with_nsmul &AdditiveMonoidWithNSmul<Z> = (fn(x, y Z) Z {x + y}, 0, fn(n N, x Z) Z {n * x})
 
 # Source product instance for AddMonoid4. Addition, zero, and natural scalar
@@ -377,7 +377,7 @@ thm _inherited_submonoid_mul_is_monoid:
         $is_nonempty_set(carrier)
         =>:
             (\inherited_submonoid_mul<M, monoid, carrier>, monoid.one) $in &Monoid<carrier>
-    by thm _inherited_submonoid_tuple_is_monoid(M, monoid, carrier, \inherited_submonoid_mul<M, monoid, carrier>)
+1release thm _inherited_submonoid_tuple_is_monoid(M, monoid, carrier, \inherited_submonoid_mul<M, monoid, carrier>)
 
 template<M nonempty_set, monoid &Monoid<M>, carrier power_set(M): $is_submonoid(M, monoid, carrier), $is_nonempty_set(carrier)>:
     have inherited_submonoid &Monoid<carrier> = (\inherited_submonoid_mul<M, monoid, carrier>, monoid.one)
@@ -390,7 +390,7 @@ thm submonoid_intersection_closed:
             $is_submonoid(M, monoid, {x M: x $in left and x $in right})
     monoid.one $in left
     monoid.one $in right
-    by thm set_builder_member(monoid.one, {x M: x $in left and x $in right})
+1release thm set_builder_member(monoid.one, {x M: x $in left and x $in right})
     monoid.one $in {x M: x $in left and x $in right}
     claim:
         ? forall x, y {x M: x $in left and x $in right}:
@@ -401,7 +401,7 @@ thm submonoid_intersection_closed:
         y $in right
         monoid.mul(x, y) $in left
         monoid.mul(x, y) $in right
-        by thm set_builder_member(monoid.mul(x, y), {z M: z $in left and z $in right})
+1release thm set_builder_member(monoid.mul(x, y), {z M: z $in left and z $in right})
     by def:
         ? $is_submonoid(M, monoid, {x M: x $in left and x $in right})
 
@@ -460,8 +460,8 @@ thm fraction_relation_transitive:
     right_num $in carrier
     monoid.mul(y_num, y_den) = monoid.mul(y_den, y_num)
     monoid.mul(z_num, y_num) = monoid.mul(y_num, z_num)
-    by thm function_substitution(M, M, fn(q M) M {monoid.mul(y, q)}, monoid.mul(y_num, y_den), monoid.mul(y_den, y_num))
-    by thm function_substitution(M, M, fn(q M) M {monoid.mul(z, q)}, monoid.mul(z_num, y_num), monoid.mul(y_num, z_num))
+1release thm function_substitution(M, M, fn(q M) M {monoid.mul(y, q)}, monoid.mul(y_num, y_den), monoid.mul(y_den, y_num))
+1release thm function_substitution(M, M, fn(q M) M {monoid.mul(z, q)}, monoid.mul(z_num, y_num), monoid.mul(y_num, z_num))
     monoid.mul(x, left_den) = monoid.mul(x, monoid.mul(x_den, y_den)) = monoid.mul(monoid.mul(x, x_den), y_den) = monoid.mul(monoid.mul(y, y_num), y_den) = monoid.mul(y, monoid.mul(y_num, y_den)) = monoid.mul(y, monoid.mul(y_den, y_num)) = monoid.mul(monoid.mul(y, y_den), y_num) = monoid.mul(monoid.mul(z, z_num), y_num) = monoid.mul(z, monoid.mul(z_num, y_num)) = monoid.mul(z, monoid.mul(y_num, z_num)) = monoid.mul(z, right_num)
     witness $submonoid_fraction_equiv(M, monoid, carrier, x, z) from left_den, right_num
 

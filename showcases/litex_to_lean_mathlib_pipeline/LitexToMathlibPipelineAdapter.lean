@@ -2,6 +2,16 @@ import LitexToMathlibPipelineGenerated
 
 namespace LitexToMathlibPipeline.ExternalAI
 
+/-- Native Mathlib mirror of the property modeled in `property_flow.lit`.
+This definition is adapter-owned; it is not presented as compiler output. -/
+def IsSquareOf (value root : ℤ) : Prop := value = root ^ 2
+
+/-- The reusable elimination law for the native property. -/
+theorem square_of_is_nonnegative {value root : ℤ}
+    (certificate : IsSquareOf value root) : 0 ≤ value := by
+  rw [certificate]
+  positivity
+
 /-- A native Mathlib interface authored outside ToLean.  The generated module
 is imported for context, but this theorem is deliberately a separate Lean
 artifact: the compiler never invents this statement or proof. -/
@@ -18,5 +28,15 @@ theorem sum_first_odds (n : ℤ) (one_le_n : (1 : ℤ) ≤ n) :
       rw [ih]
       ring)
     n one_le_n
+
+/-- Package the odd-sum theorem as an instance of the native property. -/
+theorem sum_first_odds_is_square_of_n (n : ℤ) (one_le_n : (1 : ℤ) ≤ n) :
+    IsSquareOf (∑ k ∈ Finset.Icc (1 : ℤ) n, (2 * k - 1)) n := by
+  exact sum_first_odds n one_le_n
+
+/-- Compose property construction with its reusable law. -/
+theorem sum_first_odds_nonnegative (n : ℤ) (one_le_n : (1 : ℤ) ≤ n) :
+    0 ≤ ∑ k ∈ Finset.Icc (1 : ℤ) n, (2 * k - 1) :=
+  square_of_is_nonnegative (sum_first_odds_is_square_of_n n one_le_n)
 
 end LitexToMathlibPipeline.ExternalAI

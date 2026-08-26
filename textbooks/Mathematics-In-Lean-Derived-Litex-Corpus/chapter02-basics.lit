@@ -63,7 +63,7 @@ thm add_left_cancel_in_additive_commutative_group:
 thm self_sub:
     ? forall [AdditiveCommutativeGroupSetting], a A:
         add(a, neg(a)) = zero
-    by thm add_neg_cancel(A, add, zero, neg, a)
+1release thm add_neg_cancel(A, add, zero, neg, a)
 
 thm one_add_one_eq_two:
     ? forall [RingSetting]:
@@ -82,17 +82,17 @@ thm mul_zero:
     ? forall [RingSetting], a A:
         mul(a, zero) = zero
     add(zero, zero) = zero
-    by thm add_zero(A, add, zero, neg, mul(a, zero))
+1release thm add_zero(A, add, zero, neg, mul(a, zero))
     add(mul(a, zero), mul(a, zero)) = mul(a, add(zero, zero)) = mul(a, zero) = add(mul(a, zero), zero)
-    by thm add_left_cancel_in_additive_commutative_group(A, add, zero, neg, mul(a, zero), mul(a, zero), zero)
+1release thm add_left_cancel_in_additive_commutative_group(A, add, zero, neg, mul(a, zero), mul(a, zero), zero)
 
 thm zero_mul:
     ? forall [RingSetting], a A:
         mul(zero, a) = zero
     add(zero, zero) = zero
-    by thm add_zero(A, add, zero, neg, mul(zero, a))
+1release thm add_zero(A, add, zero, neg, mul(zero, a))
     add(mul(zero, a), mul(zero, a)) = mul(add(zero, zero), a) = mul(zero, a) = add(mul(zero, a), zero)
-    by thm add_left_cancel_in_additive_commutative_group(A, add, zero, neg, mul(zero, a), mul(zero, a), zero)
+1release thm add_left_cancel_in_additive_commutative_group(A, add, zero, neg, mul(zero, a), mul(zero, a), zero)
 
 thm neg_add_cancel_left:
     ? forall [AdditiveCommutativeGroupSetting], a, b A:
@@ -103,8 +103,8 @@ thm neg_add_cancel_left:
 thm add_neg_cancel_right:
     ? forall [AdditiveCommutativeGroupSetting], a, b A:
         add(add(a, b), neg(b)) = a
-    by thm add_neg_cancel(A, add, zero, neg, b)
-    by thm add_zero(A, add, zero, neg, a)
+1release thm add_neg_cancel(A, add, zero, neg, b)
+1release thm add_zero(A, add, zero, neg, a)
     add(add(a, b), neg(b)) = add(a, add(b, neg(b))) = add(a, zero) = a
 
 thm add_left_cancel:
@@ -112,7 +112,7 @@ thm add_left_cancel:
         add(a, b) = add(a, c)
         =>:
             b = c
-    by thm add_left_cancel_in_additive_commutative_group(A, add, zero, neg, a, b, c)
+1release thm add_left_cancel_in_additive_commutative_group(A, add, zero, neg, a, b, c)
 
 thm add_right_cancel:
     ? forall [AdditiveCommutativeGroupSetting], a, b, c A:
@@ -120,7 +120,7 @@ thm add_right_cancel:
         =>:
             a = c
     add(b, a) = add(a, b) = add(c, b) = add(b, c)
-    by thm add_left_cancel(A, add, zero, neg, b, a, c)
+1release thm add_left_cancel(A, add, zero, neg, b, a, c)
 
 thm add_reorder_four:
     ? forall [AdditiveCommutativeGroupSetting], a, b, c, d A:
@@ -135,48 +135,48 @@ thm eq_neg_of_add_eq_zero:
         add(a, b) = zero
         =>:
             b = neg(a)
-    by thm add_neg_cancel(A, add, zero, neg, a)
-    by thm add_left_cancel(A, add, zero, neg, a, b, neg(a))
+1release thm add_neg_cancel(A, add, zero, neg, a)
+1release thm add_left_cancel(A, add, zero, neg, a, b, neg(a))
 
 thm neg_eq_of_add_eq_zero:
     ? forall [AdditiveCommutativeGroupSetting], a, b A:
         add(a, b) = zero
         =>:
             neg(a) = b
-    by thm eq_neg_of_add_eq_zero(A, add, zero, neg, a, b)
+1release thm eq_neg_of_add_eq_zero(A, add, zero, neg, a, b)
 
 thm neg_zero:
     ? forall [AdditiveCommutativeGroupSetting]:
         neg(zero) = zero
-    by thm neg_eq_of_add_eq_zero(A, add, zero, neg, zero, zero)
+1release thm neg_eq_of_add_eq_zero(A, add, zero, neg, zero, zero)
 
 thm neg_neg:
     ? forall [AdditiveCommutativeGroupSetting], a A:
         neg(neg(a)) = a
-    by thm neg_eq_of_add_eq_zero(A, add, zero, neg, neg(a), a)
+1release thm neg_eq_of_add_eq_zero(A, add, zero, neg, neg(a), a)
 
 thm mul_neg_right:
     ? forall [RingSetting], a, b A:
         mul(a, neg(b)) = neg(mul(a, b))
-    by thm mul_zero(A, add, zero, neg, mul, one, a)
-    by thm add_neg_cancel(A, add, zero, neg, b)
+1release thm mul_zero(A, add, zero, neg, mul, one, a)
+1release thm add_neg_cancel(A, add, zero, neg, b)
     add(mul(a, b), mul(a, neg(b))) = mul(a, add(b, neg(b))) = mul(a, zero) = zero
-    by thm eq_neg_of_add_eq_zero(A, add, zero, neg, mul(a, b), mul(a, neg(b)))
+1release thm eq_neg_of_add_eq_zero(A, add, zero, neg, mul(a, b), mul(a, neg(b)))
 
 thm neg_mul_left:
     ? forall [RingSetting], a, b A:
         mul(neg(a), b) = neg(mul(a, b))
-    by thm zero_mul(A, add, zero, neg, mul, one, b)
-    by thm add_neg_cancel(A, add, zero, neg, a)
+1release thm zero_mul(A, add, zero, neg, mul, one, b)
+1release thm add_neg_cancel(A, add, zero, neg, a)
     add(mul(a, b), mul(neg(a), b)) = mul(add(a, neg(a)), b) = mul(zero, b) = zero
-    by thm eq_neg_of_add_eq_zero(A, add, zero, neg, mul(a, b), mul(neg(a), b))
+1release thm eq_neg_of_add_eq_zero(A, add, zero, neg, mul(a, b), mul(neg(a), b))
 
 thm neg_mul_neg:
     ? forall [RingSetting], a, b A:
         mul(neg(a), neg(b)) = mul(a, b)
-    by thm neg_mul_left(A, add, zero, neg, mul, one, a, neg(b))
-    by thm mul_neg_right(A, add, zero, neg, mul, one, a, b)
-    by thm neg_neg(A, add, zero, neg, mul(a, b))
+1release thm neg_mul_left(A, add, zero, neg, mul, one, a, neg(b))
+1release thm mul_neg_right(A, add, zero, neg, mul, one, a, b)
+1release thm neg_neg(A, add, zero, neg, mul(a, b))
     mul(neg(a), neg(b)) = neg(mul(a, neg(b))) = neg(neg(mul(a, b))) = mul(a, b)
 
 setting CommutativeMultiplicationSetting(A set, mul fn(x, y A) A):
@@ -206,20 +206,20 @@ thm _group_mul_one:
         mul(a, one) = a
     mul(inv(a), a) = one
     mul(inv(a), mul(a, one)) = mul(mul(inv(a), a), one) = mul(one, one) = one = mul(inv(a), a)
-    by thm _group_left_cancel(A, mul, one, inv, inv(a), mul(a, one), a)
+1release thm _group_left_cancel(A, mul, one, inv, inv(a), mul(a, one), a)
 
 thm mul_inv_cancel:
     ? forall [GroupSetting], a A:
         mul(a, inv(a)) = one
     mul(inv(a), a) = one
-    by thm _group_mul_one(A, mul, one, inv, inv(a))
+1release thm _group_mul_one(A, mul, one, inv, inv(a))
     mul(inv(a), mul(a, inv(a))) = mul(mul(inv(a), a), inv(a)) = mul(one, inv(a)) = inv(a) = mul(inv(a), one)
-    by thm _group_left_cancel(A, mul, one, inv, inv(a), mul(a, inv(a)), one)
+1release thm _group_left_cancel(A, mul, one, inv, inv(a), mul(a, inv(a)), one)
 
 thm mul_one:
     ? forall [GroupSetting], a A:
         mul(a, one) = a
-    by thm _group_mul_one(A, mul, one, inv, a)
+1release thm _group_mul_one(A, mul, one, inv, a)
 
 thm mul_inv_rev:
     ? forall [GroupSetting], a, b A:
@@ -227,8 +227,8 @@ thm mul_inv_rev:
     mul(inv(a), a) = one
     mul(inv(a), mul(a, b)) = mul(mul(inv(a), a), b) = mul(one, b) = b
     mul(mul(inv(b), inv(a)), mul(a, b)) = mul(inv(b), mul(inv(a), mul(a, b))) = mul(inv(b), b) = one
-    by thm mul_inv_cancel(A, mul, one, inv, mul(a, b))
-    by thm _group_mul_one(A, mul, one, inv, mul(inv(b), inv(a)))
+1release thm mul_inv_cancel(A, mul, one, inv, mul(a, b))
+1release thm _group_mul_one(A, mul, one, inv, mul(inv(b), inv(a)))
     mul(inv(b), inv(a)) = mul(mul(inv(b), inv(a)), one) = mul(mul(inv(b), inv(a)), mul(mul(a, b), inv(mul(a, b)))) = mul(mul(mul(inv(b), inv(a)), mul(a, b)), inv(mul(a, b))) = mul(one, inv(mul(a, b))) = inv(mul(a, b))
 
 # 2.5 Proving facts about algebraic structures
@@ -299,14 +299,14 @@ thm lattice_meet_comm:
 thm lattice_meet_assoc:
     ? forall [LatticeSetting], x, y, z A:
         meet(meet(x, y), z) = meet(x, meet(y, z))
-    by thm lattice_le_trans(A, le_rel, meet, join, meet(meet(x, y), z), meet(x, y), x)
-    by thm lattice_le_trans(A, le_rel, meet, join, meet(meet(x, y), z), meet(x, y), y)
+1release thm lattice_le_trans(A, le_rel, meet, join, meet(meet(x, y), z), meet(x, y), x)
+1release thm lattice_le_trans(A, le_rel, meet, join, meet(meet(x, y), z), meet(x, y), y)
     (meet(meet(x, y), z), z) $in le_rel
     (meet(meet(x, y), z), meet(y, z)) $in le_rel
     (meet(meet(x, y), z), meet(x, meet(y, z))) $in le_rel
     (meet(x, meet(y, z)), x) $in le_rel
-    by thm lattice_le_trans(A, le_rel, meet, join, meet(x, meet(y, z)), meet(y, z), y)
-    by thm lattice_le_trans(A, le_rel, meet, join, meet(x, meet(y, z)), meet(y, z), z)
+1release thm lattice_le_trans(A, le_rel, meet, join, meet(x, meet(y, z)), meet(y, z), y)
+1release thm lattice_le_trans(A, le_rel, meet, join, meet(x, meet(y, z)), meet(y, z), z)
     (meet(x, meet(y, z)), meet(x, y)) $in le_rel
     (meet(x, meet(y, z)), meet(meet(x, y), z)) $in le_rel
 
@@ -323,14 +323,14 @@ thm lattice_join_comm:
 thm lattice_join_assoc:
     ? forall [LatticeSetting], x, y, z A:
         join(join(x, y), z) = join(x, join(y, z))
-    by thm lattice_le_trans(A, le_rel, meet, join, x, join(x, y), join(join(x, y), z))
-    by thm lattice_le_trans(A, le_rel, meet, join, y, join(x, y), join(join(x, y), z))
+1release thm lattice_le_trans(A, le_rel, meet, join, x, join(x, y), join(join(x, y), z))
+1release thm lattice_le_trans(A, le_rel, meet, join, y, join(x, y), join(join(x, y), z))
     (z, join(join(x, y), z)) $in le_rel
     (join(y, z), join(join(x, y), z)) $in le_rel
     (join(x, join(y, z)), join(join(x, y), z)) $in le_rel
     (x, join(x, join(y, z))) $in le_rel
-    by thm lattice_le_trans(A, le_rel, meet, join, y, join(y, z), join(x, join(y, z)))
-    by thm lattice_le_trans(A, le_rel, meet, join, z, join(y, z), join(x, join(y, z)))
+1release thm lattice_le_trans(A, le_rel, meet, join, y, join(y, z), join(x, join(y, z)))
+1release thm lattice_le_trans(A, le_rel, meet, join, z, join(y, z), join(x, join(y, z)))
     (join(x, y), join(x, join(y, z))) $in le_rel
     (join(join(x, y), z), join(x, join(y, z))) $in le_rel
 
@@ -356,14 +356,14 @@ thm lattice_join_meet_distributive_of_meet_join_distributive:
             meet(x, join(y, z)) = join(meet(x, y), meet(x, z))
         =>:
             join(a, meet(b, c)) = meet(join(a, b), join(a, c))
-    by thm lattice_meet_comm(A, le_rel, meet, join, join(a, b), a)
-    by thm lattice_meet_join_absorb(A, le_rel, meet, join, a, b)
-    by thm lattice_meet_comm(A, le_rel, meet, join, join(a, b), c)
-    by thm lattice_meet_comm(A, le_rel, meet, join, c, a)
-    by thm lattice_meet_comm(A, le_rel, meet, join, c, b)
+1release thm lattice_meet_comm(A, le_rel, meet, join, join(a, b), a)
+1release thm lattice_meet_join_absorb(A, le_rel, meet, join, a, b)
+1release thm lattice_meet_comm(A, le_rel, meet, join, join(a, b), c)
+1release thm lattice_meet_comm(A, le_rel, meet, join, c, a)
+1release thm lattice_meet_comm(A, le_rel, meet, join, c, b)
     meet(join(a, b), c) = meet(c, join(a, b)) = join(meet(c, a), meet(c, b)) = join(meet(a, c), meet(c, b)) = join(meet(a, c), meet(b, c))
-    by thm lattice_join_assoc(A, le_rel, meet, join, a, meet(a, c), meet(b, c))
-    by thm lattice_join_meet_absorb(A, le_rel, meet, join, a, c)
+1release thm lattice_join_assoc(A, le_rel, meet, join, a, meet(a, c), meet(b, c))
+1release thm lattice_join_meet_absorb(A, le_rel, meet, join, a, c)
     meet(join(a, b), join(a, c)) = join(meet(join(a, b), a), meet(join(a, b), c)) = join(a, meet(join(a, b), c)) = join(a, join(meet(a, c), meet(b, c))) = join(join(a, meet(a, c)), meet(b, c)) = join(a, meet(b, c))
 
 thm lattice_meet_join_distributive_of_join_meet_distributive:
@@ -372,14 +372,14 @@ thm lattice_meet_join_distributive_of_join_meet_distributive:
             join(x, meet(y, z)) = meet(join(x, y), join(x, z))
         =>:
             meet(a, join(b, c)) = join(meet(a, b), meet(a, c))
-    by thm lattice_join_comm(A, le_rel, meet, join, meet(a, b), a)
-    by thm lattice_join_meet_absorb(A, le_rel, meet, join, a, b)
-    by thm lattice_join_comm(A, le_rel, meet, join, meet(a, b), c)
-    by thm lattice_join_comm(A, le_rel, meet, join, c, a)
-    by thm lattice_join_comm(A, le_rel, meet, join, c, b)
+1release thm lattice_join_comm(A, le_rel, meet, join, meet(a, b), a)
+1release thm lattice_join_meet_absorb(A, le_rel, meet, join, a, b)
+1release thm lattice_join_comm(A, le_rel, meet, join, meet(a, b), c)
+1release thm lattice_join_comm(A, le_rel, meet, join, c, a)
+1release thm lattice_join_comm(A, le_rel, meet, join, c, b)
     join(meet(a, b), c) = join(c, meet(a, b)) = meet(join(c, a), join(c, b)) = meet(join(a, c), join(c, b)) = meet(join(a, c), join(b, c))
-    by thm lattice_meet_assoc(A, le_rel, meet, join, a, join(a, c), join(b, c))
-    by thm lattice_meet_join_absorb(A, le_rel, meet, join, a, c)
+1release thm lattice_meet_assoc(A, le_rel, meet, join, a, join(a, c), join(b, c))
+1release thm lattice_meet_join_absorb(A, le_rel, meet, join, a, c)
     join(meet(a, b), meet(a, c)) = meet(join(meet(a, b), a), join(meet(a, b), c)) = meet(a, join(meet(a, b), c)) = meet(a, meet(join(a, c), join(b, c))) = meet(meet(a, join(a, c)), join(b, c)) = meet(a, join(b, c))
 
 # OrderedRingSetting deliberately flattens both component structures. This is
@@ -434,9 +434,9 @@ thm ring_le_of_sub_nonnegative:
         =>:
             (a, b) $in le_rel
     (add(a, zero), add(a, add(b, neg(a)))) $in le_rel
-    by thm add_zero(A, add, zero, neg, a)
-    by thm add_neg_cancel(A, add, zero, neg, a)
-    by thm add_zero(A, add, zero, neg, b)
+1release thm add_zero(A, add, zero, neg, a)
+1release thm add_neg_cancel(A, add, zero, neg, a)
+1release thm add_zero(A, add, zero, neg, b)
     add(a, b) = add(b, a)
     add(add(a, b), neg(a)) = add(add(b, a), neg(a))
     add(a, add(b, neg(a))) = add(add(a, b), neg(a)) = add(add(b, a), neg(a)) = add(b, add(a, neg(a))) = add(b, zero) = b
@@ -447,11 +447,11 @@ thm ring_mul_le_mul_right_of_nonnegative:
         (zero, c) $in le_rel
         =>:
             (mul(a, c), mul(b, c)) $in le_rel
-    by thm ring_sub_nonnegative_of_le(A, add, zero, neg, mul, one, le_rel, a, b)
+1release thm ring_sub_nonnegative_of_le(A, add, zero, neg, mul, one, le_rel, a, b)
     (zero, mul(add(b, neg(a)), c)) $in le_rel
-    by thm neg_mul_left(A, add, zero, neg, mul, one, a, c)
+1release thm neg_mul_left(A, add, zero, neg, mul, one, a, c)
     mul(add(b, neg(a)), c) = add(mul(b, c), mul(neg(a), c)) = add(mul(b, c), neg(mul(a, c)))
-    by thm ring_le_of_sub_nonnegative(A, add, zero, neg, mul, one, le_rel, mul(a, c), mul(b, c))
+1release thm ring_le_of_sub_nonnegative(A, add, zero, neg, mul, one, le_rel, mul(a, c), mul(b, c))
 
 setting MetricSpaceSetting(X set, dist fn(x, y X) R):
     forall u, v X:

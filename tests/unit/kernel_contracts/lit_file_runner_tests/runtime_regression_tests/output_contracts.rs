@@ -282,10 +282,7 @@ trust:
 
     let (fact_graph_ok, fact_graph_output) = run_graph(GraphRequest::new(
         GraphKind::Fact,
-        RunRequest::new(
-            RunTarget::code(failed_trust, "failed_atomic_trust_graph"),
-            RunOptions::default(),
-        ),
+        RunRequest::new(RunTarget::code(failed_trust), RunOptions::default()),
         true,
     ));
     assert!(!fact_graph_ok);
@@ -298,10 +295,7 @@ trust have audit_probe R:
 "#;
     let (definition_graph_ok, definition_graph_output) = run_graph(GraphRequest::new(
         GraphKind::Definition,
-        RunRequest::new(
-            RunTarget::code(failed_trust_have, "failed_atomic_trust_have_graph"),
-            RunOptions::default(),
-        ),
+        RunRequest::new(RunTarget::code(failed_trust_have), RunOptions::default()),
         true,
     ));
     assert!(!definition_graph_ok);

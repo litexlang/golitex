@@ -44,7 +44,7 @@ thm theorem_III_1_relprime_implies_bezout_pair:
         $relatively_prime_Z(a, b)
         =>:
             exist x, y Z st {a * x + b * y = 1}
-    by thm section2::gcd_Z_bezout(a, b)
+1release thm section2::gcd_Z_bezout(a, b)
     obtain x, y from exist x, y Z st {section2::gcd_Z(a, b) = a * x + b * y}
     1 = section2::gcd_Z(a, b) = a * x + b * y
     witness exist u, v Z st {a * u + b * v = 1} from x, y:
@@ -90,10 +90,10 @@ thm positive_common_divisor_of_bezout_pair_is_one:
         a * x + b * y = 1
         =>:
             exp_e = 1
-    by thm section1::divides_Z_linear_combination(exp_e, a, b, x, y)
+1release thm section1::divides_Z_linear_combination(exp_e, a, b, x, y)
     x * a + y * b = a * x + b * y = 1
     $section1::divides_Z(exp_e, 1)
-    by thm section1::positive_divisor_of_one_is_one(exp_e)
+1release thm section1::positive_divisor_of_one_is_one(exp_e)
 
 thm theorem_III_1_bezout_implies_relprime_pair:
     ? forall a, b Z:
@@ -101,7 +101,7 @@ thm theorem_III_1_bezout_implies_relprime_pair:
         =>:
             $relatively_prime_Z(a, b)
     obtain x, y from exist x, y Z st {a * x + b * y = 1}
-    by thm bezout_pair_has_gcd_one(a, b, x, y)
+1release thm bezout_pair_has_gcd_one(a, b, x, y)
     section2::gcd_Z(a, b) = 1
     by def $relatively_prime_Z(a, b)
 
@@ -116,11 +116,11 @@ thm gcd_quotients_are_relatively_prime:
         section2::gcd_Z(a, b) != 0
         =>:
             $relatively_prime_Z(a / section2::gcd_Z(a, b), b / section2::gcd_Z(a, b))
-    by thm section2::gcd_Z_dvd_left(a, b)
+1release thm section2::gcd_Z_dvd_left(a, b)
     obtain p from exist p Z st {a = section2::gcd_Z(a, b) * p}
-    by thm section2::gcd_Z_dvd_right(a, b)
+1release thm section2::gcd_Z_dvd_right(a, b)
     obtain q from exist q Z st {b = section2::gcd_Z(a, b) * q}
-    by thm section2::gcd_Z_bezout(a, b)
+1release thm section2::gcd_Z_bezout(a, b)
     obtain x, y from exist x, y Z st {section2::gcd_Z(a, b) = a * x + b * y}
     a / section2::gcd_Z(a, b) = section2::gcd_Z(a, b) * p / section2::gcd_Z(a, b) = p
     b / section2::gcd_Z(a, b) = section2::gcd_Z(a, b) * q / section2::gcd_Z(a, b) = q
@@ -128,7 +128,7 @@ thm gcd_quotients_are_relatively_prime:
     p * x + q * y = section2::gcd_Z(a, b) * (p * x + q * y) / section2::gcd_Z(a, b) = section2::gcd_Z(a, b) / section2::gcd_Z(a, b) = 1
     witness exist u, v Z st {(a / section2::gcd_Z(a, b)) * u + (b / section2::gcd_Z(a, b)) * v = 1} from x, y:
         (a / section2::gcd_Z(a, b)) * x + (b / section2::gcd_Z(a, b)) * y = p * x + q * y = 1
-    by thm theorem_III_1_bezout_implies_relprime_pair(a / section2::gcd_Z(a, b), b / section2::gcd_Z(a, b))
+1release thm theorem_III_1_bezout_implies_relprime_pair(a / section2::gcd_Z(a, b), b / section2::gcd_Z(a, b))
 
 """
 Theorem III.2. If a is prime to b and a divides bc, then a divides c.
@@ -140,7 +140,7 @@ thm theorem_III_2_euclid_lemma:
         $section1::divides_Z(a, b * c)
         =>:
             $section1::divides_Z(a, c)
-    by thm theorem_III_1_relprime_implies_bezout_pair(a, b)
+1release thm theorem_III_1_relprime_implies_bezout_pair(a, b)
     obtain x, y from exist x, y Z st {a * x + b * y = 1}
     obtain u from exist u Z st {b * c = a * u}
     c = c * 1 = c * (a * x + b * y) = a * (c * x) + (b * c) * y
@@ -163,13 +163,13 @@ thm theorem_III_2_corollary_1:
         $relatively_prime_Z(a, c)
         =>:
             $relatively_prime_Z(a, b * c)
-    by thm theorem_III_1_relprime_implies_bezout_pair(a, b)
+1release thm theorem_III_1_relprime_implies_bezout_pair(a, b)
     obtain x, y from exist x, y Z st {a * x + b * y = 1}
-    by thm theorem_III_1_relprime_implies_bezout_pair(a, c)
+1release thm theorem_III_1_relprime_implies_bezout_pair(a, c)
     obtain u, v from exist u, v Z st {a * u + c * v = 1}
     witness exist r, s Z st {a * r + (b * c) * s = 1} from a * x * u + c * x * v + b * y * u, y * v:
         1 = 1 * 1 = (a * x + b * y) * (a * u + c * v) = a * (a * x * u + c * x * v + b * y * u) + (b * c) * (y * v)
-    by thm theorem_III_1_bezout_implies_relprime_pair(a, b * c)
+1release thm theorem_III_1_bezout_implies_relprime_pair(a, b * c)
 
 # Finite products are introduced here, before the later prime-factorization
 # chapter uses them.  The recursive value is the reusable interface; the
@@ -198,14 +198,14 @@ thm finite_product_from_one_prepend:
     by induc n from 0:
         ? finite_product_from_one(g, n + 1) = z * finite_product_from_one(f, n)
         ? from n = 0:
-            by thm finite_product_from_one_successor(g, 0)
+1release thm finite_product_from_one_successor(g, 0)
             finite_product_from_one(g, 0) = 1
             finite_product_from_one(f, 0) = 1
             finite_product_from_one(g, 1) = finite_product_from_one(g, 0) * g(1) = 1 * z = z = z * 1 = z * finite_product_from_one(f, 0)
         ? induc:
-            by thm finite_product_from_one_successor(g, n + 1)
+1release thm finite_product_from_one_successor(g, n + 1)
             g((n + 1) + 1) = f(n + 1)
-            by thm finite_product_from_one_successor(f, n)
+1release thm finite_product_from_one_successor(f, n)
             finite_product_from_one(g, (n + 1) + 1) = finite_product_from_one(g, n + 1) * g((n + 1) + 1) = (z * finite_product_from_one(f, n)) * f(n + 1) = z * (finite_product_from_one(f, n) * f(n + 1)) = z * finite_product_from_one(f, n + 1)
 
 """
@@ -222,7 +222,7 @@ thm relatively_prime_Z_one:
         $relatively_prime_Z(a, 1)
     witness exist x, y Z st {a * x + 1 * y = 1} from 0, 1:
         a * 0 + 1 * 1 = 1
-    by thm theorem_III_1_bezout_implies_relprime_pair(a, 1)
+1release thm theorem_III_1_bezout_implies_relprime_pair(a, 1)
 
 # Induct over finite subsets of the given A. The carrier keeps each inserted
 # factor inside the original hypothesis, so Corollary 1 supplies the step.
@@ -257,7 +257,7 @@ thm theorem_III_2_corollary_2:
                     =>:
                         $relatively_prime_Z(a, q)
                 q = finite_set_product({}, fn(x {}) Z {x}) = 1
-                by thm relatively_prime_Z_one(a)
+1release thm relatively_prime_Z_one(a)
             by def $finite_product_relprime({})
         ? induc z, S:
             $finite_product_relprime(S)
@@ -299,7 +299,7 @@ thm theorem_III_2_corollary_2:
                 by def $finite_product_of_integer_set(S, r)
                 $relatively_prime_Z(a, r)
                 q = finite_set_product(union({z}, S), fn(x union({z}, S)) Z {x}) = finite_set_product(S, fn(x S) Z {x}) * z = r * z
-                by thm theorem_III_2_corollary_1(a, r, z)
+1release thm theorem_III_2_corollary_1(a, r, z)
             by def $finite_product_relprime(union({z}, S))
     $finite_product_relprime(A)
     claim:

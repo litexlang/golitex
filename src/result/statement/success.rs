@@ -775,13 +775,13 @@ pub struct SuccessByStructDefStmtResult {
 pub struct SuccessByThmStmtResult {
     pub statement: ByThmStmt,
     pub common: SuccessStmtCommonResult,
-    pub verification: Option<SuccessVerifyByTheoremResult>,
+    pub verification: Option<SuccessVerifyTheoremApplicationResult>,
 }
 
 pub struct SuccessReleaseThmStmtResult {
     pub statement: ReleaseThmStmt,
     pub common: SuccessStmtCommonResult,
-    pub verification: Option<SuccessVerifyByTheoremResult>,
+    pub verification: Option<SuccessVerifyTheoremApplicationResult>,
 }
 
 pub enum SuccessByStmtResult {

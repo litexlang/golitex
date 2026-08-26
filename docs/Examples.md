@@ -3940,7 +3940,7 @@ template<S set, z S>:
 \const_on_S<R, 0> $in fn(x R) R
 ```
 
-#### 17. Named Theorems With `thm`, `release thm`, And Selected `by thm`
+#### 17. Named Theorems With `thm`, `release thm`, And `by thm ... => fact`
 
 Purpose: store a reusable theorem and instantiate it later.
 

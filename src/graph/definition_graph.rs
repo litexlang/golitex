@@ -47,7 +47,7 @@ struct DefinitionGraphBuilder {
 /// so named definitions and reusable interfaces appear as the definitions later code can
 /// actually resolve.
 pub fn render_definition_graph_from_stmt_results(
-    target_kind: &str,
+    target_kind: RunTargetKind,
     target_label: &str,
     hide_file_paths: bool,
     runtime: &mut Runtime,
@@ -66,7 +66,7 @@ pub fn render_definition_graph_from_stmt_results(
 }
 
 pub fn render_definition_graph_result(
-    target_kind: &str,
+    target_kind: RunTargetKind,
     target_label: &str,
     hide_file_paths: bool,
     runtime: &mut Runtime,
@@ -137,7 +137,7 @@ pub fn render_definition_graph_result(
 }
 
 pub fn definition_graph_target_error_output(
-    target_kind: &str,
+    target_kind: RunTargetKind,
     target_label: &str,
     hide_file_paths: bool,
     message: String,
@@ -180,11 +180,11 @@ pub fn definition_graph_target_error_output(
 }
 
 fn definition_graph_target_json_value(
-    target_kind: &str,
+    target_kind: RunTargetKind,
     target_label: &str,
     hide_file_paths: bool,
 ) -> JsonValue {
-    let label = if hide_file_paths && target_kind != "code" {
+    let label = if hide_file_paths && target_kind != RunTargetKind::Code {
         "entry".to_string()
     } else {
         target_label.to_string()
@@ -192,7 +192,7 @@ fn definition_graph_target_json_value(
     JsonValue::Object(vec![
         (
             "kind".to_string(),
-            JsonValue::JsonString(target_kind.to_string()),
+            JsonValue::JsonString(target_kind.json_name().to_string()),
         ),
         ("label".to_string(), JsonValue::JsonString(label)),
     ])

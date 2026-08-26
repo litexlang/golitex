@@ -156,7 +156,7 @@ thm finite_vector_sum_add:
             partial3(k - 1) = space.add(partial1(k - 1), partial2(k - 1))
             terms3(k) = space.add(terms1(k), terms2(k))
             partial3(k) = space.add(space.add(partial1(k - 1), terms1(k)), space.add(partial2(k - 1), terms2(k)))
-            by thm vector_add_regroup_for_direct_sum(s, v, space, partial1(k - 1), terms1(k), partial2(k - 1), terms2(k))
+1release thm vector_add_regroup_for_direct_sum(s, v, space, partial1(k - 1), terms1(k), partial2(k - 1), terms2(k))
             partial3(k) = space.add(space.add(partial1(k - 1), terms1(k)), space.add(partial2(k - 1), terms2(k))) = space.add(space.add(partial1(k - 1), partial2(k - 1)), space.add(terms1(k), terms2(k))) = space.add(partial3(k - 1), terms3(k))
         by def:
             ? $is_partial_sum_sequence(s, v, space, m, terms3, partial3)
@@ -198,7 +198,7 @@ thm finite_vector_sum_smul:
                     partial2(k) = space.add(partial2(k - 1), terms2(k))
             k - 1 $in N+
             partial1(k) = space.add(partial1(k - 1), terms1(k))
-            by thm scalar_partial_trace_step(s, v, space, a, partial1(k), partial1(k - 1), terms1(k))
+1release thm scalar_partial_trace_step(s, v, space, a, partial1(k), partial1(k - 1), terms1(k))
             trust partial2(k) = space.add(partial2(k - 1), terms2(k))
         by def:
             ? $is_partial_sum_sequence(s, v, space, m, terms2, partial2)
@@ -275,7 +275,7 @@ thm subspace_sum_is_subspace:
             zero_terms(k) = space.zero
         by def:
             ? $is_summand_sequence(v, m, parts, zero_terms)
-    by thm finite_vector_sum_of_zero_terms(s, v, space, m, zero_terms)
+1release thm finite_vector_sum_of_zero_terms(s, v, space, m, zero_terms)
     witness exist terms finite_seq(v, m) st {$is_summand_sequence(v, m, parts, terms), $is_finite_vector_sum(s, v, space, m, terms, space.zero)} from zero_terms
     by def:
         ? $is_subspace_sum_member(s, v, space, m, parts, space.zero)
@@ -285,8 +285,8 @@ thm subspace_sum_is_subspace:
     claim:
         ? forall x, y \subspace_sum<s, v, space, m>(parts):
             space.add(x, y) $in \subspace_sum<s, v, space, m>(parts)
-        by thm subspace_sum_member_spec(s, v, space, m, parts, x)
-        by thm subspace_sum_member_spec(s, v, space, m, parts, y)
+1release thm subspace_sum_member_spec(s, v, space, m, parts, x)
+1release thm subspace_sum_member_spec(s, v, space, m, parts, y)
         obtain terms1 from exist terms finite_seq(v, m) st {$is_summand_sequence(v, m, parts, terms), $is_finite_vector_sum(s, v, space, m, terms, x)}
         obtain terms2 from exist terms finite_seq(v, m) st {$is_summand_sequence(v, m, parts, terms), $is_finite_vector_sum(s, v, space, m, terms, y)}
         obtain terms3 from exist summed_terms finite_seq(v, m) st {$is_pointwise_vector_sum(s, v, space, m, terms1, terms2, summed_terms), $is_finite_vector_sum(s, v, space, m, summed_terms, space.add(x, y))}
@@ -310,7 +310,7 @@ thm subspace_sum_is_subspace:
     claim:
         ? forall a s, x \subspace_sum<s, v, space, m>(parts):
             space.smul(a, x) $in \subspace_sum<s, v, space, m>(parts)
-        by thm subspace_sum_member_spec(s, v, space, m, parts, x)
+1release thm subspace_sum_member_spec(s, v, space, m, parts, x)
         obtain terms1 from exist terms finite_seq(v, m) st {$is_summand_sequence(v, m, parts, terms), $is_finite_vector_sum(s, v, space, m, terms, x)}
         obtain terms2 from exist scaled_terms finite_seq(v, m) st {$is_pointwise_vector_smul(s, v, space, m, a, terms1, scaled_terms), $is_finite_vector_sum(s, v, space, m, scaled_terms, space.smul(a, x))}
         claim:
@@ -355,7 +355,7 @@ thm subspace_sum_is_least:
             x $in \subspace_sum<s, v, space, m>(parts)
             =>:
                 x $in W
-        by thm subspace_sum_member_spec(s, v, space, m, parts, x)
+1release thm subspace_sum_member_spec(s, v, space, m, parts, x)
         $is_subspace_sum_member(s, v, space, m, parts, x)
         obtain terms from exist terms finite_seq(v, m) st {$is_summand_sequence(v, m, parts, terms), $is_finite_vector_sum(s, v, space, m, terms, x)}
         obtain partial from exist partial finite_seq(v, m) st {$is_partial_sum_sequence(s, v, space, m, terms, partial), partial(m) = x}
@@ -506,7 +506,7 @@ thm direct_sum_implies_trivial_zero_decomposition:
                 space.zero $in parts(k)
             by def:
                 ? $is_summand_sequence(v, m, parts, zero_terms)
-        by thm finite_vector_sum_of_zero_terms(s, v, space, m, zero_terms)
+1release thm finite_vector_sum_of_zero_terms(s, v, space, m, zero_terms)
         forall x v, terms1, terms2 finite_seq(v, m):
             $is_summand_sequence(v, m, parts, terms1)
             $is_summand_sequence(v, m, parts, terms2)
@@ -543,8 +543,8 @@ thm trivial_zero_decomposition_implies_direct_sum:
         have minus_one s = space.scalars.neg(space.scalars.one)
         obtain neg_terms2 from exist scaled_terms finite_seq(v, m) st {$is_pointwise_vector_smul(s, v, space, m, minus_one, terms2, scaled_terms), $is_finite_vector_sum(s, v, space, m, scaled_terms, space.smul(minus_one, x))}
         obtain differences from exist summed_terms finite_seq(v, m) st {$is_pointwise_vector_sum(s, v, space, m, terms1, neg_terms2, summed_terms), $is_finite_vector_sum(s, v, space, m, summed_terms, space.add(x, space.smul(minus_one, x)))}
-        by thm chap1b::minus_one_times_vector(s, v, space, x)
-        by thm chap1b::vector_neg_spec(s, v, space, x)
+1release thm chap1b::minus_one_times_vector(s, v, space, x)
+1release thm chap1b::vector_neg_spec(s, v, space, x)
         space.smul(minus_one, x) = space.smul(space.scalars.neg(space.scalars.one), x) = \chap1b::vector_neg<s, v, space>(x)
         space.add(x, space.smul(minus_one, x)) = space.add(x, \chap1b::vector_neg<s, v, space>(x)) = space.zero
         $is_finite_vector_sum(s, v, space, m, differences, space.zero)
@@ -589,13 +589,13 @@ thm trivial_zero_decomposition_implies_direct_sum:
             differences(k) = space.zero
             differences(k) = space.add(terms1(k), neg_terms2(k))
             neg_terms2(k) = space.smul(minus_one, terms2(k))
-            by thm chap1b::minus_one_times_vector(s, v, space, terms2(k))
+1release thm chap1b::minus_one_times_vector(s, v, space, terms2(k))
             neg_terms2(k) = space.smul(minus_one, terms2(k)) = space.smul(space.scalars.neg(space.scalars.one), terms2(k)) = \chap1b::vector_neg<s, v, space>(terms2(k))
-            by thm chap1b::vector_neg_spec(s, v, space, terms2(k))
+1release thm chap1b::vector_neg_spec(s, v, space, terms2(k))
             space.add(terms1(k), \chap1b::vector_neg<s, v, space>(terms2(k))) = space.add(terms1(k), neg_terms2(k)) = differences(k) = space.zero
             space.add(terms2(k), \chap1b::vector_neg<s, v, space>(terms2(k))) = space.zero
             space.add(terms1(k), \chap1b::vector_neg<s, v, space>(terms2(k))) = space.zero = space.add(terms2(k), \chap1b::vector_neg<s, v, space>(terms2(k)))
-            by thm chap1b::add_right_cancel(s, v, space, terms1(k), terms2(k), \chap1b::vector_neg<s, v, space>(terms2(k)))
+1release thm chap1b::add_right_cancel(s, v, space, terms1(k), terms2(k), \chap1b::vector_neg<s, v, space>(terms2(k)))
         by def:
             ? $fn_eq(terms1, terms2)
     by def:
@@ -621,7 +621,7 @@ thm direct_sum_pair_implies_zero_intersection:
         space.add(x, space.zero) = space.add(space.zero, x) = x
         space.add(space.zero, x) = x
         space.add(x, space.zero) = space.add(space.zero, x)
-        by thm direct_sum_pair_unique_spec(s, v, space, U, W, x, space.zero, space.zero, x)
+1release thm direct_sum_pair_unique_spec(s, v, space, U, W, x, space.zero, space.zero, x)
         x = space.zero
     claim:
         ? forall x {space.zero}:
@@ -641,8 +641,8 @@ thm direct_sum_pair_implies_zero_intersection:
 thm right_difference_recombines:
     ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, u2, w1, w2 v:
         space.add(space.add(w2, \chap1b::vector_neg<s, v, space>(w1)), space.add(u2, w1)) = space.add(u2, w2)
-    by thm chap1b::vector_neg_spec(s, v, space, w1)
-    by thm vector_add_regroup_for_direct_sum(s, v, space, w2, \chap1b::vector_neg<s, v, space>(w1), u2, w1)
+1release thm chap1b::vector_neg_spec(s, v, space, w1)
+1release thm vector_add_regroup_for_direct_sum(s, v, space, w2, \chap1b::vector_neg<s, v, space>(w1), u2, w1)
     space.add(space.add(w2, \chap1b::vector_neg<s, v, space>(w1)), space.add(u2, w1)) = space.add(space.add(w2, u2), space.add(\chap1b::vector_neg<s, v, space>(w1), w1))
     space.add(\chap1b::vector_neg<s, v, space>(w1), w1) = space.add(w1, \chap1b::vector_neg<s, v, space>(w1)) = space.zero
     space.add(w2, u2) = space.add(u2, w2)
@@ -651,14 +651,14 @@ thm right_difference_recombines:
 thm left_difference_recombines_for_direct_sum:
     ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, u1, u2, w1 v:
         space.add(space.add(u1, \chap1b::vector_neg<s, v, space>(u2)), space.add(w1, u2)) = space.add(u1, w1)
-    by thm right_difference_recombines(s, v, space, w1, u2, u1)
+1release thm right_difference_recombines(s, v, space, w1, u2, u1)
     space.add(space.add(u1, \chap1b::vector_neg<s, v, space>(u2)), space.add(w1, u2)) = space.add(w1, u1) = space.add(u1, w1)
 
 thm reversed_right_difference_recombines:
     ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, u2, w1, w2 v:
         space.add(space.add(\chap1b::vector_neg<s, v, space>(w1), w2), space.add(w1, u2)) = space.add(u2, w2)
-    by thm chap1b::vector_neg_spec(s, v, space, w1)
-    by thm vector_add_regroup_for_direct_sum(s, v, space, \chap1b::vector_neg<s, v, space>(w1), w2, w1, u2)
+1release thm chap1b::vector_neg_spec(s, v, space, w1)
+1release thm vector_add_regroup_for_direct_sum(s, v, space, \chap1b::vector_neg<s, v, space>(w1), w2, w1, u2)
     space.add(space.add(\chap1b::vector_neg<s, v, space>(w1), w2), space.add(w1, u2)) = space.add(space.add(\chap1b::vector_neg<s, v, space>(w1), w1), space.add(w2, u2))
     space.add(\chap1b::vector_neg<s, v, space>(w1), w1) = space.add(w1, \chap1b::vector_neg<s, v, space>(w1)) = space.zero
     space.add(w2, u2) = space.add(u2, w2)
@@ -672,10 +672,10 @@ thm equal_pair_sums_give_equal_differences:
     have left v = space.add(u1, \chap1b::vector_neg<s, v, space>(u2))
     have right_reversed v = space.add(\chap1b::vector_neg<s, v, space>(w1), w2)
     have common v = space.add(w1, u2)
-    by thm left_difference_recombines_for_direct_sum(s, v, space, u1, u2, w1)
-    by thm reversed_right_difference_recombines(s, v, space, u2, w1, w2)
+1release thm left_difference_recombines_for_direct_sum(s, v, space, u1, u2, w1)
+1release thm reversed_right_difference_recombines(s, v, space, u2, w1, w2)
     space.add(left, common) = space.add(space.add(u1, \chap1b::vector_neg<s, v, space>(u2)), space.add(w1, u2)) = space.add(u1, w1) = space.add(u2, w2) = space.add(space.add(\chap1b::vector_neg<s, v, space>(w1), w2), space.add(w1, u2)) = space.add(right_reversed, common)
-    by thm chap1b::add_right_cancel(s, v, space, left, right_reversed, common)
+1release thm chap1b::add_right_cancel(s, v, space, left, right_reversed, common)
     space.add(u1, \chap1b::vector_neg<s, v, space>(u2)) = left = right_reversed = space.add(\chap1b::vector_neg<s, v, space>(w1), w2) = space.add(w2, \chap1b::vector_neg<s, v, space>(w1))
 
 thm subspace_contains_vector_neg:
@@ -683,7 +683,7 @@ thm subspace_contains_vector_neg:
         $is_subspace(s, v, space, U)
         =>:
             \chap1b::vector_neg<s, v, space>(x) $in U
-    by thm chap1b::minus_one_times_vector(s, v, space, x)
+1release thm chap1b::minus_one_times_vector(s, v, space, x)
     \chap1b::vector_neg<s, v, space>(x) = space.smul(space.scalars.neg(space.scalars.one), x)
     space.smul(space.scalars.neg(space.scalars.one), x) $in U
 
@@ -694,11 +694,11 @@ thm equal_pair_sum_difference_lies_in_intersection:
         space.add(u1, w1) = space.add(u2, w2)
         =>:
             space.add(u1, \chap1b::vector_neg<s, v, space>(u2)) $in intersect(U, W)
-    by thm subspace_contains_vector_neg(s, v, space, U, u2)
-    by thm subspace_contains_vector_neg(s, v, space, W, w1)
+1release thm subspace_contains_vector_neg(s, v, space, U, u2)
+1release thm subspace_contains_vector_neg(s, v, space, W, w1)
     space.add(u1, \chap1b::vector_neg<s, v, space>(u2)) $in U
     space.add(w2, \chap1b::vector_neg<s, v, space>(w1)) $in W
-    by thm equal_pair_sums_give_equal_differences(s, v, space, u1, u2, w1, w2)
+1release thm equal_pair_sums_give_equal_differences(s, v, space, u1, u2, w1, w2)
     space.add(u1, \chap1b::vector_neg<s, v, space>(u2)) $in W
 
 thm zero_intersection_difference_is_zero:
@@ -709,7 +709,7 @@ thm zero_intersection_difference_is_zero:
         space.add(u1, w1) = space.add(u2, w2)
         =>:
             space.add(u1, \chap1b::vector_neg<s, v, space>(u2)) = space.zero
-    by thm equal_pair_sum_difference_lies_in_intersection(s, v, space, U, W, u1, u2, w1, w2)
+1release thm equal_pair_sum_difference_lies_in_intersection(s, v, space, U, W, u1, u2, w1, w2)
     space.add(u1, \chap1b::vector_neg<s, v, space>(u2)) $in {space.zero}
 
 thm zero_intersection_unique_components:
@@ -721,13 +721,13 @@ thm zero_intersection_unique_components:
         =>:
             u1 = u2
             w1 = w2
-    by thm zero_intersection_difference_is_zero(s, v, space, U, W, u1, u2, w1, w2)
-    by thm chap1b::vector_neg_spec(s, v, space, u2)
+1release thm zero_intersection_difference_is_zero(s, v, space, U, W, u1, u2, w1, w2)
+1release thm chap1b::vector_neg_spec(s, v, space, u2)
     space.add(u1, \chap1b::vector_neg<s, v, space>(u2)) = space.add(u2, \chap1b::vector_neg<s, v, space>(u2))
-    by thm chap1b::add_right_cancel(s, v, space, u1, u2, \chap1b::vector_neg<s, v, space>(u2))
+1release thm chap1b::add_right_cancel(s, v, space, u1, u2, \chap1b::vector_neg<s, v, space>(u2))
     u1 = u2
     space.add(u1, w1) = space.add(u2, w2) = space.add(u1, w2)
-    by thm chap1b::add_left_cancel(s, v, space, u1, w1, w2)
+1release thm chap1b::add_left_cancel(s, v, space, u1, w1, w2)
     w1 = w2
 
 thm zero_intersection_implies_direct_sum_pair:
@@ -742,6 +742,6 @@ thm zero_intersection_implies_direct_sum_pair:
             space.add(u1, w1) = space.add(u2, w2)
             =>:
                 u1 = u2 and w1 = w2
-        by thm zero_intersection_unique_components(s, v, space, U, W, u1, u2, w1, w2)
+1release thm zero_intersection_unique_components(s, v, space, U, W, u1, u2, w1, w2)
     by def:
         ? $is_direct_sum_pair(s, v, space, U, W)

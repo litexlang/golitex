@@ -356,12 +356,12 @@ impl Runtime {
 
 impl Runtime {
     /// Start a standalone source run with its own entry module and root execution frame.
-    pub fn start_isolated_source(&mut self, source_label: &str) {
-        let module_id = self.module_manager.create_entry_module(source_label);
+    pub fn start_isolated_source(&mut self, source_path: &str) {
+        let module_id = self.module_manager.create_entry_module(source_path);
         self.execution_stack.push(ExecutionFrame::new(
             module_id,
             ExecutionLayer::Main,
-            source_label,
+            source_path,
         ));
     }
 
@@ -382,8 +382,8 @@ impl Runtime {
         Ok(module_id)
     }
 
-    /// After `start_isolated_source`, point the current user source label at
-    /// another path without pushing more layers.
+    /// After `start_isolated_source`, point the current user source at another
+    /// path without pushing more layers.
     pub fn set_current_user_lit_file_path(&mut self, path: &str) {
         let path_rc: Rc<str> = Rc::from(path);
         self.module_manager.entry_path_rc = path_rc.clone();
@@ -401,7 +401,7 @@ impl Runtime {
     /// interactive input. This method does not itself execute the ordered `[export]` plan.
     pub fn prepare_current_repository_for_repl(
         &mut self,
-        source_label: &str,
+        source_path: &str,
     ) -> Result<(), RuntimeError> {
         let module_id = self.current_module_id();
         self.module_manager
@@ -410,7 +410,7 @@ impl Runtime {
         self.execution_stack
             .last_mut()
             .expect("repository REPL should have an execution frame")
-            .source_path = Rc::from(source_label);
+            .source_path = Rc::from(source_path);
         self.refresh_current_bare_symbol_index()
     }
 }

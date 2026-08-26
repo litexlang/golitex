@@ -290,7 +290,7 @@ thm has_upper_bound_add:
             $has_upper_bound(fn(x R) R {f(x) + g(x)})
     obtain a from $has_upper_bound(f)
     obtain b from $has_upper_bound(g)
-    by thm upper_bound_of_fn_add(f, g, a, b)
+1release thm upper_bound_of_fn_add(f, g, a, b)
     witness $has_upper_bound(fn(x R) R {f(x) + g(x)}) from a + b
 
 thm has_lower_bound_add:
@@ -301,7 +301,7 @@ thm has_lower_bound_add:
             $has_lower_bound(fn(x R) R {f(x) + g(x)})
     obtain a from $has_lower_bound(f)
     obtain b from $has_lower_bound(g)
-    by thm lower_bound_of_fn_add(f, g, a, b)
+1release thm lower_bound_of_fn_add(f, g, a, b)
     witness $has_lower_bound(fn(x R) R {f(x) + g(x)}) from a + b
 
 # Source definition SumOfSquares. The carrier and its operations are explicit,
@@ -441,10 +441,10 @@ thm lt_abs_forward:
         by cases:
             ? x < abs(y)
             case x < y:
-                by thm le_abs_self(y)
+1release thm le_abs_self(y)
                 x < y <= abs(y)
             case x < -y:
-                by thm neg_le_abs_self(y)
+1release thm neg_le_abs_self(y)
                 x < -y <= abs(y)
 
 thm lt_abs_reverse:
@@ -455,10 +455,10 @@ thm lt_abs_reverse:
     by cases:
         ? x < abs(y)
         case x < y:
-            by thm le_abs_self(y)
+1release thm le_abs_self(y)
             x < y <= abs(y)
         case x < -y:
-            by thm neg_le_abs_self(y)
+1release thm neg_le_abs_self(y)
             x < -y <= abs(y)
 
 # Source theorem abs_lt, expressed by two direction facts.
@@ -647,12 +647,12 @@ thm converges_to_mul:
 
     claim:
         ? $converges_to(fn(n N) R {t(n) - b}, 0)
-        by thm converges_to_const(-b)
-        by thm converges_to_add(t, fn(n N) R {-b}, b, -b)
+1release thm converges_to_const(-b)
+1release thm converges_to_add(t, fn(n N) R {-b}, b, -b)
         forall n N:
             t(n) + (-b) = t(n) - b
         b + (-b) = 0
-        by thm converges_to_congr(fn(n N) R {t(n) + (-b)}, fn(n N) R {t(n) - b}, b + (-b), 0)
+1release thm converges_to_congr(fn(n N) R {t(n) + (-b)}, fn(n N) R {t(n) - b}, b + (-b), 0)
 
     claim:
         ? forall u, v fn(n N) R, L R:
@@ -660,7 +660,7 @@ thm converges_to_mul:
             $converges_to(v, 0)
             =>:
                 $converges_to(fn(n N) R {u(n) * v(n)}, 0)
-        by thm exists_abs_bound_of_converges_to(u, L)
+1release thm exists_abs_bound_of_converges_to(u, L)
         obtain Nu, B from exist N0 N, B R+ st {$_is_eventually_close(u, 0, B, N0)}
         claim:
             ? forall epsilon R+:
@@ -688,12 +688,12 @@ thm converges_to_mul:
         by def $converges_to(fn(n N) R {u(n) * v(n)}, 0)
 
     $converges_to(fn(n N) R {s(n) * (t(n) - b)}, 0)
-    by thm converges_to_mul_const(s, a, b)
-    by thm converges_to_add(fn(n N) R {s(n) * (t(n) - b)}, fn(n N) R {b * s(n)}, 0, b * a)
+1release thm converges_to_mul_const(s, a, b)
+1release thm converges_to_add(fn(n N) R {s(n) * (t(n) - b)}, fn(n N) R {b * s(n)}, 0, b * a)
     forall n N:
         s(n) * (t(n) - b) + b * s(n) = s(n) * t(n)
     0 + b * a = a * b
-    by thm converges_to_congr(fn(n N) R {s(n) * (t(n) - b) + b * s(n)}, fn(n N) R {s(n) * t(n)}, 0 + b * a, a * b)
+1release thm converges_to_congr(fn(n N) R {s(n) * (t(n) - b) + b * s(n)}, fn(n N) R {s(n) * t(n)}, 0 + b * a, a * b)
 
 # Source theorem convergesTo_unique. A common cutoff places the same sequence
 # value within half of |a-b| of both proposed limits.

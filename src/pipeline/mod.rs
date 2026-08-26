@@ -15,6 +15,6 @@ pub use crate::output::{display_runtime_error_json, display_stmt_exec_result_jso
 pub use pipeline_repl::{run_isolated_repl_with_runtime, run_latex_repl, run_repl, ReplOptions};
 pub use pipeline_session::{run_session, SessionPreload, SessionRequest};
 pub use repository_execution::{execute_repository_target, run_repository_before_file_target};
-pub use run::{run, RunOptions, RunOutcome, RunRequest, RunTarget};
+pub use run::{run, RunOptions, RunOutcome, RunRequest, RunTarget, RunTargetKind};
 pub use source_execution::{SourceImportPolicy, SourceRunFailureKind, SourceRunOutcome};
 pub use summary::{render_run_summary, RunSummary, RunSummaryRequest};

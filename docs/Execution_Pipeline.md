@@ -13,7 +13,7 @@ main
   cli::run_code_command
   pipeline::run
   Runtime::new(output_style, strict_mode, output_language)
-  Runtime::start_isolated_source(source_label)
+  Runtime::start_isolated_source("entry")
   Runtime::execute_source(source, SourceImportPolicy::UseRuntimePolicy)
   Runtime::execute_source_blocks
   Tokenizer::parse_blocks
@@ -51,14 +51,22 @@ may itself call atomic verification before the outer proof-verification step.
 | Output | `pipeline::render_run_output` | Renders the statement Results and any RuntimeError. |
 | Lean compiler | `compile_litex_source_to_lean_source`, then `StmtResultToLeanCompiler::compile_stmt_results_to_lean_source` | Runs the same Runtime source path with `SourceImportPolicy::Reject`, then consumes verified Results. |
 
-## Why `source_label` exists
+## Internal source identity versus output label
 
 Inline `-e` source has no filesystem path, but parser and Runtime errors still
-need a source identity. `RunTarget::Code.source_label` supplies that synthetic
-name (`-e`, `-runner -e`, and similar values). Runner JSON preserves the public
-key `target.label`; for code it contains this source label, while file and
-repository targets use their display path/name. Hiding file paths changes only
-non-code runner labels to `entry`.
+need a source identity. The pipeline therefore starts inline execution with
+the stable internal path `entry`; `RunTarget::Code` carries only source text.
+
+Runner and graph adapters create their command-facing labels only while
+rendering output: `-runner -e`, `-graph -e`, `-factgraph -e`, or `-defgraph -e`.
+These display strings do not enter Runtime state. File and repository
+outcomes retain an optional resolved `target_path` for output and file-target
+selection; hidden non-code paths render as `entry`.
+
+Target classification stays typed as `RunTargetKind` through pipeline,
+runner, graph, and session artifact generation. The fixed JSON names `code`,
+`file`, `repo`, and `session` are produced only by `RunTargetKind::json_name`
+when an output document is built.
 
 ## Statement-local proof state
 

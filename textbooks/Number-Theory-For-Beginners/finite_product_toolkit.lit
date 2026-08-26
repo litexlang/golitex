@@ -56,7 +56,7 @@ thm finite_product_congruence_insert_step:
     by def $finite_product_congruence_holds(m, S)
     $section5::congruent_mod(m, finite_set_product(S, fS), finite_set_product(S, gS))
     $section5::congruent_mod(m, f(a), g(a))
-    by thm section5::congruent_mod_multiply(m, finite_set_product(S, fS), finite_set_product(S, gS), f(a), g(a))
+1release thm section5::congruent_mod_multiply(m, finite_set_product(S, fS), finite_set_product(S, gS), f(a), g(a))
     have fn fR(x S) Z = f(x)
     have fn gR(x S) Z = g(x)
     fR = fn(x S) Z {f(x)}
@@ -65,10 +65,10 @@ thm finite_product_congruence_insert_step:
     by def $fn_eq_in(gS, gR, S)
     finite_set_product(S, fR) = finite_set_product(S, fS)
     finite_set_product(S, gR) = finite_set_product(S, gS)
-    by thm congruent_mod_transport_equalities(m, finite_set_product(S, fR) * f(a), finite_set_product(S, gR) * g(a), finite_set_product(S, fS) * f(a), finite_set_product(S, gS) * g(a))
+1release thm congruent_mod_transport_equalities(m, finite_set_product(S, fR) * f(a), finite_set_product(S, gR) * g(a), finite_set_product(S, fS) * f(a), finite_set_product(S, gS) * g(a))
     finite_set_product(union({a}, S), f) = finite_set_product(S, fn(x S) Z {f(x)}) * f(a) = finite_set_product(S, fR) * f(a)
     finite_set_product(union({a}, S), g) = finite_set_product(S, fn(x S) Z {g(x)}) * g(a) = finite_set_product(S, gR) * g(a)
-    by thm congruent_mod_transport_equalities(m, finite_set_product(union({a}, S), f), finite_set_product(union({a}, S), g), finite_set_product(S, fR) * f(a), finite_set_product(S, gR) * g(a))
+1release thm congruent_mod_transport_equalities(m, finite_set_product(union({a}, S), f), finite_set_product(union({a}, S), g), finite_set_product(S, fR) * f(a), finite_set_product(S, gR) * g(a))
 
 thm finite_product_congruence:
     ? forall m N+, A finite_set:
@@ -84,8 +84,8 @@ thm finite_product_congruence:
                         $section5::congruent_mod(m, finite_set_product({}, f), finite_set_product({}, g))
                 finite_set_product({}, f) = 1
                 finite_set_product({}, g) = 1
-                by thm section5::congruent_mod_reflexive(m, 1)
-                by thm congruent_mod_transport_equalities(m, finite_set_product({}, f), finite_set_product({}, g), 1, 1)
+1release thm section5::congruent_mod_reflexive(m, 1)
+1release thm congruent_mod_transport_equalities(m, finite_set_product({}, f), finite_set_product({}, g), 1, 1)
             by def $finite_product_congruence_holds(m, {})
         ? induc a, S:
             $finite_product_congruence_holds(m, S)
@@ -95,7 +95,7 @@ thm finite_product_congruence:
                         $section5::congruent_mod(m, f(x), g(x))
                     =>:
                         $section5::congruent_mod(m, finite_set_product(union({a}, S), f), finite_set_product(union({a}, S), g))
-                by thm finite_product_congruence_insert_step(m, a, S, f, g)
+1release thm finite_product_congruence_insert_step(m, a, S, f, g)
             by def $finite_product_congruence_holds(m, union({a}, S))
 
 thm product_mul_algebra:
@@ -116,7 +116,7 @@ thm finite_product_mul_insert_step:
     finite_set_product(union({z}, S), fn(x union({z}, S)) Z {f(x) * g(x)}) = finite_set_product(S, fn(x S) Z {f(x) * g(x)}) * (f(z) * g(z))
     finite_set_product(union({z}, S), fn(x union({z}, S)) Z {f(x)}) = finite_set_product(S, fn(x S) Z {f(x)}) * f(z)
     finite_set_product(union({z}, S), fn(x union({z}, S)) Z {g(x)}) = finite_set_product(S, fn(x S) Z {g(x)}) * g(z)
-    by thm product_mul_algebra(finite_set_product(S, fn(x S) Z {f(x) * g(x)}), finite_set_product(S, fn(x S) Z {f(x)}), finite_set_product(S, fn(x S) Z {g(x)}), f(z), g(z))
+1release thm product_mul_algebra(finite_set_product(S, fn(x S) Z {f(x) * g(x)}), finite_set_product(S, fn(x S) Z {f(x)}), finite_set_product(S, fn(x S) Z {g(x)}), f(z), g(z))
     finite_set_product(union({z}, S), fn(x union({z}, S)) Z {f(x) * g(x)}) = finite_set_product(S, fn(x S) Z {f(x) * g(x)}) * (f(z) * g(z)) = (finite_set_product(S, fn(x S) Z {f(x)}) * f(z)) * (finite_set_product(S, fn(x S) Z {g(x)}) * g(z)) = finite_set_product(union({z}, S), fn(x union({z}, S)) Z {f(x)}) * finite_set_product(union({z}, S), fn(x union({z}, S)) Z {g(x)})
 
 thm finite_product_distributes_over_pointwise_product:
@@ -128,8 +128,8 @@ thm finite_product_distributes_over_pointwise_product:
             {} $subset A
             finite_set_product({}, fn(x {}) Z {f(x) * g(x)}) = 1 = 1 * 1 = finite_set_product({}, fn(x {}) Z {f(x)}) * finite_set_product({}, fn(x {}) Z {g(x)})
         ? induc z, S:
-            by thm finite_insert_subset(A, z, S)
-            by thm finite_product_mul_insert_step(A, z, S, f, g)
+1release thm finite_insert_subset(A, z, S)
+1release thm finite_product_mul_insert_step(A, z, S, f, g)
     finite_set_product(A, f) = finite_set_product(A, fn(x A) Z {f(x)})
     finite_set_product(A, g) = finite_set_product(A, fn(x A) Z {g(x)})
     finite_set_product(A, fn(x A) Z {f(x) * g(x)}) = finite_set_product(A, fn(x A) Z {f(x)}) * finite_set_product(A, fn(x A) Z {g(x)}) = finite_set_product(A, f) * finite_set_product(A, g)
@@ -257,7 +257,7 @@ thm finite_self_range_contains_every_value:
     by contra:
         ? y $in fn_range(f)
         not y $in fn_range(f)
-        by thm finite_range_insert_size(A, f, y)
+1release thm finite_range_insert_size(A, f, y)
         union({y}, fn_range(f)) $subset A
         finite_set_size(union({y}, fn_range(f))) <= finite_set_size(A)
         finite_set_size(A) + 1 <= finite_set_size(A)
@@ -271,7 +271,7 @@ thm finite_self_injective_is_bijective:
     claim:
         ? forall y A:
             exist x A st {y = f(x)}
-        by thm finite_self_range_contains_every_value(A, f, y)
+1release thm finite_self_range_contains_every_value(A, f, y)
         obtain x from exist x A st {y = f(x)}
         witness exist z A st {y = f(z)} from x
     by def $surjective(A, A, f)
@@ -296,10 +296,10 @@ thm congruent_mod_cancel_coprime_multiplier:
         $section5::congruent_mod(m, a * x, a * y)
         =>:
             $section5::congruent_mod(m, x, y)
-    by thm section5::congruent_mod_has_same_remainder(m, a * x, a * y)
-    by thm equal_remainders_after_multiplication_give_divisibility(m, a, x, y)
-    by thm section6::relatively_prime_Z_symmetric(a, m)
-    by thm section3::theorem_III_2_euclid_lemma(m, a, x - y)
+1release thm section5::congruent_mod_has_same_remainder(m, a * x, a * y)
+1release thm equal_remainders_after_multiplication_give_divisibility(m, a, x, y)
+1release thm section6::relatively_prime_Z_symmetric(a, m)
+1release thm section3::theorem_III_2_euclid_lemma(m, a, x - y)
     by def $section5::congruent_mod(m, x, y)
 
 thm finite_set_product_constant_formula:

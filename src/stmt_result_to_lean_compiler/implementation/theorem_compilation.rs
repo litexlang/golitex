@@ -1180,7 +1180,9 @@ impl StmtResultToLeanCompiler {
             .fact_propositions
             .get(&source_fact_id)
             .cloned()
-            .ok_or_else(|| format!("release-thm cited unavailable source FactId `{source_fact_id}`"))?;
+            .ok_or_else(|| {
+                format!("release-thm cited unavailable source FactId `{source_fact_id}`")
+            })?;
         let Fact::ForallFact(source_forall) = &source_fact else {
             return Err("release-thm source FactId does not identify a forall fact".into());
         };
@@ -1258,7 +1260,9 @@ impl StmtResultToLeanCompiler {
             .fact_names
             .get(&source_fact_id)
             .cloned()
-            .ok_or_else(|| format!("release-thm source FactId `{source_fact_id}` has no Lean name"))?;
+            .ok_or_else(|| {
+                format!("release-thm source FactId `{source_fact_id}` has no Lean name")
+            })?;
         let mut application_parts = vec![theorem_name];
         let mut source_parameter_rendering_aliases = Vec::with_capacity(source_parameters.len());
         for (parameter_index, (((_, parameter_type), argument), check)) in source_parameters
@@ -1276,9 +1280,9 @@ impl StmtResultToLeanCompiler {
                 "Litex.In {rendered_argument} {}",
                 render_obj(parameter_set, &self.environment_stack)?
             );
-            let factual_check = check
-                .factual_success()
-                .ok_or_else(|| format!("release-thm argument check {parameter_index} is not factual"))?;
+            let factual_check = check.factual_success().ok_or_else(|| {
+                format!("release-thm argument check {parameter_index} is not factual")
+            })?;
             if render_fact(&factual_check.fact(), &self.environment_stack)?
                 != expected_parameter_fact
                 || !factual_check.store.infers.is_empty()
@@ -1653,8 +1657,8 @@ impl StmtResultToLeanCompiler {
                 .map(|line| line.map(|line| vec![line]));
         }
         if let StmtResult::Success(SuccessStmtResult::ReleaseThmStmt(result)) = result {
-            let Some(conclusions) = self
-                .construct_lean_proofs_from_litex_theorem_instantiation_stmt_result(result)?
+            let Some(conclusions) =
+                self.construct_lean_proofs_from_litex_theorem_instantiation_stmt_result(result)?
             else {
                 return Ok(None);
             };

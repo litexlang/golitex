@@ -8,7 +8,7 @@ use std::path::Path;
 pub(super) const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 pub(super) fn run_code_command(code: &str, options: RunOptions) {
-    let outcome = run(RunRequest::new(RunTarget::code(code, "-e"), options));
+    let outcome = run(RunRequest::new(RunTarget::code(code), options));
     println!("{}", outcome.output.trim());
 }
 
@@ -39,7 +39,7 @@ pub(super) fn run_runner_command(
     let target = match target_flag.as_str() {
         "-e" => {
             let code = read_non_flag_value_after_flag(args, index, "-e")?;
-            RunTarget::code(code.as_str(), "-runner -e")
+            RunTarget::code(code.as_str())
         }
         "-f" => {
             let file_path = read_non_flag_value_after_flag(args, index, "-f")?;
@@ -81,7 +81,7 @@ pub(super) fn run_graph_command(
     let save_path = read_optional_graph_save_path(args, index, command_flag)?;
     let hide_file_paths = !options.output_style.is_detailed();
     let run_target = match target_flag.as_str() {
-        "-e" => RunTarget::code(&target, format!("{} -e", command_flag).as_str()),
+        "-e" => RunTarget::code(&target),
         "-f" => RunTarget::file(&target),
         "-r" => RunTarget::repository(&target),
         _ => unreachable!("graph target flag was already validated"),

@@ -203,8 +203,8 @@ thm uniform_limit_preserves_continuity:
         claim:
             ? forall n N+:
                 $chap2::is_metric_continuous_at(X, Y, dist_X, dist_Y, family(n), x0)
-            by thm chap2::metric_continuous_implies_continuous_at(X, Y, dist_X, dist_Y, family(n), x0)
-        by thm uniform_limit_preserves_continuity_at(X, Y, dist_X, dist_Y, family, f, x0)
+1release thm chap2::metric_continuous_implies_continuous_at(X, Y, dist_X, dist_Y, family(n), x0)
+1release thm uniform_limit_preserves_continuity_at(X, Y, dist_X, dist_Y, family, f, x0)
     by def $chap2::is_metric_continuous(X, Y, dist_X, dist_Y, f)
 
 # Proposition 3.3.3 (Interchange of limits and uniform limits). The individual

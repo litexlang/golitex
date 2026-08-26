@@ -28,7 +28,7 @@ g(1) = 2
     );
 
     let graph = crate::graph::render_result_graph_from_stmt_results(
-        "code",
+        RunTargetKind::Code,
         "transparent_callable_alias",
         true,
         &results,

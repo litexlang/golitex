@@ -54,23 +54,31 @@ pub fn run_graph(request: GraphRequest) -> (bool, String) {
         hide_file_paths,
     } = request;
     let mut outcome = run(run_request);
+    let target_label = match outcome.target_kind {
+        RunTargetKind::Code => format!("{} -e", kind.flag()),
+        RunTargetKind::File | RunTargetKind::Repository => outcome
+            .target_path
+            .clone()
+            .expect("file and repository outcomes must retain their target path"),
+        RunTargetKind::Session => unreachable!("pipeline runs do not produce session targets"),
+    };
     if let Some(message) = outcome.target_error {
         return match kind {
             GraphKind::Result => graph_target_error_output(
-                outcome.target_kind.as_str(),
-                outcome.target_label.as_str(),
+                outcome.target_kind,
+                target_label.as_str(),
                 hide_file_paths,
                 message,
             ),
             GraphKind::Fact => fact_graph_target_error_output(
-                outcome.target_kind.as_str(),
-                outcome.target_label.as_str(),
+                outcome.target_kind,
+                target_label.as_str(),
                 hide_file_paths,
                 message,
             ),
             GraphKind::Definition => definition_graph_target_error_output(
-                outcome.target_kind.as_str(),
-                outcome.target_label.as_str(),
+                outcome.target_kind,
+                target_label.as_str(),
                 hide_file_paths,
                 message,
             ),
@@ -79,30 +87,36 @@ pub fn run_graph(request: GraphRequest) -> (bool, String) {
 
     match kind {
         GraphKind::Result => render_graph_from_stmt_results(
-            outcome.target_kind.as_str(),
-            outcome.target_label.as_str(),
+            outcome.target_kind,
+            target_label.as_str(),
             hide_file_paths,
             &outcome.runtime,
             outcome.stmt_results.as_slice(),
             outcome.runtime_error.as_ref(),
         ),
         GraphKind::Fact => render_fact_graph_from_stmt_results(
-            outcome.target_kind.as_str(),
-            outcome.target_label.as_str(),
+            outcome.target_kind,
+            target_label.as_str(),
             hide_file_paths,
             &outcome.runtime,
             outcome.stmt_results.as_slice(),
             outcome.runtime_error.as_ref(),
         ),
         GraphKind::Definition => {
-            let selected_target = if outcome.target_kind == "file" {
-                definition_graph_file_target(&outcome.runtime, outcome.target_label.as_str())
+            let selected_target = if outcome.target_kind == RunTargetKind::File {
+                definition_graph_file_target(
+                    &outcome.runtime,
+                    outcome
+                        .target_path
+                        .as_deref()
+                        .expect("file outcomes must retain their target path"),
+                )
             } else {
                 outcome.selected_repository_target
             };
             render_definition_graph_result(
-                outcome.target_kind.as_str(),
-                outcome.target_label.as_str(),
+                outcome.target_kind,
+                target_label.as_str(),
                 hide_file_paths,
                 &mut outcome.runtime,
                 outcome.stmt_results.as_slice(),

@@ -220,7 +220,7 @@ fn run_session_loop_with_readers_and_preload(
                     runtime_error: &no_error,
                 });
                 let (_, graph) = render_graph_from_stmt_results(
-                    "session",
+                    RunTargetKind::Session,
                     "entry",
                     !output_style.is_detailed(),
                     &runtime,
@@ -228,7 +228,7 @@ fn run_session_loop_with_readers_and_preload(
                     None,
                 );
                 let (_, fact_graph) = render_fact_graph_from_stmt_results(
-                    "session",
+                    RunTargetKind::Session,
                     "entry",
                     !output_style.is_detailed(),
                     &runtime,
@@ -236,7 +236,7 @@ fn run_session_loop_with_readers_and_preload(
                     None,
                 );
                 let (_, definition_graph) = render_definition_graph_from_stmt_results(
-                    "session",
+                    RunTargetKind::Session,
                     "entry",
                     !output_style.is_detailed(),
                     &mut runtime,

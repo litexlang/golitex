@@ -78,7 +78,7 @@ thm coprime_square_not_twice_square:
         m^2 = 2 * n^2
         witness $chap1::even(m^2) from n^2
         $chap1::even(m^2)
-        by thm even_of_even_sqr(m)
+1release thm even_of_even_sqr(m)
         $chap1::even(m)
         obtain a from exist a N st {m = 2 * a}
         m^2 = (2 * a)^2 = 4 * a^2
@@ -86,14 +86,14 @@ thm coprime_square_not_twice_square:
         n^2 = (2 * n^2) / 2 = (4 * a^2) / 2 = 2 * a^2
         witness $chap1::even(n^2) from a^2
         $chap1::even(n^2)
-        by thm even_of_even_sqr(n)
+1release thm even_of_even_sqr(n)
         $chap1::even(n)
         obtain b from exist b N st {n = 2 * b}
         witness $MILAlternative::chap2_struct::divides(2, m) from a
         $MILAlternative::chap2_struct::divides(2, m)
         witness $MILAlternative::chap2_struct::divides(2, n) from b
         $MILAlternative::chap2_struct::divides(2, n)
-        by thm MILAlternative::chap2_struct::common_divisor_le_gcd(m, n, 2)
+1release thm MILAlternative::chap2_struct::common_divisor_le_gcd(m, n, 2)
         2 <= gcd(m, n) = 1
         impossible 2 <= 1
 
@@ -283,7 +283,7 @@ thm power_two_le_factorial:
                     natural_predecessor(n + 1) = abs((n + 1) - 1)
                     abs((n + 1) - 1) = abs(n) = n
                     natural_predecessor(n + 1) = abs((n + 1) - 1) = n
-                    by thm factorial_positive(n)
+1release thm factorial_positive(n)
                     factorial(n) >= 0
                     2 <= n + 1
                     2 * 2^natural_predecessor(n) <= 2 * factorial(n)
@@ -330,7 +330,7 @@ thm sum_id:
             sum_to(0) = 0 = 0 * (0 + 1) / 2
         ? induc:
             sum_to(n) = n * (n + 1) / 2
-            by thm sum_to_succ(n)
+1release thm sum_to_succ(n)
             sum_to(n + 1) = (n + 1) + sum_to(n) = (n + 1) + n * (n + 1) / 2 = (n + 1) * (n + 2) / 2 = (n + 1) * ((n + 1) + 1) / 2
 
 # Source theorem: sum_sqr.
@@ -343,7 +343,7 @@ thm sum_sqr:
             square_sum_to(0) = 0 = 0 * (0 + 1) * (2 * 0 + 1) / 6
         ? induc:
             square_sum_to(n) = n * (n + 1) * (2 * n + 1) / 6
-            by thm square_sum_to_succ(n)
+1release thm square_sum_to_succ(n)
             square_sum_to(n + 1) = (n + 1)^2 + square_sum_to(n) = (n + 1)^2 + n * (n + 1) * (2 * n + 1) / 6 = (n + 1) * (n + 2) * (2 * (n + 1) + 1) / 6
 
 # Source construction: an independent Peano-natural carrier.
@@ -491,10 +491,10 @@ thm exists_prime_factor:
 thm primes_infinite:
     ? forall n N:
         exist p N+ st {p > n, $prime(p)}
-    by thm factorial_positive(n)
+1release thm factorial_positive(n)
     factorial(n) >= 1
     factorial(n) + 1 >= 1 + 1 = 2
-    by thm exists_prime_factor(factorial(n) + 1)
+1release thm exists_prime_factor(factorial(n) + 1)
     obtain p from exist p N+ st {$prime(p), $MILAlternative::chap2_struct::divides(p, factorial(n) + 1)}
     claim:
         ? p > n
@@ -502,13 +502,13 @@ thm primes_infinite:
             ? p > n
             p <= n
             p > 0
-            by thm positive_index_divides_factorial(p, n)
+1release thm positive_index_divides_factorial(p, n)
             obtain a from exist a Z st {factorial(n) = p * a}
             obtain b from exist b Z st {factorial(n) + 1 = p * b}
             witness $MILAlternative::chap2_struct::divides(p, 1) from b - a:
                 1 = (factorial(n) + 1) - factorial(n) = p * b - p * a = p * (b - a)
             $MILAlternative::chap2_struct::divides(p, 1)
-            by thm MILAlternative::chap2_struct::_positive_divisor_le_abs(p, 1)
+1release thm MILAlternative::chap2_struct::_positive_divisor_le_abs(p, 1)
             p <= abs(1) = 1
             p >= 2
             impossible p <= 1
@@ -599,7 +599,7 @@ thm two_le_of_mod_4_eq_3:
             n = 1
             n % 4 = 1 % 4 = 1
             impossible n % 4 = 3
-    by thm two_le(n)
+1release thm two_le(n)
 
 # Source theorem: exists_prime_factor_mod_4_eq_3.
 # Proof debt: strong induction must split a nonprime factorization and retain
@@ -684,7 +684,7 @@ thm fib_eq:
                 $_fibonacci_binet_pair(k)
                 fibonacci(k) = binet(k)
                 fibonacci(k + 1) = binet(k + 1)
-                by thm fib_add_two(k)
+1release thm fib_add_two(k)
                 fibonacci(k + 2) = fibonacci(k) + fibonacci(k + 1) = binet(k) + binet(k + 1) = binet(k + 2)
                 fibonacci((k + 1) + 1) = fibonacci(k + 2) = binet(k + 2) = binet((k + 1) + 1)
                 fibonacci(k + 1) = binet(k + 1)
@@ -702,24 +702,24 @@ thm _gcd_add_right_for_fibonacci:
     a + b >= a > 0
     a + b != 0
     a != 0 or a + b != 0
-    by thm MILAlternative::chap2_struct::gcd_positive(a, b)
-    by thm MILAlternative::chap2_struct::gcd_divides_left(a, b)
-    by thm MILAlternative::chap2_struct::gcd_divides_right(a, b)
+1release thm MILAlternative::chap2_struct::gcd_positive(a, b)
+1release thm MILAlternative::chap2_struct::gcd_divides_left(a, b)
+1release thm MILAlternative::chap2_struct::gcd_divides_right(a, b)
     obtain q from exist q Z st {a = gcd(a, b) * q}
     obtain r from exist r Z st {b = gcd(a, b) * r}
     witness $MILAlternative::chap2_struct::divides(gcd(a, b), a + b) from q + r:
         a + b = gcd(a, b) * q + gcd(a, b) * r = gcd(a, b) * (q + r)
-    by thm MILAlternative::chap2_struct::common_divisor_le_gcd(a, a + b, gcd(a, b))
+1release thm MILAlternative::chap2_struct::common_divisor_le_gcd(a, a + b, gcd(a, b))
     gcd(a, b) <= gcd(a, a + b)
 
-    by thm MILAlternative::chap2_struct::gcd_positive(a, a + b)
-    by thm MILAlternative::chap2_struct::gcd_divides_left(a, a + b)
-    by thm MILAlternative::chap2_struct::gcd_divides_right(a, a + b)
+1release thm MILAlternative::chap2_struct::gcd_positive(a, a + b)
+1release thm MILAlternative::chap2_struct::gcd_divides_left(a, a + b)
+1release thm MILAlternative::chap2_struct::gcd_divides_right(a, a + b)
     obtain u from exist u Z st {a = gcd(a, a + b) * u}
     obtain v from exist v Z st {a + b = gcd(a, a + b) * v}
     witness $MILAlternative::chap2_struct::divides(gcd(a, a + b), b) from v - u:
         b = (a + b) - a = gcd(a, a + b) * v - gcd(a, a + b) * u = gcd(a, a + b) * (v - u)
-    by thm MILAlternative::chap2_struct::common_divisor_le_gcd(a, b, gcd(a, a + b))
+1release thm MILAlternative::chap2_struct::common_divisor_le_gcd(a, b, gcd(a, a + b))
     gcd(a, a + b) <= gcd(a, b)
 
 thm _fibonacci_successor_positive:
@@ -746,15 +746,15 @@ thm fib_coprime_fib_succ:
             fibonacci(n + 1) = fibonacci(1) = 1
             fibonacci(n) != 0 or fibonacci(n + 1) != 0
             0 != 0 or 1 != 0
-            by thm MILAlternative::chap2_struct::gcd_comm(0, 1)
+1release thm MILAlternative::chap2_struct::gcd_comm(0, 1)
             gcd(0, 1) = gcd(1, 0)
-            by thm MILAlternative::chap2_struct::gcd_euclidean_base(1)
+1release thm MILAlternative::chap2_struct::gcd_euclidean_base(1)
             gcd(1, 0) = abs(1) = 1
             gcd(fibonacci(n), fibonacci(n + 1)) = gcd(0, 1) = 1
             by def $coprime(fibonacci(n), fibonacci(n + 1))
         ? induc:
             $coprime(fibonacci(n), fibonacci(n + 1))
-            by thm _fibonacci_successor_positive(n)
+1release thm _fibonacci_successor_positive(n)
             fibonacci(n + 1) > 0
             fibonacci(n + 1) $in N+
             fibonacci(n + 1) != 0
@@ -762,10 +762,10 @@ thm fib_coprime_fib_succ:
             fibonacci(n + 2) = fibonacci((n + 2) - 2) + fibonacci((n + 2) - 1) = fibonacci(n) + fibonacci(n + 1) = fibonacci(n + 1) + fibonacci(n)
             fibonacci((n + 1) + 1) = fibonacci(n + 2) = fibonacci(n + 1) + fibonacci(n)
             fibonacci(n + 1) != 0 or fibonacci(n) != 0
-            by thm MILAlternative::chap2_struct::gcd_comm(fibonacci(n), fibonacci(n + 1))
+1release thm MILAlternative::chap2_struct::gcd_comm(fibonacci(n), fibonacci(n + 1))
             gcd(fibonacci(n), fibonacci(n + 1)) = gcd(fibonacci(n + 1), fibonacci(n))
             gcd(fibonacci(n + 1), fibonacci(n)) = gcd(fibonacci(n), fibonacci(n + 1)) = 1
-            by thm _gcd_add_right_for_fibonacci(fibonacci(n + 1), fibonacci(n))
+1release thm _gcd_add_right_for_fibonacci(fibonacci(n + 1), fibonacci(n))
             gcd(fibonacci(n + 1), fibonacci(n)) = gcd(fibonacci(n + 1), fibonacci(n + 1) + fibonacci(n))
             gcd(fibonacci(n + 1), fibonacci((n + 1) + 1)) = gcd(fibonacci(n + 1), fibonacci(n + 1) + fibonacci(n)) = 1
             fibonacci(n + 1) != 0 or fibonacci((n + 1) + 1) != 0
@@ -823,7 +823,7 @@ thm fibonacci_fast_aux_eq:
                     fibonacci(j + 2) = fibonacci((j + 1) + 1)
                     fibonacci(j) + fibonacci(j + 1) = fibonacci((j + 1) + 1)
                     fibonacci_fast_aux(k, fibonacci(j + 1), fibonacci(j) + fibonacci(j + 1)) = fibonacci_fast_aux(k, fibonacci(j + 1), fibonacci((j + 1) + 1))
-                    by thm fibonacci_fast_aux_succ(k, fibonacci(j), fibonacci(j + 1))
+1release thm fibonacci_fast_aux_succ(k, fibonacci(j), fibonacci(j + 1))
                     fibonacci_fast_aux(k + 1, fibonacci(j), fibonacci(j + 1)) = fibonacci_fast_aux(k, fibonacci(j + 1), fibonacci(j) + fibonacci(j + 1))
                     fibonacci_fast_aux(k, fibonacci(j + 1), fibonacci((j + 1) + 1)) = fibonacci(k + (j + 1))
                     fibonacci(k + (j + 1)) = fibonacci((k + 1) + j)
@@ -837,7 +837,7 @@ thm fibonacci_fast_eq:
         fibonacci_fast(n) = fibonacci(n)
     fibonacci(0) = 0
     fibonacci(0 + 1) = fibonacci(1) = 1
-    by thm fibonacci_fast_aux_eq(0, n)
+1release thm fibonacci_fast_aux_eq(0, n)
     fibonacci_fast_aux(n, fibonacci(0), fibonacci(0 + 1)) = fibonacci(n + 0)
     fibonacci_fast(n) = fibonacci_fast_aux(n, 0, 1) = fibonacci_fast_aux(n, fibonacci(0), fibonacci(0 + 1)) = fibonacci(n + 0) = fibonacci(n)
 
@@ -890,7 +890,7 @@ thm fib_add:
 thm fibonacci_consecutive_square_sum:
     ? forall n N:
         fibonacci(n)^2 + fibonacci(n + 1)^2 = fibonacci(2 * n + 1)
-    by thm fib_add(n, n)
+1release thm fib_add(n, n)
     fibonacci(n + n + 1) = fibonacci(n) * fibonacci(n) + fibonacci(n + 1) * fibonacci(n + 1)
     fibonacci(n)^2 + fibonacci(n + 1)^2 = fibonacci(n) * fibonacci(n) + fibonacci(n + 1) * fibonacci(n + 1) = fibonacci(n + n + 1) = fibonacci(2 * n + 1)
 
@@ -917,8 +917,8 @@ thm ne_one_iff_exists_prime_dvd_forward:
                     $MILAlternative::chap2_struct::divides(2, n)
             case n != 0:
                 n $in N+
-                by thm two_le(n)
-                by thm exists_prime_factor(n)
+1release thm two_le(n)
+1release thm exists_prime_factor(n)
                 exist p N+ st {$prime(p), $MILAlternative::chap2_struct::divides(p, n)}
 
 thm ne_one_iff_exists_prime_dvd_reverse:
@@ -931,7 +931,7 @@ thm ne_one_iff_exists_prime_dvd_reverse:
         ? n != 1
         n = 1
         n != 0
-        by thm MILAlternative::chap2_struct::_positive_divisor_le_abs(p, n)
+1release thm MILAlternative::chap2_struct::_positive_divisor_le_abs(p, n)
         p <= abs(n) = 1
         p >= 2
         impossible p <= 1

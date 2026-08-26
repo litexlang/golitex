@@ -163,7 +163,7 @@ thm list_append_nil:
                 f(x) = f(y)
     have P power_set(L) = {z L: append(z, core.nil) = z}
     append(core.nil, core.nil) = core.nil
-    by thm set_builder_member(core.nil, {z L: append(z, core.nil) = z})
+1release thm set_builder_member(core.nil, {z L: append(z, core.nil) = z})
     core.nil $in {z L: append(z, core.nil) = z}
     core.nil $in P
     claim:
@@ -172,9 +172,9 @@ thm list_append_nil:
             =>:
                 core.cons(a, xs) $in P
         append(core.cons(a, xs), core.nil) = core.cons(a, append(xs, core.nil))
-        by thm function_substitution(L, L, fn(t L) L {core.cons(a, t)}, append(xs, core.nil), xs)
+1release thm function_substitution(L, L, fn(t L) L {core.cons(a, t)}, append(xs, core.nil), xs)
         append(core.cons(a, xs), core.nil) = core.cons(a, xs)
-        by thm set_builder_member(core.cons(a, xs), {z L: append(z, core.nil) = z})
+1release thm set_builder_member(core.cons(a, xs), {z L: append(z, core.nil) = z})
         core.cons(a, xs) $in {z L: append(z, core.nil) = z}
     trust append(target, core.nil) = target
 
@@ -200,7 +200,7 @@ thm list_map_map:
     map_g(core_B.nil) = core_C.nil
     map_gf(core_A.nil) = core_C.nil
     map_g(map_f(core_A.nil)) = map_g(core_B.nil) = core_C.nil = map_gf(core_A.nil)
-    by thm set_builder_member(core_A.nil, {z L_A: map_g(map_f(z)) = map_gf(z)})
+1release thm set_builder_member(core_A.nil, {z L_A: map_g(map_f(z)) = map_gf(z)})
     core_A.nil $in {z L_A: map_g(map_f(z)) = map_gf(z)}
     core_A.nil $in P
     claim:
@@ -214,11 +214,11 @@ thm list_map_map:
         map_g(map_f(core_A.cons(a, xs))) = core_C.cons(g(f(a)), map_g(map_f(xs)))
         map_gf(core_A.cons(a, xs)) = core_C.cons((fn(x A) CarrierC {g(f(x))})(a), map_gf(xs))
         (fn(x A) CarrierC {g(f(x))})(a) = g(f(a))
-        by thm function_substitution(CarrierC, L_C, fn(t CarrierC) L_C {core_C.cons(t, map_gf(xs))}, (fn(x A) CarrierC {g(f(x))})(a), g(f(a)))
+1release thm function_substitution(CarrierC, L_C, fn(t CarrierC) L_C {core_C.cons(t, map_gf(xs))}, (fn(x A) CarrierC {g(f(x))})(a), g(f(a)))
         map_gf(core_A.cons(a, xs)) = core_C.cons(g(f(a)), map_gf(xs))
-        by thm function_substitution(L_C, L_C, fn(t L_C) L_C {core_C.cons(g(f(a)), t)}, map_g(map_f(xs)), map_gf(xs))
+1release thm function_substitution(L_C, L_C, fn(t L_C) L_C {core_C.cons(g(f(a)), t)}, map_g(map_f(xs)), map_gf(xs))
         map_g(map_f(core_A.cons(a, xs))) = map_gf(core_A.cons(a, xs))
-        by thm set_builder_member(core_A.cons(a, xs), {z L_A: map_g(map_f(z)) = map_gf(z)})
+1release thm set_builder_member(core_A.cons(a, xs), {z L_A: map_g(map_f(z)) = map_gf(z)})
         core_A.cons(a, xs) $in {z L_A: map_g(map_f(z)) = map_gf(z)}
     trust map_g(map_f(target)) = map_gf(target)
 

@@ -126,7 +126,7 @@ thm remark_1115_metric_real_limit_implies_usual:
                 by def:
                     ? $is_metric_tail_close_to(R, real_distance, u, a, epsilon, N0)
                 real_distance(u(n), a) <= epsilon
-                by thm real_distance_eq_abs(u(n), a)
+1release thm real_distance_eq_abs(u(n), a)
             by def:
                 ? $is_usual_real_tail_close_to(u, a, epsilon, N0)
     by def:
@@ -152,7 +152,7 @@ thm remark_1115_usual_real_limit_implies_metric:
                 by def:
                     ? $is_usual_real_tail_close_to(u, a, epsilon, N0)
                 abs(u(n) - a) <= epsilon
-                by thm real_distance_eq_abs(u(n), a)
+1release thm real_distance_eq_abs(u(n), a)
             by def:
                 ? $is_metric_tail_close_to(R, real_distance, u, a, epsilon, N0)
     by def:
@@ -206,8 +206,8 @@ thm real_convergence_implies_distance_convergence_to_zero:
                 real_distance(u(n), a) <= epsilon
                 fn(k N+) R {real_distance(u(k), a)}(n) = real_distance(u(n), a)
                 real_distance(fn(k N+) R {real_distance(u(k), a)}(n), 0) = real_distance(real_distance(u(n), a), 0)
-                by thm real_distance_eq_abs(real_distance(u(n), a), 0)
-                by thm real_distance_eq_abs(u(n), a)
+1release thm real_distance_eq_abs(real_distance(u(n), a), 0)
+1release thm real_distance_eq_abs(u(n), a)
                 abs(u(n) - a) >= 0
                 abs(real_distance(u(n), a) - 0) = abs(abs(u(n) - a) - 0)
                 abs(abs(u(n) - a) - 0) = abs(abs(u(n) - a))
@@ -241,8 +241,8 @@ thm distance_convergence_to_zero_implies_real_convergence:
                 real_distance(fn(reverse_function_index N+) R {real_distance(u(reverse_function_index), a)}(reverse_tail_index), 0) <= epsilon
                 fn(reverse_function_index N+) R {real_distance(u(reverse_function_index), a)}(reverse_tail_index) = real_distance(u(reverse_tail_index), a)
                 real_distance(fn(reverse_function_index N+) R {real_distance(u(reverse_function_index), a)}(reverse_tail_index), 0) = real_distance(real_distance(u(reverse_tail_index), a), 0)
-                by thm real_distance_eq_abs(real_distance(u(reverse_tail_index), a), 0)
-                by thm real_distance_eq_abs(u(reverse_tail_index), a)
+1release thm real_distance_eq_abs(real_distance(u(reverse_tail_index), a), 0)
+1release thm real_distance_eq_abs(u(reverse_tail_index), a)
                 abs(u(reverse_tail_index) - a) >= 0
                 abs(real_distance(u(reverse_tail_index), a) - 0) = abs(abs(u(reverse_tail_index) - a) - 0)
                 abs(abs(u(reverse_tail_index) - a) - 0) = abs(abs(u(reverse_tail_index) - a))
@@ -570,7 +570,7 @@ thm example_1113_connected_network_shortest_path_metric:
         $is_shortest_path_system(Computers, P, path_start, path_end, connection_count, constant_path, reverse_path, concatenate, shortest_path, dist)
         =>:
             $is_metric_space(Computers, dist)
-    by thm shortest_path_system_induces_metric(Computers, P, path_start, path_end, connection_count, constant_path, reverse_path, concatenate, shortest_path, dist)
+1release thm shortest_path_system_induces_metric(Computers, P, path_start, path_end, connection_count, constant_path, reverse_path, concatenate, shortest_path, dist)
 
 # Example 1.1.17. The sequence (1/n, 1/n) converges to the origin in the l2,
 # l1, and l-infinity metrics, but not in the discrete metric.
@@ -793,7 +793,7 @@ thm metric_ball_subset_contains_center:
         \metric_ball<X, dist>(center, radius) $subset E
         =>:
             center $in E
-    by thm metric_ball_contains_center(X, dist, center, radius)
+1release thm metric_ball_contains_center(X, dist, center, radius)
     claim:
         ? forall A, B power_set(X), y X:
             A $subset B
@@ -812,9 +812,9 @@ thm remark_124_smaller_ball_is_subset:
     claim:
         ? forall point \metric_ball<X, dist>(center, small):
             point $in \metric_ball<X, dist>(center, large)
-        by thm metric_ball_member_implies_distance_lt(X, dist, center, small, point)
+1release thm metric_ball_member_implies_distance_lt(X, dist, center, small, point)
         dist(point, center) < small <= large
-        by thm metric_distance_lt_implies_ball_member(X, dist, center, point, large)
+1release thm metric_distance_lt_implies_ball_member(X, dist, center, point, large)
 
 # Example 1.2.2. The Euclidean, taxicab, and discrete unit balls at the
 # planar origin are respectively a disc, a diamond, and a singleton.
@@ -861,7 +861,7 @@ thm example_123_real_open_interval_is_ball:
                 x $in I
             x $in {y R: real_distance(y, 5) < 2}
             real_distance(x, 5) < 2
-            by thm real_distance_eq_abs(x, 5)
+1release thm real_distance_eq_abs(x, 5)
             abs(x - 5) < 2
             x - 5 < 2
             -(x - 5) < 2
@@ -885,9 +885,9 @@ thm example_123_real_open_interval_is_ball:
             -2 < x - 5
             -(x - 5) < 2
             abs(x - 5) < 2
-            by thm real_distance_eq_abs(x, 5)
+1release thm real_distance_eq_abs(x, 5)
             real_distance(x, 5) < 2
-            by thm metric_distance_lt_implies_ball_member(R, real_distance, 5, x, 2)
+1release thm metric_distance_lt_implies_ball_member(R, real_distance, 5, x, 2)
     \metric_ball<R, real_distance>(5, 2) = ball(5, 2) = I
 
 # Definition 1.2.5 (Interior, exterior, and boundary).
@@ -910,7 +910,7 @@ thm remark_126_interior_point_is_member:
         =>:
             x $in E
     obtain radius from exist radius R+ st {\metric_ball<X, dist>(x, radius) $subset E}
-    by thm metric_ball_subset_contains_center(X, dist, E, x, radius)
+1release thm metric_ball_subset_contains_center(X, dist, E, x, radius)
 
 thm remark_126_exterior_point_is_not_member:
     ? forall X set, dist fn(x, y X) R, E power_set(X), x X:
@@ -919,7 +919,7 @@ thm remark_126_exterior_point_is_not_member:
         =>:
             not x $in E
     obtain radius from exist radius R+ st {intersect(\metric_ball<X, dist>(x, radius), E) = {}}
-    by thm metric_ball_contains_center(X, dist, x, radius)
+1release thm metric_ball_contains_center(X, dist, x, radius)
     by contra:
         ? not x $in E
         x $in E
@@ -935,8 +935,8 @@ thm remark_126_not_interior_and_exterior:
     by contra:
         ? not $is_metric_exterior_point(X, dist, E, x)
         $is_metric_exterior_point(X, dist, E, x)
-        by thm remark_126_interior_point_is_member(X, dist, E, x)
-        by thm remark_126_exterior_point_is_not_member(X, dist, E, x)
+1release thm remark_126_interior_point_is_member(X, dist, E, x)
+1release thm remark_126_exterior_point_is_not_member(X, dist, E, x)
         impossible x $in E
 
 template<X set, dist fn(x, y X) R>:
@@ -1043,14 +1043,14 @@ thm interior_or_boundary_implies_adherent:
         ? $is_metric_adherent_point(X, dist, E, x)
         case $is_metric_interior_point(X, dist, E, x):
             obtain interior_radius from exist interior_radius R+ st {\metric_ball<X, dist>(x, interior_radius) $subset E}
-            by thm metric_ball_subset_contains_center(X, dist, E, x, interior_radius)
+1release thm metric_ball_subset_contains_center(X, dist, E, x, interior_radius)
             claim:
                 ? forall radius R+:
                     not intersect(\metric_ball<X, dist>(x, radius), E) = {}
                 by contra:
                     ? not intersect(\metric_ball<X, dist>(x, radius), E) = {}
                     intersect(\metric_ball<X, dist>(x, radius), E) = {}
-                    by thm metric_ball_contains_center(X, dist, x, radius)
+1release thm metric_ball_contains_center(X, dist, x, radius)
                     x $in intersect(\metric_ball<X, dist>(x, radius), E)
                     impossible intersect(\metric_ball<X, dist>(x, radius), E) = {}
             by def:
@@ -1204,7 +1204,7 @@ thm metric_closure_decomposition:
         ? forall x \metric_closure<X, dist>(E):
             x $in union(\metric_interior<X, dist>(E), \metric_boundary<X, dist>(E))
         $is_metric_adherent_point(X, dist, E, x)
-        by thm adherent_implies_interior_or_boundary(X, dist, E, x)
+1release thm adherent_implies_interior_or_boundary(X, dist, E, x)
         by cases:
             ? x $in union(\metric_interior<X, dist>(E), \metric_boundary<X, dist>(E))
             case $is_metric_interior_point(X, dist, E, x):
@@ -1222,12 +1222,12 @@ thm metric_closure_decomposition:
             case x $in \metric_interior<X, dist>(E):
                 $is_metric_interior_point(X, dist, E, x)
                 $is_metric_interior_point(X, dist, E, x) or $is_metric_boundary_point(X, dist, E, x)
-                by thm interior_or_boundary_implies_adherent(X, dist, E, x)
+1release thm interior_or_boundary_implies_adherent(X, dist, E, x)
                 x $in \metric_closure<X, dist>(E)
             case x $in \metric_boundary<X, dist>(E):
                 $is_metric_boundary_point(X, dist, E, x)
                 $is_metric_interior_point(X, dist, E, x) or $is_metric_boundary_point(X, dist, E, x)
-                by thm interior_or_boundary_implies_adherent(X, dist, E, x)
+1release thm interior_or_boundary_implies_adherent(X, dist, E, x)
                 x $in \metric_closure<X, dist>(E)
     claim:
         ? forall z \metric_closure<X, dist>(E):
@@ -1365,7 +1365,7 @@ thm metric_open_iff_equals_interior_forward:
             x $in E
         $is_metric_interior_point(X, dist, E, x)
         obtain radius from exist radius R+ st {\metric_ball<X, dist>(x, radius) $subset E}
-        by thm metric_ball_subset_contains_center(X, dist, E, x, radius)
+1release thm metric_ball_subset_contains_center(X, dist, E, x, radius)
     claim:
         ? forall x E:
             x $in \metric_interior<X, dist>(E)
@@ -1379,7 +1379,7 @@ thm metric_open_iff_equals_interior_forward:
                         ? not $is_metric_exterior_point(X, dist, E, x)
                         $is_metric_exterior_point(X, dist, E, x)
                         obtain radius from exist radius R+ st {intersect(\metric_ball<X, dist>(x, radius), E) = {}}
-                        by thm metric_ball_contains_center(X, dist, x, radius)
+1release thm metric_ball_contains_center(X, dist, x, radius)
                         x $in intersect(\metric_ball<X, dist>(x, radius), E)
                         impossible intersect(\metric_ball<X, dist>(x, radius), E) = {}
                 by def:
@@ -1447,12 +1447,12 @@ thm metric_closed_iff_contains_closure_forward:
         ? forall x \metric_closure<X, dist>(E):
             x $in E
         $is_metric_adherent_point(X, dist, E, x)
-        by thm adherent_implies_interior_or_boundary(X, dist, E, x)
+1release thm adherent_implies_interior_or_boundary(X, dist, E, x)
         by cases:
             ? x $in E
             case $is_metric_interior_point(X, dist, E, x):
                 obtain radius from exist radius R+ st {\metric_ball<X, dist>(x, radius) $subset E}
-                by thm metric_ball_subset_contains_center(X, dist, E, x, radius)
+1release thm metric_ball_subset_contains_center(X, dist, E, x, radius)
                 x $in E
             case $is_metric_boundary_point(X, dist, E, x):
                 x $in \metric_boundary<X, dist>(E)
@@ -1477,7 +1477,7 @@ thm metric_closed_iff_contains_closure_reverse:
             x $in E
         $is_metric_boundary_point(X, dist, E, x)
         $is_metric_interior_point(X, dist, E, x) or $is_metric_boundary_point(X, dist, E, x)
-        by thm interior_or_boundary_implies_adherent(X, dist, E, x)
+1release thm interior_or_boundary_implies_adherent(X, dist, E, x)
         x $in \metric_closure<X, dist>(E)
     by def:
         ? $is_metric_closed(X, dist, E)
@@ -1545,7 +1545,7 @@ thm metric_open_and_closed_ball_properties:
         by cases:
             ? z $in \metric_closed_ball<X, dist>(center, radius)
             case dist(z, center) > radius:
-                by thm metric_outside_closed_ball_is_exterior(X, dist, center, radius, z)
+1release thm metric_outside_closed_ball_is_exterior(X, dist, center, radius, z)
                 by def:
                     ? $is_metric_boundary_point(X, dist, \metric_closed_ball<X, dist>(center, radius), z)
                 impossible $is_metric_exterior_point(X, dist, \metric_closed_ball<X, dist>(center, radius), z)
@@ -1638,7 +1638,7 @@ thm metric_singleton_is_closed:
                     ? $is_metric_adherent_point(X, dist, {x}, z)
                 impossible intersect(\metric_ball<X, dist>(z, dist(z, x) / 2), {x}) = {}
     \metric_closure<X, dist>({x}) $subset {x}
-    by thm metric_closed_iff_contains_closure_reverse(X, dist, {x})
+1release thm metric_closed_iff_contains_closure_reverse(X, dist, {x})
 
 thm metric_open_iff_complement_closed:
     ? forall X set, dist fn(x, y X) R, E power_set(X):
@@ -1657,7 +1657,7 @@ thm metric_open_iff_complement_closed:
             by contra:
                 ? not z $in E
                 z $in E
-                by thm metric_boundary_of_complement_is_boundary(X, dist, E, z)
+1release thm metric_boundary_of_complement_is_boundary(X, dist, E, z)
                 z $in \metric_boundary<X, dist>(E)
                 z $in intersect(\metric_boundary<X, dist>(E), E)
                 by def:
@@ -1691,7 +1691,7 @@ thm metric_complement_closed_implies_open:
                 $is_metric_boundary_point(X, dist, E, z)
                 set_minus(X, set_minus(X, E)) = E
                 $is_metric_boundary_point(X, dist, set_minus(X, set_minus(X, E)), z)
-                by thm metric_boundary_of_complement_is_boundary(X, dist, set_minus(X, E), z)
+1release thm metric_boundary_of_complement_is_boundary(X, dist, set_minus(X, E), z)
                 z $in \metric_boundary<X, dist>(set_minus(X, E))
                 z $in set_minus(X, E)
                 by contra:
@@ -1737,7 +1737,7 @@ thm metric_interior_is_largest_open_subset:
     # The openness of the interior remains the source-deferred step. For the
     # inclusion, use V = interior(V), then carry its witnessing ball into E.
     trust $is_metric_open(X, dist, \metric_interior<X, dist>(E))
-    by thm metric_open_iff_equals_interior_forward(X, dist, V)
+1release thm metric_open_iff_equals_interior_forward(X, dist, V)
     V = \metric_interior<X, dist>(V)
     claim:
         ? forall A, B, target_set power_set(X):
@@ -1820,7 +1820,7 @@ thm metric_closure_is_smallest_closed_superset:
             by def:
                 ? $is_metric_adherent_point(X, dist, K, z)
         z $in \metric_closure<X, dist>(K)
-        by thm metric_closed_iff_contains_closure_forward(X, dist, K)
+1release thm metric_closed_iff_contains_closure_forward(X, dist, K)
         \metric_closure<X, dist>(K) $subset K
     \metric_closure<X, dist>(E) $subset K
 
@@ -2418,7 +2418,7 @@ thm finite_dimensional_heine_borel_forward:
         =>:
             $is_metric_closed(\finite_real_vector<n>, dist, E)
             $is_metric_bounded(\finite_real_vector<n>, dist, E)
-    by thm compact_metric_subset_is_closed_and_bounded(\finite_real_vector<n>, dist, E)
+1release thm compact_metric_subset_is_closed_and_bounded(\finite_real_vector<n>, dist, E)
 
 thm finite_dimensional_heine_borel_reverse:
     ? forall n N+, dist fn(x, y \finite_real_vector<n>) R, E power_set(\finite_real_vector<n>):
@@ -2497,7 +2497,7 @@ thm compact_subset_of_compact_metric_subset_is_closed:
         $is_metric_compact(X, dist, W)
         =>:
             $is_metric_closed(X, dist, W)
-    by thm compact_metric_subset_is_closed_and_bounded(X, dist, W)
+1release thm compact_metric_subset_is_closed_and_bounded(X, dist, W)
 
 # Theorem 1.5.10(b). A finite union of compact subsets is compact.
 thm finite_union_of_compact_metric_subsets_is_compact:

@@ -1036,14 +1036,14 @@ sketch:
 
         obtain g from $has_inverse(S, T, f)
         $is_inverse(S, T, f, g)
-        by thm inverse_implies_bijective(S, T, f, g)
+1release thm inverse_implies_bijective(S, T, f, g)
 
     claim:
         ? forall S, T set, f fn(x S) T:
             $bijective_fn(S, T, f)
             =>:
                 $has_inverse(S, T, f)
-        by thm bijective_implies_has_inverse(S, T, f)
+1release thm bijective_implies_has_inverse(S, T, f)
 
     forall S, T set, f fn(x S) T:
         =>:
@@ -1193,7 +1193,7 @@ sketch:
             Finv_Z2(F_Z2(t)) = t
         F_Z2(t) = (t[1] + t[2], t[1] + 2 * t[2])
         Finv_Z2(F_Z2(t)) = (2 * F_Z2(t)[1] - F_Z2(t)[2], F_Z2(t)[2] - F_Z2(t)[1])
-        by thm tuple_equal_from_coordinates(t, (t[1], t[2]))
+1release thm tuple_equal_from_coordinates(t, (t[1], t[2]))
         Finv_Z2(F_Z2(t)) = (2 * F_Z2(t)[1] - F_Z2(t)[2], F_Z2(t)[2] - F_Z2(t)[1]) = (2 * (t[1] + t[2]) - (t[1] + 2 * t[2]), (t[1] + 2 * t[2]) - (t[1] + t[2])) = (t[1], t[2]) = t
 
     claim:
@@ -1201,11 +1201,11 @@ sketch:
             F_Z2(Finv_Z2(s)) = s
         Finv_Z2(s) = (2 * s[1] - s[2], s[2] - s[1])
         F_Z2(Finv_Z2(s)) = (Finv_Z2(s)[1] + Finv_Z2(s)[2], Finv_Z2(s)[1] + 2 * Finv_Z2(s)[2])
-        by thm tuple_equal_from_coordinates(s, (s[1], s[2]))
+1release thm tuple_equal_from_coordinates(s, (s[1], s[2]))
         F_Z2(Finv_Z2(s)) = (Finv_Z2(s)[1] + Finv_Z2(s)[2], Finv_Z2(s)[1] + 2 * Finv_Z2(s)[2]) = (2 * s[1] - s[2] + (s[2] - s[1]), 2 * s[1] - s[2] + 2 * (s[2] - s[1])) = (s[1], s[2]) = s
 
     by def $is_inverse(cart(Z, Z), cart(Z, Z), F_Z2, Finv_Z2)
-    by thm inverse_implies_bijective(cart(Z, Z), cart(Z, Z), F_Z2, Finv_Z2)
+1release thm inverse_implies_bijective(cart(Z, Z), cart(Z, Z), F_Z2, Finv_Z2)
 
 # 8.4.3 Example: Same Formula Over `R^2` And `Z^2`
 
@@ -1240,7 +1240,7 @@ sketch:
             Finv_R2(F_R2(t)) = t
         F_R2(t) = (t[1] + t[2], t[1] - t[2])
         Finv_R2(F_R2(t)) = ((F_R2(t)[1] + F_R2(t)[2]) / 2, (F_R2(t)[1] - F_R2(t)[2]) / 2)
-        by thm tuple_equal_from_coordinates(t, (t[1], t[2]))
+1release thm tuple_equal_from_coordinates(t, (t[1], t[2]))
         Finv_R2(F_R2(t)) = ((F_R2(t)[1] + F_R2(t)[2]) / 2, (F_R2(t)[1] - F_R2(t)[2]) / 2) = ((t[1] + t[2] + (t[1] - t[2])) / 2, ((t[1] + t[2]) - (t[1] - t[2])) / 2) = (t[1], t[2]) = t
 
     claim:
@@ -1248,11 +1248,11 @@ sketch:
             F_R2(Finv_R2(s)) = s
         Finv_R2(s) = ((s[1] + s[2]) / 2, (s[1] - s[2]) / 2)
         F_R2(Finv_R2(s)) = (Finv_R2(s)[1] + Finv_R2(s)[2], Finv_R2(s)[1] - Finv_R2(s)[2])
-        by thm tuple_equal_from_coordinates(s, (s[1], s[2]))
+1release thm tuple_equal_from_coordinates(s, (s[1], s[2]))
         F_R2(Finv_R2(s)) = (Finv_R2(s)[1] + Finv_R2(s)[2], Finv_R2(s)[1] - Finv_R2(s)[2]) = ((s[1] + s[2]) / 2 + (s[1] - s[2]) / 2, (s[1] + s[2]) / 2 - (s[1] - s[2]) / 2) = (s[1], s[2]) = s
 
     by def $is_inverse(cart(R, R), cart(R, R), F_R2, Finv_R2)
-    by thm inverse_implies_bijective(cart(R, R), cart(R, R), F_R2, Finv_R2)
+1release thm inverse_implies_bijective(cart(R, R), cart(R, R), F_R2, Finv_R2)
 
 # Over `Z^2`, however, the same formula is not always integer-valued. In fact the
 # map from `Z^2` to `Z^2` is not surjective. The pair `(0, 1)` is not hit. If
@@ -1311,9 +1311,9 @@ sketch:
             u[2] = rho_R3(u)[3] = rho_R3(v)[3] = v[2]
             u[1] + u[2] = rho_R3(u)[1] = rho_R3(v)[1] = v[1] + v[2]
             u[1] = (u[1] + u[2]) - u[2] = (v[1] + v[2]) - v[2] = v[1]
-            by thm tuple_equal_from_coordinates(u, (u[1], u[2]))
+1release thm tuple_equal_from_coordinates(u, (u[1], u[2]))
             (u[1], u[2]) = (v[1], v[2])
-            by thm tuple_equal_from_coordinates(v, (v[1], v[2]))
+1release thm tuple_equal_from_coordinates(v, (v[1], v[2]))
         by def $injective_fn(cart(R, R), cart(R, R, R), rho_R3)
 
 # 8.4.5 Example: Addition From `R^2` To `R`
@@ -1523,7 +1523,7 @@ sketch:
         swap_R2(swap_R2(t)) = (swap_R2(t)[2], swap_R2(t)[1])
         swap_swap_R2(t) = swap_R2(swap_R2(t)) = (swap_R2(t)[2], swap_R2(t)[1]) = (t[1], t[2])
         id_R2(t) = t
-        by thm tuple_equal_from_coordinates(t, (t[1], t[2]))
+1release thm tuple_equal_from_coordinates(t, (t[1], t[2]))
         swap_swap_R2(t) = (t[1], t[2]) = t = id_R2(t)
 
 # 8.4.9 Example: A Bijection From `N^2` To `N`
@@ -1574,7 +1574,7 @@ sketch:
                 (n + 1) % 2 = (n % 2 + 1 % 2) % 2 = 0
                 n * (n + 1) % 2 = (n % 2) * ((n + 1) % 2) % 2 = 1 * 0 % 2 = 0 % 2 = 0
         have quotient Z = quot(n * (n + 1), 2)
-        by thm citation::quot_euclidean(n * (n + 1), 2)
+1release thm citation::quot_euclidean(n * (n + 1), 2)
         n * (n + 1) = 2 * quot(n * (n + 1), 2) + n * (n + 1) % 2
         2 * quot(n * (n + 1), 2) + n * (n + 1) % 2 = 2 * quotient + n * (n + 1) % 2 = 2 * quotient + 0 = 2 * quotient
         n * (n + 1) = 2 * quotient
@@ -1692,8 +1692,8 @@ sketch:
         u[2] = v[2]
         t1[2] = u[2] = v[2] = t2[2]
         t1[1] = (t1[1] + t1[2]) - t1[2] = u[1] - u[2] = v[1] - v[2] = (t2[1] + t2[2]) - t2[2] = t2[1]
-        by thm tuple_equal_from_coordinates(t1, (t1[1], t1[2]))
-        by thm tuple_equal_from_coordinates(t2, (t2[1], t2[2]))
+1release thm tuple_equal_from_coordinates(t1, (t1[1], t1[2]))
+1release thm tuple_equal_from_coordinates(t2, (t2[1], t2[2]))
         t1 = (t1[1], t1[2]) = (t2[1], t2[2]) = t2
 
     claim:
@@ -1782,5 +1782,5 @@ sketch:
 # bodies have been proved. Nested function applications are unfolded one function
 # at a time, with the immediate argument carrier available first. Reconstructing
 # a tuple from all of its coordinates is an object theorem, so the chapter invokes
-# `by thm tuple_equal_from_coordinates(...)` explicitly rather than treating tuple
+# `release thm tuple_equal_from_coordinates(...)` explicitly rather than treating tuple
 # extensionality as an automatic equality rule.

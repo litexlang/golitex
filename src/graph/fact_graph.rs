@@ -37,7 +37,7 @@ struct FactGraphBuilder {
 /// The graph omits `prop`, function, and object-definition nodes. Its edges are
 /// taken from the verifier's actual citation and `forall`-requirement evidence.
 pub fn render_fact_graph_from_stmt_results(
-    target_kind: &str,
+    target_kind: RunTargetKind,
     target_label: &str,
     hide_file_paths: bool,
     runtime: &Runtime,
@@ -90,7 +90,7 @@ pub fn render_fact_graph_from_stmt_results(
 }
 
 pub fn fact_graph_target_error_output(
-    target_kind: &str,
+    target_kind: RunTargetKind,
     target_label: &str,
     hide_file_paths: bool,
     message: String,
@@ -134,11 +134,11 @@ pub fn fact_graph_target_error_output(
 }
 
 fn fact_graph_target_json_value(
-    target_kind: &str,
+    target_kind: RunTargetKind,
     target_label: &str,
     hide_file_paths: bool,
 ) -> JsonValue {
-    let label = if hide_file_paths && target_kind != "code" {
+    let label = if hide_file_paths && target_kind != RunTargetKind::Code {
         "entry".to_string()
     } else {
         target_label.to_string()
@@ -146,7 +146,7 @@ fn fact_graph_target_json_value(
     JsonValue::Object(vec![
         (
             "kind".to_string(),
-            JsonValue::JsonString(target_kind.to_string()),
+            JsonValue::JsonString(target_kind.json_name().to_string()),
         ),
         ("label".to_string(), JsonValue::JsonString(label)),
     ])

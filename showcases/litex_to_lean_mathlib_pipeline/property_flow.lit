@@ -1,0 +1,77 @@
+# Property-centered companion to main.lit.
+#
+# This file makes the mathematical interface lifecycle explicit:
+#   define a relation -> prove a reusable law -> prove an instance -> compose.
+# The relation keeps the root as a supplied witness. An existential wrapper
+# can be added later when ToLean supports local predicate-backed `obtain` in a
+# named theorem.
+
+have fn kth_odd(k Z) Z = 2 * k - 1
+
+thm odd_sum_integer:
+    ? forall n Z:
+        n >= 1
+        =>:
+            sum(1, n, kth_odd) $in Z
+    sum(1, n, kth_odd) $in Z
+
+thm square_integer:
+    ? forall n Z:
+        n^2 $in Z
+    n^2 $in Z
+
+# value is the square represented by the supplied integer root.
+prop is_square_of(value, root Z):
+    value = root^2
+
+# A reusable consumer of the property: every represented square is
+# nonnegative. The property premise exposes value = root^2, so the only new
+# mathematical move needed here is nonnegativity of root^2.
+thm square_of_is_nonnegative:
+    ? forall value, root Z:
+        $is_square_of(value, root)
+        =>:
+            value >= 0
+    root^2 >= 0
+
+thm sum_first_odds:
+    ? forall n Z:
+        n >= 1
+        =>:
+            sum(1, n, kth_odd) = n^2
+    by induc n from 1:
+        ? sum(1, n, kth_odd) = n^2
+
+        ? from n = 1:
+            kth_odd(1) = 2 * 1 - 1 = 1
+            sum(1, 1, kth_odd) = kth_odd(1) = 2 * 1 - 1 = 1 = 1^2
+
+        ? induc:
+            kth_odd(n + 1) = 2 * (n + 1) - 1
+            sum(1, n + 1, kth_odd) = sum(1, n, kth_odd) + kth_odd(n + 1) = n^2 + kth_odd(n + 1) = n^2 + (2 * (n + 1) - 1) = (n + 1)^2
+
+# Construct the property from the already-proved equality. The two lines make
+# theorem reuse and definition folding visible as separate interface steps.
+thm sum_first_odds_is_square_of_n:
+    ? forall n Z:
+        n >= 1
+        =>:
+            $is_square_of(sum(1, n, kth_odd), n)
+    by thm sum_first_odds(n) => sum(1, n, kth_odd) = n^2
+    by def $is_square_of(sum(1, n, kth_odd), n)
+
+# Compose the constructor theorem with the reusable property law. Both calls
+# are retained as reader bridges even though Litex can infer either edge once
+# the other has been selected explicitly.
+thm sum_first_odds_nonnegative:
+    ? forall n Z:
+        n >= 1
+        =>:
+            sum(1, n, kth_odd) >= 0
+    by thm sum_first_odds_is_square_of_n(n) => $is_square_of(sum(1, n, kth_odd), n)
+    by thm square_of_is_nonnegative(sum(1, n, kth_odd), n) => sum(1, n, kth_odd) >= 0
+
+thm sum_first_ten_odds:
+    ? forall:
+        sum(1, 10, kth_odd) = 100
+    sum(1, 10, kth_odd) = 10^2 = 100

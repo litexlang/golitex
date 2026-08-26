@@ -805,6 +805,12 @@ fn cli_dispatch_delegates_execution_and_path_resolution_to_their_owners() {
     assert!(run.contains("runtime.run_code_target("));
     assert!(run.contains("runtime.run_file_target("));
     assert!(run.contains("runtime.run_repository_target("));
+    assert!(run.contains("pub enum RunTargetKind"));
+    assert!(run.contains("pub target_kind: RunTargetKind"));
+    assert!(run.contains("pub target_path: Option<String>"));
+    assert!(!run.contains("pub target_kind: String"));
+    assert!(!run.contains("source_label"));
+    assert!(!run.contains("target_label"));
     assert!(source_execution.contains("pub fn execute_source("));
     assert!(source_execution.contains("self.parse_statement(&mut block)"));
     assert!(!source_execution.contains("pub struct RunRequest"));
@@ -817,9 +823,14 @@ fn cli_dispatch_delegates_execution_and_path_resolution_to_their_owners() {
     assert!(!source_execution.contains("pub fn run_repository_with"));
     assert!(runner_execution.contains("pub fn run_runner(request: RunnerRequest)"));
     assert!(runner_execution.contains("let outcome = run(run_request);"));
+    assert!(!runner_execution.contains("target_kind: &str"));
+    assert!(!runner_execution.contains("target_kind == \"code\""));
+    assert!(runner_execution.contains("\"-runner -e\".to_string()"));
     assert!(!runner_execution.contains("pub fn run_runner_for_"));
     assert!(graph_execution.contains("pub fn run_graph(request: GraphRequest)"));
     assert!(graph_execution.contains("let mut outcome = run(run_request);"));
+    assert!(!graph_execution.contains("target_kind == \"code\""));
+    assert!(graph_execution.contains("format!(\"{} -e\", kind.flag())"));
     assert!(!graph_execution.contains("pub fn run_graph_for_"));
 
     let abbreviated_parser_call = [".parse_", "stmt("].concat();

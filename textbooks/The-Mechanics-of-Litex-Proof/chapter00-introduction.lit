@@ -133,7 +133,7 @@ sketch:
 # where the later goal already makes the intended rule clear.
 
 # Named theorems have a different job. A `thm` gives an important `forall` fact a
-# name, and later code calls it explicitly with `by thm name(args...)`. Use that
+# name, and later code calls it explicitly with `release thm name(args...)`. Use that
 # style when the theorem is long, standard, classic, or needs parameters that do
 # not all appear in the final conclusion. In those cases, remembering the theorem
 # name is useful: the call says exactly which result is being used.
