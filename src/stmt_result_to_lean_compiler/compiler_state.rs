@@ -6,6 +6,7 @@ use super::represent_litex_objects_in_lean::*;
 use crate::prelude::*;
 use crate::verify::local_builtin_catalog::registered_local_builtin_fingerprint_by_id;
 use crate::verify::rule_schema::{canonical_objs_equal, MatchLimits, RuleFingerprint, RuleId};
+use crate::verify::{compare_normalized_number_str_to_zero, NumberCompareResult};
 use std::collections::{HashMap, HashSet};
 use std::mem;
 use std::path::Path;
@@ -167,7 +168,7 @@ enum StructuredIntegerInductionConclusionPosition {
     Step,
 }
 
-/// Target-language construction output for one reviewed native-real function
+/// Target-language construction output for one reviewed native-numeric function
 /// Result. This is not another statement IR: it exists only while the parent
 /// `SuccessHaveFnEqualStmtResult` method wraps its child-scope compilation in
 /// persistent Lean declarations.
@@ -176,7 +177,7 @@ struct CompiledNamedFunctionDefinitionBody {
     source_body: Obj,
     lowered_body: LeanTargetObjectRepresentation,
     value: String,
-    uses_native_real_body: bool,
+    native_body_carrier: NativeFunctionBodyCarrier,
     parameter_premises: Vec<LeanLocalFactPremise>,
     domain_premises: Vec<LeanLocalFactPremise>,
 }
@@ -191,6 +192,7 @@ struct CheckedNamedFunctionReductionArgumentEvidence {
     rendered_source_argument: String,
     membership_proof: String,
     parameter_set: LeanTargetObjectRepresentation,
+    native_integer_argument: Option<String>,
 }
 
 /// Target-language construction output returned from the tuple index scope.
@@ -249,7 +251,12 @@ impl StmtResultToLeanCompiler {
             .ok_or_else(|| "successful fact WD result has no recursive proof".to_string())?;
         collect_well_definedness_to_lean_context_from_fact_result(recursive, &mut context)?;
 
-        let previous = self.environment_stack.well_definedness.replace(context);
+        // Compile the certificate inside a disposable lexical frame. Exact
+        // intrinsic stores owned by this WD tree may be cited by another
+        // sibling object requirement (notably a comparison chain), but must
+        // not escape into the enclosing statement environment.
+        self.environment_stack.push_inherited_environment();
+        self.environment_stack.well_definedness = Some(context);
         let requirement_locations = self
             .environment_stack
             .well_definedness
@@ -278,6 +285,27 @@ impl StmtResultToLeanCompiler {
             .collect::<Vec<_>>();
 
         let compilation_result: Result<(), String> = (|| {
+            // Anonymous-function rendering is needed by aggregate intrinsic
+            // stores, while its own body proof can replay application
+            // requirements under the binder aliases. Compile those closures
+            // first, then expose the exact sibling stores, then freeze the
+            // remaining application requirement proofs.
+            let anonymous_function_occurrences = self
+                .environment_stack
+                .well_definedness
+                .as_ref()
+                .expect("WD compilation context remains active")
+                .anonymous_functions
+                .keys()
+                .copied()
+                .collect::<Vec<_>>();
+            for occurrence_id in anonymous_function_occurrences {
+                self.compile_anonymous_function_well_definedness_context(occurrence_id)?;
+            }
+            install_fact_well_definedness_proof_store_results_in_active_environment(
+                recursive,
+                &mut self.environment_stack,
+            )?;
             for (occurrence_id, layer_index, requirement_index, verification) in
                 requirement_locations
             {
@@ -312,18 +340,6 @@ impl StmtResultToLeanCompiler {
                     .requirements[requirement_index]
                     .proof_expression = proof_expression;
             }
-            let anonymous_function_occurrences = self
-                .environment_stack
-                .well_definedness
-                .as_ref()
-                .expect("WD compilation context remains active")
-                .anonymous_functions
-                .keys()
-                .copied()
-                .collect::<Vec<_>>();
-            for occurrence_id in anonymous_function_occurrences {
-                self.compile_anonymous_function_well_definedness_context(occurrence_id)?;
-            }
             Ok(())
         })();
         let completed = self
@@ -331,7 +347,7 @@ impl StmtResultToLeanCompiler {
             .well_definedness
             .take()
             .expect("WD compilation context remains active");
-        self.environment_stack.well_definedness = previous;
+        self.environment_stack.pop_local_environment();
         compilation_result?;
         Ok(completed)
     }
@@ -437,8 +453,16 @@ impl StmtResultToLeanCompiler {
                         &allowed_sources,
                         CompiledInferenceFactAvailabilityInLeanEnvironment::LocalProofName,
                         "anonymous-function binder inference Result",
+                        None,
                     )?
                 };
+            let mut visited_body_results = HashSet::new();
+            install_object_well_definedness_store_results_for_source(
+                &anonymous_context.body_source_object,
+                anonymous_context.body_well_definedness.as_ref(),
+                &mut self.environment_stack,
+                &mut visited_body_results,
+            )?;
             let closure_proof = match anonymous_context.closure.role {
                 WellDefinednessRequirementRole::AnonymousFunctionBodyMembership => Some(
                     self.construct_lean_proof_from_shared_verify_fact_result(

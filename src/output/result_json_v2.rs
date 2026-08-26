@@ -2896,6 +2896,45 @@ impl StmtResultJsonV2 {
                     ),
                 ),
             ]),
+            BuiltinRuleEvidence::StructuralDefinitionCongruence(result) => object(vec![
+                string_field("kind", "StructuralDefinitionCongruence"),
+                string_field("expected_target", result.expected_target.to_string()),
+                (
+                    "reductions".to_string(),
+                    array(
+                        result
+                            .reductions
+                            .iter()
+                            .map(|reduction| {
+                                object(vec![
+                                    string_field(
+                                        "definition_object",
+                                        reduction.definition_object.to_string(),
+                                    ),
+                                    string_field(
+                                        "defining_equality",
+                                        reduction.defining_equality.to_string(),
+                                    ),
+                                    string_field(
+                                        "defining_equality_fact_id",
+                                        fact_id(reduction.defining_equality_fact_id),
+                                    ),
+                                    string_field("application", reduction.application.to_string()),
+                                    string_field("reduced", reduction.reduced.to_string()),
+                                ])
+                            })
+                            .collect(),
+                    ),
+                ),
+            ]),
+            BuiltinRuleEvidence::StructuralKnownEqualityCongruence(result) => object(vec![
+                string_field("kind", "StructuralKnownEqualityCongruence"),
+                string_field("expected_target", result.expected_target.to_string()),
+            ]),
+            BuiltinRuleEvidence::IntegralPolynomialNormalization(result) => object(vec![
+                string_field("kind", "IntegralPolynomialNormalization"),
+                string_field("expected_target", result.expected_target.to_string()),
+            ]),
             BuiltinRuleEvidence::StandardSetNonempty(result) => object(vec![
                 string_field("kind", "StandardSetNonempty"),
                 string_field("expected_target", result.expected_target.to_string()),
@@ -2964,6 +3003,9 @@ impl StmtResultJsonV2 {
                 "IntegerMembershipClosure",
                 integer_membership_closure_rule_name(*rule),
             ),
+            BuiltinRuleEvidence::IntegerRangeSumMembership => {
+                object(vec![string_field("kind", "IntegerRangeSumMembership")])
+            }
             BuiltinRuleEvidence::NaturalMembershipClosure(rule) => rule_evidence_value(
                 "NaturalMembershipClosure",
                 natural_membership_closure_rule_name(*rule),

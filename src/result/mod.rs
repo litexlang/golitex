@@ -69,9 +69,10 @@ pub use verification::builtin_evidence::{
     DisjunctionIntroductionBuiltinRuleEvidence, DivNotEqualZeroBuiltinRuleEvidence,
     FiniteSetBuiltinRule, FunctionApplicationReturnMembershipBuiltinRuleEvidence,
     FunctionSetMembershipBuiltinRuleEvidence, IntegerMembershipClosureBuiltinRule,
-    KnownEqualityBuiltinRuleEvidence, KnownEqualityBuiltinRuleStep,
-    ListSetMembershipBuiltinRuleEvidence, MatrixExpressionMembershipBuiltinRuleEvidence,
-    NativeConstantMembershipBuiltinRule, NaturalMembershipClosureBuiltinRule,
+    IntegralPolynomialNormalizationBuiltinRuleEvidence, KnownEqualityBuiltinRuleEvidence,
+    KnownEqualityBuiltinRuleStep, ListSetMembershipBuiltinRuleEvidence,
+    MatrixExpressionMembershipBuiltinRuleEvidence, NativeConstantMembershipBuiltinRule,
+    NaturalMembershipClosureBuiltinRule, NestedCheckedFunctionDefinitionReductionEvidence,
     NonzeroExpressionOrientation, ObjectReflexivityBuiltinRuleEvidence,
     OrderReflexivityBuiltinRuleEvidence, RationalMembershipClosureBuiltinRule,
     RationalNormalizationBuiltinRuleEvidence, RealArithmeticMembershipClosureBuiltinRule,
@@ -81,6 +82,8 @@ pub use verification::builtin_evidence::{
     RegisteredSymmetricPredicateBuiltinRuleEvidence,
     RuntimeResolvedNumericComparisonBuiltinRuleEvidence, SetBuilderMembershipBuiltinRuleEvidence,
     SetBuiltinRule, SetRelationDualityBuiltinRule, StandardSetNonemptyBuiltinRuleEvidence,
+    StructuralDefinitionCongruenceBuiltinRuleEvidence,
+    StructuralKnownEqualityCongruenceBuiltinRuleEvidence,
 };
 pub use verification::success::{
     CheckedFunctionDefinitionReductionEvidence, DefinitionReductionVerificationEvidence,

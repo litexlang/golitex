@@ -147,6 +147,48 @@ private inductive RealComplexDerived : ℝ → ℂ → Prop where
 private instance : DerivedRule ℝ ℂ where
   relation := RealComplexDerived
 
+/-- The reviewed native integer/complex operations used when a checked
+integer-valued Litex function is represented directly in Lean. -/
+private inductive IntComplexDerived : ℤ → ℂ → Prop where
+  | add
+      {a b : ℤ}
+      {z w : ℂ} :
+      Same a z → Same b w → IntComplexDerived (a + b) (z + w)
+  | sub
+      {a b : ℤ}
+      {z w : ℂ} :
+      Same a z → Same b w → IntComplexDerived (a - b) (z - w)
+  | mul
+      {a b : ℤ}
+      {z w : ℂ} :
+      Same a z → Same b w → IntComplexDerived (a * b) (z * w)
+
+private instance : DerivedRule ℤ ℂ where
+  relation := IntComplexDerived
+
+private inductive IntIntAddDerived : ℤ → ℤ → Prop where
+  | add
+      {a b c d : ℤ} :
+      Same a b → Same c d → IntIntAddDerived (a + c) (b + d)
+
+private instance : DerivedRule ℤ ℤ where
+  relation := IntIntAddDerived
+
+/-- Reviewed complex-target addition congruence, including the exact mixed
+complex/integer source shape emitted by numeric Litex expressions. -/
+private inductive ComplexComplexAddDerived : ℂ → ℂ → Prop where
+  | add
+      {a b c d : ℂ} :
+      Same a b → Same c d → ComplexComplexAddDerived (a + c) (b + d)
+  | addRightInt
+      {a b c : ℂ}
+      {z : ℤ} :
+      Same a b → Same z c →
+        ComplexComplexAddDerived (a + (z : ℂ)) (b + c)
+
+private instance : DerivedRule ℂ ℂ where
+  relation := ComplexComplexAddDerived
+
 namespace Same
 
 /-- Native Lean equality is always a valid proof of Litex semantic equality. -/
@@ -154,11 +196,48 @@ theorem ofEq {α : Litex.u.{u}} {x y : α} (h : x = y) : Same x y := by
   subst y
   exact .refl x
 
+/-- Complex addition respects retained complex-carrier semantic equality. -/
+theorem addCongr
+    {a b c d : ℂ}
+    (left : Same a b)
+    (right : Same c d) :
+    Same (a + c) (b + d) :=
+  .derived (ComplexComplexAddDerived.add left right)
+
+/-- A complex expression plus an integer expression may be transported to
+two complex expressions using the exact integer-to-complex child proof. -/
+theorem addCongrRightInt
+    {a b c : ℂ}
+    {z : ℤ}
+    (left : Same a b)
+    (right : Same z c) :
+    Same (a + (z : ℂ)) (b + c) :=
+  .derived (ComplexComplexAddDerived.addRightInt left right)
+
+/-- Addition on the exact integer carrier respects retained semantic
+equality on both integer operands. -/
+theorem intAddCongr
+    {a b c d : ℤ}
+    (left : Same a b)
+    (right : Same c d) :
+    Same (a + c) (b + d) :=
+  .derived (IntIntAddDerived.add left right)
+
 theorem natComplex (n : ℕ) : Same n (n : ℂ) :=
   .base (Primitive.natComplex n)
 
 theorem intComplex (z : ℤ) : Same z (z : ℂ) :=
   .base (Primitive.intComplex z)
+
+/-- Transport an exact integer value to the particular complex expression
+chosen by the checked source reduction.  The equality premise is discharged
+by Lean; this theorem adds no new semantic rule beyond `intComplex`. -/
+theorem intComplexOfEq
+    {z : ℤ}
+    {w : ℂ}
+    (h : (z : ℂ) = w) :
+    Same z w :=
+  .trans (intComplex z) (ofEq h)
 
 theorem ratComplex (q : ℚ) : Same q (q : ℂ) :=
   .base (Primitive.ratComplex q)
@@ -222,6 +301,30 @@ theorem realDivComplex
     (hs : Same s w) :
     Same (r / s) (z / w) :=
   .derived (RealComplexDerived.div hr hs)
+
+theorem intAddComplex
+    {a b : ℤ}
+    {z w : ℂ}
+    (ha : Same a z)
+    (hb : Same b w) :
+    Same (a + b) (z + w) :=
+  .derived (IntComplexDerived.add ha hb)
+
+theorem intSubComplex
+    {a b : ℤ}
+    {z w : ℂ}
+    (ha : Same a z)
+    (hb : Same b w) :
+    Same (a - b) (z - w) :=
+  .derived (IntComplexDerived.sub ha hb)
+
+theorem intMulComplex
+    {a b : ℤ}
+    {z w : ℂ}
+    (ha : Same a z)
+    (hb : Same b w) :
+    Same (a * b) (z * w) :=
+  .derived (IntComplexDerived.mul ha hb)
 
 end Same
 
@@ -986,6 +1089,10 @@ structure Fn
     (domain : Litex.Set.{u})
     (codomain : Litex.Set.{v}) where
   call : {α : Litex.u.{u}} → (x : α) → In x domain → codomain.Carrier
+  /-- Exact-carrier application avoids `In.rep` when the caller already owns
+  a value of the declared domain carrier. -/
+  callOwn : domain.Carrier → codomain.Carrier :=
+    fun x => call x (In.own domain x)
 
 /-- A unary Litex function with source-domain clauses. Applicability remains
 propositional: a call needs both membership in `domain` and the exact
@@ -1049,6 +1156,30 @@ def fnApplyOwn
     (hx : In x domain) :
     codomain.Carrier :=
   f.call x hx
+
+/-- Apply an exact-carrier function to an exact domain-carrier value. The
+function membership remains as verifier-owned evidence, while no classical
+representative selection occurs for the argument. -/
+def fnApplyCarrier
+    {domain : Litex.Set.{u}}
+    {codomain : Litex.Set.{v}}
+    (f : Fn domain codomain)
+    (_hf : In f (fnSet domain codomain))
+    (x : domain.Carrier) :
+    codomain.Carrier :=
+  f.callOwn x
+
+/-- Exact argument application when the function itself is selected from a
+heterogeneous function-set membership certificate. -/
+noncomputable def fnApplySelectedCarrier
+    {domain : Litex.Set.{u}}
+    {codomain : Litex.Set.{v}}
+    {β : Litex.u.{max (u + 1) v}}
+    (f : β)
+    (hf : In f (fnSet domain codomain))
+    (x : domain.Carrier) :
+    codomain.Carrier :=
+  (In.rep f hf).callOwn x
 
 /-- Apply a heterogeneous value known to belong to a domain-constrained
 function set. -/
@@ -1267,14 +1398,25 @@ def generalCart (index : alpha) (family : beta) (selector : gamma) :
     GeneralCartExpr alpha beta gamma :=
   ⟨index, family, selector⟩
 
-structure SumExpr (start : Type u) (finish : Type v) (function : Type w) where
-  lower : start
-  upper : finish
-  body : function
+/-- The mathematical value of a Litex sum over the inclusive integer interval.
+The summand consumes its exact `Z` membership proof and returns the exact
+codomain carrier. -/
+noncomputable def integerRangeSum
+    {codomain : Litex.Set}
+    [AddCommMonoid codomain.Carrier]
+    (start finish : ℤ)
+    (function : Litex.Fn Litex.Z codomain) :
+    codomain.Carrier :=
+  ∑ k ∈ Finset.Icc start finish, function.callOwn k
 
-def sum (start : alpha) (finish : beta) (function : gamma) :
-    SumExpr alpha beta gamma :=
-  ⟨start, finish, function⟩
+/-- Source `sum` has one semantic meaning: inclusive integer-range summation. -/
+noncomputable def sum
+    {codomain : Litex.Set}
+    [AddCommMonoid codomain.Carrier]
+    (start finish : ℤ)
+    (function : Litex.Fn Litex.Z codomain) :
+    codomain.Carrier :=
+  integerRangeSum start finish function
 
 structure ProductExpr (start : Type u) (finish : Type v) (function : Type w) where
   lower : start

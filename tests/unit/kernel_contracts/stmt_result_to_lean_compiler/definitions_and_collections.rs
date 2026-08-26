@@ -121,7 +121,7 @@ fn named_real_function_compiles_return_check_in_child_environment() {
         .named_function_definitions
         .get(&defining_equality_fact_id)
         .expect("direct function publishes its reduction binding");
-    assert!(binding.uses_native_real_body);
+    assert_eq!(binding.native_body_carrier, NativeFunctionBodyCarrier::Real);
 }
 
 #[test]

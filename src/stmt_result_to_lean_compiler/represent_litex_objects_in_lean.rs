@@ -53,6 +53,9 @@ pub enum LeanTargetObjectRepresentation {
         column_count: Box<LeanTargetObjectRepresentation>,
     },
     Aggregate {
+        /// Parser-owned identity used to select the exact aggregate WD use.
+        source_occurrence_id: Option<SourceObjectOccurrenceId>,
+        /// Structural identity used only after occurrence selection.
         semantic_key: String,
         kind: LeanTargetAggregateObjectConstructor,
         arguments: Vec<LeanTargetObjectRepresentation>,
@@ -657,6 +660,7 @@ fn aggregate<'a, const N: usize>(
     arguments: [&'a Obj; N],
 ) -> Result<LeanTargetObjectRepresentation, String> {
     Ok(LeanTargetObjectRepresentation::Aggregate {
+        source_occurrence_id: source.source_occurrence_id(),
         semantic_key: obj_equality_key(source),
         kind,
         arguments: arguments

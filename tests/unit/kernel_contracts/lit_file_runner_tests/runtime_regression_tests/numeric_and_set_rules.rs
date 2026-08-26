@@ -231,12 +231,20 @@ forall x, y R+:
                 run_succeeded,
                 "algebra and sqrt congruence should remain checkable:\n{run_output}"
             );
+            let generic_structural = run_output
+                .matches("structural equality with terminating reductions")
+                .count();
+            let result_owned_addition = run_output
+                .matches("known equalities under reviewed addition congruence")
+                .count();
             assert_eq!(
-                run_output
-                    .matches("structural equality with terminating reductions")
-                    .count(),
+                generic_structural + result_owned_addition,
                 3,
                 "all pure congruence conclusions should use structural provenance:\n{run_output}"
+            );
+            assert_eq!(
+                result_owned_addition, 1,
+                "addition congruence should retain its exact child equality Result:\n{run_output}"
             );
 
             let mut negative_runtime = Runtime::new();

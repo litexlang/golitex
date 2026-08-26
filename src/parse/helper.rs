@@ -194,6 +194,21 @@ impl Runtime {
             Some(self.allocate_source_object_occurrence_id()?),
         ))
     }
+
+    pub(super) fn new_parsed_sum(
+        &self,
+        start: Obj,
+        end: Obj,
+        function: Obj,
+    ) -> Result<Obj, RuntimeError> {
+        Ok(Sum::new_with_source_occurrence_id(
+            start,
+            end,
+            function,
+            Some(self.allocate_source_object_occurrence_id()?),
+        )
+        .into())
+    }
 }
 
 pub fn collect_forall_param_bindings_from_facts(facts: &[Fact]) -> Vec<SymbolBinding> {

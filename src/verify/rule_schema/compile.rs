@@ -1,6 +1,6 @@
 use super::{
-    atomic_fact_head, canonical_obj_view, CompiledRuleSchema, RuleFingerprint, RuleId,
-    RuleSourceRef, RuleVariable,
+    atomic_fact_head, canonical_obj_view, CanonicalScalar, CompiledRuleSchema, RuleFingerprint,
+    RuleId, RuleSourceRef, RuleVariable,
 };
 use crate::prelude::*;
 use std::collections::HashSet;
@@ -49,6 +49,13 @@ fn validate_pattern_and_collect_variables(
             }
         }
         let view = canonical_obj_view(obj).map_err(|error| schema_error(error.message))?;
+        for scalar in &view.scalars {
+            if let CanonicalScalar::Symbol(symbol_id) = scalar {
+                if variable_ids.contains(symbol_id) {
+                    used.insert(*symbol_id);
+                }
+            }
+        }
         work.extend(view.children);
     }
     Ok(())

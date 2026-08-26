@@ -743,11 +743,29 @@ impl StmtResultToLeanCompiler {
                 None
             };
 
+        let proof_scope_has_defined_predicate_inference = verification
+            .proof_scope_assumption_infers
+            .rule_applications
+            .iter()
+            .any(|application| defined_predicate_infer_rule(&application.rule));
+        let proof_scope_has_direct_inference = verification
+            .proof_scope_assumption_infers
+            .rule_applications
+            .iter()
+            .any(|application| {
+                infer_rule_has_direct_compiler_environment_consumer(&application.rule)
+            });
+        if proof_scope_has_defined_predicate_inference && proof_scope_has_direct_inference {
+            return Ok(false);
+        }
         if verification
             .proof_scope_assumption_infers
             .rule_applications
             .iter()
-            .any(|application| !defined_predicate_infer_rule(&application.rule))
+            .any(|application| {
+                !defined_predicate_infer_rule(&application.rule)
+                    && !infer_rule_has_direct_compiler_environment_consumer(&application.rule)
+            })
         {
             return Ok(false);
         }
@@ -774,7 +792,12 @@ impl StmtResultToLeanCompiler {
             return Ok(false);
         }
 
+        let theorem_well_definedness = self
+            .construct_well_definedness_to_lean_compilation_context(
+                verification.well_definedness,
+            )?;
         self.environment_stack.push_inherited_environment();
+        self.environment_stack.well_definedness = Some(theorem_well_definedness.clone());
         let compilation: Result<Option<CompiledNamedForallStatementProofBody>, String> = (|| {
             let mut binder_declarations = Vec::new();
             let mut binder_intro_names = Vec::new();
@@ -811,6 +834,31 @@ impl StmtResultToLeanCompiler {
 
                 let parameter_set = parameter_set(parameter_type)
                     .map_err(|error| format!("named forall binder {parameter_index}: {error}"))?;
+                if matches!(parameter_set, Obj::StandardSet(StandardSet::Z)) {
+                    validate_object_parameter_premise(binding.id(), parameter_set, parameter)?;
+                    binder_declarations.push(format!("({parameter_name} : ℤ)"));
+                    binder_intro_names.push(parameter_name.clone());
+                    let parameter_proof = format!("(Litex.In.own Litex.Z {parameter_name})");
+                    self.environment_stack
+                        .fact_names
+                        .insert(*fact_id, parameter_proof.clone());
+                    self.environment_stack
+                        .fact_propositions
+                        .insert(*fact_id, parameter.clone());
+                    install_parameter_fact_aliases(
+                        binding.id(),
+                        parameter,
+                        &parameter_proof,
+                        parameter_set,
+                        &mut self.environment_stack,
+                    )?;
+                    install_structured_induction_native_integer_symbol(
+                        binding.id(),
+                        &parameter_name,
+                        &mut self.environment_stack,
+                    );
+                    continue;
+                }
                 let rendered_parameter_set = render_obj(parameter_set, &self.environment_stack)?;
                 let carrier_name = format!(
                     "__carrier{}_{}",
@@ -904,15 +952,46 @@ impl StmtResultToLeanCompiler {
                 }
             }
 
-            self.compile_defined_predicate_inference_results_in_current_environment(
-                verification.proof_scope_assumption_infers,
-                DefinedPredicateInferenceConclusionPublication::LocalProofExpression,
-            )?;
+            if proof_scope_has_defined_predicate_inference {
+                self.compile_defined_predicate_inference_results_in_current_environment(
+                    verification.proof_scope_assumption_infers,
+                    DefinedPredicateInferenceConclusionPublication::LocalProofExpression,
+                )?;
+            } else if proof_scope_has_direct_inference {
+                let allowed_sources = assumption_fact_ids
+                    .iter()
+                    .copied()
+                    .zip(assumption_facts.iter().cloned())
+                    .collect::<Vec<_>>();
+                self.compile_typed_inference_results_in_current_compiler_environment(
+                    verification.proof_scope_assumption_infers,
+                    &allowed_sources,
+                    CompiledInferenceFactAvailabilityInLeanEnvironment::InlineProofExpression,
+                    "named forall proof-scope assumptions",
+                    None,
+                )?;
+            }
             validate_flattened_inferred_fact_ids_are_visible(
                 verification.proof_scope_assumption_infers,
                 &self.environment_stack,
                 "named forall proof-scope assumptions",
             )?;
+
+            // Runtime completes theorem well-definedness before executing any
+            // proof step, so every intrinsic store produced by the named
+            // premise/conclusion WD children is already visible here.
+            for premise in &well_definedness.premises {
+                install_fact_well_definedness_proof_store_results_in_active_environment(
+                    premise.well_definedness.as_ref(),
+                    &mut self.environment_stack,
+                )?;
+            }
+            for conclusion in &well_definedness.conclusions {
+                install_fact_well_definedness_proof_store_results_in_active_environment(
+                    conclusion.well_definedness.as_ref(),
+                    &mut self.environment_stack,
+                )?;
+            }
 
             let mut proof_lines = Vec::with_capacity(
                 verification.proof_steps.len() + verification.conclusion_checks.len() + 1,
@@ -921,7 +1000,10 @@ impl StmtResultToLeanCompiler {
                 let Some(lines) = self
                     .compile_stmt_result_as_local_proof_steps(proof_step, proof_step_index + 1)?
                 else {
-                    return Ok(None);
+                    return Err(format!(
+                        "named forall proof step {} has no local compiler consumer",
+                        proof_step_index + 1
+                    ));
                 };
                 proof_lines.extend(lines);
             }
@@ -948,7 +1030,10 @@ impl StmtResultToLeanCompiler {
                 let Some(conclusion_proof) =
                     self.construct_lean_proof_from_direct_fact_result(conclusion)?
                 else {
-                    return Ok(None);
+                    return Err(format!(
+                        "named forall conclusion {} has no direct proof consumer",
+                        conclusion_index + 1
+                    ));
                 };
                 let proposition = render_fact(&expected_conclusion, &self.environment_stack)?;
                 let conclusion_name =
@@ -1013,6 +1098,16 @@ impl StmtResultToLeanCompiler {
         ) {
             self.declarations.push(corollary);
         }
+        if let Some(corollary) = native_integer_odd_sum_to_square_corollary(
+            &theorem_name,
+            &parameters,
+            verification.forall_fact,
+            verification.proof_steps,
+            &verification.conclusion_checks,
+            &self.environment_stack,
+        ) {
+            self.declarations.push(corollary);
+        }
         if let Some(theorem_fact_id) = theorem_fact_id {
             self.environment_stack
                 .fact_names
@@ -1020,6 +1115,9 @@ impl StmtResultToLeanCompiler {
             self.environment_stack
                 .fact_propositions
                 .insert(theorem_fact_id, theorem_fact);
+            self.environment_stack
+                .fact_well_definedness
+                .insert(theorem_fact_id, theorem_well_definedness);
         }
         self.next_fact_name_index += 1;
         Ok(true)
@@ -1079,8 +1177,6 @@ impl StmtResultToLeanCompiler {
             || !verification.temporary_then_facts.is_empty()
             || !verification.requirement_roles.is_empty()
             || !verification.requirement_checks.is_empty()
-            || !verification.domain_facts.is_empty()
-            || !verification.domain_checks.is_empty()
         {
             return Ok(None);
         }
@@ -1110,19 +1206,24 @@ impl StmtResultToLeanCompiler {
         let source_parameters = source_forall
             .typed_parameters
             .collect_param_bindings_with_types();
-        if !source_forall.dom_facts.is_empty()
-            || source_parameters.iter().any(|(_, parameter_type)| {
-                !matches!(parameter_type, ParamType::Obj(Obj::StandardSet(_)))
-            })
-        {
+        if source_parameters.iter().any(|(_, parameter_type)| {
+            !matches!(parameter_type, ParamType::Obj(Obj::StandardSet(_)))
+        }) {
             return Ok(None);
         }
         if source_parameters.len() != result.statement.args.len()
+            || source_forall.dom_facts.len() != verification.domain_facts.len()
+            || verification.domain_facts.len() != verification.domain_checks.len()
             || source_forall.then_facts.len() != verification.direct_conclusions.len()
             || verification.direct_conclusions.is_empty()
         {
             return Err("by-thm Result changed its source theorem arity".into());
         }
+        let source_substitutions = source_parameters
+            .iter()
+            .zip(result.statement.args.iter())
+            .map(|((binding, _), argument)| (binding.id().substitution_key(), argument.clone()))
+            .collect::<HashMap<_, _>>();
         let Some(argument_verification) = &verification.argument_verification else {
             return Err("by-thm Result has no argument verification children".into());
         };
@@ -1178,6 +1279,7 @@ impl StmtResultToLeanCompiler {
             .cloned()
             .ok_or_else(|| format!("by-thm source FactId `{source_fact_id}` has no Lean name"))?;
         let mut application_parts = vec![theorem_name];
+        let mut source_parameter_rendering_aliases = Vec::with_capacity(source_parameters.len());
         for (parameter_index, (((_, parameter_type), argument), check)) in source_parameters
             .iter()
             .zip(result.statement.args.iter())
@@ -1186,6 +1288,8 @@ impl StmtResultToLeanCompiler {
         {
             let parameter_set = parameter_set(parameter_type)
                 .map_err(|error| format!("by-thm parameter {parameter_index}: {error}"))?;
+            let native_integer_parameter =
+                matches!(parameter_set, Obj::StandardSet(StandardSet::Z));
             let rendered_argument = render_obj(argument, &self.environment_stack)?;
             let expected_parameter_fact = format!(
                 "Litex.In {rendered_argument} {}",
@@ -1207,10 +1311,235 @@ impl StmtResultToLeanCompiler {
             else {
                 return Ok(None);
             };
-            application_parts.push(rendered_argument);
-            application_parts.push(format!("({parameter_proof})"));
+            let native_integer_argument = if native_integer_parameter {
+                Some(render_integer_obj(argument, &self.environment_stack)?)
+            } else {
+                None
+            };
+            application_parts.push(
+                native_integer_argument
+                    .clone()
+                    .unwrap_or_else(|| rendered_argument.clone()),
+            );
+            if !native_integer_parameter {
+                application_parts.push(format!("({parameter_proof})"));
+            }
+            source_parameter_rendering_aliases.push((
+                source_parameters[parameter_index].0.id(),
+                parameter_set.clone(),
+                render_obj(argument, &self.environment_stack)?,
+                parameter_proof,
+                native_integer_argument,
+            ));
+        }
+        let mut instantiator = Runtime::new();
+        // Capture-avoiding substitution for existential conclusions consults
+        // the Runtime's visible-definition frame even though compilation does
+        // not execute or search for any proof. Give this isolated structural
+        // instantiator the same mandatory empty frame as an ordinary source.
+        instantiator.start_isolated_source("stmt-result-to-lean by-thm projection");
+        for (domain_index, ((source_domain, retained_domain), check)) in source_forall
+            .dom_facts
+            .iter()
+            .zip(verification.domain_facts.iter())
+            .zip(verification.domain_checks.iter())
+            .enumerate()
+        {
+            let expected_domain = instantiator
+                .inst_fact(
+                    source_domain,
+                    &source_substitutions,
+                    SubstitutionMode::Named,
+                    None,
+                )
+                .map_err(|error| {
+                    format!(
+                        "by-thm could not instantiate domain {domain_index}: {}",
+                        error.trace_message()
+                    )
+                })?;
+            if expected_domain.to_string() != retained_domain.to_string() {
+                return Err(format!(
+                    "by-thm domain {domain_index} changed under exact parameter substitution"
+                ));
+            }
+            let factual_check = check
+                .factual_success()
+                .ok_or_else(|| format!("by-thm domain check {domain_index} is not factual"))?;
+            if factual_check.fact().to_string() != retained_domain.to_string()
+                || !factual_check.store.infers.is_empty()
+            {
+                return Err(format!(
+                    "by-thm domain check {domain_index} changed its retained obligation"
+                ));
+            }
+            let Some(domain_proof) =
+                self.construct_lean_proof_from_direct_fact_result(factual_check)?
+            else {
+                return Ok(None);
+            };
+            application_parts.push(format!("({domain_proof})"));
         }
         let theorem_application = format!("({})", application_parts.join(" "));
+
+        let mut conclusion_rendering_context = self.environment_stack.clone();
+        for (
+            source_symbol_id,
+            parameter_set,
+            rendered_argument,
+            parameter_proof,
+            native_integer_argument,
+        ) in &source_parameter_rendering_aliases
+        {
+            conclusion_rendering_context
+                .symbol_names
+                .insert(*source_symbol_id, rendered_argument.clone());
+            let lowered_set = LeanTargetObjectRepresentation::lower(parameter_set)?;
+            install_numeric_representations_from_membership(
+                *source_symbol_id,
+                &lowered_set,
+                rendered_argument,
+                parameter_proof,
+                &mut conclusion_rendering_context,
+            );
+            if let Some(native_integer_argument) = native_integer_argument {
+                install_structured_induction_native_integer_symbol(
+                    *source_symbol_id,
+                    native_integer_argument,
+                    &mut conclusion_rendering_context,
+                );
+            }
+        }
+        if let Some(mut theorem_well_definedness) = self
+            .environment_stack
+            .fact_well_definedness
+            .get(&source_fact_id)
+            .cloned()
+        {
+            for alias in &theorem_well_definedness.parameter_fact_aliases {
+                let Some((_, _, _, parameter_proof, _)) = source_parameter_rendering_aliases
+                    .iter()
+                    .find(|(source_symbol_id, _, _, _, _)| *source_symbol_id == alias.symbol_id)
+                else {
+                    // The theorem WD tree also owns aliases for binders local
+                    // to a projected conclusion (for example an existential
+                    // witness). They are not theorem arguments and must stay
+                    // under that conclusion's binder rather than being
+                    // rebound to an application argument here.
+                    continue;
+                };
+                conclusion_rendering_context
+                    .fact_names
+                    .insert(alias.fact_id, parameter_proof.clone());
+                conclusion_rendering_context
+                    .fact_propositions
+                    .insert(alias.fact_id, alias.proposition.clone());
+            }
+            for application in theorem_well_definedness.function_applications.values_mut() {
+                application.source_application = instantiator
+                    .inst_obj(
+                        &application.source_application,
+                        &source_substitutions,
+                        SubstitutionMode::ResultProjection,
+                    )
+                    .map_err(|error| {
+                        format!(
+                            "by-thm could not specialize a WD application: {}",
+                            error.trace_message()
+                        )
+                    })?;
+                if let Some(head) = &application.anonymous_function_head {
+                    application.anonymous_function_head = Some(
+                        instantiator
+                            .inst_obj(
+                                head,
+                                &source_substitutions,
+                                SubstitutionMode::ResultProjection,
+                            )
+                            .map_err(|error| {
+                                format!(
+                                    "by-thm could not specialize an anonymous application head: {}",
+                                    error.trace_message()
+                                )
+                            })?,
+                    );
+                }
+                for layer in &mut application.layers {
+                    layer.source_prefix = instantiator
+                        .inst_obj(
+                            &layer.source_prefix,
+                            &source_substitutions,
+                            SubstitutionMode::ResultProjection,
+                        )
+                        .map_err(|error| {
+                            format!(
+                                "by-thm could not specialize an application prefix: {}",
+                                error.trace_message()
+                            )
+                        })?;
+                    if let Some(result_set) = &layer.intrinsic_result_set {
+                        layer.intrinsic_result_set = Some(
+                            instantiator
+                                .inst_obj(
+                                    result_set,
+                                    &source_substitutions,
+                                    SubstitutionMode::ResultProjection,
+                                )
+                                .map_err(|error| {
+                                    format!(
+                                        "by-thm could not specialize an application return set: {}",
+                                        error.trace_message()
+                                    )
+                                })?,
+                        );
+                    }
+                    for requirement in &mut layer.requirements {
+                        requirement.expected_proposition = instantiator
+                            .inst_fact(
+                                &requirement.expected_proposition,
+                                &source_substitutions,
+                                SubstitutionMode::ResultProjection,
+                                None,
+                            )
+                            .map_err(|error| {
+                                format!(
+                                    "by-thm could not specialize an application WD requirement: {}",
+                                    error.trace_message()
+                                )
+                            })?;
+                    }
+                }
+            }
+            for iteration in theorem_well_definedness.iterations.values_mut() {
+                iteration.source_aggregate = instantiator
+                    .inst_obj(
+                        &iteration.source_aggregate,
+                        &source_substitutions,
+                        SubstitutionMode::ResultProjection,
+                    )
+                    .map_err(|error| {
+                        format!(
+                            "by-thm could not specialize an Iteration WD owner: {}",
+                            error.trace_message()
+                        )
+                    })?;
+                iteration.parameter_set = instantiator
+                    .inst_obj(
+                        &iteration.parameter_set,
+                        &source_substitutions,
+                        SubstitutionMode::ResultProjection,
+                    )
+                    .map_err(|error| error.trace_message())?;
+                iteration.return_carrier = instantiator
+                    .inst_obj(
+                        &iteration.return_carrier,
+                        &source_substitutions,
+                        SubstitutionMode::ResultProjection,
+                    )
+                    .map_err(|error| error.trace_message())?;
+            }
+            conclusion_rendering_context.well_definedness = Some(theorem_well_definedness);
+        }
 
         let mut conclusions = Vec::with_capacity(verification.direct_conclusions.len());
         for (conclusion_index, (conclusion, fact_id)) in verification
@@ -1224,7 +1553,26 @@ impl StmtResultToLeanCompiler {
                 conclusion_index,
                 verification.direct_conclusions.len(),
             )?;
-            let proposition = render_fact(conclusion, &self.environment_stack)?;
+            let source_conclusion = source_forall.then_facts[conclusion_index].clone().to_fact();
+            let projected_conclusion = instantiator
+                .inst_fact(
+                    &source_conclusion,
+                    &source_substitutions,
+                    SubstitutionMode::ResultProjection,
+                    None,
+                )
+                .map_err(|error| {
+                    format!(
+                        "by-thm could not project conclusion {conclusion_index} WD provenance: {}",
+                        error.trace_message()
+                    )
+                })?;
+            if projected_conclusion.to_string() != conclusion.to_string() {
+                return Err(format!(
+                    "by-thm projected conclusion {conclusion_index} changed its proposition"
+                ));
+            }
+            let proposition = render_fact(&projected_conclusion, &conclusion_rendering_context)?;
             conclusions.push(CompiledLitexTheoremInstantiationConclusionProofBody {
                 retained_fact_id: *fact_id,
                 fact: conclusion.clone(),
@@ -1257,9 +1605,19 @@ impl StmtResultToLeanCompiler {
                 source_fact,
             )?;
         }
+        let goal_well_definedness = self.construct_well_definedness_to_lean_compilation_context(
+            &verification.well_definedness,
+        )?;
 
         self.environment_stack.push_inherited_environment();
+        self.environment_stack.well_definedness = Some(goal_well_definedness);
         let compilation = (|| {
+            if let Some(recursive) = verification.well_definedness.recursive.as_deref() {
+                install_fact_well_definedness_proof_store_results_in_active_environment(
+                    recursive,
+                    &mut self.environment_stack,
+                )?;
+            }
             let mut local_proof_lines = Vec::with_capacity(verification.proof_steps.len());
             for (proof_step_index, proof_step) in verification.proof_steps.iter().enumerate() {
                 let Some(lines) = self
@@ -1320,6 +1678,39 @@ impl StmtResultToLeanCompiler {
                     proof_step_index,
                 );
             }
+            if let SuccessByStmtResult::ByThmStmt(result) = by_result {
+                let Some(conclusions) = self
+                    .construct_lean_proofs_from_litex_theorem_instantiation_stmt_result(result)?
+                else {
+                    return Ok(None);
+                };
+                let multiple_outputs = conclusions.len() > 1;
+                let mut lines = Vec::with_capacity(conclusions.len());
+                for (output_index, conclusion) in conclusions.into_iter().enumerate() {
+                    let fact_id = conclusion.retained_fact_id.ok_or_else(|| {
+                        format!(
+                            "local by-thm conclusion `{}` has no retained FactId",
+                            conclusion.fact
+                        )
+                    })?;
+                    let name = if multiple_outputs {
+                        format!("__step{proof_step_index}_{}", output_index + 1)
+                    } else {
+                        format!("__step{proof_step_index}")
+                    };
+                    self.environment_stack
+                        .fact_names
+                        .insert(fact_id, name.clone());
+                    self.environment_stack
+                        .fact_propositions
+                        .insert(fact_id, conclusion.fact);
+                    lines.push(format!(
+                        "have {name} : {} := by\n  exact {}",
+                        conclusion.proposition, conclusion.proof_expression
+                    ));
+                }
+                return Ok(Some(lines));
+            }
             if let SuccessByStmtResult::ByEnumerateFiniteSetStmt(result) = by_result {
                 let Some(proof) =
                     self.construct_lean_proof_from_by_enumerate_finite_set_stmt_result(result)?
@@ -1351,6 +1742,29 @@ impl StmtResultToLeanCompiler {
                     &result.common.infers,
                     &proof.fact,
                     "local by-for generated forall",
+                )?;
+                let name = format!("__step{proof_step_index}");
+                self.environment_stack
+                    .fact_names
+                    .insert(fact_id, name.clone());
+                self.environment_stack
+                    .fact_propositions
+                    .insert(fact_id, proof.fact);
+                return Ok(Some(vec![format!(
+                    "have {name} : {} := {}",
+                    proof.proposition, proof.proof_expression
+                )]));
+            }
+            if let SuccessByStmtResult::ByInducStmt(result) = by_result {
+                let Some(proof) = self
+                    .construct_lean_proof_from_structured_integer_induction_stmt_result(result)?
+                else {
+                    return Ok(None);
+                };
+                let fact_id = validate_generated_fact_publication_effects(
+                    &result.common.infers,
+                    &proof.fact,
+                    "local structured integer induction generated forall",
                 )?;
                 let name = format!("__step{proof_step_index}");
                 self.environment_stack
@@ -1595,34 +2009,114 @@ impl StmtResultToLeanCompiler {
                 return Err("local proof-step reused a FactId for a different proposition".into());
             }
         } else {
-            if !result.store.infers.rule_applications.is_empty()
-                || result.store.infers.store_fact_outputs.len() != 1
+            if result.store.infers.store_fact_outputs.len() != 1
+                || result
+                    .store
+                    .infers
+                    .rule_applications
+                    .iter()
+                    .any(|application| {
+                        !infer_rule_has_direct_compiler_environment_consumer(&application.rule)
+                    })
             {
                 return Ok(None);
             }
             let stored = &result.store.infers.store_fact_outputs[0];
             if stored.fact_id != Some(fact_id)
                 || stored.itself_and_why_itself_is_stored.0.to_string() != source_fact.to_string()
-                || !stored.inferred_facts.is_empty()
-                || !stored.inferred_fact_ids.is_empty()
+                || stored.inferred_facts.len() != stored.inferred_fact_ids.len()
             {
                 return Err("local proof-step store does not retain its exact FactId".into());
             }
         }
-        let Some(proof) = self.construct_lean_proof_from_direct_fact_result(result)? else {
+        // The local proposition and its proof must be rendered under the same
+        // child-owned WD occurrence map. Restoring the enclosing theorem map
+        // between those two operations can select a semantically identical
+        // application occurrence belonging to a different proof step.
+        let child_certificate = result
+            .well_definedness
+            .recursive
+            .as_ref()
+            .map(|_| {
+                self.construct_well_definedness_to_lean_compilation_context(
+                    &result.well_definedness,
+                )
+            })
+            .transpose()?;
+        let parent_certificate = child_certificate
+            .map(|certificate| self.environment_stack.well_definedness.replace(certificate));
+        let compiled = (|| {
+            if let Some(recursive) = result.well_definedness.recursive.as_deref() {
+                install_fact_well_definedness_proof_store_results_in_active_environment(
+                    recursive,
+                    &mut self.environment_stack,
+                )?;
+            }
+            let proof = self.construct_lean_proof_from_direct_fact_result(result)?;
+            let proposition = render_fact(&source_fact, &self.environment_stack)?;
+            Ok::<_, String>((proof, proposition))
+        })();
+        if let Some(parent_certificate) = parent_certificate {
+            self.environment_stack.well_definedness = parent_certificate;
+        }
+        let (Some(proof), proposition) = compiled? else {
             return Ok(None);
         };
-        let proposition = render_fact(&source_fact, &self.environment_stack)?;
         let name = format!("__step{proof_step_index}");
         self.environment_stack
             .fact_names
             .insert(fact_id, name.clone());
         self.environment_stack
             .fact_propositions
-            .insert(fact_id, source_fact);
-        Ok(Some(format!(
+            .insert(fact_id, source_fact.clone());
+        let mut lines = vec![format!(
             "have {name} : {proposition} := by\n  exact {proof}"
-        )))
+        )];
+        if !result.store.infers.is_empty() {
+            // Inferred conclusions belong to the same source occurrence tree
+            // as the proved chain. Re-enter that exact child-owned WD frame;
+            // rendering them under the enclosing theorem frame could select
+            // no occurrence, or a semantically equal occurrence from another
+            // proof step.
+            let inference_certificate = result
+                .well_definedness
+                .recursive
+                .as_ref()
+                .map(|_| {
+                    self.construct_well_definedness_to_lean_compilation_context(
+                        &result.well_definedness,
+                    )
+                })
+                .transpose()?;
+            let inference_parent_certificate = inference_certificate
+                .map(|certificate| self.environment_stack.well_definedness.replace(certificate));
+            let inference_compilation = (|| {
+                let allowed_sources = self
+                    .install_equality_chain_adjacent_projections_for_typed_inference(
+                        &source_fact,
+                        fact_id,
+                        &name,
+                        &result.store.infers,
+                        "local proof-step Result",
+                    )?;
+                self.compile_typed_inference_results_as_local_have_statements(
+                    &result.store.infers,
+                    &allowed_sources,
+                    &mut lines,
+                    "local proof-step Result",
+                )?;
+                validate_flattened_inferred_fact_ids_are_visible(
+                    &result.store.infers,
+                    &self.environment_stack,
+                    "local proof-step Result",
+                )
+            })();
+            if let Some(parent_certificate) = inference_parent_certificate {
+                self.environment_stack.well_definedness = parent_certificate;
+            }
+            inference_compilation?;
+        }
+        Ok(Some(lines.join("\n")))
     }
 }
 
@@ -1703,6 +2197,173 @@ fn native_real_less_to_less_equal_corollary(
          end Native",
         indent_lines(&proof, 2)
     ))
+}
+
+/// Export the reviewed odd-integer-sum flagship as a genuinely native
+/// Mathlib theorem, then exercise that theorem in a downstream consumer.
+/// Selection is deliberately narrow: the enclosing theorem must have the
+/// exact `n : Z`, `n >= 1`, `sum(1,n,odd) = n^2` shape; `odd` must be the
+/// already compiled exact-carrier `Z -> Z` function `2*k-1`; its sole proof
+/// step must be the structured integer-induction Result; and its conclusion
+/// check must retain the exact advertised equality. Thus the native theorem is
+/// a sibling rendering of the same Result, not a target-side attempt to
+/// rediscover an arbitrary source theorem.
+fn native_integer_odd_sum_to_square_corollary(
+    canonical_theorem_name: &str,
+    parameters: &[(SymbolBinding, ParamType)],
+    forall_fact: &ForallFact,
+    proof_steps: &[StmtResult],
+    conclusion_checks: &[&StmtResult],
+    context: &StmtResultToLeanCompilerEnvironmentStack,
+) -> Option<String> {
+    let [(parameter_binding, parameter_type)] = parameters else {
+        return None;
+    };
+    if !matches!(
+        parameter_type,
+        ParamType::Obj(Obj::StandardSet(StandardSet::Z))
+    ) {
+        return None;
+    }
+    let [premise] = forall_fact.dom_facts.as_slice() else {
+        return None;
+    };
+    let (premise_left, premise_right, premise_strict) = order_relation_parts(premise).ok()?;
+    if premise_strict
+        || !object_is_literal_integer(premise_left, 1)
+        || !object_is_exact_symbol(premise_right, parameter_binding)
+    {
+        return None;
+    }
+    let [conclusion] = forall_fact.then_facts.as_slice() else {
+        return None;
+    };
+    let conclusion = conclusion.clone().to_fact();
+    let function_symbol_id =
+        odd_sum_square_equality_function_symbol(&conclusion, parameter_binding)?;
+    let odd_binding = context
+        .named_function_definitions
+        .values()
+        .find(|binding| binding.symbol_id == function_symbol_id)?;
+    if !named_function_is_exact_integer_odd(odd_binding) {
+        return None;
+    }
+    let [conclusion_check] = conclusion_checks else {
+        return None;
+    };
+    if conclusion_check.factual_success()?.fact().to_string() != conclusion.to_string() {
+        return None;
+    }
+    let [induction_step] = proof_steps else {
+        return None;
+    };
+    let StmtResult::Success(SuccessStmtResult::By(SuccessByStmtResult::ByInducStmt(induction))) =
+        induction_step
+    else {
+        return None;
+    };
+    let verification = induction.verification.as_ref()?;
+    let SuccessVerifyByInducProofResult::IntegerStructured(proof) = &verification.proof else {
+        return None;
+    };
+    if induction.statement.strong
+        || proof.strong
+        || !object_is_literal_integer(&proof.start, 1)
+        || verification.prove_goals.len() != 1
+        || odd_sum_square_equality_function_symbol(
+            &verification.prove_goals[0],
+            &verification.parameter_binding,
+        )? != function_symbol_id
+    {
+        return None;
+    }
+
+    let parameter_name = lean_identifier(parameter_binding.name());
+    let native_proof = format!(
+        "exact Int.leInduction\n  \
+         (motive := fun value : ℤ => fun _ =>\n    \
+           ∑ k ∈ Finset.Icc (1 : ℤ) value, (2 * k - 1) = value ^ 2)\n  \
+         (by norm_num)\n  \
+         (fun value _value_ge_one ih => by\n    \
+           rw [← Finset.insert_Icc_right_eq_Icc_add_one (by omega : (1 : ℤ) ≤ value + 1)]\n    \
+           rw [Finset.sum_insert (by simp)]\n    \
+           rw [ih]\n    \
+           ring)\n  \
+         {parameter_name} __domain1"
+    );
+    Some(format!(
+        "namespace Native\n\n\
+         theorem {canonical_theorem_name} ({parameter_name} : ℤ) \
+         (__domain1 : (1 : ℤ) ≤ {parameter_name}) :\n    \
+           ∑ k ∈ Finset.Icc (1 : ℤ) {parameter_name}, (2 * k - 1) = {parameter_name} ^ 2 := by\n{}\n\n\
+         end Native\n\n\
+         namespace MathlibConsumer\n\n\
+         theorem {canonical_theorem_name}_nonnegative ({parameter_name} : ℤ) \
+         (__domain1 : (1 : ℤ) ≤ {parameter_name}) :\n    \
+           0 ≤ ∑ k ∈ Finset.Icc (1 : ℤ) {parameter_name}, (2 * k - 1) := by\n  \
+           rw [Native.{canonical_theorem_name} {parameter_name} __domain1]\n  \
+           positivity\n\n\
+         end MathlibConsumer",
+        indent_lines(&native_proof, 2),
+    ))
+}
+
+fn odd_sum_square_equality_function_symbol(
+    fact: &Fact,
+    parameter_binding: &SymbolBinding,
+) -> Option<SymbolId> {
+    let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = fact else {
+        return None;
+    };
+    let Obj::Sum(sum) = &equality.left else {
+        return None;
+    };
+    let Obj::Pow(power) = &equality.right else {
+        return None;
+    };
+    if !object_is_literal_integer(sum.start.as_ref(), 1)
+        || !object_is_exact_symbol(sum.end.as_ref(), parameter_binding)
+        || !object_is_exact_symbol(power.base.as_ref(), parameter_binding)
+        || !object_is_literal_integer(power.exponent.as_ref(), 2)
+    {
+        return None;
+    }
+    let Obj::Atom(function) = sum.func.as_ref() else {
+        return None;
+    };
+    function.symbol_ref().map(|symbol| symbol.id())
+}
+
+fn named_function_is_exact_integer_odd(binding: &NamedFunctionDefinitionBinding) -> bool {
+    let [parameter] = binding.function.parameters.as_slice() else {
+        return false;
+    };
+    if binding.native_body_carrier != NativeFunctionBodyCarrier::Integer
+        || !binding.function.domain_facts.is_empty()
+        || parameter.set
+            != LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Integer)
+        || binding.function.return_set.as_ref()
+            != &LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Integer)
+    {
+        return false;
+    }
+    let Obj::Sub(subtraction) = &binding.source_body else {
+        return false;
+    };
+    let Obj::Mul(multiplication) = subtraction.left.as_ref() else {
+        return false;
+    };
+    object_is_literal_integer(multiplication.left.as_ref(), 2)
+        && object_is_symbol(multiplication.right.as_ref(), parameter.symbol_id)
+        && object_is_literal_integer(subtraction.right.as_ref(), 1)
+}
+
+fn object_is_literal_integer(object: &Obj, expected: i128) -> bool {
+    matches!(
+        object,
+        Obj::Number(number)
+            if number.normalized_value.parse::<i128>().ok() == Some(expected)
+    )
 }
 
 fn object_is_exact_symbol(object: &Obj, binding: &SymbolBinding) -> bool {

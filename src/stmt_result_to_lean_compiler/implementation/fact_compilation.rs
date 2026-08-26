@@ -148,15 +148,22 @@ impl StmtResultToLeanCompiler {
         ));
         self.environment_stack
             .fact_names
-            .insert(source_fact_id, theorem_name);
+            .insert(source_fact_id, theorem_name.clone());
         self.environment_stack
             .fact_propositions
             .insert(source_fact_id, source_fact.clone());
         self.next_fact_name_index += 1;
-        self.compile_standard_numeric_membership_infer_result_as_top_level_declarations(
-            &source_fact,
-            source_fact_id,
+        let allowed_sources = self
+            .install_equality_chain_adjacent_projections_for_typed_inference(
+                &source_fact,
+                source_fact_id,
+                &theorem_name,
+                &result.store.infers,
+                "typed-inference fact Result",
+            )?;
+        self.compile_typed_infer_result_as_top_level_declarations_with_allowed_sources(
             &result.store.infers,
+            &allowed_sources,
             "typed-inference fact Result",
         )?;
         Ok(true)
@@ -1821,12 +1828,7 @@ impl StmtResultToLeanCompiler {
         let Some(recursive) = well_definedness.recursive.as_deref() else {
             return Ok(());
         };
-        let SuccessVerifyFactWellDefinedProofResult::AtomicFact(atomic) = recursive else {
-            return Ok(());
-        };
-        if !atomic.arguments.iter().any(|argument| {
-            object_well_definedness_result_contains_intrinsic_store(argument.result.as_ref())
-        }) {
+        if !fact_well_definedness_result_contains_outer_intrinsic_store(recursive) {
             return Ok(());
         }
         let certificate =
@@ -2408,6 +2410,19 @@ impl StmtResultToLeanCompiler {
         infers: &SuccessInferResult,
         result_layer: &str,
     ) -> Result<(), String> {
+        self.compile_typed_infer_result_as_top_level_declarations_with_allowed_sources(
+            infers,
+            &[(source_fact_id, source_fact.clone())],
+            result_layer,
+        )
+    }
+
+    pub(super) fn compile_typed_infer_result_as_top_level_declarations_with_allowed_sources(
+        &mut self,
+        infers: &SuccessInferResult,
+        allowed_sources: &[(FactId, Fact)],
+        result_layer: &str,
+    ) -> Result<(), String> {
         if infers.rule_applications.is_empty() {
             if infers.store_fact_outputs.iter().all(|output| {
                 output.inferred_facts.is_empty() && output.inferred_fact_ids.is_empty()
@@ -2421,9 +2436,10 @@ impl StmtResultToLeanCompiler {
 
         let compiled_steps = self.compile_typed_inference_results_in_current_compiler_environment(
             infers,
-            &[(source_fact_id, source_fact.clone())],
+            allowed_sources,
             CompiledInferenceFactAvailabilityInLeanEnvironment::LocalProofName,
             result_layer,
+            None,
         )?;
         let mut preceding_steps: Vec<CompiledInferenceFactProofStep> = Vec::new();
         for step in compiled_steps {
@@ -2451,6 +2467,155 @@ impl StmtResultToLeanCompiler {
             preceding_steps.push(step);
         }
         Ok(())
+    }
+
+    /// Validate one equality-chain closure Result against its exact source,
+    /// then expose the adjacent edge FactIds as projections of the already
+    /// published source proof. The returned allowlist roots later inference
+    /// compilation in this Result rather than in ambient proposition lookup.
+    pub(super) fn install_equality_chain_adjacent_projections_for_typed_inference(
+        &mut self,
+        source_fact: &Fact,
+        source_fact_id: FactId,
+        source_lean_reference: &str,
+        infers: &SuccessInferResult,
+        result_layer: &str,
+    ) -> Result<Vec<(FactId, Fact)>, String> {
+        let equality_applications = infers
+            .rule_applications
+            .iter()
+            .filter(|application| matches!(application.rule, InferRule::EqualityChainClosure(_)))
+            .collect::<Vec<_>>();
+        if equality_applications.is_empty() {
+            return Ok(vec![(source_fact_id, source_fact.clone())]);
+        }
+        let Fact::ChainFact(chain) = source_fact else {
+            return Err(format!(
+                "{result_layer} retained equality-chain closure for a non-chain source"
+            ));
+        };
+        if chain
+            .prop_names
+            .iter()
+            .any(|predicate| predicate.to_string() != EQUAL)
+        {
+            return Err(format!(
+                "{result_layer} retained equality closure for a mixed relation chain"
+            ));
+        }
+        let adjacent_facts = chain
+            .facts()
+            .map_err(|error| format!("{result_layer} retained an invalid chain: {error:?}"))?
+            .into_iter()
+            .map(Fact::from)
+            .collect::<Vec<_>>();
+        if adjacent_facts.len() < 2 {
+            return Err(format!(
+                "{result_layer} equality closure has fewer than two adjacent edges"
+            ));
+        }
+        let expected_application_count = adjacent_facts
+            .len()
+            .saturating_sub(1)
+            .saturating_mul(adjacent_facts.len())
+            / 2;
+        if equality_applications.len() != expected_application_count {
+            return Err(format!(
+                "{result_layer} expected {expected_application_count} equality closure applications, retained {}",
+                equality_applications.len()
+            ));
+        }
+
+        let mut adjacent_fact_ids = vec![None; adjacent_facts.len()];
+        let mut application_index = 0;
+        for start_object_index in 0..chain.objs.len() {
+            for end_object_index in start_object_index + 2..chain.objs.len() {
+                let application = equality_applications[application_index];
+                let InferRule::EqualityChainClosure(rule) = &application.rule else {
+                    unreachable!("filtered equality-chain application")
+                };
+                if rule.start_object_index != start_object_index
+                    || rule.end_object_index != end_object_index
+                {
+                    return Err(format!(
+                        "{result_layer} equality application {application_index} changed its object interval"
+                    ));
+                }
+                let expected_premises = &adjacent_facts[start_object_index..end_object_index];
+                if application.premises.len() != expected_premises.len() {
+                    return Err(format!(
+                        "{result_layer} equality application {application_index} changed its premise arity"
+                    ));
+                }
+                for (offset, (premise, expected)) in application
+                    .premises
+                    .iter()
+                    .zip(expected_premises.iter())
+                    .enumerate()
+                {
+                    if premise.fact.to_string() != expected.to_string() {
+                        return Err(format!(
+                            "{result_layer} equality application {application_index} changed premise {offset}"
+                        ));
+                    }
+                    let fact_id = premise.fact_id.ok_or_else(|| {
+                        format!(
+                            "{result_layer} equality application {application_index} premise {offset} has no FactId"
+                        )
+                    })?;
+                    let adjacent_index = start_object_index + offset;
+                    match adjacent_fact_ids[adjacent_index] {
+                        Some(existing) if existing != fact_id => {
+                            return Err(format!(
+                                "{result_layer} assigned two FactIds to adjacent equality {adjacent_index}"
+                            ));
+                        }
+                        _ => adjacent_fact_ids[adjacent_index] = Some(fact_id),
+                    }
+                }
+                let [conclusion] = application.conclusions.as_slice() else {
+                    return Err(format!(
+                        "{result_layer} equality application {application_index} must retain one conclusion"
+                    ));
+                };
+                let expected_conclusion: Fact = EqualFact::new(
+                    chain.objs[start_object_index].clone(),
+                    chain.objs[end_object_index].clone(),
+                    chain.line_file.clone(),
+                )
+                .into();
+                validate_success_store_fact_result(
+                    conclusion,
+                    &expected_conclusion,
+                    &format!("{result_layer} equality application {application_index}"),
+                )?;
+                application_index += 1;
+            }
+        }
+
+        let mut allowed_sources = vec![(source_fact_id, source_fact.clone())];
+        for (adjacent_index, (fact, fact_id)) in adjacent_facts
+            .into_iter()
+            .zip(adjacent_fact_ids.into_iter())
+            .enumerate()
+        {
+            let fact_id = fact_id.ok_or_else(|| {
+                format!("{result_layer} lost adjacent equality {adjacent_index} FactId")
+            })?;
+            let projection = conjunction_projection(
+                &format!("({source_lean_reference})"),
+                adjacent_index,
+                chain.prop_names.len(),
+            )?;
+            self.environment_stack
+                .fact_names
+                .insert(fact_id, projection);
+            self.environment_stack
+                .fact_propositions
+                .insert(fact_id, fact.clone());
+            allowed_sources.push((fact_id, fact));
+        }
+        Ok(allowed_sources)
     }
 
     /// `Combine`: publish the two exact consequences retained when equality
@@ -2624,6 +2789,7 @@ impl StmtResultToLeanCompiler {
         allowed_sources: &[(FactId, Fact)],
         availability: CompiledInferenceFactAvailabilityInLeanEnvironment,
         result_layer: &str,
+        force_replay_visible_conclusions: Option<&HashSet<FactId>>,
     ) -> Result<Vec<CompiledInferenceFactProofStep>, String> {
         validate_typed_infer_result_identity_completeness(infers, result_layer)?;
 
@@ -2664,13 +2830,20 @@ impl StmtResultToLeanCompiler {
 
         let mut compiled_conclusions = HashSet::new();
         for (application_index, application) in infers.rule_applications.iter().enumerate() {
-            let expected_premise_count = if matches!(
-                application.rule,
-                InferRule::MembershipInSetWithKnownEqualityImpliesMembershipInEqualSet(_)
-            ) {
-                2
-            } else {
-                1
+            let expected_premise_count = match &application.rule {
+                InferRule::MembershipInSetWithKnownEqualityImpliesMembershipInEqualSet(_) => 2,
+                InferRule::PositiveIntegerBaseNaturalPowerEqualityImpliesEqualSideMembership(
+                    _,
+                ) => 3,
+                InferRule::EqualityChainClosure(rule) => rule
+                    .end_object_index
+                    .checked_sub(rule.start_object_index)
+                    .ok_or_else(|| {
+                        format!(
+                            "{result_layer} application {application_index} reversed its equality-chain interval"
+                        )
+                    })?,
+                _ => 1,
             };
             if !infer_rule_has_direct_compiler_environment_consumer(&application.rule)
                 || application.premises.len() != expected_premise_count
@@ -2684,12 +2857,38 @@ impl StmtResultToLeanCompiler {
             let premise_fact_id = premise.fact_id.ok_or_else(|| {
                 format!("{result_layer} application {application_index} premise has no FactId")
             })?;
+            let premise_key = (premise_fact_id, premise.fact.to_string());
             if !allowed_sources.iter().any(|(allowed_fact_id, fact)| {
                 *allowed_fact_id == premise_fact_id && fact.to_string() == premise.fact.to_string()
-            }) {
+            }) && !compiled_conclusions.contains(&premise_key)
+            {
+                let allowed = allowed_sources
+                    .iter()
+                    .map(|(fact_id, fact)| format!("{fact_id}:{fact}"))
+                    .collect::<Vec<_>>()
+                    .join(", ");
                 return Err(format!(
-                    "{result_layer} application {application_index} cites a source outside this Result layer"
+                    "{result_layer} application {application_index} ({:?}) cites `{premise_fact_id}:{}` outside this Result layer; allowed exact roots or earlier typed conclusions: [{allowed}]",
+                    application.rule,
+                    premise.fact,
                 ));
+            }
+            if matches!(application.rule, InferRule::EqualityChainClosure(_)) {
+                for (premise_index, premise) in application.premises.iter().enumerate() {
+                    let premise_fact_id = premise.fact_id.ok_or_else(|| {
+                        format!(
+                            "{result_layer} application {application_index} premise {premise_index} has no FactId"
+                        )
+                    })?;
+                    if !allowed_sources.iter().any(|(allowed_fact_id, fact)| {
+                        *allowed_fact_id == premise_fact_id
+                            && fact.to_string() == premise.fact.to_string()
+                    }) {
+                        return Err(format!(
+                            "{result_layer} application {application_index} equality premise {premise_index} is outside its source chain"
+                        ));
+                    }
+                }
             }
 
             let conclusion = &application.conclusions[0];
@@ -2697,16 +2896,8 @@ impl StmtResultToLeanCompiler {
                 format!("{result_layer} application {application_index} conclusion has no FactId")
             })?;
             let conclusion_key = (conclusion_fact_id, conclusion.fact.to_string());
-            if !advertised_conclusions.contains(&conclusion_key) {
-                return Err(format!(
-                    "{result_layer} application {application_index} conclusion is missing from its ordered store output"
-                ));
-            }
-            if !compiled_conclusions.insert(conclusion_key) {
-                return Err(format!(
-                    "{result_layer} application {application_index} repeats an inferred conclusion"
-                ));
-            }
+            let force_replay = force_replay_visible_conclusions
+                .is_some_and(|fact_ids| fact_ids.contains(&conclusion_fact_id));
             let conclusion_already_visible = if self
                 .environment_stack
                 .fact_propositions
@@ -2717,11 +2908,100 @@ impl StmtResultToLeanCompiler {
                     &conclusion.fact,
                     &self.environment_stack,
                 )?;
-                true
+                !force_replay
             } else {
                 false
             };
-            if let InferRule::ConjunctionImpliesComponent(rule) = &application.rule {
+            let conclusion_is_advertised = advertised_conclusions.contains(&conclusion_key);
+            if !conclusion_is_advertised && !conclusion_already_visible && !force_replay {
+                return Err(format!(
+                    "{result_layer} application {application_index} conclusion is neither in its ordered store output nor already visible by exact FactId"
+                ));
+            }
+            if conclusion_is_advertised && !compiled_conclusions.insert(conclusion_key) {
+                return Err(format!(
+                    "{result_layer} application {application_index} repeats an inferred conclusion"
+                ));
+            }
+            if let InferRule::EqualityChainClosure(rule) = &application.rule {
+                if rule.end_object_index < rule.start_object_index + 2 {
+                    return Err(format!(
+                        "{result_layer} application {application_index} does not span a non-adjacent equality"
+                    ));
+                }
+                let mut expected_left: Option<Obj> = None;
+                let mut expected_right: Option<Obj> = None;
+                let mut proof_parts = Vec::with_capacity(application.premises.len());
+                for (premise_index, premise) in application.premises.iter().enumerate() {
+                    let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = &premise.fact else {
+                        return Err(format!(
+                            "{result_layer} application {application_index} premise {premise_index} is not equality"
+                        ));
+                    };
+                    if let Some(previous_right) = expected_right.as_ref() {
+                        if obj_equality_key(previous_right) != obj_equality_key(&equality.left) {
+                            return Err(format!(
+                                "{result_layer} application {application_index} equality premises are not endpoint-contiguous"
+                            ));
+                        }
+                    } else {
+                        expected_left = Some(equality.left.clone());
+                    }
+                    expected_right = Some(equality.right.clone());
+                    let premise_fact_id = premise.fact_id.ok_or_else(|| {
+                        format!(
+                            "{result_layer} application {application_index} premise {premise_index} has no FactId"
+                        )
+                    })?;
+                    proof_parts.push(resolve_fact_citation(
+                        &premise_fact_id,
+                        &premise.fact,
+                        &self.environment_stack,
+                    )?);
+                }
+                let Fact::AtomicFact(AtomicFact::EqualFact(conclusion_equality)) =
+                    &conclusion.fact
+                else {
+                    return Err(format!(
+                        "{result_layer} application {application_index} equality closure has a non-equality conclusion"
+                    ));
+                };
+                if obj_equality_key(expected_left.as_ref().ok_or_else(|| {
+                    format!(
+                        "{result_layer} application {application_index} retained no equality premises"
+                    )
+                })?) != obj_equality_key(&conclusion_equality.left)
+                    || obj_equality_key(expected_right.as_ref().ok_or_else(|| {
+                        format!(
+                            "{result_layer} application {application_index} retained no equality endpoint"
+                        )
+                    })?) != obj_equality_key(&conclusion_equality.right)
+                {
+                    return Err(format!(
+                        "{result_layer} application {application_index} changed its equality endpoints"
+                    ));
+                }
+                if !conclusion_already_visible {
+                    let mut proof = proof_parts[0].clone();
+                    for next in proof_parts.iter().skip(1) {
+                        proof = format!("Litex.Same.trans ({proof}) ({next})");
+                    }
+                    let conclusion_proposition =
+                        render_fact(&conclusion.fact, &self.environment_stack)?;
+                    let conclusion_name = self.next_local_inference_fact_proof_name();
+                    self.retain_compiled_inference_fact_proof_step_in_current_environment(
+                        &mut compiled_inference_fact_proof_steps,
+                        CompiledInferenceFactProofStep::new(
+                            conclusion_fact_id,
+                            conclusion.fact.clone(),
+                            conclusion_name,
+                            conclusion_proposition,
+                            proof,
+                        ),
+                        availability,
+                    );
+                }
+            } else if let InferRule::ConjunctionImpliesComponent(rule) = &application.rule {
                 validate_conjunction_component_inference_target(
                     rule,
                     &premise.fact,
@@ -2753,32 +3033,175 @@ impl StmtResultToLeanCompiler {
                         availability,
                     );
                 }
-            } else if matches!(
-                application.rule,
-                InferRule::MultiplicationByNegativeOneReversesOrderAgainstZero
-                    | InferRule::StrictOrderComparedToZeroImpliesWeakOrder
-            ) {
-                validate_order_sign_inference_target(
-                    &application.rule,
-                    &premise.fact,
-                    &conclusion.fact,
-                )?;
+            } else if let InferRule::ClosedPositivePowerEqualityImpliesEqualSideMembership(rule) =
+                &application.rule
+            {
                 if !conclusion_already_visible {
                     let premise_name = resolve_fact_citation(
                         &premise_fact_id,
                         &premise.fact,
                         &self.environment_stack,
                     )?;
-                    let transported_premise =
-                        transport_zero_ended_order_fact_proof_to_current_numeric_representation(
-                            &premise.fact,
-                            &premise_name,
-                            &self.environment_stack,
-                        )?;
                     let conclusion_proposition =
                         render_fact(&conclusion.fact, &self.environment_stack)?;
                     let conclusion_name = self.next_local_inference_fact_proof_name();
-                    let proof = match application.rule {
+                    let proof = render_closed_positive_power_equality_membership_inference(
+                        rule,
+                        &premise.fact,
+                        &conclusion.fact,
+                        &premise_name,
+                        &self.environment_stack,
+                    )?;
+                    self.retain_compiled_inference_fact_proof_step_in_current_environment(
+                        &mut compiled_inference_fact_proof_steps,
+                        CompiledInferenceFactProofStep::new(
+                            conclusion_fact_id,
+                            conclusion.fact.clone(),
+                            conclusion_name,
+                            conclusion_proposition,
+                            proof,
+                        ),
+                        availability,
+                    );
+                }
+            } else if let InferRule::PositiveIntegerBaseNaturalPowerEqualityImpliesEqualSideMembership(
+                rule,
+            ) = &application.rule
+            {
+                let base_positive = &application.premises[1];
+                let base_in_z = &application.premises[2];
+                for (premise_index, additional) in
+                    application.premises.iter().enumerate().skip(1)
+                {
+                    let fact_id = additional.fact_id.ok_or_else(|| {
+                        format!(
+                            "{result_layer} application {application_index} premise {premise_index} has no FactId"
+                        )
+                    })?;
+                    let key = (fact_id, additional.fact.to_string());
+                    let visible = allowed_sources.iter().any(|(allowed_fact_id, fact)| {
+                        *allowed_fact_id == fact_id
+                            && fact.to_string() == additional.fact.to_string()
+                    }) || compiled_conclusions.contains(&key)
+                        || self
+                            .environment_stack
+                            .fact_propositions
+                            .get(&fact_id)
+                            .is_some_and(|fact| fact.to_string() == additional.fact.to_string());
+                    if !visible {
+                        return Err(format!(
+                            "{result_layer} application {application_index} premise {premise_index} is not an exact visible root or earlier typed conclusion"
+                        ));
+                    }
+                }
+                if !conclusion_already_visible {
+                    let equality_proof = resolve_fact_citation(
+                        &premise_fact_id,
+                        &premise.fact,
+                        &self.environment_stack,
+                    )?;
+                    let base_positive_fact_id = base_positive.fact_id.ok_or_else(|| {
+                        format!(
+                            "{result_layer} application {application_index} positivity premise has no FactId"
+                        )
+                    })?;
+                    let base_positive_proof = resolve_fact_citation(
+                        &base_positive_fact_id,
+                        &base_positive.fact,
+                        &self.environment_stack,
+                    )?;
+                    let base_in_z_fact_id = base_in_z.fact_id.ok_or_else(|| {
+                        format!(
+                            "{result_layer} application {application_index} Z premise has no FactId"
+                        )
+                    })?;
+                    resolve_fact_citation(
+                        &base_in_z_fact_id,
+                        &base_in_z.fact,
+                        &self.environment_stack,
+                    )?;
+                    let (expected_conclusion, proof) =
+                        render_positive_integer_base_natural_power_equality_membership_inference(
+                            rule,
+                            &premise.fact,
+                            &base_positive.fact,
+                            &base_in_z.fact,
+                            &equality_proof,
+                            &base_positive_proof,
+                            &self.environment_stack,
+                        )?;
+                    if expected_conclusion.to_string() != conclusion.fact.to_string() {
+                        return Err(format!(
+                            "{result_layer} application {application_index} changed its transported R+ conclusion"
+                        ));
+                    }
+                    let conclusion_proposition =
+                        render_fact(&conclusion.fact, &self.environment_stack)?;
+                    let conclusion_name = self.next_local_inference_fact_proof_name();
+                    self.retain_compiled_inference_fact_proof_step_in_current_environment(
+                        &mut compiled_inference_fact_proof_steps,
+                        CompiledInferenceFactProofStep::new(
+                            conclusion_fact_id,
+                            conclusion.fact.clone(),
+                            conclusion_name,
+                            conclusion_proposition,
+                            proof,
+                        ),
+                        availability,
+                    );
+                }
+            } else if matches!(
+                application.rule,
+                InferRule::MultiplicationByNegativeOneReversesOrderAgainstZero
+                    | InferRule::StrictOrderComparedToZeroImpliesWeakOrder
+                    | InferRule::NumericOrderBoundImpliesZeroSign
+            ) {
+                if !conclusion_already_visible {
+                    let premise_name = resolve_fact_citation(
+                        &premise_fact_id,
+                        &premise.fact,
+                        &self.environment_stack,
+                    )?;
+                    if matches!(
+                        application.rule,
+                        InferRule::NumericOrderBoundImpliesZeroSign
+                    ) {
+                        let conclusion_proposition =
+                            render_fact(&conclusion.fact, &self.environment_stack)?;
+                        let conclusion_name = self.next_local_inference_fact_proof_name();
+                        let proof = render_numeric_order_bound_implies_zero_sign_inference(
+                            &premise.fact,
+                            &conclusion.fact,
+                            &premise_name,
+                            &self.environment_stack,
+                        )?;
+                        self.retain_compiled_inference_fact_proof_step_in_current_environment(
+                            &mut compiled_inference_fact_proof_steps,
+                            CompiledInferenceFactProofStep::new(
+                                conclusion_fact_id,
+                                conclusion.fact.clone(),
+                                conclusion_name,
+                                conclusion_proposition,
+                                proof,
+                            ),
+                            availability,
+                        );
+                    } else {
+                        validate_order_sign_inference_target(
+                            &application.rule,
+                            &premise.fact,
+                            &conclusion.fact,
+                        )?;
+                        let transported_premise =
+                            transport_zero_ended_order_fact_proof_to_current_numeric_representation(
+                                &premise.fact,
+                                &premise_name,
+                                &self.environment_stack,
+                            )?;
+                        let conclusion_proposition =
+                            render_fact(&conclusion.fact, &self.environment_stack)?;
+                        let conclusion_name = self.next_local_inference_fact_proof_name();
+                        let proof = match application.rule {
                         InferRule::StrictOrderComparedToZeroImpliesWeakOrder => {
                             let (source_left, source_right, _) =
                                 order_relation_parts(&premise.fact)?;
@@ -2817,19 +3240,20 @@ impl StmtResultToLeanCompiler {
                                 ));
                             }
                         }
-                        _ => unreachable!("order-sign inference was matched above"),
-                    };
-                    self.retain_compiled_inference_fact_proof_step_in_current_environment(
-                        &mut compiled_inference_fact_proof_steps,
-                        CompiledInferenceFactProofStep::new(
-                            conclusion_fact_id,
-                            conclusion.fact.clone(),
-                            conclusion_name,
-                            conclusion_proposition,
-                            proof,
-                        ),
-                        availability,
-                    );
+                            _ => unreachable!("order-sign inference was matched above"),
+                        };
+                        self.retain_compiled_inference_fact_proof_step_in_current_environment(
+                            &mut compiled_inference_fact_proof_steps,
+                            CompiledInferenceFactProofStep::new(
+                                conclusion_fact_id,
+                                conclusion.fact.clone(),
+                                conclusion_name,
+                                conclusion_proposition,
+                                proof,
+                            ),
+                            availability,
+                        );
+                    }
                 }
             } else if matches!(
                 application.rule,
@@ -2909,6 +3333,7 @@ impl StmtResultToLeanCompiler {
                         &[(conclusion_fact_id, conclusion.fact.clone())],
                         availability,
                         &format!("{result_layer} application {application_index} conclusion"),
+                        force_replay_visible_conclusions,
                     )?,
                 );
                 let mut recursively_compiled = HashSet::new();
@@ -2947,6 +3372,34 @@ impl StmtResultToLeanCompiler {
             allowed_sources,
             CompiledInferenceFactAvailabilityInLeanEnvironment::LocalProofName,
             result_layer,
+            None,
+        )?;
+        proof_lines.extend(
+            compiled_steps
+                .iter()
+                .map(CompiledInferenceFactProofStep::render_as_local_have_statement),
+        );
+        Ok(())
+    }
+
+    /// Structured binders may reuse verified inference FactIds while changing
+    /// only the Lean name of the exact source parameter. Replay those typed
+    /// conclusions from the locally rebound assumptions instead of inheriting
+    /// proof strings that mention the enclosing binder.
+    pub(super) fn compile_typed_inference_results_as_local_have_statements_replaying_visible(
+        &mut self,
+        infers: &SuccessInferResult,
+        allowed_sources: &[(FactId, Fact)],
+        proof_lines: &mut Vec<String>,
+        result_layer: &str,
+        force_replay_visible_conclusions: &HashSet<FactId>,
+    ) -> Result<(), String> {
+        let compiled_steps = self.compile_typed_inference_results_in_current_compiler_environment(
+            infers,
+            allowed_sources,
+            CompiledInferenceFactAvailabilityInLeanEnvironment::LocalProofName,
+            result_layer,
+            Some(force_replay_visible_conclusions),
         )?;
         proof_lines.extend(
             compiled_steps
@@ -2973,6 +3426,7 @@ impl StmtResultToLeanCompiler {
                 allowed_sources,
                 CompiledInferenceFactAvailabilityInLeanEnvironment::InlineProofExpression,
                 result_layer,
+                None,
             )?;
         Ok(())
     }

@@ -144,6 +144,11 @@ pub(super) struct StmtResultToLeanCompilerBindings {
     pub(super) existential_names: HashMap<String, String>,
     pub(super) fact_names: HashMap<FactId, String>,
     pub(super) fact_propositions: HashMap<FactId, Fact>,
+    /// Exact WD certificate environment owned by a published theorem FactId.
+    /// Theorem instantiation specializes this context alongside the theorem's
+    /// source parameters instead of borrowing the caller's unrelated WD map.
+    pub(super) fact_well_definedness:
+        HashMap<FactId, StmtResultWellDefinednessToLeanCompilationContext>,
     pub(super) forall_conclusion_bindings: HashMap<FactId, ForallConclusionBinding>,
     pub(super) function_bindings: HashMap<FactId, FunctionBinding>,
     pub(super) named_function_definitions: HashMap<FactId, NamedFunctionDefinitionBinding>,
@@ -177,6 +182,29 @@ pub(super) struct StmtResultWellDefinednessToLeanCompilationContext {
         SourceObjectOccurrenceId,
         StmtResultAnonymousFunctionWellDefinednessToLeanCompilationContext,
     >,
+    pub(super) iterations: HashMap<
+        SourceObjectOccurrenceId,
+        StmtResultIterationWellDefinednessToLeanCompilationContext,
+    >,
+    /// Explicit Result-validated rebindings used when a structured proof owns
+    /// a second parser occurrence of the exact theorem goal. This is never a
+    /// semantic-key fallback: the structured-proof compiler installs every
+    /// source/owner pair before rendering.
+    pub(super) iteration_occurrence_aliases:
+        HashMap<SourceObjectOccurrenceId, SourceObjectOccurrenceId>,
+}
+
+#[derive(Clone)]
+pub(super) struct StmtResultIterationWellDefinednessToLeanCompilationContext {
+    pub(super) source_aggregate: Obj,
+    pub(super) operation: String,
+    pub(super) parameter_set: Obj,
+    pub(super) return_carrier: Obj,
+    pub(super) parameter_count: usize,
+    pub(super) domain_count: usize,
+    pub(super) has_body: bool,
+    pub(super) has_body_membership: bool,
+    pub(super) has_exact_integer_coverage: bool,
 }
 
 #[derive(Clone)]
@@ -214,6 +242,10 @@ pub(super) struct StmtResultFunctionApplicationRequirementToLeanCompilationConte
 #[derive(Clone)]
 pub(super) struct StmtResultAnonymousFunctionWellDefinednessToLeanCompilationContext {
     pub(super) source_function: Obj,
+    /// The Result-owned body must be replayed only after this anonymous
+    /// function's parameter aliases have entered the Lean environment.
+    pub(super) body_source_object: Obj,
+    pub(super) body_well_definedness: Rc<SuccessVerifyObjWellDefinedResult>,
     pub(super) parameters: Vec<StmtResultWellDefinednessBinderPremiseToLeanCompilationContext>,
     pub(super) domains: Vec<StmtResultWellDefinednessBinderPremiseToLeanCompilationContext>,
     pub(super) assumption_infers: SuccessInferResult,
@@ -284,10 +316,17 @@ pub(super) struct NamedFunctionDefinitionBinding {
     pub(super) function: LeanTargetFunctionTypeRepresentation,
     pub(super) source_body: Obj,
     pub(super) body: LeanTargetObjectRepresentation,
-    pub(super) uses_native_real_body: bool,
+    pub(super) native_body_carrier: NativeFunctionBodyCarrier,
     pub(super) parameter_premises: Vec<LeanLocalFactPremise>,
     pub(super) domain_premises: Vec<LeanLocalFactPremise>,
     pub(super) well_definedness: StmtResultWellDefinednessToLeanCompilationContext,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(super) enum NativeFunctionBodyCarrier {
+    None,
+    Real,
+    Integer,
 }
 
 #[derive(Clone)]

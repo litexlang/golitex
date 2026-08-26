@@ -157,6 +157,26 @@ pub(super) fn render_forall_fact_type(
         }
 
         let set = parameter_set(param_type)?;
+        if matches!(set, Obj::StandardSet(StandardSet::Z)) {
+            binders.push(format!("({name} : ℤ)"));
+            let proof = format!("(Litex.In.own Litex.Z {name})");
+            let expected = format!("Litex.In {name} Litex.Z");
+            install_rendered_parameter_aliases(
+                binding.id(),
+                &expected,
+                &proof,
+                None,
+                &mut context,
+            )?;
+            install_result_owned_forall_parameter_fact_alias(
+                binding.id(),
+                &expected,
+                &proof,
+                &mut context,
+            )?;
+            install_structured_induction_native_integer_symbol(binding.id(), &name, &mut context);
+            continue;
+        }
         let carrier = format!("__carrier{}", index + 1);
         match set {
             Obj::FnSet(_) => {
@@ -613,6 +633,13 @@ pub(super) fn render_checked_identity_function_reduction_from_fact(
                 rendered_source_argument: argument,
                 membership_proof: argument_membership,
                 parameter_set: parameter.set.clone(),
+                native_integer_argument: if parameter.set
+                    == LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Integer)
+                {
+                    Some(render_integer_obj(source_argument, context)?)
+                } else {
+                    None
+                },
             },
         );
     }
@@ -664,19 +691,33 @@ pub(super) fn render_checked_identity_function_reduction_from_fact(
     if expected_application != application_term {
         return Err("checked identity reduction changed its rendered equality sides".into());
     }
-    let apply = if function_uses_telescope(&binding.function) {
+    let apply = if binding.native_body_carrier == NativeFunctionBodyCarrier::Integer
+        && binding.function.domain_facts.is_empty()
+    {
+        "Litex.fnApplyCarrier"
+    } else if function_uses_telescope(&binding.function) {
         "Litex.fnTelescopeApplyOwn"
     } else if binding.function.domain_facts.is_empty() {
         "Litex.fnApplyOwn"
     } else {
         "Litex.fnApplyWhereOwn"
     };
-    if binding.uses_native_real_body {
-        let body_same = render_real_function_body_same_with_parameters(
-            &binding.body,
-            &argument_evidence,
-            context,
-        )?;
+    if binding.native_body_carrier != NativeFunctionBodyCarrier::None {
+        let body_same = match binding.native_body_carrier {
+            NativeFunctionBodyCarrier::Real => render_real_function_body_same_with_parameters(
+                &binding.body,
+                &argument_evidence,
+                context,
+            )?,
+            NativeFunctionBodyCarrier::Integer => {
+                render_integer_function_body_same_with_parameters(
+                    &binding.body,
+                    &argument_evidence,
+                    context,
+                )?
+            }
+            NativeFunctionBodyCarrier::None => unreachable!("guarded native body carrier"),
+        };
         let proof = if application_side == LeanEqualityApplicationSide::Left {
             body_same
         } else {
@@ -711,6 +752,95 @@ pub(super) fn render_checked_identity_function_reduction_from_fact(
         "(by\n  unfold {apply} {}\n  {proof})",
         binding.name,
     ))
+}
+
+pub(super) fn render_integer_function_body_same_with_parameters(
+    body: &LeanTargetObjectRepresentation,
+    argument_evidence: &HashMap<SymbolId, CheckedNamedFunctionReductionArgumentEvidence>,
+    context: &StmtResultToLeanCompilerEnvironmentStack,
+) -> Result<String, String> {
+    match body {
+        LeanTargetObjectRepresentation::Symbol { symbol_id, .. }
+            if argument_evidence.contains_key(symbol_id) =>
+        {
+            let evidence = &argument_evidence[symbol_id];
+            if evidence.parameter_set
+                != LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Integer)
+            {
+                return Err(
+                    "checked integer function reduction retained a non-integer parameter".into(),
+                );
+            }
+            if let Some(native_integer_argument) = &evidence.native_integer_argument {
+                return Ok(format!(
+                    "Litex.Same.intComplexOfEq (z := ({native_integer_argument})) (by norm_cast)"
+                ));
+            }
+            let argument = &evidence.rendered_source_argument;
+            let argument_membership = &evidence.membership_proof;
+            let rendered_target_argument = render_numeric_obj(&evidence.source_argument, context)?;
+            let selected_integer = membership_integer_value(
+                &evidence.parameter_set,
+                argument,
+                argument_membership,
+            )
+            .ok_or_else(|| {
+                "checked integer function reduction lost its selected integer representative"
+                    .to_string()
+            })?;
+            if rendered_target_argument == selected_integer {
+                Ok(format!("Litex.Same.refl ({selected_integer})"))
+            } else if rendered_target_argument == *argument {
+                Ok(format!(
+                    "Litex.Same.symm (Litex.In.same_rep {argument} ({argument_membership}))"
+                ))
+            } else {
+                Err(format!(
+                    "checked integer function reduction target uses unrelated argument representation `{rendered_target_argument}`"
+                ))
+            }
+        }
+        LeanTargetObjectRepresentation::Number { normalized_value }
+            if normalized_value.parse::<i128>().is_ok() =>
+        {
+            Ok(format!(
+                "Litex.Same.intComplexOfEq (z := ({normalized_value} : ℤ)) (by norm_num)"
+            ))
+        }
+        LeanTargetObjectRepresentation::BuiltinApp {
+            operator,
+            arguments,
+            ..
+        } if arguments.len() == 2
+            && matches!(
+                operator,
+                LeanTargetBuiltinObjectOperator::Add
+                    | LeanTargetBuiltinObjectOperator::Sub
+                    | LeanTargetBuiltinObjectOperator::Mul
+            ) =>
+        {
+            let left = render_integer_function_body_same_with_parameters(
+                &arguments[0],
+                argument_evidence,
+                context,
+            )?;
+            let right = render_integer_function_body_same_with_parameters(
+                &arguments[1],
+                argument_evidence,
+                context,
+            )?;
+            let theorem = match operator {
+                LeanTargetBuiltinObjectOperator::Add => "Litex.Same.intAddComplex",
+                LeanTargetBuiltinObjectOperator::Sub => "Litex.Same.intSubComplex",
+                LeanTargetBuiltinObjectOperator::Mul => "Litex.Same.intMulComplex",
+                _ => unreachable!("guarded integer binary operator"),
+            };
+            Ok(format!("{theorem} ({left}) ({right})"))
+        }
+        other => Err(format!(
+            "checked integer function reduction does not support body {other:?}"
+        )),
+    }
 }
 
 pub(super) fn render_real_function_body_same_with_parameters(
@@ -1321,7 +1451,10 @@ pub(super) fn render_forall_conclusion_citation(
                 )
             })?;
         terms.push(argument);
-        if !matches!(param_type, ParamType::Set(_)) {
+        if !matches!(
+            param_type,
+            ParamType::Set(_) | ParamType::Obj(Obj::StandardSet(StandardSet::Z))
+        ) {
             terms.push(format!(
                 "({})",
                 resolve_fact_citation(&premise.fact_id, &premise.fact, context)?
@@ -1474,7 +1607,7 @@ pub(super) fn render_closed_numeric_comparison_fact(
     if !fact_is_closed_numeric_relation(fact) {
         return Err("closed numeric comparison changed its target".into());
     }
-    let (left, right, theorem, strict, negated) = match fact {
+    let (left, right, theorem, _strict, negated) = match fact {
         Fact::AtomicFact(AtomicFact::LessFact(order)) => {
             (&order.left, &order.right, "ltOfComplexReals", true, false)
         }
@@ -1511,15 +1644,16 @@ pub(super) fn render_closed_numeric_comparison_fact(
     if negated {
         return Ok("(by\n  norm_num [Litex.Lt, Litex.Le, Litex.OrderValue])".into());
     }
-    if left.to_string() == "0" {
-        let theorem = if strict {
-            "positiveOfComplexReal"
-        } else {
-            "nonnegativeOfComplexReal"
-        };
-        return Ok(format!("Litex.OrderBridge.{theorem} (by norm_num)"));
-    }
-    Ok(format!("Litex.OrderBridge.{theorem} (by norm_num)"))
+    let rendered_left = render_numeric_obj(left, context)?;
+    let rendered_right = render_numeric_obj(right, context)?;
+    let rendered_relation = if theorem == "ltOfComplexReals" {
+        format!("Litex.Lt ({rendered_left}) ({rendered_right})")
+    } else {
+        format!("Litex.Le ({rendered_left}) ({rendered_right})")
+    };
+    Ok(format!(
+        "(Litex.OrderBridge.{theorem} (by norm_num) : {rendered_relation})"
+    ))
 }
 
 pub(super) fn validate_closed_numeric_comparison_builtin_rule_evidence(
@@ -3354,11 +3488,15 @@ pub(super) fn infer_rule_has_direct_compiler_environment_consumer(rule: &InferRu
             StandardSet::ZStar | StandardSet::QStar | StandardSet::RStar | StandardSet::CStar
         ),
         InferRule::MultiplicationByNegativeOneReversesOrderAgainstZero
-        | InferRule::StrictOrderComparedToZeroImpliesWeakOrder => true,
+        | InferRule::StrictOrderComparedToZeroImpliesWeakOrder
+        | InferRule::NumericOrderBoundImpliesZeroSign => true,
         InferRule::MembershipInSetWithKnownEqualityImpliesMembershipInEqualSet(_) => true,
         InferRule::SubsetImpliesElementwiseMembershipForall(_)
         | InferRule::SupersetImpliesElementwiseMembershipForall(_)
-        | InferRule::ConjunctionImpliesComponent(_) => true,
+        | InferRule::ConjunctionImpliesComponent(_)
+        | InferRule::EqualityChainClosure(_)
+        | InferRule::ClosedPositivePowerEqualityImpliesEqualSideMembership(_)
+        | InferRule::PositiveIntegerBaseNaturalPowerEqualityImpliesEqualSideMembership(_) => true,
         InferRule::SetBuilderBaseMembershipProjection
         | InferRule::SetBuilderPredicateProjection { .. }
         | InferRule::DefinedPredicateParameterRequirementProjection(_)
@@ -3367,6 +3505,133 @@ pub(super) fn infer_rule_has_direct_compiler_environment_consumer(rule: &InferRu
         | InferRule::TupleEqualityWithKnownTupleImpliesTupleShape(_)
         | InferRule::ListSetMembershipImpliesEqualityAlternatives(_) => false,
     }
+}
+
+/// Replay the verifier's exact positive-power equality transport. The rule is
+/// intentionally limited to a closed power whose positive value is checked
+/// again here; equality orientation and the `R+` target must match the retained
+/// certificate exactly.
+pub(super) fn render_closed_positive_power_equality_membership_inference(
+    rule: &ClosedPositivePowerEqualityImpliesEqualSideMembershipInferRule,
+    source: &Fact,
+    target: &Fact,
+    source_proof: &str,
+    context: &StmtResultToLeanCompilerEnvironmentStack,
+) -> Result<String, String> {
+    let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = source else {
+        return Err("closed-positive-power inference premise is not equality".into());
+    };
+    let (power, opposite) = if rule.power_is_left_endpoint {
+        (&equality.left, &equality.right)
+    } else {
+        (&equality.right, &equality.left)
+    };
+    if !matches!(power, Obj::Pow(_)) {
+        return Err("closed-positive-power inference selected a non-power endpoint".into());
+    }
+    let evaluation = power
+        .evaluate_to_normalized_decimal_number()
+        .ok_or_else(|| {
+            "closed-positive-power inference endpoint no longer evaluates".to_string()
+        })?;
+    if !matches!(
+        compare_normalized_number_str_to_zero(&evaluation.normalized_value),
+        NumberCompareResult::Greater
+    ) {
+        return Err("closed-positive-power inference endpoint is not positive".into());
+    }
+    let (target_element, target_set) = membership_parts(target)?;
+    if obj_equality_key(target_element) != obj_equality_key(opposite)
+        || !matches!(target_set, Obj::StandardSet(StandardSet::RPos))
+    {
+        return Err(
+            "closed-positive-power inference changed its opposite endpoint or R+ target".into(),
+        );
+    }
+
+    let rendered_power = render_obj(power, context)?;
+    let rendered_set = render_obj(target_set, context)?;
+    let normalized = &evaluation.normalized_value;
+    let power_membership = format!(
+        "Litex.Rules.complexEqRealInRPos {rendered_power} ({normalized} : ℝ) (by norm_num) (by norm_num)"
+    );
+    let direction = if rule.power_is_left_endpoint {
+        "mp"
+    } else {
+        "mpr"
+    };
+    Ok(format!(
+        "(Litex.In.congr ({source_proof}) {rendered_set}).{direction} ({power_membership})"
+    ))
+}
+
+/// Replay positive `Z`-base power membership through one exact equality. The
+/// integer representation is selected by the cited `Z` premise, while the
+/// cited strict-order premise supplies the Mathlib positivity proof.
+pub(super) fn render_positive_integer_base_natural_power_equality_membership_inference(
+    rule: &PositiveIntegerBaseNaturalPowerEqualityImpliesEqualSideMembershipInferRule,
+    source: &Fact,
+    base_positive: &Fact,
+    base_in_z: &Fact,
+    source_proof: &str,
+    base_positive_proof: &str,
+    context: &StmtResultToLeanCompilerEnvironmentStack,
+) -> Result<(Fact, String), String> {
+    let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = source else {
+        return Err("positive-integer-power inference premise is not equality".into());
+    };
+    let (power_object, opposite) = if rule.power_is_left_endpoint {
+        (&equality.left, &equality.right)
+    } else {
+        (&equality.right, &equality.left)
+    };
+    let Obj::Pow(power) = power_object else {
+        return Err("positive-integer-power inference selected a non-power endpoint".into());
+    };
+    let exponent = power
+        .exponent
+        .evaluate_to_normalized_decimal_number()
+        .and_then(|number| number.normalized_value.parse::<i128>().ok())
+        .filter(|exponent| *exponent >= 0)
+        .ok_or_else(|| {
+            "positive-integer-power inference exponent is not a closed natural".to_string()
+        })?;
+    let (positive_left, positive_right, positive_strict) = order_relation_parts(base_positive)?;
+    if !positive_strict
+        || !is_literal_zero(positive_left)
+        || obj_equality_key(positive_right) != obj_equality_key(power.base.as_ref())
+    {
+        return Err("positive-integer-power inference changed its base positivity premise".into());
+    }
+    let (membership_element, membership_set) = membership_parts(base_in_z)?;
+    if obj_equality_key(membership_element) != obj_equality_key(power.base.as_ref())
+        || !matches!(membership_set, Obj::StandardSet(StandardSet::Z))
+    {
+        return Err("positive-integer-power inference changed its base Z premise".into());
+    }
+
+    let rendered_base = render_integer_obj(power.base.as_ref(), context)?;
+    let rendered_set = render_obj(&Obj::from(StandardSet::RPos), context)?;
+    let power_membership = format!(
+        "Litex.Rules.positiveIntegerRationalPowInRPos ({rendered_base}) ({exponent} : ℤ) ({base_positive_proof}) (by norm_num)"
+    );
+    let direction = if rule.power_is_left_endpoint {
+        "mp"
+    } else {
+        "mpr"
+    };
+    let target: Fact = InFact::new(
+        opposite.clone(),
+        StandardSet::RPos.into(),
+        source.line_file(),
+    )
+    .into();
+    Ok((
+        target,
+        format!(
+            "(Litex.In.congr ({source_proof}) {rendered_set}).{direction} ({power_membership})"
+        ),
+    ))
 }
 
 pub(super) fn infer_result_effects_are_fully_owned_by_direct_compiler_rules(
@@ -3463,6 +3728,86 @@ pub(super) fn validate_order_sign_inference_target(
         }
         _ => Err("non-order inference reached order-sign validation".into()),
     }
+}
+
+/// Replay the verifier's bounded-sign accelerator using only the cited order
+/// premise plus a closed numeric comparison proved by Mathlib. The source and
+/// target are normalized to left-to-right order before their exact endpoint
+/// shape is checked.
+pub(super) fn render_numeric_order_bound_implies_zero_sign_inference(
+    source: &Fact,
+    target: &Fact,
+    source_proof: &str,
+    context: &StmtResultToLeanCompilerEnvironmentStack,
+) -> Result<String, String> {
+    let (source_left, source_right, source_strict) = order_relation_parts(source)?;
+    let (target_left, target_right, target_strict) = order_relation_parts(target)?;
+    let zero = |object: &Obj| is_literal_zero(object);
+
+    if target_strict
+        && zero(target_left)
+        && obj_equality_key(target_right) == obj_equality_key(source_right)
+    {
+        let Obj::Number(bound) = source_left else {
+            return Err(
+                "numeric-bound sign inference requires a literal positive lower bound in Lean"
+                    .into(),
+            );
+        };
+        if !matches!(
+            compare_normalized_number_str_to_zero(&bound.normalized_value),
+            NumberCompareResult::Greater
+        ) {
+            return Err("numeric-bound sign inference changed its positive lower bound".into());
+        }
+        let numeric_fact: Fact = LessFact::new(
+            Number::new("0".to_string()).into(),
+            source_left.clone(),
+            source.line_file(),
+        )
+        .into();
+        let numeric_proof = render_closed_numeric_comparison_fact(&numeric_fact, context)?;
+        return Ok(if source_strict {
+            format!("Litex.Lt.trans ({numeric_proof}) ({source_proof})")
+        } else {
+            format!("Litex.Lt.transLe ({numeric_proof}) ({source_proof})")
+        });
+    }
+
+    if !target_strict
+        && zero(target_right)
+        && obj_equality_key(target_left) == obj_equality_key(source_left)
+    {
+        let Obj::Number(bound) = source_right else {
+            return Err(
+                "numeric-bound sign inference requires a literal nonpositive upper bound in Lean"
+                    .into(),
+            );
+        };
+        return match compare_normalized_number_str_to_zero(&bound.normalized_value) {
+            NumberCompareResult::Equal if source_strict => {
+                Ok(format!("Litex.Lt.toLe ({source_proof})"))
+            }
+            NumberCompareResult::Less => {
+                let numeric_fact: Fact = LessFact::new(
+                    source_right.clone(),
+                    Number::new("0".to_string()).into(),
+                    source.line_file(),
+                )
+                .into();
+                let numeric_proof = render_closed_numeric_comparison_fact(&numeric_fact, context)?;
+                let strict_proof = if source_strict {
+                    format!("Litex.Lt.trans ({source_proof}) ({numeric_proof})")
+                } else {
+                    format!("Litex.Le.transLt ({source_proof}) ({numeric_proof})")
+                };
+                Ok(format!("Litex.Lt.toLe ({strict_proof})"))
+            }
+            _ => Err("numeric-bound sign inference changed its nonpositive upper bound".into()),
+        };
+    }
+
+    Err("numeric-bound sign inference changed its zero-ended target".into())
 }
 
 pub(super) fn validate_membership_in_equal_set_inference_target(

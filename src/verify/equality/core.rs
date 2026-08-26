@@ -11,14 +11,17 @@ use crate::obj::{
 use crate::rational_expression::{
     complex_algebraic_normalization_nonzero_requirements,
     objs_equal_by_complex_rational_expression_evaluation,
-    objs_equal_by_rational_expression_evaluation,
+    objs_equal_by_rational_expression_evaluation, objs_form_verified_integral_polynomial_identity,
 };
 use crate::result::{
     BuiltinRuleEvidence, CheckedFunctionDefinitionReductionEvidence,
     ComplexAlgebraicNormalizationBuiltinRuleEvidence, EqualityTransportEvidence,
-    EqualityTransportStep, FactTransformationRule, RationalNormalizationBuiltinRuleEvidence,
-    StmtResult, SuccessFactProofResult, SuccessFactStmtResult, SuccessTransformFactResult,
-    UnknownGenericStmtResult,
+    EqualityTransportStep, FactTransformationRule,
+    IntegralPolynomialNormalizationBuiltinRuleEvidence,
+    NestedCheckedFunctionDefinitionReductionEvidence, RationalNormalizationBuiltinRuleEvidence,
+    StmtResult, StructuralDefinitionCongruenceBuiltinRuleEvidence,
+    StructuralKnownEqualityCongruenceBuiltinRuleEvidence, SuccessFactProofResult,
+    SuccessFactStmtResult, SuccessTransformFactResult, UnknownGenericStmtResult,
 };
 use crate::runtime::Runtime;
 use crate::verify::{BuiltinRuleSearchState, ProofSearchState};
@@ -137,6 +140,61 @@ impl Runtime {
             return Ok(direct_evaluation_result);
         }
 
+        // Prefer an exact earlier equality Result at a changed leaf over a
+        // second definition unfolding. This keeps proof-step provenance (for
+        // example a preceding `odd(n+1) = ...` line) visible to the compiler.
+        let mut congruence_subgoals = Vec::new();
+        if self.collect_known_addition_congruence_results(
+            &equal_fact.left,
+            &equal_fact.right,
+            equal_fact.line_file.clone(),
+            &mut congruence_subgoals,
+        ) && !congruence_subgoals.is_empty()
+        {
+            let target: Fact = equal_fact.clone().into();
+            let result =
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    target.clone(),
+                    "known equalities under reviewed addition congruence".to_string(),
+                    BuiltinRuleEvidence::StructuralKnownEqualityCongruence(
+                        StructuralKnownEqualityCongruenceBuiltinRuleEvidence {
+                            expected_target: target,
+                        },
+                    ),
+                    congruence_subgoals,
+                )
+                .into();
+            return Ok(
+                self.cache_successful_atomic_fact_for_statement(&equal_fact.clone().into(), result)
+            );
+        }
+
+        let mut nested_reductions = Vec::new();
+        if self.collect_checked_definition_structural_reductions(
+            &equal_fact.left,
+            &equal_fact.right,
+            &mut nested_reductions,
+        )? && !nested_reductions.is_empty()
+        {
+            let target: Fact = equal_fact.clone().into();
+            let result =
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    target.clone(),
+                    "checked definition reductions under structural congruence".to_string(),
+                    BuiltinRuleEvidence::StructuralDefinitionCongruence(
+                        StructuralDefinitionCongruenceBuiltinRuleEvidence {
+                            expected_target: target,
+                            reductions: nested_reductions,
+                        },
+                    ),
+                    Vec::new(),
+                )
+                .into();
+            return Ok(
+                self.cache_successful_atomic_fact_for_statement(&equal_fact.clone().into(), result)
+            );
+        }
+
         if !self.equal_fact_sides_are_equal_by_terminating_reduction_and_congruence(equal_fact)? {
             return Ok(direct_evaluation_result);
         }
@@ -206,6 +264,20 @@ impl Runtime {
             )
             .into();
         }
+        if objs_form_verified_integral_polynomial_identity(&equal_fact.left, &equal_fact.right) {
+            let target: Fact = equal_fact.clone().into();
+            return SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                target.clone(),
+                "exact integral polynomial normalization".to_string(),
+                BuiltinRuleEvidence::IntegralPolynomialNormalization(
+                    IntegralPolynomialNormalizationBuiltinRuleEvidence {
+                        expected_target: target,
+                    },
+                ),
+                Vec::new(),
+            )
+            .into();
+        }
         let left_resolved = self.resolve_obj(&equal_fact.left);
         let right_resolved = self.resolve_obj(&equal_fact.right);
         let reason = if equal_fact
@@ -237,6 +309,80 @@ impl Runtime {
             Vec::new(),
         )
         .into()
+    }
+
+    fn collect_checked_definition_structural_reductions(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        reductions: &mut Vec<NestedCheckedFunctionDefinitionReductionEvidence>,
+    ) -> Result<bool, RuntimeError> {
+        if objs_equal_with_nested_binder_alpha_equivalence(left, right) {
+            return Ok(true);
+        }
+
+        let checkpoint = reductions.len();
+        if let Some((definition_object, defining_equality, defining_equality_fact_id)) =
+            self.checked_function_definition_reduction_source(left)?
+        {
+            if let Some(reduced) = self.reduce_direct_known_fn_application_once(
+                left,
+                &ProofSearchState::after_well_definedness(),
+            )? {
+                reductions.push(NestedCheckedFunctionDefinitionReductionEvidence {
+                    definition_object,
+                    defining_equality,
+                    defining_equality_fact_id,
+                    application: left.clone(),
+                    reduced: reduced.clone(),
+                });
+                if self
+                    .collect_checked_definition_structural_reductions(&reduced, right, reductions)?
+                {
+                    return Ok(true);
+                }
+                reductions.truncate(checkpoint);
+            }
+        }
+
+        if let Some((definition_object, defining_equality, defining_equality_fact_id)) =
+            self.checked_function_definition_reduction_source(right)?
+        {
+            if let Some(reduced) = self.reduce_direct_known_fn_application_once(
+                right,
+                &ProofSearchState::after_well_definedness(),
+            )? {
+                reductions.push(NestedCheckedFunctionDefinitionReductionEvidence {
+                    definition_object,
+                    defining_equality,
+                    defining_equality_fact_id,
+                    application: right.clone(),
+                    reduced: reduced.clone(),
+                });
+                if self
+                    .collect_checked_definition_structural_reductions(left, &reduced, reductions)?
+                {
+                    return Ok(true);
+                }
+                reductions.truncate(checkpoint);
+            }
+        }
+
+        let structurally_equal: Result<bool, RuntimeError> =
+            Self::same_shape_and_corresponding_args_match(left, right, &mut |left, right| {
+                self.collect_checked_definition_structural_reductions(left, right, reductions)
+            });
+        match structurally_equal {
+            Ok(true) => Ok(true),
+            Ok(false) => {
+                reductions.truncate(checkpoint);
+                Ok(false)
+            }
+            Err(error) => {
+                reductions.truncate(checkpoint);
+                Err(error)
+            }
+        }
     }
 
     // Reusing an already stored equality and then normalizing its representative still creates

@@ -566,7 +566,7 @@ impl StmtResultToLeanCompiler {
                     "named function return check has no direct recursive Result proof adapter"
                         .to_string()
                 })?;
-            let (value, uses_native_real_body) = render_named_function_value_from_result(
+            let (value, native_body_carrier) = render_named_function_value_from_result(
                 &function,
                 &lowered_body,
                 &source_body,
@@ -578,7 +578,7 @@ impl StmtResultToLeanCompiler {
                 source_body: source_body.clone(),
                 lowered_body: lowered_body.clone(),
                 value,
-                uses_native_real_body,
+                native_body_carrier,
                 parameter_premises,
                 domain_premises,
             }))
@@ -658,7 +658,7 @@ impl StmtResultToLeanCompiler {
                 function: compiled_body.function,
                 source_body: compiled_body.source_body,
                 body: compiled_body.lowered_body,
-                uses_native_real_body: compiled_body.uses_native_real_body,
+                native_body_carrier: compiled_body.native_body_carrier,
                 parameter_premises: compiled_body.parameter_premises,
                 domain_premises: compiled_body.domain_premises,
                 well_definedness: StmtResultWellDefinednessToLeanCompilationContext::default(),
@@ -1396,7 +1396,7 @@ impl StmtResultToLeanCompiler {
                 function: compiled_body.function,
                 source_body: compiled_body.source_body,
                 body: compiled_body.lowered_body,
-                uses_native_real_body: true,
+                native_body_carrier: NativeFunctionBodyCarrier::Real,
                 parameter_premises: compiled_body.parameter_premises,
                 domain_premises: compiled_body.domain_premises,
                 well_definedness: StmtResultWellDefinednessToLeanCompilationContext::default(),
@@ -1929,7 +1929,7 @@ impl StmtResultToLeanCompiler {
                 function: compiled_body.function,
                 source_body: compiled_body.source_body,
                 body: compiled_body.lowered_body,
-                uses_native_real_body: true,
+                native_body_carrier: NativeFunctionBodyCarrier::Real,
                 parameter_premises: compiled_body.parameter_premises,
                 domain_premises: compiled_body.domain_premises,
                 well_definedness: StmtResultWellDefinednessToLeanCompilationContext::default(),
@@ -2522,7 +2522,7 @@ impl StmtResultToLeanCompiler {
                 function: compiled_body.function,
                 source_body: compiled_body.source_body,
                 body: compiled_body.lowered_body,
-                uses_native_real_body: true,
+                native_body_carrier: NativeFunctionBodyCarrier::Real,
                 parameter_premises: compiled_body.parameter_premises,
                 domain_premises: compiled_body.domain_premises,
                 well_definedness: StmtResultWellDefinednessToLeanCompilationContext::default(),

@@ -504,6 +504,12 @@ impl StmtResultToLeanCompiler {
                 return self
                     .construct_lean_integer_remainder_membership_from_result(target, subgoals);
             }
+            IntegerMembershipClosureBuiltinRule::PowNat
+                if matches!(target_element, Obj::Pow(_)) =>
+            {
+                return self
+                    .construct_lean_integer_natural_power_membership_from_result(target, subgoals);
+            }
             _ => return Err("integer arithmetic closure changed its target operator".into()),
         };
         self.construct_lean_binary_membership_from_conjunction_result(
@@ -512,6 +518,155 @@ impl StmtResultToLeanCompiler {
             theorem,
             subgoals,
         )
+    }
+
+    /// `Wrap`: a checked integer base and natural exponent certify the exact
+    /// integer power. The current Lean surface admits a nonnegative literal
+    /// exponent; symbolic natural exponents remain fail-closed until their
+    /// exact `Nat` representative is retained in the compiler environment.
+    pub(super) fn construct_lean_integer_natural_power_membership_from_result(
+        &mut self,
+        target: &Fact,
+        subgoals: &[StmtResult],
+    ) -> Result<Option<String>, String> {
+        let (target_element, target_set) = membership_parts(target)?;
+        if !matches!(target_set, Obj::StandardSet(StandardSet::Z)) {
+            return Err("integer natural-power membership target is not Z".into());
+        }
+        let Obj::Pow(power) = target_element else {
+            return Err("integer natural-power certificate changed its target operator".into());
+        };
+        let [conjunction_result] = subgoals else {
+            return Err("integer natural-power requires one conjunction child Result".into());
+        };
+        let premise_result = conjunction_result
+            .factual_success()
+            .ok_or_else(|| "integer natural-power conjunction child is not factual".to_string())?;
+        if !premise_result.store.infers.is_empty() {
+            return Err("integer natural-power premise child published effects".into());
+        }
+
+        let validate_branch = |branch: &Fact,
+                               expected_base_set: StandardSet,
+                               branch_index: usize|
+         -> Result<(), String> {
+            let components = conjunction_components(branch)?;
+            let [base_component, exponent_component] = components.as_slice() else {
+                return Err(format!(
+                    "integer natural-power premise branch {branch_index} changed its component arity"
+                ));
+            };
+            for (component_index, (component, expected_operand, expected_set)) in
+                [base_component, exponent_component]
+                    .into_iter()
+                    .zip([
+                        (power.base.as_ref(), expected_base_set),
+                        (power.exponent.as_ref(), StandardSet::N),
+                    ])
+                    .map(|(component, (operand, set))| (component, operand, set))
+                    .enumerate()
+            {
+                let (operand, set) = membership_parts(component)?;
+                if !matches!(set, Obj::StandardSet(set) if *set == expected_set)
+                    || obj_equality_key(operand) != obj_equality_key(expected_operand)
+                {
+                    return Err(format!(
+                        "integer natural-power premise branch {branch_index} component {component_index} changed its operand or carrier"
+                    ));
+                }
+            }
+            Ok(())
+        };
+
+        match premise_result.fact() {
+            branch @ (Fact::AndFact(_) | Fact::ChainFact(_)) => {
+                validate_branch(&branch, StandardSet::Z, 0)?;
+            }
+            Fact::OrFact(_) => {
+                let branches = disjunction_components(&premise_result.fact())?;
+                let [integer_branch, positive_natural_branch] = branches.as_slice() else {
+                    return Err(
+                        "integer natural-power premise changed its alternative arity".into(),
+                    );
+                };
+                validate_branch(integer_branch, StandardSet::Z, 0)?;
+                validate_branch(positive_natural_branch, StandardSet::NPos, 1)?;
+            }
+            other => {
+                return Err(format!(
+                    "integer natural-power premise has unsupported shape `{other}`"
+                ));
+            }
+        }
+        if self
+            .construct_lean_proof_from_direct_fact_result(premise_result)?
+            .is_none()
+        {
+            return Ok(None);
+        }
+        let exponent = power
+            .exponent
+            .evaluate_to_normalized_decimal_number()
+            .and_then(|number| number.normalized_value.parse::<i128>().ok())
+            .filter(|value| *value >= 0)
+            .ok_or_else(|| {
+                "integer natural-power compiler requires a literal nonnegative exponent".to_string()
+            })?;
+        let base = render_integer_obj(power.base.as_ref(), &self.environment_stack)?;
+        render_fact(target, &self.environment_stack)?;
+        Ok(Some(format!(
+            "Litex.Rules.complexIntPowNatInZ ({base}) ({exponent} : ℕ)"
+        )))
+    }
+
+    /// `Leaf`: the verifier has checked that this exact source occurrence is
+    /// an inclusive unary `Z`-indexed sum with exact return carrier `Z`.
+    pub(super) fn construct_lean_integer_range_sum_membership_from_result(
+        &self,
+        target: &Fact,
+        subgoals: &[StmtResult],
+    ) -> Result<Option<String>, String> {
+        if !subgoals.is_empty() {
+            return Err("integer-range sum membership retained child Results".into());
+        }
+        let (target_element, target_set) = membership_parts(target)?;
+        if !matches!(target_set, Obj::StandardSet(StandardSet::Z)) {
+            return Err("integer-range sum membership target is not Z".into());
+        }
+        let Obj::Sum(sum) = target_element else {
+            return Err("integer-range sum membership changed its target aggregate".into());
+        };
+        let occurrence_id = sum.source_occurrence_id.ok_or_else(|| {
+            "integer-range sum membership has no parser-owned occurrence id".to_string()
+        })?;
+        let iteration = self
+            .environment_stack
+            .well_definedness
+            .as_ref()
+            .and_then(|context| context.iterations.get(&occurrence_id))
+            .ok_or_else(|| {
+                "integer-range sum membership has no exact Iteration WD Result".to_string()
+            })?;
+        if iteration.operation != "sum"
+            || !matches!(iteration.parameter_set, Obj::StandardSet(StandardSet::Z))
+            || !matches!(iteration.return_carrier, Obj::StandardSet(StandardSet::Z))
+            || iteration.parameter_count != 1
+            || iteration.domain_count != 0
+            || !iteration_has_reviewed_integer_callable_contract(iteration)
+            || !iteration.has_exact_integer_coverage
+            || obj_equality_key(&iteration.source_aggregate) != obj_equality_key(target_element)
+        {
+            return Err(
+                "integer-range sum membership changed its exact Iteration WD contract".into(),
+            );
+        }
+        let rendered_sum = render_obj(target_element, &self.environment_stack)?;
+        let rendered_target = render_fact(target, &self.environment_stack)?;
+        let expected_target = format!("Litex.In {rendered_sum} Litex.Z");
+        if rendered_target != expected_target {
+            return Err("integer-range sum membership changed its rendered target".into());
+        }
+        Ok(Some(format!("Litex.In.own Litex.Z ({rendered_sum})")))
     }
 
     /// `Wrap`: `%` owns one conjunction child proving both operands are in
@@ -1101,6 +1256,246 @@ impl StmtResultToLeanCompiler {
         Ok(format!("Litex.Le.trans {first_le} {second_le}"))
     }
 
+    pub(super) fn construct_lean_registered_integer_sum_rule_from_result(
+        &mut self,
+        target: &Fact,
+        evidence: &RegisteredLocalBuiltinRuleEvidence,
+        subgoals: &[StmtResult],
+    ) -> Result<Option<String>, String> {
+        #[derive(Clone, Copy)]
+        enum SumRule {
+            Single,
+            SplitLast,
+        }
+
+        let fingerprint = evidence.semantic_fingerprint.as_hex();
+        let rule = match evidence.rule_id.as_str() {
+            SUM_SINGLE_RULE_ID if fingerprint == SUM_SINGLE_FINGERPRINT => SumRule::Single,
+            SUM_SPLIT_LAST_RULE_ID if fingerprint == SUM_SPLIT_LAST_FINGERPRINT => {
+                SumRule::SplitLast
+            }
+            _ => return Ok(None),
+        };
+        let (binding_count, semantic_premise_count) = match rule {
+            SumRule::Single => (2, 0),
+            SumRule::SplitLast => (3, 1),
+        };
+        if evidence.bindings.len() != binding_count
+            || evidence.parameter_requirement_count != binding_count
+            || subgoals.len() != binding_count + semantic_premise_count
+        {
+            return Err(format!(
+                "registered sum rule `{}` changed its certificate arity",
+                evidence.rule_id.as_str()
+            ));
+        }
+
+        let mut child_proofs = Vec::with_capacity(subgoals.len());
+        for (index, child) in subgoals.iter().enumerate() {
+            let child = child
+                .factual_success()
+                .ok_or_else(|| format!("registered sum child {index} is not factual"))?;
+            if !child.store.infers.is_empty() {
+                return Err(format!("registered sum child {index} published effects"));
+            }
+            if index < binding_count {
+                let child_fact = child.fact();
+                let (element, set) = membership_parts(&child_fact)?;
+                if !canonical_objs_equal(element, &evidence.bindings[index], MatchLimits::default())
+                    .map_err(|error| error.message)?
+                {
+                    return Err(format!(
+                        "registered sum parameter child {index} changed its exact binding"
+                    ));
+                }
+                if index + 1 < binding_count {
+                    if !matches!(set, Obj::StandardSet(StandardSet::Z)) {
+                        return Err(format!(
+                            "registered sum endpoint child {index} changed its integer carrier"
+                        ));
+                    }
+                } else {
+                    let LeanTargetObjectRepresentation::FunctionSet { function } =
+                        LeanTargetObjectRepresentation::lower(set)?
+                    else {
+                        return Err(
+                            "registered sum function child changed its function-set carrier".into(),
+                        );
+                    };
+                    if function.parameters.len() != 1
+                        || !function.domain_facts.is_empty()
+                        || function.parameters[0].set
+                            != LeanTargetObjectRepresentation::StandardSet(
+                                LeanTargetStandardSet::Integer,
+                            )
+                        || function.return_set.as_ref()
+                            != &LeanTargetObjectRepresentation::StandardSet(
+                                LeanTargetStandardSet::Integer,
+                            )
+                    {
+                        return Err(
+                            "registered sum function child changed its unary Z-to-Z contract"
+                                .into(),
+                        );
+                    }
+                }
+            }
+            let Some(proof) = self
+                .construct_lean_proof_from_direct_fact_result_using_its_well_definedness(child)?
+            else {
+                return Err(format!(
+                    "registered sum child {index} has no direct Result proof consumer"
+                ));
+            };
+            child_proofs.push(proof);
+        }
+
+        let (target_left, target_right) = equality_parts(target)?;
+        let endpoint_matches = |source: &Obj, binding: &Obj| -> Result<bool, String> {
+            canonical_objs_equal(source, binding, MatchLimits::default())
+                .map_err(|error| error.message)
+        };
+        let function_head_matches = |application: &FnObj, binding: &Obj| -> Result<bool, String> {
+            let head: Obj = application.head.as_ref().clone().into();
+            endpoint_matches(&head, binding)
+        };
+        let application_is_unary_at = |application: &FnObj,
+                                       function: &Obj,
+                                       argument: &Obj|
+         -> Result<bool, String> {
+            Ok(function_head_matches(application, function)?
+                && matches!(application.body.as_slice(), [layer] if matches!(layer.as_slice(), [retained] if endpoint_matches(retained.as_ref(), argument).unwrap_or(false))))
+        };
+        let add_one_matches = |source: &Obj, base: &Obj| -> Result<bool, String> {
+            let Obj::Add(addition) = source else {
+                return Ok(false);
+            };
+            Ok(endpoint_matches(addition.left.as_ref(), base)?
+                && matches!(addition.right.as_ref(), Obj::Number(number) if number.normalized_value == "1"))
+        };
+
+        let function_binding = match rule {
+            SumRule::Single => &evidence.bindings[1],
+            SumRule::SplitLast => &evidence.bindings[2],
+        };
+        match rule {
+            SumRule::Single => {
+                let Obj::Sum(sum) = target_left else {
+                    return Err("registered sum-single target lost its sum side".into());
+                };
+                let Obj::FnObj(application) = target_right else {
+                    return Err("registered sum-single target lost its application side".into());
+                };
+                if !endpoint_matches(sum.start.as_ref(), &evidence.bindings[0])?
+                    || !endpoint_matches(sum.end.as_ref(), &evidence.bindings[0])?
+                    || !endpoint_matches(sum.func.as_ref(), function_binding)?
+                    || !application_is_unary_at(
+                        application,
+                        function_binding,
+                        &evidence.bindings[0],
+                    )?
+                {
+                    return Err("registered sum-single target changed its matched structure".into());
+                }
+            }
+            SumRule::SplitLast => {
+                let Obj::Sum(extended) = target_left else {
+                    return Err("registered sum-split target lost its extended sum".into());
+                };
+                let Obj::Add(decomposition) = target_right else {
+                    return Err(
+                        "registered sum-split target lost its additive decomposition".into(),
+                    );
+                };
+                let Obj::Sum(previous) = decomposition.left.as_ref() else {
+                    return Err("registered sum-split target lost its previous sum".into());
+                };
+                let Obj::FnObj(last_application) = decomposition.right.as_ref() else {
+                    return Err("registered sum-split target lost its last application".into());
+                };
+                if !endpoint_matches(extended.start.as_ref(), &evidence.bindings[0])?
+                    || !add_one_matches(extended.end.as_ref(), &evidence.bindings[1])?
+                    || !endpoint_matches(extended.func.as_ref(), function_binding)?
+                    || !endpoint_matches(previous.start.as_ref(), &evidence.bindings[0])?
+                    || !endpoint_matches(previous.end.as_ref(), &evidence.bindings[1])?
+                    || !endpoint_matches(previous.func.as_ref(), function_binding)?
+                    || !function_head_matches(last_application, function_binding)?
+                    || !matches!(last_application.body.as_slice(), [layer] if matches!(layer.as_slice(), [argument] if add_one_matches(argument.as_ref(), &evidence.bindings[1]).unwrap_or(false)))
+                {
+                    return Err("registered sum-split target changed its matched structure".into());
+                }
+                let premise = subgoals[binding_count]
+                    .factual_success()
+                    .expect("registered sum semantic premise was validated above");
+                let premise_fact = premise.fact();
+                let (premise_left, premise_right, strict) = order_relation_parts(&premise_fact)?;
+                if strict
+                    || !endpoint_matches(premise_left, &evidence.bindings[0])?
+                    || !endpoint_matches(premise_right, &evidence.bindings[1])?
+                {
+                    return Err(
+                        "registered sum-split premise changed its non-strict endpoint order".into(),
+                    );
+                }
+            }
+        }
+
+        // Rendering is itself part of the certificate check: every Sum and
+        // function application must resolve through the exact occurrence-owned
+        // WD context before a Mathlib adapter can be selected.
+        render_fact(target, &self.environment_stack)?;
+        let start = render_integer_obj(&evidence.bindings[0], &self.environment_stack)?;
+        let finish = if matches!(rule, SumRule::SplitLast) {
+            Some(render_integer_obj(
+                &evidence.bindings[1],
+                &self.environment_stack,
+            )?)
+        } else {
+            None
+        };
+        let lowered_function = LeanTargetObjectRepresentation::lower(function_binding)?;
+        let (exact_function, heterogeneous) =
+            render_exact_unary_integer_function(&lowered_function, &self.environment_stack)?;
+        let proof = match (rule, heterogeneous) {
+            (SumRule::Single, None) => {
+                format!("Litex.Rules.integerRangeSumSingleOwn {start} {exact_function}")
+            }
+            (SumRule::Single, Some((source, membership))) => {
+                if membership != child_proofs[1] {
+                    return Err(
+                        "registered sum-single selected a different function membership proof"
+                            .into(),
+                    );
+                }
+                format!("Litex.Rules.integerRangeSumSingle {start} {source} ({membership})")
+            }
+            (SumRule::SplitLast, None) => {
+                let order_proof = format!(
+                    "(by simpa [Litex.Le, Litex.OrderValue] using ({}))",
+                    child_proofs[binding_count]
+                );
+                format!(
+                    "Litex.Rules.integerRangeSumSplitLastOwn {start} {} {exact_function} ({order_proof})",
+                    finish.expect("split-last retained finish"),
+                )
+            }
+            (SumRule::SplitLast, Some((source, membership))) => {
+                if membership != child_proofs[2] {
+                    return Err(
+                        "registered sum-split selected a different function membership proof"
+                            .into(),
+                    );
+                }
+                format!(
+                    "Litex.Rules.integerRangeSumSplitLast {start} {} {source} ({membership}) ((by simpa [Litex.Le, Litex.OrderValue] using ({})))",
+                    finish.expect("split-last retained finish"),
+                    child_proofs[binding_count]
+                )
+            }
+        };
+        Ok(Some(proof))
+    }
+
     /// `Combine`: validate one registry-owned certificate directly from its
     /// stable rule identity, semantic fingerprint, matched bindings, and
     /// ordered child Results. This first direct tranche covers the complete
@@ -1113,6 +1508,11 @@ impl StmtResultToLeanCompiler {
         subgoals: &[StmtResult],
     ) -> Result<Option<String>, String> {
         self.validate_registered_local_builtin_target_and_child_arity(target, evidence, subgoals)?;
+        if let Some(proof) =
+            self.construct_lean_registered_integer_sum_rule_from_result(target, evidence, subgoals)?
+        {
+            return Ok(Some(proof));
+        }
         let Some((set_rule, expected_binding_count, expected_semantic_premise_count)) =
             registered_set_rule(&evidence.rule_id, &evidence.semantic_fingerprint)
         else {

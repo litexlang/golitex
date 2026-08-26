@@ -505,10 +505,75 @@ impl Runtime {
             equal_fact.line_file.clone(),
         )
         .into();
-        infer_result.new_fact(&target_in_r_pos.clone().into());
-        let nested_infer =
-            self.store_atomic_fact_without_well_defined_verified_and_infer(target_in_r_pos)?;
-        infer_result.new_infer_result_inside(nested_infer);
+        let target_fact: Fact = target_in_r_pos.clone().into();
+        let nested_infer = self
+            .store_atomic_fact_without_well_defined_verified_and_infer(target_in_r_pos.clone())?;
+        let conclusion = SuccessStoreFactResult::new(target_fact, nested_infer.clone());
+        let is_closed_positive_power = maybe_power
+            .evaluate_to_normalized_decimal_number()
+            .is_some_and(|number| {
+                matches!(
+                    compare_normalized_number_str_to_zero(&number.normalized_value),
+                    NumberCompareResult::Greater
+                )
+            });
+        let positive_integer_base_natural_power_premises = if let Obj::Pow(power) = maybe_power {
+            let exponent_is_natural = power
+                .exponent
+                .evaluate_to_normalized_decimal_number()
+                .is_some_and(|number| {
+                    number
+                        .normalized_value
+                        .parse::<i128>()
+                        .is_ok_and(|exponent| exponent >= 0)
+                });
+            let base_positive: Fact = LessFact::new(
+                Number::new("0".to_string()).into(),
+                power.base.as_ref().clone(),
+                equal_fact.line_file.clone(),
+            )
+            .into();
+            let base_in_z: Fact = InFact::new(
+                power.base.as_ref().clone(),
+                StandardSet::Z.into(),
+                equal_fact.line_file.clone(),
+            )
+            .into();
+            (exponent_is_natural
+                && self.known_fact_id_for_fact(&base_positive)?.is_some()
+                && self.known_fact_id_for_fact(&base_in_z)?.is_some())
+            .then_some((base_positive, base_in_z))
+        } else {
+            None
+        };
+        if is_closed_positive_power {
+            infer_result.add_rule_application_preserving_conclusion_result_structure(
+                InferRule::ClosedPositivePowerEqualityImpliesEqualSideMembership(
+                    ClosedPositivePowerEqualityImpliesEqualSideMembershipInferRule {
+                        power_is_left_endpoint: obj_equality_key(maybe_power)
+                            == obj_equality_key(&equal_fact.left),
+                    },
+                ),
+                vec![equal_fact.clone().into()],
+                vec![conclusion],
+            );
+        } else if let Some((base_positive, base_in_z)) =
+            positive_integer_base_natural_power_premises
+        {
+            infer_result.add_rule_application_preserving_conclusion_result_structure(
+                InferRule::PositiveIntegerBaseNaturalPowerEqualityImpliesEqualSideMembership(
+                    PositiveIntegerBaseNaturalPowerEqualityImpliesEqualSideMembershipInferRule {
+                        power_is_left_endpoint: obj_equality_key(maybe_power)
+                            == obj_equality_key(&equal_fact.left),
+                    },
+                ),
+                vec![equal_fact.clone().into(), base_positive, base_in_z],
+                vec![conclusion],
+            );
+        } else {
+            infer_result.new_infer_result_inside(nested_infer);
+            infer_result.new_fact(&target_in_r_pos.into());
+        }
         Ok(())
     }
 

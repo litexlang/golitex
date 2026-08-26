@@ -821,6 +821,13 @@ pub(super) fn infer_rule_application_value(
                 InferRule::DefinedPredicateDefinitionClauseProjection(_) => {
                     "DefinedPredicateDefinitionClauseProjection"
                 }
+                InferRule::EqualityChainClosure(_) => "EqualityChainClosure",
+                InferRule::ClosedPositivePowerEqualityImpliesEqualSideMembership(_) => {
+                    "ClosedPositivePowerEqualityImpliesEqualSideMembership"
+                }
+                InferRule::PositiveIntegerBaseNaturalPowerEqualityImpliesEqualSideMembership(_) => {
+                    "PositiveIntegerBaseNaturalPowerEqualityImpliesEqualSideMembership"
+                }
                 InferRule::RegisteredTransitivePredicateChainClosure(_) => {
                     "RegisteredTransitivePredicateChainClosure"
                 }
@@ -830,6 +837,7 @@ pub(super) fn infer_rule_application_value(
                 InferRule::ListSetMembershipImpliesEqualityAlternatives(_) => {
                     "ListSetMembershipImpliesEqualityAlternatives"
                 }
+                InferRule::NumericOrderBoundImpliesZeroSign => "NumericOrderBoundImpliesZeroSign",
                 InferRule::MultiplicationByNegativeOneReversesOrderAgainstZero => {
                     "MultiplicationByNegativeOneReversesOrderAgainstZero"
                 }
@@ -901,6 +909,33 @@ pub(super) fn infer_rule_application_value(
             number_field("start_object_index", rule.start_object_index),
         );
         fields.insert(3, number_field("end_object_index", rule.end_object_index));
+    }
+    if let InferRule::EqualityChainClosure(rule) = &result.rule {
+        fields.insert(
+            1,
+            number_field("start_object_index", rule.start_object_index),
+        );
+        fields.insert(2, number_field("end_object_index", rule.end_object_index));
+    }
+    if let InferRule::ClosedPositivePowerEqualityImpliesEqualSideMembership(rule) = &result.rule {
+        fields.insert(
+            1,
+            (
+                "power_is_left_endpoint".to_string(),
+                JsonValue::Bool(rule.power_is_left_endpoint),
+            ),
+        );
+    }
+    if let InferRule::PositiveIntegerBaseNaturalPowerEqualityImpliesEqualSideMembership(rule) =
+        &result.rule
+    {
+        fields.insert(
+            1,
+            (
+                "power_is_left_endpoint".to_string(),
+                JsonValue::Bool(rule.power_is_left_endpoint),
+            ),
+        );
     }
     if let InferRule::TupleEqualityWithKnownTupleImpliesTupleShape(rule) = &result.rule {
         fields.insert(
@@ -1196,6 +1231,7 @@ pub(super) fn integer_membership_closure_rule_name(
         IntegerMembershipClosureBuiltinRule::Sub => "Sub",
         IntegerMembershipClosureBuiltinRule::Mul => "Mul",
         IntegerMembershipClosureBuiltinRule::Mod => "Mod",
+        IntegerMembershipClosureBuiltinRule::PowNat => "PowNat",
     }
 }
 

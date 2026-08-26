@@ -1,6 +1,18 @@
 // @generated local builtin catalog; do not edit.
 pub(super) const GENERATED_LOCAL_BUILTIN_RULES: &[GeneratedLocalBuiltinRuleSource] = &[
     GeneratedLocalBuiltinRuleSource {
+        id: "aggregate.sum_single",
+        semantic_fingerprint: "559412de23137a6185d8afef3f156c53168a6985b5bf14b1f45c521c31ca1b70",
+        litex_source: include_str!("aggregate/sum_single.lit"),
+        lean_theorem_name: "aggregate_sum_single",
+    },
+    GeneratedLocalBuiltinRuleSource {
+        id: "aggregate.sum_split_last",
+        semantic_fingerprint: "900f991a5769f64b590297b56047efa672cdbbfadce2cfd0710dc8106fd5f7c0",
+        litex_source: include_str!("aggregate/sum_split_last.lit"),
+        lean_theorem_name: "aggregate_sum_split_last",
+    },
+    GeneratedLocalBuiltinRuleSource {
         id: "algebra.abs_mul",
         semantic_fingerprint: "24c0627d0be87cbd868fed3f9f79f3ed03ca0fe2a938123988ba1ee9c1b964d2",
         litex_source: include_str!("algebra/abs_mul.lit"),

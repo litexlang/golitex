@@ -3,6 +3,13 @@
 //! These constants validate typed `RegisteredLocalBuiltinRuleEvidence`; they
 //! are not an intermediate representation.
 
+pub const SUM_SINGLE_RULE_ID: &str = "aggregate.sum_single";
+pub const SUM_SINGLE_FINGERPRINT: &str =
+    "559412de23137a6185d8afef3f156c53168a6985b5bf14b1f45c521c31ca1b70";
+pub const SUM_SPLIT_LAST_RULE_ID: &str = "aggregate.sum_split_last";
+pub const SUM_SPLIT_LAST_FINGERPRINT: &str =
+    "900f991a5769f64b590297b56047efa672cdbbfadce2cfd0710dc8106fd5f7c0";
+
 pub const LESS_EQUAL_OF_LESS_RULE_ID: &str = "order.less_equal_of_less";
 pub const LESS_EQUAL_OF_LESS_FINGERPRINT: &str =
     "990acd86094d0a1d3c750541cac271a185c4d399c1277d2fdebac77b98130788";

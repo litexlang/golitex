@@ -4,6 +4,54 @@ use crate::verify::verify_equality_by_builtin_rules::{
 };
 
 impl Runtime {
+    /// Collect the exact non-reflexive leaves needed to replay addition
+    /// congruence. This deliberately accepts only `Add` nodes: widening the
+    /// structural language requires a matching reviewed Lean adapter.
+    pub fn collect_known_addition_congruence_results(
+        &self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        subgoals: &mut Vec<StmtResult>,
+    ) -> bool {
+        if objs_equal_with_nested_binder_alpha_equivalence(left, right) {
+            return true;
+        }
+        if let (Obj::Add(left_add), Obj::Add(right_add)) = (left, right) {
+            return self.collect_known_addition_congruence_results(
+                left_add.left.as_ref(),
+                right_add.left.as_ref(),
+                line_file.clone(),
+                subgoals,
+            ) && self.collect_known_addition_congruence_results(
+                left_add.right.as_ref(),
+                right_add.right.as_ref(),
+                line_file,
+                subgoals,
+            );
+        }
+
+        let leaf_equality = EqualFact::new_from_refs(left, right, line_file);
+        let leaf: Fact = leaf_equality.clone().into();
+        let result =
+            self.verify_equal_fact_by_known_equality_without_direct_evaluation(&leaf_equality);
+        let Some(factual) = result.factual_success() else {
+            return false;
+        };
+        if factual.fact().to_string() != leaf.to_string()
+            || !factual.store.infers.is_empty()
+            || matches!(
+                factual.proof(),
+                SuccessFactProofResult::DefinitionReduction(_)
+                    | SuccessFactProofResult::DiagnosticOnly(_)
+            )
+        {
+            return false;
+        }
+        subgoals.push(result);
+        true
+    }
+
     pub fn equal_fact_sides_have_same_known_equality_in_some_env(
         &self,
         equal_fact: &EqualFact,

@@ -291,6 +291,7 @@ thm continuous_image_of_compact_is_compact:
         $is_compact_subset(X, open_sets_X, K)
         =>:
             $is_compact_subset(Y, open_sets_Y, fn_range(fn(x K) Y {f(x)}))
+    let image_map = fn(source K) Y {f(source)}
     claim:
         ? forall Index set, cover fn(index Index) open_sets_Y:
             fn_range(fn(x K) Y {f(x)}) $subset big_union(fn_range(cover))
@@ -302,9 +303,9 @@ thm continuous_image_of_compact_is_compact:
             claim:
                 ? forall point K:
                     point $in big_union(fn_range(pullback_cover))
-                fn(x K) Y {f(x)}(point) $in fn_range(fn(x K) Y {f(x)})
-                fn(x K) Y {f(x)}(point) = f(point)
-                f(point) $in fn_range(fn(x K) Y {f(x)})
+                image_map(point) $in fn_range(image_map)
+                image_map(point) = f(point)
+                f(point) $in fn_range(image_map)
                 f(point) $in big_union(fn_range(cover))
                 obtain target_open from exist target_open fn_range(cover) st {f(point) $in target_open}
                 have by preimage selected_index from target_open $in fn_range(cover)
@@ -321,14 +322,14 @@ thm continuous_image_of_compact_is_compact:
         witness exist finite_indices power_set(Index) st {$is_finite_set(finite_indices), fn_range(fn(x K) Y {f(x)}) $subset big_union(fn_range(fn(index finite_indices) open_sets_Y {cover(index)}))} from J:
             $is_finite_set(J)
             claim:
-                ? fn_range(fn(x K) Y {f(x)}) $subset big_union(fn_range(fn(index J) open_sets_Y {cover(index)}))
+                ? fn_range(image_map) $subset big_union(fn_range(fn(index J) open_sets_Y {cover(index)}))
                 claim:
-                    ? forall image_point fn_range(fn(x K) Y {f(x)}):
+                    ? forall image_point fn_range(image_map):
                         image_point $in big_union(fn_range(fn(index J) open_sets_Y {cover(index)}))
-                    have by preimage source_point from image_point $in fn_range(fn(x K) Y {f(x)})
+                    have by preimage source_point from image_point $in fn_range(image_map)
                     source_point $in K
-                    image_point = fn(x K) Y {f(x)}(source_point)
-                    fn(x K) Y {f(x)}(source_point) = f(source_point)
+                    image_point = image_map(source_point)
+                    image_map(source_point) = f(source_point)
                     source_point $in big_union(fn_range(fn(index J) open_sets_X {pullback_cover(index)}))
                     obtain source_open from exist source_open fn_range(fn(index J) open_sets_X {pullback_cover(index)}) st {source_point $in source_open}
                     have by preimage selected_index from source_open $in fn_range(fn(index J) open_sets_X {pullback_cover(index)})
@@ -347,5 +348,5 @@ thm continuous_image_of_compact_is_compact:
                         image_point $in cover(selected_index)
                     image_point $in big_union(fn_range(fn(index J) open_sets_Y {cover(index)}))
                 by def:
-                    ? fn_range(fn(x K) Y {f(x)}) $subset big_union(fn_range(fn(index J) open_sets_Y {cover(index)}))
+                    ? fn_range(image_map) $subset big_union(fn_range(fn(index J) open_sets_Y {cover(index)}))
     by def $is_compact_subset(Y, open_sets_Y, fn_range(fn(x K) Y {f(x)}))

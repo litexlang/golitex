@@ -502,7 +502,7 @@ forall x, y, z Z:
         "tuple/cart membership should delegate arithmetic coordinates to the numeric-carrier strategy:\n{output}"
     );
     assert!(output.contains("set-membership strategy: constructor membership decomposition"));
-    assert!(output.contains("numeric-carrier strategy: structural closure in Z"));
+    assert!(output.contains("numeric-carrier strategy: typed structural closure in Z"));
 }
 
 #[test]

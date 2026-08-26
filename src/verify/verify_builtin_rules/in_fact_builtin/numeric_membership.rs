@@ -110,9 +110,20 @@ impl Runtime {
             return Ok(UnknownGenericStmtResult::new().into());
         }
         let reason = format!("{op}: iterand return set {ret_set} is contained in {target_set}");
+        if op == "sum" && matches!(ret_set, StandardSet::Z) && matches!(target_set, StandardSet::Z)
+        {
+            return Ok(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    in_fact.clone().into(),
+                    reason,
+                    BuiltinRuleEvidence::IntegerRangeSumMembership,
+                    Vec::new(),
+                )
+                .into(),
+            );
+        }
         Ok(number_in_set_verified_by_builtin_rules_result(
-            in_fact,
-            reason.as_str(),
+            in_fact, &reason,
         ))
     }
 
@@ -1944,6 +1955,7 @@ impl Runtime {
             Obj::Sub(_) => Some(IntegerMembershipClosureBuiltinRule::Sub),
             Obj::Mul(_) => Some(IntegerMembershipClosureBuiltinRule::Mul),
             Obj::Mod(_) => Some(IntegerMembershipClosureBuiltinRule::Mod),
+            Obj::Pow(_) => Some(IntegerMembershipClosureBuiltinRule::PowNat),
             _ => None,
         };
         if let Some(rule) = closure_rule {

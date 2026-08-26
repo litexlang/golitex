@@ -187,7 +187,22 @@ pub(super) fn render_order_fact(
     strict: bool,
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
-    if left.to_string() == "0" {
+    let exact_integer_endpoint = |object: &Obj| -> bool {
+        if !matches!(
+            LeanTargetObjectRepresentation::lower(object),
+            Ok(LeanTargetObjectRepresentation::Symbol { .. })
+        ) {
+            return false;
+        }
+        let Ok(source) = render_obj(object, context) else {
+            return false;
+        };
+        let Ok(integer) = render_integer_obj(object, context) else {
+            return false;
+        };
+        source == integer
+    };
+    if left.to_string() == "0" && !exact_integer_endpoint(right) {
         let predicate = if strict {
             "Litex.Positive"
         } else {
@@ -195,7 +210,7 @@ pub(super) fn render_order_fact(
         };
         return Ok(format!("{predicate} {}", render_obj(right, context)?));
     }
-    if right.to_string() == "0" {
+    if right.to_string() == "0" && !exact_integer_endpoint(left) {
         let predicate = if strict {
             "Litex.Negative"
         } else {
@@ -283,7 +298,9 @@ pub(super) fn install_structured_induction_native_integer_symbol(
     context: &mut StmtResultToLeanCompilerEnvironmentStack,
 ) {
     let complex = format!("((({native_integer}) : ℂ))");
-    context.symbol_names.insert(symbol_id, complex.clone());
+    context
+        .symbol_names
+        .insert(symbol_id, native_integer.to_string());
     context.numeric_representations.insert(symbol_id, complex);
     context
         .numeric_integer_values
@@ -294,6 +311,51 @@ pub(super) fn install_structured_induction_native_integer_symbol(
     context
         .numeric_real_values
         .insert(symbol_id, format!("((({native_integer}) : ℝ))"));
+}
+
+pub(super) fn render_integer_target_object_representation(
+    object: &LeanTargetObjectRepresentation,
+    context: &StmtResultToLeanCompilerEnvironmentStack,
+) -> Result<String, String> {
+    match object {
+        LeanTargetObjectRepresentation::Symbol { symbol_id, name } => context
+            .numeric_integer_values
+            .get(symbol_id)
+            .cloned()
+            .ok_or_else(|| format!("integer target symbol `{name}` has no exact ℤ representation")),
+        LeanTargetObjectRepresentation::Number { normalized_value }
+            if normalized_value.parse::<i128>().is_ok() =>
+        {
+            Ok(format!("({normalized_value} : ℤ)"))
+        }
+        LeanTargetObjectRepresentation::BuiltinApp {
+            operator,
+            arguments,
+            ..
+        } if arguments.len() == 2
+            && matches!(
+                operator,
+                LeanTargetBuiltinObjectOperator::Add
+                    | LeanTargetBuiltinObjectOperator::Sub
+                    | LeanTargetBuiltinObjectOperator::Mul
+            ) =>
+        {
+            let symbol = match operator {
+                LeanTargetBuiltinObjectOperator::Add => "+",
+                LeanTargetBuiltinObjectOperator::Sub => "-",
+                LeanTargetBuiltinObjectOperator::Mul => "*",
+                _ => unreachable!("guarded integer operator"),
+            };
+            Ok(format!(
+                "({} {symbol} {})",
+                render_integer_target_object_representation(&arguments[0], context)?,
+                render_integer_target_object_representation(&arguments[1], context)?,
+            ))
+        }
+        _ => Err(format!(
+            "target object `{object:?}` has no reviewed exact ℤ representation"
+        )),
+    }
 }
 
 pub(super) fn fact_matches_structured_induction_goal_substitution(
@@ -403,6 +465,19 @@ pub(super) fn render_integer_obj(
             render_integer_obj(operation.left.as_ref(), context)?,
             render_integer_obj(operation.right.as_ref(), context)?
         )),
+        Obj::Sum(_) => render_obj(obj, context),
+        Obj::FnObj(_) => {
+            let rendered = render_obj(obj, context)?;
+            if rendered.starts_with("(Litex.fnApplyCarrier ")
+                || rendered.starts_with("(Litex.fnApplySelectedCarrier ")
+            {
+                Ok(rendered)
+            } else {
+                Err(format!(
+                    "function application has no exact visible integer representation for `{obj}`"
+                ))
+            }
+        }
         _ => Err(format!(
             "integer-only compiler operator has no exact visible integer representation for `{obj}`"
         )),
@@ -1429,8 +1504,8 @@ pub(super) fn render_nested_function_set(
 /// Render the target value for a direct named-function Result.
 /// Binder names are the same names installed by the parent Result compiler's
 /// child environment, so the nesting of the generated Lean term mirrors the
-/// nesting of `SuccessVerifyFunctionDefinitionResult`. A native-real return
-/// can be represented directly; every other return carrier is selected from
+/// nesting of `SuccessVerifyFunctionDefinitionResult`. A reviewed native
+/// numeric return can be represented directly; every other return carrier is selected from
 /// the exact recursive membership proof retained by that Result.
 pub(super) fn render_named_function_value_from_result(
     function: &LeanTargetFunctionTypeRepresentation,
@@ -1438,11 +1513,22 @@ pub(super) fn render_named_function_value_from_result(
     source_body: &Obj,
     return_proof: &str,
     context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<(String, bool), String> {
+) -> Result<(String, NativeFunctionBodyCarrier), String> {
     let real_signature = function.parameters.iter().all(|parameter| {
         parameter.set == LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Real)
     }) && function.return_set.as_ref()
         == &LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Real);
+    let integer_signature = function.parameters.iter().all(|parameter| {
+        parameter.set == LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Integer)
+    }) && function.return_set.as_ref()
+        == &LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Integer);
+    let native_body_carrier = if real_signature {
+        NativeFunctionBodyCarrier::Real
+    } else if integer_signature {
+        NativeFunctionBodyCarrier::Integer
+    } else {
+        NativeFunctionBodyCarrier::None
+    };
     if function_uses_telescope(function) {
         validate_function_type(function)?;
         let mut binders = Vec::with_capacity(function.parameters.len() + 1);
@@ -1464,42 +1550,127 @@ pub(super) fn render_named_function_value_from_result(
         if !function.domain_facts.is_empty() {
             binders.push("fun __arg_domain => ".into());
         }
-        let body = if real_signature {
-            render_real_function_body_with_parameters(body, &parameter_representations, context)?
-        } else {
-            let rendered_source_body = render_obj(source_body, context)?;
-            format!("Litex.In.rep {rendered_source_body} ({return_proof})")
+        let body = match native_body_carrier {
+            NativeFunctionBodyCarrier::Real => render_real_function_body_with_parameters(
+                body,
+                &parameter_representations,
+                context,
+            )?,
+            NativeFunctionBodyCarrier::Integer => render_integer_function_body_with_parameters(
+                body,
+                &parameter_representations,
+                context,
+            )?,
+            NativeFunctionBodyCarrier::None => {
+                let rendered_source_body = render_obj(source_body, context)?;
+                format!("Litex.In.rep {rendered_source_body} ({return_proof})")
+            }
         };
         return Ok((
             format!("{}ULift.up ({body})", binders.concat()),
-            real_signature,
+            native_body_carrier,
         ));
     }
 
     validate_unary_function_type(function)?;
-    let body = if real_signature {
-        render_real_function_body(
+    let rendered_body = match native_body_carrier {
+        NativeFunctionBodyCarrier::Real => render_real_function_body(
             body,
             function.parameters[0].symbol_id,
             "Litex.In.rep __arg __arg_in",
             context,
-        )?
-    } else {
-        let rendered_source_body = render_obj(source_body, context)?;
-        format!("Litex.In.rep {rendered_source_body} ({return_proof})")
+        )?,
+        NativeFunctionBodyCarrier::Integer => render_integer_function_body_with_parameters(
+            body,
+            &HashMap::from([(
+                function.parameters[0].symbol_id,
+                "Litex.In.rep __arg __arg_in".to_string(),
+            )]),
+            context,
+        )?,
+        NativeFunctionBodyCarrier::None => {
+            let rendered_source_body = render_obj(source_body, context)?;
+            format!("Litex.In.rep {rendered_source_body} ({return_proof})")
+        }
     };
     if function.domain_facts.is_empty() {
+        if native_body_carrier == NativeFunctionBodyCarrier::Integer {
+            let own_body = render_integer_function_body_with_parameters(
+                body,
+                &HashMap::from([(function.parameters[0].symbol_id, "__arg".to_string())]),
+                context,
+            )?;
+            return Ok((
+                format!(
+                    "{{ call := fun {{__alpha}} (__arg : __alpha) __arg_in => {rendered_body}, callOwn := fun (__arg : ℤ) => {own_body} }}"
+                ),
+                native_body_carrier,
+            ));
+        }
         Ok((
-            format!("{{ call := fun {{__alpha}} (__arg : __alpha) __arg_in => {body} }}"),
-            real_signature,
+            format!("{{ call := fun {{__alpha}} (__arg : __alpha) __arg_in => {rendered_body} }}"),
+            native_body_carrier,
         ))
     } else {
         Ok((
             format!(
-                "{{ call := fun {{__alpha}} (__arg : __alpha) __arg_in __arg_domain => {body} }}"
+                "{{ call := fun {{__alpha}} (__arg : __alpha) __arg_in __arg_domain => {rendered_body} }}"
             ),
-            real_signature,
+            native_body_carrier,
         ))
+    }
+}
+
+pub(super) fn render_integer_function_body_with_parameters(
+    body: &LeanTargetObjectRepresentation,
+    parameter_representations: &HashMap<SymbolId, String>,
+    context: &StmtResultToLeanCompilerEnvironmentStack,
+) -> Result<String, String> {
+    match body {
+        LeanTargetObjectRepresentation::Symbol { symbol_id, .. }
+            if parameter_representations.contains_key(symbol_id) =>
+        {
+            Ok(parameter_representations[symbol_id].clone())
+        }
+        LeanTargetObjectRepresentation::Number { normalized_value }
+            if normalized_value.parse::<i128>().is_ok() =>
+        {
+            Ok(format!("({normalized_value} : ℤ)"))
+        }
+        LeanTargetObjectRepresentation::BuiltinApp {
+            operator,
+            arguments,
+            ..
+        } if arguments.len() == 2
+            && matches!(
+                operator,
+                LeanTargetBuiltinObjectOperator::Add
+                    | LeanTargetBuiltinObjectOperator::Sub
+                    | LeanTargetBuiltinObjectOperator::Mul
+            ) =>
+        {
+            let left = render_integer_function_body_with_parameters(
+                &arguments[0],
+                parameter_representations,
+                context,
+            )?;
+            let right = render_integer_function_body_with_parameters(
+                &arguments[1],
+                parameter_representations,
+                context,
+            )?;
+            let operator = match operator {
+                LeanTargetBuiltinObjectOperator::Add => "+",
+                LeanTargetBuiltinObjectOperator::Sub => "-",
+                LeanTargetBuiltinObjectOperator::Mul => "*",
+                _ => unreachable!("guarded integer binary operator"),
+            };
+            Ok(format!("({left} {operator} {right})"))
+        }
+        LeanTargetObjectRepresentation::Symbol { .. } => render_ir_symbol(body, context),
+        other => Err(format!(
+            "compiler integer named-function body does not support {other:?}"
+        )),
     }
 }
 
@@ -2113,8 +2284,21 @@ pub(super) fn render_function_application(
             }
             let argument_membership =
                 render_function_application_requirement_proof(requirement, context)?;
-            arguments.push(argument.clone());
-            argument_memberships.push(argument_membership.clone());
+            let (call_argument, call_membership) = if parameter.set
+                == LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Integer)
+            {
+                let integer = render_integer_obj(source_argument, context).or_else(|_| {
+                    membership_integer_value(&parameter.set, &argument, &argument_membership)
+                        .ok_or_else(|| {
+                            "integer function argument lost its exact representative".to_string()
+                        })
+                })?;
+                (integer.clone(), format!("Litex.In.own Litex.Z {integer}"))
+            } else {
+                (argument.clone(), argument_membership.clone())
+            };
+            arguments.push(call_argument);
+            argument_memberships.push(call_membership);
             nested
                 .symbol_names
                 .insert(parameter.symbol_id, argument.clone());
@@ -2197,25 +2381,40 @@ pub(super) fn render_function_application(
         }
 
         let application_term = if !function_uses_telescope(&function) {
-            let apply = match (direct, domain_proofs.is_empty()) {
-                (true, true) => "Litex.fnApplyOwn",
-                (false, true) => "Litex.fnApply",
-                (true, false) => "Litex.fnApplyWhereOwn",
-                (false, false) => "Litex.fnApplyWhere",
-            };
-            let argument = &arguments[0];
-            let argument_membership = &argument_memberships[0];
-            if domain_proofs.is_empty() {
-                format!("({apply} {head} {membership_proof} {argument} ({argument_membership}))")
-            } else {
-                let domain_proof = if domain_proofs.len() == 1 {
-                    domain_proofs[0].clone()
+            let exact_integer_argument = function.domain_facts.is_empty()
+                && function.parameters.len() == 1
+                && function.parameters[0].set
+                    == LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Integer);
+            if exact_integer_argument {
+                let apply = if direct {
+                    "Litex.fnApplyCarrier"
                 } else {
-                    format!("⟨{}⟩", domain_proofs.join(", "))
+                    "Litex.fnApplySelectedCarrier"
                 };
-                format!(
+                format!("({apply} {head} {membership_proof} {})", arguments[0])
+            } else {
+                let apply = match (direct, domain_proofs.is_empty()) {
+                    (true, true) => "Litex.fnApplyOwn",
+                    (false, true) => "Litex.fnApply",
+                    (true, false) => "Litex.fnApplyWhereOwn",
+                    (false, false) => "Litex.fnApplyWhere",
+                };
+                let argument = &arguments[0];
+                let argument_membership = &argument_memberships[0];
+                if domain_proofs.is_empty() {
+                    format!(
+                        "({apply} {head} {membership_proof} {argument} ({argument_membership}))"
+                    )
+                } else {
+                    let domain_proof = if domain_proofs.len() == 1 {
+                        domain_proofs[0].clone()
+                    } else {
+                        format!("⟨{}⟩", domain_proofs.join(", "))
+                    };
+                    format!(
                     "({apply} {head} {membership_proof} {argument} ({argument_membership}) ({domain_proof}))"
                 )
+                }
             }
         } else {
             let apply = if direct {
@@ -2367,8 +2566,17 @@ pub(super) fn render_lean_source_for_target_object_representation(
             render_natural_endpoint(column_count)?,
         )),
         LeanTargetObjectRepresentation::Aggregate {
-            kind, arguments, ..
-        } => render_aggregate_object(*kind, arguments, context),
+            source_occurrence_id,
+            semantic_key,
+            kind,
+            arguments,
+        } => render_aggregate_object(
+            *source_occurrence_id,
+            semantic_key,
+            *kind,
+            arguments,
+            context,
+        ),
         LeanTargetObjectRepresentation::TupleDimension(tuple) => Ok(format!(
             "(Litex.tupleDim {})",
             render_lean_source_for_target_object_representation(tuple, context)?
@@ -2531,13 +2739,151 @@ pub(super) fn render_typed_spine(
     Ok(tail)
 }
 
+pub(super) fn render_exact_unary_integer_function(
+    function: &LeanTargetObjectRepresentation,
+    context: &StmtResultToLeanCompilerEnvironmentStack,
+) -> Result<(String, Option<(String, String)>), String> {
+    match function {
+        LeanTargetObjectRepresentation::Symbol { symbol_id, .. } => {
+            let source = render_ir_symbol(function, context)?;
+            let mut matching_bindings = context
+                .function_bindings
+                .values()
+                .filter(|binding| {
+                    binding.symbol_id == *symbol_id
+                        && binding.function.parameters.len() == 1
+                        && binding.function.domain_facts.is_empty()
+                        && binding.function.parameters[0].set
+                            == LeanTargetObjectRepresentation::StandardSet(
+                                LeanTargetStandardSet::Integer,
+                            )
+                        && binding.function.return_set.as_ref()
+                            == &LeanTargetObjectRepresentation::StandardSet(
+                                LeanTargetStandardSet::Integer,
+                            )
+                })
+                .collect::<Vec<_>>();
+            matching_bindings.sort_by(|left, right| {
+                left.membership_proof_name.cmp(&right.membership_proof_name)
+            });
+            matching_bindings.dedup_by(|left, right| {
+                left.membership_proof_name == right.membership_proof_name
+                    && left.direct == right.direct
+            });
+            let [binding] = matching_bindings.as_slice() else {
+                return Err(
+                    "sum function symbol has no unique exact unary Z-to-Z membership binding"
+                        .into(),
+                );
+            };
+            if binding.direct {
+                Ok((source, None))
+            } else {
+                Ok((
+                    format!(
+                        "(Litex.In.rep {source} ({}))",
+                        binding.membership_proof_name
+                    ),
+                    Some((source, binding.membership_proof_name.clone())),
+                ))
+            }
+        }
+        _ => Ok((
+            render_lean_source_for_target_object_representation(function, context)?,
+            None,
+        )),
+    }
+}
+
 pub(super) fn render_aggregate_object(
+    source_occurrence_id: Option<SourceObjectOccurrenceId>,
+    semantic_key: &str,
     kind: LeanTargetAggregateObjectConstructor,
     arguments: &[LeanTargetObjectRepresentation],
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
+    if kind == LeanTargetAggregateObjectConstructor::Sum {
+        let occurrence_id = source_occurrence_id.ok_or_else(|| {
+            "integer range sum has no parser-owned source occurrence id".to_string()
+        })?;
+        let well_definedness = context
+            .well_definedness
+            .as_ref()
+            .ok_or_else(|| "integer range sum has no active Result-owned WD context".to_string())?;
+        let owner_occurrence_id = well_definedness
+            .iteration_occurrence_aliases
+            .get(&occurrence_id)
+            .copied()
+            .unwrap_or(occurrence_id);
+        let iteration = well_definedness
+            .iterations
+            .get(&owner_occurrence_id)
+            .ok_or_else(|| {
+                let available = well_definedness
+                    .iterations
+                    .iter()
+                    .map(|(id, iteration)| {
+                        format!("{}:{}", id.value(), obj_equality_key(&iteration.source_aggregate))
+                    })
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                format!(
+                    "sum occurrence {} has no exact Iteration WD Result; available Iteration owners: [{}]",
+                    occurrence_id.value(),
+                    available,
+                )
+            })?;
+        let Obj::Sum(source_sum) = &iteration.source_aggregate else {
+            return Err("sum occurrence selected a non-sum Iteration WD owner".into());
+        };
+        if owner_occurrence_id == occurrence_id
+            && obj_equality_key(&iteration.source_aggregate) != semantic_key
+        {
+            return Err("sum occurrence changed its semantic key after WD selection".into());
+        }
+        if iteration.operation != "sum"
+            || !matches!(&iteration.parameter_set, Obj::StandardSet(StandardSet::Z))
+            || !matches!(&iteration.return_carrier, Obj::StandardSet(StandardSet::Z))
+            || iteration.parameter_count != 1
+            || iteration.domain_count != 0
+            || !iteration_has_reviewed_integer_callable_contract(iteration)
+            || !iteration.has_exact_integer_coverage
+        {
+            return Err(
+                "sum Iteration WD Result is outside the reviewed unary Z-to-Z integer-range contract"
+                    .into(),
+            );
+        }
+        let [start, end, function] = arguments else {
+            return Err("sum aggregate changed its exact source arity".into());
+        };
+        let is_explicit_occurrence_alias = owner_occurrence_id != occurrence_id;
+        if !is_explicit_occurrence_alias
+            && (LeanTargetObjectRepresentation::lower(source_sum.start.as_ref())? != *start
+                || LeanTargetObjectRepresentation::lower(source_sum.end.as_ref())? != *end
+                || LeanTargetObjectRepresentation::lower(source_sum.func.as_ref())? != *function)
+        {
+            return Err("sum Iteration WD Result changed its ordered source arguments".into());
+        }
+        let (rendered_function, _) = render_exact_unary_integer_function(function, context)?;
+        let (rendered_start, rendered_end) = if is_explicit_occurrence_alias {
+            (
+                render_integer_target_object_representation(start, context)?,
+                render_integer_target_object_representation(end, context)?,
+            )
+        } else {
+            (
+                render_integer_obj(source_sum.start.as_ref(), context)?,
+                render_integer_obj(source_sum.end.as_ref(), context)?,
+            )
+        };
+        return Ok(format!(
+            "(Litex.sum {} {} {})",
+            rendered_start, rendered_end, rendered_function,
+        ));
+    }
     let (name, arity) = match kind {
-        LeanTargetAggregateObjectConstructor::Sum => ("Litex.sum", 3),
+        LeanTargetAggregateObjectConstructor::Sum => unreachable!("sum handled above"),
         LeanTargetAggregateObjectConstructor::Product => ("Litex.product", 3),
         LeanTargetAggregateObjectConstructor::FiniteSetSum => ("Litex.finiteSetSum", 2),
         LeanTargetAggregateObjectConstructor::FiniteSetProduct => ("Litex.finiteSetProduct", 2),

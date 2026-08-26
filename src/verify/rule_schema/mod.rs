@@ -5,7 +5,7 @@ mod source;
 mod substitution;
 
 pub use canonical_match::{
-    atomic_fact_head, canonical_obj_view, AtomicFactHead, CanonicalMatchError,
+    atomic_fact_head, canonical_obj_view, AtomicFactHead, CanonicalMatchError, CanonicalScalar,
 };
 pub use compile::compile_local_builtin_schema;
 pub use matcher::{canonical_objs_equal, match_conclusion, MatchLimits};

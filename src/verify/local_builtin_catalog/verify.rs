@@ -47,8 +47,25 @@ impl Runtime {
                     SubstitutionMode::Exact,
                     Some(&goal_line_file),
                 )?;
-                let result =
-                    self.verify_atomic_fact_as_builtin_rule_premise(&instantiated, builtin_state)?;
+                // Function-typed schema variables require a pointwise type
+                // certificate when the matched value is an anonymous
+                // function literal. This is a binder type obligation, not an
+                // additional mathematical premise of the registered rule, so
+                // give that one requirement its own bounded type-check step.
+                // Semantic premises below still share the already-consumed
+                // parent rule budget.
+                let function_type_state = BuiltinRuleSearchState::initial();
+                let requirement_state = if matches!(
+                    &instantiated,
+                    AtomicFact::InFact(membership)
+                        if matches!(&membership.set, Obj::FnSet(_))
+                ) {
+                    &function_type_state
+                } else {
+                    builtin_state
+                };
+                let result = self
+                    .verify_atomic_fact_as_builtin_rule_premise(&instantiated, requirement_state)?;
                 if !result.is_success() {
                     candidate_failed = true;
                     break;

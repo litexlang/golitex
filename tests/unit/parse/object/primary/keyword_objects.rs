@@ -57,3 +57,32 @@ fn primary_keyword_arity_errors_remain_family_specific() {
         assert_eq!(error.msg, expected_message, "{source}");
     }
 }
+
+#[test]
+fn parsed_sum_occurrences_are_present_and_distinct() {
+    let tokenizer = Tokenizer::new();
+    let mut blocks = tokenizer
+        .parse_blocks(
+            "sum(1, 3, fn(k Z) Z {k})\nsum(1, 3, fn(k Z) Z {k})",
+            Rc::from("test.lit"),
+        )
+        .expect("two sum objects should tokenize");
+    assert_eq!(blocks.len(), 2);
+
+    let mut runtime = Runtime::new();
+    let first = runtime
+        .parse_obj(&mut blocks[0])
+        .expect("first sum should parse");
+    let second = runtime
+        .parse_obj(&mut blocks[1])
+        .expect("second sum should parse");
+
+    let first_occurrence = first
+        .source_occurrence_id()
+        .expect("a parsed sum must own a source occurrence id");
+    let second_occurrence = second
+        .source_occurrence_id()
+        .expect("a parsed sum must own a source occurrence id");
+    assert_ne!(first_occurrence, second_occurrence);
+    assert_eq!(obj_equality_key(&first), obj_equality_key(&second));
+}
