@@ -1,0 +1,46 @@
+# `let` composes with `template` at two useful levels. The template below
+# returns a parameterized struct, so the example also exposes the carrier
+# boundary of a transparent abbreviation.
+
+struct Triple<X set>:
+    first X
+    second X
+    third X
+
+template<X set>:
+    have fn triple(a, b, c X) &Triple<X> = (a, b, c)
+
+# Fix the template parameter and retain the ordinary function parameters.
+let triple_R = \triple<R>
+
+# Fix the complete application result.
+let chosen = \triple<R>(1, 2, 3)
+
+triple_R(4, 5, 6) = (4, 5, 6)
+chosen = (1, 2, 3)
+
+# `let` stores a transparent equality but does not create carrier evidence.
+# Introduce a typed object only when later mathematics needs struct fields.
+have chosen_struct &Triple<R> = chosen
+chosen_struct.first = 1
+
+# These remain outside the current field-access boundary because neither let
+# name owns a direct struct carrier:
+# triple_R(4, 5, 6).first = 4
+# chosen.first = 1
+
+# A `let` may also name a callable field reached through a nested struct. The
+# verifier derives the retained `(x, y R) -> R` contract from the field-access
+# object's frozen `ScalarOps` view; `scalar_add` is still only a transparent
+# local abbreviation, not a second function declaration.
+struct ScalarOps:
+    add fn(x, y R) R
+
+struct Space:
+    scalars &ScalarOps
+
+thm callable_struct_field_alias:
+    ? forall space &Space, x, y R:
+        space.scalars.add(x, y) = space.scalars.add(x, y)
+    let scalar_add = space.scalars.add
+    scalar_add(x, y) = space.scalars.add(x, y)
