@@ -8,6 +8,7 @@ mod infer_result;
 mod infer_set_relations;
 
 pub use infer_result::{
+    CartesianMembershipProjectionInferRule, CartesianMembershipProjectionKind,
     ClosedPositivePowerEqualityImpliesEqualSideMembershipInferRule,
     ConjunctionImpliesComponentInferRule, DefinedPredicateDefinitionClauseProjectionInferRule,
     DefinedPredicateParameterRequirementProjectionInferRule, EqualityChainClosureInferRule,

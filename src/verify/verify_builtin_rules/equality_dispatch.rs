@@ -1774,7 +1774,7 @@ impl Runtime {
         line_file: LineFile,
         _builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
-        let type_state = ProofSearchState::after_well_definedness();
+        let type_state = VerifyState::after_well_definedness();
         let first_finite: AtomicFact = IsFiniteSetFact::new(first_set, line_file.clone()).into();
         let first_result = self.verify_atomic_fact(&first_finite, &type_state)?;
         if !first_result.is_success() {
@@ -2381,7 +2381,7 @@ impl Runtime {
     pub fn try_verify_tuple_equality_from_dim_and_projections(
         &mut self,
         equal_fact: &EqualFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -2442,7 +2442,7 @@ impl Runtime {
     pub fn try_verify_symbolic_tuple_equality_from_coordinates(
         &mut self,
         equal_fact: &EqualFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
@@ -2657,7 +2657,7 @@ impl Runtime {
         // computation, but must not start another equality/forall search and
         // recursively re-enter cart extensionality.
         let verify_state =
-            ProofSearchState::after_well_definedness().without_known_forall_for_equality();
+            VerifyState::after_well_definedness().without_known_forall_for_equality();
         for (pattern, forall_context) in candidates {
             let Some(arg_map) = self.match_atomic_fact_args_against_known_forall_ordered_args(
                 &pattern,

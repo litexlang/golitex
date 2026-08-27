@@ -6,13 +6,11 @@
 //! `Runtime::execute_source` executes inside an explicit source context:
 //!
 //! ```
-//! use litex::api::{Runtime, SourceImportPolicy};
+//! use litex::api::Runtime;
 //!
 //! let mut runtime = Runtime::default();
 //! runtime.start_isolated_source("embedded.lit");
-//! let (results, error) = runtime
-//!     .execute_source("1 = 1", SourceImportPolicy::UseRuntimePolicy)
-//!     .into_parts();
+//! let (results, error) = runtime.execute_source("1 = 1").into_parts();
 //! assert!(error.is_none());
 //! assert_eq!(results.len(), 1);
 //! ```
@@ -25,8 +23,7 @@ pub use crate::runtime::{OutputStyle, Runtime};
 
 // Source, file, and repository execution entry points.
 pub use crate::pipeline::{
-    run, RunOptions, RunOutcome, RunRequest, RunSummary, RunTarget, RunTargetKind,
-    SourceImportPolicy, SourceRunFailureKind, SourceRunOutcome,
+    run, RunOptions, RunOutcome, RunRequest, RunSummary, RunTarget, RunTargetKind, SourceRunOutcome,
 };
 
 // Stable rendering entry points for embedding and machine-readable output.

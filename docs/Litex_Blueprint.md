@@ -39,15 +39,59 @@ The hope is that using Litex can feel like doing informal mathematics: users can
 
 ## Background: The AI Era Needs Formal Languages
 
-From Arabic numerals, to Leibniz's notation for calculus, to TeX and LaTeX, important new systems of mathematical notation have often done more than shorten writing. They have also quietly changed how people see problems, organize reasoning, and explore new directions. Formal languages are a new stage in mathematical notation: they let humans write mathematics more precisely and let machines check that writing rigorously. Today, AI is making the generation of candidate mathematical proofs broader and more scalable. As proofs cease to be only texts written by hand by a small number of people, the central bottleneck will gradually move from “can we generate an argument that looks plausible?” to “can we reliably check, reuse, and accumulate it?”
+AI is rapidly lowering the cost of producing solution steps, mathematical proofs, and technical derivations. Humans and AI can produce many plausible arguments in a short time, but plausible is not the same as checked. We are entering an era of **reasoning overflow and validation crisis**: candidate intellectual output is growing faster than our capacity to verify it reliably.
 
-*Yet mainstream formal languages and proof assistants are still designed primarily for expert researchers. Their syntax, interaction models, and workflows often differ substantially from everyday mathematical writing. Beginners must spend considerable time learning these differences before they can express the mathematics they care about. Outside mathematics, AI safety researchers, software engineers, physicists, economists, statisticians, and others may also need formal languages to express mathematics, but they may have neither the time nor the interest to learn the internals of sophisticated proof assistants.*
+This shift is creating potential uses for formalization in education, science, engineering, and AI evaluation. For those uses to develop, formalization cannot remain only an expert tool; people who already understand the relevant mathematics must also be able to author and review it.
 
-Litex aims to bring this technology closer to ordinary learners and users of mathematics. Its ideal is: **whatever mathematics you want to express, you should be able to express in a formal language.** For example, someone who already knows secondary-school mathematics should be able to learn quickly how to express that mathematics in Litex without first becoming an expert in proof assistants.
+Start with the smallest fact.
 
-> This is a design target, not a claim about current language or library coverage.
+Litex:
 
-This goal requires a formal-proof workflow closer to everyday mathematics.
+```litex
+1 + 1 = 2
+```
+
+Lean:
+
+```lean
+import Mathlib
+
+example : (1 : ℝ) + 1 = 2 := by norm_num
+```
+
+A three-year-old who already understands `1 + 1 = 2` should not need to learn `norm_num` before formalizing it. Verification commands can help experts, but they should not be the price of admission to expressing mathematics.
+
+The same difference appears in function well-definedness. For a function whose domain is the positive reals, one common Lean encoding is:
+
+```lean
+example
+    (f : {x : ℝ // x > 0} → ℝ)
+    (x : ℝ) (hx : x > 0) :
+    f ⟨x, hx⟩ = f ⟨x, hx⟩ := rfl
+```
+
+The corresponding Litex is:
+
+```litex
+forall f fn(t R: t > 0) R, x R:
+    x > 0
+    =>:
+        f(x) = f(x)
+```
+
+The condition `x > 0` remains, but its proof certificate does not become a source-level argument to `f`.
+
+> **Users write mathematics; the system manages verification evidence. Conditions cannot be omitted, but certificates need not be threaded by hand.**
+
+Lean also supports other encodings and automation; this comparison concerns source interfaces, not whether either language can express the proposition.
+
+This does not lower the verification standard. It lowers the tool barrier. Good mathematical notation has always absorbed mechanical detail so that people can focus on mathematics; formal languages in the AI era need a similar abstraction layer.
+
+Litex tests a hypothesis: can a smaller, more readable, fact-oriented formal language make machine-checked mathematics easier for students, domain experts, and AI to produce?
+
+> This is a design direction, not a claim that the current language, standard library, or compiler is complete.
+
+To pursue it, Litex chooses set theory, fact-oriented authoring, bottom-up proof flow, and a compilation path toward independent rechecking in Lean. Before examining those choices, it helps to establish a few basic terms.
 
 <details>
 <summary><strong>Basic Terms: Formal Language, Goal, Tactic, and Kernel</strong></summary>

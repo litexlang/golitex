@@ -2335,6 +2335,24 @@ consumes the Rust Result structures directly.
 - Generated Lean must contain no compiler-invented axioms, `sorry`, or
   resurrection of the deprecated universal `LitexObject` representation.
 
+Finite-set induction and the choice/Zorn/regularity family now satisfy the
+producer side of that boundary. Finite-set base and step cases retain exact
+assumption `Fact`s, roles, local `FactId`s, inference effects, proof steps, and
+goal checks. Choice-family Results retain a typed proof kind and target,
+obligation roles/facts/FactIds/checks, and the trusted conclusion with its
+published FactId. Their Lean consumers deliberately remain unavailable: the
+exact `Litex.Set = Carrier` representation has no representation-invariant
+finite-set insertion induction, dependent set-valued-family/`BigUnion` ABI, or
+native foundation theorem. Project axioms and target-side proof search are not
+substitutes for those contracts.
+
+The generated local builtin registry is now completely classified. All 43
+`set.*`, both `aggregate.*`, `algebra.abs_mul`, and all 49 `order.*` rules have
+direct Result consumers. `nonzero.mul` and `nonzero.div` are the only two named
+registry boundaries; both require a reviewed numeric-observation elimination
+from heterogeneous `Litex.Same`. Reserved builtin theorems likewise name their
+three remaining boundaries instead of returning an unclassified fallback.
+
 Example 54 adds exact complex algebraic normalization. The verifier returns a
 typed `ComplexAlgebraicNormalization` certificate containing the exact target
 and the ordered nonzero premises required by every division or negative power.
@@ -2348,7 +2366,7 @@ representation is unavailable. A missing symbolic nonzero premise still fails
 in Litex well-definedness rather than becoming target-side proof search.
 
 The persistent compiler examples currently extend through
-[`56_StructuredIntegerInductionResult.lit`](../../lean/examples/56_StructuredIntegerInductionResult.lit).
+[`63_ScalarOperatorBuiltins.lit`](../../lean/examples/63_ScalarOperatorBuiltins.lit).
 They exercise the direct Result reader and compiler environment stack; they do
 not claim that every statement accepted by the full Litex kernel is already a
 supported Lean target.

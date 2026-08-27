@@ -17,7 +17,7 @@ impl Runtime {
             for param_def in params_def.iter() {
                 rt.define_params_with_set_in_scope(param_def, binding_scope)?;
             }
-            rt.verify_obj_well_defined_and_store_cache(&obj, &ProofSearchState::initial())
+            rt.verify_obj_well_defined_and_store_cache(&obj, &VerifyState::initial())
         })
     }
 }

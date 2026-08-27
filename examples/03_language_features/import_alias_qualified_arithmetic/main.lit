@@ -1,0 +1,19 @@
+# Tracer: persistent dependencies belong to litex.config, not Litex source.
+#
+# Before:
+# import "../../_internal/fixtures/geometry_foundation" as gf
+# Former behavior: an isolated .lit file could mutate the module graph while statements executed.
+#
+# Now: the adjacent litex.config owns the gf dependency, so this source contains only Litex
+# statements and qualified mathematical references.
+
+gf::main::a + gf::main::a = gf::main2::b
+gf::main::pair[1] = 3
+gf::main2::pair[1] = 8
+cart_dim(gf::main::ProductSet) = 2
+
+# Current behavior: project execution discovers gf before parsing this file. An interactive REPL may
+# issue the same import as a terminal command, which mutates only its ephemeral in-memory manifest.
+#
+# Boundary: uncommenting the old import line is rejected in every .lit source, including
+# `litex -isolated -f`; unknown qualified names such as gf::main::missing remain rejected.

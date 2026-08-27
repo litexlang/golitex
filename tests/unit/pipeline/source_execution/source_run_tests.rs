@@ -1,4 +1,4 @@
-use super::{SourceImportPolicy, SourceRunFailureKind, SourceRunOutcome};
+use super::{SourceRunFailureKind, SourceRunOutcome};
 use crate::runtime::Runtime;
 
 fn runtime_with_source_context(name: &str) -> Runtime {
@@ -14,31 +14,47 @@ fn structured_source_run_reports_success() {
     let SourceRunOutcome {
         stmt_results,
         runtime_error,
-        failure_kind,
-    } = runtime.execute_source("1 = 1", SourceImportPolicy::UseRuntimePolicy);
+    } = runtime.execute_source("1 = 1");
 
     assert_eq!(stmt_results.len(), 1);
     assert!(runtime_error.is_none(), "{runtime_error:?}");
-    assert!(failure_kind.is_none());
 }
 
 #[test]
 fn structured_source_run_requires_an_active_source_context() {
     let mut runtime = Runtime::default();
 
-    let outcome = runtime.execute_source("1 = 1", SourceImportPolicy::UseRuntimePolicy);
+    let outcome = runtime.execute_source("1 = 1");
 
     assert!(outcome.stmt_results.is_empty());
     assert!(outcome.runtime_error.is_some());
-    assert_eq!(outcome.failure_kind, Some(SourceRunFailureKind::Other));
 }
 
 #[test]
 fn structured_source_run_preserves_try_failure_classification() {
     let mut runtime = runtime_with_source_context("structured-source-try.lit");
 
-    let outcome = runtime.execute_source("try:\n    1 = 0\n", SourceImportPolicy::UseRuntimePolicy);
+    let (outcome, failure_kind) = runtime
+        .execute_source_classified("try:\n    1 = 0\n")
+        .into_parts();
 
     assert!(outcome.runtime_error.is_some());
-    assert_eq!(outcome.failure_kind, Some(SourceRunFailureKind::TryStmt));
+    assert_eq!(failure_kind, Some(SourceRunFailureKind::TryStmt));
+}
+
+#[test]
+fn source_import_is_rejected_even_in_an_isolated_source_context() {
+    let mut runtime = runtime_with_source_context("isolated-source-import.lit");
+
+    let outcome = runtime.execute_source("import std basics");
+
+    assert!(outcome.stmt_results.is_empty());
+    let error = outcome.runtime_error.expect("source import should fail");
+    assert!(
+        error
+            .trace_message()
+            .contains("`import` is a terminal command, not a Litex statement"),
+        "{}",
+        error.trace_message()
+    );
 }

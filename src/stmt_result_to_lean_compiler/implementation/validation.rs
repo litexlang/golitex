@@ -87,7 +87,7 @@ pub(super) fn exact_ordered_fact_ids_from_store_results(
         .zip(expected_facts.iter())
         .enumerate()
         .map(|(index, (stored, expected))| {
-            if stored.itself_and_why_itself_is_stored.0.to_string() != expected.to_string() {
+            if !frozen_result_facts_align(&stored.itself_and_why_itself_is_stored.0, expected) {
                 return Err(format!(
                     "{statement_family} store {index} changed `{expected}` to `{}`",
                     stored.itself_and_why_itself_is_stored.0
@@ -107,16 +107,22 @@ pub(super) fn infer_result_retains_fact_id(
 ) -> bool {
     infer_result.store_fact_outputs.iter().any(|output| {
         (output.fact_id == Some(expected_fact_id)
-            && output.itself_and_why_itself_is_stored.0.to_string() == expected_fact.to_string())
+            && frozen_result_facts_align(&output.itself_and_why_itself_is_stored.0, expected_fact))
             || output
                 .inferred_facts
                 .iter()
                 .zip(output.inferred_fact_ids.iter())
                 .any(|(fact, fact_id)| {
-                    fact.to_string() == expected_fact.to_string()
+                    frozen_result_facts_align(fact, expected_fact)
                         && *fact_id == Some(expected_fact_id)
                 })
     })
+}
+
+fn frozen_result_facts_align(left: &Fact, right: &Fact) -> bool {
+    left.to_string() == right.to_string()
+        || membership_facts_are_equal_up_to_nested_binder_alpha(left, right)
+        || equality_facts_are_equal_up_to_nested_binder_alpha(left, right)
 }
 
 pub(super) fn defined_predicate_infer_rule(rule: &InferRule) -> bool {
@@ -160,6 +166,7 @@ pub(super) fn infer_rule_name(rule: &InferRule) -> &'static str {
         InferRule::TupleEqualityWithKnownTupleImpliesTupleShape(_) => {
             "TupleEqualityWithKnownTupleImpliesTupleShape"
         }
+        InferRule::CartesianMembershipProjection(_) => "CartesianMembershipProjection",
         InferRule::ListSetMembershipImpliesEqualityAlternatives(_) => {
             "ListSetMembershipImpliesEqualityAlternatives"
         }
@@ -223,6 +230,14 @@ pub(super) fn success_infer_results_have_same_semantic_structure(
     left: &SuccessInferResult,
     right: &SuccessInferResult,
 ) -> bool {
+    success_infer_results_have_same_structure(left, right, true)
+}
+
+fn success_infer_results_have_same_structure(
+    left: &SuccessInferResult,
+    right: &SuccessInferResult,
+    compare_store_reasons: bool,
+) -> bool {
     left.store_fact_outputs.len() == right.store_fact_outputs.len()
         && left
             .store_fact_outputs
@@ -232,8 +247,9 @@ pub(super) fn success_infer_results_have_same_semantic_structure(
                 left.fact_id == right.fact_id
                     && left.itself_and_why_itself_is_stored.0.to_string()
                         == right.itself_and_why_itself_is_stored.0.to_string()
-                    && left.itself_and_why_itself_is_stored.1
-                        == right.itself_and_why_itself_is_stored.1
+                    && (!compare_store_reasons
+                        || left.itself_and_why_itself_is_stored.1
+                            == right.itself_and_why_itself_is_stored.1)
                     && left.inferred_fact_ids == right.inferred_fact_ids
                     && left.inferred_facts.len() == right.inferred_facts.len()
                     && left
@@ -266,9 +282,10 @@ pub(super) fn success_infer_results_have_same_semantic_structure(
                         .all(|(left, right)| {
                             left.fact_id == right.fact_id
                                 && left.fact.to_string() == right.fact.to_string()
-                                && success_infer_results_have_same_semantic_structure(
+                                && success_infer_results_have_same_structure(
                                     &left.infers,
                                     &right.infers,
+                                    compare_store_reasons,
                                 )
                         })
             })
@@ -385,6 +402,32 @@ pub(super) fn validate_generated_fact_publication_effects(
         exact_fact_id = Some(fact_id);
     }
     exact_fact_id.ok_or_else(|| format!("{result_layer} retained no FactId"))
+}
+
+pub(super) fn validate_defined_predicate_fact_publication_effects(
+    infers: &SuccessInferResult,
+    expected: &Fact,
+    result_layer: &str,
+) -> Result<FactId, String> {
+    let [store] = infers.store_fact_outputs.as_slice() else {
+        return Err(format!(
+            "{result_layer} must retain exactly one predicate-fact store"
+        ));
+    };
+    if store.itself_and_why_itself_is_stored.0.to_string() != expected.to_string()
+        || store.inferred_facts.len() != store.inferred_fact_ids.len()
+        || infers
+            .rule_applications
+            .iter()
+            .any(|application| !defined_predicate_infer_rule(&application.rule))
+    {
+        return Err(format!(
+            "{result_layer} changed its predicate fact or typed projection effects"
+        ));
+    }
+    store
+        .fact_id
+        .ok_or_else(|| format!("{result_layer} predicate-fact store has no FactId"))
 }
 
 pub(super) fn render_forall_domain_intro_suffix(forall: &ForallFact) -> String {
@@ -1127,7 +1170,7 @@ pub(super) fn describe_success_fact_result_for_direct_compilation_audit(
 /// Keep direct builtin coverage compile-time exhaustive. Returning `None`
 /// means the evidence has a direct Result consumer above. A named limitation
 /// is an intentional fail-closed boundary, never permission to fall through
-/// to the compatibility builder. Adding a new `BuiltinRuleEvidence` variant
+/// to a generic or diagnostic proof builder. Adding a new `BuiltinRuleEvidence` variant
 /// therefore requires an explicit compiler decision here.
 pub(super) fn direct_builtin_rule_compiler_limitation(
     evidence: &BuiltinRuleEvidence,
@@ -1142,13 +1185,12 @@ pub(super) fn direct_builtin_rule_compiler_limitation(
         BuiltinRuleEvidence::NotEqualFromStrictOrder => Some(
             "StmtResultToLeanCompiler cannot yet replay strict-order inequality until Litex.Same has a reviewed numeric-observation elimination theorem",
         ),
-        BuiltinRuleEvidence::AbsoluteValue(_) => Some(
-            "StmtResultToLeanCompiler does not yet have a reviewed absolute-value representation and proof adapter in the Lean target ABI",
-        ),
         BuiltinRuleEvidence::RegisteredLocal(_)
         | BuiltinRuleEvidence::DefinitionProjection(_)
         | BuiltinRuleEvidence::SetBuilderMembership(_)
         | BuiltinRuleEvidence::FunctionSetMembership(_)
+        | BuiltinRuleEvidence::TupleCartesianMembership(_)
+        | BuiltinRuleEvidence::IntegerRangeSumPointwiseOrder(_)
         | BuiltinRuleEvidence::RefinedNumericMembership(_)
         | BuiltinRuleEvidence::ClosedNumericMembership(_)
         | BuiltinRuleEvidence::ClosedNumericNonmembership(_)
@@ -1161,6 +1203,7 @@ pub(super) fn direct_builtin_rule_compiler_limitation(
         | BuiltinRuleEvidence::ObjectReflexivity(_)
         | BuiltinRuleEvidence::RationalNormalization(_)
         | BuiltinRuleEvidence::ComplexAlgebraicNormalization(_)
+        | BuiltinRuleEvidence::AbsoluteValue(_)
         | BuiltinRuleEvidence::StructuralDefinitionCongruence(_)
         | BuiltinRuleEvidence::StructuralKnownEqualityCongruence(_)
         | BuiltinRuleEvidence::IntegralPolynomialNormalization(_)

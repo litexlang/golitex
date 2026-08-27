@@ -24,7 +24,7 @@ impl Runtime {
     pub fn verify_obj_well_defined_result(
         &mut self,
         obj: &Obj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<Rc<SuccessVerifyObjWellDefinedResult>, RuntimeError> {
         let verify_state = verify_state.without_known_forall_for_equality();
         let verify_state = &verify_state;
@@ -315,7 +315,7 @@ impl Runtime {
     pub fn verify_child_obj_well_defined_result(
         &mut self,
         obj: &Obj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
         role: WellDefinedObjChildRole,
     ) -> Result<SuccessVerifyChildObjWellDefinedResult, RuntimeError> {
         let result = self.verify_obj_well_defined_result(obj, verify_state)?;
@@ -336,7 +336,7 @@ impl Runtime {
     pub fn verify_obj_well_defined_and_store_cache(
         &mut self,
         obj: &Obj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_result(obj, verify_state)
             .map(|_| ())
@@ -345,7 +345,7 @@ impl Runtime {
     pub fn verify_child_obj_well_defined_and_store_cache(
         &mut self,
         obj: &Obj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
         role: WellDefinedObjChildRole,
     ) -> Result<Option<WellDefinedObjId>, RuntimeError> {
         self.verify_child_obj_well_defined_result(obj, verify_state, role)
@@ -358,7 +358,7 @@ impl Runtime {
     pub fn verify_obj_well_defined_as_verification_dependency(
         &mut self,
         obj: &Obj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_result(obj, verify_state)
             .map(|_| ())
@@ -433,7 +433,7 @@ impl Runtime {
     pub fn verify_param_type_well_defined(
         &mut self,
         param_type: &ParamType,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         match param_type {
             ParamType::Set(_) => Ok(()),

@@ -15,8 +15,6 @@ pub mod explicit_verify;
 pub mod parameters;
 #[path = "proof_blocks/sketch.rs"]
 pub mod sketch_stmt;
-#[path = "commands/tooling.rs"]
-pub mod tooling_stmt;
 #[path = "proof_blocks/trust.rs"]
 pub mod trust_stmt;
 #[path = "proof_blocks/try_block.rs"]

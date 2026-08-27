@@ -7,7 +7,7 @@ impl Runtime {
         &mut self,
         start: &Obj,
         end: &Obj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         let mut steps = SuccessVerifyObjWellDefinedStepsResult::new();
         for (argument_index, child) in [start, end].into_iter().enumerate() {
@@ -32,7 +32,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_range_well_defined_result(
         &mut self,
         value: &Range,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         self.verify_integer_range_children_result(&value.start, &value.end, verify_state)
     }
@@ -40,7 +40,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_closed_range_well_defined_result(
         &mut self,
         value: &ClosedRange,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         self.verify_integer_range_children_result(&value.start, &value.end, verify_state)
     }
@@ -65,7 +65,7 @@ impl Runtime {
         &mut self,
         operation: &str,
         function: &Obj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<Option<SuccessVerifyIterationScalarReturnResult>, RuntimeError> {
         let Some(mut body) = self.get_fn_range_function_body(function) else {
             return Ok(None);
@@ -121,7 +121,7 @@ impl Runtime {
         start: &Obj,
         end: &Obj,
         parameter_set: &Obj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
         operation: &str,
     ) -> Result<SuccessVerifyIterationCoverageResult, RuntimeError> {
         if let (Some(start_number), Some(end_number)) = (
@@ -225,7 +225,7 @@ impl Runtime {
         anonymous_body: Option<&Obj>,
         start: &Obj,
         end: &Obj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
         operation: &str,
     ) -> Result<SuccessVerifyIterationIntervalResult, RuntimeError> {
         if body.set_bound_parameters.number_of_params() != 1 {
@@ -425,7 +425,7 @@ impl Runtime {
         function: &Obj,
         start: &Obj,
         end: &Obj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
         operation: &str,
     ) -> Result<SuccessVerifyIterationIntervalResult, RuntimeError> {
         if let Some(anonymous) = Self::summand_as_unary_anonymous_fn(function) {
@@ -487,7 +487,7 @@ impl Runtime {
         function: &Obj,
         operation: &str,
         range_error: String,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         let mut steps = self.verify_integer_range_children_result(start, end, verify_state)?;
         let ordered: AtomicFact =
@@ -523,7 +523,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_sum_obj_well_defined_result(
         &mut self,
         value: &Sum,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         self.verify_range_iteration_result(
             &value.start,
@@ -538,7 +538,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_product_obj_well_defined_result(
         &mut self,
         value: &Product,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         self.verify_range_iteration_result(
             &value.start,
@@ -555,7 +555,7 @@ impl Runtime {
         operation: &str,
         list: &ListSet,
         function: &Obj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<Vec<SuccessVerifyFactForObjWellDefinedResult>, RuntimeError> {
         let Some(anonymous) = Self::summand_as_unary_anonymous_fn(function) else {
             return Ok(Vec::new());
@@ -602,7 +602,7 @@ impl Runtime {
         operation: &str,
         set: &Obj,
         function: &Obj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyFiniteAggregateModeResult, RuntimeError> {
         if let Obj::ListSet(list) = set {
             let body = self.get_fn_range_function_body(function).ok_or_else(|| {
@@ -745,7 +745,7 @@ impl Runtime {
         set: &Obj,
         function: &Obj,
         operation: &str,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         let mut steps = SuccessVerifyObjWellDefinedStepsResult::new();
         steps.push_child(self.verify_child_obj_well_defined_result(
@@ -787,7 +787,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_finite_set_sum_obj_well_defined_result(
         &mut self,
         value: &SumOfFiniteSet,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         self.verify_finite_aggregate_result(&value.set, &value.func, "finite_set_sum", verify_state)
     }
@@ -795,7 +795,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_finite_set_product_obj_well_defined_result(
         &mut self,
         value: &ProductOfFiniteSet,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         self.verify_finite_aggregate_result(
             &value.set,
@@ -890,7 +890,7 @@ impl Runtime {
         &mut self,
         seed: &Obj,
         carrier: &Obj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
         operation_name: &str,
     ) -> Result<SuccessVerifyFactForObjWellDefinedResult, RuntimeError> {
         let seed_fact: AtomicFact =
@@ -911,7 +911,7 @@ impl Runtime {
         function: &Obj,
         start: &Obj,
         end: &Obj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
         operation_name: &str,
     ) -> Result<SuccessVerifyReduceModeResult, RuntimeError> {
         let empty_fact: AtomicFact =
@@ -942,7 +942,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_reduce_obj_well_defined_result(
         &mut self,
         value: &Reduce,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         let mut steps =
             self.verify_integer_range_children_result(&value.start, &value.end, verify_state)?;
@@ -1000,7 +1000,7 @@ impl Runtime {
         parameter: Obj,
         carrier: &Obj,
         parameter_index: usize,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyBinderPremiseResult, RuntimeError> {
         self.store_parameter_binding(binding, BindingScope::LocalBinder)?;
         let proposition: Fact = InFact::new(parameter, carrier.clone(), default_line_file()).into();
@@ -1030,7 +1030,7 @@ impl Runtime {
         &mut self,
         operation: &Obj,
         carrier: &Obj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyFiniteReduceOperationLawsResult, RuntimeError> {
         let operation = operation.clone();
         let carrier = carrier.clone();
@@ -1110,7 +1110,7 @@ impl Runtime {
                         ),
                     ))
                 })?;
-            let law_state = ProofSearchState::initial();
+            let law_state = VerifyState::initial();
             let associativity_fact: AtomicFact =
                 EqualFact::new(left_assoc, right_assoc, default_line_file()).into();
             let associativity_result =
@@ -1167,7 +1167,7 @@ impl Runtime {
         &mut self,
         function: &Obj,
         set: &Obj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyFiniteReduceDomainCoverageResult, RuntimeError> {
         let body = self.get_fn_range_function_body(function).ok_or_else(|| {
             RuntimeError::from(WellDefinedRuntimeError(
@@ -1231,7 +1231,7 @@ impl Runtime {
         &mut self,
         set: &Obj,
         function: &Obj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyReduceModeResult, RuntimeError> {
         let empty_fact: AtomicFact =
             NotIsNonemptySetFact::new(set.clone(), default_line_file()).into();
@@ -1316,7 +1316,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_finite_set_reduce_obj_well_defined_result(
         &mut self,
         value: &FiniteSetReduce,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         let mut steps = SuccessVerifyObjWellDefinedStepsResult::new();
         for (argument_index, child) in [
@@ -1392,7 +1392,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_reduce_obj_well_defined(
         &mut self,
         x: &Reduce,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_child_obj_well_defined_and_store_cache(
             &x.start,
@@ -1456,7 +1456,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_finite_set_reduce_obj_well_defined(
         &mut self,
         x: &FiniteSetReduce,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_child_obj_well_defined_and_store_cache(
             &x.set,
@@ -1575,7 +1575,7 @@ impl Runtime {
         operation_name: &str,
         function: &Obj,
         set: &Obj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         let Some(body) = self.get_fn_range_function_body(function) else {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
@@ -1699,7 +1699,7 @@ impl Runtime {
         &mut self,
         seed: &Obj,
         carrier: &Obj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
         operation_name: &str,
     ) -> Result<(), RuntimeError> {
         let seed_fact: AtomicFact =
@@ -1771,7 +1771,7 @@ impl Runtime {
             )?));
         }
         let application = self.reduce_callable_application_obj(function, args, "reduce")?;
-        let already_checked_state = ProofSearchState::after_well_definedness();
+        let already_checked_state = VerifyState::after_well_definedness();
         if let Some(unfolded) =
             self.unfold_known_fn_application_once(&application, &already_checked_state)?
         {
@@ -1851,7 +1851,7 @@ impl Runtime {
                     ),
                 )));
             };
-            let law_state = ProofSearchState::initial();
+            let law_state = VerifyState::initial();
             let associativity: AtomicFact =
                 EqualFact::new(left_assoc, right_assoc, default_line_file()).into();
             if rt.verify_atomic_fact(&associativity, &law_state)?.is_unknown() {
@@ -1897,7 +1897,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_sum_obj_well_defined(
         &mut self,
         x: &Sum,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_child_obj_well_defined_and_store_cache(
             &x.start,
@@ -1940,7 +1940,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_finite_set_sum_obj_well_defined(
         &mut self,
         x: &SumOfFiniteSet,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_child_obj_well_defined_and_store_cache(
             &x.set,
@@ -2067,7 +2067,7 @@ impl Runtime {
         &mut self,
         operation: &str,
         function: &Obj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         let Some(mut body) = self.get_fn_range_function_body(function) else {
             // The operation-specific callable/domain check reports a more
@@ -2149,7 +2149,7 @@ impl Runtime {
         &mut self,
         list_set: &ListSet,
         func: &Obj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         let Some(body) = self.get_fn_range_function_body(func) else {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
@@ -2223,7 +2223,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_finite_set_product_obj_well_defined(
         &mut self,
         x: &ProductOfFiniteSet,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_child_obj_well_defined_and_store_cache(
             &x.set,
@@ -2304,7 +2304,7 @@ impl Runtime {
         &mut self,
         list_set: &ListSet,
         func: &Obj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         let Some(body) = self.get_fn_range_function_body(func) else {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
@@ -2378,7 +2378,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_product_obj_well_defined(
         &mut self,
         x: &Product,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_child_obj_well_defined_and_store_cache(
             &x.start,
@@ -2437,7 +2437,7 @@ impl Runtime {
         start: &Obj,
         end: &Obj,
         param_set: &Obj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
         op: &str,
     ) -> Result<(), RuntimeError> {
         if let (Some(a_num), Some(b_num)) = (
@@ -2522,7 +2522,7 @@ impl Runtime {
         fs_body: FnSetBody,
         start: &Obj,
         end: &Obj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
         op: &str,
     ) -> Result<(), RuntimeError> {
         if SetBoundParameterGroup::number_of_params(&fs_body.set_bound_parameters) != 1 {
@@ -2645,7 +2645,7 @@ impl Runtime {
         func: &Obj,
         start: &Obj,
         end: &Obj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
         op: &str,
     ) -> Result<(), RuntimeError> {
         if let Some(af) = Self::summand_as_unary_anonymous_fn(func) {
@@ -2724,7 +2724,7 @@ impl Runtime {
         af: &AnonymousFn,
         start: &Obj,
         end: &Obj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
         op: &str,
     ) -> Result<(), RuntimeError> {
         if SetBoundParameterGroup::number_of_params(&af.body.set_bound_parameters) != 1 {
@@ -2838,7 +2838,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_range_well_defined(
         &mut self,
         x: &Range,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_child_obj_well_defined_and_store_cache(
             &x.start,
@@ -2860,7 +2860,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_closed_range_well_defined(
         &mut self,
         x: &ClosedRange,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_child_obj_well_defined_and_store_cache(
             &x.start,
@@ -2884,7 +2884,7 @@ impl Runtime {
         op: &str,
         list_set: &ListSet,
         func: &Obj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         let Some(anonymous) = Self::summand_as_unary_anonymous_fn(func) else {
             return Ok(());
@@ -2931,7 +2931,7 @@ impl Runtime {
         &mut self,
         op: &str,
         func: &Obj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         let Some(anonymous) = Self::summand_as_unary_anonymous_fn(func) else {
             return Ok(());
@@ -3003,7 +3003,7 @@ impl Runtime {
         &mut self,
         domain: &Obj,
         return_set: &Obj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<bool, RuntimeError> {
         let subset_fact: AtomicFact =
             SubsetFact::new(domain.clone(), return_set.clone(), default_line_file()).into();

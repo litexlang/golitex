@@ -85,7 +85,7 @@ impl StmtResultToLeanCompiler {
                 let theorem = if source_is_integer_add && target_is_integer_add {
                     "Litex.Same.intAddCongr"
                 } else if source_is_integer_add {
-                    "Litex.Same.intAddComplex"
+                    "Litex.Same.intCastAddComplex"
                 } else if source_is_complex_plus_integer {
                     "Litex.Same.addCongrRightInt"
                 } else {
@@ -1592,6 +1592,468 @@ impl StmtResultToLeanCompiler {
         )))
     }
 
+    /// `Combine`: preserve the verifier-owned pointwise binder as a compiled
+    /// local theorem, then feed it to the reviewed native `Z`-sum monotonicity
+    /// adapter. Endpoint equality Results are checked and rendered too. The
+    /// first compiler tranche intentionally accepts only structurally
+    /// identical endpoints and exact unary `Z -> Z` sums; semantic endpoint
+    /// transport requires a separate reviewed `Same` elimination route.
+    pub(super) fn construct_lean_integer_range_sum_pointwise_order_from_result(
+        &mut self,
+        target: &Fact,
+        evidence: &IntegerRangeSumPointwiseOrderBuiltinRuleEvidence,
+        subgoals: &[StmtResult],
+    ) -> Result<Option<String>, String> {
+        if evidence.expected_target.to_string() != target.to_string() {
+            return Err("integer-range sum order evidence changed its target".into());
+        }
+        let Fact::AtomicFact(AtomicFact::LessEqualFact(order)) = target else {
+            return Err("integer-range sum order evidence targets a non-order fact".into());
+        };
+        let (Obj::Sum(left_sum), Obj::Sum(right_sum)) = (&order.left, &order.right) else {
+            return Err("integer-range sum order evidence retained non-sum operands".into());
+        };
+        if obj_equality_key(left_sum.start.as_ref()) != obj_equality_key(right_sum.start.as_ref())
+            || obj_equality_key(left_sum.end.as_ref()) != obj_equality_key(right_sum.end.as_ref())
+        {
+            return Err(
+                "integer-range sum compiler currently requires structurally identical endpoints"
+                    .into(),
+            );
+        }
+        let [start_result, end_result, pointwise_result] = subgoals else {
+            return Err(
+                "integer-range sum order evidence requires start, end, and pointwise children"
+                    .into(),
+            );
+        };
+        let expected = [
+            &evidence.expected_start_equality,
+            &evidence.expected_end_equality,
+            &evidence.expected_pointwise,
+        ];
+        let factual_children = [start_result, end_result, pointwise_result]
+            .into_iter()
+            .zip(expected)
+            .enumerate()
+            .map(|(index, (result, expected))| {
+                let child = result.factual_success().ok_or_else(|| {
+                    format!("integer-range sum order child {index} is not factual")
+                })?;
+                if child.fact().to_string() != expected.to_string()
+                    || child.store.fact.to_string() != expected.to_string()
+                {
+                    return Err(format!(
+                        "integer-range sum order child {index} changed its proposition"
+                    ));
+                }
+                Ok(child)
+            })
+            .collect::<Result<Vec<_>, String>>()?;
+        let start_proof = self
+            .construct_lean_proof_from_direct_fact_result_using_its_well_definedness(
+                factual_children[0],
+            )?
+            .ok_or_else(|| {
+                "integer-range sum start equality has no direct proof consumer".to_string()
+            })?;
+        let end_proof = self
+            .construct_lean_proof_from_direct_fact_result_using_its_well_definedness(
+                factual_children[1],
+            )?
+            .ok_or_else(|| {
+                "integer-range sum end equality has no direct proof consumer".to_string()
+            })?;
+
+        let Fact::ForallFact(pointwise_forall) = &evidence.expected_pointwise else {
+            return Err("integer-range sum pointwise child is not a forall fact".into());
+        };
+        let pointwise_parameters = pointwise_forall
+            .typed_parameters
+            .collect_param_bindings_with_types();
+        if !matches!(
+            pointwise_parameters.as_slice(),
+            [(_, ParamType::Obj(Obj::StandardSet(StandardSet::Z)))]
+        ) || pointwise_forall.dom_facts.len() != 2
+            || pointwise_forall.then_facts.len() != 1
+        {
+            return Err(
+                "integer-range sum compiler requires one Z binder, two range premises, and one conclusion"
+                    .into(),
+            );
+        }
+        let pointwise_declaration_index = self.next_fact_name_index;
+        if !self.compile_direct_forall_fact_result(factual_children[2])? {
+            return Err(
+                "integer-range sum pointwise ForallProof has no direct compiler consumer".into(),
+            );
+        }
+        if self.next_fact_name_index != pointwise_declaration_index + 1 {
+            return Err(
+                "integer-range sum pointwise Result published an unexpected theorem count".into(),
+            );
+        }
+        let pointwise_theorem = format!("__fact{pointwise_declaration_index}");
+
+        let left_function = LeanTargetObjectRepresentation::lower(left_sum.func.as_ref())?;
+        let right_function = LeanTargetObjectRepresentation::lower(right_sum.func.as_ref())?;
+        let (left_function, _) =
+            render_exact_unary_integer_function(&left_function, &self.environment_stack)?;
+        let (right_function, _) =
+            render_exact_unary_integer_function(&right_function, &self.environment_stack)?;
+        let start = render_integer_obj(left_sum.start.as_ref(), &self.environment_stack)?;
+        let end = render_integer_obj(left_sum.end.as_ref(), &self.environment_stack)?;
+        let start_proposition =
+            render_fact(&evidence.expected_start_equality, &self.environment_stack)?;
+        let end_proposition =
+            render_fact(&evidence.expected_end_equality, &self.environment_stack)?;
+
+        Ok(Some(format!(
+            "(by\n  have __sum_start_equal : {start_proposition} := {start_proof}\n  have __sum_end_equal : {end_proposition} := {end_proof}\n  exact Litex.Rules.integerRangeSumLeOwn {start} {end} {left_function} {right_function} (fun __index __lower __upper => by\n    simpa only [Litex.Fn.callOwn] using ({pointwise_theorem} __index (by simpa using __lower) (by simpa using __upper)))\n)"
+        )))
+    }
+
+    /// Replay the legacy typed absolute-value evidence. Sign selection is
+    /// accepted only when its ordered child is rendered against the exact
+    /// native real selected for the target symbol; semantic `Same` is never
+    /// eliminated into native equality.
+    pub(super) fn construct_lean_absolute_value_from_result(
+        &mut self,
+        target: &Fact,
+        rule: AbsoluteValueBuiltinRule,
+        subgoals: &[StmtResult],
+    ) -> Result<Option<String>, String> {
+        if rule != AbsoluteValueBuiltinRule::Product {
+            let [child] = subgoals else {
+                return Err("absolute-value sign evidence requires one retained premise".into());
+            };
+            let child = child
+                .factual_success()
+                .ok_or_else(|| "absolute-value sign premise is not factual".to_string())?;
+            if !child.store.infers.is_empty() {
+                return Err("absolute-value sign premise unexpectedly published effects".into());
+            }
+            let child_fact = child.fact();
+            let child_proof = self
+                .construct_lean_proof_from_direct_fact_result(child)?
+                .ok_or_else(|| {
+                    "absolute-value sign premise has no direct proof consumer".to_string()
+                })?;
+            render_fact(target, &self.environment_stack)?;
+
+            return match rule {
+                AbsoluteValueBuiltinRule::NonnegativeIdentity
+                | AbsoluteValueBuiltinRule::NonpositiveNegation => {
+                    let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = target else {
+                        return Err(
+                            "absolute-value sign-selection evidence targets a non-equality fact"
+                                .into(),
+                        );
+                    };
+                    fn selection<'a>(
+                        absolute_side: &'a Obj,
+                        selected_side: &Obj,
+                        rule: AbsoluteValueBuiltinRule,
+                    ) -> Option<&'a Obj> {
+                        let Obj::Abs(absolute) = absolute_side else {
+                            return None;
+                        };
+                        let argument = absolute.arg.as_ref();
+                        match rule {
+                            AbsoluteValueBuiltinRule::NonnegativeIdentity
+                                if obj_equality_key(argument)
+                                    == obj_equality_key(selected_side) =>
+                            {
+                                Some(argument)
+                            }
+                            AbsoluteValueBuiltinRule::NonpositiveNegation => {
+                                let Obj::Mul(product) = selected_side else {
+                                    return None;
+                                };
+                                let is_negative_one = |object: &Obj| matches!(object, Obj::Number(number) if number.normalized_value == "-1");
+                                let matches = (is_negative_one(product.left.as_ref())
+                                    && obj_equality_key(product.right.as_ref())
+                                        == obj_equality_key(argument))
+                                    || (is_negative_one(product.right.as_ref())
+                                        && obj_equality_key(product.left.as_ref())
+                                            == obj_equality_key(argument));
+                                matches.then_some(argument)
+                            }
+                            _ => None,
+                        }
+                    }
+                    let (argument, reversed) = if let Some(argument) =
+                        selection(&equality.left, &equality.right, rule)
+                    {
+                        (argument, false)
+                    } else if let Some(argument) = selection(&equality.right, &equality.left, rule)
+                    {
+                        (argument, true)
+                    } else {
+                        return Err(
+                            "absolute-value sign-selection evidence changed its structural target"
+                                .into(),
+                        );
+                    };
+                    let (premise_left, premise_right, strict) = order_relation_parts(&child_fact)?;
+                    let premise_matches = match rule {
+                        AbsoluteValueBuiltinRule::NonnegativeIdentity => {
+                            is_literal_zero(premise_left)
+                                && obj_equality_key(premise_right) == obj_equality_key(argument)
+                        }
+                        AbsoluteValueBuiltinRule::NonpositiveNegation => {
+                            obj_equality_key(premise_left) == obj_equality_key(argument)
+                                && is_literal_zero(premise_right)
+                        }
+                        _ => false,
+                    };
+                    if !premise_matches {
+                        return Err(
+                            "absolute-value sign-selection evidence changed its ordered premise"
+                                .into(),
+                        );
+                    }
+                    let native_real = render_real_target_object_representation(
+                        &LeanTargetObjectRepresentation::lower(argument)?,
+                        &self.environment_stack,
+                    )?;
+                    let weak_premise = if strict {
+                        format!(
+                            "(by simpa [Litex.Le, Litex.Lt, Litex.OrderValue] using (le_of_lt (show _ < _ from {child_proof})))"
+                        )
+                    } else {
+                        format!("({child_proof})")
+                    };
+                    let theorem = match rule {
+                        AbsoluteValueBuiltinRule::NonnegativeIdentity => "absEqSelfOfLe",
+                        AbsoluteValueBuiltinRule::NonpositiveNegation => "absEqNegOfLe",
+                        _ => unreachable!(),
+                    };
+                    let mut proof = format!("Litex.Rules.{theorem} {native_real} {weak_premise}");
+                    if rule == AbsoluteValueBuiltinRule::NonnegativeIdentity {
+                        if let LeanTargetObjectRepresentation::Symbol { symbol_id, .. } =
+                            LeanTargetObjectRepresentation::lower(argument)?
+                        {
+                            if let Some(source_to_selected) = self
+                                .environment_stack
+                                .numeric_representation_equalities
+                                .get(&symbol_id)
+                            {
+                                proof = format!(
+                                    "Litex.Same.trans ({proof}) (Litex.Same.symm ({source_to_selected}))"
+                                );
+                            }
+                        }
+                    }
+                    if reversed {
+                        proof = format!("Litex.Same.symm ({proof})");
+                    }
+                    Ok(Some(proof))
+                }
+                AbsoluteValueBuiltinRule::PositiveFromNonzero => {
+                    let (zero, absolute_value) = positive_order_parts(target, true)?;
+                    if !is_literal_zero(zero) {
+                        return Err(
+                            "absolute-value positivity target changed its zero endpoint".into()
+                        );
+                    }
+                    let Obj::Abs(absolute_value) = absolute_value else {
+                        return Err("absolute-value positivity target lost its abs operator".into());
+                    };
+                    let argument = absolute_value.arg.as_ref();
+                    let (nonzero_left, nonzero_right) = not_equal_parts(&child_fact)?;
+                    if obj_equality_key(nonzero_left) != obj_equality_key(argument)
+                        || !is_literal_zero(nonzero_right)
+                    {
+                        return Err(
+                            "absolute-value positivity evidence changed its nonzero premise".into(),
+                        );
+                    }
+                    let LeanTargetObjectRepresentation::Symbol { symbol_id, .. } =
+                        LeanTargetObjectRepresentation::lower(argument)?
+                    else {
+                        return Err(
+                            "absolute-value positivity requires one exact source symbol".into()
+                        );
+                    };
+                    let source = render_obj(argument, &self.environment_stack)?;
+                    let native_real = render_real_target_object_representation(
+                        &LeanTargetObjectRepresentation::lower(argument)?,
+                        &self.environment_stack,
+                    )?;
+                    let source_to_selected = self
+                        .environment_stack
+                        .numeric_representation_equalities
+                        .get(&symbol_id)
+                        .ok_or_else(|| {
+                            "absolute-value positivity has no source-to-real representation bridge"
+                                .to_string()
+                        })?;
+                    Ok(Some(format!(
+                        "Litex.Rules.absPositiveOfNotSame {source} {native_real} ({source_to_selected}) ({child_proof})"
+                    )))
+                }
+                AbsoluteValueBuiltinRule::Product => unreachable!(),
+            };
+        }
+        if !subgoals.is_empty() {
+            return Err("absolute-value product gained unexpected proof children".into());
+        }
+        let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = target else {
+            return Err("absolute-value product evidence targets a non-equality fact".into());
+        };
+        let product_shape = |abs_side: &Obj, product_side: &Obj| -> Option<(Obj, Obj)> {
+            let Obj::Abs(abs) = abs_side else {
+                return None;
+            };
+            let Obj::Mul(arguments) = abs.arg.as_ref() else {
+                return None;
+            };
+            let Obj::Mul(values) = product_side else {
+                return None;
+            };
+            let (Obj::Abs(left_abs), Obj::Abs(right_abs)) =
+                (values.left.as_ref(), values.right.as_ref())
+            else {
+                return None;
+            };
+            if obj_equality_key(arguments.left.as_ref()) != obj_equality_key(left_abs.arg.as_ref())
+                || obj_equality_key(arguments.right.as_ref())
+                    != obj_equality_key(right_abs.arg.as_ref())
+            {
+                return None;
+            }
+            Some((
+                arguments.left.as_ref().clone(),
+                arguments.right.as_ref().clone(),
+            ))
+        };
+        let (left, right, reversed) =
+            if let Some((left, right)) = product_shape(&equality.left, &equality.right) {
+                (left, right, false)
+            } else if let Some((left, right)) = product_shape(&equality.right, &equality.left) {
+                (left, right, true)
+            } else {
+                return Err("absolute-value product evidence changed its structural target".into());
+            };
+        let proof = format!(
+            "Litex.Rules.absMul {} {}",
+            render_numeric_obj(&left, &self.environment_stack)?,
+            render_numeric_obj(&right, &self.environment_stack)?
+        );
+        Ok(Some(if reversed {
+            format!("Litex.Same.symm ({proof})")
+        } else {
+            proof
+        }))
+    }
+
+    /// `Combine`: validate the literal tuple/cart arity and exact ordered
+    /// coordinate memberships retained by the verifier, then fold their
+    /// proofs into the target's typed `HCons`/`cartCons` spine.
+    pub(super) fn construct_lean_tuple_cartesian_membership_from_result(
+        &mut self,
+        target: &Fact,
+        evidence: &TupleCartesianMembershipBuiltinRuleEvidence,
+        subgoals: &[StmtResult],
+    ) -> Result<Option<String>, String> {
+        if evidence.expected_target.to_string() != target.to_string() {
+            return Err("tuple/cart membership evidence changed its target".into());
+        }
+        let Fact::AtomicFact(AtomicFact::InFact(membership)) = target else {
+            return Err("tuple/cart membership evidence targets a non-membership".into());
+        };
+        let (Obj::Tuple(tuple), Obj::Cart(cart)) = (&membership.element, &membership.set) else {
+            return Err("tuple/cart membership evidence retained nonliteral operands".into());
+        };
+        if tuple.args.len() != cart.args.len()
+            || tuple.args.len() != evidence.expected_coordinate_memberships.len()
+            || tuple.args.len() < 2
+        {
+            return Err("tuple/cart membership evidence changed its coordinate arity".into());
+        }
+        for (index, ((element, set), expected)) in tuple
+            .args
+            .iter()
+            .zip(cart.args.iter())
+            .zip(evidence.expected_coordinate_memberships.iter())
+            .enumerate()
+        {
+            let Fact::AtomicFact(AtomicFact::InFact(expected_membership)) = expected else {
+                return Err(format!(
+                    "tuple/cart coordinate {index} retained a non-membership premise"
+                ));
+            };
+            if obj_equality_key(element.as_ref()) != obj_equality_key(&expected_membership.element)
+                || obj_equality_key(set.as_ref()) != obj_equality_key(&expected_membership.set)
+            {
+                return Err(format!(
+                    "tuple/cart coordinate {index} changed its element or factor"
+                ));
+            }
+        }
+
+        let Some(coordinate_proofs) =
+            self.construct_lean_tuple_cartesian_coordinate_proofs_from_result(evidence, subgoals)?
+        else {
+            return Ok(None);
+        };
+        let mut proof = "Litex.Rules.inCartNil".to_string();
+        for coordinate_proof in coordinate_proofs.iter().rev() {
+            proof = format!("Litex.Rules.inCartCons ({coordinate_proof}) ({proof})");
+        }
+        Ok(Some(proof))
+    }
+
+    pub(super) fn construct_lean_tuple_cartesian_coordinate_proofs_from_result(
+        &mut self,
+        evidence: &TupleCartesianMembershipBuiltinRuleEvidence,
+        subgoals: &[StmtResult],
+    ) -> Result<Option<Vec<String>>, String> {
+        let [child] = subgoals else {
+            return Err(
+                "tuple/cart membership requires one retained coordinate-premise Result".into(),
+            );
+        };
+        let child = child
+            .factual_success()
+            .ok_or_else(|| "tuple/cart coordinate premise is not factual".to_string())?;
+        let child_fact = child.fact();
+        let components = conjunction_components(&child_fact)?;
+        if components.len() != evidence.expected_coordinate_memberships.len()
+            || components
+                .iter()
+                .zip(evidence.expected_coordinate_memberships.iter())
+                .any(|(retained, expected)| retained.to_string() != expected.to_string())
+            || child.store.fact.to_string() != child_fact.to_string()
+            || !child.store.infers.is_empty()
+        {
+            return Err(
+                "tuple/cart coordinate child changed its ordered conjunction or effects".into(),
+            );
+        }
+        let Some(conjunction_proof) =
+            self.construct_lean_proof_from_direct_fact_result_using_its_well_definedness(child)?
+        else {
+            return Ok(None);
+        };
+        let conjunction_type = if child.well_definedness.recursive.is_some() {
+            self.render_fact_using_well_definedness_result(&child.well_definedness, &child_fact)?
+        } else {
+            render_fact(&child_fact, &self.environment_stack)?
+        };
+        let typed_conjunction_proof = format!("({conjunction_proof} : {conjunction_type})");
+        let mut coordinate_proofs = Vec::with_capacity(components.len());
+        for index in 0..components.len() {
+            coordinate_proofs.push(conjunction_projection(
+                &typed_conjunction_proof,
+                index,
+                components.len(),
+            )?);
+        }
+        Ok(Some(coordinate_proofs))
+    }
+
     /// `Wrap`: validate the verifier-selected head-membership child and use
     /// the exact WD application layer to construct membership in the
     /// instantiated declared return carrier. No function search or return-set
@@ -1838,6 +2300,24 @@ impl StmtResultToLeanCompiler {
                         &builtin.subgoals,
                     );
                 }
+                if let Some(BuiltinRuleEvidence::TupleCartesianMembership(evidence)) =
+                    builtin.evidence.typed()
+                {
+                    return self.construct_lean_tuple_cartesian_membership_from_result(
+                        &source_fact,
+                        evidence,
+                        &builtin.subgoals,
+                    );
+                }
+                if let Some(BuiltinRuleEvidence::IntegerRangeSumPointwiseOrder(evidence)) =
+                    builtin.evidence.typed()
+                {
+                    return self.construct_lean_integer_range_sum_pointwise_order_from_result(
+                        &source_fact,
+                        evidence,
+                        &builtin.subgoals,
+                    );
+                }
                 if let Some(BuiltinRuleEvidence::FunctionApplicationReturnMembership(evidence)) =
                     builtin.evidence.typed()
                 {
@@ -2013,6 +2493,13 @@ impl StmtResultToLeanCompiler {
                         &builtin.subgoals,
                     );
                 }
+                if let Some(BuiltinRuleEvidence::AbsoluteValue(rule)) = builtin.evidence.typed() {
+                    return self.construct_lean_absolute_value_from_result(
+                        &source_fact,
+                        *rule,
+                        &builtin.subgoals,
+                    );
+                }
                 if let Some(evidence) = builtin.evidence.typed() {
                     if let Some(limitation) = direct_builtin_rule_compiler_limitation(evidence) {
                         return Err(limitation.to_string());
@@ -2058,7 +2545,7 @@ impl StmtResultToLeanCompiler {
                             );
                         }
                         Ok(Some(
-                            "Litex.Same.ofEq (by norm_num [Litex.tupleDim, Litex.TupleShape.dimension])"
+                            "Litex.Same.ofEq (by norm_num [Litex.abs, Litex.min, Litex.max, Litex.tupleDim, Litex.TupleShape.dimension])"
                                 .into(),
                         ))
                     }

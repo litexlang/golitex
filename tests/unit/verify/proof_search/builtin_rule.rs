@@ -14,7 +14,7 @@ fn builtin_premise_dispatch_has_one_quantifier_free_entry_and_one_atomic_leaf() 
         .split("#[cfg(test)]")
         .next()
         .expect("builtin premise implementation must precede its tests");
-    let fresh_proof_search_state_constructor = ["ProofSearchState", "::initial("].concat();
+    let fresh_proof_search_state_constructor = ["VerifyState", "::initial("].concat();
     let creates_full_verify_state = implementation
         .match_indices(&fresh_proof_search_state_constructor)
         .any(|(index, _)| {

@@ -48,7 +48,7 @@ impl Runtime {
             } else {
                 self.store_fact_with_well_defined_verification_and_infer_with_reason(
                     fact.clone(),
-                    &ProofSearchState::initial(),
+                    &VerifyState::initial(),
                     InferReason::UnsafeAssumption,
                 )
             }
@@ -63,7 +63,11 @@ impl Runtime {
         trust_stmt: &TrustStmt,
     ) -> Result<StmtResult, RuntimeError> {
         self.run_in_local_env_and_commit(|rt| {
-            let infer_result = rt.exec_trust_stmt_affect_environment(trust_stmt)?;
+            let mut infer_result = rt.exec_trust_stmt_affect_environment(trust_stmt)?;
+            // Freeze every assumption-local identity while the producing
+            // environment is still present. Quantified facts can lose their
+            // cache lookup route after this child scope is merged.
+            rt.attach_known_fact_ids_to_infer_result(&mut infer_result)?;
             Ok(
                 SuccessUnsafeStmtResult::TrustStmt(Box::new(SuccessTrustStmtResult {
                     statement: trust_stmt.clone(),

@@ -460,6 +460,8 @@ pub enum SuccessVerifyByInducAssumptionRole {
     ParameterType,
     BaseCaseEquality,
     DomainLowerBound,
+    CarrierConstraint,
+    FreshInsertionElement,
     InductionHypothesis,
     StrongInductionHypothesis,
 }
@@ -486,9 +488,10 @@ pub struct SuccessVerifyByFiniteSetInducResult {
 
 #[derive(Debug)]
 pub struct SuccessVerifyByInducCaseResult {
-    pub assumptions: Vec<(String, String)>,
+    pub assumptions: Vec<SuccessVerifyByInducAssumptionResult>,
+    pub assumption_infers: SuccessInferResult,
     pub proof_steps: Vec<StmtResult>,
-    pub conclusion_checks: Vec<StmtResult>,
+    pub conclusions: Vec<SuccessVerifyByInducConclusionResult>,
 }
 
 #[derive(Debug)]
@@ -515,49 +518,248 @@ pub struct SuccessVerifyByPropRegistrationResult {
     pub forall_check: Box<StmtResult>,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SuccessVerifyByChoiceProofKind {
+    AxiomOfChoice,
+    ZornLemma,
+    RegularityAxiom,
+}
+
+pub enum SuccessVerifyByChoiceTargetResult {
+    AxiomOfChoice {
+        family: Obj,
+    },
+    ZornLemma {
+        set: Obj,
+        relation: AtomicName,
+        upper_bound: AtomicName,
+        maximal: AtomicName,
+    },
+    RegularityAxiom {
+        set: Obj,
+    },
+}
+
+impl fmt::Debug for SuccessVerifyByChoiceTargetResult {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::AxiomOfChoice { family } => formatter
+                .debug_struct("AxiomOfChoice")
+                .field("family", &family.to_string())
+                .finish(),
+            Self::ZornLemma {
+                set,
+                relation,
+                upper_bound,
+                maximal,
+            } => formatter
+                .debug_struct("ZornLemma")
+                .field("set", &set.to_string())
+                .field("relation", &relation.to_string())
+                .field("upper_bound", &upper_bound.to_string())
+                .field("maximal", &maximal.to_string())
+                .finish(),
+            Self::RegularityAxiom { set } => formatter
+                .debug_struct("RegularityAxiom")
+                .field("set", &set.to_string())
+                .finish(),
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SuccessVerifyByChoiceObligationRole {
+    ChoiceFamilyIsSet,
+    ChoiceMembersNonempty,
+    ZornNonempty,
+    ZornReflexive,
+    ZornTransitive,
+    ZornAntisymmetric,
+    ZornChainUpperBound,
+    RegularityNonempty,
+}
+
 #[derive(Debug)]
 pub struct SuccessVerifyByChoiceResult {
-    pub proof_type: String,
-    pub target: String,
+    pub proof_kind: SuccessVerifyByChoiceProofKind,
+    pub target: SuccessVerifyByChoiceTargetResult,
     pub proof_steps: Vec<StmtResult>,
     pub obligations: Vec<SuccessVerifyByChoiceObligationResult>,
-    pub trusted_conclusion: String,
+    pub trusted_conclusion: Fact,
+    pub trusted_conclusion_fact_id: FactId,
 }
 
 #[derive(Debug)]
 pub struct SuccessVerifyByChoiceObligationResult {
-    pub role: String,
-    pub fact: String,
+    pub role: SuccessVerifyByChoiceObligationRole,
+    pub fact: Fact,
+    pub fact_id: FactId,
     pub check: Option<Box<StmtResult>>,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum BuiltinTheoremRequirementRole {
+    FirstArgumentIsSet,
+    SecondArgumentIsFiniteSet,
+    FirstArgumentSubsetOfSecond,
+    ArgumentIsFiniteSet,
+    ArgumentBelongsToRationals,
+    FunctionSignatureMatchesTarget,
+    SetBuilderDefiningFacts,
+    DefinedSetMembership,
+    StructCarrierFacts,
+    CartesianCoordinates,
+    GeneralCartesianPointwiseMembership,
+    GeneralCartesianFamilyNonempty,
+    GeneralCartesianPointwiseNonempty,
+    IntegerSumPointwiseOrder,
+    FiniteSetSumPointwiseOrder,
+    FiniteSetSummandNonnegative,
+    TupleCoordinatesEqual,
+    FiniteSetSumSubstitution,
+    BijectiveFiniteSetEnumerations,
+    ArgumentIsRealSequence,
+    SequenceSatisfiesCauchyDefinition,
+}
+
+impl BuiltinTheoremRequirementRole {
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::FirstArgumentIsSet => "the first argument is a set",
+            Self::SecondArgumentIsFiniteSet => "the second argument is a finite set",
+            Self::FirstArgumentSubsetOfSecond => "the first argument is a subset of the second",
+            Self::ArgumentIsFiniteSet => "the argument is a finite set",
+            Self::ArgumentBelongsToRationals => "the argument belongs to Q",
+            Self::FunctionSignatureMatchesTarget => {
+                "function signature matches the target function set"
+            }
+            Self::SetBuilderDefiningFacts => {
+                "element satisfies the set-builder base and defining facts"
+            }
+            Self::DefinedSetMembership => {
+                "one set-valued definition unfolds and its membership obligations hold"
+            }
+            Self::StructCarrierFacts => "element satisfies the struct carrier and equivalent facts",
+            Self::CartesianCoordinates => "tuple/cart dimensions and coordinate memberships hold",
+            Self::GeneralCartesianPointwiseMembership => {
+                "function carrier and pointwise general-cart membership hold"
+            }
+            Self::GeneralCartesianFamilyNonempty => "every member of the family set is nonempty",
+            Self::GeneralCartesianPointwiseNonempty => "every indexed factor is nonempty",
+            Self::IntegerSumPointwiseOrder => {
+                "summation bounds agree and summands are pointwise ordered"
+            }
+            Self::FiniteSetSumPointwiseOrder => {
+                "finite index sets agree and summands are pointwise ordered"
+            }
+            Self::FiniteSetSummandNonnegative => {
+                "term belongs to the index set and every summand is nonnegative"
+            }
+            Self::TupleCoordinatesEqual => {
+                "tuple dimensions and all corresponding coordinates agree"
+            }
+            Self::FiniteSetSumSubstitution => {
+                "summands agree pointwise on one index set, or by pullback along a bijection"
+            }
+            Self::BijectiveFiniteSetEnumerations => {
+                "both summations enumerate the same finite set bijectively"
+            }
+            Self::ArgumentIsRealSequence => "the argument belongs to seq(R)",
+            Self::SequenceSatisfiesCauchyDefinition => {
+                "the real sequence satisfies the checked Cauchy definition"
+            }
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum BuiltinTheoremProvenance {
+    AxiomOfChoice,
+}
+
+impl BuiltinTheoremProvenance {
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::AxiomOfChoice => "axiom_of_choice",
+        }
+    }
+}
+
 #[derive(Debug)]
+pub struct SuccessVerifyLitexTheoremApplicationResult {
+    /// Exact stored identity of the source theorem/axiom being instantiated.
+    pub source_fact_id: Option<FactId>,
+    pub argument_verification: Option<Box<SuccessVerifyArgsSatisfyParamDefResult>>,
+    pub domain_facts: Vec<Fact>,
+    pub domain_checks: Vec<StmtResult>,
+}
+
+#[derive(Debug)]
+pub struct SuccessVerifyBuiltinTheoremApplicationResult {
+    pub theorem_id: BuiltinTheoremId,
+    pub requirement_facts: Vec<Fact>,
+    pub requirement_roles: Vec<BuiltinTheoremRequirementRole>,
+    pub requirement_checks: Vec<StmtResult>,
+    /// Dedicated builtin theorems whose conclusion differs from every
+    /// requirement retain the exact conclusion WD tree here.
+    pub conclusion_well_definedness: Option<SuccessVerifyFactWellDefinedResult>,
+    pub provenance: Option<BuiltinTheoremProvenance>,
+}
+
+#[derive(Debug)]
+pub enum SuccessVerifyTheoremApplicationSourceResult {
+    Litex(SuccessVerifyLitexTheoremApplicationResult),
+    Builtin(SuccessVerifyBuiltinTheoremApplicationResult),
+}
+
 pub struct SuccessVerifyTheoremApplicationResult {
     pub theorem: String,
-    pub theorem_source: String,
-    /// Exact stored identity of the Litex theorem/axiom being instantiated.
-    /// Builtin registered rules deliberately retain `None` and use their
-    /// typed rule certificate instead.
-    pub source_fact_id: Option<FactId>,
-    pub mode: String,
-    pub arguments: Vec<String>,
-    pub domain_facts: Vec<String>,
-    pub requirement_roles: Vec<String>,
+    /// Exact source objects, not display strings. Consumers compare these by
+    /// structural object identity before compiling an application.
+    pub arguments: Vec<Obj>,
     /// Exact instantiated direct conclusions returned by theorem execution.
-    /// Consumers must use these structured facts rather than rediscovering a
-    /// conclusion among inference outputs with string matching.
     pub direct_conclusions: Vec<Fact>,
-    pub stored_then_facts: Vec<String>,
-    pub temporary_then_facts: Vec<String>,
-    pub selected_fact: Option<String>,
-    pub parent_stored_facts: Vec<String>,
-    pub provenance: Option<String>,
-    pub argument_verification: Option<Box<SuccessVerifyArgsSatisfyParamDefResult>>,
-    /// Checked premises for a registered builtin theorem, in the same order
-    /// as `domain_facts` and `requirement_roles`.
-    pub requirement_checks: Vec<StmtResult>,
-    pub domain_checks: Vec<StmtResult>,
-    pub selected_fact_check: Option<Box<StmtResult>>,
+    pub source: SuccessVerifyTheoremApplicationSourceResult,
+}
+
+impl fmt::Debug for SuccessVerifyTheoremApplicationResult {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("SuccessVerifyTheoremApplicationResult")
+            .field("theorem", &self.theorem)
+            .field(
+                "arguments",
+                &self
+                    .arguments
+                    .iter()
+                    .map(ToString::to_string)
+                    .collect::<Vec<_>>(),
+            )
+            .field("direct_conclusions", &self.direct_conclusions)
+            .field("source", &self.source)
+            .finish()
+    }
+}
+
+/// Successful `by thm ... => fact` execution keeps the temporary theorem
+/// application as a complete child statement Result. Its conclusion stores
+/// own the exact local FactIds cited by `selected_fact_check`; only the
+/// selected fact's outer store belongs to the parent statement.
+pub struct SuccessVerifyByTheoremSelectionResult {
+    pub temporary_application: Box<StmtResult>,
+    pub selected_fact: AtomicFact,
+    pub selected_fact_check: Box<StmtResult>,
+}
+
+impl fmt::Debug for SuccessVerifyByTheoremSelectionResult {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("SuccessVerifyByTheoremSelectionResult")
+            .field("temporary_application", &self.temporary_application)
+            .field("selected_fact", &self.selected_fact.to_string())
+            .field("selected_fact_check", &self.selected_fact_check)
+            .finish()
+    }
 }
 
 pub struct SuccessVerifyByDefinitionResult {

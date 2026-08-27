@@ -158,6 +158,13 @@ struct CompiledLitexTheoremInstantiationConclusionProofBody {
     proof_expression: String,
 }
 
+struct CompiledByTheoremSelectionProofBody {
+    fact: Fact,
+    retained_fact_id: FactId,
+    proposition: String,
+    proof_lines: Vec<String>,
+}
+
 struct CompiledFiniteAssignmentBranch {
     local_lines: Vec<String>,
     exit_proof: String,
@@ -250,7 +257,49 @@ impl StmtResultToLeanCompiler {
             .as_deref()
             .ok_or_else(|| "successful fact WD result has no recursive proof".to_string())?;
         collect_well_definedness_to_lean_context_from_fact_result(recursive, &mut context)?;
+        self.compile_precollected_well_definedness_context(context, &[recursive])
+    }
 
+    /// Compile a context assembled from one enclosing local binder and all of
+    /// its ordered body facts. Concrete proposition definitions use this
+    /// because their WD evidence is owned by the definition Result rather than
+    /// by a synthetic fact statement.
+    fn construct_def_prop_well_definedness_to_lean_compilation_context(
+        &mut self,
+        local: &SuccessVerifyDefPropLocalEnvResult,
+    ) -> Result<StmtResultWellDefinednessToLeanCompilationContext, String> {
+        let context = self.collect_def_prop_well_definedness_to_lean_compilation_context(local)?;
+        let mut roots = Vec::with_capacity(local.body.len());
+        for body in &local.body {
+            roots.push(body.well_definedness.as_ref());
+        }
+        self.compile_precollected_well_definedness_context(context, &roots)
+    }
+
+    /// Validate and index every Result-owned binder/body WD node without
+    /// prematurely rendering proofs that live below those lexical binders.
+    /// Exact semantic lowerings consume this complete index directly; generic
+    /// predicate lowering additionally freezes its renderable proof slots.
+    fn collect_def_prop_well_definedness_to_lean_compilation_context(
+        &self,
+        local: &SuccessVerifyDefPropLocalEnvResult,
+    ) -> Result<StmtResultWellDefinednessToLeanCompilationContext, String> {
+        let mut context = StmtResultWellDefinednessToLeanCompilationContext::default();
+        collect_well_definedness_to_lean_context_from_fact_binder(&local.binder, &mut context)?;
+        for body in &local.body {
+            collect_well_definedness_to_lean_context_from_fact_result(
+                &body.well_definedness,
+                &mut context,
+            )?;
+        }
+        Ok(context)
+    }
+
+    fn compile_precollected_well_definedness_context(
+        &mut self,
+        context: StmtResultWellDefinednessToLeanCompilationContext,
+        roots: &[&SuccessVerifyFactWellDefinedProofResult],
+    ) -> Result<StmtResultWellDefinednessToLeanCompilationContext, String> {
         // Compile the certificate inside a disposable lexical frame. Exact
         // intrinsic stores owned by this WD tree may be cited by another
         // sibling object requirement (notably a comparison chain), but must
@@ -302,10 +351,12 @@ impl StmtResultToLeanCompiler {
             for occurrence_id in anonymous_function_occurrences {
                 self.compile_anonymous_function_well_definedness_context(occurrence_id)?;
             }
-            install_fact_well_definedness_proof_store_results_in_active_environment(
-                recursive,
-                &mut self.environment_stack,
-            )?;
+            for recursive in roots {
+                install_fact_well_definedness_proof_store_results_in_active_environment(
+                    recursive,
+                    &mut self.environment_stack,
+                )?;
+            }
             for (occurrence_id, layer_index, requirement_index, verification) in
                 requirement_locations
             {

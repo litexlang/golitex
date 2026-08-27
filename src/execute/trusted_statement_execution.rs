@@ -194,12 +194,6 @@ impl Runtime {
                 }),
             )
             .into()),
-            Stmt::Command(CommandStmt::ImportStmt(_)) => Err(short_exec_error(
-                stmt.clone(),
-                "import is only valid as a top-level isolated terminal statement".to_string(),
-                None,
-                vec![],
-            )),
             Stmt::Witness(WitnessStmt::WitnessExistFact(s)) => {
                 self.exec_witness_exist_fact_stmt_affect_environment_only(s)
             }

@@ -233,29 +233,6 @@ impl ResultGraph {
                     }
                 }
             }
-            SuccessStmtResult::Command(SuccessCommandStmtResult::ImportStmt(result)) => {
-                let (role, label) = match &result.execution {
-                    SuccessImportExecutionResult::Executed(executed) => (
-                        "ExecutedImport",
-                        format!(
-                            "module {} / {:?} / {} statements",
-                            executed.module_id.0,
-                            executed.execution_mode,
-                            executed.statement_results.len()
-                        ),
-                    ),
-                    SuccessImportExecutionResult::Reused(reused) => (
-                        "ReusedImport",
-                        format!(
-                            "module {} / {:?}",
-                            reused.module_id.0, reused.execution_mode
-                        ),
-                    ),
-                };
-                let id = format!("{parent}/import-execution");
-                self.ensure_node(id.clone(), "module_execution", role, label, None);
-                self.add_edge(parent, &id, "import_execution", 0);
-            }
             _ => {}
         }
     }
@@ -1961,6 +1938,7 @@ fn infer_rule_role(rule: &InferRule) -> &'static str {
         InferRule::TupleEqualityWithKnownTupleImpliesTupleShape(_) => {
             "TupleEqualityWithKnownTupleImpliesTupleShape"
         }
+        InferRule::CartesianMembershipProjection(_) => "CartesianMembershipProjection",
         InferRule::ListSetMembershipImpliesEqualityAlternatives(_) => {
             "ListSetMembershipImpliesEqualityAlternatives"
         }

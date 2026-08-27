@@ -65,8 +65,6 @@ pub use verify_builtin_rules::{
 pub use verify_builtin_rules::{
     compare_normalized_number_str_to_zero, compare_number_strings, NumberCompareResult,
 };
-#[path = "proof_search/context_state.rs"]
-mod proof_search_state;
 #[path = "support/parameter_requirements.rs"]
 mod verify_arg_satisfy_param_def;
 #[path = "atomic/function_membership.rs"]
@@ -81,6 +79,8 @@ mod verify_or_fact;
 mod verify_or_fact_with_known_forall;
 #[path = "atomic/set_relations.rs"]
 pub mod verify_proper_set_relations_builtin;
+#[path = "proof_search/context_state.rs"]
+mod verify_state;
 #[path = "well_definedness/local_environment.rs"]
 mod verify_well_defined_in_local_env;
 
@@ -99,4 +99,4 @@ pub use verify_number_in_standard_set::number_is_in_z_star;
 
 pub use atomic_non_equational::AlternateFactSearch;
 pub use builtin_rule_state::BuiltinRuleSearchState;
-pub use proof_search_state::ProofSearchState;
+pub use verify_state::VerifyState;

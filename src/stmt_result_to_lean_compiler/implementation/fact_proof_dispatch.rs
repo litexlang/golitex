@@ -93,6 +93,24 @@ impl StmtResultToLeanCompiler {
                         &builtin.subgoals,
                     );
                 }
+                if let Some(BuiltinRuleEvidence::TupleCartesianMembership(evidence)) =
+                    builtin.evidence.typed()
+                {
+                    return self.construct_lean_tuple_cartesian_membership_from_result(
+                        &source_fact,
+                        evidence,
+                        &builtin.subgoals,
+                    );
+                }
+                if let Some(BuiltinRuleEvidence::IntegerRangeSumPointwiseOrder(evidence)) =
+                    builtin.evidence.typed()
+                {
+                    return self.construct_lean_integer_range_sum_pointwise_order_from_result(
+                        &source_fact,
+                        evidence,
+                        &builtin.subgoals,
+                    );
+                }
                 if let Some(BuiltinRuleEvidence::FunctionApplicationReturnMembership(evidence)) =
                     builtin.evidence.typed()
                 {
@@ -267,6 +285,13 @@ impl StmtResultToLeanCompiler {
                         &builtin.subgoals,
                     );
                 }
+                if let Some(BuiltinRuleEvidence::AbsoluteValue(rule)) = builtin.evidence.typed() {
+                    return self.construct_lean_absolute_value_from_result(
+                        &source_fact,
+                        *rule,
+                        &builtin.subgoals,
+                    );
+                }
                 if let Some(evidence) = builtin.evidence.typed() {
                     if let Some(limitation) = direct_builtin_rule_compiler_limitation(evidence) {
                         return Err(limitation.to_string());
@@ -356,7 +381,7 @@ impl StmtResultToLeanCompiler {
                             render_obj(&equality.right, &self.environment_stack)?;
                         }
                         Ok(Some(
-                            "Litex.Same.ofEq (by norm_num [Litex.tupleDim, Litex.TupleShape.dimension])"
+                            "Litex.Same.ofEq (by norm_num [Litex.abs, Litex.min, Litex.max, Litex.tupleDim, Litex.TupleShape.dimension])"
                                 .into(),
                         ))
                     }

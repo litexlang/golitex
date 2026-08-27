@@ -46,11 +46,11 @@ impl Runtime {
 
         let well_definedness = self.verify_fact_well_defined_result(
             &Fact::ForallFact(stmt.forall_fact.clone()),
-            &ProofSearchState::initial(),
+            &VerifyState::initial(),
         )?;
 
         let (proof_steps, forall_check, assumption_infer_result) = self.run_in_local_env(|rt| {
-            let verify_state = ProofSearchState::initial();
+            let verify_state = VerifyState::initial();
             let assumption_infer_result =
                 rt.forall_assume_params_and_dom_in_current_env(&stmt.forall_fact, &verify_state)?;
             let verification_assumption_infer_result = assumption_infer_result.clone();

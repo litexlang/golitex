@@ -7,7 +7,7 @@ fn compositional_well_definedness_cache_returns_exact_reuse_source() {
     let mut runtime = Runtime::default();
     runtime.start_isolated_source("compositional-wd-reuse.lit");
     let object: Obj = Number::new("1".to_string()).into();
-    let verify_state = ProofSearchState::initial();
+    let verify_state = VerifyState::initial();
 
     let first = runtime
         .verify_obj_well_defined_result(&object, &verify_state)
@@ -35,6 +35,6 @@ fn ordinary_well_definedness_keeps_historical_active_reentry_suppression() {
     runtime.begin_well_defined_object(&obj_equality_key(&object));
 
     runtime
-        .verify_obj_well_defined_and_store_cache(&object, &ProofSearchState::initial())
+        .verify_obj_well_defined_and_store_cache(&object, &VerifyState::initial())
         .expect("ordinary Litex verification should retain active-object suppression");
 }

@@ -26,7 +26,7 @@ impl Runtime {
             .verify_objects_are_known_reals(
                 &[&left, &right],
                 &line_file,
-                &ProofSearchState::after_well_definedness(),
+                &VerifyState::after_well_definedness(),
             )?
             .is_none()
         {

@@ -5,6 +5,8 @@
 //! `use crate::prelude::*;` so implementation files can focus on kernel logic
 //! instead of long import lists.
 
+pub(crate) use crate::common::builtin_theorem::without_bound_symbol_display_ids;
+pub use crate::common::builtin_theorem::BuiltinTheoremId;
 pub use crate::common::fact_id::FactId;
 pub use crate::common::forall_conclusion_location::{
     AndFactComponentForallConclusionLocation, ChainFactComponentForallConclusionLocation,
@@ -98,6 +100,7 @@ pub use crate::graph::{
     GraphRequest,
 };
 pub use crate::infer::{
+    CartesianMembershipProjectionInferRule, CartesianMembershipProjectionKind,
     ClosedPositivePowerEqualityImpliesEqualSideMembershipInferRule,
     ConjunctionImpliesComponentInferRule, DefinedPredicateDefinitionClauseProjectionInferRule,
     DefinedPredicateParameterRequirementProjectionInferRule, EqualityChainClosureInferRule,
@@ -115,12 +118,11 @@ pub use crate::infer::{
     TupleEqualityWithKnownTupleImpliesTupleShapeInferRule,
 };
 pub use crate::module_manager::{
-    discover_isolated_module_import, discover_isolated_std_import, discover_repository,
-    discover_repository_for_file, parse_project_config, resolve_std_root, BareSymbolSourceKind,
-    ConfigBareSymbolSource, ConfigImport, ConfigImportKind, ExportEntry, FileId, FileRunner,
-    FileStatus, ImportTarget, ModuleId, ModuleManager, ModuleRunner, ModuleStatus, ProjectBareName,
-    ProjectConfig, ProjectExport, ProjectHierarchy, ProjectImport, ProjectStdImport,
-    RepositoryFileTarget, UnverifiedImport,
+    discover_repository, discover_repository_for_file, parse_project_config, resolve_std_root,
+    BareSymbolSourceKind, ConfigBareSymbolSource, ConfigImport, ConfigImportKind, ExportEntry,
+    FileId, FileRunner, FileStatus, ImportTarget, ModuleId, ModuleManager, ModuleRunner,
+    ModuleStatus, ProjectBareName, ProjectConfig, ProjectExport, ProjectHierarchy, ProjectImport,
+    ProjectStdImport, RepositoryFileTarget, UnverifiedImport,
 };
 pub use crate::obj::nested_obj_binder_normalized_key;
 pub use crate::obj::obj_equality_key;
@@ -233,7 +235,7 @@ pub use crate::pipeline::{
     run, run_isolated_repl_with_runtime, run_latex_repl, run_repl,
     run_repository_before_file_target, run_session, FileExecutionOptions, ReplOptions, RunOptions,
     RunOutcome, RunRequest, RunSummary, RunSummaryRequest, RunTarget, RunTargetKind,
-    SessionPreload, SessionRequest, SourceImportPolicy, SourceRunFailureKind, SourceRunOutcome,
+    SessionPreload, SessionRequest, SourceRunOutcome,
 };
 pub use crate::rational_expression::gcd_decimal_str_and_normalize;
 pub use crate::rational_expression::mul_signed_decimal_str;
@@ -246,6 +248,8 @@ pub use crate::rational_expression::{
 pub use crate::rational_expression::{
     evaluate_obj_to_exact_rational_for_eval, evaluate_obj_to_exact_rational_obj_for_eval,
 };
+pub use crate::result::BuiltinTheoremProvenance;
+pub use crate::result::BuiltinTheoremRequirementRole;
 pub use crate::result::CheckedFunctionDefinitionReductionEvidence;
 pub use crate::result::DefinitionProjectionBuiltinRuleEvidence;
 pub use crate::result::DefinitionReductionVerificationEvidence;
@@ -277,6 +281,7 @@ pub use crate::result::SuccessStmtResult;
 pub use crate::result::SuccessStoredFactCitationProofResult;
 pub use crate::result::SuccessTransformFactResult;
 pub use crate::result::SuccessVerifyArgsSatisfyParamDefResult;
+pub use crate::result::SuccessVerifyBuiltinTheoremApplicationResult;
 pub use crate::result::SuccessVerifyByAssignmentAssumptionResult;
 pub use crate::result::SuccessVerifyByAssignmentDomainResult;
 pub use crate::result::SuccessVerifyByAssignmentResult;
@@ -286,7 +291,10 @@ pub use crate::result::SuccessVerifyByCaseConclusionsResult;
 pub use crate::result::SuccessVerifyByCaseContradictionResult;
 pub use crate::result::SuccessVerifyByCasesResult;
 pub use crate::result::SuccessVerifyByChoiceObligationResult;
+pub use crate::result::SuccessVerifyByChoiceObligationRole;
+pub use crate::result::SuccessVerifyByChoiceProofKind;
 pub use crate::result::SuccessVerifyByChoiceResult;
+pub use crate::result::SuccessVerifyByChoiceTargetResult;
 pub use crate::result::SuccessVerifyByContraResult;
 pub use crate::result::SuccessVerifyByDefinitionResult;
 pub use crate::result::SuccessVerifyByEnumerateFiniteSetResult;
@@ -309,6 +317,7 @@ pub use crate::result::SuccessVerifyByInducResult;
 pub use crate::result::SuccessVerifyByPropRegistrationResult;
 pub use crate::result::SuccessVerifyByStructuredIntegerInducCaseResult;
 pub use crate::result::SuccessVerifyByStructuredIntegerInducResult;
+pub use crate::result::SuccessVerifyByTheoremSelectionResult;
 pub use crate::result::SuccessVerifyByUnstructuredIntegerInducResult;
 pub use crate::result::SuccessVerifyCaseFunctionDefinitionResult;
 pub use crate::result::SuccessVerifyClaimFactResult;
@@ -322,12 +331,14 @@ pub use crate::result::SuccessVerifyHaveObjEqualResult;
 pub use crate::result::SuccessVerifyIndexedFunctionDefinitionResult;
 pub use crate::result::SuccessVerifyIndexedFunctionDefinitionWellDefinedResult;
 pub use crate::result::SuccessVerifyKnownForallRequirementResult;
+pub use crate::result::SuccessVerifyLitexTheoremApplicationResult;
 pub use crate::result::SuccessVerifyLocalProofScopeResult;
 pub use crate::result::SuccessVerifyObjectChoiceGroupResult;
 pub use crate::result::SuccessVerifyObjectChoiceResult;
 pub use crate::result::SuccessVerifyPreimageResult;
 pub use crate::result::SuccessVerifyStrategyDefinitionResult;
 pub use crate::result::SuccessVerifyTheoremApplicationResult;
+pub use crate::result::SuccessVerifyTheoremApplicationSourceResult;
 pub use crate::result::SuccessVerifyTheoremResult;
 pub use crate::result::SuccessVerifyTupleOrCartDefinitionResult;
 pub use crate::result::SuccessVerifyTupleOrCartDimensionResult;
@@ -358,6 +369,7 @@ pub use crate::result::{
     ComplexArithmeticMembershipClosureBuiltinRule, DisjunctionIntroductionBuiltinRuleEvidence,
     FiniteSetBuiltinRule, FunctionApplicationReturnMembershipBuiltinRuleEvidence,
     FunctionSetMembershipBuiltinRuleEvidence, IntegerMembershipClosureBuiltinRule,
+    IntegerRangeSumPointwiseOrderBuiltinRuleEvidence,
     IntegralPolynomialNormalizationBuiltinRuleEvidence, KnownEqualityBuiltinRuleEvidence,
     KnownEqualityBuiltinRuleStep, ListSetMembershipBuiltinRuleEvidence,
     MatrixExpressionMembershipBuiltinRuleEvidence, NativeConstantMembershipBuiltinRule,
@@ -371,7 +383,8 @@ pub use crate::result::{
     RuntimeResolvedNumericComparisonBuiltinRuleEvidence, SetBuilderMembershipBuiltinRuleEvidence,
     SetBuiltinRule, SetRelationDualityBuiltinRule, StandardSetNonemptyBuiltinRuleEvidence,
     StructuralDefinitionCongruenceBuiltinRuleEvidence,
-    StructuralKnownEqualityCongruenceBuiltinRuleEvidence, WellDefinednessRequirementRole,
+    StructuralKnownEqualityCongruenceBuiltinRuleEvidence,
+    TupleCartesianMembershipBuiltinRuleEvidence, WellDefinednessRequirementRole,
 };
 pub use crate::result::{
     AtomicPredicateDomainCheckRole, CaseDisjointnessOrientation, SuccessAxiomStmtResult,
@@ -388,30 +401,29 @@ pub use crate::result::{
     SuccessDefSettingStmtResult, SuccessDefStrategyStmtResult, SuccessDefStructStmtResult,
     SuccessDefTemplateStmtResult, SuccessDefThmStmtResult, SuccessDefinitionStmtResult,
     SuccessEvalStmtExecutionResult, SuccessEvalStmtResult, SuccessEvaluatedEvalStmtResult,
-    SuccessExampleStmtResult, SuccessExecutedImportResult, SuccessHaveByPreimageStmtResult,
-    SuccessHaveCartStmtResult, SuccessHaveFiniteSeqStmtResult,
-    SuccessHaveFnByForallExistUniqueStmtResult, SuccessHaveFnByInducStmtResult,
-    SuccessHaveFnEqualCaseByCaseStmtResult, SuccessHaveFnEqualStmtResult,
-    SuccessHaveMatrixStmtResult, SuccessHaveObjByExistFactsStmtResult,
-    SuccessHaveObjEqualStmtResult, SuccessHaveObjInNonemptySetStmtResult, SuccessHaveSeqStmtResult,
-    SuccessHaveTupleStmtResult, SuccessImportExecutionResult, SuccessImportStmtResult,
+    SuccessExampleStmtResult, SuccessHaveByPreimageStmtResult, SuccessHaveCartStmtResult,
+    SuccessHaveFiniteSeqStmtResult, SuccessHaveFnByForallExistUniqueStmtResult,
+    SuccessHaveFnByInducStmtResult, SuccessHaveFnEqualCaseByCaseStmtResult,
+    SuccessHaveFnEqualStmtResult, SuccessHaveMatrixStmtResult,
+    SuccessHaveObjByExistFactsStmtResult, SuccessHaveObjEqualStmtResult,
+    SuccessHaveObjInNonemptySetStmtResult, SuccessHaveSeqStmtResult, SuccessHaveTupleStmtResult,
     SuccessLetObjStmtResult, SuccessObtainObjFromAtomicFactResult,
     SuccessObtainObjFromExistFactResult, SuccessObtainObjFromThmResult,
     SuccessProofBlockStmtResult, SuccessRecursiveObjWellDefinedResult, SuccessReleaseThmStmtResult,
-    SuccessReuseObjWellDefinedResult, SuccessReusedImportResult,
-    SuccessReusedTemplateInstanceResult, SuccessSketchProofResult, SuccessSketchStmtResult,
-    SuccessStmtCommonResult, SuccessStoreFactResult, SuccessTemplateInstantiationResult,
-    SuccessTrustHaveStmtResult, SuccessTrustStmtResult, SuccessTryProofResult,
-    SuccessTryStmtResult, SuccessUnsafeStmtResult, SuccessVerifyAndFactResult,
-    SuccessVerifyAndFactWellDefinedResult, SuccessVerifyAnonymousFunctionWellDefinedResult,
-    SuccessVerifyAtomicFactResult, SuccessVerifyAtomicFactWellDefinedResult,
-    SuccessVerifyAtomicPredicateDomainCheckResult, SuccessVerifyAtomicPredicateWellDefinedResult,
-    SuccessVerifyBinderObjectWellDefinedResult, SuccessVerifyBinderPremiseResult,
-    SuccessVerifyCaseDisjointnessResult, SuccessVerifyChainFactResult,
-    SuccessVerifyChainFactWellDefinedResult, SuccessVerifyChildObjWellDefinedResult,
-    SuccessVerifyDefAlgoCaseResult, SuccessVerifyDefAlgoCoverageResult,
-    SuccessVerifyDefAlgoDefaultResult, SuccessVerifyDefAlgoLocalEnvResult,
-    SuccessVerifyDefAlgoParameterRetagResult, SuccessVerifyDefStructDomainResult,
+    SuccessReuseObjWellDefinedResult, SuccessReusedTemplateInstanceResult,
+    SuccessSketchProofResult, SuccessSketchStmtResult, SuccessStmtCommonResult,
+    SuccessStoreFactResult, SuccessTemplateInstantiationResult, SuccessTrustHaveStmtResult,
+    SuccessTrustStmtResult, SuccessTryProofResult, SuccessTryStmtResult, SuccessUnsafeStmtResult,
+    SuccessVerifyAndFactResult, SuccessVerifyAndFactWellDefinedResult,
+    SuccessVerifyAnonymousFunctionWellDefinedResult, SuccessVerifyAtomicFactResult,
+    SuccessVerifyAtomicFactWellDefinedResult, SuccessVerifyAtomicPredicateDomainCheckResult,
+    SuccessVerifyAtomicPredicateWellDefinedResult, SuccessVerifyBinderObjectWellDefinedResult,
+    SuccessVerifyBinderPremiseResult, SuccessVerifyCaseDisjointnessResult,
+    SuccessVerifyChainFactResult, SuccessVerifyChainFactWellDefinedResult,
+    SuccessVerifyChildObjWellDefinedResult, SuccessVerifyDefAlgoCaseResult,
+    SuccessVerifyDefAlgoCoverageResult, SuccessVerifyDefAlgoDefaultResult,
+    SuccessVerifyDefAlgoLocalEnvResult, SuccessVerifyDefAlgoParameterRetagResult,
+    SuccessVerifyDefPropLocalEnvResult, SuccessVerifyDefStructDomainResult,
     SuccessVerifyDefStructFieldDefinitionResult, SuccessVerifyDefStructFieldScopeResult,
     SuccessVerifyDefStructFieldTypeResult, SuccessVerifyDefStructLocalEnvResult,
     SuccessVerifyDirectObjWellDefinedResult, SuccessVerifyElementwiseReduceResult,
@@ -533,9 +545,6 @@ pub use crate::stmt::parameters::SetBoundParameterList;
 pub use crate::stmt::parameters::TypedParameterGroup;
 pub use crate::stmt::parameters::TypedParameterList;
 pub use crate::stmt::sketch_stmt::SketchStmt;
-pub use crate::stmt::tooling_stmt::ImportModuleStmt;
-pub use crate::stmt::tooling_stmt::ImportStdStmt;
-pub use crate::stmt::tooling_stmt::ImportStmt;
 pub use crate::stmt::trust_stmt::TrustStmt;
 pub use crate::stmt::try_stmt::TryStmt;
 pub use crate::stmt::witness_stmt::WitnessAtomicFact;
@@ -564,7 +573,7 @@ pub use crate::symbol::{
 };
 pub use crate::verify::general_cart_member_fn_set;
 pub use crate::verify::nested_obj_binder_normalized_fact_key;
-pub use crate::verify::{BuiltinRuleSearchState, ProofSearchState};
+pub use crate::verify::{BuiltinRuleSearchState, VerifyState};
 
 pub use crate::cli::run_cli;
 pub use crate::common::defaults::default_line_file;

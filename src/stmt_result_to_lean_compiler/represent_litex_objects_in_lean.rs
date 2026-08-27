@@ -38,6 +38,9 @@ pub enum LeanTargetObjectRepresentation {
         start: Box<LeanTargetObjectRepresentation>,
         end: Box<LeanTargetObjectRepresentation>,
     },
+    CartesianProduct {
+        factors: Vec<LeanTargetObjectRepresentation>,
+    },
     GeneralCartesianProduct {
         index_set: Box<LeanTargetObjectRepresentation>,
         family_set: Box<LeanTargetObjectRepresentation>,
@@ -265,6 +268,13 @@ impl LeanTargetObjectRepresentation {
             Obj::Range(range) => Ok(LeanTargetObjectRepresentation::Range {
                 start: Box::new(LeanTargetObjectRepresentation::lower(range.start.as_ref())?),
                 end: Box::new(LeanTargetObjectRepresentation::lower(range.end.as_ref())?),
+            }),
+            Obj::Cart(product) => Ok(LeanTargetObjectRepresentation::CartesianProduct {
+                factors: product
+                    .args
+                    .iter()
+                    .map(|factor| LeanTargetObjectRepresentation::lower(factor.as_ref()))
+                    .collect::<Result<Vec<_>, _>>()?,
             }),
             Obj::GeneralCart(product) => Ok(LeanTargetObjectRepresentation::GeneralCartesianProduct {
                 index_set: Box::new(LeanTargetObjectRepresentation::lower(product.index_set.as_ref())?),

@@ -96,6 +96,36 @@ fn registered_set_rule_result_rejects_a_stale_fingerprint() {
 }
 
 #[test]
+fn registered_nonzero_product_and_quotient_rules_fail_closed_at_same_observation_boundary() {
+    run_registered_rule_test(|| {
+        for (name, operator, rule_id) in [
+            ("product", "*", "nonzero.mul"),
+            ("quotient", "/", "nonzero.div"),
+        ] {
+            let file_name = format!("registered_nonzero_{name}.lit");
+            let source = format!(
+                "forall a, b R:\n    a != 0\n    b != 0\n    =>:\n        a {operator} b != 0\n"
+            );
+            let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
+                &source,
+                &file_name,
+            )
+            .unwrap_or_else(|error| panic!("execute registered nonzero {name} rule: {error}"));
+            let error = StmtResultToLeanCompiler::new(&file_name)
+                .compile_stmt_results_to_lean_source(&results)
+                .expect_err(
+                    "registered nonzero arithmetic must fail closed without Same elimination",
+                );
+            assert!(error.contains(rule_id), "{error}");
+            assert!(
+                error.contains("numeric-observation elimination theorem"),
+                "{error}"
+            );
+        }
+    });
+}
+
+#[test]
 fn common_arithmetic_sign_rule_combines_its_child_results_directly() {
     run_registered_rule_test(|| {
         let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
@@ -294,6 +324,66 @@ fn registered_subtraction_sign_and_greater_to_greater_equal_compile_directly() {
         );
         assert!(
             generated.contains("Litex.Lt.toLe (__domain1)"),
+            "{generated}"
+        );
+    });
+}
+
+#[test]
+fn legacy_typed_subtraction_sign_evidence_replays_the_same_exact_real_adapter() {
+    run_registered_rule_test(|| {
+        let mut results = execute_registered_subtraction_sign_and_greater_to_greater_equal_rules();
+        for (result, rule) in results[..2].iter_mut().zip([
+            ArithmeticBuiltinRule::SubNonnegativeFromLessEqual,
+            ArithmeticBuiltinRule::SubPositiveFromLess,
+        ]) {
+            let builtin = registered_single_forall_conclusion_builtin_mut(result);
+            assert_eq!(builtin.subgoals.len(), 3);
+            builtin.subgoals.drain(..2);
+            builtin.evidence =
+                SuccessBuiltinFactProofEvidenceResult::Typed(BuiltinRuleEvidence::Arithmetic(rule));
+        }
+        let generated = StmtResultToLeanCompiler::new("legacy_typed_subtraction_sign.lit")
+            .compile_stmt_results_to_lean_source(&results)
+            .expect("compile legacy typed subtraction-sign evidence");
+        assert!(
+            generated.contains("Litex.Rules.complexSubNonnegativeOfLessEqual"),
+            "{generated}"
+        );
+        assert!(
+            generated.contains("Litex.Rules.complexSubPositiveOfLess"),
+            "{generated}"
+        );
+    });
+}
+
+#[test]
+fn legacy_typed_right_nonnegative_order_evidence_replays_exact_real_adapters() {
+    run_registered_rule_test(|| {
+        let mut results =
+            crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
+                "forall a, b R:\n    0 <= b\n    =>:\n        a <= a + b\n\nforall a, b, c R:\n    a <= b\n    0 <= c\n    =>:\n        a - c <= b\n",
+                "legacy_typed_right_nonnegative_order.lit",
+            )
+            .expect("execute registered right-nonnegative order rules");
+        for (result, (binding_count, rule)) in results.iter_mut().zip([
+            (2, ArithmeticBuiltinRule::AddRightNonnegativeLessEqual),
+            (3, ArithmeticBuiltinRule::SubRightNonnegativeLessEqual),
+        ]) {
+            let builtin = registered_single_forall_conclusion_builtin_mut(result);
+            builtin.subgoals.drain(..binding_count);
+            builtin.evidence =
+                SuccessBuiltinFactProofEvidenceResult::Typed(BuiltinRuleEvidence::Arithmetic(rule));
+        }
+        let generated = StmtResultToLeanCompiler::new("legacy_typed_right_nonnegative_order.lit")
+            .compile_stmt_results_to_lean_source(&results)
+            .expect("compile legacy typed right-nonnegative order evidence");
+        assert!(
+            generated.contains("Litex.Rules.realCastLeAddOfNonnegativeRight"),
+            "{generated}"
+        );
+        assert!(
+            generated.contains("Litex.Rules.realCastSubLeOfLeOfNonnegative"),
             "{generated}"
         );
     });

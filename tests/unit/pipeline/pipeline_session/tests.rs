@@ -397,6 +397,27 @@ fn session_accepts_a_multiline_code_block() {
 }
 
 #[test]
+fn session_run_frames_do_not_dispatch_terminal_import_commands() {
+    let input = format!(
+        "{}{}close\n",
+        run_frame("import", "import std basics\n"),
+        run_frame("next", "1 = 1\n"),
+    );
+    let output = run_isolated_session("source-only-import-boundary", input);
+
+    assert!(
+        output.contains("\"id\":\"import\",\"ok\":false"),
+        "{output}"
+    );
+    assert!(
+        output.contains("`import` is a terminal command, not a Litex statement"),
+        "{output}"
+    );
+    assert!(!output.contains("terminal import\""), "{output}");
+    assert!(output.contains("\"event\":\"skipped\",\"id\":\"next\""));
+}
+
+#[test]
 fn session_continues_after_failed_try_parse() {
     let input = format!(
         "{}{}artifacts final\nclose\n",

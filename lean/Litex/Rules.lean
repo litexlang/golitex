@@ -31,6 +31,218 @@ theorem complexMulInC (a b : ℂ) : Litex.In (a * b) Litex.C :=
 theorem complexDivInC (a b : ℂ) : Litex.In (a / b) Litex.C :=
   complexInC (a / b)
 
+/-- Complex modulus is multiplicative, stated in the heterogeneous equality
+used by compiled Litex facts. -/
+theorem absMul (a b : ℂ) :
+    Litex.Same (Litex.abs (a * b)) (Litex.abs a * Litex.abs b) := by
+  apply Litex.Same.ofEq
+  simp [Litex.abs]
+
+theorem absNonnegative (z : ℂ) : Litex.Nonnegative (Litex.abs z) := by
+  exact ⟨‖z‖, by simpa [Litex.abs] using Litex.AsReal.complex ‖z‖, norm_nonneg z⟩
+
+/-- Convert the exact zero-ended order selected for an `R` binder into the
+semantic sign interface used by compound arithmetic rules. This theorem is
+deliberately restricted to an explicit native real cast. -/
+theorem realCastNonnegative (r : ℝ) (h : Litex.Le (0 : ℂ) (r : ℂ)) :
+    Litex.Nonnegative (r : ℂ) := by
+  exact ⟨r, Litex.AsReal.complex r, by simpa [Litex.Le, Litex.OrderValue] using h⟩
+
+theorem realCastPositive (r : ℝ) (h : Litex.Lt (0 : ℂ) (r : ℂ)) :
+    Litex.Positive (r : ℂ) := by
+  exact ⟨r, Litex.AsReal.complex r, by simpa [Litex.Lt, Litex.OrderValue] using h⟩
+
+theorem realCastNonpositive (r : ℝ) (h : Litex.Le (r : ℂ) (0 : ℂ)) :
+    Litex.Nonpositive (r : ℂ) := by
+  exact ⟨r, Litex.AsReal.complex r, by simpa [Litex.Le, Litex.OrderValue] using h⟩
+
+theorem realCastNegative (r : ℝ) (h : Litex.Lt (r : ℂ) (0 : ℂ)) :
+    Litex.Negative (r : ℂ) := by
+  exact ⟨r, Litex.AsReal.complex r, by simpa [Litex.Lt, Litex.OrderValue] using h⟩
+
+theorem absEqSelfOfLe (r : ℝ) (h : Litex.Le (0 : ℂ) (r : ℂ)) :
+    Litex.Same (Litex.abs (r : ℂ)) (r : ℂ) := by
+  apply Litex.Same.ofEq
+  have hr : 0 ≤ r := by simpa [Litex.Le, Litex.OrderValue] using h
+  simp [Litex.abs, abs_of_nonneg hr]
+
+theorem absEqNegOfLe (r : ℝ) (h : Litex.Le (r : ℂ) (0 : ℂ)) :
+    Litex.Same (Litex.abs (r : ℂ)) ((-1 : ℂ) * (r : ℂ)) := by
+  apply Litex.Same.ofEq
+  have hr : r ≤ 0 := by simpa [Litex.Le, Litex.OrderValue] using h
+  simp [Litex.abs, abs_of_nonpos hr]
+
+theorem absPositiveOfNotSame
+    {alpha : Type}
+    (source : alpha)
+    (r : ℝ)
+    (sourceToReal : Litex.Same source (r : ℂ))
+    (nonzero : ¬ Litex.Same source (0 : ℂ)) :
+    Litex.Positive (Litex.abs (r : ℂ)) := by
+  have hr : r ≠ 0 := by
+    intro equality
+    apply nonzero
+    exact Litex.Same.trans sourceToReal (Litex.Same.ofEq (by simp [equality]))
+  exact ⟨|r|, by simpa [Litex.abs] using Litex.AsReal.complex |r|, abs_pos.mpr hr⟩
+
+theorem absAddLe (a b : ℂ) :
+    Litex.Le (Litex.abs (a + b)) (Litex.abs a + Litex.abs b) := by
+  simpa [Litex.Le, Litex.OrderValue, Litex.abs] using norm_add_le a b
+
+theorem absSubLeSum (a b : ℂ) :
+    Litex.Le (Litex.abs (a - b)) (Litex.abs a + Litex.abs b) := by
+  simpa [Litex.Le, Litex.OrderValue, Litex.abs] using norm_sub_le a b
+
+theorem absSubAbsLeAbsAdd (a b : ℂ) :
+    Litex.Le (Litex.abs a - Litex.abs b) (Litex.abs (a + b)) := by
+  simp only [Litex.Le, Litex.OrderValue, Litex.abs, Complex.sub_re,
+    Complex.ofReal_re]
+  have h := norm_sub_le (a + b) b
+  rw [add_sub_cancel_right] at h
+  linarith
+
+theorem absSubAbsLeAbsSub (a b : ℂ) :
+    Litex.Le (Litex.abs a - Litex.abs b) (Litex.abs (a - b)) := by
+  simp only [Litex.Le, Litex.OrderValue, Litex.abs, Complex.sub_re,
+    Complex.ofReal_re]
+  have h := norm_add_le (a - b) b
+  rw [sub_add_cancel] at h
+  linarith
+
+theorem negAbsLe (z : ℂ) : Litex.Le ((-1 : ℂ) * Litex.abs z) z := by
+  simpa [Litex.Le, Litex.OrderValue, Litex.abs] using
+    (le_trans (neg_le_neg (Complex.abs_re_le_norm z)) (neg_abs_le z.re))
+
+theorem negLeAbs (z : ℂ) : Litex.Le ((-1 : ℂ) * z) (Litex.abs z) := by
+  simpa [Litex.Le, Litex.OrderValue, Litex.abs] using
+    (le_trans (neg_le_abs z.re) (Complex.abs_re_le_norm z))
+
+theorem selfLeAbs (z : ℂ) : Litex.Le z (Litex.abs z) := by
+  simp only [Litex.Le, Litex.OrderValue, Litex.abs, Complex.ofReal_re]
+  exact le_trans (le_abs_self z.re) (Complex.abs_re_le_norm z)
+
+theorem minEqLeftOfLe (a b : ℝ) (h : Litex.Le (a : ℂ) (b : ℂ)) :
+    Litex.Same (Litex.min (a : ℂ) (b : ℂ)) (a : ℂ) := by
+  apply Litex.Same.ofEq
+  have hab : a ≤ b := by simpa [Litex.Le, Litex.OrderValue] using h
+  simp [Litex.min, Litex.OrderValue, hab]
+
+theorem minEqRightOfLe (a b : ℝ) (h : Litex.Le (b : ℂ) (a : ℂ)) :
+    Litex.Same (Litex.min (a : ℂ) (b : ℂ)) (b : ℂ) := by
+  apply Litex.Same.ofEq
+  have hba : b ≤ a := by simpa [Litex.Le, Litex.OrderValue] using h
+  simp [Litex.min, Litex.OrderValue, hba]
+
+theorem maxEqLeftOfLe (a b : ℝ) (h : Litex.Le (b : ℂ) (a : ℂ)) :
+    Litex.Same (Litex.max (a : ℂ) (b : ℂ)) (a : ℂ) := by
+  apply Litex.Same.ofEq
+  have hba : b ≤ a := by simpa [Litex.Le, Litex.OrderValue] using h
+  simp [Litex.max, Litex.OrderValue, hba]
+
+theorem maxEqRightOfLe (a b : ℝ) (h : Litex.Le (a : ℂ) (b : ℂ)) :
+    Litex.Same (Litex.max (a : ℂ) (b : ℂ)) (b : ℂ) := by
+  apply Litex.Same.ofEq
+  have hab : a ≤ b := by simpa [Litex.Le, Litex.OrderValue] using h
+  simp [Litex.max, Litex.OrderValue, hab]
+
+theorem minLeLeft (a b : ℝ) : Litex.Le (Litex.min (a : ℂ) (b : ℂ)) (a : ℂ) := by
+  simp [Litex.min, Litex.Le, Litex.OrderValue]
+
+theorem minLeRight (a b : ℝ) : Litex.Le (Litex.min (a : ℂ) (b : ℂ)) (b : ℂ) := by
+  simp [Litex.min, Litex.Le, Litex.OrderValue]
+
+theorem leMaxLeft (a b : ℝ) : Litex.Le (a : ℂ) (Litex.max (a : ℂ) (b : ℂ)) := by
+  simp [Litex.max, Litex.Le, Litex.OrderValue]
+
+theorem leMaxRight (a b : ℝ) : Litex.Le (b : ℂ) (Litex.max (a : ℂ) (b : ℂ)) := by
+  simp [Litex.max, Litex.Le, Litex.OrderValue]
+
+theorem minMonotone (a b c d : ℝ)
+    (hac : Litex.Le (a : ℂ) (c : ℂ))
+    (hbd : Litex.Le (b : ℂ) (d : ℂ)) :
+    Litex.Le (Litex.min (a : ℂ) (b : ℂ)) (Litex.min (c : ℂ) (d : ℂ)) := by
+  have hac' : a ≤ c := by simpa [Litex.Le, Litex.OrderValue] using hac
+  have hbd' : b ≤ d := by simpa [Litex.Le, Litex.OrderValue] using hbd
+  simpa [Litex.min, Litex.Le, Litex.OrderValue] using min_le_min hac' hbd'
+
+theorem maxMonotone (a b c d : ℝ)
+    (hac : Litex.Le (a : ℂ) (c : ℂ))
+    (hbd : Litex.Le (b : ℂ) (d : ℂ)) :
+    Litex.Le (Litex.max (a : ℂ) (b : ℂ)) (Litex.max (c : ℂ) (d : ℂ)) := by
+  have hac' : a ≤ c := by simpa [Litex.Le, Litex.OrderValue] using hac
+  have hbd' : b ≤ d := by simpa [Litex.Le, Litex.OrderValue] using hbd
+  simpa [Litex.max, Litex.Le, Litex.OrderValue] using max_le_max hac' hbd'
+
+theorem minCommutative (a b : ℝ) :
+    Litex.Same (Litex.min (a : ℂ) (b : ℂ)) (Litex.min (b : ℂ) (a : ℂ)) := by
+  apply Litex.Same.ofEq
+  simp [Litex.min, Litex.OrderValue, min_comm]
+
+theorem maxCommutative (a b : ℝ) :
+    Litex.Same (Litex.max (a : ℂ) (b : ℂ)) (Litex.max (b : ℂ) (a : ℂ)) := by
+  apply Litex.Same.ofEq
+  simp [Litex.max, Litex.OrderValue, max_comm]
+
+theorem minAssociative (a b c : ℝ) :
+    Litex.Same
+      (Litex.min (Litex.min (a : ℂ) (b : ℂ)) (c : ℂ))
+      (Litex.min (a : ℂ) (Litex.min (b : ℂ) (c : ℂ))) := by
+  apply Litex.Same.ofEq
+  simp [Litex.min, Litex.OrderValue, min_assoc]
+
+theorem maxAssociative (a b c : ℝ) :
+    Litex.Same
+      (Litex.max (Litex.max (a : ℂ) (b : ℂ)) (c : ℂ))
+      (Litex.max (a : ℂ) (Litex.max (b : ℂ) (c : ℂ))) := by
+  apply Litex.Same.ofEq
+  simp [Litex.max, Litex.OrderValue, max_assoc]
+
+theorem minIdempotent (a : ℝ) :
+    Litex.Same (Litex.min (a : ℂ) (a : ℂ)) (a : ℂ) := by
+  apply Litex.Same.ofEq
+  simp [Litex.min, Litex.OrderValue]
+
+theorem maxIdempotent (a : ℝ) :
+    Litex.Same (Litex.max (a : ℂ) (a : ℂ)) (a : ℂ) := by
+  apply Litex.Same.ofEq
+  simp [Litex.max, Litex.OrderValue]
+
+theorem minAbsorbMaxLeft (a b : ℝ) :
+    Litex.Same (Litex.min (a : ℂ) (Litex.max (a : ℂ) (b : ℂ))) (a : ℂ) := by
+  apply Litex.Same.ofEq
+  by_cases hab : a ≤ b
+  · simp [Litex.min, Litex.max, Litex.OrderValue, hab]
+  · have hba : b ≤ a := le_of_lt (lt_of_not_ge hab)
+    simp [Litex.min, Litex.max, Litex.OrderValue, hba]
+
+theorem maxAbsorbMinLeft (a b : ℝ) :
+    Litex.Same (Litex.max (a : ℂ) (Litex.min (a : ℂ) (b : ℂ))) (a : ℂ) := by
+  apply Litex.Same.ofEq
+  by_cases hab : a ≤ b
+  · simp [Litex.min, Litex.max, Litex.OrderValue, hab]
+  · have hba : b ≤ a := le_of_lt (lt_of_not_ge hab)
+    simp [Litex.min, Litex.max, Litex.OrderValue, hba]
+
+/-- The empty typed tuple spine belongs to the empty Cartesian tail. -/
+theorem inCartNil : Litex.In (Litex.HNil.nil : Litex.HNil.{u}) Litex.cartNil :=
+  Litex.In.own Litex.cartNil Litex.HNil.nil
+
+/-- Coordinate membership composes without erasing either carrier. -/
+theorem inCartCons
+    {α tailValue : Type u}
+    {headSet tailSet : Litex.Set.{u}}
+    {head : α}
+    {tail : tailValue}
+    (headMembership : Litex.In head headSet)
+    (tailMembership : Litex.In tail tailSet) :
+    Litex.In (Litex.HCons.mk head tail) (Litex.cartCons headSet tailSet) :=
+  ⟨ Litex.HCons.mk
+      (Litex.In.rep head headMembership)
+      (Litex.In.rep tail tailMembership),
+    Litex.Same.hcons
+      (Litex.In.same_rep head headMembership)
+      (Litex.In.same_rep tail tailMembership) ⟩
+
 theorem complexNatInN (n : ℕ) : Litex.In (n : ℂ) Litex.N :=
   ⟨n, Litex.Same.complexNat n⟩
 
@@ -131,6 +343,15 @@ theorem nonnegativeOfInN
     Litex.Nonnegative x := by
   rcases hx with ⟨n, hxn⟩
   exact ⟨(n : ℝ), Litex.Same.trans hxn (Litex.AsReal.nat n), Nat.cast_nonneg n⟩
+
+/-- The exact natural representative selected by the same membership
+certificate is nonnegative in the native complex order ABI. -/
+theorem naturalRepNonnegative
+    {alpha : Type}
+    {x : alpha}
+    (h : Litex.In x Litex.N) :
+    Litex.Le (0 : ℂ) (((Litex.In.rep x h : ℕ) : ℂ)) := by
+  simp [Litex.Le, Litex.OrderValue]
 
 /-- A complex value proved equal to an integer cast belongs to `Z`. -/
 theorem complexEqIntInZ
@@ -351,6 +572,33 @@ private theorem integerRangeSumSingleNative
       function.callOwn start := by
   simp [Litex.sum, Litex.integerRangeSum]
 
+/-- Pointwise non-strict order on an inclusive integer interval lifts to the
+corresponding exact-carrier sums. This is the reviewed target of the typed
+`IntegerRangeSumPointwiseOrder` Result; the Result compiler supplies the
+binder-owning pointwise theorem rather than reconstructing it from the sum. -/
+theorem integerRangeSumLeOwn
+    (start finish : ℤ)
+    (left right : Litex.Fn Litex.Z Litex.Z)
+    (pointwise : ∀ index : ℤ,
+      Litex.Le (start : ℂ) (index : ℂ) →
+      Litex.Le (index : ℂ) (finish : ℂ) →
+      Litex.Le (left.callOwn index : ℂ) (right.callOwn index : ℂ)) :
+    Litex.Le ((Litex.sum start finish left : ℤ) : ℂ)
+      ((Litex.sum start finish right : ℤ) : ℂ) := by
+  have native : Litex.sum start finish left ≤ Litex.sum start finish right := by
+    simp only [Litex.sum, Litex.integerRangeSum]
+    apply Finset.sum_le_sum
+    intro index indexInRange
+    have lower : start ≤ index := (Finset.mem_Icc.mp indexInRange).1
+    have upper : index ≤ finish := (Finset.mem_Icc.mp indexInRange).2
+    have checked := pointwise index
+      (by simpa [Litex.Le, Litex.OrderValue] using lower)
+      (by simpa [Litex.Le, Litex.OrderValue] using upper)
+    have checkedReal : (left.callOwn index : ℝ) ≤ (right.callOwn index : ℝ) := by
+      simpa [Litex.Le, Litex.OrderValue] using checked
+    exact_mod_cast checkedReal
+  simpa [Litex.Le, Litex.OrderValue] using native
+
 /-- Registered `aggregate.sum_single` adapter for an exact function carrier. -/
 theorem integerRangeSumSingleOwn
     (start : ℤ)
@@ -402,13 +650,19 @@ theorem integerRangeSumSplitLastOwn
     (function : Litex.Fn Litex.Z Litex.Z)
     (startLeFinish : Litex.Le (start : ℂ) (finish : ℂ)) :
     Litex.Same (Litex.sum start (finish + 1) function)
-      (Litex.sum start finish function +
-        Litex.fnApplyCarrier function
+      (((Litex.sum start finish function : ℤ) : ℂ) +
+        ((Litex.fnApplyCarrier function
+            (Litex.In.own (Litex.fnSet Litex.Z Litex.Z) function)
+            (finish + 1) : ℤ) : ℂ)) := by
+  have hnative := integerRangeSumSplitLastNative start finish function
+    (by simpa [Litex.Le, Litex.OrderValue] using startLeFinish)
+  exact Litex.Same.trans (Litex.Same.ofEq hnative)
+    (Litex.Same.intAddComplex
+      (Litex.Same.intComplex (Litex.sum start finish function))
+      (Litex.Same.intComplex
+        (Litex.fnApplyCarrier function
           (Litex.In.own (Litex.fnSet Litex.Z Litex.Z) function)
-          (finish + 1)) := by
-  apply Litex.Same.ofEq
-  apply integerRangeSumSplitLastNative
-  simpa [Litex.Le, Litex.OrderValue] using startLeFinish
+          (finish + 1))))
 
 /-- Registered `aggregate.sum_split_last` adapter for a heterogeneous
 function parameter. -/
@@ -420,13 +674,22 @@ theorem integerRangeSumSplitLast
     (startLeFinish : Litex.Le (start : ℂ) (finish : ℂ)) :
     Litex.Same
       (Litex.sum start (finish + 1) (Litex.In.rep function functionMembership))
-      (Litex.sum start finish (Litex.In.rep function functionMembership) +
-        Litex.fnApplySelectedCarrier function functionMembership (finish + 1)) := by
-  apply Litex.Same.ofEq
-  simpa [Litex.fnApplySelectedCarrier] using
-    integerRangeSumSplitLastNative start finish
-      (Litex.In.rep function functionMembership)
-      (by simpa [Litex.Le, Litex.OrderValue] using startLeFinish)
+      (((Litex.sum start finish (Litex.In.rep function functionMembership) : ℤ) : ℂ) +
+        ((Litex.fnApplySelectedCarrier function functionMembership (finish + 1) : ℤ) : ℂ)) := by
+  have hnative :
+      Litex.sum start (finish + 1) (Litex.In.rep function functionMembership) =
+        Litex.sum start finish (Litex.In.rep function functionMembership) +
+          Litex.fnApplySelectedCarrier function functionMembership (finish + 1) := by
+    simpa [Litex.fnApplySelectedCarrier] using
+      integerRangeSumSplitLastNative start finish
+        (Litex.In.rep function functionMembership)
+        (by simpa [Litex.Le, Litex.OrderValue] using startLeFinish)
+  exact Litex.Same.trans (Litex.Same.ofEq hnative)
+    (Litex.Same.intAddComplex
+      (Litex.Same.intComplex
+        (Litex.sum start finish (Litex.In.rep function functionMembership)))
+      (Litex.Same.intComplex
+        (Litex.fnApplySelectedCarrier function functionMembership (finish + 1))))
 
 /-- Addition preserves natural membership for complex-carrier source values. -/
 theorem complexAddInN
@@ -713,6 +976,30 @@ theorem complexAddPreservesLessOfLessEqualAndLess
     Litex.Lt (a + c) (b + d) := by
   simpa [Litex.Lt, Litex.Le, Litex.OrderValue] using add_lt_add_of_le_of_lt hab hcd
 
+/-- Exact-real adapter for registered rule
+`order.le_add_of_nonnegative_right`. -/
+theorem realCastLeAddOfNonnegativeRight
+    (a b : ℝ)
+    (hb : Litex.Le (0 : ℂ) (b : ℂ)) :
+    Litex.Le (a : ℂ) ((a : ℂ) + (b : ℂ)) := by
+  simpa [Litex.Le, Litex.OrderValue] using
+    (show a ≤ a + b from le_add_of_nonneg_right (by
+      simpa [Litex.Le, Litex.OrderValue] using hb))
+
+/-- Exact-real adapter for registered rule
+`order.sub_le_of_le_of_nonnegative`. -/
+theorem realCastSubLeOfLeOfNonnegative
+    (a b c : ℝ)
+    (hab : Litex.Le (a : ℂ) (b : ℂ))
+    (hc : Litex.Le (0 : ℂ) (c : ℂ)) :
+    Litex.Le ((a : ℂ) - (c : ℂ)) (b : ℂ) := by
+  have hab' : a ≤ b := by
+    simpa [Litex.Le, Litex.OrderValue] using hab
+  have hc' : 0 ≤ c := by
+    simpa [Litex.Le, Litex.OrderValue] using hc
+  simpa [Litex.Le, Litex.OrderValue] using
+    (show a - c ≤ b from (sub_le_self a hc').trans hab')
+
 /-- Introduce membership in a predicate-defined set from a semantically equal
 base representative satisfying the predicate. -/
 theorem inSetBuilder
@@ -785,6 +1072,17 @@ theorem positiveOfInNPos
   refine Litex.Positive.intro (Litex.Same.trans hxn (Litex.AsReal.nat n)) ?_
   exact_mod_cast hn
 
+/-- `N+` retains positivity on its exact selected subtype representative. -/
+theorem positiveNaturalRepPositive
+    {alpha : Type}
+    {x : alpha}
+    (h : Litex.In x Litex.NPos) :
+    Litex.Lt (0 : ℂ) (((Litex.In.rep x h).val : ℕ) : ℂ) := by
+  have hn : 0 < (Litex.In.rep x h).val := (Litex.In.rep x h).property
+  have hr : (0 : ℝ) < ((Litex.In.rep x h).val : ℝ) := by
+    exact_mod_cast hn
+  simpa [Litex.Lt, Litex.OrderValue] using hr
+
 /-- A checked positive rational constructs the exact `Q+` subtype carrier. -/
 theorem complexEqRatInQPos
     (z : ℂ)
@@ -805,6 +1103,17 @@ theorem positiveOfInQPos
     Litex.Positive x := by
   rcases (inSetBuilder_iff.mp h) with ⟨q, hq, hxq⟩
   exact Litex.Positive.intro (Litex.Same.trans hxq (Litex.AsReal.rat q)) (by exact_mod_cast hq)
+
+/-- `Q+` retains positivity on its exact selected subtype representative. -/
+theorem positiveRationalRepPositive
+    {alpha : Type}
+    {x : alpha}
+    (h : Litex.In x Litex.QPos) :
+    Litex.Lt (0 : ℂ) (((Litex.In.rep x h).val : ℚ) : ℂ) := by
+  have hq : 0 < (Litex.In.rep x h).val := (Litex.In.rep x h).property
+  have hr : (0 : ℝ) < ((Litex.In.rep x h).val : ℝ) := by
+    exact_mod_cast hq
+  simpa [Litex.Lt, Litex.OrderValue] using hr
 
 /-- A checked positive real numeral constructs the exact `R+` subtype
 carrier from its native real representative. -/
@@ -863,6 +1172,14 @@ theorem positiveOfInRPos
   rcases (inSetBuilder_iff.mp h) with ⟨r, hr, hxr⟩
   exact Litex.Positive.intro hxr hr
 
+/-- `R+` retains positivity on its exact selected subtype representative. -/
+theorem positiveRealRepPositive
+    {alpha : Type}
+    {x : alpha}
+    (h : Litex.In x Litex.RPos) :
+    Litex.Lt (0 : ℂ) (((Litex.In.rep x h).val : ℝ) : ℂ) := by
+  simpa [Litex.Lt, Litex.OrderValue] using (Litex.In.rep x h).property
+
 /-- Checked negative integer/rational/real numerals construct the exact
 refined carrier retained by their successful Result. -/
 theorem complexEqIntInZNeg
@@ -906,6 +1223,17 @@ theorem negativeOfInZNeg
   rcases (inSetBuilder_iff.mp h) with ⟨z, hz, hxz⟩
   exact Litex.Negative.intro (Litex.Same.trans hxz (Litex.AsReal.int z)) (by exact_mod_cast hz)
 
+/-- `Z-` retains negativity on its exact selected integer representative. -/
+theorem negativeIntegerRepNegative
+    {alpha : Type}
+    {x : alpha}
+    (h : Litex.In x Litex.ZNeg) :
+    Litex.Lt (((Litex.In.rep x h).val : ℤ) : ℂ) (0 : ℂ) := by
+  have hz : (Litex.In.rep x h).val < 0 := (Litex.In.rep x h).property
+  have hr : ((Litex.In.rep x h).val : ℝ) < (0 : ℝ) := by
+    exact_mod_cast hz
+  simpa [Litex.Lt, Litex.OrderValue] using hr
+
 theorem negativeOfInQNeg
     {alpha : Type}
     {x : alpha}
@@ -914,6 +1242,17 @@ theorem negativeOfInQNeg
   rcases (inSetBuilder_iff.mp h) with ⟨q, hq, hxq⟩
   exact Litex.Negative.intro (Litex.Same.trans hxq (Litex.AsReal.rat q)) (by exact_mod_cast hq)
 
+/-- `Q-` retains negativity on its exact selected rational representative. -/
+theorem negativeRationalRepNegative
+    {alpha : Type}
+    {x : alpha}
+    (h : Litex.In x Litex.QNeg) :
+    Litex.Lt (((Litex.In.rep x h).val : ℚ) : ℂ) (0 : ℂ) := by
+  have hq : (Litex.In.rep x h).val < 0 := (Litex.In.rep x h).property
+  have hr : ((Litex.In.rep x h).val : ℝ) < (0 : ℝ) := by
+    exact_mod_cast hq
+  simpa [Litex.Lt, Litex.OrderValue] using hr
+
 theorem negativeOfInRNeg
     {alpha : Type}
     {x : alpha}
@@ -921,6 +1260,14 @@ theorem negativeOfInRNeg
     Litex.Negative x := by
   rcases (inSetBuilder_iff.mp h) with ⟨r, hr, hxr⟩
   exact Litex.Negative.intro hxr hr
+
+/-- `R-` retains negativity on its exact selected real representative. -/
+theorem negativeRealRepNegative
+    {alpha : Type}
+    {x : alpha}
+    (h : Litex.In x Litex.RNeg) :
+    Litex.Lt (((Litex.In.rep x h).val : ℝ) : ℂ) (0 : ℂ) := by
+  simpa [Litex.Lt, Litex.OrderValue] using (Litex.In.rep x h).property
 
 /-- Construct exact nonzero-integer membership from the verifier's base
 membership and heterogeneous non-equality premises. -/
@@ -1080,5 +1427,69 @@ theorem inCStarOfInRStar
     Litex.In x Litex.CStar := by
   rcases (inSetBuilder_iff.mp h) with ⟨z, hz, hxz⟩
   exact inSetBuilder hxz ⟨inCOfInR hz.1, hz.2⟩
+
+/-!
+## Sequential completeness of the exact real-sequence carrier
+
+Litex sequences are indexed by positive naturals. The Lean contract uses the
+equivalent zero-based Mathlib sequence obtained by sending `n` to source index
+`n + 1`; source positive cutoffs are therefore lowered by subtracting one.
+-/
+
+abbrev RealSequence := Litex.Fn Litex.NPos Litex.R
+
+def positiveRealValue (epsilon : Litex.RPos.Carrier) : ℝ := by
+  change {r : ℝ // 0 < r} at epsilon
+  exact epsilon.val
+
+def positiveNaturalZeroIndex (index : Litex.NPos.Carrier) : ℕ := by
+  change {n : ℕ // 0 < n} at index
+  exact index.val - 1
+
+def realSequenceAt (a : RealSequence) (n : ℕ) : ℝ :=
+  a.callOwn (by
+    change {n : ℕ // 0 < n}
+    exact ⟨n + 1, Nat.zero_lt_succ n⟩)
+
+def RealSequenceTailClose
+    (a : RealSequence)
+    (limit epsilon : ℝ)
+    (start : ℕ) : Prop :=
+  ∀ n : ℕ,
+    start ≤ n → dist (realSequenceAt a n) limit < epsilon
+
+def RealSequenceConvergesTo (a : RealSequence) (limit : ℝ) : Prop :=
+  ∀ epsilon : ℝ, 0 < epsilon →
+    ∃ start : ℕ,
+      RealSequenceTailClose a limit epsilon start
+
+def RealSequenceConvergent (a : RealSequence) : Prop :=
+  ∃ limit : ℝ, RealSequenceConvergesTo a limit
+
+def RealSequenceCauchyTail
+    (a : RealSequence)
+    (epsilon : ℝ)
+    (start : ℕ) : Prop :=
+  ∀ m n : ℕ,
+    start ≤ m → start ≤ n →
+      dist (realSequenceAt a m) (realSequenceAt a n) < epsilon
+
+def RealSequenceCauchy (a : RealSequence) : Prop :=
+  ∀ epsilon : ℝ, 0 < epsilon →
+    ∃ start : ℕ,
+      RealSequenceCauchyTail a epsilon start
+
+/-- Mathlib's `CompleteSpace ℝ` discharges the only completeness step. -/
+theorem realCauchySequenceConverges
+    (a : RealSequence)
+    (cauchy : RealSequenceCauchy a) :
+    RealSequenceConvergent a := by
+  have nativeCauchy : CauchySeq (realSequenceAt a) :=
+    Metric.cauchySeq_iff.mpr (by
+      intro epsilon epsilonPositive
+      obtain ⟨start, tail⟩ := cauchy epsilon epsilonPositive
+      exact ⟨start, fun m hm n hn => tail m n hm hn⟩)
+  obtain ⟨limit, tends⟩ := cauchySeq_tendsto_of_complete nativeCauchy
+  exact ⟨limit, Metric.tendsto_atTop.mp tends⟩
 
 end Litex.Rules

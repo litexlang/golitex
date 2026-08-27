@@ -147,8 +147,8 @@ Declare local project files and child submodules in recursive ordered
 `[export]` entries. Only a `[hierarchy] module` declares non-standard packages
 in `[import]` or installed packages in `[import std]`. Files cite canonical
 names such as `Part2::chap3::theorem` or
-`basics::theorem`. Module source files cannot write
-source-level imports.
+`basics::theorem`. No `.lit` source file can write imports; this includes
+standalone files run with `-isolated -f`.
 
 Manifest authors may opt selected sources into recursive bare-symbol lookup:
 
@@ -169,22 +169,23 @@ only terminal symbols in their recursive public `[export]` trees, after those
 targets are loaded; private imports are not re-exported.
 
 The ordinary REPL, and the continued terminal after a successful isolated
-`-f`, may load further interfaces dynamically:
+`-f`, may load further interfaces dynamically with terminal commands:
 
 <!-- litex:skip-test -->
-```litex
-import "../Algebra" as Algebra
-Algebra::implementation::some_fact
-
-import std basics
-basics::some_fact
+```text
+litex> import "../Algebra" as Algebra
+litex> Algebra::implementation::some_fact
+litex> import std basics
+litex> basics::some_fact
 ```
 
 The quoted target must be a folder whose `litex.config` declares
 `[hierarchy] module`. The import runs that module's declared imports and full
-ordered `[export]` tree. The terminal keeps the resulting environment, but the
-imported module's own source files remain non-isolated and therefore cannot
-write dynamic `import` statements.
+ordered `[export]` tree. Conceptually, each command appends a dependency to an
+invisible, in-memory `litex.config` owned by that REPL. It is not written to
+disk, disappears when the process exits, and never becomes a Litex statement
+or statement Result. For reproducible source, declare the dependency in the
+real project manifest.
 
 For `-e`, `-f`, and `-r`, Litex prints statement-by-statement JSON output. A
 successful run prints one success object per statement. A failed run prints the
@@ -280,6 +281,10 @@ graph, and fact graph, including a successful preloaded prefix. The event
 values are `ready`, `startup_error`, `block`, `artifacts`, `skipped`, and
 `protocol_error`; textual verifier output is returned in the JSON-string
 `trace` field so a client never has to parse terminal prompts.
+
+Session `run` frames are Litex source, not terminal input. They reject
+`import`, and the protocol intentionally defines no separate import frame;
+dependencies for a session come from its `litex.config` preload.
 
 A failed top-level `try:` block returns a `block` event with `ok: false`, but
 does not stop the session because `try:` has already discarded its temporary
@@ -420,8 +425,8 @@ Running a registered file follows the same prefix and stops after that file.
 Dependency order is the recursive `[export]` order. A `module` with exactly
 one `.lit` export may write `[module]` then `flatten = true`; its public
 interface omits that export-name segment. `std/basics` uses this form, so `[import std] basics` exposes
-`basics::name`. Source-level `import` is reserved for isolated runtimes; module
-source uses its manifest instead.
+`basics::name`. Source-level `import` is rejected everywhere; project source
+uses its manifest, while only an interactive terminal recognizes import commands.
 
 Each `[import]` declaration creates a private module instance. Two aliases of
 one physical folder remain distinct, and imports internal to an imported module
@@ -435,8 +440,7 @@ bypasses this index. Module aliases are a separate namespace from symbols, but
 an active external bare symbol reserves its spelling against every local symbol
 or binder in that source file; struct fields remain separate. Permissions from
 ancestor manifests are inherited by descendant submodules. A later export is
-not active in an earlier file, and source-level isolated imports never enable
-bare lookup.
+not active in an earlier file, and terminal imports never enable bare lookup.
 
 `litex -r <project>` verifies the complete ordered `[export]` tree. In contrast,
 `litex -f <file>` trusts and loads only the earlier `[export]` entries needed to

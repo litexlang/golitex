@@ -45,7 +45,7 @@ impl Runtime {
     pub fn forall_assume_params_and_dom_in_current_env(
         &mut self,
         forall_fact: &ForallFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let mut assumption_infer_result = self
             .define_params_with_type(
@@ -96,7 +96,7 @@ impl Runtime {
     pub fn forall_verify_then_facts_in_current_env(
         &mut self,
         forall_fact: &ForallFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
         infer_result: &mut SuccessInferResult,
         assumption_infers: SuccessInferResult,
         by_cases_case_label: Option<&str>,
@@ -259,7 +259,7 @@ impl Runtime {
     pub fn verify_forall_fact(
         &mut self,
         forall_fact: &ForallFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(cached_result) = self.verify_forall_fact_from_known_cache_only(forall_fact)? {
             return Ok(cached_result);

@@ -1,5 +1,5 @@
 use crate::common::output_language::OutputLanguage;
-use crate::pipeline::SessionPreload;
+use crate::pipeline::{RunOptions, SessionPreload};
 use crate::runtime::OutputStyle;
 
 const DETAIL_FLAG: &str = "-detail";
@@ -15,6 +15,18 @@ pub struct CliOptions {
     pub summarize_output: bool,
     pub force_isolated: bool,
     pub output_language: OutputLanguage,
+}
+
+impl CliOptions {
+    pub fn run_options(&self) -> RunOptions {
+        RunOptions {
+            output_style: self.output_style,
+            strict_mode: self.strict_mode,
+            output_language: self.output_language,
+            summarize: self.summarize_output,
+            force_isolated: self.force_isolated,
+        }
+    }
 }
 
 pub fn parse_global_options(args: &mut Vec<String>) -> Result<CliOptions, String> {

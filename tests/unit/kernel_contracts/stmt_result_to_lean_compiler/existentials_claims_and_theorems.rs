@@ -686,10 +686,15 @@ fn release_thm_uses_the_exact_source_fact_id_and_argument_check_result() {
     else {
         panic!("second Result is release-thm")
     };
-    let source_fact_id = release_theorem
+    let source = &release_theorem
         .verification
         .as_ref()
         .expect("release-thm retains verification")
+        .source;
+    let SuccessVerifyTheoremApplicationSourceResult::Litex(source) = source else {
+        panic!("release-thm retains a Litex theorem source")
+    };
+    let source_fact_id = source
         .source_fact_id
         .expect("release-thm retains its source theorem FactId");
     let json = crate::output::display_stmt_result_json_v2(&results[1]);
@@ -708,16 +713,283 @@ fn release_thm_uses_the_exact_source_fact_id_and_argument_check_result() {
 #[test]
 fn release_thm_rejects_a_missing_source_theorem_fact_id() {
     let mut results = execute_named_theorem_and_instantiation();
-    theorem_instantiation_result_mut(&mut results)
+    let verification = theorem_instantiation_result_mut(&mut results)
         .verification
         .as_mut()
-        .expect("release-thm retains verification")
-        .source_fact_id = None;
+        .expect("release-thm retains verification");
+    let SuccessVerifyTheoremApplicationSourceResult::Litex(source) = &mut verification.source
+    else {
+        panic!("release-thm retains a Litex theorem source")
+    };
+    source.source_fact_id = None;
 
     let error = StmtResultToLeanCompiler::new("direct_theorem_instantiation.lit")
         .compile_stmt_results_to_lean_source(&results)
         .expect_err("release-thm without its source FactId must fail closed");
     assert!(error.contains("release-thm Result has no source theorem FactId"));
+}
+
+#[test]
+fn builtin_release_theorems_replay_typed_constructor_and_pointwise_results() {
+    let source = "release thm set_builder_member(1, {x R: x > 0})\n\nrelease thm fn_set_member(fn(x R) R {x}, fn(y R) R)\n\nrelease thm cart_member_from_coordinates((1, 2), cart(R, R))\n\nrelease thm sum_le_sum_from_pointwise(sum(1, 2, fn(k Z) Z {k}), sum(1, 2, fn(k Z) Z {k}))\n";
+    let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
+        source,
+        "builtin_theorem_applications.lit",
+    )
+    .expect("execute typed builtin theorem applications");
+    let generated = StmtResultToLeanCompiler::new("builtin_theorem_applications.lit")
+        .compile_stmt_results_to_lean_source(&results)
+        .expect("compile typed builtin theorem applications");
+
+    assert!(
+        generated.contains("Litex.Rules.inSetBuilder"),
+        "{generated}"
+    );
+    assert!(
+        generated.contains("Litex.In.own (Litex.fnSet"),
+        "{generated}"
+    );
+    assert!(generated.contains("Litex.Rules.inCartCons"), "{generated}");
+    assert!(
+        generated.contains("Litex.Rules.integerRangeSumLeOwn"),
+        "{generated}"
+    );
+    assert!(
+        generated.contains("callOwn := fun (__arg : ℤ) => __arg"),
+        "{generated}"
+    );
+    assert!(generated.contains("∀ (__p1 : ℤ)"), "{generated}");
+
+    let sum_json = crate::output::display_stmt_result_json_v2(
+        results.last().expect("sum theorem Result is retained"),
+    );
+    assert!(
+        sum_json.contains("\"kind\": \"IntegerRangeSumPointwiseOrder\""),
+        "{sum_json}"
+    );
+    assert!(sum_json.contains("\"expected_pointwise\""), "{sum_json}");
+}
+
+#[test]
+fn integer_sum_builtin_release_fails_closed_outside_the_reviewed_z_to_z_contract() {
+    let source = "release thm sum_le_sum_from_pointwise(sum(1, 2, fn(k Z) R {k}), sum(1, 2, fn(k Z) R {k}))\n";
+    let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
+        source,
+        "builtin_sum_real_codomain_boundary.lit",
+    )
+    .expect("the runtime still verifies the broader source theorem");
+    let error = StmtResultToLeanCompiler::new("builtin_sum_real_codomain_boundary.lit")
+        .compile_stmt_results_to_lean_source(&results)
+        .expect_err("compiler must reject an unreviewed aggregate carrier");
+    assert!(
+        error.contains("outside the reviewed unary Z-to-Z integer-range contract"),
+        "{error}"
+    );
+}
+
+#[test]
+fn registered_abs_min_max_rules_compile_through_reviewed_scalar_operator_abi() {
+    let source = include_str!("../../../../lean/examples/63_ScalarOperatorBuiltins.lit");
+    let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
+        source,
+        "scalar_operator_builtins.lit",
+    )
+    .expect("execute registry-owned abs/min/max rules");
+    let generated = StmtResultToLeanCompiler::new("scalar_operator_builtins.lit")
+        .compile_stmt_results_to_lean_source(&results)
+        .expect("compile registry-owned abs/min/max rules");
+
+    for theorem in [
+        "Litex.Rules.absMul",
+        "Litex.Rules.absNonnegative",
+        "Litex.Rules.absAddLe",
+        "Litex.Rules.minMonotone",
+        "Litex.Rules.maxMonotone",
+        "Litex.Rules.minAssociative",
+        "Litex.Rules.maxAbsorbMinLeft",
+        "Litex.Rules.realCastLeAddOfNonnegativeRight",
+        "Litex.Rules.realCastSubLeOfLeOfNonnegative",
+    ] {
+        assert!(
+            generated.contains(theorem),
+            "missing {theorem}:\n{generated}"
+        );
+    }
+    assert!(generated.contains("Litex.abs"), "{generated}");
+    assert!(generated.contains("Litex.min"), "{generated}");
+    assert!(generated.contains("Litex.max"), "{generated}");
+    assert!(
+        generated.contains("Litex.Same.trans (Litex.Rules.minIdempotent"),
+        "heterogeneous result must retain the exact source-to-selected bridge:\n{generated}"
+    );
+}
+
+#[test]
+fn closed_abs_min_max_normalization_uses_the_same_reviewed_object_abi() {
+    let source = "abs(1) = 1\nmin(1, 2) = 1\nmax(1, 2) = 2\n";
+    let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
+        source,
+        "closed_scalar_operator_normalization.lit",
+    )
+    .expect("execute closed scalar normalization");
+    let generated = StmtResultToLeanCompiler::new("closed_scalar_operator_normalization.lit")
+        .compile_stmt_results_to_lean_source(&results)
+        .expect("compile closed scalar normalization");
+    assert!(
+        generated.contains("norm_num [Litex.abs, Litex.min, Litex.max"),
+        "{generated}"
+    );
+}
+
+#[test]
+fn abs_sign_selection_uses_exact_real_bindings_and_retained_premises() {
+    let source = "forall x R:\n    0 <= x\n    =>:\n        abs(x) = x\n\nforall x R:\n    x <= 0\n    =>:\n        abs(x) = -x\n\nforall x R:\n    x != 0\n    =>:\n        0 < abs(x)\n";
+    let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
+        source,
+        "abs_sign_selection_boundary.lit",
+    )
+    .expect("runtime verifies abs sign selection");
+    let generated = StmtResultToLeanCompiler::new("abs_sign_selection_boundary.lit")
+        .compile_stmt_results_to_lean_source(&results)
+        .expect("compile abs sign selection with exact real bindings");
+    assert!(
+        generated.contains("Litex.Rules.absEqSelfOfLe"),
+        "{generated}"
+    );
+    assert!(
+        generated.contains("Litex.Rules.absEqNegOfLe"),
+        "{generated}"
+    );
+    assert!(
+        generated.contains("Litex.Rules.absPositiveOfNotSame"),
+        "{generated}"
+    );
+    assert!(!generated.contains("sorry"), "{generated}");
+}
+
+fn execute_named_theorem_and_selected_application() -> Vec<StmtResult> {
+    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
+            "thm expose_zero_sides:\n    ? forall x C:\n        x + 0 = x\n        0 + x = x\n    x + 0 = x\n    0 + x = x\n\nby thm expose_zero_sides(2) => 2 + 0 = 0 + 2\n",
+            "direct_by_theorem_selection.lit",
+        )
+        .expect("execute named theorem and selected theorem application")
+}
+
+fn selected_theorem_application_result_mut(
+    results: &mut [StmtResult],
+) -> &mut SuccessByThmStmtResult {
+    let [_, StmtResult::Success(SuccessStmtResult::By(SuccessByStmtResult::ByThmStmt(result)))] =
+        results
+    else {
+        panic!("expected a named theorem followed by by-thm")
+    };
+    result
+}
+
+#[test]
+fn by_thm_replays_temporary_conclusions_in_a_child_scope_and_publishes_only_selection() {
+    let mut results = execute_named_theorem_and_selected_application();
+    let [StmtResult::Success(SuccessStmtResult::Definition(
+        SuccessDefinitionStmtResult::DefThmStmt(theorem),
+    )), StmtResult::Success(SuccessStmtResult::By(SuccessByStmtResult::ByThmStmt(selection)))] =
+        results.as_mut_slice()
+    else {
+        panic!("expected theorem followed by selected theorem application")
+    };
+    let verification = selection
+        .verification
+        .as_ref()
+        .expect("by-thm retains scoped verification");
+    let StmtResult::Success(SuccessStmtResult::ReleaseThmStmt(application)) =
+        verification.temporary_application.as_ref()
+    else {
+        panic!("by-thm retains a temporary release-thm Result")
+    };
+    let temporary_fact_ids = application
+        .common
+        .infers
+        .store_fact_outputs
+        .iter()
+        .map(|output| output.fact_id.expect("temporary conclusion retains FactId"))
+        .collect::<Vec<_>>();
+    let selected_fact_id = selection.common.infers.store_fact_outputs[0]
+        .fact_id
+        .expect("selected parent fact retains FactId");
+
+    let mut compiler = StmtResultToLeanCompiler::new("direct_by_theorem_selection.lit");
+    assert!(compiler
+        .compile_named_theorem_stmt_result_to_lean_source(theorem)
+        .expect("compile source theorem"));
+    assert!(compiler
+        .compile_by_theorem_selection_stmt_result_to_lean_source(selection)
+        .expect("compile selected theorem application"));
+
+    assert_eq!(compiler.environment_stack.environments.len(), 1);
+    for fact_id in temporary_fact_ids {
+        assert!(
+            !compiler.environment_stack.fact_names.contains_key(&fact_id),
+            "temporary theorem conclusion escaped its compiler child scope"
+        );
+    }
+    assert_eq!(
+        compiler.environment_stack.fact_names.get(&selected_fact_id),
+        Some(&"__fact1".to_string())
+    );
+    assert!(compiler.declarations[1].contains("have __step1_1"));
+    assert!(compiler.declarations[1].contains("have __step1_2"));
+    assert!(compiler.declarations[1].contains("Litex.Same.trans"));
+
+    let json = crate::output::display_stmt_result_json_v2(&results[1]);
+    assert!(json.contains("\"temporary_application\""), "{json}");
+    assert!(json.contains("\"selected_fact_check\""), "{json}");
+}
+
+#[test]
+fn by_thm_rejects_a_temporary_conclusion_without_its_local_fact_id() {
+    let mut results = execute_named_theorem_and_selected_application();
+    let selection = selected_theorem_application_result_mut(&mut results);
+    let StmtResult::Success(SuccessStmtResult::ReleaseThmStmt(application)) = selection
+        .verification
+        .as_mut()
+        .expect("by-thm retains scoped verification")
+        .temporary_application
+        .as_mut()
+    else {
+        panic!("by-thm retains a temporary release-thm Result")
+    };
+    application.common.infers.store_fact_outputs[0].fact_id = None;
+
+    let error = StmtResultToLeanCompiler::new("direct_by_theorem_selection.lit")
+        .compile_stmt_results_to_lean_source(&results)
+        .expect_err("missing temporary conclusion identity must fail closed");
+    assert!(
+        error.contains("local release-thm conclusion") && error.contains("has no retained FactId"),
+        "{error}"
+    );
+}
+
+#[test]
+fn by_thm_rejects_a_temporary_application_with_changed_arguments() {
+    let mut results = execute_named_theorem_and_selected_application();
+    let selection = selected_theorem_application_result_mut(&mut results);
+    let StmtResult::Success(SuccessStmtResult::ReleaseThmStmt(application)) = selection
+        .verification
+        .as_mut()
+        .expect("by-thm retains scoped verification")
+        .temporary_application
+        .as_mut()
+    else {
+        panic!("by-thm retains a temporary release-thm Result")
+    };
+    application.statement.args.clear();
+
+    let error = StmtResultToLeanCompiler::new("direct_by_theorem_selection.lit")
+        .compile_stmt_results_to_lean_source(&results)
+        .expect_err("changed temporary theorem arguments must fail closed");
+    assert!(
+        error.contains("by-thm temporary application changed its theorem or arguments"),
+        "{error}"
+    );
 }
 
 #[test]
@@ -781,7 +1053,9 @@ fn theorem_backed_obtain_consumes_but_does_not_publish_its_local_conclusion() {
 
 fn execute_odd_sum_to_square_flagship() -> Vec<StmtResult> {
     crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
-        include_str!("../../../../showcases/litex_to_lean_mathlib_pipeline/main.lit"),
+        include_str!(
+            "../../../../showcases/litex_to_lean_mathlib_pipeline/showcase1/main.lit"
+        ),
         "main.lit",
     )
     .expect("execute the odd-sum flagship")
@@ -790,7 +1064,7 @@ fn execute_odd_sum_to_square_flagship() -> Vec<StmtResult> {
 #[test]
 fn odd_sum_flagship_exports_only_source_owned_declarations() {
     let litex_source =
-        include_str!("../../../../showcases/litex_to_lean_mathlib_pipeline/main.lit");
+        include_str!("../../../../showcases/litex_to_lean_mathlib_pipeline/showcase1/main.lit");
     assert!(litex_source.contains("have fn kth_odd"));
     assert!(!litex_source.contains("thm odd_sum_single"));
     assert!(!litex_source.contains("thm odd_sum_step"));
@@ -811,7 +1085,7 @@ fn odd_sum_flagship_exports_only_source_owned_declarations() {
         .compile_stmt_results_to_lean_source(&results)
         .expect("compile the complete odd-sum Result DAG");
     let checked_in = include_str!(
-        "../../../../showcases/litex_to_lean_mathlib_pipeline/LitexToMathlibPipelineGenerated.lean"
+        "../../../../showcases/litex_to_lean_mathlib_pipeline/showcase1/LitexToMathlibPipelineGenerated.lean"
     );
 
     assert_eq!(lean, checked_in);
@@ -823,7 +1097,7 @@ fn odd_sum_flagship_exports_only_source_owned_declarations() {
     assert!(!lean.contains("namespace Native"));
     assert!(!lean.contains("namespace MathlibConsumer"));
     assert!(!lean.contains("Finset.Icc"));
-    assert!(lean.contains("Litex.Same.intAddComplex"));
+    assert!(lean.contains("Litex.Same.intCastAddComplex"));
     assert!(lean.contains("unfold Litex.fnApplyCarrier kth_odd"));
     assert!(!lean.contains("unfold Litex.fnApplyOwn kth_odd"));
     assert!(result_audit.contains("StructuralKnownEqualityCongruence"));

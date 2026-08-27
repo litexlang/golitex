@@ -299,7 +299,7 @@ fn case_condition_implies_not_other_result(
             let Ok(negated) = atom.logical_negation() else {
                 continue;
             };
-            let mut result = rt.verify_atomic_fact(&negated, &ProofSearchState::initial())?;
+            let mut result = rt.verify_atomic_fact(&negated, &VerifyState::initial())?;
             if result.is_success() {
                 rt.attach_known_fact_ids_to_stmt_result(&mut result)?;
                 return Ok(Some(SuccessVerifyCaseDisjointnessResult {

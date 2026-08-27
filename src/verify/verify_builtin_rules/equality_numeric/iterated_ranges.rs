@@ -151,7 +151,7 @@ impl Runtime {
 
             let known_forall_result = rt.verify_atomic_fact_with_known_forall(
                 &pointwise_fact,
-                &ProofSearchState::after_well_definedness(),
+                &VerifyState::after_well_definedness(),
             )?;
             if known_forall_result.is_success() {
                 return Ok(known_forall_result);
@@ -411,7 +411,7 @@ impl Runtime {
             }
             let known_forall_result = rt.verify_atomic_fact_with_known_forall(
                 then_fact,
-                &ProofSearchState::after_well_definedness(),
+                &VerifyState::after_well_definedness(),
             )?;
             if known_forall_result.is_success() {
                 return Ok(known_forall_result);

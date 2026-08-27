@@ -5,7 +5,8 @@ impl Runtime {
         &mut self,
         def_prop_stmt: &DefPropStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        self.exec_def_prop_stmt_verify_well_definedness(def_prop_stmt)
+        let run_in_local_env = self
+            .exec_def_prop_stmt_verify_well_definedness(def_prop_stmt)
             .map_err(|e| exec_stmt_error_with_stmt_and_cause(def_prop_stmt.clone().into(), e))?;
         self.exec_def_prop_stmt_verify_process(def_prop_stmt)?;
         let infer_result = self.exec_def_prop_stmt_affect_environment(def_prop_stmt)?;
@@ -13,6 +14,7 @@ impl Runtime {
             SuccessDefinitionStmtResult::DefPropStmt(Box::new(SuccessDefPropStmtResult {
                 statement: def_prop_stmt.clone(),
                 common: SuccessStmtCommonResult::new(infer_result),
+                run_in_local_env: Some(run_in_local_env),
             }))
             .into(),
         )
@@ -23,7 +25,7 @@ impl Runtime {
     fn exec_def_prop_stmt_verify_well_definedness(
         &mut self,
         def_prop_stmt: &DefPropStmt,
-    ) -> Result<(), RuntimeError> {
+    ) -> Result<SuccessVerifyDefPropLocalEnvResult, RuntimeError> {
         self.run_in_local_env(|rt| {
             rt.exec_def_prop_stmt_verify_well_definedness_body(def_prop_stmt)
         })
@@ -35,24 +37,29 @@ impl Runtime {
     fn exec_def_prop_stmt_verify_well_definedness_body(
         &mut self,
         def_prop_stmt: &DefPropStmt,
-    ) -> Result<(), RuntimeError> {
-        self.define_params_with_type(
-            &def_prop_stmt.typed_parameters,
-            false,
-            BindingScope::LocalBinder,
-        )
-        .map_err(|e| exec_stmt_error_with_stmt_and_cause(def_prop_stmt.clone().into(), e))?;
-
-        for fact in def_prop_stmt.iff_facts.iter() {
-            self.verify_well_defined_and_store_without_infer(
-                fact.clone(),
-                InferReason::ByDefinition,
+    ) -> Result<SuccessVerifyDefPropLocalEnvResult, RuntimeError> {
+        let verify_state = VerifyState::initial();
+        let binder = self
+            .verify_fact_binder_result(
+                &def_prop_stmt.typed_parameters,
+                BindingScope::LocalBinder,
+                &verify_state,
             )
-            .map_err(|inner_exec_error| {
-                exec_stmt_error_with_stmt_and_cause(def_prop_stmt.clone().into(), inner_exec_error)
-            })?;
+            .map_err(|e| exec_stmt_error_with_stmt_and_cause(def_prop_stmt.clone().into(), e))?;
+
+        let mut body = Vec::with_capacity(def_prop_stmt.iff_facts.len());
+        for fact in def_prop_stmt.iff_facts.iter() {
+            body.push(
+                self.verify_and_store_fact_wd_result(fact, &verify_state)
+                    .map_err(|inner_exec_error| {
+                        exec_stmt_error_with_stmt_and_cause(
+                            def_prop_stmt.clone().into(),
+                            inner_exec_error,
+                        )
+                    })?,
+            );
         }
-        Ok(())
+        Ok(SuccessVerifyDefPropLocalEnvResult { binder, body })
     }
 
     fn exec_def_prop_stmt_verify_process(
@@ -91,6 +98,7 @@ impl Runtime {
             SuccessDefinitionStmtResult::DefPropStmt(Box::new(SuccessDefPropStmtResult {
                 statement: def_prop_stmt.clone(),
                 common: SuccessStmtCommonResult::new(infer_result),
+                run_in_local_env: None,
             }))
             .into(),
         )

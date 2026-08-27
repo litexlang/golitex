@@ -373,7 +373,7 @@ impl Runtime {
         requirement_dom_facts: &[ExistOrAndChainAtomicFact],
         algo_param_to_forall_obj: &HashMap<String, Obj>,
     ) -> Result<Vec<SuccessVerifyDefAlgoCaseResult>, RuntimeError> {
-        let verify_state = ProofSearchState::initial();
+        let verify_state = VerifyState::initial();
         let mut results = Vec::with_capacity(def_algo_stmt.cases.len());
         for (case_index, algo_case) in def_algo_stmt.cases.iter().enumerate() {
             let case_forall_fact = self.forall_fact_for_def_algo_case(
@@ -460,7 +460,7 @@ impl Runtime {
         .into();
 
         let mut verification = self
-            .verify_fact_or_error(&verification_fact, &ProofSearchState::initial())
+            .verify_fact_or_error(&verification_fact, &VerifyState::initial())
             .map_err(|runtime_error| {
                 Self::def_algo_verify_exec_error_with_message_and_optional_cause(
                     def_algo_stmt,
@@ -520,7 +520,7 @@ impl Runtime {
         )?
         .into();
 
-        let verify_state = ProofSearchState::initial();
+        let verify_state = VerifyState::initial();
         let mut verification = self
             .verify_fact_or_error(&coverage_forall_fact, &verify_state)
             .map_err(|runtime_error| {

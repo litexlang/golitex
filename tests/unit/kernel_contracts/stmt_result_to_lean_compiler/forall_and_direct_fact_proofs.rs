@@ -101,7 +101,7 @@ fn forall_proof_compiles_natural_parameter_inference_inside_its_binder_environme
         .last()
         .expect("natural forall emits one theorem");
     assert_eq!(declaration.matches("have __infer0_").count(), 4);
-    assert!(declaration.contains("Litex.Rules.nonnegativeOfInN (__h0_1)"));
+    assert!(declaration.contains("Litex.Rules.naturalRepNonnegative (__h0_1)"));
     assert!(declaration.contains("Litex.Rules.complexEqNatInN"));
     assert!(!declaration.contains("complexAddInN (__h0_1)"));
     assert_eq!(compiler.environment_stack.environments.len(), 1);
@@ -165,9 +165,8 @@ fn forall_proof_compiles_positive_real_inference_only_inside_its_binder_environm
             .declarations
             .last()
             .expect("positive-real forall emits one theorem");
-        assert!(declaration.contains(
-            "have __infer0_0 : Litex.Positive r := Litex.Rules.positiveOfInRPos (__h0_1)"
-        ));
+        assert!(declaration.contains("have __infer0_0 : Litex.Lt (0 : ℂ)"));
+        assert!(declaration.contains("Litex.Rules.positiveRealRepPositive (__h0_1)"));
         assert_eq!(compiler.environment_stack.environments.len(), 1);
         assert!(!compiler
             .environment_stack

@@ -166,7 +166,6 @@ try:
 
         let mut runtime = Runtime::default();
         runtime.start_isolated_source("try_stmt_rejects_import_control_statement");
-        runtime.set_current_source_allows_inline_imports(true);
         let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -177,8 +176,8 @@ try:
             run_output
         );
         assert!(
-            run_output.contains("try cannot contain control statement `import`"),
-            "try with import should explain that control statements are disallowed:\n{}",
+            run_output.contains("`import` is a terminal command, not a Litex statement"),
+            "try with import should explain the source/terminal boundary:\n{}",
             run_output
         );
     });
@@ -1611,6 +1610,61 @@ forall A S:
         run_succeeded,
         "choice should store an atomic named-property existential:\n{run_output}"
     );
+}
+
+#[test]
+fn by_axiom_of_choice_result_retains_typed_target_facts_roles_and_fact_ids() {
+    let source_code = r#"
+have S set
+
+by axiom_of_choice: set S:
+    trust forall A S:
+        $is_nonempty_set(A)
+"#;
+    let mut runtime = Runtime::default();
+    runtime.start_isolated_source("by_axiom_of_choice_structured_result");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    assert!(runtime_error.is_none(), "{runtime_error:?}");
+    let result = stmt_results
+        .iter()
+        .find_map(|result| match result {
+            StmtResult::Success(SuccessStmtResult::By(
+                SuccessByStmtResult::ByAxiomOfChoiceStmt(result),
+            )) => Some(result.as_ref()),
+            _ => None,
+        })
+        .expect("expected successful axiom-of-choice result");
+    let verification = result.verification.as_ref().expect("retained verification");
+    assert_eq!(
+        verification.proof_kind,
+        SuccessVerifyByChoiceProofKind::AxiomOfChoice
+    );
+    let SuccessVerifyByChoiceTargetResult::AxiomOfChoice { family } = &verification.target else {
+        panic!("choice target must retain the exact family object")
+    };
+    assert_eq!(
+        obj_equality_key(family),
+        obj_equality_key(&result.statement.family)
+    );
+    assert_eq!(
+        verification
+            .obligations
+            .iter()
+            .map(|obligation| obligation.role)
+            .collect::<Vec<_>>(),
+        vec![
+            SuccessVerifyByChoiceObligationRole::ChoiceFamilyIsSet,
+            SuccessVerifyByChoiceObligationRole::ChoiceMembersNonempty,
+        ]
+    );
+    assert!(verification
+        .obligations
+        .iter()
+        .all(|obligation| !obligation.fact.to_string().is_empty()));
+    assert!(verification
+        .trusted_conclusion
+        .to_string()
+        .starts_with("exist "));
 }
 
 #[test]

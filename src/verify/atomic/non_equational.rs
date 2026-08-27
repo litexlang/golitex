@@ -14,7 +14,7 @@ use crate::verify::verify_builtin_rules::{
     builtin_in_fact_result_for_evaluation_in_standard_set,
     builtin_not_in_fact_result_for_evaluation_in_standard_set,
 };
-use crate::verify::{BuiltinRuleSearchState, ProofSearchState};
+use crate::verify::{BuiltinRuleSearchState, VerifyState};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum AlternateFactSearch {
@@ -162,7 +162,7 @@ impl Runtime {
     pub fn verify_non_equational_atomic_fact(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
         alternate_fact_search: AlternateFactSearch,
     ) -> Result<StmtResult, RuntimeError> {
         let mut result =
@@ -212,7 +212,7 @@ impl Runtime {
     fn post_process_non_equational_atomic_fact(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
         result: StmtResult,
     ) -> Result<StmtResult, RuntimeError> {
         let result = self.builtin_post_process_non_equational_atomic_fact(
@@ -233,7 +233,7 @@ impl Runtime {
     fn builtin_post_process_non_equational_atomic_fact(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
         result: StmtResult,
     ) -> Result<StmtResult, RuntimeError> {
         let transposed_fact = match atomic_fact {
@@ -301,7 +301,7 @@ impl Runtime {
     fn use_known_symmetric_prop(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
         result: StmtResult,
     ) -> Result<StmtResult, RuntimeError> {
         let AtomicFact::NormalAtomicFact(f) = atomic_fact else {

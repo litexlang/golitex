@@ -5,7 +5,7 @@ impl Runtime {
         &mut self,
         stmt: &ByRegularityAxiomStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&stmt.set, &ProofSearchState::initial())
+        self.verify_obj_well_defined_and_store_cache(&stmt.set, &VerifyState::initial())
             .map_err(|well_defined_error| {
                 short_exec_error(
                     stmt.clone().into(),
@@ -20,8 +20,8 @@ impl Runtime {
 
         let nonempty_fact: Fact =
             IsNonemptySetFact::new(stmt.set.clone(), stmt.line_file.clone()).into();
-        let nonempty_result = self
-            .verify_fact_or_error(&nonempty_fact, &ProofSearchState::initial())
+        let mut nonempty_result = self
+            .verify_fact_or_error(&nonempty_fact, &VerifyState::initial())
             .map_err(|verify_error| {
                 short_exec_error(
                     stmt.clone().into(),
@@ -33,16 +33,17 @@ impl Runtime {
                     vec![],
                 )
             })?;
+        self.attach_known_fact_ids_to_stmt_result(&mut nonempty_result)?;
+        let nonempty_fact_id = self.require_known_fact_id_for_success_result(&nonempty_fact)?;
 
         // Trusted regularity/foundation step: every nonempty set A has a member
         // disjoint from A. Example: by regularity_axiom(A) stores
         // exist x A st {intersect(x, A) = {}}.
         let regularity_fact =
             regularity_axiom_exist_fact(self, stmt.set.clone(), stmt.line_file.clone())?;
-        let regularity_fact_string = regularity_fact.to_string();
         let infer_result = self
             .store_with_well_defined_verification_and_infer_with_default_verify_state(
-                regularity_fact,
+                regularity_fact.clone(),
             )
             .map_err(|store_error| {
                 short_exec_error(
@@ -52,17 +53,22 @@ impl Runtime {
                     vec![],
                 )
             })?;
+        let regularity_fact_id = self.require_known_fact_id_for_success_result(&regularity_fact)?;
 
         let by_verification = SuccessVerifyByChoiceResult::new(
-            "by regularity_axiom proof".to_string(),
-            stmt.set.to_string(),
+            SuccessVerifyByChoiceProofKind::RegularityAxiom,
+            SuccessVerifyByChoiceTargetResult::RegularityAxiom {
+                set: stmt.set.clone(),
+            },
             Vec::new(),
             vec![SuccessVerifyByChoiceObligationResult {
-                role: "nonempty".to_string(),
-                fact: nonempty_fact.to_string(),
+                role: SuccessVerifyByChoiceObligationRole::RegularityNonempty,
+                fact: nonempty_fact,
+                fact_id: nonempty_fact_id,
                 check: Some(Box::new(nonempty_result)),
             }],
-            regularity_fact_string,
+            regularity_fact,
+            regularity_fact_id,
         );
         Ok(SuccessByStmtResult::ByRegularityAxiomStmt(Box::new(
             SuccessByRegularityAxiomStmtResult {

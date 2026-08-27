@@ -595,6 +595,18 @@ pub enum SuccessDefinitionStmtResult {
 pub struct SuccessDefPropStmtResult {
     pub statement: DefPropStmt,
     pub common: SuccessStmtCommonResult,
+    /// Verified concrete propositions are checked in a temporary environment
+    /// containing their typed parameters. Trusted materialization deliberately
+    /// retains no invented verification evidence.
+    pub run_in_local_env: Option<SuccessVerifyDefPropLocalEnvResult>,
+}
+
+/// Typed output of checking one concrete proposition definition before its
+/// parameter scope is popped. The body entries retain the exact recursive WD
+/// trees needed to render function applications in proof-producing targets.
+pub struct SuccessVerifyDefPropLocalEnvResult {
+    pub binder: SuccessVerifyFactBinderResult,
+    pub body: Vec<SuccessVerifyLocalFactWellDefinedResult>,
 }
 
 pub struct SuccessDefAbstractPropStmtResult {
@@ -775,7 +787,7 @@ pub struct SuccessByStructDefStmtResult {
 pub struct SuccessByThmStmtResult {
     pub statement: ByThmStmt,
     pub common: SuccessStmtCommonResult,
-    pub verification: Option<SuccessVerifyTheoremApplicationResult>,
+    pub verification: Option<SuccessVerifyByTheoremSelectionResult>,
 }
 
 pub struct SuccessReleaseThmStmtResult {
@@ -875,30 +887,6 @@ pub enum SuccessProofBlockStmtResult {
     TryStmt(Box<SuccessTryStmtResult>),
 }
 
-pub struct SuccessImportStmtResult {
-    pub statement: ImportStmt,
-    pub common: SuccessStmtCommonResult,
-    pub execution: SuccessImportExecutionResult,
-}
-
-pub enum SuccessImportExecutionResult {
-    Executed(Box<SuccessExecutedImportResult>),
-    Reused(SuccessReusedImportResult),
-}
-
-pub struct SuccessExecutedImportResult {
-    pub module_id: ModuleId,
-    pub execution_mode: ExecutionMode,
-    /// Ordered source statement Results produced while loading the module,
-    /// including recursively executed configured imports.
-    pub statement_results: Vec<StmtResult>,
-}
-
-pub struct SuccessReusedImportResult {
-    pub module_id: ModuleId,
-    pub execution_mode: ExecutionMode,
-}
-
 pub struct SuccessEvalStmtResult {
     pub statement: EvalStmt,
     pub common: SuccessStmtCommonResult,
@@ -924,6 +912,5 @@ pub struct SuccessEvaluatedEvalStmtResult {
 }
 
 pub enum SuccessCommandStmtResult {
-    ImportStmt(Box<SuccessImportStmtResult>),
     EvalStmt(Box<SuccessEvalStmtResult>),
 }

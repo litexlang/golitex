@@ -127,7 +127,7 @@ impl Runtime {
         stmt: &HaveByPreimageStmt,
     ) -> Result<StmtResult, RuntimeError> {
         let source_atomic: AtomicFact = stmt.range_membership.clone().into();
-        let verify_state = ProofSearchState::initial();
+        let verify_state = VerifyState::initial();
         let source_result = self
             .verify_atomic_fact(&source_atomic, &verify_state)
             .map_err(|verify_error| {
@@ -204,14 +204,14 @@ impl Runtime {
         infer_result.new_infer_result_inside(
             self.store_with_well_defined_verification_and_infer(
                 preimage_in_source,
-                &ProofSearchState::initial(),
+                &VerifyState::initial(),
             )
             .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?,
         );
         infer_result.new_infer_result_inside(
             self.store_with_well_defined_verification_and_infer(
                 relation_fact,
-                &ProofSearchState::initial(),
+                &VerifyState::initial(),
             )
             .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?,
         );
@@ -275,11 +275,8 @@ impl Runtime {
             )
             .into();
             infer_result.new_infer_result_inside(
-                self.store_with_well_defined_verification_and_infer(
-                    fact,
-                    &ProofSearchState::initial(),
-                )
-                .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?,
+                self.store_with_well_defined_verification_and_infer(fact, &VerifyState::initial())
+                    .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?,
             );
         }
         Ok(infer_result)
@@ -308,7 +305,7 @@ impl Runtime {
             infer_result.new_infer_result_inside(
                 self.store_with_well_defined_verification_and_infer(
                     instantiated_dom_fact,
-                    &ProofSearchState::initial(),
+                    &VerifyState::initial(),
                 )
                 .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?,
             );
@@ -339,11 +336,8 @@ impl Runtime {
             stmt.line_file.clone(),
         )
         .into();
-        self.store_with_well_defined_verification_and_infer(
-            equality_fact,
-            &ProofSearchState::initial(),
-        )
-        .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))
+        self.store_with_well_defined_verification_and_infer(equality_fact, &VerifyState::initial())
+            .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))
     }
 }
 

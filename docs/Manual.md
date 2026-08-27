@@ -2371,10 +2371,12 @@ enabled export is unavailable while it is still loading, so an earlier file
 cannot cite a later export by its bare name. These permissions inherit into
 descendant submodules.
 
-Source-level `import "../Algebra" as Algebra` and `import std basics` are
-available only in an isolated source session. Repository module sources use
-their manifest; dynamic imports there are rejected. Isolated imports remain
-qualified-only and never activate manifest allow-bare tables.
+`import "../Algebra" as Algebra` and `import std basics` are interactive
+terminal commands, not Litex statements. The REPL handles them before source
+parsing and keeps their qualified environments in a session-only, in-memory
+manifest. Every `.lit` file—including one run with `-isolated -f`—rejects
+`import`; reproducible dependencies belong in `litex.config`. Terminal imports
+remain qualified-only and never activate manifest allow-bare tables.
 
 ```text
 [hierarchy]
@@ -2447,7 +2449,7 @@ introductions.
 | `by regularity_axiom` | Its displayed set/nonemptiness obligations. | An explicitly trusted set-theoretic conclusion; strict mode rejects the step. |
 | `by axiom_of_choice` | The family is a set and every member is proved nonempty. | Stores `exist f fn(A S)big_union(S) st {$is_choice_function_for(S,S,fn(A S)S {A},f)}`. The existential body is atomic. |
 | `by zorn_lemma` | The set, binary relation, exact named upper-bound/maximality definitions, nonemptiness, partial-order laws, and chain-upper-bound obligation. | Stores `exist m S st {$M(m)}` using the supplied named maximality prop. The chain witness likewise uses the supplied atomic upper-bound prop. |
-| `import` | Only the isolated-session import grammar and module constraints. | A qualified imported environment; maintained modules use manifests instead. |
+| Terminal `import` command | Only the interactive REPL command grammar and module constraints; it is not a statement. | A qualified environment in the REPL's ephemeral manifest; maintained modules use real manifests instead. |
 | `eval` | The expression belongs to the supported executable subset. | Evaluation output, not a new mathematical proof fact. |
 
 ---

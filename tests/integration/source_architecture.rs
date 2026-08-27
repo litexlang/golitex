@@ -480,7 +480,7 @@ fn compiler_and_test_directories_follow_the_repository_layout() {
                 "witness.rs",
             ][..],
         ),
-        ("commands", &["evaluation.rs", "tooling.rs"][..]),
+        ("commands", &["evaluation.rs"][..]),
     ] {
         let group = statements.join(directory);
         assert!(group.is_dir());
@@ -862,7 +862,7 @@ fn main_execution_spine_names_its_dependencies_explicitly() {
         root.join("src/pipeline/run.rs"),
         root.join("src/pipeline/file_execution.rs"),
         root.join("src/pipeline/source_execution.rs"),
-        root.join("src/pipeline/top_level_statement_execution.rs"),
+        root.join("src/pipeline/terminal_import.rs"),
         root.join("src/pipeline/output_rendering.rs"),
         root.join("src/parse/statement_parsing.rs"),
         root.join("src/execute/statement_execution.rs"),
@@ -941,13 +941,13 @@ fn source_execution_is_owned_by_runtime_without_a_secondary_context() {
 }
 
 #[test]
-fn proof_search_state_vocabulary_is_semantic() {
+fn verify_state_vocabulary_is_semantic() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let forbidden = [
         ["Use", "ContextVerifyState"].concat(),
         ["Use", "BuiltinRuleVerifyState"].concat(),
-        ["ProofSearchState", "::new("].concat(),
-        ["ProofSearchState", "::new_with_final_round"].concat(),
+        ["VerifyState", "::new("].concat(),
+        ["VerifyState", "::new_with_final_round"].concat(),
         ["BuiltinRuleSearchState", "::new("].concat(),
         ["new_state_with_", "round_increased"].concat(),
         ["with_well_defined_", "already_verified"].concat(),
@@ -969,6 +969,10 @@ fn proof_search_state_vocabulary_is_semantic() {
 
     let state = fs::read_to_string(root.join("src/verify/proof_search/context_state.rs"))
         .expect("proof-search state source should be readable");
+    assert!(state.contains("pub struct VerifyState"));
+    let removed_list_membership_switch =
+        ["list_set_membership_", "may_use_equality_builtin"].concat();
+    assert!(!state.contains(&removed_list_membership_switch));
     for constructor in [
         "pub fn initial()",
         "pub fn after_well_definedness()",

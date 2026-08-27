@@ -36,13 +36,7 @@ pub fn execute_litex_source_for_lean_compilation(
     let normalized = source.replace('\r', "");
     let mut runtime = Runtime::default();
     runtime.start_isolated_source(source_label);
-    runtime.set_current_source_allows_inline_imports(true);
-    let outcome = runtime.execute_source(
-        &normalized,
-        SourceImportPolicy::Reject(
-            "single-file StmtResult-to-Lean compilation does not support `import`".to_string(),
-        ),
-    );
+    let outcome = runtime.execute_source(&normalized);
     if let Some(error) = outcome.runtime_error {
         return Err(error);
     }

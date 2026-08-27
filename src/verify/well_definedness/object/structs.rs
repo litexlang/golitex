@@ -7,7 +7,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_struct_obj_well_defined_result(
         &mut self,
         struct_obj: &StructObj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         let structure_name = struct_obj.name.to_string();
         let def = self
@@ -242,7 +242,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_obj_as_struct_instance_with_field_access_well_defined_result(
         &mut self,
         field_access: &ObjAsStructInstanceWithFieldAccess,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         let mut steps = SuccessVerifyObjWellDefinedStepsResult::new();
         let structure_carrier: Obj = field_access.struct_obj.as_ref().clone().into();
@@ -267,7 +267,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_instantiated_template_obj_well_defined_result(
         &mut self,
         template_obj: &InstantiatedTemplateObj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         let mut steps = SuccessVerifyObjWellDefinedStepsResult::new();
         for (argument_index, argument) in template_obj.args.iter().enumerate() {
@@ -289,7 +289,7 @@ impl Runtime {
     pub fn struct_header_param_to_arg_map(
         &mut self,
         struct_obj: &StructObj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(DefStructStmt, HashMap<String, Obj>), RuntimeError> {
         let struct_name = struct_obj.name.to_string();
         let def = self
@@ -398,7 +398,7 @@ impl Runtime {
     pub fn instantiated_struct_field_types(
         &mut self,
         struct_obj: &StructObj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<Vec<Obj>, RuntimeError> {
         let (def, param_to_arg_map) =
             self.struct_header_param_to_arg_map(struct_obj, verify_state)?;
@@ -419,7 +419,7 @@ impl Runtime {
     pub fn instantiated_struct_field_type_for_access(
         &mut self,
         field_access: &ObjAsStructInstanceWithFieldAccess,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<Obj, RuntimeError> {
         let (def, header_map) =
             self.struct_header_param_to_arg_map(&field_access.struct_obj, verify_state)?;
@@ -453,7 +453,7 @@ impl Runtime {
     ) -> Result<Obj, RuntimeError> {
         self.instantiated_struct_field_type_for_access(
             field_access,
-            &ProofSearchState::after_well_definedness(),
+            &VerifyState::after_well_definedness(),
         )
     }
 

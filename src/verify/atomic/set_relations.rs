@@ -34,7 +34,7 @@ impl Runtime {
     pub fn verify_builtin_proper_set_relation_by_definition(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(definition_facts) = proper_set_relation_definition_facts(atomic_fact) else {
             return Ok(None);

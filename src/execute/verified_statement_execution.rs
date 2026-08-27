@@ -1,4 +1,4 @@
-use crate::error::{exec_stmt_error_with_stmt_and_cause, short_exec_error, RuntimeError};
+use crate::error::{exec_stmt_error_with_stmt_and_cause, RuntimeError};
 use crate::infer::SuccessInferResult;
 use crate::result::{
     StmtResult, SuccessDefSettingStmtResult, SuccessDefinitionStmtResult, SuccessStmtCommonResult,
@@ -81,12 +81,6 @@ impl Runtime {
             Stmt::ProofBlock(ProofBlockStmt::ExampleStmt(s)) => self.exec_example_stmt(s),
             Stmt::ProofBlock(ProofBlockStmt::SketchStmt(s)) => self.exec_sketch_stmt(s),
             Stmt::ProofBlock(ProofBlockStmt::TryStmt(s)) => self.exec_try_stmt(s),
-            Stmt::Command(CommandStmt::ImportStmt(_)) => Err(short_exec_error(
-                stmt.clone(),
-                "import is only valid as a top-level isolated terminal statement".to_string(),
-                None,
-                vec![],
-            )),
             Stmt::Command(CommandStmt::EvalStmt(s)) => self.exec_eval_stmt(s),
             Stmt::Witness(WitnessStmt::WitnessExistFact(s)) => self.exec_witness_exist_fact(s),
             Stmt::Witness(WitnessStmt::WitnessAtomicFact(s)) => self.exec_witness_atomic_fact(s),

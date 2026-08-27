@@ -1,27 +1,19 @@
 use crate::common::keywords::TRY;
-use crate::error::{ParseRuntimeError, RuntimeError, RuntimeErrorStruct, UnknownRuntimeError};
+use crate::error::{ParseRuntimeError, RuntimeError, RuntimeErrorStruct};
 use crate::parse::{TokenBlock, Tokenizer};
 use crate::result::StmtResult;
 use crate::runtime::Runtime;
-use crate::stmt::{CommandStmt, ProofBlockStmt, Stmt};
+use crate::stmt::{ProofBlockStmt, Stmt};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum SourceRunFailureKind {
+pub(super) enum SourceRunFailureKind {
     TryStmt,
     Other,
-}
-
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
-pub enum SourceImportPolicy {
-    #[default]
-    UseRuntimePolicy,
-    Reject(String),
 }
 
 pub struct SourceRunOutcome {
     pub stmt_results: Vec<StmtResult>,
     pub runtime_error: Option<RuntimeError>,
-    pub failure_kind: Option<SourceRunFailureKind>,
 }
 
 impl SourceRunOutcome {
@@ -29,6 +21,30 @@ impl SourceRunOutcome {
         Self {
             stmt_results,
             runtime_error: None,
+        }
+    }
+
+    fn failure(stmt_results: Vec<StmtResult>, runtime_error: RuntimeError) -> Self {
+        Self {
+            stmt_results,
+            runtime_error: Some(runtime_error),
+        }
+    }
+
+    pub fn into_parts(self) -> (Vec<StmtResult>, Option<RuntimeError>) {
+        (self.stmt_results, self.runtime_error)
+    }
+}
+
+pub(super) struct ClassifiedSourceRunOutcome {
+    outcome: SourceRunOutcome,
+    failure_kind: Option<SourceRunFailureKind>,
+}
+
+impl ClassifiedSourceRunOutcome {
+    fn success(stmt_results: Vec<StmtResult>) -> Self {
+        Self {
+            outcome: SourceRunOutcome::success(stmt_results),
             failure_kind: None,
         }
     }
@@ -39,47 +55,45 @@ impl SourceRunOutcome {
         failure_kind: SourceRunFailureKind,
     ) -> Self {
         Self {
-            stmt_results,
-            runtime_error: Some(runtime_error),
+            outcome: SourceRunOutcome::failure(stmt_results, runtime_error),
             failure_kind: Some(failure_kind),
         }
     }
 
-    pub fn into_parts(self) -> (Vec<StmtResult>, Option<RuntimeError>) {
-        (self.stmt_results, self.runtime_error)
+    pub(super) fn into_parts(self) -> (SourceRunOutcome, Option<SourceRunFailureKind>) {
+        (self.outcome, self.failure_kind)
     }
 }
 
 impl Runtime {
-    pub fn execute_source(
+    pub fn execute_source(&mut self, source_code: &str) -> SourceRunOutcome {
+        self.execute_source_classified(source_code).outcome
+    }
+
+    pub(super) fn execute_source_classified(
         &mut self,
         source_code: &str,
-        import_policy: SourceImportPolicy,
-    ) -> SourceRunOutcome {
+    ) -> ClassifiedSourceRunOutcome {
         if !self.has_active_execution_frame() {
             let error = ParseRuntimeError(RuntimeErrorStruct::new_with_just_msg(
                 "runtime has no active source context; initialize a file or repository before running source"
                     .to_string(),
             ))
             .into();
-            return SourceRunOutcome::failure(vec![], error, SourceRunFailureKind::Other);
+            return ClassifiedSourceRunOutcome::failure(vec![], error, SourceRunFailureKind::Other);
         }
 
         let blocks = match tokenize_source_code(source_code, self) {
             Ok(blocks) => blocks,
             Err((error, failure_kind)) => {
-                return SourceRunOutcome::failure(vec![], error, failure_kind);
+                return ClassifiedSourceRunOutcome::failure(vec![], error, failure_kind);
             }
         };
 
-        self.execute_source_blocks(blocks, &import_policy)
+        self.execute_source_blocks(blocks)
     }
 
-    fn execute_source_blocks(
-        &mut self,
-        blocks: Vec<TokenBlock>,
-        import_policy: &SourceImportPolicy,
-    ) -> SourceRunOutcome {
+    fn execute_source_blocks(&mut self, blocks: Vec<TokenBlock>) -> ClassifiedSourceRunOutcome {
         let mut stmt_results: Vec<StmtResult> = Vec::new();
         for mut block in blocks {
             let parse_failure_kind = if block.current_token_is_equal_to(TRY) {
@@ -90,43 +104,33 @@ impl Runtime {
             let stmt = match self.parse_statement(&mut block) {
                 Ok(stmt) => stmt,
                 Err(error) => {
-                    return SourceRunOutcome::failure(stmt_results, error, parse_failure_kind);
+                    return ClassifiedSourceRunOutcome::failure(
+                        stmt_results,
+                        error,
+                        parse_failure_kind,
+                    );
                 }
             };
-            if let (
-                SourceImportPolicy::Reject(message),
-                Stmt::Command(CommandStmt::ImportStmt(_)),
-            ) = (import_policy, &stmt)
-            {
-                return SourceRunOutcome::failure(
-                    stmt_results,
-                    UnknownRuntimeError(RuntimeErrorStruct::new(
-                        None,
-                        message.clone(),
-                        stmt.line_file(),
-                        None,
-                        vec![],
-                    ))
-                    .into(),
-                    SourceRunFailureKind::Other,
-                );
-            }
             let execution_failure_kind =
                 if matches!(&stmt, Stmt::ProofBlock(ProofBlockStmt::TryStmt(_))) {
                     SourceRunFailureKind::TryStmt
                 } else {
                     SourceRunFailureKind::Other
                 };
-            let result = match self.execute_top_level_statement(&stmt) {
+            let result = match self.execute_statement(&stmt) {
                 Ok(result) => result,
                 Err(error) => {
-                    return SourceRunOutcome::failure(stmt_results, error, execution_failure_kind);
+                    return ClassifiedSourceRunOutcome::failure(
+                        stmt_results,
+                        error,
+                        execution_failure_kind,
+                    );
                 }
             };
             stmt_results.push(result);
         }
 
-        SourceRunOutcome::success(stmt_results)
+        ClassifiedSourceRunOutcome::success(stmt_results)
     }
 }
 

@@ -24,78 +24,87 @@ pub(super) fn user_defined_prop_arity(rt: &Runtime, prop_name: &str) -> Option<u
     None
 }
 
-pub(super) fn section_inferred_fact(inside_results: &[StmtResult], fact: &Fact) -> bool {
+/// Return the stable identity owned by the proof section result that inferred
+/// `fact`. This is deliberately preferred over a later environment lookup:
+/// quantified proof facts can disappear when their local scope is popped,
+/// while their successful Result must retain the exact identity it produced.
+pub(super) fn section_inferred_fact_id(
+    inside_results: &[StmtResult],
+    fact: &Fact,
+) -> Option<FactId> {
     let target = fact.to_string();
     inside_results
         .iter()
-        .any(|result| stmt_result_inferred_fact(result, &target))
+        .find_map(|result| stmt_result_inferred_fact_id(result, &target))
 }
 
-fn stmt_result_inferred_fact(result: &StmtResult, target: &str) -> bool {
-    if let Some(success) = result.non_factual_success() {
-        if let Some(common) = success.common() {
-            if common
-                .infers
-                .inferred_facts()
-                .iter()
-                .any(|fact| fact.to_string() == target)
-            {
-                return true;
+fn infer_result_fact_id(result: &SuccessInferResult, target: &str) -> Option<FactId> {
+    for output in &result.store_fact_outputs {
+        if output.itself_and_why_itself_is_stored.0.to_string() == target {
+            if let Some(fact_id) = output.fact_id {
+                return Some(fact_id);
             }
         }
-        let mut inferred_by_child = false;
-        success.visit_child_results(&mut |child| {
-            if !inferred_by_child && stmt_result_inferred_fact(child, target) {
-                inferred_by_child = true;
-            }
-        });
-        success.visit_success_child_results(&mut |child| {
-            if !inferred_by_child && success_stmt_result_inferred_fact(child, target) {
-                inferred_by_child = true;
-            }
-        });
-        inferred_by_child
-    } else if let Some(success) = result.factual_success() {
-        success
-            .infers
-            .inferred_facts()
+        for (fact, fact_id) in output
+            .inferred_facts
             .iter()
-            .any(|fact| fact.to_string() == target)
-    } else {
-        false
+            .zip(output.inferred_fact_ids.iter())
+        {
+            if fact.to_string() == target {
+                if let Some(fact_id) = fact_id {
+                    return Some(*fact_id);
+                }
+            }
+        }
     }
+    for application in &result.rule_applications {
+        for conclusion in &application.conclusions {
+            if conclusion.fact.to_string() == target {
+                if let Some(fact_id) = conclusion.fact_id {
+                    return Some(fact_id);
+                }
+            }
+            if let Some(fact_id) = infer_result_fact_id(&conclusion.infers, target) {
+                return Some(fact_id);
+            }
+        }
+    }
+    None
 }
 
-fn success_stmt_result_inferred_fact(result: &SuccessStmtResult, target: &str) -> bool {
+fn stmt_result_inferred_fact_id(result: &StmtResult, target: &str) -> Option<FactId> {
+    if let Some(success) = result.factual_success() {
+        return infer_result_fact_id(&success.infers, target);
+    }
+    result
+        .non_factual_success()
+        .and_then(|success| success_stmt_result_inferred_fact_id(success, target))
+}
+
+fn success_stmt_result_inferred_fact_id(
+    result: &SuccessStmtResult,
+    target: &str,
+) -> Option<FactId> {
     if let Some(fact) = result.fact() {
-        return fact
-            .infers
-            .inferred_facts()
-            .iter()
-            .any(|fact| fact.to_string() == target);
+        return infer_result_fact_id(&fact.infers, target);
     }
     if let Some(common) = result.common() {
-        if common
-            .infers
-            .inferred_facts()
-            .iter()
-            .any(|fact| fact.to_string() == target)
-        {
-            return true;
+        if let Some(fact_id) = infer_result_fact_id(&common.infers, target) {
+            return Some(fact_id);
         }
     }
-    let mut inferred = false;
+    let mut inferred_fact_id = None;
     result.visit_child_results(&mut |child| {
-        if !inferred && stmt_result_inferred_fact(child, target) {
-            inferred = true;
+        if inferred_fact_id.is_none() {
+            inferred_fact_id = stmt_result_inferred_fact_id(child, target);
         }
     });
     result.visit_success_child_results(&mut |child| {
-        if !inferred && success_stmt_result_inferred_fact(child, target) {
-            inferred = true;
+        if inferred_fact_id.is_none() {
+            inferred_fact_id = success_stmt_result_inferred_fact_id(child, target);
         }
     });
-    inferred
+    inferred_fact_id
 }
 
 pub(super) fn or_branches_integer_closed_range_equalities(

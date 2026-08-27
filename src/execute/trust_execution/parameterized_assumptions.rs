@@ -60,7 +60,7 @@ impl Runtime {
             } else {
                 self.store_fact_with_well_defined_verification_and_infer_with_reason(
                     fact.clone(),
-                    &ProofSearchState::initial(),
+                    &VerifyState::initial(),
                     InferReason::TrustHave,
                 )
             }
@@ -80,7 +80,11 @@ impl Runtime {
         trust_have_stmt: &TrustHaveStmt,
     ) -> Result<StmtResult, RuntimeError> {
         self.run_in_local_env_and_commit(|rt| {
-            let infer_result = rt.exec_trust_have_stmt_affect_environment(trust_have_stmt)?;
+            let mut infer_result = rt.exec_trust_have_stmt_affect_environment(trust_have_stmt)?;
+            // Parameterized assumptions produce quantified facts in this
+            // local environment. Preserve their exact IDs before the scope is
+            // popped; a later proposition lookup is not an identity proof.
+            rt.attach_known_fact_ids_to_infer_result(&mut infer_result)?;
             Ok(
                 SuccessUnsafeStmtResult::TrustHaveStmt(Box::new(SuccessTrustHaveStmtResult {
                     statement: trust_have_stmt.clone(),

@@ -8,7 +8,7 @@ impl Runtime {
         let mut checks = Vec::new();
         for param_def in param_defs.groups.iter() {
             if let Some(fact) = nonempty_check_fact_for_param_type(&param_def.param_type) {
-                let verify_state = ProofSearchState::initial();
+                let verify_state = VerifyState::initial();
                 let result = self.verify_fact_or_error(&fact, &verify_state)?;
                 checks.push(result);
             }

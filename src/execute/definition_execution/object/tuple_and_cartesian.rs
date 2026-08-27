@@ -219,7 +219,7 @@ impl Runtime {
         )
         .into();
         let in_n_pos_result = self
-            .verify_atomic_fact(&in_n_pos, &ProofSearchState::initial())
+            .verify_atomic_fact(&in_n_pos, &VerifyState::initial())
             .map_err(|e| short_exec_error(stmt.clone(), String::new(), Some(e), vec![]))?;
         if in_n_pos_result.is_unknown() {
             return Err(short_exec_error(
@@ -233,7 +233,7 @@ impl Runtime {
         let two: Obj = Number::new("2".to_string()).into();
         let at_least_two: AtomicFact = LessEqualFact::new(two, dimension.clone(), line_file).into();
         let at_least_two_result = self
-            .verify_atomic_fact(&at_least_two, &ProofSearchState::initial())
+            .verify_atomic_fact(&at_least_two, &VerifyState::initial())
             .map_err(|e| short_exec_error(stmt.clone(), String::new(), Some(e), vec![]))?;
         if at_least_two_result.is_unknown() {
             return Err(short_exec_error(
@@ -261,7 +261,7 @@ impl Runtime {
             let index_params = tuple_or_cart_index_param_def(index_binding, dimension.clone());
             rt.define_params_with_type(&index_params, true, index_scope)
                 .map_err(|e| short_exec_error(stmt.clone(), String::new(), Some(e), vec![]))?;
-            rt.verify_obj_well_defined_result(value, &ProofSearchState::initial())
+            rt.verify_obj_well_defined_result(value, &VerifyState::initial())
                 .map_err(|e| short_exec_error(stmt, String::new(), Some(e), vec![]))
         })
     }

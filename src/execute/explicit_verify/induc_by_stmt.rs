@@ -299,7 +299,7 @@ impl Runtime {
             )?
             .to_fact();
         let base_check = self
-            .verify_fact_or_error(&base_case_fact, &ProofSearchState::initial())
+            .verify_fact_or_error(&base_case_fact, &VerifyState::initial())
             .map_err(|verify_error| {
                 short_exec_error(
                     stmt.clone().into(),
@@ -316,7 +316,7 @@ impl Runtime {
         )
         .into();
         let verify_induc_from_in_z_result = self
-            .verify_atomic_fact(&induc_from_in_z_fact, &ProofSearchState::initial())
+            .verify_atomic_fact(&induc_from_in_z_fact, &VerifyState::initial())
             .map_err(|verify_error| {
                 short_exec_error(
                     stmt.clone().into(),
@@ -338,7 +338,7 @@ impl Runtime {
         let corresponding_forall_fact = self.strong_induc_step_forall_fact(stmt, fact)?;
 
         let step_check = self
-            .verify_fact_or_error(&corresponding_forall_fact, &ProofSearchState::initial())
+            .verify_fact_or_error(&corresponding_forall_fact, &VerifyState::initial())
             .map_err(|well_defined_error| {
                 short_exec_error(
                     stmt.clone().into(),
@@ -553,7 +553,7 @@ impl Runtime {
             )?
             .to_fact();
         let base_check = self
-            .verify_fact_or_error(&base_case_fact, &ProofSearchState::initial())
+            .verify_fact_or_error(&base_case_fact, &VerifyState::initial())
             .map_err(|verify_error| {
                 short_exec_error(
                     stmt.clone().into(),
@@ -570,7 +570,7 @@ impl Runtime {
         )
         .into();
         let verify_induc_from_in_z_result = self
-            .verify_atomic_fact(&induc_from_in_z_fact, &ProofSearchState::initial())
+            .verify_atomic_fact(&induc_from_in_z_fact, &VerifyState::initial())
             .map_err(|verify_error| {
                 short_exec_error(
                     stmt.clone().into(),
@@ -636,7 +636,7 @@ impl Runtime {
         .into();
 
         let step_check = self
-            .verify_fact_or_error(&corresponding_forall_fact, &ProofSearchState::initial())
+            .verify_fact_or_error(&corresponding_forall_fact, &VerifyState::initial())
             .map_err(|well_defined_error| {
                 short_exec_error(
                     stmt.clone().into(),
@@ -701,7 +701,7 @@ impl Runtime {
             for fact in stmt.to_prove.iter() {
                 let base_fact = rt.induc_goal_fact_at_obj(stmt, fact, stmt.induc_from.clone())?;
                 let mut result = rt
-                    .verify_fact_or_error(&base_fact, &ProofSearchState::initial())
+                    .verify_fact_or_error(&base_fact, &VerifyState::initial())
                     .map_err(|verify_error| {
                         short_exec_error(
                             stmt.clone().into(),
@@ -760,7 +760,7 @@ impl Runtime {
             for fact in stmt.to_prove.iter() {
                 let next_fact = rt.induc_goal_fact_at_obj(stmt, fact, next_obj.clone())?;
                 let mut result = rt
-                    .verify_fact_or_error(&next_fact, &ProofSearchState::initial())
+                    .verify_fact_or_error(&next_fact, &VerifyState::initial())
                     .map_err(|verify_error| {
                         short_exec_error(
                             stmt.clone().into(),
@@ -987,7 +987,7 @@ impl Runtime {
         )
         .into();
         let verify_result = self
-            .verify_atomic_fact(&induc_from_in_z_fact, &ProofSearchState::initial())
+            .verify_atomic_fact(&induc_from_in_z_fact, &VerifyState::initial())
             .map_err(|verify_error| {
                 short_exec_error(
                     stmt.clone().into(),

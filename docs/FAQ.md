@@ -520,8 +520,9 @@ separate, so `A` may still be both a module head and a local object. In contrast
 once external bare `b` is active, no local definition or binder may also use
 `b`; struct fields such as `value.b` remain separate. Permissions inherit into
 submodules, but an export is not visible until it has loaded, so an earlier file
-cannot accidentally cite a later file. Dynamic imports in isolated sessions
-remain qualified-only.
+cannot accidentally cite a later file. Interactive terminal imports remain
+qualified-only; they update the REPL's ephemeral manifest and are not valid
+inside Litex source.
 
 A practical rule of thumb is:
 

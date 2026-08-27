@@ -6,7 +6,7 @@ use crate::pipeline::render_run_output;
 use crate::prelude::*;
 use crate::test_support::execute_source;
 
-use super::helper::{print_slowest_run_labels, run_with_large_stack, source_has_isolated_import};
+use super::helper::{print_slowest_run_labels, run_with_large_stack};
 
 #[test]
 #[ignore = "large dataset gate; run explicitly with an exact filter and --ignored"]
@@ -256,9 +256,6 @@ fn run_finished_litex_jsonl_dataset(dataset_label: &str, jsonl_path: &Path, labe
         });
 
         let normalized_source = remove_windows_carriage_from_str(litex_code.as_str());
-        runtime.set_current_source_allows_inline_imports(source_has_isolated_import(
-            normalized_source.as_str(),
-        ));
         let start_time_for_one_solution = Instant::now();
         let (stmt_results, runtime_error) =
             execute_source(normalized_source.as_str(), &mut runtime);

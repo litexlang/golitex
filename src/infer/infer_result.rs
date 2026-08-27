@@ -38,6 +38,7 @@ pub enum InferRule {
     TupleEqualityWithKnownTupleImpliesTupleShape(
         TupleEqualityWithKnownTupleImpliesTupleShapeInferRule,
     ),
+    CartesianMembershipProjection(CartesianMembershipProjectionInferRule),
     ListSetMembershipImpliesEqualityAlternatives(
         ListSetMembershipImpliesEqualityAlternativesInferRule,
     ),
@@ -110,6 +111,19 @@ pub enum KnownTupleEqualitySide {
 pub struct TupleEqualityWithKnownTupleImpliesTupleShapeInferRule {
     pub known_side: KnownTupleEqualitySide,
     pub tuple_length: usize,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CartesianMembershipProjectionInferRule {
+    pub coordinate_count: usize,
+    pub projection: CartesianMembershipProjectionKind,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum CartesianMembershipProjectionKind {
+    TupleShape,
+    TupleDimension,
+    Coordinate { index: usize },
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]

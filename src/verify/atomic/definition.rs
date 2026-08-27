@@ -41,7 +41,7 @@ impl Runtime {
     pub fn verify_prime_fact_by_definition(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let AtomicFact::NormalAtomicFact(normal_fact) = atomic_fact else {
             return Ok(None);
@@ -70,7 +70,7 @@ impl Runtime {
     pub fn verify_coprime_fact_by_definition(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let AtomicFact::NormalAtomicFact(normal_fact) = atomic_fact else {
             return Ok(None);
@@ -99,7 +99,7 @@ impl Runtime {
     pub fn verify_dvd_fact_by_definition(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let AtomicFact::NormalAtomicFact(normal_fact) = atomic_fact else {
             return Ok(None);
@@ -128,7 +128,7 @@ impl Runtime {
     pub fn verify_choice_function_for_fact_by_definition(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let AtomicFact::NormalAtomicFact(normal_fact) = atomic_fact else {
             return Ok(None);
@@ -160,7 +160,7 @@ impl Runtime {
     pub fn verify_atomic_fact_using_builtin_or_prop_definition(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if let Some(result) = self.verify_prime_fact_by_definition(atomic_fact, verify_state)? {
             return Ok(Some(result));
@@ -204,7 +204,7 @@ impl Runtime {
     fn verify_subset_fact_by_membership_forall_definition(
         &mut self,
         subset_fact: &SubsetFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let bound_param_name = self.generate_random_unused_name();
         let bound_param = self.fresh_param_group_with_type(
@@ -241,7 +241,7 @@ impl Runtime {
     fn verify_superset_fact_by_membership_forall_definition(
         &mut self,
         superset_fact: &SupersetFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let bound_param_name = self.generate_random_unused_name();
         let bound_param = self.fresh_param_group_with_type(
@@ -278,7 +278,7 @@ impl Runtime {
     fn verify_normal_atomic_fact_using_its_definition(
         &mut self,
         normal_atomic_fact: &NormalAtomicFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if let Some(result) =
             self.verify_builtin_function_property_by_definition(normal_atomic_fact, verify_state)?
@@ -365,7 +365,7 @@ impl Runtime {
         &mut self,
         normal_atomic_fact: &NormalAtomicFact,
         definition: &DefPropStmt,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(VerifyArgsSatisfyParamDefResult, Vec<(Fact, StmtResult)>), RuntimeError> {
         let predicate_name = normal_atomic_fact.predicate.to_string();
         let full_param_type_result = self.verify_args_satisfy_param_def_flat_types(
@@ -473,7 +473,7 @@ impl Runtime {
     fn verify_builtin_fact_with_their_definition(
         &mut self,
         fact: &AtomicFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         match fact {
             AtomicFact::SubsetFact(subset_fact) => {

@@ -13,6 +13,6 @@ pub use project_config::{
     ProjectImport, ProjectStdImport,
 };
 pub use repository::{
-    discover_isolated_module_import, discover_isolated_std_import, discover_repository,
-    discover_repository_for_file, resolve_std_root, RepositoryFileTarget,
+    discover_repository, discover_repository_for_file, resolve_std_root, RepositoryFileTarget,
 };
+pub(super) use repository::{discover_terminal_module_import, discover_terminal_std_import};

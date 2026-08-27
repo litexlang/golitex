@@ -30,7 +30,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_fn_obj_well_defined_result(
         &mut self,
         fn_obj: &FnObj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         let mut head_steps = SuccessVerifyObjWellDefinedStepsResult::new();
         let candidate_spaces = match fn_obj.head.as_ref() {
@@ -236,7 +236,7 @@ impl Runtime {
         &mut self,
         fn_obj: &FnObj,
         mut space: FnSetSpace,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         let source_application: Obj = fn_obj.clone().into();
         let mut steps = SuccessVerifyObjWellDefinedStepsResult::new();
@@ -328,7 +328,7 @@ impl Runtime {
         parameters: &SetBoundParameterList,
         domains: &[QuantifierFreeFact],
         substitution_mode: SubstitutionMode,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         let parameter_count = parameters.number_of_params();
         if arguments.len() != parameter_count {

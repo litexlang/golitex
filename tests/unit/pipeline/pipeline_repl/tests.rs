@@ -66,6 +66,45 @@ fn repl_still_executes_single_line_input_immediately() {
 }
 
 #[test]
+fn repl_routes_import_to_its_ephemeral_module_manifest_before_source_parsing() {
+    let directory =
+        std::env::temp_dir().join(format!("litex-terminal-import-repl-{}", std::process::id()));
+    let _ = fs::remove_dir_all(&directory);
+    let module = directory.join("library");
+    fs::create_dir_all(&module).expect("create terminal import module");
+    fs::write(
+        module.join("litex.config"),
+        "[hierarchy]\nmodule\n\n[export]\nmain = \"./main.lit\"\n",
+    )
+    .expect("write module config");
+    fs::write(module.join("main.lit"), "have value R = 7\n").expect("write module source");
+
+    let command = format!(
+        "import \"{}\" as Library\nLibrary::main::value = 7\n",
+        module.to_string_lossy()
+    );
+    let mut stdin_reader = Cursor::new(command.into_bytes());
+    let mut stdout_writer = Vec::new();
+    run_repl_loop_with_readers(
+        "test",
+        OutputStyle::Normal,
+        &mut stdin_reader,
+        &mut stdout_writer,
+    )
+    .unwrap();
+
+    let output = String::from_utf8(stdout_writer).expect("UTF-8 REPL output");
+    assert!(output.contains("\"type\": \"terminal import\""), "{output}");
+    assert!(output.contains("\"outcome\": \"success\""), "{output}");
+    assert!(
+        !output.contains("not a Litex statement"),
+        "REPL import must bypass source parsing: {output}"
+    );
+
+    let _ = fs::remove_dir_all(&directory);
+}
+
+#[test]
 fn repl_startup_shows_version_and_upgrade_hint() {
     let input = b"";
     let mut stdin_reader = Cursor::new(input.as_slice());
@@ -119,8 +158,6 @@ fn isolated_file_continues_in_the_same_repl_runtime() {
         },
     );
     assert!(file_error.is_none(), "{file_error:?}");
-    assert!(runtime.current_source_allows_inline_imports());
-
     let mut input = Cursor::new(b"from_file = 1\nhave from_repl R = 2\n".as_slice());
     let mut output = Vec::new();
     run_isolated_repl_with_runtime_and_readers("test", &mut runtime, &mut input, &mut output)
@@ -131,6 +168,36 @@ fn isolated_file_continues_in_the_same_repl_runtime() {
 
     let (_, continuation_error) = execute_source("from_repl = 2", &mut runtime);
     assert!(continuation_error.is_none(), "{continuation_error:?}");
+
+    let _ = fs::remove_dir_all(&directory);
+}
+
+#[test]
+fn isolated_file_rejects_inline_import_before_repl_continuation() {
+    let directory =
+        std::env::temp_dir().join(format!("litex-isolated-file-import-{}", std::process::id()));
+    let _ = fs::remove_dir_all(&directory);
+    fs::create_dir_all(&directory).expect("create isolated file directory");
+    let file = directory.join("inline-import.lit");
+    fs::write(&file, "import std basics\n").expect("write isolated source file");
+
+    let mut runtime = Runtime::default();
+    let (results, error) = execute_file_in_runtime(
+        file.to_str().expect("file path is UTF-8"),
+        &mut runtime,
+        FileExecutionOptions {
+            force_isolated: true,
+        },
+    );
+    assert!(results.is_empty());
+    let error = error.expect("-isolated -f must reject inline import");
+    assert!(
+        error
+            .trace_message()
+            .contains("`import` is a terminal command, not a Litex statement"),
+        "{}",
+        error.trace_message()
+    );
 
     let _ = fs::remove_dir_all(&directory);
 }

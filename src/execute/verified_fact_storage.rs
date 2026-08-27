@@ -7,7 +7,7 @@ impl Runtime {
     pub fn store_exist_or_and_chain_atomic_fact_with_well_defined_verification_and_infer(
         &mut self,
         fact: &ExistOrAndChainAtomicFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessInferResult, RuntimeError> {
         self.store_exist_or_and_chain_atomic_fact_with_well_defined_verification_and_infer_with_reason(
             fact,
@@ -21,7 +21,7 @@ impl Runtime {
     pub fn store_exist_or_and_chain_atomic_fact_with_well_defined_verification_and_infer_with_reason(
         &mut self,
         fact: &ExistOrAndChainAtomicFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
         reason: InferReason,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let stmt_for_fact_errors: Stmt = fact.clone().to_fact().into();
@@ -47,7 +47,7 @@ impl Runtime {
     pub fn store_quantifier_free_fact_with_well_defined_verification_and_infer(
         &mut self,
         fact: &QuantifierFreeFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessInferResult, RuntimeError> {
         self.store_quantifier_free_fact_with_well_defined_verification_and_infer_with_reason(
             fact,
@@ -61,7 +61,7 @@ impl Runtime {
     pub fn store_quantifier_free_fact_with_well_defined_verification_and_infer_with_reason(
         &mut self,
         fact: &QuantifierFreeFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
         reason: InferReason,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let stmt_for_fact_errors: Stmt = fact.clone().to_fact().into();
@@ -86,7 +86,7 @@ impl Runtime {
     pub fn store_fact_with_well_defined_verification_and_infer(
         &mut self,
         fact: Fact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessInferResult, RuntimeError> {
         self.store_fact_with_well_defined_verification_and_infer_with_reason(
             fact,
@@ -100,7 +100,7 @@ impl Runtime {
     pub fn store_fact_with_well_defined_verification_and_infer_with_reason(
         &mut self,
         fact: Fact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
         reason: InferReason,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let stmt_for_fact_errors: Stmt = fact.clone().into();

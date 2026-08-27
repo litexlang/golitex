@@ -9,7 +9,7 @@ impl Runtime {
         ambient_set: &Obj,
         family_fn: &Obj,
         operator_display: &str,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         let mut steps = SuccessVerifyObjWellDefinedStepsResult::new();
         for (argument_index, child) in [index_set, ambient_set, family_fn].into_iter().enumerate() {
@@ -61,7 +61,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_index_union_well_defined_result(
         &mut self,
         value: &IndexUnion,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         self.verify_indexed_set_family_operator_well_defined_result(
             &value.index_set,
@@ -75,7 +75,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_index_intersect_well_defined_result(
         &mut self,
         value: &IndexIntersect,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         self.verify_indexed_set_family_operator_well_defined_result(
             &value.index_set,
@@ -89,7 +89,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_power_set_well_defined_result(
         &mut self,
         value: &PowerSet,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         let mut steps = SuccessVerifyObjWellDefinedStepsResult::new();
         steps.push_child(self.verify_child_obj_well_defined_result(
@@ -103,7 +103,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_general_cart_well_defined_result(
         &mut self,
         value: &GeneralCart,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         let mut steps = SuccessVerifyObjWellDefinedStepsResult::new();
         for (argument_index, child) in [&value.index_set, &value.family_set, &value.family_fn]
@@ -176,7 +176,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_obj_at_index_well_defined_result(
         &mut self,
         value: &ObjAtIndex,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         let mut steps = SuccessVerifyObjWellDefinedStepsResult::new();
         for (argument_index, child) in [&value.obj, &value.index].into_iter().enumerate() {
@@ -273,7 +273,7 @@ impl Runtime {
         ambient_set: &Obj,
         family_fn: &Obj,
         operator_display: &str,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         for (argument_index, child) in [index_set, ambient_set, family_fn].into_iter().enumerate() {
             self.verify_child_obj_well_defined_and_store_cache(
@@ -323,7 +323,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_index_union_well_defined(
         &mut self,
         x: &IndexUnion,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_indexed_set_family_operator_well_defined(
             &x.index_set,
@@ -340,7 +340,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_index_intersect_well_defined(
         &mut self,
         x: &IndexIntersect,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_indexed_set_family_operator_well_defined(
             &x.index_set,
@@ -356,7 +356,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_power_set_well_defined(
         &mut self,
         x: &PowerSet,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_child_obj_well_defined_and_store_cache(
             &x.set,
@@ -372,7 +372,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_general_cart_well_defined(
         &mut self,
         x: &GeneralCart,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_child_obj_well_defined_and_store_cache(
             &x.index_set,
@@ -441,7 +441,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_obj_at_index_well_defined(
         &mut self,
         x: &ObjAtIndex,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_child_obj_well_defined_and_store_cache(
             &x.obj,

@@ -7,7 +7,7 @@ impl Runtime {
         &mut self,
         obj: Obj,
         param_type: &ParamType,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let fact: AtomicFact = match param_type {
             ParamType::Obj(set_obj) => {
@@ -54,7 +54,7 @@ impl Runtime {
         &mut self,
         param_defs: &TypedParameterList,
         args: &Vec<Obj>,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
         substitution_mode: SubstitutionMode,
     ) -> Result<VerifyArgsSatisfyParamDefResult, RuntimeError> {
         let instantiated_types =
@@ -84,7 +84,7 @@ impl Runtime {
         &mut self,
         obj: Obj,
         param_type: &ParamType,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         match param_type {
             ParamType::Obj(set_obj) => {
@@ -153,7 +153,7 @@ impl Runtime {
         &mut self,
         param_defs: &TypedParameterList,
         args: &Vec<Obj>,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
         substitution_mode: SubstitutionMode,
     ) -> Result<VerifyArgsSatisfyParamDefResult, RuntimeError> {
         let instantiated_types =

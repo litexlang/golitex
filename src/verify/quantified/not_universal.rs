@@ -7,7 +7,7 @@ impl Runtime {
     pub fn verify_not_forall_fact(
         &mut self,
         not_forall: &NotForallFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if !verify_state.well_definedness_verified {
             self.verify_not_forall_fact_well_defined(not_forall, verify_state)?;

@@ -18,7 +18,7 @@ impl Runtime {
         stmt: &ByContraStmt,
     ) -> Result<(), RuntimeError> {
         let to_prove_fact = stmt.to_prove.clone();
-        self.verify_fact_well_defined(&to_prove_fact, &ProofSearchState::initial())
+        self.verify_fact_well_defined(&to_prove_fact, &VerifyState::initial())
             .map_err(|verify_error| {
                 short_exec_error(
                     stmt.clone().into(),
@@ -155,7 +155,7 @@ impl Runtime {
         }
 
         let verify_impossible_fact_result =
-            self.verify_atomic_fact(&stmt.impossible_fact, &ProofSearchState::initial())?;
+            self.verify_atomic_fact(&stmt.impossible_fact, &VerifyState::initial())?;
         if verify_impossible_fact_result.is_unknown() {
             return Err(short_exec_error(
                 stmt.clone().into(),
@@ -167,7 +167,7 @@ impl Runtime {
 
         let negated_impossible_fact = stmt.impossible_fact.logical_negation()?;
         let verify_negated_impossible_fact_result =
-            self.verify_atomic_fact(&negated_impossible_fact, &ProofSearchState::initial())?;
+            self.verify_atomic_fact(&negated_impossible_fact, &VerifyState::initial())?;
         if verify_negated_impossible_fact_result.is_unknown() {
             return Err(short_exec_error(
                 stmt.clone().into(),

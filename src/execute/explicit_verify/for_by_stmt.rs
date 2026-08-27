@@ -11,7 +11,7 @@ impl Runtime {
             .map_err(|msg| short_exec_error(stmt.clone().into(), msg, None, vec![]))?;
         self.verify_forall_fact_params_and_dom_well_defined(
             &stmt.forall_fact,
-            &ProofSearchState::initial(),
+            &VerifyState::initial(),
         )
         .map_err(|well_defined_error| {
             short_exec_error(
@@ -573,7 +573,7 @@ impl Runtime {
         ),
         RuntimeError,
     > {
-        let verify_state = ProofSearchState::initial();
+        let verify_state = VerifyState::initial();
         let mut domain_checks = Vec::new();
         for dom_fact in stmt.forall_fact.dom_facts.iter() {
             let verify_dom_result = self.verify_fact_allow_unknown(dom_fact, &verify_state)?;

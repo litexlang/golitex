@@ -13,13 +13,14 @@ pub(super) fn run_code_command(code: &str, options: RunOptions) {
 }
 
 pub(super) fn run_file_command(file_flag: &str, options: RunOptions) {
+    let continue_in_isolated_repl = options.force_isolated;
     let mut outcome = run(RunRequest::new(RunTarget::file(file_flag), options));
     if let Some(message) = outcome.target_error.as_ref() {
         eprintln!("Error: {}", message);
         return;
     }
     println!("{}", outcome.output.trim());
-    if outcome.ok && outcome.runtime.current_source_allows_inline_imports() {
+    if outcome.ok && continue_in_isolated_repl {
         run_isolated_repl_with_runtime(VERSION, &mut outcome.runtime);
     }
 }

@@ -37,7 +37,7 @@ impl Runtime {
         ),
         RuntimeError,
     > {
-        let verify_state = ProofSearchState::initial();
+        let verify_state = VerifyState::initial();
         let binder = self.verify_fact_binder_result(
             &def_template_stmt.template_arg_def,
             BindingScope::LocalBinder,
@@ -75,7 +75,7 @@ impl Runtime {
     pub fn instantiate_template_obj(
         &mut self,
         template_obj: &InstantiatedTemplateObj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.instantiate_template_obj_result(template_obj, verify_state)
             .map(|_| ())
@@ -84,7 +84,7 @@ impl Runtime {
     pub fn instantiate_template_obj_result(
         &mut self,
         template_obj: &InstantiatedTemplateObj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessTemplateInstantiationResult, RuntimeError> {
         let instance_name = template_obj.surface_name();
         if self.is_name_used_for_identifier(&instance_name) {

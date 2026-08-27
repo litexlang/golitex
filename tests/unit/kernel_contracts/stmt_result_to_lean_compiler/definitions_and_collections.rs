@@ -82,6 +82,74 @@ fn by_definition_rejects_a_missing_target_fact_id() {
     assert!(error.contains("by-definition target store has no FactId"));
 }
 
+#[test]
+fn concrete_sequence_predicate_retains_and_consumes_local_wd_evidence() {
+    let source = r#"prop is_sequence_tail_close_to_limit(a seq(R), L R, epsilon R+, n0 N+):
+    forall n N+:
+        n >= n0
+        =>:
+            abs(a(n) - L) < epsilon
+"#;
+    let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
+        source,
+        "real_sequence_definition_result_contract.lit",
+    )
+    .expect("execute checked real-sequence definition");
+    let [StmtResult::Success(SuccessStmtResult::Definition(
+        SuccessDefinitionStmtResult::DefPropStmt(result),
+    ))] = results.as_slice()
+    else {
+        panic!("expected one concrete predicate Result")
+    };
+    let local = result
+        .run_in_local_env
+        .as_ref()
+        .expect("verified concrete predicate retains its local WD flow");
+    assert_eq!(local.binder.parameter_groups.len(), 4);
+    assert_eq!(local.body.len(), 1);
+    assert!(local.body[0].store.fact_id.is_some());
+    let lean = StmtResultToLeanCompiler::new("real_sequence_definition_result_contract.lit")
+        .compile_stmt_results_to_lean_source(&results)
+        .expect("compile from retained sequence-definition evidence");
+    assert!(lean.contains("Litex.Rules.RealSequenceTailClose"), "{lean}");
+    assert!(lean.contains("Litex.In.rep a __type1"), "{lean}");
+    assert!(!lean.contains("axiom is_sequence_tail_close_to_limit"));
+}
+
+#[test]
+fn concrete_sequence_predicate_rejects_missing_body_wd_evidence() {
+    let source = r#"prop is_sequence_tail_close_to_limit(a seq(R), L R, epsilon R+, n0 N+):
+    forall n N+:
+        n >= n0
+        =>:
+            abs(a(n) - L) < epsilon
+"#;
+    let mut results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
+        source,
+        "real_sequence_definition_missing_wd.lit",
+    )
+    .expect("execute checked real-sequence definition");
+    let [StmtResult::Success(SuccessStmtResult::Definition(
+        SuccessDefinitionStmtResult::DefPropStmt(result),
+    ))] = results.as_mut_slice()
+    else {
+        panic!("expected one concrete predicate Result")
+    };
+    result
+        .run_in_local_env
+        .as_mut()
+        .expect("verified definition retains local evidence")
+        .body
+        .clear();
+    let error = StmtResultToLeanCompiler::new("real_sequence_definition_missing_wd.lit")
+        .compile_stmt_results_to_lean_source(&results)
+        .expect_err("missing definition-body evidence must fail closed");
+    assert!(
+        error.contains("changed its binder or body arity"),
+        "{error}"
+    );
+}
+
 fn execute_named_real_function(source: &str) -> Vec<StmtResult> {
     crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
         source,

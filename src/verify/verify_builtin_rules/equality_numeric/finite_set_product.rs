@@ -871,7 +871,7 @@ impl Runtime {
             // the full equality dispatcher or its finite-set-sum rule.
             rt.verify_atomic_fact_with_known_forall(
                 then_fact,
-                &ProofSearchState::after_well_definedness(),
+                &VerifyState::after_well_definedness(),
             )
         })
     }
@@ -1054,7 +1054,7 @@ impl Runtime {
         )?;
         let fact: Fact = forall_fact.into();
         let result =
-            self.verify_fact_allow_unknown(&fact, &ProofSearchState::after_well_definedness())?;
+            self.verify_fact_allow_unknown(&fact, &VerifyState::after_well_definedness())?;
         let _ = builtin_state;
         Ok(result.is_success())
     }

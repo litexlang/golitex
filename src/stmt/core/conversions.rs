@@ -176,12 +176,6 @@ impl From<TryStmt> for Stmt {
     }
 }
 
-impl From<ImportStmt> for Stmt {
-    fn from(v: ImportStmt) -> Self {
-        CommandStmt::ImportStmt(v).into()
-    }
-}
-
 impl From<EvalStmt> for Stmt {
     fn from(v: EvalStmt) -> Self {
         CommandStmt::EvalStmt(v).into()

@@ -1,3 +1,6 @@
+use super::object_statements::{
+    checked_real_sequence_definition_kind, CheckedRealSequenceDefinitionKind,
+};
 use super::*;
 
 impl StmtResultToLeanCompiler {
@@ -859,14 +862,16 @@ impl StmtResultToLeanCompiler {
                     );
                     continue;
                 }
-                let rendered_parameter_set = render_obj(parameter_set, &self.environment_stack)?;
+                let (_, retained_parameter_set) = membership_parts(parameter)?;
+                let rendered_parameter_set =
+                    render_obj(retained_parameter_set, &self.environment_stack)?;
                 let carrier_name = format!(
                     "__carrier{}_{}",
                     self.next_fact_name_index,
                     parameter_index + 1
                 );
                 match parameter_set {
-                    Obj::FnSet(_) => {
+                    Obj::FnSet(_) | Obj::FiniteSeqSet(_) | Obj::SeqSet(_) => {
                         binder_declarations.push(format!("{{{carrier_name} : Type 1}}"));
                         binder_intro_names.push(carrier_name.clone());
                         binder_declarations.push(format!("({parameter_name} : {carrier_name})"));
@@ -1141,6 +1146,618 @@ impl StmtResultToLeanCompiler {
         Ok(true)
     }
 
+    /// Compile a reserved builtin theorem only from its typed identity and
+    /// retained requirement child.  Most builtin theorem interfaces are an
+    /// explicit name for a proof route that already returned the exact
+    /// conclusion as a factual child Result; replay that child directly rather
+    /// than rediscovering the fact from its spelling.
+    pub(super) fn compile_builtin_theorem_application_stmt_result_to_lean_source(
+        &mut self,
+        result: &SuccessReleaseThmStmtResult,
+    ) -> Result<bool, String> {
+        if let Some(conclusion) =
+            self.construct_lean_proof_from_real_cauchy_sequence_completeness_result(result)?
+        {
+            let fact_id = conclusion.retained_fact_id.ok_or_else(|| {
+                "real-sequence completeness conclusion has no retained FactId".to_string()
+            })?;
+            let conclusion_name = format!("__fact{}", self.next_fact_name_index);
+            self.declarations.push(format!(
+                "theorem {conclusion_name} : {} := by\n  exact {}",
+                conclusion.proposition, conclusion.proof_expression
+            ));
+            self.environment_stack
+                .fact_names
+                .insert(fact_id, conclusion_name);
+            self.environment_stack
+                .fact_propositions
+                .insert(fact_id, conclusion.fact);
+            self.next_fact_name_index += 1;
+            self.compile_defined_predicate_inference_results_in_current_environment(
+                &result.common.infers,
+                DefinedPredicateInferenceConclusionPublication::PersistentLeanTheorem,
+            )?;
+            validate_flattened_inferred_fact_ids_are_visible(
+                &result.common.infers,
+                &self.environment_stack,
+                "real-sequence completeness Result",
+            )?;
+            return Ok(true);
+        }
+        let Some(verification) = &result.verification else {
+            return Ok(false);
+        };
+        let SuccessVerifyTheoremApplicationSourceResult::Builtin(source) = &verification.source
+        else {
+            return Ok(false);
+        };
+        if source.conclusion_well_definedness.is_some() {
+            return Err(
+                "ordinary builtin theorem unexpectedly retained dedicated conclusion WD evidence"
+                    .into(),
+            );
+        }
+        if verification.theorem != source.theorem_id.as_str()
+            || verification.theorem != result.statement.name.to_string()
+            || verification.arguments.len() != result.statement.args.len()
+            || verification
+                .arguments
+                .iter()
+                .zip(result.statement.args.iter())
+                .any(|(retained, source)| obj_equality_key(retained) != obj_equality_key(source))
+        {
+            return Err("builtin theorem Result changed its identity or argument order".into());
+        }
+        let expected_roles = builtin_theorem_requirement_roles(source.theorem_id);
+        if source.requirement_roles != expected_roles
+            || source.requirement_facts.len() != source.requirement_roles.len()
+            || source.requirement_checks.len() != source.requirement_roles.len()
+        {
+            return Err("builtin theorem Result changed its typed requirement schema".into());
+        }
+        let expected_provenance = match source.theorem_id {
+            BuiltinTheoremId::GeneralCartesianNonemptyByChoiceFromFamily
+            | BuiltinTheoremId::GeneralCartesianNonemptyByChoiceFromPointwise => {
+                Some(BuiltinTheoremProvenance::AxiomOfChoice)
+            }
+            _ => None,
+        };
+        if source.provenance != expected_provenance {
+            return Err("builtin theorem Result changed its typed provenance".into());
+        }
+        let [conclusion] = verification.direct_conclusions.as_slice() else {
+            return Err("builtin theorem Result must retain exactly one direct conclusion".into());
+        };
+
+        // These three interfaces need dedicated target theorems rather than a
+        // conclusion-shaped child.  They remain fail-closed until those exact
+        // ABI lemmas are installed below this shared typed entry point.
+        if let Some(limitation) = match source.theorem_id {
+            BuiltinTheoremId::SubsetOfFiniteSetIsFinite => Some(
+                "builtin theorem `subset_of_finite_set_is_finite` requires an exact finite-subcarrier transport theorem for Litex.Set",
+            ),
+            BuiltinTheoremId::FiniteSetHasBijectiveIndex => Some(
+                "builtin theorem `finite_set_has_bijective_index` requires an exact finite-carrier enumeration and bijection target ABI",
+            ),
+            BuiltinTheoremId::RationalHasUniqueReducedFraction => Some(
+                "builtin theorem `rational_has_unique_reduced_fraction` requires a reviewed bridge from heterogeneous Litex.Same to the native rational normal form",
+            ),
+            _ => None,
+        } {
+            return Err(limitation.into());
+        }
+
+        let [requirement_fact] = source.requirement_facts.as_slice() else {
+            return Err(
+                "builtin theorem direct adapter requires one retained requirement fact".into(),
+            );
+        };
+        let [requirement_check] = source.requirement_checks.as_slice() else {
+            return Err(
+                "builtin theorem direct adapter requires one retained requirement child".into(),
+            );
+        };
+        if requirement_fact.to_string() != conclusion.to_string() {
+            return Err("builtin theorem direct adapter requirement changed its conclusion".into());
+        }
+        let requirement_check = requirement_check
+            .factual_success()
+            .ok_or_else(|| "builtin theorem requirement child is not factual".to_string())?;
+        validate_scoped_fact_check_result(
+            requirement_check,
+            conclusion,
+            "builtin theorem requirement child",
+        )?;
+        let [outer_store] = result.common.infers.store_fact_outputs.as_slice() else {
+            return Err("builtin theorem must retain exactly one outer conclusion store".into());
+        };
+        let checked_fact_id = requirement_check
+            .store
+            .fact_id
+            .ok_or_else(|| "builtin theorem checked conclusion has no frozen FactId".to_string())?;
+        if outer_store.itself_and_why_itself_is_stored.0.to_string() != conclusion.to_string()
+            || outer_store.fact_id != Some(checked_fact_id)
+            || outer_store.inferred_facts.len() != outer_store.inferred_fact_ids.len()
+        {
+            return Err(
+                "builtin theorem outer publication changed the checked conclusion's root fact, FactId, or inferred child arity"
+                    .into(),
+            );
+        }
+        self.install_atomic_fact_well_definedness_store_results(requirement_check)
+            .map_err(|error| {
+                format!(
+                    "builtin theorem `{}` checked-conclusion WD installation: {error}",
+                    source.theorem_id
+                )
+            })?;
+        let Some(proof) = self
+            .construct_lean_proof_from_direct_fact_result_using_its_well_definedness(
+                requirement_check,
+            )?
+        else {
+            return Err(format!(
+                "builtin theorem `{}` checked conclusion has no direct typed proof consumer",
+                source.theorem_id
+            ));
+        };
+        let proposition = if requirement_check.well_definedness.recursive.is_some() {
+            self.render_fact_using_well_definedness_result(
+                &requirement_check.well_definedness,
+                conclusion,
+            )?
+        } else {
+            render_fact(conclusion, &self.environment_stack)?
+        };
+        let source_name = format!("__fact{}", self.next_fact_name_index);
+        self.declarations.push(format!(
+            "theorem {source_name} : {proposition} := by\n  exact {proof}"
+        ));
+        self.environment_stack
+            .fact_names
+            .insert(checked_fact_id, source_name.clone());
+        self.environment_stack
+            .fact_propositions
+            .insert(checked_fact_id, conclusion.clone());
+        self.next_fact_name_index += 1;
+
+        if result.common.infers.rule_applications.is_empty()
+            && outer_store.inferred_facts.is_empty()
+            && outer_store.inferred_fact_ids.is_empty()
+        {
+            return Ok(true);
+        }
+        if source.theorem_id == BuiltinTheoremId::SetBuilderMember {
+            self.compile_set_builder_membership_infer_result_as_top_level_declarations(
+                conclusion,
+                checked_fact_id,
+                &source_name,
+                &result.common.infers,
+            )?;
+        } else if source.theorem_id == BuiltinTheoremId::CartesianMemberFromCoordinates {
+            self.compile_literal_cartesian_membership_infer_result_as_top_level_declarations(
+                requirement_check,
+                conclusion,
+                checked_fact_id,
+                &result.common.infers,
+            )?;
+        } else {
+            self.compile_typed_infer_result_as_top_level_declarations_with_allowed_sources(
+                &result.common.infers,
+                &[(checked_fact_id, conclusion.clone())],
+                &format!("builtin theorem `{}` outer inference", source.theorem_id),
+            )?;
+        }
+        Ok(true)
+    }
+
+    pub(super) fn construct_lean_proof_from_real_cauchy_sequence_completeness_result(
+        &mut self,
+        result: &SuccessReleaseThmStmtResult,
+    ) -> Result<Option<CompiledLitexTheoremInstantiationConclusionProofBody>, String> {
+        let Some(verification) = &result.verification else {
+            return Ok(None);
+        };
+        let SuccessVerifyTheoremApplicationSourceResult::Builtin(source) = &verification.source
+        else {
+            return Ok(None);
+        };
+        if source.theorem_id != BuiltinTheoremId::RealCauchySequenceConverges {
+            return Ok(None);
+        }
+        if verification.theorem != source.theorem_id.as_str()
+            || verification.theorem != result.statement.name.to_string()
+            || verification.arguments.len() != 1
+            || result.statement.args.len() != 1
+            || obj_equality_key(&verification.arguments[0])
+                != obj_equality_key(&result.statement.args[0])
+            || source.requirement_roles
+                != vec![
+                    BuiltinTheoremRequirementRole::ArgumentIsRealSequence,
+                    BuiltinTheoremRequirementRole::SequenceSatisfiesCauchyDefinition,
+                ]
+            || source.requirement_facts.len() != 2
+            || source.requirement_checks.len() != 2
+            || verification.direct_conclusions.len() != 1
+        {
+            return Err("real-sequence completeness Result changed its typed schema".into());
+        }
+        if source.provenance.is_some() {
+            return Err("real-sequence completeness gained unexpected provenance".into());
+        }
+        let conclusion_well_definedness =
+            source.conclusion_well_definedness.as_ref().ok_or_else(|| {
+                "real-sequence completeness lost its conclusion WD evidence".to_string()
+            })?;
+        let membership_check = source.requirement_checks[0]
+            .factual_success()
+            .ok_or_else(|| "real-sequence membership requirement is not factual".to_string())?;
+        let cauchy_check = source.requirement_checks[1]
+            .factual_success()
+            .ok_or_else(|| "real-sequence Cauchy requirement is not factual".to_string())?;
+        for (index, (fact, check)) in source
+            .requirement_facts
+            .iter()
+            .zip([membership_check, cauchy_check])
+            .enumerate()
+        {
+            validate_scoped_fact_check_result(
+                check,
+                fact,
+                &format!("real-sequence completeness requirement {index}"),
+            )?;
+        }
+        self.construct_lean_proof_from_direct_fact_result_using_its_well_definedness(
+            membership_check,
+        )?
+        .ok_or_else(|| {
+            "real-sequence membership requirement has no proof-producing consumer".to_string()
+        })?;
+        let cauchy_proof = self
+            .construct_lean_proof_from_direct_fact_result_using_its_well_definedness(cauchy_check)?
+            .ok_or_else(|| {
+                "real-sequence Cauchy requirement has no proof-producing consumer".to_string()
+            })?;
+
+        let [conclusion] = verification.direct_conclusions.as_slice() else {
+            unreachable!("direct conclusion arity checked above")
+        };
+        let Fact::AtomicFact(AtomicFact::NormalAtomicFact(cauchy_fact)) =
+            &source.requirement_facts[1]
+        else {
+            return Err("real-sequence Cauchy requirement changed fact family".into());
+        };
+        let Fact::AtomicFact(AtomicFact::NormalAtomicFact(convergent_fact)) = conclusion else {
+            return Err("real-sequence completeness conclusion changed fact family".into());
+        };
+        if cauchy_fact.body.len() != 1
+            || convergent_fact.body.len() != 1
+            || obj_equality_key(&cauchy_fact.body[0])
+                != obj_equality_key(&verification.arguments[0])
+            || obj_equality_key(&convergent_fact.body[0])
+                != obj_equality_key(&verification.arguments[0])
+        {
+            return Err("real-sequence completeness changed its predicate arguments".into());
+        }
+        let cauchy_binding = self
+            .environment_stack
+            .predicate_bindings
+            .get(&cauchy_fact.predicate.to_string())
+            .cloned()
+            .ok_or_else(|| "checked Cauchy predicate is unavailable to the compiler".to_string())?;
+        let convergent_binding = self
+            .environment_stack
+            .predicate_bindings
+            .get(&convergent_fact.predicate.to_string())
+            .cloned()
+            .ok_or_else(|| {
+                "checked convergent predicate is unavailable to the compiler".to_string()
+            })?;
+        let Some(cauchy_definition) = &cauchy_binding.definition else {
+            return Err("checked Cauchy predicate lost its concrete definition".into());
+        };
+        let Some(convergent_definition) = &convergent_binding.definition else {
+            return Err("checked convergent predicate lost its concrete definition".into());
+        };
+        if !matches!(
+            checked_real_sequence_definition_kind(cauchy_definition),
+            Some(CheckedRealSequenceDefinitionKind::Cauchy)
+        ) || !matches!(
+            checked_real_sequence_definition_kind(convergent_definition),
+            Some(CheckedRealSequenceDefinitionKind::Convergent)
+        ) || !cauchy_binding.dependent_parameter_evidence
+            || !convergent_binding.dependent_parameter_evidence
+        {
+            return Err(
+                "real-sequence completeness predicates lost their checked source contracts".into(),
+            );
+        }
+        let argument = render_obj(&verification.arguments[0], &self.environment_stack)?;
+        let proposition = self
+            .render_fact_using_well_definedness_result(conclusion_well_definedness, conclusion)?;
+        let proof_expression = format!(
+            "(by\n  have __cauchy := {cauchy_proof}\n  unfold {} at __cauchy\n  rcases __cauchy with \u{27e8}__sequence_in, __native_cauchy\u{27e9}\n  unfold {}\n  exact \u{27e8}__sequence_in, Litex.Rules.realCauchySequenceConverges (Litex.In.rep {argument} __sequence_in) __native_cauchy\u{27e9})",
+            cauchy_binding.lean_name,
+            convergent_binding.lean_name,
+        );
+        if result.common.infers.store_fact_outputs.len() != 1
+            || result
+                .common
+                .infers
+                .rule_applications
+                .iter()
+                .any(|application| !defined_predicate_infer_rule(&application.rule))
+        {
+            return Err("real-sequence completeness changed its publication effects".into());
+        }
+        let store = &result.common.infers.store_fact_outputs[0];
+        if store.itself_and_why_itself_is_stored.0.to_string() != conclusion.to_string()
+            || store.inferred_facts.len() != store.inferred_fact_ids.len()
+        {
+            return Err("real-sequence completeness changed its conclusion store".into());
+        }
+        Ok(Some(CompiledLitexTheoremInstantiationConclusionProofBody {
+            retained_fact_id: store.fact_id,
+            fact: conclusion.clone(),
+            proposition,
+            proof_expression,
+        }))
+    }
+
+    fn compile_literal_cartesian_membership_infer_result_as_top_level_declarations(
+        &mut self,
+        requirement_check: &SuccessFactStmtResult,
+        source_fact: &Fact,
+        source_fact_id: FactId,
+        infers: &SuccessInferResult,
+    ) -> Result<(), String> {
+        let SuccessFactProofResult::BuiltinRule(builtin) = requirement_check.proof() else {
+            return Err("literal cart membership lost its builtin proof Result".into());
+        };
+        let Some(BuiltinRuleEvidence::TupleCartesianMembership(evidence)) =
+            builtin.evidence.typed()
+        else {
+            return Err("literal cart membership lost its typed coordinate evidence".into());
+        };
+        let Some(coordinate_proofs) = self
+            .construct_lean_tuple_cartesian_coordinate_proofs_from_result(
+                evidence,
+                &builtin.subgoals,
+            )?
+        else {
+            return Err("literal cart membership coordinate proof has no direct consumer".into());
+        };
+        let Fact::AtomicFact(AtomicFact::InFact(source_membership)) = source_fact else {
+            return Err("literal cart inference source is not membership".into());
+        };
+        let (Obj::Tuple(tuple), Obj::Cart(cart)) =
+            (&source_membership.element, &source_membership.set)
+        else {
+            return Err("literal cart inference source retained nonliteral operands".into());
+        };
+        let coordinate_count = tuple.args.len();
+        if coordinate_count != cart.args.len()
+            || coordinate_count != coordinate_proofs.len()
+            || infers.rule_applications.len() != coordinate_count + 2
+        {
+            return Err("literal cart inference changed its projection arity".into());
+        }
+
+        for (application_index, application) in infers.rule_applications.iter().enumerate() {
+            let [premise] = application.premises.as_slice() else {
+                return Err(format!(
+                    "literal cart projection {application_index} must cite one premise"
+                ));
+            };
+            if premise.fact_id != Some(source_fact_id)
+                || premise.fact.to_string() != source_fact.to_string()
+            {
+                return Err(format!(
+                    "literal cart projection {application_index} changed its source FactId"
+                ));
+            }
+            let [conclusion] = application.conclusions.as_slice() else {
+                return Err(format!(
+                    "literal cart projection {application_index} must retain one conclusion"
+                ));
+            };
+            let conclusion_fact_id = conclusion.fact_id.ok_or_else(|| {
+                format!("literal cart projection {application_index} has no FactId")
+            })?;
+            let (expected_fact, expected_projection, proof) = if application_index == 0 {
+                let rendered_tuple =
+                    render_obj(&source_membership.element, &self.environment_stack)?;
+                (
+                    Fact::from(IsTupleFact::new(
+                        source_membership.element.clone(),
+                        default_line_file(),
+                    )),
+                    CartesianMembershipProjectionKind::TupleShape,
+                    format!("Litex.tupleShape_isTuple {rendered_tuple}"),
+                )
+            } else if application_index == 1 {
+                (
+                    Fact::from(EqualFact::new(
+                        TupleDim::new(source_membership.element.clone()).into(),
+                        Number::new(coordinate_count.to_string()).into(),
+                        default_line_file(),
+                    )),
+                    CartesianMembershipProjectionKind::TupleDimension,
+                    "Litex.Same.ofEq (by norm_num [Litex.tupleDim, Litex.TupleShape.dimension])"
+                        .to_string(),
+                )
+            } else {
+                let coordinate_index = application_index - 2;
+                (
+                    evidence.expected_coordinate_memberships[coordinate_index].clone(),
+                    CartesianMembershipProjectionKind::Coordinate {
+                        index: coordinate_index,
+                    },
+                    coordinate_proofs[coordinate_index].clone(),
+                )
+            };
+            let InferRule::CartesianMembershipProjection(rule) = &application.rule else {
+                return Err(format!(
+                    "literal cart projection {application_index} lost its typed rule"
+                ));
+            };
+            if rule.coordinate_count != coordinate_count
+                || rule.projection != expected_projection
+                || conclusion.fact.to_string() != expected_fact.to_string()
+            {
+                return Err(format!(
+                    "literal cart projection {application_index} changed its typed target"
+                ));
+            }
+
+            if self
+                .environment_stack
+                .fact_propositions
+                .contains_key(&conclusion_fact_id)
+            {
+                resolve_fact_citation(
+                    &conclusion_fact_id,
+                    &conclusion.fact,
+                    &self.environment_stack,
+                )?;
+                continue;
+            }
+            if !infer_result_retains_fact_id(infers, &conclusion.fact, conclusion_fact_id) {
+                return Err(format!(
+                    "literal cart projection {application_index} is absent from its flattened store effects"
+                ));
+            }
+            let proposition = render_fact(&conclusion.fact, &self.environment_stack)?;
+            let theorem_name = format!("__fact{}", self.next_fact_name_index);
+            self.declarations.push(format!(
+                "theorem {theorem_name} : {proposition} := by\n  exact {proof}"
+            ));
+            self.environment_stack
+                .fact_names
+                .insert(conclusion_fact_id, theorem_name);
+            self.environment_stack
+                .fact_propositions
+                .insert(conclusion_fact_id, conclusion.fact.clone());
+            self.next_fact_name_index += 1;
+        }
+        validate_flattened_inferred_fact_ids_are_visible(
+            infers,
+            &self.environment_stack,
+            "literal cart membership inference",
+        )
+    }
+
+    /// `Combine`: replay one theorem application in a child compiler scope,
+    /// prove the selected atomic consequence from those exact temporary
+    /// FactIds, and publish only the parent store owned by `by thm`.
+    pub(super) fn compile_by_theorem_selection_stmt_result_to_lean_source(
+        &mut self,
+        result: &SuccessByThmStmtResult,
+    ) -> Result<bool, String> {
+        let Some(body) = self.construct_lean_proof_from_by_theorem_selection_stmt_result(result)?
+        else {
+            return Ok(false);
+        };
+        let theorem_name = format!("__fact{}", self.next_fact_name_index);
+        self.declarations.push(format!(
+            "theorem {theorem_name} : {} := by\n{}",
+            body.proposition,
+            indent_lines(&body.proof_lines.join("\n"), 2)
+        ));
+        self.environment_stack
+            .fact_names
+            .insert(body.retained_fact_id, theorem_name);
+        self.environment_stack
+            .fact_propositions
+            .insert(body.retained_fact_id, body.fact);
+        self.next_fact_name_index += 1;
+        self.compile_defined_predicate_inference_results_in_current_environment(
+            &result.common.infers,
+            DefinedPredicateInferenceConclusionPublication::PersistentLeanTheorem,
+        )?;
+        validate_flattened_inferred_fact_ids_are_visible(
+            &result.common.infers,
+            &self.environment_stack,
+            "by-thm selected parent fact",
+        )?;
+        Ok(true)
+    }
+
+    fn construct_lean_proof_from_by_theorem_selection_stmt_result(
+        &mut self,
+        result: &SuccessByThmStmtResult,
+    ) -> Result<Option<CompiledByTheoremSelectionProofBody>, String> {
+        let Some(verification) = &result.verification else {
+            return Ok(None);
+        };
+        if verification.selected_fact.to_string() != result.statement.selected_fact.to_string() {
+            return Err("by-thm Result changed its selected fact".into());
+        }
+        let StmtResult::Success(SuccessStmtResult::ReleaseThmStmt(application)) =
+            verification.temporary_application.as_ref()
+        else {
+            return Err("by-thm Result did not retain a temporary release-thm statement".into());
+        };
+        if application.statement.name.to_string() != result.statement.name.to_string()
+            || application.statement.args.len() != result.statement.args.len()
+            || application
+                .statement
+                .args
+                .iter()
+                .zip(result.statement.args.iter())
+                .any(|(actual, expected)| obj_equality_key(actual) != obj_equality_key(expected))
+        {
+            return Err("by-thm temporary application changed its theorem or arguments".into());
+        }
+
+        self.environment_stack.push_inherited_environment();
+        let compilation = (|| {
+            let Some(mut proof_lines) = self
+                .compile_stmt_result_as_local_proof_steps(&verification.temporary_application, 1)?
+            else {
+                return Ok(None);
+            };
+            let selected_check = verification
+                .selected_fact_check
+                .factual_success()
+                .ok_or_else(|| "by-thm selected-fact check is not factual".to_string())?;
+            let selected_fact: Fact = verification.selected_fact.clone().into();
+            if selected_check.fact().to_string() != selected_fact.to_string()
+                || !selected_check.store.infers.is_empty()
+            {
+                return Err("by-thm selected-fact check changed its target or effects".into());
+            }
+            let Some(selected_proof) =
+                self.construct_lean_proof_from_direct_fact_result(selected_check)?
+            else {
+                return Ok(None);
+            };
+            proof_lines.push(format!("exact {selected_proof}"));
+            let proposition = render_fact(&selected_fact, &self.environment_stack)?;
+            let retained_fact_id = if result.common.infers.rule_applications.is_empty() {
+                validate_generated_fact_publication_effects(
+                    &result.common.infers,
+                    &selected_fact,
+                    "by-thm selected parent fact",
+                )?
+            } else {
+                validate_defined_predicate_fact_publication_effects(
+                    &result.common.infers,
+                    &selected_fact,
+                    "by-thm selected parent fact",
+                )?
+            };
+            Ok(Some(CompiledByTheoremSelectionProofBody {
+                fact: selected_fact,
+                retained_fact_id,
+                proposition,
+                proof_lines,
+            }))
+        })();
+        self.environment_stack.pop_local_environment();
+        compilation
+    }
+
     /// `Combine`: construct the exact ordered theorem conclusions without
     /// publishing them into the caller's compiler environment. The enclosing
     /// statement decides whether those Result-owned FactIds become visible or
@@ -1152,27 +1769,21 @@ impl StmtResultToLeanCompiler {
         let Some(verification) = &result.verification else {
             return Ok(None);
         };
-        if verification.theorem_source != "litex"
-            || verification.mode != "release_all"
-            || verification.selected_fact.is_some()
-            || !verification.temporary_then_facts.is_empty()
-            || !verification.requirement_roles.is_empty()
-            || !verification.requirement_checks.is_empty()
-        {
+        let SuccessVerifyTheoremApplicationSourceResult::Litex(source) = &verification.source
+        else {
             return Ok(None);
-        }
+        };
         if verification.theorem != result.statement.name.to_string()
-            || verification.arguments
-                != result
-                    .statement
-                    .args
-                    .iter()
-                    .map(ToString::to_string)
-                    .collect::<Vec<_>>()
+            || verification.arguments.len() != result.statement.args.len()
+            || verification
+                .arguments
+                .iter()
+                .zip(result.statement.args.iter())
+                .any(|(retained, source)| obj_equality_key(retained) != obj_equality_key(source))
         {
             return Err("release-thm Result changed its theorem name or argument order".into());
         }
-        let source_fact_id = verification
+        let source_fact_id = source
             .source_fact_id
             .ok_or_else(|| "release-thm Result has no source theorem FactId".to_string())?;
         let source_fact = self
@@ -1195,8 +1806,8 @@ impl StmtResultToLeanCompiler {
             return Ok(None);
         }
         if source_parameters.len() != result.statement.args.len()
-            || source_forall.dom_facts.len() != verification.domain_facts.len()
-            || verification.domain_facts.len() != verification.domain_checks.len()
+            || source_forall.dom_facts.len() != source.domain_facts.len()
+            || source.domain_facts.len() != source.domain_checks.len()
             || source_forall.then_facts.len() != verification.direct_conclusions.len()
             || verification.direct_conclusions.is_empty()
         {
@@ -1207,7 +1818,7 @@ impl StmtResultToLeanCompiler {
             .zip(result.statement.args.iter())
             .map(|((binding, _), argument)| (binding.id().substitution_key(), argument.clone()))
             .collect::<HashMap<_, _>>();
-        let Some(argument_verification) = &verification.argument_verification else {
+        let Some(argument_verification) = &source.argument_verification else {
             return Err("release-thm Result has no argument verification children".into());
         };
         if !argument_verification.infers.is_empty()
@@ -1216,16 +1827,6 @@ impl StmtResultToLeanCompiler {
             return Ok(None);
         }
 
-        let direct_conclusion_strings = verification
-            .direct_conclusions
-            .iter()
-            .map(ToString::to_string)
-            .collect::<Vec<_>>();
-        if verification.stored_then_facts != direct_conclusion_strings
-            || verification.parent_stored_facts != direct_conclusion_strings
-        {
-            return Err("release-thm Result changed its direct conclusion order".into());
-        }
         if result
             .common
             .infers
@@ -1326,8 +1927,8 @@ impl StmtResultToLeanCompiler {
         for (domain_index, ((source_domain, retained_domain), check)) in source_forall
             .dom_facts
             .iter()
-            .zip(verification.domain_facts.iter())
-            .zip(verification.domain_checks.iter())
+            .zip(source.domain_facts.iter())
+            .zip(source.domain_checks.iter())
             .enumerate()
         {
             let expected_domain = instantiator
@@ -1657,9 +2258,17 @@ impl StmtResultToLeanCompiler {
                 .map(|line| line.map(|line| vec![line]));
         }
         if let StmtResult::Success(SuccessStmtResult::ReleaseThmStmt(result)) = result {
-            let Some(conclusions) =
+            let mut real_completeness = false;
+            let conclusions = if let Some(conclusions) =
                 self.construct_lean_proofs_from_litex_theorem_instantiation_stmt_result(result)?
-            else {
+            {
+                conclusions
+            } else if let Some(conclusion) =
+                self.construct_lean_proof_from_real_cauchy_sequence_completeness_result(result)?
+            {
+                real_completeness = true;
+                vec![conclusion]
+            } else {
                 return Ok(None);
             };
             let multiple_outputs = conclusions.len() > 1;
@@ -1687,9 +2296,48 @@ impl StmtResultToLeanCompiler {
                     conclusion.proposition, conclusion.proof_expression
                 ));
             }
+            if real_completeness {
+                self.compile_defined_predicate_inference_results_in_current_environment(
+                    &result.common.infers,
+                    DefinedPredicateInferenceConclusionPublication::LocalProofExpression,
+                )?;
+                validate_flattened_inferred_fact_ids_are_visible(
+                    &result.common.infers,
+                    &self.environment_stack,
+                    "local real-sequence completeness Result",
+                )?;
+            }
             return Ok(Some(lines));
         }
         if let StmtResult::Success(SuccessStmtResult::By(by_result)) = result {
+            if let SuccessByStmtResult::ByThmStmt(result) = by_result {
+                let Some(body) =
+                    self.construct_lean_proof_from_by_theorem_selection_stmt_result(result)?
+                else {
+                    return Ok(None);
+                };
+                let name = format!("__step{proof_step_index}");
+                self.environment_stack
+                    .fact_names
+                    .insert(body.retained_fact_id, name.clone());
+                self.environment_stack
+                    .fact_propositions
+                    .insert(body.retained_fact_id, body.fact);
+                self.compile_defined_predicate_inference_results_in_current_environment(
+                    &result.common.infers,
+                    DefinedPredicateInferenceConclusionPublication::LocalProofExpression,
+                )?;
+                validate_flattened_inferred_fact_ids_are_visible(
+                    &result.common.infers,
+                    &self.environment_stack,
+                    "local by-thm selected parent fact",
+                )?;
+                return Ok(Some(vec![format!(
+                    "have {name} : {} := by\n{}",
+                    body.proposition,
+                    indent_lines(&body.proof_lines.join("\n"), 2)
+                )]));
+            }
             if let SuccessByStmtResult::ByDefStmt(result) = by_result {
                 return self.compile_by_definition_stmt_result_as_local_proof_steps(
                     result,
@@ -2102,5 +2750,52 @@ impl StmtResultToLeanCompiler {
             inference_compilation?;
         }
         Ok(Some(lines.join("\n")))
+    }
+}
+
+fn builtin_theorem_requirement_roles(
+    theorem_id: BuiltinTheoremId,
+) -> Vec<BuiltinTheoremRequirementRole> {
+    use BuiltinTheoremRequirementRole as Role;
+    match theorem_id {
+        BuiltinTheoremId::SubsetOfFiniteSetIsFinite => vec![
+            Role::FirstArgumentIsSet,
+            Role::SecondArgumentIsFiniteSet,
+            Role::FirstArgumentSubsetOfSecond,
+        ],
+        BuiltinTheoremId::FiniteSetHasBijectiveIndex => vec![Role::ArgumentIsFiniteSet],
+        BuiltinTheoremId::RationalHasUniqueReducedFraction => {
+            vec![Role::ArgumentBelongsToRationals]
+        }
+        BuiltinTheoremId::FunctionSetMember => vec![Role::FunctionSignatureMatchesTarget],
+        BuiltinTheoremId::SetBuilderMember => vec![Role::SetBuilderDefiningFacts],
+        BuiltinTheoremId::DefinedSetMember => vec![Role::DefinedSetMembership],
+        BuiltinTheoremId::StructMember => vec![Role::StructCarrierFacts],
+        BuiltinTheoremId::CartesianMemberFromCoordinates => vec![Role::CartesianCoordinates],
+        BuiltinTheoremId::GeneralCartesianMember => {
+            vec![Role::GeneralCartesianPointwiseMembership]
+        }
+        BuiltinTheoremId::GeneralCartesianNonemptyByChoiceFromFamily => {
+            vec![Role::GeneralCartesianFamilyNonempty]
+        }
+        BuiltinTheoremId::GeneralCartesianNonemptyByChoiceFromPointwise => {
+            vec![Role::GeneralCartesianPointwiseNonempty]
+        }
+        BuiltinTheoremId::SumLessEqualFromPointwise => vec![Role::IntegerSumPointwiseOrder],
+        BuiltinTheoremId::FiniteSetSumLessEqualFromPointwise => {
+            vec![Role::FiniteSetSumPointwiseOrder]
+        }
+        BuiltinTheoremId::FiniteSetSummandLessEqualSum => {
+            vec![Role::FiniteSetSummandNonnegative]
+        }
+        BuiltinTheoremId::TupleEqualFromCoordinates => vec![Role::TupleCoordinatesEqual],
+        BuiltinTheoremId::FiniteSetSumSubstitution => vec![Role::FiniteSetSumSubstitution],
+        BuiltinTheoremId::SumOverBijectiveFiniteSetEnumerations => {
+            vec![Role::BijectiveFiniteSetEnumerations]
+        }
+        BuiltinTheoremId::RealCauchySequenceConverges => vec![
+            Role::ArgumentIsRealSequence,
+            Role::SequenceSatisfiesCauchyDefinition,
+        ],
     }
 }

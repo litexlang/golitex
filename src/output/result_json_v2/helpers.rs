@@ -373,67 +373,13 @@ pub(super) fn by_induc_case_value(
 ) -> JsonValue {
     object(vec![
         string_field("kind", "SuccessVerifyByInducCaseResult"),
-        ("assumptions".to_string(), string_pairs(&result.assumptions)),
-        (
-            "proof_steps".to_string(),
-            renderer.stmt_results(&result.proof_steps),
-        ),
-        (
-            "conclusion_checks".to_string(),
-            renderer.stmt_results(&result.conclusion_checks),
-        ),
-    ])
-}
-
-pub(super) fn structured_integer_induc_case_value(
-    renderer: &mut StmtResultJsonV2,
-    result: &SuccessVerifyByStructuredIntegerInducCaseResult,
-) -> JsonValue {
-    object(vec![
-        string_field(
-            "kind",
-            "SuccessVerifyByStructuredIntegerInducCaseResult",
-        ),
         (
             "assumptions".to_string(),
             array(
                 result
                     .assumptions
                     .iter()
-                    .map(|assumption| {
-                        object(vec![
-                            string_field("kind", "SuccessVerifyByInducAssumptionResult"),
-                            string_field("fact", assumption.fact.to_string()),
-                            string_field("fact_id", assumption.fact_id.to_string()),
-                            string_field(
-                                "role",
-                                match assumption.role {
-                                    SuccessVerifyByInducAssumptionRole::ParameterType => {
-                                        "ParameterType"
-                                    }
-                                    SuccessVerifyByInducAssumptionRole::BaseCaseEquality => {
-                                        "BaseCaseEquality"
-                                    }
-                                    SuccessVerifyByInducAssumptionRole::DomainLowerBound => {
-                                        "DomainLowerBound"
-                                    }
-                                    SuccessVerifyByInducAssumptionRole::InductionHypothesis => {
-                                        "InductionHypothesis"
-                                    }
-                                    SuccessVerifyByInducAssumptionRole::StrongInductionHypothesis => {
-                                        "StrongInductionHypothesis"
-                                    }
-                                },
-                            ),
-                            (
-                                "goal_index".to_string(),
-                                assumption
-                                    .goal_index
-                                    .map(JsonValue::Number)
-                                    .unwrap_or(JsonValue::Null),
-                            ),
-                        ])
-                    })
+                    .map(induc_assumption_value)
                     .collect(),
             ),
         ),
@@ -455,10 +401,81 @@ pub(super) fn structured_integer_induc_case_value(
                         object(vec![
                             string_field("kind", "SuccessVerifyByInducConclusionResult"),
                             string_field("goal", conclusion.goal.to_string()),
-                            (
-                                "check".to_string(),
-                                renderer.stmt_result(&conclusion.check),
-                            ),
+                            ("check".to_string(), renderer.stmt_result(&conclusion.check)),
+                        ])
+                    })
+                    .collect(),
+            ),
+        ),
+    ])
+}
+
+fn induc_assumption_value(assumption: &SuccessVerifyByInducAssumptionResult) -> JsonValue {
+    object(vec![
+        string_field("kind", "SuccessVerifyByInducAssumptionResult"),
+        string_field("fact", assumption.fact.to_string()),
+        string_field("fact_id", assumption.fact_id.to_string()),
+        string_field(
+            "role",
+            match assumption.role {
+                SuccessVerifyByInducAssumptionRole::ParameterType => "ParameterType",
+                SuccessVerifyByInducAssumptionRole::BaseCaseEquality => "BaseCaseEquality",
+                SuccessVerifyByInducAssumptionRole::DomainLowerBound => "DomainLowerBound",
+                SuccessVerifyByInducAssumptionRole::CarrierConstraint => "CarrierConstraint",
+                SuccessVerifyByInducAssumptionRole::FreshInsertionElement => {
+                    "FreshInsertionElement"
+                }
+                SuccessVerifyByInducAssumptionRole::InductionHypothesis => "InductionHypothesis",
+                SuccessVerifyByInducAssumptionRole::StrongInductionHypothesis => {
+                    "StrongInductionHypothesis"
+                }
+            },
+        ),
+        (
+            "goal_index".to_string(),
+            assumption
+                .goal_index
+                .map(JsonValue::Number)
+                .unwrap_or(JsonValue::Null),
+        ),
+    ])
+}
+
+pub(super) fn structured_integer_induc_case_value(
+    renderer: &mut StmtResultJsonV2,
+    result: &SuccessVerifyByStructuredIntegerInducCaseResult,
+) -> JsonValue {
+    object(vec![
+        string_field("kind", "SuccessVerifyByStructuredIntegerInducCaseResult"),
+        (
+            "assumptions".to_string(),
+            array(
+                result
+                    .assumptions
+                    .iter()
+                    .map(induc_assumption_value)
+                    .collect(),
+            ),
+        ),
+        (
+            "assumption_infers".to_string(),
+            infer_result_value(&result.assumption_infers),
+        ),
+        (
+            "proof_steps".to_string(),
+            renderer.stmt_results(&result.proof_steps),
+        ),
+        (
+            "conclusions".to_string(),
+            array(
+                result
+                    .conclusions
+                    .iter()
+                    .map(|conclusion| {
+                        object(vec![
+                            string_field("kind", "SuccessVerifyByInducConclusionResult"),
+                            string_field("goal", conclusion.goal.to_string()),
+                            ("check".to_string(), renderer.stmt_result(&conclusion.check)),
                         ])
                     })
                     .collect(),
@@ -534,10 +551,37 @@ pub(super) fn by_choice_verification_value(
     renderer: &mut StmtResultJsonV2,
     result: &SuccessVerifyByChoiceResult,
 ) -> JsonValue {
+    let proof_type = match result.proof_kind {
+        SuccessVerifyByChoiceProofKind::AxiomOfChoice => "by axiom_of_choice proof",
+        SuccessVerifyByChoiceProofKind::ZornLemma => "by zorn_lemma proof",
+        SuccessVerifyByChoiceProofKind::RegularityAxiom => "by regularity_axiom proof",
+    };
+    let target = match &result.target {
+        SuccessVerifyByChoiceTargetResult::AxiomOfChoice { family } => object(vec![
+            string_field("kind", "AxiomOfChoice"),
+            string_field("family", family.to_string()),
+        ]),
+        SuccessVerifyByChoiceTargetResult::ZornLemma {
+            set,
+            relation,
+            upper_bound,
+            maximal,
+        } => object(vec![
+            string_field("kind", "ZornLemma"),
+            string_field("set", set.to_string()),
+            string_field("relation", relation.to_string()),
+            string_field("upper_bound", upper_bound.to_string()),
+            string_field("maximal", maximal.to_string()),
+        ]),
+        SuccessVerifyByChoiceTargetResult::RegularityAxiom { set } => object(vec![
+            string_field("kind", "RegularityAxiom"),
+            string_field("set", set.to_string()),
+        ]),
+    };
     object(vec![
         string_field("kind", "SuccessVerifyByChoiceResult"),
-        string_field("proof_type", result.proof_type.clone()),
-        string_field("target", result.target.clone()),
+        string_field("proof_type", proof_type),
+        ("target".to_string(), target),
         (
             "proof_steps".to_string(),
             renderer.stmt_results(&result.proof_steps),
@@ -550,8 +594,35 @@ pub(super) fn by_choice_verification_value(
                     .iter()
                     .map(|obligation| {
                         object(vec![
-                            string_field("role", obligation.role.clone()),
-                            string_field("statement", obligation.fact.clone()),
+                            string_field(
+                                "role",
+                                match obligation.role {
+                                    SuccessVerifyByChoiceObligationRole::ChoiceFamilyIsSet => {
+                                        "family_is_set"
+                                    }
+                                    SuccessVerifyByChoiceObligationRole::ChoiceMembersNonempty => {
+                                        "members_nonempty"
+                                    }
+                                    SuccessVerifyByChoiceObligationRole::ZornNonempty
+                                    | SuccessVerifyByChoiceObligationRole::RegularityNonempty => {
+                                        "nonempty"
+                                    }
+                                    SuccessVerifyByChoiceObligationRole::ZornReflexive => {
+                                        "reflexive"
+                                    }
+                                    SuccessVerifyByChoiceObligationRole::ZornTransitive => {
+                                        "transitive"
+                                    }
+                                    SuccessVerifyByChoiceObligationRole::ZornAntisymmetric => {
+                                        "antisymmetric"
+                                    }
+                                    SuccessVerifyByChoiceObligationRole::ZornChainUpperBound => {
+                                        "chain_upper_bound"
+                                    }
+                                },
+                            ),
+                            string_field("statement", obligation.fact.to_string()),
+                            string_field("fact_id", obligation.fact_id.to_string()),
                             (
                                 "check".to_string(),
                                 obligation
@@ -565,7 +636,11 @@ pub(super) fn by_choice_verification_value(
                     .collect(),
             ),
         ),
-        string_field("trusted_conclusion", result.trusted_conclusion.clone()),
+        string_field("trusted_conclusion", result.trusted_conclusion.to_string()),
+        string_field(
+            "trusted_conclusion_fact_id",
+            result.trusted_conclusion_fact_id.to_string(),
+        ),
     ])
 }
 
@@ -582,17 +657,78 @@ pub(super) fn theorem_application_verification_value(
     renderer: &mut StmtResultJsonV2,
     result: &SuccessVerifyTheoremApplicationResult,
 ) -> JsonValue {
+    let arguments = result
+        .arguments
+        .iter()
+        .map(ToString::to_string)
+        .collect::<Vec<_>>();
+    let direct_conclusions = result
+        .direct_conclusions
+        .iter()
+        .map(ToString::to_string)
+        .collect::<Vec<_>>();
+    let (
+        theorem_source,
+        source_fact_id,
+        domain_facts,
+        requirement_roles,
+        argument_verification,
+        requirement_checks,
+        domain_checks,
+        conclusion_well_definedness,
+        provenance,
+    ) = match &result.source {
+        SuccessVerifyTheoremApplicationSourceResult::Litex(source) => (
+            "litex",
+            source.source_fact_id,
+            source
+                .domain_facts
+                .iter()
+                .map(ToString::to_string)
+                .collect::<Vec<_>>(),
+            Vec::new(),
+            source.argument_verification.as_deref(),
+            &[][..],
+            source.domain_checks.as_slice(),
+            JsonValue::Null,
+            None,
+        ),
+        SuccessVerifyTheoremApplicationSourceResult::Builtin(source) => (
+            "builtin_rule",
+            None,
+            source
+                .requirement_facts
+                .iter()
+                .map(ToString::to_string)
+                .collect::<Vec<_>>(),
+            source
+                .requirement_roles
+                .iter()
+                .map(|role| role.as_str().to_string())
+                .collect::<Vec<_>>(),
+            None,
+            source.requirement_checks.as_slice(),
+            &[][..],
+            source
+                .conclusion_well_definedness
+                .as_ref()
+                .map(|well_definedness| renderer.fact_well_definedness(well_definedness))
+                .unwrap_or(JsonValue::Null),
+            source.provenance.map(BuiltinTheoremProvenance::as_str),
+        ),
+    };
     object(vec![
         string_field("kind", "SuccessVerifyByTheoremResult"),
         string_field("theorem", result.theorem.clone()),
-        string_field("theorem_source", result.theorem_source.clone()),
-        optional_fact_id_field("source_fact_id", result.source_fact_id),
-        string_field("mode", result.mode.clone()),
-        ("arguments".to_string(), strings(&result.arguments)),
-        ("domain_facts".to_string(), strings(&result.domain_facts)),
+        string_field("theorem_source", theorem_source),
+        optional_fact_id_field("source_fact_id", source_fact_id),
+        string_field("mode", "release_all"),
+        ("arguments".to_string(), strings(&arguments)),
+        ("domain_facts".to_string(), strings(&domain_facts)),
+        ("requirement_roles".to_string(), strings(&requirement_roles)),
         (
-            "requirement_roles".to_string(),
-            strings(&result.requirement_roles),
+            "conclusion_well_definedness".to_string(),
+            conclusion_well_definedness,
         ),
         (
             "direct_conclusions".to_string(),
@@ -600,23 +736,18 @@ pub(super) fn theorem_application_verification_value(
         ),
         (
             "stored_then_facts".to_string(),
-            strings(&result.stored_then_facts),
+            strings(&direct_conclusions),
         ),
-        (
-            "temporary_then_facts".to_string(),
-            strings(&result.temporary_then_facts),
-        ),
-        optional_string_field("selected_fact", result.selected_fact.as_deref()),
+        ("temporary_then_facts".to_string(), strings(&[])),
+        optional_string_field("selected_fact", None),
         (
             "parent_stored_facts".to_string(),
-            strings(&result.parent_stored_facts),
+            strings(&direct_conclusions),
         ),
-        optional_string_field("provenance", result.provenance.as_deref()),
+        optional_string_field("provenance", provenance),
         (
             "argument_verification".to_string(),
-            result
-                .argument_verification
-                .as_ref()
+            argument_verification
                 .map(|verification| {
                     args_satisfy_param_def_verification_value(renderer, verification)
                 })
@@ -624,19 +755,30 @@ pub(super) fn theorem_application_verification_value(
         ),
         (
             "requirement_checks".to_string(),
-            renderer.stmt_results(&result.requirement_checks),
+            renderer.stmt_results(requirement_checks),
         ),
         (
             "domain_checks".to_string(),
-            renderer.stmt_results(&result.domain_checks),
+            renderer.stmt_results(domain_checks),
         ),
+        ("selected_fact_check".to_string(), JsonValue::Null),
+    ])
+}
+
+pub(super) fn theorem_selection_verification_value(
+    renderer: &mut StmtResultJsonV2,
+    result: &SuccessVerifyByTheoremSelectionResult,
+) -> JsonValue {
+    object(vec![
+        string_field("kind", "SuccessVerifyByTheoremSelectionResult"),
+        (
+            "temporary_application".to_string(),
+            renderer.stmt_result(&result.temporary_application),
+        ),
+        string_field("selected_fact", result.selected_fact.to_string()),
         (
             "selected_fact_check".to_string(),
-            result
-                .selected_fact_check
-                .as_ref()
-                .map(|check| renderer.stmt_result(check))
-                .unwrap_or(JsonValue::Null),
+            renderer.stmt_result(&result.selected_fact_check),
         ),
     ])
 }
@@ -834,6 +976,7 @@ pub(super) fn infer_rule_application_value(
                 InferRule::TupleEqualityWithKnownTupleImpliesTupleShape(_) => {
                     "TupleEqualityWithKnownTupleImpliesTupleShape"
                 }
+                InferRule::CartesianMembershipProjection(_) => "CartesianMembershipProjection",
                 InferRule::ListSetMembershipImpliesEqualityAlternatives(_) => {
                     "ListSetMembershipImpliesEqualityAlternatives"
                 }
@@ -949,6 +1092,23 @@ pub(super) fn infer_rule_application_value(
             ),
         );
         fields.insert(2, number_field("tuple_length", rule.tuple_length));
+    }
+    if let InferRule::CartesianMembershipProjection(rule) = &result.rule {
+        fields.insert(1, number_field("coordinate_count", rule.coordinate_count));
+        fields.insert(
+            2,
+            string_field(
+                "projection",
+                match rule.projection {
+                    CartesianMembershipProjectionKind::TupleShape => "tuple_shape",
+                    CartesianMembershipProjectionKind::TupleDimension => "tuple_dimension",
+                    CartesianMembershipProjectionKind::Coordinate { .. } => "coordinate",
+                },
+            ),
+        );
+        if let CartesianMembershipProjectionKind::Coordinate { index } = rule.projection {
+            fields.insert(3, number_field("coordinate_index", index));
+        }
     }
     if let InferRule::ListSetMembershipImpliesEqualityAlternatives(rule) = &result.rule {
         fields.insert(1, number_field("element_count", rule.element_count));

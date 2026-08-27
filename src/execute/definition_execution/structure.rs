@@ -35,7 +35,7 @@ impl Runtime {
         &mut self,
         def_struct_stmt: &DefStructStmt,
     ) -> Result<(), RuntimeError> {
-        let verify_state = ProofSearchState::initial();
+        let verify_state = VerifyState::initial();
 
         if let Some((param_def_with_type, dom_facts)) = &def_struct_stmt.param_def_with_dom {
             self.define_params_with_type(param_def_with_type, false, BindingScope::LocalBinder)?;
@@ -76,7 +76,7 @@ impl Runtime {
         &mut self,
         def_struct_stmt: &DefStructStmt,
     ) -> Result<SuccessVerifyDefStructLocalEnvResult, RuntimeError> {
-        let verify_state = ProofSearchState::initial();
+        let verify_state = VerifyState::initial();
 
         let mut structure_parameter_definition = None;
         let mut structure_domains = Vec::new();
@@ -135,8 +135,8 @@ impl Runtime {
             let mut equivalent_facts = Vec::with_capacity(def_struct_stmt.equivalent_facts.len());
             for fact in def_struct_stmt.equivalent_facts.iter() {
                 let verify_state = match fact {
-                    Fact::ForallFact(_) | Fact::ForallFactWithIff(_) => ProofSearchState::initial(),
-                    _ => ProofSearchState::final_round(),
+                    Fact::ForallFact(_) | Fact::ForallFactWithIff(_) => VerifyState::initial(),
+                    _ => VerifyState::final_round(),
                 };
                 let well_definedness = rt.verify_fact_well_defined_result(fact, &verify_state)?;
                 let mut infers = rt

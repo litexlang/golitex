@@ -44,10 +44,10 @@ impl Runtime {
             Fact::ForallFact(forall_fact) => self
                 .verify_forall_fact_well_defined_and_collect_certificate(
                     forall_fact,
-                    &ProofSearchState::initial(),
+                    &VerifyState::initial(),
                 ),
             _ => self
-                .verify_fact_well_defined_result(fact, &ProofSearchState::initial())
+                .verify_fact_well_defined_result(fact, &VerifyState::initial())
                 .map(|result| (result, WellDefinednessEnvironmentDelta::new())),
         };
         verify_result.map_err(|error| {
@@ -80,7 +80,7 @@ impl Runtime {
                             let mut assumption_infers = rt
                                 .forall_assume_params_and_dom_in_current_env(
                                     forall_fact,
-                                    &ProofSearchState::initial(),
+                                    &VerifyState::initial(),
                                 )?;
                             let mut inside_results = Vec::new();
                             for (proof_index, proof_stmt) in proof.iter().enumerate() {
@@ -110,7 +110,7 @@ impl Runtime {
                                 prechecked_well_definedness,
                             )?;
                             let then_count = forall_fact.then_facts.len();
-                            let then_verify_state = ProofSearchState::after_well_definedness();
+                            let then_verify_state = VerifyState::after_well_definedness();
                             for (then_index, then_fact) in forall_fact.then_facts.iter().enumerate()
                             {
                                 let mut result = rt.verify_exist_or_and_chain_atomic_fact(
@@ -215,7 +215,7 @@ impl Runtime {
                         inside_results.push(rt.execute_statement(proof_stmt)?);
                     }
                     inside_results.push(
-                        rt.verify_fact_or_error(fact, &ProofSearchState::after_well_definedness())?,
+                        rt.verify_fact_or_error(fact, &VerifyState::after_well_definedness())?,
                     );
                     for result in inside_results.iter_mut() {
                         rt.attach_known_fact_ids_to_stmt_result(result)?;

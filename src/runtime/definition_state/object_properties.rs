@@ -204,7 +204,7 @@ impl Runtime {
     pub fn unfold_known_fn_application_once(
         &mut self,
         application: &Obj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<Option<Obj>, RuntimeError> {
         self.unfold_known_fn_application_once_impl(application, verify_state, true)
     }
@@ -215,7 +215,7 @@ impl Runtime {
     pub fn reduce_direct_known_fn_application_once(
         &mut self,
         application: &Obj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<Option<Obj>, RuntimeError> {
         self.unfold_known_fn_application_once_impl(application, verify_state, false)
     }
@@ -229,14 +229,14 @@ impl Runtime {
     ) -> Result<Option<Obj>, RuntimeError> {
         self.reduce_direct_known_fn_application_once(
             application,
-            &ProofSearchState::after_well_definedness(),
+            &VerifyState::after_well_definedness(),
         )
     }
 
     fn unfold_known_fn_application_once_impl(
         &mut self,
         application: &Obj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
         allow_indirect_lookup: bool,
     ) -> Result<Option<Obj>, RuntimeError> {
         let Obj::FnObj(fn_obj) = application else {
@@ -424,7 +424,7 @@ impl Runtime {
     pub fn unfold_known_fn_application_to_set_builder(
         &mut self,
         application: &Obj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<Option<SetBuilder>, RuntimeError> {
         const MAX_SET_BUILDER_UNFOLD_DEPTH: usize = 8;
 

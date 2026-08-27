@@ -24,7 +24,7 @@ run source `1 = 1`
 | Owner | State and concrete example |
 | --- | --- |
 | `Runtime` | Stored facts receive `f1`, then `f2`; popped local facts do not cause ID reuse. `-compact`, `-detail`, and `-strict` are run-wide configuration. Its `StatementProofStateStack` mirrors temporary environment scopes but is cleared between statements. |
-| `ExecutionFrame` | The active module/file and whether that source permits inline imports. Repository files default to no inline imports; isolated source and REPL frames opt in. |
+| `ExecutionFrame` | The active module/file, execution mode, and environment. Import permission is not source-frame state: every Litex source rejects `import`, while an interactive terminal may update its separate ephemeral module manifest before source parsing. |
 | `ParseContext` | Free binders and temporary struct/tuple views needed before the current statement executes. A source binder such as `a &Pair` can therefore parse later `a.left` syntax within the same recursive statement. |
 | `Environment` | Checked definitions, facts, and persistent mathematical caches. A stored `SymbolDefinition` owns its definition-time struct/tuple views, so exact `SymbolId` references keep working across exported files and imported modules. Child-environment merge commits this mathematical state; transient statement-proof cache entries and recursion guards are not part of the merge. |
 | `ModuleManager` | Repository/module lifecycle plus parse-only struct definitions and unverified-import diagnostics shared by files in that module world. |

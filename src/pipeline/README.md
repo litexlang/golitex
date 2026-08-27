@@ -6,11 +6,10 @@
 run(RunRequest { target, options })
   Runtime::new(output_style, strict_mode, output_language)
   match target: Code | File | Repository
-  Runtime::execute_source(source, import_policy)
+  Runtime::execute_source(source)
     Runtime::execute_source_blocks
     Tokenizer::parse_blocks
     Runtime::parse_statement
-    Runtime::execute_top_level_statement
     Runtime::execute_statement -> verify -> Result
   render output and optional summary once
 ```
@@ -38,7 +37,7 @@ or `module_manager` without first expanding the crate-wide prelude.
 | [`source_execution.rs`](source_execution.rs) | Tokenizes, parses, and executes source inside an already initialized Runtime. |
 | [`file_execution.rs`](file_execution.rs) | Resolves `-f`, discovers project context, and selects repository-prefix or isolated-file execution. |
 | [`output_rendering.rs`](output_rendering.rs) | Renders statement results, errors, and unverified-import warnings. |
-| [`top_level_statement_execution.rs`](top_level_statement_execution.rs) | Executes one parsed top-level statement and owns isolated terminal imports. |
+| [`terminal_import.rs`](terminal_import.rs) | Parses REPL-only `import` commands before source parsing and mutates the terminal's ephemeral module manifest. |
 | [`repository_execution.rs`](repository_execution.rs) | Runs ordered project imports, module trees, file targets, and registered prefixes. |
 | [`pipeline_session.rs`](pipeline_session.rs) | Keeps one runtime alive for `-session`. |
 | [`summary.rs`](summary.rs) | Builds the optional `-summarize` output. |

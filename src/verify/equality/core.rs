@@ -24,7 +24,7 @@ use crate::result::{
     SuccessFactStmtResult, SuccessTransformFactResult, UnknownGenericStmtResult,
 };
 use crate::runtime::Runtime;
-use crate::verify::{BuiltinRuleSearchState, ProofSearchState};
+use crate::verify::{BuiltinRuleSearchState, VerifyState};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum EqualitySide {
@@ -105,7 +105,7 @@ impl Runtime {
         // `f(y) $in {0}` generates `f(y) = 0`).  Preserve the checked
         // definition reduction as a real proof node here instead of letting
         // the terminating boolean comparator erase that evidence.
-        let after_parent_well_definedness = ProofSearchState::after_well_definedness();
+        let after_parent_well_definedness = VerifyState::after_well_definedness();
         for definition_side in EqualitySide::BOTH {
             let (application, _) = definition_side.select(equal_fact);
             if self
@@ -278,6 +278,13 @@ impl Runtime {
             )
             .into();
         }
+        // Resolving an equality-class representative can expose these abs
+        // identities, but their validity depends on a retained order premise.
+        // Let the bounded premise-producing phase emit the registered rule
+        // Result instead of reporting a premise-free diagnostic calculation.
+        if equal_fact_has_abs_sign_selection_shape(equal_fact) {
+            return UnknownGenericStmtResult::new().into();
+        }
         let left_resolved = self.resolve_obj(&equal_fact.left);
         let right_resolved = self.resolve_obj(&equal_fact.right);
         let reason = if equal_fact
@@ -327,7 +334,7 @@ impl Runtime {
         {
             if let Some(reduced) = self.reduce_direct_known_fn_application_once(
                 left,
-                &ProofSearchState::after_well_definedness(),
+                &VerifyState::after_well_definedness(),
             )? {
                 reductions.push(NestedCheckedFunctionDefinitionReductionEvidence {
                     definition_object,
@@ -350,7 +357,7 @@ impl Runtime {
         {
             if let Some(reduced) = self.reduce_direct_known_fn_application_once(
                 right,
-                &ProofSearchState::after_well_definedness(),
+                &VerifyState::after_well_definedness(),
             )? {
                 reductions.push(NestedCheckedFunctionDefinitionReductionEvidence {
                     definition_object,
@@ -423,6 +430,14 @@ impl Runtime {
         let known_result = self.verify_equal_fact_with_known_fact(&known_fact);
         if !known_result.is_success() {
             return UnknownGenericStmtResult::new().into();
+        }
+        // Resolution may rediscover the submitted equality itself (for
+        // example `0 <= x` stores the exact inferred fact `abs(x) = x`). In
+        // that case the stored citation is already the complete proof. Do not
+        // wrap it in a diagnostic-only "normalization" node and erase its
+        // FactId provenance.
+        if known_fact.to_string() == equal_fact.to_string() {
+            return known_result;
         }
         SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
             equal_fact.clone().into(),
@@ -529,7 +544,7 @@ impl Runtime {
     pub fn verify_equal_fact(
         &mut self,
         equal_fact: &EqualFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let builtin_goal: AtomicFact = equal_fact.clone().into();
         let mut result = self.verify_equal_fact_with_bounded_builtin_routes(equal_fact)?;
@@ -596,7 +611,7 @@ impl Runtime {
     fn try_verify_equal_fact_by_transforming_known_equal_representatives(
         &mut self,
         equal_fact: &EqualFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let mut left_candidates = vec![equal_fact.left.clone()];
         left_candidates.extend(self.get_all_obj_representatives_equal_to_given(&equal_fact.left));
@@ -684,7 +699,7 @@ impl Runtime {
     fn verify_equality_after_one_checked_definition_reduction(
         &mut self,
         equal_fact: &EqualFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         // The goal's well-definedness check already discharged the selected
         // function application's carrier and domain obligations. Definition
@@ -715,7 +730,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         definition_side: EqualitySide,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (application_side, other_side) = definition_side.select(equal_fact);
         let line_file = equal_fact.line_file.clone();
@@ -857,7 +872,7 @@ impl Runtime {
         &mut self,
         left_args_equal_fact: &EqualFact,
         right_args_equal_fact: &EqualFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<bool, RuntimeError> {
         let result = self.verify_equal_fact_by_builtin_rules_and_known_equalities(
             left_args_equal_fact,
@@ -879,7 +894,7 @@ impl Runtime {
     fn verify_equal_fact_for_corresponding_unary_args(
         &mut self,
         equal_fact: &EqualFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<bool, RuntimeError> {
         let result =
             self.verify_equal_fact_by_builtin_rules_and_known_equalities(equal_fact, verify_state)?;
@@ -892,7 +907,7 @@ impl Runtime {
     fn verify_equal_fact_for_iterated_operator_functions(
         &mut self,
         equal_fact: &EqualFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<bool, RuntimeError> {
         // Iterated operators such as sum/product compare their summand
         // functions extensionally. Example:
@@ -903,7 +918,7 @@ impl Runtime {
     pub fn verify_equal_fact_when_both_sides_have_same_builtin_shape_and_equal_args_recursively(
         &mut self,
         equal_fact: &EqualFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<bool, RuntimeError> {
         let left_obj = &equal_fact.left;
         let right_obj = &equal_fact.right;
@@ -1014,7 +1029,7 @@ impl Runtime {
     fn verify_equal_fact_by_builtin_rules_and_known_equalities(
         &mut self,
         equal_fact: &EqualFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let result = self.verify_equal_fact_with_bounded_builtin_routes(equal_fact)?;
         if result.is_success() {
@@ -1046,6 +1061,29 @@ impl Runtime {
 
         Ok((UnknownGenericStmtResult::new()).into())
     }
+}
+
+fn equal_fact_has_abs_sign_selection_shape(equal_fact: &EqualFact) -> bool {
+    fn is_negation_of(candidate: &Obj, argument: &Obj) -> bool {
+        let Obj::Mul(product) = candidate else {
+            return false;
+        };
+        let is_negative_one =
+            |object: &Obj| matches!(object, Obj::Number(number) if number.normalized_value == "-1");
+        (is_negative_one(product.left.as_ref())
+            && objs_equal_with_nested_binder_alpha_equivalence(product.right.as_ref(), argument))
+            || (is_negative_one(product.right.as_ref())
+                && objs_equal_with_nested_binder_alpha_equivalence(product.left.as_ref(), argument))
+    }
+
+    let matches = |absolute_value: &Obj, selected_value: &Obj| {
+        let Obj::Abs(absolute_value) = absolute_value else {
+            return false;
+        };
+        objs_equal_with_nested_binder_alpha_equivalence(absolute_value.arg.as_ref(), selected_value)
+            || is_negation_of(selected_value, absolute_value.arg.as_ref())
+    };
+    matches(&equal_fact.left, &equal_fact.right) || matches(&equal_fact.right, &equal_fact.left)
 }
 
 fn equal_fact_sides_match_by_bounded_symbolic_normalization(equal_fact: &EqualFact) -> bool {

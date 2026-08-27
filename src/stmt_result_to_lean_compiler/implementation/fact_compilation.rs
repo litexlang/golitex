@@ -439,11 +439,23 @@ impl StmtResultToLeanCompiler {
                 "defined-predicate inference component {component_index} changed its conclusion"
             ));
         }
-        let selector = conjunction_selector(component_index, components.len())?;
-        let proof_expression = format!(
-            "(by\n  have __definition := {source_proof}\n  unfold {} at __definition\n  exact __definition{selector})",
-            binding.lean_name
-        );
+        let proof_expression = if binding.dependent_parameter_evidence {
+            let component_names = (0..components.len())
+                .map(|index| format!("__component{index}"))
+                .collect::<Vec<_>>();
+            format!(
+                "(by\n  have __definition := {source_proof}\n  unfold {} at __definition\n  rcases __definition with \u{27e8}{}\u{27e9}\n  exact {})",
+                binding.lean_name,
+                component_names.join(", "),
+                component_names[component_index],
+            )
+        } else {
+            let selector = conjunction_selector(component_index, components.len())?;
+            format!(
+                "(by\n  have __definition := {source_proof}\n  unfold {} at __definition\n  exact __definition{selector})",
+                binding.lean_name
+            )
+        };
         match self
             .environment_stack
             .fact_propositions
@@ -1090,6 +1102,15 @@ impl StmtResultToLeanCompiler {
                         }
                         ParamType::Obj(set) => {
                             validate_object_parameter_premise(binding.id(), set, fact)?;
+                            let native_integer_parameter =
+                                matches!(set, Obj::StandardSet(StandardSet::Z));
+                            if native_integer_parameter {
+                                install_structured_induction_native_integer_symbol(
+                                    binding.id(),
+                                    &parameter_name,
+                                    &mut self.environment_stack,
+                                );
+                            }
                             let proposition = render_fact(fact, &self.environment_stack).map_err(
                             |error| {
                                 format!(
@@ -1097,9 +1118,17 @@ impl StmtResultToLeanCompiler {
                                 )
                             },
                         )?;
-                            let hypothesis =
-                                format!("__h{}_{}", self.next_fact_name_index, parameter_index + 1);
-                            intro_names.push(hypothesis.clone());
+                            let hypothesis = if native_integer_parameter {
+                                format!("(Litex.In.own Litex.Z {parameter_name})")
+                            } else {
+                                let hypothesis = format!(
+                                    "__h{}_{}",
+                                    self.next_fact_name_index,
+                                    parameter_index + 1
+                                );
+                                intro_names.push(hypothesis.clone());
+                                hypothesis
+                            };
                             self.environment_stack
                                 .fact_names
                                 .insert(*fact_id, hypothesis.clone());
@@ -1136,6 +1165,17 @@ impl StmtResultToLeanCompiler {
                                 "ForallProof parameter {parameter_index} aliases failed to install: {error}"
                             )
                         })?;
+                            if native_integer_parameter {
+                                // Generic membership aliases select `In.rep`.
+                                // This binder is already the exact `Z.Carrier`,
+                                // so restore the direct native observation used
+                                // by `render_forall_fact_type` and `callOwn`.
+                                install_structured_induction_native_integer_symbol(
+                                    binding.id(),
+                                    &parameter_name,
+                                    &mut self.environment_stack,
+                                );
+                            }
                             let expected = format!(
                                 "Litex.In {parameter_name} {}",
                                 render_obj(set, &self.environment_stack)?
@@ -1562,10 +1602,10 @@ impl StmtResultToLeanCompiler {
         result: &SuccessFactStmtResult,
     ) -> Result<bool, String> {
         let source_fact = result.fact();
-        let Ok((source_element, source_set)) = membership_parts(&source_fact) else {
+        let Ok((_, source_set)) = membership_parts(&source_fact) else {
             return Ok(false);
         };
-        let Obj::SetBuilder(builder) = source_set else {
+        let Obj::SetBuilder(_) = source_set else {
             return Ok(false);
         };
         if result.store.infers.rule_applications.is_empty() {
@@ -1592,16 +1632,35 @@ impl StmtResultToLeanCompiler {
             .insert(source_fact_id, source_fact.clone());
         self.next_fact_name_index += 1;
 
+        self.compile_set_builder_membership_infer_result_as_top_level_declarations(
+            &source_fact,
+            source_fact_id,
+            &source_name,
+            &result.store.infers,
+        )?;
+        Ok(true)
+    }
+
+    pub(super) fn compile_set_builder_membership_infer_result_as_top_level_declarations(
+        &mut self,
+        source_fact: &Fact,
+        source_fact_id: FactId,
+        source_name: &str,
+        infers: &SuccessInferResult,
+    ) -> Result<(), String> {
+        let (source_element, source_set) = membership_parts(source_fact)?;
+        let Obj::SetBuilder(builder) = source_set else {
+            return Err("set-builder inference source retained a non-builder set".into());
+        };
+        resolve_fact_citation(&source_fact_id, source_fact, &self.environment_stack)?;
         let expected_application_count = builder.facts.len() + 1;
-        if result.store.infers.rule_applications.len() != expected_application_count {
+        if infers.rule_applications.len() != expected_application_count {
             return Err(format!(
                 "set-builder membership retained {} typed projections instead of {expected_application_count}",
-                result.store.infers.rule_applications.len()
+                infers.rule_applications.len()
             ));
         }
-        for (application_index, application) in
-            result.store.infers.rule_applications.iter().enumerate()
-        {
+        for (application_index, application) in infers.rule_applications.iter().enumerate() {
             let [premise] = application.premises.as_slice() else {
                 return Err(format!(
                     "set-builder projection {application_index} must cite one source premise"
@@ -1623,11 +1682,7 @@ impl StmtResultToLeanCompiler {
                 format!("set-builder projection {application_index} has no conclusion FactId")
             })?;
             if conclusion_fact_id == source_fact_id
-                || !infer_result_retains_fact_id(
-                    &result.store.infers,
-                    &conclusion.fact,
-                    conclusion_fact_id,
-                )
+                || !infer_result_retains_fact_id(infers, &conclusion.fact, conclusion_fact_id)
             {
                 return Err(format!(
                     "set-builder projection {application_index} disagrees with its ordered store effect"
@@ -1677,7 +1732,7 @@ impl StmtResultToLeanCompiler {
                 .insert(conclusion_fact_id, conclusion.fact.clone());
             self.next_fact_name_index += 1;
         }
-        Ok(true)
+        Ok(())
     }
 
     /// `Combine`: publish the selected list-set membership proof and then
@@ -1960,7 +2015,7 @@ impl StmtResultToLeanCompiler {
         self.render_object_using_well_definedness_from_fact_result(result, &equality.right)?;
         self.compile_stored_fact_without_inference(
             result,
-            "Litex.Same.ofEq (by norm_num [Litex.tupleDim, Litex.TupleShape.dimension])"
+            "Litex.Same.ofEq (by norm_num [Litex.abs, Litex.min, Litex.max, Litex.tupleDim, Litex.TupleShape.dimension])"
                 .to_string(),
         )?;
         Ok(true)
@@ -3303,6 +3358,7 @@ impl StmtResultToLeanCompiler {
                     &application.rule,
                     &premise.fact,
                     &conclusion.fact,
+                    &self.environment_stack,
                 )?;
                 if !conclusion_already_visible {
                     let premise_name = resolve_fact_citation(

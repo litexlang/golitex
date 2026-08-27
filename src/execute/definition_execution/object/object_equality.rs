@@ -92,7 +92,7 @@ impl Runtime {
                     .verify_obj_satisfies_param_type(
                         current_param_equal_to.clone(),
                         current_type,
-                        &ProofSearchState::initial(),
+                        &VerifyState::initial(),
                     )
                     .map_err(|verify_error| {
                         short_exec_error(
@@ -152,7 +152,7 @@ impl Runtime {
                             if let Ok(candidate_result) = self.verify_obj_satisfies_param_type(
                                 current_param_equal_to.clone(),
                                 &candidate_type,
-                                &ProofSearchState::initial(),
+                                &VerifyState::initial(),
                             ) {
                                 if candidate_result.is_success() {
                                     known_source_sets.push(candidate_set);

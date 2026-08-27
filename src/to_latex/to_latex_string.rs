@@ -2424,7 +2424,6 @@ impl Stmt {
             Stmt::ProofBlock(ProofBlockStmt::ExampleStmt(x)) => x.to_latex_string(),
             Stmt::ProofBlock(ProofBlockStmt::SketchStmt(x)) => x.to_latex_string(),
             Stmt::ProofBlock(ProofBlockStmt::TryStmt(x)) => x.to_latex_string(),
-            Stmt::Command(CommandStmt::ImportStmt(x)) => latex_texttt_escape(&x.to_string()),
             Stmt::Command(CommandStmt::EvalStmt(x)) => x.to_latex_string(),
             Stmt::Witness(WitnessStmt::WitnessExistFact(x)) => x.to_latex_string(),
             Stmt::Witness(WitnessStmt::WitnessAtomicFact(x)) => x.to_latex_string(),

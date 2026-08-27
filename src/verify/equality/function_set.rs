@@ -40,7 +40,7 @@ impl Runtime {
     pub fn verify_fn_set_with_params_equality_by_builtin_rules(
         &mut self,
         equal_fact: &EqualFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let (Obj::FnSet(left), Obj::FnSet(right)) = (&equal_fact.left, &equal_fact.right) else {
             return Ok(UnknownGenericStmtResult::new().into());
@@ -80,7 +80,7 @@ impl Runtime {
         source: &FnSet,
         target: &FnSet,
         line_file: LineFile,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<bool, RuntimeError> {
         self.run_in_local_env(|rt| {
             rt.verify_fn_set_with_params_directionally_in_local_env_body(
@@ -97,7 +97,7 @@ impl Runtime {
         source: &FnSet,
         target: &FnSet,
         line_file: LineFile,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<bool, RuntimeError> {
         let target_flat_param_bindings = target.body.set_bound_parameters.collect_param_bindings();
         let generated_param_names =
@@ -369,7 +369,7 @@ impl Runtime {
         target: &FnSet,
         target_param_to_generated_arg_map: &HashMap<String, Obj>,
         line_file: LineFile,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<bool, RuntimeError> {
         for param_def_with_set in target.body.set_bound_parameters.iter() {
             let instantiated_param_type = ParamType::Obj(
@@ -421,7 +421,7 @@ impl Runtime {
         target: &FnSet,
         line_file: LineFile,
         target_param_to_generated_arg_map: &HashMap<String, Obj>,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<bool, RuntimeError> {
         for dom_fact in target.body.dom_facts.iter() {
             let instantiated_dom_fact = self

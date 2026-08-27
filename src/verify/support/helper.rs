@@ -45,7 +45,7 @@ impl Runtime {
                     .or_else(|| {
                         self.unfold_known_fn_application_once(
                             &prefix,
-                            &ProofSearchState::after_well_definedness(),
+                            &VerifyState::after_well_definedness(),
                         )
                         .ok()
                         .flatten()
@@ -114,7 +114,7 @@ impl Runtime {
                     .into();
                     self.store_fact_with_well_defined_verification_and_infer(
                         ret_nonempty,
-                        &ProofSearchState::final_round(),
+                        &VerifyState::final_round(),
                     )?;
                     Ok(())
                 }
@@ -126,7 +126,7 @@ impl Runtime {
                     .into();
                     self.store_fact_with_well_defined_verification_and_infer(
                         ret_nonempty,
-                        &ProofSearchState::final_round(),
+                        &VerifyState::final_round(),
                     )?;
                     Ok(())
                 }
@@ -135,7 +135,7 @@ impl Runtime {
                         IsNonemptySetFact::new(param_set.clone(), default_line_file());
                     let ret = self.verify_fact_allow_unknown(
                         &nonempty_fact.into(),
-                        &ProofSearchState::initial(),
+                        &VerifyState::initial(),
                     )?;
                     if ret.is_unknown() {
                         return Err(RuntimeError::from(VerifyRuntimeError(
@@ -159,7 +159,7 @@ impl Runtime {
     pub fn verify_atomic_fact_restricted_known_builtin(
         &mut self,
         atomic_fact: &AtomicFact,
-        _verify_state: &ProofSearchState,
+        _verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(cached_result) =
             self.verification_result_from_known_fact_cache(&atomic_fact.clone().into())
@@ -177,7 +177,7 @@ impl Runtime {
     pub fn verify_quantifier_free_fact_restricted_known_builtin(
         &mut self,
         fact: &QuantifierFreeFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         match fact {
             QuantifierFreeFact::AtomicFact(atomic_fact) => {
@@ -198,7 +198,7 @@ impl Runtime {
     pub fn verify_and_chain_atomic_fact_restricted_known_builtin(
         &mut self,
         fact: &AndChainAtomicFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         match fact {
             AndChainAtomicFact::AtomicFact(atomic_fact) => {
@@ -216,7 +216,7 @@ impl Runtime {
     pub fn verify_and_fact_restricted_known_builtin(
         &mut self,
         and_fact: &AndFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let mut steps = Vec::with_capacity(and_fact.facts.len());
         for atomic_fact in and_fact.facts.iter() {
@@ -240,7 +240,7 @@ impl Runtime {
     pub fn verify_chain_fact_restricted_known_builtin(
         &mut self,
         chain_fact: &ChainFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let facts = chain_fact.facts()?;
         let and_fact = AndFact::new(facts, chain_fact.line_file.clone());
@@ -250,7 +250,7 @@ impl Runtime {
     pub fn verify_or_fact_restricted_known_builtin(
         &mut self,
         or_fact: &OrFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(cached_result) =
             self.verification_result_from_known_fact_cache(&or_fact.clone().into())
@@ -283,7 +283,7 @@ impl Runtime {
         known_forall: &StoredForallConclusionReference,
         arg_map: &HashMap<String, Obj>,
         goal: Fact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<
         Option<(
             Vec<KnownForallInstantiationItem>,
@@ -354,7 +354,7 @@ impl Runtime {
         known_forall: &StoredForallConclusionReference,
         args_for_params: &Vec<Obj>,
         goal: &Fact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
         requirements: &mut Vec<SuccessVerifyKnownForallRequirementResult>,
     ) -> Result<bool, RuntimeError> {
         // A matcher may synthesize a forall argument while solving an
@@ -448,7 +448,7 @@ impl Runtime {
         &mut self,
         objs: &[&Obj],
         line_file: &LineFile,
-        _verify_state: &ProofSearchState,
+        _verify_state: &VerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         let mut seen = Vec::new();
         let mut steps = Vec::new();
@@ -534,7 +534,7 @@ impl Runtime {
         &mut self,
         objs: &[&Obj],
         line_file: &LineFile,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         let mut seen = Vec::new();
         let mut steps = Vec::new();

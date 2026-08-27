@@ -66,7 +66,10 @@ impl Runtime {
                 ),
             ))),
             TRUST => self.parse_trust_stmt(tb),
-            IMPORT => self.parse_import_stmt(tb),
+            IMPORT => Err(statement_dispatch_error(
+                tb,
+                "`import` is a terminal command, not a Litex statement; declare source dependencies in litex.config",
+            )),
             EVAL => self.parse_eval_stmt(tb),
             WITNESS => self.parse_witness_stmt(tb),
             STRUCT => self.parse_def_struct_stmt(tb),

@@ -7,7 +7,7 @@ impl Runtime {
         &mut self,
         steps: &mut SuccessVerifyObjWellDefinedStepsResult,
         fact: &AtomicFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
         error_message: String,
     ) -> Result<(), RuntimeError> {
         let result = self.verify_atomic_fact(fact, verify_state)?;
@@ -23,7 +23,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_interval_obj_well_defined_result(
         &mut self,
         value: &IntervalObj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         let mut steps = SuccessVerifyObjWellDefinedStepsResult::new();
         for (argument_index, child) in [value.start(), value.end()].into_iter().enumerate() {
@@ -40,7 +40,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_one_side_infinity_interval_obj_well_defined_result(
         &mut self,
         value: &OneSideInfinityIntervalObj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         let mut steps = SuccessVerifyObjWellDefinedStepsResult::new();
         steps.push_child(self.verify_child_obj_well_defined_result(
@@ -55,7 +55,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_finite_seq_set_well_defined_result(
         &mut self,
         value: &FiniteSeqSet,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         let mut steps = SuccessVerifyObjWellDefinedStepsResult::new();
         for (argument_index, child) in [&value.set, &value.n].into_iter().enumerate() {
@@ -93,7 +93,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_seq_set_well_defined_result(
         &mut self,
         value: &SeqSet,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         let mut steps = SuccessVerifyObjWellDefinedStepsResult::new();
         steps.push_child(self.verify_child_obj_well_defined_result(
@@ -114,7 +114,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_finite_seq_list_obj_well_defined_result(
         &mut self,
         value: &FiniteSeqListObj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         let mut steps = SuccessVerifyObjWellDefinedStepsResult::new();
         for (argument_index, child) in value.objs.iter().enumerate() {
@@ -130,7 +130,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_matrix_set_well_defined_result(
         &mut self,
         value: &MatrixSet,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         let mut steps = SuccessVerifyObjWellDefinedStepsResult::new();
         for (argument_index, child) in [&value.set, &value.row_len, &value.col_len]
@@ -173,7 +173,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_matrix_list_obj_well_defined_result(
         &mut self,
         value: &MatrixListObj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         if value.rows.is_empty() || value.rows[0].is_empty() {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
@@ -249,7 +249,7 @@ impl Runtime {
         &mut self,
         steps: &mut SuccessVerifyObjWellDefinedStepsResult,
         object: &Obj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
         operator: &str,
     ) -> Result<MatrixSet, RuntimeError> {
         let result = match object {
@@ -411,7 +411,7 @@ impl Runtime {
             &'a MatrixSet,
             &'a MatrixSet,
         ) -> Vec<(&'a Obj, &'a Obj, &'static str)>,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         let mut steps = SuccessVerifyObjWellDefinedStepsResult::new();
         for (argument_index, child) in [left_object, right_object].into_iter().enumerate() {
@@ -439,7 +439,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_matrix_add_well_defined_result(
         &mut self,
         value: &MatrixAdd,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         self.verify_binary_matrix_operator_result(
             &value.left,
@@ -458,7 +458,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_matrix_sub_well_defined_result(
         &mut self,
         value: &MatrixSub,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         self.verify_binary_matrix_operator_result(
             &value.left,
@@ -477,7 +477,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_matrix_mul_well_defined_result(
         &mut self,
         value: &MatrixMul,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         self.verify_binary_matrix_operator_result(
             &value.left,
@@ -491,7 +491,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_matrix_scalar_mul_well_defined_result(
         &mut self,
         value: &MatrixScalarMul,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         let mut steps = SuccessVerifyObjWellDefinedStepsResult::new();
         for (argument_index, child) in [&value.scalar, &value.matrix].into_iter().enumerate() {
@@ -517,7 +517,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_matrix_pow_well_defined_result(
         &mut self,
         value: &MatrixPow,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         let mut steps = SuccessVerifyObjWellDefinedStepsResult::new();
         for (argument_index, child) in [&value.base, &value.exponent].into_iter().enumerate() {
@@ -582,7 +582,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_interval_obj_well_defined(
         &mut self,
         x: &IntervalObj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_child_obj_well_defined_and_store_cache(
             x.start(),
@@ -604,7 +604,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_one_side_infinity_interval_obj_well_defined(
         &mut self,
         x: &OneSideInfinityIntervalObj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_child_obj_well_defined_and_store_cache(
             x.start(),
@@ -620,7 +620,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_finite_seq_set_well_defined(
         &mut self,
         x: &FiniteSeqSet,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_child_obj_well_defined_and_store_cache(
             &x.set,
@@ -660,7 +660,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_seq_set_well_defined(
         &mut self,
         x: &SeqSet,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_child_obj_well_defined_and_store_cache(
             &x.set,
@@ -685,7 +685,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_finite_seq_list_obj_well_defined(
         &mut self,
         x: &FiniteSeqListObj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         for (argument_index, o) in x.objs.iter().enumerate() {
             self.verify_child_obj_well_defined_and_store_cache(
@@ -702,7 +702,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_matrix_set_well_defined(
         &mut self,
         x: &MatrixSet,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_child_obj_well_defined_and_store_cache(
             &x.set,
@@ -754,7 +754,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_matrix_list_obj_well_defined(
         &mut self,
         x: &MatrixListObj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         if x.rows.is_empty() || x.rows[0].is_empty() {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
@@ -796,7 +796,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_matrix_add_well_defined(
         &mut self,
         ma: &MatrixAdd,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_child_obj_well_defined_and_store_cache(
             &ma.left,
@@ -820,7 +820,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_matrix_sub_well_defined(
         &mut self,
         ms: &MatrixSub,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_child_obj_well_defined_and_store_cache(
             &ms.left,
@@ -844,7 +844,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_matrix_mul_well_defined(
         &mut self,
         mm: &MatrixMul,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_child_obj_well_defined_and_store_cache(
             &mm.left,
@@ -867,7 +867,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_matrix_scalar_mul_well_defined(
         &mut self,
         m: &MatrixScalarMul,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_child_obj_well_defined_and_store_cache(
             &m.scalar,
@@ -897,7 +897,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_matrix_pow_well_defined(
         &mut self,
         m: &MatrixPow,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_child_obj_well_defined_and_store_cache(
             &m.base,
@@ -937,7 +937,7 @@ impl Runtime {
     pub fn real_matrix_type(
         &mut self,
         obj: &Obj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
         operator: &str,
     ) -> Result<MatrixSet, RuntimeError> {
         let result = match obj {
