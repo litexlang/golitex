@@ -1414,7 +1414,9 @@ forall a, b R:
         run_output
     );
     assert!(run_output.contains("rational expression simplification"));
-    assert!(!run_output.contains("\"rule_id\""));
+    assert!(run_output.contains(
+        "\"rule_id\": \"builtin.verify.equality.core.verify_equal_fact_by_known_equality_then_direct_evaluation\""
+    ));
 }
 
 #[test]
@@ -1459,7 +1461,8 @@ fn builtin_rule_output_hides_internal_complement_helper_name() {
         run_output
     );
     assert!(run_output.contains("\"diagnostic_label\": \"or: complementary atomic facts\""));
-    assert!(!run_output.contains("\"rule_id\""));
+    assert!(run_output
+        .contains("\"rule_id\": \"builtin.verify.composite.disjunction.verify_or_fact.02\""));
     assert!(
         !run_output.contains("make_reversed"),
         "public builtin rule output should not expose helper names:\n{}",
@@ -1506,8 +1509,9 @@ forall a, b R:
         "quotient_nonzero_from_numerator_nonzero_builtin_rule failed:\n{}",
         run_output
     );
-    assert!(run_output.contains("\"diagnostic_label\": \"local builtin nonzero.div\""));
+    assert!(run_output.contains("\"rule_id\": \"nonzero.div\""));
     assert!(run_output.contains("\"diagnostic_label\": \"not-equality symmetry\""));
+    assert!(run_output.contains("\"rule_id\": \"not_equal.symmetry\""));
 }
 
 #[test]
@@ -2652,7 +2656,7 @@ x $in U or x $in V
         run_output
     );
     assert!(
-        run_output.contains("local builtin set.union_membership_left"),
+        run_output.contains("\"rule_id\": \"set.union_membership_left\""),
         "union introduction should remain a direct builtin:\n{}",
         run_output
     );
@@ -2662,12 +2666,12 @@ x $in U or x $in V
         run_output
     );
     assert!(
-        run_output.contains("local builtin set.intersect_membership"),
+        run_output.contains("\"rule_id\": \"set.intersect_membership\""),
         "intersection introduction should report its builtin provenance:\n{}",
         run_output
     );
     assert!(
-        run_output.contains("local builtin set.set_minus_membership"),
+        run_output.contains("\"rule_id\": \"set.set_minus_membership\""),
         "set-minus introduction should report its builtin provenance:\n{}",
         run_output
     );
@@ -2879,7 +2883,7 @@ union(set_minus(A, B), set_minus(A, c)) = set_minus(A, intersect(B, c))
         run_output
     );
     assert!(
-        run_output.contains("local builtin set.subset_eq_set_minus_recovery"),
+        run_output.contains("\"rule_id\": \"set.subset_eq_set_minus_recovery\""),
         "the subset recovery equality should report its builtin rule:\n{}",
         run_output
     );
@@ -2959,7 +2963,7 @@ forall A, B, D set:
         run_output
     );
     assert!(
-        run_output.contains("local builtin set.union_set_minus_decomposition"),
+        run_output.contains("\"rule_id\": \"set.union_set_minus_decomposition\""),
         "the primary canonical tracer should retain its registered rule identity:\n{}",
         run_output
     );
@@ -4020,7 +4024,7 @@ forall A, B, T set:
     );
     for rule in [
         "literal finite-set subset from member facts",
-        "local builtin set.union_subset",
+        "\"rule_id\": \"set.union_subset\"",
     ] {
         assert!(
             run_output.contains(rule),

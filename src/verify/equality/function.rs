@@ -60,7 +60,9 @@ impl Runtime {
                 recorded,
                 "fn_eq_in: pointwise equality on the given set (forall x in S, f(x)=g(x))"
                     .to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyFnEqualInFactWithBuiltinRules),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::VerifyFnEqualInFactWithBuiltinRules,
+                ),
                 vec![forall_res],
             )
             .into(),
@@ -113,7 +115,7 @@ impl Runtime {
                         f.clone().into(),
                         "fn_eq: exact known pointwise forall over alpha-equivalent function carriers"
                             .to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyFnEqualFactWithBuiltinRules),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyFnEqualFactWithBuiltinRules01),
                         vec![pointwise_result],
                     )
                     .into(),
@@ -173,7 +175,9 @@ impl Runtime {
                 recorded,
                 "fn_eq: mutual function-space membership and pointwise equality (forall+dom)"
                     .to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyFnEqualFactWithBuiltinRules),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::VerifyFnEqualFactWithBuiltinRules02,
+                ),
                 vec![forall_res],
             )
             .into(),

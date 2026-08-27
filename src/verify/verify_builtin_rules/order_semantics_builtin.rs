@@ -164,7 +164,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "positive even integer is greater than one".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyPositiveEvenIntegerGreaterThanOne),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::TryVerifyPositiveEvenIntegerGreaterThanOne,
+                ),
                 vec![membership_result, even_result],
             )
             .into(),
@@ -285,7 +287,7 @@ impl Runtime {
                     SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         atomic_fact.clone().into(),
                         "finite_set_max: every member is at most the maximum".to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyFiniteSetExtremaOrderBuiltinRule),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyFiniteSetExtremaOrderBuiltinRule01),
                         vec![member_result],
                     )
                     .into(),
@@ -313,7 +315,7 @@ impl Runtime {
                     SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         atomic_fact.clone().into(),
                         "finite_set_max: every member is at most a known-equal maximum".to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyFiniteSetExtremaOrderBuiltinRule),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyFiniteSetExtremaOrderBuiltinRule02),
                         vec![equality_result, member_result],
                     )
                     .into(),
@@ -335,7 +337,7 @@ impl Runtime {
                     SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         atomic_fact.clone().into(),
                         "finite_set_min: the minimum is at most every member".to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyFiniteSetExtremaOrderBuiltinRule),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyFiniteSetExtremaOrderBuiltinRule03),
                         vec![member_result],
                     )
                     .into(),
@@ -363,7 +365,7 @@ impl Runtime {
                     SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         atomic_fact.clone().into(),
                         "finite_set_min: a known-equal minimum is at most every member".to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyFiniteSetExtremaOrderBuiltinRule),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyFiniteSetExtremaOrderBuiltinRule04),
                         vec![equality_result, member_result],
                     )
                     .into(),
@@ -392,7 +394,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 member_fact.clone().into(),
                 "membership by concrete finite-set structure".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyKnownOrConcreteFiniteSetMembership),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::VerifyKnownOrConcreteFiniteSetMembership,
+                ),
                 Vec::new(),
             )
             .into(),
@@ -478,7 +482,7 @@ impl Runtime {
                             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                                 atomic_fact.clone().into(),
                                 "integer difference: a < b gives b - a >= 1".to_string(),
-                                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyIntegerSuccessorPredecessorBuiltinRule),
+                                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyIntegerSuccessorPredecessorBuiltinRule01),
                                 steps,
                             )
                             .into(),
@@ -508,7 +512,7 @@ impl Runtime {
                     SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         atomic_fact.clone().into(),
                         "integer adjacency: a < b + 1 gives a <= b".to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyIntegerSuccessorPredecessorBuiltinRule),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyIntegerSuccessorPredecessorBuiltinRule02),
                         steps,
                     )
                     .into(),
@@ -534,7 +538,7 @@ impl Runtime {
                     SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         atomic_fact.clone().into(),
                         "integer successor: a < b gives a + 1 <= b".to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyIntegerSuccessorPredecessorBuiltinRule),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyIntegerSuccessorPredecessorBuiltinRule03),
                         steps,
                     )
                     .into(),
@@ -560,7 +564,7 @@ impl Runtime {
                     SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         atomic_fact.clone().into(),
                         "integer predecessor: a < b gives a <= b - 1".to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyIntegerSuccessorPredecessorBuiltinRule),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyIntegerSuccessorPredecessorBuiltinRule04),
                         steps,
                     )
                     .into(),
@@ -607,7 +611,7 @@ impl Runtime {
                 SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     equal_fact.clone().into(),
                     "integer singleton interval: n <= x < n + 1 gives x = n".to_string(),
-                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyIntegerSingletonIntervalEqualityBuiltinRule),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyIntegerSingletonIntervalEqualityBuiltinRule01),
                     steps,
                 )
                 .into(),
@@ -645,7 +649,7 @@ impl Runtime {
                     equal_fact.clone().into(),
                     "integer successor singleton interval: n < x <= n + 1 gives x = n + 1"
                         .to_string(),
-                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyIntegerSingletonIntervalEqualityBuiltinRule),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyIntegerSingletonIntervalEqualityBuiltinRule02),
                     steps,
                 )
                 .into(),
@@ -700,7 +704,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 or_fact.clone().into(),
                 reason.to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyIntegerDiscreteSplitOrBuiltinRule),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::TryVerifyIntegerDiscreteSplitOrBuiltinRule,
+                ),
                 steps,
             )
             .into(),

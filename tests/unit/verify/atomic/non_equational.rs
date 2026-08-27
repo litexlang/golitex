@@ -7,7 +7,7 @@ use crate::obj::{Add, Number, Obj, StandardSet};
 use crate::parse::Tokenizer;
 use crate::result::{
     BuiltinRuleEvidence, EvaluateBinaryObjOperator, StmtResult, SuccessEvaluateObjStepResult,
-    SuccessFactProofResult, SuccessFactStmtResult, SuccessStmtResult,
+    SuccessFactProofResult, SuccessFactStmtResult, SuccessStmtResult, UncataloguedBuiltinRule,
 };
 use crate::runtime::Runtime;
 use crate::stmt::Stmt;

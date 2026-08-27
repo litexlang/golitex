@@ -2,8 +2,7 @@ use crate::error::RuntimeError;
 use crate::fact::Fact;
 use crate::infer::{InferReason, SuccessInferResult};
 use crate::result::{
-    BuiltinRuleEvidence, StmtResult, SuccessFactStmtResult, SuccessVerifyFactWellDefinedResult,
-    UncataloguedBuiltinRule,
+    StmtResult, SuccessFactProofResult, SuccessFactStmtResult, SuccessVerifyFactWellDefinedResult,
 };
 use crate::runtime::Runtime;
 use crate::verify::VerifyState;
@@ -55,15 +54,11 @@ impl Runtime {
             InferReason::VerifiedStatement,
         )?;
 
-        Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
-                fact.clone(),
-                infer_result,
-                "trusted file load".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::ExecuteTrustedFact),
-                vec![],
-            )
-            .into(),
+        Ok(SuccessFactStmtResult::new(
+            fact.clone(),
+            infer_result,
+            SuccessFactProofResult::diagnostic("trusted file load"),
         )
+        .into())
     }
 }

@@ -8,7 +8,9 @@ pub(super) fn number_in_set_verified_by_builtin_rules_result(
         SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
             in_fact.clone().into(),
             reason.to_string(),
-            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::NumberInSetVerifiedByBuiltinRulesResult),
+            BuiltinRuleEvidence::Uncatalogued(
+                UncataloguedBuiltinRule::NumberInSetVerifiedByBuiltinRulesResult,
+            ),
             Vec::new(),
         ),
     )
@@ -44,7 +46,9 @@ pub(super) fn number_in_set_verified_by_builtin_rules_result_with_subgoals(
         SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
             in_fact.clone().into(),
             reason.to_string(),
-            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::NumberInSetVerifiedByBuiltinRulesResultWithSubgoals),
+            BuiltinRuleEvidence::Uncatalogued(
+                UncataloguedBuiltinRule::NumberInSetVerifiedByBuiltinRulesResultWithSubgoals,
+            ),
             subgoals,
         ),
     )
@@ -58,7 +62,9 @@ pub(super) fn not_in_fact_verified_by_builtin_rules_result(
         SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
             not_in_fact.clone().into(),
             reason.to_string(),
-            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::NotInFactVerifiedByBuiltinRulesResult),
+            BuiltinRuleEvidence::Uncatalogued(
+                UncataloguedBuiltinRule::NotInFactVerifiedByBuiltinRulesResult,
+            ),
             Vec::new(),
         ),
     )

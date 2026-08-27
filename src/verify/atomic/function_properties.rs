@@ -31,7 +31,9 @@ impl Runtime {
                     "{} by its builtin function-property definition",
                     fact.predicate
                 ),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyBuiltinFunctionPropertyByDefinition),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::VerifyBuiltinFunctionPropertyByDefinition,
+                ),
                 inside_results,
             )
             .into(),

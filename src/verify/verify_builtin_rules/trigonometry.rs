@@ -155,7 +155,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 reason,
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyTrigonometricEquality),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::TryVerifyTrigonometricEquality,
+                ),
                 dependencies,
             )
             .into(),
@@ -205,7 +207,9 @@ impl Runtime {
                         TrigLemma::Bounds.level(),
                         TrigLemma::Bounds.name()
                     ),
-                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyTrigonometricOrderBound),
+                    BuiltinRuleEvidence::Uncatalogued(
+                        UncataloguedBuiltinRule::TryVerifyTrigonometricOrderBound01,
+                    ),
                     vec![pythagorean, nonnegative_result],
                 )
                 .into(),
@@ -230,7 +234,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "trigonometry: -1 <= sin/cos <= 1 from the unit-circle square bound".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyTrigonometricOrderBound),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::TryVerifyTrigonometricOrderBound02,
+                ),
                 vec![square_bound_result],
             )
             .into(),
@@ -261,7 +267,7 @@ impl Runtime {
                                 equal_fact.clone().into(),
                                 "arcsin principal inverse: sin(arcsin(x)) = x on [-1, 1]"
                                     .to_string(),
-                                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyArcsinInverseEquality),
+                                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyArcsinInverseEquality01),
                                 steps,
                             )
                             .into(),
@@ -276,7 +282,7 @@ impl Runtime {
                         SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             equal_fact.clone().into(),
                             "arcsin principal branch: exact endpoint or zero value".to_string(),
-                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyArcsinInverseEquality),
+                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyArcsinInverseEquality02),
                             Vec::new(),
                         )
                         .into(),
@@ -298,7 +304,7 @@ impl Runtime {
                                 equal_fact.clone().into(),
                                 "arcsin principal branch: arcsin(sin(y)) = y on [-pi/2, pi/2]"
                                     .to_string(),
-                                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyArcsinInverseEquality),
+                                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyArcsinInverseEquality03),
                                 steps,
                             )
                             .into(),
@@ -324,7 +330,7 @@ impl Runtime {
                         SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             equal_fact.clone().into(),
                             "arcsin principal branch from a supported exact sine value".to_string(),
-                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyArcsinInverseEquality),
+                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyArcsinInverseEquality04),
                             steps,
                         )
                         .into(),
@@ -366,7 +372,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "arcsin principal value lies in [-pi/2, pi/2]".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyArcsinPrincipalRange),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::TryVerifyArcsinPrincipalRange,
+                ),
                 steps,
             )
             .into(),
@@ -698,7 +706,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 format!("trigonometry: {reason}"),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyTrigonometricIntervalOrder),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::TryVerifyTrigonometricIntervalOrder,
+                ),
                 results,
             )
             .into(),
@@ -764,7 +774,7 @@ impl Runtime {
                     SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         not_equal_fact.clone().into(),
                         "trigonometry: non-zero transfer through canonical expansion".to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyTrigonometricNotEqual),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyTrigonometricNotEqual01),
                         results,
                     )
                     .into(),
@@ -851,7 +861,7 @@ impl Runtime {
                         not_equal_fact.clone().into(),
                         "trigonometry: sine/cosine is nonzero on a canonical sign interval"
                             .to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyTrigonometricNotEqual),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyTrigonometricNotEqual02),
                         vec![interval_result],
                     )
                     .into(),
@@ -872,7 +882,7 @@ impl Runtime {
                     SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         not_equal_fact.clone().into(),
                         "trigonometry: pi shift changes only sign, preserving non-zero".to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyTrigonometricNotEqual),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyTrigonometricNotEqual03),
                         vec![reduced_result],
                     )
                     .into(),
@@ -897,7 +907,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 not_equal_fact.clone().into(),
                 "trigonometry: non-zero transfer through canonical expansion".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyTrigonometricNotEqual),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::TryVerifyTrigonometricNotEqual04,
+                ),
                 vec![expanded_result],
             )
             .into(),
@@ -1256,7 +1268,9 @@ fn try_trig_quotient_definition(equal_fact: &EqualFact) -> Option<StmtResult> {
                 SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     equal_fact.clone().into(),
                     "trigonometry core: tan/cot quotient definition".to_string(),
-                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryTrigQuotientDefinition),
+                    BuiltinRuleEvidence::Uncatalogued(
+                        UncataloguedBuiltinRule::TryTrigQuotientDefinition,
+                    ),
                     Vec::new(),
                 )
                 .into(),
@@ -1379,7 +1393,9 @@ fn trig_core_dependency_results(equal_fact: &EqualFact, lemmas: &[TrigLemma]) ->
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 EqualFact::new(source, expanded, equal_fact.line_file.clone()).into(),
                 "trigonometry core: sine addition formula".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TrigCoreDependencyResults),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::TrigCoreDependencyResults,
+                ),
                 Vec::new(),
             )
             .into(),

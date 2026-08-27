@@ -70,7 +70,7 @@ impl Runtime {
                     SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         atomic_fact.clone().into(),
                         "every positive common divisor is at most the gcd".to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyOrderAtomicFactNumericBuiltinOnly),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyOrderAtomicFactNumericBuiltinOnly01),
                         subgoals,
                     )
                     .into(),
@@ -309,7 +309,7 @@ impl Runtime {
                     SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         less_equal_fact.clone().into(),
                         "less_equal_fact_equal".to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyOrderAtomicFactNumericBuiltinOnly),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyOrderAtomicFactNumericBuiltinOnly02),
                         Vec::new(),
                     ),
                 ));
@@ -324,7 +324,7 @@ impl Runtime {
                     SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         less_equal_fact.clone().into(),
                         "less_equal_fact_from_known_equality".to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyOrderAtomicFactNumericBuiltinOnly),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyOrderAtomicFactNumericBuiltinOnly03),
                         vec![equal_result],
                     ),
                 ));
@@ -356,7 +356,7 @@ impl Runtime {
                     SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         greater_equal_fact.clone().into(),
                         "greater_equal_fact_equal".to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyOrderAtomicFactNumericBuiltinOnly),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyOrderAtomicFactNumericBuiltinOnly04),
                         Vec::new(),
                     ),
                 ));
@@ -371,7 +371,7 @@ impl Runtime {
                     SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         greater_equal_fact.clone().into(),
                         "greater_equal_fact_from_known_equality".to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyOrderAtomicFactNumericBuiltinOnly),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyOrderAtomicFactNumericBuiltinOnly05),
                         vec![equal_result],
                     ),
                 ));
@@ -517,7 +517,9 @@ fn try_verify_native_real_constant_positive(atomic_fact: &AtomicFact) -> Option<
         SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
             atomic_fact.clone().into(),
             "native mathematical constant positivity bound".to_string(),
-            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNativeRealConstantPositive),
+            BuiltinRuleEvidence::Uncatalogued(
+                UncataloguedBuiltinRule::TryVerifyNativeRealConstantPositive,
+            ),
             Vec::new(),
         )
         .into(),
@@ -768,7 +770,9 @@ impl Runtime {
                 SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     atomic_fact.clone().into(),
                     "n >= 0 from n $in N".to_string(),
-                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyOrderNonnegativeFromMembershipInN),
+                    BuiltinRuleEvidence::Uncatalogued(
+                        UncataloguedBuiltinRule::TryVerifyOrderNonnegativeFromMembershipInN,
+                    ),
                     vec![in_n_result],
                 ),
             )));
@@ -818,7 +822,9 @@ impl Runtime {
                 SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     atomic_fact.clone().into(),
                     "n >= 1 from n $in N+".to_string(),
-                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyOrderOneLeFromMembershipInNPos),
+                    BuiltinRuleEvidence::Uncatalogued(
+                        UncataloguedBuiltinRule::TryVerifyOrderOneLeFromMembershipInNPos,
+                    ),
                     vec![in_n_pos_result],
                 ),
             )));
@@ -884,7 +890,9 @@ impl Runtime {
                 atomic_fact.clone().into(),
                 SuccessInferResult::new(),
                 "finite_nonempty_set_size_at_least_one".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyFiniteNonemptySetSizeAtLeastOne),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::TryVerifyFiniteNonemptySetSizeAtLeastOne,
+                ),
                 vec![finite_result, nonempty_result],
             )
             .into(),
@@ -919,7 +927,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "finite set cardinality is nonnegative".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyFiniteSetSizeNonnegative),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::TryVerifyFiniteSetSizeNonnegative,
+                ),
                 vec![result],
             )
             .into(),
@@ -968,7 +978,7 @@ impl Runtime {
                             atomic_fact.clone().into(),
                             SuccessInferResult::new(),
                             "finite_set_size_subset_le".to_string(),
-                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyFiniteSetSizeSubsetLe),
+                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyFiniteSetSizeSubsetLe01),
                             vec![left_result, right_result],
                         )
                         .into(),
@@ -1020,7 +1030,9 @@ impl Runtime {
                 atomic_fact.clone().into(),
                 SuccessInferResult::new(),
                 "finite_set_size_subset_le".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyFiniteSetSizeSubsetLe),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::TryVerifyFiniteSetSizeSubsetLe02,
+                ),
                 vec![subset_result, left_result, right_result],
             )
             .into(),
@@ -1080,7 +1092,9 @@ impl Runtime {
                 atomic_fact.clone().into(),
                 SuccessInferResult::new(),
                 "finite_set_size_union_le_sum".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyFiniteSetSizeUnionLeSum),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::TryVerifyFiniteSetSizeUnionLeSum,
+                ),
                 vec![left_result, right_result],
             )
             .into(),
@@ -1149,7 +1163,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "1 <= n from n $in N and n != 0".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyOrderOneLeFromMembershipInNAndNonzero),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::TryVerifyOrderOneLeFromMembershipInNAndNonzero,
+                ),
                 vec![in_n_result, nonzero_result],
             ),
         )))
@@ -1226,7 +1242,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 reason.to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyModRemainderBounds),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::TryVerifyModRemainderBounds,
+                ),
                 vec![dividend_result, modulus_result],
             ),
         )))
@@ -1282,7 +1300,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "1 <= n from n $in Z and 0 < n".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyOrderOneLeFromMembershipInZAndPositive),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::TryVerifyOrderOneLeFromMembershipInZAndPositive,
+                ),
                 vec![in_z_result, positive_result],
             ),
         )))
@@ -1336,7 +1356,7 @@ impl Runtime {
                             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                                 atomic_fact.clone().into(),
                                 "weaken numeric lower bound from known lower bound".to_string(),
-                                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNumericLowerBoundFromKnownLowerBound),
+                                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNumericLowerBoundFromKnownLowerBound01),
                                 vec![candidate_result],
                             ),
                         )));
@@ -1358,7 +1378,7 @@ impl Runtime {
                                 atomic_fact.clone().into(),
                                 "integer weak lower bound from strict predecessor lower bound"
                                     .to_string(),
-                                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNumericLowerBoundFromKnownLowerBound),
+                                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNumericLowerBoundFromKnownLowerBound02),
                                 vec![candidate_result, in_z_result],
                             ),
                         )));
@@ -1393,7 +1413,7 @@ impl Runtime {
                                 atomic_fact.clone().into(),
                                 "weaken numeric strict lower bound from known lower bound"
                                     .to_string(),
-                                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNumericLowerBoundFromKnownLowerBound),
+                                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNumericLowerBoundFromKnownLowerBound03),
                                 vec![candidate_result],
                             ),
                         )));
@@ -1490,7 +1510,9 @@ impl Runtime {
                 SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     atomic_fact.clone().into(),
                     "weaken numeric upper bound from known upper bound".to_string(),
-                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNumericUpperBoundFromKnownUpperBound),
+                    BuiltinRuleEvidence::Uncatalogued(
+                        UncataloguedBuiltinRule::TryVerifyNumericUpperBoundFromKnownUpperBound,
+                    ),
                     vec![candidate_result],
                 ),
             )));
@@ -1601,7 +1623,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "sqrt: 0 <= sqrt(x) from 0 <= x".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyZeroLeSqrtFromNonnegativeArgBuiltinRule),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::VerifyZeroLeSqrtFromNonnegativeArgBuiltinRule,
+                ),
                 vec![nonnegative_result],
             ),
         )))
@@ -1641,7 +1665,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "sqrt: 0 < sqrt(x) from 0 < x".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyZeroLtSqrtFromPositiveArgBuiltinRule),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::VerifyZeroLtSqrtFromPositiveArgBuiltinRule,
+                ),
                 vec![positive_result],
             ),
         )))
@@ -1717,7 +1743,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 reason.to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifySqrtMonotonicity),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::TryVerifySqrtMonotonicity,
+                ),
                 step_results,
             ),
         )))
@@ -1736,7 +1764,9 @@ impl Runtime {
                 SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     atomic_fact.clone().into(),
                     msg.to_string(),
-                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyOrderOppositeSignMulMinusOne),
+                    BuiltinRuleEvidence::Uncatalogued(
+                        UncataloguedBuiltinRule::TryVerifyOrderOppositeSignMulMinusOne,
+                    ),
                     Vec::new(),
                 ),
             )))
@@ -1983,7 +2013,9 @@ impl Runtime {
                     atomic_fact.clone().into(),
                     SuccessInferResult::new(),
                     "order_from_known_negated_complement".to_string(),
-                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyOrderFromKnownNegatedComplement),
+                    BuiltinRuleEvidence::Uncatalogued(
+                        UncataloguedBuiltinRule::VerifyOrderFromKnownNegatedComplement,
+                    ),
                     steps,
                 )
                 .into(),
@@ -2060,7 +2092,7 @@ impl Runtime {
                                 SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                                     atomic_fact.clone().into(),
                                     "log order: base > 1 preserves strict order".to_string(),
-                                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyLogOrderBuiltinRule),
+                                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyLogOrderBuiltinRule01),
                                     vec![same_base, base_gt_one_result, args_result],
                                 ),
                             )));
@@ -2079,7 +2111,7 @@ impl Runtime {
                                 SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                                     atomic_fact.clone().into(),
                                     "log order: 0 < base < 1 reverses strict order".to_string(),
-                                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyLogOrderBuiltinRule),
+                                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyLogOrderBuiltinRule02),
                                     vec![same_base, base_lt_one_result, args_result],
                                 ),
                             )));
@@ -2109,7 +2141,7 @@ impl Runtime {
                         SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             atomic_fact.clone().into(),
                             "log sign: 0 < log(a, x) from 1 < a and 1 < x".to_string(),
-                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyLogOrderBuiltinRule),
+                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyLogOrderBuiltinRule03),
                             vec![base_gt_one_result, arg_gt_one_result],
                         ),
                     )));
@@ -2146,7 +2178,7 @@ impl Runtime {
                         SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             atomic_fact.clone().into(),
                             "log sign: log(a, x) < 0 from 1 < a and 0 < x < 1".to_string(),
-                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyLogOrderBuiltinRule),
+                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyLogOrderBuiltinRule04),
                             vec![base_gt_one_result, arg_lt_one_result, arg_positive_result],
                         ),
                     )));
@@ -2223,7 +2255,9 @@ impl Runtime {
                         atomic_fact.clone().into(),
                         SuccessInferResult::new(),
                         "negated_order_from_known_equivalent_order".to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyNegatedOrderFromKnownEquivalentOrder),
+                        BuiltinRuleEvidence::Uncatalogued(
+                            UncataloguedBuiltinRule::VerifyNegatedOrderFromKnownEquivalentOrder01,
+                        ),
                         steps,
                     )
                     .into(),
@@ -2246,7 +2280,9 @@ impl Runtime {
                     atomic_fact.clone().into(),
                     SuccessInferResult::new(),
                     "negated_order_from_complete_equivalent_order_disjunction".to_string(),
-                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyNegatedOrderFromKnownEquivalentOrder),
+                    BuiltinRuleEvidence::Uncatalogued(
+                        UncataloguedBuiltinRule::VerifyNegatedOrderFromKnownEquivalentOrder02,
+                    ),
                     steps,
                 )
                 .into(),
@@ -2290,7 +2326,9 @@ impl Runtime {
                 SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     atomic_fact.clone().into(),
                     reason.to_string(),
-                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyOrderFromKnownZeroOrderOnSubBuiltinRule),
+                    BuiltinRuleEvidence::Uncatalogued(
+                        UncataloguedBuiltinRule::VerifyOrderFromKnownZeroOrderOnSubBuiltinRule01,
+                    ),
                     vec![direct_difference_result],
                 )
                 .into(),
@@ -2315,7 +2353,9 @@ impl Runtime {
                 SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     atomic_fact.clone().into(),
                     reason.to_string(),
-                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyOrderFromKnownZeroOrderOnSubBuiltinRule),
+                    BuiltinRuleEvidence::Uncatalogued(
+                        UncataloguedBuiltinRule::VerifyOrderFromKnownZeroOrderOnSubBuiltinRule02,
+                    ),
                     vec![difference_result],
                 )
                 .into(),
@@ -2332,7 +2372,9 @@ impl Runtime {
                 SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     atomic_fact.clone().into(),
                     "order from complete zero-difference-bound disjunction".to_string(),
-                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyOrderFromKnownZeroOrderOnSubBuiltinRule),
+                    BuiltinRuleEvidence::Uncatalogued(
+                        UncataloguedBuiltinRule::VerifyOrderFromKnownZeroOrderOnSubBuiltinRule03,
+                    ),
                     vec![premise_result],
                 )
                 .into(),
@@ -2638,7 +2680,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 msg,
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyZeroLeEvenIntegerPowBuiltinRule),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::VerifyZeroLeEvenIntegerPowBuiltinRule,
+                ),
                 steps,
             ),
         )))
@@ -2698,7 +2742,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 reason.to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyZeroLtEvenIntegerPowFromBaseNonzeroBuiltinRule),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::VerifyZeroLtEvenIntegerPowFromBaseNonzeroBuiltinRule,
+                ),
                 steps,
             ),
         )))
@@ -2744,7 +2790,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "0 < a^b from 0 < a and b in R".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyZeroLtPowFromPositiveBaseRealExpBuiltinRule),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::VerifyZeroLtPowFromPositiveBaseRealExpBuiltinRule,
+                ),
                 steps,
             ),
         )))
@@ -2791,7 +2839,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "0 <= a^b from 0 < a and b in R".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyZeroLePowFromPositiveBaseRealExpBuiltinRule),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::VerifyZeroLePowFromPositiveBaseRealExpBuiltinRule,
+                ),
                 steps,
             ),
         )))

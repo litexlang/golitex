@@ -3547,12 +3547,12 @@ forall F finite_set, c set:
     );
     for rule in [
         "intersection non-membership: non-member of the left side",
-        "local builtin set.intersect_subset_left",
-        "local builtin set.intersect_subset_right",
-        "local builtin set.subset_union_left",
-        "local builtin set.subset_union_right",
-        "local builtin set.set_minus_subset_left",
-        "local builtin set.subset_eq_set_minus_recovery",
+        "\"rule_id\": \"set.intersect_subset_left\"",
+        "\"rule_id\": \"set.intersect_subset_right\"",
+        "\"rule_id\": \"set.subset_union_left\"",
+        "\"rule_id\": \"set.subset_union_right\"",
+        "\"rule_id\": \"set.set_minus_subset_left\"",
+        "\"rule_id\": \"set.subset_eq_set_minus_recovery\"",
     ] {
         assert!(
             run_output.contains(rule),

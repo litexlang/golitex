@@ -46,7 +46,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 "definition-owned struct field has its instantiated defined carrier".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactStructFieldInDefinitionCarrier),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::VerifyInFactStructFieldInDefinitionCarrier,
+                ),
                 steps,
             )
             .into(),
@@ -105,7 +107,7 @@ impl Runtime {
                     SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         selected_membership.clone().into(),
                         "selected literal tuple component has a real carrier".to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactLiteralTupleProjectionInSet),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactLiteralTupleProjectionInSet01),
                         real_steps,
                     )
                     .into();
@@ -119,7 +121,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 "literal tuple projection inherits the selected component carrier".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactLiteralTupleProjectionInSet),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::VerifyInFactLiteralTupleProjectionInSet02,
+                ),
                 vec![selected_result],
             )
             .into(),
@@ -156,7 +160,9 @@ impl Runtime {
                 SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     subset_fact.clone().into(),
                     "subset reflexivity".to_string(),
-                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactSetBuilderInPowerSetViaParamSubset),
+                    BuiltinRuleEvidence::Uncatalogued(
+                        UncataloguedBuiltinRule::VerifyInFactSetBuilderInPowerSetViaParamSubset01,
+                    ),
                     Vec::new(),
                 )
                 .into()
@@ -175,7 +181,7 @@ impl Runtime {
             infer_result,
             "set_builder in power_set: param_set subset of base implies builder defines a subset of base"
                 .to_string(),
-            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactSetBuilderInPowerSetViaParamSubset),
+            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactSetBuilderInPowerSetViaParamSubset02),
             vec![verify_subset_result],
         ))
         .into())
@@ -215,7 +221,9 @@ impl Runtime {
                 stmt,
                 infer_result,
                 "list_set in power_set: each element is in the base set".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactListSetInPowerSetDefinesMembership),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::VerifyInFactListSetInPowerSetDefinesMembership,
+                ),
                 subgoals,
             ))
             .into(),
@@ -329,7 +337,9 @@ impl Runtime {
                     "{} is not equal to every element in list_set {}",
                     not_in_fact.element, not_in_fact.set
                 ),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyNotInFactByNotEqualToEveryElementInListSet),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::VerifyNotInFactByNotEqualToEveryElementInListSet,
+                ),
                 steps,
             ))
             .into(),
@@ -351,7 +361,9 @@ impl Runtime {
                 (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "fn membership: stored fn signature matches RHS".to_string(),
-                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactElementInFnSetByStoredDefinition),
+                    BuiltinRuleEvidence::Uncatalogued(
+                        UncataloguedBuiltinRule::VerifyInFactElementInFnSetByStoredDefinition01,
+                    ),
                     Vec::new(),
                 ))
                 .into(),
@@ -375,7 +387,9 @@ impl Runtime {
                     in_fact.clone().into(),
                     "fn membership: stored fn signature matches RHS (alpha-renamed parameters)"
                         .to_string(),
-                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactElementInFnSetByStoredDefinition),
+                    BuiltinRuleEvidence::Uncatalogued(
+                        UncataloguedBuiltinRule::VerifyInFactElementInFnSetByStoredDefinition02,
+                    ),
                     Vec::new(),
                 ))
                 .into(),
@@ -406,7 +420,9 @@ impl Runtime {
                     in_fact.clone().into(),
                     "anonymous function: signature (params, dom, co-domain) matches `fn` set"
                         .to_string(),
-                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactAnonymousFnSignatureMatchesFnSet),
+                    BuiltinRuleEvidence::Uncatalogued(
+                        UncataloguedBuiltinRule::VerifyInFactAnonymousFnSignatureMatchesFnSet01,
+                    ),
                     Vec::new(),
                 ))
                 .into(),
@@ -431,7 +447,9 @@ impl Runtime {
                     in_fact.clone().into(),
                     "anonymous function: signature matches `fn` set (alpha-renamed parameters)"
                         .to_string(),
-                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactAnonymousFnSignatureMatchesFnSet),
+                    BuiltinRuleEvidence::Uncatalogued(
+                        UncataloguedBuiltinRule::VerifyInFactAnonymousFnSignatureMatchesFnSet02,
+                    ),
                     Vec::new(),
                 ))
                 .into(),
@@ -564,7 +582,9 @@ impl Runtime {
                     "finite sequence literal application is in {}",
                     target_set_obj
                 ),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactFiniteSeqLiteralApplicationInSet),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::VerifyInFactFiniteSeqLiteralApplicationInSet,
+                ),
                 step_results,
             ))
             .into(),
@@ -627,7 +647,9 @@ impl Runtime {
                     "cart projection list_set elements are all in {}",
                     target_set_obj
                 ),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactObjAtIndexInStandardSetByCartFactorListSet),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::VerifyInFactObjAtIndexInStandardSetByCartFactorListSet,
+                ),
                 step_results,
             ))
             .into(),

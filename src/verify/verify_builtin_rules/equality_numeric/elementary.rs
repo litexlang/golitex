@@ -145,7 +145,7 @@ impl Runtime {
                             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                                 equal_fact.clone().into(),
                                 reason.to_string(),
-                                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyZeroEqualsProductImpliesOtherFactorZero),
+                                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyZeroEqualsProductImpliesOtherFactorZero01),
                                 results,
                             )
                             .into(),
@@ -173,7 +173,7 @@ impl Runtime {
                             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                                 equal_fact.clone().into(),
                                 "equality: b = 0 from a * b = 0 and a != 0".to_string(),
-                                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyZeroEqualsProductImpliesOtherFactorZero),
+                                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyZeroEqualsProductImpliesOtherFactorZero02),
                                 vec![left_target_result, right_nonzero_result],
                             )
                             .into(),
@@ -199,7 +199,7 @@ impl Runtime {
                             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                                 equal_fact.clone().into(),
                                 "equality: a = 0 from a * b = 0 and b != 0".to_string(),
-                                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyZeroEqualsProductImpliesOtherFactorZero),
+                                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyZeroEqualsProductImpliesOtherFactorZero03),
                                 vec![right_target_result, left_nonzero_result],
                             )
                             .into(),
@@ -373,7 +373,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "equality: 1 % k = 1 for k >= 2".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyOneModEqualsOneForModulusAtLeastTwo),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::TryVerifyOneModEqualsOneForModulusAtLeastTwo,
+                ),
                 vec![modulus_result],
             )
             .into(),
@@ -435,7 +437,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "equality: (a - a % b) % b = 0 for a in Z and b in N+".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyModDividendMinusRemainderEqualsZero),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::TryVerifyModDividendMinusRemainderEqualsZero,
+                ),
                 results,
             )
             .into(),
@@ -568,7 +572,7 @@ impl Runtime {
                         equal_fact.clone().into(),
                         "equality: Euclidean remainder uniqueness from a = m * q + r and 0 <= r < m"
                             .to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyModEqRemainderFromEuclideanDivision),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyModEqRemainderFromEuclideanDivision01),
                         steps,
                     )
                     .into(),
@@ -611,7 +615,9 @@ impl Runtime {
                     equal_fact.clone().into(),
                     "equality: Euclidean remainder uniqueness from a = m * q + r and 0 <= r < m"
                         .to_string(),
-                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyModEqRemainderFromEuclideanDivision),
+                    BuiltinRuleEvidence::Uncatalogued(
+                        UncataloguedBuiltinRule::TryVerifyModEqRemainderFromEuclideanDivision02,
+                    ),
                     steps,
                 )
                 .into(),

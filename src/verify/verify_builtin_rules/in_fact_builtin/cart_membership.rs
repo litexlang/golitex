@@ -116,7 +116,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 "cart membership from symbolic dimension and projections".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyInFactBySymbolicCart),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::TryVerifyInFactBySymbolicCart,
+                ),
                 vec![
                     is_cart_result,
                     is_tuple_result,

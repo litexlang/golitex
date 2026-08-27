@@ -132,7 +132,9 @@ impl Runtime {
                 SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     not_equal_fact.clone().into(),
                     "native imaginary unit is nonzero".to_string(),
-                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNativeINonzero),
+                    BuiltinRuleEvidence::Uncatalogued(
+                        UncataloguedBuiltinRule::TryVerifyNativeINonzero,
+                    ),
                     Vec::new(),
                 )
                 .into(),
@@ -224,7 +226,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 not_equal_fact.clone().into(),
                 "complex modulus is nonzero for a nonzero argument".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNativeComplexAbsNonzero),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::TryVerifyNativeComplexAbsNonzero,
+                ),
                 vec![result],
             )
             .into(),

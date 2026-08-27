@@ -70,7 +70,9 @@ impl Runtime {
                         "anonymous fn satisfies a definition return set through an equal {}",
                         representative_kind
                     ),
-                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyValueInDefinitionReturnSet),
+                    BuiltinRuleEvidence::Uncatalogued(
+                        UncataloguedBuiltinRule::VerifyValueInDefinitionReturnSet,
+                    ),
                     vec![representative_result],
                 )
                 .into(),

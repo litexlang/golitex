@@ -462,7 +462,7 @@ impl Runtime {
                     SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         exist_fact.clone().into(),
                         "exist: real-line comparison witness".to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyExistFact),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyExistFact01),
                         steps,
                     )
                     .into(),
@@ -482,7 +482,7 @@ impl Runtime {
                     SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         exist_fact.clone().into(),
                         "exist: member of a nonempty set".to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyExistFact),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyExistFact02),
                         vec![nonempty_result],
                     )
                     .into(),
@@ -509,7 +509,7 @@ impl Runtime {
                         exist_fact.clone().into(),
                         "exist: rational representation with positive integer denominator"
                             .to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyExistFact),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyExistFact03),
                         vec![rational_membership],
                     )
                     .into(),
@@ -534,7 +534,7 @@ impl Runtime {
                     SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         exist_fact.clone().into(),
                         "exist: rational integer ratio representation".to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyExistFact),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyExistFact04),
                         vec![rational_membership],
                     )
                     .into(),
@@ -559,7 +559,7 @@ impl Runtime {
                         exist_fact.clone().into(),
                         "exist!: unique Euclidean quotient for an integer and positive divisor"
                             .to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyExistFact),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyExistFact05),
                         vec![dividend_result, divisor_result],
                     )
                     .into(),
@@ -612,7 +612,7 @@ impl Runtime {
                         exist_fact.clone().into(),
                         "exist: zero remainder gives an integer multiple of a nonzero modulus"
                             .to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyExistFact),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyExistFact06),
                         vec![
                             dividend_result,
                             divisor_result,
@@ -641,7 +641,7 @@ impl Runtime {
                     SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         exist_fact.clone().into(),
                         "exist: Archimedean reciprocal bound".to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyExistFact),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyExistFact07),
                         vec![positive_bound_result],
                     )
                     .into(),
@@ -669,7 +669,7 @@ impl Runtime {
                         SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             exist_fact.clone().into(),
                             "exist: rational density in the real line".to_string(),
-                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyExistFact),
+                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyExistFact08),
                             steps,
                         )
                         .into(),
@@ -698,7 +698,7 @@ impl Runtime {
                         SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             exist_fact.clone().into(),
                             "exist: real density by the midpoint principle".to_string(),
-                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyExistFact),
+                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyExistFact09),
                             steps,
                         )
                         .into(),
@@ -738,7 +738,7 @@ impl Runtime {
                         SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             exist_fact.clone().into(),
                             rule.to_string(),
-                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyExistFact),
+                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyExistFact10),
                             steps,
                         )
                         .into(),
@@ -896,7 +896,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 exist_fact.clone().into(),
                 "finite nonempty natural set has a greatest member".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyFiniteNonemptyNaturalSetHasMaximum),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::VerifyFiniteNonemptyNaturalSetHasMaximum,
+                ),
                 steps,
             )
             .into(),

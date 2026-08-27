@@ -320,12 +320,8 @@ impl StmtResultToLeanCompiler {
                 LeanSetBuiltinCompilationKind::UnionAbsorptionFromSubset
             }
             SetBuiltinRule::UnionFinite => LeanSetBuiltinCompilationKind::UnionFinite,
-            SetBuiltinRule::UnionNonemptyLeft => {
-                LeanSetBuiltinCompilationKind::UnionNonemptyLeft
-            }
-            SetBuiltinRule::UnionNonemptyRight => {
-                LeanSetBuiltinCompilationKind::UnionNonemptyRight
-            }
+            SetBuiltinRule::UnionNonemptyLeft => LeanSetBuiltinCompilationKind::UnionNonemptyLeft,
+            SetBuiltinRule::UnionNonemptyRight => LeanSetBuiltinCompilationKind::UnionNonemptyRight,
             SetBuiltinRule::UnionSubset => LeanSetBuiltinCompilationKind::UnionSubset,
             SetBuiltinRule::IntersectCommutative => {
                 LeanSetBuiltinCompilationKind::IntersectCommutative
@@ -363,18 +359,10 @@ impl StmtResultToLeanCompiler {
                 LeanSetBuiltinCompilationKind::PowerSetMembershipOfSubset
             }
             SetBuiltinRule::PowerSetNonempty => LeanSetBuiltinCompilationKind::PowerSetNonempty,
-            SetBuiltinRule::SetMinusSelfEmpty => {
-                LeanSetBuiltinCompilationKind::SetMinusSelfEmpty
-            }
-            SetBuiltinRule::SetMinusEmptyRight => {
-                LeanSetBuiltinCompilationKind::SetMinusEmptyRight
-            }
-            SetBuiltinRule::SetMinusEmptyLeft => {
-                LeanSetBuiltinCompilationKind::SetMinusEmptyLeft
-            }
-            SetBuiltinRule::SetMinusFiniteLeft => {
-                LeanSetBuiltinCompilationKind::SetMinusFiniteLeft
-            }
+            SetBuiltinRule::SetMinusSelfEmpty => LeanSetBuiltinCompilationKind::SetMinusSelfEmpty,
+            SetBuiltinRule::SetMinusEmptyRight => LeanSetBuiltinCompilationKind::SetMinusEmptyRight,
+            SetBuiltinRule::SetMinusEmptyLeft => LeanSetBuiltinCompilationKind::SetMinusEmptyLeft,
+            SetBuiltinRule::SetMinusFiniteLeft => LeanSetBuiltinCompilationKind::SetMinusFiniteLeft,
             SetBuiltinRule::SetMinusInfiniteOfInfiniteFinite => {
                 return Err(format!(
                     "builtin rule `{}` has no reviewed ToLean mapping because the Lean ABI does not yet represent infinite-set facts",
@@ -390,9 +378,7 @@ impl StmtResultToLeanCompiler {
             SetBuiltinRule::SetMinusRecoverSubset => {
                 LeanSetBuiltinCompilationKind::SetMinusRecoverSubset
             }
-            SetBuiltinRule::SetMinusSubsetLeft => {
-                LeanSetBuiltinCompilationKind::SetMinusSubsetLeft
-            }
+            SetBuiltinRule::SetMinusSubsetLeft => LeanSetBuiltinCompilationKind::SetMinusSubsetLeft,
             SetBuiltinRule::SetMinusUnionDeMorgan => {
                 LeanSetBuiltinCompilationKind::SetMinusUnionDeMorgan
             }
@@ -408,9 +394,7 @@ impl StmtResultToLeanCompiler {
             SetBuiltinRule::IntersectMembershipBoth => {
                 LeanSetBuiltinCompilationKind::IntersectMembershipBoth
             }
-            SetBuiltinRule::SetMinusMembership => {
-                LeanSetBuiltinCompilationKind::SetMinusMembership
-            }
+            SetBuiltinRule::SetMinusMembership => LeanSetBuiltinCompilationKind::SetMinusMembership,
             unsupported => {
                 return Err(format!(
                     "builtin rule `{}` has no reviewed ToLean mapping",
@@ -1519,8 +1503,17 @@ impl StmtResultToLeanCompiler {
             );
         }
 
-        let components =
-            instantiated_predicate_components(&source_fact, &binding, &self.environment_stack)?;
+        let Some(source_proof) =
+            self.construct_lean_proof_from_direct_fact_result(source_result)?
+        else {
+            return Ok(None);
+        };
+        let components = instantiated_predicate_components(
+            &source_fact,
+            &binding,
+            &self.environment_stack,
+            Some(&source_proof),
+        )?;
         let rendered_target = render_fact(target, &self.environment_stack)?;
         let clause_index = components
             .iter()
@@ -1530,11 +1523,6 @@ impl StmtResultToLeanCompiler {
                     .to_string()
             })?;
         let selector = conjunction_selector(clause_index, components.len())?;
-        let Some(source_proof) =
-            self.construct_lean_proof_from_direct_fact_result(source_result)?
-        else {
-            return Ok(None);
-        };
         Ok(Some(format!(
             "(by\n  have __definition := {source_proof}\n  unfold {} at __definition\n  exact __definition{selector})",
             binding.lean_name
@@ -1813,9 +1801,7 @@ impl StmtResultToLeanCompiler {
                 let Obj::Mul(product) = candidate else {
                     return false;
                 };
-                let is_negative_one = |object: &Obj| {
-                    matches!(object, Obj::Number(number) if number.normalized_value == "-1")
-                };
+                let is_negative_one = |object: &Obj| matches!(object, Obj::Number(number) if number.normalized_value == "-1");
                 (is_negative_one(product.left.as_ref())
                     && obj_equality_key(product.right.as_ref()) == obj_equality_key(argument))
                     || (is_negative_one(product.right.as_ref())
@@ -1831,13 +1817,18 @@ impl StmtResultToLeanCompiler {
                 let Obj::Add(sum) = object else {
                     return None;
                 };
-                Some((abs_argument(sum.left.as_ref())?, abs_argument(sum.right.as_ref())?))
+                Some((
+                    abs_argument(sum.left.as_ref())?,
+                    abs_argument(sum.right.as_ref())?,
+                ))
             }
             let (arguments, theorem): (Vec<&Obj>, &str) = match rule {
                 AbsoluteValueBuiltinRule::Nonnegative => {
                     let argument = abs_argument(right)
                         .filter(|_| is_literal_zero(left))
-                        .ok_or_else(|| "absolute-value nonnegative target changed shape".to_string())?;
+                        .ok_or_else(|| {
+                            "absolute-value nonnegative target changed shape".to_string()
+                        })?;
                     (vec![argument], "absNonnegative")
                 }
                 AbsoluteValueBuiltinRule::SelfLessEqual => {
@@ -1856,22 +1847,26 @@ impl StmtResultToLeanCompiler {
                     let Obj::Mul(product) = left else {
                         return Err("negative-absolute lower bound lost its negation".into());
                     };
-                    let absolute = if matches!(product.left.as_ref(), Obj::Number(number) if number.normalized_value == "-1") {
+                    let absolute = if matches!(product.left.as_ref(), Obj::Number(number) if number.normalized_value == "-1")
+                    {
                         product.right.as_ref()
-                    } else if matches!(product.right.as_ref(), Obj::Number(number) if number.normalized_value == "-1") {
+                    } else if matches!(product.right.as_ref(), Obj::Number(number) if number.normalized_value == "-1")
+                    {
                         product.left.as_ref()
                     } else {
                         return Err("negative-absolute lower bound lost negative one".into());
                     };
                     let argument = abs_argument(absolute)
                         .filter(|argument| obj_equality_key(right) == obj_equality_key(argument))
-                        .ok_or_else(|| "negative-absolute lower bound changed its argument".to_string())?;
+                        .ok_or_else(|| {
+                            "negative-absolute lower bound changed its argument".to_string()
+                        })?;
                     (vec![argument], "negAbsLe")
                 }
-                AbsoluteValueBuiltinRule::TriangleAdd
-                | AbsoluteValueBuiltinRule::TriangleSub => {
-                    let outer = abs_argument(left)
-                        .ok_or_else(|| "absolute triangle target lost its outer absolute value".to_string())?;
+                AbsoluteValueBuiltinRule::TriangleAdd | AbsoluteValueBuiltinRule::TriangleSub => {
+                    let outer = abs_argument(left).ok_or_else(|| {
+                        "absolute triangle target lost its outer absolute value".to_string()
+                    })?;
                     let (first, second) = match (rule, outer) {
                         (AbsoluteValueBuiltinRule::TriangleAdd, Obj::Add(sum)) => {
                             (sum.left.as_ref(), sum.right.as_ref())
@@ -1881,8 +1876,9 @@ impl StmtResultToLeanCompiler {
                         }
                         _ => return Err("absolute triangle target changed its operator".into()),
                     };
-                    let (right_first, right_second) = abs_pair(right)
-                        .ok_or_else(|| "absolute triangle target lost its absolute-value sum".to_string())?;
+                    let (right_first, right_second) = abs_pair(right).ok_or_else(|| {
+                        "absolute triangle target lost its absolute-value sum".to_string()
+                    })?;
                     if !((obj_equality_key(first) == obj_equality_key(right_first)
                         && obj_equality_key(second) == obj_equality_key(right_second))
                         || (obj_equality_key(first) == obj_equality_key(right_second)
@@ -1904,18 +1900,22 @@ impl StmtResultToLeanCompiler {
                     let Obj::Sub(difference) = left else {
                         return Err("reverse absolute triangle lost its difference".into());
                     };
-                    let first = abs_argument(difference.left.as_ref())
-                        .ok_or_else(|| "reverse absolute triangle lost its left absolute value".to_string())?;
-                    let second = abs_argument(difference.right.as_ref())
-                        .ok_or_else(|| "reverse absolute triangle lost its right absolute value".to_string())?;
-                    let outer = abs_argument(right)
-                        .ok_or_else(|| "reverse absolute triangle lost its outer absolute value".to_string())?;
+                    let first = abs_argument(difference.left.as_ref()).ok_or_else(|| {
+                        "reverse absolute triangle lost its left absolute value".to_string()
+                    })?;
+                    let second = abs_argument(difference.right.as_ref()).ok_or_else(|| {
+                        "reverse absolute triangle lost its right absolute value".to_string()
+                    })?;
+                    let outer = abs_argument(right).ok_or_else(|| {
+                        "reverse absolute triangle lost its outer absolute value".to_string()
+                    })?;
                     let operands_match = match (rule, outer) {
                         (AbsoluteValueBuiltinRule::ReverseTriangleAdd, Obj::Add(sum)) => {
                             (obj_equality_key(first) == obj_equality_key(sum.left.as_ref())
                                 && obj_equality_key(second) == obj_equality_key(sum.right.as_ref()))
                                 || (obj_equality_key(first) == obj_equality_key(sum.right.as_ref())
-                                    && obj_equality_key(second) == obj_equality_key(sum.left.as_ref()))
+                                    && obj_equality_key(second)
+                                        == obj_equality_key(sum.left.as_ref()))
                         }
                         (AbsoluteValueBuiltinRule::ReverseTriangleSub, Obj::Sub(subtraction)) => {
                             obj_equality_key(first) == obj_equality_key(subtraction.left.as_ref())
@@ -2273,9 +2273,7 @@ impl StmtResultToLeanCompiler {
                 })
                 .collect()
         };
-        let same = |left: &Obj, right: &Obj| {
-            obj_equality_key(left) == obj_equality_key(right)
-        };
+        let same = |left: &Obj, right: &Obj| obj_equality_key(left) == obj_equality_key(right);
         let bridge_selected_source = |proof: String, selected: &Obj| -> Result<String, String> {
             let LeanTargetObjectRepresentation::Symbol { symbol_id, .. } =
                 LeanTargetObjectRepresentation::lower(selected)?
@@ -2332,33 +2330,40 @@ impl StmtResultToLeanCompiler {
                         let Obj::Min(minimum) = left else {
                             return Err("minimum bound lost its minimum constructor".into());
                         };
-                        let (expected, theorem) =
-                            if rule == ExtremaBuiltinRule::MinLessEqualLeft {
-                                (minimum.left.as_ref(), "minLeLeft")
-                            } else {
-                                (minimum.right.as_ref(), "minLeRight")
-                            };
-                        (minimum.left.as_ref(), minimum.right.as_ref(), expected, theorem)
+                        let (expected, theorem) = if rule == ExtremaBuiltinRule::MinLessEqualLeft {
+                            (minimum.left.as_ref(), "minLeLeft")
+                        } else {
+                            (minimum.right.as_ref(), "minLeRight")
+                        };
+                        (
+                            minimum.left.as_ref(),
+                            minimum.right.as_ref(),
+                            expected,
+                            theorem,
+                        )
                     }
                     ExtremaBuiltinRule::LessEqualMaxLeft
                     | ExtremaBuiltinRule::LessEqualMaxRight => {
                         let Obj::Max(maximum) = right else {
                             return Err("maximum bound lost its maximum constructor".into());
                         };
-                        let (expected, theorem) =
-                            if rule == ExtremaBuiltinRule::LessEqualMaxLeft {
-                                (maximum.left.as_ref(), "leMaxLeft")
-                            } else {
-                                (maximum.right.as_ref(), "leMaxRight")
-                            };
-                        (maximum.left.as_ref(), maximum.right.as_ref(), expected, theorem)
+                        let (expected, theorem) = if rule == ExtremaBuiltinRule::LessEqualMaxLeft {
+                            (maximum.left.as_ref(), "leMaxLeft")
+                        } else {
+                            (maximum.right.as_ref(), "leMaxRight")
+                        };
+                        (
+                            maximum.left.as_ref(),
+                            maximum.right.as_ref(),
+                            expected,
+                            theorem,
+                        )
                     }
                     _ => unreachable!(),
                 };
                 let actual = if matches!(
                     rule,
-                    ExtremaBuiltinRule::MinLessEqualLeft
-                        | ExtremaBuiltinRule::MinLessEqualRight
+                    ExtremaBuiltinRule::MinLessEqualLeft | ExtremaBuiltinRule::MinLessEqualRight
                 ) {
                     right
                 } else {
@@ -2389,13 +2394,19 @@ impl StmtResultToLeanCompiler {
                                 rule,
                                 ExtremaBuiltinRule::MinEqLeftOfLessEqual
                                     | ExtremaBuiltinRule::MinEqRightOfLessEqual
-                            ) => (value.left.as_ref(), value.right.as_ref()),
+                            ) =>
+                        {
+                            (value.left.as_ref(), value.right.as_ref())
+                        }
                         Obj::Max(value)
                             if matches!(
                                 rule,
                                 ExtremaBuiltinRule::MaxEqLeftOfLessEqual
                                     | ExtremaBuiltinRule::MaxEqRightOfLessEqual
-                            ) => (value.left.as_ref(), value.right.as_ref()),
+                            ) =>
+                        {
+                            (value.left.as_ref(), value.right.as_ref())
+                        }
                         _ => continue,
                     };
                     let (expected_result, premise_left, premise_right, theorem) = match rule {
@@ -2426,7 +2437,15 @@ impl StmtResultToLeanCompiler {
                         break;
                     }
                 }
-                let Some((first, second, selected_result, premise_left, premise_right, theorem, reverse)) = selected
+                let Some((
+                    first,
+                    second,
+                    selected_result,
+                    premise_left,
+                    premise_right,
+                    theorem,
+                    reverse,
+                )) = selected
                 else {
                     return Err("extrema selection equality changed its structure".into());
                 };
@@ -2511,7 +2530,10 @@ impl StmtResultToLeanCompiler {
                                 if same(source.left.as_ref(), destination.right.as_ref())
                                     && same(source.right.as_ref(), destination.left.as_ref()) =>
                             {
-                                Some((vec![source.left.as_ref(), source.right.as_ref()], "minCommutative"))
+                                Some((
+                                    vec![source.left.as_ref(), source.right.as_ref()],
+                                    "minCommutative",
+                                ))
                             }
                             _ => None,
                         },
@@ -2520,7 +2542,10 @@ impl StmtResultToLeanCompiler {
                                 if same(source.left.as_ref(), destination.right.as_ref())
                                     && same(source.right.as_ref(), destination.left.as_ref()) =>
                             {
-                                Some((vec![source.left.as_ref(), source.right.as_ref()], "maxCommutative"))
+                                Some((
+                                    vec![source.left.as_ref(), source.right.as_ref()],
+                                    "maxCommutative",
+                                ))
                             }
                             _ => None,
                         },
@@ -2545,11 +2570,12 @@ impl StmtResultToLeanCompiler {
                         ExtremaBuiltinRule::MinAbsorbMaxLeft => match source {
                             Obj::Min(value) if same(value.left.as_ref(), destination) => {
                                 match value.right.as_ref() {
-                                    Obj::Max(inner)
-                                        if same(inner.left.as_ref(), destination) => Some((
+                                    Obj::Max(inner) if same(inner.left.as_ref(), destination) => {
+                                        Some((
                                             vec![destination, inner.right.as_ref()],
                                             "minAbsorbMaxLeft",
-                                        )),
+                                        ))
+                                    }
                                     _ => None,
                                 }
                             }
@@ -2558,11 +2584,12 @@ impl StmtResultToLeanCompiler {
                         ExtremaBuiltinRule::MaxAbsorbMinLeft => match source {
                             Obj::Max(value) if same(value.left.as_ref(), destination) => {
                                 match value.right.as_ref() {
-                                    Obj::Min(inner)
-                                        if same(inner.left.as_ref(), destination) => Some((
+                                    Obj::Min(inner) if same(inner.left.as_ref(), destination) => {
+                                        Some((
                                             vec![destination, inner.right.as_ref()],
                                             "maxAbsorbMinLeft",
-                                        )),
+                                        ))
+                                    }
                                     _ => None,
                                 }
                             }
@@ -2572,12 +2599,26 @@ impl StmtResultToLeanCompiler {
                             (Obj::Min(source), Obj::Min(destination)) => {
                                 match (source.left.as_ref(), destination.right.as_ref()) {
                                     (Obj::Min(inner_left), Obj::Min(inner_right))
-                                        if same(inner_left.left.as_ref(), destination.left.as_ref())
-                                            && same(inner_left.right.as_ref(), inner_right.left.as_ref())
-                                            && same(source.right.as_ref(), inner_right.right.as_ref()) => Some((
-                                                vec![inner_left.left.as_ref(), inner_left.right.as_ref(), source.right.as_ref()],
-                                                "minAssociative",
-                                            )),
+                                        if same(
+                                            inner_left.left.as_ref(),
+                                            destination.left.as_ref(),
+                                        ) && same(
+                                            inner_left.right.as_ref(),
+                                            inner_right.left.as_ref(),
+                                        ) && same(
+                                            source.right.as_ref(),
+                                            inner_right.right.as_ref(),
+                                        ) =>
+                                    {
+                                        Some((
+                                            vec![
+                                                inner_left.left.as_ref(),
+                                                inner_left.right.as_ref(),
+                                                source.right.as_ref(),
+                                            ],
+                                            "minAssociative",
+                                        ))
+                                    }
                                     _ => None,
                                 }
                             }
@@ -2587,12 +2628,26 @@ impl StmtResultToLeanCompiler {
                             (Obj::Max(source), Obj::Max(destination)) => {
                                 match (source.left.as_ref(), destination.right.as_ref()) {
                                     (Obj::Max(inner_left), Obj::Max(inner_right))
-                                        if same(inner_left.left.as_ref(), destination.left.as_ref())
-                                            && same(inner_left.right.as_ref(), inner_right.left.as_ref())
-                                            && same(source.right.as_ref(), inner_right.right.as_ref()) => Some((
-                                                vec![inner_left.left.as_ref(), inner_left.right.as_ref(), source.right.as_ref()],
-                                                "maxAssociative",
-                                            )),
+                                        if same(
+                                            inner_left.left.as_ref(),
+                                            destination.left.as_ref(),
+                                        ) && same(
+                                            inner_left.right.as_ref(),
+                                            inner_right.left.as_ref(),
+                                        ) && same(
+                                            source.right.as_ref(),
+                                            inner_right.right.as_ref(),
+                                        ) =>
+                                    {
+                                        Some((
+                                            vec![
+                                                inner_left.left.as_ref(),
+                                                inner_left.right.as_ref(),
+                                                source.right.as_ref(),
+                                            ],
+                                            "maxAssociative",
+                                        ))
+                                    }
                                     _ => None,
                                 }
                             }
@@ -2629,9 +2684,7 @@ impl StmtResultToLeanCompiler {
         subgoals: &[StmtResult],
     ) -> Result<Option<String>, String> {
         let (equality_left, equality_right) = equality_parts(target)?;
-        let same = |left: &Obj, right: &Obj| {
-            obj_equality_key(left) == obj_equality_key(right)
-        };
+        let same = |left: &Obj, right: &Obj| obj_equality_key(left) == obj_equality_key(right);
         let application_matches = |object: &Obj, function: &Obj, argument: &Obj| {
             let Obj::FnObj(application) = object else {
                 return false;
@@ -2678,15 +2731,17 @@ impl StmtResultToLeanCompiler {
                 render_fact(target, &self.environment_stack)?;
                 let start = render_integer_obj(sum.start.as_ref(), &self.environment_stack)?;
                 let lowered_function = LeanTargetObjectRepresentation::lower(sum.func.as_ref())?;
-                let (exact_function, heterogeneous) =
-                    render_exact_unary_integer_function(&lowered_function, &self.environment_stack)?;
+                let (exact_function, heterogeneous) = render_exact_unary_integer_function(
+                    &lowered_function,
+                    &self.environment_stack,
+                )?;
                 let mut proof = match heterogeneous {
-                    None => format!(
-                        "Litex.Rules.integerRangeSumSingleOwn {start} {exact_function}"
-                    ),
-                    Some((source, membership)) => format!(
-                        "Litex.Rules.integerRangeSumSingle {start} {source} ({membership})"
-                    ),
+                    None => {
+                        format!("Litex.Rules.integerRangeSumSingleOwn {start} {exact_function}")
+                    }
+                    Some((source, membership)) => {
+                        format!("Litex.Rules.integerRangeSumSingle {start} {source} ({membership})")
+                    }
                 };
                 if reverse {
                     proof = format!("Litex.Same.symm ({proof})");
@@ -2752,11 +2807,12 @@ impl StmtResultToLeanCompiler {
                 let finish = render_integer_obj(previous.end.as_ref(), &self.environment_stack)?;
                 let lowered_function =
                     LeanTargetObjectRepresentation::lower(extended.func.as_ref())?;
-                let (exact_function, heterogeneous) =
-                    render_exact_unary_integer_function(&lowered_function, &self.environment_stack)?;
-                let native_order = format!(
-                    "(by simpa [Litex.Le, Litex.OrderValue] using ({order_proof}))"
-                );
+                let (exact_function, heterogeneous) = render_exact_unary_integer_function(
+                    &lowered_function,
+                    &self.environment_stack,
+                )?;
+                let native_order =
+                    format!("(by simpa [Litex.Le, Litex.OrderValue] using ({order_proof}))");
                 let mut proof = match heterogeneous {
                     None => format!(
                         "Litex.Rules.integerRangeSumSplitLastOwn {start} {finish} {exact_function} ({native_order})"

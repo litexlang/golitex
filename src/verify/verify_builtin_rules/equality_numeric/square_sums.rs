@@ -51,7 +51,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "equality: a^2 + b^2 = 0 from a = 0 and b = 0 over R".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifySquareSumZeroFromZeroComponents),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::TryVerifySquareSumZeroFromZeroComponents,
+                ),
                 steps,
             )
             .into(),

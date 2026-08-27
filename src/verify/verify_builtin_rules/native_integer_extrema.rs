@@ -36,7 +36,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 format!("{name} fixes integer inputs"),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNativeRoundingIntegerEquality),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::TryVerifyNativeRoundingIntegerEquality,
+                ),
                 vec![premise_result],
             )
             .into(),
@@ -59,7 +61,9 @@ impl Runtime {
                 SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     equal_fact.clone().into(),
                     "native floor/ceil negation duality".to_string(),
-                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNativeRoundingAlgebraEquality),
+                    BuiltinRuleEvidence::Uncatalogued(
+                        UncataloguedBuiltinRule::TryVerifyNativeRoundingAlgebraEquality01,
+                    ),
                     Vec::new(),
                 )
                 .into(),
@@ -82,7 +86,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "native floor/ceil integer translation".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNativeRoundingAlgebraEquality),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::TryVerifyNativeRoundingAlgebraEquality02,
+                ),
                 vec![premise_result],
             )
             .into(),
@@ -192,7 +198,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "native rounding/extremum characteristic order bound".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNativeRoundingExtremaOrder),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::TryVerifyNativeRoundingExtremaOrder,
+                ),
                 Vec::new(),
             )
             .into()
@@ -242,7 +250,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "native lcm is bounded by every positive common multiple".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNativeLcmLeCommonPositiveMultiple),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::TryVerifyNativeLcmLeCommonPositiveMultiple,
+                ),
                 results,
             )
             .into(),
@@ -367,8 +377,8 @@ impl Runtime {
     ) -> Option<StmtResult> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
-        let rule = min_max_lattice_rule(left, right)
-            .or_else(|| min_max_lattice_rule(right, left))?;
+        let rule =
+            min_max_lattice_rule(left, right).or_else(|| min_max_lattice_rule(right, left))?;
         Some(
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
@@ -396,7 +406,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "lcm times gcd is the absolute product".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNativeLcmGcdProductEquality),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::TryVerifyNativeLcmGcdProductEquality,
+                ),
                 Vec::new(),
             )
             .into(),
@@ -419,7 +431,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "native lcm symmetry, zero law, or divisibility".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNativeLcmBasicEquality),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::TryVerifyNativeLcmBasicEquality,
+                ),
                 Vec::new(),
             )
             .into(),

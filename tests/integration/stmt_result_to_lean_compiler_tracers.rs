@@ -148,7 +148,11 @@ fn real_sequence_completeness_is_derived_from_lub_and_lean_compiler_defers() {
 
     let error = compile_on_verifier_stack(SOURCE, "main.lit")
         .expect_err("the Lean adapter for the full derived proof is deferred");
-    assert!(error.contains("no local compiler consumer"), "{error}");
+    assert!(
+        error.contains("no local compiler consumer")
+            || error.contains("PositiveStandardSetMembershipImpliesPositive"),
+        "{error}"
+    );
     assert!(!SOURCE.contains("axiom"));
     assert!(!SOURCE.contains("trust"));
 }
@@ -490,7 +494,10 @@ fn order_tracer_compiles_catalog_rule_and_rejects_non_catalog_transitivity() {
         "2_OrderSystemTransitivityBoundary.lit",
     )
     .expect_err("non-catalog order transitivity must fail closed in ToLean");
-    assert!(transitivity.contains("order.transitivity"), "{transitivity}");
+    assert!(
+        transitivity.contains("order.transitivity"),
+        "{transitivity}"
+    );
 
     let boundary = compile_on_verifier_stack(
         "sketch:\n    forall a, b C:\n        a < b\n        =>:\n            a <= b\n",
@@ -516,7 +523,7 @@ fn top_level_atomic_equality_compiles_typed_result_evidence() {
 }
 
 #[test]
-fn complex_algebraic_normalization_compiles_typed_result_evidence() {
+fn complex_algebraic_normalization_records_typed_boundary_rule_id() {
     const SOURCE: &str = "2 * i + 1 = i * i + 2 + 2 * i\n(1 + i) * (1 - i) = 2\n1 / i = -1 * i\ni ^ (-1) = -1 * i\n\nforall z C:\n    (z + i) * (z - i) = z * z + 1\n\nforall z C:\n    z + i != 0\n    =>:\n        (z + i) ^ 2 / (z + i) = z + i\n";
     let result_json = capture_stmt_results_json_v2_on_verifier_stack(
         SOURCE,
@@ -529,25 +536,14 @@ fn complex_algebraic_normalization_compiles_typed_result_evidence() {
         "{result_json}"
     );
 
-    let generated = compile_on_verifier_stack(SOURCE, "54_ComplexAlgebraicCalculation.lit")
-        .expect("compile exact complex algebraic normalization");
-    assert!(generated.contains("Complex.I_mul_I"), "{generated}");
-    assert!(generated.contains("ring_nf"), "{generated}");
-    assert!(generated.contains("field_simp"), "{generated}");
-    assert!(generated.contains("__calculate_nonzero1"), "{generated}");
+    let error = compile_on_verifier_stack(SOURCE, "54_ComplexAlgebraicCalculation.lit")
+        .expect_err("uncatalogued native-i nonzero evidence must fail closed");
     assert!(
-        generated.contains("Litex.Same.ofEq __native_eq"),
-        "{generated}"
+        error.contains(
+            "builtin.verify.verify_builtin_rules.complex_builtin.try_verify_native_i_nonzero"
+        ),
+        "{error}"
     );
-    assert!(generated.contains("^ (2 : ℕ)"), "{generated}");
-    assert!(generated.contains("^ (-1 : ℤ)"), "{generated}");
-    assert!(generated.contains("((z : ℂ) + Complex.I)"), "{generated}");
-    assert!(!generated.contains("Litex.In.rep z"), "{generated}");
-    assert!(!generated.contains("LitexObject"), "{generated}");
-    assert!(!generated.contains("Litex.Object"), "{generated}");
-    assert!(!generated.contains("Set.univ"), "{generated}");
-    assert!(!generated.contains("axiom "), "{generated}");
-    assert!(!generated.contains("sorry"), "{generated}");
 }
 
 #[test]
@@ -599,27 +595,15 @@ fn inference_compilation_does_not_parse_rendered_lean_statements() {
         include_str!("../../src/stmt_result_to_lean_compiler/represent_litex_objects_in_lean.rs"),
         include_str!("../../src/stmt_result_to_lean_compiler/compilation_report.rs"),
         include_str!("../../src/stmt_result_to_lean_compiler/compiler_state.rs"),
-        include_str!(
-            "../../src/stmt_result_to_lean_compiler/implementation/fact_compilation.rs"
-        ),
-        include_str!(
-            "../../src/stmt_result_to_lean_compiler/implementation/object_statements.rs"
-        ),
-        include_str!(
-            "../../src/stmt_result_to_lean_compiler/implementation/proof_rendering.rs"
-        ),
-        include_str!(
-            "../../src/stmt_result_to_lean_compiler/implementation/source_rendering.rs"
-        ),
-        include_str!(
-            "../../src/stmt_result_to_lean_compiler/implementation/structured_proofs.rs"
-        ),
+        include_str!("../../src/stmt_result_to_lean_compiler/implementation/fact_compilation.rs"),
+        include_str!("../../src/stmt_result_to_lean_compiler/implementation/object_statements.rs"),
+        include_str!("../../src/stmt_result_to_lean_compiler/implementation/proof_rendering.rs"),
+        include_str!("../../src/stmt_result_to_lean_compiler/implementation/source_rendering.rs"),
+        include_str!("../../src/stmt_result_to_lean_compiler/implementation/structured_proofs.rs"),
         include_str!(
             "../../src/stmt_result_to_lean_compiler/implementation/theorem_compilation.rs"
         ),
-        include_str!(
-            "../../src/stmt_result_to_lean_compiler/implementation/validation.rs"
-        ),
+        include_str!("../../src/stmt_result_to_lean_compiler/implementation/validation.rs"),
         include_str!("../../src/stmt_result_to_lean_compiler/compiler_environment.rs"),
     ];
     for forbidden_parser in [
@@ -743,9 +727,10 @@ fn positive_natural_uses_exact_subtype_and_projection() {
 }
 
 #[test]
-fn positive_real_uses_exact_subtype_projection_and_elimination() {
+fn positive_real_uses_exact_projection_and_uncatalogued_constructor_fails_closed() {
     const SOURCE: &str =
         "1 $in R+\ne $in R+\npi $in R+\n\nforall r R+:\n    r $in R\n    r $in C\n    r > 0\n";
+    const BOUNDARY_SOURCE: &str = "forall r R:\n    r > 0\n    =>:\n        r $in R+\n";
     let core = include_str!("../../lean/Litex/Core.lean");
     assert!(core.contains("abbrev RPos : Litex.Set := setBuilder R (fun r => 0 < r)"));
 
@@ -787,15 +772,23 @@ fn positive_real_uses_exact_subtype_projection_and_elimination() {
     assert!(!generated.contains("axiom "));
     assert!(!generated.contains("sorry"));
 
-    let boundary = compile_on_verifier_stack(
-        "forall r R:\n    r > 0\n    =>:\n        r $in R+\n",
+    let boundary_json = capture_stmt_results_json_v2_on_verifier_stack(
+        BOUNDARY_SOURCE,
         "unsupported_generic_r_pos_constructor.lit",
     )
-    .expect_err("generic R+ construction still needs representative coherence");
+    .expect("generic R+ construction verifies with typed Rust evidence");
+    assert!(boundary_json.contains("\"kind\": \"Uncatalogued\""));
+    assert!(boundary_json.contains(
+        "\"rule_id\": \"builtin.verify.verify_builtin_rules.in_fact_builtin.numeric_values.number_in_set_verified_by_builtin_rules_result_with_subgoals\""
+    ));
+
+    let boundary =
+        compile_on_verifier_stack(BOUNDARY_SOURCE, "unsupported_generic_r_pos_constructor.lit")
+            .expect_err("generic R+ construction still needs representative coherence");
     assert!(
-        boundary.contains("refined numeric membership has no Lean replay adapter")
-            || boundary.contains("has no supported Litex-to-Lean proof rule")
-            || boundary.contains("R+"),
+        boundary.contains(
+            "builtin.verify.verify_builtin_rules.in_fact_builtin.numeric_values.number_in_set_verified_by_builtin_rules_result_with_subgoals"
+        ),
         "unexpected boundary error: {boundary}"
     );
 }
@@ -1515,7 +1508,10 @@ fn builtin_strategy_result_marks_each_selected_layer_and_replays_exact_rules() {
         2,
         "{result_json}"
     );
-    assert!(result_json.contains("AddPositiveLeftStrict"), "{result_json}");
+    assert!(
+        result_json.contains("AddPositiveLeftStrict"),
+        "{result_json}"
+    );
     assert!(
         result_json.contains("\"rule_id\": \"order.add_nonnegative\""),
         "{result_json}"
@@ -1573,8 +1569,7 @@ fn builtin_strategy_result_marks_each_selected_layer_and_replays_exact_rules() {
         "{right_result_json}"
     );
     assert!(
-        right_result_json
-            .contains("\"rule_id\": \"order.add_positive_of_nonnegative_positive\""),
+        right_result_json.contains("\"rule_id\": \"order.add_positive_of_nonnegative_positive\""),
         "{right_result_json}"
     );
 

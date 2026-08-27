@@ -37,9 +37,7 @@ fn typed_set_rule_compiles_directly_from_its_recursive_certificate() {
             .compile_stmt_result(set_b)
             .expect("compile second set definition");
         for (index, child) in builtin.subgoals.iter().enumerate() {
-            let child = child
-                .factual_success()
-                .expect("typed set child is factual");
+            let child = child.factual_success().expect("typed set child is factual");
             let SuccessFactProofResult::StoredFactCitation(citation) = child.proof() else {
                 panic!("typed set child must cite an exact source fact")
             };
@@ -82,9 +80,7 @@ fn typed_nonzero_product_and_quotient_rules_fail_closed_at_same_observation_boun
             .unwrap_or_else(|error| panic!("execute typed nonzero {name} rule: {error}"));
             let error = StmtResultToLeanCompiler::new(&file_name)
                 .compile_stmt_results_to_lean_source(&results)
-                .expect_err(
-                    "typed nonzero arithmetic must fail closed without Same elimination",
-                );
+                .expect_err("typed nonzero arithmetic must fail closed without Same elimination");
             assert!(error.contains(rule_id), "{error}");
             assert!(
                 error.contains("numeric-observation elimination theorem"),
@@ -233,8 +229,8 @@ fn registered_componentwise_order_addition_rejects_swapped_semantic_children() {
     run_registered_rule_test(|| {
         let mut results = execute_registered_componentwise_order_addition();
         let builtin = registered_componentwise_order_addition_builtin_mut(&mut results);
-        assert_eq!(builtin.subgoals.len(), 6);
-        builtin.subgoals.swap(4, 5);
+        assert_eq!(builtin.subgoals.len(), 2);
+        builtin.subgoals.swap(0, 1);
 
         let error =
             StmtResultToLeanCompiler::new("direct_registered_componentwise_order_addition.lit")
@@ -264,11 +260,11 @@ fn registered_subtraction_sign_and_greater_to_greater_equal_compile_directly() {
                 .compile_stmt_results_to_lean_source(&results)
                 .expect("compile registered subtraction-sign and strict-to-weak order directly");
         assert!(
-            generated.contains("Litex.Rules.complexSubNonnegativeOfLessEqual (__domain1)"),
+            generated.contains("Litex.Rules.complexSubNonnegativeOfLessEqual"),
             "{generated}"
         );
         assert!(
-            generated.contains("Litex.Rules.complexSubPositiveOfLess (__domain1)"),
+            generated.contains("Litex.Rules.complexSubPositiveOfLess"),
             "{generated}"
         );
         assert!(
@@ -279,7 +275,7 @@ fn registered_subtraction_sign_and_greater_to_greater_equal_compile_directly() {
 }
 
 #[test]
-fn legacy_typed_subtraction_sign_evidence_replays_the_same_exact_real_adapter() {
+fn typed_subtraction_sign_evidence_replays_the_exact_real_adapter() {
     run_registered_rule_test(|| {
         let mut results = execute_registered_subtraction_sign_and_greater_to_greater_equal_rules();
         for (result, rule) in results[..2].iter_mut().zip([
@@ -287,14 +283,15 @@ fn legacy_typed_subtraction_sign_evidence_replays_the_same_exact_real_adapter() 
             ArithmeticBuiltinRule::SubPositiveFromLess,
         ]) {
             let builtin = registered_single_forall_conclusion_builtin_mut(result);
-            assert_eq!(builtin.subgoals.len(), 3);
-            builtin.subgoals.drain(..2);
-            builtin.evidence =
-                SuccessBuiltinFactProofEvidenceResult::Typed(BuiltinRuleEvidence::Arithmetic(rule));
+            assert_eq!(builtin.subgoals.len(), 1);
+            assert!(matches!(
+                builtin.evidence.typed(),
+                Some(BuiltinRuleEvidence::Arithmetic(actual)) if *actual == rule
+            ));
         }
-        let generated = StmtResultToLeanCompiler::new("legacy_typed_subtraction_sign.lit")
+        let generated = StmtResultToLeanCompiler::new("typed_subtraction_sign.lit")
             .compile_stmt_results_to_lean_source(&results)
-            .expect("compile legacy typed subtraction-sign evidence");
+            .expect("compile typed subtraction-sign evidence");
         assert!(
             generated.contains("Litex.Rules.complexSubNonnegativeOfLessEqual"),
             "{generated}"
@@ -307,7 +304,7 @@ fn legacy_typed_subtraction_sign_evidence_replays_the_same_exact_real_adapter() 
 }
 
 #[test]
-fn legacy_typed_right_nonnegative_order_evidence_replays_exact_real_adapters() {
+fn typed_right_nonnegative_order_evidence_replays_exact_real_adapters() {
     run_registered_rule_test(|| {
         let mut results =
             crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
@@ -315,18 +312,20 @@ fn legacy_typed_right_nonnegative_order_evidence_replays_exact_real_adapters() {
                 "legacy_typed_right_nonnegative_order.lit",
             )
             .expect("execute registered right-nonnegative order rules");
-        for (result, (binding_count, rule)) in results.iter_mut().zip([
-            (2, ArithmeticBuiltinRule::AddRightNonnegativeLessEqual),
-            (3, ArithmeticBuiltinRule::SubRightNonnegativeLessEqual),
+        for (result, rule) in results.iter_mut().zip([
+            ArithmeticBuiltinRule::AddRightNonnegativeLessEqual,
+            ArithmeticBuiltinRule::SubRightNonnegativeLessEqual,
         ]) {
             let builtin = registered_single_forall_conclusion_builtin_mut(result);
-            builtin.subgoals.drain(..binding_count);
-            builtin.evidence =
-                SuccessBuiltinFactProofEvidenceResult::Typed(BuiltinRuleEvidence::Arithmetic(rule));
+            assert!(!builtin.subgoals.is_empty());
+            assert!(matches!(
+                builtin.evidence.typed(),
+                Some(BuiltinRuleEvidence::Arithmetic(actual)) if *actual == rule
+            ));
         }
-        let generated = StmtResultToLeanCompiler::new("legacy_typed_right_nonnegative_order.lit")
+        let generated = StmtResultToLeanCompiler::new("typed_right_nonnegative_order.lit")
             .compile_stmt_results_to_lean_source(&results)
-            .expect("compile legacy typed right-nonnegative order evidence");
+            .expect("compile typed right-nonnegative order evidence");
         assert!(
             generated.contains("Litex.Rules.realCastLeAddOfNonnegativeRight"),
             "{generated}"
@@ -339,18 +338,18 @@ fn legacy_typed_right_nonnegative_order_evidence_replays_exact_real_adapters() {
 }
 
 #[test]
-fn registered_subtraction_sign_rejects_reordered_parameter_and_semantic_children() {
+fn typed_subtraction_sign_rejects_a_missing_semantic_child() {
     run_registered_rule_test(|| {
         let mut results = execute_registered_subtraction_sign_and_greater_to_greater_equal_rules();
         let builtin = registered_single_forall_conclusion_builtin_mut(&mut results[0]);
-        assert_eq!(builtin.subgoals.len(), 3);
-        builtin.subgoals.swap(0, 2);
+        assert_eq!(builtin.subgoals.len(), 1);
+        builtin.subgoals.clear();
 
         let error =
             StmtResultToLeanCompiler::new("direct_registered_subtraction_sign_and_order.lit")
                 .compile_stmt_results_to_lean_source(&results)
-                .expect_err("reordered registered subtraction-sign children must fail closed");
-        assert!(error.contains("expected membership fact"), "{error}");
+                .expect_err("missing typed subtraction-sign premise must fail closed");
+        assert!(error.contains("changed its ordered child arity"), "{error}");
     });
 }
 
@@ -395,32 +394,33 @@ fn order_transitivity_builtin_mut(
 }
 
 #[test]
-fn order_transitivity_compiles_from_carrier_and_order_children_directly() {
+fn order_transitivity_fails_closed_without_a_reviewed_mapping() {
     run_registered_rule_test(|| {
         let mut results = execute_order_transitivity();
         order_transitivity_builtin_mut(&mut results);
-        let generated = StmtResultToLeanCompiler::new("direct_order_transitivity.lit")
+        let error = StmtResultToLeanCompiler::new("direct_order_transitivity.lit")
             .compile_stmt_results_to_lean_source(&results)
-            .expect("compile typed order transitivity");
-        assert!(
-            generated.contains("Litex.Le.transLt (__domain1) (__domain2)"),
-            "{generated}"
-        );
+            .expect_err("non-catalog order transitivity must fail closed");
+        assert!(error.contains("order.transitivity"), "{error}");
     });
 }
 
 #[test]
-fn order_transitivity_rejects_reversed_order_children() {
+fn order_transitivity_retains_two_ordered_semantic_children() {
     run_registered_rule_test(|| {
         let mut results = execute_order_transitivity();
         let builtin = order_transitivity_builtin_mut(&mut results);
         let child_count = builtin.subgoals.len();
-        assert!(child_count >= 3);
-        builtin.subgoals.swap(child_count - 2, child_count - 1);
-        let error = StmtResultToLeanCompiler::new("direct_order_transitivity.lit")
-            .compile_stmt_results_to_lean_source(&results)
-            .expect_err("reversed transitivity path must fail closed");
-        assert!(error.contains("changed its ordered path"), "{error}");
+        assert!(child_count >= 2);
+        let semantic = &builtin.subgoals[child_count - 2..];
+        assert_eq!(
+            semantic[0].factual_success().unwrap().fact().to_string(),
+            "#0#a <= #1#b"
+        );
+        assert_eq!(
+            semantic[1].factual_success().unwrap().fact().to_string(),
+            "#1#b < #2#c"
+        );
     });
 }
 
