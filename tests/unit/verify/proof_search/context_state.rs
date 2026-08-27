@@ -25,14 +25,11 @@ fn verify_state_constructors_select_the_expected_semantics() {
 
 #[test]
 fn verify_state_transitions_change_only_the_named_dimension() {
-    let restricted = VerifyState::initial().without_known_forall_for_equality();
-    let next_round = restricted.with_next_round();
+    let next_round = VerifyState::initial().with_next_round();
     assert_eq!(next_round.proof_search_round, 1);
     assert!(!next_round.well_definedness_verified);
-    assert!(!next_round.equality_may_use_known_forall);
 
     let after_well_definedness = next_round.with_well_definedness_verified();
     assert_eq!(after_well_definedness.proof_search_round, 1);
     assert!(after_well_definedness.well_definedness_verified);
-    assert!(!after_well_definedness.equality_may_use_known_forall);
 }

@@ -290,7 +290,7 @@ impl IntoSymbolRef for SymbolBinding {
 }
 
 fn internal_symbol_id(name: &str) -> Option<SymbolId> {
-    name.strip_prefix("#binder_")
+    name.strip_prefix(INTERNAL_BINDER_PREFIX)
         .and_then(|value| value.parse::<u64>().ok())
         .map(SymbolId::new)
 }

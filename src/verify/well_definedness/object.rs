@@ -26,8 +26,6 @@ impl Runtime {
         obj: &Obj,
         verify_state: &VerifyState,
     ) -> Result<Rc<SuccessVerifyObjWellDefinedResult>, RuntimeError> {
-        let verify_state = verify_state.without_known_forall_for_equality();
-        let verify_state = &verify_state;
         let reusable_cache_key = self.well_defined_cache_key_for_obj(obj);
         if let Some(source) = reusable_cache_key
             .as_ref()

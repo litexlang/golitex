@@ -36,6 +36,8 @@ grouped by the state or operation it owns:
 
 - [`name_resolution/`](name_resolution/) owns local parser scopes, symbol and
   binder policy, parameter definition, object resolution, and internal names.
+  Kernel-generated binders use `____binder_<id>`; the tokenizer reserves the
+  four-underscore prefix from user-authored symbol tokens.
 - [`definition_state/`](definition_state/) owns definition lookup and support,
   known object properties, and parameter-type facts.
 - [`instantiation/`](instantiation/) owns capture-avoiding fact, object, and

@@ -9,7 +9,7 @@ impl Runtime {
         let id = self
             .allocate_symbol_id()
             .expect("internal binder identity counter exhausted");
-        format!("#binder_{}", id.value())
+        format!("{}{}", INTERNAL_BINDER_PREFIX, id.value())
     }
 
     pub fn fresh_binder_retag_plan_for_bindings(

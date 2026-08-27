@@ -60,21 +60,23 @@ fn max_length_255() {
 }
 
 #[test]
-fn double_underscore_prefix_rejected() {
-    assert!(is_valid_litex_name("__").is_err());
-    assert!(is_valid_litex_name("__x").is_err());
-    assert!(is_valid_litex_name("__foo").is_err());
-}
-
-#[test]
 fn underscore_and_letters_allowed() {
     assert!(is_valid_litex_name("_").is_ok());
     assert!(is_valid_litex_name("_x").is_ok());
+    assert!(is_valid_litex_name("__x").is_ok());
+    assert!(is_valid_litex_name("___x").is_ok());
     assert!(is_valid_litex_name("a_b_c").is_ok());
     assert!(is_valid_litex_name("Abc").is_ok());
     assert!(is_valid_litex_name("名字").is_ok());
     assert!(is_valid_litex_name("变量_1").is_ok());
     assert!(is_valid_litex_name("x1").is_ok());
+}
+
+#[test]
+fn four_underscore_internal_prefix_rejected() {
+    assert!(is_valid_litex_name("____").is_err());
+    assert!(is_valid_litex_name("____x").is_err());
+    assert!(is_valid_litex_name("_____x").is_err());
 }
 
 #[test]

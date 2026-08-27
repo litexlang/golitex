@@ -43,9 +43,28 @@ impl Tokenizer {
     pub fn tokenize_line(
         &self,
         line: &str,
-        _line_file: LineFile,
+        line_file: LineFile,
     ) -> Result<Vec<String>, RuntimeError> {
-        Ok(self.raw_tokenize_line(line))
+        let tokens = self.raw_tokenize_line(line);
+        let mut inside_double_quotes = false;
+        for token in &tokens {
+            if token == DOUBLE_QUOTE {
+                inside_double_quotes = !inside_double_quotes;
+                continue;
+            }
+            if !inside_double_quotes && token.starts_with(INTERNAL_SYMBOL_PREFIX) {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        format!(
+                            "symbol token `{}` starts with reserved internal prefix `{}`",
+                            token, INTERNAL_SYMBOL_PREFIX
+                        ),
+                        line_file,
+                    ),
+                )));
+            }
+        }
+        Ok(tokens)
     }
 
     fn raw_tokenize_line(&self, line: &str) -> Vec<String> {
@@ -225,7 +244,7 @@ impl Tokenizer {
 
             // Tokenize header; if it's empty (e.g. whole line comment),
             // treat it like a blank line for block parsing.
-            let header_tokens = self.raw_tokenize_line(content);
+            let header_tokens = self.tokenize_line(content, line_file.clone())?;
             if header_tokens.is_empty() {
                 continue;
             }

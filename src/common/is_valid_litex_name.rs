@@ -1,4 +1,4 @@
-use super::defaults::DEFAULT_MANGLED_FN_PARAM_PREFIX;
+use super::defaults::INTERNAL_SYMBOL_PREFIX;
 use super::keywords::is_keyword;
 
 const MAX_NAME_LEN: usize = 255;
@@ -7,10 +7,10 @@ pub fn is_valid_litex_name(s: &str) -> Result<(), String> {
     if s.is_empty() {
         return Err("name cannot be empty".to_string());
     }
-    if s.starts_with(DEFAULT_MANGLED_FN_PARAM_PREFIX) {
+    if s.starts_with(INTERNAL_SYMBOL_PREFIX) {
         return Err(format!(
-            "user defined name cannot start with two underscores because it is reserved for internal use: `{}`.",
-            s
+            "user-defined names cannot start with `{}` because that prefix is reserved for Litex internals: `{}`",
+            INTERNAL_SYMBOL_PREFIX, s
         ));
     }
     if s.len() > MAX_NAME_LEN {

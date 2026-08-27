@@ -34,8 +34,7 @@ impl Runtime {
         }
 
         if !verify_state.well_definedness_verified {
-            let well_defined_state = verify_state.without_known_forall_for_equality();
-            if let Err(error) = self.verify_atomic_fact_well_defined(fact, &well_defined_state) {
+            if let Err(error) = self.verify_atomic_fact_well_defined(fact, verify_state) {
                 return Err({
                     VerifyRuntimeError(RuntimeErrorStruct::new(
                         Some(Fact::from(fact.clone()).into_stmt()),

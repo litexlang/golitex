@@ -580,6 +580,8 @@ pub use crate::common::defaults::default_line_file;
 pub use crate::common::defaults::is_default_line_file;
 pub use crate::common::defaults::LineFile;
 pub use crate::common::defaults::DEFAULT_MANGLED_FN_PARAM_PREFIX;
+pub use crate::common::defaults::INTERNAL_BINDER_PREFIX;
+pub use crate::common::defaults::INTERNAL_SYMBOL_PREFIX;
 pub use crate::common::helper::add_four_spaces_at_beginning;
 pub use crate::common::helper::brace_vec_colon_vec_to_string;
 pub use crate::common::helper::braced_string;

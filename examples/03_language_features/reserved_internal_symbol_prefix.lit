@@ -1,0 +1,13 @@
+# Tracer: the four-underscore prefix is reserved for Litex internals.
+#
+# Before (reached later parsing instead of failing at tokenization):
+# have ____x R = 1
+# Former behavior: the tokenizer emitted `____x` as a user-source symbol token.
+#
+# Now (verified):
+have ___x R = 1
+___x = 1
+# Current behavior: three leading underscores remain valid user syntax.
+#
+# Boundary: `have ____x R = 1` is rejected by the tokenizer regression.
+# Evidence: target/release/litex -compact -isolated -runner -f examples/03_language_features/reserved_internal_symbol_prefix.lit
