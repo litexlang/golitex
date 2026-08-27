@@ -13,6 +13,6 @@ theorem weak_order_is_reflexive :
   exact __c0_0
 
 theorem __fact1 : Litex.Lt ((2 : ℂ) + (3 : ℂ)) (6 : ℂ) := by
-  exact Litex.OrderBridge.ltOfComplexReals (by norm_num)
+  exact (Litex.OrderBridge.ltOfComplexReals (by norm_num) : Litex.Lt (((2 : ℂ) + (3 : ℂ))) ((6 : ℂ)))
 
 end __Compiler_45_OrderReflexivityAndNumericComparisonResults

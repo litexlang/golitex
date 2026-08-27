@@ -19,7 +19,7 @@ impl Runtime {
         value: Obj,
         definition_return_set: Obj,
         line_file: LineFile,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let direct_result = self.verify_obj_satisfies_param_type(
             value.clone(),
@@ -88,7 +88,7 @@ impl Runtime {
         value: &Obj,
         definition_return_set: &Obj,
         line_file: &LineFile,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Obj::ObjAtIndex(indexed) = value else {
             return Ok(None);
@@ -125,10 +125,8 @@ impl Runtime {
                 // projection check is a fresh, bounded proof obligation whose
                 // objects were just verified above, so allow its one forall
                 // lookup explicitly.
-                equal_set_result = self.verify_atomic_fact(
-                    &equal_set_fact,
-                    &ProofSearchState::after_well_definedness(),
-                )?;
+                equal_set_result = self
+                    .verify_atomic_fact(&equal_set_fact, &VerifyState::after_well_definedness())?;
             }
             let carrier_result = if equal_set_result.is_success() {
                 equal_set_result
@@ -141,10 +139,8 @@ impl Runtime {
                 .into();
                 let mut subset_result = self.verify_atomic_fact(&subset_fact, verify_state)?;
                 if !subset_result.is_success() {
-                    subset_result = self.verify_atomic_fact(
-                        &subset_fact,
-                        &ProofSearchState::after_well_definedness(),
-                    )?;
+                    subset_result = self
+                        .verify_atomic_fact(&subset_fact, &VerifyState::after_well_definedness())?;
                 }
                 if !subset_result.is_success() {
                     continue;
@@ -180,7 +176,7 @@ impl Runtime {
         element: &Obj,
         expected_fn_set: &FnSet,
         in_fact: &InFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let stored_membership = self.get_object_in_fn_set_with_membership_fact_id(element);
         if let Some((known_body, source_line_file, source_fact_id)) = stored_membership {
@@ -410,7 +406,7 @@ impl Runtime {
     fn verify_fn_membership_application_well_defined(
         &mut self,
         flow: &FnMembershipProofFlow,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         let stub = ForallFact::new_canonical_forall(
             flow.forall_params.clone(),

@@ -7,7 +7,7 @@ impl Runtime {
     pub fn verify_forall_fact_with_iff(
         &mut self,
         forall_iff: &ForallFactWithIff,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(cached_result) =
             self.verification_result_from_known_fact_cache(&forall_iff.clone().into())

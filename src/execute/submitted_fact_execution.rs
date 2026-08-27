@@ -3,7 +3,7 @@ use crate::fact::Fact;
 use crate::infer::{InferReason, SuccessInferResult};
 use crate::result::{StmtResult, SuccessFactStmtResult, SuccessVerifyFactWellDefinedResult};
 use crate::runtime::Runtime;
-use crate::verify::ProofSearchState;
+use crate::verify::VerifyState;
 use std::result::Result;
 
 impl Runtime {
@@ -24,11 +24,11 @@ impl Runtime {
         &mut self,
         fact: &Fact,
     ) -> Result<SuccessVerifyFactWellDefinedResult, RuntimeError> {
-        self.verify_fact_well_defined_result(fact, &ProofSearchState::initial())
+        self.verify_fact_well_defined_result(fact, &VerifyState::initial())
     }
 
     fn verify_fact_for_execution(&mut self, fact: &Fact) -> Result<StmtResult, RuntimeError> {
-        self.verify_fact_or_error(fact, &ProofSearchState::initial())
+        self.verify_fact_or_error(fact, &VerifyState::initial())
     }
 
     fn store_executed_fact_and_infer(

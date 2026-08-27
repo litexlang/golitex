@@ -9,9 +9,9 @@ theorem __fact0 : ¬ Litex.In (0 : ℂ) Litex.CStar := by
   exact (fun __membership => (Litex.Rules.notSameZeroOfInCStar (__membership)) (Litex.Same.refl (0 : ℂ)))
 
 theorem __fact1 :
-    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.Z) (__domain1 : ¬ Litex.Same __p1 (0 : ℂ)), Litex.In __p1 Litex.ZStar := by
-  intro z __h1_1 __domain1
-  have __c1_0 : Litex.In z Litex.ZStar := Litex.Rules.inZStarOfInZNotSameZero (__h1_1) (__domain1)
+    ∀ (__p1 : ℤ) (__domain1 : ¬ Litex.Same __p1 (0 : ℂ)), Litex.In __p1 Litex.ZStar := by
+  intro z __domain1
+  have __c1_0 : Litex.In z Litex.ZStar := Litex.Rules.inZStarOfInZNotSameZero ((Litex.In.own Litex.Z z)) (__domain1)
   exact __c1_0
 
 theorem __fact2 :

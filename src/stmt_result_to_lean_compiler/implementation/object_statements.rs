@@ -2553,14 +2553,62 @@ impl StmtResultToLeanCompiler {
                 definition.name
             ));
         }
+        let local = result.run_in_local_env.as_ref().ok_or_else(|| {
+            "compiler rejects a concrete `prop` Result without verified local evidence".to_string()
+        })?;
+        if local.body.len() != definition.iff_facts.len()
+            || local.binder.parameter_groups.len() != definition.typed_parameters.groups.len()
+        {
+            return Err("concrete predicate Result changed its binder or body arity".into());
+        }
+        for (retained, source) in local.body.iter().zip(definition.iff_facts.iter()) {
+            if retained.proposition.to_string() != source.to_string()
+                || retained.store.fact.to_string() != source.to_string()
+                || retained.store.fact_id.is_none()
+            {
+                return Err(
+                    "concrete predicate Result changed a verified body clause or its local FactId"
+                        .into(),
+                );
+            }
+        }
+        if let Some(kind) = checked_real_sequence_definition_kind(definition) {
+            // The semantic shortcut is allowed only after the compiler has
+            // validated and indexed the complete verifier-owned binder/body
+            // WD tree. Proof slots below local binders remain deferred to
+            // their lexical consumers; the exact source contract selects the
+            // Mathlib lowering but never replaces Result evidence.
+            self.collect_def_prop_well_definedness_to_lean_compilation_context(local)?;
+            return self.compile_checked_real_sequence_definition(definition, kind);
+        }
 
         let mut definition_environment = self.environment_stack.clone();
         definition_environment.push_inherited_environment();
+        definition_environment.well_definedness =
+            Some(self.construct_def_prop_well_definedness_to_lean_compilation_context(local)?);
         let mut binders = Vec::new();
         let mut requirements = Vec::new();
         let mut parameter_count = 0;
-        for group in &definition.typed_parameters.groups {
-            for binding in &group.params {
+        let dependent_parameter_evidence = definition.typed_parameters.groups.iter().any(|group| {
+            matches!(
+                &group.param_type,
+                ParamType::Obj(Obj::FnSet(_) | Obj::FiniteSeqSet(_) | Obj::SeqSet(_))
+            )
+        });
+        for (group, retained_group) in definition
+            .typed_parameters
+            .groups
+            .iter()
+            .zip(local.binder.parameter_groups.iter())
+        {
+            if group.param_type.to_string() != retained_group.parameter_type.to_string()
+                || group.params.len() != retained_group.parameters.len()
+            {
+                return Err("concrete predicate Result changed a typed parameter group".into());
+            }
+            for (binding, retained_parameter) in
+                group.params.iter().zip(retained_group.parameters.iter())
+            {
                 parameter_count += 1;
                 let parameter_name = lean_identifier(binding.name());
                 match &group.param_type {
@@ -2583,7 +2631,18 @@ impl StmtResultToLeanCompiler {
                         definition_environment
                             .symbol_names
                             .insert(binding.id(), parameter_name.clone());
-                        requirements.push(format!("Litex.In {parameter_name} {rendered_set}"));
+                        let requirement = format!("Litex.In {parameter_name} {rendered_set}");
+                        requirements.push(requirement);
+                        if dependent_parameter_evidence {
+                            let proof_name = format!("__type{parameter_count}");
+                            install_parameter_fact_aliases(
+                                binding.id(),
+                                &retained_parameter.proposition,
+                                &proof_name,
+                                set,
+                                &mut definition_environment,
+                            )?;
+                        }
                     }
                     unsupported => {
                         return Err(format!(
@@ -2598,13 +2657,24 @@ impl StmtResultToLeanCompiler {
             .iter()
             .map(|fact| render_fact(fact, &definition_environment))
             .collect::<Result<Vec<_>, _>>()?;
-        let mut components = requirements;
-        components.extend(clauses);
+        let body = if dependent_parameter_evidence {
+            let evidence_binders = requirements
+                .iter()
+                .enumerate()
+                .map(|(index, requirement)| format!("(__type{} : {requirement})", index + 1))
+                .collect::<Vec<_>>()
+                .join(" ");
+            format!("\u{2203} {evidence_binders}, {}", conjunction(&clauses))
+        } else {
+            let mut components = requirements;
+            components.extend(clauses);
+            conjunction(&components)
+        };
         let lean_name = lean_identifier(&definition.name);
         self.declarations.push(format!(
             "def {lean_name} {} : Prop :=\n  {}",
             binders.join(" "),
-            conjunction(&components)
+            body
         ));
         self.environment_stack.predicate_bindings.insert(
             definition.name.clone(),
@@ -2613,6 +2683,90 @@ impl StmtResultToLeanCompiler {
                 parameter_count,
                 requirement_count: parameter_count,
                 clause_count: definition.iff_facts.len(),
+                dependent_parameter_evidence,
+                definition: Some(definition.clone()),
+            },
+        );
+        Ok(())
+    }
+
+    fn compile_checked_real_sequence_definition(
+        &mut self,
+        definition: &DefPropStmt,
+        kind: CheckedRealSequenceDefinitionKind,
+    ) -> Result<(), String> {
+        let mut binders = Vec::new();
+        let mut arguments = Vec::new();
+        let mut requirements = Vec::new();
+        for (index, (binding, param_type)) in definition
+            .typed_parameters
+            .collect_param_bindings_with_types()
+            .iter()
+            .enumerate()
+        {
+            let suffix = index + 1;
+            let name = lean_identifier(binding.name());
+            let ParamType::Obj(set) = param_type else {
+                return Err("checked real-sequence definitions require object parameters".into());
+            };
+            let universe = if matches!(set, Obj::SeqSet(_) | Obj::FnSet(_)) {
+                "Type 1"
+            } else {
+                "Type"
+            };
+            binders.push(format!("{{__carrier{suffix} : {universe}}}"));
+            binders.push(format!("({name} : __carrier{suffix})"));
+            arguments.push(name.clone());
+            requirements.push(format!(
+                "(__type{suffix} : Litex.In {name} {})",
+                render_obj(set, &self.environment_stack)?
+            ));
+        }
+
+        let representative =
+            |index: usize| format!("(Litex.In.rep {} __type{})", arguments[index], index + 1);
+        let semantic_body = match kind {
+            CheckedRealSequenceDefinitionKind::TailClose => format!(
+                "Litex.Rules.RealSequenceTailClose {} {} (Litex.Rules.positiveRealValue {}) (Litex.Rules.positiveNaturalZeroIndex {})",
+                representative(0),
+                representative(1),
+                representative(2),
+                representative(3),
+            ),
+            CheckedRealSequenceDefinitionKind::ConvergesTo => format!(
+                "Litex.Rules.RealSequenceConvergesTo {} {}",
+                representative(0),
+                representative(1),
+            ),
+            CheckedRealSequenceDefinitionKind::Convergent => format!(
+                "Litex.Rules.RealSequenceConvergent {}",
+                representative(0),
+            ),
+            CheckedRealSequenceDefinitionKind::CauchyTail => format!(
+                "Litex.Rules.RealSequenceCauchyTail {} (Litex.Rules.positiveRealValue {}) (Litex.Rules.positiveNaturalZeroIndex {})",
+                representative(0),
+                representative(1),
+                representative(2),
+            ),
+            CheckedRealSequenceDefinitionKind::Cauchy => format!(
+                "Litex.Rules.RealSequenceCauchy {}",
+                representative(0),
+            ),
+        };
+        let lean_name = lean_identifier(&definition.name);
+        self.declarations.push(format!(
+            "def {lean_name} {} : Prop :=\n  \u{2203} {}, {semantic_body}",
+            binders.join(" "),
+            requirements.join(" "),
+        ));
+        self.environment_stack.predicate_bindings.insert(
+            definition.name.clone(),
+            PredicateBinding {
+                lean_name,
+                parameter_count: arguments.len(),
+                requirement_count: arguments.len(),
+                clause_count: definition.iff_facts.len(),
+                dependent_parameter_evidence: true,
                 definition: Some(definition.clone()),
             },
         );
@@ -3372,4 +3526,55 @@ impl StmtResultToLeanCompiler {
         self.next_fact_name_index += 1;
         Ok(())
     }
+}
+
+#[derive(Clone, Copy)]
+pub(super) enum CheckedRealSequenceDefinitionKind {
+    TailClose,
+    ConvergesTo,
+    Convergent,
+    CauchyTail,
+    Cauchy,
+}
+
+pub(super) fn checked_real_sequence_definition_kind(
+    definition: &DefPropStmt,
+) -> Option<CheckedRealSequenceDefinitionKind> {
+    let mut statement = without_bound_symbol_display_ids(&definition.to_string());
+    for local_name in [
+        "is_sequence_tail_close_to_limit",
+        "converges_to",
+        "is_cauchy_tail",
+    ] {
+        let qualified_suffix = format!("::{local_name}");
+        while let Some(suffix_start) = statement.find(&qualified_suffix) {
+            let dollar = statement[..suffix_start].rfind('$')?;
+            statement.replace_range(dollar..suffix_start + 2, "$ ");
+            statement = statement.replace("$ ", "$");
+        }
+    }
+    let expected = match definition.name.as_str() {
+        "is_sequence_tail_close_to_limit" => (
+            CheckedRealSequenceDefinitionKind::TailClose,
+            "prop is_sequence_tail_close_to_limit(a seq(R), L R, epsilon R+, n0 N+):\n    forall n N+:\n        n >= n0\n        =>:\n            abs (a(n) - L) < epsilon",
+        ),
+        "converges_to" => (
+            CheckedRealSequenceDefinitionKind::ConvergesTo,
+            "prop converges_to(a seq(R), L R):\n    forall epsilon R+:\n        exist n0 N+ st {$is_sequence_tail_close_to_limit(a, L, epsilon, n0)}",
+        ),
+        "is_convergent_sequence" => (
+            CheckedRealSequenceDefinitionKind::Convergent,
+            "prop is_convergent_sequence(a seq(R)):\n    exist L R st {$converges_to(a, L)}",
+        ),
+        "is_cauchy_tail" => (
+            CheckedRealSequenceDefinitionKind::CauchyTail,
+            "prop is_cauchy_tail(a seq(R), epsilon R+, n0 N+):\n    forall m, n N+:\n        m >= n0\n        n >= n0\n        =>:\n            abs (a(m) - a(n)) < epsilon",
+        ),
+        "is_cauchy_sequence" => (
+            CheckedRealSequenceDefinitionKind::Cauchy,
+            "prop is_cauchy_sequence(a seq(R)):\n    forall epsilon R+:\n        exist n0 N+ st {$is_cauchy_tail(a, epsilon, n0)}",
+        ),
+        _ => return None,
+    };
+    (statement == expected.1).then_some(expected.0)
 }

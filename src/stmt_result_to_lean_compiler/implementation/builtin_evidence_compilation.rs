@@ -1006,11 +1006,15 @@ impl StmtResultToLeanCompiler {
             ArithmeticBuiltinRule::LessEqualFromStrictOrder
             | ArithmeticBuiltinRule::GreaterEqualFromStrictOrder
             | ArithmeticBuiltinRule::AddCommonLeftLessEqual
-            | ArithmeticBuiltinRule::AddCommonLeftLess => 1,
+            | ArithmeticBuiltinRule::AddCommonLeftLess
+            | ArithmeticBuiltinRule::SubNonnegativeFromLessEqual
+            | ArithmeticBuiltinRule::SubPositiveFromLess
+            | ArithmeticBuiltinRule::AddRightNonnegativeLessEqual => 1,
             ArithmeticBuiltinRule::AddComponentwiseLessEqual
             | ArithmeticBuiltinRule::AddComponentwiseLess
             | ArithmeticBuiltinRule::AddComponentwiseLessLessEqual
-            | ArithmeticBuiltinRule::AddComponentwiseLessEqualLess => 2,
+            | ArithmeticBuiltinRule::AddComponentwiseLessEqualLess
+            | ArithmeticBuiltinRule::SubRightNonnegativeLessEqual => 2,
             ArithmeticBuiltinRule::OrderTransitivity => {
                 if subgoals.len() < 3 {
                     return Err(
@@ -1074,6 +1078,136 @@ impl StmtResultToLeanCompiler {
             return Ok(Some(
                 self.construct_lean_order_transitivity_from_compiled_children(target, &children)?,
             ));
+        }
+
+        if matches!(
+            rule,
+            ArithmeticBuiltinRule::SubNonnegativeFromLessEqual
+                | ArithmeticBuiltinRule::SubPositiveFromLess
+        ) {
+            let [premise] = children.as_slice() else {
+                unreachable!("subtraction-sign rule retained one child")
+            };
+            let strict = rule == ArithmeticBuiltinRule::SubPositiveFromLess;
+            let (zero, expression) = positive_order_parts(target, strict)?;
+            let Obj::Sub(subtraction) = expression else {
+                return Err("subtraction-sign evidence changed its target subtraction".into());
+            };
+            let (premise_left, premise_right, premise_strict) =
+                order_relation_parts(&premise.fact)?;
+            if !is_literal_zero(zero)
+                || premise_strict != strict
+                || obj_equality_key(premise_left) != obj_equality_key(subtraction.right.as_ref())
+                || obj_equality_key(premise_right) != obj_equality_key(subtraction.left.as_ref())
+            {
+                return Err(
+                    "subtraction-sign evidence changed its ordered operands or strictness".into(),
+                );
+            }
+            let minuend = render_real_target_object_representation(
+                &LeanTargetObjectRepresentation::lower(subtraction.left.as_ref())?,
+                &self.environment_stack,
+            )?;
+            let subtrahend = render_real_target_object_representation(
+                &LeanTargetObjectRepresentation::lower(subtraction.right.as_ref())?,
+                &self.environment_stack,
+            )?;
+            render_fact(target, &self.environment_stack)?;
+            let theorem = if strict {
+                "complexSubPositiveOfLess"
+            } else {
+                "complexSubNonnegativeOfLessEqual"
+            };
+            return Ok(Some(format!(
+                "Litex.Rules.{theorem} (u := {minuend}) (v := {subtrahend}) ({})",
+                premise.proof_expression
+            )));
+        }
+
+        if rule == ArithmeticBuiltinRule::AddRightNonnegativeLessEqual {
+            let [premise] = children.as_slice() else {
+                unreachable!("right-nonnegative addition retained one child")
+            };
+            let (target_left, target_right, target_strict) = order_relation_parts(target)?;
+            let Obj::Add(sum) = target_right else {
+                return Err("right-nonnegative addition changed its target sum".into());
+            };
+            let (addend, reversed) =
+                if obj_equality_key(target_left) == obj_equality_key(sum.left.as_ref()) {
+                    (sum.right.as_ref(), false)
+                } else if obj_equality_key(target_left) == obj_equality_key(sum.right.as_ref()) {
+                    (sum.left.as_ref(), true)
+                } else {
+                    return Err("right-nonnegative addition changed its common addend".into());
+                };
+            let (zero, premise_addend, premise_strict) = order_relation_parts(&premise.fact)?;
+            if target_strict
+                || premise_strict
+                || !is_literal_zero(zero)
+                || obj_equality_key(addend) != obj_equality_key(premise_addend)
+            {
+                return Err("right-nonnegative addition changed its premise".into());
+            }
+            let common = render_real_target_object_representation(
+                &LeanTargetObjectRepresentation::lower(target_left)?,
+                &self.environment_stack,
+            )?;
+            let addend = render_real_target_object_representation(
+                &LeanTargetObjectRepresentation::lower(addend)?,
+                &self.environment_stack,
+            )?;
+            render_fact(target, &self.environment_stack)?;
+            let proof = format!(
+                "Litex.Rules.realCastLeAddOfNonnegativeRight {common} {addend} ({})",
+                premise.proof_expression
+            );
+            return Ok(Some(if reversed {
+                format!("(by simpa [add_comm] using ({proof}))")
+            } else {
+                proof
+            }));
+        }
+
+        if rule == ArithmeticBuiltinRule::SubRightNonnegativeLessEqual {
+            let [ordered, nonnegative] = children.as_slice() else {
+                unreachable!("right-nonnegative subtraction retained two children")
+            };
+            let (target_left, target_right, target_strict) = order_relation_parts(target)?;
+            let Obj::Sub(difference) = target_left else {
+                return Err("right-nonnegative subtraction changed its target difference".into());
+            };
+            let (ordered_left, ordered_right, ordered_strict) =
+                order_relation_parts(&ordered.fact)?;
+            let (zero, subtractor, nonnegative_strict) = order_relation_parts(&nonnegative.fact)?;
+            if target_strict
+                || ordered_strict
+                || nonnegative_strict
+                || !is_literal_zero(zero)
+                || obj_equality_key(difference.left.as_ref()) != obj_equality_key(ordered_left)
+                || obj_equality_key(target_right) != obj_equality_key(ordered_right)
+                || obj_equality_key(difference.right.as_ref()) != obj_equality_key(subtractor)
+            {
+                return Err(
+                    "right-nonnegative subtraction changed its operands or premises".into(),
+                );
+            }
+            let a = render_real_target_object_representation(
+                &LeanTargetObjectRepresentation::lower(difference.left.as_ref())?,
+                &self.environment_stack,
+            )?;
+            let b = render_real_target_object_representation(
+                &LeanTargetObjectRepresentation::lower(target_right)?,
+                &self.environment_stack,
+            )?;
+            let c = render_real_target_object_representation(
+                &LeanTargetObjectRepresentation::lower(difference.right.as_ref())?,
+                &self.environment_stack,
+            )?;
+            render_fact(target, &self.environment_stack)?;
+            return Ok(Some(format!(
+                "Litex.Rules.realCastSubLeOfLeOfNonnegative {a} {b} {c} ({}) ({})",
+                ordered.proof_expression, nonnegative.proof_expression
+            )));
         }
 
         let [source] = children.as_slice() else {
@@ -1499,8 +1633,8 @@ impl StmtResultToLeanCompiler {
     /// `Combine`: validate one registry-owned certificate directly from its
     /// stable rule identity, semantic fingerprint, matched bindings, and
     /// ordered child Results. This first direct tranche covers the complete
-    /// registered set catalog; unsupported registered families remain on the
-    /// compatibility path until their target renderers are migrated.
+    /// registered set catalog; every other registry family is either consumed
+    /// by a reviewed direct adapter below or rejected at a named boundary.
     pub(super) fn construct_lean_registered_local_builtin_from_result(
         &mut self,
         target: &Fact,
@@ -1508,6 +1642,12 @@ impl StmtResultToLeanCompiler {
         subgoals: &[StmtResult],
     ) -> Result<Option<String>, String> {
         self.validate_registered_local_builtin_target_and_child_arity(target, evidence, subgoals)?;
+        if matches!(evidence.rule_id.as_str(), "nonzero.mul" | "nonzero.div") {
+            return Err(format!(
+                "StmtResultToLeanCompiler cannot yet replay registered rule `{}` until Litex.Same has a reviewed numeric-observation elimination theorem",
+                evidence.rule_id.as_str()
+            ));
+        }
         if let Some(proof) =
             self.construct_lean_registered_integer_sum_rule_from_result(target, evidence, subgoals)?
         {
@@ -1647,10 +1787,17 @@ impl StmtResultToLeanCompiler {
         evidence: &RegisteredLocalBuiltinRuleEvidence,
         subgoals: &[StmtResult],
     ) -> Result<Option<String>, String> {
+        if let Some(proof) =
+            self.construct_lean_registered_abs_min_max_rule_from_result(target, evidence, subgoals)?
+        {
+            return Ok(Some(proof));
+        }
         #[derive(Clone, Copy)]
         enum RegisteredArithmeticRule {
             WeakOrderFromStrictOrder,
             SubtractionSign { strict: bool },
+            LeAddOfNonnegativeRight,
+            SubLeOfLeOfNonnegative,
             Sign(LeanArithmeticBuiltinCompilationKind),
             AdditiveOrder(ArithmeticBuiltinRule),
         }
@@ -1667,6 +1814,10 @@ impl StmtResultToLeanCompiler {
             "order.sub_positive_of_less" => {
                 RegisteredArithmeticRule::SubtractionSign { strict: true }
             }
+            "order.le_add_of_nonnegative_right" => {
+                RegisteredArithmeticRule::LeAddOfNonnegativeRight
+            }
+            "order.sub_le_of_le_of_nonnegative" => RegisteredArithmeticRule::SubLeOfLeOfNonnegative,
             ADD_POSITIVE_OF_POSITIVE_NONNEGATIVE_RULE_ID
                 if fingerprint == ADD_POSITIVE_OF_POSITIVE_NONNEGATIVE_FINGERPRINT =>
             {
@@ -1722,6 +1873,8 @@ impl StmtResultToLeanCompiler {
         let (expected_binding_count, expected_semantic_premise_count) = match rule {
             RegisteredArithmeticRule::WeakOrderFromStrictOrder
             | RegisteredArithmeticRule::SubtractionSign { .. } => (2, 1),
+            RegisteredArithmeticRule::LeAddOfNonnegativeRight => (2, 1),
+            RegisteredArithmeticRule::SubLeOfLeOfNonnegative => (3, 2),
             RegisteredArithmeticRule::Sign(_) => (2, 2),
             RegisteredArithmeticRule::AdditiveOrder(
                 ArithmeticBuiltinRule::AddCommonLeftLessEqual
@@ -1860,7 +2013,256 @@ impl StmtResultToLeanCompiler {
                 };
                 format!("Litex.Rules.{theorem} ({})", premise.proof_expression)
             }
+            RegisteredArithmeticRule::LeAddOfNonnegativeRight => {
+                let [premise] = semantic_premises.as_slice() else {
+                    unreachable!("registered le-add rule retained one premise")
+                };
+                let (target_left, target_right, target_strict) = order_relation_parts(target)?;
+                let Obj::Add(target_sum) = target_right else {
+                    return Err("registered le-add rule changed its target addition".into());
+                };
+                let (premise_left, premise_right, premise_strict) =
+                    order_relation_parts(&premise.fact)?;
+                if target_strict
+                    || premise_strict
+                    || !is_literal_zero(premise_left)
+                    || obj_equality_key(target_left) != obj_equality_key(&evidence.bindings[0])
+                    || obj_equality_key(target_sum.left.as_ref())
+                        != obj_equality_key(&evidence.bindings[0])
+                    || obj_equality_key(target_sum.right.as_ref())
+                        != obj_equality_key(&evidence.bindings[1])
+                    || obj_equality_key(premise_right) != obj_equality_key(&evidence.bindings[1])
+                {
+                    return Err(
+                        "registered le-add rule changed its operands or nonnegative premise".into(),
+                    );
+                }
+                render_fact(target, &self.environment_stack)?;
+                let a = render_real_target_object_representation(
+                    &LeanTargetObjectRepresentation::lower(&evidence.bindings[0])?,
+                    &self.environment_stack,
+                )?;
+                let b = render_real_target_object_representation(
+                    &LeanTargetObjectRepresentation::lower(&evidence.bindings[1])?,
+                    &self.environment_stack,
+                )?;
+                format!(
+                    "Litex.Rules.realCastLeAddOfNonnegativeRight {a} {b} ({})",
+                    premise.proof_expression
+                )
+            }
+            RegisteredArithmeticRule::SubLeOfLeOfNonnegative => {
+                let [ordered, nonnegative] = semantic_premises.as_slice() else {
+                    unreachable!("registered sub-le rule retained two premises")
+                };
+                let (target_left, target_right, target_strict) = order_relation_parts(target)?;
+                let Obj::Sub(target_difference) = target_left else {
+                    return Err("registered sub-le rule changed its target subtraction".into());
+                };
+                let (ordered_left, ordered_right, ordered_strict) =
+                    order_relation_parts(&ordered.fact)?;
+                let (zero, nonnegative_right, nonnegative_strict) =
+                    order_relation_parts(&nonnegative.fact)?;
+                if target_strict
+                    || ordered_strict
+                    || nonnegative_strict
+                    || !is_literal_zero(zero)
+                    || obj_equality_key(target_difference.left.as_ref())
+                        != obj_equality_key(&evidence.bindings[0])
+                    || obj_equality_key(target_right) != obj_equality_key(&evidence.bindings[1])
+                    || obj_equality_key(target_difference.right.as_ref())
+                        != obj_equality_key(&evidence.bindings[2])
+                    || obj_equality_key(ordered_left) != obj_equality_key(&evidence.bindings[0])
+                    || obj_equality_key(ordered_right) != obj_equality_key(&evidence.bindings[1])
+                    || obj_equality_key(nonnegative_right)
+                        != obj_equality_key(&evidence.bindings[2])
+                {
+                    return Err(
+                        "registered sub-le rule changed its ordered operands or nonnegative premise"
+                            .into(),
+                    );
+                }
+                render_fact(target, &self.environment_stack)?;
+                let rendered_bindings = evidence
+                    .bindings
+                    .iter()
+                    .map(|binding| {
+                        render_real_target_object_representation(
+                            &LeanTargetObjectRepresentation::lower(binding)?,
+                            &self.environment_stack,
+                        )
+                    })
+                    .collect::<Result<Vec<_>, String>>()?;
+                format!(
+                    "Litex.Rules.realCastSubLeOfLeOfNonnegative {} {} {} ({}) ({})",
+                    rendered_bindings[0],
+                    rendered_bindings[1],
+                    rendered_bindings[2],
+                    ordered.proof_expression,
+                    nonnegative.proof_expression
+                )
+            }
         };
+        Ok(Some(proof))
+    }
+
+    /// Registry-owned scalar operators whose target ABI is backed directly by
+    /// Mathlib norm and real lattice operations. Every parameter membership
+    /// and semantic premise is retained as an ordered child Result. Sign
+    /// selection additionally requires the exact source-to-real bridge owned
+    /// by the current binder environment.
+    pub(super) fn construct_lean_registered_abs_min_max_rule_from_result(
+        &mut self,
+        target: &Fact,
+        evidence: &RegisteredLocalBuiltinRuleEvidence,
+        subgoals: &[StmtResult],
+    ) -> Result<Option<String>, String> {
+        #[derive(Clone, Copy)]
+        enum Carrier {
+            Complex,
+            Real,
+        }
+        let (theorem, binding_count, semantic_count, carrier) = match evidence.rule_id.as_str() {
+            "algebra.abs_mul" => ("absMul", 2, 0, Carrier::Complex),
+            "order.abs_nonnegative" => ("absNonnegative", 1, 0, Carrier::Complex),
+            "order.abs_add_le" => ("absAddLe", 2, 0, Carrier::Complex),
+            "order.abs_sub_le_sum" => ("absSubLeSum", 2, 0, Carrier::Complex),
+            "order.abs_sub_abs_le_abs_add" => ("absSubAbsLeAbsAdd", 2, 0, Carrier::Complex),
+            "order.abs_sub_abs_le_abs_sub" => ("absSubAbsLeAbsSub", 2, 0, Carrier::Complex),
+            "order.neg_abs_le" => ("negAbsLe", 1, 0, Carrier::Complex),
+            "order.neg_le_abs" => ("negLeAbs", 1, 0, Carrier::Complex),
+            "order.self_le_abs" => ("selfLeAbs", 1, 0, Carrier::Complex),
+            "order.abs_eq_self_of_nonnegative" => ("absEqSelfOfLe", 1, 1, Carrier::Real),
+            "order.abs_eq_neg_of_nonpositive" => ("absEqNegOfLe", 1, 1, Carrier::Real),
+            "order.abs_positive_of_nonzero" => ("absPositiveOfNotSame", 1, 1, Carrier::Real),
+            "order.min_eq_left_of_le" => ("minEqLeftOfLe", 2, 1, Carrier::Real),
+            "order.min_eq_right_of_le" => ("minEqRightOfLe", 2, 1, Carrier::Real),
+            "order.max_eq_left_of_le" => ("maxEqLeftOfLe", 2, 1, Carrier::Real),
+            "order.max_eq_right_of_le" => ("maxEqRightOfLe", 2, 1, Carrier::Real),
+            "order.min_le_left" => ("minLeLeft", 2, 0, Carrier::Real),
+            "order.min_le_right" => ("minLeRight", 2, 0, Carrier::Real),
+            "order.le_max_left" => ("leMaxLeft", 2, 0, Carrier::Real),
+            "order.le_max_right" => ("leMaxRight", 2, 0, Carrier::Real),
+            "order.min_monotone" => ("minMonotone", 4, 2, Carrier::Real),
+            "order.max_monotone" => ("maxMonotone", 4, 2, Carrier::Real),
+            "order.min_commutative" => ("minCommutative", 2, 0, Carrier::Real),
+            "order.max_commutative" => ("maxCommutative", 2, 0, Carrier::Real),
+            "order.min_associative" => ("minAssociative", 3, 0, Carrier::Real),
+            "order.max_associative" => ("maxAssociative", 3, 0, Carrier::Real),
+            "order.min_idempotent" => ("minIdempotent", 1, 0, Carrier::Real),
+            "order.max_idempotent" => ("maxIdempotent", 1, 0, Carrier::Real),
+            "order.min_absorb_max_left" => ("minAbsorbMaxLeft", 2, 0, Carrier::Real),
+            "order.max_absorb_min_left" => ("maxAbsorbMinLeft", 2, 0, Carrier::Real),
+            _ => return Ok(None),
+        };
+        if evidence.bindings.len() != binding_count
+            || evidence.parameter_requirement_count != binding_count
+            || subgoals.len() != binding_count + semantic_count
+        {
+            return Err(format!(
+                "registered scalar rule `{}` changed its certificate arity",
+                evidence.rule_id.as_str()
+            ));
+        }
+
+        let mut semantic_proofs = Vec::with_capacity(semantic_count);
+        for (index, child) in subgoals.iter().enumerate() {
+            let child = child
+                .factual_success()
+                .ok_or_else(|| format!("registered scalar child {index} is not factual"))?;
+            if !child.store.infers.is_empty() {
+                return Err(format!("registered scalar child {index} published effects"));
+            }
+            let fact = child.fact();
+            let proof = self
+                .construct_lean_proof_from_direct_fact_result(child)?
+                .ok_or_else(|| {
+                    format!("registered scalar child {index} has no direct proof consumer")
+                })?;
+            if index < binding_count {
+                let (element, set) = membership_parts(&fact)?;
+                if !matches!(set, Obj::StandardSet(StandardSet::R))
+                    || !canonical_objs_equal(
+                        element,
+                        &evidence.bindings[index],
+                        MatchLimits::default(),
+                    )
+                    .map_err(|error| error.message)?
+                {
+                    return Err(format!(
+                        "registered scalar parameter child {index} changed its exact real binding"
+                    ));
+                }
+            } else {
+                semantic_proofs.push(proof);
+            }
+        }
+        if semantic_proofs.len() != semantic_count {
+            return Err("registered scalar rule changed its semantic-premise count".into());
+        }
+        render_fact(target, &self.environment_stack)?;
+        let rendered_bindings = evidence
+            .bindings
+            .iter()
+            .map(|binding| match carrier {
+                Carrier::Complex => render_numeric_obj(binding, &self.environment_stack),
+                Carrier::Real => render_real_target_object_representation(
+                    &LeanTargetObjectRepresentation::lower(binding)?,
+                    &self.environment_stack,
+                ),
+            })
+            .collect::<Result<Vec<_>, String>>()?;
+        let mut arguments = rendered_bindings;
+        if evidence.rule_id.as_str() == "order.abs_positive_of_nonzero" {
+            let LeanTargetObjectRepresentation::Symbol { symbol_id, .. } =
+                LeanTargetObjectRepresentation::lower(&evidence.bindings[0])?
+            else {
+                return Err("registered abs positivity requires one exact source symbol".into());
+            };
+            let source = render_obj(&evidence.bindings[0], &self.environment_stack)?;
+            let equality = self
+                .environment_stack
+                .numeric_representation_equalities
+                .get(&symbol_id)
+                .ok_or_else(|| {
+                    "registered abs positivity has no source-to-real representation bridge"
+                        .to_string()
+                })?;
+            arguments.insert(0, source);
+            arguments.insert(2, format!("({equality})"));
+        }
+        arguments.extend(
+            semantic_proofs
+                .into_iter()
+                .map(|proof| format!("({proof})")),
+        );
+        let mut proof = format!("Litex.Rules.{theorem} {}", arguments.join(" "));
+        let heterogeneous_result_binding = match evidence.rule_id.as_str() {
+            "order.min_eq_left_of_le"
+            | "order.max_eq_left_of_le"
+            | "order.abs_eq_self_of_nonnegative"
+            | "order.min_idempotent"
+            | "order.max_idempotent"
+            | "order.min_absorb_max_left"
+            | "order.max_absorb_min_left" => Some(0),
+            "order.min_eq_right_of_le" | "order.max_eq_right_of_le" => Some(1),
+            _ => None,
+        };
+        if let Some(index) = heterogeneous_result_binding {
+            if let LeanTargetObjectRepresentation::Symbol { symbol_id, .. } =
+                LeanTargetObjectRepresentation::lower(&evidence.bindings[index])?
+            {
+                if let Some(source_to_selected) = self
+                    .environment_stack
+                    .numeric_representation_equalities
+                    .get(&symbol_id)
+                {
+                    proof = format!(
+                        "Litex.Same.trans ({proof}) (Litex.Same.symm ({source_to_selected}))"
+                    );
+                }
+            }
+        }
         Ok(Some(proof))
     }
 

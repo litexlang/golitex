@@ -6,7 +6,7 @@ use crate::error::{
 use crate::fact::{AndChainAtomicFact, ExistOrAndChainAtomicFact, Fact, QuantifierFreeFact};
 use crate::result::{StmtResult, UnknownFactResult};
 use crate::runtime::Runtime;
-use crate::verify::ProofSearchState;
+use crate::verify::VerifyState;
 
 impl Runtime {
     /// Full fact verification used for user proof obligations.
@@ -18,7 +18,7 @@ impl Runtime {
     pub fn verify_fact_allow_unknown(
         &mut self,
         fact: &Fact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         match fact {
             Fact::AtomicFact(atomic_fact) => self.verify_atomic_fact(atomic_fact, verify_state),
@@ -37,10 +37,9 @@ impl Runtime {
     pub fn verify_fact_or_error(
         &mut self,
         fact: &Fact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let result = self.verify_fact_allow_unknown(fact, verify_state)?;
-        let result = self.structured_unknown_result_for_failed_fact(fact, verify_state, result)?;
 
         if result.is_unknown() {
             let fact_owned = fact.clone();
@@ -72,7 +71,7 @@ impl Runtime {
     pub fn structured_unknown_result_for_failed_fact(
         &mut self,
         fact: &Fact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
         result: StmtResult,
     ) -> Result<StmtResult, RuntimeError> {
         if !result.is_unknown() || result.as_fact_unknown().is_some() {
@@ -135,7 +134,7 @@ impl Runtime {
     pub fn verify_exist_or_and_chain_atomic_fact(
         &mut self,
         exist_or_and_chain_atomic_fact: &ExistOrAndChainAtomicFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         match exist_or_and_chain_atomic_fact {
             ExistOrAndChainAtomicFact::AtomicFact(atomic_fact) => {
@@ -159,7 +158,7 @@ impl Runtime {
     pub fn verify_quantifier_free_fact(
         &mut self,
         quantifier_free_fact: &QuantifierFreeFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         match quantifier_free_fact {
             QuantifierFreeFact::AtomicFact(atomic_fact) => {
@@ -176,7 +175,7 @@ impl Runtime {
     pub fn verify_and_chain_atomic_fact(
         &mut self,
         and_chain_atomic_fact: &AndChainAtomicFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         match and_chain_atomic_fact {
             AndChainAtomicFact::AtomicFact(atomic_fact) => {

@@ -1,4 +1,3 @@
-use super::source_execution::SourceImportPolicy;
 use crate::prelude::*;
 use std::fs;
 use std::rc::Rc;
@@ -518,10 +517,8 @@ fn run_repository_source_file(
             )
         }
     };
-    let outcome = runtime.execute_source(
-        remove_windows_carriage_from_str(source_code.as_str()).as_str(),
-        SourceImportPolicy::UseRuntimePolicy,
-    );
+    let outcome =
+        runtime.execute_source(remove_windows_carriage_from_str(source_code.as_str()).as_str());
     (outcome.stmt_results, outcome.runtime_error)
 }
 

@@ -8,8 +8,8 @@
 # Now: zero-binder and standard-set-binder theorem Results, ordinary claim,
 # and ordinary example Results are read recursively. Parameter FactIds live
 # only in the theorem compiler environment; proof-step Results become local
-# Lean `have` declarations; and `by thm` cites the theorem's exact outer
-# FactId before publishing its instantiated conclusion FactId.
+# Lean `have` declarations; and selected `by thm ... => fact` cites the
+# theorem's exact outer FactId before publishing its selected FactId.
 #
 # Boundary: forall examples, dependent/refined theorem binders, non-atomic
 # theorem conclusions, theorem domain premises/projections, and unreviewed
@@ -30,7 +30,7 @@ thm local_reflexivity:
         x = x
     x = x
 
-by thm local_reflexivity(1)
+by thm local_reflexivity(1) => 1 = 1
 
 claim:
     ? 2 = 2

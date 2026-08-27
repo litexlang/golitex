@@ -9,7 +9,7 @@ impl Runtime {
     pub fn verify_and_fact(
         &mut self,
         and_fact: &AndFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(cached_result) =
             self.verification_result_from_known_fact_cache(&and_fact.clone().into())
@@ -59,7 +59,7 @@ impl Runtime {
     fn try_verify_and_fact_with_known_forall_facts_in_envs(
         &mut self,
         and_fact: &AndFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<Option<SuccessFactStmtResult>, RuntimeError> {
         let key = and_fact.key();
         let envs_count = self.environment_count();
@@ -120,7 +120,7 @@ impl Runtime {
         known_forall: &Rc<StoredForallConclusionReference>,
         arg_map: HashMap<String, Obj>,
         given_and_fact: &AndFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<Option<SuccessFactStmtResult>, RuntimeError> {
         let Some((instantiation, requirements)) = self
             .verify_known_forall_requirements_and_build_evidence(
@@ -152,7 +152,7 @@ impl Runtime {
     pub fn verify_chain_fact(
         &mut self,
         chain_fact: &ChainFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(cached_result) =
             self.verification_result_from_known_fact_cache(&chain_fact.clone().into())

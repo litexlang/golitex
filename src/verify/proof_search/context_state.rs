@@ -14,19 +14,14 @@
 /// `equality_may_use_known_forall` controls an important recursion boundary:
 /// equality verification may usually instantiate known `forall` facts, but some
 /// equality subchecks disable that route to prevent circular proof search.
-///
-/// `list_set_membership_may_use_equality_builtin` lets selected builtin premises
-/// restrict list-set membership to reflexive or already-known element equality.
-
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct ProofSearchState {
+pub struct VerifyState {
     pub proof_search_round: u8,
     pub well_definedness_verified: bool,
     pub equality_may_use_known_forall: bool,
-    pub list_set_membership_may_use_equality_builtin: bool,
 }
 
-impl ProofSearchState {
+impl VerifyState {
     const FINAL_ROUND: u8 = 2;
 
     pub fn initial() -> Self {
@@ -50,7 +45,6 @@ impl ProofSearchState {
             proof_search_round,
             well_definedness_verified,
             equality_may_use_known_forall: true,
-            list_set_membership_may_use_equality_builtin: true,
         }
     }
 

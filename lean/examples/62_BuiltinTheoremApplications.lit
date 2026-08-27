@@ -1,0 +1,7 @@
+release thm set_builder_member(1, {x R: x > 0})
+
+release thm fn_set_member(fn(x R) R {x}, fn(y R) R)
+
+release thm cart_member_from_coordinates((1, 2), cart(R, R))
+
+release thm sum_le_sum_from_pointwise(sum(1, 2, fn(k Z) Z {k}), sum(1, 2, fn(k Z) Z {k}))

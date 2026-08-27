@@ -68,7 +68,7 @@ impl Runtime {
     ) -> Result<SuccessInferResult, RuntimeError> {
         let mut infer_result = SuccessInferResult::new();
         for param_def in param_defs.groups.iter() {
-            self.verify_param_type_well_defined(&param_def.param_type, &ProofSearchState::initial())
+            self.verify_param_type_well_defined(&param_def.param_type, &VerifyState::initial())
                 .map_err(|well_defined_error| {
                     let param_names_text = vec_to_string_join_by_comma(&param_def.params);
                     let error_line_file = well_defined_error.line_file().clone();

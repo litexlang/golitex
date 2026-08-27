@@ -9,7 +9,7 @@ use crate::parse::Tokenizer;
 use crate::result::{StmtResult, SuccessFactProofResult, SuccessVerifyFactResult};
 use crate::runtime::Runtime;
 use crate::stmt::Stmt;
-use crate::verify::ProofSearchState;
+use crate::verify::VerifyState;
 use std::rc::Rc;
 
 impl StatementProofStateStack {
@@ -42,7 +42,7 @@ fn successful_atomic_fact_is_shared_until_statement_proof_cache_is_cleared() {
     let fact = parse_atomic_fact(&mut runtime, "1 < 2");
 
     let first = runtime
-        .verify_atomic_fact(&fact, &ProofSearchState::initial())
+        .verify_atomic_fact(&fact, &VerifyState::initial())
         .expect("first verification should run");
     let first_source = direct_verification(&first);
     assert!(!matches!(
@@ -55,7 +55,7 @@ fn successful_atomic_fact_is_shared_until_statement_proof_cache_is_cleared() {
         .is_none());
 
     let second = runtime
-        .verify_atomic_fact(&fact, &ProofSearchState::initial())
+        .verify_atomic_fact(&fact, &VerifyState::initial())
         .expect("second verification should hit the statement proof cache");
     let second_source = reused_verification(&second);
     assert!(Rc::ptr_eq(&first_source, second_source));
@@ -74,7 +74,7 @@ fn unknown_atomic_fact_is_not_cached() {
     let fact = parse_atomic_fact(&mut runtime, "1 = 2");
 
     let result = runtime
-        .verify_atomic_fact(&fact, &ProofSearchState::initial())
+        .verify_atomic_fact(&fact, &VerifyState::initial())
         .expect("unknown verification should not error");
     assert!(result.is_unknown());
     assert!(!runtime.statement_atomic_fact_proof_is_cached(&fact.to_string()));
@@ -91,7 +91,7 @@ fn local_environment_proof_cache_is_visible_inward_and_discarded_outward() {
     let parent_fact = parse_atomic_fact(&mut runtime, "1 < 2");
     let child_fact = parse_atomic_fact(&mut runtime, "2 < 3");
     runtime
-        .verify_atomic_fact(&parent_fact, &ProofSearchState::initial())
+        .verify_atomic_fact(&parent_fact, &VerifyState::initial())
         .expect("parent fact should verify");
 
     runtime
@@ -99,7 +99,7 @@ fn local_environment_proof_cache_is_visible_inward_and_discarded_outward() {
             assert!(runtime
                 .verification_result_from_statement_proof_cache(&parent_fact)
                 .is_some());
-            runtime.verify_atomic_fact(&child_fact, &ProofSearchState::initial())?;
+            runtime.verify_atomic_fact(&child_fact, &VerifyState::initial())?;
             assert!(runtime.statement_atomic_fact_proof_is_cached(&child_fact.to_string()));
             Ok::<(), RuntimeError>(())
         })
@@ -118,7 +118,7 @@ fn known_only_entry_points_reuse_statement_proofs() {
     let mut runtime = new_test_runtime();
     let set_fact = parse_atomic_fact(&mut runtime, "$is_set(R)");
     let first_set_result = runtime
-        .verify_atomic_fact(&set_fact, &ProofSearchState::initial())
+        .verify_atomic_fact(&set_fact, &VerifyState::initial())
         .expect("builtin set fact should verify");
     let set_source = direct_verification(&first_set_result);
     let known_set_result = runtime
@@ -131,7 +131,7 @@ fn known_only_entry_points_reuse_statement_proofs() {
 
     let equality = parse_atomic_fact(&mut runtime, "1 = 1");
     let first_equality_result = runtime
-        .verify_atomic_fact(&equality, &ProofSearchState::initial())
+        .verify_atomic_fact(&equality, &VerifyState::initial())
         .expect("reflexive equality should verify");
     let equality_source = direct_verification(&first_equality_result);
     let AtomicFact::EqualFact(equality_fact) = equality else {
@@ -154,7 +154,7 @@ fn next_statement_does_not_inherit_the_previous_proof_cache_source() {
     let mut runtime = new_test_runtime();
     let fact = parse_atomic_fact(&mut runtime, "1 < 2");
     let first = runtime
-        .verify_atomic_fact(&fact, &ProofSearchState::initial())
+        .verify_atomic_fact(&fact, &VerifyState::initial())
         .expect("temporary proof should verify");
     let first_source = direct_verification(&first);
 

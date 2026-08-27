@@ -1,5 +1,6 @@
-# Compatibility import: the module still exists but exports no declarations.
-import std basics
+# Compatibility note: the module still exists but exports no declarations. A project that retains
+# the compatibility dependency declares `basics` under `[import std]` in litex.config; source-level
+# `import std basics` is intentionally rejected.
 
 # Former std/basics consumers now use native vocabulary.
 quot(-7, 3) = -3

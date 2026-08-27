@@ -1088,7 +1088,7 @@ impl Runtime {
         &mut self,
         conclusion: &IsNonemptySetFact,
         pointwise: bool,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let Obj::GeneralCart(general_cart) = &conclusion.set else {
             return Ok(UnknownGenericStmtResult::new().into());

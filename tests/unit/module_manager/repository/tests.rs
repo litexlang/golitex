@@ -1,6 +1,5 @@
 use super::*;
-use crate::output::display_stmt_result_json_v2;
-use crate::test_support::execute_source;
+use crate::test_support::with_standard_library_root;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 #[test]
@@ -545,170 +544,11 @@ main = "./main.lit"
 }
 
 #[test]
-fn isolated_file_can_import_modules_and_standard_packages() {
-    run_repository_test_with_large_stack("isolated-source-import", || {
-        let fixture = Fixture::new("isolated-source-import");
-        let module_root = fixture.path("external-module");
-        let broken_module_root = fixture.path("broken-module");
-        let std_root = fixture.path("std");
-        let file_path = fixture.path("scratch/session.lit");
-        write_file(
-            &module_root.join("litex.config"),
-            r#"[hierarchy]
-module
-
-[export]
-api = "./api.lit"
-"#,
-        );
-        write_file(&module_root.join("api.lit"), "have value R = 7\n");
-        write_file(
-            &broken_module_root.join("litex.config"),
-            r#"[hierarchy]
-module
-
-[export]
-main = "./main.lit"
-"#,
-        );
-        write_file(&broken_module_root.join("main.lit"), "have broken R =\n");
-        write_file(
-            &std_root.join("basics/litex.config"),
-            r#"[hierarchy]
-module
-
-[module]
-flatten = true
-
-[export]
-main = "./main.lit"
-"#,
-        );
-        write_file(&std_root.join("basics/main.lit"), "have std_value R = 2\n");
-        write_file(&file_path, "have seed R = 1\n");
-
-        with_standard_library_root(&std_root, || {
-            let mut runtime = Runtime::default();
-            let file = path_string_for_test(&file_path);
-            let (_, file_error) = execute_file_in_runtime(
-                file.as_str(),
-                &mut runtime,
-                FileExecutionOptions {
-                    force_isolated: true,
-                },
-            );
-            assert!(file_error.is_none(), "{file_error:?}");
-            assert!(runtime.current_source_allows_inline_imports());
-
-            let broken_module_path = path_string_for_test(&broken_module_root);
-            let (_, failed_import) = execute_source(
-                format!("import \"{}\" as broken", broken_module_path).as_str(),
-                &mut runtime,
-            );
-            assert!(failed_import.is_some(), "invalid module import must fail");
-            assert!(
-                runtime.module_manager.module_id_by_name("broken").is_none(),
-                "a failed isolated import must not leave its alias registered"
-            );
-            assert!(
-                runtime.unverified_imports().is_empty(),
-                "a failed isolated import must roll back its unverified-import diagnostic"
-            );
-
-            let module_path = path_string_for_test(&module_root);
-            let source = format!(
-                    "import \"{}\" as yy\nyy::api::value = 7\nimport std basics\nbasics::std_value = 2\nimport std basics\nseed = 1\n",
-                    module_path
-                );
-            let (stmt_results, runtime_error) = execute_source(source.as_str(), &mut runtime);
-            let (ok, output) = render_run_output(&runtime, &stmt_results, &runtime_error);
-            assert!(ok, "{output}");
-            assert!(output.contains("import std basics"), "{output}");
-            assert!(output.contains("unverified import warning"), "{output}");
-            assert!(output.contains("isolated_import"), "{output}");
-            assert!(output.contains("isolated_std_import"), "{output}");
-
-            fn import_execution(result: &StmtResult) -> &SuccessImportExecutionResult {
-                let StmtResult::Success(SuccessStmtResult::Command(
-                    SuccessCommandStmtResult::ImportStmt(result),
-                )) = result
-                else {
-                    panic!("expected import statement Result")
-                };
-                &result.execution
-            }
-            let SuccessImportExecutionResult::Executed(path_import) =
-                import_execution(&stmt_results[0])
-            else {
-                panic!("first path import must execute its discovered module")
-            };
-            assert_eq!(path_import.execution_mode, ExecutionMode::Trusted);
-            assert!(
-                !path_import.statement_results.is_empty(),
-                "an executed nonempty module must retain ordered child Results"
-            );
-
-            let SuccessImportExecutionResult::Executed(first_std_import) =
-                import_execution(&stmt_results[2])
-            else {
-                panic!("first standard import must execute its discovered module")
-            };
-            assert!(!first_std_import.statement_results.is_empty());
-            let mut visited_import_children = 0;
-            let StmtResult::Success(success) = &stmt_results[2] else {
-                unreachable!("the import was already matched as successful")
-            };
-            success.visit_child_results(&mut |_| visited_import_children += 1);
-            assert_eq!(
-                visited_import_children,
-                first_std_import.statement_results.len(),
-                "the generic Result visitor must expose every executed module statement"
-            );
-
-            let SuccessImportExecutionResult::Reused(reused_std_import) =
-                import_execution(&stmt_results[4])
-            else {
-                panic!("second standard import must record module reuse")
-            };
-            assert_eq!(reused_std_import.module_id, first_std_import.module_id);
-            assert_eq!(reused_std_import.execution_mode, ExecutionMode::Trusted);
-            let mut visited_reused_children = 0;
-            let StmtResult::Success(success) = &stmt_results[4] else {
-                unreachable!("the reused import was already matched as successful")
-            };
-            success.visit_child_results(&mut |_| visited_reused_children += 1);
-            assert_eq!(visited_reused_children, 0);
-            let executed_json = display_stmt_result_json_v2(&stmt_results[2]);
-            assert!(executed_json.contains("\"kind\": \"Executed\""));
-            assert!(executed_json.contains("\"statement_results\""));
-            let reused_json = display_stmt_result_json_v2(&stmt_results[4]);
-            assert!(reused_json.contains("\"kind\": \"Reused\""));
-            assert!(!reused_json.contains("\"statement_results\""));
-            let import_graph = crate::graph::render_result_graph_from_stmt_results(
-                RunTargetKind::Code,
-                "isolated-import-result-contract",
-                true,
-                &stmt_results,
-            );
-            assert!(import_graph.contains("\"role\": \"ExecutedImport\""));
-            assert!(import_graph.contains("\"role\": \"ReusedImport\""));
-            let compiler_error =
-                crate::stmt_result_to_lean_compiler::StmtResultToLeanCompiler::new(
-                    "isolated_import_result_contract.lit",
-                )
-                .compile_stmt_results_to_lean_source(&stmt_results[2..3])
-                .expect_err("a standalone import Result must fail closed");
-            assert!(compiler_error.contains("ImportStmt"), "{compiler_error}");
-        });
-    });
-}
-
-#[test]
-fn isolated_imported_qualified_values_participate_in_calculation() {
-    run_repository_test_with_large_stack("isolated-import-qualified-calculation", || {
-        let fixture = Fixture::new("isolated-import-qualified-calculation");
+fn configured_imported_qualified_values_participate_in_calculation() {
+    run_repository_test_with_large_stack("configured-import-qualified-calculation", || {
+        let fixture = Fixture::new("configured-import-qualified-calculation");
         let module_root = fixture.path("geometry-foundation");
-        let file_path = fixture.path("scratch/tmp.lit");
+        let root = fixture.path("root");
         write_file(
             &module_root.join("litex.config"),
             r#"[hierarchy]
@@ -727,43 +567,25 @@ main2 = "./main2.lit"
             &module_root.join("main2.lit"),
             "have b R = 2\nhave pair cart(R, R) = (8, 9)\n",
         );
-        write_file(&file_path, "have seed R = 1\n");
-
-        let mut runtime = Runtime::default();
-        let file = path_string_for_test(&file_path);
-        let (_, file_error) = execute_file_in_runtime(
-            file.as_str(),
-            &mut runtime,
-            FileExecutionOptions {
-                force_isolated: true,
-            },
+        write_file(
+            &root.join("litex.config"),
+            "[hierarchy]\nmodule\n\n[import]\ngf = \"../geometry-foundation\"\n\n[export]\nmain = \"./main.lit\"\n",
         );
-        assert!(file_error.is_none(), "{file_error:?}");
-
-        let module_path = path_string_for_test(&module_root);
-        let source = format!(
-                "import \"{}\" as gf\ngf::main::a + gf::main::a = gf::main2::b\ngf::main::pair[1] = 3\ngf::main2::pair[1] = 8\ncart_dim(gf::main::ProductSet) = 2\n",
-                module_path
-            );
-        let (stmt_results, runtime_error) = execute_source(source.as_str(), &mut runtime);
-        let (ok, output) = render_run_output(&runtime, &stmt_results, &runtime_error);
+        write_file(
+            &root.join("main.lit"),
+            "gf::main::a + gf::main::a = gf::main2::b\ngf::main::pair[1] = 3\ngf::main2::pair[1] = 8\ncart_dim(gf::main::ProductSet) = 2\n",
+        );
+        let (ok, output) = run_repository(&root);
         assert!(ok, "{output}");
-
-        let (_, missing_error) = execute_source("gf::main::missing = 0", &mut runtime);
-        let missing_error = missing_error.expect("an unknown qualified object must fail");
-        assert!(
-            format!("{missing_error:?}").contains("gf::main::missing"),
-            "{missing_error:?}"
-        );
     });
 }
 
 #[test]
-fn isolated_imported_qualified_direct_cached_properties_remain_usable() {
-    run_repository_test_with_large_stack("isolated-import-qualified-properties", || {
-        let fixture = Fixture::new("isolated-import-qualified-properties");
+fn configured_imported_qualified_direct_cached_properties_remain_usable() {
+    run_repository_test_with_large_stack("configured-import-qualified-properties", || {
+        let fixture = Fixture::new("configured-import-qualified-properties");
         let module_root = fixture.path("property-library");
-        let file_path = fixture.path("scratch/tmp.lit");
+        let root = fixture.path("root");
         write_file(
             &module_root.join("litex.config"),
             r#"[hierarchy]
@@ -783,26 +605,20 @@ have pair cart(R, R) = (3, 4)
 have ProductSet set = cart(R, R)
 "#,
         );
-        write_file(&file_path, "have seed R = 1\n");
-
-        let mut runtime = Runtime::default();
-        let file = path_string_for_test(&file_path);
-        let (_, file_error) = execute_file_in_runtime(
-            file.as_str(),
-            &mut runtime,
-            FileExecutionOptions {
-                force_isolated: true,
-            },
+        write_file(
+            &root.join("litex.config"),
+            "[hierarchy]\nmodule\n\n[import]\nlib = \"../property-library\"\n\n[export]\nmain = \"./main.lit\"\n",
         );
-        assert!(file_error.is_none(), "{file_error:?}");
-
-        let module_path = path_string_for_test(&module_root);
-        let (stmt_results, runtime_error) = execute_source(
-            format!("import \"{}\" as lib", module_path).as_str(),
-            &mut runtime,
+        write_file(
+            &root.join("main.lit"),
+            "lib::main::entries(2) = 6\nlib::main::inc(2) = 3\n1 $in lib::main::positives\nlib::main::mat(1, 2) = 2\nlib::main::pair[1] = 3\ncart_dim(lib::main::ProductSet) = 2\n",
         );
-        let (ok, output) = render_run_output(&runtime, &stmt_results, &runtime_error);
-        assert!(ok, "{output}");
+        let outcome = run(RunRequest::new(
+            RunTarget::repository(path_string_for_test(&root).as_str()),
+            RunOptions::default(),
+        ));
+        assert!(outcome.ok, "{}", outcome.output);
+        let runtime = outcome.runtime;
 
         let imported_environment = runtime
             .imported_module_environments("lib::main")
@@ -863,64 +679,6 @@ have ProductSet set = cart(R, R)
             Some("2".to_string()),
             "qualified tuple dimension should use the module's canonical cache key"
         );
-
-        let probes = [
-            ("finite sequence lookup", "lib::main::entries(2) = 6"),
-            ("function unfolding", "lib::main::inc(2) = 3"),
-            ("set-builder membership", "1 $in lib::main::positives"),
-            ("matrix lookup", "lib::main::mat(1, 2) = 2"),
-            ("tuple projection", "lib::main::pair[1] = 3"),
-            (
-                "cart dimension lookup",
-                "cart_dim(lib::main::ProductSet) = 2",
-            ),
-        ];
-        let mut failures = Vec::new();
-        for (case_name, source) in probes {
-            let (stmt_results, runtime_error) = execute_source(source, &mut runtime);
-            let (ok, output) = render_run_output(&runtime, &stmt_results, &runtime_error);
-            if !ok {
-                failures.push(format!("{case_name}:\n{output}"));
-            }
-        }
-        assert!(failures.is_empty(), "{}", failures.join("\n\n"));
-    });
-}
-
-#[test]
-fn strict_isolated_import_verifies_the_loaded_module() {
-    run_repository_test_with_large_stack("strict-isolated-source-import", || {
-        let fixture = Fixture::new("strict-isolated-source-import");
-        let module_root = fixture.path("external-module");
-        let file_path = fixture.path("scratch/session.lit");
-        write_file(
-            &module_root.join("litex.config"),
-            r#"[hierarchy]
-module
-
-[export]
-assumption = "./assumption.lit"
-"#,
-        );
-        write_file(&module_root.join("assumption.lit"), "1 = 0\n");
-        write_file(&file_path, "have seed R = 1\n");
-
-        let mut runtime = Runtime::default();
-        runtime.strict_mode = true;
-        let file = path_string_for_test(&file_path);
-        let (_, file_error) = execute_file_in_runtime(
-            file.as_str(),
-            &mut runtime,
-            FileExecutionOptions {
-                force_isolated: true,
-            },
-        );
-        assert!(file_error.is_none(), "{file_error:?}");
-        let module_path = path_string_for_test(&module_root);
-        let source = format!("import \"{}\" as External", module_path);
-        let (_, import_error) = execute_source(source.as_str(), &mut runtime);
-        let import_error = import_error.expect("strict import must verify its target");
-        assert!(format!("{import_error:?}").contains("1 = 0"));
     });
 }
 
@@ -942,7 +700,7 @@ main = "./main.lit"
     let (ok, output) = run_repository(&root);
     assert!(!ok, "{output}");
     assert!(
-        output.contains("only available in an isolated REPL or an isolated .lit file"),
+        output.contains("`import` is a terminal command, not a Litex statement"),
         "{output}"
     );
 }
@@ -1772,42 +1530,5 @@ impl Fixture {
 impl Drop for Fixture {
     fn drop(&mut self) {
         let _ = fs::remove_dir_all(&self.root);
-    }
-}
-
-fn with_standard_library_root(std_root: &Path, test: impl FnOnce()) {
-    let lock = standard_library_root_env_lock()
-        .lock()
-        .unwrap_or_else(|poisoned| poisoned.into_inner());
-    let _restore = StandardLibraryRootEnvGuard::new();
-    std::env::set_var("LITEX_STD_PATH", std_root);
-    test();
-    drop(lock);
-}
-
-fn standard_library_root_env_lock() -> &'static std::sync::Mutex<()> {
-    static LOCK: std::sync::OnceLock<std::sync::Mutex<()>> = std::sync::OnceLock::new();
-    LOCK.get_or_init(|| std::sync::Mutex::new(()))
-}
-
-struct StandardLibraryRootEnvGuard {
-    previous: Option<std::ffi::OsString>,
-}
-
-impl StandardLibraryRootEnvGuard {
-    fn new() -> Self {
-        StandardLibraryRootEnvGuard {
-            previous: std::env::var_os("LITEX_STD_PATH"),
-        }
-    }
-}
-
-impl Drop for StandardLibraryRootEnvGuard {
-    fn drop(&mut self) {
-        if let Some(previous) = self.previous.as_ref() {
-            std::env::set_var("LITEX_STD_PATH", previous);
-        } else {
-            std::env::remove_var("LITEX_STD_PATH");
-        }
     }
 }

@@ -1694,7 +1694,7 @@ impl Runtime {
                 None,
             )?;
             let verify_result = self
-                .verify_atomic_fact(&instantiated_case_condition, &ProofSearchState::initial())
+                .verify_atomic_fact(&instantiated_case_condition, &VerifyState::initial())
                 .map_err(|verify_error| {
                     short_exec_error(
                         eval_stmt.clone().into(),
@@ -1723,7 +1723,7 @@ impl Runtime {
                         )
                     })?;
                 let verify_negated_result = self
-                    .verify_atomic_fact(&negated_case_condition, &ProofSearchState::initial())
+                    .verify_atomic_fact(&negated_case_condition, &VerifyState::initial())
                     .map_err(|verify_error| {
                         short_exec_error(
                             eval_stmt.clone().into(),
@@ -1763,10 +1763,7 @@ impl Runtime {
     }
 
     fn evaluate_obj_for_eval_stmt(&mut self, stmt: &EvalStmt) -> Result<Obj, RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(
-            &stmt.obj_to_eval,
-            &ProofSearchState::initial(),
-        )?;
+        self.verify_obj_well_defined_and_store_cache(&stmt.obj_to_eval, &VerifyState::initial())?;
         if stmt.obj_to_eval.contains_native_complex_syntax() {
             return Err(short_exec_error(
                 stmt.clone().into(),

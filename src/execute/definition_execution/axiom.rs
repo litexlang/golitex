@@ -14,7 +14,7 @@ impl Runtime {
         let (well_definedness, _) = self
             .verify_forall_fact_well_defined_and_collect_certificate(
                 &stmt.forall_fact,
-                &ProofSearchState::initial(),
+                &VerifyState::initial(),
             )
             .map_err(|error| {
                 short_exec_error(

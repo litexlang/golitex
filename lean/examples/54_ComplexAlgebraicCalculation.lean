@@ -30,18 +30,18 @@ theorem __fact3 : Litex.Same (Complex.I ^ (-1 : ℤ)) (((-1 : ℂ) * (1 : ℂ)) 
   field_simp [__calculate_nonzero1] <;> ring_nf <;> norm_num [Complex.I_mul_I] <;> ring)
 
 theorem __fact4 :
-    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.C), Litex.Same (((Litex.In.rep __p1 __type1 : ℂ) + Complex.I) * ((Litex.In.rep __p1 __type1 : ℂ) - Complex.I)) (((Litex.In.rep __p1 __type1 : ℂ) * (Litex.In.rep __p1 __type1 : ℂ)) + (1 : ℂ)) := by
+    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.C), Litex.Same (((__p1 : ℂ) + Complex.I) * ((__p1 : ℂ) - Complex.I)) (((__p1 : ℂ) * (__p1 : ℂ)) + (1 : ℂ)) := by
   intro z __h4_1
-  have __c4_0 : Litex.Same (((Litex.In.rep z __h4_1 : ℂ) + Complex.I) * ((Litex.In.rep z __h4_1 : ℂ) - Complex.I)) (((Litex.In.rep z __h4_1 : ℂ) * (Litex.In.rep z __h4_1 : ℂ)) + (1 : ℂ)) := (by
+  have __c4_0 : Litex.Same (((z : ℂ) + Complex.I) * ((z : ℂ) - Complex.I)) (((z : ℂ) * (z : ℂ)) + (1 : ℂ)) := (by
     apply Litex.Same.ofEq
     ring_nf <;> norm_num [Complex.I_mul_I] <;> ring)
   exact __c4_0
 
 theorem __fact5 :
-    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.C) (__domain1 : ¬ Litex.Same ((Litex.In.rep __p1 __type1 : ℂ) + Complex.I) (0 : ℂ)), Litex.Same ((((Litex.In.rep __p1 __type1 : ℂ) + Complex.I) ^ (2 : ℕ)) / ((Litex.In.rep __p1 __type1 : ℂ) + Complex.I)) ((Litex.In.rep __p1 __type1 : ℂ) + Complex.I) := by
+    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.C) (__domain1 : ¬ Litex.Same ((__p1 : ℂ) + Complex.I) (0 : ℂ)), Litex.Same ((((__p1 : ℂ) + Complex.I) ^ (2 : ℕ)) / ((__p1 : ℂ) + Complex.I)) ((__p1 : ℂ) + Complex.I) := by
   intro z __h5_1 __domain1
-  have __c5_0 : Litex.Same ((((Litex.In.rep z __h5_1 : ℂ) + Complex.I) ^ (2 : ℕ)) / ((Litex.In.rep z __h5_1 : ℂ) + Complex.I)) ((Litex.In.rep z __h5_1 : ℂ) + Complex.I) := (by
-    have __calculate_nonzero1 : ((Litex.In.rep z __h5_1 : ℂ) + Complex.I) ≠ (0 : ℂ) := by
+  have __c5_0 : Litex.Same ((((z : ℂ) + Complex.I) ^ (2 : ℕ)) / ((z : ℂ) + Complex.I)) ((z : ℂ) + Complex.I) := (by
+    have __calculate_nonzero1 : ((z : ℂ) + Complex.I) ≠ (0 : ℂ) := by
       intro __native_eq
       exact (__domain1) (Litex.Same.ofEq __native_eq)
     apply Litex.Same.ofEq

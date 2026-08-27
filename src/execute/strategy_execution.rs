@@ -9,7 +9,7 @@ impl Runtime {
         let well_definedness = self
             .verify_fact_well_defined_result(
                 &Fact::ForallFact(stmt.forall_fact.clone()),
-                &ProofSearchState::initial(),
+                &VerifyState::initial(),
             )
             .map_err(|e| {
                 short_exec_error(
@@ -67,7 +67,7 @@ impl Runtime {
 
             let mut conclusion_checks = Vec::new();
             let then_count = stmt.forall_fact.then_facts.len();
-            let then_verify_state = ProofSearchState::initial();
+            let then_verify_state = VerifyState::initial();
             for (then_index, then_fact) in stmt.forall_fact.then_facts.iter().enumerate() {
                 let mut result =
                     rt.verify_exist_or_and_chain_atomic_fact(then_fact, &then_verify_state)?;

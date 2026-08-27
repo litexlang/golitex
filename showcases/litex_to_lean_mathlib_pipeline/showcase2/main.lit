@@ -1,0 +1,43 @@
+# Real-sequence completeness pipeline.
+#
+# The theorem in this file is deliberately restricted to `seq(R)`: a Cauchy
+# sequence need not converge in an arbitrary metric space.
+
+# From index n0 onward, every term lies within epsilon of L.
+prop is_sequence_tail_close_to_limit(a seq(R), L R, epsilon R+, n0 N+):
+    forall n N+:
+        n >= n0
+        =>:
+            abs(a(n) - L) < epsilon
+
+# A sequence converges to L when every positive tolerance has such a tail.
+prop converges_to(a seq(R), L R):
+    forall epsilon R+:
+        exist n0 N+ st {$is_sequence_tail_close_to_limit(a, L, epsilon, n0)}
+
+# A convergent sequence has at least one real limit.
+prop is_convergent_sequence(a seq(R)):
+    exist L R st {$converges_to(a, L)}
+
+# From index n0 onward, every pair of terms lies within epsilon.
+prop is_cauchy_tail(a seq(R), epsilon R+, n0 N+):
+    forall m, n N+:
+        m >= n0
+        n >= n0
+        =>:
+            abs(a(m) - a(n)) < epsilon
+
+# A sequence is Cauchy when every positive tolerance has a common tail.
+prop is_cauchy_sequence(a seq(R)):
+    forall epsilon R+:
+        exist n0 N+ st {$is_cauchy_tail(a, epsilon, n0)}
+
+# Sequential completeness is discharged by the verifier's typed real-only
+# completeness certificate; the generated Lean proof calls the Mathlib-backed
+# rule in `Litex.Rules`.
+thm cauchy_sequence_converges:
+    ? forall a seq(R):
+        $is_cauchy_sequence(a)
+        =>:
+            $is_convergent_sequence(a)
+    by thm real_cauchy_sequence_converges(a) => $is_convergent_sequence(a)

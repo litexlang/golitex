@@ -28,7 +28,7 @@ impl Runtime {
     pub fn verify_fn_equal_in_fact_with_builtin_rules(
         &mut self,
         f: &FnEqualInFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let x_name = self.generate_random_unused_names(1)[0].clone();
         let x_group =
@@ -71,7 +71,7 @@ impl Runtime {
     pub fn verify_fn_equal_fact_with_builtin_rules(
         &mut self,
         f: &FnEqualFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let left_t = match fn_set_type_of_function_value(self, &f.left) {
             Some(fs) => fs,
@@ -182,7 +182,7 @@ impl Runtime {
         value: &Obj,
         expected: &FnSet,
         membership: &AtomicFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let AtomicFact::InFact(in_fact) = membership else {
             return Ok(UnknownGenericStmtResult::new().into());

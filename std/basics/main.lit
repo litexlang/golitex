@@ -1,4 +1,5 @@
 # Empty compatibility module.
 #
-# Keep this file and litex.config so existing `import std basics` statements
-# remain loadable.  This module intentionally exports no declarations.
+# Keep this file and litex.config so existing `[import std] basics` manifest
+# entries and interactive `import std basics` terminal commands remain loadable.
+# This module intentionally exports no declarations.

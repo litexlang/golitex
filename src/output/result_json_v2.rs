@@ -559,43 +559,6 @@ impl StmtResultJsonV2 {
         ])
     }
 
-    fn import_stmt(&mut self, result: &SuccessImportStmtResult) -> JsonValue {
-        let execution = match &result.execution {
-            SuccessImportExecutionResult::Executed(executed) => object(vec![
-                string_field("kind", "Executed"),
-                number_field("module_id", executed.module_id.0),
-                string_field(
-                    "execution_mode",
-                    match executed.execution_mode {
-                        ExecutionMode::Verified => "Verified",
-                        ExecutionMode::Trusted => "Trusted",
-                    },
-                ),
-                (
-                    "statement_results".to_string(),
-                    self.stmt_results(&executed.statement_results),
-                ),
-            ]),
-            SuccessImportExecutionResult::Reused(reused) => object(vec![
-                string_field("kind", "Reused"),
-                number_field("module_id", reused.module_id.0),
-                string_field(
-                    "execution_mode",
-                    match reused.execution_mode {
-                        ExecutionMode::Verified => "Verified",
-                        ExecutionMode::Trusted => "Trusted",
-                    },
-                ),
-            ]),
-        };
-        self.non_fact_stmt(
-            "ImportStmt",
-            result.statement.to_string(),
-            &result.common,
-            vec![("execution".to_string(), execution)],
-        )
-    }
-
     fn definition_stmt(&mut self, result: &SuccessDefinitionStmtResult) -> JsonValue {
         match result {
             SuccessDefinitionStmtResult::LetObjStmt(result) => self.non_fact_stmt(
@@ -803,12 +766,34 @@ impl StmtResultJsonV2 {
                 &result.common,
                 result.verification.as_ref(),
             ),
-            SuccessDefinitionStmtResult::DefPropStmt(result) => self.non_fact_stmt(
-                "DefPropStmt",
-                result.statement.to_string(),
-                &result.common,
-                vec![],
-            ),
+            SuccessDefinitionStmtResult::DefPropStmt(result) => {
+                let run_in_local_env = result
+                    .run_in_local_env
+                    .as_ref()
+                    .map(|local| {
+                        object(vec![
+                            string_field("kind", "SuccessVerifyDefPropLocalEnvResult"),
+                            ("binder".to_string(), self.fact_binder_result(&local.binder)),
+                            (
+                                "body".to_string(),
+                                array(
+                                    local
+                                        .body
+                                        .iter()
+                                        .map(|fact| self.local_fact_wd_result(fact))
+                                        .collect(),
+                                ),
+                            ),
+                        ])
+                    })
+                    .unwrap_or(JsonValue::Null);
+                self.non_fact_stmt(
+                    "DefPropStmt",
+                    result.statement.to_string(),
+                    &result.common,
+                    vec![("run_in_local_env".to_string(), run_in_local_env)],
+                )
+            }
             SuccessDefinitionStmtResult::DefAbstractPropStmt(result) => self.non_fact_stmt(
                 "DefAbstractPropStmt",
                 result.statement.to_string(),
@@ -1220,7 +1205,7 @@ impl StmtResultJsonV2 {
                 let verification = result
                     .verification
                     .as_ref()
-                    .map(|verification| theorem_application_verification_value(self, verification))
+                    .map(|verification| theorem_selection_verification_value(self, verification))
                     .unwrap_or(JsonValue::Null);
                 self.non_fact_stmt(
                     "ByThmStmt",
@@ -1367,7 +1352,6 @@ impl StmtResultJsonV2 {
 
     fn command_stmt(&mut self, result: &SuccessCommandStmtResult) -> JsonValue {
         match result {
-            SuccessCommandStmtResult::ImportStmt(result) => self.import_stmt(result),
             SuccessCommandStmtResult::EvalStmt(result) => self.non_fact_stmt(
                 "EvalStmt",
                 result.statement.to_string(),
@@ -2802,6 +2786,27 @@ impl StmtResultJsonV2 {
             BuiltinRuleEvidence::FunctionSetMembership(result) => object(vec![
                 string_field("kind", "FunctionSetMembership"),
                 string_field("expected_target", result.expected_target.to_string()),
+                string_field("expected_pointwise", result.expected_pointwise.to_string()),
+            ]),
+            BuiltinRuleEvidence::TupleCartesianMembership(result) => object(vec![
+                string_field("kind", "TupleCartesianMembership"),
+                string_field("expected_target", result.expected_target.to_string()),
+                (
+                    "expected_coordinate_memberships".to_string(),
+                    display_values(&result.expected_coordinate_memberships),
+                ),
+            ]),
+            BuiltinRuleEvidence::IntegerRangeSumPointwiseOrder(result) => object(vec![
+                string_field("kind", "IntegerRangeSumPointwiseOrder"),
+                string_field("expected_target", result.expected_target.to_string()),
+                string_field(
+                    "expected_start_equality",
+                    result.expected_start_equality.to_string(),
+                ),
+                string_field(
+                    "expected_end_equality",
+                    result.expected_end_equality.to_string(),
+                ),
                 string_field("expected_pointwise", result.expected_pointwise.to_string()),
             ]),
             BuiltinRuleEvidence::RefinedNumericMembership(result) => object(vec![

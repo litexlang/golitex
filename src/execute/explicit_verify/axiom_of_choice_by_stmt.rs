@@ -1,4 +1,4 @@
-use super::helpers_by_stmt::section_inferred_fact;
+use super::helpers_by_stmt::section_inferred_fact_id;
 use crate::prelude::*;
 
 impl Runtime {
@@ -6,7 +6,7 @@ impl Runtime {
         &mut self,
         stmt: &ByAxiomOfChoiceStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&stmt.family, &ProofSearchState::initial())
+        self.verify_obj_well_defined_and_store_cache(&stmt.family, &VerifyState::initial())
             .map_err(|well_defined_error| {
                 short_exec_error(
                     stmt.clone().into(),
@@ -22,7 +22,7 @@ impl Runtime {
         let (mut inside_results, obligations_for_output) = self.run_in_local_env(|rt| {
             let mut inside_results: Vec<StmtResult> = Vec::new();
             for proof_stmt in stmt.proof.iter() {
-                let result = rt
+                let mut result = rt
                     .execute_statement(proof_stmt)
                     .map_err(|statement_error| {
                         short_exec_error(
@@ -35,31 +35,55 @@ impl Runtime {
                             std::mem::take(&mut inside_results),
                         )
                     })?;
+                rt.attach_known_fact_ids_to_stmt_result(&mut result)?;
                 inside_results.push(result);
             }
 
             let obligations =
                 axiom_of_choice_obligations(rt, stmt.family.clone(), stmt.line_file.clone())?;
             let mut obligations_for_output = Vec::new();
-            for (label, fact) in obligations {
-                if section_inferred_fact(&inside_results, &fact) {
-                    obligations_for_output.push((label, fact.to_string(), false));
+            for (role, fact) in obligations {
+                if let Some(fact_id) = section_inferred_fact_id(&inside_results, &fact) {
+                    obligations_for_output.push((role, fact, fact_id, false));
                     continue;
                 }
-                let result = rt
-                    .verify_fact_or_error(&fact, &ProofSearchState::initial())
+                let mut result = rt
+                    .verify_fact_or_error(&fact, &VerifyState::initial())
                     .map_err(|verify_error| {
                         short_exec_error(
                             stmt.clone().into(),
                             format!(
                                 "by axiom_of_choice: failed to prove {} obligation `{}`",
-                                label, fact
+                                choice_obligation_label(role),
+                                fact
                             ),
                             Some(verify_error),
                             std::mem::take(&mut inside_results),
                         )
                     })?;
-                obligations_for_output.push((label, fact.to_string(), true));
+                let store = rt
+                    .store_with_well_defined_verification_and_infer_with_default_verify_state(
+                        fact.clone(),
+                    )
+                    .map_err(|store_error| {
+                        short_exec_error(
+                            stmt.clone().into(),
+                            format!(
+                                "by axiom_of_choice: failed to retain verified {} obligation `{}`",
+                                choice_obligation_label(role),
+                                fact
+                            ),
+                            Some(store_error),
+                            std::mem::take(&mut inside_results),
+                        )
+                    })?;
+                result = result.with_infers(store);
+                rt.attach_known_fact_ids_to_stmt_result(&mut result)?;
+                let fact_id = result
+                    .fact_id()
+                    .map(Ok)
+                    .unwrap_or_else(|| rt.require_known_fact_id_for_success_result(&fact))?;
+                obligations_for_output.push((role, fact, fact_id, true));
                 inside_results.push(result);
             }
             Ok::<_, RuntimeError>((inside_results, obligations_for_output))
@@ -69,9 +93,10 @@ impl Runtime {
         let obligations = obligations_for_output
             .into_iter()
             .map(
-                |(role, fact, checked)| SuccessVerifyByChoiceObligationResult {
+                |(role, fact, fact_id, checked)| SuccessVerifyByChoiceObligationResult {
                     role,
                     fact,
+                    fact_id,
                     check: checked.then(|| {
                         Box::new(
                             checked_obligations
@@ -91,9 +116,10 @@ impl Runtime {
         // }.
         let choice_fact =
             axiom_of_choice_exist_fact(self, stmt.family.clone(), stmt.line_file.clone())?;
-        let choice_fact_string = choice_fact.to_string();
         let infer_result = self
-            .store_with_well_defined_verification_and_infer_with_default_verify_state(choice_fact)
+            .store_with_well_defined_verification_and_infer_with_default_verify_state(
+                choice_fact.clone(),
+            )
             .map_err(|store_error| {
                 short_exec_error(
                     stmt.clone().into(),
@@ -102,13 +128,17 @@ impl Runtime {
                     vec![],
                 )
             })?;
+        let choice_fact_id = self.require_known_fact_id_for_success_result(&choice_fact)?;
 
         let by_verification = SuccessVerifyByChoiceResult::new(
-            "by axiom_of_choice proof".to_string(),
-            stmt.family.to_string(),
+            SuccessVerifyByChoiceProofKind::AxiomOfChoice,
+            SuccessVerifyByChoiceTargetResult::AxiomOfChoice {
+                family: stmt.family.clone(),
+            },
             proof_steps,
             obligations,
-            choice_fact_string,
+            choice_fact,
+            choice_fact_id,
         );
         Ok(
             SuccessByStmtResult::ByAxiomOfChoiceStmt(Box::new(SuccessByAxiomOfChoiceStmtResult {
@@ -145,17 +175,25 @@ fn axiom_of_choice_obligations(
     runtime: &Runtime,
     family: Obj,
     line_file: LineFile,
-) -> Result<Vec<(String, Fact)>, RuntimeError> {
+) -> Result<Vec<(SuccessVerifyByChoiceObligationRole, Fact)>, RuntimeError> {
     Ok(vec![
         (
-            "family_is_set".to_string(),
+            SuccessVerifyByChoiceObligationRole::ChoiceFamilyIsSet,
             IsSetFact::new(family.clone(), line_file.clone()).into(),
         ),
         (
-            "members_nonempty".to_string(),
+            SuccessVerifyByChoiceObligationRole::ChoiceMembersNonempty,
             axiom_of_choice_members_nonempty_fact(runtime, family, line_file)?,
         ),
     ])
+}
+
+fn choice_obligation_label(role: SuccessVerifyByChoiceObligationRole) -> &'static str {
+    match role {
+        SuccessVerifyByChoiceObligationRole::ChoiceFamilyIsSet => "family_is_set",
+        SuccessVerifyByChoiceObligationRole::ChoiceMembersNonempty => "members_nonempty",
+        _ => unreachable!("axiom-of-choice producer only creates choice obligation roles"),
+    }
 }
 
 fn axiom_of_choice_members_nonempty_fact(

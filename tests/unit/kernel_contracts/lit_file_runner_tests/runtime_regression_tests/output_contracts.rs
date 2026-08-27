@@ -2184,11 +2184,13 @@ pub(super) fn detail_output_keeps_composite_fact_step_metadata() {
 }
 
 #[test]
-fn and_fact_unknown_reports_failed_part() {
+fn and_fact_unknown_reports_original_goal_without_second_pass_projection() {
     let source_code = "1 = 1 and 1 = 2";
 
     let mut runtime = Runtime::default();
-    runtime.start_isolated_source("and_fact_unknown_reports_failed_part");
+    runtime.start_isolated_source(
+        "and_fact_unknown_reports_original_goal_without_second_pass_projection",
+    );
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
@@ -2198,31 +2200,30 @@ fn and_fact_unknown_reports_failed_part() {
         run_output
     );
     assert!(
-        run_output.contains("\"type\": \"and fact unknown\""),
-        "and fact unknown should be fact-specific:\n{}",
+        run_output.contains("\"failed_goal\": \"1 = 1 and 1 = 2\""),
+        "and fact failure should retain the original goal:\n{}",
         run_output
     );
     assert!(
-        run_output.contains("\"failed_part\": {"),
-        "and fact unknown should expose the failed part:\n{}",
+        run_output.contains("\"type\": \"unknown\""),
+        "and fact failure should retain the original unresolved result:\n{}",
         run_output
     );
-    assert!(run_output.contains("\"statement\": \"1 = 2\""));
-    assert!(run_output.contains("\"index\": 2"));
-    assert!(run_output.contains("\"count\": 2"));
     assert!(
-        run_output.contains("\"type\": \"atomic fact unknown\""),
-        "failed RuntimeError output should use the detailed nested projection:\n{}",
+        !run_output.contains("\"failed_part\":"),
+        "and fact failure should not contain a re-verification-generated child projection:\n{}",
         run_output
     );
 }
 
 #[test]
-fn chain_fact_unknown_reports_failed_chain_step() {
+fn chain_fact_unknown_reports_original_goal_without_second_pass_projection() {
     let source_code = "1 = 0 = 1";
 
     let mut runtime = Runtime::default();
-    runtime.start_isolated_source("chain_fact_unknown_reports_failed_chain_step");
+    runtime.start_isolated_source(
+        "chain_fact_unknown_reports_original_goal_without_second_pass_projection",
+    );
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
@@ -2231,23 +2232,19 @@ fn chain_fact_unknown_reports_failed_chain_step() {
         "chain fact fixture should fail:\n{}",
         run_output
     );
-    assert!(run_output.contains("\"type\": \"chain fact unknown\""));
     assert!(
-        run_output.contains("\"failed_chain_step\": {"),
-        "chain fact unknown should expose the failed chain step:\n{}",
-        run_output
-    );
-    assert!(run_output.contains("\"statement\": \"1 = 0\""));
-    assert!(run_output.contains("\"index\": 1"));
-    assert!(run_output.contains("\"count\": 2"));
-    assert!(
-        run_output.contains("\"type\": \"atomic fact unknown\""),
-        "failed RuntimeError output should use the detailed nested projection:\n{}",
+        run_output.contains("\"failed_goal\": \"1 = 0 = 1\""),
+        "chain fact failure should retain the original goal:\n{}",
         run_output
     );
     assert!(
-        !run_output.contains("unverified chain step"),
-        "chain unknown output should not hide the failed step in a detail string:\n{}",
+        run_output.contains("\"type\": \"unknown\""),
+        "chain fact failure should retain the original unresolved result:\n{}",
+        run_output
+    );
+    assert!(
+        !run_output.contains("\"failed_chain_step\":"),
+        "chain fact failure should not contain a re-verification-generated child projection:\n{}",
         run_output
     );
     assert!(
@@ -2639,9 +2636,11 @@ fn by_thm_selected_fact_output_distinguishes_temporary_and_parent_facts() {
         run_succeeded,
         "selected by thm fixture failed:\n{run_output}"
     );
-    assert!(run_output.contains("\"mode\": \"select_atomic_fact\""));
-    assert!(run_output.contains("\"stored_then_facts\": []"));
-    assert!(run_output.contains("\"temporary_then_facts\": ["));
+    assert!(run_output.contains("\"kind\": \"SuccessVerifyByTheoremSelectionResult\""));
+    assert!(run_output.contains("\"temporary_application\": {"));
+    assert!(run_output.contains("\"mode\": \"release_all\""));
+    assert!(run_output.contains("\"stored_then_facts\": ["));
+    assert!(run_output.contains("\"temporary_then_facts\": []"));
     assert!(run_output.contains("\"selected_fact\": \"1 $in {x R: x > 0}\""));
     assert!(run_output.contains("\"requirement_checks\": ["));
     assert!(run_output.contains("\"selected_fact_check\": {"));

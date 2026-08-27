@@ -27,13 +27,6 @@ impl SuccessStmtResult {
         if let Self::Definition(definition) = self {
             definition.visit_named_child_results(visitor);
         }
-        if let Self::Command(SuccessCommandStmtResult::ImportStmt(result)) = self {
-            if let SuccessImportExecutionResult::Executed(execution) = &result.execution {
-                for child in &execution.statement_results {
-                    visitor(child);
-                }
-            }
-        }
         if let Self::Witness(witness) = self {
             witness.visit_named_child_results(visitor);
         }
@@ -54,13 +47,6 @@ impl SuccessStmtResult {
         }
         if let Self::Definition(definition) = self {
             definition.try_visit_named_child_results_mut(visitor)?;
-        }
-        if let Self::Command(SuccessCommandStmtResult::ImportStmt(result)) = self {
-            if let SuccessImportExecutionResult::Executed(execution) = &mut result.execution {
-                for child in &mut execution.statement_results {
-                    visitor(child)?;
-                }
-            }
         }
         if let Self::Witness(witness) = self {
             witness.try_visit_named_child_results_mut(visitor)?;
@@ -161,10 +147,6 @@ impl SuccessStmtResult {
             Self::Fact(_) => Vec::new(),
             Self::ProofBlock(proof_block) => proof_block.into_child_results(),
             Self::Definition(definition) => definition.into_child_results(),
-            Self::Command(SuccessCommandStmtResult::ImportStmt(result)) => match result.execution {
-                SuccessImportExecutionResult::Executed(execution) => execution.statement_results,
-                SuccessImportExecutionResult::Reused(_) => Vec::new(),
-            },
             Self::Witness(witness) => witness.into_child_results(),
             Self::By(by) => by.into_child_results(),
             Self::ReleaseThmStmt(result) => result.into_child_results(),
@@ -176,16 +158,22 @@ impl SuccessStmtResult {
 impl SuccessReleaseThmStmtResult {
     fn visit_named_child_results(&self, visitor: &mut impl FnMut(&StmtResult)) {
         if let Some(verification) = &self.verification {
-            if let Some(arguments) = &verification.argument_verification {
-                for check in &arguments.checks {
-                    visitor(check);
+            match &verification.source {
+                SuccessVerifyTheoremApplicationSourceResult::Litex(source) => {
+                    if let Some(arguments) = &source.argument_verification {
+                        for check in &arguments.checks {
+                            visitor(check);
+                        }
+                    }
+                    for check in &source.domain_checks {
+                        visitor(check);
+                    }
                 }
-            }
-            for check in &verification.requirement_checks {
-                visitor(check);
-            }
-            for check in &verification.domain_checks {
-                visitor(check);
+                SuccessVerifyTheoremApplicationSourceResult::Builtin(source) => {
+                    for check in &source.requirement_checks {
+                        visitor(check);
+                    }
+                }
             }
         }
     }
@@ -195,16 +183,22 @@ impl SuccessReleaseThmStmtResult {
         visitor: &mut impl FnMut(&mut StmtResult) -> Result<(), E>,
     ) -> Result<(), E> {
         if let Some(verification) = &mut self.verification {
-            if let Some(arguments) = &mut verification.argument_verification {
-                for check in &mut arguments.checks {
-                    visitor(check)?;
+            match &mut verification.source {
+                SuccessVerifyTheoremApplicationSourceResult::Litex(source) => {
+                    if let Some(arguments) = &mut source.argument_verification {
+                        for check in &mut arguments.checks {
+                            visitor(check)?;
+                        }
+                    }
+                    for check in &mut source.domain_checks {
+                        visitor(check)?;
+                    }
                 }
-            }
-            for check in &mut verification.requirement_checks {
-                visitor(check)?;
-            }
-            for check in &mut verification.domain_checks {
-                visitor(check)?;
+                SuccessVerifyTheoremApplicationSourceResult::Builtin(source) => {
+                    for check in &mut source.requirement_checks {
+                        visitor(check)?;
+                    }
+                }
             }
         }
         Ok(())
@@ -213,11 +207,17 @@ impl SuccessReleaseThmStmtResult {
     fn into_child_results(self) -> Vec<StmtResult> {
         let mut children = Vec::new();
         if let Some(verification) = self.verification {
-            if let Some(arguments) = verification.argument_verification {
-                children.extend(arguments.checks);
+            match verification.source {
+                SuccessVerifyTheoremApplicationSourceResult::Litex(source) => {
+                    if let Some(arguments) = source.argument_verification {
+                        children.extend(arguments.checks);
+                    }
+                    children.extend(source.domain_checks);
+                }
+                SuccessVerifyTheoremApplicationSourceResult::Builtin(source) => {
+                    children.extend(source.requirement_checks);
+                }
             }
-            children.extend(verification.requirement_checks);
-            children.extend(verification.domain_checks);
         }
         children
     }
@@ -341,20 +341,8 @@ impl SuccessByStmtResult {
             }
             Self::ByThmStmt(result) => {
                 if let Some(verification) = &result.verification {
-                    if let Some(arguments) = &verification.argument_verification {
-                        for check in &arguments.checks {
-                            visitor(check);
-                        }
-                    }
-                    for check in &verification.requirement_checks {
-                        visitor(check);
-                    }
-                    for check in &verification.domain_checks {
-                        visitor(check);
-                    }
-                    if let Some(check) = &verification.selected_fact_check {
-                        visitor(check);
-                    }
+                    visitor(&verification.temporary_application);
+                    visitor(&verification.selected_fact_check);
                 }
             }
         }
@@ -480,20 +468,8 @@ impl SuccessByStmtResult {
             }
             Self::ByThmStmt(result) => {
                 if let Some(verification) = &mut result.verification {
-                    if let Some(arguments) = &mut verification.argument_verification {
-                        for check in &mut arguments.checks {
-                            visitor(check)?;
-                        }
-                    }
-                    for check in &mut verification.requirement_checks {
-                        visitor(check)?;
-                    }
-                    for check in &mut verification.domain_checks {
-                        visitor(check)?;
-                    }
-                    if let Some(check) = &mut verification.selected_fact_check {
-                        visitor(check)?;
-                    }
+                    visitor(&mut verification.temporary_application)?;
+                    visitor(&mut verification.selected_fact_check)?;
                 }
             }
         }
@@ -626,14 +602,8 @@ impl SuccessByStmtResult {
             Self::ByThmStmt(result) => {
                 let mut children = Vec::new();
                 if let Some(verification) = result.verification {
-                    if let Some(arguments) = verification.argument_verification {
-                        children.extend(arguments.checks);
-                    }
-                    children.extend(verification.requirement_checks);
-                    children.extend(verification.domain_checks);
-                    if let Some(check) = verification.selected_fact_check {
-                        children.push(*check);
-                    }
+                    children.push(*verification.temporary_application);
+                    children.push(*verification.selected_fact_check);
                 }
                 children
             }
@@ -827,8 +797,8 @@ fn visit_induc_case_children(
     for step in &result.proof_steps {
         visitor(step);
     }
-    for check in &result.conclusion_checks {
-        visitor(check);
+    for conclusion in &result.conclusions {
+        visitor(&conclusion.check);
     }
 }
 
@@ -883,8 +853,8 @@ fn try_visit_induc_case_children_mut<E>(
     for step in &mut result.proof_steps {
         visitor(step)?;
     }
-    for check in &mut result.conclusion_checks {
-        visitor(check)?;
+    for conclusion in &mut result.conclusions {
+        visitor(&mut conclusion.check)?;
     }
     Ok(())
 }
@@ -934,7 +904,12 @@ fn into_structured_integer_induc_case_children(
 
 fn into_induc_case_children(result: SuccessVerifyByInducCaseResult) -> Vec<StmtResult> {
     let mut children = result.proof_steps;
-    children.extend(result.conclusion_checks);
+    children.extend(
+        result
+            .conclusions
+            .into_iter()
+            .map(|conclusion| *conclusion.check),
+    );
     children
 }
 
@@ -2134,28 +2109,24 @@ impl SuccessProofBlockStmtResult {
 impl SuccessCommandStmtResult {
     fn into_common(self) -> SuccessStmtCommonResult {
         match self {
-            Self::ImportStmt(result) => result.common,
             Self::EvalStmt(result) => result.common,
         }
     }
 
     fn statement(&self) -> Stmt {
         match self {
-            Self::ImportStmt(result) => result.statement.clone().into(),
             Self::EvalStmt(result) => result.statement.clone().into(),
         }
     }
 
     fn common(&self) -> &SuccessStmtCommonResult {
         match self {
-            Self::ImportStmt(result) => &result.common,
             Self::EvalStmt(result) => &result.common,
         }
     }
 
     fn common_mut(&mut self) -> &mut SuccessStmtCommonResult {
         match self {
-            Self::ImportStmt(result) => &mut result.common,
             Self::EvalStmt(result) => &mut result.common,
         }
     }

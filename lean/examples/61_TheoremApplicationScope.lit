@@ -1,0 +1,33 @@
+# Tracer: exact scoped Result replay for `by thm`
+#
+# Before (Litex verified, but Lean compilation did not work):
+# thm expose_zero_sides:
+#     ? forall x C:
+#         x + 0 = x
+#         0 + x = x
+#     x + 0 = x
+#     0 + x = x
+# by thm expose_zero_sides(2) => 2 + 0 = 0 + 2
+# Former compiler behavior: `ByThmStmt` was rejected, and its flattened
+# verification record did not retain the local conclusion-store FactIds.
+#
+# Now (verified and compiled):
+thm expose_zero_sides:
+    ? forall x C:
+        x + 0 = x
+        0 + x = x
+
+    x + 0 = x
+    0 + x = x
+
+by thm expose_zero_sides(2) => 2 + 0 = 0 + 2
+# Current behavior: the two instantiated conclusions are emitted as local
+# Lean `have`s, the selected equality cites their exact FactIds, and only the
+# selected equality is published outside that child scope.
+#
+# Boundary: a missing temporary conclusion FactId, changed theorem argument,
+# or selected proof that cites outside its child scope is rejected by focused
+# compiler corruption tests.
+# Evidence: target/release/litex -compact -strict -runner -f
+# lean/examples/61_TheoremApplicationScope.lit
+# and `cd lean && ./stmt_result_to_lean_compiler.sh check examples`.

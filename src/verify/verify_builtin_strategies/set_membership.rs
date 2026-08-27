@@ -125,7 +125,7 @@ impl Runtime {
         let (Obj::Tuple(_), Obj::StructObj(struct_obj)) = (&fact.element, &fact.set) else {
             return Ok(UnknownGenericStmtResult::new().into());
         };
-        let final_state = ProofSearchState::final_round();
+        let final_state = VerifyState::final_round();
         self.verify_in_fact_by_struct_obj(fact, struct_obj, &final_state)
     }
 
@@ -165,7 +165,7 @@ impl Runtime {
         {
             return Ok(UnknownGenericStmtResult::new().into());
         }
-        let final_state = ProofSearchState::final_round();
+        let final_state = VerifyState::final_round();
         if let Obj::InstantiatedTemplateObj(template_obj) = &fact.set {
             self.instantiate_template_obj(template_obj, &final_state)?;
         }

@@ -4,13 +4,13 @@ use crate::error::{RuntimeError, RuntimeErrorStruct, VerifyRuntimeError};
 use crate::fact::{AtomicFact, Fact};
 use crate::result::StmtResult;
 use crate::runtime::Runtime;
-use crate::verify::{AlternateFactSearch, ProofSearchState};
+use crate::verify::{AlternateFactSearch, VerifyState};
 
 impl Runtime {
     fn verify_atomic_fact_family_after_well_definedness(
         &mut self,
         fact: &AtomicFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         match fact {
             AtomicFact::EqualFact(equal_fact) => self.verify_equal_fact(equal_fact, verify_state),
@@ -25,7 +25,7 @@ impl Runtime {
     pub fn verify_atomic_fact(
         &mut self,
         fact: &AtomicFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(cached_result) =
             self.verification_result_from_known_fact_cache(&fact.clone().into())

@@ -686,10 +686,7 @@ trust x $in A
                     label
                 );
                 let result = runtime
-                    .verify_atomic_fact_restricted_known_builtin(
-                        &target,
-                        &ProofSearchState::initial(),
-                    )
+                    .verify_atomic_fact_restricted_known_builtin(&target, &VerifyState::initial())
                     .unwrap_or_else(|error| {
                         panic!("{} restricted membership check failed: {}", label, error)
                     });
@@ -758,10 +755,7 @@ trust x $in A
                 )
                 .into();
                 let result = runtime
-                    .verify_atomic_fact_restricted_known_builtin(
-                        &target,
-                        &ProofSearchState::initial(),
-                    )
+                    .verify_atomic_fact_restricted_known_builtin(&target, &VerifyState::initial())
                     .unwrap_or_else(|error| {
                         panic!("{} restricted membership check failed: {}", label, error)
                     });
@@ -814,7 +808,7 @@ trust B $subset U
             let direct_result = runtime
                 .verify_atomic_fact_restricted_known_builtin(
                     &direct_target,
-                    &ProofSearchState::initial(),
+                    &VerifyState::initial(),
                 )
                 .unwrap_or_else(|error| {
                     panic!("direct restricted membership check failed: {}", error)
@@ -836,7 +830,7 @@ trust B $subset U
             let transitive_result = runtime
                 .verify_atomic_fact_restricted_known_builtin(
                     &transitive_target,
-                    &ProofSearchState::initial(),
+                    &VerifyState::initial(),
                 )
                 .unwrap_or_else(|error| {
                     panic!("transitive restricted membership check failed: {}", error)
@@ -879,7 +873,7 @@ trust S $subset T
             let reverse_result = reverse_runtime
                 .verify_atomic_fact_restricted_known_builtin(
                     &reverse_target,
-                    &ProofSearchState::initial(),
+                    &VerifyState::initial(),
                 )
                 .unwrap_or_else(|error| {
                     panic!("reverse restricted membership check failed: {}", error)
@@ -933,7 +927,7 @@ trust A $subset B
             let equal_set_result = equal_sets_runtime
                 .verify_atomic_fact_restricted_known_builtin(
                     &equal_set_target,
-                    &ProofSearchState::initial(),
+                    &VerifyState::initial(),
                 )
                 .expect("equal-set membership verification should not error");
             assert!(
@@ -984,10 +978,7 @@ trust S $subset T
                 )
                 .into();
                 let result = runtime
-                    .verify_atomic_fact_restricted_known_builtin(
-                        &target,
-                        &ProofSearchState::initial(),
-                    )
+                    .verify_atomic_fact_restricted_known_builtin(&target, &VerifyState::initial())
                     .unwrap_or_else(|error| {
                         panic!("{} restricted membership check failed: {}", label, error)
                     });
@@ -1035,10 +1026,7 @@ try:
         )
         .into();
         let committed_result = committed_runtime
-            .verify_atomic_fact_restricted_known_builtin(
-                &committed_target,
-                &ProofSearchState::initial(),
-            )
+            .verify_atomic_fact_restricted_known_builtin(&committed_target, &VerifyState::initial())
             .expect("committed membership verification should not error");
         assert!(
             committed_result.is_success(),

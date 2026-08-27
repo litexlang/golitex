@@ -47,7 +47,7 @@ fn incomplete_have_dispatch_reports_syntax_errors() {
 }
 
 #[test]
-fn trust_forms_and_import_boundaries_parse_as_expected() {
+fn trust_forms_parse_and_import_is_not_a_statement() {
     for source_code in [
         "trust 1 = 1",
         "trust:\n    1 = 1",
@@ -57,22 +57,9 @@ fn trust_forms_and_import_boundaries_parse_as_expected() {
     }
     let message = parse_one_stmt_error_message("import std basics");
     assert!(
-        message.contains("only available in an isolated REPL"),
+        message.contains("`import` is a terminal command, not a Litex statement"),
         "{message}"
     );
-
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("isolated_import_test.lit");
-    runtime.set_current_source_allows_inline_imports(true);
-    let tokenizer = Tokenizer::new();
-    let mut blocks = tokenizer
-        .parse_blocks(
-            "import \"../algebra\" as Algebra\nimport std basics",
-            Rc::from("isolated_import_test.lit"),
-        )
-        .expect("tokenize imports");
-    assert!(runtime.parse_statement(&mut blocks[0]).is_ok());
-    assert!(runtime.parse_statement(&mut blocks[1]).is_ok());
 }
 
 #[test]

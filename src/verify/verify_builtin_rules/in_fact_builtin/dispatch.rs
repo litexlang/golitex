@@ -110,7 +110,7 @@ impl Runtime {
             ) {
                 if let Ok(inferred_matrix_set) = self.real_matrix_type(
                     &in_fact.element,
-                    &ProofSearchState::final_round_after_well_definedness(),
+                    &VerifyState::final_round_after_well_definedness(),
                     "membership",
                 ) {
                     let inferred_obj: Obj = inferred_matrix_set.clone().into();
@@ -142,7 +142,7 @@ impl Runtime {
                 &in_fact.element,
                 fn_set,
                 in_fact,
-                &ProofSearchState::after_well_definedness(),
+                &VerifyState::after_well_definedness(),
             )? {
                 return Ok(result);
             }
@@ -167,7 +167,7 @@ impl Runtime {
                         anonymous_fn,
                         fn_set,
                         in_fact,
-                        &ProofSearchState::after_well_definedness(),
+                        &VerifyState::after_well_definedness(),
                     )?;
                 if transported_result.is_success() {
                     return Ok(transported_result);
@@ -178,7 +178,7 @@ impl Runtime {
             let result = self.verify_in_fact_in_general_cart_by_defining_facts(
                 in_fact,
                 general_cart,
-                &ProofSearchState::after_well_definedness(),
+                &VerifyState::after_well_definedness(),
             )?;
             if result.is_success() {
                 return Ok(result);

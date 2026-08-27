@@ -34,10 +34,17 @@ impl Runtime {
             return Ok((UnknownGenericStmtResult::new()).into());
         };
 
+        let target: Fact = in_fact.clone().into();
         Ok(
-            (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
-                in_fact.clone().into(),
+            (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                target.clone(),
                 "tuple in cart: each component is in the corresponding cart factor".to_string(),
+                BuiltinRuleEvidence::TupleCartesianMembership(
+                    TupleCartesianMembershipBuiltinRuleEvidence::new(
+                        target,
+                        component_facts.into_iter().map(Fact::from).collect(),
+                    ),
+                ),
                 component_results,
             ))
             .into(),
@@ -51,7 +58,7 @@ impl Runtime {
     pub fn try_verify_in_fact_by_symbolic_cart(
         &mut self,
         in_fact: &InFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let is_cart_fact: AtomicFact =
             IsCartFact::new(in_fact.set.clone(), in_fact.line_file.clone()).into();

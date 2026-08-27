@@ -217,13 +217,15 @@ fn run_repl_source_if_not_empty(
     }
 
     let normalized_source = remove_windows_carriage_from_str(source);
+    if super::terminal_import::terminal_input_starts_with_import(normalized_source.as_str()) {
+        return super::terminal_import::run_terminal_import(normalized_source.as_str(), runtime)
+            .trim()
+            .to_string();
+    }
     match output_mode {
         ReplOutputMode::Json => {
             let (stmt_results, runtime_error) = runtime
-                .execute_source(
-                    normalized_source.as_str(),
-                    SourceImportPolicy::UseRuntimePolicy,
-                )
+                .execute_source(normalized_source.as_str())
                 .into_parts();
             let (_, output_text) = render_run_output(runtime, &stmt_results, &runtime_error);
             output_text.trim().to_string()
@@ -239,7 +241,6 @@ fn run_repl_source_if_not_empty(
 
 fn initialize_isolated_repl_runtime(runtime: &mut Runtime) {
     runtime.start_isolated_source("repl");
-    runtime.set_current_source_allows_inline_imports(true);
 }
 
 fn repl_line_starts_block(line: &str) -> bool {

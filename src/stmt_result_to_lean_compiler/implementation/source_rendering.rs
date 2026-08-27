@@ -187,6 +187,44 @@ pub(super) fn render_order_fact(
     strict: bool,
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
+    let uses_transportable_builder_sign = |object: &Obj| -> bool {
+        matches!(
+            LeanTargetObjectRepresentation::lower(object),
+            Ok(LeanTargetObjectRepresentation::Symbol { symbol_id, .. })
+                if context.semantic_zero_ended_order_symbols.contains(&symbol_id)
+        )
+    };
+    if left.to_string() == "0" && uses_transportable_builder_sign(right) {
+        return Ok(format!(
+            "{} {}",
+            if strict {
+                "Litex.Positive"
+            } else {
+                "Litex.Nonnegative"
+            },
+            render_obj(right, context)?
+        ));
+    }
+    if right.to_string() == "0" && uses_transportable_builder_sign(left) {
+        return Ok(format!(
+            "{} {}",
+            if strict {
+                "Litex.Negative"
+            } else {
+                "Litex.Nonpositive"
+            },
+            render_obj(left, context)?
+        ));
+    }
+    let exact_selected_real = |object: &Obj| -> Option<String> {
+        let LeanTargetObjectRepresentation::Symbol { symbol_id, .. } =
+            LeanTargetObjectRepresentation::lower(object).ok()?
+        else {
+            return None;
+        };
+        context.numeric_real_values.get(&symbol_id)?;
+        context.numeric_representations.get(&symbol_id).cloned()
+    };
     let exact_integer_endpoint = |object: &Obj| -> bool {
         if !matches!(
             LeanTargetObjectRepresentation::lower(object),
@@ -202,6 +240,22 @@ pub(super) fn render_order_fact(
         };
         source == integer
     };
+    if left.to_string() == "0" {
+        if let Some(right) = exact_selected_real(right) {
+            return Ok(format!(
+                "{} (0 : ℂ) {right}",
+                if strict { "Litex.Lt" } else { "Litex.Le" }
+            ));
+        }
+    }
+    if right.to_string() == "0" {
+        if let Some(left) = exact_selected_real(left) {
+            return Ok(format!(
+                "{} {left} (0 : ℂ)",
+                if strict { "Litex.Lt" } else { "Litex.Le" }
+            ));
+        }
+    }
     if left.to_string() == "0" && !exact_integer_endpoint(right) {
         let predicate = if strict {
             "Litex.Positive"
@@ -269,6 +323,7 @@ pub(super) fn render_numeric_obj(
             render_numeric_obj(operation.left.as_ref(), context)?,
             render_numeric_obj(operation.right.as_ref(), context)?
         )),
+        Obj::Sum(_) => Ok(format!("(({} : ℤ) : ℂ)", render_obj(obj, context)?)),
         _ => render_obj(obj, context),
     }
 }
@@ -311,6 +366,20 @@ pub(super) fn install_structured_induction_native_integer_symbol(
     context
         .numeric_real_values
         .insert(symbol_id, format!("((({native_integer}) : ℝ))"));
+    // This binder is already the exact `Z.Carrier` (`ℤ`).  Do not leave the
+    // generic heterogeneous-membership representative installed by
+    // `install_parameter_fact_aliases`: its arbitrary `In.rep` term is only
+    // propositionally related to the native binder and therefore cannot feed
+    // a closure theorem whose operands are the exact complex casts rendered
+    // above.
+    context.numeric_representation_equalities.insert(
+        symbol_id,
+        format!("Litex.Same.intComplex ({native_integer})"),
+    );
+    context.numeric_representation_memberships.insert(
+        symbol_id,
+        format!("Litex.Rules.complexIntInZ ({native_integer})"),
+    );
 }
 
 pub(super) fn render_integer_target_object_representation(
@@ -354,6 +423,73 @@ pub(super) fn render_integer_target_object_representation(
         }
         _ => Err(format!(
             "target object `{object:?}` has no reviewed exact ℤ representation"
+        )),
+    }
+}
+
+/// Render the exact native real selected by verifier-owned membership
+/// evidence. This is intentionally narrower than ordinary object rendering:
+/// callers use it only for target rules whose Lean theorem is stated over the
+/// exact `R.Carrier`, never as a fallback conversion from `Same`.
+pub(super) fn render_real_target_object_representation(
+    object: &LeanTargetObjectRepresentation,
+    context: &StmtResultToLeanCompilerEnvironmentStack,
+) -> Result<String, String> {
+    match object {
+        LeanTargetObjectRepresentation::Symbol { symbol_id, name } => context
+            .numeric_real_values
+            .get(symbol_id)
+            .cloned()
+            .ok_or_else(|| format!("real target symbol `{name}` has no exact ℝ representation")),
+        LeanTargetObjectRepresentation::Number { normalized_value } => {
+            Ok(format!("({normalized_value} : ℝ)"))
+        }
+        LeanTargetObjectRepresentation::BuiltinApp {
+            operator,
+            arguments,
+            ..
+        } if arguments.len() == 2
+            && matches!(
+                operator,
+                LeanTargetBuiltinObjectOperator::Add
+                    | LeanTargetBuiltinObjectOperator::Sub
+                    | LeanTargetBuiltinObjectOperator::Mul
+                    | LeanTargetBuiltinObjectOperator::Div
+                    | LeanTargetBuiltinObjectOperator::Min
+                    | LeanTargetBuiltinObjectOperator::Max
+            ) =>
+        {
+            let left = render_real_target_object_representation(&arguments[0], context)?;
+            let right = render_real_target_object_representation(&arguments[1], context)?;
+            match operator {
+                LeanTargetBuiltinObjectOperator::Min => Ok(format!("(min {left} {right})")),
+                LeanTargetBuiltinObjectOperator::Max => Ok(format!("(max {left} {right})")),
+                LeanTargetBuiltinObjectOperator::Add
+                | LeanTargetBuiltinObjectOperator::Sub
+                | LeanTargetBuiltinObjectOperator::Mul
+                | LeanTargetBuiltinObjectOperator::Div => {
+                    let symbol = match operator {
+                        LeanTargetBuiltinObjectOperator::Add => "+",
+                        LeanTargetBuiltinObjectOperator::Sub => "-",
+                        LeanTargetBuiltinObjectOperator::Mul => "*",
+                        LeanTargetBuiltinObjectOperator::Div => "/",
+                        _ => unreachable!("guarded real infix operator"),
+                    };
+                    Ok(format!("({left} {symbol} {right})"))
+                }
+                _ => unreachable!("guarded real binary operator"),
+            }
+        }
+        LeanTargetObjectRepresentation::BuiltinApp {
+            operator: LeanTargetBuiltinObjectOperator::Abs,
+            arguments,
+            ..
+        } if arguments.len() == 1 => Ok(format!(
+            "|{}|",
+            render_real_target_object_representation(&arguments[0], context)?
+        )),
+        _ => Err(format!(
+            "target object `{object:?}` has no reviewed exact ℝ representation"
         )),
     }
 }
@@ -775,10 +911,36 @@ pub(super) fn validate_object_parameter_premise(
     if !object_is_symbol(element, symbol_id) {
         return Err("object parameter evidence changed its SymbolId".into());
     }
-    if obj_equality_key(set) != obj_equality_key(expected_set) {
+    if !object_parameter_carriers_align(expected_set, set) {
         return Err("object parameter evidence changed its carrier set".into());
     }
     Ok(())
+}
+
+fn object_parameter_carriers_align(expected: &Obj, retained: &Obj) -> bool {
+    if obj_equality_key(expected) == obj_equality_key(retained) {
+        return true;
+    }
+    let (Obj::SeqSet(expected_sequence), Obj::FnSet(retained_function)) = (expected, retained)
+    else {
+        return false;
+    };
+    let [parameter_group] = retained_function
+        .body
+        .set_bound_parameters
+        .groups
+        .as_slice()
+    else {
+        return false;
+    };
+    parameter_group.params.len() == 1
+        && matches!(
+            parameter_group.set_obj(),
+            Obj::StandardSet(StandardSet::NPos)
+        )
+        && retained_function.body.dom_facts.is_empty()
+        && obj_equality_key(retained_function.body.ret_set.as_ref())
+            == obj_equality_key(expected_sequence.set.as_ref())
 }
 
 pub(super) fn validate_refined_set_parameter_premise(
@@ -896,6 +1058,9 @@ pub(super) fn object_ir_is_independent_of_symbols(
             object_ir_is_independent_of_symbols(start, symbol_ids)
                 && object_ir_is_independent_of_symbols(end, symbol_ids)
         }
+        LeanTargetObjectRepresentation::CartesianProduct { factors } => factors
+            .iter()
+            .all(|factor| object_ir_is_independent_of_symbols(factor, symbol_ids)),
         LeanTargetObjectRepresentation::GeneralCartesianProduct {
             index_set,
             family_set,
@@ -1115,6 +1280,19 @@ pub(super) fn membership_numeric_value(
     value: &str,
     membership: &str,
 ) -> Option<String> {
+    // `C.Carrier` is definitionally `ℂ`, and the reviewed forall ABI binds a
+    // `C` parameter directly as `value : ℂ`.  Selecting `In.rep value
+    // membership` here would introduce an arbitrary choice that is only
+    // semantically, not definitionally, equal to `value`.  That breaks theorem
+    // conclusions at both their body proof and later application boundary.
+    // Keep the exact-carrier value itself for `C`; smaller numeric carriers
+    // still require the representative certified by their membership proof.
+    if matches!(
+        set,
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Complex)
+    ) {
+        return exact_set_numeric_value(set, value);
+    }
     exact_set_numeric_value(set, &format!("Litex.In.rep {value} {membership}"))
 }
 
@@ -1127,6 +1305,12 @@ pub(super) fn membership_numeric_equality(
     value: &str,
     membership: &str,
 ) -> Option<String> {
+    if matches!(
+        set,
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Complex)
+    ) {
+        return Some(format!("Litex.Same.refl ({value} : ℂ)"));
+    }
     let representative = format!("Litex.In.rep {value} {membership}");
     let representative_to_numeric = exact_set_numeric_equality(set, &representative)?;
     Some(format!(
@@ -1919,7 +2103,26 @@ pub(super) fn render_anonymous_function(
     let value = if uses_telescope {
         format!("{}ULift.up ({checked_body})", binders.concat())
     } else if function.function.domain_facts.is_empty() {
-        format!("{{ call := fun {{__alpha}} (__arg : __alpha) __arg_in => {checked_body} }}")
+        let exact_unary_integer = function.function.parameters.len() == 1
+            && function.function.parameters[0].set
+                == LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Integer)
+            && function.function.return_set.as_ref()
+                == &LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Integer);
+        if exact_unary_integer {
+            let own_body = render_integer_function_body_with_parameters(
+                &function.body,
+                &HashMap::from([(
+                    function.function.parameters[0].symbol_id,
+                    "__arg".to_string(),
+                )]),
+                context,
+            )?;
+            format!(
+                "{{ call := fun {{__alpha}} (__arg : __alpha) __arg_in => {checked_body}, callOwn := fun (__arg : ℤ) => {own_body} }}"
+            )
+        } else {
+            format!("{{ call := fun {{__alpha}} (__arg : __alpha) __arg_in => {checked_body} }}")
+        }
     } else {
         format!(
             "{{ call := fun {{__alpha}} (__arg : __alpha) __arg_in __arg_domain => {checked_body} }}"
@@ -1952,6 +2155,9 @@ pub(super) fn render_lean_source_for_target_set_representation(
             nested
                 .symbol_names
                 .insert(builder.symbol_id, parameter.clone());
+            nested
+                .semantic_zero_ended_order_symbols
+                .insert(builder.symbol_id);
             if let Some(real) = exact_set_real_value(builder.set.as_ref(), &parameter) {
                 nested.numeric_real_values.insert(builder.symbol_id, real);
             }
@@ -2360,11 +2566,12 @@ pub(super) fn render_function_application(
             .enumerate()
         {
             let requirement = requirement.expect("domain requirements checked above");
-            let expected = render_fact(source_fact, &source_domain_nested)?;
+            let expected_source = render_fact(source_fact, &source_domain_nested)?;
+            let expected_selected = render_fact(source_fact, &nested)?;
             let retained = render_fact(&requirement.expected_proposition, context)?;
-            if expected != retained {
+            if expected_source != retained && expected_selected != retained {
                 return Err(format!(
-                    "application layer {layer_index} expected domain clause {expected}, retained {retained}"
+                    "application layer {layer_index} expected domain clause {expected_source} (or exact selected-carrier form {expected_selected}), retained {retained}"
                 ));
             }
             let retained_proof =
@@ -2565,6 +2772,16 @@ pub(super) fn render_lean_source_for_target_object_representation(
             render_natural_endpoint(row_count)?,
             render_natural_endpoint(column_count)?,
         )),
+        LeanTargetObjectRepresentation::CartesianProduct { factors } => {
+            let mut rendered = "Litex.cartNil".to_string();
+            for factor in factors.iter().rev() {
+                rendered = format!(
+                    "(Litex.cartCons {} {rendered})",
+                    render_lean_source_for_target_set_representation(factor, context)?
+                );
+            }
+            Ok(rendered)
+        }
         LeanTargetObjectRepresentation::Aggregate {
             source_occurrence_id,
             semantic_key,
@@ -2983,6 +3200,20 @@ pub(super) fn render_builtin_object(
         ));
     }
     match (operator, arguments) {
+        (LeanTargetBuiltinObjectOperator::Abs, [value]) => Ok(format!(
+            "(Litex.abs {})",
+            render_lean_source_for_numeric_target_object_representation(value, context)?
+        )),
+        (LeanTargetBuiltinObjectOperator::Min, [left, right]) => Ok(format!(
+            "(Litex.min {} {})",
+            render_lean_source_for_numeric_target_object_representation(left, context)?,
+            render_lean_source_for_numeric_target_object_representation(right, context)?
+        )),
+        (LeanTargetBuiltinObjectOperator::Max, [left, right]) => Ok(format!(
+            "(Litex.max {} {})",
+            render_lean_source_for_numeric_target_object_representation(left, context)?,
+            render_lean_source_for_numeric_target_object_representation(right, context)?
+        )),
         (LeanTargetBuiltinObjectOperator::Union, [left, right]) => Ok(format!(
             "(Litex.union {} {})",
             render_lean_source_for_target_object_representation(left, context)?,

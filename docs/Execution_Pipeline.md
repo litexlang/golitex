@@ -14,11 +14,10 @@ main
   pipeline::run
   Runtime::new(output_style, strict_mode, output_language)
   Runtime::start_isolated_source("entry")
-  Runtime::execute_source(source, SourceImportPolicy::UseRuntimePolicy)
+  Runtime::execute_source(source)
   Runtime::execute_source_blocks
   Tokenizer::parse_blocks
   Runtime::parse_statement
-  Runtime::execute_top_level_statement
   Runtime::execute_statement
   Runtime::execute_verified_statement
   Runtime::execute_submitted_fact
@@ -43,13 +42,19 @@ may itself call atomic verification before the outer proof-verification step.
 | CLI | `cli::run_cli` | Parses global options and selects one command. |
 | Batch pipeline | `pipeline::run(RunRequest)` | Owns code/file/repository dispatch, creates one Runtime, and renders once. |
 | Runtime construction | `Runtime::new(output_style, strict_mode, output_language)` | Creates state and run configuration atomically. `Runtime::default()` is reserved for an explicit default configuration, especially tests and internal scratch runtimes. |
-| Source execution | `Runtime::execute_source` | Requires an active source frame, tokenizes the source, and executes its blocks. `SourceImportPolicy` is the one case distinction: normal Runtime policy or compiler rejection of inline imports. |
+| Source execution | `Runtime::execute_source` | Requires an active source frame, tokenizes the source, and executes its blocks. `import` is never part of this grammar. |
 | Parse | `Tokenizer::parse_blocks`, then `Runtime::parse_statement` | Converts source text into token blocks and typed statements. |
-| Execute | `Runtime::execute_top_level_statement`, then `Runtime::execute_statement` | Handles top-level imports, resets statement-local proof state, and dispatches verified or configured trusted-import execution. |
+| Execute | `Runtime::execute_statement` | Resets statement-local proof state and dispatches verified or configured trusted execution. |
 | Verify | `Runtime::verify_fact_or_error` | Produces proof evidence or a structured RuntimeError. |
 | Result | `Runtime::finish_statement_execution` | Attaches FactIds and execution provenance to the finished `StmtResult`. |
 | Output | `pipeline::render_run_output` | Renders the statement Results and any RuntimeError. |
-| Lean compiler | `compile_litex_source_to_lean_source`, then `StmtResultToLeanCompiler::compile_stmt_results_to_lean_source` | Runs the same Runtime source path with `SourceImportPolicy::Reject`, then consumes verified Results. |
+| Lean compiler | `compile_litex_source_to_lean_source`, then `StmtResultToLeanCompiler::compile_stmt_results_to_lean_source` | Runs the same source-only Runtime path, then consumes verified Results. |
+
+Interactive REPL input has one earlier terminal boundary. If the first token is
+`import`, `pipeline::terminal_import` parses a terminal command and updates the
+REPL's in-memory module manifest; it does not create a `Stmt` or `StmtResult`.
+All other input enters `Runtime::execute_source`. The machine-framed `-session`
+protocol is source-only and deliberately has no import frame.
 
 ## Internal source identity versus output label
 

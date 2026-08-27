@@ -419,7 +419,7 @@ impl Runtime {
     pub fn verify_or_fact(
         &mut self,
         or_fact: &OrFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(cached_result) =
             self.verification_result_from_known_fact_cache(&or_fact.clone().into())
@@ -612,7 +612,7 @@ impl Runtime {
     fn try_verify_or_by_classical_implication(
         &mut self,
         or_fact: &OrFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if or_fact.facts.len() != 2 {
             return Ok(None);
@@ -662,7 +662,7 @@ impl Runtime {
     fn try_verify_integer_successor_tail_or_from_lower_bound(
         &mut self,
         or_fact: &OrFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some((subject, base)) = integer_successor_tail_or_pattern(or_fact) else {
             return Ok(None);
@@ -701,7 +701,7 @@ impl Runtime {
     fn try_verify_zero_product_or(
         &mut self,
         or_fact: &OrFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if or_fact.facts.len() != 2 {
             return Ok(None);

@@ -310,6 +310,20 @@ theorem intAddComplex
     Same (a + b) (z + w) :=
   .derived (IntComplexDerived.add ha hb)
 
+/-- Congruence for the compiler's exact numeric rendering of an integer
+addition: the source operands are individually embedded into `ℂ` before the
+addition is formed.  This is distinct from `intAddComplex`, whose source is the
+native integer sum. -/
+theorem intCastAddComplex
+    {a b : ℤ}
+    {z w : ℂ}
+    (ha : Same a z)
+    (hb : Same b w) :
+    Same (((a : ℤ) : ℂ) + ((b : ℤ) : ℂ)) (z + w) :=
+  .trans
+    (.symm (intAddComplex (intComplex a) (intComplex b)))
+    (intAddComplex ha hb)
+
 theorem intSubComplex
     {a b : ℤ}
     {z w : ℂ}
@@ -1319,7 +1333,7 @@ theorem closedRange_finite (start finish : ℤ) :
   infer_instance
 
 /-- Empty tail of a typed heterogeneous tuple/sequence spine. -/
-inductive HNil where
+inductive HNil : Type u where
   | nil
 
 /-- One typed heterogeneous spine cell. The carrier type is determined by
@@ -1327,6 +1341,52 @@ the concrete head and tail types; no universal object is stored. -/
 structure HCons (alpha : Type u) (tail : Type v) where
   head : alpha
   rest : tail
+
+/-- Exact carrier of the empty Cartesian-product tail. Its universe is
+selected by the enclosing product rather than collapsed into a universal
+object carrier. -/
+def cartNil : Litex.Set.{u} :=
+  Set.ofType HNil.{u}
+
+/-- Add one exact factor carrier to a Cartesian-product spine. -/
+def cartCons (head tail : Litex.Set.{u}) : Litex.Set.{u} :=
+  Set.ofType (HCons head.Carrier tail.Carrier)
+
+private inductive HConsDerived
+    {α β tail rest : Type u} :
+    HCons α tail → HCons β rest → Prop where
+  | mk
+      {head : α}
+      {otherHead : β}
+      {tailValue : tail}
+      {otherTail : rest} :
+      Same head otherHead →
+      Same tailValue otherTail →
+      HConsDerived
+        (HCons.mk head tailValue)
+        (HCons.mk otherHead otherTail)
+
+private instance {α β tail rest : Type u} :
+    DerivedRule (HCons α tail) (HCons β rest) where
+  relation := HConsDerived
+
+namespace Same
+
+/-- Coordinatewise semantic equality for exact heterogeneous tuple spines. -/
+theorem hcons
+    {α β tail rest : Type u}
+    {head : α}
+    {otherHead : β}
+    {tailValue : tail}
+    {otherTail : rest}
+    (headSame : Same head otherHead)
+    (tailSame : Same tailValue otherTail) :
+    Same
+      (HCons.mk head tailValue)
+      (HCons.mk otherHead otherTail) :=
+  .derived (HConsDerived.mk headSame tailSame)
+
+end Same
 
 /-- Structural tuple evidence and its source arity. -/
 class TupleShape (alpha : Type u) where
@@ -1340,6 +1400,10 @@ instance [TupleShape tail] : TupleShape (HCons alpha tail) where
 
 def IsTuple {alpha : Type u} (_value : alpha) : Prop :=
   Nonempty (TupleShape alpha)
+
+theorem tupleShape_isTuple [TupleShape alpha] (value : alpha) :
+    IsTuple value :=
+  ⟨inferInstance⟩
 
 theorem hcons_isTuple [TupleShape tail] (head : alpha) (rest : tail) :
     IsTuple (HCons.mk head rest) :=
@@ -1721,6 +1785,24 @@ once admitted, every occurrence of the same `ℕ`/`ℤ`/`ℚ`/`ℝ`-lowered comp
 term has exactly this one observation. -/
 def OrderValue (z : ℂ) : ℝ :=
   z.re
+
+/-- The reviewed target representation of source `abs`. Litex admits this
+operator only after checking that its argument is real; keeping the target
+operation total on `ℂ` lets object rendering remain proof-independent while
+agreeing definitionally with Mathlib absolute value on every admitted real
+argument. -/
+noncomputable def abs (z : ℂ) : ℂ :=
+  ((‖z‖ : ℝ) : ℂ)
+
+/-- The reviewed target representation of source binary `min`. Source
+well-definedness owns realness; the target operation uses the canonical real
+observation already used by `Litex.Le`. -/
+def min (x y : ℂ) : ℂ :=
+  ((Min.min (OrderValue x) (OrderValue y) : ℝ) : ℂ)
+
+/-- The reviewed target representation of source binary `max`. -/
+def max (x y : ℂ) : ℂ :=
+  ((Max.max (OrderValue x) (OrderValue y) : ℝ) : ℂ)
 
 /-- Litex strict order on its current numeric carrier. This is a custom Litex
 relation with a definitional route to Mathlib's native real order. -/

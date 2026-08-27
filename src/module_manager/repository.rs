@@ -85,7 +85,7 @@ pub fn discover_repository(
     Ok(RepositoryFileTarget::Module(target_module_id))
 }
 
-pub fn discover_isolated_module_import(
+pub fn discover_terminal_module_import(
     runtime: &mut Runtime,
     import_path: &str,
     alias: &str,
@@ -93,7 +93,7 @@ pub fn discover_isolated_module_import(
 ) -> Result<ModuleId, RuntimeError> {
     let importing_module_id = runtime.current_module_id();
     let source_path = line_file.1.as_ref();
-    let target_path = isolated_import_target_path(runtime, import_path, source_path)?;
+    let target_path = terminal_import_target_path(runtime, import_path, source_path)?;
     let canonical_root = canonical_directory(
         target_path.to_string_lossy().as_ref(),
         source_path,
@@ -103,7 +103,7 @@ pub fn discover_isolated_module_import(
     let config = read_project_config(&config_path)?;
     if config.hierarchy != ProjectHierarchy::Module {
         return Err(repository_error(
-            "isolated import target must declare module under [hierarchy]".to_string(),
+            "terminal import target must declare module under [hierarchy]".to_string(),
             &config_path.to_string_lossy(),
             config.hierarchy_line,
         ));
@@ -118,7 +118,7 @@ pub fn discover_isolated_module_import(
         mount_stack.as_slice(),
         root_string.as_str(),
         alias,
-        "cyclic isolated import",
+        "cyclic terminal import",
         &config_path,
         line_file.0,
     )?;
@@ -158,7 +158,7 @@ pub fn discover_isolated_module_import(
     Ok(module_id)
 }
 
-pub fn discover_isolated_std_import(
+pub fn discover_terminal_std_import(
     runtime: &mut Runtime,
     package_name: &str,
     line_file: LineFile,
@@ -1527,7 +1527,7 @@ fn repository_error(message: String, source_path: &str, line: usize) -> RuntimeE
     .into()
 }
 
-fn isolated_import_target_path(
+fn terminal_import_target_path(
     runtime: &Runtime,
     import_path: &str,
     source_path: &str,

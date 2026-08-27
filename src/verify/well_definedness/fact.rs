@@ -6,7 +6,7 @@ impl Runtime {
     pub fn verify_fact_well_defined_result(
         &mut self,
         fact: &Fact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyFactWellDefinedResult, RuntimeError> {
         let verify_state = verify_state.without_known_forall_for_equality();
         let verify_state = &verify_state;
@@ -98,7 +98,7 @@ impl Runtime {
     fn verify_atomic_fact_well_defined_result(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyFactWellDefinedProofResult, RuntimeError> {
         let arguments = atomic_fact.args_ref();
         let mut argument_results = Vec::with_capacity(arguments.len());
@@ -123,7 +123,7 @@ impl Runtime {
     fn verify_and_chain_atomic_fact_well_defined_result(
         &mut self,
         fact: &AndChainAtomicFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyFactWellDefinedProofResult, RuntimeError> {
         match fact {
             AndChainAtomicFact::AtomicFact(atomic_fact) => {
@@ -141,7 +141,7 @@ impl Runtime {
     fn verify_exist_fact_well_defined_result(
         &mut self,
         exist_fact: &ExistFactEnum,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyFactWellDefinedProofResult, RuntimeError> {
         let bindings = exist_fact.typed_parameters().collect_param_bindings();
         let rename_map = self.visible_binding_conflict_rename_map(&bindings)?;
@@ -174,7 +174,7 @@ impl Runtime {
     fn verify_forall_fact_well_defined_result(
         &mut self,
         forall_fact: &ForallFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyFactWellDefinedProofResult, RuntimeError> {
         let (well_definedness, _) = self
             .verify_forall_fact_well_defined_and_collect_certificate(forall_fact, verify_state)?;
@@ -187,7 +187,7 @@ impl Runtime {
         &mut self,
         parameter_definition: &TypedParameterList,
         binding_scope: BindingScope,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyFactBinderResult, RuntimeError> {
         let mut parameter_groups = Vec::with_capacity(parameter_definition.len());
         for (group_index, group) in parameter_definition.iter().enumerate() {
@@ -244,7 +244,7 @@ impl Runtime {
     pub fn verify_and_store_quantifier_free_wd_result(
         &mut self,
         fact: &QuantifierFreeFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyLocalFactWellDefinedResult, RuntimeError> {
         let proposition: Fact = fact.clone().into();
         let well_definedness = self.verify_fact_well_defined_result(&proposition, verify_state)?;
@@ -265,10 +265,10 @@ impl Runtime {
         })
     }
 
-    fn verify_and_store_fact_wd_result(
+    pub(crate) fn verify_and_store_fact_wd_result(
         &mut self,
         proposition: &Fact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyLocalFactWellDefinedResult, RuntimeError> {
         let well_definedness = self.verify_fact_well_defined_result(proposition, verify_state)?;
         let mut infers =
@@ -294,7 +294,7 @@ impl Runtime {
     pub fn verify_fact_well_defined(
         &mut self,
         fact: &Fact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         let verify_state = verify_state.without_known_forall_for_equality();
         let verify_state = &verify_state;
@@ -329,7 +329,7 @@ impl Runtime {
     pub fn verify_atomic_fact_well_defined(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_atomic_fact_well_defined_result(atomic_fact, verify_state)
             .map(|_| ())
@@ -341,7 +341,7 @@ impl Runtime {
     fn verify_atomic_predicate_well_defined_result(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyAtomicPredicateWellDefinedResult, RuntimeError> {
         let name_string = atomic_fact.key();
         if matches!(atomic_fact, AtomicFact::EqualFact(_)) {
@@ -549,7 +549,7 @@ impl Runtime {
     pub fn verify_and_fact_well_defined(
         &mut self,
         and_fact: &AndFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_fact_well_defined_result(&and_fact.clone().into(), verify_state)
             .map(|_| ())
@@ -560,7 +560,7 @@ impl Runtime {
     pub fn verify_chain_fact_well_defined(
         &mut self,
         chain_fact: &ChainFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_fact_well_defined_result(&chain_fact.clone().into(), verify_state)
             .map(|_| ())
@@ -571,7 +571,7 @@ impl Runtime {
     pub fn verify_or_fact_well_defined(
         &mut self,
         or_fact: &OrFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_fact_well_defined_result(&or_fact.clone().into(), verify_state)
             .map(|_| ())
@@ -584,7 +584,7 @@ impl Runtime {
     pub fn verify_exist_fact_well_defined(
         &mut self,
         exist_fact: &ExistFactEnum,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_fact_well_defined_result(&exist_fact.clone().into(), verify_state)
             .map(|_| ())
@@ -596,7 +596,7 @@ impl Runtime {
     pub fn verify_forall_fact_well_defined(
         &mut self,
         forall_fact: &ForallFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_forall_fact_well_defined_and_collect_certificate(forall_fact, verify_state)
             .map(|_| ())
@@ -609,7 +609,7 @@ impl Runtime {
     pub fn verify_forall_fact_well_defined_and_collect_certificate(
         &mut self,
         forall_fact: &ForallFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<
         (
             SuccessVerifyFactWellDefinedResult,
@@ -714,7 +714,7 @@ impl Runtime {
     pub fn verify_forall_fact_params_and_dom_well_defined(
         &mut self,
         forall_fact: &ForallFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.run_in_local_env(|rt| {
             rt.verify_forall_fact_params_and_dom_well_defined_inner(forall_fact, verify_state)
@@ -728,7 +728,7 @@ impl Runtime {
     fn verify_forall_fact_params_and_dom_well_defined_inner(
         &mut self,
         forall_fact: &ForallFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         let _parameter_infers = match self.define_params_with_type(
             &forall_fact.typed_parameters,
@@ -771,7 +771,7 @@ impl Runtime {
     pub fn verify_quantifier_free_fact_well_defined(
         &mut self,
         fact: &QuantifierFreeFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_fact_well_defined_result(&fact.clone().into(), verify_state)
             .map(|_| ())
@@ -782,7 +782,7 @@ impl Runtime {
     pub fn verify_exist_or_and_chain_atomic_fact_well_defined(
         &mut self,
         fact: &ExistOrAndChainAtomicFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_fact_well_defined_result(&fact.clone().to_fact(), verify_state)
             .map(|_| ())
@@ -794,7 +794,7 @@ impl Runtime {
     pub fn verify_forall_fact_with_iff_well_defined(
         &mut self,
         forall_fact_with_iff: &ForallFactWithIff,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_fact_well_defined_result(&forall_fact_with_iff.clone().into(), verify_state)
             .map(|_| ())
@@ -805,7 +805,7 @@ impl Runtime {
     pub fn verify_not_forall_fact_well_defined(
         &mut self,
         not_forall: &NotForallFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_fact_well_defined_result(&not_forall.clone().into(), verify_state)
             .map(|_| ())

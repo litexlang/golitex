@@ -40,27 +40,27 @@ theorem __fact3 :
 theorem __fact4 :
     ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.N) (__p2 : ℂ) (__type2 : Litex.In __p2 Litex.N), Litex.In ((((Litex.In.rep __p1 __type1 : ℕ)) : ℂ) + (((Litex.In.rep __p2 __type2 : ℕ)) : ℂ)) Litex.N := by
   intro a __h4_1 b __h4_2
-  have __infer4_0 : Litex.Nonnegative a := Litex.Rules.nonnegativeOfInN (__h4_1)
-  have __infer4_1 : Litex.Nonpositive ((-1 : ℂ) * (((Litex.In.rep a __h4_1 : ℕ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNonpositive ((Litex.Nonnegative.congr (Litex.Same.trans (Litex.In.same_rep a (__h4_1)) (Litex.Same.natComplex (Litex.In.rep a __h4_1)))).mp (__infer4_0))
-  have __infer4_2 : Litex.Nonnegative b := Litex.Rules.nonnegativeOfInN (__h4_2)
-  have __infer4_3 : Litex.Nonpositive ((-1 : ℂ) * (((Litex.In.rep b __h4_2 : ℕ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNonpositive ((Litex.Nonnegative.congr (Litex.Same.trans (Litex.In.same_rep b (__h4_2)) (Litex.Same.natComplex (Litex.In.rep b __h4_2)))).mp (__infer4_2))
+  have __infer4_0 : Litex.Le (0 : ℂ) (((Litex.In.rep a __h4_1 : ℕ)) : ℂ) := Litex.Rules.naturalRepNonnegative (__h4_1)
+  have __infer4_1 : Litex.Nonpositive ((-1 : ℂ) * (((Litex.In.rep a __h4_1 : ℕ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNonpositive (Litex.Rules.realCastNonnegative ((Litex.In.rep a __h4_1 : ℕ) : ℝ) (__infer4_0))
+  have __infer4_2 : Litex.Le (0 : ℂ) (((Litex.In.rep b __h4_2 : ℕ)) : ℂ) := Litex.Rules.naturalRepNonnegative (__h4_2)
+  have __infer4_3 : Litex.Nonpositive ((-1 : ℂ) * (((Litex.In.rep b __h4_2 : ℕ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNonpositive (Litex.Rules.realCastNonnegative ((Litex.In.rep b __h4_2 : ℕ) : ℝ) (__infer4_2))
   have __c4_0 : Litex.In ((((Litex.In.rep a __h4_1 : ℕ)) : ℂ) + (((Litex.In.rep b __h4_2 : ℕ)) : ℂ)) Litex.N := Litex.Rules.complexAddInN (Litex.Rules.complexEqNatInN (((Litex.In.rep a __h4_1 : ℕ) : ℂ)) (Litex.In.rep a __h4_1 : ℕ) (by rfl)) (Litex.Rules.complexEqNatInN (((Litex.In.rep b __h4_2 : ℕ) : ℂ)) (Litex.In.rep b __h4_2 : ℕ) (by rfl))
   exact __c4_0
 
 theorem __fact5 :
     ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.N) (__p2 : ℂ) (__type2 : Litex.In __p2 Litex.N), Litex.In ((((Litex.In.rep __p1 __type1 : ℕ)) : ℂ) * (((Litex.In.rep __p2 __type2 : ℕ)) : ℂ)) Litex.N := by
   intro a __h5_1 b __h5_2
-  have __infer5_4 : Litex.Nonnegative a := Litex.Rules.nonnegativeOfInN (__h5_1)
-  have __infer5_5 : Litex.Nonpositive ((-1 : ℂ) * (((Litex.In.rep a __h5_1 : ℕ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNonpositive ((Litex.Nonnegative.congr (Litex.Same.trans (Litex.In.same_rep a (__h5_1)) (Litex.Same.natComplex (Litex.In.rep a __h5_1)))).mp (__infer5_4))
-  have __infer5_6 : Litex.Nonnegative b := Litex.Rules.nonnegativeOfInN (__h5_2)
-  have __infer5_7 : Litex.Nonpositive ((-1 : ℂ) * (((Litex.In.rep b __h5_2 : ℕ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNonpositive ((Litex.Nonnegative.congr (Litex.Same.trans (Litex.In.same_rep b (__h5_2)) (Litex.Same.natComplex (Litex.In.rep b __h5_2)))).mp (__infer5_6))
+  have __infer5_4 : Litex.Le (0 : ℂ) (((Litex.In.rep a __h5_1 : ℕ)) : ℂ) := Litex.Rules.naturalRepNonnegative (__h5_1)
+  have __infer5_5 : Litex.Nonpositive ((-1 : ℂ) * (((Litex.In.rep a __h5_1 : ℕ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNonpositive (Litex.Rules.realCastNonnegative ((Litex.In.rep a __h5_1 : ℕ) : ℝ) (__infer5_4))
+  have __infer5_6 : Litex.Le (0 : ℂ) (((Litex.In.rep b __h5_2 : ℕ)) : ℂ) := Litex.Rules.naturalRepNonnegative (__h5_2)
+  have __infer5_7 : Litex.Nonpositive ((-1 : ℂ) * (((Litex.In.rep b __h5_2 : ℕ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNonpositive (Litex.Rules.realCastNonnegative ((Litex.In.rep b __h5_2 : ℕ) : ℝ) (__infer5_6))
   have __c5_0 : Litex.In ((((Litex.In.rep a __h5_1 : ℕ)) : ℂ) * (((Litex.In.rep b __h5_2 : ℕ)) : ℂ)) Litex.N := Litex.Rules.complexMulInN (Litex.Rules.complexEqNatInN (((Litex.In.rep a __h5_1 : ℕ) : ℂ)) (Litex.In.rep a __h5_1 : ℕ) (by rfl)) (Litex.Rules.complexEqNatInN (((Litex.In.rep b __h5_2 : ℕ) : ℂ)) (Litex.In.rep b __h5_2 : ℕ) (by rfl))
   exact __c5_0
 
 theorem __fact6 :
-    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.Q) (__p2 : ℂ) (__type2 : Litex.In __p2 Litex.Z) (__domain1 : ¬ Litex.Same __p1 (0 : ℂ)), Litex.In (((Litex.In.rep __p1 __type1 : ℚ) ^ (Litex.In.rep __p2 __type2 : ℤ) : ℚ) : ℂ) Litex.Q := by
-  intro a __h6_1 z __h6_2 __domain1
-  have __c6_0 : Litex.In (((Litex.In.rep a __h6_1 : ℚ) ^ (Litex.In.rep z __h6_2 : ℤ) : ℚ) : ℂ) Litex.Q := Litex.Rules.complexRatInQ ((Litex.In.rep a __h6_1 : ℚ) ^ (Litex.In.rep z __h6_2 : ℤ))
+    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.Q) (__p2 : ℤ) (__domain1 : ¬ Litex.Same __p1 (0 : ℂ)), Litex.In (((Litex.In.rep __p1 __type1 : ℚ) ^ __p2 : ℚ) : ℂ) Litex.Q := by
+  intro a __h6_1 z __domain1
+  have __c6_0 : Litex.In (((Litex.In.rep a __h6_1 : ℚ) ^ z : ℚ) : ℂ) Litex.Q := Litex.Rules.complexRatInQ ((Litex.In.rep a __h6_1 : ℚ) ^ z)
   exact __c6_0
 
 end __Compiler_18_RationalNaturalClosures

@@ -28,8 +28,8 @@ impl SessionRequest {
 /// Input frames are `run <id> <utf8-byte-count>`, followed by exactly that
 /// many source bytes, or `artifacts <id>`. Each response is one JSON line.
 /// The length frame keeps arbitrary multiline Litex source out of terminal
-/// prompt parsing while preserving the same project-local-import semantics as
-/// the interactive REPL.
+/// prompt parsing. Frames are Litex source only: terminal import commands are
+/// deliberately outside this machine protocol.
 pub fn run_session(request: SessionRequest) {
     let SessionRequest { options, preload } = request;
     let stdin_handle = io::stdin();
@@ -160,14 +160,13 @@ fn run_session_loop_with_readers_and_preload(
                     continue;
                 }
 
+                let (source_outcome, failure_kind) = runtime
+                    .execute_source_classified(source.replace('\r', "").as_str())
+                    .into_parts();
                 let SourceRunOutcome {
                     stmt_results: mut results,
                     runtime_error,
-                    failure_kind,
-                } = runtime.execute_source(
-                    source.replace('\r', "").as_str(),
-                    SourceImportPolicy::UseRuntimePolicy,
-                );
+                } = source_outcome;
                 let (ok, trace) = render_run_output(&runtime, &results, &runtime_error);
                 all_results.append(&mut results);
                 if !ok && failure_kind != Some(SourceRunFailureKind::TryStmt) {
@@ -291,7 +290,7 @@ fn initialize_session_runtime(
         if let Some(error) = runtime_error {
             return Err((stmt_results, error));
         }
-        if runtime.current_source_allows_inline_imports() {
+        if force_isolated {
             return Ok(("isolated", stmt_results));
         }
         if let Err(error) = runtime
@@ -342,7 +341,6 @@ fn initialize_session_runtime(
 
     if force_isolated || !directory.join("litex.config").is_file() {
         runtime.start_isolated_source("session");
-        runtime.set_current_source_allows_inline_imports(true);
         return Ok(("isolated", vec![]));
     }
 

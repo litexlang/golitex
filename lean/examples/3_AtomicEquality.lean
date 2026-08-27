@@ -9,6 +9,6 @@ theorem __fact0 : Litex.Same (1 : ℂ) (1 : ℂ) := by
   exact Litex.Same.refl (1 : ℂ)
 
 theorem __fact1 : Litex.Same ((2 : ℂ) + (3 : ℂ)) (5 : ℂ) := by
-  exact Litex.Same.ofEq (by norm_num [Litex.tupleDim, Litex.TupleShape.dimension])
+  exact Litex.Same.ofEq (by norm_num [Litex.abs, Litex.min, Litex.max, Litex.tupleDim, Litex.TupleShape.dimension])
 
 end __Compiler_3_AtomicEquality

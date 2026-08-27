@@ -420,7 +420,7 @@ impl Runtime {
     pub fn verify_exist_fact(
         &mut self,
         exist_fact: &ExistFactEnum,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(cached_result) =
             self.verification_result_from_known_fact_cache(&exist_fact.clone().into())
@@ -751,7 +751,7 @@ impl Runtime {
         // strictly different fact shape; reset only those child verifications
         // to their ordinary root state.
         if exist_fact.is_exist_unique() && verify_state.proof_search_round <= 1 {
-            let decomposition_state = ProofSearchState::after_well_definedness();
+            let decomposition_state = VerifyState::after_well_definedness();
             if let Some(proved) = self.try_verify_exist_unique_by_exist_and_uniqueness_forall(
                 exist_fact,
                 &decomposition_state,
@@ -776,7 +776,7 @@ impl Runtime {
     fn verify_finite_nonempty_natural_set_has_maximum(
         &mut self,
         exist_fact: &ExistFactEnum,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let ExistFactEnum::ExistFact(body) = exist_fact else {
             return Ok(None);
@@ -1051,7 +1051,7 @@ impl Runtime {
     fn try_verify_exist_unique_by_exist_and_uniqueness_forall(
         &mut self,
         exist_fact: &ExistFactEnum,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if exist_fact.typed_parameters().number_of_params() == 0 {
             return Ok(None);

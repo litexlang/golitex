@@ -25,7 +25,7 @@ impl Runtime {
     > {
         self.verify_forall_fact_well_defined_and_collect_certificate(
             &stmt.forall_fact,
-            &ProofSearchState::initial(),
+            &VerifyState::initial(),
         )
         .map_err(|e| {
             short_exec_error(
@@ -59,7 +59,7 @@ impl Runtime {
             for dom_fact in stmt.forall_fact.dom_facts.iter() {
                 let mut dom_infers = rt.store_with_well_defined_verification_and_infer(
                     dom_fact.clone(),
-                    &ProofSearchState::initial(),
+                    &VerifyState::initial(),
                 )?;
                 dom_infers
                     .relabel_all_added_facts_with_store_reason(ForallFact::premise_store_reason());
@@ -97,7 +97,7 @@ impl Runtime {
             }
 
             let then_count = stmt.forall_fact.then_facts.len();
-            let then_verify_state = ProofSearchState::after_well_definedness();
+            let then_verify_state = VerifyState::after_well_definedness();
             for (then_index, then_fact) in stmt.forall_fact.then_facts.iter().enumerate() {
                 let mut result =
                     rt.verify_exist_or_and_chain_atomic_fact(then_fact, &then_verify_state)?;

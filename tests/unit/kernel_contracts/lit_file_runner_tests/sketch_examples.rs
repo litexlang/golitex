@@ -8,7 +8,7 @@ use crate::prelude::*;
 use crate::stmt_result_to_lean_compiler::compile_litex_source_to_lean_source;
 use crate::test_support::execute_source;
 
-use super::helper::{run_with_large_stack, source_has_isolated_import};
+use super::helper::run_with_large_stack;
 
 fn run_example_lit_file(relative_path: &str) {
     let lit_path = example_lit_path(relative_path);
@@ -30,10 +30,6 @@ fn run_example_lit_file(relative_path: &str) {
     let mut runtime = Runtime::default();
     runtime.start_isolated_source(path_str);
     let normalized_source = remove_windows_carriage_from_str(lit_content.as_str());
-    runtime.set_current_source_allows_inline_imports(source_has_isolated_import(
-        normalized_source.as_str(),
-    ));
-
     let start_time = Instant::now();
     let (stmt_results, runtime_error) = execute_source(normalized_source.as_str(), &mut runtime);
     let duration_ms = start_time.elapsed().as_secs_f64() * 1000.0;

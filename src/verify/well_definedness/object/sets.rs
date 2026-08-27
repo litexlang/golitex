@@ -8,7 +8,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_union_well_defined(
         &mut self,
         x: &Union,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_child_obj_well_defined_and_store_cache(
             &x.left,
@@ -28,7 +28,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_intersect_well_defined(
         &mut self,
         x: &Intersect,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_child_obj_well_defined_and_store_cache(
             &x.left,
@@ -48,7 +48,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_set_minus_well_defined(
         &mut self,
         x: &SetMinus,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_child_obj_well_defined_and_store_cache(
             &x.left,
@@ -68,7 +68,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_big_union_well_defined(
         &mut self,
         x: &BigUnion,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_child_obj_well_defined_and_store_cache(
             &x.left,
@@ -83,7 +83,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_big_intersect_well_defined(
         &mut self,
         x: &BigIntersect,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_child_obj_well_defined_and_store_cache(
             &x.left,
@@ -99,7 +99,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_list_set_well_defined(
         &mut self,
         x: &ListSet,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         for (argument_index, obj) in x.list.iter().enumerate() {
             self.verify_child_obj_well_defined_and_store_cache(
@@ -155,7 +155,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_set_builder_well_defined(
         &mut self,
         x: &SetBuilder,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         // A set-builder parameter is a local binder in this isolated environment.
         // Parsed set-builder facts use SetBuilder-tagged bound vars; a mismatched tag means
@@ -164,7 +164,7 @@ impl Runtime {
         self.run_in_local_env(|rt| {
             rt.verify_child_obj_well_defined_and_store_cache(
                 &x.param_set,
-                &ProofSearchState::initial(),
+                &VerifyState::initial(),
                 WellDefinedObjChildRole::BinderParameterCarrier {
                     parameter_group_index: 0,
                 },
@@ -246,7 +246,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_fn_set_well_defined(
         &mut self,
         x: &FnSet,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         let bindings = x.body.set_bound_parameters.collect_param_bindings();
         let rename_map = self.visible_binding_conflict_rename_map(&bindings)?;
@@ -323,7 +323,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_anonymous_fn_well_defined(
         &mut self,
         x: &AnonymousFn,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         let bindings = x.body.set_bound_parameters.collect_param_bindings();
         let rename_map = self.visible_binding_conflict_rename_map(&bindings)?;
@@ -494,7 +494,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_cart_well_defined(
         &mut self,
         x: &Cart,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         for (argument_index, obj) in x.args.iter().enumerate() {
             self.verify_child_obj_well_defined_and_store_cache(
@@ -511,7 +511,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_cart_dim_well_defined(
         &mut self,
         x: &CartDim,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_child_obj_well_defined_and_store_cache(
             &x.set,
@@ -538,7 +538,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_proj_well_defined(
         &mut self,
         x: &Proj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_child_obj_well_defined_and_store_cache(
             &x.set,
@@ -614,7 +614,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_dim_well_defined(
         &mut self,
         x: &TupleDim,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_child_obj_well_defined_and_store_cache(
             &x.arg,
@@ -641,7 +641,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_tuple_well_defined(
         &mut self,
         x: &Tuple,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         for (argument_index, obj) in x.args.iter().enumerate() {
             self.verify_child_obj_well_defined_and_store_cache(
@@ -658,7 +658,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_finite_set_size_well_defined(
         &mut self,
         x: &FiniteSetSize,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_child_obj_well_defined_and_store_cache(
             &x.set,
@@ -684,7 +684,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_finite_set_max_well_defined(
         &mut self,
         x: &FiniteSetMax,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_child_obj_well_defined_and_store_cache(
             &x.set,
@@ -699,7 +699,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_finite_set_min_well_defined(
         &mut self,
         x: &FiniteSetMin,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_child_obj_well_defined_and_store_cache(
             &x.set,
@@ -715,7 +715,7 @@ impl Runtime {
         &mut self,
         set: &Obj,
         operator_name: &str,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         let finite: AtomicFact = IsFiniteSetFact::new(set.clone(), default_line_file()).into();
         let nonempty: AtomicFact = IsNonemptySetFact::new(set.clone(), default_line_file()).into();
@@ -738,7 +738,7 @@ impl Runtime {
         &mut self,
         set: &Obj,
         operator_name: &str,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         match set {
             Obj::ListSet(list_set) => {
@@ -789,7 +789,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_fn_range_well_defined(
         &mut self,
         x: &FnRange,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         self.verify_child_obj_well_defined_and_store_cache(
             &x.function,
@@ -813,7 +813,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_replacement_well_defined(
         &mut self,
         x: &Replacement,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         let prop_arity = self.replacement_prop_arity(x)?;
         if prop_arity != 2 {
@@ -911,7 +911,7 @@ impl Runtime {
     fn verify_set_constructor_children_result(
         &mut self,
         arguments: &[Obj],
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         let mut steps = SuccessVerifyObjWellDefinedStepsResult::new();
         for (argument_index, argument) in arguments.iter().enumerate() {
@@ -927,7 +927,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_set_builder_well_defined_result(
         &mut self,
         value: &SetBuilder,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         let rename_map =
             self.visible_binding_conflict_rename_map(std::slice::from_ref(&value.param_binding))?;
@@ -938,7 +938,7 @@ impl Runtime {
         self.run_in_local_env(|runtime| {
             let parameter_carrier = runtime.verify_child_obj_well_defined_result(
                 &value.param_set,
-                &ProofSearchState::initial(),
+                &VerifyState::initial(),
                 WellDefinedObjChildRole::BinderParameterCarrier {
                     parameter_group_index: 0,
                 },
@@ -1021,7 +1021,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_fn_set_well_defined_result(
         &mut self,
         value: &FnSet,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         let bindings = value.body.set_bound_parameters.collect_param_bindings();
         let rename_map = self.visible_binding_conflict_rename_map(&bindings)?;
@@ -1059,7 +1059,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_anonymous_fn_well_defined_result(
         &mut self,
         value: &AnonymousFn,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         let bindings = value.body.set_bound_parameters.collect_param_bindings();
         let rename_map = self.visible_binding_conflict_rename_map(&bindings)?;
@@ -1161,7 +1161,7 @@ impl Runtime {
         &mut self,
         parameter_definition: &SetBoundParameterList,
         domain_facts: &[QuantifierFreeFact],
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<
         (
             Vec<SuccessVerifyChildObjWellDefinedResult>,
@@ -1237,7 +1237,7 @@ impl Runtime {
         &mut self,
         steps: &mut SuccessVerifyObjWellDefinedStepsResult,
         fact: &AtomicFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
         error_message: String,
     ) -> Result<(), RuntimeError> {
         let result = self.verify_atomic_fact(fact, verify_state)?;
@@ -1254,7 +1254,7 @@ impl Runtime {
         &mut self,
         steps: &mut SuccessVerifyObjWellDefinedStepsResult,
         object: &Obj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         match object {
             Obj::Abs(value) => {
@@ -1291,7 +1291,7 @@ impl Runtime {
         steps: &mut SuccessVerifyObjWellDefinedStepsResult,
         set: &Obj,
         operator_name: &str,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         match set {
             Obj::ListSet(list_set) => {
@@ -1349,7 +1349,7 @@ impl Runtime {
         &mut self,
         set: &Obj,
         operator_name: &str,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         let mut steps =
             self.verify_set_constructor_children_result(&[set.clone()], verify_state)?;
@@ -1370,7 +1370,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_union_well_defined_result(
         &mut self,
         value: &Union,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         self.verify_set_constructor_children_result(
             &[(*value.left).clone(), (*value.right).clone()],
@@ -1381,7 +1381,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_intersect_well_defined_result(
         &mut self,
         value: &Intersect,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         self.verify_set_constructor_children_result(
             &[(*value.left).clone(), (*value.right).clone()],
@@ -1392,7 +1392,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_set_minus_well_defined_result(
         &mut self,
         value: &SetMinus,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         self.verify_set_constructor_children_result(
             &[(*value.left).clone(), (*value.right).clone()],
@@ -1403,7 +1403,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_big_union_well_defined_result(
         &mut self,
         value: &BigUnion,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         self.verify_set_constructor_children_result(&[(*value.left).clone()], verify_state)
     }
@@ -1411,7 +1411,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_big_intersect_well_defined_result(
         &mut self,
         value: &BigIntersect,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         self.verify_set_constructor_children_result(&[(*value.left).clone()], verify_state)
     }
@@ -1419,7 +1419,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_list_set_well_defined_result(
         &mut self,
         value: &ListSet,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         let arguments = value
             .list
@@ -1461,7 +1461,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_cart_well_defined_result(
         &mut self,
         value: &Cart,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         let arguments = value
             .args
@@ -1474,7 +1474,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_cart_dim_well_defined_result(
         &mut self,
         value: &CartDim,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         let mut steps =
             self.verify_set_constructor_children_result(&[(*value.set).clone()], verify_state)?;
@@ -1491,7 +1491,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_proj_well_defined_result(
         &mut self,
         value: &Proj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         let mut steps = self.verify_set_constructor_children_result(
             &[(*value.set).clone(), (*value.dim).clone()],
@@ -1535,7 +1535,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_tuple_dim_well_defined_result(
         &mut self,
         value: &TupleDim,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         let mut steps =
             self.verify_set_constructor_children_result(&[(*value.arg).clone()], verify_state)?;
@@ -1552,7 +1552,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_tuple_well_defined_result(
         &mut self,
         value: &Tuple,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         let arguments = value
             .args
@@ -1565,7 +1565,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_finite_set_size_well_defined_result(
         &mut self,
         value: &FiniteSetSize,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         let mut steps =
             self.verify_set_constructor_children_result(&[(*value.set).clone()], verify_state)?;
@@ -1583,7 +1583,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_finite_set_max_well_defined_result(
         &mut self,
         value: &FiniteSetMax,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         self.verify_finite_set_extremum_well_defined_result(
             &value.set,
@@ -1595,7 +1595,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_finite_set_min_well_defined_result(
         &mut self,
         value: &FiniteSetMin,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         self.verify_finite_set_extremum_well_defined_result(
             &value.set,
@@ -1607,7 +1607,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_fn_range_well_defined_result(
         &mut self,
         value: &FnRange,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         let steps = self
             .verify_set_constructor_children_result(&[(*value.function).clone()], verify_state)?;
@@ -1625,7 +1625,7 @@ impl Runtime {
     pub(in crate::verify) fn verify_replacement_well_defined_result(
         &mut self,
         value: &Replacement,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         let prop_arity = self.replacement_prop_arity(value)?;
         if prop_arity != 2 {

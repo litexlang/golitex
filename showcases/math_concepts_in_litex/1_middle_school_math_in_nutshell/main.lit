@@ -58,26 +58,11 @@ thm two_variable_am_gm:
         y >= 0
         =>:
             geometric_mean(x, y) <= arithmetic_mean(x, y)
-    x * y >= 0
-    sqrt(x * y)^2 = x * y
-    (x + y)^2 - 4 * x * y = (x - y)^2
-    0 <= (x - y)^2
-    0 <= (x + y)^2 - 4 * x * y
-    4 * x * y <= (x + y)^2
-    x * y <= (x + y)^2 / 4
-    ((x + y) / 2)^2 = (x + y)^2 / 4
-    x * y <= ((x + y) / 2)^2
-    0 <= sqrt(x * y)
+    4 * x * y <= (x - y)^2 + 4 * x * y = (x + y)^2
+    x * y <= (x + y)^2 / 4 = ((x + y) / 2)^2
     0 <= x + y
-    0 < 2
     0 <= (x + y) / 2
-    by contra:
-        ? sqrt(x * y) <= (x + y) / 2
-        sqrt(x * y) > (x + y) / 2
-        sqrt(x * y)^2 > ((x + y) / 2)^2
-        impossible x * y <= ((x + y) / 2)^2
-    geometric_mean(x, y) = sqrt(x * y)
-    arithmetic_mean(x, y) = (x + y) / 2
+    geometric_mean(x, y) = sqrt(x * y) <= sqrt(((x + y) / 2)^2) = (x + y) / 2 = arithmetic_mean(x, y)
 
 # Application: compute an arithmetic mean, then compare the arithmetic and
 # geometric means of 9 and 16.

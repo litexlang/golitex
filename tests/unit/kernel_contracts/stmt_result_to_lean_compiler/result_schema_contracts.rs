@@ -2,6 +2,77 @@ use super::super::*;
 use crate::output::display_stmt_result_json_v2;
 
 #[test]
+fn finite_set_induction_and_choice_report_their_exact_lean_abi_boundaries() {
+    let finite_results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
+        "by induc P:\n    ? P = P\n    ? from P = {}\n    ? induc x, S\n",
+        "finite_set_induction_lean_boundary.lit",
+    )
+    .expect("execute finite-set induction boundary fixture");
+    let finite_error = StmtResultToLeanCompiler::new("finite_set_induction_lean_boundary.lit")
+        .compile_stmt_results_to_lean_source(&finite_results)
+        .expect_err("finite-set induction must fail closed at its exact Set ABI boundary");
+    assert!(
+        finite_error.contains("representation-invariant empty/insertion induction"),
+        "{finite_error}"
+    );
+
+    let choice_results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
+        "have S set\nby axiom_of_choice: set S:\n    trust forall A S:\n        $is_nonempty_set(A)\n",
+        "axiom_of_choice_lean_boundary.lit",
+    )
+    .expect("execute axiom-of-choice boundary fixture");
+    let choice_result = choice_results
+        .iter()
+        .find(|result| {
+            matches!(
+                result,
+                StmtResult::Success(SuccessStmtResult::By(
+                    SuccessByStmtResult::ByAxiomOfChoiceStmt(_)
+                ))
+            )
+        })
+        .expect("fixture must retain the successful axiom-of-choice Result");
+    let choice_error = StmtResultToLeanCompiler::new("axiom_of_choice_lean_boundary.lit")
+        .compile_stmt_results_to_lean_source(std::slice::from_ref(choice_result))
+        .expect_err("choice must fail closed at its dependent set-family ABI boundary");
+    assert!(
+        choice_error.contains("dependent set-valued-family and BigUnion"),
+        "{choice_error}"
+    );
+}
+
+#[test]
+fn reserved_builtin_theorem_boundaries_are_named_and_never_fall_through() {
+    for (file_name, source, expected) in [
+        (
+            "subset_finite_builtin_boundary.lit",
+            "release thm subset_of_finite_set_is_finite({1}, {1, 2})\n",
+            "finite-subcarrier transport theorem",
+        ),
+        (
+            "finite_index_builtin_boundary.lit",
+            "release thm finite_set_has_bijective_index({})\n",
+            "finite-carrier enumeration and bijection",
+        ),
+        (
+            "rational_fraction_builtin_boundary.lit",
+            "have q Q\nrelease thm rational_has_unique_reduced_fraction(q)\n",
+            "native rational normal form",
+        ),
+    ] {
+        let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
+            source,
+            file_name,
+        )
+        .unwrap_or_else(|error| panic!("execute {file_name}: {error}"));
+        let error = StmtResultToLeanCompiler::new(file_name)
+            .compile_stmt_results_to_lean_source(&results)
+            .expect_err("unrepresented reserved theorem must fail at a named boundary");
+        assert!(error.contains(expected), "{error}");
+    }
+}
+
+#[test]
 fn def_struct_result_retains_each_local_verification_phase_without_synthetic_statements() {
     let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
             "struct ValueBox<S set>:\n    value S\n    <=>:\n        value = value\n",

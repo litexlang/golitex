@@ -20,7 +20,7 @@ impl Runtime {
         let mut goal_well_definedness = Vec::with_capacity(stmt.then_facts.len());
         for fact in stmt.then_facts.iter() {
             goal_well_definedness.push(
-                self.verify_fact_well_defined_result(fact, &ProofSearchState::initial())
+                self.verify_fact_well_defined_result(fact, &VerifyState::initial())
                     .map_err(|verify_error| {
                         short_exec_error(
                             stmt.clone().into(),
@@ -175,7 +175,7 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         let all_cases_or_fact: Fact =
             OrFact::new(stmt.cases.clone(), stmt.line_file.clone()).into();
-        let vs = ProofSearchState::initial();
+        let vs = VerifyState::initial();
         let result = if let Some(Fact::ForallFact(ff)) = stmt.then_facts.first() {
             self.run_in_local_env(|rt| {
                 rt.forall_assume_params_and_dom_in_current_env(ff, &vs)?;
@@ -240,7 +240,7 @@ impl Runtime {
         let case_fact_as_fact: Fact = case_fact.clone().into();
         let case_label = case_fact.to_string();
         let mut proof_steps: Vec<StmtResult> = Vec::new();
-        let vs = ProofSearchState::initial();
+        let vs = VerifyState::initial();
 
         if let Some(Fact::ForallFact(ff)) = stmt.then_facts.first() {
             let assumption_infer_result = self
@@ -401,7 +401,7 @@ impl Runtime {
         }
 
         if let Some(impossible_fact) = &stmt.impossible_facts[case_index] {
-            let verify_state = ProofSearchState::initial();
+            let verify_state = VerifyState::initial();
             let verify_impossible_fact_result = self
                 .verify_atomic_fact(impossible_fact, &verify_state)
                 .map_err(|verify_error| {

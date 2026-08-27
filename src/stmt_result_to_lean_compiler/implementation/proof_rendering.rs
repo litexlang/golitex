@@ -43,6 +43,7 @@ pub(super) fn construct_lean_source_parts_for_abstract_predicate_definition(
             parameter_count: parameter_names.len(),
             requirement_count: 0,
             clause_count: 0,
+            dependent_parameter_evidence: false,
             definition: None,
         },
     );
@@ -324,6 +325,15 @@ pub(super) fn install_parameter_fact_aliases(
 ) -> Result<(), String> {
     let function = match set {
         Obj::FnSet(function) => Some(LeanTargetFunctionTypeRepresentation::lower(function)?),
+        Obj::FiniteSeqSet(sequence) => {
+            let function =
+                Runtime::default().finite_seq_set_to_fn_set(sequence, default_line_file());
+            Some(LeanTargetFunctionTypeRepresentation::lower(&function)?)
+        }
+        Obj::SeqSet(sequence) => {
+            let function = Runtime::default().seq_set_to_fn_set(sequence, default_line_file());
+            Some(LeanTargetFunctionTypeRepresentation::lower(&function)?)
+        }
         _ => None,
     };
     let expected = render_fact(proposition, context)?;
@@ -1054,12 +1064,18 @@ pub(super) fn render_set_builder_membership_from_fact_and_proofs(
     nested
         .symbol_names
         .insert(builder.symbol_id, representative.clone());
+    nested
+        .semantic_zero_ended_order_symbols
+        .insert(builder.symbol_id);
 
     let mut predicate_proofs = Vec::with_capacity(builder.facts.len());
     let mut source = context.clone();
     source
         .symbol_names
         .insert(builder.symbol_id, rendered_element.clone());
+    source
+        .semantic_zero_ended_order_symbols
+        .insert(builder.symbol_id);
     let representative_same = format!("Litex.In.same_rep {rendered_element} ({base_proof})");
     for (index, fact) in builder.facts.iter().enumerate() {
         let premise = &premises[index + 1];
@@ -1081,6 +1097,20 @@ pub(super) fn render_set_builder_membership_from_fact_and_proofs(
                     &source_proof,
                 )?
             }
+            Fact::AtomicFact(
+                AtomicFact::LessFact(_)
+                | AtomicFact::GreaterFact(_)
+                | AtomicFact::LessEqualFact(_)
+                | AtomicFact::GreaterEqualFact(_),
+            ) => render_zero_ended_order_across_representative(
+                fact,
+                &source,
+                &nested,
+                &rendered_element,
+                &representative,
+                &representative_same,
+                &source_proof,
+            )?,
             Fact::AtomicFact(AtomicFact::NormalAtomicFact(predicate)) => {
                 if predicate.body.len() != 1 {
                     return Err(
@@ -1212,6 +1242,56 @@ pub(super) fn render_equality_across_representative(
     }
 }
 
+/// Transport one zero-ended sign proposition from the source value used to
+/// check a set-builder clause to the exact base-carrier representative used by
+/// the Lean set-builder predicate. General binary order is deliberately not
+/// transported here: its two observations need a separate reviewed ABI.
+pub(super) fn render_zero_ended_order_across_representative(
+    fact: &Fact,
+    source: &StmtResultToLeanCompilerEnvironmentStack,
+    target: &StmtResultToLeanCompilerEnvironmentStack,
+    source_value: &str,
+    target_value: &str,
+    source_same_target: &str,
+    source_proof: &str,
+) -> Result<String, String> {
+    let (left, right, strict) = order_relation_parts(fact)?;
+    let source_left = render_obj(left, source)?;
+    let source_right = render_obj(right, source)?;
+    let target_left = render_obj(left, target)?;
+    let target_right = render_obj(right, target)?;
+    let left_changed = source_left == source_value && target_left == target_value;
+    let right_changed = source_right == source_value && target_right == target_value;
+
+    let predicate = if is_literal_zero(left) && right_changed && source_left == target_left {
+        if strict {
+            "Litex.Positive"
+        } else {
+            "Litex.Nonnegative"
+        }
+    } else if is_literal_zero(right) && left_changed && source_right == target_right {
+        if strict {
+            "Litex.Negative"
+        } else {
+            "Litex.Nonpositive"
+        }
+    } else if !left_changed
+        && !right_changed
+        && render_fact(fact, source)? == render_fact(fact, target)?
+    {
+        return Ok(source_proof.to_string());
+    } else {
+        return Err(
+            "compiler set-builder order transport requires the changing value as the nonzero side of a zero-ended comparison"
+                .into(),
+        );
+    };
+
+    Ok(format!(
+        "({predicate}.congr ({source_same_target})).mp ({source_proof})"
+    ))
+}
+
 pub(super) fn render_set_builder_predicate_projection_from_fact_and_proof(
     target: &Fact,
     clause_index: usize,
@@ -1236,15 +1316,60 @@ pub(super) fn render_set_builder_predicate_projection_from_fact_and_proof(
         representative_context
             .symbol_names
             .insert(builder.symbol_id, "__rep".into());
+        representative_context
+            .semantic_zero_ended_order_symbols
+            .insert(builder.symbol_id);
         let mut element_context = context.clone();
         element_context
             .symbol_names
             .insert(builder.symbol_id, rendered_element.clone());
+        element_context
+            .semantic_zero_ended_order_symbols
+            .insert(builder.symbol_id);
         if render_fact(clause, &element_context)? != render_fact(target, context)? {
             return Err("set-builder equality projection changed its instantiated clause".into());
         }
         let transported = render_equality_across_representative(
             equality,
+            &representative_context,
+            &element_context,
+            "__rep",
+            &rendered_element,
+            "Litex.Same.symm __same",
+            "__selected",
+        )?;
+        return Ok(format!(
+            "(by\n  rcases Litex.Rules.inSetBuilder_iff.mp ({source_proof}) with ⟨__rep, __predicate, __same⟩\n  have __selected := __predicate{predicate_selector}\n  exact {transported})"
+        ));
+    }
+    if matches!(
+        clause,
+        Fact::AtomicFact(
+            AtomicFact::LessFact(_)
+                | AtomicFact::GreaterFact(_)
+                | AtomicFact::LessEqualFact(_)
+                | AtomicFact::GreaterEqualFact(_)
+        )
+    ) {
+        let mut representative_context = context.clone();
+        representative_context
+            .symbol_names
+            .insert(builder.symbol_id, "__rep".into());
+        representative_context
+            .semantic_zero_ended_order_symbols
+            .insert(builder.symbol_id);
+        let mut element_context = context.clone();
+        element_context
+            .symbol_names
+            .insert(builder.symbol_id, rendered_element.clone());
+        element_context
+            .semantic_zero_ended_order_symbols
+            .insert(builder.symbol_id);
+        if render_fact(clause, &element_context)? != render_fact(target, context)? {
+            return Err("set-builder order projection changed its instantiated clause".into());
+        }
+        let transported = render_zero_ended_order_across_representative(
+            clause,
             &representative_context,
             &element_context,
             "__rep",
@@ -1643,6 +1768,47 @@ pub(super) fn render_closed_numeric_comparison_fact(
     render_obj(right, context)?;
     if negated {
         return Ok("(by\n  norm_num [Litex.Lt, Litex.Le, Litex.OrderValue])".into());
+    }
+    if is_literal_zero(left) {
+        let Obj::Number(number) = right else {
+            return Err(
+                "closed zero-ended positive comparison currently requires a literal nonzero endpoint"
+                    .into(),
+            );
+        };
+        let constructor = if theorem == "ltOfComplexReals" {
+            "positiveOfComplexReal"
+        } else {
+            "nonnegativeOfComplexReal"
+        };
+        return Ok(format!(
+            "Litex.OrderBridge.{constructor} (show (0 : ℝ) {} ({} : ℝ) by norm_num)",
+            if theorem == "ltOfComplexReals" {
+                "<"
+            } else {
+                "≤"
+            },
+            number.normalized_value,
+        ));
+    }
+    if is_literal_zero(right) {
+        let Obj::Number(number) = left else {
+            return Err(
+                "closed zero-ended negative comparison currently requires a literal nonzero endpoint"
+                    .into(),
+            );
+        };
+        let predicate = if theorem == "ltOfComplexReals" {
+            "Negative"
+        } else {
+            "Nonpositive"
+        };
+        return Ok(format!(
+            "Litex.{predicate}.intro (Litex.AsReal.complex ({} : ℝ)) (show ({} : ℝ) {} 0 by norm_num)",
+            number.normalized_value,
+            number.normalized_value,
+            if theorem == "ltOfComplexReals" { "<" } else { "≤" },
+        ));
     }
     let rendered_left = render_numeric_obj(left, context)?;
     let rendered_right = render_numeric_obj(right, context)?;
@@ -3503,6 +3669,7 @@ pub(super) fn infer_rule_has_direct_compiler_environment_consumer(rule: &InferRu
         | InferRule::DefinedPredicateDefinitionClauseProjection(_)
         | InferRule::RegisteredTransitivePredicateChainClosure(_)
         | InferRule::TupleEqualityWithKnownTupleImpliesTupleShape(_)
+        | InferRule::CartesianMembershipProjection(_)
         | InferRule::ListSetMembershipImpliesEqualityAlternatives(_) => false,
     }
 }
@@ -3738,7 +3905,7 @@ pub(super) fn render_numeric_order_bound_implies_zero_sign_inference(
     source: &Fact,
     target: &Fact,
     source_proof: &str,
-    context: &StmtResultToLeanCompilerEnvironmentStack,
+    _context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
     let (source_left, source_right, source_strict) = order_relation_parts(source)?;
     let (target_left, target_right, target_strict) = order_relation_parts(target)?;
@@ -3760,13 +3927,10 @@ pub(super) fn render_numeric_order_bound_implies_zero_sign_inference(
         ) {
             return Err("numeric-bound sign inference changed its positive lower bound".into());
         }
-        let numeric_fact: Fact = LessFact::new(
-            Number::new("0".to_string()).into(),
-            source_left.clone(),
-            source.line_file(),
-        )
-        .into();
-        let numeric_proof = render_closed_numeric_comparison_fact(&numeric_fact, context)?;
+        let numeric_proof = format!(
+            "Litex.OrderBridge.ltOfComplexReals (show (0 : ℝ) < ({} : ℝ) by norm_num)",
+            bound.normalized_value
+        );
         return Ok(if source_strict {
             format!("Litex.Lt.trans ({numeric_proof}) ({source_proof})")
         } else {
@@ -3789,13 +3953,10 @@ pub(super) fn render_numeric_order_bound_implies_zero_sign_inference(
                 Ok(format!("Litex.Lt.toLe ({source_proof})"))
             }
             NumberCompareResult::Less => {
-                let numeric_fact: Fact = LessFact::new(
-                    source_right.clone(),
-                    Number::new("0".to_string()).into(),
-                    source.line_file(),
-                )
-                .into();
-                let numeric_proof = render_closed_numeric_comparison_fact(&numeric_fact, context)?;
+                let numeric_proof = format!(
+                    "Litex.OrderBridge.ltOfComplexReals (show ({} : ℝ) < (0 : ℝ) by norm_num)",
+                    bound.normalized_value
+                );
                 let strict_proof = if source_strict {
                     format!("Litex.Lt.trans ({source_proof}) ({numeric_proof})")
                 } else {
@@ -3910,6 +4071,7 @@ pub(super) fn validate_standard_numeric_membership_inference_target(
     rule: &InferRule,
     source: &Fact,
     target: &Fact,
+    context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<&'static str, String> {
     let (source_element, source_set) = membership_parts(source)?;
     let (target_element, lean_theorem_name) = match rule {
@@ -3931,7 +4093,14 @@ pub(super) fn validate_standard_numeric_membership_inference_target(
                     );
                 }
             };
-            (target_element, "nonnegativeOfInN")
+            let semantic_target =
+                format!("Litex.Nonnegative {}", render_obj(target_element, context)?);
+            let theorem = if render_fact(target, context)? == semantic_target {
+                "nonnegativeOfInN"
+            } else {
+                "naturalRepNonnegative"
+            };
+            (target_element, theorem)
         }
         InferRule::PositiveStandardSetMembershipImpliesPositive(rule) => {
             if !matches!(source_set, Obj::StandardSet(set) if *set == rule.source_set) {
@@ -3953,10 +4122,16 @@ pub(super) fn validate_standard_numeric_membership_inference_target(
                     );
                 }
             };
-            let lean_theorem_name = match rule.source_set {
-                StandardSet::NPos => "positiveOfInNPos",
-                StandardSet::QPos => "positiveOfInQPos",
-                StandardSet::RPos => "positiveOfInRPos",
+            let semantic_target =
+                format!("Litex.Positive {}", render_obj(target_element, context)?);
+            let semantic = render_fact(target, context)? == semantic_target;
+            let lean_theorem_name = match (rule.source_set, semantic) {
+                (StandardSet::NPos, true) => "positiveOfInNPos",
+                (StandardSet::QPos, true) => "positiveOfInQPos",
+                (StandardSet::RPos, true) => "positiveOfInRPos",
+                (StandardSet::NPos, false) => "positiveNaturalRepPositive",
+                (StandardSet::QPos, false) => "positiveRationalRepPositive",
+                (StandardSet::RPos, false) => "positiveRealRepPositive",
                 _ => {
                     return Err(format!(
                         "positive-carrier inference from {} has no direct Lean theorem",
@@ -3986,10 +4161,16 @@ pub(super) fn validate_standard_numeric_membership_inference_target(
                     );
                 }
             };
-            let lean_theorem_name = match rule.source_set {
-                StandardSet::ZNeg => "negativeOfInZNeg",
-                StandardSet::QNeg => "negativeOfInQNeg",
-                StandardSet::RNeg => "negativeOfInRNeg",
+            let semantic_target =
+                format!("Litex.Negative {}", render_obj(target_element, context)?);
+            let semantic = render_fact(target, context)? == semantic_target;
+            let lean_theorem_name = match (rule.source_set, semantic) {
+                (StandardSet::ZNeg, true) => "negativeOfInZNeg",
+                (StandardSet::QNeg, true) => "negativeOfInQNeg",
+                (StandardSet::RNeg, true) => "negativeOfInRNeg",
+                (StandardSet::ZNeg, false) => "negativeIntegerRepNegative",
+                (StandardSet::QNeg, false) => "negativeRationalRepNegative",
+                (StandardSet::RNeg, false) => "negativeRealRepNegative",
                 _ => {
                     return Err(format!(
                         "negative-carrier inference from {} has no direct Lean theorem",
@@ -4153,6 +4334,20 @@ pub(super) fn transport_zero_ended_order_proof_to_rendered_numeric_operand(
     source_proof: &str,
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
+    if let LeanTargetObjectRepresentation::Symbol { symbol_id, .. } =
+        LeanTargetObjectRepresentation::lower(source_operand)?
+    {
+        if let Some(real) = context.numeric_real_values.get(&symbol_id) {
+            return Ok(format!(
+                "Litex.Rules.{} {real} ({source_proof})",
+                if strict {
+                    "realCastPositive"
+                } else {
+                    "realCastNonnegative"
+                }
+            ));
+        }
+    }
     let rendered_source = render_obj(source_operand, context)?;
     let rendered_target = render_numeric_obj(source_operand, context)?;
     if rendered_source == rendered_target {
@@ -4217,6 +4412,20 @@ pub(super) fn transport_zero_ended_order_fact_proof_to_current_numeric_represent
             "typed zero-order inference retained a nonzero-ended premise `{source_fact}`"
         ));
     };
+
+    if let LeanTargetObjectRepresentation::Symbol { symbol_id, .. } =
+        LeanTargetObjectRepresentation::lower(source_operand)?
+    {
+        if let Some(real) = context.numeric_real_values.get(&symbol_id) {
+            let theorem = match (is_literal_zero(source_left), strict) {
+                (true, true) => "realCastPositive",
+                (true, false) => "realCastNonnegative",
+                (false, true) => "realCastNegative",
+                (false, false) => "realCastNonpositive",
+            };
+            return Ok(format!("Litex.Rules.{theorem} {real} ({source_proof})"));
+        }
+    }
 
     let rendered_source = render_obj(source_operand, context)?;
     let rendered_target = render_numeric_obj(source_operand, context)?;

@@ -1236,33 +1236,29 @@ impl Runtime {
         &mut self,
         f: &LessEqualFact,
         atomic_fact: &AtomicFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (Obj::Sum(left_sum), Obj::Sum(right_sum)) = (&f.left, &f.right) else {
             return Ok(None);
         };
 
-        let start_result = self.verify_atomic_fact(
-            &EqualFact::new(
-                left_sum.start.as_ref().clone(),
-                right_sum.start.as_ref().clone(),
-                f.line_file.clone(),
-            )
-            .into(),
-            verify_state,
-        )?;
+        let start_equality: AtomicFact = EqualFact::new(
+            left_sum.start.as_ref().clone(),
+            right_sum.start.as_ref().clone(),
+            f.line_file.clone(),
+        )
+        .into();
+        let start_result = self.verify_atomic_fact(&start_equality, verify_state)?;
         if !start_result.is_success() {
             return Ok(None);
         }
-        let end_result = self.verify_atomic_fact(
-            &EqualFact::new(
-                left_sum.end.as_ref().clone(),
-                right_sum.end.as_ref().clone(),
-                f.line_file.clone(),
-            )
-            .into(),
-            verify_state,
-        )?;
+        let end_equality: AtomicFact = EqualFact::new(
+            left_sum.end.as_ref().clone(),
+            right_sum.end.as_ref().clone(),
+            f.line_file.clone(),
+        )
+        .into();
+        let end_result = self.verify_atomic_fact(&end_equality, verify_state)?;
         if !end_result.is_success() {
             return Ok(None);
         }
@@ -1306,24 +1302,48 @@ impl Runtime {
         .into();
         let dom_hi: Fact =
             LessEqualFact::new(x_obj, (*left_sum.end).clone(), f.line_file.clone()).into();
-        let pointwise_result = self.run_in_local_env(|rt| {
-            let params_def = TypedParameterList::new(vec![TypedParameterGroup::new(
+        let pointwise_forall = ForallFact::new_canonical_forall(
+            TypedParameterList::new(vec![TypedParameterGroup::new(
                 vec![x_binding],
                 ParamType::Obj(index_param_set),
-            )]);
-            rt.define_params_with_type(&params_def, false, BindingScope::LocalBinder)?;
-            rt.store_fact_without_forall_coverage_check_and_infer(dom_lo)?;
-            rt.store_fact_without_forall_coverage_check_and_infer(dom_hi)?;
-            rt.verify_atomic_fact(&pointwise_fact, &ProofSearchState::after_well_definedness())
-        })?;
+            )]),
+            vec![dom_lo, dom_hi],
+            vec![pointwise_fact.into()],
+            f.line_file.clone(),
+        )?;
+        let pointwise_fact: Fact = pointwise_forall.clone().into();
+        let pointwise_well_definedness =
+            self.verify_fact_well_defined_result(&pointwise_fact, verify_state)?;
+        let mut pointwise_result = self.verify_forall_fact(&pointwise_forall, verify_state)?;
         if !pointwise_result.is_success() {
             return Ok(None);
         }
+        let StmtResult::Success(SuccessStmtResult::Fact(pointwise_success)) = &mut pointwise_result
+        else {
+            return Err(UnknownRuntimeError(RuntimeErrorStruct::new(
+                Some(pointwise_fact.clone().into_stmt()),
+                "integer-range sum pointwise verification retained a non-factual Result"
+                    .to_string(),
+                f.line_file.clone(),
+                None,
+                vec![],
+            ))
+            .into());
+        };
+        pointwise_success.well_definedness = pointwise_well_definedness;
 
         Ok(Some(StmtResult::from(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "finite sum monotonicity from pointwise order on the index range".to_string(),
+                BuiltinRuleEvidence::IntegerRangeSumPointwiseOrder(
+                    IntegerRangeSumPointwiseOrderBuiltinRuleEvidence::new(
+                        atomic_fact.clone().into(),
+                        start_equality.into(),
+                        end_equality.into(),
+                        pointwise_fact,
+                    ),
+                ),
                 vec![start_result, end_result, pointwise_result],
             ),
         )))
@@ -1336,7 +1356,7 @@ impl Runtime {
         &mut self,
         f: &LessEqualFact,
         atomic_fact: &AtomicFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let (Obj::SumOfFiniteSet(left_sum), Obj::SumOfFiniteSet(right_sum)) = (&f.left, &f.right)
         else {
@@ -1398,7 +1418,7 @@ impl Runtime {
         &mut self,
         f: &LessEqualFact,
         atomic_fact: &AtomicFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Obj::SumOfFiniteSet(sum) = &f.right else {
             return Ok(None);
@@ -1470,7 +1490,7 @@ impl Runtime {
         let lf = &f.line_file;
         let z = Self::literal_zero_obj();
         let one = Self::literal_one_obj();
-        let structural_state = ProofSearchState::after_well_definedness();
+        let structural_state = VerifyState::after_well_definedness();
 
         if let Some(result) = self.try_less_equal_sum_pointwise_on_same_integer_range(
             f,

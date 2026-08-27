@@ -2,7 +2,7 @@ use super::lean_compilation_types::{CompiledInferenceFactProofStep, LeanLocalFac
 use super::represent_litex_function_contracts_in_lean::LeanTargetFunctionTypeRepresentation;
 use super::represent_litex_objects_in_lean::LeanTargetObjectRepresentation;
 use crate::prelude::*;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::ops::{Deref, DerefMut};
 use std::rc::Rc;
 
@@ -120,6 +120,12 @@ pub(super) struct StmtResultToLeanCompilerBindings {
     pub(super) numeric_representation_equalities: HashMap<SymbolId, String>,
     pub(super) numeric_representation_memberships: HashMap<SymbolId, String>,
     pub(super) numeric_real_values: HashMap<SymbolId, String>,
+    /// Set-builder refinements must remain invariant under the heterogeneous
+    /// `Same` edge between a source element and the base-carrier value selected
+    /// by membership.  Zero-ended order clauses for these binders therefore
+    /// use `Positive`/`Nonnegative`/`Negative`/`Nonpositive`, not a fresh
+    /// `Complex.re` observation of an arbitrary `In.rep`.
+    pub(super) semantic_zero_ended_order_symbols: HashSet<SymbolId>,
     /// Exact integer representatives selected by visible `N+`/`N`/`Z`
     /// membership proofs. Integer-only source operators such as `%` consume
     /// this target representation instead of pretending Complex has a native
@@ -290,6 +296,9 @@ pub(super) struct PredicateBinding {
     pub(super) parameter_count: usize,
     pub(super) requirement_count: usize,
     pub(super) clause_count: usize,
+    /// Membership evidence is bound by nested `Exists` so the definition body
+    /// may use verifier-selected representatives of heterogeneous parameters.
+    pub(super) dependent_parameter_evidence: bool,
     pub(super) definition: Option<DefPropStmt>,
 }
 

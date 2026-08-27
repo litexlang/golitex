@@ -436,7 +436,7 @@ impl Runtime {
         anon: &AnonymousFn,
         expected_fn_set: &FnSet,
         in_fact: &InFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let signature_from_anon = FnSet::new(
             anon.body.set_bound_parameters.clone(),
@@ -470,7 +470,7 @@ impl Runtime {
         anon: &AnonymousFn,
         expected_fn_set: &FnSet,
         in_fact: &InFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(result) = self.verify_in_fact_element_in_fn_set_by_pointwise_values(
             &anon.clone().into(),

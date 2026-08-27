@@ -1,4 +1,4 @@
-use super::{execute_repository_target, SourceImportPolicy};
+use super::execute_repository_target;
 use crate::common::helper::remove_windows_carriage_from_str;
 use crate::error::{ParseRuntimeError, RuntimeError, RuntimeErrorStruct};
 use crate::module_manager::discover_repository_for_file;
@@ -83,11 +83,8 @@ pub fn execute_file_in_runtime(
         }
     };
     runtime.start_isolated_source(entry_file_path);
-    runtime.set_current_source_allows_inline_imports(true);
-    let outcome = runtime.execute_source(
-        remove_windows_carriage_from_str(source_code.as_str()).as_str(),
-        SourceImportPolicy::UseRuntimePolicy,
-    );
+    let outcome =
+        runtime.execute_source(remove_windows_carriage_from_str(source_code.as_str()).as_str());
     (outcome.stmt_results, outcome.runtime_error)
 }
 

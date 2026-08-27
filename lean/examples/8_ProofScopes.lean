@@ -20,7 +20,9 @@ theorem local_reflexivity :
   exact __c1_0
 
 theorem __fact2 : Litex.Same (1 : ℂ) (1 : ℂ) := by
-  exact (local_reflexivity (1 : ℂ) (Litex.Rules.complexRealInR (1 : ℝ)))
+  have __step1 : Litex.Same (1 : ℂ) (1 : ℂ) := by
+    exact (local_reflexivity (1 : ℂ) (Litex.Rules.complexRealInR (1 : ℝ)))
+  exact __step1
 
 theorem __fact3 : Litex.Same (2 : ℂ) (2 : ℂ) := by
   have __step1 : Litex.Same (2 : ℂ) (2 : ℂ) := by

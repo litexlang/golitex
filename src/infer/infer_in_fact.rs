@@ -552,9 +552,23 @@ impl Runtime {
                     IsTupleFact::new(in_fact.element.clone(), in_fact.line_file.clone()).into();
 
                 infer_result.new_fact(&is_cart_fact);
-                self.store_with_well_defined_verification_and_infer_with_default_verify_state(
-                    is_cart_fact,
-                )?;
+                let tuple_shape_infers = self
+                    .store_with_well_defined_verification_and_infer_with_default_verify_state(
+                        is_cart_fact.clone(),
+                    )?;
+                infer_result.add_rule_application(
+                    InferRule::CartesianMembershipProjection(
+                        CartesianMembershipProjectionInferRule {
+                            coordinate_count: cart.args.len(),
+                            projection: CartesianMembershipProjectionKind::TupleShape,
+                        },
+                    ),
+                    in_fact.clone().into(),
+                    vec![SuccessStoreFactResult::new(
+                        is_cart_fact,
+                        tuple_shape_infers,
+                    )],
+                );
 
                 let cart_args_count = cart.args.len();
                 let tuple_dim_obj = TupleDim::new(in_fact.element.clone()).into();
@@ -567,9 +581,23 @@ impl Runtime {
                 .into();
 
                 infer_result.new_fact(&tuple_dim_fact);
-                self.store_with_well_defined_verification_and_infer_with_default_verify_state(
-                    tuple_dim_fact,
-                )?;
+                let tuple_dimension_infers = self
+                    .store_with_well_defined_verification_and_infer_with_default_verify_state(
+                        tuple_dim_fact.clone(),
+                    )?;
+                infer_result.add_rule_application(
+                    InferRule::CartesianMembershipProjection(
+                        CartesianMembershipProjectionInferRule {
+                            coordinate_count: cart.args.len(),
+                            projection: CartesianMembershipProjectionKind::TupleDimension,
+                        },
+                    ),
+                    in_fact.clone().into(),
+                    vec![SuccessStoreFactResult::new(
+                        tuple_dim_fact,
+                        tuple_dimension_infers,
+                    )],
+                );
 
                 self.store_tuple_obj_and_cart(
                     &in_fact.element.to_string(),
@@ -596,10 +624,22 @@ impl Runtime {
                         InFact::new(projected, (**factor).clone(), in_fact.line_file.clone())
                             .into();
                     infer_result.new_fact(&projected_in_factor);
-                    infer_result.new_infer_result_inside(
-                        self.store_with_well_defined_verification_and_infer_with_default_verify_state(
+                    let coordinate_infers = self
+                        .store_with_well_defined_verification_and_infer_with_default_verify_state(
+                            projected_in_factor.clone(),
+                        )?;
+                    infer_result.add_rule_application(
+                        InferRule::CartesianMembershipProjection(
+                            CartesianMembershipProjectionInferRule {
+                                coordinate_count: cart.args.len(),
+                                projection: CartesianMembershipProjectionKind::Coordinate { index },
+                            },
+                        ),
+                        in_fact.clone().into(),
+                        vec![SuccessStoreFactResult::new(
                             projected_in_factor,
-                        )?,
+                            coordinate_infers,
+                        )],
                     );
                 }
 
@@ -937,10 +977,9 @@ impl Runtime {
                 // Follow checked set-valued definitions to their set builder for
                 // inference too. Besides `circle(5)`, this covers a defined
                 // family such as `rows(n)(K) = row(K)`.
-                if let Some(set_builder) = self.unfold_known_fn_application_to_set_builder(
-                    set_obj,
-                    &ProofSearchState::initial(),
-                )? {
+                if let Some(set_builder) = self
+                    .unfold_known_fn_application_to_set_builder(set_obj, &VerifyState::initial())?
+                {
                     return self
                         .infer_membership_in_set_builder_from_in_fact(in_fact, &set_builder);
                 }

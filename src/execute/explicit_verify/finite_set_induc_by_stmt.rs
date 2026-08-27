@@ -3,11 +3,20 @@ use std::collections::HashMap;
 
 fn completed_finite_set_induc_case_results(
     proof_steps: &mut Vec<StmtResult>,
-    conclusion_checks: &mut Vec<StmtResult>,
+    conclusions: &mut Vec<SuccessVerifyByInducConclusionResult>,
 ) -> Vec<StmtResult> {
     let mut completed = std::mem::take(proof_steps);
-    completed.append(conclusion_checks);
+    completed.extend(
+        std::mem::take(conclusions)
+            .into_iter()
+            .map(|conclusion| *conclusion.check),
+    );
     completed
+}
+
+struct SuccessExecFiniteSetInducCaseContextResult {
+    assumptions: Vec<SuccessVerifyByInducAssumptionResult>,
+    infers: SuccessInferResult,
 }
 
 impl Runtime {
@@ -21,9 +30,8 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         let proof = self.run_in_local_env(
             |rt| -> Result<SuccessVerifyByFiniteSetInducResult, RuntimeError> {
-                let (base_assumptions, step_assumptions) = rt.finite_set_induc_assumptions(stmt)?;
-                let base = rt.exec_finite_set_induc_base_proof(stmt, base_assumptions)?;
-                let step = rt.exec_finite_set_induc_step_proof(stmt, step_assumptions)?;
+                let base = rt.exec_finite_set_induc_base_proof(stmt)?;
+                let step = rt.exec_finite_set_induc_step_proof(stmt)?;
                 Ok(SuccessVerifyByFiniteSetInducResult { base, step })
             },
         )?;
@@ -99,22 +107,21 @@ impl Runtime {
     fn exec_finite_set_induc_base_proof(
         &mut self,
         stmt: &ByFiniteSetInducStmt,
-        assumptions: Vec<(String, String)>,
     ) -> Result<SuccessVerifyByInducCaseResult, RuntimeError> {
         self.run_in_local_env(|rt| {
-            rt.exec_finite_set_induc_base_context(stmt)?;
+            let context = rt.exec_finite_set_induc_base_context(stmt)?;
             let mut proof_steps = rt.exec_finite_set_induc_proof_stmts(
                 stmt,
                 &stmt.base_proof,
                 "finite-set induc base proof",
             )?;
-            let mut conclusion_checks = Vec::new();
+            let mut conclusions = Vec::new();
             let empty_set: Obj = ListSet::new(vec![]).into();
             for fact in stmt.to_prove.iter() {
                 let base_fact =
                     rt.finite_set_induc_goal_fact_at_obj(stmt, fact, empty_set.clone())?;
-                let result = rt
-                    .verify_fact_or_error(&base_fact, &ProofSearchState::initial())
+                let mut result = rt
+                    .verify_fact_or_error(&base_fact, &VerifyState::initial())
                     .map_err(|verify_error| {
                         short_exec_error(
                             stmt.clone().into(),
@@ -122,16 +129,24 @@ impl Runtime {
                             Some(verify_error),
                             completed_finite_set_induc_case_results(
                                 &mut proof_steps,
-                                &mut conclusion_checks,
+                                &mut conclusions,
                             ),
                         )
                     })?;
-                conclusion_checks.push(result);
+                rt.attach_known_fact_ids_to_stmt_result(&mut result)?;
+                conclusions.push(SuccessVerifyByInducConclusionResult {
+                    goal: base_fact,
+                    check: Box::new(result),
+                });
+            }
+            for proof_step in proof_steps.iter_mut() {
+                rt.attach_known_fact_ids_to_stmt_result(proof_step)?;
             }
             Ok(SuccessVerifyByInducCaseResult {
-                assumptions,
+                assumptions: context.assumptions,
+                assumption_infers: context.infers,
                 proof_steps,
-                conclusion_checks,
+                conclusions,
             })
         })
     }
@@ -139,22 +154,21 @@ impl Runtime {
     fn exec_finite_set_induc_step_proof(
         &mut self,
         stmt: &ByFiniteSetInducStmt,
-        assumptions: Vec<(String, String)>,
     ) -> Result<SuccessVerifyByInducCaseResult, RuntimeError> {
         self.run_in_local_env(|rt| {
-            rt.exec_finite_set_induc_step_context(stmt)?;
+            let context = rt.exec_finite_set_induc_step_context(stmt)?;
             let mut proof_steps = rt.exec_finite_set_induc_proof_stmts(
                 stmt,
                 &stmt.step_proof,
                 "finite-set induc step proof",
             )?;
-            let mut conclusion_checks = Vec::new();
+            let mut conclusions = Vec::new();
             let extension = rt.finite_set_induc_extension_obj(stmt);
             for fact in stmt.to_prove.iter() {
                 let extension_fact =
                     rt.finite_set_induc_goal_fact_at_obj(stmt, fact, extension.clone())?;
-                let result = rt
-                    .verify_fact_or_error(&extension_fact, &ProofSearchState::initial())
+                let mut result = rt
+                    .verify_fact_or_error(&extension_fact, &VerifyState::initial())
                     .map_err(|verify_error| {
                         short_exec_error(
                             stmt.clone().into(),
@@ -165,16 +179,24 @@ impl Runtime {
                             Some(verify_error),
                             completed_finite_set_induc_case_results(
                                 &mut proof_steps,
-                                &mut conclusion_checks,
+                                &mut conclusions,
                             ),
                         )
                     })?;
-                conclusion_checks.push(result);
+                rt.attach_known_fact_ids_to_stmt_result(&mut result)?;
+                conclusions.push(SuccessVerifyByInducConclusionResult {
+                    goal: extension_fact,
+                    check: Box::new(result),
+                });
+            }
+            for proof_step in proof_steps.iter_mut() {
+                rt.attach_known_fact_ids_to_stmt_result(proof_step)?;
             }
             Ok(SuccessVerifyByInducCaseResult {
-                assumptions,
+                assumptions: context.assumptions,
+                assumption_infers: context.infers,
                 proof_steps,
-                conclusion_checks,
+                conclusions,
             })
         })
     }
@@ -182,12 +204,13 @@ impl Runtime {
     fn exec_finite_set_induc_base_context(
         &mut self,
         stmt: &ByFiniteSetInducStmt,
-    ) -> Result<(), RuntimeError> {
+    ) -> Result<SuccessExecFiniteSetInducCaseContextResult, RuntimeError> {
         let params = TypedParameterList::new(vec![TypedParameterGroup::new(
             vec![stmt.param_binding.clone()],
             ParamType::FiniteSet(FiniteSet::new()),
         )]);
-        self.define_params_with_type(&params, false, BindingScope::LocalBinder)
+        let mut infers = self
+            .define_params_with_type(&params, false, BindingScope::LocalBinder)
             .map_err(|error| {
                 short_exec_error(
                     stmt.clone().into(),
@@ -196,14 +219,15 @@ impl Runtime {
                     vec![],
                 )
             })?;
+        let param = obj_for_bound_param_in_scope(&stmt.param_binding);
+        let parameter_type_fact: Fact =
+            IsFiniteSetFact::new(param.clone(), stmt.line_file.clone()).into();
         let empty_set: Obj = ListSet::new(vec![]).into();
-        let base_eq: Fact = EqualFact::new(
-            obj_for_bound_param_in_scope(&stmt.param_binding),
-            empty_set,
-            stmt.line_file.clone(),
-        )
-        .into();
-        self.store_with_well_defined_verification_and_infer_with_default_verify_state(base_eq)
+        let base_eq: Fact = EqualFact::new(param.clone(), empty_set, stmt.line_file.clone()).into();
+        let base_infers = self
+            .store_with_well_defined_verification_and_infer_with_default_verify_state(
+                base_eq.clone(),
+            )
             .map_err(|error| {
                 short_exec_error(
                     stmt.clone().into(),
@@ -212,32 +236,52 @@ impl Runtime {
                     vec![],
                 )
             })?;
+        infers.new_infer_result_inside(base_infers);
+        let mut assumptions = vec![
+            self.finite_set_induc_assumption_result(
+                parameter_type_fact,
+                SuccessVerifyByInducAssumptionRole::ParameterType,
+                None,
+            )?,
+            self.finite_set_induc_assumption_result(
+                base_eq,
+                SuccessVerifyByInducAssumptionRole::BaseCaseEquality,
+                None,
+            )?,
+        ];
         if let Some(carrier_set) = &stmt.carrier_set {
-            let base_subset: Fact = SubsetFact::new(
-                obj_for_bound_param_in_scope(&stmt.param_binding),
-                carrier_set.clone(),
-                stmt.line_file.clone(),
-            )
-            .into();
-            self.store_with_well_defined_verification_and_infer_with_default_verify_state(
-                base_subset,
-            )
-            .map_err(|error| {
-                short_exec_error(
-                    stmt.clone().into(),
-                    "finite-set induc: failed to assume the base carrier subset".to_string(),
-                    Some(error),
-                    vec![],
+            let base_subset: Fact =
+                SubsetFact::new(param, carrier_set.clone(), stmt.line_file.clone()).into();
+            let subset_infers = self
+                .store_with_well_defined_verification_and_infer_with_default_verify_state(
+                    base_subset.clone(),
                 )
-            })?;
+                .map_err(|error| {
+                    short_exec_error(
+                        stmt.clone().into(),
+                        "finite-set induc: failed to assume the base carrier subset".to_string(),
+                        Some(error),
+                        vec![],
+                    )
+                })?;
+            infers.new_infer_result_inside(subset_infers);
+            assumptions.push(self.finite_set_induc_assumption_result(
+                base_subset,
+                SuccessVerifyByInducAssumptionRole::CarrierConstraint,
+                None,
+            )?);
         }
-        Ok(())
+        self.attach_known_fact_ids_to_infer_result(&mut infers)?;
+        Ok(SuccessExecFiniteSetInducCaseContextResult {
+            assumptions,
+            infers,
+        })
     }
 
     fn exec_finite_set_induc_step_context(
         &mut self,
         stmt: &ByFiniteSetInducStmt,
-    ) -> Result<(), RuntimeError> {
+    ) -> Result<SuccessExecFiniteSetInducCaseContextResult, RuntimeError> {
         let element_type = match &stmt.carrier_set {
             Some(carrier_set) => ParamType::Obj(carrier_set.clone()),
             None => ParamType::Set(Set::new()),
@@ -249,7 +293,8 @@ impl Runtime {
                 ParamType::FiniteSet(FiniteSet::new()),
             ),
         ]);
-        self.define_params_with_type(&params, false, BindingScope::LocalBinder)
+        let mut infers = self
+            .define_params_with_type(&params, false, BindingScope::LocalBinder)
             .map_err(|error| {
                 short_exec_error(
                     stmt.clone().into(),
@@ -261,9 +306,32 @@ impl Runtime {
 
         let element = obj_for_bound_param_in_scope(&stmt.element_param_binding);
         let smaller_set = obj_for_bound_param_in_scope(&stmt.smaller_set_param_binding);
+        let element_type_fact: Fact = match &stmt.carrier_set {
+            Some(carrier_set) => {
+                InFact::new(element.clone(), carrier_set.clone(), stmt.line_file.clone()).into()
+            }
+            None => IsSetFact::new(element.clone(), stmt.line_file.clone()).into(),
+        };
+        let smaller_type_fact: Fact =
+            IsFiniteSetFact::new(smaller_set.clone(), stmt.line_file.clone()).into();
+        let mut assumptions = vec![
+            self.finite_set_induc_assumption_result(
+                element_type_fact,
+                SuccessVerifyByInducAssumptionRole::ParameterType,
+                None,
+            )?,
+            self.finite_set_induc_assumption_result(
+                smaller_type_fact,
+                SuccessVerifyByInducAssumptionRole::ParameterType,
+                None,
+            )?,
+        ];
         let fresh_fact: Fact =
             NotInFact::new(element, smaller_set.clone(), stmt.line_file.clone()).into();
-        self.store_with_well_defined_verification_and_infer_with_default_verify_state(fresh_fact)
+        let fresh_infers = self
+            .store_with_well_defined_verification_and_infer_with_default_verify_state(
+                fresh_fact.clone(),
+            )
             .map_err(|error| {
                 short_exec_error(
                     stmt.clone().into(),
@@ -272,6 +340,7 @@ impl Runtime {
                     vec![],
                 )
             })?;
+        infers.new_infer_result_inside(fresh_infers);
 
         if let Some(carrier_set) = &stmt.carrier_set {
             let smaller_subset: Fact = SubsetFact::new(
@@ -280,22 +349,37 @@ impl Runtime {
                 stmt.line_file.clone(),
             )
             .into();
-            self.store_with_well_defined_verification_and_infer_with_default_verify_state(
-                smaller_subset,
-            )
-            .map_err(|error| {
-                short_exec_error(
-                    stmt.clone().into(),
-                    "finite-set induc: failed to assume the smaller carrier subset".to_string(),
-                    Some(error),
-                    vec![],
+            let subset_infers = self
+                .store_with_well_defined_verification_and_infer_with_default_verify_state(
+                    smaller_subset.clone(),
                 )
-            })?;
+                .map_err(|error| {
+                    short_exec_error(
+                        stmt.clone().into(),
+                        "finite-set induc: failed to assume the smaller carrier subset".to_string(),
+                        Some(error),
+                        vec![],
+                    )
+                })?;
+            infers.new_infer_result_inside(subset_infers);
+            assumptions.push(self.finite_set_induc_assumption_result(
+                smaller_subset,
+                SuccessVerifyByInducAssumptionRole::CarrierConstraint,
+                None,
+            )?);
         }
+        assumptions.push(self.finite_set_induc_assumption_result(
+            fresh_fact,
+            SuccessVerifyByInducAssumptionRole::FreshInsertionElement,
+            None,
+        )?);
 
-        for fact in stmt.to_prove.iter() {
+        for (goal_index, fact) in stmt.to_prove.iter().enumerate() {
             let ih = self.finite_set_induc_goal_fact_at_obj(stmt, fact, smaller_set.clone())?;
-            self.store_with_well_defined_verification_and_infer_with_default_verify_state(ih)
+            let ih_infers = self
+                .store_with_well_defined_verification_and_infer_with_default_verify_state(
+                    ih.clone(),
+                )
                 .map_err(|error| {
                     short_exec_error(
                         stmt.clone().into(),
@@ -304,8 +388,18 @@ impl Runtime {
                         vec![],
                     )
                 })?;
+            infers.new_infer_result_inside(ih_infers);
+            assumptions.push(self.finite_set_induc_assumption_result(
+                ih,
+                SuccessVerifyByInducAssumptionRole::InductionHypothesis,
+                Some(goal_index),
+            )?);
         }
-        Ok(())
+        self.attach_known_fact_ids_to_infer_result(&mut infers)?;
+        Ok(SuccessExecFiniteSetInducCaseContextResult {
+            assumptions,
+            infers,
+        })
     }
 
     fn exec_finite_set_induc_proof_stmts(
@@ -395,78 +489,18 @@ impl Runtime {
         .into())
     }
 
-    fn finite_set_induc_assumptions(
-        &mut self,
-        stmt: &ByFiniteSetInducStmt,
-    ) -> Result<(Vec<(String, String)>, Vec<(String, String)>), RuntimeError> {
-        let param = obj_for_bound_param_in_scope(&stmt.param_binding);
-        let empty_set: Obj = ListSet::new(vec![]).into();
-        let mut base_assumptions = vec![
-            (
-                IsFiniteSetFact::new(param.clone(), stmt.line_file.clone()).to_string(),
-                "finite induction parameter".to_string(),
-            ),
-            (
-                EqualFact::new(param.clone(), empty_set, stmt.line_file.clone()).to_string(),
-                "empty base case".to_string(),
-            ),
-        ];
-        if let Some(carrier_set) = &stmt.carrier_set {
-            base_assumptions.push((
-                SubsetFact::new(param.clone(), carrier_set.clone(), stmt.line_file.clone())
-                    .to_string(),
-                "finite induction carrier".to_string(),
-            ));
-        }
-
-        let element = obj_for_bound_param_in_scope(&stmt.element_param_binding);
-        let smaller_set = obj_for_bound_param_in_scope(&stmt.smaller_set_param_binding);
-        let mut step_assumptions = vec![
-            (
-                IsFiniteSetFact::new(smaller_set.clone(), stmt.line_file.clone()).to_string(),
-                "smaller finite set".to_string(),
-            ),
-            (
-                NotInFact::new(element.clone(), smaller_set.clone(), stmt.line_file.clone())
-                    .to_string(),
-                "fresh insertion element".to_string(),
-            ),
-        ];
-        if let Some(carrier_set) = &stmt.carrier_set {
-            step_assumptions.insert(
-                0,
-                (
-                    InFact::new(element.clone(), carrier_set.clone(), stmt.line_file.clone())
-                        .to_string(),
-                    "new element in the induction carrier".to_string(),
-                ),
-            );
-            step_assumptions.insert(
-                2,
-                (
-                    SubsetFact::new(
-                        smaller_set.clone(),
-                        carrier_set.clone(),
-                        stmt.line_file.clone(),
-                    )
-                    .to_string(),
-                    "smaller set in the induction carrier".to_string(),
-                ),
-            );
-        } else {
-            step_assumptions.insert(
-                0,
-                (
-                    IsSetFact::new(element.clone(), stmt.line_file.clone()).to_string(),
-                    "new element".to_string(),
-                ),
-            );
-        }
-        for fact in stmt.to_prove.iter() {
-            let ih = self.finite_set_induc_goal_fact_at_obj(stmt, fact, smaller_set.clone())?;
-            step_assumptions.push((ih.to_string(), "induction hypothesis".to_string()));
-        }
-
-        Ok((base_assumptions, step_assumptions))
+    fn finite_set_induc_assumption_result(
+        &self,
+        fact: Fact,
+        role: SuccessVerifyByInducAssumptionRole,
+        goal_index: Option<usize>,
+    ) -> Result<SuccessVerifyByInducAssumptionResult, RuntimeError> {
+        let fact_id = self.require_known_fact_id_for_success_result(&fact)?;
+        Ok(SuccessVerifyByInducAssumptionResult {
+            fact,
+            fact_id,
+            role,
+            goal_index,
+        })
     }
 }

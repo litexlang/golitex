@@ -4,7 +4,7 @@ use crate::common::defaults::default_line_file;
 use crate::fact::EqualFact;
 use crate::obj::{Abs, Add, AtomicName, Identifier, Mul, Number, Obj, StructObj, Sub, Union};
 use crate::runtime::Runtime;
-use crate::verify::ProofSearchState;
+use crate::verify::VerifyState;
 
 #[test]
 fn zero_premise_structural_equality_still_requires_known_equal_leaves() {
@@ -49,12 +49,12 @@ fn structural_equality_runs_only_from_the_outer_round() {
     assert!(runtime
         .verify_equal_fact(
             &equal_fact,
-            &ProofSearchState::after_well_definedness().with_next_round()
+            &VerifyState::after_well_definedness().with_next_round()
         )
         .expect("later-round equality verification")
         .is_unknown());
     assert!(runtime
-        .verify_equal_fact(&equal_fact, &ProofSearchState::after_well_definedness())
+        .verify_equal_fact(&equal_fact, &VerifyState::after_well_definedness())
         .expect("outer-round equality verification")
         .is_success());
 }

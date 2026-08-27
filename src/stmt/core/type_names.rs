@@ -56,16 +56,6 @@ impl DefSettingStmt {
     }
 }
 
-impl ImportStmt {
-    pub fn stmt_type_name(&self) -> String {
-        "ImportStmt".to_string()
-    }
-
-    pub fn output_type_string(&self) -> String {
-        "import statement".to_string()
-    }
-}
-
 impl WitnessExistFact {
     pub fn stmt_type_name(&self) -> String {
         "WitnessExistFact".to_string()

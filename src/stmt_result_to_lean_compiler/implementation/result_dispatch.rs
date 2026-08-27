@@ -1,10 +1,9 @@
 use super::*;
 
 impl StmtResultToLeanCompiler {
-    /// Transitional direct entry point. It consumes one completed result at a
+    /// Direct entry point. It consumes one completed result at a
     /// time, so compiler state and declaration order already follow the result
-    /// stream. Statement-family adapters are removed as their direct recursive
-    /// compiler methods land.
+    /// stream. Every supported family reads only its recursive Result fields.
     pub fn compile_stmt_results_to_lean_source(
         mut self,
         results: &[StmtResult],
@@ -34,15 +33,16 @@ impl StmtResultToLeanCompiler {
     /// Declares the compilation responsibility of every statement family.
     ///
     /// A statement dispatcher is a `PassThrough`: it selects the matching
-    /// family method but does not manufacture a compiler node. `Sketch` is a
-    /// recursive `Combine`. The remaining currently supported families still
-    /// use their focused compatibility adapter while their proof renderers are
-    /// moved to consume the named Result fields directly.
+    /// family method but does not manufacture a compiler node. Composite proof
+    /// statements recursively combine their retained child Results.
     fn compile_success_stmt_result(&mut self, success: &SuccessStmtResult) -> Result<(), String> {
         match success {
             SuccessStmtResult::Fact(result) => self.compile_fact_stmt_result_to_lean_source(result),
             SuccessStmtResult::ReleaseThmStmt(result) => {
-                if self.compile_litex_theorem_instantiation_stmt_result_to_lean_source(result)? {
+                if self.compile_litex_theorem_instantiation_stmt_result_to_lean_source(result)?
+                    || self
+                        .compile_builtin_theorem_application_stmt_result_to_lean_source(result)?
+                {
                     Ok(())
                 } else {
                     self.unsupported_success_stmt_result(success)
@@ -198,7 +198,13 @@ impl StmtResultToLeanCompiler {
                         self.unsupported_success_stmt_result(success)
                     }
                 }
-                SuccessByStmtResult::ByThmStmt(_) => self.unsupported_success_stmt_result(success),
+                SuccessByStmtResult::ByThmStmt(result) => {
+                    if self.compile_by_theorem_selection_stmt_result_to_lean_source(result)? {
+                        Ok(())
+                    } else {
+                        self.unsupported_success_stmt_result(success)
+                    }
+                }
                 SuccessByStmtResult::ByReflexivePropStmt(result) => self
                     .compile_registered_predicate_property_stmt_result_to_lean_source(
                         &result.statement.forall_fact,
@@ -276,13 +282,19 @@ impl StmtResultToLeanCompiler {
                     }
                 }
                 SuccessByStmtResult::ByFiniteSetInducStmt(_) => {
-                    Err("finite-set induction Result compilation is not supported yet".into())
+                    Err("finite-set induction has a structured Result certificate, but the exact Litex.Set carrier ABI does not yet provide representation-invariant empty/insertion induction".into())
                 }
-                SuccessByStmtResult::ByZornLemmaStmt(_)
-                | SuccessByStmtResult::ByAxiomOfChoiceStmt(_)
-                | SuccessByStmtResult::ByRegularityAxiomStmt(_)
-                | SuccessByStmtResult::ByStructDefStmt(_) => {
-                    self.unsupported_success_stmt_result(success)
+                SuccessByStmtResult::ByZornLemmaStmt(_) => {
+                    Err("Zorn-lemma Result compilation requires an exact set-valued-family and chain-upper-bound target ABI".into())
+                }
+                SuccessByStmtResult::ByAxiomOfChoiceStmt(_) => {
+                    Err("axiom-of-choice Result compilation requires an exact dependent set-valued-family and BigUnion target ABI".into())
+                }
+                SuccessByStmtResult::ByRegularityAxiomStmt(_) => {
+                    Err("regularity-axiom Result compilation is unavailable without a reviewed native Lean foundation theorem or an explicitly permitted project axiom".into())
+                }
+                SuccessByStmtResult::ByStructDefStmt(_) => {
+                    Err("by-struct-definition Result compilation requires an exact structure carrier and field-projection target ABI".into())
                 }
             },
             SuccessStmtResult::Witness(SuccessWitnessStmtResult::WitnessExistFact(result)) => {
@@ -330,9 +342,6 @@ impl StmtResultToLeanCompiler {
             },
             SuccessStmtResult::Command(SuccessCommandStmtResult::EvalStmt(result)) => {
                 self.compile_eval_stmt_result_to_lean_source(result)
-            }
-            SuccessStmtResult::Command(SuccessCommandStmtResult::ImportStmt(_)) => {
-                self.unsupported_success_stmt_result(success)
             }
         }
     }

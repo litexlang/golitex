@@ -5,7 +5,7 @@ impl Runtime {
     fn unfold_set_builder_definition_without_transport_reentry(
         &mut self,
         obj: &Obj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<Option<Obj>, RuntimeError> {
         if self.set_builder_forall_transport_is_active() {
             return Ok(None);
@@ -32,7 +32,7 @@ impl Runtime {
             .filter(|membership| objs_match_for_pattern(&membership.element, &goal.element))
             .cloned()
             .collect();
-        let final_state = ProofSearchState::final_round_after_well_definedness();
+        let final_state = VerifyState::final_round_after_well_definedness();
 
         for membership in memberships {
             let unfolded = match &membership.set {
@@ -142,7 +142,7 @@ impl Runtime {
             ) {
                 continue;
             }
-            let requirement_state = ProofSearchState::final_round_after_well_definedness()
+            let requirement_state = VerifyState::final_round_after_well_definedness()
                 .without_known_forall_for_equality();
             self.set_set_builder_forall_transport_active(true);
             let membership_result = self.verify_args_satisfy_forall_requirements(
@@ -205,7 +205,7 @@ impl Runtime {
                     Obj::SetBuilder(set_builder) => Some(set_builder.clone()),
                     _ => match self.unfold_set_builder_definition_without_transport_reentry(
                         &membership_pattern.set,
-                        &ProofSearchState::final_round_after_well_definedness(),
+                        &VerifyState::final_round_after_well_definedness(),
                     )? {
                         Some(Obj::SetBuilder(set_builder)) => Some(set_builder),
                         _ => None,
@@ -247,7 +247,7 @@ impl Runtime {
                         SubstitutionMode::Exact,
                         Some(&goal.line_file()),
                     )?;
-                    let requirement_state = ProofSearchState::final_round_after_well_definedness()
+                    let requirement_state = VerifyState::final_round_after_well_definedness()
                         .without_known_forall_for_equality();
                     self.set_set_builder_forall_transport_active(true);
                     let membership_result = self.verify_args_satisfy_forall_requirements(
@@ -301,7 +301,7 @@ impl Runtime {
                 }
             }
         }
-        let final_state = ProofSearchState::final_round();
+        let final_state = VerifyState::final_round();
 
         for membership in memberships {
             let set_builder = match &membership.set {
@@ -1278,7 +1278,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         general_cart: &GeneralCart,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let fn_set_fact: AtomicFact = InFact::new(
             in_fact.element.clone(),
@@ -1316,9 +1316,10 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         set_builder: &SetBuilder,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let mut step_results = Vec::with_capacity(set_builder.facts.len() + 1);
+        let mut expected_premises = Vec::with_capacity(set_builder.facts.len() + 1);
 
         let element_in_param_set: AtomicFact = InFact::new(
             in_fact.element.clone(),
@@ -1331,6 +1332,7 @@ impl Runtime {
         if !element_in_param_set_result.is_success() {
             return Ok((UnknownGenericStmtResult::new()).into());
         }
+        expected_premises.push(element_in_param_set.clone().into());
         step_results.push(element_in_param_set_result);
 
         let mut param_to_arg_map: HashMap<String, Obj> = HashMap::new();
@@ -1362,21 +1364,29 @@ impl Runtime {
                     )))
                 })?;
 
+            let instantiated_fact = instantiated_fact.to_fact();
             let instantiated_fact_result =
-                self.verify_fact_allow_unknown(&instantiated_fact.to_fact(), verify_state)?;
+                self.verify_fact_allow_unknown(&instantiated_fact, verify_state)?;
             if !instantiated_fact_result.is_success() {
                 return Ok((UnknownGenericStmtResult::new()).into());
             }
+            expected_premises.push(instantiated_fact);
             step_results.push(instantiated_fact_result);
         }
 
-        Ok(SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
-            in_fact.clone().into(),
-            "set builder membership: element is in the base set and satisfies all defining facts"
-                .to_string(),
-            step_results,
+        let target: Fact = in_fact.clone().into();
+        Ok(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                target.clone(),
+                "set builder membership: element is in the base set and satisfies all defining facts"
+                    .to_string(),
+                BuiltinRuleEvidence::SetBuilderMembership(
+                    SetBuilderMembershipBuiltinRuleEvidence::new(target, expected_premises),
+                ),
+                step_results,
+            )
+            .into(),
         )
-        .into())
     }
 
     // Membership through a set-valued definition: if `S(a) = {x T: P(x)}`,
@@ -1386,7 +1396,7 @@ impl Runtime {
     pub fn maybe_verify_in_fact_in_unfolded_user_defined_set(
         &mut self,
         in_fact: &InFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let goal_key = in_fact.to_string();
         if !self.begin_set_builder_membership_unfold(&goal_key) {
@@ -1401,7 +1411,7 @@ impl Runtime {
     fn maybe_verify_in_fact_in_unfolded_user_defined_set_once(
         &mut self,
         in_fact: &InFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if let Obj::InstantiatedTemplateObj(template_obj) = &in_fact.set {
             self.instantiate_template_obj(template_obj, verify_state)?;
@@ -1441,7 +1451,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         struct_obj: &StructObj,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(
             &Obj::StructObj(struct_obj.clone()),

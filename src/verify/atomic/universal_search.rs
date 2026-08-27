@@ -10,7 +10,7 @@ impl Runtime {
     pub fn verify_atomic_fact_with_known_forall(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         match atomic_fact {
             AtomicFact::EqualFact(equal_fact) => {
@@ -25,7 +25,7 @@ impl Runtime {
     pub fn verify_non_equational_atomic_fact_with_known_forall(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         debug_assert!(!matches!(atomic_fact, AtomicFact::EqualFact(_)));
         if let Some(cached_result) =
@@ -50,7 +50,7 @@ impl Runtime {
     pub fn verify_equal_fact_with_known_forall(
         &mut self,
         equal_fact: &EqualFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let atomic_fact: AtomicFact = equal_fact.clone().into();
         if let Some(cached_result) =
@@ -110,7 +110,7 @@ impl Runtime {
     fn try_verify_equal_fact_with_known_forall_after_nested_rational_normalization(
         &mut self,
         equal_fact: &EqualFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<Option<SuccessFactStmtResult>, RuntimeError> {
         let target_atomic: AtomicFact = equal_fact.clone().into();
         let lookup_key = (target_atomic.key(), target_atomic.has_positive_polarity());
@@ -209,7 +209,7 @@ impl Runtime {
         known_forall: Rc<StoredForallConclusionReference>,
         matching_target: &AtomicFact,
         given_target: &AtomicFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<Option<SuccessFactStmtResult>, RuntimeError> {
         let (AtomicFact::EqualFact(candidate_equality), AtomicFact::EqualFact(matching_equality)) =
             (&candidate, matching_target)
@@ -268,7 +268,7 @@ impl Runtime {
     fn verify_atomic_fact_with_known_forall_forward(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<Option<SuccessFactStmtResult>, RuntimeError> {
         if let Some(fact_verified) =
             self.try_verify_with_known_forall_facts_in_envs(atomic_fact, verify_state)?
@@ -366,7 +366,7 @@ impl Runtime {
     fn try_verify_with_fallback_known_forall_facts_in_envs(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<Option<SuccessFactStmtResult>, RuntimeError> {
         let mut iterate_from_env_index = 0;
         let mut iterate_from_known_forall_fact_index = 0;
@@ -408,7 +408,7 @@ impl Runtime {
     fn try_verify_with_fallback_known_forall_facts_in_imported_modules(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
         module_names: &[String],
     ) -> Result<Option<SuccessFactStmtResult>, RuntimeError> {
         let lookup_key = (atomic_fact.key(), atomic_fact.has_positive_polarity());
@@ -454,7 +454,7 @@ impl Runtime {
     fn try_verify_with_known_forall_facts_in_envs(
         &mut self,
         atomic_fact: &AtomicFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<Option<SuccessFactStmtResult>, RuntimeError> {
         let arg_shape_lookup_keys = atomic_fact_in_forall_lookup_arg_shape_keys(atomic_fact);
         if let Some(fact_verified) = self.try_verify_with_arg_shape_known_forall_facts_in_envs(
@@ -484,7 +484,7 @@ impl Runtime {
         atomic_fact_in_known_forall_fact: AtomicFact,
         forall_rc: Rc<StoredForallConclusionReference>,
         given_atomic_fact: &AtomicFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<Option<SuccessFactStmtResult>, RuntimeError> {
         self.try_verify_known_forall_candidate_with_matching_fact(
             phase,
@@ -503,7 +503,7 @@ impl Runtime {
         forall_rc: Rc<StoredForallConclusionReference>,
         matching_atomic_fact: &AtomicFact,
         given_atomic_fact: &AtomicFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<Option<SuccessFactStmtResult>, RuntimeError> {
         known_forall_profile::record_candidate_attempt(phase);
         let match_result = self.match_atomic_fact_args_against_known_forall_ordered_args(
@@ -532,7 +532,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         arg_shape_lookup_keys: &[ForallArgumentShape],
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<Option<SuccessFactStmtResult>, RuntimeError> {
         let lookup_key = (atomic_fact.key(), atomic_fact.has_positive_polarity());
         let envs_count = self.environment_count();
@@ -574,7 +574,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         arg_shape_lookup_keys: &[ForallArgumentShape],
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<Option<SuccessFactStmtResult>, RuntimeError> {
         let lookup_key = (atomic_fact.key(), atomic_fact.has_positive_polarity());
         let envs_count = self.environment_count();
@@ -657,7 +657,7 @@ impl Runtime {
         lookup_key: &(AtomicFactKey, bool),
         arg_shape_key: &ForallArgumentShape,
         atomic_fact: &AtomicFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
         phase: KnownForallSearchPhase,
     ) -> Result<Option<SuccessFactStmtResult>, RuntimeError> {
         let Some(bucket_count) = ({
@@ -710,7 +710,7 @@ impl Runtime {
         lookup_key: &(AtomicFactKey, bool),
         arg_shape_key: &ForallArgumentShape,
         atomic_fact: &AtomicFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
         phase: KnownForallSearchPhase,
     ) -> Result<Option<SuccessFactStmtResult>, RuntimeError> {
         let module_local_identifiers =
@@ -777,7 +777,7 @@ impl Runtime {
         known_forall: &Rc<StoredForallConclusionReference>,
         mut arg_map: HashMap<String, Obj>,
         given_atomic_fact: &AtomicFact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<Option<SuccessFactStmtResult>, RuntimeError> {
         self.complete_known_forall_arg_map_from_known_dom_facts(
             known_forall.as_ref(),
@@ -2182,7 +2182,7 @@ impl ArgMatcher<'_> {
                 return Ok(None);
             }
         }
-        let verify_state = ProofSearchState::final_round();
+        let verify_state = VerifyState::final_round();
         for value in merged.values() {
             if self
                 .verify_obj_well_defined_and_store_cache(value, &verify_state)
@@ -2292,7 +2292,7 @@ impl ArgMatcher<'_> {
         if !self.merge_arg_match_map_into(&mut merged, ret_map) {
             return Ok(None);
         }
-        let verify_state = ProofSearchState::final_round();
+        let verify_state = VerifyState::final_round();
         for value in merged.values() {
             if self
                 .verify_obj_well_defined_and_store_cache(value, &verify_state)
@@ -2394,7 +2394,7 @@ impl ArgMatcher<'_> {
             if !self.merge_arg_match_map_into(&mut merged, eq_map) {
                 return Ok(None);
             }
-            let verify_state = ProofSearchState::final_round();
+            let verify_state = VerifyState::final_round();
             for value in merged.values() {
                 if self
                     .verify_obj_well_defined_and_store_cache(value, &verify_state)
@@ -2408,7 +2408,7 @@ impl ArgMatcher<'_> {
         if !self.merge_arg_match_map_into(&mut merged, eq_map) {
             return Ok(None);
         }
-        let verify_state = ProofSearchState::final_round();
+        let verify_state = VerifyState::final_round();
         for value in merged.values() {
             if self
                 .verify_obj_well_defined_and_store_cache(value, &verify_state)

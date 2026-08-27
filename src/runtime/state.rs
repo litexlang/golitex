@@ -246,19 +246,6 @@ impl Runtime {
         self.current_execution_mode() == ExecutionMode::Trusted
     }
 
-    pub fn current_source_allows_inline_imports(&self) -> bool {
-        self.execution_stack
-            .last()
-            .is_some_and(|frame| frame.allows_inline_imports)
-    }
-
-    pub fn set_current_source_allows_inline_imports(&mut self, allows_inline_imports: bool) {
-        self.execution_stack
-            .last_mut()
-            .expect("an execution frame should exist while configuring source imports")
-            .allows_inline_imports = allows_inline_imports;
-    }
-
     pub fn record_unverified_import(&mut self, kind: &str, name: String, line_file: LineFile) {
         if self
             .module_manager

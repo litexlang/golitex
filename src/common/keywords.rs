@@ -498,26 +498,7 @@ pub fn is_keyword(atom_name: &str) -> bool {
 }
 
 pub fn is_builtin_theorem_name(name: &str) -> bool {
-    matches!(
-        name,
-        "fn_set_member"
-            | "set_builder_member"
-            | "defined_set_member"
-            | "struct_member"
-            | "cart_member_from_coordinates"
-            | "general_cart_member"
-            | "general_cart_nonempty_by_choice_from_family"
-            | "general_cart_nonempty_by_choice_from_pointwise"
-            | "sum_le_sum_from_pointwise"
-            | "finite_set_sum_le_from_pointwise"
-            | "finite_set_summand_le_sum"
-            | "tuple_equal_from_coordinates"
-            | "finite_set_sum_substitution"
-            | "sum_over_bijective_finite_set_enumerations"
-            | "rational_has_unique_reduced_fraction"
-            | "subset_of_finite_set_is_finite"
-            | "finite_set_has_bijective_index"
-    )
+    crate::common::builtin_theorem::BuiltinTheoremId::from_name(name).is_some()
 }
 
 fn is_key_symbol(atom_name: &str) -> bool {

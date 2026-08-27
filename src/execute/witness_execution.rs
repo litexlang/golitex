@@ -149,7 +149,7 @@ impl Runtime {
     ) -> Result<SuccessVerifyArgsSatisfyParamDefResult, RuntimeError> {
         self.run_in_local_env(|rt| {
             let witness_stmt: Stmt = stmt.clone().into();
-            let verify_state = ProofSearchState::initial();
+            let verify_state = VerifyState::initial();
             let atomic_fact: AtomicFact = stmt.atomic_fact.clone().into();
             rt.verify_atomic_fact_well_defined(&atomic_fact, &verify_state)
                 .map_err(|cause| {
@@ -186,7 +186,7 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         self.run_in_local_env(|rt| {
             let witness_stmt: Stmt = stmt.clone().into();
-            let verify_state_for_well_defined = ProofSearchState::initial();
+            let verify_state_for_well_defined = VerifyState::initial();
 
             let expected_param_count = stmt
                 .exist_fact_in_witness
@@ -277,7 +277,7 @@ impl Runtime {
                 let result = rt.verify_obj_satisfies_param_type(
                     witness.clone(),
                     param_type,
-                    &ProofSearchState::initial(),
+                    &VerifyState::initial(),
                 )?;
                 if result.is_unknown() {
                     return Err(short_exec_error(
@@ -362,7 +362,7 @@ impl Runtime {
                 None,
             )?;
 
-            let verify_state_for_proof_check = ProofSearchState::initial();
+            let verify_state_for_proof_check = VerifyState::initial();
             for internal_fact_template in instantiated_exist_fact.facts().iter() {
                 let internal_fact = internal_fact_template.clone().to_fact();
                 let verification_result = rt
@@ -544,7 +544,7 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         self.run_in_local_env(|rt| {
             let witness_stmt: Stmt = stmt.clone().into();
-            let verify_state_for_well_defined = ProofSearchState::initial();
+            let verify_state_for_well_defined = VerifyState::initial();
 
             if let Err(well_defined_error) = rt
                 .verify_obj_well_defined_and_store_cache(&stmt.obj, &verify_state_for_well_defined)
@@ -611,7 +611,7 @@ impl Runtime {
 
             let membership_fact =
                 InFact::new(stmt.obj.clone(), stmt.set.clone(), stmt.line_file.clone()).into();
-            let verify_state_for_proof_check = ProofSearchState::initial();
+            let verify_state_for_proof_check = VerifyState::initial();
             let membership_result = rt
                 .verify_fact_or_error(&membership_fact, &verify_state_for_proof_check)
                 .map_err(|verify_error| {

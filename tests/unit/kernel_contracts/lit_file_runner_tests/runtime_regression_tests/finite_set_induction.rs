@@ -2,6 +2,76 @@ use super::*;
 use crate::test_support::execute_source;
 
 #[test]
+fn finite_set_induction_result_retains_exact_local_certificate_identity_and_roles() {
+    let source_code = r#"
+by induc P:
+    ? P = P
+    ? from P = {}
+    ? induc x, S
+"#;
+    let mut runtime = Runtime::default();
+    runtime.start_isolated_source("finite_set_induction_structured_result");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    assert!(runtime_error.is_none(), "{runtime_error:?}");
+    let [StmtResult::Success(SuccessStmtResult::By(SuccessByStmtResult::ByFiniteSetInducStmt(
+        result,
+    )))] = stmt_results.as_slice()
+    else {
+        panic!("expected one successful finite-set induction result")
+    };
+    let verification = result
+        .verification
+        .as_ref()
+        .expect("finite-set induction retains verification");
+    let SuccessVerifyByInducProofResult::FiniteSet(proof) = &verification.proof else {
+        panic!("expected structured finite-set induction proof")
+    };
+    assert_eq!(proof.base.assumptions.len(), 2);
+    assert_eq!(
+        proof
+            .base
+            .assumptions
+            .iter()
+            .map(|assumption| assumption.role)
+            .collect::<Vec<_>>(),
+        vec![
+            SuccessVerifyByInducAssumptionRole::ParameterType,
+            SuccessVerifyByInducAssumptionRole::BaseCaseEquality,
+        ]
+    );
+    assert_eq!(
+        proof
+            .step
+            .assumptions
+            .iter()
+            .map(|assumption| assumption.role)
+            .collect::<Vec<_>>(),
+        vec![
+            SuccessVerifyByInducAssumptionRole::ParameterType,
+            SuccessVerifyByInducAssumptionRole::ParameterType,
+            SuccessVerifyByInducAssumptionRole::FreshInsertionElement,
+            SuccessVerifyByInducAssumptionRole::InductionHypothesis,
+        ]
+    );
+    assert_eq!(proof.step.assumptions[3].goal_index, Some(0));
+    assert_eq!(proof.base.conclusions.len(), 1);
+    assert_eq!(proof.step.conclusions.len(), 1);
+    for case in [&proof.base, &proof.step] {
+        assert!(
+            !case.assumption_infers.store_fact_outputs.is_empty(),
+            "case must retain local store effects"
+        );
+        assert!(
+            case.assumption_infers
+                .store_fact_outputs
+                .iter()
+                .all(|output| output.fact_id.is_some()),
+            "every retained local store needs an exact FactId"
+        );
+    }
+}
+
+#[test]
 fn finite_set_induction_checks_empty_and_insertion_cases() {
     run_with_large_stack(
         "finite_set_induction_checks_empty_and_insertion_cases",

@@ -223,8 +223,9 @@ fn integer_remainder_uses_exact_integer_representatives_from_the_compiler_enviro
             .expect("compile integer remainder directly from recursive Results");
         assert!(
             generated.contains("Litex.Rules.complexIntInZ")
-                && generated.contains("Litex.In.rep a __h0_1")
-                && generated.contains("Litex.In.rep b __h0_2")
+                && generated.contains("Litex.Rules.complexIntInZ (a % b)")
+                && !generated.contains("Litex.In.rep a")
+                && !generated.contains("Litex.In.rep b")
                 && generated.contains(" % "),
             "{generated}"
         );
@@ -298,7 +299,8 @@ fn rational_power_uses_exact_rational_and_integer_compiler_representatives() {
         assert!(
             generated.contains("Litex.Rules.complexRatInQ")
                 && generated.contains("Litex.In.rep a __h0_1")
-                && generated.contains("Litex.In.rep z __h0_2")
+                && generated.contains(" ^ z")
+                && !generated.contains("Litex.In.rep z")
                 && generated.contains(" ^ "),
             "{generated}"
         );

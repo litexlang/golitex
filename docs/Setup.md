@@ -315,7 +315,7 @@ litex [OPTION...]
 
 Basic behavior:
 
-- **No arguments**: starts an isolated persistent interactive REPL; it does not discover a current-directory project.
+- **No arguments**: starts an isolated persistent interactive REPL; it does not discover a current-directory project. An `import` entered at its prompt updates only that process's in-memory dependency manifest.
 - **With options**: runs code, files, repositories, or helper commands as described below.
 - **Unknown options**: print an error message and exit.
 
@@ -340,6 +340,11 @@ Basic behavior:
 | `-strict` | Verify configured dependencies and reject user trust or axiom statements. |
 | `-summarize` | Append one final run-summary JSON object after ordinary verifier output. |
 | `-lang <code>` | Localize JSON keys and explanatory labels without changing Litex source text. |
+
+`import` is not valid inside a `.lit` file or `-e` source, including a file
+run with `-isolated -f`. Put reproducible dependencies in the direct-parent
+`litex.config`. Only the human-facing interactive REPL recognizes `import` as
+a terminal command; `-session` run frames remain source-only.
 
 Commands that take a value require the next token to be present and not begin
 with `-`. Global options such as `-detail`, `-strict`, `-summarize`,

@@ -21,7 +21,7 @@ impl Runtime {
             })?;
         let source_fact_id = self.known_fact_id_for_fact(&forall_fact.clone().into())?;
 
-        let verify_state = ProofSearchState::initial();
+        let verify_state = VerifyState::initial();
         let arg_type_result = self
             .verify_args_satisfy_param_def_flat_types(
                 &forall_fact.typed_parameters,
@@ -107,11 +107,10 @@ impl Runtime {
                 ));
             }
             Self::merge_stmt_result_infers(&mut infer_result, &dom_result);
-            domain_facts.push(instantiated_dom.to_string());
+            domain_facts.push(instantiated_dom);
             domain_checks.push(dom_result);
         }
 
-        let mut stored_then_facts = Vec::new();
         let mut direct_conclusions = Vec::new();
         for then_fact in forall_fact.then_facts.iter() {
             let instantiated_then = self
@@ -132,7 +131,6 @@ impl Runtime {
                         vec![],
                     )
                 })?;
-            stored_then_facts.push(instantiated_then.to_string());
             direct_conclusions.push(instantiated_then.clone().to_fact());
             infer_result.new_infer_result_inside(
                 self.store_exist_or_and_chain_atomic_fact_with_well_defined_verification_and_infer_with_reason(
@@ -157,10 +155,9 @@ impl Runtime {
         let theorem_verification = SuccessVerifyTheoremApplicationResult::new(
             thm_name,
             source_fact_id,
-            stmt.args.iter().map(|arg| arg.to_string()).collect(),
+            stmt.args.clone(),
             domain_facts,
             direct_conclusions,
-            stored_then_facts,
             Some(argument_verification),
             domain_checks,
         );
@@ -199,7 +196,6 @@ impl Runtime {
             .param_defs_and_args_to_param_to_arg_map(&stmt.args);
 
         let mut infer_result = SuccessInferResult::new();
-        let mut stored_then_facts = Vec::new();
         let mut direct_conclusions = Vec::new();
         for then_fact in forall_fact.then_facts.iter() {
             let instantiated_then = self
@@ -220,7 +216,6 @@ impl Runtime {
                         vec![],
                     )
                 })?;
-            stored_then_facts.push(instantiated_then.to_string());
             direct_conclusions.push(instantiated_then.clone().to_fact());
             infer_result.new_infer_result_inside(
                 self.store_trusted_fact_and_infer_with_reason(
@@ -244,10 +239,9 @@ impl Runtime {
         let theorem_verification = SuccessVerifyTheoremApplicationResult::new(
             thm_name,
             source_fact_id,
-            stmt.args.iter().map(|arg| arg.to_string()).collect(),
+            stmt.args.clone(),
             vec![],
             direct_conclusions,
-            stored_then_facts,
             None,
             Vec::new(),
         );
@@ -277,7 +271,7 @@ impl Runtime {
         stmt: &ByThmStmt,
     ) -> Result<StmtResult, RuntimeError> {
         let selected_fact = stmt.selected_fact.clone();
-        let verify_state = ProofSearchState::initial();
+        let verify_state = VerifyState::initial();
         self.verify_atomic_fact_well_defined(&selected_fact, &verify_state)
             .map_err(|error| {
                 short_exec_error(
@@ -293,8 +287,8 @@ impl Runtime {
 
         let expanded_stmt =
             ReleaseThmStmt::new(stmt.name.clone(), stmt.args.clone(), stmt.line_file.clone());
-        let (expanded_success, target_result) = self.run_in_local_env(|rt| {
-            let expanded_result = rt.exec_release_thm_stmt(&expanded_stmt).map_err(|error| {
+        let (expanded_result, target_result) = self.run_in_local_env(|rt| {
+            let mut expanded_result = rt.exec_release_thm_stmt(&expanded_stmt).map_err(|error| {
                 short_exec_error(
                     stmt.clone().into(),
                     format!(
@@ -305,7 +299,8 @@ impl Runtime {
                     vec![],
                 )
             })?;
-            let target_result = rt
+            rt.attach_known_fact_ids_to_stmt_result(&mut expanded_result)?;
+            let mut target_result = rt
                 .verify_atomic_fact(
                     &selected_fact,
                     &verify_state.with_well_definedness_verified(),
@@ -332,11 +327,22 @@ impl Runtime {
                     vec![target_result],
                 ));
             }
-            let expanded_success = expanded_result
-                .into_non_factual_success()
-                .expect("by thm application must return a non-factual success");
-            Ok((expanded_success, target_result))
+            rt.attach_known_fact_ids_to_stmt_result(&mut target_result)?;
+            Ok((expanded_result, target_result))
         })?;
+
+        if !matches!(
+            &expanded_result,
+            StmtResult::Success(SuccessStmtResult::ReleaseThmStmt(result))
+                if result.verification.is_some()
+        ) {
+            return Err(short_exec_error(
+                stmt.clone().into(),
+                "by thm: theorem application did not retain verified release evidence".to_string(),
+                None,
+                vec![expanded_result],
+            ));
+        }
 
         let infer_result = self
             .run_in_local_env_and_commit(|rt| {
@@ -357,23 +363,15 @@ impl Runtime {
                 )
             })?;
 
-        let SuccessStmtResult::ReleaseThmStmt(result) = expanded_success else {
-            unreachable!("by thm application must contain theorem verification metadata")
-        };
-        let SuccessReleaseThmStmtResult {
-            verification: Some(mut verification),
-            ..
-        } = *result
-        else {
-            unreachable!("by thm application must contain theorem verification metadata")
-        };
-        verification.select_atomic_fact(selected_fact.to_string());
-        verification.retain_selected_fact_check(target_result);
         Ok(
             SuccessByStmtResult::ByThmStmt(Box::new(SuccessByThmStmtResult {
                 statement: stmt.clone(),
                 common: SuccessStmtCommonResult::new(infer_result),
-                verification: Some(verification),
+                verification: Some(SuccessVerifyByTheoremSelectionResult::new(
+                    expanded_result,
+                    selected_fact,
+                    target_result,
+                )),
             }))
             .into(),
         )
@@ -386,7 +384,7 @@ impl Runtime {
         let selected_fact = stmt.selected_fact.clone();
         let expanded_stmt =
             ReleaseThmStmt::new(stmt.name.clone(), stmt.args.clone(), stmt.line_file.clone());
-        let expanded_success = self.run_in_local_env(|rt| {
+        self.run_in_local_env(|rt| {
             rt.exec_release_thm_stmt_affect_environment_only(&expanded_stmt)
                 .map_err(|error| {
                     short_exec_error(
@@ -398,16 +396,8 @@ impl Runtime {
                         Some(error),
                         vec![],
                     )
-                })?
-                .into_non_factual_success()
-                .ok_or_else(|| {
-                    short_exec_error(
-                        stmt.clone().into(),
-                        "by thm: theorem application returned an invalid result".to_string(),
-                        None,
-                        vec![],
-                    )
-                })
+                })?;
+            Ok::<_, RuntimeError>(())
         })?;
 
         let infer_result = self
@@ -429,22 +419,11 @@ impl Runtime {
                 )
             })?;
 
-        let SuccessStmtResult::ReleaseThmStmt(result) = expanded_success else {
-            unreachable!("by thm application must contain theorem verification metadata")
-        };
-        let SuccessReleaseThmStmtResult {
-            verification: Some(mut verification),
-            ..
-        } = *result
-        else {
-            unreachable!("by thm application must contain theorem verification metadata")
-        };
-        verification.select_atomic_fact(selected_fact.to_string());
         Ok(
             SuccessByStmtResult::ByThmStmt(Box::new(SuccessByThmStmtResult {
                 statement: stmt.clone(),
                 common: SuccessStmtCommonResult::new(infer_result),
-                verification: Some(verification),
+                verification: None,
             }))
             .into(),
         )
@@ -487,6 +466,8 @@ impl Runtime {
             }
             _ => return Ok(None),
         };
+        let theorem_id = BuiltinTheoremId::from_name(name)
+            .expect("reserved builtin theorem name has a typed identity");
 
         macro_rules! require_arity {
             ($expected:expr) => {
@@ -505,7 +486,121 @@ impl Runtime {
             };
         }
 
-        let verify_state = ProofSearchState::initial();
+        let verify_state = VerifyState::initial();
+        if name == "real_cauchy_sequence_converges" {
+            require_arity!(1);
+            validate_real_sequence_completeness_definition_contract(self, stmt)?;
+
+            // These predicates were selected from the active local definition
+            // registry by the exact contract check above. Keep the facts bare:
+            // isolated sources legitimately have an empty module name, for
+            // which manufacturing `$::predicate` is neither resolvable nor
+            // equivalent to the local declaration.
+            let predicate_name = |local_name: &str| AtomicName::WithoutMod(local_name.to_string());
+            let real_sequence: AtomicFact = InFact::new(
+                stmt.args[0].clone(),
+                SeqSet::new(StandardSet::R.into()).into(),
+                stmt.line_file.clone(),
+            )
+            .into();
+            let cauchy: AtomicFact = NormalAtomicFact::new(
+                predicate_name("is_cauchy_sequence"),
+                vec![stmt.args[0].clone()],
+                stmt.line_file.clone(),
+            )
+            .into();
+            let conclusion: AtomicFact = NormalAtomicFact::new(
+                predicate_name("is_convergent_sequence"),
+                vec![stmt.args[0].clone()],
+                stmt.line_file.clone(),
+            )
+            .into();
+
+            let mut requirement_facts = Vec::new();
+            let mut requirement_roles = Vec::new();
+            let mut inside_results = Vec::new();
+            let conclusion_well_definedness =
+                if verify_requirements {
+                    for (requirement, role) in [
+                        (
+                            real_sequence,
+                            BuiltinTheoremRequirementRole::ArgumentIsRealSequence,
+                        ),
+                        (
+                            cauchy,
+                            BuiltinTheoremRequirementRole::SequenceSatisfiesCauchyDefinition,
+                        ),
+                    ] {
+                        self.verify_atomic_fact_well_defined(&requirement, &verify_state)?;
+                        let result = self.verify_atomic_fact(&requirement, &verify_state)?;
+                        if !result.is_success() {
+                            return Err(builtin_thm_exec_error(
+                                stmt,
+                                format!(
+                                "builtin theorem `real_cauchy_sequence_converges` requires that {}",
+                                role.as_str()
+                            ),
+                                vec![result],
+                            ));
+                        }
+                        requirement_facts.push(requirement.into());
+                        requirement_roles.push(role);
+                        inside_results.push(result);
+                    }
+                    Some(self.verify_fact_well_defined_result(
+                        &conclusion.clone().into(),
+                        &verify_state,
+                    )?)
+                } else {
+                    None
+                };
+
+            let store_reason = InferReason::Other(format!("builtin theorem `{}`", name));
+            let infer_result = if verify_requirements {
+                self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason(
+                    conclusion.clone(),
+                    store_reason.store_reason(),
+                )?
+            } else {
+                self.store_trusted_fact_and_infer_with_reason(
+                    conclusion.clone().into(),
+                    store_reason,
+                )?
+            };
+            let direct_conclusions = vec![conclusion.into()];
+            let verification = match conclusion_well_definedness {
+                Some(conclusion_well_definedness) => {
+                    SuccessVerifyTheoremApplicationResult::new_builtin_with_conclusion_well_definedness(
+                        theorem_id,
+                        stmt.args.clone(),
+                        requirement_facts,
+                        requirement_roles,
+                        direct_conclusions,
+                        inside_results,
+                        conclusion_well_definedness,
+                        None,
+                    )
+                }
+                None => SuccessVerifyTheoremApplicationResult::new_builtin(
+                    theorem_id,
+                    stmt.args.clone(),
+                    requirement_facts,
+                    requirement_roles,
+                    direct_conclusions,
+                    inside_results,
+                    None,
+                ),
+            };
+            return Ok(Some(
+                SuccessStmtResult::ReleaseThmStmt(Box::new(SuccessReleaseThmStmtResult {
+                    statement: stmt.clone(),
+                    common: SuccessStmtCommonResult::new(infer_result),
+                    verification: Some(verification),
+                }))
+                .into(),
+            ));
+        }
+
         if name == "subset_of_finite_set_is_finite" {
             require_arity!(2);
 
@@ -527,9 +622,18 @@ impl Runtime {
             let mut requirement_roles = Vec::new();
             if verify_requirements {
                 for (requirement, role) in [
-                    (first_is_set, "the first argument is a set"),
-                    (second_is_finite, "the second argument is a finite set"),
-                    (subset, "the first argument is a subset of the second"),
+                    (
+                        first_is_set,
+                        BuiltinTheoremRequirementRole::FirstArgumentIsSet,
+                    ),
+                    (
+                        second_is_finite,
+                        BuiltinTheoremRequirementRole::SecondArgumentIsFiniteSet,
+                    ),
+                    (
+                        subset,
+                        BuiltinTheoremRequirementRole::FirstArgumentSubsetOfSecond,
+                    ),
                 ] {
                     self.verify_atomic_fact_well_defined(&requirement, &verify_state)?;
                     let result = self.verify_atomic_fact(&requirement, &verify_state)?;
@@ -538,13 +642,13 @@ impl Runtime {
                             stmt,
                             format!(
                                 "builtin theorem `subset_of_finite_set_is_finite` requires that {}",
-                                role
+                                role.as_str()
                             ),
                             vec![result],
                         ));
                     }
-                    requirement_facts.push(requirement.to_string());
-                    requirement_roles.push(role.to_string());
+                    requirement_facts.push(requirement.into());
+                    requirement_roles.push(role);
                     inside_results.push(result);
                 }
                 self.verify_atomic_fact_well_defined(&conclusion, &verify_state)?;
@@ -563,12 +667,11 @@ impl Runtime {
                 )?
             };
             let verification = SuccessVerifyTheoremApplicationResult::new_builtin(
-                name.to_string(),
-                stmt.args.iter().map(ToString::to_string).collect(),
+                theorem_id,
+                stmt.args.clone(),
                 requirement_facts,
                 requirement_roles,
                 vec![conclusion.clone().into()],
-                vec![conclusion.to_string()],
                 inside_results,
                 None,
             );
@@ -623,8 +726,8 @@ impl Runtime {
                         vec![result],
                     ));
                 }
-                requirement_facts.push(finite_requirement.to_string());
-                requirement_roles.push("the argument is a finite set".to_string());
+                requirement_facts.push(finite_requirement.into());
+                requirement_roles.push(BuiltinTheoremRequirementRole::ArgumentIsFiniteSet);
                 inside_results.push(result);
                 self.verify_exist_or_and_chain_atomic_fact_well_defined(
                     &conclusion,
@@ -645,12 +748,11 @@ impl Runtime {
                 )?
             };
             let verification = SuccessVerifyTheoremApplicationResult::new_builtin(
-                name.to_string(),
-                stmt.args.iter().map(ToString::to_string).collect(),
+                theorem_id,
+                stmt.args.clone(),
                 requirement_facts,
                 requirement_roles,
                 vec![conclusion.clone().to_fact()],
-                vec![conclusion.to_string()],
                 inside_results,
                 None,
             );
@@ -721,8 +823,8 @@ impl Runtime {
                         vec![result],
                     ));
                 }
-                requirement_facts.push(rational_requirement.to_string());
-                requirement_roles.push("the argument belongs to Q".to_string());
+                requirement_facts.push(rational_requirement.into());
+                requirement_roles.push(BuiltinTheoremRequirementRole::ArgumentBelongsToRationals);
                 inside_results.push(result);
                 self.verify_exist_or_and_chain_atomic_fact_well_defined(
                     &conclusion,
@@ -743,12 +845,11 @@ impl Runtime {
                 )?
             };
             let verification = SuccessVerifyTheoremApplicationResult::new_builtin(
-                name.to_string(),
-                stmt.args.iter().map(ToString::to_string).collect(),
+                theorem_id,
+                stmt.args.clone(),
                 requirement_facts,
                 requirement_roles,
                 vec![conclusion.clone().to_fact()],
-                vec![conclusion.to_string()],
                 inside_results,
                 None,
             );
@@ -764,9 +865,9 @@ impl Runtime {
 
         let (conclusion, requirement_role, verification, provenance): (
             AtomicFact,
-            String,
+            BuiltinTheoremRequirementRole,
             Option<StmtResult>,
-            Option<String>,
+            Option<BuiltinTheoremProvenance>,
         ) = match name {
             "fn_set_member" => {
                 require_arity!(2);
@@ -890,7 +991,7 @@ impl Runtime {
                 };
                 (
                     conclusion,
-                    "function signature matches the target function set".to_string(),
+                    BuiltinTheoremRequirementRole::FunctionSignatureMatchesTarget,
                     verification,
                     None,
                 )
@@ -925,7 +1026,7 @@ impl Runtime {
                 };
                 (
                     conclusion,
-                    "element satisfies the set-builder base and defining facts".to_string(),
+                    BuiltinTheoremRequirementRole::SetBuilderDefiningFacts,
                     verification,
                     None,
                 )
@@ -955,8 +1056,7 @@ impl Runtime {
                 };
                 (
                     conclusion,
-                    "one set-valued definition unfolds and its membership obligations hold"
-                        .to_string(),
+                    BuiltinTheoremRequirementRole::DefinedSetMembership,
                     verification,
                     None,
                 )
@@ -987,7 +1087,7 @@ impl Runtime {
                 };
                 (
                     conclusion,
-                    "element satisfies the struct carrier and equivalent facts".to_string(),
+                    BuiltinTheoremRequirementRole::StructCarrierFacts,
                     verification,
                     None,
                 )
@@ -1022,7 +1122,7 @@ impl Runtime {
                 };
                 (
                     conclusion,
-                    "tuple/cart dimensions and coordinate memberships hold".to_string(),
+                    BuiltinTheoremRequirementRole::CartesianCoordinates,
                     verification,
                     None,
                 )
@@ -1057,7 +1157,7 @@ impl Runtime {
                 };
                 (
                     conclusion,
-                    "function carrier and pointwise general-cart membership hold".to_string(),
+                    BuiltinTheoremRequirementRole::GeneralCartesianPointwiseMembership,
                     verification,
                     None,
                 )
@@ -1091,13 +1191,12 @@ impl Runtime {
                 (
                     conclusion,
                     if pointwise {
-                        "every indexed factor is nonempty"
+                        BuiltinTheoremRequirementRole::GeneralCartesianPointwiseNonempty
                     } else {
-                        "every member of the family set is nonempty"
-                    }
-                    .to_string(),
+                        BuiltinTheoremRequirementRole::GeneralCartesianFamilyNonempty
+                    },
                     verification,
-                    Some("axiom_of_choice".to_string()),
+                    Some(BuiltinTheoremProvenance::AxiomOfChoice),
                 )
             }
             "sum_le_sum_from_pointwise" => {
@@ -1133,7 +1232,7 @@ impl Runtime {
                 };
                 (
                     conclusion,
-                    "summation bounds agree and summands are pointwise ordered".to_string(),
+                    BuiltinTheoremRequirementRole::IntegerSumPointwiseOrder,
                     verification,
                     None,
                 )
@@ -1174,7 +1273,7 @@ impl Runtime {
                 };
                 (
                     conclusion,
-                    "finite index sets agree and summands are pointwise ordered".to_string(),
+                    BuiltinTheoremRequirementRole::FiniteSetSumPointwiseOrder,
                     verification,
                     None,
                 )
@@ -1212,7 +1311,7 @@ impl Runtime {
                 };
                 (
                     conclusion,
-                    "term belongs to the index set and every summand is nonnegative".to_string(),
+                    BuiltinTheoremRequirementRole::FiniteSetSummandNonnegative,
                     verification,
                     None,
                 )
@@ -1253,7 +1352,7 @@ impl Runtime {
                 };
                 (
                     conclusion,
-                    "tuple dimensions and all corresponding coordinates agree".to_string(),
+                    BuiltinTheoremRequirementRole::TupleCoordinatesEqual,
                     verification,
                     None,
                 )
@@ -1305,8 +1404,7 @@ impl Runtime {
                 };
                 (
                     conclusion,
-                    "summands agree pointwise on one index set, or by pullback along a bijection"
-                        .to_string(),
+                    BuiltinTheoremRequirementRole::FiniteSetSumSubstitution,
                     verification,
                     None,
                 )
@@ -1345,7 +1443,7 @@ impl Runtime {
                 };
                 (
                     conclusion,
-                    "both summations enumerate the same finite set bijectively".to_string(),
+                    BuiltinTheoremRequirementRole::BijectiveFiniteSetEnumerations,
                     verification,
                     None,
                 )
@@ -1356,21 +1454,36 @@ impl Runtime {
         let mut inside_results = Vec::new();
         let mut requirement_facts = Vec::new();
         let mut requirement_roles = Vec::new();
-        if let Some(result) = verification {
+        if let Some(mut result) = verification {
             if !result.is_success() {
                 return Err(builtin_thm_exec_error(
                     stmt,
                     format!(
                         "builtin theorem `{}` requirement is not verified: {}",
-                        name, requirement_role
+                        name,
+                        requirement_role.as_str()
                     ),
                     vec![result],
                 ));
             }
+            let conclusion_well_definedness =
+                self.verify_fact_well_defined_result(&conclusion.clone().into(), &verify_state)?;
+            let StmtResult::Success(SuccessStmtResult::Fact(requirement_result)) = &mut result
+            else {
+                return Err(builtin_thm_exec_error(
+                    stmt,
+                    format!(
+                        "builtin theorem `{}` retained a non-factual requirement Result",
+                        name
+                    ),
+                    vec![result],
+                ));
+            };
+            requirement_result.well_definedness = conclusion_well_definedness;
             let verified_requirement = result
                 .factual_success()
-                .map(|success| success.fact().to_string())
-                .unwrap_or_else(|| conclusion.to_string());
+                .map(|success| success.fact())
+                .unwrap_or_else(|| conclusion.clone().into());
             requirement_facts.push(verified_requirement);
             requirement_roles.push(requirement_role.clone());
             inside_results.push(result);
@@ -1385,14 +1498,12 @@ impl Runtime {
         } else {
             self.store_trusted_fact_and_infer_with_reason(conclusion.clone().into(), store_reason)?
         };
-        let stored_then_facts = vec![conclusion.to_string()];
         let verification = SuccessVerifyTheoremApplicationResult::new_builtin(
-            name.to_string(),
-            stmt.args.iter().map(ToString::to_string).collect(),
+            theorem_id,
+            stmt.args.clone(),
             requirement_facts,
             requirement_roles,
             vec![conclusion.clone().into()],
-            stored_then_facts,
             inside_results,
             provenance,
         );
@@ -1424,4 +1535,60 @@ fn builtin_thm_shape_error(stmt: &ReleaseThmStmt, name: &str, expected: &str) ->
         ),
         vec![],
     )
+}
+
+/// The completeness certificate is deliberately tied to one transparent,
+/// epsilon-based source interface. This fail-closed check prevents a source
+/// file from redefining “Cauchy” or “convergent” to obtain an unrelated fact.
+fn validate_real_sequence_completeness_definition_contract(
+    runtime: &Runtime,
+    stmt: &ReleaseThmStmt,
+) -> Result<(), RuntimeError> {
+    let contracts = [
+        (
+            "is_sequence_tail_close_to_limit",
+            format!(
+                "prop is_sequence_tail_close_to_limit(a seq(R), L R, epsilon R+, n0 N+):\n    forall n N+:\n        n >= n0\n        =>:\n            abs (a(n) - L) < epsilon"
+            ),
+        ),
+        (
+            "converges_to",
+            "prop converges_to(a seq(R), L R):\n    forall epsilon R+:\n        exist n0 N+ st {$is_sequence_tail_close_to_limit(a, L, epsilon, n0)}".to_string(),
+        ),
+        (
+            "is_convergent_sequence",
+            "prop is_convergent_sequence(a seq(R)):\n    exist L R st {$converges_to(a, L)}".to_string(),
+        ),
+        (
+            "is_cauchy_tail",
+            format!(
+                "prop is_cauchy_tail(a seq(R), epsilon R+, n0 N+):\n    forall m, n N+:\n        m >= n0\n        n >= n0\n        =>:\n            abs (a(m) - a(n)) < epsilon"
+            ),
+        ),
+        (
+            "is_cauchy_sequence",
+            "prop is_cauchy_sequence(a seq(R)):\n    forall epsilon R+:\n        exist n0 N+ st {$is_cauchy_tail(a, epsilon, n0)}".to_string(),
+        ),
+    ];
+    for (name, expected) in contracts {
+        let Some(definition) = runtime.get_active_prop_definition_by_name(name) else {
+            return Err(builtin_thm_exec_error(
+                stmt,
+                format!(
+                    "builtin theorem `real_cauchy_sequence_converges` requires the concrete `{name}` definition"
+                ),
+                vec![],
+            ));
+        };
+        if without_bound_symbol_display_ids(&definition.to_string()) != expected {
+            return Err(builtin_thm_exec_error(
+                stmt,
+                format!(
+                    "builtin theorem `real_cauchy_sequence_converges` rejected `{name}` because it does not match the checked epsilon-definition contract"
+                ),
+                vec![],
+            ));
+        }
+    }
+    Ok(())
 }

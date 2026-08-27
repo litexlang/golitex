@@ -173,7 +173,7 @@ impl Runtime {
         have_fn_equal_stmt: &HaveFnEqualStmt,
         fn_set_stored: &FnSet,
     ) -> Result<(), RuntimeError> {
-        let verify_state = ProofSearchState::initial();
+        let verify_state = VerifyState::initial();
 
         self.verify_obj_well_defined_and_store_cache(
             &have_fn_equal_stmt.equal_to_anonymous_fn.clone().into(),
@@ -264,7 +264,7 @@ impl Runtime {
                 (*have_fn_equal_stmt.equal_to_anonymous_fn.equal_to).clone(),
                 (*have_fn_equal_stmt.equal_to_anonymous_fn.body.ret_set).clone(),
                 have_fn_equal_stmt.line_file.clone(),
-                &ProofSearchState::initial(),
+                &VerifyState::initial(),
             )?;
             rt.attach_known_fact_ids_to_infer_result(&mut assumption_infers)?;
             rt.attach_known_fact_ids_to_stmt_result(&mut return_check)?;

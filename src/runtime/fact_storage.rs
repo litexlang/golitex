@@ -22,7 +22,7 @@ impl Runtime {
     pub fn store_with_well_defined_verification_and_infer(
         &mut self,
         fact: Fact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
     ) -> Result<SuccessInferResult, RuntimeError> {
         self.store_with_well_defined_verification_and_infer_with_reason(
             fact,
@@ -36,7 +36,7 @@ impl Runtime {
     pub fn store_with_well_defined_verification_and_infer_with_reason(
         &mut self,
         fact: Fact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
         reason: InferReason,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let reason_text = reason.store_reason();
@@ -53,7 +53,7 @@ impl Runtime {
     fn store_with_well_defined_verification_and_infer_with_reason_text(
         &mut self,
         fact: Fact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
         reason_text: String,
     ) -> Result<SuccessInferResult, RuntimeError> {
         if self.non_forall_fact_is_cached(&fact) {
@@ -98,9 +98,9 @@ impl Runtime {
         reason: InferReason,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let verify_state = match &fact {
-            Fact::ForallFact(_) => ProofSearchState::initial(),
-            Fact::ForallFactWithIff(_) => ProofSearchState::initial(),
-            _ => ProofSearchState::final_round(),
+            Fact::ForallFact(_) => VerifyState::initial(),
+            Fact::ForallFactWithIff(_) => VerifyState::initial(),
+            _ => VerifyState::final_round(),
         };
         self.store_with_well_defined_verification_and_infer_with_reason(fact, &verify_state, reason)
     }
@@ -803,8 +803,8 @@ impl Runtime {
         reason: InferReason,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let verify_state = match &fact {
-            Fact::ForallFact(_) | Fact::ForallFactWithIff(_) => ProofSearchState::initial(),
-            _ => ProofSearchState::final_round(),
+            Fact::ForallFact(_) | Fact::ForallFactWithIff(_) => VerifyState::initial(),
+            _ => VerifyState::final_round(),
         };
         self.verify_well_defined_and_store_without_infer_with_state(fact, &verify_state, reason)
     }
@@ -815,7 +815,7 @@ impl Runtime {
     pub fn verify_well_defined_and_store_without_infer_with_state(
         &mut self,
         fact: Fact,
-        verify_state: &ProofSearchState,
+        verify_state: &VerifyState,
         reason: InferReason,
     ) -> Result<SuccessInferResult, RuntimeError> {
         if !self.current_execution_is_trusted_file() {

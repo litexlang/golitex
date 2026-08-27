@@ -749,18 +749,20 @@ impl SuccessVerifyByPropRegistrationResult {
 
 impl SuccessVerifyByChoiceResult {
     pub fn new(
-        proof_type: String,
-        target: String,
+        proof_kind: SuccessVerifyByChoiceProofKind,
+        target: SuccessVerifyByChoiceTargetResult,
         proof_steps: Vec<StmtResult>,
         obligations: Vec<SuccessVerifyByChoiceObligationResult>,
-        trusted_conclusion: String,
+        trusted_conclusion: Fact,
+        trusted_conclusion_fact_id: FactId,
     ) -> Self {
         SuccessVerifyByChoiceResult {
-            proof_type,
+            proof_kind,
             target,
             proof_steps,
             obligations,
             trusted_conclusion,
+            trusted_conclusion_fact_id,
         }
     }
 }
@@ -769,77 +771,92 @@ impl SuccessVerifyTheoremApplicationResult {
     pub fn new(
         theorem: String,
         source_fact_id: Option<FactId>,
-        arguments: Vec<String>,
-        domain_facts: Vec<String>,
+        arguments: Vec<Obj>,
+        domain_facts: Vec<Fact>,
         direct_conclusions: Vec<Fact>,
-        stored_then_facts: Vec<String>,
         argument_verification: Option<SuccessVerifyArgsSatisfyParamDefResult>,
         domain_checks: Vec<StmtResult>,
     ) -> Self {
-        let parent_stored_facts = stored_then_facts.clone();
         SuccessVerifyTheoremApplicationResult {
             theorem,
-            theorem_source: "litex".to_string(),
-            source_fact_id,
-            mode: "release_all".to_string(),
             arguments,
-            domain_facts,
-            requirement_roles: vec![],
             direct_conclusions,
-            stored_then_facts,
-            temporary_then_facts: vec![],
-            selected_fact: None,
-            parent_stored_facts,
-            provenance: None,
-            argument_verification: argument_verification.map(Box::new),
-            requirement_checks: Vec::new(),
-            domain_checks,
-            selected_fact_check: None,
+            source: SuccessVerifyTheoremApplicationSourceResult::Litex(
+                SuccessVerifyLitexTheoremApplicationResult {
+                    source_fact_id,
+                    argument_verification: argument_verification.map(Box::new),
+                    domain_facts,
+                    domain_checks,
+                },
+            ),
         }
     }
 
     pub fn new_builtin(
-        theorem: String,
-        arguments: Vec<String>,
-        requirement_facts: Vec<String>,
-        requirement_roles: Vec<String>,
+        theorem_id: BuiltinTheoremId,
+        arguments: Vec<Obj>,
+        requirement_facts: Vec<Fact>,
+        requirement_roles: Vec<BuiltinTheoremRequirementRole>,
         direct_conclusions: Vec<Fact>,
-        stored_then_facts: Vec<String>,
         requirement_checks: Vec<StmtResult>,
-        provenance: Option<String>,
+        provenance: Option<BuiltinTheoremProvenance>,
     ) -> Self {
-        let parent_stored_facts = stored_then_facts.clone();
         SuccessVerifyTheoremApplicationResult {
-            theorem,
-            theorem_source: "builtin_rule".to_string(),
-            source_fact_id: None,
-            mode: "release_all".to_string(),
+            theorem: theorem_id.as_str().to_string(),
             arguments,
-            domain_facts: requirement_facts,
-            requirement_roles,
             direct_conclusions,
-            stored_then_facts,
-            temporary_then_facts: vec![],
-            selected_fact: None,
-            parent_stored_facts,
-            provenance,
-            argument_verification: None,
-            requirement_checks,
-            domain_checks: Vec::new(),
-            selected_fact_check: None,
+            source: SuccessVerifyTheoremApplicationSourceResult::Builtin(
+                SuccessVerifyBuiltinTheoremApplicationResult {
+                    theorem_id,
+                    requirement_facts,
+                    requirement_roles,
+                    requirement_checks,
+                    conclusion_well_definedness: None,
+                    provenance,
+                },
+            ),
         }
     }
 
-    pub fn select_atomic_fact(&mut self, selected_fact: String) {
-        self.mode = "select_atomic_fact".to_string();
-        self.temporary_then_facts = self.stored_then_facts.clone();
-        self.stored_then_facts.clear();
-        self.parent_stored_facts = vec![selected_fact.clone()];
-        self.selected_fact = Some(selected_fact);
+    pub fn new_builtin_with_conclusion_well_definedness(
+        theorem_id: BuiltinTheoremId,
+        arguments: Vec<Obj>,
+        requirement_facts: Vec<Fact>,
+        requirement_roles: Vec<BuiltinTheoremRequirementRole>,
+        direct_conclusions: Vec<Fact>,
+        requirement_checks: Vec<StmtResult>,
+        conclusion_well_definedness: SuccessVerifyFactWellDefinedResult,
+        provenance: Option<BuiltinTheoremProvenance>,
+    ) -> Self {
+        let mut result = Self::new_builtin(
+            theorem_id,
+            arguments,
+            requirement_facts,
+            requirement_roles,
+            direct_conclusions,
+            requirement_checks,
+            provenance,
+        );
+        let SuccessVerifyTheoremApplicationSourceResult::Builtin(source) = &mut result.source
+        else {
+            unreachable!("new_builtin constructs builtin theorem evidence")
+        };
+        source.conclusion_well_definedness = Some(conclusion_well_definedness);
+        result
     }
+}
 
-    pub fn retain_selected_fact_check(&mut self, result: StmtResult) {
-        self.selected_fact_check = Some(Box::new(result));
+impl SuccessVerifyByTheoremSelectionResult {
+    pub fn new(
+        temporary_application: StmtResult,
+        selected_fact: AtomicFact,
+        selected_fact_check: StmtResult,
+    ) -> Self {
+        Self {
+            temporary_application: Box::new(temporary_application),
+            selected_fact,
+            selected_fact_check: Box::new(selected_fact_check),
+        }
     }
 }
 

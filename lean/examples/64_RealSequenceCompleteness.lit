@@ -1,0 +1,34 @@
+# Before this compiler/verifier slice, concrete predicate bodies lost their
+# Result-owned WD evidence at `a(n)`, and real completeness had no typed,
+# proof-producing theorem interface. This file is the stable positive tracer.
+
+prop is_sequence_tail_close_to_limit(a seq(R), L R, epsilon R+, n0 N+):
+    forall n N+:
+        n >= n0
+        =>:
+            abs(a(n) - L) < epsilon
+
+prop converges_to(a seq(R), L R):
+    forall epsilon R+:
+        exist n0 N+ st {$is_sequence_tail_close_to_limit(a, L, epsilon, n0)}
+
+prop is_convergent_sequence(a seq(R)):
+    exist L R st {$converges_to(a, L)}
+
+prop is_cauchy_tail(a seq(R), epsilon R+, n0 N+):
+    forall m, n N+:
+        m >= n0
+        n >= n0
+        =>:
+            abs(a(m) - a(n)) < epsilon
+
+prop is_cauchy_sequence(a seq(R)):
+    forall epsilon R+:
+        exist n0 N+ st {$is_cauchy_tail(a, epsilon, n0)}
+
+thm cauchy_sequence_converges:
+    ? forall a seq(R):
+        $is_cauchy_sequence(a)
+        =>:
+            $is_convergent_sequence(a)
+    by thm real_cauchy_sequence_converges(a) => $is_convergent_sequence(a)

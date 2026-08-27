@@ -37,7 +37,6 @@ fn capture_stmt_results_json_v2_on_verifier_stack(
         .spawn(move || {
             let mut runtime = Runtime::default();
             runtime.start_isolated_source(label);
-            runtime.set_current_source_allows_inline_imports(true);
             let tokenizer = Tokenizer::new();
             let blocks = tokenizer
                 .parse_blocks(source, runtime.current_file_path_rc())
@@ -48,7 +47,7 @@ fn capture_stmt_results_json_v2_on_verifier_stack(
                     .parse_statement(&mut block)
                     .map_err(|error| format!("{error:?}"))?;
                 let result = runtime
-                    .execute_top_level_statement(&statement)
+                    .execute_statement(&statement)
                     .map_err(|error| format!("{error:?}"))?;
                 results.push(result);
             }
@@ -85,9 +84,10 @@ fn named_real_less_to_less_equal_emits_only_its_source_declaration() {
 
 #[test]
 fn litex_to_mathlib_pipeline_showcase_generated_lean_has_not_drifted() {
-    const SOURCE: &str = include_str!("../../showcases/litex_to_lean_mathlib_pipeline/main.lit");
+    const SOURCE: &str =
+        include_str!("../../showcases/litex_to_lean_mathlib_pipeline/showcase1/main.lit");
     const CHECKED_IN: &str = include_str!(
-        "../../showcases/litex_to_lean_mathlib_pipeline/LitexToMathlibPipelineGenerated.lean"
+        "../../showcases/litex_to_lean_mathlib_pipeline/showcase1/LitexToMathlibPipelineGenerated.lean"
     );
 
     let generated =
@@ -117,8 +117,9 @@ fn litex_to_mathlib_pipeline_showcase_generated_lean_has_not_drifted() {
 
 #[test]
 fn litex_to_mathlib_pipeline_property_companion_verifies_without_trust() {
-    const SOURCE: &str =
-        include_str!("../../showcases/litex_to_lean_mathlib_pipeline/property_flow.lit");
+    const SOURCE: &str = include_str!(
+        "../../showcases/litex_to_lean_mathlib_pipeline/showcase1/property_flow.lit"
+    );
 
     let results = capture_stmt_results_json_v2_on_verifier_stack(SOURCE, "property_flow.lit")
         .expect("verify the property-centered companion source");
@@ -133,6 +134,29 @@ fn litex_to_mathlib_pipeline_property_companion_verifies_without_trust() {
     assert!(results.contains("sum_first_odds_nonnegative"), "{results}");
     assert!(!SOURCE.contains("trust"));
     assert!(!SOURCE.contains("abstract_prop"));
+}
+
+#[test]
+fn real_sequence_completeness_showcase_generated_lean_has_not_drifted() {
+    const SOURCE: &str =
+        include_str!("../../showcases/litex_to_lean_mathlib_pipeline/showcase2/main.lit");
+    const CHECKED_IN: &str = include_str!(
+        "../../showcases/litex_to_lean_mathlib_pipeline/showcase2/LitexGenerate.lean"
+    );
+
+    let generated = compile_on_verifier_stack(SOURCE, "main.lit")
+        .expect("compile the real-sequence completeness showcase");
+
+    assert_eq!(generated, CHECKED_IN);
+    assert!(generated.contains("def is_convergent_sequence"));
+    assert!(generated.contains("def is_cauchy_sequence"));
+    assert!(generated.contains("theorem cauchy_sequence_converges"));
+    assert!(generated.contains("Litex.Rules.realCauchySequenceConverges"));
+    assert!(!SOURCE.contains("axiom"));
+    assert!(!SOURCE.contains("trust"));
+    assert!(!generated.contains("axiom "));
+    assert!(!generated.contains("sorry"));
+    assert!(!generated.contains("admit"));
 }
 
 #[test]

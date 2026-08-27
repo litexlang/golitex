@@ -5,7 +5,7 @@ impl Runtime {
         &mut self,
         stmt: &ByExtensionStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&stmt.left, &ProofSearchState::initial())
+        self.verify_obj_well_defined_and_store_cache(&stmt.left, &VerifyState::initial())
             .map_err(|well_defined_error| {
                 short_exec_error(
                     stmt.clone().into(),
@@ -14,7 +14,7 @@ impl Runtime {
                     vec![],
                 )
             })?;
-        self.verify_obj_well_defined_and_store_cache(&stmt.right, &ProofSearchState::initial())
+        self.verify_obj_well_defined_and_store_cache(&stmt.right, &VerifyState::initial())
             .map_err(|well_defined_error| {
                 short_exec_error(
                     stmt.clone().into(),
@@ -56,7 +56,7 @@ impl Runtime {
                 .into();
                 let left_to_right_subset_result = rt.verify_atomic_fact_restricted_known_builtin(
                     &left_to_right_subset_fact,
-                    &ProofSearchState::initial(),
+                    &VerifyState::initial(),
                 )?;
 
                 let left_to_right_param = rt.fresh_param_group_with_type(
@@ -78,21 +78,18 @@ impl Runtime {
                 let left_to_right_result = if left_to_right_subset_result.is_success() {
                     left_to_right_subset_result
                 } else {
-                    rt.verify_fact_or_error(
-                        &left_to_right_forall_fact,
-                        &ProofSearchState::initial(),
-                    )
-                    .map_err(|verify_error| {
-                        short_exec_error(
-                            stmt.clone().into(),
-                            format!(
-                                "by extension: failed to prove left subset right `{}`",
-                                left_to_right_forall_fact
-                            ),
-                            Some(verify_error),
-                            vec![],
-                        )
-                    })?
+                    rt.verify_fact_or_error(&left_to_right_forall_fact, &VerifyState::initial())
+                        .map_err(|verify_error| {
+                            short_exec_error(
+                                stmt.clone().into(),
+                                format!(
+                                    "by extension: failed to prove left subset right `{}`",
+                                    left_to_right_forall_fact
+                                ),
+                                Some(verify_error),
+                                vec![],
+                            )
+                        })?
                 };
 
                 let right_to_left_subset_fact: AtomicFact = SubsetFact::new(
@@ -103,7 +100,7 @@ impl Runtime {
                 .into();
                 let right_to_left_subset_result = rt.verify_atomic_fact_restricted_known_builtin(
                     &right_to_left_subset_fact,
-                    &ProofSearchState::initial(),
+                    &VerifyState::initial(),
                 )?;
 
                 let right_to_left_param = rt.fresh_param_group_with_type(
@@ -125,21 +122,18 @@ impl Runtime {
                 let right_to_left_result = if right_to_left_subset_result.is_success() {
                     right_to_left_subset_result
                 } else {
-                    rt.verify_fact_or_error(
-                        &right_to_left_forall_fact,
-                        &ProofSearchState::initial(),
-                    )
-                    .map_err(|verify_error| {
-                        short_exec_error(
-                            stmt.clone().into(),
-                            format!(
-                                "by extension: failed to prove right subset left `{}`",
-                                right_to_left_forall_fact
-                            ),
-                            Some(verify_error),
-                            vec![],
-                        )
-                    })?
+                    rt.verify_fact_or_error(&right_to_left_forall_fact, &VerifyState::initial())
+                        .map_err(|verify_error| {
+                            short_exec_error(
+                                stmt.clone().into(),
+                                format!(
+                                    "by extension: failed to prove right subset left `{}`",
+                                    right_to_left_forall_fact
+                                ),
+                                Some(verify_error),
+                                vec![],
+                            )
+                        })?
                 };
                 Ok::<_, RuntimeError>((proof_steps, left_to_right_result, right_to_left_result))
             });

@@ -983,7 +983,16 @@ impl DefinitionGraphBuilder {
         }
         if let SuccessStmtResult::By(SuccessByStmtResult::ByThmStmt(result)) = success {
             if let Some(verification) = result.verification.as_ref() {
-                let theorem_name = self.normalized_dependency_name(verification.theorem.as_str());
+                let StmtResult::Success(SuccessStmtResult::ReleaseThmStmt(application)) =
+                    verification.temporary_application.as_ref()
+                else {
+                    return;
+                };
+                let Some(application_verification) = application.verification.as_ref() else {
+                    return;
+                };
+                let theorem_name =
+                    self.normalized_dependency_name(application_verification.theorem.as_str());
                 let source_id = definition_id("theorem", theorem_name.as_str());
                 self.ensure_node(
                     source_id.clone(),

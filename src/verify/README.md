@@ -10,7 +10,7 @@ forall x R:
 ```text
 execute_submitted_fact(1 + 1 = 2)
   verify_fact_well_defined_for_execution(1 + 1 = 2)
-  verify_fact_or_error(1 + 1 = 2, ProofSearchState::initial())
+  verify_fact_or_error(1 + 1 = 2, VerifyState::initial())
     verify_fact_allow_unknown(1 + 1 = 2)
     dispatch EqualFact
     try closed numeric evaluation
@@ -43,7 +43,7 @@ well-definedness
 
 The order above is observable in `1 / 0 = 0`: well-definedness rejects the divisor before any equality rule runs.
 
-`ProofSearchState` names the recursion boundary explicitly. `initial()` is the
+`VerifyState` names the recursion boundary explicitly. `initial()` is the
 ordinary outer proof search, `after_well_definedness()` prevents a child from
 rechecking an already discharged gate, and `final_round()` selects the bounded
 last retry. `BuiltinRuleSearchState` separately limits recursive builtin-rule

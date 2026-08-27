@@ -1,4 +1,4 @@
-use super::helpers_by_stmt::{section_inferred_fact, user_defined_prop_arity};
+use super::helpers_by_stmt::{section_inferred_fact_id, user_defined_prop_arity};
 use crate::prelude::*;
 
 impl Runtime {
@@ -6,7 +6,7 @@ impl Runtime {
         &mut self,
         stmt: &ByZornLemmaStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&stmt.set, &ProofSearchState::initial())
+        self.verify_obj_well_defined_and_store_cache(&stmt.set, &VerifyState::initial())
             .map_err(|well_defined_error| {
                 short_exec_error(
                     stmt.clone().into(),
@@ -20,7 +20,7 @@ impl Runtime {
         let (mut inside_results, obligations_for_output) = self.run_in_local_env(|rt| {
             let mut inside_results: Vec<StmtResult> = Vec::new();
             for proof_stmt in stmt.proof.iter() {
-                let result = rt
+                let mut result = rt
                     .execute_statement(proof_stmt)
                     .map_err(|statement_error| {
                         short_exec_error(
@@ -33,6 +33,7 @@ impl Runtime {
                             std::mem::take(&mut inside_results),
                         )
                     })?;
+                rt.attach_known_fact_ids_to_stmt_result(&mut result)?;
                 inside_results.push(result);
             }
 
@@ -44,25 +45,48 @@ impl Runtime {
                 stmt.line_file.clone(),
             )?;
             let mut obligations_for_output = Vec::new();
-            for (label, fact) in obligations {
-                if section_inferred_fact(&inside_results, &fact) {
-                    obligations_for_output.push((label, fact.to_string(), false));
+            for (role, fact) in obligations {
+                if let Some(fact_id) = section_inferred_fact_id(&inside_results, &fact) {
+                    obligations_for_output.push((role, fact, fact_id, false));
                     continue;
                 }
-                let result = rt
-                    .verify_fact_or_error(&fact, &ProofSearchState::initial())
+                let mut result = rt
+                    .verify_fact_or_error(&fact, &VerifyState::initial())
                     .map_err(|verify_error| {
                         short_exec_error(
                             stmt.clone().into(),
                             format!(
                                 "by zorn_lemma: failed to prove {} obligation `{}`",
-                                label, fact
+                                zorn_obligation_label(role),
+                                fact
                             ),
                             Some(verify_error),
                             std::mem::take(&mut inside_results),
                         )
                     })?;
-                obligations_for_output.push((label, fact.to_string(), true));
+                let store = rt
+                    .store_with_well_defined_verification_and_infer_with_default_verify_state(
+                        fact.clone(),
+                    )
+                    .map_err(|store_error| {
+                        short_exec_error(
+                            stmt.clone().into(),
+                            format!(
+                                "by zorn_lemma: failed to retain verified {} obligation `{}`",
+                                zorn_obligation_label(role),
+                                fact
+                            ),
+                            Some(store_error),
+                            std::mem::take(&mut inside_results),
+                        )
+                    })?;
+                result = result.with_infers(store);
+                rt.attach_known_fact_ids_to_stmt_result(&mut result)?;
+                let fact_id = result
+                    .fact_id()
+                    .map(Ok)
+                    .unwrap_or_else(|| rt.require_known_fact_id_for_success_result(&fact))?;
+                obligations_for_output.push((role, fact, fact_id, true));
                 inside_results.push(result);
             }
             Ok::<_, RuntimeError>((inside_results, obligations_for_output))
@@ -72,9 +96,10 @@ impl Runtime {
         let obligations = obligations_for_output
             .into_iter()
             .map(
-                |(role, fact, checked)| SuccessVerifyByChoiceObligationResult {
+                |(role, fact, fact_id, checked)| SuccessVerifyByChoiceObligationResult {
                     role,
                     fact,
+                    fact_id,
                     check: checked.then(|| {
                         Box::new(
                             checked_obligations
@@ -96,9 +121,10 @@ impl Runtime {
             stmt.maximal_prop_name.clone(),
             stmt.line_file.clone(),
         )?;
-        let maximal_fact_string = maximal_fact.to_string();
         let infer_result = self
-            .store_with_well_defined_verification_and_infer_with_default_verify_state(maximal_fact)
+            .store_with_well_defined_verification_and_infer_with_default_verify_state(
+                maximal_fact.clone(),
+            )
             .map_err(|store_error| {
                 short_exec_error(
                     stmt.clone().into(),
@@ -107,16 +133,20 @@ impl Runtime {
                     vec![],
                 )
             })?;
+        let maximal_fact_id = self.require_known_fact_id_for_success_result(&maximal_fact)?;
 
         let by_verification = SuccessVerifyByChoiceResult::new(
-            "by zorn_lemma proof".to_string(),
-            format!(
-                "set {}, prop {}, prop {}, prop {}",
-                stmt.set, stmt.prop_name, stmt.upper_bound_prop_name, stmt.maximal_prop_name
-            ),
+            SuccessVerifyByChoiceProofKind::ZornLemma,
+            SuccessVerifyByChoiceTargetResult::ZornLemma {
+                set: stmt.set.clone(),
+                relation: stmt.prop_name.clone(),
+                upper_bound: stmt.upper_bound_prop_name.clone(),
+                maximal: stmt.maximal_prop_name.clone(),
+            },
             proof_steps,
             obligations,
-            maximal_fact_string,
+            maximal_fact,
+            maximal_fact_id,
         );
         Ok(
             SuccessByStmtResult::ByZornLemmaStmt(Box::new(SuccessByZornLemmaStmtResult {
@@ -383,29 +413,40 @@ fn zorn_lemma_obligations(
     prop_name: AtomicName,
     upper_bound_prop_name: AtomicName,
     line_file: LineFile,
-) -> Result<Vec<(String, Fact)>, RuntimeError> {
+) -> Result<Vec<(SuccessVerifyByChoiceObligationRole, Fact)>, RuntimeError> {
     Ok(vec![
         (
-            "nonempty".to_string(),
+            SuccessVerifyByChoiceObligationRole::ZornNonempty,
             IsNonemptySetFact::new(set.clone(), line_file.clone()).into(),
         ),
         (
-            "reflexive".to_string(),
+            SuccessVerifyByChoiceObligationRole::ZornReflexive,
             zorn_reflexive_fact(runtime, set.clone(), prop_name.clone(), line_file.clone())?,
         ),
         (
-            "transitive".to_string(),
+            SuccessVerifyByChoiceObligationRole::ZornTransitive,
             zorn_transitive_fact(runtime, set.clone(), prop_name.clone(), line_file.clone())?,
         ),
         (
-            "antisymmetric".to_string(),
+            SuccessVerifyByChoiceObligationRole::ZornAntisymmetric,
             zorn_antisymmetric_fact(runtime, set.clone(), prop_name.clone(), line_file.clone())?,
         ),
         (
-            "chain_upper_bound".to_string(),
+            SuccessVerifyByChoiceObligationRole::ZornChainUpperBound,
             zorn_chain_upper_bound_fact(runtime, set, prop_name, upper_bound_prop_name, line_file)?,
         ),
     ])
+}
+
+fn zorn_obligation_label(role: SuccessVerifyByChoiceObligationRole) -> &'static str {
+    match role {
+        SuccessVerifyByChoiceObligationRole::ZornNonempty => "nonempty",
+        SuccessVerifyByChoiceObligationRole::ZornReflexive => "reflexive",
+        SuccessVerifyByChoiceObligationRole::ZornTransitive => "transitive",
+        SuccessVerifyByChoiceObligationRole::ZornAntisymmetric => "antisymmetric",
+        SuccessVerifyByChoiceObligationRole::ZornChainUpperBound => "chain_upper_bound",
+        _ => unreachable!("Zorn producer only creates Zorn obligation roles"),
+    }
 }
 
 fn zorn_reflexive_fact(

@@ -96,7 +96,7 @@ fn builtin_rules_do_not_add_unreviewed_full_verifier_calls() {
         "verify_atomic_fact_with_known_forall(",
         "verify_atomic_fact_using_builtin_or_prop_definition(",
         "verify_atomic_fact_with_strategy(",
-        "ProofSearchState::initial(",
+        "VerifyState::initial(",
     ];
     // These exact handlers have reviewed, bounded semantic-premise searches.
     // Automatic builtin dispatch must otherwise stay atomic and must not
@@ -2897,8 +2897,7 @@ trust Ambient = \selected<R>
                 .0,
             "a bound ambient membership must not eagerly unfold every opaque equal set"
         );
-        let on_demand =
-            rt.verify_atomic_fact(&expanded_membership, &ProofSearchState::initial())?;
+        let on_demand = rt.verify_atomic_fact(&expanded_membership, &VerifyState::initial())?;
         assert!(
             on_demand.is_success(),
             "the deferred membership must remain provable through equality on demand"

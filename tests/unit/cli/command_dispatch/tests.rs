@@ -1,8 +1,37 @@
 use super::super::command_handlers::read_optional_graph_save_path;
 use super::super::messages::{help_message, upgrade_message};
-use crate::cli::arguments::{read_session_preload, validate_session_preload};
+use crate::cli::arguments::{parse_global_options, read_session_preload, validate_session_preload};
+use crate::common::output_language::OutputLanguage;
 use crate::graph::GraphKind;
 use crate::pipeline::SessionPreload;
+use crate::runtime::OutputStyle;
+
+#[test]
+fn global_cli_options_preserve_every_run_option_value() {
+    let mut args = vec![
+        "-compact".to_string(),
+        "-strict".to_string(),
+        "-summarize".to_string(),
+        "-isolated".to_string(),
+        "-lang".to_string(),
+        "zh-Hans".to_string(),
+        "-e".to_string(),
+        "1 = 1".to_string(),
+    ];
+
+    let cli_options = parse_global_options(&mut args).expect("global CLI options should parse");
+    let run_options = cli_options.run_options();
+
+    assert_eq!(run_options.output_style, OutputStyle::Compact);
+    assert!(run_options.strict_mode);
+    assert!(run_options.summarize);
+    assert!(run_options.force_isolated);
+    assert_eq!(
+        run_options.output_language,
+        OutputLanguage::SimplifiedChinese
+    );
+    assert_eq!(args, ["-e", "1 = 1"]);
+}
 
 #[test]
 fn help_lists_upgrade_command() {

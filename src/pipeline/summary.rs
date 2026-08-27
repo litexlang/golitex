@@ -396,8 +396,9 @@ impl RunSummary {
             SuccessByStmtResult::ByStructDefStmt(_) => self.bump_by_method("struct def"),
             SuccessByStmtResult::ByThmStmt(result) => {
                 self.bump_by_method("theorem selection");
-                if let Some(verification) = &result.verification {
-                    bump_count(&mut self.by_theorem_counts, verification.theorem.as_str());
+                if result.verification.is_some() {
+                    let theorem_name = result.statement.name.to_string();
+                    bump_count(&mut self.by_theorem_counts, theorem_name.as_str());
                 }
             }
         }

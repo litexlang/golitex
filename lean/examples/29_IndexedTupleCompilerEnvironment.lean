@@ -9,7 +9,7 @@ theorem __coordinates_dimension_check1 : Litex.In (3 : ℂ) Litex.NPos := by
   exact Litex.Rules.complexEqNatInNPos (3 : ℂ) 3 (by norm_num) (by norm_num)
 
 theorem __coordinates_dimension_check2 : Litex.Le (2 : ℂ) (3 : ℂ) := by
-  exact Litex.OrderBridge.leOfComplexReals (by norm_num)
+  exact (Litex.OrderBridge.leOfComplexReals (by norm_num) : Litex.Le ((2 : ℂ)) ((3 : ℂ)))
 
 noncomputable def coordinates : Litex.IndexedTuple 3 ℂ :=
   ⟨fun __index => ((((__index.val : ℤ) : ℂ)) + (1 : ℂ))⟩

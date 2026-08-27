@@ -739,7 +739,7 @@ impl Runtime {
                     EqualFact::new(source_value, translated_value, line_file.clone()).into();
                 let known_forall = rt.verify_atomic_fact_with_known_forall(
                     &equality,
-                    &ProofSearchState::after_well_definedness(),
+                    &VerifyState::after_well_definedness(),
                 )?;
                 if known_forall.is_success() {
                     return Ok(known_forall);
@@ -1095,7 +1095,7 @@ impl Runtime {
                 rt.define_params_with_type(&params_def, false, BindingScope::LocalBinder)?;
                 let known_forall = rt.verify_atomic_fact_with_known_forall(
                     &pointwise_fact,
-                    &ProofSearchState::after_well_definedness(),
+                    &VerifyState::after_well_definedness(),
                 )?;
                 if known_forall.is_success() {
                     return Ok(known_forall);
@@ -1299,7 +1299,7 @@ impl Runtime {
             let equality: AtomicFact = EqualFact::new(actual, expected, line_file.clone()).into();
             let known_forall = rt.verify_atomic_fact_with_known_forall(
                 &equality,
-                &ProofSearchState::after_well_definedness(),
+                &VerifyState::after_well_definedness(),
             )?;
             if known_forall.is_success() {
                 return Ok(known_forall);
@@ -1361,7 +1361,7 @@ impl Runtime {
                 EqualFact::new(left_value, right_value, line_file.clone()).into();
             let known_forall = rt.verify_atomic_fact_with_known_forall(
                 &equality,
-                &ProofSearchState::after_well_definedness(),
+                &VerifyState::after_well_definedness(),
             )?;
             if known_forall.is_success() {
                 return Ok(known_forall);
