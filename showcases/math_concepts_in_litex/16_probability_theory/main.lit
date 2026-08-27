@@ -617,17 +617,18 @@ thm event_is_subset_of_sample_space:
 thm two_event_sequence_countable_union:
     ? forall [SigmaAlgebraSetting(union_Omega, union_events)], A, B union_events:
         index_union(N+, union_Omega, fn(n N+) power_set(union_Omega) {\two_event_sequence<union_Omega, union_events>(A, B, n)}) = union(A, B)
+    let two_events = \two_event_sequence<union_Omega, union_events>
     by extension:
-        ? index_union(N+, union_Omega, fn(n N+) power_set(union_Omega) {\two_event_sequence<union_Omega, union_events>(A, B, n)}) = union(A, B)
+        ? index_union(N+, union_Omega, fn(n N+) power_set(union_Omega) {two_events(A, B, n)}) = union(A, B)
         claim:
-            ? forall point index_union(N+, union_Omega, fn(n N+) power_set(union_Omega) {\two_event_sequence<union_Omega, union_events>(A, B, n)}):
+            ? forall point index_union(N+, union_Omega, fn(n N+) power_set(union_Omega) {two_events(A, B, n)}):
                 point $in union(A, B)
-            obtain idx from exist idx N+ st {point $in \two_event_sequence<union_Omega, union_events>(A, B, idx)}
+            obtain idx from exist idx N+ st {point $in two_events(A, B, idx)}
             idx = 1 or idx > 1
             by cases:
                 ? point $in union(A, B)
                 case idx = 1:
-                    \two_event_sequence<union_Omega, union_events>(A, B, idx) = A
+                    two_events(A, B, idx) = A
                     point $in A
                     point $in union(A, B)
                 case idx > 1:
@@ -637,7 +638,7 @@ thm two_event_sequence_countable_union:
                         ? point $in union(A, B)
                         case idx - 1 = 1:
                             idx = (idx - 1) + 1 = 1 + 1 = 2
-                            \two_event_sequence<union_Omega, union_events>(A, B, idx) = B
+                            two_events(A, B, idx) = B
                             point $in B
                             point $in union(A, B)
                         case idx - 1 > 1:
@@ -645,29 +646,30 @@ thm two_event_sequence_countable_union:
                             idx = (idx - 1) + 1
                             1 + 1 = 2
                             idx > 2
-                            \two_event_sequence<union_Omega, union_events>(A, B, idx) = {}
+                            two_events(A, B, idx) = {}
                             point $in {}
                             impossible point $in {}
         claim:
             ? forall point union(A, B):
-                point $in index_union(N+, union_Omega, fn(n N+) power_set(union_Omega) {\two_event_sequence<union_Omega, union_events>(A, B, n)})
+                point $in index_union(N+, union_Omega, fn(n N+) power_set(union_Omega) {two_events(A, B, n)})
             point $in A or point $in B
             by cases:
-                ? point $in index_union(N+, union_Omega, fn(n N+) power_set(union_Omega) {\two_event_sequence<union_Omega, union_events>(A, B, n)})
+                ? point $in index_union(N+, union_Omega, fn(n N+) power_set(union_Omega) {two_events(A, B, n)})
                 case point $in A:
                     by thm event_is_subset_of_sample_space(union_Omega, union_events, A) => A $subset union_Omega
                     point $in union_Omega
-                    \two_event_sequence<union_Omega, union_events>(A, B, 1) = A
-                    point $in \two_event_sequence<union_Omega, union_events>(A, B, 1)
-                    witness exist idx N+ st {point $in \two_event_sequence<union_Omega, union_events>(A, B, idx)} from 1
-                    point $in index_union(N+, union_Omega, fn(n N+) power_set(union_Omega) {\two_event_sequence<union_Omega, union_events>(A, B, n)})
+                    two_events(A, B, 1) = A
+                    point $in two_events(A, B, 1)
+                    witness exist idx N+ st {point $in two_events(A, B, idx)} from 1
+                    point $in index_union(N+, union_Omega, fn(n N+) power_set(union_Omega) {two_events(A, B, n)})
                 case point $in B:
                     by thm event_is_subset_of_sample_space(union_Omega, union_events, B) => B $subset union_Omega
                     point $in union_Omega
-                    \two_event_sequence<union_Omega, union_events>(A, B, 2) = B
-                    point $in \two_event_sequence<union_Omega, union_events>(A, B, 2)
-                    witness exist idx N+ st {point $in \two_event_sequence<union_Omega, union_events>(A, B, idx)} from 2
-                    point $in index_union(N+, union_Omega, fn(n N+) power_set(union_Omega) {\two_event_sequence<union_Omega, union_events>(A, B, n)})
+                    two_events(A, B, 2) = B
+                    point $in two_events(A, B, 2)
+                    witness exist idx N+ st {point $in two_events(A, B, idx)} from 2
+                    point $in index_union(N+, union_Omega, fn(n N+) power_set(union_Omega) {two_events(A, B, n)})
+    index_union(N+, union_Omega, fn(n N+) power_set(union_Omega) {\two_event_sequence<union_Omega, union_events>(A, B, n)}) = index_union(N+, union_Omega, fn(n N+) power_set(union_Omega) {two_events(A, B, n)}) = union(A, B)
 
 # If A and B are disjoint, a finite index case split proves the padded event
 # sequence pairwise disjoint, including all empty tail terms.
@@ -676,18 +678,19 @@ thm two_event_sequence_pairwise_disjoint:
         intersect(A, B) = {}
         =>:
             $pairwise_disjoint_event_sequence(disjoint_Omega, disjoint_events, fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)})
+    let two_events = \two_event_sequence<disjoint_Omega, disjoint_events>
     claim:
         ? forall idx, j N+:
             idx != j
             =>:
-                intersect(fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(idx), fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(j)) = {}
+                intersect(fn(n N+) disjoint_events {two_events(A, B, n)}(idx), fn(n N+) disjoint_events {two_events(A, B, n)}(j)) = {}
         idx = 1 or idx > 1
         j = 1 or j > 1
         by cases:
-            ? intersect(fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(idx), fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(j)) = {}
+            ? intersect(fn(n N+) disjoint_events {two_events(A, B, n)}(idx), fn(n N+) disjoint_events {two_events(A, B, n)}(j)) = {}
             case idx = 1:
                 by cases:
-                    ? intersect(fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(idx), fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(j)) = {}
+                    ? intersect(fn(n N+) disjoint_events {two_events(A, B, n)}(idx), fn(n N+) disjoint_events {two_events(A, B, n)}(j)) = {}
                     case j = 1:
                         idx = j
                         impossible idx != j
@@ -695,38 +698,38 @@ thm two_event_sequence_pairwise_disjoint:
                         j - 1 $in N+
                         j - 1 = 1 or j - 1 > 1
                         by cases:
-                            ? intersect(fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(idx), fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(j)) = {}
+                            ? intersect(fn(n N+) disjoint_events {two_events(A, B, n)}(idx), fn(n N+) disjoint_events {two_events(A, B, n)}(j)) = {}
                             case j - 1 = 1:
                                 j = (j - 1) + 1 = 1 + 1 = 2
-                                \two_event_sequence<disjoint_Omega, disjoint_events>(A, B, idx) = A
-                                \two_event_sequence<disjoint_Omega, disjoint_events>(A, B, j) = B
-                                intersect(fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(idx), fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(j)) = intersect(A, B) = {}
+                                two_events(A, B, idx) = A
+                                two_events(A, B, j) = B
+                                intersect(fn(n N+) disjoint_events {two_events(A, B, n)}(idx), fn(n N+) disjoint_events {two_events(A, B, n)}(j)) = intersect(A, B) = {}
                             case j - 1 > 1:
                                 (j - 1) + 1 > 1 + 1
                                 j = (j - 1) + 1
                                 1 + 1 = 2
                                 j > 2
-                                \two_event_sequence<disjoint_Omega, disjoint_events>(A, B, idx) = A
-                                \two_event_sequence<disjoint_Omega, disjoint_events>(A, B, j) = {}
-                                intersect(fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(idx), fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(j)) = intersect(A, {}) = {}
+                                two_events(A, B, idx) = A
+                                two_events(A, B, j) = {}
+                                intersect(fn(n N+) disjoint_events {two_events(A, B, n)}(idx), fn(n N+) disjoint_events {two_events(A, B, n)}(j)) = intersect(A, {}) = {}
             case idx > 1:
                 idx - 1 $in N+
                 idx - 1 = 1 or idx - 1 > 1
                 by cases:
-                    ? intersect(fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(idx), fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(j)) = {}
+                    ? intersect(fn(n N+) disjoint_events {two_events(A, B, n)}(idx), fn(n N+) disjoint_events {two_events(A, B, n)}(j)) = {}
                     case idx - 1 = 1:
                         idx = (idx - 1) + 1 = 1 + 1 = 2
-                        \two_event_sequence<disjoint_Omega, disjoint_events>(A, B, idx) = B
+                        two_events(A, B, idx) = B
                         by cases:
-                            ? intersect(fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(idx), fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(j)) = {}
+                            ? intersect(fn(n N+) disjoint_events {two_events(A, B, n)}(idx), fn(n N+) disjoint_events {two_events(A, B, n)}(j)) = {}
                             case j = 1:
-                                \two_event_sequence<disjoint_Omega, disjoint_events>(A, B, j) = A
-                                intersect(fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(idx), fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(j)) = intersect(B, A) = intersect(A, B) = {}
+                                two_events(A, B, j) = A
+                                intersect(fn(n N+) disjoint_events {two_events(A, B, n)}(idx), fn(n N+) disjoint_events {two_events(A, B, n)}(j)) = intersect(B, A) = intersect(A, B) = {}
                             case j > 1:
                                 j - 1 $in N+
                                 j - 1 = 1 or j - 1 > 1
                                 by cases:
-                                    ? intersect(fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(idx), fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(j)) = {}
+                                    ? intersect(fn(n N+) disjoint_events {two_events(A, B, n)}(idx), fn(n N+) disjoint_events {two_events(A, B, n)}(j)) = {}
                                     case j - 1 = 1:
                                         idx = (idx - 1) + 1 = 1 + 1 = 2
                                         j = (j - 1) + 1 = 1 + 1 = 2
@@ -737,15 +740,24 @@ thm two_event_sequence_pairwise_disjoint:
                                         j = (j - 1) + 1
                                         1 + 1 = 2
                                         j > 2
-                                        \two_event_sequence<disjoint_Omega, disjoint_events>(A, B, j) = {}
-                                        intersect(fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(idx), fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(j)) = intersect(B, {}) = {}
+                                        two_events(A, B, j) = {}
+                                        intersect(fn(n N+) disjoint_events {two_events(A, B, n)}(idx), fn(n N+) disjoint_events {two_events(A, B, n)}(j)) = intersect(B, {}) = {}
                     case idx - 1 > 1:
                         (idx - 1) + 1 > 1 + 1
                         idx = (idx - 1) + 1
                         1 + 1 = 2
                         idx > 2
-                        \two_event_sequence<disjoint_Omega, disjoint_events>(A, B, idx) = {}
-                        intersect(fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(idx), fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(j)) = intersect({}, fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(j)) = {}
+                        two_events(A, B, idx) = {}
+                        intersect(fn(n N+) disjoint_events {two_events(A, B, n)}(idx), fn(n N+) disjoint_events {two_events(A, B, n)}(j)) = intersect({}, fn(n N+) disjoint_events {two_events(A, B, n)}(j)) = {}
+    by def $pairwise_disjoint_event_sequence(disjoint_Omega, disjoint_events, fn(n N+) disjoint_events {two_events(A, B, n)})
+    claim:
+        ? forall idx, j N+:
+            idx != j
+            =>:
+                intersect(fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(idx), fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(j)) = {}
+        fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(idx) = two_events(A, B, idx)
+        fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(j) = two_events(A, B, j)
+        intersect(fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(idx), fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)}(j)) = intersect(fn(n N+) disjoint_events {two_events(A, B, n)}(idx), fn(n N+) disjoint_events {two_events(A, B, n)}(j)) = {}
     by def $pairwise_disjoint_event_sequence(disjoint_Omega, disjoint_events, fn(n N+) disjoint_events {\two_event_sequence<disjoint_Omega, disjoint_events>(A, B, n)})
 
 # Evaluate probability term by term: the first two values are P(A), P(B), and
@@ -1369,30 +1381,40 @@ thm increasing_event_increments_pairwise_disjoint:
         $is_increasing_event_sequence(Omega, events, event_sequence)
         =>:
             $pairwise_disjoint_event_sequence(Omega, events, fn (n N+) events {\increasing_event_increment<Omega, events>(event_sequence, n)})
+    let increment = \increasing_event_increment<Omega, events>
     claim:
         ? forall idx, j N+:
             idx != j
             =>:
-                intersect(fn (n N+) events {\increasing_event_increment<Omega, events>(event_sequence, n)}(idx), fn (n N+) events {\increasing_event_increment<Omega, events>(event_sequence, n)}(j)) = {}
+                intersect(fn (n N+) events {increment(event_sequence, n)}(idx), fn (n N+) events {increment(event_sequence, n)}(j)) = {}
         idx < j or idx >= j
-        fn (n N+) events {\increasing_event_increment<Omega, events>(event_sequence, n)}(idx) = \increasing_event_increment<Omega, events>(event_sequence, idx)
-        fn (n N+) events {\increasing_event_increment<Omega, events>(event_sequence, n)}(j) = \increasing_event_increment<Omega, events>(event_sequence, j)
+        fn (n N+) events {increment(event_sequence, n)}(idx) = increment(event_sequence, idx)
+        fn (n N+) events {increment(event_sequence, n)}(j) = increment(event_sequence, j)
         by cases:
-            ? intersect(fn (n N+) events {\increasing_event_increment<Omega, events>(event_sequence, n)}(idx), fn (n N+) events {\increasing_event_increment<Omega, events>(event_sequence, n)}(j)) = {}
+            ? intersect(fn (n N+) events {increment(event_sequence, n)}(idx), fn (n N+) events {increment(event_sequence, n)}(j)) = {}
             case idx < j:
-                by thm earlier_increasing_event_increment_disjoint_from_later(Omega, events, event_sequence, idx, j) => intersect(\increasing_event_increment<Omega, events>(event_sequence, idx), \increasing_event_increment<Omega, events>(event_sequence, j)) = {}
-                by thm equal_event_pairs_preserve_empty_intersection(fn (n N+) events {\increasing_event_increment<Omega, events>(event_sequence, n)}(idx), fn (n N+) events {\increasing_event_increment<Omega, events>(event_sequence, n)}(j), \increasing_event_increment<Omega, events>(event_sequence, idx), \increasing_event_increment<Omega, events>(event_sequence, j)) => intersect(fn (n N+) events {\increasing_event_increment<Omega, events>(event_sequence, n)}(idx), fn (n N+) events {\increasing_event_increment<Omega, events>(event_sequence, n)}(j)) = {}
+                by thm earlier_increasing_event_increment_disjoint_from_later(Omega, events, event_sequence, idx, j) => intersect(increment(event_sequence, idx), increment(event_sequence, j)) = {}
+                by thm equal_event_pairs_preserve_empty_intersection(fn (n N+) events {increment(event_sequence, n)}(idx), fn (n N+) events {increment(event_sequence, n)}(j), increment(event_sequence, idx), increment(event_sequence, j)) => intersect(fn (n N+) events {increment(event_sequence, n)}(idx), fn (n N+) events {increment(event_sequence, n)}(j)) = {}
             case idx >= j:
                 idx = j or idx > j
                 by cases:
-                    ? intersect(fn (n N+) events {\increasing_event_increment<Omega, events>(event_sequence, n)}(idx), fn (n N+) events {\increasing_event_increment<Omega, events>(event_sequence, n)}(j)) = {}
+                    ? intersect(fn (n N+) events {increment(event_sequence, n)}(idx), fn (n N+) events {increment(event_sequence, n)}(j)) = {}
                     case idx = j:
                         impossible idx != j
                     case idx > j:
-                        by thm earlier_increasing_event_increment_disjoint_from_later(Omega, events, event_sequence, j, idx) => intersect(\increasing_event_increment<Omega, events>(event_sequence, j), \increasing_event_increment<Omega, events>(event_sequence, idx)) = {}
-                        intersect(\increasing_event_increment<Omega, events>(event_sequence, idx), \increasing_event_increment<Omega, events>(event_sequence, j)) = intersect(\increasing_event_increment<Omega, events>(event_sequence, j), \increasing_event_increment<Omega, events>(event_sequence, idx)) = {}
-                        by thm equal_event_pairs_preserve_empty_intersection(fn (n N+) events {\increasing_event_increment<Omega, events>(event_sequence, n)}(idx), fn (n N+) events {\increasing_event_increment<Omega, events>(event_sequence, n)}(j), \increasing_event_increment<Omega, events>(event_sequence, idx), \increasing_event_increment<Omega, events>(event_sequence, j)) => intersect(fn (n N+) events {\increasing_event_increment<Omega, events>(event_sequence, n)}(idx), fn (n N+) events {\increasing_event_increment<Omega, events>(event_sequence, n)}(j)) = {}
-    by def $pairwise_disjoint_event_sequence(Omega, events, fn (n N+) events {\increasing_event_increment<Omega, events>(event_sequence, n)})
+                        by thm earlier_increasing_event_increment_disjoint_from_later(Omega, events, event_sequence, j, idx) => intersect(increment(event_sequence, j), increment(event_sequence, idx)) = {}
+                        intersect(increment(event_sequence, idx), increment(event_sequence, j)) = intersect(increment(event_sequence, j), increment(event_sequence, idx)) = {}
+                        by thm equal_event_pairs_preserve_empty_intersection(fn (n N+) events {increment(event_sequence, n)}(idx), fn (n N+) events {increment(event_sequence, n)}(j), increment(event_sequence, idx), increment(event_sequence, j)) => intersect(fn (n N+) events {increment(event_sequence, n)}(idx), fn (n N+) events {increment(event_sequence, n)}(j)) = {}
+    by def $pairwise_disjoint_event_sequence(Omega, events, fn (n N+) events {increment(event_sequence, n)})
+    claim:
+        ? forall idx, j N+:
+            idx != j
+            =>:
+                intersect(fn(n N+) events {\increasing_event_increment<Omega, events>(event_sequence, n)}(idx), fn(n N+) events {\increasing_event_increment<Omega, events>(event_sequence, n)}(j)) = {}
+        fn(n N+) events {\increasing_event_increment<Omega, events>(event_sequence, n)}(idx) = increment(event_sequence, idx)
+        fn(n N+) events {\increasing_event_increment<Omega, events>(event_sequence, n)}(j) = increment(event_sequence, j)
+        intersect(fn(n N+) events {\increasing_event_increment<Omega, events>(event_sequence, n)}(idx), fn(n N+) events {\increasing_event_increment<Omega, events>(event_sequence, n)}(j)) = intersect(fn(n N+) events {increment(event_sequence, n)}(idx), fn(n N+) events {increment(event_sequence, n)}(j)) = {}
+    by def $pairwise_disjoint_event_sequence(Omega, events, fn(n N+) events {\increasing_event_increment<Omega, events>(event_sequence, n)})
 
 thm increasing_event_increment_union_covers_each_stage:
     ? forall Omega set, events power_set(power_set(Omega)), event_sequence fn (index N+) events, k N+:
@@ -1400,33 +1422,37 @@ thm increasing_event_increment_union_covers_each_stage:
         $is_increasing_event_sequence(Omega, events, event_sequence)
         =>:
             event_sequence(k) $subset index_union(N+, Omega, fn (n N+) power_set(Omega) {\increasing_event_increment<Omega, events>(event_sequence, n)})
+    let increment = \increasing_event_increment<Omega, events>
     by induc k from 1:
-        ? event_sequence(k) $subset index_union(N+, Omega, fn (n N+) power_set(Omega) {\increasing_event_increment<Omega, events>(event_sequence, n)})
+        ? event_sequence(k) $subset index_union(N+, Omega, fn (n N+) power_set(Omega) {increment(event_sequence, n)})
         ? from k = 1:
-            \increasing_event_increment<Omega, events>(event_sequence, 1) = \raw_increasing_event_increment<Omega, events>(event_sequence, 1)
+            increment(event_sequence, 1) = \raw_increasing_event_increment<Omega, events>(event_sequence, 1)
             \raw_increasing_event_increment<Omega, events>(event_sequence, 1) = event_sequence(1)
             claim:
                 ? forall point event_sequence(1):
-                    point $in index_union(N+, Omega, fn (n N+) power_set(Omega) {\increasing_event_increment<Omega, events>(event_sequence, n)})
-                point $in \increasing_event_increment<Omega, events>(event_sequence, 1)
-                witness exist candidate_index N+ st {point $in \increasing_event_increment<Omega, events>(event_sequence, candidate_index)} from 1
-                point $in index_union(N+, Omega, fn (n N+) power_set(Omega) {\increasing_event_increment<Omega, events>(event_sequence, n)})
-            by def event_sequence(1) $subset index_union(N+, Omega, fn (n N+) power_set(Omega) {\increasing_event_increment<Omega, events>(event_sequence, n)})
+                    point $in index_union(N+, Omega, fn (n N+) power_set(Omega) {increment(event_sequence, n)})
+                point $in increment(event_sequence, 1)
+                witness exist candidate_index N+ st {point $in increment(event_sequence, candidate_index)} from 1
+                point $in index_union(N+, Omega, fn (n N+) power_set(Omega) {increment(event_sequence, n)})
+            by def event_sequence(1) $subset index_union(N+, Omega, fn (n N+) power_set(Omega) {increment(event_sequence, n)})
         ? induc:
-            by thm increasing_event_increment_partitions_next(Omega, events, event_sequence, k) => union(event_sequence(k), \increasing_event_increment<Omega, events>(event_sequence, k + 1)) = event_sequence(k + 1)
+            by thm increasing_event_increment_partitions_next(Omega, events, event_sequence, k) => union(event_sequence(k), increment(event_sequence, k + 1)) = event_sequence(k + 1)
             claim:
                 ? forall point event_sequence(k + 1):
-                    point $in index_union(N+, Omega, fn (n N+) power_set(Omega) {\increasing_event_increment<Omega, events>(event_sequence, n)})
-                point $in union(event_sequence(k), \increasing_event_increment<Omega, events>(event_sequence, k + 1))
-                point $in event_sequence(k) or point $in \increasing_event_increment<Omega, events>(event_sequence, k + 1)
+                    point $in index_union(N+, Omega, fn (n N+) power_set(Omega) {increment(event_sequence, n)})
+                point $in union(event_sequence(k), increment(event_sequence, k + 1))
+                point $in event_sequence(k) or point $in increment(event_sequence, k + 1)
                 by cases:
-                    ? point $in index_union(N+, Omega, fn (n N+) power_set(Omega) {\increasing_event_increment<Omega, events>(event_sequence, n)})
+                    ? point $in index_union(N+, Omega, fn (n N+) power_set(Omega) {increment(event_sequence, n)})
                     case point $in event_sequence(k):
-                        point $in index_union(N+, Omega, fn (n N+) power_set(Omega) {\increasing_event_increment<Omega, events>(event_sequence, n)})
-                    case point $in \increasing_event_increment<Omega, events>(event_sequence, k + 1):
-                        witness exist candidate_index N+ st {point $in \increasing_event_increment<Omega, events>(event_sequence, candidate_index)} from k + 1
-                        point $in index_union(N+, Omega, fn (n N+) power_set(Omega) {\increasing_event_increment<Omega, events>(event_sequence, n)})
-            by def event_sequence(k + 1) $subset index_union(N+, Omega, fn (n N+) power_set(Omega) {\increasing_event_increment<Omega, events>(event_sequence, n)})
+                        point $in index_union(N+, Omega, fn (n N+) power_set(Omega) {increment(event_sequence, n)})
+                    case point $in increment(event_sequence, k + 1):
+                        witness exist candidate_index N+ st {point $in increment(event_sequence, candidate_index)} from k + 1
+                        point $in index_union(N+, Omega, fn (n N+) power_set(Omega) {increment(event_sequence, n)})
+            by def event_sequence(k + 1) $subset index_union(N+, Omega, fn (n N+) power_set(Omega) {increment(event_sequence, n)})
+    index_union(N+, Omega, fn(n N+) power_set(Omega) {increment(event_sequence, n)}) = index_union(N+, Omega, fn(n N+) power_set(Omega) {\increasing_event_increment<Omega, events>(event_sequence, n)})
+    event_sequence(k) $subset index_union(N+, Omega, fn(n N+) power_set(Omega) {increment(event_sequence, n)})
+    event_sequence(k) $subset index_union(N+, Omega, fn(n N+) power_set(Omega) {\increasing_event_increment<Omega, events>(event_sequence, n)})
 
 thm increasing_event_increment_union_equals_source_union:
     ? forall Omega set, events power_set(power_set(Omega)), event_sequence fn (index N+) events:
@@ -1434,22 +1460,24 @@ thm increasing_event_increment_union_equals_source_union:
         $is_increasing_event_sequence(Omega, events, event_sequence)
         =>:
             index_union(N+, Omega, fn (n N+) power_set(Omega) {\increasing_event_increment<Omega, events>(event_sequence, n)}) = index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})
+    let increment = \increasing_event_increment<Omega, events>
     by extension:
-        ? index_union(N+, Omega, fn (n N+) power_set(Omega) {\increasing_event_increment<Omega, events>(event_sequence, n)}) = index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})
+        ? index_union(N+, Omega, fn (n N+) power_set(Omega) {increment(event_sequence, n)}) = index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})
         claim:
-            ? forall point index_union(N+, Omega, fn (n N+) power_set(Omega) {\increasing_event_increment<Omega, events>(event_sequence, n)}):
+            ? forall point index_union(N+, Omega, fn (n N+) power_set(Omega) {increment(event_sequence, n)}):
                 point $in index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})
-            obtain index from exist index N+ st {point $in \increasing_event_increment<Omega, events>(event_sequence, index)}
-            by thm increasing_event_increment_is_subset(Omega, events, event_sequence, index) => \increasing_event_increment<Omega, events>(event_sequence, index) $subset event_sequence(index)
+            obtain index from exist index N+ st {point $in increment(event_sequence, index)}
+            by thm increasing_event_increment_is_subset(Omega, events, event_sequence, index) => increment(event_sequence, index) $subset event_sequence(index)
             point $in event_sequence(index)
             witness exist candidate_index N+ st {point $in event_sequence(candidate_index)} from index
             point $in index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})
         claim:
             ? forall point index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)}):
-                point $in index_union(N+, Omega, fn (n N+) power_set(Omega) {\increasing_event_increment<Omega, events>(event_sequence, n)})
+                point $in index_union(N+, Omega, fn (n N+) power_set(Omega) {increment(event_sequence, n)})
             obtain index from exist index N+ st {point $in event_sequence(index)}
-            by thm increasing_event_increment_union_covers_each_stage(Omega, events, event_sequence, index) => event_sequence(index) $subset index_union(N+, Omega, fn (n N+) power_set(Omega) {\increasing_event_increment<Omega, events>(event_sequence, n)})
-            point $in index_union(N+, Omega, fn (n N+) power_set(Omega) {\increasing_event_increment<Omega, events>(event_sequence, n)})
+            by thm increasing_event_increment_union_covers_each_stage(Omega, events, event_sequence, index) => event_sequence(index) $subset index_union(N+, Omega, fn (n N+) power_set(Omega) {increment(event_sequence, n)})
+            point $in index_union(N+, Omega, fn (n N+) power_set(Omega) {increment(event_sequence, n)})
+    index_union(N+, Omega, fn(n N+) power_set(Omega) {\increasing_event_increment<Omega, events>(event_sequence, n)}) = index_union(N+, Omega, fn(n N+) power_set(Omega) {increment(event_sequence, n)}) = index_union(N+, Omega, fn(n N+) power_set(Omega) {event_sequence(n)})
 
 thm previous_event_disjoint_from_next_increment:
     ? forall Omega set, events power_set(power_set(Omega)), event_sequence fn (index N+) events, k N+:
@@ -1841,32 +1869,39 @@ thm event_prefix_union_sequence_is_increasing:
         $is_sigma_algebra(Omega, events)
         =>:
             $is_increasing_event_sequence(Omega, events, fn (k N+) events {\event_prefix_union<Omega, events>(event_sequence, k)})
+    let prefix_union = \event_prefix_union<Omega, events>
     claim:
         ? forall k N+:
-            fn (index N+) events {\event_prefix_union<Omega, events>(event_sequence, index)}(k) $subset fn (index N+) events {\event_prefix_union<Omega, events>(event_sequence, index)}(k + 1)
-        fn (index N+) events {\event_prefix_union<Omega, events>(event_sequence, index)}(k) = \event_prefix_union<Omega, events>(event_sequence, k)
-        fn (index N+) events {\event_prefix_union<Omega, events>(event_sequence, index)}(k + 1) = \event_prefix_union<Omega, events>(event_sequence, k + 1)
-        by thm event_prefix_union_successor(Omega, events, event_sequence, k) => \event_prefix_union<Omega, events>(event_sequence, k + 1) = union(\event_prefix_union<Omega, events>(event_sequence, k), event_sequence(k + 1))
+            fn (index N+) events {prefix_union(event_sequence, index)}(k) $subset fn (index N+) events {prefix_union(event_sequence, index)}(k + 1)
+        fn (index N+) events {prefix_union(event_sequence, index)}(k) = prefix_union(event_sequence, k)
+        fn (index N+) events {prefix_union(event_sequence, index)}(k + 1) = prefix_union(event_sequence, k + 1)
+        by thm event_prefix_union_successor(Omega, events, event_sequence, k) => prefix_union(event_sequence, k + 1) = union(prefix_union(event_sequence, k), event_sequence(k + 1))
         claim:
-            ? forall point \event_prefix_union<Omega, events>(event_sequence, k):
-                point $in \event_prefix_union<Omega, events>(event_sequence, k + 1)
-            point $in union(\event_prefix_union<Omega, events>(event_sequence, k), event_sequence(k + 1))
-            point $in \event_prefix_union<Omega, events>(event_sequence, k + 1)
-        by def \event_prefix_union<Omega, events>(event_sequence, k) $subset \event_prefix_union<Omega, events>(event_sequence, k + 1)
-        fn (index N+) events {\event_prefix_union<Omega, events>(event_sequence, index)}(k) $subset fn (index N+) events {\event_prefix_union<Omega, events>(event_sequence, index)}(k + 1)
-    by def $is_increasing_event_sequence(Omega, events, fn (k N+) events {\event_prefix_union<Omega, events>(event_sequence, k)})
+            ? forall point prefix_union(event_sequence, k):
+                point $in prefix_union(event_sequence, k + 1)
+            point $in union(prefix_union(event_sequence, k), event_sequence(k + 1))
+            point $in prefix_union(event_sequence, k + 1)
+        by def prefix_union(event_sequence, k) $subset prefix_union(event_sequence, k + 1)
+        fn (index N+) events {prefix_union(event_sequence, index)}(k) $subset fn (index N+) events {prefix_union(event_sequence, index)}(k + 1)
+    by def $is_increasing_event_sequence(Omega, events, fn (k N+) events {prefix_union(event_sequence, k)})
+    claim:
+        ? forall k N+:
+            fn(index N+) events {\event_prefix_union<Omega, events>(event_sequence, index)}(k) $subset fn(index N+) events {\event_prefix_union<Omega, events>(event_sequence, index)}(k + 1)
+        fn(index N+) events {\event_prefix_union<Omega, events>(event_sequence, index)}(k) = fn(index N+) events {prefix_union(event_sequence, index)}(k) $subset fn(index N+) events {prefix_union(event_sequence, index)}(k + 1) = fn(index N+) events {\event_prefix_union<Omega, events>(event_sequence, index)}(k + 1)
+    by def $is_increasing_event_sequence(Omega, events, fn(k N+) events {\event_prefix_union<Omega, events>(event_sequence, k)})
 
 thm event_prefix_union_subset_source_union:
     ? forall Omega set, events power_set(power_set(Omega)), event_sequence fn (n N+) events, k N+:
         $is_sigma_algebra(Omega, events)
         =>:
             \event_prefix_union<Omega, events>(event_sequence, k) $subset index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})
+    let prefix_union = \event_prefix_union<Omega, events>
     by induc k from 1:
-        ? \event_prefix_union<Omega, events>(event_sequence, k) $subset index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})
+        ? prefix_union(event_sequence, k) $subset index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})
         ? from k = 1:
-            \event_prefix_union<Omega, events>(event_sequence, 1) = event_sequence(1)
+            prefix_union(event_sequence, 1) = event_sequence(1)
             claim:
-                ? forall point \event_prefix_union<Omega, events>(event_sequence, 1):
+                ? forall point prefix_union(event_sequence, 1):
                     point $in index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})
                 point $in event_sequence(1)
                 by thm event_is_subset_of_sample_space(Omega, events, event_sequence(1)) => event_sequence(1) $subset Omega
@@ -1874,17 +1909,17 @@ thm event_prefix_union_subset_source_union:
                 witness exist index N+ st {point $in event_sequence(index)} from 1:
                     point $in event_sequence(1)
                 point $in index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})
-            by def \event_prefix_union<Omega, events>(event_sequence, 1) $subset index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})
+            by def prefix_union(event_sequence, 1) $subset index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})
         ? induc:
-            by thm event_prefix_union_successor(Omega, events, event_sequence, k) => \event_prefix_union<Omega, events>(event_sequence, k + 1) = union(\event_prefix_union<Omega, events>(event_sequence, k), event_sequence(k + 1))
+            by thm event_prefix_union_successor(Omega, events, event_sequence, k) => prefix_union(event_sequence, k + 1) = union(prefix_union(event_sequence, k), event_sequence(k + 1))
             claim:
-                ? forall point \event_prefix_union<Omega, events>(event_sequence, k + 1):
+                ? forall point prefix_union(event_sequence, k + 1):
                     point $in index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})
-                point $in union(\event_prefix_union<Omega, events>(event_sequence, k), event_sequence(k + 1))
-                point $in \event_prefix_union<Omega, events>(event_sequence, k) or point $in event_sequence(k + 1)
+                point $in union(prefix_union(event_sequence, k), event_sequence(k + 1))
+                point $in prefix_union(event_sequence, k) or point $in event_sequence(k + 1)
                 by cases:
                     ? point $in index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})
-                    case point $in \event_prefix_union<Omega, events>(event_sequence, k):
+                    case point $in prefix_union(event_sequence, k):
                         point $in index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})
                     case point $in event_sequence(k + 1):
                         by thm event_is_subset_of_sample_space(Omega, events, event_sequence(k + 1)) => event_sequence(k + 1) $subset Omega
@@ -1892,8 +1927,10 @@ thm event_prefix_union_subset_source_union:
                         witness exist index N+ st {point $in event_sequence(index)} from k + 1:
                             point $in event_sequence(k + 1)
                         point $in index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})
-            by def \event_prefix_union<Omega, events>(event_sequence, k + 1) $subset index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})
-    \event_prefix_union<Omega, events>(event_sequence, k) $subset index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})
+            by def prefix_union(event_sequence, k + 1) $subset index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})
+    prefix_union(event_sequence, k) $subset index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})
+    \event_prefix_union<Omega, events>(event_sequence, k) = prefix_union(event_sequence, k)
+    \event_prefix_union<Omega, events>(event_sequence, k) $subset index_union(N+, Omega, fn(n N+) power_set(Omega) {event_sequence(n)})
 
 thm source_event_subset_same_prefix_union:
     ? forall Omega set, events power_set(power_set(Omega)), event_sequence fn (n N+) events, k N+:
@@ -1931,23 +1968,25 @@ thm event_prefix_union_countable_union_equals_source_union:
         $is_sigma_algebra(Omega, events)
         =>:
             index_union(N+, Omega, fn (prefix_index N+) power_set(Omega) {\event_prefix_union<Omega, events>(event_sequence, prefix_index)}) = index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})
+    let prefix_union = \event_prefix_union<Omega, events>
     by extension:
-        ? index_union(N+, Omega, fn (prefix_index N+) power_set(Omega) {\event_prefix_union<Omega, events>(event_sequence, prefix_index)}) = index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})
+        ? index_union(N+, Omega, fn (prefix_index N+) power_set(Omega) {prefix_union(event_sequence, prefix_index)}) = index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})
         claim:
-            ? forall point index_union(N+, Omega, fn (prefix_index N+) power_set(Omega) {\event_prefix_union<Omega, events>(event_sequence, prefix_index)}):
+            ? forall point index_union(N+, Omega, fn (prefix_index N+) power_set(Omega) {prefix_union(event_sequence, prefix_index)}):
                 point $in index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})
-            obtain k from exist k N+ st {point $in \event_prefix_union<Omega, events>(event_sequence, k)}
-            by thm event_prefix_union_subset_source_union(Omega, events, event_sequence, k) => \event_prefix_union<Omega, events>(event_sequence, k) $subset index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})
+            obtain k from exist k N+ st {point $in prefix_union(event_sequence, k)}
+            by thm event_prefix_union_subset_source_union(Omega, events, event_sequence, k) => prefix_union(event_sequence, k) $subset index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})
             point $in index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)})
         claim:
             ? forall point index_union(N+, Omega, fn (n N+) power_set(Omega) {event_sequence(n)}):
-                point $in index_union(N+, Omega, fn (prefix_index N+) power_set(Omega) {\event_prefix_union<Omega, events>(event_sequence, prefix_index)})
+                point $in index_union(N+, Omega, fn (prefix_index N+) power_set(Omega) {prefix_union(event_sequence, prefix_index)})
             obtain k from exist k N+ st {point $in event_sequence(k)}
-            by thm source_event_subset_same_prefix_union(Omega, events, event_sequence, k) => event_sequence(k) $subset \event_prefix_union<Omega, events>(event_sequence, k)
-            point $in \event_prefix_union<Omega, events>(event_sequence, k)
-            witness exist index N+ st {point $in \event_prefix_union<Omega, events>(event_sequence, index)} from k:
-                point $in \event_prefix_union<Omega, events>(event_sequence, k)
-            point $in index_union(N+, Omega, fn (prefix_index N+) power_set(Omega) {\event_prefix_union<Omega, events>(event_sequence, prefix_index)})
+            by thm source_event_subset_same_prefix_union(Omega, events, event_sequence, k) => event_sequence(k) $subset prefix_union(event_sequence, k)
+            point $in prefix_union(event_sequence, k)
+            witness exist index N+ st {point $in prefix_union(event_sequence, index)} from k:
+                point $in prefix_union(event_sequence, k)
+            point $in index_union(N+, Omega, fn (prefix_index N+) power_set(Omega) {prefix_union(event_sequence, prefix_index)})
+    index_union(N+, Omega, fn(prefix_index N+) power_set(Omega) {\event_prefix_union<Omega, events>(event_sequence, prefix_index)}) = index_union(N+, Omega, fn(prefix_index N+) power_set(Omega) {prefix_union(event_sequence, prefix_index)}) = index_union(N+, Omega, fn(n N+) power_set(Omega) {event_sequence(n)})
 
 thm partial_sum_successor:
     ? forall a seq(R), k N:
@@ -2467,20 +2506,21 @@ thm event_tail_union_sequence_is_decreasing:
         $is_sigma_algebra(Omega, events)
         =>:
             $is_decreasing_event_sequence(Omega, events, fn (n N+) events {\event_tail_union_after<Omega, events>(event_sequence, n - 1)})
+    let tail_union = \event_tail_union_after<Omega, events>
     claim:
         ? forall n N+:
-            fn (tail_index N+) events {\event_tail_union_after<Omega, events>(event_sequence, tail_index - 1)}(n + 1) $subset fn (tail_index N+) events {\event_tail_union_after<Omega, events>(event_sequence, tail_index - 1)}(n)
-        fn (tail_index N+) events {\event_tail_union_after<Omega, events>(event_sequence, tail_index - 1)}(n + 1) = \event_tail_union_after<Omega, events>(event_sequence, (n + 1) - 1)
+            fn (tail_index N+) events {tail_union(event_sequence, tail_index - 1)}(n + 1) $subset fn (tail_index N+) events {tail_union(event_sequence, tail_index - 1)}(n)
+        fn (tail_index N+) events {tail_union(event_sequence, tail_index - 1)}(n + 1) = tail_union(event_sequence, (n + 1) - 1)
         (n + 1) - 1 = n
-        fn (tail_index N+) events {\event_tail_union_after<Omega, events>(event_sequence, tail_index - 1)}(n + 1) = \event_tail_union_after<Omega, events>(event_sequence, n)
-        fn (tail_index N+) events {\event_tail_union_after<Omega, events>(event_sequence, tail_index - 1)}(n) = \event_tail_union_after<Omega, events>(event_sequence, n - 1)
+        fn (tail_index N+) events {tail_union(event_sequence, tail_index - 1)}(n + 1) = tail_union(event_sequence, n)
+        fn (tail_index N+) events {tail_union(event_sequence, tail_index - 1)}(n) = tail_union(event_sequence, n - 1)
         claim:
-            ? forall point \event_tail_union_after<Omega, events>(event_sequence, n):
-                point $in \event_tail_union_after<Omega, events>(event_sequence, n - 1)
-            \event_tail_union_after<Omega, events>(event_sequence, n) = index_union(N+, Omega, fn (offset_index N+) power_set(Omega) {event_sequence(n + offset_index)})
+            ? forall point tail_union(event_sequence, n):
+                point $in tail_union(event_sequence, n - 1)
+            tail_union(event_sequence, n) = index_union(N+, Omega, fn (offset_index N+) power_set(Omega) {event_sequence(n + offset_index)})
             point $in index_union(N+, Omega, fn (offset_index N+) power_set(Omega) {event_sequence(n + offset_index)})
             obtain offset from exist offset N+ st {point $in event_sequence(n + offset)}
-            by thm event_is_subset_of_sample_space(Omega, events, \event_tail_union_after<Omega, events>(event_sequence, n)) => \event_tail_union_after<Omega, events>(event_sequence, n) $subset Omega
+            by thm event_is_subset_of_sample_space(Omega, events, tail_union(event_sequence, n)) => tail_union(event_sequence, n) $subset Omega
             point $in Omega
             have earlier_offset N+ = offset + 1
             n - 1 + earlier_offset = n - 1 + (offset + 1) = n + offset
@@ -2488,11 +2528,16 @@ thm event_tail_union_sequence_is_decreasing:
             witness exist candidate_offset N+ st {point $in event_sequence(n - 1 + candidate_offset)} from earlier_offset:
                 point $in event_sequence(n - 1 + earlier_offset)
             point $in index_union(N+, Omega, fn (offset_index N+) power_set(Omega) {event_sequence(n - 1 + offset_index)})
-            \event_tail_union_after<Omega, events>(event_sequence, n - 1) = index_union(N+, Omega, fn (offset_index N+) power_set(Omega) {event_sequence(n - 1 + offset_index)})
-            point $in \event_tail_union_after<Omega, events>(event_sequence, n - 1)
-        by def \event_tail_union_after<Omega, events>(event_sequence, n) $subset \event_tail_union_after<Omega, events>(event_sequence, n - 1)
-        fn (tail_index N+) events {\event_tail_union_after<Omega, events>(event_sequence, tail_index - 1)}(n + 1) $subset fn (tail_index N+) events {\event_tail_union_after<Omega, events>(event_sequence, tail_index - 1)}(n)
-    by def $is_decreasing_event_sequence(Omega, events, fn (n N+) events {\event_tail_union_after<Omega, events>(event_sequence, n - 1)})
+            tail_union(event_sequence, n - 1) = index_union(N+, Omega, fn (offset_index N+) power_set(Omega) {event_sequence(n - 1 + offset_index)})
+            point $in tail_union(event_sequence, n - 1)
+        by def tail_union(event_sequence, n) $subset tail_union(event_sequence, n - 1)
+        fn (tail_index N+) events {tail_union(event_sequence, tail_index - 1)}(n + 1) $subset fn (tail_index N+) events {tail_union(event_sequence, tail_index - 1)}(n)
+    by def $is_decreasing_event_sequence(Omega, events, fn (n N+) events {tail_union(event_sequence, n - 1)})
+    claim:
+        ? forall n N+:
+            fn(tail_index N+) events {\event_tail_union_after<Omega, events>(event_sequence, tail_index - 1)}(n + 1) $subset fn(tail_index N+) events {\event_tail_union_after<Omega, events>(event_sequence, tail_index - 1)}(n)
+        fn(tail_index N+) events {\event_tail_union_after<Omega, events>(event_sequence, tail_index - 1)}(n + 1) = fn(tail_index N+) events {tail_union(event_sequence, tail_index - 1)}(n + 1) $subset fn(tail_index N+) events {tail_union(event_sequence, tail_index - 1)}(n) = fn(tail_index N+) events {\event_tail_union_after<Omega, events>(event_sequence, tail_index - 1)}(n)
+    by def $is_decreasing_event_sequence(Omega, events, fn(n N+) events {\event_tail_union_after<Omega, events>(event_sequence, n - 1)})
 
 thm first_borel_cantelli:
     ? forall Omega set, events power_set(power_set(Omega)), probability fn (event events) R, event_sequence fn (n N+) events, total R:

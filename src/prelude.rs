@@ -5,7 +5,7 @@
 //! `use crate::prelude::*;` so implementation files can focus on kernel logic
 //! instead of long import lists.
 
-pub(crate) use crate::common::builtin_theorem::without_bound_symbol_display_ids;
+pub use crate::common::builtin_theorem::without_bound_symbol_display_ids;
 pub use crate::common::builtin_theorem::BuiltinTheoremId;
 pub use crate::common::fact_id::FactId;
 pub use crate::common::forall_conclusion_location::{

@@ -136,20 +136,20 @@ fn litex_to_mathlib_pipeline_property_companion_verifies_without_trust() {
 }
 
 #[test]
-fn real_sequence_completeness_showcase_generated_lean_has_not_drifted() {
+fn real_sequence_definition_showcase_generated_lean_has_not_drifted() {
     const SOURCE: &str =
         include_str!("../../showcases/litex_to_lean_mathlib_pipeline/showcase2/main.lit");
     const CHECKED_IN: &str =
         include_str!("../../showcases/litex_to_lean_mathlib_pipeline/showcase2/LitexGenerate.lean");
 
     let generated = compile_on_verifier_stack(SOURCE, "main.lit")
-        .expect("compile the real-sequence completeness showcase");
+        .expect("compile the real-sequence definition showcase");
 
     assert_eq!(generated, CHECKED_IN);
     assert!(generated.contains("def is_convergent_sequence"));
     assert!(generated.contains("def is_cauchy_sequence"));
-    assert!(generated.contains("theorem cauchy_sequence_converges"));
-    assert!(generated.contains("Litex.Rules.realCauchySequenceConverges"));
+    assert!(!generated.contains("theorem cauchy_sequence_converges"));
+    assert!(!SOURCE.contains("real_cauchy_sequence_converges"));
     assert!(!SOURCE.contains("axiom"));
     assert!(!SOURCE.contains("trust"));
     assert!(!generated.contains("axiom "));
@@ -158,16 +158,18 @@ fn real_sequence_completeness_showcase_generated_lean_has_not_drifted() {
 }
 
 #[test]
-fn real_sequence_completeness_stable_tracer_generated_lean_has_not_drifted() {
+fn real_sequence_definitions_stable_tracer_generated_lean_has_not_drifted() {
     const SOURCE: &str = include_str!("../../lean/examples/64_RealSequenceCompleteness.lit");
     const CHECKED_IN: &str = include_str!("../../lean/examples/64_RealSequenceCompleteness.lean");
 
     let generated = compile_on_verifier_stack(SOURCE, "64_RealSequenceCompleteness.lit")
-        .expect("compile the stable real-sequence completeness tracer");
+        .expect("compile the stable real-sequence definition tracer");
 
     assert_eq!(generated, CHECKED_IN);
-    assert!(generated.contains("theorem cauchy_sequence_converges"));
-    assert!(generated.contains("Litex.Rules.realCauchySequenceConverges"));
+    assert!(generated.contains("def is_convergent_sequence"));
+    assert!(generated.contains("def is_cauchy_sequence"));
+    assert!(!generated.contains("theorem cauchy_sequence_converges"));
+    assert!(!SOURCE.contains("real_cauchy_sequence_converges"));
     assert!(!SOURCE.contains("axiom"));
     assert!(!SOURCE.contains("trust"));
     assert!(!generated.contains("axiom "));
@@ -520,8 +522,9 @@ fn top_level_atomic_equality_compiles_typed_result_evidence() {
             .expect("compile top-level atomic equality tracer");
     assert!(generated.contains("Litex.Same.refl (1 : ℂ)"));
     assert!(generated.contains("Litex.Same ((2 : ℂ) + (3 : ℂ)) (5 : ℂ)"));
-    assert!(generated
-        .contains("Litex.Same.ofEq (by norm_num [Litex.tupleDim, Litex.TupleShape.dimension])"));
+    assert!(generated.contains(
+        "Litex.Same.ofEq (by norm_num [Litex.abs, Litex.min, Litex.max, Litex.tupleDim, Litex.TupleShape.dimension])"
+    ));
     assert!(generated.contains("theorem __fact2"));
     assert!(generated.contains("exact __fact1"));
     assert!(!generated.contains("sorry"));
@@ -553,7 +556,8 @@ fn complex_algebraic_normalization_compiles_typed_result_evidence() {
     );
     assert!(generated.contains("^ (2 : ℕ)"), "{generated}");
     assert!(generated.contains("^ (-1 : ℤ)"), "{generated}");
-    assert!(generated.contains("Litex.In.rep z"), "{generated}");
+    assert!(generated.contains("((z : ℂ) + Complex.I)"), "{generated}");
+    assert!(!generated.contains("Litex.In.rep z"), "{generated}");
     assert!(!generated.contains("LitexObject"), "{generated}");
     assert!(!generated.contains("Litex.Object"), "{generated}");
     assert!(!generated.contains("Set.univ"), "{generated}");
@@ -742,7 +746,7 @@ fn positive_natural_uses_exact_subtype_and_projection() {
         "Litex.Rules.complexEqNatInNPos (1 : ℂ) 1 (by norm_num) (by norm_num)",
         "Litex.Rules.inNOfInNPos",
         "have __infer",
-        "Litex.Rules.positiveOfInNPos (__h",
+        "Litex.Rules.positiveNaturalRepPositive (__h",
     ] {
         assert!(
             generated.contains(expected),
@@ -788,7 +792,7 @@ fn positive_real_uses_exact_subtype_projection_and_elimination() {
         "Litex.Rules.inCOfInR",
         "Litex.Rules.positiveOfInRPos",
         "have __infer",
-        "Litex.Rules.positiveOfInRPos (__h",
+        "Litex.Rules.positiveRealRepPositive (__h",
     ] {
         assert!(
             generated.contains(expected),
@@ -956,11 +960,11 @@ fn numeric_carrier_closures_replay_exact_rules() {
     assert!(!generated.contains("axiom "));
     assert!(!generated.contains("sorry"));
     assert!(
-        generated.contains("Litex.In.rep a __h7_1")
-            && generated.contains("Litex.In.rep b __h7_2")
-            && generated.contains(" % "),
-        "integer remainder did not consume its two exact visible representatives: {generated}"
+        generated.contains("∀ (__p1 : ℤ) (__p2 : ℤ)")
+            && generated.contains("Litex.Rules.complexIntInZ (a % b)"),
+        "integer remainder did not preserve its native integer binders: {generated}"
     );
+    assert!(!generated.contains("Litex.In.rep a __h7_1"));
 }
 
 #[test]
@@ -1002,16 +1006,16 @@ fn rational_and_natural_carrier_closures_replay_exact_rules() {
     assert!(!generated.contains("sorry"));
     assert_eq!(generated.matches("have __infer4_").count(), 4);
     assert_eq!(generated.matches("have __infer5_").count(), 4);
-    assert!(generated.contains("Litex.Rules.nonnegativeOfInN (__h4_1)"));
+    assert!(generated.contains("Litex.Rules.naturalRepNonnegative (__h4_1)"));
     assert!(generated.contains("Litex.Rules.complexEqNatInN"));
     assert!(!generated.contains("complexAddInN (__h4_1)"));
     assert!(!generated.contains("complexMulInN (__h5_1)"));
     assert!(
         generated.contains("Litex.In.rep a __h6_1")
-            && generated.contains("Litex.In.rep z __h6_2")
+            && generated.contains("(__p2 : ℤ)")
             && generated.contains("Litex.Rules.complexRatInQ")
-            && generated.contains(" ^ "),
-        "rational power did not consume its exact Q/Z representatives: {generated}"
+            && generated.contains(" ^ z : ℚ"),
+        "rational power did not preserve its exact Q representative and native Z exponent: {generated}"
     );
 }
 
@@ -1151,8 +1155,12 @@ fn multilayer_application_preserves_each_unary_source_contract() {
         compile_on_verifier_stack(SAME_LAYER_DOMAIN, "23_MultilayerApplication.lit")
             .expect("compile same-layer ordered domain clauses");
     assert!(same_layer_domain.contains("Litex.FnTelescope.requirement"));
-    assert!(same_layer_domain.contains("Litex.Positive __arg1"));
-    assert!(same_layer_domain.contains("Litex.Positive __arg2"));
+    assert!(
+        same_layer_domain.contains("Litex.Lt (0 : ℂ) (((Litex.In.rep __arg1 __arg1_in : ℝ)) : ℂ)")
+    );
+    assert!(
+        same_layer_domain.contains("Litex.Lt (0 : ℂ) (((Litex.In.rep __arg2 __arg2_in : ℝ)) : ℂ)")
+    );
     assert!(same_layer_domain.contains("__domain1"));
     assert!(same_layer_domain.contains("__domain2"));
     assert!(same_layer_domain.contains("⟨__domain1, __domain2⟩"));
@@ -1556,12 +1564,15 @@ fn builtin_strategy_result_marks_each_selected_layer_and_replays_exact_rules() {
             .count(),
         1
     );
-    assert!(generated.contains("Litex.Positive.congr (Litex.Same.trans"));
-    assert!(generated.contains("Litex.Nonnegative.congr (Litex.Same.trans"));
-    assert!(generated.contains("Litex.Rules.complexNegativeOneMulNegative ((Litex.Positive.congr"));
+    assert!(generated.contains("Litex.Rules.realCastPositive (Litex.In.rep a __h"));
+    assert!(generated.contains(": ℝ) (__domain1)"));
+    assert!(generated.contains("Litex.Rules.realCastNonnegative (Litex.In.rep b __h"));
+    assert!(generated.contains(": ℝ) (__domain2)"));
+    assert!(generated
+        .contains("Litex.Rules.complexNegativeOneMulNegative (Litex.Rules.realCastPositive"));
     assert!(generated.contains("Litex.Negative.toNonpositive (__infer"));
-    assert!(generated.contains("Litex.In.same_rep a"));
-    assert!(generated.contains("Litex.Same.realComplex (Litex.In.rep a"));
+    assert!(!generated.contains("Litex.Positive.congr"));
+    assert!(!generated.contains("Litex.Same.realComplex"));
     assert!(!generated.contains("sorry"));
 
     const REAL_ADDITION_CARRIER_SOURCE: &str = "forall a, b R:\n    a + b $in R\n";
@@ -1710,16 +1721,22 @@ fn direct_multiplicative_and_divisive_sign_rules_all_compile() {
 }
 
 #[test]
-fn unsupported_subtractive_strategy_rule_remains_fail_closed() {
-    let error = compile_on_verifier_stack(
-        "forall a, b R:\n    a <= b\n    =>:\n        b - a >= 0\n",
-        "unsupported_builtin_strategy_rule.lit",
+fn subtractive_strategy_rule_compiles_from_registered_certificate() {
+    const SOURCE: &str = "forall a, b R:\n    a <= b\n    =>:\n        b - a >= 0\n";
+    let result_json = capture_stmt_results_json_v2_on_verifier_stack(
+        SOURCE,
+        "subtractive_builtin_strategy_rule.lit",
     )
-    .expect_err("unreviewed subtractive sign rule must remain outside the compiler slice");
-    assert!(
-        error.contains("SubNonnegativeFromLessEqual"),
-        "unexpected error: {error}"
-    );
+    .expect("capture the registered subtractive-sign certificate");
+    assert!(result_json.contains("SubNonnegativeFromLessEqual"));
+
+    let generated = compile_on_verifier_stack(SOURCE, "subtractive_builtin_strategy_rule.lit")
+        .expect("compile the reviewed subtractive-sign rule");
+    assert!(generated.contains("Litex.Rules.complexSubNonnegativeOfLessEqual"));
+    assert!(generated.contains("Litex.In.rep a"));
+    assert!(generated.contains("Litex.In.rep b"));
+    assert!(!generated.contains("axiom "));
+    assert!(!generated.contains("sorry"));
 }
 
 #[test]

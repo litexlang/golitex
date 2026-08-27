@@ -1479,17 +1479,4 @@ def RealSequenceCauchy (a : RealSequence) : Prop :=
     ∃ start : ℕ,
       RealSequenceCauchyTail a epsilon start
 
-/-- Mathlib's `CompleteSpace ℝ` discharges the only completeness step. -/
-theorem realCauchySequenceConverges
-    (a : RealSequence)
-    (cauchy : RealSequenceCauchy a) :
-    RealSequenceConvergent a := by
-  have nativeCauchy : CauchySeq (realSequenceAt a) :=
-    Metric.cauchySeq_iff.mpr (by
-      intro epsilon epsilonPositive
-      obtain ⟨start, tail⟩ := cauchy epsilon epsilonPositive
-      exact ⟨start, fun m hm n hn => tail m n hm hn⟩)
-  obtain ⟨limit, tends⟩ := cauchySeq_tendsto_of_complete nativeCauchy
-  exact ⟨limit, Metric.tendsto_atTop.mp tends⟩
-
 end Litex.Rules

@@ -1,6 +1,3 @@
-use super::object_statements::{
-    checked_real_sequence_definition_kind, CheckedRealSequenceDefinitionKind,
-};
 use super::*;
 
 impl StmtResultToLeanCompiler {
@@ -1155,35 +1152,6 @@ impl StmtResultToLeanCompiler {
         &mut self,
         result: &SuccessReleaseThmStmtResult,
     ) -> Result<bool, String> {
-        if let Some(conclusion) =
-            self.construct_lean_proof_from_real_cauchy_sequence_completeness_result(result)?
-        {
-            let fact_id = conclusion.retained_fact_id.ok_or_else(|| {
-                "real-sequence completeness conclusion has no retained FactId".to_string()
-            })?;
-            let conclusion_name = format!("__fact{}", self.next_fact_name_index);
-            self.declarations.push(format!(
-                "theorem {conclusion_name} : {} := by\n  exact {}",
-                conclusion.proposition, conclusion.proof_expression
-            ));
-            self.environment_stack
-                .fact_names
-                .insert(fact_id, conclusion_name);
-            self.environment_stack
-                .fact_propositions
-                .insert(fact_id, conclusion.fact);
-            self.next_fact_name_index += 1;
-            self.compile_defined_predicate_inference_results_in_current_environment(
-                &result.common.infers,
-                DefinedPredicateInferenceConclusionPublication::PersistentLeanTheorem,
-            )?;
-            validate_flattened_inferred_fact_ids_are_visible(
-                &result.common.infers,
-                &self.environment_stack,
-                "real-sequence completeness Result",
-            )?;
-            return Ok(true);
-        }
         let Some(verification) = &result.verification else {
             return Ok(false);
         };
@@ -1349,159 +1317,6 @@ impl StmtResultToLeanCompiler {
             )?;
         }
         Ok(true)
-    }
-
-    pub(super) fn construct_lean_proof_from_real_cauchy_sequence_completeness_result(
-        &mut self,
-        result: &SuccessReleaseThmStmtResult,
-    ) -> Result<Option<CompiledLitexTheoremInstantiationConclusionProofBody>, String> {
-        let Some(verification) = &result.verification else {
-            return Ok(None);
-        };
-        let SuccessVerifyTheoremApplicationSourceResult::Builtin(source) = &verification.source
-        else {
-            return Ok(None);
-        };
-        if source.theorem_id != BuiltinTheoremId::RealCauchySequenceConverges {
-            return Ok(None);
-        }
-        if verification.theorem != source.theorem_id.as_str()
-            || verification.theorem != result.statement.name.to_string()
-            || verification.arguments.len() != 1
-            || result.statement.args.len() != 1
-            || obj_equality_key(&verification.arguments[0])
-                != obj_equality_key(&result.statement.args[0])
-            || source.requirement_roles
-                != vec![
-                    BuiltinTheoremRequirementRole::ArgumentIsRealSequence,
-                    BuiltinTheoremRequirementRole::SequenceSatisfiesCauchyDefinition,
-                ]
-            || source.requirement_facts.len() != 2
-            || source.requirement_checks.len() != 2
-            || verification.direct_conclusions.len() != 1
-        {
-            return Err("real-sequence completeness Result changed its typed schema".into());
-        }
-        if source.provenance.is_some() {
-            return Err("real-sequence completeness gained unexpected provenance".into());
-        }
-        let conclusion_well_definedness =
-            source.conclusion_well_definedness.as_ref().ok_or_else(|| {
-                "real-sequence completeness lost its conclusion WD evidence".to_string()
-            })?;
-        let membership_check = source.requirement_checks[0]
-            .factual_success()
-            .ok_or_else(|| "real-sequence membership requirement is not factual".to_string())?;
-        let cauchy_check = source.requirement_checks[1]
-            .factual_success()
-            .ok_or_else(|| "real-sequence Cauchy requirement is not factual".to_string())?;
-        for (index, (fact, check)) in source
-            .requirement_facts
-            .iter()
-            .zip([membership_check, cauchy_check])
-            .enumerate()
-        {
-            validate_scoped_fact_check_result(
-                check,
-                fact,
-                &format!("real-sequence completeness requirement {index}"),
-            )?;
-        }
-        self.construct_lean_proof_from_direct_fact_result_using_its_well_definedness(
-            membership_check,
-        )?
-        .ok_or_else(|| {
-            "real-sequence membership requirement has no proof-producing consumer".to_string()
-        })?;
-        let cauchy_proof = self
-            .construct_lean_proof_from_direct_fact_result_using_its_well_definedness(cauchy_check)?
-            .ok_or_else(|| {
-                "real-sequence Cauchy requirement has no proof-producing consumer".to_string()
-            })?;
-
-        let [conclusion] = verification.direct_conclusions.as_slice() else {
-            unreachable!("direct conclusion arity checked above")
-        };
-        let Fact::AtomicFact(AtomicFact::NormalAtomicFact(cauchy_fact)) =
-            &source.requirement_facts[1]
-        else {
-            return Err("real-sequence Cauchy requirement changed fact family".into());
-        };
-        let Fact::AtomicFact(AtomicFact::NormalAtomicFact(convergent_fact)) = conclusion else {
-            return Err("real-sequence completeness conclusion changed fact family".into());
-        };
-        if cauchy_fact.body.len() != 1
-            || convergent_fact.body.len() != 1
-            || obj_equality_key(&cauchy_fact.body[0])
-                != obj_equality_key(&verification.arguments[0])
-            || obj_equality_key(&convergent_fact.body[0])
-                != obj_equality_key(&verification.arguments[0])
-        {
-            return Err("real-sequence completeness changed its predicate arguments".into());
-        }
-        let cauchy_binding = self
-            .environment_stack
-            .predicate_bindings
-            .get(&cauchy_fact.predicate.to_string())
-            .cloned()
-            .ok_or_else(|| "checked Cauchy predicate is unavailable to the compiler".to_string())?;
-        let convergent_binding = self
-            .environment_stack
-            .predicate_bindings
-            .get(&convergent_fact.predicate.to_string())
-            .cloned()
-            .ok_or_else(|| {
-                "checked convergent predicate is unavailable to the compiler".to_string()
-            })?;
-        let Some(cauchy_definition) = &cauchy_binding.definition else {
-            return Err("checked Cauchy predicate lost its concrete definition".into());
-        };
-        let Some(convergent_definition) = &convergent_binding.definition else {
-            return Err("checked convergent predicate lost its concrete definition".into());
-        };
-        if !matches!(
-            checked_real_sequence_definition_kind(cauchy_definition),
-            Some(CheckedRealSequenceDefinitionKind::Cauchy)
-        ) || !matches!(
-            checked_real_sequence_definition_kind(convergent_definition),
-            Some(CheckedRealSequenceDefinitionKind::Convergent)
-        ) || !cauchy_binding.dependent_parameter_evidence
-            || !convergent_binding.dependent_parameter_evidence
-        {
-            return Err(
-                "real-sequence completeness predicates lost their checked source contracts".into(),
-            );
-        }
-        let argument = render_obj(&verification.arguments[0], &self.environment_stack)?;
-        let proposition = self
-            .render_fact_using_well_definedness_result(conclusion_well_definedness, conclusion)?;
-        let proof_expression = format!(
-            "(by\n  have __cauchy := {cauchy_proof}\n  unfold {} at __cauchy\n  rcases __cauchy with \u{27e8}__sequence_in, __native_cauchy\u{27e9}\n  unfold {}\n  exact \u{27e8}__sequence_in, Litex.Rules.realCauchySequenceConverges (Litex.In.rep {argument} __sequence_in) __native_cauchy\u{27e9})",
-            cauchy_binding.lean_name,
-            convergent_binding.lean_name,
-        );
-        if result.common.infers.store_fact_outputs.len() != 1
-            || result
-                .common
-                .infers
-                .rule_applications
-                .iter()
-                .any(|application| !defined_predicate_infer_rule(&application.rule))
-        {
-            return Err("real-sequence completeness changed its publication effects".into());
-        }
-        let store = &result.common.infers.store_fact_outputs[0];
-        if store.itself_and_why_itself_is_stored.0.to_string() != conclusion.to_string()
-            || store.inferred_facts.len() != store.inferred_fact_ids.len()
-        {
-            return Err("real-sequence completeness changed its conclusion store".into());
-        }
-        Ok(Some(CompiledLitexTheoremInstantiationConclusionProofBody {
-            retained_fact_id: store.fact_id,
-            fact: conclusion.clone(),
-            proposition,
-            proof_expression,
-        }))
     }
 
     fn compile_literal_cartesian_membership_infer_result_as_top_level_declarations(
@@ -2258,16 +2073,10 @@ impl StmtResultToLeanCompiler {
                 .map(|line| line.map(|line| vec![line]));
         }
         if let StmtResult::Success(SuccessStmtResult::ReleaseThmStmt(result)) = result {
-            let mut real_completeness = false;
             let conclusions = if let Some(conclusions) =
                 self.construct_lean_proofs_from_litex_theorem_instantiation_stmt_result(result)?
             {
                 conclusions
-            } else if let Some(conclusion) =
-                self.construct_lean_proof_from_real_cauchy_sequence_completeness_result(result)?
-            {
-                real_completeness = true;
-                vec![conclusion]
             } else {
                 return Ok(None);
             };
@@ -2295,17 +2104,6 @@ impl StmtResultToLeanCompiler {
                     "have {name} : {} := by\n  exact {}",
                     conclusion.proposition, conclusion.proof_expression
                 ));
-            }
-            if real_completeness {
-                self.compile_defined_predicate_inference_results_in_current_environment(
-                    &result.common.infers,
-                    DefinedPredicateInferenceConclusionPublication::LocalProofExpression,
-                )?;
-                validate_flattened_inferred_fact_ids_are_visible(
-                    &result.common.infers,
-                    &self.environment_stack,
-                    "local real-sequence completeness Result",
-                )?;
             }
             return Ok(Some(lines));
         }
@@ -2793,9 +2591,5 @@ fn builtin_theorem_requirement_roles(
         BuiltinTheoremId::SumOverBijectiveFiniteSetEnumerations => {
             vec![Role::BijectiveFiniteSetEnumerations]
         }
-        BuiltinTheoremId::RealCauchySequenceConverges => vec![
-            Role::ArgumentIsRealSequence,
-            Role::SequenceSatisfiesCauchyDefinition,
-        ],
     }
 }

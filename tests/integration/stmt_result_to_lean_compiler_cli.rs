@@ -97,7 +97,7 @@ fn lean_command_rejects_the_litex_file_as_its_output() {
 }
 
 #[test]
-fn lean_command_rejects_imports_in_single_file_mode() {
+fn lean_command_rejects_legacy_imports_before_single_file_compilation() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let mut scratch = ScratchFiles::new("import");
     let source_path = scratch.new_path("lit");
@@ -115,8 +115,9 @@ fn lean_command_rejects_imports_in_single_file_mode() {
         .expect("run importing single-file -lean");
 
     assert!(!output.status.success());
-    assert!(String::from_utf8_lossy(&output.stderr)
-        .contains("single-file StmtResult-to-Lean compilation does not support `import`"));
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("`import` is a terminal command, not a Litex statement"));
+    assert!(stderr.contains("declare source dependencies in litex.config"));
     assert!(!output_path.exists());
 }
 

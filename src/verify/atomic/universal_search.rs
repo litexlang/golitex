@@ -2850,6 +2850,14 @@ impl ArgMatcher<'_> {
                     );
                     return Ok(Some(map));
                 }
+
+                // A named application may contribute its callable prefix only
+                // when its complete suffix is exactly the surrounding
+                // anonymous-function binder application.  Falling through here
+                // would instead synthesize a lambda from, for example,
+                // `rows(a)(1)` while matching `F(K)`, silently treating the
+                // nonmatching named suffix as if it were `K`.
+                return Ok(None);
             }
         }
 

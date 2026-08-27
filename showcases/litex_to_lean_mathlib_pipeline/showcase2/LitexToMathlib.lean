@@ -36,12 +36,17 @@ theorem mathlibCompleteness
     ∃ limit : ℝ, Tendsto (toMathlibSequence a) atTop (nhds limit) := by
   exact cauchySeq_tendsto_of_complete (cauchySeq_of_litexCauchy a h)
 
-/-- The source theorem, specialized to the compiler's exact real-sequence carrier. -/
-theorem generatedCompleteness
+/-- Mathlib completeness, stated with the predicates generated from `main.lit`. -/
+theorem mathlibCompletenessInGeneratedVocabulary
     (a : LitexRealSequence)
     (h : __Compiler_main.is_cauchy_sequence a) :
     __Compiler_main.is_convergent_sequence a := by
-  exact __Compiler_main.cauchy_sequence_converges
-    a (Litex.In.own (Litex.sequenceSet Litex.R) a) h
+  unfold __Compiler_main.is_cauchy_sequence at h
+  rcases h with ⟨sequenceIn, nativeCauchy⟩
+  unfold __Compiler_main.is_convergent_sequence
+  refine ⟨sequenceIn, ?_⟩
+  obtain ⟨limit, tends⟩ :=
+    mathlibCompleteness (Litex.In.rep a sequenceIn) nativeCauchy
+  exact ⟨limit, Metric.tendsto_atTop.mp tends⟩
 
 end CauchySequencePipeline
