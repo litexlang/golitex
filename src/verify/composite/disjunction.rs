@@ -451,9 +451,10 @@ impl Runtime {
                 &verify_state_for_children,
             )? {
                 return Ok(
-                    (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                    (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         or_fact.clone().into(),
                         reason.to_string(),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyOrFact),
                         steps,
                     ))
                     .into(),
@@ -470,9 +471,10 @@ impl Runtime {
                 if let Ok(negated_first) = first_atomic.logical_negation() {
                     if negated_first.to_string() == second_atomic.to_string() {
                         return Ok(
-                            (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                            (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                                 or_fact.clone().into(),
                                 "or: complementary atomic facts".to_string(),
+                                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyOrFact),
                                 Vec::new(),
                             ))
                             .into(),
@@ -489,10 +491,11 @@ impl Runtime {
                         &verify_state_for_children,
                     )? {
                         return Ok(
-                            (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                            (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                                 or_fact.clone().into(),
                                 "or: complementary order relations (strict vs non-strict) on the same real terms"
                                     .to_string(),
+                                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyOrFact),
                                 steps,
                             ))
                             .into(),
@@ -508,10 +511,11 @@ impl Runtime {
                         .verify_atomic_fact_restricted_known_builtin(&weak_bound, verify_state)?;
                     if weak_result.is_success() {
                         return Ok(
-                            (SuccessFactStmtResult::new_with_verified_by_builtin_rules_label_and_steps(
+                            (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                                 or_fact.clone().into(),
                                 SuccessInferResult::new(),
                                 "or: equality plus strict order covers a known weak order".to_string(),
+                                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyOrFact),
                                 vec![weak_result],
                             ))
                             .into(),
@@ -522,9 +526,10 @@ impl Runtime {
                     || abs_sign_split_or_is_exhaustive_pair(second_atomic, first_atomic)
                 {
                     return Ok(
-                        (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                        (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             or_fact.clone().into(),
                             "or: abs(x) is x or -x".to_string(),
+                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyOrFact),
                             Vec::new(),
                         ))
                         .into(),
@@ -535,9 +540,10 @@ impl Runtime {
 
         if mod_positive_integer_residue_or_is_exhaustive(or_fact) {
             return Ok(
-                (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     or_fact.clone().into(),
                     "or: complete residue classes modulo a positive integer".to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyOrFact),
                     Vec::new(),
                 ))
                 .into(),
@@ -639,13 +645,14 @@ impl Runtime {
             })?;
             if conclusion_result.is_success() {
                 return Ok(Some(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_label_and_steps(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                         or_fact.clone().into(),
                         SuccessInferResult::new(),
                         format!(
                             "or: classical implication packaging; `{}` follows under `{}`",
                             conclusion, assumed_opposite
                         ),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyOrByClassicalImplication),
                         vec![conclusion_result],
                     )
                     .into(),
@@ -686,10 +693,11 @@ impl Runtime {
         }
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_label_and_steps(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                 or_fact.clone().into(),
                 SuccessInferResult::new(),
                 "or: integer lower bound split into finite successors and strict tail".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyIntegerSuccessorTailOrFromLowerBound),
                 steps,
             )
             .into(),
@@ -746,10 +754,11 @@ impl Runtime {
             if product_zero_result.is_success() {
                 steps.push(product_zero_result);
                 return Ok(Some(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_label_and_steps(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                         or_fact.clone().into(),
                         SuccessInferResult::new(),
                         "zero_product_split: a * b = 0 gives a = 0 or b = 0".to_string(),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyZeroProductOr),
                         steps,
                     )
                     .into(),
@@ -810,10 +819,11 @@ impl Runtime {
                 self.verify_non_equational_atomic_fact_with_known_atomic_facts(&candidate)?;
             if result.is_success() {
                 return Ok(Some(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_label_and_steps(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                         or_fact.clone().into(),
                         SuccessInferResult::new(),
                         "or: square sum nonzero implies one component nonzero".to_string(),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyComponentNonzeroOrFromKnownSquareSumNotEqualZero),
                         vec![result],
                     )
                     .into(),

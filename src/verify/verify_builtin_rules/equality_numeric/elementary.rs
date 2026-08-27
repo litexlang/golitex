@@ -142,9 +142,10 @@ impl Runtime {
                         self.verify_builtin_rule_premises(&premises, builtin_state)?
                     {
                         return Ok(Some(
-                            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                                 equal_fact.clone().into(),
                                 reason.to_string(),
+                                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyZeroEqualsProductImpliesOtherFactorZero),
                                 results,
                             )
                             .into(),
@@ -169,9 +170,10 @@ impl Runtime {
                     )?;
                     if right_nonzero_result.is_success() {
                         return Ok(Some(
-                            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                                 equal_fact.clone().into(),
                                 "equality: b = 0 from a * b = 0 and a != 0".to_string(),
+                                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyZeroEqualsProductImpliesOtherFactorZero),
                                 vec![left_target_result, right_nonzero_result],
                             )
                             .into(),
@@ -194,9 +196,10 @@ impl Runtime {
                         .verify_atomic_fact_as_builtin_rule_premise(&left_nonzero, builtin_state)?;
                     if left_nonzero_result.is_success() {
                         return Ok(Some(
-                            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                                 equal_fact.clone().into(),
                                 "equality: a = 0 from a * b = 0 and b != 0".to_string(),
+                                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyZeroEqualsProductImpliesOtherFactorZero),
                                 vec![right_target_result, left_nonzero_result],
                             )
                             .into(),
@@ -367,9 +370,10 @@ impl Runtime {
         }
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "equality: 1 % k = 1 for k >= 2".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyOneModEqualsOneForModulusAtLeastTwo),
                 vec![modulus_result],
             )
             .into(),
@@ -428,9 +432,10 @@ impl Runtime {
         };
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "equality: (a - a % b) % b = 0 for a in Z and b in N+".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyModDividendMinusRemainderEqualsZero),
                 results,
             )
             .into(),
@@ -494,9 +499,10 @@ impl Runtime {
         };
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "equality: Euclidean quotient decomposition a = d * quot(a, d) + a % d".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::DecompositionParts),
                 premises,
             )
             .into(),
@@ -558,10 +564,11 @@ impl Runtime {
                 self.verify_builtin_rule_premises(&complete_premises, builtin_state)?
             {
                 return Ok(Some(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         equal_fact.clone().into(),
                         "equality: Euclidean remainder uniqueness from a = m * q + r and 0 <= r < m"
                             .to_string(),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyModEqRemainderFromEuclideanDivision),
                         steps,
                     )
                     .into(),
@@ -600,10 +607,11 @@ impl Runtime {
                 decomposition_result,
             ]);
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     equal_fact.clone().into(),
                     "equality: Euclidean remainder uniqueness from a = m * q + r and 0 <= r < m"
                         .to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyModEqRemainderFromEuclideanDivision),
                     steps,
                 )
                 .into(),

@@ -24,12 +24,13 @@ impl Runtime {
             return None;
         }
         Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 format!(
                     "{name}: operation carrier {carrier} is contained in {}",
                     in_fact.set
                 ),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyReduceMembershipFromOperationCarrier),
                 Vec::new(),
             )
             .into(),
@@ -79,10 +80,11 @@ impl Runtime {
                 continue;
             }
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "refined integer carrier from known integer membership and strict sign"
                         .to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyRefinedIntegerCarrierFromKnownSign),
                     vec![source_result, sign_result],
                 )
                 .into(),
@@ -353,9 +355,10 @@ impl Runtime {
             );
         }
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 "fn application in defined return set or standard numeric superset (well-defined under typing)".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactFnApplicationInTypedReturnSet),
                 Vec::new(),
             )
             .into(),
@@ -431,9 +434,10 @@ impl Runtime {
                 self.verify_atomic_fact_as_builtin_rule_premise(&left_in_n_pos, builtin_state)?;
             if positive_natural_result.is_success() {
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         in_fact.clone().into(),
                         "N: n - 1 from n in N+".to_string(),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactSubInNFromIntegerTermsAndBound),
                         vec![positive_natural_result],
                     )
                     .into(),
@@ -449,9 +453,10 @@ impl Runtime {
                 self.verify_atomic_fact_as_builtin_rule_premise(&left_positive, builtin_state)?;
             if membership_result.is_success() && positive_result.is_success() {
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         in_fact.clone().into(),
                         "N: n - 1 from n in N and n > 0".to_string(),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactSubInNFromIntegerTermsAndBound),
                         vec![membership_result, positive_result],
                     )
                     .into(),
@@ -485,9 +490,10 @@ impl Runtime {
             self.verify_atomic_fact_as_builtin_rule_premise(&right_le_left, builtin_state)?;
         if bound_result.is_success() {
             return Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "N: a - b from a,b in Z and b <= a".to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactSubInNFromIntegerTermsAndBound),
                     vec![left_result, right_result, bound_result],
                 )
                 .into(),
@@ -507,9 +513,10 @@ impl Runtime {
                 self.verify_non_equational_atomic_fact_with_known_atomic_facts(order_fact)?;
             if order_result.is_success() {
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         in_fact.clone().into(),
                         "N: a - b from a,b in Z and known nonnegative difference".to_string(),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactSubInNFromIntegerTermsAndBound),
                         vec![left_result, right_result, order_result],
                     )
                     .into(),
@@ -600,9 +607,10 @@ impl Runtime {
         }
 
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 reason.to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactPowInStandardSetFromBaseAndNaturalExponent),
                 vec![base_result, exponent_result],
             )
             .into(),
@@ -636,9 +644,10 @@ impl Runtime {
         }
 
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 "R+: a^x from 0 < a and x in R".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactPowInRPosFromPositiveBaseRealExponent),
                 vec![base_result, exponent_result],
             )
             .into(),
@@ -685,9 +694,10 @@ impl Runtime {
         }
 
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 "N+: n - 1 from n in N+ and n > 1".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactSubInNPosFromNPosAndGreaterThanOne),
                 vec![membership_result, bound_result],
             )
             .into(),
@@ -731,9 +741,10 @@ impl Runtime {
                 .verify_atomic_fact_as_builtin_rule_premise(&right_n_pos_for_pair, builtin_state)?;
             if r_right_n_pos_for_pair.is_success() {
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         in_fact.clone().into(),
                         "N+: a + b from a in N+ and b in N+".to_string(),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactAddInNPosFromNPosAndN),
                         vec![r_left_n_pos_for_pair, r_right_n_pos_for_pair],
                     )
                     .into(),
@@ -748,9 +759,10 @@ impl Runtime {
                 self.verify_atomic_fact_as_builtin_rule_premise(&right_n, builtin_state)?;
             if r_right_n.is_success() {
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         in_fact.clone().into(),
                         "N+: a + b from a in N+ and b in N".to_string(),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactAddInNPosFromNPosAndN),
                         vec![r_left_n_pos, r_right_n],
                     )
                     .into(),
@@ -763,9 +775,10 @@ impl Runtime {
             self.verify_atomic_fact_as_builtin_rule_premise(&right_n_pos, builtin_state)?;
         if r_left_n.is_success() && r_right_n_pos.is_success() {
             return Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "N+: a + b from a in N and b in N+".to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactAddInNPosFromNPosAndN),
                     vec![r_left_n, r_right_n_pos],
                 )
                 .into(),
@@ -791,9 +804,10 @@ impl Runtime {
         )?;
         if premise_result.is_success() {
             return Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "N+: a + b from complete positive-natural carrier alternatives".to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactAddInNPosFromNPosAndN),
                     vec![premise_result],
                 )
                 .into(),
@@ -832,9 +846,10 @@ impl Runtime {
             return Ok((UnknownGenericStmtResult::new()).into());
         }
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 "N+: a * b from a in N+ and b in N+".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactMulInNPosFromFactorsInNPos),
                 vec![r_left, r_right],
             )
             .into(),
@@ -1168,9 +1183,10 @@ impl Runtime {
         let conjunction_result = self.verify_builtin_rule_premise(&conjunction, builtin_state)?;
         if conjunction_result.is_success() {
             return Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "in real interval from complete carrier-and-bounds conjunction".to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactIntervalByRealOrderBounds),
                     vec![conjunction_result],
                 )
                 .into(),
@@ -1195,9 +1211,10 @@ impl Runtime {
         step_results.push(upper_result);
 
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 "in real interval: x in R and endpoint bounds".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactIntervalByRealOrderBounds),
                 step_results,
             )
             .into(),
@@ -1234,10 +1251,11 @@ impl Runtime {
         let conjunction_result = self.verify_builtin_rule_premise(&conjunction, builtin_state)?;
         if conjunction_result.is_success() {
             return Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "in half-infinite real interval from complete carrier-and-bound conjunction"
                         .to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactOneSideInfinityIntervalByRealOrderBound),
                     vec![conjunction_result],
                 )
                 .into(),
@@ -1257,9 +1275,10 @@ impl Runtime {
         step_results.push(bound_result);
 
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 "in half-infinite real interval: x in R and endpoint bound".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactOneSideInfinityIntervalByRealOrderBound),
                 step_results,
             )
             .into(),
@@ -1971,10 +1990,11 @@ impl Runtime {
         }
 
         Ok(
-            (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 "Z closure: integer arithmetic; quot dividend in Z and divisor in N+; pow base in Z or N+ and exponent in N"
                     .to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactArithmeticExpressionInZ),
                 subgoals,
             ))
             .into(),
@@ -2050,9 +2070,10 @@ impl Runtime {
         }
 
         Ok(
-            (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 "Q closure: +-*/ operands in Q; pow base in Q and exponent in Z".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactArithmeticExpressionInQ),
                 subgoals,
             ))
             .into(),
@@ -2102,10 +2123,11 @@ impl Runtime {
                 .verify_atomic_fact_as_builtin_rule_premise(&positive_membership, builtin_state)?;
             if positive_result.is_success() {
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         in_fact.clone().into(),
                         "negation maps a positive scalar into the matching negative carrier"
                             .to_string(),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactArithmeticExpressionInStandardNegativeSet),
                         vec![positive_result],
                     )
                     .into(),
@@ -2137,9 +2159,10 @@ impl Runtime {
         base_subgoals.append(&mut sign_subgoals);
         match target_negative_standard_set {
             StandardSet::RNeg => Ok(
-                (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "mul_opposite_signs_product_in_negative_reals".to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactArithmeticExpressionInStandardNegativeSet),
                     base_subgoals,
                 ))
                 .into(),
@@ -2158,9 +2181,10 @@ impl Runtime {
                 if product_in_q_result.is_success() {
                     base_subgoals.push(product_in_q_result);
                     Ok(
-                        (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                        (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             in_fact.clone().into(),
                             "mul_opposite_signs_product_in_negative_rationals".to_string(),
+                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactArithmeticExpressionInStandardNegativeSet),
                             base_subgoals,
                         ))
                         .into(),
@@ -2183,9 +2207,10 @@ impl Runtime {
                 if product_in_z_result.is_success() {
                     base_subgoals.push(product_in_z_result);
                     Ok(
-                        (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                        (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             in_fact.clone().into(),
                             "mul_opposite_signs_product_in_negative_integers".to_string(),
+                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactArithmeticExpressionInStandardNegativeSet),
                             base_subgoals,
                         ))
                         .into(),

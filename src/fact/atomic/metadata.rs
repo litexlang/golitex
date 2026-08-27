@@ -93,6 +93,18 @@ impl AtomicFact {
             {
                 2
             }
+            AtomicFact::NormalAtomicFact(a)
+                if a.predicate.to_string()
+                    == crate::common::keywords::IS_REAL_GREATEST_LOWER_BOUND =>
+            {
+                2
+            }
+            AtomicFact::NotNormalAtomicFact(a)
+                if a.predicate.to_string()
+                    == crate::common::keywords::IS_REAL_GREATEST_LOWER_BOUND =>
+            {
+                2
+            }
             _ => unreachable!("other cases are not builtin predicates"),
         }
     }

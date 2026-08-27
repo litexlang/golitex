@@ -230,13 +230,19 @@ impl Runtime {
         atomic_fact: &AtomicFact,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if let Obj::Abs(abs) = &f.right {
-            if objs_have_same_display(&f.left, abs.arg.as_ref())
-                || obj_is_negation_of(&f.left, abs.arg.as_ref())
-            {
+            let rule = if objs_have_same_display(&f.left, abs.arg.as_ref()) {
+                Some(AbsoluteValueBuiltinRule::SelfLessEqual)
+            } else if obj_is_negation_of(&f.left, abs.arg.as_ref()) {
+                Some(AbsoluteValueBuiltinRule::NegationLessEqual)
+            } else {
+                None
+            };
+            if let Some(rule) = rule {
                 return Ok(Some(StmtResult::from(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         atomic_fact.clone().into(),
                         "abs: x <= abs(x) and -x <= abs(x)".to_string(),
+                        BuiltinRuleEvidence::AbsoluteValue(rule),
                         Vec::new(),
                     ),
                 )));
@@ -248,9 +254,12 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(StmtResult::from(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "abs: -abs(x) <= x".to_string(),
+                BuiltinRuleEvidence::AbsoluteValue(
+                    AbsoluteValueBuiltinRule::NegativeAbsoluteLessEqual,
+                ),
                 Vec::new(),
             ),
         )))
@@ -334,9 +343,10 @@ impl Runtime {
         }
 
         Ok(Some(StmtResult::from(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "abs: finite sum triangle inequality".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyAbsFiniteSumTriangle),
                 vec![start_result, end_result, pointwise_result],
             ),
         )))
@@ -398,9 +408,10 @@ impl Runtime {
         }
 
         Ok(Some(StmtResult::from(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "abs: finite-set sum triangle inequality".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyAbsFiniteSetSumTriangle),
                 vec![set_result, pointwise_result],
             ),
         )))
@@ -483,9 +494,10 @@ impl Runtime {
             "abs: abs(x) <= b from -b <= x <= b"
         };
         Ok(Some(StmtResult::from(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 rule.to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyAbsUpperBound),
                 vec![r1, r2],
             ),
         )))
@@ -521,9 +533,10 @@ impl Runtime {
                         rule_suffix
                     );
                     return Ok(Some(StmtResult::from(
-                        SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             atomic_fact.clone().into(),
                             rule,
+                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyAbsLowerBoundFromAbsCompare),
                             vec![r],
                         ),
                     )));
@@ -544,9 +557,10 @@ impl Runtime {
                             rule_suffix
                         );
                         return Ok(Some(StmtResult::from(
-                            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                                 atomic_fact.clone().into(),
                                 rule,
+                                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyAbsLowerBoundFromAbsCompare),
                                 vec![r, r_sign],
                             ),
                         )));
@@ -564,9 +578,10 @@ impl Runtime {
                 rule_suffix
             );
             return Ok(Some(StmtResult::from(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     atomic_fact.clone().into(),
                     rule,
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyAbsLowerBoundFromAbsCompare),
                     vec![r],
                 ),
             )));
@@ -582,9 +597,10 @@ impl Runtime {
                     rule_suffix
                 );
                 return Ok(Some(StmtResult::from(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         atomic_fact.clone().into(),
                         rule,
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyAbsLowerBoundFromAbsCompare),
                         vec![r],
                     ),
                 )));
@@ -610,9 +626,10 @@ impl Runtime {
                     rule_suffix
                 );
                 return Ok(Some(StmtResult::from(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         atomic_fact.clone().into(),
                         rule,
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyAbsLowerBoundFromAbsCompare),
                         vec![r, r_sign],
                     ),
                 )));
@@ -639,9 +656,10 @@ impl Runtime {
                         rule_suffix
                     );
                     return Ok(Some(StmtResult::from(
-                        SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             atomic_fact.clone().into(),
                             rule,
+                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyAbsLowerBoundFromAbsCompare),
                             vec![r, r_sign],
                         ),
                     )));
@@ -664,9 +682,10 @@ impl Runtime {
                     rule_suffix
                 );
                 return Ok(Some(StmtResult::from(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         atomic_fact.clone().into(),
                         rule,
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyAbsLowerBoundFromAbsCompare),
                         vec![r, r_sign],
                     ),
                 )));
@@ -729,22 +748,25 @@ impl Runtime {
         let Obj::Abs(abs) = &f.left else {
             return Ok(None);
         };
-        let ok = match abs.arg.as_ref() {
+        let rule = match abs.arg.as_ref() {
             Obj::Add(add) => {
                 obj_is_add_of_abs_pair(&f.right, add.left.as_ref(), add.right.as_ref())
+                    .then_some(AbsoluteValueBuiltinRule::TriangleAdd)
             }
             Obj::Sub(sub) => {
                 obj_is_add_of_abs_pair(&f.right, sub.left.as_ref(), sub.right.as_ref())
+                    .then_some(AbsoluteValueBuiltinRule::TriangleSub)
             }
-            _ => false,
+            _ => None,
         };
-        if !ok {
+        let Some(rule) = rule else {
             return Ok(None);
-        }
+        };
         Ok(Some(StmtResult::from(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "abs: triangle inequality".to_string(),
+                BuiltinRuleEvidence::AbsoluteValue(rule),
                 Vec::new(),
             ),
         )))
@@ -766,13 +788,21 @@ impl Runtime {
         };
         let x = left_abs.arg.as_ref();
         let y = right_abs.arg.as_ref();
-        if !obj_is_abs_of_add_pair(&f.right, x, y) && !obj_is_abs_of_sub_pair(&f.right, x, y) {
+        let rule = if obj_is_abs_of_add_pair(&f.right, x, y) {
+            Some(AbsoluteValueBuiltinRule::ReverseTriangleAdd)
+        } else if obj_is_abs_of_sub_pair(&f.right, x, y) {
+            Some(AbsoluteValueBuiltinRule::ReverseTriangleSub)
+        } else {
+            None
+        };
+        let Some(rule) = rule else {
             return Ok(None);
-        }
+        };
         Ok(Some(StmtResult::from(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "abs: weak reverse triangle inequality".to_string(),
+                BuiltinRuleEvidence::AbsoluteValue(rule),
                 Vec::new(),
             ),
         )))

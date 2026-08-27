@@ -4,8 +4,9 @@ This showcase keeps the current trust boundary explicit:
 
 1. `main.lit` defines convergence of a real sequence.
 2. `main.lit` defines the Cauchy property.
-3. the compiler alone writes those definitions to `LitexGenerate.lean`;
-4. `LitexToMathlib.lean` proves Cauchy completeness using Mathlib's
+3. `main.lit` derives sequential completeness from the kernel-owned
+   least-upper-bound completeness of `R`;
+4. `LitexToMathlib.lean` independently proves Cauchy completeness using Mathlib's
    `CompleteSpace ℝ` instance and states it in the generated vocabulary.
 
 ## Ownership
@@ -13,21 +14,24 @@ This showcase keeps the current trust boundary explicit:
 | File | Owner | Role |
 | --- | --- | --- |
 | `main.lit` | author | Litex definitions |
-| `LitexGenerate.lean` | Litex compiler | exact generated Lean; never hand-edit |
+| `LitexGenerate.lean` | Litex compiler | checked-in definition output; never hand-edit |
 | `LitexToMathlib.lean` | adapter author | Mathlib-facing bridge and downstream examples |
 | `litex.config` | module | local Litex entry point |
 
-The source contains no `axiom` and no `trust`. There is deliberately no
-reserved Litex completeness theorem. The current Litex foundation treats `R`
-as a builtin carrier but does not construct it and does not prove a least-upper-
-bound principle. Consequently, the five epsilon definitions alone cannot prove
-that every real Cauchy sequence converges. That assertion is exactly the
-missing completeness principle (and it is false with `Q` in place of `R`).
+The source contains no `axiom` and no `trust`. The kernel knows only the order
+completeness of builtin `R`: a nonempty real set with a real upper bound has a
+least upper bound. There is no sequence-specific completeness builtin.
 
-`LitexToMathlib.lean` is therefore a one-way, handwritten boundary: it consumes
-the generated definitions and proves their Mathlib counterpart from
-`CompleteSpace ℝ`. It does not feed a certificate back into Litex or pretend
-that Litex verified the completeness theorem.
+The Litex proof forms the set of real numbers that lower-bound some tail of the
+Cauchy sequence, obtains its supremum from `real_least_upper_bound_exists`, and
+uses the two LUB projection theorems to prove eventual epsilon-closeness to that
+supremum. The analogous statement over `Q` is not available because the LUB
+step fails there.
+
+The Lean compiler does not yet consume every local proof step in this derived
+Litex proof. `LitexGenerate.lean` therefore remains the checked-in output for
+the original definition layer, while `LitexToMathlib.lean` independently proves
+the native Mathlib counterpart. No generated Lean proof is fabricated.
 
 Litex sequences use positive-natural indices. The adapter views the same
 sequence as a Mathlib sequence on `ℕ` by sending `n` to the Litex index
@@ -42,15 +46,10 @@ Run from the repository root:
 cargo build --release
 target/release/litex -compact -strict -runner -isolated \
   -f showcases/litex_to_lean_mathlib_pipeline/showcase2/main.lit
-target/release/stmt_result_to_lean_compiler compile \
-  showcases/litex_to_lean_mathlib_pipeline/showcase2/main.lit \
-  showcases/litex_to_lean_mathlib_pipeline/showcase2/LitexGenerate.lean
 cd lean
 lake build LitexGenerate LitexToMathlib
 ```
 
-Regenerating `LitexGenerate.lean` must produce no diff.
-
-An actual Litex proof of `Cauchy => convergent` requires first adding a
-non-circular, axiom-free foundation for completeness of `R` (for example a
-construction of the real carrier or an independently proved LUB theorem).
+Lean regeneration is deferred until the compiler supports the remaining local
+defined-predicate proof steps. It fails closed instead of emitting an unchecked
+proof.

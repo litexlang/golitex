@@ -463,9 +463,10 @@ impl Runtime {
                         );
                     if fn_eq_result.is_success() {
                         return Ok(Some(
-                            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                                 equal_fact.clone().into(),
                                 "equality: finite-set products from known fn_eq_in".to_string(),
+                                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyFiniteSetProductPointwiseEquality),
                                 vec![fn_eq_result],
                             )
                             .into(),

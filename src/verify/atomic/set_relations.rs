@@ -17,12 +17,13 @@ impl Runtime {
         }
 
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 format!(
                     "{} from its complete quantifier-free definition premise",
                     atomic_fact
                 ),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyBuiltinProperSetRelationFromQuantifierFreePremise),
                 vec![premise_result],
             )
             .into(),
@@ -50,12 +51,13 @@ impl Runtime {
         }
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 format!(
                     "{} by its builtin proper-set-relation definition",
                     atomic_fact.key()
                 ),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyBuiltinProperSetRelationByDefinition),
                 inside_results,
             )
             .into(),

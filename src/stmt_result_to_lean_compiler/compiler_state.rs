@@ -1,11 +1,8 @@
 use super::compiler_environment::*;
 use super::lean_compilation_types::*;
-use super::registered_local_builtin_rule_identifiers_for_lean::*;
 use super::represent_litex_function_contracts_in_lean::*;
 use super::represent_litex_objects_in_lean::*;
 use crate::prelude::*;
-use crate::verify::local_builtin_catalog::registered_local_builtin_fingerprint_by_id;
-use crate::verify::rule_schema::{canonical_objs_equal, MatchLimits, RuleFingerprint, RuleId};
 use crate::verify::{compare_normalized_number_str_to_zero, NumberCompareResult};
 use std::collections::{HashMap, HashSet};
 use std::mem;

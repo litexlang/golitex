@@ -16,9 +16,10 @@ impl Runtime {
                 self.verify_non_equational_atomic_fact_with_bounded_builtin_routes(&normalized)?;
             if normalized_result.is_success() {
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_strategy_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                         atomic_fact.clone().into(),
                         "additive sign strategy: normalized order goal".to_string(),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyAdditiveSignWithBuiltinStrategy),
                         vec![normalized_result],
                     )
                     .into(),
@@ -36,9 +37,10 @@ impl Runtime {
                         evidence,
                         children,
                     ),
-                None => SuccessFactStmtResult::new_with_verified_by_builtin_strategy_recording_stmt(
+                None => SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                     atomic_fact.clone().into(),
                     strategy_label,
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyAdditiveSignWithBuiltinStrategy),
                     children,
                 ),
             };
@@ -66,9 +68,10 @@ impl Runtime {
                     return Ok(UnknownGenericStmtResult::new().into());
                 }
                 Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_strategy_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                         atomic_fact.clone().into(),
                         "additive sign strategy: nonnegative summands".to_string(),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyAdditiveSignWithBuiltinStrategy),
                         vec![left, right],
                     )
                     .into(),
@@ -84,10 +87,11 @@ impl Runtime {
                     &fact.line_file,
                 )? {
                     return Ok(
-                        SuccessFactStmtResult::new_with_verified_by_builtin_strategy_recording_stmt(
+                        SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                             atomic_fact.clone().into(),
                             "additive sign strategy: one positive and one nonnegative summand"
                                 .to_string(),
+                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyAdditiveSignWithBuiltinStrategy),
                             children,
                         )
                         .into(),

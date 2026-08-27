@@ -1219,6 +1219,11 @@ impl StmtResultToLeanCompiler {
             BuiltinTheoremId::RationalHasUniqueReducedFraction => Some(
                 "builtin theorem `rational_has_unique_reduced_fraction` requires a reviewed bridge from heterogeneous Litex.Same to the native rational normal form",
             ),
+            BuiltinTheoremId::RealGreatestLowerBoundExists
+            | BuiltinTheoremId::RealGreatestLowerBoundLeMember
+            | BuiltinTheoremId::RealLowerBoundLeGreatestLowerBound => Some(
+                "real greatest-lower-bound builtin theorems are currently Litex-kernel-only; the Lean rule adapter has not been installed",
+            ),
             _ => None,
         } {
             return Err(limitation.into());
@@ -1428,12 +1433,12 @@ impl StmtResultToLeanCompiler {
                 self.construct_lean_proof_from_direct_fact_result_using_its_well_definedness(
                     check,
                 )?
-                .ok_or_else(|| {
-                    format!(
+                    .ok_or_else(|| {
+                        format!(
                         "real-analysis builtin requirement {} has no direct typed proof consumer",
                         index + 1
                     )
-                })?
+                    })?
             };
             requirement_proofs.push(format!("({proof})"));
         }
@@ -2251,6 +2256,23 @@ impl StmtResultToLeanCompiler {
                 .map(|line| line.map(|line| vec![line]));
         }
         if let StmtResult::Success(SuccessStmtResult::ReleaseThmStmt(result)) = result {
+            if let Some(verification) = &result.verification {
+                if let SuccessVerifyTheoremApplicationSourceResult::Builtin(source) =
+                    &verification.source
+                {
+                    if matches!(
+                        source.theorem_id,
+                        BuiltinTheoremId::RealGreatestLowerBoundExists
+                            | BuiltinTheoremId::RealGreatestLowerBoundLeMember
+                            | BuiltinTheoremId::RealLowerBoundLeGreatestLowerBound
+                    ) {
+                        return Err(
+                            "real greatest-lower-bound builtin theorems are currently Litex-kernel-only; the Lean rule adapter has not been installed"
+                                .into(),
+                        );
+                    }
+                }
+            }
             let conclusions = if let Some(conclusions) =
                 self.construct_lean_proofs_from_litex_theorem_instantiation_stmt_result(result)?
             {
@@ -3032,6 +3054,25 @@ fn builtin_theorem_requirement_roles(
             Role::CandidateIsRealLeastUpperBound,
             Role::SuppliedUpperBoundBelongsToReals,
             Role::SuppliedValueBoundsEverySetMember,
+        ],
+        BuiltinTheoremId::RealGreatestLowerBoundExists => vec![
+            Role::ArgumentSetSubsetOfReals,
+            Role::ArgumentSetIsNonempty,
+            Role::SuppliedLowerBoundBelongsToReals,
+            Role::SuppliedValueIsLowerBoundForEverySetMember,
+        ],
+        BuiltinTheoremId::RealGreatestLowerBoundLeMember => vec![
+            Role::ArgumentSetSubsetOfReals,
+            Role::CandidateBelongsToReals,
+            Role::CandidateIsRealGreatestLowerBound,
+            Role::ArgumentIsMemberOfSet,
+        ],
+        BuiltinTheoremId::RealLowerBoundLeGreatestLowerBound => vec![
+            Role::ArgumentSetSubsetOfReals,
+            Role::CandidateBelongsToReals,
+            Role::CandidateIsRealGreatestLowerBound,
+            Role::SuppliedLowerBoundBelongsToReals,
+            Role::SuppliedValueIsLowerBoundForEverySetMember,
         ],
         BuiltinTheoremId::RationalBetweenReals => vec![
             Role::LeftArgumentBelongsToReals,

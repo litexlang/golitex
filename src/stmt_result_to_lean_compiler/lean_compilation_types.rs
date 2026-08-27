@@ -17,7 +17,6 @@ pub(super) enum LeanArithmeticBuiltinCompilationKind {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) enum LeanSetBuiltinCompilationKind {
     EmptySubset,
-    SubsetTransitivity,
     UnionCommutative,
     UnionAssociative,
     UnionIdempotent,

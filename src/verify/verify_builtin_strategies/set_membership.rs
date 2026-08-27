@@ -106,9 +106,10 @@ impl Runtime {
             return Ok(UnknownGenericStmtResult::new().into());
         };
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_strategy_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                 fact.clone().into(),
                 "set-membership strategy: constructor membership decomposition".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifySetMembershipWithBuiltinStrategy),
                 children,
             )
             .into(),
@@ -253,10 +254,11 @@ impl Runtime {
             );
         }
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_strategy_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                 target,
                 "set-builder membership strategy: unfold one set definition and verify its atomic obligations"
                     .to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyOneLayerSetBuilderMembershipWithBuiltinStrategyOnce),
                 children,
             )
             .into(),
@@ -314,9 +316,10 @@ impl Runtime {
             return Ok(UnknownGenericStmtResult::new().into());
         };
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_strategy_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                 fact.clone().into(),
                 "set-containment strategy: constructor containment decomposition".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifySubsetWithBuiltinStrategy),
                 children,
             )
             .into(),

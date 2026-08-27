@@ -37,9 +37,10 @@ impl Runtime {
         }
 
         Ok(
-            (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 forall_iff.clone().into(),
                 "forall iff: then=>iff and iff=>then verified".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyForallFactWithIff),
                 step_results,
             ))
             .into(),

@@ -1,7 +1,7 @@
-# Tracer: exact abs/min/max object representations and registry-owned rules.
+# Tracer: exact abs/min/max object representations and typed rules.
 #
-# These variable statements exercise stable local-builtin RuleIds, not closed
-# numeric normalization. Their Lean proofs replay ordered parameter/premise
+# These variable statements exercise stable Rust rule IDs, not closed numeric
+# normalization. Their Lean proofs replay ordered semantic-premise
 # Results into Mathlib norm and real-lattice theorems.
 forall x, y R:
     abs(x * y) = abs(x) * abs(y)

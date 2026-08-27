@@ -1,4 +1,0 @@
-forall a, b R:
-    0 <= b
-    =>:
-        a <= a + b

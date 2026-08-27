@@ -624,6 +624,9 @@ pub enum BuiltinTheoremRequirementRole {
     SuppliedValueBoundsEverySetMember,
     CandidateBelongsToReals,
     CandidateIsRealLeastUpperBound,
+    SuppliedLowerBoundBelongsToReals,
+    SuppliedValueIsLowerBoundForEverySetMember,
+    CandidateIsRealGreatestLowerBound,
     ArgumentIsMemberOfSet,
     LeftArgumentBelongsToReals,
     RightArgumentBelongsToReals,
@@ -674,22 +677,25 @@ impl BuiltinTheoremRequirementRole {
             }
             Self::ArgumentSetSubsetOfReals => "the argument set is a subset of R",
             Self::ArgumentSetIsNonempty => "the argument set is nonempty",
-            Self::SuppliedUpperBoundBelongsToReals => {
-                "the supplied upper bound belongs to R"
-            }
+            Self::SuppliedUpperBoundBelongsToReals => "the supplied upper bound belongs to R",
             Self::SuppliedValueBoundsEverySetMember => {
                 "every member of the argument set is at most the supplied value"
             }
-            Self::CandidateBelongsToReals => "the LUB candidate belongs to R",
+            Self::CandidateBelongsToReals => "the extremum candidate belongs to R",
             Self::CandidateIsRealLeastUpperBound => {
                 "the candidate carries a real least-upper-bound certificate"
+            }
+            Self::SuppliedLowerBoundBelongsToReals => "the supplied lower bound belongs to R",
+            Self::SuppliedValueIsLowerBoundForEverySetMember => {
+                "the supplied value is at most every member of the argument set"
+            }
+            Self::CandidateIsRealGreatestLowerBound => {
+                "the candidate carries a real greatest-lower-bound certificate"
             }
             Self::ArgumentIsMemberOfSet => "the argument is a member of the set",
             Self::LeftArgumentBelongsToReals => "the left argument belongs to R",
             Self::RightArgumentBelongsToReals => "the right argument belongs to R",
-            Self::RealArgumentsStrictlyOrdered => {
-                "the real arguments are strictly ordered"
-            }
+            Self::RealArgumentsStrictlyOrdered => "the real arguments are strictly ordered",
         }
     }
 }
@@ -1047,26 +1053,23 @@ pub struct SuccessBuiltinFactProofResult {
 #[derive(Debug)]
 pub enum SuccessBuiltinFactProofEvidenceResult {
     Typed(BuiltinRuleEvidence),
-    DiagnosticOnly,
 }
 
 impl SuccessBuiltinFactProofEvidenceResult {
     pub fn typed(&self) -> Option<&BuiltinRuleEvidence> {
         match self {
             Self::Typed(evidence) => Some(evidence),
-            Self::DiagnosticOnly => None,
         }
     }
 
     pub fn typed_mut(&mut self) -> Option<&mut BuiltinRuleEvidence> {
         match self {
             Self::Typed(evidence) => Some(evidence),
-            Self::DiagnosticOnly => None,
         }
     }
 
     pub fn is_typed(&self) -> bool {
-        matches!(self, Self::Typed(_))
+        true
     }
 }
 

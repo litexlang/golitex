@@ -1,2 +1,0 @@
-forall a, b R:
-    max(a, b) = max(b, a)

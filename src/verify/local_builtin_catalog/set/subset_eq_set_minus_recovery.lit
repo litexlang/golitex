@@ -1,4 +1,0 @@
-forall A, B set:
-    B $subset A
-    =>:
-        B = set_minus(A, set_minus(A, B))

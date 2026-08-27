@@ -143,11 +143,6 @@ impl Runtime {
         }
         let child_state = builtin_state.after_applying_rule();
         if let Some(result) =
-            self.try_verify_atomic_fact_with_local_builtin_catalog(atomic_fact, &child_state)?
-        {
-            return Ok(self.cache_successful_atomic_fact_for_statement(atomic_fact, result));
-        }
-        if let Some(result) =
             self.try_verify_atomic_fact_from_known_set_builder_membership(atomic_fact)?
         {
             return Ok(self.cache_successful_atomic_fact_for_statement(atomic_fact, result));

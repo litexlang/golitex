@@ -96,9 +96,10 @@ impl Runtime {
         };
 
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_strategy_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                 fact.clone().into(),
                 reason.to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsFiniteSetWithBuiltinStrategy),
                 child_results,
             )
             .into(),
@@ -139,10 +140,11 @@ impl Runtime {
                     return Ok(UnknownGenericStmtResult::new().into());
                 }
                 Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_strategy_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                         fact.clone().into(),
                         "nonempty-set strategy: closed integer range has ordered endpoints"
                             .to_string(),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsNonemptySetWithBuiltinStrategy),
                         vec![result],
                     )
                     .into(),
@@ -162,10 +164,11 @@ impl Runtime {
                     return Ok(UnknownGenericStmtResult::new().into());
                 }
                 Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_strategy_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                         fact.clone().into(),
                         "nonempty-set strategy: half-open integer range has strictly ordered endpoints"
                             .to_string(),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsNonemptySetWithBuiltinStrategy),
                         vec![result],
                     )
                     .into(),
@@ -201,9 +204,10 @@ impl Runtime {
                     "nonempty-set strategy: real interval with an open endpoint has strictly ordered endpoints"
                 };
                 Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_strategy_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                         fact.clone().into(),
                         reason.to_string(),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsNonemptySetWithBuiltinStrategy),
                         vec![result],
                     )
                     .into(),
@@ -215,9 +219,10 @@ impl Runtime {
                     let result = self.verify_is_nonempty_set_strategy_child(&child)?;
                     if result.is_success() {
                         return Ok(
-                            SuccessFactStmtResult::new_with_verified_by_builtin_strategy_recording_stmt(
+                            SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                                 fact.clone().into(),
                                 "nonempty-set strategy: a union has a nonempty side".to_string(),
+                                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsNonemptySetWithBuiltinStrategy),
                                 vec![result],
                             )
                             .into(),
@@ -238,9 +243,10 @@ impl Runtime {
                     results.push(result);
                 }
                 Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_strategy_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                         fact.clone().into(),
                         "nonempty-set strategy: all Cartesian factors are nonempty".to_string(),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsNonemptySetWithBuiltinStrategy),
                         results,
                     )
                     .into(),
@@ -287,9 +293,10 @@ impl Runtime {
             return Ok(UnknownGenericStmtResult::new().into());
         }
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_strategy_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                 fact.clone().into(),
                 reason.to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyNonemptyConstructorStrategy),
                 vec![result],
             )
             .into(),

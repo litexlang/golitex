@@ -1,4 +1,0 @@
-forall A, B set, x A:
-    not x $in B
-    =>:
-        x $in set_minus(A, B)

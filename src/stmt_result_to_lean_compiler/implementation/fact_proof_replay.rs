@@ -303,49 +303,137 @@ impl StmtResultToLeanCompiler {
         rule: SetBuiltinRule,
         subgoals: &[StmtResult],
     ) -> Result<Option<String>, String> {
-        if matches!(
-            rule,
-            SetBuiltinRule::SubsetReflexivity | SetBuiltinRule::SupersetReflexivity
-        ) {
-            if !subgoals.is_empty() {
-                return Err("set-relation reflexivity unexpectedly gained child Results".into());
+        let compilation_kind = match rule {
+            SetBuiltinRule::EmptySubset => LeanSetBuiltinCompilationKind::EmptySubset,
+            SetBuiltinRule::SubsetUnionLeft => LeanSetBuiltinCompilationKind::SubsetUnionLeft,
+            SetBuiltinRule::SubsetUnionRight => LeanSetBuiltinCompilationKind::SubsetUnionRight,
+            SetBuiltinRule::UnionCommutative => LeanSetBuiltinCompilationKind::UnionCommutative,
+            SetBuiltinRule::UnionAssociative => LeanSetBuiltinCompilationKind::UnionAssociative,
+            SetBuiltinRule::UnionIdempotent => LeanSetBuiltinCompilationKind::UnionIdempotent,
+            SetBuiltinRule::UnionEmptyLeft | SetBuiltinRule::UnionEmptyRight => {
+                LeanSetBuiltinCompilationKind::UnionEmptyIdentity
             }
-            return Ok(Some(render_set_relation_reflexivity(
-                target,
-                rule == SetBuiltinRule::SubsetReflexivity,
-                &self.environment_stack,
-            )?));
-        }
+            SetBuiltinRule::UnionSetMinusDecomposition => {
+                LeanSetBuiltinCompilationKind::UnionSetMinusDecomposition
+            }
+            SetBuiltinRule::UnionEqRightOfSubset => {
+                LeanSetBuiltinCompilationKind::UnionAbsorptionFromSubset
+            }
+            SetBuiltinRule::UnionFinite => LeanSetBuiltinCompilationKind::UnionFinite,
+            SetBuiltinRule::UnionNonemptyLeft => {
+                LeanSetBuiltinCompilationKind::UnionNonemptyLeft
+            }
+            SetBuiltinRule::UnionNonemptyRight => {
+                LeanSetBuiltinCompilationKind::UnionNonemptyRight
+            }
+            SetBuiltinRule::UnionSubset => LeanSetBuiltinCompilationKind::UnionSubset,
+            SetBuiltinRule::IntersectCommutative => {
+                LeanSetBuiltinCompilationKind::IntersectCommutative
+            }
+            SetBuiltinRule::IntersectAssociative => {
+                LeanSetBuiltinCompilationKind::IntersectAssociative
+            }
+            SetBuiltinRule::IntersectIdempotent => {
+                LeanSetBuiltinCompilationKind::IntersectIdempotent
+            }
+            SetBuiltinRule::IntersectEqLeftOfSubset => {
+                LeanSetBuiltinCompilationKind::IntersectEqLeftOfSubset
+            }
+            SetBuiltinRule::IntersectEqRightOfSubset => {
+                LeanSetBuiltinCompilationKind::IntersectEqRightOfSubset
+            }
+            SetBuiltinRule::IntersectFinite => LeanSetBuiltinCompilationKind::IntersectFinite,
+            SetBuiltinRule::IntersectSubsetLeft => {
+                LeanSetBuiltinCompilationKind::IntersectSubsetLeft
+            }
+            SetBuiltinRule::IntersectSubsetRight => {
+                LeanSetBuiltinCompilationKind::IntersectSubsetRight
+            }
+            SetBuiltinRule::IntersectUnionDistributive => {
+                LeanSetBuiltinCompilationKind::IntersectUnionDistributive
+            }
+            SetBuiltinRule::IntersectSetMinusSelfEmpty => {
+                LeanSetBuiltinCompilationKind::IntersectSetMinusSelfEmpty
+            }
+            SetBuiltinRule::IntersectSetMinusDisjointFromSubset => {
+                LeanSetBuiltinCompilationKind::IntersectSetMinusDisjointFromSubset
+            }
+            SetBuiltinRule::PowerSetFinite => LeanSetBuiltinCompilationKind::PowerSetFinite,
+            SetBuiltinRule::PowerSetMembershipOfSubset => {
+                LeanSetBuiltinCompilationKind::PowerSetMembershipOfSubset
+            }
+            SetBuiltinRule::PowerSetNonempty => LeanSetBuiltinCompilationKind::PowerSetNonempty,
+            SetBuiltinRule::SetMinusSelfEmpty => {
+                LeanSetBuiltinCompilationKind::SetMinusSelfEmpty
+            }
+            SetBuiltinRule::SetMinusEmptyRight => {
+                LeanSetBuiltinCompilationKind::SetMinusEmptyRight
+            }
+            SetBuiltinRule::SetMinusEmptyLeft => {
+                LeanSetBuiltinCompilationKind::SetMinusEmptyLeft
+            }
+            SetBuiltinRule::SetMinusFiniteLeft => {
+                LeanSetBuiltinCompilationKind::SetMinusFiniteLeft
+            }
+            SetBuiltinRule::SetMinusInfiniteOfInfiniteFinite => {
+                return Err(format!(
+                    "builtin rule `{}` has no reviewed ToLean mapping because the Lean ABI does not yet represent infinite-set facts",
+                    rule.rule_id()
+                ));
+            }
+            SetBuiltinRule::SetMinusIntersectDeMorgan => {
+                LeanSetBuiltinCompilationKind::SetMinusIntersectDeMorgan
+            }
+            SetBuiltinRule::SetMinusIntersectSelf => {
+                LeanSetBuiltinCompilationKind::SetMinusIntersectSelf
+            }
+            SetBuiltinRule::SetMinusRecoverSubset => {
+                LeanSetBuiltinCompilationKind::SetMinusRecoverSubset
+            }
+            SetBuiltinRule::SetMinusSubsetLeft => {
+                LeanSetBuiltinCompilationKind::SetMinusSubsetLeft
+            }
+            SetBuiltinRule::SetMinusUnionDeMorgan => {
+                LeanSetBuiltinCompilationKind::SetMinusUnionDeMorgan
+            }
+            SetBuiltinRule::SubsetEqSetMinusRecovery => {
+                LeanSetBuiltinCompilationKind::SubsetEqSetMinusRecovery
+            }
+            SetBuiltinRule::UnionMembershipLeft => {
+                LeanSetBuiltinCompilationKind::UnionMembershipLeft
+            }
+            SetBuiltinRule::UnionMembershipRight => {
+                LeanSetBuiltinCompilationKind::UnionMembershipRight
+            }
+            SetBuiltinRule::IntersectMembershipBoth => {
+                LeanSetBuiltinCompilationKind::IntersectMembershipBoth
+            }
+            SetBuiltinRule::SetMinusMembership => {
+                LeanSetBuiltinCompilationKind::SetMinusMembership
+            }
+            unsupported => {
+                return Err(format!(
+                    "builtin rule `{}` has no reviewed ToLean mapping",
+                    unsupported.rule_id()
+                ));
+            }
+        };
+
         if matches!(
-            rule,
-            SetBuiltinRule::UnionCommutative
-                | SetBuiltinRule::UnionAssociative
-                | SetBuiltinRule::UnionIdempotent
-                | SetBuiltinRule::UnionEmptyIdentity
-                | SetBuiltinRule::IntersectCommutative
-                | SetBuiltinRule::IntersectAssociative
+            compilation_kind,
+            LeanSetBuiltinCompilationKind::UnionCommutative
+                | LeanSetBuiltinCompilationKind::UnionAssociative
+                | LeanSetBuiltinCompilationKind::UnionIdempotent
+                | LeanSetBuiltinCompilationKind::UnionEmptyIdentity
+                | LeanSetBuiltinCompilationKind::IntersectCommutative
+                | LeanSetBuiltinCompilationKind::IntersectAssociative
         ) {
             if !subgoals.is_empty() {
                 return Err("structural set equality unexpectedly gained child Results".into());
             }
-            let compatibility_rule = match rule {
-                SetBuiltinRule::UnionCommutative => LeanSetBuiltinCompilationKind::UnionCommutative,
-                SetBuiltinRule::UnionAssociative => LeanSetBuiltinCompilationKind::UnionAssociative,
-                SetBuiltinRule::UnionIdempotent => LeanSetBuiltinCompilationKind::UnionIdempotent,
-                SetBuiltinRule::UnionEmptyIdentity => {
-                    LeanSetBuiltinCompilationKind::UnionEmptyIdentity
-                }
-                SetBuiltinRule::IntersectCommutative => {
-                    LeanSetBuiltinCompilationKind::IntersectCommutative
-                }
-                SetBuiltinRule::IntersectAssociative => {
-                    LeanSetBuiltinCompilationKind::IntersectAssociative
-                }
-                _ => unreachable!("matched structural set rule"),
-            };
             return Ok(Some(render_structural_set_equality(
                 target,
-                compatibility_rule,
+                compilation_kind,
                 &self.environment_stack,
             )?));
         }
@@ -362,59 +450,33 @@ impl StmtResultToLeanCompiler {
             };
             children.push((child.fact(), proof));
         }
-        let extended_rule = match rule {
-            SetBuiltinRule::SubsetTransitivity => {
-                Some(LeanSetBuiltinCompilationKind::SubsetTransitivity)
-            }
-            SetBuiltinRule::UnionSetMinusDecomposition => {
-                Some(LeanSetBuiltinCompilationKind::UnionSetMinusDecomposition)
-            }
-            SetBuiltinRule::UnionAbsorptionFromSubset => {
-                Some(LeanSetBuiltinCompilationKind::UnionAbsorptionFromSubset)
-            }
-            SetBuiltinRule::IntersectIdempotent => {
-                Some(LeanSetBuiltinCompilationKind::IntersectIdempotent)
-            }
-            SetBuiltinRule::IntersectSetMinusSelfEmpty => {
-                Some(LeanSetBuiltinCompilationKind::IntersectSetMinusSelfEmpty)
-            }
-            SetBuiltinRule::IntersectSetMinusDisjointFromSubset => {
-                Some(LeanSetBuiltinCompilationKind::IntersectSetMinusDisjointFromSubset)
-            }
-            SetBuiltinRule::SetMinusSelfEmpty => {
-                Some(LeanSetBuiltinCompilationKind::SetMinusSelfEmpty)
-            }
-            SetBuiltinRule::SetMinusEmptyRight => {
-                Some(LeanSetBuiltinCompilationKind::SetMinusEmptyRight)
-            }
-            SetBuiltinRule::SetMinusEmptyLeft => {
-                Some(LeanSetBuiltinCompilationKind::SetMinusEmptyLeft)
-            }
-            SetBuiltinRule::SetMinusIntersectSelf => {
-                Some(LeanSetBuiltinCompilationKind::SetMinusIntersectSelf)
-            }
-            _ => None,
-        };
-        if let Some(extended_rule) = extended_rule {
-            let premises = children
-                .into_iter()
-                .map(|(fact, proof_expression)| CompiledFactProofBody {
-                    proposition: String::new(),
-                    fact,
-                    proof_expression,
-                })
-                .collect::<Vec<_>>();
-            return Ok(Some(render_extended_set_rule(
+        if matches!(
+            compilation_kind,
+            LeanSetBuiltinCompilationKind::UnionMembershipLeft
+                | LeanSetBuiltinCompilationKind::UnionMembershipRight
+                | LeanSetBuiltinCompilationKind::IntersectMembershipBoth
+                | LeanSetBuiltinCompilationKind::SetMinusMembership
+        ) {
+            return Ok(Some(render_base_set_builtin_rule_from_compiled_children(
                 target,
-                extended_rule,
-                &premises,
+                rule,
+                &children,
                 &self.environment_stack,
             )?));
         }
-        Ok(Some(render_base_set_builtin_rule_from_compiled_children(
+
+        let premises = children
+            .into_iter()
+            .map(|(fact, proof_expression)| CompiledFactProofBody {
+                proposition: String::new(),
+                fact,
+                proof_expression,
+            })
+            .collect::<Vec<_>>();
+        Ok(Some(render_extended_set_rule(
             target,
-            rule,
-            &children,
+            compilation_kind,
+            &premises,
             &self.environment_stack,
         )?))
     }
@@ -1723,6 +1785,169 @@ impl StmtResultToLeanCompiler {
         rule: AbsoluteValueBuiltinRule,
         subgoals: &[StmtResult],
     ) -> Result<Option<String>, String> {
+        if matches!(
+            rule,
+            AbsoluteValueBuiltinRule::Nonnegative
+                | AbsoluteValueBuiltinRule::SelfLessEqual
+                | AbsoluteValueBuiltinRule::NegationLessEqual
+                | AbsoluteValueBuiltinRule::NegativeAbsoluteLessEqual
+                | AbsoluteValueBuiltinRule::TriangleAdd
+                | AbsoluteValueBuiltinRule::TriangleSub
+                | AbsoluteValueBuiltinRule::ReverseTriangleAdd
+                | AbsoluteValueBuiltinRule::ReverseTriangleSub
+        ) {
+            if !subgoals.is_empty() {
+                return Err(format!(
+                    "builtin rule `{}` unexpectedly gained child Results",
+                    rule.rule_id()
+                ));
+            }
+            let (left, right, strict) = order_relation_parts(target)?;
+            if strict {
+                return Err(format!(
+                    "builtin rule `{}` changed to strict order",
+                    rule.rule_id()
+                ));
+            }
+            let is_negation_of = |candidate: &Obj, argument: &Obj| {
+                let Obj::Mul(product) = candidate else {
+                    return false;
+                };
+                let is_negative_one = |object: &Obj| {
+                    matches!(object, Obj::Number(number) if number.normalized_value == "-1")
+                };
+                (is_negative_one(product.left.as_ref())
+                    && obj_equality_key(product.right.as_ref()) == obj_equality_key(argument))
+                    || (is_negative_one(product.right.as_ref())
+                        && obj_equality_key(product.left.as_ref()) == obj_equality_key(argument))
+            };
+            fn abs_argument(object: &Obj) -> Option<&Obj> {
+                match object {
+                    Obj::Abs(absolute) => Some(absolute.arg.as_ref()),
+                    _ => None,
+                }
+            }
+            fn abs_pair(object: &Obj) -> Option<(&Obj, &Obj)> {
+                let Obj::Add(sum) = object else {
+                    return None;
+                };
+                Some((abs_argument(sum.left.as_ref())?, abs_argument(sum.right.as_ref())?))
+            }
+            let (arguments, theorem): (Vec<&Obj>, &str) = match rule {
+                AbsoluteValueBuiltinRule::Nonnegative => {
+                    let argument = abs_argument(right)
+                        .filter(|_| is_literal_zero(left))
+                        .ok_or_else(|| "absolute-value nonnegative target changed shape".to_string())?;
+                    (vec![argument], "absNonnegative")
+                }
+                AbsoluteValueBuiltinRule::SelfLessEqual => {
+                    let argument = abs_argument(right)
+                        .filter(|argument| obj_equality_key(left) == obj_equality_key(argument))
+                        .ok_or_else(|| "self-to-absolute bound changed shape".to_string())?;
+                    (vec![argument], "selfLeAbs")
+                }
+                AbsoluteValueBuiltinRule::NegationLessEqual => {
+                    let argument = abs_argument(right)
+                        .filter(|argument| is_negation_of(left, argument))
+                        .ok_or_else(|| "negated-to-absolute bound changed shape".to_string())?;
+                    (vec![argument], "negLeAbs")
+                }
+                AbsoluteValueBuiltinRule::NegativeAbsoluteLessEqual => {
+                    let Obj::Mul(product) = left else {
+                        return Err("negative-absolute lower bound lost its negation".into());
+                    };
+                    let absolute = if matches!(product.left.as_ref(), Obj::Number(number) if number.normalized_value == "-1") {
+                        product.right.as_ref()
+                    } else if matches!(product.right.as_ref(), Obj::Number(number) if number.normalized_value == "-1") {
+                        product.left.as_ref()
+                    } else {
+                        return Err("negative-absolute lower bound lost negative one".into());
+                    };
+                    let argument = abs_argument(absolute)
+                        .filter(|argument| obj_equality_key(right) == obj_equality_key(argument))
+                        .ok_or_else(|| "negative-absolute lower bound changed its argument".to_string())?;
+                    (vec![argument], "negAbsLe")
+                }
+                AbsoluteValueBuiltinRule::TriangleAdd
+                | AbsoluteValueBuiltinRule::TriangleSub => {
+                    let outer = abs_argument(left)
+                        .ok_or_else(|| "absolute triangle target lost its outer absolute value".to_string())?;
+                    let (first, second) = match (rule, outer) {
+                        (AbsoluteValueBuiltinRule::TriangleAdd, Obj::Add(sum)) => {
+                            (sum.left.as_ref(), sum.right.as_ref())
+                        }
+                        (AbsoluteValueBuiltinRule::TriangleSub, Obj::Sub(difference)) => {
+                            (difference.left.as_ref(), difference.right.as_ref())
+                        }
+                        _ => return Err("absolute triangle target changed its operator".into()),
+                    };
+                    let (right_first, right_second) = abs_pair(right)
+                        .ok_or_else(|| "absolute triangle target lost its absolute-value sum".to_string())?;
+                    if !((obj_equality_key(first) == obj_equality_key(right_first)
+                        && obj_equality_key(second) == obj_equality_key(right_second))
+                        || (obj_equality_key(first) == obj_equality_key(right_second)
+                            && obj_equality_key(second) == obj_equality_key(right_first)))
+                    {
+                        return Err("absolute triangle target changed its operands".into());
+                    }
+                    (
+                        vec![first, second],
+                        if rule == AbsoluteValueBuiltinRule::TriangleAdd {
+                            "absAddLe"
+                        } else {
+                            "absSubLeSum"
+                        },
+                    )
+                }
+                AbsoluteValueBuiltinRule::ReverseTriangleAdd
+                | AbsoluteValueBuiltinRule::ReverseTriangleSub => {
+                    let Obj::Sub(difference) = left else {
+                        return Err("reverse absolute triangle lost its difference".into());
+                    };
+                    let first = abs_argument(difference.left.as_ref())
+                        .ok_or_else(|| "reverse absolute triangle lost its left absolute value".to_string())?;
+                    let second = abs_argument(difference.right.as_ref())
+                        .ok_or_else(|| "reverse absolute triangle lost its right absolute value".to_string())?;
+                    let outer = abs_argument(right)
+                        .ok_or_else(|| "reverse absolute triangle lost its outer absolute value".to_string())?;
+                    let operands_match = match (rule, outer) {
+                        (AbsoluteValueBuiltinRule::ReverseTriangleAdd, Obj::Add(sum)) => {
+                            (obj_equality_key(first) == obj_equality_key(sum.left.as_ref())
+                                && obj_equality_key(second) == obj_equality_key(sum.right.as_ref()))
+                                || (obj_equality_key(first) == obj_equality_key(sum.right.as_ref())
+                                    && obj_equality_key(second) == obj_equality_key(sum.left.as_ref()))
+                        }
+                        (AbsoluteValueBuiltinRule::ReverseTriangleSub, Obj::Sub(subtraction)) => {
+                            obj_equality_key(first) == obj_equality_key(subtraction.left.as_ref())
+                                && obj_equality_key(second)
+                                    == obj_equality_key(subtraction.right.as_ref())
+                        }
+                        _ => false,
+                    };
+                    if !operands_match {
+                        return Err("reverse absolute triangle changed its operands".into());
+                    }
+                    (
+                        vec![first, second],
+                        if rule == AbsoluteValueBuiltinRule::ReverseTriangleAdd {
+                            "absSubAbsLeAbsAdd"
+                        } else {
+                            "absSubAbsLeAbsSub"
+                        },
+                    )
+                }
+                _ => unreachable!("matched zero-premise absolute-value rule"),
+            };
+            render_fact(target, &self.environment_stack)?;
+            let rendered_arguments = arguments
+                .into_iter()
+                .map(|argument| render_numeric_obj(argument, &self.environment_stack))
+                .collect::<Result<Vec<_>, _>>()?;
+            return Ok(Some(format!(
+                "Litex.Rules.{theorem} {}",
+                rendered_arguments.join(" ")
+            )));
+        }
         if rule != AbsoluteValueBuiltinRule::Product {
             let [child] = subgoals else {
                 return Err("absolute-value sign evidence requires one retained premise".into());
@@ -1894,6 +2119,16 @@ impl StmtResultToLeanCompiler {
                     )))
                 }
                 AbsoluteValueBuiltinRule::Product => unreachable!(),
+                AbsoluteValueBuiltinRule::Nonnegative
+                | AbsoluteValueBuiltinRule::SelfLessEqual
+                | AbsoluteValueBuiltinRule::NegationLessEqual
+                | AbsoluteValueBuiltinRule::NegativeAbsoluteLessEqual
+                | AbsoluteValueBuiltinRule::TriangleAdd
+                | AbsoluteValueBuiltinRule::TriangleSub
+                | AbsoluteValueBuiltinRule::ReverseTriangleAdd
+                | AbsoluteValueBuiltinRule::ReverseTriangleSub => {
+                    unreachable!("zero-premise absolute-value rule returned above")
+                }
             };
         }
         if !subgoals.is_empty() {
@@ -2003,6 +2238,539 @@ impl StmtResultToLeanCompiler {
             proof = format!("Litex.Rules.inCartCons ({coordinate_proof}) ({proof})");
         }
         Ok(Some(proof))
+    }
+
+    pub(super) fn construct_lean_extrema_from_result(
+        &mut self,
+        target: &Fact,
+        rule: ExtremaBuiltinRule,
+        subgoals: &[StmtResult],
+    ) -> Result<Option<String>, String> {
+        let mut child_proofs = Vec::with_capacity(subgoals.len());
+        let mut child_facts = Vec::with_capacity(subgoals.len());
+        for (index, child) in subgoals.iter().enumerate() {
+            let child = child
+                .factual_success()
+                .ok_or_else(|| format!("extrema child {index} is not factual"))?;
+            if !child.store.infers.is_empty() {
+                return Err(format!("extrema child {index} published effects"));
+            }
+            child_facts.push(child.fact());
+            child_proofs.push(
+                self.construct_lean_proof_from_direct_fact_result(child)?
+                    .ok_or_else(|| format!("extrema child {index} has no direct proof consumer"))?,
+            );
+        }
+
+        let render_reals = |objects: &[&Obj]| -> Result<Vec<String>, String> {
+            objects
+                .iter()
+                .map(|object| {
+                    render_real_target_object_representation(
+                        &LeanTargetObjectRepresentation::lower(object)?,
+                        &self.environment_stack,
+                    )
+                })
+                .collect()
+        };
+        let same = |left: &Obj, right: &Obj| {
+            obj_equality_key(left) == obj_equality_key(right)
+        };
+        let bridge_selected_source = |proof: String, selected: &Obj| -> Result<String, String> {
+            let LeanTargetObjectRepresentation::Symbol { symbol_id, .. } =
+                LeanTargetObjectRepresentation::lower(selected)?
+            else {
+                return Ok(proof);
+            };
+            let Some(source_to_selected) = self
+                .environment_stack
+                .numeric_representation_equalities
+                .get(&symbol_id)
+            else {
+                return Ok(proof);
+            };
+            Ok(format!(
+                "Litex.Same.trans ({proof}) (Litex.Same.symm ({source_to_selected}))"
+            ))
+        };
+        let one_weak_premise = |expected_left: &Obj, expected_right: &Obj| -> Result<(), String> {
+            let [premise] = child_facts.as_slice() else {
+                return Err(format!(
+                    "builtin rule `{}` requires one ordered premise",
+                    rule.rule_id()
+                ));
+            };
+            let (left, right, strict) = order_relation_parts(premise)?;
+            if strict || !same(left, expected_left) || !same(right, expected_right) {
+                return Err(format!(
+                    "builtin rule `{}` changed its ordered premise",
+                    rule.rule_id()
+                ));
+            }
+            Ok(())
+        };
+
+        render_fact(target, &self.environment_stack)?;
+        match rule {
+            ExtremaBuiltinRule::MinLessEqualLeft
+            | ExtremaBuiltinRule::MinLessEqualRight
+            | ExtremaBuiltinRule::LessEqualMaxLeft
+            | ExtremaBuiltinRule::LessEqualMaxRight => {
+                if !subgoals.is_empty() {
+                    return Err(format!(
+                        "builtin rule `{}` unexpectedly gained child Results",
+                        rule.rule_id()
+                    ));
+                }
+                let (left, right, strict) = order_relation_parts(target)?;
+                if strict {
+                    return Err("extrema bound changed to strict order".into());
+                }
+                let (first, second, expected, theorem) = match rule {
+                    ExtremaBuiltinRule::MinLessEqualLeft
+                    | ExtremaBuiltinRule::MinLessEqualRight => {
+                        let Obj::Min(minimum) = left else {
+                            return Err("minimum bound lost its minimum constructor".into());
+                        };
+                        let (expected, theorem) =
+                            if rule == ExtremaBuiltinRule::MinLessEqualLeft {
+                                (minimum.left.as_ref(), "minLeLeft")
+                            } else {
+                                (minimum.right.as_ref(), "minLeRight")
+                            };
+                        (minimum.left.as_ref(), minimum.right.as_ref(), expected, theorem)
+                    }
+                    ExtremaBuiltinRule::LessEqualMaxLeft
+                    | ExtremaBuiltinRule::LessEqualMaxRight => {
+                        let Obj::Max(maximum) = right else {
+                            return Err("maximum bound lost its maximum constructor".into());
+                        };
+                        let (expected, theorem) =
+                            if rule == ExtremaBuiltinRule::LessEqualMaxLeft {
+                                (maximum.left.as_ref(), "leMaxLeft")
+                            } else {
+                                (maximum.right.as_ref(), "leMaxRight")
+                            };
+                        (maximum.left.as_ref(), maximum.right.as_ref(), expected, theorem)
+                    }
+                    _ => unreachable!(),
+                };
+                let actual = if matches!(
+                    rule,
+                    ExtremaBuiltinRule::MinLessEqualLeft
+                        | ExtremaBuiltinRule::MinLessEqualRight
+                ) {
+                    right
+                } else {
+                    left
+                };
+                if !same(actual, expected) {
+                    return Err("extrema bound changed its selected operand".into());
+                }
+                let arguments = render_reals(&[first, second])?;
+                Ok(Some(format!(
+                    "Litex.Rules.{theorem} {} {}",
+                    arguments[0], arguments[1]
+                )))
+            }
+            ExtremaBuiltinRule::MinEqLeftOfLessEqual
+            | ExtremaBuiltinRule::MinEqRightOfLessEqual
+            | ExtremaBuiltinRule::MaxEqLeftOfLessEqual
+            | ExtremaBuiltinRule::MaxEqRightOfLessEqual => {
+                let (equality_left, equality_right) = equality_parts(target)?;
+                let mut selected = None;
+                for (operator, result, reverse) in [
+                    (equality_left, equality_right, false),
+                    (equality_right, equality_left, true),
+                ] {
+                    let (first, second) = match operator {
+                        Obj::Min(value)
+                            if matches!(
+                                rule,
+                                ExtremaBuiltinRule::MinEqLeftOfLessEqual
+                                    | ExtremaBuiltinRule::MinEqRightOfLessEqual
+                            ) => (value.left.as_ref(), value.right.as_ref()),
+                        Obj::Max(value)
+                            if matches!(
+                                rule,
+                                ExtremaBuiltinRule::MaxEqLeftOfLessEqual
+                                    | ExtremaBuiltinRule::MaxEqRightOfLessEqual
+                            ) => (value.left.as_ref(), value.right.as_ref()),
+                        _ => continue,
+                    };
+                    let (expected_result, premise_left, premise_right, theorem) = match rule {
+                        ExtremaBuiltinRule::MinEqLeftOfLessEqual => {
+                            (first, first, second, "minEqLeftOfLe")
+                        }
+                        ExtremaBuiltinRule::MinEqRightOfLessEqual => {
+                            (second, second, first, "minEqRightOfLe")
+                        }
+                        ExtremaBuiltinRule::MaxEqLeftOfLessEqual => {
+                            (first, second, first, "maxEqLeftOfLe")
+                        }
+                        ExtremaBuiltinRule::MaxEqRightOfLessEqual => {
+                            (second, first, second, "maxEqRightOfLe")
+                        }
+                        _ => unreachable!(),
+                    };
+                    if same(result, expected_result) {
+                        selected = Some((
+                            first,
+                            second,
+                            expected_result,
+                            premise_left,
+                            premise_right,
+                            theorem,
+                            reverse,
+                        ));
+                        break;
+                    }
+                }
+                let Some((first, second, selected_result, premise_left, premise_right, theorem, reverse)) = selected
+                else {
+                    return Err("extrema selection equality changed its structure".into());
+                };
+                one_weak_premise(premise_left, premise_right)?;
+                let arguments = render_reals(&[first, second])?;
+                let proof = format!(
+                    "Litex.Rules.{theorem} {} {} ({})",
+                    arguments[0], arguments[1], child_proofs[0]
+                );
+                let mut proof = bridge_selected_source(proof, selected_result)?;
+                if reverse {
+                    proof = format!("Litex.Same.symm ({proof})");
+                }
+                Ok(Some(proof))
+            }
+            ExtremaBuiltinRule::MinMonotone | ExtremaBuiltinRule::MaxMonotone => {
+                let [first_premise, second_premise] = child_facts.as_slice() else {
+                    return Err("extrema monotonicity requires two ordered premises".into());
+                };
+                let (left, right, strict) = order_relation_parts(target)?;
+                if strict {
+                    return Err("extrema monotonicity changed to strict order".into());
+                }
+                let (first, second, third, fourth, theorem) = match (rule, left, right) {
+                    (ExtremaBuiltinRule::MinMonotone, Obj::Min(left), Obj::Min(right)) => (
+                        left.left.as_ref(),
+                        left.right.as_ref(),
+                        right.left.as_ref(),
+                        right.right.as_ref(),
+                        "minMonotone",
+                    ),
+                    (ExtremaBuiltinRule::MaxMonotone, Obj::Max(left), Obj::Max(right)) => (
+                        left.left.as_ref(),
+                        left.right.as_ref(),
+                        right.left.as_ref(),
+                        right.right.as_ref(),
+                        "maxMonotone",
+                    ),
+                    _ => return Err("extrema monotonicity changed its constructors".into()),
+                };
+                for (premise, expected_left, expected_right) in [
+                    (first_premise, first, third),
+                    (second_premise, second, fourth),
+                ] {
+                    let (premise_left, premise_right, premise_strict) =
+                        order_relation_parts(premise)?;
+                    if premise_strict
+                        || !same(premise_left, expected_left)
+                        || !same(premise_right, expected_right)
+                    {
+                        return Err("extrema monotonicity changed its ordered premises".into());
+                    }
+                }
+                let arguments = render_reals(&[first, second, third, fourth])?;
+                Ok(Some(format!(
+                    "Litex.Rules.{theorem} {} {} {} {} ({}) ({})",
+                    arguments[0],
+                    arguments[1],
+                    arguments[2],
+                    arguments[3],
+                    child_proofs[0],
+                    child_proofs[1]
+                )))
+            }
+            ExtremaBuiltinRule::MinCommutative
+            | ExtremaBuiltinRule::MinAssociative
+            | ExtremaBuiltinRule::MinIdempotent
+            | ExtremaBuiltinRule::MinAbsorbMaxLeft
+            | ExtremaBuiltinRule::MaxCommutative
+            | ExtremaBuiltinRule::MaxAssociative
+            | ExtremaBuiltinRule::MaxIdempotent
+            | ExtremaBuiltinRule::MaxAbsorbMinLeft => {
+                if !subgoals.is_empty() {
+                    return Err("extrema lattice identity unexpectedly gained child Results".into());
+                }
+                let (left, right) = equality_parts(target)?;
+                let mut matched = None;
+                for (source, destination, reverse) in [(left, right, false), (right, left, true)] {
+                    let candidate = match rule {
+                        ExtremaBuiltinRule::MinCommutative => match (source, destination) {
+                            (Obj::Min(source), Obj::Min(destination))
+                                if same(source.left.as_ref(), destination.right.as_ref())
+                                    && same(source.right.as_ref(), destination.left.as_ref()) =>
+                            {
+                                Some((vec![source.left.as_ref(), source.right.as_ref()], "minCommutative"))
+                            }
+                            _ => None,
+                        },
+                        ExtremaBuiltinRule::MaxCommutative => match (source, destination) {
+                            (Obj::Max(source), Obj::Max(destination))
+                                if same(source.left.as_ref(), destination.right.as_ref())
+                                    && same(source.right.as_ref(), destination.left.as_ref()) =>
+                            {
+                                Some((vec![source.left.as_ref(), source.right.as_ref()], "maxCommutative"))
+                            }
+                            _ => None,
+                        },
+                        ExtremaBuiltinRule::MinIdempotent => match source {
+                            Obj::Min(value)
+                                if same(value.left.as_ref(), value.right.as_ref())
+                                    && same(value.left.as_ref(), destination) =>
+                            {
+                                Some((vec![value.left.as_ref()], "minIdempotent"))
+                            }
+                            _ => None,
+                        },
+                        ExtremaBuiltinRule::MaxIdempotent => match source {
+                            Obj::Max(value)
+                                if same(value.left.as_ref(), value.right.as_ref())
+                                    && same(value.left.as_ref(), destination) =>
+                            {
+                                Some((vec![value.left.as_ref()], "maxIdempotent"))
+                            }
+                            _ => None,
+                        },
+                        ExtremaBuiltinRule::MinAbsorbMaxLeft => match source {
+                            Obj::Min(value) if same(value.left.as_ref(), destination) => {
+                                match value.right.as_ref() {
+                                    Obj::Max(inner)
+                                        if same(inner.left.as_ref(), destination) => Some((
+                                            vec![destination, inner.right.as_ref()],
+                                            "minAbsorbMaxLeft",
+                                        )),
+                                    _ => None,
+                                }
+                            }
+                            _ => None,
+                        },
+                        ExtremaBuiltinRule::MaxAbsorbMinLeft => match source {
+                            Obj::Max(value) if same(value.left.as_ref(), destination) => {
+                                match value.right.as_ref() {
+                                    Obj::Min(inner)
+                                        if same(inner.left.as_ref(), destination) => Some((
+                                            vec![destination, inner.right.as_ref()],
+                                            "maxAbsorbMinLeft",
+                                        )),
+                                    _ => None,
+                                }
+                            }
+                            _ => None,
+                        },
+                        ExtremaBuiltinRule::MinAssociative => match (source, destination) {
+                            (Obj::Min(source), Obj::Min(destination)) => {
+                                match (source.left.as_ref(), destination.right.as_ref()) {
+                                    (Obj::Min(inner_left), Obj::Min(inner_right))
+                                        if same(inner_left.left.as_ref(), destination.left.as_ref())
+                                            && same(inner_left.right.as_ref(), inner_right.left.as_ref())
+                                            && same(source.right.as_ref(), inner_right.right.as_ref()) => Some((
+                                                vec![inner_left.left.as_ref(), inner_left.right.as_ref(), source.right.as_ref()],
+                                                "minAssociative",
+                                            )),
+                                    _ => None,
+                                }
+                            }
+                            _ => None,
+                        },
+                        ExtremaBuiltinRule::MaxAssociative => match (source, destination) {
+                            (Obj::Max(source), Obj::Max(destination)) => {
+                                match (source.left.as_ref(), destination.right.as_ref()) {
+                                    (Obj::Max(inner_left), Obj::Max(inner_right))
+                                        if same(inner_left.left.as_ref(), destination.left.as_ref())
+                                            && same(inner_left.right.as_ref(), inner_right.left.as_ref())
+                                            && same(source.right.as_ref(), inner_right.right.as_ref()) => Some((
+                                                vec![inner_left.left.as_ref(), inner_left.right.as_ref(), source.right.as_ref()],
+                                                "maxAssociative",
+                                            )),
+                                    _ => None,
+                                }
+                            }
+                            _ => None,
+                        },
+                        _ => unreachable!(),
+                    };
+                    if let Some((arguments, theorem)) = candidate {
+                        matched = Some((arguments, theorem, destination, reverse));
+                        break;
+                    }
+                }
+                let Some((arguments, theorem, selected_result, reverse)) = matched else {
+                    return Err(format!(
+                        "builtin rule `{}` changed its lattice identity",
+                        rule.rule_id()
+                    ));
+                };
+                let rendered = render_reals(&arguments)?;
+                let proof = format!("Litex.Rules.{theorem} {}", rendered.join(" "));
+                let mut proof = bridge_selected_source(proof, selected_result)?;
+                if reverse {
+                    proof = format!("Litex.Same.symm ({proof})");
+                }
+                Ok(Some(proof))
+            }
+        }
+    }
+
+    pub(super) fn construct_lean_aggregate_from_result(
+        &mut self,
+        target: &Fact,
+        rule: AggregateBuiltinRule,
+        subgoals: &[StmtResult],
+    ) -> Result<Option<String>, String> {
+        let (equality_left, equality_right) = equality_parts(target)?;
+        let same = |left: &Obj, right: &Obj| {
+            obj_equality_key(left) == obj_equality_key(right)
+        };
+        let application_matches = |object: &Obj, function: &Obj, argument: &Obj| {
+            let Obj::FnObj(application) = object else {
+                return false;
+            };
+            let head: Obj = application.head.as_ref().clone().into();
+            same(&head, function)
+                && matches!(application.body.as_slice(), [layer] if matches!(layer.as_slice(), [retained] if same(retained.as_ref(), argument)))
+        };
+        let add_one_matches = |object: &Obj, base: &Obj| {
+            let Obj::Add(addition) = object else {
+                return false;
+            };
+            same(addition.left.as_ref(), base)
+                && matches!(addition.right.as_ref(), Obj::Number(number) if number.normalized_value == "1")
+        };
+
+        match rule {
+            AggregateBuiltinRule::SumSingle => {
+                if !subgoals.is_empty() {
+                    return Err("aggregate.sum_single unexpectedly gained child Results".into());
+                }
+                let mut matched = None;
+                for (sum_side, application_side, reverse) in [
+                    (equality_left, equality_right, false),
+                    (equality_right, equality_left, true),
+                ] {
+                    let Obj::Sum(sum) = sum_side else {
+                        continue;
+                    };
+                    if same(sum.start.as_ref(), sum.end.as_ref())
+                        && application_matches(
+                            application_side,
+                            sum.func.as_ref(),
+                            sum.start.as_ref(),
+                        )
+                    {
+                        matched = Some((sum, reverse));
+                        break;
+                    }
+                }
+                let Some((sum, reverse)) = matched else {
+                    return Err("aggregate.sum_single changed its target structure".into());
+                };
+                render_fact(target, &self.environment_stack)?;
+                let start = render_integer_obj(sum.start.as_ref(), &self.environment_stack)?;
+                let lowered_function = LeanTargetObjectRepresentation::lower(sum.func.as_ref())?;
+                let (exact_function, heterogeneous) =
+                    render_exact_unary_integer_function(&lowered_function, &self.environment_stack)?;
+                let mut proof = match heterogeneous {
+                    None => format!(
+                        "Litex.Rules.integerRangeSumSingleOwn {start} {exact_function}"
+                    ),
+                    Some((source, membership)) => format!(
+                        "Litex.Rules.integerRangeSumSingle {start} {source} ({membership})"
+                    ),
+                };
+                if reverse {
+                    proof = format!("Litex.Same.symm ({proof})");
+                }
+                Ok(Some(proof))
+            }
+            AggregateBuiltinRule::SumSplitLast => {
+                let [order_child] = subgoals else {
+                    return Err("aggregate.sum_split_last requires one ordered premise".into());
+                };
+                let order_child = order_child
+                    .factual_success()
+                    .ok_or_else(|| "aggregate.sum_split_last child is not factual".to_string())?;
+                if !order_child.store.infers.is_empty() {
+                    return Err("aggregate.sum_split_last child published effects".into());
+                }
+                let order_fact = order_child.fact();
+                let order_proof = self
+                    .construct_lean_proof_from_direct_fact_result(order_child)?
+                    .ok_or_else(|| {
+                        "aggregate.sum_split_last child has no direct proof consumer".to_string()
+                    })?;
+                let mut matched = None;
+                for (extended_side, decomposition_side, reverse) in [
+                    (equality_left, equality_right, false),
+                    (equality_right, equality_left, true),
+                ] {
+                    let (Obj::Sum(extended), Obj::Add(decomposition)) =
+                        (extended_side, decomposition_side)
+                    else {
+                        continue;
+                    };
+                    let Obj::Sum(previous) = decomposition.left.as_ref() else {
+                        continue;
+                    };
+                    if !same(extended.start.as_ref(), previous.start.as_ref())
+                        || !add_one_matches(extended.end.as_ref(), previous.end.as_ref())
+                        || !same(extended.func.as_ref(), previous.func.as_ref())
+                        || !application_matches(
+                            decomposition.right.as_ref(),
+                            extended.func.as_ref(),
+                            extended.end.as_ref(),
+                        )
+                    {
+                        continue;
+                    }
+                    let (premise_left, premise_right, premise_strict) =
+                        order_relation_parts(&order_fact)?;
+                    if premise_strict
+                        || !same(premise_left, previous.start.as_ref())
+                        || !same(premise_right, previous.end.as_ref())
+                    {
+                        continue;
+                    }
+                    matched = Some((extended, previous, reverse));
+                    break;
+                }
+                let Some((extended, previous, reverse)) = matched else {
+                    return Err("aggregate.sum_split_last changed its target or premise".into());
+                };
+                render_fact(target, &self.environment_stack)?;
+                let start = render_integer_obj(extended.start.as_ref(), &self.environment_stack)?;
+                let finish = render_integer_obj(previous.end.as_ref(), &self.environment_stack)?;
+                let lowered_function =
+                    LeanTargetObjectRepresentation::lower(extended.func.as_ref())?;
+                let (exact_function, heterogeneous) =
+                    render_exact_unary_integer_function(&lowered_function, &self.environment_stack)?;
+                let native_order = format!(
+                    "(by simpa [Litex.Le, Litex.OrderValue] using ({order_proof}))"
+                );
+                let mut proof = match heterogeneous {
+                    None => format!(
+                        "Litex.Rules.integerRangeSumSplitLastOwn {start} {finish} {exact_function} ({native_order})"
+                    ),
+                    Some((source, membership)) => format!(
+                        "Litex.Rules.integerRangeSumSplitLast {start} {finish} {source} ({membership}) ({native_order})"
+                    ),
+                };
+                if reverse {
+                    proof = format!("Litex.Same.symm ({proof})");
+                }
+                Ok(Some(proof))
+            }
+        }
     }
 
     pub(super) fn construct_lean_tuple_cartesian_coordinate_proofs_from_result(
@@ -2354,15 +3122,6 @@ impl StmtResultToLeanCompiler {
                         &builtin.subgoals,
                     );
                 }
-                if let Some(BuiltinRuleEvidence::RegisteredLocal(evidence)) =
-                    builtin.evidence.typed()
-                {
-                    return self.construct_lean_registered_local_builtin_from_result(
-                        &source_fact,
-                        evidence,
-                        &builtin.subgoals,
-                    );
-                }
                 if let Some(BuiltinRuleEvidence::Arithmetic(rule)) = builtin.evidence.typed() {
                     return self.construct_lean_arithmetic_builtin_from_result(
                         &source_fact,
@@ -2527,9 +3286,23 @@ impl StmtResultToLeanCompiler {
                         &builtin.subgoals,
                     );
                 }
+                if let Some(BuiltinRuleEvidence::Extrema(rule)) = builtin.evidence.typed() {
+                    return self.construct_lean_extrema_from_result(
+                        &source_fact,
+                        *rule,
+                        &builtin.subgoals,
+                    );
+                }
+                if let Some(BuiltinRuleEvidence::Aggregate(rule)) = builtin.evidence.typed() {
+                    return self.construct_lean_aggregate_from_result(
+                        &source_fact,
+                        *rule,
+                        &builtin.subgoals,
+                    );
+                }
                 if let Some(evidence) = builtin.evidence.typed() {
                     if let Some(limitation) = direct_builtin_rule_compiler_limitation(evidence) {
-                        return Err(limitation.to_string());
+                        return Err(limitation);
                     }
                 }
                 if !builtin.subgoals.is_empty() {

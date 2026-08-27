@@ -5,9 +5,10 @@ pub(super) fn number_in_set_verified_by_builtin_rules_result(
     reason: &str,
 ) -> StmtResult {
     StmtResult::from(
-        SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
             in_fact.clone().into(),
             reason.to_string(),
+            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::NumberInSetVerifiedByBuiltinRulesResult),
             Vec::new(),
         ),
     )
@@ -40,9 +41,10 @@ pub(super) fn number_in_set_verified_by_builtin_rules_result_with_subgoals(
     subgoals: Vec<StmtResult>,
 ) -> StmtResult {
     StmtResult::from(
-        SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
             in_fact.clone().into(),
             reason.to_string(),
+            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::NumberInSetVerifiedByBuiltinRulesResultWithSubgoals),
             subgoals,
         ),
     )
@@ -53,9 +55,10 @@ pub(super) fn not_in_fact_verified_by_builtin_rules_result(
     reason: &str,
 ) -> StmtResult {
     StmtResult::from(
-        SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
             not_in_fact.clone().into(),
             reason.to_string(),
+            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::NotInFactVerifiedByBuiltinRulesResult),
             Vec::new(),
         ),
     )

@@ -2,10 +2,10 @@
 #
 # Before: the verifier left the union/set-minus decomposition unknown, so the
 # direct Result compiler had no certificate to consume.
-# Now: canonical forms retain registered rule IDs; reverse and commuted forms
+# Now: canonical forms retain typed Rust rule IDs; reverse and commuted forms
 # retain typed set-rule evidence and compile to explicit Same chains.
-# Boundary: premise-bearing absorption, disjointness, and transitivity consume
-# the exact ordered subset child Results. No theorem search or axiom is used.
+# Boundary: catalog absorption and disjointness compile from exact ordered
+# subset children; non-catalog transitivity is typed but fails closed in ToLean.
 
 forall A, B set:
     union(A, set_minus(B, A)) = union(A, B)

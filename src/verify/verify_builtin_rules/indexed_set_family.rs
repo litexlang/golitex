@@ -393,9 +393,10 @@ impl Runtime {
         reason: &str,
         steps: Vec<StmtResult>,
     ) -> StmtResult {
-        SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
             subset_fact.clone().into(),
             reason.to_string(),
+            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::IndexedFamilySubsetSuccess),
             steps,
         )
         .into()
@@ -467,9 +468,10 @@ impl Runtime {
             IsNonemptySetFact::new(index_set.clone(), line_file.clone()).into();
         if matches!(index_set, Obj::ListSet(list) if !list.list.is_empty()) {
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     nonempty.into(),
                     "nonempty literal index set".to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIndexSetNonemptyPremise),
                     Vec::new(),
                 )
                 .into(),

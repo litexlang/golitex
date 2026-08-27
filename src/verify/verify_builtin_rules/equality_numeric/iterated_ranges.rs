@@ -537,7 +537,7 @@ impl Runtime {
                 continue;
             }
             let Some(expected) =
-                self.instantiate_unary_anonymous_summand_at(sum.func.as_ref(), sum.start.as_ref())?
+                self.instantiate_unary_function_at(sum.func.as_ref(), sum.start.as_ref())?
             else {
                 continue;
             };
@@ -548,10 +548,15 @@ impl Runtime {
                 )?
                 .is_success()
             {
-                return Ok(Some(factual_equal_success_by_builtin_reason(
-                    equal_fact,
-                    "equality: single-term sum equals the summand",
-                )));
+                return Ok(Some(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                        equal_fact.clone().into(),
+                        "equality: single-term sum equals the summand".to_string(),
+                        BuiltinRuleEvidence::Aggregate(AggregateBuiltinRule::SumSingle),
+                        Vec::new(),
+                    )
+                    .into(),
+                ));
             }
         }
         Ok(None)
@@ -671,7 +676,7 @@ impl Runtime {
                 {
                     continue;
                 }
-                let Some(expected_tail) = self.instantiate_unary_anonymous_summand_at(
+                let Some(expected_tail) = self.instantiate_unary_function_at(
                     s_full.func.as_ref(),
                     s_full.end.as_ref(),
                 )?
@@ -687,10 +692,27 @@ impl Runtime {
                 {
                     continue;
                 }
-                return Ok(Some(factual_equal_success_by_builtin_reason(
-                    equal_fact,
-                    "equality: sum through e equals sum through e-1 plus last summand f(e)",
-                )));
+                let ordered_range: AtomicFact = LessEqualFact::new(
+                    s_pre.start.as_ref().clone(),
+                    s_pre.end.as_ref().clone(),
+                    line_file.clone(),
+                )
+                .into();
+                let ordered_range_result = self
+                    .verify_atomic_fact_as_builtin_rule_premise(&ordered_range, builtin_state)?;
+                if !ordered_range_result.is_success() {
+                    continue;
+                }
+                return Ok(Some(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                        equal_fact.clone().into(),
+                        "equality: sum through e equals sum through e-1 plus last summand f(e)"
+                            .to_string(),
+                        BuiltinRuleEvidence::Aggregate(AggregateBuiltinRule::SumSplitLast),
+                        vec![ordered_range_result],
+                    )
+                    .into(),
+                ));
             }
         }
         Ok(None)

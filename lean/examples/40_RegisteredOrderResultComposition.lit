@@ -1,11 +1,11 @@
-# Tracer: registered additive-order Result composition
+# Tracer: typed additive-order Result composition
 #
 # Before: Litex verification succeeded, but StmtResultToLeanCompiler delegated
-# these registered order certificates to the mirrored compatibility proof IR.
+# these order certificates to the mirrored compatibility proof IR.
 #
 # Now: the compiler enters each forall-owned child environment and consumes
-# the exact RuleId, semantic fingerprint, parameter-check Results, and ordered
-# comparison-child Results directly from SuccessStmtResult.
+# the exact Rust rule variant and ordered comparison-child Results directly
+# from SuccessStmtResult.
 forall a, b, c, d R:
     a <= b
     c <= d

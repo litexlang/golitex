@@ -152,9 +152,10 @@ impl Runtime {
         let reason = trig_reason(&left_expansion.lemmas);
         let dependencies = trig_core_dependency_results(equal_fact, &left_expansion.lemmas);
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 reason,
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyTrigonometricEquality),
                 dependencies,
             )
             .into(),
@@ -197,13 +198,14 @@ impl Runtime {
                 return Ok(None);
             };
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     atomic_fact.clone().into(),
                     format!(
                         "trigonometry layer {}: {} derived from the unit-circle identity",
                         TrigLemma::Bounds.level(),
                         TrigLemma::Bounds.name()
                     ),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyTrigonometricOrderBound),
                     vec![pythagorean, nonnegative_result],
                 )
                 .into(),
@@ -225,9 +227,10 @@ impl Runtime {
             return Ok(None);
         };
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "trigonometry: -1 <= sin/cos <= 1 from the unit-circle square bound".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyTrigonometricOrderBound),
                 vec![square_bound_result],
             )
             .into(),
@@ -254,10 +257,11 @@ impl Runtime {
                             continue;
                         };
                         return Ok(Some(
-                            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                                 equal_fact.clone().into(),
                                 "arcsin principal inverse: sin(arcsin(x)) = x on [-1, 1]"
                                     .to_string(),
+                                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyArcsinInverseEquality),
                                 steps,
                             )
                             .into(),
@@ -269,9 +273,10 @@ impl Runtime {
             if let Obj::Arcsin(arcsin) = left {
                 if arcsin_supported_exact_value(arcsin.arg.as_ref(), right) {
                     return Ok(Some(
-                        SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             equal_fact.clone().into(),
                             "arcsin principal branch: exact endpoint or zero value".to_string(),
+                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyArcsinInverseEquality),
                             Vec::new(),
                         )
                         .into(),
@@ -289,10 +294,11 @@ impl Runtime {
                             continue;
                         };
                         return Ok(Some(
-                            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                                 equal_fact.clone().into(),
                                 "arcsin principal branch: arcsin(sin(y)) = y on [-pi/2, pi/2]"
                                     .to_string(),
+                                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyArcsinInverseEquality),
                                 steps,
                             )
                             .into(),
@@ -315,9 +321,10 @@ impl Runtime {
                 );
                 if let Some(steps) = self.verify_builtin_rule_premises(&premises, builtin_state)? {
                     return Ok(Some(
-                        SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             equal_fact.clone().into(),
                             "arcsin principal branch from a supported exact sine value".to_string(),
+                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyArcsinInverseEquality),
                             steps,
                         )
                         .into(),
@@ -356,9 +363,10 @@ impl Runtime {
             return Ok(None);
         };
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "arcsin principal value lies in [-pi/2, pi/2]".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyArcsinPrincipalRange),
                 steps,
             )
             .into(),
@@ -687,9 +695,10 @@ impl Runtime {
             return Ok(None);
         };
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 format!("trigonometry: {reason}"),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyTrigonometricIntervalOrder),
                 results,
             )
             .into(),
@@ -752,9 +761,10 @@ impl Runtime {
         if let Some(premises) = quotient_nonzero_premises {
             if let Some(results) = self.verify_builtin_rule_premises(&premises, builtin_state)? {
                 return Ok(Some(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         not_equal_fact.clone().into(),
                         "trigonometry: non-zero transfer through canonical expansion".to_string(),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyTrigonometricNotEqual),
                         results,
                     )
                     .into(),
@@ -837,10 +847,11 @@ impl Runtime {
             )?;
             if interval_result.is_success() {
                 return Ok(Some(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         not_equal_fact.clone().into(),
                         "trigonometry: sine/cosine is nonzero on a canonical sign interval"
                             .to_string(),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyTrigonometricNotEqual),
                         vec![interval_result],
                     )
                     .into(),
@@ -858,9 +869,10 @@ impl Runtime {
                 self.verify_atomic_fact_as_builtin_rule_premise(&reduced, builtin_state)?;
             if reduced_result.is_success() {
                 return Ok(Some(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         not_equal_fact.clone().into(),
                         "trigonometry: pi shift changes only sign, preserving non-zero".to_string(),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyTrigonometricNotEqual),
                         vec![reduced_result],
                     )
                     .into(),
@@ -882,9 +894,10 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 not_equal_fact.clone().into(),
                 "trigonometry: non-zero transfer through canonical expansion".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyTrigonometricNotEqual),
                 vec![expanded_result],
             )
             .into(),
@@ -1240,9 +1253,10 @@ fn try_trig_quotient_definition(equal_fact: &EqualFact) -> Option<StmtResult> {
         };
         if objs_equal_by_rational_expression_evaluation(&expected, quotient_side) {
             return Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     equal_fact.clone().into(),
                     "trigonometry core: tan/cot quotient definition".to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryTrigQuotientDefinition),
                     Vec::new(),
                 )
                 .into(),
@@ -1263,9 +1277,10 @@ fn pythagorean_core_result(sin_or_cos: &Obj, other: &Obj, line_file: &LineFile) 
         Pow::new(cos, Number::new("2".to_string()).into()).into(),
     )
     .into();
-    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
         EqualFact::new(left, Number::new("1".to_string()).into(), line_file.clone()).into(),
         "trigonometry core: sin(x)^2 + cos(x)^2 = 1".to_string(),
+        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::PythagoreanCoreResult),
         Vec::new(),
     )
     .into()
@@ -1361,9 +1376,10 @@ fn trig_core_dependency_results(equal_fact: &EqualFact, lemmas: &[TrigLemma]) ->
         )
         .into();
         results.push(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 EqualFact::new(source, expanded, equal_fact.line_file.clone()).into(),
                 "trigonometry core: sine addition formula".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TrigCoreDependencyResults),
                 Vec::new(),
             )
             .into(),

@@ -25,12 +25,13 @@ impl Runtime {
         }
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 fact.clone().into(),
                 format!(
                     "{} by its builtin function-property definition",
                     fact.predicate
                 ),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyBuiltinFunctionPropertyByDefinition),
                 inside_results,
             )
             .into(),

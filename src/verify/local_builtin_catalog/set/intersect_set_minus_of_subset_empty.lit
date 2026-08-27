@@ -1,4 +1,0 @@
-forall A, B, D set:
-    A $subset D
-    =>:
-        intersect(A, set_minus(B, D)) = {}

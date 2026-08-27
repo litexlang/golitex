@@ -359,13 +359,12 @@ algorithm evaluations without a recursive computation Result remain the
 paired fail-closed boundary.
 
 `49_RegisteredSubtractionAndOrderResultComposition.lit` covers three common
-registered arithmetic/order procedures that now consume their recursive
-Result certificates directly. The compiler validates the current `RuleId`
-fingerprint, the two real-parameter checks, the exact ordered comparison
-child, the subtraction operand reversal, and strictness before selecting the
-Lean adapter for `v <= u -> 0 <= u - v`, `v < u -> 0 < u - v`, or the
-strict-to-weak `a > b -> a >= b` conversion. Reordering a parameter child with
-the semantic comparison fails closed.
+typed arithmetic/order procedures that consume their recursive Result
+certificates directly. The compiler validates the Rust rule variant, the exact
+ordered comparison child, the subtraction operand reversal, and strictness
+before selecting the Lean adapter for `v <= u -> 0 <= u - v`,
+`v < u -> 0 < u - v`, or the strict-to-weak `a > b -> a >= b` conversion.
+Reordering semantic children fails closed.
 
 `50_SetExtensionResultComposition.lit` compiles the two directional children
 of `by extension` in one inherited compiler environment and closes the exact

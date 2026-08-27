@@ -271,9 +271,10 @@ impl Runtime {
 
         if Self::forall_has_literal_empty_obj_parameter_domain(forall_fact) {
             return Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     forall_fact.clone().into(),
                     "forall over empty parameter set".to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyForallFact),
                     Vec::new(),
                 )
                 .into(),

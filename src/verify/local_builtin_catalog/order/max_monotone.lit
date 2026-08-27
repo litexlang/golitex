@@ -1,5 +1,0 @@
-forall a, b, c, d R:
-    a <= c
-    b <= d
-    =>:
-        max(a, b) <= max(c, d)

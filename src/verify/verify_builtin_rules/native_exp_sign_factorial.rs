@@ -142,9 +142,10 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 goal.clone().into(),
                 "sign is nonzero exactly for nonzero arguments".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNativeSignNonzeroCharacterization),
                 vec![result],
             )
             .into(),
@@ -331,9 +332,10 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "native exp/sign/factorial characteristic order bound".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNativeExpSignFactorialOrder),
                 subgoals,
             )
             .into(),
@@ -391,9 +393,10 @@ impl Runtime {
             return Ok(None);
         };
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "native factorial monotonicity".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNativeFactorialMonotonicity),
                 results,
             )
             .into(),
@@ -425,9 +428,10 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "native sign preserves weak order".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNativeSignMonotonicity),
                 vec![result],
             )
             .into(),
@@ -571,9 +575,10 @@ impl Runtime {
             subgoals.push(result);
             let order_kind = if strict { "strict" } else { "weak" };
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     atomic_fact.clone().into(),
                     format!("native exp/ln reflects {order_kind} order"),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNativeExpLnMonotonicity),
                     subgoals,
                 )
                 .into(),
@@ -596,9 +601,10 @@ impl Runtime {
         if reflected_result.is_success() {
             let order_kind = if strict { "strict" } else { "weak" };
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     atomic_fact.clone().into(),
                     format!("native exp/ln reflects {order_kind} order"),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNativeExpLnMonotonicity),
                     vec![reflected_result],
                 )
                 .into(),
@@ -633,9 +639,10 @@ impl Runtime {
         };
         let order_kind = if strict { "strict" } else { "weak" };
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 format!("native {function_name} preserves {order_kind} order"),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNativeExpLnMonotonicity),
                 results,
             )
             .into(),
@@ -648,9 +655,10 @@ fn native_equal_success(
     reason: &str,
     subgoals: Vec<StmtResult>,
 ) -> StmtResult {
-    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
         equal_fact.clone().into(),
         reason.to_string(),
+        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::NativeEqualSuccess),
         subgoals,
     )
     .into()
