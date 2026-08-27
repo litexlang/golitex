@@ -19,11 +19,12 @@ pub use crate::common::name_types::{
     TemplateName, ThmName,
 };
 pub use crate::common::output_language::OutputLanguage;
+pub use crate::common::output_style::OutputStyle;
 pub use crate::environment::{
     forall_argument_shape, AtomicFactIndex, CachedKnownFact, Environment,
     EnvironmentDefinitionRegistry, EnvironmentFactStore, EnvironmentObjectKnowledge,
-    EnvironmentObjectKnowledgeStore, EnvironmentPredicateProperties,
-    EnvironmentPredicatePropertyStore, EnvironmentStoredFactStore, EnvironmentVerificationCache,
+    EnvironmentObjectKnowledgeStore, EnvironmentPredicateAlgebraicPropertyStore,
+    EnvironmentPredicateProperties, EnvironmentStoredFactStore, EnvironmentVerificationCache,
     ForallArgumentShape, ForallConclusionIndex, KnownEquality, KnownEqualityProofStep, KnownFnInfo,
     KnownObjValue, QuantifiedFactIndex, SetRelationIndex, StoredFactRecord,
     StoredForallConclusionReference, WellDefinednessEnvironmentDelta,
@@ -233,9 +234,9 @@ pub use crate::pipeline::{
     display_runtime_error_json, display_stmt_exec_result_json, execute_file_in_runtime,
     execute_repository_target, render_run_output, render_run_summary, resolve_source_file_path,
     run, run_isolated_repl_with_runtime, run_latex_repl, run_repl,
-    run_repository_before_file_target, run_session, FileExecutionOptions, ReplOptions, RunOptions,
-    RunOutcome, RunRequest, RunSummary, RunSummaryRequest, RunTarget, RunTargetKind,
-    SessionPreload, SessionRequest, SourceRunOutcome,
+    run_repository_before_file_target, run_session, FileExecutionOptions, RunOutcome, RunRequest,
+    RunSummary, RunSummaryRequest, RunTarget, RunTargetKind, SessionPreload, SessionRequest,
+    SourceRunOutcome,
 };
 pub use crate::rational_expression::gcd_decimal_str_and_normalize;
 pub use crate::rational_expression::mul_signed_decimal_str;
@@ -485,7 +486,7 @@ pub use crate::runtime::FreeParamCollection;
 pub use crate::runtime::ParseContext;
 pub use crate::runtime::ScopeFrame;
 pub use crate::runtime::{
-    BareSymbol, ExecutionFrame, ExecutionLayer, OutputStyle, Runtime, StatementProofStateStack,
+    BareSymbol, ExecutionFrame, ExecutionLayer, RunOptions, Runtime, StatementProofStateStack,
 };
 pub use crate::stmt::claim_stmt::ClaimStmt;
 pub use crate::stmt::define_algorithm_stmt::AlgoCase;
@@ -688,6 +689,7 @@ pub use crate::common::keywords::INTERSECT;
 pub use crate::common::keywords::INTERVAL_LITERAL_PREFIX;
 pub use crate::common::keywords::IS_CART;
 pub use crate::common::keywords::IS_FINITE_SET;
+pub use crate::common::keywords::IS_REAL_LEAST_UPPER_BOUND;
 pub use crate::common::keywords::IS_NONEMPTY_SET;
 pub use crate::common::keywords::IS_SET;
 pub use crate::common::keywords::IS_TUPLE;

@@ -22,6 +22,7 @@ impl Runtime {
         let source_fact_id = self.known_fact_id_for_fact(&forall_fact.clone().into())?;
 
         let verify_state = VerifyState::initial();
+
         let arg_type_result = self
             .verify_args_satisfy_param_def_flat_types(
                 &forall_fact.typed_parameters,
@@ -487,6 +488,20 @@ impl Runtime {
         }
 
         let verify_state = VerifyState::initial();
+
+        if matches!(
+            theorem_id,
+            BuiltinTheoremId::RealLeastUpperBoundExists
+                | BuiltinTheoremId::RealMemberLeLeastUpperBound
+                | BuiltinTheoremId::RealLeastUpperBoundLeUpperBound
+                | BuiltinTheoremId::RationalBetweenReals
+        ) {
+            return self.exec_builtin_real_analysis_thm(
+                stmt,
+                theorem_id,
+                verify_requirements,
+            );
+        }
 
         if name == "subset_of_finite_set_is_finite" {
             require_arity!(2);
@@ -1403,6 +1418,304 @@ impl Runtime {
             .into(),
         ))
     }
+
+    fn exec_builtin_real_analysis_thm(
+        &mut self,
+        stmt: &ReleaseThmStmt,
+        theorem_id: BuiltinTheoremId,
+        verify_requirements: bool,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let name = theorem_id.as_str();
+        let expected_arity = match theorem_id {
+            BuiltinTheoremId::RealLeastUpperBoundExists
+            | BuiltinTheoremId::RationalBetweenReals => 2,
+            BuiltinTheoremId::RealMemberLeLeastUpperBound
+            | BuiltinTheoremId::RealLeastUpperBoundLeUpperBound => 3,
+            _ => unreachable!("only real-analysis builtin theorems use this executor"),
+        };
+        if stmt.args.len() != expected_arity {
+            return Err(builtin_thm_exec_error(
+                stmt,
+                format!(
+                    "builtin theorem `{}` expects {} argument(s), but got {}",
+                    name,
+                    expected_arity,
+                    stmt.args.len()
+                ),
+                vec![],
+            ));
+        }
+
+        let line_file = stmt.line_file.clone();
+        let real: Obj = StandardSet::R.into();
+        let (requirements, conclusion): (
+            Vec<(Fact, BuiltinTheoremRequirementRole)>,
+            Fact,
+        ) = match theorem_id {
+            BuiltinTheoremId::RealLeastUpperBoundExists => {
+                let set = stmt.args[0].clone();
+                let upper_bound = stmt.args[1].clone();
+                let upper_bound_requirement = self.real_upper_bound_requirement(
+                    &set,
+                    &upper_bound,
+                    line_file.clone(),
+                )?;
+
+                let lub_group = self.fresh_param_group_with_type(
+                    vec!["lub".to_string()],
+                    ParamType::Obj(real.clone()),
+                )?;
+                let lub = obj_for_bound_param_in_scope(&lub_group.params[0]);
+                let certificate: AtomicFact = NormalAtomicFact::new(
+                    AtomicName::WithoutMod(IS_REAL_LEAST_UPPER_BOUND.to_string()),
+                    vec![set.clone(), lub],
+                    line_file.clone(),
+                )
+                .into();
+                let existential = ExistentialSpec::new(
+                    TypedParameterList::new(vec![lub_group]),
+                    vec![certificate.into()],
+                    line_file.clone(),
+                )?;
+                let conclusion: ExistOrAndChainAtomicFact =
+                    ExistFactEnum::ExistFact(existential).into();
+
+                (
+                    vec![
+                        (
+                            SubsetFact::new(set.clone(), real.clone(), line_file.clone()).into(),
+                            BuiltinTheoremRequirementRole::ArgumentSetSubsetOfReals,
+                        ),
+                        (
+                            IsNonemptySetFact::new(set, line_file.clone()).into(),
+                            BuiltinTheoremRequirementRole::ArgumentSetIsNonempty,
+                        ),
+                        (
+                            InFact::new(upper_bound, real.clone(), line_file.clone()).into(),
+                            BuiltinTheoremRequirementRole::SuppliedUpperBoundBelongsToReals,
+                        ),
+                        (
+                            upper_bound_requirement,
+                            BuiltinTheoremRequirementRole::SuppliedValueBoundsEverySetMember,
+                        ),
+                    ],
+                    conclusion.to_fact(),
+                )
+            }
+            BuiltinTheoremId::RealMemberLeLeastUpperBound => {
+                let set = stmt.args[0].clone();
+                let lub = stmt.args[1].clone();
+                let member = stmt.args[2].clone();
+                (
+                    vec![
+                        (
+                            SubsetFact::new(set.clone(), real.clone(), line_file.clone()).into(),
+                            BuiltinTheoremRequirementRole::ArgumentSetSubsetOfReals,
+                        ),
+                        (
+                            InFact::new(lub.clone(), real.clone(), line_file.clone()).into(),
+                            BuiltinTheoremRequirementRole::CandidateBelongsToReals,
+                        ),
+                        (
+                            real_lub_certificate_fact(&set, &lub, line_file.clone()).into(),
+                            BuiltinTheoremRequirementRole::CandidateIsRealLeastUpperBound,
+                        ),
+                        (
+                            InFact::new(member.clone(), set, line_file.clone()).into(),
+                            BuiltinTheoremRequirementRole::ArgumentIsMemberOfSet,
+                        ),
+                    ],
+                    LessEqualFact::new(member, lub, line_file.clone()).into(),
+                )
+            }
+            BuiltinTheoremId::RealLeastUpperBoundLeUpperBound => {
+                let set = stmt.args[0].clone();
+                let lub = stmt.args[1].clone();
+                let upper_bound = stmt.args[2].clone();
+                let upper_bound_requirement = self.real_upper_bound_requirement(
+                    &set,
+                    &upper_bound,
+                    line_file.clone(),
+                )?;
+                (
+                    vec![
+                        (
+                            SubsetFact::new(set.clone(), real.clone(), line_file.clone()).into(),
+                            BuiltinTheoremRequirementRole::ArgumentSetSubsetOfReals,
+                        ),
+                        (
+                            InFact::new(lub.clone(), real.clone(), line_file.clone()).into(),
+                            BuiltinTheoremRequirementRole::CandidateBelongsToReals,
+                        ),
+                        (
+                            real_lub_certificate_fact(&set, &lub, line_file.clone()).into(),
+                            BuiltinTheoremRequirementRole::CandidateIsRealLeastUpperBound,
+                        ),
+                        (
+                            InFact::new(upper_bound, real, line_file.clone()).into(),
+                            BuiltinTheoremRequirementRole::SuppliedUpperBoundBelongsToReals,
+                        ),
+                        (
+                            upper_bound_requirement,
+                            BuiltinTheoremRequirementRole::SuppliedValueBoundsEverySetMember,
+                        ),
+                    ],
+                    LessEqualFact::new(lub, stmt.args[2].clone(), line_file.clone()).into(),
+                )
+            }
+            BuiltinTheoremId::RationalBetweenReals => {
+                let left = stmt.args[0].clone();
+                let right = stmt.args[1].clone();
+                let rational_group = self.fresh_param_group_with_type(
+                    vec!["rational".to_string()],
+                    ParamType::Obj(StandardSet::Q.into()),
+                )?;
+                let rational = obj_for_bound_param_in_scope(&rational_group.params[0]);
+                let left_less: AtomicFact =
+                    LessFact::new(left.clone(), rational.clone(), line_file.clone()).into();
+                let right_less: AtomicFact =
+                    LessFact::new(rational, right.clone(), line_file.clone()).into();
+                let existential = ExistentialSpec::new(
+                    TypedParameterList::new(vec![rational_group]),
+                    vec![QuantifierFreeFact::AndFact(AndFact::new(
+                        vec![left_less, right_less],
+                        line_file.clone(),
+                    ))],
+                    line_file.clone(),
+                )?;
+                let conclusion: ExistOrAndChainAtomicFact =
+                    ExistFactEnum::ExistFact(existential).into();
+                (
+                    vec![
+                        (
+                            InFact::new(left.clone(), real.clone(), line_file.clone()).into(),
+                            BuiltinTheoremRequirementRole::LeftArgumentBelongsToReals,
+                        ),
+                        (
+                            InFact::new(right.clone(), real, line_file.clone()).into(),
+                            BuiltinTheoremRequirementRole::RightArgumentBelongsToReals,
+                        ),
+                        (
+                            LessFact::new(left, right, line_file.clone()).into(),
+                            BuiltinTheoremRequirementRole::RealArgumentsStrictlyOrdered,
+                        ),
+                    ],
+                    conclusion.to_fact(),
+                )
+            }
+            _ => unreachable!("only real-analysis builtin theorems use this executor"),
+        };
+
+        let verify_state = VerifyState::initial();
+        let mut requirement_facts = Vec::new();
+        let mut requirement_roles = Vec::new();
+        let mut requirement_checks = Vec::new();
+        if verify_requirements {
+            for (requirement, role) in requirements {
+                let well_definedness =
+                    self.verify_fact_well_defined_result(&requirement, &verify_state)?;
+                let result = self
+                    .verify_fact_allow_unknown(&requirement, &verify_state)?
+                    .with_fact_well_definedness(well_definedness);
+                if !result.is_success() {
+                    return Err(builtin_thm_exec_error(
+                        stmt,
+                        format!(
+                            "builtin theorem `{}` requires that {}",
+                            name,
+                            role.as_str()
+                        ),
+                        vec![result],
+                    ));
+                }
+                requirement_facts.push(requirement);
+                requirement_roles.push(role);
+                requirement_checks.push(result);
+            }
+        }
+
+        let conclusion_well_definedness = if verify_requirements {
+            Some(self.verify_fact_well_defined_result(&conclusion, &verify_state)?)
+        } else {
+            None
+        };
+        let reason = InferReason::Other(format!("builtin theorem `{}`", name));
+        let infer_result = if verify_requirements {
+            self.store_without_well_defined_verification_and_infer_with_reason(
+                conclusion.clone(),
+                reason,
+            )?
+        } else {
+            self.store_trusted_fact_and_infer_with_reason(conclusion.clone(), reason)?
+        };
+        let verification = if let Some(well_definedness) = conclusion_well_definedness {
+            SuccessVerifyTheoremApplicationResult::new_builtin_with_conclusion_well_definedness(
+                theorem_id,
+                stmt.args.clone(),
+                requirement_facts,
+                requirement_roles,
+                vec![conclusion],
+                requirement_checks,
+                well_definedness,
+                None,
+            )
+        } else {
+            SuccessVerifyTheoremApplicationResult::new_builtin(
+                theorem_id,
+                stmt.args.clone(),
+                requirement_facts,
+                requirement_roles,
+                vec![conclusion],
+                requirement_checks,
+                None,
+            )
+        };
+        Ok(Some(
+            SuccessStmtResult::ReleaseThmStmt(Box::new(SuccessReleaseThmStmtResult {
+                statement: stmt.clone(),
+                common: SuccessStmtCommonResult::new(infer_result),
+                verification: Some(verification),
+            }))
+            .into(),
+        ))
+    }
+
+    fn real_upper_bound_requirement(
+        &mut self,
+        set: &Obj,
+        upper_bound: &Obj,
+        line_file: LineFile,
+    ) -> Result<Fact, RuntimeError> {
+        let member_group = self.fresh_param_group_with_type(
+            vec!["member".to_string()],
+            ParamType::Obj(StandardSet::R.into()),
+        )?;
+        let member = obj_for_bound_param_in_scope(&member_group.params[0]);
+        let comparison: AtomicFact =
+            LessEqualFact::new(member, upper_bound.clone(), line_file.clone()).into();
+        let membership: Fact = InFact::new(
+            obj_for_bound_param_in_scope(&member_group.params[0]),
+            set.clone(),
+            line_file.clone(),
+        )
+        .into();
+        Ok(ForallFact::new_canonical_forall(
+            TypedParameterList::new(vec![member_group]),
+            vec![membership],
+            vec![comparison.into()],
+            line_file,
+        )?
+        .into())
+    }
+}
+
+fn real_lub_certificate_fact(set: &Obj, lub: &Obj, line_file: LineFile) -> AtomicFact {
+    NormalAtomicFact::new(
+        AtomicName::WithoutMod(IS_REAL_LEAST_UPPER_BOUND.to_string()),
+        vec![set.clone(), lub.clone()],
+        line_file,
+    )
+    .into()
 }
 
 fn builtin_thm_exec_error(

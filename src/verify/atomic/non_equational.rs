@@ -277,7 +277,7 @@ impl Runtime {
         }
         let prop_name = f.predicate.to_string();
         for env in self.iter_environments_from_top() {
-            if env.predicate_properties.is_reflexive(&prop_name) {
+            if env.predicate_algebraic_properties.is_reflexive(&prop_name) {
                 let target: Fact = atomic_fact.clone().into();
                 return Ok(
                     SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
@@ -315,7 +315,7 @@ impl Runtime {
         let mut permutations: Vec<Vec<usize>> = Vec::new();
         for env in self.iter_environments_from_top() {
             if let Some(perms) = env
-                .predicate_properties
+                .predicate_algebraic_properties
                 .symmetric_argument_permutations(&prop_name)
             {
                 for g in perms {

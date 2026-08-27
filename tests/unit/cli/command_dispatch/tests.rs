@@ -1,10 +1,9 @@
 use super::super::command_handlers::read_optional_graph_save_path;
 use super::super::messages::{help_message, upgrade_message};
 use crate::cli::arguments::{parse_global_options, read_session_preload, validate_session_preload};
-use crate::common::output_language::OutputLanguage;
+use crate::common::{output_language::OutputLanguage, output_style::OutputStyle};
 use crate::graph::GraphKind;
 use crate::pipeline::SessionPreload;
-use crate::runtime::OutputStyle;
 
 #[test]
 fn global_cli_options_preserve_every_run_option_value() {
@@ -19,8 +18,7 @@ fn global_cli_options_preserve_every_run_option_value() {
         "1 = 1".to_string(),
     ];
 
-    let cli_options = parse_global_options(&mut args).expect("global CLI options should parse");
-    let run_options = cli_options.run_options();
+    let run_options = parse_global_options(&mut args).expect("global CLI options should parse");
 
     assert_eq!(run_options.output_style, OutputStyle::Compact);
     assert!(run_options.strict_mode);

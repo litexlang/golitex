@@ -4,7 +4,7 @@
 
 ```text
 run(RunRequest { target, options })
-  Runtime::new(output_style, strict_mode, output_language)
+  Runtime::new(options)
   match target: Code | File | Repository
   Runtime::execute_source(source)
     Runtime::execute_source_blocks
@@ -33,7 +33,7 @@ or `module_manager` without first expanding the crate-wide prelude.
 
 | File | Example |
 | --- | --- |
-| [`run.rs`](run.rs) | Owns the single batch entry `run(RunRequest)`, its request/target types, Runtime creation, and target dispatch. |
+| [`run.rs`](run.rs) | Owns the single batch entry `run(RunRequest)`, its request/target types, Runtime creation, and target dispatch. The canonical `RunOptions` lives in [`../runtime/run_options.rs`](../runtime/run_options.rs). |
 | [`source_execution.rs`](source_execution.rs) | Tokenizes, parses, and executes source inside an already initialized Runtime. |
 | [`file_execution.rs`](file_execution.rs) | Resolves `-f`, discovers project context, and selects repository-prefix or isolated-file execution. |
 | [`output_rendering.rs`](output_rendering.rs) | Renders statement results, errors, and unverified-import warnings. |

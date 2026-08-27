@@ -33,6 +33,33 @@ impl StmtResultToLeanCompiler {
                         &builtin.subgoals,
                     );
                 }
+                if matches!(
+                    builtin.evidence.typed(),
+                    Some(BuiltinRuleEvidence::LiteralSetNonempty)
+                ) {
+                    return self.construct_lean_literal_set_nonempty_from_result(
+                        &source_fact,
+                        &builtin.subgoals,
+                    );
+                }
+                if matches!(
+                    builtin.evidence.typed(),
+                    Some(BuiltinRuleEvidence::LiteralSetSubset)
+                ) {
+                    return self.construct_lean_literal_set_subset_from_result(
+                        &source_fact,
+                        &builtin.subgoals,
+                    );
+                }
+                if matches!(
+                    builtin.evidence.typed(),
+                    Some(BuiltinRuleEvidence::SetBuilderSubsetBase)
+                ) {
+                    return self.construct_lean_set_builder_subset_base_from_result(
+                        &source_fact,
+                        &builtin.subgoals,
+                    );
+                }
                 if let Some(BuiltinRuleEvidence::RefinedNumericMembership(evidence)) =
                     builtin.evidence.typed()
                 {
@@ -429,8 +456,9 @@ impl StmtResultToLeanCompiler {
                             &source_fact,
                             evidence,
                         )?;
-                        Ok(Some(render_closed_numeric_comparison_fact(
+                        Ok(Some(render_closed_numeric_comparison_fact_from_result(
                             &source_fact,
+                            evidence,
                             &self.environment_stack,
                         )?))
                     }
@@ -512,6 +540,53 @@ impl StmtResultToLeanCompiler {
         }
     }
 
+    pub(super) fn construct_lean_literal_set_nonempty_from_result(
+        &self,
+        source_fact: &Fact,
+        subgoals: &[StmtResult],
+    ) -> Result<Option<String>, String> {
+        if !subgoals.is_empty() {
+            return Err("literal-set nonempty evidence unexpectedly retained subgoals".into());
+        }
+        let Fact::AtomicFact(AtomicFact::IsNonemptySetFact(nonempty)) = source_fact else {
+            return Err("literal-set nonempty evidence targets another fact family".into());
+        };
+        let Obj::ListSet(list_set) = &nonempty.set else {
+            return Err("literal-set nonempty evidence targets a nonliteral set".into());
+        };
+        let Some(first) = list_set.list.first() else {
+            return Err("literal-set nonempty evidence targets the empty literal".into());
+        };
+        let rendered_first = render_obj(first.as_ref(), &self.environment_stack)?;
+        Ok(Some(format!(
+            "Litex.SetRules.unionNonemptyLeft (Litex.Rules.singletonNonempty {rendered_first})"
+        )))
+    }
+
+    pub(super) fn construct_lean_set_builder_subset_base_from_result(
+        &self,
+        source_fact: &Fact,
+        subgoals: &[StmtResult],
+    ) -> Result<Option<String>, String> {
+        if !subgoals.is_empty() {
+            return Err("set-builder base-subset evidence unexpectedly retained subgoals".into());
+        }
+        let Fact::AtomicFact(AtomicFact::SubsetFact(subset)) = source_fact else {
+            return Err("set-builder base-subset evidence targets another fact family".into());
+        };
+        let Obj::SetBuilder(builder) = &subset.left else {
+            return Err("set-builder base-subset evidence targets another set constructor".into());
+        };
+        if !objs_equal_with_nested_binder_alpha_equivalence(
+            builder.param_set.as_ref(),
+            &subset.right,
+        ) {
+            return Err("set-builder base-subset evidence changed its base carrier".into());
+        }
+        render_fact(source_fact, &self.environment_stack)?;
+        Ok(Some("Litex.Rules.setBuilderSubsetBase".into()))
+    }
+
     /// Temporarily exposes this exact statement Result's retained WD tree
     /// while its proof renders objects. The parent Result's WD certificate is
     /// restored afterwards; bindings and FactIds remain inherited separately.
@@ -529,5 +604,56 @@ impl StmtResultToLeanCompiler {
         let construction = self.construct_lean_proof_from_direct_fact_result(result);
         self.environment_stack.well_definedness = parent;
         construction
+    }
+
+    pub(super) fn construct_lean_literal_set_subset_from_result(
+        &mut self,
+        source_fact: &Fact,
+        subgoals: &[StmtResult],
+    ) -> Result<Option<String>, String> {
+        let Fact::AtomicFact(AtomicFact::SubsetFact(subset)) = source_fact else {
+            return Err("literal-set-subset evidence targets a non-subset fact".into());
+        };
+        let Obj::ListSet(list) = &subset.left else {
+            return Err("literal-set-subset evidence lost its literal left set".into());
+        };
+        if list.list.len() != subgoals.len() {
+            return Err("literal-set-subset evidence changed its member arity".into());
+        }
+        let target = render_obj(&subset.right, &self.environment_stack)?;
+        let mut tail = "Litex.Set.empty".to_string();
+        let mut proof = format!("Litex.Rules.emptySubset {target}");
+        for (item, subgoal) in list.list.iter().zip(subgoals.iter()).rev() {
+            let item = item.as_ref();
+            let expected: Fact = InFact::new(
+                item.clone(),
+                subset.right.clone(),
+                subset.line_file.clone(),
+            )
+            .into();
+            let subgoal = subgoal.factual_success().ok_or_else(|| {
+                "literal-set-subset member subgoal is not factual".to_string()
+            })?;
+            validate_scoped_fact_check_result(
+                subgoal,
+                &expected,
+                "literal-set-subset member subgoal",
+            )?;
+            let item_proof = self
+                .construct_lean_proof_from_direct_fact_result_using_its_well_definedness(subgoal)?
+                .ok_or_else(|| {
+                    "literal-set-subset member subgoal has no typed proof consumer".to_string()
+                })?;
+            let rendered_item = render_obj(item, &self.environment_stack)?;
+            let singleton = format!("Litex.Set.singleton {rendered_item}");
+            let singleton_proof = format!(
+                "Litex.Rules.singletonSubset {rendered_item} {target} ({item_proof})"
+            );
+            proof = format!(
+                "Litex.Rules.coproductSubset {singleton} {tail} {target} ({singleton_proof}) ({proof})"
+            );
+            tail = format!("Litex.Set.coproduct {singleton} {tail}");
+        }
+        Ok(Some(proof))
     }
 }

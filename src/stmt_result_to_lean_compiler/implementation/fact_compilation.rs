@@ -3312,6 +3312,103 @@ impl StmtResultToLeanCompiler {
                 }
             } else if matches!(
                 application.rule,
+                InferRule::SetBuilderBaseMembershipProjection
+                    | InferRule::SetBuilderPredicateProjection { .. }
+            ) {
+                if !conclusion_already_visible {
+                    let premise_name = resolve_fact_citation(
+                        &premise_fact_id,
+                        &premise.fact,
+                        &self.environment_stack,
+                    )?;
+                    let proof = match &application.rule {
+                        InferRule::SetBuilderBaseMembershipProjection => {
+                            let (source_element, source_set) = membership_parts(&premise.fact)?;
+                            let Obj::SetBuilder(builder) = source_set else {
+                                return Err(format!(
+                                    "{result_layer} application {application_index} set-builder base projection cites another set constructor"
+                                ));
+                            };
+                            let (target_element, target_set) = membership_parts(&conclusion.fact)?;
+                            if obj_equality_key(source_element) != obj_equality_key(target_element)
+                                || obj_equality_key(builder.param_set.as_ref())
+                                    != obj_equality_key(target_set)
+                            {
+                                return Err(format!(
+                                    "{result_layer} application {application_index} changed its set-builder base projection"
+                                ));
+                            }
+                            format!("Litex.Rules.inBaseOfInSetBuilder ({premise_name})")
+                        }
+                        InferRule::SetBuilderPredicateProjection { clause_index } => {
+                            render_set_builder_predicate_projection_from_fact_and_proof(
+                                &conclusion.fact,
+                                *clause_index,
+                                &premise.fact,
+                                &premise_name,
+                                &self.environment_stack,
+                            )?
+                        }
+                        _ => unreachable!("set-builder inference was matched above"),
+                    };
+                    let conclusion_proposition =
+                        render_fact(&conclusion.fact, &self.environment_stack)?;
+                    let conclusion_name = self.next_local_inference_fact_proof_name();
+                    self.retain_compiled_inference_fact_proof_step_in_current_environment(
+                        &mut compiled_inference_fact_proof_steps,
+                        CompiledInferenceFactProofStep::new(
+                            conclusion_fact_id,
+                            conclusion.fact.clone(),
+                            conclusion_name,
+                            conclusion_proposition,
+                            proof,
+                        ),
+                        availability,
+                    );
+                }
+            } else if let InferRule::ListSetMembershipImpliesEqualityAlternatives(rule) =
+                &application.rule
+            {
+                let (_, source_set) = membership_parts(&premise.fact)?;
+                let Obj::ListSet(list_set) = source_set else {
+                    return Err(format!(
+                        "{result_layer} application {application_index} literal alternatives cite another set constructor"
+                    ));
+                };
+                if rule.element_count == 0 || rule.element_count != list_set.list.len() {
+                    return Err(format!(
+                        "{result_layer} application {application_index} changed its literal alternatives arity"
+                    ));
+                }
+                if !conclusion_already_visible {
+                    let premise_name = resolve_fact_citation(
+                        &premise_fact_id,
+                        &premise.fact,
+                        &self.environment_stack,
+                    )?;
+                    let proof = render_list_set_membership_elimination_from_fact_and_proof(
+                        &conclusion.fact,
+                        &premise.fact,
+                        &premise_name,
+                        &self.environment_stack,
+                    )?;
+                    let conclusion_proposition =
+                        render_fact(&conclusion.fact, &self.environment_stack)?;
+                    let conclusion_name = self.next_local_inference_fact_proof_name();
+                    self.retain_compiled_inference_fact_proof_step_in_current_environment(
+                        &mut compiled_inference_fact_proof_steps,
+                        CompiledInferenceFactProofStep::new(
+                            conclusion_fact_id,
+                            conclusion.fact.clone(),
+                            conclusion_name,
+                            conclusion_proposition,
+                            proof,
+                        ),
+                        availability,
+                    );
+                }
+            } else if matches!(
+                application.rule,
                 InferRule::MembershipInSetWithKnownEqualityImpliesMembershipInEqualSet(_)
                     | InferRule::SubsetImpliesElementwiseMembershipForall(_)
                     | InferRule::SupersetImpliesElementwiseMembershipForall(_)

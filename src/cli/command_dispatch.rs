@@ -10,13 +10,13 @@ use super::conversion_commands::{run_latex_command, run_python_command};
 use super::lean_commands::{run_lean_file_command, run_lean_ledger_command};
 use super::messages::{print_help_message, upgrade_message};
 use crate::graph::GraphKind;
-use crate::pipeline::{run_repl, run_session, ReplOptions, RunOptions, SessionRequest};
+use crate::pipeline::{run_repl, run_session, RunOptions, SessionRequest};
 use std::env;
 use std::process;
 
 pub fn run_cli() {
     let mut args: Vec<String> = env::args().skip(1).collect();
-    let cli_options = match parse_global_options(&mut args) {
+    let run_options = match parse_global_options(&mut args) {
         Ok(options) => options,
         Err(message) => {
             eprintln!("{}", message);
@@ -24,7 +24,6 @@ pub fn run_cli() {
             process::exit(2);
         }
     };
-    let run_options = cli_options.run_options();
     let mut index: usize = 0;
 
     if !args.is_empty() {
@@ -156,7 +155,7 @@ pub fn run_cli() {
                         process::exit(2);
                     }
                 };
-                if let Err(message) = validate_session_preload(cli_options.force_isolated, &preload)
+                if let Err(message) = validate_session_preload(run_options.force_isolated, &preload)
                 {
                     eprintln!("{}", message);
                     print_help_message();
@@ -179,8 +178,8 @@ pub fn run_cli() {
                 run_latex_command(
                     &args,
                     &mut index,
-                    cli_options.output_language,
-                    cli_options.force_isolated,
+                    run_options.output_language,
+                    run_options.force_isolated,
                 );
                 return;
             }
@@ -188,8 +187,8 @@ pub fn run_cli() {
                 run_python_command(
                     &args,
                     &mut index,
-                    cli_options.output_language,
-                    cli_options.force_isolated,
+                    run_options.output_language,
+                    run_options.force_isolated,
                 );
                 return;
             }
@@ -201,14 +200,7 @@ pub fn run_cli() {
         }
     }
 
-    run_repl(
-        VERSION,
-        ReplOptions::new(
-            cli_options.output_style,
-            cli_options.strict_mode,
-            cli_options.output_language,
-        ),
-    );
+    run_repl(VERSION, run_options);
 }
 
 #[cfg(test)]

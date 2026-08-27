@@ -59,7 +59,7 @@ impl Runtime {
     pub fn is_symmetric_prop_name_known(&self, prop_name: &str) -> bool {
         for env in self.iter_environments_from_top() {
             if let Some(perms) = env
-                .predicate_properties
+                .predicate_algebraic_properties
                 .symmetric_argument_permutations(prop_name)
             {
                 if !perms.is_empty() {

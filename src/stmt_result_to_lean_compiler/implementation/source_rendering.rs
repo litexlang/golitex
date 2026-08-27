@@ -21,6 +21,13 @@ pub(super) fn render_fact(
                         render_obj(&fact.body[1], context)?
                     ));
                 }
+                if source_name == IS_REAL_LEAST_UPPER_BOUND && fact.body.len() == 2 {
+                    return Ok(format!(
+                        "Litex.RealLeastUpperBound {} {}",
+                        render_obj(&fact.body[0], context)?,
+                        render_obj(&fact.body[1], context)?
+                    ));
+                }
                 let binding = context
                     .predicate_bindings
                     .get(&source_name)
@@ -50,6 +57,13 @@ pub(super) fn render_fact(
                 if source_name == COPRIME && fact.body.len() == 2 {
                     return Ok(format!(
                         "¬ Litex.Coprime {} {}",
+                        render_obj(&fact.body[0], context)?,
+                        render_obj(&fact.body[1], context)?
+                    ));
+                }
+                if source_name == IS_REAL_LEAST_UPPER_BOUND && fact.body.len() == 2 {
+                    return Ok(format!(
+                        "¬ Litex.RealLeastUpperBound {} {}",
                         render_obj(&fact.body[0], context)?,
                         render_obj(&fact.body[1], context)?
                     ));

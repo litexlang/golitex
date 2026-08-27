@@ -2,11 +2,11 @@ use super::{
     execute_file_in_runtime, execute_repository_target, render_run_output, render_run_summary,
     resolve_source_file_path, FileExecutionOptions, RunSummaryRequest,
 };
-use crate::common::{helper::remove_windows_carriage_from_str, output_language::OutputLanguage};
+use crate::common::helper::remove_windows_carriage_from_str;
 use crate::error::RuntimeError;
 use crate::module_manager::{discover_repository, RepositoryFileTarget};
 use crate::result::StmtResult;
-use crate::runtime::{OutputStyle, Runtime};
+use crate::runtime::{RunOptions, Runtime};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum RunTargetKind {
@@ -54,27 +54,6 @@ impl RunTarget {
     }
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct RunOptions {
-    pub output_style: OutputStyle,
-    pub strict_mode: bool,
-    pub output_language: OutputLanguage,
-    pub summarize: bool,
-    pub force_isolated: bool,
-}
-
-impl Default for RunOptions {
-    fn default() -> Self {
-        Self {
-            output_style: OutputStyle::Normal,
-            strict_mode: false,
-            output_language: OutputLanguage::English,
-            summarize: false,
-            force_isolated: false,
-        }
-    }
-}
-
 pub struct RunRequest {
     pub target: RunTarget,
     pub options: RunOptions,
@@ -101,11 +80,7 @@ pub struct RunOutcome {
 pub fn run(request: RunRequest) -> RunOutcome {
     let RunRequest { target, options } = request;
 
-    let mut runtime = Runtime::new(
-        options.output_style,
-        options.strict_mode,
-        options.output_language,
-    );
+    let mut runtime = Runtime::new(options);
 
     let mut target_error = None;
     let mut selected_repository_target = None;

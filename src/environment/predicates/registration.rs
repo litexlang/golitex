@@ -4,19 +4,19 @@ use crate::prelude::*;
 
 impl Environment {
     pub fn store_transitive_prop_name(&mut self, prop_name: String) {
-        self.predicate_properties
+        self.predicate_algebraic_properties
             .properties_mut(prop_name)
             .is_transitive = true;
     }
 
     pub fn store_reflexive_prop_name(&mut self, prop_name: String) {
-        self.predicate_properties
+        self.predicate_algebraic_properties
             .properties_mut(prop_name)
             .is_reflexive = true;
     }
 
     pub fn store_antisymmetric_prop_name(&mut self, prop_name: String) {
-        self.predicate_properties
+        self.predicate_algebraic_properties
             .properties_mut(prop_name)
             .is_antisymmetric = true;
     }
@@ -58,7 +58,7 @@ impl Environment {
             );
         }
         if let Some(existing) = self
-            .predicate_properties
+            .predicate_algebraic_properties
             .symmetric_argument_permutations(&prop_name)
         {
             if let Some(first) = existing.first() {
@@ -79,7 +79,7 @@ impl Environment {
             }
         }
         let entry = &mut self
-            .predicate_properties
+            .predicate_algebraic_properties
             .properties_mut(prop_name)
             .symmetric_argument_permutations;
         if entry.iter().any(|g| g == &gather) {

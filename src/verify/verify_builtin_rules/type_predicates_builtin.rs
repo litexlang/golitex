@@ -82,14 +82,13 @@ impl Runtime {
                 if list_set.list.is_empty() {
                     Ok((UnknownGenericStmtResult::new()).into())
                 } else {
-                    Ok(
-                        (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
-                            is_nonempty_set_fact.clone().into(),
-                            "list_set_nonempty_has_member_in_syntax".to_string(),
-                            Vec::new(),
-                        ))
-                        .into(),
+                    Ok(SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                        is_nonempty_set_fact.clone().into(),
+                        "list_set_nonempty_has_member_in_syntax".to_string(),
+                        BuiltinRuleEvidence::LiteralSetNonempty,
+                        Vec::new(),
                     )
+                    .into())
                 }
             }
             // Power set nonempty rule: `power_set(S)` contains the empty set as a subset of `S`.

@@ -6,7 +6,7 @@ use crate::common::output_language::OutputLanguage;
 use crate::error::RuntimeError;
 use crate::output::display_runtime_error_json;
 use crate::pipeline::run_latex_repl;
-use crate::runtime::{OutputStyle, Runtime};
+use crate::runtime::{RunOptions, Runtime};
 use crate::to_latex::{to_latex_from_file, to_latex_from_repository, to_latex_from_source};
 use crate::to_python::{to_python_from_file, to_python_from_repository, to_python_from_source};
 use std::fs;
@@ -205,6 +205,9 @@ pub(super) fn compile_repo_to_python(repo_path: &str, output_language: OutputLan
 }
 
 fn render_conversion_error(output_language: OutputLanguage, error: &RuntimeError) -> String {
-    let runtime = Runtime::new(OutputStyle::Normal, false, output_language);
+    let runtime = Runtime::new(RunOptions {
+        output_language,
+        ..RunOptions::default()
+    });
     display_runtime_error_json(&runtime, error, true)
 }

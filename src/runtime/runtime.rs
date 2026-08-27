@@ -1,22 +1,9 @@
-//! Run-wide Runtime state and execution-frame lifecycle.
+//! Run-wide Runtime and execution-frame lifecycle.
 
 use crate::prelude::*;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum OutputStyle {
-    Compact,
-    Normal,
-    Detailed,
-}
-
-impl OutputStyle {
-    pub fn is_detailed(self) -> bool {
-        self == OutputStyle::Detailed
-    }
-}
 
 pub struct Runtime {
     /// The module world for this top-level run. Imported modules execute in
@@ -32,17 +19,11 @@ pub struct Runtime {
     /// temporary runtime environments, but are not part of the persistent
     /// mathematical environment and are never merged or snapshotted.
     pub statement_proof_state: StatementProofStateStack,
-    pub output_style: OutputStyle,
-    pub strict_mode: bool,
-    pub output_language: OutputLanguage,
+    pub options: RunOptions,
 }
 
 impl Runtime {
-    pub fn new(
-        output_style: OutputStyle,
-        strict_mode: bool,
-        output_language: OutputLanguage,
-    ) -> Self {
+    pub fn new(options: RunOptions) -> Self {
         Runtime {
             module_manager: Box::new(ModuleManager::new()),
             execution_stack: vec![],
@@ -50,16 +31,14 @@ impl Runtime {
             symbol_id_allocator: Rc::new(SymbolIdAllocator::new()),
             template_instance_interner: RefCell::new(HashMap::new()),
             statement_proof_state: StatementProofStateStack::new(),
-            output_style,
-            strict_mode,
-            output_language,
+            options,
         }
     }
 }
 
 impl Default for Runtime {
     fn default() -> Self {
-        Self::new(OutputStyle::Normal, false, OutputLanguage::English)
+        Self::new(RunOptions::default())
     }
 }
 
@@ -75,11 +54,11 @@ impl Runtime {
     }
 
     pub fn set_output_style(&mut self, output_style: OutputStyle) {
-        self.output_style = output_style;
+        self.options.output_style = output_style;
     }
 
     pub fn effective_output_style(&self) -> OutputStyle {
-        self.output_style
+        self.options.output_style
     }
 
     pub fn is_compact_output(&self) -> bool {
@@ -219,7 +198,7 @@ impl Runtime {
     }
 
     pub fn strict_mode_applies_to_current_module(&self) -> bool {
-        if !self.strict_mode {
+        if !self.options.strict_mode {
             return false;
         }
         let Some(frame) = self.execution_stack.last() else {
@@ -403,5 +382,5 @@ impl Runtime {
 }
 
 #[cfg(test)]
-#[path = "../../tests/unit/runtime/state/test_support.rs"]
+#[path = "../../tests/unit/runtime/runtime/test_support.rs"]
 mod test_support;

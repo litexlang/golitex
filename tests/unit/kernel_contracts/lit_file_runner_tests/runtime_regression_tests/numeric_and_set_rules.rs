@@ -1376,7 +1376,7 @@ fn direct_calculation_builtin_rule_output_localizes_to_zh() {
 
             let mut runtime = Runtime::default();
             runtime.start_isolated_source("direct_calculation_builtin_rule_output_localizes_to_zh");
-            runtime.output_language = OutputLanguage::SimplifiedChinese;
+            runtime.options.output_language = OutputLanguage::SimplifiedChinese;
 
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
@@ -1430,7 +1430,7 @@ forall a, b R:
     runtime.start_isolated_source(
         "rational_expression_simplification_builtin_rule_output_localizes_to_zh",
     );
-    runtime.output_language = OutputLanguage::SimplifiedChinese;
+    runtime.options.output_language = OutputLanguage::SimplifiedChinese;
 
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);

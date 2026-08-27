@@ -1813,6 +1813,19 @@ def Lt (x y : ℂ) : Prop :=
 def Le (x y : ℂ) : Prop :=
   OrderValue x ≤ OrderValue y
 
+/-- Native real values represented by complex-carrier source members of a
+Litex set. The retained `In z R` proof selects exactly the real representative
+used by compiled source order facts. -/
+def realMemberValues (set : Litex.Set) : _root_.Set ℝ :=
+  {value | ∃ (z : ℂ) (hzR : In z R), In z set ∧ value = In.rep z hzR}
+
+/-- A verifier-owned certificate that the compiler's canonical real
+observation of a source complex value is the least upper bound of the real
+members of `set`. Possessing this certificate is the explicit evidence that
+allows later compilation to keep the candidate's `OrderValue` representation. -/
+def RealLeastUpperBound (set : Litex.Set) (candidate : ℂ) : Prop :=
+  IsLUB (realMemberValues set) (OrderValue candidate)
+
 /-- A bounded positive-natural function parameter is compared through one
 source complex observation. This keeps the telescope requirement usable for a
 heterogeneous argument while retaining the exact Litex `index <= length`

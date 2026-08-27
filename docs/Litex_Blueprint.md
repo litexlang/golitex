@@ -122,7 +122,7 @@ Many programming languages begin under one or a few lead designers, who also wri
 
 In an earlier era, I could scarcely have designed the language, designed its implementation architecture, and maintained a large verifier alone; that workload is difficult for any one person to carry. AI changes the cost of implementation. Once the framework, semantics, and boundaries are explicit, language models can often generate correct or nearly correct implementations quickly, after which tests, review, and counterexamples filter out errors. This lets me concentrate more on design and acceptance. AI is not the source of correctness, but it makes a personal language project of this scale feasible for the first time.
 
-The Litex-to-Lean compiler is intended to add another long-term safeguard: it aims to compile the verification paths found by Litex into corresponding Lean proof terms, which the Lean kernel can check independently. The current compiler covers only some paths. Even complete future coverage will still require auditing the semantic correspondence between Litex and Lean. But when every result can pass through this independent rechecking path, correctness need not rely only on the much larger Litex verifier.
+The Litex-to-Lean compiler is intended to add another long-term safeguard: it aims to compile the verification paths found by Litex into corresponding Lean proof terms, which the Lean kernel can check independently. That means no matter how big Litex kernel is, the strictness of Litex is validated.
 
 </details>
 

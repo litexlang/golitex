@@ -649,7 +649,7 @@ fn zh_output_localizes_unproved_trust_labels() {
     let source_code = "abstract_prop tmp_rel(m, n)\ntrust exist! m, n R st {$tmp_rel(m, n)}\n";
     let mut runtime = Runtime::default();
     runtime.start_isolated_source("zh_output_localizes_unproved_trust_labels");
-    runtime.output_language = OutputLanguage::SimplifiedChinese;
+    runtime.options.output_language = OutputLanguage::SimplifiedChinese;
 
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -667,7 +667,7 @@ fn zh_output_localizes_citation_evidence_but_keeps_litex_statement() {
     let mut runtime = Runtime::default();
     runtime
         .start_isolated_source("zh_output_localizes_citation_evidence_but_keeps_litex_statement");
-    runtime.output_language = OutputLanguage::SimplifiedChinese;
+    runtime.options.output_language = OutputLanguage::SimplifiedChinese;
 
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -714,7 +714,7 @@ $can_be_divided_by_2(x)
 
     let mut runtime = Runtime::default();
     runtime.start_isolated_source("zh_forall_output_uses_short_conclusions_and_compact_citation");
-    runtime.output_language = OutputLanguage::SimplifiedChinese;
+    runtime.options.output_language = OutputLanguage::SimplifiedChinese;
 
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -923,7 +923,7 @@ fn non_english_languages_localize_unproved_trust_labels() {
     {
         let mut runtime = Runtime::default();
         runtime.start_isolated_source("non_english_languages_localize_unproved_trust_labels");
-        runtime.output_language = language;
+        runtime.options.output_language = language;
 
         let (stmt_results, runtime_error) = execute_source("trust 1 = 1", &mut runtime);
         let (run_succeeded, run_output) =
@@ -1026,7 +1026,7 @@ axiom bad_axiom:
 fn strict_mode_rejects_user_trust() {
     let mut runtime = Runtime::default();
     runtime.start_isolated_source("strict_mode_rejects_user_trust");
-    runtime.strict_mode = true;
+    runtime.options.strict_mode = true;
 
     let (stmt_results, runtime_error) = execute_source("trust 1 = 0", &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -1048,7 +1048,7 @@ fn strict_mode_rejects_user_trust_have() {
     run_with_large_stack("strict_mode_rejects_user_trust_have", || {
         let mut runtime = Runtime::default();
         runtime.start_isolated_source("strict_mode_rejects_user_trust_have");
-        runtime.strict_mode = true;
+        runtime.options.strict_mode = true;
 
         let (stmt_results, runtime_error) = execute_source("trust have x R", &mut runtime);
         let (run_succeeded, run_output) =
@@ -1071,7 +1071,7 @@ fn strict_mode_rejects_user_trust_have() {
 fn strict_mode_rejects_user_axiom() {
     let mut runtime = Runtime::default();
     runtime.start_isolated_source("strict_mode_rejects_user_axiom");
-    runtime.strict_mode = true;
+    runtime.options.strict_mode = true;
 
     let source_code = r#"
 axiom strict_axiom:

@@ -3082,6 +3082,15 @@ impl StmtResultJsonV2 {
             BuiltinRuleEvidence::StandardSetSubset => {
                 object(vec![string_field("kind", "StandardSetSubset")])
             }
+            BuiltinRuleEvidence::LiteralSetNonempty => {
+                object(vec![string_field("kind", "LiteralSetNonempty")])
+            }
+            BuiltinRuleEvidence::SetBuilderSubsetBase => {
+                object(vec![string_field("kind", "SetBuilderSubsetBase")])
+            }
+            BuiltinRuleEvidence::LiteralSetSubset => {
+                object(vec![string_field("kind", "LiteralSetSubset")])
+            }
         }
     }
 

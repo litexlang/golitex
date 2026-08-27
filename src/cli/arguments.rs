@@ -1,6 +1,6 @@
-use crate::common::output_language::OutputLanguage;
-use crate::pipeline::{RunOptions, SessionPreload};
-use crate::runtime::OutputStyle;
+use crate::common::{output_language::OutputLanguage, output_style::OutputStyle};
+use crate::pipeline::SessionPreload;
+use crate::runtime::RunOptions;
 
 const DETAIL_FLAG: &str = "-detail";
 const COMPACT_FLAG: &str = "-compact";
@@ -9,27 +9,7 @@ const LANGUAGE_FLAG: &str = "-lang";
 const SUMMARIZE_FLAG: &str = "-summarize";
 const ISOLATED_FLAG: &str = "-isolated";
 
-pub struct CliOptions {
-    pub output_style: OutputStyle,
-    pub strict_mode: bool,
-    pub summarize_output: bool,
-    pub force_isolated: bool,
-    pub output_language: OutputLanguage,
-}
-
-impl CliOptions {
-    pub fn run_options(&self) -> RunOptions {
-        RunOptions {
-            output_style: self.output_style,
-            strict_mode: self.strict_mode,
-            output_language: self.output_language,
-            summarize: self.summarize_output,
-            force_isolated: self.force_isolated,
-        }
-    }
-}
-
-pub fn parse_global_options(args: &mut Vec<String>) -> Result<CliOptions, String> {
+pub fn parse_global_options(args: &mut Vec<String>) -> Result<RunOptions, String> {
     let detail_output = remove_flag(args, DETAIL_FLAG);
     let compact_output = remove_flag(args, COMPACT_FLAG);
     if detail_output && compact_output {
@@ -44,14 +24,14 @@ pub fn parse_global_options(args: &mut Vec<String>) -> Result<CliOptions, String
         OutputStyle::Normal
     };
     let strict_mode = remove_flag(args, STRICT_FLAG);
-    let summarize_output = remove_flag(args, SUMMARIZE_FLAG);
+    let summarize = remove_flag(args, SUMMARIZE_FLAG);
     let force_isolated = remove_flag(args, ISOLATED_FLAG);
     let output_language = remove_language_flag(args)?;
 
-    Ok(CliOptions {
+    Ok(RunOptions {
         output_style,
         strict_mode,
-        summarize_output,
+        summarize,
         force_isolated,
         output_language,
     })

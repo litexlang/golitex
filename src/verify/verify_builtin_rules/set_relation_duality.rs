@@ -216,6 +216,26 @@ impl Runtime {
             }
         }
 
+        // A predicate-defined set retains the exact carrier of its declared
+        // base, so it is always contained in that base without inspecting the
+        // predicate.
+        if let Obj::SetBuilder(builder) = &subset_fact.left {
+            if objs_equal_with_nested_binder_alpha_equivalence(
+                builder.param_set.as_ref(),
+                &subset_fact.right,
+            ) {
+                return Ok(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                        subset_fact.clone().into(),
+                        "set-builder subset of its base carrier".to_string(),
+                        BuiltinRuleEvidence::SetBuilderSubsetBase,
+                        Vec::new(),
+                    )
+                    .into(),
+                );
+            }
+        }
+
         // A literal finite set is contained in a set when every listed member
         // is already known to belong to the target.
         if let Obj::ListSet(list_set) = &subset_fact.left {
@@ -233,9 +253,10 @@ impl Runtime {
                 .collect::<Vec<AtomicFact>>();
             if let Some(steps) = self.verify_builtin_rule_premises(&premises, builtin_state)? {
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         subset_fact.clone().into(),
                         "literal finite-set subset from member facts".to_string(),
+                        BuiltinRuleEvidence::LiteralSetSubset,
                         steps,
                     )
                     .into(),

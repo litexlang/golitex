@@ -3,4 +3,4 @@ mod registration;
 mod store;
 
 pub use properties::EnvironmentPredicateProperties;
-pub use store::EnvironmentPredicatePropertyStore;
+pub use store::EnvironmentPredicateAlgebraicPropertyStore;

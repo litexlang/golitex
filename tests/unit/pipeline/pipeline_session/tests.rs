@@ -1,6 +1,6 @@
 use super::{run_session_loop_with_readers_and_preload, SessionPreload};
-use crate::prelude::OutputLanguage;
-use crate::runtime::OutputStyle;
+use crate::prelude::{OutputLanguage, OutputStyle};
+use crate::runtime::RunOptions;
 use std::fs;
 use std::io::{self, BufRead, Cursor, Write};
 use std::path::{Path, PathBuf};
@@ -18,10 +18,13 @@ fn run_session_loop_with_readers(
         stdin_reader,
         stdout_writer,
         directory,
-        output_style,
-        strict_mode,
-        output_language,
-        force_isolated,
+        RunOptions {
+            output_style,
+            strict_mode,
+            output_language,
+            force_isolated,
+            ..RunOptions::default()
+        },
         SessionPreload::None,
     )
 }
@@ -107,10 +110,7 @@ fn project_file_session_preloads_registered_prefix() {
         &mut stdin_reader,
         &mut stdout_writer,
         &root,
-        OutputStyle::Normal,
-        false,
-        OutputLanguage::English,
-        false,
+        RunOptions::default(),
         SessionPreload::ThroughFile(preload.to_string_lossy().into_owned()),
     )
     .expect("session must run");
@@ -145,10 +145,7 @@ fn project_file_session_reports_a_failing_prefix_before_ready() {
         &mut stdin_reader,
         &mut stdout_writer,
         &root,
-        OutputStyle::Normal,
-        false,
-        OutputLanguage::English,
-        false,
+        RunOptions::default(),
         SessionPreload::ThroughFile(preload.to_string_lossy().into_owned()),
     )
     .expect("session must report startup failure");
@@ -194,10 +191,7 @@ fn project_before_file_session_skips_the_target_and_uses_its_environment() {
         &mut stdin_reader,
         &mut stdout_writer,
         &root,
-        OutputStyle::Normal,
-        false,
-        OutputLanguage::English,
-        false,
+        RunOptions::default(),
         SessionPreload::BeforeFile(target.to_string_lossy().into_owned()),
     )
     .expect("session must run");
@@ -239,10 +233,7 @@ fn project_before_file_session_reports_a_failing_predecessor() {
         &mut stdin_reader,
         &mut stdout_writer,
         &root,
-        OutputStyle::Normal,
-        false,
-        OutputLanguage::English,
-        false,
+        RunOptions::default(),
         SessionPreload::BeforeFile(target.to_string_lossy().into_owned()),
     )
     .expect("session must report startup failure");
@@ -282,10 +273,7 @@ fn project_before_first_export_starts_with_an_empty_prefix() {
         &mut stdin_reader,
         &mut stdout_writer,
         &root,
-        OutputStyle::Normal,
-        false,
-        OutputLanguage::English,
-        false,
+        RunOptions::default(),
         SessionPreload::BeforeFile(target.to_string_lossy().into_owned()),
     )
     .expect("first-export session must run");
@@ -346,10 +334,7 @@ fn project_before_file_session_follows_nested_export_order() {
         &mut stdin_reader,
         &mut stdout_writer,
         &root,
-        OutputStyle::Normal,
-        false,
-        OutputLanguage::English,
-        false,
+        RunOptions::default(),
         SessionPreload::BeforeFile(target.to_string_lossy().into_owned()),
     )
     .expect("nested session must run");

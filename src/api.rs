@@ -16,14 +16,14 @@
 //! ```
 
 // Core execution model and result types.
-pub use crate::common::output_language::OutputLanguage;
+pub use crate::common::{output_language::OutputLanguage, output_style::OutputStyle};
 pub use crate::error::RuntimeError;
 pub use crate::result::StmtResult;
-pub use crate::runtime::{OutputStyle, Runtime};
+pub use crate::runtime::{RunOptions, Runtime};
 
 // Source, file, and repository execution entry points.
 pub use crate::pipeline::{
-    run, RunOptions, RunOutcome, RunRequest, RunSummary, RunTarget, RunTargetKind, SourceRunOutcome,
+    run, RunOutcome, RunRequest, RunSummary, RunTarget, RunTargetKind, SourceRunOutcome,
 };
 
 // Stable rendering entry points for embedding and machine-readable output.

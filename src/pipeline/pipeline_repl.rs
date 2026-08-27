@@ -8,37 +8,14 @@ enum ReplOutputMode {
     Latex,
 }
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct ReplOptions {
-    pub output_style: OutputStyle,
-    pub strict_mode: bool,
-    pub output_language: OutputLanguage,
-}
-
-impl ReplOptions {
-    pub fn new(
-        output_style: OutputStyle,
-        strict_mode: bool,
-        output_language: OutputLanguage,
-    ) -> Self {
-        Self {
-            output_style,
-            strict_mode,
-            output_language,
-        }
-    }
-}
-
-pub fn run_repl(version: &str, options: ReplOptions) {
+pub fn run_repl(version: &str, options: RunOptions) {
     let stdin_handle = io::stdin();
     let stdout_handle = io::stdout();
     let mut stdin_locked = stdin_handle.lock();
     let mut stdout_locked = stdout_handle.lock();
     let result = run_repl_loop_with_readers_and_mode(
         version,
-        options.output_style,
-        options.strict_mode,
-        options.output_language,
+        options,
         &mut stdin_locked,
         &mut stdout_locked,
         ReplOutputMode::Json,
@@ -71,9 +48,7 @@ fn run_latex_repl_loop_with_readers(
 ) -> io::Result<()> {
     run_repl_loop_with_readers_and_mode(
         version_banner,
-        OutputStyle::Normal,
-        false,
-        OutputLanguage::English,
+        RunOptions::default(),
         stdin_reader,
         stdout_writer,
         ReplOutputMode::Latex,
@@ -82,9 +57,7 @@ fn run_latex_repl_loop_with_readers(
 
 fn run_repl_loop_with_readers_and_mode(
     version_banner: &str,
-    output_style: OutputStyle,
-    strict_mode: bool,
-    output_language: OutputLanguage,
+    options: RunOptions,
     stdin_reader: &mut dyn BufRead,
     stdout_writer: &mut dyn Write,
     output_mode: ReplOutputMode,
@@ -102,7 +75,7 @@ fn run_repl_loop_with_readers_and_mode(
     )?;
     writeln!(stdout_writer, "Ctrl+D to exit.")?;
 
-    let mut runtime = Runtime::new(output_style, strict_mode, output_language);
+    let mut runtime = Runtime::new(options);
     initialize_isolated_repl_runtime(&mut runtime);
     writeln!(stdout_writer, "Isolated REPL.")?;
 

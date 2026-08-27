@@ -113,7 +113,7 @@ fn strict_terminal_import_verifies_and_rolls_back_a_failing_module() {
     write_file(&dependency.join("assumption.lit"), "1 = 0\n");
 
     let mut runtime = Runtime::default();
-    runtime.strict_mode = true;
+    runtime.options.strict_mode = true;
     runtime.start_isolated_source("repl");
     let output = run_terminal_import(
         format!(
