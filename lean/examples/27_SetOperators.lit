@@ -1,3 +1,20 @@
+# Tracer: reviewed typed set-rule replay.
+#
+# Before (compiler example accepted rules outside the former catalog):
+# forall A, B, D set, x D:
+#     not x $in A
+#     =>:
+#         not x $in intersect(A, B)
+# Former behavior: ToLean emitted a non-catalog intersection-nonmembership adapter.
+#
+# Now (verified and compiled): the active statements below use only reviewed
+# former-catalog set rules, each selected by typed Rust evidence and a stable ID.
+#
+# Boundary: the commented nonmembership shape still verifies in Litex, but
+# ToLean rejects `set.intersect_nonmembership_left` (and the symmetric right
+# rule) by exact ID instead of selecting an unreviewed adapter.
+# Evidence: cargo test --release --test stmt_result_to_lean_compiler_tracers set_operators_replay_catalog_certificates_and_reject_non_catalog_rules
+
 forall A, B set:
     union(A, B) = union(B, A)
 
@@ -31,12 +48,13 @@ forall A, B set, x A:
     =>:
         x $in set_minus(A, B)
 
-forall A, B, D set, x D:
-    not x $in A
-    =>:
-        not x $in intersect(A, B)
-
-forall A, B, D set, x D:
-    not x $in B
-    =>:
-        not x $in intersect(A, B)
+# Nearest rejected forms, exercised by the Rust negative regression:
+# forall A, B, D set, x D:
+#     not x $in A
+#     =>:
+#         not x $in intersect(A, B)
+#
+# forall A, B, D set, x D:
+#     not x $in B
+#     =>:
+#         not x $in intersect(A, B)

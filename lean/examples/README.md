@@ -76,11 +76,10 @@ or label matching.
 command. `clear` now follows the ordinary object-definition and fact paths in
 both Litex and Lean compilation; a bare line does not reset either environment.
 
-`42_OrderTransitivityResultComposition.lit` covers weak/weak, strict/weak,
-and weak/strict transitivity. The typed arithmetic Result retains carrier
-evidence followed by the exact two-edge path; the compiler validates their
-shared middle endpoint and applies `Litex.Le.trans`, `Litex.Lt.transLe`, or
-`Litex.Le.transLt`. Reversing the child order is a corruption error.
+Order transitivity remains a typed verifier Result with the exact two-edge
+path in child order, but it was not in the former local-builtin catalog and is
+therefore not a positive compiler example. ToLean rejects it with the stable
+ID `order.transitivity`; focused Rust contracts also reject reversed children.
 
 `1_SetSystem.lit` is the tracer for checked named set aliases, `Same`, and
 heterogeneous `In`: `have A set = R` becomes an `abbrev A : Litex.Set`, while

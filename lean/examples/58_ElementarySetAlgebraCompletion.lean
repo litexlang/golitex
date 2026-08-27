@@ -41,9 +41,4 @@ theorem __fact3 :
   have __c3_1 : Litex.Same (Litex.intersect (Litex.setMinus B D) A) Litex.Set.empty := Litex.Same.trans (Litex.SetRules.intersectCommutative (Litex.setMinus B D) A) (Litex.SetRules.intersectSetMinusOfSubsetEmpty B (__domain1))
   exact ⟨__c3_0, __c3_1⟩
 
-theorem __fact4 :
-    ∀ (__p1 : Litex.Set) (__p2 : Litex.Set) (__p3 : Litex.Set) (__domain1 : Litex.Subset __p1 __p2) (__domain2 : Litex.Subset __p2 __p3), Litex.Subset __p1 __p3 := by
-  intro A B D __domain1 __domain2
-  exact Litex.SetRules.subsetTransitive (__domain1) (__domain2)
-
 end __Compiler_58_ElementarySetAlgebraCompletion

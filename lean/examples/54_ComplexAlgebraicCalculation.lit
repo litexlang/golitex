@@ -8,8 +8,6 @@
 # Now (verified and compiled):
 2 * i + 1 = i * i + 2 + 2 * i
 (1 + i) * (1 - i) = 2
-1 / i = -1 * i
-i ^ (-1) = -1 * i
 
 forall z C:
     (z + i) * (z - i) = z * z + 1
@@ -27,5 +25,10 @@ forall z C:
 # exact-rational representation is unavailable.
 #
 # Boundary: removing `z + i != 0` above remains a well-definedness error.
+# The verifier also proves the following with typed native-`i` nonzero
+# evidence, but that producer was not in the former local-builtin catalog, so
+# ToLean rejects its exact rule ID instead of constructing a new adapter:
+# 1 / i = -1 * i
+# i ^ (-1) = -1 * i
 # Evidence: target/release/litex -compact -strict -isolated -runner -f lean/examples/54_ComplexAlgebraicCalculation.lit
 # Compiler: target/release/stmt_result_to_lean_compiler compile lean/examples/54_ComplexAlgebraicCalculation.lit

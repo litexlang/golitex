@@ -61,16 +61,4 @@ theorem __fact8 :
   have __c8_0 : Litex.In x (Litex.setMinus A B) := Litex.SetRules.inSetMinus (__h8_3) (__domain1)
   exact __c8_0
 
-theorem __fact9 :
-    ∀ (__p1 : Litex.Set) (__p2 : Litex.Set) (__p3 : Litex.Set) {__carrier4 : Type} (__p4 : __carrier4) (__type4 : Litex.In __p4 __p3) (__domain1 : ¬ Litex.In __p4 __p1), ¬ Litex.In __p4 (Litex.intersect __p1 __p2) := by
-  intro A B D __carrier4 x __h9_4 __domain1
-  have __c9_0 : ¬ Litex.In x (Litex.intersect A B) := Litex.SetRules.notInIntersectOfNotInLeft (__domain1)
-  exact __c9_0
-
-theorem __fact10 :
-    ∀ (__p1 : Litex.Set) (__p2 : Litex.Set) (__p3 : Litex.Set) {__carrier4 : Type} (__p4 : __carrier4) (__type4 : Litex.In __p4 __p3) (__domain1 : ¬ Litex.In __p4 __p2), ¬ Litex.In __p4 (Litex.intersect __p1 __p2) := by
-  intro A B D __carrier4 x __h10_4 __domain1
-  have __c10_0 : ¬ Litex.In x (Litex.intersect A B) := Litex.SetRules.notInIntersectOfNotInRight (__domain1)
-  exact __c10_0
-
 end __Compiler_27_SetOperators

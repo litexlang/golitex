@@ -6,12 +6,13 @@
 #
 # Now: Litex.Lt and Litex.Le are custom relations on the compiler's numeric
 # carrier, and both reduce through the one canonical Complex.re observation to
-# Mathlib real order. The registered less-to-less-equal certificate and the
-# direct order-transitivity certificate replay those native theorems.
+# Mathlib real order. The reviewed strict-to-weak certificate replays that
+# native theorem directly from typed Rust evidence.
 #
 # Boundary: comparison of C-only binders remains rejected by the verifier with
-# "ordered comparison requires both operands to belong to R". A changed rule
-# ID, fingerprint, or proof-certificate shape also remains fail-closed.
+# "ordered comparison requires both operands to belong to R". Order
+# transitivity is typed as `order.transitivity`, but because it was not in the
+# former catalog ToLean rejects it by that exact ID.
 #
 # Evidence:
 # target/release/litex -compact -strict -runner -f lean/examples/2_OrderSystem.lit
@@ -23,8 +24,10 @@ sketch:
         =>:
             a <= b
 
-    forall a, b, c R:
-        a < b
-        b < c
-        =>:
-            a < c
+# Former non-catalog compiler route, now exercised as a Rust negative test:
+# sketch:
+#     forall a, b, c R:
+#         a < b
+#         b < c
+#         =>:
+#             a < c

@@ -34,9 +34,9 @@ theorem __fact7 : Litex.In (2 : ℂ) Litex.R := by
 
 theorem __fact8 :
     ∀ (__p1 : ℤ) (__domain1 : Litex.Le (1 : ℂ) (((__p1) : ℂ))) (__domain2 : Litex.Le (((__p1) : ℂ)) (2 : ℂ)), Litex.Le (((__p1) : ℂ)) (((__p1) : ℂ)) := by
-  intro _binder_12 __domain1 __domain2
-  have __infer8_0 : Litex.Lt (0 : ℂ) (((_binder_12) : ℂ)) := Litex.Lt.transLe (Litex.OrderBridge.ltOfComplexReals (show (0 : ℝ) < (1 : ℝ) by norm_num)) (__domain1)
-  have __c8_0 : Litex.Le (((_binder_12) : ℂ)) (((_binder_12) : ℂ)) := Litex.Le.refl (((_binder_12) : ℂ))
+  intro ____binder_12 __domain1 __domain2
+  have __infer8_0 : Litex.Lt (0 : ℂ) (((____binder_12) : ℂ)) := Litex.Lt.transLe (Litex.OrderBridge.ltOfComplexReals (show (0 : ℝ) < (1 : ℝ) by norm_num)) (__domain1)
+  have __c8_0 : Litex.Le (((____binder_12) : ℂ)) (((____binder_12) : ℂ)) := Litex.Le.refl (((____binder_12) : ℂ))
   exact __c8_0
 
 theorem __fact9 : Litex.Le (((Litex.sum (1 : ℤ) (2 : ℤ) ({ call := fun {__alpha} (__arg : __alpha) __arg_in => Litex.In.rep __arg (__arg_in), callOwn := fun (__arg : ℤ) => __arg } : Litex.Fn Litex.Z Litex.Z)) : ℤ) : ℂ) (((Litex.sum (1 : ℤ) (2 : ℤ) ({ call := fun {__alpha} (__arg : __alpha) __arg_in => Litex.In.rep __arg (__arg_in), callOwn := fun (__arg : ℤ) => __arg } : Litex.Fn Litex.Z Litex.Z)) : ℤ) : ℂ) := by

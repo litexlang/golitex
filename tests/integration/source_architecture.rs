@@ -1288,3 +1288,56 @@ fn definition_terminology_has_one_core_route_without_legacy_rust_names() {
     assert!(!root.join("src/execute/object_introduction").exists());
     assert!(root.join("docs/Developer_Terminology.md").is_file());
 }
+
+#[test]
+fn builtin_rules_use_typed_rust_evidence_without_a_runtime_catalog() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let success_results = fs::read_to_string(root.join("src/result/verification/success.rs"))
+        .expect("verification success results should be readable");
+    assert!(success_results.contains(
+        "pub enum SuccessBuiltinFactProofEvidenceResult {\n    Typed(BuiltinRuleEvidence),\n}"
+    ));
+
+    let production_sources = rust_files_below(&root.join("src"))
+        .into_iter()
+        .map(|path| {
+            fs::read_to_string(&path)
+                .unwrap_or_else(|error| panic!("{} should be readable: {error}", path.display()))
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+    for retired_mechanism in [
+        "RegisteredLocalBuiltinRuleEvidence",
+        "registered_local_builtin_rules",
+        "semantic_fingerprint",
+        "new_with_verified_by_builtin_rules_recording_stmt",
+        "new_with_verified_by_builtin_strategy_recording_stmt",
+        "new_with_verified_by_builtin_rules_label_and_steps",
+        "SuccessBuiltinFactProofEvidenceResult::DiagnosticOnly",
+    ] {
+        assert!(
+            !production_sources.contains(retired_mechanism),
+            "retired runtime builtin mechanism `{retired_mechanism}` returned"
+        );
+    }
+
+    for retired_module in [
+        "src/verify/local_builtin_catalog/mod.rs",
+        "src/verify/rule_schema/mod.rs",
+    ] {
+        assert!(
+            !root.join(retired_module).exists(),
+            "retired runtime builtin module `{retired_module}` returned"
+        );
+    }
+
+    let json_output = fs::read_to_string(root.join("src/output/result_json_v2.rs"))
+        .expect("Result JSON source should be readable");
+    assert!(json_output.contains("string_field(\"rule_id\", evidence.rule_id())"));
+
+    let compiler_validation = fs::read_to_string(
+        root.join("src/stmt_result_to_lean_compiler/implementation/validation.rs"),
+    )
+    .expect("ToLean builtin validation should be readable");
+    assert!(compiler_validation.contains("builtin rule `{}` has no reviewed ToLean mapping"));
+}

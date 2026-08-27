@@ -35,8 +35,9 @@ forall A, B, D set:
         intersect(A, set_minus(B, D)) = {}
         intersect(set_minus(B, D), A) = {}
 
-forall A, B, D set:
-    A $subset B
-    B $subset D
-    =>:
-        A $subset D
+# Nearest rejected form, exercised by the Rust negative regression:
+# forall A, B, D set:
+#     A $subset B
+#     B $subset D
+#     =>:
+#         A $subset D
