@@ -769,6 +769,8 @@ fn cli_dispatch_delegates_execution_and_path_resolution_to_their_owners() {
         .expect("conversion command source should be readable");
     let run = fs::read_to_string(root.join("src/pipeline/run.rs"))
         .expect("pipeline run source should be readable");
+    let run_options = fs::read_to_string(root.join("src/runtime/run_options.rs"))
+        .expect("runtime run-options source should be readable");
     let source_execution = fs::read_to_string(root.join("src/pipeline/source_execution.rs"))
         .expect("source execution source should be readable");
     let file_execution = fs::read_to_string(root.join("src/pipeline/file_execution.rs"))
@@ -799,7 +801,8 @@ fn cli_dispatch_delegates_execution_and_path_resolution_to_their_owners() {
     assert!(handlers.contains("RunTarget::file("));
     assert!(handlers.contains("RunTarget::repository("));
     assert!(run.contains("pub enum RunTarget"));
-    assert!(run.contains("pub struct RunOptions"));
+    assert!(run_options.contains("pub struct RunOptions"));
+    assert!(!run.contains("pub struct RunOptions"));
     assert!(run.contains("pub struct RunRequest"));
     assert!(run.contains("pub fn run(request: RunRequest)"));
     assert!(run.contains("runtime.run_code_target("));
@@ -1160,7 +1163,7 @@ fn environment_exposes_five_direct_owners_without_flat_compatibility_storage() {
         "pub definitions: EnvironmentDefinitionRegistry",
         "pub facts: EnvironmentFactStore",
         "pub objects: EnvironmentObjectKnowledgeStore",
-        "pub predicate_properties: EnvironmentPredicatePropertyStore",
+        "pub predicate_algebraic_properties: EnvironmentPredicateAlgebraicPropertyStore",
         "pub caches: EnvironmentVerificationCache",
     ] {
         assert!(environment.contains(direct_owner));

@@ -3,8 +3,8 @@ use super::{
     run_repl_loop_with_readers_and_mode, ReplOutputMode,
 };
 use crate::pipeline::{execute_file_in_runtime, FileExecutionOptions};
-use crate::prelude::OutputLanguage;
-use crate::runtime::{OutputStyle, Runtime};
+use crate::prelude::OutputStyle;
+use crate::runtime::{RunOptions, Runtime};
 use crate::test_support::execute_source;
 use std::fs;
 use std::io::{self, BufRead, Cursor, Write};
@@ -17,9 +17,10 @@ fn run_repl_loop_with_readers(
 ) -> io::Result<()> {
     run_repl_loop_with_readers_and_mode(
         version_banner,
-        output_style,
-        false,
-        OutputLanguage::English,
+        RunOptions {
+            output_style,
+            ..RunOptions::default()
+        },
         stdin_reader,
         stdout_writer,
         ReplOutputMode::Json,

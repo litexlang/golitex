@@ -12,7 +12,7 @@ main
   cli::run_cli
   cli::run_code_command
   pipeline::run
-  Runtime::new(output_style, strict_mode, output_language)
+  Runtime::new(options: RunOptions)
   Runtime::start_isolated_source("entry")
   Runtime::execute_source(source)
   Runtime::execute_source_blocks
@@ -41,7 +41,7 @@ may itself call atomic verification before the outer proof-verification step.
 | Process | `main` in `src/main.rs` | Starts the CLI thread. |
 | CLI | `cli::run_cli` | Parses global options and selects one command. |
 | Batch pipeline | `pipeline::run(RunRequest)` | Owns code/file/repository dispatch, creates one Runtime, and renders once. |
-| Runtime construction | `Runtime::new(output_style, strict_mode, output_language)` | Creates state and run configuration atomically. `Runtime::default()` is reserved for an explicit default configuration, especially tests and internal scratch runtimes. |
+| Runtime construction | `Runtime::new(options: RunOptions)` | Creates state and stores the one run configuration atomically. `Runtime::default()` is reserved for an explicit default configuration, especially tests and internal scratch runtimes. |
 | Source execution | `Runtime::execute_source` | Requires an active source frame, tokenizes the source, and executes its blocks. `import` is never part of this grammar. |
 | Parse | `Tokenizer::parse_blocks`, then `Runtime::parse_statement` | Converts source text into token blocks and typed statements. |
 | Execute | `Runtime::execute_statement` | Resets statement-local proof state and dispatches verified or configured trusted execution. |

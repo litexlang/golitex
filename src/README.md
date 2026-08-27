@@ -22,7 +22,7 @@ stops after rendering the Result.
 | CLI | [`cli::run_cli()`](cli/command_dispatch.rs) | Parses flags and selects code, file, repository, runner, graph, or compiler execution. |
 | CLI command | [`cli::run_code_command()`](cli/command_handlers.rs) | Adapts the selected `-e` target to the shared batch request. File, repository, and runner commands have parallel handlers in the same file. |
 | Batch pipeline | [`pipeline::run(RunRequest)`](pipeline/run.rs) | Owns the code/file/repository batch entry and creates the `Runtime`. |
-| Runtime state | [`Runtime::new(output_style, strict_mode, output_language)`](runtime/state.rs) | Creates the environment, module state, proof state, identifiers, and run options together; `Runtime::default()` is the explicit default/test configuration. |
+| Runtime state | [`Runtime::new(options: RunOptions)`](runtime/runtime.rs) | Creates the environment, module state, proof state, identifiers, and one run-options value together; `Runtime::default()` is the explicit default/test configuration. |
 | Source pipeline | [`Runtime::execute_source`](pipeline/source_execution.rs) | Tokenizes and executes statement blocks in order on the Runtime that owns their state. |
 | Parse | [`Tokenizer::parse_blocks`](parse/tokenizer.rs) and [`Runtime::parse_statement`](parse/statement_parsing.rs) | Turn source text into `TokenBlock` values and then typed `Stmt` values. |
 | Execute | [`Runtime::execute_statement`](execute/statement_execution.rs) | Clears statement-local proof state and dispatches verified or configured trusted execution. Interactive imports take a separate terminal-command path before parsing and never become statements. |

@@ -18,7 +18,7 @@ pub use facts::{
 pub use object_knowledge::{
     EnvironmentObjectKnowledge, EnvironmentObjectKnowledgeStore, KnownFnInfo, KnownObjValue,
 };
-pub use predicates::{EnvironmentPredicateProperties, EnvironmentPredicatePropertyStore};
+pub use predicates::{EnvironmentPredicateAlgebraicPropertyStore, EnvironmentPredicateProperties};
 pub use verification_cache::EnvironmentVerificationCache;
 pub use well_definedness_environment_delta::WellDefinednessEnvironmentDelta;
 
@@ -42,7 +42,7 @@ pub struct Environment {
     pub definitions: EnvironmentDefinitionRegistry,
     pub facts: EnvironmentFactStore,
     pub objects: EnvironmentObjectKnowledgeStore,
-    pub predicate_properties: EnvironmentPredicatePropertyStore,
+    pub predicate_algebraic_properties: EnvironmentPredicateAlgebraicPropertyStore,
     pub caches: EnvironmentVerificationCache,
 }
 
@@ -52,7 +52,7 @@ impl Environment {
             definitions: EnvironmentDefinitionRegistry::new(),
             facts: EnvironmentFactStore::new(),
             objects: EnvironmentObjectKnowledgeStore::new(),
-            predicate_properties: EnvironmentPredicatePropertyStore::new(),
+            predicate_algebraic_properties: EnvironmentPredicateAlgebraicPropertyStore::new(),
             caches: EnvironmentVerificationCache::new(),
         }
     }

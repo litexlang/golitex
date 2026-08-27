@@ -51,6 +51,10 @@ pub enum BuiltinTheoremId {
     RationalHasUniqueReducedFraction,
     SubsetOfFiniteSetIsFinite,
     FiniteSetHasBijectiveIndex,
+    RealLeastUpperBoundExists,
+    RealMemberLeLeastUpperBound,
+    RealLeastUpperBoundLeUpperBound,
+    RationalBetweenReals,
 }
 
 impl BuiltinTheoremId {
@@ -79,6 +83,12 @@ impl BuiltinTheoremId {
             "rational_has_unique_reduced_fraction" => Self::RationalHasUniqueReducedFraction,
             "subset_of_finite_set_is_finite" => Self::SubsetOfFiniteSetIsFinite,
             "finite_set_has_bijective_index" => Self::FiniteSetHasBijectiveIndex,
+            "real_least_upper_bound_exists" => Self::RealLeastUpperBoundExists,
+            "real_member_le_least_upper_bound" => Self::RealMemberLeLeastUpperBound,
+            "real_least_upper_bound_le_upper_bound" => {
+                Self::RealLeastUpperBoundLeUpperBound
+            }
+            "rational_between_reals" => Self::RationalBetweenReals,
             _ => return None,
         })
     }
@@ -108,6 +118,10 @@ impl BuiltinTheoremId {
             Self::RationalHasUniqueReducedFraction => "rational_has_unique_reduced_fraction",
             Self::SubsetOfFiniteSetIsFinite => "subset_of_finite_set_is_finite",
             Self::FiniteSetHasBijectiveIndex => "finite_set_has_bijective_index",
+            Self::RealLeastUpperBoundExists => "real_least_upper_bound_exists",
+            Self::RealMemberLeLeastUpperBound => "real_member_le_least_upper_bound",
+            Self::RealLeastUpperBoundLeUpperBound => "real_least_upper_bound_le_upper_bound",
+            Self::RationalBetweenReals => "rational_between_reals",
         }
     }
 }

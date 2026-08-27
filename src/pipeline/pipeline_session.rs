@@ -53,10 +53,7 @@ pub fn run_session(request: SessionRequest) {
         &mut stdin_locked,
         &mut stdout_locked,
         &directory,
-        options.output_style,
-        options.strict_mode,
-        options.output_language,
-        options.force_isolated,
+        options,
         preload,
     ) {
         eprintln!("session output error: {}", error);
@@ -67,30 +64,31 @@ fn run_session_loop_with_readers_and_preload(
     stdin_reader: &mut dyn BufRead,
     stdout_writer: &mut dyn Write,
     directory: &Path,
-    output_style: OutputStyle,
-    strict_mode: bool,
-    output_language: OutputLanguage,
-    force_isolated: bool,
+    options: RunOptions,
     preload: SessionPreload,
 ) -> io::Result<()> {
-    let mut runtime = Runtime::new(output_style, strict_mode, output_language);
+    let mut runtime = Runtime::new(options);
 
-    let (startup_mode, mut all_results) =
-        match initialize_session_runtime(&mut runtime, directory, force_isolated, preload) {
-            Ok(startup) => startup,
-            Err((stmt_results, error)) => {
-                let error_json = display_runtime_error_json(&runtime, &error, true);
-                let runtime_error = Some(error);
-                let (_, trace) = render_run_output(&runtime, &stmt_results, &runtime_error);
-                write_session_event(
-                    stdout_writer,
-                    "startup_error",
-                    None,
-                    &[('e', error_json), ('t', trace.trim().to_string())],
-                )?;
-                return Ok(());
-            }
-        };
+    let (startup_mode, mut all_results) = match initialize_session_runtime(
+        &mut runtime,
+        directory,
+        options.force_isolated,
+        preload,
+    ) {
+        Ok(startup) => startup,
+        Err((stmt_results, error)) => {
+            let error_json = display_runtime_error_json(&runtime, &error, true);
+            let runtime_error = Some(error);
+            let (_, trace) = render_run_output(&runtime, &stmt_results, &runtime_error);
+            write_session_event(
+                stdout_writer,
+                "startup_error",
+                None,
+                &[('e', error_json), ('t', trace.trim().to_string())],
+            )?;
+            return Ok(());
+        }
+    };
     write_session_event(
         stdout_writer,
         "ready",
@@ -221,7 +219,7 @@ fn run_session_loop_with_readers_and_preload(
                 let (_, graph) = render_graph_from_stmt_results(
                     RunTargetKind::Session,
                     "entry",
-                    !output_style.is_detailed(),
+                    !options.output_style.is_detailed(),
                     &runtime,
                     all_results.as_slice(),
                     None,
@@ -229,7 +227,7 @@ fn run_session_loop_with_readers_and_preload(
                 let (_, fact_graph) = render_fact_graph_from_stmt_results(
                     RunTargetKind::Session,
                     "entry",
-                    !output_style.is_detailed(),
+                    !options.output_style.is_detailed(),
                     &runtime,
                     all_results.as_slice(),
                     None,
@@ -237,7 +235,7 @@ fn run_session_loop_with_readers_and_preload(
                 let (_, definition_graph) = render_definition_graph_from_stmt_results(
                     RunTargetKind::Session,
                     "entry",
-                    !output_style.is_detailed(),
+                    !options.output_style.is_detailed(),
                     &mut runtime,
                     all_results.as_slice(),
                     None,

@@ -2240,6 +2240,33 @@ impl StmtResultToLeanCompiler {
                         &builtin.subgoals,
                     );
                 }
+                if matches!(
+                    builtin.evidence.typed(),
+                    Some(BuiltinRuleEvidence::LiteralSetNonempty)
+                ) {
+                    return self.construct_lean_literal_set_nonempty_from_result(
+                        &source_fact,
+                        &builtin.subgoals,
+                    );
+                }
+                if matches!(
+                    builtin.evidence.typed(),
+                    Some(BuiltinRuleEvidence::LiteralSetSubset)
+                ) {
+                    return self.construct_lean_literal_set_subset_from_result(
+                        &source_fact,
+                        &builtin.subgoals,
+                    );
+                }
+                if matches!(
+                    builtin.evidence.typed(),
+                    Some(BuiltinRuleEvidence::SetBuilderSubsetBase)
+                ) {
+                    return self.construct_lean_set_builder_subset_base_from_result(
+                        &source_fact,
+                        &builtin.subgoals,
+                    );
+                }
                 if let Some(BuiltinRuleEvidence::RefinedNumericMembership(evidence)) =
                     builtin.evidence.typed()
                 {
@@ -2561,8 +2588,9 @@ impl StmtResultToLeanCompiler {
                             &source_fact,
                             evidence,
                         )?;
-                        Ok(Some(render_closed_numeric_comparison_fact(
+                        Ok(Some(render_closed_numeric_comparison_fact_from_result(
                             &source_fact,
+                            evidence,
                             &self.environment_stack,
                         )?))
                     }

@@ -1208,6 +1208,8 @@ pub(super) fn direct_builtin_rule_compiler_limitation(
         | BuiltinRuleEvidence::StructuralKnownEqualityCongruence(_)
         | BuiltinRuleEvidence::IntegralPolynomialNormalization(_)
         | BuiltinRuleEvidence::StandardSetNonempty(_)
+        | BuiltinRuleEvidence::LiteralSetNonempty
+        | BuiltinRuleEvidence::SetBuilderSubsetBase
         | BuiltinRuleEvidence::DisjunctionIntroduction(_)
         | BuiltinRuleEvidence::FunctionApplicationReturnMembership(_)
         | BuiltinRuleEvidence::KnownEqualityPath(_)
@@ -1229,6 +1231,7 @@ pub(super) fn direct_builtin_rule_compiler_limitation(
         | BuiltinRuleEvidence::CoprimeNaturalReflection
         | BuiltinRuleEvidence::StandardSetMembershipProjection
         | BuiltinRuleEvidence::StandardSetSubset => None,
+        BuiltinRuleEvidence::LiteralSetSubset => None,
     }
 }
 

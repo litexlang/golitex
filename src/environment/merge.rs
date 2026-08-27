@@ -172,12 +172,12 @@ impl Environment {
             definitions: _,
             facts,
             objects,
-            predicate_properties,
+            predicate_algebraic_properties,
             caches,
         } = child;
-        let EnvironmentPredicatePropertyStore {
+        let EnvironmentPredicateAlgebraicPropertyStore {
             properties_by_predicate,
-        } = predicate_properties;
+        } = predicate_algebraic_properties;
         let EnvironmentVerificationCache {
             well_defined_objects: cache_well_defined_obj,
             infer_rule_firings: cache_infer_rule_firing,
@@ -289,13 +289,17 @@ impl Environment {
             }
         }
 
-        for (name, child_properties) in child.predicate_properties.properties_by_predicate.iter() {
+        for (name, child_properties) in child
+            .predicate_algebraic_properties
+            .properties_by_predicate
+            .iter()
+        {
             let child_permutations = &child_properties.symmetric_argument_permutations;
             let Some(child_arity) = child_permutations.first().map(Vec::len) else {
                 continue;
             };
             let Some(parent_arity) = self
-                .predicate_properties
+                .predicate_algebraic_properties
                 .symmetric_argument_permutations(name)
                 .and_then(|permutations| permutations.first())
                 .map(Vec::len)

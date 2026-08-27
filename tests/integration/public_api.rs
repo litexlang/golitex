@@ -6,7 +6,10 @@ use litex::api::{
 
 #[test]
 fn curated_api_executes_litex_inside_an_existing_runtime() {
-    let mut runtime = Runtime::new(OutputStyle::Compact, false, OutputLanguage::English);
+    let mut runtime = Runtime::new(RunOptions {
+        output_style: OutputStyle::Compact,
+        ..RunOptions::default()
+    });
     runtime.start_isolated_source("public-api.lit");
 
     let SourceRunOutcome {
@@ -21,13 +24,18 @@ fn curated_api_executes_litex_inside_an_existing_runtime() {
 
 #[test]
 fn curated_api_exposes_one_owned_run_entry_for_every_target_kind() {
-    let code = run(RunRequest::new(
-        RunTarget::code("1 = 1"),
-        RunOptions::default(),
-    ));
+    let options = RunOptions {
+        output_style: OutputStyle::Compact,
+        strict_mode: true,
+        output_language: OutputLanguage::SimplifiedChinese,
+        summarize: true,
+        force_isolated: true,
+    };
+    let code = run(RunRequest::new(RunTarget::code("1 = 1"), options));
     assert!(code.ok, "{}", code.output);
     assert_eq!(code.target_kind, RunTargetKind::Code);
     assert!(code.target_path.is_none());
+    assert_eq!(code.runtime.options, options);
 
     let _: fn(RunRequest) -> RunOutcome = run;
     let _: fn(&str) -> RunTarget = RunTarget::code;

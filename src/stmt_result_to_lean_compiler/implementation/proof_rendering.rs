@@ -1079,10 +1079,12 @@ pub(super) fn render_set_builder_membership_from_fact_and_proofs(
     let representative_same = format!("Litex.In.same_rep {rendered_element} ({base_proof})");
     for (index, fact) in builder.facts.iter().enumerate() {
         let premise = &premises[index + 1];
-        if render_fact(fact, &source)? != render_fact(&premise.0, context)? {
-            return Err(
-                "set-builder predicate premise changed its checked binder substitution".into(),
-            );
+        let expected_premise = render_fact(fact, &source)?;
+        let retained_premise = render_fact(&premise.0, context)?;
+        if expected_premise != retained_premise {
+            return Err(format!(
+                "set-builder predicate premise changed its checked binder substitution from `{expected_premise}` to `{retained_premise}`"
+            ));
         }
         let source_proof = premise.1.clone();
         let proof = match fact {
@@ -1365,8 +1367,12 @@ pub(super) fn render_set_builder_predicate_projection_from_fact_and_proof(
         element_context
             .semantic_zero_ended_order_symbols
             .insert(builder.symbol_id);
-        if render_fact(clause, &element_context)? != render_fact(target, context)? {
-            return Err("set-builder order projection changed its instantiated clause".into());
+        let expected_clause = render_fact(clause, &element_context)?;
+        let retained_clause = render_fact(target, context)?;
+        if expected_clause != retained_clause {
+            return Err(format!(
+                "set-builder order projection changed its instantiated clause from `{expected_clause}` to `{retained_clause}`"
+            ));
         }
         let transported = render_zero_ended_order_across_representative(
             clause,
@@ -1491,6 +1497,10 @@ pub(super) fn resolve_fact_citation(
         true
     } else if equality_facts_are_equal_up_to_nested_binder_alpha(retained, expected) {
         true
+    } else if subset_facts_are_equal_up_to_nested_binder_alpha(retained, expected) {
+        true
+    } else if nonempty_facts_are_equal_up_to_nested_binder_alpha(retained, expected) {
+        true
     } else if let (Fact::ForallFact(retained), Fact::ForallFact(expected)) = (retained, expected) {
         render_forall_fact_type(retained, context)? == render_forall_fact_type(expected, context)?
     } else if matches!(
@@ -1514,6 +1524,35 @@ pub(super) fn resolve_fact_citation(
         .get(source_fact_id)
         .ok_or_else(|| format!("cited FactId `{source_fact_id}` has no emitted Lean proof"))?;
     render_forall_conclusion_citation(binding, context)
+}
+
+pub(super) fn nonempty_facts_are_equal_up_to_nested_binder_alpha(
+    left: &Fact,
+    right: &Fact,
+) -> bool {
+    match (left, right) {
+        (
+            Fact::AtomicFact(AtomicFact::IsNonemptySetFact(left)),
+            Fact::AtomicFact(AtomicFact::IsNonemptySetFact(right)),
+        ) => objs_equal_with_nested_binder_alpha_equivalence(&left.set, &right.set),
+        _ => false,
+    }
+}
+
+pub(super) fn subset_facts_are_equal_up_to_nested_binder_alpha(
+    left: &Fact,
+    right: &Fact,
+) -> bool {
+    match (left, right) {
+        (
+            Fact::AtomicFact(AtomicFact::SubsetFact(left)),
+            Fact::AtomicFact(AtomicFact::SubsetFact(right)),
+        ) => {
+            objs_equal_with_nested_binder_alpha_equivalence(&left.left, &right.left)
+                && objs_equal_with_nested_binder_alpha_equivalence(&left.right, &right.right)
+        }
+        _ => false,
+    }
 }
 
 pub(super) fn equality_facts_are_equal_up_to_nested_binder_alpha(
@@ -1820,6 +1859,69 @@ pub(super) fn render_closed_numeric_comparison_fact(
     Ok(format!(
         "(Litex.OrderBridge.{theorem} (by norm_num) : {rendered_relation})"
     ))
+}
+
+pub(super) fn render_closed_numeric_comparison_fact_from_result(
+    fact: &Fact,
+    evidence: &ClosedNumericComparisonBuiltinRuleEvidence,
+    context: &StmtResultToLeanCompilerEnvironmentStack,
+) -> Result<String, String> {
+    let Fact::AtomicFact(atomic) = fact else {
+        return Err("closed numeric comparison evidence targets a non-atomic fact".into());
+    };
+    let (left, right, strict, negated) = match atomic {
+        AtomicFact::LessFact(order) => (&order.left, &order.right, true, false),
+        AtomicFact::GreaterFact(order) => (&order.right, &order.left, true, false),
+        AtomicFact::LessEqualFact(order) => (&order.left, &order.right, false, false),
+        AtomicFact::GreaterEqualFact(order) => (&order.right, &order.left, false, false),
+        AtomicFact::NotLessFact(order) => (&order.left, &order.right, true, true),
+        AtomicFact::NotGreaterFact(order) => (&order.right, &order.left, true, true),
+        AtomicFact::NotLessEqualFact(order) => (&order.left, &order.right, false, true),
+        AtomicFact::NotGreaterEqualFact(order) => (&order.right, &order.left, false, true),
+        AtomicFact::NotEqualFact(_) => {
+            return render_closed_numeric_comparison_fact(fact, context);
+        }
+        _ => return Err("closed numeric comparison evidence changed its relation".into()),
+    };
+    if negated {
+        return render_closed_numeric_comparison_fact(fact, context);
+    }
+    let normalized_endpoint = |endpoint: &Obj| -> Result<&str, String> {
+        [&evidence.left_evaluation, &evidence.right_evaluation]
+            .into_iter()
+            .find(|evaluation| {
+                obj_equality_key(&evaluation.expression) == obj_equality_key(endpoint)
+            })
+            .map(|evaluation| evaluation.value.normalized_value.as_str())
+            .ok_or_else(|| {
+                "closed numeric comparison evidence lost a zero-ended endpoint".to_string()
+            })
+    };
+    if is_literal_zero(left) && !matches!(right, Obj::Number(_)) {
+        let source = render_numeric_obj(right, context)?;
+        let normalized = normalized_endpoint(right)?;
+        let theorem = if strict {
+            "complexEqRealPositive"
+        } else {
+            "complexEqRealNonnegative"
+        };
+        return Ok(format!(
+            "Litex.Rules.{theorem} ({source}) ({normalized} : ℝ) (by norm_num) (by norm_num)"
+        ));
+    }
+    if is_literal_zero(right) && !matches!(left, Obj::Number(_)) {
+        let source = render_numeric_obj(left, context)?;
+        let normalized = normalized_endpoint(left)?;
+        let theorem = if strict {
+            "complexEqRealNegative"
+        } else {
+            "complexEqRealNonpositive"
+        };
+        return Ok(format!(
+            "Litex.Rules.{theorem} ({source}) ({normalized} : ℝ) (by norm_num) (by norm_num)"
+        ));
+    }
+    render_closed_numeric_comparison_fact(fact, context)
 }
 
 pub(super) fn validate_closed_numeric_comparison_builtin_rule_evidence(
@@ -3665,12 +3767,12 @@ pub(super) fn infer_rule_has_direct_compiler_environment_consumer(rule: &InferRu
         | InferRule::PositiveIntegerBaseNaturalPowerEqualityImpliesEqualSideMembership(_) => true,
         InferRule::SetBuilderBaseMembershipProjection
         | InferRule::SetBuilderPredicateProjection { .. }
-        | InferRule::DefinedPredicateParameterRequirementProjection(_)
+        | InferRule::ListSetMembershipImpliesEqualityAlternatives(_) => true,
+        InferRule::DefinedPredicateParameterRequirementProjection(_)
         | InferRule::DefinedPredicateDefinitionClauseProjection(_)
         | InferRule::RegisteredTransitivePredicateChainClosure(_)
         | InferRule::TupleEqualityWithKnownTupleImpliesTupleShape(_)
-        | InferRule::CartesianMembershipProjection(_)
-        | InferRule::ListSetMembershipImpliesEqualityAlternatives(_) => false,
+        | InferRule::CartesianMembershipProjection(_) => false,
     }
 }
 

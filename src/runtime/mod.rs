@@ -4,14 +4,17 @@ mod fact_storage;
 mod instantiation;
 mod name_resolution;
 mod parse_context;
-mod state;
+mod run_options;
+mod runtime;
 mod statement_proof_state;
 
+pub use crate::common::output_style::OutputStyle;
 pub use execution_frame::{ExecutionFrame, ExecutionLayer, ExecutionMode};
 pub use name_resolution::{
     bare_symbol_name_reserved_error, BareSymbol, FreeParamCollection, FreeParamTypeAndLineFile,
     TransparentObjectDefinitionUse,
 };
 pub use parse_context::{ParseContext, ScopeFrame};
-pub use state::{OutputStyle, Runtime};
+pub use run_options::RunOptions;
+pub use runtime::Runtime;
 pub use statement_proof_state::StatementProofStateStack;

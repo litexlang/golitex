@@ -1060,6 +1060,11 @@ pub enum BuiltinRuleEvidence {
     StructuralKnownEqualityCongruence(StructuralKnownEqualityCongruenceBuiltinRuleEvidence),
     IntegralPolynomialNormalization(IntegralPolynomialNormalizationBuiltinRuleEvidence),
     StandardSetNonempty(StandardSetNonemptyBuiltinRuleEvidence),
+    /// A nonempty finite set literal is inhabited by the first singleton
+    /// carrier in its exact coproduct encoding.
+    LiteralSetNonempty,
+    /// A predicate-defined set is contained in its exact base carrier.
+    SetBuilderSubsetBase,
     DisjunctionIntroduction(DisjunctionIntroductionBuiltinRuleEvidence),
     FunctionApplicationReturnMembership(FunctionApplicationReturnMembershipBuiltinRuleEvidence),
     MatrixExpressionMembership(MatrixExpressionMembershipBuiltinRuleEvidence),
@@ -1094,6 +1099,9 @@ pub enum BuiltinRuleEvidence {
     /// One fixed inclusion in Litex's standard numeric-set hierarchy. The
     /// target subset fact itself retains the exact source and target sets.
     StandardSetSubset,
+    /// A literal finite-set inclusion whose ordered subgoals prove membership
+    /// of every literal item in the retained target set.
+    LiteralSetSubset,
 }
 
 impl fmt::Debug for BuiltinRuleEvidence {
@@ -1184,6 +1192,8 @@ impl fmt::Debug for BuiltinRuleEvidence {
                 .debug_tuple("StandardSetNonempty")
                 .field(evidence)
                 .finish(),
+            BuiltinRuleEvidence::LiteralSetNonempty => f.write_str("LiteralSetNonempty"),
+            BuiltinRuleEvidence::SetBuilderSubsetBase => f.write_str("SetBuilderSubsetBase"),
             BuiltinRuleEvidence::DisjunctionIntroduction(evidence) => f
                 .debug_tuple("DisjunctionIntroduction")
                 .field(evidence)
@@ -1254,6 +1264,7 @@ impl fmt::Debug for BuiltinRuleEvidence {
                 f.write_str("StandardSetMembershipProjection")
             }
             BuiltinRuleEvidence::StandardSetSubset => f.write_str("StandardSetSubset"),
+            BuiltinRuleEvidence::LiteralSetSubset => f.write_str("LiteralSetSubset"),
         }
     }
 }

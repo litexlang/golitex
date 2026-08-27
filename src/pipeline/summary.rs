@@ -718,34 +718,40 @@ impl EnvironmentSummary {
         summary.add_field_counts(
             "known_transitive_props",
             environment
-                .predicate_properties
+                .predicate_algebraic_properties
                 .transitive_predicate_count(),
             environment
-                .predicate_properties
+                .predicate_algebraic_properties
                 .transitive_predicate_count(),
         );
 
         let symmetric_permutation_count = environment
-            .predicate_properties
+            .predicate_algebraic_properties
             .symmetric_permutation_count();
         summary.add_field_counts(
             "known_symmetric_props",
-            environment.predicate_properties.symmetric_predicate_count(),
+            environment
+                .predicate_algebraic_properties
+                .symmetric_predicate_count(),
             symmetric_permutation_count,
         );
 
         summary.add_field_counts(
             "known_reflexive_props",
-            environment.predicate_properties.reflexive_predicate_count(),
-            environment.predicate_properties.reflexive_predicate_count(),
+            environment
+                .predicate_algebraic_properties
+                .reflexive_predicate_count(),
+            environment
+                .predicate_algebraic_properties
+                .reflexive_predicate_count(),
         );
         summary.add_field_counts(
             "known_antisymmetric_props",
             environment
-                .predicate_properties
+                .predicate_algebraic_properties
                 .antisymmetric_predicate_count(),
             environment
-                .predicate_properties
+                .predicate_algebraic_properties
                 .antisymmetric_predicate_count(),
         );
         summary.add_field_counts(
@@ -822,7 +828,7 @@ impl EnvironmentSummary {
         self.category_counts.insert(
             "property_registrations".to_string(),
             environment
-                .predicate_properties
+                .predicate_algebraic_properties
                 .property_registration_count(),
         );
     }

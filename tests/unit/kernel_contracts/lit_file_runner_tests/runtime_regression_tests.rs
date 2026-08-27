@@ -64,7 +64,7 @@ fn runtime_contract_builtin() {
 
     let mut import_runtime = Runtime::default();
     import_runtime.start_isolated_source("runtime_contract_import");
-    import_runtime.strict_mode = true;
+    import_runtime.options.strict_mode = true;
     let (import_stmt_results, import_runtime_error) =
         execute_source(source_code, &mut import_runtime);
     let (import_run_succeeded, import_run_output) =

@@ -618,6 +618,16 @@ pub enum BuiltinTheoremRequirementRole {
     TupleCoordinatesEqual,
     FiniteSetSumSubstitution,
     BijectiveFiniteSetEnumerations,
+    ArgumentSetSubsetOfReals,
+    ArgumentSetIsNonempty,
+    SuppliedUpperBoundBelongsToReals,
+    SuppliedValueBoundsEverySetMember,
+    CandidateBelongsToReals,
+    CandidateIsRealLeastUpperBound,
+    ArgumentIsMemberOfSet,
+    LeftArgumentBelongsToReals,
+    RightArgumentBelongsToReals,
+    RealArgumentsStrictlyOrdered,
 }
 
 impl BuiltinTheoremRequirementRole {
@@ -661,6 +671,24 @@ impl BuiltinTheoremRequirementRole {
             }
             Self::BijectiveFiniteSetEnumerations => {
                 "both summations enumerate the same finite set bijectively"
+            }
+            Self::ArgumentSetSubsetOfReals => "the argument set is a subset of R",
+            Self::ArgumentSetIsNonempty => "the argument set is nonempty",
+            Self::SuppliedUpperBoundBelongsToReals => {
+                "the supplied upper bound belongs to R"
+            }
+            Self::SuppliedValueBoundsEverySetMember => {
+                "every member of the argument set is at most the supplied value"
+            }
+            Self::CandidateBelongsToReals => "the LUB candidate belongs to R",
+            Self::CandidateIsRealLeastUpperBound => {
+                "the candidate carries a real least-upper-bound certificate"
+            }
+            Self::ArgumentIsMemberOfSet => "the argument is a member of the set",
+            Self::LeftArgumentBelongsToReals => "the left argument belongs to R",
+            Self::RightArgumentBelongsToReals => "the right argument belongs to R",
+            Self::RealArgumentsStrictlyOrdered => {
+                "the real arguments are strictly ordered"
             }
         }
     }

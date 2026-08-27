@@ -30,7 +30,7 @@ invalid combination -> print help and exit 2
 | File | Responsibility |
 | --- | --- |
 | [`command_dispatch.rs`](command_dispatch.rs) | `run_cli` selects one command and preserves its exit behavior. |
-| [`arguments.rs`](arguments.rs) | Removes and validates global flags into `CliOptions`. |
+| [`arguments.rs`](arguments.rs) | Removes and validates global flags directly into the runtime-owned `RunOptions`. |
 | [`command_handlers.rs`](command_handlers.rs) | Owns the command-level adapters such as `run_code_command`, then converts CLI targets into `RunRequest`, `RunnerRequest`, or `GraphRequest` while preserving process behavior. |
 | [`lean_commands.rs`](lean_commands.rs) | Validates and executes single-file Lean and Markdown-ledger compilation commands. |
 | [`conversion_commands.rs`](conversion_commands.rs) | Owns complete `-latex` and `-python` command handling and their compiler adapters. |

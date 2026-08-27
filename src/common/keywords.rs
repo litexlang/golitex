@@ -222,6 +222,10 @@ pub const PRIME: &str = "prime";
 pub const COPRIME: &str = "coprime";
 pub const DVD: &str = "dvd";
 pub const IS_CHOICE_FUNCTION_FOR: &str = "is_choice_function_for";
+/// `$is_real_least_upper_bound(E, L)`: `L` certifies the least upper bound of
+/// the real members of `E`. The certificate is introduced only by the
+/// reserved real-completeness theorem and consumed by its projection theorems.
+pub const IS_REAL_LEAST_UPPER_BOUND: &str = "is_real_least_upper_bound";
 
 fn build_key_symbols_map() -> HashMap<&'static str, &'static str> {
     let mut m = HashMap::new();
@@ -425,6 +429,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         DVD,
         PROPER_SUBSET,
         PROPER_SUPERSET,
+        IS_REAL_LEAST_UPPER_BOUND,
     ];
     for &s in &words {
         m.insert(s, s);
@@ -544,6 +549,7 @@ pub fn is_builtin_predicate(atom_name: &str) -> bool {
         || atom_name == COPRIME
         || atom_name == DVD
         || atom_name == IS_CHOICE_FUNCTION_FOR
+        || atom_name == IS_REAL_LEAST_UPPER_BOUND
 }
 
 pub fn is_builtin_identifier_name(atom_name: &str) -> bool {

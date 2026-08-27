@@ -19,6 +19,13 @@ fn all_explicit_builtin_theorem_interfaces_succeed() {
 have q Q
 release thm rational_has_unique_reduced_fraction(q)
 
+release thm real_least_upper_bound_exists({0}, 1)
+obtain real_lub from exist real_lub R st {$is_real_least_upper_bound({0}, real_lub)}
+release thm real_member_le_least_upper_bound({0}, real_lub, 0)
+release thm real_least_upper_bound_le_upper_bound({0}, real_lub, 1)
+release thm rational_between_reals(0, 1)
+obtain between_rational from exist between_rational Q st {0 < between_rational and between_rational < 1}
+
 by def {1} $subset {1, 2}
 release thm subset_of_finite_set_is_finite({1}, {1, 2})
 release thm finite_set_has_bijective_index({})
@@ -88,6 +95,12 @@ release thm sum_over_bijective_finite_set_enumerations(sum(1, finite_set_size({1
             "all builtin theorem interfaces should succeed:\n{output}"
         );
         assert!(output.contains("\"theorem\": \"rational_has_unique_reduced_fraction\""));
+        assert!(output.contains("\"theorem\": \"real_least_upper_bound_exists\""));
+        assert!(output.contains("\"theorem\": \"real_member_le_least_upper_bound\""));
+        assert!(output.contains(
+            "\"theorem\": \"real_least_upper_bound_le_upper_bound\""
+        ));
+        assert!(output.contains("\"theorem\": \"rational_between_reals\""));
         assert!(output.contains("exist! p Z, d N+ st {q = p / d, gcd(p, d) = 1}"));
         assert!(output.contains("\"theorem\": \"subset_of_finite_set_is_finite\""));
         assert!(output.contains("\"theorem\": \"finite_set_has_bijective_index\""));
@@ -152,6 +165,26 @@ fn builtin_theorem_rejects_arity_shape_and_qualified_names() {
             "release thm M::finite_set_has_bijective_index({})",
             "cannot use keyword as name: finite_set_has_bijective_index",
         ),
+        (
+            "real lub arity",
+            "release thm real_least_upper_bound_exists({0})",
+            "expects 2 argument(s), but got 1",
+        ),
+        (
+            "real lub projection arity",
+            "release thm real_member_le_least_upper_bound({0}, 0)",
+            "expects 3 argument(s), but got 2",
+        ),
+        (
+            "rational density arity",
+            "release thm rational_between_reals(0)",
+            "expects 2 argument(s), but got 1",
+        ),
+        (
+            "qualified real lub",
+            "release thm M::real_least_upper_bound_exists({0}, 1)",
+            "cannot use keyword as name: real_least_upper_bound_exists",
+        ),
     ];
 
     for (label, source, expected) in cases {
@@ -159,6 +192,64 @@ fn builtin_theorem_rejects_arity_shape_and_qualified_names() {
         assert!(!succeeded, "{label} should fail:\n{output}");
         assert!(output.contains(expected), "{label}:\n{output}");
     }
+}
+
+#[test]
+fn real_analysis_builtin_theorems_require_explicit_premises_and_do_not_leak() {
+    let direct_certificate = "$is_real_least_upper_bound({0}, 0)";
+    let (_, succeeded, output) = run_source(
+        direct_certificate,
+        "real_lub_certificate_is_not_implicit",
+        false,
+    );
+    assert!(
+        !succeeded,
+        "a real LUB certificate must not be proved implicitly:\n{output}"
+    );
+
+    let mut completeness_runtime = Runtime::default();
+    completeness_runtime.start_isolated_source("real_completeness_no_leak");
+    let failed_completeness = "release thm real_least_upper_bound_exists({}, 0)";
+    let (results, error) = execute_source(failed_completeness, &mut completeness_runtime);
+    let (succeeded, output) =
+        render_run_output(&completeness_runtime, &results, &error);
+    assert!(
+        !succeeded,
+        "an empty set must not receive a real LUB witness:\n{output}"
+    );
+    assert!(output.contains("requires that the argument set is nonempty"));
+    let leaked_lub = "exist lub R st {$is_real_least_upper_bound({}, lub)}";
+    assert!(!completeness_runtime.cache_known_facts_contains(leaked_lub).0);
+    let (probe_results, probe_error) =
+        execute_source(leaked_lub, &mut completeness_runtime);
+    let (probe_succeeded, probe_output) =
+        render_run_output(&completeness_runtime, &probe_results, &probe_error);
+    assert!(
+        !probe_succeeded,
+        "a failed completeness call must not store its existential conclusion:\n{probe_output}"
+    );
+
+    let mut density_runtime = Runtime::default();
+    density_runtime.start_isolated_source("rational_density_no_leak");
+    let (results, error) = execute_source(
+        "release thm rational_between_reals(1, 0)",
+        &mut density_runtime,
+    );
+    let (succeeded, output) = render_run_output(&density_runtime, &results, &error);
+    assert!(
+        !succeeded,
+        "density requires a strict real interval:\n{output}"
+    );
+    assert!(output.contains("requires that the real arguments are strictly ordered"));
+    let leaked_rational = "exist q Q st {1 < q and q < 0}";
+    assert!(!density_runtime.cache_known_facts_contains(leaked_rational).0);
+    let (probe_results, probe_error) = execute_source(leaked_rational, &mut density_runtime);
+    let (probe_succeeded, probe_output) =
+        render_run_output(&density_runtime, &probe_results, &probe_error);
+    assert!(
+        !probe_succeeded,
+        "a failed density call must not store its rational witness:\n{probe_output}"
+    );
 }
 
 #[test]

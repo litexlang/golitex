@@ -811,6 +811,43 @@ impl StmtResultToLeanCompiler {
                 .insert(*fact_id, fact.clone());
             self.next_fact_name_index += 1;
         }
+        if let Fact::AtomicFact(AtomicFact::NormalAtomicFact(certificate)) =
+            &verification.instantiated_body_facts[0]
+        {
+            if certificate.predicate.to_string() == IS_REAL_LEAST_UPPER_BOUND {
+                if certificate.body.len() != 2
+                    || obj_equality_key(&certificate.body[1])
+                        != obj_equality_key(&obj_for_bound_param_in_scope(binding))
+                {
+                    return Err(
+                        "real LUB existential projection changed its certified witness"
+                            .into(),
+                    );
+                }
+                let membership_proof = self
+                    .environment_stack
+                    .fact_names
+                    .get(&stored_fact_ids[0])
+                    .cloned()
+                    .ok_or_else(|| {
+                        "real LUB witness membership has no compiled FactId".to_string()
+                    })?;
+                self.environment_stack
+                    .numeric_representations
+                    .insert(binding.id(), witness_name.clone());
+                self.environment_stack.numeric_real_values.insert(
+                    binding.id(),
+                    format!("Litex.OrderValue {witness_name}"),
+                );
+                self.environment_stack.numeric_representation_equalities.insert(
+                    binding.id(),
+                    format!("Litex.Same.refl {witness_name}"),
+                );
+                self.environment_stack
+                    .numeric_representation_memberships
+                    .insert(binding.id(), membership_proof);
+            }
+        }
         Ok(true)
     }
 
