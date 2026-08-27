@@ -2656,8 +2656,7 @@ impl Runtime {
         // projection. Its domain requirements may use known facts and builtin
         // computation, but must not start another equality/forall search and
         // recursively re-enter cart extensionality.
-        let verify_state =
-            VerifyState::after_well_definedness().without_known_forall_for_equality();
+        let verify_state = VerifyState::after_well_definedness().with_next_round();
         for (pattern, forall_context) in candidates {
             let Some(arg_map) = self.match_atomic_fact_args_against_known_forall_ordered_args(
                 &pattern,

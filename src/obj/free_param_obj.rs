@@ -42,7 +42,7 @@ impl BindingScope {
     }
 
     pub fn respects_bare_symbols(self, name: &str) -> bool {
-        !name.starts_with("#binder_") && self != Self::StructureField
+        !name.starts_with(INTERNAL_SYMBOL_PREFIX) && self != Self::StructureField
     }
 }
 
@@ -68,6 +68,7 @@ pub fn strip_free_param_numeric_tags_in_display(text: &str) -> String {
     let mut out = String::with_capacity(text.len());
     let chars = text.chars().collect::<Vec<_>>();
     let mut generated_names = HashMap::new();
+    let internal_prefix = INTERNAL_BINDER_PREFIX.chars().collect::<Vec<_>>();
     let mut index = 0;
     while index < chars.len() {
         if chars[index] == '#' {
@@ -83,24 +84,22 @@ pub fn strip_free_param_numeric_tags_in_display(text: &str) -> String {
                 index = after_digits + 1;
                 continue;
             }
-
-            let internal_prefix = "#binder_".chars().collect::<Vec<_>>();
-            if chars[index..].starts_with(&internal_prefix) {
-                let digits_start = index + internal_prefix.len();
-                let mut after_digits = digits_start;
-                while after_digits < chars.len() && chars[after_digits].is_ascii_digit() {
-                    after_digits += 1;
-                }
-                if after_digits > digits_start {
-                    let internal_name = chars[index..after_digits].iter().collect::<String>();
-                    let next_display_index = generated_names.len() + 1;
-                    let display_name = generated_names
-                        .entry(internal_name)
-                        .or_insert_with(|| format!("_generated_{}", next_display_index));
-                    out.push_str(display_name);
-                    index = after_digits;
-                    continue;
-                }
+        }
+        if chars[index..].starts_with(&internal_prefix) {
+            let digits_start = index + internal_prefix.len();
+            let mut after_digits = digits_start;
+            while after_digits < chars.len() && chars[after_digits].is_ascii_digit() {
+                after_digits += 1;
+            }
+            if after_digits > digits_start {
+                let internal_name = chars[index..after_digits].iter().collect::<String>();
+                let next_display_index = generated_names.len() + 1;
+                let display_name = generated_names
+                    .entry(internal_name)
+                    .or_insert_with(|| format!("_generated_{}", next_display_index));
+                out.push_str(display_name);
+                index = after_digits;
+                continue;
             }
         }
         if chars[index] == FREE_PARAM_DISPLAY_TAG_PREFIX {

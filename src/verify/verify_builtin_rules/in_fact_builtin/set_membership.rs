@@ -142,8 +142,7 @@ impl Runtime {
             ) {
                 continue;
             }
-            let requirement_state = VerifyState::final_round_after_well_definedness()
-                .without_known_forall_for_equality();
+            let requirement_state = VerifyState::final_round_after_well_definedness();
             self.set_set_builder_forall_transport_active(true);
             let membership_result = self.verify_args_satisfy_forall_requirements(
                 &membership_pattern_atomic,
@@ -247,8 +246,7 @@ impl Runtime {
                         SubstitutionMode::Exact,
                         Some(&goal.line_file()),
                     )?;
-                    let requirement_state = VerifyState::final_round_after_well_definedness()
-                        .without_known_forall_for_equality();
+                    let requirement_state = VerifyState::final_round_after_well_definedness();
                     self.set_set_builder_forall_transport_active(true);
                     let membership_result = self.verify_args_satisfy_forall_requirements(
                         &membership_pattern_atomic,

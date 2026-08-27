@@ -34,7 +34,7 @@ fn symbol_identity_prefix_is_removed_without_touching_ordinary_hash_text() {
 fn generated_binder_names_are_stable_and_hide_internal_ids() {
     assert_eq!(
         strip_free_param_numeric_tags_in_display(
-            "forall #17##binder_17, #42##binder_42: #17##binder_17 = #42##binder_42"
+            "forall #17#____binder_17, #42#____binder_42: #17#____binder_17 = #42#____binder_42"
         ),
         "forall _generated_1, _generated_2: _generated_1 = _generated_2"
     );

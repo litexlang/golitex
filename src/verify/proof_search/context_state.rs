@@ -10,15 +10,10 @@
 /// `well_definedness_verified` means the current caller has already checked
 /// the well-definedness obligations for the fact or object being verified, so
 /// child checks should not repeat that gate.
-///
-/// `equality_may_use_known_forall` controls an important recursion boundary:
-/// equality verification may usually instantiate known `forall` facts, but some
-/// equality subchecks disable that route to prevent circular proof search.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct VerifyState {
     pub proof_search_round: u8,
     pub well_definedness_verified: bool,
-    pub equality_may_use_known_forall: bool,
 }
 
 impl VerifyState {
@@ -44,7 +39,6 @@ impl VerifyState {
         Self {
             proof_search_round,
             well_definedness_verified,
-            equality_may_use_known_forall: true,
         }
     }
 
@@ -64,13 +58,6 @@ impl VerifyState {
 
     pub fn is_initial_round(&self) -> bool {
         self.proof_search_round == 0
-    }
-
-    pub fn without_known_forall_for_equality(&self) -> Self {
-        Self {
-            equality_may_use_known_forall: false,
-            ..*self
-        }
     }
 }
 

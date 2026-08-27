@@ -117,9 +117,8 @@ fn litex_to_mathlib_pipeline_showcase_generated_lean_has_not_drifted() {
 
 #[test]
 fn litex_to_mathlib_pipeline_property_companion_verifies_without_trust() {
-    const SOURCE: &str = include_str!(
-        "../../showcases/litex_to_lean_mathlib_pipeline/showcase1/property_flow.lit"
-    );
+    const SOURCE: &str =
+        include_str!("../../showcases/litex_to_lean_mathlib_pipeline/showcase1/property_flow.lit");
 
     let results = capture_stmt_results_json_v2_on_verifier_stack(SOURCE, "property_flow.lit")
         .expect("verify the property-centered companion source");
@@ -140,9 +139,8 @@ fn litex_to_mathlib_pipeline_property_companion_verifies_without_trust() {
 fn real_sequence_completeness_showcase_generated_lean_has_not_drifted() {
     const SOURCE: &str =
         include_str!("../../showcases/litex_to_lean_mathlib_pipeline/showcase2/main.lit");
-    const CHECKED_IN: &str = include_str!(
-        "../../showcases/litex_to_lean_mathlib_pipeline/showcase2/LitexGenerate.lean"
-    );
+    const CHECKED_IN: &str =
+        include_str!("../../showcases/litex_to_lean_mathlib_pipeline/showcase2/LitexGenerate.lean");
 
     let generated = compile_on_verifier_stack(SOURCE, "main.lit")
         .expect("compile the real-sequence completeness showcase");
@@ -150,6 +148,24 @@ fn real_sequence_completeness_showcase_generated_lean_has_not_drifted() {
     assert_eq!(generated, CHECKED_IN);
     assert!(generated.contains("def is_convergent_sequence"));
     assert!(generated.contains("def is_cauchy_sequence"));
+    assert!(generated.contains("theorem cauchy_sequence_converges"));
+    assert!(generated.contains("Litex.Rules.realCauchySequenceConverges"));
+    assert!(!SOURCE.contains("axiom"));
+    assert!(!SOURCE.contains("trust"));
+    assert!(!generated.contains("axiom "));
+    assert!(!generated.contains("sorry"));
+    assert!(!generated.contains("admit"));
+}
+
+#[test]
+fn real_sequence_completeness_stable_tracer_generated_lean_has_not_drifted() {
+    const SOURCE: &str = include_str!("../../lean/examples/64_RealSequenceCompleteness.lit");
+    const CHECKED_IN: &str = include_str!("../../lean/examples/64_RealSequenceCompleteness.lean");
+
+    let generated = compile_on_verifier_stack(SOURCE, "64_RealSequenceCompleteness.lit")
+        .expect("compile the stable real-sequence completeness tracer");
+
+    assert_eq!(generated, CHECKED_IN);
     assert!(generated.contains("theorem cauchy_sequence_converges"));
     assert!(generated.contains("Litex.Rules.realCauchySequenceConverges"));
     assert!(!SOURCE.contains("axiom"));

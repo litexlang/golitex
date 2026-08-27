@@ -581,7 +581,7 @@ impl Runtime {
             }
         }
 
-        if verify_state.is_initial_round() && verify_state.equality_may_use_known_forall {
+        if verify_state.is_initial_round() {
             let next_round_state = verify_state.with_next_round();
             result = self.verify_equal_fact_with_known_forall(equal_fact, &next_round_state)?;
             if result.is_success() {

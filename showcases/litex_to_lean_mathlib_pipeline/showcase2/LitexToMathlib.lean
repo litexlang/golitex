@@ -27,13 +27,13 @@ theorem tendsTo_of_litexConvergesTo
     (a : LitexRealSequence)
     (limit : ℝ)
     (h : Litex.Rules.RealSequenceConvergesTo a limit) :
-    Tendsto (toMathlibSequence a) atTop (𝗝 limit) := by
+    Tendsto (toMathlibSequence a) atTop (nhds limit) := by
   exact Metric.tendsto_atTop.mpr h
 
 theorem mathlibCompleteness
     (a : LitexRealSequence)
     (h : Litex.Rules.RealSequenceCauchy a) :
-    ∃ limit : ℝ, Tendsto (toMathlibSequence a) atTop (𝗐 limit) := by
+    ∃ limit : ℝ, Tendsto (toMathlibSequence a) atTop (nhds limit) := by
   exact cauchySeq_tendsto_of_complete (cauchySeq_of_litexCauchy a h)
 
 /-- The source theorem, specialized to the compiler's exact real-sequence carrier. -/

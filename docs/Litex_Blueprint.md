@@ -11,7 +11,6 @@ Chinese version: https://litexlang.com/doc/Litex中文蓝图
 ## Table of Contents
 
 - [Litex Blueprint Overview](#overview)
-- [Background: The AI Era Needs Formal Languages](#background)
 - [The Overall Interaction Loop: Write Facts Directly and See Why Verification Succeeds or Where It Stops](#interaction-loop)
 - [1. Based on Set Theory: Let Set-Theoretic Knowledge Look Like Set Theory](#set-theory)
   - [Two Ways to Define a Group: Building a Mathematical Theory from the Ground Up](#group-comparison)
@@ -25,19 +24,6 @@ Chinese version: https://litexlang.com/doc/Litex中文蓝图
 <a id="overview"></a>
 
 ## Litex Blueprint Overview
-
-*Litex is a formal language based on set theory, oriented around facts, designed to build proof flow bottom-up, and compatible with Lean. It lets humans and AI write mathematical facts directly and see why verification succeeds and where it stops.*
-
-1. Based on set theory: Litex is founded on ZFC set theory and organizes mathematical objects uniformly through sets and membership. The same object can belong to multiple sets, and the language represents mathematical objects separately from facts about those objects. By comparison, Lean's `Set α` first depends on the more abstract carrier type `α : Type*`; mathematical objects and propositions are both organized by the type system, an approach with powerful generality. Litex's tradeoff is to make set theory and the common mathematical knowledge built on it clearer to express.
-2. Fact-oriented: Litex source code primarily states *what mathematical facts should hold*. Based on each fact's predicate and arguments, the kernel looks for a verification route among builtin rules, previously proved facts, and equality matching. It also checks that objects and expressions are well-defined before accepting a fact. By comparison, typical Lean tactic source code primarily states *how to handle the next Goal*, while the Infoview shows which Goals remain after each operation. Lean's type system likewise checks that expressions are well-typed; the required type information, type-class instances, and proof premises enter expressions and theorem interfaces through explicit or implicit parameters.
-3. Building proof flow bottom-up: A mathematical proof can start from known conditions, derive new facts, and eventually converge on the conclusion. It can also start from the final Goal and reduce it backward to known conditions. Litex defaults to the former workflow, in which the context grows forward with verified facts; common Lean tactic interactions usually adopt the latter. Neither system excludes the other direction from what it can express.
-4. Lean-compatible: The goal of the Litex-to-Lean compiler is to translate verification paths already found by the Litex kernel into Lean proof terms, which the Lean kernel can then check independently. The current compiler covers only some verification paths. “Every Litex source file can be compiled to Lean” is an unfinished direction, not a capability already delivered by the beta release.
-
-The hope is that using Litex can feel like doing informal mathematics: users can keep their attention on mathematical objects, conditions, intermediate facts, and conclusions without first having to confront the theoretical abstractions underlying a proof assistant, unfamiliar formal syntax, or vast external libraries. Litex acts as their copilot, providing fast, local, and traceable verification feedback. *The hope is that Litex will make it easier for non-specialists across many fields to enter the world of formal mathematics.*
-
-<a id="background"></a>
-
-## Background: The AI Era Needs Formal Languages
 
 AI is rapidly lowering the cost of producing solution steps, mathematical proofs, and technical derivations. Humans and AI can produce many plausible arguments in a short time, but plausible is not the same as checked. We are entering an era of **reasoning overflow and validation crisis**: candidate intellectual output is growing faster than our capacity to verify it reliably.
 
@@ -79,7 +65,11 @@ forall f fn(t R: t > 0) R, x R:
         f(x) = f(x)
 ```
 
-The condition `x > 0` remains, but its proof certificate does not become a source-level argument to `f`.
+**This is as plain a fact as one can state: a function value equals itself.**
+
+Yet in the Lean subtype encoding above, applying `f` requires not only `x` but also packaging the proof `hx : x > 0` into `⟨x, hx⟩`, producing `f ⟨x, hx⟩`.
+
+This is unlike ordinary function notation: a function receives an argument, not a well-definedness certificate. Litex still checks `x > 0` strictly, but the source says only `f(x)`.
 
 > **Users write mathematics; the system manages verification evidence. Conditions cannot be omitted, but certificates need not be threaded by hand.**
 
@@ -87,11 +77,22 @@ Lean also supports other encodings and automation; this comparison concerns sour
 
 This does not lower the verification standard. It lowers the tool barrier. Good mathematical notation has always absorbed mechanical detail so that people can focus on mathematics; formal languages in the AI era need a similar abstraction layer.
 
-Litex tests a hypothesis: can a smaller, more readable, fact-oriented formal language make machine-checked mathematics easier for students, domain experts, and AI to produce?
+Litex tests a hypothesis: can we lower the barrier to formalization, without lowering the verification standard, so that students, domain experts, and AI can produce machine-checkable mathematics more easily?
 
 > This is a design direction, not a claim that the current language, standard library, or compiler is complete.
 
-To pursue it, Litex chooses set theory, fact-oriented authoring, bottom-up proof flow, and a compilation path toward independent rechecking in Lean. Before examining those choices, it helps to establish a few basic terms.
+The path for this experiment is:
+
+*Litex is a formal language based on set theory, oriented around facts, designed to build proof flow bottom-up, and compatible with Lean. It lets humans and AI write mathematical facts directly and see why verification succeeds and where it stops.*
+
+1. Based on set theory: Litex is founded on ZFC set theory and organizes mathematical objects uniformly through sets and membership. The same object can belong to multiple sets, and the language represents mathematical objects separately from facts about those objects. By comparison, Lean's `Set α` first depends on the more abstract carrier type `α : Type*`; mathematical objects and propositions are both organized by the type system, an approach with powerful generality. Litex's tradeoff is to make set theory and the common mathematical knowledge built on it clearer to express.
+2. Fact-oriented: Litex source code primarily states *what mathematical facts should hold*. Based on each fact's predicate and arguments, the kernel looks for a verification route among builtin rules, previously proved facts, and equality matching. It also checks that objects and expressions are well-defined before accepting a fact. By comparison, typical Lean tactic source code primarily states *how to handle the next Goal*, while the Infoview shows which Goals remain after each operation. Lean's type system likewise checks that expressions are well-typed; the required type information, type-class instances, and proof premises enter expressions and theorem interfaces through explicit or implicit parameters.
+3. Building proof flow bottom-up: A mathematical proof can start from known conditions, derive new facts, and eventually converge on the conclusion. It can also start from the final Goal and reduce it backward to known conditions. Litex defaults to the former workflow, in which the context grows forward with verified facts; common Lean tactic interactions usually adopt the latter. Neither system excludes the other direction from what it can express.
+4. Lean-compatible: The goal of the Litex-to-Lean compiler is to translate verification paths already found by the Litex kernel into Lean proof terms, which the Lean kernel can then check independently. The current compiler covers only some verification paths. “Every Litex source file can be compiled to Lean” is an unfinished direction, not a capability already delivered by the beta release.
+
+The hope is that using Litex can feel like doing informal mathematics: users can keep their attention on mathematical objects, conditions, intermediate facts, and conclusions without first having to confront the theoretical abstractions underlying a proof assistant, unfamiliar formal syntax, or vast external libraries. Litex acts as their copilot, providing fast, local, and traceable verification feedback. *The hope is that Litex will make it easier for non-specialists across many fields to enter the world of formal mathematics.*
+
+Before examining this path, it helps to establish a few basic terms.
 
 <details>
 <summary><strong>Basic Terms: Formal Language, Goal, Tactic, and Kernel</strong></summary>

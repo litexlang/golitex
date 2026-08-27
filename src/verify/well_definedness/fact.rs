@@ -8,8 +8,6 @@ impl Runtime {
         fact: &Fact,
         verify_state: &VerifyState,
     ) -> Result<SuccessVerifyFactWellDefinedResult, RuntimeError> {
-        let verify_state = verify_state.without_known_forall_for_equality();
-        let verify_state = &verify_state;
         let recursive =
             match fact {
                 Fact::AtomicFact(atomic_fact) => {
@@ -296,8 +294,6 @@ impl Runtime {
         fact: &Fact,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
-        let verify_state = verify_state.without_known_forall_for_equality();
-        let verify_state = &verify_state;
         match fact {
             Fact::AtomicFact(atomic_fact) => {
                 self.verify_atomic_fact_well_defined(atomic_fact, verify_state)

@@ -3482,6 +3482,29 @@ f(1) = 1
 }
 
 #[test]
+fn circular_known_forall_equality_requirement_stops_after_one_round() {
+    let source_code = r#"
+have f fn(x R) R
+trust forall a R:
+    f(a) = a
+    =>:
+        f(a) = a
+f(1) = 1
+"#;
+
+    let mut runtime = Runtime::default();
+    runtime.start_isolated_source("circular_known_forall_equality_requirement");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
+
+    assert!(
+        !run_succeeded && run_output.contains("UnknownError"),
+        "a forall may not discharge its own equality requirement recursively:\n{}",
+        run_output
+    );
+}
+
+#[test]
 fn known_forall_equality_indexes_forall_param_side_as_wildcard() {
     let source_code = r#"
 have f fn(x R) R

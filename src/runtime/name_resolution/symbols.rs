@@ -39,7 +39,7 @@ impl Runtime {
 
     pub fn allocate_internal_symbol_binding(&self) -> Result<SymbolBinding, RuntimeError> {
         let id = self.allocate_symbol_id()?;
-        let name = format!("#binder_{}", id.value());
+        let name = format!("{}{}", INTERNAL_BINDER_PREFIX, id.value());
         Ok(SymbolBinding::new(id, name.clone(), name))
     }
 
