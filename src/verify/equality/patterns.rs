@@ -221,7 +221,9 @@ pub fn factual_equal_success_by_builtin_reason_with_subgoals(
         SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
             equal_fact.clone().into(),
             reason.to_string(),
-            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::FactualEqualSuccessByBuiltinReasonWithSubgoals),
+            BuiltinRuleEvidence::Uncatalogued(
+                UncataloguedBuiltinRule::FactualEqualSuccessByBuiltinReasonWithSubgoals,
+            ),
             subgoals,
         ),
     )

@@ -204,7 +204,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "structural equality with terminating reductions".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyEqualFactWithZeroPremiseVerification),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::VerifyEqualFactWithZeroPremiseVerification,
+                ),
                 Vec::new(),
             )
             .into();
@@ -315,7 +317,9 @@ impl Runtime {
         SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
             equal_fact.clone().into(),
             reason.to_string(),
-            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyEqualFactByDirectEvaluation),
+            BuiltinRuleEvidence::Uncatalogued(
+                UncataloguedBuiltinRule::VerifyEqualFactByDirectEvaluation,
+            ),
             Vec::new(),
         )
         .into()
@@ -445,7 +449,9 @@ impl Runtime {
         SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
             equal_fact.clone().into(),
             "calculation and rational expression simplification".to_string(),
-            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyEqualFactByKnownEqualityThenDirectEvaluation),
+            BuiltinRuleEvidence::Uncatalogued(
+                UncataloguedBuiltinRule::VerifyEqualFactByKnownEqualityThenDirectEvaluation,
+            ),
             vec![known_result],
         )
         .into()
@@ -1037,7 +1043,9 @@ impl Runtime {
                 (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     equal_fact.clone().into(),
                     "builtin rules".to_string(),
-                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyEqualFactByBuiltinRulesAndKnownEqualities),
+                    BuiltinRuleEvidence::Uncatalogued(
+                        UncataloguedBuiltinRule::VerifyEqualFactByBuiltinRulesAndKnownEqualities01,
+                    ),
                     Vec::new(),
                 ))
                 .into(),
@@ -1054,7 +1062,9 @@ impl Runtime {
                 (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     equal_fact.clone().into(),
                     same_shape_and_equal_args_reason(equal_fact),
-                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyEqualFactByBuiltinRulesAndKnownEqualities),
+                    BuiltinRuleEvidence::Uncatalogued(
+                        UncataloguedBuiltinRule::VerifyEqualFactByBuiltinRulesAndKnownEqualities02,
+                    ),
                     Vec::new(),
                 ))
                 .into(),

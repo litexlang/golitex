@@ -87,7 +87,7 @@ impl Runtime {
                         SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             subset_fact.clone().into(),
                             "binary union subset from componentwise subsets".to_string(),
-                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifySubsetFactWithBuiltinRules),
+                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifySubsetFactWithBuiltinRules01),
                             steps,
                         )
                         .into(),
@@ -114,7 +114,7 @@ impl Runtime {
                         SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             subset_fact.clone().into(),
                             "intersection subset from an operand upper bound".to_string(),
-                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifySubsetFactWithBuiltinRules),
+                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifySubsetFactWithBuiltinRules02),
                             vec![result],
                         )
                         .into(),
@@ -137,7 +137,7 @@ impl Runtime {
                     SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         subset_fact.clone().into(),
                         "set difference subset from left-operand upper bound".to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifySubsetFactWithBuiltinRules),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifySubsetFactWithBuiltinRules03),
                         vec![result],
                     )
                     .into(),
@@ -163,7 +163,7 @@ impl Runtime {
                     SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         subset_fact.clone().into(),
                         "power set subset from base-set subset".to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifySubsetFactWithBuiltinRules),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifySubsetFactWithBuiltinRules04),
                         vec![result],
                     )
                     .into(),
@@ -192,7 +192,7 @@ impl Runtime {
                         SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             subset_fact.clone().into(),
                             "set difference subset from common-right left subset".to_string(),
-                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifySubsetFactWithBuiltinRules),
+                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifySubsetFactWithBuiltinRules05),
                             vec![result],
                         )
                         .into(),
@@ -324,7 +324,7 @@ impl Runtime {
                         SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             subset_fact.clone().into(),
                             "Cartesian-product subset from componentwise subsets".to_string(),
-                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifySubsetFactWithBuiltinRules),
+                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifySubsetFactWithBuiltinRules06),
                             steps,
                         )
                         .into(),
@@ -389,7 +389,7 @@ impl Runtime {
                     (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         subset_fact.clone().into(),
                         "integer range is contained in its standard numeric carrier".to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifySubsetFactWithBuiltinRules),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifySubsetFactWithBuiltinRules07),
                         dependencies,
                     ))
                     .into(),
@@ -479,7 +479,9 @@ impl Runtime {
                 (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     subset_fact.clone().into(),
                     "real_interval_subset_R".to_string(),
-                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifySubsetFactWithBuiltinRules),
+                    BuiltinRuleEvidence::Uncatalogued(
+                        UncataloguedBuiltinRule::VerifySubsetFactWithBuiltinRules08,
+                    ),
                     Vec::new(),
                 ))
                 .into(),
@@ -503,7 +505,7 @@ impl Runtime {
                     SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         ret_subset.clone().into(),
                         "structural subset".to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifySubsetFactWithBuiltinRules),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifySubsetFactWithBuiltinRules09),
                         Vec::new(),
                     )
                     .into()
@@ -515,7 +517,7 @@ impl Runtime {
                         (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             subset_fact.clone().into(),
                             "fn_range_subset_codomain".to_string(),
-                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifySubsetFactWithBuiltinRules),
+                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifySubsetFactWithBuiltinRules10),
                             vec![ret_subset_result],
                         ))
                         .into(),

@@ -99,7 +99,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                 fact.clone().into(),
                 reason.to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsFiniteSetWithBuiltinStrategy),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::VerifyIsFiniteSetWithBuiltinStrategy,
+                ),
                 child_results,
             )
             .into(),
@@ -144,7 +146,7 @@ impl Runtime {
                         fact.clone().into(),
                         "nonempty-set strategy: closed integer range has ordered endpoints"
                             .to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsNonemptySetWithBuiltinStrategy),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsNonemptySetWithBuiltinStrategy01),
                         vec![result],
                     )
                     .into(),
@@ -168,7 +170,7 @@ impl Runtime {
                         fact.clone().into(),
                         "nonempty-set strategy: half-open integer range has strictly ordered endpoints"
                             .to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsNonemptySetWithBuiltinStrategy),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsNonemptySetWithBuiltinStrategy02),
                         vec![result],
                     )
                     .into(),
@@ -207,7 +209,7 @@ impl Runtime {
                     SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                         fact.clone().into(),
                         reason.to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsNonemptySetWithBuiltinStrategy),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsNonemptySetWithBuiltinStrategy03),
                         vec![result],
                     )
                     .into(),
@@ -222,7 +224,7 @@ impl Runtime {
                             SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                                 fact.clone().into(),
                                 "nonempty-set strategy: a union has a nonempty side".to_string(),
-                                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsNonemptySetWithBuiltinStrategy),
+                                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsNonemptySetWithBuiltinStrategy04),
                                 vec![result],
                             )
                             .into(),
@@ -246,7 +248,7 @@ impl Runtime {
                     SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                         fact.clone().into(),
                         "nonempty-set strategy: all Cartesian factors are nonempty".to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsNonemptySetWithBuiltinStrategy),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsNonemptySetWithBuiltinStrategy05),
                         results,
                     )
                     .into(),
@@ -296,7 +298,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                 fact.clone().into(),
                 reason.to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyNonemptyConstructorStrategy),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::VerifyNonemptyConstructorStrategy,
+                ),
                 vec![result],
             )
             .into(),

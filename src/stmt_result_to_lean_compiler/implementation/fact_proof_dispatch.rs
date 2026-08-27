@@ -630,15 +630,11 @@ impl StmtResultToLeanCompiler {
         let mut proof = format!("Litex.Rules.emptySubset {target}");
         for (item, subgoal) in list.list.iter().zip(subgoals.iter()).rev() {
             let item = item.as_ref();
-            let expected: Fact = InFact::new(
-                item.clone(),
-                subset.right.clone(),
-                subset.line_file.clone(),
-            )
-            .into();
-            let subgoal = subgoal.factual_success().ok_or_else(|| {
-                "literal-set-subset member subgoal is not factual".to_string()
-            })?;
+            let expected: Fact =
+                InFact::new(item.clone(), subset.right.clone(), subset.line_file.clone()).into();
+            let subgoal = subgoal
+                .factual_success()
+                .ok_or_else(|| "literal-set-subset member subgoal is not factual".to_string())?;
             validate_scoped_fact_check_result(
                 subgoal,
                 &expected,
@@ -651,9 +647,8 @@ impl StmtResultToLeanCompiler {
                 })?;
             let rendered_item = render_obj(item, &self.environment_stack)?;
             let singleton = format!("Litex.Set.singleton {rendered_item}");
-            let singleton_proof = format!(
-                "Litex.Rules.singletonSubset {rendered_item} {target} ({item_proof})"
-            );
+            let singleton_proof =
+                format!("Litex.Rules.singletonSubset {rendered_item} {target} ({item_proof})");
             proof = format!(
                 "Litex.Rules.coproductSubset {singleton} {tail} {target} ({singleton_proof}) ({proof})"
             );

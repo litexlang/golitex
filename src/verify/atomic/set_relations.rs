@@ -57,7 +57,9 @@ impl Runtime {
                     "{} by its builtin proper-set-relation definition",
                     atomic_fact.key()
                 ),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyBuiltinProperSetRelationByDefinition),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::VerifyBuiltinProperSetRelationByDefinition,
+                ),
                 inside_results,
             )
             .into(),

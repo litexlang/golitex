@@ -50,7 +50,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                 fact.clone().into(),
                 "nonzero-product strategy: all immediate factors are nonzero".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyNonzeroProductWithBuiltinStrategy),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::VerifyNonzeroProductWithBuiltinStrategy,
+                ),
                 children,
             )
             .into(),

@@ -571,6 +571,236 @@ impl StmtResultToLeanCompiler {
         )
     }
 
+    pub(super) fn compile_obtain_obj_from_exist_fact_stmt_result_as_local_proof_steps(
+        &mut self,
+        result: &SuccessObtainObjFromExistFactResult,
+        proof_step_index: usize,
+    ) -> Result<Option<Vec<String>>, String> {
+        let Some(verification) = &result.verification else {
+            return Ok(None);
+        };
+        if result.statement.fact.to_string() != verification.source_exist_fact.to_string() {
+            return Err("local existential elimination changed its source existential".into());
+        }
+        self.compile_positive_single_witness_existential_elimination_result_as_local_proof_steps(
+            &result.statement.equal_tos,
+            &result.common,
+            verification,
+            proof_step_index,
+        )
+    }
+
+    pub(super) fn compile_obtain_obj_from_atomic_fact_stmt_result_as_local_proof_steps(
+        &mut self,
+        result: &SuccessObtainObjFromAtomicFactResult,
+        proof_step_index: usize,
+    ) -> Result<Option<Vec<String>>, String> {
+        let Some(verification) = &result.verification else {
+            return Ok(None);
+        };
+        let source_result = verification
+            .source_result
+            .factual_success()
+            .ok_or_else(|| {
+                "local predicate-backed existential source is not factual".to_string()
+            })?;
+        let SuccessFactProofResult::BuiltinRule(source_builtin) = source_result.proof() else {
+            return Ok(None);
+        };
+        let Some(BuiltinRuleEvidence::DefinitionProjection(evidence)) =
+            source_builtin.evidence.typed()
+        else {
+            return Ok(None);
+        };
+        if evidence.fact.to_string() != result.statement.fact.to_string() {
+            return Err(
+                "local predicate-backed existential elimination changed its source fact".into(),
+            );
+        }
+        self.compile_positive_single_witness_existential_elimination_result_as_local_proof_steps(
+            &result.statement.equal_tos,
+            &result.common,
+            verification,
+            proof_step_index,
+        )
+    }
+
+    /// Local counterpart of the persistent existential-elimination adapter.
+    /// The verifier-owned existential, witness type, body projection, and
+    /// ordered FactIds are identical; only their Lean lifetime changes from
+    /// global `noncomputable def` declarations to one `rcases` binder.
+    pub(super) fn compile_positive_single_witness_existential_elimination_result_as_local_proof_steps(
+        &mut self,
+        introduced_bindings: &[SymbolBinding],
+        common: &SuccessStmtCommonResult,
+        verification: &SuccessVerifyExistentialEliminationResult,
+        proof_step_index: usize,
+    ) -> Result<Option<Vec<String>>, String> {
+        let existential = &verification.source_exist_fact;
+        if !existential.is_plain_exist()
+            || existential.typed_parameters().number_of_params() != 1
+            || existential.facts().len() != 1
+            || introduced_bindings.len() != 1
+            || verification.witness_type_facts.len() != 1
+            || verification.instantiated_body_facts.len() != 1
+            || verification.includes_uniqueness
+        {
+            return Ok(None);
+        }
+        let expected_stored_facts = vec![
+            verification.witness_type_facts[0].clone(),
+            verification.instantiated_body_facts[0].clone(),
+        ];
+        let stored_fact_ids = exact_ordered_fact_ids_from_store_results(
+            &common.infers,
+            &expected_stored_facts,
+            "local existential elimination projections",
+        )?;
+
+        let source_fact: Fact = existential.clone().into();
+        let source_result = verification
+            .source_result
+            .factual_success()
+            .ok_or_else(|| "local existential source is not factual".to_string())?;
+        if !source_result.store.infers.is_empty() {
+            return Err("local existential source Result gained effects".into());
+        }
+        let Some(source_proof) = self.construct_lean_proof_from_direct_fact_result(source_result)?
+        else {
+            return Ok(None);
+        };
+        if !one_witness_existentials_are_alpha_equal(
+            &source_result.fact(),
+            &source_fact,
+            &self.environment_stack,
+        )? {
+            return Err("local existential source Result changed its cited fact".into());
+        }
+        let source_proposition = render_fact(&source_fact, &self.environment_stack)?;
+        let typed_source_proof = format!("(show {source_proposition} from {source_proof})");
+
+        let group = &existential.typed_parameters().groups[0];
+        if group.params.len() != 1 || !matches!(group.param_type, ParamType::Obj(_)) {
+            return Ok(None);
+        }
+        let source_set = parameter_set(&group.param_type)?;
+        let binding = &introduced_bindings[0];
+        let witness_name = lean_identifier(binding.name());
+        let mut result_environment_stack = self.environment_stack.clone();
+        if result_environment_stack
+            .symbol_names
+            .insert(binding.id(), witness_name.clone())
+            .is_some()
+        {
+            return Err(format!(
+                "local existential elimination reused SymbolId for `{}`",
+                binding.name()
+            ));
+        }
+        let mut source_template_environment_stack = result_environment_stack.clone();
+        source_template_environment_stack
+            .symbol_names
+            .insert(group.params[0].id(), witness_name.clone());
+        source_template_environment_stack
+            .existential_names
+            .insert(group.params[0].name().to_string(), witness_name.clone());
+
+        let expected_requirement = format!(
+            "Litex.In {witness_name} {}",
+            render_obj(source_set, &result_environment_stack)?
+        );
+        let retained_requirement = render_fact(
+            &verification.witness_type_facts[0],
+            &result_environment_stack,
+        )?;
+        let expected_body = render_fact(
+            &existential.facts()[0].from_ref_to_cloned_fact(),
+            &source_template_environment_stack,
+        )?;
+        let retained_body = render_fact(
+            &verification.instantiated_body_facts[0],
+            &result_environment_stack,
+        )?;
+        if retained_requirement != expected_requirement || retained_body != expected_body {
+            return Err("local existential elimination changed a retained projection role".into());
+        }
+
+        let type_name = format!("__step{proof_step_index}_type");
+        let body_name = format!("__step{proof_step_index}_body");
+        let dynamic_carrier = set_requires_heterogeneous_carrier(source_set);
+        let function_carrier = matches!(source_set, Obj::FnSet(_));
+        let line = if dynamic_carrier || function_carrier {
+            let carrier_name = format!("__carrier_{witness_name}");
+            format!(
+                "rcases {typed_source_proof} with ⟨{carrier_name}, {witness_name}, {type_name}, {body_name}⟩"
+            )
+        } else {
+            format!(
+                "rcases {typed_source_proof} with ⟨{witness_name}, {type_name}, {body_name}⟩"
+            )
+        };
+
+        self.environment_stack = result_environment_stack;
+        for ((fact, fact_id), proof_name) in expected_stored_facts
+            .iter()
+            .zip(stored_fact_ids.iter())
+            .zip([type_name.clone(), body_name.clone()])
+        {
+            self.environment_stack
+                .fact_names
+                .insert(*fact_id, proof_name);
+            self.environment_stack
+                .fact_propositions
+                .insert(*fact_id, fact.clone());
+        }
+        if let Fact::AtomicFact(AtomicFact::NormalAtomicFact(certificate)) =
+            &verification.instantiated_body_facts[0]
+        {
+            if certificate.predicate.to_string() == IS_REAL_LEAST_UPPER_BOUND {
+                if certificate.body.len() != 2
+                    || obj_equality_key(&certificate.body[1])
+                        != obj_equality_key(&obj_for_bound_param_in_scope(binding))
+                {
+                    return Err(
+                        "local real LUB projection changed its certified witness".into(),
+                    );
+                }
+                self.environment_stack
+                    .numeric_representations
+                    .insert(binding.id(), witness_name.clone());
+                self.environment_stack.numeric_real_values.insert(
+                    binding.id(),
+                    format!("Litex.OrderValue {witness_name}"),
+                );
+                self.environment_stack.numeric_representation_equalities.insert(
+                    binding.id(),
+                    format!("Litex.Same.refl {witness_name}"),
+                );
+                self.environment_stack
+                    .numeric_representation_memberships
+                    .insert(binding.id(), type_name);
+            }
+        }
+        let mut lines = vec![line];
+        self.compile_typed_inference_results_as_local_have_statements(
+            &common.infers,
+            &expected_stored_facts
+                .iter()
+                .cloned()
+                .zip(stored_fact_ids.iter().copied())
+                .map(|(fact, fact_id)| (fact_id, fact))
+                .collect::<Vec<_>>(),
+            &mut lines,
+            "local existential elimination Result",
+        )?;
+        validate_flattened_inferred_fact_ids_are_visible(
+            &common.infers,
+            &self.environment_stack,
+            "local existential elimination Result",
+        )?;
+        Ok(Some(lines))
+    }
+
     /// `Combine`: the nested theorem application constructs one local
     /// existential conclusion proof. This parent consumes that proof as its
     /// source and publishes only the selected witness projections.

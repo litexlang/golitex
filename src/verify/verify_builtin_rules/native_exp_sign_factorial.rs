@@ -145,7 +145,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 goal.clone().into(),
                 "sign is nonzero exactly for nonzero arguments".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNativeSignNonzeroCharacterization),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::TryVerifyNativeSignNonzeroCharacterization,
+                ),
                 vec![result],
             )
             .into(),
@@ -335,7 +337,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "native exp/sign/factorial characteristic order bound".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNativeExpSignFactorialOrder),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::TryVerifyNativeExpSignFactorialOrder,
+                ),
                 subgoals,
             )
             .into(),
@@ -396,7 +400,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "native factorial monotonicity".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNativeFactorialMonotonicity),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::TryVerifyNativeFactorialMonotonicity,
+                ),
                 results,
             )
             .into(),
@@ -431,7 +437,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "native sign preserves weak order".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNativeSignMonotonicity),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::TryVerifyNativeSignMonotonicity,
+                ),
                 vec![result],
             )
             .into(),
@@ -578,7 +586,9 @@ impl Runtime {
                 SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     atomic_fact.clone().into(),
                     format!("native exp/ln reflects {order_kind} order"),
-                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNativeExpLnMonotonicity),
+                    BuiltinRuleEvidence::Uncatalogued(
+                        UncataloguedBuiltinRule::TryVerifyNativeExpLnMonotonicity01,
+                    ),
                     subgoals,
                 )
                 .into(),
@@ -604,7 +614,9 @@ impl Runtime {
                 SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     atomic_fact.clone().into(),
                     format!("native exp/ln reflects {order_kind} order"),
-                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNativeExpLnMonotonicity),
+                    BuiltinRuleEvidence::Uncatalogued(
+                        UncataloguedBuiltinRule::TryVerifyNativeExpLnMonotonicity02,
+                    ),
                     vec![reflected_result],
                 )
                 .into(),
@@ -642,7 +654,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 format!("native {function_name} preserves {order_kind} order"),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNativeExpLnMonotonicity),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::TryVerifyNativeExpLnMonotonicity03,
+                ),
                 results,
             )
             .into(),

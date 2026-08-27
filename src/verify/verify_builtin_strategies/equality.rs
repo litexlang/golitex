@@ -120,7 +120,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                 fact.clone().into(),
                 "finite-extremum equality strategy: prove both weak-order directions".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyExtremumEqualityWithBuiltinStrategy),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::VerifyExtremumEqualityWithBuiltinStrategy,
+                ),
                 steps,
             )
             .into(),
@@ -196,7 +198,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                 fact.clone().into(),
                 "mod-congruence strategy: reduce immediate binary operands modulo m".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyModCongruenceWithBuiltinStrategy),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::VerifyModCongruenceWithBuiltinStrategy,
+                ),
                 subgoals,
             )
             .into(),

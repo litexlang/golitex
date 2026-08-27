@@ -231,7 +231,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 and_fact.clone().into(),
                 "restricted builtin premise: each conjunct verified".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyAndFactRestrictedKnownBuiltin),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::VerifyAndFactRestrictedKnownBuiltin,
+                ),
                 steps,
             )
             .into(),

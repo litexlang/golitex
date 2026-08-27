@@ -333,13 +333,17 @@ impl StmtResultToLeanCompiler {
                         .into(),
                 );
             };
-            if type_check_proof.evidence.is_typed()
-                || !type_check_proof.subgoals.is_empty()
+            if !matches!(
+                type_check_proof.evidence.typed(),
+                Some(BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::VerifyNonEquationalAtomicFactWithBuiltinRulesInner
+                ))
+            ) || !type_check_proof.subgoals.is_empty()
                 || factual_type_check.fact_id.is_some()
                 || !factual_type_check.infers.is_empty()
             {
                 return Err(
-                    "Template set-alias body type check retained unexpected evidence, children, or stores"
+                    "Template set-alias body type check changed its typed rule, children, or stores"
                         .into(),
                 );
             }
@@ -1366,20 +1370,15 @@ impl StmtResultToLeanCompiler {
             || source.provenance.is_some()
         {
             return Err(
-                "real-analysis builtin theorem Result changed its typed requirement schema"
-                    .into(),
+                "real-analysis builtin theorem Result changed its typed requirement schema".into(),
             );
         }
-        let conclusion_well_definedness = source
-            .conclusion_well_definedness
-            .as_ref()
-            .ok_or_else(|| {
+        let conclusion_well_definedness =
+            source.conclusion_well_definedness.as_ref().ok_or_else(|| {
                 "real-analysis builtin theorem lost dedicated conclusion WD evidence".to_string()
             })?;
         let [conclusion] = verification.direct_conclusions.as_slice() else {
-            return Err(
-                "real-analysis builtin theorem must retain one direct conclusion".into(),
-            );
+            return Err("real-analysis builtin theorem must retain one direct conclusion".into());
         };
         validate_real_analysis_builtin_contract(
             source.theorem_id,
@@ -1396,7 +1395,10 @@ impl StmtResultToLeanCompiler {
             .enumerate()
         {
             let check = check.factual_success().ok_or_else(|| {
-                format!("real-analysis builtin requirement {} is not factual", index + 1)
+                format!(
+                    "real-analysis builtin requirement {} is not factual",
+                    index + 1
+                )
             })?;
             validate_scoped_fact_check_result(
                 check,
@@ -1430,9 +1432,7 @@ impl StmtResultToLeanCompiler {
                 }
                 theorem_name
             } else {
-                self.construct_lean_proof_from_direct_fact_result_using_its_well_definedness(
-                    check,
-                )?
+                self.construct_lean_proof_from_direct_fact_result_using_its_well_definedness(check)?
                     .ok_or_else(|| {
                         format!(
                         "real-analysis builtin requirement {} has no direct typed proof consumer",
@@ -1449,9 +1449,7 @@ impl StmtResultToLeanCompiler {
             .map(|argument| render_obj(argument, &self.environment_stack))
             .collect::<Result<Vec<_>, _>>()?;
         let rule_name = match source.theorem_id {
-            BuiltinTheoremId::RealLeastUpperBoundExists => {
-                "Litex.Rules.realLeastUpperBoundExists"
-            }
+            BuiltinTheoremId::RealLeastUpperBoundExists => "Litex.Rules.realLeastUpperBoundExists",
             BuiltinTheoremId::RealMemberLeLeastUpperBound => {
                 "Litex.Rules.realMemberLeLeastUpperBound"
             }
@@ -1466,10 +1464,8 @@ impl StmtResultToLeanCompiler {
             rendered_arguments.join(" "),
             requirement_proofs.join(" ")
         );
-        let proposition = self.render_fact_using_well_definedness_result(
-            conclusion_well_definedness,
-            conclusion,
-        )?;
+        let proposition = self
+            .render_fact_using_well_definedness_result(conclusion_well_definedness, conclusion)?;
 
         let [outer_store] = result.common.infers.store_fact_outputs.as_slice() else {
             return Err(
@@ -1484,9 +1480,7 @@ impl StmtResultToLeanCompiler {
             || !outer_store.inferred_fact_ids.is_empty()
             || !result.common.infers.rule_applications.is_empty()
         {
-            return Err(
-                "real-analysis builtin theorem changed its publication effects".into(),
-            );
+            return Err("real-analysis builtin theorem changed its publication effects".into());
         }
         let theorem_name = format!("__fact{}", self.next_fact_name_index);
         self.declarations.push(format!(
@@ -2250,6 +2244,26 @@ impl StmtResultToLeanCompiler {
         {
             return self.compile_let_obj_stmt_result_as_local_proof_steps(result, proof_step_index);
         }
+        if let StmtResult::Success(SuccessStmtResult::Definition(
+            SuccessDefinitionStmtResult::ObtainObjFromExistFact(result),
+        )) = result
+        {
+            return self
+                .compile_obtain_obj_from_exist_fact_stmt_result_as_local_proof_steps(
+                    result,
+                    proof_step_index,
+                );
+        }
+        if let StmtResult::Success(SuccessStmtResult::Definition(
+            SuccessDefinitionStmtResult::ObtainObjFromAtomicFact(result),
+        )) = result
+        {
+            return self
+                .compile_obtain_obj_from_atomic_fact_stmt_result_as_local_proof_steps(
+                    result,
+                    proof_step_index,
+                );
+        }
         if let Some(factual) = result.factual_success() {
             return self
                 .compile_fact_stmt_result_as_local_proof_step(factual, proof_step_index)
@@ -2640,14 +2654,32 @@ impl StmtResultToLeanCompiler {
                 return Err("local proof-step reused a FactId for a different proposition".into());
             }
         } else {
+            let has_defined_predicate_inference = result
+                .store
+                .infers
+                .rule_applications
+                .iter()
+                .any(|application| defined_predicate_infer_rule(&application.rule));
+            let has_direct_inference = result
+                .store
+                .infers
+                .rule_applications
+                .iter()
+                .any(|application| {
+                    infer_rule_has_direct_compiler_environment_consumer(&application.rule)
+                });
             if result.store.infers.store_fact_outputs.len() != 1
+                || (has_defined_predicate_inference && has_direct_inference)
                 || result
                     .store
                     .infers
                     .rule_applications
                     .iter()
                     .any(|application| {
-                        !infer_rule_has_direct_compiler_environment_consumer(&application.rule)
+                        !defined_predicate_infer_rule(&application.rule)
+                            && !infer_rule_has_direct_compiler_environment_consumer(
+                                &application.rule,
+                            )
                     })
             {
                 return Ok(None);
@@ -2722,20 +2754,33 @@ impl StmtResultToLeanCompiler {
             let inference_parent_certificate = inference_certificate
                 .map(|certificate| self.environment_stack.well_definedness.replace(certificate));
             let inference_compilation = (|| {
-                let allowed_sources = self
-                    .install_equality_chain_adjacent_projections_for_typed_inference(
-                        &source_fact,
-                        fact_id,
-                        &name,
+                if result
+                    .store
+                    .infers
+                    .rule_applications
+                    .iter()
+                    .any(|application| defined_predicate_infer_rule(&application.rule))
+                {
+                    self.compile_defined_predicate_inference_results_in_current_environment(
                         &result.store.infers,
+                        DefinedPredicateInferenceConclusionPublication::LocalProofExpression,
+                    )?;
+                } else {
+                    let allowed_sources = self
+                        .install_equality_chain_adjacent_projections_for_typed_inference(
+                            &source_fact,
+                            fact_id,
+                            &name,
+                            &result.store.infers,
+                            "local proof-step Result",
+                        )?;
+                    self.compile_typed_inference_results_as_local_have_statements(
+                        &result.store.infers,
+                        &allowed_sources,
+                        &mut lines,
                         "local proof-step Result",
                     )?;
-                self.compile_typed_inference_results_as_local_have_statements(
-                    &result.store.infers,
-                    &allowed_sources,
-                    &mut lines,
-                    "local proof-step Result",
-                )?;
+                }
                 validate_flattened_inferred_fact_ids_are_visible(
                     &result.store.infers,
                     &self.environment_stack,
@@ -2883,11 +2928,7 @@ fn validate_real_lub_existential(set: &Obj, conclusion: &Fact) -> bool {
     atomic_is_real_lub_certificate(set, &obj_for_bound_param_in_scope(binding), body)
 }
 
-fn validate_rational_between_existential(
-    left: &Obj,
-    right: &Obj,
-    conclusion: &Fact,
-) -> bool {
+fn validate_rational_between_existential(left: &Obj, right: &Obj, conclusion: &Fact) -> bool {
     let Fact::ExistFact(existential) = conclusion else {
         return false;
     };

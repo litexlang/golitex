@@ -109,7 +109,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                 fact.clone().into(),
                 "set-membership strategy: constructor membership decomposition".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifySetMembershipWithBuiltinStrategy),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::VerifySetMembershipWithBuiltinStrategy,
+                ),
                 children,
             )
             .into(),
@@ -319,7 +321,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                 fact.clone().into(),
                 "set-containment strategy: constructor containment decomposition".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifySubsetWithBuiltinStrategy),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::VerifySubsetWithBuiltinStrategy,
+                ),
                 children,
             )
             .into(),

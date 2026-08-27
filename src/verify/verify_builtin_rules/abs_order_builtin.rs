@@ -346,7 +346,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "abs: finite sum triangle inequality".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyAbsFiniteSumTriangle),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::TryVerifyAbsFiniteSumTriangle,
+                ),
                 vec![start_result, end_result, pointwise_result],
             ),
         )))
@@ -411,7 +413,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "abs: finite-set sum triangle inequality".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyAbsFiniteSetSumTriangle),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::TryVerifyAbsFiniteSetSumTriangle,
+                ),
                 vec![set_result, pointwise_result],
             ),
         )))
@@ -536,7 +540,7 @@ impl Runtime {
                         SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             atomic_fact.clone().into(),
                             rule,
-                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyAbsLowerBoundFromAbsCompare),
+                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyAbsLowerBoundFromAbsCompare01),
                             vec![r],
                         ),
                     )));
@@ -560,7 +564,7 @@ impl Runtime {
                             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                                 atomic_fact.clone().into(),
                                 rule,
-                                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyAbsLowerBoundFromAbsCompare),
+                                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyAbsLowerBoundFromAbsCompare02),
                                 vec![r, r_sign],
                             ),
                         )));
@@ -581,7 +585,9 @@ impl Runtime {
                 SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     atomic_fact.clone().into(),
                     rule,
-                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyAbsLowerBoundFromAbsCompare),
+                    BuiltinRuleEvidence::Uncatalogued(
+                        UncataloguedBuiltinRule::TryVerifyAbsLowerBoundFromAbsCompare03,
+                    ),
                     vec![r],
                 ),
             )));
@@ -600,7 +606,7 @@ impl Runtime {
                     SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         atomic_fact.clone().into(),
                         rule,
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyAbsLowerBoundFromAbsCompare),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyAbsLowerBoundFromAbsCompare04),
                         vec![r],
                     ),
                 )));
@@ -629,7 +635,7 @@ impl Runtime {
                     SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         atomic_fact.clone().into(),
                         rule,
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyAbsLowerBoundFromAbsCompare),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyAbsLowerBoundFromAbsCompare05),
                         vec![r, r_sign],
                     ),
                 )));
@@ -659,7 +665,7 @@ impl Runtime {
                         SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             atomic_fact.clone().into(),
                             rule,
-                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyAbsLowerBoundFromAbsCompare),
+                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyAbsLowerBoundFromAbsCompare06),
                             vec![r, r_sign],
                         ),
                     )));
@@ -685,7 +691,7 @@ impl Runtime {
                     SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         atomic_fact.clone().into(),
                         rule,
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyAbsLowerBoundFromAbsCompare),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyAbsLowerBoundFromAbsCompare07),
                         vec![r, r_sign],
                     ),
                 )));

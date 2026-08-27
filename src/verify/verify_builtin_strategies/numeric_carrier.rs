@@ -35,7 +35,7 @@ impl Runtime {
                         fact.clone().into(),
                         "numeric-carrier strategy: cardinality of a structurally finite set"
                             .to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyNumericCarrierWithBuiltinStrategy),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyNumericCarrierWithBuiltinStrategy01),
                         children,
                     )
                     .into(),
@@ -52,7 +52,7 @@ impl Runtime {
                         fact.clone().into(),
                         "numeric-carrier strategy: finite extremum source is real-valued"
                             .to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyNumericCarrierWithBuiltinStrategy),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyNumericCarrierWithBuiltinStrategy02),
                         children,
                     )
                     .into(),
@@ -129,7 +129,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                 fact.clone().into(),
                 format!("numeric-carrier strategy: structural closure in {target}"),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyNumericCarrierWithBuiltinStrategy),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::VerifyNumericCarrierWithBuiltinStrategy03,
+                ),
                 children,
             )
             .into(),

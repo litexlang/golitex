@@ -471,7 +471,9 @@ impl Runtime {
                 SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     nonempty.into(),
                     "nonempty literal index set".to_string(),
-                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIndexSetNonemptyPremise),
+                    BuiltinRuleEvidence::Uncatalogued(
+                        UncataloguedBuiltinRule::VerifyIndexSetNonemptyPremise,
+                    ),
                     Vec::new(),
                 )
                 .into(),

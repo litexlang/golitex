@@ -93,7 +93,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "equality: (-1)^(2*m+1) = -1 for m in N".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyMinusOneOddNaturalPower),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::TryVerifyMinusOneOddNaturalPower,
+                ),
                 vec![m_result],
             )
             .into(),
@@ -265,7 +267,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "equality: 0^x = 0 for x > 0".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyZeroPowPositiveExponentIdentity),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::TryVerifyZeroPowPositiveExponentIdentity,
+                ),
                 positive_steps,
             )
             .into(),

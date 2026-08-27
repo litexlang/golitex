@@ -19,7 +19,7 @@ impl Runtime {
                     SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                         atomic_fact.clone().into(),
                         "additive sign strategy: normalized order goal".to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyAdditiveSignWithBuiltinStrategy),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyAdditiveSignWithBuiltinStrategy01),
                         vec![normalized_result],
                     )
                     .into(),
@@ -40,7 +40,7 @@ impl Runtime {
                 None => SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                     atomic_fact.clone().into(),
                     strategy_label,
-                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyAdditiveSignWithBuiltinStrategy),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyAdditiveSignWithBuiltinStrategy02),
                     children,
                 ),
             };
@@ -71,7 +71,7 @@ impl Runtime {
                     SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                         atomic_fact.clone().into(),
                         "additive sign strategy: nonnegative summands".to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyAdditiveSignWithBuiltinStrategy),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyAdditiveSignWithBuiltinStrategy03),
                         vec![left, right],
                     )
                     .into(),
@@ -91,7 +91,7 @@ impl Runtime {
                             atomic_fact.clone().into(),
                             "additive sign strategy: one positive and one nonnegative summand"
                                 .to_string(),
-                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyAdditiveSignWithBuiltinStrategy),
+                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyAdditiveSignWithBuiltinStrategy04),
                             children,
                         )
                         .into(),

@@ -1503,9 +1503,7 @@ pub(super) fn set_builtin_rule_name(rule: SetBuiltinRule) -> &'static str {
         SetBuiltinRule::SetMinusEmptyRight => "SetMinusEmptyRight",
         SetBuiltinRule::SetMinusEmptyLeft => "SetMinusEmptyLeft",
         SetBuiltinRule::SetMinusFiniteLeft => "SetMinusFiniteLeft",
-        SetBuiltinRule::SetMinusInfiniteOfInfiniteFinite => {
-            "SetMinusInfiniteOfInfiniteFinite"
-        }
+        SetBuiltinRule::SetMinusInfiniteOfInfiniteFinite => "SetMinusInfiniteOfInfiniteFinite",
         SetBuiltinRule::SetMinusIntersectDeMorgan => "SetMinusIntersectDeMorgan",
         SetBuiltinRule::SetMinusIntersectSelf => "SetMinusIntersectSelf",
         SetBuiltinRule::SetMinusRecoverSubset => "SetMinusRecoverSubset",

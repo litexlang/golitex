@@ -412,7 +412,9 @@ impl Runtime {
                     equal_fact.clone().into(),
                     "equality: finite-set sum substitution along a uniquely-covered index set"
                         .to_string(),
-                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyFiniteSetSumSubstitution),
+                    BuiltinRuleEvidence::Uncatalogued(
+                        UncataloguedBuiltinRule::TryVerifyFiniteSetSumSubstitution,
+                    ),
                     subgoals,
                 )
                 .into(),

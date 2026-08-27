@@ -61,7 +61,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "prime by trial-division definition".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyPrimeFactByDefinition),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::VerifyPrimeFactByDefinition,
+                ),
                 subgoals,
             )
             .into(),
@@ -91,7 +93,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "coprime by natural gcd-one definition".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyCoprimeFactByDefinition),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::VerifyCoprimeFactByDefinition,
+                ),
                 subgoals,
             )
             .into(),
@@ -121,7 +125,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "dvd by zero-remainder and integer-multiple definition".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyDvdFactByDefinition),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::VerifyDvdFactByDefinition,
+                ),
                 subgoals,
             )
             .into(),
@@ -153,7 +159,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "choice function by pointwise membership definition".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyChoiceFunctionForFactByDefinition),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::VerifyChoiceFunctionForFactByDefinition,
+                ),
                 subgoals,
             )
             .into(),
@@ -236,7 +244,9 @@ impl Runtime {
             (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 subset_fact.clone().into(),
                 "subset by definition (forall x in left: x in right)".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifySubsetFactByMembershipForallDefinition),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::VerifySubsetFactByMembershipForallDefinition,
+                ),
                 Vec::new(),
             ))
             .into(),
@@ -274,7 +284,9 @@ impl Runtime {
             (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 superset_fact.clone().into(),
                 "superset by definition (forall x in right: x in left)".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifySupersetFactByMembershipForallDefinition),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::VerifySupersetFactByMembershipForallDefinition,
+                ),
                 Vec::new(),
             ))
             .into(),

@@ -368,7 +368,8 @@ pub use crate::result::{
     ClosedNumericNonmembershipBuiltinRuleEvidence,
     ComplexAlgebraicNormalizationBuiltinRuleEvidence,
     ComplexArithmeticMembershipClosureBuiltinRule, DisjunctionIntroductionBuiltinRuleEvidence,
-    ExtremaBuiltinRule, FiniteSetBuiltinRule, FunctionApplicationReturnMembershipBuiltinRuleEvidence,
+    ExtremaBuiltinRule, FiniteSetBuiltinRule,
+    FunctionApplicationReturnMembershipBuiltinRuleEvidence,
     FunctionSetMembershipBuiltinRuleEvidence, IntegerMembershipClosureBuiltinRule,
     IntegerRangeSumPointwiseOrderBuiltinRuleEvidence,
     IntegralPolynomialNormalizationBuiltinRuleEvidence, KnownEqualityBuiltinRuleEvidence,
@@ -690,9 +691,9 @@ pub use crate::common::keywords::INTERSECT;
 pub use crate::common::keywords::INTERVAL_LITERAL_PREFIX;
 pub use crate::common::keywords::IS_CART;
 pub use crate::common::keywords::IS_FINITE_SET;
+pub use crate::common::keywords::IS_NONEMPTY_SET;
 pub use crate::common::keywords::IS_REAL_GREATEST_LOWER_BOUND;
 pub use crate::common::keywords::IS_REAL_LEAST_UPPER_BOUND;
-pub use crate::common::keywords::IS_NONEMPTY_SET;
 pub use crate::common::keywords::IS_SET;
 pub use crate::common::keywords::IS_TUPLE;
 pub use crate::common::keywords::LCM;

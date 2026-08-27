@@ -2687,6 +2687,7 @@ impl StmtResultJsonV2 {
                 match &result.evidence {
                     SuccessBuiltinFactProofEvidenceResult::Typed(evidence) => object(vec![
                         string_field("kind", "Typed"),
+                        string_field("rule_id", evidence.rule_id()),
                         ("value".to_string(), self.builtin_evidence(evidence)),
                     ]),
                 },
@@ -3063,13 +3064,11 @@ impl StmtResultJsonV2 {
             BuiltinRuleEvidence::TupleLiteralShape => {
                 object(vec![string_field("kind", "TupleLiteralShape")])
             }
-            BuiltinRuleEvidence::AbsoluteValue(rule) => {
-                object(vec![
-                    string_field("kind", "AbsoluteValue"),
-                    string_field("rule", absolute_value_builtin_rule_name(*rule)),
-                    string_field("rule_id", rule.rule_id()),
-                ])
-            }
+            BuiltinRuleEvidence::AbsoluteValue(rule) => object(vec![
+                string_field("kind", "AbsoluteValue"),
+                string_field("rule", absolute_value_builtin_rule_name(*rule)),
+                string_field("rule_id", rule.rule_id()),
+            ]),
             BuiltinRuleEvidence::Extrema(rule) => object(vec![
                 string_field("kind", "Extrema"),
                 string_field("rule", extrema_builtin_rule_name(*rule)),

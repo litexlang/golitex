@@ -62,7 +62,9 @@ impl Runtime {
                 SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     goal.clone().into(),
                     "set-builder membership transport through one unfolded definition".to_string(),
-                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifySetBuilderMembershipDefinitionTransport),
+                    BuiltinRuleEvidence::Uncatalogued(
+                        UncataloguedBuiltinRule::TryVerifySetBuilderMembershipDefinitionTransport01,
+                    ),
                     vec![membership_result],
                 )
                 .into(),
@@ -162,7 +164,9 @@ impl Runtime {
                     goal.clone().into(),
                     "set-builder membership transport from a known universal named-set membership"
                         .to_string(),
-                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifySetBuilderMembershipDefinitionTransport),
+                    BuiltinRuleEvidence::Uncatalogued(
+                        UncataloguedBuiltinRule::TryVerifySetBuilderMembershipDefinitionTransport02,
+                    ),
                     vec![membership_result],
                 )
                 .into(),
@@ -267,7 +271,7 @@ impl Runtime {
                             goal.clone().into(),
                             "universal set-builder membership eliminates to its defining fact"
                                 .to_string(),
-                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyAtomicFactFromKnownSetBuilderMembership),
+                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyAtomicFactFromKnownSetBuilderMembership01),
                             vec![membership_result],
                         )
                         .into(),
@@ -349,7 +353,7 @@ impl Runtime {
                         goal.clone().into(),
                         "set-builder membership eliminates to its instantiated defining fact"
                             .to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyAtomicFactFromKnownSetBuilderMembership),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyAtomicFactFromKnownSetBuilderMembership02),
                         vec![membership_result],
                     )
                     .into(),
@@ -408,7 +412,9 @@ impl Runtime {
                 SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "union membership from complete left-or-right membership premise".to_string(),
-                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactInUnionByMemberOfEitherSide),
+                    BuiltinRuleEvidence::Uncatalogued(
+                        UncataloguedBuiltinRule::VerifyInFactInUnionByMemberOfEitherSide,
+                    ),
                     vec![premise_result],
                 )
                 .into(),
@@ -464,7 +470,9 @@ impl Runtime {
                 SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "intersection membership from complete conjunction premise".to_string(),
-                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactInIntersectByMemberOfBothSides),
+                    BuiltinRuleEvidence::Uncatalogued(
+                        UncataloguedBuiltinRule::VerifyInFactInIntersectByMemberOfBothSides,
+                    ),
                     vec![premise_result],
                 )
                 .into(),
@@ -581,7 +589,9 @@ impl Runtime {
                 SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "set-minus membership from complete conjunction premise".to_string(),
-                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactInSetMinusByMemberAndNonMember),
+                    BuiltinRuleEvidence::Uncatalogued(
+                        UncataloguedBuiltinRule::VerifyInFactInSetMinusByMemberAndNonMember,
+                    ),
                     vec![premise_result],
                 )
                 .into(),
@@ -609,7 +619,9 @@ impl Runtime {
                     in_fact.clone().into(),
                     "big_union membership: an element of a member set is in the family union"
                         .to_string(),
-                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactInBigUnionByMemberWitness),
+                    BuiltinRuleEvidence::Uncatalogued(
+                        UncataloguedBuiltinRule::VerifyInFactInBigUnionByMemberWitness01,
+                    ),
                     vec![exist_result],
                 )
                 .into(),
@@ -647,7 +659,7 @@ impl Runtime {
                         in_fact.clone().into(),
                         "big_union membership: an element of a member set is in the family union"
                             .to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactInBigUnionByMemberWitness),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactInBigUnionByMemberWitness02),
                         vec![member_set_result, element_result],
                     )
                     .into(),
@@ -761,7 +773,7 @@ impl Runtime {
                     SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         in_fact.clone().into(),
                         "index_union membership from an indexed fiber witness".to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactInIndexUnionByIndexWitness),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactInIndexUnionByIndexWitness01),
                         vec![exist_result],
                     )
                     .into(),
@@ -788,7 +800,9 @@ impl Runtime {
                 SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     index_member.clone().into(),
                     "index is listed in the literal index set".to_string(),
-                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactInIndexUnionByIndexWitness),
+                    BuiltinRuleEvidence::Uncatalogued(
+                        UncataloguedBuiltinRule::VerifyInFactInIndexUnionByIndexWitness02,
+                    ),
                     Vec::new(),
                 )
                 .into()
@@ -812,7 +826,7 @@ impl Runtime {
                     SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         in_fact.clone().into(),
                         "index_union membership from an indexed fiber witness".to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactInIndexUnionByIndexWitness),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactInIndexUnionByIndexWitness03),
                         vec![index_result, fiber_result],
                     )
                     .into(),
@@ -894,7 +908,9 @@ impl Runtime {
                     in_fact.clone().into(),
                     "index_intersect membership in the ambient set and every indexed fiber"
                         .to_string(),
-                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactInIndexIntersectByPointwiseMembership),
+                    BuiltinRuleEvidence::Uncatalogued(
+                        UncataloguedBuiltinRule::VerifyInFactInIndexIntersectByPointwiseMembership01,
+                    ),
                     evidence,
                 )
                 .into(),
@@ -917,7 +933,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 "index_intersect membership in the ambient set and every indexed fiber".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactInIndexIntersectByPointwiseMembership),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::VerifyInFactInIndexIntersectByPointwiseMembership02,
+                ),
                 vec![ambient_result, forall_result],
             )
             .into(),
@@ -942,7 +960,9 @@ impl Runtime {
                     in_fact.clone().into(),
                     "replacement membership: a relation witness is in the replacement set"
                         .to_string(),
-                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactInReplacementByRelationWitness),
+                    BuiltinRuleEvidence::Uncatalogued(
+                        UncataloguedBuiltinRule::VerifyInFactInReplacementByRelationWitness01,
+                    ),
                     vec![exist_result],
                 )
                 .into(),
@@ -991,7 +1011,7 @@ impl Runtime {
                         in_fact.clone().into(),
                         "replacement membership: a relation witness is in the replacement set"
                             .to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactInReplacementByRelationWitness),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactInReplacementByRelationWitness02),
                         vec![preimage_result, relation_result],
                     )
                     .into(),
@@ -1177,7 +1197,9 @@ impl Runtime {
                 in_fact.clone().into(),
                 "fn_range membership: a well-defined function application is in the function range"
                     .to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactFnApplicationInFnRange),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::VerifyInFactFnApplicationInFnRange,
+                ),
                 Vec::new(),
             )
             .into(),
@@ -1218,7 +1240,9 @@ impl Runtime {
                 SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     subset_fact.clone().into(),
                     "structural subset".to_string(),
-                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactFnRangeInPowerSet),
+                    BuiltinRuleEvidence::Uncatalogued(
+                        UncataloguedBuiltinRule::VerifyInFactFnRangeInPowerSet01,
+                    ),
                     Vec::new(),
                 )
                 .into();
@@ -1232,7 +1256,9 @@ impl Runtime {
                 in_fact.clone().into(),
                 "fn_range power_set membership: function range is contained in the codomain"
                     .to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactFnRangeInPowerSet),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::VerifyInFactFnRangeInPowerSet02,
+                ),
                 vec![subset_result],
             )
             .into(),
@@ -1269,7 +1295,9 @@ impl Runtime {
                 SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     subset_fact.clone().into(),
                     "structural subset".to_string(),
-                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactInPowerSetViaSubset),
+                    BuiltinRuleEvidence::Uncatalogued(
+                        UncataloguedBuiltinRule::VerifyInFactInPowerSetViaSubset,
+                    ),
                     Vec::new(),
                 )
                 .into();
@@ -1326,7 +1354,9 @@ impl Runtime {
                 in_fact.clone().into(),
                 "general_cart membership: function carrier and named pointwise choice property"
                     .to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactInGeneralCartByDefiningFacts),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::VerifyInFactInGeneralCartByDefiningFacts,
+                ),
                 vec![fn_set_result, choice_result],
             )
             .into(),
@@ -1510,7 +1540,7 @@ impl Runtime {
                 carrier_membership.into(),
                 "dependent struct constructor: each literal tuple field has its instantiated carrier"
                     .to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactByStructObj),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactByStructObj01),
                 field_results,
             )
             .into()
@@ -1565,7 +1595,7 @@ impl Runtime {
         Ok(SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
             in_fact.clone().into(),
             "struct membership: element is in the named structure carrier and satisfies struct equivalent facts".to_string(),
-            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactByStructObj),
+            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactByStructObj02),
             step_results,
         )
         .into())
@@ -1619,7 +1649,9 @@ impl Runtime {
                 SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     rule_name.to_string(),
-                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::MaybeVerifyInFactFiniteSetExtremum),
+                    BuiltinRuleEvidence::Uncatalogued(
+                        UncataloguedBuiltinRule::MaybeVerifyInFactFiniteSetExtremum01,
+                    ),
                     Vec::new(),
                 )
                 .into(),
@@ -1648,7 +1680,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 "finite-set extremum: member of a standard numeric superset".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::MaybeVerifyInFactFiniteSetExtremum),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::MaybeVerifyInFactFiniteSetExtremum02,
+                ),
                 type_results,
             )
             .into(),
@@ -1824,7 +1858,9 @@ impl Runtime {
                 SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "membership through a known direct set inclusion".to_string(),
-                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactByKnownDirectSuperset),
+                    BuiltinRuleEvidence::Uncatalogued(
+                        UncataloguedBuiltinRule::VerifyInFactByKnownDirectSuperset,
+                    ),
                     vec![membership_result, inclusion_result],
                 )
                 .into(),

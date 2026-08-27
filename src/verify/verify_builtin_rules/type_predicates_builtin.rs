@@ -24,7 +24,7 @@ impl Runtime {
                         SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             is_nonempty_set_fact.clone().into(),
                             "indexed union is nonempty from an existing nonempty fiber".to_string(),
-                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsNonemptySetFactWithBuiltinRules),
+                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsNonemptySetFactWithBuiltinRules01),
                             vec![result],
                         )
                         .into(),
@@ -50,7 +50,9 @@ impl Runtime {
                     is_nonempty_set_fact.clone().into(),
                     SuccessInferResult::new(),
                     "nonempty_set_from_not_equal_empty_set".to_string(),
-                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsNonemptySetFactWithBuiltinRules),
+                    BuiltinRuleEvidence::Uncatalogued(
+                        UncataloguedBuiltinRule::VerifyIsNonemptySetFactWithBuiltinRules02,
+                    ),
                     vec![not_equal_result],
                 )
                 .into(),
@@ -123,7 +125,7 @@ impl Runtime {
                     SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         is_nonempty_set_fact.clone().into(),
                         "closed_range_nonempty_when_start_le_end".to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsNonemptySetFactWithBuiltinRules),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsNonemptySetFactWithBuiltinRules03),
                         vec![result],
                     )
                     .into(),
@@ -147,7 +149,7 @@ impl Runtime {
                     SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         is_nonempty_set_fact.clone().into(),
                         "range_nonempty_when_start_lt_end".to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsNonemptySetFactWithBuiltinRules),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsNonemptySetFactWithBuiltinRules04),
                         vec![result],
                     )
                     .into(),
@@ -194,7 +196,7 @@ impl Runtime {
                     SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         is_nonempty_set_fact.clone().into(),
                         rule.to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsNonemptySetFactWithBuiltinRules),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsNonemptySetFactWithBuiltinRules05),
                         vec![result],
                     )
                     .into(),
@@ -221,7 +223,7 @@ impl Runtime {
                     (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         is_nonempty_set_fact.clone().into(),
                         rule.to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsNonemptySetFactWithBuiltinRules),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsNonemptySetFactWithBuiltinRules06),
                         Vec::new(),
                     ))
                     .into(),
@@ -278,7 +280,7 @@ impl Runtime {
                         SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             is_nonempty_set_fact.clone().into(),
                             "union_is_nonempty_set_from_complete_side_disjunction".to_string(),
-                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsNonemptySetFactWithBuiltinRules),
+                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsNonemptySetFactWithBuiltinRules07),
                             vec![premise_result],
                         )
                         .into(),
@@ -317,7 +319,7 @@ impl Runtime {
                                 .join(", "),
                             cart.to_string()
                         ),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsNonemptySetFactWithBuiltinRules),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsNonemptySetFactWithBuiltinRules08),
                         Vec::new(),
                     ))
                     .into(),
@@ -338,7 +340,7 @@ impl Runtime {
                         (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             is_nonempty_set_fact.clone().into(),
                             "fn_set_is_nonempty_when_ret_set_is_nonempty".to_string(),
-                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsNonemptySetFactWithBuiltinRules),
+                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsNonemptySetFactWithBuiltinRules09),
                             Vec::new(),
                         ))
                         .into(),
@@ -362,7 +364,7 @@ impl Runtime {
                         (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             is_nonempty_set_fact.clone().into(),
                             "fn_set_is_nonempty_when_ret_set_is_nonempty".to_string(),
-                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsNonemptySetFactWithBuiltinRules),
+                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsNonemptySetFactWithBuiltinRules10),
                             Vec::new(),
                         ))
                         .into(),
@@ -388,7 +390,7 @@ impl Runtime {
                             is_nonempty_set_fact.clone().into(),
                             SuccessInferResult::new(),
                             "finite_seq_set_is_nonempty_when_length_is_zero".to_string(),
-                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsNonemptySetFactWithBuiltinRules),
+                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsNonemptySetFactWithBuiltinRules11),
                             vec![length_zero],
                         )
                         .into(),
@@ -408,7 +410,7 @@ impl Runtime {
                         (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             is_nonempty_set_fact.clone().into(),
                             "finite_seq_set_is_nonempty_when_codomain_set_is_nonempty".to_string(),
-                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsNonemptySetFactWithBuiltinRules),
+                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsNonemptySetFactWithBuiltinRules12),
                             Vec::new(),
                         ))
                         .into(),
@@ -432,7 +434,7 @@ impl Runtime {
                         (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             is_nonempty_set_fact.clone().into(),
                             "seq_set_is_nonempty_when_codomain_set_is_nonempty".to_string(),
-                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsNonemptySetFactWithBuiltinRules),
+                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsNonemptySetFactWithBuiltinRules13),
                             Vec::new(),
                         ))
                         .into(),
@@ -456,7 +458,7 @@ impl Runtime {
                         (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             is_nonempty_set_fact.clone().into(),
                             "matrix_set_is_nonempty_when_codomain_set_is_nonempty".to_string(),
-                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsNonemptySetFactWithBuiltinRules),
+                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsNonemptySetFactWithBuiltinRules14),
                             Vec::new(),
                         ))
                         .into(),
@@ -488,7 +490,7 @@ impl Runtime {
                                 SuccessInferResult::new(),
                                 "nonempty named function space from known equality and intrinsically nonempty codomain"
                                     .to_string(),
-                                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsNonemptySetFactWithBuiltinRules),
+                                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsNonemptySetFactWithBuiltinRules15),
                                 Vec::new(),
                             )
                             .into());
@@ -512,7 +514,7 @@ impl Runtime {
                                 is_nonempty_set_fact.clone().into(),
                                 SuccessInferResult::new(),
                                 "nonempty_set_from_equal_structural_set".to_string(),
-                                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsNonemptySetFactWithBuiltinRules),
+                                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsNonemptySetFactWithBuiltinRules16),
                                 vec![equal_result],
                             )
                             .into(),
@@ -551,7 +553,9 @@ impl Runtime {
                 is_nonempty_set_fact.clone().into(),
                 SuccessInferResult::new(),
                 "nonempty_finite_set_from_positive_finite_set_size".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNonemptyFiniteSetFromPositiveFiniteSetSize),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::TryVerifyNonemptyFiniteSetFromPositiveFiniteSetSize,
+                ),
                 results,
             )
             .into(),
@@ -585,7 +589,7 @@ impl Runtime {
                                 is_finite_set_fact.clone().into(),
                                 "indexed union is finite from finite domain and pointwise finite fibers"
                                     .to_string(),
-                                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsFiniteSetFactWithBuiltinRules),
+                                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsFiniteSetFactWithBuiltinRules01),
                                 vec![domain_result, pointwise_result],
                             )
                             .into(),
@@ -607,7 +611,7 @@ impl Runtime {
                     SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         is_finite_set_fact.clone().into(),
                         "indexed intersection is finite when its ambient set is finite".to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsFiniteSetFactWithBuiltinRules),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsFiniteSetFactWithBuiltinRules02),
                         vec![ambient_result],
                     )
                     .into(),
@@ -637,7 +641,7 @@ impl Runtime {
                                 is_finite_set_fact.clone().into(),
                                 "nonempty indexed intersection is finite from one finite fiber"
                                     .to_string(),
-                                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsFiniteSetFactWithBuiltinRules),
+                                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsFiniteSetFactWithBuiltinRules03),
                                 vec![nonempty_result, fiber_result],
                             )
                             .into(),
@@ -698,7 +702,7 @@ impl Runtime {
                     (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         is_finite_set_fact.clone().into(),
                         "set-builder over a finite base is finite".to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsFiniteSetFactWithBuiltinRules),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsFiniteSetFactWithBuiltinRules04),
                         vec![base_result],
                     ))
                     .into(),
@@ -728,7 +732,7 @@ impl Runtime {
                         (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             is_finite_set_fact.clone().into(),
                             "fn_range_is_finite_set_when_domain_is_finite_set".to_string(),
-                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsFiniteSetFactWithBuiltinRules),
+                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsFiniteSetFactWithBuiltinRules05),
                             vec![domain_result],
                         ))
                         .into(),
@@ -751,10 +755,10 @@ impl Runtime {
                     is_finite_set_fact.line_file.clone(),
                 )
                 .into();
-                let left_result = self
-                    .verify_atomic_fact_as_builtin_rule_premise(&left_finite, builtin_state)?;
-                let right_result = self
-                    .verify_atomic_fact_as_builtin_rule_premise(&right_finite, builtin_state)?;
+                let left_result =
+                    self.verify_atomic_fact_as_builtin_rule_premise(&left_finite, builtin_state)?;
+                let right_result =
+                    self.verify_atomic_fact_as_builtin_rule_premise(&right_finite, builtin_state)?;
                 if !left_result.is_success() || !right_result.is_success() {
                     return Ok((UnknownGenericStmtResult::new()).into());
                 }
@@ -783,10 +787,10 @@ impl Runtime {
                     is_finite_set_fact.line_file.clone(),
                 )
                 .into();
-                let left_result = self
-                    .verify_atomic_fact_as_builtin_rule_premise(&left_finite, builtin_state)?;
-                let right_result = self
-                    .verify_atomic_fact_as_builtin_rule_premise(&right_finite, builtin_state)?;
+                let left_result =
+                    self.verify_atomic_fact_as_builtin_rule_premise(&left_finite, builtin_state)?;
+                let right_result =
+                    self.verify_atomic_fact_as_builtin_rule_premise(&right_finite, builtin_state)?;
                 if !left_result.is_success() || !right_result.is_success() {
                     return Ok((UnknownGenericStmtResult::new()).into());
                 }
@@ -873,7 +877,7 @@ impl Runtime {
                     (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         is_finite_set_fact.clone().into(),
                         "cart_is_finite_set_when_all_factors_are_finite_set".to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsFiniteSetFactWithBuiltinRules),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsFiniteSetFactWithBuiltinRules06),
                         step_results,
                     ))
                     .into(),
@@ -1016,7 +1020,7 @@ impl Runtime {
                     (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         not_is_nonempty_set_fact.clone().into(),
                         "list_set_empty".to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyNotIsNonemptySetFactWithBuiltinRules),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyNotIsNonemptySetFactWithBuiltinRules01),
                         Vec::new(),
                     ))
                     .into(),
@@ -1038,7 +1042,9 @@ impl Runtime {
                     not_is_nonempty_set_fact.clone().into(),
                     SuccessInferResult::new(),
                     "finite_set_size_zero_is_not_nonempty".to_string(),
-                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyNotIsNonemptySetFactWithBuiltinRules),
+                    BuiltinRuleEvidence::Uncatalogued(
+                        UncataloguedBuiltinRule::VerifyNotIsNonemptySetFactWithBuiltinRules02,
+                    ),
                     vec![size_zero_result],
                 )
                 .into(),
@@ -1056,7 +1062,9 @@ impl Runtime {
                 (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     not_is_nonempty_set_fact.clone().into(),
                     "not_nonempty_set_from_equal_empty_set".to_string(),
-                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyNotIsNonemptySetFactWithBuiltinRules),
+                    BuiltinRuleEvidence::Uncatalogued(
+                        UncataloguedBuiltinRule::VerifyNotIsNonemptySetFactWithBuiltinRules03,
+                    ),
                     Vec::new(),
                 ))
                 .into(),
@@ -1078,7 +1086,7 @@ impl Runtime {
                     (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         not_is_nonempty_set_fact.clone().into(),
                         "closed_range_empty_when_end_lt_start".to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyNotIsNonemptySetFactWithBuiltinRules),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyNotIsNonemptySetFactWithBuiltinRules04),
                         Vec::new(),
                     ))
                     .into(),
@@ -1100,7 +1108,7 @@ impl Runtime {
                     (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         not_is_nonempty_set_fact.clone().into(),
                         "range_empty_when_end_le_start".to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyNotIsNonemptySetFactWithBuiltinRules),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyNotIsNonemptySetFactWithBuiltinRules05),
                         Vec::new(),
                     ))
                     .into(),
@@ -1142,7 +1150,9 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 conclusion.clone().into(),
                 label.to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyGeneralCartNonemptyByChoiceExplicit),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::VerifyGeneralCartNonemptyByChoiceExplicit,
+                ),
                 vec![requirement_result],
             )
             .into(),
