@@ -263,7 +263,7 @@ impl Runtime {
         })
     }
 
-    pub(crate) fn verify_and_store_fact_wd_result(
+    pub fn verify_and_store_fact_wd_result(
         &mut self,
         proposition: &Fact,
         verify_state: &VerifyState,

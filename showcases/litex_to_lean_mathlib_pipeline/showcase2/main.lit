@@ -1,7 +1,4 @@
-# Real-sequence completeness pipeline.
-#
-# The theorem in this file is deliberately restricted to `seq(R)`: a Cauchy
-# sequence need not converge in an arbitrary metric space.
+# Real-sequence definitions for the Litex -> Lean -> Mathlib pipeline.
 
 # From index n0 onward, every term lies within epsilon of L.
 prop is_sequence_tail_close_to_limit(a seq(R), L R, epsilon R+, n0 N+):
@@ -32,12 +29,9 @@ prop is_cauchy_sequence(a seq(R)):
     forall epsilon R+:
         exist n0 N+ st {$is_cauchy_tail(a, epsilon, n0)}
 
-# Sequential completeness is discharged by the verifier's typed real-only
-# completeness certificate; the generated Lean proof calls the Mathlib-backed
-# rule in `Litex.Rules`.
-thm cauchy_sequence_converges:
-    ? forall a seq(R):
-        $is_cauchy_sequence(a)
-        =>:
-            $is_convergent_sequence(a)
-    by thm real_cauchy_sequence_converges(a) => $is_convergent_sequence(a)
+# Do not add an unproved assumption, unchecked step, or reserved verifier rule.
+# Cauchy completeness of builtin `R` needs an independent completeness
+# foundation (for example a constructive definition of `R` or a proved least
+# upper bound theorem). The current Litex foundation provides neither. The
+# handwritten Mathlib layer proves the native counterpart from Mathlib's
+# `CompleteSpace R` theorem without feeding that result back into the verifier.

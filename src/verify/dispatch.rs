@@ -40,6 +40,17 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let result = self.verify_fact_allow_unknown(fact, verify_state)?;
+        let result = match fact {
+            // Direct atomic submissions otherwise carry only the generic
+            // unknown result, so enrich that existing result without running a
+            // second proof search. Composite verifiers already own their
+            // failure structure; projecting their children here would mutate
+            // the observable result and repeat verification.
+            Fact::AtomicFact(_) => {
+                self.structured_unknown_result_for_failed_fact(fact, verify_state, result)?
+            }
+            _ => result,
+        };
 
         if result.is_unknown() {
             let fact_owned = fact.clone();

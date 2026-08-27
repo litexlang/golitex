@@ -152,11 +152,6 @@ fn builtin_theorem_rejects_arity_shape_and_qualified_names() {
             "release thm M::finite_set_has_bijective_index({})",
             "cannot use keyword as name: finite_set_has_bijective_index",
         ),
-        (
-            "real completeness arity",
-            "release thm real_cauchy_sequence_converges()",
-            "expects 1 argument(s), but got 0",
-        ),
     ];
 
     for (label, source, expected) in cases {
@@ -164,55 +159,6 @@ fn builtin_theorem_rejects_arity_shape_and_qualified_names() {
         assert!(!succeeded, "{label} should fail:\n{output}");
         assert!(output.contains(expected), "{label}:\n{output}");
     }
-}
-
-#[test]
-fn real_completeness_rejects_a_nonreal_sequence_and_does_not_leak() {
-    let definitions = r#"
-prop is_sequence_tail_close_to_limit(a seq(R), L R, epsilon R+, n0 N+):
-    forall n N+:
-        n >= n0
-        =>:
-            abs(a(n) - L) < epsilon
-prop converges_to(a seq(R), L R):
-    forall epsilon R+:
-        exist n0 N+ st {$is_sequence_tail_close_to_limit(a, L, epsilon, n0)}
-prop is_convergent_sequence(a seq(R)):
-    exist L R st {$converges_to(a, L)}
-prop is_cauchy_tail(a seq(R), epsilon R+, n0 N+):
-    forall m, n N+:
-        m >= n0
-        n >= n0
-        =>:
-            abs(a(m) - a(n)) < epsilon
-prop is_cauchy_sequence(a seq(R)):
-    forall epsilon R+:
-        exist n0 N+ st {$is_cauchy_tail(a, epsilon, n0)}
-have q seq(Q)
-"#;
-    let mut runtime = Runtime::default();
-    runtime.start_isolated_source("real_completeness_wrong_carrier");
-    let (setup_results, setup_error) = execute_source(definitions, &mut runtime);
-    let (setup_succeeded, setup_output) = render_run_output(&runtime, &setup_results, &setup_error);
-    assert!(setup_succeeded, "setup should succeed:\n{setup_output}");
-    let (results, error) = execute_source(
-        "release thm real_cauchy_sequence_converges(q)",
-        &mut runtime,
-    );
-    let (succeeded, output) = render_run_output(&runtime, &results, &error);
-    assert!(
-        !succeeded,
-        "a rational-valued sequence must fail:\n{output}"
-    );
-    assert!(
-        output.contains("requires that the argument belongs to seq(R)"),
-        "{output}"
-    );
-    assert!(
-        !runtime
-            .cache_known_facts_contains("$is_convergent_sequence(q)")
-            .0
-    );
 }
 
 #[test]
@@ -371,7 +317,6 @@ fn builtin_theorem_names_are_reserved_and_normal_theorems_still_fall_back() {
     for name in [
         "subset_of_finite_set_is_finite",
         "finite_set_has_bijective_index",
-        "real_cauchy_sequence_converges",
     ] {
         let source = format!("have {name} R");
         let (_, succeeded, output) = run_source(&source, name, false);
@@ -380,6 +325,16 @@ fn builtin_theorem_names_are_reserved_and_normal_theorems_still_fall_back() {
             "the builtin theorem name `{name}` should be reserved:\n{output}"
         );
     }
+
+    let (_, succeeded, output) = run_source(
+        "have real_cauchy_sequence_converges R",
+        "removed_real_completeness_builtin_name",
+        false,
+    );
+    assert!(
+        succeeded,
+        "the removed completeness builtin name must be an ordinary identifier:\n{output}"
+    );
 
     let ordinary = r#"
 thm local_reflexivity:

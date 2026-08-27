@@ -4,7 +4,7 @@ use std::fmt;
 /// source formatter for bound symbols. Contract checks compare the resulting
 /// alpha-readable source while Result/compiler logic continues to use the
 /// original SymbolIds structurally.
-pub(crate) fn without_bound_symbol_display_ids(source: &str) -> String {
+pub fn without_bound_symbol_display_ids(source: &str) -> String {
     let bytes = source.as_bytes();
     let mut output = String::with_capacity(source.len());
     let mut cursor = 0;
@@ -51,7 +51,6 @@ pub enum BuiltinTheoremId {
     RationalHasUniqueReducedFraction,
     SubsetOfFiniteSetIsFinite,
     FiniteSetHasBijectiveIndex,
-    RealCauchySequenceConverges,
 }
 
 impl BuiltinTheoremId {
@@ -80,7 +79,6 @@ impl BuiltinTheoremId {
             "rational_has_unique_reduced_fraction" => Self::RationalHasUniqueReducedFraction,
             "subset_of_finite_set_is_finite" => Self::SubsetOfFiniteSetIsFinite,
             "finite_set_has_bijective_index" => Self::FiniteSetHasBijectiveIndex,
-            "real_cauchy_sequence_converges" => Self::RealCauchySequenceConverges,
             _ => return None,
         })
     }
@@ -110,7 +108,6 @@ impl BuiltinTheoremId {
             Self::RationalHasUniqueReducedFraction => "rational_has_unique_reduced_fraction",
             Self::SubsetOfFiniteSetIsFinite => "subset_of_finite_set_is_finite",
             Self::FiniteSetHasBijectiveIndex => "finite_set_has_bijective_index",
-            Self::RealCauchySequenceConverges => "real_cauchy_sequence_converges",
         }
     }
 }

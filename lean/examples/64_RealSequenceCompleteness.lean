@@ -20,20 +20,4 @@ def is_cauchy_tail {__carrier1 : Type 1} (a : __carrier1) {__carrier2 : Type} (e
 def is_cauchy_sequence {__carrier1 : Type 1} (a : __carrier1) : Prop :=
   ∃ (__type1 : Litex.In a (Litex.sequenceSet Litex.R)), Litex.Rules.RealSequenceCauchy (Litex.In.rep a __type1)
 
-theorem cauchy_sequence_converges :
-    ∀ {__carrier0_1 : Type 1} (a : __carrier0_1) (__h0_1 : Litex.In a (Litex.fnSet Litex.NPos Litex.R)) (__domain1 : is_cauchy_sequence a),
-      is_convergent_sequence a := by
-  intro __carrier0_1 a __h0_1 __domain1
-  have __step1 : is_convergent_sequence a := by
-    have __step1 : is_convergent_sequence a := by
-      exact (by
-      have __cauchy := __domain1
-      unfold is_cauchy_sequence at __cauchy
-      rcases __cauchy with ⟨__sequence_in, __native_cauchy⟩
-      unfold is_convergent_sequence
-      exact ⟨__sequence_in, Litex.Rules.realCauchySequenceConverges (Litex.In.rep a __sequence_in) __native_cauchy⟩)
-    exact __step1
-  have __c0_0 : is_convergent_sequence a := __step1
-  exact __c0_0
-
 end __Compiler_64_RealSequenceCompleteness

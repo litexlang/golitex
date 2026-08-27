@@ -618,8 +618,6 @@ pub enum BuiltinTheoremRequirementRole {
     TupleCoordinatesEqual,
     FiniteSetSumSubstitution,
     BijectiveFiniteSetEnumerations,
-    ArgumentIsRealSequence,
-    SequenceSatisfiesCauchyDefinition,
 }
 
 impl BuiltinTheoremRequirementRole {
@@ -663,10 +661,6 @@ impl BuiltinTheoremRequirementRole {
             }
             Self::BijectiveFiniteSetEnumerations => {
                 "both summations enumerate the same finite set bijectively"
-            }
-            Self::ArgumentIsRealSequence => "the argument belongs to seq(R)",
-            Self::SequenceSatisfiesCauchyDefinition => {
-                "the real sequence satisfies the checked Cauchy definition"
             }
         }
     }
