@@ -45,7 +45,6 @@ pub(super) fn construct_lean_source_parts_for_abstract_predicate_definition(
             clause_count: 0,
             dependent_parameter_evidence: false,
             definition: None,
-            well_definedness: None,
         },
     );
     Ok(())
@@ -969,7 +968,6 @@ pub(super) fn instantiated_predicate_components(
     source: &Fact,
     binding: &PredicateBinding,
     context: &StmtResultToLeanCompilerEnvironmentStack,
-    source_proof: Option<&str>,
 ) -> Result<Vec<String>, String> {
     let definition = binding
         .definition
@@ -984,66 +982,13 @@ pub(super) fn instantiated_predicate_components(
         return Err("concrete predicate component expansion changed its application".into());
     }
     let mut nested = context.clone();
-    nested.well_definedness = binding.well_definedness.clone();
-    let mut parameter_substitutions = HashMap::new();
     let mut argument_index = 0;
     for group in &definition.typed_parameters.groups {
         for parameter in &group.params {
-            parameter_substitutions.insert(
-                parameter.substitution_key(),
-                source.body[argument_index].clone(),
+            nested.symbol_names.insert(
+                parameter.id(),
+                render_obj(&source.body[argument_index], context)?,
             );
-            let rendered_argument = render_obj(&source.body[argument_index], context)?;
-            nested
-                .symbol_names
-                .insert(parameter.id(), rendered_argument);
-            if let (ParamType::Obj(set), Some(source_proof)) =
-                (&group.param_type, source_proof)
-            {
-                let retained_parameter = nested
-                    .well_definedness
-                    .as_ref()
-                    .and_then(|well_definedness| {
-                        well_definedness
-                            .parameter_fact_aliases
-                            .iter()
-                            .find(|alias| alias.symbol_id == parameter.id())
-                    })
-                    .map(|alias| alias.proposition.clone())
-                    .ok_or_else(|| {
-                        format!(
-                            "predicate definition parameter `{}` has no retained FactId alias",
-                            parameter.name()
-                        )
-                    })?;
-                let component_proof = if binding.dependent_parameter_evidence {
-                    let component_names = (0..binding.requirement_count + binding.clause_count)
-                        .map(|index| format!("__component{index}"))
-                        .collect::<Vec<_>>();
-                    format!(
-                        "(by\n  have __definition := {source_proof}\n  unfold {} at __definition\n  rcases __definition with ⟨{}⟩\n  exact {})",
-                        binding.lean_name,
-                        component_names.join(", "),
-                        component_names[argument_index],
-                    )
-                } else {
-                    let selector = conjunction_selector(
-                        argument_index,
-                        binding.requirement_count + binding.clause_count,
-                    )?;
-                    format!(
-                        "(by\n  have __definition := {source_proof}\n  unfold {} at __definition\n  exact __definition{selector})",
-                        binding.lean_name
-                    )
-                };
-                install_parameter_fact_aliases(
-                    parameter.id(),
-                    &retained_parameter,
-                    &component_proof,
-                    set,
-                    &mut nested,
-                )?;
-            }
             argument_index += 1;
         }
     }
@@ -1070,22 +1015,7 @@ pub(super) fn instantiated_predicate_components(
         definition
             .iff_facts
             .iter()
-            .map(|fact| {
-                let projected = Runtime::default()
-                    .inst_fact(
-                        fact,
-                        &parameter_substitutions,
-                        SubstitutionMode::ResultProjection,
-                        None,
-                    )
-                    .map_err(|error| {
-                        format!(
-                            "predicate definition component projection failed: {}",
-                            error.trace_message()
-                        )
-                    })?;
-                render_fact(&projected, &nested)
-            })
+            .map(|fact| render_fact(fact, &nested))
             .collect::<Result<Vec<_>, _>>()?,
     );
     Ok(components)

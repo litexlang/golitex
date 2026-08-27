@@ -300,11 +300,6 @@ pub(super) struct PredicateBinding {
     /// may use verifier-selected representatives of heterogeneous parameters.
     pub(super) dependent_parameter_evidence: bool,
     pub(super) definition: Option<DefPropStmt>,
-    /// Exact recursive WD evidence owned by the predicate definition.  A
-    /// later definition projection reuses this occurrence map while
-    /// substituting the application arguments; it must not borrow an
-    /// unrelated caller statement's occurrence map.
-    pub(super) well_definedness: Option<StmtResultWellDefinednessToLeanCompilationContext>,
 }
 
 /// A theorem introduced by one successful `by *_prop` Result and visible only

@@ -41,4 +41,4 @@ forall a, b, c, d R:
         a + c < b + d
 
 # Boundary: swapping the two semantic child Results or changing the retained
-# registry fingerprint fails before any Lean source is published.
+# typed rule evidence fails before any Lean source is published.

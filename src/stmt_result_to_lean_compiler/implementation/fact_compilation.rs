@@ -402,12 +402,8 @@ impl StmtResultToLeanCompiler {
                     "defined predicate `{predicate_name}` is not visible in this compiler environment"
                 )
             })?;
-        let components = instantiated_predicate_components(
-            &premise.fact,
-            &binding,
-            &self.environment_stack,
-            Some(&source_proof),
-        )?;
+        let components =
+            instantiated_predicate_components(&premise.fact, &binding, &self.environment_stack)?;
         if component_index >= components.len() {
             return Err(format!(
                 "defined-predicate inference selected component {component_index}, but `{predicate_name}` has {} components",
@@ -494,44 +490,10 @@ impl StmtResultToLeanCompiler {
                     .insert(conclusion_fact_id, conclusion.fact.clone());
             }
         }
-        if conclusion
-            .infers
-            .rule_applications
-            .iter()
-            .all(|application| defined_predicate_infer_rule(&application.rule))
-        {
-            self.compile_defined_predicate_inference_results_in_current_environment(
-                &conclusion.infers,
-                publication,
-            )?;
-        } else if conclusion
-            .infers
-            .rule_applications
-            .iter()
-            .all(|application| {
-                infer_rule_has_direct_compiler_environment_consumer(&application.rule)
-            })
-        {
-            // A definition projection can itself trigger another typed
-            // inference family (for example, projecting membership in a
-            // refined numeric carrier and then projecting its sign).  Keep
-            // following the verifier-owned Result tree instead of requiring
-            // every recursive layer to belong to the definition family.
-            // These descendants have no standalone tactic block, so retain
-            // their exact FactIds as proof expressions in the active scope.
-            self.compile_typed_inference_results_in_current_compiler_environment(
-                &conclusion.infers,
-                &[(conclusion_fact_id, conclusion.fact.clone())],
-                CompiledInferenceFactAvailabilityInLeanEnvironment::InlineProofExpression,
-                "defined-predicate conclusion store",
-                None,
-            )?;
-        } else if !conclusion.infers.is_empty() {
-            return Err(
-                "defined-predicate conclusion mixes inference families in one Result layer"
-                    .into(),
-            );
-        }
+        self.compile_defined_predicate_inference_results_in_current_environment(
+            &conclusion.infers,
+            publication,
+        )?;
         validate_flattened_inferred_fact_ids_are_visible(
             &conclusion.infers,
             &self.environment_stack,
@@ -2913,26 +2875,15 @@ impl StmtResultToLeanCompiler {
                 let fact_id = fact_id.ok_or_else(|| {
                     format!("{result_layer} advertised inferred fact `{fact}` without a FactId")
                 })?;
-                // One closure fact may be reachable from more than one exact
-                // root store (for example both a refined-carrier witness and
-                // a predicate parameter projection).  The verifier has
-                // already deduplicated it by FactId; preserve that identity
-                // here instead of treating repeated, identical reachability
-                // as a second conclusion.
-                advertised_conclusions.insert((fact_id, fact.to_string()));
+                if !advertised_conclusions.insert((fact_id, fact.to_string())) {
+                    return Err(format!(
+                        "{result_layer} advertised inferred FactId `{fact_id}` more than once"
+                    ));
+                }
             }
         }
 
-        let mut compiled_conclusions = advertised_conclusions
-            .iter()
-            .filter(|(fact_id, proposition)| {
-                self.environment_stack
-                    .fact_propositions
-                    .get(fact_id)
-                    .is_some_and(|fact| fact.to_string() == *proposition)
-            })
-            .cloned()
-            .collect::<HashSet<_>>();
+        let mut compiled_conclusions = HashSet::new();
         for (application_index, application) in infers.rule_applications.iter().enumerate() {
             let expected_premise_count = match &application.rule {
                 InferRule::MembershipInSetWithKnownEqualityImpliesMembershipInEqualSet(_) => 2,
@@ -2949,8 +2900,7 @@ impl StmtResultToLeanCompiler {
                     })?,
                 _ => 1,
             };
-            if (!infer_rule_has_direct_compiler_environment_consumer(&application.rule)
-                && !defined_predicate_infer_rule(&application.rule))
+            if !infer_rule_has_direct_compiler_environment_consumer(&application.rule)
                 || application.premises.len() != expected_premise_count
                 || application.conclusions.len() != 1
             {
@@ -3023,131 +2973,12 @@ impl StmtResultToLeanCompiler {
                     "{result_layer} application {application_index} conclusion is neither in its ordered store output nor already visible by exact FactId"
                 ));
             }
-            if conclusion_is_advertised
-                && !compiled_conclusions.insert(conclusion_key)
-                && !conclusion_already_visible
-            {
+            if conclusion_is_advertised && !compiled_conclusions.insert(conclusion_key) {
                 return Err(format!(
                     "{result_layer} application {application_index} repeats an inferred conclusion"
                 ));
             }
-            if defined_predicate_infer_rule(&application.rule) {
-                let source_proof = resolve_fact_citation(
-                    &premise_fact_id,
-                    &premise.fact,
-                    &self.environment_stack,
-                )?;
-                let Fact::AtomicFact(AtomicFact::NormalAtomicFact(source_predicate)) =
-                    &premise.fact
-                else {
-                    return Err(format!(
-                        "{result_layer} application {application_index} defined-predicate premise is not an atomic predicate"
-                    ));
-                };
-                let (predicate_name, component_index) = match &application.rule {
-                    InferRule::DefinedPredicateParameterRequirementProjection(rule) => {
-                        (&rule.predicate_name, rule.parameter_index)
-                    }
-                    InferRule::DefinedPredicateDefinitionClauseProjection(rule) => {
-                        let binding = self
-                            .environment_stack
-                            .predicate_bindings
-                            .get(&rule.predicate_name)
-                            .ok_or_else(|| {
-                                format!(
-                                    "{result_layer} application {application_index} references invisible predicate `{}`",
-                                    rule.predicate_name
-                                )
-                            })?;
-                        (
-                            &rule.predicate_name,
-                            binding.requirement_count + rule.clause_index,
-                        )
-                    }
-                    _ => unreachable!("defined-predicate rule was matched above"),
-                };
-                if source_predicate.predicate.to_string() != *predicate_name {
-                    return Err(format!(
-                        "{result_layer} application {application_index} changed its defined predicate"
-                    ));
-                }
-                let binding = self
-                    .environment_stack
-                    .predicate_bindings
-                    .get(predicate_name)
-                    .cloned()
-                    .ok_or_else(|| {
-                        format!(
-                            "{result_layer} application {application_index} references invisible predicate `{predicate_name}`"
-                        )
-                    })?;
-                match &application.rule {
-                    InferRule::DefinedPredicateParameterRequirementProjection(rule)
-                        if rule.parameter_index >= binding.requirement_count =>
-                    {
-                        return Err(format!(
-                            "{result_layer} application {application_index} parameter projection left the requirement prefix"
-                        ));
-                    }
-                    InferRule::DefinedPredicateDefinitionClauseProjection(rule)
-                        if rule.clause_index >= binding.clause_count =>
-                    {
-                        return Err(format!(
-                            "{result_layer} application {application_index} clause projection left the definition body"
-                        ));
-                    }
-                    _ => {}
-                }
-                let components = instantiated_predicate_components(
-                    &premise.fact,
-                    &binding,
-                    &self.environment_stack,
-                    Some(&source_proof),
-                )?;
-                let expected_proposition = components.get(component_index).ok_or_else(|| {
-                    format!(
-                        "{result_layer} application {application_index} selected missing predicate component {component_index}"
-                    )
-                })?;
-                let conclusion_proposition =
-                    render_fact(&conclusion.fact, &self.environment_stack)?;
-                if &conclusion_proposition != expected_proposition {
-                    return Err(format!(
-                        "{result_layer} application {application_index} changed its predicate projection conclusion"
-                    ));
-                }
-                if !conclusion_already_visible {
-                    let proof = if binding.dependent_parameter_evidence {
-                        let component_names = (0..components.len())
-                            .map(|index| format!("__component{index}"))
-                            .collect::<Vec<_>>();
-                        format!(
-                            "(by\n  have __definition := {source_proof}\n  unfold {} at __definition\n  rcases __definition with ⟨{}⟩\n  exact {})",
-                            binding.lean_name,
-                            component_names.join(", "),
-                            component_names[component_index],
-                        )
-                    } else {
-                        let selector = conjunction_selector(component_index, components.len())?;
-                        format!(
-                            "(by\n  have __definition := {source_proof}\n  unfold {} at __definition\n  exact __definition{selector})",
-                            binding.lean_name
-                        )
-                    };
-                    let conclusion_name = self.next_local_inference_fact_proof_name();
-                    self.retain_compiled_inference_fact_proof_step_in_current_environment(
-                        &mut compiled_inference_fact_proof_steps,
-                        CompiledInferenceFactProofStep::new(
-                            conclusion_fact_id,
-                            conclusion.fact.clone(),
-                            conclusion_name,
-                            conclusion_proposition,
-                            proof,
-                        ),
-                        availability,
-                    );
-                }
-            } else if let InferRule::EqualityChainClosure(rule) = &application.rule {
+            if let InferRule::EqualityChainClosure(rule) = &application.rule {
                 if rule.end_object_index < rule.start_object_index + 2 {
                     return Err(format!(
                         "{result_layer} application {application_index} does not span a non-adjacent equality"
@@ -3649,60 +3480,10 @@ impl StmtResultToLeanCompiler {
                 }
             }
             if !conclusion.infers.is_empty() {
-                let recursive_effects_already_visible = conclusion
-                    .infers
-                    .store_fact_outputs
-                    .iter()
-                    .all(|output| {
-                        output.fact_id.is_some_and(|fact_id| {
-                            self.environment_stack
-                                .fact_propositions
-                                .get(&fact_id)
-                                .is_some_and(|visible| {
-                                    visible.to_string()
-                                        == output.itself_and_why_itself_is_stored.0.to_string()
-                                })
-                        }) && output
-                            .inferred_facts
-                            .iter()
-                            .zip(output.inferred_fact_ids.iter())
-                            .all(|(fact, fact_id)| {
-                                fact_id.is_some_and(|fact_id| {
-                                    self.environment_stack
-                                        .fact_propositions
-                                        .get(&fact_id)
-                                        .is_some_and(|visible| {
-                                            visible.to_string() == fact.to_string()
-                                        })
-                                })
-                            })
-                    });
-                if recursive_effects_already_visible {
-                    continue;
-                }
-                let complete_sources = conclusion
-                    .infers
-                    .store_fact_outputs
-                    .iter()
-                    .filter_map(|output| {
-                        output.fact_id.map(|fact_id| {
-                            (fact_id, output.itself_and_why_itself_is_stored.0.clone())
-                        })
-                    })
-                    .collect::<Vec<_>>();
-                let visible_source = [(conclusion_fact_id, conclusion.fact.clone())];
-                let selected = select_typed_inference_results_for_visible_forall_sources(
-                    &conclusion.infers,
-                    &complete_sources,
-                    &visible_source,
-                    &format!(
-                        "{result_layer} application {application_index} conclusion inference scope"
-                    ),
-                )?;
                 compiled_inference_fact_proof_steps.extend(
                     self.compile_typed_inference_results_in_current_compiler_environment(
-                        &selected,
-                        &visible_source,
+                        &conclusion.infers,
+                        &[(conclusion_fact_id, conclusion.fact.clone())],
                         availability,
                         &format!("{result_layer} application {application_index} conclusion"),
                         force_replay_visible_conclusions,

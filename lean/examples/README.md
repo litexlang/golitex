@@ -67,10 +67,10 @@ equalities remain outside this definition-reduction path.
 order rules. Each enclosing forall Result owns the parameter and premise
 scope; the compiler environment stack makes those exact FactIds visible only
 while compiling its conclusion. The arithmetic proof method then validates
-the retained RuleId, semantic fingerprint, target operands, and ordered child
-Results before applying one fixed `Litex.Rules` theorem. Swapped children or a
-stale fingerprint fail closed instead of falling back to rule-name or label
-matching.
+the retained typed rule variant, stable rule ID, target operands, and ordered
+child Results before applying one fixed `Litex.Rules` theorem. Swapped children
+or mismatched typed evidence fail closed instead of falling back to rule-name
+or label matching.
 
 `41_ClearOrdinaryName.lit` covers the removal of the former environment
 command. `clear` now follows the ordinary object-definition and fact paths in

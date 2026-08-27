@@ -2097,21 +2097,19 @@ Each node cites the source membership `FactId` and owns the projected fact's
 their retained order without searching stored propositions or reconstructing
 the clause index.
 
-Registered set builtins follow the same contract. A direct compiler layer
-validates the retained `RuleId`, semantic fingerprint, target-matched bindings,
-parameter checks, and ordered semantic child Results. Only then does it
-construct the corresponding `Litex.SetRules` proof in the current compiler
-environment. The registry certificate is semantic Result input, not a
-diagnostic label and not a request to rerun verifier search.
+Builtin rules are Rust-owned certificates. Every successful builtin producer
+returns a concrete `BuiltinRuleEvidence` variant with a stable `rule_id` and
+ordered child Results; no `.lit` catalog, semantic fingerprint, binding map,
+schema parser, or runtime registry participates in verification or replay.
+Only the former 97-entry catalog support set is eligible for reviewed typed
+ToLean adapters. A support-set rule with no current Lean ABI, and every other
+producer represented by its own `UncataloguedBuiltinRule` enum variant, fails
+closed with that exact rule ID until a Lean mapping is reviewed.
 
-Registered sign and strict-to-weak order rules use the same layer. The
-compiler reads only the generated registry fingerprint metadata for the
-retained `RuleId`; it does not parse a rule schema or run its matcher again.
-The target-specific compiler method then checks the exact real-valued
-bindings, parameter requirements, target operands, and ordered child Results
-before constructing the Lean rule application. Ordinary typed
-`BuiltinRuleEvidence::Arithmetic` sign rules share the same target-side
-constructor after their own Result shape has been validated.
+Set, sign, strict-to-weak order, absolute-value, extrema, and aggregate
+adapters validate the typed variant, target operands, and ordered child
+Results before constructing a Lean proof. Diagnostic labels remain output
+text only; neither the verifier nor the compiler uses them to select a rule.
 
 Integer remainder demonstrates a target representation that legitimately
 belongs in the compiler environment stack. Runtime returns

@@ -1503,17 +1503,8 @@ impl StmtResultToLeanCompiler {
             );
         }
 
-        let Some(source_proof) =
-            self.construct_lean_proof_from_direct_fact_result(source_result)?
-        else {
-            return Ok(None);
-        };
-        let components = instantiated_predicate_components(
-            &source_fact,
-            &binding,
-            &self.environment_stack,
-            Some(&source_proof),
-        )?;
+        let components =
+            instantiated_predicate_components(&source_fact, &binding, &self.environment_stack)?;
         let rendered_target = render_fact(target, &self.environment_stack)?;
         let clause_index = components
             .iter()
@@ -1521,8 +1512,13 @@ impl StmtResultToLeanCompiler {
             .ok_or_else(|| {
                 "definition projection target is not an instantiated definition component"
                     .to_string()
-            })?;
+        })?;
         let selector = conjunction_selector(clause_index, components.len())?;
+        let Some(source_proof) =
+            self.construct_lean_proof_from_direct_fact_result(source_result)?
+        else {
+            return Ok(None);
+        };
         Ok(Some(format!(
             "(by\n  have __definition := {source_proof}\n  unfold {} at __definition\n  exact __definition{selector})",
             binding.lean_name

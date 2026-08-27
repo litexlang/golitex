@@ -2244,26 +2244,6 @@ impl StmtResultToLeanCompiler {
         {
             return self.compile_let_obj_stmt_result_as_local_proof_steps(result, proof_step_index);
         }
-        if let StmtResult::Success(SuccessStmtResult::Definition(
-            SuccessDefinitionStmtResult::ObtainObjFromExistFact(result),
-        )) = result
-        {
-            return self
-                .compile_obtain_obj_from_exist_fact_stmt_result_as_local_proof_steps(
-                    result,
-                    proof_step_index,
-                );
-        }
-        if let StmtResult::Success(SuccessStmtResult::Definition(
-            SuccessDefinitionStmtResult::ObtainObjFromAtomicFact(result),
-        )) = result
-        {
-            return self
-                .compile_obtain_obj_from_atomic_fact_stmt_result_as_local_proof_steps(
-                    result,
-                    proof_step_index,
-                );
-        }
         if let Some(factual) = result.factual_success() {
             return self
                 .compile_fact_stmt_result_as_local_proof_step(factual, proof_step_index)
@@ -2654,32 +2634,14 @@ impl StmtResultToLeanCompiler {
                 return Err("local proof-step reused a FactId for a different proposition".into());
             }
         } else {
-            let has_defined_predicate_inference = result
-                .store
-                .infers
-                .rule_applications
-                .iter()
-                .any(|application| defined_predicate_infer_rule(&application.rule));
-            let has_direct_inference = result
-                .store
-                .infers
-                .rule_applications
-                .iter()
-                .any(|application| {
-                    infer_rule_has_direct_compiler_environment_consumer(&application.rule)
-                });
             if result.store.infers.store_fact_outputs.len() != 1
-                || (has_defined_predicate_inference && has_direct_inference)
                 || result
                     .store
                     .infers
                     .rule_applications
                     .iter()
                     .any(|application| {
-                        !defined_predicate_infer_rule(&application.rule)
-                            && !infer_rule_has_direct_compiler_environment_consumer(
-                                &application.rule,
-                            )
+                        !infer_rule_has_direct_compiler_environment_consumer(&application.rule)
                     })
             {
                 return Ok(None);
@@ -2754,33 +2716,20 @@ impl StmtResultToLeanCompiler {
             let inference_parent_certificate = inference_certificate
                 .map(|certificate| self.environment_stack.well_definedness.replace(certificate));
             let inference_compilation = (|| {
-                if result
-                    .store
-                    .infers
-                    .rule_applications
-                    .iter()
-                    .any(|application| defined_predicate_infer_rule(&application.rule))
-                {
-                    self.compile_defined_predicate_inference_results_in_current_environment(
+                let allowed_sources = self
+                    .install_equality_chain_adjacent_projections_for_typed_inference(
+                        &source_fact,
+                        fact_id,
+                        &name,
                         &result.store.infers,
-                        DefinedPredicateInferenceConclusionPublication::LocalProofExpression,
-                    )?;
-                } else {
-                    let allowed_sources = self
-                        .install_equality_chain_adjacent_projections_for_typed_inference(
-                            &source_fact,
-                            fact_id,
-                            &name,
-                            &result.store.infers,
-                            "local proof-step Result",
-                        )?;
-                    self.compile_typed_inference_results_as_local_have_statements(
-                        &result.store.infers,
-                        &allowed_sources,
-                        &mut lines,
                         "local proof-step Result",
                     )?;
-                }
+                self.compile_typed_inference_results_as_local_have_statements(
+                    &result.store.infers,
+                    &allowed_sources,
+                    &mut lines,
+                    "local proof-step Result",
+                )?;
                 validate_flattened_inferred_fact_ids_are_visible(
                     &result.store.infers,
                     &self.environment_stack,
