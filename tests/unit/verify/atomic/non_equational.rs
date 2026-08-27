@@ -89,7 +89,11 @@ fn registered_symmetric_predicate_verifier_wraps_the_exact_reordered_child_resul
     let alternate_result: StmtResult = SuccessFactStmtResult::new(
         alternate.clone().into(),
         SuccessInferResult::new(),
-        SuccessFactProofResult::builtin_rule("fixture child"),
+        SuccessFactProofResult::builtin_rule_with_evidence(
+            "fixture child",
+            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TestFixture),
+            Vec::new(),
+        ),
     )
     .into();
     let result = Runtime::wrap_registered_symmetric_prop_result(

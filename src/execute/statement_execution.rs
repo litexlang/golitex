@@ -9,16 +9,7 @@ impl Runtime {
         let execution_mode = self.current_execution_mode();
         let result = match execution_mode {
             ExecutionMode::Trusted => self.execute_statement_without_verification(stmt),
-            ExecutionMode::Verified => {
-                // The generated local-builtin catalog is parsed once per thread.
-                // Do that work at the shallow statement boundary instead of on
-                // first use from deep inside object/fact verification: the parser
-                // intentionally has many precedence layers, and nesting that
-                // one-time compilation below a recursive verifier can exhaust a
-                // normal test thread's stack in debug builds.
-                crate::verify::local_builtin_catalog::registered_local_builtin_rules()
-                    .and_then(|_| self.execute_verified_statement(stmt))
-            }
+            ExecutionMode::Verified => self.execute_verified_statement(stmt),
         };
         let result = self.finish_statement_execution(result, execution_mode);
         self.clear_statement_proof_state();

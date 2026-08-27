@@ -33,9 +33,10 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 format!("{name} fixes integer inputs"),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNativeRoundingIntegerEquality),
                 vec![premise_result],
             )
             .into(),
@@ -55,9 +56,10 @@ impl Runtime {
         let line_file = equal_fact.line_file.clone();
         if rounding_negation_shape(left, right) || rounding_negation_shape(right, left) {
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     equal_fact.clone().into(),
                     "native floor/ceil negation duality".to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNativeRoundingAlgebraEquality),
                     Vec::new(),
                 )
                 .into(),
@@ -77,9 +79,10 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "native floor/ceil integer translation".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNativeRoundingAlgebraEquality),
                 vec![premise_result],
             )
             .into(),
@@ -127,10 +130,17 @@ impl Runtime {
             return Ok(None);
         }
         let name = if is_min { "min" } else { "max" };
+        let rule = match (is_min, selected_is_first) {
+            (true, true) => ExtremaBuiltinRule::MinEqLeftOfLessEqual,
+            (true, false) => ExtremaBuiltinRule::MinEqRightOfLessEqual,
+            (false, true) => ExtremaBuiltinRule::MaxEqLeftOfLessEqual,
+            (false, false) => ExtremaBuiltinRule::MaxEqRightOfLessEqual,
+        };
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 format!("{name} selects the ordered argument: {premise_left} <= {premise_right}"),
+                BuiltinRuleEvidence::Extrema(rule),
                 vec![premise_result],
             )
             .into(),
@@ -160,18 +170,29 @@ impl Runtime {
             AtomicFact::LessEqualFact(f) => (&f.left, &f.right, false),
             _ => return Ok(None),
         };
+        if !is_strict {
+            if let Some(rule) = extrema_bound_rule(left, right) {
+                return Ok(Some(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                        atomic_fact.clone().into(),
+                        "native extremum characteristic order bound".to_string(),
+                        BuiltinRuleEvidence::Extrema(rule),
+                        Vec::new(),
+                    )
+                    .into(),
+                ));
+            }
+        }
         let verified = if is_strict {
             floor_upper_shape(left, right) || ceil_lower_shape(left, right)
         } else {
-            floor_lower_shape(left, right)
-                || ceil_upper_shape(left, right)
-                || min_lower_shape(left, right)
-                || max_upper_shape(left, right)
+            floor_lower_shape(left, right) || ceil_upper_shape(left, right)
         };
         Ok(verified.then(|| {
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "native rounding/extremum characteristic order bound".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNativeRoundingExtremaOrder),
                 Vec::new(),
             )
             .into()
@@ -218,9 +239,10 @@ impl Runtime {
             return Ok(None);
         };
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "native lcm is bounded by every positive common multiple".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNativeLcmLeCommonPositiveMultiple),
                 results,
             )
             .into(),
@@ -239,7 +261,7 @@ impl Runtime {
         else {
             return Ok(None);
         };
-        let (premises, reason) = match (&f.left, &f.right) {
+        let (premises, reason, typed_rule) = match (&f.left, &f.right) {
             (Obj::Floor(left), Obj::Floor(right)) => (
                 vec![LessEqualFact::new(
                     left.arg.as_ref().clone(),
@@ -248,6 +270,7 @@ impl Runtime {
                 )
                 .into()],
                 "native floor preserves weak order",
+                None,
             ),
             (Obj::Ceil(left), Obj::Ceil(right)) => (
                 vec![LessEqualFact::new(
@@ -257,6 +280,7 @@ impl Runtime {
                 )
                 .into()],
                 "native ceil preserves weak order",
+                None,
             ),
             (Obj::Min(left), Obj::Min(right)) => (
                 vec![
@@ -274,6 +298,7 @@ impl Runtime {
                     .into(),
                 ],
                 "native min preserves componentwise weak order",
+                Some(ExtremaBuiltinRule::MinMonotone),
             ),
             (Obj::Max(left), Obj::Max(right)) => (
                 vec![
@@ -291,19 +316,44 @@ impl Runtime {
                     .into(),
                 ],
                 "native max preserves componentwise weak order",
+                Some(ExtremaBuiltinRule::MaxMonotone),
             ),
             _ => return Ok(None),
         };
 
-        let Some(results) = self.verify_builtin_rule_premises(&premises, builtin_state)? else {
-            return Ok(None);
+        let results = if typed_rule.is_some() {
+            let mut results = Vec::with_capacity(premises.len());
+            for premise in &premises {
+                let result =
+                    self.verify_atomic_fact_as_builtin_rule_premise(premise, builtin_state)?;
+                if !result.is_success() {
+                    return Ok(None);
+                }
+                results.push(result);
+            }
+            results
+        } else {
+            let Some(results) = self.verify_builtin_rule_premises(&premises, builtin_state)? else {
+                return Ok(None);
+            };
+            results
         };
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
-                atomic_fact.clone().into(),
-                reason.to_string(),
-                results,
-            )
+            match typed_rule {
+                Some(rule) =>
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                        atomic_fact.clone().into(),
+                        reason.to_string(),
+                        BuiltinRuleEvidence::Extrema(rule),
+                        results,
+                    ),
+                None => SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    atomic_fact.clone().into(),
+                    reason.to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNativeRoundingExtremaMonotonicity),
+                    results,
+                ),
+            }
             .into(),
         ))
     }
@@ -317,13 +367,13 @@ impl Runtime {
     ) -> Option<StmtResult> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
-        if !min_max_lattice_shape(left, right) && !min_max_lattice_shape(right, left) {
-            return None;
-        }
+        let rule = min_max_lattice_rule(left, right)
+            .or_else(|| min_max_lattice_rule(right, left))?;
         Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "native min/max lattice identity".to_string(),
+                BuiltinRuleEvidence::Extrema(rule),
                 Vec::new(),
             )
             .into(),
@@ -343,9 +393,10 @@ impl Runtime {
             return None;
         }
         Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "lcm times gcd is the absolute product".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNativeLcmGcdProductEquality),
                 Vec::new(),
             )
             .into(),
@@ -365,9 +416,10 @@ impl Runtime {
             return None;
         }
         Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "native lcm symmetry, zero law, or divisibility".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNativeLcmBasicEquality),
                 Vec::new(),
             )
             .into(),
@@ -417,18 +469,24 @@ fn ceil_upper_shape(left: &Obj, right: &Obj) -> bool {
     objs_match_for_pattern(left, &ceil.arg)
 }
 
-fn min_lower_shape(left: &Obj, right: &Obj) -> bool {
-    let Obj::Min(min) = left else {
-        return false;
-    };
-    objs_match_for_pattern(&min.left, right) || objs_match_for_pattern(&min.right, right)
-}
-
-fn max_upper_shape(left: &Obj, right: &Obj) -> bool {
-    let Obj::Max(max) = right else {
-        return false;
-    };
-    objs_match_for_pattern(left, &max.left) || objs_match_for_pattern(left, &max.right)
+fn extrema_bound_rule(left: &Obj, right: &Obj) -> Option<ExtremaBuiltinRule> {
+    if let Obj::Min(min) = left {
+        if objs_match_for_pattern(&min.left, right) {
+            return Some(ExtremaBuiltinRule::MinLessEqualLeft);
+        }
+        if objs_match_for_pattern(&min.right, right) {
+            return Some(ExtremaBuiltinRule::MinLessEqualRight);
+        }
+    }
+    if let Obj::Max(max) = right {
+        if objs_match_for_pattern(left, &max.left) {
+            return Some(ExtremaBuiltinRule::LessEqualMaxLeft);
+        }
+        if objs_match_for_pattern(left, &max.right) {
+            return Some(ExtremaBuiltinRule::LessEqualMaxRight);
+        }
+    }
+    None
 }
 
 fn lcm_gcd_product_shape(left: &Obj, right: &Obj) -> bool {
@@ -482,51 +540,51 @@ fn lcm_basic_shape(native: &Obj, other: &Obj) -> bool {
         || objs_match_for_pattern(&modulus.arg, &lcm.right)
 }
 
-fn min_max_lattice_shape(lattice: &Obj, other: &Obj) -> bool {
+fn min_max_lattice_rule(lattice: &Obj, other: &Obj) -> Option<ExtremaBuiltinRule> {
     match lattice {
         Obj::Min(min) => {
             if objs_match_for_pattern(&min.left, &min.right)
                 && objs_match_for_pattern(&min.left, other)
             {
-                return true;
+                return Some(ExtremaBuiltinRule::MinIdempotent);
             }
             if let Obj::Min(swapped) = other {
                 if objs_match_for_pattern(&min.left, &swapped.right)
                     && objs_match_for_pattern(&min.right, &swapped.left)
                 {
-                    return true;
+                    return Some(ExtremaBuiltinRule::MinCommutative);
                 }
             }
             if objs_match_for_pattern(&min.left, other) && max_contains(min.right.as_ref(), other) {
-                return true;
+                return Some(ExtremaBuiltinRule::MinAbsorbMaxLeft);
             }
             if objs_match_for_pattern(&min.right, other) && max_contains(min.left.as_ref(), other) {
-                return true;
+                return Some(ExtremaBuiltinRule::MinAbsorbMaxLeft);
             }
-            min_associative_shape(min, other)
+            min_associative_shape(min, other).then_some(ExtremaBuiltinRule::MinAssociative)
         }
         Obj::Max(max) => {
             if objs_match_for_pattern(&max.left, &max.right)
                 && objs_match_for_pattern(&max.left, other)
             {
-                return true;
+                return Some(ExtremaBuiltinRule::MaxIdempotent);
             }
             if let Obj::Max(swapped) = other {
                 if objs_match_for_pattern(&max.left, &swapped.right)
                     && objs_match_for_pattern(&max.right, &swapped.left)
                 {
-                    return true;
+                    return Some(ExtremaBuiltinRule::MaxCommutative);
                 }
             }
             if objs_match_for_pattern(&max.left, other) && min_contains(max.right.as_ref(), other) {
-                return true;
+                return Some(ExtremaBuiltinRule::MaxAbsorbMinLeft);
             }
             if objs_match_for_pattern(&max.right, other) && min_contains(max.left.as_ref(), other) {
-                return true;
+                return Some(ExtremaBuiltinRule::MaxAbsorbMinLeft);
             }
-            max_associative_shape(max, other)
+            max_associative_shape(max, other).then_some(ExtremaBuiltinRule::MaxAssociative)
         }
-        _ => false,
+        _ => None,
     }
 }
 

@@ -502,7 +502,7 @@ after = "./after.lit"
         assert!(project_output.contains("1 = 0"), "{project_output}");
 
         let mut strict_runtime = Runtime::default();
-        strict_runtime.options.strict_mode = true;
+        strict_runtime.run_options.strict_mode = true;
         let (_, strict_error) = execute_file_in_runtime(
             target.as_str(),
             &mut strict_runtime,

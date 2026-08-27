@@ -129,9 +129,10 @@ impl Runtime {
             || (obj_is_native_i(&not_equal_fact.right) && obj_is_literal_zero(&not_equal_fact.left))
         {
             return Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     not_equal_fact.clone().into(),
                     "native imaginary unit is nonzero".to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNativeINonzero),
                     Vec::new(),
                 )
                 .into(),
@@ -220,9 +221,10 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 not_equal_fact.clone().into(),
                 "complex modulus is nonzero for a nonzero argument".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNativeComplexAbsNonzero),
                 vec![result],
             )
             .into(),
@@ -649,9 +651,10 @@ fn complex_equality_result_with_steps(
     reason: &str,
     steps: Vec<StmtResult>,
 ) -> StmtResult {
-    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
         equal_fact.clone().into(),
         reason.to_string(),
+        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::ComplexEqualityResultWithSteps),
         steps,
     )
     .into()
@@ -662,9 +665,10 @@ fn complex_order_result(
     reason: &str,
     steps: Vec<StmtResult>,
 ) -> StmtResult {
-    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
         atomic_fact.clone().into(),
         reason.to_string(),
+        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::ComplexOrderResult),
         steps,
     )
     .into()

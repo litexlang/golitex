@@ -31,7 +31,7 @@ capabilities still need implementation work. They fall into five remaining batch
 2. wider atomic-statement and object-definition shapes (2 rows);
 3. WD-backed set and collection constructors (8 rows);
 4. remaining numeric objects and refined carriers (4 rows); and
-5. set, reflection, and registered rule adapters (3 rows).
+5. set, reflection, and typed rule adapters (3 rows).
 
 ## Semantic and proof spine
 
@@ -39,8 +39,8 @@ capabilities still need implementation work. They fall into five remaining batch
 | --- | --- | --- |
 | Native carriers plus independent Litex membership | migrated | Examples 1, 4, and 5; generated output forbids `Litex.Object` and set encodings based on `Set.univ`. |
 | Heterogeneous equality and membership transport | migrated | Examples 1 and 6 use `Litex.Same` and exact equality-path `FactId`s. |
-| Real order wrappers and registered order rules | migrated | Example 2; exact rule ID and fingerprint are validated before `Litex.Lt.toLe`. |
-| Generic two-ended order normalization | migrated | Example 2 lowers custom `Litex.Lt` / `Litex.Le` on the compiler numeric carrier through the single canonical `Complex.re : ℂ → ℝ` observation. The verifier now records a stable `OrderTransitivity` certificate, the compiler validates its carrier evidence, endpoints, shared middle, and strictness, and Lean replays Mathlib transitivity. `RealCoherence` has been removed; C-only comparisons remain rejected before IR capture. |
+| Real order wrappers and typed catalog rules | migrated | Example 2; the exact Rust rule variant and ordered subgoals are validated before `Litex.Lt.toLe`. |
+| Generic two-ended order normalization | verifier-only | The verifier records stable `OrderTransitivity` evidence, but this non-catalog rule now fails closed in ToLean until it receives a separately reviewed mapping. |
 | Source order, persistent/local scope, and exact `FactId` replay | migrated | Examples 6, 8, and 9. |
 | Verifier-owned WD object/fact graph | partial | Current arithmetic and function tracers consume it; old constructor families below still lack emitters. |
 | Known forall instantiation and alpha-equivalent citation | migrated | Example 6 and focused compiler tests. |
@@ -95,14 +95,14 @@ capabilities still need implementation work. They fall into five remaining batch
 | --- | --- | --- |
 | Reflexivity, rational normalization, standard numeral membership | migrated | Examples 3 and 5. |
 | Not-equality symmetry and exact equality paths | migrated | Example 6. |
-| Additive nonnegative and one-strict sign strategies | migrated | Example 15 covers real-addition closure, left/right strict routes, direct evidence, and registered rule certificates. |
-| Multiplicative/divisive sign strategies | migrated | Example 15 replays direct and registered `MulNonnegative`, `MulPositive`, `DivNonnegative`, and `DivPositive` certificates through canonical zero-ended order and proved Mathlib adapters. |
+| Additive nonnegative and one-strict sign strategies | migrated | Example 15 covers real-addition closure, left/right strict routes, and typed rule evidence. |
+| Multiplicative/divisive sign strategies | migrated | Example 15 replays typed `MulNonnegative`, `MulPositive`, `DivNonnegative`, and `DivPositive` certificates through canonical zero-ended order and proved Mathlib adapters. |
 | Standard-set hierarchy | migrated | Example 16 validates every proper projection through `N → Z → Q → R → C` and composes four proved adjacent native-carrier bridges. |
 | Refined numeric membership | partial | Examples 20–22 give exact `N+`, `R+`, `Z*`, `Q*`, `R*`, and `C*` carriers. The star family compiles construction from base membership plus source `!= 0`, base/supercarrier projection, `Z* → Q* → R* → C*` widening, and membership-to-`!= 0` elimination by retaining the semantic nonzero certificate in a complex-source subtype. Generic `R + positivity → R+`, `Q+`, negative carriers, closed `!=` reflection, and star arithmetic remain fail-closed. |
 | Base numeric arithmetic membership families | partial | Examples 15, 17, and 18 cover real/complex/rational `+`/`-`/`*`/`/`, integer `+`/`-`/`*`, and natural `+`/`*`. Integer remainder/quotient/power/absolute value, rational power/absolute value/quotient, natural subtraction/power, and real power remain pending. |
 | Set-relation and set-operator rules | pending | Depend on exact native set constructors and their proved laws. |
 | Reflection rules such as prime and coprime | pending | Verifier evidence exists; no active native-carrier compiler theorem family is accepted yet. |
-| Remaining registered local rules | pending | Every rule needs its stable ID/fingerprint adapter and a real-Lean tracer; no generic theorem search is allowed. |
+| Remaining verifier-only typed rules | pending | Every non-catalog rule needs a separately reviewed Rust mapping and a real-Lean tracer; no generic theorem search is allowed. |
 
 ## Required migration order
 

@@ -43,9 +43,10 @@ impl Runtime {
             steps.push(carrier_equality);
         }
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 "definition-owned struct field has its instantiated defined carrier".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactStructFieldInDefinitionCarrier),
                 steps,
             )
             .into(),
@@ -101,9 +102,10 @@ impl Runtime {
                 builtin_state,
             )? {
                 selected_result =
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         selected_membership.clone().into(),
                         "selected literal tuple component has a real carrier".to_string(),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactLiteralTupleProjectionInSet),
                         real_steps,
                     )
                     .into();
@@ -114,9 +116,10 @@ impl Runtime {
         }
 
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 "literal tuple projection inherits the selected component carrier".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactLiteralTupleProjectionInSet),
                 vec![selected_result],
             )
             .into(),
@@ -150,9 +153,10 @@ impl Runtime {
                 .into()
             }
             (left, right) if objs_equal_with_nested_binder_alpha_equivalence(left, right) => {
-                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     subset_fact.clone().into(),
                     "subset reflexivity".to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactSetBuilderInPowerSetViaParamSubset),
                     Vec::new(),
                 )
                 .into()
@@ -166,11 +170,12 @@ impl Runtime {
         infer_result.new_infer_result_inside(verify_subset_result.infer_result());
         let stmt = in_fact.clone().into();
         infer_result.new_fact(&stmt);
-        Ok((SuccessFactStmtResult::new_with_verified_by_builtin_rules_label_and_steps(
+        Ok((SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
             stmt,
             infer_result,
             "set_builder in power_set: param_set subset of base implies builder defines a subset of base"
                 .to_string(),
+            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactSetBuilderInPowerSetViaParamSubset),
             vec![verify_subset_result],
         ))
         .into())
@@ -206,10 +211,11 @@ impl Runtime {
         let stmt = in_fact.clone().into();
         infer_result.new_fact(&stmt);
         Ok(
-            (SuccessFactStmtResult::new_with_verified_by_builtin_rules_label_and_steps(
+            (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                 stmt,
                 infer_result,
                 "list_set in power_set: each element is in the base set".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactListSetInPowerSetDefinesMembership),
                 subgoals,
             ))
             .into(),
@@ -280,9 +286,10 @@ impl Runtime {
             let premise_result = self.verify_builtin_rule_premise(&premise, builtin_state)?;
             if premise_result.is_success() {
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         in_fact.clone().into(),
                         "list-set membership from equality with one listed element".to_string(),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactByEqualToOneElementInListSet),
                         vec![premise_result],
                     )
                     .into(),
@@ -316,12 +323,13 @@ impl Runtime {
         };
 
         Ok(
-            (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 not_in_fact.clone().into(),
                 format!(
                     "{} is not equal to every element in list_set {}",
                     not_in_fact.element, not_in_fact.set
                 ),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyNotInFactByNotEqualToEveryElementInListSet),
                 steps,
             ))
             .into(),
@@ -340,9 +348,10 @@ impl Runtime {
         };
         if stored_fn_set.to_string() == expected_fn_set.to_string() {
             return Ok(
-                (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "fn membership: stored fn signature matches RHS".to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactElementInFnSetByStoredDefinition),
                     Vec::new(),
                 ))
                 .into(),
@@ -362,10 +371,11 @@ impl Runtime {
             self.fn_set_alpha_renamed_for_display_compare(&expected_fn_set.body, &shared_names)?;
         if stored_norm.to_string() == expected_norm.to_string() {
             return Ok(
-                (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "fn membership: stored fn signature matches RHS (alpha-renamed parameters)"
                         .to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactElementInFnSetByStoredDefinition),
                     Vec::new(),
                 ))
                 .into(),
@@ -392,10 +402,11 @@ impl Runtime {
         )?;
         if signature_from_anon.to_string() == expected_fn_set.to_string() {
             return Ok(
-                (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "anonymous function: signature (params, dom, co-domain) matches `fn` set"
                         .to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactAnonymousFnSignatureMatchesFnSet),
                     Vec::new(),
                 ))
                 .into(),
@@ -416,10 +427,11 @@ impl Runtime {
             self.fn_set_alpha_renamed_for_display_compare(&expected_fn_set.body, &shared_names)?;
         if a_norm.to_string() == e_norm.to_string() {
             return Ok(
-                (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "anonymous function: signature matches `fn` set (alpha-renamed parameters)"
                         .to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactAnonymousFnSignatureMatchesFnSet),
                     Vec::new(),
                 ))
                 .into(),
@@ -453,10 +465,11 @@ impl Runtime {
         )?;
         if signature_equality.is_success() {
             return Ok(
-                (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "anonymous function: signature matches `fn` set through propositionally equal parameter sets"
                         .to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactAnonymousFnSignatureMatchesFnSetThroughEqualSets),
                     Vec::new(),
                 ))
                 .into(),
@@ -545,12 +558,13 @@ impl Runtime {
         };
 
         Ok(
-            (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 format!(
                     "finite sequence literal application is in {}",
                     target_set_obj
                 ),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactFiniteSeqLiteralApplicationInSet),
                 step_results,
             ))
             .into(),
@@ -607,12 +621,13 @@ impl Runtime {
         };
 
         Ok(
-            (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 format!(
                     "cart projection list_set elements are all in {}",
                     target_set_obj
                 ),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactObjAtIndexInStandardSetByCartFactorListSet),
                 step_results,
             ))
             .into(),
@@ -715,10 +730,11 @@ impl Runtime {
             }
             if all_elements_match {
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         in_fact.clone().into(),
                         "listed-set member inherits a carrier shared by every listed element"
                             .to_string(),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactByKnownListSetCarrier),
                         steps,
                     )
                     .into(),

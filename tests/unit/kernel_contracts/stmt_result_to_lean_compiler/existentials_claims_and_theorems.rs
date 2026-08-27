@@ -788,16 +788,16 @@ fn integer_sum_builtin_release_fails_closed_outside_the_reviewed_z_to_z_contract
 }
 
 #[test]
-fn registered_abs_min_max_rules_compile_through_reviewed_scalar_operator_abi() {
+fn typed_abs_min_max_rules_compile_through_reviewed_scalar_operator_abi() {
     let source = include_str!("../../../../lean/examples/63_ScalarOperatorBuiltins.lit");
     let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
         source,
         "scalar_operator_builtins.lit",
     )
-    .expect("execute registry-owned abs/min/max rules");
+    .expect("execute typed abs/min/max rules");
     let generated = StmtResultToLeanCompiler::new("scalar_operator_builtins.lit")
         .compile_stmt_results_to_lean_source(&results)
-        .expect("compile registry-owned abs/min/max rules");
+        .expect("compile typed abs/min/max rules");
 
     for theorem in [
         "Litex.Rules.absMul",
@@ -1104,6 +1104,8 @@ fn odd_sum_flagship_exports_only_source_owned_declarations() {
     assert!(result_audit.contains("CheckedFunctionDefinitionReduction"));
     assert!(result_audit.contains("IntegralPolynomialNormalization"));
     assert!(result_audit.contains("IntegerRangeSumMembership"));
+    assert!(result_audit.contains("\"rule_id\": \"aggregate.sum_single\""));
+    assert!(result_audit.contains("\"rule_id\": \"aggregate.sum_split_last\""));
     assert!(result_audit.contains("PowNat"));
     assert!(result_audit.contains("\"kind\": \"Iteration\""));
     assert!(result_audit.contains("\"argument\": \"10\""));

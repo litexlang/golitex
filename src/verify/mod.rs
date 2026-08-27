@@ -8,10 +8,8 @@ mod builtin_rule_state;
 mod equality_core;
 #[path = "proof_search/universal_profile.rs"]
 pub mod known_forall_profile;
-pub mod local_builtin_catalog;
 #[path = "quantified/negated_existential.rs"]
 mod not_exist_demorgan_forall;
-pub mod rule_schema;
 #[path = "composite/conjunction_and_chain.rs"]
 mod verify_and_chain_fact;
 #[path = "atomic/definition.rs"]

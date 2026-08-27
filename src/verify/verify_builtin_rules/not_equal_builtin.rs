@@ -62,9 +62,10 @@ impl Runtime {
         if let (Obj::ListSet(left_ls), Obj::ListSet(right_ls)) = (left_obj, right_obj) {
             if left_ls.list.len() != right_ls.list.len() {
                 return Ok(
-                    (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                    (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         not_equal_fact.clone().into(),
                         "list_set_different_length".to_string(),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyNotEqualFactWithBuiltinRules),
                         Vec::new(),
                     ))
                     .into(),
@@ -212,9 +213,10 @@ fn try_verify_native_real_constant_nonzero(not_equal_fact: &NotEqualFact) -> Opt
         return None;
     }
     Some(
-        SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
             not_equal_fact.clone().into(),
             "native real constant distinctness".to_string(),
+            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNativeRealConstantNonzero),
             Vec::new(),
         )
         .into(),
@@ -235,9 +237,10 @@ fn try_verify_intrinsically_positive_native_value_nonzero(
         return None;
     }
     Some(
-        SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
             not_equal_fact.clone().into(),
             "well-defined exp/factorial values are strictly positive".to_string(),
+            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyIntrinsicallyPositiveNativeValueNonzero),
             Vec::new(),
         )
         .into(),
@@ -352,10 +355,11 @@ impl Runtime {
         }
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_label_and_steps(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                 not_equal_fact.clone().into(),
                 SuccessInferResult::new(),
                 "not_equal_empty_set_from_nonempty".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNotEqualEmptySetFromNonempty),
                 vec![sub],
             )
             .into(),
@@ -411,10 +415,11 @@ impl Runtime {
             if premise_result.is_success() {
                 steps.push(premise_result);
                 return Ok(Some(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_label_and_steps(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                         not_equal_fact.clone().into(),
                         SuccessInferResult::new(),
                         "not_equal_from_complete_strict_order_disjunction".to_string(),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNotEqualFromKnownStrictOrder),
                         steps,
                     )
                     .into(),
@@ -486,10 +491,11 @@ impl Runtime {
                     continue;
                 }
                 return Ok(Some(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_label_and_steps(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                         not_equal_fact.clone().into(),
                         SuccessInferResult::new(),
                         "not_equal_from_known_positive_lower_bound".to_string(),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNotEqualFromKnownPositiveLowerBound),
                         vec![positive_result, order_result],
                     )
                     .into(),
@@ -527,10 +533,11 @@ impl Runtime {
                     self.verify_non_equational_atomic_fact_with_known_atomic_facts(&in_set)?;
 
                 return Ok(Some(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_label_and_steps(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                         not_equal_fact.clone().into(),
                         SuccessInferResult::new(),
                         "not_equal_from_membership_contradiction".to_string(),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNotEqualFromMembershipContradiction),
                         vec![in_result, not_in_result],
                     )
                     .into(),
@@ -571,10 +578,11 @@ impl Runtime {
         }
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_label_and_steps(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                 not_equal_fact.clone().into(),
                 SuccessInferResult::new(),
                 "abs_not_equal_zero_from_arg_nonzero".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyAbsNotEqualZeroFromArgNonzero),
                 vec![result],
             )
             .into(),
@@ -614,9 +622,10 @@ impl Runtime {
         }
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 not_equal_fact.clone().into(),
                 "sqrt(x) != 0 from x > 0".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifySqrtNotEqualZeroFromPositiveArg),
                 vec![positive_result],
             )
             .into(),
@@ -663,10 +672,11 @@ impl Runtime {
                 self.verify_non_equational_atomic_fact_with_known_atomic_facts(candidate)?;
             if sub_result.is_success() {
                 return Ok(Some(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_label_and_steps(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                         not_equal_fact.clone().into(),
                         SuccessInferResult::new(),
                         "sub_not_equal_zero_from_operand_not_equal".to_string(),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifySubNotEqualZeroFromOperandNotEqual),
                         vec![sub_result],
                     )
                     .into(),
@@ -684,10 +694,11 @@ impl Runtime {
         )?;
         if premise_result.is_success() {
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rules_label_and_steps(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                     not_equal_fact.clone().into(),
                     SuccessInferResult::new(),
                     "sub_not_equal_zero_from_complete_operand_disjunction".to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifySubNotEqualZeroFromOperandNotEqual),
                     vec![premise_result],
                 )
                 .into(),
@@ -745,10 +756,11 @@ impl Runtime {
                 self.verify_non_equational_atomic_fact_with_known_atomic_facts(candidate)?;
             if sub_result.is_success() {
                 return Ok(Some(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_label_and_steps(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                         not_equal_fact.clone().into(),
                         SuccessInferResult::new(),
                         "add_not_equal_zero_from_operand_not_equal_negation".to_string(),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyAddNotEqualZeroFromOperandNotEqualNegation),
                         vec![sub_result],
                     )
                     .into(),
@@ -766,10 +778,11 @@ impl Runtime {
         )?;
         if premise_result.is_success() {
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rules_label_and_steps(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                     not_equal_fact.clone().into(),
                     SuccessInferResult::new(),
                     "add_not_equal_zero_from_complete_negation_disjunction".to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyAddNotEqualZeroFromOperandNotEqualNegation),
                     vec![premise_result],
                 )
                 .into(),
@@ -808,10 +821,11 @@ impl Runtime {
                 self.verify_non_equational_atomic_fact_with_known_atomic_facts(candidate)?;
             if sub_result.is_success() {
                 return Ok(Some(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_label_and_steps(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                         not_equal_fact.clone().into(),
                         SuccessInferResult::new(),
                         "operand_not_equal_from_sub_not_equal_zero".to_string(),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyOperandNotEqualFromSubNotEqualZero),
                         vec![sub_result],
                     )
                     .into(),
@@ -829,10 +843,11 @@ impl Runtime {
         )?;
         if premise_result.is_success() {
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rules_label_and_steps(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                     not_equal_fact.clone().into(),
                     SuccessInferResult::new(),
                     "operand_not_equal_from_complete_difference_disjunction".to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyOperandNotEqualFromSubNotEqualZero),
                     vec![premise_result],
                 )
                 .into(),
@@ -897,10 +912,11 @@ impl Runtime {
                 self.verify_non_equational_atomic_fact_with_known_atomic_facts(candidate)?;
             if sub_result.is_success() {
                 return Ok(Some(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_label_and_steps(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                         not_equal_fact.clone().into(),
                         SuccessInferResult::new(),
                         "operand_not_equal_negation_from_add_not_equal_zero".to_string(),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyOperandNotEqualNegationFromAddNotEqualZero),
                         vec![sub_result],
                     )
                     .into(),
@@ -919,10 +935,11 @@ impl Runtime {
             )?;
             if premise_result.is_success() {
                 return Ok(Some(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_label_and_steps(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                         not_equal_fact.clone().into(),
                         SuccessInferResult::new(),
                         "operand_not_equal_negation_from_complete_sum_disjunction".to_string(),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyOperandNotEqualNegationFromAddNotEqualZero),
                         vec![premise_result],
                     )
                     .into(),
@@ -960,9 +977,10 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 not_equal_fact.clone().into(),
                 "n != 0 from n $in N and 1 <= n".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNotEqualZeroFromNAndOneLe),
                 vec![premise_result],
             )
             .into(),
@@ -1036,10 +1054,11 @@ impl Runtime {
             self.verify_atomic_fact_as_builtin_rule_premise(&base_neq_zero, builtin_state)?;
         if result.is_success() {
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rules_label_and_steps(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                     not_equal_fact.clone().into(),
                     SuccessInferResult::new(),
                     "not_equal_pow_from_base_nonzero".to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNotEqualPowFromBaseNonzero),
                     vec![result],
                 )
                 .into(),
@@ -1057,10 +1076,11 @@ impl Runtime {
                 .verify_non_equational_atomic_fact_with_known_atomic_facts(&positive_membership)?;
             if positive_result.is_success() {
                 return Ok(Some(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_label_and_steps(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                         not_equal_fact.clone().into(),
                         SuccessInferResult::new(),
                         "not_equal_pow_from_positive_base_carrier".to_string(),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNotEqualPowFromBaseNonzero),
                         vec![positive_result],
                     )
                     .into(),
@@ -1100,13 +1120,14 @@ impl Runtime {
         let denominator_nonzero: AtomicFact =
             NotEqualFact::new(div.right.as_ref().clone(), zero_obj, line_file.clone()).into();
 
-        let Some(step_results) = self.verify_builtin_rule_premises(
-            &[numerator_nonzero, denominator_nonzero],
-            builtin_state,
-        )?
-        else {
+        let numerator_result = self
+            .verify_atomic_fact_as_builtin_rule_premise(&numerator_nonzero, builtin_state)?;
+        let denominator_result = self
+            .verify_atomic_fact_as_builtin_rule_premise(&denominator_nonzero, builtin_state)?;
+        if !numerator_result.is_success() || !denominator_result.is_success() {
             return Ok(None);
-        };
+        }
+        let step_results = vec![numerator_result, denominator_result];
         let success = if matches!(
             matched_zero,
             Obj::Number(number) if number.normalized_value == "0"
@@ -1127,10 +1148,11 @@ impl Runtime {
         } else {
             // Resolved aliases of zero still verify in Litex, but this rule
             // cannot yet return the equality evidence a compiler would need.
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_label_and_steps(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                 not_equal_fact.clone().into(),
                 SuccessInferResult::new(),
                 "div_not_equal_zero_from_numerator_nonzero".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyDivNotEqualZeroFromNumeratorNonzero),
                 step_results,
             )
         };
@@ -1225,9 +1247,10 @@ impl Runtime {
             }
 
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     not_equal_fact.clone().into(),
                     "product_nonzero_component: a * b != 0 gives a != 0 and b != 0".to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyProductNonzeroComponentFromKnownProduct),
                     steps,
                 )
                 .into(),
@@ -1283,10 +1306,11 @@ impl Runtime {
         if premise_result.is_success() {
             steps.push(premise_result);
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rules_label_and_steps(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                     not_equal_fact.clone().into(),
                     SuccessInferResult::new(),
                     "square_sum_not_equal_zero_from_nonzero_component_or".to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifySquareSumNotEqualZeroFromNonzeroComponent),
                     steps,
                 )
                 .into(),
@@ -1364,7 +1388,15 @@ impl Runtime {
             NotEqualFact::new(right_operand.clone(), zero_obj, line_file).into(),
         ];
         // A factor may also be a directly computable nonzero scalar such as `7 / 5`.
-        self.verify_builtin_rule_premises(&premises, builtin_state)
+        let mut results = Vec::with_capacity(premises.len());
+        for premise in &premises {
+            let result = self.verify_atomic_fact_as_builtin_rule_premise(premise, builtin_state)?;
+            if !result.is_success() {
+                return Ok(None);
+            }
+            results.push(result);
+        }
+        Ok(Some(results))
     }
 
     fn both_operands_strictly_positive_by_non_equational_verify(
@@ -1546,14 +1578,26 @@ impl Runtime {
         };
 
         match verified {
-            Some((rule_label, subgoals)) => Ok(Some(
-                (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
-                    not_equal_fact.clone().into(),
-                    rule_label.to_string(),
-                    subgoals,
-                ))
-                .into(),
-            )),
+            Some((rule_label, subgoals)) => {
+                let success = if rule_label
+                    == "mul_not_equal_zero_both_factors_nonzero_by_known_facts"
+                {
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                        not_equal_fact.clone().into(),
+                        rule_label.to_string(),
+                        BuiltinRuleEvidence::Nonzero(NonzeroBuiltinRule::Mul),
+                        subgoals,
+                    )
+                } else {
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                        not_equal_fact.clone().into(),
+                        rule_label.to_string(),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNotEqualFactWhenZeroAndBinaryArithmeticReducesByOperandFacts),
+                        subgoals,
+                    )
+                };
+                Ok(Some(success.into()))
+            }
             None => Ok(None),
         }
     }

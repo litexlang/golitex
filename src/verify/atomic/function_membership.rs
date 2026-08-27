@@ -64,12 +64,13 @@ impl Runtime {
             let membership_fact: Fact =
                 InFact::new(value_fn.clone().into(), definition_return_set, line_file).into();
             return Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     membership_fact,
                     format!(
                         "anonymous fn satisfies a definition return set through an equal {}",
                         representative_kind
                     ),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyValueInDefinitionReturnSet),
                     vec![representative_result],
                 )
                 .into(),
@@ -155,10 +156,11 @@ impl Runtime {
             )
             .into();
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     membership_fact,
                     "indexed result inherits its carrier from a symbolic Cartesian projection"
                         .to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIndexedValueInDefinitionReturnSetViaCartProjection),
                     vec![is_cart_result, coordinate_result, carrier_result],
                 )
                 .into(),

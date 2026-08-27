@@ -147,15 +147,6 @@ impl StmtResultToLeanCompiler {
                         &builtin.subgoals,
                     );
                 }
-                if let Some(BuiltinRuleEvidence::RegisteredLocal(evidence)) =
-                    builtin.evidence.typed()
-                {
-                    return self.construct_lean_registered_local_builtin_from_result(
-                        &source_fact,
-                        evidence,
-                        &builtin.subgoals,
-                    );
-                }
                 if let Some(BuiltinRuleEvidence::Arithmetic(rule)) = builtin.evidence.typed() {
                     return self.construct_lean_arithmetic_builtin_from_result(
                         &source_fact,
@@ -319,9 +310,23 @@ impl StmtResultToLeanCompiler {
                         &builtin.subgoals,
                     );
                 }
+                if let Some(BuiltinRuleEvidence::Extrema(rule)) = builtin.evidence.typed() {
+                    return self.construct_lean_extrema_from_result(
+                        &source_fact,
+                        *rule,
+                        &builtin.subgoals,
+                    );
+                }
+                if let Some(BuiltinRuleEvidence::Aggregate(rule)) = builtin.evidence.typed() {
+                    return self.construct_lean_aggregate_from_result(
+                        &source_fact,
+                        *rule,
+                        &builtin.subgoals,
+                    );
+                }
                 if let Some(evidence) = builtin.evidence.typed() {
                     if let Some(limitation) = direct_builtin_rule_compiler_limitation(evidence) {
-                        return Err(limitation.to_string());
+                        return Err(limitation);
                     }
                 }
                 if !builtin.subgoals.is_empty() {

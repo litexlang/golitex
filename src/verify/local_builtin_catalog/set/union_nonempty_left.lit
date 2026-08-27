@@ -1,4 +1,0 @@
-forall A, B set:
-    $is_nonempty_set(A)
-    =>:
-        $is_nonempty_set(union(A, B))

@@ -363,29 +363,30 @@ pub use crate::result::UnknownStmtResult;
 pub use crate::result::UnknownVerifyArgsSatisfyParamDefResult;
 pub use crate::result::VerifyArgsSatisfyParamDefResult;
 pub use crate::result::{
-    AbsoluteValueBuiltinRule, ArithmeticBuiltinRule, BuiltinRuleEvidence,
+    AbsoluteValueBuiltinRule, AggregateBuiltinRule, ArithmeticBuiltinRule, BuiltinRuleEvidence,
     ClosedNumericComparisonBuiltinRuleEvidence, ClosedNumericMembershipBuiltinRuleEvidence,
     ClosedNumericNonmembershipBuiltinRuleEvidence,
     ComplexAlgebraicNormalizationBuiltinRuleEvidence,
     ComplexArithmeticMembershipClosureBuiltinRule, DisjunctionIntroductionBuiltinRuleEvidence,
-    FiniteSetBuiltinRule, FunctionApplicationReturnMembershipBuiltinRuleEvidence,
+    ExtremaBuiltinRule, FiniteSetBuiltinRule, FunctionApplicationReturnMembershipBuiltinRuleEvidence,
     FunctionSetMembershipBuiltinRuleEvidence, IntegerMembershipClosureBuiltinRule,
     IntegerRangeSumPointwiseOrderBuiltinRuleEvidence,
     IntegralPolynomialNormalizationBuiltinRuleEvidence, KnownEqualityBuiltinRuleEvidence,
     KnownEqualityBuiltinRuleStep, ListSetMembershipBuiltinRuleEvidence,
     MatrixExpressionMembershipBuiltinRuleEvidence, NativeConstantMembershipBuiltinRule,
     NaturalMembershipClosureBuiltinRule, NestedCheckedFunctionDefinitionReductionEvidence,
-    ObjectReflexivityBuiltinRuleEvidence, OrderReflexivityBuiltinRuleEvidence,
+    NonzeroBuiltinRule, ObjectReflexivityBuiltinRuleEvidence, OrderReflexivityBuiltinRuleEvidence,
     RationalMembershipClosureBuiltinRule, RationalNormalizationBuiltinRuleEvidence,
     RealArithmeticMembershipClosureBuiltinRule, RefinedNumericMembershipBuiltinRuleEvidence,
-    RegisteredAntisymmetricPredicateBuiltinRuleEvidence, RegisteredLocalBuiltinRuleEvidence,
+    RegisteredAntisymmetricPredicateBuiltinRuleEvidence,
     RegisteredReflexivePredicateBuiltinRuleEvidence,
     RegisteredSymmetricPredicateBuiltinRuleEvidence,
     RuntimeResolvedNumericComparisonBuiltinRuleEvidence, SetBuilderMembershipBuiltinRuleEvidence,
     SetBuiltinRule, SetRelationDualityBuiltinRule, StandardSetNonemptyBuiltinRuleEvidence,
     StructuralDefinitionCongruenceBuiltinRuleEvidence,
     StructuralKnownEqualityCongruenceBuiltinRuleEvidence,
-    TupleCartesianMembershipBuiltinRuleEvidence, WellDefinednessRequirementRole,
+    TupleCartesianMembershipBuiltinRuleEvidence, UncataloguedBuiltinRule,
+    WellDefinednessRequirementRole,
 };
 pub use crate::result::{
     AtomicPredicateDomainCheckRole, CaseDisjointnessOrientation, SuccessAxiomStmtResult,
@@ -689,6 +690,7 @@ pub use crate::common::keywords::INTERSECT;
 pub use crate::common::keywords::INTERVAL_LITERAL_PREFIX;
 pub use crate::common::keywords::IS_CART;
 pub use crate::common::keywords::IS_FINITE_SET;
+pub use crate::common::keywords::IS_REAL_GREATEST_LOWER_BOUND;
 pub use crate::common::keywords::IS_REAL_LEAST_UPPER_BOUND;
 pub use crate::common::keywords::IS_NONEMPTY_SET;
 pub use crate::common::keywords::IS_SET;

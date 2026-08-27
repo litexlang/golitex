@@ -35,7 +35,7 @@ fn curated_api_exposes_one_owned_run_entry_for_every_target_kind() {
     assert!(code.ok, "{}", code.output);
     assert_eq!(code.target_kind, RunTargetKind::Code);
     assert!(code.target_path.is_none());
-    assert_eq!(code.runtime.options, options);
+    assert_eq!(code.runtime.run_options, options);
 
     let _: fn(RunRequest) -> RunOutcome = run;
     let _: fn(&str) -> RunTarget = RunTarget::code;

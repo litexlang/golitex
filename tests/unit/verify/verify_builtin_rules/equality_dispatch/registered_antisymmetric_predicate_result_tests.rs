@@ -17,7 +17,11 @@ fn fixture_child(fact: Fact) -> StmtResult {
     SuccessFactStmtResult::new(
         fact,
         SuccessInferResult::new(),
-        SuccessFactProofResult::builtin_rule("fixture child"),
+        SuccessFactProofResult::builtin_rule_with_evidence(
+            "fixture child",
+            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TestFixture),
+            Vec::new(),
+        ),
     )
     .into()
 }

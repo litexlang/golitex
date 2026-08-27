@@ -34,9 +34,10 @@ impl Runtime {
             }
 
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     target.clone().into(),
                     "finite codomain of a surjection from a finite set".to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyFiniteCodomainFromKnownSurjection),
                     vec![codomain_match, domain_result, property_result],
                 )
                 .into(),
@@ -87,9 +88,10 @@ impl Runtime {
             }
 
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     equal_fact.clone().into(),
                     "finite injection has range cardinality equal to its source".to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyFiniteSetSizeFnRangeFromKnownInjection),
                     vec![domain_match, function_match, finite_result, property_result],
                 )
                 .into(),
@@ -151,9 +153,10 @@ impl Runtime {
             }
 
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     equal_fact.clone().into(),
                     "finite bijection preserves cardinality".to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyFiniteSetSizeFromKnownBijection),
                     vec![domain_match, codomain_match, finite_result, property_result],
                 )
                 .into(),
@@ -203,10 +206,11 @@ impl Runtime {
             }
 
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     target.clone().into(),
                     "finite surjection bounds codomain cardinality by source cardinality"
                         .to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyFiniteSetSizeCodomainLeDomainFromKnownSurjection),
                     vec![codomain_match, domain_match, finite_result, property_result],
                 )
                 .into(),
@@ -301,9 +305,10 @@ impl Runtime {
             return Ok(UnknownGenericStmtResult::new().into());
         }
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 fact.clone().into(),
                 "literal/range finite-set structure".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyKnownOrStructurallyFiniteSet),
                 Vec::new(),
             )
             .into(),

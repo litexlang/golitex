@@ -54,6 +54,9 @@ pub enum BuiltinTheoremId {
     RealLeastUpperBoundExists,
     RealMemberLeLeastUpperBound,
     RealLeastUpperBoundLeUpperBound,
+    RealGreatestLowerBoundExists,
+    RealGreatestLowerBoundLeMember,
+    RealLowerBoundLeGreatestLowerBound,
     RationalBetweenReals,
 }
 
@@ -88,6 +91,11 @@ impl BuiltinTheoremId {
             "real_least_upper_bound_le_upper_bound" => {
                 Self::RealLeastUpperBoundLeUpperBound
             }
+            "real_greatest_lower_bound_exists" => Self::RealGreatestLowerBoundExists,
+            "real_greatest_lower_bound_le_member" => Self::RealGreatestLowerBoundLeMember,
+            "real_lower_bound_le_greatest_lower_bound" => {
+                Self::RealLowerBoundLeGreatestLowerBound
+            }
             "rational_between_reals" => Self::RationalBetweenReals,
             _ => return None,
         })
@@ -121,6 +129,11 @@ impl BuiltinTheoremId {
             Self::RealLeastUpperBoundExists => "real_least_upper_bound_exists",
             Self::RealMemberLeLeastUpperBound => "real_member_le_least_upper_bound",
             Self::RealLeastUpperBoundLeUpperBound => "real_least_upper_bound_le_upper_bound",
+            Self::RealGreatestLowerBoundExists => "real_greatest_lower_bound_exists",
+            Self::RealGreatestLowerBoundLeMember => "real_greatest_lower_bound_le_member",
+            Self::RealLowerBoundLeGreatestLowerBound => {
+                "real_lower_bound_le_greatest_lower_bound"
+            }
             Self::RationalBetweenReals => "rational_between_reals",
         }
     }

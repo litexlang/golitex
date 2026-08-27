@@ -34,10 +34,10 @@ impl Runtime {
                 "a product modulo either factor is zero",
             ));
         }
-        if let Some(result) = self.try_verify_native_min_max_equality(equal_fact, builtin_state)? {
+        if let Some(result) = self.try_verify_native_min_max_lattice_equality(equal_fact) {
             return Ok(result);
         }
-        if let Some(result) = self.try_verify_native_min_max_lattice_equality(equal_fact) {
+        if let Some(result) = self.try_verify_native_min_max_equality(equal_fact, builtin_state)? {
             return Ok(result);
         }
         if let Some(result) =
@@ -754,9 +754,10 @@ impl Runtime {
                 continue;
             }
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     equal_fact.clone().into(),
                     "tuple reconstruction from known Cartesian-product membership".to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyTupleReconstructionFromKnownCartMembership),
                     vec![membership_result],
                 )
                 .into(),
@@ -806,13 +807,13 @@ impl Runtime {
 
         // Empty set is a two-sided identity for union, accepted in either equality direction.
         // Example: `union(A, {}) = A` and `union({}, A) = A`.
-        if Self::union_empty_identity_shape(left, right)
-            || Self::union_empty_identity_shape(right, left)
+        if let Some(rule) = Self::union_empty_identity_rule(left, right)
+            .or_else(|| Self::union_empty_identity_rule(right, left))
         {
             return Ok(Some(Self::set_equality_success(
                 equal_fact,
                 "union_empty_identity",
-                Some(SetBuiltinRule::UnionEmptyIdentity),
+                Some(rule),
             )));
         }
 
@@ -843,7 +844,7 @@ impl Runtime {
                 return Ok(Some(Self::set_equality_success_with_subgoals(
                     equal_fact,
                     "union_absorption_from_subset",
-                    SetBuiltinRule::UnionAbsorptionFromSubset,
+                    SetBuiltinRule::UnionEqRightOfSubset,
                     vec![result],
                 )));
             }
@@ -889,7 +890,7 @@ impl Runtime {
             return Ok(Some(Self::set_equality_success(
                 equal_fact,
                 "intersect_union_distributive",
-                None,
+                Some(SetBuiltinRule::IntersectUnionDistributive),
             )));
         }
 
@@ -1004,7 +1005,7 @@ impl Runtime {
             return Ok(Some(Self::set_equality_success(
                 equal_fact,
                 "set_minus_union_de_morgan",
-                None,
+                Some(SetBuiltinRule::SetMinusUnionDeMorgan),
             )));
         }
 
@@ -1016,14 +1017,21 @@ impl Runtime {
             return Ok(Some(Self::set_equality_success(
                 equal_fact,
                 "set_minus_intersect_de_morgan",
-                None,
+                Some(SetBuiltinRule::SetMinusIntersectDeMorgan),
             )));
         }
 
         // A subset is recovered by removing its relative complement from the container.
         // Example: `B $subset A` gives `B = set_minus(A, set_minus(A, B))`.
-        if let Some((container, subset)) = Self::set_minus_recovers_subset_shape(left, right)
-            .or_else(|| Self::set_minus_recovers_subset_shape(right, left))
+        if let Some((container, subset, rule)) = Self::set_minus_recovers_subset_shape(left, right)
+            .map(|(container, subset)| {
+                (container, subset, SetBuiltinRule::SubsetEqSetMinusRecovery)
+            })
+            .or_else(|| {
+                Self::set_minus_recovers_subset_shape(right, left).map(|(container, subset)| {
+                    (container, subset, SetBuiltinRule::SetMinusRecoverSubset)
+                })
+            })
         {
             let subset_fact: AtomicFact =
                 SubsetFact::new(subset, container, line_file.clone()).into();
@@ -1031,12 +1039,12 @@ impl Runtime {
                 self.verify_atomic_fact_as_builtin_rule_premise(&subset_fact, builtin_state)?;
             if subset_result.is_success() {
                 return Ok(Some(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
-                        equal_fact.clone().into(),
-                        "set_minus_recovers_subset_from_relative_complement".to_string(),
+                    Self::set_equality_success_with_subgoals(
+                        equal_fact,
+                        "set_minus_recovers_subset_from_relative_complement",
+                        rule,
                         vec![subset_result],
-                    )
-                    .into(),
+                    ),
                 ));
             }
         }
@@ -1096,9 +1104,10 @@ impl Runtime {
         }
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "finite_set_size_set_minus".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyFiniteSetSizeSetMinusEquality),
                 vec![first_result, second_result],
             )
             .into(),
@@ -1131,9 +1140,10 @@ impl Runtime {
         };
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "finite_set_size_union_inclusion_exclusion".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyFiniteSetSizeUnionEquality),
                 step_results,
             )
             .into(),
@@ -1166,9 +1176,10 @@ impl Runtime {
         };
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "finite_set_size_partition_by_intersection_and_difference".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyFiniteSetSizePartitionEquality),
                 step_results,
             )
             .into(),
@@ -1214,9 +1225,10 @@ impl Runtime {
         }
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "finite_set_size_set_minus_finite_subset".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyFiniteSetSizeSetMinusOfSubsetEquality),
                 vec![subset_result, container_result, subset_finite_result],
             )
             .into(),
@@ -1270,9 +1282,10 @@ impl Runtime {
             "finite_set_size_range"
         };
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 rule.to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyFiniteSetSizeIntegerRangeEquality),
                 vec![start_result, end_result, order_result],
             )
             .into(),
@@ -1303,9 +1316,10 @@ impl Runtime {
         }
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "power_set_finite_set_size_two_pow_finite_set_size_base".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyPowerSetFiniteSetSizeEquality),
                 vec![base_result],
             )
             .into(),
@@ -1327,9 +1341,10 @@ impl Runtime {
                     Vec::new(),
                 )
             }
-            None => SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            None => SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 fact,
                 reason.to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::SetEqualitySuccess),
                 Vec::new(),
             ),
         }
@@ -1890,13 +1905,24 @@ impl Runtime {
         None
     }
 
-    fn union_empty_identity_shape(union_side: &Obj, other_side: &Obj) -> bool {
+    fn union_empty_identity_rule(
+        union_side: &Obj,
+        other_side: &Obj,
+    ) -> Option<SetBuiltinRule> {
         let Obj::Union(union) = union_side else {
-            return false;
+            return None;
         };
-        (Self::is_empty_list_set(&union.left) && objs_match_for_pattern(&union.right, other_side))
-            || (Self::is_empty_list_set(&union.right)
-                && objs_match_for_pattern(&union.left, other_side))
+        if Self::is_empty_list_set(&union.left)
+            && objs_match_for_pattern(&union.right, other_side)
+        {
+            Some(SetBuiltinRule::UnionEmptyLeft)
+        } else if Self::is_empty_list_set(&union.right)
+            && objs_match_for_pattern(&union.left, other_side)
+        {
+            Some(SetBuiltinRule::UnionEmptyRight)
+        } else {
+            None
+        }
     }
 
     fn is_empty_list_set(obj: &Obj) -> bool {
@@ -1980,9 +2006,10 @@ impl Runtime {
                             .into();
                             let nonempty_result = match index_intersect.index_set.as_ref() {
                                 Obj::ListSet(list) if !list.list.is_empty() => {
-                                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                                         nonempty_index.clone().into(),
                                         "nonempty literal index set".to_string(),
+                                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyIndexedSetFamilyEqualities),
                                         Vec::new(),
                                     )
                                     .into()
@@ -2189,13 +2216,22 @@ impl Runtime {
                 continue;
             };
 
-            let (subset, superset) = if objs_match_for_pattern(target_side, &intersection.right) {
-                (&intersection.right, &intersection.left)
-            } else if objs_match_for_pattern(target_side, &intersection.left) {
-                (&intersection.left, &intersection.right)
-            } else {
-                continue;
-            };
+            let (subset, superset, rule) =
+                if objs_match_for_pattern(target_side, &intersection.right) {
+                    (
+                        &intersection.right,
+                        &intersection.left,
+                        SetBuiltinRule::IntersectEqRightOfSubset,
+                    )
+                } else if objs_match_for_pattern(target_side, &intersection.left) {
+                    (
+                        &intersection.left,
+                        &intersection.right,
+                        SetBuiltinRule::IntersectEqLeftOfSubset,
+                    )
+                } else {
+                    continue;
+                };
 
             let subset_fact: AtomicFact = SubsetFact::new(
                 subset.as_ref().clone(),
@@ -2210,12 +2246,12 @@ impl Runtime {
             }
 
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
-                    equal_fact.clone().into(),
-                    "intersect_from_subset".to_string(),
+                Self::set_equality_success_with_subgoals(
+                    equal_fact,
+                    "intersect_from_subset",
+                    rule,
                     vec![subset_result],
                 )
-                .into(),
             ));
         }
 
@@ -2278,9 +2314,10 @@ impl Runtime {
         }
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "intersect_literal_set_filter".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyLiteralSetIntersectionFilter),
                 steps,
             )
             .into(),
@@ -2328,9 +2365,10 @@ impl Runtime {
         let known_sum_1 = self.verify_equal_fact_by_known_equality(&sum_fact_1);
         if known_sum_1.is_success() {
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     equal_fact.clone().into(),
                     "equality: a = c - b from known a + b = c".to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyOneSubtractionFromKnownAddition),
                     vec![known_sum_1],
                 )
                 .into(),
@@ -2347,9 +2385,10 @@ impl Runtime {
         let known_sum_2 = self.verify_equal_fact_by_known_equality(&sum_fact_2);
         if known_sum_2.is_success() {
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     equal_fact.clone().into(),
                     "equality: a = c - b from known b + a = c".to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyOneSubtractionFromKnownAddition),
                     vec![known_sum_2],
                 )
                 .into(),
@@ -2363,9 +2402,10 @@ impl Runtime {
         )?;
         if premise_result.is_success() {
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     equal_fact.clone().into(),
                     "equality: subtraction from complete addition-order disjunction".to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyOneSubtractionFromKnownAddition),
                     vec![premise_result],
                 )
                 .into(),
@@ -2426,9 +2466,10 @@ impl Runtime {
         }
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "tuple equality from dimension and projections".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyTupleEqualityFromDimAndProjections),
                 steps,
             )
             .into(),
@@ -2514,9 +2555,10 @@ impl Runtime {
         }
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "tuple equality from symbolic dimension and coordinates".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifySymbolicTupleEqualityFromCoordinates),
                 vec![
                     left_is_tuple_result,
                     right_is_tuple_result,
@@ -2572,9 +2614,10 @@ impl Runtime {
         }
         if let Some(steps) = self.verify_builtin_rule_premises(&complete_premises, builtin_state)? {
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     equal_fact.clone().into(),
                     "cart equality from dimension and projections".to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyCartEqualityFromDimAndProjections),
                     steps,
                 )
                 .into(),
@@ -2615,9 +2658,10 @@ impl Runtime {
         }
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "cart equality from dimension and projections".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyCartEqualityFromDimAndProjections),
                 steps,
             )
             .into(),
@@ -2723,9 +2767,10 @@ impl Runtime {
                         &empty_order,
                     )?;
                 if comparison.is_success() {
-                    sub = SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                    sub = SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         not_nonempty.clone().into(),
                         "integer interval emptiness by number comparison".to_string(),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyEmptySetEqualityFromNotNonempty),
                         vec![comparison],
                     )
                     .into();
@@ -2737,10 +2782,11 @@ impl Runtime {
         }
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_label_and_steps(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                 equal_fact.clone().into(),
                 SuccessInferResult::new(),
                 "empty_set_equality_from_not_nonempty".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyEmptySetEqualityFromNotNonempty),
                 vec![sub],
             )
             .into(),
@@ -2771,10 +2817,11 @@ impl Runtime {
         }
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_label_and_steps(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                 equal_fact.clone().into(),
                 SuccessInferResult::new(),
                 "finite_set_size_zero_implies_empty_set".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyEmptyFiniteSetFromSizeZero),
                 vec![size_zero],
             )
             .into(),
@@ -2861,9 +2908,10 @@ impl Runtime {
         )?;
         if complete_result.is_success() {
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     equal_fact.clone().into(),
                     "equality from a >= b and b >= a".to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyEqualityFromTwoSidedWeakOrder),
                     vec![complete_result],
                 )
                 .into(),
@@ -2892,9 +2940,10 @@ impl Runtime {
         steps.push(right_ge_left);
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "equality from a >= b and b >= a".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyEqualityFromTwoSidedWeakOrder),
                 steps,
             )
             .into(),
@@ -2956,9 +3005,10 @@ impl Runtime {
         };
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "division elimination: from a / b = c and b != 0, prove a = c * b".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyProductFromKnownDivisionCandidate),
                 vec![nonzero_result],
             )
             .into(),
@@ -3035,9 +3085,10 @@ impl Runtime {
         };
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "division introduction: from a = b * c and b != 0, prove a / b = c".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyDivisionFromKnownProduct),
                 vec![nonzero_result],
             )
             .into(),

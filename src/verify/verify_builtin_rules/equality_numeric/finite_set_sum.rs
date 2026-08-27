@@ -408,10 +408,11 @@ impl Runtime {
             let mut subgoals = vec![pointwise_result];
             subgoals.append(&mut unique_coverage_results);
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     equal_fact.clone().into(),
                     "equality: finite-set sum substitution along a uniquely-covered index set"
                         .to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyFiniteSetSumSubstitution),
                     subgoals,
                 )
                 .into(),

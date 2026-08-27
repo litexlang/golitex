@@ -19,11 +19,11 @@ pub struct Runtime {
     /// temporary runtime environments, but are not part of the persistent
     /// mathematical environment and are never merged or snapshotted.
     pub statement_proof_state: StatementProofStateStack,
-    pub options: RunOptions,
+    pub run_options: RunOptions,
 }
 
 impl Runtime {
-    pub fn new(options: RunOptions) -> Self {
+    pub fn new(run_options: RunOptions) -> Self {
         Runtime {
             module_manager: Box::new(ModuleManager::new()),
             execution_stack: vec![],
@@ -31,7 +31,7 @@ impl Runtime {
             symbol_id_allocator: Rc::new(SymbolIdAllocator::new()),
             template_instance_interner: RefCell::new(HashMap::new()),
             statement_proof_state: StatementProofStateStack::new(),
-            options,
+            run_options,
         }
     }
 }
@@ -54,11 +54,11 @@ impl Runtime {
     }
 
     pub fn set_output_style(&mut self, output_style: OutputStyle) {
-        self.options.output_style = output_style;
+        self.run_options.output_style = output_style;
     }
 
     pub fn effective_output_style(&self) -> OutputStyle {
-        self.options.output_style
+        self.run_options.output_style
     }
 
     pub fn is_compact_output(&self) -> bool {
@@ -198,7 +198,7 @@ impl Runtime {
     }
 
     pub fn strict_mode_applies_to_current_module(&self) -> bool {
-        if !self.options.strict_mode {
+        if !self.run_options.strict_mode {
             return false;
         }
         let Some(frame) = self.execution_stack.last() else {

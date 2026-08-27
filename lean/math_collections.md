@@ -395,13 +395,12 @@ carrier values with separately proved real membership use
 `Rules.complexAddInR`, `complexSubInR`, `complexMulInR`, and `complexDivInR`
 for the four basic real carrier closures. The three reviewed additive sign
 adapters cover nonnegative plus nonnegative and either one of the two ordered
-summands being strictly positive. Both a direct arithmetic certificate and a
-registered local-rule certificate validate their ordered operands before
-calling the corresponding theorem.
+summands being strictly positive. Each typed arithmetic certificate validates
+its ordered operands before calling the corresponding theorem.
 
 Example 15 also covers `AddPositive`, `MulNonnegative`, `MulPositive`,
 `DivNonnegative`, and `DivPositive`, including recursive strategy children
-whose registered rule IDs and semantic fingerprints are validated exactly.
+whose Rust rule variants and ordered subgoals are validated exactly.
 The adapters open one representative per operand and call Mathlib's native
 sign theorems. No generated theorem receives a `RealCoherence` parameter and
 no project axiom is added.

@@ -81,7 +81,7 @@ executable reuse, not the number of helper lemmas.
 ```text
 Z and integer arithmetic
   ├─→ kth_odd definition and checked reductions
-  ├─→ singleton/split-last registered sum certificates
+  ├─→ singleton/split-last typed sum certificates
   └─→ carrier facts for the sum and square
              ↓
 inline base + split-last + exact IH FactId + inline function/square calculation

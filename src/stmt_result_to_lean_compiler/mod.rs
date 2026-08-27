@@ -4,7 +4,6 @@ mod compiler_state;
 mod file_compilation;
 mod lean_compilation_types;
 mod markdown_compilation;
-mod registered_local_builtin_rule_identifiers_for_lean;
 mod represent_litex_function_contracts_in_lean;
 mod represent_litex_objects_in_lean;
 mod source_compilation;

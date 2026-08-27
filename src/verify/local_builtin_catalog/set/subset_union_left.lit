@@ -1,2 +1,0 @@
-forall A, B set:
-    A $subset union(A, B)

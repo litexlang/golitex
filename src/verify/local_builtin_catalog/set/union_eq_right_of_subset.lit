@@ -1,4 +1,0 @@
-forall A, B set:
-    A $subset B
-    =>:
-        union(A, B) = B

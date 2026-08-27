@@ -1174,19 +1174,27 @@ pub(super) fn describe_success_fact_result_for_direct_compilation_audit(
 /// therefore requires an explicit compiler decision here.
 pub(super) fn direct_builtin_rule_compiler_limitation(
     evidence: &BuiltinRuleEvidence,
-) -> Option<&'static str> {
+) -> Option<String> {
     match evidence {
+        BuiltinRuleEvidence::Uncatalogued(rule) => Some(format!(
+            "builtin rule `{}` has no reviewed ToLean mapping",
+            rule.rule_id()
+        )),
         BuiltinRuleEvidence::MatrixExpressionMembership(_) => Some(
-            "StmtResultToLeanCompiler does not yet represent native matrix expressions in the Lean target ABI",
+            "StmtResultToLeanCompiler does not yet represent native matrix expressions in the Lean target ABI".to_string(),
         ),
         BuiltinRuleEvidence::DivNotEqualZero(_) => Some(
-            "StmtResultToLeanCompiler cannot yet replay division nonzero until Litex.Same has a reviewed numeric-observation elimination theorem",
+            "StmtResultToLeanCompiler cannot yet replay builtin rule `nonzero.div` until Litex.Same has a reviewed numeric-observation elimination theorem".to_string(),
         ),
+        BuiltinRuleEvidence::Nonzero(rule) => Some(match rule {
+            NonzeroBuiltinRule::Mul => {
+                "StmtResultToLeanCompiler cannot yet replay builtin rule `nonzero.mul` until Litex.Same has a reviewed numeric-observation elimination theorem".to_string()
+            }
+        }),
         BuiltinRuleEvidence::NotEqualFromStrictOrder => Some(
-            "StmtResultToLeanCompiler cannot yet replay strict-order inequality until Litex.Same has a reviewed numeric-observation elimination theorem",
+            "StmtResultToLeanCompiler cannot yet replay strict-order inequality until Litex.Same has a reviewed numeric-observation elimination theorem".to_string(),
         ),
-        BuiltinRuleEvidence::RegisteredLocal(_)
-        | BuiltinRuleEvidence::DefinitionProjection(_)
+        BuiltinRuleEvidence::DefinitionProjection(_)
         | BuiltinRuleEvidence::SetBuilderMembership(_)
         | BuiltinRuleEvidence::FunctionSetMembership(_)
         | BuiltinRuleEvidence::TupleCartesianMembership(_)
@@ -1204,6 +1212,8 @@ pub(super) fn direct_builtin_rule_compiler_limitation(
         | BuiltinRuleEvidence::RationalNormalization(_)
         | BuiltinRuleEvidence::ComplexAlgebraicNormalization(_)
         | BuiltinRuleEvidence::AbsoluteValue(_)
+        | BuiltinRuleEvidence::Extrema(_)
+        | BuiltinRuleEvidence::Aggregate(_)
         | BuiltinRuleEvidence::StructuralDefinitionCongruence(_)
         | BuiltinRuleEvidence::StructuralKnownEqualityCongruence(_)
         | BuiltinRuleEvidence::IntegralPolynomialNormalization(_)

@@ -2,7 +2,7 @@
 #
 # Both induction cases deliberately contain their calculations. There are no
 # one-use sum/square-step wrappers and no explicit theorem invocation: Litex
-# matches the checked function reductions, registered sum rules, exact
+# matches the checked function reductions, typed sum rules, exact
 # induction hypothesis, and arithmetic facts automatically.
 #
 # ToLean translates only the declarations and proof in this file. The native

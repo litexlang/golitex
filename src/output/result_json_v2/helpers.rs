@@ -1466,26 +1466,52 @@ pub(super) fn set_relation_duality_rule_name(rule: SetRelationDualityBuiltinRule
 
 pub(super) fn set_builtin_rule_name(rule: SetBuiltinRule) -> &'static str {
     match rule {
+        SetBuiltinRule::EmptySubset => "EmptySubset",
         SetBuiltinRule::SubsetReflexivity => "SubsetReflexivity",
         SetBuiltinRule::SupersetReflexivity => "SupersetReflexivity",
         SetBuiltinRule::SubsetTransitivity => "SubsetTransitivity",
+        SetBuiltinRule::SubsetUnionLeft => "SubsetUnionLeft",
+        SetBuiltinRule::SubsetUnionRight => "SubsetUnionRight",
         SetBuiltinRule::UnionCommutative => "UnionCommutative",
         SetBuiltinRule::UnionAssociative => "UnionAssociative",
         SetBuiltinRule::UnionIdempotent => "UnionIdempotent",
-        SetBuiltinRule::UnionEmptyIdentity => "UnionEmptyIdentity",
+        SetBuiltinRule::UnionEmptyLeft => "UnionEmptyLeft",
+        SetBuiltinRule::UnionEmptyRight => "UnionEmptyRight",
         SetBuiltinRule::UnionSetMinusDecomposition => "UnionSetMinusDecomposition",
-        SetBuiltinRule::UnionAbsorptionFromSubset => "UnionAbsorptionFromSubset",
+        SetBuiltinRule::UnionEqRightOfSubset => "UnionEqRightOfSubset",
+        SetBuiltinRule::UnionFinite => "UnionFinite",
+        SetBuiltinRule::UnionNonemptyLeft => "UnionNonemptyLeft",
+        SetBuiltinRule::UnionNonemptyRight => "UnionNonemptyRight",
+        SetBuiltinRule::UnionSubset => "UnionSubset",
         SetBuiltinRule::IntersectCommutative => "IntersectCommutative",
         SetBuiltinRule::IntersectAssociative => "IntersectAssociative",
         SetBuiltinRule::IntersectIdempotent => "IntersectIdempotent",
+        SetBuiltinRule::IntersectEqLeftOfSubset => "IntersectEqLeftOfSubset",
+        SetBuiltinRule::IntersectEqRightOfSubset => "IntersectEqRightOfSubset",
+        SetBuiltinRule::IntersectFinite => "IntersectFinite",
+        SetBuiltinRule::IntersectSubsetLeft => "IntersectSubsetLeft",
+        SetBuiltinRule::IntersectSubsetRight => "IntersectSubsetRight",
+        SetBuiltinRule::IntersectUnionDistributive => "IntersectUnionDistributive",
         SetBuiltinRule::IntersectSetMinusSelfEmpty => "IntersectSetMinusSelfEmpty",
         SetBuiltinRule::IntersectSetMinusDisjointFromSubset => {
             "IntersectSetMinusDisjointFromSubset"
         }
+        SetBuiltinRule::PowerSetFinite => "PowerSetFinite",
+        SetBuiltinRule::PowerSetMembershipOfSubset => "PowerSetMembershipOfSubset",
+        SetBuiltinRule::PowerSetNonempty => "PowerSetNonempty",
         SetBuiltinRule::SetMinusSelfEmpty => "SetMinusSelfEmpty",
         SetBuiltinRule::SetMinusEmptyRight => "SetMinusEmptyRight",
         SetBuiltinRule::SetMinusEmptyLeft => "SetMinusEmptyLeft",
+        SetBuiltinRule::SetMinusFiniteLeft => "SetMinusFiniteLeft",
+        SetBuiltinRule::SetMinusInfiniteOfInfiniteFinite => {
+            "SetMinusInfiniteOfInfiniteFinite"
+        }
+        SetBuiltinRule::SetMinusIntersectDeMorgan => "SetMinusIntersectDeMorgan",
         SetBuiltinRule::SetMinusIntersectSelf => "SetMinusIntersectSelf",
+        SetBuiltinRule::SetMinusRecoverSubset => "SetMinusRecoverSubset",
+        SetBuiltinRule::SetMinusSubsetLeft => "SetMinusSubsetLeft",
+        SetBuiltinRule::SetMinusUnionDeMorgan => "SetMinusUnionDeMorgan",
+        SetBuiltinRule::SubsetEqSetMinusRecovery => "SubsetEqSetMinusRecovery",
         SetBuiltinRule::UnionMembershipLeft => "UnionMembershipLeft",
         SetBuiltinRule::UnionMembershipRight => "UnionMembershipRight",
         SetBuiltinRule::IntersectMembershipBoth => "IntersectMembershipBoth",
@@ -1505,10 +1531,54 @@ pub(super) fn finite_set_builtin_rule_name(rule: FiniteSetBuiltinRule) -> &'stat
 
 pub(super) fn absolute_value_builtin_rule_name(rule: AbsoluteValueBuiltinRule) -> &'static str {
     match rule {
+        AbsoluteValueBuiltinRule::Nonnegative => "Nonnegative",
+        AbsoluteValueBuiltinRule::SelfLessEqual => "SelfLessEqual",
+        AbsoluteValueBuiltinRule::NegationLessEqual => "NegationLessEqual",
+        AbsoluteValueBuiltinRule::NegativeAbsoluteLessEqual => "NegativeAbsoluteLessEqual",
+        AbsoluteValueBuiltinRule::TriangleAdd => "TriangleAdd",
+        AbsoluteValueBuiltinRule::TriangleSub => "TriangleSub",
+        AbsoluteValueBuiltinRule::ReverseTriangleAdd => "ReverseTriangleAdd",
+        AbsoluteValueBuiltinRule::ReverseTriangleSub => "ReverseTriangleSub",
         AbsoluteValueBuiltinRule::NonnegativeIdentity => "NonnegativeIdentity",
         AbsoluteValueBuiltinRule::NonpositiveNegation => "NonpositiveNegation",
         AbsoluteValueBuiltinRule::Product => "Product",
         AbsoluteValueBuiltinRule::PositiveFromNonzero => "PositiveFromNonzero",
+    }
+}
+
+pub(super) fn extrema_builtin_rule_name(rule: ExtremaBuiltinRule) -> &'static str {
+    match rule {
+        ExtremaBuiltinRule::MinLessEqualLeft => "MinLessEqualLeft",
+        ExtremaBuiltinRule::MinLessEqualRight => "MinLessEqualRight",
+        ExtremaBuiltinRule::LessEqualMaxLeft => "LessEqualMaxLeft",
+        ExtremaBuiltinRule::LessEqualMaxRight => "LessEqualMaxRight",
+        ExtremaBuiltinRule::MinEqLeftOfLessEqual => "MinEqLeftOfLessEqual",
+        ExtremaBuiltinRule::MinEqRightOfLessEqual => "MinEqRightOfLessEqual",
+        ExtremaBuiltinRule::MaxEqLeftOfLessEqual => "MaxEqLeftOfLessEqual",
+        ExtremaBuiltinRule::MaxEqRightOfLessEqual => "MaxEqRightOfLessEqual",
+        ExtremaBuiltinRule::MinCommutative => "MinCommutative",
+        ExtremaBuiltinRule::MinAssociative => "MinAssociative",
+        ExtremaBuiltinRule::MinIdempotent => "MinIdempotent",
+        ExtremaBuiltinRule::MinAbsorbMaxLeft => "MinAbsorbMaxLeft",
+        ExtremaBuiltinRule::MaxCommutative => "MaxCommutative",
+        ExtremaBuiltinRule::MaxAssociative => "MaxAssociative",
+        ExtremaBuiltinRule::MaxIdempotent => "MaxIdempotent",
+        ExtremaBuiltinRule::MaxAbsorbMinLeft => "MaxAbsorbMinLeft",
+        ExtremaBuiltinRule::MinMonotone => "MinMonotone",
+        ExtremaBuiltinRule::MaxMonotone => "MaxMonotone",
+    }
+}
+
+pub(super) fn aggregate_builtin_rule_name(rule: AggregateBuiltinRule) -> &'static str {
+    match rule {
+        AggregateBuiltinRule::SumSingle => "SumSingle",
+        AggregateBuiltinRule::SumSplitLast => "SumSplitLast",
+    }
+}
+
+pub(super) fn nonzero_builtin_rule_name(rule: NonzeroBuiltinRule) -> &'static str {
+    match rule {
+        NonzeroBuiltinRule::Mul => "Mul",
     }
 }
 

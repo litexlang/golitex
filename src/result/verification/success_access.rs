@@ -13,30 +13,6 @@ impl SuccessFactStmtResult {
         Self::new(stmt, infers, verified_by)
     }
 
-    pub fn new_with_verified_by_builtin_rules_recording_stmt(
-        stmt: Fact,
-        builtin_rule_label: String,
-        step_results: Vec<StmtResult>,
-    ) -> Self {
-        let infers = SuccessInferResult::new();
-        let verified_by =
-            SuccessFactProofResult::builtin_rule_with_subgoals(builtin_rule_label, step_results);
-        Self::new_with_verified_by_builtin_rules(stmt, infers, verified_by)
-    }
-
-    pub fn new_with_verified_by_builtin_strategy_recording_stmt(
-        stmt: Fact,
-        strategy_label: String,
-        step_results: Vec<StmtResult>,
-    ) -> Self {
-        let verified_by = SuccessFactProofResult::BuiltinStrategy(SuccessBuiltinFactProofResult {
-            msg: strategy_label,
-            evidence: SuccessBuiltinFactProofEvidenceResult::DiagnosticOnly,
-            subgoals: step_results,
-        });
-        Self::new_with_verified_by_builtin_rules(stmt, SuccessInferResult::new(), verified_by)
-    }
-
     pub fn new_with_verified_by_builtin_strategy_evidence_recording_stmt(
         stmt: Fact,
         strategy_label: String,
@@ -49,17 +25,6 @@ impl SuccessFactStmtResult {
             subgoals: step_results,
         });
         Self::new_with_verified_by_builtin_rules(stmt, SuccessInferResult::new(), verified_by)
-    }
-
-    pub fn new_with_verified_by_builtin_rules_label_and_steps(
-        stmt: Fact,
-        infers: SuccessInferResult,
-        builtin_rule_label: String,
-        step_results: Vec<StmtResult>,
-    ) -> Self {
-        let verified_by =
-            SuccessFactProofResult::builtin_rule_with_subgoals(builtin_rule_label, step_results);
-        Self::new_with_verified_by_builtin_rules(stmt, infers, verified_by)
     }
 
     pub fn new_with_verified_by_builtin_rule_evidence_and_steps(
@@ -137,18 +102,6 @@ impl SuccessFactStmtResult {
 mod test_support;
 
 impl SuccessFactProofResult {
-    pub fn builtin_rule(msg: impl Into<String>) -> Self {
-        Self::builtin_rule_with_subgoals(msg, Vec::new())
-    }
-
-    pub fn builtin_rule_with_subgoals(msg: impl Into<String>, subgoals: Vec<StmtResult>) -> Self {
-        Self::BuiltinRule(SuccessBuiltinFactProofResult {
-            msg: msg.into(),
-            evidence: SuccessBuiltinFactProofEvidenceResult::DiagnosticOnly,
-            subgoals,
-        })
-    }
-
     pub fn builtin_rule_with_evidence(
         msg: impl Into<String>,
         evidence: BuiltinRuleEvidence,

@@ -1,38 +1,33 @@
 use super::super::*;
 use super::existentials_claims_and_theorems::named_theorem_result_mut;
 use super::run_registered_rule_test;
-use crate::verify::rule_schema::{RuleFingerprint, RuleId};
 
-#[test]
-fn registered_set_rule_rejects_stale_fingerprint() {
-    let rule_id =
-        RuleId::new(SET_POWER_SET_MEMBERSHIP_OF_SUBSET_RULE_ID).expect("valid stable rule id");
-    let stale_fingerprint =
-        RuleFingerprint::from_hex("0".repeat(64)).expect("valid forged fingerprint shape");
-    assert!(registered_set_rule(&rule_id, &stale_fingerprint).is_none());
-}
-
-fn execute_registered_power_set_membership() -> Vec<StmtResult> {
+fn execute_typed_power_set_membership() -> Vec<StmtResult> {
     crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
         "have A set = R\nhave B set = C\ntrust A $subset B\nA $in power_set(B)\n",
         "direct_registered_power_set_membership.lit",
     )
-    .expect("execute registered power-set membership")
+    .expect("execute typed power-set membership")
 }
 
 #[test]
-fn registered_set_rule_compiles_directly_from_its_recursive_certificate() {
+fn typed_set_rule_compiles_directly_from_its_recursive_certificate() {
     run_registered_rule_test(|| {
-        let results = execute_registered_power_set_membership();
+        let results = execute_typed_power_set_membership();
         let [set_a, set_b, _, result] = results.as_slice() else {
             panic!("expected two set definitions, one trust boundary, and one result")
         };
         let result = result
             .factual_success()
-            .expect("registered set rule result is factual");
+            .expect("typed set rule result is factual");
         let SuccessFactProofResult::BuiltinRule(builtin) = result.proof() else {
-            panic!("expected registered builtin proof")
+            panic!("expected typed builtin proof")
         };
+        let Some(BuiltinRuleEvidence::Set(rule)) = builtin.evidence.typed() else {
+            panic!("expected typed set-rule evidence")
+        };
+        assert_eq!(*rule, SetBuiltinRule::PowerSetMembershipOfSubset);
+        assert_eq!(rule.rule_id(), "set.power_set_membership_of_subset");
         let mut compiler =
             StmtResultToLeanCompiler::new("direct_registered_power_set_membership.lit");
         compiler
@@ -44,9 +39,9 @@ fn registered_set_rule_compiles_directly_from_its_recursive_certificate() {
         for (index, child) in builtin.subgoals.iter().enumerate() {
             let child = child
                 .factual_success()
-                .expect("registered set child is factual");
+                .expect("typed set child is factual");
             let SuccessFactProofResult::StoredFactCitation(citation) = child.proof() else {
-                panic!("registered set child must cite an exact source fact")
+                panic!("typed set child must cite an exact source fact")
             };
             let source_fact_id = citation.source_fact_id;
             compiler
@@ -60,8 +55,8 @@ fn registered_set_rule_compiles_directly_from_its_recursive_certificate() {
         }
         let generated = compiler
             .construct_lean_proof_from_direct_fact_result(result)
-            .expect("compile registered set rule directly")
-            .expect("registered set rule must not use compatibility IR");
+            .expect("compile typed set rule directly")
+            .expect("typed set rule must have a direct consumer");
         assert!(
             generated.contains("Litex.SetRules.inPowerSetOfSubset"),
             "{generated}"
@@ -70,33 +65,7 @@ fn registered_set_rule_compiles_directly_from_its_recursive_certificate() {
 }
 
 #[test]
-fn registered_set_rule_result_rejects_a_stale_fingerprint() {
-    run_registered_rule_test(|| {
-        let mut results = execute_registered_power_set_membership();
-        let StmtResult::Success(SuccessStmtResult::Fact(result)) = &mut results[3] else {
-            panic!("expected registered power-set membership Result")
-        };
-        let verification = std::rc::Rc::get_mut(&mut result.verification)
-            .expect("test result has one verification owner");
-        let SuccessFactProofResult::BuiltinRule(proof) = verification.proof_mut() else {
-            panic!("expected registered builtin proof")
-        };
-        let Some(BuiltinRuleEvidence::RegisteredLocal(evidence)) = proof.evidence.typed_mut()
-        else {
-            panic!("expected registered local certificate")
-        };
-        evidence.semantic_fingerprint =
-            RuleFingerprint::from_hex("0".repeat(64)).expect("valid forged fingerprint shape");
-
-        let error = StmtResultToLeanCompiler::new("direct_registered_power_set_membership.lit")
-            .construct_lean_proof_from_direct_fact_result(result)
-            .expect_err("a stale registry certificate must fail closed");
-        assert!(error.contains("stale local builtin fingerprint"), "{error}");
-    });
-}
-
-#[test]
-fn registered_nonzero_product_and_quotient_rules_fail_closed_at_same_observation_boundary() {
+fn typed_nonzero_product_and_quotient_rules_fail_closed_at_same_observation_boundary() {
     run_registered_rule_test(|| {
         for (name, operator, rule_id) in [
             ("product", "*", "nonzero.mul"),
@@ -110,11 +79,11 @@ fn registered_nonzero_product_and_quotient_rules_fail_closed_at_same_observation
                 &source,
                 &file_name,
             )
-            .unwrap_or_else(|error| panic!("execute registered nonzero {name} rule: {error}"));
+            .unwrap_or_else(|error| panic!("execute typed nonzero {name} rule: {error}"));
             let error = StmtResultToLeanCompiler::new(&file_name)
                 .compile_stmt_results_to_lean_source(&results)
                 .expect_err(
-                    "registered nonzero arithmetic must fail closed without Same elimination",
+                    "typed nonzero arithmetic must fail closed without Same elimination",
                 );
             assert!(error.contains(rule_id), "{error}");
             assert!(
@@ -275,26 +244,6 @@ fn registered_componentwise_order_addition_rejects_swapped_semantic_children() {
             error.contains("componentwise additive order premise 0 changed"),
             "{error}"
         );
-    });
-}
-
-#[test]
-fn registered_componentwise_order_addition_rejects_stale_fingerprint() {
-    run_registered_rule_test(|| {
-        let mut results = execute_registered_componentwise_order_addition();
-        let builtin = registered_componentwise_order_addition_builtin_mut(&mut results);
-        let Some(BuiltinRuleEvidence::RegisteredLocal(evidence)) = builtin.evidence.typed_mut()
-        else {
-            panic!("expected registered local builtin evidence")
-        };
-        evidence.semantic_fingerprint =
-            RuleFingerprint::from_hex("0".repeat(64)).expect("valid forged fingerprint shape");
-
-        let error =
-            StmtResultToLeanCompiler::new("direct_registered_componentwise_order_addition.lit")
-                .compile_stmt_results_to_lean_source(&results)
-                .expect_err("stale registered order fingerprint must fail closed");
-        assert!(error.contains("stale local builtin fingerprint"), "{error}");
     });
 }
 

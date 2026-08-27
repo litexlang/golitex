@@ -48,9 +48,10 @@ impl Runtime {
         steps.push(second_zero);
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "equality: a^2 + b^2 = 0 from a = 0 and b = 0 over R".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifySquareSumZeroFromZeroComponents),
                 steps,
             )
             .into(),
@@ -126,9 +127,10 @@ impl Runtime {
                     steps.push(second_matches);
                 }
                 return Ok(Some(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         equal_fact.clone().into(),
                         "equality: a = 0 from a^2 + b^2 = 0 over R".to_string(),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifySquareSumComponentZeroFromKnownSumZero),
                         steps,
                     )
                     .into(),

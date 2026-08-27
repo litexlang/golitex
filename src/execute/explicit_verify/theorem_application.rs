@@ -494,6 +494,9 @@ impl Runtime {
             BuiltinTheoremId::RealLeastUpperBoundExists
                 | BuiltinTheoremId::RealMemberLeLeastUpperBound
                 | BuiltinTheoremId::RealLeastUpperBoundLeUpperBound
+                | BuiltinTheoremId::RealGreatestLowerBoundExists
+                | BuiltinTheoremId::RealGreatestLowerBoundLeMember
+                | BuiltinTheoremId::RealLowerBoundLeGreatestLowerBound
                 | BuiltinTheoremId::RationalBetweenReals
         ) {
             return self.exec_builtin_real_analysis_thm(
@@ -843,10 +846,11 @@ impl Runtime {
                         ];
                         if steps.iter().all(StmtResult::is_success) {
                             Some(
-                                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                                         conclusion.clone().into(),
                                         "real matrix operator has the requested matrix type"
                                             .to_string(),
+                                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::ExecBuiltinThmStmtImpl),
                                         steps,
                                     )
                                     .into(),
@@ -1428,9 +1432,12 @@ impl Runtime {
         let name = theorem_id.as_str();
         let expected_arity = match theorem_id {
             BuiltinTheoremId::RealLeastUpperBoundExists
+            | BuiltinTheoremId::RealGreatestLowerBoundExists
             | BuiltinTheoremId::RationalBetweenReals => 2,
             BuiltinTheoremId::RealMemberLeLeastUpperBound
-            | BuiltinTheoremId::RealLeastUpperBoundLeUpperBound => 3,
+            | BuiltinTheoremId::RealLeastUpperBoundLeUpperBound
+            | BuiltinTheoremId::RealGreatestLowerBoundLeMember
+            | BuiltinTheoremId::RealLowerBoundLeGreatestLowerBound => 3,
             _ => unreachable!("only real-analysis builtin theorems use this executor"),
         };
         if stmt.args.len() != expected_arity {
@@ -1561,6 +1568,112 @@ impl Runtime {
                         ),
                     ],
                     LessEqualFact::new(lub, stmt.args[2].clone(), line_file.clone()).into(),
+                )
+            }
+            BuiltinTheoremId::RealGreatestLowerBoundExists => {
+                let set = stmt.args[0].clone();
+                let lower_bound = stmt.args[1].clone();
+                let lower_bound_requirement = self.real_lower_bound_requirement(
+                    &set,
+                    &lower_bound,
+                    line_file.clone(),
+                )?;
+
+                let glb_group = self.fresh_param_group_with_type(
+                    vec!["glb".to_string()],
+                    ParamType::Obj(real.clone()),
+                )?;
+                let glb = obj_for_bound_param_in_scope(&glb_group.params[0]);
+                let certificate = real_glb_certificate_fact(&set, &glb, line_file.clone());
+                let existential = ExistentialSpec::new(
+                    TypedParameterList::new(vec![glb_group]),
+                    vec![certificate.into()],
+                    line_file.clone(),
+                )?;
+                let conclusion: ExistOrAndChainAtomicFact =
+                    ExistFactEnum::ExistFact(existential).into();
+
+                (
+                    vec![
+                        (
+                            SubsetFact::new(set.clone(), real.clone(), line_file.clone()).into(),
+                            BuiltinTheoremRequirementRole::ArgumentSetSubsetOfReals,
+                        ),
+                        (
+                            IsNonemptySetFact::new(set, line_file.clone()).into(),
+                            BuiltinTheoremRequirementRole::ArgumentSetIsNonempty,
+                        ),
+                        (
+                            InFact::new(lower_bound, real.clone(), line_file.clone()).into(),
+                            BuiltinTheoremRequirementRole::SuppliedLowerBoundBelongsToReals,
+                        ),
+                        (
+                            lower_bound_requirement,
+                            BuiltinTheoremRequirementRole::SuppliedValueIsLowerBoundForEverySetMember,
+                        ),
+                    ],
+                    conclusion.to_fact(),
+                )
+            }
+            BuiltinTheoremId::RealGreatestLowerBoundLeMember => {
+                let set = stmt.args[0].clone();
+                let glb = stmt.args[1].clone();
+                let member = stmt.args[2].clone();
+                (
+                    vec![
+                        (
+                            SubsetFact::new(set.clone(), real.clone(), line_file.clone()).into(),
+                            BuiltinTheoremRequirementRole::ArgumentSetSubsetOfReals,
+                        ),
+                        (
+                            InFact::new(glb.clone(), real.clone(), line_file.clone()).into(),
+                            BuiltinTheoremRequirementRole::CandidateBelongsToReals,
+                        ),
+                        (
+                            real_glb_certificate_fact(&set, &glb, line_file.clone()).into(),
+                            BuiltinTheoremRequirementRole::CandidateIsRealGreatestLowerBound,
+                        ),
+                        (
+                            InFact::new(member.clone(), set, line_file.clone()).into(),
+                            BuiltinTheoremRequirementRole::ArgumentIsMemberOfSet,
+                        ),
+                    ],
+                    LessEqualFact::new(glb, member, line_file.clone()).into(),
+                )
+            }
+            BuiltinTheoremId::RealLowerBoundLeGreatestLowerBound => {
+                let set = stmt.args[0].clone();
+                let glb = stmt.args[1].clone();
+                let lower_bound = stmt.args[2].clone();
+                let lower_bound_requirement = self.real_lower_bound_requirement(
+                    &set,
+                    &lower_bound,
+                    line_file.clone(),
+                )?;
+                (
+                    vec![
+                        (
+                            SubsetFact::new(set.clone(), real.clone(), line_file.clone()).into(),
+                            BuiltinTheoremRequirementRole::ArgumentSetSubsetOfReals,
+                        ),
+                        (
+                            InFact::new(glb.clone(), real.clone(), line_file.clone()).into(),
+                            BuiltinTheoremRequirementRole::CandidateBelongsToReals,
+                        ),
+                        (
+                            real_glb_certificate_fact(&set, &glb, line_file.clone()).into(),
+                            BuiltinTheoremRequirementRole::CandidateIsRealGreatestLowerBound,
+                        ),
+                        (
+                            InFact::new(lower_bound.clone(), real, line_file.clone()).into(),
+                            BuiltinTheoremRequirementRole::SuppliedLowerBoundBelongsToReals,
+                        ),
+                        (
+                            lower_bound_requirement,
+                            BuiltinTheoremRequirementRole::SuppliedValueIsLowerBoundForEverySetMember,
+                        ),
+                    ],
+                    LessEqualFact::new(lower_bound, glb, line_file.clone()).into(),
                 )
             }
             BuiltinTheoremId::RationalBetweenReals => {
@@ -1707,12 +1820,49 @@ impl Runtime {
         )?
         .into())
     }
+
+    fn real_lower_bound_requirement(
+        &mut self,
+        set: &Obj,
+        lower_bound: &Obj,
+        line_file: LineFile,
+    ) -> Result<Fact, RuntimeError> {
+        let member_group = self.fresh_param_group_with_type(
+            vec!["member".to_string()],
+            ParamType::Obj(StandardSet::R.into()),
+        )?;
+        let member = obj_for_bound_param_in_scope(&member_group.params[0]);
+        let comparison: AtomicFact =
+            LessEqualFact::new(lower_bound.clone(), member, line_file.clone()).into();
+        let membership: Fact = InFact::new(
+            obj_for_bound_param_in_scope(&member_group.params[0]),
+            set.clone(),
+            line_file.clone(),
+        )
+        .into();
+        Ok(ForallFact::new_canonical_forall(
+            TypedParameterList::new(vec![member_group]),
+            vec![membership],
+            vec![comparison.into()],
+            line_file,
+        )?
+        .into())
+    }
 }
 
 fn real_lub_certificate_fact(set: &Obj, lub: &Obj, line_file: LineFile) -> AtomicFact {
     NormalAtomicFact::new(
         AtomicName::WithoutMod(IS_REAL_LEAST_UPPER_BOUND.to_string()),
         vec![set.clone(), lub.clone()],
+        line_file,
+    )
+    .into()
+}
+
+fn real_glb_certificate_fact(set: &Obj, glb: &Obj, line_file: LineFile) -> AtomicFact {
+    NormalAtomicFact::new(
+        AtomicName::WithoutMod(IS_REAL_GREATEST_LOWER_BOUND.to_string()),
+        vec![set.clone(), glb.clone()],
         line_file,
     )
     .into()

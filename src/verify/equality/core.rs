@@ -21,7 +21,8 @@ use crate::result::{
     NestedCheckedFunctionDefinitionReductionEvidence, RationalNormalizationBuiltinRuleEvidence,
     StmtResult, StructuralDefinitionCongruenceBuiltinRuleEvidence,
     StructuralKnownEqualityCongruenceBuiltinRuleEvidence, SuccessFactProofResult,
-    SuccessFactStmtResult, SuccessTransformFactResult, UnknownGenericStmtResult,
+    SuccessFactStmtResult, SuccessTransformFactResult, UncataloguedBuiltinRule,
+    UnknownGenericStmtResult,
 };
 use crate::runtime::Runtime;
 use crate::verify::{BuiltinRuleSearchState, VerifyState};
@@ -200,9 +201,10 @@ impl Runtime {
         }
 
         let result: StmtResult =
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "structural equality with terminating reductions".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyEqualFactWithZeroPremiseVerification),
                 Vec::new(),
             )
             .into();
@@ -310,9 +312,10 @@ impl Runtime {
         } else {
             return UnknownGenericStmtResult::new().into();
         };
-        SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
             equal_fact.clone().into(),
             reason.to_string(),
+            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyEqualFactByDirectEvaluation),
             Vec::new(),
         )
         .into()
@@ -439,9 +442,10 @@ impl Runtime {
         if known_fact.to_string() == equal_fact.to_string() {
             return known_result;
         }
-        SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
             equal_fact.clone().into(),
             "calculation and rational expression simplification".to_string(),
+            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyEqualFactByKnownEqualityThenDirectEvaluation),
             vec![known_result],
         )
         .into()
@@ -464,11 +468,6 @@ impl Runtime {
                 equal_fact,
                 &child_state,
             )?
-        {
-            return Ok(self.cache_successful_atomic_fact_for_statement(&goal, result));
-        }
-        if let Some(result) =
-            self.try_verify_atomic_fact_with_local_builtin_catalog(&goal, &child_state)?
         {
             return Ok(self.cache_successful_atomic_fact_for_statement(&goal, result));
         }
@@ -571,9 +570,10 @@ impl Runtime {
                 )?;
             if verified_by_arg_to_arg {
                 return Ok(
-                    (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                    (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         equal_fact.clone().into(),
                         same_shape_and_equal_args_reason(equal_fact),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyEqualFact),
                         Vec::new(),
                     ))
                     .into(),
@@ -1034,9 +1034,10 @@ impl Runtime {
         let result = self.verify_equal_fact_with_bounded_builtin_routes(equal_fact)?;
         if result.is_success() {
             return Ok(
-                (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     equal_fact.clone().into(),
                     "builtin rules".to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyEqualFactByBuiltinRulesAndKnownEqualities),
                     Vec::new(),
                 ))
                 .into(),
@@ -1050,9 +1051,10 @@ impl Runtime {
             )?;
         if verified_by_arg_to_arg {
             return Ok(
-                (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     equal_fact.clone().into(),
                     same_shape_and_equal_args_reason(equal_fact),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyEqualFactByBuiltinRulesAndKnownEqualities),
                     Vec::new(),
                 ))
                 .into(),

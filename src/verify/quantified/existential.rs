@@ -459,9 +459,10 @@ impl Runtime {
                 verify_state,
             )? {
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         exist_fact.clone().into(),
                         "exist: real-line comparison witness".to_string(),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyExistFact),
                         steps,
                     )
                     .into(),
@@ -478,9 +479,10 @@ impl Runtime {
                 self.verify_atomic_fact_restricted_known_builtin(&nonempty, verify_state)?;
             if nonempty_result.is_success() {
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         exist_fact.clone().into(),
                         "exist: member of a nonempty set".to_string(),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyExistFact),
                         vec![nonempty_result],
                     )
                     .into(),
@@ -503,10 +505,11 @@ impl Runtime {
                 self.verify_atomic_fact_restricted_known_builtin(&in_q, verify_state)?;
             if rational_membership.is_success() {
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         exist_fact.clone().into(),
                         "exist: rational representation with positive integer denominator"
                             .to_string(),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyExistFact),
                         vec![rational_membership],
                     )
                     .into(),
@@ -528,9 +531,10 @@ impl Runtime {
                 self.verify_atomic_fact_restricted_known_builtin(&in_q, verify_state)?;
             if rational_membership.is_success() {
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         exist_fact.clone().into(),
                         "exist: rational integer ratio representation".to_string(),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyExistFact),
                         vec![rational_membership],
                     )
                     .into(),
@@ -551,10 +555,11 @@ impl Runtime {
                 self.verify_atomic_fact_restricted_known_builtin(&divisor_in_n_pos, verify_state)?;
             if dividend_result.is_success() && divisor_result.is_success() {
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         exist_fact.clone().into(),
                         "exist!: unique Euclidean quotient for an integer and positive divisor"
                             .to_string(),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyExistFact),
                         vec![dividend_result, divisor_result],
                     )
                     .into(),
@@ -603,10 +608,11 @@ impl Runtime {
                 && remainder_result.is_success()
             {
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         exist_fact.clone().into(),
                         "exist: zero remainder gives an integer multiple of a nonzero modulus"
                             .to_string(),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyExistFact),
                         vec![
                             dividend_result,
                             divisor_result,
@@ -632,9 +638,10 @@ impl Runtime {
                 self.verify_atomic_fact_restricted_known_builtin(&positive_bound, verify_state)?;
             if positive_bound_result.is_success() {
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         exist_fact.clone().into(),
                         "exist: Archimedean reciprocal bound".to_string(),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyExistFact),
                         vec![positive_bound_result],
                     )
                     .into(),
@@ -659,9 +666,10 @@ impl Runtime {
                 if interval_result.is_success() {
                     steps.push(interval_result);
                     return Ok(
-                        SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             exist_fact.clone().into(),
                             "exist: rational density in the real line".to_string(),
+                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyExistFact),
                             steps,
                         )
                         .into(),
@@ -687,9 +695,10 @@ impl Runtime {
                 if interval_result.is_success() {
                     steps.push(interval_result);
                     return Ok(
-                        SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             exist_fact.clone().into(),
                             "exist: real density by the midpoint principle".to_string(),
+                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyExistFact),
                             steps,
                         )
                         .into(),
@@ -726,9 +735,10 @@ impl Runtime {
                         "exist: integer inside a real interval of length at least 1"
                     };
                     return Ok(
-                        SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             exist_fact.clone().into(),
                             rule.to_string(),
+                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyExistFact),
                             steps,
                         )
                         .into(),
@@ -883,9 +893,10 @@ impl Runtime {
         }
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 exist_fact.clone().into(),
                 "finite nonempty natural set has a greatest member".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyFiniteNonemptyNaturalSetHasMaximum),
                 steps,
             )
             .into(),

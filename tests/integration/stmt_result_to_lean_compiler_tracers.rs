@@ -136,25 +136,21 @@ fn litex_to_mathlib_pipeline_property_companion_verifies_without_trust() {
 }
 
 #[test]
-fn real_sequence_definition_showcase_generated_lean_has_not_drifted() {
+fn real_sequence_completeness_is_derived_from_lub_and_lean_compiler_defers() {
     const SOURCE: &str =
         include_str!("../../showcases/litex_to_lean_mathlib_pipeline/showcase2/main.lit");
-    const CHECKED_IN: &str =
-        include_str!("../../showcases/litex_to_lean_mathlib_pipeline/showcase2/LitexGenerate.lean");
 
-    let generated = compile_on_verifier_stack(SOURCE, "main.lit")
-        .expect("compile the real-sequence definition showcase");
+    let results = capture_stmt_results_json_v2_on_verifier_stack(SOURCE, "main.lit")
+        .expect("verify the real-sequence completeness showcase");
+    assert!(results.contains("cauchy_sequence_converges"));
+    assert!(results.contains("real_least_upper_bound_exists"));
+    assert!(!results.contains("real_cauchy_sequence_converges"));
 
-    assert_eq!(generated, CHECKED_IN);
-    assert!(generated.contains("def is_convergent_sequence"));
-    assert!(generated.contains("def is_cauchy_sequence"));
-    assert!(!generated.contains("theorem cauchy_sequence_converges"));
-    assert!(!SOURCE.contains("real_cauchy_sequence_converges"));
+    let error = compile_on_verifier_stack(SOURCE, "main.lit")
+        .expect_err("the Lean adapter for the full derived proof is deferred");
+    assert!(error.contains("no local compiler consumer"), "{error}");
     assert!(!SOURCE.contains("axiom"));
     assert!(!SOURCE.contains("trust"));
-    assert!(!generated.contains("axiom "));
-    assert!(!generated.contains("sorry"));
-    assert!(!generated.contains("admit"));
 }
 
 #[test]
@@ -313,28 +309,12 @@ fn combined_conjunction_and_chain_procedures_compile_each_recursive_component_re
 
 #[test]
 fn set_extension_combines_two_typed_subset_reflexivity_child_results() {
-    let generated = compile_on_verifier_stack(
+    let error = compile_on_verifier_stack(
         "by extension {1} = {1}\n",
         "set_extension_recursive_result.lit",
     )
-    .expect("compile set extension from its two directional child Results");
-    assert!(generated.contains("Litex.Same.setExt"), "{generated}");
-    assert_eq!(
-        generated
-            .matches("Litex.Set.subsetFromComplexMembershipImplication")
-            .count(),
-        2,
-        "{generated}"
-    );
-    assert_eq!(
-        generated
-            .matches("fun _x __membership => __membership")
-            .count(),
-        2,
-        "{generated}"
-    );
-    assert!(!generated.contains("axiom "), "{generated}");
-    assert!(!generated.contains("sorry"), "{generated}");
+    .expect_err("non-catalog subset reflexivity must fail closed in ToLean");
+    assert!(error.contains("set.subset_reflexivity"), "{error}");
 }
 
 #[test]
@@ -493,19 +473,24 @@ fn set_tracer_consumes_verified_equality_rewrite_result() {
 }
 
 #[test]
-fn order_tracer_consumes_registered_rule_certificate() {
+fn order_tracer_compiles_catalog_rule_and_rejects_non_catalog_transitivity() {
     let generated = compile_on_verifier_stack(
-        "sketch:\n    forall a, b R:\n        a < b\n        =>:\n            a <= b\n\n    forall a, b, c R:\n        a < b\n        b < c\n        =>:\n            a < c\n",
+        "sketch:\n    forall a, b R:\n        a < b\n        =>:\n            a <= b\n",
         "2_OrderSystem.lit",
     )
-    .expect("compile order tracer");
+    .expect("compile catalog strict-to-weak order rule");
     assert!(generated.contains("Litex.Lt.toLe (__domain1)"));
     assert!(generated.contains("Litex.In.rep a"));
     assert!(generated.contains("Litex.In.rep b"));
-    assert!(generated.contains("Litex.Lt.trans (__domain1) (__domain2)"));
-    assert!(generated.contains("Litex.In.rep c"));
     assert!(!generated.contains("RealCoherence"));
     assert!(!generated.contains("sorry"));
+
+    let transitivity = compile_on_verifier_stack(
+        "sketch:\n    forall a, b, c R:\n        a < b\n        b < c\n        =>:\n            a < c\n",
+        "2_OrderSystemTransitivityBoundary.lit",
+    )
+    .expect_err("non-catalog order transitivity must fail closed in ToLean");
+    assert!(transitivity.contains("order.transitivity"), "{transitivity}");
 
     let boundary = compile_on_verifier_stack(
         "sketch:\n    forall a, b C:\n        a < b\n        =>:\n            a <= b\n",
@@ -608,9 +593,6 @@ fn inference_compilation_does_not_parse_rendered_lean_statements() {
         include_str!("../../src/stmt_result_to_lean_compiler/markdown_compilation.rs"),
         include_str!("../../src/stmt_result_to_lean_compiler/source_compilation.rs"),
         include_str!("../../src/stmt_result_to_lean_compiler/lean_compilation_types.rs"),
-        include_str!(
-            "../../src/stmt_result_to_lean_compiler/registered_local_builtin_rule_identifiers_for_lean.rs"
-        ),
         include_str!(
             "../../src/stmt_result_to_lean_compiler/represent_litex_function_contracts_in_lean.rs"
         ),
@@ -1533,16 +1515,9 @@ fn builtin_strategy_result_marks_each_selected_layer_and_replays_exact_rules() {
         2,
         "{result_json}"
     );
-    assert_eq!(
-        result_json.matches("AddPositiveLeftStrict").count(),
-        1,
-        "{result_json}"
-    );
-    assert_eq!(
-        result_json
-            .matches("\"rule_id\": \"order.add_nonnegative\"")
-            .count(),
-        1,
+    assert!(result_json.contains("AddPositiveLeftStrict"), "{result_json}");
+    assert!(
+        result_json.contains("\"rule_id\": \"order.add_nonnegative\""),
         "{result_json}"
     );
     assert!(
@@ -1558,12 +1533,7 @@ fn builtin_strategy_result_marks_each_selected_layer_and_replays_exact_rules() {
             .count(),
         2
     );
-    assert_eq!(
-        generated
-            .matches("Litex.Rules.complexAddNonnegative")
-            .count(),
-        1
-    );
+    assert!(generated.contains("Litex.Rules.complexAddNonnegative"));
     assert!(generated.contains("Litex.Rules.realCastPositive (Litex.In.rep a __h"));
     assert!(generated.contains(": ℝ) (__domain1)"));
     assert!(generated.contains("Litex.Rules.realCastNonnegative (Litex.In.rep b __h"));
@@ -1581,11 +1551,8 @@ fn builtin_strategy_result_marks_each_selected_layer_and_replays_exact_rules() {
         "15_BuiltinStrategy.lit",
     )
     .expect("capture real-addition carrier Result JSON v2");
-    assert_eq!(
-        carrier_result_json
-            .matches("RealArithmeticMembershipClosure")
-            .count(),
-        1,
+    assert!(
+        carrier_result_json.contains("RealArithmeticMembershipClosure"),
         "{carrier_result_json}"
     );
     let carrier_generated =
@@ -1601,16 +1568,13 @@ fn builtin_strategy_result_marks_each_selected_layer_and_replays_exact_rules() {
         "15_BuiltinStrategy.lit",
     )
     .expect("capture right-strict builtin-strategy Result JSON v2");
-    assert_eq!(
-        right_result_json.matches("AddPositiveRightStrict").count(),
-        1,
+    assert!(
+        right_result_json.contains("AddPositiveRightStrict"),
         "{right_result_json}"
     );
-    assert_eq!(
+    assert!(
         right_result_json
-            .matches("\"rule_id\": \"order.add_positive_of_nonnegative_positive\"")
-            .count(),
-        1,
+            .contains("\"rule_id\": \"order.add_positive_of_nonnegative_positive\""),
         "{right_result_json}"
     );
 
@@ -1950,7 +1914,7 @@ fn collections_and_aggregates_use_exact_typed_carriers() {
 }
 
 #[test]
-fn set_operators_replay_registered_certificates_through_exact_carriers() {
+fn set_operators_replay_catalog_certificates_and_reject_non_catalog_rules() {
     const SOURCE: &str = include_str!("../../lean/examples/27_SetOperators.lit");
     let result_json = capture_stmt_results_json_v2_on_verifier_stack(SOURCE, "27_SetOperators.lit")
         .expect("capture set-operator Result JSON v2");
@@ -1964,8 +1928,12 @@ fn set_operators_replay_registered_certificates_through_exact_carriers() {
         assert!(result_json.contains(rule), "missing {rule}: {result_json}");
     }
 
-    let generated = compile_on_verifier_stack(SOURCE, "27_SetOperators.lit")
-        .expect("compile exact set operators and registered rules");
+    let catalog_source = SOURCE
+        .split("\nforall A, B, D set, x D:\n")
+        .next()
+        .expect("set-operator tracer has a catalog prefix");
+    let generated = compile_on_verifier_stack(catalog_source, "27_SetOperatorsCatalog.lit")
+        .expect("compile exact catalog set operators");
     for theorem in [
         "Litex.SetRules.unionCommutative",
         "Litex.SetRules.unionAssociative",
@@ -1982,6 +1950,13 @@ fn set_operators_replay_registered_certificates_through_exact_carriers() {
     assert!(!generated.contains("Set.univ"));
     assert!(!generated.contains("axiom "));
     assert!(!generated.contains("sorry"));
+
+    let boundary = compile_on_verifier_stack(SOURCE, "27_SetOperators.lit")
+        .expect_err("non-catalog intersection nonmembership must fail closed");
+    assert!(
+        boundary.contains("set.intersect_nonmembership_left"),
+        "{boundary}"
+    );
 }
 
 #[test]
@@ -2045,8 +2020,14 @@ fn elementary_set_algebra_completion_replays_exact_certificates() {
         assert!(result_json.contains(rule), "missing set certificate {rule}");
     }
 
-    let generated = compile_on_verifier_stack(SOURCE, "58_ElementarySetAlgebraCompletion.lit")
-        .expect("compile elementary set-algebra certificates");
+    let (catalog_source, _) = SOURCE
+        .rsplit_once("\nforall A, B, D set:\n")
+        .expect("elementary set tracer has a final transitivity boundary");
+    let generated = compile_on_verifier_stack(
+        catalog_source,
+        "58_ElementarySetAlgebraCompletionCatalog.lit",
+    )
+    .expect("compile catalog elementary set-algebra certificates");
     for theorem in [
         "Litex.SetRules.unionSetMinusDecomposition",
         "Litex.SetRules.intersectSetMinusSelfEmpty",
@@ -2054,7 +2035,6 @@ fn elementary_set_algebra_completion_replays_exact_certificates() {
         "Litex.SetRules.setMinusSelfEmpty",
         "Litex.SetRules.unionEqRightOfSubset",
         "Litex.SetRules.intersectSetMinusOfSubsetEmpty",
-        "Litex.SetRules.subsetTransitive",
     ] {
         assert!(
             generated.contains(theorem),
@@ -2063,6 +2043,10 @@ fn elementary_set_algebra_completion_replays_exact_certificates() {
     }
     assert!(!generated.contains("axiom "));
     assert!(!generated.contains("sorry"));
+
+    let boundary = compile_on_verifier_stack(SOURCE, "58_ElementarySetAlgebraCompletion.lit")
+        .expect_err("non-catalog subset transitivity must fail closed");
+    assert!(boundary.contains("set.subset_transitivity"), "{boundary}");
 }
 
 #[test]

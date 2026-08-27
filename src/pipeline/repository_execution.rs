@@ -391,7 +391,7 @@ fn config_import_execution_mode(
     runtime: &mut Runtime,
     config_import: &ConfigImport,
 ) -> ExecutionMode {
-    if runtime.options.strict_mode {
+    if runtime.run_options.strict_mode {
         return ExecutionMode::Verified;
     }
     let import_target = ImportTarget::Module(config_import.module_id);
@@ -409,7 +409,7 @@ fn project_target_execution_mode(
     module_id: ModuleId,
     target: ImportTarget,
 ) -> ExecutionMode {
-    if runtime.options.strict_mode {
+    if runtime.run_options.strict_mode {
         return ExecutionMode::Verified;
     }
     let line_file = runtime

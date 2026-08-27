@@ -2689,9 +2689,6 @@ impl StmtResultJsonV2 {
                         string_field("kind", "Typed"),
                         ("value".to_string(), self.builtin_evidence(evidence)),
                     ]),
-                    SuccessBuiltinFactProofEvidenceResult::DiagnosticOnly => {
-                        object(vec![string_field("kind", "DiagnosticOnly")])
-                    }
                 },
             ),
             (
@@ -2760,15 +2757,10 @@ impl StmtResultJsonV2 {
 
     fn builtin_evidence(&mut self, evidence: &BuiltinRuleEvidence) -> JsonValue {
         match evidence {
-            BuiltinRuleEvidence::RegisteredLocal(result) => object(vec![
-                string_field("kind", "RegisteredLocal"),
-                string_field("rule_id", result.rule_id.as_str()),
-                string_field("semantic_fingerprint", result.semantic_fingerprint.as_hex()),
-                ("bindings".to_string(), display_values(&result.bindings)),
-                number_field(
-                    "parameter_requirement_count",
-                    result.parameter_requirement_count,
-                ),
+            BuiltinRuleEvidence::Uncatalogued(rule) => object(vec![
+                string_field("kind", "Uncatalogued"),
+                string_field("rule", format!("{rule:?}")),
+                string_field("rule_id", rule.rule_id()),
             ]),
             BuiltinRuleEvidence::DefinitionProjection(result) => object(vec![
                 string_field("kind", "DefinitionProjection"),
@@ -3004,6 +2996,7 @@ impl StmtResultJsonV2 {
             ]),
             BuiltinRuleEvidence::DivNotEqualZero(result) => object(vec![
                 string_field("kind", "DivNotEqualZero"),
+                string_field("rule_id", result.rule_id()),
                 string_field("numerator", result.numerator.to_string()),
                 string_field("denominator", result.denominator.to_string()),
                 string_field(
@@ -3014,9 +3007,11 @@ impl StmtResultJsonV2 {
                     },
                 ),
             ]),
-            BuiltinRuleEvidence::Arithmetic(rule) => {
-                rule_evidence_value("Arithmetic", arithmetic_builtin_rule_name(*rule))
-            }
+            BuiltinRuleEvidence::Arithmetic(rule) => object(vec![
+                string_field("kind", "Arithmetic"),
+                string_field("rule", arithmetic_builtin_rule_name(*rule)),
+                string_field("rule_id", rule.rule_id()),
+            ]),
             BuiltinRuleEvidence::IntegerMembershipClosure(rule) => rule_evidence_value(
                 "IntegerMembershipClosure",
                 integer_membership_closure_rule_name(*rule),
@@ -3053,9 +3048,11 @@ impl StmtResultJsonV2 {
             BuiltinRuleEvidence::SetRelationDuality(rule) => {
                 rule_evidence_value("SetRelationDuality", set_relation_duality_rule_name(*rule))
             }
-            BuiltinRuleEvidence::Set(rule) => {
-                rule_evidence_value("Set", set_builtin_rule_name(*rule))
-            }
+            BuiltinRuleEvidence::Set(rule) => object(vec![
+                string_field("kind", "Set"),
+                string_field("rule", set_builtin_rule_name(*rule)),
+                string_field("rule_id", rule.rule_id()),
+            ]),
             BuiltinRuleEvidence::FiniteSet(rule) => {
                 rule_evidence_value("FiniteSet", finite_set_builtin_rule_name(*rule))
             }
@@ -3067,8 +3064,27 @@ impl StmtResultJsonV2 {
                 object(vec![string_field("kind", "TupleLiteralShape")])
             }
             BuiltinRuleEvidence::AbsoluteValue(rule) => {
-                rule_evidence_value("AbsoluteValue", absolute_value_builtin_rule_name(*rule))
+                object(vec![
+                    string_field("kind", "AbsoluteValue"),
+                    string_field("rule", absolute_value_builtin_rule_name(*rule)),
+                    string_field("rule_id", rule.rule_id()),
+                ])
             }
+            BuiltinRuleEvidence::Extrema(rule) => object(vec![
+                string_field("kind", "Extrema"),
+                string_field("rule", extrema_builtin_rule_name(*rule)),
+                string_field("rule_id", rule.rule_id()),
+            ]),
+            BuiltinRuleEvidence::Aggregate(rule) => object(vec![
+                string_field("kind", "Aggregate"),
+                string_field("rule", aggregate_builtin_rule_name(*rule)),
+                string_field("rule_id", rule.rule_id()),
+            ]),
+            BuiltinRuleEvidence::Nonzero(rule) => object(vec![
+                string_field("kind", "Nonzero"),
+                string_field("rule", nonzero_builtin_rule_name(*rule)),
+                string_field("rule_id", rule.rule_id()),
+            ]),
             BuiltinRuleEvidence::PrimeU64Reflection => {
                 object(vec![string_field("kind", "PrimeU64Reflection")])
             }

@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 pub fn localize_json_value(runtime: &Runtime, value: JsonValue) -> JsonValue {
-    localize_json_value_for_language(runtime.options.output_language, value)
+    localize_json_value_for_language(runtime.run_options.output_language, value)
 }
 
 pub fn localize_json_value_for_language(

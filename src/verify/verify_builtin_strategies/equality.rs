@@ -65,10 +65,11 @@ impl Runtime {
         }
 
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_strategy_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                 fact.clone().into(),
                 "finite-set product congruence strategy: prove pointwise factor equality"
                     .to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyFiniteSetProductPointwiseEqualityWithBuiltinStrategy),
                 vec![set_result, pointwise_result],
             )
             .into(),
@@ -116,9 +117,10 @@ impl Runtime {
         }
 
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_strategy_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                 fact.clone().into(),
                 "finite-extremum equality strategy: prove both weak-order directions".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyExtremumEqualityWithBuiltinStrategy),
                 steps,
             )
             .into(),
@@ -191,9 +193,10 @@ impl Runtime {
         }
 
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_strategy_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                 fact.clone().into(),
                 "mod-congruence strategy: reduce immediate binary operands modulo m".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyModCongruenceWithBuiltinStrategy),
                 subgoals,
             )
             .into(),

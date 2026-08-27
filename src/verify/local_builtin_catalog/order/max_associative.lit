@@ -1,2 +1,0 @@
-forall a, b, c R:
-    max(max(a, b), c) = max(a, max(b, c))

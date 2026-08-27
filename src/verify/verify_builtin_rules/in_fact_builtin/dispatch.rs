@@ -80,9 +80,10 @@ impl Runtime {
                 }
                 if evidence.is_some() {
                     Ok(
-                        SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             not_in_fact.clone().into(),
                             "set-minus membership excludes the right operand".to_string(),
+                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyNotInFactWithBuiltinRules),
                             Vec::new(),
                         )
                         .into(),
@@ -550,10 +551,11 @@ impl Runtime {
                 }
                 if let Some(evidence) = evidence {
                     Ok(
-                        SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             in_fact.clone().into(),
                             "absolute value of a known nonzero integer is a positive natural"
                                 .to_string(),
+                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactWithBuiltinRules),
                             vec![evidence],
                         )
                         .into(),
@@ -592,9 +594,10 @@ impl Runtime {
                     | StandardSet::RPos,
                 ),
             ) => Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "gcd of a non-all-zero integer pair is a positive integer".to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactWithBuiltinRules),
                     Vec::new(),
                 )
                 .into(),
@@ -609,9 +612,10 @@ impl Runtime {
                     | StandardSet::C,
                 ),
             ) => Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "lcm of two integers is a nonnegative integer".to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactWithBuiltinRules),
                     Vec::new(),
                 )
                 .into(),
@@ -620,17 +624,19 @@ impl Runtime {
                 Obj::Floor(_) | Obj::Ceil(_),
                 Obj::StandardSet(StandardSet::Z | StandardSet::Q | StandardSet::R | StandardSet::C),
             ) => Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "floor and ceil return integers".to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactWithBuiltinRules),
                     Vec::new(),
                 )
                 .into(),
             ),
             (Obj::Min(_) | Obj::Max(_), Obj::StandardSet(StandardSet::R | StandardSet::C)) => Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "minimum and maximum of real arguments are real".to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactWithBuiltinRules),
                     Vec::new(),
                 )
                 .into(),
@@ -639,17 +645,19 @@ impl Runtime {
                 Obj::Exp(_),
                 Obj::StandardSet(StandardSet::RPos | StandardSet::R | StandardSet::C),
             ) => Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "real exponential values are positive reals".to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactWithBuiltinRules),
                     Vec::new(),
                 )
                 .into(),
             ),
             (Obj::Ln(_), Obj::StandardSet(StandardSet::R | StandardSet::C)) => Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "natural logarithm of a positive real is real".to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactWithBuiltinRules),
                     Vec::new(),
                 )
                 .into(),
@@ -658,9 +666,10 @@ impl Runtime {
                 Obj::Sign(_),
                 Obj::StandardSet(StandardSet::Z | StandardSet::Q | StandardSet::R | StandardSet::C),
             ) => Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "the real sign function returns an integer".to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactWithBuiltinRules),
                     Vec::new(),
                 )
                 .into(),
@@ -678,9 +687,10 @@ impl Runtime {
                     | StandardSet::RPos,
                 ),
             ) => Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "factorial of a natural number is a positive integer".to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactWithBuiltinRules),
                     Vec::new(),
                 )
                 .into(),
@@ -949,9 +959,10 @@ impl Runtime {
                 ) =>
             {
                 Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         in_fact.clone().into(),
                         "index_union is contained in its explicit ambient set".to_string(),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactWithBuiltinRules),
                         Vec::new(),
                     )
                     .into(),
@@ -964,9 +975,10 @@ impl Runtime {
                 ) =>
             {
                 Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         in_fact.clone().into(),
                         "index_intersect is contained in its explicit ambient set".to_string(),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactWithBuiltinRules),
                         Vec::new(),
                     )
                     .into(),

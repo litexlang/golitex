@@ -56,10 +56,11 @@ impl Runtime {
         }
         let recorded: Fact = f.clone().into();
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 recorded,
                 "fn_eq_in: pointwise equality on the given set (forall x in S, f(x)=g(x))"
                     .to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyFnEqualInFactWithBuiltinRules),
                 vec![forall_res],
             )
             .into(),
@@ -108,10 +109,11 @@ impl Runtime {
             let pointwise_result = self.verify_forall_fact(&pointwise, verify_state)?;
             if pointwise_result.is_success() {
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         f.clone().into(),
                         "fn_eq: exact known pointwise forall over alpha-equivalent function carriers"
                             .to_string(),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyFnEqualFactWithBuiltinRules),
                         vec![pointwise_result],
                     )
                     .into(),
@@ -167,10 +169,11 @@ impl Runtime {
         }
         let recorded: Fact = f.clone().into();
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 recorded,
                 "fn_eq: mutual function-space membership and pointwise equality (forall+dom)"
                     .to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyFnEqualFactWithBuiltinRules),
                 vec![forall_res],
             )
             .into(),

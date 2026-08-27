@@ -228,9 +228,10 @@ impl Runtime {
             steps.push(result);
         }
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 and_fact.clone().into(),
                 "restricted builtin premise: each conjunct verified".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyAndFactRestrictedKnownBuiltin),
                 steps,
             )
             .into(),
@@ -266,9 +267,10 @@ impl Runtime {
                 self.verify_and_chain_atomic_fact_restricted_known_builtin(fact, verify_state)?;
             if result.is_success() {
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         or_fact.clone().into(),
                         "restricted builtin premise: one branch verified".to_string(),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyOrFactRestrictedKnownBuiltin),
                         vec![result],
                     )
                     .into(),

@@ -1,2 +1,0 @@
-forall A, B set:
-    union(A, set_minus(B, A)) = union(A, B)

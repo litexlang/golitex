@@ -23,6 +23,10 @@ release thm real_least_upper_bound_exists({0}, 1)
 obtain real_lub from exist real_lub R st {$is_real_least_upper_bound({0}, real_lub)}
 release thm real_member_le_least_upper_bound({0}, real_lub, 0)
 release thm real_least_upper_bound_le_upper_bound({0}, real_lub, 1)
+release thm real_greatest_lower_bound_exists({0}, -1)
+obtain real_glb from exist real_glb R st {$is_real_greatest_lower_bound({0}, real_glb)}
+release thm real_greatest_lower_bound_le_member({0}, real_glb, 0)
+release thm real_lower_bound_le_greatest_lower_bound({0}, real_glb, -1)
 release thm rational_between_reals(0, 1)
 obtain between_rational from exist between_rational Q st {0 < between_rational and between_rational < 1}
 
@@ -97,9 +101,10 @@ release thm sum_over_bijective_finite_set_enumerations(sum(1, finite_set_size({1
         assert!(output.contains("\"theorem\": \"rational_has_unique_reduced_fraction\""));
         assert!(output.contains("\"theorem\": \"real_least_upper_bound_exists\""));
         assert!(output.contains("\"theorem\": \"real_member_le_least_upper_bound\""));
-        assert!(output.contains(
-            "\"theorem\": \"real_least_upper_bound_le_upper_bound\""
-        ));
+        assert!(output.contains("\"theorem\": \"real_least_upper_bound_le_upper_bound\""));
+        assert!(output.contains("\"theorem\": \"real_greatest_lower_bound_exists\""));
+        assert!(output.contains("\"theorem\": \"real_greatest_lower_bound_le_member\""));
+        assert!(output.contains("\"theorem\": \"real_lower_bound_le_greatest_lower_bound\""));
         assert!(output.contains("\"theorem\": \"rational_between_reals\""));
         assert!(output.contains("exist! p Z, d N+ st {q = p / d, gcd(p, d) = 1}"));
         assert!(output.contains("\"theorem\": \"subset_of_finite_set_is_finite\""));
@@ -181,6 +186,11 @@ fn builtin_theorem_rejects_arity_shape_and_qualified_names() {
             "expects 2 argument(s), but got 1",
         ),
         (
+            "real glb arity",
+            "release thm real_greatest_lower_bound_exists({0})",
+            "expects 2 argument(s), but got 1",
+        ),
+        (
             "qualified real lub",
             "release thm M::real_least_upper_bound_exists({0}, 1)",
             "cannot use keyword as name: real_least_upper_bound_exists",
@@ -211,22 +221,35 @@ fn real_analysis_builtin_theorems_require_explicit_premises_and_do_not_leak() {
     completeness_runtime.start_isolated_source("real_completeness_no_leak");
     let failed_completeness = "release thm real_least_upper_bound_exists({}, 0)";
     let (results, error) = execute_source(failed_completeness, &mut completeness_runtime);
-    let (succeeded, output) =
-        render_run_output(&completeness_runtime, &results, &error);
+    let (succeeded, output) = render_run_output(&completeness_runtime, &results, &error);
     assert!(
         !succeeded,
         "an empty set must not receive a real LUB witness:\n{output}"
     );
     assert!(output.contains("requires that the argument set is nonempty"));
     let leaked_lub = "exist lub R st {$is_real_least_upper_bound({}, lub)}";
-    assert!(!completeness_runtime.cache_known_facts_contains(leaked_lub).0);
-    let (probe_results, probe_error) =
-        execute_source(leaked_lub, &mut completeness_runtime);
+    assert!(
+        !completeness_runtime
+            .cache_known_facts_contains(leaked_lub)
+            .0
+    );
+    let (probe_results, probe_error) = execute_source(leaked_lub, &mut completeness_runtime);
     let (probe_succeeded, probe_output) =
         render_run_output(&completeness_runtime, &probe_results, &probe_error);
     assert!(
         !probe_succeeded,
         "a failed completeness call must not store its existential conclusion:\n{probe_output}"
+    );
+
+    let direct_glb_certificate = "$is_real_greatest_lower_bound({0}, 0)";
+    let (_, succeeded, output) = run_source(
+        direct_glb_certificate,
+        "real_glb_certificate_is_not_implicit",
+        false,
+    );
+    assert!(
+        !succeeded,
+        "a real GLB certificate must not be proved implicitly:\n{output}"
     );
 
     let mut density_runtime = Runtime::default();
@@ -242,7 +265,11 @@ fn real_analysis_builtin_theorems_require_explicit_premises_and_do_not_leak() {
     );
     assert!(output.contains("requires that the real arguments are strictly ordered"));
     let leaked_rational = "exist q Q st {1 < q and q < 0}";
-    assert!(!density_runtime.cache_known_facts_contains(leaked_rational).0);
+    assert!(
+        !density_runtime
+            .cache_known_facts_contains(leaked_rational)
+            .0
+    );
     let (probe_results, probe_error) = execute_source(leaked_rational, &mut density_runtime);
     let (probe_succeeded, probe_output) =
         render_run_output(&density_runtime, &probe_results, &probe_error);
@@ -419,12 +446,12 @@ fn builtin_theorem_names_are_reserved_and_normal_theorems_still_fall_back() {
 
     let (_, succeeded, output) = run_source(
         "have real_cauchy_sequence_converges R",
-        "removed_real_completeness_builtin_name",
+        "ordinary_real_sequence_theorem_name",
         false,
     );
     assert!(
         succeeded,
-        "the removed completeness builtin name must be an ordinary identifier:\n{output}"
+        "the removed sequence-specific builtin name must be ordinary:\n{output}"
     );
 
     let ordinary = r#"

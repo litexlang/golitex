@@ -15,31 +15,40 @@ impl Runtime {
 
         // Fundamental set containments follow directly from membership definitions.
         // Examples: `intersect(A, B) $subset A`, `A $subset union(A, B)`.
-        let elementary_set_subset_reason = match (&subset_fact.left, &subset_fact.right) {
+        let elementary_set_subset_rule = match (&subset_fact.left, &subset_fact.right) {
             (Obj::Intersect(intersect), right)
-                if objs_equal_with_nested_binder_alpha_equivalence(&intersect.left, right)
-                    || objs_equal_with_nested_binder_alpha_equivalence(&intersect.right, right) =>
+                if objs_equal_with_nested_binder_alpha_equivalence(&intersect.left, right) =>
             {
-                Some("intersection_subset_operand")
+                Some(SetBuiltinRule::IntersectSubsetLeft)
+            }
+            (Obj::Intersect(intersect), right)
+                if objs_equal_with_nested_binder_alpha_equivalence(&intersect.right, right) =>
+            {
+                Some(SetBuiltinRule::IntersectSubsetRight)
             }
             (left, Obj::Union(union))
-                if objs_equal_with_nested_binder_alpha_equivalence(&union.left, left)
-                    || objs_equal_with_nested_binder_alpha_equivalence(&union.right, left) =>
+                if objs_equal_with_nested_binder_alpha_equivalence(&union.left, left) =>
             {
-                Some("operand_subset_union")
+                Some(SetBuiltinRule::SubsetUnionLeft)
+            }
+            (left, Obj::Union(union))
+                if objs_equal_with_nested_binder_alpha_equivalence(&union.right, left) =>
+            {
+                Some(SetBuiltinRule::SubsetUnionRight)
             }
             (Obj::SetMinus(set_minus), right)
                 if objs_equal_with_nested_binder_alpha_equivalence(&set_minus.left, right) =>
             {
-                Some("set_minus_subset_left_operand")
+                Some(SetBuiltinRule::SetMinusSubsetLeft)
             }
             _ => None,
         };
-        if let Some(reason) = elementary_set_subset_reason {
+        if let Some(rule) = elementary_set_subset_rule {
             return Ok(
-                (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     subset_fact.clone().into(),
-                    reason.to_string(),
+                    rule.rule_id().to_string(),
+                    BuiltinRuleEvidence::Set(rule),
                     Vec::new(),
                 ))
                 .into(),
@@ -75,9 +84,10 @@ impl Runtime {
                     .collect::<Vec<AtomicFact>>();
                 if let Some(steps) = self.verify_builtin_rule_premises(&premises, builtin_state)? {
                     return Ok(
-                        SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             subset_fact.clone().into(),
                             "binary union subset from componentwise subsets".to_string(),
+                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifySubsetFactWithBuiltinRules),
                             steps,
                         )
                         .into(),
@@ -101,9 +111,10 @@ impl Runtime {
                     self.verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
                 if result.is_success() {
                     return Ok(
-                        SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             subset_fact.clone().into(),
                             "intersection subset from an operand upper bound".to_string(),
+                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifySubsetFactWithBuiltinRules),
                             vec![result],
                         )
                         .into(),
@@ -123,9 +134,10 @@ impl Runtime {
                 self.verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
             if result.is_success() {
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         subset_fact.clone().into(),
                         "set difference subset from left-operand upper bound".to_string(),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifySubsetFactWithBuiltinRules),
                         vec![result],
                     )
                     .into(),
@@ -148,9 +160,10 @@ impl Runtime {
                 self.verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
             if result.is_success() {
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         subset_fact.clone().into(),
                         "power set subset from base-set subset".to_string(),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifySubsetFactWithBuiltinRules),
                         vec![result],
                     )
                     .into(),
@@ -176,9 +189,10 @@ impl Runtime {
                     self.verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
                 if result.is_success() {
                     return Ok(
-                        SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             subset_fact.clone().into(),
                             "set difference subset from common-right left subset".to_string(),
+                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifySubsetFactWithBuiltinRules),
                             vec![result],
                         )
                         .into(),
@@ -204,11 +218,22 @@ impl Runtime {
                 )
                 .into(),
             ];
-            if let Some(steps) = self.verify_builtin_rule_premises(&premises, builtin_state)? {
+            let mut steps = Vec::with_capacity(premises.len());
+            for premise in &premises {
+                let result =
+                    self.verify_atomic_fact_as_builtin_rule_premise(premise, builtin_state)?;
+                if !result.is_success() {
+                    steps.clear();
+                    break;
+                }
+                steps.push(result);
+            }
+            if steps.len() == premises.len() {
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         subset_fact.clone().into(),
                         "union subset from both operand subsets".to_string(),
+                        BuiltinRuleEvidence::Set(SetBuiltinRule::UnionSubset),
                         steps,
                     )
                     .into(),
@@ -256,7 +281,11 @@ impl Runtime {
                     SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         subset_fact.clone().into(),
                         "literal finite-set subset from member facts".to_string(),
-                        BuiltinRuleEvidence::LiteralSetSubset,
+                        if list_set.list.is_empty() {
+                            BuiltinRuleEvidence::Set(SetBuiltinRule::EmptySubset)
+                        } else {
+                            BuiltinRuleEvidence::LiteralSetSubset
+                        },
                         steps,
                     )
                     .into(),
@@ -292,9 +321,10 @@ impl Runtime {
                     .collect::<Vec<AtomicFact>>();
                 if let Some(steps) = self.verify_builtin_rule_premises(&premises, builtin_state)? {
                     return Ok(
-                        SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             subset_fact.clone().into(),
                             "Cartesian-product subset from componentwise subsets".to_string(),
+                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifySubsetFactWithBuiltinRules),
                             steps,
                         )
                         .into(),
@@ -356,9 +386,10 @@ impl Runtime {
                     dependencies.push(result);
                 }
                 return Ok(
-                    (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                    (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         subset_fact.clone().into(),
                         "integer range is contained in its standard numeric carrier".to_string(),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifySubsetFactWithBuiltinRules),
                         dependencies,
                     ))
                     .into(),
@@ -445,9 +476,10 @@ impl Runtime {
             && matches!(subset_fact.right, Obj::StandardSet(StandardSet::R))
         {
             return Ok(
-                (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     subset_fact.clone().into(),
                     "real_interval_subset_R".to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifySubsetFactWithBuiltinRules),
                     Vec::new(),
                 ))
                 .into(),
@@ -468,9 +500,10 @@ impl Runtime {
                     body.ret_set.as_ref(),
                     &subset_fact.right,
                 ) {
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         ret_subset.clone().into(),
                         "structural subset".to_string(),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifySubsetFactWithBuiltinRules),
                         Vec::new(),
                     )
                     .into()
@@ -479,9 +512,10 @@ impl Runtime {
                 };
                 if ret_subset_result.is_success() {
                     return Ok(
-                        (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                        (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             subset_fact.clone().into(),
                             "fn_range_subset_codomain".to_string(),
+                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifySubsetFactWithBuiltinRules),
                             vec![ret_subset_result],
                         ))
                         .into(),
@@ -527,9 +561,10 @@ impl Runtime {
         {
             if right.is_subset_eq(left) {
                 return Ok(
-                    (SuccessFactStmtResult::new_with_verified_by_builtin_rules_recording_stmt(
+                    (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         superset_fact.clone().into(),
                         "standard_set_superset".to_string(),
+                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifySupersetFactWithBuiltinRules),
                         Vec::new(),
                     ))
                     .into(),
