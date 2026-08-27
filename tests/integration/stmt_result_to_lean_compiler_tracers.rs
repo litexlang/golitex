@@ -478,11 +478,9 @@ fn set_tracer_consumes_verified_equality_rewrite_result() {
 
 #[test]
 fn order_tracer_compiles_catalog_rule_and_rejects_non_catalog_transitivity() {
-    let generated = compile_on_verifier_stack(
-        "sketch:\n    forall a, b R:\n        a < b\n        =>:\n            a <= b\n",
-        "2_OrderSystem.lit",
-    )
-    .expect("compile catalog strict-to-weak order rule");
+    const SOURCE: &str = include_str!("../../lean/examples/2_OrderSystem.lit");
+    let generated = compile_on_verifier_stack(SOURCE, "2_OrderSystem.lit")
+        .expect("compile catalog strict-to-weak order rule");
     assert!(generated.contains("Litex.Lt.toLe (__domain1)"));
     assert!(generated.contains("Litex.In.rep a"));
     assert!(generated.contains("Litex.In.rep b"));
@@ -524,7 +522,8 @@ fn top_level_atomic_equality_compiles_typed_result_evidence() {
 
 #[test]
 fn complex_algebraic_normalization_records_typed_boundary_rule_id() {
-    const SOURCE: &str = "2 * i + 1 = i * i + 2 + 2 * i\n(1 + i) * (1 - i) = 2\n1 / i = -1 * i\ni ^ (-1) = -1 * i\n\nforall z C:\n    (z + i) * (z - i) = z * z + 1\n\nforall z C:\n    z + i != 0\n    =>:\n        (z + i) ^ 2 / (z + i) = z + i\n";
+    const SOURCE: &str = include_str!("../../lean/examples/54_ComplexAlgebraicCalculation.lit");
+    const BOUNDARY_SOURCE: &str = "1 / i = -1 * i\n";
     let result_json = capture_stmt_results_json_v2_on_verifier_stack(
         SOURCE,
         "54_ComplexAlgebraicCalculation.lit",
@@ -532,12 +531,29 @@ fn complex_algebraic_normalization_records_typed_boundary_rule_id() {
     .expect("capture complex-algebraic-normalization Result JSON v2");
     assert_eq!(
         result_json.matches("ComplexAlgebraicNormalization").count(),
-        6,
+        4,
         "{result_json}"
     );
 
-    let error = compile_on_verifier_stack(SOURCE, "54_ComplexAlgebraicCalculation.lit")
-        .expect_err("uncatalogued native-i nonzero evidence must fail closed");
+    let generated = compile_on_verifier_stack(SOURCE, "54_ComplexAlgebraicCalculation.lit")
+        .expect("compile supported complex-algebraic normalization routes");
+    assert!(!generated.contains("axiom "), "{generated}");
+    assert!(!generated.contains("sorry"), "{generated}");
+
+    let boundary_json = capture_stmt_results_json_v2_on_verifier_stack(
+        BOUNDARY_SOURCE,
+        "54_ComplexAlgebraicCalculationBoundary.lit",
+    )
+    .expect("capture typed native-i nonzero boundary evidence");
+    assert!(boundary_json.contains(
+        "\"rule_id\": \"builtin.verify.verify_builtin_rules.complex_builtin.try_verify_native_i_nonzero\""
+    ));
+
+    let error = compile_on_verifier_stack(
+        BOUNDARY_SOURCE,
+        "54_ComplexAlgebraicCalculationBoundary.lit",
+    )
+    .expect_err("uncatalogued native-i nonzero evidence must fail closed");
     assert!(
         error.contains(
             "builtin.verify.verify_builtin_rules.complex_builtin.try_verify_native_i_nonzero"
@@ -1911,6 +1927,10 @@ fn collections_and_aggregates_use_exact_typed_carriers() {
 #[test]
 fn set_operators_replay_catalog_certificates_and_reject_non_catalog_rules() {
     const SOURCE: &str = include_str!("../../lean/examples/27_SetOperators.lit");
+    const LEFT_BOUNDARY: &str =
+        "forall A, B, D set, x D:\n    not x $in A\n    =>:\n        not x $in intersect(A, B)\n";
+    const RIGHT_BOUNDARY: &str =
+        "forall A, B, D set, x D:\n    not x $in B\n    =>:\n        not x $in intersect(A, B)\n";
     let result_json = capture_stmt_results_json_v2_on_verifier_stack(SOURCE, "27_SetOperators.lit")
         .expect("capture set-operator Result JSON v2");
     for rule in [
@@ -1923,11 +1943,7 @@ fn set_operators_replay_catalog_certificates_and_reject_non_catalog_rules() {
         assert!(result_json.contains(rule), "missing {rule}: {result_json}");
     }
 
-    let catalog_source = SOURCE
-        .split("\nforall A, B, D set, x D:\n")
-        .next()
-        .expect("set-operator tracer has a catalog prefix");
-    let generated = compile_on_verifier_stack(catalog_source, "27_SetOperatorsCatalog.lit")
+    let generated = compile_on_verifier_stack(SOURCE, "27_SetOperators.lit")
         .expect("compile exact catalog set operators");
     for theorem in [
         "Litex.SetRules.unionCommutative",
@@ -1946,12 +1962,22 @@ fn set_operators_replay_catalog_certificates_and_reject_non_catalog_rules() {
     assert!(!generated.contains("axiom "));
     assert!(!generated.contains("sorry"));
 
-    let boundary = compile_on_verifier_stack(SOURCE, "27_SetOperators.lit")
-        .expect_err("non-catalog intersection nonmembership must fail closed");
-    assert!(
-        boundary.contains("set.intersect_nonmembership_left"),
-        "{boundary}"
-    );
+    for (source, rule_id) in [
+        (LEFT_BOUNDARY, "set.intersect_nonmembership_left"),
+        (RIGHT_BOUNDARY, "set.intersect_nonmembership_right"),
+    ] {
+        let boundary_json =
+            capture_stmt_results_json_v2_on_verifier_stack(source, "27_SetOperatorsBoundary.lit")
+                .expect("non-catalog intersection nonmembership verifies with typed evidence");
+        assert!(
+            boundary_json.contains(&format!("\"rule_id\": \"{rule_id}\"")),
+            "{boundary_json}"
+        );
+
+        let boundary = compile_on_verifier_stack(source, "27_SetOperatorsBoundary.lit")
+            .expect_err("non-catalog intersection nonmembership must fail closed");
+        assert!(boundary.contains(rule_id), "{boundary}");
+    }
 }
 
 #[test]
@@ -1999,6 +2025,8 @@ fn extended_set_rules_use_exact_power_set_and_subset_certificates() {
 #[test]
 fn elementary_set_algebra_completion_replays_exact_certificates() {
     const SOURCE: &str = include_str!("../../lean/examples/58_ElementarySetAlgebraCompletion.lit");
+    const BOUNDARY_SOURCE: &str =
+        "forall A, B, D set:\n    A $subset B\n    B $subset D\n    =>:\n        A $subset D\n";
     let result_json = capture_stmt_results_json_v2_on_verifier_stack(
         SOURCE,
         "58_ElementarySetAlgebraCompletion.lit",
@@ -2010,19 +2038,12 @@ fn elementary_set_algebra_completion_replays_exact_certificates() {
         "set.intersect_idempotent",
         "set.set_minus_self_empty",
         "set.union_eq_right_of_subset",
-        "SubsetTransitivity",
     ] {
         assert!(result_json.contains(rule), "missing set certificate {rule}");
     }
 
-    let (catalog_source, _) = SOURCE
-        .rsplit_once("\nforall A, B, D set:\n")
-        .expect("elementary set tracer has a final transitivity boundary");
-    let generated = compile_on_verifier_stack(
-        catalog_source,
-        "58_ElementarySetAlgebraCompletionCatalog.lit",
-    )
-    .expect("compile catalog elementary set-algebra certificates");
+    let generated = compile_on_verifier_stack(SOURCE, "58_ElementarySetAlgebraCompletion.lit")
+        .expect("compile catalog elementary set-algebra certificates");
     for theorem in [
         "Litex.SetRules.unionSetMinusDecomposition",
         "Litex.SetRules.intersectSetMinusSelfEmpty",
@@ -2039,8 +2060,18 @@ fn elementary_set_algebra_completion_replays_exact_certificates() {
     assert!(!generated.contains("axiom "));
     assert!(!generated.contains("sorry"));
 
-    let boundary = compile_on_verifier_stack(SOURCE, "58_ElementarySetAlgebraCompletion.lit")
-        .expect_err("non-catalog subset transitivity must fail closed");
+    let boundary_json = capture_stmt_results_json_v2_on_verifier_stack(
+        BOUNDARY_SOURCE,
+        "58_ElementarySetAlgebraCompletionBoundary.lit",
+    )
+    .expect("capture typed subset-transitivity boundary");
+    assert!(boundary_json.contains("\"rule_id\": \"set.subset_transitivity\""));
+
+    let boundary = compile_on_verifier_stack(
+        BOUNDARY_SOURCE,
+        "58_ElementarySetAlgebraCompletionBoundary.lit",
+    )
+    .expect_err("non-catalog subset transitivity must fail closed");
     assert!(boundary.contains("set.subset_transitivity"), "{boundary}");
 }
 
