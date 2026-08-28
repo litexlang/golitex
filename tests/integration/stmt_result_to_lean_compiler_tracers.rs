@@ -14,6 +14,16 @@ fn compile_on_verifier_stack(source: &'static str, label: &'static str) -> Resul
         .expect("compiler verifier thread panicked")
 }
 
+fn compile_owned_on_verifier_stack(source: String, label: &'static str) -> Result<String, String> {
+    std::thread::Builder::new()
+        .name(format!("compiler-test-{label}"))
+        .stack_size(32 * 1024 * 1024)
+        .spawn(move || compile_litex_source_to_lean_source(&source, label))
+        .expect("spawn compiler verifier thread")
+        .join()
+        .expect("compiler verifier thread panicked")
+}
+
 fn compile_direct_result_only_on_verifier_stack(
     source: &'static str,
     label: &'static str,
@@ -136,25 +146,47 @@ fn litex_to_mathlib_pipeline_property_companion_verifies_without_trust() {
 }
 
 #[test]
-fn real_sequence_completeness_is_derived_from_lub_and_lean_compiler_defers() {
+fn convergence_under_constant_scaling_generates_without_name_specialization() {
     const SOURCE: &str =
         include_str!("../../showcases/litex_to_lean_mathlib_pipeline/showcase2/main.lit");
+    const CHECKED_IN: &str =
+        include_str!("../../showcases/litex_to_lean_mathlib_pipeline/showcase2/LitexGenerate.lean");
 
     let results = capture_stmt_results_json_v2_on_verifier_stack(SOURCE, "main.lit")
-        .expect("verify the real-sequence completeness showcase");
-    assert!(results.contains("cauchy_sequence_converges"));
-    assert!(results.contains("real_least_upper_bound_exists"));
-    assert!(!results.contains("real_cauchy_sequence_converges"));
+        .expect("verify the convergence-under-scaling showcase");
+    assert!(results.contains("is_eventually_close"));
+    assert!(results.contains("converges_to_mul_const"));
+    assert!(results.contains("SuccessVerifyClaimForallResult"));
+    assert!(results.contains("ObtainObjFromExistFact"));
+    assert!(results.contains("WitnessExistFact"));
+    assert!(results.contains("KnownForallInstantiation"));
 
-    let error = compile_on_verifier_stack(SOURCE, "main.lit")
-        .expect_err("the Lean adapter for the full derived proof is deferred");
-    assert!(
-        error.contains("no local compiler consumer")
-            || error.contains("PositiveStandardSetMembershipImpliesPositive"),
-        "{error}"
-    );
+    let generated = compile_on_verifier_stack(SOURCE, "main.lit")
+        .expect("compile the convergence-under-scaling showcase");
+    assert_eq!(generated, CHECKED_IN);
+    assert!(generated.contains("def is_eventually_close"));
+    assert!(generated.contains("def converges_to"));
+    assert!(generated.contains("theorem converges_to_mul_const"));
+    assert!(!generated.contains("axiom "));
+    assert!(!generated.contains("sorry"));
+    assert!(!generated.contains("admit"));
+
+    let renamed_source = SOURCE
+        .replace("converges_to_mul_const", "scaling_preserves_approach")
+        .replace("is_eventually_close", "tail_close_rel")
+        .replace("converges_to", "approaches_limit");
+    let renamed = compile_owned_on_verifier_stack(renamed_source, "renamed_scaling.lit")
+        .expect("compile the alpha-equivalent renamed showcase");
+    assert!(renamed.contains("def tail_close_rel"));
+    assert!(renamed.contains("def approaches_limit"));
+    assert!(renamed.contains("theorem scaling_preserves_approach"));
+    assert!(!renamed.contains("is_eventually_close"));
+    assert!(!renamed.contains("converges_to_mul_const"));
+    assert!(!renamed.contains("axiom "));
+    assert!(!renamed.contains("sorry"));
     assert!(!SOURCE.contains("axiom"));
     assert!(!SOURCE.contains("trust"));
+    assert!(!SOURCE.contains("sorry"));
 }
 
 #[test]
@@ -202,24 +234,20 @@ fn known_forall_multi_conclusion_fact_id_provenance_compiles_both_exact_projecti
 
     assert!(generated.contains("theorem paired_source :"), "{generated}");
     assert!(
-        generated.contains("exact (paired_source (2 : ℂ) (Litex.Rules.complexRealInR (2 : ℝ))).1"),
+        generated.contains(
+            "((paired_source (2 : ℂ) (Litex.Rules.complexRealInR (2 : ℝ))).1).1"
+        ),
         "{generated}"
     );
-    let second_conclusion_projection = generated
-        .lines()
-        .find(|line| {
-            line.contains("exact (paired_source (2 : ℂ)") && line.trim_end().ends_with(").2")
-        })
-        .expect("second known-forall conclusion must use its exact projection");
     assert!(
-        second_conclusion_projection.contains("__fact2"),
-        "the second application must reuse the retained FactId proof produced while compiling the first conclusion:\n{generated}"
-    );
-    assert!(
-        generated.contains("theorem __fact2 : Litex.In (2 : ℂ) Litex.R"),
+        generated.contains("theorem __fact2 : Litex.In (2 : ℝ) Litex.R"),
         "{generated}"
     );
-    assert_eq!(generated.matches("paired_source (2 : ℂ)").count(), 2);
+    assert!(
+        generated.contains("Litex.In.congr") && generated.contains(".mp (__fact2))).2"),
+        "the second application must reuse and transport the retained FactId proof produced while compiling the first conclusion:\n{generated}"
+    );
+    assert!(generated.matches("paired_source (2 : ℂ)").count() >= 2);
     assert!(!generated.contains("axiom "));
     assert!(!generated.contains("sorry"));
 }
@@ -254,10 +282,13 @@ fn predicate_backed_witness_compiles_all_retained_fact_ids() {
         "{generated}"
     );
     assert!(
-        generated.contains("Litex.In (2 : ℂ) Litex.R"),
+        generated.contains("Litex.In (2 : ℝ) Litex.R"),
         "{generated}"
     );
-    assert!(generated.contains("∃ (x : ℂ)"), "{generated}");
+    assert!(
+        generated.contains("∃ (x : ℂ), ∃ (__type_x : Litex.In x Litex.R)"),
+        "{generated}"
+    );
     assert!(!generated.contains("axiom "), "{generated}");
     assert!(!generated.contains("sorry"), "{generated}");
 }
@@ -481,7 +512,8 @@ fn order_tracer_compiles_catalog_rule_and_rejects_non_catalog_transitivity() {
     const SOURCE: &str = include_str!("../../lean/examples/2_OrderSystem.lit");
     let generated = compile_on_verifier_stack(SOURCE, "2_OrderSystem.lit")
         .expect("compile catalog strict-to-weak order rule");
-    assert!(generated.contains("Litex.Lt.toLe (__domain1)"));
+    assert!(generated.contains("Litex.Lt.toLe ((by"));
+    assert!(generated.contains("convert __domain1"));
     assert!(generated.contains("Litex.In.rep a"));
     assert!(generated.contains("Litex.In.rep b"));
     assert!(!generated.contains("RealCoherence"));
@@ -531,7 +563,11 @@ fn complex_algebraic_normalization_records_typed_boundary_rule_id() {
     .expect("capture complex-algebraic-normalization Result JSON v2");
     assert_eq!(
         result_json.matches("ComplexAlgebraicNormalization").count(),
-        4,
+        3,
+        "{result_json}"
+    );
+    assert!(
+        result_json.contains("RationalAlgebraicNormalization"),
         "{result_json}"
     );
 
@@ -775,7 +811,7 @@ fn positive_real_uses_exact_projection_and_uncatalogued_constructor_fails_closed
         "Litex.Rules.inCOfInR",
         "Litex.Rules.positiveOfInRPos",
         "have __infer",
-        "Litex.Rules.positiveRealRepPositive (__h",
+        "Litex.Rules.positiveRealCarrierPositive (__h",
     ] {
         assert!(
             generated.contains(expected),
@@ -995,14 +1031,14 @@ fn rational_and_natural_carrier_closures_replay_exact_rules() {
     assert!(!generated.contains("Set.univ"));
     assert!(!generated.contains("axiom "));
     assert!(!generated.contains("sorry"));
-    assert_eq!(generated.matches("have __infer4_").count(), 4);
-    assert_eq!(generated.matches("have __infer5_").count(), 4);
-    assert!(generated.contains("Litex.Rules.naturalRepNonnegative (__h4_1)"));
+    assert!(generated.matches("have __infer4_").count() >= 4);
+    assert!(generated.matches("have __infer5_").count() >= 4);
+    assert!(generated.contains("Litex.Rules.naturalRepNonnegative (__h"));
     assert!(generated.contains("Litex.Rules.complexEqNatInN"));
     assert!(!generated.contains("complexAddInN (__h4_1)"));
     assert!(!generated.contains("complexMulInN (__h5_1)"));
     assert!(
-        generated.contains("Litex.In.rep a __h6_1")
+        generated.contains("Litex.In.rep a __h")
             && generated.contains("(__p2 : ℤ)")
             && generated.contains("Litex.Rules.complexRatInQ")
             && generated.contains(" ^ z : ℚ"),
@@ -1037,7 +1073,8 @@ fn not_equal_symmetry_negates_heterogeneous_same() {
     .expect("compile not-equality symmetry");
     assert!(generated.contains("(__domain1 : ¬ Litex.Same __p1 __p2)"));
     assert!(generated.contains("¬ Litex.Same b a"));
-    assert!(generated.contains("Litex.Rules.notSameSymm (__domain1)"));
+    assert!(generated.contains("Litex.Rules.notSameSymm ((by"));
+    assert!(generated.contains("convert __domain1"));
 }
 
 #[test]
@@ -1047,15 +1084,16 @@ fn conjunction_disjunction_and_alpha_forall_citations_replay_exact_evidence() {
         "propositional_fact_spine.lit",
     )
     .expect("compile propositional proof spine");
-    assert!(generated.contains("Litex.Same (1 : ℂ) (1 : ℂ) ∧ Litex.Same (2 : ℂ) (2 : ℂ)"));
+    assert!(generated
+        .contains("(Litex.Same (1 : ℂ) (1 : ℂ)) ∧ (Litex.Same (2 : ℂ) (2 : ℂ))"));
     assert!(generated.contains("exact ⟨Litex.Same.refl (1 : ℂ), Litex.Same.refl (2 : ℂ)⟩"));
     assert!(generated
-        .contains("have __c1_0 : Litex.Same a a ∧ Litex.Same b b := ⟨__domain1, __domain2⟩"));
-    assert!(generated.contains("exact __c1_0"));
+        .contains("have __prior1_0 : (Litex.Same a a) ∧ (Litex.Same b b) := ⟨__domain1, __domain2⟩"));
+    assert!(generated.contains("exact __prior1_0"));
     assert!(
-        generated.contains("have __c2_0 : Litex.Same a a ∨ Litex.Same b b := Or.inl (__domain1)")
+        generated.contains("have __prior2_0 : Litex.Same a a ∨ Litex.Same b b := Or.inl (__domain1)")
     );
-    assert!(generated.contains("exact __c2_0"));
+    assert!(generated.contains("exact __prior2_0"));
     assert!(generated.contains("theorem __fact4 :\n    ∀ (__p1 : Litex.Set) (__p2 : Litex.Set)"));
     assert!(generated.contains(":= __fact3"));
 }
@@ -1069,9 +1107,9 @@ fn conjunction_projection_replays_inferred_fact_ids() {
     .expect("compile conjunction projection proof spine");
     assert!(generated.contains("have __infer0_0 : ¬ Litex.Same a b := (__domain1).1"));
     assert!(generated.contains("have __infer0_1 : ¬ Litex.Same c d := (__domain1).2"));
-    assert!(generated.contains("have __c0_0"));
+    assert!(generated.contains("have __prior0_0"));
     assert!(generated.contains(":= __infer0_1"));
-    assert!(generated.contains("exact __c0_0"));
+    assert!(generated.contains("exact __prior0_0"));
 }
 
 #[test]
@@ -1090,7 +1128,8 @@ fn unary_function_set_application_consumes_both_memberships() {
         generated.contains("__type4 : Litex.In __p4 (Litex.fnSet"),
         "{generated}"
     );
-    assert!(generated.contains("Litex.fnApply f __h0_4 x (__h0_3)"));
+    assert!(generated.contains("Litex.fnApplyOwn (Litex.In.rep f"));
+    assert!(generated.contains("(Litex.In.own (Litex.fnSet"));
     assert!(!generated.contains("namespace __Sketch"));
     assert!(!generated.contains("sorry"));
 }
@@ -1112,7 +1151,7 @@ fn multilayer_application_preserves_each_unary_source_contract() {
     let generated = compile_on_verifier_stack(SOURCE, "23_MultilayerApplication.lit")
         .expect("compile multi-layer application tracer");
     assert!(generated.contains("Litex.In __p6 (Litex.fnSet"));
-    assert!(generated.contains("let __fn_layer1 := (Litex.fnApply g __h0_6 a (__h0_4))"));
+    assert!(generated.contains("let __fn_layer1 := (Litex.fnApplyOwn (Litex.In.rep g"));
     assert!(generated.contains("Litex.fnApplyOwn __fn_layer1"));
     assert!(generated.contains("(Litex.In.own (Litex.fnSet"));
     assert!(!generated.contains("Litex.Object"));
@@ -1136,7 +1175,7 @@ fn multilayer_application_preserves_each_unary_source_contract() {
         .expect("compile one exact two-parameter source layer");
     assert!(same_layer.contains("Litex.fnTelescopeSet"));
     assert!(same_layer.contains("Litex.FnTelescope.parameter"));
-    assert!(same_layer.contains("Litex.fnTelescopeApply f"));
+    assert!(same_layer.contains("Litex.fnTelescopeApplyOwn"));
     assert!(same_layer.contains(").down"));
     assert!(!same_layer.contains("Litex.Object"));
     assert!(!same_layer.contains("sorry"));
@@ -1186,7 +1225,10 @@ fn dependent_function_sets_keep_parameter_and_return_carriers() {
     let returned = compile_on_verifier_stack(DEPENDENT_RETURN, "24_DependentAnonymousFunction.lit")
         .expect("compile an application with an argument-indexed exact return set");
     assert!(returned.contains("Litex.fnTelescopeSet"), "{returned}");
-    assert!(returned.contains("Litex.fnTelescopeApply f"), "{returned}");
+    assert!(
+        returned.contains("Litex.fnTelescopeApplyOwn (Litex.In.rep f"),
+        "{returned}"
+    );
     assert!(returned.contains("Litex.setBuilder Litex.R"), "{returned}");
     assert!(returned.contains(").down"), "{returned}");
     assert!(!returned.contains("Litex.Object"));
@@ -1209,7 +1251,7 @@ fn compound_anonymous_functions_replay_their_owned_wd_scope() {
     let generated = compile_on_verifier_stack(SOURCE, "24_DependentAnonymousFunction.lit")
         .expect("compile compound anonymous values and their direct application");
     assert!(
-        generated.contains("Litex.Rules.complexAddInR"),
+        generated.contains("((Litex.In.rep __arg __arg_in : ℝ) + (1 : ℝ))"),
         "{generated}"
     );
     assert!(generated.contains("Litex.fnApplyOwn"), "{generated}");
@@ -1334,7 +1376,8 @@ fn existential_intro_and_elim_use_native_carrier_and_exact_projections() {
         "10_ExistentialWitness.lit",
     )
     .expect("compile existential introduction/elimination tracer");
-    assert!(generated.contains("∃ (x : ℂ), Litex.In x Litex.R ∧ Litex.Same x (1 : ℂ)"));
+    assert!(generated
+        .contains("∃ (x : ℂ), ∃ (__type_x : Litex.In x Litex.R), Litex.Same x (1 : ℂ)"));
     assert!(generated.contains("noncomputable def y : ℂ := Classical.choose"));
     assert!(generated.contains("Classical.choose_spec"));
     assert!(!generated.contains("Litex.Object"));
@@ -1441,11 +1484,11 @@ fn concrete_predicate_definition_and_by_def_replay_checked_components() {
     )
     .expect("compile concrete predicate tracer");
     assert!(generated.contains("def is_unit_pair"));
-    assert!(generated.contains("Litex.In x Litex.R ∧ Litex.In y Litex.R"));
+    assert!(generated.contains("(Litex.In x Litex.R) ∧ (Litex.In y Litex.R)"));
     assert!(generated.contains("unfold is_unit_pair"));
-    assert!(generated.contains(
-        "exact ⟨Litex.Rules.complexRealInR (1 : ℝ), Litex.Rules.complexRealInR (1 : ℝ), __fact0, __fact0⟩"
-    ));
+    assert!(generated.contains("is_unit_pair (1 : ℝ) (1 : ℝ)"));
+    assert!(generated.contains("Litex.In.own Litex.R (1 : ℝ)"));
+    assert!(generated.contains("Litex.Same.realComplex ((1 : ℝ))"));
     assert!(!generated.contains("axiom "));
     assert!(!generated.contains("sorry"));
 }

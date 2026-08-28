@@ -1,5 +1,27 @@
 use super::*;
 
+fn source_display_without_symbol_ids(source: &str) -> String {
+    let mut rendered = String::with_capacity(source.len());
+    let mut characters = source.chars().peekable();
+    while let Some(character) = characters.next() {
+        if character == '#' {
+            let mut digits = String::new();
+            while characters.peek().is_some_and(|next| next.is_ascii_digit()) {
+                digits.push(characters.next().expect("peeked digit"));
+            }
+            if !digits.is_empty() && characters.peek() == Some(&'#') {
+                characters.next();
+                continue;
+            }
+            rendered.push('#');
+            rendered.push_str(&digits);
+        } else {
+            rendered.push(character);
+        }
+    }
+    rendered
+}
+
 pub(super) fn render_fact(
     fact: &Fact,
     context: &StmtResultToLeanCompilerEnvironmentStack,
@@ -42,7 +64,20 @@ pub(super) fn render_fact(
                 let arguments = fact
                     .body
                     .iter()
-                    .map(|argument| render_obj(argument, context))
+                    .enumerate()
+                    .map(|(argument_index, argument)| {
+                        render_concrete_predicate_argument(
+                            binding,
+                            argument_index,
+                            argument,
+                            context,
+                        )
+                        .map_err(|error| {
+                            format!(
+                                "predicate `{source_name}` argument {argument_index} (`{argument}`) failed: {error}"
+                            )
+                        })
+                    })
                     .collect::<Result<Vec<_>, _>>()?;
                 Ok(format!("{} {}", binding.lean_name, arguments.join(" ")))
             }
@@ -82,7 +117,20 @@ pub(super) fn render_fact(
                 let arguments = fact
                     .body
                     .iter()
-                    .map(|argument| render_obj(argument, context))
+                    .enumerate()
+                    .map(|(argument_index, argument)| {
+                        render_concrete_predicate_argument(
+                            binding,
+                            argument_index,
+                            argument,
+                            context,
+                        )
+                        .map_err(|error| {
+                            format!(
+                                "negated predicate `{source_name}` argument {argument_index} (`{argument}`) failed: {error}"
+                            )
+                        })
+                    })
                     .collect::<Result<Vec<_>, _>>()?;
                 Ok(format!("¬ {} {}", binding.lean_name, arguments.join(" ")))
             }
@@ -502,6 +550,17 @@ pub(super) fn render_real_target_object_representation(
             "|{}|",
             render_real_target_object_representation(&arguments[0], context)?
         )),
+        LeanTargetObjectRepresentation::FunctionApplication(application) => {
+            let return_set = function_application_return_set_from_result(application, context)?;
+            if return_set
+                != LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Real)
+            {
+                return Err(
+                    "function application has no verifier-owned exact R return carrier".into(),
+                );
+            }
+            render_function_application(application, context)
+        }
         _ => Err(format!(
             "target object `{object:?}` has no reviewed exact ℝ representation"
         )),
@@ -523,6 +582,9 @@ pub(super) fn fact_matches_structured_induction_goal_substitution(
         }
         (Fact::ChainFact(source), Fact::ChainFact(target)) => {
             Runtime::_verify_chain_fact_the_same_type_and_return_matched_args(source, target)
+        }
+        (Fact::OrFact(source), Fact::OrFact(target)) => {
+            Runtime::_verify_or_fact_the_same_type_and_return_matched_args(source, target)
         }
         _ => return false,
     };
@@ -717,6 +779,53 @@ pub(super) fn render_existential_fact_with_names(
         .existential_names
         .insert(group.params[0].name().to_string(), witness_name.to_string());
     let requirement = format!("Litex.In {witness_name} {}", render_obj(set, &nested)?);
+    // The body may pass the witness to an exact-carrier concrete predicate.
+    // Bind the checked membership as data before rendering that body so every
+    // use observes the same Result-owned representative.  The constructor and
+    // `rcases` syntax remains `⟨witness, membership, body⟩`, while Lean's
+    // type now records the dependency that a plain conjunction cannot express.
+    let proof_name = format!("__type_{witness_name}");
+    let lowered_set = LeanTargetObjectRepresentation::lower(set)?;
+    let exact_witness = if matches!(
+        lowered_set,
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Complex)
+    ) {
+        witness_name.to_string()
+    } else {
+        format!("(Litex.In.rep {witness_name} {proof_name})")
+    };
+    nested
+        .exact_carrier_values
+        .insert(group.params[0].id(), exact_witness);
+    install_numeric_representations_from_membership(
+        group.params[0].id(),
+        &lowered_set,
+        witness_name,
+        &proof_name,
+        &mut nested,
+    );
+    let aliases = nested
+        .well_definedness
+        .as_ref()
+        .map(|well_definedness| {
+            well_definedness
+                .parameter_fact_aliases
+                .iter()
+                .filter(|alias| alias.symbol_id == group.params[0].id())
+                .cloned()
+                .collect::<Vec<_>>()
+        })
+        .unwrap_or_default();
+    if let Some(primary) = aliases.first() {
+        install_parameter_fact_aliases(
+            group.params[0].id(),
+            primary.fact_id,
+            &primary.proposition,
+            &proof_name,
+            set,
+            &mut nested,
+        )?;
+    }
     let body = render_fact(&existential.facts()[0].from_ref_to_cloned_fact(), &nested)?;
     let binders = match set {
         Obj::FnSet(_) => format!("({carrier_name} : Type 1) ({witness_name} : {carrier_name})"),
@@ -725,7 +834,7 @@ pub(super) fn render_existential_fact_with_names(
         }
         _ => format!("({witness_name} : ℂ)"),
     };
-    Ok(format!("∃ {binders}, {requirement} ∧ {body}"))
+    Ok(format!("∃ {binders}, ∃ ({proof_name} : {requirement}), {body}"))
 }
 
 pub(super) fn one_witness_existential_group(
@@ -750,15 +859,24 @@ pub(super) fn one_witness_existential_group(
 pub(super) fn one_witness_existentials_are_alpha_equal(
     source: &Fact,
     target: &Fact,
-    context: &StmtResultToLeanCompilerEnvironmentStack,
+    _context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<bool, String> {
     let (Fact::ExistFact(source), Fact::ExistFact(target)) = (source, target) else {
         return Ok(false);
     };
-    Ok(
-        render_existential_fact_with_names(source, context, "__bound", "__bound_carrier")?
-            == render_existential_fact_with_names(target, context, "__bound", "__bound_carrier")?,
-    )
+    let source_group = one_witness_existential_group(source)?;
+    let target_group = one_witness_existential_group(target)?;
+    if source_group.param_type.to_string() != target_group.param_type.to_string() {
+        return Ok(false);
+    }
+    let source_body = source.facts()[0].from_ref_to_cloned_fact();
+    let target_body = target.facts()[0].from_ref_to_cloned_fact();
+    Ok(fact_matches_structured_induction_goal_substitution(
+        &source_body,
+        &target_body,
+        source_group.params[0].id(),
+        &obj_for_bound_param_in_scope(&target_group.params[0]),
+    ))
 }
 
 pub(super) fn render_obj(
@@ -807,6 +925,10 @@ pub(super) fn render_obj(
             render_numeric_obj(division.left.as_ref(), context)?,
             render_numeric_obj(division.right.as_ref(), context)?
         )),
+        Obj::Abs(operation) => Ok(format!(
+            "(Litex.abs {})",
+            render_numeric_obj(operation.arg.as_ref(), context)?
+        )),
         Obj::Mod(remainder) => Ok(format!(
             "(({} % {} : ℤ) : ℂ)",
             render_integer_obj(remainder.left.as_ref(), context)?,
@@ -830,8 +952,71 @@ pub(super) fn render_obj(
             render_anonymous_function(&function, context)
         }
         Obj::FnObj(application) => {
+            let mut source: Obj = application.clone().into();
+            if application.source_occurrence_id.is_none() {
+                let alpha_display = source_display_without_symbol_ids(&source.to_string());
+                let result_context = context.well_definedness.as_ref().ok_or_else(|| {
+                    format!(
+                        "synthesized application `{source}` has no active Result-owned WD context"
+                    )
+                })?;
+                let mut matching = result_context
+                    .function_applications
+                    .values()
+                    .filter(|candidate| {
+                        objs_equal_with_nested_binder_alpha_equivalence(
+                            &candidate.source_application,
+                            &source,
+                        ) || source_display_without_symbol_ids(
+                            &candidate.source_application.to_string(),
+                        ) == alpha_display
+                    })
+                    .collect::<Vec<_>>();
+                matching.sort_by_key(|candidate| match &candidate.source_application {
+                    Obj::FnObj(application) => application
+                        .source_occurrence_id
+                        .map(|occurrence| occurrence.value())
+                        .unwrap_or_default(),
+                    _ => 0,
+                });
+                let Some(first) = matching.first().copied() else {
+                    let available = result_context
+                        .function_applications
+                        .values()
+                        .map(|candidate| candidate.source_application.to_string())
+                        .collect::<Vec<_>>()
+                        .join(", ");
+                    return Err(format!(
+                        "synthesized application `{source}` has no structurally matching Result-owned occurrence; active applications: [{available}]"
+                    ));
+                };
+                let expected_certificate = function_application_result_certificate_key(first);
+                if matching.iter().any(|candidate| {
+                    function_application_result_certificate_key(candidate) != expected_certificate
+                }) {
+                    return Err(format!(
+                        "synthesized application `{source}` has evidence-distinct matching Result-owned occurrences"
+                    ));
+                }
+                let Obj::FnObj(source_application) = &mut source else {
+                    unreachable!("FnObj branch retained a non-application object")
+                };
+                let Obj::FnObj(certified_application) = &first.source_application else {
+                    return Err(
+                        "Result-owned function application certificate retained a non-application"
+                            .into(),
+                    );
+                };
+                // Keep the synthesized application's current binder symbols.  The
+                // Result-owned occurrence contributes identity/evidence only; copying
+                // the whole certified source here would reintroduce the fresh binder
+                // symbols from the verifier's alpha-equivalent replay and make them
+                // unbound in the current Lean lambda/forall scope.
+                source_application.source_occurrence_id =
+                    certified_application.source_occurrence_id;
+            }
             let LeanTargetObjectRepresentation::FunctionApplication(application) =
-                LeanTargetObjectRepresentation::lower(&application.clone().into())?
+                LeanTargetObjectRepresentation::lower(&source)?
             else {
                 return Err("function application lowered to a non-application object".into());
             };
@@ -1947,7 +2132,6 @@ pub(super) fn render_anonymous_function(
     function: &LeanTargetAnonymousFunctionRepresentation,
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
-    validate_function_type(&function.function)?;
     let occurrence = function.source_occurrence_id.ok_or_else(|| {
         "anonymous function has no parser-owned source occurrence identity".to_string()
     })?;
@@ -1955,13 +2139,33 @@ pub(super) fn render_anonymous_function(
         .well_definedness
         .as_ref()
         .ok_or_else(|| "anonymous function has no active Result-owned WD context".to_string())?;
+    let owner_occurrence = result_context
+        .anonymous_function_occurrence_aliases
+        .get(&occurrence)
+        .copied()
+        .unwrap_or(occurrence);
     let anonymous_context = result_context
         .anonymous_functions
-        .get(&occurrence)
+        .get(&owner_occurrence)
         .ok_or_else(|| {
+            let equivalent_owners = result_context
+                .anonymous_functions
+                .iter()
+                .filter_map(|(candidate, certificate)| {
+                    (obj_equality_key(&certificate.source_function) == function.semantic_key)
+                        .then_some(candidate.value().to_string())
+                })
+                .collect::<Vec<_>>()
+                .join(", ");
+            let aliases = result_context
+                .anonymous_function_occurrence_aliases
+                .iter()
+                .map(|(source, owner)| format!("{}->{}", source.value(), owner.value()))
+                .collect::<Vec<_>>()
+                .join(", ");
             format!(
-                "anonymous function occurrence {} has no exact recursive Result context",
-                occurrence.value()
+                "anonymous function occurrence {} has no exact recursive Result context; alpha-equivalent Result owners [{}]; installed aliases [{}]",
+                occurrence.value(), equivalent_owners, aliases
             )
         })?;
     if obj_equality_key(&anonymous_context.source_function) != function.semantic_key {
@@ -1969,6 +2173,17 @@ pub(super) fn render_anonymous_function(
             "anonymous function Result context changed its source body or signature".into(),
         );
     }
+    let function = if owner_occurrence == occurrence {
+        function.clone()
+    } else {
+        let LeanTargetObjectRepresentation::AnonymousFunction(function) =
+            LeanTargetObjectRepresentation::lower(&anonymous_context.source_function)?
+        else {
+            return Err("anonymous-function Result owner lowered to another object".into());
+        };
+        *function
+    };
+    validate_function_type(&function.function)?;
 
     let mut nested = context.clone();
     let uses_telescope = function_uses_telescope(&function.function);
@@ -2086,13 +2301,21 @@ pub(super) fn render_anonymous_function(
                     "anonymous function return closure changed its exact body or carrier".into(),
                 );
             }
-            format!(
-                "Litex.In.rep {} ({})",
-                render_obj(body, &nested)?,
-                closure.proof_expression.as_ref().ok_or_else(|| {
-                    "anonymous function body-membership Result was not compiled".to_string()
-                })?
-            )
+            match function.function.return_set.as_ref() {
+                LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Real) => {
+                    render_real_target_object_representation(&function.body, &nested)?
+                }
+                LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Integer) => {
+                    render_integer_target_object_representation(&function.body, &nested)?
+                }
+                _ => format!(
+                    "Litex.In.rep {} ({})",
+                    render_obj(body, &nested)?,
+                    closure.proof_expression.as_ref().ok_or_else(|| {
+                        "anonymous function body-membership Result was not compiled".to_string()
+                    })?
+                ),
+            }
         }
         WellDefinednessRequirementRole::AnonymousFunctionBoundParameterSubset {
             parameter_group_index: _,
@@ -2168,6 +2391,13 @@ pub(super) fn render_lean_source_for_target_set_representation(
             let mut nested = context.clone();
             nested
                 .symbol_names
+                .insert(builder.symbol_id, parameter.clone());
+            // A set-builder lambda binds the exact carrier of its base set.
+            // Concrete predicates with exact parameters must consume that
+            // value directly instead of searching for a heterogeneous
+            // membership fact that the lambda does not need to carry.
+            nested
+                .exact_carrier_values
                 .insert(builder.symbol_id, parameter.clone());
             nested
                 .semantic_zero_ended_order_symbols
@@ -2245,6 +2475,271 @@ fn matches_directly_or_after_one_transparent_definition_pass(
     Ok(obj_equality_key(&reduced) == obj_equality_key(target))
 }
 
+fn matches_result_owned_application_source(
+    certified: &Obj,
+    replayed: &Obj,
+    context: &StmtResultToLeanCompilerEnvironmentStack,
+) -> Result<bool, String> {
+    if matches_directly_or_after_one_transparent_definition_pass(certified, replayed, context)? {
+        return Ok(true);
+    }
+    // A quantified definition replay may alpha-rename its binder after the
+    // function-application Result was frozen.  Once both objects carry the
+    // same parser-owned occurrence, that occurrence is the evidence join key;
+    // permit only the corresponding identifier-erased source shape.  This
+    // does not perform a text-based certificate lookup.
+    Ok(certified.source_occurrence_id().is_some()
+        && certified.source_occurrence_id() == replayed.source_occurrence_id()
+        && source_display_without_symbol_ids(&certified.to_string())
+            == source_display_without_symbol_ids(&replayed.to_string()))
+}
+
+fn install_result_owned_application_alpha_aliases(
+    certified: &Obj,
+    replayed: &Obj,
+    current_context: &StmtResultToLeanCompilerEnvironmentStack,
+    result_context: &mut StmtResultToLeanCompilerEnvironmentStack,
+) -> Result<bool, String> {
+    if obj_equality_key(certified) == obj_equality_key(replayed) {
+        return Ok(true);
+    }
+    // A transparent-definition certificate may retain the application before
+    // the verifier's one checked substitution pass, while the replayed object
+    // is already reduced.  Align the reduced, verifier-owned source before
+    // installing alpha aliases; this uses exactly the same stored definitions
+    // as the occurrence match above and does not normalize arbitrary facts.
+    let substitutions = current_context
+        .transparent_object_definitions
+        .iter()
+        .map(|(symbol_id, definition)| (symbol_id.substitution_key(), definition.value.clone()))
+        .collect::<HashMap<_, _>>();
+    if !substitutions.is_empty() {
+        let reduced = Runtime::default()
+            .inst_obj(certified, &substitutions, SubstitutionMode::Exact)
+            .map_err(|error| {
+                format!(
+                    "compiler could not replay transparent definition alpha alignment: {}",
+                    error.trace_message()
+                )
+            })?;
+        if obj_equality_key(&reduced) != obj_equality_key(certified) {
+            return install_result_owned_application_alpha_aliases(
+                &reduced,
+                replayed,
+                current_context,
+                result_context,
+            );
+        }
+    }
+    if let (Obj::Atom(certified_atom), Obj::Atom(replayed_atom)) = (certified, replayed) {
+        let (Some(certified_symbol), Some(_replayed_symbol)) =
+            (certified_atom.symbol_ref(), replayed_atom.symbol_ref())
+        else {
+            return Ok(false);
+        };
+        if source_display_without_symbol_ids(&certified.to_string())
+            != source_display_without_symbol_ids(&replayed.to_string())
+        {
+            return Ok(false);
+        }
+        let replayed_name = render_obj(replayed, current_context)?;
+        if let Some(previous) = result_context
+            .symbol_names
+            .insert(certified_symbol.id(), replayed_name.clone())
+        {
+            if previous != replayed_name {
+                return Err(format!(
+                    "Result-owned application alpha alias for `{certified}` is inconsistent"
+                ));
+            }
+        }
+        return Ok(true);
+    }
+    Runtime::same_shape_and_corresponding_args_match(
+        certified,
+        replayed,
+        &mut |certified_child, replayed_child| {
+            install_result_owned_application_alpha_aliases(
+                certified_child,
+                replayed_child,
+                current_context,
+                result_context,
+            )
+        },
+    )
+}
+
+fn function_application_result_certificate_key(
+    application: &StmtResultFunctionApplicationWellDefinednessToLeanCompilationContext,
+) -> String {
+    let anonymous_head = application
+        .anonymous_function_head
+        .as_ref()
+        .map(obj_equality_key)
+        .unwrap_or_default();
+    let layers = application
+        .layers
+        .iter()
+        .map(|layer| {
+            let intrinsic_result_set = layer
+                .intrinsic_result_set
+                .as_ref()
+                .map(obj_equality_key)
+                .unwrap_or_default();
+            let requirements = layer
+                .requirements
+                .iter()
+                .map(|requirement| {
+                    format!(
+                        "{:?}:{}",
+                        requirement.role,
+                        requirement.expected_proposition
+                    )
+                })
+                .collect::<Vec<_>>()
+                .join(";");
+            format!(
+                "{}:{:?}:{}:[{}]",
+                obj_equality_key(&layer.source_prefix),
+                layer.function_contracts,
+                intrinsic_result_set,
+                requirements
+            )
+        })
+        .collect::<Vec<_>>()
+        .join("|");
+    format!(
+        "{}:{:?}:{}:[{}]",
+        obj_equality_key(&application.source_application),
+        application.function_contracts,
+        anonymous_head,
+        layers
+    )
+}
+
+fn resolve_function_application_result_context<'a>(
+    application: &LeanTargetFunctionApplicationRepresentation,
+    context: &'a StmtResultToLeanCompilerEnvironmentStack,
+) -> Result<&'a StmtResultFunctionApplicationWellDefinednessToLeanCompilationContext, String> {
+    let result_context = context
+        .well_definedness
+        .as_ref()
+        .ok_or_else(|| "function application has no active Result-owned WD context".to_string())?;
+    if let Some(exact) = result_context
+        .function_applications
+        .get(&application.source_occurrence_id)
+    {
+        return Ok(exact);
+    }
+
+    // A proof chain can repeat the identical source application in several
+    // adjacent facts. Each parser occurrence is distinct, while a child
+    // Result may retain only the occurrence used by its own fact. Reuse is
+    // sound only when every matching active Result has the same complete
+    // verifier certificate.
+    let mut equivalent = Vec::new();
+    for (occurrence_id, candidate) in &result_context.function_applications {
+        if matches_directly_or_after_one_transparent_definition_pass(
+            &candidate.source_application,
+            &application.source_application,
+            context,
+        )? {
+            equivalent.push((*occurrence_id, candidate));
+        }
+    }
+    equivalent.sort_by_key(|(occurrence_id, _)| occurrence_id.value());
+    let Some((_, first)) = equivalent.first().copied() else {
+        let available_occurrences = result_context
+            .function_applications
+            .iter()
+            .map(|(source_occurrence_id, application)| {
+                format!(
+                    "{}:{}",
+                    source_occurrence_id.value(),
+                    application.source_application
+                )
+            })
+            .collect::<Vec<_>>()
+            .join(", ");
+        return Err(format!(
+            "function application occurrence {} (`{}`) has no exact recursive Result context; active child occurrences are [{}]",
+            application.source_occurrence_id.value(),
+            application.source_application,
+            available_occurrences,
+        ));
+    };
+    let expected_certificate = function_application_result_certificate_key(first);
+    if equivalent.iter().any(|(_, candidate)| {
+        function_application_result_certificate_key(candidate) != expected_certificate
+    }) {
+        return Err(format!(
+            "function application occurrence {} has multiple structurally matching but evidence-distinct Result contexts",
+            application.source_occurrence_id.value()
+        ));
+    }
+    Ok(first)
+}
+
+fn function_application_return_set_from_result(
+    application: &LeanTargetFunctionApplicationRepresentation,
+    context: &StmtResultToLeanCompilerEnvironmentStack,
+) -> Result<LeanTargetObjectRepresentation, String> {
+    let application_context = resolve_function_application_result_context(application, context)?;
+    let mut function = match application.head.as_ref() {
+        LeanTargetObjectRepresentation::Symbol { .. } => {
+            let [WellDefinedFunctionContract::StoredMembershipFact(contract_fact_id)] =
+                application_context.function_contracts.as_slice()
+            else {
+                return Err(
+                    "named real application requires one verifier-selected membership FactId"
+                        .into(),
+                );
+            };
+            context
+                .function_bindings
+                .get(contract_fact_id)
+                .ok_or_else(|| {
+                    format!("unavailable function membership FactId `{contract_fact_id}`")
+                })?
+                .function
+                .clone()
+        }
+        LeanTargetObjectRepresentation::AnonymousFunction(anonymous) => {
+            if !application_context.function_contracts.is_empty() {
+                return Err(
+                    "anonymous real application retained an unexpected named contract".into(),
+                );
+            }
+            anonymous.function.clone()
+        }
+        _ => return Err("real application requires a named or anonymous function head".into()),
+    };
+    if application.argument_layers.len() != application_context.layers.len() {
+        return Err("real application changed its Result-owned layer count".into());
+    }
+    for (layer_index, arguments) in application.argument_layers.iter().enumerate() {
+        validate_function_type(&function)?;
+        if arguments.len() != function.parameters.len() {
+            return Err(format!(
+                "real application layer {layer_index} changed its parameter arity"
+            ));
+        }
+        if layer_index + 1 == application.argument_layers.len() {
+            return Ok(function.return_set.as_ref().clone());
+        }
+        let LeanTargetObjectRepresentation::FunctionSet {
+            function: next_function,
+        } = function.return_set.as_ref()
+        else {
+            return Err(format!(
+                "real application layer {layer_index} does not return its next callable layer"
+            ));
+        };
+        function = next_function.as_ref().clone();
+    }
+    Err("real application retained no argument layers".into())
+}
+
 pub(super) fn render_function_application(
     application: &LeanTargetFunctionApplicationRepresentation,
     context: &StmtResultToLeanCompilerEnvironmentStack,
@@ -2266,32 +2761,25 @@ pub(super) fn render_function_application(
     let Obj::FnObj(source_application) = &application.source_application else {
         return Err("function application retained a non-application source object".into());
     };
-    let result_context = context
-        .well_definedness
-        .as_ref()
-        .ok_or_else(|| "function application has no active Result-owned WD context".to_string())?;
-    let application_context = result_context
-        .function_applications
-        .get(&application.source_occurrence_id)
-        .ok_or_else(|| {
-            let available_occurrences = result_context
-                .function_applications
-                .keys()
-                .map(|source_occurrence_id| source_occurrence_id.value().to_string())
-                .collect::<Vec<_>>()
-                .join(", ");
-            format!(
-                "function application occurrence {} has no exact recursive Result context; active child occurrences are [{}]",
-                application.source_occurrence_id.value(),
-                available_occurrences,
-            )
-        })?;
-    if !matches_directly_or_after_one_transparent_definition_pass(
+    let application_context = resolve_function_application_result_context(application, context)?;
+    if !matches_result_owned_application_source(
         &application_context.source_application,
         &application.source_application,
         context,
     )? {
         return Err("function application Result context changed its source occurrence".into());
+    }
+    let mut result_owned_context = context.clone();
+    if !install_result_owned_application_alpha_aliases(
+        &application_context.source_application,
+        &application.source_application,
+        context,
+        &mut result_owned_context,
+    )? {
+        return Err(
+            "function application Result context could not align its alpha-renamed source"
+                .into(),
+        );
     }
 
     let layer_count = application.argument_layers.len();
@@ -2300,7 +2788,7 @@ pub(super) fn render_function_application(
     }
     for (layer_index, layer_context) in application_context.layers.iter().enumerate() {
         let source_prefix = source_application.prefix_obj(layer_index + 1);
-        if !matches_directly_or_after_one_transparent_definition_pass(
+        if !matches_result_owned_application_source(
             &layer_context.source_prefix,
             &source_prefix,
             context,
@@ -2365,12 +2853,22 @@ pub(super) fn render_function_application(
                     );
                 }
             }
-            (
-                binding.function.clone(),
-                render_ir_symbol(application.head.as_ref(), context)?,
-                binding.membership_proof_name.clone(),
-                binding.direct,
-            )
+            if let Some(exact_head) = context.exact_carrier_values.get(&binding.symbol_id) {
+                let function_set = render_function_set(&binding.function, context)?;
+                (
+                    binding.function.clone(),
+                    exact_head.clone(),
+                    format!("(Litex.In.own {function_set} {exact_head})"),
+                    true,
+                )
+            } else {
+                (
+                    binding.function.clone(),
+                    render_ir_symbol(application.head.as_ref(), context)?,
+                    binding.membership_proof_name.clone(),
+                    binding.direct,
+                )
+            }
         }
         LeanTargetObjectRepresentation::AnonymousFunction(anonymous) => {
             if !root_contracts.is_empty() {
@@ -2496,14 +2994,16 @@ pub(super) fn render_function_application(
                 render_lean_source_for_target_set_representation(&parameter.set, &nested)?
             );
             let retained_argument_membership =
-                render_fact(&requirement.expected_proposition, context)?;
+                render_fact(&requirement.expected_proposition, &result_owned_context)?;
             if retained_argument_membership != expected_argument_membership {
                 return Err(format!(
                     "application layer {layer_index} expected `{expected_argument_membership}`, retained `{retained_argument_membership}`"
                 ));
             }
-            let argument_membership =
-                render_function_application_requirement_proof(requirement, context)?;
+            let argument_membership = render_function_application_requirement_proof(
+                requirement,
+                &result_owned_context,
+            )?;
             let (call_argument, call_membership) = if parameter.set
                 == LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Integer)
             {
@@ -2582,14 +3082,16 @@ pub(super) fn render_function_application(
             let requirement = requirement.expect("domain requirements checked above");
             let expected_source = render_fact(source_fact, &source_domain_nested)?;
             let expected_selected = render_fact(source_fact, &nested)?;
-            let retained = render_fact(&requirement.expected_proposition, context)?;
+            let retained = render_fact(&requirement.expected_proposition, &result_owned_context)?;
             if expected_source != retained && expected_selected != retained {
                 return Err(format!(
                     "application layer {layer_index} expected domain clause {expected_source} (or exact selected-carrier form {expected_selected}), retained {retained}"
                 ));
             }
-            let retained_proof =
-                render_function_application_requirement_proof(requirement, context)?;
+            let retained_proof = render_function_application_requirement_proof(
+                requirement,
+                &result_owned_context,
+            )?;
             if positive_natural_parameter_less_equal_natural_bound(&function, source_fact)?
                 .is_some()
             {
@@ -3500,7 +4002,16 @@ pub(super) fn conjunction(facts: &[String]) -> String {
     match facts {
         [] => "True".to_string(),
         [only] => only.clone(),
-        _ => facts.join(" ∧ "),
+        // A retained conclusion can itself be an `AndFact` or relation
+        // chain. Preserve that Result boundary: the proof compiler publishes
+        // one proof term for each outer conclusion and projects its inner
+        // components separately. Without parentheses Lean reassociates the
+        // nested conjunction and changes the type expected at that slot.
+        _ => facts
+            .iter()
+            .map(|fact| format!("({fact})"))
+            .collect::<Vec<_>>()
+            .join(" ∧ "),
     }
 }
 

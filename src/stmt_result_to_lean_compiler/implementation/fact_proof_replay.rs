@@ -288,13 +288,165 @@ impl StmtResultToLeanCompiler {
         let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = target else {
             return Err("integral-polynomial evidence targets a non-equality fact".into());
         };
-        if !objs_form_verified_integral_polynomial_identity(&equality.left, &equality.right) {
+        if !objs_form_verified_integral_polynomial_congruence_identity(
+            &equality.left,
+            &equality.right,
+        ) {
             return Err(
                 "integral-polynomial evidence does not reproduce its exact identity".into(),
             );
         }
         render_fact(target, &self.environment_stack)?;
-        Ok(Some("Litex.Same.ofEq (by norm_cast; ring)".into()))
+        Ok(Some(
+            "Litex.Same.ofEq (by norm_cast; ring)".into(),
+        ))
+    }
+
+    /// Construct native Lean equality only for Result rules whose reviewed
+    /// consumer proves the exact rendered `=` before wrapping it in
+    /// `Litex.Same`.  Returning `None` is intentional: semantic equality is
+    /// heterogeneous, so an arbitrary successful `Same` proof is not an
+    /// admissible rewrite certificate for native order propositions.
+    pub(super) fn construct_lean_native_equality_proof_from_direct_fact_result(
+        &mut self,
+        result: &SuccessFactStmtResult,
+    ) -> Result<Option<String>, String> {
+        let target = result.fact();
+        let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = &target else {
+            return Ok(None);
+        };
+        let (SuccessFactProofResult::BuiltinRule(builtin)
+        | SuccessFactProofResult::BuiltinStrategy(builtin)) = result.proof()
+        else {
+            return Ok(None);
+        };
+
+        match builtin.evidence.typed() {
+            Some(BuiltinRuleEvidence::ObjectReflexivity(evidence)) => {
+                if !builtin.subgoals.is_empty()
+                    || evidence.expected_target.to_string() != target.to_string()
+                    || obj_equality_key(&equality.left) != obj_equality_key(&equality.right)
+                {
+                    return Err("native object-reflexivity evidence changed its target".into());
+                }
+                render_obj(&equality.left, &self.environment_stack)?;
+                render_obj(&equality.right, &self.environment_stack)?;
+                Ok(Some("by rfl".into()))
+            }
+            Some(BuiltinRuleEvidence::RationalNormalization(evidence)) => {
+                if !builtin.subgoals.is_empty()
+                    || evidence.expected_target.to_string() != target.to_string()
+                    || obj_equality_key(&equality.left)
+                        != obj_equality_key(&evidence.left_evaluation.expression)
+                    || obj_equality_key(&equality.right)
+                        != obj_equality_key(&evidence.right_evaluation.expression)
+                {
+                    return Err("native rational-normalization evidence changed its target".into());
+                }
+                validate_success_evaluate_obj_result(&evidence.left_evaluation)?;
+                validate_success_evaluate_obj_result(&evidence.right_evaluation)?;
+                if evidence.left_evaluation.value.normalized_value
+                    != evidence.right_evaluation.value.normalized_value
+                {
+                    return Err(
+                        "native rational-normalization evidence retained unequal normal forms"
+                            .into(),
+                    );
+                }
+                render_fact(&target, &self.environment_stack)?;
+                Ok(Some(
+                    "by norm_num [Litex.abs, Litex.min, Litex.max, Litex.tupleDim, Litex.TupleShape.dimension]"
+                        .into(),
+                ))
+            }
+            Some(BuiltinRuleEvidence::IntegralPolynomialNormalization(evidence)) => {
+                self.construct_lean_integral_polynomial_normalization_from_result(
+                    &target,
+                    evidence,
+                    &builtin.subgoals,
+                )?
+                .ok_or_else(|| {
+                    "integral-polynomial equality lost its native proof constructor".to_string()
+                })?;
+                Ok(Some("by norm_cast; ring".into()))
+            }
+            Some(BuiltinRuleEvidence::ComplexAlgebraicNormalization(evidence)) => {
+                validate_complex_algebraic_normalization_builtin_rule_evidence(&target, evidence)?;
+                self.construct_lean_native_algebraic_normalization_from_result(
+                    &target,
+                    &evidence.expected_nonzero_premises,
+                    &builtin.subgoals,
+                )
+                .map(Some)
+            }
+            Some(BuiltinRuleEvidence::RationalAlgebraicNormalization(evidence)) => {
+                validate_rational_algebraic_normalization_builtin_rule_evidence(&target, evidence)?;
+                self.construct_lean_native_algebraic_normalization_from_result(
+                    &target,
+                    &evidence.expected_nonzero_premises,
+                    &builtin.subgoals,
+                )
+                .map(Some)
+            }
+            Some(BuiltinRuleEvidence::AbsoluteValue(AbsoluteValueBuiltinRule::Product)) => {
+                self.construct_lean_absolute_value_from_result(
+                    &target,
+                    AbsoluteValueBuiltinRule::Product,
+                    &builtin.subgoals,
+                )?
+                .ok_or_else(|| {
+                    "absolute-value product lost its semantic proof constructor".to_string()
+                })?;
+                Ok(Some("by simp [Litex.abs]".into()))
+            }
+            _ => Ok(None),
+        }
+    }
+
+    pub(super) fn retain_native_equality_proof_in_current_environment(
+        &mut self,
+        fact_id: FactId,
+        fact: &Fact,
+        proof_expression: String,
+    ) -> Result<(), String> {
+        let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = fact else {
+            return Err(format!(
+                "native equality proof `{fact_id}` was attached to non-equality `{fact}`"
+            ));
+        };
+        // Native equality certificates are consumed by `rw` inside the
+        // compiler's exact numeric target representation.  A source symbol
+        // such as an `R+` epsilon is not definitionally its selected
+        // `In.rep`; retain the rendered numeric endpoints, while the ordinary
+        // Litex proof continues to use heterogeneous `Same` bridges.
+        let rendered_left = render_numeric_obj(&equality.left, &self.environment_stack)?;
+        let rendered_right = render_numeric_obj(&equality.right, &self.environment_stack)?;
+        if let Some(existing) = self
+            .environment_stack
+            .native_equality_proofs
+            .get(&fact_id)
+        {
+            if existing.fact.to_string() != fact.to_string()
+                || existing.rendered_left != rendered_left
+                || existing.rendered_right != rendered_right
+                || existing.proof_expression != proof_expression
+            {
+                return Err(format!(
+                    "native equality FactId `{fact_id}` was rebound to another certificate"
+                ));
+            }
+            return Ok(());
+        }
+        self.environment_stack.native_equality_proofs.insert(
+            fact_id,
+            NativeEqualityProofBinding {
+                fact: fact.clone(),
+                rendered_left,
+                rendered_right,
+                proof_expression,
+            },
+        );
+        Ok(())
     }
 
     pub(super) fn construct_lean_set_builtin_from_result(
@@ -748,8 +900,17 @@ impl StmtResultToLeanCompiler {
         transformation: &SuccessTransformFactResult,
     ) -> Result<Option<String>, String> {
         let source = transformation.source.fact();
+        self.install_fact_anonymous_function_occurrence_aliases(
+            target,
+            "fact transformation target",
+        )?;
+        self.install_fact_anonymous_function_occurrence_aliases(
+            &source,
+            "fact transformation source",
+        )?;
         let Some(source_proof) = self
-            .construct_lean_proof_from_shared_verify_fact_result(transformation.source.as_ref())?
+            .construct_lean_proof_from_shared_verify_fact_result(transformation.source.as_ref())
+            .map_err(|error| format!("fact transformation source proof: {error}"))?
         else {
             return Ok(None);
         };
@@ -760,7 +921,8 @@ impl StmtResultToLeanCompiler {
                 source_proof,
                 &transformation.rule,
                 0,
-            )?,
+            )
+            .map_err(|error| format!("fact transformation replay: {error}"))?,
         ))
     }
 
@@ -785,6 +947,22 @@ impl StmtResultToLeanCompiler {
                 Ok(format!(
                     "(by\n  convert {source_proof} using 1 <;> norm_num)"
                 ))
+            }
+            FactTransformationRule::AnonymousFunctionBetaNormalization => {
+                if !facts_align_by_anonymous_function_beta_normalization_for_result_compiler(
+                    source, target,
+                )? {
+                    return Err(format!(
+                        "fact transformation step {step_index} does not retain an anonymous-function beta-normalization shape"
+                    ));
+                }
+                // Neither frozen transformation endpoint is required to own
+                // the parser occurrence selected for the enclosing statement
+                // Result. The structural replay above validates the exact
+                // beta step; the enclosing statement renderer supplies the
+                // target proposition, and Lean checks this returned proof
+                // against that definitionally reduced type.
+                Ok(source_proof)
             }
             FactTransformationRule::EqualityRewrite(evidence) => self
                 .construct_lean_equality_rewrite_transformation_from_result(
@@ -984,6 +1162,73 @@ impl StmtResultToLeanCompiler {
                 render_fact(target, &self.environment_stack)?;
                 Ok(proof)
             }
+            (source_order, target_order)
+                if order_relation_parts(source_order).is_ok()
+                    && order_relation_parts(target_order).is_ok() =>
+            {
+                let (source_left, source_right, source_strict) =
+                    order_relation_parts(source_order)?;
+                let (target_left, target_right, target_strict) =
+                    order_relation_parts(target_order)?;
+                if source_strict != target_strict {
+                    return Err(
+                        "fact transformation equality rewrite changed order strictness".into(),
+                    );
+                }
+                let mut current_left = source_left.clone();
+                let mut current_right = source_right.clone();
+                let mut rewrite_declarations = Vec::with_capacity(evidence.steps.len());
+                let mut rewrite_names = Vec::with_capacity(evidence.steps.len());
+                for (rewrite_index, rewrite) in evidence.steps.iter().enumerate() {
+                    let rewrites_left =
+                        obj_equality_key(&current_left) == obj_equality_key(&rewrite.from);
+                    let rewrites_right =
+                        obj_equality_key(&current_right) == obj_equality_key(&rewrite.from);
+                    if rewrites_left == rewrites_right {
+                        return Err(format!(
+                            "fact transformation equality rewrite {rewrite_index} does not select exactly one order endpoint"
+                        ));
+                    }
+                    let (native_equality, forward, rendered_from, rendered_to) =
+                        self.resolve_native_equality_rewrite_proof(rewrite, rewrite_index)?;
+                    let oriented = if forward {
+                        native_equality
+                    } else {
+                        format!("Eq.symm ({native_equality})")
+                    };
+                    let rewrite_name = format!("__native_rewrite{}", rewrite_index + 1);
+                    rewrite_declarations.push(format!(
+                        "  have {rewrite_name} : {} = {} := {oriented}",
+                        rendered_from,
+                        rendered_to,
+                    ));
+                    rewrite_names.push(rewrite_name);
+                    if rewrites_left {
+                        current_left = rewrite.to.clone();
+                    } else {
+                        current_right = rewrite.to.clone();
+                    }
+                }
+                if obj_equality_key(&current_left) != obj_equality_key(target_left)
+                    || obj_equality_key(&current_right) != obj_equality_key(target_right)
+                {
+                    return Err(
+                        "fact transformation equality rewrite did not reach its target order"
+                            .into(),
+                    );
+                }
+                let mut lines = vec!["(by".to_string()];
+                lines.extend(rewrite_declarations);
+                lines.push(format!("  have __transported := ({proof})"));
+                lines.push(format!(
+                    "  rw [{}] at __transported",
+                    rewrite_names.join(", ")
+                ));
+                lines.push(
+                    "  simpa [Litex.fnApplyOwn] using __transported)".to_string(),
+                );
+                Ok(lines.join("\n"))
+            }
             _ => Err(format!(
                 "fact transformation equality rewrite does not support `{source}` -> `{target}`"
             )),
@@ -1009,6 +1254,53 @@ impl StmtResultToLeanCompiler {
         } else {
             Err(format!(
                 "fact transformation equality rewrite {rewrite_index} is not oriented by its retained equality"
+            ))
+        }
+    }
+
+    pub(super) fn resolve_native_equality_rewrite_proof(
+        &self,
+        rewrite: &EqualityTransportStep,
+        rewrite_index: usize,
+    ) -> Result<(String, bool, String, String), String> {
+        let equality_fact: Fact = AtomicFact::EqualFact(rewrite.equality.clone()).into();
+        let binding = self
+            .environment_stack
+            .native_equality_proofs
+            .get(&rewrite.equality_fact_id)
+            .ok_or_else(|| {
+                format!(
+                    "fact transformation equality rewrite {rewrite_index} cites `{}` without a verifier-backed native Lean equality certificate",
+                    rewrite.equality_fact_id
+                )
+            })?;
+        if binding.fact.to_string() != equality_fact.to_string() {
+            return Err(format!(
+                "fact transformation equality rewrite {rewrite_index} changed the native equality proposition for `{}`",
+                rewrite.equality_fact_id
+            ));
+        }
+        let left = obj_equality_key(&rewrite.equality.left);
+        let right = obj_equality_key(&rewrite.equality.right);
+        let from = obj_equality_key(&rewrite.from);
+        let to = obj_equality_key(&rewrite.to);
+        if from == left && to == right {
+            Ok((
+                binding.proof_expression.clone(),
+                true,
+                binding.rendered_left.clone(),
+                binding.rendered_right.clone(),
+            ))
+        } else if from == right && to == left {
+            Ok((
+                binding.proof_expression.clone(),
+                false,
+                binding.rendered_right.clone(),
+                binding.rendered_left.clone(),
+            ))
+        } else {
+            Err(format!(
+                "fact transformation native equality rewrite {rewrite_index} is not oriented by its retained equality"
             ))
         }
     }
@@ -1104,9 +1396,12 @@ impl StmtResultToLeanCompiler {
         let substitutions = source_forall
             .typed_parameters
             .param_defs_and_args_to_param_to_arg_map(&arguments);
-        let substitution_runtime = Runtime::default();
+        let mut substitution_runtime = Runtime::default();
+        substitution_runtime.ensure_execution_frame_for_parse();
 
         let mut application_terms = vec![source_theorem];
+        let mut source_application_context = self.environment_stack.clone();
+        let mut uses_exact_refined_numeric_parameter = false;
         for (parameter_index, (((_, parameter_type), argument), requirement)) in source_parameters
             .iter()
             .zip(arguments.iter())
@@ -1136,11 +1431,22 @@ impl StmtResultToLeanCompiler {
                 parameter_type,
                 ParamType::Obj(Obj::StandardSet(StandardSet::Z))
             );
-            application_terms.push(if native_integer_parameter {
+            let exact_refined_numeric_parameter = matches!(
+                parameter_type,
+                ParamType::Obj(set) if forall_parameter_uses_exact_refined_numeric_carrier(set)
+            );
+            uses_exact_refined_numeric_parameter |= exact_refined_numeric_parameter;
+            let rendered_application_argument = if native_integer_parameter {
                 render_integer_obj(argument, &self.environment_stack)?
             } else {
                 render_obj(argument, &self.environment_stack)?
-            });
+            };
+            source_application_context
+                .symbol_names
+                .insert(source_parameters[parameter_index].0.id(), rendered_application_argument.clone());
+            if !exact_refined_numeric_parameter {
+                application_terms.push(rendered_application_argument.clone());
+            }
             let requirement_needs_proof = match parameter_type {
                 ParamType::Set(_) => {
                     let Fact::AtomicFact(AtomicFact::IsSetFact(sethood)) = &requirement.stmt else {
@@ -1202,12 +1508,200 @@ impl StmtResultToLeanCompiler {
                 }
             };
             if requirement_needs_proof {
-                let Some(proof) =
+                let Some(mut proof) =
                     self.construct_lean_proof_from_direct_fact_result(requirement_result)?
                 else {
                     return Ok(None);
                 };
-                application_terms.push(format!("({proof})"));
+                if let (Some(fact_id), ParamType::Obj(set)) =
+                    (requirement_result.store.fact_id, parameter_type)
+                {
+                    let expected_proposition = render_fact(
+                        &requirement.stmt,
+                        &self.environment_stack,
+                    )?;
+                    if let Some(actual_proposition) = self
+                        .environment_stack
+                        .fact_lean_propositions
+                        .get(&fact_id)
+                        .filter(|actual| *actual != &expected_proposition)
+                    {
+                        let exact_argument = render_exact_predicate_argument(
+                            argument,
+                            set,
+                            &self.environment_stack,
+                        )?;
+                        let rendered_set = render_obj(set, &self.environment_stack)?;
+                        let exact_proposition =
+                            format!("Litex.In {exact_argument} {rendered_set}");
+                        if actual_proposition != &exact_proposition {
+                            return Err(format!(
+                                "known-forall parameter proof `{fact_id}` has unrelated Lean proposition `{actual_proposition}`; expected `{expected_proposition}` or `{exact_proposition}`"
+                            ));
+                        }
+                        let exact_to_source = render_exact_predicate_argument_same_to_source(
+                            argument,
+                            set,
+                            &self.environment_stack,
+                        )?;
+                        proof = format!(
+                            "(Litex.In.congr ({exact_to_source}) {rendered_set}).mp ({proof})"
+                        );
+                    }
+                }
+                if exact_refined_numeric_parameter {
+                    let ParamType::Obj(set) = parameter_type else {
+                        unreachable!("exact refined numeric parameter is an object")
+                    };
+                    let lowered_argument = LeanTargetObjectRepresentation::lower(argument)?;
+                    let exact_real = render_real_target_object_representation(
+                        &lowered_argument,
+                        &self.environment_stack,
+                    )?;
+                    let mut positive_carriers = self
+                        .environment_stack
+                        .exact_positive_real_carriers
+                        .values()
+                        .cloned()
+                        .collect::<Vec<_>>();
+                    positive_carriers.sort();
+                    positive_carriers.dedup();
+                    let positivity_premises = positive_carriers
+                        .iter()
+                        .enumerate()
+                        .map(|(index, carrier)| {
+                            format!(
+                                "have __exact_positive{index} : 0 < (({carrier}).val : ℝ) := ({carrier}).property"
+                            )
+                        })
+                        .collect::<Vec<_>>();
+                    let positivity_proof = if let LeanTargetObjectRepresentation::BuiltinApp {
+                        operator: LeanTargetBuiltinObjectOperator::Div,
+                        arguments,
+                        ..
+                    } = &lowered_argument
+                    {
+                        let numerator = render_real_target_object_representation(
+                            &arguments[0],
+                            &self.environment_stack,
+                        )?;
+                        let numerator_carrier = self
+                            .environment_stack
+                            .exact_positive_real_carriers
+                            .iter()
+                            .filter_map(|(symbol_id, carrier)| {
+                                (self
+                                    .environment_stack
+                                    .numeric_real_values
+                                    .get(symbol_id)
+                                    == Some(&numerator))
+                                    .then_some(carrier.clone())
+                            })
+                            .min();
+                        if let Some(numerator_carrier) = numerator_carrier {
+                            format!(
+                                "by\n  exact div_pos ({numerator_carrier}).property (by positivity)"
+                            )
+                        } else if positivity_premises.is_empty() {
+                            "by positivity".to_string()
+                        } else {
+                            format!(
+                                "by\n  {}\n  positivity",
+                                positivity_premises.join("\n  ")
+                            )
+                        }
+                    } else if positivity_premises.is_empty() {
+                        "by positivity".to_string()
+                    } else {
+                        format!("by\n  {}\n  positivity", positivity_premises.join("\n  "))
+                    };
+                    let exact_argument = match &lowered_argument {
+                        LeanTargetObjectRepresentation::Symbol { symbol_id, .. } => self
+                            .environment_stack
+                            .exact_positive_real_carriers
+                            .get(symbol_id)
+                            .cloned()
+                            .unwrap_or_else(|| {
+                                format!(
+                                    "(⟨{exact_real}, {positivity_proof}⟩ : Litex.RPos.Carrier)"
+                                )
+                            }),
+                        _ => format!(
+                            "(⟨{exact_real}, {positivity_proof}⟩ : Litex.RPos.Carrier)"
+                        ),
+                    };
+                    application_terms.push(exact_argument.clone());
+                    application_terms.push(format!(
+                        "(Litex.In.own {} {exact_argument})",
+                        render_obj(set, &self.environment_stack)?
+                    ));
+                    source_application_context.symbol_names.insert(
+                        source_parameters[parameter_index].0.id(),
+                        exact_argument.clone(),
+                    );
+                    install_exact_predicate_carrier_value(
+                        source_parameters[parameter_index].0.id(),
+                        set,
+                        &exact_argument,
+                        &mut source_application_context,
+                    )?;
+                } else {
+                    application_terms.push(format!("({proof})"));
+                    if let ParamType::Obj(set) = parameter_type {
+                        let lowered_set = LeanTargetObjectRepresentation::lower(set)?;
+                        let selected = if native_integer_parameter
+                            || matches!(
+                                lowered_set,
+                                LeanTargetObjectRepresentation::StandardSet(
+                                    LeanTargetStandardSet::Complex
+                                )
+                            )
+                        {
+                            rendered_application_argument.clone()
+                        } else {
+                            format!(
+                                "(Litex.In.rep {rendered_application_argument} ({proof}))"
+                            )
+                        };
+                        install_exact_predicate_carrier_value(
+                            source_parameters[parameter_index].0.id(),
+                            set,
+                            &selected,
+                            &mut source_application_context,
+                        )?;
+                        install_numeric_representations_from_membership(
+                            source_parameters[parameter_index].0.id(),
+                            &lowered_set,
+                            &rendered_application_argument,
+                            &format!("({proof})"),
+                            &mut source_application_context,
+                        );
+                        if let (Some(numeric), Some(selected_to_numeric)) = (
+                            exact_set_numeric_value(&lowered_set, &selected),
+                            exact_set_numeric_equality(&lowered_set, &selected),
+                        ) {
+                            source_application_context.numeric_representations.insert(
+                                source_parameters[parameter_index].0.id(),
+                                numeric,
+                            );
+                            source_application_context
+                                .numeric_representation_equalities
+                                .insert(
+                                    source_parameters[parameter_index].0.id(),
+                                    format!(
+                                        "Litex.Same.trans (Litex.In.same_rep {rendered_application_argument} ({proof})) ({selected_to_numeric})"
+                                    ),
+                                );
+                        }
+                    }
+                }
+            } else if let ParamType::Obj(set) = parameter_type {
+                install_exact_predicate_carrier_value(
+                    source_parameters[parameter_index].0.id(),
+                    set,
+                    &rendered_application_argument,
+                    &mut source_application_context,
+                )?;
             }
         }
 
@@ -1310,7 +1804,52 @@ impl StmtResultToLeanCompiler {
             application.push_str(&conjunction_selector(component_index, component_count)?);
         }
         if instantiated_conclusion.to_string() == target.to_string() {
-            return Ok(Some(application));
+            let transported = if facts_require_exact_predicate_argument_transport(
+                &source_conclusion,
+                target,
+                &self.environment_stack,
+            ) {
+                render_fact_proof_across_exact_predicate_arguments(
+                    &source_conclusion,
+                    target,
+                    &source_application_context,
+                    &self.environment_stack,
+                    &application,
+                )?
+            } else {
+                application.clone()
+            };
+            return Ok(Some(if uses_exact_refined_numeric_parameter
+                && transported == application
+            {
+                format!(
+                    "(by\n  simpa [Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using {application})"
+                )
+            } else {
+                transported
+            }));
+        }
+        if one_witness_existentials_are_alpha_equal(
+            &instantiated_conclusion,
+            target,
+            &self.environment_stack,
+        )
+        .map_err(|error| format!("known-forall existential alpha comparison: {error}"))?
+        {
+            return Ok(Some(if uses_exact_refined_numeric_parameter {
+                format!(
+                    "(by\n  simpa [Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using {application})"
+                )
+            } else {
+                application
+            }));
+        }
+        if facts_align_by_anonymous_function_beta_normalization_for_result_compiler(
+            &instantiated_conclusion,
+            target,
+        )? {
+            render_fact(target, &self.environment_stack)?;
+            return Ok(Some(format!("(by\n  simpa using {application})")));
         }
         if facts_align_by_nested_rational_normalization_for_result_compiler(
             &instantiated_conclusion,
@@ -1339,6 +1878,17 @@ impl StmtResultToLeanCompiler {
         if !matches!(target_set, Obj::StandardSet(StandardSet::R)) {
             return Err("real arithmetic membership Result changed its target carrier".into());
         }
+        if let (RealArithmeticMembershipClosureBuiltinRule::Abs, Obj::Abs(operation)) =
+            (rule, target_element)
+        {
+            if !subgoals.is_empty() {
+                return Err("real absolute-value membership retained unexpected child Results".into());
+            }
+            return Ok(Some(format!(
+                "Litex.Rules.complexAbsInR {}",
+                render_numeric_obj(operation.arg.as_ref(), &self.environment_stack)?
+            )));
+        }
         let (left, right, theorem) = match (rule, target_element) {
             (RealArithmeticMembershipClosureBuiltinRule::Add, Obj::Add(operation)) => (
                 operation.left.as_ref(),
@@ -1361,6 +1911,9 @@ impl StmtResultToLeanCompiler {
                 "complexDivInR",
             ),
             (RealArithmeticMembershipClosureBuiltinRule::Pow, _) => return Ok(None),
+            (RealArithmeticMembershipClosureBuiltinRule::Abs, _) => {
+                return Err("real absolute-value membership changed its source operator".into());
+            }
             _ => {
                 return Err("real arithmetic membership Result changed its source operator".into());
             }
@@ -1503,24 +2056,114 @@ impl StmtResultToLeanCompiler {
             );
         }
 
-        let components =
-            instantiated_predicate_components(&source_fact, &binding, &self.environment_stack)?;
-        let rendered_target = render_fact(target, &self.environment_stack)?;
-        let clause_index = components
-            .iter()
-            .position(|component| component == &rendered_target)
-            .ok_or_else(|| {
-                "definition projection target is not an instantiated definition component"
-                    .to_string()
-        })?;
-        let selector = conjunction_selector(clause_index, components.len())?;
         let Some(source_proof) =
             self.construct_lean_proof_from_direct_fact_result(source_result)?
         else {
             return Ok(None);
         };
+        let components =
+            instantiated_predicate_components(&source_fact, &binding, &self.environment_stack)?;
+        let rendered_target = render_fact(target, &self.environment_stack)?;
+        if let Some(clause_index) = components
+            .iter()
+            .position(|component| component == &rendered_target)
+        {
+            let selector = conjunction_selector(clause_index, components.len())?;
+            return Ok(Some(format!(
+                "(by\n  have __definition := {source_proof}\n  unfold {} at __definition\n  exact __definition{selector})",
+                binding.lean_name
+            )));
+        }
+
+        // Exact numeric predicate parameters change only the Lean carrier of
+        // an instantiated definition clause, not its Litex value. For the
+        // verifier's one-witness existential projection, transport the
+        // equality body across the same checked representation bridge used at
+        // the predicate call instead of pretending the two Lean propositions
+        // are definitionally identical.
+        let definition_clause = active_definition
+            .iff_facts
+            .first()
+            .ok_or_else(|| "definition projection retained no definition clause".to_string())?;
+        let Fact::ExistFact(definition_existential) = definition_clause else {
+            return Err(format!(
+                "definition projection target `{rendered_target}` is not an instantiated definition component; available: {}",
+                components.join(" | ")
+            ));
+        };
+        let definition_group = one_witness_existential_group(definition_existential)?;
+        let target_group = one_witness_existential_group(target_existential)?;
+        let definition_body = definition_existential.facts()[0].from_ref_to_cloned_fact();
+        let target_body = target_existential.facts()[0].from_ref_to_cloned_fact();
+        let (definition_left, definition_right) = equality_parts(&definition_body)?;
+        let (target_left, target_right) = equality_parts(&target_body)?;
+        let definition_witness = definition_group.params[0].id();
+        let target_witness = target_group.params[0].id();
+        let parameters = active_definition
+            .typed_parameters
+            .collect_param_bindings_with_types();
+        let orientation = if object_is_symbol(definition_left, definition_witness)
+            && object_is_symbol(target_left, target_witness)
+        {
+            Some((definition_right, target_right, true))
+        } else if object_is_symbol(definition_right, definition_witness)
+            && object_is_symbol(target_right, target_witness)
+        {
+            Some((definition_left, target_left, false))
+        } else {
+            None
+        };
+        let Some((definition_parameter_object, target_argument, witness_on_left)) = orientation
+        else {
+            return Err(format!(
+                "definition projection target `{rendered_target}` is not an instantiated definition component; available: {}",
+                components.join(" | ")
+            ));
+        };
+        let parameter_index = parameters
+            .iter()
+            .position(|(parameter, _)| {
+                object_is_symbol(definition_parameter_object, parameter.id())
+            })
+            .ok_or_else(|| {
+                "definition projection equality does not reference a predicate parameter"
+                    .to_string()
+            })?;
+        let source_argument = evidence
+            .fact
+            .body
+            .get(parameter_index)
+            .ok_or_else(|| "definition projection lost its source argument".to_string())?;
+        if obj_equality_key(target_argument) != obj_equality_key(source_argument)
+            || binding.exact_parameters.get(parameter_index) != Some(&true)
+        {
+            return Err("definition projection changed its exact source argument".into());
+        }
+        let ParamType::Obj(parameter_set) = &parameters[parameter_index].1 else {
+            return Err("definition projection exact parameter is not an object".into());
+        };
+        let exact_to_source = render_exact_predicate_argument_same_to_source(
+            source_argument,
+            parameter_set,
+            &self.environment_stack,
+        )?;
+        let clause_index = binding.requirement_count;
+        if active_definition.iff_facts.len() != 1
+            || components.len() != binding.requirement_count + 1
+        {
+            return Err(
+                "definition projection representation transport requires one definition clause"
+                    .into(),
+            );
+        }
+        let selector = conjunction_selector(clause_index, components.len())?;
+        let transported_body = if witness_on_left {
+            format!("Litex.Same.trans __body ({exact_to_source})")
+        } else {
+            format!("Litex.Same.trans (Litex.Same.symm ({exact_to_source})) __body")
+        };
         Ok(Some(format!(
-            "(by\n  have __definition := {source_proof}\n  unfold {} at __definition\n  exact __definition{selector})",
+            "(by\n  have __definition := {source_proof}\n  unfold {} at __definition\n  rcases __definition{selector} with ⟨__witness, __membership, __body⟩\n  exact ⟨__witness, __membership, {transported_body}⟩)",
             binding.lean_name
         )))
     }
@@ -2974,6 +3617,15 @@ impl StmtResultToLeanCompiler {
                     .fact_id
                     .ok_or_else(|| format!("combined proof step {index} has no frozen FactId"))?;
                 let fact = factual.fact();
+                if let Some(native_equality) =
+                    self.construct_lean_native_equality_proof_from_direct_fact_result(factual)?
+                {
+                    self.retain_native_equality_proof_in_current_environment(
+                        fact_id,
+                        &fact,
+                        native_equality,
+                    )?;
+                }
                 if let Some(existing) = self.environment_stack.fact_propositions.get(&fact_id) {
                     if existing.to_string() != fact.to_string() {
                         return Err(format!(
@@ -3012,6 +3664,15 @@ impl StmtResultToLeanCompiler {
                 return Err("combined proof component changed in its store Result".into());
             }
             if let Some(fact_id) = factual.store.fact_id {
+                if let Some(native_equality) =
+                    self.construct_lean_native_equality_proof_from_direct_fact_result(factual)?
+                {
+                    self.retain_native_equality_proof_in_current_environment(
+                        fact_id,
+                        component,
+                        native_equality,
+                    )?;
+                }
                 if let Some(existing) = self.environment_stack.fact_propositions.get(&fact_id) {
                     if existing.to_string() != component.to_string() {
                         return Err(format!(
@@ -3331,6 +3992,15 @@ impl StmtResultToLeanCompiler {
                         &builtin.subgoals,
                     );
                 }
+                if let Some(BuiltinRuleEvidence::RationalAlgebraicNormalization(evidence)) =
+                    builtin.evidence.typed()
+                {
+                    return self.construct_lean_rational_algebraic_normalization_from_result(
+                        &source_fact,
+                        evidence,
+                        &builtin.subgoals,
+                    );
+                }
                 if let Some(BuiltinRuleEvidence::AbsoluteValue(rule)) = builtin.evidence.typed() {
                     return self.construct_lean_absolute_value_from_result(
                         &source_fact,
@@ -3354,7 +4024,16 @@ impl StmtResultToLeanCompiler {
                 }
                 if let Some(evidence) = builtin.evidence.typed() {
                     if let Some(limitation) = direct_builtin_rule_compiler_limitation(evidence) {
-                        return Err(limitation);
+                        let children = builtin
+                            .subgoals
+                            .iter()
+                            .filter_map(StmtResult::factual_success)
+                            .map(|child| child.fact().to_string())
+                            .collect::<Vec<_>>()
+                            .join("; ");
+                        return Err(format!(
+                            "{limitation}; target `{source_fact}`; children [{children}]"
+                        ));
                     }
                 }
                 if !builtin.subgoals.is_empty() {
@@ -3701,4 +4380,57 @@ impl StmtResultToLeanCompiler {
         }
         Ok(Some(theorem_application))
     }
+}
+
+fn facts_align_by_anonymous_function_beta_normalization_for_result_compiler(
+    source: &Fact,
+    target: &Fact,
+) -> Result<bool, String> {
+    let (Fact::AtomicFact(source), Fact::AtomicFact(target)) = (source, target) else {
+        return Ok(false);
+    };
+    if source.key() != target.key()
+        || source.has_positive_polarity() != target.has_positive_polarity()
+    {
+        return Ok(false);
+    }
+    let source_args = source.args_ref();
+    let target_args = target.args_ref();
+    if source_args.len() != target_args.len() {
+        return Ok(false);
+    }
+    let runtime = Runtime::default();
+    for (source, target) in source_args.iter().zip(target_args.iter()) {
+        if !objs_align_by_anonymous_function_beta_normalization_for_result_compiler(
+            &runtime, source, target,
+        )? {
+            return Ok(false);
+        }
+    }
+    Ok(true)
+}
+
+fn objs_align_by_anonymous_function_beta_normalization_for_result_compiler(
+    runtime: &Runtime,
+    source: &Obj,
+    target: &Obj,
+) -> Result<bool, String> {
+    if objs_equal_with_nested_binder_alpha_equivalence(source, target) {
+        return Ok(true);
+    }
+    if let Some(reduced) = runtime
+        .beta_reduce_complete_anonymous_application_once(target)
+        .map_err(|error| error.trace_message())?
+    {
+        if objs_align_by_anonymous_function_beta_normalization_for_result_compiler(
+            runtime, source, &reduced,
+        )? {
+            return Ok(true);
+        }
+    }
+    Runtime::same_shape_and_corresponding_args_match(source, target, &mut |source, target| {
+        objs_align_by_anonymous_function_beta_normalization_for_result_compiler(
+            runtime, source, target,
+        )
+    })
 }

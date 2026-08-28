@@ -2893,6 +2893,20 @@ impl StmtResultJsonV2 {
                     evaluation_value(&result.right_evaluation),
                 ),
             ]),
+            BuiltinRuleEvidence::RationalAlgebraicNormalization(result) => object(vec![
+                string_field("kind", "RationalAlgebraicNormalization"),
+                string_field("expected_target", result.expected_target.to_string()),
+                (
+                    "expected_nonzero_premises".to_string(),
+                    array(
+                        result
+                            .expected_nonzero_premises
+                            .iter()
+                            .map(|fact| JsonValue::JsonString(fact.to_string()))
+                            .collect(),
+                    ),
+                ),
+            ]),
             BuiltinRuleEvidence::ComplexAlgebraicNormalization(result) => object(vec![
                 string_field("kind", "ComplexAlgebraicNormalization"),
                 string_field("expected_target", result.expected_target.to_string()),

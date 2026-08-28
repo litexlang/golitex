@@ -1054,7 +1054,18 @@ impl Runtime {
     ) -> Result<ForallFact, RuntimeError> {
         let rename_map =
             self.forall_capture_avoiding_rename_map(forall_fact, &[], param_to_arg_map);
-        let renamed_forall_fact = self.alpha_rename_forall_fact(forall_fact, &rename_map)?;
+        let renamed_forall_fact = self.alpha_rename_forall_fact_with_mode(
+            forall_fact,
+            &rename_map,
+            if matches!(
+                to_inst_param_type,
+                SubstitutionMode::TransparentDefinition | SubstitutionMode::ResultProjection
+            ) {
+                to_inst_param_type
+            } else {
+                SubstitutionMode::Exact
+            },
+        )?;
         self.inst_forall_fact_without_capture_preparation(
             &renamed_forall_fact,
             param_to_arg_map,
@@ -1120,8 +1131,18 @@ impl Runtime {
             &forall_fact_with_iff.iff_facts,
             param_to_arg_map,
         );
-        let renamed_forall_fact =
-            self.alpha_rename_forall_fact(&forall_fact_with_iff.forall_fact, &rename_map)?;
+        let renamed_forall_fact = self.alpha_rename_forall_fact_with_mode(
+            &forall_fact_with_iff.forall_fact,
+            &rename_map,
+            if matches!(
+                to_inst_param_type,
+                SubstitutionMode::TransparentDefinition | SubstitutionMode::ResultProjection
+            ) {
+                to_inst_param_type
+            } else {
+                SubstitutionMode::Exact
+            },
+        )?;
         let forall_fact = self.inst_forall_fact_without_capture_preparation(
             &renamed_forall_fact,
             param_to_arg_map,
@@ -1202,6 +1223,19 @@ impl Runtime {
         forall_fact: &ForallFact,
         rename_map: &HashMap<String, Obj>,
     ) -> Result<ForallFact, RuntimeError> {
+        self.alpha_rename_forall_fact_with_mode(
+            forall_fact,
+            rename_map,
+            SubstitutionMode::Exact,
+        )
+    }
+
+    fn alpha_rename_forall_fact_with_mode(
+        &self,
+        forall_fact: &ForallFact,
+        rename_map: &HashMap<String, Obj>,
+        substitution_mode: SubstitutionMode,
+    ) -> Result<ForallFact, RuntimeError> {
         if rename_map.is_empty() {
             return Ok(forall_fact.clone());
         }
@@ -1212,7 +1246,7 @@ impl Runtime {
             let param_type = self.inst_param_type(
                 &group.param_type,
                 &active_rename_map,
-                SubstitutionMode::Exact,
+                substitution_mode,
             )?;
             let params = group
                 .params
@@ -1233,14 +1267,14 @@ impl Runtime {
 
         let mut dom_facts = Vec::with_capacity(forall_fact.dom_facts.len());
         for fact in forall_fact.dom_facts.iter() {
-            dom_facts.push(self.inst_fact(fact, rename_map, SubstitutionMode::Exact, None)?);
+            dom_facts.push(self.inst_fact(fact, rename_map, substitution_mode, None)?);
         }
         let mut then_facts = Vec::with_capacity(forall_fact.then_facts.len());
         for fact in forall_fact.then_facts.iter() {
             then_facts.push(self.inst_exist_or_and_chain_atomic_fact(
                 fact,
                 rename_map,
-                SubstitutionMode::Exact,
+                substitution_mode,
                 None,
             )?);
         }

@@ -95,12 +95,40 @@ impl StmtResultToLeanCompiler {
 
         let (target_element, target_set) = membership_parts(target)?;
         let (base_element, base_set) = membership_parts(expected_base)?;
+        if obj_equality_key(target_element) != obj_equality_key(base_element) {
+            return Err("refined numeric membership changed its base element".into());
+        }
+        let Some(base_proof) = self.construct_lean_proof_from_direct_fact_result(base_result)?
+        else {
+            return Ok(None);
+        };
+        let Some(refinement_proof) =
+            self.construct_lean_proof_from_direct_fact_result(nonzero_result)?
+        else {
+            return Ok(None);
+        };
+
+        if matches!(target_set, Obj::StandardSet(StandardSet::RPos))
+            && matches!(base_set, Obj::StandardSet(StandardSet::R))
+        {
+            let (zero, positive_element) = positive_order_parts(expected_nonzero, true)?;
+            if !matches!(zero, Obj::Number(number) if number.normalized_value == "0")
+                || obj_equality_key(target_element) != obj_equality_key(positive_element)
+            {
+                return Err(
+                    "positive-real refined membership changed its strict-positive premise".into(),
+                );
+            }
+            return Ok(Some(format!(
+                "Litex.Rules.inRPosOfInRPositive ({base_proof}) ({refinement_proof})"
+            )));
+        }
+
         let (nonzero_left, nonzero_right) = not_equal_parts(expected_nonzero)?;
-        if obj_equality_key(target_element) != obj_equality_key(base_element)
-            || obj_equality_key(target_element) != obj_equality_key(nonzero_left)
+        if obj_equality_key(target_element) != obj_equality_key(nonzero_left)
             || !matches!(nonzero_right, Obj::Number(number) if number.normalized_value == "0")
         {
-            return Err("refined numeric membership changed its source element".into());
+            return Err("nonzero refined membership changed its source element".into());
         }
         let theorem = match (target_set, base_set) {
             (Obj::StandardSet(StandardSet::ZStar), Obj::StandardSet(StandardSet::Z)) => {
@@ -117,17 +145,8 @@ impl StmtResultToLeanCompiler {
             }
             _ => return Ok(None),
         };
-        let Some(base_proof) = self.construct_lean_proof_from_direct_fact_result(base_result)?
-        else {
-            return Ok(None);
-        };
-        let Some(nonzero_proof) =
-            self.construct_lean_proof_from_direct_fact_result(nonzero_result)?
-        else {
-            return Ok(None);
-        };
         Ok(Some(format!(
-            "Litex.Rules.{theorem} ({base_proof}) ({nonzero_proof})"
+            "Litex.Rules.{theorem} ({base_proof}) ({refinement_proof})"
         )))
     }
 
@@ -1016,11 +1035,22 @@ impl StmtResultToLeanCompiler {
             | ArithmeticBuiltinRule::SubNonnegativeFromLessEqual
             | ArithmeticBuiltinRule::SubPositiveFromLess
             | ArithmeticBuiltinRule::AddRightNonnegativeLessEqual => 1,
+            ArithmeticBuiltinRule::MulCommonFactorLessEqualNonnegative
+            | ArithmeticBuiltinRule::MulCommonFactorLessEqualNonpositive
+            | ArithmeticBuiltinRule::MulCommonFactorLessPositive
+            | ArithmeticBuiltinRule::MulCommonFactorLessNegative => 2,
             ArithmeticBuiltinRule::AddComponentwiseLessEqual
+            | ArithmeticBuiltinRule::MulComponentwiseLessEqual
             | ArithmeticBuiltinRule::AddComponentwiseLess
             | ArithmeticBuiltinRule::AddComponentwiseLessLessEqual
             | ArithmeticBuiltinRule::AddComponentwiseLessEqualLess
-            | ArithmeticBuiltinRule::SubRightNonnegativeLessEqual => 2,
+            | ArithmeticBuiltinRule::SubRightNonnegativeLessEqual => {
+                if rule == ArithmeticBuiltinRule::MulComponentwiseLessEqual {
+                    4
+                } else {
+                    2
+                }
+            }
             _ => return Ok(None),
         };
         if subgoals.len() != expected_child_count {
@@ -1039,7 +1069,9 @@ impl StmtResultToLeanCompiler {
             let Some(proof_expression) =
                 self.construct_lean_proof_from_direct_fact_result(child)?
             else {
-                return Ok(None);
+                return Err(format!(
+                    "arithmetic rule {rule:?} child {index} has no direct proof consumer"
+                ));
             };
             children.push(CompiledFactProofBody {
                 fact: child.fact(),
@@ -1054,6 +1086,188 @@ impl StmtResultToLeanCompiler {
                 &children,
                 &self.environment_stack,
             )?));
+        }
+
+
+        if rule == ArithmeticBuiltinRule::MulComponentwiseLessEqual {
+            let (target_left, target_right, target_strict) = order_relation_parts(target)?;
+            let (Obj::Mul(lower), Obj::Mul(upper)) = (target_left, target_right) else {
+                return Err(
+                    "componentwise multiplication evidence changed its target products".into(),
+                );
+            };
+            if target_strict {
+                return Err(
+                    "componentwise nonnegative multiplication changed target strictness".into(),
+                );
+            }
+            let [lower_left_nonnegative, lower_right_nonnegative, left_order, right_order] =
+                children.as_slice()
+            else {
+                unreachable!("componentwise multiplication retained four children")
+            };
+            for (child, expected) in [
+                (lower_left_nonnegative, (None, lower.left.as_ref())),
+                (lower_right_nonnegative, (None, lower.right.as_ref())),
+                (left_order, (Some(lower.left.as_ref()), upper.left.as_ref())),
+                (right_order, (Some(lower.right.as_ref()), upper.right.as_ref())),
+            ] {
+                let (left, right, strict) = order_relation_parts(&child.fact)?;
+                if strict
+                    || expected.0.is_none() && !is_literal_zero(left)
+                    || obj_equality_key(right) != obj_equality_key(expected.1)
+                    || expected.0.is_some_and(|expected_left| {
+                        obj_equality_key(left) != obj_equality_key(expected_left)
+                    })
+                {
+                    return Err(
+                        "componentwise multiplication evidence changed an ordered child"
+                            .into(),
+                    );
+                }
+            }
+            let lower_left = render_real_target_object_representation(
+                &LeanTargetObjectRepresentation::lower(lower.left.as_ref())?,
+                &self.environment_stack,
+            )?;
+            let lower_right = render_real_target_object_representation(
+                &LeanTargetObjectRepresentation::lower(lower.right.as_ref())?,
+                &self.environment_stack,
+            )?;
+            let upper_left = render_real_target_object_representation(
+                &LeanTargetObjectRepresentation::lower(upper.left.as_ref())?,
+                &self.environment_stack,
+            )?;
+            let upper_right = render_real_target_object_representation(
+                &LeanTargetObjectRepresentation::lower(upper.right.as_ref())?,
+                &self.environment_stack,
+            )?;
+            render_fact(target, &self.environment_stack)?;
+            return Ok(Some(format!(
+                "(by\n  have __mul_h1 : (0 : ℝ) ≤ {lower_left} := by positivity\n  have __mul_h2 : (0 : ℝ) ≤ {lower_right} := by positivity\n  have __mul_h3 : ({lower_left} : ℝ) ≤ {upper_left} := by\n    have __source := ({})\n    simpa [Litex.Le, Litex.OrderValue, Litex.abs, ← Complex.ofReal_one, ← Complex.ofReal_add, ← Complex.ofReal_sub, ← Complex.ofReal_mul, ← Complex.ofReal_div, Complex.norm_real, Real.norm_eq_abs] using __source\n  have __mul_h4 : ({lower_right} : ℝ) ≤ {upper_right} := by\n    have __source := ({})\n    simpa [Litex.Le, Litex.OrderValue, Litex.abs, ← Complex.ofReal_one, ← Complex.ofReal_add, ← Complex.ofReal_sub, ← Complex.ofReal_mul, ← Complex.ofReal_div, Complex.norm_real, Real.norm_eq_abs] using __source\n  have __native : {lower_left} * {lower_right} ≤ {upper_left} * {upper_right} := mul_le_mul __mul_h3 __mul_h4 __mul_h2 (__mul_h1.trans __mul_h3)\n  simpa [Litex.Le, Litex.OrderValue, Litex.abs, ← Complex.ofReal_one, ← Complex.ofReal_add, ← Complex.ofReal_sub, ← Complex.ofReal_mul, ← Complex.ofReal_div, Complex.norm_real, Real.norm_eq_abs] using __native)",
+                left_order.proof_expression,
+                right_order.proof_expression,
+            )));
+        }
+
+        if matches!(
+            rule,
+            ArithmeticBuiltinRule::MulCommonFactorLessEqualNonnegative
+                | ArithmeticBuiltinRule::MulCommonFactorLessEqualNonpositive
+                | ArithmeticBuiltinRule::MulCommonFactorLessPositive
+                | ArithmeticBuiltinRule::MulCommonFactorLessNegative
+        ) {
+            let (target_left, target_right, target_strict) = order_relation_parts(target)?;
+            let (Obj::Mul(left_product), Obj::Mul(right_product)) =
+                (target_left, target_right)
+            else {
+                return Err("common-factor multiplication changed its target products".into());
+            };
+            let (common, left_remaining, right_remaining, common_on_right) =
+                if obj_equality_key(left_product.left.as_ref())
+                    == obj_equality_key(right_product.left.as_ref())
+                {
+                    (
+                        left_product.left.as_ref(),
+                        left_product.right.as_ref(),
+                        right_product.right.as_ref(),
+                        false,
+                    )
+                } else if obj_equality_key(left_product.right.as_ref())
+                    == obj_equality_key(right_product.right.as_ref())
+                {
+                    (
+                        left_product.right.as_ref(),
+                        left_product.left.as_ref(),
+                        right_product.left.as_ref(),
+                        true,
+                    )
+                } else {
+                    return Err(
+                        "common-factor multiplication lost its exact shared factor".into(),
+                    );
+                };
+            let strict = matches!(
+                rule,
+                ArithmeticBuiltinRule::MulCommonFactorLessPositive
+                    | ArithmeticBuiltinRule::MulCommonFactorLessNegative
+            );
+            let reverses = matches!(
+                rule,
+                ArithmeticBuiltinRule::MulCommonFactorLessEqualNonpositive
+                    | ArithmeticBuiltinRule::MulCommonFactorLessNegative
+            );
+            if target_strict != strict {
+                return Err("common-factor multiplication changed target strictness".into());
+            }
+            let [sign, order] = children.as_slice() else {
+                unreachable!("common-factor multiplication retained two children")
+            };
+            let (sign_left, sign_right, sign_strict) = order_relation_parts(&sign.fact)?;
+            let (order_left, order_right, order_strict) = order_relation_parts(&order.fact)?;
+            if sign_strict != strict
+                || order_strict != strict
+                || if reverses {
+                    obj_equality_key(sign_left) != obj_equality_key(common)
+                        || !is_literal_zero(sign_right)
+                        || obj_equality_key(order_left) != obj_equality_key(right_remaining)
+                        || obj_equality_key(order_right) != obj_equality_key(left_remaining)
+                } else {
+                    !is_literal_zero(sign_left)
+                        || obj_equality_key(sign_right) != obj_equality_key(common)
+                        || obj_equality_key(order_left) != obj_equality_key(left_remaining)
+                        || obj_equality_key(order_right) != obj_equality_key(right_remaining)
+                }
+            {
+                return Err("common-factor multiplication changed its ordered premises".into());
+            }
+            let common_real = render_real_target_object_representation(
+                &LeanTargetObjectRepresentation::lower(common)?,
+                &self.environment_stack,
+            )?;
+            let left_real = render_real_target_object_representation(
+                &LeanTargetObjectRepresentation::lower(left_remaining)?,
+                &self.environment_stack,
+            )?;
+            let right_real = render_real_target_object_representation(
+                &LeanTargetObjectRepresentation::lower(right_remaining)?,
+                &self.environment_stack,
+            )?;
+            let relation = if strict { "<" } else { "≤" };
+            let sign_type = if reverses {
+                format!("({common_real} : ℝ) {relation} 0")
+            } else {
+                format!("(0 : ℝ) {relation} {common_real}")
+            };
+            let (order_source, order_target) = if reverses {
+                (&right_real, &left_real)
+            } else {
+                (&left_real, &right_real)
+            };
+            let order_type = format!(
+                "({order_source} : ℝ) {relation} {order_target}"
+            );
+            let theorem = match rule {
+                ArithmeticBuiltinRule::MulCommonFactorLessEqualNonnegative => {
+                    "mul_le_mul_of_nonneg_left"
+                }
+                ArithmeticBuiltinRule::MulCommonFactorLessEqualNonpositive => {
+                    "mul_le_mul_of_nonpos_left"
+                }
+                ArithmeticBuiltinRule::MulCommonFactorLessPositive => {
+                    "mul_lt_mul_of_pos_left"
+                }
+                ArithmeticBuiltinRule::MulCommonFactorLessNegative => {
+                    "mul_lt_mul_of_neg_left"
+                }
+                _ => unreachable!(),
+            };
+            let commutativity = if common_on_right { ", mul_comm" } else { "" };
+            render_fact(target, &self.environment_stack)?;
+            return Ok(Some(format!(
+                "(by\n  have __mul_sign : {sign_type} := by positivity\n  have __mul_order : {order_type} := by\n    have __source := ({})\n    simpa [Litex.Lt, Litex.Le, Litex.OrderValue, Litex.abs, ← Complex.ofReal_one, ← Complex.ofReal_add, ← Complex.ofReal_sub, ← Complex.ofReal_mul, ← Complex.ofReal_div, Complex.norm_real, Real.norm_eq_abs] using __source\n  have __native := {theorem} __mul_order __mul_sign\n  simpa [Litex.Lt, Litex.Le, Litex.OrderValue, Litex.abs, ← Complex.ofReal_one, ← Complex.ofReal_add, ← Complex.ofReal_sub, ← Complex.ofReal_mul, ← Complex.ofReal_div, Complex.norm_real, Real.norm_eq_abs{commutativity}] using __native)",
+                order.proof_expression,
+            )));
         }
 
         if matches!(
@@ -1150,8 +1364,7 @@ impl StmtResultToLeanCompiler {
             )?;
             render_fact(target, &self.environment_stack)?;
             let proof = format!(
-                "Litex.Rules.realCastLeAddOfNonnegativeRight {common} {addend} ({})",
-                premise.proof_expression
+                "Litex.Rules.realCastLeAddOfNonnegativeRight {common} {addend} (Litex.OrderBridge.leOfReal (by positivity))"
             );
             return Ok(Some(if reversed {
                 format!("(by simpa [add_comm] using ({proof}))")

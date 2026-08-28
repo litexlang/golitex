@@ -168,9 +168,17 @@ impl Runtime {
                 .into());
             }
 
-            self.store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
-                then_fact.clone(),
-            )?;
+            let then_store_infers = self
+                .store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
+                    then_fact.clone(),
+                )?;
+            // The store operation is part of this exact conclusion Result.
+            // Retain its typed inference applications (for example, a
+            // non-adjacent consequence of a relation chain) on the child that
+            // owns the source fact. Later conclusions may cite those exact
+            // FactIds; dropping this Result used to leave the environment
+            // effect visible to verification but impossible to replay.
+            result = result.with_infers(then_store_infers);
             self.attach_known_fact_ids_to_stmt_result(&mut result)?;
 
             if let Some(non_factual_success) = result.non_factual_success() {

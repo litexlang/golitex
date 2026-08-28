@@ -583,6 +583,13 @@ theorem complexDivInR
   rcases hb with ⟨rb, hrb⟩
   exact ⟨ra / rb, complexDivAsReal hra hrb⟩
 
+/-- The Litex absolute-value representation always selects the corresponding
+native real norm. -/
+theorem complexAbsInR
+    (z : ℂ) :
+    Litex.In (Litex.abs z) Litex.R := by
+  exact ⟨‖z‖, by simpa [Litex.abs] using Litex.Same.complexReal ‖z‖⟩
+
 /-- Addition preserves integer membership for complex-carrier source values. -/
 theorem complexAddInZ
     {a b : ℂ}
@@ -1014,6 +1021,63 @@ theorem complexAddPreservesLessEqualComponentwise
     Litex.Le (a + c) (b + d) := by
   simpa [Litex.Le, Litex.OrderValue] using add_le_add hab hcd
 
+/-- Componentwise multiplication preserves non-strict order on nonnegative
+native real representatives. This is the Lean adapter for registered rule
+`order.mul_le_mul_nonnegative`. -/
+theorem realCastMulPreservesLessEqual
+    (a b c d : ℝ)
+    (ha : Litex.Le (0 : ℂ) (a : ℂ))
+    (hb : Litex.Le (0 : ℂ) (b : ℂ))
+    (hac : Litex.Le (a : ℂ) (c : ℂ))
+    (hbd : Litex.Le (b : ℂ) (d : ℂ)) :
+    Litex.Le ((a : ℂ) * (b : ℂ)) ((c : ℂ) * (d : ℂ)) := by
+  have ha' : 0 ≤ a := by simpa [Litex.Le, Litex.OrderValue] using ha
+  have hb' : 0 ≤ b := by simpa [Litex.Le, Litex.OrderValue] using hb
+  have hac' : a ≤ c := by simpa [Litex.Le, Litex.OrderValue] using hac
+  have hbd' : b ≤ d := by simpa [Litex.Le, Litex.OrderValue] using hbd
+  have hc' : 0 ≤ c := ha'.trans hac'
+  simpa [Litex.Le, Litex.OrderValue] using mul_le_mul hac' hbd' hb' hc'
+
+/-- Multiplication by a nonnegative native real preserves Litex weak order. -/
+theorem realCastMulPreservesLessEqualOfNonnegative
+    (k a b : ℝ)
+    (hk : Litex.Le (0 : ℂ) (k : ℂ))
+    (hab : Litex.Le (a : ℂ) (b : ℂ)) :
+    Litex.Le ((k : ℂ) * (a : ℂ)) ((k : ℂ) * (b : ℂ)) := by
+  have hk' : 0 ≤ k := by simpa [Litex.Le, Litex.OrderValue] using hk
+  have hab' : a ≤ b := by simpa [Litex.Le, Litex.OrderValue] using hab
+  simpa [Litex.Le, Litex.OrderValue] using mul_le_mul_of_nonneg_left hab' hk'
+
+/-- Multiplication by a nonpositive native real reverses Litex weak order. -/
+theorem realCastMulReversesLessEqualOfNonpositive
+    (k a b : ℝ)
+    (hk : Litex.Le (k : ℂ) (0 : ℂ))
+    (hba : Litex.Le (b : ℂ) (a : ℂ)) :
+    Litex.Le ((k : ℂ) * (a : ℂ)) ((k : ℂ) * (b : ℂ)) := by
+  have hk' : k ≤ 0 := by simpa [Litex.Le, Litex.OrderValue] using hk
+  have hba' : b ≤ a := by simpa [Litex.Le, Litex.OrderValue] using hba
+  simpa [Litex.Le, Litex.OrderValue] using mul_le_mul_of_nonpos_left hba' hk'
+
+/-- Multiplication by a positive native real preserves Litex strict order. -/
+theorem realCastMulPreservesLessOfPositive
+    (k a b : ℝ)
+    (hk : Litex.Lt (0 : ℂ) (k : ℂ))
+    (hab : Litex.Lt (a : ℂ) (b : ℂ)) :
+    Litex.Lt ((k : ℂ) * (a : ℂ)) ((k : ℂ) * (b : ℂ)) := by
+  have hk' : 0 < k := by simpa [Litex.Lt, Litex.OrderValue] using hk
+  have hab' : a < b := by simpa [Litex.Lt, Litex.OrderValue] using hab
+  simpa [Litex.Lt, Litex.OrderValue] using mul_lt_mul_of_pos_left hab' hk'
+
+/-- Multiplication by a negative native real reverses Litex strict order. -/
+theorem realCastMulReversesLessOfNegative
+    (k a b : ℝ)
+    (hk : Litex.Lt (k : ℂ) (0 : ℂ))
+    (hba : Litex.Lt (b : ℂ) (a : ℂ)) :
+    Litex.Lt ((k : ℂ) * (a : ℂ)) ((k : ℂ) * (b : ℂ)) := by
+  have hk' : k < 0 := by simpa [Litex.Lt, Litex.OrderValue] using hk
+  have hba' : b < a := by simpa [Litex.Lt, Litex.OrderValue] using hba
+  simpa [Litex.Lt, Litex.OrderValue] using mul_lt_mul_of_neg_left hba' hk'
+
 /-- Adding one common complex term preserves Litex strict order.
 This is the Lean adapter for registered rule `order.add_lt_add_left`. -/
 theorem complexAddPreservesLessWithCommonLeft
@@ -1209,6 +1273,17 @@ theorem complexEqRealInRPos
     (Litex.Same.trans (Litex.Same.ofEq hz) (Litex.Same.complexReal r))
     h
 
+/-- Introduce exact `R+` membership from the verifier's ordinary real
+membership and transportable strict-positivity certificates. -/
+theorem inRPosOfInRPositive
+    {alpha : Type}
+    {x : alpha}
+    (_hx : Litex.In x Litex.R)
+    (h : Litex.Positive x) :
+    Litex.In x Litex.RPos := by
+  rcases h with ⟨r, hxr, hr⟩
+  exact inSetBuilder hxr hr
+
 /-- A positive native integer base raised to a nonnegative integral exponent
 has an exact positive-real representative through Mathlib's rational `zpow`.
 This is the fixed target adapter for the verifier's typed power/equality
@@ -1261,6 +1336,14 @@ theorem positiveRealRepPositive
     (h : Litex.In x Litex.RPos) :
     Litex.Lt (0 : ℂ) (((Litex.In.rep x h).val : ℝ) : ℂ) := by
   simpa [Litex.Lt, Litex.OrderValue] using (Litex.In.rep x h).property
+
+/-- An already exact positive-real carrier exposes its native positivity
+without selecting a second representative from heterogeneous membership. -/
+theorem positiveRealCarrierPositive
+    {x : Litex.RPos.Carrier}
+    (_h : Litex.In x Litex.RPos) :
+    Litex.Lt (0 : ℂ) (((x.val : ℝ)) : ℂ) := by
+  exact Litex.OrderBridge.ltOfReal x.property
 
 /-- Checked negative integer/rational/real numerals construct the exact
 refined carrier retained by their successful Result. -/

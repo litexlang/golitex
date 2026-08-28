@@ -1,6 +1,149 @@
 use super::*;
 
+fn fact_proof_is_not_equal_from_strict_order(proof: &SuccessFactProofResult) -> bool {
+    match proof {
+        SuccessFactProofResult::BuiltinRule(builtin) => matches!(
+            builtin.evidence.typed(),
+            Some(BuiltinRuleEvidence::NotEqualFromStrictOrder)
+        ),
+        SuccessFactProofResult::Reuse(reuse) => {
+            fact_proof_is_not_equal_from_strict_order(reuse.source.proof())
+        }
+        _ => false,
+    }
+}
+
 impl StmtResultToLeanCompiler {
+    /// A frozen proof/check Result may repeat an alpha-equivalent anonymous
+    /// function under a fresh parser occurrence. Rebind that occurrence only
+    /// when the active WD certificate has exactly one semantic owner. This is
+    /// the fact-level analogue of witness aliasing and is deliberately scoped
+    /// to the current compiler environment.
+    pub(super) fn install_fact_anonymous_function_occurrence_aliases(
+        &mut self,
+        fact: &Fact,
+        result_layer: &str,
+    ) -> Result<(), String> {
+        fn collect_from_object(
+            object: &Obj,
+            functions: &mut Vec<(SourceObjectOccurrenceId, String)>,
+        ) {
+            if let Obj::AnonymousFn(function) = object {
+                if let Some(occurrence_id) = function.source_occurrence_id {
+                    functions.push((occurrence_id, obj_equality_key(object)));
+                }
+            }
+            // Function-application traversal treats the callable head as a
+            // different structural field from ordinary arguments. Visit it
+            // explicitly so an applied anonymous literal is not skipped.
+            if let Obj::FnObj(application) = object {
+                let head: Obj = application.head.as_ref().clone().into();
+                collect_from_object(&head, functions);
+            }
+            let _: Result<bool, ()> = Runtime::same_shape_and_corresponding_args_match(
+                object,
+                object,
+                &mut |child, _| {
+                    collect_from_object(child, functions);
+                    Ok(true)
+                },
+            );
+        }
+
+        fn collect_from_forall(
+            forall: &ForallFact,
+            functions: &mut Vec<(SourceObjectOccurrenceId, String)>,
+        ) {
+            for group in &forall.typed_parameters.groups {
+                if let ParamType::Obj(carrier) = &group.param_type {
+                    collect_from_object(carrier, functions);
+                }
+            }
+            for premise in &forall.dom_facts {
+                collect_from_fact(premise, functions);
+            }
+            for conclusion in &forall.then_facts {
+                collect_from_fact(&conclusion.clone().to_fact(), functions);
+            }
+        }
+
+        fn collect_from_fact(
+            fact: &Fact,
+            functions: &mut Vec<(SourceObjectOccurrenceId, String)>,
+        ) {
+            let arguments = match fact {
+                Fact::AtomicFact(fact) => fact.get_args_from_fact_ref(),
+                Fact::ExistFact(fact) => fact.get_args_from_fact_ref(),
+                Fact::OrFact(fact) => fact.get_args_from_fact_ref(),
+                Fact::AndFact(fact) => fact.get_args_from_fact_ref(),
+                Fact::ChainFact(fact) => fact.get_args_from_fact_ref(),
+                Fact::ForallFact(forall) => {
+                    collect_from_forall(forall, functions);
+                    return;
+                }
+                Fact::ForallFactWithIff(forall) => {
+                    collect_from_forall(&forall.forall_fact, functions);
+                    for conclusion in &forall.iff_facts {
+                        collect_from_fact(&conclusion.clone().to_fact(), functions);
+                    }
+                    return;
+                }
+                Fact::NotForall(forall) => {
+                    collect_from_forall(&forall.forall_fact, functions);
+                    return;
+                }
+            };
+            for argument in arguments {
+                collect_from_object(argument, functions);
+            }
+        }
+
+        let mut functions = Vec::new();
+        collect_from_fact(fact, &mut functions);
+        functions.sort_by_key(|(occurrence_id, _)| occurrence_id.value());
+        functions.dedup_by_key(|(occurrence_id, _)| occurrence_id.value());
+        if functions.is_empty() {
+            return Ok(());
+        }
+        let context = self
+            .environment_stack
+            .well_definedness
+            .as_mut()
+            .ok_or_else(|| format!("{result_layer} has no active WD Result"))?;
+        for (source_occurrence, semantic_key) in functions {
+            if context.anonymous_functions.contains_key(&source_occurrence) {
+                continue;
+            }
+            let owners = context
+                .anonymous_functions
+                .iter()
+                .filter_map(|(owner_occurrence, certificate)| {
+                    (obj_equality_key(&certificate.source_function) == semantic_key)
+                        .then_some(*owner_occurrence)
+                })
+                .collect::<Vec<_>>();
+            let [owner_occurrence] = owners.as_slice() else {
+                return Err(format!(
+                    "{result_layer} anonymous function occurrence {} has {} alpha-equivalent WD owners",
+                    source_occurrence.value(),
+                    owners.len()
+                ));
+            };
+            if let Some(previous) = context
+                .anonymous_function_occurrence_aliases
+                .insert(source_occurrence, *owner_occurrence)
+            {
+                if previous != *owner_occurrence {
+                    return Err(format!(
+                        "{result_layer} anonymous function occurrence {} changed its WD owner",
+                        source_occurrence.value()
+                    ));
+                }
+            }
+        }
+        Ok(())
+    }
+
     pub(super) fn compile_fact_stmt_result_to_lean_source(
         &mut self,
         result: &SuccessFactStmtResult,
@@ -16,6 +159,12 @@ impl StmtResultToLeanCompiler {
         if self
             .compile_rational_normalization_fact_result(result)
             .map_err(|error| format!("rational-normalization route: {error}"))?
+        {
+            return Ok(());
+        }
+        if self
+            .compile_rational_algebraic_normalization_fact_result(result)
+            .map_err(|error| format!("rational-algebraic-normalization route: {error}"))?
         {
             return Ok(());
         }
@@ -334,12 +483,9 @@ impl StmtResultToLeanCompiler {
         infer_result: &SuccessInferResult,
         publication: DefinedPredicateInferenceConclusionPublication,
     ) -> Result<(), String> {
-        for (application_index, application) in infer_result.rule_applications.iter().enumerate() {
+        for application in &infer_result.rule_applications {
             if !defined_predicate_infer_rule(&application.rule) {
-                return Err(format!(
-                    "defined-predicate inference collection mixed unsupported rule {} at index {application_index}",
-                    infer_rule_name(&application.rule)
-                ));
+                continue;
             }
             self.compile_defined_predicate_inference_application_in_current_environment(
                 application,
@@ -402,6 +548,116 @@ impl StmtResultToLeanCompiler {
                     "defined predicate `{predicate_name}` is not visible in this compiler environment"
                 )
             })?;
+        let [conclusion] = application.conclusions.as_slice() else {
+            return Err("defined-predicate inference must retain one conclusion Result".into());
+        };
+        let conclusion_fact_id = conclusion
+            .fact_id
+            .ok_or_else(|| "defined-predicate inference conclusion has no FactId".to_string())?;
+        if let InferRule::DefinedPredicateParameterRequirementProjection(rule) = &application.rule {
+            let definition = binding.definition.as_ref().ok_or_else(|| {
+                "defined-predicate parameter projection has no concrete definition".to_string()
+            })?;
+            let parameters = definition
+                .typed_parameters
+                .collect_param_bindings_with_types();
+            let (definition_parameter, parameter_type) =
+                parameters.get(rule.parameter_index).ok_or_else(|| {
+                    "defined-predicate parameter projection selected a missing parameter"
+                        .to_string()
+                })?;
+            if matches!(
+                parameter_type,
+                ParamType::Obj(Obj::FnSet(_) | Obj::FiniteSeqSet(_) | Obj::SeqSet(_))
+            ) {
+                resolve_fact_citation(
+                    &conclusion_fact_id,
+                    &conclusion.fact,
+                    &self.environment_stack,
+                )?;
+                if binding
+                    .exact_parameters
+                    .get(rule.parameter_index)
+                    != Some(&true)
+                {
+                    return Err(
+                        "concrete function parameter lost its exact-carrier ABI flag".into(),
+                    );
+                }
+                let source_argument = source_predicate
+                    .body
+                    .get(rule.parameter_index)
+                    .ok_or_else(|| {
+                        "defined-predicate function projection lost its source argument"
+                            .to_string()
+                    })?;
+                let exact_argument = render_exact_predicate_function_argument(
+                    source_argument,
+                    &self.environment_stack,
+                )?;
+                let function = match parameter_type {
+                    ParamType::Obj(Obj::FnSet(function)) => {
+                        LeanTargetFunctionTypeRepresentation::lower(function)?
+                    }
+                    ParamType::Obj(Obj::FiniteSeqSet(sequence)) => {
+                        let function = Runtime::default()
+                            .finite_seq_set_to_fn_set(sequence, default_line_file());
+                        LeanTargetFunctionTypeRepresentation::lower(&function)?
+                    }
+                    ParamType::Obj(Obj::SeqSet(sequence)) => {
+                        let function = Runtime::default()
+                            .seq_set_to_fn_set(sequence, default_line_file());
+                        LeanTargetFunctionTypeRepresentation::lower(&function)?
+                    }
+                    _ => unreachable!("guarded function-like parameter type"),
+                };
+                let function_set = render_function_set(&function, &self.environment_stack)?;
+                let exact_parameter_proof =
+                    format!("(Litex.In.own {function_set} {exact_argument})");
+                let definition_well_definedness = binding
+                    .definition_well_definedness
+                    .as_ref()
+                    .ok_or_else(|| {
+                        "defined-predicate function parameter has no retained definition WD context"
+                            .to_string()
+                    })?;
+                let definition_fact_id = definition_well_definedness
+                    .parameter_fact_aliases
+                    .iter()
+                    .find(|alias| alias.symbol_id == definition_parameter.id())
+                    .map(|alias| alias.fact_id)
+                    .ok_or_else(|| {
+                        "defined-predicate function parameter has no exact definition FactId alias"
+                            .to_string()
+                    })?;
+                let mut current_function = self
+                    .environment_stack
+                    .function_bindings
+                    .get(&conclusion_fact_id)
+                    .cloned()
+                    .unwrap_or(FunctionBinding {
+                        symbol_id: definition_parameter.id(),
+                        function: function.clone(),
+                        membership_proof_name: exact_parameter_proof.clone(),
+                        direct: true,
+                    });
+                current_function.symbol_id = definition_parameter.id();
+                current_function.function = function;
+                current_function.membership_proof_name = exact_parameter_proof.clone();
+                current_function.direct = true;
+                self.environment_stack
+                    .function_bindings
+                    .insert(definition_fact_id, current_function);
+                self.environment_stack.fact_names.insert(
+                    definition_fact_id,
+                    exact_parameter_proof,
+                );
+                self.environment_stack.fact_propositions.insert(
+                    definition_fact_id,
+                    conclusion.fact.clone(),
+                );
+            }
+        }
         let components =
             instantiated_predicate_components(&premise.fact, &binding, &self.environment_stack)?;
         if component_index >= components.len() {
@@ -427,18 +683,7 @@ impl StmtResultToLeanCompiler {
             }
             _ => {}
         }
-        let [conclusion] = application.conclusions.as_slice() else {
-            return Err("defined-predicate inference must retain one conclusion Result".into());
-        };
-        let conclusion_fact_id = conclusion
-            .fact_id
-            .ok_or_else(|| "defined-predicate inference conclusion has no FactId".to_string())?;
-        let conclusion_proposition = render_fact(&conclusion.fact, &self.environment_stack)?;
-        if conclusion_proposition != components[component_index] {
-            return Err(format!(
-                "defined-predicate inference component {component_index} changed its conclusion"
-            ));
-        }
+        let conclusion_proposition = components[component_index].clone();
         let proof_expression = if binding.dependent_parameter_evidence {
             let component_names = (0..components.len())
                 .map(|index| format!("__component{index}"))
@@ -479,7 +724,9 @@ impl StmtResultToLeanCompiler {
                         theorem_name
                     }
                     DefinedPredicateInferenceConclusionPublication::LocalProofExpression => {
-                        proof_expression
+                        format!(
+                            "(show {conclusion_proposition} from {proof_expression})"
+                        )
                     }
                 };
                 self.environment_stack
@@ -488,6 +735,9 @@ impl StmtResultToLeanCompiler {
                 self.environment_stack
                     .fact_propositions
                     .insert(conclusion_fact_id, conclusion.fact.clone());
+                self.environment_stack
+                    .fact_lean_propositions
+                    .insert(conclusion_fact_id, conclusion_proposition.clone());
             }
         }
         self.compile_defined_predicate_inference_results_in_current_environment(
@@ -1110,6 +1360,56 @@ impl StmtResultToLeanCompiler {
                                     &parameter_name,
                                     &mut self.environment_stack,
                                 );
+                            } else if forall_parameter_uses_exact_refined_numeric_carrier(set) {
+                                let lowered_set = LeanTargetObjectRepresentation::lower(set)?;
+                                self.environment_stack
+                                    .exact_carrier_values
+                                    .insert(binding.id(), parameter_name.clone());
+                                self.environment_stack
+                                    .exact_positive_real_carriers
+                                    .insert(binding.id(), parameter_name.clone());
+                                if let Some(real) =
+                                    exact_set_real_value(&lowered_set, &parameter_name)
+                                {
+                                    self.environment_stack
+                                        .numeric_real_values
+                                        .insert(binding.id(), real);
+                                }
+                                if let Some(integer) =
+                                    exact_set_integer_value(&lowered_set, &parameter_name)
+                                {
+                                    self.environment_stack
+                                        .numeric_integer_values
+                                        .insert(binding.id(), integer);
+                                }
+                                if let Some(rational) =
+                                    exact_set_rational_value(&lowered_set, &parameter_name)
+                                {
+                                    self.environment_stack
+                                        .numeric_rational_values
+                                        .insert(binding.id(), rational);
+                                }
+                                if let Some(numeric) =
+                                    exact_set_numeric_value(&lowered_set, &parameter_name)
+                                {
+                                    self.environment_stack
+                                        .numeric_representations
+                                        .insert(binding.id(), numeric);
+                                }
+                                if let Some(equality) =
+                                    exact_set_numeric_equality(&lowered_set, &parameter_name)
+                                {
+                                    self.environment_stack
+                                        .numeric_representation_equalities
+                                        .insert(binding.id(), equality);
+                                }
+                                if let Some(proof) =
+                                    exact_set_numeric_proof(&lowered_set, &parameter_name)
+                                {
+                                    self.environment_stack
+                                        .numeric_representation_memberships
+                                        .insert(binding.id(), proof);
+                                }
                             }
                             let proposition = render_fact(fact, &self.environment_stack).map_err(
                             |error| {
@@ -1121,11 +1421,7 @@ impl StmtResultToLeanCompiler {
                             let hypothesis = if native_integer_parameter {
                                 format!("(Litex.In.own Litex.Z {parameter_name})")
                             } else {
-                                let hypothesis = format!(
-                                    "__h{}_{}",
-                                    self.next_fact_name_index,
-                                    parameter_index + 1
-                                );
+                                let hypothesis = format!("__h{}", fact_id.value());
                                 intro_names.push(hypothesis.clone());
                                 hypothesis
                             };
@@ -1154,17 +1450,18 @@ impl StmtResultToLeanCompiler {
                                 .fact_propositions
                                 .insert(*well_definedness_fact_id, fact.clone());
                             install_parameter_fact_aliases(
-                            binding.id(),
-                            fact,
-                            &hypothesis,
-                            set,
-                            &mut self.environment_stack,
-                        )
-                        .map_err(|error| {
-                            format!(
-                                "ForallProof parameter {parameter_index} aliases failed to install: {error}"
+                                binding.id(),
+                                *fact_id,
+                                fact,
+                                &hypothesis,
+                                set,
+                                &mut self.environment_stack,
                             )
-                        })?;
+                            .map_err(|error| {
+                                format!(
+                                    "ForallProof parameter {parameter_index} aliases failed to install: {error}"
+                                )
+                            })?;
                             if native_integer_parameter {
                                 // Generic membership aliases select `In.rep`.
                                 // This binder is already the exact `Z.Carrier`,
@@ -1175,6 +1472,56 @@ impl StmtResultToLeanCompiler {
                                     &parameter_name,
                                     &mut self.environment_stack,
                                 );
+                            } else if forall_parameter_uses_exact_refined_numeric_carrier(set) {
+                                let lowered_set = LeanTargetObjectRepresentation::lower(set)?;
+                                self.environment_stack
+                                    .exact_carrier_values
+                                    .insert(binding.id(), parameter_name.clone());
+                                self.environment_stack
+                                    .exact_positive_real_carriers
+                                    .insert(binding.id(), parameter_name.clone());
+                                if let Some(real) =
+                                    exact_set_real_value(&lowered_set, &parameter_name)
+                                {
+                                    self.environment_stack
+                                        .numeric_real_values
+                                        .insert(binding.id(), real);
+                                }
+                                if let Some(integer) =
+                                    exact_set_integer_value(&lowered_set, &parameter_name)
+                                {
+                                    self.environment_stack
+                                        .numeric_integer_values
+                                        .insert(binding.id(), integer);
+                                }
+                                if let Some(rational) =
+                                    exact_set_rational_value(&lowered_set, &parameter_name)
+                                {
+                                    self.environment_stack
+                                        .numeric_rational_values
+                                        .insert(binding.id(), rational);
+                                }
+                                if let Some(numeric) =
+                                    exact_set_numeric_value(&lowered_set, &parameter_name)
+                                {
+                                    self.environment_stack
+                                        .numeric_representations
+                                        .insert(binding.id(), numeric);
+                                }
+                                if let Some(equality) =
+                                    exact_set_numeric_equality(&lowered_set, &parameter_name)
+                                {
+                                    self.environment_stack
+                                        .numeric_representation_equalities
+                                        .insert(binding.id(), equality);
+                                }
+                                if let Some(proof) =
+                                    exact_set_numeric_proof(&lowered_set, &parameter_name)
+                                {
+                                    self.environment_stack
+                                        .numeric_representation_memberships
+                                        .insert(binding.id(), proof);
+                                }
                             }
                             let expected = format!(
                                 "Litex.In {parameter_name} {}",
@@ -1193,7 +1540,7 @@ impl StmtResultToLeanCompiler {
                                 fact,
                             )?;
                             let proposition = render_fact(fact, &self.environment_stack)?;
-                            let hypothesis = format!("__type{}", parameter_index + 1);
+                            let hypothesis = format!("__h{}", fact_id.value());
                             intro_names.push(hypothesis.clone());
                             self.environment_stack
                                 .fact_names
@@ -1294,10 +1641,6 @@ impl StmtResultToLeanCompiler {
                     &mut proof_lines,
                     "ForallProof assumption inference",
                 )?;
-                let mut conclusion_names =
-                    Vec::with_capacity(publication_selection.source_conclusion_indices.len());
-                let mut conclusions =
-                    Vec::with_capacity(publication_selection.source_conclusion_indices.len());
                 let mut direct_single_heterogeneous_subset_proof = None;
                 let selected_conclusion_indices = publication_selection
                     .source_conclusion_indices
@@ -1310,7 +1653,6 @@ impl StmtResultToLeanCompiler {
                     .copied()
                     .max()
                     .ok_or_else(|| "ForallProof publication retained no conclusion".to_string())?;
-                let mut projected_conclusion_index = 0;
                 // Runtime verifies source conclusions in order, so a later
                 // conclusion may cite the exact FactId of an earlier one. A
                 // projected stored forall still has to replay those preceding
@@ -1350,13 +1692,6 @@ impl StmtResultToLeanCompiler {
                             "ForallProof conclusion {source_conclusion_index} contains a typed inference rule that the binder compiler does not support"
                         ));
                     }
-                    if !infer_result_effects_are_fully_owned_by_direct_compiler_rules(
-                        &child.store.infers,
-                    ) {
-                        return Err(format!(
-                            "ForallProof conclusion {source_conclusion_index} has flattened inference effects without matching typed rules"
-                        ));
-                    }
                     let conclusion_fact_id = child.store.fact_id.ok_or_else(|| {
                         format!(
                             "ForallProof conclusion {source_conclusion_index} has no frozen FactId"
@@ -1388,6 +1723,16 @@ impl StmtResultToLeanCompiler {
                         "ForallProof conclusion {source_conclusion_index} WD stores failed to install after preceding FactIds [{preceding_fact_ids}]: {error}"
                     )
                 })?;
+                    self.install_fact_anonymous_function_occurrence_aliases(
+                        &expected,
+                        &format!("ForallProof conclusion {source_conclusion_index}"),
+                    )?;
+                    self.install_fact_anonymous_function_occurrence_aliases(
+                        &child.fact(),
+                        &format!(
+                            "ForallProof conclusion {source_conclusion_index} retained proof target"
+                        ),
+                    )?;
                     let Some(conclusion_proof) = self
                     .construct_lean_proof_from_direct_fact_result(child)
                     .map_err(|error| {
@@ -1400,7 +1745,9 @@ impl StmtResultToLeanCompiler {
                         ));
                 };
                     if conclusion_is_published
-                        && publication_selection.source_conclusion_indices.len() == 1
+                        && publication_selection.published_conclusions.len() == 1
+                        && publication_selection.published_conclusions[0].1
+                            == conclusion_fact_id
                         && matches!(
                             &expected,
                             Fact::AtomicFact(
@@ -1413,21 +1760,13 @@ impl StmtResultToLeanCompiler {
                         // standalone local `have` from prematurely choosing its
                         // implicit carrier (notably for `empty subset A`).
                         direct_single_heterogeneous_subset_proof = Some(conclusion_proof);
-                        conclusions.push((conclusion_fact_id, expected));
                         continue;
                     }
                     let proposition = render_fact(&expected, &self.environment_stack)?;
-                    let conclusion_name = if conclusion_is_published {
-                        format!(
-                            "__c{}_{}",
-                            self.next_fact_name_index, projected_conclusion_index
-                        )
-                    } else {
-                        format!(
-                            "__prior{}_{}",
-                            self.next_fact_name_index, source_conclusion_index
-                        )
-                    };
+                    let conclusion_name = format!(
+                        "__prior{}_{}",
+                        self.next_fact_name_index, source_conclusion_index
+                    );
                     proof_lines.push(format!(
                         "have {conclusion_name} : {proposition} := {conclusion_proof}"
                     ));
@@ -1458,22 +1797,123 @@ impl StmtResultToLeanCompiler {
                     self.environment_stack
                         .fact_propositions
                         .insert(well_definedness_conclusion_fact_id, expected.clone());
+                    if !conclusion_well_definedness.store.infers.is_empty() {
+                        if conclusion_well_definedness
+                            .store
+                            .infers
+                            .rule_applications
+                            .iter()
+                            .any(|application| {
+                                !infer_rule_has_direct_compiler_environment_consumer(
+                                    &application.rule,
+                                )
+                            })
+                        {
+                            return Err(format!(
+                                "ForallProof WD conclusion {source_conclusion_index} contains an inference rule without a direct compiler consumer"
+                            ));
+                        }
+                        let layer = format!(
+                            "ForallProof WD conclusion {source_conclusion_index} inference"
+                        );
+                        let mut allowed_sources = self
+                            .install_equality_chain_adjacent_projections_for_typed_inference(
+                                &expected,
+                                well_definedness_conclusion_fact_id,
+                                &conclusion_name,
+                                &conclusion_well_definedness.store.infers,
+                                &layer,
+                            )?;
+                        for source in self
+                            .install_numeric_order_chain_adjacent_projections_for_typed_inference(
+                                &expected,
+                                well_definedness_conclusion_fact_id,
+                                &conclusion_name,
+                                &conclusion_well_definedness.store.infers,
+                                &layer,
+                            )?
+                        {
+                            if !allowed_sources.iter().any(|existing| {
+                                existing.0 == source.0
+                                    && existing.1.to_string() == source.1.to_string()
+                            }) {
+                                allowed_sources.push(source);
+                            }
+                        }
+                        self.compile_typed_inference_results_as_local_have_statements(
+                            &conclusion_well_definedness.store.infers,
+                            &allowed_sources,
+                            &mut proof_lines,
+                            &layer,
+                        )?;
+                    }
+                    let child_inference_layer =
+                        format!("ForallProof conclusion {source_conclusion_index} inference");
+                    let mut child_allowed_sources = self
+                        .install_equality_chain_adjacent_projections_for_typed_inference(
+                            &expected,
+                            conclusion_fact_id,
+                            &conclusion_name,
+                            &child.store.infers,
+                            &child_inference_layer,
+                        )?;
+                    for source in self
+                        .install_numeric_order_chain_adjacent_projections_for_typed_inference(
+                            &expected,
+                            conclusion_fact_id,
+                            &conclusion_name,
+                            &child.store.infers,
+                            &child_inference_layer,
+                        )?
+                    {
+                        if !child_allowed_sources.iter().any(|existing| {
+                            existing.0 == source.0
+                                && existing.1.to_string() == source.1.to_string()
+                        }) {
+                            child_allowed_sources.push(source);
+                        }
+                    }
                     self.compile_typed_inference_results_as_local_have_statements(
                         &child.store.infers,
-                        &[(conclusion_fact_id, expected.clone())],
+                        &child_allowed_sources,
                         &mut proof_lines,
-                        &format!("ForallProof conclusion {source_conclusion_index} inference"),
+                        &child_inference_layer,
                     )?;
-                    if conclusion_is_published {
-                        conclusion_names.push(conclusion_name);
-                        conclusions.push((conclusion_fact_id, expected));
-                        projected_conclusion_index += 1;
-                    }
                 }
-                if conclusion_names.is_empty() {
-                    let direct = direct_single_heterogeneous_subset_proof.ok_or_else(|| {
-                        "ForallProof retained no compiled conclusion proof".to_string()
-                    })?;
+                let mut conclusion_names =
+                    Vec::with_capacity(publication_selection.published_conclusions.len());
+                let mut conclusions =
+                    Vec::with_capacity(publication_selection.published_conclusions.len());
+                for (_, fact_id, fact) in &publication_selection.published_conclusions {
+                    let Some(name) = self.environment_stack.fact_names.get(fact_id) else {
+                        if direct_single_heterogeneous_subset_proof.is_some()
+                            && publication_selection.published_conclusions.len() == 1
+                        {
+                            conclusions.push((*fact_id, fact.clone()));
+                            continue;
+                        }
+                        return Err(format!(
+                            "ForallProof published conclusion FactId `{fact_id}` was not replayed"
+                        ));
+                    };
+                    let retained = self
+                        .environment_stack
+                        .fact_propositions
+                        .get(fact_id)
+                        .ok_or_else(|| {
+                            format!(
+                                "ForallProof published conclusion FactId `{fact_id}` lost its proposition"
+                            )
+                        })?;
+                    if retained.to_string() != fact.to_string() {
+                        return Err(format!(
+                            "ForallProof published conclusion FactId `{fact_id}` changed its proposition"
+                        ));
+                    }
+                    conclusion_names.push(name.clone());
+                    conclusions.push((*fact_id, fact.clone()));
+                }
+                if let Some(direct) = direct_single_heterogeneous_subset_proof {
                     proof_lines.push(format!("exact {direct}"));
                 } else if conclusion_names.len() == 1 {
                     proof_lines.push(format!("exact {}", conclusion_names[0]));
@@ -2055,6 +2495,40 @@ impl StmtResultToLeanCompiler {
         Ok(true)
     }
 
+    pub(super) fn compile_rational_algebraic_normalization_fact_result(
+        &mut self,
+        result: &SuccessFactStmtResult,
+    ) -> Result<bool, String> {
+        let SuccessFactProofResult::BuiltinRule(builtin) = result.proof() else {
+            return Ok(false);
+        };
+        let Some(BuiltinRuleEvidence::RationalAlgebraicNormalization(evidence)) =
+            builtin.evidence.typed()
+        else {
+            return Ok(false);
+        };
+        if fact_result_contains_inferred_facts(result) {
+            return Ok(false);
+        }
+        let source_fact = result.fact();
+        let Some(proof) = self.construct_lean_rational_algebraic_normalization_from_result(
+            &source_fact,
+            evidence,
+            &builtin.subgoals,
+        )?
+        else {
+            return Ok(false);
+        };
+        let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = &source_fact else {
+            unreachable!();
+        };
+        validate_atomic_fact_well_definedness_result(&result.well_definedness, &source_fact)?;
+        self.render_object_using_well_definedness_from_fact_result(result, &equality.left)?;
+        self.render_object_using_well_definedness_from_fact_result(result, &equality.right)?;
+        self.compile_stored_fact_without_inference(result, proof)?;
+        Ok(true)
+    }
+
     /// Compile the exact nonzero child Results retained by complex calculate,
     /// bridge each semantic `!= 0` proof to native Complex nonzero, and feed
     /// only those named proofs to the fixed field/ring adapter.
@@ -2065,10 +2539,92 @@ impl StmtResultToLeanCompiler {
         subgoals: &[StmtResult],
     ) -> Result<Option<String>, String> {
         validate_complex_algebraic_normalization_builtin_rule_evidence(target, evidence)?;
+        self.construct_lean_algebraic_normalization_from_result(
+            target,
+            &evidence.expected_nonzero_premises,
+            subgoals,
+        )
+    }
+
+    pub(super) fn construct_lean_rational_algebraic_normalization_from_result(
+        &mut self,
+        target: &Fact,
+        evidence: &RationalAlgebraicNormalizationBuiltinRuleEvidence,
+        subgoals: &[StmtResult],
+    ) -> Result<Option<String>, String> {
+        validate_rational_algebraic_normalization_builtin_rule_evidence(target, evidence)?;
+        self.construct_lean_algebraic_normalization_from_result(
+            target,
+            &evidence.expected_nonzero_premises,
+            subgoals,
+        )
+    }
+
+    fn construct_lean_algebraic_normalization_from_result(
+        &mut self,
+        target: &Fact,
+        expected_nonzero_premises: &[Fact],
+        subgoals: &[StmtResult],
+    ) -> Result<Option<String>, String> {
+        let native = self.construct_lean_native_algebraic_normalization_from_result(
+            target,
+            expected_nonzero_premises,
+            subgoals,
+        )?;
+        let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = target else {
+            unreachable!("algebraic normalization validator requires equality")
+        };
+        let source_to_numeric = |object: &Obj| -> Result<(String, String, String), String> {
+            let source = render_obj(object, &self.environment_stack)?;
+            let numeric = render_numeric_obj(object, &self.environment_stack)?;
+            if source == numeric {
+                return Ok((
+                    source.clone(),
+                    numeric,
+                    format!("Litex.Same.refl ({source})"),
+                ));
+            }
+            let LeanTargetObjectRepresentation::Symbol { symbol_id, .. } =
+                LeanTargetObjectRepresentation::lower(object)?
+            else {
+                return Err(format!(
+                    "algebraic normalization changed non-symbol endpoint `{source}` to `{numeric}` without a structural Same bridge"
+                ));
+            };
+            let bridge = self
+                .environment_stack
+                .numeric_representation_equalities
+                .get(&symbol_id)
+                .cloned()
+                .ok_or_else(|| {
+                    format!(
+                        "algebraic normalization endpoint `{source}` has no exact numeric Same bridge"
+                    )
+                })?;
+            Ok((source, numeric, bridge))
+        };
+        let (_source_left, numeric_left, left_bridge) =
+            source_to_numeric(&equality.left)?;
+        let (_source_right, numeric_right, right_bridge) =
+            source_to_numeric(&equality.right)?;
+        let native = format!(
+            "(show {numeric_left} = {numeric_right} from {native})"
+        );
+        Ok(Some(format!(
+            "Litex.Same.trans ({left_bridge}) (Litex.Same.trans (Litex.Same.ofEq ({native})) (Litex.Same.symm ({right_bridge})))"
+        )))
+    }
+
+    pub(super) fn construct_lean_native_algebraic_normalization_from_result(
+        &mut self,
+        target: &Fact,
+        expected_nonzero_premises: &[Fact],
+        subgoals: &[StmtResult],
+    ) -> Result<String, String> {
         let Fact::AtomicFact(AtomicFact::EqualFact(_)) = target else {
             unreachable!("complex normalization validator requires an equality")
         };
-        if subgoals.len() != evidence.expected_nonzero_premises.len() {
+        if subgoals.len() != expected_nonzero_premises.len() {
             return Err(
                 "complex-algebraic-normalization proof lost an ordered nonzero child Result".into(),
             );
@@ -2076,8 +2632,7 @@ impl StmtResultToLeanCompiler {
 
         let mut declarations = Vec::with_capacity(subgoals.len());
         let mut native_nonzero_names = Vec::with_capacity(subgoals.len());
-        for (index, (expected, subgoal)) in evidence
-            .expected_nonzero_premises
+        for (index, (expected, subgoal)) in expected_nonzero_premises
             .iter()
             .zip(subgoals.iter())
             .enumerate()
@@ -2108,17 +2663,26 @@ impl StmtResultToLeanCompiler {
             let left = render_numeric_obj(&nonzero.left, &self.environment_stack)?;
             let right = render_numeric_obj(&nonzero.right, &self.environment_stack)?;
             let name = format!("__calculate_nonzero{}", index + 1);
-            let native_proof = match self.construct_lean_proof_from_direct_fact_result(subgoal)? {
-                Some(semantic_proof) => format!(
+            let native_proof = match self.construct_lean_proof_from_direct_fact_result(subgoal) {
+                Ok(Some(semantic_proof)) => format!(
                     "by\n    intro __native_eq\n    exact ({semantic_proof}) (Litex.Same.ofEq __native_eq)"
                 ),
-                None => {
+                Ok(None) => {
                     // A few closed native constants still have legacy
                     // label-only nonzero Results. The target is independently
                     // checked here by Lean; symbolic premises never use this
                     // fallback because `norm_num` cannot manufacture them.
                     "by\n    norm_num [Complex.I_mul_I]".to_string()
                 }
+                Err(_error)
+                    if fact_proof_is_not_equal_from_strict_order(subgoal.proof()) =>
+                {
+                    self.construct_native_nonzero_from_strict_order_result(
+                        subgoal,
+                        &nonzero.left,
+                    )?
+                }
+                Err(error) => return Err(error),
             };
             declarations.push(format!(
                 "  have {name} : {left} ≠ {right} := {native_proof}"
@@ -2131,7 +2695,6 @@ impl StmtResultToLeanCompiler {
             proof.push_str(&declarations.join("\n"));
             proof.push('\n');
         }
-        proof.push_str("  apply Litex.Same.ofEq\n");
         if native_nonzero_names.is_empty() {
             proof.push_str("  ring_nf <;> norm_num [Complex.I_mul_I] <;> ring");
         } else {
@@ -2140,7 +2703,78 @@ impl StmtResultToLeanCompiler {
                 native_nonzero_names.join(", ")
             ));
         }
-        Ok(Some(format!("({proof})")))
+        Ok(format!("({proof})"))
+    }
+
+    fn construct_native_nonzero_from_strict_order_result(
+        &mut self,
+        result: &SuccessFactStmtResult,
+        expected_object: &Obj,
+    ) -> Result<String, String> {
+        let mut proof = result.proof();
+        while let SuccessFactProofResult::Reuse(reuse) = proof {
+            proof = reuse.source.proof();
+        }
+        let SuccessFactProofResult::BuiltinRule(builtin) = proof else {
+            return Err("strict-order nonzero Result changed its proof kind".into());
+        };
+        if !matches!(
+            builtin.evidence.typed(),
+            Some(BuiltinRuleEvidence::NotEqualFromStrictOrder)
+        ) {
+            return Err("native nonzero extraction requires strict-order evidence".into());
+        }
+        let mut selected = None;
+        for child in &builtin.subgoals {
+            let Some(child) = child.factual_success() else {
+                return Err("strict-order nonzero evidence retained a non-factual child".into());
+            };
+            if let Ok((left, right, true)) = order_relation_parts(&child.fact()) {
+                let endpoints_match = (is_literal_zero(left)
+                    && obj_equality_key(right) == obj_equality_key(expected_object))
+                    || (obj_equality_key(left) == obj_equality_key(expected_object)
+                        && is_literal_zero(right));
+                if endpoints_match {
+                    if selected.is_some() {
+                        return Err(
+                            "strict-order nonzero evidence retained multiple matching orders"
+                                .into(),
+                        );
+                    }
+                    selected = Some(child);
+                    continue;
+                }
+            }
+            let child_fact = child.fact();
+            let Ok((_, set)) = membership_parts(&child_fact) else {
+                return Err(
+                    "strict-order nonzero evidence retained an unrelated child fact".into(),
+                );
+            };
+            if !matches!(set, Obj::StandardSet(StandardSet::R)) {
+                return Err(
+                    "strict-order nonzero evidence changed its real-carrier premise".into(),
+                );
+            }
+        }
+        let selected = selected
+            .ok_or_else(|| "strict-order nonzero evidence lost its strict-order child".to_string())?;
+        // Consume the retained strict-order child as authority for this
+        // nonzero obligation, but prove the exact target term in Lean's
+        // native real representation. This avoids treating Litex's
+        // representative-owning `Positive` wrapper as definitionally equal
+        // to a `Litex.Lt` proposition.
+        self.construct_lean_proof_from_direct_fact_result(selected)?
+            .ok_or_else(|| {
+                "strict-order nonzero child has no direct Lean proof constructor".to_string()
+            })?;
+        let native_real = render_real_target_object_representation(
+            &LeanTargetObjectRepresentation::lower(expected_object)?,
+            &self.environment_stack,
+        )?;
+        Ok(format!(
+            "by\n    intro __native_eq\n    have __native_re := congrArg Complex.re __native_eq\n    simp [Litex.abs, ← Complex.ofReal_add, ← Complex.ofReal_sub, ← Complex.ofReal_mul, ← Complex.ofReal_div, Complex.norm_real, Real.norm_eq_abs] at __native_re\n    have __native_nonzero : ({native_real} : ℝ) ≠ 0 := by positivity\n    exact __native_nonzero __native_re"
+        ))
     }
 
     pub(super) fn render_object_using_well_definedness_from_fact_result(
@@ -2673,6 +3307,121 @@ impl StmtResultToLeanCompiler {
         Ok(allowed_sources)
     }
 
+    /// Expose the exact adjacent premises used by retained mixed strict/weak
+    /// numeric-order closure applications as projections of the source chain.
+    pub(super) fn install_numeric_order_chain_adjacent_projections_for_typed_inference(
+        &mut self,
+        source_fact: &Fact,
+        source_fact_id: FactId,
+        source_lean_reference: &str,
+        infers: &SuccessInferResult,
+        result_layer: &str,
+    ) -> Result<Vec<(FactId, Fact)>, String> {
+        let applications = infers
+            .rule_applications
+            .iter()
+            .filter(|application| {
+                matches!(application.rule, InferRule::NumericOrderChainClosure(_))
+            })
+            .collect::<Vec<_>>();
+        if applications.is_empty() {
+            return Ok(vec![(source_fact_id, source_fact.clone())]);
+        }
+        let Fact::ChainFact(chain) = source_fact else {
+            return Err(format!(
+                "{result_layer} retained numeric-order closure for a non-chain source"
+            ));
+        };
+        let expected_steps = chain
+            .numeric_order_chain_closure_steps()
+            .map_err(|error| format!("{result_layer} retained an invalid order chain: {error:?}"))?;
+        if applications.len() != expected_steps.len() {
+            return Err(format!(
+                "{result_layer} expected {} numeric-order closure applications, retained {}",
+                expected_steps.len(),
+                applications.len()
+            ));
+        }
+        let adjacent_facts = chain
+            .facts()
+            .map_err(|error| format!("{result_layer} retained an invalid chain: {error:?}"))?
+            .into_iter()
+            .map(Fact::from)
+            .collect::<Vec<_>>();
+        let mut adjacent_fact_ids = vec![None; adjacent_facts.len()];
+        for (application_index, (application, expected)) in
+            applications.iter().zip(expected_steps.iter()).enumerate()
+        {
+            let InferRule::NumericOrderChainClosure(rule) = &application.rule else {
+                unreachable!("filtered numeric-order application")
+            };
+            if rule.start_object_index != expected.start_object_index
+                || rule.end_object_index != expected.end_object_index
+                || application.premises.len() != expected.premises.len()
+                || application.conclusions.len() != 1
+            {
+                return Err(format!(
+                    "{result_layer} numeric-order application {application_index} changed its interval or arity"
+                ));
+            }
+            for (offset, (premise, expected_premise)) in application
+                .premises
+                .iter()
+                .zip(expected.premises.iter())
+                .enumerate()
+            {
+                if premise.fact.to_string() != expected_premise.to_string() {
+                    return Err(format!(
+                        "{result_layer} numeric-order application {application_index} changed premise {offset}"
+                    ));
+                }
+                let fact_id = premise.fact_id.ok_or_else(|| {
+                    format!(
+                        "{result_layer} numeric-order application {application_index} premise {offset} has no FactId"
+                    )
+                })?;
+                let adjacent_index = expected.start_object_index + offset;
+                match adjacent_fact_ids[adjacent_index] {
+                    Some(existing) if existing != fact_id => {
+                        return Err(format!(
+                            "{result_layer} assigned two FactIds to order edge {adjacent_index}"
+                        ));
+                    }
+                    _ => adjacent_fact_ids[adjacent_index] = Some(fact_id),
+                }
+            }
+            if application.conclusions[0].fact.to_string()
+                != Fact::from(expected.conclusion.clone()).to_string()
+            {
+                return Err(format!(
+                    "{result_layer} numeric-order application {application_index} changed its conclusion"
+                ));
+            }
+        }
+
+        let mut allowed_sources = vec![(source_fact_id, source_fact.clone())];
+        for (adjacent_index, (fact, fact_id)) in adjacent_facts
+            .into_iter()
+            .zip(adjacent_fact_ids.into_iter())
+            .enumerate()
+        {
+            let Some(fact_id) = fact_id else {
+                continue;
+            };
+            let projection = conjunction_projection(
+                &format!("({source_lean_reference})"),
+                adjacent_index,
+                chain.prop_names.len(),
+            )?;
+            self.environment_stack.fact_names.insert(fact_id, projection);
+            self.environment_stack
+                .fact_propositions
+                .insert(fact_id, fact.clone());
+            allowed_sources.push((fact_id, fact));
+        }
+        Ok(allowed_sources)
+    }
+
     /// `Combine`: publish the two exact consequences retained when equality
     /// exposes a literal tuple shape. The current Lean representation can
     /// replay this rule when the selected target is the same concrete tuple;
@@ -2898,6 +3647,14 @@ impl StmtResultToLeanCompiler {
                             "{result_layer} application {application_index} reversed its equality-chain interval"
                         )
                     })?,
+                InferRule::NumericOrderChainClosure(rule) => rule
+                    .end_object_index
+                    .checked_sub(rule.start_object_index)
+                    .ok_or_else(|| {
+                        format!(
+                            "{result_layer} application {application_index} reversed its numeric-order interval"
+                        )
+                    })?,
                 _ => 1,
             };
             if !infer_rule_has_direct_compiler_environment_consumer(&application.rule)
@@ -2916,6 +3673,11 @@ impl StmtResultToLeanCompiler {
             if !allowed_sources.iter().any(|(allowed_fact_id, fact)| {
                 *allowed_fact_id == premise_fact_id && fact.to_string() == premise.fact.to_string()
             }) && !compiled_conclusions.contains(&premise_key)
+                && !self
+                    .environment_stack
+                    .fact_propositions
+                    .get(&premise_fact_id)
+                    .is_some_and(|visible| visible.to_string() == premise.fact.to_string())
             {
                 let allowed = allowed_sources
                     .iter()
@@ -2978,7 +3740,122 @@ impl StmtResultToLeanCompiler {
                     "{result_layer} application {application_index} repeats an inferred conclusion"
                 ));
             }
-            if let InferRule::EqualityChainClosure(rule) = &application.rule {
+            if let InferRule::NumericOrderChainClosure(rule) = &application.rule {
+                if rule.end_object_index < rule.start_object_index + 2 {
+                    return Err(format!(
+                        "{result_layer} application {application_index} does not span a non-adjacent order consequence"
+                    ));
+                }
+                let descending = application.premises.iter().all(|premise| {
+                    matches!(
+                        premise.fact,
+                        Fact::AtomicFact(
+                            AtomicFact::GreaterFact(_) | AtomicFact::GreaterEqualFact(_)
+                        )
+                    )
+                });
+                let ascending = application.premises.iter().all(|premise| {
+                    matches!(
+                        premise.fact,
+                        Fact::AtomicFact(
+                            AtomicFact::LessFact(_) | AtomicFact::LessEqualFact(_)
+                        )
+                    )
+                });
+                if ascending == descending {
+                    return Err(format!(
+                        "{result_layer} application {application_index} mixes incompatible order directions"
+                    ));
+                }
+                let ordered_premises = if descending {
+                    application.premises.iter().rev().collect::<Vec<_>>()
+                } else {
+                    application.premises.iter().collect::<Vec<_>>()
+                };
+                let mut rendered = Vec::with_capacity(ordered_premises.len());
+                let mut expected_left = None;
+                let mut expected_right: Option<Obj> = None;
+                for (premise_index, premise) in ordered_premises.iter().enumerate() {
+                    let fact_id = premise.fact_id.ok_or_else(|| {
+                        format!(
+                            "{result_layer} application {application_index} premise {premise_index} has no FactId"
+                        )
+                    })?;
+                    let visible = allowed_sources.iter().any(|(allowed_id, fact)| {
+                        *allowed_id == fact_id && fact.to_string() == premise.fact.to_string()
+                    }) || compiled_conclusions
+                        .contains(&(fact_id, premise.fact.to_string()));
+                    if !visible {
+                        return Err(format!(
+                            "{result_layer} application {application_index} order premise {premise_index} is outside its source chain"
+                        ));
+                    }
+                    let (left, right, strict) = order_relation_parts(&premise.fact)?;
+                    if let Some(previous_right) = expected_right.as_ref() {
+                        if obj_equality_key(previous_right) != obj_equality_key(left) {
+                            return Err(format!(
+                                "{result_layer} application {application_index} order premises are not endpoint-contiguous"
+                            ));
+                        }
+                    } else {
+                        expected_left = Some(left.clone());
+                    }
+                    expected_right = Some(right.clone());
+                    rendered.push((
+                        resolve_fact_citation(
+                            &fact_id,
+                            &premise.fact,
+                            &self.environment_stack,
+                        )?,
+                        strict,
+                    ));
+                }
+                let (conclusion_left, conclusion_right, conclusion_strict) =
+                    order_relation_parts(&conclusion.fact)?;
+                if obj_equality_key(expected_left.as_ref().ok_or_else(|| {
+                    format!(
+                        "{result_layer} application {application_index} retained no order premises"
+                    )
+                })?) != obj_equality_key(conclusion_left)
+                    || obj_equality_key(expected_right.as_ref().ok_or_else(|| {
+                        format!(
+                            "{result_layer} application {application_index} retained no order endpoint"
+                        )
+                    })?) != obj_equality_key(conclusion_right)
+                    || conclusion_strict != rendered.iter().any(|(_, strict)| *strict)
+                {
+                    return Err(format!(
+                        "{result_layer} application {application_index} changed its order endpoints or strictness"
+                    ));
+                }
+                if !conclusion_already_visible {
+                    let (mut proof, mut proof_is_strict) = rendered[0].clone();
+                    for (next, next_is_strict) in rendered.iter().skip(1) {
+                        let theorem = match (proof_is_strict, *next_is_strict) {
+                            (false, false) => "Litex.Le.trans",
+                            (false, true) => "Litex.Le.transLt",
+                            (true, false) => "Litex.Lt.transLe",
+                            (true, true) => "Litex.Lt.trans",
+                        };
+                        proof = format!("{theorem} ({proof}) ({next})");
+                        proof_is_strict |= *next_is_strict;
+                    }
+                    let conclusion_proposition =
+                        render_fact(&conclusion.fact, &self.environment_stack)?;
+                    let conclusion_name = self.next_local_inference_fact_proof_name();
+                    self.retain_compiled_inference_fact_proof_step_in_current_environment(
+                        &mut compiled_inference_fact_proof_steps,
+                        CompiledInferenceFactProofStep::new(
+                            conclusion_fact_id,
+                            conclusion.fact.clone(),
+                            conclusion_name,
+                            conclusion_proposition,
+                            proof,
+                        ),
+                        availability,
+                    );
+                }
+            } else if let InferRule::EqualityChainClosure(rule) = &application.rule {
                 if rule.end_object_index < rule.start_object_index + 2 {
                     return Err(format!(
                         "{result_layer} application {application_index} does not span a non-adjacent equality"
@@ -2987,6 +3864,7 @@ impl StmtResultToLeanCompiler {
                 let mut expected_left: Option<Obj> = None;
                 let mut expected_right: Option<Obj> = None;
                 let mut proof_parts = Vec::with_capacity(application.premises.len());
+                let mut native_proof_parts = Some(Vec::with_capacity(application.premises.len()));
                 for (premise_index, premise) in application.premises.iter().enumerate() {
                     let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = &premise.fact else {
                         return Err(format!(
@@ -3013,6 +3891,22 @@ impl StmtResultToLeanCompiler {
                         &premise.fact,
                         &self.environment_stack,
                     )?);
+                    if let Some(parts) = native_proof_parts.as_mut() {
+                        if let Some(binding) = self
+                            .environment_stack
+                            .native_equality_proofs
+                            .get(&premise_fact_id)
+                        {
+                            if binding.fact.to_string() != premise.fact.to_string() {
+                                return Err(format!(
+                                    "{result_layer} application {application_index} native equality premise {premise_index} changed its FactId proposition"
+                                ));
+                            }
+                            parts.push(binding.proof_expression.clone());
+                        } else {
+                            native_proof_parts = None;
+                        }
+                    }
                 }
                 let Fact::AtomicFact(AtomicFact::EqualFact(conclusion_equality)) =
                     &conclusion.fact
@@ -3040,6 +3934,17 @@ impl StmtResultToLeanCompiler {
                     let mut proof = proof_parts[0].clone();
                     for next in proof_parts.iter().skip(1) {
                         proof = format!("Litex.Same.trans ({proof}) ({next})");
+                    }
+                    if let Some(native_parts) = native_proof_parts {
+                        let mut native_proof = native_parts[0].clone();
+                        for next in native_parts.iter().skip(1) {
+                            native_proof = format!("Eq.trans ({native_proof}) ({next})");
+                        }
+                        self.retain_native_equality_proof_in_current_environment(
+                            conclusion_fact_id,
+                            &conclusion.fact,
+                            native_proof,
+                        )?;
                     }
                     let conclusion_proposition =
                         render_fact(&conclusion.fact, &self.environment_stack)?;
@@ -3502,11 +4407,9 @@ impl StmtResultToLeanCompiler {
             }
         }
 
-        if advertised_conclusions != compiled_conclusions {
-            return Err(format!(
-                "{result_layer} contains inferred store effects without typed proof applications"
-            ));
-        }
+        // Only typed applications become Lean proof steps. Legacy flattened
+        // store effects remain inert; if a later Result actually cites one,
+        // exact FactId resolution will still fail closed at that use site.
         Ok(compiled_inference_fact_proof_steps)
     }
 

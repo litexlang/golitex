@@ -1539,9 +1539,12 @@ impl Runtime {
                 vec![InFact::new(pow.base.as_ref().clone(), real.clone(), lf.clone()).into()],
                 Some(RealArithmeticMembershipClosureBuiltinRule::Pow),
             ),
+            Obj::Abs(_) => (
+                Vec::new(),
+                Some(RealArithmeticMembershipClosureBuiltinRule::Abs),
+            ),
             Obj::Mod(_)
             | Obj::Quot(_)
-            | Obj::Abs(_)
             | Obj::Sin(_)
             | Obj::Arcsin(_)
             | Obj::Cos(_)

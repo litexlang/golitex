@@ -96,6 +96,35 @@ impl Runtime {
         let Some(children) = self.verify_numeric_carrier_strategy_children(&required)? else {
             return Ok(UnknownGenericStmtResult::new().into());
         };
+        let real_rule = if matches!(target, StandardSet::R) {
+            match &fact.element {
+                Obj::Add(_) => Some(RealArithmeticMembershipClosureBuiltinRule::Add),
+                Obj::Sub(_) => Some(RealArithmeticMembershipClosureBuiltinRule::Sub),
+                Obj::Mul(_) => Some(RealArithmeticMembershipClosureBuiltinRule::Mul),
+                Obj::Div(_) => Some(RealArithmeticMembershipClosureBuiltinRule::Div),
+                Obj::Pow(_) => Some(RealArithmeticMembershipClosureBuiltinRule::Pow),
+                _ => None,
+            }
+        } else {
+            None
+        };
+        if let Some(rule) = real_rule {
+            let conjunction: Fact = AndFact::new(required, lf).into();
+            let conjunction_result = SuccessFactStmtResult::new(
+                conjunction,
+                SuccessInferResult::new(),
+                SuccessFactProofResult::combined_steps(children),
+            );
+            return Ok(
+                SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
+                    fact.clone().into(),
+                    "numeric-carrier strategy: typed structural closure in R".to_string(),
+                    BuiltinRuleEvidence::RealArithmeticMembershipClosure(rule),
+                    vec![conjunction_result.into()],
+                )
+                .into(),
+            );
+        }
         let integer_rule = if matches!(target, StandardSet::Z) {
             match &fact.element {
                 Obj::Add(_) => Some(IntegerMembershipClosureBuiltinRule::Add),

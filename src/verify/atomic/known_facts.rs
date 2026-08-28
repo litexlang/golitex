@@ -295,7 +295,7 @@ impl Runtime {
         if known_args
             .iter()
             .zip(goal_args.iter())
-            .all(|(known, goal)| obj_equality_key(known) == obj_equality_key(goal))
+            .all(|(known, goal)| known.to_string() == goal.to_string())
         {
             return Some(EqualityTransportEvidence::new(Vec::new()));
         }
@@ -439,13 +439,13 @@ impl Runtime {
                     vec![],
                 ))
             })?;
-        let equality_transport =
+        let mut equality_transport =
             self.equality_transport_for_known_atomic_fact(known_fact, goal, module_names);
         // The fast structural lookup can descend through an object such as
         // `f(a + b)` before the slower resolved-fact retry runs. Preserve the
         // same source-to-goal replay evidence on that route too, provided its
         // resolved source is exactly the known fact we are citing.
-        let fact_transformation = equality_transport
+        let mut fact_transformation = equality_transport
             .is_none()
             .then(|| {
                 self.resolved_atomic_fact_for_lookup_with_evidence(goal)
@@ -458,6 +458,34 @@ impl Runtime {
                     .and_then(|resolved| resolved.fact_transformation)
             })
             .flatten();
+        fact_transformation = fact_transformation.or_else(|| {
+            atomic_facts_align_by_nested_rational_normalization(known_fact, goal).then(|| {
+                FactTransformationEvidence::new(
+                    source_fact.clone(),
+                    vec![FactTransformationStep::new(
+                        goal.clone().into(),
+                        FactTransformationRule::RationalNormalization,
+                    )],
+                )
+            })
+        });
+        if equality_transport.is_none() && fact_transformation.is_none() {
+            if let Some(resolved) = self
+                .resolved_atomic_fact_for_lookup_with_evidence(goal)
+                .map_err(RuntimeError::from)?
+            {
+                if let Some(resolved_transformation) = resolved.fact_transformation {
+                    if let Some(transport) = self.equality_transport_for_known_atomic_fact(
+                        known_fact,
+                        &resolved.fact,
+                        module_names,
+                    ) {
+                        equality_transport = Some(transport);
+                        fact_transformation = Some(resolved_transformation);
+                    }
+                }
+            }
+        }
         SuccessFactProofResult::cited_fact_with_provenance(
             goal.clone().into(),
             source_fact,
@@ -684,6 +712,15 @@ impl Runtime {
                 transformations.push(FactTransformationStep::new(
                     equality_rewritten_fact.clone().into(),
                     FactTransformationRule::RationalNormalization,
+                ));
+            } else if atomic_facts_align_by_anonymous_function_beta_normalization(
+                self,
+                &resolved_fact,
+                &equality_rewritten_fact,
+            )? {
+                transformations.push(FactTransformationStep::new(
+                    equality_rewritten_fact.clone().into(),
+                    FactTransformationRule::AnonymousFunctionBetaNormalization,
                 ));
             } else {
                 transformations_are_replayable = false;
@@ -1009,6 +1046,7 @@ impl Runtime {
                 .verify_atomic_fact_with_alpha_equivalent_anonymous_fn_known_facts_in_environment(
                     environment,
                     atomic_fact,
+                    module_names,
                 )?
             {
                 return Ok(Some(result));
@@ -1020,6 +1058,7 @@ impl Runtime {
                     .verify_atomic_fact_with_alpha_equivalent_anonymous_fn_known_facts_in_environment(
                         environment,
                         atomic_fact,
+                        module_names,
                     )?
                 {
                     return Ok(Some(result));
@@ -1034,6 +1073,7 @@ impl Runtime {
         &self,
         environment: &Environment,
         atomic_fact: &AtomicFact,
+        module_names: &[String],
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let lookup_key = (atomic_fact.key(), atomic_fact.has_positive_polarity());
         let mut known_facts = Vec::new();
@@ -1069,16 +1109,15 @@ impl Runtime {
                 }
             }
             if all_args_match {
-                let source_fact: Fact = known_fact.clone().into();
-                let source_fact_id = self.require_known_fact_id_for_success_result(&source_fact)?;
                 return Ok(Some(
                     SuccessFactStmtResult::new_with_verified_by_known_fact(
                         atomic_fact.clone().into(),
-                        SuccessFactProofResult::stored_fact_citation(
-                            source_fact,
-                            source_fact_id,
+                        self.cited_known_atomic_fact(
+                            atomic_fact,
+                            known_fact,
+                            module_names,
                             None,
-                        ),
+                        )?,
                         Vec::new(),
                     )
                     .into(),
@@ -1121,6 +1160,46 @@ fn objs_align_by_nested_rational_normalization(source: &Obj, goal: &Obj) -> bool
         },
     );
     result.unwrap_or(false)
+}
+
+fn atomic_facts_align_by_anonymous_function_beta_normalization(
+    runtime: &Runtime,
+    source: &AtomicFact,
+    goal: &AtomicFact,
+) -> Result<bool, RuntimeError> {
+    if source.key() != goal.key() || source.has_positive_polarity() != goal.has_positive_polarity()
+    {
+        return Ok(false);
+    }
+    let source_args = source.args_ref();
+    let goal_args = goal.args_ref();
+    if source_args.len() != goal_args.len() {
+        return Ok(false);
+    }
+    for (source, goal) in source_args.iter().zip(goal_args.iter()) {
+        if !objs_align_by_anonymous_function_beta_normalization(runtime, source, goal)? {
+            return Ok(false);
+        }
+    }
+    Ok(true)
+}
+
+fn objs_align_by_anonymous_function_beta_normalization(
+    runtime: &Runtime,
+    source: &Obj,
+    goal: &Obj,
+) -> Result<bool, RuntimeError> {
+    if objs_equal_with_nested_binder_alpha_equivalence(source, goal) {
+        return Ok(true);
+    }
+    if let Some(reduced) = runtime.beta_reduce_complete_anonymous_application_once(goal)? {
+        if objs_align_by_anonymous_function_beta_normalization(runtime, source, &reduced)? {
+            return Ok(true);
+        }
+    }
+    Runtime::same_shape_and_corresponding_args_match(source, goal, &mut |source, goal| {
+        objs_align_by_anonymous_function_beta_normalization(runtime, source, goal)
+    })
 }
 
 fn dedup_strings(values: &mut Vec<String>) {

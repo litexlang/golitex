@@ -41,10 +41,12 @@ pub(super) fn construct_lean_source_parts_for_abstract_predicate_definition(
         PredicateBinding {
             lean_name: name,
             parameter_count: parameter_names.len(),
+            exact_parameters: vec![false; parameter_names.len()],
             requirement_count: 0,
             clause_count: 0,
             dependent_parameter_evidence: false,
             definition: None,
+            definition_well_definedness: None,
         },
     );
     Ok(())
@@ -52,6 +54,239 @@ pub(super) fn construct_lean_source_parts_for_abstract_predicate_definition(
 
 pub(super) fn object_is_symbol(object: &Obj, symbol_id: SymbolId) -> bool {
     matches!(object, Obj::Atom(atom) if atom.symbol_ref().is_some_and(|symbol| symbol.id() == symbol_id))
+}
+
+pub(super) fn render_exact_predicate_function_argument(
+    object: &Obj,
+    context: &StmtResultToLeanCompilerEnvironmentStack,
+) -> Result<String, String> {
+    match LeanTargetObjectRepresentation::lower(object)? {
+        LeanTargetObjectRepresentation::AnonymousFunction(_) => render_obj(object, context),
+        LeanTargetObjectRepresentation::Symbol { symbol_id, name } => {
+            let mut candidates = context
+                .function_bindings
+                .values()
+                .filter(|binding| binding.symbol_id == symbol_id)
+                .collect::<Vec<_>>();
+            candidates.sort_by(|left, right| {
+                left.membership_proof_name
+                    .cmp(&right.membership_proof_name)
+            });
+            let Some(first) = candidates.first().copied() else {
+                return Err(format!(
+                    "predicate function argument `{name}` has no visible checked function membership"
+                ));
+            };
+            if candidates.iter().any(|candidate| {
+                candidate.function != first.function || candidate.direct != first.direct
+            }) {
+                return Err(format!(
+                    "predicate function argument `{name}` has evidence-distinct visible function contracts"
+                ));
+            }
+            let source = render_obj(object, context)?;
+            Ok(if first.direct {
+                source
+            } else {
+                format!(
+                    "(Litex.In.rep {source} ({}))",
+                    first.membership_proof_name
+                )
+            })
+        }
+        _ => Err(format!(
+            "exact predicate function argument `{object}` is neither a named nor anonymous function"
+        )),
+    }
+}
+
+fn resolve_visible_exact_membership_proof(
+    object: &Obj,
+    set: &Obj,
+    context: &StmtResultToLeanCompilerEnvironmentStack,
+) -> Result<String, String> {
+    let mut candidates = context
+        .fact_propositions
+        .iter()
+        .filter_map(|(fact_id, fact)| {
+            let (element, retained_set) = membership_parts(fact).ok()?;
+            (obj_equality_key(element) == obj_equality_key(object)
+                && obj_equality_key(retained_set) == obj_equality_key(set))
+                .then_some((*fact_id, fact))
+        })
+        .collect::<Vec<_>>();
+    candidates.sort_by_key(|(fact_id, _)| *fact_id);
+    for (fact_id, fact) in candidates {
+        if let Ok(proof) = resolve_fact_citation(&fact_id, fact, context) {
+            return Ok(proof);
+        }
+    }
+    Err(format!(
+        "exact predicate argument `{object}` has no visible checked membership in `{set}`"
+    ))
+}
+
+pub(super) fn render_exact_predicate_argument(
+    object: &Obj,
+    set: &Obj,
+    context: &StmtResultToLeanCompilerEnvironmentStack,
+) -> Result<String, String> {
+    if let Ok(LeanTargetObjectRepresentation::Symbol { symbol_id, name }) =
+        LeanTargetObjectRepresentation::lower(object)
+    {
+        if let Some(value) = context.exact_carrier_values.get(&symbol_id) {
+            return Ok(value.clone());
+        }
+        // Cloning/instantiating an existential fact may alpha-refresh the
+        // body's SymbolId while preserving its binder name.  The existential
+        // renderer records that lexical name together with the dependent
+        // membership binder, so recover the same exact representative here
+        // instead of searching ambient facts by proposition.
+        if let Some(witness_name) = context.existential_names.get(&name) {
+            if matches!(set, Obj::StandardSet(StandardSet::C)) {
+                return Ok(witness_name.clone());
+            }
+            return Ok(format!(
+                "(Litex.In.rep {witness_name} __type_{witness_name})"
+            ));
+        }
+    }
+    if matches!(set, Obj::FnSet(_) | Obj::FiniteSeqSet(_) | Obj::SeqSet(_)) {
+        return render_exact_predicate_function_argument(object, context);
+    }
+    let representative = || -> Result<String, String> {
+        let source = render_obj(object, context)?;
+        let proof = resolve_visible_exact_membership_proof(object, set, context)?;
+        Ok(format!("(Litex.In.rep {source} ({proof}))"))
+    };
+    match set {
+        Obj::StandardSet(StandardSet::R) => render_real_target_object_representation(
+            &LeanTargetObjectRepresentation::lower(object)?,
+            context,
+        )
+        .or_else(|_| representative()),
+        Obj::StandardSet(StandardSet::C) => render_numeric_obj(object, context),
+        Obj::StandardSet(StandardSet::Z) => {
+            render_integer_obj(object, context).or_else(|_| representative())
+        }
+        Obj::StandardSet(StandardSet::Q) => {
+            render_rational_obj(object, context).or_else(|_| representative())
+        }
+        _ => representative(),
+    }
+}
+
+/// Prove that the exact carrier passed to a concrete numeric predicate is
+/// semantically the original Complex-facing Litex argument. The bridge is
+/// determined entirely by the same checked membership representation used to
+/// render the call; it does not search for a replacement mathematical proof.
+pub(super) fn render_exact_predicate_argument_same_to_source(
+    object: &Obj,
+    set: &Obj,
+    context: &StmtResultToLeanCompilerEnvironmentStack,
+) -> Result<String, String> {
+    let lowered_set = LeanTargetObjectRepresentation::lower(set)?;
+    let exact = render_exact_predicate_argument(object, set, context)?;
+    let exact_to_numeric = exact_set_numeric_equality(&lowered_set, &exact).ok_or_else(|| {
+        format!("exact predicate argument `{object}` has no numeric equality bridge for `{set}`")
+    })?;
+    let numeric = exact_set_numeric_value(&lowered_set, &exact).ok_or_else(|| {
+        format!("exact predicate argument `{object}` has no numeric observation for `{set}`")
+    })?;
+    let source = render_obj(object, context)?;
+    if source == numeric {
+        return Ok(exact_to_numeric);
+    }
+    if matches!(
+        LeanTargetObjectRepresentation::lower(object)?,
+        LeanTargetObjectRepresentation::Symbol { .. }
+    ) {
+        if let Ok(membership) = resolve_visible_exact_membership_proof(object, set, context) {
+            let selected = if matches!(set, Obj::StandardSet(StandardSet::C)) {
+                source.clone()
+            } else {
+                format!("(Litex.In.rep {source} {membership})")
+            };
+            if exact == selected {
+                return Ok(format!(
+                    "Litex.Same.symm (Litex.In.same_rep {source} ({membership}))"
+                ));
+            }
+        }
+    }
+    if let LeanTargetObjectRepresentation::Symbol { symbol_id, .. } =
+        LeanTargetObjectRepresentation::lower(object)?
+    {
+        if context
+            .numeric_representations
+            .get(&symbol_id)
+            .is_some_and(|selected| selected == &numeric)
+        {
+            let source_to_numeric = context
+                .numeric_representation_equalities
+                .get(&symbol_id)
+                .ok_or_else(|| {
+                    format!(
+                        "exact predicate argument `{object}` has a numeric observation but no equality bridge"
+                    )
+                })?;
+            return Ok(format!(
+                "Litex.Same.trans ({exact_to_numeric}) (Litex.Same.symm ({source_to_numeric}))"
+            ));
+        }
+    }
+    // Closed numeric expressions elaborate their direct Complex notation and
+    // the exact carrier's canonical cast to the same Mathlib value. Keep the
+    // reviewed carrier bridge and let Lean check that endpoint conversion.
+    if matches!(
+        LeanTargetObjectRepresentation::lower(object)?,
+        LeanTargetObjectRepresentation::Number { .. }
+            | LeanTargetObjectRepresentation::Constant(_)
+    ) {
+        return Ok(exact_to_numeric);
+    }
+    Err(format!(
+        "exact predicate argument `{object}` changed from source `{source}` to unrelated numeric observation `{numeric}`"
+    ))
+}
+
+pub(super) fn render_concrete_predicate_argument(
+    binding: &PredicateBinding,
+    argument_index: usize,
+    object: &Obj,
+    context: &StmtResultToLeanCompilerEnvironmentStack,
+) -> Result<String, String> {
+    let Some(definition) = binding.definition.as_ref() else {
+        // Abstract predicates deliberately have no Litex-side parameter
+        // classification to unwrap. Their generated Lean axiom remains
+        // universe-polymorphic over the source value's existing host carrier.
+        return render_obj(object, context);
+    };
+    let parameter_types = definition
+        .typed_parameters
+        .collect_param_bindings_with_types();
+    let (_, parameter_type) = parameter_types.get(argument_index).ok_or_else(|| {
+        format!("concrete predicate argument {argument_index} has no declared parameter")
+    })?;
+    match parameter_type {
+        ParamType::Obj(set) if binding.exact_parameters[argument_index] => {
+            render_exact_predicate_argument(object, set, context)
+        }
+        ParamType::Obj(Obj::StandardSet(_)) => {
+            // Proper numeric subsets use a Complex-facing predicate ABI, but
+            // the value passed at each call site must still be the canonical
+            // numeric observation selected by visible membership evidence.
+            // Rendering compositionally (rather than `In.rep` on the whole
+            // expression) keeps `epsilon / d`, products, and named members on
+            // the same representation used by their checked arithmetic facts.
+            render_numeric_obj(object, context).or_else(|_| render_obj(object, context))
+        }
+        ParamType::Obj(_) => render_obj(object, context),
+        ParamType::Set(_) => render_obj(object, context),
+        unsupported => Err(format!(
+            "concrete predicate argument {argument_index} has unsupported type `{unsupported}`"
+        )),
+    }
 }
 
 pub(super) fn indexed_tuple_value_is_complex(
@@ -103,6 +338,10 @@ pub(super) fn render_set_definition_value(
             "unsupported compiler named set definition value `{value:?}`"
         )),
     }
+}
+
+pub(super) fn forall_parameter_uses_exact_refined_numeric_carrier(set: &Obj) -> bool {
+    matches!(set, Obj::StandardSet(StandardSet::RPos))
 }
 
 pub(super) fn render_forall_fact_type(
@@ -176,6 +415,58 @@ pub(super) fn render_forall_fact_type(
                 &mut context,
             )?;
             install_structured_induction_native_integer_symbol(binding.id(), &name, &mut context);
+            continue;
+        }
+        if forall_parameter_uses_exact_refined_numeric_carrier(set) {
+            let rendered_set = render_obj(set, &context)?;
+            binders.push(format!("({name} : ({rendered_set}).Carrier)"));
+            binders.push(format!(
+                "(__type{} : Litex.In {name} {rendered_set})",
+                index + 1
+            ));
+            let expected = format!("Litex.In {name} {rendered_set}");
+            install_rendered_parameter_aliases(
+                binding.id(),
+                &expected,
+                &format!("__type{}", index + 1),
+                None,
+                &mut context,
+            )?;
+            install_result_owned_forall_parameter_fact_alias(
+                binding.id(),
+                &expected,
+                &format!("__type{}", index + 1),
+                &mut context,
+            )?;
+            let lowered_set = LeanTargetObjectRepresentation::lower(set)?;
+            context
+                .exact_carrier_values
+                .insert(binding.id(), name.clone());
+            context
+                .exact_positive_real_carriers
+                .insert(binding.id(), name.clone());
+            if let Some(real) = exact_set_real_value(&lowered_set, &name) {
+                context.numeric_real_values.insert(binding.id(), real);
+            }
+            if let Some(integer) = exact_set_integer_value(&lowered_set, &name) {
+                context.numeric_integer_values.insert(binding.id(), integer);
+            }
+            if let Some(rational) = exact_set_rational_value(&lowered_set, &name) {
+                context.numeric_rational_values.insert(binding.id(), rational);
+            }
+            if let Some(numeric) = exact_set_numeric_value(&lowered_set, &name) {
+                context.numeric_representations.insert(binding.id(), numeric);
+            }
+            if let Some(equality) = exact_set_numeric_equality(&lowered_set, &name) {
+                context
+                    .numeric_representation_equalities
+                    .insert(binding.id(), equality);
+            }
+            if let Some(proof) = exact_set_numeric_proof(&lowered_set, &name) {
+                context
+                    .numeric_representation_memberships
+                    .insert(binding.id(), proof);
+            }
             continue;
         }
         let carrier = format!("__carrier{}", index + 1);
@@ -318,6 +609,7 @@ pub(super) fn install_result_owned_forall_parameter_fact_alias(
 
 pub(super) fn install_parameter_fact_aliases(
     symbol_id: SymbolId,
+    primary_fact_id: FactId,
     proposition: &Fact,
     proof_name: &str,
     set: &Obj,
@@ -337,6 +629,23 @@ pub(super) fn install_parameter_fact_aliases(
         _ => None,
     };
     let expected = render_fact(proposition, context)?;
+    context
+        .fact_names
+        .insert(primary_fact_id, proof_name.to_string());
+    context
+        .fact_propositions
+        .insert(primary_fact_id, proposition.clone());
+    if let Some(function) = &function {
+        context.function_bindings.insert(
+            primary_fact_id,
+            FunctionBinding {
+                symbol_id,
+                function: function.clone(),
+                membership_proof_name: proof_name.to_string(),
+                direct: false,
+            },
+        );
+    }
     install_rendered_parameter_aliases(symbol_id, &expected, proof_name, function, context)?;
 
     // Integer-only target operators cannot be applied to the ordinary
@@ -349,6 +658,17 @@ pub(super) fn install_parameter_fact_aliases(
         .get(&symbol_id)
         .cloned()
         .ok_or_else(|| "parameter alias has no visible compiler symbol".to_string())?;
+    let exact_carrier_value = if matches!(
+        lowered_set,
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Complex)
+    ) {
+        source_name.clone()
+    } else {
+        format!("(Litex.In.rep {source_name} {proof_name})")
+    };
+    context
+        .exact_carrier_values
+        .insert(symbol_id, exact_carrier_value);
     if let Some(real) = membership_real_value(&lowered_set, &source_name, proof_name) {
         context.numeric_real_values.insert(symbol_id, real);
     }
@@ -982,13 +1302,43 @@ pub(super) fn instantiated_predicate_components(
         return Err("concrete predicate component expansion changed its application".into());
     }
     let mut nested = context.clone();
+    if let Some(definition_well_definedness) = &binding.definition_well_definedness {
+        nested.well_definedness = Some(definition_well_definedness.clone());
+    }
     let mut argument_index = 0;
     for group in &definition.typed_parameters.groups {
         for parameter in &group.params {
+            let rendered_argument = render_concrete_predicate_argument(
+                binding,
+                argument_index,
+                &source.body[argument_index],
+                context,
+            )?;
             nested.symbol_names.insert(
                 parameter.id(),
-                render_obj(&source.body[argument_index], context)?,
+                rendered_argument.clone(),
             );
+            if binding.exact_parameters[argument_index] {
+                nested
+                    .exact_carrier_values
+                    .insert(parameter.id(), rendered_argument.clone());
+                let ParamType::Obj(set) = &group.param_type else {
+                    return Err("exact predicate parameter retained a non-object type".into());
+                };
+                let lowered_set = LeanTargetObjectRepresentation::lower(set)?;
+                if let Some(real) = exact_set_real_value(&lowered_set, &rendered_argument) {
+                    nested.numeric_real_values.insert(parameter.id(), real);
+                }
+                if let Some(integer) = exact_set_integer_value(&lowered_set, &rendered_argument) {
+                    nested.numeric_integer_values.insert(parameter.id(), integer);
+                }
+                if let Some(rational) = exact_set_rational_value(&lowered_set, &rendered_argument) {
+                    nested.numeric_rational_values.insert(parameter.id(), rational);
+                }
+                if let Some(numeric) = exact_set_numeric_value(&lowered_set, &rendered_argument) {
+                    nested.numeric_representations.insert(parameter.id(), numeric);
+                }
+            }
             argument_index += 1;
         }
     }
@@ -999,7 +1349,12 @@ pub(super) fn instantiated_predicate_components(
             match &group.param_type {
                 ParamType::Set(_) => components.push("True".to_string()),
                 ParamType::Obj(set) => {
-                    let argument = render_obj(&source.body[argument_index], context)?;
+                    let argument = render_concrete_predicate_argument(
+                        binding,
+                        argument_index,
+                        &source.body[argument_index],
+                        context,
+                    )?;
                     components.push(format!("Litex.In {argument} {}", render_obj(set, &nested)?));
                 }
                 unsupported => {
@@ -1019,6 +1374,307 @@ pub(super) fn instantiated_predicate_components(
             .collect::<Result<Vec<_>, _>>()?,
     );
     Ok(components)
+}
+
+pub(super) fn install_exact_predicate_carrier_value(
+    symbol_id: SymbolId,
+    set: &Obj,
+    value: &str,
+    context: &mut StmtResultToLeanCompilerEnvironmentStack,
+) -> Result<(), String> {
+    let lowered_set = LeanTargetObjectRepresentation::lower(set)?;
+    context
+        .exact_carrier_values
+        .insert(symbol_id, value.to_string());
+    if let Some(real) = exact_set_real_value(&lowered_set, value) {
+        context.numeric_real_values.insert(symbol_id, real);
+    }
+    if let Some(integer) = exact_set_integer_value(&lowered_set, value) {
+        context.numeric_integer_values.insert(symbol_id, integer);
+    }
+    if let Some(rational) = exact_set_rational_value(&lowered_set, value) {
+        context.numeric_rational_values.insert(symbol_id, rational);
+    }
+    if let Some(numeric) = exact_set_numeric_value(&lowered_set, value) {
+        context.numeric_representations.insert(symbol_id, numeric);
+    }
+    if let Some(equality) = exact_set_numeric_equality(&lowered_set, value) {
+        context
+            .numeric_representation_equalities
+            .insert(symbol_id, equality);
+    }
+    if let Some(proof) = exact_set_numeric_proof(&lowered_set, value) {
+        context
+            .numeric_representation_memberships
+            .insert(symbol_id, proof);
+    }
+    Ok(())
+}
+
+/// Transport a proof of a concrete predicate (or a conjunction of concrete
+/// predicates) when the source theorem and the target call use different
+/// exact representatives of the same checked Litex arguments.  The predicate
+/// definition is the only transport interface: parameter memberships are
+/// rebuilt with `In.own`, and equality clauses are moved across explicit
+/// `Same` bridges.  Unsupported clause shapes fail closed.
+pub(super) fn render_fact_proof_across_exact_predicate_arguments(
+    source: &Fact,
+    target: &Fact,
+    source_context: &StmtResultToLeanCompilerEnvironmentStack,
+    target_context: &StmtResultToLeanCompilerEnvironmentStack,
+    source_proof: &str,
+) -> Result<String, String> {
+    if render_fact(source, source_context)? == render_fact(target, target_context)? {
+        return Ok(source_proof.to_string());
+    }
+    if let (Fact::AndFact(source_and), Fact::AndFact(target_and)) = (source, target) {
+        if source_and.facts.len() != target_and.facts.len() || source_and.facts.is_empty() {
+            return Err("exact predicate conjunction transport changed its arity".into());
+        }
+        let mut proofs = Vec::with_capacity(source_and.facts.len());
+        for (index, (source_component, target_component)) in source_and
+            .facts
+            .iter()
+            .zip(target_and.facts.iter())
+            .enumerate()
+        {
+            let selector = conjunction_selector(index, source_and.facts.len())?;
+            proofs.push(render_fact_proof_across_exact_predicate_arguments(
+                &Fact::from(source_component.clone()),
+                &Fact::from(target_component.clone()),
+                source_context,
+                target_context,
+                &format!("({source_proof}){selector}"),
+            )?);
+        }
+        return Ok(format!("⟨{}⟩", proofs.join(", ")));
+    }
+
+    let (
+        Fact::AtomicFact(AtomicFact::NormalAtomicFact(source_predicate)),
+        Fact::AtomicFact(AtomicFact::NormalAtomicFact(target_predicate)),
+    ) = (source, target)
+    else {
+        return Err("exact predicate proof transport requires matching concrete predicates".into());
+    };
+    let predicate_name = source_predicate.predicate.to_string();
+    if target_predicate.predicate.to_string() != predicate_name
+        || source_predicate.body.len() != target_predicate.body.len()
+    {
+        return Err("exact predicate proof transport changed its predicate application".into());
+    }
+    let binding = target_context
+        .predicate_bindings
+        .get(&predicate_name)
+        .ok_or_else(|| format!("unavailable concrete predicate `{predicate_name}`"))?;
+    let definition = binding
+        .definition
+        .as_ref()
+        .ok_or_else(|| "abstract predicates have no representation transport".to_string())?;
+    let parameters = definition
+        .typed_parameters
+        .collect_param_bindings_with_types();
+    if parameters.len() != source_predicate.body.len() {
+        return Err("exact predicate proof transport changed its parameter arity".into());
+    }
+
+    let mut current = source_context.clone();
+    let mut final_context = target_context.clone();
+    if let Some(well_definedness) = &binding.definition_well_definedness {
+        current.well_definedness = Some(well_definedness.clone());
+        final_context.well_definedness = Some(well_definedness.clone());
+    }
+    let mut transports = Vec::new();
+    for (index, ((parameter, parameter_type), (source_argument, target_argument))) in parameters
+        .iter()
+        .zip(
+            source_predicate
+                .body
+                .iter()
+                .zip(target_predicate.body.iter()),
+        )
+        .enumerate()
+    {
+        let source_value = render_concrete_predicate_argument(
+            binding,
+            index,
+            source_argument,
+            source_context,
+        )?;
+        let target_value = render_concrete_predicate_argument(
+            binding,
+            index,
+            target_argument,
+            target_context,
+        )?;
+        current
+            .symbol_names
+            .insert(parameter.id(), source_value.clone());
+        final_context
+            .symbol_names
+            .insert(parameter.id(), target_value.clone());
+        if !binding.exact_parameters[index] {
+            if source_value != target_value {
+                return Err(format!(
+                    "predicate `{predicate_name}` changed non-exact parameter {index}"
+                ));
+            }
+            continue;
+        }
+        let ParamType::Obj(set) = parameter_type else {
+            return Err("exact predicate transport retained a non-object parameter".into());
+        };
+        install_exact_predicate_carrier_value(
+            parameter.id(),
+            set,
+            &source_value,
+            &mut current,
+        )?;
+        install_exact_predicate_carrier_value(
+            parameter.id(),
+            set,
+            &target_value,
+            &mut final_context,
+        )?;
+        if source_value == target_value {
+            continue;
+        }
+        let source_original = render_obj(source_argument, source_context)?;
+        let target_original = render_obj(target_argument, target_context)?;
+        if source_original != target_original {
+            return Err(format!(
+                "predicate `{predicate_name}` exact parameter {index} changed its Litex argument from `{source_original}` to `{target_original}`"
+            ));
+        }
+        let source_to_original = render_exact_predicate_argument_same_to_source(
+            source_argument,
+            set,
+            source_context,
+        )?;
+        let target_to_original = render_exact_predicate_argument_same_to_source(
+            target_argument,
+            set,
+            target_context,
+        )?;
+        transports.push((
+            parameter.id(),
+            set.clone(),
+            source_value,
+            target_value,
+            format!(
+                "Litex.Same.trans ({source_to_original}) (Litex.Same.symm ({target_to_original}))"
+            ),
+        ));
+    }
+
+    let component_count = binding.requirement_count + definition.iff_facts.len();
+    if component_count == 0 {
+        return Err("concrete predicate transport retained no definition components".into());
+    }
+    let mut component_proofs = Vec::with_capacity(component_count);
+    for index in 0..binding.requirement_count {
+        let selector = conjunction_selector(index, component_count)?;
+        let source_component = instantiated_predicate_components(source, binding, source_context)?;
+        let target_component = instantiated_predicate_components(target, binding, target_context)?;
+        if source_component[index] == target_component[index] {
+            component_proofs.push(format!("__source{selector}"));
+            continue;
+        }
+        let (_, ParamType::Obj(set)) = &parameters[index] else {
+            return Err("predicate requirement transport retained a non-object parameter".into());
+        };
+        let target_value = render_concrete_predicate_argument(
+            binding,
+            index,
+            &target_predicate.body[index],
+            target_context,
+        )?;
+        component_proofs.push(format!(
+            "Litex.In.own {} {target_value}",
+            render_obj(set, target_context)?
+        ));
+    }
+    for (clause_index, clause) in definition.iff_facts.iter().enumerate() {
+        let selector = conjunction_selector(binding.requirement_count + clause_index, component_count)?;
+        let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = clause else {
+            return Err(
+                "exact predicate transport currently supports equality definition clauses"
+                    .into(),
+            );
+        };
+        let mut proof = format!("__source{selector}");
+        let mut clause_context = current.clone();
+        for (symbol_id, set, source_value, target_value, bridge) in &transports {
+            let mut next = clause_context.clone();
+            next.symbol_names.insert(*symbol_id, target_value.clone());
+            install_exact_predicate_carrier_value(*symbol_id, set, target_value, &mut next)?;
+            proof = render_equality_across_representative(
+                equality,
+                &clause_context,
+                &next,
+                source_value,
+                target_value,
+                bridge,
+                &proof,
+            )?;
+            clause_context = next;
+        }
+        if render_fact(clause, &clause_context)? != render_fact(clause, &final_context)? {
+            return Err(format!(
+                "predicate `{predicate_name}` clause {clause_index} did not reach its target representation"
+            ));
+        }
+        component_proofs.push(proof);
+    }
+    Ok(format!(
+        "(by\n  have __source := {source_proof}\n  unfold {} at __source ⊢\n  exact ⟨{}⟩)",
+        binding.lean_name,
+        component_proofs.join(", ")
+    ))
+}
+
+/// Whether `source` and `target` are made entirely from applications of
+/// concrete predicates whose definitions are available in `context`.
+///
+/// Known-forall replay uses this guard before invoking the representation
+/// transport above.  Ordinary relations such as equality may also be encoded
+/// as `NormalAtomicFact`; they must keep the normal theorem-application path
+/// instead of being mistaken for user-defined predicates.
+pub(super) fn facts_require_exact_predicate_argument_transport(
+    source: &Fact,
+    target: &Fact,
+    context: &StmtResultToLeanCompilerEnvironmentStack,
+) -> bool {
+    match (source, target) {
+        (Fact::AndFact(source_and), Fact::AndFact(target_and)) => {
+            source_and.facts.len() == target_and.facts.len()
+                && !source_and.facts.is_empty()
+                && source_and
+                    .facts
+                    .iter()
+                    .zip(target_and.facts.iter())
+                    .all(|(source_component, target_component)| {
+                        facts_require_exact_predicate_argument_transport(
+                            &Fact::from(source_component.clone()),
+                            &Fact::from(target_component.clone()),
+                            context,
+                        )
+                    })
+        }
+        (
+            Fact::AtomicFact(AtomicFact::NormalAtomicFact(source_predicate)),
+            Fact::AtomicFact(AtomicFact::NormalAtomicFact(target_predicate)),
+        ) => {
+            let predicate_name = source_predicate.predicate.to_string();
+            predicate_name == target_predicate.predicate.to_string()
+                && context
+                    .predicate_bindings
+                    .get(&predicate_name)
+                    .and_then(|binding| binding.definition.as_ref())
+                    .is_some()
+        }
+        _ => false,
+    }
 }
 
 pub(super) fn conjunction_selector(index: usize, count: usize) -> Result<String, String> {
@@ -1060,9 +1716,16 @@ pub(super) fn render_set_builder_membership_from_fact_and_proofs(
     let base_proof = premises[0].1.clone();
     let rendered_element = render_obj(element, context)?;
     let representative = format!("Litex.In.rep {rendered_element} ({base_proof})");
+    let exact_source_element =
+        render_exact_predicate_argument(element, base_set, context).unwrap_or_else(|_| {
+            rendered_element.clone()
+        });
     let mut nested = context.clone();
     nested
         .symbol_names
+        .insert(builder.symbol_id, representative.clone());
+    nested
+        .exact_carrier_values
         .insert(builder.symbol_id, representative.clone());
     nested
         .semantic_zero_ended_order_symbols
@@ -1073,6 +1736,9 @@ pub(super) fn render_set_builder_membership_from_fact_and_proofs(
     source
         .symbol_names
         .insert(builder.symbol_id, rendered_element.clone());
+    source
+        .exact_carrier_values
+        .insert(builder.symbol_id, exact_source_element.clone());
     source
         .semantic_zero_ended_order_symbols
         .insert(builder.symbol_id);
@@ -1132,9 +1798,20 @@ pub(super) fn render_set_builder_membership_from_fact_and_proofs(
                             .into(),
                     );
                 }
-                let argument_source = render_obj(&predicate.body[0], &source)?;
+                let expected_source_argument = if binding.exact_parameters[0] {
+                    &exact_source_element
+                } else {
+                    &rendered_element
+                };
+                let argument_source = if binding.exact_parameters[0] {
+                    render_exact_predicate_argument(&predicate.body[0], base_set, &source)?
+                } else {
+                    render_obj(&predicate.body[0], &source)?
+                };
                 let argument_target = render_obj(&predicate.body[0], &nested)?;
-                if argument_source != rendered_element || argument_target != representative {
+                if argument_source != *expected_source_argument
+                    || argument_target != representative
+                {
                     return Err("set-builder concrete predicate changed its binder argument".into());
                 }
                 let definition = binding.definition.as_ref().ok_or_else(|| {
@@ -1501,8 +2178,29 @@ pub(super) fn resolve_fact_citation(
         true
     } else if nonempty_facts_are_equal_up_to_nested_binder_alpha(retained, expected) {
         true
+    } else if normal_atomic_facts_are_equal_up_to_nested_binder_alpha(retained, expected) {
+        true
     } else if let (Fact::ForallFact(retained), Fact::ForallFact(expected)) = (retained, expected) {
-        render_forall_fact_type(retained, context)? == render_forall_fact_type(expected, context)?
+        let mut runtime = Runtime::default();
+        runtime.ensure_execution_frame_for_parse();
+        runtime
+            .alpha_normalized_forall_cache_key(retained)
+            .map_err(|error| {
+                format!(
+                    "cited FactId `{source_fact_id}` retained forall alpha key failed: {}",
+                    error.trace_message()
+                )
+            })?
+            == runtime
+                .alpha_normalized_forall_cache_key(expected)
+                .map_err(|error| {
+                    format!(
+                        "cited FactId `{source_fact_id}` expected forall alpha key failed: {}",
+                        error.trace_message()
+                    )
+                })?
+            || render_forall_fact_type(retained, context)?
+                == render_forall_fact_type(expected, context)?
     } else if matches!(
         (retained, expected),
         (Fact::ExistFact(_), Fact::ExistFact(_))
@@ -1524,6 +2222,29 @@ pub(super) fn resolve_fact_citation(
         .get(source_fact_id)
         .ok_or_else(|| format!("cited FactId `{source_fact_id}` has no emitted Lean proof"))?;
     render_forall_conclusion_citation(binding, context)
+}
+
+pub(super) fn normal_atomic_facts_are_equal_up_to_nested_binder_alpha(
+    left: &Fact,
+    right: &Fact,
+) -> bool {
+    match (left, right) {
+        (
+            Fact::AtomicFact(AtomicFact::NormalAtomicFact(left)),
+            Fact::AtomicFact(AtomicFact::NormalAtomicFact(right)),
+        ) => {
+            left.predicate.to_string() == right.predicate.to_string()
+                && left.body.len() == right.body.len()
+                && left
+                    .body
+                    .iter()
+                    .zip(right.body.iter())
+                    .all(|(left, right)| {
+                        objs_equal_with_nested_binder_alpha_equivalence(left, right)
+                    })
+        }
+        _ => false,
+    }
 }
 
 pub(super) fn nonempty_facts_are_equal_up_to_nested_binder_alpha(
@@ -3745,6 +4466,7 @@ pub(super) fn infer_rule_has_direct_compiler_environment_consumer(rule: &InferRu
         | InferRule::SupersetImpliesElementwiseMembershipForall(_)
         | InferRule::ConjunctionImpliesComponent(_)
         | InferRule::EqualityChainClosure(_)
+        | InferRule::NumericOrderChainClosure(_)
         | InferRule::ClosedPositivePowerEqualityImpliesEqualSideMembership(_)
         | InferRule::PositiveIntegerBaseNaturalPowerEqualityImpliesEqualSideMembership(_) => true,
         InferRule::SetBuilderBaseMembershipProjection
@@ -4209,12 +4931,20 @@ pub(super) fn validate_standard_numeric_membership_inference_target(
             let semantic_target =
                 format!("Litex.Positive {}", render_obj(target_element, context)?);
             let semantic = render_fact(target, context)? == semantic_target;
+            let exact_positive_real_carrier = matches!(
+                LeanTargetObjectRepresentation::lower(source_element),
+                Ok(LeanTargetObjectRepresentation::Symbol { symbol_id, .. })
+                    if context.exact_positive_real_carriers.contains_key(&symbol_id)
+            );
             let lean_theorem_name = match (rule.source_set, semantic) {
                 (StandardSet::NPos, true) => "positiveOfInNPos",
                 (StandardSet::QPos, true) => "positiveOfInQPos",
                 (StandardSet::RPos, true) => "positiveOfInRPos",
                 (StandardSet::NPos, false) => "positiveNaturalRepPositive",
                 (StandardSet::QPos, false) => "positiveRationalRepPositive",
+                (StandardSet::RPos, false) if exact_positive_real_carrier => {
+                    "positiveRealCarrierPositive"
+                }
                 (StandardSet::RPos, false) => "positiveRealRepPositive",
                 _ => {
                     return Err(format!(
@@ -4541,14 +5271,23 @@ pub(super) fn render_real_operand_membership(
     fallback: &str,
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> String {
-    let real = match LeanTargetObjectRepresentation::lower(object) {
-        Ok(LeanTargetObjectRepresentation::Symbol { symbol_id, .. }) => {
-            context.numeric_real_values.get(&symbol_id)
+    // Prefer the exact native-real representation selected by verifier-owned
+    // carrier evidence.  This is not limited to bare symbols: function
+    // applications and compound real expressions also have exact target
+    // representations, and their membership proof must mention the same
+    // complex cast that appears in generated arithmetic.
+    if let Ok(target) = LeanTargetObjectRepresentation::lower(object) {
+        if matches!(
+            target,
+            LeanTargetObjectRepresentation::Symbol { .. }
+                | LeanTargetObjectRepresentation::FunctionApplication(_)
+        ) {
+            if let Ok(real) = render_real_target_object_representation(&target, context) {
+            return format!(
+                "(by simpa [Litex.abs, ← Complex.ofReal_add, ← Complex.ofReal_sub, ← Complex.ofReal_mul, ← Complex.ofReal_div, Complex.norm_real, Real.norm_eq_abs] using (Litex.Rules.complexRealInR ({real})))"
+            );
+            }
         }
-        _ => None,
-    };
-    real.map_or_else(
-        || fallback.to_string(),
-        |real| format!("Litex.Rules.complexRealInR ({real})"),
-    )
+    }
+    fallback.to_string()
 }

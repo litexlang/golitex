@@ -771,6 +771,38 @@ fn structural_order_strategy_rule_evidence(
     target: &AtomicFact,
     children: &[StmtResult],
 ) -> Option<BuiltinRuleEvidence> {
+    if let AtomicFact::LessEqualFact(fact) = target {
+        if let (Obj::Mul(lower), Obj::Mul(upper)) = (&fact.left, &fact.right) {
+            if children.len() == 4
+                && structural_order_strategy_child_matches(
+                    &children[0],
+                    lower.left.as_ref(),
+                    true,
+                )
+                && structural_order_strategy_child_matches(
+                    &children[1],
+                    lower.right.as_ref(),
+                    true,
+                )
+                && structural_order_strategy_binary_child_matches(
+                    &children[2],
+                    lower.left.as_ref(),
+                    upper.left.as_ref(),
+                    false,
+                )
+                && structural_order_strategy_binary_child_matches(
+                    &children[3],
+                    lower.right.as_ref(),
+                    upper.right.as_ref(),
+                    false,
+                )
+            {
+                return Some(BuiltinRuleEvidence::Arithmetic(
+                    ArithmeticBuiltinRule::MulComponentwiseLessEqual,
+                ));
+            }
+        }
+    }
     if children.len() != 2 {
         return None;
     }
@@ -889,6 +921,27 @@ fn structural_order_strategy_rule_evidence(
         },
         _ => None,
     }
+}
+
+fn structural_order_strategy_binary_child_matches(
+    result: &StmtResult,
+    expected_left: &Obj,
+    expected_right: &Obj,
+    strict: bool,
+) -> bool {
+    let Some(success) = result.factual_success() else {
+        return false;
+    };
+    let Fact::AtomicFact(child) = success.fact() else {
+        return false;
+    };
+    let (left, right) = match &child {
+        AtomicFact::LessEqualFact(fact) if !strict => (&fact.left, &fact.right),
+        AtomicFact::LessFact(fact) if strict => (&fact.left, &fact.right),
+        _ => return false,
+    };
+    obj_equality_key(left) == obj_equality_key(expected_left)
+        && obj_equality_key(right) == obj_equality_key(expected_right)
 }
 
 fn structural_order_strategy_child_matches(result: &StmtResult, operand: &Obj, weak: bool) -> bool {

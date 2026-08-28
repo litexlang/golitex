@@ -5,19 +5,19 @@ set_option linter.style.nameCheck false
 
 namespace __Compiler_64_RealSequenceCompleteness
 
-def is_sequence_tail_close_to_limit {__carrier1 : Type 1} (a : __carrier1) {__carrier2 : Type} (L : __carrier2) {__carrier3 : Type} (epsilon : __carrier3) {__carrier4 : Type} (n0 : __carrier4) : Prop :=
-  ∃ (__type1 : Litex.In a (Litex.sequenceSet Litex.R)) (__type2 : Litex.In L Litex.R) (__type3 : Litex.In epsilon Litex.RPos) (__type4 : Litex.In n0 Litex.NPos), Litex.Rules.RealSequenceTailClose (Litex.In.rep a __type1) (Litex.In.rep L __type2) (Litex.Rules.positiveRealValue (Litex.In.rep epsilon __type3)) (Litex.Rules.positiveNaturalZeroIndex (Litex.In.rep n0 __type4))
+def is_sequence_tail_close_to_limit (a : ((Litex.sequenceSet Litex.R)).Carrier) (L : (Litex.R).Carrier) (epsilon : ℂ) (n0 : ℂ) : Prop :=
+  ∃ (__arg_type1 : Litex.In a (Litex.sequenceSet Litex.R)) (__arg_type2 : Litex.In L Litex.R) (__arg_type3 : Litex.In epsilon Litex.RPos) (__arg_type4 : Litex.In n0 Litex.NPos), ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.NPos) (__domain1 : Litex.Le n0 ((((Litex.In.rep __p1 __type1).val : ℕ)) : ℂ)), Litex.Lt (Litex.abs ((Litex.fnApplyOwn a (Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a) __p1 (__type1)) - (((L : ℝ)) : ℂ))) epsilon
 
-def converges_to {__carrier1 : Type 1} (a : __carrier1) {__carrier2 : Type} (L : __carrier2) : Prop :=
-  ∃ (__type1 : Litex.In a (Litex.sequenceSet Litex.R)) (__type2 : Litex.In L Litex.R), Litex.Rules.RealSequenceConvergesTo (Litex.In.rep a __type1) (Litex.In.rep L __type2)
+def converges_to (a : ((Litex.sequenceSet Litex.R)).Carrier) (L : (Litex.R).Carrier) : Prop :=
+  (Litex.In a (Litex.sequenceSet Litex.R)) ∧ (Litex.In L Litex.R) ∧ (∀ (__p1 : (Litex.RPos).Carrier) (__type1 : Litex.In __p1 Litex.RPos), ∃ (n0 : ℂ), ∃ (__type_n0 : Litex.In n0 Litex.NPos), is_sequence_tail_close_to_limit a L ((((__p1).val : ℝ)) : ℂ) ((((Litex.In.rep n0 __type_n0).val : ℕ)) : ℂ))
 
-def is_convergent_sequence {__carrier1 : Type 1} (a : __carrier1) : Prop :=
-  ∃ (__type1 : Litex.In a (Litex.sequenceSet Litex.R)), Litex.Rules.RealSequenceConvergent (Litex.In.rep a __type1)
+def is_convergent_sequence (a : ((Litex.sequenceSet Litex.R)).Carrier) : Prop :=
+  (Litex.In a (Litex.sequenceSet Litex.R)) ∧ (∃ (L : ℂ), ∃ (__type_L : Litex.In L Litex.R), converges_to a (Litex.In.rep L __type_L))
 
-def is_cauchy_tail {__carrier1 : Type 1} (a : __carrier1) {__carrier2 : Type} (epsilon : __carrier2) {__carrier3 : Type} (n0 : __carrier3) : Prop :=
-  ∃ (__type1 : Litex.In a (Litex.sequenceSet Litex.R)) (__type2 : Litex.In epsilon Litex.RPos) (__type3 : Litex.In n0 Litex.NPos), Litex.Rules.RealSequenceCauchyTail (Litex.In.rep a __type1) (Litex.Rules.positiveRealValue (Litex.In.rep epsilon __type2)) (Litex.Rules.positiveNaturalZeroIndex (Litex.In.rep n0 __type3))
+def is_cauchy_tail (a : ((Litex.sequenceSet Litex.R)).Carrier) (epsilon : ℂ) (n0 : ℂ) : Prop :=
+  ∃ (__arg_type1 : Litex.In a (Litex.sequenceSet Litex.R)) (__arg_type2 : Litex.In epsilon Litex.RPos) (__arg_type3 : Litex.In n0 Litex.NPos), ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.NPos) (__p2 : ℂ) (__type2 : Litex.In __p2 Litex.NPos) (__domain1 : Litex.Le n0 ((((Litex.In.rep __p1 __type1).val : ℕ)) : ℂ)) (__domain2 : Litex.Le n0 ((((Litex.In.rep __p2 __type2).val : ℕ)) : ℂ)), Litex.Lt (Litex.abs ((Litex.fnApplyOwn a (Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a) __p1 (__type1)) - (Litex.fnApplyOwn a (Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a) __p2 (__type2)))) epsilon
 
-def is_cauchy_sequence {__carrier1 : Type 1} (a : __carrier1) : Prop :=
-  ∃ (__type1 : Litex.In a (Litex.sequenceSet Litex.R)), Litex.Rules.RealSequenceCauchy (Litex.In.rep a __type1)
+def is_cauchy_sequence (a : ((Litex.sequenceSet Litex.R)).Carrier) : Prop :=
+  (Litex.In a (Litex.sequenceSet Litex.R)) ∧ (∀ (__p1 : (Litex.RPos).Carrier) (__type1 : Litex.In __p1 Litex.RPos), ∃ (n0 : ℂ), ∃ (__type_n0 : Litex.In n0 Litex.NPos), is_cauchy_tail a ((((__p1).val : ℝ)) : ℂ) ((((Litex.In.rep n0 __type_n0).val : ℕ)) : ℂ))
 
 end __Compiler_64_RealSequenceCompleteness

@@ -1,136 +1,36 @@
-# Real-sequence definitions for the Litex -> Lean -> Mathlib pipeline.
-
-# From index n0 onward, every term lies within epsilon of L.
-prop is_sequence_tail_close_to_limit(a seq(R), L R, epsilon R+, n0 N+):
-    forall n N+:
-        n >= n0
+# A real sequence is eventually close to a when all terms after N0 are within epsilon.
+prop is_eventually_close(s fn(n N) R, a R, epsilon R+, N0 N):
+    forall n N:
+        n >= N0
         =>:
-            abs(a(n) - L) < epsilon
+            abs(s(n) - a) < epsilon
 
-# A sequence converges to L when every positive tolerance has such a tail.
-prop converges_to(a seq(R), L R):
+# A real sequence converges to a when it is eventually epsilon-close for every
+# positive real epsilon.
+prop converges_to(s fn(n N) R, a R):
     forall epsilon R+:
-        exist n0 N+ st {$is_sequence_tail_close_to_limit(a, L, epsilon, n0)}
+        exist N0 N st {$is_eventually_close(s, a, epsilon, N0)}
 
-# A convergent sequence has at least one real limit.
-prop is_convergent_sequence(a seq(R)):
-    exist L R st {$converges_to(a, L)}
-
-# From index n0 onward, every pair of terms lies within epsilon.
-prop is_cauchy_tail(a seq(R), epsilon R+, n0 N+):
-    forall m, n N+:
-        m >= n0
-        n >= n0
+# Multiplying every term of a convergent real sequence by a real constant
+# multiplies its limit by the same constant.
+thm converges_to_mul_const:
+    ? forall s fn(n N) R, a, c R:
+        $converges_to(s, a)
         =>:
-            abs(a(m) - a(n)) < epsilon
-
-# A chosen tolerance has some Cauchy tail.
-prop has_cauchy_tail(a seq(R), epsilon R+):
-    exist n0 N+ st {$is_cauchy_tail(a, epsilon, n0)}
-
-# A sequence is Cauchy when every positive tolerance has a common tail.
-prop is_cauchy_sequence(a seq(R)):
-    forall epsilon R+:
-        $has_cauchy_tail(a, epsilon)
-
-# B is a lower bound for one tail of a.
-prop is_sequence_tail_lower_bound(a seq(R), n0 N+, B R):
-    forall n N+:
-        n >= n0
-        =>:
-            B <= a(n)
-
-# B is a lower bound for some tail of a.
-prop is_eventual_lower_bound(a seq(R), B R):
-    exist n0 N+ st {$is_sequence_tail_lower_bound(a, n0, B)}
-
-# This is an ordinary Litex proof from the least-upper-bound completeness of R.
-# The kernel does not contain a sequence-specific completeness theorem.
-thm cauchy_sequence_converges:
-    ? forall a seq(R):
-        $is_cauchy_sequence(a)
-        =>:
-            $is_convergent_sequence(a)
-    $has_cauchy_tail(a, 1)
-    obtain n0 from $has_cauchy_tail(a, 1)
-    have E power_set(R) = {x R: $is_eventual_lower_bound(a, x)}
-    claim:
-        ? $is_nonempty_set(E)
-        forall n N+:
-            n >= n0
-            =>:
-                abs(a(n0) - a(n)) < 1
-                a(n0) - a(n) <= abs(a(n0) - a(n)) < 1
-                (-1) < -(a(n0) - a(n))
-                a(n0) - 1 < a(n0) - (a(n0) - a(n)) = a(n)
-                a(n0) - 1 <= a(n)
-        by def:
-            ? $is_sequence_tail_lower_bound(a, n0, a(n0) - 1)
-        witness $is_eventual_lower_bound(a, a(n0) - 1) from n0
-        a(n0) - 1 $in E
-        witness $is_nonempty_set(E) from a(n0) - 1
-    claim:
-        ? forall x E:
-            x <= a(n0) + 1
-        obtain n1 from $is_eventual_lower_bound(a, x)
-        have common_start N+ = finite_set_max(union({n0}, {n1}))
-        common_start >= n0
-        common_start >= n1
-        abs(a(common_start) - a(n0)) < 1
-        a(common_start) - a(n0) <= abs(a(common_start) - a(n0)) < 1
-        a(common_start) = (a(common_start) - a(n0)) + a(n0) < 1 + a(n0) = a(n0) + 1
-        a(common_start) <= a(n0) + 1
-        x <= a(common_start) <= a(n0) + 1
-    release thm real_least_upper_bound_exists(E, a(n0) + 1)
-    obtain L from exist L R st {$is_real_least_upper_bound(E, L)}
+            $converges_to(fn(n N) R {c * s(n)}, c * a)
     claim:
         ? forall epsilon R+:
-            exist limit_start N+ st {$is_sequence_tail_close_to_limit(a, L, epsilon, limit_start)}
-        $has_cauchy_tail(a, epsilon / 2)
-        obtain epsilon_start from $has_cauchy_tail(a, epsilon / 2)
-        claim:
-            ? forall n N+:
-                n >= epsilon_start
+            exist N0 N st {$is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, N0)}
+        abs(c) + 1 > 0
+        epsilon / (abs(c) + 1) $in R+
+        obtain N0 from exist K N st {$is_eventually_close(s, a, epsilon / (abs(c) + 1), K)}
+        witness exist K N st {$is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, K)} from N0:
+            forall n N:
+                n >= N0
                 =>:
-                    abs(a(n) - L) < epsilon
-            claim:
-                ? a(n) - epsilon / 2 <= L
-                forall k N+:
-                    k >= epsilon_start
-                    =>:
-                        abs(a(n) - a(k)) < epsilon / 2
-                        a(n) - a(k) <= abs(a(n) - a(k)) < epsilon / 2
-                        a(n) - epsilon / 2 = (a(n) - a(k)) + a(k) - epsilon / 2 < epsilon / 2 + a(k) - epsilon / 2 = a(k)
-                        a(n) - epsilon / 2 <= a(k)
-                by def:
-                    ? $is_sequence_tail_lower_bound(a, epsilon_start, a(n) - epsilon / 2)
-                witness $is_eventual_lower_bound(a, a(n) - epsilon / 2) from epsilon_start
-                a(n) - epsilon / 2 $in E
-                release thm real_member_le_least_upper_bound(E, L, a(n) - epsilon / 2)
-            claim:
-                ? L <= a(n) + epsilon / 2
-                claim:
-                    ? forall x E:
-                        x <= a(n) + epsilon / 2
-                    obtain lower_start from $is_eventual_lower_bound(a, x)
-                    have comparison_start N+ = finite_set_max(union({epsilon_start}, {lower_start}))
-                    comparison_start >= epsilon_start
-                    comparison_start >= lower_start
-                    abs(a(comparison_start) - a(n)) < epsilon / 2
-                    a(comparison_start) - a(n) <= abs(a(comparison_start) - a(n)) < epsilon / 2
-                    a(comparison_start) = (a(comparison_start) - a(n)) + a(n) < epsilon / 2 + a(n) = a(n) + epsilon / 2
-                    a(comparison_start) <= a(n) + epsilon / 2
-                    x <= a(comparison_start) <= a(n) + epsilon / 2
-                release thm real_least_upper_bound_le_upper_bound(E, L, a(n) + epsilon / 2)
-            a(n) - epsilon / 2 <= L <= a(n) + epsilon / 2
-            a(n) - L <= a(n) - (a(n) - epsilon / 2) = epsilon / 2
-            (-epsilon) / 2 = a(n) - (a(n) + epsilon / 2) <= a(n) - L
-            (-epsilon) / 2 <= a(n) - L <= epsilon / 2
-            -(a(n) - L) <= epsilon / 2
-            abs(a(n) - L) <= epsilon / 2 < epsilon
-        by def:
-            ? $is_sequence_tail_close_to_limit(a, L, epsilon, epsilon_start)
-        witness exist limit_start N+ st {$is_sequence_tail_close_to_limit(a, L, epsilon, limit_start)} from epsilon_start
-    by def:
-        ? $converges_to(a, L)
-    witness $is_convergent_sequence(a) from L
+                    abs(s(n) - a) < epsilon / (abs(c) + 1)
+                    abs(c * s(n) - c * a) = abs(c * (s(n) - a)) = abs(c) * abs(s(n) - a)
+                    abs(c) * abs(s(n) - a) <= (abs(c) + 1) * abs(s(n) - a) < (abs(c) + 1) * (epsilon / (abs(c) + 1)) = epsilon
+                    abs(fn(k N) R {c * s(k)}(n) - c * a) < epsilon
+            by def $is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, N0)
+    by def $converges_to(fn(n N) R {c * s(n)}, c * a)

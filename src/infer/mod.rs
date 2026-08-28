@@ -20,6 +20,7 @@ pub use infer_result::{
     PositiveIntegerBaseNaturalPowerEqualityImpliesEqualSideMembershipInferRule,
     PositiveStandardSetMembershipImpliesPositiveInferRule,
     RegisteredTransitivePredicateChainClosureInferRule,
+    NumericOrderChainClosureInferRule,
     SubsetImpliesElementwiseMembershipForallInferRule, SuccessInferPremiseResult,
     SuccessInferResult, SuccessInferRuleApplicationResult, SuccessStoreFactOutput,
     SupersetImpliesElementwiseMembershipForallInferRule,

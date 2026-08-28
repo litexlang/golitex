@@ -1005,29 +1005,43 @@ impl Runtime {
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let z = Self::literal_zero_obj();
-        let premise_result = self.verify_builtin_rule_premise_alternatives(
-            vec![
+        for (premises, message, rule) in [
+            (
                 vec![
                     LessEqualFact::new(z.clone(), x.clone(), lf.clone()).into(),
                     LessEqualFact::new(u.clone(), v.clone(), lf.clone()).into(),
                 ],
+                msg_nonneg,
+                ArithmeticBuiltinRule::MulCommonFactorLessEqualNonnegative,
+            ),
+            (
                 vec![
                     LessEqualFact::new(x.clone(), z, lf.clone()).into(),
                     LessEqualFact::new(v.clone(), u.clone(), lf.clone()).into(),
                 ],
-            ],
-            lf.clone(),
-            builtin_state,
-        )?;
-        if premise_result.is_success() {
-            return Ok(Some(StmtResult::from(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
-                    atomic_fact.clone().into(),
-                    format!("{msg_nonneg}; alternatively {msg_nonpos}"),
-                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryMulLeSharedLeft),
-                    vec![premise_result],
-                ),
-            )));
+                msg_nonpos,
+                ArithmeticBuiltinRule::MulCommonFactorLessEqualNonpositive,
+            ),
+        ] {
+            let mut children = Vec::with_capacity(premises.len());
+            for premise in premises {
+                let result = self.verify_order_subgoal(premise, builtin_state)?;
+                if !result.is_success() {
+                    children.clear();
+                    break;
+                }
+                children.push(result);
+            }
+            if children.len() == 2 {
+                return Ok(Some(StmtResult::from(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                        atomic_fact.clone().into(),
+                        message.to_string(),
+                        BuiltinRuleEvidence::Arithmetic(rule),
+                        children,
+                    ),
+                )));
+            }
         }
         Ok(None)
     }
@@ -1045,29 +1059,43 @@ impl Runtime {
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let z = Self::literal_zero_obj();
-        let premise_result = self.verify_builtin_rule_premise_alternatives(
-            vec![
+        for (premises, message, rule) in [
+            (
                 vec![
                     LessFact::new(z.clone(), x.clone(), lf.clone()).into(),
                     LessFact::new(u.clone(), v.clone(), lf.clone()).into(),
                 ],
+                msg_pos,
+                ArithmeticBuiltinRule::MulCommonFactorLessPositive,
+            ),
+            (
                 vec![
                     LessFact::new(x.clone(), z, lf.clone()).into(),
                     LessFact::new(v.clone(), u.clone(), lf.clone()).into(),
                 ],
-            ],
-            lf.clone(),
-            builtin_state,
-        )?;
-        if premise_result.is_success() {
-            return Ok(Some(StmtResult::from(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
-                    atomic_fact.clone().into(),
-                    format!("{msg_pos}; alternatively {msg_neg}"),
-                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryMulLtSharedLeft),
-                    vec![premise_result],
-                ),
-            )));
+                msg_neg,
+                ArithmeticBuiltinRule::MulCommonFactorLessNegative,
+            ),
+        ] {
+            let mut children = Vec::with_capacity(premises.len());
+            for premise in premises {
+                let result = self.verify_order_subgoal(premise, builtin_state)?;
+                if !result.is_success() {
+                    children.clear();
+                    break;
+                }
+                children.push(result);
+            }
+            if children.len() == 2 {
+                return Ok(Some(StmtResult::from(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                        atomic_fact.clone().into(),
+                        message.to_string(),
+                        BuiltinRuleEvidence::Arithmetic(rule),
+                        children,
+                    ),
+                )));
+            }
         }
         Ok(None)
     }

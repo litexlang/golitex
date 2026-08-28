@@ -964,6 +964,7 @@ pub(super) fn infer_rule_application_value(
                     "DefinedPredicateDefinitionClauseProjection"
                 }
                 InferRule::EqualityChainClosure(_) => "EqualityChainClosure",
+                InferRule::NumericOrderChainClosure(_) => "NumericOrderChainClosure",
                 InferRule::ClosedPositivePowerEqualityImpliesEqualSideMembership(_) => {
                     "ClosedPositivePowerEqualityImpliesEqualSideMembership"
                 }
@@ -1054,6 +1055,13 @@ pub(super) fn infer_rule_application_value(
         fields.insert(3, number_field("end_object_index", rule.end_object_index));
     }
     if let InferRule::EqualityChainClosure(rule) = &result.rule {
+        fields.insert(
+            1,
+            number_field("start_object_index", rule.start_object_index),
+        );
+        fields.insert(2, number_field("end_object_index", rule.end_object_index));
+    }
+    if let InferRule::NumericOrderChainClosure(rule) = &result.rule {
         fields.insert(
             1,
             number_field("start_object_index", rule.start_object_index),
@@ -1317,6 +1325,9 @@ pub(super) fn fact_transformation_rule_value(rule: &FactTransformationRule) -> J
         FactTransformationRule::RationalNormalization => {
             object(vec![string_field("kind", "RationalNormalization")])
         }
+        FactTransformationRule::AnonymousFunctionBetaNormalization => object(vec![
+            string_field("kind", "AnonymousFunctionBetaNormalization"),
+        ]),
         FactTransformationRule::TransparentDefinitionReduction(evidence) => object(vec![
             string_field("kind", "TransparentDefinitionReduction"),
             (
@@ -1376,6 +1387,15 @@ pub(super) fn arithmetic_builtin_rule_name(rule: ArithmeticBuiltinRule) -> &'sta
         ArithmeticBuiltinRule::SubRightNonnegativeLessEqual => "SubRightNonnegativeLessEqual",
         ArithmeticBuiltinRule::AddRightNonnegativeLessEqual => "AddRightNonnegativeLessEqual",
         ArithmeticBuiltinRule::AddComponentwiseLessEqual => "AddComponentwiseLessEqual",
+        ArithmeticBuiltinRule::MulComponentwiseLessEqual => "MulComponentwiseLessEqual",
+        ArithmeticBuiltinRule::MulCommonFactorLessEqualNonnegative => {
+            "MulCommonFactorLessEqualNonnegative"
+        }
+        ArithmeticBuiltinRule::MulCommonFactorLessEqualNonpositive => {
+            "MulCommonFactorLessEqualNonpositive"
+        }
+        ArithmeticBuiltinRule::MulCommonFactorLessPositive => "MulCommonFactorLessPositive",
+        ArithmeticBuiltinRule::MulCommonFactorLessNegative => "MulCommonFactorLessNegative",
         ArithmeticBuiltinRule::AddCommonLeftLess => "AddCommonLeftLess",
         ArithmeticBuiltinRule::AddComponentwiseLess => "AddComponentwiseLess",
         ArithmeticBuiltinRule::AddComponentwiseLessLessEqual => "AddComponentwiseLessLessEqual",
@@ -1436,6 +1456,7 @@ pub(super) fn real_membership_closure_rule_name(
         RealArithmeticMembershipClosureBuiltinRule::Mul => "Mul",
         RealArithmeticMembershipClosureBuiltinRule::Div => "Div",
         RealArithmeticMembershipClosureBuiltinRule::Pow => "Pow",
+        RealArithmeticMembershipClosureBuiltinRule::Abs => "Abs",
     }
 }
 

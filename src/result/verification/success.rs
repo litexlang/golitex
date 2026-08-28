@@ -1134,6 +1134,9 @@ impl FactTransformationStep {
 pub enum FactTransformationRule {
     EqualityRewrite(EqualityTransportEvidence),
     RationalNormalization,
+    /// Capture-avoiding beta conversion of fully applied anonymous-function
+    /// literals, possibly below ordinary object constructors.
+    AnonymousFunctionBetaNormalization,
     TransparentDefinitionReduction(TransparentDefinitionReductionEvidence),
 }
 

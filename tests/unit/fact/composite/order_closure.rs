@@ -62,3 +62,22 @@ fn opposite_inclusion_directions_do_not_create_endpoint_facts() {
         ]
     );
 }
+
+#[test]
+fn numeric_order_steps_survive_an_unrelated_equality_suffix() {
+    let chain = ChainFact::new(
+        ["A", "B", "C", "D"].into_iter().map(obj).collect(),
+        [LESS_EQUAL, LESS, EQUAL].into_iter().map(prop).collect(),
+        default_line_file(),
+    );
+
+    let steps = chain
+        .numeric_order_chain_closure_steps()
+        .expect("mixed numeric/equality chain should retain numeric subchains");
+
+    assert_eq!(steps.len(), 1);
+    assert_eq!(steps[0].start_object_index, 0);
+    assert_eq!(steps[0].end_object_index, 2);
+    assert_eq!(steps[0].premises.len(), 2);
+    assert_eq!(Fact::from(steps[0].conclusion.clone()).to_string(), "A < C");
+}

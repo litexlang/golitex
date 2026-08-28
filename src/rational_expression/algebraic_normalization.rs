@@ -17,12 +17,14 @@ pub fn objs_equal_by_rational_expression_evaluation(left: &Obj, right: &Obj) -> 
 }
 
 /// The source fragment whose successful ordinary normalization is exported as
-/// a proof-carrying integral-polynomial certificate.  Keep this narrower than
-/// the normalizer itself: division, functions, transcendental constructors,
+/// a proof-carrying integral-polynomial certificate. Checked function
+/// applications are opaque polynomial indeterminates: their well-definedness
+/// Result fixes their numeric carrier, while normalization never unfolds or
+/// otherwise inspects the function. Division, transcendental constructors,
 /// and symbolic exponents require different evidence paths.
 pub fn obj_is_integral_polynomial_fragment(object: &Obj) -> bool {
     match object {
-        Obj::Atom(_) => true,
+        Obj::Atom(_) | Obj::FnObj(_) => true,
         Obj::Number(number) => number.normalized_value.parse::<i128>().is_ok(),
         Obj::Add(add) => {
             obj_is_integral_polynomial_fragment(&add.left)
@@ -51,6 +53,32 @@ pub fn objs_form_verified_integral_polynomial_identity(left: &Obj, right: &Obj) 
         && objs_equal_by_rational_expression_evaluation(left, right)
 }
 
+/// Accept an integral-polynomial identity either at the root or beneath an
+/// unchanged structural context. This is the exact source-side counterpart of
+/// Lean's congruence-aware `ring`: for example, after proving `p = q` by ring
+/// normalization it may prove `abs(p) = abs(q)` without assigning any algebraic
+/// meaning to `abs` itself.
+pub fn objs_form_verified_integral_polynomial_congruence_identity(
+    left: &Obj,
+    right: &Obj,
+) -> bool {
+    fn verify(left: &Obj, right: &Obj) -> bool {
+        if objs_equal_with_nested_binder_alpha_equivalence(left, right)
+            || objs_form_verified_integral_polynomial_identity(left, right)
+        {
+            return true;
+        }
+        let comparison: Result<bool, ()> = Runtime::same_shape_and_corresponding_args_match(
+            left,
+            right,
+            &mut |left_arg, right_arg| Ok(verify(left_arg, right_arg)),
+        );
+        comparison.unwrap_or(false)
+    }
+
+    verify(left, right)
+}
+
 /// Proves exact polynomial/rational identities after reducing every pair of
 /// imaginary-unit factors by `i * i = -1`.
 /// Example: `(1 + i) * (1 - i) = 2`.
@@ -73,7 +101,7 @@ pub fn objs_equal_by_complex_rational_expression_evaluation(left: &Obj, right: &
 /// verifier freezes proofs of these exact objects into the normalization
 /// Result so downstream consumers never have to rediscover them from ambient
 /// facts or from a diagnostic label.
-pub fn complex_algebraic_normalization_nonzero_requirements(left: &Obj, right: &Obj) -> Vec<Obj> {
+pub fn algebraic_normalization_nonzero_requirements(left: &Obj, right: &Obj) -> Vec<Obj> {
     fn collect(object: &Obj, requirements: &mut Vec<Obj>, seen: &mut HashSet<String>) {
         match object {
             Obj::Add(add) => {
@@ -120,6 +148,10 @@ pub fn complex_algebraic_normalization_nonzero_requirements(left: &Obj, right: &
     collect(left, &mut requirements, &mut seen);
     collect(right, &mut requirements, &mut seen);
     requirements
+}
+
+pub fn complex_algebraic_normalization_nonzero_requirements(left: &Obj, right: &Obj) -> Vec<Obj> {
+    algebraic_normalization_nonzero_requirements(left, right)
 }
 
 fn obj_contains_normalizable_imaginary_unit(obj: &Obj) -> bool {

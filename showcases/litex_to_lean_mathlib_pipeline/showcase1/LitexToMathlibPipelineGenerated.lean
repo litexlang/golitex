@@ -44,12 +44,12 @@ theorem sum_first_odds :
     have __target_ge_start : (1 : ℤ) ≤ __target_value := by
       exact_mod_cast __target_ge_start_real
     exact Litex.Rules.integerInductionFrom (motive := fun __induction_value : ℤ => Litex.Same (Litex.sum (1 : ℤ) __induction_value kth_odd) (((((__induction_value) : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ)) (by
-    have __step1 : Litex.Same (Litex.fnApplyCarrier kth_odd __fact0 (1 : ℤ)) (((2 : ℂ) * (1 : ℂ)) - (1 : ℂ)) ∧ Litex.Same (((2 : ℂ) * (1 : ℂ)) - (1 : ℂ)) (1 : ℂ) := by
+    have __step1 : (Litex.Same (Litex.fnApplyCarrier kth_odd __fact0 (1 : ℤ)) (((2 : ℂ) * (1 : ℂ)) - (1 : ℂ))) ∧ (Litex.Same (((2 : ℂ) * (1 : ℂ)) - (1 : ℂ)) (1 : ℂ)) := by
       exact ⟨(by
       unfold Litex.fnApplyCarrier kth_odd
       exact Litex.Same.intSubComplex (Litex.Same.intMulComplex (Litex.Same.intComplexOfEq (z := (2 : ℤ)) (by norm_num)) (Litex.Same.intComplexOfEq (z := ((1 : ℤ))) (by norm_cast))) (Litex.Same.intComplexOfEq (z := (1 : ℤ)) (by norm_num))), Litex.Same.ofEq (by norm_num [Litex.abs, Litex.min, Litex.max, Litex.tupleDim, Litex.TupleShape.dimension])⟩
     have __infer4_2 : Litex.Same (Litex.fnApplyCarrier kth_odd __fact0 (1 : ℤ)) (1 : ℂ) := Litex.Same.trans ((__step1).1) ((__step1).2)
-    have __step2 : Litex.Same (Litex.sum (1 : ℤ) (1 : ℤ) kth_odd) (Litex.fnApplyCarrier kth_odd __fact0 (1 : ℤ)) ∧ Litex.Same (Litex.fnApplyCarrier kth_odd __fact0 (1 : ℤ)) (((2 : ℂ) * (1 : ℂ)) - (1 : ℂ)) ∧ Litex.Same (((2 : ℂ) * (1 : ℂ)) - (1 : ℂ)) (1 : ℂ) ∧ Litex.Same (1 : ℂ) (((1 : ℚ) ^ (2 : ℤ) : ℚ) : ℂ) := by
+    have __step2 : (Litex.Same (Litex.sum (1 : ℤ) (1 : ℤ) kth_odd) (Litex.fnApplyCarrier kth_odd __fact0 (1 : ℤ))) ∧ (Litex.Same (Litex.fnApplyCarrier kth_odd __fact0 (1 : ℤ)) (((2 : ℂ) * (1 : ℂ)) - (1 : ℂ))) ∧ (Litex.Same (((2 : ℂ) * (1 : ℂ)) - (1 : ℂ)) (1 : ℂ)) ∧ (Litex.Same (1 : ℂ) (((1 : ℚ) ^ (2 : ℤ) : ℚ) : ℂ)) := by
       exact ⟨Litex.Rules.integerRangeSumSingleOwn (1 : ℤ) kth_odd, ⟨(__step1).1, ⟨(__step1).2, Litex.Same.ofEq (by norm_num [Litex.abs, Litex.min, Litex.max, Litex.tupleDim, Litex.TupleShape.dimension])⟩⟩⟩
     have __infer4_3 : Litex.Same (Litex.sum (1 : ℤ) (1 : ℤ) kth_odd) (((2 : ℂ) * (1 : ℂ)) - (1 : ℂ)) := Litex.Same.trans ((__step2).1) ((__step2).2.1)
     have __infer4_4 : Litex.Same (Litex.sum (1 : ℤ) (1 : ℤ) kth_odd) (1 : ℂ) := Litex.Same.trans (Litex.Same.trans ((__step2).1) ((__step2).2.1)) ((__step2).2.2.1)
@@ -75,7 +75,7 @@ theorem sum_first_odds :
       exact (by
       unfold Litex.fnApplyCarrier kth_odd
       exact Litex.Same.intSubComplex (Litex.Same.intMulComplex (Litex.Same.intComplexOfEq (z := (2 : ℤ)) (by norm_num)) (Litex.Same.intComplexOfEq (z := ((__induction_value + (1 : ℤ)))) (by norm_cast))) (Litex.Same.intComplexOfEq (z := (1 : ℤ)) (by norm_num)))
-    have __step2 : Litex.Same (Litex.sum (1 : ℤ) (__induction_value + (1 : ℤ)) kth_odd) ((((Litex.sum (1 : ℤ) __induction_value kth_odd) : ℤ) : ℂ) + (Litex.fnApplyCarrier kth_odd __fact0 (__induction_value + (1 : ℤ)))) ∧ Litex.Same ((((Litex.sum (1 : ℤ) __induction_value kth_odd) : ℤ) : ℂ) + (Litex.fnApplyCarrier kth_odd __fact0 (__induction_value + (1 : ℤ)))) ((((((__induction_value) : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ) + (Litex.fnApplyCarrier kth_odd __fact0 (__induction_value + (1 : ℤ)))) ∧ Litex.Same ((((((__induction_value) : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ) + (Litex.fnApplyCarrier kth_odd __fact0 (__induction_value + (1 : ℤ)))) ((((((__induction_value) : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ) + (((2 : ℂ) * ((((__induction_value) : ℂ)) + (1 : ℂ))) - (1 : ℂ))) ∧ Litex.Same ((((((__induction_value) : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ) + (((2 : ℂ) * ((((__induction_value) : ℂ)) + (1 : ℂ))) - (1 : ℂ))) ((((((__induction_value) : ℚ)) + (1 : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ) := by
+    have __step2 : (Litex.Same (Litex.sum (1 : ℤ) (__induction_value + (1 : ℤ)) kth_odd) ((((Litex.sum (1 : ℤ) __induction_value kth_odd) : ℤ) : ℂ) + (Litex.fnApplyCarrier kth_odd __fact0 (__induction_value + (1 : ℤ))))) ∧ (Litex.Same ((((Litex.sum (1 : ℤ) __induction_value kth_odd) : ℤ) : ℂ) + (Litex.fnApplyCarrier kth_odd __fact0 (__induction_value + (1 : ℤ)))) ((((((__induction_value) : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ) + (Litex.fnApplyCarrier kth_odd __fact0 (__induction_value + (1 : ℤ))))) ∧ (Litex.Same ((((((__induction_value) : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ) + (Litex.fnApplyCarrier kth_odd __fact0 (__induction_value + (1 : ℤ)))) ((((((__induction_value) : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ) + (((2 : ℂ) * ((((__induction_value) : ℂ)) + (1 : ℂ))) - (1 : ℂ)))) ∧ (Litex.Same ((((((__induction_value) : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ) + (((2 : ℂ) * ((((__induction_value) : ℂ)) + (1 : ℂ))) - (1 : ℂ))) ((((((__induction_value) : ℚ)) + (1 : ℚ)) ^ (2 : ℤ) : ℚ) : ℂ)) := by
       exact ⟨Litex.Rules.integerRangeSumSplitLastOwn (1 : ℤ) __induction_value kth_odd ((by simpa [Litex.Le, Litex.OrderValue] using ((by
       have __induction_ge_start_real : (((1 : ℤ)) : ℝ) ≤ (__induction_value : ℝ) := by
         exact_mod_cast __induction_ge_start
@@ -92,7 +92,7 @@ theorem sum_first_odds :
 
 theorem sum_first_ten_odds :
     Litex.Same (Litex.sum (1 : ℤ) (10 : ℤ) kth_odd) (100 : ℂ) := by
-  have __step1 : Litex.Same (Litex.sum (1 : ℤ) (10 : ℤ) kth_odd) (((10 : ℚ) ^ (2 : ℤ) : ℚ) : ℂ) ∧ Litex.Same (((10 : ℚ) ^ (2 : ℤ) : ℚ) : ℂ) (100 : ℂ) := by
+  have __step1 : (Litex.Same (Litex.sum (1 : ℤ) (10 : ℤ) kth_odd) (((10 : ℚ) ^ (2 : ℤ) : ℚ) : ℂ)) ∧ (Litex.Same (((10 : ℚ) ^ (2 : ℤ) : ℚ) : ℂ) (100 : ℂ)) := by
     exact ⟨(sum_first_odds (10 : ℤ) ((Litex.OrderBridge.leOfComplexReals (by norm_num) : Litex.Le ((1 : ℂ)) ((10 : ℂ))))), Litex.Same.ofEq (by norm_num [Litex.abs, Litex.min, Litex.max, Litex.tupleDim, Litex.TupleShape.dimension])⟩
   have __infer5_25 : Litex.Same (Litex.sum (1 : ℤ) (10 : ℤ) kth_odd) (100 : ℂ) := Litex.Same.trans ((__step1).1) ((__step1).2)
   have __infer5_26 : Litex.In (Litex.sum (1 : ℤ) (10 : ℤ) kth_odd) Litex.RPos := (Litex.In.congr ((__step1).1) Litex.RPos).mpr (Litex.Rules.complexEqRealInRPos (((10 : ℚ) ^ (2 : ℤ) : ℚ) : ℂ) (100 : ℝ) (by norm_num) (by norm_num))

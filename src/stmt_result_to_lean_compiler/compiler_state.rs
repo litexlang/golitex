@@ -133,7 +133,12 @@ struct DirectForallResultPublicationSelection {
     forall_fact: ForallFact,
     stored_fact_id: Option<FactId>,
     source_parameter_indices: Vec<usize>,
+    /// Distinct source conclusions whose child Results must be replayed.
     source_conclusion_indices: Vec<usize>,
+    /// Conclusions exposed by the published forall, in target order. Each
+    /// item is backed either by the source conclusion's FactId or by one of
+    /// that child's typed inferred FactIds.
+    published_conclusions: Vec<(usize, FactId, Fact)>,
 }
 
 struct CompiledByDefinitionComponentProofBody {
@@ -248,13 +253,25 @@ impl StmtResultToLeanCompiler {
         &mut self,
         result: &SuccessVerifyFactWellDefinedResult,
     ) -> Result<StmtResultWellDefinednessToLeanCompilationContext, String> {
+        let context = self.collect_well_definedness_to_lean_compilation_context(result)?;
+        let recursive = result
+            .recursive
+            .as_deref()
+            .ok_or_else(|| "successful fact WD result has no recursive proof".to_string())?;
+        self.compile_precollected_well_definedness_context(context, &[recursive])
+    }
+
+    fn collect_well_definedness_to_lean_compilation_context(
+        &self,
+        result: &SuccessVerifyFactWellDefinedResult,
+    ) -> Result<StmtResultWellDefinednessToLeanCompilationContext, String> {
         let mut context = StmtResultWellDefinednessToLeanCompilationContext::default();
         let recursive = result
             .recursive
             .as_deref()
             .ok_or_else(|| "successful fact WD result has no recursive proof".to_string())?;
         collect_well_definedness_to_lean_context_from_fact_result(recursive, &mut context)?;
-        self.compile_precollected_well_definedness_context(context, &[recursive])
+        Ok(context)
     }
 
     /// Compile a context assembled from one enclosing local binder and all of
