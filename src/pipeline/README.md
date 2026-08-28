@@ -39,5 +39,5 @@ or `module_manager` without first expanding the crate-wide prelude.
 | [`output_rendering.rs`](output_rendering.rs) | Renders statement results, errors, and unverified-import warnings. |
 | [`terminal_import.rs`](terminal_import.rs) | Parses REPL-only `import` commands before source parsing and mutates the terminal's ephemeral module manifest. |
 | [`repository_execution.rs`](repository_execution.rs) | Runs ordered project imports, module trees, file targets, and registered prefixes. |
-| [`pipeline_session.rs`](pipeline_session.rs) | Keeps one runtime alive for `-session`. |
+| [`session.rs`](session.rs) | Keeps one runtime alive for `-session`. |
 | [`summary.rs`](summary.rs) | Builds the optional `-summarize` output. |

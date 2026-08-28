@@ -1,15 +1,15 @@
 //! Contracts for statement-local proof reuse and recursion guards.
 
 use super::{StatementProofScopeState, StatementProofStateStack};
-use crate::common::name_types::FactString;
 use crate::error::RuntimeError;
 use crate::fact::{AtomicFact, EqualFact, Fact};
 use crate::output::display_stmt_exec_result_json;
-use crate::parse::Tokenizer;
+use crate::parsing::Tokenizer;
 use crate::result::{StmtResult, SuccessFactProofResult, SuccessVerifyFactResult};
 use crate::runtime::Runtime;
-use crate::stmt::Stmt;
-use crate::verify::VerifyState;
+use crate::statement::Stmt;
+use crate::syntax::name_types::FactString;
+use crate::verification::VerifyState;
 use std::rc::Rc;
 
 impl StatementProofStateStack {

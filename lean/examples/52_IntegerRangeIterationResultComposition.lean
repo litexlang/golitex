@@ -6,8 +6,8 @@ set_option linter.style.nameCheck false
 namespace __Compiler_52_IntegerRangeIterationResultComposition
 
 theorem __fact0 :
-    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 (Litex.range (0 : ℤ) (3 : ℤ))), Litex.Lt ((((Litex.In.rep __p1 __type1).val : ℤ)) : ℂ) (3 : ℂ) := by
-  intro n __type1
+    ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 (Litex.range (0 : ℤ) (3 : ℤ))), Litex.Lt ((((Litex.In.rep __p1 __type1).val : ℤ)) : ℂ) (3 : ℂ) := by
+  intro __carrier1 n __type1
   have __range_bounds := ((Litex.In.rep n __type1)).property
   simp only [Finset.mem_Ico] at __range_bounds
   have __range_value_cases : ((Litex.In.rep n __type1)).val = (0 : ℤ) ∨ ((Litex.In.rep n __type1)).val = (1 : ℤ) ∨ ((Litex.In.rep n __type1)).val = (2 : ℤ) := by omega

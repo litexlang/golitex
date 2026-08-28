@@ -1,3 +1,3 @@
-mod registry;
+mod definitions;
 
-pub use registry::EnvironmentDefinitionRegistry;
+pub use definitions::EnvironmentDefinitionRegistry;

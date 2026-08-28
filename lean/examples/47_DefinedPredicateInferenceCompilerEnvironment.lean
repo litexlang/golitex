@@ -6,28 +6,28 @@ set_option linter.style.nameCheck false
 namespace __Compiler_47_DefinedPredicateInferenceCompilerEnvironment
 
 def same_set (x : Litex.Set) (y : Litex.Set) : Prop :=
-  True ∧ True ∧ Litex.Same x y
+  (True) ∧ (True) ∧ (Litex.Same x y)
 
 theorem __litex_registered_transitive_same_set_0 :
     ∀ (x : Litex.Set) (y : Litex.Set) (z : Litex.Set) (__domain1 : same_set x y) (__domain2 : same_set y z),
       same_set x z := by
   intro x y z __domain1 __domain2
   have __step1 : Litex.Same x y := by
-    exact (by
+    exact (show Litex.Same x y from (by
     have __definition := __domain1
     unfold same_set at __definition
-    exact __definition.2.2)
+    exact __definition.2.2))
   have __step2 : Litex.Same y z := by
-    exact (by
+    exact (show Litex.Same y z from (by
     have __definition := __domain2
     unfold same_set at __definition
-    exact __definition.2.2)
+    exact __definition.2.2))
   have __step3 : Litex.Same x z := by
     exact Litex.Same.trans (__step1) (__step2)
   have __step4 : same_set x z := by
     exact (by
     unfold same_set
-    exact ⟨True.intro, True.intro, __step3⟩)
+    exact ⟨True.intro, True.intro, (by simpa [Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (__step3))⟩)
   have __c0_0 : same_set x z := __step4
   exact __c0_0
 
@@ -65,7 +65,7 @@ theorem __fact7 : Litex.Same Litex.C Litex.N := by
   unfold same_set at __definition
   exact __definition.2.2)
 
-theorem __fact8 : same_set Litex.R Litex.C ∧ same_set Litex.C Litex.N := by
+theorem __fact8 : (same_set Litex.R Litex.C) ∧ (same_set Litex.C Litex.N) := by
   exact ⟨__fact1, __fact5⟩
 
 theorem __fact9 : same_set Litex.R Litex.N := by

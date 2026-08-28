@@ -21,7 +21,7 @@ theorem __fact2 : Litex.Same g f := by
   unfold g
   exact Litex.Same.refl f
 
-theorem __fact3 : Litex.Same (Litex.fnApplyOwn g __fact0 (1 : ℂ) (Litex.Rules.complexRealInR (1 : ℝ))) (1 : ℂ) := by
+theorem __fact3 : Litex.Same (Litex.fnApplyOwn g (Litex.In.own (Litex.fnSet Litex.R Litex.R) g) (1 : ℂ) (Litex.Rules.complexRealInR (1 : ℝ))) (1 : ℂ) := by
   exact (by
   unfold g
   exact ((by

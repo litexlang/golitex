@@ -1,0 +1,20 @@
+//! Parsing for statements that explicitly choose a verifier operation.
+mod antisymmetry;
+mod cases;
+mod choice;
+mod closed_range_cases;
+mod contradiction;
+mod definition;
+mod dispatch;
+mod enumeration;
+mod extension;
+mod finite_set_induction;
+mod induction;
+mod iteration;
+mod reflexivity;
+mod regularity;
+mod structure_definition;
+mod symmetry;
+mod theorem_application;
+mod transitivity;
+mod zorn;

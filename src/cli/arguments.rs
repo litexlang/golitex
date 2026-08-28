@@ -1,4 +1,4 @@
-use crate::common::{output_language::OutputLanguage, output_style::OutputStyle};
+use crate::output::{language::OutputLanguage, style::OutputStyle};
 use crate::pipeline::SessionPreload;
 use crate::runtime::RunOptions;
 

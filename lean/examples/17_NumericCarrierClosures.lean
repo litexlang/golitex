@@ -6,57 +6,57 @@ set_option linter.style.nameCheck false
 namespace __Compiler_17_NumericCarrierClosures
 
 theorem __fact0 :
-    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.C) (__p2 : ℂ) (__type2 : Litex.In __p2 Litex.C), Litex.In ((__p1 : ℂ) + (__p2 : ℂ)) Litex.C := by
-  intro a __h0_1 b __h0_2
-  have __c0_0 : Litex.In ((a : ℂ) + (b : ℂ)) Litex.C := Litex.Rules.complexAddInC (a : ℂ) (b : ℂ)
-  exact __c0_0
+    ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.C) {__carrier2 : Type} (__p2 : __carrier2) (__type2 : Litex.In __p2 Litex.C), Litex.In ((Litex.In.rep __p1 __type1 : ℂ) + (Litex.In.rep __p2 __type2 : ℂ)) Litex.C := by
+  intro __carrier1 a __h4 __carrier2 b __h5
+  have __prior0_0 : Litex.In ((Litex.In.rep a __h4 : ℂ) + (Litex.In.rep b __h5 : ℂ)) Litex.C := Litex.Rules.complexAddInC (Litex.In.rep a __h4 : ℂ) (Litex.In.rep b __h5 : ℂ)
+  exact __prior0_0
 
 theorem __fact1 :
-    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.C) (__p2 : ℂ) (__type2 : Litex.In __p2 Litex.C), Litex.In ((__p1 : ℂ) - (__p2 : ℂ)) Litex.C := by
-  intro a __h1_1 b __h1_2
-  have __c1_0 : Litex.In ((a : ℂ) - (b : ℂ)) Litex.C := Litex.Rules.complexSubInC (a : ℂ) (b : ℂ)
-  exact __c1_0
+    ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.C) {__carrier2 : Type} (__p2 : __carrier2) (__type2 : Litex.In __p2 Litex.C), Litex.In ((Litex.In.rep __p1 __type1 : ℂ) - (Litex.In.rep __p2 __type2 : ℂ)) Litex.C := by
+  intro __carrier1 a __h11 __carrier2 b __h12
+  have __prior1_0 : Litex.In ((Litex.In.rep a __h11 : ℂ) - (Litex.In.rep b __h12 : ℂ)) Litex.C := Litex.Rules.complexSubInC (Litex.In.rep a __h11 : ℂ) (Litex.In.rep b __h12 : ℂ)
+  exact __prior1_0
 
 theorem __fact2 :
-    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.C) (__p2 : ℂ) (__type2 : Litex.In __p2 Litex.C), Litex.In ((__p1 : ℂ) * (__p2 : ℂ)) Litex.C := by
-  intro a __h2_1 b __h2_2
-  have __c2_0 : Litex.In ((a : ℂ) * (b : ℂ)) Litex.C := Litex.Rules.complexMulInC (a : ℂ) (b : ℂ)
-  exact __c2_0
+    ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.C) {__carrier2 : Type} (__p2 : __carrier2) (__type2 : Litex.In __p2 Litex.C), Litex.In ((Litex.In.rep __p1 __type1 : ℂ) * (Litex.In.rep __p2 __type2 : ℂ)) Litex.C := by
+  intro __carrier1 a __h18 __carrier2 b __h19
+  have __prior2_0 : Litex.In ((Litex.In.rep a __h18 : ℂ) * (Litex.In.rep b __h19 : ℂ)) Litex.C := Litex.Rules.complexMulInC (Litex.In.rep a __h18 : ℂ) (Litex.In.rep b __h19 : ℂ)
+  exact __prior2_0
 
 theorem __fact3 :
-    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.C) (__p2 : ℂ) (__type2 : Litex.In __p2 Litex.C) (__domain1 : ¬ Litex.Same __p2 (0 : ℂ)), Litex.In ((__p1 : ℂ) / (__p2 : ℂ)) Litex.C := by
-  intro a __h3_1 b __h3_2 __domain1
-  have __c3_0 : Litex.In ((a : ℂ) / (b : ℂ)) Litex.C := Litex.Rules.complexDivInC (a : ℂ) (b : ℂ)
-  exact __c3_0
+    ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.C) {__carrier2 : Type} (__p2 : __carrier2) (__type2 : Litex.In __p2 Litex.C) (__domain1 : ¬ Litex.Same __p2 (0 : ℂ)), Litex.In ((Litex.In.rep __p1 __type1 : ℂ) / (Litex.In.rep __p2 __type2 : ℂ)) Litex.C := by
+  intro __carrier1 a __h26 __carrier2 b __h27 __domain1
+  have __prior3_0 : Litex.In ((Litex.In.rep a __h26 : ℂ) / (Litex.In.rep b __h27 : ℂ)) Litex.C := Litex.Rules.complexDivInC (Litex.In.rep a __h26 : ℂ) (Litex.In.rep b __h27 : ℂ)
+  exact __prior3_0
 
 theorem __fact4 :
     ∀ (__p1 : ℤ) (__p2 : ℤ), Litex.In ((((__p1) : ℂ)) + (((__p2) : ℂ))) Litex.Z := by
   intro a b
-  have __c4_0 : Litex.In ((((a) : ℂ)) + (((b) : ℂ))) Litex.Z := (by
-    have __components : Litex.In a Litex.Z ∧ Litex.In b Litex.Z := ⟨(Litex.In.own Litex.Z a), (Litex.In.own Litex.Z b)⟩
+  have __prior4_0 : Litex.In ((((a) : ℂ)) + (((b) : ℂ))) Litex.Z := (by
+    have __components : (Litex.In a Litex.Z) ∧ (Litex.In b Litex.Z) := ⟨(Litex.In.own Litex.Z a), (Litex.In.own Litex.Z b)⟩
     exact Litex.Rules.complexAddInZ (Litex.Rules.complexIntInZ (a)) (Litex.Rules.complexIntInZ (b)))
-  exact __c4_0
+  exact __prior4_0
 
 theorem __fact5 :
     ∀ (__p1 : ℤ) (__p2 : ℤ), Litex.In ((((__p1) : ℂ)) - (((__p2) : ℂ))) Litex.Z := by
   intro a b
-  have __c5_0 : Litex.In ((((a) : ℂ)) - (((b) : ℂ))) Litex.Z := (by
-    have __components : Litex.In a Litex.Z ∧ Litex.In b Litex.Z := ⟨(Litex.In.own Litex.Z a), (Litex.In.own Litex.Z b)⟩
+  have __prior5_0 : Litex.In ((((a) : ℂ)) - (((b) : ℂ))) Litex.Z := (by
+    have __components : (Litex.In a Litex.Z) ∧ (Litex.In b Litex.Z) := ⟨(Litex.In.own Litex.Z a), (Litex.In.own Litex.Z b)⟩
     exact Litex.Rules.complexSubInZ (Litex.Rules.complexIntInZ (a)) (Litex.Rules.complexIntInZ (b)))
-  exact __c5_0
+  exact __prior5_0
 
 theorem __fact6 :
     ∀ (__p1 : ℤ) (__p2 : ℤ), Litex.In ((((__p1) : ℂ)) * (((__p2) : ℂ))) Litex.Z := by
   intro a b
-  have __c6_0 : Litex.In ((((a) : ℂ)) * (((b) : ℂ))) Litex.Z := (by
-    have __components : Litex.In a Litex.Z ∧ Litex.In b Litex.Z := ⟨(Litex.In.own Litex.Z a), (Litex.In.own Litex.Z b)⟩
+  have __prior6_0 : Litex.In ((((a) : ℂ)) * (((b) : ℂ))) Litex.Z := (by
+    have __components : (Litex.In a Litex.Z) ∧ (Litex.In b Litex.Z) := ⟨(Litex.In.own Litex.Z a), (Litex.In.own Litex.Z b)⟩
     exact Litex.Rules.complexMulInZ (Litex.Rules.complexIntInZ (a)) (Litex.Rules.complexIntInZ (b)))
-  exact __c6_0
+  exact __prior6_0
 
 theorem __fact7 :
     ∀ (__p1 : ℤ) (__p2 : ℤ) (__domain1 : ¬ Litex.Same __p2 (0 : ℂ)), Litex.In ((__p1 % __p2 : ℤ) : ℂ) Litex.Z := by
   intro a b __domain1
-  have __c7_0 : Litex.In ((a % b : ℤ) : ℂ) Litex.Z := Litex.Rules.complexIntInZ (a % b)
-  exact __c7_0
+  have __prior7_0 : Litex.In ((a % b : ℤ) : ℂ) Litex.Z := Litex.Rules.complexIntInZ (a % b)
+  exact __prior7_0
 
 end __Compiler_17_NumericCarrierClosures

@@ -11,9 +11,9 @@ theorem one_eq_one :
   exact __c0_0
 
 theorem local_reflexivity :
-    ∀ (x : ℂ) (__h1_1 : Litex.In x Litex.R),
+    ∀ {__carrier1_1 : Type} (x : __carrier1_1) (__h5 : Litex.In x Litex.R),
       Litex.Same x x := by
-  intro x __h1_1
+  intro __carrier1_1 x __h5
   have __step1 : Litex.Same x x := by
     exact Litex.Same.refl x
   have __c1_0 : Litex.Same x x := __step1
@@ -21,7 +21,10 @@ theorem local_reflexivity :
 
 theorem __fact2 : Litex.Same (1 : ℂ) (1 : ℂ) := by
   have __step1 : Litex.Same (1 : ℂ) (1 : ℂ) := by
-    exact (local_reflexivity (1 : ℂ) (Litex.Rules.complexRealInR (1 : ℝ)))
+    exact (by
+    have __projected_conclusion := (local_reflexivity (1 : ℂ) (Litex.Rules.complexRealInR (1 : ℝ)))
+    try rw [Litex.In.rep_exact] at __projected_conclusion
+    exact __projected_conclusion)
   exact __step1
 
 theorem __fact3 : Litex.Same (2 : ℂ) (2 : ℂ) := by

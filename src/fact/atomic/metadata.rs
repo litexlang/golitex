@@ -72,36 +72,36 @@ impl AtomicFact {
             AtomicFact::NormalAtomicFact(a) if a.predicate.to_string() == DVD => 2,
             AtomicFact::NotNormalAtomicFact(a) if a.predicate.to_string() == DVD => 2,
             AtomicFact::NormalAtomicFact(a)
-                if a.predicate.to_string() == crate::common::keywords::IS_CHOICE_FUNCTION_FOR =>
+                if a.predicate.to_string() == crate::syntax::keywords::IS_CHOICE_FUNCTION_FOR =>
             {
                 4
             }
             AtomicFact::NotNormalAtomicFact(a)
-                if a.predicate.to_string() == crate::common::keywords::IS_CHOICE_FUNCTION_FOR =>
+                if a.predicate.to_string() == crate::syntax::keywords::IS_CHOICE_FUNCTION_FOR =>
             {
                 4
             }
             AtomicFact::NormalAtomicFact(a)
                 if a.predicate.to_string()
-                    == crate::common::keywords::IS_REAL_LEAST_UPPER_BOUND =>
+                    == crate::syntax::keywords::IS_REAL_LEAST_UPPER_BOUND =>
             {
                 2
             }
             AtomicFact::NotNormalAtomicFact(a)
                 if a.predicate.to_string()
-                    == crate::common::keywords::IS_REAL_LEAST_UPPER_BOUND =>
+                    == crate::syntax::keywords::IS_REAL_LEAST_UPPER_BOUND =>
             {
                 2
             }
             AtomicFact::NormalAtomicFact(a)
                 if a.predicate.to_string()
-                    == crate::common::keywords::IS_REAL_GREATEST_LOWER_BOUND =>
+                    == crate::syntax::keywords::IS_REAL_GREATEST_LOWER_BOUND =>
             {
                 2
             }
             AtomicFact::NotNormalAtomicFact(a)
                 if a.predicate.to_string()
-                    == crate::common::keywords::IS_REAL_GREATEST_LOWER_BOUND =>
+                    == crate::syntax::keywords::IS_REAL_GREATEST_LOWER_BOUND =>
             {
                 2
             }

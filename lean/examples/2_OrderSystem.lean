@@ -8,10 +8,11 @@ namespace __Compiler_2_OrderSystem
 namespace __Sketch01
 
 theorem __fact0 :
-    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.R) (__p2 : ℂ) (__type2 : Litex.In __p2 Litex.R) (__domain1 : Litex.Lt (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)), Litex.Le (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ) := by
-  intro a __h0_1 b __h0_2 __domain1
-  have __c0_0 : Litex.Le (((Litex.In.rep a __h0_1 : ℝ)) : ℂ) (((Litex.In.rep b __h0_2 : ℝ)) : ℂ) := Litex.Lt.toLe (__domain1)
-  exact __c0_0
+    ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.R) {__carrier2 : Type} (__p2 : __carrier2) (__type2 : Litex.In __p2 Litex.R) (__domain1 : Litex.Lt (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)), Litex.Le (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ) := by
+  intro __carrier1 a __h5 __carrier2 b __h6 __domain1
+  have __prior0_0 : Litex.Le (((Litex.In.rep a __h5 : ℝ)) : ℂ) (((Litex.In.rep b __h6 : ℝ)) : ℂ) := Litex.Lt.toLe ((by
+    convert __domain1 using 1 <;> norm_num))
+  exact __prior0_0
 
 end __Sketch01
 

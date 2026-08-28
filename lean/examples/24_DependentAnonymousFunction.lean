@@ -7,49 +7,23 @@ namespace __Compiler_24_DependentAnonymousFunction
 
 theorem __fact0 :
     ∀ {__carrier1 : Type 1} (__p1 : __carrier1) (__type1 : Litex.In __p1 (Litex.fnTelescopeSet ((Litex.FnTelescope.parameter Litex.R (fun {__alpha1 : Type} (__arg1 : __alpha1) (__arg1_in : Litex.In __arg1 Litex.R) => (Litex.FnTelescope.parameter (Litex.setBuilder Litex.R (fun (z : Litex.R.Carrier) => Litex.Lt (((Litex.In.rep __arg1 __arg1_in : ℝ)) : ℂ) (((z : ℝ)) : ℂ))) (fun {__alpha2 : Type} (__arg2 : __alpha2) (__arg2_in : Litex.In __arg2 (Litex.setBuilder Litex.R (fun (z : Litex.R.Carrier) => Litex.Lt (((Litex.In.rep __arg1 __arg1_in : ℝ)) : ℂ) (((z : ℝ)) : ℂ)))) => (Litex.FnTelescope.done Litex.R))))) : Litex.FnTelescope.{0}))), Litex.Same __p1 __p1 := by
-  intro __carrier1 f __h0_1
-  have __c0_0 : Litex.Same f f := Litex.Same.refl f
-  exact __c0_0
+  intro __carrier1 f __h35
+  have __prior0_0 : Litex.Same f f := Litex.Same.refl f
+  exact __prior0_0
 
 theorem __fact1 :
-    ∀ {__carrier1 : Type 1} (__p1 : __carrier1) (__type1 : Litex.In __p1 (Litex.fnTelescopeSet ((Litex.FnTelescope.parameter Litex.R (fun {__alpha1 : Type} (__arg1 : __alpha1) (__arg1_in : Litex.In __arg1 Litex.R) => (Litex.FnTelescope.done (Litex.setBuilder Litex.R (fun (z : Litex.R.Carrier) => Litex.Lt (((Litex.In.rep __arg1 __arg1_in : ℝ)) : ℂ) (((z : ℝ)) : ℂ)))))) : Litex.FnTelescope.{0}))) (__p2 : ℂ) (__type2 : Litex.In __p2 Litex.R), Litex.Same (((Litex.fnTelescopeApply __p1 __type1) __p2 (__type2))).down (((Litex.fnTelescopeApply __p1 __type1) __p2 (__type2))).down := by
-  intro __carrier1 f __h1_1 a __h1_2
-  have __c1_0 : Litex.Same (((Litex.fnTelescopeApply f __h1_1) a (__h1_2))).down (((Litex.fnTelescopeApply f __h1_1) a (__h1_2))).down := Litex.Same.refl (((Litex.fnTelescopeApply f __h1_1) a (__h1_2))).down
-  exact __c1_0
+    ∀ {__carrier1 : Type 1} (__p1 : __carrier1) (__type1 : Litex.In __p1 (Litex.fnTelescopeSet ((Litex.FnTelescope.parameter Litex.R (fun {__alpha1 : Type} (__arg1 : __alpha1) (__arg1_in : Litex.In __arg1 Litex.R) => (Litex.FnTelescope.done (Litex.setBuilder Litex.R (fun (z : Litex.R.Carrier) => Litex.Lt (((Litex.In.rep __arg1 __arg1_in : ℝ)) : ℂ) (((z : ℝ)) : ℂ)))))) : Litex.FnTelescope.{0}))) {__carrier2 : Type} (__p2 : __carrier2) (__type2 : Litex.In __p2 Litex.R), Litex.Same (((Litex.fnTelescopeApply __p1 __type1) __p2 (__type2))).down (((Litex.fnTelescopeApply __p1 __type1) __p2 (__type2))).down := by
+  intro __carrier1 f __h56 __carrier2 a __h57
+  have __prior1_0 : Litex.Same (((Litex.fnTelescopeApply f __h56) a (__h57))).down (((Litex.fnTelescopeApply f __h56) a (__h57))).down := Litex.Same.refl (((Litex.fnTelescopeApply f __h56) a (__h57))).down
+  exact __prior1_0
 
-theorem __fact2 : Litex.Same ({ call := fun {__alpha} (__arg : __alpha) __arg_in => Litex.In.rep ((((Litex.In.rep __arg __arg_in : ℝ)) : ℂ) + (1 : ℂ)) ((by
-  have __components : Litex.In __arg Litex.R ∧ Litex.In (1 : ℂ) Litex.R := ⟨__arg_in, Litex.Rules.complexRealInR (1 : ℝ)⟩
-  exact Litex.Rules.complexAddInR (Litex.Rules.complexRealInR ((Litex.In.rep __arg __arg_in : ℝ))) (__components.2))) } : Litex.Fn Litex.R Litex.R) ({ call := fun {__alpha} (__arg : __alpha) __arg_in => Litex.In.rep ((((Litex.In.rep __arg __arg_in : ℝ)) : ℂ) + (1 : ℂ)) ((by
-  have __components : Litex.In __arg Litex.R ∧ Litex.In (1 : ℂ) Litex.R := ⟨__arg_in, Litex.Rules.complexRealInR (1 : ℝ)⟩
-  exact Litex.Rules.complexAddInR (Litex.Rules.complexRealInR ((Litex.In.rep __arg __arg_in : ℝ))) (__components.2))) } : Litex.Fn Litex.R Litex.R) := by
-  exact Litex.Same.refl ({ call := fun {__alpha} (__arg : __alpha) __arg_in => Litex.In.rep ((((Litex.In.rep __arg __arg_in : ℝ)) : ℂ) + (1 : ℂ)) ((by
-  have __components : Litex.In __arg Litex.R ∧ Litex.In (1 : ℂ) Litex.R := ⟨__arg_in, Litex.Rules.complexRealInR (1 : ℝ)⟩
-  exact Litex.Rules.complexAddInR (Litex.Rules.complexRealInR ((Litex.In.rep __arg __arg_in : ℝ))) (__components.2))) } : Litex.Fn Litex.R Litex.R)
+theorem __fact2 : Litex.Same ({ call := fun {__alpha} (__arg : __alpha) __arg_in => ((Litex.In.rep __arg __arg_in : ℝ) + (1 : ℝ)) } : Litex.Fn Litex.R Litex.R) ({ call := fun {__alpha} (__arg : __alpha) __arg_in => ((Litex.In.rep __arg __arg_in : ℝ) + (1 : ℝ)) } : Litex.Fn Litex.R Litex.R) := by
+  exact Litex.Same.refl ({ call := fun {__alpha} (__arg : __alpha) __arg_in => ((Litex.In.rep __arg __arg_in : ℝ) + (1 : ℝ)) } : Litex.Fn Litex.R Litex.R)
 
 theorem __fact3 :
-    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.R), Litex.Same (Litex.fnApplyOwn ({ call := fun {__alpha} (__arg : __alpha) __arg_in => Litex.In.rep ((((Litex.In.rep __arg __arg_in : ℝ)) : ℂ) + (1 : ℂ)) ((by
-  have __components : Litex.In __arg Litex.R ∧ Litex.In (1 : ℂ) Litex.R := ⟨__arg_in, Litex.Rules.complexRealInR (1 : ℝ)⟩
-  exact Litex.Rules.complexAddInR (Litex.Rules.complexRealInR ((Litex.In.rep __arg __arg_in : ℝ))) (__components.2))) } : Litex.Fn Litex.R Litex.R) (Litex.In.own (Litex.fnSet Litex.R Litex.R) ({ call := fun {__alpha} (__arg : __alpha) __arg_in => Litex.In.rep ((((Litex.In.rep __arg __arg_in : ℝ)) : ℂ) + (1 : ℂ)) ((by
-  have __components : Litex.In __arg Litex.R ∧ Litex.In (1 : ℂ) Litex.R := ⟨__arg_in, Litex.Rules.complexRealInR (1 : ℝ)⟩
-  exact Litex.Rules.complexAddInR (Litex.Rules.complexRealInR ((Litex.In.rep __arg __arg_in : ℝ))) (__components.2))) } : Litex.Fn Litex.R Litex.R)) __p1 (__type1)) (Litex.fnApplyOwn ({ call := fun {__alpha} (__arg : __alpha) __arg_in => Litex.In.rep ((((Litex.In.rep __arg __arg_in : ℝ)) : ℂ) + (1 : ℂ)) ((by
-  have __components : Litex.In __arg Litex.R ∧ Litex.In (1 : ℂ) Litex.R := ⟨__arg_in, Litex.Rules.complexRealInR (1 : ℝ)⟩
-  exact Litex.Rules.complexAddInR (Litex.Rules.complexRealInR ((Litex.In.rep __arg __arg_in : ℝ))) (__components.2))) } : Litex.Fn Litex.R Litex.R) (Litex.In.own (Litex.fnSet Litex.R Litex.R) ({ call := fun {__alpha} (__arg : __alpha) __arg_in => Litex.In.rep ((((Litex.In.rep __arg __arg_in : ℝ)) : ℂ) + (1 : ℂ)) ((by
-  have __components : Litex.In __arg Litex.R ∧ Litex.In (1 : ℂ) Litex.R := ⟨__arg_in, Litex.Rules.complexRealInR (1 : ℝ)⟩
-  exact Litex.Rules.complexAddInR (Litex.Rules.complexRealInR ((Litex.In.rep __arg __arg_in : ℝ))) (__components.2))) } : Litex.Fn Litex.R Litex.R)) __p1 (__type1)) := by
-  intro a __h3_1
-  have __c3_0 : Litex.Same (Litex.fnApplyOwn ({ call := fun {__alpha} (__arg : __alpha) __arg_in => Litex.In.rep ((((Litex.In.rep __arg __arg_in : ℝ)) : ℂ) + (1 : ℂ)) ((by
-    have __components : Litex.In __arg Litex.R ∧ Litex.In (1 : ℂ) Litex.R := ⟨__arg_in, Litex.Rules.complexRealInR (1 : ℝ)⟩
-    exact Litex.Rules.complexAddInR (Litex.Rules.complexRealInR ((Litex.In.rep __arg __arg_in : ℝ))) (__components.2))) } : Litex.Fn Litex.R Litex.R) (Litex.In.own (Litex.fnSet Litex.R Litex.R) ({ call := fun {__alpha} (__arg : __alpha) __arg_in => Litex.In.rep ((((Litex.In.rep __arg __arg_in : ℝ)) : ℂ) + (1 : ℂ)) ((by
-    have __components : Litex.In __arg Litex.R ∧ Litex.In (1 : ℂ) Litex.R := ⟨__arg_in, Litex.Rules.complexRealInR (1 : ℝ)⟩
-    exact Litex.Rules.complexAddInR (Litex.Rules.complexRealInR ((Litex.In.rep __arg __arg_in : ℝ))) (__components.2))) } : Litex.Fn Litex.R Litex.R)) a (__h3_1)) (Litex.fnApplyOwn ({ call := fun {__alpha} (__arg : __alpha) __arg_in => Litex.In.rep ((((Litex.In.rep __arg __arg_in : ℝ)) : ℂ) + (1 : ℂ)) ((by
-    have __components : Litex.In __arg Litex.R ∧ Litex.In (1 : ℂ) Litex.R := ⟨__arg_in, Litex.Rules.complexRealInR (1 : ℝ)⟩
-    exact Litex.Rules.complexAddInR (Litex.Rules.complexRealInR ((Litex.In.rep __arg __arg_in : ℝ))) (__components.2))) } : Litex.Fn Litex.R Litex.R) (Litex.In.own (Litex.fnSet Litex.R Litex.R) ({ call := fun {__alpha} (__arg : __alpha) __arg_in => Litex.In.rep ((((Litex.In.rep __arg __arg_in : ℝ)) : ℂ) + (1 : ℂ)) ((by
-    have __components : Litex.In __arg Litex.R ∧ Litex.In (1 : ℂ) Litex.R := ⟨__arg_in, Litex.Rules.complexRealInR (1 : ℝ)⟩
-    exact Litex.Rules.complexAddInR (Litex.Rules.complexRealInR ((Litex.In.rep __arg __arg_in : ℝ))) (__components.2))) } : Litex.Fn Litex.R Litex.R)) a (__h3_1)) := Litex.Same.refl (Litex.fnApplyOwn ({ call := fun {__alpha} (__arg : __alpha) __arg_in => Litex.In.rep ((((Litex.In.rep __arg __arg_in : ℝ)) : ℂ) + (1 : ℂ)) ((by
-    have __components : Litex.In __arg Litex.R ∧ Litex.In (1 : ℂ) Litex.R := ⟨__arg_in, Litex.Rules.complexRealInR (1 : ℝ)⟩
-    exact Litex.Rules.complexAddInR (Litex.Rules.complexRealInR ((Litex.In.rep __arg __arg_in : ℝ))) (__components.2))) } : Litex.Fn Litex.R Litex.R) (Litex.In.own (Litex.fnSet Litex.R Litex.R) ({ call := fun {__alpha} (__arg : __alpha) __arg_in => Litex.In.rep ((((Litex.In.rep __arg __arg_in : ℝ)) : ℂ) + (1 : ℂ)) ((by
-    have __components : Litex.In __arg Litex.R ∧ Litex.In (1 : ℂ) Litex.R := ⟨__arg_in, Litex.Rules.complexRealInR (1 : ℝ)⟩
-    exact Litex.Rules.complexAddInR (Litex.Rules.complexRealInR ((Litex.In.rep __arg __arg_in : ℝ))) (__components.2))) } : Litex.Fn Litex.R Litex.R)) a (__h3_1))
-  exact __c3_0
+    ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.R), Litex.Same (Litex.fnApplyOwn ({ call := fun {__alpha} (__arg : __alpha) __arg_in => ((Litex.In.rep __arg __arg_in : ℝ) + (1 : ℝ)) } : Litex.Fn Litex.R Litex.R) (Litex.In.own (Litex.fnSet Litex.R Litex.R) ({ call := fun {__alpha} (__arg : __alpha) __arg_in => ((Litex.In.rep __arg __arg_in : ℝ) + (1 : ℝ)) } : Litex.Fn Litex.R Litex.R)) __p1 (__type1)) (Litex.fnApplyOwn ({ call := fun {__alpha} (__arg : __alpha) __arg_in => ((Litex.In.rep __arg __arg_in : ℝ) + (1 : ℝ)) } : Litex.Fn Litex.R Litex.R) (Litex.In.own (Litex.fnSet Litex.R Litex.R) ({ call := fun {__alpha} (__arg : __alpha) __arg_in => ((Litex.In.rep __arg __arg_in : ℝ) + (1 : ℝ)) } : Litex.Fn Litex.R Litex.R)) __p1 (__type1)) := by
+  intro __carrier1 a __h73
+  have __prior3_0 : Litex.Same (Litex.fnApplyOwn ({ call := fun {__alpha} (__arg : __alpha) __arg_in => ((Litex.In.rep __arg __arg_in : ℝ) + (1 : ℝ)) } : Litex.Fn Litex.R Litex.R) (Litex.In.own (Litex.fnSet Litex.R Litex.R) ({ call := fun {__alpha} (__arg : __alpha) __arg_in => ((Litex.In.rep __arg __arg_in : ℝ) + (1 : ℝ)) } : Litex.Fn Litex.R Litex.R)) a (__h73)) (Litex.fnApplyOwn ({ call := fun {__alpha} (__arg : __alpha) __arg_in => ((Litex.In.rep __arg __arg_in : ℝ) + (1 : ℝ)) } : Litex.Fn Litex.R Litex.R) (Litex.In.own (Litex.fnSet Litex.R Litex.R) ({ call := fun {__alpha} (__arg : __alpha) __arg_in => ((Litex.In.rep __arg __arg_in : ℝ) + (1 : ℝ)) } : Litex.Fn Litex.R Litex.R)) a (__h73)) := Litex.Same.refl (Litex.fnApplyOwn ({ call := fun {__alpha} (__arg : __alpha) __arg_in => ((Litex.In.rep __arg __arg_in : ℝ) + (1 : ℝ)) } : Litex.Fn Litex.R Litex.R) (Litex.In.own (Litex.fnSet Litex.R Litex.R) ({ call := fun {__alpha} (__arg : __alpha) __arg_in => ((Litex.In.rep __arg __arg_in : ℝ) + (1 : ℝ)) } : Litex.Fn Litex.R Litex.R)) a (__h73))
+  exact __prior3_0
 
 end __Compiler_24_DependentAnonymousFunction

@@ -3,9 +3,9 @@ use std::io::Write;
 use std::path::PathBuf;
 use std::time::Instant;
 
+use crate::lean_compiler::compile_litex_source_to_lean_source;
 use crate::pipeline::render_run_output;
 use crate::prelude::*;
-use crate::stmt_result_to_lean_compiler::compile_litex_source_to_lean_source;
 use crate::test_support::execute_source;
 
 use super::helper::run_with_large_stack;

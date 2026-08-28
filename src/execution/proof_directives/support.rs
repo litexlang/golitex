@@ -1,0 +1,288 @@
+use crate::prelude::*;
+use crate::syntax::source_formatting::is_number_string_literally_integer_without_dot;
+
+pub(super) fn impossible_proof_error_message(
+    impossible_fact: &AtomicFact,
+    option_case_fact_string: Option<String>,
+) -> String {
+    match option_case_fact_string {
+        Some(case_fact) => format!(
+            "failed to prove impossible `{}` under case `{}`",
+            impossible_fact, case_fact
+        ),
+        None => format!("failed to prove impossible `{}`", impossible_fact),
+    }
+}
+
+pub(super) fn user_defined_prop_arity(rt: &Runtime, prop_name: &str) -> Option<usize> {
+    if let Some(definition) = rt.get_abstract_prop_definition_by_name(prop_name) {
+        return Some(definition.params.len());
+    }
+    if let Some(definition) = rt.get_prop_definition_by_name(prop_name) {
+        return Some(definition.typed_parameters.collect_param_names().len());
+    }
+    None
+}
+
+/// Return the stable identity owned by the proof section result that inferred
+/// `fact`. This is deliberately preferred over a later environment lookup:
+/// quantified proof facts can disappear when their local scope is popped,
+/// while their successful Result must retain the exact identity it produced.
+pub(super) fn section_inferred_fact_id(
+    inside_results: &[StmtResult],
+    fact: &Fact,
+) -> Option<FactId> {
+    let target = fact.to_string();
+    inside_results
+        .iter()
+        .find_map(|result| stmt_result_inferred_fact_id(result, &target))
+}
+
+fn infer_result_fact_id(result: &SuccessInferResult, target: &str) -> Option<FactId> {
+    for output in &result.store_fact_outputs {
+        if output.itself_and_why_itself_is_stored.0.to_string() == target {
+            if let Some(fact_id) = output.fact_id {
+                return Some(fact_id);
+            }
+        }
+        for (fact, fact_id) in output
+            .inferred_facts
+            .iter()
+            .zip(output.inferred_fact_ids.iter())
+        {
+            if fact.to_string() == target {
+                if let Some(fact_id) = fact_id {
+                    return Some(*fact_id);
+                }
+            }
+        }
+    }
+    for application in &result.rule_applications {
+        for conclusion in &application.conclusions {
+            if conclusion.fact.to_string() == target {
+                if let Some(fact_id) = conclusion.fact_id {
+                    return Some(fact_id);
+                }
+            }
+            if let Some(fact_id) = infer_result_fact_id(&conclusion.infers, target) {
+                return Some(fact_id);
+            }
+        }
+    }
+    None
+}
+
+fn stmt_result_inferred_fact_id(result: &StmtResult, target: &str) -> Option<FactId> {
+    if let Some(success) = result.factual_success() {
+        return infer_result_fact_id(&success.infers, target);
+    }
+    result
+        .non_factual_success()
+        .and_then(|success| success_stmt_result_inferred_fact_id(success, target))
+}
+
+fn success_stmt_result_inferred_fact_id(
+    result: &SuccessStmtResult,
+    target: &str,
+) -> Option<FactId> {
+    if let Some(fact) = result.fact() {
+        return infer_result_fact_id(&fact.infers, target);
+    }
+    if let Some(common) = result.common() {
+        if let Some(fact_id) = infer_result_fact_id(&common.infers, target) {
+            return Some(fact_id);
+        }
+    }
+    let mut inferred_fact_id = None;
+    result.visit_child_results(&mut |child| {
+        if inferred_fact_id.is_none() {
+            inferred_fact_id = stmt_result_inferred_fact_id(child, target);
+        }
+    });
+    result.visit_success_child_results(&mut |child| {
+        if inferred_fact_id.is_none() {
+            inferred_fact_id = success_stmt_result_inferred_fact_id(child, target);
+        }
+    });
+    inferred_fact_id
+}
+
+pub(super) fn or_branches_integer_closed_range_equalities(
+    element: Obj,
+    closed: &ClosedRange,
+    line_file: &LineFile,
+    stmt_name: &str,
+) -> Result<Vec<AndChainAtomicFact>, String> {
+    let start_s = range_endpoint_integer_string(closed.start.as_ref(), stmt_name)?;
+    let end_s = range_endpoint_integer_string(closed.end.as_ref(), stmt_name)?;
+    let start_i: i128 = start_s
+        .parse()
+        .map_err(|_| format!("{}: invalid integer `{}`", stmt_name, start_s))?;
+    let end_i: i128 = end_s
+        .parse()
+        .map_err(|_| format!("{}: invalid integer `{}`", stmt_name, end_s))?;
+
+    let mut branches: Vec<AndChainAtomicFact> = Vec::new();
+    let mut v = start_i;
+    while v <= end_i {
+        let eq = EqualFact::new(
+            element.clone(),
+            Number::new(v.to_string()).into(),
+            line_file.clone(),
+        );
+        branches.push(AndChainAtomicFact::AtomicFact(eq.into()));
+        v += 1;
+    }
+    Ok(branches)
+}
+
+pub(super) fn or_branches_integer_range_equalities(
+    element: Obj,
+    range: &Range,
+    line_file: &LineFile,
+    stmt_name: &str,
+) -> Result<Vec<AndChainAtomicFact>, String> {
+    let start_s = range_endpoint_integer_string(range.start.as_ref(), stmt_name)?;
+    let end_s = range_endpoint_integer_string(range.end.as_ref(), stmt_name)?;
+    let start_i: i128 = start_s
+        .parse()
+        .map_err(|_| format!("{}: invalid integer `{}`", stmt_name, start_s))?;
+    let end_i: i128 = end_s
+        .parse()
+        .map_err(|_| format!("{}: invalid integer `{}`", stmt_name, end_s))?;
+
+    let mut branches: Vec<AndChainAtomicFact> = Vec::new();
+    let mut v = start_i;
+    while v < end_i {
+        let eq = EqualFact::new(
+            element.clone(),
+            Number::new(v.to_string()).into(),
+            line_file.clone(),
+        );
+        branches.push(AndChainAtomicFact::AtomicFact(eq.into()));
+        v += 1;
+    }
+    Ok(branches)
+}
+
+pub(super) fn or_branches_closed_range_start_plus_offset_equalities(
+    element: Obj,
+    closed: &ClosedRange,
+    line_file: &LineFile,
+    stmt_name: &str,
+) -> Result<Vec<AndChainAtomicFact>, String> {
+    let start = closed.start.as_ref();
+    let end = closed.end.as_ref();
+    let Obj::Add(add) = end else {
+        return Err(format!(
+            "{}: when start is not an integer literal, end must be start + N",
+            stmt_name
+        ));
+    };
+    if add.left.as_ref().to_string() != start.to_string() {
+        return Err(format!(
+            "{}: end must be start + N (left addend equals range start)",
+            stmt_name
+        ));
+    }
+    let offset = offset_integer_literal(add.right.as_ref(), stmt_name)?;
+    if offset < 0 {
+        return Err(format!(
+            "{}: offset N in start + N must be non-negative",
+            stmt_name
+        ));
+    }
+    Ok(start_plus_offset_equalities(
+        element, start, offset, true, line_file,
+    ))
+}
+
+pub(super) fn or_branches_range_start_plus_offset_equalities(
+    element: Obj,
+    range: &Range,
+    line_file: &LineFile,
+    stmt_name: &str,
+) -> Result<Vec<AndChainAtomicFact>, String> {
+    let start = range.start.as_ref();
+    let end = range.end.as_ref();
+    let Obj::Add(add) = end else {
+        return Err(format!(
+            "{}: when start is not an integer literal, end must be start + N",
+            stmt_name
+        ));
+    };
+    if add.left.as_ref().to_string() != start.to_string() {
+        return Err(format!(
+            "{}: end must be start + N (left addend equals range start)",
+            stmt_name
+        ));
+    }
+    let offset = offset_integer_literal(add.right.as_ref(), stmt_name)?;
+    if offset < 0 {
+        return Err(format!(
+            "{}: offset N in start + N must be non-negative",
+            stmt_name
+        ));
+    }
+    Ok(start_plus_offset_equalities(
+        element, start, offset, false, line_file,
+    ))
+}
+
+fn range_endpoint_integer_string(obj: &Obj, stmt_name: &str) -> Result<String, String> {
+    let Obj::Number(n) = obj else {
+        return Err(format!(
+            "{}: range endpoints must be integer literals",
+            stmt_name
+        ));
+    };
+    let s = n.normalized_value.clone();
+    if !is_number_string_literally_integer_without_dot(s.clone()) {
+        return Err(format!(
+            "{}: range endpoints must be integers (no decimal point)",
+            stmt_name
+        ));
+    }
+    Ok(s)
+}
+
+fn offset_integer_literal(obj: &Obj, stmt_name: &str) -> Result<i128, String> {
+    let Obj::Number(n) = obj else {
+        return Err(format!(
+            "{}: N in start + N must be an integer literal",
+            stmt_name
+        ));
+    };
+    let s = n.normalized_value.clone();
+    if !is_number_string_literally_integer_without_dot(s.clone()) {
+        return Err(format!(
+            "{}: N in start + N must be an integer (no decimal point)",
+            stmt_name
+        ));
+    }
+    s.parse()
+        .map_err(|_| format!("{}: invalid integer offset `{}`", stmt_name, s))
+}
+
+fn start_plus_offset_equalities(
+    element: Obj,
+    start: &Obj,
+    offset: i128,
+    end_inclusive: bool,
+    line_file: &LineFile,
+) -> Vec<AndChainAtomicFact> {
+    let mut branches: Vec<AndChainAtomicFact> = Vec::new();
+    let right_offset = if end_inclusive { offset } else { offset - 1 };
+    let mut i = 0_i128;
+    while i <= right_offset {
+        let rhs = if i == 0 {
+            start.clone()
+        } else {
+            Add::new(start.clone(), Number::new(i.to_string()).into()).into()
+        };
+        let eq = EqualFact::new(element.clone(), rhs, line_file.clone());
+        branches.push(AndChainAtomicFact::AtomicFact(eq.into()));
+        i += 1;
+    }
+    branches
+}

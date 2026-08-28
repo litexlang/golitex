@@ -6,8 +6,8 @@ set_option linter.style.nameCheck false
 namespace __Compiler_51_FiniteEnumerationResultComposition
 
 theorem __fact0 :
-    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 (Litex.Set.coproduct (Litex.Set.singleton (1 : ℂ)) (Litex.Set.coproduct (Litex.Set.singleton (2 : ℂ)) Litex.Set.empty))), Litex.Same __p1 (1 : ℂ) ∨ Litex.Same __p1 (2 : ℂ) := by
-  intro x __type1
+    ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 (Litex.Set.coproduct (Litex.Set.singleton (1 : ℂ)) (Litex.Set.coproduct (Litex.Set.singleton (2 : ℂ)) Litex.Set.empty))), Litex.Same __p1 (1 : ℂ) ∨ Litex.Same __p1 (2 : ℂ) := by
+  intro __carrier1 x __type1
   have __assignment_cases : Litex.Same x (1 : ℂ) ∨ Litex.Same x (2 : ℂ) := (by
   rcases (__type1) with ⟨__member, __same⟩
   cases __member with

@@ -1,4 +1,5 @@
-use super::*;
+use super::renderer::*;
+use crate::prelude::*;
 
 pub(super) fn verify_fact_kind(result: &SuccessVerifyFactResult) -> &'static str {
     match result {
@@ -1325,9 +1326,10 @@ pub(super) fn fact_transformation_rule_value(rule: &FactTransformationRule) -> J
         FactTransformationRule::RationalNormalization => {
             object(vec![string_field("kind", "RationalNormalization")])
         }
-        FactTransformationRule::AnonymousFunctionBetaNormalization => object(vec![
-            string_field("kind", "AnonymousFunctionBetaNormalization"),
-        ]),
+        FactTransformationRule::AnonymousFunctionBetaNormalization => object(vec![string_field(
+            "kind",
+            "AnonymousFunctionBetaNormalization",
+        )]),
         FactTransformationRule::TransparentDefinitionReduction(evidence) => object(vec![
             string_field("kind", "TransparentDefinitionReduction"),
             (

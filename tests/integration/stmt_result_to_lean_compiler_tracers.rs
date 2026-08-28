@@ -1,8 +1,8 @@
-use litex::prelude::*;
-use litex::stmt_result_to_lean_compiler::{
+use litex::lean_compiler::{
     compile_litex_source_to_lean_compilation_report, compile_litex_source_to_lean_source,
     StmtResultToLeanCompilationPhase, StmtResultToLeanCompilationStatus,
 };
+use litex::prelude::*;
 
 fn compile_on_verifier_stack(source: &'static str, label: &'static str) -> Result<String, String> {
     std::thread::Builder::new()
@@ -167,6 +167,9 @@ fn convergence_under_constant_scaling_generates_without_name_specialization() {
     assert!(generated.contains("def is_eventually_close"));
     assert!(generated.contains("def converges_to"));
     assert!(generated.contains("theorem converges_to_mul_const"));
+    assert!(generated.contains("∀ {__carrier1 : Type} (__p1 : __carrier1)"));
+    assert!(generated.contains("exact @__component4"));
+    assert!(generated.contains("using (@__fact1)"));
     assert!(!generated.contains("axiom "));
     assert!(!generated.contains("sorry"));
     assert!(!generated.contains("admit"));
@@ -234,9 +237,7 @@ fn known_forall_multi_conclusion_fact_id_provenance_compiles_both_exact_projecti
 
     assert!(generated.contains("theorem paired_source :"), "{generated}");
     assert!(
-        generated.contains(
-            "((paired_source (2 : ℂ) (Litex.Rules.complexRealInR (2 : ℝ))).1).1"
-        ),
+        generated.contains("((paired_source (2 : ℂ) (Litex.Rules.complexRealInR (2 : ℝ))).1).1"),
         "{generated}"
     );
     assert!(
@@ -637,26 +638,135 @@ fn top_level_recursive_inference_theorems_close_over_earlier_inference_steps() {
 #[test]
 fn inference_compilation_does_not_parse_rendered_lean_statements() {
     const COMPILER_SOURCES: &[&str] = &[
-        include_str!("../../src/stmt_result_to_lean_compiler/file_compilation.rs"),
-        include_str!("../../src/stmt_result_to_lean_compiler/markdown_compilation.rs"),
-        include_str!("../../src/stmt_result_to_lean_compiler/source_compilation.rs"),
-        include_str!("../../src/stmt_result_to_lean_compiler/lean_compilation_types.rs"),
-        include_str!(
-            "../../src/stmt_result_to_lean_compiler/represent_litex_function_contracts_in_lean.rs"
+        include_str!("../../src/lean_compiler/file_compilation.rs"),
+        include_str!("../../src/lean_compiler/markdown_compilation.rs"),
+        include_str!("../../src/lean_compiler/source_compilation.rs"),
+        include_str!("../../src/lean_compiler/target_types.rs"),
+        include_str!("../../src/lean_compiler/function_contracts.rs"),
+        include_str!("../../src/lean_compiler/object_representation.rs"),
+        include_str!("../../src/lean_compiler/compilation_report.rs"),
+        include_str!("../../src/lean_compiler/compiler/state.rs"),
+        concat!(
+            include_str!("../../src/lean_compiler/compiler/fact_compilation/mod.rs"),
+            include_str!("../../src/lean_compiler/compiler/fact_compilation/algebraic_normalization.rs"),
+            include_str!("../../src/lean_compiler/compiler/fact_compilation/anonymous_function_aliases.rs"),
+            include_str!("../../src/lean_compiler/compiler/fact_compilation/chain_inference_projections.rs"),
+            include_str!("../../src/lean_compiler/compiler/fact_compilation/defined_predicate_inference.rs"),
+            include_str!("../../src/lean_compiler/compiler/fact_compilation/direct_fact_inference.rs"),
+            include_str!("../../src/lean_compiler/compiler/fact_compilation/direct_membership_inference.rs"),
+            include_str!("../../src/lean_compiler/compiler/fact_compilation/inference_environment.rs"),
+            include_str!("../../src/lean_compiler/compiler/fact_compilation/local_inference_state.rs"),
+            include_str!("../../src/lean_compiler/compiler/fact_compilation/local_inference_statements.rs"),
+            include_str!("../../src/lean_compiler/compiler/fact_compilation/numeric_membership_inference.rs"),
+            include_str!("../../src/lean_compiler/compiler/fact_compilation/object_reflexivity.rs"),
+            include_str!("../../src/lean_compiler/compiler/fact_compilation/statement_dispatch.rs"),
+            include_str!("../../src/lean_compiler/compiler/fact_compilation/stored_fact_citations.rs"),
+            include_str!("../../src/lean_compiler/compiler/fact_compilation/transitive_predicate_chains.rs"),
+            include_str!("../../src/lean_compiler/compiler/fact_compilation/tuple_equality_inference.rs"),
+            include_str!("../../src/lean_compiler/compiler/fact_compilation/typed_inference_declarations.rs"),
+            include_str!("../../src/lean_compiler/compiler/fact_compilation/universal_facts.rs"),
+            include_str!("../../src/lean_compiler/compiler/fact_compilation/well_definedness_rendering.rs"),
         ),
-        include_str!("../../src/stmt_result_to_lean_compiler/represent_litex_objects_in_lean.rs"),
-        include_str!("../../src/stmt_result_to_lean_compiler/compilation_report.rs"),
-        include_str!("../../src/stmt_result_to_lean_compiler/compiler_state.rs"),
-        include_str!("../../src/stmt_result_to_lean_compiler/implementation/fact_compilation.rs"),
-        include_str!("../../src/stmt_result_to_lean_compiler/implementation/object_statements.rs"),
-        include_str!("../../src/stmt_result_to_lean_compiler/implementation/proof_rendering.rs"),
-        include_str!("../../src/stmt_result_to_lean_compiler/implementation/source_rendering.rs"),
-        include_str!("../../src/stmt_result_to_lean_compiler/implementation/structured_proofs.rs"),
-        include_str!(
-            "../../src/stmt_result_to_lean_compiler/implementation/theorem_compilation.rs"
+        concat!(
+            include_str!("../../src/lean_compiler/compiler/object_definitions/mod.rs"),
+            include_str!("../../src/lean_compiler/compiler/object_definitions/definition_proofs.rs"),
+            include_str!("../../src/lean_compiler/compiler/object_definitions/evaluation.rs"),
+            include_str!("../../src/lean_compiler/compiler/object_definitions/function_equalities.rs"),
+            include_str!("../../src/lean_compiler/compiler/object_definitions/local_objects.rs"),
+            include_str!("../../src/lean_compiler/compiler/object_definitions/matrices.rs"),
+            include_str!("../../src/lean_compiler/compiler/object_definitions/nonempty_objects.rs"),
+            include_str!("../../src/lean_compiler/compiler/object_definitions/object_equalities.rs"),
+            include_str!("../../src/lean_compiler/compiler/object_definitions/proposition_definitions.rs"),
+            include_str!("../../src/lean_compiler/compiler/object_definitions/sequences.rs"),
+            include_str!("../../src/lean_compiler/compiler/object_definitions/speculative_execution.rs"),
+            include_str!("../../src/lean_compiler/compiler/object_definitions/trusted_statements.rs"),
+            include_str!("../../src/lean_compiler/compiler/object_definitions/tuples.rs"),
         ),
-        include_str!("../../src/stmt_result_to_lean_compiler/implementation/validation.rs"),
-        include_str!("../../src/stmt_result_to_lean_compiler/compiler_environment.rs"),
+        concat!(
+            include_str!("../../src/lean_compiler/compiler/proof_rendering/mod.rs"),
+            include_str!("../../src/lean_compiler/compiler/proof_rendering/abstract_predicate_definitions.rs"),
+            include_str!("../../src/lean_compiler/compiler/proof_rendering/exact_predicate_transport.rs"),
+            include_str!("../../src/lean_compiler/compiler/proof_rendering/fact_citations.rs"),
+            include_str!("../../src/lean_compiler/compiler/proof_rendering/forall_parameters.rs"),
+            include_str!("../../src/lean_compiler/compiler/proof_rendering/function_reduction.rs"),
+            include_str!("../../src/lean_compiler/compiler/proof_rendering/inference_ownership.rs"),
+            include_str!("../../src/lean_compiler/compiler/proof_rendering/inference_validation.rs"),
+            include_str!("../../src/lean_compiler/compiler/proof_rendering/list_set_elimination.rs"),
+            include_str!("../../src/lean_compiler/compiler/proof_rendering/numeric_comparison.rs"),
+            include_str!("../../src/lean_compiler/compiler/proof_rendering/numeric_membership.rs"),
+            include_str!("../../src/lean_compiler/compiler/proof_rendering/numeric_sign_rendering.rs"),
+            include_str!("../../src/lean_compiler/compiler/proof_rendering/object_values.rs"),
+            include_str!("../../src/lean_compiler/compiler/proof_rendering/power_membership_inference.rs"),
+            include_str!("../../src/lean_compiler/compiler/proof_rendering/predicate_arguments.rs"),
+            include_str!("../../src/lean_compiler/compiler/proof_rendering/rational_normalization.rs"),
+            include_str!("../../src/lean_compiler/compiler/proof_rendering/registered_predicate_properties.rs"),
+            include_str!("../../src/lean_compiler/compiler/proof_rendering/representative_transport.rs"),
+            include_str!("../../src/lean_compiler/compiler/proof_rendering/set_algebra_rules.rs"),
+            include_str!("../../src/lean_compiler/compiler/proof_rendering/set_builder_membership.rs"),
+            include_str!("../../src/lean_compiler/compiler/proof_rendering/standard_set_projection.rs"),
+            include_str!("../../src/lean_compiler/compiler/proof_rendering/structural_set_equality.rs"),
+        ),
+        concat!(
+            include_str!("../../src/lean_compiler/compiler/source_rendering/mod.rs"),
+            include_str!("../../src/lean_compiler/compiler/source_rendering/aggregate_objects.rs"),
+            include_str!("../../src/lean_compiler/compiler/source_rendering/builtin_objects.rs"),
+            include_str!("../../src/lean_compiler/compiler/source_rendering/existential_facts.rs"),
+            include_str!("../../src/lean_compiler/compiler/source_rendering/fact_components.rs"),
+            include_str!("../../src/lean_compiler/compiler/source_rendering/fact_rendering.rs"),
+            include_str!("../../src/lean_compiler/compiler/source_rendering/function_applications.rs"),
+            include_str!("../../src/lean_compiler/compiler/source_rendering/function_types.rs"),
+            include_str!("../../src/lean_compiler/compiler/source_rendering/function_values.rs"),
+            include_str!("../../src/lean_compiler/compiler/source_rendering/list_sets.rs"),
+            include_str!("../../src/lean_compiler/compiler/source_rendering/logical_connectives.rs"),
+            include_str!("../../src/lean_compiler/compiler/source_rendering/numeric_objects.rs"),
+            include_str!("../../src/lean_compiler/compiler/source_rendering/numeric_set_certificates.rs"),
+            include_str!("../../src/lean_compiler/compiler/source_rendering/object_rendering.rs"),
+            include_str!("../../src/lean_compiler/compiler/source_rendering/parameter_contracts.rs"),
+            include_str!("../../src/lean_compiler/compiler/source_rendering/source_text.rs"),
+            include_str!("../../src/lean_compiler/compiler/source_rendering/standard_sets.rs"),
+            include_str!("../../src/lean_compiler/compiler/source_rendering/structured_induction.rs"),
+            include_str!("../../src/lean_compiler/compiler/source_rendering/target_sets.rs"),
+            include_str!("../../src/lean_compiler/compiler/source_rendering/typed_spines.rs"),
+        ),
+        include_str!("../../src/lean_compiler/compiler/structured_proofs.rs"),
+        concat!(
+            include_str!("../../src/lean_compiler/compiler/theorem_compilation/mod.rs"),
+            include_str!("../../src/lean_compiler/compiler/theorem_compilation/builtin_theorem_application.rs"),
+            include_str!("../../src/lean_compiler/compiler/theorem_compilation/cartesian_inference.rs"),
+            include_str!("../../src/lean_compiler/compiler/theorem_compilation/claims.rs"),
+            include_str!("../../src/lean_compiler/compiler/theorem_compilation/examples.rs"),
+            include_str!("../../src/lean_compiler/compiler/theorem_compilation/fact_goal_proofs.rs"),
+            include_str!("../../src/lean_compiler/compiler/theorem_compilation/local_definition_steps.rs"),
+            include_str!("../../src/lean_compiler/compiler/theorem_compilation/local_fact_steps.rs"),
+            include_str!("../../src/lean_compiler/compiler/theorem_compilation/local_forall_steps.rs"),
+            include_str!("../../src/lean_compiler/compiler/theorem_compilation/local_statement_steps.rs"),
+            include_str!("../../src/lean_compiler/compiler/theorem_compilation/named_forall.rs"),
+            include_str!("../../src/lean_compiler/compiler/theorem_compilation/named_theorems.rs"),
+            include_str!("../../src/lean_compiler/compiler/theorem_compilation/real_analysis_builtins.rs"),
+            include_str!("../../src/lean_compiler/compiler/theorem_compilation/registered_predicate_properties.rs"),
+            include_str!("../../src/lean_compiler/compiler/theorem_compilation/sketches.rs"),
+            include_str!("../../src/lean_compiler/compiler/theorem_compilation/strategies_and_settings.rs"),
+            include_str!("../../src/lean_compiler/compiler/theorem_compilation/templates.rs"),
+            include_str!("../../src/lean_compiler/compiler/theorem_compilation/theorem_instantiation.rs"),
+            include_str!("../../src/lean_compiler/compiler/theorem_compilation/theorem_selection.rs"),
+        ),
+        concat!(
+            include_str!("../../src/lean_compiler/compiler/validation/mod.rs"),
+            include_str!("../../src/lean_compiler/compiler/validation/definition_types.rs"),
+            include_str!("../../src/lean_compiler/compiler/validation/direct_compilation_audit.rs"),
+            include_str!("../../src/lean_compiler/compiler/validation/fact_context_collection.rs"),
+            include_str!("../../src/lean_compiler/compiler/validation/fact_publication.rs"),
+            include_str!("../../src/lean_compiler/compiler/validation/fact_store_results.rs"),
+            include_str!("../../src/lean_compiler/compiler/validation/fact_well_definedness.rs"),
+            include_str!("../../src/lean_compiler/compiler/validation/inference_identity.rs"),
+            include_str!("../../src/lean_compiler/compiler/validation/object_context_collection.rs"),
+            include_str!("../../src/lean_compiler/compiler/validation/object_result_validation.rs"),
+            include_str!("../../src/lean_compiler/compiler/validation/range_loops.rs"),
+            include_str!("../../src/lean_compiler/compiler/validation/standard_set_nonempty.rs"),
+            include_str!("../../src/lean_compiler/compiler/validation/template_instantiation.rs"),
+            include_str!("../../src/lean_compiler/compiler/validation/well_definedness_installation.rs"),
+        ),
+        include_str!("../../src/lean_compiler/environment.rs"),
     ];
     for forbidden_parser in [
         "strip_prefix(\"have \")",
@@ -1084,15 +1194,14 @@ fn conjunction_disjunction_and_alpha_forall_citations_replay_exact_evidence() {
         "propositional_fact_spine.lit",
     )
     .expect("compile propositional proof spine");
-    assert!(generated
-        .contains("(Litex.Same (1 : ℂ) (1 : ℂ)) ∧ (Litex.Same (2 : ℂ) (2 : ℂ))"));
+    assert!(generated.contains("(Litex.Same (1 : ℂ) (1 : ℂ)) ∧ (Litex.Same (2 : ℂ) (2 : ℂ))"));
     assert!(generated.contains("exact ⟨Litex.Same.refl (1 : ℂ), Litex.Same.refl (2 : ℂ)⟩"));
-    assert!(generated
-        .contains("have __prior1_0 : (Litex.Same a a) ∧ (Litex.Same b b) := ⟨__domain1, __domain2⟩"));
+    assert!(generated.contains(
+        "have __prior1_0 : (Litex.Same a a) ∧ (Litex.Same b b) := ⟨__domain1, __domain2⟩"
+    ));
     assert!(generated.contains("exact __prior1_0"));
-    assert!(
-        generated.contains("have __prior2_0 : Litex.Same a a ∨ Litex.Same b b := Or.inl (__domain1)")
-    );
+    assert!(generated
+        .contains("have __prior2_0 : Litex.Same a a ∨ Litex.Same b b := Or.inl (__domain1)"));
     assert!(generated.contains("exact __prior2_0"));
     assert!(generated.contains("theorem __fact4 :\n    ∀ (__p1 : Litex.Set) (__p2 : Litex.Set)"));
     assert!(generated.contains(":= __fact3"));
@@ -1128,8 +1237,8 @@ fn unary_function_set_application_consumes_both_memberships() {
         generated.contains("__type4 : Litex.In __p4 (Litex.fnSet"),
         "{generated}"
     );
-    assert!(generated.contains("Litex.fnApplyOwn (Litex.In.rep f"));
-    assert!(generated.contains("(Litex.In.own (Litex.fnSet"));
+    assert!(generated.contains("Litex.fnApply f"));
+    assert!(generated.contains("__type4"));
     assert!(!generated.contains("namespace __Sketch"));
     assert!(!generated.contains("sorry"));
 }
@@ -1151,7 +1260,7 @@ fn multilayer_application_preserves_each_unary_source_contract() {
     let generated = compile_on_verifier_stack(SOURCE, "23_MultilayerApplication.lit")
         .expect("compile multi-layer application tracer");
     assert!(generated.contains("Litex.In __p6 (Litex.fnSet"));
-    assert!(generated.contains("let __fn_layer1 := (Litex.fnApplyOwn (Litex.In.rep g"));
+    assert!(generated.contains("let __fn_layer1 := (Litex.fnApply g"));
     assert!(generated.contains("Litex.fnApplyOwn __fn_layer1"));
     assert!(generated.contains("(Litex.In.own (Litex.fnSet"));
     assert!(!generated.contains("Litex.Object"));
@@ -1175,7 +1284,7 @@ fn multilayer_application_preserves_each_unary_source_contract() {
         .expect("compile one exact two-parameter source layer");
     assert!(same_layer.contains("Litex.fnTelescopeSet"));
     assert!(same_layer.contains("Litex.FnTelescope.parameter"));
-    assert!(same_layer.contains("Litex.fnTelescopeApplyOwn"));
+    assert!(same_layer.contains("Litex.fnTelescopeApply f"));
     assert!(same_layer.contains(").down"));
     assert!(!same_layer.contains("Litex.Object"));
     assert!(!same_layer.contains("sorry"));
@@ -1225,10 +1334,7 @@ fn dependent_function_sets_keep_parameter_and_return_carriers() {
     let returned = compile_on_verifier_stack(DEPENDENT_RETURN, "24_DependentAnonymousFunction.lit")
         .expect("compile an application with an argument-indexed exact return set");
     assert!(returned.contains("Litex.fnTelescopeSet"), "{returned}");
-    assert!(
-        returned.contains("Litex.fnTelescopeApplyOwn (Litex.In.rep f"),
-        "{returned}"
-    );
+    assert!(returned.contains("Litex.fnTelescopeApply f"), "{returned}");
     assert!(returned.contains("Litex.setBuilder Litex.R"), "{returned}");
     assert!(returned.contains(").down"), "{returned}");
     assert!(!returned.contains("Litex.Object"));
@@ -1376,8 +1482,9 @@ fn existential_intro_and_elim_use_native_carrier_and_exact_projections() {
         "10_ExistentialWitness.lit",
     )
     .expect("compile existential introduction/elimination tracer");
-    assert!(generated
-        .contains("∃ (x : ℂ), ∃ (__type_x : Litex.In x Litex.R), Litex.Same x (1 : ℂ)"));
+    assert!(
+        generated.contains("∃ (x : ℂ), ∃ (__type_x : Litex.In x Litex.R), Litex.Same x (1 : ℂ)")
+    );
     assert!(generated.contains("noncomputable def y : ℂ := Classical.choose"));
     assert!(generated.contains("Classical.choose_spec"));
     assert!(!generated.contains("Litex.Object"));
@@ -1457,7 +1564,7 @@ fn named_real_functions_compile_compound_bodies_and_domain_clauses() {
     .expect("compile compound named-function tracer");
     assert!(generated.contains("noncomputable def id : Litex.Fn Litex.R Litex.R"));
     assert!(generated.contains("Litex.In id (Litex.fnSet Litex.R Litex.R)"));
-    assert!(generated.contains("Litex.fnApplyOwn id __fact0"));
+    assert!(generated.contains("Litex.fnApplyOwn id (Litex.In.own"));
     assert!(generated.contains("Litex.In.same_rep (1 : ℂ)"));
     assert!(generated.contains("noncomputable def inc : Litex.Fn Litex.R Litex.R"));
     assert!(generated.contains("Litex.Same.realAddComplex"));

@@ -18,7 +18,7 @@ theorem __fact2 : Litex.Same shifted_sequence ({ call := fun {__alpha} (__arg : 
   unfold shifted_sequence
   exact Litex.Same.refl ({ call := fun {__alpha} (__arg : __alpha) __arg_in => (((((Litex.In.rep __arg __arg_in).val : ℕ) : ℝ)) + (1 : ℝ)) } : Litex.Fn Litex.NPos Litex.R)
 
-theorem __fact3 : Litex.Same (Litex.fnApplyOwn shifted_sequence __fact0 (2 : ℂ) (Litex.Rules.complexEqNatInNPos (2 : ℂ) 2 (by norm_num) (by norm_num))) ((2 : ℂ) + (1 : ℂ)) := by
+theorem __fact3 : Litex.Same (Litex.fnApplyOwn shifted_sequence (Litex.In.own (Litex.fnSet Litex.NPos Litex.R) shifted_sequence) (2 : ℂ) (Litex.Rules.complexEqNatInNPos (2 : ℂ) 2 (by norm_num) (by norm_num))) ((2 : ℂ) + (1 : ℂ)) := by
   exact (by
   unfold Litex.fnApplyOwn shifted_sequence
   exact Litex.Same.realAddComplex (Litex.Same.symm (Litex.Same.trans (Litex.In.same_rep (2 : ℂ) (Litex.Rules.complexEqNatInNPos (2 : ℂ) 2 (by norm_num) (by norm_num))) (Litex.Same.trans (Litex.Same.subtype (Litex.In.rep (2 : ℂ) (Litex.Rules.complexEqNatInNPos (2 : ℂ) 2 (by norm_num) (by norm_num)))) (Litex.AsReal.nat ((Litex.In.rep (2 : ℂ) (Litex.Rules.complexEqNatInNPos (2 : ℂ) 2 (by norm_num) (by norm_num)))).val)))) (Litex.Same.realComplex (1 : ℝ)))

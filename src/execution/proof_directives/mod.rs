@@ -1,0 +1,22 @@
+//! Execution for statements that explicitly choose a verifier operation.
+mod antisymmetry;
+mod assignment_assumption;
+mod cases;
+mod choice;
+mod closed_range_cases;
+mod contradiction;
+mod definition;
+mod enumeration;
+mod extension;
+mod finite_set_induction;
+mod induction;
+mod iteration;
+mod range_enumeration;
+mod reflexivity;
+mod regularity;
+mod structure_definition;
+mod support;
+mod symmetry;
+mod theorem_application;
+mod transitivity;
+mod zorn;

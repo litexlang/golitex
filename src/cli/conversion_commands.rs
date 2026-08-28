@@ -1,14 +1,16 @@
 use super::arguments::{read_any_value_after_flag, read_non_flag_value_after_flag};
 use super::command_handlers::VERSION;
 use super::messages::print_help_message;
-use crate::common::helper::remove_windows_carriage_from_str;
-use crate::common::output_language::OutputLanguage;
 use crate::error::RuntimeError;
+use crate::latex_renderer::{to_latex_from_file, to_latex_from_repository, to_latex_from_source};
 use crate::output::display_runtime_error_json;
+use crate::output::language::OutputLanguage;
 use crate::pipeline::run_latex_repl;
+use crate::python_extractor::{
+    to_python_from_file, to_python_from_repository, to_python_from_source,
+};
 use crate::runtime::{RunOptions, Runtime};
-use crate::to_latex::{to_latex_from_file, to_latex_from_repository, to_latex_from_source};
-use crate::to_python::{to_python_from_file, to_python_from_repository, to_python_from_source};
+use crate::syntax::source_formatting::remove_windows_carriage_from_str;
 use std::fs;
 use std::process;
 

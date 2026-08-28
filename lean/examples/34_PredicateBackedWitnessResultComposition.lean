@@ -5,23 +5,25 @@ set_option linter.style.nameCheck false
 
 namespace __Compiler_34_PredicateBackedWitnessResultComposition
 
-def has_copy {__carrier1 : Type} (a : __carrier1) : Prop :=
-  Litex.In a Litex.R ∧ ∃ (x : ℂ), Litex.In x Litex.R ∧ Litex.Same x a
+def has_copy (a : (Litex.R).Carrier) : Prop :=
+  (Litex.In a Litex.R) ∧ (∃ (x : ℂ), ∃ (__type_x : Litex.In x Litex.R), Litex.Same x a)
 
-theorem __fact0 : has_copy (2 : ℂ) := by
+theorem __fact0 : has_copy (2 : ℝ) := by
   unfold has_copy
-  exact ⟨Litex.Rules.complexRealInR (2 : ℝ), (by
+  exact ⟨Litex.In.own Litex.R (2 : ℝ), (by
+  rcases ((show ∃ (x : ℂ), ∃ (__type_x : Litex.In x Litex.R), Litex.Same x (2 : ℂ) from (by
   have __step1 : Litex.Same (2 : ℂ) (2 : ℂ) := by
     exact Litex.Same.refl (2 : ℂ)
-  exact ⟨(2 : ℂ), (Litex.Rules.complexRealInR (2 : ℝ)), (__step1)⟩)⟩
+  exact ⟨(((Litex.In.rep (2 : ℂ) (Litex.Rules.complexRealInR (2 : ℝ)) : ℝ)) : ℂ), (Litex.Rules.complexRealInR (Litex.In.rep (2 : ℂ) (Litex.Rules.complexRealInR (2 : ℝ)) : ℝ)), (Litex.Same.trans (Litex.Same.symm (Litex.Same.trans (Litex.In.same_rep (2 : ℂ) ((Litex.Rules.complexRealInR (2 : ℝ)))) (Litex.Same.realComplex (Litex.In.rep (2 : ℂ) (Litex.Rules.complexRealInR (2 : ℝ)))))) (__step1))⟩))) with ⟨__transport_witness, __transport_membership, __transport_body⟩
+  exact ⟨__transport_witness, __transport_membership, Litex.Same.trans (__transport_body) (Litex.Same.symm (Litex.Same.realComplex ((2 : ℝ))))⟩)⟩
 
-theorem __fact1 : Litex.In (2 : ℂ) Litex.R := by
+theorem __fact1 : Litex.In (2 : ℝ) Litex.R := by
   exact (by
   have __definition := __fact0
   unfold has_copy at __definition
   exact __definition.1)
 
-theorem __fact2 : ∃ (x : ℂ), Litex.In x Litex.R ∧ Litex.Same x (2 : ℂ) := by
+theorem __fact2 : ∃ (x : ℂ), ∃ (__type_x : Litex.In x Litex.R), Litex.Same x (2 : ℝ) := by
   exact (by
   have __definition := __fact0
   unfold has_copy at __definition

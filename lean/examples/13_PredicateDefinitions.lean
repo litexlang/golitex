@@ -5,21 +5,15 @@ set_option linter.style.nameCheck false
 
 namespace __Compiler_13_PredicateDefinitions
 
-def is_unit_pair {__carrier1 : Type} (x : __carrier1) {__carrier2 : Type} (y : __carrier2) : Prop :=
-  Litex.In x Litex.R ∧ Litex.In y Litex.R ∧ Litex.Same x (1 : ℂ) ∧ Litex.Same y (1 : ℂ)
+def is_unit_pair (x : (Litex.R).Carrier) (y : (Litex.R).Carrier) : Prop :=
+  (Litex.In x Litex.R) ∧ (Litex.In y Litex.R) ∧ (Litex.Same x (1 : ℂ)) ∧ (Litex.Same y (1 : ℂ))
 
 theorem __fact0 : Litex.Same (1 : ℂ) (1 : ℂ) := by
   exact Litex.Same.refl (1 : ℂ)
 
-theorem __fact1 : is_unit_pair (1 : ℂ) (1 : ℂ) := by
+theorem __fact1 : is_unit_pair (1 : ℝ) (1 : ℝ) := by
   exact (by
   unfold is_unit_pair
-  exact ⟨Litex.Rules.complexRealInR (1 : ℝ), Litex.Rules.complexRealInR (1 : ℝ), __fact0, __fact0⟩)
-
-theorem __fact2 : Litex.In (1 : ℂ) Litex.R := by
-  exact (by
-  have __definition := __fact1
-  unfold is_unit_pair at __definition
-  exact __definition.1)
+  exact ⟨Litex.In.own Litex.R (1 : ℝ), Litex.In.own Litex.R (1 : ℝ), Litex.Same.trans (Litex.Same.symm (Litex.Same.symm (Litex.Same.realComplex ((1 : ℝ))))) ((by simpa [Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (__fact0))), Litex.Same.trans (Litex.Same.symm (Litex.Same.symm (Litex.Same.realComplex ((1 : ℝ))))) ((by simpa [Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (__fact0)))⟩)
 
 end __Compiler_13_PredicateDefinitions

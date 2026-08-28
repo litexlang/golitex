@@ -6,22 +6,28 @@ set_option linter.style.nameCheck false
 namespace __Compiler_61_TheoremApplicationScope
 
 theorem expose_zero_sides :
-    ∀ (x : ℂ) (__h0_1 : Litex.In x Litex.C),
-      (Litex.Same ((x : ℂ) + (0 : ℂ)) x) ∧ (Litex.Same ((0 : ℂ) + (x : ℂ)) x) := by
-  intro x __h0_1
-  have __step1 : Litex.Same ((x : ℂ) + (0 : ℂ)) x := by
-    exact Litex.Same.ofEq (by norm_cast; ring)
-  have __step2 : Litex.Same ((0 : ℂ) + (x : ℂ)) x := by
-    exact Litex.Same.ofEq (by norm_cast; ring)
-  have __c0_0 : Litex.Same ((x : ℂ) + (0 : ℂ)) x := __step1
-  have __c0_1 : Litex.Same ((0 : ℂ) + (x : ℂ)) x := __step2
+    ∀ {__carrier0_1 : Type} (x : __carrier0_1) (__h4 : Litex.In x Litex.C),
+      ((Litex.Same ((Litex.In.rep x __h4 : ℂ) + (0 : ℂ)) x)) ∧ ((Litex.Same ((0 : ℂ) + (Litex.In.rep x __h4 : ℂ)) x)) := by
+  intro __carrier0_1 x __h4
+  have __step1 : Litex.Same ((Litex.In.rep x __h4 : ℂ) + (0 : ℂ)) x := by
+    exact Litex.Same.trans (Litex.Same.refl (((Litex.In.rep x __h4 : ℂ) + (0 : ℂ)))) (Litex.Same.trans (Litex.Same.ofEq ((show ((Litex.In.rep x __h4 : ℂ) + (0 : ℂ)) = (Litex.In.rep x __h4 : ℂ) from (by norm_cast <;> ring_nf)))) (Litex.Same.symm (Litex.Same.trans (Litex.In.same_rep x (__h4)) (Litex.Same.refl (Litex.In.rep x __h4)))))
+  have __step2 : Litex.Same ((0 : ℂ) + (Litex.In.rep x __h4 : ℂ)) x := by
+    exact Litex.Same.trans (Litex.Same.refl (((0 : ℂ) + (Litex.In.rep x __h4 : ℂ)))) (Litex.Same.trans (Litex.Same.ofEq ((show ((0 : ℂ) + (Litex.In.rep x __h4 : ℂ)) = (Litex.In.rep x __h4 : ℂ) from (by norm_cast <;> ring_nf)))) (Litex.Same.symm (Litex.Same.trans (Litex.In.same_rep x (__h4)) (Litex.Same.refl (Litex.In.rep x __h4)))))
+  have __c0_0 : Litex.Same ((Litex.In.rep x __h4 : ℂ) + (0 : ℂ)) x := __step1
+  have __c0_1 : Litex.Same ((0 : ℂ) + (Litex.In.rep x __h4 : ℂ)) x := __step2
   exact ⟨__c0_0, __c0_1⟩
 
 theorem __fact1 : Litex.Same ((2 : ℂ) + (0 : ℂ)) ((0 : ℂ) + (2 : ℂ)) := by
   have __step1_1 : Litex.Same ((2 : ℂ) + (0 : ℂ)) (2 : ℂ) := by
-    exact (expose_zero_sides (2 : ℂ) (Litex.Rules.complexInC (2 : ℂ))).1
+    exact (by
+    have __projected_conclusion := (expose_zero_sides (2 : ℂ) (Litex.Rules.complexInC (2 : ℂ))).1
+    try rw [Litex.In.rep_exact] at __projected_conclusion
+    exact __projected_conclusion)
   have __step1_2 : Litex.Same ((0 : ℂ) + (2 : ℂ)) (2 : ℂ) := by
-    exact (expose_zero_sides (2 : ℂ) (Litex.Rules.complexInC (2 : ℂ))).2
+    exact (by
+    have __projected_conclusion := (expose_zero_sides (2 : ℂ) (Litex.Rules.complexInC (2 : ℂ))).2
+    try rw [Litex.In.rep_exact] at __projected_conclusion
+    exact __projected_conclusion)
   exact Litex.Same.trans (__step1_1) (Litex.Same.symm (__step1_2))
 
 end __Compiler_61_TheoremApplicationScope

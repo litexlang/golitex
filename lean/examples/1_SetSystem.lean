@@ -24,11 +24,11 @@ theorem __fact3 : Litex.Same B Litex.C := by
   exact Litex.Same.refl Litex.C
 
 theorem __fact4 :
-    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 A) (__p2 : ℂ) (__type2 : Litex.In __p2 B) (__domain1 : Litex.Same __p1 __p2), Litex.In __p2 A ∧ Litex.In __p1 B := by
-  intro a __h4_1 b __h4_2 __domain1
-  have __c4_0 : Litex.In b A := (Litex.In.congr (__domain1) A).mp (__h4_1)
-  have __c4_1 : Litex.In a B := (Litex.In.congr (__domain1) B).mpr (__h4_2)
-  exact ⟨__c4_0, __c4_1⟩
+    ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 A) {__carrier2 : Type} (__p2 : __carrier2) (__type2 : Litex.In __p2 B) (__domain1 : Litex.Same __p1 __p2), (Litex.In __p2 A) ∧ (Litex.In __p1 B) := by
+  intro __carrier1 a __h16 __carrier2 b __h18 __domain1
+  have __prior4_0 : Litex.In b A := (Litex.In.congr (__domain1) A).mp (__h16)
+  have __prior4_1 : Litex.In a B := (Litex.In.congr (__domain1) B).mpr (__h18)
+  exact ⟨__prior4_0, __prior4_1⟩
 
 end __Sketch01
 

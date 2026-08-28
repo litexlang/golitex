@@ -1,4 +1,4 @@
-use crate::common::json_value::{render_json_value, JsonValue};
+use crate::output::json_value::{render_json_value, JsonValue};
 use crate::prelude::*;
 use std::collections::{BTreeMap, HashSet};
 

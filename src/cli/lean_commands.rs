@@ -1,10 +1,10 @@
 use super::arguments::read_non_flag_value_after_flag;
 use super::messages::print_help_message;
-use crate::common::output_style::OutputStyle;
-use crate::pipeline::RunOptions;
-use crate::stmt_result_to_lean_compiler::{
+use crate::lean_compiler::{
     compile_litex_file_to_lean_file, compile_litex_markdown_code_blocks_to_lean_file,
 };
+use crate::output::style::OutputStyle;
+use crate::pipeline::RunOptions;
 use std::path::Path;
 use std::process;
 

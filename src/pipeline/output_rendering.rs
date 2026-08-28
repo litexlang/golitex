@@ -1,6 +1,6 @@
-use crate::common::json_value::{render_json_value, JsonValue};
 use crate::error::RuntimeError;
-use crate::obj::strip_free_param_numeric_tags_in_display;
+use crate::object::strip_free_param_numeric_tags_in_display;
+use crate::output::json_value::{render_json_value, JsonValue};
 use crate::output::{display_runtime_error_json, display_stmt_exec_result_json};
 use crate::result::StmtResult;
 use crate::runtime::Runtime;

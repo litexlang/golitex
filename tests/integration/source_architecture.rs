@@ -38,6 +38,24 @@ fn directories_below(root: &Path) -> Vec<PathBuf> {
     directories
 }
 
+fn explicit_owner_entrypoints(root: &Path) -> Vec<PathBuf> {
+    [
+        "src/environment/caches/caches.rs",
+        "src/environment/definitions/definitions.rs",
+        "src/environment/environment.rs",
+        "src/environment/facts/facts.rs",
+        "src/environment/object/object.rs",
+        "src/environment/predicate_algebraic_properties/predicate_algebraic_properties.rs",
+        "src/fact/fact.rs",
+        "src/object/object.rs",
+        "src/statement/statement.rs",
+        "src/verification/well_definedness/object/object.rs",
+    ]
+    .into_iter()
+    .map(|path| root.join(path))
+    .collect()
+}
+
 #[test]
 fn rust_visibility_does_not_regress_to_crate_only() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
@@ -127,16 +145,16 @@ fn compiler_and_test_directories_follow_the_repository_layout() {
         assert!(pipeline.join(responsibility).is_file());
     }
     assert!(!pipeline.join("execution_trace.rs").exists());
-    let compiler = root.join("src/stmt_result_to_lean_compiler");
+    let compiler = root.join("src/lean_compiler");
     assert!(root
         .join("src/bin/stmt_result_to_lean_compiler.rs")
         .is_file());
     assert!(!compiler.join("main.rs").exists());
     assert!(manifest.contains("path = \"src/bin/stmt_result_to_lean_compiler.rs\""));
-    let compiler_cli_tests = root.join("tests/unit/stmt_result_to_lean_compiler");
+    let compiler_cli_tests = root.join("tests/unit/lean_compiler");
     assert!(compiler_cli_tests.join("compiler_cli").is_dir());
     assert!(!compiler_cli_tests.join("main").exists());
-    let compiler_contracts = root.join("tests/unit/kernel_contracts/stmt_result_to_lean_compiler");
+    let compiler_contracts = root.join("tests/unit/kernel_contracts/lean_compiler");
     assert!(compiler_contracts.join("mod.rs").is_file());
     assert!(!root
         .join("tests/unit/kernel_contracts/stmt_result_to_lean_compiler.rs")
@@ -153,16 +171,207 @@ fn compiler_and_test_directories_follow_the_repository_layout() {
     ] {
         assert!(compiler_contracts.join(responsibility).is_file());
     }
-    assert!(compiler.join("implementation").is_dir());
+    let compiler_implementation = compiler.join("compiler");
+    assert!(compiler_implementation.is_dir());
+    assert!(compiler_implementation.join("mod.rs").is_file());
+    for responsibility in [
+        "builtin_evidence_compilation.rs",
+        "compilation_lifecycle.rs",
+        "fact_proof_dispatch.rs",
+        "result_dispatch.rs",
+        "state.rs",
+        "structured_proofs.rs",
+    ] {
+        assert!(compiler_implementation.join(responsibility).is_file());
+    }
+    let proof_rendering = compiler_implementation.join("proof_rendering");
+    assert!(proof_rendering.is_dir());
+    assert!(proof_rendering.join("mod.rs").is_file());
+    for responsibility in [
+        "exact_predicate_transport.rs",
+        "fact_citations.rs",
+        "forall_parameters.rs",
+        "function_reduction.rs",
+        "inference_validation.rs",
+        "list_set_elimination.rs",
+        "numeric_comparison.rs",
+        "registered_predicate_properties.rs",
+        "set_algebra_rules.rs",
+        "set_builder_membership.rs",
+        "structural_set_equality.rs",
+    ] {
+        assert!(proof_rendering.join(responsibility).is_file());
+    }
+    let fact_compilation = compiler_implementation.join("fact_compilation");
+    assert!(fact_compilation.is_dir());
+    assert!(fact_compilation.join("mod.rs").is_file());
+    for responsibility in [
+        "algebraic_normalization.rs",
+        "anonymous_function_aliases.rs",
+        "chain_inference_projections.rs",
+        "defined_predicate_inference.rs",
+        "direct_fact_inference.rs",
+        "direct_membership_inference.rs",
+        "inference_environment.rs",
+        "local_inference_state.rs",
+        "local_inference_statements.rs",
+        "numeric_membership_inference.rs",
+        "object_reflexivity.rs",
+        "statement_dispatch.rs",
+        "stored_fact_citations.rs",
+        "transitive_predicate_chains.rs",
+        "tuple_equality_inference.rs",
+        "typed_inference_declarations.rs",
+        "universal_facts.rs",
+        "well_definedness_rendering.rs",
+    ] {
+        assert!(fact_compilation.join(responsibility).is_file());
+    }
+    let fact_proof_replay = compiler_implementation.join("fact_proof_replay");
+    assert!(fact_proof_replay.is_dir());
+    assert!(fact_proof_replay.join("mod.rs").is_file());
+    for responsibility in [
+        "absolute_value.rs",
+        "aggregates.rs",
+        "definition_projection.rs",
+        "disjunction_introduction.rs",
+        "extrema.rs",
+        "fact_citations.rs",
+        "fact_transformations.rs",
+        "function_application_membership.rs",
+        "function_definition_reduction.rs",
+        "function_membership.rs",
+        "known_equality_paths.rs",
+        "known_forall_instantiation.rs",
+        "native_equality.rs",
+        "polynomial_normalization.rs",
+        "proof_composition.rs",
+        "range_sum_order.rs",
+        "real_membership_closure.rs",
+        "registered_predicate_properties.rs",
+        "result_alignment.rs",
+        "set_builtin_rules.rs",
+        "set_relation_duality.rs",
+        "standard_set_projection.rs",
+        "structural_congruence.rs",
+        "tuple_cartesian_membership.rs",
+        "tuple_coordinates.rs",
+    ] {
+        assert!(fact_proof_replay.join(responsibility).is_file());
+    }
+    let object_definitions = compiler_implementation.join("object_definitions");
+    assert!(object_definitions.is_dir());
+    assert!(object_definitions.join("mod.rs").is_file());
+    for responsibility in [
+        "definition_proofs.rs",
+        "evaluation.rs",
+        "function_equalities.rs",
+        "local_objects.rs",
+        "matrices.rs",
+        "nonempty_objects.rs",
+        "object_equalities.rs",
+        "proposition_definitions.rs",
+        "sequences.rs",
+        "speculative_execution.rs",
+        "trusted_statements.rs",
+        "tuples.rs",
+    ] {
+        assert!(object_definitions.join(responsibility).is_file());
+    }
+    let theorem_compilation = compiler_implementation.join("theorem_compilation");
+    assert!(theorem_compilation.is_dir());
+    assert!(theorem_compilation.join("mod.rs").is_file());
+    for responsibility in [
+        "builtin_theorem_application.rs",
+        "cartesian_inference.rs",
+        "claims.rs",
+        "examples.rs",
+        "fact_goal_proofs.rs",
+        "local_definition_steps.rs",
+        "local_fact_steps.rs",
+        "local_forall_steps.rs",
+        "local_statement_steps.rs",
+        "named_forall.rs",
+        "named_theorems.rs",
+        "real_analysis_builtins.rs",
+        "registered_predicate_properties.rs",
+        "sketches.rs",
+        "strategies_and_settings.rs",
+        "templates.rs",
+        "theorem_instantiation.rs",
+        "theorem_selection.rs",
+    ] {
+        assert!(theorem_compilation.join(responsibility).is_file());
+    }
+    let source_rendering = compiler_implementation.join("source_rendering");
+    assert!(source_rendering.is_dir());
+    assert!(source_rendering.join("mod.rs").is_file());
+    for responsibility in [
+        "aggregate_objects.rs",
+        "builtin_objects.rs",
+        "existential_facts.rs",
+        "fact_components.rs",
+        "fact_rendering.rs",
+        "function_applications.rs",
+        "function_types.rs",
+        "function_values.rs",
+        "list_sets.rs",
+        "logical_connectives.rs",
+        "numeric_objects.rs",
+        "numeric_set_certificates.rs",
+        "object_rendering.rs",
+        "parameter_contracts.rs",
+        "source_text.rs",
+        "standard_sets.rs",
+        "structured_induction.rs",
+        "target_sets.rs",
+        "typed_spines.rs",
+    ] {
+        assert!(source_rendering.join(responsibility).is_file());
+    }
+    let validation = compiler_implementation.join("validation");
+    assert!(validation.is_dir());
+    assert!(validation.join("mod.rs").is_file());
+    for responsibility in [
+        "definition_types.rs",
+        "direct_compilation_audit.rs",
+        "fact_context_collection.rs",
+        "fact_publication.rs",
+        "fact_store_results.rs",
+        "fact_well_definedness.rs",
+        "inference_identity.rs",
+        "object_context_collection.rs",
+        "object_result_validation.rs",
+        "range_loops.rs",
+        "standard_set_nonempty.rs",
+        "template_instantiation.rs",
+        "well_definedness_installation.rs",
+    ] {
+        assert!(validation.join(responsibility).is_file());
+    }
+    for retired_monolith in [
+        "fact_compilation.rs",
+        "fact_proof_replay.rs",
+        "object_definitions.rs",
+        "proof_rendering.rs",
+        "source_rendering.rs",
+        "theorem_compilation.rs",
+        "validation.rs",
+    ] {
+        assert!(!compiler_implementation.join(retired_monolith).exists());
+    }
+    assert!(!compiler.join("implementation").exists());
     assert!(!compiler.join("stmt_result_to_lean_compiler").exists());
-    assert!(compiler.join("compiler_state.rs").is_file());
     assert!(!compiler.join("stmt_result_to_lean_compiler.rs").exists());
     for current_file in [
         "source_compilation.rs",
         "file_compilation.rs",
         "markdown_compilation.rs",
         "compilation_report.rs",
-        "compiler_environment.rs",
+        "environment.rs",
+        "function_contracts.rs",
+        "object_representation.rs",
+        "target_types.rs",
     ] {
         assert!(compiler.join(current_file).is_file());
     }
@@ -172,36 +381,38 @@ fn compiler_and_test_directories_follow_the_repository_layout() {
         "compile_litex_markdown_code_blocks_to_lean_file.rs",
         "stmt_result_to_lean_compilation_report.rs",
         "stmt_result_to_lean_compiler_environment_stack.rs",
+        "compiler_environment.rs",
+        "compiler_state.rs",
+        "lean_compilation_types.rs",
+        "represent_litex_function_contracts_in_lean.rs",
+        "represent_litex_objects_in_lean.rs",
     ] {
         assert!(!compiler.join(retired_file).exists());
     }
+    assert!(!root.join("src/stmt_result_to_lean_compiler").exists());
     let result = root.join("src/result");
-    for (directory, responsibilities) in [
+    for (directory, file_responsibilities, directory_responsibilities) in [
         (
             "statement",
-            &[
-                "execution_trace.rs",
-                "result.rs",
-                "success.rs",
-                "traversal.rs",
-                "unknown.rs",
-            ][..],
+            &["execution_trace.rs", "traversal.rs", "unknown.rs"][..],
+            &["result", "success"][..],
         ),
         (
             "verification",
-            &[
-                "builtin_evidence.rs",
-                "success.rs",
-                "success_access.rs",
-                "unknown_fact.rs",
-            ][..],
+            &["unknown_fact.rs"][..],
+            &["builtin_evidence", "success"][..],
         ),
-        ("well_definedness", &["proof.rs", "results.rs"][..]),
+        ("well_definedness", &[][..], &["proof", "results"][..]),
     ] {
         let group = result.join(directory);
         assert!(group.join("mod.rs").is_file());
-        for responsibility in responsibilities {
+        for responsibility in file_responsibilities {
             assert!(group.join(responsibility).is_file());
+        }
+        for responsibility in directory_responsibilities {
+            let concept = group.join(responsibility);
+            assert!(concept.is_dir());
+            assert!(concept.join("mod.rs").is_file());
         }
     }
     assert!(result.join("object_evaluation.rs").is_file());
@@ -233,7 +444,26 @@ fn compiler_and_test_directories_follow_the_repository_layout() {
     for (directory, responsibilities) in [
         (
             "atomic",
-            &["arguments.rs", "conversions.rs", "core.rs", "metadata.rs"][..],
+            &[
+                "arguments.rs",
+                "atomic_fact.rs",
+                "calculation.rs",
+                "classification.rs",
+                "construction.rs",
+                "conversions.rs",
+                "display.rs",
+                "equality.rs",
+                "function_equality.rs",
+                "membership.rs",
+                "metadata.rs",
+                "negation.rs",
+                "order_relations.rs",
+                "predicate.rs",
+                "set_properties.rs",
+                "set_relations.rs",
+                "structure_properties.rs",
+                "substitution.rs",
+            ][..],
         ),
         (
             "composite",
@@ -265,7 +495,17 @@ fn compiler_and_test_directories_follow_the_repository_layout() {
             assert!(group.join(responsibility).is_file());
         }
     }
-    assert!(fact.join("types.rs").is_file());
+    for responsibility in [
+        "classification.rs",
+        "display.rs",
+        "fact.rs",
+        "fact_conversions.rs",
+        "not_forall.rs",
+        "source_location.rs",
+    ] {
+        assert!(fact.join(responsibility).is_file());
+    }
+    assert!(!fact.join("types.rs").exists());
     assert!(fact.join("support.rs").is_file());
     for retired_root_file in [
         "atomic_fact.rs",
@@ -363,14 +603,14 @@ fn compiler_and_test_directories_follow_the_repository_layout() {
         repeated_runtime_test_names.is_empty(),
         "runtime test directories repeat their parent responsibility: {repeated_runtime_test_names:#?}"
     );
-    let parser = root.join("src/parse");
+    let parser = root.join("src/parsing");
     assert!(parser.join("statement_parsing.rs").is_file());
     assert!(!parser.join("parse_stmt.rs").exists());
-    assert!(root.join("tests/unit/parse/statement_parsing").is_dir());
+    assert!(root.join("tests/unit/parsing/statement_parsing").is_dir());
     assert!(root
-        .join("tests/unit/parse/statement_parsing/diagnostics.rs")
+        .join("tests/unit/parsing/statement_parsing/diagnostics.rs")
         .is_file());
-    assert!(!root.join("tests/unit/parse/parse_stmt").exists());
+    assert!(!root.join("tests/unit/parsing/parse_stmt").exists());
     for (directory, responsibilities) in [
         (
             "object",
@@ -399,6 +639,30 @@ fn compiler_and_test_directories_follow_the_repository_layout() {
                 "trust_fact.rs",
                 "try_block.rs",
                 "witness.rs",
+            ][..],
+        ),
+        (
+            "proof_directives",
+            &[
+                "antisymmetry.rs",
+                "cases.rs",
+                "choice.rs",
+                "closed_range_cases.rs",
+                "contradiction.rs",
+                "definition.rs",
+                "dispatch.rs",
+                "enumeration.rs",
+                "extension.rs",
+                "finite_set_induction.rs",
+                "induction.rs",
+                "iteration.rs",
+                "reflexivity.rs",
+                "regularity.rs",
+                "structure_definition.rs",
+                "symmetry.rs",
+                "theorem_application.rs",
+                "transitivity.rs",
+                "zorn.rs",
             ][..],
         ),
     ] {
@@ -434,7 +698,7 @@ fn compiler_and_test_directories_follow_the_repository_layout() {
     ] {
         assert!(!parser.join(retired_root_file).exists());
     }
-    let parser_tests = root.join("tests/unit/parse");
+    let parser_tests = root.join("tests/unit/parsing");
     for test_file in [
         "object/expression/module_qualification.rs",
         "object/expression/matrix_operators.rs",
@@ -445,18 +709,55 @@ fn compiler_and_test_directories_follow_the_repository_layout() {
     ] {
         assert!(parser_tests.join(test_file).is_file());
     }
-    let statements = root.join("src/stmt");
+    let inference = root.join("src/inference");
+    for responsibility in [
+        "atomic_fact.rs",
+        "dispatch.rs",
+        "equality_and_normalization.rs",
+        "membership.rs",
+        "negated_universal.rs",
+        "numeric_order_and_sign.rs",
+        "set_relations.rs",
+    ] {
+        assert!(inference.join(responsibility).is_file());
+    }
+    let inference_result = inference.join("result");
+    assert!(inference_result.join("mod.rs").is_file());
+    for responsibility in [
+        "chain_rules.rs",
+        "composite_rules.rs",
+        "infer_reason.rs",
+        "infer_rule.rs",
+        "numeric_rules.rs",
+        "predicate_rules.rs",
+        "rule_application.rs",
+        "set_rules.rs",
+        "store_fact_output.rs",
+        "structure_rules.rs",
+        "success_result.rs",
+    ] {
+        assert!(inference_result.join(responsibility).is_file());
+    }
+    let inference_tests = root.join("tests/unit/inference");
+    for responsibility in [
+        "atomic_fact/tests.rs",
+        "dispatch/conjunction_component_inference_result_tests.rs",
+        "equality_and_normalization/defined_predicate_inference_result_tests.rs",
+        "numeric_order_and_sign/tests.rs",
+    ] {
+        assert!(inference_tests.join(responsibility).is_file());
+    }
+    let statements = root.join("src/statement");
+    for responsibility in [
+        "conversions.rs",
+        "display.rs",
+        "metadata.rs",
+        "statement.rs",
+        "type_names.rs",
+    ] {
+        assert!(statements.join(responsibility).is_file());
+    }
     for (directory, responsibilities) in [
-        (
-            "core",
-            &[
-                "conversions.rs",
-                "display.rs",
-                "metadata.rs",
-                "type_names.rs",
-                "types.rs",
-            ][..],
-        ),
         (
             "definitions",
             &[
@@ -481,6 +782,18 @@ fn compiler_and_test_directories_follow_the_repository_layout() {
             ][..],
         ),
         ("commands", &["evaluation.rs"][..]),
+        (
+            "proof_directives",
+            &[
+                "cases.rs",
+                "contra.rs",
+                "definition.rs",
+                "enumerate.rs",
+                "induc.rs",
+                "theorem_release.rs",
+                "theorem_selection.rs",
+            ][..],
+        ),
     ] {
         let group = statements.join(directory);
         assert!(group.is_dir());
@@ -512,11 +825,12 @@ fn compiler_and_test_directories_follow_the_repository_layout() {
     ] {
         assert!(!statements.join(retired_root_file).exists());
     }
+    assert!(!root.join("src/stmt").exists());
     assert!(root
-        .join("tests/unit/stmt/definitions/parameters.rs")
+        .join("tests/unit/statement/definitions/parameters.rs")
         .is_file());
-    assert!(!root.join("tests/unit/stmt/parameter_def").exists());
-    let verifier = root.join("src/verify");
+    assert!(!root.join("tests/unit/statement/parameter_def").exists());
+    let verifier = root.join("src/verification");
     assert!(verifier.join("dispatch.rs").is_file());
     for (directory, responsibilities) in [
         (
@@ -530,7 +844,6 @@ fn compiler_and_test_directories_follow_the_repository_layout() {
                 "non_equational.rs",
                 "numeric_membership.rs",
                 "set_relations.rs",
-                "universal_search.rs",
             ][..],
         ),
         (
@@ -569,7 +882,12 @@ fn compiler_and_test_directories_follow_the_repository_layout() {
         ),
         (
             "well_definedness",
-            &["fact.rs", "local_environment.rs", "object.rs"][..],
+            &[
+                "fact.rs",
+                "local_environment.rs",
+                "object/mod.rs",
+                "object/object.rs",
+            ][..],
         ),
         (
             "support",
@@ -586,6 +904,78 @@ fn compiler_and_test_directories_follow_the_repository_layout() {
             assert!(group.join(responsibility).is_file());
         }
     }
+    let universal_search = verifier.join("atomic/universal_search");
+    assert!(universal_search.join("mod.rs").is_file());
+    for responsibility in [
+        "anonymous_function_alpha.rs",
+        "anonymous_function_bodies.rs",
+        "argument_combinations.rs",
+        "argument_shapes.rs",
+        "arithmetic_arguments.rs",
+        "binder_arguments.rs",
+        "collection_arguments.rs",
+        "finite_set_measure_arguments.rs",
+        "function_collection_arguments.rs",
+        "interval_sequence_arguments.rs",
+        "iterated_arguments.rs",
+        "matcher_dispatch.rs",
+        "matcher_state.rs",
+        "matrix_index_arguments.rs",
+        "search.rs",
+        "set_operation_arguments.rs",
+        "tuple_arguments.rs",
+    ] {
+        assert!(universal_search.join(responsibility).is_file());
+    }
+    for (directory, responsibilities) in [
+        (
+            "equality_dispatch",
+            &[
+                "dispatch.rs",
+                "division_and_products.rs",
+                "empty_sets.rs",
+                "finite_set_cardinality.rs",
+                "indexed_set_families.rs",
+                "literal_set_intersections.rs",
+                "registered_antisymmetry.rs",
+                "set_builders.rs",
+                "set_operations.rs",
+                "subtraction.rs",
+                "tuple_reconstruction.rs",
+                "tuples_and_cartesian.rs",
+                "two_sided_order.rs",
+            ][..],
+        ),
+        (
+            "number_compare",
+            &[
+                "additive_sign.rs",
+                "decimal_comparison.rs",
+                "finite_set_cardinality.rs",
+                "integer_membership_bounds.rs",
+                "known_numeric_bounds.rs",
+                "logarithm_order.rs",
+                "modulo_bounds.rs",
+                "multiplicative_sign.rs",
+                "numeric_dispatch.rs",
+                "order_equivalences.rs",
+                "power_sign.rs",
+                "roots_and_absolute_value.rs",
+                "subtraction_order.rs",
+            ][..],
+        ),
+    ] {
+        let concept = verifier.join("builtin_rules").join(directory);
+        assert!(concept.join("mod.rs").is_file());
+        for responsibility in responsibilities {
+            assert!(concept.join(responsibility).is_file());
+        }
+        assert!(!verifier
+            .join("builtin_rules")
+            .join(format!("{directory}.rs"))
+            .exists());
+    }
+    assert!(!verifier.join("atomic/universal_search.rs").exists());
     for responsibility in [
         "advanced.rs",
         "core.rs",
@@ -641,7 +1031,7 @@ fn compiler_and_test_directories_follow_the_repository_layout() {
         assert!(!verifier.join(retired_root_file).exists());
     }
     assert!(!verifier.join("verify_obj_well_defined").exists());
-    let verifier_tests = root.join("tests/unit/verify");
+    let verifier_tests = root.join("tests/unit/verification");
     for test_file in [
         "atomic/non_equational.rs",
         "equality/core.rs",
@@ -653,7 +1043,7 @@ fn compiler_and_test_directories_follow_the_repository_layout() {
     ] {
         assert!(verifier_tests.join(test_file).is_file());
     }
-    let execute = root.join("src/execute");
+    let execute = root.join("src/execution");
     let object_definitions = execute.join("definition_execution/object");
     assert!(object_definitions.is_dir());
     for responsibility in [
@@ -696,6 +1086,32 @@ fn compiler_and_test_directories_follow_the_repository_layout() {
         (
             "trust_execution",
             &["assumed_facts.rs", "parameterized_assumptions.rs"][..],
+        ),
+        (
+            "proof_directives",
+            &[
+                "antisymmetry.rs",
+                "assignment_assumption.rs",
+                "cases.rs",
+                "choice.rs",
+                "closed_range_cases.rs",
+                "contradiction.rs",
+                "definition.rs",
+                "enumeration.rs",
+                "extension.rs",
+                "finite_set_induction.rs",
+                "induction.rs",
+                "iteration.rs",
+                "range_enumeration.rs",
+                "reflexivity.rs",
+                "regularity.rs",
+                "structure_definition.rs",
+                "support.rs",
+                "symmetry.rs",
+                "theorem_application.rs",
+                "transitivity.rs",
+                "zorn.rs",
+            ][..],
         ),
     ] {
         let group = execute.join(directory);
@@ -754,6 +1170,147 @@ fn compiler_and_test_directories_follow_the_repository_layout() {
     assert!(root.join("tests/unit").is_dir());
     assert!(root.join("tests/integration").is_dir());
     assert!(root.join("tests/tooling").is_dir());
+    for retired_top_level in [
+        "src/parse",
+        "src/execute",
+        "src/infer",
+        "src/verify",
+        "tests/unit/parse",
+        "tests/unit/infer",
+        "tests/unit/verify",
+    ] {
+        assert!(!root.join(retired_top_level).exists());
+    }
+}
+
+#[test]
+fn output_graph_and_repository_concepts_do_not_collapse_back_into_monoliths() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    for (directory, responsibilities) in [
+        (
+            "src/output/result_json_v2/renderer",
+            &[
+                "algorithm_definitions.rs",
+                "binder_well_definedness.rs",
+                "builtin_proofs.rs",
+                "by_statements.rs",
+                "cases_and_contradiction.rs",
+                "claims_and_theorems.rs",
+                "commands.rs",
+                "definitions.rs",
+                "fact_statements.rs",
+                "fact_storage.rs",
+                "fact_verification.rs",
+                "fact_well_definedness.rs",
+                "inductive_functions.rs",
+                "iteration_well_definedness.rs",
+                "known_forall.rs",
+                "model.rs",
+                "object_well_definedness.rs",
+                "proof_blocks.rs",
+                "shared_facts.rs",
+                "statement_dispatch.rs",
+                "structure_definitions.rs",
+                "template_instantiation.rs",
+                "tuple_functions.rs",
+                "witnesses.rs",
+            ][..],
+        ),
+        (
+            "src/output/localization",
+            &[
+                "rendering.rs",
+                "translations/mod.rs",
+                "translations/arabic.rs",
+                "translations/chinese_simplified.rs",
+                "translations/chinese_traditional.rs",
+                "translations/french.rs",
+                "translations/german.rs",
+                "translations/hindi.rs",
+                "translations/indonesian.rs",
+                "translations/japanese.rs",
+                "translations/korean.rs",
+                "translations/portuguese.rs",
+                "translations/russian.rs",
+                "translations/spanish.rs",
+                "translations/vietnamese.rs",
+            ][..],
+        ),
+        (
+            "src/graph/result_graph",
+            &[
+                "construction.rs",
+                "fact_proofs.rs",
+                "fact_well_definedness.rs",
+                "inference_edges.rs",
+                "model.rs",
+                "object_well_definedness.rs",
+                "rendering.rs",
+                "roles.rs",
+                "statement_results.rs",
+            ][..],
+        ),
+        (
+            "src/graph/fact_graph",
+            &[
+                "analysis.rs",
+                "edge_collection.rs",
+                "edge_rendering.rs",
+                "entrypoints.rs",
+                "graph_mutation.rs",
+                "model.rs",
+                "node_collection.rs",
+                "node_rendering.rs",
+                "rendering.rs",
+                "source_resolution.rs",
+            ][..],
+        ),
+        (
+            "src/graph/definition_graph",
+            &[
+                "analysis.rs",
+                "construction.rs",
+                "definition_inventory.rs",
+                "dependency_edges.rs",
+                "edge_rendering.rs",
+                "entrypoints.rs",
+                "model.rs",
+                "node_metadata.rs",
+                "node_rendering.rs",
+                "rendering.rs",
+                "result_provenance.rs",
+            ][..],
+        ),
+        (
+            "src/module_system/repository_discovery",
+            &[
+                "config_exports.rs",
+                "config_imports.rs",
+                "filesystem_paths.rs",
+                "import_cycles.rs",
+                "model.rs",
+                "module_config.rs",
+                "project_authorization.rs",
+                "project_config_files.rs",
+                "repository_entry.rs",
+                "standard_library.rs",
+                "terminal_imports.rs",
+            ][..],
+        ),
+    ] {
+        let concept = root.join(directory);
+        assert!(concept.join("mod.rs").is_file());
+        for responsibility in responsibilities {
+            assert!(
+                concept.join(responsibility).is_file(),
+                "{directory} is missing concept responsibility {responsibility}"
+            );
+        }
+        assert!(
+            !root.join(format!("{directory}.rs")).exists(),
+            "{directory} must remain a concept directory rather than a monolith"
+        );
+    }
 }
 
 #[test]
@@ -855,7 +1412,7 @@ fn cli_dispatch_delegates_execution_and_path_resolution_to_their_owners() {
 #[test]
 fn main_execution_spine_names_its_dependencies_explicitly() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
-    let entry_files = [
+    let entry_files = vec![
         root.join("src/main.rs"),
         root.join("src/cli/arguments.rs"),
         root.join("src/cli/command_dispatch.rs"),
@@ -867,16 +1424,16 @@ fn main_execution_spine_names_its_dependencies_explicitly() {
         root.join("src/pipeline/source_execution.rs"),
         root.join("src/pipeline/terminal_import.rs"),
         root.join("src/pipeline/output_rendering.rs"),
-        root.join("src/parse/statement_parsing.rs"),
-        root.join("src/execute/statement_execution.rs"),
-        root.join("src/execute/verified_statement_execution.rs"),
-        root.join("src/execute/trusted_statement_execution.rs"),
-        root.join("src/execute/submitted_fact_execution.rs"),
-        root.join("src/verify/dispatch.rs"),
-        root.join("src/verify/atomic/core.rs"),
-        root.join("src/verify/atomic/non_equational.rs"),
-        root.join("src/verify/equality/core.rs"),
-        root.join("src/result/statement/result.rs"),
+        root.join("src/parsing/statement_parsing.rs"),
+        root.join("src/execution/statement_execution.rs"),
+        root.join("src/execution/verified_statement_execution.rs"),
+        root.join("src/execution/trusted_statement_execution.rs"),
+        root.join("src/execution/submitted_fact_execution.rs"),
+        root.join("src/verification/dispatch.rs"),
+        root.join("src/verification/atomic/core.rs"),
+        root.join("src/verification/atomic/non_equational.rs"),
+        root.join("src/verification/equality/core.rs"),
+        root.join("src/result/statement/result/mod.rs"),
     ];
     let wildcard_prelude = ["prelude::", "*"].concat();
     let offenders: Vec<_> = entry_files
@@ -896,9 +1453,9 @@ fn main_execution_spine_names_its_dependencies_explicitly() {
 #[test]
 fn atomic_and_equality_route_controls_use_semantic_names() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
-    let atomic = fs::read_to_string(root.join("src/verify/atomic/non_equational.rs"))
+    let atomic = fs::read_to_string(root.join("src/verification/atomic/non_equational.rs"))
         .expect("non-equational verifier should be readable");
-    let equality = fs::read_to_string(root.join("src/verify/equality/core.rs"))
+    let equality = fs::read_to_string(root.join("src/verification/equality/core.rs"))
         .expect("equality verifier should be readable");
     let old_equal_route = ["verify_equal_fact_with_", "direct_routes"].concat();
     let old_atomic_route = ["verify_non_equational_atomic_fact_with_", "direct_routes"].concat();
@@ -927,10 +1484,10 @@ fn atomic_and_equality_route_controls_use_semantic_names() {
 #[test]
 fn source_execution_is_owned_by_runtime_without_a_secondary_context() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
-    let statement_execution = fs::read_to_string(root.join("src/execute/statement_execution.rs"))
+    let statement_execution = fs::read_to_string(root.join("src/execution/statement_execution.rs"))
         .expect("statement execution source should be readable");
     let trusted_execution =
-        fs::read_to_string(root.join("src/execute/trusted_statement_execution.rs"))
+        fs::read_to_string(root.join("src/execution/trusted_statement_execution.rs"))
             .expect("trusted statement execution source should be readable");
     let source_execution = fs::read_to_string(root.join("src/pipeline/source_execution.rs"))
         .expect("source execution source should be readable");
@@ -970,7 +1527,7 @@ fn verify_state_vocabulary_is_semantic() {
         "proof-search state must use the canonical semantic vocabulary: {offenders:#?}"
     );
 
-    let state = fs::read_to_string(root.join("src/verify/proof_search/context_state.rs"))
+    let state = fs::read_to_string(root.join("src/verification/proof_search/context_state.rs"))
         .expect("proof-search state source should be readable");
     assert!(state.contains("pub struct VerifyState"));
     let removed_list_membership_switch =
@@ -992,9 +1549,9 @@ fn verify_state_vocabulary_is_semantic() {
 #[test]
 fn result_outcomes_and_atomic_polarity_use_distinct_vocabulary() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
-    let result = fs::read_to_string(root.join("src/result/statement/result.rs"))
+    let result = fs::read_to_string(root.join("src/result/statement/result/inspection.rs"))
         .expect("statement result source should be readable");
-    let atomic = fs::read_to_string(root.join("src/fact/atomic/core.rs"))
+    let atomic = fs::read_to_string(root.join("src/fact/atomic/classification.rs"))
         .expect("atomic fact source should be readable");
     let old_call = [".is_", "true()"].concat();
     let old_definition = ["fn is_", "true"].concat();
@@ -1020,7 +1577,7 @@ fn verification_cache_vocabulary_names_scope_and_operation() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let statement_cache = fs::read_to_string(root.join("src/runtime/statement_proof_state.rs"))
         .expect("statement proof cache source should be readable");
-    let persistent_cache = fs::read_to_string(root.join("src/verify/support/helper.rs"))
+    let persistent_cache = fs::read_to_string(root.join("src/verification/support/helper.rs"))
         .expect("persistent verification cache source should be readable");
     let old_names = [
         ["verify_fact_from_cache_using_", "display_string"].concat(),
@@ -1050,19 +1607,21 @@ fn verification_cache_vocabulary_names_scope_and_operation() {
 fn result_to_lean_entry_and_dispatch_names_match_their_effects() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let source_compilation =
-        fs::read_to_string(root.join("src/stmt_result_to_lean_compiler/source_compilation.rs"))
+        fs::read_to_string(root.join("src/lean_compiler/source_compilation.rs"))
             .expect("compiler source entry should be readable");
-    let result_dispatch = fs::read_to_string(
-        root.join("src/stmt_result_to_lean_compiler/implementation/result_dispatch.rs"),
-    )
-    .expect("compiler Result dispatcher should be readable");
-    let fact_compilation = fs::read_to_string(
-        root.join("src/stmt_result_to_lean_compiler/implementation/fact_compilation.rs"),
-    )
-    .expect("compiler fact implementation should be readable");
-    let report =
-        fs::read_to_string(root.join("src/stmt_result_to_lean_compiler/compilation_report.rs"))
-            .expect("compiler report source should be readable");
+    let result_dispatch =
+        fs::read_to_string(root.join("src/lean_compiler/compiler/result_dispatch.rs"))
+            .expect("compiler Result dispatcher should be readable");
+    let fact_compilation =
+        rust_files_below(&root.join("src/lean_compiler/compiler/fact_compilation"))
+            .into_iter()
+            .map(|path| {
+                fs::read_to_string(path).expect("compiler fact implementation should be readable")
+            })
+            .collect::<Vec<_>>()
+            .join("\n");
+    let report = fs::read_to_string(root.join("src/lean_compiler/compilation_report.rs"))
+        .expect("compiler report source should be readable");
 
     assert!(source_compilation.contains("compile_litex_source_to_lean_compilation_report"));
     assert!(source_compilation.contains("execute_litex_source_for_lean_compilation"));
@@ -1080,6 +1639,7 @@ fn result_to_lean_entry_and_dispatch_names_match_their_effects() {
 fn source_and_test_paths_do_not_repeat_their_parent_name() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let source_root = root.join("src");
+    let explicit_owner_entrypoints = explicit_owner_entrypoints(root);
     let repeated_source_directories: Vec<_> = directories_below(&source_root)
         .into_iter()
         .filter(|path| {
@@ -1106,6 +1666,7 @@ fn source_and_test_paths_do_not_repeat_their_parent_name() {
                 .and_then(Path::file_name)
                 .is_some_and(|parent_name| parent_name == stem)
         })
+        .filter(|path| !explicit_owner_entrypoints.contains(path))
         .collect();
     assert!(
         repeated_source_files.is_empty(),
@@ -1131,6 +1692,112 @@ fn source_and_test_paths_do_not_repeat_their_parent_name() {
 }
 
 #[test]
+fn repeated_parent_filenames_are_exactly_confirmed_owner_entrypoints() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let mut repeated_files = rust_files_below(&root.join("src"))
+        .into_iter()
+        .filter(|path| {
+            let Some(stem) = path.file_stem() else {
+                return false;
+            };
+            path.parent()
+                .and_then(Path::file_name)
+                .is_some_and(|parent_name| parent_name == stem)
+        })
+        .collect::<Vec<_>>();
+    repeated_files.sort();
+
+    let mut expected = explicit_owner_entrypoints(root);
+    expected.sort();
+    assert_eq!(repeated_files, expected);
+
+    for entrypoint in repeated_files {
+        let module = fs::read_to_string(
+            entrypoint
+                .parent()
+                .expect("owner entrypoint should have a parent")
+                .join("mod.rs"),
+        )
+        .expect("owner entrypoint module wiring should be readable");
+        assert!(!module.contains("struct "));
+        assert!(!module.contains("impl "));
+        assert!(!module.contains("fn "));
+    }
+}
+
+#[test]
+fn environment_repeated_parent_filenames_are_exactly_the_owner_entrypoints() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let environment_root = root.join("src/environment");
+    let mut repeated_files = rust_files_below(&environment_root)
+        .into_iter()
+        .filter(|path| {
+            let Some(stem) = path.file_stem() else {
+                return false;
+            };
+            path.parent()
+                .and_then(Path::file_name)
+                .is_some_and(|parent_name| parent_name == stem)
+        })
+        .collect::<Vec<_>>();
+    repeated_files.sort();
+
+    let mut expected = vec![
+        root.join("src/environment/caches/caches.rs"),
+        root.join("src/environment/definitions/definitions.rs"),
+        root.join("src/environment/environment.rs"),
+        root.join("src/environment/facts/facts.rs"),
+        root.join("src/environment/object/object.rs"),
+        root.join(
+            "src/environment/predicate_algebraic_properties/predicate_algebraic_properties.rs",
+        ),
+    ];
+    expected.sort();
+    assert_eq!(repeated_files, expected);
+
+    for (module_path, entrypoint_declaration, entrypoint_reexport) in [
+        (
+            "src/environment/mod.rs",
+            "mod environment;",
+            "pub use environment::Environment;",
+        ),
+        (
+            "src/environment/definitions/mod.rs",
+            "mod definitions;",
+            "pub use definitions::EnvironmentDefinitionRegistry;",
+        ),
+        (
+            "src/environment/facts/mod.rs",
+            "mod facts;",
+            "pub use facts::EnvironmentFactStore;",
+        ),
+        (
+            "src/environment/object/mod.rs",
+            "mod object;",
+            "pub use object::EnvironmentObjectKnowledgeStore;",
+        ),
+        (
+            "src/environment/predicate_algebraic_properties/mod.rs",
+            "mod predicate_algebraic_properties;",
+            "pub use predicate_algebraic_properties::EnvironmentPredicateAlgebraicPropertyStore;",
+        ),
+        (
+            "src/environment/caches/mod.rs",
+            "mod caches;",
+            "pub use caches::EnvironmentVerificationCache;",
+        ),
+    ] {
+        let module = fs::read_to_string(root.join(module_path))
+            .unwrap_or_else(|error| panic!("{module_path} should be readable: {error}"));
+        assert!(module.contains(entrypoint_declaration));
+        assert!(module.contains(entrypoint_reexport));
+        assert!(!module.contains("struct "));
+        assert!(!module.contains("impl "));
+        assert!(!module.contains("fn "));
+    }
+}
+
+#[test]
 fn environment_exposes_five_direct_owners_without_flat_compatibility_storage() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let production_sources = rust_files_below(&root.join("src"))
@@ -1141,19 +1808,22 @@ fn environment_exposes_five_direct_owners_without_flat_compatibility_storage() {
         })
         .collect::<Vec<_>>()
         .join("\n");
-    let environment = fs::read_to_string(root.join("src/environment.rs"))
+    let environment = fs::read_to_string(root.join("src/environment/environment.rs"))
         .expect("Environment source should be readable");
-    let fact_store = fs::read_to_string(root.join("src/environment/facts/store.rs"))
+    let environment_module = fs::read_to_string(root.join("src/environment/mod.rs"))
+        .expect("Environment module wiring should be readable");
+    let fact_store = fs::read_to_string(root.join("src/environment/facts/facts.rs"))
         .expect("fact store should be readable");
-    let forall_index =
-        fs::read_to_string(root.join("src/environment/facts/forall_conclusion_index.rs"))
-            .expect("forall conclusion index should be readable");
-    let object_store = fs::read_to_string(root.join("src/environment/object_knowledge/store.rs"))
+    let forall_index = fs::read_to_string(root.join("src/environment/facts/forall_conclusions.rs"))
+        .expect("forall conclusion index should be readable");
+    let object_store = fs::read_to_string(root.join("src/environment/object/object.rs"))
         .expect("object knowledge store should be readable");
-    let object_value =
-        fs::read_to_string(root.join("src/environment/object_knowledge/known_value.rs"))
-            .expect("known object value should be readable");
-    let predicate_store = fs::read_to_string(root.join("src/environment/predicates/store.rs"))
+    let object_value = fs::read_to_string(root.join("src/environment/object/known_value.rs"))
+        .expect("known object value should be readable");
+    let predicate_store =
+        fs::read_to_string(root.join(
+            "src/environment/predicate_algebraic_properties/predicate_algebraic_properties.rs",
+        ))
         .expect("predicate property store should be readable");
     let well_definedness_delta =
         fs::read_to_string(root.join("src/environment/well_definedness_environment_delta.rs"))
@@ -1171,10 +1841,56 @@ fn environment_exposes_five_direct_owners_without_flat_compatibility_storage() {
     assert!(!environment.contains("pub repositories:"));
     assert!(!environment.contains("impl Deref for Environment"));
     assert!(!environment.contains("EnvironmentPersistentRepositories"));
+    assert!(!root.join("src/environment.rs").exists());
     assert!(!root.join("src/environment/environment_state.rs").exists());
-    assert!(!root.join("src/environment/mod.rs").exists());
+    assert!(environment_module.contains("mod environment;"));
+    assert!(environment_module.contains("pub use environment::Environment;"));
     assert!(!production_sources.contains("ParamObjType"));
     assert!(!production_sources.contains("defined_identifiers"));
+
+    for owner_path in [
+        "src/environment/definitions/definitions.rs",
+        "src/environment/definitions/mod.rs",
+        "src/environment/facts/facts.rs",
+        "src/environment/facts/mod.rs",
+        "src/environment/object/object.rs",
+        "src/environment/predicate_algebraic_properties/predicate_algebraic_properties.rs",
+        "src/environment/predicate_algebraic_properties/mod.rs",
+        "src/environment/caches/caches.rs",
+        "src/environment/caches/mod.rs",
+        "src/environment/facts/known_equality.rs",
+        "src/environment/facts/atomic.rs",
+        "src/environment/facts/set_relations.rs",
+        "src/environment/facts/quantified.rs",
+        "src/environment/facts/forall_conclusions.rs",
+        "src/environment/facts/stored_facts.rs",
+    ] {
+        assert!(
+            root.join(owner_path).is_file(),
+            "environment owner path should exist: {owner_path}"
+        );
+    }
+    for retired_path in [
+        "src/environment/definitions.rs",
+        "src/environment/definitions/registry.rs",
+        "src/environment/facts.rs",
+        "src/environment/facts/store.rs",
+        "src/environment/facts/atomic_index.rs",
+        "src/environment/facts/set_relation_index.rs",
+        "src/environment/facts/quantified_index.rs",
+        "src/environment/facts/forall_conclusion_index.rs",
+        "src/environment/facts/stored_fact_store.rs",
+        "src/environment/object_knowledge",
+        "src/environment/predicate_algebraic_properties.rs",
+        "src/environment/predicates",
+        "src/environment/caches.rs",
+        "src/environment/verification_cache.rs",
+    ] {
+        assert!(
+            !root.join(retired_path).exists(),
+            "retired environment path should not exist: {retired_path}"
+        );
+    }
 
     for fact_owner in [
         "pub atomic: AtomicFactIndex",
@@ -1203,31 +1919,33 @@ fn environment_exposes_five_direct_owners_without_flat_compatibility_storage() {
 #[test]
 fn definition_terminology_has_one_core_route_without_legacy_rust_names() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
-    let statement_types = fs::read_to_string(root.join("src/stmt/core/types.rs"))
+    let statement_types = fs::read_to_string(root.join("src/statement/statement.rs"))
         .expect("statement types should be readable");
-    let success_results = fs::read_to_string(root.join("src/result/statement/success.rs"))
-        .expect("success result types should be readable");
-    let environment = fs::read_to_string(root.join("src/environment.rs"))
+    let success_results = rust_files_below(&root.join("src/result/statement/success"))
+        .into_iter()
+        .map(|path| fs::read_to_string(path).expect("success result types should be readable"))
+        .collect::<Vec<_>>()
+        .join("\n");
+    let environment = fs::read_to_string(root.join("src/environment/environment.rs"))
         .expect("environment should be readable");
-    let execute_module = fs::read_to_string(root.join("src/execute/mod.rs"))
+    let execute_module = fs::read_to_string(root.join("src/execution/mod.rs"))
         .expect("execute module should be readable");
-    let parameter_types = fs::read_to_string(root.join("src/stmt/definitions/parameters.rs"))
+    let parameter_types = fs::read_to_string(root.join("src/statement/definitions/parameters.rs"))
         .expect("parameter types should be readable");
     let mut core_terminology_sources = [
-        "src/stmt/core/types.rs",
-        "src/result/statement/success.rs",
-        "src/environment.rs",
-        "src/environment/definitions/registry.rs",
-        "src/environment/facts/store.rs",
-        "src/environment/facts/stored_fact_store.rs",
-        "src/execute/mod.rs",
-        "src/obj/free_param_obj.rs",
-        "src/obj/object_types.rs",
-        "src/parse/object/reference.rs",
+        "src/statement/statement.rs",
+        "src/environment/environment.rs",
+        "src/environment/definitions/definitions.rs",
+        "src/environment/facts/facts.rs",
+        "src/environment/facts/stored_facts.rs",
+        "src/execution/mod.rs",
+        "src/object/parameter.rs",
+        "src/object/object.rs",
+        "src/parsing/object/reference.rs",
         "src/runtime/definition_state/object_properties.rs",
-        "src/stmt/definitions/parameters.rs",
-        "src/verify/atomic/function_membership.rs",
-        "src/verify/verify_builtin_rules/in_fact_builtin/structured_membership.rs",
+        "src/statement/definitions/parameters.rs",
+        "src/verification/atomic/function_membership.rs",
+        "src/verification/builtin_rules/in_fact_builtin/structured_membership.rs",
     ]
     .into_iter()
     .map(|relative| {
@@ -1236,7 +1954,16 @@ fn definition_terminology_has_one_core_route_without_legacy_rust_names() {
     })
     .collect::<Vec<_>>();
     core_terminology_sources.extend(
-        rust_files_below(&root.join("src/execute/definition_execution"))
+        rust_files_below(&root.join("src/result/statement/success"))
+            .into_iter()
+            .map(|path| {
+                fs::read_to_string(&path).unwrap_or_else(|error| {
+                    panic!("{} should be readable: {error}", path.display())
+                })
+            }),
+    );
+    core_terminology_sources.extend(
+        rust_files_below(&root.join("src/execution/definition_execution"))
             .into_iter()
             .map(|path| {
                 fs::read_to_string(&path).unwrap_or_else(|error| {
@@ -1285,15 +2012,20 @@ fn definition_terminology_has_one_core_route_without_legacy_rust_names() {
         );
     }
 
-    assert!(!root.join("src/execute/object_introduction").exists());
+    assert!(!root.join("src/execution/object_introduction").exists());
     assert!(root.join("docs/Developer_Terminology.md").is_file());
 }
 
 #[test]
 fn builtin_rules_use_typed_rust_evidence_without_a_runtime_catalog() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
-    let success_results = fs::read_to_string(root.join("src/result/verification/success.rs"))
-        .expect("verification success results should be readable");
+    let success_results = rust_files_below(&root.join("src/result/verification/success"))
+        .into_iter()
+        .map(|path| {
+            fs::read_to_string(&path).expect("verification success results should be readable")
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
     assert!(success_results.contains(
         "pub enum SuccessBuiltinFactProofEvidenceResult {\n    Typed(BuiltinRuleEvidence),\n}"
     ));
@@ -1322,8 +2054,8 @@ fn builtin_rules_use_typed_rust_evidence_without_a_runtime_catalog() {
     }
 
     for retired_module in [
-        "src/verify/local_builtin_catalog/mod.rs",
-        "src/verify/rule_schema/mod.rs",
+        "src/verification/local_builtin_catalog/mod.rs",
+        "src/verification/rule_schema/mod.rs",
     ] {
         assert!(
             !root.join(retired_module).exists(),
@@ -1331,13 +2063,17 @@ fn builtin_rules_use_typed_rust_evidence_without_a_runtime_catalog() {
         );
     }
 
-    let json_output = fs::read_to_string(root.join("src/output/result_json_v2.rs"))
-        .expect("Result JSON source should be readable");
+    let json_output = rust_files_below(&root.join("src/output/result_json_v2/renderer"))
+        .into_iter()
+        .map(|path| fs::read_to_string(path).expect("Result JSON source should be readable"))
+        .collect::<Vec<_>>()
+        .join("\n");
     assert!(json_output.contains("string_field(\"rule_id\", evidence.rule_id())"));
 
-    let compiler_validation = fs::read_to_string(
-        root.join("src/stmt_result_to_lean_compiler/implementation/validation.rs"),
-    )
-    .expect("ToLean builtin validation should be readable");
+    let compiler_validation = rust_files_below(&root.join("src/lean_compiler/compiler/validation"))
+        .into_iter()
+        .map(|path| fs::read_to_string(path).expect("ToLean builtin validation should be readable"))
+        .collect::<Vec<_>>()
+        .join("\n");
     assert!(compiler_validation.contains("builtin rule `{}` has no reviewed ToLean mapping"));
 }

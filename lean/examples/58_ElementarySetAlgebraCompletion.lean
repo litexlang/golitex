@@ -6,39 +6,39 @@ set_option linter.style.nameCheck false
 namespace __Compiler_58_ElementarySetAlgebraCompletion
 
 theorem __fact0 :
-    ∀ (__p1 : Litex.Set) (__p2 : Litex.Set), Litex.Same (Litex.union __p1 (Litex.setMinus __p2 __p1)) (Litex.union __p1 __p2) ∧ Litex.Same (Litex.union (Litex.setMinus __p2 __p1) __p1) (Litex.union __p2 __p1) ∧ Litex.Same (Litex.intersect __p1 (Litex.setMinus __p2 __p1)) Litex.Set.empty ∧ Litex.Same (Litex.intersect (Litex.setMinus __p2 __p1) __p1) Litex.Set.empty ∧ Litex.Same (Litex.setMinus __p2 (Litex.intersect __p1 __p2)) (Litex.setMinus __p2 __p1) ∧ Litex.Same (Litex.setMinus __p2 (Litex.intersect __p2 __p1)) (Litex.setMinus __p2 __p1) := by
+    ∀ (__p1 : Litex.Set) (__p2 : Litex.Set), (Litex.Same (Litex.union __p1 (Litex.setMinus __p2 __p1)) (Litex.union __p1 __p2)) ∧ (Litex.Same (Litex.union (Litex.setMinus __p2 __p1) __p1) (Litex.union __p2 __p1)) ∧ (Litex.Same (Litex.intersect __p1 (Litex.setMinus __p2 __p1)) Litex.Set.empty) ∧ (Litex.Same (Litex.intersect (Litex.setMinus __p2 __p1) __p1) Litex.Set.empty) ∧ (Litex.Same (Litex.setMinus __p2 (Litex.intersect __p1 __p2)) (Litex.setMinus __p2 __p1)) ∧ (Litex.Same (Litex.setMinus __p2 (Litex.intersect __p2 __p1)) (Litex.setMinus __p2 __p1)) := by
   intro A B
-  have __c0_0 : Litex.Same (Litex.union A (Litex.setMinus B A)) (Litex.union A B) := Litex.SetRules.unionSetMinusDecomposition A B
-  have __c0_1 : Litex.Same (Litex.union (Litex.setMinus B A) A) (Litex.union B A) := Litex.Same.trans (Litex.Same.trans (Litex.SetRules.unionCommutative (Litex.setMinus B A) A) (Litex.SetRules.unionSetMinusDecomposition A B)) (Litex.SetRules.unionCommutative A B)
-  have __c0_2 : Litex.Same (Litex.intersect A (Litex.setMinus B A)) Litex.Set.empty := Litex.SetRules.intersectSetMinusSelfEmpty A B
-  have __c0_3 : Litex.Same (Litex.intersect (Litex.setMinus B A) A) Litex.Set.empty := Litex.Same.trans (Litex.SetRules.intersectCommutative (Litex.setMinus B A) A) (Litex.SetRules.intersectSetMinusSelfEmpty A B)
-  have __c0_4 : Litex.Same (Litex.setMinus B (Litex.intersect A B)) (Litex.setMinus B A) := Litex.SetRules.setMinusIntersectSelf B A
-  have __c0_5 : Litex.Same (Litex.setMinus B (Litex.intersect B A)) (Litex.setMinus B A) := Litex.SetRules.setMinusIntersectSelfCommuted B A
-  exact ⟨__c0_0, __c0_1, __c0_2, __c0_3, __c0_4, __c0_5⟩
+  have __prior0_0 : Litex.Same (Litex.union A (Litex.setMinus B A)) (Litex.union A B) := Litex.SetRules.unionSetMinusDecomposition A B
+  have __prior0_1 : Litex.Same (Litex.union (Litex.setMinus B A) A) (Litex.union B A) := Litex.Same.trans (Litex.Same.trans (Litex.SetRules.unionCommutative (Litex.setMinus B A) A) (Litex.SetRules.unionSetMinusDecomposition A B)) (Litex.SetRules.unionCommutative A B)
+  have __prior0_2 : Litex.Same (Litex.intersect A (Litex.setMinus B A)) Litex.Set.empty := Litex.SetRules.intersectSetMinusSelfEmpty A B
+  have __prior0_3 : Litex.Same (Litex.intersect (Litex.setMinus B A) A) Litex.Set.empty := Litex.Same.trans (Litex.SetRules.intersectCommutative (Litex.setMinus B A) A) (Litex.SetRules.intersectSetMinusSelfEmpty A B)
+  have __prior0_4 : Litex.Same (Litex.setMinus B (Litex.intersect A B)) (Litex.setMinus B A) := Litex.SetRules.setMinusIntersectSelf B A
+  have __prior0_5 : Litex.Same (Litex.setMinus B (Litex.intersect B A)) (Litex.setMinus B A) := Litex.SetRules.setMinusIntersectSelfCommuted B A
+  exact ⟨__prior0_0, __prior0_1, __prior0_2, __prior0_3, __prior0_4, __prior0_5⟩
 
 theorem __fact1 :
-    ∀ (__p1 : Litex.Set), Litex.Same (Litex.intersect __p1 __p1) __p1 ∧ Litex.Same __p1 (Litex.intersect __p1 __p1) ∧ Litex.Same (Litex.setMinus __p1 __p1) Litex.Set.empty ∧ Litex.Same (Litex.setMinus __p1 Litex.Set.empty) __p1 ∧ Litex.Same (Litex.setMinus Litex.Set.empty __p1) Litex.Set.empty := by
+    ∀ (__p1 : Litex.Set), (Litex.Same (Litex.intersect __p1 __p1) __p1) ∧ (Litex.Same __p1 (Litex.intersect __p1 __p1)) ∧ (Litex.Same (Litex.setMinus __p1 __p1) Litex.Set.empty) ∧ (Litex.Same (Litex.setMinus __p1 Litex.Set.empty) __p1) ∧ (Litex.Same (Litex.setMinus Litex.Set.empty __p1) Litex.Set.empty) := by
   intro A
-  have __c1_0 : Litex.Same (Litex.intersect A A) A := Litex.SetRules.intersectIdempotent A
-  have __c1_1 : Litex.Same A (Litex.intersect A A) := Litex.Same.symm (__c1_0)
-  have __c1_2 : Litex.Same (Litex.setMinus A A) Litex.Set.empty := Litex.SetRules.setMinusSelfEmpty A
-  have __c1_3 : Litex.Same (Litex.setMinus A Litex.Set.empty) A := Litex.SetRules.setMinusEmptyRight A
-  have __c1_4 : Litex.Same (Litex.setMinus Litex.Set.empty A) Litex.Set.empty := Litex.SetRules.setMinusEmptyLeft A
-  exact ⟨__c1_0, __c1_1, __c1_2, __c1_3, __c1_4⟩
+  have __prior1_0 : Litex.Same (Litex.intersect A A) A := Litex.SetRules.intersectIdempotent A
+  have __prior1_1 : Litex.Same A (Litex.intersect A A) := Litex.Same.symm (__prior1_0)
+  have __prior1_2 : Litex.Same (Litex.setMinus A A) Litex.Set.empty := Litex.SetRules.setMinusSelfEmpty A
+  have __prior1_3 : Litex.Same (Litex.setMinus A Litex.Set.empty) A := Litex.SetRules.setMinusEmptyRight A
+  have __prior1_4 : Litex.Same (Litex.setMinus Litex.Set.empty A) Litex.Set.empty := Litex.SetRules.setMinusEmptyLeft A
+  exact ⟨__prior1_0, __prior1_1, __prior1_2, __prior1_3, __prior1_4⟩
 
 theorem __fact2 :
-    ∀ (__p1 : Litex.Set) (__p2 : Litex.Set) (__domain1 : Litex.Subset __p1 __p2), Litex.Same (Litex.union __p1 __p2) __p2 ∧ Litex.Same (Litex.union __p2 __p1) __p2 ∧ Litex.Same __p2 (Litex.union __p1 __p2) := by
+    ∀ (__p1 : Litex.Set) (__p2 : Litex.Set) (__domain1 : Litex.Subset __p1 __p2), (Litex.Same (Litex.union __p1 __p2) __p2) ∧ (Litex.Same (Litex.union __p2 __p1) __p2) ∧ (Litex.Same __p2 (Litex.union __p1 __p2)) := by
   intro A B __domain1
-  have __c2_0 : Litex.Same (Litex.union A B) B := Litex.SetRules.unionEqRightOfSubset (__domain1)
-  have __c2_1 : Litex.Same (Litex.union B A) B := Litex.SetRules.unionEqLeftOfSubset (__domain1)
-  have __c2_2 : Litex.Same B (Litex.union A B) := Litex.Same.symm (__c2_0)
-  exact ⟨__c2_0, __c2_1, __c2_2⟩
+  have __prior2_0 : Litex.Same (Litex.union A B) B := Litex.SetRules.unionEqRightOfSubset (__domain1)
+  have __prior2_1 : Litex.Same (Litex.union B A) B := Litex.SetRules.unionEqLeftOfSubset (__domain1)
+  have __prior2_2 : Litex.Same B (Litex.union A B) := Litex.Same.symm (__prior2_0)
+  exact ⟨__prior2_0, __prior2_1, __prior2_2⟩
 
 theorem __fact3 :
-    ∀ (__p1 : Litex.Set) (__p2 : Litex.Set) (__p3 : Litex.Set) (__domain1 : Litex.Subset __p1 __p3), Litex.Same (Litex.intersect __p1 (Litex.setMinus __p2 __p3)) Litex.Set.empty ∧ Litex.Same (Litex.intersect (Litex.setMinus __p2 __p3) __p1) Litex.Set.empty := by
+    ∀ (__p1 : Litex.Set) (__p2 : Litex.Set) (__p3 : Litex.Set) (__domain1 : Litex.Subset __p1 __p3), (Litex.Same (Litex.intersect __p1 (Litex.setMinus __p2 __p3)) Litex.Set.empty) ∧ (Litex.Same (Litex.intersect (Litex.setMinus __p2 __p3) __p1) Litex.Set.empty) := by
   intro A B D __domain1
-  have __c3_0 : Litex.Same (Litex.intersect A (Litex.setMinus B D)) Litex.Set.empty := Litex.SetRules.intersectSetMinusOfSubsetEmpty B (__domain1)
-  have __c3_1 : Litex.Same (Litex.intersect (Litex.setMinus B D) A) Litex.Set.empty := Litex.Same.trans (Litex.SetRules.intersectCommutative (Litex.setMinus B D) A) (Litex.SetRules.intersectSetMinusOfSubsetEmpty B (__domain1))
-  exact ⟨__c3_0, __c3_1⟩
+  have __prior3_0 : Litex.Same (Litex.intersect A (Litex.setMinus B D)) Litex.Set.empty := Litex.SetRules.intersectSetMinusOfSubsetEmpty B (__domain1)
+  have __prior3_1 : Litex.Same (Litex.intersect (Litex.setMinus B D) A) Litex.Set.empty := Litex.Same.trans (Litex.SetRules.intersectCommutative (Litex.setMinus B D) A) (Litex.SetRules.intersectSetMinusOfSubsetEmpty B (__domain1))
+  exact ⟨__prior3_0, __prior3_1⟩
 
 end __Compiler_58_ElementarySetAlgebraCompletion

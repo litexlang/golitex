@@ -1,31 +1,56 @@
 pub mod api;
 pub mod cli;
-pub mod common;
+pub mod compatibility;
+// Compatibility alias retained for one version while embedders migrate.
+pub use compatibility::common;
 pub mod environment;
 pub mod error;
-pub mod execute;
+pub mod execution;
+// Compatibility alias retained for one version while embedders migrate.
+pub use execution as execute;
 pub mod fact;
 pub mod graph;
-pub mod infer;
+pub mod inference;
+// Compatibility alias retained for one version while embedders migrate.
+pub use inference as infer;
+pub mod latex_renderer;
+// Compatibility alias retained for one version while embedders migrate.
+pub use latex_renderer as to_latex;
+pub mod lean_compiler;
+// Compatibility alias retained for one version while embedders migrate.
+pub use lean_compiler as stmt_result_to_lean_compiler;
 #[cfg(test)]
 #[path = "../tests/unit/kernel_contracts/mod.rs"]
 mod kernel_contracts;
-pub mod module_manager;
-pub mod obj;
+pub mod module_system;
+// Compatibility alias retained for one version while embedders migrate.
+pub use module_system as module_manager;
+pub mod object;
+// Compatibility alias retained for one version while embedders migrate.
+pub use object as obj;
 pub mod output;
-pub mod parse;
+pub mod parsing;
+// Compatibility alias retained for one version while embedders migrate.
+pub use parsing as parse;
+pub mod algebraic_normalization;
 pub mod pipeline;
 pub mod prelude;
-pub mod rational_expression;
+// Compatibility alias retained for one version while embedders migrate.
+pub use algebraic_normalization as rational_expression;
+pub mod python_extractor;
+// Compatibility alias retained for one version while embedders migrate.
+pub use python_extractor as to_python;
 pub mod result;
 pub mod runner;
 pub mod runtime;
-pub mod stmt;
-pub mod stmt_result_to_lean_compiler;
+pub mod statement;
+// Compatibility alias retained for one version while embedders migrate.
+pub use statement as stmt;
 pub mod symbol;
+pub mod syntax;
 #[cfg(test)]
 #[path = "../tests/unit/test_support.rs"]
 pub mod test_support;
-pub mod to_latex;
-pub mod to_python;
-pub mod verify;
+pub mod verification;
+// Compatibility alias retained for one version while embedders migrate.
+pub use verification as verify;

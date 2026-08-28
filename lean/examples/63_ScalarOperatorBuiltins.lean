@@ -6,94 +6,106 @@ set_option linter.style.nameCheck false
 namespace __Compiler_63_ScalarOperatorBuiltins
 
 theorem __fact0 :
-    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.R) (__p2 : ℂ) (__type2 : Litex.In __p2 Litex.R), Litex.Same (Litex.abs ((((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) * (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ))) ((Litex.abs (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ)) * (Litex.abs (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ))) ∧ Litex.Le (Litex.abs ((((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) + (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ))) ((Litex.abs (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ)) + (Litex.abs (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ))) ∧ Litex.Le (Litex.abs ((((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) - (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ))) ((Litex.abs (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ)) + (Litex.abs (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ))) ∧ Litex.Le ((Litex.abs (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ)) - (Litex.abs (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ))) (Litex.abs ((((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) + (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ))) ∧ Litex.Le ((Litex.abs (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ)) - (Litex.abs (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ))) (Litex.abs ((((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) - (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ))) := by
-  intro x __h0_1 y __h0_2
-  have __c0_0 : Litex.Same (Litex.abs ((((Litex.In.rep x __h0_1 : ℝ)) : ℂ) * (((Litex.In.rep y __h0_2 : ℝ)) : ℂ))) ((Litex.abs (((Litex.In.rep x __h0_1 : ℝ)) : ℂ)) * (Litex.abs (((Litex.In.rep y __h0_2 : ℝ)) : ℂ))) := Litex.Rules.absMul (((Litex.In.rep x __h0_1 : ℝ)) : ℂ) (((Litex.In.rep y __h0_2 : ℝ)) : ℂ)
-  have __c0_1 : Litex.Le (Litex.abs ((((Litex.In.rep x __h0_1 : ℝ)) : ℂ) + (((Litex.In.rep y __h0_2 : ℝ)) : ℂ))) ((Litex.abs (((Litex.In.rep x __h0_1 : ℝ)) : ℂ)) + (Litex.abs (((Litex.In.rep y __h0_2 : ℝ)) : ℂ))) := Litex.Rules.absAddLe (((Litex.In.rep x __h0_1 : ℝ)) : ℂ) (((Litex.In.rep y __h0_2 : ℝ)) : ℂ)
-  have __c0_2 : Litex.Le (Litex.abs ((((Litex.In.rep x __h0_1 : ℝ)) : ℂ) - (((Litex.In.rep y __h0_2 : ℝ)) : ℂ))) ((Litex.abs (((Litex.In.rep x __h0_1 : ℝ)) : ℂ)) + (Litex.abs (((Litex.In.rep y __h0_2 : ℝ)) : ℂ))) := Litex.Rules.absSubLeSum (((Litex.In.rep x __h0_1 : ℝ)) : ℂ) (((Litex.In.rep y __h0_2 : ℝ)) : ℂ)
-  have __c0_3 : Litex.Le ((Litex.abs (((Litex.In.rep x __h0_1 : ℝ)) : ℂ)) - (Litex.abs (((Litex.In.rep y __h0_2 : ℝ)) : ℂ))) (Litex.abs ((((Litex.In.rep x __h0_1 : ℝ)) : ℂ) + (((Litex.In.rep y __h0_2 : ℝ)) : ℂ))) := Litex.Rules.absSubAbsLeAbsAdd (((Litex.In.rep x __h0_1 : ℝ)) : ℂ) (((Litex.In.rep y __h0_2 : ℝ)) : ℂ)
-  have __c0_4 : Litex.Le ((Litex.abs (((Litex.In.rep x __h0_1 : ℝ)) : ℂ)) - (Litex.abs (((Litex.In.rep y __h0_2 : ℝ)) : ℂ))) (Litex.abs ((((Litex.In.rep x __h0_1 : ℝ)) : ℂ) - (((Litex.In.rep y __h0_2 : ℝ)) : ℂ))) := Litex.Rules.absSubAbsLeAbsSub (((Litex.In.rep x __h0_1 : ℝ)) : ℂ) (((Litex.In.rep y __h0_2 : ℝ)) : ℂ)
-  exact ⟨__c0_0, __c0_1, __c0_2, __c0_3, __c0_4⟩
+    ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.R) {__carrier2 : Type} (__p2 : __carrier2) (__type2 : Litex.In __p2 Litex.R), (Litex.Same (Litex.abs ((((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) * (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ))) ((Litex.abs (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ)) * (Litex.abs (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)))) ∧ (Litex.Le (Litex.abs ((((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) + (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ))) ((Litex.abs (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ)) + (Litex.abs (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)))) ∧ (Litex.Le (Litex.abs ((((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) - (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ))) ((Litex.abs (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ)) + (Litex.abs (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)))) ∧ (Litex.Le ((Litex.abs (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ)) - (Litex.abs (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ))) (Litex.abs ((((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) + (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)))) ∧ (Litex.Le ((Litex.abs (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ)) - (Litex.abs (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ))) (Litex.abs ((((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) - (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)))) := by
+  intro __carrier1 x __h8 __carrier2 y __h9
+  have __prior0_0 : Litex.Same (Litex.abs ((((Litex.In.rep x __h8 : ℝ)) : ℂ) * (((Litex.In.rep y __h9 : ℝ)) : ℂ))) ((Litex.abs (((Litex.In.rep x __h8 : ℝ)) : ℂ)) * (Litex.abs (((Litex.In.rep y __h9 : ℝ)) : ℂ))) := Litex.Rules.absMul (((Litex.In.rep x __h8 : ℝ)) : ℂ) (((Litex.In.rep y __h9 : ℝ)) : ℂ)
+  have __prior0_1 : Litex.Le (Litex.abs ((((Litex.In.rep x __h8 : ℝ)) : ℂ) + (((Litex.In.rep y __h9 : ℝ)) : ℂ))) ((Litex.abs (((Litex.In.rep x __h8 : ℝ)) : ℂ)) + (Litex.abs (((Litex.In.rep y __h9 : ℝ)) : ℂ))) := Litex.Rules.absAddLe (((Litex.In.rep x __h8 : ℝ)) : ℂ) (((Litex.In.rep y __h9 : ℝ)) : ℂ)
+  have __prior0_2 : Litex.Le (Litex.abs ((((Litex.In.rep x __h8 : ℝ)) : ℂ) - (((Litex.In.rep y __h9 : ℝ)) : ℂ))) ((Litex.abs (((Litex.In.rep x __h8 : ℝ)) : ℂ)) + (Litex.abs (((Litex.In.rep y __h9 : ℝ)) : ℂ))) := Litex.Rules.absSubLeSum (((Litex.In.rep x __h8 : ℝ)) : ℂ) (((Litex.In.rep y __h9 : ℝ)) : ℂ)
+  have __prior0_3 : Litex.Le ((Litex.abs (((Litex.In.rep x __h8 : ℝ)) : ℂ)) - (Litex.abs (((Litex.In.rep y __h9 : ℝ)) : ℂ))) (Litex.abs ((((Litex.In.rep x __h8 : ℝ)) : ℂ) + (((Litex.In.rep y __h9 : ℝ)) : ℂ))) := Litex.Rules.absSubAbsLeAbsAdd (((Litex.In.rep x __h8 : ℝ)) : ℂ) (((Litex.In.rep y __h9 : ℝ)) : ℂ)
+  have __prior0_4 : Litex.Le ((Litex.abs (((Litex.In.rep x __h8 : ℝ)) : ℂ)) - (Litex.abs (((Litex.In.rep y __h9 : ℝ)) : ℂ))) (Litex.abs ((((Litex.In.rep x __h8 : ℝ)) : ℂ) - (((Litex.In.rep y __h9 : ℝ)) : ℂ))) := Litex.Rules.absSubAbsLeAbsSub (((Litex.In.rep x __h8 : ℝ)) : ℂ) (((Litex.In.rep y __h9 : ℝ)) : ℂ)
+  exact ⟨__prior0_0, __prior0_1, __prior0_2, __prior0_3, __prior0_4⟩
 
 theorem __fact1 :
-    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.R), Litex.Nonnegative (Litex.abs (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ)) ∧ Litex.Le ((-1 : ℂ) * (Litex.abs (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ))) (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) ∧ Litex.Le ((-1 : ℂ) * (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ)) (Litex.abs (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ)) ∧ Litex.Le (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (Litex.abs (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ)) := by
-  intro x __h1_1
-  have __c1_0 : Litex.Nonnegative (Litex.abs (((Litex.In.rep x __h1_1 : ℝ)) : ℂ)) := Litex.Rules.absNonnegative (((Litex.In.rep x __h1_1 : ℝ)) : ℂ)
-  have __c1_1 : Litex.Le ((-1 : ℂ) * (Litex.abs (((Litex.In.rep x __h1_1 : ℝ)) : ℂ))) (((Litex.In.rep x __h1_1 : ℝ)) : ℂ) := Litex.Rules.negAbsLe (((Litex.In.rep x __h1_1 : ℝ)) : ℂ)
-  have __c1_2 : Litex.Le ((-1 : ℂ) * (((Litex.In.rep x __h1_1 : ℝ)) : ℂ)) (Litex.abs (((Litex.In.rep x __h1_1 : ℝ)) : ℂ)) := Litex.Rules.negLeAbs (((Litex.In.rep x __h1_1 : ℝ)) : ℂ)
-  have __c1_3 : Litex.Le (((Litex.In.rep x __h1_1 : ℝ)) : ℂ) (Litex.abs (((Litex.In.rep x __h1_1 : ℝ)) : ℂ)) := Litex.Rules.selfLeAbs (((Litex.In.rep x __h1_1 : ℝ)) : ℂ)
-  exact ⟨__c1_0, __c1_1, __c1_2, __c1_3⟩
+    ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.R), (Litex.Nonnegative (Litex.abs (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ))) ∧ (Litex.Le ((-1 : ℂ) * (Litex.abs (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ))) (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ)) ∧ (Litex.Le ((-1 : ℂ) * (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ)) (Litex.abs (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ))) ∧ (Litex.Le (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (Litex.abs (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ))) := by
+  intro __carrier1 x __h21
+  have __prior1_0 : Litex.Nonnegative (Litex.abs (((Litex.In.rep x __h21 : ℝ)) : ℂ)) := Litex.Rules.absNonnegative (((Litex.In.rep x __h21 : ℝ)) : ℂ)
+  have __prior1_1 : Litex.Le ((-1 : ℂ) * (Litex.abs (((Litex.In.rep x __h21 : ℝ)) : ℂ))) (((Litex.In.rep x __h21 : ℝ)) : ℂ) := Litex.Rules.negAbsLe (((Litex.In.rep x __h21 : ℝ)) : ℂ)
+  have __prior1_2 : Litex.Le ((-1 : ℂ) * (((Litex.In.rep x __h21 : ℝ)) : ℂ)) (Litex.abs (((Litex.In.rep x __h21 : ℝ)) : ℂ)) := Litex.Rules.negLeAbs (((Litex.In.rep x __h21 : ℝ)) : ℂ)
+  have __prior1_3 : Litex.Le (((Litex.In.rep x __h21 : ℝ)) : ℂ) (Litex.abs (((Litex.In.rep x __h21 : ℝ)) : ℂ)) := Litex.Rules.selfLeAbs (((Litex.In.rep x __h21 : ℝ)) : ℂ)
+  exact ⟨__prior1_0, __prior1_1, __prior1_2, __prior1_3⟩
 
 theorem __fact2 :
-    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.R) (__p2 : ℂ) (__type2 : Litex.In __p2 Litex.R), Litex.Le (Litex.min (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)) (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) ∧ Litex.Le (Litex.min (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)) (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ) ∧ Litex.Le (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (Litex.max (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)) ∧ Litex.Le (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ) (Litex.max (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)) ∧ Litex.Same (Litex.min (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)) (Litex.min (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ) (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ)) ∧ Litex.Same (Litex.max (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)) (Litex.max (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ) (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ)) ∧ Litex.Same (Litex.min (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (Litex.max (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ))) __p1 ∧ Litex.Same (Litex.max (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (Litex.min (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ))) __p1 := by
-  intro a __h2_1 b __h2_2
-  have __c2_0 : Litex.Le (Litex.min (((Litex.In.rep a __h2_1 : ℝ)) : ℂ) (((Litex.In.rep b __h2_2 : ℝ)) : ℂ)) (((Litex.In.rep a __h2_1 : ℝ)) : ℂ) := Litex.Rules.minLeLeft (Litex.In.rep a __h2_1 : ℝ) (Litex.In.rep b __h2_2 : ℝ)
-  have __c2_1 : Litex.Le (Litex.min (((Litex.In.rep a __h2_1 : ℝ)) : ℂ) (((Litex.In.rep b __h2_2 : ℝ)) : ℂ)) (((Litex.In.rep b __h2_2 : ℝ)) : ℂ) := Litex.Rules.minLeRight (Litex.In.rep a __h2_1 : ℝ) (Litex.In.rep b __h2_2 : ℝ)
-  have __c2_2 : Litex.Le (((Litex.In.rep a __h2_1 : ℝ)) : ℂ) (Litex.max (((Litex.In.rep a __h2_1 : ℝ)) : ℂ) (((Litex.In.rep b __h2_2 : ℝ)) : ℂ)) := Litex.Rules.leMaxLeft (Litex.In.rep a __h2_1 : ℝ) (Litex.In.rep b __h2_2 : ℝ)
-  have __c2_3 : Litex.Le (((Litex.In.rep b __h2_2 : ℝ)) : ℂ) (Litex.max (((Litex.In.rep a __h2_1 : ℝ)) : ℂ) (((Litex.In.rep b __h2_2 : ℝ)) : ℂ)) := Litex.Rules.leMaxRight (Litex.In.rep a __h2_1 : ℝ) (Litex.In.rep b __h2_2 : ℝ)
-  have __c2_4 : Litex.Same (Litex.min (((Litex.In.rep a __h2_1 : ℝ)) : ℂ) (((Litex.In.rep b __h2_2 : ℝ)) : ℂ)) (Litex.min (((Litex.In.rep b __h2_2 : ℝ)) : ℂ) (((Litex.In.rep a __h2_1 : ℝ)) : ℂ)) := Litex.Rules.minCommutative (Litex.In.rep a __h2_1 : ℝ) (Litex.In.rep b __h2_2 : ℝ)
-  have __c2_5 : Litex.Same (Litex.max (((Litex.In.rep a __h2_1 : ℝ)) : ℂ) (((Litex.In.rep b __h2_2 : ℝ)) : ℂ)) (Litex.max (((Litex.In.rep b __h2_2 : ℝ)) : ℂ) (((Litex.In.rep a __h2_1 : ℝ)) : ℂ)) := Litex.Rules.maxCommutative (Litex.In.rep a __h2_1 : ℝ) (Litex.In.rep b __h2_2 : ℝ)
-  have __c2_6 : Litex.Same (Litex.min (((Litex.In.rep a __h2_1 : ℝ)) : ℂ) (Litex.max (((Litex.In.rep a __h2_1 : ℝ)) : ℂ) (((Litex.In.rep b __h2_2 : ℝ)) : ℂ))) a := Litex.Same.trans (Litex.Rules.minAbsorbMaxLeft (Litex.In.rep a __h2_1 : ℝ) (Litex.In.rep b __h2_2 : ℝ)) (Litex.Same.symm (Litex.Same.trans (Litex.In.same_rep a (__h2_1)) (Litex.Same.realComplex (Litex.In.rep a __h2_1))))
-  have __c2_7 : Litex.Same (Litex.max (((Litex.In.rep a __h2_1 : ℝ)) : ℂ) (Litex.min (((Litex.In.rep a __h2_1 : ℝ)) : ℂ) (((Litex.In.rep b __h2_2 : ℝ)) : ℂ))) a := Litex.Same.trans (Litex.Rules.maxAbsorbMinLeft (Litex.In.rep a __h2_1 : ℝ) (Litex.In.rep b __h2_2 : ℝ)) (Litex.Same.symm (Litex.Same.trans (Litex.In.same_rep a (__h2_1)) (Litex.Same.realComplex (Litex.In.rep a __h2_1))))
-  exact ⟨__c2_0, __c2_1, __c2_2, __c2_3, __c2_4, __c2_5, __c2_6, __c2_7⟩
+    ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.R) {__carrier2 : Type} (__p2 : __carrier2) (__type2 : Litex.In __p2 Litex.R), (Litex.Le (Litex.min (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)) (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ)) ∧ (Litex.Le (Litex.min (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)) (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)) ∧ (Litex.Le (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (Litex.max (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ))) ∧ (Litex.Le (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ) (Litex.max (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ))) ∧ (Litex.Same (Litex.min (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)) (Litex.min (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ) (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ))) ∧ (Litex.Same (Litex.max (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)) (Litex.max (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ) (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ))) ∧ (Litex.Same (Litex.min (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (Litex.max (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ))) __p1) ∧ (Litex.Same (Litex.max (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (Litex.min (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ))) __p1) := by
+  intro __carrier1 a __h37 __carrier2 b __h38
+  have __prior2_0 : Litex.Le (Litex.min (((Litex.In.rep a __h37 : ℝ)) : ℂ) (((Litex.In.rep b __h38 : ℝ)) : ℂ)) (((Litex.In.rep a __h37 : ℝ)) : ℂ) := Litex.Rules.minLeLeft (Litex.In.rep a __h37 : ℝ) (Litex.In.rep b __h38 : ℝ)
+  have __prior2_1 : Litex.Le (Litex.min (((Litex.In.rep a __h37 : ℝ)) : ℂ) (((Litex.In.rep b __h38 : ℝ)) : ℂ)) (((Litex.In.rep b __h38 : ℝ)) : ℂ) := Litex.Rules.minLeRight (Litex.In.rep a __h37 : ℝ) (Litex.In.rep b __h38 : ℝ)
+  have __prior2_2 : Litex.Le (((Litex.In.rep a __h37 : ℝ)) : ℂ) (Litex.max (((Litex.In.rep a __h37 : ℝ)) : ℂ) (((Litex.In.rep b __h38 : ℝ)) : ℂ)) := Litex.Rules.leMaxLeft (Litex.In.rep a __h37 : ℝ) (Litex.In.rep b __h38 : ℝ)
+  have __prior2_3 : Litex.Le (((Litex.In.rep b __h38 : ℝ)) : ℂ) (Litex.max (((Litex.In.rep a __h37 : ℝ)) : ℂ) (((Litex.In.rep b __h38 : ℝ)) : ℂ)) := Litex.Rules.leMaxRight (Litex.In.rep a __h37 : ℝ) (Litex.In.rep b __h38 : ℝ)
+  have __prior2_4 : Litex.Same (Litex.min (((Litex.In.rep a __h37 : ℝ)) : ℂ) (((Litex.In.rep b __h38 : ℝ)) : ℂ)) (Litex.min (((Litex.In.rep b __h38 : ℝ)) : ℂ) (((Litex.In.rep a __h37 : ℝ)) : ℂ)) := Litex.Rules.minCommutative (Litex.In.rep a __h37 : ℝ) (Litex.In.rep b __h38 : ℝ)
+  have __prior2_5 : Litex.Same (Litex.max (((Litex.In.rep a __h37 : ℝ)) : ℂ) (((Litex.In.rep b __h38 : ℝ)) : ℂ)) (Litex.max (((Litex.In.rep b __h38 : ℝ)) : ℂ) (((Litex.In.rep a __h37 : ℝ)) : ℂ)) := Litex.Rules.maxCommutative (Litex.In.rep a __h37 : ℝ) (Litex.In.rep b __h38 : ℝ)
+  have __prior2_6 : Litex.Same (Litex.min (((Litex.In.rep a __h37 : ℝ)) : ℂ) (Litex.max (((Litex.In.rep a __h37 : ℝ)) : ℂ) (((Litex.In.rep b __h38 : ℝ)) : ℂ))) a := Litex.Same.trans (Litex.Rules.minAbsorbMaxLeft (Litex.In.rep a __h37 : ℝ) (Litex.In.rep b __h38 : ℝ)) (Litex.Same.symm (Litex.Same.trans (Litex.In.same_rep a (__h37)) (Litex.Same.realComplex (Litex.In.rep a __h37))))
+  have __prior2_7 : Litex.Same (Litex.max (((Litex.In.rep a __h37 : ℝ)) : ℂ) (Litex.min (((Litex.In.rep a __h37 : ℝ)) : ℂ) (((Litex.In.rep b __h38 : ℝ)) : ℂ))) a := Litex.Same.trans (Litex.Rules.maxAbsorbMinLeft (Litex.In.rep a __h37 : ℝ) (Litex.In.rep b __h38 : ℝ)) (Litex.Same.symm (Litex.Same.trans (Litex.In.same_rep a (__h37)) (Litex.Same.realComplex (Litex.In.rep a __h37))))
+  exact ⟨__prior2_0, __prior2_1, __prior2_2, __prior2_3, __prior2_4, __prior2_5, __prior2_6, __prior2_7⟩
 
 theorem __fact3 :
-    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.R), Litex.Same (Litex.min (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ)) __p1 ∧ Litex.Same (Litex.max (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ)) __p1 := by
-  intro a __h3_1
-  have __c3_0 : Litex.Same (Litex.min (((Litex.In.rep a __h3_1 : ℝ)) : ℂ) (((Litex.In.rep a __h3_1 : ℝ)) : ℂ)) a := Litex.Same.trans (Litex.Rules.minIdempotent (Litex.In.rep a __h3_1 : ℝ)) (Litex.Same.symm (Litex.Same.trans (Litex.In.same_rep a (__h3_1)) (Litex.Same.realComplex (Litex.In.rep a __h3_1))))
-  have __c3_1 : Litex.Same (Litex.max (((Litex.In.rep a __h3_1 : ℝ)) : ℂ) (((Litex.In.rep a __h3_1 : ℝ)) : ℂ)) a := Litex.Same.trans (Litex.Rules.maxIdempotent (Litex.In.rep a __h3_1 : ℝ)) (Litex.Same.symm (Litex.Same.trans (Litex.In.same_rep a (__h3_1)) (Litex.Same.realComplex (Litex.In.rep a __h3_1))))
-  exact ⟨__c3_0, __c3_1⟩
+    ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.R), (Litex.Same (Litex.min (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ)) __p1) ∧ (Litex.Same (Litex.max (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ)) __p1) := by
+  intro __carrier1 a __h51
+  have __prior3_0 : Litex.Same (Litex.min (((Litex.In.rep a __h51 : ℝ)) : ℂ) (((Litex.In.rep a __h51 : ℝ)) : ℂ)) a := Litex.Same.trans (Litex.Rules.minIdempotent (Litex.In.rep a __h51 : ℝ)) (Litex.Same.symm (Litex.Same.trans (Litex.In.same_rep a (__h51)) (Litex.Same.realComplex (Litex.In.rep a __h51))))
+  have __prior3_1 : Litex.Same (Litex.max (((Litex.In.rep a __h51 : ℝ)) : ℂ) (((Litex.In.rep a __h51 : ℝ)) : ℂ)) a := Litex.Same.trans (Litex.Rules.maxIdempotent (Litex.In.rep a __h51 : ℝ)) (Litex.Same.symm (Litex.Same.trans (Litex.In.same_rep a (__h51)) (Litex.Same.realComplex (Litex.In.rep a __h51))))
+  exact ⟨__prior3_0, __prior3_1⟩
 
 theorem __fact4 :
-    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.R) (__p2 : ℂ) (__type2 : Litex.In __p2 Litex.R) (__p3 : ℂ) (__type3 : Litex.In __p3 Litex.R), Litex.Same (Litex.min (Litex.min (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)) (((Litex.In.rep __p3 __type3 : ℝ)) : ℂ)) (Litex.min (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (Litex.min (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ) (((Litex.In.rep __p3 __type3 : ℝ)) : ℂ))) ∧ Litex.Same (Litex.max (Litex.max (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)) (((Litex.In.rep __p3 __type3 : ℝ)) : ℂ)) (Litex.max (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (Litex.max (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ) (((Litex.In.rep __p3 __type3 : ℝ)) : ℂ))) := by
-  intro a __h4_1 b __h4_2 c __h4_3
-  have __c4_0 : Litex.Same (Litex.min (Litex.min (((Litex.In.rep a __h4_1 : ℝ)) : ℂ) (((Litex.In.rep b __h4_2 : ℝ)) : ℂ)) (((Litex.In.rep c __h4_3 : ℝ)) : ℂ)) (Litex.min (((Litex.In.rep a __h4_1 : ℝ)) : ℂ) (Litex.min (((Litex.In.rep b __h4_2 : ℝ)) : ℂ) (((Litex.In.rep c __h4_3 : ℝ)) : ℂ))) := Litex.Rules.minAssociative (Litex.In.rep a __h4_1 : ℝ) (Litex.In.rep b __h4_2 : ℝ) (Litex.In.rep c __h4_3 : ℝ)
-  have __c4_1 : Litex.Same (Litex.max (Litex.max (((Litex.In.rep a __h4_1 : ℝ)) : ℂ) (((Litex.In.rep b __h4_2 : ℝ)) : ℂ)) (((Litex.In.rep c __h4_3 : ℝ)) : ℂ)) (Litex.max (((Litex.In.rep a __h4_1 : ℝ)) : ℂ) (Litex.max (((Litex.In.rep b __h4_2 : ℝ)) : ℂ) (((Litex.In.rep c __h4_3 : ℝ)) : ℂ))) := Litex.Rules.maxAssociative (Litex.In.rep a __h4_1 : ℝ) (Litex.In.rep b __h4_2 : ℝ) (Litex.In.rep c __h4_3 : ℝ)
-  exact ⟨__c4_0, __c4_1⟩
+    ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.R) {__carrier2 : Type} (__p2 : __carrier2) (__type2 : Litex.In __p2 Litex.R) {__carrier3 : Type} (__p3 : __carrier3) (__type3 : Litex.In __p3 Litex.R), (Litex.Same (Litex.min (Litex.min (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)) (((Litex.In.rep __p3 __type3 : ℝ)) : ℂ)) (Litex.min (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (Litex.min (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ) (((Litex.In.rep __p3 __type3 : ℝ)) : ℂ)))) ∧ (Litex.Same (Litex.max (Litex.max (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)) (((Litex.In.rep __p3 __type3 : ℝ)) : ℂ)) (Litex.max (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (Litex.max (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ) (((Litex.In.rep __p3 __type3 : ℝ)) : ℂ)))) := by
+  intro __carrier1 a __h60 __carrier2 b __h61 __carrier3 c __h62
+  have __prior4_0 : Litex.Same (Litex.min (Litex.min (((Litex.In.rep a __h60 : ℝ)) : ℂ) (((Litex.In.rep b __h61 : ℝ)) : ℂ)) (((Litex.In.rep c __h62 : ℝ)) : ℂ)) (Litex.min (((Litex.In.rep a __h60 : ℝ)) : ℂ) (Litex.min (((Litex.In.rep b __h61 : ℝ)) : ℂ) (((Litex.In.rep c __h62 : ℝ)) : ℂ))) := Litex.Rules.minAssociative (Litex.In.rep a __h60 : ℝ) (Litex.In.rep b __h61 : ℝ) (Litex.In.rep c __h62 : ℝ)
+  have __prior4_1 : Litex.Same (Litex.max (Litex.max (((Litex.In.rep a __h60 : ℝ)) : ℂ) (((Litex.In.rep b __h61 : ℝ)) : ℂ)) (((Litex.In.rep c __h62 : ℝ)) : ℂ)) (Litex.max (((Litex.In.rep a __h60 : ℝ)) : ℂ) (Litex.max (((Litex.In.rep b __h61 : ℝ)) : ℂ) (((Litex.In.rep c __h62 : ℝ)) : ℂ))) := Litex.Rules.maxAssociative (Litex.In.rep a __h60 : ℝ) (Litex.In.rep b __h61 : ℝ) (Litex.In.rep c __h62 : ℝ)
+  exact ⟨__prior4_0, __prior4_1⟩
 
 theorem __fact5 :
-    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.R) (__p2 : ℂ) (__type2 : Litex.In __p2 Litex.R) (__domain1 : Litex.Le (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)), Litex.Same (Litex.min (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)) __p1 ∧ Litex.Same (Litex.max (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)) __p2 := by
-  intro a __h5_1 b __h5_2 __domain1
-  have __c5_0 : Litex.Same (Litex.min (((Litex.In.rep a __h5_1 : ℝ)) : ℂ) (((Litex.In.rep b __h5_2 : ℝ)) : ℂ)) a := Litex.Same.trans (Litex.Rules.minEqLeftOfLe (Litex.In.rep a __h5_1 : ℝ) (Litex.In.rep b __h5_2 : ℝ) (__domain1)) (Litex.Same.symm (Litex.Same.trans (Litex.In.same_rep a (__h5_1)) (Litex.Same.realComplex (Litex.In.rep a __h5_1))))
-  have __c5_1 : Litex.Same (Litex.max (((Litex.In.rep a __h5_1 : ℝ)) : ℂ) (((Litex.In.rep b __h5_2 : ℝ)) : ℂ)) b := Litex.Same.trans (Litex.Rules.maxEqRightOfLe (Litex.In.rep a __h5_1 : ℝ) (Litex.In.rep b __h5_2 : ℝ) (__domain1)) (Litex.Same.symm (Litex.Same.trans (Litex.In.same_rep b (__h5_2)) (Litex.Same.realComplex (Litex.In.rep b __h5_2))))
-  exact ⟨__c5_0, __c5_1⟩
+    ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.R) {__carrier2 : Type} (__p2 : __carrier2) (__type2 : Litex.In __p2 Litex.R) (__domain1 : Litex.Le (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)), (Litex.Same (Litex.min (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)) __p1) ∧ (Litex.Same (Litex.max (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)) __p2) := by
+  intro __carrier1 a __h71 __carrier2 b __h72 __domain1
+  have __prior5_0 : Litex.Same (Litex.min (((Litex.In.rep a __h71 : ℝ)) : ℂ) (((Litex.In.rep b __h72 : ℝ)) : ℂ)) a := Litex.Same.trans (Litex.Rules.minEqLeftOfLe (Litex.In.rep a __h71 : ℝ) (Litex.In.rep b __h72 : ℝ) ((by
+    convert __domain1 using 1 <;> norm_num))) (Litex.Same.symm (Litex.Same.trans (Litex.In.same_rep a (__h71)) (Litex.Same.realComplex (Litex.In.rep a __h71))))
+  have __prior5_1 : Litex.Same (Litex.max (((Litex.In.rep a __h71 : ℝ)) : ℂ) (((Litex.In.rep b __h72 : ℝ)) : ℂ)) b := Litex.Same.trans (Litex.Rules.maxEqRightOfLe (Litex.In.rep a __h71 : ℝ) (Litex.In.rep b __h72 : ℝ) ((by
+    convert __domain1 using 1 <;> norm_num))) (Litex.Same.symm (Litex.Same.trans (Litex.In.same_rep b (__h72)) (Litex.Same.realComplex (Litex.In.rep b __h72))))
+  exact ⟨__prior5_0, __prior5_1⟩
 
 theorem __fact6 :
-    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.R) (__p2 : ℂ) (__type2 : Litex.In __p2 Litex.R) (__p3 : ℂ) (__type3 : Litex.In __p3 Litex.R) (__p4 : ℂ) (__type4 : Litex.In __p4 Litex.R) (__domain1 : Litex.Le (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (((Litex.In.rep __p3 __type3 : ℝ)) : ℂ)) (__domain2 : Litex.Le (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ) (((Litex.In.rep __p4 __type4 : ℝ)) : ℂ)), Litex.Le (Litex.min (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)) (Litex.min (((Litex.In.rep __p3 __type3 : ℝ)) : ℂ) (((Litex.In.rep __p4 __type4 : ℝ)) : ℂ)) ∧ Litex.Le (Litex.max (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)) (Litex.max (((Litex.In.rep __p3 __type3 : ℝ)) : ℂ) (((Litex.In.rep __p4 __type4 : ℝ)) : ℂ)) := by
-  intro a __h6_1 b __h6_2 c __h6_3 d __h6_4 __domain1 __domain2
-  have __c6_0 : Litex.Le (Litex.min (((Litex.In.rep a __h6_1 : ℝ)) : ℂ) (((Litex.In.rep b __h6_2 : ℝ)) : ℂ)) (Litex.min (((Litex.In.rep c __h6_3 : ℝ)) : ℂ) (((Litex.In.rep d __h6_4 : ℝ)) : ℂ)) := Litex.Rules.minMonotone (Litex.In.rep a __h6_1 : ℝ) (Litex.In.rep b __h6_2 : ℝ) (Litex.In.rep c __h6_3 : ℝ) (Litex.In.rep d __h6_4 : ℝ) (__domain1) (__domain2)
-  have __c6_1 : Litex.Le (Litex.max (((Litex.In.rep a __h6_1 : ℝ)) : ℂ) (((Litex.In.rep b __h6_2 : ℝ)) : ℂ)) (Litex.max (((Litex.In.rep c __h6_3 : ℝ)) : ℂ) (((Litex.In.rep d __h6_4 : ℝ)) : ℂ)) := Litex.Rules.maxMonotone (Litex.In.rep a __h6_1 : ℝ) (Litex.In.rep b __h6_2 : ℝ) (Litex.In.rep c __h6_3 : ℝ) (Litex.In.rep d __h6_4 : ℝ) (__domain1) (__domain2)
-  exact ⟨__c6_0, __c6_1⟩
+    ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.R) {__carrier2 : Type} (__p2 : __carrier2) (__type2 : Litex.In __p2 Litex.R) {__carrier3 : Type} (__p3 : __carrier3) (__type3 : Litex.In __p3 Litex.R) {__carrier4 : Type} (__p4 : __carrier4) (__type4 : Litex.In __p4 Litex.R) (__domain1 : Litex.Le (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (((Litex.In.rep __p3 __type3 : ℝ)) : ℂ)) (__domain2 : Litex.Le (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ) (((Litex.In.rep __p4 __type4 : ℝ)) : ℂ)), (Litex.Le (Litex.min (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)) (Litex.min (((Litex.In.rep __p3 __type3 : ℝ)) : ℂ) (((Litex.In.rep __p4 __type4 : ℝ)) : ℂ))) ∧ (Litex.Le (Litex.max (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)) (Litex.max (((Litex.In.rep __p3 __type3 : ℝ)) : ℂ) (((Litex.In.rep __p4 __type4 : ℝ)) : ℂ))) := by
+  intro __carrier1 a __h85 __carrier2 b __h86 __carrier3 c __h87 __carrier4 d __h88 __domain1 __domain2
+  have __prior6_0 : Litex.Le (Litex.min (((Litex.In.rep a __h85 : ℝ)) : ℂ) (((Litex.In.rep b __h86 : ℝ)) : ℂ)) (Litex.min (((Litex.In.rep c __h87 : ℝ)) : ℂ) (((Litex.In.rep d __h88 : ℝ)) : ℂ)) := Litex.Rules.minMonotone (Litex.In.rep a __h85 : ℝ) (Litex.In.rep b __h86 : ℝ) (Litex.In.rep c __h87 : ℝ) (Litex.In.rep d __h88 : ℝ) ((by
+    convert __domain1 using 1 <;> norm_num)) ((by
+    convert __domain2 using 1 <;> norm_num))
+  have __prior6_1 : Litex.Le (Litex.max (((Litex.In.rep a __h85 : ℝ)) : ℂ) (((Litex.In.rep b __h86 : ℝ)) : ℂ)) (Litex.max (((Litex.In.rep c __h87 : ℝ)) : ℂ) (((Litex.In.rep d __h88 : ℝ)) : ℂ)) := Litex.Rules.maxMonotone (Litex.In.rep a __h85 : ℝ) (Litex.In.rep b __h86 : ℝ) (Litex.In.rep c __h87 : ℝ) (Litex.In.rep d __h88 : ℝ) ((by
+    convert __domain1 using 1 <;> norm_num)) ((by
+    convert __domain2 using 1 <;> norm_num))
+  exact ⟨__prior6_0, __prior6_1⟩
 
 theorem __fact7 :
-    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.R) (__domain1 : Litex.Le (0 : ℂ) (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ)), Litex.Same (Litex.abs (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ)) __p1 := by
-  intro x __h7_1 __domain1
-  have __c7_0 : Litex.Same (Litex.abs (((Litex.In.rep x __h7_1 : ℝ)) : ℂ)) x := Litex.Same.trans (Litex.Rules.absEqSelfOfLe (Litex.In.rep x __h7_1 : ℝ) (__domain1)) (Litex.Same.symm (Litex.Same.trans (Litex.In.same_rep x (__h7_1)) (Litex.Same.realComplex (Litex.In.rep x __h7_1))))
-  exact __c7_0
+    ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.R) (__domain1 : Litex.Le (0 : ℂ) (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ)), Litex.Same (Litex.abs (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ)) __p1 := by
+  intro __carrier1 x __h97 __domain1
+  have __prior7_0 : Litex.Same (Litex.abs (((Litex.In.rep x __h97 : ℝ)) : ℂ)) x := Litex.Same.trans (Litex.Rules.absEqSelfOfLe (Litex.In.rep x __h97 : ℝ) ((by
+    convert __domain1 using 1 <;> norm_num))) (Litex.Same.symm (Litex.Same.trans (Litex.In.same_rep x (__h97)) (Litex.Same.realComplex (Litex.In.rep x __h97))))
+  exact __prior7_0
 
 theorem __fact8 :
-    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.R) (__domain1 : Litex.Le (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (0 : ℂ)), Litex.Same (Litex.abs (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ)) ((-1 : ℂ) * (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ)) := by
-  intro x __h8_1 __domain1
-  have __infer8_0 : Litex.Nonnegative ((-1 : ℂ) * (((Litex.In.rep x __h8_1 : ℝ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNonnegative (Litex.Rules.realCastNonpositive (Litex.In.rep x __h8_1 : ℝ) (__domain1))
-  have __c8_0 : Litex.Same (Litex.abs (((Litex.In.rep x __h8_1 : ℝ)) : ℂ)) ((-1 : ℂ) * (((Litex.In.rep x __h8_1 : ℝ)) : ℂ)) := Litex.Rules.absEqNegOfLe (Litex.In.rep x __h8_1 : ℝ) (__domain1)
-  exact __c8_0
+    ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.R) (__domain1 : Litex.Le (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (0 : ℂ)), Litex.Same (Litex.abs (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ)) ((-1 : ℂ) * (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ)) := by
+  intro __carrier1 x __h105 __domain1
+  have __infer8_0 : Litex.Nonnegative ((-1 : ℂ) * (((Litex.In.rep x __h105 : ℝ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNonnegative (Litex.Rules.realCastNonpositive (Litex.In.rep x __h105 : ℝ) (__domain1))
+  have __prior8_0 : Litex.Same (Litex.abs (((Litex.In.rep x __h105 : ℝ)) : ℂ)) ((-1 : ℂ) * (((Litex.In.rep x __h105 : ℝ)) : ℂ)) := Litex.Rules.absEqNegOfLe (Litex.In.rep x __h105 : ℝ) ((by
+    convert __domain1 using 1 <;> norm_num))
+  exact __prior8_0
 
 theorem __fact9 :
-    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.R) (__domain1 : ¬ Litex.Same __p1 (0 : ℂ)), Litex.Positive (Litex.abs (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ)) := by
-  intro x __h9_1 __domain1
-  have __c9_0 : Litex.Positive (Litex.abs (((Litex.In.rep x __h9_1 : ℝ)) : ℂ)) := Litex.Rules.absPositiveOfNotSame x (Litex.In.rep x __h9_1 : ℝ) (Litex.Same.trans (Litex.In.same_rep x (__h9_1)) (Litex.Same.realComplex (Litex.In.rep x __h9_1))) (__domain1)
-  exact __c9_0
+    ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.R) (__domain1 : ¬ Litex.Same __p1 (0 : ℂ)), Litex.Positive (Litex.abs (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ)) := by
+  intro __carrier1 x __h113 __domain1
+  have __prior9_0 : Litex.Positive (Litex.abs (((Litex.In.rep x __h113 : ℝ)) : ℂ)) := Litex.Rules.absPositiveOfNotSame x (Litex.In.rep x __h113 : ℝ) (Litex.Same.trans (Litex.In.same_rep x (__h113)) (Litex.Same.realComplex (Litex.In.rep x __h113))) ((by
+    convert __domain1 using 1 <;> norm_num))
+  exact __prior9_0
 
 theorem __fact10 :
-    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.R) (__p2 : ℂ) (__type2 : Litex.In __p2 Litex.R) (__domain1 : Litex.Le (0 : ℂ) (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)), Litex.Le (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) ((((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) + (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)) := by
-  intro a __h10_1 b __h10_2 __domain1
-  have __c10_0 : Litex.Le (((Litex.In.rep a __h10_1 : ℝ)) : ℂ) ((((Litex.In.rep a __h10_1 : ℝ)) : ℂ) + (((Litex.In.rep b __h10_2 : ℝ)) : ℂ)) := Litex.Rules.realCastLeAddOfNonnegativeRight (Litex.In.rep a __h10_1 : ℝ) (Litex.In.rep b __h10_2 : ℝ) (__domain1)
-  exact __c10_0
+    ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.R) {__carrier2 : Type} (__p2 : __carrier2) (__type2 : Litex.In __p2 Litex.R) (__domain1 : Litex.Le (0 : ℂ) (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)), Litex.Le (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) ((((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) + (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)) := by
+  intro __carrier1 a __h121 __carrier2 b __h122 __domain1
+  have __prior10_0 : Litex.Le (((Litex.In.rep a __h121 : ℝ)) : ℂ) ((((Litex.In.rep a __h121 : ℝ)) : ℂ) + (((Litex.In.rep b __h122 : ℝ)) : ℂ)) := Litex.Rules.realCastLeAddOfNonnegativeRight (Litex.In.rep a __h121 : ℝ) (Litex.In.rep b __h122 : ℝ) ((by
+    convert __domain1 using 1 <;> norm_num))
+  exact __prior10_0
 
 theorem __fact11 :
-    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.R) (__p2 : ℂ) (__type2 : Litex.In __p2 Litex.R) (__p3 : ℂ) (__type3 : Litex.In __p3 Litex.R) (__domain1 : Litex.Le (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)) (__domain2 : Litex.Le (0 : ℂ) (((Litex.In.rep __p3 __type3 : ℝ)) : ℂ)), Litex.Le ((((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) - (((Litex.In.rep __p3 __type3 : ℝ)) : ℂ)) (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ) := by
-  intro a __h11_1 b __h11_2 c __h11_3 __domain1 __domain2
-  have __c11_0 : Litex.Le ((((Litex.In.rep a __h11_1 : ℝ)) : ℂ) - (((Litex.In.rep c __h11_3 : ℝ)) : ℂ)) (((Litex.In.rep b __h11_2 : ℝ)) : ℂ) := Litex.Rules.realCastSubLeOfLeOfNonnegative (Litex.In.rep a __h11_1 : ℝ) (Litex.In.rep b __h11_2 : ℝ) (Litex.In.rep c __h11_3 : ℝ) (__domain1) (__domain2)
-  exact __c11_0
+    ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.R) {__carrier2 : Type} (__p2 : __carrier2) (__type2 : Litex.In __p2 Litex.R) {__carrier3 : Type} (__p3 : __carrier3) (__type3 : Litex.In __p3 Litex.R) (__domain1 : Litex.Le (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)) (__domain2 : Litex.Le (0 : ℂ) (((Litex.In.rep __p3 __type3 : ℝ)) : ℂ)), Litex.Le ((((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) - (((Litex.In.rep __p3 __type3 : ℝ)) : ℂ)) (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ) := by
+  intro __carrier1 a __h132 __carrier2 b __h133 __carrier3 c __h134 __domain1 __domain2
+  have __prior11_0 : Litex.Le ((((Litex.In.rep a __h132 : ℝ)) : ℂ) - (((Litex.In.rep c __h134 : ℝ)) : ℂ)) (((Litex.In.rep b __h133 : ℝ)) : ℂ) := Litex.Rules.realCastSubLeOfLeOfNonnegative (Litex.In.rep a __h132 : ℝ) (Litex.In.rep b __h133 : ℝ) (Litex.In.rep c __h134 : ℝ) ((by
+    convert __domain1 using 1 <;> norm_num)) ((by
+    convert __domain2 using 1 <;> norm_num))
+  exact __prior11_0
 
 end __Compiler_63_ScalarOperatorBuiltins

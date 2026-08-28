@@ -11,37 +11,8 @@ open Filter Topology
 
 abbrev LitexRealSequence := Litex.Fn Litex.N Litex.R
 
-/-- A Mathlib index carrying exactly the heterogeneous natural-number input
-accepted by a generated Litex function. Its order is the order of the
-verifier-selected exact natural representative. -/
-structure NaturalInput where
-  value : ℂ
-  membership : Litex.In value Litex.N
-
-noncomputable def NaturalInput.natural (n : NaturalInput) : ℕ :=
-  Litex.In.rep n.value n.membership
-
-noncomputable instance : LE NaturalInput where
-  le left right := left.natural ≤ right.natural
-
-noncomputable instance : Preorder NaturalInput where
-  le_refl _ := Nat.le_refl _
-  le_trans _ _ _ := Nat.le_trans
-
-noncomputable instance : IsDirectedOrder NaturalInput where
-  directed left right := by
-    by_cases h : left.natural ≤ right.natural
-    · exact ⟨right, h, Nat.le_refl _⟩
-    · refine ⟨left, Nat.le_refl _, ?_⟩
-      change right.natural ≤ left.natural
-      exact Nat.le_of_lt (Nat.lt_of_not_ge h)
-
-instance : Nonempty NaturalInput :=
-  ⟨{ value := (0 : ℂ)
-     membership := Litex.Rules.complexEqNatInN 0 0 (by norm_num) }⟩
-
-def toMathlibSequence (s : LitexRealSequence) : NaturalInput → ℝ :=
-  fun n => s.call n.value n.membership
+def toMathlibSequence (s : LitexRealSequence) : ℕ → ℝ :=
+  fun n => s.call n (Litex.In.own Litex.N n)
 
 def scaleSequence (c : ℝ) (s : LitexRealSequence) : LitexRealSequence :=
   { call := fun {_} n hn => c * s.call n hn }
@@ -59,10 +30,14 @@ theorem tendsto_of_generated_convergesTo
   unfold __Compiler_main.is_eventually_close at close
   rcases close with ⟨_, _, _, _, tail⟩
   apply Filter.eventually_atTop.mpr
-  refine ⟨⟨N0, N0In⟩, ?_⟩
+  refine ⟨Litex.In.rep N0 N0In, ?_⟩
   intro n hn
-  have sourceTail := tail n.value n.membership (by
-    exact Litex.OrderBridge.leOfReal (by exact_mod_cast hn))
+  have hnRepresentative :
+      Litex.In.rep N0 N0In ≤ Litex.In.rep n (Litex.In.own Litex.N n) := by
+    rw [Litex.In.rep_exact (set := Litex.N) n (Litex.In.own Litex.N n)]
+    exact hn
+  have sourceTail := tail n (Litex.In.own Litex.N n) (by
+    exact Litex.OrderBridge.leOfReal (by exact_mod_cast hnRepresentative))
   simpa [epsilonCarrier, toMathlibSequence, Litex.fnApplyOwn, Litex.Lt,
     Litex.OrderValue, Litex.abs, Real.dist_eq, ← Complex.ofReal_sub,
     Complex.norm_real, Real.norm_eq_abs] using sourceTail
@@ -87,7 +62,7 @@ theorem tendsto_mul_const_from_generated
       __Compiler_main.converges_to
         (scaleSequence (Litex.In.rep c cIn) (Litex.In.rep s sIn))
         (Litex.In.rep c cIn * Litex.In.rep a aIn) := by
-    simpa [scaleSequence, Litex.fnApplyOwn] using generated
+    simpa [scaleSequence, Litex.fnApply, Litex.fnApplyOwn] using generated
   exact tendsto_of_generated_convergesTo _ _ generatedScaled
 
 end ConvergenceScalingPipeline

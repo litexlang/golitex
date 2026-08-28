@@ -7,8 +7,8 @@ namespace __Compiler_50_SetExtensionResultComposition
 
 theorem __fact0 : Litex.Same (Litex.Set.coproduct (Litex.Set.singleton (1 : ℂ)) (Litex.Set.coproduct (Litex.Set.singleton (2 : ℂ)) Litex.Set.empty)) (Litex.Set.coproduct (Litex.Set.singleton (2 : ℂ)) (Litex.Set.coproduct (Litex.Set.singleton (1 : ℂ)) Litex.Set.empty)) := by
   exact (by
-  have __step1 : ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 (Litex.Set.coproduct (Litex.Set.singleton (1 : ℂ)) (Litex.Set.coproduct (Litex.Set.singleton (2 : ℂ)) Litex.Set.empty))), Litex.In __p1 (Litex.Set.coproduct (Litex.Set.singleton (2 : ℂ)) (Litex.Set.coproduct (Litex.Set.singleton (1 : ℂ)) Litex.Set.empty)) := by
-    intro x __type1
+  have __step1 : ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 (Litex.Set.coproduct (Litex.Set.singleton (1 : ℂ)) (Litex.Set.coproduct (Litex.Set.singleton (2 : ℂ)) Litex.Set.empty))), Litex.In __p1 (Litex.Set.coproduct (Litex.Set.singleton (2 : ℂ)) (Litex.Set.coproduct (Litex.Set.singleton (1 : ℂ)) Litex.Set.empty)) := by
+    intro __carrier1 x __type1
     have __assignment_cases : Litex.Same x (1 : ℂ) ∨ Litex.Same x (2 : ℂ) := (by
     rcases (__type1) with ⟨__member, __same⟩
     cases __member with
@@ -28,8 +28,8 @@ theorem __fact0 : Litex.Same (Litex.Set.coproduct (Litex.Set.singleton (1 : ℂ)
       exact ⟨Sum.inr (Sum.inl (Litex.SingletonCarrier.element)), Litex.Same.trans (__assignment1) (Litex.Same.trans (Litex.Same.trans (Litex.Same.singleton (1 : ℂ)) (Litex.Same.sumLeft (Litex.SingletonCarrier.element))) (Litex.Same.sumRight (Sum.inl (Litex.SingletonCarrier.element))))⟩
     ·
       exact ⟨Sum.inl (Litex.SingletonCarrier.element), Litex.Same.trans (__assignment2) (Litex.Same.trans (Litex.Same.singleton (2 : ℂ)) (Litex.Same.sumLeft (Litex.SingletonCarrier.element)))⟩
-  have __step2 : ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 (Litex.Set.coproduct (Litex.Set.singleton (2 : ℂ)) (Litex.Set.coproduct (Litex.Set.singleton (1 : ℂ)) Litex.Set.empty))), Litex.In __p1 (Litex.Set.coproduct (Litex.Set.singleton (1 : ℂ)) (Litex.Set.coproduct (Litex.Set.singleton (2 : ℂ)) Litex.Set.empty)) := by
-    intro y __type1
+  have __step2 : ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 (Litex.Set.coproduct (Litex.Set.singleton (2 : ℂ)) (Litex.Set.coproduct (Litex.Set.singleton (1 : ℂ)) Litex.Set.empty))), Litex.In __p1 (Litex.Set.coproduct (Litex.Set.singleton (1 : ℂ)) (Litex.Set.coproduct (Litex.Set.singleton (2 : ℂ)) Litex.Set.empty)) := by
+    intro __carrier1 y __type1
     have __assignment_cases : Litex.Same y (2 : ℂ) ∨ Litex.Same y (1 : ℂ) := (by
     rcases (__type1) with ⟨__member, __same⟩
     cases __member with

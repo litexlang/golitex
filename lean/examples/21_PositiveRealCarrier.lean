@@ -24,12 +24,16 @@ theorem __fact5 : Litex.Positive ((Real.pi : ℝ) : ℂ) := by
   exact Litex.Rules.positiveOfInRPos (__fact4)
 
 theorem __fact6 :
-    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.RPos), Litex.In __p1 Litex.R ∧ Litex.In __p1 Litex.C ∧ Litex.Lt (0 : ℂ) ((((Litex.In.rep __p1 __type1).val : ℝ)) : ℂ) := by
-  intro r __h6_1
-  have __infer6_3 : Litex.Lt (0 : ℂ) ((((Litex.In.rep r __h6_1).val : ℝ)) : ℂ) := Litex.Rules.positiveRealRepPositive (__h6_1)
-  have __c6_0 : Litex.In r Litex.R := Litex.Rules.inROfInRPos (__h6_1)
-  have __c6_1 : Litex.In r Litex.C := Litex.Rules.inCOfInR (Litex.Rules.inROfInRPos (__h6_1))
-  have __c6_2 : Litex.Lt (0 : ℂ) ((((Litex.In.rep r __h6_1).val : ℝ)) : ℂ) := __infer6_3
-  exact ⟨__c6_0, __c6_1, __c6_2⟩
+    ∀ (__p1 : (Litex.RPos).Carrier) (__type1 : Litex.In __p1 Litex.RPos), (Litex.In __p1 Litex.R) ∧ (Litex.In __p1 Litex.C) ∧ (Litex.Lt (0 : ℂ) ((((__p1).val : ℝ)) : ℂ)) := by
+  intro r __h14
+  have __infer6_3 : Litex.Lt (0 : ℂ) ((((r).val : ℝ)) : ℂ) := Litex.Rules.positiveRealCarrierPositive (__h14)
+  have __prior6_0 : Litex.In r Litex.R := Litex.Rules.inROfInRPos (__h14)
+  have __prior6_1 : Litex.In r Litex.C := Litex.Rules.inCOfInR (Litex.Rules.inROfInRPos (__h14))
+  have __prior6_2 : Litex.Lt (0 : ℂ) ((((r).val : ℝ)) : ℂ) := __infer6_3
+  have __infer6_4 : Litex.Negative ((-1 : ℂ) * ((((r).val : ℝ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNegative (Litex.Rules.realCastPositive ((r).val : ℝ) (__prior6_2))
+  have __infer6_5 : Litex.Nonpositive ((-1 : ℂ) * ((((r).val : ℝ)) : ℂ)) := Litex.Negative.toNonpositive (__infer6_4)
+  have __infer6_6 : Litex.Negative ((-1 : ℂ) * ((((r).val : ℝ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNegative (Litex.Rules.realCastPositive ((r).val : ℝ) (__prior6_2))
+  have __infer6_7 : Litex.Nonpositive ((-1 : ℂ) * ((((r).val : ℝ)) : ℂ)) := Litex.Negative.toNonpositive (__infer6_6)
+  exact ⟨__prior6_0, __prior6_1, __prior6_2⟩
 
 end __Compiler_21_PositiveRealCarrier

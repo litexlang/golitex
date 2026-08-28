@@ -1,13 +1,13 @@
 use super::{display_runtime_error_json, render_run_output};
-use crate::common::defaults::{default_line_file, LineFile};
-use crate::common::is_valid_litex_name::is_valid_litex_name;
-use crate::common::json_value::{render_json_value, JsonValue};
-use crate::common::keywords::{AS, DOUBLE_QUOTE, IMPORT, STD};
 use crate::error::{ParseRuntimeError, RuntimeError, RuntimeErrorStruct};
-use crate::module_manager::{discover_terminal_module_import, discover_terminal_std_import};
-use crate::module_manager::{ImportTarget, ModuleStatus};
-use crate::parse::Tokenizer;
+use crate::module_system::{discover_terminal_module_import, discover_terminal_std_import};
+use crate::module_system::{ImportTarget, ModuleStatus};
+use crate::output::json_value::{render_json_value, JsonValue};
+use crate::parsing::Tokenizer;
 use crate::runtime::{ExecutionMode, Runtime};
+use crate::syntax::keywords::{AS, DOUBLE_QUOTE, IMPORT, STD};
+use crate::syntax::name_validation::is_valid_litex_name;
+use crate::syntax::source_conventions::{default_line_file, LineFile};
 use std::fmt;
 
 #[derive(Clone)]

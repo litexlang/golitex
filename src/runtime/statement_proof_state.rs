@@ -1,13 +1,13 @@
 //! Statement-local proof reuse and recursive inference guards.
 
-use crate::common::name_types::{FactString, ObjString};
 use crate::fact::AtomicFact;
-use crate::infer::SuccessInferResult;
+use crate::inference::SuccessInferResult;
 use crate::result::{
     StmtResult, SuccessFactStmtResult, SuccessVerifyFactResult, SuccessVerifyObjWellDefinedResult,
     WellDefinedCacheKey,
 };
 use crate::runtime::Runtime;
+use crate::syntax::name_types::{FactString, ObjString};
 use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 

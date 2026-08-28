@@ -8,20 +8,21 @@ namespace __Compiler_6_FactReplay
 theorem __fact0 :
     ∀ (__p1 : Litex.Set) (__p2 : Litex.Set) (__domain1 : Litex.Same __p1 __p2), Litex.Same __p2 __p1 := by
   intro a b __domain1
-  have __c0_0 : Litex.Same b a := Litex.Same.symm (__domain1)
-  exact __c0_0
+  have __prior0_0 : Litex.Same b a := Litex.Same.symm (__domain1)
+  exact __prior0_0
 
 theorem __fact1 :
     ∀ (__p1 : Litex.Set) (__p2 : Litex.Set) (__p3 : Litex.Set) (__domain1 : Litex.Same __p1 __p2) (__domain2 : Litex.Same __p2 __p3), Litex.Same __p1 __p3 := by
   intro a b c __domain1 __domain2
-  have __c1_0 : Litex.Same a c := Litex.Same.trans (__domain1) (__domain2)
-  exact __c1_0
+  have __prior1_0 : Litex.Same a c := Litex.Same.trans (__domain1) (__domain2)
+  exact __prior1_0
 
 theorem __fact2 :
     ∀ (__p1 : Litex.Set) (__p2 : Litex.Set) (__domain1 : ¬ Litex.Same __p1 __p2), ¬ Litex.Same __p2 __p1 := by
   intro a b __domain1
-  have __c2_0 : ¬ Litex.Same b a := Litex.Rules.notSameSymm (__domain1)
-  exact __c2_0
+  have __prior2_0 : ¬ Litex.Same b a := Litex.Rules.notSameSymm ((by
+    convert __domain1 using 1 <;> norm_num))
+  exact __prior2_0
 
 theorem __fact3 :
     ∀ (__p1 : Litex.Set) (__p2 : Litex.Set) (__domain1 : Litex.Same __p1 __p2), Litex.Same __p2 __p1 := __fact0

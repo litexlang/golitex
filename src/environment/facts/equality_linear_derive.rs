@@ -8,7 +8,7 @@
 //! Linear equality derivation owned by Environment fact storage.
 
 use crate::prelude::*;
-use crate::verify::{compare_normalized_number_str_to_zero, NumberCompareResult};
+use crate::verification::{compare_normalized_number_str_to_zero, NumberCompareResult};
 
 fn number_literal_is_nonzero(n: &Number) -> bool {
     !matches!(

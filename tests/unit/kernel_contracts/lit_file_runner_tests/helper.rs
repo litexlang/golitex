@@ -9,10 +9,10 @@ pub(super) const REPOSITORY_EXAMPLES_SUBDIR: &str = "examples/08_module_reposito
 pub(super) const SCRATCH_EXAMPLE_FILE: &str = "examples/tmp.lit";
 
 pub(super) fn print_known_forall_profile_summary(label: &str) {
-    if !crate::verify::known_forall_profile::enabled() {
+    if !crate::verification::known_forall_profile::enabled() {
         return;
     }
-    let p = crate::verify::known_forall_profile::snapshot();
+    let p = crate::verification::known_forall_profile::snapshot();
     println!(
         "--- known_forall profile: {} ---\n  entries={} success={} unknown={} candidates={} exact={} fallback={} other={} arg_matches={} requirement_failures={}",
         label,

@@ -5,20 +5,20 @@ set_option linter.style.nameCheck false
 
 namespace __Compiler_43_StrategyDefinitionCompilerEnvironment
 
-def reflexive {__carrier1 : Type} (x : __carrier1) : Prop :=
-  Litex.In x Litex.R ∧ Litex.Same x x
+def reflexive (x : (Litex.R).Carrier) : Prop :=
+  (Litex.In x Litex.R) ∧ (Litex.Same x x)
 
 theorem prove_reflexive :
-    ∀ (x : ℂ) (__h0_1 : Litex.In x Litex.R),
-      reflexive x := by
-  intro x __h0_1
+    ∀ {__carrier0_1 : Type} (x : __carrier0_1) (__h6 : Litex.In x Litex.R),
+      reflexive (Litex.In.rep x __h6) := by
+  intro __carrier0_1 x __h6
   have __step1 : Litex.Same x x := by
     exact Litex.Same.refl x
-  have __step2 : reflexive x := by
+  have __step2 : reflexive (Litex.In.rep x __h6) := by
     exact (by
     unfold reflexive
-    exact ⟨__h0_1, __step1⟩)
-  have __c0_0 : reflexive x := __step2
+    exact ⟨Litex.In.own Litex.R (Litex.In.rep x __h6), Litex.Same.refl ((Litex.In.rep x __h6))⟩)
+  have __c0_0 : reflexive (Litex.In.rep x __h6) := __step2
   exact __c0_0
 
 end __Compiler_43_StrategyDefinitionCompilerEnvironment

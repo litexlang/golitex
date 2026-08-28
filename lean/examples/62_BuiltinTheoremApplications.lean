@@ -17,11 +17,11 @@ theorem __fact2 : Litex.Positive (1 : ℂ) := by
   have __selected := __predicate
   exact (Litex.Positive.congr (Litex.Same.symm __same)).mp (__selected))
 
-theorem __fact3 : Litex.In ({ call := fun {__alpha} (__arg : __alpha) __arg_in => Litex.In.rep __arg (__arg_in) } : Litex.Fn Litex.R Litex.R) (Litex.fnSet Litex.R Litex.R) := by
-  exact Litex.In.own (Litex.fnSet Litex.R Litex.R) ({ call := fun {__alpha} (__arg : __alpha) __arg_in => Litex.In.rep __arg (__arg_in) } : Litex.Fn Litex.R Litex.R)
+theorem __fact3 : Litex.In ({ call := fun {__alpha} (__arg : __alpha) __arg_in => (Litex.In.rep __arg __arg_in : ℝ) } : Litex.Fn Litex.R Litex.R) (Litex.fnSet Litex.R Litex.R) := by
+  exact Litex.In.own (Litex.fnSet Litex.R Litex.R) ({ call := fun {__alpha} (__arg : __alpha) __arg_in => (Litex.In.rep __arg __arg_in : ℝ) } : Litex.Fn Litex.R Litex.R)
 
 theorem __fact4 : Litex.In (Litex.HCons.mk (1 : ℂ) (Litex.HCons.mk (2 : ℂ) Litex.HNil.nil)) (Litex.cartCons Litex.R (Litex.cartCons Litex.R Litex.cartNil)) := by
-  exact Litex.Rules.inCartCons ((⟨__fact1, Litex.Rules.complexRealInR (2 : ℝ)⟩ : Litex.In (1 : ℂ) Litex.R ∧ Litex.In (2 : ℂ) Litex.R).1) (Litex.Rules.inCartCons ((⟨__fact1, Litex.Rules.complexRealInR (2 : ℝ)⟩ : Litex.In (1 : ℂ) Litex.R ∧ Litex.In (2 : ℂ) Litex.R).2) (Litex.Rules.inCartNil))
+  exact Litex.Rules.inCartCons ((⟨__fact1, Litex.Rules.complexRealInR (2 : ℝ)⟩ : (Litex.In (1 : ℂ) Litex.R) ∧ (Litex.In (2 : ℂ) Litex.R)).1) (Litex.Rules.inCartCons ((⟨__fact1, Litex.Rules.complexRealInR (2 : ℝ)⟩ : (Litex.In (1 : ℂ) Litex.R) ∧ (Litex.In (2 : ℂ) Litex.R)).2) (Litex.Rules.inCartNil))
 
 theorem __fact5 : Litex.IsTuple (Litex.HCons.mk (1 : ℂ) (Litex.HCons.mk (2 : ℂ) Litex.HNil.nil)) := by
   exact Litex.tupleShape_isTuple (Litex.HCons.mk (1 : ℂ) (Litex.HCons.mk (2 : ℂ) Litex.HNil.nil))
@@ -30,20 +30,20 @@ theorem __fact6 : Litex.Same (Litex.tupleDim (Litex.HCons.mk (1 : ℂ) (Litex.HC
   exact Litex.Same.ofEq (by norm_num [Litex.tupleDim, Litex.TupleShape.dimension])
 
 theorem __fact7 : Litex.In (2 : ℂ) Litex.R := by
-  exact (⟨__fact1, Litex.Rules.complexRealInR (2 : ℝ)⟩ : Litex.In (1 : ℂ) Litex.R ∧ Litex.In (2 : ℂ) Litex.R).2
+  exact (⟨__fact1, Litex.Rules.complexRealInR (2 : ℝ)⟩ : (Litex.In (1 : ℂ) Litex.R) ∧ (Litex.In (2 : ℂ) Litex.R)).2
 
 theorem __fact8 :
     ∀ (__p1 : ℤ) (__domain1 : Litex.Le (1 : ℂ) (((__p1) : ℂ))) (__domain2 : Litex.Le (((__p1) : ℂ)) (2 : ℂ)), Litex.Le (((__p1) : ℂ)) (((__p1) : ℂ)) := by
   intro ____binder_12 __domain1 __domain2
   have __infer8_0 : Litex.Lt (0 : ℂ) (((____binder_12) : ℂ)) := Litex.Lt.transLe (Litex.OrderBridge.ltOfComplexReals (show (0 : ℝ) < (1 : ℝ) by norm_num)) (__domain1)
-  have __c8_0 : Litex.Le (((____binder_12) : ℂ)) (((____binder_12) : ℂ)) := Litex.Le.refl (((____binder_12) : ℂ))
-  exact __c8_0
+  have __prior8_0 : Litex.Le (((____binder_12) : ℂ)) (((____binder_12) : ℂ)) := Litex.Le.refl (((____binder_12) : ℂ))
+  exact __prior8_0
 
-theorem __fact9 : Litex.Le (((Litex.sum (1 : ℤ) (2 : ℤ) ({ call := fun {__alpha} (__arg : __alpha) __arg_in => Litex.In.rep __arg (__arg_in), callOwn := fun (__arg : ℤ) => __arg } : Litex.Fn Litex.Z Litex.Z)) : ℤ) : ℂ) (((Litex.sum (1 : ℤ) (2 : ℤ) ({ call := fun {__alpha} (__arg : __alpha) __arg_in => Litex.In.rep __arg (__arg_in), callOwn := fun (__arg : ℤ) => __arg } : Litex.Fn Litex.Z Litex.Z)) : ℤ) : ℂ) := by
+theorem __fact9 : Litex.Le (((Litex.sum (1 : ℤ) (2 : ℤ) ({ call := fun {__alpha} (__arg : __alpha) __arg_in => (Litex.In.rep __arg __arg_in : ℤ), callOwn := fun (__arg : ℤ) => __arg } : Litex.Fn Litex.Z Litex.Z)) : ℤ) : ℂ) (((Litex.sum (1 : ℤ) (2 : ℤ) ({ call := fun {__alpha} (__arg : __alpha) __arg_in => (Litex.In.rep __arg __arg_in : ℤ), callOwn := fun (__arg : ℤ) => __arg } : Litex.Fn Litex.Z Litex.Z)) : ℤ) : ℂ) := by
   exact (by
   have __sum_start_equal : Litex.Same (1 : ℂ) (1 : ℂ) := Litex.Same.refl (1 : ℂ)
   have __sum_end_equal : Litex.Same (2 : ℂ) (2 : ℂ) := Litex.Same.refl (2 : ℂ)
-  exact Litex.Rules.integerRangeSumLeOwn (1 : ℤ) (2 : ℤ) ({ call := fun {__alpha} (__arg : __alpha) __arg_in => Litex.In.rep __arg (__arg_in), callOwn := fun (__arg : ℤ) => __arg } : Litex.Fn Litex.Z Litex.Z) ({ call := fun {__alpha} (__arg : __alpha) __arg_in => Litex.In.rep __arg (__arg_in), callOwn := fun (__arg : ℤ) => __arg } : Litex.Fn Litex.Z Litex.Z) (fun __index __lower __upper => by
+  exact Litex.Rules.integerRangeSumLeOwn (1 : ℤ) (2 : ℤ) ({ call := fun {__alpha} (__arg : __alpha) __arg_in => (Litex.In.rep __arg __arg_in : ℤ), callOwn := fun (__arg : ℤ) => __arg } : Litex.Fn Litex.Z Litex.Z) ({ call := fun {__alpha} (__arg : __alpha) __arg_in => (Litex.In.rep __arg __arg_in : ℤ), callOwn := fun (__arg : ℤ) => __arg } : Litex.Fn Litex.Z Litex.Z) (fun __index __lower __upper => by
     simpa only [Litex.Fn.callOwn] using (__fact8 __index (by simpa using __lower) (by simpa using __upper)))
 )
 

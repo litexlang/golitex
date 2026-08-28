@@ -429,15 +429,26 @@ theorem congr
     exact ⟨z, .trans h hyz⟩
 
 /-- Select the exact-carrier representative certified by a Litex membership
-proof. This is noncomputable because `In` deliberately stores only existence;
-it adds no axiom beyond Lean's ordinary classical choice. -/
+proof. An input already living in the set's exact carrier is its own canonical
+representative; genuinely heterogeneous inputs use Lean's ordinary classical
+choice. -/
 noncomputable def rep
     {set : Litex.Set.{u}}
     {α : Litex.u.{u}}
     (x : α)
     (hx : In x set) :
-    set.Carrier :=
-  Classical.choose hx
+    set.Carrier := by
+  classical
+  exact if h : α = set.Carrier then _root_.cast h x else Classical.choose hx
+
+/-- Exact-carrier inputs survive representative selection definitionally.
+This is the native-consumer bridge for values such as `n : ℕ` in `N`. -/
+@[simp] theorem rep_exact
+    {set : Litex.Set.{u}}
+    (x : set.Carrier)
+    (hx : In x set) :
+    rep x hx = x := by
+  simp [rep]
 
 /-- The representative selected by `rep` remains semantically equal to the
 source value. -/
@@ -447,7 +458,14 @@ theorem same_rep
     (x : α)
     (hx : In x set) :
     Same x (rep x hx) :=
-  Classical.choose_spec hx
+  by
+    classical
+    unfold rep
+    split
+    · rename_i h
+      subst α
+      exact Same.refl x
+    · exact Classical.choose_spec hx
 
 end In
 

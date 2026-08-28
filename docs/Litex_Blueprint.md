@@ -8,6 +8,8 @@ Chinese version: https://litexlang.com/doc/Litex中文蓝图
 
 > **Litex is an experimental hobby project and remains in beta. Expect edge cases.**
 
+<!-- Blueprint spine: reasoning abundance → verification and understanding bottlenecks → the complexity tax on understanding → two participation barriers → the human–AI verification loop → four language choices → definition and verification → ToLean/adapter handoff → ecosystem role → success criterion -->
+
 ## Table of Contents
 
 - [Litex Blueprint Overview](#overview)
@@ -30,6 +32,12 @@ Chinese version: https://litexlang.com/doc/Litex中文蓝图
 
 AI is rapidly lowering the cost of reasoning, proof, and scientific exploration. Humans and AI can propose many arguments and conjectures quickly, but answers that *look right* are not automatically reliable knowledge. We are entering an era of **reasoning overflow and validation crisis**: candidate conclusions are growing faster than our ability to check them.
 
+Correctness is only one half of the crisis. A proof can be correct yet remain too difficult to read, explain, connect to existing theory, or reuse. Mathematicians and formal-language communities talk about complexity every day—long proofs, distant representations, steep tooling, and results that are hard to digest—but rarely treat the cost this complexity imposes on understanding as a design problem. This is the **complexity tax on understanding**.
+
+The central question is therefore not whether all complexity can disappear. It is which complexity belongs to the mathematics itself, and which is accidental complexity introduced by representation, evidence plumbing, and interaction. In an age of abundant AI-generated reasoning, that distinction governs two inseparable goals: whether results can be verified rigorously, and whether humans can understand, digest, and reuse them.
+
+Terence Tao's [2026 ICM public lecture](https://teorth.github.io/tao-web/slides/age-of-ai-icm-2026.pdf) and [companion essay](https://arxiv.org/abs/2608.16753) make the same underlying bottleneck visible: proof generation and verification can accelerate far ahead of exposition, digestion, community acceptance, and canonicalization. Litex's proposed response is its own research hypothesis, not Tao's claim: a formal language should help scale both rigor and understanding.
+
 Education, science, engineering, and AI review therefore have new formalization needs. To turn AI's creativity into trustworthy knowledge, formalization cannot remain confined to a few specialists.
 
 > **The next step for formal languages is not only to give existing experts stronger tools. It is also to help more people become experts.**
@@ -40,7 +48,7 @@ People who understand a domain should be able to express, check, and repair its 
 
 ### Two Barriers: From Understanding Mathematics to Being Able to Formalize It
 
-The next two examples are mathematically trivial and effortless for Lean. They use a mature, general proof assistant to separate two interface barriers, not to compare mathematical capability.
+The next two examples make two sources of the complexity tax concrete. They are mathematically trivial and effortless for Lean. They use a mature, general proof assistant to separate two interface barriers, not to compare mathematical capability.
 
 1. **Entry knowledge:** users may know a fact but still need imports, proposition syntax, type annotations, and tactics.
 2. **Representation distance:** even after learning the tool, users may manipulate subtypes and proof arguments instead of writing as they ordinarily reason.
@@ -782,6 +790,8 @@ Code and dataset volume are intermediate measures. What matters is whether peopl
 Litex uses syntax and an interaction contract closer to ordinary mathematics to lower authorship and review barriers, make mathematical text executable, and support deeper understanding and discovery.
 
 Four choices serve one division of labor: set theory keeps objects readable, fact orientation preserves *what holds*, bottom-up flow accumulates verified facts, and Lean compatibility rechecks covered routes. Litex does not replace Lean; it tests whether a smaller, mathematics-facing front end can let more people produce, review, and repair checked mathematics at lower cost.
+
+If, over the next decade, formal languages become as routine in mathematics as LaTeX, learning to produce a first useful checked artifact should eventually cost about as much as learning to produce a first useful LaTeX document. This is a long-term onboarding standard, not a claim that deep mathematics, complete formalization, or mastery of a proof assistant can become effortless.
 
 **Litex's success will not be measured by how much Litex code is written, but by whether it can turn readable reasoning into useful results that interoperate with existing formal-language systems and genuinely serve mathematics, AI, engineering, and other fields.**
 

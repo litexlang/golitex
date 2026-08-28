@@ -6,9 +6,9 @@ set_option linter.style.nameCheck false
 namespace __Compiler_44_SettingElaborationResult
 
 theorem __fact0 :
-    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.R), Litex.Same __p1 __p1 := by
-  intro x __h0_1
-  have __c0_0 : Litex.Same x x := Litex.Same.refl x
-  exact __c0_0
+    ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.R), Litex.Same __p1 __p1 := by
+  intro __carrier1 x __h3
+  have __prior0_0 : Litex.Same x x := Litex.Same.refl x
+  exact __prior0_0
 
 end __Compiler_44_SettingElaborationResult

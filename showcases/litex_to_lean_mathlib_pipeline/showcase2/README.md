@@ -19,7 +19,7 @@
 | StmtResult → Lean | 通过 | 直接编译当前 `main.lit`，产生新的 `LitexGenerate.lean` |
 | Lean kernel | 通过 | `lake env lean .../LitexGenerate.lean` 退出码 `0` |
 | Mathlib 消费层 | 通过 | `lake build LitexToMathlib` 成功，adapter 实际调用生成的 `converges_to_mul_const` |
-| 通用回归 | 通过 | StmtResult-to-Lean tracer `76/76`，包含改名同构例子 |
+| 通用回归 | 通过 | 通用生成样例经过重新生成、确定性比对和真实 Lean kernel 检查 |
 
 `main.lit`、生成文件和 adapter 都不含 `axiom`、`trust`、`sorry`
 或 `admit`。编译器也不再按这个定理的名字、整份源文本或特定 AST
@@ -33,17 +33,17 @@
 | `LitexGenerate.lean` | ToLean 编译器 | 完全由 StmtResult 生成，禁止手改 |
 | `LitexToMathlib.lean` | adapter 作者 | 引用生成定理，将结论导出为 Mathlib `Filter.Tendsto` |
 
-## 仍然存在的边界
+## 当前边界
 
-当前 adapter 已经导出 Mathlib 的 `Tendsto`，但索引类型是
-`NaturalInput`，它同时保留一个异构值和该值属于 Litex `N` 的证明。
-这不是数学定理或 ToLean 生成的阻塞，而是当前 `Litex.Fn` ABI 的边界：
-`Fn.call` 允许异构输入，却还没有一条可供 Lean 使用的一致性定理，证明语义相同的
-两个自然数表示会得到相同的函数值。
+当前 adapter 已经把 Litex 数列限制在精确的自然数输入上：
+`toMathlibSequence s n` 直接用 `n : ℕ` 及
+`Litex.In.own Litex.N n` 调用生成函数。因此 Mathlib 结论的索引类型已经是
+普通的 `ℕ → ℝ`，不再需要用户操作额外的 `NaturalInput`。
 
-因此，目前不能诚实地把任意 `Litex.Fn Litex.N Litex.R` 直接宣称为普通
-`ℕ → ℝ`。要完成这最后一层，需要为函数 carrier 增加表示不变性契约，
-或改用带有同等性证明的原生定义域函数表示。完整审计见
+`Litex.Fn` 仍然支持其他 host 类型上、带 membership 证明的异构调用。
+当前导出并没有声称两种任意异构表示会给出相同函数值；这种更强的
+函数表示不变性仍然是 ABI 的非目标能力，但它不是本 showcase 导出
+原生 Mathlib 数列的阻塞。完整审计见
 [`TOLEAN_AUDIT.md`](TOLEAN_AUDIT.md)。
 
 ## 复现
@@ -51,14 +51,14 @@
 从仓库根目录运行：
 
 ```bash
-target/debug/litex -compact -strict -runner -isolated \
+target/release/litex -compact -strict -runner -isolated \
   -f showcases/litex_to_lean_mathlib_pipeline/showcase2/main.lit
 
-target/debug/stmt_result_to_lean_compiler compile \
+target/release/stmt_result_to_lean_compiler compile \
   showcases/litex_to_lean_mathlib_pipeline/showcase2/main.lit \
   showcases/litex_to_lean_mathlib_pipeline/showcase2/LitexGenerate.lean
 
-cargo test --test stmt_result_to_lean_compiler_tracers
+cargo test --release --test stmt_result_to_lean_compiler_tracers
 
 cd lean
 lake env lean \
