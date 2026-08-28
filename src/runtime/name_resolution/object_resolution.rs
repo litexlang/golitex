@@ -1,10 +1,10 @@
 //! Resolve parsed object forms against active Runtime bindings.
 
-use crate::common::count_range_integer::{
+use crate::object::range_cardinality::{
     count_closed_range_integer_endpoints, count_half_open_range_integer_endpoints,
 };
 use crate::prelude::*;
-use crate::verify::{compare_normalized_number_str_to_zero, NumberCompareResult};
+use crate::verification::{compare_normalized_number_str_to_zero, NumberCompareResult};
 
 impl Runtime {
     fn cached_less_equal_fact_holds(&self, left: Obj, right: Obj) -> bool {

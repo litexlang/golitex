@@ -15,6 +15,6 @@ with the checked-in `.lean` file, and asks the Lean kernel to check each pair.
 [`stmt_result_to_lean_compiler.rs`](stmt_result_to_lean_compiler.rs) owns only
 these maintenance commands. The recursive Result consumer and its compiler
 environment stack remain in
-[`../stmt_result_to_lean_compiler/`](../stmt_result_to_lean_compiler/README.md),
+[`../lean_compiler/`](../lean_compiler/README.md),
 and the ordinary `litex` command-line interface remains in
 [`../cli/`](../cli/README.md).

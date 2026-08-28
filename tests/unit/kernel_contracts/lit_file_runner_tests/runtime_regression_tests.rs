@@ -2,11 +2,11 @@ use std::fs;
 use std::path::PathBuf;
 use std::time::Instant;
 
+use crate::latex_renderer::to_latex_from_source;
 use crate::pipeline::render_run_output;
 use crate::prelude::*;
+use crate::python_extractor::to_python_from_source;
 use crate::test_support::execute_source;
-use crate::to_latex::to_latex_from_source;
-use crate::to_python::to_python_from_source;
 
 use super::helper::run_with_large_stack;
 

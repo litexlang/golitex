@@ -1,9 +1,9 @@
 use super::execute_repository_target;
-use crate::common::helper::remove_windows_carriage_from_str;
 use crate::error::{ParseRuntimeError, RuntimeError, RuntimeErrorStruct};
-use crate::module_manager::discover_repository_for_file;
+use crate::module_system::discover_repository_for_file;
 use crate::result::StmtResult;
 use crate::runtime::Runtime;
+use crate::syntax::source_formatting::remove_windows_carriage_from_str;
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};

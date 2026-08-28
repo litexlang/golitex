@@ -2,11 +2,11 @@ use super::{
     execute_file_in_runtime, execute_repository_target, render_run_output, render_run_summary,
     resolve_source_file_path, FileExecutionOptions, RunSummaryRequest,
 };
-use crate::common::helper::remove_windows_carriage_from_str;
 use crate::error::RuntimeError;
-use crate::module_manager::{discover_repository, RepositoryFileTarget};
+use crate::module_system::{discover_repository, RepositoryFileTarget};
 use crate::result::StmtResult;
 use crate::runtime::{RunOptions, Runtime};
+use crate::syntax::source_formatting::remove_windows_carriage_from_str;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum RunTargetKind {

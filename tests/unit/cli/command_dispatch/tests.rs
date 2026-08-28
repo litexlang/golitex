@@ -1,8 +1,8 @@
 use super::super::command_handlers::read_optional_graph_save_path;
 use super::super::messages::{help_message, upgrade_message};
 use crate::cli::arguments::{parse_global_options, read_session_preload, validate_session_preload};
-use crate::common::{output_language::OutputLanguage, output_style::OutputStyle};
 use crate::graph::GraphKind;
+use crate::output::{language::OutputLanguage, style::OutputStyle};
 use crate::pipeline::SessionPreload;
 
 #[test]

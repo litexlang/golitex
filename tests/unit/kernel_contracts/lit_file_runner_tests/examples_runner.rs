@@ -118,7 +118,7 @@ fn run_all_docs_examples_runtime_contracts() {
 }
 
 fn run_all_docs_examples_runtime_contracts_impl() {
-    if crate::verify::known_forall_profile::enabled() {
+    if crate::verification::known_forall_profile::enabled() {
         // The profile counters are process-global, so keep profiled aggregate runs sequential.
         println!(
             "--- full suite: LITEX_PROFILE_KNOWN_FORALL enabled; running datasets sequentially ---"
@@ -233,7 +233,7 @@ fn run_examples_phase1_with_runtime(
     runtime: &mut Runtime,
     include_manual_docs: bool,
 ) -> TimedRunSummary {
-    if crate::verify::known_forall_profile::enabled() {
+    if crate::verification::known_forall_profile::enabled() {
         return run_examples_phase1_sequential_with_runtime(
             manifest_dir,
             runtime,
@@ -256,7 +256,7 @@ fn run_examples_phase1_with_runtime(
     }
 
     runtime.start_isolated_source(phase1_groups[0].items[0].path_for_runtime.as_str());
-    crate::verify::known_forall_profile::reset();
+    crate::verification::known_forall_profile::reset();
 
     let examples_wall_start = Instant::now();
     let mut handles = Vec::new();
@@ -360,7 +360,7 @@ fn run_examples_phase1_sequential_with_runtime(
         let examples_wall_start = Instant::now();
         let first_path = phase1_items[0].path_for_runtime.as_str();
         runtime.start_isolated_source(first_path);
-        crate::verify::known_forall_profile::reset();
+        crate::verification::known_forall_profile::reset();
 
         for (item_index, item) in phase1_items.iter().enumerate() {
             if item.run_in_project_context {
@@ -506,7 +506,7 @@ fn run_docs_markdown_with_runtime(
         md_paths.len()
     );
 
-    crate::verify::known_forall_profile::reset();
+    crate::verification::known_forall_profile::reset();
     let docs_wall_start = Instant::now();
     let mut doc_durations_ms: Vec<(String, f64)> = Vec::new();
     for (snippet_index, (label, source_code, source_path)) in doc_snippets.iter().enumerate() {

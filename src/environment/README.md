@@ -16,22 +16,32 @@ pub struct Environment {
 }
 ```
 
-The type itself lives in [`../environment.rs`](../environment.rs). That root
-contains only the five owners, construction, module wiring, and public
-re-exports. Feature logic lives under this directory:
+The type itself lives in [`environment.rs`](environment.rs). Module declarations
+and public re-exports live in the wiring-only [`mod.rs`](mod.rs). Feature logic
+is organized by the current owner and field names:
 
 ```text
-definitions/       reusable name definitions
-facts/             fact records and typed search indexes
-object_knowledge/  reusable facets known about one object
-predicates/        algebraic properties registered for predicates
-display.rs         Environment formatting
-merge.rs           committed-child transaction
+environment.rs                                                   the five Environment owners and construction
+definitions/definitions.rs                                       reusable name definitions
+facts/facts.rs                                                   fact-owner composition root
+facts/                                                            fact records and typed search indexes
+object/object.rs                                                 canonical object owner
+object/                                                          reusable facets known about one object
+predicate_algebraic_properties/predicate_algebraic_properties.rs predicate-name property owner
+predicate_algebraic_properties/                                  property profile and registration operations
+caches/caches.rs                                                 reusable environment-scoped verification results
+display.rs                                                       Environment formatting
+merge.rs                                                         committed-child transaction
 ```
 
-Each public domain data structure has one source file. A larger operation may
-have one file whose helper functions are branches of that operation; for
-example, `facts/storage.rs` is the central fact-storage dispatch.
+The main Environment and every direct owner entry deliberately repeat their
+parent folder name: `environment/environment.rs`,
+`definitions/definitions.rs`, `facts/facts.rs`, `object/object.rs`,
+`predicate_algebraic_properties/predicate_algebraic_properties.rs`, and
+`caches/caches.rs`. Each owner directory has a wiring-only `mod.rs`; supporting
+files name narrower responsibilities. A larger operation may have one file
+whose helper functions are branches of that operation; for example,
+`facts/storage.rs` is the central fact-storage dispatch.
 
 Before this split, callers saw `Environment { repositories }` and relied on
 `Deref` to reach roughly forty unrelated maps. That hid which subsystem owned
@@ -108,6 +118,12 @@ The primary regression tracer is
 [`examples/03_language_features/idempotent_template_child_environment_reuse.lit`](../../examples/03_language_features/idempotent_template_child_environment_reuse.lit).
 It checks the important boundary where template-instantiation support is made
 inside a child environment and must remain reusable after the child commits.
+The example is intentionally standalone rather than registered in a local
+`litex.config`, so run it with:
+
+```bash
+target/release/litex -compact -runner -isolated -f examples/03_language_features/idempotent_template_child_environment_reuse.lit
+```
 
 ## Well-definedness preflight changes
 
@@ -126,11 +142,10 @@ This makes the algorithmic boundary match the data structure: proof code can
 replay checked changes, but cannot accidentally ask a partial certificate what
 the complete world knows.
 
-Start with [`../environment.rs`](../environment.rs) for the five owners,
+Start with [`environment.rs`](environment.rs) for the five owners,
 [`merge.rs`](merge.rs) for child commit,
-[`facts/store.rs`](facts/store.rs) for the fact composition root,
-[`object_knowledge/store.rs`](object_knowledge/store.rs) for the keyed object
-profile, and
+[`facts/facts.rs`](facts/facts.rs) for the fact composition root,
+[`object/object.rs`](object/object.rs) for the keyed object profile, and
 [`well_definedness_environment_delta.rs`](well_definedness_environment_delta.rs)
 for WD replay.
 
@@ -138,10 +153,10 @@ for WD replay.
 
 The ownership boundary is checked at both structural and behavioral levels:
 
-- the source-architecture test requires the five direct fields, five typed fact
-  owners, one object map, one predicate-profile map, private WD-delta fields,
-  and the absence of both the old repository/Deref facade and
-  `environment_state.rs`;
+- the source-architecture test requires the five direct fields, matching owner
+  paths, five typed fact owners, one object map, one predicate-profile map,
+  private WD-delta fields, and the absence of the retired path vocabulary plus
+  the old repository/Deref facade and `environment_state.rs`;
 - Environment merge regressions exercise successful child commits and rejected
   conflicts;
 - the user-strategy tracer confirms that a checked strategy publishes its

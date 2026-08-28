@@ -85,8 +85,8 @@ fn let_object_definition_has_latex_output() {
 fn builtin_rules_do_not_add_unreviewed_full_verifier_calls() {
     let builtin_rules_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("src")
-        .join("verify")
-        .join("verify_builtin_rules");
+        .join("verification")
+        .join("builtin_rules");
     let disallowed_calls = [
         "verify_fact_full(",
         "verify_atomic_fact(",
@@ -130,7 +130,7 @@ fn builtin_rules_do_not_add_unreviewed_full_verifier_calls() {
     let mut source_files = Vec::new();
     collect_rust_files_under_dir(&builtin_rules_dir, &mut source_files);
     for path in source_files {
-        let content = fs::read_to_string(&path).expect("read verify_builtin_rules source file");
+        let content = fs::read_to_string(&path).expect("read builtin_rules source file");
         for (line_index, line) in content.lines().enumerate() {
             for disallowed_call in disallowed_calls {
                 if line.contains(disallowed_call) {
@@ -171,8 +171,8 @@ fn enclosing_rust_function_name(source: &str, line_index: usize) -> Option<Strin
 }
 
 fn collect_rust_files_under_dir(dir: &Path, out: &mut Vec<PathBuf>) {
-    for entry in fs::read_dir(dir).expect("read verify_builtin_rules directory") {
-        let entry = entry.expect("read verify_builtin_rules entry");
+    for entry in fs::read_dir(dir).expect("read builtin_rules directory") {
+        let entry = entry.expect("read builtin_rules entry");
         let path = entry.path();
         if path.is_dir() {
             collect_rust_files_under_dir(&path, out);
@@ -1757,7 +1757,7 @@ forall node &Node:
 "#;
     let mut runtime = Runtime::default();
     runtime.start_isolated_source("latex_chained_field_access_uses_earlier_struct_definitions");
-    let output = crate::to_latex::to_latex(source_code, &mut runtime)
+    let output = crate::latex_renderer::to_latex(source_code, &mut runtime)
         .expect("LaTeX conversion should retain parsed struct metadata for field chains");
 
     assert!(output.contains("Leaf"));
@@ -1810,7 +1810,7 @@ fn chained_field_access_works_across_flattened_module_and_latex() {
                 OutputLanguage::English,
                 false,
             );
-            let result = crate::to_latex::to_latex_from_repository(repository_path);
+            let result = crate::latex_renderer::to_latex_from_repository(repository_path);
             let _ = std::fs::remove_dir_all(&project_root);
             assert!(
                 run_succeeded,
@@ -2484,7 +2484,7 @@ thm self_exists:
 obtain copy from thm self_exists(2)
 "#;
 
-    let generated = crate::stmt_result_to_lean_compiler::compile_litex_source_to_lean_source(
+    let generated = crate::lean_compiler::compile_litex_source_to_lean_source(
         source_code,
         "stmt_result_to_lean_compiles_theorem_backed_obtain_from_its_nested_result",
     )

@@ -1,6 +1,4 @@
-use litex::stmt_result_to_lean_compiler::{
-    compile_litex_file_to_lean_file, compile_litex_source_to_lean_source,
-};
+use litex::lean_compiler::{compile_litex_file_to_lean_file, compile_litex_source_to_lean_source};
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -138,5 +136,5 @@ fn example_sources(directory: &Path) -> Result<Vec<PathBuf>, String> {
 }
 
 #[cfg(test)]
-#[path = "../../tests/unit/stmt_result_to_lean_compiler/compiler_cli/tests.rs"]
+#[path = "../../tests/unit/lean_compiler/compiler_cli/tests.rs"]
 mod tests;

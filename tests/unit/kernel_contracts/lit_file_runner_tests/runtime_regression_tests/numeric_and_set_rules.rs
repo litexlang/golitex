@@ -137,8 +137,17 @@ forall a Z:
         &source_in_fact.set,
         Obj::StandardSet(StandardSet::Z)
     ));
+    let SuccessFactProofResult::Transform(transformation) =
+        source_membership.underlying_verified_by()
+    else {
+        panic!("integer membership should retain its exact normalization: {source_membership:?}");
+    };
     assert!(matches!(
-        source_membership.underlying_verified_by(),
+        transformation.rule,
+        FactTransformationRule::RationalNormalization
+    ));
+    assert!(matches!(
+        transformation.source.proof(),
         SuccessFactProofResult::StoredFactCitation(_)
     ));
 
@@ -159,7 +168,7 @@ forall a Z:
 fn standard_set_membership_lifting_does_not_enumerate_stored_owner_sets() {
     let source = include_str!(concat!(
         env!("CARGO_MANIFEST_DIR"),
-        "/src/verify/verify_builtin_rules/in_fact_builtin/structured_membership.rs"
+        "/src/verification/builtin_rules/in_fact_builtin/structured_membership.rs"
     ));
     let implementation = source
         .split("fn verify_in_fact_by_standard_subset_membership(")

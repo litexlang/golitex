@@ -1,9 +1,9 @@
-use crate::common::keywords::TRY;
 use crate::error::{ParseRuntimeError, RuntimeError, RuntimeErrorStruct};
-use crate::parse::{TokenBlock, Tokenizer};
+use crate::parsing::{TokenBlock, Tokenizer};
 use crate::result::StmtResult;
 use crate::runtime::Runtime;
-use crate::stmt::{ProofBlockStmt, Stmt};
+use crate::statement::{ProofBlockStmt, Stmt};
+use crate::syntax::keywords::TRY;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) enum SourceRunFailureKind {

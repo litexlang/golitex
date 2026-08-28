@@ -1223,11 +1223,7 @@ impl Runtime {
         forall_fact: &ForallFact,
         rename_map: &HashMap<String, Obj>,
     ) -> Result<ForallFact, RuntimeError> {
-        self.alpha_rename_forall_fact_with_mode(
-            forall_fact,
-            rename_map,
-            SubstitutionMode::Exact,
-        )
+        self.alpha_rename_forall_fact_with_mode(forall_fact, rename_map, SubstitutionMode::Exact)
     }
 
     fn alpha_rename_forall_fact_with_mode(
@@ -1243,11 +1239,8 @@ impl Runtime {
         let mut groups = Vec::with_capacity(forall_fact.typed_parameters.groups.len());
         let mut active_rename_map = HashMap::new();
         for group in forall_fact.typed_parameters.groups.iter() {
-            let param_type = self.inst_param_type(
-                &group.param_type,
-                &active_rename_map,
-                substitution_mode,
-            )?;
+            let param_type =
+                self.inst_param_type(&group.param_type, &active_rename_map, substitution_mode)?;
             let params = group
                 .params
                 .iter()

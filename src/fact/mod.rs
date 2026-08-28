@@ -1,17 +1,24 @@
 mod atomic;
+mod classification;
 mod composite;
+mod display;
+mod fact;
+mod fact_conversions;
+pub mod forall_conclusion_location;
+pub mod id;
+mod not_forall;
 mod quantified;
+mod source_location;
 mod support;
-mod types;
 mod validation;
 
-pub use atomic::core::*;
+pub use atomic::*;
 pub use composite::conjunction_and_chain::{
     AndChainAtomicFact, AndFact, ChainAtomicFact, ChainFact,
 };
 pub use composite::disjunction::OrFact;
-pub use composite::quantifier_free::QuantifierFreeFact;
 pub use composite::order_closure::NumericOrderChainClosureStep;
+pub use composite::quantifier_free::QuantifierFreeFact;
 pub use quantified::existential::{ExistFactEnum, ExistentialSpec};
 pub use quantified::universal::ForallFact;
 pub use quantified::universal_iff::ForallFactWithIff;
@@ -26,5 +33,6 @@ pub use validation::object_parameters::{
     check_set_builder_has_no_duplicate_set_builder_free_parameter,
 };
 
+pub use fact::Fact;
+pub use not_forall::NotForallFact;
 pub use quantified::nested::ExistOrAndChainAtomicFact;
-pub use types::{Fact, NotForallFact};

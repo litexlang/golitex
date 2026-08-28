@@ -5,10 +5,10 @@ mod instantiation;
 mod name_resolution;
 mod parse_context;
 mod run_options;
-mod runtime;
+mod state;
 mod statement_proof_state;
 
-pub use crate::common::output_style::OutputStyle;
+pub use crate::output::style::OutputStyle;
 pub use execution_frame::{ExecutionFrame, ExecutionLayer, ExecutionMode};
 pub use name_resolution::{
     bare_symbol_name_reserved_error, BareSymbol, FreeParamCollection, FreeParamTypeAndLineFile,
@@ -16,5 +16,5 @@ pub use name_resolution::{
 };
 pub use parse_context::{ParseContext, ScopeFrame};
 pub use run_options::RunOptions;
-pub use runtime::Runtime;
+pub use state::Runtime;
 pub use statement_proof_state::StatementProofStateStack;

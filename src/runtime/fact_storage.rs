@@ -760,7 +760,7 @@ impl Runtime {
             .unwrap_or_else(|| self.allocate_fact_id())
     }
 
-    pub(crate) fn equivalent_proposition_lookup_key_for_fact(
+    pub fn equivalent_proposition_lookup_key_for_fact(
         &self,
         fact: &Fact,
     ) -> Result<FactString, RuntimeError> {
