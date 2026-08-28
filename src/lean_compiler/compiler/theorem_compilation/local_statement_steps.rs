@@ -32,6 +32,13 @@ impl StmtResultToLeanCompiler {
             );
         }
         if let StmtResult::Success(SuccessStmtResult::Definition(
+            SuccessDefinitionStmtResult::HaveObjEqualStmt(result),
+        )) = result
+        {
+            return self
+                .compile_have_obj_equal_stmt_result_as_local_proof_steps(result, proof_step_index);
+        }
+        if let StmtResult::Success(SuccessStmtResult::Definition(
             SuccessDefinitionStmtResult::LetObjStmt(result),
         )) = result
         {
@@ -63,15 +70,19 @@ impl StmtResultToLeanCompiler {
                     }
                 }
             }
-            let conclusions = if let Some(conclusions) =
+            let (mut lines, conclusions) = if let Some(conclusions) =
                 self.construct_lean_proofs_from_litex_theorem_instantiation_stmt_result(result)?
             {
-                conclusions
+                (Vec::new(), conclusions)
+            } else if let Some(compiled) =
+                self.construct_local_real_analysis_builtin_theorem_application_proof(result)?
+            {
+                (compiled.local_prerequisite_lines, vec![compiled.conclusion])
             } else {
                 return Ok(None);
             };
             let multiple_outputs = conclusions.len() > 1;
-            let mut lines = Vec::with_capacity(conclusions.len());
+            lines.reserve(conclusions.len());
             for (output_index, conclusion) in conclusions.into_iter().enumerate() {
                 let fact_id = conclusion.retained_fact_id.ok_or_else(|| {
                     format!(
@@ -247,6 +258,12 @@ impl StmtResultToLeanCompiler {
                 ));
             }
             return Ok(Some(lines));
+        }
+        if let StmtResult::Success(SuccessStmtResult::Witness(
+            SuccessWitnessStmtResult::WitnessNonemptySet(result),
+        )) = result
+        {
+            return self.compile_witness_nonempty_set_stmt_result_as_local_proof_steps(result);
         }
         let StmtResult::Success(SuccessStmtResult::Witness(
             SuccessWitnessStmtResult::WitnessExistFact(result),

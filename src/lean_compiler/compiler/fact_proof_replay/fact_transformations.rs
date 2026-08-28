@@ -204,6 +204,18 @@ impl StmtResultToLeanCompiler {
             };
         }
 
+        if let Some(proof) = self
+            .construct_lean_transparent_definition_equality_rewrite_from_result(
+                source,
+                target,
+                &proof,
+                evidence,
+                transformation_step_index,
+            )?
+        {
+            return Ok(proof);
+        }
+
         match (source, target) {
             (
                 Fact::AtomicFact(AtomicFact::InFact(source_membership)),
@@ -350,6 +362,100 @@ impl StmtResultToLeanCompiler {
                 "fact transformation equality rewrite does not support `{source}` -> `{target}`"
             )),
         }
+    }
+
+    fn construct_lean_transparent_definition_equality_rewrite_from_result(
+        &self,
+        source: &Fact,
+        target: &Fact,
+        source_proof: &str,
+        evidence: &EqualityTransportEvidence,
+        transformation_step_index: usize,
+    ) -> Result<Option<String>, String> {
+        let mut substitutions = HashMap::new();
+        let mut definition_names = Vec::with_capacity(evidence.steps.len());
+        let mut seen_symbols = HashSet::new();
+        for (rewrite_index, rewrite) in evidence.steps.iter().enumerate() {
+            let LeanTargetObjectRepresentation::Symbol { symbol_id, .. } =
+                LeanTargetObjectRepresentation::lower(&rewrite.equality.left)?
+            else {
+                return Ok(None);
+            };
+            let Some(definition) = self
+                .environment_stack
+                .transparent_object_definitions
+                .get(&symbol_id)
+            else {
+                return Ok(None);
+            };
+            let equality_fact: Fact = rewrite.equality.clone().into();
+            if definition.defining_equality_fact_id != rewrite.equality_fact_id
+                || definition.defining_equality.to_string() != equality_fact.to_string()
+                || obj_equality_key(&definition.value) != obj_equality_key(&rewrite.equality.right)
+            {
+                return Ok(None);
+            }
+            self.resolve_equality_rewrite_proof(rewrite, rewrite_index)?;
+            if !seen_symbols.insert(symbol_id) {
+                return Err(format!(
+                    "fact transformation transparent equality rewrite step {transformation_step_index} repeats symbol ID {}",
+                    symbol_id.value()
+                ));
+            }
+            let lean_name = self
+                .environment_stack
+                .symbol_names
+                .get(&symbol_id)
+                .ok_or_else(|| {
+                    format!(
+                        "fact transformation transparent equality rewrite step {transformation_step_index} references unavailable symbol ID {}",
+                        symbol_id.value()
+                    )
+                })?
+                .clone();
+            substitutions.insert(symbol_id.substitution_key(), definition.value.clone());
+            definition_names.push(lean_name);
+        }
+
+        let reduced_source = Runtime::default()
+            .inst_fact(
+                source,
+                &substitutions,
+                SubstitutionMode::TransparentDefinition,
+                None,
+            )
+            .map_err(|error| {
+                format!(
+                    "fact transformation transparent equality rewrite step {transformation_step_index} could not reduce its source: {}",
+                    error.trace_message()
+                )
+            })?;
+        let reduced_target = Runtime::default()
+            .inst_fact(
+                target,
+                &substitutions,
+                SubstitutionMode::TransparentDefinition,
+                None,
+            )
+            .map_err(|error| {
+                format!(
+                    "fact transformation transparent equality rewrite step {transformation_step_index} could not reduce its target: {}",
+                    error.trace_message()
+                )
+            })?;
+        if render_fact(&reduced_source, &self.environment_stack)?
+            != render_fact(&reduced_target, &self.environment_stack)?
+        {
+            return Err(format!(
+                "fact transformation transparent equality rewrite step {transformation_step_index} does not reduce its source and target to the same proposition"
+            ));
+        }
+        render_fact(source, &self.environment_stack)?;
+        render_fact(target, &self.environment_stack)?;
+        Ok(Some(format!(
+            "(by\n  simpa [{}] using ({source_proof}))",
+            definition_names.join(", ")
+        )))
     }
 
     pub(in super::super) fn resolve_equality_rewrite_proof(

@@ -135,7 +135,17 @@ impl StmtResultToLeanCompiler {
                     .insert(stored_equality_fact_id, equality_theorem_name);
                 self.environment_stack
                     .fact_propositions
-                    .insert(stored_equality_fact_id, stored_equality);
+                    .insert(stored_equality_fact_id, stored_equality.clone());
+                self.environment_stack
+                    .transparent_object_definitions
+                    .insert(
+                        binding.id(),
+                        CompilerTransparentObjectDefinition {
+                            value: value.clone(),
+                            defining_equality: stored_equality,
+                            defining_equality_fact_id: stored_equality_fact_id,
+                        },
+                    );
                 self.next_fact_name_index += 1;
                 continue;
             }
@@ -203,7 +213,17 @@ impl StmtResultToLeanCompiler {
                 .insert(stored_equality_fact_id, equality_theorem_name);
             self.environment_stack
                 .fact_propositions
-                .insert(stored_equality_fact_id, stored_equality);
+                .insert(stored_equality_fact_id, stored_equality.clone());
+            self.environment_stack
+                .transparent_object_definitions
+                .insert(
+                    binding.id(),
+                    CompilerTransparentObjectDefinition {
+                        value: value.clone(),
+                        defining_equality: stored_equality,
+                        defining_equality_fact_id: stored_equality_fact_id,
+                    },
+                );
             self.environment_stack
                 .runtime_resolved_numeric_substitutions
                 .insert(binding.substitution_key(), value.clone());

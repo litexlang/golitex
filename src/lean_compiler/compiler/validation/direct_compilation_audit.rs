@@ -157,6 +157,7 @@ pub(in super::super) fn direct_builtin_rule_compiler_limitation(
         | BuiltinRuleEvidence::StandardSetNonempty(_)
         | BuiltinRuleEvidence::LiteralSetNonempty
         | BuiltinRuleEvidence::SetBuilderSubsetBase
+        | BuiltinRuleEvidence::SetBuilderInPowerSetViaParamSubset
         | BuiltinRuleEvidence::DisjunctionIntroduction(_)
         | BuiltinRuleEvidence::FunctionApplicationReturnMembership(_)
         | BuiltinRuleEvidence::KnownEqualityPath(_)

@@ -1186,6 +1186,22 @@ theorem setBuilderSubsetBase
   intro _ value membership
   exact inBaseOfInSetBuilder membership
 
+theorem setBuilderSubsetViaParamSubset
+    {source target : Litex.Set.{u}}
+    {predicate : source.Carrier → Prop}
+    (sourceTarget : Litex.Subset source target) :
+    Litex.Subset (Litex.setBuilder source predicate) target :=
+  fun {_} value membership =>
+    sourceTarget value (inBaseOfInSetBuilder membership)
+
+theorem setBuilderInPowerSetViaParamSubset
+    {source target : Litex.Set.{u}}
+    {predicate : source.Carrier → Prop}
+    (sourceTarget : Litex.Subset source target) :
+    Litex.In (Litex.setBuilder source predicate) (Litex.powerSet target) :=
+  Litex.SetRules.inPowerSetOfSubset
+    (setBuilderSubsetViaParamSubset sourceTarget)
+
 /-- A checked positive natural numeral constructs the exact `N+` subtype
 carrier rather than reusing the carrier of `N`. -/
 theorem complexEqNatInNPos
@@ -1603,7 +1619,8 @@ translate the retained exact-carrier evidence to native real analysis.
 
 theorem realLeastUpperBoundExists
     (set : Litex.Set)
-    (upperBound : ℂ)
+    {upperType : Type}
+    (upperBound : upperType)
     (setSubsetReal : Litex.Subset set Litex.R)
     (setNonempty : Litex.Set.Nonempty set)
     (upperBoundReal : Litex.In upperBound Litex.R)
@@ -1614,7 +1631,7 @@ theorem realLeastUpperBoundExists
             ((Litex.In.rep member memberReal : ℝ) : ℂ)
             ((Litex.In.rep upperBound upperBoundReal : ℝ) : ℂ)) :
     ∃ candidate : ℂ,
-      Litex.In candidate Litex.R ∧
+      ∃ _candidateReal : Litex.In candidate Litex.R,
         Litex.RealLeastUpperBound set candidate := by
   let values := Litex.realMemberValues set
   have valuesNonempty : values.Nonempty := by
@@ -1668,7 +1685,9 @@ theorem realMemberLeLeastUpperBound
 
 theorem realLeastUpperBoundLeUpperBound
     (set : Litex.Set)
-    (candidate upperBound : ℂ)
+    (candidate : ℂ)
+    {upperType : Type}
+    (upperBound : upperType)
     (setSubsetReal : Litex.Subset set Litex.R)
     (candidateReal : Litex.In candidate Litex.R)
     (candidateIsLUB : Litex.RealLeastUpperBound set candidate)
@@ -1694,7 +1713,9 @@ theorem realLeastUpperBoundLeUpperBound
   simpa [Litex.Le, Litex.OrderValue] using ordered
 
 theorem rationalBetweenReals
-    (left right : ℂ)
+    {leftType rightType : Type}
+    (left : leftType)
+    (right : rightType)
     (leftReal : Litex.In left Litex.R)
     (rightReal : Litex.In right Litex.R)
     (ordered :
@@ -1702,9 +1723,9 @@ theorem rationalBetweenReals
         ((Litex.In.rep left leftReal : ℝ) : ℂ)
         ((Litex.In.rep right rightReal : ℝ) : ℂ)) :
     ∃ rational : ℂ,
-      Litex.In rational Litex.Q ∧
+      ∃ _rationalMembership : Litex.In rational Litex.Q,
         Litex.Lt ((Litex.In.rep left leftReal : ℝ) : ℂ) rational ∧
-        Litex.Lt rational ((Litex.In.rep right rightReal : ℝ) : ℂ) := by
+          Litex.Lt rational ((Litex.In.rep right rightReal : ℝ) : ℂ) := by
   have nativeOrdered :
       Litex.In.rep left leftReal < Litex.In.rep right rightReal := by
     simpa [Litex.Lt, Litex.OrderValue] using ordered

@@ -146,6 +146,36 @@ impl StmtResultToLeanCompiler {
         Ok(true)
     }
 
+    /// Reuse the complete nonempty-witness compiler inside a named theorem.
+    /// Its one generated declaration is compiler-owned syntax, so replacing
+    /// the leading `theorem` with `have` keeps the exact FactId publication
+    /// while retaining every enclosing local binder.
+    pub(super) fn compile_witness_nonempty_set_stmt_result_as_local_proof_steps(
+        &mut self,
+        result: &SuccessWitnessNonemptySetResult,
+    ) -> Result<Option<Vec<String>>, String> {
+        let declaration_count = self.declarations.len();
+        let fact_index = self.next_fact_name_index;
+        if !self.compile_witness_nonempty_set_stmt_result_to_lean_source(result)? {
+            return Ok(None);
+        }
+        if self.declarations.len() != declaration_count + 1
+            || self.next_fact_name_index != fact_index + 1
+        {
+            return Err(
+                "local nonempty-set witness generated an unexpected declaration count".into(),
+            );
+        }
+        let declaration = self
+            .declarations
+            .pop()
+            .expect("validated one generated nonempty-set witness declaration");
+        let body = declaration.strip_prefix("theorem ").ok_or_else(|| {
+            "local nonempty-set witness generated an unexpected declaration shape".to_string()
+        })?;
+        Ok(Some(vec![format!("have {body}")]))
+    }
+
     pub(super) fn construct_lean_proof_from_witness_exist_fact_stmt_result(
         &mut self,
         result: &SuccessWitnessExistFactResult,

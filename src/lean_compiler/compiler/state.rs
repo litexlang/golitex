@@ -115,11 +115,16 @@ pub(super) struct CompiledByDefinitionProofBody {
     pub(super) components: Vec<CompiledByDefinitionComponentProofBody>,
 }
 
-pub(super) struct CompiledLitexTheoremInstantiationConclusionProofBody {
+pub(super) struct CompiledTheoremApplicationConclusionProofBody {
     pub(super) retained_fact_id: Option<FactId>,
     pub(super) fact: Fact,
     pub(super) proposition: String,
     pub(super) proof_expression: String,
+}
+
+pub(super) struct CompiledRealAnalysisTheoremApplicationProofBody {
+    pub(super) local_prerequisite_lines: Vec<String>,
+    pub(super) conclusion: CompiledTheoremApplicationConclusionProofBody,
 }
 
 pub(super) struct CompiledByTheoremSelectionProofBody {

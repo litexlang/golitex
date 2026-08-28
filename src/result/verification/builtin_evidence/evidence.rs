@@ -36,6 +36,9 @@ pub enum BuiltinRuleEvidence {
     LiteralSetNonempty,
     /// A predicate-defined set is contained in its exact base carrier.
     SetBuilderSubsetBase,
+    /// A predicate-defined subset of `S` belongs to `power_set(T)` after one
+    /// checked child proves `S subset T`.
+    SetBuilderInPowerSetViaParamSubset,
     DisjunctionIntroduction(DisjunctionIntroductionBuiltinRuleEvidence),
     FunctionApplicationReturnMembership(FunctionApplicationReturnMembershipBuiltinRuleEvidence),
     MatrixExpressionMembership(MatrixExpressionMembershipBuiltinRuleEvidence),
@@ -114,6 +117,9 @@ impl BuiltinRuleEvidence {
             Self::StandardSetNonempty(_) => "set.standard_nonempty",
             Self::LiteralSetNonempty => "set.literal_nonempty",
             Self::SetBuilderSubsetBase => "set.set_builder_subset_base",
+            Self::SetBuilderInPowerSetViaParamSubset => {
+                "set.set_builder_in_power_set_via_param_subset"
+            }
             Self::DisjunctionIntroduction(_) => "logic.disjunction_introduction",
             Self::FunctionApplicationReturnMembership(_) => {
                 "function.application_return_membership"
@@ -243,6 +249,9 @@ impl fmt::Debug for BuiltinRuleEvidence {
                 .finish(),
             BuiltinRuleEvidence::LiteralSetNonempty => f.write_str("LiteralSetNonempty"),
             BuiltinRuleEvidence::SetBuilderSubsetBase => f.write_str("SetBuilderSubsetBase"),
+            BuiltinRuleEvidence::SetBuilderInPowerSetViaParamSubset => {
+                f.write_str("SetBuilderInPowerSetViaParamSubset")
+            }
             BuiltinRuleEvidence::DisjunctionIntroduction(evidence) => f
                 .debug_tuple("DisjunctionIntroduction")
                 .field(evidence)

@@ -69,14 +69,46 @@ StmtResult-to-Lean 路径打通，同时保证没有定理特化、项目公理�
 `f.call x hx = f.call y hy`，仍需要一项跨所有函数的 ABI 契约。本 adapter 没有
 使用这项更强声明，因此它不是当前 showcase 的剩余缺口。
 
+## 与“柯西列由实数完备性收敛”的边界
+
+上面的结论只针对当前“收敛数列乘常数”源文件：它还需要的
+ToLean 功能数量是 **0**。它已经覆盖 concrete predicate、匿名函数、
+局部 `forall` claim、存在量词的 `obtain`/`witness`、嵌套证明、
+`by def` 以及绝对值和有序字段运算的 Result 回放。
+
+以后若要把“柯西列必收敛”从一般实数完备性完整编译到 Lean，
+则是另一层任务。当前已支持在定理证明中写
+`have E power_set(R) = {x R: ...}` 这类局部有类型集合定义；
+现在，前两项通用基础能力已经打通：
+
+- Example 67 可以在命名定理的局部证明中调用一般的
+  `real_least_upper_bound_exists(S, upper)`。编译器读取的是 Result 中的
+  builtin 定理 ID、按序前提检查和结论 FactId；
+- Example 68 可以先写 `have E power_set(R) = {x R: ...}`，再证明
+  `x $in E`。这条路径复用通用的透明定义约简，精确引用定义等式的
+  FactId，并没有增加集合名或题目名特化。
+
+因此，继续推“柯西列由实数完备性收敛”时，目前还剩两个主要的通用表示缺口：
+
+1. `x <= 0` 或字面单点集成员等符号证据，与 LUB 所需的精确实数次序观察尚未共用
+   同一个表示；
+2. `exist q Q` 一类 typed existential 还需要保留同一个原生
+   `q : ℚ` 见证，否则 Mathlib 构造的见证与当前异构 wrapper 选出的
+   代表元无法保证相同。
+
+这两项不是当前 `main.lit` 的隐藏依赖，也不应通过柯西列、
+有理数稠密性或某个定理名的特化分支解决。
+
 ## 核验证据
 
 - Litex strict runner：成功，退出码 `0`；
 - 生成文件 Lean kernel gate：成功，退出码 `0`；
 - Mathlib adapter：`lake build LitexToMathlib` 成功；
-- Rust lib 与编译器 tracer：按当前仓库测试集通过；
-- showcase1 和旧 real-sequence 生成回归：分别经 Lean kernel 通过；
-- 同构改名测试：通过；
+- 编译器单元合约：151/151 通过；tracer：76/76 通过；
+  CLI：4/4 通过；binary 测试：2/2 通过；
+- 生成账本：67 对文件重生成后无漂移，并全部通过真实 Lean kernel；
+- real-sequence 定义与 implicit-binder tracer 已包含在完整生成账本中；
+- 同构改名测试已包含在 76 个 tracer 中；
 - 禁止项扫描：当前源文件、生成文件和 adapter 无
   `axiom`/`trust`/`sorry`/`admit`。
 

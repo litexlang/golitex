@@ -3,6 +3,8 @@ mod definitions_and_collections;
 mod existentials_claims_and_theorems;
 mod forall_and_direct_fact_proofs;
 mod known_forall_and_transformations;
+mod local_analysis_proof_steps;
+mod local_typed_definitions;
 mod proof_composition_and_scopes;
 mod registered_rules_and_environments;
 mod result_schema_contracts;

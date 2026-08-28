@@ -15,11 +15,11 @@
 
 | 层 | 状态 | 证据 |
 | --- | --- | --- |
-| Litex 源文件 | 通过 | strict isolated runner 退出码 `0`，顶层 `ok: true` |
-| StmtResult → Lean | 通过 | 直接编译当前 `main.lit`，产生新的 `LitexGenerate.lean` |
+| Litex 源文件 | 通过 | strict registered-file runner 退出码 `0`，顶层 `ok: true` |
+| StmtResult → Lean | 通过 | 直接编译当前 `main.lit`，重生成前后的文件哈希相同 |
 | Lean kernel | 通过 | `lake env lean .../LitexGenerate.lean` 退出码 `0` |
 | Mathlib 消费层 | 通过 | `lake build LitexToMathlib` 成功，adapter 实际调用生成的 `converges_to_mul_const` |
-| 通用回归 | 通过 | 通用生成样例经过重新生成、确定性比对和真实 Lean kernel 检查 |
+| 通用回归 | 通过 | 76 个 tracer、4 个 CLI 和 2 个编译器 binary 测试通过；67 对生成样例无漂移并全部通过真实 Lean kernel |
 
 `main.lit`、生成文件和 adapter 都不含 `axiom`、`trust`、`sorry`
 或 `admit`。编译器也不再按这个定理的名字、整份源文本或特定 AST
@@ -51,7 +51,7 @@
 从仓库根目录运行：
 
 ```bash
-target/release/litex -compact -strict -runner -isolated \
+target/release/litex -compact -strict -runner \
   -f showcases/litex_to_lean_mathlib_pipeline/showcase2/main.lit
 
 target/release/stmt_result_to_lean_compiler compile \
@@ -59,6 +59,9 @@ target/release/stmt_result_to_lean_compiler compile \
   showcases/litex_to_lean_mathlib_pipeline/showcase2/LitexGenerate.lean
 
 cargo test --release --test stmt_result_to_lean_compiler_tracers
+cargo test --release --bin stmt_result_to_lean_compiler
+
+target/release/stmt_result_to_lean_compiler check lean/examples
 
 cd lean
 lake env lean \

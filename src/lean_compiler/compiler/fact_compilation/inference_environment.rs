@@ -737,14 +737,7 @@ impl StmtResultToLeanCompiler {
             } else if matches!(
                 application.rule,
                 InferRule::MembershipInSetWithKnownEqualityImpliesMembershipInEqualSet(_)
-                    | InferRule::SubsetImpliesElementwiseMembershipForall(_)
-                    | InferRule::SupersetImpliesElementwiseMembershipForall(_)
             ) {
-                // These runtime search accelerators are local to this binder.
-                // Validate their complete typed shape, but do not publish an
-                // unreviewed Lean proof. If a later Result actually cites one,
-                // exact FactId resolution fails closed instead of silently
-                // recreating the inference in Lean.
                 if let InferRule::MembershipInSetWithKnownEqualityImpliesMembershipInEqualSet(
                     rule,
                 ) = &application.rule
@@ -766,16 +759,110 @@ impl StmtResultToLeanCompiler {
                         &equality_premise.fact,
                         &conclusion.fact,
                     )?;
-                } else if matches!(
-                    application.rule,
-                    InferRule::SubsetImpliesElementwiseMembershipForall(_)
-                        | InferRule::SupersetImpliesElementwiseMembershipForall(_)
-                ) {
-                    validate_set_inclusion_elementwise_forall_inference_target(
-                        &application.rule,
+                    if !conclusion_already_visible {
+                        let premise_name = resolve_fact_citation(
+                            &premise_fact_id,
+                            &premise.fact,
+                            &self.environment_stack,
+                        )?;
+                        let (source_element, source_set) = membership_parts(&premise.fact)?;
+                        let (target_element, target_set) = membership_parts(&conclusion.fact)?;
+                        if obj_equality_key(source_element) != obj_equality_key(target_element) {
+                            return Err(format!(
+                                "{result_layer} application {application_index} changed its membership element"
+                            ));
+                        }
+                        let transparent_set = [
+                            (source_set, target_set),
+                            (target_set, source_set),
+                        ]
+                        .into_iter()
+                        .find_map(|(candidate_symbol, expected_value)| {
+                            let Ok(LeanTargetObjectRepresentation::Symbol {
+                                symbol_id,
+                                ..
+                            }) = LeanTargetObjectRepresentation::lower(candidate_symbol)
+                            else {
+                                return None;
+                            };
+                            let definition = self
+                                .environment_stack
+                                .transparent_object_definitions
+                                .get(&symbol_id)?;
+                            if definition.defining_equality_fact_id != equality_fact_id
+                                || definition.defining_equality.to_string()
+                                    != equality_premise.fact.to_string()
+                                || obj_equality_key(&definition.value)
+                                    != obj_equality_key(expected_value)
+                            {
+                                return None;
+                            }
+                            Some(candidate_symbol)
+                        })
+                        .ok_or_else(|| {
+                            format!(
+                                "{result_layer} application {application_index} equal-set membership has no exact transparent definition adapter"
+                            )
+                        })?;
+                        let transparent_set_name =
+                            render_obj(transparent_set, &self.environment_stack)?;
+                        let conclusion_proposition =
+                            render_fact(&conclusion.fact, &self.environment_stack)?;
+                        let conclusion_name = self.next_local_inference_fact_proof_name();
+                        self.retain_compiled_inference_fact_proof_step_in_current_environment(
+                            &mut compiled_inference_fact_proof_steps,
+                            CompiledInferenceFactProofStep::new(
+                                conclusion_fact_id,
+                                conclusion.fact.clone(),
+                                conclusion_name,
+                                conclusion_proposition,
+                                format!(
+                                    "by\n  simpa [{transparent_set_name}] using ({premise_name})"
+                                ),
+                            ),
+                            availability,
+                        );
+                    }
+                }
+            } else if matches!(
+                application.rule,
+                InferRule::SubsetImpliesElementwiseMembershipForall(_)
+                    | InferRule::SupersetImpliesElementwiseMembershipForall(_)
+            ) {
+                // Litex.Subset is definitionally the elementwise universal
+                // proposition retained by this typed inference.  Replay the
+                // exact Result edge under its own FactId so later theorem
+                // requirements can cite it without reconstructing search.
+                validate_set_inclusion_elementwise_forall_inference_target(
+                    &application.rule,
+                    &premise.fact,
+                    &conclusion.fact,
+                )?;
+                if !conclusion_already_visible {
+                    let premise_name = resolve_fact_citation(
+                        &premise_fact_id,
                         &premise.fact,
-                        &conclusion.fact,
+                        &self.environment_stack,
                     )?;
+                    // `Litex.Subset` is definitionally this forall. Preserve
+                    // the inferred FactId as an alias of the exact premise
+                    // proof instead of emitting an eta-expanded theorem that
+                    // can accidentally monomorphize a user set's universe.
+                    render_fact(&conclusion.fact, &self.environment_stack)?;
+                    let lean_reference = match availability {
+                        CompiledInferenceFactAvailabilityInLeanEnvironment::LocalProofName => {
+                            premise_name
+                        }
+                        CompiledInferenceFactAvailabilityInLeanEnvironment::InlineProofExpression => {
+                            format!("({premise_name})")
+                        }
+                    };
+                    self.environment_stack
+                        .fact_names
+                        .insert(conclusion_fact_id, lean_reference);
+                    self.environment_stack
+                        .fact_propositions
+                        .insert(conclusion_fact_id, conclusion.fact.clone());
                 }
             } else {
                 let premise_name = resolve_fact_citation(

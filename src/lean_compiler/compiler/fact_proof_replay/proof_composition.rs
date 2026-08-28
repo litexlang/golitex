@@ -161,6 +161,16 @@ impl StmtResultToLeanCompiler {
                         &builtin.subgoals,
                     );
                 }
+                if matches!(
+                    builtin.evidence.typed(),
+                    Some(BuiltinRuleEvidence::SetBuilderInPowerSetViaParamSubset)
+                ) {
+                    return self
+                        .construct_lean_set_builder_in_power_set_via_param_subset_from_result(
+                            &source_fact,
+                            &builtin.subgoals,
+                        );
+                }
                 if let Some(BuiltinRuleEvidence::RefinedNumericMembership(evidence)) =
                     builtin.evidence.typed()
                 {
