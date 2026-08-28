@@ -405,7 +405,7 @@ fn numeric_comparison_replays_prior_object_definition_results() {
         "{generated}"
     );
     assert!(generated.contains("norm_num"), "{generated}");
-    assert!(generated.contains("a, b"), "{generated}");
+    assert!(generated.contains("unfold a b"), "{generated}");
     assert!(
         generated.contains("Litex.Rules.complexNegativeOneMulNonpositive (__fact4)"),
         "{generated}"

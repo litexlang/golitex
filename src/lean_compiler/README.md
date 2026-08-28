@@ -63,7 +63,7 @@ The following sections describe the compiler's design for these two problems.
 
 ## Rust implementation boundaries
 
-[`compiler.rs`](compiler.rs) owns the compiler state and well-definedness
+[`compiler/state.rs`](compiler/state.rs) owns the compiler state and well-definedness
 context construction.
 [`compiler/result_dispatch.rs`](compiler/result_dispatch.rs) is the single
 top-level map from `StmtResult` families to their focused compilers. Large
@@ -668,7 +668,7 @@ in their execution order:
 
 Rust-shaped pseudocode for that consumer path makes the producer/consumer
 duality explicit. It follows
-[`compiler.rs`](compiler.rs):
+[`compiler/state.rs`](compiler/state.rs):
 
 ```rust
 fn compile_all(results: &[StmtResult]) -> LeanSource {
@@ -1653,7 +1653,7 @@ proposition-string fact lookup or live `Runtime` lookup is involved.
 
 The theorem-backed adapter demonstrates proof construction versus
 publication more explicitly. A named
-`CompiledLitexTheoremInstantiationConclusionProofBody` is constructed from
+`CompiledTheoremApplicationConclusionProofBody` is constructed from
 the nested `SuccessReleaseThmStmtResult`. A top-level `release thm` requires and
 publishes each conclusion's retained FactId. Inside `obtain from thm`, the
 temporary conclusion may intentionally have no publishable FactId after its
@@ -2393,7 +2393,23 @@ representation is unavailable. A missing symbolic nonzero premise still fails
 in Litex well-definedness rather than becoming target-side proof search.
 
 The persistent compiler examples currently extend through
-[`63_ScalarOperatorBuiltins.lit`](../../lean/examples/63_ScalarOperatorBuiltins.lit).
-They exercise the direct Result reader and compiler environment stack; they do
-not claim that every statement accepted by the full Litex kernel is already a
-supported Lean target.
+[`68_LocalTransparentSetMembership.lit`](../../lean/examples/68_LocalTransparentSetMembership.lit).
+Example 64 records the concrete real-sequence predicate definitions without
+postulating completeness; Example 65 checks the system-wide implicit host-
+carrier convention and its exact-carrier boundary. Example 66 checks the
+generic local `have E power_set(R) = {x R: ...}` definition route and its
+typed set-builder/power-set evidence. Example 67 applies the general real
+least-upper-bound builtin as a local proof step from its retained theorem ID,
+ordered requirement Results, nested pointwise-bound premise, and conclusion
+FactId. Example 68 registers a local `have ... = ...` object definition in the
+generic transparent-definition mechanism, then replays later set membership
+through the exact defining equality FactId. It does not introduce a
+set-membership-specific definition ABI.
+
+These examples establish the abstract completeness and transparent-local-set
+interfaces needed by later analysis proofs. They do not yet bridge concrete
+zero-ended or singleton order evidence to the exact native real observation
+required by the LUB consumer, and they do not repair the native-witness
+identity of typed `exist q Q`. The ledger exercises the direct Result reader
+and compiler environment stack; it does not claim that every statement
+accepted by the full Litex kernel is already a supported Lean target.

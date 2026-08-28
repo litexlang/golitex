@@ -1,0 +1,20 @@
+# Tracer: a named theorem may use the kernel's real least-upper-bound theorem
+# as one of its local proof steps.
+#
+# Before: the direct compiler only adapted this builtin theorem at top level.
+# Now: the local release step retains its typed requirements and exact FactIds,
+# then emits a proof term through Litex.Rules.realLeastUpperBoundExists.
+# Boundary: this example supplies the nonempty and upper-bound hypotheses. It
+# does not derive them for a particular set.
+
+thm local_real_completeness:
+    ? forall S set, upper R:
+        S $subset R
+        $is_nonempty_set(S)
+        forall member R:
+            member $in S
+            =>:
+                member <= upper
+        =>:
+            exist L R st {$is_real_least_upper_bound(S, L)}
+    release thm real_least_upper_bound_exists(S, upper)

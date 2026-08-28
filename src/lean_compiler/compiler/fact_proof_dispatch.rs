@@ -60,6 +60,16 @@ impl StmtResultToLeanCompiler {
                         &builtin.subgoals,
                     );
                 }
+                if matches!(
+                    builtin.evidence.typed(),
+                    Some(BuiltinRuleEvidence::SetBuilderInPowerSetViaParamSubset)
+                ) {
+                    return self
+                        .construct_lean_set_builder_in_power_set_via_param_subset_from_result(
+                            &source_fact,
+                            &builtin.subgoals,
+                        );
+                }
                 if let Some(BuiltinRuleEvidence::RefinedNumericMembership(evidence)) =
                     builtin.evidence.typed()
                 {
@@ -608,6 +618,47 @@ impl StmtResultToLeanCompiler {
         }
         render_fact(source_fact, &self.environment_stack)?;
         Ok(Some("Litex.Rules.setBuilderSubsetBase".into()))
+    }
+
+    pub(super) fn construct_lean_set_builder_in_power_set_via_param_subset_from_result(
+        &mut self,
+        source_fact: &Fact,
+        subgoals: &[StmtResult],
+    ) -> Result<Option<String>, String> {
+        let (element, target) = membership_parts(source_fact)?;
+        let Obj::SetBuilder(builder) = element else {
+            return Err(
+                "set-builder power-set evidence targets another element constructor".into(),
+            );
+        };
+        let Obj::PowerSet(power_set) = target else {
+            return Err("set-builder power-set evidence targets another carrier".into());
+        };
+        let [child] = subgoals else {
+            return Err(
+                "set-builder power-set evidence must retain one parameter-subset child".into(),
+            );
+        };
+        let child = child
+            .factual_success()
+            .ok_or_else(|| "set-builder power-set child is not factual".to_string())?;
+        if !child.store.infers.is_empty() {
+            return Err("set-builder power-set child published effects".into());
+        }
+        let child_fact = child.fact();
+        let (child_left, child_right) = subset_parts(&child_fact)?;
+        if !objs_equal_with_nested_binder_alpha_equivalence(builder.param_set.as_ref(), child_left)
+            || !objs_equal_with_nested_binder_alpha_equivalence(power_set.set.as_ref(), child_right)
+        {
+            return Err("set-builder power-set evidence changed its subset endpoints".into());
+        }
+        let Some(child_proof) = self.construct_lean_proof_from_direct_fact_result(child)? else {
+            return Ok(None);
+        };
+        render_fact(source_fact, &self.environment_stack)?;
+        Ok(Some(format!(
+            "Litex.Rules.setBuilderInPowerSetViaParamSubset ({child_proof})"
+        )))
     }
 
     /// Temporarily exposes this exact statement Result's retained WD tree

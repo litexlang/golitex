@@ -1,0 +1,16 @@
+# Tracer: a set-builder stored by a local have-definition remains transparent
+# to later typed membership reasoning inside the same named theorem.
+#
+# Before: the verifier could resolve the definition, but Result did not retain
+# the defining equality FactId needed by the direct compiler.
+# Now: the membership proof records that exact definition citation and the Lean
+# proof unfolds the local set before replaying set-builder membership.
+
+thm local_transparent_set_membership:
+    ? forall marker R:
+        marker = marker
+        =>:
+            marker = marker
+    have E power_set(R) = {x R: x = 0}
+    0 $in E
+    marker = marker

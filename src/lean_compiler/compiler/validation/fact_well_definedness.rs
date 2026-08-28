@@ -86,6 +86,9 @@ pub(in super::super) fn validate_direct_named_theorem_conclusion_well_definednes
         }
         return Ok(());
     }
+    if let Fact::ForallFact(expected_forall) = expected_fact {
+        return validate_nested_forall_fact_well_definedness(result, expected_forall);
+    }
     let Fact::ExistFact(expected_existential) = expected_fact else {
         return Err("direct named theorem received an unsupported conclusion family".into());
     };
@@ -141,6 +144,133 @@ pub(in super::super) fn validate_direct_named_theorem_conclusion_well_definednes
         &body.proposition,
         "existential theorem conclusion body WD",
     )?;
+    Ok(())
+}
+
+/// Validate a universal proposition retained as a premise of a named theorem.
+///
+/// The named theorem compiler already renders universal premises as ordinary
+/// Lean hypotheses.  The missing trust check was structural: the recursive WD
+/// Result must retain the exact binder, parameter premises, domain premises,
+/// conclusions, and local stores from the source proposition.  Keeping this
+/// validation generic lets analysis interfaces accept pointwise hypotheses
+/// without adding a theorem-specific completeness path.
+fn validate_nested_forall_fact_well_definedness(
+    result: &SuccessVerifyFactWellDefinedProofResult,
+    expected_forall: &ForallFact,
+) -> Result<(), String> {
+    let SuccessVerifyFactWellDefinedProofResult::ForallFact(result) = result else {
+        return Err("universal theorem premise has no universal WD Result".into());
+    };
+    if result.statement.to_string() != expected_forall.to_string()
+        || result.binder.parameter_groups.len() != expected_forall.typed_parameters.groups.len()
+        || result.premises.len() != expected_forall.dom_facts.len()
+        || result.conclusions.len() != expected_forall.then_facts.len()
+    {
+        return Err("universal theorem premise WD changed its source structure".into());
+    }
+
+    for (group_index, (actual_group, expected_group)) in result
+        .binder
+        .parameter_groups
+        .iter()
+        .zip(expected_forall.typed_parameters.groups.iter())
+        .enumerate()
+    {
+        if actual_group.group_index != group_index
+            || actual_group.parameter_type.to_string() != expected_group.param_type.to_string()
+            || actual_group.parameters.len() != expected_group.params.len()
+        {
+            return Err(format!(
+                "universal theorem premise WD changed binder group {group_index}"
+            ));
+        }
+        for (parameter_index, (actual_parameter, expected_parameter)) in actual_group
+            .parameters
+            .iter()
+            .zip(expected_group.params.iter())
+            .enumerate()
+        {
+            if actual_parameter.symbol_id != Some(expected_parameter.id()) {
+                return Err(format!(
+                    "universal theorem premise WD changed binder SymbolId at group {group_index}, parameter {parameter_index}"
+                ));
+            }
+            match &expected_group.param_type {
+                ParamType::Set(_) => {
+                    validate_set_parameter_premise(
+                        expected_parameter.id(),
+                        &actual_parameter.proposition,
+                    )?;
+                }
+                ParamType::Obj(expected_set) => {
+                    validate_object_parameter_premise(
+                        expected_parameter.id(),
+                        expected_set,
+                        &actual_parameter.proposition,
+                    )?;
+                }
+                ParamType::NonemptySet(_) | ParamType::FiniteSet(_) => {
+                    return Err(
+                        "universal theorem premise uses an unsupported refined-set binder".into(),
+                    );
+                }
+            }
+            validate_atomic_fact_well_definedness_result(
+                actual_parameter.well_definedness.as_ref(),
+                &actual_parameter.proposition,
+            )?;
+            validate_single_fact_store_output_allowing_supported_typed_inferences(
+                &actual_parameter.infers,
+                &actual_parameter.proposition,
+                "universal theorem premise binder WD",
+            )?;
+        }
+    }
+
+    for (child_index, (actual, expected)) in result
+        .premises
+        .iter()
+        .zip(expected_forall.dom_facts.iter())
+        .enumerate()
+    {
+        if actual.proposition.to_string() != expected.to_string() {
+            return Err(format!(
+                "universal theorem premise WD changed domain child {child_index}"
+            ));
+        }
+        validate_direct_named_theorem_conclusion_well_definedness(
+            actual.well_definedness.as_ref(),
+            &actual.proposition,
+        )?;
+        validate_success_store_fact_result_allowing_well_definedness_inferred_children(
+            &actual.store,
+            &actual.proposition,
+            "universal theorem premise domain WD",
+        )?;
+    }
+    for (child_index, (actual, expected)) in result
+        .conclusions
+        .iter()
+        .zip(expected_forall.then_facts.iter())
+        .enumerate()
+    {
+        let expected = expected.clone().to_fact();
+        if actual.proposition.to_string() != expected.to_string() {
+            return Err(format!(
+                "universal theorem premise WD changed conclusion child {child_index}"
+            ));
+        }
+        validate_direct_named_theorem_conclusion_well_definedness(
+            actual.well_definedness.as_ref(),
+            &actual.proposition,
+        )?;
+        validate_success_store_fact_result_allowing_well_definedness_inferred_children(
+            &actual.store,
+            &actual.proposition,
+            "universal theorem premise conclusion WD",
+        )?;
+    }
     Ok(())
 }
 

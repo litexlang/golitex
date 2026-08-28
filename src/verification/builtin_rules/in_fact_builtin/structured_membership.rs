@@ -181,7 +181,7 @@ impl Runtime {
             infer_result,
             "set_builder in power_set: param_set subset of base implies builder defines a subset of base"
                 .to_string(),
-            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactSetBuilderInPowerSetViaParamSubset02),
+            BuiltinRuleEvidence::SetBuilderInPowerSetViaParamSubset,
             vec![verify_subset_result],
         ))
         .into())

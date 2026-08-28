@@ -398,6 +398,10 @@ impl StmtResultJsonV2 {
             BuiltinRuleEvidence::SetBuilderSubsetBase => {
                 object(vec![string_field("kind", "SetBuilderSubsetBase")])
             }
+            BuiltinRuleEvidence::SetBuilderInPowerSetViaParamSubset => object(vec![string_field(
+                "kind",
+                "SetBuilderInPowerSetViaParamSubset",
+            )]),
             BuiltinRuleEvidence::LiteralSetSubset => {
                 object(vec![string_field("kind", "LiteralSetSubset")])
             }

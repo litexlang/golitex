@@ -14,7 +14,9 @@ theorem __fact1 : Litex.Same S (Litex.setBuilder Litex.R (fun (x : Litex.R.Carri
   exact Litex.Same.refl (Litex.setBuilder Litex.R (fun (x : Litex.R.Carrier) => Litex.Same x x))
 
 theorem __fact2 : Litex.Same S S := by
-  exact Litex.Same.refl S
+  exact (by
+  unfold S
+  exact (Litex.Same.refl (Litex.setBuilder Litex.R (fun (x : Litex.R.Carrier) => Litex.Same x x))))
 
 theorem __fact3 : Litex.In (1 : ℂ) (Litex.setBuilder Litex.R (fun (x : Litex.R.Carrier) => Litex.Same x (1 : ℂ))) := by
   exact Litex.Rules.inSetBuilder (Litex.In.same_rep (1 : ℂ) (Litex.Rules.complexRealInR (1 : ℝ))) (Litex.Same.trans (Litex.Same.symm (Litex.In.same_rep (1 : ℂ) (Litex.Rules.complexRealInR (1 : ℝ)))) (Litex.Same.refl (1 : ℂ)))

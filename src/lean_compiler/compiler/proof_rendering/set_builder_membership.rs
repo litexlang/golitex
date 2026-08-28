@@ -252,11 +252,17 @@ pub(in super::super) fn render_set_builder_predicate_projection_from_fact_and_pr
             .symbol_names
             .insert(builder.symbol_id, "__rep".into());
         representative_context
+            .exact_carrier_values
+            .insert(builder.symbol_id, "__rep".into());
+        representative_context
             .semantic_zero_ended_order_symbols
             .insert(builder.symbol_id);
         let mut element_context = context.clone();
         element_context
             .symbol_names
+            .insert(builder.symbol_id, rendered_element.clone());
+        element_context
+            .exact_carrier_values
             .insert(builder.symbol_id, rendered_element.clone());
         element_context
             .semantic_zero_ended_order_symbols
@@ -291,11 +297,17 @@ pub(in super::super) fn render_set_builder_predicate_projection_from_fact_and_pr
             .symbol_names
             .insert(builder.symbol_id, "__rep".into());
         representative_context
+            .exact_carrier_values
+            .insert(builder.symbol_id, "__rep".into());
+        representative_context
             .semantic_zero_ended_order_symbols
             .insert(builder.symbol_id);
         let mut element_context = context.clone();
         element_context
             .symbol_names
+            .insert(builder.symbol_id, rendered_element.clone());
+        element_context
+            .exact_carrier_values
             .insert(builder.symbol_id, rendered_element.clone());
         element_context
             .semantic_zero_ended_order_symbols

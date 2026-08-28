@@ -46,7 +46,7 @@ impl StmtResultToLeanCompiler {
     pub(in super::super) fn construct_lean_proofs_from_litex_theorem_instantiation_stmt_result(
         &mut self,
         result: &SuccessReleaseThmStmtResult,
-    ) -> Result<Option<Vec<CompiledLitexTheoremInstantiationConclusionProofBody>>, String> {
+    ) -> Result<Option<Vec<CompiledTheoremApplicationConclusionProofBody>>, String> {
         let Some(verification) = &result.verification else {
             return Ok(None);
         };
@@ -448,7 +448,7 @@ impl StmtResultToLeanCompiler {
                 ));
             }
             let proposition = render_fact(&projected_conclusion, &conclusion_rendering_context)?;
-            conclusions.push(CompiledLitexTheoremInstantiationConclusionProofBody {
+            conclusions.push(CompiledTheoremApplicationConclusionProofBody {
                 retained_fact_id: *fact_id,
                 fact: conclusion.clone(),
                 proposition,

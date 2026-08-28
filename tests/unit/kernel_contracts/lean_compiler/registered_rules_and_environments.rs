@@ -10,6 +10,40 @@ fn execute_typed_power_set_membership() -> Vec<StmtResult> {
     .expect("execute typed power-set membership")
 }
 
+fn typed_set_builtin_below_transparent_definitions(
+    proof: &SuccessFactProofResult,
+) -> &SuccessBuiltinFactProofResult {
+    match proof {
+        SuccessFactProofResult::BuiltinRule(builtin) => builtin,
+        SuccessFactProofResult::Reuse(reuse) => {
+            typed_set_builtin_below_transparent_definitions(reuse.source.proof())
+        }
+        SuccessFactProofResult::Transform(transformation) => {
+            assert!(matches!(
+                transformation.rule,
+                FactTransformationRule::TransparentDefinitionReduction(_)
+            ));
+            typed_set_builtin_below_transparent_definitions(transformation.source.proof())
+        }
+        other => panic!("expected typed set proof below transparent definitions: {other:?}"),
+    }
+}
+
+fn stored_citation_below_set_child_transforms(
+    proof: &SuccessFactProofResult,
+) -> &SuccessStoredFactCitationProofResult {
+    match proof {
+        SuccessFactProofResult::StoredFactCitation(citation) => citation,
+        SuccessFactProofResult::Reuse(reuse) => {
+            stored_citation_below_set_child_transforms(reuse.source.proof())
+        }
+        SuccessFactProofResult::Transform(transformation) => {
+            stored_citation_below_set_child_transforms(transformation.source.proof())
+        }
+        other => panic!("typed set child must cite an exact source fact: {other:?}"),
+    }
+}
+
 #[test]
 fn typed_set_rule_compiles_directly_from_its_recursive_certificate() {
     run_registered_rule_test(|| {
@@ -20,9 +54,7 @@ fn typed_set_rule_compiles_directly_from_its_recursive_certificate() {
         let result = result
             .factual_success()
             .expect("typed set rule result is factual");
-        let SuccessFactProofResult::BuiltinRule(builtin) = result.proof() else {
-            panic!("expected typed builtin proof")
-        };
+        let builtin = typed_set_builtin_below_transparent_definitions(result.proof());
         let Some(BuiltinRuleEvidence::Set(rule)) = builtin.evidence.typed() else {
             panic!("expected typed set-rule evidence")
         };
@@ -38,22 +70,7 @@ fn typed_set_rule_compiles_directly_from_its_recursive_certificate() {
             .expect("compile second set definition");
         for (index, child) in builtin.subgoals.iter().enumerate() {
             let child = child.factual_success().expect("typed set child is factual");
-            let citation = match child.proof() {
-                SuccessFactProofResult::StoredFactCitation(citation) => citation,
-                SuccessFactProofResult::Transform(transformation) => {
-                    assert!(matches!(
-                        transformation.rule,
-                        FactTransformationRule::RationalNormalization
-                    ));
-                    let SuccessFactProofResult::StoredFactCitation(citation) =
-                        transformation.source.proof()
-                    else {
-                        panic!("typed set transformation must cite an exact source fact")
-                    };
-                    citation
-                }
-                other => panic!("typed set child must cite an exact source fact: {other:?}"),
-            };
+            let citation = stored_citation_below_set_child_transforms(child.proof());
             let source_fact_id = citation.source_fact_id;
             compiler
                 .environment_stack

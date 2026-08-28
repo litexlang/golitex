@@ -1,0 +1,17 @@
+# Tracer: a named theorem defines a local typed real set inside its proof.
+#
+# This exercises the generic local `have E power_set(R) = ...` Result route.
+# The set is deliberately unused by later mathematics: local nonempty-set
+# witnesses and local completeness theorem applications remain separate,
+# currently unsupported compiler families rather than hidden dependencies.
+thm local_typed_set_definition:
+    ? forall marker R:
+        marker = marker
+        =>:
+            marker = marker
+    have E power_set(R) = {x R: x = 0}
+    marker = marker
+
+# Evidence:
+# target/release/litex -compact -strict -runner -f lean/examples/66_LocalTypedSetDefinition.lit
+# target/release/stmt_result_to_lean_compiler check lean/examples

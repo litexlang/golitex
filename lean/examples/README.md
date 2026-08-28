@@ -399,6 +399,25 @@ also reuses a parameter-membership FactId recursively produced while compiling
 the first conclusion; corrupting either the source FactId or location fails
 closed.
 
+`66_LocalTypedSetDefinition.lit` lowers a local
+`have E power_set(R) = {x R: ...}` inside a named theorem. The definition
+publishes its exact type, equality, subset, and elementwise facts; the
+set-builder/power-set proof consumes a typed child for the parameter subset.
+
+`67_LocalRealCompleteness.lit` uses the general real least-upper-bound builtin
+inside a named theorem. Its local proof step validates the builtin theorem ID,
+the explicit `S subset R` and nonempty premises, the nested pointwise
+upper-bound premise, and the conclusion FactId before calling the proved Lean
+adapter. The paired negative test keeps greatest-lower-bound support explicit
+as an uninstalled adapter rather than inventing a proof.
+
+`68_LocalTransparentSetMembership.lit` defines a local set builder and then
+proves `0 $in E`. The verifier records the existing generic one-pass
+transparent-definition transformation with the exact defining equality
+FactId; the compiler validates that record, unfolds only `E`, and recursively
+replays ordinary literal set-builder membership. There is no theorem-name or
+set-name specialization.
+
 Generated `.lean` files are review artifacts, not editing surfaces. A new
 compiler feature must add the next numbered same-name pair. Unsupported
 statements, objects, facts, or proof routes fail closed.

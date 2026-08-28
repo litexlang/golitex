@@ -7,14 +7,70 @@ impl StmtResultToLeanCompiler {
         &mut self,
         result: &SuccessReleaseThmStmtResult,
     ) -> Result<bool, String> {
+        let Some(compiled) =
+            self.construct_real_analysis_builtin_theorem_application_proof(result, false)?
+        else {
+            return Ok(false);
+        };
+        if !compiled.local_prerequisite_lines.is_empty() {
+            return Err(
+                "top-level real-analysis theorem application retained local prerequisite lines"
+                    .into(),
+            );
+        }
+        let conclusion = compiled.conclusion;
+        let conclusion_fact_id = conclusion.retained_fact_id.ok_or_else(|| {
+            "real-analysis builtin theorem conclusion has no frozen FactId".to_string()
+        })?;
+        let theorem_name = format!("__fact{}", self.next_fact_name_index);
+        self.declarations.push(format!(
+            "theorem {theorem_name} : {} := by\n  exact {}",
+            conclusion.proposition, conclusion.proof_expression
+        ));
+        self.environment_stack
+            .fact_names
+            .insert(conclusion_fact_id, theorem_name);
+        self.environment_stack
+            .fact_propositions
+            .insert(conclusion_fact_id, conclusion.fact);
+        self.next_fact_name_index += 1;
+        Ok(true)
+    }
+
+    pub(in super::super) fn construct_local_real_analysis_builtin_theorem_application_proof(
+        &mut self,
+        result: &SuccessReleaseThmStmtResult,
+    ) -> Result<Option<CompiledRealAnalysisTheoremApplicationProofBody>, String> {
+        self.construct_real_analysis_builtin_theorem_application_proof(result, true)
+    }
+
+    /// Construct one proof application from the verifier-owned builtin theorem
+    /// Result. Requirement Results are replayed in their retained order. A
+    /// direct `ForallProof` is published as a theorem at top level or as a
+    /// local `have` inside a named theorem; both paths preserve the same exact
+    /// FactId and generated Lean name.
+    fn construct_real_analysis_builtin_theorem_application_proof(
+        &mut self,
+        result: &SuccessReleaseThmStmtResult,
+        requirements_are_local: bool,
+    ) -> Result<Option<CompiledRealAnalysisTheoremApplicationProofBody>, String> {
         let verification = result
             .verification
             .as_ref()
             .ok_or_else(|| "real-analysis builtin theorem lost its verification".to_string())?;
         let SuccessVerifyTheoremApplicationSourceResult::Builtin(source) = &verification.source
         else {
-            return Err("real-analysis builtin theorem lost its typed source".into());
+            return Ok(None);
         };
+        if !matches!(
+            source.theorem_id,
+            BuiltinTheoremId::RealLeastUpperBoundExists
+                | BuiltinTheoremId::RealMemberLeLeastUpperBound
+                | BuiltinTheoremId::RealLeastUpperBoundLeUpperBound
+                | BuiltinTheoremId::RationalBetweenReals
+        ) {
+            return Ok(None);
+        }
         if verification.theorem != source.theorem_id.as_str()
             || verification.theorem != result.statement.name.to_string()
             || verification.arguments.len() != result.statement.args.len()
@@ -54,9 +110,11 @@ impl StmtResultToLeanCompiler {
         )?;
 
         let mut requirement_proofs = Vec::with_capacity(source.requirement_checks.len());
-        for (index, (requirement, check)) in source
+        let mut local_prerequisite_lines = Vec::new();
+        for (index, ((requirement, role), check)) in source
             .requirement_facts
             .iter()
+            .zip(source.requirement_roles.iter())
             .zip(source.requirement_checks.iter())
             .enumerate()
         {
@@ -80,21 +138,39 @@ impl StmtResultToLeanCompiler {
                 })?;
             let proof = if matches!(check.proof(), SuccessFactProofResult::ForallProof(_)) {
                 let theorem_name = format!("__fact{}", self.next_fact_name_index);
-                let declaration_count = self.declarations.len();
                 let fact_index = self.next_fact_name_index;
-                if !self.compile_direct_forall_fact_result(check)? {
-                    return Err(format!(
-                        "real-analysis builtin requirement {} retained an unsupported ForallProof",
-                        index + 1
-                    ));
-                }
-                if self.declarations.len() != declaration_count + 1
-                    || self.next_fact_name_index != fact_index + 1
-                {
-                    return Err(format!(
-                        "real-analysis builtin requirement {} compiled an unexpected number of forall projections",
-                        index + 1
-                    ));
+                if requirements_are_local {
+                    let Some(lines) =
+                        self.compile_direct_forall_fact_result_as_local_proof_steps(check)?
+                    else {
+                        return Err(format!(
+                            "real-analysis builtin requirement {} retained an unsupported ForallProof",
+                            index + 1
+                        ));
+                    };
+                    if lines.len() != 1 || self.next_fact_name_index != fact_index + 1 {
+                        return Err(format!(
+                            "real-analysis builtin requirement {} compiled an unexpected number of local forall projections",
+                            index + 1
+                        ));
+                    }
+                    local_prerequisite_lines.extend(lines);
+                } else {
+                    let declaration_count = self.declarations.len();
+                    if !self.compile_direct_forall_fact_result(check)? {
+                        return Err(format!(
+                            "real-analysis builtin requirement {} retained an unsupported ForallProof",
+                            index + 1
+                        ));
+                    }
+                    if self.declarations.len() != declaration_count + 1
+                        || self.next_fact_name_index != fact_index + 1
+                    {
+                        return Err(format!(
+                            "real-analysis builtin requirement {} compiled an unexpected number of forall projections",
+                            index + 1
+                        ));
+                    }
                 }
                 theorem_name
             } else {
@@ -106,13 +182,37 @@ impl StmtResultToLeanCompiler {
                     )
                     })?
             };
+            let proof = if matches!(role, BuiltinTheoremRequirementRole::CandidateBelongsToReals) {
+                let (numeric_object, target_set) = membership_parts(requirement)?;
+                if !matches!(target_set, Obj::StandardSet(StandardSet::R)) {
+                    return Err(format!(
+                        "real-analysis builtin requirement {} changed its real-membership target",
+                        index + 1
+                    ));
+                }
+                render_numeric_operand_membership(numeric_object, &proof, &self.environment_stack)
+            } else {
+                proof
+            };
             requirement_proofs.push(format!("({proof})"));
         }
 
         let rendered_arguments = verification
             .arguments
             .iter()
-            .map(|argument| render_obj(argument, &self.environment_stack))
+            .enumerate()
+            .map(|(argument_index, argument)| {
+                if matches!(
+                    (source.theorem_id, argument_index),
+                    (BuiltinTheoremId::RealMemberLeLeastUpperBound, 1)
+                        | (BuiltinTheoremId::RealMemberLeLeastUpperBound, 2)
+                        | (BuiltinTheoremId::RealLeastUpperBoundLeUpperBound, 1)
+                ) {
+                    render_numeric_obj(argument, &self.environment_stack)
+                } else {
+                    render_obj(argument, &self.environment_stack)
+                }
+            })
             .collect::<Result<Vec<_>, _>>()?;
         let rule_name = match source.theorem_id {
             BuiltinTheoremId::RealLeastUpperBoundExists => "Litex.Rules.realLeastUpperBoundExists",
@@ -148,18 +248,15 @@ impl StmtResultToLeanCompiler {
         {
             return Err("real-analysis builtin theorem changed its publication effects".into());
         }
-        let theorem_name = format!("__fact{}", self.next_fact_name_index);
-        self.declarations.push(format!(
-            "theorem {theorem_name} : {proposition} := by\n  exact {proof}"
-        ));
-        self.environment_stack
-            .fact_names
-            .insert(conclusion_fact_id, theorem_name);
-        self.environment_stack
-            .fact_propositions
-            .insert(conclusion_fact_id, conclusion.clone());
-        self.next_fact_name_index += 1;
-        Ok(true)
+        Ok(Some(CompiledRealAnalysisTheoremApplicationProofBody {
+            local_prerequisite_lines,
+            conclusion: CompiledTheoremApplicationConclusionProofBody {
+                retained_fact_id: Some(conclusion_fact_id),
+                fact: conclusion.clone(),
+                proposition,
+                proof_expression: proof,
+            },
+        }))
     }
 }
 fn same_compiler_object(left: &Obj, right: &Obj) -> bool {
