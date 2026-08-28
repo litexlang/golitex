@@ -412,7 +412,12 @@ impl Runtime {
             let mut clause_checks = Vec::with_capacity(definition.iff_facts.len());
             for iff_fact in definition.iff_facts.iter() {
                 let instantiated_iff_fact = self
-                    .inst_fact(iff_fact, &param_to_arg_map, SubstitutionMode::Exact, None)
+                    .inst_fact(
+                        iff_fact,
+                        &param_to_arg_map,
+                        SubstitutionMode::ResultProjection,
+                        None,
+                    )
                     .map_err(|e| {
                         RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
                             Some(Fact::from(normal_atomic_fact.clone()).into_stmt()),
@@ -422,8 +427,11 @@ impl Runtime {
                             vec![],
                         )))
                     })?;
-                let clause_result =
-                    self.verify_fact_allow_unknown(&instantiated_iff_fact, verify_state)?;
+                let clause_well_definedness =
+                    self.verify_fact_well_defined_result(&instantiated_iff_fact, verify_state)?;
+                let clause_result = self
+                    .verify_fact_allow_unknown(&instantiated_iff_fact, verify_state)?
+                    .with_fact_well_definedness(clause_well_definedness);
                 let clause_is_unknown = clause_result.is_unknown();
                 clause_checks.push((instantiated_iff_fact, clause_result));
                 if clause_is_unknown {
@@ -446,7 +454,7 @@ impl Runtime {
             .inst_fact(
                 &definition.iff_facts[0],
                 &param_to_arg_map,
-                SubstitutionMode::Exact,
+                SubstitutionMode::ResultProjection,
                 None,
             )
             .map_err(|e| {
@@ -482,9 +490,14 @@ impl Runtime {
         if args_param_types.is_unknown() {
             return Ok((args_param_types, vec![]));
         }
+        let clause_well_definedness =
+            self.verify_fact_well_defined_result(&instantiated_clause, verify_state)?;
         Ok((
             args_param_types,
-            vec![(instantiated_clause, cached_clause_result)],
+            vec![(
+                instantiated_clause,
+                cached_clause_result.with_fact_well_definedness(clause_well_definedness),
+            )],
         ))
     }
 

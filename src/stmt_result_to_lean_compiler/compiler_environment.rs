@@ -135,6 +135,15 @@ pub(super) struct StmtResultToLeanCompilerBindings {
     /// memberships. Rational integer powers are rendered in `ℚ` and then
     /// observed through the ordinary Litex complex carrier.
     pub(super) numeric_rational_values: HashMap<SymbolId, String>,
+    /// Concrete predicate parameters inhabit the exact carrier of their
+    /// declared set. This map prevents an already-selected carrier value from
+    /// being wrapped in a second heterogeneous `In.rep` during definition
+    /// rendering or replay.
+    pub(super) exact_carrier_values: HashMap<SymbolId, String>,
+    /// Exact `R+` carrier values whose subtype property is a native strict
+    /// positivity certificate.  Arithmetic constructors use these proofs
+    /// directly instead of selecting another representative through `In`.
+    pub(super) exact_positive_real_carriers: HashMap<SymbolId, String>,
     /// Native integer equalities introduced by an enclosing finite iteration
     /// Result. Runtime-resolved numeric child Results may use them only while
     /// that exact assignment frame is active.
@@ -150,6 +159,16 @@ pub(super) struct StmtResultToLeanCompilerBindings {
     pub(super) existential_names: HashMap<String, String>,
     pub(super) fact_names: HashMap<FactId, String>,
     pub(super) fact_propositions: HashMap<FactId, Fact>,
+    /// The concrete Lean proposition assigned to a proof name when it is
+    /// representation-sensitive and cannot be reconstructed from the Litex
+    /// fact alone in a later carrier context (notably predicate projections).
+    pub(super) fact_lean_propositions: HashMap<FactId, String>,
+    /// A strictly narrower companion to `fact_names`: entries exist only
+    /// when the recursive Result was compiled to a native Lean equality on
+    /// the exact rendered carrier.  `Litex.Same` is heterogeneous and must
+    /// never be eliminated to `Eq`; order rewriting therefore consumes this
+    /// verifier-owned native certificate instead of the ordinary fact proof.
+    pub(super) native_equality_proofs: HashMap<FactId, NativeEqualityProofBinding>,
     /// Exact WD certificate environment owned by a published theorem FactId.
     /// Theorem instantiation specializes this context alongside the theorem's
     /// source parameters instead of borrowing the caller's unrelated WD map.
@@ -171,6 +190,14 @@ pub(super) struct StmtResultToLeanCompilerBindings {
 }
 
 #[derive(Clone)]
+pub(super) struct NativeEqualityProofBinding {
+    pub(super) fact: Fact,
+    pub(super) rendered_left: String,
+    pub(super) rendered_right: String,
+    pub(super) proof_expression: String,
+}
+
+#[derive(Clone)]
 pub(super) struct CompilerTransparentObjectDefinition {
     pub(super) value: Obj,
     pub(super) defining_equality: Fact,
@@ -188,6 +215,11 @@ pub(super) struct StmtResultWellDefinednessToLeanCompilationContext {
         SourceObjectOccurrenceId,
         StmtResultAnonymousFunctionWellDefinednessToLeanCompilationContext,
     >,
+    /// Explicit Result-validated rebindings for a proof-owned occurrence of
+    /// an alpha-equivalent anonymous function already certified by the
+    /// enclosing theorem WD Result.
+    pub(super) anonymous_function_occurrence_aliases:
+        HashMap<SourceObjectOccurrenceId, SourceObjectOccurrenceId>,
     pub(super) iterations: HashMap<
         SourceObjectOccurrenceId,
         StmtResultIterationWellDefinednessToLeanCompilationContext,
@@ -294,12 +326,18 @@ pub(super) struct ForallConclusionBinding {
 pub(super) struct PredicateBinding {
     pub(super) lean_name: String,
     pub(super) parameter_count: usize,
+    /// Object parameters of concrete predicates use the exact carrier of
+    /// their declared `Litex.Set`. Heterogeneous source objects pass their
+    /// verifier-selected representative at each predicate application.
+    pub(super) exact_parameters: Vec<bool>,
     pub(super) requirement_count: usize,
     pub(super) clause_count: usize,
     /// Membership evidence is bound by nested `Exists` so the definition body
     /// may use verifier-selected representatives of heterogeneous parameters.
     pub(super) dependent_parameter_evidence: bool,
     pub(super) definition: Option<DefPropStmt>,
+    pub(super) definition_well_definedness:
+        Option<StmtResultWellDefinednessToLeanCompilationContext>,
 }
 
 /// A theorem introduced by one successful `by *_prop` Result and visible only

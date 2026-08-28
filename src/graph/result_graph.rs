@@ -1899,6 +1899,9 @@ fn transform_role(rule: &FactTransformationRule) -> &'static str {
     match rule {
         FactTransformationRule::EqualityRewrite(_) => "EqualityRewrite",
         FactTransformationRule::RationalNormalization => "RationalNormalization",
+        FactTransformationRule::AnonymousFunctionBetaNormalization => {
+            "AnonymousFunctionBetaNormalization"
+        }
         FactTransformationRule::TransparentDefinitionReduction(_) => {
             "TransparentDefinitionReduction"
         }
@@ -1926,6 +1929,7 @@ fn infer_rule_role(rule: &InferRule) -> &'static str {
             "DefinedPredicateDefinitionClauseProjection"
         }
         InferRule::EqualityChainClosure(_) => "EqualityChainClosure",
+        InferRule::NumericOrderChainClosure(_) => "NumericOrderChainClosure",
         InferRule::ClosedPositivePowerEqualityImpliesEqualSideMembership(_) => {
             "ClosedPositivePowerEqualityImpliesEqualSideMembership"
         }

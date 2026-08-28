@@ -303,6 +303,15 @@ impl StmtResultToLeanCompiler {
                         &builtin.subgoals,
                     );
                 }
+                if let Some(BuiltinRuleEvidence::RationalAlgebraicNormalization(evidence)) =
+                    builtin.evidence.typed()
+                {
+                    return self.construct_lean_rational_algebraic_normalization_from_result(
+                        &source_fact,
+                        evidence,
+                        &builtin.subgoals,
+                    );
+                }
                 if let Some(BuiltinRuleEvidence::AbsoluteValue(rule)) = builtin.evidence.typed() {
                     return self.construct_lean_absolute_value_from_result(
                         &source_fact,
@@ -326,7 +335,16 @@ impl StmtResultToLeanCompiler {
                 }
                 if let Some(evidence) = builtin.evidence.typed() {
                     if let Some(limitation) = direct_builtin_rule_compiler_limitation(evidence) {
-                        return Err(limitation);
+                        let children = builtin
+                            .subgoals
+                            .iter()
+                            .filter_map(StmtResult::factual_success)
+                            .map(|child| child.fact().to_string())
+                            .collect::<Vec<_>>()
+                            .join("; ");
+                        return Err(format!(
+                            "{limitation}; target `{source_fact}`; children [{children}]"
+                        ));
                     }
                 }
                 if !builtin.subgoals.is_empty() {

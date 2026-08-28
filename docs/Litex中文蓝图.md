@@ -20,7 +20,7 @@
 - [4. Lean 兼容：为已覆盖路径提供独立复核](#compatibility)
 - [从四项设计到数学实践：定义与验证](#mathematics-practice)
   - [完整例子：定义收敛并验证常数倍保持收敛](#convergence-example)
-  - [下一阶段：把 Litex 结果接到 Mathlib 风格的数学](#next-stage-pipeline)
+  <!-- - [下一阶段：把 Litex 结果接到 Mathlib 风格的数学](#next-stage-pipeline) -->
 - [从语言到生态：Litex 想扮演什么角色](#ecosystem-role)
 - [总结](#conclusions)
 
@@ -740,6 +740,7 @@ thm converges_to_mul_const:
 
 </details>
 
+<!--
 <a id="next-stage-pipeline"></a>
 
 ### 下一阶段：把 Litex 结果接到 Mathlib 风格的数学
@@ -752,6 +753,7 @@ thm converges_to_mul_const:
 4. 独立的 AI 或人类 adapter 导入生成模块，引用生成定理，通过已经证明的 wrapper/unwrap 桥梁取得 Mathlib 原生对象或结论，再继续证明真正面向下游的问题。
 
 这里必须区分“已经有的架构”与“下一阶段的完整示例”。当前的[分层 showcase](../showcases/litex_to_lean_mathlib_pipeline/showcase1/README.md)已经把 Litex 源码、生成 Lean、外部 adapter 和下游消费者分成独立产物；但其中的 adapter 仍独立重建了一部分原生数学，并不是“直接引用生成定理再 unwrap 出目标定理”的完整证据。等这条消费路径能够以真实源码、生成文件和 Lean 内核门禁端到端运行后，蓝图再附上对应代码及 AI 使用 Litex skill 的工作流，才不会把路线图写成已经实现的能力。
+-->
 
 <a id="ecosystem-role"></a>
 

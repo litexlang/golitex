@@ -38,8 +38,34 @@ impl StmtResultToLeanCompiler {
         &mut self,
         result: &SuccessClaimStmtResult,
     ) -> Result<bool, String> {
-        let Some(SuccessVerifyClaimResult::Fact(verification)) = &result.verification else {
+        let Some(verification) = &result.verification else {
             return Ok(false);
+        };
+        if let SuccessVerifyClaimResult::Forall(verification) = verification {
+            if Fact::from(verification.forall_fact.clone()).to_string()
+                != result.statement.fact.to_string()
+                || verification.proof_steps.len() != result.statement.proof.len()
+            {
+                return Err("forall `claim` Result changed its statement or proof-step order".into());
+            }
+            let claim_name = format!("__fact{}", self.next_fact_name_index);
+            return self.compile_named_forall_statement_result_to_lean_source(
+                NamedForallStatementResultCompilationInput {
+                    name: &claim_name,
+                    forall_fact: &verification.forall_fact,
+                    well_definedness: &verification.well_definedness,
+                    proof_scope_assumption_infers: &verification.proof_scope.assumption_infers,
+                    proof_scope_assumption_components: &verification
+                        .proof_scope
+                        .assumption_components,
+                    proof_steps: &verification.proof_steps,
+                    conclusion_checks: verification.conclusion_checks.iter().collect(),
+                    outer_statement_common: Some(&result.common),
+                },
+            );
+        }
+        let SuccessVerifyClaimResult::Fact(verification) = verification else {
+            unreachable!("forall claim returned above")
         };
         let Some(mut body) = self.compile_ordinary_fact_goal_proof_body(
             &result.statement.fact,
@@ -82,6 +108,56 @@ impl StmtResultToLeanCompiler {
             .insert(fact_id, verification.fact.clone());
         self.next_fact_name_index += 1;
         Ok(true)
+    }
+
+    fn compile_forall_claim_stmt_result_as_local_proof_steps(
+        &mut self,
+        result: &SuccessClaimStmtResult,
+        proof_step_index: usize,
+    ) -> Result<Option<Vec<String>>, String> {
+        let Some(SuccessVerifyClaimResult::Forall(verification)) = &result.verification else {
+            return Ok(None);
+        };
+        if Fact::from(verification.forall_fact.clone()).to_string()
+            != result.statement.fact.to_string()
+            || verification.proof_steps.len() != result.statement.proof.len()
+        {
+            return Err("local forall `claim` Result changed its statement or proof-step order".into());
+        }
+
+        let claim_name = format!("__step{proof_step_index}");
+        let declaration_count = self.declarations.len();
+        let compiled = self.compile_named_forall_statement_result_to_lean_source(
+            NamedForallStatementResultCompilationInput {
+                name: &claim_name,
+                forall_fact: &verification.forall_fact,
+                well_definedness: &verification.well_definedness,
+                proof_scope_assumption_infers: &verification.proof_scope.assumption_infers,
+                proof_scope_assumption_components: &verification.proof_scope.assumption_components,
+                proof_steps: &verification.proof_steps,
+                conclusion_checks: verification.conclusion_checks.iter().collect(),
+                outer_statement_common: Some(&result.common),
+            },
+        )?;
+        if !compiled {
+            return Ok(None);
+        }
+        if self.declarations.len() != declaration_count + 1 {
+            return Err("local forall `claim` did not emit exactly one declaration".into());
+        }
+        let declaration = self
+            .declarations
+            .pop()
+            .ok_or_else(|| "local forall `claim` lost its generated declaration".to_string())?;
+        let theorem_prefix = format!("theorem {claim_name} :");
+        let local_prefix = format!("have {claim_name} :");
+        let local_declaration = declaration
+            .strip_prefix(&theorem_prefix)
+            .map(|body| format!("{local_prefix}{body}"))
+            .ok_or_else(|| {
+                "local forall `claim` generated an unexpected declaration shape".to_string()
+            })?;
+        Ok(Some(vec![local_declaration]))
     }
 
     /// `Combine`: an `example` owns the same recursive proof body as a claim,
@@ -671,7 +747,7 @@ impl StmtResultToLeanCompiler {
                 parameter.well_definedness.as_ref(),
                 &parameter.proposition,
             )?;
-            validate_single_fact_store_output(
+            validate_single_fact_store_output_allowing_supported_typed_inferences(
                 &parameter.infers,
                 &parameter.proposition,
                 "named forall binder WD",
@@ -791,13 +867,15 @@ impl StmtResultToLeanCompiler {
             .store_fact_outputs
             .iter()
             .take(parameter_facts.len())
-            .any(|output| !output.inferred_facts.is_empty() || !output.inferred_fact_ids.is_empty())
+            .any(|output| output.inferred_facts.len() != output.inferred_fact_ids.len())
         {
-            return Ok(false);
+            return Err(
+                "named forall parameter inference lost one or more inferred FactIds".into(),
+            );
         }
 
         let theorem_well_definedness = self
-            .construct_well_definedness_to_lean_compilation_context(
+            .collect_well_definedness_to_lean_compilation_context(
                 verification.well_definedness,
             )?;
         self.environment_stack.push_inherited_environment();
@@ -851,6 +929,7 @@ impl StmtResultToLeanCompiler {
                         .insert(*fact_id, parameter.clone());
                     install_parameter_fact_aliases(
                         binding.id(),
+                        *fact_id,
                         parameter,
                         &parameter_proof,
                         parameter_set,
@@ -872,6 +951,11 @@ impl StmtResultToLeanCompiler {
                     parameter_index + 1
                 );
                 match parameter_set {
+                    set if forall_parameter_uses_exact_refined_numeric_carrier(set) => {
+                        binder_declarations.push(format!(
+                            "({parameter_name} : ({rendered_parameter_set}).Carrier)"
+                        ));
+                    }
                     Obj::FnSet(_) | Obj::FiniteSeqSet(_) | Obj::SeqSet(_) => {
                         binder_declarations.push(format!("{{{carrier_name} : Type 1}}"));
                         binder_intro_names.push(carrier_name.clone());
@@ -893,8 +977,7 @@ impl StmtResultToLeanCompiler {
                         "named forall parameter evidence mismatch: expected `{expected_parameter_fact}`, found `{rendered_parameter_fact}`"
                     ));
                 }
-                let hypothesis_name =
-                    format!("__h{}_{}", self.next_fact_name_index, parameter_index + 1);
+                let hypothesis_name = format!("__h{}", fact_id.value());
                 binder_declarations
                     .push(format!("({hypothesis_name} : {rendered_parameter_fact})"));
                 binder_intro_names.push(hypothesis_name.clone());
@@ -906,12 +989,74 @@ impl StmtResultToLeanCompiler {
                     .insert(*fact_id, parameter.clone());
                 install_parameter_fact_aliases(
                     binding.id(),
+                    *fact_id,
                     parameter,
                     &hypothesis_name,
                     parameter_set,
                     &mut self.environment_stack,
                 )?;
+                if forall_parameter_uses_exact_refined_numeric_carrier(parameter_set) {
+                    let lowered_set = LeanTargetObjectRepresentation::lower(parameter_set)?;
+                    self.environment_stack
+                        .exact_carrier_values
+                        .insert(binding.id(), parameter_name.clone());
+                    self.environment_stack
+                        .exact_positive_real_carriers
+                        .insert(binding.id(), parameter_name.clone());
+                    if let Some(real) = exact_set_real_value(&lowered_set, &parameter_name) {
+                        self.environment_stack
+                            .numeric_real_values
+                            .insert(binding.id(), real);
+                    }
+                    if let Some(integer) = exact_set_integer_value(&lowered_set, &parameter_name) {
+                        self.environment_stack
+                            .numeric_integer_values
+                            .insert(binding.id(), integer);
+                    }
+                    if let Some(rational) =
+                        exact_set_rational_value(&lowered_set, &parameter_name)
+                    {
+                        self.environment_stack
+                            .numeric_rational_values
+                            .insert(binding.id(), rational);
+                    }
+                    if let Some(numeric) =
+                        exact_set_numeric_value(&lowered_set, &parameter_name)
+                    {
+                        self.environment_stack
+                            .numeric_representations
+                            .insert(binding.id(), numeric);
+                    }
+                    if let Some(equality) =
+                        exact_set_numeric_equality(&lowered_set, &parameter_name)
+                    {
+                        self.environment_stack
+                            .numeric_representation_equalities
+                            .insert(binding.id(), equality);
+                    }
+                    if let Some(proof) =
+                        exact_set_numeric_proof(&lowered_set, &parameter_name)
+                    {
+                        self.environment_stack
+                            .numeric_representation_memberships
+                            .insert(binding.id(), proof);
+                    }
+                }
             }
+
+            let recursive_well_definedness = verification
+                .well_definedness
+                .recursive
+                .as_deref()
+                .ok_or_else(|| {
+                    "named forall Result has no recursive well-definedness root".to_string()
+                })?;
+            let compiled_well_definedness = self
+                .compile_precollected_well_definedness_context(
+                    theorem_well_definedness.clone(),
+                    &[recursive_well_definedness],
+                )?;
+            self.environment_stack.well_definedness = Some(compiled_well_definedness);
 
             for (premise_index, (((premise, premise_fact_id), premise_output), premise_wd)) in
                 verification
@@ -1007,8 +1152,9 @@ impl StmtResultToLeanCompiler {
                     .compile_stmt_result_as_local_proof_steps(proof_step, proof_step_index + 1)?
                 else {
                     return Err(format!(
-                        "named forall proof step {} has no local compiler consumer",
-                        proof_step_index + 1
+                        "named forall proof step {} has no local compiler consumer: {:?}",
+                        proof_step_index + 1,
+                        proof_step,
                     ));
                 };
                 proof_lines.extend(lines);
@@ -2238,6 +2384,26 @@ impl StmtResultToLeanCompiler {
         result: &StmtResult,
         proof_step_index: usize,
     ) -> Result<Option<Vec<String>>, String> {
+        if let StmtResult::Success(SuccessStmtResult::ProofBlock(
+            SuccessProofBlockStmtResult::ClaimStmt(result),
+        )) = result
+        {
+            if matches!(result.verification, Some(SuccessVerifyClaimResult::Forall(_))) {
+                return self.compile_forall_claim_stmt_result_as_local_proof_steps(
+                    result,
+                    proof_step_index,
+                );
+            }
+        }
+        if let StmtResult::Success(SuccessStmtResult::Definition(
+            SuccessDefinitionStmtResult::ObtainObjFromExistFact(result),
+        )) = result
+        {
+            return self.compile_obtain_obj_from_exist_fact_stmt_result_as_local_proof_steps(
+                result,
+                proof_step_index,
+            );
+        }
         if let StmtResult::Success(SuccessStmtResult::Definition(
             SuccessDefinitionStmtResult::LetObjStmt(result),
         )) = result
@@ -2245,6 +2411,9 @@ impl StmtResultToLeanCompiler {
             return self.compile_let_obj_stmt_result_as_local_proof_steps(result, proof_step_index);
         }
         if let Some(factual) = result.factual_success() {
+            if matches!(factual.proof(), SuccessFactProofResult::ForallProof(_)) {
+                return self.compile_direct_forall_fact_result_as_local_proof_steps(factual);
+            }
             return self
                 .compile_fact_stmt_result_as_local_proof_step(factual, proof_step_index)
                 .map(|line| line.map(|line| vec![line]));
@@ -2482,6 +2651,37 @@ impl StmtResultToLeanCompiler {
         )]))
     }
 
+    /// Reuse the complete direct-Forall Result compiler inside a structured
+    /// proof. Its declarations are compiler-owned syntax, so changing their
+    /// leading `theorem` to `have` preserves all exact FactId publications
+    /// while keeping references to enclosing local binders in scope.
+    pub(super) fn compile_direct_forall_fact_result_as_local_proof_steps(
+        &mut self,
+        result: &SuccessFactStmtResult,
+    ) -> Result<Option<Vec<String>>, String> {
+        let declaration_count = self.declarations.len();
+        if !self.compile_direct_forall_fact_result(result)? {
+            return Ok(None);
+        }
+        if self.declarations.len() == declaration_count {
+            return Err("local direct ForallProof emitted no declaration".into());
+        }
+        let declarations = self.declarations.split_off(declaration_count);
+        declarations
+            .into_iter()
+            .map(|declaration| {
+                declaration
+                    .strip_prefix("theorem ")
+                    .map(|body| format!("have {body}"))
+                    .ok_or_else(|| {
+                        "local direct ForallProof generated an unexpected declaration shape"
+                            .to_string()
+                    })
+            })
+            .collect::<Result<Vec<_>, _>>()
+            .map(Some)
+    }
+
     /// `Combine`: a local `let` publishes its symbol and exact defining
     /// equality only in the compiler frame that owns the surrounding proof.
     /// The recursive proof-step consumer therefore needs no separate
@@ -2567,6 +2767,24 @@ impl StmtResultToLeanCompiler {
         result: &SuccessByDefStmtResult,
         proof_step_index: usize,
     ) -> Result<Option<Vec<String>>, String> {
+        let mut prerequisite_lines = Vec::new();
+        if let Some(verification) = &result.verification {
+            for (clause_index, check) in verification.clause_checks.iter().enumerate() {
+                let check = check.factual_success().ok_or_else(|| {
+                    format!("by-definition clause check {clause_index} is not factual")
+                })?;
+                if matches!(check.proof(), SuccessFactProofResult::ForallProof(_)) {
+                    let Some(lines) =
+                        self.compile_direct_forall_fact_result_as_local_proof_steps(check)?
+                    else {
+                        return Err(format!(
+                            "by-definition forall clause {clause_index} has no local binder compiler"
+                        ));
+                    };
+                    prerequisite_lines.extend(lines);
+                }
+            }
+        }
         let Some(proof) = self.construct_lean_proof_from_by_definition_stmt_result(result)? else {
             return Ok(None);
         };
@@ -2591,16 +2809,17 @@ impl StmtResultToLeanCompiler {
             .fact_id
             .ok_or_else(|| "local by-definition target has no FactId".to_string())?;
         let target_name = format!("__step{proof_step_index}");
-        let lines = vec![format!(
+        prerequisite_lines.push(format!(
             "have {target_name} : {} := by\n  exact {}",
             proof.target.proposition, proof.target.proof_expression
-        )];
+        ));
         self.environment_stack
             .fact_names
             .insert(target_fact_id, target_name);
         self.environment_stack
             .fact_propositions
             .insert(target_fact_id, proof.target.fact.clone());
+        self.install_compiled_by_definition_component_bindings(&proof.components)?;
         self.compile_defined_predicate_inference_results_in_current_environment(
             &result.common.infers,
             DefinedPredicateInferenceConclusionPublication::LocalProofExpression,
@@ -2610,7 +2829,7 @@ impl StmtResultToLeanCompiler {
             &self.environment_stack,
             "local by-definition Result",
         )?;
-        Ok(Some(lines))
+        Ok(Some(prerequisite_lines))
     }
 
     pub(super) fn compile_fact_stmt_result_as_local_proof_step(

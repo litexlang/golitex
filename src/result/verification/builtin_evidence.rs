@@ -968,6 +968,13 @@ pub enum ArithmeticBuiltinRule {
     SubRightNonnegativeLessEqual,
     AddRightNonnegativeLessEqual,
     AddComponentwiseLessEqual,
+    /// If `0 <= a`, `0 <= b`, `a <= c`, and `b <= d`, then
+    /// `a * b <= c * d` in the checked real carrier.
+    MulComponentwiseLessEqual,
+    MulCommonFactorLessEqualNonnegative,
+    MulCommonFactorLessEqualNonpositive,
+    MulCommonFactorLessPositive,
+    MulCommonFactorLessNegative,
     AddCommonLeftLess,
     AddComponentwiseLess,
     AddComponentwiseLessLessEqual,
@@ -994,6 +1001,19 @@ impl ArithmeticBuiltinRule {
             Self::SubRightNonnegativeLessEqual => "order.sub_le_of_le_of_nonnegative",
             Self::AddRightNonnegativeLessEqual => "order.le_add_of_nonnegative_right",
             Self::AddComponentwiseLessEqual => "order.add_le_add",
+            Self::MulComponentwiseLessEqual => "order.mul_le_mul_nonnegative",
+            Self::MulCommonFactorLessEqualNonnegative => {
+                "order.mul_le_mul_of_nonnegative_common_factor"
+            }
+            Self::MulCommonFactorLessEqualNonpositive => {
+                "order.mul_le_mul_of_nonpositive_common_factor"
+            }
+            Self::MulCommonFactorLessPositive => {
+                "order.mul_lt_mul_of_positive_common_factor"
+            }
+            Self::MulCommonFactorLessNegative => {
+                "order.mul_lt_mul_of_negative_common_factor"
+            }
             Self::AddCommonLeftLess => "order.add_lt_add_left",
             Self::AddComponentwiseLess => "order.add_lt_add",
             Self::AddComponentwiseLessLessEqual => "order.add_lt_add_of_lt_of_le",
@@ -1099,6 +1119,7 @@ pub enum RealArithmeticMembershipClosureBuiltinRule {
     Mul,
     Div,
     Pow,
+    Abs,
 }
 
 impl RealArithmeticMembershipClosureBuiltinRule {
@@ -1109,6 +1130,7 @@ impl RealArithmeticMembershipClosureBuiltinRule {
             Self::Mul => "numeric.real.mul_membership",
             Self::Div => "numeric.real.div_membership",
             Self::Pow => "numeric.real.pow_membership",
+            Self::Abs => "numeric.real.abs_membership",
         }
     }
 }
@@ -1479,6 +1501,15 @@ pub struct RationalNormalizationBuiltinRuleEvidence {
     pub expected_target: Fact,
     pub left_evaluation: SuccessEvaluateObjResult,
     pub right_evaluation: SuccessEvaluateObjResult,
+}
+
+/// Equality certificate selected after ordinary rational-expression
+/// normalization. Every denominator or negative-power base used by
+/// cancellation is retained as an exact nonzero premise.
+#[derive(Clone)]
+pub struct RationalAlgebraicNormalizationBuiltinRuleEvidence {
+    pub expected_target: Fact,
+    pub expected_nonzero_premises: Vec<Fact>,
 }
 
 /// Equality certificate selected only after exact bounded polynomial/rational
@@ -1883,6 +1914,15 @@ impl RationalNormalizationBuiltinRuleEvidence {
     }
 }
 
+impl RationalAlgebraicNormalizationBuiltinRuleEvidence {
+    pub fn new(expected_target: Fact, expected_nonzero_premises: Vec<Fact>) -> Self {
+        Self {
+            expected_target,
+            expected_nonzero_premises,
+        }
+    }
+}
+
 impl ComplexAlgebraicNormalizationBuiltinRuleEvidence {
     pub fn new(expected_target: Fact, expected_nonzero_premises: Vec<Fact>) -> Self {
         Self {
@@ -1919,6 +1959,23 @@ impl fmt::Debug for RationalNormalizationBuiltinRuleEvidence {
             .field("expected_target", &self.expected_target.to_string())
             .field("left_evaluation", &self.left_evaluation)
             .field("right_evaluation", &self.right_evaluation)
+            .finish()
+    }
+}
+
+impl fmt::Debug for RationalAlgebraicNormalizationBuiltinRuleEvidence {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        formatter
+            .debug_struct("RationalAlgebraicNormalizationBuiltinRuleEvidence")
+            .field("expected_target", &self.expected_target.to_string())
+            .field(
+                "expected_nonzero_premises",
+                &self
+                    .expected_nonzero_premises
+                    .iter()
+                    .map(ToString::to_string)
+                    .collect::<Vec<_>>(),
+            )
             .finish()
     }
 }
@@ -2197,6 +2254,7 @@ pub enum BuiltinRuleEvidence {
     RegisteredAntisymmetricPredicate(RegisteredAntisymmetricPredicateBuiltinRuleEvidence),
     ObjectReflexivity(ObjectReflexivityBuiltinRuleEvidence),
     RationalNormalization(RationalNormalizationBuiltinRuleEvidence),
+    RationalAlgebraicNormalization(RationalAlgebraicNormalizationBuiltinRuleEvidence),
     ComplexAlgebraicNormalization(ComplexAlgebraicNormalizationBuiltinRuleEvidence),
     StructuralDefinitionCongruence(StructuralDefinitionCongruenceBuiltinRuleEvidence),
     StructuralKnownEqualityCongruence(StructuralKnownEqualityCongruenceBuiltinRuleEvidence),
@@ -2273,6 +2331,9 @@ impl BuiltinRuleEvidence {
             Self::RegisteredAntisymmetricPredicate(_) => "predicate.registered_antisymmetric",
             Self::ObjectReflexivity(_) => "equality.object_reflexivity",
             Self::RationalNormalization(_) => "equality.rational_normalization",
+            Self::RationalAlgebraicNormalization(_) => {
+                "equality.rational_algebraic_normalization"
+            }
             Self::ComplexAlgebraicNormalization(_) => "equality.complex_algebraic_normalization",
             Self::StructuralDefinitionCongruence(_) => "equality.structural_definition_congruence",
             Self::StructuralKnownEqualityCongruence(_) => {
@@ -2385,6 +2446,10 @@ impl fmt::Debug for BuiltinRuleEvidence {
             }
             BuiltinRuleEvidence::RationalNormalization(evidence) => f
                 .debug_tuple("RationalNormalization")
+                .field(evidence)
+                .finish(),
+            BuiltinRuleEvidence::RationalAlgebraicNormalization(evidence) => f
+                .debug_tuple("RationalAlgebraicNormalization")
                 .field(evidence)
                 .finish(),
             BuiltinRuleEvidence::ComplexAlgebraicNormalization(evidence) => f

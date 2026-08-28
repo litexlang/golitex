@@ -68,7 +68,11 @@ impl StmtResultToLeanCompiler {
                 let Some(lines) = self
                     .compile_stmt_result_as_local_proof_steps(proof_step, proof_step_index + 1)?
                 else {
-                    return Ok(None);
+                    return Err(format!(
+                        "nonempty-set witness proof step {} has no local compiler consumer: {:?}",
+                        proof_step_index + 1,
+                        proof_step,
+                    ));
                 };
                 proof_lines.extend(lines);
             }
@@ -198,6 +202,7 @@ impl StmtResultToLeanCompiler {
 
         let source_set = parameter_set(&group.param_type)?;
         let witness_object = &witness_objects[0];
+        self.install_existential_witness_anonymous_function_occurrence_aliases(existential)?;
         let rendered_witness = render_obj(witness_object, &self.environment_stack)?;
         let proposition = render_existential_fact(existential, &self.environment_stack)?;
 
@@ -217,15 +222,16 @@ impl StmtResultToLeanCompiler {
 
             let mut proof_lines = Vec::with_capacity(verification.proof_steps.len() + 1);
             for (proof_step_index, proof_step) in verification.proof_steps.iter().enumerate() {
-                let Some(factual) = proof_step.factual_success() else {
-                    return Ok(None);
-                };
-                let Some(line) = self
-                    .compile_fact_stmt_result_as_local_proof_step(factual, proof_step_index + 1)?
+                let Some(lines) = self
+                    .compile_stmt_result_as_local_proof_steps(proof_step, proof_step_index + 1)?
                 else {
-                    return Ok(None);
+                    return Err(format!(
+                        "existential witness proof step {} has no local compiler consumer: {:?}",
+                        proof_step_index + 1,
+                        proof_step,
+                    ));
                 };
-                proof_lines.push(line);
+                proof_lines.extend(lines);
             }
 
             let Some(parameter_check) = verification.parameter_checks[0].as_deref() else {
@@ -253,30 +259,59 @@ impl StmtResultToLeanCompiler {
             let Some(parameter_proof) =
                 self.construct_lean_proof_from_direct_fact_result(parameter_check)?
             else {
-                return Ok(None);
+                return Err(format!(
+                    "existential witness parameter check has no direct proof consumer: {:?}",
+                    parameter_check.proof()
+                ));
             };
 
             let body_check = verification.body_checks[0]
                 .factual_success()
                 .ok_or_else(|| {
                     "existential witness body check is not a successful fact Result".to_string()
-                })?;
+            })?;
             if !body_check.store.infers.is_empty() {
-                return Ok(None);
+                return Err(
+                    "existential witness body check unexpectedly published inference effects"
+                        .into(),
+                );
             }
-            let expected_body = render_fact(
-                &existential.facts()[0].from_ref_to_cloned_fact(),
-                &self.environment_stack,
-            )?;
-            let retained_body = render_fact(&body_check.fact(), &self.environment_stack)?;
-            if retained_body != expected_body {
+            let substitutions = existential
+                .typed_parameters()
+                .param_defs_and_args_to_param_to_arg_map(witness_objects);
+            let mut substitution_runtime = Runtime::default();
+            substitution_runtime.ensure_execution_frame_for_parse();
+            let expected_body = substitution_runtime
+                .inst_fact(
+                    &existential.facts()[0].from_ref_to_cloned_fact(),
+                    &substitutions,
+                    SubstitutionMode::ResultProjection,
+                    None,
+                )
+                .map_err(|error| {
+                    format!(
+                        "existential witness body substitution replay failed: {}",
+                        error.trace_message()
+                    )
+                })?;
+            let expected_key = substitution_runtime
+                .equivalent_proposition_lookup_key_for_fact(&expected_body)
+                .map_err(|error| error.trace_message())?;
+            let retained_key = substitution_runtime
+                .equivalent_proposition_lookup_key_for_fact(&body_check.fact())
+                .map_err(|error| error.trace_message())?;
+            if expected_key != retained_key {
                 return Err(format!(
-                    "existential witness body check changed `{expected_body}` to `{retained_body}`"
+                    "existential witness body check changed `{expected_body}` to `{}`",
+                    body_check.fact()
                 ));
             }
             let Some(body_proof) = self.construct_lean_proof_from_direct_fact_result(body_check)?
             else {
-                return Ok(None);
+                return Err(format!(
+                    "existential witness body check has no direct proof consumer: {:?}",
+                    body_check.proof()
+                ));
             };
 
             let carrier_witness = if matches!(source_set, Obj::FnSet(_))
@@ -296,6 +331,90 @@ impl StmtResultToLeanCompiler {
         })();
         self.environment_stack.pop_local_environment();
         compilation
+    }
+
+    /// A witness target can repeat an anonymous function from its enclosing
+    /// theorem goal under a fresh parser occurrence. Reuse is permitted only
+    /// when the complete alpha-normalized function object selects exactly one
+    /// Result-owned WD certificate; rendering then uses that certificate's
+    /// original binder identities.
+    fn install_existential_witness_anonymous_function_occurrence_aliases(
+        &mut self,
+        existential: &ExistFactEnum,
+    ) -> Result<(), String> {
+        fn collect_from_object(
+            object: &Obj,
+            functions: &mut Vec<(SourceObjectOccurrenceId, String)>,
+        ) {
+            if let Obj::AnonymousFn(function) = object {
+                if let Some(occurrence_id) = function.source_occurrence_id {
+                    functions.push((occurrence_id, obj_equality_key(object)));
+                }
+            }
+            if let Obj::FnObj(application) = object {
+                let head: Obj = application.head.as_ref().clone().into();
+                collect_from_object(&head, functions);
+            }
+            let _: Result<bool, ()> = Runtime::same_shape_and_corresponding_args_match(
+                object,
+                object,
+                &mut |child, _| {
+                    collect_from_object(child, functions);
+                    Ok(true)
+                },
+            );
+        }
+
+        let mut functions = Vec::new();
+        for argument in existential.get_args_from_fact_ref() {
+            collect_from_object(argument, &mut functions);
+        }
+        functions.sort_by_key(|(occurrence_id, _)| occurrence_id.value());
+        functions.dedup_by_key(|(occurrence_id, _)| occurrence_id.value());
+        if functions.is_empty() {
+            return Ok(());
+        }
+
+        let context = self
+            .environment_stack
+            .well_definedness
+            .as_mut()
+            .ok_or_else(|| {
+                "existential witness anonymous function has no active theorem WD Result"
+                    .to_string()
+            })?;
+        for (source_occurrence, semantic_key) in functions {
+            if context.anonymous_functions.contains_key(&source_occurrence) {
+                continue;
+            }
+            let owners = context
+                .anonymous_functions
+                .iter()
+                .filter_map(|(owner_occurrence, certificate)| {
+                    (obj_equality_key(&certificate.source_function) == semantic_key)
+                        .then_some(*owner_occurrence)
+                })
+                .collect::<Vec<_>>();
+            let [owner_occurrence] = owners.as_slice() else {
+                return Err(format!(
+                    "existential witness anonymous function occurrence {} has {} alpha-equivalent theorem-WD owners",
+                    source_occurrence.value(),
+                    owners.len()
+                ));
+            };
+            if let Some(previous) = context
+                .anonymous_function_occurrence_aliases
+                .insert(source_occurrence, *owner_occurrence)
+            {
+                if previous != *owner_occurrence {
+                    return Err(format!(
+                        "existential witness anonymous function occurrence {} changed its WD owner",
+                        source_occurrence.value()
+                    ));
+                }
+            }
+        }
+        Ok(())
     }
 
     /// `Combine`: prove the instantiated existential from its ordinary child
@@ -499,6 +618,235 @@ impl StmtResultToLeanCompiler {
             verification,
             None,
         )
+    }
+
+    pub(super) fn compile_obtain_obj_from_exist_fact_stmt_result_as_local_proof_steps(
+        &mut self,
+        result: &SuccessObtainObjFromExistFactResult,
+        proof_step_index: usize,
+    ) -> Result<Option<Vec<String>>, String> {
+        let Some(verification) = &result.verification else {
+            return Ok(None);
+        };
+        if result.statement.fact.to_string() != verification.source_exist_fact.to_string() {
+            return Err("local existential elimination changed its source existential".into());
+        }
+        let existential = &verification.source_exist_fact;
+        if !existential.is_plain_exist()
+            || existential.typed_parameters().number_of_params() != 1
+            || existential.facts().len() != 1
+            || result.statement.equal_tos.len() != 1
+            || verification.witness_type_facts.len() != 1
+            || verification.instantiated_body_facts.len() != 1
+            || verification.includes_uniqueness
+        {
+            return Ok(None);
+        }
+        validate_typed_infer_result_identity_completeness(
+            &result.common.infers,
+            "local existential elimination",
+        )?;
+        if result.common.infers.rule_applications.iter().any(|application| {
+            !defined_predicate_infer_rule(&application.rule)
+                && !infer_rule_has_direct_compiler_environment_consumer(&application.rule)
+        }) {
+            return Ok(None);
+        }
+
+        let expected_stored_facts = [
+            verification.witness_type_facts[0].clone(),
+            verification.instantiated_body_facts[0].clone(),
+        ];
+        let stored_fact_ids = exact_ordered_fact_ids_from_store_results(
+            &result.common.infers,
+            &expected_stored_facts,
+            "local existential elimination projections",
+        )?;
+        let [witness_type_fact_id, body_fact_id] = stored_fact_ids.as_slice() else {
+            unreachable!("two expected projection facts produced two FactIds")
+        };
+
+        let source_result = verification
+            .source_result
+            .factual_success()
+            .ok_or_else(|| "local existential elimination source is not factual".to_string())?;
+        if !source_result.store.infers.is_empty() {
+            return Err("local existential elimination source Result gained effects".into());
+        }
+        let Some(source_proof) = self
+            .construct_lean_proof_from_direct_fact_result(source_result)
+            .map_err(|error| format!("local existential source proof: {error}"))?
+        else {
+            return Ok(None);
+        };
+        let source_fact: Fact = existential.clone().into();
+        if !one_witness_existentials_are_alpha_equal(
+            &source_result.fact(),
+            &source_fact,
+            &self.environment_stack,
+        )? {
+            return Err("local existential elimination source changed its cited fact".into());
+        }
+        let source_proposition = render_fact(&source_fact, &self.environment_stack)
+            .map_err(|error| format!("local existential source proposition: {error}"))?;
+
+        let group = &existential.typed_parameters().groups[0];
+        if group.params.len() != 1 || !matches!(group.param_type, ParamType::Obj(_)) {
+            return Ok(None);
+        }
+        let source_set = parameter_set(&group.param_type)?;
+        if set_requires_heterogeneous_carrier(source_set) || matches!(source_set, Obj::FnSet(_)) {
+            return Ok(None);
+        }
+        let binding = &result.statement.equal_tos[0];
+        let witness_name = lean_identifier(binding.name());
+        if self
+            .environment_stack
+            .symbol_names
+            .insert(binding.id(), witness_name.clone())
+            .is_some()
+        {
+            return Err(format!(
+                "local existential elimination reused SymbolId for `{}`",
+                binding.name()
+            ));
+        }
+
+        let witness_type_fact = &verification.witness_type_facts[0];
+        let body_fact = &verification.instantiated_body_facts[0];
+        let rendered_type_fact = render_fact(witness_type_fact, &self.environment_stack)?;
+        let expected_type_fact = format!(
+            "Litex.In {witness_name} {}",
+            render_obj(source_set, &self.environment_stack)?
+        );
+        if rendered_type_fact != expected_type_fact {
+            return Err("local existential elimination changed its witness type projection".into());
+        }
+        let type_name = format!("__step{proof_step_index}_type");
+        let body_name = format!("__step{proof_step_index}_body");
+        self.environment_stack
+            .fact_names
+            .insert(*witness_type_fact_id, type_name.clone());
+        self.environment_stack
+            .fact_propositions
+            .insert(*witness_type_fact_id, witness_type_fact.clone());
+        install_parameter_fact_aliases(
+            binding.id(),
+            *witness_type_fact_id,
+            witness_type_fact,
+            &type_name,
+            source_set,
+            &mut self.environment_stack,
+        )?;
+        let mut source_template_environment = self.environment_stack.clone();
+        source_template_environment
+            .symbol_names
+            .insert(group.params[0].id(), witness_name.clone());
+        source_template_environment
+            .existential_names
+            .insert(group.params[0].name().to_string(), witness_name.clone());
+        let lowered_source_set = LeanTargetObjectRepresentation::lower(source_set)?;
+        let exact_template_witness = if matches!(
+            lowered_source_set,
+            LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Complex)
+        ) {
+            witness_name.clone()
+        } else {
+            format!("(Litex.In.rep {witness_name} {type_name})")
+        };
+        source_template_environment
+            .exact_carrier_values
+            .insert(group.params[0].id(), exact_template_witness);
+        install_numeric_representations_from_membership(
+            group.params[0].id(),
+            &lowered_source_set,
+            &witness_name,
+            &type_name,
+            &mut source_template_environment,
+        );
+        let expected_body = render_fact(
+            &existential.facts()[0].from_ref_to_cloned_fact(),
+            &source_template_environment,
+        )?;
+        let retained_body = render_fact(body_fact, &self.environment_stack)?;
+        if expected_body != retained_body {
+            return Err(format!(
+                "local existential elimination changed its body projection: expected `{expected_body}`, retained `{retained_body}`"
+            ));
+        }
+        self.environment_stack
+            .fact_names
+            .insert(*body_fact_id, body_name.clone());
+        self.environment_stack
+            .fact_propositions
+            .insert(*body_fact_id, body_fact.clone());
+        let mut proof_lines = vec![format!(
+            "rcases (show {source_proposition} from {source_proof}) with ⟨{witness_name}, {type_name}, {body_name}⟩"
+        )];
+        let direct_source_keys = result
+            .common
+            .infers
+            .rule_applications
+            .iter()
+            .filter(|application| {
+                infer_rule_has_direct_compiler_environment_consumer(&application.rule)
+            })
+            .filter_map(|application| {
+                application
+                    .premises
+                    .first()
+                    .and_then(|premise| premise.fact_id.map(|fact_id| (fact_id, premise.fact.to_string())))
+            })
+            .collect::<HashSet<_>>();
+        let direct_infers = SuccessInferResult {
+            store_fact_outputs: result
+                .common
+                .infers
+                .store_fact_outputs
+                .iter()
+                .filter(|output| {
+                    output.fact_id.is_some_and(|fact_id| {
+                        direct_source_keys.contains(&(
+                            fact_id,
+                            output.itself_and_why_itself_is_stored.0.to_string(),
+                        ))
+                    })
+                })
+                .cloned()
+                .collect(),
+            rule_applications: result
+                .common
+                .infers
+                .rule_applications
+                .iter()
+                .filter(|application| {
+                    infer_rule_has_direct_compiler_environment_consumer(&application.rule)
+                })
+                .cloned()
+                .collect(),
+        };
+        let allowed_sources = expected_stored_facts
+            .iter()
+            .cloned()
+            .zip(stored_fact_ids.iter().copied())
+            .map(|(fact, fact_id)| (fact_id, fact))
+            .collect::<Vec<_>>();
+        self.compile_typed_inference_results_as_local_have_statements(
+            &direct_infers,
+            &allowed_sources,
+            &mut proof_lines,
+            "local existential elimination direct inference",
+        )?;
+        self.compile_defined_predicate_inference_results_in_current_environment(
+            &result.common.infers,
+            DefinedPredicateInferenceConclusionPublication::LocalProofExpression,
+        )?;
+        validate_flattened_inferred_fact_ids_are_visible(
+            &result.common.infers,
+            &self.environment_stack,
+            "local existential elimination",
+        )?;
+        Ok(Some(proof_lines))
     }
 
     /// `Combine`: the statement itself is the existential source. The adapter
@@ -2838,7 +3186,8 @@ impl StmtResultToLeanCompiler {
         let substitutions = &self
             .environment_stack
             .runtime_resolved_numeric_substitutions;
-        let substitution_runtime = Runtime::default();
+        let mut substitution_runtime = Runtime::default();
+        substitution_runtime.ensure_execution_frame_for_parse();
         let evaluate_substituted = |source: &Obj| -> Result<String, String> {
             let substituted = substitution_runtime
                 .inst_obj(source, substitutions, SubstitutionMode::Exact)

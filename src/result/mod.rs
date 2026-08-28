@@ -64,6 +64,7 @@ pub use verification::builtin_evidence::{
     ClosedNumericComparisonBuiltinRuleEvidence, ClosedNumericMembershipBuiltinRuleEvidence,
     ClosedNumericNonmembershipBuiltinRuleEvidence,
     ComplexAlgebraicNormalizationBuiltinRuleEvidence,
+    RationalAlgebraicNormalizationBuiltinRuleEvidence,
     ComplexArithmeticMembershipClosureBuiltinRule, DefinitionProjectionBuiltinRuleEvidence,
     DisjunctionIntroductionBuiltinRuleEvidence, DivNotEqualZeroBuiltinRuleEvidence,
     ExtremaBuiltinRule, FiniteSetBuiltinRule,

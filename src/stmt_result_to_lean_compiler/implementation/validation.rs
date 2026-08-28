@@ -154,6 +154,7 @@ pub(super) fn infer_rule_name(rule: &InferRule) -> &'static str {
             "DefinedPredicateDefinitionClauseProjection"
         }
         InferRule::EqualityChainClosure(_) => "EqualityChainClosure",
+        InferRule::NumericOrderChainClosure(_) => "NumericOrderChainClosure",
         InferRule::ClosedPositivePowerEqualityImpliesEqualSideMembership(_) => {
             "ClosedPositivePowerEqualityImpliesEqualSideMembership"
         }
@@ -586,6 +587,33 @@ pub(super) fn validate_single_fact_store_output(
     output
         .fact_id
         .ok_or_else(|| format!("{result_layer} store has no FactId"))
+}
+
+pub(super) fn validate_single_fact_store_output_allowing_supported_typed_inferences(
+    infer_result: &SuccessInferResult,
+    expected_fact: &Fact,
+    result_layer: &str,
+) -> Result<FactId, String> {
+    if infer_result.rule_applications.iter().any(|application| {
+        !defined_predicate_infer_rule(&application.rule)
+            && !infer_rule_has_direct_compiler_environment_consumer(&application.rule)
+    }) {
+        return Err(format!(
+            "{result_layer} retained an unsupported typed inference rule"
+        ));
+    }
+    validate_typed_infer_result_identity_completeness(infer_result, result_layer)?;
+    let fact_ids = exact_ordered_fact_ids_from_store_results(
+        infer_result,
+        std::slice::from_ref(expected_fact),
+        result_layer,
+    )?;
+    let [fact_id] = fact_ids.as_slice() else {
+        return Err(format!(
+            "{result_layer} must retain exactly one direct store output"
+        ));
+    };
+    Ok(*fact_id)
 }
 
 pub(super) fn validate_conjunction_store_and_component_inference_results(
@@ -1210,6 +1238,7 @@ pub(super) fn direct_builtin_rule_compiler_limitation(
         | BuiltinRuleEvidence::RegisteredAntisymmetricPredicate(_)
         | BuiltinRuleEvidence::ObjectReflexivity(_)
         | BuiltinRuleEvidence::RationalNormalization(_)
+        | BuiltinRuleEvidence::RationalAlgebraicNormalization(_)
         | BuiltinRuleEvidence::ComplexAlgebraicNormalization(_)
         | BuiltinRuleEvidence::AbsoluteValue(_)
         | BuiltinRuleEvidence::Extrema(_)
@@ -1280,6 +1309,52 @@ pub(super) fn validate_complex_algebraic_normalization_builtin_rule_evidence(
     {
         return Err(
             "complex-algebraic-normalization evidence changed its ordered nonzero premises".into(),
+        );
+    }
+    Ok(())
+}
+
+pub(super) fn validate_rational_algebraic_normalization_builtin_rule_evidence(
+    target: &Fact,
+    evidence: &RationalAlgebraicNormalizationBuiltinRuleEvidence,
+) -> Result<(), String> {
+    if evidence.expected_target.to_string() != target.to_string() {
+        return Err("rational-algebraic-normalization evidence changed its target".into());
+    }
+    let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = target else {
+        return Err(
+            "rational-algebraic-normalization evidence targets a non-equality fact".into(),
+        );
+    };
+    if !objs_equal_by_rational_expression_evaluation(&equality.left, &equality.right) {
+        return Err(
+            "rational-algebraic-normalization evidence does not reproduce its exact equality"
+                .into(),
+        );
+    }
+    let zero: Obj = Number::new("0".to_string()).into();
+    let reproduced_nonzero_premises = algebraic_normalization_nonzero_requirements(
+        &equality.left,
+        &equality.right,
+    )
+    .into_iter()
+    .map(|object| {
+        Fact::from(AtomicFact::NotEqualFact(NotEqualFact::new(
+            object,
+            zero.clone(),
+            equality.line_file.clone(),
+        )))
+    })
+    .collect::<Vec<_>>();
+    if reproduced_nonzero_premises.len() != evidence.expected_nonzero_premises.len()
+        || reproduced_nonzero_premises
+            .iter()
+            .zip(evidence.expected_nonzero_premises.iter())
+            .any(|(reproduced, retained)| reproduced.to_string() != retained.to_string())
+    {
+        return Err(
+            "rational-algebraic-normalization evidence changed its ordered nonzero premises"
+                .into(),
         );
     }
     Ok(())
@@ -1404,7 +1479,7 @@ pub(super) fn validate_direct_named_theorem_conclusion_well_definedness(
         parameter.well_definedness.as_ref(),
         &parameter.proposition,
     )?;
-    validate_single_fact_store_output(
+    validate_single_fact_store_output_allowing_supported_typed_inferences(
         &parameter.infers,
         &parameter.proposition,
         "existential theorem conclusion binder WD",
@@ -1419,7 +1494,7 @@ pub(super) fn validate_direct_named_theorem_conclusion_well_definedness(
         body.well_definedness.as_ref(),
         &body.proposition,
     )?;
-    validate_success_store_fact_result(
+    validate_success_store_fact_result_allowing_well_definedness_inferred_children(
         &body.store,
         &body.proposition,
         "existential theorem conclusion body WD",
@@ -1544,11 +1619,202 @@ pub(super) fn direct_forall_result_publication_selections(
     let source_parameters = source_forall
         .typed_parameters
         .collect_param_bindings_with_types();
-    let source_conclusion_keys = source_forall
+    let SuccessFactProofResult::ForallProof(proof) = result.proof() else {
+        return Err("direct forall publication retained another proof family".into());
+    };
+    if proof.proves.len() != source_forall.then_facts.len() {
+        return Err("direct forall publication changed its conclusion Result arity".into());
+    }
+    let Some(SuccessVerifyFactWellDefinedProofResult::ForallFact(forall_wd)) =
+        result.well_definedness.recursive.as_deref()
+    else {
+        return Err("direct forall publication retained no forall WD Result".into());
+    };
+    if forall_wd.conclusions.len() != source_forall.then_facts.len() {
+        return Err("direct forall publication changed its WD conclusion arity".into());
+    }
+
+    fn push_available_conclusion(
+        available: &mut Vec<(usize, FactId, Fact, u8)>,
+        owner: usize,
+        fact_id: FactId,
+        fact: Fact,
+        rank: u8,
+    ) {
+        if !available.iter().any(|(existing_owner, existing_id, existing_fact, _)| {
+            *existing_owner == owner
+                && *existing_id == fact_id
+                && existing_fact.to_string() == fact.to_string()
+        }) {
+            available.push((owner, fact_id, fact, rank));
+        }
+    }
+
+    fn collect_infer_candidates(
+        infers: &SuccessInferResult,
+        owner: usize,
+        rank: u8,
+        available: &mut Vec<(usize, FactId, Fact, u8)>,
+    ) -> Result<(), String> {
+        for output in &infers.store_fact_outputs {
+            if let Some(fact_id) = output.fact_id {
+                push_available_conclusion(
+                    available,
+                    owner,
+                    fact_id,
+                    output.itself_and_why_itself_is_stored.0.clone(),
+                    rank,
+                );
+            }
+            if output.inferred_facts.len() != output.inferred_fact_ids.len() {
+                return Err(format!(
+                    "ForallProof conclusion {owner} changed its inferred FactId arity"
+                ));
+            }
+            for (fact, fact_id) in output
+                .inferred_facts
+                .iter()
+                .zip(output.inferred_fact_ids.iter())
+            {
+                let fact_id = fact_id.ok_or_else(|| {
+                    format!("ForallProof conclusion {owner} inferred `{fact}` without a FactId")
+                })?;
+                push_available_conclusion(available, owner, fact_id, fact.clone(), rank);
+            }
+        }
+        for application in &infers.rule_applications {
+            for premise in &application.premises {
+                if let Some(fact_id) = premise.fact_id {
+                    push_available_conclusion(
+                        available,
+                        owner,
+                        fact_id,
+                        premise.fact.clone(),
+                        rank,
+                    );
+                }
+            }
+            for conclusion in &application.conclusions {
+                if let Some(fact_id) = conclusion.fact_id {
+                    push_available_conclusion(
+                        available,
+                        owner,
+                        fact_id,
+                        conclusion.fact.clone(),
+                        rank,
+                    );
+                }
+                collect_infer_candidates(&conclusion.infers, owner, rank, available)?;
+            }
+        }
+        Ok(())
+    }
+
+    fn collect_child_fact_candidates(
+        child: &SuccessFactStmtResult,
+        owner: usize,
+        available: &mut Vec<(usize, FactId, Fact, u8)>,
+    ) -> Result<(), String> {
+        if let Some(fact_id) = child.store.fact_id {
+            push_available_conclusion(available, owner, fact_id, child.fact(), 1);
+        }
+        collect_infer_candidates(&child.store.infers, owner, 1, available)?;
+        if let SuccessFactProofResult::CombinedProofs(combined) = child.proof() {
+            for step in &combined.steps {
+                if let Some(factual) = step.factual_success() {
+                    collect_child_fact_candidates(factual, owner, available)?;
+                }
+            }
+        }
+        Ok(())
+    }
+
+    let mut available_conclusions = Vec::new();
+    let mut source_primary_fact_ids = Vec::with_capacity(source_forall.then_facts.len());
+    for (source_index, (source_conclusion, proved)) in source_forall
         .then_facts
         .iter()
-        .map(|fact| fact.clone().to_fact().to_string())
-        .collect::<Vec<_>>();
+        .zip(proof.proves.iter())
+        .enumerate()
+    {
+        let child = proved.result.factual_success().ok_or_else(|| {
+            format!("ForallProof conclusion {source_index} is not factual")
+        })?;
+        let source_fact = source_conclusion.clone().to_fact();
+        if child.fact().to_string() != source_fact.to_string()
+            || child.store.fact.to_string() != source_fact.to_string()
+        {
+            return Err(format!(
+                "ForallProof conclusion {source_index} changed its target before publication"
+            ));
+        }
+        let primary_fact_id = child.store.fact_id.ok_or_else(|| {
+            format!("ForallProof conclusion {source_index} has no frozen FactId")
+        })?;
+        source_primary_fact_ids.push(primary_fact_id);
+        push_available_conclusion(
+            &mut available_conclusions,
+            source_index,
+            primary_fact_id,
+            source_fact,
+            0,
+        );
+        collect_child_fact_candidates(child, source_index, &mut available_conclusions)?;
+        let wd_store = &forall_wd.conclusions[source_index].store;
+        if let Some(fact_id) = wd_store.fact_id {
+            push_available_conclusion(
+                &mut available_conclusions,
+                source_index,
+                fact_id,
+                wd_store.fact.clone(),
+                2,
+            );
+        }
+        collect_infer_candidates(
+            &wd_store.infers,
+            source_index,
+            2,
+            &mut available_conclusions,
+        )?;
+    }
+
+    let select_published_conclusions = |projected: &ForallFact| {
+        let mut selected = Vec::with_capacity(projected.then_facts.len());
+        let mut used_fact_ids = HashSet::new();
+        for projected_conclusion in &projected.then_facts {
+            let projected_fact = projected_conclusion.clone().to_fact();
+            let matching_rank = available_conclusions
+                .iter()
+                .filter(|(_, fact_id, fact, _)| {
+                    !used_fact_ids.contains(fact_id)
+                        && fact.to_string() == projected_fact.to_string()
+                })
+                .map(|(_, _, _, rank)| *rank)
+                .min();
+            let matches = available_conclusions
+                .iter()
+                .filter(|(_, fact_id, fact, rank)| {
+                    Some(*rank) == matching_rank
+                        && !used_fact_ids.contains(fact_id)
+                        && fact.to_string() == projected_fact.to_string()
+                })
+                .cloned()
+                .collect::<Vec<_>>();
+            let [selected_conclusion] = matches.as_slice() else {
+                return Err(format!(
+                    "stored ForallProof conclusion `{projected_fact}` has {} exact child-Result owners",
+                    matches.len()
+                ));
+            };
+            used_fact_ids.insert(selected_conclusion.1);
+            selected.push((
+                selected_conclusion.0,
+                selected_conclusion.1,
+                selected_conclusion.2.clone(),
+            ));
+        }
+        Ok::<_, String>(selected)
+    };
 
     if let Some(stored_fact_id) = result.store.fact_id {
         let matching_outputs = result
@@ -1572,12 +1838,13 @@ pub(super) fn direct_forall_result_publication_selections(
             stored_fact_id: Some(stored_fact_id),
             source_parameter_indices: (0..source_parameters.len()).collect(),
             source_conclusion_indices: (0..source_forall.then_facts.len()).collect(),
+            published_conclusions: select_published_conclusions(source_forall)?,
         }]);
     }
 
     let mut saw_transient_source = false;
     let mut selections = Vec::new();
-    let mut selected_source_conclusions = HashSet::new();
+    let mut selected_source_primary_conclusions = HashSet::new();
     for output in &result.store.infers.store_fact_outputs {
         let proposition = &output.itself_and_why_itself_is_stored.0;
         if proposition.to_string() == source_fact.to_string() {
@@ -1635,31 +1902,26 @@ pub(super) fn direct_forall_result_publication_selections(
         if projected.then_facts.is_empty() {
             return Err("stored ForallProof projection has no conclusion".into());
         }
-        let mut source_conclusion_indices = Vec::with_capacity(projected.then_facts.len());
-        let mut used_inside_projection = HashSet::new();
-        for projected_conclusion in &projected.then_facts {
-            let projected_key = projected_conclusion.clone().to_fact().to_string();
-            let Some(source_index) = source_conclusion_keys
-                .iter()
-                .enumerate()
-                .find(|(index, source_key)| {
-                    !used_inside_projection.contains(index) && **source_key == projected_key
-                })
-                .map(|(index, _)| index)
-            else {
-                return Err("stored ForallProof projection introduced a new conclusion".into());
-            };
-            if !selected_source_conclusions.insert(source_index) {
-                return Err("stored ForallProof projections duplicated a conclusion".into());
+        let published_conclusions = select_published_conclusions(projected)?;
+        let mut source_conclusion_indices = published_conclusions
+            .iter()
+            .map(|(source_index, _, _)| *source_index)
+            .collect::<Vec<_>>();
+        source_conclusion_indices.sort_unstable();
+        source_conclusion_indices.dedup();
+        for (source_index, fact_id, _) in &published_conclusions {
+            if *fact_id == source_primary_fact_ids[*source_index]
+                && !selected_source_primary_conclusions.insert(*source_index)
+            {
+                return Err("stored ForallProof projections duplicated a source conclusion".into());
             }
-            used_inside_projection.insert(source_index);
-            source_conclusion_indices.push(source_index);
         }
         selections.push(DirectForallResultPublicationSelection {
             forall_fact: projected.clone(),
             stored_fact_id: Some(stored_fact_id),
             source_parameter_indices,
             source_conclusion_indices,
+            published_conclusions,
         });
     }
 
@@ -1675,9 +1937,10 @@ pub(super) fn direct_forall_result_publication_selections(
             stored_fact_id: None,
             source_parameter_indices: (0..source_parameters.len()).collect(),
             source_conclusion_indices: (0..source_forall.then_facts.len()).collect(),
+            published_conclusions: select_published_conclusions(source_forall)?,
         }]);
     }
-    if selected_source_conclusions.len() != source_forall.then_facts.len() {
+    if selected_source_primary_conclusions.len() != source_forall.then_facts.len() {
         return Err(
             "stored ForallProof projections did not publish every source conclusion".into(),
         );

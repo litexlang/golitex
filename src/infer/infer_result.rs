@@ -28,6 +28,7 @@ pub enum InferRule {
     ),
     DefinedPredicateDefinitionClauseProjection(DefinedPredicateDefinitionClauseProjectionInferRule),
     EqualityChainClosure(EqualityChainClosureInferRule),
+    NumericOrderChainClosure(NumericOrderChainClosureInferRule),
     ClosedPositivePowerEqualityImpliesEqualSideMembership(
         ClosedPositivePowerEqualityImpliesEqualSideMembershipInferRule,
     ),
@@ -183,6 +184,15 @@ pub struct RegisteredTransitivePredicateChainClosureInferRule {
 /// those premises against the source chain before folding transitivity.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct EqualityChainClosureInferRule {
+    pub start_object_index: usize,
+    pub end_object_index: usize,
+}
+
+/// One non-adjacent consequence of a numeric `<`/`<=` or `>`/`>=` chain.
+/// The exact ordered premises remain in the Result application; these indexes
+/// freeze the source interval without encoding a theorem-specific pattern.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct NumericOrderChainClosureInferRule {
     pub start_object_index: usize,
     pub end_object_index: usize,
 }

@@ -9,9 +9,12 @@ use crate::obj::{
     Number, Obj,
 };
 use crate::rational_expression::{
+    algebraic_normalization_nonzero_requirements,
     complex_algebraic_normalization_nonzero_requirements,
     objs_equal_by_complex_rational_expression_evaluation,
-    objs_equal_by_rational_expression_evaluation, objs_form_verified_integral_polynomial_identity,
+    objs_equal_by_rational_expression_evaluation,
+    objs_form_verified_integral_polynomial_congruence_identity,
+    objs_form_verified_integral_polynomial_identity,
 };
 use crate::result::{
     BuiltinRuleEvidence, CheckedFunctionDefinitionReductionEvidence,
@@ -19,6 +22,7 @@ use crate::result::{
     EqualityTransportStep, FactTransformationRule,
     IntegralPolynomialNormalizationBuiltinRuleEvidence,
     NestedCheckedFunctionDefinitionReductionEvidence, RationalNormalizationBuiltinRuleEvidence,
+    RationalAlgebraicNormalizationBuiltinRuleEvidence,
     StmtResult, StructuralDefinitionCongruenceBuiltinRuleEvidence,
     StructuralKnownEqualityCongruenceBuiltinRuleEvidence, SuccessFactProofResult,
     SuccessFactStmtResult, SuccessTransformFactResult, UncataloguedBuiltinRule,
@@ -200,6 +204,28 @@ impl Runtime {
             return Ok(direct_evaluation_result);
         }
 
+        if objs_form_verified_integral_polynomial_congruence_identity(
+            &equal_fact.left,
+            &equal_fact.right,
+        ) {
+            let target: Fact = equal_fact.clone().into();
+            let result =
+                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    target.clone(),
+                    "exact integral polynomial normalization under structural congruence"
+                        .to_string(),
+                    BuiltinRuleEvidence::IntegralPolynomialNormalization(
+                        IntegralPolynomialNormalizationBuiltinRuleEvidence {
+                            expected_target: target,
+                        },
+                    ),
+                    Vec::new(),
+                )
+                .into();
+            return Ok(self
+                .cache_successful_atomic_fact_for_statement(&equal_fact.clone().into(), result));
+        }
+
         let result: StmtResult =
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
@@ -240,6 +266,17 @@ impl Runtime {
                 )
                 .into();
             }
+        }
+        if objs_equal_by_rational_expression_evaluation(&equal_fact.left, &equal_fact.right)
+            && !algebraic_normalization_nonzero_requirements(
+                &equal_fact.left,
+                &equal_fact.right,
+            )
+            .is_empty()
+        {
+            // Cancellation is valid only under the exact nonzero premises.
+            // The premise-producing phase below retains those Results.
+            return UnknownGenericStmtResult::new().into();
         }
         let complex_normalization_succeeds = objs_equal_by_complex_rational_expression_evaluation(
             &equal_fact.left,
@@ -470,6 +507,14 @@ impl Runtime {
         let child_state = builtin_state.after_applying_rule();
         let goal: AtomicFact = equal_fact.clone().into();
         if let Some(result) = self
+            .try_verify_equal_fact_by_rational_algebraic_normalization_with_nonzero_premises(
+                equal_fact,
+                &child_state,
+            )?
+        {
+            return Ok(self.cache_successful_atomic_fact_for_statement(&goal, result));
+        }
+        if let Some(result) = self
             .try_verify_equal_fact_by_complex_algebraic_normalization_with_nonzero_premises(
                 equal_fact,
                 &child_state,
@@ -484,6 +529,63 @@ impl Runtime {
         }
         let result = self.verify_equal_fact_by_builtin_rules(equal_fact, &child_state)?;
         Ok(self.cache_successful_atomic_fact_for_statement(&goal, result))
+    }
+
+    fn try_verify_equal_fact_by_rational_algebraic_normalization_with_nonzero_premises(
+        &mut self,
+        equal_fact: &EqualFact,
+        builtin_state: &BuiltinRuleSearchState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if !objs_equal_by_rational_expression_evaluation(&equal_fact.left, &equal_fact.right) {
+            return Ok(None);
+        }
+        let required_objects = algebraic_normalization_nonzero_requirements(
+            &equal_fact.left,
+            &equal_fact.right,
+        );
+        if required_objects.is_empty() {
+            return Ok(None);
+        }
+
+        let zero: Obj = Number::new("0".to_string()).into();
+        let required_facts = required_objects
+            .into_iter()
+            .map(|object| {
+                AtomicFact::NotEqualFact(NotEqualFact::new(
+                    object,
+                    zero.clone(),
+                    equal_fact.line_file.clone(),
+                ))
+            })
+            .collect::<Vec<_>>();
+        let mut subgoals = Vec::with_capacity(required_facts.len());
+        for premise in &required_facts {
+            let result = self.verify_atomic_fact_as_builtin_rule_premise(premise, builtin_state)?;
+            if !result.is_success() {
+                return Ok(None);
+            }
+            subgoals.push(result);
+        }
+
+        let target: Fact = equal_fact.clone().into();
+        let expected_nonzero_premises = required_facts
+            .into_iter()
+            .map(Fact::from)
+            .collect::<Vec<_>>();
+        Ok(Some(
+            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                target.clone(),
+                "exact rational algebraic normalization with nonzero premises".to_string(),
+                BuiltinRuleEvidence::RationalAlgebraicNormalization(
+                    RationalAlgebraicNormalizationBuiltinRuleEvidence::new(
+                        target,
+                        expected_nonzero_premises,
+                    ),
+                ),
+                subgoals,
+            )
+            .into(),
+        ))
     }
 
     fn try_verify_equal_fact_by_complex_algebraic_normalization_with_nonzero_premises(

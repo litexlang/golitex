@@ -22,6 +22,13 @@ struct UnionFind {
     parent: Vec<usize>,
 }
 
+pub struct NumericOrderChainClosureStep {
+    pub start_object_index: usize,
+    pub end_object_index: usize,
+    pub premises: Vec<Fact>,
+    pub conclusion: AtomicFact,
+}
+
 impl UnionFind {
     fn new(n: usize) -> Self {
         UnionFind {
@@ -73,6 +80,86 @@ fn dedup_atomic_facts(mut facts: Vec<AtomicFact>) -> Vec<AtomicFact> {
 }
 
 impl ChainFact {
+    /// Retain proof-replayable closure steps for mixed strict/weak numeric
+    /// order chains. Equality edges use a different semantic transport and
+    /// are deliberately excluded from this certificate family.
+    pub fn numeric_order_chain_closure_steps(
+        &self,
+    ) -> Result<Vec<NumericOrderChainClosureStep>, RuntimeError> {
+        let adjacent = self.facts()?;
+        let mut edges = Vec::with_capacity(self.prop_names.len());
+        for predicate in &self.prop_names {
+            let Some(edge) = order_edge_from_prop(predicate) else {
+                return Ok(Vec::new());
+            };
+            edges.push(edge);
+        }
+        let has_up = edges
+            .iter()
+            .any(|edge| matches!(edge, OrderEdge::Le | OrderEdge::Lt));
+        let has_down = edges
+            .iter()
+            .any(|edge| matches!(edge, OrderEdge::Ge | OrderEdge::Gt));
+        if has_up == has_down {
+            return Ok(Vec::new());
+        }
+
+        let mut steps = Vec::new();
+        for start in 0..self.objs.len() {
+            for end in start + 2..self.objs.len() {
+                let path = &edges[start..end];
+                if path.iter().any(|edge| *edge == OrderEdge::Eq) {
+                    continue;
+                }
+                let path_is_strict = path
+                    .iter()
+                    .any(|edge| matches!(edge, OrderEdge::Lt | OrderEdge::Gt));
+                let conclusion: AtomicFact = if has_up {
+                    if path_is_strict {
+                        LessFact::new(
+                            self.objs[start].clone(),
+                            self.objs[end].clone(),
+                            self.line_file.clone(),
+                        )
+                        .into()
+                    } else {
+                        LessEqualFact::new(
+                            self.objs[start].clone(),
+                            self.objs[end].clone(),
+                            self.line_file.clone(),
+                        )
+                        .into()
+                    }
+                } else if path_is_strict {
+                    GreaterFact::new(
+                        self.objs[start].clone(),
+                        self.objs[end].clone(),
+                        self.line_file.clone(),
+                    )
+                    .into()
+                } else {
+                    GreaterEqualFact::new(
+                        self.objs[start].clone(),
+                        self.objs[end].clone(),
+                        self.line_file.clone(),
+                    )
+                    .into()
+                };
+                steps.push(NumericOrderChainClosureStep {
+                    start_object_index: start,
+                    end_object_index: end,
+                    premises: adjacent[start..end]
+                        .iter()
+                        .cloned()
+                        .map(Fact::from)
+                        .collect(),
+                    conclusion,
+                });
+            }
+        }
+        Ok(steps)
+    }
+
     pub fn facts_with_order_transitive_closure(&self) -> Result<Vec<AtomicFact>, RuntimeError> {
         let base = self.facts()?;
         let n = self.objs.len();

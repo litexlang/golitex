@@ -2572,28 +2572,33 @@ impl StmtResultToLeanCompiler {
                 );
             }
         }
-        if let Some(kind) = checked_real_sequence_definition_kind(definition) {
-            // The semantic shortcut is allowed only after the compiler has
-            // validated and indexed the complete verifier-owned binder/body
-            // WD tree. Proof slots below local binders remain deferred to
-            // their lexical consumers; the exact source contract selects the
-            // Mathlib lowering but never replaces Result evidence.
-            self.collect_def_prop_well_definedness_to_lean_compilation_context(local)?;
-            return self.compile_checked_real_sequence_definition(definition, kind);
-        }
-
         let mut definition_environment = self.environment_stack.clone();
         definition_environment.push_inherited_environment();
         definition_environment.well_definedness =
             Some(self.construct_def_prop_well_definedness_to_lean_compilation_context(local)?);
         let mut binders = Vec::new();
         let mut requirements = Vec::new();
+        let mut exact_parameters = Vec::new();
         let mut parameter_count = 0;
-        let dependent_parameter_evidence = definition.typed_parameters.groups.iter().any(|group| {
+        // Primitive numeric sets and function sets have stable exact target
+        // carriers. Proper numeric subtypes such as R+ remain heterogeneous:
+        // their source value is what surrounding Litex inequalities mention,
+        // while the membership proof is retained as dependent evidence.
+        let parameter_is_exact = |set: &Obj| {
             matches!(
-                &group.param_type,
-                ParamType::Obj(Obj::FnSet(_) | Obj::FiniteSeqSet(_) | Obj::SeqSet(_))
+                set,
+                Obj::FnSet(_) | Obj::FiniteSeqSet(_) | Obj::SeqSet(_)
+                    | Obj::StandardSet(
+                        StandardSet::N
+                            | StandardSet::Z
+                            | StandardSet::Q
+                            | StandardSet::R
+                            | StandardSet::C
+                    )
             )
+        };
+        let dependent_parameter_evidence = definition.typed_parameters.groups.iter().any(|group| {
+            matches!(&group.param_type, ParamType::Obj(set) if !parameter_is_exact(set))
         });
         for (group, retained_group) in definition
             .typed_parameters
@@ -2613,6 +2618,7 @@ impl StmtResultToLeanCompiler {
                 let parameter_name = lean_identifier(binding.name());
                 match &group.param_type {
                     ParamType::Set(_) => {
+                        exact_parameters.push(false);
                         binders.push(format!("({parameter_name} : Litex.Set)"));
                         definition_environment
                             .symbol_names
@@ -2624,24 +2630,105 @@ impl StmtResultToLeanCompiler {
                         requirements.push("True".to_string());
                     }
                     ParamType::Obj(set) => {
-                        let carrier_name = format!("__carrier{parameter_count}");
                         let rendered_set = render_obj(set, &definition_environment)?;
-                        binders.push(format!("{{{carrier_name} : Type}}"));
-                        binders.push(format!("({parameter_name} : {carrier_name})"));
+                        let exact_parameter = parameter_is_exact(set);
+                        exact_parameters.push(exact_parameter);
+                        if exact_parameter {
+                            binders.push(format!(
+                                "({parameter_name} : ({rendered_set}).Carrier)"
+                            ));
+                        } else if matches!(set, Obj::StandardSet(_)) {
+                            // Litex arithmetic observes proper numeric
+                            // subsets (R+, Q-, Z*, ...) through the source
+                            // complex carrier. Their membership proof remains
+                            // explicit, but the value itself must be usable by
+                            // `Litex.Lt`/`Litex.Le` without an unsound cast
+                            // from an arbitrary host type.
+                            binders.push(format!("({parameter_name} : ℂ)"));
+                        } else {
+                            let carrier_name = format!("__carrier{parameter_count}");
+                            binders.push(format!("{{{carrier_name} : Type}}"));
+                            binders.push(format!("({parameter_name} : {carrier_name})"));
+                        }
                         definition_environment
                             .symbol_names
                             .insert(binding.id(), parameter_name.clone());
                         let requirement = format!("Litex.In {parameter_name} {rendered_set}");
                         requirements.push(requirement);
-                        if dependent_parameter_evidence {
-                            let proof_name = format!("__type{parameter_count}");
-                            install_parameter_fact_aliases(
-                                binding.id(),
-                                &retained_parameter.proposition,
-                                &proof_name,
+                        let primary_fact_id =
+                            fact_id_for_well_definedness_binder_premise(retained_parameter)?;
+                        let proof_name = if dependent_parameter_evidence {
+                            format!("__arg_type{parameter_count}")
+                        } else {
+                            format!("(Litex.In.own {rendered_set} {parameter_name})")
+                        };
+                        install_parameter_fact_aliases(
+                            binding.id(),
+                            primary_fact_id,
+                            &retained_parameter.proposition,
+                            &proof_name,
+                            set,
+                            &mut definition_environment,
+                        )?;
+                        let lowered_set = LeanTargetObjectRepresentation::lower(set)?;
+                        if exact_parameter {
+                            definition_environment
+                                .exact_carrier_values
+                                .insert(binding.id(), parameter_name.clone());
+                            if let Some(real) = exact_set_real_value(&lowered_set, &parameter_name) {
+                                definition_environment
+                                    .numeric_real_values
+                                    .insert(binding.id(), real);
+                            }
+                            if let Some(integer) =
+                                exact_set_integer_value(&lowered_set, &parameter_name)
+                            {
+                                definition_environment
+                                    .numeric_integer_values
+                                    .insert(binding.id(), integer);
+                            }
+                            if let Some(rational) =
+                                exact_set_rational_value(&lowered_set, &parameter_name)
+                            {
+                                definition_environment
+                                    .numeric_rational_values
+                                    .insert(binding.id(), rational);
+                            }
+                            if let Some(numeric) =
+                                exact_set_numeric_value(&lowered_set, &parameter_name)
+                            {
+                                definition_environment
+                                    .numeric_representations
+                                    .insert(binding.id(), numeric);
+                            }
+                        } else {
+                            definition_environment.exact_carrier_values.remove(&binding.id());
+                            definition_environment.numeric_real_values.remove(&binding.id());
+                            definition_environment.numeric_integer_values.remove(&binding.id());
+                            definition_environment.numeric_rational_values.remove(&binding.id());
+                            definition_environment.numeric_representations.remove(&binding.id());
+                            definition_environment
+                                .numeric_representation_equalities
+                                .remove(&binding.id());
+                            definition_environment
+                                .numeric_representation_memberships
+                                .remove(&binding.id());
+                        }
+                        if exact_parameter
+                            && matches!(
                                 set,
-                                &mut definition_environment,
-                            )?;
+                                Obj::FnSet(_) | Obj::FiniteSeqSet(_) | Obj::SeqSet(_)
+                            )
+                        {
+                            let function_binding = definition_environment
+                                .function_bindings
+                                .get_mut(&primary_fact_id)
+                                .ok_or_else(|| {
+                                    "exact predicate function parameter lost its checked function binding"
+                                        .to_string()
+                                })?;
+                            function_binding.direct = true;
+                            function_binding.membership_proof_name = proof_name;
                         }
                     }
                     unsupported => {
@@ -2661,7 +2748,9 @@ impl StmtResultToLeanCompiler {
             let evidence_binders = requirements
                 .iter()
                 .enumerate()
-                .map(|(index, requirement)| format!("(__type{} : {requirement})", index + 1))
+                .map(|(index, requirement)| {
+                    format!("(__arg_type{} : {requirement})", index + 1)
+                })
                 .collect::<Vec<_>>()
                 .join(" ");
             format!("\u{2203} {evidence_binders}, {}", conjunction(&clauses))
@@ -2681,93 +2770,12 @@ impl StmtResultToLeanCompiler {
             PredicateBinding {
                 lean_name,
                 parameter_count,
+                exact_parameters,
                 requirement_count: parameter_count,
                 clause_count: definition.iff_facts.len(),
                 dependent_parameter_evidence,
                 definition: Some(definition.clone()),
-            },
-        );
-        Ok(())
-    }
-
-    fn compile_checked_real_sequence_definition(
-        &mut self,
-        definition: &DefPropStmt,
-        kind: CheckedRealSequenceDefinitionKind,
-    ) -> Result<(), String> {
-        let mut binders = Vec::new();
-        let mut arguments = Vec::new();
-        let mut requirements = Vec::new();
-        for (index, (binding, param_type)) in definition
-            .typed_parameters
-            .collect_param_bindings_with_types()
-            .iter()
-            .enumerate()
-        {
-            let suffix = index + 1;
-            let name = lean_identifier(binding.name());
-            let ParamType::Obj(set) = param_type else {
-                return Err("checked real-sequence definitions require object parameters".into());
-            };
-            let universe = if matches!(set, Obj::SeqSet(_) | Obj::FnSet(_)) {
-                "Type 1"
-            } else {
-                "Type"
-            };
-            binders.push(format!("{{__carrier{suffix} : {universe}}}"));
-            binders.push(format!("({name} : __carrier{suffix})"));
-            arguments.push(name.clone());
-            requirements.push(format!(
-                "(__type{suffix} : Litex.In {name} {})",
-                render_obj(set, &self.environment_stack)?
-            ));
-        }
-
-        let representative =
-            |index: usize| format!("(Litex.In.rep {} __type{})", arguments[index], index + 1);
-        let semantic_body = match kind {
-            CheckedRealSequenceDefinitionKind::TailClose => format!(
-                "Litex.Rules.RealSequenceTailClose {} {} (Litex.Rules.positiveRealValue {}) (Litex.Rules.positiveNaturalZeroIndex {})",
-                representative(0),
-                representative(1),
-                representative(2),
-                representative(3),
-            ),
-            CheckedRealSequenceDefinitionKind::ConvergesTo => format!(
-                "Litex.Rules.RealSequenceConvergesTo {} {}",
-                representative(0),
-                representative(1),
-            ),
-            CheckedRealSequenceDefinitionKind::Convergent => format!(
-                "Litex.Rules.RealSequenceConvergent {}",
-                representative(0),
-            ),
-            CheckedRealSequenceDefinitionKind::CauchyTail => format!(
-                "Litex.Rules.RealSequenceCauchyTail {} (Litex.Rules.positiveRealValue {}) (Litex.Rules.positiveNaturalZeroIndex {})",
-                representative(0),
-                representative(1),
-                representative(2),
-            ),
-            CheckedRealSequenceDefinitionKind::Cauchy => format!(
-                "Litex.Rules.RealSequenceCauchy {}",
-                representative(0),
-            ),
-        };
-        let lean_name = lean_identifier(&definition.name);
-        self.declarations.push(format!(
-            "def {lean_name} {} : Prop :=\n  \u{2203} {}, {semantic_body}",
-            binders.join(" "),
-            requirements.join(" "),
-        ));
-        self.environment_stack.predicate_bindings.insert(
-            definition.name.clone(),
-            PredicateBinding {
-                lean_name,
-                parameter_count: arguments.len(),
-                requirement_count: arguments.len(),
-                clause_count: definition.iff_facts.len(),
-                dependent_parameter_evidence: true,
-                definition: Some(definition.clone()),
+                definition_well_definedness: definition_environment.well_definedness.clone(),
             },
         );
         Ok(())
@@ -2792,6 +2800,20 @@ impl StmtResultToLeanCompiler {
         &mut self,
         result: &SuccessByDefStmtResult,
     ) -> Result<bool, String> {
+        if let Some(verification) = &result.verification {
+            for (clause_index, check) in verification.clause_checks.iter().enumerate() {
+                let check = check.factual_success().ok_or_else(|| {
+                    format!("by-definition clause check {clause_index} is not factual")
+                })?;
+                if matches!(check.proof(), SuccessFactProofResult::ForallProof(_))
+                    && !self.compile_direct_forall_fact_result(check)?
+                {
+                    return Err(format!(
+                        "by-definition forall clause {clause_index} has no binder compiler"
+                    ));
+                }
+            }
+        }
         let Some(proof) = self.construct_lean_proof_from_by_definition_stmt_result(result)? else {
             return Ok(false);
         };
@@ -2840,6 +2862,8 @@ impl StmtResultToLeanCompiler {
             .fact_propositions
             .insert(fact_id, proof.target.fact);
         self.next_fact_name_index += 1;
+
+        self.install_compiled_by_definition_component_bindings(&proof.components)?;
 
         if !result.common.infers.rule_applications.is_empty() {
             self.compile_defined_predicate_inference_results_in_current_environment(
@@ -2896,6 +2920,32 @@ impl StmtResultToLeanCompiler {
             self.next_fact_name_index += 1;
         }
         Ok(true)
+    }
+
+    pub(super) fn install_compiled_by_definition_component_bindings(
+        &mut self,
+        components: &[CompiledByDefinitionComponentProofBody],
+    ) -> Result<(), String> {
+        for component in components {
+            let Some(fact_id) = component.retained_fact_id else {
+                continue;
+            };
+            if self
+                .environment_stack
+                .fact_propositions
+                .contains_key(&fact_id)
+            {
+                resolve_fact_citation(&fact_id, &component.fact, &self.environment_stack)?;
+                continue;
+            }
+            self.environment_stack
+                .fact_names
+                .insert(fact_id, component.proof_expression.clone());
+            self.environment_stack
+                .fact_propositions
+                .insert(fact_id, component.fact.clone());
+        }
+        Ok(())
     }
 
     /// `Combine`: validate each parameter and definition-clause child in
@@ -2962,7 +3012,10 @@ impl StmtResultToLeanCompiler {
             return Err("by-definition Result has no parameter-check children".into());
         };
         if !argument_verification.infers.is_empty() {
-            return Ok(None);
+            return Err(
+                "by-definition argument verification unexpectedly published inference effects"
+                    .into(),
+            );
         }
         if argument_verification.checks.len() != binding.requirement_count
             || verification.definition_clause_facts.len() != binding.clause_count
@@ -2971,12 +3024,117 @@ impl StmtResultToLeanCompiler {
             return Err("by-definition Result changed its component arity".into());
         }
 
+        self.install_fact_anonymous_function_occurrence_aliases(
+            &target,
+            "by-definition target",
+        )?;
+        for (component_index, check) in argument_verification.checks.iter().enumerate() {
+            let check = check
+                .factual_success()
+                .ok_or_else(|| "by-definition parameter child is not factual".to_string())?;
+            self.install_fact_anonymous_function_occurrence_aliases(
+                &check.fact(),
+                &format!("by-definition parameter check {component_index}"),
+            )?;
+        }
+        for (clause_index, retained_clause) in
+            verification.definition_clause_facts.iter().enumerate()
+        {
+            self.install_fact_anonymous_function_occurrence_aliases(
+                retained_clause,
+                &format!("by-definition clause {clause_index}"),
+            )?;
+        }
+
+        let substitutions = definition
+            .typed_parameters
+            .param_defs_and_args_to_param_to_arg_map(target_predicate.body.as_slice());
+        let mut substitution_runtime = Runtime::default();
+        substitution_runtime.ensure_execution_frame_for_parse();
+        for (clause_index, (source_clause, retained_clause)) in definition
+            .iff_facts
+            .iter()
+            .zip(verification.definition_clause_facts.iter())
+            .enumerate()
+        {
+            let replayed = substitution_runtime
+                .inst_fact(
+                    source_clause,
+                    &substitutions,
+                    SubstitutionMode::ResultProjection,
+                    None,
+                )
+                .map_err(|error| {
+                    format!(
+                        "by-definition clause {clause_index} substitution replay failed: {}",
+                        error.trace_message()
+                    )
+                })?;
+            let replayed_key = substitution_runtime
+                .equivalent_proposition_lookup_key_for_fact(&replayed)
+                .map_err(|error| {
+                    format!(
+                        "by-definition clause {clause_index} replay key failed: {}",
+                        error.trace_message()
+                    )
+                })?;
+            let retained_key = substitution_runtime
+                .equivalent_proposition_lookup_key_for_fact(retained_clause)
+                .map_err(|error| {
+                    format!(
+                        "by-definition clause {clause_index} retained key failed: {}",
+                        error.trace_message()
+                    )
+                })?;
+            if replayed_key != retained_key {
+                return Err(format!(
+                    "by-definition clause {clause_index} changed its exact parameter substitution:\n  replayed: {}\n  retained: {}\n  replayed key: {}\n  retained key: {}",
+                    replayed,
+                    retained_clause,
+                    replayed_key,
+                    retained_key,
+                ));
+            }
+        }
+
+        // Definition instantiation renders every clause with the exact
+        // numeric representatives selected by its parameter-check Results.
+        // Make those frozen FactIds visible before constructing the
+        // instantiated component types; otherwise a compound argument such
+        // as `c * a` has no certificate from which to select its real
+        // representative.
+        for (component_index, check) in argument_verification.checks.iter().enumerate() {
+            let check = check
+                .factual_success()
+                .ok_or_else(|| "by-definition parameter child is not factual".to_string())?;
+            let fact_id = check.store.fact_id.ok_or_else(|| {
+                format!("by-definition parameter check {component_index} has no FactId")
+            })?;
+            if self.environment_stack.fact_propositions.contains_key(&fact_id) {
+                continue;
+            }
+            let proof = self
+                .construct_lean_proof_from_direct_fact_result(check)?
+                .ok_or_else(|| {
+                    format!(
+                        "by-definition parameter check {component_index} has no direct proof consumer"
+                    )
+                })?;
+            self.environment_stack.fact_names.insert(fact_id, proof);
+            self.environment_stack
+                .fact_propositions
+                .insert(fact_id, check.fact());
+        }
+
         let expected_components =
             instantiated_predicate_components(&target, &binding, &self.environment_stack)?;
         if expected_components.len() != binding.requirement_count + binding.clause_count {
             return Err("active predicate definition produced an invalid component arity".into());
         }
         let mut components = Vec::with_capacity(expected_components.len());
+        let parameter_types = definition
+            .typed_parameters
+            .collect_param_bindings_with_types();
         for (component_index, check) in argument_verification.checks.iter().enumerate() {
             let check = check
                 .factual_success()
@@ -2986,15 +3144,85 @@ impl StmtResultToLeanCompiler {
                 &check.fact(),
                 &format!("by-definition parameter check {component_index}"),
             )?;
-            if render_fact(&check.fact(), &self.environment_stack)?
-                != expected_components[component_index]
-            {
-                return Err(format!(
-                    "by-definition parameter check {component_index} changed its expected fact"
-                ));
-            }
-            let Some(proof) = self.construct_lean_proof_from_direct_fact_result(check)? else {
-                return Ok(None);
+            let proof = if binding.exact_parameters[component_index] {
+                let (_, ParamType::Obj(set)) = &parameter_types[component_index] else {
+                    return Err(
+                        "exact predicate parameter retained a non-object type".into(),
+                    );
+                };
+                let checked_fact = check.fact();
+                let (checked_argument, checked_set) = membership_parts(&checked_fact)?;
+                if obj_equality_key(checked_argument)
+                    != obj_equality_key(&target_predicate.body[component_index])
+                    || obj_equality_key(checked_set) != obj_equality_key(set)
+                {
+                    return Err(format!(
+                        "by-definition exact function parameter check {component_index} changed its source argument or set"
+                    ));
+                }
+                let argument = render_exact_predicate_argument(
+                    &target_predicate.body[component_index],
+                    set,
+                    &self.environment_stack,
+                )?;
+                format!(
+                    "Litex.In.own {} {argument}",
+                    render_obj(set, &self.environment_stack)?
+                )
+            } else {
+                let (_, ParamType::Obj(set)) = &parameter_types[component_index] else {
+                    return Err(
+                        "concrete predicate object requirement retained another parameter type"
+                            .into(),
+                    );
+                };
+                let checked_fact = check.fact();
+                let (checked_argument, checked_set) = membership_parts(&checked_fact)?;
+                if obj_equality_key(checked_argument)
+                    != obj_equality_key(&target_predicate.body[component_index])
+                    || obj_equality_key(checked_set) != obj_equality_key(set)
+                {
+                    return Err(format!(
+                        "by-definition parameter check {component_index} changed its source argument or set"
+                    ));
+                }
+                let Some(proof) = self.construct_lean_proof_from_direct_fact_result(check)? else {
+                    return Err(format!(
+                        "by-definition parameter check {component_index} has no direct proof consumer: {:?}",
+                        check.proof()
+                    ));
+                };
+                if render_fact(&checked_fact, &self.environment_stack)?
+                    == expected_components[component_index]
+                {
+                    proof
+                } else {
+                    let lowered_set = LeanTargetObjectRepresentation::lower(set)?;
+                    let source_argument = render_obj(
+                        &target_predicate.body[component_index],
+                        &self.environment_stack,
+                    )?;
+                    let exact_argument = match LeanTargetObjectRepresentation::lower(
+                        &target_predicate.body[component_index],
+                    )? {
+                        LeanTargetObjectRepresentation::Symbol { symbol_id, .. } => self
+                            .environment_stack
+                            .exact_carrier_values
+                            .get(&symbol_id)
+                            .cloned(),
+                        _ => None,
+                    };
+                    exact_argument
+                        .and_then(|argument| exact_set_numeric_proof(&lowered_set, &argument))
+                        .or_else(|| {
+                            membership_numeric_proof(&lowered_set, &source_argument, &proof)
+                        })
+                        .ok_or_else(|| {
+                            format!(
+                                "by-definition numeric parameter check {component_index} cannot construct its canonical predicate-boundary membership"
+                            )
+                        })?
+                }
             };
             components.push(CompiledByDefinitionComponentProofBody {
                 fact: check.fact(),
@@ -3023,15 +3251,119 @@ impl StmtResultToLeanCompiler {
                 &format!("by-definition clause check {clause_index}"),
             )?;
             let component_index = binding.requirement_count + clause_index;
-            if render_fact(retained_clause, &self.environment_stack)?
-                != expected_components[component_index]
+            let proof = if matches!(check.proof(), SuccessFactProofResult::ForallProof(_)) {
+                let fact_id = check.store.fact_id.ok_or_else(|| {
+                    format!("by-definition forall clause {clause_index} has no frozen FactId")
+                })?;
+                resolve_fact_citation(&fact_id, retained_clause, &self.environment_stack)?
+            } else {
+                let Some(proof) = self.construct_lean_proof_from_direct_fact_result(check)? else {
+                    return Err(format!(
+                        "by-definition clause check {clause_index} has no direct proof consumer: {:?}",
+                        check.proof()
+                    ));
+                };
+                proof
+            };
+            let proof = if let Fact::AtomicFact(AtomicFact::EqualFact(equality)) =
+                &definition.iff_facts[clause_index]
             {
-                return Err(format!(
-                    "by-definition clause check {clause_index} changed its expected fact"
-                ));
-            }
-            let Some(proof) = self.construct_lean_proof_from_direct_fact_result(check)? else {
-                return Ok(None);
+                let mut clause_source = self.environment_stack.clone();
+                let mut clause_target = self.environment_stack.clone();
+                if let Some(definition_well_definedness) = &binding.definition_well_definedness {
+                    clause_source.well_definedness = Some(definition_well_definedness.clone());
+                    clause_target.well_definedness = Some(definition_well_definedness.clone());
+                }
+                let mut transports = Vec::new();
+                for (parameter_index, ((definition_parameter, parameter_type), argument)) in
+                    parameter_types
+                        .iter()
+                        .zip(target_predicate.body.iter())
+                        .enumerate()
+                {
+                    let source_value = render_obj(argument, &self.environment_stack)?;
+                    let target_value = render_concrete_predicate_argument(
+                        &binding,
+                        parameter_index,
+                        argument,
+                        &self.environment_stack,
+                    )?;
+                    clause_source
+                        .symbol_names
+                        .insert(definition_parameter.id(), source_value.clone());
+                    clause_target
+                        .symbol_names
+                        .insert(definition_parameter.id(), target_value.clone());
+                    if !binding.exact_parameters[parameter_index] {
+                        if source_value != target_value {
+                            return Err(format!(
+                                "by-definition clause {clause_index} changed non-exact parameter {parameter_index}"
+                            ));
+                        }
+                        continue;
+                    }
+                    let ParamType::Obj(set) = parameter_type else {
+                        return Err(
+                            "by-definition exact clause parameter is not object-valued".into(),
+                        );
+                    };
+                    install_exact_predicate_carrier_value(
+                        definition_parameter.id(),
+                        set,
+                        &target_value,
+                        &mut clause_target,
+                    )?;
+                    if source_value != target_value {
+                        let exact_to_source = render_exact_predicate_argument_same_to_source(
+                            argument,
+                            set,
+                            &self.environment_stack,
+                        )?;
+                        transports.push((
+                            definition_parameter.id(),
+                            set.clone(),
+                            source_value,
+                            target_value,
+                            format!("Litex.Same.symm ({exact_to_source})"),
+                        ));
+                    }
+                }
+                let mut transported = format!(
+                    "(by simpa [Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using ({proof}))"
+                );
+                let mut current = clause_source;
+                for (symbol_id, set, source_value, target_value, bridge) in transports {
+                    let mut next = current.clone();
+                    next.symbol_names.insert(symbol_id, target_value.clone());
+                    install_exact_predicate_carrier_value(
+                        symbol_id,
+                        &set,
+                        &target_value,
+                        &mut next,
+                    )?;
+                    transported = render_equality_across_representative(
+                        equality,
+                        &current,
+                        &next,
+                        &source_value,
+                        &target_value,
+                        &bridge,
+                        &transported,
+                    )?;
+                    current = next;
+                }
+                if render_fact(&definition.iff_facts[clause_index], &current)?
+                    != expected_components[component_index]
+                {
+                    return Err(format!(
+                        "by-definition clause {clause_index} did not reach its exact predicate representation"
+                    ));
+                }
+                transported
+            } else {
+                format!(
+                    "(by simpa [Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using ({proof}))"
+                )
             };
             components.push(CompiledByDefinitionComponentProofBody {
                 fact: retained_clause.clone(),
@@ -3526,55 +3858,4 @@ impl StmtResultToLeanCompiler {
         self.next_fact_name_index += 1;
         Ok(())
     }
-}
-
-#[derive(Clone, Copy)]
-pub(super) enum CheckedRealSequenceDefinitionKind {
-    TailClose,
-    ConvergesTo,
-    Convergent,
-    CauchyTail,
-    Cauchy,
-}
-
-pub(super) fn checked_real_sequence_definition_kind(
-    definition: &DefPropStmt,
-) -> Option<CheckedRealSequenceDefinitionKind> {
-    let mut statement = without_bound_symbol_display_ids(&definition.to_string());
-    for local_name in [
-        "is_sequence_tail_close_to_limit",
-        "converges_to",
-        "is_cauchy_tail",
-    ] {
-        let qualified_suffix = format!("::{local_name}");
-        while let Some(suffix_start) = statement.find(&qualified_suffix) {
-            let dollar = statement[..suffix_start].rfind('$')?;
-            statement.replace_range(dollar..suffix_start + 2, "$ ");
-            statement = statement.replace("$ ", "$");
-        }
-    }
-    let expected = match definition.name.as_str() {
-        "is_sequence_tail_close_to_limit" => (
-            CheckedRealSequenceDefinitionKind::TailClose,
-            "prop is_sequence_tail_close_to_limit(a seq(R), L R, epsilon R+, n0 N+):\n    forall n N+:\n        n >= n0\n        =>:\n            abs (a(n) - L) < epsilon",
-        ),
-        "converges_to" => (
-            CheckedRealSequenceDefinitionKind::ConvergesTo,
-            "prop converges_to(a seq(R), L R):\n    forall epsilon R+:\n        exist n0 N+ st {$is_sequence_tail_close_to_limit(a, L, epsilon, n0)}",
-        ),
-        "is_convergent_sequence" => (
-            CheckedRealSequenceDefinitionKind::Convergent,
-            "prop is_convergent_sequence(a seq(R)):\n    exist L R st {$converges_to(a, L)}",
-        ),
-        "is_cauchy_tail" => (
-            CheckedRealSequenceDefinitionKind::CauchyTail,
-            "prop is_cauchy_tail(a seq(R), epsilon R+, n0 N+):\n    forall m, n N+:\n        m >= n0\n        n >= n0\n        =>:\n            abs (a(m) - a(n)) < epsilon",
-        ),
-        "is_cauchy_sequence" => (
-            CheckedRealSequenceDefinitionKind::Cauchy,
-            "prop is_cauchy_sequence(a seq(R)):\n    forall epsilon R+:\n        exist n0 N+ st {$is_cauchy_tail(a, epsilon, n0)}",
-        ),
-        _ => return None,
-    };
-    (statement == expected.1).then_some(expected.0)
 }

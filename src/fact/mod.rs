@@ -11,6 +11,7 @@ pub use composite::conjunction_and_chain::{
 };
 pub use composite::disjunction::OrFact;
 pub use composite::quantifier_free::QuantifierFreeFact;
+pub use composite::order_closure::NumericOrderChainClosureStep;
 pub use quantified::existential::{ExistFactEnum, ExistentialSpec};
 pub use quantified::universal::ForallFact;
 pub use quantified::universal_iff::ForallFactWithIff;

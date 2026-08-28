@@ -20,7 +20,7 @@ Chinese version: https://litexlang.com/doc/Litex中文蓝图
 - [4. Lean-Compatible: Independent Rechecking for Covered Paths](#compatibility)
 - [From Four Design Principles to Mathematical Practice: Definition and Verification](#mathematics-practice)
   - [Full Example: Define Convergence and Verify Preservation under Scalar Multiplication](#convergence-example)
-  - [Next Stage: Connect Litex Results to Mathlib-Style Mathematics](#next-stage-pipeline)
+  <!-- - [Next Stage: Connect Litex Results to Mathlib-Style Mathematics](#next-stage-pipeline) -->
 - [From Language to Ecosystem: The Role Litex Aims to Play](#ecosystem-role)
 - [Conclusion](#conclusions)
 
@@ -742,6 +742,7 @@ The first two `prop` declarations establish the domain language: what it means t
 
 </details>
 
+<!--
 <a id="next-stage-pipeline"></a>
 
 ### Next Stage: Connect Litex Results to Mathlib-Style Mathematics
@@ -754,6 +755,7 @@ The convergence example currently shows how Litex defines mathematical interface
 4. A separate AI- or human-authored adapter imports the generated module, cites its theorem, uses proved wrapper/unwrap bridges to recover native Mathlib objects or conclusions, and then proves the downstream result people actually want.
 
 The existing [layered showcase](../showcases/litex_to_lean_mathlib_pipeline/showcase1/README.md) already separates Litex source, generated Lean, an external adapter, and a downstream consumer. Its adapter, however, still reconstructs part of the native mathematics independently; it is not yet the complete evidence for “cite the generated theorem and unwrap it into the desired native theorem.” The Blueprint should include that code and the AI/Litex-skill workflow only after the consumption path runs end to end through real source, generated output, and a Lean kernel gate. A skill can organize authorship, but correctness must still come from Litex verification and Lean checking.
+-->
 
 <a id="ecosystem-role"></a>
 

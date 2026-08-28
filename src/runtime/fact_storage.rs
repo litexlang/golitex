@@ -371,6 +371,10 @@ impl Runtime {
             Fact::ChainFact(chain_fact) => chain_fact.facts_with_order_transitive_closure()?,
             _ => Vec::new(),
         };
+        let numeric_order_chain_steps = match &fact {
+            Fact::ChainFact(chain_fact) => chain_fact.numeric_order_chain_closure_steps()?,
+            _ => Vec::new(),
+        };
         let equality_chain_facts = match &fact {
             Fact::ChainFact(chain_fact) => Self::equality_chain_closure_facts(chain_fact)?,
             _ => Vec::new(),
@@ -391,6 +395,9 @@ impl Runtime {
         self.store_chain_atomic_facts_to_cache(chain_atomic_facts)?;
         let mut transitive_chain_infers =
             self.store_equality_chain_atomic_facts(equality_chain_facts)?;
+        transitive_chain_infers.new_infer_result_inside(
+            self.store_numeric_order_chain_atomic_facts(numeric_order_chain_steps)?,
+        );
         transitive_chain_infers.new_infer_result_inside(
             self.store_transitive_prop_chain_atomic_facts(transitive_chain_facts)?,
         );
@@ -434,6 +441,12 @@ impl Runtime {
             }
             _ => Vec::new(),
         };
+        let numeric_order_chain_steps = match &fact {
+            AndChainAtomicFact::ChainFact(chain_fact) => {
+                chain_fact.numeric_order_chain_closure_steps()?
+            }
+            _ => Vec::new(),
+        };
         let equality_chain_facts = match &fact {
             AndChainAtomicFact::ChainFact(chain_fact) => {
                 Self::equality_chain_closure_facts(chain_fact)?
@@ -450,6 +463,9 @@ impl Runtime {
         self.store_chain_atomic_facts_to_cache(chain_atomic_facts)?;
         let mut transitive_chain_infers =
             self.store_equality_chain_atomic_facts(equality_chain_facts)?;
+        transitive_chain_infers.new_infer_result_inside(
+            self.store_numeric_order_chain_atomic_facts(numeric_order_chain_steps)?,
+        );
         transitive_chain_infers.new_infer_result_inside(
             self.store_transitive_prop_chain_atomic_facts(transitive_chain_facts)?,
         );
@@ -537,6 +553,12 @@ impl Runtime {
             }
             _ => Vec::new(),
         };
+        let numeric_order_chain_steps = match &fact {
+            ExistOrAndChainAtomicFact::ChainFact(chain_fact) => {
+                chain_fact.numeric_order_chain_closure_steps()?
+            }
+            _ => Vec::new(),
+        };
         let equality_chain_facts = match &fact {
             ExistOrAndChainAtomicFact::ChainFact(chain_fact) => {
                 Self::equality_chain_closure_facts(chain_fact)?
@@ -554,6 +576,9 @@ impl Runtime {
         self.store_chain_atomic_facts_to_cache(chain_atomic_facts)?;
         let mut transitive_chain_infers =
             self.store_equality_chain_atomic_facts(equality_chain_facts)?;
+        transitive_chain_infers.new_infer_result_inside(
+            self.store_numeric_order_chain_atomic_facts(numeric_order_chain_steps)?,
+        );
         transitive_chain_infers.new_infer_result_inside(
             self.store_transitive_prop_chain_atomic_facts(transitive_chain_facts)?,
         );
@@ -595,6 +620,12 @@ impl Runtime {
             }
             _ => Vec::new(),
         };
+        let numeric_order_chain_steps = match &fact {
+            QuantifierFreeFact::ChainFact(chain_fact) => {
+                chain_fact.numeric_order_chain_closure_steps()?
+            }
+            _ => Vec::new(),
+        };
         let equality_chain_facts = match &fact {
             QuantifierFreeFact::ChainFact(chain_fact) => {
                 Self::equality_chain_closure_facts(chain_fact)?
@@ -611,6 +642,9 @@ impl Runtime {
         self.store_chain_atomic_facts_to_cache(chain_atomic_facts)?;
         let mut transitive_chain_infers =
             self.store_equality_chain_atomic_facts(equality_chain_facts)?;
+        transitive_chain_infers.new_infer_result_inside(
+            self.store_numeric_order_chain_atomic_facts(numeric_order_chain_steps)?,
+        );
         transitive_chain_infers.new_infer_result_inside(
             self.store_transitive_prop_chain_atomic_facts(transitive_chain_facts)?,
         );
@@ -645,6 +679,32 @@ impl Runtime {
             result.new_infer_result_inside(conclusion_infers);
             result.add_rule_application_with_premises(
                 InferRule::RegisteredTransitivePredicateChainClosure(inference.rule),
+                inference.premises,
+                vec![conclusion],
+            );
+        }
+        Ok(result)
+    }
+
+    fn store_numeric_order_chain_atomic_facts(
+        &mut self,
+        inferences: Vec<crate::fact::NumericOrderChainClosureStep>,
+    ) -> Result<SuccessInferResult, RuntimeError> {
+        let mut result = SuccessInferResult::new();
+        for inference in inferences {
+            let conclusion_fact: Fact = inference.conclusion.clone().into();
+            let conclusion_infers = self.store_derived_atomic_fact_without_infer(
+                inference.conclusion,
+                InferReason::InferredFact.store_reason(),
+            )?;
+            let conclusion =
+                SuccessStoreFactResult::new(conclusion_fact, conclusion_infers.clone());
+            result.new_infer_result_inside(conclusion_infers);
+            result.add_rule_application_with_premises(
+                InferRule::NumericOrderChainClosure(NumericOrderChainClosureInferRule {
+                    start_object_index: inference.start_object_index,
+                    end_object_index: inference.end_object_index,
+                }),
                 inference.premises,
                 vec![conclusion],
             );
@@ -700,7 +760,7 @@ impl Runtime {
             .unwrap_or_else(|| self.allocate_fact_id())
     }
 
-    fn equivalent_proposition_lookup_key_for_fact(
+    pub(crate) fn equivalent_proposition_lookup_key_for_fact(
         &self,
         fact: &Fact,
     ) -> Result<FactString, RuntimeError> {
