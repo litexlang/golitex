@@ -5,10 +5,10 @@
 ```json
 {
   "runner": "litex-runner",
-  "runner_version": "0.1",
+  "runner_version": "0.2",
   "result": "success",
   "ok": true,
-  "target": {"kind": "code", "label": "-runner -e"},
+  "target": {"kind": "code"},
   "error": null,
   "trace": "...statement-result JSON..."
 }
@@ -36,9 +36,8 @@ an already executed `RunOutcome`; code, file, and repository selection remains
 at the CLI or embedding call site, while `RunOptions` carries strictness,
 language, isolation, output style, and summary behavior.
 
-The JSON key `target.label` is runner output metadata, not an execution tag.
-The runner creates `-runner -e` while rendering an inline-code result. The
-pipeline gives inline code the stable internal source path `<-e>`; command
-spellings never enter Runtime state. File and repository targets use their
-resolved display path/name, and hidden non-code paths become `entry`.
-Target kind remains a `RunTargetKind` until this JSON object is rendered.
+The target kind remains a `RunTargetKind` until this JSON object is rendered.
+Inline code therefore needs no synthetic label; its source keeps the stable
+internal path `<-e>`. File and repository targets expose only `kind` by
+default, while `-detail` adds their real `path`. Command spellings never enter
+Runtime state.

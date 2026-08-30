@@ -73,7 +73,6 @@ pub(in super::super) const KO_TEXTS: &[(&str, &str)] = &[
     ("code", "코드"),
     ("file", "파일"),
     ("repo", "저장소"),
-    ("entry", "진입점"),
     ("builtin", "내장"),
     ("module", "모듈"),
     ("ArithmeticError", "산술 오류"),

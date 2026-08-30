@@ -1,4 +1,4 @@
-//! Repository discovery entrypoints and requested targets.
+//! Repository discovery for requested modules and files.
 
 use super::*;
 

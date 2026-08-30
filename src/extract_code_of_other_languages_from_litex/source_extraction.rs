@@ -1,98 +1,99 @@
+use super::program::{extract_program_from_stmts, ExtractedProgram};
 use crate::prelude::*;
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
-fn latex_fragment(math_blocks: &[String]) -> String {
-    let mut blocks = Vec::new();
-    if math_blocks.is_empty() {
-        blocks.push("% No statements parsed.".to_string());
-    } else {
-        for block in math_blocks.iter() {
-            let t = block.trim();
-            if t.is_empty() {
-                continue;
-            }
-            blocks.push(format!("\\[\n{}\n\\]", t));
-        }
-        if blocks.is_empty() {
-            blocks.push("% No non-empty LaTeX blocks.".to_string());
-        }
-    }
-    blocks.join("\n\n")
+#[derive(Clone, Copy)]
+pub(crate) enum CodeExtractionTarget {
+    Python,
+    C,
 }
 
-// Parse-only path: one blank-separated block per top-level stmt via `Stmt::syntax_rendering`.
-// Returns a LaTeX fragment; callers can embed it in their own document wrapper if needed.
-pub fn to_latex(source_code: &str, runtime: &mut Runtime) -> Result<String, RuntimeError> {
+pub(super) fn extract_code(
+    source_code: &str,
+    runtime: &mut Runtime,
+    target: CodeExtractionTarget,
+) -> Result<String, RuntimeError> {
     let tokenizer = Tokenizer::new();
     let current_file_path = runtime.current_file_path_rc();
     let blocks = tokenizer.parse_blocks(source_code, current_file_path)?;
-    let mut math_blocks: Vec<String> = Vec::new();
+
+    let mut stmts = vec![];
     for mut block in blocks {
         let stmt = runtime.parse_statement(&mut block)?;
-        // Chained field parsing needs earlier definitions, but LaTeX output
-        // must not place unverified structs in the checked environment.
-        if let Stmt::Definition(DefinitionStmt::DefStructStmt(def)) = &stmt {
-            runtime.register_parsed_struct_definition(def);
-        }
-        math_blocks.push(stmt.syntax_rendering());
+        runtime.execute_statement(&stmt)?;
+        stmts.push(stmt);
     }
-    Ok(latex_fragment(&math_blocks))
+
+    let program = extract_program_from_stmts(&stmts, runtime)?;
+    render_program(&program, target)
 }
 
-pub fn to_latex_from_file(file_path: &str) -> Result<String, RuntimeError> {
-    let resolved_path = resolve_file_path(file_path)?;
-    let mut runtime = Runtime::default();
-    match discover_repository_for_file(&mut runtime, resolved_path.as_str())? {
-        Some(target) => to_latex_project_run(&mut runtime, target),
-        None => {
-            let source = read_source(resolved_path.as_str())?;
-            runtime.start_isolated_file(resolved_path.as_str());
-            to_latex(source.as_str(), &mut runtime)
-        }
-    }
-}
-
-pub fn to_latex_from_source(source_code: &str, source_label: &str) -> Result<String, RuntimeError> {
+pub(super) fn extract_code_from_source(
+    source_code: &str,
+    source_label: &str,
+    target: CodeExtractionTarget,
+) -> Result<String, RuntimeError> {
     let normalized = source_code.replace('\r', "");
     let mut runtime = Runtime::default();
     runtime.start_isolated_source(source_label);
-    to_latex(normalized.as_str(), &mut runtime)
+    extract_code(normalized.as_str(), &mut runtime, target)
 }
 
-pub fn to_latex_from_repository(repository_path: &str) -> Result<String, RuntimeError> {
+pub(super) fn extract_code_from_file(
+    file_path: &str,
+    target: CodeExtractionTarget,
+) -> Result<String, RuntimeError> {
+    let resolved_path = resolve_file_path(file_path)?;
     let mut runtime = Runtime::default();
-    let target = discover_repository(&mut runtime, repository_path)?;
-    to_latex_project_run(&mut runtime, target)
+    match discover_repository_for_file(&mut runtime, resolved_path.as_str())? {
+        Some(selected_target) => extract_project_run(&mut runtime, selected_target, target),
+        None => {
+            let source = read_source(resolved_path.as_str())?;
+            runtime.start_isolated_file(resolved_path.as_str());
+            extract_code(source.as_str(), &mut runtime, target)
+        }
+    }
 }
 
-fn to_latex_project_run(
+pub(super) fn extract_code_from_repository(
+    repository_path: &str,
+    target: CodeExtractionTarget,
+) -> Result<String, RuntimeError> {
+    let mut runtime = Runtime::default();
+    let selected_target = discover_repository(&mut runtime, repository_path)?;
+    extract_project_run(&mut runtime, selected_target, target)
+}
+
+fn extract_project_run(
     runtime: &mut Runtime,
-    target: RepositoryFileTarget,
+    selected_target: RepositoryFileTarget,
+    target: CodeExtractionTarget,
 ) -> Result<String, RuntimeError> {
     let root_module_id = runtime
         .module_manager
         .module(ModuleId::ROOT)
         .map(|module| module.id)
         .expect("discovered project should have a root module");
-    if target == RepositoryFileTarget::Module(root_module_id) {
-        return to_latex_project_target(runtime, target);
+    if selected_target == RepositoryFileTarget::Module(root_module_id) {
+        return extract_project_target(runtime, selected_target, target);
     }
-    if !project_target_is_inside_module(runtime, target, root_module_id) {
+    if !project_target_is_inside_module(runtime, selected_target, root_module_id) {
         return Err(file_error(
             "litex.config",
             "selected target is not inside the root module export tree".to_string(),
         ));
     }
-    to_latex_project_prefix(runtime, root_module_id, target)
+    extract_project_prefix(runtime, root_module_id, selected_target, target)
 }
 
-fn to_latex_project_prefix(
+fn extract_project_prefix(
     runtime: &mut Runtime,
     module_id: ModuleId,
     selected_target: RepositoryFileTarget,
+    target: CodeExtractionTarget,
 ) -> Result<String, RuntimeError> {
     let (module_path, config_imports, run_targets) = {
         let module = runtime
@@ -108,10 +109,12 @@ fn to_latex_project_prefix(
     let output = (|| {
         let mut fragments = vec![];
         for config_import in config_imports {
-            to_latex_project_target(
+            let fragment = extract_project_target(
                 runtime,
                 RepositoryFileTarget::Module(config_import.module_id),
+                target,
             )?;
+            push_fragment(&mut fragments, fragment, target);
         }
         for run_target in run_targets {
             let target_matches = repository_target_matches(selected_target, run_target);
@@ -124,15 +127,13 @@ fn to_latex_project_prefix(
                 let ImportTarget::Module(child_module_id) = run_target else {
                     unreachable!("only a module target can contain another target")
                 };
-                to_latex_project_prefix(runtime, child_module_id, selected_target)?
+                extract_project_prefix(runtime, child_module_id, selected_target, target)?
             } else {
-                to_latex_project_target(runtime, repository_file_target(run_target))?
+                extract_project_target(runtime, repository_file_target(run_target), target)?
             };
-            if !fragment.trim().is_empty() {
-                fragments.push(fragment);
-            }
+            push_fragment(&mut fragments, fragment, target);
             if target_matches || target_contains {
-                return Ok(fragments.join("\n\n"));
+                return Ok(fragments.join("\n"));
             }
         }
         Err(file_error(
@@ -140,14 +141,22 @@ fn to_latex_project_prefix(
             "selected target is missing from its recursive ordered [export] tree".to_string(),
         ))
     })();
+    if output.is_ok() {
+        runtime
+            .module_manager
+            .module_mut(module_id)
+            .expect("discovered module should exist")
+            .status = ModuleStatus::Loaded;
+    }
     output
 }
 
-fn to_latex_project_target(
+fn extract_project_target(
     runtime: &mut Runtime,
-    target: RepositoryFileTarget,
+    selected_target: RepositoryFileTarget,
+    target: CodeExtractionTarget,
 ) -> Result<String, RuntimeError> {
-    match target {
+    match selected_target {
         RepositoryFileTarget::Module(module_id) => {
             let (config_imports, run_targets) = {
                 let module = runtime
@@ -159,44 +168,94 @@ fn to_latex_project_target(
             let output = (|| {
                 let mut fragments = vec![];
                 for config_import in config_imports {
-                    to_latex_project_target(
+                    let fragment = extract_project_target(
                         runtime,
                         RepositoryFileTarget::Module(config_import.module_id),
+                        target,
                     )?;
+                    push_fragment(&mut fragments, fragment, target);
                 }
                 for run_target in run_targets {
-                    let fragment = match run_target {
-                        ImportTarget::File { module_id, file_id } => to_latex_project_target(
-                            runtime,
-                            RepositoryFileTarget::File { module_id, file_id },
-                        ),
-                        ImportTarget::Module(module_id) => to_latex_project_target(
-                            runtime,
-                            RepositoryFileTarget::Module(module_id),
-                        ),
-                    }?;
-                    if !fragment.trim().is_empty() {
-                        fragments.push(fragment);
-                    }
+                    let fragment = extract_project_target(
+                        runtime,
+                        repository_file_target(run_target),
+                        target,
+                    )?;
+                    push_fragment(&mut fragments, fragment, target);
                 }
-                Ok(fragments.join("\n\n"))
+                Ok(fragments.join("\n"))
             })();
+            if output.is_ok() {
+                runtime
+                    .module_manager
+                    .module_mut(module_id)
+                    .expect("discovered module should exist")
+                    .status = ModuleStatus::Loaded;
+            }
             output
         }
         RepositoryFileTarget::File { module_id, file_id } => {
-            let source_path = runtime
+            let (source_path, status) = {
+                let file = runtime
+                    .module_manager
+                    .module(module_id)
+                    .and_then(|module| module.file(file_id))
+                    .expect("registered project file should exist");
+                (file.source_path.clone(), file.status)
+            };
+            if status == FileStatus::Loaded {
+                return Ok(String::new());
+            }
+            if status == FileStatus::Loading {
+                return Err(file_error(
+                    source_path.as_str(),
+                    format!("cyclic project entry while extracting {}", target.name()),
+                ));
+            }
+            runtime
                 .module_manager
-                .module(module_id)
-                .and_then(|module| module.file(file_id))
+                .module_mut(module_id)
+                .and_then(|module| module.file_mut(file_id))
                 .expect("registered project file should exist")
-                .source_path
-                .clone();
+                .status = FileStatus::Loading;
             runtime.push_file_execution_frame(module_id, file_id);
-            let output = read_source(source_path.as_str())
-                .and_then(|source| to_latex(source.as_str(), runtime));
+            let output = runtime
+                .refresh_current_bare_symbol_index()
+                .and_then(|_| read_source(source_path.as_str()))
+                .and_then(|source| extract_code(source.as_str(), runtime, target));
             runtime.pop_execution_frame();
+            runtime
+                .module_manager
+                .module_mut(module_id)
+                .and_then(|module| module.file_mut(file_id))
+                .expect("registered project file should exist")
+                .status = if output.is_ok() {
+                FileStatus::Loaded
+            } else {
+                FileStatus::Unloaded
+            };
             output
         }
+    }
+}
+
+fn render_program(
+    program: &ExtractedProgram,
+    target: CodeExtractionTarget,
+) -> Result<String, RuntimeError> {
+    match target {
+        CodeExtractionTarget::Python => super::python::rendering::render_program(program),
+        CodeExtractionTarget::C => super::c::rendering::render_program(program),
+    }
+}
+
+fn push_fragment(
+    fragments: &mut Vec<String>,
+    fragment: String,
+    target: CodeExtractionTarget,
+) {
+    if !fragment.trim().is_empty() && fragment.trim() != target.empty_output() {
+        fragments.push(fragment);
     }
 }
 
@@ -280,4 +339,20 @@ fn file_error(path: &str, message: String) -> RuntimeError {
         (0, Rc::from(path)),
     ))
     .into()
+}
+
+impl CodeExtractionTarget {
+    fn name(self) -> &'static str {
+        match self {
+            Self::Python => "Python",
+            Self::C => "C",
+        }
+    }
+
+    fn empty_output(self) -> &'static str {
+        match self {
+            Self::Python => "# No Python-extractable Litex definitions.",
+            Self::C => "/* No C-extractable Litex definitions. */",
+        }
+    }
 }

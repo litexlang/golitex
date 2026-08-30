@@ -22,8 +22,6 @@ pub struct ModuleManager {
     pub exported_files_by_name: HashMap<String, ImportTarget>,
     pub loading_module_stack: Vec<ModuleId>,
     pub next_module_id: usize,
-    pub entry_module_id: Option<ModuleId>,
-    pub entry_path_rc: Rc<str>,
     pub parsed_struct_definitions: HashMap<String, DefStructStmt>,
     pub unverified_imports: Vec<UnverifiedImport>,
 }
@@ -37,27 +35,25 @@ impl ModuleManager {
             exported_files_by_name: HashMap::new(),
             loading_module_stack: vec![],
             next_module_id: 0,
-            entry_module_id: None,
-            entry_path_rc: Rc::from(""),
             parsed_struct_definitions: HashMap::new(),
             unverified_imports: vec![],
         }
     }
 
-    pub fn create_entry_module(
+    pub fn create_root_module(
         &mut self,
         main_file_path: &str,
         is_virtual_source: bool,
     ) -> ExecutionModuleFileInfo {
         assert!(
-            self.entry_module_id.is_none(),
-            "entry module has already been created"
+            self.module(ModuleId::ROOT).is_none(),
+            "root module has already been created"
         );
         let id = self.allocate_module_id();
         assert_eq!(
             id,
             ModuleId::ROOT,
-            "the entry module must be allocated as ModuleId::ROOT"
+            "the root module must be allocated as ModuleId::ROOT"
         );
         let module_root_path = module_root_path_for_main_file(main_file_path);
         let mut runner = ModuleRunner::new(
@@ -78,26 +74,24 @@ impl ModuleManager {
         };
         runner
             .file_mut(file_id)
-            .expect("entry source file should exist")
+            .expect("root source file should exist")
             .status = FileStatus::Loaded;
         self.modules.insert(id, runner);
-        self.entry_module_id = Some(id);
-        self.entry_path_rc = Rc::from(main_file_path);
         self.execution_module_file_info(id, file_id)
-            .expect("entry source file should be registered")
+            .expect("root source file should be registered")
     }
 
-    pub fn create_repository_entry_module(
+    pub fn create_repository_root_module(
         &mut self,
         module_root_path: String,
         main_file_path: String,
     ) -> Result<ModuleId, String> {
-        if self.entry_module_id.is_some() {
-            return Err("entry module has already been created".to_string());
+        if self.module(ModuleId::ROOT).is_some() {
+            return Err("root module has already been created".to_string());
         }
         let id = self.allocate_module_id();
         if id != ModuleId::ROOT {
-            return Err("the entry module must be allocated as ModuleId::ROOT".to_string());
+            return Err("the root module must be allocated as ModuleId::ROOT".to_string());
         }
         let runner = ModuleRunner::new(
             id,
@@ -110,8 +104,6 @@ impl ModuleManager {
         );
         self.modules.insert(id, runner);
         self.module_by_path.insert(module_root_path, id);
-        self.entry_module_id = Some(id);
-        self.entry_path_rc = Rc::from(main_file_path);
         Ok(id)
     }
 

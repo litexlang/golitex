@@ -100,13 +100,57 @@ impl StmtResultToLeanCompiler {
         let target_group = one_witness_existential_group(target_existential)?;
         let definition_body = definition_existential.facts()[0].from_ref_to_cloned_fact();
         let target_body = target_existential.facts()[0].from_ref_to_cloned_fact();
-        let (definition_left, definition_right) = equality_parts(&definition_body)?;
-        let (target_left, target_right) = equality_parts(&target_body)?;
         let definition_witness = definition_group.params[0].id();
         let target_witness = target_group.params[0].id();
         let parameters = active_definition
             .typed_parameters
             .collect_param_bindings_with_types();
+        if !matches!(definition_body, Fact::AtomicFact(AtomicFact::EqualFact(_))) {
+            if active_definition.iff_facts.len() != 1
+                || components.len() != binding.requirement_count + 1
+                || !binding.exact_parameters.iter().any(|exact| *exact)
+            {
+                return Err(format!(
+                    "definition projection target `{rendered_target}` is not an instantiated definition component; available: {}",
+                    components.join(" | ")
+                ));
+            }
+            let substitutions = active_definition
+                .typed_parameters
+                .param_defs_and_args_to_param_to_arg_map(evidence.fact.body.as_slice());
+            let mut instantiator = Runtime::default();
+            instantiator.ensure_execution_frame_for_parse();
+            let instantiated_clause = instantiator
+                .inst_fact(
+                    definition_clause,
+                    &substitutions,
+                    SubstitutionMode::ResultProjection,
+                    None,
+                )
+                .map_err(|error| {
+                    format!(
+                        "definition projection could not replay its retained clause substitution: {}",
+                        error.trace_message()
+                    )
+                })?;
+            if !one_witness_existentials_are_alpha_equal(
+                &instantiated_clause,
+                target,
+                &self.environment_stack,
+            )? {
+                return Err(
+                    "predicate-bodied definition projection changed its instantiated existential"
+                        .into(),
+                );
+            }
+            let selector = conjunction_selector(binding.requirement_count, components.len())?;
+            return Ok(Some(format!(
+                "(by\n  have __definition := {source_proof}\n  unfold {} at __definition\n  simpa [Litex.In.rep, Litex.Rules.complexRealInR, Litex.Rules.complexAddInR, Litex.Rules.complexSubInR, Litex.Rules.complexMulInR, Litex.Rules.complexDivInR, Litex.Rules.inROfInRPos, Litex.Le, Litex.Lt, Litex.OrderValue] using (__definition{selector}))",
+                binding.lean_name,
+            )));
+        }
+        let (definition_left, definition_right) = equality_parts(&definition_body)?;
+        let (target_left, target_right) = equality_parts(&target_body)?;
         let orientation = if object_is_symbol(definition_left, definition_witness)
             && object_is_symbol(target_left, target_witness)
         {

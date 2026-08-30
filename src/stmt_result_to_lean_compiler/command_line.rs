@@ -1,4 +1,6 @@
-use litex::stmt_result_to_lean_compiler::{compile_litex_file_to_lean_file, compile_litex_source_to_lean_source};
+use litex::stmt_result_to_lean_compiler::{
+    compile_litex_file_to_lean_file, compile_litex_source_to_lean_source,
+};
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};

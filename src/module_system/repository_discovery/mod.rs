@@ -17,7 +17,7 @@ mod model;
 mod module_config;
 mod project_authorization;
 mod project_config_files;
-mod repository_entry;
+mod requested_target;
 mod standard_library;
 mod terminal_imports;
 
@@ -29,7 +29,7 @@ pub use model::RepositoryFileTarget;
 use module_config::*;
 use project_authorization::*;
 use project_config_files::*;
-pub use repository_entry::{discover_repository, discover_repository_for_file};
+pub use requested_target::{discover_repository, discover_repository_for_file};
 use standard_library::discover_config_std_import;
 pub use standard_library::{discover_terminal_std_import, resolve_std_root};
 pub use terminal_imports::discover_terminal_module_import;

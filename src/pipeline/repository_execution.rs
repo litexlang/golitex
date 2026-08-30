@@ -75,7 +75,8 @@ fn run_repository_module_prefix(
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
     let root_module_id = runtime
         .module_manager
-        .entry_module_id
+        .module(ModuleId::ROOT)
+        .map(|module| module.id)
         .unwrap_or(target_module_id);
     if root_module_id == target_module_id {
         let execution_mode = runtime.current_execution_mode();
@@ -101,7 +102,8 @@ fn run_repository_prefix(
     };
     let root_module_id = runtime
         .module_manager
-        .entry_module_id
+        .module(ModuleId::ROOT)
+        .map(|module| module.id)
         .unwrap_or(target_module_id);
     if !runtime
         .module_manager
@@ -110,7 +112,7 @@ fn run_repository_prefix(
         return (
             vec![],
             Some(repository_target_error(
-                "selected target is not inside the entry module export tree",
+                "selected target is not inside the root module export tree",
             )),
         );
     }
@@ -144,7 +146,7 @@ fn run_repository_module_with_mode(
             )),
         );
     };
-    if runtime.module_manager.entry_module_id == Some(module_id) {
+    if module_id == ModuleId::ROOT {
         return run_repository_module_plan(runtime, module_id, execution_mode, module_run);
     }
     if module.status == ModuleStatus::Loaded {

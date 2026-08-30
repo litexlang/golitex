@@ -1388,6 +1388,8 @@ pub(super) fn arithmetic_builtin_rule_name(rule: ArithmeticBuiltinRule) -> &'sta
         ArithmeticBuiltinRule::GreaterEqualFromStrictOrder => "GreaterEqualFromStrictOrder",
         ArithmeticBuiltinRule::SubNonnegativeFromLessEqual => "SubNonnegativeFromLessEqual",
         ArithmeticBuiltinRule::SubPositiveFromLess => "SubPositiveFromLess",
+        ArithmeticBuiltinRule::SubLessImpliesLessAdd => "SubLessImpliesLessAdd",
+        ArithmeticBuiltinRule::SubLessSwap => "SubLessSwap",
         ArithmeticBuiltinRule::AddNonnegative => "AddNonnegative",
         ArithmeticBuiltinRule::AddPositive => "AddPositive",
         ArithmeticBuiltinRule::AddPositiveLeftStrict => "AddPositiveLeftStrict",
@@ -1414,6 +1416,7 @@ pub(super) fn arithmetic_builtin_rule_name(rule: ArithmeticBuiltinRule) -> &'sta
         ArithmeticBuiltinRule::AddComponentwiseLessLessEqual => "AddComponentwiseLessLessEqual",
         ArithmeticBuiltinRule::AddComponentwiseLessEqualLess => "AddComponentwiseLessEqualLess",
         ArithmeticBuiltinRule::SubComponentwiseLessEqualLess => "SubComponentwiseLessEqualLess",
+        ArithmeticBuiltinRule::SubComponentwiseLessEqual => "SubComponentwiseLessEqual",
     }
 }
 

@@ -73,7 +73,6 @@ pub(in super::super) const PT_TEXTS: &[(&str, &str)] = &[
     ("code", "código"),
     ("file", "arquivo"),
     ("repo", "repositório"),
-    ("entry", "entrada"),
     ("builtin", "interno"),
     ("module", "módulo"),
     ("ArithmeticError", "erro aritmético"),

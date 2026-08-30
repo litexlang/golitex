@@ -109,7 +109,7 @@ impl StmtResultToLeanCompiler {
             let inference_parent_certificate = inference_certificate
                 .map(|certificate| self.environment_stack.well_definedness.replace(certificate));
             let inference_compilation = (|| {
-                let allowed_sources = self
+                let mut allowed_sources = self
                     .install_equality_chain_adjacent_projections_for_typed_inference(
                         &source_fact,
                         fact_id,
@@ -117,6 +117,21 @@ impl StmtResultToLeanCompiler {
                         &result.store.infers,
                         "local proof-step Result",
                     )?;
+                for source in self
+                    .install_numeric_order_chain_adjacent_projections_for_typed_inference(
+                        &source_fact,
+                        fact_id,
+                        &name,
+                        &result.store.infers,
+                        "local proof-step Result",
+                    )?
+                {
+                    if !allowed_sources.iter().any(|existing| {
+                        existing.0 == source.0 && existing.1.to_string() == source.1.to_string()
+                    }) {
+                        allowed_sources.push(source);
+                    }
+                }
                 self.compile_typed_inference_results_as_local_have_statements(
                     &result.store.infers,
                     &allowed_sources,

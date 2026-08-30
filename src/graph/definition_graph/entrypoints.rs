@@ -9,7 +9,7 @@ use super::*;
 /// actually resolve.
 pub fn render_definition_graph_from_stmt_results(
     target_kind: RunTargetKind,
-    target_label: &str,
+    target_path: Option<&str>,
     hide_file_paths: bool,
     runtime: &mut Runtime,
     _stmt_results: &[StmtResult],
@@ -17,7 +17,7 @@ pub fn render_definition_graph_from_stmt_results(
 ) -> (bool, String) {
     render_definition_graph_result(
         target_kind,
-        target_label,
+        target_path,
         hide_file_paths,
         runtime,
         _stmt_results,
@@ -28,7 +28,7 @@ pub fn render_definition_graph_from_stmt_results(
 
 pub fn render_definition_graph_result(
     target_kind: RunTargetKind,
-    target_label: &str,
+    target_path: Option<&str>,
     hide_file_paths: bool,
     runtime: &mut Runtime,
     stmt_results: &[StmtResult],
@@ -58,7 +58,7 @@ pub fn render_definition_graph_result(
         ),
         (
             "target".to_string(),
-            definition_graph_target_json_value(target_kind, target_label, hide_file_paths),
+            run_target_json_value(target_kind.json_name(), target_path, hide_file_paths),
         ),
         (
             "error".to_string(),
@@ -99,7 +99,7 @@ pub fn render_definition_graph_result(
 
 pub fn definition_graph_target_error_output(
     target_kind: RunTargetKind,
-    target_label: &str,
+    target_path: Option<&str>,
     hide_file_paths: bool,
     message: String,
 ) -> (bool, String) {
@@ -120,7 +120,7 @@ pub fn definition_graph_target_error_output(
         ("partial".to_string(), JsonValue::Bool(false)),
         (
             "target".to_string(),
-            definition_graph_target_json_value(target_kind, target_label, hide_file_paths),
+            run_target_json_value(target_kind.json_name(), target_path, hide_file_paths),
         ),
         ("error".to_string(), JsonValue::JsonString(message)),
         (
@@ -138,25 +138,6 @@ pub fn definition_graph_target_error_output(
         ),
     ]);
     (false, render_json_value(&output, 0))
-}
-
-fn definition_graph_target_json_value(
-    target_kind: RunTargetKind,
-    target_label: &str,
-    hide_file_paths: bool,
-) -> JsonValue {
-    let label = if hide_file_paths && target_kind != RunTargetKind::Code {
-        "entry".to_string()
-    } else {
-        target_label.to_string()
-    };
-    JsonValue::Object(vec![
-        (
-            "kind".to_string(),
-            JsonValue::JsonString(target_kind.json_name().to_string()),
-        ),
-        ("label".to_string(), JsonValue::JsonString(label)),
-    ])
 }
 
 pub fn definition_graph_file_target(

@@ -51,6 +51,23 @@ pub fn line_file_source_json_value(line_file: &LineFile) -> JsonValue {
     }
 }
 
+pub fn run_target_json_value(
+    target_kind: &str,
+    target_path: Option<&str>,
+    hide_file_paths: bool,
+) -> JsonValue {
+    let mut fields = vec![(
+        "kind".to_string(),
+        JsonValue::JsonString(target_kind.to_string()),
+    )];
+    if !hide_file_paths {
+        if let Some(path) = target_path {
+            fields.push(("path".to_string(), JsonValue::JsonString(path.to_string())));
+        }
+    }
+    JsonValue::Object(fields)
+}
+
 fn render_json_primitive(v: &JsonValue) -> String {
     match v {
         JsonValue::Null => "null".to_string(),

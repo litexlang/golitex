@@ -84,7 +84,6 @@ pub(in super::super) const ZH_TEXTS: &[(&str, &str)] = &[
     ("code", "代码"),
     ("file", "文件"),
     ("repo", "仓库"),
-    ("entry", "入口"),
     ("builtin", "内置"),
     ("module", "模块"),
     ("ArithmeticError", "算术错误"),

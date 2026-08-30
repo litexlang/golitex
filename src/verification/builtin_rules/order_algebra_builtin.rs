@@ -2084,8 +2084,8 @@ impl Runtime {
                 SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     atomic_fact.clone().into(),
                     "a - d <= b - c from a <= b and c <= d".to_string(),
-                    BuiltinRuleEvidence::Uncatalogued(
-                        UncataloguedBuiltinRule::TryLessEqualAlgebra10,
+                    BuiltinRuleEvidence::Arithmetic(
+                        ArithmeticBuiltinRule::SubComponentwiseLessEqual,
                     ),
                     vec![r1, r2],
                 ),
@@ -2431,6 +2431,22 @@ impl Runtime {
         }
 
         if let Obj::Sub(sub) = &f.left {
+            // Exchange the target subtrahend with the strict upper bound.
+            // Example: from `a - b < c`, prove `a - c < b`.
+            let swapped_left: Obj = Sub::new(sub.left.as_ref().clone(), f.right.clone()).into();
+            let swapped_subgoal: AtomicFact =
+                LessFact::new(swapped_left, sub.right.as_ref().clone(), lf.clone()).into();
+            let swapped_result = self.verify_order_subgoal(swapped_subgoal, builtin_state)?;
+            if swapped_result.is_success() {
+                return Ok(Some(StmtResult::from(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                        atomic_fact.clone().into(),
+                        "a - c < b from a - b < c".to_string(),
+                        BuiltinRuleEvidence::Arithmetic(ArithmeticBuiltinRule::SubLessSwap),
+                        vec![swapped_result],
+                    ),
+                )));
+            }
             // Subtracting a nonnegative term preserves a strict upper bound.
             // Example: from `a < b` and `0 <= c`, prove `a - c < b`.
             let strict_order_subgoal: AtomicFact =
@@ -2493,6 +2509,29 @@ impl Runtime {
         }
 
         if let Obj::Add(add) = &f.right {
+            // Move either target addend to the left as a subtractor.
+            // Example: from `a - b < c`, prove `a < b + c`.
+            for (subtrahend, remaining_bound) in [
+                (add.left.as_ref(), add.right.as_ref()),
+                (add.right.as_ref(), add.left.as_ref()),
+            ] {
+                let shifted_left: Obj = Sub::new(f.left.clone(), subtrahend.clone()).into();
+                let shifted_subgoal: AtomicFact =
+                    LessFact::new(shifted_left, remaining_bound.clone(), lf.clone()).into();
+                let shifted_result = self.verify_order_subgoal(shifted_subgoal, builtin_state)?;
+                if shifted_result.is_success() {
+                    return Ok(Some(StmtResult::from(
+                        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                            atomic_fact.clone().into(),
+                            "a < b + c from a - b < c".to_string(),
+                            BuiltinRuleEvidence::Arithmetic(
+                                ArithmeticBuiltinRule::SubLessImpliesLessAdd,
+                            ),
+                            vec![shifted_result],
+                        ),
+                    )));
+                }
+            }
             let left_s = f.left.to_string();
             let b_opt = if add.left.as_ref().to_string() == left_s {
                 Some(add.right.as_ref().clone())

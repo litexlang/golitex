@@ -215,7 +215,7 @@ fn run_session_loop_with_readers_and_preload(
                 });
                 let (_, graph) = render_graph_from_stmt_results(
                     RunTargetKind::Session,
-                    "entry",
+                    None,
                     !options.output_style.is_detailed(),
                     &runtime,
                     all_results.as_slice(),
@@ -223,7 +223,7 @@ fn run_session_loop_with_readers_and_preload(
                 );
                 let (_, fact_graph) = render_fact_graph_from_stmt_results(
                     RunTargetKind::Session,
-                    "entry",
+                    None,
                     !options.output_style.is_detailed(),
                     &runtime,
                     all_results.as_slice(),
@@ -231,7 +231,7 @@ fn run_session_loop_with_readers_and_preload(
                 );
                 let (_, definition_graph) = render_definition_graph_from_stmt_results(
                     RunTargetKind::Session,
-                    "entry",
+                    None,
                     !options.output_style.is_detailed(),
                     &mut runtime,
                     all_results.as_slice(),
@@ -288,9 +288,7 @@ fn initialize_session_runtime(
         if force_isolated {
             return Ok(("isolated", stmt_results));
         }
-        if let Err(error) = runtime
-            .prepare_current_repository_for_repl(format!("{}::<session>", path_string).as_str())
-        {
+        if let Err(error) = runtime.prepare_current_repository_for_repl("<session>") {
             return Err((stmt_results, error));
         }
         return Ok(("project", stmt_results));
@@ -343,9 +341,7 @@ fn initialize_session_runtime(
     if let Err(error) = discover_repository(runtime, root.as_str()) {
         return Err((vec![], error));
     }
-    if let Err(error) =
-        runtime.prepare_current_repository_for_repl(format!("{}/<session>", root).as_str())
-    {
+    if let Err(error) = runtime.prepare_current_repository_for_repl("<session>") {
         return Err((vec![], error));
     }
     Ok(("project", vec![]))

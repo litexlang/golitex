@@ -6,7 +6,7 @@ use std::path::Path;
 use std::rc::Rc;
 
 const DEFINITION_GRAPH_NAME: &str = "litex-definition-graph";
-const DEFINITION_GRAPH_VERSION: &str = "0.2";
+const DEFINITION_GRAPH_VERSION: &str = "0.3";
 
 mod analysis;
 mod construction;

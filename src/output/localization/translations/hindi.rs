@@ -73,7 +73,6 @@ pub(in super::super) const HI_TEXTS: &[(&str, &str)] = &[
     ("code", "कोड"),
     ("file", "फ़ाइल"),
     ("repo", "रिपॉजिटरी"),
-    ("entry", "प्रविष्टि"),
     ("builtin", "आंतरिक"),
     ("module", "मॉड्यूल"),
     ("ArithmeticError", "अंकगणित त्रुटि"),

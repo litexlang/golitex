@@ -1265,6 +1265,8 @@ impl StmtResultToLeanCompiler {
             | ArithmeticBuiltinRule::AddCommonLeftLess
             | ArithmeticBuiltinRule::SubNonnegativeFromLessEqual
             | ArithmeticBuiltinRule::SubPositiveFromLess
+            | ArithmeticBuiltinRule::SubLessImpliesLessAdd
+            | ArithmeticBuiltinRule::SubLessSwap
             | ArithmeticBuiltinRule::AddRightNonnegativeLessEqual => 1,
             ArithmeticBuiltinRule::MulCommonFactorLessEqualNonnegative
             | ArithmeticBuiltinRule::MulCommonFactorLessEqualNonpositive
@@ -1276,6 +1278,7 @@ impl StmtResultToLeanCompiler {
             | ArithmeticBuiltinRule::AddComponentwiseLessLessEqual
             | ArithmeticBuiltinRule::AddComponentwiseLessEqualLess
             | ArithmeticBuiltinRule::SubComponentwiseLessEqualLess
+            | ArithmeticBuiltinRule::SubComponentwiseLessEqual
             | ArithmeticBuiltinRule::SubRightNonnegativeLessEqual => {
                 if rule == ArithmeticBuiltinRule::MulComponentwiseLessEqual {
                     4
@@ -1517,7 +1520,11 @@ impl StmtResultToLeanCompiler {
             ));
         }
 
-        if rule == ArithmeticBuiltinRule::SubComponentwiseLessEqualLess {
+        if matches!(
+            rule,
+            ArithmeticBuiltinRule::SubComponentwiseLessEqualLess
+                | ArithmeticBuiltinRule::SubComponentwiseLessEqual
+        ) {
             let [minuend_order, subtrahend_order] = children.as_slice() else {
                 unreachable!("componentwise subtraction retained two children")
             };
@@ -1531,9 +1538,10 @@ impl StmtResultToLeanCompiler {
                 order_relation_parts(&minuend_order.fact)?;
             let (subtrahend_left, subtrahend_right, subtrahend_strict) =
                 order_relation_parts(&subtrahend_order.fact)?;
-            if !target_strict
+            let expected_strict = rule == ArithmeticBuiltinRule::SubComponentwiseLessEqualLess;
+            if target_strict != expected_strict
                 || minuend_strict
-                || !subtrahend_strict
+                || subtrahend_strict != expected_strict
                 || obj_equality_key(minuend_left) != obj_equality_key(left_difference.left.as_ref())
                 || obj_equality_key(minuend_right)
                     != obj_equality_key(right_difference.left.as_ref())
@@ -1548,8 +1556,13 @@ impl StmtResultToLeanCompiler {
                 );
             }
             render_fact(target, &self.environment_stack)?;
+            let theorem = if expected_strict {
+                "Litex.Rules.complexSubPreservesLessOfLessEqualAndLess"
+            } else {
+                "Litex.Rules.complexSubPreservesLessEqualComponentwise"
+            };
             return Ok(Some(format!(
-                "Litex.Rules.complexSubPreservesLessOfLessEqualAndLess ({}) ({})",
+                "{theorem} ({}) ({})",
                 minuend_order.proof_expression, subtrahend_order.proof_expression
             )));
         }
@@ -1594,6 +1607,79 @@ impl StmtResultToLeanCompiler {
             };
             return Ok(Some(format!(
                 "Litex.Rules.{theorem} (u := {minuend}) (v := {subtrahend}) ({})",
+                premise.proof_expression
+            )));
+        }
+
+        if rule == ArithmeticBuiltinRule::SubLessImpliesLessAdd {
+            let [premise] = children.as_slice() else {
+                unreachable!("strict subtraction shift retained one child")
+            };
+            let (target_left, target_right, target_strict) = order_relation_parts(target)?;
+            let Obj::Add(target_sum) = target_right else {
+                return Err("strict subtraction shift changed its target sum".into());
+            };
+            let (premise_left, premise_right, premise_strict) =
+                order_relation_parts(&premise.fact)?;
+            let Obj::Sub(premise_difference) = premise_left else {
+                return Err("strict subtraction shift changed its premise difference".into());
+            };
+            if !target_strict
+                || !premise_strict
+                || obj_equality_key(target_left)
+                    != obj_equality_key(premise_difference.left.as_ref())
+            {
+                return Err(
+                    "strict subtraction shift changed its left endpoint or strictness".into(),
+                );
+            }
+            let target_is_native_order = obj_equality_key(target_sum.left.as_ref())
+                == obj_equality_key(premise_difference.right.as_ref())
+                && obj_equality_key(target_sum.right.as_ref()) == obj_equality_key(premise_right);
+            let target_is_reversed_order = obj_equality_key(target_sum.right.as_ref())
+                == obj_equality_key(premise_difference.right.as_ref())
+                && obj_equality_key(target_sum.left.as_ref()) == obj_equality_key(premise_right);
+            if !target_is_native_order && !target_is_reversed_order {
+                return Err("strict subtraction shift changed its moved addend".into());
+            }
+            render_fact(target, &self.environment_stack)?;
+            let proof = format!(
+                "Litex.Rules.complexLtAddOfSubLt ({})",
+                premise.proof_expression
+            );
+            return Ok(Some(if target_is_reversed_order {
+                format!("(by simpa [add_comm] using ({proof}))")
+            } else {
+                proof
+            }));
+        }
+
+        if rule == ArithmeticBuiltinRule::SubLessSwap {
+            let [premise] = children.as_slice() else {
+                unreachable!("strict subtraction swap retained one child")
+            };
+            let (target_left, target_right, target_strict) = order_relation_parts(target)?;
+            let (premise_left, premise_right, premise_strict) =
+                order_relation_parts(&premise.fact)?;
+            let (Obj::Sub(target_difference), Obj::Sub(premise_difference)) =
+                (target_left, premise_left)
+            else {
+                return Err("strict subtraction swap changed a difference endpoint".into());
+            };
+            if !target_strict
+                || !premise_strict
+                || obj_equality_key(target_difference.left.as_ref())
+                    != obj_equality_key(premise_difference.left.as_ref())
+                || obj_equality_key(target_difference.right.as_ref())
+                    != obj_equality_key(premise_right)
+                || obj_equality_key(target_right)
+                    != obj_equality_key(premise_difference.right.as_ref())
+            {
+                return Err("strict subtraction swap changed its operands or strictness".into());
+            }
+            render_fact(target, &self.environment_stack)?;
+            return Ok(Some(format!(
+                "Litex.Rules.complexSubLtSwap ({})",
                 premise.proof_expression
             )));
         }
@@ -1776,17 +1862,64 @@ impl StmtResultToLeanCompiler {
         }
 
         if children.len() == 1 {
-            if obj_equality_key(target_left_common) != obj_equality_key(target_right_common) {
-                return Err("common-left additive order rule changed its common term".into());
-            }
             let (premise_left, premise_right, premise_is_strict) =
                 order_relation_parts(&children[0].fact)?;
-            if premise_is_strict != expected_strictness[0]
-                || obj_equality_key(premise_left) != obj_equality_key(target_left_addend)
-                || obj_equality_key(premise_right) != obj_equality_key(target_right_addend)
-            {
+            if premise_is_strict != expected_strictness[0] {
                 return Err("common-left additive order rule changed its ordered premise".into());
             }
+            let candidates = [
+                (
+                    target_left_common,
+                    target_left_addend,
+                    target_right_common,
+                    target_right_addend,
+                    false,
+                ),
+                (
+                    target_left_common,
+                    target_left_addend,
+                    target_right_addend,
+                    target_right_common,
+                    true,
+                ),
+                (
+                    target_left_addend,
+                    target_left_common,
+                    target_right_common,
+                    target_right_addend,
+                    true,
+                ),
+                (
+                    target_left_addend,
+                    target_left_common,
+                    target_right_addend,
+                    target_right_common,
+                    true,
+                ),
+            ];
+            let Some((common, _, _, _, needs_commutativity)) = candidates.into_iter().find(
+                |(left_common, left_remaining, right_common, right_remaining, _)| {
+                    obj_equality_key(left_common) == obj_equality_key(right_common)
+                        && obj_equality_key(left_remaining) == obj_equality_key(premise_left)
+                        && obj_equality_key(right_remaining) == obj_equality_key(premise_right)
+                },
+            ) else {
+                return Err(format!(
+                    "common-addend order rule cannot align target `{target}` with premise `{}`",
+                    children[0].fact
+                ));
+            };
+            render_fact(target, &self.environment_stack)?;
+            let common = render_obj(common, &self.environment_stack)?;
+            let proof = format!(
+                "Litex.Rules.{theorem} (u := {common}) ({})",
+                children[0].proof_expression
+            );
+            return Ok(if needs_commutativity {
+                format!("(by simpa [add_comm] using ({proof}))")
+            } else {
+                proof
+            });
         } else {
             for (index, ((child, expected_is_strict), (expected_left, expected_right))) in children
                 .iter()

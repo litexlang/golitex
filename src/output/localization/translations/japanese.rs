@@ -73,7 +73,6 @@ pub(in super::super) const JA_TEXTS: &[(&str, &str)] = &[
     ("code", "コード"),
     ("file", "ファイル"),
     ("repo", "リポジトリ"),
-    ("entry", "入口"),
     ("builtin", "組み込み"),
     ("module", "モジュール"),
     ("ArithmeticError", "算術エラー"),

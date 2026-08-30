@@ -73,7 +73,6 @@ pub(in super::super) const ID_TEXTS: &[(&str, &str)] = &[
     ("code", "kode"),
     ("file", "file"),
     ("repo", "repositori"),
-    ("entry", "entri"),
     ("builtin", "bawaan"),
     ("module", "modul"),
     ("ArithmeticError", "galat aritmetika"),

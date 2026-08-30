@@ -98,8 +98,7 @@ impl StmtResultToLeanCompiler {
                 ParamType::Obj(set)
                     if forall_parameter_uses_exact_structured_set_carrier(set)
             );
-            let exact_object_parameter =
-                exact_real_parameter || exact_structured_set_parameter;
+            let exact_object_parameter = exact_real_parameter || exact_structured_set_parameter;
             uses_exact_object_parameter |= exact_object_parameter;
             let rendered_application_argument = if native_integer_parameter {
                 render_integer_obj(argument, &self.environment_stack)?
@@ -280,9 +279,13 @@ impl StmtResultToLeanCompiler {
                                 .get(symbol_id)
                                 .cloned()
                                 .unwrap_or_else(|| {
-                                    format!("(⟨{exact_real}, {positivity_proof}⟩ : Litex.RPos.Carrier)")
+                                    format!(
+                                        "(⟨{exact_real}, {positivity_proof}⟩ : Litex.RPos.Carrier)"
+                                    )
                                 }),
-                            _ => format!("(⟨{exact_real}, {positivity_proof}⟩ : Litex.RPos.Carrier)"),
+                            _ => {
+                                format!("(⟨{exact_real}, {positivity_proof}⟩ : Litex.RPos.Carrier)")
+                            }
                         }
                     } else {
                         exact_real
@@ -307,13 +310,11 @@ impl StmtResultToLeanCompiler {
                         unreachable!("exact structured parameter is an object")
                     };
                     let rendered_set = render_obj(set, &self.environment_stack)?;
-                    let exact_argument = format!(
-                        "(Litex.In.rep {rendered_application_argument} ({proof}))"
-                    );
+                    let exact_argument =
+                        format!("(Litex.In.rep {rendered_application_argument} ({proof}))");
                     application_terms.push(exact_argument.clone());
-                    application_terms.push(format!(
-                        "(Litex.In.own {rendered_set} {exact_argument})"
-                    ));
+                    application_terms
+                        .push(format!("(Litex.In.own {rendered_set} {exact_argument})"));
                     source_application_context.symbol_names.insert(
                         source_parameters[parameter_index].0.id(),
                         exact_argument.clone(),

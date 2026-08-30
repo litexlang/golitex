@@ -179,6 +179,66 @@ pub(in super::super) fn render_real_target_object_representation(
     }
 }
 
+/// Render a checked source object at the exact native real carrier.  Most
+/// objects lower directly to the target IR.  Definition replay may clone a
+/// function application without its parser occurrence, so the source-shaped
+/// fallback recovers that occurrence from the active Result and then recurses
+/// compositionally through ordinary real arithmetic.
+pub(in super::super) fn render_real_source_object(
+    object: &Obj,
+    context: &StmtResultToLeanCompilerEnvironmentStack,
+) -> Result<String, String> {
+    if let Ok(lowered) = LeanTargetObjectRepresentation::lower(object) {
+        if let Ok(rendered) = render_real_target_object_representation(&lowered, context) {
+            return Ok(rendered);
+        }
+    }
+    match object {
+        Obj::Add(operation) => Ok(format!(
+            "({} + {})",
+            render_real_source_object(operation.left.as_ref(), context)?,
+            render_real_source_object(operation.right.as_ref(), context)?,
+        )),
+        Obj::Sub(operation) => Ok(format!(
+            "({} - {})",
+            render_real_source_object(operation.left.as_ref(), context)?,
+            render_real_source_object(operation.right.as_ref(), context)?,
+        )),
+        Obj::Mul(operation) => Ok(format!(
+            "({} * {})",
+            render_real_source_object(operation.left.as_ref(), context)?,
+            render_real_source_object(operation.right.as_ref(), context)?,
+        )),
+        Obj::Div(operation) => Ok(format!(
+            "({} / {})",
+            render_real_source_object(operation.left.as_ref(), context)?,
+            render_real_source_object(operation.right.as_ref(), context)?,
+        )),
+        Obj::Abs(operation) => Ok(format!(
+            "|{}|",
+            render_real_source_object(operation.arg.as_ref(), context)?
+        )),
+        Obj::FnObj(application) => {
+            let application = lower_source_function_application_with_result_owned_occurrence(
+                application,
+                context,
+            )?;
+            let return_set = function_application_return_set_from_result(&application, context)?;
+            if return_set
+                != LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Real)
+            {
+                return Err(
+                    "function application has no verifier-owned exact R return carrier".into(),
+                );
+            }
+            render_function_application(&application, context)
+        }
+        _ => Err(format!(
+            "source object `{object}` has no reviewed exact ℝ representation"
+        )),
+    }
+}
+
 pub(in super::super) fn fact_matches_structured_induction_goal_substitution(
     source: &Fact,
     target: &Fact,

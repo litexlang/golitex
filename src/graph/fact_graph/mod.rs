@@ -2,7 +2,7 @@ use crate::prelude::*;
 use std::collections::{HashMap, HashSet};
 
 const FACT_GRAPH_NAME: &str = "litex-fact-graph";
-const FACT_GRAPH_VERSION: &str = "0.1";
+const FACT_GRAPH_VERSION: &str = "0.2";
 
 mod analysis;
 mod edge_collection;

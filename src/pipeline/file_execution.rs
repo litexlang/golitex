@@ -36,24 +36,24 @@ pub struct FileExecutionOptions {
 }
 
 pub fn execute_file_in_runtime(
-    entry_file_path: &str,
+    target_file_path: &str,
     runtime: &mut Runtime,
     options: FileExecutionOptions,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
     let FileExecutionOptions { force_isolated } = options;
-    let path = Path::new(entry_file_path);
+    let path = Path::new(target_file_path);
     let file_name = path.file_name().and_then(|name| name.to_str());
     if file_name == Some("litex.config") {
         return (
             vec![],
             Some(file_target_error(
-                entry_file_path,
+                target_file_path,
                 "litex.config is project configuration, not executable Litex source",
             )),
         );
     }
     if !force_isolated {
-        match discover_repository_for_file(runtime, entry_file_path) {
+        match discover_repository_for_file(runtime, target_file_path) {
             Ok(Some(target)) => {
                 return execute_repository_target(runtime, target);
             }
@@ -61,7 +61,7 @@ pub fn execute_file_in_runtime(
                 return (
                     vec![],
                     Some(file_target_error(
-                        entry_file_path,
+                        target_file_path,
                         "litex -f requires a litex.config in the same folder; use `litex -isolated -f <file>` for an isolated file",
                     )),
                 )
@@ -70,28 +70,28 @@ pub fn execute_file_in_runtime(
         }
     }
 
-    let source_code = match fs::read_to_string(entry_file_path) {
+    let source_code = match fs::read_to_string(target_file_path) {
         Ok(content) => content,
         Err(error) => {
             return (
                 vec![],
                 Some(file_target_error(
-                    entry_file_path,
+                    target_file_path,
                     format!("could not read file: {}", error).as_str(),
                 )),
             )
         }
     };
-    runtime.start_isolated_file(entry_file_path);
+    runtime.start_isolated_file(target_file_path);
     let outcome =
         runtime.execute_source(remove_windows_carriage_from_str(source_code.as_str()).as_str());
     (outcome.stmt_results, outcome.runtime_error)
 }
 
-fn file_target_error(entry_file_path: &str, message: &str) -> RuntimeError {
+fn file_target_error(target_file_path: &str, message: &str) -> RuntimeError {
     ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(
         message.to_string(),
-        (0, Rc::from(entry_file_path)),
+        (0, Rc::from(target_file_path)),
     ))
     .into()
 }

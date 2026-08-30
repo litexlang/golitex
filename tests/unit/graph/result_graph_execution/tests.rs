@@ -24,8 +24,9 @@ fn result_graph_records_statement_verification_proof_and_store_layers() {
     let output = graph_output("2 + 3 $in N\n");
 
     assert!(output.contains(r#""graph": "litex-result-graph""#));
-    assert!(output.contains(r#""graph_version": "2""#));
-    assert!(output.contains(r#""label": "-graph -e""#));
+    assert!(output.contains(r#""graph_version": "3""#));
+    assert!(output.contains("\"target\": {\n    \"kind\": \"code\"\n  }"));
+    assert!(!output.contains(r#""label""#));
     assert!(output.contains(r#""kind": "statement""#));
     assert!(output.contains(r#""kind": "well_definedness""#));
     assert!(output.contains(r#""kind": "verification""#));
@@ -106,8 +107,7 @@ fn completed_result_graph_does_not_need_runtime() {
     assert!(error.is_none());
     drop(runtime);
 
-    let output =
-        render_result_graph_from_stmt_results(RunTargetKind::Code, "dropped", true, &results);
+    let output = render_result_graph_from_stmt_results(RunTargetKind::Code, None, true, &results);
     assert!(output.contains(r#""graph": "litex-result-graph""#));
     assert!(output.contains(r#""role": "NaturalMembershipImpliesNonnegative""#));
     assert!(output.contains(r#""kind": "well_definedness""#));

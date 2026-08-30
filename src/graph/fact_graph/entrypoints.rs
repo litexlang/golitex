@@ -8,7 +8,7 @@ use super::*;
 /// taken from the verifier's actual citation and `forall`-requirement evidence.
 pub fn render_fact_graph_from_stmt_results(
     target_kind: RunTargetKind,
-    target_label: &str,
+    target_path: Option<&str>,
     hide_file_paths: bool,
     runtime: &Runtime,
     stmt_results: &[StmtResult],
@@ -36,7 +36,7 @@ pub fn render_fact_graph_from_stmt_results(
         ),
         (
             "target".to_string(),
-            fact_graph_target_json_value(target_kind, target_label, hide_file_paths),
+            run_target_json_value(target_kind.json_name(), target_path, hide_file_paths),
         ),
     ];
     if let Some(error) = runtime_error {
@@ -61,7 +61,7 @@ pub fn render_fact_graph_from_stmt_results(
 
 pub fn fact_graph_target_error_output(
     target_kind: RunTargetKind,
-    target_label: &str,
+    target_path: Option<&str>,
     hide_file_paths: bool,
     message: String,
 ) -> (bool, String) {
@@ -82,7 +82,7 @@ pub fn fact_graph_target_error_output(
         ("partial".to_string(), JsonValue::Bool(false)),
         (
             "target".to_string(),
-            fact_graph_target_json_value(target_kind, target_label, hide_file_paths),
+            run_target_json_value(target_kind.json_name(), target_path, hide_file_paths),
         ),
         ("error".to_string(), JsonValue::JsonString(message)),
         (
@@ -101,23 +101,4 @@ pub fn fact_graph_target_error_output(
         ),
     ]);
     (false, render_json_value(&output, 0))
-}
-
-fn fact_graph_target_json_value(
-    target_kind: RunTargetKind,
-    target_label: &str,
-    hide_file_paths: bool,
-) -> JsonValue {
-    let label = if hide_file_paths && target_kind != RunTargetKind::Code {
-        "entry".to_string()
-    } else {
-        target_label.to_string()
-    };
-    JsonValue::Object(vec![
-        (
-            "kind".to_string(),
-            JsonValue::JsonString(target_kind.json_name().to_string()),
-        ),
-        ("label".to_string(), JsonValue::JsonString(label)),
-    ])
 }

@@ -3,7 +3,7 @@ use crate::prelude::*;
 use std::collections::HashSet;
 
 const GRAPH_NAME: &str = "litex-result-graph";
-const GRAPH_VERSION: &str = "2";
+const GRAPH_VERSION: &str = "3";
 
 #[derive(Default)]
 pub struct DepSet {
@@ -22,7 +22,7 @@ pub struct DepCollector {
 /// Successful graph semantics come only from `stmt_results`.
 pub fn render_graph_from_stmt_results(
     target_kind: RunTargetKind,
-    target_label: &str,
+    target_path: Option<&str>,
     hide_file_paths: bool,
     runtime: &Runtime,
     stmt_results: &[StmtResult],
@@ -34,7 +34,7 @@ pub fn render_graph_from_stmt_results(
         ok,
         render_result_graph_document(
             target_kind,
-            target_label,
+            target_path,
             hide_file_paths,
             stmt_results,
             !ok,
@@ -46,13 +46,13 @@ pub fn render_graph_from_stmt_results(
 /// Render a completed successful result graph without a live `Runtime`.
 pub fn render_result_graph_from_stmt_results(
     target_kind: RunTargetKind,
-    target_label: &str,
+    target_path: Option<&str>,
     hide_file_paths: bool,
     stmt_results: &[StmtResult],
 ) -> String {
     render_result_graph_document(
         target_kind,
-        target_label,
+        target_path,
         hide_file_paths,
         stmt_results,
         false,
@@ -62,7 +62,7 @@ pub fn render_result_graph_from_stmt_results(
 
 fn render_result_graph_document(
     target_kind: RunTargetKind,
-    target_label: &str,
+    target_path: Option<&str>,
     hide_file_paths: bool,
     stmt_results: &[StmtResult],
     partial: bool,
@@ -86,7 +86,7 @@ fn render_result_graph_document(
         ("partial".to_string(), JsonValue::Bool(partial)),
         (
             "target".to_string(),
-            target_json_value(target_kind, target_label, hide_file_paths),
+            run_target_json_value(target_kind.json_name(), target_path, hide_file_paths),
         ),
     ];
     if let Some(error) = error {
@@ -107,7 +107,7 @@ fn render_result_graph_document(
 
 pub fn graph_target_error_output(
     target_kind: RunTargetKind,
-    target_label: &str,
+    target_path: Option<&str>,
     hide_file_paths: bool,
     message: String,
 ) -> (bool, String) {
@@ -128,7 +128,7 @@ pub fn graph_target_error_output(
         ("partial".to_string(), JsonValue::Bool(false)),
         (
             "target".to_string(),
-            target_json_value(target_kind, target_label, hide_file_paths),
+            run_target_json_value(target_kind.json_name(), target_path, hide_file_paths),
         ),
         ("error".to_string(), JsonValue::JsonString(message)),
         (
@@ -143,26 +143,6 @@ pub fn graph_target_error_output(
         ),
     ]);
     (false, render_json_value(&output, 0))
-}
-
-fn target_json_value(
-    target_kind: RunTargetKind,
-    target_label: &str,
-    hide_file_paths: bool,
-) -> JsonValue {
-    let label = if hide_file_paths && target_kind != RunTargetKind::Code {
-        "entry".to_string()
-    } else {
-        target_label.to_string()
-    };
-
-    JsonValue::Object(vec![
-        (
-            "kind".to_string(),
-            JsonValue::JsonString(target_kind.json_name().to_string()),
-        ),
-        ("label".to_string(), JsonValue::JsonString(label)),
-    ])
 }
 
 impl DepSet {

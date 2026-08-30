@@ -34,12 +34,13 @@ fn fact_graph_uses_runtime_fact_evidence_without_definition_nodes() {
 }
 
 #[test]
-fn fact_graph_keeps_the_command_label_out_of_runtime_source_identity() {
+fn fact_graph_keeps_target_metadata_out_of_runtime_source_identity() {
     let output = fact_graph_output("1 = 1\n");
 
-    assert!(output.contains(r#""label": "-factgraph -e""#), "{output}");
+    assert!(output.contains(r#""graph_version": "0.2""#), "{output}");
+    assert!(output.contains("\"target\": {\n    \"kind\": \"code\"\n  }"));
+    assert!(!output.contains(r#""label""#), "{output}");
     assert!(output.contains("fact:<-e>:1:1 = 1"), "{output}");
-    assert!(!output.contains("fact:-factgraph -e:"), "{output}");
 }
 
 #[test]

@@ -48,10 +48,8 @@ impl StmtResultToLeanCompiler {
         if matches!(source_fact, Fact::AtomicFact(_)) {
             validate_atomic_fact_well_definedness_result(&result.well_definedness, &source_fact)?;
         }
-        let proposition = self.render_fact_using_well_definedness_result(
-            &result.well_definedness,
-            &source_fact,
-        )?;
+        let proposition =
+            self.render_fact_using_well_definedness_result(&result.well_definedness, &source_fact)?;
         let theorem_name = format!("__fact{}", self.next_fact_name_index);
         self.declarations.push(format!(
             "theorem {theorem_name} : {proposition} := by\n  exact {proof}"
@@ -63,7 +61,7 @@ impl StmtResultToLeanCompiler {
             .fact_propositions
             .insert(source_fact_id, source_fact.clone());
         self.next_fact_name_index += 1;
-        let allowed_sources = self
+        let mut allowed_sources = self
             .install_equality_chain_adjacent_projections_for_typed_inference(
                 &source_fact,
                 source_fact_id,
@@ -71,6 +69,19 @@ impl StmtResultToLeanCompiler {
                 &result.store.infers,
                 "typed-inference fact Result",
             )?;
+        for source in self.install_numeric_order_chain_adjacent_projections_for_typed_inference(
+            &source_fact,
+            source_fact_id,
+            &theorem_name,
+            &result.store.infers,
+            "typed-inference fact Result",
+        )? {
+            if !allowed_sources.iter().any(|existing| {
+                existing.0 == source.0 && existing.1.to_string() == source.1.to_string()
+            }) {
+                allowed_sources.push(source);
+            }
+        }
         // Inferred conclusions may repeat source objects (notably function
         // applications) whose only recursive certificate lives in the parent
         // fact's WD Result. Keep that exact context active for the complete

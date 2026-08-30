@@ -1302,7 +1302,7 @@ fn output_graph_and_repository_concepts_do_not_collapse_back_into_monoliths() {
                 "module_config.rs",
                 "project_authorization.rs",
                 "project_config_files.rs",
-                "repository_entry.rs",
+                "requested_target.rs",
                 "standard_library.rs",
                 "terminal_imports.rs",
             ][..],
@@ -1397,13 +1397,16 @@ fn cli_dispatch_delegates_execution_and_path_resolution_to_their_owners() {
     assert!(!runner_execution.contains("run_repository("));
     assert!(!runner_execution.contains("target_kind: &str"));
     assert!(!runner_execution.contains("target_kind == \"code\""));
-    assert!(runner_execution.contains("\"-runner -e\".to_string()"));
+    assert!(runner_execution.contains("run_target_json_value(target_kind.json_name()"));
+    assert!(!runner_execution.contains("\"label\".to_string()"));
+    assert!(!runner_execution.contains("\"entry\""));
     assert!(graph_execution.contains("pub fn render_graph("));
     assert!(!graph_execution.contains("run_code("));
     assert!(!graph_execution.contains("run_file("));
     assert!(!graph_execution.contains("run_repository("));
     assert!(!graph_execution.contains("target_kind == \"code\""));
-    assert!(graph_execution.contains("format!(\"{} -e\", kind.flag())"));
+    assert!(!graph_execution.contains("target_label"));
+    assert!(!graph_execution.contains("\"entry\""));
 
     let abbreviated_parser_call = [".parse_", "stmt("].concat();
     let abbreviated_callers: Vec<_> = [root.join("src"), root.join("tests")]
@@ -1452,7 +1455,7 @@ fn main_execution_spine_names_its_dependencies_explicitly() {
         .into_iter()
         .filter(|path| {
             fs::read_to_string(path)
-                .expect("entry source should be readable")
+                .expect("execution source should be readable")
                 .contains(&wildcard_prelude)
         })
         .collect();
@@ -1460,6 +1463,44 @@ fn main_execution_spine_names_its_dependencies_explicitly() {
         offenders.is_empty(),
         "main execution-spine files must name dependency owners explicitly: {offenders:#?}"
     );
+}
+
+#[test]
+fn root_module_and_target_metadata_use_structured_state() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let registry = fs::read_to_string(root.join("src/module_system/registry.rs"))
+        .expect("module registry should be readable");
+    let runtime = fs::read_to_string(root.join("src/runtime/state.rs"))
+        .expect("runtime state should be readable");
+    let source_references = fs::read_to_string(root.join("src/output/source_references.rs"))
+        .expect("source-reference renderer should be readable");
+    let target_json = fs::read_to_string(root.join("src/output/json_value.rs"))
+        .expect("target JSON renderer should be readable");
+    let runner = fs::read_to_string(root.join("src/runner/target_execution.rs"))
+        .expect("runner renderer should be readable");
+    let result_graph = fs::read_to_string(root.join("src/graph/result_graph_execution.rs"))
+        .expect("result-graph renderer should be readable");
+
+    let retired_module_field = ["entry", "_module_id"].concat();
+    let retired_path_field = ["entry", "_path_rc"].concat();
+    let retired_module_constructor = ["create_", "entry", "_module"].concat();
+    let retired_source_kind = ["SOURCE_KIND_", "ENTRY"].concat();
+
+    for source in [&registry, &runtime] {
+        assert!(!source.contains(&retired_module_field));
+        assert!(!source.contains(&retired_path_field));
+        assert!(!source.contains(&retired_module_constructor));
+    }
+    assert!(registry.contains("pub fn create_root_module("));
+    assert!(registry.contains("pub fn create_repository_root_module("));
+    assert!(!source_references.contains(&retired_source_kind));
+    assert!(source_references.contains("file.is_virtual_source"));
+    assert!(target_json.contains("pub fn run_target_json_value("));
+    assert!(target_json.contains("\"path\".to_string()"));
+    for target_renderer in [&runner, &result_graph] {
+        assert!(target_renderer.contains("run_target_json_value(target_kind.json_name()"));
+        assert!(!target_renderer.contains("\"label\".to_string()"));
+    }
 }
 
 #[test]

@@ -569,7 +569,7 @@ The runner wrapper contains:
 | `runner_version` | Runner output-contract version. |
 | `result` | `success` or `error` for the whole run. |
 | `ok` | Boolean success flag. |
-| `target` | Target kind and label. Without `-detail`, file and repo labels are hidden as `entry`. |
+| `target` | Target kind, plus the real file or repository `path` only under `-detail`. |
 | `error` | Target-load error object, or `null` when the target was loaded. |
 | `trace` | The ordinary statement-by-statement Litex JSON output as a string. |
 
@@ -686,13 +686,16 @@ Runtime reuse.
 | `litex -defgraph -f <file> <json>` | Run a file and save an environment-backed definition dependency graph. |
 | `litex -defgraph -r <repo> <json>` | Discover the repository module graph, run its ordered `[export]` table, and save an environment-backed definition dependency graph. |
 
-The main graph is `litex-result-graph` version 2. It walks the recursive
+The main graph is `litex-result-graph` version 3. It walks the recursive
 `StmtResult` value directly and creates nodes for statement, well-definedness,
 verification, proof, store, store-effect, inference, and fact layers. Tree
 edges preserve result-field order; semantic citation, premise, conclusion, and
 stored-fact edges use `FactId`, while memo reuse points to the exact shared
 proof node. The wrapper includes a `summary`, machine-readable `nodes` and
 `edges`, and a Mermaid `flowchart LR` string for quick rendering.
+Its target metadata follows the runner contract: `kind` is always present and
+`path` appears only under `-detail`. The fact graph uses contract version 0.2,
+and the definition graph uses contract version 0.3.
 If the final `<json>` path is omitted, Litex prints the graph JSON to stdout for
 quick debugging. In this repository, generated graph JSON, Mermaid, SVG, or PNG
 artifacts should be written under `tmp/graphs/`; `tmp/` is ignored by git.

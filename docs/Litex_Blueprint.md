@@ -10,6 +10,15 @@ Chinese version: https://litexlang.com/doc/Litex中文蓝图
 
 <!-- Blueprint spine: reasoning abundance → scientific object → design hypothesis → measurable costs → potential capacity impact → verification and understanding bottlenecks → two participation barriers → the human–AI verification loop → four language choices → definition and verification → ToLean/adapter handoff → ecosystem role → success criterion -->
 
+<!--
+Litex 定位四层检查（写作时逐层核对；面向不同受众可以调整强调重点，但不能混淆层级）：
+- 科学对象：可检查知识如何被表示和逐步构造。
+- 科学假设：事实导向表示与事务式交互是否构成新的形式语言范式。
+- 科学结果变量：这种范式怎样影响构造、理解、审核、修复和复用知识的成本。
+- 社会影响：降低门槛，使验证能力跟上 AI 产生候选推理的速度。
+写作边界：前三层是 Litex 的科学内核；第四层是潜在影响。不得用“从而”把未验证的科学结果写成已经实现的工具效果。
+-->
+
 ## Table of Contents
 
 - [Litex Blueprint Overview](#overview)

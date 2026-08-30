@@ -121,311 +121,370 @@ impl StmtResultToLeanCompiler {
             conclusion,
         )?;
 
-        // Rational density is a theorem about native real endpoints.  Lower
-        // each verifier-checked endpoint once to its exact ℝ observation and
-        // use that same term for the rule arguments, memberships, order
-        // premise, and existential conclusion.
-        let rational_density_real_arguments =
-            if matches!(source.theorem_id, BuiltinTheoremId::RationalBetweenReals) {
-                Some(
-                    verification
-                        .arguments
-                        .iter()
-                        .map(|argument| {
-                            render_real_target_object_representation(
-                                &LeanTargetObjectRepresentation::lower(argument)?,
-                                &self.environment_stack,
-                            )
-                        })
-                        .collect::<Result<Vec<_>, String>>()?,
-                )
-            } else {
-                None
-            };
-
-        let mut requirement_proofs = Vec::with_capacity(source.requirement_checks.len());
-        let mut local_prerequisite_lines = Vec::new();
-        for (index, ((requirement, role), check)) in source
-            .requirement_facts
-            .iter()
-            .zip(source.requirement_roles.iter())
-            .zip(source.requirement_checks.iter())
-            .enumerate()
-        {
+        // Arguments such as `a(n) + 1` are checked inside the theorem's
+        // requirement Results, not by the enclosing proof statement. Merge
+        // those exact occurrence indexes with the conclusion certificate for
+        // the complete application replay; never fall back to a structural
+        // search in the ambient theorem context.
+        let mut application_well_definedness =
+            StmtResultWellDefinednessToLeanCompilationContext::default();
+        let mut application_well_definedness_roots = Vec::new();
+        for (index, check) in source.requirement_checks.iter().enumerate() {
             let check = check.factual_success().ok_or_else(|| {
                 format!(
                     "real-analysis builtin requirement {} is not factual",
                     index + 1
                 )
             })?;
-            validate_scoped_fact_check_result(
-                check,
-                requirement,
-                "real-analysis builtin requirement child",
+            if let Some(recursive) = check.well_definedness.recursive.as_deref() {
+                application_well_definedness.merge_from(
+                    &self.collect_well_definedness_to_lean_compilation_context(
+                        &check.well_definedness,
+                    )?,
+                )?;
+                application_well_definedness_roots.push(recursive);
+            }
+        }
+        if let Some(recursive) = conclusion_well_definedness.recursive.as_deref() {
+            application_well_definedness.merge_from(
+                &self.collect_well_definedness_to_lean_compilation_context(
+                    conclusion_well_definedness,
+                )?,
             )?;
-            self.install_atomic_fact_well_definedness_store_results(check)
-                .map_err(|error| {
+            application_well_definedness_roots.push(recursive);
+        }
+        let application_well_definedness = self.compile_precollected_well_definedness_context(
+            application_well_definedness,
+            &application_well_definedness_roots,
+        )?;
+        let previous_well_definedness = self
+            .environment_stack
+            .well_definedness
+            .replace(application_well_definedness);
+        let compilation = (|| {
+            // Rational density is a theorem about native real endpoints.  Lower
+            // each verifier-checked endpoint once to its exact ℝ observation and
+            // use that same term for the rule arguments, memberships, order
+            // premise, and existential conclusion.
+            let rational_density_real_arguments =
+                if matches!(source.theorem_id, BuiltinTheoremId::RationalBetweenReals) {
+                    Some(
+                        verification
+                            .arguments
+                            .iter()
+                            .map(|argument| {
+                                render_real_target_object_representation(
+                                    &LeanTargetObjectRepresentation::lower(argument)?,
+                                    &self.environment_stack,
+                                )
+                            })
+                            .collect::<Result<Vec<_>, String>>()?,
+                    )
+                } else {
+                    None
+                };
+
+            let mut requirement_proofs = Vec::with_capacity(source.requirement_checks.len());
+            let mut local_prerequisite_lines = Vec::new();
+            for (index, ((requirement, role), check)) in source
+                .requirement_facts
+                .iter()
+                .zip(source.requirement_roles.iter())
+                .zip(source.requirement_checks.iter())
+                .enumerate()
+            {
+                let check = check.factual_success().ok_or_else(|| {
                     format!(
-                        "real-analysis builtin requirement {} WD installation: {error}",
+                        "real-analysis builtin requirement {} is not factual",
                         index + 1
                     )
                 })?;
-            let proof = if matches!(check.proof(), SuccessFactProofResult::ForallProof(_)) {
-                let theorem_name = format!("__fact{}", self.next_fact_name_index);
-                let fact_index = self.next_fact_name_index;
-                if requirements_are_local {
-                    let Some(lines) =
-                        self.compile_direct_forall_fact_result_as_local_proof_steps(check)?
-                    else {
-                        return Err(format!(
+                validate_scoped_fact_check_result(
+                    check,
+                    requirement,
+                    "real-analysis builtin requirement child",
+                )?;
+                self.install_atomic_fact_well_definedness_store_results(check)
+                    .map_err(|error| {
+                        format!(
+                            "real-analysis builtin requirement {} WD installation: {error}",
+                            index + 1
+                        )
+                    })?;
+                let proof = if matches!(check.proof(), SuccessFactProofResult::ForallProof(_)) {
+                    let theorem_name = format!("__fact{}", self.next_fact_name_index);
+                    let fact_index = self.next_fact_name_index;
+                    if requirements_are_local {
+                        let Some(lines) =
+                            self.compile_direct_forall_fact_result_as_local_proof_steps(check)?
+                        else {
+                            return Err(format!(
                             "real-analysis builtin requirement {} retained an unsupported ForallProof",
                             index + 1
                         ));
-                    };
-                    if lines.len() != 1 || self.next_fact_name_index != fact_index + 1 {
-                        return Err(format!(
+                        };
+                        if lines.len() != 1 || self.next_fact_name_index != fact_index + 1 {
+                            return Err(format!(
                             "real-analysis builtin requirement {} compiled an unexpected number of local forall projections",
                             index + 1
                         ));
-                    }
-                    local_prerequisite_lines.extend(lines);
-                } else {
-                    let declaration_count = self.declarations.len();
-                    if !self.compile_direct_forall_fact_result(check)? {
-                        return Err(format!(
+                        }
+                        local_prerequisite_lines.extend(lines);
+                    } else {
+                        let declaration_count = self.declarations.len();
+                        if !self.compile_direct_forall_fact_result(check)? {
+                            return Err(format!(
                             "real-analysis builtin requirement {} retained an unsupported ForallProof",
                             index + 1
                         ));
-                    }
-                    if self.declarations.len() != declaration_count + 1
-                        || self.next_fact_name_index != fact_index + 1
-                    {
-                        return Err(format!(
+                        }
+                        if self.declarations.len() != declaration_count + 1
+                            || self.next_fact_name_index != fact_index + 1
+                        {
+                            return Err(format!(
                             "real-analysis builtin requirement {} compiled an unexpected number of forall projections",
                             index + 1
                         ));
+                        }
                     }
-                }
-                theorem_name
-            } else {
-                self.construct_lean_proof_from_direct_fact_result_using_its_well_definedness(check)?
+                    theorem_name
+                } else {
+                    self.construct_lean_proof_from_direct_fact_result_using_its_well_definedness(
+                        check,
+                    )?
                     .ok_or_else(|| {
                         format!(
                         "real-analysis builtin requirement {} has no direct typed proof consumer",
                         index + 1
                     )
                     })?
-            };
-            let proof = if matches!(role, BuiltinTheoremRequirementRole::CandidateBelongsToReals) {
-                let (numeric_object, target_set) = membership_parts(requirement)?;
-                if !matches!(target_set, Obj::StandardSet(StandardSet::R)) {
-                    return Err(format!(
+                };
+                let proof = if matches!(
+                    role,
+                    BuiltinTheoremRequirementRole::CandidateBelongsToReals
+                ) {
+                    let (numeric_object, target_set) = membership_parts(requirement)?;
+                    if !matches!(target_set, Obj::StandardSet(StandardSet::R)) {
+                        return Err(format!(
                         "real-analysis builtin requirement {} changed its real-membership target",
                         index + 1
                     ));
-                }
-                render_numeric_operand_membership(numeric_object, &proof, &self.environment_stack)
-            } else if matches!(
-                role,
-                BuiltinTheoremRequirementRole::SuppliedUpperBoundBelongsToReals
-                    | BuiltinTheoremRequirementRole::SuppliedLowerBoundBelongsToReals
-                    | BuiltinTheoremRequirementRole::ArgumentBelongsToReals
-            ) {
-                let (numeric_object, target_set) = membership_parts(requirement)?;
-                if !matches!(target_set, Obj::StandardSet(StandardSet::R)) {
-                    return Err(format!(
+                    }
+                    render_numeric_operand_membership(
+                        numeric_object,
+                        &proof,
+                        &self.environment_stack,
+                    )
+                } else if matches!(
+                    role,
+                    BuiltinTheoremRequirementRole::SuppliedUpperBoundBelongsToReals
+                        | BuiltinTheoremRequirementRole::SuppliedLowerBoundBelongsToReals
+                        | BuiltinTheoremRequirementRole::ArgumentBelongsToReals
+                ) {
+                    let (numeric_object, target_set) = membership_parts(requirement)?;
+                    if !matches!(target_set, Obj::StandardSet(StandardSet::R)) {
+                        return Err(format!(
                         "real-analysis builtin requirement {} changed its real-membership target",
                         index + 1
                     ));
-                }
-                let exact_real = render_real_target_object_representation(
-                    &LeanTargetObjectRepresentation::lower(numeric_object)?,
-                    &self.environment_stack,
-                )?;
-                format!("Litex.In.own Litex.R {exact_real}")
-            } else if let Some(real_arguments) = rational_density_real_arguments.as_ref() {
-                match role {
-                    BuiltinTheoremRequirementRole::LeftArgumentBelongsToReals => {
-                        format!("Litex.In.own Litex.R {}", real_arguments[0])
                     }
-                    BuiltinTheoremRequirementRole::RightArgumentBelongsToReals => {
-                        format!("Litex.In.own Litex.R {}", real_arguments[1])
-                    }
-                    BuiltinTheoremRequirementRole::RealArgumentsStrictlyOrdered => {
-                        if let SuccessFactProofResult::BuiltinRule(builtin) = check.proof() {
-                            if let Some(BuiltinRuleEvidence::ClosedNumericComparison(evidence)) =
-                                builtin.evidence.typed()
-                            {
-                                validate_closed_numeric_comparison_builtin_rule_evidence(
-                                    requirement,
+                    let exact_real = render_real_target_object_representation(
+                        &LeanTargetObjectRepresentation::lower(numeric_object)?,
+                        &self.environment_stack,
+                    )?;
+                    format!("Litex.In.own Litex.R {exact_real}")
+                } else if let Some(real_arguments) = rational_density_real_arguments.as_ref() {
+                    match role {
+                        BuiltinTheoremRequirementRole::LeftArgumentBelongsToReals => {
+                            format!("Litex.In.own Litex.R {}", real_arguments[0])
+                        }
+                        BuiltinTheoremRequirementRole::RightArgumentBelongsToReals => {
+                            format!("Litex.In.own Litex.R {}", real_arguments[1])
+                        }
+                        BuiltinTheoremRequirementRole::RealArgumentsStrictlyOrdered => {
+                            if let SuccessFactProofResult::BuiltinRule(builtin) = check.proof() {
+                                if let Some(BuiltinRuleEvidence::ClosedNumericComparison(
                                     evidence,
-                                )?;
-                                format!(
+                                )) = builtin.evidence.typed()
+                                {
+                                    validate_closed_numeric_comparison_builtin_rule_evidence(
+                                        requirement,
+                                        evidence,
+                                    )?;
+                                    format!(
                                     "(Litex.OrderBridge.ltOfComplexReals (show {} < {} by norm_num) : Litex.Lt (({}) : ℂ) (({}) : ℂ))",
                                     real_arguments[0],
                                     real_arguments[1],
                                     real_arguments[0],
                                     real_arguments[1],
                                 )
+                                } else {
+                                    proof
+                                }
                             } else {
                                 proof
                             }
-                        } else {
-                            proof
                         }
+                        _ => proof,
                     }
-                    _ => proof,
-                }
-            } else {
-                proof
-            };
-            requirement_proofs.push(format!("({proof})"));
-        }
-
-        let rendered_arguments = verification
-            .arguments
-            .iter()
-            .enumerate()
-            .map(|(argument_index, argument)| {
-                if matches!(source.theorem_id, BuiltinTheoremId::RationalBetweenReals) {
-                    Ok(rational_density_real_arguments
-                        .as_ref()
-                        .expect("rational density real arguments were installed")[argument_index]
-                        .clone())
-                } else if matches!(
-                    source.theorem_id,
-                    BuiltinTheoremId::RealArchimedeanNaturalUpperBound
-                ) {
-                    render_obj(argument, &self.environment_stack)
-                } else if matches!(
-                    (source.theorem_id, argument_index),
-                    (BuiltinTheoremId::RealLeastUpperBoundExists, 1)
-                        | (BuiltinTheoremId::RealLeastUpperBoundLeUpperBound, 2)
-                        | (BuiltinTheoremId::RealGreatestLowerBoundExists, 1)
-                        | (BuiltinTheoremId::RealLowerBoundLeGreatestLowerBound, 2)
-                ) {
-                    render_real_target_object_representation(
-                        &LeanTargetObjectRepresentation::lower(argument)?,
-                        &self.environment_stack,
-                    )
-                } else if matches!(
-                    (source.theorem_id, argument_index),
-                    (BuiltinTheoremId::RealMemberLeLeastUpperBound, 1)
-                        | (BuiltinTheoremId::RealLeastUpperBoundLeUpperBound, 1)
-                        | (BuiltinTheoremId::RealGreatestLowerBoundLeMember, 1)
-                        | (BuiltinTheoremId::RealLowerBoundLeGreatestLowerBound, 1)
-                ) {
-                    render_numeric_obj(argument, &self.environment_stack)
-                } else if matches!(
-                    (source.theorem_id, argument_index),
-                    (BuiltinTheoremId::RealMemberLeLeastUpperBound, 2)
-                        | (BuiltinTheoremId::RealGreatestLowerBoundLeMember, 2)
-                ) {
-                    // The membership premise is evidence about this exact
-                    // source object.  The real observer is supplied
-                    // separately and applied by the Lean rule after selecting
-                    // the set-carrier representative.
-                    render_obj(argument, &self.environment_stack)
                 } else {
-                    render_obj(argument, &self.environment_stack)
+                    proof
+                };
+                requirement_proofs.push(format!("({proof})"));
+            }
+
+            let rendered_arguments = verification
+                .arguments
+                .iter()
+                .enumerate()
+                .map(|(argument_index, argument)| {
+                    if matches!(source.theorem_id, BuiltinTheoremId::RationalBetweenReals) {
+                        Ok(rational_density_real_arguments
+                            .as_ref()
+                            .expect("rational density real arguments were installed")
+                            [argument_index]
+                            .clone())
+                    } else if matches!(
+                        source.theorem_id,
+                        BuiltinTheoremId::RealArchimedeanNaturalUpperBound
+                    ) {
+                        render_obj(argument, &self.environment_stack)
+                    } else if matches!(
+                        (source.theorem_id, argument_index),
+                        (BuiltinTheoremId::RealLeastUpperBoundExists, 1)
+                            | (BuiltinTheoremId::RealLeastUpperBoundLeUpperBound, 2)
+                            | (BuiltinTheoremId::RealGreatestLowerBoundExists, 1)
+                            | (BuiltinTheoremId::RealLowerBoundLeGreatestLowerBound, 2)
+                    ) {
+                        render_real_target_object_representation(
+                            &LeanTargetObjectRepresentation::lower(argument)?,
+                            &self.environment_stack,
+                        )
+                    } else if matches!(
+                        (source.theorem_id, argument_index),
+                        (BuiltinTheoremId::RealMemberLeLeastUpperBound, 1)
+                            | (BuiltinTheoremId::RealLeastUpperBoundLeUpperBound, 1)
+                            | (BuiltinTheoremId::RealGreatestLowerBoundLeMember, 1)
+                            | (BuiltinTheoremId::RealLowerBoundLeGreatestLowerBound, 1)
+                    ) {
+                        render_numeric_obj(argument, &self.environment_stack)
+                    } else if matches!(
+                        (source.theorem_id, argument_index),
+                        (BuiltinTheoremId::RealMemberLeLeastUpperBound, 2)
+                            | (BuiltinTheoremId::RealGreatestLowerBoundLeMember, 2)
+                    ) {
+                        // The membership premise is evidence about this exact
+                        // source object.  The real observer is supplied
+                        // separately and applied by the Lean rule after selecting
+                        // the set-carrier representative.
+                        render_obj(argument, &self.environment_stack)
+                    } else {
+                        render_obj(argument, &self.environment_stack)
+                    }
+                })
+                .collect::<Result<Vec<_>, _>>()?;
+            let rule_name = match source.theorem_id {
+                BuiltinTheoremId::RealLeastUpperBoundExists => {
+                    "Litex.Rules.realLeastUpperBoundExists"
                 }
-            })
-            .collect::<Result<Vec<_>, _>>()?;
-        let rule_name = match source.theorem_id {
-            BuiltinTheoremId::RealLeastUpperBoundExists => "Litex.Rules.realLeastUpperBoundExists",
-            BuiltinTheoremId::RealMemberLeLeastUpperBound => {
-                "Litex.Rules.realMemberLeLeastUpperBound"
+                BuiltinTheoremId::RealMemberLeLeastUpperBound => {
+                    "Litex.Rules.realMemberLeLeastUpperBound"
+                }
+                BuiltinTheoremId::RealLeastUpperBoundLeUpperBound => {
+                    "Litex.Rules.realLeastUpperBoundLeUpperBound"
+                }
+                BuiltinTheoremId::RealGreatestLowerBoundExists => {
+                    "Litex.Rules.realGreatestLowerBoundExists"
+                }
+                BuiltinTheoremId::RealGreatestLowerBoundLeMember => {
+                    "Litex.Rules.realGreatestLowerBoundLeMember"
+                }
+                BuiltinTheoremId::RealLowerBoundLeGreatestLowerBound => {
+                    "Litex.Rules.realLowerBoundLeGreatestLowerBound"
+                }
+                BuiltinTheoremId::RealArchimedeanNaturalUpperBound => {
+                    "Litex.Rules.realArchimedeanNaturalUpperBound"
+                }
+                BuiltinTheoremId::RationalBetweenReals => "Litex.Rules.rationalBetweenReals",
+                _ => unreachable!("typed real-analysis theorem set was checked above"),
+            };
+            let mut representation_arguments = Vec::new();
+            if matches!(
+                source.theorem_id,
+                BuiltinTheoremId::RealArchimedeanNaturalUpperBound
+            ) {
+                representation_arguments.push(render_numeric_obj(
+                    &verification.arguments[0],
+                    &self.environment_stack,
+                )?);
+                representation_arguments.push("(by norm_num)".to_string());
             }
-            BuiltinTheoremId::RealLeastUpperBoundLeUpperBound => {
-                "Litex.Rules.realLeastUpperBoundLeUpperBound"
-            }
-            BuiltinTheoremId::RealGreatestLowerBoundExists => {
-                "Litex.Rules.realGreatestLowerBoundExists"
-            }
-            BuiltinTheoremId::RealGreatestLowerBoundLeMember => {
-                "Litex.Rules.realGreatestLowerBoundLeMember"
-            }
-            BuiltinTheoremId::RealLowerBoundLeGreatestLowerBound => {
-                "Litex.Rules.realLowerBoundLeGreatestLowerBound"
-            }
-            BuiltinTheoremId::RealArchimedeanNaturalUpperBound => {
-                "Litex.Rules.realArchimedeanNaturalUpperBound"
-            }
-            BuiltinTheoremId::RationalBetweenReals => "Litex.Rules.rationalBetweenReals",
-            _ => unreachable!("typed real-analysis theorem set was checked above"),
-        };
-        let mut representation_arguments = Vec::new();
-        if matches!(
-            source.theorem_id,
-            BuiltinTheoremId::RealArchimedeanNaturalUpperBound
-        ) {
-            representation_arguments.push(render_numeric_obj(
-                &verification.arguments[0],
-                &self.environment_stack,
-            )?);
-            representation_arguments.push("(by norm_num)".to_string());
-        }
-        if matches!(
-            source.theorem_id,
-            BuiltinTheoremId::RealLeastUpperBoundExists
-                | BuiltinTheoremId::RealMemberLeLeastUpperBound
-                | BuiltinTheoremId::RealLeastUpperBoundLeUpperBound
-                | BuiltinTheoremId::RealGreatestLowerBoundExists
-                | BuiltinTheoremId::RealGreatestLowerBoundLeMember
-                | BuiltinTheoremId::RealLowerBoundLeGreatestLowerBound
-        ) {
-            let set = LeanTargetObjectRepresentation::lower(&verification.arguments[0])?;
-            let observer = render_real_set_observer(&set, &self.environment_stack, "__member")?;
-            representation_arguments.push(format!("(fun __member => {observer})"));
-            representation_arguments.push("(by rfl)".to_string());
             if matches!(
                 source.theorem_id,
                 BuiltinTheoremId::RealLeastUpperBoundExists
+                    | BuiltinTheoremId::RealMemberLeLeastUpperBound
+                    | BuiltinTheoremId::RealLeastUpperBoundLeUpperBound
                     | BuiltinTheoremId::RealGreatestLowerBoundExists
+                    | BuiltinTheoremId::RealGreatestLowerBoundLeMember
+                    | BuiltinTheoremId::RealLowerBoundLeGreatestLowerBound
             ) {
-                let same =
-                    render_real_set_observer_same(&set, &self.environment_stack, "__member")?;
-                representation_arguments.push(format!("(fun __member => {same})"));
+                let set = LeanTargetObjectRepresentation::lower(&verification.arguments[0])?;
+                let observer = render_real_set_observer(&set, &self.environment_stack, "__member")?;
+                representation_arguments.push(format!("(fun __member => {observer})"));
+                representation_arguments.push("(by rfl)".to_string());
+                if matches!(
+                    source.theorem_id,
+                    BuiltinTheoremId::RealLeastUpperBoundExists
+                        | BuiltinTheoremId::RealGreatestLowerBoundExists
+                ) {
+                    let same =
+                        render_real_set_observer_same(&set, &self.environment_stack, "__member")?;
+                    representation_arguments.push(format!("(fun __member => {same})"));
+                }
             }
-        }
-        let mut proof = format!(
-            "{rule_name} {} {} {}",
-            rendered_arguments.join(" "),
-            representation_arguments.join(" "),
-            requirement_proofs.join(" ")
-        );
-        if matches!(
-            source.theorem_id,
-            BuiltinTheoremId::RealMemberLeLeastUpperBound
-                | BuiltinTheoremId::RealGreatestLowerBoundLeMember
-        ) {
-            proof = format!("(by simpa using ({proof}))");
-        }
-        let proposition = self
-            .render_fact_using_well_definedness_result(conclusion_well_definedness, conclusion)?;
-
-        let [outer_store] = result.common.infers.store_fact_outputs.as_slice() else {
-            return Err(
-                "real-analysis builtin theorem must retain one outer conclusion store".into(),
+            let mut proof = format!(
+                "{rule_name} {} {} {}",
+                rendered_arguments.join(" "),
+                representation_arguments.join(" "),
+                requirement_proofs.join(" ")
             );
-        };
-        let conclusion_fact_id = outer_store.fact_id.ok_or_else(|| {
-            "real-analysis builtin theorem conclusion has no frozen FactId".to_string()
-        })?;
-        if outer_store.itself_and_why_itself_is_stored.0.to_string() != conclusion.to_string()
-            || outer_store.inferred_facts.len() != outer_store.inferred_fact_ids.len()
-        {
-            return Err("real-analysis builtin theorem changed its publication effects".into());
-        }
-        Ok(Some(CompiledRealAnalysisTheoremApplicationProofBody {
-            local_prerequisite_lines,
-            conclusion: CompiledTheoremApplicationConclusionProofBody {
-                retained_fact_id: Some(conclusion_fact_id),
-                fact: conclusion.clone(),
-                proposition,
-                proof_expression: proof,
-            },
-        }))
+            if matches!(
+                source.theorem_id,
+                BuiltinTheoremId::RealMemberLeLeastUpperBound
+                    | BuiltinTheoremId::RealGreatestLowerBoundLeMember
+            ) {
+                proof = format!("(by simpa using ({proof}))");
+            }
+            let proposition = self.render_fact_using_well_definedness_result(
+                conclusion_well_definedness,
+                conclusion,
+            )?;
+
+            let [outer_store] = result.common.infers.store_fact_outputs.as_slice() else {
+                return Err(
+                    "real-analysis builtin theorem must retain one outer conclusion store".into(),
+                );
+            };
+            let conclusion_fact_id = outer_store.fact_id.ok_or_else(|| {
+                "real-analysis builtin theorem conclusion has no frozen FactId".to_string()
+            })?;
+            if outer_store.itself_and_why_itself_is_stored.0.to_string() != conclusion.to_string()
+                || outer_store.inferred_facts.len() != outer_store.inferred_fact_ids.len()
+            {
+                return Err("real-analysis builtin theorem changed its publication effects".into());
+            }
+            Ok(Some(CompiledRealAnalysisTheoremApplicationProofBody {
+                local_prerequisite_lines,
+                conclusion: CompiledTheoremApplicationConclusionProofBody {
+                    retained_fact_id: Some(conclusion_fact_id),
+                    fact: conclusion.clone(),
+                    proposition,
+                    proof_expression: proof,
+                },
+            }))
+        })();
+        self.environment_stack.well_definedness = previous_well_definedness;
+        compilation
     }
 }
 

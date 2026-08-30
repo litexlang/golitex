@@ -332,11 +332,30 @@ pub(in super::super) fn render_fact_proof_across_exact_predicate_arguments(
     for (clause_index, clause) in definition.iff_facts.iter().enumerate() {
         let selector =
             conjunction_selector(binding.requirement_count + clause_index, component_count)?;
+        let source_clause = render_fact(clause, &current)?;
+        let target_clause = render_fact(clause, &final_context)?;
         let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = clause else {
+            if source_clause == target_clause {
+                component_proofs.push(format!("__source{selector}"));
+                continue;
+            }
+            if transports
+                .iter()
+                .all(|(_, set, _, _, _)| matches!(set, Obj::StandardSet(StandardSet::R)))
+            {
+                // A checked exact-R argument can be represented either by a
+                // compositional native real term or by `In.rep` applied to
+                // the verifier-owned membership constructor.  Normalize only
+                // those closed constructors here.  Lean must prove the whole
+                // clause conversion (including forall/implication nesting);
+                // no `Same ℝ ℝ -> Eq` principle is introduced.
+                component_proofs.push(format!(
+                    "(by simpa [Litex.In.rep, Litex.Rules.complexRealInR, Litex.Rules.complexAddInR, Litex.Rules.complexSubInR, Litex.Rules.complexMulInR, Litex.Rules.complexDivInR, Litex.Rules.inROfInRPos, Litex.Le, Litex.Lt, Litex.OrderValue] using (__source{selector}))"
+                ));
+                continue;
+            }
             return Err(format!(
-                "exact predicate transport does not yet support definition clause `{}` changing to `{}`",
-                render_fact(clause, &current)?,
-                render_fact(clause, &final_context)?,
+                "exact predicate transport does not yet support definition clause `{source_clause}` changing to `{target_clause}`",
             ));
         };
         let mut proof = format!("__source{selector}");
