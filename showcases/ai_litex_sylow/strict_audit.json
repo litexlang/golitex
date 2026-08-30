@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "recorded_on": "2026-08-29",
+  "recorded_command": "target/release/litex -compact -strict -session -before tmp/2026-08-29/ai-litex-sylow-showcase/main.lit",
+  "replay_command": "target/release/litex -compact -strict -session -before showcases/ai_litex_sylow/main.lit",
+  "entered_session": false,
+  "event": "startup_error",
+  "raw_jsonl": {
+    "sha256": "a5e233e5db4188ec7b9f2c0dfc57da6930c72d10406e643bdc5b742ef2c46912",
+    "bytes": 31033832,
+    "publication": "Exact decisive fields are projected below; replay_session.py --strict reproduces the complete startup trace."
+  },
+  "error": {
+    "error_type": "ExecStmtError",
+    "line": 863,
+    "source": "MIL::MILAlternative::chap2_struct",
+    "path": "scripts/mathematics_in_litex/textbook2/chapter02-basics-struct.lit",
+    "message": "strict mode rejects user trust statements; use claim/thm with a `?` goal or move trusted background into an imported module",
+    "type": "unproved assumption",
+    "statement": "trust forall A set, order &MIL::MILAlternative::chap2_struct::PartialOrder<A>, x, y A:\n    $MIL::MILAlternative::chap2_struct::is_less_than_in_order(A, order, x, y)\n    <=>:\n        (x, y) $in order.le_rel\n        x != y",
+    "phases": {
+      "verify_well_definedness": {
+        "status": "success"
+      },
+      "verify_process": {
+        "status": "error",
+        "message": "strict mode rejects user trust statements; use claim/thm with a `?` goal or move trusted background into an imported module"
+      },
+      "affect_environment": {
+        "status": "not_run",
+        "message": "previous phase failed"
+      }
+    }
+  },
+  "scope_conclusion": "The ordinary showcase file gate verifies main.lit relative to configured imports. The complete imported dependency closure is not strictly checkable because this explicit trust is encountered before the session becomes ready."
+}

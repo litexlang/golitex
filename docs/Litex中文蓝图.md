@@ -22,7 +22,6 @@
 - [4. Lean 兼容：为已覆盖路径提供独立复核](#compatibility)
 - [从四项设计到数学实践：定义与验证](#mathematics-practice)
   - [完整例子：定义收敛并验证常数倍保持收敛](#convergence-example)
-  <!-- - [下一阶段：把 Litex 结果接到 Mathlib 风格的数学](#next-stage-pipeline) -->
 - [从语言到生态：Litex 想扮演什么角色](#ecosystem-role)
 - [总结](#conclusions)
 
@@ -130,8 +129,6 @@ Litex：对象和事实 → 内核检查并寻找依据 → 已验证事实扩�
 <a id="interaction-loop"></a>
 
 ## 人类与 AI 的验证闭环：写下事实，看见依据与停止边界
-
-<!-- 这里之后加上，litex 怎么用 try 语句 和 proof journal 来，在增量与缓存验证 按 top-level block 缓存已经验证的前缀，只重跑受影响的依赖闭包。Chapter 9 的反馈周期应该从十几分钟降到几秒或几十秒。这还挺牛的-->
 
 “容易写”还不够。面对大量推理，形式系统还应说明这一步为何接受、不能继续时停在哪里。Litex 的闭环是：**人类或 AI 写下事实；检查器返回依据或停止位置。** 用户据此补条件、拆步骤、改表达或继续前进。
 
@@ -250,7 +247,6 @@ no goals
 </details>
 
 <a id="set-theory"></a>
-<a id="goal-2"></a>
 
 ## 1. 基于集合论：让数学对象保持可读
 
@@ -297,24 +293,20 @@ Litex 让用户直接面对集合和成员关系，并为成员、子集与交�
 
 </details>
 
+<details>
+<summary><strong>技术总结：类型判断与成员事实</strong></summary>
+
+Lean 把数学组织成有类型的项：经过细化后，核心表达式由 `Γ ⊢ e : T` 形式的判断检查。冒号属于元语言层的类型判断，不是 Lean 对象语言中可与等式、序关系或定理事实并列累积的普通命题。表层重载和强制转换可以把相似写法细化成不同的核心项，但每个所得项都在一个确定类型下接受检查。
+
+Litex 则把数学组织成对象与逐步增长的事实上下文。`e $in S` 是对象语言中的成员事实，与等式、序关系和其他谓词处于同一逻辑层。因此，同一对象可被证明属于多个无关或相互重叠的集合：成员关系是对象之间的关系，不是唯一内生赋值 `typeOf(e) = S`。
+
+这不等于取消静态约束或推断。Litex 在接受表达式前仍会检查定义域、返回集合、结构字段和其他良定义性义务，并通过专用规则在证明中推出成员与载体事实。区别在于，这种推断向上下文增加 `e $in S` 一类事实，而不是推断一个决定对象身份的特权类型 `e : T`。
+
+</details>
+
 直接的表层不等于取消约束。函数定义域和返回集合、结构字段，以及运算能否作用于给定对象，仍须通过良定义性检查，只是条件尽量写在数学本来出现的位置。`template` 可描述随载体、参数或假设变化的对象族，但只是受控索引机制；Litex 不因此自称拥有完整依赖类型论。
 
 函数经过检查的契约——参数域、返回集合和调用条件——还能复用。验证器检查实参、推出返回值所属集合，并把事实传给外层调用。例如有 `f : A → B`、`g : B → C` 和 `a ∈ A` 后，可直接写 `g(f(a))`；系统检查 `f(a)` 能否作为 `g` 的输入。责任没有消失，省去的是反复抄写。
-
-群、环等结构也沿用这种分工：载体与运算范围必须明确；Lean 默认以类型和函数组织，Litex 默认以集合、成员和集合上的运算组织。价值不只在代码更短，更在读者能从形式文本中认出原来的数学结构。
-
-<details>
-<summary><strong>AI 生成数学中的规格对齐</strong></summary>
-
-证明助手能判断证明是否建立了实际编码的命题，却不能仅靠内核判断该命题是否符合作者意图。AI 产物可能内部正确，却只证明特例、改变定义或论域、弱化结论。这不是逻辑失效，而是意图与规格错位。
-
-AI 越强，越需要作者或领域专家认出原意。若类型论抽象、细化、类型类和库接口使原命题提出者读不懂形式表达，内核接受可能只会增强对错误命题的信心。
-
-Litex 让定义域、条件、中间事实和结论以接近日常数学又机器可检的形式留在源码中。它不能保证定理选对了，但希望懂数学的人能直接审查，并在验证后比较、重组文本，识别新结构。
-
-**责任分工是：AI 生成形式化，内核检查它声称的命题，人类确认该命题就是原意。Litex 把最后一步视为核心要求。**
-
-</details>
 
 <a id="group-comparison"></a>
 
@@ -407,7 +399,6 @@ Lean 当然也能脱离 Mathlib 自行定义群；这里比较的是默认体验
 > 宇宙（universe）的前提下，覆盖有实质内容的数学？
 
 <a id="fact-oriented"></a>
-<a id="workflow"></a>
 
 ## 2. 事实导向：源码保存“什么成立”
 
@@ -415,7 +406,6 @@ Lean 当然也能脱离 Mathlib 自行定义群；这里比较的是默认体验
 
 前面的集合包含和群结构已给出两个小版本：用户直接写下希望成立的对象关系或结构事实，内核再寻找局部依据。这里先把这种分工本身讲清楚；定义、量词、见证和连续估计如何组合，将在四项设计之后用一个完整收敛例子展示。
 
-<a id="goal-1"></a>
 ### 为什么普通事实不需要名字，也不需要证明指令？
 
 像 `a + b >= 0` 这样的普通事实不必逐一命名，也不必逐行指定证明指令、库定理或改写方向。用户直接写当前需要的数学事实，让内核从上下文和受支持规则中找依据。
@@ -502,9 +492,11 @@ forall a R:
 用户写结论，内核从规则、事实和等式中找依据。来源被记录，搜索受限；源码保留推理主线，轨迹补充机器依据。
 
 <details>
-<summary><strong>个人观察：声明式与命令式的类比</strong></summary>
+<summary><strong>个人观察：命令式与声明式的类比</strong></summary>
 
-借用不严格的类比：声明式强调“要什么”，命令式强调“怎么做”。Litex 更接近前者，普通事实无须先命名再引用，因而减少名称与依赖传递。Lean 本身是函数式语言；这里只说其证明指令交互会逐步改变状态，不是严格分类或优劣判断。
+粗略地说，编程语言有命令式与声明式两种风格。C、Rust 中常见的命令式代码强调“how”；Haskell 等函数式语言强调“what”。
+
+有趣的是，Lean 本身是函数式、声明式语言，但 tactic proof 常读起来更像命令式程序。每条指令都改变当前 Goal。Litex 则把默认证明界面拉回“what”：作者写下一条应当成立的事实，验证器寻找“how”。
 
 </details>
 
@@ -518,7 +510,6 @@ forall a R:
 > 尝试证明定理事件（theorem event）；[Naproche](https://naproche.github.io/) 则用自动定理证明器
 > 检查受控自然语言中的步骤。Litex 更具体地检验：普通数学陈述能否触发受当前上下文和规则限制的局部验证，并在通过后写回上下文、显示验证来源。
 
-<a id="goal-3"></a>
 <a id="bottom-up"></a>
 
 ## 3. 自下而上：让已验证事实继续生长
@@ -579,8 +570,6 @@ Mizar、Isar、ACL2 和 Naproche 已支持前向文本、定理累积或逐步�
 
 </details>
 
-第四项设计因此是：把验证结果交给 Lean，而非只要求用户相信 Litex。
-
 <a id="compatibility"></a>
 
 ## 4. Lean 兼容：为已覆盖路径提供独立复核
@@ -595,7 +584,26 @@ Litex 的事实优先接口聚焦数学对象和局部反馈；Lean 的细化、
 
 完整编译并通过 Lean 的路径会获得强而相对独立的证据。这不能证明 Litex 全部实现正确，却减少对其大型实现的单一依赖。
 
-_这仍是实现目标，并非测试版已全面具备。编译器只覆盖部分对象、语句和路径；未完整编译并通过 Lean 的结果不能声称获得这层保障。_
+_覆盖仍然有限。只有完整编译并通过 Lean 的源码路径才获得这层保障。_
+
+### 一个完整定理已经进入 Lean
+
+下方的收敛定理已不只是 Litex 示例。ToLean 把 `converges_to_mul_const` 的验证证据编译成 Lean。Lean 内核接受了它，手写 adapter 再把结论导出为 Mathlib 的 `Filter.Tendsto` 定理。
+
+关键的 Lean 调用只有几行：
+
+```lean
+import LitexGenerate
+
+have generated :=
+  __Compiler_main.converges_to_mul_const s sIn a aIn c cIn h
+```
+
+**Litex 源码 ✓ → 生成 Lean ✓ → Lean 内核 ✓ → Mathlib adapter ✓**
+
+[在仓库中查看完整 showcase](https://github.com/litexlang/golitex/tree/main/showcases/litex_to_lean_mathlib_pipeline/showcase2)。
+
+这证明一条已覆盖路径完整走通，不代表所有 Litex 源码都能编译。
 
 <details>
 <summary><strong>Litex 到 Lean 的编译器如何工作</strong></summary>
@@ -603,38 +611,6 @@ _这仍是实现目标，并非测试版已全面具备。编译器只覆盖部�
 生态复用和独立复核指向同一技术路线：Litex 保留验证路径，把每个已支持步骤映射为 Lean 定理或证明构造，再组装成证明对象。Mathlib 对集合论数学的支持使这条路线自然可行。
 
 实现它需要两层映射：验证路径映射为 Lean 证明构造；数学对象通过设计过的包装层映射为 Lean 表示，而非机械直译。这需要持续开发和验证；中介代码见 https://github.com/litexlang/golitex/blob/main/lean/Litex/Core.lean。
-
-可执行的 [pipeline](../showcases/litex_to_lean_mathlib_pipeline/showcase1/README.md) 展示递归 `StmtResult` 证据、生成的 Lean 证明、外部 adapter 及其 Mathlib 消费者；实现导航和门禁由该 showcase 维护。
-
-以下已验证定理说明证据映射和生态接口：
-
-```litex
-thm litex_real_add_comm:
-    ? forall a, b R:
-        a + b = b + a
-```
-
-第一层 Lean 接口是编译器的规范定理，保留 Litex 分类和验证证据：
-
-```text
-∀ {α β : Type} (a : α) (ha : Litex.In a Litex.R)
-  (b : β) (hb : Litex.In b Litex.R),
-  Litex.Same
-    ((Litex.In.rep a ha : ℝ) + (Litex.In.rep b hb : ℝ))
-    ((Litex.In.rep b hb : ℝ) + (Litex.In.rep a ha : ℝ))
-```
-
-编译器止于源码拥有的声明，不额外发明普通 Lean 推论：
-
-```text
-theorem litex_real_add_comm (a b : ℝ) : a + b = b + a
-```
-
-因为 `.lit` 文件没有该声明。“只翻译源码声明”使定理名、陈述和证明路径都可追溯。
-
-普通 Mathlib 接口由 AI 或人类在独立的非生成模块中编写。adapter 可导入生成模块，但自行负责新增陈述和证明；编译器不把 API 设计或新数学藏在翻译中。
-
-**互操作性有两个独立产物：ToLean 提供可由内核检查的源码翻译；外部 adapter 提供新增 Lean/Mathlib 接口，不能与编译器输出混淆。**
 
 编译器有两个底层问题。其一是如何在 Lean/Mathlib 中表示 Litex 数学。同一对象常有多种等价写法，选择会长期影响 Mathlib 复用、Litex 扩展与生态协作；函数、集合、成员和良定义性必须采用一致、可持续的表示。
 
@@ -713,57 +689,54 @@ Litex 尝试把这种顺序变成默认逻辑：用户写事实，检查器寻�
 对应代码先定义“最终足够接近”和“收敛”，再从原收敛性取得位置并为新数列构造见证：
 
 ```litex
+# 1. 用 prop 定义“最终足够接近”：forall n，只要 n >= N0，=>: 后的距离界就成立。
 prop is_eventually_close(s fn(n N) R, a R, epsilon R+, N0 N):
     forall n N:
         n >= N0
         =>:
             abs(s(n) - a) < epsilon
 
+# 2. 收敛的意思是：forall 正误差 epsilon，都存在一个让上述 prop 成立的 N0。
 prop converges_to(s fn(n N) R, a R):
     forall epsilon R+:
         exist N0 N st {$is_eventually_close(s, a, epsilon, N0)}
 
+# 3. 把“s 收敛 =>: c * s 收敛”写成一个 thm。
 thm converges_to_mul_const:
     ? forall s fn(n N) R, a, c R:
         $converges_to(s, a)
         =>:
             $converges_to(fn(n N) R {c * s(n)}, c * a)
+    # 4. 先 claim 一个局部目标：forall epsilon，都要证明存在 N0。
     claim:
         ? forall epsilon R+:
             exist N0 N st {$is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, N0)}
+        # 5. 为了给这个存在性找到见证，选择更小的正误差 epsilon / (abs(c) + 1)。
         abs(c) + 1 > 0
         epsilon / (abs(c) + 1) $in R+
+        # 6. 原收敛性已经说这样的 K 存在，所以 obtain N0。
         obtain N0 from exist K N st {$is_eventually_close(s, a, epsilon / (abs(c) + 1), K)}
+        # 7. 要完成新数列的存在性，就把同一个 N0 作为 witness 交出去。
         witness exist K N st {$is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, K)} from N0:
+            # 8. 进入 forall n；把 n >= N0 放在 =>: 左边，右边证明距离界。
             forall n N:
                 n >= N0
                 =>:
                     abs(s(n) - a) < epsilon / (abs(c) + 1)
+                    # 9. 沿事实链提出 abs(c)，再用 abs(c) <= abs(c) + 1 把误差压到 epsilon 以下。
                     abs(c * s(n) - c * a) = abs(c * (s(n) - a)) = abs(c) * abs(s(n) - a)
                     abs(c) * abs(s(n) - a) <= (abs(c) + 1) * abs(s(n) - a) < (abs(c) + 1) * (epsilon / (abs(c) + 1)) = epsilon
+                    # 用 fn 写出的新数列，在 n 处需要的正是这个结论。
                     abs(fn(k N) R {c * s(k)}(n) - c * a) < epsilon
+            # 10. by def is_eventually_close：由定义，上面的 forall 事实就是“最终足够接近”。
             by def $is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, N0)
+    # 11. by def converges_to：再由定义，刚才的 forall / exist 结构就是收敛。
     by def $converges_to(fn(n N) R {c * s(n)}, c * a)
 ```
 
 前两个 `prop` 建立领域语言：什么叫“最终足够接近”，什么叫“收敛”。随后 `obtain N0` 从原收敛性取出位置，`witness` 把它交给新数列；`epsilon / (abs(c) + 1)` 避免另分 `c = 0`，不等式链再把误差压到 `epsilon` 以下。这个例子把两种数学工作放在一起：先定义可复用接口，再验证它能推出新的事实。事实导向改变的是接口，不是删去数学内容。
 
 </details>
-
-<!--
-<a id="next-stage-pipeline"></a>
-
-### 下一阶段：把 Litex 结果接到 Mathlib 风格的数学
-
-这个收敛例子目前展示的是 Litex 如何定义数学接口、如何验证数学事实。下一阶段更完整的蓝图证据，应把同一案例继续走完以下链路：
-
-1. 人类或 AI（未来也可以由 Litex skill 约束工作流）写出 Litex 定义和定理；
-2. Litex 验证源码，并把实际采用的验证路径保存在结构化结果中；
-3. ToLean 只把源码拥有的声明及其证据编译成可由 Lean 内核检查的规范定理，不额外发明 Mathlib API；
-4. 独立的 AI 或人类 adapter 导入生成模块，引用生成定理，通过已经证明的 wrapper/unwrap 桥梁取得 Mathlib 原生对象或结论，再继续证明真正面向下游的问题。
-
-这里必须区分“已经有的架构”与“下一阶段的完整示例”。当前的[分层 showcase](../showcases/litex_to_lean_mathlib_pipeline/showcase1/README.md)已经把 Litex 源码、生成 Lean、外部 adapter 和下游消费者分成独立产物；但其中的 adapter 仍独立重建了一部分原生数学，并不是“直接引用生成定理再 unwrap 出目标定理”的完整证据。等这条消费路径能够以真实源码、生成文件和 Lean 内核门禁端到端运行后，蓝图再附上对应代码及 AI 使用 Litex skill 的工作流，才不会把路线图写成已经实现的能力。
--->
 
 <a id="ecosystem-role"></a>
 
@@ -808,5 +781,3 @@ Litex 以接近日常数学的语法和交互降低书写与审查门槛：用�
 2. 如果关注内核实现，可以查看 [golitex 仓库](https://github.com/litexlang/golitex)。
 
 注：当前仓库同时保留已检查成果、实验和未完成工作。*公开可见不等于宣称完成*；能力应以测试、带日期的状态、可信边界和已知限制为准。
-
-<!-- 蓝图主线：验证危机 → 两种参与门槛 → 人与 AI 的验证闭环 → 四项语言设计 → 数学实践中的定义与验证 → ToLean/adapter 接续 → 生态角色 → 成功标准 -->

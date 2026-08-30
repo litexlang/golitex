@@ -44,10 +44,23 @@ impl ModuleManager {
         }
     }
 
-    pub fn create_entry_module(&mut self, main_file_path: &str) -> ModuleId {
+    pub fn create_entry_module(
+        &mut self,
+        main_file_path: &str,
+        is_virtual_source: bool,
+    ) -> ExecutionModuleFileInfo {
+        assert!(
+            self.entry_module_id.is_none(),
+            "entry module has already been created"
+        );
         let id = self.allocate_module_id();
+        assert_eq!(
+            id,
+            ModuleId::ROOT,
+            "the entry module must be allocated as ModuleId::ROOT"
+        );
         let module_root_path = module_root_path_for_main_file(main_file_path);
-        let runner = ModuleRunner::new(
+        let mut runner = ModuleRunner::new(
             id,
             String::new(),
             module_root_path,
@@ -56,10 +69,22 @@ impl ModuleManager {
             None,
             ModuleStatus::Loaded,
         );
+        let file_id = if is_virtual_source {
+            let file_id = runner.create_virtual_file(main_file_path.to_string(), String::new());
+            runner.module_source_file = Some(file_id);
+            file_id
+        } else {
+            runner.create_module_source_file(main_file_path.to_string(), String::new())
+        };
+        runner
+            .file_mut(file_id)
+            .expect("entry source file should exist")
+            .status = FileStatus::Loaded;
         self.modules.insert(id, runner);
         self.entry_module_id = Some(id);
         self.entry_path_rc = Rc::from(main_file_path);
-        id
+        self.execution_module_file_info(id, file_id)
+            .expect("entry source file should be registered")
     }
 
     pub fn create_repository_entry_module(
@@ -71,6 +96,9 @@ impl ModuleManager {
             return Err("entry module has already been created".to_string());
         }
         let id = self.allocate_module_id();
+        if id != ModuleId::ROOT {
+            return Err("the entry module must be allocated as ModuleId::ROOT".to_string());
+        }
         let runner = ModuleRunner::new(
             id,
             String::new(),
@@ -102,15 +130,18 @@ impl ModuleManager {
             ));
         }
         let id = self.allocate_module_id();
-        let runner = ModuleRunner::new(
+        let mut runner = ModuleRunner::new(
             id,
             module_name.clone(),
             module_root_path.clone(),
-            main_file_path,
+            main_file_path.clone(),
             hierarchy,
             parent_module_id,
             ModuleStatus::Discovered,
         );
+        if main_file_path.ends_with(".lit") {
+            runner.create_module_source_file(main_file_path, module_name.clone());
+        }
         self.modules.insert(id, runner);
         self.module_by_name.insert(module_name, id);
         self.module_by_path.entry(module_root_path).or_insert(id);
@@ -223,6 +254,36 @@ impl ModuleManager {
 
     pub fn module_mut(&mut self, id: ModuleId) -> Option<&mut ModuleRunner> {
         self.modules.get_mut(&id)
+    }
+
+    pub fn execution_module_file_info(
+        &self,
+        module_id: ModuleId,
+        file_id: FileId,
+    ) -> Option<ExecutionModuleFileInfo> {
+        let source_path = self.module(module_id)?.file(file_id)?.source_path.as_str();
+        Some(ExecutionModuleFileInfo::new(
+            module_id,
+            file_id,
+            Rc::from(source_path),
+        ))
+    }
+
+    pub fn create_execution_file(
+        &mut self,
+        module_id: ModuleId,
+        source_path: &str,
+    ) -> Result<ExecutionModuleFileInfo, String> {
+        let file_id = self
+            .module_mut(module_id)
+            .ok_or_else(|| "execution module is missing".to_string())?
+            .create_virtual_file(source_path.to_string(), String::new());
+        self.module_mut(module_id)
+            .and_then(|module| module.file_mut(file_id))
+            .expect("new execution file should exist")
+            .status = FileStatus::Loaded;
+        self.execution_module_file_info(module_id, file_id)
+            .ok_or_else(|| "new execution file is missing".to_string())
     }
 
     pub fn module_is_descendant_of(

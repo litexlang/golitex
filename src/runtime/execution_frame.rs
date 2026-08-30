@@ -1,12 +1,5 @@
 use crate::prelude::*;
 use std::collections::HashMap;
-use std::rc::Rc;
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum ExecutionLayer {
-    Main,
-    File(FileId),
-}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum ExecutionMode {
@@ -16,9 +9,7 @@ pub enum ExecutionMode {
 
 #[derive(Clone)]
 pub struct ExecutionFrame {
-    pub module_id: ModuleId,
-    pub layer: ExecutionLayer,
-    pub source_path: Rc<str>,
+    pub module_file_info: ExecutionModuleFileInfo,
     pub execution_mode: ExecutionMode,
     pub local_environment_stack: Vec<Box<Environment>>,
     pub parse_context: ParseContext,
@@ -28,20 +19,16 @@ pub struct ExecutionFrame {
 }
 
 impl ExecutionFrame {
-    pub fn new(module_id: ModuleId, layer: ExecutionLayer, source_path: &str) -> Self {
-        Self::new_with_mode(module_id, layer, source_path, ExecutionMode::Verified)
+    pub fn new(module_file_info: ExecutionModuleFileInfo) -> Self {
+        Self::new_with_mode(module_file_info, ExecutionMode::Verified)
     }
 
     pub fn new_with_mode(
-        module_id: ModuleId,
-        layer: ExecutionLayer,
-        source_path: &str,
+        module_file_info: ExecutionModuleFileInfo,
         execution_mode: ExecutionMode,
     ) -> Self {
         ExecutionFrame {
-            module_id,
-            layer,
-            source_path: Rc::from(source_path),
+            module_file_info,
             execution_mode,
             local_environment_stack: vec![],
             parse_context: ParseContext::new(),

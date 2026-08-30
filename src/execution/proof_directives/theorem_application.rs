@@ -497,6 +497,7 @@ impl Runtime {
                 | BuiltinTheoremId::RealGreatestLowerBoundExists
                 | BuiltinTheoremId::RealGreatestLowerBoundLeMember
                 | BuiltinTheoremId::RealLowerBoundLeGreatestLowerBound
+                | BuiltinTheoremId::RealArchimedeanNaturalUpperBound
                 | BuiltinTheoremId::RationalBetweenReals
         ) {
             return self.exec_builtin_real_analysis_thm(stmt, theorem_id, verify_requirements);
@@ -1427,6 +1428,7 @@ impl Runtime {
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let name = theorem_id.as_str();
         let expected_arity = match theorem_id {
+            BuiltinTheoremId::RealArchimedeanNaturalUpperBound => 1,
             BuiltinTheoremId::RealLeastUpperBoundExists
             | BuiltinTheoremId::RealGreatestLowerBoundExists
             | BuiltinTheoremId::RationalBetweenReals => 2,
@@ -1662,6 +1664,30 @@ impl Runtime {
                     LessEqualFact::new(lower_bound, glb, line_file.clone()).into(),
                 )
                 }
+                BuiltinTheoremId::RealArchimedeanNaturalUpperBound => {
+                    let value = stmt.args[0].clone();
+                    let natural_group = self.fresh_param_group_with_type(
+                        vec!["natural".to_string()],
+                        ParamType::Obj(StandardSet::NPos.into()),
+                    )?;
+                    let natural = obj_for_bound_param_in_scope(&natural_group.params[0]);
+                    let body: AtomicFact =
+                        LessFact::new(value.clone(), natural, line_file.clone()).into();
+                    let existential = ExistentialSpec::new(
+                        TypedParameterList::new(vec![natural_group]),
+                        vec![body.into()],
+                        line_file.clone(),
+                    )?;
+                    let conclusion: ExistOrAndChainAtomicFact =
+                        ExistFactEnum::ExistFact(existential).into();
+                    (
+                        vec![(
+                            InFact::new(value, real.clone(), line_file.clone()).into(),
+                            BuiltinTheoremRequirementRole::ArgumentBelongsToReals,
+                        )],
+                        conclusion.to_fact(),
+                    )
+                }
                 BuiltinTheoremId::RationalBetweenReals => {
                     let left = stmt.args[0].clone();
                     let right = stmt.args[1].clone();
@@ -1781,22 +1807,14 @@ impl Runtime {
         upper_bound: &Obj,
         line_file: LineFile,
     ) -> Result<Fact, RuntimeError> {
-        let member_group = self.fresh_param_group_with_type(
-            vec!["member".to_string()],
-            ParamType::Obj(StandardSet::R.into()),
-        )?;
+        let member_group = self
+            .fresh_param_group_with_type(vec!["member".to_string()], ParamType::Obj(set.clone()))?;
         let member = obj_for_bound_param_in_scope(&member_group.params[0]);
         let comparison: AtomicFact =
             LessEqualFact::new(member, upper_bound.clone(), line_file.clone()).into();
-        let membership: Fact = InFact::new(
-            obj_for_bound_param_in_scope(&member_group.params[0]),
-            set.clone(),
-            line_file.clone(),
-        )
-        .into();
         Ok(ForallFact::new_canonical_forall(
             TypedParameterList::new(vec![member_group]),
-            vec![membership],
+            vec![],
             vec![comparison.into()],
             line_file,
         )?
@@ -1809,22 +1827,14 @@ impl Runtime {
         lower_bound: &Obj,
         line_file: LineFile,
     ) -> Result<Fact, RuntimeError> {
-        let member_group = self.fresh_param_group_with_type(
-            vec!["member".to_string()],
-            ParamType::Obj(StandardSet::R.into()),
-        )?;
+        let member_group = self
+            .fresh_param_group_with_type(vec!["member".to_string()], ParamType::Obj(set.clone()))?;
         let member = obj_for_bound_param_in_scope(&member_group.params[0]);
         let comparison: AtomicFact =
             LessEqualFact::new(lower_bound.clone(), member, line_file.clone()).into();
-        let membership: Fact = InFact::new(
-            obj_for_bound_param_in_scope(&member_group.params[0]),
-            set.clone(),
-            line_file.clone(),
-        )
-        .into();
         Ok(ForallFact::new_canonical_forall(
             TypedParameterList::new(vec![member_group]),
-            vec![membership],
+            vec![],
             vec![comparison.into()],
             line_file,
         )?

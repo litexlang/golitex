@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "target": "showcases/ai_litex_sylow/main.lit",
+  "session_command": "target/release/litex -compact -session -before showcases/ai_litex_sylow/main.lit",
+  "proof_spine": [
+    "Use the canonical coordinate-bijection theorem to obtain finiteness and the exact quotient-preimage cardinality.",
+    "Substitute |K| = p and |H| = p^k to obtain the successor order p^(k+1).",
+    "Cite the canonical exponent-induction theorem for the First Sylow endpoint."
+  ],
+  "blocks": [
+    {
+      "id": "P001",
+      "source_order": 1,
+      "intent": "Expose the exact quotient-preimage cardinality checkpoint.",
+      "dependencies": [
+        "MIL::chap9::sylow_quotient_preimage_cardinality"
+      ],
+      "attempts": [
+        {
+          "candidate": "thm quotient_preimage_cardinality_checkpoint:\n    ? forall G nonempty_set, group &MILAlternative::chap2_struct::Group<G>, H power_set(G), K set:\n        $MIL::chap9::is_subgroup(G, group, H)\n        $MIL::chap9::is_subgroup(G, group, \\MIL::chap9::subgroup_normalizer<G, group>(H))\n        $MIL::chap9::is_normal_subgroup(\\MIL::chap9::subgroup_carrier<G, group, \\MIL::chap9::subgroup_normalizer<G, group>(H)>, \\MIL::chap9::subgroup_group<G, group, \\MIL::chap9::subgroup_normalizer<G, group>(H)>, H)\n        K $in power_set(\\MIL::chap9::quotient_group_nonempty<\\MIL::chap9::subgroup_carrier<G, group, \\MIL::chap9::subgroup_normalizer<G, group>(H)>, \\MIL::chap9::subgroup_group<G, group, \\MIL::chap9::subgroup_normalizer<G, group>(H)>, H>)\n        $is_finite_set(G)\n        $is_finite_set(H)\n        $is_finite_set(K)\n        =>:\n            $is_finite_set(\\MIL::chap9::sylow_quotient_preimage<G, group, H>(K))\n            finite_set_size(\\MIL::chap9::sylow_quotient_preimage<G, group, H>(K)) = finite_set_size(K) * finite_set_size(H)\n    release thm MIL::chap9::sylow_quotient_preimage_cardinality(G, group, H)\n",
+          "result": "failed",
+          "verifier_evidence": "InstantiateError: argument count mismatch: expected 4 parameter(s), got 3 argument(s)",
+          "diagnosis": "The theorem release failed during well-definedness because K was omitted from the four-parameter interface.",
+          "next_change": "Pass K as the fourth theorem argument; keep the statement unchanged."
+        },
+        {
+          "candidate": "thm quotient_preimage_cardinality_checkpoint:\n    ? forall G nonempty_set, group &MILAlternative::chap2_struct::Group<G>, H power_set(G), K set:\n        $MIL::chap9::is_subgroup(G, group, H)\n        $MIL::chap9::is_subgroup(G, group, \\MIL::chap9::subgroup_normalizer<G, group>(H))\n        $MIL::chap9::is_normal_subgroup(\\MIL::chap9::subgroup_carrier<G, group, \\MIL::chap9::subgroup_normalizer<G, group>(H)>, \\MIL::chap9::subgroup_group<G, group, \\MIL::chap9::subgroup_normalizer<G, group>(H)>, H)\n        K $in power_set(\\MIL::chap9::quotient_group_nonempty<\\MIL::chap9::subgroup_carrier<G, group, \\MIL::chap9::subgroup_normalizer<G, group>(H)>, \\MIL::chap9::subgroup_group<G, group, \\MIL::chap9::subgroup_normalizer<G, group>(H)>, H>)\n        $is_finite_set(G)\n        $is_finite_set(H)\n        $is_finite_set(K)\n        =>:\n            $is_finite_set(\\MIL::chap9::sylow_quotient_preimage<G, group, H>(K))\n            finite_set_size(\\MIL::chap9::sylow_quotient_preimage<G, group, H>(K)) = finite_set_size(K) * finite_set_size(H)\n    release thm MIL::chap9::sylow_quotient_preimage_cardinality(G, group, H, K)\n",
+          "result": "accepted",
+          "verifier_evidence": "session block B002 returned ok:true with litex.statement-result.v2 outcome success",
+          "diagnosis": "The corrected release matches the canonical theorem contract.",
+          "next_change": "Advance to the prime-power consumer."
+        }
+      ],
+      "accepted_litex": "thm quotient_preimage_cardinality_checkpoint:\n    ? forall G nonempty_set, group &MILAlternative::chap2_struct::Group<G>, H power_set(G), K set:\n        $MIL::chap9::is_subgroup(G, group, H)\n        $MIL::chap9::is_subgroup(G, group, \\MIL::chap9::subgroup_normalizer<G, group>(H))\n        $MIL::chap9::is_normal_subgroup(\\MIL::chap9::subgroup_carrier<G, group, \\MIL::chap9::subgroup_normalizer<G, group>(H)>, \\MIL::chap9::subgroup_group<G, group, \\MIL::chap9::subgroup_normalizer<G, group>(H)>, H)\n        K $in power_set(\\MIL::chap9::quotient_group_nonempty<\\MIL::chap9::subgroup_carrier<G, group, \\MIL::chap9::subgroup_normalizer<G, group>(H)>, \\MIL::chap9::subgroup_group<G, group, \\MIL::chap9::subgroup_normalizer<G, group>(H)>, H>)\n        $is_finite_set(G)\n        $is_finite_set(H)\n        $is_finite_set(K)\n        =>:\n            $is_finite_set(\\MIL::chap9::sylow_quotient_preimage<G, group, H>(K))\n            finite_set_size(\\MIL::chap9::sylow_quotient_preimage<G, group, H>(K)) = finite_set_size(K) * finite_set_size(H)\n    release thm MIL::chap9::sylow_quotient_preimage_cardinality(G, group, H, K)\n",
+      "reusable_lesson": "When a named theorem call fails before proof search, compare its exact arity and carrier contract before changing the mathematics.",
+      "status": "materialized"
+    },
+    {
+      "id": "P002",
+      "source_order": 2,
+      "intent": "Reuse the committed cardinality checkpoint and calculate the prime-power successor order.",
+      "dependencies": [
+        "P001",
+        "quotient_preimage_cardinality_checkpoint"
+      ],
+      "attempts": [
+        {
+          "candidate": "thm quotient_preimage_prime_power_checkpoint:\n    ? forall G nonempty_set, group &MILAlternative::chap2_struct::Group<G>, H power_set(G), K set, p N+, k N:\n        $MIL::chap9::is_subgroup(G, group, H)\n        $MIL::chap9::is_subgroup(G, group, \\MIL::chap9::subgroup_normalizer<G, group>(H))\n        $MIL::chap9::is_normal_subgroup(\\MIL::chap9::subgroup_carrier<G, group, \\MIL::chap9::subgroup_normalizer<G, group>(H)>, \\MIL::chap9::subgroup_group<G, group, \\MIL::chap9::subgroup_normalizer<G, group>(H)>, H)\n        K $in power_set(\\MIL::chap9::quotient_group_nonempty<\\MIL::chap9::subgroup_carrier<G, group, \\MIL::chap9::subgroup_normalizer<G, group>(H)>, \\MIL::chap9::subgroup_group<G, group, \\MIL::chap9::subgroup_normalizer<G, group>(H)>, H>)\n        $is_finite_set(G)\n        $is_finite_set(H)\n        $is_finite_set(K)\n        finite_set_size(K) = p\n        finite_set_size(H) = p^k\n        =>:\n            finite_set_size(\\MIL::chap9::sylow_quotient_preimage<G, group, H>(K)) = p^(k + 1)\n    release thm quotient_preimage_cardinality_checkpoint(G, group, H, K)\n    finite_set_size(\\MIL::chap9::sylow_quotient_preimage<G, group, H>(K)) = finite_set_size(K) * finite_set_size(H) = p * p^k = p^(k + 1)\n",
+          "result": "accepted",
+          "verifier_evidence": "session block B003 returned ok:true with litex.statement-result.v2 outcome success",
+          "diagnosis": "The prior successful frame is callable in the same Runtime and the equality chain closes the target.",
+          "next_change": "Advance to the First Sylow endpoint."
+        }
+      ],
+      "accepted_litex": "thm quotient_preimage_prime_power_checkpoint:\n    ? forall G nonempty_set, group &MILAlternative::chap2_struct::Group<G>, H power_set(G), K set, p N+, k N:\n        $MIL::chap9::is_subgroup(G, group, H)\n        $MIL::chap9::is_subgroup(G, group, \\MIL::chap9::subgroup_normalizer<G, group>(H))\n        $MIL::chap9::is_normal_subgroup(\\MIL::chap9::subgroup_carrier<G, group, \\MIL::chap9::subgroup_normalizer<G, group>(H)>, \\MIL::chap9::subgroup_group<G, group, \\MIL::chap9::subgroup_normalizer<G, group>(H)>, H)\n        K $in power_set(\\MIL::chap9::quotient_group_nonempty<\\MIL::chap9::subgroup_carrier<G, group, \\MIL::chap9::subgroup_normalizer<G, group>(H)>, \\MIL::chap9::subgroup_group<G, group, \\MIL::chap9::subgroup_normalizer<G, group>(H)>, H>)\n        $is_finite_set(G)\n        $is_finite_set(H)\n        $is_finite_set(K)\n        finite_set_size(K) = p\n        finite_set_size(H) = p^k\n        =>:\n            finite_set_size(\\MIL::chap9::sylow_quotient_preimage<G, group, H>(K)) = p^(k + 1)\n    release thm quotient_preimage_cardinality_checkpoint(G, group, H, K)\n    finite_set_size(\\MIL::chap9::sylow_quotient_preimage<G, group, H>(K)) = finite_set_size(K) * finite_set_size(H) = p * p^k = p^(k + 1)\n",
+      "reusable_lesson": "A successful outermost try commits its declaration; the next source block should cite it without replaying accepted source.",
+      "status": "materialized"
+    },
+    {
+      "id": "P003",
+      "source_order": 3,
+      "intent": "Connect the deep checkpoint to the complete First Sylow theorem.",
+      "dependencies": [
+        "MIL::chap9::p_power_subgroup_exists"
+      ],
+      "attempts": [
+        {
+          "candidate": "thm first_sylow_checkpoint:\n    ? forall G nonempty_set, group &MILAlternative::chap2_struct::Group<G>, p N+, n N:\n        $is_finite_set(G)\n        $prime(p)\n        $MILAlternative::chap2_struct::divides(p^n, finite_set_size(G))\n        =>:\n            exist H power_set(G) st {$MIL::chap9::is_subgroup(G, group, H), $is_finite_set(H), finite_set_size(H) = p^n}\n    release thm MIL::chap9::p_power_subgroup_exists(G, group, p, n)\n",
+          "result": "accepted",
+          "verifier_evidence": "session block B004 returned ok:true with litex.statement-result.v2 outcome success",
+          "diagnosis": "The endpoint exactly matches the canonical exponent-induction theorem.",
+          "next_change": "Materialize the contiguous accepted prefix and run the clean file gate."
+        }
+      ],
+      "accepted_litex": "thm first_sylow_checkpoint:\n    ? forall G nonempty_set, group &MILAlternative::chap2_struct::Group<G>, p N+, n N:\n        $is_finite_set(G)\n        $prime(p)\n        $MILAlternative::chap2_struct::divides(p^n, finite_set_size(G))\n        =>:\n            exist H power_set(G) st {$MIL::chap9::is_subgroup(G, group, H), $is_finite_set(H), finite_set_size(H) = p^n}\n    release thm MIL::chap9::p_power_subgroup_exists(G, group, p, n)\n",
+      "reusable_lesson": "Keep the full theorem endpoint as one named interface after independently tracing its decisive internal node.",
+      "status": "materialized"
+    }
+  ],
+  "materialization": {
+    "block_ids": [
+      "P001",
+      "P002",
+      "P003"
+    ],
+    "source_matches_frames": true,
+    "file_gate_command": "target/release/litex -compact -runner -f showcases/ai_litex_sylow/main.lit",
+    "file_gate_result": "success: top-level result success, ok true, process exit 0; configured imports are reported as the trusted boundary",
+    "strict_dependency_audit": {
+      "command": "target/release/litex -compact -strict -session -before showcases/ai_litex_sylow/main.lit",
+      "result": "startup_error before ready",
+      "evidence": "strict_audit.json",
+      "boundary": "MIL::MILAlternative::chap2_struct line 863 contains an explicit trusted partial-order statement"
+    }
+  }
+}

@@ -16,9 +16,6 @@ pub use inference as infer;
 pub mod latex_renderer;
 // Compatibility alias retained for one version while embedders migrate.
 pub use latex_renderer as to_latex;
-pub mod lean_compiler;
-// Compatibility alias retained for one version while embedders migrate.
-pub use lean_compiler as stmt_result_to_lean_compiler;
 #[cfg(test)]
 #[path = "../tests/unit/kernel_contracts/mod.rs"]
 mod kernel_contracts;
@@ -46,6 +43,7 @@ pub mod runtime;
 pub mod statement;
 // Compatibility alias retained for one version while embedders migrate.
 pub use statement as stmt;
+pub mod stmt_result_to_lean_compiler;
 pub mod symbol;
 pub mod syntax;
 #[cfg(test)]

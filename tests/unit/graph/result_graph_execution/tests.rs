@@ -7,11 +7,11 @@ fn graph_output(source: &'static str) -> String {
         .name("graph_output_large_stack".to_string())
         .stack_size(64 * 1024 * 1024)
         .spawn(move || {
-            run_graph(GraphRequest::new(
+            render_graph(
                 GraphKind::Result,
-                RunRequest::new(RunTarget::code(source), RunOptions::default()),
+                run_code(source, RunOptions::default()),
                 true,
-            ))
+            )
             .1
         })
         .expect("spawn graph output test")

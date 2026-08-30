@@ -613,10 +613,10 @@ have ProductSet set = cart(R, R)
             &root.join("main.lit"),
             "lib::main::entries(2) = 6\nlib::main::inc(2) = 3\n1 $in lib::main::positives\nlib::main::mat(1, 2) = 2\nlib::main::pair[1] = 3\ncart_dim(lib::main::ProductSet) = 2\n",
         );
-        let outcome = run(RunRequest::new(
-            RunTarget::repository(path_string_for_test(&root).as_str()),
+        let outcome = crate::pipeline::run_repository(
+            path_string_for_test(&root).as_str(),
             RunOptions::default(),
-        ));
+        );
         assert!(outcome.ok, "{}", outcome.output);
         let runtime = outcome.runtime;
 
@@ -1457,8 +1457,8 @@ fn run_repository_for_test(
     output_language: OutputLanguage,
     summarize: bool,
 ) -> (bool, String) {
-    let outcome = run(RunRequest::new(
-        RunTarget::repository(repository_path),
+    let outcome = crate::pipeline::run_repository(
+        repository_path,
         RunOptions {
             output_style: if detailed_output {
                 OutputStyle::Detailed
@@ -1470,15 +1470,12 @@ fn run_repository_for_test(
             summarize,
             ..RunOptions::default()
         },
-    ));
+    );
     (outcome.ok, outcome.output)
 }
 
 fn run_file_for_test(file_path: &str) -> (bool, String) {
-    let outcome = run(RunRequest::new(
-        RunTarget::file(file_path),
-        RunOptions::default(),
-    ));
+    let outcome = run_file(file_path, RunOptions::default());
     (outcome.ok, outcome.output)
 }
 

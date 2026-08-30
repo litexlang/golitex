@@ -23,7 +23,7 @@ pub use crate::runtime::{RunOptions, Runtime};
 
 // Source, file, and repository execution entry points.
 pub use crate::pipeline::{
-    run, RunOutcome, RunRequest, RunSummary, RunTarget, RunTargetKind, SourceRunOutcome,
+    run_code, run_file, run_repository, RunOutcome, RunSummary, RunTargetKind, SourceRunOutcome,
 };
 
 // Stable rendering entry points for embedding and machine-readable output.
@@ -32,7 +32,7 @@ pub use crate::output::{
 };
 
 // Litex-to-Lean entry points and their structured report types.
-pub use crate::lean_compiler::{
+pub use crate::stmt_result_to_lean_compiler::{
     compile_litex_file_to_lean_file, compile_litex_markdown_code_blocks_to_lean_file,
     compile_litex_source_to_lean_compilation_report, compile_litex_source_to_lean_source,
     StmtResultToLeanCompilationPhase, StmtResultToLeanCompilationReport,

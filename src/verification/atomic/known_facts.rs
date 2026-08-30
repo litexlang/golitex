@@ -458,17 +458,18 @@ impl Runtime {
                     .and_then(|resolved| resolved.fact_transformation)
             })
             .flatten();
-        fact_transformation = fact_transformation.or_else(|| {
-            atomic_facts_align_by_nested_rational_normalization(known_fact, goal).then(|| {
-                FactTransformationEvidence::new(
-                    source_fact.clone(),
-                    vec![FactTransformationStep::new(
-                        goal.clone().into(),
-                        FactTransformationRule::RationalNormalization,
-                    )],
-                )
-            })
-        });
+        if equality_transport.is_none()
+            && fact_transformation.is_none()
+            && atomic_facts_align_by_nested_rational_normalization(known_fact, goal)
+        {
+            fact_transformation = Some(FactTransformationEvidence::new(
+                source_fact.clone(),
+                vec![FactTransformationStep::new(
+                    goal.clone().into(),
+                    FactTransformationRule::RationalNormalization,
+                )],
+            ));
+        }
         if equality_transport.is_none() && fact_transformation.is_none() {
             if let Some(resolved) = self
                 .resolved_atomic_fact_for_lookup_with_evidence(goal)

@@ -10,10 +10,10 @@ litex -e "1 + 1 = 2"
 ```text
 main
   cli::run_cli
-  cli::run_code_command
-  pipeline::run
+  cli::run_code_from_e_command_line_flag
+  pipeline::run_code
   Runtime::new(options: RunOptions)
-  Runtime::start_isolated_source("entry")
+  Runtime::start_isolated_source("<-e>")
   Runtime::execute_source(source)
   Runtime::execute_source_blocks
   Tokenizer::parse_blocks
@@ -40,7 +40,7 @@ may itself call atomic verification before the outer proof-verification step.
 | --- | --- | --- |
 | Process | `main` in `src/main.rs` | Starts the CLI thread. |
 | CLI | `cli::run_cli` | Parses global options and selects one command. |
-| Batch pipeline | `pipeline::run(RunRequest)` | Owns code/file/repository dispatch, creates one Runtime, and renders once. |
+| Batch pipeline | `pipeline::run_code`, `pipeline::run_file`, or `pipeline::run_repository` | Each explicit entry creates one Runtime, performs its input-specific setup, and renders once. |
 | Runtime construction | `Runtime::new(options: RunOptions)` | Creates state and stores the one run configuration atomically. `Runtime::default()` is reserved for an explicit default configuration, especially tests and internal scratch runtimes. |
 | Source execution | `Runtime::execute_source` | Requires an active source frame, tokenizes the source, and executes its blocks. `import` is never part of this grammar. |
 | Parse | `Tokenizer::parse_blocks`, then `Runtime::parse_statement` | Converts source text into token blocks and typed statements. |
@@ -59,8 +59,8 @@ protocol is source-only and deliberately has no import frame.
 ## Internal source identity versus output label
 
 Inline `-e` source has no filesystem path, but parser and Runtime errors still
-need a source identity. The pipeline therefore starts inline execution with
-the stable internal path `entry`; `RunTarget::Code` carries only source text.
+need a source identity. `run_code` therefore starts inline execution with the
+stable internal path `<-e>` and receives the source text directly.
 
 Runner and graph adapters create their command-facing labels only while
 rendering output: `-runner -e`, `-graph -e`, `-factgraph -e`, or `-defgraph -e`.

@@ -58,17 +58,12 @@ impl Runtime {
         let canonical_owner = self
             .execution_stack
             .last()
-            .and_then(|frame| match frame.layer {
-                ExecutionLayer::Main => self
-                    .module_manager
-                    .canonical_name_for_target(ImportTarget::Module(frame.module_id)),
-                ExecutionLayer::File(file_id) => {
-                    self.module_manager
-                        .canonical_name_for_target(ImportTarget::File {
-                            module_id: frame.module_id,
-                            file_id,
-                        })
-                }
+            .and_then(|frame| {
+                self.module_manager
+                    .canonical_name_for_target(ImportTarget::File {
+                        module_id: frame.module_file_info.module_id,
+                        file_id: frame.module_file_info.file_id,
+                    })
             })
             .unwrap_or("");
         if canonical_owner.is_empty() {

@@ -34,7 +34,7 @@ pub fn to_python_from_file(file_path: &str) -> Result<String, RuntimeError> {
         Some(target) => to_python_project_run(&mut runtime, target),
         None => {
             let source = read_source(resolved_path.as_str())?;
-            runtime.start_isolated_source(resolved_path.as_str());
+            runtime.start_isolated_file(resolved_path.as_str());
             to_python(source.as_str(), &mut runtime)
         }
     }
@@ -82,10 +82,6 @@ fn to_python_project_prefix(
             module.run_targets.clone(),
         )
     };
-    let pushed_frame = runtime.current_module_id() != module_id;
-    if pushed_frame {
-        runtime.push_module_execution_frame(module_id, module_path.as_str());
-    }
     let output = (|| {
         let mut fragments = vec![];
         for config_import in config_imports {
@@ -94,7 +90,6 @@ fn to_python_project_prefix(
                 RepositoryFileTarget::Module(config_import.module_id),
             )?;
             push_python_fragment(&mut fragments, fragment);
-            runtime.refresh_current_bare_symbol_index()?;
         }
         for run_target in run_targets {
             let target_matches = repository_target_matches(selected_target, run_target);
@@ -112,7 +107,6 @@ fn to_python_project_prefix(
                 to_python_project_target(runtime, repository_file_target(run_target))?
             };
             push_python_fragment(&mut fragments, fragment);
-            runtime.refresh_current_bare_symbol_index()?;
             if target_matches || target_contains {
                 return Ok(fragments.join("\n"));
             }
@@ -129,9 +123,6 @@ fn to_python_project_prefix(
             .expect("discovered module should exist")
             .status = ModuleStatus::Loaded;
     }
-    if pushed_frame {
-        runtime.pop_execution_frame();
-    }
     output
 }
 
@@ -141,21 +132,13 @@ fn to_python_project_target(
 ) -> Result<String, RuntimeError> {
     match target {
         RepositoryFileTarget::Module(module_id) => {
-            let (module_path, config_imports, run_targets) = {
+            let (config_imports, run_targets) = {
                 let module = runtime
                     .module_manager
                     .module(module_id)
                     .expect("discovered module should exist");
-                (
-                    module.main_file_path.clone(),
-                    module.config_imports.clone(),
-                    module.run_targets.clone(),
-                )
+                (module.config_imports.clone(), module.run_targets.clone())
             };
-            let pushed_frame = runtime.current_module_id() != module_id;
-            if pushed_frame {
-                runtime.push_module_execution_frame(module_id, module_path.as_str());
-            }
             let output = (|| {
                 let mut fragments = vec![];
                 for config_import in config_imports {
@@ -164,7 +147,6 @@ fn to_python_project_target(
                         RepositoryFileTarget::Module(config_import.module_id),
                     )?;
                     push_python_fragment(&mut fragments, fragment);
-                    runtime.refresh_current_bare_symbol_index()?;
                 }
                 for run_target in run_targets {
                     let fragment = match run_target {
@@ -178,7 +160,6 @@ fn to_python_project_target(
                         ),
                     }?;
                     push_python_fragment(&mut fragments, fragment);
-                    runtime.refresh_current_bare_symbol_index()?;
                 }
                 Ok(fragments.join("\n"))
             })();
@@ -188,9 +169,6 @@ fn to_python_project_target(
                     .module_mut(module_id)
                     .expect("discovered module should exist")
                     .status = ModuleStatus::Loaded;
-            }
-            if pushed_frame {
-                runtime.pop_execution_frame();
             }
             output
         }
@@ -218,7 +196,7 @@ fn to_python_project_target(
                 .and_then(|module| module.file_mut(file_id))
                 .expect("registered project file should exist")
                 .status = FileStatus::Loading;
-            runtime.push_file_execution_frame(module_id, file_id, source_path.as_str());
+            runtime.push_file_execution_frame(module_id, file_id);
             let output = runtime
                 .refresh_current_bare_symbol_index()
                 .and_then(|_| read_source(source_path.as_str()))

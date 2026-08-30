@@ -158,6 +158,14 @@ impl StmtResultJsonV2 {
                         object(vec![
                             string_field("kind", "SuccessVerifyFunctionFromUniqueExistenceResult"),
                             (
+                                "well_definedness".to_string(),
+                                self.fact_well_definedness(&verification.well_definedness),
+                            ),
+                            (
+                                "proof_scope".to_string(),
+                                self.local_proof_scope(&verification.proof_scope),
+                            ),
+                            (
                                 "source_forall_check".to_string(),
                                 verification
                                     .source_forall_check
@@ -176,11 +184,22 @@ impl StmtResultJsonV2 {
                         ])
                     })
                     .unwrap_or(JsonValue::Null);
+                let published_property_well_definedness = result
+                    .published_property_well_definedness
+                    .as_ref()
+                    .map(|well_definedness| self.fact_well_definedness(well_definedness))
+                    .unwrap_or(JsonValue::Null);
                 self.non_fact_stmt(
                     "HaveFnByForallExistUniqueStmt",
                     result.statement.to_string(),
                     &result.common,
-                    vec![("verification".to_string(), verification)],
+                    vec![
+                        ("verification".to_string(), verification),
+                        (
+                            "published_property_well_definedness".to_string(),
+                            published_property_well_definedness,
+                        ),
+                    ],
                 )
             }
             SuccessDefinitionStmtResult::HaveTupleStmt(result) => self.tuple_or_cart_stmt(

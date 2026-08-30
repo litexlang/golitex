@@ -22,7 +22,6 @@ Chinese version: https://litexlang.com/doc/Litex中文蓝图
 - [4. Lean-Compatible: Independent Rechecking for Covered Paths](#compatibility)
 - [From Four Design Principles to Mathematical Practice: Definition and Verification](#mathematics-practice)
   - [Full Example: Define Convergence and Verify Preservation under Scalar Multiplication](#convergence-example)
-  <!-- - [Next Stage: Connect Litex Results to Mathlib-Style Mathematics](#next-stage-pipeline) -->
 - [From Language to Ecosystem: The Role Litex Aims to Play](#ecosystem-role)
 - [Conclusion](#conclusions)
 
@@ -246,7 +245,6 @@ The Litex-to-Lean compiler aims to compile verification paths into Lean proof te
 </details>
 
 <a id="set-theory"></a>
-<a id="goal-2"></a>
 
 ## 1. Based on Set Theory: Keep Mathematical Objects Readable
 
@@ -293,30 +291,22 @@ This is not a claim that shorter code is stronger: Lean can use a shorter proof 
 
 </details>
 
+<details>
+<summary><strong>Technical summary: typing judgments and membership facts</strong></summary>
+
+Lean organizes mathematics around typed terms: after elaboration, a core expression is checked through a judgment of the form `Γ ⊢ e : T`. The colon belongs to this metalevel typing judgment; it is not an ordinary proposition inside Lean that accumulates alongside equality, order, or theorem facts. Surface overloading and coercions may elaborate similar notation into different core terms, but each resulting term is checked at a definite type.
+
+Litex instead organizes mathematics around objects and a growing context of facts. `e $in S` is an object-language membership fact, on the same logical side of the boundary as equality, order, and other predicates. The same object may therefore be proved to belong to many unrelated or overlapping sets: membership is a relation between objects, not a unique intrinsic assignment `typeOf(e) = S`.
+
+This does not remove static discipline or inference. Litex checks domains, return sets, structure fields, and other well-definedness obligations before accepting an expression, and dedicated rules infer membership and carrier facts throughout a proof. The distinction is that this inference extends the context with facts such as `e $in S`; it does not infer one privileged type `e : T` that determines the object's identity.
+
+</details>
+
 The set-theoretic surface does not remove constraints. Function domains and codomains, structure fields, and membership still undergo well-definedness checks, placed where mathematicians would naturally write them. `template` supports families indexed by carriers, parameters, or hypotheses; Litex does not claim to be a complete dependent type theory.
 
 Nor must authors repeat well-definedness transport at every call. A checked function contract—parameter domains, return set, and call conditions—becomes reusable. The verifier checks arguments, derives return membership, and carries it through nested calls.
 
 The obligation remains; only repeated transcription disappears. Given `f : A → B`, `g : B → C`, and `a ∈ A`, one simply writes `g(f(a))`.
-
-The same applies to groups: carriers and operation domains remain explicit. Lean presents them first through types and functions; Litex through sets, membership, and operations on sets. The value is not merely shorter code, but a reviewable formal statement.
-
-<details>
-<summary><strong>Specification Alignment in AI-Generated Mathematics</strong></summary>
-
-A proof assistant can determine whether a proof establishes the encoded proposition, but kernel checking alone cannot determine whether that proposition matches its author's intent. An AI artifact may be internally valid while proving only a special case, changing a definition or domain, or weakening the conclusion. That is specification misalignment, not logical unsoundness.
-
-Stronger AI increases the need for authors or domain experts to recognize their intent in the formal statement. Lean experts can audit it, but type-theoretic abstractions, elaboration, type classes, and library interfaces may obstruct direct review by the original domain expert.
-
-If those responsible for the mathematics cannot read its formal expression, kernel acceptance may strengthen confidence in the wrong claim.
-
-Litex aims to narrow that gap by keeping sets, domains, conditions, intermediate facts, and conclusions close to ordinary mathematics yet machine-checkable. It cannot ensure that an author or AI chose the intended theorem, but it aims to make that choice inspectable by people who understand the domain.
-
-Readability also lets humans compare and reorganize verified corpora, recognize recurring structures, and form better abstractions or conjectures. Artifacts readable only as implementation machinery make such discovery harder.
-
-**The division of responsibility is: AI generates formalization, the kernel checks its stated proposition, and humans confirm that proposition matches their intent. Litex treats the last step as central.**
-
-</details>
 
 <a id="group-comparison"></a>
 
@@ -408,15 +398,12 @@ The group is only a small demonstration. A stronger test is whether a small team
 > can a small, membership-centered, set-theoretic surface cover substantive mathematics without first requiring users to manage type universes?
 
 <a id="fact-oriented"></a>
-<a id="workflow"></a>
 
 ## 2. Fact-Oriented: Source Preserves *What Holds*
 
 Fact orientation reallocates work: source preserves the objects and facts that should hold, while the kernel finds, checks, and explains local justification.
 
 The earlier set-inclusion and group examples gave two small versions of this division: the user states the desired relation or structural fact, and the kernel searches for local support. This section first isolates that interface. A full convergence example after the four principles will combine definitions, quantifiers, witnesses, and a continuous estimate.
-
-<a id="goal-1"></a>
 
 ### Why Do Ordinary Facts Need Neither Names nor Tactics?
 
@@ -504,11 +491,11 @@ To verify `$q(1)`, the kernel finds `$q(a)`. The contextual equality `a = 1` mak
 This resembles everyday mathematics: authors write the desired conclusion, and readers infer its support from context and known facts instead of seeing every theorem, equality, or definition named.
 
 <details>
-<summary><strong>A personal analogy: declarative and imperative styles</strong></summary>
+<summary><strong>A personal analogy: imperative and declarative styles</strong></summary>
 
-An imperfect analogy is that declarative source emphasizes *what*, while imperative source emphasizes *how*. Litex is closer to the former and searches both well-definedness conditions and factual support, so ordinary facts usually need not be named and cited later. This reduces explicit dependency threading and keeps the surface smaller.
+As a rough distinction, programming languages have imperative and declarative styles. Imperative code, common in C and Rust, emphasizes *how*. Functional languages such as Haskell emphasize *what*.
 
-Lean itself is functional, but tactic interaction can feel more imperative because source transforms proof state step by step. This is an interaction analogy, not a strict language classification.
+Here is the interesting tension: Lean itself is functional and declarative, yet tactic proofs often read imperatively. Each command changes the current Goal. Litex shifts the default proof interface back toward *what*: the author states the next fact, and the verifier searches for *how* to justify it.
 
 </details>
 
@@ -522,7 +509,6 @@ Lean itself is functional, but tactic interaction can feel more imperative becau
 > [Naproche](https://naproche.github.io/) uses automated theorem provers
 > to check controlled-natural-language steps. Litex asks more specifically whether ordinary mathematical statements can trigger local justification bounded by context and supported rules, then enter the context with their verification source displayed.
 
-<a id="goal-3"></a>
 <a id="bottom-up"></a>
 
 ## 3. Bottom-Up: Let Verified Facts Continue to Grow
@@ -581,8 +567,6 @@ Mizar, Isar, ACL2, and Naproche already support forward text, theorem accumulati
 
 </details>
 
-Independent rechecking therefore requires handing recorded paths to the smaller Lean kernel.
-
 <a id="compatibility"></a>
 
 ## 4. Lean-Compatible: Independent Rechecking for Covered Paths
@@ -595,7 +579,26 @@ Fact-first verification lets humans and AI focus on objects, conditions, facts, 
 
 *The compiler also provides an independent safeguard for Litex's rigor.* Rust under `src/` alone approaches 200,000 lines and contains hundreds of growing rules, making its trusted surface harder to audit than Lean's smaller kernel. A Litex route fully compiled and accepted by Lean gains strong independent evidence and reduces sole reliance on Litex's implementation.
 
-_This remains an implementation goal, not a comprehensive beta capability. The compiler covers only some paths; its framework exists, but details still need work._
+_Coverage remains partial. Only source routes that fully compile and pass Lean receive this safeguard._
+
+### One Complete Theorem Now Reaches Lean
+
+The convergence theorem below is no longer only a Litex example. ToLean compiles the recorded evidence for `converges_to_mul_const` into Lean. The Lean kernel accepts it, and a handwritten adapter exports a native Mathlib `Filter.Tendsto` theorem.
+
+The decisive Lean call is short:
+
+```lean
+import LitexGenerate
+
+have generated :=
+  __Compiler_main.converges_to_mul_const s sIn a aIn c cIn h
+```
+
+**Litex source ✓ → generated Lean ✓ → Lean kernel ✓ → Mathlib adapter ✓**
+
+[See the complete showcase in the repository](https://github.com/litexlang/golitex/tree/main/showcases/litex_to_lean_mathlib_pipeline/showcase2).
+
+This establishes one fully covered route, not universal compiler coverage.
 
 <details>
 <summary><strong>How the Litex-to-Lean Compiler Works</strong></summary>
@@ -603,38 +606,6 @@ _This remains an implementation goal, not a comprehensive beta capability. The c
 Ecosystem reuse and independent rechecking share one route: Litex records verification paths, maps each supported step to a Lean theorem or proof construction, and assembles a proof term. Mathlib's set-theoretic support makes this a natural architecture.
 
 Implementation requires two mappings: supported paths to Lean proof constructions, and Litex objects through designed wrappers to Lean representations rather than mechanical translation. This takes continued development and verification; intermediary code lives at https://github.com/litexlang/golitex/blob/main/lean/Litex/Core.lean.
-
-The executable [pipeline](../showcases/litex_to_lean_mathlib_pipeline/showcase1/README.md) shows recursive `StmtResult` evidence, generated Lean proof, external adapter, and Mathlib consumer. The showcase owns implementation navigation and gates.
-
-This checked theorem illustrates evidence-preserving mapping and the ecosystem interface:
-
-```litex
-thm litex_real_add_comm:
-    ? forall a, b R:
-        a + b = b + a
-```
-
-The first Lean interface is the canonical compiler theorem, preserving Litex classification and evidence:
-
-```text
-∀ {α β : Type} (a : α) (ha : Litex.In a Litex.R)
-  (b : β) (hb : Litex.In b Litex.R),
-  Litex.Same
-    ((Litex.In.rep a ha : ℝ) + (Litex.In.rep b hb : ℝ))
-    ((Litex.In.rep b hb : ℝ) + (Litex.In.rep a ha : ℝ))
-```
-
-The compiler stops at that source-owned declaration and does not invent this Lean corollary:
-
-```text
-theorem litex_real_add_comm (a b : ℝ) : a + b = b + a
-```
-
-No such declaration exists in `.lit`. This boundary keeps names, statements, and proof routes traceable to source-owned facts.
-
-An ordinary Mathlib interface belongs in a separate, non-generated module written by AI or humans. Its adapter may import generated code, but owns the new statement and proof; translation does not hide API design or fresh mathematics.
-
-**Interoperability has two distinct artifacts: ToLean supplies the kernel-checkable source translation; an external adapter supplies added Lean/Mathlib APIs and must not be confused with compiler output.**
 
 The compiler has two underlying problems. First, how should Lean/Mathlib represent Litex mathematics? Equivalent formulations have long-term consequences for Mathlib reuse, Litex extension, and ecosystem cooperation. Functions, sets, membership, and well-definedness need a consistent, sustainable representation.
 
@@ -713,57 +684,54 @@ Litex makes this workflow its default execution model:
 The corresponding Litex first defines “eventually close” and “converges to,” then extracts a position from the original convergence statement and constructs a witness for the new sequence:
 
 ```litex
+# 1. Use prop to define “eventually close”: forall n, n >= N0 leads through =>: to the distance bound.
 prop is_eventually_close(s fn(n N) R, a R, epsilon R+, N0 N):
     forall n N:
         n >= N0
         =>:
             abs(s(n) - a) < epsilon
 
+# 2. Convergence reads: forall positive epsilon, there exists an N0 that makes the prop hold.
 prop converges_to(s fn(n N) R, a R):
     forall epsilon R+:
         exist N0 N st {$is_eventually_close(s, a, epsilon, N0)}
 
+# 3. State “s converges =>: c * s converges” as a thm.
 thm converges_to_mul_const:
     ? forall s fn(n N) R, a, c R:
         $converges_to(s, a)
         =>:
             $converges_to(fn(n N) R {c * s(n)}, c * a)
+    # 4. First claim the local goal: forall epsilon, prove that an N0 exists.
     claim:
         ? forall epsilon R+:
             exist N0 N st {$is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, N0)}
+        # 5. To supply that existence witness, choose the smaller positive error epsilon / (abs(c) + 1).
         abs(c) + 1 > 0
         epsilon / (abs(c) + 1) $in R+
+        # 6. Original convergence already says such a K exists, so obtain N0 from it.
         obtain N0 from exist K N st {$is_eventually_close(s, a, epsilon / (abs(c) + 1), K)}
+        # 7. To finish the new existence claim, offer that same N0 as the witness.
         witness exist K N st {$is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, K)} from N0:
+            # 8. Enter forall n; put n >= N0 left of =>:, then prove the distance bound on the right.
             forall n N:
                 n >= N0
                 =>:
                     abs(s(n) - a) < epsilon / (abs(c) + 1)
+                    # 9. Follow the fact chain: factor out abs(c), then use abs(c) <= abs(c) + 1 to get below epsilon.
                     abs(c * s(n) - c * a) = abs(c * (s(n) - a)) = abs(c) * abs(s(n) - a)
                     abs(c) * abs(s(n) - a) <= (abs(c) + 1) * abs(s(n) - a) < (abs(c) + 1) * (epsilon / (abs(c) + 1)) = epsilon
+                    # For the new sequence written with fn, this is exactly the required fact at n.
                     abs(fn(k N) R {c * s(k)}(n) - c * a) < epsilon
+            # 10. by def is_eventually_close: by definition, the forall fact above is “eventually close.”
             by def $is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, N0)
+    # 11. by def converges_to: by definition, that forall / exist structure is convergence.
     by def $converges_to(fn(n N) R {c * s(n)}, c * a)
 ```
 
 The first two `prop` declarations establish the domain language: what it means to be eventually close and to converge. Then `obtain N0` extracts a position from the original convergence statement, while `witness` supplies it for the new sequence. Choosing `epsilon / (abs(c) + 1)` avoids a separate `c = 0` case, and the inequality chain compresses the error below `epsilon`. The example combines both kinds of mathematical work: define a reusable interface, then verify a new fact through it. Fact orientation changes the interface; it does not remove the mathematics.
 
 </details>
-
-<!--
-<a id="next-stage-pipeline"></a>
-
-### Next Stage: Connect Litex Results to Mathlib-Style Mathematics
-
-The convergence example currently shows how Litex defines mathematical interfaces and verifies facts. A fuller next-stage Blueprint artifact should carry that same case through this complete path:
-
-1. A human or AI—eventually guided by a Litex skill—writes the Litex definitions and theorem.
-2. Litex verifies the source and preserves the route it actually used as structured evidence.
-3. ToLean compiles only source-owned declarations and evidence into canonical theorems checked by the Lean kernel; it does not invent a Mathlib API.
-4. A separate AI- or human-authored adapter imports the generated module, cites its theorem, uses proved wrapper/unwrap bridges to recover native Mathlib objects or conclusions, and then proves the downstream result people actually want.
-
-The existing [layered showcase](../showcases/litex_to_lean_mathlib_pipeline/showcase1/README.md) already separates Litex source, generated Lean, an external adapter, and a downstream consumer. Its adapter, however, still reconstructs part of the native mathematics independently; it is not yet the complete evidence for “cite the generated theorem and unwrap it into the desired native theorem.” The Blueprint should include that code and the AI/Litex-skill workflow only after the consumption path runs end to end through real source, generated output, and a Lean kernel gate. A skill can organize authorship, but correctness must still come from Litex verification and Lean checking.
--->
 
 <a id="ecosystem-role"></a>
 

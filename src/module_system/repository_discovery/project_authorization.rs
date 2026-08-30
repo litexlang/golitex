@@ -38,6 +38,7 @@ pub(super) fn reject_unauthorized_project_references(
             module
                 .files
                 .iter()
+                .filter(|file| !file.is_virtual_source)
                 .map(|file| (module.id, file.source_path.clone()))
                 .collect::<Vec<(ModuleId, String)>>()
         })

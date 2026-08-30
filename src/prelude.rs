@@ -100,9 +100,8 @@ pub use crate::fact::SubsetFact;
 pub use crate::fact::SupersetFact;
 pub use crate::fact::{ExistFactEnum, ExistentialSpec};
 pub use crate::graph::{
-    render_definition_graph_from_stmt_results, render_fact_graph_from_stmt_results,
-    render_graph_from_stmt_results, render_result_graph_from_stmt_results, run_graph, GraphKind,
-    GraphRequest,
+    render_definition_graph_from_stmt_results, render_fact_graph_from_stmt_results, render_graph,
+    render_graph_from_stmt_results, render_result_graph_from_stmt_results, GraphKind,
 };
 pub use crate::inference::{
     CartesianMembershipProjectionInferRule, CartesianMembershipProjectionKind,
@@ -240,10 +239,9 @@ pub use crate::parsing::{TokenBlock, Tokenizer};
 pub use crate::pipeline::{
     display_runtime_error_json, display_stmt_exec_result_json, execute_file_in_runtime,
     execute_repository_target, render_run_output, render_run_summary, resolve_source_file_path,
-    run, run_isolated_repl_with_runtime, run_latex_repl, run_repl,
-    run_repository_before_file_target, run_session, FileExecutionOptions, RunOutcome, RunRequest,
-    RunSummary, RunSummaryRequest, RunTarget, RunTargetKind, SessionPreload, SessionRequest,
-    SourceRunOutcome,
+    run_code, run_file, run_isolated_repl_with_runtime, run_latex_repl, run_repl, run_repository,
+    run_repository_before_file_target, run_session, FileExecutionOptions, RunOutcome, RunSummary,
+    RunSummaryRequest, RunTargetKind, SessionPreload, SessionRequest, SourceRunOutcome,
 };
 pub use crate::result::BuiltinTheoremProvenance;
 pub use crate::result::BuiltinTheoremRequirementRole;
@@ -364,8 +362,8 @@ pub use crate::result::{
     ClosedNumericNonmembershipBuiltinRuleEvidence,
     ComplexAlgebraicNormalizationBuiltinRuleEvidence,
     ComplexArithmeticMembershipClosureBuiltinRule, DisjunctionIntroductionBuiltinRuleEvidence,
-    ExtremaBuiltinRule, FiniteSetBuiltinRule,
-    FunctionApplicationReturnMembershipBuiltinRuleEvidence,
+    ExtremaBuiltinRule, FiniteSetBuiltinRule, FunctionApplicationInRangeBuiltinRuleEvidence,
+    FunctionApplicationReturnMembershipBuiltinRuleEvidence, FunctionRangeSubsetBuiltinRuleEvidence,
     FunctionSetMembershipBuiltinRuleEvidence, IntegerMembershipClosureBuiltinRule,
     IntegerRangeSumPointwiseOrderBuiltinRuleEvidence,
     IntegralPolynomialNormalizationBuiltinRuleEvidence, KnownEqualityBuiltinRuleEvidence,
@@ -375,7 +373,7 @@ pub use crate::result::{
     NonzeroBuiltinRule, ObjectReflexivityBuiltinRuleEvidence, OrderReflexivityBuiltinRuleEvidence,
     RationalAlgebraicNormalizationBuiltinRuleEvidence, RationalMembershipClosureBuiltinRule,
     RationalNormalizationBuiltinRuleEvidence, RealArithmeticMembershipClosureBuiltinRule,
-    RefinedNumericMembershipBuiltinRuleEvidence,
+    RealIntervalSubsetRealBuiltinRuleEvidence, RefinedNumericMembershipBuiltinRuleEvidence,
     RegisteredAntisymmetricPredicateBuiltinRuleEvidence,
     RegisteredReflexivePredicateBuiltinRuleEvidence,
     RegisteredSymmetricPredicateBuiltinRuleEvidence,
@@ -479,13 +477,14 @@ pub use crate::result::{
 };
 pub use crate::result::{KnownForallInstantiationItem, KnownForallRequirementKind};
 pub use crate::result::{SuccessBuiltinFactProofEvidenceResult, SuccessBuiltinFactProofResult};
-pub use crate::runner::{run_runner, RunnerRequest};
+pub use crate::runner::render_runner;
 pub use crate::runtime::ExecutionMode;
 pub use crate::runtime::FreeParamCollection;
 pub use crate::runtime::ParseContext;
 pub use crate::runtime::ScopeFrame;
 pub use crate::runtime::{
-    BareSymbol, ExecutionFrame, ExecutionLayer, RunOptions, Runtime, StatementProofStateStack,
+    BareSymbol, ExecutionFrame, ExecutionModuleFileInfo, RunOptions, Runtime,
+    StatementProofStateStack,
 };
 pub use crate::statement::claim_stmt::ClaimStmt;
 pub use crate::statement::define_algorithm_stmt::AlgoCase;

@@ -3,12 +3,15 @@
 use crate::prelude::*;
 
 impl Runtime {
-    fn current_execution_target(&self) -> (ModuleId, ExecutionLayer) {
+    fn current_execution_target(&self) -> (ModuleId, FileId) {
         let frame = self
             .execution_stack
             .last()
             .expect("an execution frame should always exist");
-        (frame.module_id, frame.layer)
+        (
+            frame.module_file_info.module_id,
+            frame.module_file_info.file_id,
+        )
     }
 
     pub fn top_level_env(&mut self) -> &mut Environment {
@@ -25,20 +28,12 @@ impl Runtime {
                 .expect("local environment should exist");
         }
 
-        let (module_id, layer) = self.current_execution_target();
-        match layer {
-            ExecutionLayer::Main => self
-                .module_manager
-                .module_mut(module_id)
-                .map(|module| module.main_environment.as_mut())
-                .expect("current module should exist"),
-            ExecutionLayer::File(file_id) => self
-                .module_manager
-                .module_mut(module_id)
-                .and_then(|module| module.file_mut(file_id))
-                .map(|file| file.environment.as_mut())
-                .expect("current file environment should exist"),
-        }
+        let (module_id, file_id) = self.current_execution_target();
+        self.module_manager
+            .module_mut(module_id)
+            .and_then(|module| module.file_mut(file_id))
+            .map(|file| file.environment.as_mut())
+            .expect("current file environment should exist")
     }
 }
 

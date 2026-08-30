@@ -142,12 +142,17 @@ impl Runtime {
                 if module.status != ModuleStatus::Loaded {
                     return;
                 }
-                if module.main_file_path.ends_with(".lit") {
-                    collect_environment_symbols(
-                        module.main_environment.as_ref(),
-                        module.module_name.as_str(),
-                        output,
-                    );
+                if let Some(file_id) = module.module_source_file {
+                    if let Some(file) = module
+                        .file(file_id)
+                        .filter(|file| file.status == FileStatus::Loaded)
+                    {
+                        collect_environment_symbols(
+                            file.environment.as_ref(),
+                            module.module_name.as_str(),
+                            output,
+                        );
+                    }
                     return;
                 }
                 for child in module.run_targets.iter().copied() {

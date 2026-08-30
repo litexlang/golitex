@@ -62,6 +62,22 @@ impl StmtResultJsonV2 {
                 string_field("expected_target", result.expected_target.to_string()),
                 string_field("expected_pointwise", result.expected_pointwise.to_string()),
             ]),
+            BuiltinRuleEvidence::FunctionApplicationInRange(result) => object(vec![
+                string_field("kind", "FunctionApplicationInRange"),
+                string_field("expected_target", result.expected_target.to_string()),
+            ]),
+            BuiltinRuleEvidence::FunctionRangeSubset(result) => object(vec![
+                string_field("kind", "FunctionRangeSubset"),
+                string_field("expected_target", result.expected_target.to_string()),
+                string_field(
+                    "expected_codomain_subset",
+                    result.expected_codomain_subset.to_string(),
+                ),
+            ]),
+            BuiltinRuleEvidence::RealIntervalSubsetReal(result) => object(vec![
+                string_field("kind", "RealIntervalSubsetReal"),
+                string_field("expected_target", result.expected_target.to_string()),
+            ]),
             BuiltinRuleEvidence::TupleCartesianMembership(result) => object(vec![
                 string_field("kind", "TupleCartesianMembership"),
                 string_field("expected_target", result.expected_target.to_string()),

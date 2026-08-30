@@ -11,7 +11,8 @@ Runtime::new(options: RunOptions)
   execution_stack = []
   next_fact_id = 1
 start_isolated_source("example.lit")
-  push entry execution frame
+  register ModuleId::ROOT/FileId(0)
+  push the registered file's execution frame
 run source `1 = 1`
   parse and execute statement
   allocate f1
@@ -24,15 +25,16 @@ run source `1 = 1`
 | Owner | State and concrete example |
 | --- | --- |
 | `Runtime` | Stored facts receive `f1`, then `f2`; popped local facts do not cause ID reuse. Its single `RunOptions` value owns run-wide `-compact`, `-detail`, `-strict`, language, summary, and isolation configuration. Its `StatementProofStateStack` mirrors temporary environment scopes but is cleared between statements. |
-| `ExecutionFrame` | The active module/file, execution mode, and environment. Import permission is not source-frame state: every Litex source rejects `import`, while an interactive terminal may update its separate ephemeral module manifest before source parsing. |
+| `ExecutionFrame` | The active registered module/file plus transient execution mode, parser state, local scopes, and bare-name index. Its `ExecutionModuleFileInfo` contains `ModuleId`, module-local `FileId`, and the source label/path. Import permission is not source-frame state: every Litex source rejects `import`, while an interactive terminal may update its separate ephemeral module manifest before source parsing. |
 | `ParseContext` | Free binders and temporary struct/tuple views needed before the current statement executes. A source binder such as `a &Pair` can therefore parse later `a.left` syntax within the same recursive statement. |
 | `Environment` | Checked definitions, facts, and persistent mathematical caches. A stored `SymbolDefinition` owns its definition-time struct/tuple views, so exact `SymbolId` references keep working across exported files and imported modules. Child-environment merge commits this mathematical state; transient statement-proof cache entries and recursion guards are not part of the merge. |
-| `ModuleManager` | Repository/module lifecycle plus parse-only struct definitions and unverified-import diagnostics shared by files in that module world. |
+| `ModuleManager` | Repository/module/file lifecycle and every persistent file environment, plus parse-only struct definitions and unverified-import diagnostics shared by files in that module world. `ModuleId::ROOT` is always zero. |
 | Local matcher values | Recursive forall-argument bindings live only for the operation using them; they are not ambient `Runtime` state. |
 
 Start with [`runtime.rs`](runtime.rs) for the `Runtime` fields and run initialization,
-[`run_options.rs`](run_options.rs) for run configuration, and [`execution_frame.rs`](execution_frame.rs)
-for active execution frames. The remaining code is
+[`run_options.rs`](run_options.rs) for run configuration,
+[`execution_module_file_info.rs`](execution_module_file_info.rs) for registered source identity,
+and [`execution_frame.rs`](execution_frame.rs) for transient execution state. The remaining code is
 grouped by the state or operation it owns:
 
 - [`name_resolution/`](name_resolution/) owns local parser scopes, symbol and

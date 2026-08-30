@@ -4,6 +4,10 @@ use std::collections::HashMap;
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct ModuleId(pub usize);
 
+impl ModuleId {
+    pub const ROOT: Self = Self(0);
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct FileId(pub usize);
 
@@ -91,6 +95,7 @@ impl ExportEntry {
 pub struct FileRunner {
     pub id: FileId,
     pub source_path: String,
+    pub is_virtual_source: bool,
     pub canonical_name: String,
     pub environment: Box<Environment>,
     pub status: FileStatus,
@@ -98,10 +103,16 @@ pub struct FileRunner {
 }
 
 impl FileRunner {
-    pub fn new(id: FileId, source_path: String, canonical_name: String) -> Self {
+    pub fn new(
+        id: FileId,
+        source_path: String,
+        canonical_name: String,
+        is_virtual_source: bool,
+    ) -> Self {
         FileRunner {
             id,
             source_path,
+            is_virtual_source,
             canonical_name,
             environment: Box::new(Environment::new_empty_env()),
             status: FileStatus::Unloaded,
@@ -121,6 +132,8 @@ pub struct ModuleRunner {
     pub is_standard_library: bool,
     pub main_environment: Box<Environment>,
     pub files: Vec<FileRunner>,
+    /// The source owned directly by a module, whether physical or virtual.
+    pub module_source_file: Option<FileId>,
     pub flattened_export_file: Option<FileId>,
     pub exports: HashMap<String, ExportEntry>,
     pub run_targets: Vec<ImportTarget>,
@@ -154,6 +167,7 @@ impl ModuleRunner {
             is_standard_library: false,
             main_environment: Box::new(Environment::new_empty_env()),
             files: vec![],
+            module_source_file: None,
             flattened_export_file: None,
             exports: HashMap::new(),
             run_targets: vec![],
@@ -166,10 +180,45 @@ impl ModuleRunner {
     }
 
     pub fn create_exported_file(&mut self, source_path: String, canonical_name: String) -> FileId {
+        self.create_file(source_path, canonical_name)
+    }
+
+    pub fn create_file(&mut self, source_path: String, canonical_name: String) -> FileId {
+        self.create_file_with_kind(source_path, canonical_name, false)
+    }
+
+    pub fn create_virtual_file(&mut self, source_path: String, canonical_name: String) -> FileId {
+        self.create_file_with_kind(source_path, canonical_name, true)
+    }
+
+    fn create_file_with_kind(
+        &mut self,
+        source_path: String,
+        canonical_name: String,
+        is_virtual_source: bool,
+    ) -> FileId {
         let id = FileId(self.files.len());
-        self.files
-            .push(FileRunner::new(id, source_path, canonical_name));
+        self.files.push(FileRunner::new(
+            id,
+            source_path,
+            canonical_name,
+            is_virtual_source,
+        ));
         id
+    }
+
+    pub fn create_module_source_file(
+        &mut self,
+        source_path: String,
+        canonical_name: String,
+    ) -> FileId {
+        assert!(
+            self.module_source_file.is_none(),
+            "module source file has already been registered"
+        );
+        let file_id = self.create_file(source_path, canonical_name);
+        self.module_source_file = Some(file_id);
+        file_id
     }
 
     pub fn file_id_by_source_path(&self, source_path: &str) -> Option<FileId> {

@@ -3,6 +3,37 @@
 use crate::prelude::*;
 
 impl Runtime {
+    /// Parameter checks are recursively consumed by theorem application,
+    /// definition folding, and the Lean compiler rather than executed as
+    /// standalone statements. Retain the exact WD Result here just as
+    /// submitted-fact execution does; otherwise the successful proof may cite
+    /// intrinsic object-membership FactIds whose producing Result was lost.
+    fn verify_atomic_parameter_fact(
+        &mut self,
+        fact: &AtomicFact,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        let well_definedness =
+            self.verify_fact_well_defined_result(&fact.clone().into(), verify_state)?;
+        let result =
+            self.verify_atomic_fact(fact, &verify_state.with_well_definedness_verified())?;
+        Ok(result.with_fact_well_definedness(well_definedness))
+    }
+
+    fn verify_atomic_parameter_fact_known_or_builtin_only(
+        &mut self,
+        fact: &AtomicFact,
+        verify_state: &VerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        let well_definedness =
+            self.verify_fact_well_defined_result(&fact.clone().into(), verify_state)?;
+        let result = self.verify_atomic_fact_restricted_known_builtin(
+            fact,
+            &verify_state.with_well_definedness_verified(),
+        )?;
+        Ok(result.with_fact_well_definedness(well_definedness))
+    }
+
     fn verify_obj_satisfies_param_type_known_or_builtin_only(
         &mut self,
         obj: Obj,
@@ -43,7 +74,7 @@ impl Runtime {
             ParamType::NonemptySet(_) => IsNonemptySetFact::new(obj, default_line_file()).into(),
             ParamType::FiniteSet(_) => IsFiniteSetFact::new(obj, default_line_file()).into(),
         };
-        self.verify_atomic_fact_restricted_known_builtin(&fact, verify_state)
+        self.verify_atomic_parameter_fact_known_or_builtin_only(&fact, verify_state)
     }
 
     // Definition folding usually receives arguments already stored with their defined
@@ -117,7 +148,7 @@ impl Runtime {
                         );
                     }
                 }
-                let direct_result = self.verify_atomic_fact(&fact, verify_state)?;
+                let direct_result = self.verify_atomic_parameter_fact(&fact, verify_state)?;
                 if direct_result.is_success() {
                     return Ok(direct_result);
                 }
@@ -136,15 +167,15 @@ impl Runtime {
             }
             ParamType::Set(_) => {
                 let fact = IsSetFact::new(obj, default_line_file()).into();
-                self.verify_atomic_fact(&fact, verify_state)
+                self.verify_atomic_parameter_fact(&fact, verify_state)
             }
             ParamType::NonemptySet(_) => {
                 let fact = IsNonemptySetFact::new(obj, default_line_file()).into();
-                self.verify_atomic_fact(&fact, verify_state)
+                self.verify_atomic_parameter_fact(&fact, verify_state)
             }
             ParamType::FiniteSet(_) => {
                 let fact = IsFiniteSetFact::new(obj, default_line_file()).into();
-                self.verify_atomic_fact(&fact, verify_state)
+                self.verify_atomic_parameter_fact(&fact, verify_state)
             }
         }
     }

@@ -470,17 +470,21 @@ impl Runtime {
             }
         }
 
-        // Every finite real interval is a subset of R once its endpoints are
-        // well-defined reals. Example: `'[a, b] $subset R`.
-        if matches!(subset_fact.left, Obj::IntervalObj(_))
-            && matches!(subset_fact.right, Obj::StandardSet(StandardSet::R))
+        // Every finite real interval or one-sided real ray is a subset of R
+        // once its endpoint objects are well-defined reals. Examples:
+        // `'[a, b] $subset R`, `'[a,) $subset R`, and `'(,b] $subset R`.
+        if matches!(
+            subset_fact.left,
+            Obj::IntervalObj(_) | Obj::OneSideInfinityIntervalObj(_)
+        ) && matches!(subset_fact.right, Obj::StandardSet(StandardSet::R))
         {
+            let expected_target: Fact = subset_fact.clone().into();
             return Ok(
                 (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
-                    subset_fact.clone().into(),
+                    expected_target.clone(),
                     "real_interval_subset_R".to_string(),
-                    BuiltinRuleEvidence::Uncatalogued(
-                        UncataloguedBuiltinRule::VerifySubsetFactWithBuiltinRules08,
+                    BuiltinRuleEvidence::RealIntervalSubsetReal(
+                        RealIntervalSubsetRealBuiltinRuleEvidence::new(expected_target),
                     ),
                     Vec::new(),
                 ))
@@ -505,7 +509,7 @@ impl Runtime {
                     SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         ret_subset.clone().into(),
                         "structural subset".to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifySubsetFactWithBuiltinRules09),
+                        BuiltinRuleEvidence::Set(SetBuiltinRule::SubsetReflexivity),
                         Vec::new(),
                     )
                     .into()
@@ -513,11 +517,17 @@ impl Runtime {
                     self.verify_atomic_fact_as_builtin_rule_premise(&ret_subset, builtin_state)?
                 };
                 if ret_subset_result.is_success() {
+                    let expected_target: Fact = subset_fact.clone().into();
                     return Ok(
                         (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
-                            subset_fact.clone().into(),
+                            expected_target.clone(),
                             "fn_range_subset_codomain".to_string(),
-                            BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifySubsetFactWithBuiltinRules10),
+                            BuiltinRuleEvidence::FunctionRangeSubset(
+                                FunctionRangeSubsetBuiltinRuleEvidence::new(
+                                    expected_target,
+                                    ret_subset.clone().into(),
+                                ),
+                            ),
                             vec![ret_subset_result],
                         ))
                         .into(),

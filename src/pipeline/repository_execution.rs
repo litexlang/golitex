@@ -43,29 +43,24 @@ pub fn run_repository_before_file_target(
             )),
         );
     };
-    let Some(source_path) = runtime
+    let file_exists = runtime
         .module_manager
         .module(module_id)
         .and_then(|module| module.file(file_id))
-        .map(|file| file.source_path.clone())
-    else {
+        .is_some();
+    if !file_exists {
         return (
             vec![],
             Some(repository_target_error(
                 "registered project file is missing",
             )),
         );
-    };
+    }
 
     let execution_mode = runtime.current_execution_mode();
     let result = run_repository_prefix(runtime, RepositoryModuleRun::Before(target));
     if result.1.is_none() {
-        runtime.push_file_execution_frame_with_mode(
-            module_id,
-            file_id,
-            source_path.as_str(),
-            execution_mode,
-        );
+        runtime.push_file_execution_frame_with_mode(module_id, file_id, execution_mode);
         if let Err(error) = runtime.refresh_current_bare_symbol_index() {
             runtime.pop_execution_frame();
             return (result.0, Some(error));
@@ -149,7 +144,7 @@ fn run_repository_module_with_mode(
             )),
         );
     };
-    if runtime.current_module_id() == module_id {
+    if runtime.module_manager.entry_module_id == Some(module_id) {
         return run_repository_module_plan(runtime, module_id, execution_mode, module_run);
     }
     if module.status == ModuleStatus::Loaded {
@@ -182,20 +177,12 @@ fn run_repository_module_with_mode(
     {
         return (vec![], Some(repository_target_error(message.as_str())));
     }
-    let module_path = runtime
-        .module_manager
-        .module(module_id)
-        .expect("registered project module should exist")
-        .main_file_path
-        .clone();
     runtime
         .module_manager
         .module_mut(module_id)
         .expect("registered project module should exist")
         .execution_mode = execution_mode;
-    runtime.push_module_execution_frame_with_mode(module_id, module_path.as_str(), execution_mode);
     let result = run_repository_module_plan(runtime, module_id, execution_mode, module_run);
-    runtime.pop_execution_frame();
     if result.1.is_some() {
         runtime.module_manager = module_manager_before;
         return result;
@@ -214,9 +201,6 @@ fn run_repository_module_plan(
     if let Some(error) = import_error {
         return (results, Some(error));
     }
-    if let Err(error) = runtime.refresh_current_bare_symbol_index() {
-        return (results, Some(error));
-    }
     let Some(module) = runtime.module_manager.module(module_id) else {
         return (
             results,
@@ -226,9 +210,22 @@ fn run_repository_module_plan(
         );
     };
     let source_path = module.main_file_path.clone();
+    let module_source_file = module.module_source_file;
     if source_path.ends_with(".lit") {
-        let (mut source_results, source_error) =
-            run_repository_source_file(runtime, source_path.as_str());
+        let Some(file_id) = module_source_file else {
+            return (
+                results,
+                Some(repository_target_error(
+                    "single-file module source is not registered",
+                )),
+            );
+        };
+        let (mut source_results, source_error) = run_repository_exported_file_target_with_mode(
+            runtime,
+            module_id,
+            file_id,
+            execution_mode,
+        );
         results.append(&mut source_results);
         return (results, source_error);
     }
@@ -282,9 +279,6 @@ fn run_repository_module_plan(
 
         results.append(&mut target_results);
         if let Some(error) = runtime_error {
-            return (results, Some(error));
-        }
-        if let Err(error) = runtime.refresh_current_bare_symbol_index() {
             return (results, Some(error));
         }
         if reached_selected_target {
@@ -472,12 +466,7 @@ fn run_repository_exported_file_target_with_mode(
         .and_then(|module| module.file_mut(file_id))
         .expect("registered project file should exist")
         .execution_mode = execution_mode;
-    runtime.push_file_execution_frame_with_mode(
-        module_id,
-        file_id,
-        source_path.as_str(),
-        execution_mode,
-    );
+    runtime.push_file_execution_frame_with_mode(module_id, file_id, execution_mode);
     if let Err(error) = runtime.refresh_current_bare_symbol_index() {
         runtime.pop_execution_frame();
         runtime.module_manager = module_manager_before;

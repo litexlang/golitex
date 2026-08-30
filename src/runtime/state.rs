@@ -76,7 +76,7 @@ impl Runtime {
     pub fn current_file_path_rc(&self) -> Rc<str> {
         self.execution_stack
             .last()
-            .map(|frame| frame.source_path.clone())
+            .map(|frame| frame.module_file_info.source_path.clone())
             .unwrap_or_else(|| Rc::from(""))
     }
 
@@ -85,17 +85,29 @@ impl Runtime {
             return;
         }
         let source_path = self.module_manager.entry_path_rc.to_string();
-        let module_id = match self.module_manager.entry_module_id {
-            Some(module_id) => module_id,
+        let module_file_info = match self.module_manager.entry_module_id {
+            Some(module_id) => {
+                let existing_file_id = self
+                    .module_manager
+                    .module(module_id)
+                    .and_then(|module| module.module_source_file);
+                match existing_file_id {
+                    Some(file_id) => self
+                        .module_manager
+                        .execution_module_file_info(module_id, file_id)
+                        .expect("entry source file should exist"),
+                    None => self
+                        .module_manager
+                        .create_execution_file(module_id, source_path.as_str())
+                        .expect("entry execution file should be registered"),
+                }
+            }
             None => self
                 .module_manager
-                .create_entry_module(source_path.as_str()),
+                .create_entry_module(source_path.as_str(), true),
         };
-        self.execution_stack.push(ExecutionFrame::new(
-            module_id,
-            ExecutionLayer::Main,
-            source_path.as_str(),
-        ));
+        self.execution_stack
+            .push(ExecutionFrame::new(module_file_info));
     }
 
     pub fn current_parse_context(&self) -> &ParseContext {
@@ -117,7 +129,7 @@ impl Runtime {
     pub fn current_module_id(&self) -> ModuleId {
         self.execution_stack
             .last()
-            .map(|frame| frame.module_id)
+            .map(|frame| frame.module_file_info.module_id)
             .expect("current execution frame should exist")
     }
 
@@ -134,49 +146,22 @@ impl Runtime {
             .expect("current module should exist")
     }
 
-    pub fn push_module_execution_frame(&mut self, module_id: ModuleId, source_path: &str) {
-        self.push_module_execution_frame_with_mode(module_id, source_path, ExecutionMode::Verified);
-    }
-
-    pub fn push_module_execution_frame_with_mode(
-        &mut self,
-        module_id: ModuleId,
-        source_path: &str,
-        execution_mode: ExecutionMode,
-    ) {
-        self.execution_stack.push(ExecutionFrame::new_with_mode(
-            module_id,
-            ExecutionLayer::Main,
-            source_path,
-            execution_mode,
-        ));
-    }
-
-    pub fn push_file_execution_frame(
-        &mut self,
-        module_id: ModuleId,
-        file_id: FileId,
-        source_path: &str,
-    ) {
-        self.push_file_execution_frame_with_mode(
-            module_id,
-            file_id,
-            source_path,
-            ExecutionMode::Verified,
-        );
+    pub fn push_file_execution_frame(&mut self, module_id: ModuleId, file_id: FileId) {
+        self.push_file_execution_frame_with_mode(module_id, file_id, ExecutionMode::Verified);
     }
 
     pub fn push_file_execution_frame_with_mode(
         &mut self,
         module_id: ModuleId,
         file_id: FileId,
-        source_path: &str,
         execution_mode: ExecutionMode,
     ) {
+        let module_file_info = self
+            .module_manager
+            .execution_module_file_info(module_id, file_id)
+            .expect("execution frame must point to a registered module file");
         self.execution_stack.push(ExecutionFrame::new_with_mode(
-            module_id,
-            ExecutionLayer::File(file_id),
-            source_path,
+            module_file_info,
             execution_mode,
         ));
     }
@@ -186,15 +171,14 @@ impl Runtime {
             return name.to_string();
         };
         self.module_manager
-            .canonical_name_for_reference(frame.module_id, name)
+            .canonical_name_for_reference(frame.module_file_info.module_id, name)
             .unwrap_or_else(|| name.to_string())
     }
 
     pub fn pop_execution_frame(&mut self) {
-        if self.execution_stack.len() <= 1 {
-            unreachable!("cannot pop the root user execution frame")
-        }
-        self.execution_stack.pop();
+        self.execution_stack
+            .pop()
+            .expect("an execution frame should exist before it is popped");
     }
 
     pub fn strict_mode_applies_to_current_module(&self) -> bool {
@@ -206,7 +190,7 @@ impl Runtime {
         };
         !self
             .module_manager
-            .module(frame.module_id)
+            .module(frame.module_file_info.module_id)
             .is_some_and(|module| module.is_standard_library)
     }
 
@@ -323,15 +307,24 @@ impl Runtime {
 impl Runtime {
     /// Start a standalone source run with its own entry module and root execution frame.
     pub fn start_isolated_source(&mut self, source_path: &str) {
-        let module_id = self.module_manager.create_entry_module(source_path);
-        self.execution_stack.push(ExecutionFrame::new(
-            module_id,
-            ExecutionLayer::Main,
-            source_path,
-        ));
+        self.start_isolated_source_with_kind(source_path, true);
     }
 
-    /// Start a repository run with its root module and root execution frame.
+    /// Start a standalone physical file run with its own entry module and root frame.
+    pub fn start_isolated_file(&mut self, source_path: &str) {
+        self.start_isolated_source_with_kind(source_path, false);
+    }
+
+    fn start_isolated_source_with_kind(&mut self, source_path: &str, is_virtual_source: bool) {
+        let module_file_info = self
+            .module_manager
+            .create_entry_module(source_path, is_virtual_source);
+        self.execution_stack
+            .push(ExecutionFrame::new(module_file_info));
+    }
+
+    /// Start a repository run with its root module. File frames are pushed only
+    /// while registered Litex files execute.
     pub fn start_repository_run(
         &mut self,
         repository_root: String,
@@ -340,11 +333,6 @@ impl Runtime {
         let module_id = self
             .module_manager
             .create_repository_entry_module(repository_root, main_file_path.clone())?;
-        self.execution_stack.push(ExecutionFrame::new(
-            module_id,
-            ExecutionLayer::Main,
-            main_file_path.as_str(),
-        ));
         Ok(module_id)
     }
 
@@ -352,14 +340,32 @@ impl Runtime {
     /// path without pushing more layers.
     pub fn set_current_user_lit_file_path(&mut self, path: &str) {
         let path_rc: Rc<str> = Rc::from(path);
-        self.module_manager.entry_path_rc = path_rc.clone();
-        if let Some(frame) = self.execution_stack.last_mut() {
-            frame.source_path = path_rc;
-        }
-        if let Some(entry_id) = self.module_manager.entry_module_id {
-            if let Some(module) = self.module_manager.module_mut(entry_id) {
-                module.main_file_path = path.to_string();
-            }
+        let (module_id, file_id) = self
+            .execution_stack
+            .last()
+            .map(|frame| {
+                (
+                    frame.module_file_info.module_id,
+                    frame.module_file_info.file_id,
+                )
+            })
+            .expect("a user source frame should exist before changing its path");
+        self.module_manager
+            .module_mut(module_id)
+            .and_then(|module| module.file_mut(file_id))
+            .expect("current user source file should be registered")
+            .source_path = path.to_string();
+        self.execution_stack
+            .last_mut()
+            .expect("current user source frame should exist")
+            .module_file_info
+            .source_path = path_rc.clone();
+        if self.module_manager.entry_module_id == Some(module_id) {
+            self.module_manager.entry_path_rc = path_rc;
+            self.module_manager
+                .module_mut(module_id)
+                .expect("entry module should exist")
+                .main_file_path = path.to_string();
         }
     }
 
@@ -369,14 +375,16 @@ impl Runtime {
         &mut self,
         source_path: &str,
     ) -> Result<(), RuntimeError> {
-        let module_id = self.current_module_id();
-        self.module_manager
-            .module_mut(module_id)
+        let module_id = self
+            .module_manager
+            .entry_module_id
             .expect("repository entry module should exist");
+        let module_file_info = self
+            .module_manager
+            .create_execution_file(module_id, source_path)
+            .expect("repository REPL source should be registered");
         self.execution_stack
-            .last_mut()
-            .expect("repository REPL should have an execution frame")
-            .source_path = Rc::from(source_path);
+            .push(ExecutionFrame::new(module_file_info));
         self.refresh_current_bare_symbol_index()
     }
 }

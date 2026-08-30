@@ -33,6 +33,7 @@ pub enum BuiltinTheoremRequirementRole {
     SuppliedLowerBoundBelongsToReals,
     SuppliedValueIsLowerBoundForEverySetMember,
     CandidateIsRealGreatestLowerBound,
+    ArgumentBelongsToReals,
     ArgumentIsMemberOfSet,
     LeftArgumentBelongsToReals,
     RightArgumentBelongsToReals,
@@ -98,6 +99,7 @@ impl BuiltinTheoremRequirementRole {
             Self::CandidateIsRealGreatestLowerBound => {
                 "the candidate carries a real greatest-lower-bound certificate"
             }
+            Self::ArgumentBelongsToReals => "the argument belongs to R",
             Self::ArgumentIsMemberOfSet => "the argument is a member of the set",
             Self::LeftArgumentBelongsToReals => "the left argument belongs to R",
             Self::RightArgumentBelongsToReals => "the right argument belongs to R",

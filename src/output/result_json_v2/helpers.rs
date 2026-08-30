@@ -810,6 +810,14 @@ pub(super) fn by_definition_verification_value(
             JsonValue::Bool(result.concrete_user_prop),
         ),
         (
+            "target_well_definedness".to_string(),
+            result
+                .target_well_definedness
+                .as_ref()
+                .map(|well_definedness| renderer.fact_well_definedness(well_definedness))
+                .unwrap_or(JsonValue::Null),
+        ),
+        (
             "definition_clause_facts".to_string(),
             display_values(&result.definition_clause_facts),
         ),
@@ -981,6 +989,9 @@ pub(super) fn infer_rule_application_value(
                 InferRule::CartesianMembershipProjection(_) => "CartesianMembershipProjection",
                 InferRule::ListSetMembershipImpliesEqualityAlternatives(_) => {
                     "ListSetMembershipImpliesEqualityAlternatives"
+                }
+                InferRule::FunctionRangeMembershipImpliesCodomainMembership => {
+                    "FunctionRangeMembershipImpliesCodomainMembership"
                 }
                 InferRule::NumericOrderBoundImpliesZeroSign => "NumericOrderBoundImpliesZeroSign",
                 InferRule::MultiplicationByNegativeOneReversesOrderAgainstZero => {
@@ -1402,6 +1413,7 @@ pub(super) fn arithmetic_builtin_rule_name(rule: ArithmeticBuiltinRule) -> &'sta
         ArithmeticBuiltinRule::AddComponentwiseLess => "AddComponentwiseLess",
         ArithmeticBuiltinRule::AddComponentwiseLessLessEqual => "AddComponentwiseLessLessEqual",
         ArithmeticBuiltinRule::AddComponentwiseLessEqualLess => "AddComponentwiseLessEqualLess",
+        ArithmeticBuiltinRule::SubComponentwiseLessEqualLess => "SubComponentwiseLessEqualLess",
     }
 }
 

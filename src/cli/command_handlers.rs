@@ -1,20 +1,22 @@
 use super::arguments::{read_any_value_after_flag, read_non_flag_value_after_flag};
-use crate::graph::{run_graph, GraphKind, GraphRequest};
-use crate::pipeline::{run, run_isolated_repl_with_runtime, RunOptions, RunRequest, RunTarget};
-use crate::runner::{run_runner, RunnerRequest};
+use crate::graph::{render_graph, GraphKind};
+use crate::pipeline::{
+    run_code, run_file, run_isolated_repl_with_runtime, run_repository, RunOptions,
+};
+use crate::runner::render_runner;
 use std::fs;
 use std::path::Path;
 
 pub(super) const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-pub(super) fn run_code_command(code: &str, options: RunOptions) {
-    let outcome = run(RunRequest::new(RunTarget::code(code), options));
+pub(super) fn run_code_from_e_command_line_flag(code: &str, options: RunOptions) {
+    let outcome = run_code(code, options);
     println!("{}", outcome.output.trim());
 }
 
 pub(super) fn run_file_command(file_flag: &str, options: RunOptions) {
     let continue_in_isolated_repl = options.force_isolated;
-    let mut outcome = run(RunRequest::new(RunTarget::file(file_flag), options));
+    let mut outcome = run_file(file_flag, options);
     if let Some(message) = outcome.target_error.as_ref() {
         eprintln!("Error: {}", message);
         return;
@@ -26,7 +28,7 @@ pub(super) fn run_file_command(file_flag: &str, options: RunOptions) {
 }
 
 pub(super) fn run_repository_command(repo_path: &str, options: RunOptions) {
-    let outcome = run(RunRequest::new(RunTarget::repository(repo_path), options));
+    let outcome = run_repository(repo_path, options);
     println!("{}", outcome.output.trim());
 }
 
@@ -37,18 +39,18 @@ pub(super) fn run_runner_command(
 ) -> Result<(bool, String), String> {
     let target_flag = read_any_value_after_flag(args, index, "-runner")?;
     let hide_file_paths = !options.output_style.is_detailed();
-    let target = match target_flag.as_str() {
+    let outcome = match target_flag.as_str() {
         "-e" => {
             let code = read_non_flag_value_after_flag(args, index, "-e")?;
-            RunTarget::code(code.as_str())
+            run_code(code.as_str(), options)
         }
         "-f" => {
             let file_path = read_non_flag_value_after_flag(args, index, "-f")?;
-            RunTarget::file(file_path.as_str())
+            run_file(file_path.as_str(), options)
         }
         "-r" => {
             let repo_path = read_non_flag_value_after_flag(args, index, "-r")?;
-            RunTarget::repository(repo_path.as_str())
+            run_repository(repo_path.as_str(), options)
         }
         _ => {
             return Err(
@@ -56,10 +58,7 @@ pub(super) fn run_runner_command(
             )
         }
     };
-    Ok(run_runner(RunnerRequest::new(
-        RunRequest::new(target, options),
-        hide_file_paths,
-    )))
+    Ok(render_runner(outcome, hide_file_paths))
 }
 
 pub(super) fn run_graph_command(
@@ -81,17 +80,13 @@ pub(super) fn run_graph_command(
     };
     let save_path = read_optional_graph_save_path(args, index, command_flag)?;
     let hide_file_paths = !options.output_style.is_detailed();
-    let run_target = match target_flag.as_str() {
-        "-e" => RunTarget::code(&target),
-        "-f" => RunTarget::file(&target),
-        "-r" => RunTarget::repository(&target),
+    let outcome = match target_flag.as_str() {
+        "-e" => run_code(&target, options),
+        "-f" => run_file(&target, options),
+        "-r" => run_repository(&target, options),
         _ => unreachable!("graph target flag was already validated"),
     };
-    let output = run_graph(GraphRequest::new(
-        graph_kind,
-        RunRequest::new(run_target, options),
-        hide_file_paths,
-    ));
+    let output = render_graph(graph_kind, outcome, hide_file_paths);
 
     Ok((output.0, output.1, save_path))
 }

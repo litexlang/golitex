@@ -12,6 +12,10 @@ pub struct SuccessVerifyByDefinitionResult {
     pub definition_clauses: Vec<String>,
     pub stored_fact: String,
     pub concrete_user_prop: bool,
+    /// Exact target well-definedness checked before definition expansion.
+    /// This owns application occurrences that may appear inside substituted
+    /// predicate arguments and are absent from the definition's own WD tree.
+    pub target_well_definedness: Option<SuccessVerifyFactWellDefinedResult>,
     pub definition_clause_facts: Vec<Fact>,
     pub argument_verification: Option<Box<SuccessVerifyArgsSatisfyParamDefResult>>,
     pub clause_checks: Vec<StmtResult>,
@@ -29,6 +33,7 @@ impl fmt::Debug for SuccessVerifyByDefinitionResult {
             .field("definition_clauses", &self.definition_clauses)
             .field("stored_fact", &self.stored_fact)
             .field("concrete_user_prop", &self.concrete_user_prop)
+            .field("target_well_definedness", &self.target_well_definedness)
             .field("definition_clause_facts", &self.definition_clause_facts)
             .field("argument_verification", &self.argument_verification)
             .field("clause_checks", &self.clause_checks)
@@ -44,6 +49,7 @@ impl SuccessVerifyByDefinitionResult {
         definition_clauses: Vec<String>,
         stored_fact: String,
         concrete_user_prop: bool,
+        target_well_definedness: Option<SuccessVerifyFactWellDefinedResult>,
         definition_clause_facts: Vec<Fact>,
         argument_verification: Option<SuccessVerifyArgsSatisfyParamDefResult>,
         clause_checks: Vec<StmtResult>,
@@ -55,6 +61,7 @@ impl SuccessVerifyByDefinitionResult {
             definition_clauses,
             stored_fact,
             concrete_user_prop,
+            target_well_definedness,
             definition_clause_facts,
             argument_verification: argument_verification.map(Box::new),
             clause_checks,

@@ -2484,7 +2484,7 @@ thm self_exists:
 obtain copy from thm self_exists(2)
 "#;
 
-    let generated = crate::lean_compiler::compile_litex_source_to_lean_source(
+    let generated = crate::stmt_result_to_lean_compiler::compile_litex_source_to_lean_source(
         source_code,
         "stmt_result_to_lean_compiles_theorem_backed_obtain_from_its_nested_result",
     )

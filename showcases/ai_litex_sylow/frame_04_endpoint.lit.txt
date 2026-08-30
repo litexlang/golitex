@@ -1,0 +1,9 @@
+try:
+    thm first_sylow_checkpoint:
+        ? forall G nonempty_set, group &MILAlternative::chap2_struct::Group<G>, p N+, n N:
+            $is_finite_set(G)
+            $prime(p)
+            $MILAlternative::chap2_struct::divides(p^n, finite_set_size(G))
+            =>:
+                exist H power_set(G) st {$MIL::chap9::is_subgroup(G, group, H), $is_finite_set(H), finite_set_size(H) = p^n}
+        release thm MIL::chap9::p_power_subgroup_exists(G, group, p, n)

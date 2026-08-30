@@ -280,11 +280,11 @@ trust:
     assert!(summary_output.contains("\"direct_trust\": 0"));
     assert!(summary_output.contains("\"known_facts\": 0"));
 
-    let (fact_graph_ok, fact_graph_output) = run_graph(GraphRequest::new(
+    let (fact_graph_ok, fact_graph_output) = render_graph(
         GraphKind::Fact,
-        RunRequest::new(RunTarget::code(failed_trust), RunOptions::default()),
+        run_code(failed_trust, RunOptions::default()),
         true,
-    ));
+    );
     assert!(!fact_graph_ok);
     assert!(fact_graph_output.contains("\"nodes\": []"));
 
@@ -293,11 +293,11 @@ trust have audit_probe R:
     audit_probe = audit_probe
     1 / 0 = 0
 "#;
-    let (definition_graph_ok, definition_graph_output) = run_graph(GraphRequest::new(
+    let (definition_graph_ok, definition_graph_output) = render_graph(
         GraphKind::Definition,
-        RunRequest::new(RunTarget::code(failed_trust_have), RunOptions::default()),
+        run_code(failed_trust_have, RunOptions::default()),
         true,
-    ));
+    );
     assert!(!definition_graph_ok);
     assert!(definition_graph_output.contains("\"nodes\": []"));
 }

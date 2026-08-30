@@ -16,9 +16,11 @@ impl Runtime {
         &mut self,
         stmt: &HaveFnByForallExistUniqueStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        let shape = self.exec_have_fn_by_forall_exist_unique_verify_well_definedness(stmt)?;
-        let verification = self.exec_have_fn_by_forall_exist_unique_verify_process(stmt)?;
-        let infer_result =
+        let (shape, well_definedness) =
+            self.exec_have_fn_by_forall_exist_unique_verify_well_definedness(stmt)?;
+        let verification =
+            self.exec_have_fn_by_forall_exist_unique_verify_process(stmt, well_definedness)?;
+        let (infer_result, published_property_well_definedness) =
             self.exec_have_fn_by_forall_exist_unique_affect_environment(stmt, shape)?;
 
         Ok(
@@ -27,6 +29,9 @@ impl Runtime {
                     statement: stmt.clone(),
                     common: SuccessStmtCommonResult::new(infer_result),
                     verification: Some(verification),
+                    published_property_well_definedness: Some(
+                        published_property_well_definedness,
+                    ),
                 },
             ))
             .into(),
@@ -40,9 +45,15 @@ impl Runtime {
     fn exec_have_fn_by_forall_exist_unique_verify_well_definedness(
         &mut self,
         stmt: &HaveFnByForallExistUniqueStmt,
-    ) -> Result<HaveFnByForallExistUniqueShape, RuntimeError> {
+    ) -> Result<
+        (
+            HaveFnByForallExistUniqueShape,
+            SuccessVerifyFactWellDefinedResult,
+        ),
+        RuntimeError,
+    > {
         let shape = self.have_fn_by_forall_exist_unique_shape(stmt)?;
-        self.verify_fact_well_defined(
+        let well_definedness = self.verify_fact_well_defined_result(
             &Fact::ForallFact(stmt.forall.clone()),
             &VerifyState::initial(),
         )
@@ -54,60 +65,56 @@ impl Runtime {
                 vec![],
             )
         })?;
-        Ok(shape)
+        Ok((shape, well_definedness))
     }
 
     fn exec_have_fn_by_forall_exist_unique_verify_process(
         &mut self,
         stmt: &HaveFnByForallExistUniqueStmt,
+        well_definedness: SuccessVerifyFactWellDefinedResult,
     ) -> Result<SuccessVerifyFunctionFromUniqueExistenceResult, RuntimeError> {
         if stmt.prove_process.is_empty() {
             let forall_fact: Fact = stmt.forall.clone().into();
-            let result = self
+            let mut result = self
                 .verify_fact_or_error(&forall_fact, &VerifyState::initial())
                 .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
-            Ok(SuccessVerifyFunctionFromUniqueExistenceResult {
-                source_forall_check: Some(Box::new(result)),
-                proof_steps: vec![],
-                conclusion_checks: vec![],
-            })
+            self.attach_known_fact_ids_to_stmt_result(&mut result)?;
+            Ok(SuccessVerifyFunctionFromUniqueExistenceResult::new(
+                well_definedness,
+                SuccessVerifyLocalProofScopeResult::new(SuccessInferResult::new(), Vec::new()),
+                Some(result),
+                vec![],
+                vec![],
+            ))
         } else {
-            self.exec_have_fn_by_forall_exist_unique_prove_process(stmt)
+            self.exec_have_fn_by_forall_exist_unique_prove_process(stmt, well_definedness)
         }
     }
 
     fn exec_have_fn_by_forall_exist_unique_prove_process(
         &mut self,
         stmt: &HaveFnByForallExistUniqueStmt,
+        well_definedness: SuccessVerifyFactWellDefinedResult,
     ) -> Result<SuccessVerifyFunctionFromUniqueExistenceResult, RuntimeError> {
-        self.verify_fact_well_defined(
-            &Fact::ForallFact(stmt.forall.clone()),
-            &VerifyState::initial(),
-        )
-        .map_err(|e| {
-            short_exec_error(
-                stmt.clone().into(),
-                "have_fn_by_forall_exist_unique: forall fact is not well defined".to_string(),
-                Some(e),
-                vec![],
-            )
-        })?;
-
         self.run_in_local_env(|rt| {
-            rt.define_params_with_type(
-                &stmt.forall.typed_parameters,
-                false,
-                BindingScope::LocalBinder,
-            )
-            .map_err(|define_params_error| {
-                exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), define_params_error)
-            })?;
+            let mut assumption_infers = rt
+                .define_params_with_type(
+                    &stmt.forall.typed_parameters,
+                    false,
+                    BindingScope::LocalBinder,
+                )
+                .map_err(|define_params_error| {
+                    exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), define_params_error)
+                })?;
 
             for dom_fact in stmt.forall.dom_facts.iter() {
-                rt.store_with_well_defined_verification_and_infer(
+                let mut domain_infers = rt.store_with_well_defined_verification_and_infer(
                     dom_fact.clone(),
                     &VerifyState::initial(),
                 )?;
+                domain_infers
+                    .relabel_all_added_facts_with_store_reason(ForallFact::premise_store_reason());
+                assumption_infers.new_infer_result_inside(domain_infers);
             }
 
             let mut proof_steps = vec![];
@@ -172,11 +179,21 @@ impl Runtime {
                 conclusion_checks.push(result);
             }
 
-            Ok(SuccessVerifyFunctionFromUniqueExistenceResult {
-                source_forall_check: None,
+            rt.attach_known_fact_ids_to_infer_result(&mut assumption_infers)?;
+            for result in proof_steps.iter_mut() {
+                rt.attach_known_fact_ids_to_stmt_result(result)?;
+            }
+            for result in conclusion_checks.iter_mut() {
+                rt.attach_known_fact_ids_to_stmt_result(result)?;
+            }
+
+            Ok(SuccessVerifyFunctionFromUniqueExistenceResult::new(
+                well_definedness,
+                SuccessVerifyLocalProofScopeResult::new(assumption_infers, Vec::new()),
+                None,
                 proof_steps,
                 conclusion_checks,
-            })
+            ))
         })
     }
 
@@ -184,7 +201,7 @@ impl Runtime {
         &mut self,
         stmt: &HaveFnByForallExistUniqueStmt,
         shape: HaveFnByForallExistUniqueShape,
-    ) -> Result<SuccessInferResult, RuntimeError> {
+    ) -> Result<(SuccessInferResult, SuccessVerifyFactWellDefinedResult), RuntimeError> {
         let mut infer_result = SuccessInferResult::new();
         let fn_set = self
             .fn_set_from_fn_set_clause(&shape.fn_set_clause)
@@ -218,6 +235,9 @@ impl Runtime {
         let property_fact = self
             .inst_have_fn_forall_fact_for_store(property_forall)
             .map_err(|e| Self::have_fn_by_forall_exist_unique_err(stmt, e))?;
+        let published_property_well_definedness = self
+            .verify_fact_well_defined_result(&property_fact, &VerifyState::initial())
+            .map_err(|e| Self::have_fn_by_forall_exist_unique_err(stmt, e))?;
         let property_infer = self
             .store_with_well_defined_verification_and_infer_with_default_verify_state(
                 property_fact.clone(),
@@ -238,7 +258,7 @@ impl Runtime {
         self.store_fact_without_forall_coverage_check_and_infer(uniqueness_fact)
             .map_err(|e| Self::have_fn_by_forall_exist_unique_err(stmt, e))?;
 
-        Ok(infer_result)
+        Ok((infer_result, published_property_well_definedness))
     }
 
     pub fn exec_have_fn_by_forall_exist_unique_stmt_affect_environment_only(
@@ -246,7 +266,7 @@ impl Runtime {
         stmt: &HaveFnByForallExistUniqueStmt,
     ) -> Result<StmtResult, RuntimeError> {
         let shape = self.have_fn_by_forall_exist_unique_shape(stmt)?;
-        let infer_result =
+        let (infer_result, _) =
             self.exec_have_fn_by_forall_exist_unique_affect_environment(stmt, shape)?;
         Ok(
             SuccessDefinitionStmtResult::HaveFnByForallExistUniqueStmt(Box::new(
@@ -254,6 +274,7 @@ impl Runtime {
                     statement: stmt.clone(),
                     common: SuccessStmtCommonResult::new(infer_result),
                     verification: None,
+                    published_property_well_definedness: None,
                 },
             ))
             .into(),
@@ -369,6 +390,29 @@ impl Runtime {
             clause.dom_facts,
             clause.ret_set,
         ))
+    }
+
+    /// Return the exact function-property theorem stored by
+    /// `have fn ... by exist!`.  The Result-to-Lean compiler uses this
+    /// constructor to validate that the two published outer effects are the
+    /// function membership and the property derived from the same source
+    /// `exist!`; it must not infer that relationship from names or output
+    /// order alone.
+    pub fn direct_property_forall_for_have_fn_by_forall_exist_unique(
+        &self,
+        stmt: &HaveFnByForallExistUniqueStmt,
+    ) -> Result<ForallFact, RuntimeError> {
+        let shape = self.have_fn_by_forall_exist_unique_shape(stmt)?;
+        let forall_param_bindings = stmt.forall.typed_parameters.collect_param_bindings();
+        let function_obj = build_defined_function_obj_with_parameter_bindings(
+            Identifier::new_bound(stmt.fn_name().to_string(), stmt.symbol_binding.as_ref()).into(),
+            &forall_param_bindings,
+        );
+        self.have_fn_by_forall_exist_unique_property_forall_with_function(
+            stmt,
+            &shape,
+            function_obj,
+        )
     }
 
     fn have_fn_by_forall_exist_unique_property_forall(

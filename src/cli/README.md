@@ -6,10 +6,10 @@
 args = parse global fields (-compact, -strict, -lang, ...)
 match first command:
   -e/-f/-r -> enter the matching run_*_command handler
-             -> build RunRequest and call pipeline::run
+             -> call pipeline::run_code/run_file/run_repository
   -runner  -> enter run_runner_command
-             -> build RunnerRequest around the same RunRequest
-  graph commands -> build GraphRequest around the same RunRequest
+             -> execute the selected entry and render its RunOutcome
+  graph commands -> execute the selected entry and render its RunOutcome
   -latex   -> render LaTeX
   -python  -> run the frozen Python extractor
 invalid combination -> print help and exit 2
@@ -31,7 +31,7 @@ invalid combination -> print help and exit 2
 | --- | --- |
 | [`command_dispatch.rs`](command_dispatch.rs) | `run_cli` selects one command and preserves its exit behavior. |
 | [`arguments.rs`](arguments.rs) | Removes and validates global flags directly into the runtime-owned `RunOptions`. |
-| [`command_handlers.rs`](command_handlers.rs) | Owns the command-level adapters such as `run_code_command`, then converts CLI targets into `RunRequest`, `RunnerRequest`, or `GraphRequest` while preserving process behavior. |
+| [`command_handlers.rs`](command_handlers.rs) | Owns command-level adapters such as `run_code_from_e_command_line_flag`, calls the matching explicit pipeline entry, and hands its outcome to runner or graph rendering while preserving process behavior. |
 | [`lean_commands.rs`](lean_commands.rs) | Validates and executes single-file Lean and Markdown-ledger compilation commands. |
 | [`conversion_commands.rs`](conversion_commands.rs) | Owns complete `-latex` and `-python` command handling and their compiler adapters. |
 | [`messages.rs`](messages.rs) | Owns stable help and upgrade text. |

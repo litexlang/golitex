@@ -3,26 +3,7 @@ use crate::prelude::*;
 const RUNNER_NAME: &str = "litex-runner";
 const RUNNER_VERSION: &str = "0.1";
 
-pub struct RunnerRequest {
-    pub run: RunRequest,
-    pub hide_file_paths: bool,
-}
-
-impl RunnerRequest {
-    pub fn new(run: RunRequest, hide_file_paths: bool) -> Self {
-        Self {
-            run,
-            hide_file_paths,
-        }
-    }
-}
-
-pub fn run_runner(request: RunnerRequest) -> (bool, String) {
-    let RunnerRequest {
-        run: run_request,
-        hide_file_paths,
-    } = request;
-    let outcome = run(run_request);
+pub fn render_runner(outcome: RunOutcome, hide_file_paths: bool) -> (bool, String) {
     if let Some(message) = outcome.target_error {
         return runner_target_error_output(
             outcome.target_kind,

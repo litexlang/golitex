@@ -106,6 +106,9 @@ pub(super) fn infer_rule_role(rule: &InferRule) -> &'static str {
         InferRule::ListSetMembershipImpliesEqualityAlternatives(_) => {
             "ListSetMembershipImpliesEqualityAlternatives"
         }
+        InferRule::FunctionRangeMembershipImpliesCodomainMembership => {
+            "FunctionRangeMembershipImpliesCodomainMembership"
+        }
         InferRule::NumericOrderBoundImpliesZeroSign => "NumericOrderBoundImpliesZeroSign",
         InferRule::MultiplicationByNegativeOneReversesOrderAgainstZero => {
             "MultiplicationByNegativeOneReversesOrderAgainstZero"

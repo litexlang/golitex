@@ -2390,7 +2390,9 @@ impl Runtime {
                     SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         atomic_fact.clone().into(),
                         "a - d < b - c from a <= b and c < d".to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryLessAlgebra04),
+                        BuiltinRuleEvidence::Arithmetic(
+                            ArithmeticBuiltinRule::SubComponentwiseLessEqualLess,
+                        ),
                         vec![r3, r4],
                     ),
                 )));

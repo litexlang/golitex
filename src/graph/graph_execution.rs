@@ -31,29 +31,11 @@ impl GraphKind {
     }
 }
 
-pub struct GraphRequest {
-    pub kind: GraphKind,
-    pub run: RunRequest,
-    pub hide_file_paths: bool,
-}
-
-impl GraphRequest {
-    pub fn new(kind: GraphKind, run: RunRequest, hide_file_paths: bool) -> Self {
-        Self {
-            kind,
-            run,
-            hide_file_paths,
-        }
-    }
-}
-
-pub fn run_graph(request: GraphRequest) -> (bool, String) {
-    let GraphRequest {
-        kind,
-        run: run_request,
-        hide_file_paths,
-    } = request;
-    let mut outcome = run(run_request);
+pub fn render_graph(
+    kind: GraphKind,
+    mut outcome: RunOutcome,
+    hide_file_paths: bool,
+) -> (bool, String) {
     let target_label = match outcome.target_kind {
         RunTargetKind::Code => format!("{} -e", kind.flag()),
         RunTargetKind::File | RunTargetKind::Repository => outcome
