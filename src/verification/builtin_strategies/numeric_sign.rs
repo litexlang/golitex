@@ -800,6 +800,42 @@ fn structural_order_strategy_rule_evidence(
     }
 
     match target {
+        AtomicFact::LessEqualFact(fact) if fact.left.to_string() != "0" => {
+            if let Obj::Add(add) = &fact.right {
+                let left_is_common = obj_equality_key(&fact.left)
+                    == obj_equality_key(add.left.as_ref())
+                    && structural_order_strategy_binary_child_matches(
+                        &children[0],
+                        &fact.left,
+                        add.left.as_ref(),
+                        false,
+                    )
+                    && structural_order_strategy_child_matches(
+                        &children[1],
+                        add.right.as_ref(),
+                        true,
+                    );
+                let right_is_common = obj_equality_key(&fact.left)
+                    == obj_equality_key(add.right.as_ref())
+                    && structural_order_strategy_binary_child_matches(
+                        &children[0],
+                        &fact.left,
+                        add.right.as_ref(),
+                        false,
+                    )
+                    && structural_order_strategy_child_matches(
+                        &children[1],
+                        add.left.as_ref(),
+                        true,
+                    );
+                if left_is_common || right_is_common {
+                    return Some(BuiltinRuleEvidence::Arithmetic(
+                        ArithmeticBuiltinRule::AddRightNonnegativeLessEqual,
+                    ));
+                }
+            }
+            None
+        }
         AtomicFact::LessEqualFact(fact) if fact.left.to_string() == "0" => match &fact.right {
             Obj::Add(add)
                 if structural_order_strategy_child_matches(

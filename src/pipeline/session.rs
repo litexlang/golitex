@@ -1,4 +1,4 @@
-use super::source_execution::{SourceRunFailureKind, SourceRunOutcome};
+use super::source_execution::SourceRunOutcome;
 use crate::prelude::*;
 use std::env;
 use std::io::{self, BufRead, Write};
@@ -158,16 +158,13 @@ fn run_session_loop_with_readers_and_preload(
                     continue;
                 }
 
-                let (source_outcome, failure_kind) = runtime
-                    .execute_source_classified(source.replace('\r', "").as_str())
-                    .into_parts();
                 let SourceRunOutcome {
                     stmt_results: mut results,
                     runtime_error,
-                } = source_outcome;
+                } = runtime.execute_source(source.replace('\r', "").as_str());
                 let (ok, trace) = render_run_output(&runtime, &results, &runtime_error);
                 all_results.append(&mut results);
-                if !ok && failure_kind != Some(SourceRunFailureKind::TryStmt) {
+                if !ok {
                     has_failed = true;
                 }
                 write_session_event(

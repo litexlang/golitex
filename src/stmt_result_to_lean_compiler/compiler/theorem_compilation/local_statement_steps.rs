@@ -33,6 +33,15 @@ impl StmtResultToLeanCompiler {
             );
         }
         if let StmtResult::Success(SuccessStmtResult::Definition(
+            SuccessDefinitionStmtResult::ObtainObjFromAtomicFact(result),
+        )) = result
+        {
+            return self.compile_obtain_obj_from_atomic_fact_stmt_result_as_local_proof_steps(
+                result,
+                proof_step_index,
+            );
+        }
+        if let StmtResult::Success(SuccessStmtResult::Definition(
             SuccessDefinitionStmtResult::HaveObjEqualStmt(result),
         )) = result
         {

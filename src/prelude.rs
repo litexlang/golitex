@@ -371,9 +371,10 @@ pub use crate::result::{
     MatrixExpressionMembershipBuiltinRuleEvidence, NativeConstantMembershipBuiltinRule,
     NaturalMembershipClosureBuiltinRule, NestedCheckedFunctionDefinitionReductionEvidence,
     NonzeroBuiltinRule, ObjectReflexivityBuiltinRuleEvidence, OrderReflexivityBuiltinRuleEvidence,
-    RationalAlgebraicNormalizationBuiltinRuleEvidence, RationalMembershipClosureBuiltinRule,
-    RationalNormalizationBuiltinRuleEvidence, RealArithmeticMembershipClosureBuiltinRule,
-    RealIntervalSubsetRealBuiltinRuleEvidence, RefinedNumericMembershipBuiltinRuleEvidence,
+    PositiveNaturalMembershipClosureBuiltinRule, RationalAlgebraicNormalizationBuiltinRuleEvidence,
+    RationalMembershipClosureBuiltinRule, RationalNormalizationBuiltinRuleEvidence,
+    RealArithmeticMembershipClosureBuiltinRule, RealIntervalSubsetRealBuiltinRuleEvidence,
+    RefinedNumericMembershipBuiltinRuleEvidence,
     RegisteredAntisymmetricPredicateBuiltinRuleEvidence,
     RegisteredReflexivePredicateBuiltinRuleEvidence,
     RegisteredSymmetricPredicateBuiltinRuleEvidence,
@@ -461,6 +462,7 @@ pub use crate::result::{
     SuccessVerifyTemplateHeaderArgumentResult, SuccessVerifyUniversalIntegerCarrierCoverageResult,
     SuccessVerifyWitnessNonemptySetResult, SuccessWitnessAtomicFactResult,
     SuccessWitnessExistFactResult, SuccessWitnessNonemptySetResult, SuccessWitnessStmtResult,
+    TryStmtExecutionResult,
 };
 pub use crate::result::{
     CachedWellDefinedObj, WellDefinedBinderPremiseProof, WellDefinedBinderPremiseRole,

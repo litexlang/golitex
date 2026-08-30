@@ -32,7 +32,15 @@ pub struct SuccessTryProofResult {
 pub struct SuccessTryStmtResult {
     pub statement: TryStmt,
     pub common: SuccessStmtCommonResult,
-    pub proof: Option<SuccessTryProofResult>,
+    /// Whether the successful `try` statement committed or rolled back its
+    /// isolated body. A rollback is diagnostic data, not a statement failure.
+    pub execution: TryStmtExecutionResult,
+}
+
+pub enum TryStmtExecutionResult {
+    Committed(SuccessTryProofResult),
+    RolledBack(RuntimeError),
+    SkippedByTrustedExecution,
 }
 
 pub enum SuccessProofBlockStmtResult {

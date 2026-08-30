@@ -74,13 +74,19 @@ impl StmtResultToLeanCompiler {
         publication: DefinedPredicateInferenceConclusionPublication,
     ) -> Result<(), String> {
         for application in &infer_result.rule_applications {
-            if !defined_predicate_infer_rule(&application.rule) {
-                continue;
+            if defined_predicate_infer_rule(&application.rule) {
+                self.compile_defined_predicate_inference_application_in_current_environment(
+                    application,
+                    publication,
+                )?;
+            } else {
+                for conclusion in &application.conclusions {
+                    self.compile_defined_predicate_inference_results_in_current_environment(
+                        &conclusion.infers,
+                        publication,
+                    )?;
+                }
             }
-            self.compile_defined_predicate_inference_application_in_current_environment(
-                application,
-                publication,
-            )?;
         }
         Ok(())
     }

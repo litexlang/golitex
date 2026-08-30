@@ -1237,6 +1237,61 @@ theorem inNOfInNPos
     Litex.In x Litex.N :=
   inBaseOfInSetBuilder h
 
+/-- Adding a positive natural and a natural preserves the exact `N+`
+carrier. The ordered hypotheses match the verifier's left-positive rule. -/
+theorem complexAddInNPosOfLeftPositive
+    {a b : ℂ}
+    (ha : Litex.In a Litex.NPos)
+    (hb : Litex.In b Litex.N) :
+    Litex.In (a + b) Litex.NPos := by
+  rcases (inSetBuilder_iff.mp ha) with ⟨na, hna, hxa⟩
+  rcases hb with ⟨nb, hxb⟩
+  refine inSetBuilder ?_ (Nat.add_pos_left hna nb)
+  exact Litex.Same.trans
+    (complexAddAsReal (complexNatAsReal hxa) (complexNatAsReal hxb))
+    (Litex.Same.trans
+      (Litex.Same.ofEq (by norm_cast : (na : ℝ) + (nb : ℝ) = ((na + nb : ℕ) : ℝ)))
+      (realSameNat (na + nb)))
+
+/-- Adding a natural and a positive natural preserves the exact `N+`
+carrier. The ordered hypotheses match the verifier's right-positive rule. -/
+theorem complexAddInNPosOfRightPositive
+    {a b : ℂ}
+    (ha : Litex.In a Litex.N)
+    (hb : Litex.In b Litex.NPos) :
+    Litex.In (a + b) Litex.NPos := by
+  rcases ha with ⟨na, hxa⟩
+  rcases (inSetBuilder_iff.mp hb) with ⟨nb, hnb, hxb⟩
+  refine inSetBuilder ?_ (Nat.add_pos_right na hnb)
+  exact Litex.Same.trans
+    (complexAddAsReal (complexNatAsReal hxa) (complexNatAsReal hxb))
+    (Litex.Same.trans
+      (Litex.Same.ofEq (by norm_cast : (na : ℝ) + (nb : ℝ) = ((na + nb : ℕ) : ℝ)))
+      (realSameNat (na + nb)))
+
+/-- The verifier's two-positive addition rule retains both stronger premises. -/
+theorem complexAddInNPosOfBothPositive
+    {a b : ℂ}
+    (ha : Litex.In a Litex.NPos)
+    (hb : Litex.In b Litex.NPos) :
+    Litex.In (a + b) Litex.NPos :=
+  complexAddInNPosOfLeftPositive ha (inNOfInNPos hb)
+
+/-- Multiplication preserves positive-natural membership. -/
+theorem complexMulInNPos
+    {a b : ℂ}
+    (ha : Litex.In a Litex.NPos)
+    (hb : Litex.In b Litex.NPos) :
+    Litex.In (a * b) Litex.NPos := by
+  rcases (inSetBuilder_iff.mp ha) with ⟨na, hna, hxa⟩
+  rcases (inSetBuilder_iff.mp hb) with ⟨nb, hnb, hxb⟩
+  refine inSetBuilder ?_ (Nat.mul_pos hna hnb)
+  exact Litex.Same.trans
+    (complexMulAsReal (complexNatAsReal hxa) (complexNatAsReal hxb))
+    (Litex.Same.trans
+      (Litex.Same.ofEq (by norm_cast : (na : ℝ) * (nb : ℝ) = ((na * nb : ℕ) : ℝ)))
+      (realSameNat (na * nb)))
+
 /-- Exact `N+` membership exposes strict positivity through the retained
 natural representative and its canonical real observation. -/
 theorem positiveOfInNPos

@@ -13,15 +13,10 @@ pub(in super::super) fn forall_parameter_uses_exact_refined_numeric_carrier(set:
 /// independent `In.rep` choices from becoming the observable meaning of one
 /// real variable.
 pub(in super::super) fn forall_parameter_uses_exact_real_carrier(set: &Obj) -> bool {
-    matches!(
-        set,
-        Obj::StandardSet(StandardSet::R | StandardSet::RPos)
-    )
+    matches!(set, Obj::StandardSet(StandardSet::R | StandardSet::RPos))
 }
 
-pub(in super::super) fn forall_parameter_uses_exact_structured_set_carrier(
-    set: &Obj,
-) -> bool {
+pub(in super::super) fn forall_parameter_uses_exact_structured_set_carrier(set: &Obj) -> bool {
     matches!(
         set,
         Obj::SetBuilder(_)
@@ -34,6 +29,7 @@ pub(in super::super) fn forall_parameter_uses_exact_structured_set_carrier(
 pub(in super::super) fn forall_parameter_uses_exact_object_carrier(set: &Obj) -> bool {
     forall_parameter_uses_exact_real_carrier(set)
         || forall_parameter_uses_exact_structured_set_carrier(set)
+        || matches!(set, Obj::FnSet(_) | Obj::FiniteSeqSet(_) | Obj::SeqSet(_))
 }
 
 pub(in super::super) fn forall_parameter_uses_implicit_host_carrier(
@@ -149,11 +145,27 @@ pub(in super::super) fn render_forall_fact_type(
                 index + 1
             ));
             let expected = format!("Litex.In {name} {rendered_set}");
+            let function = match set {
+                Obj::FnSet(function) => {
+                    Some(LeanTargetFunctionTypeRepresentation::lower(function)?)
+                }
+                Obj::FiniteSeqSet(sequence) => {
+                    let function =
+                        Runtime::default().finite_seq_set_to_fn_set(sequence, default_line_file());
+                    Some(LeanTargetFunctionTypeRepresentation::lower(&function)?)
+                }
+                Obj::SeqSet(sequence) => {
+                    let function =
+                        Runtime::default().seq_set_to_fn_set(sequence, default_line_file());
+                    Some(LeanTargetFunctionTypeRepresentation::lower(&function)?)
+                }
+                _ => None,
+            };
             install_rendered_parameter_aliases(
                 binding.id(),
                 &expected,
                 &format!("__type{}", index + 1),
-                None,
+                function,
                 &mut context,
             )?;
             install_result_owned_forall_parameter_fact_alias(

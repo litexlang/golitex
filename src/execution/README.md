@@ -25,7 +25,7 @@ verification mode.
 | --- | --- |
 | `1 + 1 = 2` | Uses verified execution and stores the successful fact. |
 | `have a R = 1` | Creates an object definition only after its required facts verify. |
-| `try:`<br>&nbsp;&nbsp;`1 = 2` | Rolls back the failed block instead of committing its environment changes. |
+| `try:`<br>&nbsp;&nbsp;`1 = 2` | Returns a successful `TryStmt` result whose body is marked `RolledBack`; no environment changes are committed. |
 | `trust 1 = 2` | Uses the unsafe statement path; `-strict` rejects this example. |
 | A failed `1 / 0 = 0` | Stops after well-definedness; verification and environment mutation do not run. |
 

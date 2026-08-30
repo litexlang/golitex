@@ -168,6 +168,7 @@ pub(in super::super) fn direct_builtin_rule_compiler_limitation(
         | BuiltinRuleEvidence::IntegerMembershipClosure(_)
         | BuiltinRuleEvidence::IntegerRangeSumMembership
         | BuiltinRuleEvidence::NaturalMembershipClosure(_)
+        | BuiltinRuleEvidence::PositiveNaturalMembershipClosure(_)
         | BuiltinRuleEvidence::RationalMembershipClosure(_)
         | BuiltinRuleEvidence::ComplexArithmeticMembershipClosure(_)
         | BuiltinRuleEvidence::RealArithmeticMembershipClosure(_)

@@ -1,7 +1,298 @@
 # Litex CLI
 
-This page records the command-line rules implemented by the Rust `litex`
-binary.
+<!-- Blueprint spine: try online → install for one platform → verify the installation → learn the command shape → choose a run mode → inspect or automate the result -->
+
+This is the canonical installation guide and command-line reference for the
+Rust `litex` binary.
+
+Created and maintained by Jiachen Shen.
+
+Read this page online: https://litexlang.com/doc/cli
+
+Markdown source: https://github.com/litexlang/golitex/blob/main/docs/cli.md
+
+> **Litex is an experimental hobby project still in beta. Expect rough edges.**
+
+## Try Litex Online
+
+To quickly try Litex without installing it, use the Playground on the official
+website:
+
+- https://litexlang.com
+
+You can run Litex code there and translate Litex code into LaTeX.
+
+## Install Litex Locally
+
+Release assets are published on the
+[GitHub Releases page](https://github.com/litexlang/golitex/releases). Each
+official archive or package contains both the `litex` executable and the
+standard library.
+
+After any installation, check both the version and a small verified statement:
+
+```bash
+litex -version
+litex -e '1 = 1'
+```
+
+### macOS and Linux (Homebrew)
+
+Homebrew is the shortest supported installation route on Apple Silicon macOS
+and on Linux (`amd64` or `arm64`).
+
+Install:
+
+```bash
+brew install litexlang/tap/litex
+```
+
+Upgrade:
+
+```bash
+brew update
+brew upgrade litexlang/tap/litex
+```
+
+If upgrade fails or is too slow on your machine, use:
+
+```bash
+brew uninstall litex
+brew install litexlang/tap/litex
+```
+
+The current Homebrew macOS package targets Apple Silicon. For another macOS
+architecture, build from source until a matching release asset is available.
+
+### Linux (Ubuntu/Debian)
+
+Official `.deb` packages are available for `amd64` and `arm64`. This command
+detects the current Debian architecture and installs the latest release:
+
+```bash
+tag=$(curl -fsSL https://api.github.com/repos/litexlang/golitex/releases/latest | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')
+arch=$(dpkg --print-architecture)
+case "$arch" in amd64|arm64) ;; *) echo "Unsupported architecture: $arch"; exit 1 ;; esac
+wget "https://github.com/litexlang/golitex/releases/download/${tag}/litex_${tag}_${arch}.deb"
+sudo dpkg -i "litex_${tag}_${arch}.deb"
+```
+
+If you want a fixed release, replace `<tag>` and `<arch>` (`amd64` or `arm64`)
+manually:
+
+```bash
+wget "https://github.com/litexlang/golitex/releases/download/<tag>/litex_<tag>_<arch>.deb"
+sudo dpkg -i "litex_<tag>_<arch>.deb"
+```
+
+If needed, fix dependencies:
+
+```bash
+sudo apt-get install -f
+```
+
+The `.deb` package installs the Litex executable together with its standard
+library. Verify the executable with a checked statement:
+
+```bash
+litex -runner -e '1 = 1' | grep '"ok": true'
+```
+
+#### Upgrade Litex on Linux
+
+If you installed from the `.deb` in Releases, upgrade by downloading the
+latest tag and installing it again. This replaces the older version:
+
+```bash
+tag=$(curl -fsSL https://api.github.com/repos/litexlang/golitex/releases/latest | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')
+arch=$(dpkg --print-architecture)
+case "$arch" in amd64|arm64) ;; *) echo "Unsupported architecture: $arch"; exit 1 ;; esac
+wget "https://github.com/litexlang/golitex/releases/download/${tag}/litex_${tag}_${arch}.deb"
+sudo dpkg -i "litex_${tag}_${arch}.deb"
+```
+
+Then verify:
+
+```bash
+litex -version
+litex -runner -e '1 = 1' | grep '"ok": true'
+```
+
+### Windows
+
+#### Option A (recommended): Scoop
+
+The release workflow keeps the Litex Scoop bucket up to date. In PowerShell:
+
+```powershell
+scoop bucket add litex https://github.com/litexlang/scoop-litex
+scoop install litex
+```
+
+Upgrade later with:
+
+```powershell
+scoop update
+scoop update litex
+```
+
+#### Option B: direct PowerShell install
+
+If you do not use Scoop, this script installs the latest release under
+`%LOCALAPPDATA%\litex` and adds that directory to the user `Path`:
+
+```powershell
+$ErrorActionPreference = 'Stop'
+$repo = 'litexlang/golitex'
+$tag = (Invoke-RestMethod -Uri "https://api.github.com/repos/$repo/releases/latest" -Headers @{ 'User-Agent' = 'litex-install' }).tag_name
+$name = "litex_${tag}_windows_amd64.zip"
+$url = "https://github.com/$repo/releases/download/$tag/$name"
+$dir = Join-Path $env:LOCALAPPDATA 'litex'
+$zip = Join-Path $env:TEMP $name
+$exe = Join-Path $dir 'litex.exe'
+New-Item -ItemType Directory -Force -Path $dir | Out-Null
+Invoke-WebRequest -Uri $url -OutFile $zip
+Expand-Archive -Path $zip -DestinationPath $dir -Force
+Remove-Item -Force $zip
+
+$userPath = [Environment]::GetEnvironmentVariable('Path', 'User')
+if (-not $userPath) { $userPath = '' }
+if ($userPath -notlike "*$dir*") {
+    $newPath = if ($userPath) { "$userPath;$dir" } else { $dir }
+    [Environment]::SetEnvironmentVariable('Path', $newPath, 'User')
+}
+
+$env:Path = "$dir;$env:Path"
+Write-Host "Installed: $exe"
+Write-Host "Open a new terminal and run: litex -version"
+```
+
+What this command changes on the user machine:
+
+1. Downloads `litex_<tag>_windows_amd64.zip` from GitHub Releases.
+2. Extracts `litex.exe` and the `std` directory into `%LOCALAPPDATA%\litex`.
+3. Appends `%LOCALAPPDATA%\litex` to the **User** `Path` environment variable.
+4. Updates `Path` in the current PowerShell session.
+
+It does **not** install services or edit firewall settings.
+
+After running the command:
+
+1. Open a **new** terminal window.
+2. Run:
+
+```powershell
+litex -version
+litex -runner -e "1 = 1" | Select-String '"ok": true'
+```
+
+Now users can run `litex` directly in a terminal.
+
+If you want a fixed tag, replace `<tag>` manually:
+
+```powershell
+$ErrorActionPreference = 'Stop'
+$tag = '<tag>'
+$repo = 'litexlang/golitex'
+$name = "litex_${tag}_windows_amd64.zip"
+$url = "https://github.com/$repo/releases/download/$tag/$name"
+$dir = Join-Path $env:LOCALAPPDATA 'litex'
+$zip = Join-Path $env:TEMP $name
+$exe = Join-Path $dir 'litex.exe'
+New-Item -ItemType Directory -Force -Path $dir | Out-Null
+Invoke-WebRequest -Uri $url -OutFile $zip
+Expand-Archive -Path $zip -DestinationPath $dir -Force
+Remove-Item -Force $zip
+
+$userPath = [Environment]::GetEnvironmentVariable('Path', 'User')
+if (-not $userPath) { $userPath = '' }
+if ($userPath -notlike "*$dir*") {
+    $newPath = if ($userPath) { "$userPath;$dir" } else { $dir }
+    [Environment]::SetEnvironmentVariable('Path', $newPath, 'User')
+}
+
+$env:Path = "$dir;$env:Path"
+litex -version
+litex -e "1 = 1" | Select-String '"result": "success"'
+```
+
+To upgrade a direct PowerShell installation, rerun the same script. It replaces
+the executable and bundled `std` directory while preserving the existing
+`Path` entry.
+
+### Docker
+
+The release workflow publishes multi-architecture Linux images for `amd64` and
+`arm64`. Prereleases use the `beta` tag; stable releases also update `latest`.
+
+```bash
+docker pull ghcr.io/litexlang/litex:beta
+docker run --rm ghcr.io/litexlang/litex:beta -runner -e '1 = 1'
+```
+
+Use a version tag such as `0.9.109-beta` when reproducibility matters.
+
+### Build from Source
+
+For kernel development, install the stable Rust toolchain, clone this
+repository, and build from the repository root:
+
+```bash
+git clone https://github.com/litexlang/golitex.git
+cd golitex
+cargo build --release
+target/release/litex -e '1 = 1'
+```
+
+Running from the repository root lets Litex find the checked-in `std`
+directory. Packaged installations place the same standard library beside the
+binary or in the platform installation directory.
+
+## First Run
+
+Start the REPL:
+
+```bash
+litex
+```
+
+The ordinary REPL is always isolated, including when the current directory
+contains `litex.config`. It is a persistent terminal environment, not a
+project run.
+
+Typical startup output:
+
+```text
+Litex version <version>
+Upgrade Litex? Run `litex -upgrade` for platform instructions.
+Copyright (C) 2024-2026 Jiachen Shen
+website: https://litexlang.com
+github: https://github.com/litexlang/golitex
+Ctrl+D to exit. On Windows PowerShell, press Ctrl+Z and then Enter.
+>>>
+```
+
+Run a standalone `.lit` file:
+
+```bash
+litex -isolated -f "your_file.lit"
+```
+
+For a file registered in a module's direct-parent `litex.config`, use
+`litex -f "your_file.lit"` to load its configured source prefix first.
+
+Run Litex source directly:
+
+```bash
+litex -e "1 + 1 = 2"
+```
+
+Show the installed version and platform upgrade instructions:
+
+```bash
+litex -version
+litex -upgrade
+```
 
 ## Basic Shape
 
@@ -217,6 +508,51 @@ should read the JSON result instead of relying only on the process exit code.
 Use `-runner` when a script or CI job needs a wrapper object and a nonzero exit
 code on verification failure.
 
+### Statement Output Examples
+
+A successful statement object has `"result": "success"`. The normal reading
+view includes its direct proof route when one is available:
+
+```json
+{
+  "result": "success",
+  "type": "equality fact",
+  "line": 1,
+  "statement": "1 + 1 = 2",
+  "why_verified": {
+    "type": "builtin rule",
+    "rule": "calculation"
+  }
+}
+```
+
+If an error occurs, the most useful fields are usually `error_type`, `message`,
+`statement`, and `previous_error`. The exact output may differ by version:
+
+```json
+{
+  "error_type": "VerifyError",
+  "result": "error",
+  "line": 1,
+  "message": "verification failed",
+  "type": "equality fact",
+  "statement": "1 = 0",
+  "previous_error": {
+    "error_type": "UnknownError",
+    "result": "error",
+    "line": 1,
+    "message": "unknown result",
+    "type": "equality fact",
+    "statement": "1 = 0",
+    "failed_goal": "1 = 0"
+  }
+}
+```
+
+Programs should inspect the JSON rather than rely on an ordinary verifier
+command's process status. Use the runner commands below when a meaningful
+nonzero exit code is part of the calling contract.
+
 ## Runner Commands
 
 | Command | Behavior |
@@ -286,13 +622,15 @@ Session `run` frames are Litex source, not terminal input. They reject
 `import`, and the protocol intentionally defines no separate import frame;
 dependencies for a session come from its `litex.config` preload.
 
-A failed top-level `try:` block returns a `block` event with `ok: false`, but
-does not stop the session because `try:` has already discarded its temporary
-environment. The client may submit another `run` frame, and `artifacts` remains
-available. Any other failed Litex statement stops execution of later frames:
+A parsed top-level `try:` block always returns a `block` event with `ok: true`.
+Its statement result reports whether the isolated body was `Committed` or
+`RolledBack`; a rollback keeps its diagnostic but publishes no environment
+changes. The client may submit another `run` frame, and `artifacts` remains
+available. A malformed source frame that never parses as a `try` is an ordinary
+source error. Like any other failed Litex statement, it stops later frames:
 subsequent `run` requests return `skipped`, and `artifacts` returns
 `artifacts_unavailable`. A `try:` nested inside another top-level statement does
-not make that outer statement recoverable.
+not make a parse failure in that outer statement recoverable.
 
 ### Repairing the next project file
 
@@ -306,16 +644,16 @@ failing.
    environment.
 2. After the `ready` event, send the top-level statements from `chap5.lit` in
    source order. Wrap every candidate frame in a literal outermost `try:`.
-3. A successful `try:` commits its definitions and facts to the persistent
-   Runtime. A failed `try:` discards only that candidate, so the chap1--chap4
-   prefix and all earlier successful chap5 frames remain available.
+3. A committed `try:` publishes its definitions and facts to the persistent
+   Runtime. A rolled-back `try:` discards only that candidate, so the chap1--chap4
+   prefix and all earlier committed chap5 frames remain available.
 4. Correct and resend only the failed fragment. If a proof remains blocked,
    keep its intended statement and use the narrowest explicit `trust` before
    continuing with the next statement.
 5. Write each accepted statement back to `chap5.lit`. When all fragments have
    been replayed, run release `-f chap5.lit` once as the clean file checkpoint.
 
-A failed `try:` never requires a restart. Restart from `-before chap5.lit` only
+A rolled-back `try:` never requires a restart. Restart from `-before chap5.lit` only
 if the process exits, a loaded predecessor changes, or an already committed
 definition must be replaced under the same name.
 
@@ -344,6 +682,9 @@ Runtime reuse.
 | `litex -factgraph -e <code> <json>` | Run a source string and save a fact-only verification dependency graph. |
 | `litex -factgraph -f <file> <json>` | Run a file and save a fact-only verification dependency graph. |
 | `litex -factgraph -r <repo> <json>` | Discover the repository module graph, run its ordered `[export]` table, and save a fact-only verification dependency graph. |
+| `litex -defgraph -e <code> <json>` | Run a source string and save an environment-backed definition dependency graph. |
+| `litex -defgraph -f <file> <json>` | Run a file and save an environment-backed definition dependency graph. |
+| `litex -defgraph -r <repo> <json>` | Discover the repository module graph, run its ordered `[export]` table, and save an environment-backed definition dependency graph. |
 
 The main graph is `litex-result-graph` version 2. It walks the recursive
 `StmtResult` value directly and creates nodes for statement, well-definedness,
@@ -365,6 +706,10 @@ compresses automatic inferred facts into their surrounding edges, so a reader
 can follow one long, concrete chain from assumptions or trusted boundaries to a
 theorem without mixing it with the definition graph.
 
+`-defgraph` inventories definitions from the final Runtime environment and
+records their dependency and provenance edges. Like the other graph commands,
+it prints JSON to stdout when the final output path is omitted.
+
 ## LaTeX Commands
 
 | Command | Behavior |
@@ -380,6 +725,20 @@ If no selector follows `-latex`, Litex starts the interactive LaTeX REPL.
 The LaTeX path is a compile/pretty-print path, not the same JSON proof trace as
 the verifier commands. If LaTeX compilation hits a Litex error, the CLI prints a
 JSON error object.
+
+## Python Commands
+
+| Command | Behavior |
+|---------|----------|
+| `litex -python -e <code>` | Verify a source string and emit Python for the extractor's supported definitions. |
+| `litex -python -f <file>` | Verify a file and emit Python for the extractor's supported definitions. |
+| `litex -python -r <repo>` | Verify a repository's ordered `[export]` table and emit Python for the extractor's supported definitions. |
+
+The Python extractor is a frozen experiment, not a general Litex-to-Python
+compiler. It currently emits supported numeric assignments and `algo`
+definitions, reports when no extractable definitions exist, and rejects known
+unsupported native-complex and number-theory forms instead of approximating
+them.
 
 ## Information Commands
 

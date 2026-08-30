@@ -7,12 +7,17 @@
 
 Created and maintained by Jiachen Shen.
 
-[Website](https://litexlang.com) · [Blueprint](docs/Litex_Blueprint.md) · [中文蓝图](docs/Litex中文蓝图.md) · [Manual](docs/Manual.md) · [Cheat Sheet](docs/cheatsheet.md) · [Install](docs/Setup.md) · [Examples](examples/README.md) · [Zulip](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/)
+[Website](https://litexlang.com) · [Blueprint](docs/Litex_Blueprint.md) · [中文蓝图](docs/Litex中文蓝图.md) · [Manual](docs/Manual.md) · [Cheat Sheet](docs/cheatsheet.md) · [Install](docs/cli.md#install-litex-locally) · [Examples](examples/README.md) · [Zulip](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/)
 
 **Litex is an experimental hobby project in beta. Expect rough edges.**
+
+**This README is a short version of the
+[Litex Blueprint](docs/Litex_Blueprint.md)
+([中文蓝图](docs/Litex中文蓝图.md)). For the complete design argument,
+detailed comparisons, and examples, read the full Blueprint.**
 </div>
 
-<!-- Blueprint spine: reasoning abundance → verification and understanding bottlenecks → the complexity tax on understanding → two participation barriers → human–AI verification loop → four design choices → definition and verification → ToLean/adapter handoff → ecosystem role → success criterion -->
+<!-- Blueprint spine: reasoning abundance → scientific object → design hypothesis → measurable costs → potential capacity impact → two participation barriers → human–AI verification loop → four design choices → definition and verification → ToLean/adapter handoff → ecosystem role → success criterion -->
 
 ## Why Litex?
 
@@ -20,6 +25,15 @@ AI is rapidly lowering the cost of producing arguments, proofs, and scientific
 hypotheses. But answers that *look right* are not automatically reliable
 knowledge. Candidate reasoning is outgrowing our ability to check it. This is
 **reasoning overflow and validation crisis**.
+
+Litex studies how checkable knowledge should be represented and constructed
+step by step. It tests whether facts as the basic unit, with immediate checking
+and local rollback as the interaction mechanism, can form a new design paradigm
+for formal languages. It further asks how this paradigm changes the cost for
+humans and AI to construct, understand, audit, repair, and reuse checkable
+knowledge. If supported, the hypothesis could lower the barrier to using formal
+languages and help rigorous verification capacity keep pace with the growth of
+candidate reasoning in the AI era.
 
 Correctness is only half of this crisis. Mathematics also pays a
 **complexity tax on understanding**. Long proofs, distant representations, and
@@ -29,8 +43,8 @@ reduce the latter.
 
 Terence Tao's [2026 ICM lecture](https://teorth.github.io/tao-web/slides/age-of-ai-icm-2026.pdf)
 shows how proof generation and verification can outpace exposition, digestion,
-and canonicalization. Litex tests a further hypothesis. Formal languages should
-scale rigorous verification and human understanding together.
+and canonicalization. This context motivates Litex's question but does not
+answer it; the representation-and-interaction hypothesis above is Litex's own.
 
 Formalization cannot remain a specialist-only practice. Domain experts should
 be able to express, check, repair, and review formal reasoning—including work
@@ -269,8 +283,8 @@ fields—and whether supported paths interoperate with existing formal systems.*
 ## Try Litex
 
 The fastest route is the [online playground](https://litexlang.com). For a
-local installation, see the [setup guide](docs/Setup.md). On macOS and Linux
-with Homebrew:
+local installation, see the [CLI guide](docs/cli.md#install-litex-locally). On
+macOS and Linux with Homebrew:
 
 ```bash
 brew install litexlang/tap/litex

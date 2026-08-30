@@ -2,16 +2,18 @@ use crate::prelude::*;
 
 impl Runtime {
     pub fn exec_try_stmt(&mut self, stmt: &TryStmt) -> Result<StmtResult, RuntimeError> {
-        let committed_results =
-            self.run_in_local_env_and_commit(|rt| rt.exec_try_proof_steps(stmt))?;
+        let execution = match self.run_in_local_env_and_commit(|rt| rt.exec_try_proof_steps(stmt)) {
+            Ok(proof_steps) => {
+                TryStmtExecutionResult::Committed(SuccessTryProofResult { proof_steps })
+            }
+            Err(error) => TryStmtExecutionResult::RolledBack(error),
+        };
 
         Ok(
             SuccessProofBlockStmtResult::TryStmt(Box::new(SuccessTryStmtResult {
                 statement: stmt.clone(),
                 common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
-                proof: Some(SuccessTryProofResult {
-                    proof_steps: committed_results,
-                }),
+                execution,
             }))
             .into(),
         )

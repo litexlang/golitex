@@ -972,15 +972,57 @@ impl StmtResultToLeanCompiler {
                 }
             }
             if !conclusion.infers.is_empty() {
-                compiled_inference_fact_proof_steps.extend(
-                    self.compile_typed_inference_results_in_current_compiler_environment(
-                        &conclusion.infers,
-                        &[(conclusion_fact_id, conclusion.fact.clone())],
-                        availability,
-                        &format!("{result_layer} application {application_index} conclusion"),
-                        force_replay_visible_conclusions,
-                    )?,
-                );
+                let direct_source_keys = conclusion
+                    .infers
+                    .rule_applications
+                    .iter()
+                    .filter(|application| {
+                        infer_rule_has_direct_compiler_environment_consumer(&application.rule)
+                    })
+                    .filter_map(|application| {
+                        application.premises.first().and_then(|premise| {
+                            premise
+                                .fact_id
+                                .map(|fact_id| (fact_id, premise.fact.to_string()))
+                        })
+                    })
+                    .collect::<HashSet<_>>();
+                let direct_infers = SuccessInferResult {
+                    store_fact_outputs: conclusion
+                        .infers
+                        .store_fact_outputs
+                        .iter()
+                        .filter(|output| {
+                            output.fact_id.is_some_and(|fact_id| {
+                                direct_source_keys.contains(&(
+                                    fact_id,
+                                    output.itself_and_why_itself_is_stored.0.to_string(),
+                                ))
+                            })
+                        })
+                        .cloned()
+                        .collect(),
+                    rule_applications: conclusion
+                        .infers
+                        .rule_applications
+                        .iter()
+                        .filter(|application| {
+                            infer_rule_has_direct_compiler_environment_consumer(&application.rule)
+                        })
+                        .cloned()
+                        .collect(),
+                };
+                if !direct_infers.rule_applications.is_empty() {
+                    compiled_inference_fact_proof_steps.extend(
+                        self.compile_typed_inference_results_in_current_compiler_environment(
+                            &direct_infers,
+                            &[(conclusion_fact_id, conclusion.fact.clone())],
+                            availability,
+                            &format!("{result_layer} application {application_index} conclusion"),
+                            force_replay_visible_conclusions,
+                        )?,
+                    );
+                }
                 let mut recursively_compiled = HashSet::new();
                 collect_supported_typed_infer_conclusions(
                     &conclusion.infers,

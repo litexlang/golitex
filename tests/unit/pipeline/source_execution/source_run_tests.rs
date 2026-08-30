@@ -1,6 +1,9 @@
-use super::{SourceRunFailureKind, SourceRunOutcome};
+use super::SourceRunOutcome;
 use crate::module_system::{FileId, ModuleId};
 use crate::pipeline::run_code;
+use crate::result::{
+    StmtResult, SuccessProofBlockStmtResult, SuccessStmtResult, TryStmtExecutionResult,
+};
 use crate::runtime::{RunOptions, Runtime};
 
 fn runtime_with_source_context(name: &str) -> Runtime {
@@ -33,15 +36,26 @@ fn structured_source_run_requires_an_active_source_context() {
 }
 
 #[test]
-fn structured_source_run_preserves_try_failure_classification() {
+fn structured_source_run_retains_rolled_back_try_as_a_successful_statement() {
     let mut runtime = runtime_with_source_context("structured-source-try.lit");
 
-    let (outcome, failure_kind) = runtime
-        .execute_source_classified("try:\n    1 = 0\n")
-        .into_parts();
+    let outcome = runtime.execute_source("try:\n    1 = 0\n");
 
-    assert!(outcome.runtime_error.is_some());
-    assert_eq!(failure_kind, Some(SourceRunFailureKind::TryStmt));
+    assert!(
+        outcome.runtime_error.is_none(),
+        "{:?}",
+        outcome.runtime_error
+    );
+    let [StmtResult::Success(SuccessStmtResult::ProofBlock(SuccessProofBlockStmtResult::TryStmt(
+        result,
+    )))] = outcome.stmt_results.as_slice()
+    else {
+        panic!("expected one successful try statement result")
+    };
+    assert!(matches!(
+        result.execution,
+        TryStmtExecutionResult::RolledBack(_)
+    ));
 }
 
 #[test]

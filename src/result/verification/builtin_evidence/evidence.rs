@@ -53,6 +53,7 @@ pub enum BuiltinRuleEvidence {
     /// `Z` belongs to the exact `Z` carrier.
     IntegerRangeSumMembership,
     NaturalMembershipClosure(NaturalMembershipClosureBuiltinRule),
+    PositiveNaturalMembershipClosure(PositiveNaturalMembershipClosureBuiltinRule),
     RationalMembershipClosure(RationalMembershipClosureBuiltinRule),
     ComplexArithmeticMembershipClosure(ComplexArithmeticMembershipClosureBuiltinRule),
     RealArithmeticMembershipClosure(RealArithmeticMembershipClosureBuiltinRule),
@@ -137,6 +138,7 @@ impl BuiltinRuleEvidence {
             Self::IntegerMembershipClosure(rule) => rule.rule_id(),
             Self::IntegerRangeSumMembership => "aggregate.integer_range_sum_membership",
             Self::NaturalMembershipClosure(rule) => rule.rule_id(),
+            Self::PositiveNaturalMembershipClosure(rule) => rule.rule_id(),
             Self::RationalMembershipClosure(rule) => rule.rule_id(),
             Self::ComplexArithmeticMembershipClosure(rule) => rule.rule_id(),
             Self::RealArithmeticMembershipClosure(rule) => rule.rule_id(),
@@ -300,6 +302,10 @@ impl fmt::Debug for BuiltinRuleEvidence {
             }
             BuiltinRuleEvidence::NaturalMembershipClosure(rule) => f
                 .debug_tuple("NaturalMembershipClosure")
+                .field(rule)
+                .finish(),
+            BuiltinRuleEvidence::PositiveNaturalMembershipClosure(rule) => f
+                .debug_tuple("PositiveNaturalMembershipClosure")
                 .field(rule)
                 .finish(),
             BuiltinRuleEvidence::RationalMembershipClosure(rule) => f
