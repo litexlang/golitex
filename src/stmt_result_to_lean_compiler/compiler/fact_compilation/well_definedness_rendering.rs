@@ -11,6 +11,28 @@ impl StmtResultToLeanCompiler {
         &mut self,
         result: &SuccessFactStmtResult,
     ) -> Result<Option<CompiledFactProofBody>, String> {
+        if let SuccessFactProofResult::StoredFactCitation(citation) = result.proof() {
+            let fact = result.fact();
+            if fact.to_string() == citation.source_fact.to_string() {
+                if let Some(proposition) = self
+                    .environment_stack
+                    .fact_lean_propositions
+                    .get(&citation.source_fact_id)
+                    .cloned()
+                {
+                    let proof_expression = resolve_fact_citation(
+                        &citation.source_fact_id,
+                        &fact,
+                        &self.environment_stack,
+                    )?;
+                    return Ok(Some(CompiledFactProofBody {
+                        fact,
+                        proposition,
+                        proof_expression,
+                    }));
+                }
+            }
+        }
         let child_certificate = result
             .well_definedness
             .recursive

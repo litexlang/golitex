@@ -1438,6 +1438,17 @@ pub(super) fn natural_membership_closure_rule_name(
     }
 }
 
+pub(super) fn positive_natural_membership_closure_rule_name(
+    rule: PositiveNaturalMembershipClosureBuiltinRule,
+) -> &'static str {
+    match rule {
+        PositiveNaturalMembershipClosureBuiltinRule::AddBothPositive => "AddBothPositive",
+        PositiveNaturalMembershipClosureBuiltinRule::AddLeftPositive => "AddLeftPositive",
+        PositiveNaturalMembershipClosureBuiltinRule::AddRightPositive => "AddRightPositive",
+        PositiveNaturalMembershipClosureBuiltinRule::MulBothPositive => "MulBothPositive",
+    }
+}
+
 pub(super) fn rational_membership_closure_rule_name(
     rule: RationalMembershipClosureBuiltinRule,
 ) -> &'static str {

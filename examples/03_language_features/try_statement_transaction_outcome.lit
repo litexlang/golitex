@@ -1,0 +1,21 @@
+# Tracer: parsed try statements always return a successful transaction result.
+#
+# Before (returned a source-level RuntimeError):
+# try:
+#     have candidate R = 1
+#     1 = 0
+# Former behavior: the runner returned `ok: false`; session needed a special
+# `TryStmt` failure classification to continue after the rollback.
+#
+# Now (successful statement with an explicit RolledBack result):
+try:
+    have candidate R = 1
+    1 = 0
+
+# Reusing the name proves the failed transaction did not leak its definition.
+have candidate R = 2
+candidate = 2
+
+# Boundary: malformed source that cannot be parsed into a TryStmt remains a
+# source error. Ordinary non-try execution errors also remain source errors.
+# Evidence: target/release/litex -compact -isolated -runner -f examples/03_language_features/try_statement_transaction_outcome.lit

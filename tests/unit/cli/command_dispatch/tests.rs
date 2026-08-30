@@ -228,4 +228,5 @@ fn upgrade_message_mentions_version_and_release_page() {
     let message = upgrade_message("test-version");
     assert!(message.contains("Litex version test-version"));
     assert!(message.contains("https://github.com/litexlang/golitex/releases/latest"));
+    assert!(message.contains("https://litexlang.com/doc/cli#install-litex-locally"));
 }

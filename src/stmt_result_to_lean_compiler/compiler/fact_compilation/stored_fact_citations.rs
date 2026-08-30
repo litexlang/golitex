@@ -100,6 +100,9 @@ impl StmtResultToLeanCompiler {
         self.environment_stack
             .fact_propositions
             .insert(fact_id, source_fact);
+        self.environment_stack
+            .fact_lean_propositions
+            .insert(fact_id, proposition);
         self.next_fact_name_index += 1;
         Ok(())
     }

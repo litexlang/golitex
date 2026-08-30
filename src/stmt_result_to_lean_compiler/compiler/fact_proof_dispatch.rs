@@ -231,6 +231,15 @@ impl StmtResultToLeanCompiler {
                         &builtin.subgoals,
                     );
                 }
+                if let Some(BuiltinRuleEvidence::PositiveNaturalMembershipClosure(rule)) =
+                    builtin.evidence.typed()
+                {
+                    return self.construct_lean_positive_natural_membership_closure_from_result(
+                        &source_fact,
+                        *rule,
+                        &builtin.subgoals,
+                    );
+                }
                 if let Some(BuiltinRuleEvidence::RationalMembershipClosure(rule)) =
                     builtin.evidence.typed()
                 {

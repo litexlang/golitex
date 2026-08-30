@@ -2391,8 +2391,8 @@ basics
 This manifest is invalid because a `submodule` cannot declare imports.
 
 Project execution, persistent sessions, output modes, and graph commands are
-CLI contracts rather than language syntax. See the [CLI reference](cli.md) for the current command set
-and [Setup](Setup.md) for installation and project-running examples.
+CLI contracts rather than language syntax. See the [CLI reference](cli.md) for
+installation, project-running examples, and the current command set.
 
 ### Utility statements
 
@@ -2435,7 +2435,7 @@ introductions.
 | `claim` | One target is proved in a lexical child scope. | Only the target; helper statements do not escape. |
 | `example` | One target is proved in a lexical child scope. | Nothing; the target and helper statements do not escape. |
 | `sketch` | Every contained statement checks. | Nothing outside the block. |
-| `try` | The whole block succeeds transactionally. | All block effects on success; none on failure. |
+| `try` | The statement always succeeds after parsing; its isolated body either commits or rolls back with a retained diagnostic. | All block effects when committed; none when rolled back. |
 | `thm`, `axiom` | `thm` proves its target; `axiom` checks its interface but trusts truth. | A named reusable theorem interface; universal facts also enter ordinary matching. |
 | `release thm` | Arity/domains/premises; the form is bare and has no goal/proof body. | All instantiated conclusions and their ordinary inferred consequences. |
 | `by thm ... => fact` | Arity/domains/premises and one selected atomic target. | Only the requested atomic selection and its ordinary inferred consequences. |

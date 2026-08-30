@@ -8,7 +8,7 @@ Chinese version: https://litexlang.com/doc/Litex中文蓝图
 
 > **Litex is an experimental hobby project and remains in beta. Expect edge cases.**
 
-<!-- Blueprint spine: reasoning abundance → verification and understanding bottlenecks → the complexity tax on understanding → two participation barriers → the human–AI verification loop → four language choices → definition and verification → ToLean/adapter handoff → ecosystem role → success criterion -->
+<!-- Blueprint spine: reasoning abundance → scientific object → design hypothesis → measurable costs → potential capacity impact → verification and understanding bottlenecks → two participation barriers → the human–AI verification loop → four language choices → definition and verification → ToLean/adapter handoff → ecosystem role → success criterion -->
 
 ## Table of Contents
 
@@ -31,11 +31,13 @@ Chinese version: https://litexlang.com/doc/Litex中文蓝图
 
 AI is rapidly lowering the cost of reasoning, proof, and scientific exploration. Humans and AI can now propose many arguments and conjectures quickly. But answers that *look right* are not reliable knowledge. Candidate conclusions are growing faster than we can check them. This is **reasoning overflow and validation crisis**.
 
+Litex studies how checkable knowledge should be represented and constructed step by step. It tests whether facts as the basic unit, with immediate checking and local rollback as the interaction mechanism, can form a new design paradigm for formal languages; it further measures how this paradigm affects the cost for humans and AI to construct, understand, audit, repair, and reuse checkable knowledge. If supported, the hypothesis could lower the barrier to using formal languages and help rigorous verification capacity keep pace with the growth of candidate reasoning in the AI era.
+
 Correctness is only half of the crisis. A proof can be correct but hard to read, explain, connect, or reuse. Mathematicians and formal-language communities talk about complexity every day: long proofs, distant representations, steep tools, and hard-to-digest results. Yet they rarely ask why understanding bears this cost—or how to reduce it. This is the **complexity tax on understanding**.
 
 Not all complexity can disappear. Some belongs to the mathematics. Some is added by representations, evidence plumbing, and interaction. With abundant AI-generated reasoning, the distinction matters twice: can the result be verified, and can humans understand, digest, and reuse it?
 
-Terence Tao's [2026 ICM public lecture](https://teorth.github.io/tao-web/slides/age-of-ai-icm-2026.pdf) and [companion essay](https://arxiv.org/abs/2608.16753) show the same bottleneck. Generation and verification can outpace exposition, digestion, community acceptance, and canonicalization. Litex proposes its own hypothesis: a formal language should scale rigor and understanding together. That proposal is not Tao's claim.
+Terence Tao's [2026 ICM public lecture](https://teorth.github.io/tao-web/slides/age-of-ai-icm-2026.pdf) and [companion essay](https://arxiv.org/abs/2608.16753) show the same bottleneck. Generation and verification can outpace exposition, digestion, community acceptance, and canonicalization. This context motivates Litex's question but does not answer it; the representation-and-interaction hypothesis above is Litex's own.
 
 Education, science, engineering, and AI review all need formalization. Turning AI's creativity into trustworthy knowledge requires wider participation.
 

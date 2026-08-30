@@ -5,6 +5,7 @@ use crate::result::{
     SuccessDefStructStmtResult, SuccessDefinitionStmtResult, SuccessEvalStmtExecutionResult,
     SuccessEvalStmtResult, SuccessExampleStmtResult, SuccessProofBlockStmtResult,
     SuccessSketchStmtResult, SuccessStmtCommonResult, SuccessStmtResult, SuccessTryStmtResult,
+    TryStmtExecutionResult,
 };
 use crate::runtime::{ExecutionMode, Runtime};
 use crate::statement::{
@@ -182,7 +183,7 @@ impl Runtime {
                 SuccessProofBlockStmtResult::TryStmt(Box::new(SuccessTryStmtResult {
                     statement: s.clone(),
                     common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
-                    proof: None,
+                    execution: TryStmtExecutionResult::SkippedByTrustedExecution,
                 }))
                 .into(),
             ),

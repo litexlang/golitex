@@ -335,6 +335,10 @@ impl StmtResultJsonV2 {
                 "NaturalMembershipClosure",
                 natural_membership_closure_rule_name(*rule),
             ),
+            BuiltinRuleEvidence::PositiveNaturalMembershipClosure(rule) => rule_evidence_value(
+                "PositiveNaturalMembershipClosure",
+                positive_natural_membership_closure_rule_name(*rule),
+            ),
             BuiltinRuleEvidence::RationalMembershipClosure(rule) => rule_evidence_value(
                 "RationalMembershipClosure",
                 rational_membership_closure_rule_name(*rule),

@@ -20,13 +20,17 @@ pub(super) fn upgrade_message(version: &str) -> String {
         result.push_str("  sudo dpkg -i litex_<tag>_amd64.deb\n\n");
     } else if cfg!(target_os = "windows") {
         result.push_str("Windows release zip install:\n");
-        result.push_str("  Rerun the PowerShell install command from docs/Setup.md.\n\n");
+        result.push_str(
+            "  Rerun the PowerShell install command from docs/cli.md#install-litex-locally.\n\n",
+        );
     } else {
         result.push_str("Open the latest GitHub Release and install the package for your OS.\n\n");
     }
 
     result.push_str("Release page: https://github.com/litexlang/golitex/releases/latest\n");
-    result.push_str("Full setup notes: https://litexlang.com/doc/Setup");
+    result.push_str(
+        "Installation and CLI guide: https://litexlang.com/doc/cli#install-litex-locally",
+    );
     result
 }
 

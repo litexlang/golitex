@@ -403,7 +403,7 @@ fn session_run_frames_do_not_dispatch_terminal_import_commands() {
 }
 
 #[test]
-fn session_continues_after_failed_try_parse() {
+fn session_stops_when_try_source_never_forms_an_ast() {
     let input = format!(
         "{}{}artifacts final\nclose\n",
         run_frame(
@@ -415,13 +415,12 @@ fn session_continues_after_failed_try_parse() {
     let output = run_isolated_session("failed-try-parse", input);
 
     assert!(output.contains("\"id\":\"failed_try\",\"ok\":false"));
-    assert!(output.contains("\"id\":\"next\",\"ok\":true"));
-    assert!(output.contains("\"event\":\"artifacts\",\"id\":\"final\""));
-    assert!(!output.contains("\"event\":\"skipped\""));
+    assert!(output.contains("\"event\":\"skipped\",\"id\":\"next\""));
+    assert!(output.contains("\"event\":\"artifacts_unavailable\",\"id\":\"final\""));
 }
 
 #[test]
-fn session_continues_after_failed_try_block_tokenization() {
+fn session_stops_when_try_source_cannot_be_tokenized() {
     let input = format!(
         "{}{}close\n",
         run_frame(
@@ -433,12 +432,11 @@ fn session_continues_after_failed_try_block_tokenization() {
     let output = run_isolated_session("failed-try-block-tokenization", input);
 
     assert!(output.contains("\"id\":\"failed_try\",\"ok\":false"));
-    assert!(output.contains("\"id\":\"next\",\"ok\":true"));
-    assert!(!output.contains("\"event\":\"skipped\""));
+    assert!(output.contains("\"event\":\"skipped\",\"id\":\"next\""));
 }
 
 #[test]
-fn session_continues_after_failed_try_execution() {
+fn session_continues_after_a_try_rolls_back() {
     let input = format!(
         "{}{}artifacts final\nclose\n",
         run_frame("failed_try", "try:\n    1 = 0\n"),
@@ -446,7 +444,8 @@ fn session_continues_after_failed_try_execution() {
     );
     let output = run_isolated_session("failed-try-execution", input);
 
-    assert!(output.contains("\"id\":\"failed_try\",\"ok\":false"));
+    assert!(output.contains("\"id\":\"failed_try\",\"ok\":true"));
+    assert!(output.contains("\\\"kind\\\": \\\"RolledBack\\\""));
     assert!(output.contains("\"id\":\"next\",\"ok\":true"));
     assert!(output.contains("\"event\":\"artifacts\",\"id\":\"final\""));
     assert!(!output.contains("\"event\":\"skipped\""));
@@ -485,8 +484,8 @@ fn nested_try_does_not_make_outer_statement_recoverable() {
 }
 
 #[test]
-fn error_output_session_failed_try_is_detailed_in_every_style() {
-    let mut failed_events = Vec::new();
+fn rolled_back_try_output_is_detailed_in_every_style() {
+    let mut rollback_events = Vec::new();
     for output_style in [
         OutputStyle::Compact,
         OutputStyle::Normal,
@@ -503,23 +502,24 @@ fn error_output_session_failed_try_is_detailed_in_every_style() {
             output_style,
         );
 
-        let failed_event = output
+        let rollback_event = output
             .lines()
             .find(|line| line.contains("\"id\":\"failed_try\""))
-            .expect("session should emit the failed try event")
+            .expect("session should emit the rolled-back try event")
             .to_string();
-        assert!(failed_event.contains("\"ok\":false"));
-        assert!(failed_event.contains("\\\"phases\\\": {"));
-        assert!(failed_event.contains("\\\"previous_error\\\":"));
-        assert!(failed_event.contains("\\\"failed_goal\\\": \\\"1 = 0\\\""));
-        assert!(failed_event.contains("\\\"unknown_result\\\": {"));
+        assert!(rollback_event.contains("\"ok\":true"));
+        assert!(rollback_event.contains("\\\"kind\\\": \\\"RolledBack\\\""));
+        assert!(rollback_event.contains("\\\"phases\\\": {"));
+        assert!(rollback_event.contains("\\\"previous_error\\\":"));
+        assert!(rollback_event.contains("\\\"failed_goal\\\": \\\"1 = 0\\\""));
+        assert!(rollback_event.contains("\\\"unknown_result\\\":"));
         assert!(output.contains("\"id\":\"next\",\"ok\":true"));
         assert!(!output.contains("\"event\":\"skipped\""));
-        failed_events.push(failed_event);
+        rollback_events.push(rollback_event);
     }
 
-    assert_eq!(failed_events[0], failed_events[1]);
-    assert_eq!(failed_events[1], failed_events[2]);
+    assert_eq!(rollback_events[0], rollback_events[1]);
+    assert_eq!(rollback_events[1], rollback_events[2]);
 }
 
 fn run_isolated_session_with_style(name: &str, input: String, output_style: OutputStyle) -> String {

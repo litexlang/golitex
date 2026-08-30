@@ -282,7 +282,7 @@ pub(in super::super) fn render_fact_proof_across_exact_predicate_arguments(
         }
         let source_original = render_obj(source_argument, source_context)?;
         let target_original = render_obj(target_argument, target_context)?;
-        if source_original != target_original {
+        if obj_equality_key(source_argument) != obj_equality_key(target_argument) {
             return Err(format!(
                 "predicate `{predicate_name}` exact parameter {index} changed its Litex argument from `{source_original}` to `{target_original}`"
             ));
@@ -333,9 +333,11 @@ pub(in super::super) fn render_fact_proof_across_exact_predicate_arguments(
         let selector =
             conjunction_selector(binding.requirement_count + clause_index, component_count)?;
         let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = clause else {
-            return Err(
-                "exact predicate transport currently supports equality definition clauses".into(),
-            );
+            return Err(format!(
+                "exact predicate transport does not yet support definition clause `{}` changing to `{}`",
+                render_fact(clause, &current)?,
+                render_fact(clause, &final_context)?,
+            ));
         };
         let mut proof = format!("__source{selector}");
         let mut clause_context = current.clone();

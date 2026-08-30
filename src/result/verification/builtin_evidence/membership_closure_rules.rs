@@ -43,6 +43,29 @@ impl NaturalMembershipClosureBuiltinRule {
     }
 }
 
+/// Stable identities for closure of the positive-natural carrier. Addition
+/// stays positive when either ordered operand is positive and the other is a
+/// natural; multiplication requires both ordered operands to be positive.
+/// The enclosing result retains those membership premises in source order.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum PositiveNaturalMembershipClosureBuiltinRule {
+    AddBothPositive,
+    AddLeftPositive,
+    AddRightPositive,
+    MulBothPositive,
+}
+
+impl PositiveNaturalMembershipClosureBuiltinRule {
+    pub fn rule_id(self) -> &'static str {
+        match self {
+            Self::AddBothPositive => "numeric.positive_natural.add_both_positive_membership",
+            Self::AddLeftPositive => "numeric.positive_natural.add_left_positive_membership",
+            Self::AddRightPositive => "numeric.positive_natural.add_right_positive_membership",
+            Self::MulBothPositive => "numeric.positive_natural.mul_membership",
+        }
+    }
+}
+
 /// Stable identities for closure of the rational carrier under binary
 /// arithmetic. The enclosing result contains the checked left- and
 /// right-operand memberships in that exact order.

@@ -84,6 +84,9 @@ impl StmtResultToLeanCompiler {
         self.environment_stack
             .fact_propositions
             .insert(fact_id, source_fact.clone());
+        self.environment_stack
+            .fact_lean_propositions
+            .insert(fact_id, proposition.clone());
         let mut lines = vec![format!(
             "have {name} : {proposition} := by\n  exact {proof}"
         )];

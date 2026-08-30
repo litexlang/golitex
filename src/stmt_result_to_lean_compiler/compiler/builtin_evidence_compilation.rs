@@ -951,6 +951,101 @@ impl StmtResultToLeanCompiler {
         )))
     }
 
+    /// `Combine`: positive-natural closure retains two ordered membership
+    /// Results. The typed rule fixes whether each operand is checked in `N+`
+    /// or `N`, so the compiler never guesses a positivity source.
+    pub(super) fn construct_lean_positive_natural_membership_closure_from_result(
+        &mut self,
+        target: &Fact,
+        rule: PositiveNaturalMembershipClosureBuiltinRule,
+        subgoals: &[StmtResult],
+    ) -> Result<Option<String>, String> {
+        let (target_element, target_set) = membership_parts(target)?;
+        if !matches!(target_set, Obj::StandardSet(StandardSet::NPos)) {
+            return Err("positive-natural arithmetic membership target is not N+".into());
+        }
+        let (left, right, expected_sets, theorem) = match (rule, target_element) {
+            (PositiveNaturalMembershipClosureBuiltinRule::AddBothPositive, Obj::Add(operation)) => {
+                (
+                    operation.left.as_ref(),
+                    operation.right.as_ref(),
+                    [StandardSet::NPos, StandardSet::NPos],
+                    "complexAddInNPosOfBothPositive",
+                )
+            }
+            (PositiveNaturalMembershipClosureBuiltinRule::AddLeftPositive, Obj::Add(operation)) => {
+                (
+                    operation.left.as_ref(),
+                    operation.right.as_ref(),
+                    [StandardSet::NPos, StandardSet::N],
+                    "complexAddInNPosOfLeftPositive",
+                )
+            }
+            (
+                PositiveNaturalMembershipClosureBuiltinRule::AddRightPositive,
+                Obj::Add(operation),
+            ) => (
+                operation.left.as_ref(),
+                operation.right.as_ref(),
+                [StandardSet::N, StandardSet::NPos],
+                "complexAddInNPosOfRightPositive",
+            ),
+            (PositiveNaturalMembershipClosureBuiltinRule::MulBothPositive, Obj::Mul(operation)) => {
+                (
+                    operation.left.as_ref(),
+                    operation.right.as_ref(),
+                    [StandardSet::NPos, StandardSet::NPos],
+                    "complexMulInNPos",
+                )
+            }
+            _ => {
+                return Err(
+                    "positive-natural arithmetic membership changed its target operator".into(),
+                );
+            }
+        };
+        let [left_result, right_result] = subgoals else {
+            return Err("positive-natural closure requires two ordered child Results".into());
+        };
+        let mut proofs = Vec::with_capacity(2);
+        for (index, ((child, expected_element), expected_set)) in [left_result, right_result]
+            .into_iter()
+            .zip([left, right])
+            .zip(expected_sets)
+            .enumerate()
+        {
+            let child = child
+                .factual_success()
+                .ok_or_else(|| format!("positive-natural closure child {index} is not factual"))?;
+            if !child.store.infers.is_empty() {
+                return Err(format!(
+                    "positive-natural closure child {index} published effects"
+                ));
+            }
+            let child_fact = child.fact();
+            let (element, set) = membership_parts(&child_fact)?;
+            if !matches!(set, Obj::StandardSet(actual) if *actual == expected_set)
+                || obj_equality_key(element) != obj_equality_key(expected_element)
+            {
+                return Err(format!(
+                    "positive-natural closure child {index} changed its ordered operand or carrier"
+                ));
+            }
+            let Some(proof) = self.construct_lean_proof_from_direct_fact_result(child)? else {
+                return Ok(None);
+            };
+            proofs.push(render_numeric_operand_membership(
+                expected_element,
+                &proof,
+                &self.environment_stack,
+            ));
+        }
+        Ok(Some(format!(
+            "Litex.Rules.{theorem} ({}) ({})",
+            proofs[0], proofs[1]
+        )))
+    }
+
     /// `Wrap`: rational closure shares the conjunction-child shape with the
     /// integer carrier. Integer power additionally switches to the exact
     /// `ℚ`/`ℤ` representatives selected in the active compiler environment.
@@ -1190,7 +1285,12 @@ impl StmtResultToLeanCompiler {
             }
             _ => return Ok(None),
         };
-        if subgoals.len() != expected_child_count {
+        let child_count_is_valid = if rule == ArithmeticBuiltinRule::AddRightNonnegativeLessEqual {
+            matches!(subgoals.len(), 1 | 2)
+        } else {
+            subgoals.len() == expected_child_count
+        };
+        if !child_count_is_valid {
             return Err(format!(
                 "arithmetic rule {rule:?} changed its ordered child arity"
             ));
@@ -1499,8 +1599,12 @@ impl StmtResultToLeanCompiler {
         }
 
         if rule == ArithmeticBuiltinRule::AddRightNonnegativeLessEqual {
-            let [premise] = children.as_slice() else {
-                unreachable!("right-nonnegative addition retained one child")
+            let (reflexive, premise) = match children.as_slice() {
+                [premise] => (None, premise),
+                [reflexive, premise] => (Some(reflexive), premise),
+                _ => unreachable!(
+                    "right-nonnegative addition retained one premise and optional reflexivity"
+                ),
             };
             let (target_left, target_right, target_strict) = order_relation_parts(target)?;
             let Obj::Add(sum) = target_right else {
@@ -1514,6 +1618,19 @@ impl StmtResultToLeanCompiler {
                 } else {
                     return Err("right-nonnegative addition changed its common addend".into());
                 };
+            if let Some(reflexive) = reflexive {
+                let (reflexive_left, reflexive_right, reflexive_strict) =
+                    order_relation_parts(&reflexive.fact)?;
+                if reflexive_strict
+                    || obj_equality_key(reflexive_left) != obj_equality_key(target_left)
+                    || obj_equality_key(reflexive_right) != obj_equality_key(target_left)
+                {
+                    return Err(
+                        "right-nonnegative addition changed its retained reflexivity premise"
+                            .into(),
+                    );
+                }
+            }
             let (zero, premise_addend, premise_strict) = order_relation_parts(&premise.fact)?;
             if target_strict
                 || premise_strict

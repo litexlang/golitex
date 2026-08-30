@@ -1,6 +1,16 @@
 use super::*;
 use crate::test_support::execute_source;
 
+fn try_execution(stmt_results: &[StmtResult]) -> &TryStmtExecutionResult {
+    let [StmtResult::Success(SuccessStmtResult::ProofBlock(SuccessProofBlockStmtResult::TryStmt(
+        result,
+    )))] = stmt_results
+    else {
+        panic!("expected one successful try statement result")
+    };
+    &result.execution
+}
+
 #[test]
 fn example_stmt_is_checked_and_does_not_export_its_goal() {
     let source_code = r#"
@@ -120,6 +130,11 @@ x = 1
             run_output
         );
         assert!(
+            run_output.contains("\"kind\": \"Committed\""),
+            "try should report its committed transaction:\n{}",
+            run_output
+        );
+        assert!(
             run_output.contains("try:\\n"),
             "try output should use the canonical `try:` spelling:\n{}",
             run_output
@@ -184,8 +199,8 @@ try:
 }
 
 #[test]
-fn try_stmt_unknown_is_reported_and_local() {
-    run_with_large_stack("try_stmt_unknown_is_reported_and_local", || {
+fn try_stmt_unknown_rolls_back_and_returns_success() {
+    run_with_large_stack("try_stmt_unknown_rolls_back_and_returns_success", || {
         let source_code = r#"
 try:
     trust:
@@ -194,18 +209,23 @@ try:
 "#;
 
         let mut runtime = Runtime::default();
-        runtime.start_isolated_source("try_stmt_unknown_is_reported_and_local");
+        runtime.start_isolated_source("try_stmt_unknown_rolls_back_and_returns_success");
         let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_output(&runtime, &stmt_results, &runtime_error);
 
         assert!(
-            !run_succeeded,
-            "unknown try body should fail:\n{}",
+            run_succeeded,
+            "unknown try body should return a successful rolled-back try result:\n{}",
             run_output
         );
+        assert!(matches!(
+            try_execution(&stmt_results),
+            TryStmtExecutionResult::RolledBack(_)
+        ));
         assert!(
-            run_output.contains("UnknownError") || run_output.contains("try failed"),
+            run_output.contains("\"kind\": \"RolledBack\"")
+                && (run_output.contains("UnknownError") || run_output.contains("try failed")),
             "try should report the unknown inner step:\n{}",
             run_output
         );
@@ -222,34 +242,39 @@ try:
 }
 
 #[test]
-fn try_stmt_error_is_reported_and_local() {
-    run_with_large_stack("try_stmt_error_is_reported_and_local", || {
+fn try_stmt_error_rolls_back_and_returns_success() {
+    run_with_large_stack("try_stmt_error_rolls_back_and_returns_success", || {
         let source_code = r#"
 try:
-    have a R
-    have a R
+    have a R = 1
+    1 / 0 = 0
 "#;
 
         let mut runtime = Runtime::default();
-        runtime.start_isolated_source("try_stmt_error_is_reported_and_local");
+        runtime.start_isolated_source("try_stmt_error_rolls_back_and_returns_success");
         let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_output(&runtime, &stmt_results, &runtime_error);
 
         assert!(
-            !run_succeeded,
-            "error try body should fail:\n{}",
+            run_succeeded,
+            "error try body should return a successful rolled-back try result:\n{}",
             run_output
         );
+        assert!(matches!(
+            try_execution(&stmt_results),
+            TryStmtExecutionResult::RolledBack(_)
+        ));
         assert!(
-            run_output.contains("try:")
-                || run_output.contains("have a R")
-                || run_output.contains("name `a` is already active"),
+            run_output.contains("ArithmeticError")
+                || run_output.contains("1 / 0 = 0")
+                || run_output.contains("division"),
             "try should report the failing inner statement:\n{}",
             run_output
         );
 
-        let (stmt_results_after, runtime_error_after) = execute_source("have a R", &mut runtime);
+        let (stmt_results_after, runtime_error_after) =
+            execute_source("have a R = 2", &mut runtime);
         let (run_succeeded_after, run_output_after) =
             render_run_output(&runtime, &stmt_results_after, &runtime_error_after);
         assert!(
@@ -258,6 +283,17 @@ try:
             run_output_after
         );
     });
+}
+
+#[test]
+fn rolled_back_try_compiles_as_a_no_effect_statement() {
+    let lean_source = crate::stmt_result_to_lean_compiler::compile_litex_source_to_lean_source(
+        "try:\n    1 = 0\n1 = 1\n",
+        "rolled_back_try_to_lean.lit",
+    )
+    .expect("a rolled-back try should not block compilation of later statements");
+
+    assert!(!lean_source.contains("1 = 0"), "{lean_source}");
 }
 
 #[test]

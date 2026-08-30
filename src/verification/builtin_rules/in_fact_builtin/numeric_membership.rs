@@ -756,7 +756,9 @@ impl Runtime {
                     SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         in_fact.clone().into(),
                         "N+: a + b from a in N+ and b in N+".to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactAddInNPosFromNPosAndN01),
+                        BuiltinRuleEvidence::PositiveNaturalMembershipClosure(
+                            PositiveNaturalMembershipClosureBuiltinRule::AddBothPositive,
+                        ),
                         vec![r_left_n_pos_for_pair, r_right_n_pos_for_pair],
                     )
                     .into(),
@@ -774,7 +776,9 @@ impl Runtime {
                     SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         in_fact.clone().into(),
                         "N+: a + b from a in N+ and b in N".to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactAddInNPosFromNPosAndN02),
+                        BuiltinRuleEvidence::PositiveNaturalMembershipClosure(
+                            PositiveNaturalMembershipClosureBuiltinRule::AddLeftPositive,
+                        ),
                         vec![r_left_n_pos, r_right_n],
                     )
                     .into(),
@@ -790,8 +794,8 @@ impl Runtime {
                 SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "N+: a + b from a in N and b in N+".to_string(),
-                    BuiltinRuleEvidence::Uncatalogued(
-                        UncataloguedBuiltinRule::VerifyInFactAddInNPosFromNPosAndN03,
+                    BuiltinRuleEvidence::PositiveNaturalMembershipClosure(
+                        PositiveNaturalMembershipClosureBuiltinRule::AddRightPositive,
                     ),
                     vec![r_left_n, r_right_n_pos],
                 )
@@ -865,8 +869,8 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 "N+: a * b from a in N+ and b in N+".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(
-                    UncataloguedBuiltinRule::VerifyInFactMulInNPosFromFactorsInNPos,
+                BuiltinRuleEvidence::PositiveNaturalMembershipClosure(
+                    PositiveNaturalMembershipClosureBuiltinRule::MulBothPositive,
                 ),
                 vec![r_left, r_right],
             )

@@ -1062,10 +1062,11 @@ impl SuccessProofBlockStmtResult {
                 .proof
                 .map(|proof| proof.proof_steps)
                 .unwrap_or_default(),
-            Self::TryStmt(result) => result
-                .proof
-                .map(|proof| proof.proof_steps)
-                .unwrap_or_default(),
+            Self::TryStmt(result) => match result.execution {
+                TryStmtExecutionResult::Committed(proof) => proof.proof_steps,
+                TryStmtExecutionResult::RolledBack(_)
+                | TryStmtExecutionResult::SkippedByTrustedExecution => vec![],
+            },
         }
     }
 
@@ -1089,7 +1090,7 @@ impl SuccessProofBlockStmtResult {
                 }
             }
             Self::TryStmt(result) => {
-                if let Some(proof) = &result.proof {
+                if let TryStmtExecutionResult::Committed(proof) = &result.execution {
                     for step in &proof.proof_steps {
                         visitor(step);
                     }
@@ -1121,7 +1122,7 @@ impl SuccessProofBlockStmtResult {
                 }
             }
             Self::TryStmt(result) => {
-                if let Some(proof) = &mut result.proof {
+                if let TryStmtExecutionResult::Committed(proof) = &mut result.execution {
                     for step in &mut proof.proof_steps {
                         visitor(step)?;
                     }

@@ -6,7 +6,10 @@ pub(in super::super) fn object_is_symbol(object: &Obj, symbol_id: SymbolId) -> b
     matches!(object, Obj::Atom(atom) if atom.symbol_ref().is_some_and(|symbol| symbol.id() == symbol_id))
 }
 
-fn cached_exact_membership_selection_proof<'a>(exact: &'a str, source: &str) -> Option<&'a str> {
+pub(in super::super) fn cached_exact_membership_selection_proof<'a>(
+    exact: &'a str,
+    source: &str,
+) -> Option<&'a str> {
     // `exact_carrier_values` is populated only from compiler-rendered checked
     // membership selections.  Preserve the proof carried by that cached term
     // when an instantiated body alpha-refreshes the source SymbolId.
@@ -128,6 +131,30 @@ pub(in super::super) fn render_exact_predicate_argument(
     {
         if let Some(value) = context.exact_carrier_values.get(&symbol_id) {
             return Ok(value.clone());
+        }
+        // Definition and existential instantiation may alpha-refresh the
+        // SymbolId of a retained parameter. Recover only a unique cached
+        // representative that names the same visible Lean source binder.
+        let source = render_obj(object, context)?;
+        let mut lexical_candidates = context
+            .exact_carrier_values
+            .values()
+            .filter(|value| {
+                value.as_str() == source
+                    || cached_exact_membership_selection_proof(value, &source).is_some()
+            })
+            .cloned()
+            .collect::<Vec<_>>();
+        lexical_candidates.sort();
+        lexical_candidates.dedup();
+        match lexical_candidates.as_slice() {
+            [value] => return Ok(value.clone()),
+            [] => {}
+            _ => {
+                return Err(format!(
+                    "predicate argument `{name}` has evidence-distinct cached exact representatives"
+                ));
+            }
         }
         // Cloning/instantiating an existential fact may alpha-refresh the
         // body's SymbolId while preserving its binder name.  The existential
@@ -284,6 +311,18 @@ pub(in super::super) fn render_exact_predicate_argument_same_to_source(
         LeanTargetObjectRepresentation::Number { .. } | LeanTargetObjectRepresentation::Constant(_)
     ) {
         return Ok(exact_to_numeric);
+    }
+    // A compositional numeric Litex expression can have a native real value
+    // whose Complex observation differs only by homomorphic coercion, e.g.
+    // `((x - 1 : ℝ) : ℂ)` versus `(x : ℂ) - 1`.  The exact carrier
+    // bridge reaches the former; Mathlib's cast normalization proves the
+    // remaining native equality, which Lean checks at the generated gate.
+    if render_numeric_obj(object, context)
+        .is_ok_and(|rendered_numeric_source| rendered_numeric_source == source)
+    {
+        return Ok(format!(
+            "Litex.Same.trans ({exact_to_numeric}) (Litex.Same.ofEq (by norm_num))"
+        ));
     }
     Err(format!(
         "exact predicate argument `{object}` changed from source `{source}` to unrelated numeric observation `{numeric}`"

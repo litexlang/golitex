@@ -56,7 +56,7 @@ pub use statement::success::{
     SuccessVerifyHaveFnByInducWellDefinednessLocalEnvResult, SuccessVerifyNotForallFactResult,
     SuccessVerifyOrFactResult, SuccessVerifyWitnessNonemptySetResult,
     SuccessWitnessAtomicFactResult, SuccessWitnessExistFactResult, SuccessWitnessNonemptySetResult,
-    SuccessWitnessStmtResult,
+    SuccessWitnessStmtResult, TryStmtExecutionResult,
 };
 pub use statement::unknown::UnknownGenericStmtResult;
 pub use verification::builtin_evidence::{
@@ -75,10 +75,10 @@ pub use verification::builtin_evidence::{
     MatrixExpressionMembershipBuiltinRuleEvidence, NativeConstantMembershipBuiltinRule,
     NaturalMembershipClosureBuiltinRule, NestedCheckedFunctionDefinitionReductionEvidence,
     NonzeroBuiltinRule, NonzeroExpressionOrientation, ObjectReflexivityBuiltinRuleEvidence,
-    OrderReflexivityBuiltinRuleEvidence, RationalAlgebraicNormalizationBuiltinRuleEvidence,
-    RationalMembershipClosureBuiltinRule, RationalNormalizationBuiltinRuleEvidence,
-    RealArithmeticMembershipClosureBuiltinRule, RealIntervalSubsetRealBuiltinRuleEvidence,
-    RefinedNumericMembershipBuiltinRuleEvidence,
+    OrderReflexivityBuiltinRuleEvidence, PositiveNaturalMembershipClosureBuiltinRule,
+    RationalAlgebraicNormalizationBuiltinRuleEvidence, RationalMembershipClosureBuiltinRule,
+    RationalNormalizationBuiltinRuleEvidence, RealArithmeticMembershipClosureBuiltinRule,
+    RealIntervalSubsetRealBuiltinRuleEvidence, RefinedNumericMembershipBuiltinRuleEvidence,
     RegisteredAntisymmetricPredicateBuiltinRuleEvidence,
     RegisteredReflexivePredicateBuiltinRuleEvidence,
     RegisteredSymmetricPredicateBuiltinRuleEvidence,

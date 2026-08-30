@@ -953,11 +953,26 @@ impl StmtResultToLeanCompiler {
         if result.statement.fact.to_string() != verification.source_exist_fact.to_string() {
             return Err("local existential elimination changed its source existential".into());
         }
+        self.compile_positive_single_witness_existential_elimination_result_as_local_proof_steps(
+            &result.statement.equal_tos,
+            &result.common,
+            verification,
+            proof_step_index,
+        )
+    }
+
+    fn compile_positive_single_witness_existential_elimination_result_as_local_proof_steps(
+        &mut self,
+        bindings: &[SymbolBinding],
+        common: &SuccessStmtCommonResult,
+        verification: &SuccessVerifyExistentialEliminationResult,
+        proof_step_index: usize,
+    ) -> Result<Option<Vec<String>>, String> {
         let existential = &verification.source_exist_fact;
         if !existential.is_plain_exist()
             || existential.typed_parameters().number_of_params() != 1
             || existential.facts().len() != 1
-            || result.statement.equal_tos.len() != 1
+            || bindings.len() != 1
             || verification.witness_type_facts.len() != 1
             || verification.instantiated_body_facts.len() != 1
             || verification.includes_uniqueness
@@ -965,19 +980,13 @@ impl StmtResultToLeanCompiler {
             return Ok(None);
         }
         validate_typed_infer_result_identity_completeness(
-            &result.common.infers,
+            &common.infers,
             "local existential elimination",
         )?;
-        if result
-            .common
-            .infers
-            .rule_applications
-            .iter()
-            .any(|application| {
-                !defined_predicate_infer_rule(&application.rule)
-                    && !infer_rule_has_direct_compiler_environment_consumer(&application.rule)
-            })
-        {
+        if common.infers.rule_applications.iter().any(|application| {
+            !defined_predicate_infer_rule(&application.rule)
+                && !infer_rule_has_direct_compiler_environment_consumer(&application.rule)
+        }) {
             return Ok(None);
         }
 
@@ -986,7 +995,7 @@ impl StmtResultToLeanCompiler {
             verification.instantiated_body_facts[0].clone(),
         ];
         let stored_fact_ids = exact_ordered_fact_ids_from_store_results(
-            &result.common.infers,
+            &common.infers,
             &expected_stored_facts,
             "local existential elimination projections",
         )?;
@@ -1027,7 +1036,7 @@ impl StmtResultToLeanCompiler {
             return Ok(None);
         }
         let exact_numeric_carrier = existential_uses_exact_numeric_carrier(source_set)?;
-        let binding = &result.statement.equal_tos[0];
+        let binding = &bindings[0];
         let witness_name = lean_identifier(binding.name());
         if self
             .environment_stack
@@ -1142,8 +1151,7 @@ impl StmtResultToLeanCompiler {
         let mut proof_lines = vec![format!(
             "rcases (show {source_proposition} from {source_proof}) with ⟨{witness_name}, {type_name}, {body_name}⟩"
         )];
-        let direct_source_keys = result
-            .common
+        let direct_source_keys = common
             .infers
             .rule_applications
             .iter()
@@ -1159,8 +1167,7 @@ impl StmtResultToLeanCompiler {
             })
             .collect::<HashSet<_>>();
         let direct_infers = SuccessInferResult {
-            store_fact_outputs: result
-                .common
+            store_fact_outputs: common
                 .infers
                 .store_fact_outputs
                 .iter()
@@ -1174,8 +1181,7 @@ impl StmtResultToLeanCompiler {
                 })
                 .cloned()
                 .collect(),
-            rule_applications: result
-                .common
+            rule_applications: common
                 .infers
                 .rule_applications
                 .iter()
@@ -1198,15 +1204,54 @@ impl StmtResultToLeanCompiler {
             "local existential elimination direct inference",
         )?;
         self.compile_defined_predicate_inference_results_in_current_environment(
-            &result.common.infers,
+            &common.infers,
             DefinedPredicateInferenceConclusionPublication::LocalProofExpression,
         )?;
         validate_flattened_inferred_fact_ids_are_visible(
-            &result.common.infers,
+            &common.infers,
             &self.environment_stack,
             "local existential elimination",
         )?;
         Ok(Some(proof_lines))
+    }
+
+    /// Predicate-backed `obtain` is the same existential elimination after
+    /// the verifier has projected the predicate's existential definition.
+    /// Keep that projection as the proof source, then reuse the general local
+    /// one-witness lowering path.
+    pub(super) fn compile_obtain_obj_from_atomic_fact_stmt_result_as_local_proof_steps(
+        &mut self,
+        result: &SuccessObtainObjFromAtomicFactResult,
+        proof_step_index: usize,
+    ) -> Result<Option<Vec<String>>, String> {
+        let Some(verification) = &result.verification else {
+            return Ok(None);
+        };
+        let source_result = verification
+            .source_result
+            .factual_success()
+            .ok_or_else(|| {
+                "local predicate-backed existential elimination source is not factual".to_string()
+            })?;
+        let SuccessFactProofResult::BuiltinRule(source_builtin) = source_result.proof() else {
+            return Ok(None);
+        };
+        let Some(BuiltinRuleEvidence::DefinitionProjection(evidence)) =
+            source_builtin.evidence.typed()
+        else {
+            return Ok(None);
+        };
+        if evidence.fact.to_string() != result.statement.fact.to_string() {
+            return Err(
+                "local predicate-backed existential elimination changed its source fact".into(),
+            );
+        }
+        self.compile_positive_single_witness_existential_elimination_result_as_local_proof_steps(
+            &result.statement.equal_tos,
+            &result.common,
+            verification,
+            proof_step_index,
+        )
     }
 
     /// `Combine`: the statement itself is the existential source. The adapter

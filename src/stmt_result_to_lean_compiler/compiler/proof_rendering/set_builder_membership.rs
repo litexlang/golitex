@@ -38,6 +38,13 @@ pub(in super::super) fn render_set_builder_membership_from_fact_and_proofs(
     {
         return Err("set-builder membership changed its base-membership premise".into());
     }
+    if let Some((exact_value, exact_base_same_source)) =
+        render_exact_set_builder_value_from_fact_and_proofs(target, premises, context)?
+    {
+        return Ok(format!(
+            "⟨{exact_value}, Litex.Same.trans (Litex.Same.symm ({exact_base_same_source})) (Litex.Same.symm (Litex.Same.subtype {exact_value}))⟩"
+        ));
+    }
     let base_proof = premises[0].1.clone();
     let rendered_element = render_obj(element, context)?;
     let representative = format!("Litex.In.rep {rendered_element} ({base_proof})");
@@ -454,6 +461,50 @@ pub(in super::super) fn render_set_builder_predicate_projection_from_fact_and_pr
             if render_fact(clause, &exact_context)? == render_fact(target, context)? {
                 return Ok(format!("(({exact_carrier}).property{predicate_selector})"));
             }
+            let rendered_source_set = render_obj(source_set, context)?;
+            let selected_membership =
+                cached_exact_membership_selection_proof(exact_carrier, &rendered_element).map(
+                    |proof| proof.trim_matches(|character| character == '(' || character == ')'),
+                );
+            let exact_carrier_is_owned_by_source_set = selected_membership.is_some_and(|proof| {
+                context.fact_propositions.iter().any(|(fact_id, fact)| {
+                    let Ok((declared_element, declared_set)) = membership_parts(fact) else {
+                        return false;
+                    };
+                    context
+                        .fact_names
+                        .get(fact_id)
+                        .is_some_and(|name| name == proof)
+                        && render_obj(declared_element, context)
+                            .is_ok_and(|value| value == rendered_element)
+                        && (render_obj(declared_set, context)
+                            .is_ok_and(|value| value == rendered_source_set)
+                            || matches_directly_or_after_one_transparent_definition_pass(
+                                declared_set,
+                                source_set,
+                                context,
+                            )
+                            .unwrap_or(false)
+                            || matches_directly_or_after_one_transparent_definition_pass(
+                                source_set,
+                                declared_set,
+                                context,
+                            )
+                            .unwrap_or(false))
+                })
+            });
+            if exact_carrier_is_owned_by_source_set
+                && fact_matches_structured_induction_goal_substitution(
+                    clause,
+                    target,
+                    builder.symbol_id,
+                    element,
+                )
+            {
+                return Ok(format!(
+                    "(by simpa using (({exact_carrier}).property{predicate_selector}))"
+                ));
+            }
         }
     }
     if let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = clause {
@@ -555,7 +606,19 @@ pub(in super::super) fn render_set_builder_predicate_projection_from_fact_and_pr
         || predicate.body.len() != 1
         || target_predicate.body.len() != 1
     {
-        return Err("set-builder concrete predicate projection changed its application".into());
+        let exact_carrier = LeanTargetObjectRepresentation::lower(element)
+            .ok()
+            .and_then(|lowered| match lowered {
+                LeanTargetObjectRepresentation::Symbol { symbol_id, .. } => {
+                    context.exact_carrier_values.get(&symbol_id).cloned()
+                }
+                _ => None,
+            });
+        return Err(format!(
+            "set-builder concrete predicate projection changed its application (clause `{}`, target `{}`, element `{element}`, exact carrier {exact_carrier:?})",
+            Fact::AtomicFact(AtomicFact::NormalAtomicFact(predicate.clone())),
+            Fact::AtomicFact(AtomicFact::NormalAtomicFact(target_predicate.clone())),
+        ));
     }
     let predicate_name = predicate.predicate.to_string();
     let binding = context
