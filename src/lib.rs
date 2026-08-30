@@ -8,6 +8,7 @@ pub mod error;
 pub mod execution;
 // Compatibility alias retained for one version while embedders migrate.
 pub use execution as execute;
+pub mod extract_code_of_other_languages_from_litex;
 pub mod fact;
 pub mod graph;
 pub mod inference;
@@ -34,9 +35,12 @@ pub mod pipeline;
 pub mod prelude;
 // Compatibility alias retained for one version while embedders migrate.
 pub use algebraic_normalization as rational_expression;
-pub mod python_extractor;
-// Compatibility alias retained for one version while embedders migrate.
-pub use python_extractor as to_python;
+// Compatibility aliases retained while canonical ownership moves under the
+// verified executable-code extraction subsystem.
+pub use extract_code_of_other_languages_from_litex::c as c_extractor;
+pub use extract_code_of_other_languages_from_litex::c as to_c;
+pub use extract_code_of_other_languages_from_litex::python as python_extractor;
+pub use extract_code_of_other_languages_from_litex::python as to_python;
 pub mod result;
 pub mod runner;
 pub mod runtime;

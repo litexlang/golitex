@@ -13,6 +13,7 @@ pub(super) fn run_lean_file_command(
     index: &mut usize,
     file_path: &str,
     options: RunOptions,
+    isolated: bool,
 ) {
     *index += 1;
     let output_path = match read_non_flag_value_after_flag(args, index, "-lean") {
@@ -23,7 +24,7 @@ pub(super) fn run_lean_file_command(
             process::exit(2);
         }
     };
-    if !options.force_isolated {
+    if !isolated {
         eprintln!(
             "single-file Litex-to-Lean requires `-isolated`: litex -f <input.lit> -isolated -lean <output.lean>"
         );

@@ -166,3 +166,15 @@ pub fn definition_graph_file_target(
         None
     }
 }
+
+pub fn definition_graph_repository_target(
+    runtime: &Runtime,
+    repository_path: &str,
+) -> Option<RepositoryFileTarget> {
+    let canonical_path = fs::canonicalize(repository_path).ok()?;
+    let canonical_path = canonical_path.to_str()?;
+    runtime
+        .module_manager
+        .module_id_by_path(canonical_path)
+        .map(RepositoryFileTarget::Module)
+}

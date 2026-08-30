@@ -1,5 +1,5 @@
 use crate::output::{language::OutputLanguage, style::OutputStyle};
-use crate::pipeline::SessionPreload;
+use crate::pipeline::{FileRunMode, SessionTarget};
 use crate::runtime::RunOptions;
 
 const DETAIL_FLAG: &str = "-detail";
@@ -9,7 +9,13 @@ const LANGUAGE_FLAG: &str = "-lang";
 const SUMMARIZE_FLAG: &str = "-summarize";
 const ISOLATED_FLAG: &str = "-isolated";
 
-pub fn parse_global_options(args: &mut Vec<String>) -> Result<RunOptions, String> {
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct GlobalOptions {
+    pub run: RunOptions,
+    pub isolated: bool,
+}
+
+pub fn parse_global_options(args: &mut Vec<String>) -> Result<GlobalOptions, String> {
     let detail_output = remove_flag(args, DETAIL_FLAG);
     let compact_output = remove_flag(args, COMPACT_FLAG);
     if detail_output && compact_output {
@@ -25,15 +31,17 @@ pub fn parse_global_options(args: &mut Vec<String>) -> Result<RunOptions, String
     };
     let strict_mode = remove_flag(args, STRICT_FLAG);
     let summarize = remove_flag(args, SUMMARIZE_FLAG);
-    let force_isolated = remove_flag(args, ISOLATED_FLAG);
+    let isolated = remove_flag(args, ISOLATED_FLAG);
     let output_language = remove_language_flag(args)?;
 
-    Ok(RunOptions {
-        output_style,
-        strict_mode,
-        summarize,
-        force_isolated,
-        output_language,
+    Ok(GlobalOptions {
+        run: RunOptions {
+            output_style,
+            strict_mode,
+            summarize,
+            output_language,
+        },
+        isolated,
     })
 }
 
@@ -91,19 +99,24 @@ pub fn read_any_value_after_flag(
     Ok(value)
 }
 
-pub fn read_session_preload(args: &[String], index: &mut usize) -> Result<SessionPreload, String> {
+pub fn read_session_target(
+    args: &[String],
+    index: &mut usize,
+    isolated: bool,
+) -> Result<SessionTarget, String> {
     if *index == args.len() {
-        return Ok(SessionPreload::None);
+        return Ok(if isolated {
+            SessionTarget::Isolated
+        } else {
+            SessionTarget::CurrentDirectory
+        });
     }
     let flag = args.get(*index).map(String::as_str).unwrap_or_default();
     *index += 1;
     let file = match flag {
         "-f" => read_non_flag_value_after_flag(args, index, "-f")?,
-        "-before" => read_non_flag_value_after_flag(args, index, "-before")?,
         _ => {
-            return Err(
-                "-session accepts only an optional -f <file> or -before <file> target".to_string(),
-            );
+            return Err("-session accepts only an optional -f <file> target".to_string());
         }
     };
     if *index != args.len() {
@@ -112,22 +125,18 @@ pub fn read_session_preload(args: &[String], index: &mut usize) -> Result<Sessio
             flag
         ));
     }
-    match flag {
-        "-f" => Ok(SessionPreload::ThroughFile(file)),
-        "-before" => Ok(SessionPreload::BeforeFile(file)),
-        _ => unreachable!("session preload flag was already validated"),
-    }
+    Ok(SessionTarget::File {
+        path: file,
+        mode: FileRunMode::from_isolated(isolated),
+    })
 }
 
-pub fn validate_session_preload(
-    force_isolated: bool,
-    preload: &SessionPreload,
-) -> Result<(), String> {
-    if force_isolated && matches!(preload, SessionPreload::BeforeFile(_)) {
-        return Err(
-            "-isolated cannot be used with -session -before; the target must be a registered project file"
-                .to_string(),
-        );
+pub fn reject_meaningless_isolated(isolated: bool, target: &str) -> Result<(), String> {
+    if isolated {
+        return Err(format!(
+            "-isolated has no meaning with {}; use it with -f, -session, or the REPL",
+            target
+        ));
     }
     Ok(())
 }

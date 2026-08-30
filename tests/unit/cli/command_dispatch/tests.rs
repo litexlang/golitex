@@ -156,9 +156,11 @@ fn session_rejects_isolated_before_target() {
 }
 
 #[test]
-fn help_lists_python_command() {
+fn help_lists_code_extraction_commands_without_the_retired_python_flag() {
     let message = help_message();
-    assert!(message.contains("litex -python -f <file>"));
+    assert!(message.contains("litex -extractpython <code>"));
+    assert!(message.contains("litex -extractc <code>"));
+    assert!(!message.contains("litex -python"));
 }
 
 #[test]

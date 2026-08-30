@@ -1,4 +1,5 @@
 use super::execute_repository_target;
+use super::FileRunMode;
 use crate::error::{ParseRuntimeError, RuntimeError, RuntimeErrorStruct};
 use crate::module_system::discover_repository_for_file;
 use crate::result::StmtResult;
@@ -30,17 +31,11 @@ pub fn resolve_source_file_path(file_path: &str) -> Result<String, String> {
         .ok_or_else(|| "file path is not valid UTF-8".to_string())
 }
 
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
-pub struct FileExecutionOptions {
-    pub force_isolated: bool,
-}
-
 pub fn execute_file_in_runtime(
     target_file_path: &str,
     runtime: &mut Runtime,
-    options: FileExecutionOptions,
+    mode: FileRunMode,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
-    let FileExecutionOptions { force_isolated } = options;
     let path = Path::new(target_file_path);
     let file_name = path.file_name().and_then(|name| name.to_str());
     if file_name == Some("litex.config") {
@@ -52,7 +47,7 @@ pub fn execute_file_in_runtime(
             )),
         );
     }
-    if !force_isolated {
+    if mode == FileRunMode::Project {
         match discover_repository_for_file(runtime, target_file_path) {
             Ok(Some(target)) => {
                 return execute_repository_target(runtime, target);

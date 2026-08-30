@@ -282,6 +282,92 @@ fn execute_registered_componentwise_order_subtraction() -> Vec<StmtResult> {
     .expect("execute registered componentwise order subtraction")
 }
 
+fn execute_registered_weak_subtraction_rearrangements() -> Vec<StmtResult> {
+    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
+        "forall a, b, c R:\n    a - b <= c\n    =>:\n        a - c <= b\n\nforall a, b, c R:\n    a <= b + c\n    =>:\n        a - c <= b\n",
+        "direct_registered_weak_subtraction_rearrangements.lit",
+    )
+    .expect("execute registered weak subtraction rearrangements")
+}
+
+#[test]
+fn typed_weak_subtraction_rearrangements_retain_and_replay_their_exact_premise() {
+    run_registered_rule_test(|| {
+        let mut results = execute_registered_weak_subtraction_rearrangements();
+        for (result, expected_rule) in results.iter_mut().zip([
+            ArithmeticBuiltinRule::SubLessEqualSwap,
+            ArithmeticBuiltinRule::LessEqualAddImpliesSubLessEqual,
+        ]) {
+            let builtin = registered_single_forall_conclusion_builtin_mut(result);
+            assert_eq!(builtin.subgoals.len(), 1);
+            assert!(matches!(
+                builtin.evidence.typed(),
+                Some(BuiltinRuleEvidence::Arithmetic(actual)) if *actual == expected_rule
+            ));
+        }
+
+        let generated =
+            StmtResultToLeanCompiler::new("direct_registered_weak_subtraction_rearrangements.lit")
+                .compile_stmt_results_to_lean_source(&results)
+                .expect("compile registered weak subtraction rearrangements");
+        assert!(
+            generated.contains("Litex.Rules.complexSubLeSwap"),
+            "{generated}"
+        );
+        assert!(
+            generated.contains("Litex.Rules.complexSubLeOfLeAdd"),
+            "{generated}"
+        );
+    });
+}
+
+#[test]
+fn typed_weak_subtraction_swap_rejects_a_missing_premise() {
+    run_registered_rule_test(|| {
+        let mut results = execute_registered_weak_subtraction_rearrangements();
+        let builtin = registered_single_forall_conclusion_builtin_mut(&mut results[0]);
+        builtin.subgoals.clear();
+        let error =
+            StmtResultToLeanCompiler::new("direct_registered_weak_subtraction_rearrangements.lit")
+                .compile_stmt_results_to_lean_source(&results)
+                .expect_err("weak subtraction swap without its premise must fail closed");
+        assert!(error.contains("changed its ordered child arity"), "{error}");
+    });
+}
+
+fn execute_registered_negated_order() -> Vec<StmtResult> {
+    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
+        "forall a, b R:\n    a >= -b\n    =>:\n        -a <= b\n",
+        "direct_registered_negated_order.lit",
+    )
+    .expect("execute registered negated order")
+}
+
+#[test]
+fn typed_negated_order_retains_the_reversed_order_child() {
+    run_registered_rule_test(|| {
+        let mut results = execute_registered_negated_order();
+        let [result] = results.as_mut_slice() else {
+            panic!("expected one forall result")
+        };
+        let builtin = registered_single_forall_conclusion_builtin_mut(result);
+        assert_eq!(builtin.subgoals.len(), 1);
+        assert!(matches!(
+            builtin.evidence.typed(),
+            Some(BuiltinRuleEvidence::Arithmetic(
+                ArithmeticBuiltinRule::NegateOrder
+            ))
+        ));
+        let generated = StmtResultToLeanCompiler::new("direct_registered_negated_order.lit")
+            .compile_stmt_results_to_lean_source(&results)
+            .expect("compile registered negated order");
+        assert!(
+            generated.contains("Litex.Rules.complexNegativeOneMulReversesLessEqual"),
+            "{generated}"
+        );
+    });
+}
+
 #[test]
 fn typed_componentwise_order_subtraction_replays_exact_ordered_children() {
     run_registered_rule_test(|| {

@@ -265,26 +265,33 @@ impl StmtResultToLeanCompiler {
             let right = render_numeric_obj(&nonzero.right, &self.environment_stack)?;
             let semantic_proposition = render_fact(expected, &self.environment_stack)?;
             let name = format!("__calculate_nonzero{}", index + 1);
-            let native_proof = match self.construct_lean_proof_from_direct_fact_result(subgoal) {
-                Ok(Some(semantic_proof)) => format!(
-                    "by\n    intro __native_eq\n    exact (show {semantic_proposition} from {semantic_proof}) (Litex.Same.ofEq __native_eq)"
-                ),
-                Ok(None) => {
-                    // A few closed native constants still have legacy
-                    // label-only nonzero Results. The target is independently
-                    // checked here by Lean; symbolic premises never use this
-                    // fallback because `norm_num` cannot manufacture them.
-                    "by\n    norm_num [Complex.I_mul_I]".to_string()
+            let native_proof = if let Some(native_proof) = self
+                .construct_native_nonzero_from_closed_numeric_disequality_result(
+                    subgoal, expected,
+                )? {
+                native_proof
+            } else {
+                match self.construct_lean_proof_from_direct_fact_result(subgoal) {
+                    Ok(Some(semantic_proof)) => format!(
+                        "by\n    intro __native_eq\n    exact (show {semantic_proposition} from {semantic_proof}) (Litex.Same.ofEq __native_eq)"
+                    ),
+                    Ok(None) => {
+                        // A few closed native constants still have legacy
+                        // label-only nonzero Results. The target is independently
+                        // checked here by Lean; symbolic premises never use this
+                        // fallback because `norm_num` cannot manufacture them.
+                        "by\n    norm_num [Complex.I_mul_I]".to_string()
+                    }
+                    Err(_error)
+                        if fact_proof_is_not_equal_from_strict_order(subgoal.proof()) =>
+                    {
+                        self.construct_native_nonzero_from_strict_order_result(
+                            subgoal,
+                            &nonzero.left,
+                        )?
+                    }
+                    Err(error) => return Err(error),
                 }
-                Err(_error)
-                    if fact_proof_is_not_equal_from_strict_order(subgoal.proof()) =>
-                {
-                    self.construct_native_nonzero_from_strict_order_result(
-                        subgoal,
-                        &nonzero.left,
-                    )?
-                }
-                Err(error) => return Err(error),
             };
             declarations.push(format!(
                 "  have {name} : {left} ≠ {right} := {native_proof}"
@@ -306,6 +313,56 @@ impl StmtResultToLeanCompiler {
             ));
         }
         Ok(format!("({proof})"))
+    }
+
+    /// Consume a closed numeric Litex disequality only as the native
+    /// nonzero premise required by a checked field normalization.  The
+    /// semantic source proposition is `¬ Litex.Same left right`, which must
+    /// not be derived from native inequality in general: `Same` is
+    /// heterogeneous and intentionally has no global elimination to `Eq`.
+    /// Here the parent Result fixes the exact nonzero role, the closed-value
+    /// evidence is independently revalidated, and Lean proves only the
+    /// rendered native proposition.
+    pub(in super::super) fn construct_native_nonzero_from_closed_numeric_disequality_result(
+        &mut self,
+        result: &SuccessFactStmtResult,
+        expected: &Fact,
+    ) -> Result<Option<String>, String> {
+        let mut proof = result.proof();
+        while let SuccessFactProofResult::Reuse(reuse) = proof {
+            proof = reuse.source.proof();
+        }
+        let builtin = match proof {
+            SuccessFactProofResult::BuiltinRule(builtin)
+            | SuccessFactProofResult::BuiltinStrategy(builtin) => builtin,
+            _ => return Ok(None),
+        };
+        let Some(BuiltinRuleEvidence::ClosedNumericComparison(evidence)) = builtin.evidence.typed()
+        else {
+            return Ok(None);
+        };
+        if !builtin.subgoals.is_empty() {
+            return Err(
+                "closed numeric nonzero Result unexpectedly retained proof children".into(),
+            );
+        }
+        if result.fact().to_string() != expected.to_string()
+            || result.store.fact.to_string() != expected.to_string()
+        {
+            return Err("closed numeric nonzero Result changed its exact premise".into());
+        }
+        validate_closed_numeric_comparison_builtin_rule_evidence(expected, evidence)?;
+        let Fact::AtomicFact(AtomicFact::NotEqualFact(nonzero)) = expected else {
+            return Err("closed numeric nonzero adapter received a non-disequality".into());
+        };
+        if !is_literal_zero(&nonzero.right) {
+            return Err("closed numeric nonzero adapter changed its zero endpoint".into());
+        }
+        let left = render_numeric_obj(&nonzero.left, &self.environment_stack)?;
+        let right = render_numeric_obj(&nonzero.right, &self.environment_stack)?;
+        Ok(Some(format!(
+            "by\n    show {left} ≠ {right}\n    norm_num [Complex.I_mul_I]"
+        )))
     }
 
     pub(in super::super) fn construct_native_nonzero_from_strict_order_result(

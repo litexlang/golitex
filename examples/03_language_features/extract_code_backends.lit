@@ -1,0 +1,22 @@
+# Tracer: verified executable-code extraction backends
+#
+# Before (retired CLI shape):
+# litex -python -e 'have a R = 1'
+# Former behavior: Python extraction required the generic `-e` selector and no
+# C extraction command existed.
+#
+# Now (verified source shared by both backends):
+have a R = 1
+
+have fn increment(x R) R = x + 1
+have algo for increment(x):
+    x + 1
+
+# Current behavior:
+# litex -extractpython -f examples/03_language_features/extract_code_backends.lit
+# litex -extractc -f examples/03_language_features/extract_code_backends.lit
+# emit Python and C99 from the same verified executable subset.
+#
+# Boundary: `have z C = i` remains unsupported by both computation extractors;
+# neither backend attempts whole-system Litex proof compilation.
+# Evidence: target/release/litex -compact -isolated -runner -f examples/03_language_features/extract_code_backends.lit

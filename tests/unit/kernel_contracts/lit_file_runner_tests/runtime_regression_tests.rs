@@ -2,10 +2,11 @@ use std::fs;
 use std::path::PathBuf;
 use std::time::Instant;
 
+use crate::extract_code_of_other_languages_from_litex::c::to_c_from_source;
+use crate::extract_code_of_other_languages_from_litex::python::to_python_from_source;
 use crate::latex_renderer::to_latex_from_source;
 use crate::pipeline::render_run_output;
 use crate::prelude::*;
-use crate::python_extractor::to_python_from_source;
 use crate::test_support::execute_source;
 
 use super::helper::run_with_large_stack;
@@ -54,6 +55,7 @@ pub(super) fn run_runtime_contract_suite_impl() {
     output_contracts::unknown_fact_failure_has_structured_output_fields();
     core_definitions_and_syntax::latex_output_is_fragment_without_default_packages();
     core_definitions_and_syntax::python_extractor_outputs_supported_have_subset();
+    core_definitions_and_syntax::c_extractor_outputs_supported_have_subset();
     output_contracts::detail_output_keeps_composite_fact_step_metadata();
     println!("--- runtime contracts: all selected smoke tests OK ---");
 }

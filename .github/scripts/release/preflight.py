@@ -324,7 +324,7 @@ def validate_runner_output(output: str, returncode: int) -> None:
         raise PreflightError("smoke test runner output is not an object")
     if envelope.get("runner") != "litex-runner":
         raise PreflightError("smoke test output is not a litex-runner envelope")
-    if envelope.get("runner_version") != "0.1":
+    if envelope.get("runner_version") != "0.2":
         raise PreflightError("smoke test returned an unsupported runner version")
     target = envelope.get("target")
     if not isinstance(target, dict) or target.get("kind") != "file":

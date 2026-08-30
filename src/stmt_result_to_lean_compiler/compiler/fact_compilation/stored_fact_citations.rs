@@ -9,6 +9,15 @@ impl StmtResultToLeanCompiler {
         proof: String,
     ) -> Result<(), String> {
         let source_fact = result.fact();
+        // A reviewed equality rule can own both the heterogeneous Litex.Same
+        // theorem published below and an exact native `=` certificate used by
+        // later order/equality transports. Previously this certificate was
+        // retained only for equality steps nested inside combined proofs, so
+        // an ordinary standalone normalization fact could be cited by FactId
+        // but not used as a native rewrite. Construct it from the same Result
+        // before publication, then bind it to the statement's exact FactId.
+        let native_equality =
+            self.construct_lean_native_equality_proof_from_direct_fact_result(result)?;
         // Most facts render solely from the compiler environment. Function
         // applications are the remaining target-side exception: their exact
         // application term still reads the temporary WD rendering view. Only
@@ -35,7 +44,19 @@ impl StmtResultToLeanCompiler {
             result,
             proof,
             proposition,
-        )
+        )?;
+        if let Some(native_equality) = native_equality {
+            let fact_id = result
+                .store
+                .fact_id
+                .ok_or_else(|| "stored equality fact has no FactId".to_string())?;
+            self.retain_native_equality_proof_in_current_environment(
+                fact_id,
+                &source_fact,
+                native_equality,
+            )?;
+        }
+        Ok(())
     }
 
     /// Publish a fact whose proposition was rendered by the Result-owned

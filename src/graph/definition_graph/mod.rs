@@ -23,7 +23,7 @@ mod result_provenance;
 use analysis::*;
 pub use entrypoints::render_definition_graph_from_stmt_results;
 pub(super) use entrypoints::{
-    definition_graph_file_target, definition_graph_target_error_output,
-    render_definition_graph_result,
+    definition_graph_file_target, definition_graph_repository_target,
+    definition_graph_target_error_output, render_definition_graph_result,
 };
 use model::*;

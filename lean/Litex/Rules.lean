@@ -953,6 +953,22 @@ theorem complexNegativeOneMulNonnegative
       (Litex.AsReal.complex (-1 : ℝ))
   exact ⟨-1 * ra, complexMulAsReal minusOneAsReal hra, by linarith⟩
 
+/-- Multiplication by negative one reverses a non-strict order. This is the
+typed target counterpart of Litex rule `order.negate`; the verifier retains
+the source order as its sole proof child. -/
+theorem complexNegativeOneMulReversesLessEqual
+    {a b : ℂ}
+    (h : Litex.Le a b) :
+    Litex.Le ((-1 : ℂ) * b) ((-1 : ℂ) * a) := by
+  simpa [Litex.Le, Litex.OrderValue] using (neg_le_neg h)
+
+/-- Strict counterpart of `complexNegativeOneMulReversesLessEqual`. -/
+theorem complexNegativeOneMulReversesLess
+    {a b : ℂ}
+    (h : Litex.Lt a b) :
+    Litex.Lt ((-1 : ℂ) * b) ((-1 : ℂ) * a) := by
+  simpa [Litex.Lt, Litex.OrderValue] using (neg_lt_neg h)
+
 /-- Positive real representatives are closed under multiplication. -/
 theorem complexMulPositive
     {a b : ℂ}
@@ -1024,6 +1040,22 @@ theorem complexSubLtSwap
     simpa [Litex.Lt, Litex.OrderValue] using h
   simpa [Litex.Lt, Litex.OrderValue] using (sub_lt_iff_lt_add.mpr (by
     linarith : a.re < b.re + c.re))
+
+/-- Weak subtraction exchange: `a - b ≤ c` implies `a - c ≤ b`. -/
+theorem complexSubLeSwap
+    {a b c : ℂ}
+    (h : Litex.Le (a - b) c) :
+    Litex.Le (a - c) b := by
+  simp [Litex.Le, Litex.OrderValue] at h ⊢
+  linarith
+
+/-- Move an addend across a weak inequality as a subtractor. -/
+theorem complexSubLeOfLeAdd
+    {a b c : ℂ}
+    (h : Litex.Le a (b + c)) :
+    Litex.Le (a - c) b := by
+  simp [Litex.Le, Litex.OrderValue] at h ⊢
+  linarith
 
 /-- Adding one common complex term preserves Litex non-strict order.
 This is the Lean adapter for registered rule `order.add_le_add_left`. -/

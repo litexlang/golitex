@@ -23,7 +23,7 @@ using `double`, without a generated `main`. Litex verification establishes the
 source mathematics, not IEEE-754 rounding, overflow, or target compiler
 behavior.
 
-Use direct source, file, or repository extraction:
+Example commands use direct source, file, or repository extraction:
 
 ```sh
 litex -extractpython 'have a R = 1'

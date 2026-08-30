@@ -62,8 +62,9 @@ fn runner_target_error_returns_message() {
 fn detailed_runner_exposes_a_real_target_path_without_a_label() {
     let outcome = run_file("does_not_exist.lit", RunOptions::default());
     let expected_path = outcome
-        .target_path
-        .clone()
+        .target
+        .path()
+        .map(str::to_string)
         .expect("file outcome should retain its resolved path");
     let (_, output) = render_runner(outcome, false);
 

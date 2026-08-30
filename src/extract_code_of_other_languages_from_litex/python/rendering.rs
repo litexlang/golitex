@@ -45,8 +45,7 @@ impl PythonRenderer {
             let keyword = if index == 0 { "if" } else { "elif" };
             let condition = self.render_condition(&case.condition)?;
             let value = self.render_expression(&case.value)?;
-            self.lines
-                .push(format!("    {} {}:", keyword, condition));
+            self.lines.push(format!("    {} {}:", keyword, condition));
             self.lines.push(format!("        return {}", value));
         }
         if let Some(default_return) = &function.default_return {
@@ -59,10 +58,7 @@ impl PythonRenderer {
         Ok(())
     }
 
-    fn render_condition(
-        &mut self,
-        condition: &ExtractedCondition,
-    ) -> Result<String, RuntimeError> {
+    fn render_condition(&mut self, condition: &ExtractedCondition) -> Result<String, RuntimeError> {
         let left = self.render_expression(&condition.left)?;
         let right = self.render_expression(&condition.right)?;
         Ok(format!(
@@ -140,10 +136,7 @@ impl PythonRenderer {
             }
             ExtractedExpressionKind::Sign(value) => {
                 let value = self.render_expression(value)?;
-                Ok(format!(
-                    "(1 if {0} > 0 else (-1 if {0} < 0 else 0))",
-                    value
-                ))
+                Ok(format!("(1 if {0} > 0 else (-1 if {0} < 0 else 0))", value))
             }
             ExtractedExpressionKind::Factorial(value) => {
                 self.needs_math = true;
@@ -190,7 +183,9 @@ impl PythonRenderer {
     }
 }
 
-pub(super) fn render_program(program: &ExtractedProgram) -> Result<String, RuntimeError> {
+pub(in crate::extract_code_of_other_languages_from_litex) fn render_program(
+    program: &ExtractedProgram,
+) -> Result<String, RuntimeError> {
     let mut renderer = PythonRenderer::new();
     for statement in program.statements.iter() {
         renderer.render_statement(statement)?;
@@ -222,7 +217,10 @@ fn validate_python_name(name: &str, line_file: &LineFile) -> Result<(), RuntimeE
     }
     Err(code_extraction_error(
         line_file,
-        format!("Python extractor v1 cannot emit `{}` as an identifier", name),
+        format!(
+            "Python extractor v1 cannot emit `{}` as an identifier",
+            name
+        ),
     ))
 }
 

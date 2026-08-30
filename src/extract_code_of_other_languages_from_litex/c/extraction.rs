@@ -8,10 +8,7 @@ pub fn to_c(source_code: &str, runtime: &mut Runtime) -> Result<String, RuntimeE
     extract_code(source_code, runtime, CodeExtractionTarget::C)
 }
 
-pub fn to_c_from_source(
-    source_code: &str,
-    source_label: &str,
-) -> Result<String, RuntimeError> {
+pub fn to_c_from_source(source_code: &str, source_label: &str) -> Result<String, RuntimeError> {
     extract_code_from_source(source_code, source_label, CodeExtractionTarget::C)
 }
 

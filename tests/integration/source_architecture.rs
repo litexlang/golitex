@@ -1336,6 +1336,8 @@ fn cli_dispatch_delegates_execution_and_path_resolution_to_their_owners() {
         .expect("conversion command source should be readable");
     let run = fs::read_to_string(root.join("src/pipeline/run.rs"))
         .expect("pipeline run source should be readable");
+    let target = fs::read_to_string(root.join("src/pipeline/target.rs"))
+        .expect("pipeline target source should be readable");
     let run_options = fs::read_to_string(root.join("src/runtime/run_options.rs"))
         .expect("runtime run-options source should be readable");
     let source_execution = fs::read_to_string(root.join("src/pipeline/source_execution.rs"))
@@ -1354,32 +1356,38 @@ fn cli_dispatch_delegates_execution_and_path_resolution_to_their_owners() {
     assert!(!dispatch.contains("compile_litex_file_to_lean_file("));
     assert!(!dispatch.contains("compile_litex_markdown_code_blocks_to_lean_file("));
     assert!(!dispatch.contains("compile_code_to_latex("));
-    assert!(!dispatch.contains("compile_code_to_python("));
+    assert!(!dispatch.contains("compile_code_to_extracted_code("));
     assert!(!handlers.contains("command_dispatch::"));
     assert!(dispatch.contains("run_lean_file_command("));
     assert!(dispatch.contains("run_lean_ledger_command("));
     assert!(dispatch.contains("run_latex_command("));
-    assert!(dispatch.contains("run_python_command("));
+    assert!(dispatch.contains("run_code_extraction_command("));
     assert!(lean_commands.contains("compile_litex_file_to_lean_file("));
     assert!(lean_commands.contains("compile_litex_markdown_code_blocks_to_lean_file("));
     assert!(conversion_commands.contains("compile_code_to_latex("));
-    assert!(conversion_commands.contains("compile_code_to_python("));
+    assert!(conversion_commands.contains("compile_code_to_extracted_code("));
     assert!(handlers.contains("run_code("));
     assert!(handlers.contains("run_file("));
+    assert!(handlers.contains("run_isolated_file("));
     assert!(handlers.contains("run_repository("));
-    assert!(!handlers.contains("RunTarget"));
-    assert!(!run.contains("pub enum RunTarget {"));
+    assert!(target.contains("pub enum RunTarget {"));
+    assert!(target.contains("pub enum SessionTarget {"));
+    assert!(target.contains("pub enum ExecutionTarget {"));
+    assert!(target.contains("pub enum FileRunMode {"));
     assert!(run_options.contains("pub struct RunOptions"));
     assert!(!run.contains("pub struct RunOptions"));
     assert!(!run.contains("pub struct RunRequest"));
     assert!(run.contains("pub fn run_code(source: &str, options: RunOptions)"));
     assert!(run.contains("pub fn run_file(path: &str, options: RunOptions)"));
+    assert!(run.contains("pub fn run_isolated_file(path: &str, options: RunOptions)"));
     assert!(run.contains("pub fn run_repository(path: &str, options: RunOptions)"));
-    assert!(run.contains("pub enum RunTargetKind"));
-    assert!(run.contains("pub target_kind: RunTargetKind"));
-    assert!(run.contains("pub target_path: Option<String>"));
+    assert!(target.contains("pub enum RunTargetKind"));
+    assert!(run.contains("pub target: RunTarget"));
+    assert!(!run.contains("pub target_kind:"));
+    assert!(!run.contains("pub target_path:"));
+    assert!(!run.contains("selected_repository_target"));
     assert!(!run.contains("pub target_kind: String"));
-    assert!(!run.contains("source_label"));
+    assert!(target.contains("source_label"));
     assert!(!run.contains("target_label"));
     assert!(source_execution.contains("pub fn execute_source("));
     assert!(source_execution.contains("self.parse_statement(&mut block)"));

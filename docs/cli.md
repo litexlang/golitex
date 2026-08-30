@@ -729,19 +729,27 @@ The LaTeX path is a compile/pretty-print path, not the same JSON proof trace as
 the verifier commands. If LaTeX compilation hits a Litex error, the CLI prints a
 JSON error object.
 
-## Python Commands
+## Executable Code Extraction Commands
 
 | Command | Behavior |
 |---------|----------|
-| `litex -python -e <code>` | Verify a source string and emit Python for the extractor's supported definitions. |
-| `litex -python -f <file>` | Verify a file and emit Python for the extractor's supported definitions. |
-| `litex -python -r <repo>` | Verify a repository's ordered `[export]` table and emit Python for the extractor's supported definitions. |
+| `litex -extractpython <code>` | Verify inline source and emit Python for the supported executable definitions. |
+| `litex -extractpython -f <file>` | Verify a file and emit Python for the supported executable definitions. |
+| `litex -extractpython -r <repo>` | Verify a repository's ordered `[export]` table and emit Python. |
+| `litex -extractc <code>` | Verify inline source and emit a C99 translation-unit fragment for the supported executable definitions. |
+| `litex -extractc -f <file>` | Verify a file and emit the supported executable definitions as C99. |
+| `litex -extractc -r <repo>` | Verify a repository's ordered `[export]` table and emit C99. |
 
-The Python extractor is a frozen experiment, not a general Litex-to-Python
-compiler. It currently emits supported numeric assignments and `algo`
-definitions, reports when no extractable definitions exist, and rejects known
-unsupported native-complex and number-theory forms instead of approximating
-them.
+The extraction subsystem is deliberately not a whole-Litex compiler. It emits
+supported numeric assignments and `algo` definitions, reports when no
+extractable definitions exist, and rejects known unsupported native-complex
+and number-theory forms instead of approximating them. Python uses ordinary
+floating-point expressions. C uses C99 `double`, emits no `main`, and currently
+requires module-level constants to be literal arithmetic so the generated
+translation unit remains valid C. Neither target proves IEEE-754 behavior.
+
+Inline source follows the extraction flag directly; `-e` is not accepted.
+The retired `-python` command is not a compatibility alias.
 
 ## Information Commands
 

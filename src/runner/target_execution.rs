@@ -4,17 +4,19 @@ const RUNNER_NAME: &str = "litex-runner";
 const RUNNER_VERSION: &str = "0.2";
 
 pub fn render_runner(outcome: RunOutcome, hide_file_paths: bool) -> (bool, String) {
+    let target_kind = outcome.target.kind();
+    let target_path = outcome.target.path();
     if let Some(message) = outcome.target_error {
         return runner_target_error_output(
-            outcome.target_kind,
-            outcome.target_path.as_deref(),
+            target_kind,
+            target_path,
             hide_file_paths,
             message,
         );
     }
     runner_output_from_trace(
-        outcome.target_kind,
-        outcome.target_path.as_deref(),
+        target_kind,
+        target_path,
         hide_file_paths,
         outcome.ok,
         outcome.output,

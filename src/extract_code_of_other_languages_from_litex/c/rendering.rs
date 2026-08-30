@@ -72,10 +72,7 @@ impl CRenderer {
         Ok(())
     }
 
-    fn render_condition(
-        &mut self,
-        condition: &ExtractedCondition,
-    ) -> Result<String, RuntimeError> {
+    fn render_condition(&mut self, condition: &ExtractedCondition) -> Result<String, RuntimeError> {
         Ok(format!(
             "{} {} {}",
             self.render_expression(&condition.left)?,
@@ -93,9 +90,7 @@ impl CRenderer {
             ExtractedExpressionKind::EulerNumber => {
                 Ok("2.7182818284590452353602874713526625".to_string())
             }
-            ExtractedExpressionKind::Pi => {
-                Ok("3.1415926535897932384626433832795029".to_string())
-            }
+            ExtractedExpressionKind::Pi => Ok("3.1415926535897932384626433832795029".to_string()),
             ExtractedExpressionKind::Add(left, right) => {
                 self.render_file_scope_binary_expression(left, "+", right)
             }
@@ -138,9 +133,7 @@ impl CRenderer {
             ExtractedExpressionKind::EulerNumber => {
                 Ok("2.7182818284590452353602874713526625".to_string())
             }
-            ExtractedExpressionKind::Pi => {
-                Ok("3.1415926535897932384626433832795029".to_string())
-            }
+            ExtractedExpressionKind::Pi => Ok("3.1415926535897932384626433832795029".to_string()),
             ExtractedExpressionKind::Name(name) => {
                 validate_c_name(name, &expression.line_file)?;
                 Ok(name.clone())
@@ -270,7 +263,9 @@ impl CRenderer {
     }
 }
 
-pub(super) fn render_program(program: &ExtractedProgram) -> Result<String, RuntimeError> {
+pub(in crate::extract_code_of_other_languages_from_litex) fn render_program(
+    program: &ExtractedProgram,
+) -> Result<String, RuntimeError> {
     let mut renderer = CRenderer::new();
     for statement in program.statements.iter() {
         renderer.render_statement(statement)?;

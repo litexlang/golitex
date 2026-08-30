@@ -556,6 +556,17 @@ fn complex_python_and_evaluator_paths_fail_explicitly() {
         "{complex_star_python_error}"
     );
 
+    let c_error = to_c_from_source(
+        "have fn f(z C) C = z + i",
+        "complex_c_extractor_is_unsupported",
+    )
+    .expect_err("C extraction must reject native complex definitions")
+    .trace_message();
+    assert!(
+        c_error.contains("does not support native complex"),
+        "{c_error}"
+    );
+
     let (run_succeeded, run_output) =
         run_complex_source("eval i", "native_complex_evaluator_is_symbolic");
     assert!(

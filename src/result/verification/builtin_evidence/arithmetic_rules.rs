@@ -16,6 +16,16 @@ pub enum ArithmeticBuiltinRule {
     SubLessImpliesLessAdd,
     /// From `a - b < c`, conclude `a - c < b`.
     SubLessSwap,
+    /// Weak counterpart of `SubLessSwap`: from `a - b <= c`, conclude
+    /// `a - c <= b`.
+    SubLessEqualSwap,
+    /// From `a <= b + c`, conclude `a - c <= b`, accepting the checked
+    /// commutative orientation of the target sum.
+    LessEqualAddImpliesSubLessEqual,
+    /// Negating both sides reverses a strict or weak real order. The
+    /// enclosing Result retains the exact ordered premise; weak conclusions
+    /// may also consume a strict premise.
+    NegateOrder,
     AddNonnegative,
     AddPositive,
     AddPositiveLeftStrict,
@@ -57,6 +67,9 @@ impl ArithmeticBuiltinRule {
             Self::SubPositiveFromLess => "order.sub_positive_of_less",
             Self::SubLessImpliesLessAdd => "order.lt_add_of_sub_lt",
             Self::SubLessSwap => "order.sub_lt_swap",
+            Self::SubLessEqualSwap => "order.sub_le_swap",
+            Self::LessEqualAddImpliesSubLessEqual => "order.sub_le_of_le_add",
+            Self::NegateOrder => "order.negate",
             Self::AddNonnegative => "order.add_nonnegative",
             Self::AddPositive => "order.add_positive",
             Self::AddPositiveLeftStrict => "order.add_positive_of_positive_nonnegative",

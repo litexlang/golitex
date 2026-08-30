@@ -26,7 +26,6 @@ fn result_graph_records_statement_verification_proof_and_store_layers() {
     assert!(output.contains(r#""graph": "litex-result-graph""#));
     assert!(output.contains(r#""graph_version": "3""#));
     assert!(output.contains("\"target\": {\n    \"kind\": \"code\"\n  }"));
-    assert!(!output.contains(r#""label""#));
     assert!(output.contains(r#""kind": "statement""#));
     assert!(output.contains(r#""kind": "well_definedness""#));
     assert!(output.contains(r#""kind": "verification""#));

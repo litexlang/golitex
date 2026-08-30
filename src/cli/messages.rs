@@ -61,9 +61,12 @@ litex -latex : run Litex interactively and print LaTeX output in your terminal
 litex -latex -f <file> : compile the given file to LaTeX
 litex -latex -e <code> : compile the given code to LaTeX
 litex -latex -r <project> : compile the given project to LaTeX
-litex -python -f <file> : run the frozen experimental Python extractor on a file
-litex -python -e <code> : run the frozen experimental Python extractor on source code
-litex -python -r <project> : run the frozen experimental Python extractor on a recursive project
+litex -extractpython <code> : verify inline Litex and extract the supported program subset as Python
+litex -extractpython -f <file> : verify a file and extract the supported program subset as Python
+litex -extractpython -r <project> : verify a recursive project and extract the supported program subset as Python
+litex -extractc <code> : verify inline Litex and extract the supported program subset as C99
+litex -extractc -f <file> : verify a file and extract the supported program subset as C99
+litex -extractc -r <project> : verify a recursive project and extract the supported program subset as C99
 litex -help : show the help message
 litex -version : show the version
 litex -upgrade : show upgrade instructions for this platform

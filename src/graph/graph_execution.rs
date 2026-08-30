@@ -1,6 +1,6 @@
 use super::definition_graph::{
-    definition_graph_file_target, definition_graph_target_error_output,
-    render_definition_graph_result,
+    definition_graph_file_target, definition_graph_repository_target,
+    definition_graph_target_error_output, render_definition_graph_result,
 };
 use super::fact_graph::{fact_graph_target_error_output, render_fact_graph_from_stmt_results};
 use super::result_graph_execution::{graph_target_error_output, render_graph_from_stmt_results};
@@ -36,23 +36,24 @@ pub fn render_graph(
     mut outcome: RunOutcome,
     hide_file_paths: bool,
 ) -> (bool, String) {
-    let target_path = outcome.target_path.clone();
+    let target_kind = outcome.target.kind();
+    let target_path = outcome.target.path().map(str::to_string);
     if let Some(message) = outcome.target_error {
         return match kind {
             GraphKind::Result => graph_target_error_output(
-                outcome.target_kind,
+                target_kind,
                 target_path.as_deref(),
                 hide_file_paths,
                 message,
             ),
             GraphKind::Fact => fact_graph_target_error_output(
-                outcome.target_kind,
+                target_kind,
                 target_path.as_deref(),
                 hide_file_paths,
                 message,
             ),
             GraphKind::Definition => definition_graph_target_error_output(
-                outcome.target_kind,
+                target_kind,
                 target_path.as_deref(),
                 hide_file_paths,
                 message,
@@ -62,7 +63,7 @@ pub fn render_graph(
 
     match kind {
         GraphKind::Result => render_graph_from_stmt_results(
-            outcome.target_kind,
+            target_kind,
             target_path.as_deref(),
             hide_file_paths,
             &outcome.runtime,
@@ -70,7 +71,7 @@ pub fn render_graph(
             outcome.runtime_error.as_ref(),
         ),
         GraphKind::Fact => render_fact_graph_from_stmt_results(
-            outcome.target_kind,
+            target_kind,
             target_path.as_deref(),
             hide_file_paths,
             &outcome.runtime,
@@ -78,18 +79,18 @@ pub fn render_graph(
             outcome.runtime_error.as_ref(),
         ),
         GraphKind::Definition => {
-            let selected_target = if outcome.target_kind == RunTargetKind::File {
-                definition_graph_file_target(
+            let selected_target = match &outcome.target {
+                RunTarget::Eval => None,
+                RunTarget::File { path, .. } => definition_graph_file_target(
                     &outcome.runtime,
-                    target_path
-                        .as_deref()
-                        .expect("file outcomes must retain their target path"),
-                )
-            } else {
-                outcome.selected_repository_target
+                    path,
+                ),
+                RunTarget::Repository { path } => {
+                    definition_graph_repository_target(&outcome.runtime, path)
+                }
             };
             render_definition_graph_result(
-                outcome.target_kind,
+                target_kind,
                 target_path.as_deref(),
                 hide_file_paths,
                 &mut outcome.runtime,

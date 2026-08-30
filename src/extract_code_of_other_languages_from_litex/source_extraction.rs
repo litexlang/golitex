@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
 #[derive(Clone, Copy)]
-pub(crate) enum CodeExtractionTarget {
+pub(super) enum CodeExtractionTarget {
     Python,
     C,
 }
@@ -249,11 +249,7 @@ fn render_program(
     }
 }
 
-fn push_fragment(
-    fragments: &mut Vec<String>,
-    fragment: String,
-    target: CodeExtractionTarget,
-) {
+fn push_fragment(fragments: &mut Vec<String>, fragment: String, target: CodeExtractionTarget) {
     if !fragment.trim().is_empty() && fragment.trim() != target.empty_output() {
         fragments.push(fragment);
     }
