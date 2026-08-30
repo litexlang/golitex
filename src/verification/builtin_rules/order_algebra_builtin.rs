@@ -1756,6 +1756,25 @@ impl Runtime {
         }
 
         if let Obj::Sub(sub) = &f.left {
+            // Exchange the target subtrahend with the weak upper bound.
+            // Example: from `a - b <= c`, prove `a - c <= b`.
+            let swapped_left: Obj = Sub::new(sub.left.as_ref().clone(), f.right.clone()).into();
+            let swapped_subgoal: AtomicFact =
+                LessEqualFact::new(swapped_left, sub.right.as_ref().clone(), lf.clone()).into();
+            let swapped_result = self.verify_order_subgoal(swapped_subgoal, builtin_state)?;
+            if swapped_result.is_success() {
+                return Ok(Some(StmtResult::from(
+                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                        atomic_fact.clone().into(),
+                        "a - c <= b from a - b <= c".to_string(),
+                        BuiltinRuleEvidence::Arithmetic(
+                            ArithmeticBuiltinRule::SubLessEqualSwap,
+                        ),
+                        vec![swapped_result],
+                    ),
+                )));
+            }
+
             // Subtracting a nonnegative term cannot increase the left side.
             // Example: from `a <= b` and `0 <= c`, prove `a - c <= b`.
             let order_subgoal: AtomicFact =
@@ -1780,19 +1799,25 @@ impl Runtime {
 
             // Move a left subtractor to the right side as an addend.
             // Example: from `a <= b + c`, prove `a - c <= b`.
-            let shifted_right: Obj = Add::new(f.right.clone(), sub.right.as_ref().clone()).into();
-            let shifted_subgoal: AtomicFact =
-                LessEqualFact::new(sub.left.as_ref().clone(), shifted_right, lf.clone()).into();
-            let shifted_result = self.verify_order_subgoal(shifted_subgoal, builtin_state)?;
-            if shifted_result.is_success() {
-                return Ok(Some(StmtResult::from(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
-                        atomic_fact.clone().into(),
-                        "a - c <= b from a <= b + c".to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryLessEqualAlgebra03),
-                        vec![shifted_result],
-                    ),
-                )));
+            for shifted_right in [
+                Add::new(f.right.clone(), sub.right.as_ref().clone()).into(),
+                Add::new(sub.right.as_ref().clone(), f.right.clone()).into(),
+            ] {
+                let shifted_subgoal: AtomicFact =
+                    LessEqualFact::new(sub.left.as_ref().clone(), shifted_right, lf.clone()).into();
+                let shifted_result = self.verify_order_subgoal(shifted_subgoal, builtin_state)?;
+                if shifted_result.is_success() {
+                    return Ok(Some(StmtResult::from(
+                        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                            atomic_fact.clone().into(),
+                            "a - c <= b from a <= b + c".to_string(),
+                            BuiltinRuleEvidence::Arithmetic(
+                                ArithmeticBuiltinRule::LessEqualAddImpliesSubLessEqual,
+                            ),
+                            vec![shifted_result],
+                        ),
+                    )));
+                }
             }
         }
 

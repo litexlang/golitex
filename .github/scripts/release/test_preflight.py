@@ -49,7 +49,7 @@ class ReleasePreflightTest(unittest.TestCase):
         successful = json.dumps(
             {
                 "runner": "litex-runner",
-                "runner_version": "0.1",
+                "runner_version": "0.2",
                 "result": "success",
                 "ok": True,
                 "target": {"kind": "file"},

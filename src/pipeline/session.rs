@@ -3,23 +3,15 @@ use crate::prelude::*;
 use std::env;
 use std::io::{self, BufRead, Write};
 use std::path::Path;
-use std::rc::Rc;
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub enum SessionPreload {
-    None,
-    ThroughFile(String),
-    BeforeFile(String),
-}
 
 pub struct SessionRequest {
     pub options: RunOptions,
-    pub preload: SessionPreload,
+    pub target: SessionTarget,
 }
 
 impl SessionRequest {
-    pub fn new(options: RunOptions, preload: SessionPreload) -> Self {
-        Self { options, preload }
+    pub fn new(options: RunOptions, target: SessionTarget) -> Self {
+        Self { options, target }
     }
 }
 
@@ -31,7 +23,7 @@ impl SessionRequest {
 /// prompt parsing. Frames are Litex source only: terminal import commands are
 /// deliberately outside this machine protocol.
 pub fn run_session(request: SessionRequest) {
-    let SessionRequest { options, preload } = request;
+    let SessionRequest { options, target } = request;
     let stdin_handle = io::stdin();
     let stdout_handle = io::stdout();
     let mut stdin_locked = stdin_handle.lock();
@@ -49,32 +41,28 @@ pub fn run_session(request: SessionRequest) {
         }
     };
 
-    if let Err(error) = run_session_loop_with_readers_and_preload(
+    if let Err(error) = run_session_loop_with_readers_and_target(
         &mut stdin_locked,
         &mut stdout_locked,
         &directory,
         options,
-        preload,
+        target,
     ) {
         eprintln!("session output error: {}", error);
     }
 }
 
-fn run_session_loop_with_readers_and_preload(
+fn run_session_loop_with_readers_and_target(
     stdin_reader: &mut dyn BufRead,
     stdout_writer: &mut dyn Write,
     directory: &Path,
     options: RunOptions,
-    preload: SessionPreload,
+    target: SessionTarget,
 ) -> io::Result<()> {
     let mut runtime = Runtime::new(options);
 
-    let (startup_mode, mut all_results) = match initialize_session_runtime(
-        &mut runtime,
-        directory,
-        options.force_isolated,
-        preload,
-    ) {
+    let (startup_mode, mut all_results) =
+        match initialize_session_runtime(&mut runtime, directory, target) {
         Ok(startup) => startup,
         Err((stmt_results, error)) => {
             let error_json = display_runtime_error_json(&runtime, &error, true);
@@ -265,10 +253,17 @@ fn run_session_loop_with_readers_and_preload(
 fn initialize_session_runtime(
     runtime: &mut Runtime,
     directory: &Path,
-    force_isolated: bool,
-    preload: SessionPreload,
+    target: SessionTarget,
 ) -> Result<(&'static str, Vec<StmtResult>), (Vec<StmtResult>, RuntimeError)> {
-    if let SessionPreload::ThroughFile(preload_file) = &preload {
+    let source_label = ExecutionTarget::Session(target.clone())
+        .source_label()
+        .to_string();
+
+    if let SessionTarget::File {
+        path: preload_file,
+        mode,
+    } = &target
+    {
         let clean_path = preload_file.replace('\r', "");
         let path = Path::new(clean_path.as_str());
         let path = if path.is_absolute() {
@@ -277,63 +272,24 @@ fn initialize_session_runtime(
             directory.join(path)
         };
         let path_string = path.to_string_lossy().into_owned();
-        let (stmt_results, runtime_error) = execute_file_in_runtime(
-            path_string.as_str(),
-            runtime,
-            FileExecutionOptions { force_isolated },
-        );
+        let (stmt_results, runtime_error) =
+            execute_file_in_runtime(path_string.as_str(), runtime, *mode);
         if let Some(error) = runtime_error {
             return Err((stmt_results, error));
         }
-        if force_isolated {
+        if mode.is_isolated() {
             return Ok(("isolated", stmt_results));
         }
-        if let Err(error) = runtime.prepare_current_repository_for_repl("<session>") {
+        if let Err(error) = runtime.prepare_current_repository_for_repl(source_label.as_str()) {
             return Err((stmt_results, error));
         }
         return Ok(("project", stmt_results));
     }
 
-    if let SessionPreload::BeforeFile(preload_file) = &preload {
-        let clean_path = preload_file.replace('\r', "");
-        let path = Path::new(clean_path.as_str());
-        let path = if path.is_absolute() {
-            path.to_path_buf()
-        } else {
-            directory.join(path)
-        };
-        let path_string = path.to_string_lossy().into_owned();
-        if force_isolated {
-            let error = ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(
-                "`-session -before` requires a registered project file and cannot be isolated"
-                    .to_string(),
-                (0, Rc::from(path_string.as_str())),
-            ))
-            .into();
-            return Err((vec![], error));
-        }
-        let target = match discover_repository_for_file(runtime, path_string.as_str()) {
-            Ok(Some(target)) => target,
-            Ok(None) => {
-                let error = ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "`-session -before` requires a litex.config in the target file's folder"
-                        .to_string(),
-                    (0, Rc::from(path_string.as_str())),
-                ))
-                .into();
-                return Err((vec![], error));
-            }
-            Err(error) => return Err((vec![], error)),
-        };
-        let (stmt_results, runtime_error) = run_repository_before_file_target(runtime, target);
-        if let Some(error) = runtime_error {
-            return Err((stmt_results, error));
-        }
-        return Ok(("project", stmt_results));
-    }
-
-    if force_isolated || !directory.join("litex.config").is_file() {
-        runtime.start_isolated_source("<session>");
+    if target == SessionTarget::Isolated
+        || !directory.join("litex.config").is_file()
+    {
+        runtime.start_isolated_source(source_label.as_str());
         return Ok(("isolated", vec![]));
     }
 
@@ -341,7 +297,7 @@ fn initialize_session_runtime(
     if let Err(error) = discover_repository(runtime, root.as_str()) {
         return Err((vec![], error));
     }
-    if let Err(error) = runtime.prepare_current_repository_for_repl("<session>") {
+    if let Err(error) = runtime.prepare_current_repository_for_repl(source_label.as_str()) {
         return Err((vec![], error));
     }
     Ok(("project", vec![]))

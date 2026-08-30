@@ -204,11 +204,9 @@ impl ProgramExtractor {
             });
         }
         let default_return = match &stmt.default_return {
-            Some(value) => Some(self.extract_expression(
-                &value.value,
-                &params_in_scope,
-                &value.line_file,
-            )?),
+            Some(value) => {
+                Some(self.extract_expression(&value.value, &params_in_scope, &value.line_file)?)
+            }
             None => None,
         };
         self.statements
@@ -288,9 +286,7 @@ impl ProgramExtractor {
         line_file: &LineFile,
     ) -> Result<ExtractedExpression, RuntimeError> {
         let kind = match obj {
-            Obj::Number(number) => {
-                ExtractedExpressionKind::Number(number.normalized_value.clone())
-            }
+            Obj::Number(number) => ExtractedExpressionKind::Number(number.normalized_value.clone()),
             Obj::EulerNumber(_) => ExtractedExpressionKind::EulerNumber,
             Obj::Pi(_) => ExtractedExpressionKind::Pi,
             Obj::ImaginaryUnit(_) => {
@@ -508,10 +504,7 @@ pub(super) fn extract_program_from_stmts(
     })
 }
 
-pub(super) fn code_extraction_error(
-    line_file: &LineFile,
-    msg: impl Into<String>,
-) -> RuntimeError {
+pub(super) fn code_extraction_error(line_file: &LineFile, msg: impl Into<String>) -> RuntimeError {
     UnknownRuntimeError(RuntimeErrorStruct::new(
         None,
         msg.into(),

@@ -1,22 +1,27 @@
 use super::arguments::{
-    parse_global_options, read_non_flag_value_after_flag, read_session_preload,
-    validate_session_preload,
+    parse_global_options, read_non_flag_value_after_flag, read_session_target,
+    reject_meaningless_isolated, GlobalOptions,
 };
 use super::command_handlers::{
     print_or_save_graph_output, run_code_from_e_command_line_flag, run_file_command,
     run_graph_command, run_repository_command, run_runner_command, VERSION,
 };
-use super::conversion_commands::{run_latex_command, run_python_command};
+use super::conversion_commands::{
+    run_code_extraction_command, run_latex_command, CodeExtractionCommand,
+};
 use super::lean_commands::{run_lean_file_command, run_lean_ledger_command};
 use super::messages::{print_help_message, upgrade_message};
 use crate::graph::GraphKind;
-use crate::pipeline::{run_repl, run_session, RunOptions, SessionRequest};
+use crate::pipeline::{run_repl, run_session, FileRunMode, RunOptions, SessionRequest};
 use std::env;
 use std::process;
 
 pub fn run_cli() {
     let mut args: Vec<String> = env::args().skip(1).collect();
-    let run_options = match parse_global_options(&mut args) {
+    let GlobalOptions {
+        run: run_options,
+        isolated,
+    } = match parse_global_options(&mut args) {
         Ok(options) => options,
         Err(message) => {
             eprintln!("{}", message);
@@ -31,20 +36,24 @@ pub fn run_cli() {
 
         match head {
             "-help" => {
+                exit_on_meaningless_isolated(isolated, "-help");
                 print_help_message();
                 println!();
                 println!("If no options are provided, starts interactive REPL mode.");
                 return;
             }
             "-version" => {
+                exit_on_meaningless_isolated(isolated, "-version");
                 println!("Litex Kernel: litex {}", VERSION);
                 return;
             }
             "-upgrade" => {
+                exit_on_meaningless_isolated(isolated, "-upgrade");
                 println!("{}", upgrade_message(VERSION));
                 return;
             }
             "-e" => {
+                exit_on_meaningless_isolated(isolated, "-e");
                 index += 1;
                 let code = match read_non_flag_value_after_flag(&args, &mut index, "-e") {
                     Ok(value) => value,
@@ -68,13 +77,18 @@ pub fn run_cli() {
                     }
                 };
                 if args.get(index).is_some_and(|arg| arg == "-lean") {
-                    run_lean_file_command(&args, &mut index, &file_path, run_options);
+                    run_lean_file_command(&args, &mut index, &file_path, run_options, isolated);
                     return;
                 }
-                run_file_command(file_path.as_str(), run_options);
+                run_file_command(
+                    file_path.as_str(),
+                    FileRunMode::from_isolated(isolated),
+                    run_options,
+                );
                 return;
             }
             "-r" => {
+                exit_on_meaningless_isolated(isolated, "-r");
                 index += 1;
                 let repo_path = match read_non_flag_value_after_flag(&args, &mut index, "-r") {
                     Ok(value) => value,
@@ -96,6 +110,7 @@ pub fn run_cli() {
                         summarize: false,
                         ..run_options
                     },
+                    isolated,
                 ) {
                     Ok(output) => output,
                     Err(message) => {
@@ -126,6 +141,7 @@ pub fn run_cli() {
                         summarize: false,
                         ..run_options
                     },
+                    isolated,
                 ) {
                     Ok(output) => output,
                     Err(message) => {
@@ -147,7 +163,7 @@ pub fn run_cli() {
             }
             "-session" => {
                 index += 1;
-                let preload = match read_session_preload(&args, &mut index) {
+                let target = match read_session_target(&args, &mut index, isolated) {
                     Ok(value) => value,
                     Err(message) => {
                         eprintln!("{}", message);
@@ -155,40 +171,41 @@ pub fn run_cli() {
                         process::exit(2);
                     }
                 };
-                if let Err(message) = validate_session_preload(run_options.force_isolated, &preload)
-                {
-                    eprintln!("{}", message);
-                    print_help_message();
-                    process::exit(2);
-                }
                 run_session(SessionRequest::new(
                     RunOptions {
                         summarize: false,
                         ..run_options
                     },
-                    preload,
+                    target,
                 ));
                 return;
             }
             "-lean-ledger" => {
+                exit_on_meaningless_isolated(isolated, "-lean-ledger");
                 run_lean_ledger_command(&args, &mut index);
                 return;
             }
             "-latex" => {
-                run_latex_command(
+                run_latex_command(&args, &mut index, run_options.output_language, isolated);
+                return;
+            }
+            "-extractpython" => {
+                run_code_extraction_command(
                     &args,
                     &mut index,
                     run_options.output_language,
-                    run_options.force_isolated,
+                    isolated,
+                    CodeExtractionCommand::Python,
                 );
                 return;
             }
-            "-python" => {
-                run_python_command(
+            "-extractc" => {
+                run_code_extraction_command(
                     &args,
                     &mut index,
                     run_options.output_language,
-                    run_options.force_isolated,
+                    isolated,
+                    CodeExtractionCommand::C,
                 );
                 return;
             }
@@ -201,6 +218,14 @@ pub fn run_cli() {
     }
 
     run_repl(VERSION, run_options);
+}
+
+fn exit_on_meaningless_isolated(isolated: bool, target: &str) {
+    if let Err(message) = reject_meaningless_isolated(isolated, target) {
+        eprintln!("{}", message);
+        print_help_message();
+        process::exit(2);
+    }
 }
 
 #[cfg(test)]

@@ -1873,6 +1873,45 @@ have algo for max2(x, y):
 }
 
 #[test]
+pub(super) fn c_extractor_outputs_supported_have_subset() {
+    run_with_large_stack("c_extractor_outputs_supported_have_subset", || {
+        let source_code = r#"
+have q Q = 1
+have z Z = 3
+
+have fn f(x R) R = x + 1
+have algo for f(x):
+    x + 1
+
+have fn g(x R) R = f(x) + 2
+have algo for g(x):
+    f(x) + 2
+
+have fn max2(x, y R) R by cases:
+    case x >= y: x
+    case x < y: y
+have algo for max2(x, y):
+    case x >= y: x
+    case x < y: y
+"#;
+
+        let output = to_c_from_source(source_code, "c_extractor_outputs_supported_have_subset")
+            .expect("supported C extraction should succeed");
+
+        assert!(output.contains("double q = 1.0;"));
+        assert!(output.contains("double z = 3.0;"));
+        assert!(output.contains("double f(double x) {"));
+        assert!(output.contains("return (x + 1.0);"));
+        assert!(output.contains("double g(double x) {"));
+        assert!(output.contains("return (f(x) + 2.0);"));
+        assert!(output.contains("double max2(double x, double y) {"));
+        assert!(output.contains("if (x >= y) {"));
+        assert!(output.contains("else if (x < y) {"));
+        assert!(output.contains("abort();"));
+    });
+}
+
+#[test]
 fn python_extractor_skips_non_numeric_have_obj_equal() {
     run_with_large_stack("python_extractor_skips_non_numeric_have_obj_equal", || {
         let output = to_python_from_source(

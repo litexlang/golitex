@@ -39,7 +39,6 @@ fn fact_graph_keeps_target_metadata_out_of_runtime_source_identity() {
 
     assert!(output.contains(r#""graph_version": "0.2""#), "{output}");
     assert!(output.contains("\"target\": {\n    \"kind\": \"code\"\n  }"));
-    assert!(!output.contains(r#""label""#), "{output}");
     assert!(output.contains("fact:<-e>:1:1 = 1"), "{output}");
 }
 

@@ -11,6 +11,7 @@ fn retired_placeholder_commands_are_rejected_and_absent_from_help() {
         "-tutorial",
         "-trace-pipeline",
         "-trust-before-line",
+        "-python",
     ] {
         let output = Command::new(env!("CARGO_BIN_EXE_litex"))
             .arg(flag)

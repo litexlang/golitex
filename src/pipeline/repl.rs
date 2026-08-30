@@ -213,7 +213,7 @@ fn run_repl_source_if_not_empty(
 }
 
 fn initialize_isolated_repl_runtime(runtime: &mut Runtime) {
-    runtime.start_isolated_source("<repl>");
+    runtime.start_isolated_source(ExecutionTarget::Repl.source_label());
 }
 
 fn repl_line_starts_block(line: &str) -> bool {

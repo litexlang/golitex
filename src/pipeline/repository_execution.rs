@@ -5,16 +5,14 @@ use std::rc::Rc;
 #[derive(Clone, Copy)]
 enum RepositoryModuleRun {
     Complete,
-    Before(RepositoryFileTarget),
     Through(RepositoryFileTarget),
 }
 
 impl RepositoryModuleRun {
-    fn selected_target(self) -> Option<(RepositoryFileTarget, bool)> {
+    fn selected_target(self) -> Option<RepositoryFileTarget> {
         match self {
             Self::Complete => None,
-            Self::Before(target) => Some((target, false)),
-            Self::Through(target) => Some((target, true)),
+            Self::Through(target) => Some(target),
         }
     }
 }
@@ -29,44 +27,6 @@ pub fn execute_repository_target(
             run_repository_prefix(runtime, RepositoryModuleRun::Through(target))
         }
     }
-}
-
-pub fn run_repository_before_file_target(
-    runtime: &mut Runtime,
-    target: RepositoryFileTarget,
-) -> (Vec<StmtResult>, Option<RuntimeError>) {
-    let RepositoryFileTarget::File { module_id, file_id } = target else {
-        return (
-            vec![],
-            Some(repository_target_error(
-                "a session -before target must be a registered project file",
-            )),
-        );
-    };
-    let file_exists = runtime
-        .module_manager
-        .module(module_id)
-        .and_then(|module| module.file(file_id))
-        .is_some();
-    if !file_exists {
-        return (
-            vec![],
-            Some(repository_target_error(
-                "registered project file is missing",
-            )),
-        );
-    }
-
-    let execution_mode = runtime.current_execution_mode();
-    let result = run_repository_prefix(runtime, RepositoryModuleRun::Before(target));
-    if result.1.is_none() {
-        runtime.push_file_execution_frame_with_mode(module_id, file_id, execution_mode);
-        if let Err(error) = runtime.refresh_current_bare_symbol_index() {
-            runtime.pop_execution_frame();
-            return (result.0, Some(error));
-        }
-    }
-    result
 }
 
 fn run_repository_module_prefix(
@@ -92,7 +52,7 @@ fn run_repository_prefix(
     runtime: &mut Runtime,
     module_run: RepositoryModuleRun,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
-    let Some((target, _)) = module_run.selected_target() else {
+    let Some(target) = module_run.selected_target() else {
         unreachable!("repository prefix requires a selected target")
     };
     let execution_mode = runtime.current_execution_mode();
@@ -236,12 +196,9 @@ fn run_repository_module_plan(
     let run_targets = module.run_targets.clone();
     for target in run_targets {
         let (mut target_results, runtime_error, reached_selected_target) =
-            if let Some((selected_target, include_selected_target)) = selected_target {
+            if let Some(selected_target) = selected_target {
                 let target_matches =
                     repository_target_matches_import_target(selected_target, target);
-                if target_matches && !include_selected_target {
-                    return (results, None);
-                }
                 let target_contains = match target {
                     ImportTarget::Module(child_module_id) => repository_target_is_inside_module(
                         runtime,

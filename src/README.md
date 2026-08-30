@@ -90,7 +90,7 @@ source `1 + 1 = 2`
 | [`symbol/`](symbol/README.md) | Two nested binders named `x` receive different `SymbolId` values. |
 | [`syntax/`](syntax/README.md) | `forall` is reserved, while `user_name` is a valid source identifier. |
 | [`latex_renderer/`](latex_renderer/README.md) | `litex -latex -e '1 = 1'` renders LaTeX. |
-| [`python_extractor/`](python_extractor/README.md) | `litex -python -e '1 = 1'` uses the frozen Python extractor. |
+| [`extract_code_of_other_languages_from_litex/`](extract_code_of_other_languages_from_litex/README.md) | `litex -extractpython 'have a R = 1'` and `litex -extractc 'have a R = 1'` render one verified executable subset through two target backends. |
 | [`verification/`](verification/README.md) | `x ^ 2 / x = x` needs `x != 0` before algebraic verification. |
 
 ## Repository tests

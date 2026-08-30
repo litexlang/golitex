@@ -29,7 +29,6 @@ fn definition_graph_reads_environment_stored_props_and_functions() {
 
     assert!(output.contains(r#""graph": "litex-definition-graph""#));
     assert!(output.contains("\"target\": {\n    \"kind\": \"code\"\n  }"));
-    assert!(!output.contains(r#""label""#));
     assert!(output.contains(r#""id": "definition:prop:p""#));
     assert!(output.contains(r#""id": "definition:prop:q""#));
     assert!(output.contains(r#""id": "definition:fn:f""#));

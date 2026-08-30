@@ -19,7 +19,7 @@ from pathlib import Path
 from typing import Callable
 
 
-RUNNER_VERSION = "0.1"
+RUNNER_VERSION = "0.2"
 DEFAULT_GLOBAL_TIMEOUT_SECONDS = 240.0
 DEFAULT_FILE_TIMEOUT_SECONDS = 600.0
 DEFAULT_TEXTBOOK_JOBS = min(4, os.cpu_count() or 1)

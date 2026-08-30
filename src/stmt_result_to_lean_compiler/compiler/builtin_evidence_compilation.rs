@@ -1,5 +1,19 @@
 use super::*;
 
+fn negative_one_product_argument(object: &Obj) -> Option<&Obj> {
+    let Obj::Mul(product) = object else {
+        return None;
+    };
+    if matches!(product.left.as_ref(), Obj::Number(number) if number.normalized_value == "-1") {
+        Some(product.right.as_ref())
+    } else if matches!(product.right.as_ref(), Obj::Number(number) if number.normalized_value == "-1")
+    {
+        Some(product.left.as_ref())
+    } else {
+        None
+    }
+}
+
 impl StmtResultToLeanCompiler {
     /// `Leaf`: intervals and rays retain exact native-real endpoints, so the
     /// Core inclusion theorem is selected solely from the retained source
@@ -1267,6 +1281,9 @@ impl StmtResultToLeanCompiler {
             | ArithmeticBuiltinRule::SubPositiveFromLess
             | ArithmeticBuiltinRule::SubLessImpliesLessAdd
             | ArithmeticBuiltinRule::SubLessSwap
+            | ArithmeticBuiltinRule::SubLessEqualSwap
+            | ArithmeticBuiltinRule::LessEqualAddImpliesSubLessEqual
+            | ArithmeticBuiltinRule::NegateOrder
             | ArithmeticBuiltinRule::AddRightNonnegativeLessEqual => 1,
             ArithmeticBuiltinRule::MulCommonFactorLessEqualNonnegative
             | ArithmeticBuiltinRule::MulCommonFactorLessEqualNonpositive
@@ -1328,6 +1345,115 @@ impl StmtResultToLeanCompiler {
                 &children,
                 &self.environment_stack,
             )?));
+        }
+
+        if rule == ArithmeticBuiltinRule::NegateOrder {
+            let [source] = children.as_slice() else {
+                unreachable!("negated order retained one child")
+            };
+            let (target_left, target_right, target_strict) = order_relation_parts(target)?;
+            let (source_left, source_right, source_strict) = order_relation_parts(&source.fact)?;
+            if target_strict && !source_strict {
+                return Err("strict negated order retained a weak premise".into());
+            }
+            let target_matches_negated_source =
+                negative_one_product_argument(target_left).is_some_and(|argument| {
+                    obj_equality_key(argument) == obj_equality_key(source_right)
+                        && negative_one_product_argument(source_left).is_some_and(
+                            |source_argument| {
+                                obj_equality_key(source_argument) == obj_equality_key(target_right)
+                            },
+                        )
+                }) || negative_one_product_argument(target_right).is_some_and(|argument| {
+                    obj_equality_key(argument) == obj_equality_key(source_left)
+                        && negative_one_product_argument(source_right).is_some_and(
+                            |source_argument| {
+                                obj_equality_key(source_argument) == obj_equality_key(target_left)
+                            },
+                        )
+                });
+            if !target_matches_negated_source {
+                return Err("negated order changed its reversed endpoints".into());
+            }
+            render_fact(target, &self.environment_stack)?;
+            let theorem = if source_strict {
+                "Litex.Rules.complexNegativeOneMulReversesLess"
+            } else {
+                "Litex.Rules.complexNegativeOneMulReversesLessEqual"
+            };
+            let source_proof = format!("{theorem} ({})", source.proof_expression);
+            let source_proof = if source_strict && !target_strict {
+                format!("Litex.Lt.toLe ({source_proof})")
+            } else {
+                source_proof
+            };
+            return Ok(Some(format!(
+                "(by simpa [mul_assoc] using ({source_proof}))"
+            )));
+        }
+
+        if matches!(
+            rule,
+            ArithmeticBuiltinRule::SubLessEqualSwap
+                | ArithmeticBuiltinRule::LessEqualAddImpliesSubLessEqual
+        ) {
+            let [premise] = children.as_slice() else {
+                unreachable!("weak subtraction rearrangement retained one child")
+            };
+            let (target_left, target_right, target_strict) = order_relation_parts(target)?;
+            let Obj::Sub(target_difference) = target_left else {
+                return Err("weak subtraction rearrangement changed its target difference".into());
+            };
+            let (premise_left, premise_right, premise_strict) =
+                order_relation_parts(&premise.fact)?;
+            if target_strict || premise_strict {
+                return Err("weak subtraction rearrangement changed relation strictness".into());
+            }
+            let theorem = if rule == ArithmeticBuiltinRule::SubLessEqualSwap {
+                let Obj::Sub(premise_difference) = premise_left else {
+                    return Err("weak subtraction swap changed its premise difference".into());
+                };
+                if obj_equality_key(target_difference.left.as_ref())
+                    != obj_equality_key(premise_difference.left.as_ref())
+                    || obj_equality_key(target_difference.right.as_ref())
+                        != obj_equality_key(premise_right)
+                    || obj_equality_key(target_right)
+                        != obj_equality_key(premise_difference.right.as_ref())
+                {
+                    return Err("weak subtraction swap changed its operands".into());
+                }
+                "Litex.Rules.complexSubLeSwap"
+            } else {
+                let Obj::Add(premise_sum) = premise_right else {
+                    return Err("subtraction-from-addition changed its premise sum".into());
+                };
+                if obj_equality_key(target_difference.left.as_ref())
+                    != obj_equality_key(premise_left)
+                {
+                    return Err("subtraction-from-addition changed its left endpoint".into());
+                }
+                let native_order = obj_equality_key(target_right)
+                    == obj_equality_key(premise_sum.left.as_ref())
+                    && obj_equality_key(target_difference.right.as_ref())
+                        == obj_equality_key(premise_sum.right.as_ref());
+                let commuted_order = obj_equality_key(target_right)
+                    == obj_equality_key(premise_sum.right.as_ref())
+                    && obj_equality_key(target_difference.right.as_ref())
+                        == obj_equality_key(premise_sum.left.as_ref());
+                if !native_order && !commuted_order {
+                    return Err("subtraction-from-addition changed its moved addend".into());
+                }
+                if commuted_order {
+                    render_fact(target, &self.environment_stack)?;
+                    return Ok(Some(format!(
+                        "Litex.Rules.complexSubLeOfLeAdd (by simpa [add_comm] using ({}))",
+                        premise.proof_expression
+                    )));
+                }
+                "Litex.Rules.complexSubLeOfLeAdd"
+            };
+            render_fact(target, &self.environment_stack)?;
+            return Ok(Some(format!("{theorem} ({})", premise.proof_expression)));
         }
 
         if rule == ArithmeticBuiltinRule::MulComponentwiseLessEqual {
