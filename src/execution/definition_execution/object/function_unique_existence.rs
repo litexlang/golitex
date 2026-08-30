@@ -29,9 +29,7 @@ impl Runtime {
                     statement: stmt.clone(),
                     common: SuccessStmtCommonResult::new(infer_result),
                     verification: Some(verification),
-                    published_property_well_definedness: Some(
-                        published_property_well_definedness,
-                    ),
+                    published_property_well_definedness: Some(published_property_well_definedness),
                 },
             ))
             .into(),
@@ -53,18 +51,19 @@ impl Runtime {
         RuntimeError,
     > {
         let shape = self.have_fn_by_forall_exist_unique_shape(stmt)?;
-        let well_definedness = self.verify_fact_well_defined_result(
-            &Fact::ForallFact(stmt.forall.clone()),
-            &VerifyState::initial(),
-        )
-        .map_err(|e| {
-            short_exec_error(
-                stmt.clone().into(),
-                "have_fn_by_forall_exist_unique: forall fact is not well defined".to_string(),
-                Some(e),
-                vec![],
+        let well_definedness = self
+            .verify_fact_well_defined_result(
+                &Fact::ForallFact(stmt.forall.clone()),
+                &VerifyState::initial(),
             )
-        })?;
+            .map_err(|e| {
+                short_exec_error(
+                    stmt.clone().into(),
+                    "have_fn_by_forall_exist_unique: forall fact is not well defined".to_string(),
+                    Some(e),
+                    vec![],
+                )
+            })?;
         Ok((shape, well_definedness))
     }
 

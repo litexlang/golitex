@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 const RUNNER_NAME: &str = "litex-runner";
-const RUNNER_VERSION: &str = "0.1";
+const RUNNER_VERSION: &str = "0.2";
 
 pub fn render_runner(outcome: RunOutcome, hide_file_paths: bool) -> (bool, String) {
     if let Some(message) = outcome.target_error {
@@ -46,7 +46,7 @@ fn runner_output_from_trace(
         ("ok".to_string(), JsonValue::Bool(ok)),
         (
             "target".to_string(),
-            target_json_value(target_kind, target_path, hide_file_paths),
+            run_target_json_value(target_kind.json_name(), target_path, hide_file_paths),
         ),
         ("error".to_string(), JsonValue::Null),
         (
@@ -86,7 +86,7 @@ fn runner_target_error_output(
         ("ok".to_string(), JsonValue::Bool(false)),
         (
             "target".to_string(),
-            target_json_value(target_kind, target_path, hide_file_paths),
+            run_target_json_value(target_kind.json_name(), target_path, hide_file_paths),
         ),
         ("error".to_string(), error),
         ("trace".to_string(), JsonValue::JsonString(String::new())),
@@ -96,28 +96,6 @@ fn runner_target_error_output(
 
 fn render_runner_json_value(value: JsonValue) -> String {
     render_json_value(&value, 0)
-}
-
-fn target_json_value(
-    target_kind: RunTargetKind,
-    target_path: Option<&str>,
-    hide_file_paths: bool,
-) -> JsonValue {
-    let label = if target_kind == RunTargetKind::Code {
-        "-runner -e".to_string()
-    } else if hide_file_paths {
-        "entry".to_string()
-    } else {
-        target_path.unwrap_or("entry").to_string()
-    };
-
-    JsonValue::Object(vec![
-        (
-            "kind".to_string(),
-            JsonValue::JsonString(target_kind.json_name().to_string()),
-        ),
-        ("label".to_string(), JsonValue::JsonString(label)),
-    ])
 }
 
 #[cfg(test)]

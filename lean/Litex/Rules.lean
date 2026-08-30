@@ -1004,6 +1004,27 @@ theorem complexSubPositiveOfLess
   exact ⟨u - v, complexSubAsReal (Litex.AsReal.complex u) (Litex.AsReal.complex v), by
     simpa [Litex.Lt, Litex.OrderValue] using hvu⟩
 
+/-- Moving a subtrahend across a strict real-observed inequality is the
+registered rule `order.lt_add_of_sub_lt`. -/
+theorem complexLtAddOfSubLt
+    {a b c : ℂ}
+    (h : Litex.Lt (a - b) c) :
+    Litex.Lt a (b + c) := by
+  have h' : a.re - b.re < c.re := by
+    simpa [Litex.Lt, Litex.OrderValue] using h
+  simpa [Litex.Lt, Litex.OrderValue, add_comm] using (sub_lt_iff_lt_add.mp h')
+
+/-- Swapping the subtrahend with the strict upper bound preserves the
+equivalent ordered-difference statement. -/
+theorem complexSubLtSwap
+    {a b c : ℂ}
+    (h : Litex.Lt (a - b) c) :
+    Litex.Lt (a - c) b := by
+  have h' : a.re - b.re < c.re := by
+    simpa [Litex.Lt, Litex.OrderValue] using h
+  simpa [Litex.Lt, Litex.OrderValue] using (sub_lt_iff_lt_add.mpr (by
+    linarith : a.re < b.re + c.re))
+
 /-- Adding one common complex term preserves Litex non-strict order.
 This is the Lean adapter for registered rule `order.add_le_add_left`. -/
 theorem complexAddPreservesLessEqualWithCommonLeft
@@ -1128,6 +1149,17 @@ theorem complexSubPreservesLessOfLessEqualAndLess
   have hleft : a.re - d.re ≤ b.re - d.re := sub_le_sub_right hab' d.re
   have hright : b.re - d.re < b.re - c.re := sub_lt_sub_left hcd' b.re
   simpa [Litex.Lt, Litex.OrderValue] using hleft.trans_lt hright
+
+/-- Componentwise weak subtraction, contravariant in the subtrahend. This is
+the Lean adapter for registered rule `order.sub_le_sub`. -/
+theorem complexSubPreservesLessEqualComponentwise
+    {a b c d : ℂ}
+    (hab : Litex.Le a b)
+    (hcd : Litex.Le c d) :
+    Litex.Le (a - d) (b - c) := by
+  have hab' : a.re ≤ b.re := hab
+  have hcd' : c.re ≤ d.re := hcd
+  simpa [Litex.Le, Litex.OrderValue] using sub_le_sub hab' hcd'
 
 /-- Exact-real adapter for registered rule
 `order.le_add_of_nonnegative_right`. -/

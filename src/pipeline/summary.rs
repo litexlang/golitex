@@ -85,12 +85,10 @@ impl RunSummary {
                 file: entry.line_file.1.to_string(),
             })
             .collect();
-        if let Some(entry_module_id) = runtime.module_manager.entry_module_id {
-            if let Some(module) = runtime.module_manager.module(entry_module_id) {
-                summary.main_environment = Some(EnvironmentSummary::from_environment(
-                    module.main_environment.as_ref(),
-                ));
-            }
+        if let Some(module) = runtime.module_manager.module(ModuleId::ROOT) {
+            summary.main_environment = Some(EnvironmentSummary::from_environment(
+                module.main_environment.as_ref(),
+            ));
         }
         summary
     }

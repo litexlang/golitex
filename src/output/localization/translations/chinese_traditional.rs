@@ -84,7 +84,6 @@ pub(in super::super) const ZH_HANT_TEXTS: &[(&str, &str)] = &[
     ("code", "程式碼"),
     ("file", "檔案"),
     ("repo", "倉庫"),
-    ("entry", "入口"),
     ("builtin", "內建"),
     ("module", "模組"),
     ("ArithmeticError", "算術錯誤"),

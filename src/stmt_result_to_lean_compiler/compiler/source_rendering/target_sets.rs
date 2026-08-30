@@ -208,11 +208,9 @@ pub(in super::super) fn render_real_set_observer(
         LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Real) => {
             Ok(format!("({value} : ℝ)"))
         }
-        LeanTargetObjectRepresentation::SetBuilder(builder) => render_real_set_observer(
-            builder.set.as_ref(),
-            context,
-            &format!("({value}).val"),
-        ),
+        LeanTargetObjectRepresentation::SetBuilder(builder) => {
+            render_real_set_observer(builder.set.as_ref(), context, &format!("({value}).val"))
+        }
         LeanTargetObjectRepresentation::FunctionRange { function } => {
             let function_type = resolve_exact_function_range_type(function, context)?;
             render_real_set_observer(
@@ -222,8 +220,28 @@ pub(in super::super) fn render_real_set_observer(
             )
         }
         LeanTargetObjectRepresentation::RealInterval { .. }
-        | LeanTargetObjectRepresentation::RealRay { .. } => {
-            Ok(format!("(({value}).val : ℝ)"))
+        | LeanTargetObjectRepresentation::RealRay { .. } => Ok(format!("(({value}).val : ℝ)")),
+        LeanTargetObjectRepresentation::Symbol { symbol_id, .. } => {
+            let definition = context
+                .transparent_object_definitions
+                .get(symbol_id)
+                .ok_or_else(|| {
+                    format!(
+                        "target set symbol {} has no transparent native-real carrier definition",
+                        symbol_id.value()
+                    )
+                })?;
+            let lowered = LeanTargetObjectRepresentation::lower(&definition.value)?;
+            if matches!(
+                &lowered,
+                LeanTargetObjectRepresentation::Symbol {
+                    symbol_id: defined_id,
+                    ..
+                } if defined_id == symbol_id
+            ) {
+                return Err("transparent real-set definition is self-referential".into());
+            }
+            render_real_set_observer(&lowered, context, value)
         }
         other => Err(format!(
             "target set `{other:?}` has no registered native-real carrier observation"
@@ -242,7 +260,11 @@ pub(in super::super) fn render_real_set_observer_same(
         }
         LeanTargetObjectRepresentation::SetBuilder(builder) => Ok(format!(
             "Litex.Same.trans (Litex.Same.subtype {value}) ({})",
-            render_real_set_observer_same(builder.set.as_ref(), context, &format!("({value}).val"))?
+            render_real_set_observer_same(
+                builder.set.as_ref(),
+                context,
+                &format!("({value}).val")
+            )?
         )),
         LeanTargetObjectRepresentation::FunctionRange { function } => {
             let function_type = resolve_exact_function_range_type(function, context)?;
@@ -258,6 +280,28 @@ pub(in super::super) fn render_real_set_observer_same(
         LeanTargetObjectRepresentation::RealInterval { .. }
         | LeanTargetObjectRepresentation::RealRay { .. } => {
             Ok(format!("Litex.Same.subtype {value}"))
+        }
+        LeanTargetObjectRepresentation::Symbol { symbol_id, .. } => {
+            let definition = context
+                .transparent_object_definitions
+                .get(symbol_id)
+                .ok_or_else(|| {
+                    format!(
+                        "target set symbol {} has no transparent native-real semantic definition",
+                        symbol_id.value()
+                    )
+                })?;
+            let lowered = LeanTargetObjectRepresentation::lower(&definition.value)?;
+            if matches!(
+                &lowered,
+                LeanTargetObjectRepresentation::Symbol {
+                    symbol_id: defined_id,
+                    ..
+                } if defined_id == symbol_id
+            ) {
+                return Err("transparent real-set definition is self-referential".into());
+            }
+            render_real_set_observer_same(&lowered, context, value)
         }
         other => Err(format!(
             "target set `{other:?}` has no registered native-real semantic bridge"

@@ -73,7 +73,6 @@ pub(in super::super) const RU_TEXTS: &[(&str, &str)] = &[
     ("code", "код"),
     ("file", "файл"),
     ("repo", "репозиторий"),
-    ("entry", "вход"),
     ("builtin", "встроенный"),
     ("module", "модуль"),
     ("ArithmeticError", "арифметическая ошибка"),

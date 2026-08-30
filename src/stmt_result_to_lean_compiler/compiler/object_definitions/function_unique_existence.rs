@@ -115,8 +115,7 @@ impl StmtResultToLeanCompiler {
         if !result.common.infers.rule_applications.is_empty() {
             return Ok(false);
         }
-        let [membership_store, property_store] =
-            result.common.infers.store_fact_outputs.as_slice()
+        let [membership_store, property_store] = result.common.infers.store_fact_outputs.as_slice()
         else {
             return Err(
                 "have-fn unique-existence Result must publish membership and property".into(),
@@ -307,9 +306,7 @@ impl StmtResultToLeanCompiler {
         let Some(SuccessVerifyFactWellDefinedProofResult::ForallFact(property_wd_forall)) =
             property_well_definedness.recursive.as_deref()
         else {
-            return Err(
-                "have-fn unique-existence property WD has no recursive forall root".into(),
-            );
+            return Err("have-fn unique-existence property WD has no recursive forall root".into());
         };
         if runtime
             .alpha_normalized_forall_cache_key(&property_wd_forall.statement)
@@ -318,9 +315,7 @@ impl StmtResultToLeanCompiler {
                 .alpha_normalized_forall_cache_key(stored_forall)
                 .map_err(|error| error.trace_message())?
         {
-            return Err(
-                "have-fn unique-existence property WD changed its published forall".into(),
-            );
+            return Err("have-fn unique-existence property WD changed its published forall".into());
         }
 
         // The runtime-derived property application is synthesized after the
@@ -351,14 +346,10 @@ impl StmtResultToLeanCompiler {
 
             let witness_groups = &source_existential.typed_parameters().groups;
             let [witness_group] = witness_groups.as_slice() else {
-                return Err(
-                    "have-fn unique-existence property requires one witness group".into(),
-                );
+                return Err("have-fn unique-existence property requires one witness group".into());
             };
             let [witness_binding] = witness_group.params.as_slice() else {
-                return Err(
-                    "have-fn unique-existence property requires one witness binder".into(),
-                );
+                return Err("have-fn unique-existence property requires one witness binder".into());
             };
             let witness_set = parameter_set(&witness_group.param_type)?;
             let selected_value = format!(

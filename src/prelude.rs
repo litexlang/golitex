@@ -232,7 +232,7 @@ pub use crate::object::Union;
 pub use crate::object::{
     strip_free_param_numeric_tags_in_display, strip_parsing_free_param_tags_for_user_display,
 };
-pub use crate::output::json_value::{render_json_value, JsonValue};
+pub use crate::output::json_value::{render_json_value, run_target_json_value, JsonValue};
 pub use crate::output::language::OutputLanguage;
 pub use crate::output::style::OutputStyle;
 pub use crate::parsing::{TokenBlock, Tokenizer};

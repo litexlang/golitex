@@ -11,6 +11,11 @@ pub enum ArithmeticBuiltinRule {
     GreaterEqualFromStrictOrder,
     SubNonnegativeFromLessEqual,
     SubPositiveFromLess,
+    /// From `a - b < c`, conclude `a < b + c` (up to the checked
+    /// commutativity of the target addition).
+    SubLessImpliesLessAdd,
+    /// From `a - b < c`, conclude `a - c < b`.
+    SubLessSwap,
     AddNonnegative,
     AddPositive,
     AddPositiveLeftStrict,
@@ -37,6 +42,9 @@ pub enum ArithmeticBuiltinRule {
     /// If `a <= b` and `c < d`, then `a - d < b - c` in the
     /// checked real carrier.
     SubComponentwiseLessEqualLess,
+    /// If `a <= b` and `c <= d`, then `a - d <= b - c` in the
+    /// checked real carrier.
+    SubComponentwiseLessEqual,
 }
 
 impl ArithmeticBuiltinRule {
@@ -47,6 +55,8 @@ impl ArithmeticBuiltinRule {
             Self::GreaterEqualFromStrictOrder => "order.greater_equal_of_greater",
             Self::SubNonnegativeFromLessEqual => "order.sub_nonnegative_of_less_equal",
             Self::SubPositiveFromLess => "order.sub_positive_of_less",
+            Self::SubLessImpliesLessAdd => "order.lt_add_of_sub_lt",
+            Self::SubLessSwap => "order.sub_lt_swap",
             Self::AddNonnegative => "order.add_nonnegative",
             Self::AddPositive => "order.add_positive",
             Self::AddPositiveLeftStrict => "order.add_positive_of_positive_nonnegative",
@@ -73,6 +83,7 @@ impl ArithmeticBuiltinRule {
             Self::AddComponentwiseLessLessEqual => "order.add_lt_add_of_lt_of_le",
             Self::AddComponentwiseLessEqualLess => "order.add_lt_add_of_le_of_lt",
             Self::SubComponentwiseLessEqualLess => "order.sub_lt_sub_of_le_of_lt",
+            Self::SubComponentwiseLessEqual => "order.sub_le_sub",
         }
     }
 }

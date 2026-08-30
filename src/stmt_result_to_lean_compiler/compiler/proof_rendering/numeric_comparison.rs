@@ -36,8 +36,9 @@ pub(in super::super) fn render_closed_numeric_comparison_fact(
         }
         _ => {
             return Err(
-                "compiler closed comparison requires an order relation; closed equality and disequality use separate semantic adapters"
-                    .into()
+                format!(
+                    "compiler closed comparison requires an order relation; closed equality and disequality use separate semantic adapters (target `{fact}`)"
+                )
             )
         }
     };

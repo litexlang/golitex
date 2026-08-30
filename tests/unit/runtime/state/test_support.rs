@@ -17,7 +17,7 @@ fn isolated_source_registers_the_root_module_file() {
     let mut runtime = Runtime::default();
     runtime.start_isolated_source("<-e>");
 
-    assert_eq!(runtime.module_manager.entry_module_id, Some(ModuleId::ROOT));
+    assert!(runtime.module_manager.module(ModuleId::ROOT).is_some());
     let frame = runtime
         .execution_stack
         .last()

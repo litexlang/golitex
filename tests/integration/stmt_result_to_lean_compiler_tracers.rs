@@ -1,8 +1,8 @@
+use litex::prelude::*;
 use litex::stmt_result_to_lean_compiler::{
     compile_litex_source_to_lean_compilation_report, compile_litex_source_to_lean_source,
     StmtResultToLeanCompilationPhase, StmtResultToLeanCompilationStatus,
 };
-use litex::prelude::*;
 
 fn compile_on_verifier_stack(source: &'static str, label: &'static str) -> Result<String, String> {
     std::thread::Builder::new()

@@ -114,8 +114,14 @@ fn rational_density_keeps_the_mathlib_witness_in_the_exact_rational_carrier() {
             generated.contains("noncomputable def q : (Litex.Q).Carrier"),
             "{generated}"
         );
-        assert!(generated.contains("theorem __fact3 : Litex.Lt"), "{generated}");
-        assert!(generated.contains("theorem __fact4 : Litex.Lt"), "{generated}");
+        assert!(
+            generated.contains("theorem __fact3 : Litex.Lt"),
+            "{generated}"
+        );
+        assert!(
+            generated.contains("theorem __fact4 : Litex.Lt"),
+            "{generated}"
+        );
         for forbidden in ["LitexObject", "Litex.Object", "sorry", "axiom "] {
             assert!(
                 !generated.contains(forbidden),

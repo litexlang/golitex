@@ -129,6 +129,89 @@ pub(in super::super) fn render_exact_predicate_argument(
     if let Ok(LeanTargetObjectRepresentation::Symbol { symbol_id, name }) =
         LeanTargetObjectRepresentation::lower(object)
     {
+        // One symbol may inhabit an exact refined carrier such as a
+        // set-builder while a later predicate asks for its underlying exact
+        // `R` value. `exact_carrier_values` records the former; the registered
+        // real observer supplies the latter. Prefer an already-installed
+        // native real, otherwise recover the unique nontrivial projection
+        // from a visible checked membership fact. This keeps the existing
+        // environment layout while preventing a subtype value from being
+        // passed where `R.Carrier` is required.
+        if matches!(set, Obj::StandardSet(StandardSet::R)) {
+            if let Some(real) = context.numeric_real_values.get(&symbol_id) {
+                return Ok(real.clone());
+            }
+            if let Some(exact) = context.exact_carrier_values.get(&symbol_id) {
+                let rendered_source = render_obj(object, context)?;
+                if let Some(selection_proof) =
+                    cached_exact_membership_selection_proof(exact, &rendered_source)
+                {
+                    let selection_proof = selection_proof
+                        .trim_matches(|character| character == '(' || character == ')');
+                    let mut owners = context
+                        .fact_names
+                        .iter()
+                        .filter(|(_, proof)| {
+                            proof.trim_matches(|character| character == '(' || character == ')')
+                                == selection_proof
+                        })
+                        .filter_map(|(fact_id, _)| context.fact_propositions.get(fact_id))
+                        .filter_map(|fact| membership_parts(fact).ok())
+                        .filter(|(element, _)| {
+                            obj_equality_key(element) == obj_equality_key(object)
+                        })
+                        .filter_map(|(_, owner_set)| {
+                            let lowered = LeanTargetObjectRepresentation::lower(owner_set).ok()?;
+                            render_real_set_observer(&lowered, context, exact).ok()
+                        })
+                        .collect::<Vec<_>>();
+                    owners.sort();
+                    owners.dedup();
+                    match owners.as_slice() {
+                        [owner] => return Ok(owner.clone()),
+                        [] => {}
+                        _ => {
+                            return Err(format!(
+                                "predicate argument `{name}` has evidence-distinct exact carrier owners"
+                            ));
+                        }
+                    }
+                }
+                let mut projections = context
+                    .fact_propositions
+                    .values()
+                    .filter_map(|fact| {
+                        let (element, owner_set) = membership_parts(fact).ok()?;
+                        (obj_equality_key(element) == obj_equality_key(object)).then_some(owner_set)
+                    })
+                    .filter_map(|owner_set| {
+                        let lowered = LeanTargetObjectRepresentation::lower(owner_set).ok()?;
+                        render_real_set_observer(&lowered, context, exact).ok()
+                    })
+                    .filter(|projection| projection != exact)
+                    .collect::<Vec<_>>();
+                projections.sort();
+                projections.dedup();
+                let projected = projections
+                    .iter()
+                    .filter(|projection| projection.contains(".val"))
+                    .cloned()
+                    .collect::<Vec<_>>();
+                if let [projection] = projected.as_slice() {
+                    return Ok(projection.clone());
+                }
+                match projections.as_slice() {
+                    [projection] => return Ok(projection.clone()),
+                    [] => {}
+                    _ => {
+                        return Err(format!(
+                            "predicate argument `{name}` has multiple exact real-carrier projections: [{}]",
+                            projections.join(", ")
+                        ));
+                    }
+                }
+            }
+        }
         if let Some(value) = context.exact_carrier_values.get(&symbol_id) {
             return Ok(value.clone());
         }
@@ -179,9 +262,9 @@ pub(in super::super) fn render_exact_predicate_argument(
         Ok(format!("(Litex.In.rep {source} ({proof}))"))
     };
     match set {
-        Obj::StandardSet(StandardSet::R) => LeanTargetObjectRepresentation::lower(object)
-            .and_then(|lowered| render_real_target_object_representation(&lowered, context))
-            .or_else(|_| representative()),
+        Obj::StandardSet(StandardSet::R) => {
+            render_real_source_object(object, context).or_else(|_| representative())
+        }
         Obj::StandardSet(StandardSet::C) => render_numeric_obj(object, context),
         Obj::StandardSet(StandardSet::Z) => {
             render_integer_obj(object, context).or_else(|_| representative())
@@ -206,6 +289,15 @@ pub(in super::super) fn render_exact_predicate_argument_same_to_source(
     let source = render_obj(object, context)?;
     if exact == source {
         return Ok(format!("Litex.Same.refl ({exact})"));
+    }
+    if matches!(set, Obj::StandardSet(StandardSet::R))
+        && (exact == format!("({source} : ℝ)") || exact == format!("(({source}) : ℝ)"))
+    {
+        // Context substitution can leave an otherwise native real term with
+        // one explicit result ascription. Both endpoints are the same exact
+        // `R.Carrier` value, so this is homogeneous reflexive equality rather
+        // than a heterogeneous `Same` elimination.
+        return Ok("Litex.Same.ofEq (by rfl)".into());
     }
     if let Some(membership) = cached_exact_membership_selection_proof(&exact, &source) {
         return Ok(format!(
@@ -325,7 +417,7 @@ pub(in super::super) fn render_exact_predicate_argument_same_to_source(
         ));
     }
     Err(format!(
-        "exact predicate argument `{object}` changed from source `{source}` to unrelated numeric observation `{numeric}`"
+        "exact predicate argument `{object}` changed from exact `{exact}` and source `{source}` to unrelated numeric observation `{numeric}`"
     ))
 }
 

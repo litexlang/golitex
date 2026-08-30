@@ -12,7 +12,6 @@ use super::user_visible_text::{
 };
 
 const SOURCE_KIND: &str = "source_kind";
-const SOURCE_KIND_ENTRY: &str = "entry";
 const SOURCE_KIND_MODULE: &str = "module";
 const SOURCE_KIND_FILE: &str = "file";
 
@@ -20,28 +19,33 @@ fn line_files_have_same_source(left: &LineFile, right: &LineFile) -> bool {
     Rc::ptr_eq(&left.1, &right.1) || left.1.as_ref() == right.1.as_ref()
 }
 
-fn line_file_is_entry_source(line_file: &LineFile, mm: &ModuleManager) -> bool {
-    Rc::ptr_eq(&line_file.1, &mm.entry_path_rc) || line_file.1.as_ref() == mm.entry_path_rc.as_ref()
+fn line_file_is_root_source(line_file: &LineFile, mm: &ModuleManager) -> bool {
+    mm.module(ModuleId::ROOT)
+        .is_some_and(|module| line_file.1.as_ref() == module.main_file_path)
 }
 
 fn display_source_label_for_line_file(
     runtime: &Runtime,
     line_file: &LineFile,
-) -> Option<(String, String)> {
+) -> Option<(Option<String>, String)> {
     if is_default_line_file(line_file) {
         return None;
     }
 
     let path = line_file.1.as_ref();
 
-    if line_file_is_entry_source(line_file, &runtime.module_manager) {
-        return Some((SOURCE_KIND_ENTRY.to_string(), SOURCE_KIND_ENTRY.to_string()));
-    }
-
     for module in runtime.module_manager.modules.values() {
         for file in module.files.iter() {
             if file.source_path == path {
-                return Some((SOURCE_KIND_FILE.to_string(), file.canonical_name.clone()));
+                if file.is_virtual_source {
+                    return Some((None, file.source_path.clone()));
+                }
+                let source = if file.canonical_name.is_empty() {
+                    file_name_for_display(path)
+                } else {
+                    file.canonical_name.clone()
+                };
+                return Some((Some(SOURCE_KIND_FILE.to_string()), source));
             }
         }
     }
@@ -50,19 +54,22 @@ fn display_source_label_for_line_file(
         return Some(label);
     }
 
-    Some((SOURCE_KIND_FILE.to_string(), SOURCE_KIND_FILE.to_string()))
+    Some((
+        Some(SOURCE_KIND_FILE.to_string()),
+        file_name_for_display(path),
+    ))
 }
 
 fn imported_module_source_label_for_path(
     runtime: &Runtime,
     source_path: &str,
-) -> Option<(String, String)> {
+) -> Option<(Option<String>, String)> {
     let source_path = Path::new(source_path);
     let module_manager = &runtime.module_manager;
     let mut best_match: Option<(usize, String, String)> = None;
 
     for imported_module in module_manager.modules.values() {
-        if Some(imported_module.id) == module_manager.entry_module_id {
+        if imported_module.id == ModuleId::ROOT {
             continue;
         }
         let module_root = Path::new(imported_module.module_root_path.as_str());
@@ -71,7 +78,11 @@ fn imported_module_source_label_for_path(
         }
 
         let source_kind = SOURCE_KIND_MODULE.to_string();
-        let source = module_display_path(module_root, &module_manager.entry_path_rc);
+        let root_path = module_manager
+            .module(ModuleId::ROOT)
+            .map(|module| module.main_file_path.as_str())
+            .unwrap_or_default();
+        let source = module_display_path(module_root, root_path);
         let score = imported_module.module_root_path.len();
 
         if best_match
@@ -82,14 +93,14 @@ fn imported_module_source_label_for_path(
         }
     }
 
-    best_match.map(|(_, source_kind, source)| (source_kind, source))
+    best_match.map(|(_, source_kind, source)| (Some(source_kind), source))
 }
 
-fn module_display_path(module_root: &Path, entry_path: &Rc<str>) -> String {
-    let entry_path = Path::new(entry_path.as_ref());
-    if let Some(entry_dir) = entry_path.parent() {
-        if !entry_dir.as_os_str().is_empty() {
-            if let Ok(relative_path) = module_root.strip_prefix(entry_dir) {
+fn module_display_path(module_root: &Path, root_path: &str) -> String {
+    let root_path = Path::new(root_path);
+    if let Some(root_dir) = root_path.parent() {
+        if !root_dir.as_os_str().is_empty() {
+            if let Ok(relative_path) = module_root.strip_prefix(root_dir) {
                 return relative_path.to_string_lossy().into_owned();
             }
         }
@@ -99,6 +110,14 @@ fn module_display_path(module_root: &Path, entry_path: &Rc<str>) -> String {
         Some(file_name) => file_name.to_string_lossy().into_owned(),
         None => module_root.to_string_lossy().into_owned(),
     }
+}
+
+fn file_name_for_display(source_path: &str) -> String {
+    Path::new(source_path)
+        .file_name()
+        .map(|name| name.to_string_lossy().into_owned())
+        .filter(|name| !name.is_empty())
+        .unwrap_or_else(|| SOURCE_KIND_FILE.to_string())
 }
 
 pub fn source_ref_json_fields(
@@ -114,17 +133,16 @@ pub fn source_ref_json_fields(
 
     let same_source = match current_line_file {
         Some(current_line_file) => line_files_have_same_source(source_line_file, current_line_file),
-        None => line_file_is_entry_source(source_line_file, &runtime.module_manager),
+        None => line_file_is_root_source(source_line_file, &runtime.module_manager),
     };
 
     if !same_source {
         if let Some((source_kind, source)) =
             display_source_label_for_line_file(runtime, source_line_file)
         {
-            fields.push((
-                SOURCE_KIND.to_string(),
-                JsonValue::JsonString(source_kind.clone()),
-            ));
+            if let Some(source_kind) = source_kind {
+                fields.push((SOURCE_KIND.to_string(), JsonValue::JsonString(source_kind)));
+            }
             fields.push((JSON_KEY_SOURCE.to_string(), JsonValue::JsonString(source)));
             if output_style.is_detailed() {
                 fields.push((

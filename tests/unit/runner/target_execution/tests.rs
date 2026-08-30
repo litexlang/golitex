@@ -22,8 +22,11 @@ fn runner_success_returns_trace() {
 
     assert!(ok, "runner success run failed:\n{}", output);
     assert!(output.contains("\"runner\": \"litex-runner\""));
+    assert!(output.contains("\"runner_version\": \"0.2\""));
     assert!(output.contains("\"result\": \"success\""));
-    assert!(output.contains("\"kind\": \"code\",\n    \"label\": \"-runner -e\""));
+    assert!(output.contains("\"target\": {\n    \"kind\": \"code\"\n  }"));
+    assert!(!output.contains("\"label\""));
+    assert!(!output.contains("\"path\""));
     assert!(output.contains("\"trace\""));
     assert!(!output.contains("\"pipeline_trace\""));
 }
@@ -46,12 +49,28 @@ fn runner_target_error_returns_message() {
     let (ok, output) = render_runner(run_file("does_not_exist.lit", RunOptions::default()), true);
 
     assert!(!ok, "runner target error should fail:\n{}", output);
-    assert!(output.contains("\"target\": {\n    \"kind\": \"file\",\n    \"label\": \"entry\""));
+    assert!(output.contains("\"target\": {\n    \"kind\": \"file\"\n  }"));
+    assert!(!output.contains("\"label\""));
     assert!(output.contains("\"error\": null"));
     assert!(output.contains("\\\"error_type\\\": \\\"ParseError\\\""));
     assert!(output.contains("\\\"source_kind\\\": \\\"file\\\""));
     assert!(output.contains("does_not_exist.lit"));
     assert!(!output.contains("\"kind\": \"target_error\""));
+}
+
+#[test]
+fn detailed_runner_exposes_a_real_target_path_without_a_label() {
+    let outcome = run_file("does_not_exist.lit", RunOptions::default());
+    let expected_path = outcome
+        .target_path
+        .clone()
+        .expect("file outcome should retain its resolved path");
+    let (_, output) = render_runner(outcome, false);
+
+    assert!(output.contains("\"kind\": \"file\""));
+    assert!(output.contains("\"path\":"));
+    assert!(output.contains(expected_path.as_str()));
+    assert!(!output.contains("\"label\""));
 }
 
 #[test]

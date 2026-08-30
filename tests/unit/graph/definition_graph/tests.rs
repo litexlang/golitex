@@ -28,11 +28,12 @@ fn definition_graph_reads_environment_stored_props_and_functions() {
     );
 
     assert!(output.contains(r#""graph": "litex-definition-graph""#));
-    assert!(output.contains(r#""label": "-defgraph -e""#));
+    assert!(output.contains("\"target\": {\n    \"kind\": \"code\"\n  }"));
+    assert!(!output.contains(r#""label""#));
     assert!(output.contains(r#""id": "definition:prop:p""#));
     assert!(output.contains(r#""id": "definition:prop:q""#));
     assert!(output.contains(r#""id": "definition:fn:f""#));
-    assert!(output.contains(r#""graph_version": "0.2""#));
+    assert!(output.contains(r#""graph_version": "0.3""#));
     assert!(output.contains(r#""kind": "definition""#));
     assert!(output.contains(r#""kind": "well_definedness""#));
     assert!(output.contains(r#""referenced_kind": "prop""#));

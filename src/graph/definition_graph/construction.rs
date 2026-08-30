@@ -45,8 +45,8 @@ impl DefinitionGraphBuilder {
                 builder.add_module_environments(runtime, module_id);
             }
             None => {
-                if let Some(module_id) = runtime.module_manager.entry_module_id {
-                    builder.add_module_environments(runtime, module_id);
+                if runtime.module_manager.module(ModuleId::ROOT).is_some() {
+                    builder.add_module_environments(runtime, ModuleId::ROOT);
                 }
             }
         }

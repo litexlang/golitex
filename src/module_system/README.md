@@ -23,7 +23,7 @@ discover litex.config
 
 ## Examples and boundaries
 
-The entry module is always `ModuleId::ROOT` (`ModuleId(0)`). Every execution
+The root module is always `ModuleId::ROOT` (`ModuleId(0)`). Every execution
 frame points to a registered `(ModuleId, FileId)` pair; module discovery and
 ordered export traversal use module loading state rather than a synthetic
 module-only execution frame.
@@ -42,8 +42,8 @@ Start with [`project_config.rs`](project_config.rs) for the TOML-like tables,
 
 Repository discovery is a concept directory rather than a single mixed file.
 Start with
-[`repository_discovery/repository_entry.rs`](repository_discovery/repository_entry.rs)
-for the requested entry point,
+[`repository_discovery/requested_target.rs`](repository_discovery/requested_target.rs)
+for the requested target,
 [`repository_discovery/module_config.rs`](repository_discovery/module_config.rs)
 for recursive module loading, and
 [`repository_discovery/config_imports.rs`](repository_discovery/config_imports.rs)

@@ -73,7 +73,6 @@ pub(in super::super) const VI_TEXTS: &[(&str, &str)] = &[
     ("code", "mã"),
     ("file", "tệp"),
     ("repo", "kho"),
-    ("entry", "điểm vào"),
     ("builtin", "tích hợp"),
     ("module", "mô-đun"),
     ("ArithmeticError", "lỗi số học"),

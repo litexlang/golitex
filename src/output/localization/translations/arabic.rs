@@ -73,7 +73,6 @@ pub(in super::super) const AR_TEXTS: &[(&str, &str)] = &[
     ("code", "كود"),
     ("file", "ملف"),
     ("repo", "مستودع"),
-    ("entry", "مدخل"),
     ("builtin", "مضمن"),
     ("module", "وحدة"),
     ("ArithmeticError", "خطأ حسابي"),

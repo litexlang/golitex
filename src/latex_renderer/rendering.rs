@@ -55,10 +55,10 @@ pub fn to_latex_from_file(file_path: &str) -> Result<String, RuntimeError> {
     }
 }
 
-pub fn to_latex_from_source(source_code: &str, entry_label: &str) -> Result<String, RuntimeError> {
+pub fn to_latex_from_source(source_code: &str, source_label: &str) -> Result<String, RuntimeError> {
     let normalized = source_code.replace('\r', "");
     let mut runtime = Runtime::default();
-    runtime.start_isolated_source(entry_label);
+    runtime.start_isolated_source(source_label);
     to_latex(normalized.as_str(), &mut runtime)
 }
 
@@ -74,15 +74,16 @@ fn to_latex_project_run(
 ) -> Result<String, RuntimeError> {
     let root_module_id = runtime
         .module_manager
-        .entry_module_id
-        .expect("discovered project should have an entry module");
+        .module(ModuleId::ROOT)
+        .map(|module| module.id)
+        .expect("discovered project should have a root module");
     if target == RepositoryFileTarget::Module(root_module_id) {
         return to_latex_project_target(runtime, target);
     }
     if !project_target_is_inside_module(runtime, target, root_module_id) {
         return Err(file_error(
             "litex.config",
-            "selected target is not inside the entry module export tree".to_string(),
+            "selected target is not inside the root module export tree".to_string(),
         ));
     }
     to_latex_project_prefix(runtime, root_module_id, target)

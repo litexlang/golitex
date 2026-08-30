@@ -84,27 +84,31 @@ impl Runtime {
         if !self.execution_stack.is_empty() {
             return;
         }
-        let source_path = self.module_manager.entry_path_rc.to_string();
-        let module_file_info = match self.module_manager.entry_module_id {
-            Some(module_id) => {
+        let source_path = self
+            .module_manager
+            .module(ModuleId::ROOT)
+            .map(|module| module.main_file_path.clone())
+            .unwrap_or_default();
+        let module_file_info = match self.module_manager.module(ModuleId::ROOT) {
+            Some(_) => {
                 let existing_file_id = self
                     .module_manager
-                    .module(module_id)
+                    .module(ModuleId::ROOT)
                     .and_then(|module| module.module_source_file);
                 match existing_file_id {
                     Some(file_id) => self
                         .module_manager
-                        .execution_module_file_info(module_id, file_id)
-                        .expect("entry source file should exist"),
+                        .execution_module_file_info(ModuleId::ROOT, file_id)
+                        .expect("root source file should exist"),
                     None => self
                         .module_manager
-                        .create_execution_file(module_id, source_path.as_str())
-                        .expect("entry execution file should be registered"),
+                        .create_execution_file(ModuleId::ROOT, source_path.as_str())
+                        .expect("root execution file should be registered"),
                 }
             }
             None => self
                 .module_manager
-                .create_entry_module(source_path.as_str(), true),
+                .create_root_module(source_path.as_str(), true),
         };
         self.execution_stack
             .push(ExecutionFrame::new(module_file_info));
@@ -305,12 +309,12 @@ impl Runtime {
 }
 
 impl Runtime {
-    /// Start a standalone source run with its own entry module and root execution frame.
+    /// Start a standalone source run with its own root module and execution frame.
     pub fn start_isolated_source(&mut self, source_path: &str) {
         self.start_isolated_source_with_kind(source_path, true);
     }
 
-    /// Start a standalone physical file run with its own entry module and root frame.
+    /// Start a standalone physical file run with its own root module and frame.
     pub fn start_isolated_file(&mut self, source_path: &str) {
         self.start_isolated_source_with_kind(source_path, false);
     }
@@ -318,7 +322,7 @@ impl Runtime {
     fn start_isolated_source_with_kind(&mut self, source_path: &str, is_virtual_source: bool) {
         let module_file_info = self
             .module_manager
-            .create_entry_module(source_path, is_virtual_source);
+            .create_root_module(source_path, is_virtual_source);
         self.execution_stack
             .push(ExecutionFrame::new(module_file_info));
     }
@@ -332,7 +336,7 @@ impl Runtime {
     ) -> Result<ModuleId, String> {
         let module_id = self
             .module_manager
-            .create_repository_entry_module(repository_root, main_file_path.clone())?;
+            .create_repository_root_module(repository_root, main_file_path.clone())?;
         Ok(module_id)
     }
 
@@ -360,11 +364,10 @@ impl Runtime {
             .expect("current user source frame should exist")
             .module_file_info
             .source_path = path_rc.clone();
-        if self.module_manager.entry_module_id == Some(module_id) {
-            self.module_manager.entry_path_rc = path_rc;
+        if module_id == ModuleId::ROOT {
             self.module_manager
                 .module_mut(module_id)
-                .expect("entry module should exist")
+                .expect("root module should exist")
                 .main_file_path = path.to_string();
         }
     }
@@ -377,8 +380,9 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         let module_id = self
             .module_manager
-            .entry_module_id
-            .expect("repository entry module should exist");
+            .module(ModuleId::ROOT)
+            .map(|module| module.id)
+            .expect("repository root module should exist");
         let module_file_info = self
             .module_manager
             .create_execution_file(module_id, source_path)

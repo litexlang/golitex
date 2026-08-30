@@ -73,7 +73,6 @@ pub(in super::super) const FR_TEXTS: &[(&str, &str)] = &[
     ("code", "code"),
     ("file", "fichier"),
     ("repo", "dépôt"),
-    ("entry", "entrée"),
     ("builtin", "intégré"),
     ("module", "module"),
     ("ArithmeticError", "erreur arithmétique"),

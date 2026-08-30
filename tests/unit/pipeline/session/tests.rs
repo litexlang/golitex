@@ -81,6 +81,8 @@ fn project_session_keeps_previous_blocks() {
     assert!(output.contains("litex-fact-graph"));
     assert!(output.contains("litex-definition-graph"));
     assert!(output.contains("\\\"kind\\\": \\\"session\\\""));
+    assert!(output.contains("<session>"), "{output}");
+    assert!(!output.contains("\\\"label\\\""), "{output}");
 
     let _ = fs::remove_dir_all(&root);
 }

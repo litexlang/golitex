@@ -231,10 +231,10 @@ class PredeployGateTest(unittest.TestCase):
         envelope = json.dumps(
             {
                 "runner": "litex-runner",
-                "runner_version": "0.1",
+                "runner_version": "0.2",
                 "result": "error",
                 "ok": False,
-                "target": {"kind": "file", "label": "entry"},
+                "target": {"kind": "file"},
                 "error": None,
                 "trace": successful_prefix + "\n\n" + error_trace,
             }

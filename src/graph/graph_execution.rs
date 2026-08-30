@@ -36,31 +36,24 @@ pub fn render_graph(
     mut outcome: RunOutcome,
     hide_file_paths: bool,
 ) -> (bool, String) {
-    let target_label = match outcome.target_kind {
-        RunTargetKind::Code => format!("{} -e", kind.flag()),
-        RunTargetKind::File | RunTargetKind::Repository => outcome
-            .target_path
-            .clone()
-            .expect("file and repository outcomes must retain their target path"),
-        RunTargetKind::Session => unreachable!("pipeline runs do not produce session targets"),
-    };
+    let target_path = outcome.target_path.clone();
     if let Some(message) = outcome.target_error {
         return match kind {
             GraphKind::Result => graph_target_error_output(
                 outcome.target_kind,
-                target_label.as_str(),
+                target_path.as_deref(),
                 hide_file_paths,
                 message,
             ),
             GraphKind::Fact => fact_graph_target_error_output(
                 outcome.target_kind,
-                target_label.as_str(),
+                target_path.as_deref(),
                 hide_file_paths,
                 message,
             ),
             GraphKind::Definition => definition_graph_target_error_output(
                 outcome.target_kind,
-                target_label.as_str(),
+                target_path.as_deref(),
                 hide_file_paths,
                 message,
             ),
@@ -70,7 +63,7 @@ pub fn render_graph(
     match kind {
         GraphKind::Result => render_graph_from_stmt_results(
             outcome.target_kind,
-            target_label.as_str(),
+            target_path.as_deref(),
             hide_file_paths,
             &outcome.runtime,
             outcome.stmt_results.as_slice(),
@@ -78,7 +71,7 @@ pub fn render_graph(
         ),
         GraphKind::Fact => render_fact_graph_from_stmt_results(
             outcome.target_kind,
-            target_label.as_str(),
+            target_path.as_deref(),
             hide_file_paths,
             &outcome.runtime,
             outcome.stmt_results.as_slice(),
@@ -88,8 +81,7 @@ pub fn render_graph(
             let selected_target = if outcome.target_kind == RunTargetKind::File {
                 definition_graph_file_target(
                     &outcome.runtime,
-                    outcome
-                        .target_path
+                    target_path
                         .as_deref()
                         .expect("file outcomes must retain their target path"),
                 )
@@ -98,7 +90,7 @@ pub fn render_graph(
             };
             render_definition_graph_result(
                 outcome.target_kind,
-                target_label.as_str(),
+                target_path.as_deref(),
                 hide_file_paths,
                 &mut outcome.runtime,
                 outcome.stmt_results.as_slice(),
