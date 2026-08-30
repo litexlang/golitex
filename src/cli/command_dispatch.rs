@@ -3,8 +3,8 @@ use super::arguments::{
     validate_session_preload,
 };
 use super::command_handlers::{
-    print_or_save_graph_output, run_code_command, run_file_command, run_graph_command,
-    run_repository_command, run_runner_command, VERSION,
+    print_or_save_graph_output, run_code_from_e_command_line_flag, run_file_command,
+    run_graph_command, run_repository_command, run_runner_command, VERSION,
 };
 use super::conversion_commands::{run_latex_command, run_python_command};
 use super::lean_commands::{run_lean_file_command, run_lean_ledger_command};
@@ -54,7 +54,7 @@ pub fn run_cli() {
                         process::exit(2);
                     }
                 };
-                run_code_command(code.as_str(), run_options);
+                run_code_from_e_command_line_flag(code.as_str(), run_options);
                 return;
             }
             "-f" => {

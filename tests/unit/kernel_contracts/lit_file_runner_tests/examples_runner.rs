@@ -15,10 +15,7 @@ use super::helper::{
 use super::runtime_regression_tests::run_runtime_contract_suite_impl;
 
 fn run_file_for_test(file_path: &str) -> (bool, String) {
-    let outcome = run(RunRequest::new(
-        RunTarget::file(file_path),
-        RunOptions::default(),
-    ));
+    let outcome = run_file(file_path, RunOptions::default());
     (outcome.ok, outcome.output)
 }
 

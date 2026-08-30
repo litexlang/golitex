@@ -338,7 +338,7 @@ fn initialize_session_runtime(
     }
 
     if force_isolated || !directory.join("litex.config").is_file() {
-        runtime.start_isolated_source("session");
+        runtime.start_isolated_source("<session>");
         return Ok(("isolated", vec![]));
     }
 

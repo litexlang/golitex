@@ -34,6 +34,7 @@ pub enum InferRule {
     ListSetMembershipImpliesEqualityAlternatives(
         ListSetMembershipImpliesEqualityAlternativesInferRule,
     ),
+    FunctionRangeMembershipImpliesCodomainMembership,
     NumericOrderBoundImpliesZeroSign,
     MultiplicationByNegativeOneReversesOrderAgainstZero,
     StrictOrderComparedToZeroImpliesWeakOrder,

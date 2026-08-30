@@ -3,10 +3,7 @@ use super::*;
 const LARGE_TEST_STACK_SIZE: usize = 64 * 1024 * 1024;
 
 fn run_runner_for_test(code: &str, options: RunOptions) -> (bool, String) {
-    run_runner(RunnerRequest::new(
-        RunRequest::new(RunTarget::code(code), options),
-        true,
-    ))
+    render_runner(run_code(code, options), true)
 }
 
 fn run_with_large_stack(test_name: &str, f: impl FnOnce() + Send + 'static) {
@@ -46,10 +43,7 @@ fn runner_failure_returns_trace() {
 
 #[test]
 fn runner_target_error_returns_message() {
-    let (ok, output) = run_runner(RunnerRequest::new(
-        RunRequest::new(RunTarget::file("does_not_exist.lit"), RunOptions::default()),
-        true,
-    ));
+    let (ok, output) = render_runner(run_file("does_not_exist.lit", RunOptions::default()), true);
 
     assert!(!ok, "runner target error should fail:\n{}", output);
     assert!(output.contains("\"target\": {\n    \"kind\": \"file\",\n    \"label\": \"entry\""));

@@ -17,8 +17,8 @@ fn run_repository_for_test(
     output_language: OutputLanguage,
     summarize: bool,
 ) -> (bool, String) {
-    let outcome = run(RunRequest::new(
-        RunTarget::repository(repository_path),
+    let outcome = run_repository(
+        repository_path,
         RunOptions {
             output_style: if detailed_output {
                 OutputStyle::Detailed
@@ -30,7 +30,7 @@ fn run_repository_for_test(
             summarize,
             ..RunOptions::default()
         },
-    ));
+    );
     (outcome.ok, outcome.output)
 }
 

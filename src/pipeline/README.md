@@ -1,17 +1,14 @@
 # Running Litex source
 
-`litex -e '1 + 1 = 2'`, `litex -f example.lit`, `litex -r project`, runner mode, and graph mode all enter through `run(RunRequest)`.
+`litex -e '1 + 1 = 2'`, `litex -f example.lit`, and `litex -r project`
+enter through separate code, file, and repository functions. Runner and graph
+commands render the resulting `RunOutcome` without redispatching the input.
 
 ```text
-run(RunRequest { target, options })
-  Runtime::new(options)
-  match target: Code | File | Repository
-  Runtime::execute_source(source)
-    Runtime::execute_source_blocks
-    Tokenizer::parse_blocks
-    Runtime::parse_statement
-    Runtime::execute_statement -> verify -> Result
-  render output and optional summary once
+run_code(source, options)         -> Runtime::new -> execute source
+run_file(path, options)           -> Runtime::new -> resolve and execute file
+run_repository(path, options)     -> Runtime::new -> discover and execute repository
+                                   -> render output and optional summary once
 ```
 
 The files on this path import their dependency owners directly. Reading from
@@ -33,7 +30,7 @@ or `module_manager` without first expanding the crate-wide prelude.
 
 | File | Example |
 | --- | --- |
-| [`run.rs`](run.rs) | Owns the single batch entry `run(RunRequest)`, its request/target types, Runtime creation, and target dispatch. The canonical `RunOptions` lives in [`../runtime/run_options.rs`](../runtime/run_options.rs). |
+| [`run.rs`](run.rs) | Owns the explicit `run_code`, `run_file`, and `run_repository` entries, Runtime creation, and their shared outcome rendering. The canonical `RunOptions` lives in [`../runtime/run_options.rs`](../runtime/run_options.rs). |
 | [`source_execution.rs`](source_execution.rs) | Tokenizes, parses, and executes source inside an already initialized Runtime. |
 | [`file_execution.rs`](file_execution.rs) | Resolves `-f`, discovers project context, and selects repository-prefix or isolated-file execution. |
 | [`output_rendering.rs`](output_rendering.rs) | Renders statement results, errors, and unverified-import warnings. |

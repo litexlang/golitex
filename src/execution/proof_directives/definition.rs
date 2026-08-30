@@ -19,6 +19,8 @@ impl Runtime {
                 .factual_success()
                 .map(|success| success.fact().to_string())
                 .unwrap_or_else(|| stmt.fact.to_string());
+            let target_well_definedness =
+                self.verify_fact_well_defined_result(&stmt.fact.clone().into(), &verify_state)?;
             return self.finish_by_def_stmt(
                 stmt,
                 stmt.fact.key(),
@@ -26,6 +28,7 @@ impl Runtime {
                 false,
                 Vec::new(),
                 vec![checked_definition],
+                Some(target_well_definedness),
                 None,
                 vec![result],
             );
@@ -95,7 +98,8 @@ impl Runtime {
                 vec![],
             ));
         }
-        self.verify_atomic_fact_well_defined(&stmt.fact, &verify_state)?;
+        let target_well_definedness =
+            self.verify_fact_well_defined_result(&stmt.fact.clone().into(), &verify_state)?;
 
         let (parameter_type_check, clause_checks) = self
             .run_in_local_env(|rt| {
@@ -164,6 +168,7 @@ impl Runtime {
             true,
             instantiated_clause_facts,
             instantiated_clauses,
+            Some(target_well_definedness),
             Some(argument_verification),
             clause_check_results,
         )
@@ -180,6 +185,7 @@ impl Runtime {
             false,
             vec![],
             vec![],
+            None,
             None,
             vec![],
         )
@@ -248,6 +254,7 @@ impl Runtime {
         concrete_user_prop: bool,
         definition_clause_facts: Vec<Fact>,
         definition_clauses: Vec<String>,
+        target_well_definedness: Option<SuccessVerifyFactWellDefinedResult>,
         argument_verification: Option<SuccessVerifyArgsSatisfyParamDefResult>,
         clause_checks: Vec<StmtResult>,
     ) -> Result<StmtResult, RuntimeError> {
@@ -265,6 +272,7 @@ impl Runtime {
             definition_clauses,
             target_fact.to_string(),
             concrete_user_prop,
+            target_well_definedness,
             definition_clause_facts,
             argument_verification,
             clause_checks,

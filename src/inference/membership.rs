@@ -997,26 +997,47 @@ impl Runtime {
         let Some(body) = self.get_fn_range_function_body(&fn_range.function) else {
             return Ok(SuccessInferResult::new());
         };
-        let codomain_fact: AtomicFact = InFact::new(
+        let codomain_atomic: AtomicFact = InFact::new(
             in_fact.element.clone(),
             body.ret_set.as_ref().clone(),
             in_fact.line_file.clone(),
         )
         .into();
+        let codomain_fact: Fact = codomain_atomic.clone().into();
         let mut result = SuccessInferResult::new();
-        result.push_atomic_fact(&codomain_fact);
-        result.new_infer_result_inside(
-            self.store_atomic_fact_without_well_defined_verified_and_infer(codomain_fact)?,
+        result.new_fact(&codomain_fact);
+        let codomain_infers =
+            self.store_atomic_fact_without_well_defined_verified_and_infer(codomain_atomic)?;
+        result.add_rule_application(
+            InferRule::FunctionRangeMembershipImpliesCodomainMembership,
+            in_fact.clone().into(),
+            vec![SuccessStoreFactResult::new(codomain_fact, codomain_infers)],
         );
-        if let Some(exist_fact) =
-            self.preimage_exist_fact_from_fn_body(in_fact, fn_range.function.as_ref(), &body)?
-        {
-            result.new_fact(&exist_fact);
-            result.new_infer_result_inside(
-                self.store_with_well_defined_verification_and_infer_with_default_verify_state(
-                    exist_fact,
-                )?,
-            );
+
+        // For a displayed application `f(args) in fn_range(f)`, the source
+        // arguments are already the explicit preimage and `have by preimage`
+        // can extract them directly from this membership. Avoid publishing a
+        // redundant existential here. General range members still receive the
+        // ordinary existential elimination fact.
+        let application_is_its_own_displayed_preimage = matches!(
+            &in_fact.element,
+            Obj::FnObj(application)
+                if objs_equal_with_nested_binder_alpha_equivalence(
+                    &Obj::from(application.head.as_ref().clone()),
+                    fn_range.function.as_ref(),
+                )
+        );
+        if !application_is_its_own_displayed_preimage {
+            if let Some(exist_fact) =
+                self.preimage_exist_fact_from_fn_body(in_fact, fn_range.function.as_ref(), &body)?
+            {
+                result.new_fact(&exist_fact);
+                result.new_infer_result_inside(
+                    self.store_with_well_defined_verification_and_infer_with_default_verify_state(
+                        exist_fact,
+                    )?,
+                );
+            }
         }
         Ok(result)
     }

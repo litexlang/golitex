@@ -2,7 +2,7 @@
 
 `StmtResultToLeanCompiler` is the only active Litex-to-Lean implementation. Its
 Rust implementation is the root-crate module and binary under
-`../src/lean_compiler/`; this directory owns the Lean ABI, generated
+`../src/stmt_result_to_lean_compiler/`; this directory owns the Lean ABI, generated
 examples, and the stable `stmt_result_to_lean_compiler.sh` entrypoint. The compiler reads
 the kernel's recursive `StmtResult`; it does not use the old universal-object
 output stage. That legacy implementation is archived under

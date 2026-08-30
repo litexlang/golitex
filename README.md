@@ -225,7 +225,7 @@ Independent checking and ecosystem reuse require two distinct artifacts:
 
 Keeping these layers separate preserves ownership: the compiler does not
 invent mathematics or public APIs that do not exist in the Litex source. The
-[layered pipeline showcase](showcases/litex_to_lean_mathlib_pipeline/showcase1/README.md)
+[complete pipeline showcase](https://github.com/litexlang/golitex/tree/main/showcases/litex_to_lean_mathlib_pipeline/showcase2)
 demonstrates the current path and its boundaries.
 
 ## From language to ecosystem

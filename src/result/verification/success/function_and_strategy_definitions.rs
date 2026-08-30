@@ -18,9 +18,35 @@ pub struct SuccessVerifyCaseFunctionDefinitionResult {
 }
 
 pub struct SuccessVerifyFunctionFromUniqueExistenceResult {
+    /// Recursive well-definedness for the exact source `forall ... exist!`
+    /// contract.  The Lean compiler needs the binder-owned object and fact
+    /// certificates while replaying the chosen function under its arguments.
+    pub well_definedness: SuccessVerifyFactWellDefinedResult,
+    /// Parameter-membership and domain-premise facts created only inside the
+    /// source forall scope.  Their FactIds must be frozen before that scope is
+    /// removed; proof children cite these identities directly.
+    pub proof_scope: SuccessVerifyLocalProofScopeResult,
     pub source_forall_check: Option<Box<StmtResult>>,
     pub proof_steps: Vec<StmtResult>,
     pub conclusion_checks: Vec<StmtResult>,
+}
+
+impl SuccessVerifyFunctionFromUniqueExistenceResult {
+    pub fn new(
+        well_definedness: SuccessVerifyFactWellDefinedResult,
+        proof_scope: SuccessVerifyLocalProofScopeResult,
+        source_forall_check: Option<StmtResult>,
+        proof_steps: Vec<StmtResult>,
+        conclusion_checks: Vec<StmtResult>,
+    ) -> Self {
+        Self {
+            well_definedness,
+            proof_scope,
+            source_forall_check: source_forall_check.map(Box::new),
+            proof_steps,
+            conclusion_checks,
+        }
+    }
 }
 
 pub struct SuccessVerifyStrategyDefinitionResult {

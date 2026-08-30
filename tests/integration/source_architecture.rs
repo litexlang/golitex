@@ -145,16 +145,27 @@ fn compiler_and_test_directories_follow_the_repository_layout() {
         assert!(pipeline.join(responsibility).is_file());
     }
     assert!(!pipeline.join("execution_trace.rs").exists());
-    let compiler = root.join("src/lean_compiler");
-    assert!(root
-        .join("src/bin/stmt_result_to_lean_compiler.rs")
-        .is_file());
+    let compiler = root.join("src/stmt_result_to_lean_compiler");
+    let retired_short_name = ["lean", "compiler"].join("_");
+    assert!(!root.join("src").join(&retired_short_name).exists());
+    assert!(!root.join("tests/unit").join(&retired_short_name).exists());
+    assert!(!root
+        .join("tests/unit/kernel_contracts")
+        .join(&retired_short_name)
+        .exists());
+    assert!(compiler.join("command_line.rs").is_file());
     assert!(!compiler.join("main.rs").exists());
-    assert!(manifest.contains("path = \"src/bin/stmt_result_to_lean_compiler.rs\""));
-    let compiler_cli_tests = root.join("tests/unit/lean_compiler");
+    assert!(manifest.contains("path = \"src/stmt_result_to_lean_compiler/command_line.rs\""));
+    assert!(!manifest.contains(&format!("src/{retired_short_name}/")));
+    let library_source =
+        fs::read_to_string(root.join("src/lib.rs")).expect("library source should be readable");
+    assert!(library_source.contains("pub mod stmt_result_to_lean_compiler;"));
+    assert!(!library_source.contains(&format!("pub mod {retired_short_name};")));
+    assert!(!library_source.contains(&format!("as {retired_short_name}")));
+    let compiler_cli_tests = root.join("tests/unit/stmt_result_to_lean_compiler");
     assert!(compiler_cli_tests.join("compiler_cli").is_dir());
     assert!(!compiler_cli_tests.join("main").exists());
-    let compiler_contracts = root.join("tests/unit/kernel_contracts/lean_compiler");
+    let compiler_contracts = root.join("tests/unit/kernel_contracts/stmt_result_to_lean_compiler");
     assert!(compiler_contracts.join("mod.rs").is_file());
     assert!(!root
         .join("tests/unit/kernel_contracts/stmt_result_to_lean_compiler.rs")
@@ -389,7 +400,6 @@ fn compiler_and_test_directories_follow_the_repository_layout() {
     ] {
         assert!(!compiler.join(retired_file).exists());
     }
-    assert!(!root.join("src/stmt_result_to_lean_compiler").exists());
     let result = root.join("src/result");
     for (directory, file_responsibilities, directory_responsibilities) in [
         (
@@ -1339,7 +1349,7 @@ fn cli_dispatch_delegates_execution_and_path_resolution_to_their_owners() {
     let graph_execution = fs::read_to_string(root.join("src/graph/graph_execution.rs"))
         .expect("graph execution source should be readable");
 
-    assert!(dispatch.contains("run_code_command("));
+    assert!(dispatch.contains("run_code_from_e_command_line_flag("));
     assert!(!dispatch.contains("Runtime::default()"));
     assert!(!dispatch.contains("compile_litex_file_to_lean_file("));
     assert!(!dispatch.contains("compile_litex_markdown_code_blocks_to_lean_file("));
@@ -1354,17 +1364,17 @@ fn cli_dispatch_delegates_execution_and_path_resolution_to_their_owners() {
     assert!(lean_commands.contains("compile_litex_markdown_code_blocks_to_lean_file("));
     assert!(conversion_commands.contains("compile_code_to_latex("));
     assert!(conversion_commands.contains("compile_code_to_python("));
-    assert!(handlers.contains("RunTarget::code("));
-    assert!(handlers.contains("RunTarget::file("));
-    assert!(handlers.contains("RunTarget::repository("));
-    assert!(run.contains("pub enum RunTarget"));
+    assert!(handlers.contains("run_code("));
+    assert!(handlers.contains("run_file("));
+    assert!(handlers.contains("run_repository("));
+    assert!(!handlers.contains("RunTarget"));
+    assert!(!run.contains("pub enum RunTarget {"));
     assert!(run_options.contains("pub struct RunOptions"));
     assert!(!run.contains("pub struct RunOptions"));
-    assert!(run.contains("pub struct RunRequest"));
-    assert!(run.contains("pub fn run(request: RunRequest)"));
-    assert!(run.contains("runtime.run_code_target("));
-    assert!(run.contains("runtime.run_file_target("));
-    assert!(run.contains("runtime.run_repository_target("));
+    assert!(!run.contains("pub struct RunRequest"));
+    assert!(run.contains("pub fn run_code(source: &str, options: RunOptions)"));
+    assert!(run.contains("pub fn run_file(path: &str, options: RunOptions)"));
+    assert!(run.contains("pub fn run_repository(path: &str, options: RunOptions)"));
     assert!(run.contains("pub enum RunTargetKind"));
     assert!(run.contains("pub target_kind: RunTargetKind"));
     assert!(run.contains("pub target_path: Option<String>"));
@@ -1381,17 +1391,19 @@ fn cli_dispatch_delegates_execution_and_path_resolution_to_their_owners() {
     assert!(output_rendering.contains("pub fn render_run_output("));
     assert!(!source_execution.contains("pub fn run_source_code_in_file"));
     assert!(!source_execution.contains("pub fn run_repository_with"));
-    assert!(runner_execution.contains("pub fn run_runner(request: RunnerRequest)"));
-    assert!(runner_execution.contains("let outcome = run(run_request);"));
+    assert!(runner_execution.contains("pub fn render_runner(outcome: RunOutcome"));
+    assert!(!runner_execution.contains("run_code("));
+    assert!(!runner_execution.contains("run_file("));
+    assert!(!runner_execution.contains("run_repository("));
     assert!(!runner_execution.contains("target_kind: &str"));
     assert!(!runner_execution.contains("target_kind == \"code\""));
     assert!(runner_execution.contains("\"-runner -e\".to_string()"));
-    assert!(!runner_execution.contains("pub fn run_runner_for_"));
-    assert!(graph_execution.contains("pub fn run_graph(request: GraphRequest)"));
-    assert!(graph_execution.contains("let mut outcome = run(run_request);"));
+    assert!(graph_execution.contains("pub fn render_graph("));
+    assert!(!graph_execution.contains("run_code("));
+    assert!(!graph_execution.contains("run_file("));
+    assert!(!graph_execution.contains("run_repository("));
     assert!(!graph_execution.contains("target_kind == \"code\""));
     assert!(graph_execution.contains("format!(\"{} -e\", kind.flag())"));
-    assert!(!graph_execution.contains("pub fn run_graph_for_"));
 
     let abbreviated_parser_call = [".parse_", "stmt("].concat();
     let abbreviated_callers: Vec<_> = [root.join("src"), root.join("tests")]
@@ -1607,21 +1619,23 @@ fn verification_cache_vocabulary_names_scope_and_operation() {
 fn result_to_lean_entry_and_dispatch_names_match_their_effects() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let source_compilation =
-        fs::read_to_string(root.join("src/lean_compiler/source_compilation.rs"))
+        fs::read_to_string(root.join("src/stmt_result_to_lean_compiler/source_compilation.rs"))
             .expect("compiler source entry should be readable");
-    let result_dispatch =
-        fs::read_to_string(root.join("src/lean_compiler/compiler/result_dispatch.rs"))
-            .expect("compiler Result dispatcher should be readable");
+    let result_dispatch = fs::read_to_string(
+        root.join("src/stmt_result_to_lean_compiler/compiler/result_dispatch.rs"),
+    )
+    .expect("compiler Result dispatcher should be readable");
     let fact_compilation =
-        rust_files_below(&root.join("src/lean_compiler/compiler/fact_compilation"))
+        rust_files_below(&root.join("src/stmt_result_to_lean_compiler/compiler/fact_compilation"))
             .into_iter()
             .map(|path| {
                 fs::read_to_string(path).expect("compiler fact implementation should be readable")
             })
             .collect::<Vec<_>>()
             .join("\n");
-    let report = fs::read_to_string(root.join("src/lean_compiler/compilation_report.rs"))
-        .expect("compiler report source should be readable");
+    let report =
+        fs::read_to_string(root.join("src/stmt_result_to_lean_compiler/compilation_report.rs"))
+            .expect("compiler report source should be readable");
 
     assert!(source_compilation.contains("compile_litex_source_to_lean_compilation_report"));
     assert!(source_compilation.contains("execute_litex_source_for_lean_compilation"));
@@ -2070,10 +2084,13 @@ fn builtin_rules_use_typed_rust_evidence_without_a_runtime_catalog() {
         .join("\n");
     assert!(json_output.contains("string_field(\"rule_id\", evidence.rule_id())"));
 
-    let compiler_validation = rust_files_below(&root.join("src/lean_compiler/compiler/validation"))
-        .into_iter()
-        .map(|path| fs::read_to_string(path).expect("ToLean builtin validation should be readable"))
-        .collect::<Vec<_>>()
-        .join("\n");
+    let compiler_validation =
+        rust_files_below(&root.join("src/stmt_result_to_lean_compiler/compiler/validation"))
+            .into_iter()
+            .map(|path| {
+                fs::read_to_string(path).expect("ToLean builtin validation should be readable")
+            })
+            .collect::<Vec<_>>()
+            .join("\n");
     assert!(compiler_validation.contains("builtin rule `{}` has no reviewed ToLean mapping"));
 }

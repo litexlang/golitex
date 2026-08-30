@@ -34,6 +34,9 @@ pub enum ArithmeticBuiltinRule {
     AddComponentwiseLess,
     AddComponentwiseLessLessEqual,
     AddComponentwiseLessEqualLess,
+    /// If `a <= b` and `c < d`, then `a - d < b - c` in the
+    /// checked real carrier.
+    SubComponentwiseLessEqualLess,
 }
 
 impl ArithmeticBuiltinRule {
@@ -69,6 +72,7 @@ impl ArithmeticBuiltinRule {
             Self::AddComponentwiseLess => "order.add_lt_add",
             Self::AddComponentwiseLessLessEqual => "order.add_lt_add_of_lt_of_le",
             Self::AddComponentwiseLessEqualLess => "order.add_lt_add_of_le_of_lt",
+            Self::SubComponentwiseLessEqualLess => "order.sub_lt_sub_of_le_of_lt",
         }
     }
 }

@@ -1,5 +1,6 @@
 mod definition_state;
 mod execution_frame;
+mod execution_module_file_info;
 mod fact_storage;
 mod instantiation;
 mod name_resolution;
@@ -9,7 +10,8 @@ mod state;
 mod statement_proof_state;
 
 pub use crate::output::style::OutputStyle;
-pub use execution_frame::{ExecutionFrame, ExecutionLayer, ExecutionMode};
+pub use execution_frame::{ExecutionFrame, ExecutionMode};
+pub use execution_module_file_info::ExecutionModuleFileInfo;
 pub use name_resolution::{
     bare_symbol_name_reserved_error, BareSymbol, FreeParamCollection, FreeParamTypeAndLineFile,
     TransparentObjectDefinitionUse,

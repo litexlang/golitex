@@ -1,0 +1,39 @@
+# Materialized accepted prefix from proof_journal.json. The interactive frame
+# wrappers are intentionally absent from canonical source.
+
+thm quotient_preimage_cardinality_checkpoint:
+    ? forall G nonempty_set, group &MILAlternative::chap2_struct::Group<G>, H power_set(G), K set:
+        $MIL::chap9::is_subgroup(G, group, H)
+        $MIL::chap9::is_subgroup(G, group, \MIL::chap9::subgroup_normalizer<G, group>(H))
+        $MIL::chap9::is_normal_subgroup(\MIL::chap9::subgroup_carrier<G, group, \MIL::chap9::subgroup_normalizer<G, group>(H)>, \MIL::chap9::subgroup_group<G, group, \MIL::chap9::subgroup_normalizer<G, group>(H)>, H)
+        K $in power_set(\MIL::chap9::quotient_group_nonempty<\MIL::chap9::subgroup_carrier<G, group, \MIL::chap9::subgroup_normalizer<G, group>(H)>, \MIL::chap9::subgroup_group<G, group, \MIL::chap9::subgroup_normalizer<G, group>(H)>, H>)
+        $is_finite_set(G)
+        $is_finite_set(H)
+        $is_finite_set(K)
+        =>:
+            $is_finite_set(\MIL::chap9::sylow_quotient_preimage<G, group, H>(K))
+            finite_set_size(\MIL::chap9::sylow_quotient_preimage<G, group, H>(K)) = finite_set_size(K) * finite_set_size(H)
+    release thm MIL::chap9::sylow_quotient_preimage_cardinality(G, group, H, K)
+thm quotient_preimage_prime_power_checkpoint:
+    ? forall G nonempty_set, group &MILAlternative::chap2_struct::Group<G>, H power_set(G), K set, p N+, k N:
+        $MIL::chap9::is_subgroup(G, group, H)
+        $MIL::chap9::is_subgroup(G, group, \MIL::chap9::subgroup_normalizer<G, group>(H))
+        $MIL::chap9::is_normal_subgroup(\MIL::chap9::subgroup_carrier<G, group, \MIL::chap9::subgroup_normalizer<G, group>(H)>, \MIL::chap9::subgroup_group<G, group, \MIL::chap9::subgroup_normalizer<G, group>(H)>, H)
+        K $in power_set(\MIL::chap9::quotient_group_nonempty<\MIL::chap9::subgroup_carrier<G, group, \MIL::chap9::subgroup_normalizer<G, group>(H)>, \MIL::chap9::subgroup_group<G, group, \MIL::chap9::subgroup_normalizer<G, group>(H)>, H>)
+        $is_finite_set(G)
+        $is_finite_set(H)
+        $is_finite_set(K)
+        finite_set_size(K) = p
+        finite_set_size(H) = p^k
+        =>:
+            finite_set_size(\MIL::chap9::sylow_quotient_preimage<G, group, H>(K)) = p^(k + 1)
+    release thm quotient_preimage_cardinality_checkpoint(G, group, H, K)
+    finite_set_size(\MIL::chap9::sylow_quotient_preimage<G, group, H>(K)) = finite_set_size(K) * finite_set_size(H) = p * p^k = p^(k + 1)
+thm first_sylow_checkpoint:
+    ? forall G nonempty_set, group &MILAlternative::chap2_struct::Group<G>, p N+, n N:
+        $is_finite_set(G)
+        $prime(p)
+        $MILAlternative::chap2_struct::divides(p^n, finite_set_size(G))
+        =>:
+            exist H power_set(G) st {$MIL::chap9::is_subgroup(G, group, H), $is_finite_set(H), finite_set_size(H) = p^n}
+    release thm MIL::chap9::p_power_subgroup_exists(G, group, p, n)

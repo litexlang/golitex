@@ -5,11 +5,11 @@ fn fact_graph_output(source: &'static str) -> String {
         .name("fact_graph_output_large_stack".to_string())
         .stack_size(64 * 1024 * 1024)
         .spawn(move || {
-            run_graph(GraphRequest::new(
+            render_graph(
                 GraphKind::Fact,
-                RunRequest::new(RunTarget::code(source), RunOptions::default()),
+                run_code(source, RunOptions::default()),
                 true,
-            ))
+            )
             .1
         })
         .expect("spawn fact graph output test")
@@ -38,7 +38,7 @@ fn fact_graph_keeps_the_command_label_out_of_runtime_source_identity() {
     let output = fact_graph_output("1 = 1\n");
 
     assert!(output.contains(r#""label": "-factgraph -e""#), "{output}");
-    assert!(output.contains("fact:entry:1:1 = 1"), "{output}");
+    assert!(output.contains("fact:<-e>:1:1 = 1"), "{output}");
     assert!(!output.contains("fact:-factgraph -e:"), "{output}");
 }
 

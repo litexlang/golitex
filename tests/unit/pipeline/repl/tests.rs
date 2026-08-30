@@ -1,6 +1,6 @@
 use super::{
-    run_isolated_repl_with_runtime_and_readers, run_latex_repl_loop_with_readers,
-    run_repl_loop_with_readers_and_mode, ReplOutputMode,
+    initialize_isolated_repl_runtime, run_isolated_repl_with_runtime_and_readers,
+    run_latex_repl_loop_with_readers, run_repl_loop_with_readers_and_mode, ReplOutputMode,
 };
 use crate::pipeline::{execute_file_in_runtime, FileExecutionOptions};
 use crate::prelude::OutputStyle;
@@ -64,6 +64,14 @@ fn repl_still_executes_single_line_input_immediately() {
 
     let output_text = String::from_utf8(stdout_writer).unwrap();
     assert!(output_text.contains("\"outcome\": \"success\""));
+}
+
+#[test]
+fn isolated_repl_uses_the_explicit_repl_source_label() {
+    let mut runtime = Runtime::default();
+    initialize_isolated_repl_runtime(&mut runtime);
+
+    assert_eq!(runtime.current_file_path_rc().as_ref(), "<repl>");
 }
 
 #[test]

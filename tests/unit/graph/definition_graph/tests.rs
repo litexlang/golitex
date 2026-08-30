@@ -9,11 +9,11 @@ fn definition_graph_output(source: &'static str) -> String {
         .name("definition_graph_output_large_stack".to_string())
         .stack_size(64 * 1024 * 1024)
         .spawn(move || {
-            run_graph(GraphRequest::new(
+            render_graph(
                 GraphKind::Definition,
-                RunRequest::new(RunTarget::code(source), RunOptions::default()),
+                run_code(source, RunOptions::default()),
                 true,
-            ))
+            )
             .1
         })
         .expect("spawn definition graph output test")
@@ -110,14 +110,11 @@ fn definition_graph_file_uses_selected_export_environment() {
         .name("definition_graph_selected_export".to_string())
         .stack_size(64 * 1024 * 1024)
         .spawn(move || {
-            run_graph(GraphRequest::new(
+            render_graph(
                 GraphKind::Definition,
-                RunRequest::new(
-                    RunTarget::file(target_string.as_str()),
-                    RunOptions::default(),
-                ),
+                run_file(target_string.as_str(), RunOptions::default()),
                 true,
-            ))
+            )
             .1
         })
         .expect("spawn selected export definition graph test")
@@ -204,17 +201,17 @@ fn definition_graph_project_proof_sources_normalize_local_qualifier() {
         .name("definition_graph_local_proof_source".to_string())
         .stack_size(64 * 1024 * 1024)
         .spawn(move || {
-            run_graph(GraphRequest::new(
+            render_graph(
                 GraphKind::Definition,
-                RunRequest::new(
-                    RunTarget::file(target_string.as_str()),
+                run_file(
+                    target_string.as_str(),
                     RunOptions {
                         strict_mode: true,
                         ..RunOptions::default()
                     },
                 ),
                 true,
-            ))
+            )
             .1
         })
         .expect("spawn local proof-source definition graph test")

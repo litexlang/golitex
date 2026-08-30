@@ -74,7 +74,7 @@ fn every_nonempty_top_level_source_subsystem_has_an_example_readme() {
         "algebraic_normalization",
         "result",
         "runtime",
-        "lean_compiler",
+        "stmt_result_to_lean_compiler",
         "verification",
     ] {
         let readme_path = source_root.join(important_subsystem).join("README.md");

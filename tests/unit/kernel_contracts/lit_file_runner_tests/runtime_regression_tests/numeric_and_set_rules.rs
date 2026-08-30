@@ -1555,7 +1555,10 @@ trust d = 1 / (2 / 3 * 4)
     let b_key = runtime.definition_identifier_obj("b").to_string();
     let c_key = runtime.definition_identifier_obj("c").to_string();
     let d_key = runtime.definition_identifier_obj("d").to_string();
-    let env = &runtime.current_module().main_environment;
+    let env = runtime
+        .iter_environments_from_top()
+        .next()
+        .expect("the active source environment should exist");
     match env
         .objects
         .knowledge(&a_key)

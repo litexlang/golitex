@@ -1,6 +1,6 @@
 use litex::api::{
-    compile_litex_source_to_lean_compilation_report, compile_litex_source_to_lean_source, run,
-    OutputLanguage, OutputStyle, RunOptions, RunOutcome, RunRequest, RunTarget, RunTargetKind,
+    compile_litex_source_to_lean_compilation_report, compile_litex_source_to_lean_source, run_code,
+    run_file, run_repository, OutputLanguage, OutputStyle, RunOptions, RunOutcome, RunTargetKind,
     Runtime, SourceRunOutcome, StmtResult, StmtResultToLeanCompilationReport,
 };
 
@@ -23,7 +23,7 @@ fn curated_api_executes_litex_inside_an_existing_runtime() {
 }
 
 #[test]
-fn curated_api_exposes_one_owned_run_entry_for_every_target_kind() {
+fn curated_api_exposes_one_owned_entry_for_every_batch_input() {
     let options = RunOptions {
         output_style: OutputStyle::Compact,
         strict_mode: true,
@@ -31,23 +31,24 @@ fn curated_api_exposes_one_owned_run_entry_for_every_target_kind() {
         summarize: true,
         force_isolated: true,
     };
-    let code = run(RunRequest::new(RunTarget::code("1 = 1"), options));
+    let code = run_code("1 = 1", options);
     assert!(code.ok, "{}", code.output);
     assert_eq!(code.target_kind, RunTargetKind::Code);
     assert!(code.target_path.is_none());
     assert_eq!(code.runtime.run_options, options);
 
-    let _: fn(RunRequest) -> RunOutcome = run;
-    let _: fn(&str) -> RunTarget = RunTarget::code;
-    let _: fn(&str) -> RunTarget = RunTarget::file;
-    let _: fn(&str) -> RunTarget = RunTarget::repository;
+    let _: fn(&str, RunOptions) -> RunOutcome = run_code;
+    let _: fn(&str, RunOptions) -> RunOutcome = run_file;
+    let _: fn(&str, RunOptions) -> RunOutcome = run_repository;
 }
 
 #[test]
 fn curated_api_keeps_only_canonical_execution_paths_public() {
     let _: fn(&mut Runtime, &str) = Runtime::start_isolated_source;
     let _: fn(&mut Runtime, &str) -> SourceRunOutcome = Runtime::execute_source;
-    let _: fn(RunRequest) -> RunOutcome = litex::pipeline::run;
+    let _: fn(&str, RunOptions) -> RunOutcome = litex::pipeline::run_code;
+    let _: fn(&str, RunOptions) -> RunOutcome = litex::pipeline::run_file;
+    let _: fn(&str, RunOptions) -> RunOutcome = litex::pipeline::run_repository;
     let _: fn(&str) -> Result<String, String> = litex::pipeline::resolve_source_file_path;
     let _: fn(&str, &str) -> Result<String, String> = compile_litex_source_to_lean_source;
     let _: fn(&str, &str) -> Result<StmtResultToLeanCompilationReport, String> =
@@ -65,7 +66,7 @@ fn curated_api_keeps_only_canonical_execution_paths_public() {
     let _: fn(&str, &str) -> Result<String, litex::error::RuntimeError> =
         litex::python_extractor::to_python_from_source;
     let _: fn(&str, &str) -> Result<String, String> =
-        litex::lean_compiler::compile_litex_source_to_lean_source;
+        litex::stmt_result_to_lean_compiler::compile_litex_source_to_lean_source;
 
     // Compatibility aliases remain available for one version.
     let _: fn(&litex::object::FnSet) -> litex::statement::definition_stmt::FnSetClause =
@@ -81,6 +82,4 @@ fn curated_api_keeps_only_canonical_execution_paths_public() {
         litex::to_latex::to_latex_from_source;
     let _: fn(&str, &str) -> Result<String, litex::error::RuntimeError> =
         litex::to_python::to_python_from_source;
-    let _: fn(&str, &str) -> Result<String, String> =
-        litex::stmt_result_to_lean_compiler::compile_litex_source_to_lean_source;
 }

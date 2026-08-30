@@ -12,6 +12,9 @@ pub enum BuiltinRuleEvidence {
     DefinitionProjection(DefinitionProjectionBuiltinRuleEvidence),
     SetBuilderMembership(SetBuilderMembershipBuiltinRuleEvidence),
     FunctionSetMembership(FunctionSetMembershipBuiltinRuleEvidence),
+    FunctionApplicationInRange(FunctionApplicationInRangeBuiltinRuleEvidence),
+    FunctionRangeSubset(FunctionRangeSubsetBuiltinRuleEvidence),
+    RealIntervalSubsetReal(RealIntervalSubsetRealBuiltinRuleEvidence),
     TupleCartesianMembership(TupleCartesianMembershipBuiltinRuleEvidence),
     IntegerRangeSumPointwiseOrder(IntegerRangeSumPointwiseOrderBuiltinRuleEvidence),
     RefinedNumericMembership(RefinedNumericMembershipBuiltinRuleEvidence),
@@ -90,6 +93,9 @@ impl BuiltinRuleEvidence {
             Self::DefinitionProjection(_) => "definition.projection",
             Self::SetBuilderMembership(_) => "set.set_builder_membership",
             Self::FunctionSetMembership(_) => "function.set_membership",
+            Self::FunctionApplicationInRange(_) => "function.application_in_range",
+            Self::FunctionRangeSubset(_) => "function.range_subset",
+            Self::RealIntervalSubsetReal(_) => "set.real_interval_subset_real",
             Self::TupleCartesianMembership(_) => "tuple.cartesian_membership",
             Self::IntegerRangeSumPointwiseOrder(_) => "aggregate.integer_range_sum_pointwise_order",
             Self::RefinedNumericMembership(_) => "numeric.refined_membership",
@@ -171,6 +177,18 @@ impl fmt::Debug for BuiltinRuleEvidence {
                 .finish(),
             BuiltinRuleEvidence::FunctionSetMembership(evidence) => f
                 .debug_tuple("FunctionSetMembership")
+                .field(evidence)
+                .finish(),
+            BuiltinRuleEvidence::FunctionApplicationInRange(evidence) => f
+                .debug_tuple("FunctionApplicationInRange")
+                .field(evidence)
+                .finish(),
+            BuiltinRuleEvidence::FunctionRangeSubset(evidence) => f
+                .debug_tuple("FunctionRangeSubset")
+                .field(evidence)
+                .finish(),
+            BuiltinRuleEvidence::RealIntervalSubsetReal(evidence) => f
+                .debug_tuple("RealIntervalSubsetReal")
                 .field(evidence)
                 .finish(),
             BuiltinRuleEvidence::TupleCartesianMembership(evidence) => f

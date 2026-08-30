@@ -346,12 +346,25 @@ end Same
 the set extension itself; no additional native `Set.univ` value is stored. -/
 structure Set where
   Carrier : Litex.u.{u}
+  /-- Optional canonical native-real observation for exact carriers used by
+  the analysis layer. Ordinary sets remain valid without one; real-set
+  constructors preserve a single observation instead of reselecting semantic
+  representatives. -/
+  realValue : Option (Carrier → ℝ) := none
 
 namespace Set
 
 /-- Package an exact Lean carrier as a Litex set. -/
 abbrev ofType (α : Litex.u.{u}) : Litex.Set.{u} :=
-  ⟨α⟩
+  ⟨α, none⟩
+
+/-- Package an exact carrier together with its canonical native-real
+observation. -/
+abbrev ofRealCarrier
+    (α : Litex.u.{u})
+    (value : α → ℝ) :
+    Litex.Set.{u} :=
+  ⟨α, some value⟩
 
 /-- A Litex set is nonempty exactly when its exact carrier is inhabited. -/
 def Nonempty (set : Litex.Set.{u}) : Prop :=
@@ -1244,6 +1257,112 @@ def fnApplyWhereOwn
     codomain.Carrier :=
   f.call x hx hrequires
 
+/-- Exact range of a total unary Litex function.  A range element retains its
+native codomain value together with the heterogeneous source argument and its
+checked domain membership. -/
+def fnRangeOwn
+    {domain : Litex.Set.{u}}
+    {codomain : Litex.Set.{v}}
+    (f : Fn domain codomain) :
+    Litex.Set.{v} :=
+  ⟨
+    {value : codomain.Carrier //
+      ∃ (α : Type u) (x : α) (hx : In x domain), value = f.call x hx},
+    codomain.realValue.map (fun observe value => observe value.val)
+  ⟩
+
+/-- Exact range of a unary Litex function with a source-domain predicate. -/
+def fnWhereRangeOwn
+    {domain : Litex.Set.{u}}
+    {codomain : Litex.Set.{v}}
+    {requires : {α : Type u} → α → Prop}
+    (f : FnWhere domain codomain requires) :
+    Litex.Set.{v} :=
+  ⟨
+    {value : codomain.Carrier //
+      ∃ (α : Type u) (x : α) (hx : In x domain) (hr : requires x),
+        value = f.call x hx hr},
+    codomain.realValue.map (fun observe value => observe value.val)
+  ⟩
+
+/-- Every checked application of an exact total function belongs to its exact
+range. -/
+theorem fnApplyOwnInRange
+    {domain : Litex.Set.{u}}
+    {codomain : Litex.Set.{v}}
+    (f : Fn domain codomain)
+    {α : Type u}
+    (x : α)
+    (hx : In x domain) :
+    In (f.call x hx) (fnRangeOwn f) := by
+  let witness : (fnRangeOwn f).Carrier :=
+    ⟨f.call x hx, ⟨α, x, hx, rfl⟩⟩
+  exact ⟨witness, Same.symm (Same.subtype witness)⟩
+
+/-- Inference-friendly form used when the compiler has already rendered the
+exact checked application and range in the expected proposition. -/
+theorem fnApplyOwnInRangeFromRenderedApplication
+    {domain : Litex.Set.{u}}
+    {codomain : Litex.Set.{v}}
+    {f : Fn domain codomain}
+    {hf : In f (fnSet domain codomain)}
+    {alpha : Type u}
+    {x : alpha}
+    {hx : In x domain} :
+    In (fnApplyOwn f hf x hx) (fnRangeOwn f) := by
+  simpa [fnApplyOwn] using fnApplyOwnInRange f x hx
+
+/-- Every checked application of an exact constrained function belongs to
+its exact range. -/
+theorem fnApplyWhereOwnInRange
+    {domain : Litex.Set.{u}}
+    {codomain : Litex.Set.{v}}
+    {requires : {α : Type u} → α → Prop}
+    (f : FnWhere domain codomain requires)
+    {α : Type u}
+    (x : α)
+    (hx : In x domain)
+    (hr : requires x) :
+    In (f.call x hx hr) (fnWhereRangeOwn f) := by
+  let witness : (fnWhereRangeOwn f).Carrier :=
+    ⟨f.call x hx hr, ⟨α, x, hx, hr, rfl⟩⟩
+  exact ⟨witness, Same.symm (Same.subtype witness)⟩
+
+/-- Inference-friendly constrained-function range introduction. -/
+theorem fnApplyWhereOwnInRangeFromRenderedApplication
+    {domain : Litex.Set.{u}}
+    {codomain : Litex.Set.{v}}
+    {requires : {alpha : Type u} → alpha → Prop}
+    {f : FnWhere domain codomain requires}
+    {hf : In f (fnSetWhere domain codomain requires)}
+    {alpha : Type u}
+    {x : alpha}
+    {hx : In x domain}
+    {hr : requires x} :
+    In (fnApplyWhereOwn f hf x hx hr) (fnWhereRangeOwn f) := by
+  simpa [fnApplyWhereOwn] using fnApplyWhereOwnInRange f x hx hr
+
+/-- A function range is included in its declared codomain. -/
+theorem fnRangeOwnSubsetCodomain
+    {domain : Litex.Set.{u}}
+    {codomain : Litex.Set.{v}}
+    (f : Fn domain codomain) :
+    Subset (fnRangeOwn f) codomain := by
+  intro α value membership
+  rcases membership with ⟨rangeValue, sameRangeValue⟩
+  exact ⟨rangeValue.val, Same.trans sameRangeValue (Same.subtype rangeValue)⟩
+
+/-- A constrained function range is included in its declared codomain. -/
+theorem fnWhereRangeOwnSubsetCodomain
+    {domain : Litex.Set.{u}}
+    {codomain : Litex.Set.{v}}
+    {requires : {α : Type u} → α → Prop}
+    (f : FnWhere domain codomain requires) :
+    Subset (fnWhereRangeOwn f) codomain := by
+  intro α value membership
+  rcases membership with ⟨rangeValue, sameRangeValue⟩
+  exact ⟨rangeValue.val, Same.trans sameRangeValue (Same.subtype rangeValue)⟩
+
 /-!
 `FnTelescope` is the native carrier for one source application layer with any
 finite number of parameters. A parameter node retains its exact Litex set and
@@ -1304,8 +1423,83 @@ def fnTelescopeApplyOwn
 abbrev N : Litex.Set := Set.ofType ℕ
 abbrev Z : Litex.Set := Set.ofType ℤ
 abbrev Q : Litex.Set := Set.ofType ℚ
-abbrev R : Litex.Set := Set.ofType ℝ
+abbrev R : Litex.Set := Set.ofRealCarrier ℝ id
 abbrev C : Litex.Set := Set.ofType ℂ
+
+/-- A real interval with independently open or closed endpoints.  Its exact
+carrier is the native Mathlib real subtype satisfying the selected bounds. -/
+def realInterval
+    (leftClosed rightClosed : Bool)
+    (start finish : ℝ) :
+    Litex.Set :=
+  Set.ofRealCarrier
+    {value : ℝ //
+      (if leftClosed then start ≤ value else start < value) ∧
+      (if rightClosed then value ≤ finish else value < finish)}
+    Subtype.val
+
+/-- A real ray extending rightward from one open or closed endpoint. -/
+def realLeftRay
+    (closed : Bool)
+    (start : ℝ) :
+    Litex.Set :=
+  Set.ofRealCarrier
+    {value : ℝ // if closed then start ≤ value else start < value}
+    Subtype.val
+
+/-- A real ray extending leftward to one open or closed endpoint. -/
+def realRightRay
+    (closed : Bool)
+    (finish : ℝ) :
+    Litex.Set :=
+  Set.ofRealCarrier
+    {value : ℝ // if closed then value ≤ finish else value < finish}
+    Subtype.val
+
+theorem realIntervalSubsetR
+    (leftClosed rightClosed : Bool)
+    (start finish : ℝ) :
+    Subset (realInterval leftClosed rightClosed start finish) R := by
+  intro α value membership
+  rcases membership with ⟨intervalValue, sameIntervalValue⟩
+  exact ⟨intervalValue.val, Same.trans sameIntervalValue (Same.subtype intervalValue)⟩
+
+theorem realLeftRaySubsetR
+    (closed : Bool)
+    (start : ℝ) :
+    Subset (realLeftRay closed start) R := by
+  intro α value membership
+  rcases membership with ⟨rayValue, sameRayValue⟩
+  exact ⟨rayValue.val, Same.trans sameRayValue (Same.subtype rayValue)⟩
+
+theorem realRightRaySubsetR
+    (closed : Bool)
+    (finish : ℝ) :
+    Subset (realRightRay closed finish) R := by
+  intro α value membership
+  rcases membership with ⟨rayValue, sameRayValue⟩
+  exact ⟨rayValue.val, Same.trans sameRayValue (Same.subtype rayValue)⟩
+
+/-- Expected-type-driven finite-interval inclusion for generated proofs. -/
+theorem realIntervalSubsetRFromExpectedType
+    {leftClosed rightClosed : Bool}
+    {start finish : ℝ} :
+    Subset (realInterval leftClosed rightClosed start finish) R :=
+  realIntervalSubsetR leftClosed rightClosed start finish
+
+/-- Expected-type-driven rightward-ray inclusion for generated proofs. -/
+theorem realLeftRaySubsetRFromExpectedType
+    {closed : Bool}
+    {start : ℝ} :
+    Subset (realLeftRay closed start) R :=
+  realLeftRaySubsetR closed start
+
+/-- Expected-type-driven leftward-ray inclusion for generated proofs. -/
+theorem realRightRaySubsetRFromExpectedType
+    {closed : Bool}
+    {finish : ℝ} :
+    Subset (realRightRay closed finish) R :=
+  realRightRaySubsetR closed finish
 
 /-- A predicate-defined Litex subset. Its exact carrier is the corresponding
 subtype, and the compiler-owned subtype edge relates each member to its base
@@ -1314,7 +1508,8 @@ def setBuilder
     (base : Litex.Set.{u})
     (predicate : base.Carrier → Prop) :
     Litex.Set.{u} :=
-  Set.ofType (Subtype predicate)
+  ⟨Subtype predicate,
+    base.realValue.map (fun observe value => observe value.val)⟩
 
 /-- Positive naturals use the exact subtype of native naturals carrying their
 strict-positivity proof. This is not an alias of `N`: membership retains the
@@ -1831,11 +2026,18 @@ def Lt (x y : ℂ) : Prop :=
 def Le (x y : ℂ) : Prop :=
   OrderValue x ≤ OrderValue y
 
-/-- Native real values represented by complex-carrier source members of a
-Litex set. The retained `In z R` proof selects exactly the real representative
-used by compiled source order facts. -/
+/-- A Litex set is explicitly real-valued when its exact carrier owns one
+canonical native-real observation. -/
+def Set.RealValued (set : Litex.Set) : Prop :=
+  ∃ observe : set.Carrier → ℝ, set.realValue = some observe
+
+/-- Native real values of an explicitly real-valued exact carrier. Sets
+without a registered real observation contribute no native values; analysis
+rules require and retain the corresponding `RealValued` certificate. -/
 def realMemberValues (set : Litex.Set) : _root_.Set ℝ :=
-  {value | ∃ (z : ℂ) (hzR : In z R), In z set ∧ value = In.rep z hzR}
+  match set.realValue with
+  | none => ∅
+  | some observe => _root_.Set.range observe
 
 /-- A verifier-owned certificate that the compiler's canonical real
 observation of a source complex value is the least upper bound of the real
@@ -1843,6 +2045,11 @@ members of `set`. Possessing this certificate is the explicit evidence that
 allows later compilation to keep the candidate's `OrderValue` representation. -/
 def RealLeastUpperBound (set : Litex.Set) (candidate : ℂ) : Prop :=
   IsLUB (realMemberValues set) (OrderValue candidate)
+
+/-- The greatest-lower-bound certificate dual to `RealLeastUpperBound`, over
+the same canonical native-real observation owned by the exact set carrier. -/
+def RealGreatestLowerBound (set : Litex.Set) (candidate : ℂ) : Prop :=
+  IsGLB (realMemberValues set) (OrderValue candidate)
 
 /-- A bounded positive-natural function parameter is compared through one
 source complex observation. This keeps the telescope requirement usable for a

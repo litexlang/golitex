@@ -46,20 +46,7 @@ impl DefinitionGraphBuilder {
             }
             None => {
                 if let Some(module_id) = runtime.module_manager.entry_module_id {
-                    if let Some(module) = runtime.module_manager.module(module_id) {
-                        let node_ids = builder.add_environment(
-                            module.main_environment.as_ref(),
-                            Some(module.module_name.as_str()),
-                            Some(module.main_file_path.as_str()),
-                        );
-                        builder.add_execution_source_for_nodes(
-                            runtime,
-                            module.execution_mode,
-                            module.module_name.as_str(),
-                            module.main_file_path.as_str(),
-                            node_ids.as_slice(),
-                        );
-                    }
+                    builder.add_module_environments(runtime, module_id);
                 }
             }
         }

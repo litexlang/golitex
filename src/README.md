@@ -20,15 +20,15 @@ stops after rendering the Result.
 | --- | --- | --- |
 | Process | [`main()`](main.rs) | Starts the CLI thread. |
 | CLI | [`cli::run_cli()`](cli/command_dispatch.rs) | Parses flags and selects code, file, repository, runner, graph, or compiler execution. |
-| CLI command | [`cli::run_code_command()`](cli/command_handlers.rs) | Adapts the selected `-e` target to the shared batch request. File, repository, and runner commands have parallel handlers in the same file. |
-| Batch pipeline | [`pipeline::run(RunRequest)`](pipeline/run.rs) | Owns the code/file/repository batch entry and creates the `Runtime`. |
+| CLI command | [`cli::run_code_from_e_command_line_flag()`](cli/command_handlers.rs) | Adapts the selected `-e` input to `run_code`. File, repository, and runner commands have parallel handlers in the same file. |
+| Batch pipeline | [`pipeline::run_code`, `run_file`, `run_repository`](pipeline/run.rs) | Each explicit entry owns its input-specific setup and creates the `Runtime`. |
 | Runtime state | [`Runtime::new(options: RunOptions)`](runtime/state.rs) | Creates the environment, module state, proof state, identifiers, and one run-options value together; `Runtime::default()` is the explicit default/test configuration. |
 | Source pipeline | [`Runtime::execute_source`](pipeline/source_execution.rs) | Tokenizes and executes statement blocks in order on the Runtime that owns their state. |
 | Parsing | [`Tokenizer::parse_blocks`](parsing/tokenizer.rs) and [`Runtime::parse_statement`](parsing/statement_parsing.rs) | Turn source text into `TokenBlock` values and then typed `Stmt` values. |
 | Execution | [`Runtime::execute_statement`](execution/statement_execution.rs) | Clears statement-local proof state and dispatches verified or configured trusted execution. Interactive imports take a separate terminal-command path before parsing and never become statements. |
 | Verification | [`Runtime::verify_fact_or_error`](verification/dispatch.rs) | Dispatches fact verification; equality reaches [`Runtime::verify_equal_fact`](verification/equality/core.rs). |
 | Result | [`Runtime::finish_statement_execution`](execution/statement_execution.rs) | Attaches FactIds and execution provenance, then returns the completed [`StmtResult`](result/statement/result.rs). |
-| Lean compiler | [`compile_litex_source_to_lean_source`](lean_compiler/source_compilation.rs) and [`StmtResultToLeanCompiler::compile_stmt_results_to_lean_source`](lean_compiler/compiler/result_dispatch.rs) | Optionally replay verified Results as Lean declarations and proof terms. |
+| Lean compiler | [`compile_litex_source_to_lean_source`](stmt_result_to_lean_compiler/source_compilation.rs) and [`StmtResultToLeanCompiler::compile_stmt_results_to_lean_source`](stmt_result_to_lean_compiler/compiler/result_dispatch.rs) | Optionally replay verified Results as Lean declarations and proof terms. |
 
 ### Follow one statement through the source
 
@@ -58,7 +58,7 @@ source `1 + 1 = 2`
 
 | Rule | Example |
 | --- | --- |
-| Every nonempty top-level source subsystem has one README. | `parsing/README.md` documents parsing, while `bin/README.md` documents the standalone compiler-maintenance binary. |
+| Every nonempty top-level source subsystem has one README. | `parsing/README.md` documents parsing, while `stmt_result_to_lean_compiler/README.md` also documents its standalone maintenance command entry. |
 | Start with an observable input and result. | `verification/README.md` starts from `1 + 1 = 2`, not from a list of Rust types. |
 | Put every capability beside its nearest boundary. | `algebraic_normalization/README.md` pairs `x ^ 2 / x = x` with the required premise `x != 0`. |
 | Add pseudocode only for an important control flow or algorithm. | `pipeline/README.md` shows the parse/execute loop; `syntax/README.md` only shows concrete conventions. |
@@ -68,7 +68,6 @@ source `1 + 1 = 2`
 
 | Directory | Concrete example |
 | --- | --- |
-| [`bin/`](bin/README.md) | `stmt_result_to_lean_compiler check lean/examples` checks generated-source drift and invokes Lean. |
 | [`cli/`](cli/README.md) | `litex -runner -e '1 + 1 = 2'` selects the runner command. |
 | [`compatibility/`](compatibility/README.md) | `litex::common::fact_id::FactId` temporarily re-exports `litex::fact::id::FactId`. |
 | [`environment/`](environment/README.md) | After checking `a = 1`, later statements can reuse that equality. |
@@ -87,7 +86,7 @@ source `1 + 1 = 2`
 | [`runner/`](runner/README.md) | A successful run has top-level `"ok": true`. |
 | [`runtime/`](runtime/README.md) | One run owns its module stack, FactId allocator, and temporary proof guards. |
 | [`statement/`](statement/README.md) | `have a R = 1` and `1 = 1` become different `Stmt` variants. |
-| [`lean_compiler/`](lean_compiler/README.md) | The complex calculation example is replayed as Lean proof code. |
+| [`stmt_result_to_lean_compiler/`](stmt_result_to_lean_compiler/README.md) | The complex calculation example is replayed as Lean proof code. |
 | [`symbol/`](symbol/README.md) | Two nested binders named `x` receive different `SymbolId` values. |
 | [`syntax/`](syntax/README.md) | `forall` is reserved, while `user_name` is a valid source identifier. |
 | [`latex_renderer/`](latex_renderer/README.md) | `litex -latex -e '1 = 1'` renders LaTeX. |

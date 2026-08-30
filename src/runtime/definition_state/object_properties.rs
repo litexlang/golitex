@@ -18,10 +18,7 @@ impl Runtime {
             .last()
             .expect("an execution frame should always exist");
         let local_count = frame.local_environment_stack.len();
-        match frame.layer {
-            ExecutionLayer::Main => local_count + 1,
-            ExecutionLayer::File(_) => local_count + 2,
-        }
+        local_count + 2
     }
 
     pub fn environment_by_top_index(&self, index: usize) -> Option<&Environment> {
@@ -34,26 +31,17 @@ impl Runtime {
                 .map(|environment| environment.as_ref());
         }
         let layer_index = index - local_count;
-        match frame.layer {
-            ExecutionLayer::Main => {
-                let module = self.module_manager.module(frame.module_id)?;
-                if layer_index == 0 {
-                    return Some(module.main_environment.as_ref());
-                }
-                None
-            }
-            ExecutionLayer::File(current_file_id) => {
-                let module = self.module_manager.module(frame.module_id)?;
-                let current_file = module.file(current_file_id)?;
-                if layer_index == 0 {
-                    return Some(current_file.environment.as_ref());
-                }
-                if layer_index == 1 {
-                    return Some(module.main_environment.as_ref());
-                }
-                None
-            }
+        let module = self
+            .module_manager
+            .module(frame.module_file_info.module_id)?;
+        let current_file = module.file(frame.module_file_info.file_id)?;
+        if layer_index == 0 {
+            return Some(current_file.environment.as_ref());
         }
+        if layer_index == 1 {
+            return Some(module.main_environment.as_ref());
+        }
+        None
     }
 
     pub fn is_symmetric_prop_name_known(&self, prop_name: &str) -> bool {
@@ -1137,6 +1125,13 @@ impl Runtime {
                         .map(|file| vec![file.environment.as_ref()])
                         .unwrap_or_default();
                 }
+                if let Some(file_id) = module.module_source_file {
+                    return module
+                        .file(file_id)
+                        .filter(|file| file.status == FileStatus::Loaded)
+                        .map(|file| vec![file.environment.as_ref()])
+                        .unwrap_or_default();
+                }
                 vec![module.main_environment.as_ref()]
             }
             Some(ImportTarget::File { module_id, file_id }) => {
@@ -1160,24 +1155,17 @@ impl Runtime {
 
     pub fn current_parse_namespace(&self) -> Option<&str> {
         let frame = self.execution_stack.last()?;
-        let module_id = frame.module_id;
+        let module_id = frame.module_file_info.module_id;
+        let file_id = frame.module_file_info.file_id;
         let module = self.module_manager.module(module_id)?;
-        match frame.layer {
-            ExecutionLayer::Main => {
-                (!module.module_name.is_empty()).then_some(module.module_name.as_str())
-            }
-            ExecutionLayer::File(file_id) => {
-                if module.flattened_export_file == Some(file_id) && !module.module_name.is_empty() {
-                    return Some(module.module_name.as_str());
-                }
-                module
-                    .file(file_id)
-                    .map(|file| file.canonical_name.as_str())
-                    .or_else(|| {
-                        (!module.module_name.is_empty()).then_some(module.module_name.as_str())
-                    })
-            }
+        if module.flattened_export_file == Some(file_id) && !module.module_name.is_empty() {
+            return Some(module.module_name.as_str());
         }
+        module
+            .file(file_id)
+            .map(|file| file.canonical_name.as_str())
+            .filter(|name| !name.is_empty())
+            .or_else(|| (!module.module_name.is_empty()).then_some(module.module_name.as_str()))
     }
 
     pub fn atomic_fact_referenced_module_names(&self, atomic_fact: &AtomicFact) -> Vec<String> {

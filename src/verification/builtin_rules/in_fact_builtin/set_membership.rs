@@ -1192,13 +1192,14 @@ impl Runtime {
         {
             return Ok((UnknownGenericStmtResult::new()).into());
         }
+        let expected_target: Fact = in_fact.clone().into();
         Ok(
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
-                in_fact.clone().into(),
+                expected_target.clone(),
                 "fn_range membership: a well-defined function application is in the function range"
                     .to_string(),
-                BuiltinRuleEvidence::Uncatalogued(
-                    UncataloguedBuiltinRule::VerifyInFactFnApplicationInFnRange,
+                BuiltinRuleEvidence::FunctionApplicationInRange(
+                    FunctionApplicationInRangeBuiltinRuleEvidence::new(expected_target),
                 ),
                 Vec::new(),
             )
