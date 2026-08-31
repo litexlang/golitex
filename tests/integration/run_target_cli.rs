@@ -147,6 +147,27 @@ fn eval_graph_uses_the_canonical_eval_source_label() {
 }
 
 #[test]
+fn isolated_file_graph_preserves_the_file_target_error_contract() {
+    let path = "missing-isolated-graph-file.lit";
+    let output = Command::new(env!("CARGO_BIN_EXE_litex"))
+        .args(["-isolated", "-factgraph", "-f", path])
+        .output()
+        .expect("run isolated file graph");
+
+    assert_eq!(output.status.code(), Some(1));
+    let stdout = String::from_utf8(output.stdout).expect("stdout is UTF-8");
+    assert!(stdout.contains("\"kind\": \"artifact\""), "{stdout}");
+    assert!(stdout.contains("\"ok\": false"), "{stdout}");
+    assert!(stdout.contains("\"artifact\": \"fact_graph\""), "{stdout}");
+    assert!(stdout.contains("\"target\": \"file\""), "{stdout}");
+    assert!(
+        stdout.contains(format!("\"path\": \"{path}\"").as_str()),
+        "{stdout}"
+    );
+    assert!(output.stderr.is_empty());
+}
+
+#[test]
 fn help_version_and_unknown_option_use_minimal_json_envelopes() {
     let help = Command::new(env!("CARGO_BIN_EXE_litex"))
         .arg("-help")

@@ -41,14 +41,10 @@ pub fn run_cli() {
             let target = match (options.execution(), file_path) {
                 (ExecutionOption::Session, None) => SessionTarget::CurrentDirectory,
                 (ExecutionOption::IsolatedSession, None) => SessionTarget::Isolated,
-                (ExecutionOption::Session, Some(path)) => SessionTarget::File {
-                    path,
-                    mode: FileRunMode::Project,
-                },
-                (ExecutionOption::IsolatedSession, Some(path)) => SessionTarget::File {
-                    path,
-                    mode: FileRunMode::Isolated,
-                },
+                (ExecutionOption::Session, Some(path)) => SessionTarget::File { path },
+                (ExecutionOption::IsolatedSession, Some(path)) => {
+                    SessionTarget::IsolatedFile { path }
+                }
                 _ => unreachable!("session command was resolved to a non-session target"),
             };
             run_session(SessionRequest::new(options, target));

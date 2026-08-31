@@ -1,12 +1,14 @@
 # Running Litex source
 
-`litex -e '1 + 1 = 2'`, `litex -f example.lit`, and `litex -r project`
-enter through separate code, file, and repository functions. Runner and graph
+`litex -e '1 + 1 = 2'`, `litex -f example.lit`,
+`litex -isolated -f example.lit`, and `litex -r project` enter through separate
+code, project-file, isolated-file, and repository functions. Runner and graph
 commands render the resulting `RunOutcome` without redispatching the input.
 
 ```text
 run_code(source, options)         -> Runtime::new -> execute source
-run_file(path, options)           -> Runtime::new -> resolve and execute file
+run_file(path, options)           -> Runtime::new -> resolve and execute project file
+run_isolated_file(path, options)  -> Runtime::new -> resolve and execute isolated file
 run_repository(path, options)     -> Runtime::new -> discover and execute repository
                                    -> render output and optional summary once
 ```
@@ -36,7 +38,7 @@ or `module_manager` without first expanding the crate-wide prelude.
 | File | Example |
 | --- | --- |
 | [`target.rs`](target.rs) | Models batch, REPL, file-mode, and session targets and their canonical source labels. |
-| [`run.rs`](run.rs) | Owns the explicit batch entries, Runtime creation, and their shared outcome rendering. The canonical `RunOptions` lives in [`../runtime/run_options.rs`](../runtime/run_options.rs). |
+| [`run.rs`](run.rs) | Owns the explicit code, project-file, isolated-file, and repository batch entries, Runtime creation, and their shared outcome rendering. The canonical `RunOptions` lives in [`../runtime/run_options.rs`](../runtime/run_options.rs). |
 | [`source_execution.rs`](source_execution.rs) | Tokenizes, parses, and executes source inside an already initialized Runtime. |
 | [`file_execution.rs`](file_execution.rs) | Resolves `-f`, discovers project context, and selects repository-prefix or isolated-file execution. |
 | [`output_rendering.rs`](output_rendering.rs) | Renders statement results, errors, and JSONL stream envelopes. |

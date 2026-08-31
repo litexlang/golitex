@@ -2,7 +2,7 @@ use super::{
     initialize_isolated_repl_runtime, run_isolated_repl_with_runtime_and_readers,
     run_latex_repl_loop_with_readers, run_repl_loop_with_readers_and_mode, ReplOutputMode,
 };
-use crate::pipeline::{execute_file_in_runtime, FileRunMode};
+use crate::pipeline::execute_isolated_file_in_runtime;
 use crate::prelude::OutputStyle;
 use crate::runtime::{ExecutionOption, RunOptions, Runtime};
 use crate::test_support::execute_source;
@@ -164,11 +164,8 @@ fn isolated_file_continues_in_the_same_repl_runtime() {
     fs::write(&file, "have from_file R = 1\n").expect("write isolated source file");
 
     let mut runtime = Runtime::default();
-    let (_, file_error) = execute_file_in_runtime(
-        file.to_str().expect("file path is UTF-8"),
-        &mut runtime,
-        FileRunMode::Isolated,
-    );
+    let (_, file_error) =
+        execute_isolated_file_in_runtime(file.to_str().expect("file path is UTF-8"), &mut runtime);
     assert!(file_error.is_none(), "{file_error:?}");
     let mut input = Cursor::new(b"from_file = 1\nhave from_repl R = 2\n".as_slice());
     let mut output = Vec::new();
@@ -194,11 +191,8 @@ fn isolated_file_rejects_inline_import_before_repl_continuation() {
     fs::write(&file, "import std basics\n").expect("write isolated source file");
 
     let mut runtime = Runtime::default();
-    let (results, error) = execute_file_in_runtime(
-        file.to_str().expect("file path is UTF-8"),
-        &mut runtime,
-        FileRunMode::Isolated,
-    );
+    let (results, error) =
+        execute_isolated_file_in_runtime(file.to_str().expect("file path is UTF-8"), &mut runtime);
     assert!(results.is_empty());
     let error = error.expect("-isolated -f must reject inline import");
     assert!(

@@ -8,7 +8,7 @@ args -> command::parse_cli_command
      -> produce one resolved CliCommand with owned values and RunOptions
 match typed command:
   Execute -> command_handlers::run_command
-          -> select pipeline::run_code/run_file/run_repository once
+          -> select pipeline::run_code/run_file/run_isolated_file/run_repository once
   Graph   -> execute the resolved input and render its RunOutcome
   Latex/Extract/Lean -> run the selected typed conversion
 invalid combination -> print one cli_error JSON object and exit 2

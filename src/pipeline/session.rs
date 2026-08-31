@@ -331,11 +331,26 @@ fn initialize_session_runtime(
         .source_label()
         .to_string();
 
-    if let SessionTarget::File {
-        path: preload_file,
-        mode,
-    } = &target
-    {
+    if let SessionTarget::File { path: preload_file } = &target {
+        let clean_path = preload_file.replace('\r', "");
+        let path = Path::new(clean_path.as_str());
+        let path = if path.is_absolute() {
+            path.to_path_buf()
+        } else {
+            directory.join(path)
+        };
+        let path_string = path.to_string_lossy().into_owned();
+        let (stmt_results, runtime_error) = execute_file_in_runtime(path_string.as_str(), runtime);
+        if let Some(error) = runtime_error {
+            return Err((stmt_results, error));
+        }
+        if let Err(error) = runtime.prepare_current_repository_for_repl(source_label.as_str()) {
+            return Err((stmt_results, error));
+        }
+        return Ok(("project", stmt_results));
+    }
+
+    if let SessionTarget::IsolatedFile { path: preload_file } = &target {
         let clean_path = preload_file.replace('\r', "");
         let path = Path::new(clean_path.as_str());
         let path = if path.is_absolute() {
@@ -345,17 +360,11 @@ fn initialize_session_runtime(
         };
         let path_string = path.to_string_lossy().into_owned();
         let (stmt_results, runtime_error) =
-            execute_file_in_runtime(path_string.as_str(), runtime, *mode);
+            execute_isolated_file_in_runtime(path_string.as_str(), runtime);
         if let Some(error) = runtime_error {
             return Err((stmt_results, error));
         }
-        if mode.is_isolated() {
-            return Ok(("isolated", stmt_results));
-        }
-        if let Err(error) = runtime.prepare_current_repository_for_repl(source_label.as_str()) {
-            return Err((stmt_results, error));
-        }
-        return Ok(("project", stmt_results));
+        return Ok(("isolated", stmt_results));
     }
 
     if target == SessionTarget::Isolated || !directory.join("litex.config").is_file() {
