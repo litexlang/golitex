@@ -143,3 +143,13 @@ byte-for-byte unchanged (recorded 09:48:41, SHA-256 `4207917d...`), and the
 tmp matrix still has its prior 64 generated modules. This is `B-H4-04
 baseline_external`, owned by the active Rust refactor; no coverage total from
 this attempt exists.
+
+A later coherent `cargo check --all-targets` at Rust `c6b82214...` justified
+one retry, but active Rust changed again during the release build and the
+runner stopped at the same binding boundary. H4 therefore switched to the
+independent checked-in Lean lane. At stable Lean fingerprint `ca5b1de5...`,
+`run_checked_examples_gate.py --jobs 4` records 67/69 kernel passes, two real
+rejects (Examples 10 and 69), zero infrastructure failures, and zero forbidden
+rows. Lean changed immediately afterward from `ca5b1de5...` to `75991dea...`
+and made `Rules.olean` stale, so the report is now marked historical. It does
+not claim that current Rust can regenerate the pairs.

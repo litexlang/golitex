@@ -1832,8 +1832,10 @@ theorem realLeastUpperBoundExists
     (setNonempty : Litex.Set.Nonempty set)
     (upperBoundReal : Litex.In upperBound Litex.R)
     (boundsEveryMember :
-      ∀ member : ℝ,
-        Litex.In member set → Litex.Le (member : ℂ) (upperBound : ℂ)) :
+      ∀ {α : Type} (member : α) (memberInSet : Litex.In member set),
+        Litex.Le
+          ((Litex.Subset.rep setSubsetReal member memberInSet : ℝ) : ℂ)
+          (upperBound : ℂ)) :
     ∃ candidate : ℝ,
       ∃ _candidateReal : Litex.In candidate Litex.R,
         Litex.RealLeastUpperBound set (candidate : ℂ) := by
@@ -1851,9 +1853,14 @@ theorem realLeastUpperBoundExists
   have valuesBounded : BddAbove values := by
     refine ⟨upperBound, ?_⟩
     intro value valueInSet
-    have ordered := boundsEveryMember value (by
-      simpa [values, Litex.realSubsetMemberValues, Litex.realMemberValues] using valueInSet)
-    simpa [Litex.Le, Litex.OrderValue] using ordered
+    have valueMembership : Litex.In value set := by
+      simpa [values, Litex.realSubsetMemberValues,
+        Litex.realMemberValues] using valueInSet
+    have valueTransport :
+        Litex.Subset.rep setSubsetReal value valueMembership = value :=
+      Litex.Subset.rep_exact setSubsetReal value valueMembership
+    have ordered := boundsEveryMember value valueMembership
+    simpa [valueTransport, Litex.Le, Litex.OrderValue] using ordered
   let supremum : ℝ := sSup values
   have supremumIsLUB : IsLUB values supremum := by
     exact isLUB_csSup valuesNonempty valuesBounded
@@ -1887,8 +1894,10 @@ theorem realLeastUpperBoundLeUpperBound
     (candidateIsLUB : Litex.RealLeastUpperBound set candidate)
     (upperBoundReal : Litex.In upperBound Litex.R)
     (boundsEveryMember :
-      ∀ member : ℝ,
-        Litex.In member set → Litex.Le (member : ℂ) (upperBound : ℂ)) :
+      ∀ {α : Type} (member : α) (memberInSet : Litex.In member set),
+        Litex.Le
+          ((Litex.Subset.rep setSubsetReal member memberInSet : ℝ) : ℂ)
+          (upperBound : ℂ)) :
     Litex.Le
       candidate
       (upperBound : ℂ) := by
@@ -1897,9 +1906,14 @@ theorem realLeastUpperBoundLeUpperBound
       ∀ value ∈ Litex.realSubsetMemberValues set setSubsetReal,
         value ≤ upperBound := by
     intro value valueInSet
-    have ordered := boundsEveryMember value (by
-      simpa [Litex.realSubsetMemberValues, Litex.realMemberValues] using valueInSet)
-    simpa [Litex.Le, Litex.OrderValue] using ordered
+    have valueMembership : Litex.In value set := by
+      simpa [Litex.realSubsetMemberValues,
+        Litex.realMemberValues] using valueInSet
+    have valueTransport :
+        Litex.Subset.rep setSubsetReal value valueMembership = value :=
+      Litex.Subset.rep_exact setSubsetReal value valueMembership
+    have ordered := boundsEveryMember value valueMembership
+    simpa [valueTransport, Litex.Le, Litex.OrderValue] using ordered
   have ordered := lub.2 suppliedIsUpperBound
   simpa [Litex.Le, Litex.OrderValue] using ordered
 
@@ -1912,8 +1926,10 @@ theorem realGreatestLowerBoundExists
     (setNonempty : Litex.Set.Nonempty set)
     (lowerBoundReal : Litex.In lowerBound Litex.R)
     (boundsEveryMember :
-      ∀ member : ℝ,
-        Litex.In member set → Litex.Le (lowerBound : ℂ) (member : ℂ)) :
+      ∀ {α : Type} (member : α) (memberInSet : Litex.In member set),
+        Litex.Le
+          (lowerBound : ℂ)
+          ((Litex.Subset.rep setSubsetReal member memberInSet : ℝ) : ℂ)) :
     ∃ candidate : ℝ,
       ∃ _candidateReal : Litex.In candidate Litex.R,
         Litex.RealGreatestLowerBound set (candidate : ℂ) := by
@@ -1931,9 +1947,14 @@ theorem realGreatestLowerBoundExists
   have valuesBounded : BddBelow values := by
     refine ⟨lowerBound, ?_⟩
     intro value valueInSet
-    have ordered := boundsEveryMember value (by
-      simpa [values, Litex.realSubsetMemberValues, Litex.realMemberValues] using valueInSet)
-    simpa [Litex.Le, Litex.OrderValue] using ordered
+    have valueMembership : Litex.In value set := by
+      simpa [values, Litex.realSubsetMemberValues,
+        Litex.realMemberValues] using valueInSet
+    have valueTransport :
+        Litex.Subset.rep setSubsetReal value valueMembership = value :=
+      Litex.Subset.rep_exact setSubsetReal value valueMembership
+    have ordered := boundsEveryMember value valueMembership
+    simpa [valueTransport, Litex.Le, Litex.OrderValue] using ordered
   let infimum : ℝ := sInf values
   have infimumIsGLB : IsGLB values infimum := by
     exact isGLB_csInf valuesNonempty valuesBounded
@@ -1967,17 +1988,24 @@ theorem realLowerBoundLeGreatestLowerBound
     (candidateIsGLB : Litex.RealGreatestLowerBound set candidate)
     (lowerBoundReal : Litex.In lowerBound Litex.R)
     (boundsEveryMember :
-      ∀ member : ℝ,
-        Litex.In member set → Litex.Le (lowerBound : ℂ) (member : ℂ)) :
+      ∀ {α : Type} (member : α) (memberInSet : Litex.In member set),
+        Litex.Le
+          (lowerBound : ℂ)
+          ((Litex.Subset.rep setSubsetReal member memberInSet : ℝ) : ℂ)) :
     Litex.Le (lowerBound : ℂ) candidate := by
   rcases candidateIsGLB with ⟨certificateSubset, glb⟩
   have suppliedIsLowerBound :
       ∀ value ∈ Litex.realSubsetMemberValues set setSubsetReal,
         lowerBound ≤ value := by
     intro value valueInSet
-    have ordered := boundsEveryMember value (by
-      simpa [Litex.realSubsetMemberValues, Litex.realMemberValues] using valueInSet)
-    simpa [Litex.Le, Litex.OrderValue] using ordered
+    have valueMembership : Litex.In value set := by
+      simpa [Litex.realSubsetMemberValues,
+        Litex.realMemberValues] using valueInSet
+    have valueTransport :
+        Litex.Subset.rep setSubsetReal value valueMembership = value :=
+      Litex.Subset.rep_exact setSubsetReal value valueMembership
+    have ordered := boundsEveryMember value valueMembership
+    simpa [valueTransport, Litex.Le, Litex.OrderValue] using ordered
   have ordered := glb.2 suppliedIsLowerBound
   simpa [Litex.Le, Litex.OrderValue] using ordered
 

@@ -14,18 +14,26 @@ impl StmtResultToLeanCompiler {
         if result.store.fact.to_string() != fact.to_string() {
             return Err("subset transport changed between verification and store".into());
         }
-        let Ok((source_set, target_set)) = subset_parts(&fact) else {
-            return Ok(());
-        };
-        self.environment_stack
-            .subset_membership_transports
-            .push(SubsetMembershipTransportBinding::new(
-                source_set.clone(),
-                target_set.clone(),
-                proof_expression.to_string(),
-            ));
-        Ok(())
+        install_subset_transport_from_fact(&fact, proof_expression, &mut self.environment_stack)
     }
+}
+
+pub(in super::super) fn install_subset_transport_from_fact(
+    fact: &Fact,
+    proof_expression: &str,
+    context: &mut StmtResultToLeanCompilerEnvironmentStack,
+) -> Result<(), String> {
+    let Ok((source_set, target_set)) = subset_parts(fact) else {
+        return Ok(());
+    };
+    context
+        .subset_membership_transports
+        .push(SubsetMembershipTransportBinding::new(
+            source_set.clone(),
+            target_set.clone(),
+            proof_expression.to_string(),
+        ));
+    Ok(())
 }
 
 pub(in super::super) fn install_visible_subset_transports_for_parameter(

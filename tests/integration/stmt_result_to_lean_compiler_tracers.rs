@@ -96,9 +96,8 @@ fn named_real_less_to_less_equal_emits_only_its_source_declaration() {
 fn litex_to_mathlib_pipeline_showcase_generated_lean_has_not_drifted() {
     const SOURCE: &str =
         include_str!("../../showcases/litex_to_lean_mathlib_pipeline/showcase1/main.lit");
-    const CHECKED_IN: &str = include_str!(
-        "../../showcases/litex_to_lean_mathlib_pipeline/showcase1/Generated.lean"
-    );
+    const CHECKED_IN: &str =
+        include_str!("../../showcases/litex_to_lean_mathlib_pipeline/showcase1/Generated.lean");
 
     let generated =
         compile_on_verifier_stack(SOURCE, "main.lit").expect("compile the pipeline showcase");
@@ -127,8 +126,9 @@ fn litex_to_mathlib_pipeline_showcase_generated_lean_has_not_drifted() {
 
 #[test]
 fn litex_to_mathlib_pipeline_property_companion_verifies_without_trust() {
-    const SOURCE: &str =
-        include_str!("../../showcases/litex_to_lean_mathlib_pipeline/showcase1/extras/property_flow.lit");
+    const SOURCE: &str = include_str!(
+        "../../showcases/litex_to_lean_mathlib_pipeline/showcase1/extras/property_flow.lit"
+    );
 
     let results = capture_stmt_results_json_v2_on_verifier_stack(SOURCE, "property_flow.lit")
         .expect("verify the property-centered companion source");
@@ -1661,6 +1661,28 @@ fn set_builder_membership_and_nonempty_choice_use_exact_carriers() {
     assert!(!generated.contains("Set.univ"));
     assert!(!generated.contains("Litex.Object"));
     assert!(!generated.contains("sorry"));
+}
+
+#[test]
+fn set_builder_predicate_transport_is_not_specialized_to_one_argument() {
+    let generated = compile_on_verifier_stack(
+        "prop anchored_at(anchor R, value R):\n    value = anchor\n1 = 1\nby def $anchored_at(1, 1)\n1 $in {x R: $anchored_at(1, x)}\n",
+        "captured_set_builder_predicate.lit",
+    )
+    .expect("compile a set-builder predicate with a captured argument");
+
+    assert!(generated.contains("def anchored_at"), "{generated}");
+    assert!(
+        generated.contains("Litex.Rules.inSetBuilder"),
+        "{generated}"
+    );
+    assert!(generated.contains("unfold anchored_at"), "{generated}");
+    for forbidden in ["LitexObject", "Litex.Object", "Set.univ", "sorry", "axiom "] {
+        assert!(
+            !generated.contains(forbidden),
+            "forbidden `{forbidden}` in:\n{generated}"
+        );
+    }
 }
 
 #[test]

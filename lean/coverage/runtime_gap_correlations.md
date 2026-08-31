@@ -18,7 +18,7 @@ user-owned compiler paths.
 | Example 36 / known-forall composition | Generated Lean reject | generated line 15 fails after simplification | known-forall Result composition succeeds in Rust | align the projected conclusion carrier before publishing its FactId |
 | Example 62 / builtin theorem application | Generated Lean reject | generated line 18 supplies an argument of the wrong type to the selected theorem | theorem identity and application Result are retained | validate exact argument carriers before emitting the registered theorem call |
 | Example 68 / transparent set membership | Generated Lean reject | generated line 26 fails after simplification | transparent definition and membership Results are retained | preserve the set-carrier transport through transparent unfolding |
-| Example 69 / real Cauchy | Generated and checked Lean reject | generated line 127 has a simplification type mismatch; checked line 122 hits forbidden large elimination from `Prop` | completeness Result tree compiles in Rust | redesign the elimination route without large elimination and kernel-check both copies |
+| Example 69 / real Cauchy | Generated and checked Lean reject | current checked line 24 treats `(sequenceSet R).Carrier` as a `Fn`; later calls require membership in `fnSet NPos {Carrier := ℂ}` but retain `fnSet NPos R`, followed by `In.rep`/complex-observation mismatches | completeness Result tree compiles in Rust, but sequence/function carrier identity is not preserved coherently | freeze `UD-2` exact-carrier transport, distinguish sequence wrapper from owned function value, then kernel-check both copies without large elimination |
 
 ## Dependency order
 

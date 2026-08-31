@@ -31,15 +31,14 @@ theorem sumFirstOdds (n : ℤ) (oneLeN : (1 : ℤ) ≤ n) :
 
 `IntegerSameEqBridge` is deliberately a proof-carrying interface, not an
 axiom and not an alternative definition of equality. It records the exact
-eliminator that Core would have to prove before an unconditional native
-downstream theorem can be sound.
+eliminator that a sound implementation must provide before an unconditional
+native downstream theorem can be declared.
 -/
 
 /-- A proposed elimination certificate for integer-valued semantic equality.
 
-No value of this structure is postulated here. Keeping the prototype local to
-the adapter makes its eventual Core contract reviewable before it becomes part
-of the shared ABI. -/
+No value of this structure is postulated here. It deliberately remains local
+to the adapter instead of becoming part of the shared Core ABI. -/
 structure IntegerSameEqBridge : Prop where
   toEq {left right : ℤ} :
     Litex.Same left (right : ℂ) → left = right

@@ -161,10 +161,8 @@ impl StmtResultToLeanCompiler {
             .environment_stack
             .well_definedness
             .replace(application_well_definedness);
-        let inherited_subset_transport_count = self
-            .environment_stack
-            .subset_membership_transports
-            .len();
+        let inherited_subset_transport_count =
+            self.environment_stack.subset_membership_transports.len();
         let compilation = (|| {
             // Rational density is a theorem about native real endpoints.  Lower
             // each verifier-checked endpoint once to its exact ℝ observation and

@@ -106,6 +106,11 @@ downstream APIs that need a system as an object. It also owns shared law
 predicates and generic results. This is one export and one file with two
 interface roles.
 
+Flattening the namespaces creates genuine name collisions. Setting-facing
+results keep the unsuffixed source name; the corresponding bundled
+structure-facing results use `_structure`. Non-colliding objects, laws, and
+theorems remain ordinary `chap2` declarations.
+
 Inside the structure-first presentation, the dependency direction is:
 
 ```text

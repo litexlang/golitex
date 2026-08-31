@@ -1,7 +1,7 @@
 use super::command::{parse_cli_command, CliCommand};
 use super::command_handlers::{
-    print_or_save_graph_output, run_code_command, run_file_command,
-    run_graph_command, run_repository_command, VERSION,
+    print_or_save_graph_output, run_code_command, run_file_command, run_graph_command,
+    run_repository_command, VERSION,
 };
 use super::conversion_commands::{run_code_extraction_command, run_latex_command};
 use super::lean_commands::run_lean_file_command;
