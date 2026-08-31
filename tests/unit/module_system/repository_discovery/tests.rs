@@ -1438,10 +1438,10 @@ fn run_repository_for_test(
     } else {
         RunOptions::execute(ExecutionOption::Repo)
     }
-    .with_output_style(if detailed_output {
-        OutputStyle::Detailed
+    .with_output_detail(if detailed_output {
+        OutputDetail::Detailed
     } else {
-        OutputStyle::Normal
+        OutputDetail::Normal
     })
     .with_output_language(output_language)
     .with_summary(if summarize {

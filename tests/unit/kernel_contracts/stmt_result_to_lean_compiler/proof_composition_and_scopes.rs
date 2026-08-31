@@ -1,5 +1,5 @@
 use super::super::*;
-use crate::output::display_stmt_result_json_v2;
+use crate::output::render_statement_result_json;
 
 #[test]
 fn combined_builtin_items_retain_and_compile_their_typed_component_evidence() {
@@ -246,7 +246,7 @@ fn forall_result_retains_exact_parameter_and_domain_fact_ids_for_compiler_scope(
         proof.parameter_assumptions[0].fact_id
     );
 
-    let json = display_stmt_result_json_v2(&results[0]);
+    let json = render_statement_result_json(&results[0]);
     assert!(json.contains("\"parameter_assumptions\""), "{json}");
     assert!(json.contains("\"domain_assumptions\""), "{json}");
 

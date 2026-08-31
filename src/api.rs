@@ -17,9 +17,12 @@
 
 // Core execution model and result types.
 pub use crate::error::RuntimeError;
-pub use crate::output::{language::OutputLanguage, style::OutputStyle};
+pub use crate::output::language::OutputLanguage;
 pub use crate::result::StmtResult;
-pub use crate::runtime::{ExecutionOption, RunOption, RunOptions, Runtime, SummaryOption};
+#[allow(deprecated)]
+pub use crate::runtime::{
+    ExecutionOption, OutputDetail, OutputStyle, RunOption, RunOptions, Runtime, SummaryOption,
+};
 
 // Source, file, and repository execution entry points.
 pub use crate::pipeline::{
@@ -28,8 +31,10 @@ pub use crate::pipeline::{
 };
 
 // Stable rendering entry points for embedding and machine-readable output.
+#[allow(deprecated)]
 pub use crate::output::{
     display_runtime_error_json, display_stmt_exec_result_json, display_stmt_result_json_v2,
+    render_runtime_error_json, render_statement_result_json,
 };
 
 // Litex-to-Lean entry points and their structured report types.

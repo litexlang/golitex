@@ -3,7 +3,7 @@
 use super::{StatementProofScopeState, StatementProofStateStack};
 use crate::error::RuntimeError;
 use crate::fact::{AtomicFact, EqualFact, Fact};
-use crate::output::display_stmt_exec_result_json;
+use crate::output::render_statement_result_json;
 use crate::parsing::Tokenizer;
 use crate::result::{StmtResult, SuccessFactProofResult, SuccessVerifyFactResult};
 use crate::runtime::Runtime;
@@ -60,7 +60,7 @@ fn successful_atomic_fact_is_shared_until_statement_proof_cache_is_cleared() {
     let second_source = reused_verification(&second);
     assert!(Rc::ptr_eq(&first_source, second_source));
     assert!(second.infer_result().is_empty());
-    let output = display_stmt_exec_result_json(&runtime, &second, false);
+    let output = render_statement_result_json(&second);
     assert!(output.contains("number comparison"), "{output}");
     assert!(!output.contains("statement proof cache"), "{output}");
 
@@ -182,7 +182,7 @@ fn exec_stmt_clears_temporary_successes_but_keeps_the_proof_evidence() {
     assert!(runtime
         .verification_result_from_known_fact_cache(&fact.clone().into())
         .is_some());
-    let output = display_stmt_exec_result_json(&runtime, &result, false);
+    let output = render_statement_result_json(&result);
     assert!(output.contains("number comparison"), "{output}");
     assert!(!output.contains("statement proof cache"), "{output}");
 }

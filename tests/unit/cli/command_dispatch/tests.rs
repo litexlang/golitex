@@ -1,7 +1,7 @@
 use super::super::command::{parse_cli_command, CliCommand};
 use super::super::messages::help_message;
 use crate::graph::GraphKind;
-use crate::output::{language::OutputLanguage, style::OutputStyle};
+use crate::output::{language::OutputLanguage, style::OutputDetail};
 use crate::pipeline::{ExecutionOption, RunOption, RunOptions};
 
 #[test]
@@ -23,7 +23,7 @@ fn canonical_cli_prefix_maps_to_one_typed_command() {
         options.run(),
         RunOption::StrictExecute(ExecutionOption::Eval)
     );
-    assert_eq!(options.output_style(), OutputStyle::Detailed);
+    assert_eq!(options.output_detail(), OutputDetail::Detailed);
     assert!(options.is_strict());
     assert!(!options.should_summarize());
     assert!(!options.is_isolated());
@@ -63,7 +63,7 @@ fn graph_tracer_resolves_every_argument_before_dispatch() {
         options.run(),
         RunOption::StrictExecute(ExecutionOption::IsolatedFile)
     );
-    assert_eq!(options.output_style(), OutputStyle::Detailed);
+    assert_eq!(options.output_detail(), OutputDetail::Detailed);
     assert!(options.is_strict());
     assert!(options.is_isolated());
 }

@@ -3,7 +3,7 @@ use super::{
     run_latex_repl_loop_with_readers, run_repl_loop_with_readers_and_mode, ReplOutputMode,
 };
 use crate::pipeline::execute_isolated_file_in_runtime;
-use crate::prelude::OutputStyle;
+use crate::prelude::OutputDetail;
 use crate::runtime::{ExecutionOption, RunOptions, Runtime};
 use crate::test_support::execute_source;
 use std::fs;
@@ -11,13 +11,13 @@ use std::io::{self, BufRead, Cursor, Write};
 
 fn run_repl_loop_with_readers(
     version_banner: &str,
-    output_style: OutputStyle,
+    output_detail: OutputDetail,
     stdin_reader: &mut dyn BufRead,
     stdout_writer: &mut dyn Write,
 ) -> io::Result<()> {
     run_repl_loop_with_readers_and_mode(
         version_banner,
-        RunOptions::execute(ExecutionOption::Repl).with_output_style(output_style),
+        RunOptions::execute(ExecutionOption::Repl).with_output_detail(output_detail),
         stdin_reader,
         stdout_writer,
         ReplOutputMode::Json,
@@ -32,7 +32,7 @@ fn repl_accepts_multiline_block_after_blank_line() {
 
     run_repl_loop_with_readers(
         "test",
-        OutputStyle::Normal,
+        OutputDetail::Normal,
         &mut stdin_reader,
         &mut stdout_writer,
     )
@@ -55,7 +55,7 @@ fn repl_still_executes_single_line_input_immediately() {
 
     run_repl_loop_with_readers(
         "test",
-        OutputStyle::Normal,
+        OutputDetail::Normal,
         &mut stdin_reader,
         &mut stdout_writer,
     )
@@ -97,7 +97,7 @@ fn repl_routes_import_to_its_ephemeral_module_manifest_before_source_parsing() {
     let mut stdout_writer = Vec::new();
     run_repl_loop_with_readers(
         "test",
-        OutputStyle::Normal,
+        OutputDetail::Normal,
         &mut stdin_reader,
         &mut stdout_writer,
     )
@@ -123,7 +123,7 @@ fn repl_startup_shows_version_without_a_retired_upgrade_command() {
 
     run_repl_loop_with_readers(
         "test-version",
-        OutputStyle::Normal,
+        OutputDetail::Normal,
         &mut stdin_reader,
         &mut stdout_writer,
     )

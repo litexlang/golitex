@@ -412,7 +412,7 @@ claim:
 
             let mut runtime = Runtime::default();
             runtime.start_isolated_source("obtain_body_well_defined_can_use_forall_domain_fact");
-            runtime.set_output_style(OutputStyle::Detailed);
+            runtime.set_output_detail(OutputDetail::Detailed);
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -2265,7 +2265,7 @@ thm builtin_bijective_unfolds:
 
         let mut runtime = Runtime::default();
         runtime.start_isolated_source("builtin_function_properties_verify_and_unfold");
-        runtime.set_output_style(OutputStyle::Detailed);
+        runtime.set_output_detail(OutputDetail::Detailed);
         let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -2378,7 +2378,7 @@ thm finite_bijection_preserves_size:
 
         let mut runtime = Runtime::default();
         runtime.start_isolated_source("finite_source_function_property_rules");
-        runtime.set_output_style(OutputStyle::Detailed);
+        runtime.set_output_detail(OutputDetail::Detailed);
         let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_output(&runtime, &stmt_results, &runtime_error);

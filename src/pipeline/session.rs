@@ -79,7 +79,7 @@ fn run_session_loop_with_readers_and_target(
         match initialize_session_runtime(&mut runtime, directory, target) {
             Ok(startup) => startup,
             Err((stmt_results, error)) => {
-                let error_json = display_runtime_error_json(&runtime, &error, true);
+                let error_json = render_runtime_error_json(&runtime, &error, true);
                 write_session_event(
                     stdout_writer,
                     "startup_error",
@@ -212,7 +212,7 @@ fn run_session_loop_with_readers_and_target(
                     runtime_error
                         .as_ref()
                         .map(|error| {
-                            JsonValue::RawJson(display_runtime_error_json(&runtime, error, true))
+                            JsonValue::RawJson(render_runtime_error_json(&runtime, error, true))
                         })
                         .unwrap_or(JsonValue::Null),
                 )?;
@@ -256,7 +256,7 @@ fn run_session_loop_with_readers_and_target(
                 let (_, graph) = render_graph_from_stmt_results(
                     RunTargetKind::Session,
                     None,
-                    !options.output_style().is_detailed(),
+                    !options.output_detail().is_detailed(),
                     &runtime,
                     all_results.as_slice(),
                     None,
@@ -264,7 +264,7 @@ fn run_session_loop_with_readers_and_target(
                 let (_, fact_graph) = render_fact_graph_from_stmt_results(
                     RunTargetKind::Session,
                     None,
-                    !options.output_style().is_detailed(),
+                    !options.output_detail().is_detailed(),
                     &runtime,
                     all_results.as_slice(),
                     None,
@@ -272,7 +272,7 @@ fn run_session_loop_with_readers_and_target(
                 let (_, definition_graph) = render_definition_graph_from_stmt_results(
                     RunTargetKind::Session,
                     None,
-                    !options.output_style().is_detailed(),
+                    !options.output_detail().is_detailed(),
                     &mut runtime,
                     all_results.as_slice(),
                     None,

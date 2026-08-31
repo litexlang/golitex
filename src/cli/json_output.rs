@@ -27,12 +27,12 @@ pub(super) fn render_run(outcome: &RunOutcome, input_path: Option<&str>) -> Stri
     let statement_results = outcome
         .stmt_results
         .iter()
-        .map(|result| JsonValue::RawJson(display_stmt_result_json_v2(result)))
+        .map(|result| JsonValue::RawJson(render_statement_result_json(result)))
         .collect::<Vec<_>>();
     let error = if let Some(message) = outcome.target_error.as_deref() {
         simple_error("target_error", message)
     } else if let Some(error) = outcome.runtime_error.as_ref() {
-        JsonValue::RawJson(display_runtime_error_json(&outcome.runtime, error, true))
+        JsonValue::RawJson(render_runtime_error_json(&outcome.runtime, error, true))
     } else {
         JsonValue::Null
     };

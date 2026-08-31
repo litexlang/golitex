@@ -1197,7 +1197,7 @@ fn output_graph_and_repository_concepts_do_not_collapse_back_into_monoliths() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     for (directory, responsibilities) in [
         (
-            "src/output/result_json_v2/renderer",
+            "src/output/statement_result/renderer",
             &[
                 "algorithm_definitions.rs",
                 "binder_well_definedness.rs",
@@ -1214,10 +1214,10 @@ fn output_graph_and_repository_concepts_do_not_collapse_back_into_monoliths() {
                 "inductive_functions.rs",
                 "iteration_well_definedness.rs",
                 "known_forall.rs",
-                "model.rs",
                 "object_well_definedness.rs",
                 "proof_blocks.rs",
                 "shared_facts.rs",
+                "state.rs",
                 "statement_dispatch.rs",
                 "structure_definitions.rs",
                 "template_instantiation.rs",
@@ -1226,23 +1226,33 @@ fn output_graph_and_repository_concepts_do_not_collapse_back_into_monoliths() {
             ][..],
         ),
         (
-            "src/output/localization",
+            "src/output/runtime_error",
+            &[
+                "execution_phases.rs",
+                "fields.rs",
+                "rendering.rs",
+                "source_references.rs",
+                "unknown.rs",
+            ][..],
+        ),
+        (
+            "src/output/messages",
             &[
                 "rendering.rs",
-                "translations/mod.rs",
-                "translations/arabic.rs",
-                "translations/chinese_simplified.rs",
-                "translations/chinese_traditional.rs",
-                "translations/french.rs",
-                "translations/german.rs",
-                "translations/hindi.rs",
-                "translations/indonesian.rs",
-                "translations/japanese.rs",
-                "translations/korean.rs",
-                "translations/portuguese.rs",
-                "translations/russian.rs",
-                "translations/spanish.rs",
-                "translations/vietnamese.rs",
+                "catalogs/mod.rs",
+                "catalogs/arabic.rs",
+                "catalogs/chinese_simplified.rs",
+                "catalogs/chinese_traditional.rs",
+                "catalogs/french.rs",
+                "catalogs/german.rs",
+                "catalogs/hindi.rs",
+                "catalogs/indonesian.rs",
+                "catalogs/japanese.rs",
+                "catalogs/korean.rs",
+                "catalogs/portuguese.rs",
+                "catalogs/russian.rs",
+                "catalogs/spanish.rs",
+                "catalogs/vietnamese.rs",
             ][..],
         ),
         (
@@ -1552,8 +1562,9 @@ fn root_module_and_target_metadata_use_structured_state() {
         .expect("module registry should be readable");
     let runtime = fs::read_to_string(root.join("src/runtime/state.rs"))
         .expect("runtime state should be readable");
-    let source_references = fs::read_to_string(root.join("src/output/source_references.rs"))
-        .expect("source-reference renderer should be readable");
+    let source_references =
+        fs::read_to_string(root.join("src/output/runtime_error/source_references.rs"))
+            .expect("source-reference renderer should be readable");
     let target_json = fs::read_to_string(root.join("src/output/json_value.rs"))
         .expect("target JSON renderer should be readable");
     let runner = fs::read_to_string(root.join("src/runner/target_execution.rs"))
@@ -2198,7 +2209,7 @@ fn builtin_rules_use_typed_rust_evidence_without_a_runtime_catalog() {
         );
     }
 
-    let json_output = rust_files_below(&root.join("src/output/result_json_v2/renderer"))
+    let json_output = rust_files_below(&root.join("src/output/statement_result/renderer"))
         .into_iter()
         .map(|path| fs::read_to_string(path).expect("Result JSON source should be readable"))
         .collect::<Vec<_>>()

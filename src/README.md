@@ -78,7 +78,7 @@ source `1 + 1 = 2`
 | [`inference/`](inference/README.md) | Storing `1 = 1 and 2 = 2` also stores its two components. |
 | [`module_system/`](module_system/README.md) | `[export] main = "./main.lit"` orders a module file. |
 | [`object/`](object/README.md) | `x + 1`, `sin(x)`, and `{1, 2}` become `Obj` variants. |
-| [`output/`](output/README.md) | A checked `1 = 1` renders as statement-result JSON v2. |
+| [`output/`](output/README.md) | A checked `1 = 1` renders as statement-result JSON. |
 | [`parsing/`](parsing/README.md) | The README's two-line `forall x R:` example becomes a `ForallFact` statement. |
 | [`pipeline/`](pipeline/README.md) | `-f`, `-r`, and `-e` share one parse/execute/render pipeline. |
 | [`algebraic_normalization/`](algebraic_normalization/README.md) | `(1 + i) * (1 - i) = 2` uses complex algebraic normalization. |

@@ -53,24 +53,34 @@ impl Runtime {
         Ok(FactId::new(value))
     }
 
-    pub fn set_output_style(&mut self, output_style: OutputStyle) {
-        self.run_options = self.run_options.with_output_style(output_style);
+    pub fn set_output_detail(&mut self, output_detail: OutputDetail) {
+        self.run_options = self.run_options.with_output_detail(output_detail);
     }
 
-    pub fn effective_output_style(&self) -> OutputStyle {
-        self.run_options.output_style()
+    pub fn effective_output_detail(&self) -> OutputDetail {
+        self.run_options.output_detail()
+    }
+
+    #[deprecated(note = "use `set_output_detail`")]
+    pub fn set_output_style(&mut self, output_detail: OutputDetail) {
+        self.set_output_detail(output_detail);
+    }
+
+    #[deprecated(note = "use `effective_output_detail`")]
+    pub fn effective_output_style(&self) -> OutputDetail {
+        self.effective_output_detail()
     }
 
     pub fn is_compact_output(&self) -> bool {
-        self.effective_output_style() == OutputStyle::Compact
+        self.effective_output_detail() == OutputDetail::Compact
     }
 
     pub fn is_normal_output(&self) -> bool {
-        self.effective_output_style() == OutputStyle::Normal
+        self.effective_output_detail() == OutputDetail::Normal
     }
 
     pub fn is_detailed_output(&self) -> bool {
-        self.effective_output_style() == OutputStyle::Detailed
+        self.effective_output_detail() == OutputDetail::Detailed
     }
 
     pub fn current_file_path_rc(&self) -> Rc<str> {

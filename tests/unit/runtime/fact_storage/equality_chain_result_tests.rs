@@ -1,6 +1,6 @@
 //! Result contracts for equality-chain closure inference.
 
-use crate::output::display_stmt_result_json_v2;
+use crate::output::render_statement_result_json;
 use crate::prelude::*;
 use crate::test_support::execute_source;
 
@@ -52,7 +52,7 @@ fn equality_chain_store_returns_typed_exact_interval_closure() {
             .any(|(fact, fact_id)| fact.to_string() == "1 + 0 = 0 + 1"
                 && *fact_id == conclusion.fact_id)));
 
-    let json = display_stmt_result_json_v2(&result);
+    let json = render_statement_result_json(&result);
     assert!(json.contains("\"rule\": \"EqualityChainClosure\""));
     assert!(json.contains("\"start_object_index\": 0"));
     assert!(json.contains("\"end_object_index\": 2"));

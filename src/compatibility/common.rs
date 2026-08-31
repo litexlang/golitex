@@ -42,6 +42,12 @@ pub mod output_language {
     pub use crate::output::language::*;
 }
 
+pub mod output_detail {
+    pub use crate::runtime::output_detail::OutputDetail;
+}
+
+#[deprecated(note = "use `output_detail`")]
 pub mod output_style {
-    pub use crate::output::style::*;
+    #[allow(deprecated)]
+    pub use crate::runtime::output_detail::OutputStyle;
 }

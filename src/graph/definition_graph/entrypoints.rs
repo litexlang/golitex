@@ -36,7 +36,7 @@ pub fn render_definition_graph_result(
     selected_target: Option<RepositoryFileTarget>,
 ) -> (bool, String) {
     let ok = runtime_error.is_none();
-    let error = runtime_error.map(|error| display_runtime_error_json(runtime, error, true));
+    let error = runtime_error.map(|error| render_runtime_error_json(runtime, error, true));
     let graph = DefinitionGraphBuilder::from_runtime(runtime, selected_target, stmt_results);
     let mut fields = vec![
         (

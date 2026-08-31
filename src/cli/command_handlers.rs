@@ -32,7 +32,7 @@ pub(super) fn run_graph_command(
     save_path: Option<&str>,
     options: RunOptions,
 ) -> bool {
-    let hide_file_paths = !options.output_style().is_detailed();
+    let hide_file_paths = !options.output_detail().is_detailed();
     let outcome = match options.execution() {
         ExecutionOption::Eval => run_code(target, options),
         ExecutionOption::File => run_file(target, options),

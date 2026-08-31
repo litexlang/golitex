@@ -1,5 +1,5 @@
 use super::run_session_loop_with_readers_and_target;
-use crate::prelude::{OutputLanguage, OutputStyle, SessionTarget};
+use crate::prelude::{OutputDetail, OutputLanguage, SessionTarget};
 use crate::runtime::{ExecutionOption, RunOptions};
 use std::fs;
 use std::io::{self, BufRead, Cursor, Write};
@@ -9,7 +9,7 @@ fn run_session_loop_with_readers(
     stdin_reader: &mut dyn BufRead,
     stdout_writer: &mut dyn Write,
     directory: &Path,
-    output_style: OutputStyle,
+    output_detail: OutputDetail,
     strict_mode: bool,
     output_language: OutputLanguage,
     isolated: bool,
@@ -31,7 +31,7 @@ fn run_session_loop_with_readers(
                 ExecutionOption::Session
             })
         }
-        .with_output_style(output_style)
+        .with_output_detail(output_detail)
         .with_output_language(output_language),
         if isolated {
             SessionTarget::Isolated
@@ -50,7 +50,7 @@ fn run_frame(id: &str, source: &str) -> String {
 }
 
 fn run_isolated_session(name: &str, input: String) -> String {
-    run_isolated_session_with_style(name, input, OutputStyle::Normal)
+    run_isolated_session_with_style(name, input, OutputDetail::Normal)
 }
 
 #[test]
@@ -77,7 +77,7 @@ fn project_session_keeps_previous_blocks() {
         &mut stdin_reader,
         &mut stdout_writer,
         &root,
-        OutputStyle::Normal,
+        OutputDetail::Normal,
         false,
         OutputLanguage::English,
         false,
@@ -194,7 +194,7 @@ fn explicit_isolated_session_ignores_a_broken_current_directory_project() {
         &mut stdin_reader,
         &mut stdout_writer,
         &root,
-        OutputStyle::Normal,
+        OutputDetail::Normal,
         false,
         OutputLanguage::English,
         true,
@@ -253,7 +253,7 @@ fn session_accepts_a_multiline_code_block() {
         &mut stdin_reader,
         &mut stdout_writer,
         &root,
-        OutputStyle::Normal,
+        OutputDetail::Normal,
         false,
         OutputLanguage::English,
         false,
@@ -381,10 +381,10 @@ fn nested_try_does_not_make_outer_statement_recoverable() {
 #[test]
 fn rolled_back_try_output_is_detailed_in_every_style() {
     let mut rollback_events = Vec::new();
-    for output_style in [
-        OutputStyle::Compact,
-        OutputStyle::Normal,
-        OutputStyle::Detailed,
+    for output_detail in [
+        OutputDetail::Compact,
+        OutputDetail::Normal,
+        OutputDetail::Detailed,
     ] {
         let input = format!(
             "{}{}close\n",
@@ -392,9 +392,9 @@ fn rolled_back_try_output_is_detailed_in_every_style() {
             run_frame("next", "try:\n    1 = 1\n"),
         );
         let output = run_isolated_session_with_style(
-            format!("error-output-try-{:?}", output_style).as_str(),
+            format!("error-output-try-{:?}", output_detail).as_str(),
             input,
-            output_style,
+            output_detail,
         );
 
         let rollback_event = output
@@ -417,7 +417,11 @@ fn rolled_back_try_output_is_detailed_in_every_style() {
     assert_eq!(rollback_events[1], rollback_events[2]);
 }
 
-fn run_isolated_session_with_style(name: &str, input: String, output_style: OutputStyle) -> String {
+fn run_isolated_session_with_style(
+    name: &str,
+    input: String,
+    output_detail: OutputDetail,
+) -> String {
     let root = session_test_dir(name);
     let _ = fs::remove_dir_all(&root);
     fs::create_dir_all(&root).expect("create isolated fixture");
@@ -428,7 +432,7 @@ fn run_isolated_session_with_style(name: &str, input: String, output_style: Outp
         &mut stdin_reader,
         &mut stdout_writer,
         &root,
-        output_style,
+        output_detail,
         false,
         OutputLanguage::English,
         false,

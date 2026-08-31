@@ -1,5 +1,5 @@
 use super::super::*;
-use crate::output::display_stmt_result_json_v2;
+use crate::output::render_statement_result_json;
 
 #[test]
 fn finite_set_induction_and_choice_report_their_exact_lean_abi_boundaries() {
@@ -103,7 +103,7 @@ fn def_struct_result_retains_each_local_verification_phase_without_synthetic_sta
     assert_eq!(field_scope.field_definitions[0].field_index, 0);
     assert_eq!(field_scope.equivalent_facts.len(), 1);
     assert!(field_scope.equivalent_facts[0].store.fact_id.is_some());
-    let json = display_stmt_result_json_v2(&results[0]);
+    let json = render_statement_result_json(&results[0]);
     assert!(json.contains("\"run_in_local_env\""), "{json}");
     assert!(json.contains("\"equivalent_facts\""), "{json}");
     let compiler_error = StmtResultToLeanCompiler::new("def_struct_result_contract.lit")
@@ -154,7 +154,7 @@ fn def_algo_result_retains_retagged_parameters_and_the_exact_default_check() {
         1,
         "the generic Result visitor must expose the exact default-return check"
     );
-    let json = display_stmt_result_json_v2(&results[1]);
+    let json = render_statement_result_json(&results[1]);
     assert!(json.contains("\"parameter_retagging\""), "{json}");
     assert!(json.contains("\"default_return\""), "{json}");
     let compiler_error = StmtResultToLeanCompiler::new("def_algo_result_contract.lit")
@@ -223,7 +223,7 @@ have fn iterate(n N) R+ by induc n from 0:
         visited_children, 7,
         "the generic Result visitor must expose three measure checks, coverage, one disjointness check, and two return checks"
     );
-    let json = display_stmt_result_json_v2(&results[1]);
+    let json = render_statement_result_json(&results[1]);
     assert!(
         json.contains("\"well_definedness_run_in_local_env\""),
         "{json}"

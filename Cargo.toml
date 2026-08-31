@@ -62,8 +62,8 @@ name = "retired_cli_commands"
 path = "tests/integration/retired_cli_commands.rs"
 
 [[test]]
-name = "result_json_v2"
-path = "tests/integration/result_json_v2.rs"
+name = "statement_result_json"
+path = "tests/integration/statement_result_json.rs"
 
 [[test]]
 name = "showcases"

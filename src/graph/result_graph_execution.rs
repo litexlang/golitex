@@ -29,7 +29,7 @@ pub fn render_graph_from_stmt_results(
     runtime_error: Option<&RuntimeError>,
 ) -> (bool, String) {
     let ok = runtime_error.is_none();
-    let error = runtime_error.map(|error| display_runtime_error_json(runtime, error, true));
+    let error = runtime_error.map(|error| render_runtime_error_json(runtime, error, true));
     (
         ok,
         render_result_graph_document(
