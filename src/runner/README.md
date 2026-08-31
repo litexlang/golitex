@@ -25,7 +25,7 @@
 | A successful wrapper with diagnostic text inside `trace` | Success is decided from top-level `ok`, not by searching the nested string. |
 
 ```text
-pipeline::run_code/run_file/run_repository
+pipeline::run_code/run_file/run_isolated_file/run_repository
   -> render_runner(RunOutcome)
   -> collect (ok, statement-result trace)
   -> wrap target metadata, error, and trace once

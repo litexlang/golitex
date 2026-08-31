@@ -17,8 +17,9 @@ use std::fs;
 
 pub(super) fn run_latex_command(target: &str, options: RunOptions) -> bool {
     let result = match options.execution() {
-        ExecutionOption::File | ExecutionOption::IsolatedFile => {
-            compile_file_to_latex(target, options.output_language(), options.is_isolated())
+        ExecutionOption::File => compile_file_to_latex(target, options.output_language()),
+        ExecutionOption::IsolatedFile => {
+            compile_isolated_file_to_latex(target, options.output_language())
         }
         ExecutionOption::Eval => compile_code_to_latex(target, options.output_language()),
         ExecutionOption::Repo => compile_repo_to_latex(target, options.output_language()),
@@ -36,12 +37,12 @@ pub(super) fn run_code_extraction_command(
 ) -> bool {
     let command_flag = extraction_command_flag(target);
     let result = match options.execution() {
-        ExecutionOption::File | ExecutionOption::IsolatedFile => compile_file_to_extracted_code(
-            source,
-            options.output_language(),
-            options.is_isolated(),
-            target,
-        ),
+        ExecutionOption::File => {
+            compile_file_to_extracted_code(source, options.output_language(), target)
+        }
+        ExecutionOption::IsolatedFile => {
+            compile_isolated_file_to_extracted_code(source, options.output_language(), target)
+        }
         ExecutionOption::Repo => {
             compile_repository_to_extracted_code(source, options.output_language(), target)
         }
@@ -73,14 +74,17 @@ pub(super) fn compile_code_to_latex(
 pub(super) fn compile_file_to_latex(
     file_path: &str,
     output_language: OutputLanguage,
-    isolated: bool,
 ) -> Result<String, String> {
-    if !isolated {
-        return match to_latex_from_file(file_path) {
-            Ok(output) => Ok(output),
-            Err(error) => Err(render_conversion_error(output_language, &error)),
-        };
+    match to_latex_from_file(file_path) {
+        Ok(output) => Ok(output),
+        Err(error) => Err(render_conversion_error(output_language, &error)),
     }
+}
+
+pub(super) fn compile_isolated_file_to_latex(
+    file_path: &str,
+    output_language: OutputLanguage,
+) -> Result<String, String> {
     let source = match fs::read_to_string(file_path) {
         Ok(content) => remove_windows_carriage_from_str(&content),
         Err(error) => {
@@ -129,19 +133,23 @@ fn compile_code_to_extracted_code(
 fn compile_file_to_extracted_code(
     file_path: &str,
     output_language: OutputLanguage,
-    isolated: bool,
     target: ExtractionKind,
 ) -> Result<String, String> {
-    if !isolated {
-        let result = match target {
-            ExtractionKind::Python => to_python_from_file(file_path),
-            ExtractionKind::C => to_c_from_file(file_path),
-        };
-        return match result {
-            Ok(output) => Ok(output),
-            Err(error) => Err(render_conversion_error(output_language, &error)),
-        };
+    let result = match target {
+        ExtractionKind::Python => to_python_from_file(file_path),
+        ExtractionKind::C => to_c_from_file(file_path),
+    };
+    match result {
+        Ok(output) => Ok(output),
+        Err(error) => Err(render_conversion_error(output_language, &error)),
     }
+}
+
+fn compile_isolated_file_to_extracted_code(
+    file_path: &str,
+    output_language: OutputLanguage,
+    target: ExtractionKind,
+) -> Result<String, String> {
     let source = match fs::read_to_string(file_path) {
         Ok(content) => remove_windows_carriage_from_str(&content),
         Err(error) => {

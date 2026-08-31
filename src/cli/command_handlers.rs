@@ -8,7 +8,8 @@ pub(super) const VERSION: &str = env!("CARGO_PKG_VERSION");
 pub(super) fn run_command(target: &str, options: RunOptions) -> bool {
     let mut outcome = match options.execution() {
         ExecutionOption::Eval => run_code(target, options),
-        ExecutionOption::File | ExecutionOption::IsolatedFile => run_file(target, options),
+        ExecutionOption::File => run_file(target, options),
+        ExecutionOption::IsolatedFile => run_isolated_file(target, options),
         ExecutionOption::Repo => run_repository(target, options),
         ExecutionOption::Repl | ExecutionOption::Session | ExecutionOption::IsolatedSession => {
             unreachable!("run command was resolved to a non-batch target")
@@ -16,7 +17,7 @@ pub(super) fn run_command(target: &str, options: RunOptions) -> bool {
     };
     let (_, has_path) = execution_target(options);
     let output = render_run(&outcome, has_path.then_some(target));
-    if outcome.ok && options.is_isolated() {
+    if outcome.ok && options.execution() == ExecutionOption::IsolatedFile {
         println!("{}", render_json_value_compact(&JsonValue::RawJson(output)));
         run_isolated_repl_with_runtime(VERSION, &mut outcome.runtime);
     } else {
@@ -34,7 +35,8 @@ pub(super) fn run_graph_command(
     let hide_file_paths = !options.output_style().is_detailed();
     let outcome = match options.execution() {
         ExecutionOption::Eval => run_code(target, options),
-        ExecutionOption::File | ExecutionOption::IsolatedFile => run_file(target, options),
+        ExecutionOption::File => run_file(target, options),
+        ExecutionOption::IsolatedFile => run_isolated_file(target, options),
         ExecutionOption::Repo => run_repository(target, options),
         ExecutionOption::Repl | ExecutionOption::Session | ExecutionOption::IsolatedSession => {
             unreachable!("graph command was resolved to a non-batch target")

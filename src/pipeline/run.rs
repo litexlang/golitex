@@ -1,6 +1,7 @@
 use super::{
-    execute_file_in_runtime, execute_repository_target, render_run_output, render_run_summary,
-    resolve_source_file_path, ExecutionTarget, FileRunMode, RunSummaryRequest, RunTarget,
+    execute_file_in_runtime, execute_isolated_file_in_runtime, execute_repository_target,
+    render_run_output, render_run_summary, resolve_source_file_path, ExecutionTarget,
+    RunSummaryRequest, RunTarget,
 };
 use crate::error::RuntimeError;
 use crate::module_system::discover_repository;
@@ -38,22 +39,12 @@ pub fn run_code(source: &str, options: RunOptions) -> RunOutcome {
 }
 
 pub fn run_file(path: &str, options: RunOptions) -> RunOutcome {
-    let (execution, mode) = if options.is_isolated() {
-        (ExecutionOption::IsolatedFile, FileRunMode::Isolated)
-    } else {
-        (ExecutionOption::File, FileRunMode::Project)
-    };
-    let options = options.with_execution(execution);
-    run_file_with_mode(path, mode, options)
-}
-
-fn run_file_with_mode(path: &str, mode: FileRunMode, options: RunOptions) -> RunOutcome {
+    let options = options.with_execution(ExecutionOption::File);
     let mut runtime = Runtime::new(options);
     let mut target_error = None;
     let (target_path, stmt_results, runtime_error) = match resolve_source_file_path(path) {
         Ok(resolved_path) => {
-            let (results, error) =
-                execute_file_in_runtime(resolved_path.as_str(), &mut runtime, mode);
+            let (results, error) = execute_file_in_runtime(resolved_path.as_str(), &mut runtime);
             (resolved_path, results, error)
         }
         Err(message) => {
@@ -63,10 +54,33 @@ fn run_file_with_mode(path: &str, mode: FileRunMode, options: RunOptions) -> Run
     };
 
     finish_run(
-        RunTarget::File {
-            path: target_path,
-            mode,
-        },
+        RunTarget::File { path: target_path },
+        runtime,
+        stmt_results,
+        runtime_error,
+        target_error,
+        options.should_summarize(),
+    )
+}
+
+pub fn run_isolated_file(path: &str, options: RunOptions) -> RunOutcome {
+    let options = options.with_execution(ExecutionOption::IsolatedFile);
+    let mut runtime = Runtime::new(options);
+    let mut target_error = None;
+    let (target_path, stmt_results, runtime_error) = match resolve_source_file_path(path) {
+        Ok(resolved_path) => {
+            let (results, error) =
+                execute_isolated_file_in_runtime(resolved_path.as_str(), &mut runtime);
+            (resolved_path, results, error)
+        }
+        Err(message) => {
+            target_error = Some(message);
+            (path.to_string(), Vec::new(), None)
+        }
+    };
+
+    finish_run(
+        RunTarget::IsolatedFile { path: target_path },
         runtime,
         stmt_results,
         runtime_error,

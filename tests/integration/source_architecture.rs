@@ -1348,6 +1348,8 @@ fn cli_dispatch_delegates_execution_and_path_resolution_to_their_owners() {
         .expect("file execution source should be readable");
     let output_rendering = fs::read_to_string(root.join("src/pipeline/output_rendering.rs"))
         .expect("output rendering source should be readable");
+    let session = fs::read_to_string(root.join("src/pipeline/session.rs"))
+        .expect("session source should be readable");
     let runner_execution = fs::read_to_string(root.join("src/runner/target_execution.rs"))
         .expect("runner execution source should be readable");
     let graph_execution = fs::read_to_string(root.join("src/graph/graph_execution.rs"))
@@ -1371,10 +1373,17 @@ fn cli_dispatch_delegates_execution_and_path_resolution_to_their_owners() {
     assert!(!lean_commands.contains("compile_litex_markdown_code_blocks_to_lean_file("));
     assert!(conversion_commands.contains("compile_code_to_latex("));
     assert!(conversion_commands.contains("compile_code_to_extracted_code("));
+    assert!(conversion_commands.contains("compile_isolated_file_to_latex("));
+    assert!(conversion_commands.contains("compile_isolated_file_to_extracted_code("));
+    assert!(!conversion_commands.contains("options.is_isolated()"));
     assert!(handlers.contains("run_code("));
     assert!(handlers.contains("run_file("));
-    assert!(!handlers.contains("run_isolated_file("));
+    assert!(handlers.contains("run_isolated_file("));
     assert!(handlers.contains("run_repository("));
+    assert!(handlers.contains("ExecutionOption::File => run_file(target, options)"));
+    assert!(
+        handlers.contains("ExecutionOption::IsolatedFile => run_isolated_file(target, options)")
+    );
     assert!(handlers.contains("pub(super) fn run_command("));
     assert!(!handlers.contains("fn run_code_command("));
     assert!(!handlers.contains("fn run_file_command("));
@@ -1382,7 +1391,11 @@ fn cli_dispatch_delegates_execution_and_path_resolution_to_their_owners() {
     assert!(target.contains("pub enum RunTarget {"));
     assert!(target.contains("pub enum SessionTarget {"));
     assert!(target.contains("pub enum ExecutionTarget {"));
-    assert!(target.contains("pub enum FileRunMode {"));
+    assert!(!target.contains("FileRunMode"));
+    assert!(target.contains("IsolatedFile { path: String }"));
+    assert!(session.contains("SessionTarget::File { path: preload_file }"));
+    assert!(session.contains("SessionTarget::IsolatedFile { path: preload_file }"));
+    assert!(!session.contains("mode.is_isolated()"));
     assert!(run_options.contains("pub struct RunOptions"));
     assert!(run_options.contains("pub enum RunOption {"));
     assert!(run_options.contains("Execute(ExecutionOption)"));
@@ -1433,7 +1446,11 @@ fn cli_dispatch_delegates_execution_and_path_resolution_to_their_owners() {
     assert!(!run.contains("pub struct RunRequest"));
     assert!(run.contains("pub fn run_code(source: &str, options: RunOptions)"));
     assert!(run.contains("pub fn run_file(path: &str, options: RunOptions)"));
-    assert!(!run.contains("pub fn run_isolated_file("));
+    assert!(run.contains("pub fn run_isolated_file(path: &str, options: RunOptions)"));
+    assert!(!run.contains("run_file_with_mode"));
+    assert!(!run.contains("options.is_isolated()"));
+    assert!(run.contains("options.with_execution(ExecutionOption::File)"));
+    assert!(run.contains("options.with_execution(ExecutionOption::IsolatedFile)"));
     assert!(run.contains("pub fn run_repository(path: &str, options: RunOptions)"));
     assert!(target.contains("pub enum RunTargetKind"));
     assert!(run.contains("pub target: RunTarget"));
@@ -1450,6 +1467,8 @@ fn cli_dispatch_delegates_execution_and_path_resolution_to_their_owners() {
     assert!(!source_execution.contains("pub fn render_run_output("));
     assert!(file_execution.contains("pub fn resolve_source_file_path("));
     assert!(file_execution.contains("pub fn execute_file_in_runtime("));
+    assert!(file_execution.contains("pub fn execute_isolated_file_in_runtime("));
+    assert!(!file_execution.contains("mode: FileRunMode"));
     assert!(output_rendering.contains("pub fn render_run_output("));
     assert!(!source_execution.contains("pub fn run_source_code_in_file"));
     assert!(!source_execution.contains("pub fn run_repository_with"));

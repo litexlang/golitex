@@ -1,5 +1,4 @@
 use super::execute_repository_target;
-use super::FileRunMode;
 use crate::error::{ParseRuntimeError, RuntimeError, RuntimeErrorStruct};
 use crate::module_system::discover_repository_for_file;
 use crate::result::StmtResult;
@@ -34,7 +33,6 @@ pub fn resolve_source_file_path(file_path: &str) -> Result<String, String> {
 pub fn execute_file_in_runtime(
     target_file_path: &str,
     runtime: &mut Runtime,
-    mode: FileRunMode,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
     let path = Path::new(target_file_path);
     let file_name = path.file_name().and_then(|name| name.to_str());
@@ -47,22 +45,33 @@ pub fn execute_file_in_runtime(
             )),
         );
     }
-    if mode == FileRunMode::Project {
-        match discover_repository_for_file(runtime, target_file_path) {
-            Ok(Some(target)) => {
-                return execute_repository_target(runtime, target);
-            }
-            Ok(None) => {
-                return (
-                    vec![],
-                    Some(file_target_error(
-                        target_file_path,
-                        "litex -f requires a litex.config in the same folder; use `litex -isolated -f <file>` for an isolated file",
-                    )),
-                )
-            }
-            Err(error) => return (vec![], Some(error)),
-        }
+    match discover_repository_for_file(runtime, target_file_path) {
+        Ok(Some(target)) => execute_repository_target(runtime, target),
+        Ok(None) => (
+            vec![],
+            Some(file_target_error(
+                target_file_path,
+                "litex -f requires a litex.config in the same folder; use `litex -isolated -f <file>` for an isolated file",
+            )),
+        ),
+        Err(error) => (vec![], Some(error)),
+    }
+}
+
+pub fn execute_isolated_file_in_runtime(
+    target_file_path: &str,
+    runtime: &mut Runtime,
+) -> (Vec<StmtResult>, Option<RuntimeError>) {
+    let path = Path::new(target_file_path);
+    let file_name = path.file_name().and_then(|name| name.to_str());
+    if file_name == Some("litex.config") {
+        return (
+            vec![],
+            Some(file_target_error(
+                target_file_path,
+                "litex.config is project configuration, not executable Litex source",
+            )),
+        );
     }
 
     let source_code = match fs::read_to_string(target_file_path) {
@@ -77,6 +86,7 @@ pub fn execute_file_in_runtime(
             )
         }
     };
+
     runtime.start_isolated_file(target_file_path);
     let outcome =
         runtime.execute_source(remove_windows_carriage_from_str(source_code.as_str()).as_str());

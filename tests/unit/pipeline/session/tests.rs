@@ -1,5 +1,5 @@
 use super::run_session_loop_with_readers_and_target;
-use crate::prelude::{FileRunMode, OutputLanguage, OutputStyle, SessionTarget};
+use crate::prelude::{OutputLanguage, OutputStyle, SessionTarget};
 use crate::runtime::{ExecutionOption, RunOptions};
 use std::fs;
 use std::io::{self, BufRead, Cursor, Write};
@@ -128,7 +128,6 @@ fn project_file_session_preloads_registered_prefix() {
         RunOptions::default(),
         SessionTarget::File {
             path: preload.to_string_lossy().into_owned(),
-            mode: FileRunMode::Project,
         },
     )
     .expect("session must run");
@@ -167,7 +166,6 @@ fn project_file_session_reports_a_failing_prefix_before_ready() {
         RunOptions::default(),
         SessionTarget::File {
             path: preload.to_string_lossy().into_owned(),
-            mode: FileRunMode::Project,
         },
     )
     .expect("session must report startup failure");
@@ -227,9 +225,8 @@ fn isolated_file_session_preloads_the_standalone_file() {
         &mut stdout_writer,
         &root,
         RunOptions::default(),
-        SessionTarget::File {
+        SessionTarget::IsolatedFile {
             path: preload.to_string_lossy().into_owned(),
-            mode: FileRunMode::Isolated,
         },
     )
     .expect("isolated file session must run");

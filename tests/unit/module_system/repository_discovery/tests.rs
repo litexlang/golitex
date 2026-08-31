@@ -502,8 +502,7 @@ after = "./after.lit"
         assert!(project_output.contains("1 = 0"), "{project_output}");
 
         let mut strict_runtime = Runtime::new(RunOptions::strict_execute(ExecutionOption::File));
-        let (_, strict_error) =
-            execute_file_in_runtime(target.as_str(), &mut strict_runtime, FileRunMode::Project);
+        let (_, strict_error) = execute_file_in_runtime(target.as_str(), &mut strict_runtime);
         let strict_error = strict_error.expect("strict -f must verify its export prefix");
         assert!(format!("{strict_error:?}").contains("1 = 0"));
     });

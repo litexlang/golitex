@@ -1,3 +1,4 @@
+use std::fs;
 use std::process::Command;
 
 #[test]
@@ -55,4 +56,39 @@ fn c_extraction_emits_a_c99_function_shape() {
     assert!(stdout.contains("\"kind\": \"artifact\""), "{stdout}");
     assert!(stdout.contains("double f(double x) {"), "{stdout}");
     assert!(stdout.contains("return (x + 1.0);"), "{stdout}");
+}
+
+#[test]
+fn isolated_file_conversions_read_the_standalone_source() {
+    let directory = std::env::temp_dir().join(format!(
+        "litex-isolated-file-conversions-{}",
+        std::process::id()
+    ));
+    let _ = fs::remove_dir_all(&directory);
+    fs::create_dir_all(&directory).expect("create isolated conversion fixture");
+    let file = directory.join("standalone.lit");
+    fs::write(&file, "have a R = 1\n").expect("write standalone Litex source");
+    let path = file.to_str().expect("fixture path is UTF-8");
+
+    let python = Command::new(env!("CARGO_BIN_EXE_litex"))
+        .args(["-isolated", "-extractpython", "-f", path])
+        .output()
+        .expect("extract Python from isolated file");
+    assert!(python.status.success(), "{python:?}");
+    let python_stdout = String::from_utf8(python.stdout).expect("Python stdout is UTF-8");
+    assert!(python_stdout.contains("\"format\": \"python\""));
+    assert!(python_stdout.contains("\"content\": \"a = 1.0\""));
+    assert!(python_stdout.contains("\"error\": null"));
+
+    let latex = Command::new(env!("CARGO_BIN_EXE_litex"))
+        .args(["-isolated", "-latex", "-f", path])
+        .output()
+        .expect("render LaTeX from isolated file");
+    assert!(latex.status.success(), "{latex:?}");
+    let latex_stdout = String::from_utf8(latex.stdout).expect("LaTeX stdout is UTF-8");
+    assert!(latex_stdout.contains("\"format\": \"latex\""));
+    assert!(latex_stdout.contains("\"content\":"));
+    assert!(latex_stdout.contains("\"error\": null"));
+
+    let _ = fs::remove_dir_all(&directory);
 }
