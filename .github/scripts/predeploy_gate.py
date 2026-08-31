@@ -919,7 +919,7 @@ def cargo_test_command(test_name: str) -> list[str]:
 
 
 def textbook_file_command(binary: Path, file_path: Path) -> list[str]:
-    return [str(binary), "-compact", "-graph", "-f", str(file_path)]
+    return [str(binary), "-graph", "-f", str(file_path)]
 
 
 def positive_int(value: str) -> int:

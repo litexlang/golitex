@@ -17,116 +17,397 @@ inductive SingletonCarrier {α : Type u} (value : α) : Type u where
   | element
 deriving Fintype
 
-/-- Compiler-owned primitive representation edges. This class is private so a
-downstream file cannot widen Litex semantic equality by installing an
-unreviewed carrier relation. -/
-private class PrimitiveRule (α β : Type u) where
+/-- A carrier's canonical partial observation as a native complex value.
+
+The default observer records that a carrier has no numeric observation.  The
+five native numeric carriers and the structural wrappers traversed by `Same`
+have higher-priority observers below.  Observer values are part of the
+proof-level `Same` index: changing an observer does not create a new semantic
+equality edge. -/
+class ComplexObserver (α : Type u) where
+  observe : α → Option ℂ
+
+namespace ComplexObserver
+
+@[reducible] def none (α : Type u) : ComplexObserver α where
+  observe _ := Option.none
+
+@[reducible] def nat : ComplexObserver ℕ where
+  observe n := some (n : ℂ)
+
+@[reducible] def int : ComplexObserver ℤ where
+  observe z := some (z : ℂ)
+
+@[reducible] def rat : ComplexObserver ℚ where
+  observe q := some (q : ℂ)
+
+@[reducible] def real : ComplexObserver ℝ where
+  observe r := some (r : ℂ)
+
+@[reducible] def complex : ComplexObserver ℂ where
+  observe z := some z
+
+@[reducible] def subtype
+    {α : Type u}
+    {predicate : α → Prop}
+    (observer : ComplexObserver α) :
+    ComplexObserver (Subtype predicate) where
+  observe x := observer.observe x.val
+
+@[reducible] def singleton
+    {α : Type u}
+    (observer : ComplexObserver α)
+    (value : α) :
+    ComplexObserver (SingletonCarrier value) where
+  observe _ := observer.observe value
+
+@[reducible] def sum
+    {α β : Type u}
+    (leftObserver : ComplexObserver α)
+    (rightObserver : ComplexObserver β) :
+    ComplexObserver (Sum α β) where
+  observe
+    | Sum.inl value => leftObserver.observe value
+    | Sum.inr value => rightObserver.observe value
+
+end ComplexObserver
+
+@[reducible] instance (priority := low) defaultComplexObserver
+    {α : Type u} : ComplexObserver α :=
+  ComplexObserver.none α
+
+@[reducible] instance (priority := high) natComplexObserver :
+    ComplexObserver ℕ := ComplexObserver.nat
+
+@[reducible] instance (priority := high) intComplexObserver :
+    ComplexObserver ℤ := ComplexObserver.int
+
+@[reducible] instance (priority := high) ratComplexObserver :
+    ComplexObserver ℚ := ComplexObserver.rat
+
+@[reducible] instance (priority := high) realComplexObserver :
+    ComplexObserver ℝ := ComplexObserver.real
+
+@[reducible] instance (priority := high) complexComplexObserver :
+    ComplexObserver ℂ := ComplexObserver.complex
+
+@[reducible] instance (priority := high) subtypeComplexObserver
+    {α : Type u}
+    {predicate : α → Prop}
+    [observer : ComplexObserver α] :
+    ComplexObserver (Subtype predicate) :=
+  ComplexObserver.subtype observer
+
+@[reducible] instance (priority := high) singletonComplexObserver
+    {α : Type u}
+    [observer : ComplexObserver α]
+    (value : α) :
+    ComplexObserver (SingletonCarrier value) :=
+  ComplexObserver.singleton observer value
+
+@[reducible] instance (priority := high) sumComplexObserver
+    {α β : Type u}
+    [leftObserver : ComplexObserver α]
+    [rightObserver : ComplexObserver β] :
+    ComplexObserver (Sum α β) :=
+  ComplexObserver.sum leftObserver rightObserver
+
+/-- Proof-carrying primitive representation edges.
+
+The class is public, but a numeric rule cannot widen semantic equality merely
+by choosing `relation := True`: it must also prove that every related pair has
+the same selected complex observation. -/
+class PrimitiveRule
+    (α β : Type u)
+    (leftObserver : ComplexObserver α)
+    (rightObserver : ComplexObserver β) where
   relation : α → β → Prop
+  observationEq {x : α} {y : β} :
+    relation x y →
+      leftObserver.observe x = rightObserver.observe y
 
 /-- One primitive representation step between values with different (or the
 same) Lean carriers at one universe level. -/
-private def Primitive
+def Primitive
     {α β : Type u}
-    [rule : PrimitiveRule α β]
+    {leftObserver : ComplexObserver α}
+    {rightObserver : ComplexObserver β}
+    [rule : PrimitiveRule α β leftObserver rightObserver]
     (x : α)
     (y : β) : Prop :=
   rule.relation x y
 
-/-- Closed, compiler-owned congruence edges. Unlike primitive carrier
-bridges, these edges may consume an existing `Same` proof. -/
-private class DerivedRule (α β : Type u) where
+/-- Proof-carrying congruence edges. Unlike primitive carrier bridges, these
+edges may consume an existing `Same` proof. -/
+class DerivedRule
+    (α β : Type u)
+    (leftObserver : ComplexObserver α)
+    (rightObserver : ComplexObserver β) where
   relation : α → β → Prop
+  observationEq {x : α} {y : β} :
+    relation x y →
+      leftObserver.observe x = rightObserver.observe y
 
-private def Derived
+def Derived
     {α β : Type u}
-    [rule : DerivedRule α β]
+    {leftObserver : ComplexObserver α}
+    {rightObserver : ComplexObserver β}
+    [rule : DerivedRule α β leftObserver rightObserver]
     (x : α)
     (y : β) : Prop :=
   rule.relation x y
 
-private instance : PrimitiveRule ℕ ℂ where
+instance : PrimitiveRule ℕ ℂ natComplexObserver complexComplexObserver where
   relation n z := z = (n : ℂ)
+  observationEq := by rintro n z rfl; rfl
 
-private instance : PrimitiveRule ℤ ℂ where
+instance : PrimitiveRule ℤ ℂ intComplexObserver complexComplexObserver where
   relation z w := w = (z : ℂ)
+  observationEq := by rintro z w rfl; rfl
 
-private instance : PrimitiveRule ℚ ℂ where
+instance : PrimitiveRule ℚ ℂ ratComplexObserver complexComplexObserver where
   relation q z := z = (q : ℂ)
+  observationEq := by rintro q z rfl; rfl
 
-private instance : PrimitiveRule ℝ ℂ where
+instance : PrimitiveRule ℝ ℂ realComplexObserver complexComplexObserver where
   relation r z := z = (r : ℂ)
+  observationEq := by rintro r z rfl; rfl
 
-private instance {α : Type u} {predicate : α → Prop} :
-    PrimitiveRule (Subtype predicate) α where
+instance :
+    PrimitiveRule ℕ ℂ (ComplexObserver.none ℕ) (ComplexObserver.none ℂ) where
+  relation n z := z = (n : ℂ)
+  observationEq := by intros; rfl
+
+instance :
+    PrimitiveRule ℤ ℂ (ComplexObserver.none ℤ) (ComplexObserver.none ℂ) where
+  relation z w := w = (z : ℂ)
+  observationEq := by intros; rfl
+
+instance :
+    PrimitiveRule ℚ ℂ (ComplexObserver.none ℚ) (ComplexObserver.none ℂ) where
+  relation q z := z = (q : ℂ)
+  observationEq := by intros; rfl
+
+instance :
+    PrimitiveRule ℝ ℂ (ComplexObserver.none ℝ) (ComplexObserver.none ℂ) where
+  relation r z := z = (r : ℂ)
+  observationEq := by intros; rfl
+
+instance {α : Type u} {predicate : α → Prop}
+    [observer : ComplexObserver α] :
+    PrimitiveRule (Subtype predicate) α
+      (ComplexObserver.subtype observer)
+      observer where
   relation x y := y = x.val
+  observationEq := by rintro x y rfl; rfl
+
+instance {α : Type u} {predicate : α → Prop} :
+    PrimitiveRule (Subtype predicate) α
+      (ComplexObserver.none (Subtype predicate))
+      (ComplexObserver.none α) where
+  relation x y := y = x.val
+  observationEq := by intros; rfl
 
 namespace Primitive
 
-private theorem natComplex (n : ℕ) : Primitive n (n : ℂ) := by
+theorem natComplex (n : ℕ) :
+    @Primitive ℕ ℂ natComplexObserver complexComplexObserver inferInstance n (n : ℂ) := by
   rfl
 
-private theorem intComplex (z : ℤ) : Primitive z (z : ℂ) := by
+theorem intComplex (z : ℤ) :
+    @Primitive ℤ ℂ intComplexObserver complexComplexObserver inferInstance z (z : ℂ) := by
   rfl
 
-private theorem ratComplex (q : ℚ) : Primitive q (q : ℂ) := by
+theorem ratComplex (q : ℚ) :
+    @Primitive ℚ ℂ ratComplexObserver complexComplexObserver inferInstance q (q : ℂ) := by
   rfl
 
-private theorem realComplex (r : ℝ) : Primitive r (r : ℂ) := by
+theorem realComplex (r : ℝ) :
+    @Primitive ℝ ℂ realComplexObserver complexComplexObserver inferInstance r (r : ℂ) := by
   rfl
 
-private theorem subtype
+theorem natComplexNoObservation (n : ℕ) :
+    @Primitive ℕ ℂ
+      (ComplexObserver.none ℕ) (ComplexObserver.none ℂ)
+      inferInstance n (n : ℂ) := by
+  rfl
+
+theorem intComplexNoObservation (z : ℤ) :
+    @Primitive ℤ ℂ
+      (ComplexObserver.none ℤ) (ComplexObserver.none ℂ)
+      inferInstance z (z : ℂ) := by
+  rfl
+
+theorem ratComplexNoObservation (q : ℚ) :
+    @Primitive ℚ ℂ
+      (ComplexObserver.none ℚ) (ComplexObserver.none ℂ)
+      inferInstance q (q : ℂ) := by
+  rfl
+
+theorem realComplexNoObservation (r : ℝ) :
+    @Primitive ℝ ℂ
+      (ComplexObserver.none ℝ) (ComplexObserver.none ℂ)
+      inferInstance r (r : ℂ) := by
+  rfl
+
+theorem subtype
     {α : Type u}
     {predicate : α → Prop}
+    [observer : ComplexObserver α]
     (x : Subtype predicate) :
-    Primitive x x.val := by
+    @Primitive (Subtype predicate) α
+      (ComplexObserver.subtype observer) observer inferInstance x x.val := by
   rfl
 
 end Primitive
 
 /-- Litex semantic equality. It is heterogeneous and is generated by explicit
 representation bridges, reflexivity, symmetry, and transitivity. -/
-inductive Same : {α β : Type u} → α → β → Prop where
+inductive Same :
+    {α β : Type u} →
+      [_leftObserver : ComplexObserver α] →
+      [_rightObserver : ComplexObserver β] →
+      α → β → Prop where
   | base
       {α β : Litex.u.{u}}
+      [leftObserver : ComplexObserver α]
+      [rightObserver : ComplexObserver β]
       {x : α}
       {y : β}
-      [PrimitiveRule α β] :
-      Primitive x y → Same x y
+      [rule : PrimitiveRule α β leftObserver rightObserver] :
+      @Primitive α β leftObserver rightObserver rule x y → Same x y
   | derived
       {α β : Litex.u.{u}}
+      [leftObserver : ComplexObserver α]
+      [rightObserver : ComplexObserver β]
       {x : α}
       {y : β}
-      [DerivedRule α β] :
-      Derived x y → Same x y
-  | refl {α : Litex.u.{u}} (x : α) : Same x x
+      [rule : DerivedRule α β leftObserver rightObserver] :
+      @Derived α β leftObserver rightObserver rule x y → Same x y
+  | refl
+      {α : Litex.u.{u}}
+      [observer : ComplexObserver α]
+      (x : α) :
+      Same x x
   | singleton
       {α : Litex.u.{u}}
+      [observer : ComplexObserver α]
       (value : α) :
-      Same value
+      @Same α (SingletonCarrier value)
+        observer (ComplexObserver.singleton observer value) value
+        (@SingletonCarrier.element.{u} α value : SingletonCarrier.{u} value)
+  | singletonNoObservation
+      {α : Litex.u.{u}}
+      (value : α) :
+      @Same α (SingletonCarrier value)
+        (ComplexObserver.none α)
+        (ComplexObserver.none (SingletonCarrier value)) value
         (@SingletonCarrier.element.{u} α value : SingletonCarrier.{u} value)
   | sumLeft
       {α β : Litex.u.{u}}
+      [leftObserver : ComplexObserver α]
+      [rightObserver : ComplexObserver β]
       (value : α) :
-      Same value (Sum.inl value : Sum α β)
+      @Same α (Sum α β)
+        leftObserver (ComplexObserver.sum leftObserver rightObserver)
+        value (Sum.inl value)
+  | sumLeftNoObservation
+      {α β : Litex.u.{u}}
+      (value : α) :
+      @Same α (Sum α β)
+        (ComplexObserver.none α)
+        (ComplexObserver.none (Sum α β))
+        value (Sum.inl value)
   | sumRight
       {α β : Litex.u.{u}}
+      [leftObserver : ComplexObserver α]
+      [rightObserver : ComplexObserver β]
       (value : β) :
-      Same value (Sum.inr value : Sum α β)
+      @Same β (Sum α β)
+        rightObserver (ComplexObserver.sum leftObserver rightObserver)
+        value (Sum.inr value)
+  | sumRightNoObservation
+      {α β : Litex.u.{u}}
+      (value : β) :
+      @Same β (Sum α β)
+        (ComplexObserver.none β)
+        (ComplexObserver.none (Sum α β))
+        value (Sum.inr value)
   | symm
       {α β : Litex.u.{u}}
+      [leftObserver : ComplexObserver α]
+      [rightObserver : ComplexObserver β]
       {x : α}
       {y : β} :
       Same x y → Same y x
   | trans
       {α β γ : Litex.u.{u}}
+      [leftObserver : ComplexObserver α]
+      [middleObserver : ComplexObserver β]
+      [rightObserver : ComplexObserver γ]
       {x : α}
       {y : β}
       {z : γ} :
       Same x y → Same y z → Same x z
+  | forgetObservation
+      {α β : Litex.u.{u}}
+      {leftObserver : ComplexObserver α}
+      {rightObserver : ComplexObserver β}
+      {x : α}
+      {y : β} :
+      @Same α β leftObserver rightObserver x y →
+      @Same α β
+        (ComplexObserver.none α)
+        (ComplexObserver.none β) x y
+
+namespace Same
+
+/-- Every `Same` proof preserves the observers indexed by its endpoint
+carriers. Numeric observers therefore turn a checked semantic-equality path
+into an ordinary equality of optional complex values. -/
+theorem observationEq
+    {α β : Type u}
+    [leftObserver : ComplexObserver α]
+    [rightObserver : ComplexObserver β]
+    {x : α}
+    {y : β}
+    (same : Same x y) :
+    leftObserver.observe x = rightObserver.observe y := by
+  induction same with
+  | base edge => exact PrimitiveRule.observationEq edge
+  | derived edge => exact DerivedRule.observationEq edge
+  | refl => rfl
+  | singleton => rfl
+  | singletonNoObservation => rfl
+  | sumLeft => rfl
+  | sumLeftNoObservation => rfl
+  | sumRight => rfl
+  | sumRightNoObservation => rfl
+  | symm _ ih => exact ih.symm
+  | trans _ _ left right => exact left.trans right
+  | forgetObservation _ => rfl
+
+/-- Discard observer metadata while preserving checked semantic equality.
+This is intentionally one-way: generic membership may consume a stronger
+numeric `Same`, but a no-observation proof cannot manufacture native numeric
+equality. -/
+theorem withoutObservation
+    {α β : Type u}
+    {leftObserver : ComplexObserver α}
+    {rightObserver : ComplexObserver β}
+    {x : α}
+    {y : β}
+    (same : @Same α β leftObserver rightObserver x y) :
+    @Same α β
+      (ComplexObserver.none α)
+      (ComplexObserver.none β) x y :=
+  Same.forgetObservation same
+
+end Same
 
 /-- The reviewed native real/complex operations whose representation
 congruence is part of the compiler ABI. -/
-private inductive RealComplexDerived : ℝ → ℂ → Prop where
+inductive RealComplexDerived : ℝ → ℂ → Prop where
   | add
       {r s : ℝ}
       {z w : ℂ} :
@@ -144,12 +425,73 @@ private inductive RealComplexDerived : ℝ → ℂ → Prop where
       {z w : ℂ} :
       Same r z → Same s w → RealComplexDerived (r / s) (z / w)
 
-private instance : DerivedRule ℝ ℂ where
+instance : DerivedRule ℝ ℂ realComplexObserver complexComplexObserver where
   relation := RealComplexDerived
+  observationEq := by
+    intro _ _ relation
+    cases relation with
+    | add left right =>
+        apply congrArg some
+        push_cast
+        exact congrArg₂ (fun x y : ℂ => x + y)
+          (Option.some.inj left.observationEq)
+          (Option.some.inj right.observationEq)
+    | sub left right =>
+        apply congrArg some
+        push_cast
+        exact congrArg₂ (fun x y : ℂ => x - y)
+          (Option.some.inj left.observationEq)
+          (Option.some.inj right.observationEq)
+    | mul left right =>
+        apply congrArg some
+        push_cast
+        exact congrArg₂ (fun x y : ℂ => x * y)
+          (Option.some.inj left.observationEq)
+          (Option.some.inj right.observationEq)
+    | div left right =>
+        apply congrArg some
+        push_cast
+        exact congrArg₂ (fun x y : ℂ => x / y)
+          (Option.some.inj left.observationEq)
+          (Option.some.inj right.observationEq)
+
+/-- The same reviewed real/complex operation edges under the deliberately
+nonnumeric observer used by generic heterogeneous membership and `AsReal`. -/
+inductive RealComplexNoObservationDerived : ℝ → ℂ → Prop where
+  | add
+      {r s : ℝ}
+      {z w : ℂ} :
+      @Same ℝ ℂ (ComplexObserver.none ℝ) (ComplexObserver.none ℂ) r z →
+      @Same ℝ ℂ (ComplexObserver.none ℝ) (ComplexObserver.none ℂ) s w →
+      RealComplexNoObservationDerived (r + s) (z + w)
+  | sub
+      {r s : ℝ}
+      {z w : ℂ} :
+      @Same ℝ ℂ (ComplexObserver.none ℝ) (ComplexObserver.none ℂ) r z →
+      @Same ℝ ℂ (ComplexObserver.none ℝ) (ComplexObserver.none ℂ) s w →
+      RealComplexNoObservationDerived (r - s) (z - w)
+  | mul
+      {r s : ℝ}
+      {z w : ℂ} :
+      @Same ℝ ℂ (ComplexObserver.none ℝ) (ComplexObserver.none ℂ) r z →
+      @Same ℝ ℂ (ComplexObserver.none ℝ) (ComplexObserver.none ℂ) s w →
+      RealComplexNoObservationDerived (r * s) (z * w)
+  | div
+      {r s : ℝ}
+      {z w : ℂ} :
+      @Same ℝ ℂ (ComplexObserver.none ℝ) (ComplexObserver.none ℂ) r z →
+      @Same ℝ ℂ (ComplexObserver.none ℝ) (ComplexObserver.none ℂ) s w →
+      RealComplexNoObservationDerived (r / s) (z / w)
+
+instance :
+    DerivedRule ℝ ℂ
+      (ComplexObserver.none ℝ) (ComplexObserver.none ℂ) where
+  relation := RealComplexNoObservationDerived
+  observationEq := by intros; rfl
 
 /-- The reviewed native integer/complex operations used when a checked
 integer-valued Litex function is represented directly in Lean. -/
-private inductive IntComplexDerived : ℤ → ℂ → Prop where
+inductive IntComplexDerived : ℤ → ℂ → Prop where
   | add
       {a b : ℤ}
       {z w : ℂ} :
@@ -163,20 +505,50 @@ private inductive IntComplexDerived : ℤ → ℂ → Prop where
       {z w : ℂ} :
       Same a z → Same b w → IntComplexDerived (a * b) (z * w)
 
-private instance : DerivedRule ℤ ℂ where
+instance : DerivedRule ℤ ℂ intComplexObserver complexComplexObserver where
   relation := IntComplexDerived
+  observationEq := by
+    intro _ _ relation
+    cases relation with
+    | add left right =>
+        apply congrArg some
+        push_cast
+        exact congrArg₂ (fun x y : ℂ => x + y)
+          (Option.some.inj left.observationEq)
+          (Option.some.inj right.observationEq)
+    | sub left right =>
+        apply congrArg some
+        push_cast
+        exact congrArg₂ (fun x y : ℂ => x - y)
+          (Option.some.inj left.observationEq)
+          (Option.some.inj right.observationEq)
+    | mul left right =>
+        apply congrArg some
+        push_cast
+        exact congrArg₂ (fun x y : ℂ => x * y)
+          (Option.some.inj left.observationEq)
+          (Option.some.inj right.observationEq)
 
-private inductive IntIntAddDerived : ℤ → ℤ → Prop where
+inductive IntIntAddDerived : ℤ → ℤ → Prop where
   | add
       {a b c d : ℤ} :
       Same a b → Same c d → IntIntAddDerived (a + c) (b + d)
 
-private instance : DerivedRule ℤ ℤ where
+instance : DerivedRule ℤ ℤ intComplexObserver intComplexObserver where
   relation := IntIntAddDerived
+  observationEq := by
+    intro _ _ relation
+    cases relation with
+    | add left right =>
+        apply congrArg some
+        push_cast
+        exact congrArg₂ (fun x y : ℂ => x + y)
+          (Option.some.inj left.observationEq)
+          (Option.some.inj right.observationEq)
 
 /-- Reviewed complex-target addition congruence, including the exact mixed
 complex/integer source shape emitted by numeric Litex expressions. -/
-private inductive ComplexComplexAddDerived : ℂ → ℂ → Prop where
+inductive ComplexComplexAddDerived : ℂ → ℂ → Prop where
   | add
       {a b c d : ℂ} :
       Same a b → Same c d → ComplexComplexAddDerived (a + c) (b + d)
@@ -186,15 +558,84 @@ private inductive ComplexComplexAddDerived : ℂ → ℂ → Prop where
       Same a b → Same z c →
         ComplexComplexAddDerived (a + (z : ℂ)) (b + c)
 
-private instance : DerivedRule ℂ ℂ where
+instance : DerivedRule ℂ ℂ complexComplexObserver complexComplexObserver where
   relation := ComplexComplexAddDerived
+  observationEq := by
+    intro _ _ relation
+    cases relation with
+    | add left right =>
+        apply congrArg some
+        exact congrArg₂ (fun x y : ℂ => x + y)
+          (Option.some.inj left.observationEq)
+          (Option.some.inj right.observationEq)
+    | addRightInt left right =>
+        apply congrArg some
+        exact congrArg₂ (fun x y : ℂ => x + y)
+          (Option.some.inj left.observationEq)
+          (Option.some.inj right.observationEq)
 
 namespace Same
 
 /-- Native Lean equality is always a valid proof of Litex semantic equality. -/
-theorem ofEq {α : Litex.u.{u}} {x y : α} (h : x = y) : Same x y := by
+theorem ofEq
+    {α : Litex.u.{u}}
+    [observer : ComplexObserver α]
+    {x y : α}
+    (h : x = y) :
+    Same x y := by
   subst y
   exact .refl x
+
+theorem reflNoObservation {α : Type u} (x : α) :
+    @Same α α (ComplexObserver.none α) (ComplexObserver.none α) x x :=
+  @Same.refl α (ComplexObserver.none α) x
+
+theorem ofEqNoObservation
+    {α : Type u}
+    {x y : α}
+    (equality : x = y) :
+    @Same α α (ComplexObserver.none α) (ComplexObserver.none α) x y := by
+  subst y
+  exact reflNoObservation x
+
+theorem symmNoObservation
+    {α β : Type u}
+    {x : α}
+    {y : β}
+    (same : @Same α β
+      (ComplexObserver.none α)
+      (ComplexObserver.none β)
+      x y) :
+    @Same β α
+      (ComplexObserver.none β)
+      (ComplexObserver.none α)
+      y x :=
+  @Same.symm α β
+    (ComplexObserver.none α) (ComplexObserver.none β)
+    x y same
+
+theorem transNoObservation
+    {α β γ : Type u}
+    {x : α}
+    {y : β}
+    {z : γ}
+    (left : @Same α β
+      (ComplexObserver.none α)
+      (ComplexObserver.none β)
+      x y)
+    (right : @Same β γ
+      (ComplexObserver.none β)
+      (ComplexObserver.none γ)
+      y z) :
+    @Same α γ
+      (ComplexObserver.none α)
+      (ComplexObserver.none γ)
+      x z :=
+  @Same.trans α β γ
+    (ComplexObserver.none α)
+    (ComplexObserver.none β)
+    (ComplexObserver.none γ)
+    x y z left right
 
 /-- Complex addition respects retained complex-carrier semantic equality. -/
 theorem addCongr
@@ -226,8 +667,20 @@ theorem intAddCongr
 theorem natComplex (n : ℕ) : Same n (n : ℂ) :=
   .base (Primitive.natComplex n)
 
+theorem natComplexNoObservation (n : ℕ) :
+    @Same ℕ ℂ (ComplexObserver.none ℕ) (ComplexObserver.none ℂ) n (n : ℂ) :=
+  @Same.base ℕ ℂ
+    (ComplexObserver.none ℕ) (ComplexObserver.none ℂ)
+    n (n : ℂ) inferInstance (Primitive.natComplexNoObservation n)
+
 theorem intComplex (z : ℤ) : Same z (z : ℂ) :=
   .base (Primitive.intComplex z)
+
+theorem intComplexNoObservation (z : ℤ) :
+    @Same ℤ ℂ (ComplexObserver.none ℤ) (ComplexObserver.none ℂ) z (z : ℂ) :=
+  @Same.base ℤ ℂ
+    (ComplexObserver.none ℤ) (ComplexObserver.none ℂ)
+    z (z : ℂ) inferInstance (Primitive.intComplexNoObservation z)
 
 /-- Transport an exact integer value to the particular complex expression
 chosen by the checked source reduction.  The equality premise is discharged
@@ -242,27 +695,79 @@ theorem intComplexOfEq
 theorem ratComplex (q : ℚ) : Same q (q : ℂ) :=
   .base (Primitive.ratComplex q)
 
+theorem ratComplexNoObservation (q : ℚ) :
+    @Same ℚ ℂ (ComplexObserver.none ℚ) (ComplexObserver.none ℂ) q (q : ℂ) :=
+  @Same.base ℚ ℂ
+    (ComplexObserver.none ℚ) (ComplexObserver.none ℂ)
+    q (q : ℂ) inferInstance (Primitive.ratComplexNoObservation q)
+
 theorem realComplex (r : ℝ) : Same r (r : ℂ) :=
   .base (Primitive.realComplex r)
+
+theorem realComplexNoObservation (r : ℝ) :
+    @Same ℝ ℂ (ComplexObserver.none ℝ) (ComplexObserver.none ℂ) r (r : ℂ) :=
+  @Same.base ℝ ℂ
+    (ComplexObserver.none ℝ) (ComplexObserver.none ℂ)
+    r (r : ℂ) inferInstance (Primitive.realComplexNoObservation r)
 
 theorem complexNat (n : ℕ) : Same (n : ℂ) n :=
   .symm (natComplex n)
 
+theorem complexNatNoObservation (n : ℕ) :
+    @Same ℂ ℕ (ComplexObserver.none ℂ) (ComplexObserver.none ℕ) (n : ℂ) n :=
+  @Same.symm ℕ ℂ
+    (ComplexObserver.none ℕ) (ComplexObserver.none ℂ)
+    n (n : ℂ) (natComplexNoObservation n)
+
 theorem complexInt (z : ℤ) : Same (z : ℂ) z :=
   .symm (intComplex z)
+
+theorem complexIntNoObservation (z : ℤ) :
+    @Same ℂ ℤ (ComplexObserver.none ℂ) (ComplexObserver.none ℤ) (z : ℂ) z :=
+  @Same.symm ℤ ℂ
+    (ComplexObserver.none ℤ) (ComplexObserver.none ℂ)
+    z (z : ℂ) (intComplexNoObservation z)
 
 theorem complexRat (q : ℚ) : Same (q : ℂ) q :=
   .symm (ratComplex q)
 
+theorem complexRatNoObservation (q : ℚ) :
+    @Same ℂ ℚ (ComplexObserver.none ℂ) (ComplexObserver.none ℚ) (q : ℂ) q :=
+  @Same.symm ℚ ℂ
+    (ComplexObserver.none ℚ) (ComplexObserver.none ℂ)
+    q (q : ℂ) (ratComplexNoObservation q)
+
 theorem complexReal (r : ℝ) : Same (r : ℂ) r :=
   .symm (realComplex r)
+
+theorem complexRealNoObservation (r : ℝ) :
+    @Same ℂ ℝ (ComplexObserver.none ℂ) (ComplexObserver.none ℝ) (r : ℂ) r :=
+  @Same.symm ℝ ℂ
+    (ComplexObserver.none ℝ) (ComplexObserver.none ℂ)
+    r (r : ℂ) (realComplexNoObservation r)
 
 theorem subtype
     {α : Type u}
     {predicate : α → Prop}
+    [observer : ComplexObserver α]
     (x : Subtype predicate) :
     Same x x.val :=
   .base (Primitive.subtype x)
+
+/-- The same subtype/value bridge under the deliberately nonnumeric observer
+used by generic heterogeneous membership. -/
+theorem subtypeNoObservation
+    {α : Type u}
+    {predicate : α → Prop}
+    (x : Subtype predicate) :
+    @Same (Subtype predicate) α
+      (ComplexObserver.none (Subtype predicate))
+      (ComplexObserver.none α)
+      x x.val :=
+  @Same.base (Subtype predicate) α
+    (ComplexObserver.none (Subtype predicate))
+    (ComplexObserver.none α)
+    x x.val inferInstance (by rfl)
 
 /-- Addition respects the closed real-to-complex representation relation. -/
 theorem realAddComplex
@@ -302,6 +807,66 @@ theorem realDivComplex
     Same (r / s) (z / w) :=
   .derived (RealComplexDerived.div hr hs)
 
+theorem realAddComplexNoObservation
+    {r s : ℝ}
+    {z w : ℂ}
+    (hr : @Same ℝ ℂ
+      (ComplexObserver.none ℝ) (ComplexObserver.none ℂ) r z)
+    (hs : @Same ℝ ℂ
+      (ComplexObserver.none ℝ) (ComplexObserver.none ℂ) s w) :
+    @Same ℝ ℂ
+      (ComplexObserver.none ℝ) (ComplexObserver.none ℂ)
+      (r + s) (z + w) :=
+  @Same.derived ℝ ℂ
+    (ComplexObserver.none ℝ) (ComplexObserver.none ℂ)
+    (r + s) (z + w) inferInstance
+    (RealComplexNoObservationDerived.add hr hs)
+
+theorem realSubComplexNoObservation
+    {r s : ℝ}
+    {z w : ℂ}
+    (hr : @Same ℝ ℂ
+      (ComplexObserver.none ℝ) (ComplexObserver.none ℂ) r z)
+    (hs : @Same ℝ ℂ
+      (ComplexObserver.none ℝ) (ComplexObserver.none ℂ) s w) :
+    @Same ℝ ℂ
+      (ComplexObserver.none ℝ) (ComplexObserver.none ℂ)
+      (r - s) (z - w) :=
+  @Same.derived ℝ ℂ
+    (ComplexObserver.none ℝ) (ComplexObserver.none ℂ)
+    (r - s) (z - w) inferInstance
+    (RealComplexNoObservationDerived.sub hr hs)
+
+theorem realMulComplexNoObservation
+    {r s : ℝ}
+    {z w : ℂ}
+    (hr : @Same ℝ ℂ
+      (ComplexObserver.none ℝ) (ComplexObserver.none ℂ) r z)
+    (hs : @Same ℝ ℂ
+      (ComplexObserver.none ℝ) (ComplexObserver.none ℂ) s w) :
+    @Same ℝ ℂ
+      (ComplexObserver.none ℝ) (ComplexObserver.none ℂ)
+      (r * s) (z * w) :=
+  @Same.derived ℝ ℂ
+    (ComplexObserver.none ℝ) (ComplexObserver.none ℂ)
+    (r * s) (z * w) inferInstance
+    (RealComplexNoObservationDerived.mul hr hs)
+
+theorem realDivComplexNoObservation
+    {r s : ℝ}
+    {z w : ℂ}
+    (hr : @Same ℝ ℂ
+      (ComplexObserver.none ℝ) (ComplexObserver.none ℂ) r z)
+    (hs : @Same ℝ ℂ
+      (ComplexObserver.none ℝ) (ComplexObserver.none ℂ) s w) :
+    @Same ℝ ℂ
+      (ComplexObserver.none ℝ) (ComplexObserver.none ℂ)
+      (r / s) (z / w) :=
+  @Same.derived ℝ ℂ
+    (ComplexObserver.none ℝ) (ComplexObserver.none ℂ)
+    (r / s) (z / w) inferInstance
+    (RealComplexNoObservationDerived.div hr hs)
+
 theorem intAddComplex
     {a b : ℤ}
     {z w : ℂ}
@@ -339,6 +904,157 @@ theorem intMulComplex
     (hb : Same b w) :
     Same (a * b) (z * w) :=
   .derived (IntComplexDerived.mul ha hb)
+
+end Same
+
+/-- Independent native-complex observation of one Litex carrier value.
+
+Unlike `Litex.In`, this proposition does not use `Same`: it is the statement
+that the carrier's selected observer is exactly the supplied complex value. -/
+def AsComplex
+    {α : Type u}
+    [observer : ComplexObserver α]
+    (value : α)
+    (complexValue : ℂ) : Prop :=
+  observer.observe value = some complexValue
+
+/-- A value is complex-observable when it has a native `ℂ` observation. -/
+def InComplex
+    {α : Type u}
+    [observer : ComplexObserver α]
+    (value : α) : Prop :=
+  ∃ complexValue : ℂ, AsComplex value complexValue
+
+namespace InComplex
+
+/-- The native complex value selected by one `InComplex` proof. -/
+noncomputable def value
+    {α : Type u}
+    [observer : ComplexObserver α]
+    (source : α)
+    (evidence : InComplex source) : ℂ :=
+  Classical.choose evidence
+
+/-- The selected value really is the source value's complex observation. -/
+theorem value_spec
+    {α : Type u}
+    [observer : ComplexObserver α]
+    (source : α)
+    (evidence : InComplex source) :
+    AsComplex source (value source evidence) :=
+  Classical.choose_spec evidence
+
+end InComplex
+
+namespace AsComplex
+
+theorem nat (n : ℕ) : AsComplex n (n : ℂ) := by rfl
+theorem int (z : ℤ) : AsComplex z (z : ℂ) := by rfl
+theorem rat (q : ℚ) : AsComplex q (q : ℂ) := by rfl
+theorem real (r : ℝ) : AsComplex r (r : ℂ) := by rfl
+theorem complex (z : ℂ) : AsComplex z z := by rfl
+
+/-- A fixed carrier value has at most one complex observation. -/
+theorem unique
+    {α : Type u}
+    [observer : ComplexObserver α]
+    {value : α}
+    {left right : ℂ}
+    (leftEvidence : AsComplex value left)
+    (rightEvidence : AsComplex value right) :
+    left = right := by
+  exact Option.some.inj (leftEvidence.symm.trans rightEvidence)
+
+end AsComplex
+
+namespace Same
+
+/-- Transport an independent complex observation along semantic equality. -/
+theorem asComplex
+    {α β : Type u}
+    [leftObserver : ComplexObserver α]
+    [rightObserver : ComplexObserver β]
+    {left : α}
+    {right : β}
+    {value : ℂ}
+    (same : Same left right)
+    (leftEvidence : AsComplex left value) :
+    AsComplex right value := by
+  exact same.observationEq.symm.trans leftEvidence
+
+/-- `Same` preserves and reflects independent complex observability. -/
+theorem inComplexIff
+    {α β : Type u}
+    [leftObserver : ComplexObserver α]
+    [rightObserver : ComplexObserver β]
+    {left : α}
+    {right : β}
+    (same : Same left right) :
+    InComplex left ↔ InComplex right := by
+  constructor
+  · rintro ⟨value, evidence⟩
+    exact ⟨value, same.asComplex evidence⟩
+  · rintro ⟨value, evidence⟩
+    exact ⟨value, same.symm.asComplex evidence⟩
+
+/-- `Same` plus complex observations yields Lean's native equality between
+the two observed `ℂ` values. -/
+theorem complexEq
+    {α β : Type u}
+    [leftObserver : ComplexObserver α]
+    [rightObserver : ComplexObserver β]
+    {left : α}
+    {right : β}
+    {leftValue rightValue : ℂ}
+    (same : Same left right)
+    (leftEvidence : AsComplex left leftValue)
+    (rightEvidence : AsComplex right rightValue) :
+    leftValue = rightValue := by
+  exact AsComplex.unique (same.asComplex leftEvidence) rightEvidence
+
+/-- The direct public contract requested by numeric consumers: `Same` plus
+`InComplex` evidence on both endpoints makes their selected native complex
+values equal. -/
+theorem inComplexEq
+    {α β : Type u}
+    [leftObserver : ComplexObserver α]
+    [rightObserver : ComplexObserver β]
+    {left : α}
+    {right : β}
+    (same : Same left right)
+    (leftEvidence : InComplex left)
+    (rightEvidence : InComplex right) :
+    InComplex.value left leftEvidence =
+      InComplex.value right rightEvidence :=
+  same.complexEq
+    (InComplex.value_spec left leftEvidence)
+    (InComplex.value_spec right rightEvidence)
+
+theorem intComplexEq
+    {left : ℤ}
+    {right : ℂ}
+    (same : Same left right) :
+    (left : ℂ) = right :=
+  same.complexEq (AsComplex.int left) (AsComplex.complex right)
+
+theorem natEq {left right : ℕ} (same : Same left right) : left = right := by
+  have := same.complexEq (AsComplex.nat left) (AsComplex.nat right)
+  exact_mod_cast this
+
+theorem intEq {left right : ℤ} (same : Same left right) : left = right := by
+  have := same.complexEq (AsComplex.int left) (AsComplex.int right)
+  exact_mod_cast this
+
+theorem ratEq {left right : ℚ} (same : Same left right) : left = right := by
+  have := same.complexEq (AsComplex.rat left) (AsComplex.rat right)
+  exact_mod_cast this
+
+theorem realEq {left right : ℝ} (same : Same left right) : left = right := by
+  have := same.complexEq (AsComplex.real left) (AsComplex.real right)
+  exact_mod_cast this
+
+theorem complexNativeEq {left right : ℂ} (same : Same left right) : left = right :=
+  same.complexEq (AsComplex.complex left) (AsComplex.complex right)
 
 end Same
 
@@ -419,14 +1135,19 @@ theorem congr
     {α β : Litex.u.{u}}
     {x : α}
     {y : β}
-    (h : Same x y)
+    {leftObserver : ComplexObserver α}
+    {rightObserver : ComplexObserver β}
+    (h : @Same α β leftObserver rightObserver x y)
     (set : Litex.Set.{u}) :
     In x set ↔ In y set := by
+  have hWithoutObservation := Same.withoutObservation h
   constructor
   · rintro ⟨z, hxz⟩
-    exact ⟨z, .trans (.symm h) hxz⟩
+    exact ⟨z,
+      Same.transNoObservation
+        (Same.symmNoObservation hWithoutObservation) hxz⟩
   · rintro ⟨z, hyz⟩
-    exact ⟨z, .trans h hyz⟩
+    exact ⟨z, Same.transNoObservation hWithoutObservation hyz⟩
 
 /-- Select the exact-carrier representative certified by a Litex membership
 proof. An input already living in the set's exact carrier is its own canonical
@@ -534,7 +1255,12 @@ semantic representation as a complex value. This is the bridge required
 when a Litex `forall x S` Result was checked with a complex source binder but
 is consumed as the heterogeneous `Subset S T` contract. -/
 def EveryCarrierValueHasComplexRepresentative (set : Litex.Set) : Prop :=
-  ∀ value : set.Carrier, ∃ complexValue : ℂ, Same value complexValue
+  ∀ value : set.Carrier,
+    ∃ complexValue : ℂ,
+      @Same set.Carrier ℂ
+        (ComplexObserver.none set.Carrier)
+        (ComplexObserver.none ℂ)
+        value complexValue
 
 theorem emptyEveryCarrierValueHasComplexRepresentative :
     EveryCarrierValueHasComplexRepresentative empty := by
@@ -546,7 +1272,8 @@ theorem singletonEveryCarrierValueHasComplexRepresentative
     EveryCarrierValueHasComplexRepresentative (singleton value) := by
   intro singletonValue
   cases singletonValue
-  exact ⟨value, Same.symm (Same.singleton value)⟩
+  exact ⟨value,
+    Same.symmNoObservation (Same.singletonNoObservation value)⟩
 
 theorem coproductEveryCarrierValueHasComplexRepresentative
     {left right : Litex.Set}
@@ -558,11 +1285,15 @@ theorem coproductEveryCarrierValueHasComplexRepresentative
   | inl leftValue =>
       rcases leftEvidence leftValue with ⟨complexValue, representation⟩
       exact ⟨complexValue,
-        Same.trans (Same.symm (Same.sumLeft leftValue)) representation⟩
+        Same.transNoObservation
+          (Same.symmNoObservation (Same.sumLeftNoObservation leftValue))
+          representation⟩
   | inr rightValue =>
       rcases rightEvidence rightValue with ⟨complexValue, representation⟩
       exact ⟨complexValue,
-        Same.trans (Same.symm (Same.sumRight rightValue)) representation⟩
+        Same.transNoObservation
+          (Same.symmNoObservation (Same.sumRightNoObservation rightValue))
+          representation⟩
 
 /-- Turn a complex-binder membership implication retained by a recursive
 statement Result into the fully heterogeneous subset contract. The source
@@ -577,12 +1308,13 @@ theorem subsetFromComplexMembershipImplication
   rcases membership with ⟨leftValue, valueToLeftValue⟩
   rcases leftEvidence leftValue with ⟨complexValue, leftValueToComplexValue⟩
   have complexMembershipInLeft : In complexValue left :=
-    ⟨leftValue, Same.symm leftValueToComplexValue⟩
+    ⟨leftValue, Same.symmNoObservation leftValueToComplexValue⟩
   rcases implication complexValue complexMembershipInLeft with
     ⟨rightValue, complexValueToRightValue⟩
   exact ⟨rightValue,
-    Same.trans valueToLeftValue
-      (Same.trans leftValueToComplexValue complexValueToRightValue)⟩
+    Same.transNoObservation valueToLeftValue
+      (Same.transNoObservation
+        leftValueToComplexValue complexValueToRightValue)⟩
 
 end Set
 
@@ -606,20 +1338,26 @@ def emptyPowerSubset (base : Litex.Set.{u}) : PowerSubset base :=
 
 /-- A source set and a native power-subset predicate represent the same
 mathematical set exactly when their Litex membership extensions agree. -/
-private instance (base : Litex.Set.{u}) :
-    DerivedRule (Litex.Set.{u}) (PowerSubset base) where
+instance (base : Litex.Set.{u}) :
+    DerivedRule (Litex.Set.{u}) (PowerSubset base)
+      (ComplexObserver.none (Litex.Set.{u}))
+      (ComplexObserver.none (PowerSubset base)) where
   relation source predicate :=
     Subset source (powerSubsetSet base predicate) ∧
       Subset (powerSubsetSet base predicate) source
+  observationEq := by intros; rfl
 
 /-- Exact power-set carrier. -/
 def powerSet (base : Litex.Set.{u}) : Litex.Set.{u + 1} :=
   Set.ofType (PowerSubset base)
 
-/-- Extensional set equality is the closed set/set derived representation
-edge. No other carrier can register or manufacture this relation. -/
-private instance : DerivedRule (Litex.Set.{u}) (Litex.Set.{u}) where
+/-- The built-in extensional set/set derived representation edge. -/
+instance :
+    DerivedRule (Litex.Set.{u}) (Litex.Set.{u})
+      (ComplexObserver.none (Litex.Set.{u}))
+      (ComplexObserver.none (Litex.Set.{u})) where
   relation left right := Subset left right ∧ Subset right left
+  observationEq := by intros; rfl
 
 namespace Same
 
@@ -643,7 +1381,8 @@ theorem inUnionLeft
     (membership : In value left) :
     In value (union left right) := by
   rcases membership with ⟨representative, same⟩
-  exact ⟨Sum.inl representative, Same.trans same (Same.sumLeft representative)⟩
+  exact ⟨Sum.inl representative,
+    Same.trans same (Same.sumLeftNoObservation representative)⟩
 
 theorem inUnionRight
     {left right : Litex.Set.{u}}
@@ -652,7 +1391,8 @@ theorem inUnionRight
     (membership : In value right) :
     In value (union left right) := by
   rcases membership with ⟨representative, same⟩
-  exact ⟨Sum.inr representative, Same.trans same (Same.sumRight representative)⟩
+  exact ⟨Sum.inr representative,
+    Same.trans same (Same.sumRightNoObservation representative)⟩
 
 theorem unionCases
     {left right : Litex.Set.{u}}
@@ -663,9 +1403,11 @@ theorem unionCases
   rcases membership with ⟨representative, same⟩
   cases representative with
   | inl leftValue =>
-      exact Or.inl ⟨leftValue, Same.trans same (Same.symm (Same.sumLeft leftValue))⟩
+      exact Or.inl ⟨leftValue,
+        Same.trans same (Same.symm (Same.sumLeftNoObservation leftValue))⟩
   | inr rightValue =>
-      exact Or.inr ⟨rightValue, Same.trans same (Same.symm (Same.sumRight rightValue))⟩
+      exact Or.inr ⟨rightValue,
+        Same.trans same (Same.symm (Same.sumRightNoObservation rightValue))⟩
 
 theorem inIntersect
     {left right : Litex.Set.{u}}
@@ -680,7 +1422,7 @@ theorem inIntersect
     (In.congr sameRepresentative right).mp rightMembership
   let exactValue : {value : left.Carrier // In value right} :=
     ⟨representative, representativeInRight⟩
-  exact ⟨exactValue, Same.trans sameRepresentative (Same.symm (Same.subtype exactValue))⟩
+  exact ⟨exactValue, Same.trans sameRepresentative (Same.symm (Same.subtypeNoObservation exactValue))⟩
 
 theorem inLeftOfInIntersect
     {left right : Litex.Set.{u}}
@@ -689,7 +1431,7 @@ theorem inLeftOfInIntersect
     (membership : In value (intersect left right)) :
     In value left := by
   rcases membership with ⟨representative, same⟩
-  exact ⟨representative.val, Same.trans same (Same.subtype representative)⟩
+  exact ⟨representative.val, Same.trans same (Same.subtypeNoObservation representative)⟩
 
 theorem inRightOfInIntersect
     {left right : Litex.Set.{u}}
@@ -699,7 +1441,7 @@ theorem inRightOfInIntersect
     In value right := by
   rcases membership with ⟨representative, same⟩
   have sameValue : Same value representative.val :=
-    Same.trans same (Same.subtype representative)
+    Same.trans same (Same.subtypeNoObservation representative)
   exact (In.congr sameValue right).mpr representative.property
 
 theorem notInIntersectOfNotInLeft
@@ -732,7 +1474,7 @@ theorem inSetMinus
     exact rightNonmembership ((In.congr sameRepresentative right).mpr member)
   let exactValue : {value : left.Carrier // ¬ In value right} :=
     ⟨representative, representativeNotInRight⟩
-  exact ⟨exactValue, Same.trans sameRepresentative (Same.symm (Same.subtype exactValue))⟩
+  exact ⟨exactValue, Same.trans sameRepresentative (Same.symm (Same.subtypeNoObservation exactValue))⟩
 
 theorem inLeftOfInSetMinus
     {left right : Litex.Set.{u}}
@@ -741,7 +1483,7 @@ theorem inLeftOfInSetMinus
     (membership : In value (setMinus left right)) :
     In value left := by
   rcases membership with ⟨representative, same⟩
-  exact ⟨representative.val, Same.trans same (Same.subtype representative)⟩
+  exact ⟨representative.val, Same.trans same (Same.subtypeNoObservation representative)⟩
 
 theorem notInRightOfInSetMinus
     {left right : Litex.Set.{u}}
@@ -751,7 +1493,7 @@ theorem notInRightOfInSetMinus
     ¬ In value right := by
   rcases membership with ⟨representative, same⟩
   have sameValue : Same value representative.val :=
-    Same.trans same (Same.subtype representative)
+    Same.trans same (Same.subtypeNoObservation representative)
   intro rightMembership
   exact representative.property ((In.congr sameValue right).mp rightMembership)
 
@@ -845,11 +1587,11 @@ theorem subsetSamePowerMember
     let exactValue : {value : base.Carrier // In value subset} :=
       ⟨baseValue, baseValueMembership⟩
     exact
-      ⟨exactValue, Same.trans sameBase (Same.symm (Same.subtype exactValue))⟩
+      ⟨exactValue, Same.trans sameBase (Same.symm (Same.subtypeNoObservation exactValue))⟩
   · intro _ value membership
     rcases membership with ⟨exactValue, sameExact⟩
     have sameValue : Same value exactValue.val :=
-      Same.trans sameExact (Same.subtype exactValue)
+      Same.trans sameExact (Same.subtypeNoObservation exactValue)
     exact (In.congr sameValue subset).mpr exactValue.property
 
 theorem inPowerSetOfSubset
@@ -1317,7 +2059,7 @@ theorem fnApplyOwnInRange
     In (f.call x hx) (fnRangeOwn f) := by
   let witness : (fnRangeOwn f).Carrier :=
     ⟨f.call x hx, ⟨α, x, hx, rfl⟩⟩
-  exact ⟨witness, Same.symm (Same.subtype witness)⟩
+  exact ⟨witness, Same.symm (Same.subtypeNoObservation witness)⟩
 
 /-- Inference-friendly form used when the compiler has already rendered the
 exact checked application and range in the expected proposition. -/
@@ -1346,7 +2088,7 @@ theorem fnApplyWhereOwnInRange
     In (f.call x hx hr) (fnWhereRangeOwn f) := by
   let witness : (fnWhereRangeOwn f).Carrier :=
     ⟨f.call x hx hr, ⟨α, x, hx, hr, rfl⟩⟩
-  exact ⟨witness, Same.symm (Same.subtype witness)⟩
+  exact ⟨witness, Same.symm (Same.subtypeNoObservation witness)⟩
 
 /-- Inference-friendly constrained-function range introduction. -/
 theorem fnApplyWhereOwnInRangeFromRenderedApplication
@@ -1370,7 +2112,7 @@ theorem fnRangeOwnSubsetCodomain
     Subset (fnRangeOwn f) codomain := by
   intro α value membership
   rcases membership with ⟨rangeValue, sameRangeValue⟩
-  exact ⟨rangeValue.val, Same.trans sameRangeValue (Same.subtype rangeValue)⟩
+  exact ⟨rangeValue.val, Same.trans sameRangeValue (Same.subtypeNoObservation rangeValue)⟩
 
 /-- A constrained function range is included in its declared codomain. -/
 theorem fnWhereRangeOwnSubsetCodomain
@@ -1381,7 +2123,7 @@ theorem fnWhereRangeOwnSubsetCodomain
     Subset (fnWhereRangeOwn f) codomain := by
   intro α value membership
   rcases membership with ⟨rangeValue, sameRangeValue⟩
-  exact ⟨rangeValue.val, Same.trans sameRangeValue (Same.subtype rangeValue)⟩
+  exact ⟨rangeValue.val, Same.trans sameRangeValue (Same.subtypeNoObservation rangeValue)⟩
 
 /-!
 `FnTelescope` is the native carrier for one source application layer with any
@@ -1477,7 +2219,9 @@ theorem realIntervalSubsetR
     Subset (realInterval leftClosed rightClosed start finish) R := by
   intro α value membership
   rcases membership with ⟨intervalValue, sameIntervalValue⟩
-  exact ⟨intervalValue.val, Same.trans sameIntervalValue (Same.subtype intervalValue)⟩
+  exact ⟨intervalValue.val,
+    Same.transNoObservation sameIntervalValue
+      (Same.subtypeNoObservation intervalValue)⟩
 
 theorem realLeftRaySubsetR
     (closed : Bool)
@@ -1485,7 +2229,8 @@ theorem realLeftRaySubsetR
     Subset (realLeftRay closed start) R := by
   intro α value membership
   rcases membership with ⟨rayValue, sameRayValue⟩
-  exact ⟨rayValue.val, Same.trans sameRayValue (Same.subtype rayValue)⟩
+  exact ⟨rayValue.val,
+    Same.transNoObservation sameRayValue (Same.subtypeNoObservation rayValue)⟩
 
 theorem realRightRaySubsetR
     (closed : Bool)
@@ -1493,7 +2238,8 @@ theorem realRightRaySubsetR
     Subset (realRightRay closed finish) R := by
   intro α value membership
   rcases membership with ⟨rayValue, sameRayValue⟩
-  exact ⟨rayValue.val, Same.trans sameRayValue (Same.subtype rayValue)⟩
+  exact ⟨rayValue.val,
+    Same.transNoObservation sameRayValue (Same.subtypeNoObservation rayValue)⟩
 
 /-- Expected-type-driven finite-interval inclusion for generated proofs. -/
 theorem realIntervalSubsetRFromExpectedType
@@ -1579,7 +2325,7 @@ def cartNil : Litex.Set.{u} :=
 def cartCons (head tail : Litex.Set.{u}) : Litex.Set.{u} :=
   Set.ofType (HCons head.Carrier tail.Carrier)
 
-private inductive HConsDerived
+inductive HConsDerived
     {α β tail rest : Type u} :
     HCons α tail → HCons β rest → Prop where
   | mk
@@ -1593,9 +2339,12 @@ private inductive HConsDerived
         (HCons.mk head tailValue)
         (HCons.mk otherHead otherTail)
 
-private instance {α β tail rest : Type u} :
-    DerivedRule (HCons α tail) (HCons β rest) where
+instance {α β tail rest : Type u} :
+    DerivedRule (HCons α tail) (HCons β rest)
+      (ComplexObserver.none (HCons α tail))
+      (ComplexObserver.none (HCons β rest)) where
   relation := HConsDerived
+  observationEq := by intros; rfl
 
 namespace Same
 
@@ -1768,30 +2517,38 @@ abbrev RNeg : Litex.Set := setBuilder R (fun r => r < 0)
 /-- Nonzero integers retain a complex source representative together with the
 exact integer-membership and semantic-nonzero certificates used by Litex. -/
 abbrev ZStar : Litex.Set :=
-  setBuilder C (fun z => In z Z ∧ ¬ Same z (0 : ℂ))
+  setBuilder C (fun z => In z Z ∧
+    ¬ @Same ℂ ℂ
+      (ComplexObserver.none ℂ) (ComplexObserver.none ℂ) z (0 : ℂ))
 
 /-- Nonzero rationals retain a complex source representative together with the
 exact rational-membership and semantic-nonzero certificates used by Litex. -/
 abbrev QStar : Litex.Set :=
-  setBuilder C (fun z => In z Q ∧ ¬ Same z (0 : ℂ))
+  setBuilder C (fun z => In z Q ∧
+    ¬ @Same ℂ ℂ
+      (ComplexObserver.none ℂ) (ComplexObserver.none ℂ) z (0 : ℂ))
 
 /-- Nonzero reals retain a complex source representative together with the
 exact real-membership and semantic-nonzero certificates used by Litex. -/
 abbrev RStar : Litex.Set :=
-  setBuilder C (fun z => In z R ∧ ¬ Same z (0 : ℂ))
+  setBuilder C (fun z => In z R ∧
+    ¬ @Same ℂ ℂ
+      (ComplexObserver.none ℂ) (ComplexObserver.none ℂ) z (0 : ℂ))
 
 /-- Nonzero complexes retain a complex source representative together with the
 exact complex-membership and semantic-nonzero certificates used by Litex. -/
 abbrev CStar : Litex.Set :=
-  setBuilder C (fun z => In z C ∧ ¬ Same z (0 : ℂ))
+  setBuilder C (fun z => In z C ∧
+    ¬ @Same ℂ ℂ
+      (ComplexObserver.none ℂ) (ComplexObserver.none ℂ) z (0 : ℂ))
 
 /-!
 The ordered-numeric layer deliberately lives at Lean universe `0`: Mathlib's
 native `ℕ`, `ℤ`, `ℚ`, `ℝ`, and `ℂ` all live there. This does not restrict the
 universe-polymorphic `Litex.Set`, `Litex.In`, or `Litex.Same` interfaces.
 
-Primitive and native-operation representation edges are closed inside this
-header. Facts which only transport a chosen real representative need no global
+The built-in primitive and native-operation representation edges are declared
+in this public header. Facts which only transport a chosen real representative need no global
 assumption. General order does not compare independently selected
 representatives: it uses the one canonical real observation of the compiler's
 current numeric carrier, `Complex.re`, and therefore reduces directly to
@@ -1801,24 +2558,33 @@ Mathlib order.
 /-- `x` has the real representative `r` when Litex semantic equality relates
 the (possibly differently typed) value `x` to the native Mathlib real `r`. -/
 def AsReal {α : Type} (x : α) (r : ℝ) : Prop :=
-  Same x r
+  @Same α ℝ
+    (ComplexObserver.none α)
+    (ComplexObserver.none ℝ)
+    x r
 
 namespace AsReal
 
 theorem real (r : ℝ) : AsReal r r :=
-  .refl r
+  Same.reflNoObservation r
 
 theorem complex (r : ℝ) : AsReal (r : ℂ) r :=
-  Same.complexReal r
+  Same.complexRealNoObservation r
 
 theorem nat (n : ℕ) : AsReal n (n : ℝ) :=
-  .trans (Same.natComplex n) (Same.complexReal (n : ℝ))
+  Same.transNoObservation
+    (Same.natComplexNoObservation n)
+    (Same.complexRealNoObservation (n : ℝ))
 
 theorem int (z : ℤ) : AsReal z (z : ℝ) :=
-  .trans (Same.intComplex z) (Same.complexReal (z : ℝ))
+  Same.transNoObservation
+    (Same.intComplexNoObservation z)
+    (Same.complexRealNoObservation (z : ℝ))
 
 theorem rat (q : ℚ) : AsReal q (q : ℝ) :=
-  .trans (Same.ratComplex q) (Same.complexReal (q : ℝ))
+  Same.transNoObservation
+    (Same.ratComplexNoObservation q)
+    (Same.complexRealNoObservation (q : ℝ))
 
 /-- Semantic equality transports a chosen real representative. -/
 theorem congr
@@ -1826,13 +2592,16 @@ theorem congr
     {x : α}
     {y : β}
     {r : ℝ}
-    (hxy : Same x y) :
+    (hxy : @Same α β
+      (ComplexObserver.none α)
+      (ComplexObserver.none β)
+      x y) :
     AsReal x r ↔ AsReal y r := by
   constructor
   · intro hxr
-    exact .trans (.symm hxy) hxr
+    exact Same.transNoObservation (Same.symmNoObservation hxy) hxr
   · intro hyr
-    exact .trans hxy hyr
+    exact Same.transNoObservation hxy hyr
 
 /-- Values with the same real representative are semantically equal. -/
 theorem same
@@ -1842,8 +2611,11 @@ theorem same
     {r : ℝ}
     (hxr : AsReal x r)
     (hyr : AsReal y r) :
-    Same x y :=
-  .trans hxr (.symm hyr)
+    @Same α β
+      (ComplexObserver.none α)
+      (ComplexObserver.none β)
+      x y :=
+  Same.transNoObservation hxr (Same.symmNoObservation hyr)
 
 end AsReal
 
@@ -2075,7 +2847,10 @@ def positiveNaturalParameterLessEqualNaturalBound
     (length : Nat) :
     Prop :=
   ∃ complexIndex : Complex,
-    Litex.Same index complexIndex ∧
+    @Litex.Same α Complex
+      (ComplexObserver.none α)
+      (ComplexObserver.none Complex)
+      index complexIndex ∧
       Litex.Le complexIndex (length : Complex)
 
 theorem positiveNaturalParameterLessEqualNaturalBoundOfComplex
@@ -2083,7 +2858,7 @@ theorem positiveNaturalParameterLessEqualNaturalBoundOfComplex
     {length : Nat}
     (indexLessEqualLength : Litex.Le index (length : Complex)) :
     positiveNaturalParameterLessEqualNaturalBound index length :=
-  ⟨index, Litex.Same.refl index, indexLessEqualLength⟩
+  ⟨index, Litex.Same.reflNoObservation index, indexLessEqualLength⟩
 
 /-- One finite sequence is exactly the positive-natural function telescope
 whose retained source-domain clause bounds the index by `length`. The

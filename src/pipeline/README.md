@@ -43,4 +43,4 @@ or `module_manager` without first expanding the crate-wide prelude.
 | [`terminal_import.rs`](terminal_import.rs) | Parses REPL-only `import` commands before source parsing and mutates the terminal's ephemeral module manifest. |
 | [`repository_execution.rs`](repository_execution.rs) | Runs ordered project imports, module trees, file targets, and registered prefixes. |
 | [`session.rs`](session.rs) | Keeps one runtime alive for `-session`. |
-| [`summary.rs`](summary.rs) | Builds the optional `-summarize` output. |
+| [`summary.rs`](summary.rs) | Builds summaries requested by embedding APIs and internal artifacts; the CLI has no summary flag. |

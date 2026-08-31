@@ -20,7 +20,7 @@ Obj set
 Run the checked Litex module from the repository root:
 
 ```bash
-target/release/litex -compact -graph -r showcases/math_concepts_in_litex/15_category_theory_in_set_theory
+target/release/litex -graph -r showcases/math_concepts_in_litex/15_category_theory_in_set_theory
 ```
 
 Run the handwritten Lean analogy with the repository's Lean toolchain:

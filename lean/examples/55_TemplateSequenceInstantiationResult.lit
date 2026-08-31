@@ -18,6 +18,6 @@ template<S set>:
 #
 # Boundary: this compiler slice rejects template domains, non-set parameters, and non-set-alias bodies.
 # It also preserves N+ as the index carrier; it does not translate the family to Lean's zero-based Seq.
-# Evidence: target/release/litex -compact -graph -f lean/examples/55_TemplateSequenceInstantiationResult.lit
+# Evidence: target/release/litex -graph -f lean/examples/55_TemplateSequenceInstantiationResult.lit
 # Compiler: target/release/stmt_result_to_lean_compiler compile lean/examples/55_TemplateSequenceInstantiationResult.lit
 # Lean: cd lean && lake env lean examples/55_TemplateSequenceInstantiationResult.lean

@@ -5,27 +5,23 @@ use std::path::Path;
 
 pub(super) const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-pub(super) fn run_code_command(code: &str, options: RunOptions) -> bool {
-    let outcome = run_code(code, options);
-    println!("{}", render_run(&outcome, None));
-    outcome.ok
-}
-
-pub(super) fn run_file_command(file_flag: &str, options: RunOptions) -> bool {
-    let mut outcome = run_file(file_flag, options);
-    let output = render_run(&outcome, Some(file_flag));
+pub(super) fn run_command(target: &str, options: RunOptions) -> bool {
+    let mut outcome = match options.execution() {
+        ExecutionOption::Eval => run_code(target, options),
+        ExecutionOption::File | ExecutionOption::IsolatedFile => run_file(target, options),
+        ExecutionOption::Repo => run_repository(target, options),
+        ExecutionOption::Repl | ExecutionOption::Session | ExecutionOption::IsolatedSession => {
+            unreachable!("run command was resolved to a non-batch target")
+        }
+    };
+    let (_, has_path) = execution_target(options);
+    let output = render_run(&outcome, has_path.then_some(target));
     if outcome.ok && options.is_isolated() {
         println!("{}", render_json_value_compact(&JsonValue::RawJson(output)));
         run_isolated_repl_with_runtime(VERSION, &mut outcome.runtime);
     } else {
         println!("{}", output);
     }
-    outcome.ok
-}
-
-pub(super) fn run_repository_command(repo_path: &str, options: RunOptions) -> bool {
-    let outcome = run_repository(repo_path, options);
-    println!("{}", render_run(&outcome, Some(repo_path)));
     outcome.ok
 }
 

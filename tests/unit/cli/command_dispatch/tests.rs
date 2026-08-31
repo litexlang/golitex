@@ -7,9 +7,7 @@ use crate::pipeline::{ExecutionOption, RunOption, RunOptions};
 #[test]
 fn canonical_cli_prefix_maps_to_one_typed_command() {
     let args = vec![
-        "-compact".to_string(),
         "-strict".to_string(),
-        "-summarize".to_string(),
         "-lang".to_string(),
         "zh-Hans".to_string(),
         "-e".to_string(),
@@ -25,9 +23,9 @@ fn canonical_cli_prefix_maps_to_one_typed_command() {
         options.run(),
         RunOption::StrictExecute(ExecutionOption::Eval)
     );
-    assert_eq!(options.output_style(), OutputStyle::Compact);
+    assert_eq!(options.output_style(), OutputStyle::Detailed);
     assert!(options.is_strict());
-    assert!(options.should_summarize());
+    assert!(!options.should_summarize());
     assert!(!options.is_isolated());
     assert_eq!(options.output_language(), OutputLanguage::SimplifiedChinese);
     assert_eq!(target, "1 = 1");
@@ -38,7 +36,6 @@ fn graph_tracer_resolves_every_argument_before_dispatch() {
     // Before this migration, parsing stopped at RunOptions + command_index and run_cli
     // interpreted the graph, target, and save path from the same raw argv a second time.
     let args = [
-        "-detail",
         "-strict",
         "-isolated",
         "-graph",
@@ -97,23 +94,17 @@ fn help_lists_strict_command() {
 }
 
 #[test]
-fn help_lists_summarize_command() {
+fn help_omits_retired_output_flags() {
     let message = help_message();
-    assert!(message.contains("\"usage\": \"-summarize\""));
+    for retired in ["-compact", "-detail", "-summarize"] {
+        assert!(!message.contains(retired), "{retired}");
+    }
 }
 
 #[test]
 fn help_names_simplified_and_traditional_chinese_unambiguously() {
     let message = help_message();
     assert!(message.contains("\"usage\": \"-lang <language>\""));
-}
-
-#[test]
-fn help_lists_compact_output() {
-    let message = help_message();
-    assert!(message.contains("\"usage\": \"-compact\""));
-    assert!(message.contains("Use compact verification output."));
-    assert!(message.contains("detailed verification output (the default)"));
 }
 
 #[test]
@@ -242,7 +233,7 @@ fn cli_whitelist_accepts_every_supported_command_family() {
                 }
                 parse_cli_command(&args).unwrap();
 
-                let mut strict = vec!["-detail".to_string(), "-strict".to_string()];
+                let mut strict = vec!["-strict".to_string()];
                 if target == "-f" {
                     strict.push("-isolated".to_string());
                 }
@@ -277,6 +268,8 @@ fn cli_whitelist_rejects_retired_malformed_and_meaningless_combinations() {
         vec!["-summarize"],
         vec!["-summarize", "-session"],
         vec!["-summarize", "-graph", "-f", "main.lit"],
+        vec!["-compact", "-e", "1 = 1"],
+        vec!["-detail", "-e", "1 = 1"],
         vec!["-e"],
         vec!["-f", "main.lit", "extra"],
         vec!["-r", "project", "extra"],

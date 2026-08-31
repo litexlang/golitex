@@ -1,7 +1,5 @@
 use super::command::{parse_cli_command, CliCommand};
-use super::command_handlers::{
-    run_code_command, run_file_command, run_graph_command, run_repository_command, VERSION,
-};
+use super::command_handlers::{run_command, run_graph_command, VERSION};
 use super::conversion_commands::{run_code_extraction_command, run_latex_command};
 use super::json_output::{render_cli_error, render_version};
 use super::lean_commands::run_lean_file_command;
@@ -25,19 +23,7 @@ pub fn run_cli() {
         CliCommand::Help => print_help_message(),
         CliCommand::Version => println!("{}", render_version(VERSION)),
         CliCommand::Execute { target, options } => {
-            let ok = match options.execution() {
-                ExecutionOption::Eval => run_code_command(target.as_str(), options),
-                ExecutionOption::File | ExecutionOption::IsolatedFile => {
-                    run_file_command(target.as_str(), options)
-                }
-                ExecutionOption::Repo => run_repository_command(target.as_str(), options),
-                ExecutionOption::Repl
-                | ExecutionOption::Session
-                | ExecutionOption::IsolatedSession => {
-                    unreachable!("execute command was resolved to a non-batch target")
-                }
-            };
-            if !ok {
+            if !run_command(target.as_str(), options) {
                 process::exit(1);
             }
         }

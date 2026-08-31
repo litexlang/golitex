@@ -35,7 +35,7 @@ runnable. The set layer also exposes and immediately applies
 Run it from the repository root with:
 
 ```bash
-target/release/litex -compact -graph -r showcases/math_concepts_in_litex/1_middle_school_math_in_nutshell
+target/release/litex -graph -r showcases/math_concepts_in_litex/1_middle_school_math_in_nutshell
 ```
 
 `same_math_in_lean.lean` is a selected comparison rather than a line-for-line

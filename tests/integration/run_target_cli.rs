@@ -46,6 +46,46 @@ fn strict_execute_uses_the_canonical_prefix_position() {
 }
 
 #[test]
+fn batch_execute_handler_preserves_target_specific_output() {
+    for (args, expected_status, target, path) in [
+        (["-e", "1 = 1"], 0, "eval", None),
+        (
+            ["-f", "missing-batch-command-file.lit"],
+            1,
+            "file",
+            Some("missing-batch-command-file.lit"),
+        ),
+        (
+            ["-r", "missing-batch-command-repository"],
+            1,
+            "repository",
+            Some("missing-batch-command-repository"),
+        ),
+    ] {
+        let output = Command::new(env!("CARGO_BIN_EXE_litex"))
+            .args(args)
+            .output()
+            .expect("run Litex batch command");
+
+        assert_eq!(output.status.code(), Some(expected_status));
+        let stdout = String::from_utf8(output.stdout).expect("stdout is UTF-8");
+        assert!(stdout.contains("\"kind\": \"run\""), "{stdout}");
+        assert!(
+            stdout.contains(format!("\"target\": \"{target}\"").as_str()),
+            "{stdout}"
+        );
+        match path {
+            Some(path) => assert!(
+                stdout.contains(format!("\"path\": \"{path}\"").as_str()),
+                "{stdout}"
+            ),
+            None => assert!(stdout.contains("\"path\": null"), "{stdout}"),
+        }
+        assert!(output.stderr.is_empty());
+    }
+}
+
+#[test]
 fn retired_commands_are_no_longer_cli_combinations() {
     for args in [
         vec!["-upgrade"],
@@ -53,6 +93,9 @@ fn retired_commands_are_no_longer_cli_combinations() {
         vec!["-runner", "-f", "main.lit"],
         vec!["-runner", "-r", "."],
         vec!["-lean-ledger", "notes.md", "notes.lean"],
+        vec!["-compact", "-e", "1 = 1"],
+        vec!["-detail", "-e", "1 = 1"],
+        vec!["-summarize", "-e", "1 = 1"],
     ] {
         let output = Command::new(env!("CARGO_BIN_EXE_litex"))
             .args(args)

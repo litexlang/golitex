@@ -12,7 +12,7 @@
 # checks still run before proof verification.
 #
 # Evidence:
-# target/release/litex -compact -strict -isolated -graph -f lean/examples/59_TransparentLetResolution.lit
+# target/release/litex -strict -isolated -graph -f lean/examples/59_TransparentLetResolution.lit
 # cd lean && ./stmt_result_to_lean_compiler.sh compile examples/59_TransparentLetResolution.lit
 # cd lean && ./stmt_result_to_lean_compiler.sh check examples
 

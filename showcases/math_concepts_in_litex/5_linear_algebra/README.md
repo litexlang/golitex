@@ -48,7 +48,7 @@ the x-axis. `main2.lit` reuses those concrete values through its Settings.
 Run the registered module from the repository root with:
 
 ```bash
-target/release/litex -compact -summarize -r showcases/math_concepts_in_litex/5_linear_algebra
+target/release/litex -r showcases/math_concepts_in_litex/5_linear_algebra
 ```
 
 The published Litex source contains no direct `trust` or local `axiom`. The

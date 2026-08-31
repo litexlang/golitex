@@ -14,7 +14,7 @@
 # blocks, and branch-local WD replay for a checked function application.
 #
 # Evidence:
-# target/release/litex -compact -strict -graph -f lean/examples/9_CasesAndContradiction.lit
+# target/release/litex -strict -graph -f lean/examples/9_CasesAndContradiction.lit
 # cd lean && ./stmt_result_to_lean_compiler.sh compile examples/9_CasesAndContradiction.lit
 # cd lean && ./stmt_result_to_lean_compiler.sh check examples
 

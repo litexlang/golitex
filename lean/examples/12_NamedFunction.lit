@@ -31,5 +31,5 @@ into_builder(1) = 1
 # and (for reciprocal) exact nonzero FactId.
 #
 # Boundary: a body not verified in its declared return set remains fail-closed.
-# Evidence: target/release/litex -compact -strict -graph -f lean/examples/12_NamedFunction.lit
+# Evidence: target/release/litex -strict -graph -f lean/examples/12_NamedFunction.lit
 # and cargo test --release --test stmt_result_to_lean_compiler_tracers

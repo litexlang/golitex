@@ -57,7 +57,7 @@ thm obtain_basis_without_reentering_space_membership:
     );
 
     let output = Command::new(litex_binary())
-        .args(["-compact", "-f", path_string(&source).as_str()])
+        .args(["-f", path_string(&source).as_str()])
         .output()
         .expect("run Litex reentrant well-definedness fixture");
     assert!(
@@ -100,7 +100,7 @@ h.op(h.zero, h.zero) = h.zero
     );
 
     let output = Command::new(litex_binary())
-        .args(["-compact", "-f", path_string(&source).as_str()])
+        .args(["-f", path_string(&source).as_str()])
         .output()
         .expect("run Litex normal-predicate struct-field fixture");
     assert!(

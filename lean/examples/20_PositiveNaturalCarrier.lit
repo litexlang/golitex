@@ -19,6 +19,6 @@ forall n N+:
 # other sign/nonzero sets; each needs its own exact native predicate contract.
 #
 # Evidence:
-# target/release/litex -compact -strict -graph -f lean/examples/20_PositiveNaturalCarrier.lit
+# target/release/litex -strict -graph -f lean/examples/20_PositiveNaturalCarrier.lit
 # cargo test --release --test stmt_result_to_lean_compiler_tracers positive_natural
 # cd lean && ./stmt_result_to_lean_compiler.sh check examples

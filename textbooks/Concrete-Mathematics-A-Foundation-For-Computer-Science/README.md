@@ -12,7 +12,7 @@ This public module currently contains the verified runnable prefix of
 Run the complete published prefix with:
 
 ```text
-target/release/litex -compact -graph -r scripts/Concrete-Mathematics-A-Foundation-For-Computer-Science/textbook
+target/release/litex -graph -r scripts/Concrete-Mathematics-A-Foundation-For-Computer-Science/textbook
 ```
 
 The current release runner checks Chapter 1 and the one-chapter dependency

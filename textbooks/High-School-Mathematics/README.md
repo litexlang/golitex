@@ -18,7 +18,7 @@ checkpoint, and the complete recursive module. The command below is the
 canonical publication gate.
 
 ```text
-target/release/litex -compact -graph -r scripts/high_school_book/textbook
+target/release/litex -graph -r scripts/high_school_book/textbook
 ```
 
 The former quarantine description remains in `../todo_textbook_chapters/` as

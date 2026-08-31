@@ -16,7 +16,7 @@
 # require their own reviewed verifier certificate and emitter adapter.
 #
 # Evidence:
-# target/release/litex -compact -strict -graph -f lean/examples/5_AtomicMembership.lit
+# target/release/litex -strict -graph -f lean/examples/5_AtomicMembership.lit
 # cd lean && ./stmt_result_to_lean_compiler.sh compile examples/5_AtomicMembership.lit
 # cd lean && ./stmt_result_to_lean_compiler.sh check examples
 

@@ -12,7 +12,7 @@ projection equality. Chapters 5--8 remain dependency-quarantined behind that
 root.
 
 ```text
-target/release/litex -compact -graph -r scripts/Analysis2/textbook
+target/release/litex -graph -r scripts/Analysis2/textbook
 ```
 
 The previous full-module README is preserved under

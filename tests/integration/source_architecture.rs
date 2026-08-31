@@ -1353,7 +1353,10 @@ fn cli_dispatch_delegates_execution_and_path_resolution_to_their_owners() {
     let graph_execution = fs::read_to_string(root.join("src/graph/graph_execution.rs"))
         .expect("graph execution source should be readable");
 
-    assert!(dispatch.contains("run_code_command("));
+    assert!(dispatch.contains("run_command(target.as_str(), options)"));
+    assert!(!dispatch.contains("run_code_command("));
+    assert!(!dispatch.contains("run_file_command("));
+    assert!(!dispatch.contains("run_repository_command("));
     assert!(!dispatch.contains("Runtime::default()"));
     assert!(!dispatch.contains("compile_litex_file_to_lean_file("));
     assert!(!dispatch.contains("compile_litex_markdown_code_blocks_to_lean_file("));
@@ -1372,6 +1375,10 @@ fn cli_dispatch_delegates_execution_and_path_resolution_to_their_owners() {
     assert!(handlers.contains("run_file("));
     assert!(!handlers.contains("run_isolated_file("));
     assert!(handlers.contains("run_repository("));
+    assert!(handlers.contains("pub(super) fn run_command("));
+    assert!(!handlers.contains("fn run_code_command("));
+    assert!(!handlers.contains("fn run_file_command("));
+    assert!(!handlers.contains("fn run_repository_command("));
     assert!(target.contains("pub enum RunTarget {"));
     assert!(target.contains("pub enum SessionTarget {"));
     assert!(target.contains("pub enum ExecutionTarget {"));

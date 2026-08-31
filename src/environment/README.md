@@ -122,7 +122,7 @@ The example is intentionally standalone rather than registered in a local
 `litex.config`, so run it with:
 
 ```bash
-target/release/litex -compact -isolated -graph -f examples/03_language_features/idempotent_template_child_environment_reuse.lit
+target/release/litex -isolated -graph -f examples/03_language_features/idempotent_template_child_environment_reuse.lit
 ```
 
 ## Well-definedness preflight changes

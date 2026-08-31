@@ -25,5 +25,5 @@ forall epsilon R+:
     epsilon = epsilon
 
 # Evidence:
-# target/release/litex -compact -strict -isolated -graph -f lean/examples/65_ImplicitNumericBinder.lit
+# target/release/litex -strict -isolated -graph -f lean/examples/65_ImplicitNumericBinder.lit
 # target/release/stmt_result_to_lean_compiler check lean/examples

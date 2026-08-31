@@ -23,6 +23,6 @@ pi $in C
 # erase that predicate or reuse plain `R`.
 #
 # Evidence:
-# target/release/litex -compact -strict -graph -f lean/examples/19_NativeConstants.lit
+# target/release/litex -strict -graph -f lean/examples/19_NativeConstants.lit
 # cargo test --release --test stmt_result_to_lean_compiler_tracers native_constants
 # cd lean && ./stmt_result_to_lean_compiler.sh check examples

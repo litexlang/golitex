@@ -47,6 +47,6 @@ forall r R:
 # batch must not erase its positivity predicate or treat it as plain N.
 #
 # Evidence:
-# target/release/litex -compact -strict -graph -f lean/examples/16_StandardSetHierarchy.lit
+# target/release/litex -strict -graph -f lean/examples/16_StandardSetHierarchy.lit
 # cargo test --release --test stmt_result_to_lean_compiler_tracers standard_set_hierarchy
 # cd lean && ./stmt_result_to_lean_compiler.sh check examples

@@ -14,7 +14,7 @@ promotions introduced no trust. Sections X--XIII remain in
 publication closures.
 
 ```text
-target/release/litex -compact -graph -r scripts/number_theory_for_beginners/textbook
+target/release/litex -graph -r scripts/number_theory_for_beginners/textbook
 ```
 
 This is a source-order publication through Section IX, not a completion claim

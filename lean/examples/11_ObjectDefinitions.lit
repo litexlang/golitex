@@ -12,7 +12,7 @@
 # reviewed renderer remain fail-closed.
 #
 # Evidence:
-# target/release/litex -compact -strict -graph -f lean/examples/11_ObjectDefinitions.lit
+# target/release/litex -strict -graph -f lean/examples/11_ObjectDefinitions.lit
 # cd lean && ./stmt_result_to_lean_compiler.sh compile examples/11_ObjectDefinitions.lit
 # cd lean && ./stmt_result_to_lean_compiler.sh check examples
 

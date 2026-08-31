@@ -8,6 +8,7 @@ use std::rc::Rc;
 const LITEX_CONFIG: &str = "litex.config";
 const LITEX_TODO: &str = "todo.lit";
 const LOCAL_DRAFTS: &str = ".drafts";
+const LAKE_BUILD_DIRECTORY: &str = ".lake";
 
 mod config_exports;
 mod config_imports;

@@ -19,4 +19,4 @@ have algo for increment(x):
 #
 # Boundary: `have z C = i` remains unsupported by both computation extractors;
 # neither backend attempts whole-system Litex proof compilation.
-# Evidence: target/release/litex -compact -isolated -graph -f examples/03_language_features/extract_code_backends.lit
+# Evidence: target/release/litex -isolated -graph -f examples/03_language_features/extract_code_backends.lit

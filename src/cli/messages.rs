@@ -62,10 +62,7 @@ pub(super) fn help_message() -> String {
             "litex -isolated -f <input.lit> -lean <output.lean>",
             "Verify one standalone file and compile it to Lean.",
         ),
-        ("-compact", "Use compact verification output."),
-        ("-detail", "Use detailed verification output (the default)."),
         ("-strict", "Verify dependencies and reject unchecked trust."),
-        ("-summarize", "Include a summary in run output."),
         ("-lang <language>", "Select human-readable output language."),
         (
             "-isolated",

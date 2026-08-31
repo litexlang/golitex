@@ -24,7 +24,7 @@
 # `not exist`, multiple witnesses, and inverse transport remain fail-closed.
 #
 # Evidence:
-# target/release/litex -compact -strict -graph -f lean/examples/10_ExistentialWitness.lit
+# target/release/litex -strict -graph -f lean/examples/10_ExistentialWitness.lit
 # cd lean && ./stmt_result_to_lean_compiler.sh compile examples/10_ExistentialWitness.lit
 # cd lean && ./stmt_result_to_lean_compiler.sh check examples
 

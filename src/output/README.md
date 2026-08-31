@@ -18,8 +18,7 @@ For `1 + 1 = 2`, statement-result JSON v2 reports `"outcome": "success"` and kee
 | Input/mode | Output behavior |
 | --- | --- |
 | `1 + 1 = 2` | Emits the statement, proof, well-definedness, store, inference, and phase fields. |
-| `-compact -e '1 = 1'` | Reduces success display while retaining full error diagnostics. |
-| `-detail -e '1 = 1'` | Includes detailed audit fields and raw source paths. |
+| `-e '1 = 1'` | Uses the one canonical detailed CLI projection. |
 | `-lang zh -e '1 = 2'` | Keeps machine keys stable and localizes human-readable messages and labels. |
 | Two references to one shared proof Result | Use `$id`/`$ref` rather than flattening two copies. |
 
