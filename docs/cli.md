@@ -95,7 +95,7 @@ The `.deb` package installs the Litex executable together with its standard
 library. Verify the executable with a checked statement:
 
 ```bash
-litex -runner -e '1 = 1' | grep '"ok": true'
+litex -e '1 = 1' | grep '"result": "success"'
 ```
 
 #### Upgrade Litex on Linux
@@ -115,7 +115,7 @@ Then verify:
 
 ```bash
 litex -version
-litex -runner -e '1 = 1' | grep '"ok": true'
+litex -e '1 = 1' | grep '"result": "success"'
 ```
 
 ### Windows
@@ -183,7 +183,7 @@ After running the command:
 
 ```powershell
 litex -version
-litex -runner -e "1 = 1" | Select-String '"ok": true'
+litex -e "1 = 1" | Select-String '"result": "success"'
 ```
 
 Now users can run `litex` directly in a terminal.
@@ -227,7 +227,7 @@ The release workflow publishes multi-architecture Linux images for `amd64` and
 
 ```bash
 docker pull ghcr.io/litexlang/litex:beta
-docker run --rm ghcr.io/litexlang/litex:beta -runner -e '1 = 1'
+docker run --rm ghcr.io/litexlang/litex:beta -e '1 = 1'
 ```
 
 Use a version tag such as `0.9.109-beta` when reproducibility matters.
@@ -264,7 +264,6 @@ Typical startup output:
 
 ```text
 Litex version <version>
-Upgrade Litex? Run `litex -upgrade` for platform instructions.
 Copyright (C) 2024-2026 Jiachen Shen
 website: https://litexlang.com
 github: https://github.com/litexlang/golitex
@@ -287,11 +286,10 @@ Run Litex source directly:
 litex -e "1 + 1 = 2"
 ```
 
-Show the installed version and platform upgrade instructions:
+Show the installed version:
 
 ```bash
 litex -version
-litex -upgrade
 ```
 
 ## Basic Shape
@@ -312,14 +310,13 @@ primary command. Prefer putting them before the command for readability:
 ```bash
 litex -detail -strict -isolated -f examples/tmp.lit
 litex -summarize -isolated -f examples/tmp.lit
-litex -compact -session -before chapter.lit
-litex -lang zh -runner -e "1 = 1"
+litex -compact -session -f chapter.lit
+litex -lang zh -e "1 = 1"
 ```
 
-Do not rely on extra positional tokens after a command's required values, except
-for the documented graph-output path after `litex -graph` or `litex
--factgraph`. The current parser is command-oriented, not a general argument
-parser.
+Every invocation must match one documented command shape exactly. Additional
+tokens are rejected, except for the one documented optional graph-output path.
+The parser is a hardcoded command whitelist, not a general argument parser.
 
 ## Global Options
 
@@ -327,7 +324,7 @@ parser.
 |--------|---------|
 | `-compact` | Show only `result`, `type`, `line`, and `statement` for successful execution results. Any `RuntimeError` is always detailed. |
 | *(no output flag)* | Use the normal reading view for successful results: internal statements plus assumptions, conclusions, and direct `why_verified` reasons, without audit duplication. Any `RuntimeError` is always detailed. |
-| `-detail` | Include fuller JSON trace details for both successful results and errors, including well-definedness, verification, and environment phases. For runner output, this also keeps raw file paths instead of replacing file targets with `entry`. |
+| `-detail` | Include fuller JSON trace details for both successful results and errors, including well-definedness, verification, and environment phases. Machine-rendered graph output also keeps raw file paths in this mode. |
 | `-strict` | Verify every configured import and every export loaded by `-f`, then reject user `trust`, `trust have`, and `axiom`. `-r` already verifies its complete export tree. Use it for CI or a complete dependency audit. |
 | `-summarize` | Append one final run-summary JSON object after ordinary verifier command output. |
 | `-lang <code>` | Localize JSON keys and explanatory labels. Mathematical source strings inside fields such as `statement`, `fact`, and `cited_statement` stay in Litex syntax. |
@@ -409,21 +406,19 @@ any of those flags. `-lang` also consumes the next token globally.
 | `litex -isolated -f <file>` | Run one Litex file as an isolated script, without project discovery; a successful ordinary CLI run then continues in an isolated REPL. |
 | `litex -r <project>` | Run a module's complete recursive `[export]` tree, or trace to the module and run the prefix through a selected submodule's complete subtree. |
 | `litex -session -f <file>` | Run the registered project prefix through one file, then keep that same Runtime alive as a framed persistent session. |
-| `litex -session -before <file>` | Run the registered project prefix before one file, exclude that file, and start the persistent session in its file environment. |
+| `litex -isolated -session -f <file>` | Run one standalone file, then keep that same Runtime alive as a framed persistent session. |
 
 ## Lean Compiler Commands
 
 | Command | Behavior |
 |---------|----------|
 | `litex -isolated -f <input.lit> -lean <output.lean>` | Verify and compile one Litex source file into one complete Lean file. The output is replaced only after the complete source compiles successfully. |
-| `litex -lean-ledger <input.md> <output.lean>` | Freshly compile every `litex` fence under a level-two Markdown heading and combine the results in numbered namespaces. |
 
 The canonical single-file tracer can be generated through either the main CLI
 or the dedicated compiler wrapper:
 
 ```bash
-litex -lean \
-  lean/examples/1_SetSystem.lit \
+litex -isolated -f lean/examples/1_SetSystem.lit -lean \
   lean/examples/1_SetSystem.lean
 
 ./lean/stmt_result_to_lean_compiler.sh compile lean/examples/1_SetSystem.lit
@@ -505,8 +500,7 @@ litex -summarize -isolated -f examples/tmp.lit
 
 Ordinary verifier commands are designed for interactive inspection. Programs
 should read the JSON result instead of relying only on the process exit code.
-Use `-runner` when a script or CI job needs a wrapper object and a nonzero exit
-code on verification failure.
+The CLI does not add a second wrapper command around that statement stream.
 
 ### Statement Output Examples
 
@@ -549,35 +543,9 @@ If an error occurs, the most useful fields are usually `error_type`, `message`,
 }
 ```
 
-Programs should inspect the JSON rather than rely on an ordinary verifier
-command's process status. Use the runner commands below when a meaningful
-nonzero exit code is part of the calling contract.
-
-## Runner Commands
-
-| Command | Behavior |
-|---------|----------|
-| `litex -runner -e <code>` | Run a source string and return one wrapper JSON object. |
-| `litex -runner -f <file>` | Run a file and return one wrapper JSON object. |
-| `litex -runner -r <repo>` | Discover the repository module graph, run its ordered `[export]` table, and return one wrapper JSON object. |
-
-The runner wrapper contains:
-
-| Field | Meaning |
-|-------|---------|
-| `runner` | Runner name, currently `litex-runner`. |
-| `runner_version` | Runner output-contract version. |
-| `result` | `success` or `error` for the whole run. |
-| `ok` | Boolean success flag. |
-| `target` | Target kind, plus the real file or repository `path` only under `-detail`. |
-| `error` | Target-load error object, or `null` when the target was loaded. |
-| `trace` | The ordinary statement-by-statement Litex JSON output as a string. |
-
-Runner exit behavior:
-
-- exits with code `0` when `ok` is true;
-- exits with code `1` when the checked run fails or the target cannot be loaded;
-- exits with code `2` for CLI usage errors, such as a missing value.
+Programs should inspect the emitted statement JSON rather than infer verifier
+success from an ordinary command's process status. CLI usage errors, including
+unsupported command combinations and extra arguments, exit with code `2`.
 
 ## Session Command
 
@@ -593,15 +561,6 @@ facts from the prefix are already available. If the prefix fails, the process
 emits `startup_error` with the verifier trace and does not enter the session
 loop. `litex -isolated -session -f <file>` provides the analogous behavior for
 an intentionally standalone file.
-
-`litex -session -before <file>` discovers the file in its direct-parent
-`litex.config`, loads imports and recursive ordered exports strictly before the
-target, and does not execute the target or anything after it. The session then
-executes submitted blocks in the target's own file environment, so names and
-module references match the eventual source file. This mode is intended for a
-new, incomplete, or currently failing file. It cannot be combined with
-`-isolated` because its ordering and file environment come from the project
-configuration.
 
 The session writes one JSON object per event and accepts these stdin frames:
 
@@ -632,30 +591,18 @@ subsequent `run` requests return `skipped`, and `artifacts` returns
 `artifacts_unavailable`. A `try:` nested inside another top-level statement does
 not make a parse failure in that outer statement recoverable.
 
-### Repairing the next project file
+### Iterating after a verified file
 
-Suppose `chap5.lit` follows `chap4.lit` in the module's ordered `[export]`
-table. The same loop applies whether chap5 is empty, incomplete, or currently
-failing.
+Use `target/release/litex -compact -session -f chap4.lit` when the registered
+prefix through `chap4.lit` already verifies and later framed experiments should
+reuse that environment. A committed outermost `try:` publishes its definitions
+and facts to the persistent Runtime; a rolled-back `try:` discards only that
+candidate.
 
-1. Start
-   `target/release/litex -compact -session -before chap5.lit`. This loads the
-   configured prefix through chap4, excludes chap5, and enters chap5's file
-   environment.
-2. After the `ready` event, send the top-level statements from `chap5.lit` in
-   source order. Wrap every candidate frame in a literal outermost `try:`.
-3. A committed `try:` publishes its definitions and facts to the persistent
-   Runtime. A rolled-back `try:` discards only that candidate, so the chap1--chap4
-   prefix and all earlier committed chap5 frames remain available.
-4. Correct and resend only the failed fragment. If a proof remains blocked,
-   keep its intended statement and use the narrowest explicit `trust` before
-   continuing with the next statement.
-5. Write each accepted statement back to `chap5.lit`. When all fragments have
-   been replayed, run release `-f chap5.lit` once as the clean file checkpoint.
-
-A rolled-back `try:` never requires a restart. Restart from `-before chap5.lit` only
-if the process exits, a loaded predecessor changes, or an already committed
-definition must be replaced under the same name.
+Session file preload always executes the selected file. It does not provide a
+hidden “prefix before a failing target” mode. When repairing a failing
+registered file, keep the candidate in the file and rerun release
+`-f <file>` so every probe is checked in the real configured execution order.
 
 For example, a client can send a frame shaped like:
 
@@ -667,8 +614,8 @@ try:
 
 The byte count covers only the source bytes after the frame header; clients
 should compute it from the UTF-8 payload. Prefix execution is the cold part of
-the run. `-session -before` pays that cost once and keeps the populated target
-file Runtime; later frames parse and verify only their submitted source.
+the run. File preload pays that cost once and keeps the populated Runtime;
+later frames parse and verify only their submitted source.
 `-compact` reduces rendered output but does not replace release optimization or
 Runtime reuse.
 
@@ -757,7 +704,6 @@ The retired `-python` command is not a compatibility alias.
 |---------|----------|
 | `litex -help` | Print help and exit. |
 | `litex -version` | Print the installed Litex kernel version and exit. |
-| `litex -upgrade` | Print platform-specific upgrade instructions and exit. |
 
 Unknown commands print an error and the help message, then exit with code `2`.
 
@@ -859,7 +805,7 @@ litex -r examples/08_module_repository
 Run a strict CI-style check:
 
 ```bash
-litex -strict -runner -isolated -f examples/tmp.lit
+litex -strict -isolated -f examples/tmp.lit
 ```
 
 Generate a recursive result graph:
@@ -877,7 +823,7 @@ litex -factgraph -isolated -f examples/tmp.lit tmp/graphs/tmp_fact_graph.json
 Run with Chinese output labels:
 
 ```bash
-litex -lang zh -runner -e "1 = 1"
+litex -lang zh -e "1 = 1"
 ```
 
 Compile a file to LaTeX:

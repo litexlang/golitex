@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "target": "showcases/ai_litex_sylow/main.lit",
-  "session_command": "target/release/litex -compact -session -before showcases/ai_litex_sylow/main.lit",
+  "session_command": "python3 showcases/ai_litex_sylow/replay_session.py --output <events.jsonl>",
   "proof_spine": [
     "Use the canonical coordinate-bijection theorem to obtain finiteness and the exact quotient-preimage cardinality.",
     "Substitute |K| = p and |H| = p^k to obtain the successor order p^(k+1).",
@@ -87,7 +87,7 @@
     "file_gate_command": "target/release/litex -compact -runner -f showcases/ai_litex_sylow/main.lit",
     "file_gate_result": "success: top-level result success, ok true, process exit 0; configured imports are reported as the trusted boundary",
     "strict_dependency_audit": {
-      "command": "target/release/litex -compact -strict -session -before showcases/ai_litex_sylow/main.lit",
+      "command": "python3 showcases/ai_litex_sylow/replay_session.py --strict --output <events.jsonl>",
       "result": "startup_error before ready",
       "evidence": "strict_audit.json",
       "boundary": "MIL::MILAlternative::chap2_struct line 863 contains an explicit trusted partial-order statement"

@@ -330,6 +330,16 @@ impl StmtResultToLeanCompiler {
                     &mut self.environment_stack,
                 )?;
                 if forall_parameter_uses_exact_object_carrier(parameter_set) {
+                    // The binder itself already has the exact carrier selected by
+                    // `parameter_set`.  Function applications must therefore call
+                    // that carrier directly.  Re-selecting it through `In.rep`
+                    // introduces an independent dependent representative and makes
+                    // otherwise identical quantified definitions fail to elaborate.
+                    for function_binding in self.environment_stack.function_bindings.values_mut() {
+                        if function_binding.symbol_id == binding.id() {
+                            function_binding.direct = true;
+                        }
+                    }
                     let lowered_set = LeanTargetObjectRepresentation::lower(parameter_set)?;
                     self.environment_stack
                         .exact_carrier_values
@@ -405,7 +415,12 @@ impl StmtResultToLeanCompiler {
                     .enumerate()
             {
                 let proposition = render_fact(premise, &self.environment_stack)?;
-                let premise_name = format!("__domain{}", premise_index + 1);
+                // Local claims are emitted inside their enclosing tactic scope.
+                // An ordinal such as `__domain1` can shadow the enclosing
+                // theorem's first premise and silently supply the wrong proof to
+                // a later forall application.  FactIds are verifier-owned and
+                // unique throughout the Result, so use them as the lexical key.
+                let premise_name = format!("__domain_f{}", premise_fact_id.value());
                 binder_declarations.push(format!("({premise_name} : {proposition})"));
                 binder_intro_names.push(premise_name.clone());
                 self.environment_stack

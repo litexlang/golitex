@@ -30,5 +30,5 @@ forall z C:
 # ToLean rejects its exact rule ID instead of constructing a new adapter:
 # 1 / i = -1 * i
 # i ^ (-1) = -1 * i
-# Evidence: target/release/litex -compact -strict -isolated -runner -f lean/examples/54_ComplexAlgebraicCalculation.lit
+# Evidence: target/release/litex -compact -strict -isolated -graph -f lean/examples/54_ComplexAlgebraicCalculation.lit
 # Compiler: target/release/stmt_result_to_lean_compiler compile lean/examples/54_ComplexAlgebraicCalculation.lit

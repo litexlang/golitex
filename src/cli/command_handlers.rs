@@ -1,10 +1,8 @@
 use super::arguments::{read_any_value_after_flag, read_non_flag_value_after_flag};
 use crate::graph::{render_graph, GraphKind};
 use crate::pipeline::{
-    run_code, run_file, run_isolated_file, run_isolated_repl_with_runtime, run_repository,
-    FileRunMode, RunOptions, RunOutcome,
+    run_code, run_file, run_isolated_repl_with_runtime, run_repository, RunOptions,
 };
-use crate::runner::render_runner;
 use std::fs;
 use std::path::Path;
 
@@ -15,14 +13,14 @@ pub(super) fn run_code_from_e_command_line_flag(code: &str, options: RunOptions)
     println!("{}", outcome.output.trim());
 }
 
-pub(super) fn run_file_command(file_flag: &str, mode: FileRunMode, options: RunOptions) {
-    let mut outcome = run_file_in_mode(file_flag, mode, options);
+pub(super) fn run_file_command(file_flag: &str, options: RunOptions) {
+    let mut outcome = run_file(file_flag, options);
     if let Some(message) = outcome.target_error.as_ref() {
         eprintln!("Error: {}", message);
         return;
     }
     println!("{}", outcome.output.trim());
-    if outcome.ok && mode.is_isolated() {
+    if outcome.ok && options.is_isolated {
         run_isolated_repl_with_runtime(VERSION, &mut outcome.runtime);
     }
 }
@@ -32,48 +30,11 @@ pub(super) fn run_repository_command(repo_path: &str, options: RunOptions) {
     println!("{}", outcome.output.trim());
 }
 
-pub(super) fn run_runner_command(
-    args: &[String],
-    index: &mut usize,
-    options: RunOptions,
-    isolated: bool,
-) -> Result<(bool, String), String> {
-    let target_flag = read_any_value_after_flag(args, index, "-runner")?;
-    let hide_file_paths = !options.output_style.is_detailed();
-    let outcome = match target_flag.as_str() {
-        "-e" => {
-            reject_isolated_runner_target(isolated, "-e")?;
-            let code = read_non_flag_value_after_flag(args, index, "-e")?;
-            run_code(code.as_str(), options)
-        }
-        "-f" => {
-            let file_path = read_non_flag_value_after_flag(args, index, "-f")?;
-            run_file_in_mode(
-                file_path.as_str(),
-                FileRunMode::from_isolated(isolated),
-                options,
-            )
-        }
-        "-r" => {
-            reject_isolated_runner_target(isolated, "-r")?;
-            let repo_path = read_non_flag_value_after_flag(args, index, "-r")?;
-            run_repository(repo_path.as_str(), options)
-        }
-        _ => {
-            return Err(
-                "-runner must be followed by one of: -f <file>, -e <code>, -r <repo>".to_string(),
-            )
-        }
-    };
-    Ok(render_runner(outcome, hide_file_paths))
-}
-
 pub(super) fn run_graph_command(
     graph_kind: GraphKind,
     args: &[String],
     index: &mut usize,
     options: RunOptions,
-    isolated: bool,
 ) -> Result<(bool, String, Option<String>), String> {
     let command_flag = graph_kind.flag();
     let target_flag = read_any_value_after_flag(args, index, command_flag)?;
@@ -89,55 +50,14 @@ pub(super) fn run_graph_command(
     let save_path = read_optional_graph_save_path(args, index, command_flag)?;
     let hide_file_paths = !options.output_style.is_detailed();
     let outcome = match target_flag.as_str() {
-        "-e" => {
-            reject_isolated_graph_target(isolated, command_flag, "-e")?;
-            run_code(&target, options)
-        }
-        "-f" => run_file_in_mode(
-            &target,
-            FileRunMode::from_isolated(isolated),
-            options,
-        ),
-        "-r" => {
-            reject_isolated_graph_target(isolated, command_flag, "-r")?;
-            run_repository(&target, options)
-        }
+        "-e" => run_code(&target, options),
+        "-f" => run_file(&target, options),
+        "-r" => run_repository(&target, options),
         _ => unreachable!("graph target flag was already validated"),
     };
     let output = render_graph(graph_kind, outcome, hide_file_paths);
 
     Ok((output.0, output.1, save_path))
-}
-
-fn run_file_in_mode(path: &str, mode: FileRunMode, options: RunOptions) -> RunOutcome {
-    match mode {
-        FileRunMode::Project => run_file(path, options),
-        FileRunMode::Isolated => run_isolated_file(path, options),
-    }
-}
-
-fn reject_isolated_runner_target(isolated: bool, target_flag: &str) -> Result<(), String> {
-    if isolated {
-        return Err(format!(
-            "-isolated has no meaning with -runner {}; use -runner -f <file>",
-            target_flag
-        ));
-    }
-    Ok(())
-}
-
-fn reject_isolated_graph_target(
-    isolated: bool,
-    graph_flag: &str,
-    target_flag: &str,
-) -> Result<(), String> {
-    if isolated {
-        return Err(format!(
-            "-isolated has no meaning with {} {}; use {} -f <file>",
-            graph_flag, target_flag, graph_flag
-        ));
-    }
-    Ok(())
 }
 
 pub(super) fn read_optional_graph_save_path(

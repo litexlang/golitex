@@ -28,6 +28,6 @@ by thm expose_zero_sides(2) => 2 + 0 = 0 + 2
 # Boundary: a missing temporary conclusion FactId, changed theorem argument,
 # or selected proof that cites outside its child scope is rejected by focused
 # compiler corruption tests.
-# Evidence: target/release/litex -compact -strict -runner -f
+# Evidence: target/release/litex -compact -strict -graph -f
 # lean/examples/61_TheoremApplicationScope.lit
 # and `cd lean && ./stmt_result_to_lean_compiler.sh check examples`.

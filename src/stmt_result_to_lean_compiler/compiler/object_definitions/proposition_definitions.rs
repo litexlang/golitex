@@ -199,15 +199,22 @@ impl StmtResultToLeanCompiler {
                         if exact_parameter
                             && matches!(set, Obj::FnSet(_) | Obj::FiniteSeqSet(_) | Obj::SeqSet(_))
                         {
-                            let function_binding = definition_environment
-                                .function_bindings
-                                .get_mut(&primary_fact_id)
-                                .ok_or_else(|| {
+                            let mut found = false;
+                            for function_binding in
+                                definition_environment.function_bindings.values_mut()
+                            {
+                                if function_binding.symbol_id == binding.id() {
+                                    function_binding.direct = true;
+                                    function_binding.membership_proof_name = proof_name.clone();
+                                    found = true;
+                                }
+                            }
+                            if !found {
+                                return Err(
                                     "exact predicate function parameter lost its checked function binding"
-                                        .to_string()
-                                })?;
-                            function_binding.direct = true;
-                            function_binding.membership_proof_name = proof_name;
+                                        .to_string(),
+                                );
+                            }
                         }
                     }
                     unsupported => {

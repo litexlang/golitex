@@ -24,11 +24,11 @@ theorem __fact2 : Litex.Same y (1 : ℂ) := by
 theorem local_definition :
     Litex.Same (2 : ℂ) (2 : ℂ) := by
   let z := (2 : ℂ)
-  have __step1 : Litex.Same z (2 : ℂ) := by
+  have __step3_0 : Litex.Same z (2 : ℂ) := by
     unfold z
     exact Litex.Same.refl (2 : ℂ)
-  have __step2 : Litex.Same z (2 : ℂ) := by
-    exact __step1
+  have __step3_1 : Litex.Same z (2 : ℂ) := by
+    exact __step3_0
   have __c3_0 : Litex.Same (2 : ℂ) (2 : ℂ) := Litex.Same.refl (2 : ℂ)
   exact __c3_0
 

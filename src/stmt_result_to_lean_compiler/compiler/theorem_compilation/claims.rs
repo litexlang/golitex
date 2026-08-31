@@ -87,7 +87,7 @@ impl StmtResultToLeanCompiler {
     pub(in super::super) fn compile_forall_claim_stmt_result_as_local_proof_steps(
         &mut self,
         result: &SuccessClaimStmtResult,
-        proof_step_index: usize,
+        _proof_step_index: usize,
     ) -> Result<Option<Vec<String>>, String> {
         let Some(SuccessVerifyClaimResult::Forall(verification)) = &result.verification else {
             return Ok(None);
@@ -101,7 +101,7 @@ impl StmtResultToLeanCompiler {
             );
         }
 
-        let claim_name = format!("__step{proof_step_index}");
+        let claim_name = self.next_local_proof_step_base_name();
         let declaration_count = self.declarations.len();
         let compiled = self.compile_named_forall_statement_result_to_lean_source(
             NamedForallStatementResultCompilationInput {
@@ -143,7 +143,7 @@ impl StmtResultToLeanCompiler {
     pub(in super::super) fn compile_fact_claim_stmt_result_as_local_proof_steps(
         &mut self,
         result: &SuccessClaimStmtResult,
-        proof_step_index: usize,
+        _proof_step_index: usize,
     ) -> Result<Option<Vec<String>>, String> {
         let Some(SuccessVerifyClaimResult::Fact(verification)) = &result.verification else {
             return Ok(None);
@@ -173,7 +173,7 @@ impl StmtResultToLeanCompiler {
         let fact_id = stored
             .fact_id
             .ok_or_else(|| "local ordinary `claim` outer store has no FactId".to_string())?;
-        let name = format!("__step{proof_step_index}");
+        let name = self.next_local_proof_step_base_name();
         body.local_proof_lines
             .push(format!("exact {}", body.conclusion_proof));
         self.environment_stack

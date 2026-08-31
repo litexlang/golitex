@@ -588,16 +588,18 @@ impl StmtResultToLeanCompiler {
                         let conclusion_name = self.next_local_inference_fact_proof_name();
                         let proof = match application.rule {
                         InferRule::StrictOrderComparedToZeroImpliesWeakOrder => {
-                            let (source_left, source_right, _) =
+                            let (source_left, source_right, _source_is_strict) =
                                 order_relation_parts(&premise.fact)?;
                             if is_literal_zero(source_left) {
-                                format!("Litex.Positive.toNonnegative ({transported_premise})")
+                                format!(
+                                    "Litex.Positive.toNonnegative ({transported_premise})"
+                                )
                             } else if is_literal_zero(source_right) {
-                                format!("Litex.Negative.toNonpositive ({transported_premise})")
+                                format!(
+                                    "Litex.Negative.toNonpositive ({transported_premise})"
+                                )
                             } else {
-                                return Err(format!(
-                                    "{result_layer} application {application_index} strict-to-weak premise is not compared with zero"
-                                ));
+                                format!("Litex.Lt.toLe ({transported_premise})")
                             }
                         }
                         InferRule::MultiplicationByNegativeOneReversesOrderAgainstZero => {
@@ -930,6 +932,19 @@ impl StmtResultToLeanCompiler {
                 if let LeanTargetObjectRepresentation::Symbol { symbol_id, .. } =
                     LeanTargetObjectRepresentation::lower(premise_element)?
                 {
+                    if matches!(
+                        application.rule,
+                        InferRule::NaturalMembershipImpliesNonnegative
+                    ) {
+                        // The membership proof, not the host carrier, is what
+                        // establishes this zero-ended order.  Keep the source
+                        // proposition semantic so an exact `N`, `N+`, or other
+                        // heterogeneous host cannot accidentally be compared
+                        // through a second `In.rep` representative.
+                        self.environment_stack
+                            .semantic_zero_ended_order_symbols
+                            .insert(symbol_id);
+                    }
                     let source_name = render_obj(premise_element, &self.environment_stack)?;
                     let already_exact = self
                         .environment_stack
@@ -957,7 +972,9 @@ impl StmtResultToLeanCompiler {
                     let conclusion_proposition =
                         render_fact(&conclusion.fact, &self.environment_stack)?;
                     let conclusion_name = self.next_local_inference_fact_proof_name();
-                    let proof = format!("Litex.Rules.{lean_theorem_name} ({premise_name})");
+                    let proof = format!(
+                        "(by simpa using (Litex.Rules.{lean_theorem_name} ({premise_name})))"
+                    );
                     self.retain_compiled_inference_fact_proof_step_in_current_environment(
                         &mut compiled_inference_fact_proof_steps,
                         CompiledInferenceFactProofStep::new(

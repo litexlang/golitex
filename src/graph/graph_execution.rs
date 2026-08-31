@@ -81,10 +81,9 @@ pub fn render_graph(
         GraphKind::Definition => {
             let selected_target = match &outcome.target {
                 RunTarget::Eval => None,
-                RunTarget::File { path, .. } => definition_graph_file_target(
-                    &outcome.runtime,
-                    path,
-                ),
+                RunTarget::File { path, .. } => {
+                    definition_graph_file_target(&outcome.runtime, path)
+                }
                 RunTarget::Repository { path } => {
                     definition_graph_repository_target(&outcome.runtime, path)
                 }

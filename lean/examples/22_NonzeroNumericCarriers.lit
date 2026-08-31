@@ -72,6 +72,6 @@ forall c C*:
 # closed nonzero certificate adapter.
 #
 # Evidence:
-# target/release/litex -compact -strict -runner -f lean/examples/22_NonzeroNumericCarriers.lit
+# target/release/litex -compact -strict -graph -f lean/examples/22_NonzeroNumericCarriers.lit
 # cargo test --release --test stmt_result_to_lean_compiler_tracers nonzero_numeric
 # cd lean && ./stmt_result_to_lean_compiler.sh check examples

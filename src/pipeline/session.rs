@@ -63,20 +63,20 @@ fn run_session_loop_with_readers_and_target(
 
     let (startup_mode, mut all_results) =
         match initialize_session_runtime(&mut runtime, directory, target) {
-        Ok(startup) => startup,
-        Err((stmt_results, error)) => {
-            let error_json = display_runtime_error_json(&runtime, &error, true);
-            let runtime_error = Some(error);
-            let (_, trace) = render_run_output(&runtime, &stmt_results, &runtime_error);
-            write_session_event(
-                stdout_writer,
-                "startup_error",
-                None,
-                &[('e', error_json), ('t', trace.trim().to_string())],
-            )?;
-            return Ok(());
-        }
-    };
+            Ok(startup) => startup,
+            Err((stmt_results, error)) => {
+                let error_json = display_runtime_error_json(&runtime, &error, true);
+                let runtime_error = Some(error);
+                let (_, trace) = render_run_output(&runtime, &stmt_results, &runtime_error);
+                write_session_event(
+                    stdout_writer,
+                    "startup_error",
+                    None,
+                    &[('e', error_json), ('t', trace.trim().to_string())],
+                )?;
+                return Ok(());
+            }
+        };
     write_session_event(
         stdout_writer,
         "ready",
@@ -286,9 +286,7 @@ fn initialize_session_runtime(
         return Ok(("project", stmt_results));
     }
 
-    if target == SessionTarget::Isolated
-        || !directory.join("litex.config").is_file()
-    {
+    if target == SessionTarget::Isolated || !directory.join("litex.config").is_file() {
         runtime.start_isolated_source(source_label.as_str());
         return Ok(("isolated", vec![]));
     }

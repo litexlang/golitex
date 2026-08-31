@@ -13,5 +13,5 @@ thm local_typed_set_definition:
     marker = marker
 
 # Evidence:
-# target/release/litex -compact -strict -runner -f lean/examples/66_LocalTypedSetDefinition.lit
+# target/release/litex -compact -strict -graph -f lean/examples/66_LocalTypedSetDefinition.lit
 # target/release/stmt_result_to_lean_compiler check lean/examples

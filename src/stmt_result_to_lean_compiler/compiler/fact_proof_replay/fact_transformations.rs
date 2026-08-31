@@ -328,12 +328,29 @@ impl StmtResultToLeanCompiler {
                     } else {
                         format!("Eq.symm ({native_equality})")
                     };
-                    let rewrite_name = format!("__native_rewrite{}", rewrite_index + 1);
+                    let oriented = oriented.replace('\n', "\n  ");
+                    let native_name = format!("__native_equality{}", rewrite_index + 1);
                     rewrite_declarations.push(format!(
-                        "  have {rewrite_name} : {} = {} := {oriented}",
+                        "  have {native_name} : {} = {} := {oriented}",
                         rendered_from, rendered_to,
                     ));
-                    rewrite_names.push(rewrite_name);
+                    let order_from = format!(
+                        "({} : ℂ)",
+                        render_numeric_obj(&rewrite.from, &self.environment_stack)?
+                    );
+                    let order_to = format!(
+                        "({} : ℂ)",
+                        render_numeric_obj(&rewrite.to, &self.environment_stack)?
+                    );
+                    if order_from == rendered_from && order_to == rendered_to {
+                        rewrite_names.push(native_name);
+                    } else {
+                        let order_name = format!("__order_equality{}", rewrite_index + 1);
+                        rewrite_declarations.push(format!(
+                            "  have {order_name} : {order_from} = {order_to} := by\n    exact_mod_cast {native_name}"
+                        ));
+                        rewrite_names.push(order_name);
+                    }
                     if rewrites_left {
                         current_left = rewrite.to.clone();
                     } else {
@@ -354,7 +371,10 @@ impl StmtResultToLeanCompiler {
                     "  rw [{}] at __transported",
                     rewrite_names.join(", ")
                 ));
-                lines.push("  simpa [Litex.fnApplyOwn] using __transported)".to_string());
+                lines.push(
+                    "  simpa [Litex.Lt, Litex.Le, Litex.OrderValue, Litex.fnApplyOwn] using __transported)"
+                        .to_string(),
+                );
                 Ok(lines.join("\n"))
             }
             _ => Err(format!(

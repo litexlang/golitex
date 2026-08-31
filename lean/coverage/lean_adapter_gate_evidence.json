@@ -1,0 +1,16 @@
+{
+  "schema_version": 2,
+  "recorded_at": "2026-08-31 09:38:31 CST",
+  "lean_dependency_fingerprint_sha256": "64652e81a5c21a3ea1ce88daa639a77cf7183010ea068ba388317705ca195c63",
+  "current_valid": true,
+  "literal_symbol_count": 246,
+  "checks_path": "lean/coverage/LeanAdapterSymbols.lean",
+  "checks_sha256": "482f53b88a3f6b0fda081d5a7e03a5525683192ef7b71e98b5be6d1c0702c70e",
+  "ledger_path": "lean/coverage/lean_adapter_symbols.tsv",
+  "ledger_sha256": "59d70f51d384b283e7bef0d419420624b64cc76fd194a6f005618a50c46de6bc",
+  "ledger_updated_at": "2026-08-31 09:38:19 CST",
+  "command": "cd lean && lake env lean coverage/LeanAdapterSymbols.lean",
+  "exit": 0,
+  "scope": "Every literal Litex.* symbol found in src/stmt_result_to_lean_compiler; namespace-only dynamic prefixes excluded.",
+  "boundary": "Name/type availability is kernel-checked. Rule-ID dispatch, certificate validation, dynamic theorem families, and generated proof terms still require Result-driven tracers."
+}

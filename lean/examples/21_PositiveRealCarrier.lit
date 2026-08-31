@@ -29,6 +29,6 @@ forall r R+:
 # order contract. This batch must not silently identify them.
 #
 # Evidence:
-# target/release/litex -compact -strict -runner -f lean/examples/21_PositiveRealCarrier.lit
+# target/release/litex -compact -strict -graph -f lean/examples/21_PositiveRealCarrier.lit
 # cargo test --release --test stmt_result_to_lean_compiler_tracers positive_real
 # cd lean && ./stmt_result_to_lean_compiler.sh check examples

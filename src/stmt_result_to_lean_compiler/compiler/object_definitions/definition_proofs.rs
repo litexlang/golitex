@@ -138,12 +138,16 @@ impl StmtResultToLeanCompiler {
                 let check = check.factual_success().ok_or_else(|| {
                     format!("by-definition clause check {clause_index} is not factual")
                 })?;
-                if matches!(check.proof(), SuccessFactProofResult::ForallProof(_))
-                    && !self.compile_direct_forall_fact_result(check)?
-                {
-                    return Err(format!(
-                        "by-definition forall clause {clause_index} has no binder compiler"
-                    ));
+                if matches!(check.proof(), SuccessFactProofResult::ForallProof(_)) {
+                    self.install_fact_anonymous_function_occurrence_aliases(
+                        &check.fact(),
+                        &format!("by-definition forall clause {clause_index} prerequisite"),
+                    )?;
+                    if !self.compile_direct_forall_fact_result(check)? {
+                        return Err(format!(
+                            "by-definition forall clause {clause_index} has no binder compiler"
+                        ));
+                    }
                 }
             }
         }

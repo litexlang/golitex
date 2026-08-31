@@ -51,7 +51,7 @@
 从仓库根目录运行：
 
 ```bash
-target/release/litex -compact -strict -runner \
+target/release/litex -compact -strict -graph \
   -f showcases/litex_to_lean_mathlib_pipeline/showcase2/main.lit
 
 target/release/stmt_result_to_lean_compiler compile \

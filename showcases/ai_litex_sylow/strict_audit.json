@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "recorded_on": "2026-08-29",
-  "recorded_command": "target/release/litex -compact -strict -session -before tmp/2026-08-29/ai-litex-sylow-showcase/main.lit",
-  "replay_command": "target/release/litex -compact -strict -session -before showcases/ai_litex_sylow/main.lit",
+  "recorded_mode": "historical strict pre-target session available on 2026-08-29",
+  "replay_command": "python3 showcases/ai_litex_sylow/replay_session.py --strict --output <events.jsonl>",
   "entered_session": false,
   "event": "startup_error",
   "raw_jsonl": {

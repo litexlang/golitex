@@ -29,5 +29,5 @@ forall a R:
 # Boundary: fn(x R) N {x} is rejected by Litex because x is not verified to
 # belong to the declared N return carrier. The compiler never invents a cast
 # or a proof to repair the missing source closure.
-# Evidence: target/release/litex -compact -strict -runner -f lean/examples/24_DependentAnonymousFunction.lit
+# Evidence: target/release/litex -compact -strict -graph -f lean/examples/24_DependentAnonymousFunction.lit
 # and cargo test --release --test stmt_result_to_lean_compiler_tracers

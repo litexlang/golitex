@@ -28,5 +28,5 @@ chosen $in R
 
 # Boundary: a bare `have A set` still has no checked inhabited carrier;
 # nested binder occurrences such as `x + 1 = 2` remain fail-closed.
-# Evidence: target/release/litex -compact -strict -runner -f lean/examples/14_SetBuilderAndChoice.lit
+# Evidence: target/release/litex -compact -strict -graph -f lean/examples/14_SetBuilderAndChoice.lit
 # and cargo test --release --test stmt_result_to_lean_compiler_tracers

@@ -30,14 +30,14 @@ theorem tendsto_of_generated_convergesTo
   unfold __Compiler_main.is_eventually_close at close
   rcases close with ⟨_, _, _, _, tail⟩
   apply Filter.eventually_atTop.mpr
-  refine ⟨Litex.In.rep N0 N0In, ?_⟩
+  refine ⟨N0, ?_⟩
   intro n hn
-  have hnRepresentative :
-      Litex.In.rep N0 N0In ≤ Litex.In.rep n (Litex.In.own Litex.N n) := by
+  have hnExact :
+      N0 ≤ Litex.In.rep n (Litex.In.own Litex.N n) := by
     rw [Litex.In.rep_exact (set := Litex.N) n (Litex.In.own Litex.N n)]
     exact hn
   have sourceTail := tail n (Litex.In.own Litex.N n) (by
-    exact Litex.OrderBridge.leOfReal (by exact_mod_cast hnRepresentative))
+    exact Litex.OrderBridge.leOfReal (by exact_mod_cast hnExact))
   simpa [epsilonCarrier, toMathlibSequence, Litex.fnApplyOwn, Litex.Lt,
     Litex.OrderValue, Litex.abs, Real.dist_eq, ← Complex.ofReal_sub,
     Complex.norm_real, Real.norm_eq_abs] using sourceTail
@@ -57,7 +57,14 @@ theorem tendsto_mul_const_from_generated
       atTop
       (nhds (Litex.In.rep c cIn * Litex.In.rep a aIn)) := by
   have generated :=
-    __Compiler_main.converges_to_mul_const s sIn a aIn c cIn h
+    __Compiler_main.converges_to_mul_const
+      (Litex.In.rep s sIn)
+      (Litex.In.own (Litex.fnSet Litex.N Litex.R) (Litex.In.rep s sIn))
+      (Litex.In.rep a aIn)
+      (Litex.In.own Litex.R (Litex.In.rep a aIn))
+      (Litex.In.rep c cIn)
+      (Litex.In.own Litex.R (Litex.In.rep c cIn))
+      h
   have generatedScaled :
       __Compiler_main.converges_to
         (scaleSequence (Litex.In.rep c cIn) (Litex.In.rep s sIn))

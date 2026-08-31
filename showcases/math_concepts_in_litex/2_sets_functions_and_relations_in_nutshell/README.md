@@ -20,7 +20,7 @@ selection. It does not redeclare those concepts locally.
 Run the Litex project from the repository root:
 
 ```bash
-target/release/litex -compact -runner -r showcases/math_concepts_in_litex/2_sets_functions_and_relations_in_nutshell
+target/release/litex -compact -graph -r showcases/math_concepts_in_litex/2_sets_functions_and_relations_in_nutshell
 ```
 
 The handwritten Lean comparison has no imports and uses only Lean 4's Prelude:

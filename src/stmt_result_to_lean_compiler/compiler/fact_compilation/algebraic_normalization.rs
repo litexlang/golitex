@@ -222,9 +222,11 @@ impl StmtResultToLeanCompiler {
         expected_nonzero_premises: &[Fact],
         subgoals: &[StmtResult],
     ) -> Result<String, String> {
-        let Fact::AtomicFact(AtomicFact::EqualFact(_)) = target else {
+        let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = target else {
             unreachable!("complex normalization validator requires an equality")
         };
+        let native_left = render_numeric_obj(&equality.left, &self.environment_stack)?;
+        let native_right = render_numeric_obj(&equality.right, &self.environment_stack)?;
         if subgoals.len() != expected_nonzero_premises.len() {
             return Err(
                 "complex-algebraic-normalization proof lost an ordered nonzero child Result".into(),
@@ -299,7 +301,7 @@ impl StmtResultToLeanCompiler {
             native_nonzero_names.push(name);
         }
 
-        let mut proof = "by\n".to_string();
+        let mut proof = format!("by\n  show {native_left} = {native_right}\n");
         if !declarations.is_empty() {
             proof.push_str(&declarations.join("\n"));
             proof.push('\n');

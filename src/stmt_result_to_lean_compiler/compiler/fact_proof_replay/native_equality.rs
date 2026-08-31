@@ -3,6 +3,26 @@
 use super::super::*;
 
 impl StmtResultToLeanCompiler {
+    /// Construct a native equality under the exact object WD view owned by
+    /// the statement Result. Function applications inside arithmetic
+    /// equalities need the same occurrence/codomain certificates as their
+    /// ordinary semantic proof.
+    pub(in super::super) fn construct_lean_native_equality_proof_from_direct_fact_result_using_its_well_definedness(
+        &mut self,
+        result: &SuccessFactStmtResult,
+    ) -> Result<Option<String>, String> {
+        if result.well_definedness.recursive.is_none() {
+            return self.construct_lean_native_equality_proof_from_direct_fact_result(result);
+        }
+        let certificate =
+            self.construct_well_definedness_to_lean_compilation_context(&result.well_definedness)?;
+        let parent = self.environment_stack.well_definedness.replace(certificate);
+        let construction =
+            self.construct_lean_native_equality_proof_from_direct_fact_result(result);
+        self.environment_stack.well_definedness = parent;
+        construction
+    }
+
     /// Construct native Lean equality only for Result rules whose reviewed
     /// consumer proves the exact rendered `=` before wrapping it in
     /// `Litex.Same`.  Returning `None` is intentional: semantic equality is

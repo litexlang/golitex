@@ -13,7 +13,7 @@
 # constructors remain fail-closed until they receive their own numbered pair.
 #
 # Evidence:
-# target/release/litex -compact -strict -runner -f lean/examples/1_SetSystem.lit
+# target/release/litex -compact -strict -graph -f lean/examples/1_SetSystem.lit
 # cd lean && ./stmt_result_to_lean_compiler.sh check examples && lake env lean examples/1_SetSystem.lean
 
 sketch:

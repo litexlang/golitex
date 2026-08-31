@@ -1,6 +1,7 @@
-# Machine runner envelope
+# Machine result-envelope library
 
-`litex -runner -e '1 + 1 = 2'` returns one wrapper JSON object whose top-level `ok` is `true`.
+`render_runner` is a Rust library adapter that converts an already completed
+`RunOutcome` into one wrapper JSON object. It is not exposed as a CLI command.
 
 ```json
 {
@@ -14,13 +15,13 @@
 }
 ```
 
-## Examples and boundaries
+## Result boundaries
 
-| Command | Contract |
+| Outcome | Contract |
 | --- | --- |
-| `litex -runner -e '1 = 1'` | `ok: true` and process exit code `0`. |
-| `litex -runner -e '1 = 2'` | `ok: false` and a nonzero process exit code. |
-| `litex -runner -f missing.lit` | A target error appears in `error`; `trace` is empty. |
+| Successful `RunOutcome` | `ok: true` and the statement stream is stored in `trace`. |
+| Failed verification | `ok: false` and the diagnostic stream remains in `trace`. |
+| Target-loading error | A target error appears in `error`; `trace` is empty. |
 | A successful wrapper with diagnostic text inside `trace` | Success is decided from top-level `ok`, not by searching the nested string. |
 
 ```text
@@ -33,11 +34,22 @@ pipeline::run_code/run_file/run_repository
 
 Start with [`target_execution.rs`](target_execution.rs). `render_runner` accepts
 an already executed `RunOutcome`; code, file, and repository selection remains
-at the CLI or embedding call site, while `RunOptions` carries strictness,
-language, isolation, output style, and summary behavior.
+at the embedding call site.
+
+## Rust API example
+
+An embedding that already has an `outcome: RunOutcome` can render the envelope
+without adding a CLI command:
+
+```rust
+let (ok, json) = render_runner(outcome, true);
+```
+
+The boolean is the machine success result and `json` is the wrapper shown
+above. Passing `true` keeps file paths out of the rendered target metadata.
 
 The target kind remains a `RunTargetKind` until this JSON object is rendered.
 Inline code therefore needs no synthetic label; its source keeps the stable
-internal path `<-e>`. File and repository targets expose only `kind` by
+internal source label `eval`. File and repository targets expose only `kind` by
 default, while `-detail` adds their real `path`. Command spellings never enter
 Runtime state.

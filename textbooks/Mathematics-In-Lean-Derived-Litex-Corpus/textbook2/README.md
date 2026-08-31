@@ -12,7 +12,7 @@ as first-class struct values whose fields are accessed as `group.mul`,
 Run it from the repository root with:
 
 ```sh
-RUST_MIN_STACK=8388608 target/release/litex -compact -runner -r scripts/mathematics_in_litex/textbook2
+RUST_MIN_STACK=8388608 target/release/litex -compact -graph -r scripts/mathematics_in_litex/textbook2
 ```
 
 The main `textbook/litex.config` imports this module as `MILAlternative` for

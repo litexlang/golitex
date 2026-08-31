@@ -16,7 +16,7 @@
 # evidence without a reviewed structured IR adapter remain fail-closed.
 #
 # Evidence:
-# target/release/litex -compact -strict -runner -f lean/examples/7_PropositionalFacts.lit
+# target/release/litex -compact -strict -graph -f lean/examples/7_PropositionalFacts.lit
 # cd lean && ./stmt_result_to_lean_compiler.sh compile examples/7_PropositionalFacts.lit
 # cd lean && ./stmt_result_to_lean_compiler.sh check examples
 

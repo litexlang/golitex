@@ -1328,6 +1328,8 @@ fn cli_dispatch_delegates_execution_and_path_resolution_to_their_owners() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let dispatch = fs::read_to_string(root.join("src/cli/command_dispatch.rs"))
         .expect("CLI dispatch source should be readable");
+    let arguments = fs::read_to_string(root.join("src/cli/arguments.rs"))
+        .expect("CLI arguments source should be readable");
     let handlers = fs::read_to_string(root.join("src/cli/command_handlers.rs"))
         .expect("CLI handler source should be readable");
     let lean_commands = fs::read_to_string(root.join("src/cli/lean_commands.rs"))
@@ -1359,22 +1361,28 @@ fn cli_dispatch_delegates_execution_and_path_resolution_to_their_owners() {
     assert!(!dispatch.contains("compile_code_to_extracted_code("));
     assert!(!handlers.contains("command_dispatch::"));
     assert!(dispatch.contains("run_lean_file_command("));
-    assert!(dispatch.contains("run_lean_ledger_command("));
+    assert!(!dispatch.contains("run_lean_ledger_command("));
     assert!(dispatch.contains("run_latex_command("));
     assert!(dispatch.contains("run_code_extraction_command("));
     assert!(lean_commands.contains("compile_litex_file_to_lean_file("));
-    assert!(lean_commands.contains("compile_litex_markdown_code_blocks_to_lean_file("));
+    assert!(!lean_commands.contains("compile_litex_markdown_code_blocks_to_lean_file("));
     assert!(conversion_commands.contains("compile_code_to_latex("));
     assert!(conversion_commands.contains("compile_code_to_extracted_code("));
     assert!(handlers.contains("run_code("));
     assert!(handlers.contains("run_file("));
-    assert!(handlers.contains("run_isolated_file("));
+    assert!(!handlers.contains("run_isolated_file("));
     assert!(handlers.contains("run_repository("));
     assert!(target.contains("pub enum RunTarget {"));
     assert!(target.contains("pub enum SessionTarget {"));
     assert!(target.contains("pub enum ExecutionTarget {"));
     assert!(target.contains("pub enum FileRunMode {"));
     assert!(run_options.contains("pub struct RunOptions"));
+    assert!(run_options.contains("pub is_isolated: bool"));
+    assert!(!arguments.contains("pub struct GlobalOptions"));
+    assert!(arguments.contains("Result<RunOptions, String>"));
+    assert!(arguments.contains("pub fn validate_cli_combination("));
+    assert!(!dispatch.contains("exit_on_meaningless_isolated("));
+    assert!(!handlers.contains("reject_isolated_"));
     assert!(!run.contains("pub struct RunOptions"));
     assert!(!run.contains("pub struct RunRequest"));
     assert!(run.contains("pub fn run_code(source: &str, options: RunOptions)"));

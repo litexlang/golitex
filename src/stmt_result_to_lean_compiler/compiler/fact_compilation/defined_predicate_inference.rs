@@ -303,12 +303,21 @@ impl StmtResultToLeanCompiler {
             } else {
                 component_names[component_index].clone()
             };
-            format!(
-                "(by\n  have __definition := {source_proof}\n  unfold {} at __definition\n  rcases __definition with \u{27e8}{}\u{27e9}\n  exact {})",
-                binding.lean_name,
-                component_names.join(", "),
-                selected_component,
-            )
+            if preserve_implicit_host_carrier {
+                format!(
+                    "(by\n  have __definition := {source_proof}\n  unfold {} at __definition\n  rcases __definition with \u{27e8}{}\u{27e9}\n  exact {})",
+                    binding.lean_name,
+                    component_names.join(", "),
+                    selected_component,
+                )
+            } else {
+                format!(
+                    "(by\n  have __definition := {source_proof}\n  unfold {} at __definition\n  rcases __definition with \u{27e8}{}\u{27e9}\n  simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using {})",
+                    binding.lean_name,
+                    component_names.join(", "),
+                    selected_component,
+                )
+            }
         } else {
             let selector = conjunction_selector(component_index, components.len())?;
             let selected_component = if preserve_implicit_host_carrier {
@@ -316,10 +325,17 @@ impl StmtResultToLeanCompiler {
             } else {
                 format!("__definition{selector}")
             };
-            format!(
-                "(by\n  have __definition := {source_proof}\n  unfold {} at __definition\n  exact {selected_component})",
-                binding.lean_name,
-            )
+            if preserve_implicit_host_carrier {
+                format!(
+                    "(by\n  have __definition := {source_proof}\n  unfold {} at __definition\n  exact {selected_component})",
+                    binding.lean_name,
+                )
+            } else {
+                format!(
+                    "(by\n  have __definition := {source_proof}\n  unfold {} at __definition\n  simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using {selected_component})",
+                    binding.lean_name,
+                )
+            }
         };
         match self
             .environment_stack

@@ -1,0 +1,79 @@
+{
+  "schema_version": 2,
+  "recorded_at": "2026-08-30 23:16:57 CST",
+  "updated_at": "2026-08-31 09:39:51 CST",
+  "lean_dependency_fingerprint_sha256": "64652e81a5c21a3ea1ce88daa639a77cf7183010ea068ba388317705ca195c63",
+  "current_valid": true,
+  "release_build": {
+    "command": "cargo build --release --bin litex --bin stmt_result_to_lean_compiler",
+    "exit": 0,
+    "duration": "1m08s",
+    "warnings": 6
+  },
+  "tracer": "lean/examples/54_ComplexAlgebraicCalculation.lit",
+  "source_sha256": "3d2d49561798c25dfd5ca2296ab1d42db16a15970ae770815ac543b1a115578d",
+  "checked_in_lean": {
+    "recorded_at": "2026-08-31 09:39:51 CST",
+    "path": "lean/examples/54_ComplexAlgebraicCalculation.lean",
+    "sha256": "a0650a244db8b85fb831ca2024b4935a27a72c887638e8665f50cfc7ec6ba228",
+    "kernel_command": "cd lean && lake env lean examples/54_ComplexAlgebraicCalculation.lean",
+    "kernel_exit": 0
+  },
+  "project_mode_verifier": {
+    "recorded_at": "2026-08-31 09:39:40 CST",
+    "command": "target/release/litex -compact -strict -summarize -f lean/examples/54_ComplexAlgebraicCalculation.lit",
+    "exit": 0,
+    "top_level_ok": false,
+    "summary_result": "error",
+    "config_path": "lean/examples/litex.config",
+    "config_sha256": "59cd6c22af12ca9d1d30e6cd58735920b49c718a5475659c8c8a3083d2e4fb9e",
+    "first_failure": "lean/examples/25_ExplicitSourceAxioms.lit:10 strict mode rejects the explicit trust statement",
+    "classification": "test_gap",
+    "boundary": "Project mode loads the registered trust-boundary example before the requested file; isolated strict mode is the source-declared primary-tracer envelope."
+  },
+  "isolated_verifier": {
+    "recorded_at": "2026-08-31 09:39:40 CST",
+    "command": "target/release/litex -compact -strict -summarize -isolated -f lean/examples/54_ComplexAlgebraicCalculation.lit",
+    "exit": 0,
+    "top_level_ok": true,
+    "summary_result": "success",
+    "direct_trust": 0,
+    "axioms": 0,
+    "trusted_object_assumptions": 0,
+    "unverified_imports": []
+  },
+  "compiler": {
+    "recorded_at": "2026-08-31 09:38:31 CST",
+    "command": "target/release/stmt_result_to_lean_compiler compile lean/examples/54_ComplexAlgebraicCalculation.lit tmp/2026-08-30/one-week-tolean-day1/54_ComplexAlgebraicCalculation.generated.lean",
+    "exit": 0,
+    "generated_path": "tmp/2026-08-30/one-week-tolean-day1/54_ComplexAlgebraicCalculation.generated.lean",
+    "generated_sha256": "6d91f6dbf08709ffd372c054136d111b660c0fca8c777ce46fd4b698a165b99f"
+  },
+  "generated_drift": {
+    "recorded_at": "2026-08-31 09:39:34 CST",
+    "command": "cmp -s tmp/2026-08-30/one-week-tolean-day1/54_ComplexAlgebraicCalculation.generated.lean lean/examples/54_ComplexAlgebraicCalculation.lean",
+    "exit": 1,
+    "matches_checked_in": false
+  },
+  "generated_kernel": {
+    "recorded_at": "2026-08-31 09:39:31 CST",
+    "command": "cd lean && lake env lean ../tmp/2026-08-30/one-week-tolean-day1/54_ComplexAlgebraicCalculation.generated.lean",
+    "exit": 0,
+    "note": "The generated module is kernel-accepted with linter warnings under the same dependency fingerprint as the green full workspace build."
+  },
+  "forbidden_construct_scan": {
+    "paths": [
+      "lean/examples/54_ComplexAlgebraicCalculation.lean",
+      "tmp/2026-08-30/one-week-tolean-day1/54_ComplexAlgebraicCalculation.generated.lean"
+    ],
+    "forbidden": "sorry|admit|axiom|LitexObject|Litex.Object|Set.univ",
+    "clean": true
+  },
+  "workspace_kernel": {
+    "recorded_at": "2026-08-31 09:38:12 CST",
+    "command": "cd lean && lake build",
+    "exit": 0,
+    "duration": "4.5s",
+    "note": "Build completed successfully (8561 jobs) with existing unused-variable linter warnings in Rules.lean."
+  }
+}

@@ -7,7 +7,9 @@ examples, and the stable `stmt_result_to_lean_compiler.sh` entrypoint. The compi
 the kernel's recursive `StmtResult`; it does not use the old universal-object
 output stage. That legacy implementation is archived under
 `../tmp/compile_to_lean_legacy/` and is not part of the Rust build. Both
-`litex -lean` and `litex -lean-ledger` route through the active compiler.
+The single-file `litex -isolated -f <input> -lean <output>` command routes
+through the active compiler. Markdown-bundle compilation remains available as
+a Rust API rather than a CLI command.
 Source-level migration from that archive is tracked explicitly in
 [`legacy_parity.md`](legacy_parity.md); archived Rust and its universal-object
 ABI are never copied as implementation dependencies.

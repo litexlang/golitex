@@ -3,6 +3,70 @@
 use super::super::*;
 
 impl StmtResultToLeanCompiler {
+    /// Recover the explicit carrier witness owned by a checked set-builder
+    /// membership, including the common case where the user names that
+    /// set-builder with a transparent local definition. The outer
+    /// transformation Result is replayed before its source is inspected, so
+    /// this never unfolds an ambient definition merely because its text
+    /// happens to match.
+    pub(in super::super) fn construct_lean_exact_set_builder_value_from_fact_result(
+        &mut self,
+        result: &SuccessVerifyFactResult,
+    ) -> Result<Option<(String, String)>, String> {
+        match result.proof() {
+            SuccessFactProofResult::BuiltinRule(builtin)
+            | SuccessFactProofResult::BuiltinStrategy(builtin) => {
+                let Some(BuiltinRuleEvidence::SetBuilderMembership(evidence)) =
+                    builtin.evidence.typed()
+                else {
+                    return Ok(None);
+                };
+                self.construct_lean_exact_set_builder_value_from_result(
+                    &result.fact(),
+                    evidence,
+                    &builtin.subgoals,
+                )
+            }
+            SuccessFactProofResult::Transform(transformation) => {
+                let FactTransformationRule::TransparentDefinitionReduction(evidence) =
+                    &transformation.rule
+                else {
+                    return Ok(None);
+                };
+                let source = transformation.source.as_ref();
+                self.construct_lean_transparent_definition_reduction_from_result(
+                    &source.fact(),
+                    &result.fact(),
+                    "True.intro".to_string(),
+                    evidence,
+                    0,
+                )?;
+                self.construct_lean_exact_set_builder_value_from_fact_result(source)
+            }
+            SuccessFactProofResult::Reuse(reuse) => {
+                let source = reuse.source.as_ref();
+                if source.fact().to_string() != result.fact().to_string() {
+                    return Err(
+                        "reused set-builder membership changed its exact proposition".into(),
+                    );
+                }
+                self.construct_lean_exact_set_builder_value_from_fact_result(source)
+            }
+            SuccessFactProofResult::CombinedProofs(combined) => {
+                let Some(primary) = combined.primary.as_deref() else {
+                    return Ok(None);
+                };
+                if primary.fact().to_string() != result.fact().to_string() {
+                    return Err(
+                        "combined set-builder membership changed its primary proposition".into(),
+                    );
+                }
+                self.construct_lean_exact_set_builder_value_from_fact_result(primary)
+            }
+            _ => Ok(None),
+        }
+    }
+
     /// Compile the same ordered children as ordinary set-builder membership,
     /// but retain the canonical exact carrier value for a typed object
     /// definition.  Returning `None` means the checked membership is valid

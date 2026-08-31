@@ -63,10 +63,6 @@ fn run_repl_loop_with_readers_and_mode(
     output_mode: ReplOutputMode,
 ) -> io::Result<()> {
     writeln!(stdout_writer, "Litex version {}", version_banner)?;
-    writeln!(
-        stdout_writer,
-        "Upgrade Litex? Run `litex -upgrade` for platform instructions."
-    )?;
     writeln!(stdout_writer, "Copyright (C) 2024-2026 Jiachen Shen")?;
     writeln!(stdout_writer, "website: https://litexlang.com")?;
     writeln!(

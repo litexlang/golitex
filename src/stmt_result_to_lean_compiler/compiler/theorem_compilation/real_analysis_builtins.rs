@@ -211,13 +211,34 @@ impl StmtResultToLeanCompiler {
                             index + 1
                         )
                     })?;
+                let real_bound_subset_proof = matches!(
+                    role,
+                    BuiltinTheoremRequirementRole::SuppliedValueBoundsEverySetMember
+                        | BuiltinTheoremRequirementRole::SuppliedValueIsLowerBoundForEverySetMember
+                )
+                .then(|| {
+                    requirement_proofs.first().cloned().ok_or_else(|| {
+                        format!(
+                            "real-analysis builtin requirement {} has no preceding subset-of-R proof",
+                            index + 1
+                        )
+                    })
+                })
+                .transpose()?;
                 let proof = if matches!(check.proof(), SuccessFactProofResult::ForallProof(_)) {
                     let theorem_name = format!("__fact{}", self.next_fact_name_index);
                     let fact_index = self.next_fact_name_index;
                     if requirements_are_local {
-                        let Some(lines) =
+                        let lines = if let Some(subset_proof) = real_bound_subset_proof.as_deref() {
+                            self.compile_direct_forall_fact_result_as_local_proof_steps_with_real_subset_observer(
+                                check,
+                                &verification.arguments[0],
+                                subset_proof,
+                            )?
+                        } else {
                             self.compile_direct_forall_fact_result_as_local_proof_steps(check)?
-                        else {
+                        };
+                        let Some(lines) = lines else {
                             return Err(format!(
                             "real-analysis builtin requirement {} retained an unsupported ForallProof",
                             index + 1
@@ -232,7 +253,17 @@ impl StmtResultToLeanCompiler {
                         local_prerequisite_lines.extend(lines);
                     } else {
                         let declaration_count = self.declarations.len();
-                        if !self.compile_direct_forall_fact_result(check)? {
+                        let compiled =
+                            if let Some(subset_proof) = real_bound_subset_proof.as_deref() {
+                                self.compile_direct_forall_fact_result_with_real_subset_observer(
+                                    check,
+                                    &verification.arguments[0],
+                                    subset_proof,
+                                )?
+                            } else {
+                                self.compile_direct_forall_fact_result(check)?
+                            };
+                        if !compiled {
                             return Err(format!(
                             "real-analysis builtin requirement {} retained an unsupported ForallProof",
                             index + 1
@@ -293,6 +324,21 @@ impl StmtResultToLeanCompiler {
                         &self.environment_stack,
                     )?;
                     format!("Litex.In.own Litex.R {exact_real}")
+                } else if matches!(
+                    role,
+                    BuiltinTheoremRequirementRole::SuppliedValueBoundsEverySetMember
+                        | BuiltinTheoremRequirementRole::SuppliedValueIsLowerBoundForEverySetMember
+                ) {
+                    // The projected proof is generic over source-set members,
+                    // but its numeric occurrence is selected through the
+                    // checked `set subset R` proof above.  Calling it with a
+                    // native real makes that selection definitionally exact.
+                    let subset_proof = real_bound_subset_proof.as_deref().ok_or_else(|| {
+                        "real bound requirement lost its subset-of-R proof".to_string()
+                    })?;
+                    format!(
+                        "(fun member memberInSet => by\n  have __member_rep : Litex.In.rep member (({subset_proof}) member memberInSet) = member :=\n    Litex.In.rep_exact (set := Litex.R) member (({subset_proof}) member memberInSet)\n  simpa only [__member_rep, Complex.ofReal_one, Complex.ofReal_add, Complex.ofReal_sub, Complex.ofReal_mul, Complex.ofReal_div] using (({proof}) member memberInSet))"
+                    )
                 } else if let Some(real_arguments) = rational_density_real_arguments.as_ref() {
                     match role {
                         BuiltinTheoremRequirementRole::LeftArgumentBelongsToReals => {
@@ -348,7 +394,10 @@ impl StmtResultToLeanCompiler {
                         source.theorem_id,
                         BuiltinTheoremId::RealArchimedeanNaturalUpperBound
                     ) {
-                        render_obj(argument, &self.environment_stack)
+                        render_real_target_object_representation(
+                            &LeanTargetObjectRepresentation::lower(argument)?,
+                            &self.environment_stack,
+                        )
                     } else if matches!(
                         (source.theorem_id, argument_index),
                         (BuiltinTheoremId::RealLeastUpperBoundExists, 1)
@@ -373,11 +422,10 @@ impl StmtResultToLeanCompiler {
                         (BuiltinTheoremId::RealMemberLeLeastUpperBound, 2)
                             | (BuiltinTheoremId::RealGreatestLowerBoundLeMember, 2)
                     ) {
-                        // The membership premise is evidence about this exact
-                        // source object.  The real observer is supplied
-                        // separately and applied by the Lean rule after selecting
-                        // the set-carrier representative.
-                        render_obj(argument, &self.environment_stack)
+                        render_real_target_object_representation(
+                            &LeanTargetObjectRepresentation::lower(argument)?,
+                            &self.environment_stack,
+                        )
                     } else {
                         render_obj(argument, &self.environment_stack)
                     }
@@ -413,34 +461,11 @@ impl StmtResultToLeanCompiler {
                 source.theorem_id,
                 BuiltinTheoremId::RealArchimedeanNaturalUpperBound
             ) {
-                representation_arguments.push(render_numeric_obj(
+                representation_arguments.push(render_obj(
                     &verification.arguments[0],
                     &self.environment_stack,
                 )?);
-                representation_arguments.push("(by norm_num)".to_string());
-            }
-            if matches!(
-                source.theorem_id,
-                BuiltinTheoremId::RealLeastUpperBoundExists
-                    | BuiltinTheoremId::RealMemberLeLeastUpperBound
-                    | BuiltinTheoremId::RealLeastUpperBoundLeUpperBound
-                    | BuiltinTheoremId::RealGreatestLowerBoundExists
-                    | BuiltinTheoremId::RealGreatestLowerBoundLeMember
-                    | BuiltinTheoremId::RealLowerBoundLeGreatestLowerBound
-            ) {
-                let set = LeanTargetObjectRepresentation::lower(&verification.arguments[0])?;
-                let observer = render_real_set_observer(&set, &self.environment_stack, "__member")?;
-                representation_arguments.push(format!("(fun __member => {observer})"));
-                representation_arguments.push("(by rfl)".to_string());
-                if matches!(
-                    source.theorem_id,
-                    BuiltinTheoremId::RealLeastUpperBoundExists
-                        | BuiltinTheoremId::RealGreatestLowerBoundExists
-                ) {
-                    let same =
-                        render_real_set_observer_same(&set, &self.environment_stack, "__member")?;
-                    representation_arguments.push(format!("(fun __member => {same})"));
-                }
+                representation_arguments.push("(by norm_cast <;> norm_num)".to_string());
             }
             let mut proof = format!(
                 "{rule_name} {} {} {}",
@@ -454,6 +479,18 @@ impl StmtResultToLeanCompiler {
                     | BuiltinTheoremId::RealGreatestLowerBoundLeMember
             ) {
                 proof = format!("(by simpa using ({proof}))");
+            } else if matches!(
+                source.theorem_id,
+                BuiltinTheoremId::RealLeastUpperBoundLeUpperBound
+                    | BuiltinTheoremId::RealLowerBoundLeGreatestLowerBound
+            ) {
+                // The rule consumes its supplied bound through the exact
+                // native-real observer.  The source conclusion may retain
+                // the definitionally corresponding complex syntax (for
+                // example `a(n) + epsilon / 2`).  Transport only this checked
+                // conclusion boundary; all hypotheses above still come from
+                // their ordered verifier Results.
+                proof = format!("(by convert ({proof}) using 1 <;> norm_num <;> norm_cast)");
             }
             let proposition = self.render_fact_using_well_definedness_result(
                 conclusion_well_definedness,

@@ -5,7 +5,7 @@ expectation, variance, linearity of expectation, and one coherent Bayes
 calculation.
 
 ```bash
-target/release/litex -compact -runner -r showcases/math_concepts_in_litex/8_probability_and_statistics_in_nutshell
+target/release/litex -compact -graph -r showcases/math_concepts_in_litex/8_probability_and_statistics_in_nutshell
 cd lean
 lake env lean ../showcases/math_concepts_in_litex/8_probability_and_statistics_in_nutshell/same_math_in_lean.lean
 ```

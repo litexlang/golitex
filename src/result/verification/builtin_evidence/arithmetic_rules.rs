@@ -34,6 +34,9 @@ pub enum ArithmeticBuiltinRule {
     MulPositive,
     DivNonnegative,
     DivPositive,
+    /// For positive `a` and `1 < b`, conclude `a / b < a` in the exact
+    /// real carrier retained by the statement Result.
+    DivByGreaterThanOneLessSelf,
     AddCommonLeftLessEqual,
     SubRightNonnegativeLessEqual,
     AddRightNonnegativeLessEqual,
@@ -78,6 +81,7 @@ impl ArithmeticBuiltinRule {
             Self::MulPositive => "order.mul_positive",
             Self::DivNonnegative => "order.div_nonnegative",
             Self::DivPositive => "order.div_positive",
+            Self::DivByGreaterThanOneLessSelf => "order.div_lt_self_of_pos_of_one_lt",
             Self::AddCommonLeftLessEqual => "order.add_le_add_left",
             Self::SubRightNonnegativeLessEqual => "order.sub_le_of_le_of_nonnegative",
             Self::AddRightNonnegativeLessEqual => "order.le_add_of_nonnegative_right",

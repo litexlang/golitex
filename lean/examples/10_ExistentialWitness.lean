@@ -9,48 +9,48 @@ theorem member_has_witness :
     ∀ (S : Litex.Set) {__carrier0_2 : Type} (a : __carrier0_2) (__h7 : Litex.In a S),
       ∃ (__carrier_x : Type) (x : __carrier_x), ∃ (__type_x : Litex.In x S), Litex.Same x a := by
   intro S __carrier0_2 a __h7
-  have __step1 : ∃ (__carrier_x : Type) (x : __carrier_x), ∃ (__type_x : Litex.In x S), Litex.Same x a := by
+  have __step0_1 : ∃ (__carrier_x : Type) (x : __carrier_x), ∃ (__type_x : Litex.In x S), Litex.Same x a := by
     exact (by
-    have __step1 : Litex.Same a a := by
+    have __step0_0 : Litex.Same a a := by
       exact Litex.Same.refl a
-    exact ⟨_, a, (__h7), (__step1)⟩)
-  have __c0_0 : ∃ (__carrier_x : Type) (x : __carrier_x), ∃ (__type_x : Litex.In x S), Litex.Same x a := __step1
+    exact ⟨_, a, (__h7), (__step0_0)⟩)
+  have __c0_0 : ∃ (__carrier_x : Type) (x : __carrier_x), ∃ (__type_x : Litex.In x S), Litex.Same x a := __step0_1
   exact __c0_0
 
-theorem __fact1 : ∃ (x : ℂ), ∃ (__type_x : Litex.In x Litex.R), Litex.Same x (1 : ℂ) := by
+theorem __fact1 : ∃ (x : (Litex.R).Carrier), ∃ (__type_x : Litex.In x Litex.R), Litex.Same x (1 : ℂ) := by
   exact (by
-  have __step1 : Litex.Same (1 : ℂ) (1 : ℂ) := by
+  have __step1_2 : Litex.Same (1 : ℂ) (1 : ℂ) := by
     exact Litex.Same.refl (1 : ℂ)
-  exact ⟨(((Litex.In.rep (1 : ℂ) (Litex.Rules.complexRealInR (1 : ℝ)) : ℝ)) : ℂ), (Litex.Rules.complexRealInR (Litex.In.rep (1 : ℂ) (Litex.Rules.complexRealInR (1 : ℝ)) : ℝ)), (Litex.Same.trans (Litex.Same.symm (Litex.Same.trans (Litex.In.same_rep (1 : ℂ) ((Litex.Rules.complexRealInR (1 : ℝ)))) (Litex.Same.realComplex (Litex.In.rep (1 : ℂ) (Litex.Rules.complexRealInR (1 : ℝ)))))) (__step1))⟩)
+  exact ⟨(Litex.In.rep (1 : ℂ) (Litex.Rules.complexRealInR (1 : ℝ))), (Litex.In.own Litex.R (Litex.In.rep (1 : ℂ) (Litex.Rules.complexRealInR (1 : ℝ)))), (Litex.Same.trans (Litex.Same.symm (Litex.In.same_rep (1 : ℂ) (Litex.Rules.complexRealInR (1 : ℝ)))) (__step1_2))⟩)
 
-noncomputable def y : ℂ := Classical.choose ((show ∃ (x : ℂ), ∃ (__type_x : Litex.In x Litex.R), Litex.Same x (1 : ℂ) from __fact1))
+noncomputable def y : (Litex.R).Carrier := Classical.choose ((show ∃ (x : (Litex.R).Carrier), ∃ (__type_x : Litex.In x Litex.R), Litex.Same x (1 : ℂ) from __fact1))
 
 theorem __fact2 : Litex.In y Litex.R := by
   unfold y
-  exact (Classical.choose_spec ((show ∃ (x : ℂ), ∃ (__type_x : Litex.In x Litex.R), Litex.Same x (1 : ℂ) from __fact1))).1
+  exact (Classical.choose_spec ((show ∃ (x : (Litex.R).Carrier), ∃ (__type_x : Litex.In x Litex.R), Litex.Same x (1 : ℂ) from __fact1))).1
 
 theorem __fact3 : Litex.Same y (1 : ℂ) := by
   unfold y
-  exact (Classical.choose_spec ((show ∃ (x : ℂ), ∃ (__type_x : Litex.In x Litex.R), Litex.Same x (1 : ℂ) from __fact1))).2
+  exact (Classical.choose_spec ((show ∃ (x : (Litex.R).Carrier), ∃ (__type_x : Litex.In x Litex.R), Litex.Same x (1 : ℂ) from __fact1))).2
 
-noncomputable def selected : ℂ := Classical.choose ((show ∃ (selected : ℂ), ∃ (__type_selected : Litex.In selected Litex.R), Litex.Same selected (1 : ℂ) from __fact1))
+noncomputable def selected : (Litex.R).Carrier := Classical.choose ((show ∃ (selected : (Litex.R).Carrier), ∃ (__type_selected : Litex.In selected Litex.R), Litex.Same selected (1 : ℂ) from __fact1))
 
 theorem __fact4 : Litex.In selected Litex.R := by
   unfold selected
-  exact (Classical.choose_spec ((show ∃ (selected : ℂ), ∃ (__type_selected : Litex.In selected Litex.R), Litex.Same selected (1 : ℂ) from __fact1))).1
+  exact (Classical.choose_spec ((show ∃ (selected : (Litex.R).Carrier), ∃ (__type_selected : Litex.In selected Litex.R), Litex.Same selected (1 : ℂ) from __fact1))).1
 
 theorem __fact5 : Litex.Same selected (1 : ℂ) := by
   unfold selected
-  exact (Classical.choose_spec ((show ∃ (selected : ℂ), ∃ (__type_selected : Litex.In selected Litex.R), Litex.Same selected (1 : ℂ) from __fact1))).2
+  exact (Classical.choose_spec ((show ∃ (selected : (Litex.R).Carrier), ∃ (__type_selected : Litex.In selected Litex.R), Litex.Same selected (1 : ℂ) from __fact1))).2
 
 def has_copy (a : (Litex.R).Carrier) : Prop :=
-  (Litex.In a Litex.R) ∧ (∃ (x : ℂ), ∃ (__type_x : Litex.In x Litex.R), Litex.Same x a)
+  (Litex.In a Litex.R) ∧ (∃ (x : (Litex.R).Carrier), ∃ (__type_x : Litex.In x Litex.R), Litex.Same x a)
 
-theorem __fact6 : ∃ (x : ℂ), ∃ (__type_x : Litex.In x Litex.R), Litex.Same x (2 : ℂ) := by
+theorem __fact6 : ∃ (x : (Litex.R).Carrier), ∃ (__type_x : Litex.In x Litex.R), Litex.Same x (2 : ℂ) := by
   exact (by
-  have __step1 : Litex.Same (2 : ℂ) (2 : ℂ) := by
+  have __step6_3 : Litex.Same (2 : ℂ) (2 : ℂ) := by
     exact Litex.Same.refl (2 : ℂ)
-  exact ⟨(((Litex.In.rep (2 : ℂ) (Litex.Rules.complexRealInR (2 : ℝ)) : ℝ)) : ℂ), (Litex.Rules.complexRealInR (Litex.In.rep (2 : ℂ) (Litex.Rules.complexRealInR (2 : ℝ)) : ℝ)), (Litex.Same.trans (Litex.Same.symm (Litex.Same.trans (Litex.In.same_rep (2 : ℂ) ((Litex.Rules.complexRealInR (2 : ℝ)))) (Litex.Same.realComplex (Litex.In.rep (2 : ℂ) (Litex.Rules.complexRealInR (2 : ℝ)))))) (__step1))⟩)
+  exact ⟨(Litex.In.rep (2 : ℂ) (Litex.Rules.complexRealInR (2 : ℝ))), (Litex.In.own Litex.R (Litex.In.rep (2 : ℂ) (Litex.Rules.complexRealInR (2 : ℝ)))), (Litex.Same.trans (Litex.Same.symm (Litex.In.same_rep (2 : ℂ) (Litex.Rules.complexRealInR (2 : ℝ)))) (__step6_3))⟩)
 
 theorem __fact7 : has_copy (2 : ℝ) := by
   exact (by
@@ -59,7 +59,7 @@ theorem __fact7 : has_copy (2 : ℝ) := by
   rcases ((by simpa [Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (__fact6))) with ⟨__transport_witness, __transport_membership, __transport_body⟩
   exact ⟨__transport_witness, __transport_membership, Litex.Same.trans (__transport_body) (Litex.Same.symm (Litex.Same.realComplex ((2 : ℝ))))⟩)⟩)
 
-noncomputable def copy : ℂ := Classical.choose ((show ∃ (x : ℂ), ∃ (__type_x : Litex.In x Litex.R), Litex.Same x (2 : ℂ) from (by
+noncomputable def copy : (Litex.R).Carrier := Classical.choose ((show ∃ (x : (Litex.R).Carrier), ∃ (__type_x : Litex.In x Litex.R), Litex.Same x (2 : ℂ) from (by
   have __definition := __fact7
   unfold has_copy at __definition
   rcases __definition.2 with ⟨__witness, __membership, __body⟩
@@ -67,7 +67,7 @@ noncomputable def copy : ℂ := Classical.choose ((show ∃ (x : ℂ), ∃ (__ty
 
 theorem __fact8 : Litex.In copy Litex.R := by
   unfold copy
-  exact (Classical.choose_spec ((show ∃ (x : ℂ), ∃ (__type_x : Litex.In x Litex.R), Litex.Same x (2 : ℂ) from (by
+  exact (Classical.choose_spec ((show ∃ (x : (Litex.R).Carrier), ∃ (__type_x : Litex.In x Litex.R), Litex.Same x (2 : ℂ) from (by
   have __definition := __fact7
   unfold has_copy at __definition
   rcases __definition.2 with ⟨__witness, __membership, __body⟩
@@ -75,39 +75,39 @@ theorem __fact8 : Litex.In copy Litex.R := by
 
 theorem __fact9 : Litex.Same copy (2 : ℂ) := by
   unfold copy
-  exact (Classical.choose_spec ((show ∃ (x : ℂ), ∃ (__type_x : Litex.In x Litex.R), Litex.Same x (2 : ℂ) from (by
+  exact (Classical.choose_spec ((show ∃ (x : (Litex.R).Carrier), ∃ (__type_x : Litex.In x Litex.R), Litex.Same x (2 : ℂ) from (by
   have __definition := __fact7
   unfold has_copy at __definition
   rcases __definition.2 with ⟨__witness, __membership, __body⟩
   exact ⟨__witness, __membership, Litex.Same.trans __body (Litex.Same.realComplex ((2 : ℝ)))⟩)))).2
 
 theorem self_exists :
-    ∀ {__carrier10_1 : Type} (a : __carrier10_1) (__h63 : Litex.In a Litex.R),
-      ∃ (x : ℂ), ∃ (__type_x : Litex.In x Litex.R), Litex.Same x a := by
-  intro __carrier10_1 a __h63
-  have __step1 : ∃ (x : ℂ), ∃ (__type_x : Litex.In x Litex.R), Litex.Same x a := by
+    ∀ (a : (Litex.R).Carrier) (__h63 : Litex.In a Litex.R),
+      ∃ (x : (Litex.R).Carrier), ∃ (__type_x : Litex.In x Litex.R), Litex.Same x a := by
+  intro a __h63
+  have __step10_5 : ∃ (x : (Litex.R).Carrier), ∃ (__type_x : Litex.In x Litex.R), Litex.Same x a := by
     exact (by
-    have __step1 : Litex.Same a a := by
+    have __step10_4 : Litex.Same a a := by
       exact Litex.Same.refl a
-    exact ⟨(((Litex.In.rep a (__h63) : ℝ)) : ℂ), (Litex.Rules.complexRealInR (Litex.In.rep a (__h63) : ℝ)), (Litex.Same.trans (Litex.Same.symm (Litex.Same.trans (Litex.In.same_rep a ((__h63))) (Litex.Same.realComplex (Litex.In.rep a (__h63))))) (__step1))⟩)
-  have __c10_0 : ∃ (x : ℂ), ∃ (__type_x : Litex.In x Litex.R), Litex.Same x a := __step1
+    exact ⟨a, (__h63), (__step10_4)⟩)
+  have __c10_0 : ∃ (x : (Litex.R).Carrier), ∃ (__type_x : Litex.In x Litex.R), Litex.Same x a := __step10_5
   exact __c10_0
 
-noncomputable def theorem_copy : ℂ := Classical.choose ((show ∃ (x : ℂ), ∃ (__type_x : Litex.In x Litex.R), Litex.Same x (3 : ℂ) from (by
+noncomputable def theorem_copy : (Litex.R).Carrier := Classical.choose ((show ∃ (x : (Litex.R).Carrier), ∃ (__type_x : Litex.In x Litex.R), Litex.Same x (3 : ℂ) from (by
   have __projected_conclusion := (self_exists (3 : ℂ) (Litex.Rules.complexRealInR (3 : ℝ)))
   try rw [Litex.In.rep_exact] at __projected_conclusion
   exact __projected_conclusion)))
 
 theorem __fact11 : Litex.In theorem_copy Litex.R := by
   unfold theorem_copy
-  exact (Classical.choose_spec ((show ∃ (x : ℂ), ∃ (__type_x : Litex.In x Litex.R), Litex.Same x (3 : ℂ) from (by
+  exact (Classical.choose_spec ((show ∃ (x : (Litex.R).Carrier), ∃ (__type_x : Litex.In x Litex.R), Litex.Same x (3 : ℂ) from (by
   have __projected_conclusion := (self_exists (3 : ℂ) (Litex.Rules.complexRealInR (3 : ℝ)))
   try rw [Litex.In.rep_exact] at __projected_conclusion
   exact __projected_conclusion)))).1
 
 theorem __fact12 : Litex.Same theorem_copy (3 : ℂ) := by
   unfold theorem_copy
-  exact (Classical.choose_spec ((show ∃ (x : ℂ), ∃ (__type_x : Litex.In x Litex.R), Litex.Same x (3 : ℂ) from (by
+  exact (Classical.choose_spec ((show ∃ (x : (Litex.R).Carrier), ∃ (__type_x : Litex.In x Litex.R), Litex.Same x (3 : ℂ) from (by
   have __projected_conclusion := (self_exists (3 : ℂ) (Litex.Rules.complexRealInR (3 : ℝ)))
   try rw [Litex.In.rep_exact] at __projected_conclusion
   exact __projected_conclusion)))).2

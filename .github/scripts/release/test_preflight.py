@@ -45,23 +45,23 @@ class ReleasePreflightTest(unittest.TestCase):
             "litex.exe",
         )
 
-    def test_runner_contract_requires_exit_zero_and_top_level_ok(self) -> None:
+    def test_result_graph_contract_requires_exit_zero_and_top_level_ok(self) -> None:
         successful = json.dumps(
             {
-                "runner": "litex-runner",
-                "runner_version": "0.2",
+                "graph": "litex-result-graph",
+                "graph_version": "3",
                 "result": "success",
                 "ok": True,
                 "target": {"kind": "file"},
             }
         )
-        preflight.validate_runner_output(successful, 0)
+        preflight.validate_result_graph_output(successful, 0)
         with self.assertRaises(preflight.PreflightError):
-            preflight.validate_runner_output(successful, 1)
+            preflight.validate_result_graph_output(successful, 1)
         with self.assertRaises(preflight.PreflightError):
-            preflight.validate_runner_output(
+            preflight.validate_result_graph_output(
                 json.dumps(
-                    {"runner": "litex-runner", "result": "error", "ok": False}
+                    {"graph": "litex-result-graph", "result": "error", "ok": False}
                 ),
                 1,
             )

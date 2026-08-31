@@ -9,13 +9,7 @@ const LANGUAGE_FLAG: &str = "-lang";
 const SUMMARIZE_FLAG: &str = "-summarize";
 const ISOLATED_FLAG: &str = "-isolated";
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct GlobalOptions {
-    pub run: RunOptions,
-    pub isolated: bool,
-}
-
-pub fn parse_global_options(args: &mut Vec<String>) -> Result<GlobalOptions, String> {
+pub fn parse_global_options(args: &mut Vec<String>) -> Result<RunOptions, String> {
     let detail_output = remove_flag(args, DETAIL_FLAG);
     let compact_output = remove_flag(args, COMPACT_FLAG);
     if detail_output && compact_output {
@@ -31,18 +25,76 @@ pub fn parse_global_options(args: &mut Vec<String>) -> Result<GlobalOptions, Str
     };
     let strict_mode = remove_flag(args, STRICT_FLAG);
     let summarize = remove_flag(args, SUMMARIZE_FLAG);
-    let isolated = remove_flag(args, ISOLATED_FLAG);
+    let is_isolated = remove_flag(args, ISOLATED_FLAG);
     let output_language = remove_language_flag(args)?;
 
-    Ok(GlobalOptions {
-        run: RunOptions {
-            output_style,
-            strict_mode,
-            summarize,
-            output_language,
-        },
-        isolated,
+    Ok(RunOptions {
+        output_style,
+        strict_mode,
+        summarize,
+        output_language,
+        is_isolated,
     })
+}
+
+pub fn validate_cli_combination(args: &[String], isolated: bool) -> Result<(), String> {
+    let is_value = |index: usize| args.get(index).is_some_and(|value| !value.starts_with('-'));
+
+    let valid = if args.is_empty() {
+        true
+    } else if args.len() == 1 {
+        if args[0] == "-session" {
+            true
+        } else if isolated {
+            false
+        } else {
+            matches!(args[0].as_str(), "-help" | "-version" | "-latex")
+        }
+    } else if args.len() == 2 {
+        is_value(1)
+            && if args[0] == "-f" {
+                true
+            } else if isolated {
+                false
+            } else {
+                matches!(
+                    args[0].as_str(),
+                    "-e" | "-r" | "-extractpython" | "-extractc"
+                )
+            }
+    } else if args.len() == 3 {
+        let target_flag = args[1].as_str();
+        is_value(2)
+            && if args[0] == "-session" {
+                target_flag == "-f"
+            } else if matches!(args[0].as_str(), "-graph" | "-factgraph" | "-defgraph") {
+                matches!(target_flag, "-e" | "-f" | "-r") && (!isolated || target_flag == "-f")
+            } else if args[0] == "-latex" {
+                matches!(target_flag, "-e" | "-f" | "-r") && (!isolated || target_flag == "-f")
+            } else if matches!(args[0].as_str(), "-extractpython" | "-extractc") {
+                matches!(target_flag, "-f" | "-r") && (!isolated || target_flag == "-f")
+            } else {
+                false
+            }
+    } else if args.len() == 4 {
+        if args[0] == "-f" {
+            isolated && is_value(1) && args[2] == "-lean" && is_value(3)
+        } else {
+            matches!(args[0].as_str(), "-graph" | "-factgraph" | "-defgraph")
+                && matches!(args[1].as_str(), "-e" | "-f" | "-r")
+                && (!isolated || args[1] == "-f")
+                && is_value(2)
+                && is_value(3)
+        }
+    } else {
+        false
+    };
+
+    if valid {
+        Ok(())
+    } else {
+        Err("unsupported CLI command combination".to_string())
+    }
 }
 
 fn remove_flag(args: &mut Vec<String>, flag_name: &str) -> bool {
@@ -129,14 +181,4 @@ pub fn read_session_target(
         path: file,
         mode: FileRunMode::from_isolated(isolated),
     })
-}
-
-pub fn reject_meaningless_isolated(isolated: bool, target: &str) -> Result<(), String> {
-    if isolated {
-        return Err(format!(
-            "-isolated has no meaning with {}; use it with -f, -session, or the REPL",
-            target
-        ));
-    }
-    Ok(())
 }

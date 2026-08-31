@@ -120,6 +120,32 @@ pub(in super::super) fn transport_zero_ended_order_proof_to_rendered_numeric_ope
     if let LeanTargetObjectRepresentation::Symbol { symbol_id, .. } =
         LeanTargetObjectRepresentation::lower(source_operand)?
     {
+        if context
+            .semantic_zero_ended_order_symbols
+            .contains(&symbol_id)
+        {
+            let rendered_source = render_obj(source_operand, context)?;
+            let rendered_target = render_numeric_obj(source_operand, context)?;
+            if rendered_source == rendered_target {
+                return Ok(source_proof.to_string());
+            }
+            let equality = context
+                .numeric_representation_equalities
+                .get(&symbol_id)
+                .ok_or_else(|| {
+                    format!(
+                        "semantic sign proof for `{rendered_source}` has no visible exact numeric equality bridge"
+                    )
+                })?;
+            let predicate = if strict {
+                "Litex.Positive"
+            } else {
+                "Litex.Nonnegative"
+            };
+            return Ok(format!(
+                "({predicate}.congr ({equality})).mp ({source_proof})"
+            ));
+        }
         if let Some(real) = context.numeric_real_values.get(&symbol_id) {
             return Ok(format!(
                 "Litex.Rules.{} {real} ({source_proof})",
@@ -199,6 +225,27 @@ pub(in super::super) fn transport_zero_ended_order_fact_proof_to_current_numeric
     if let LeanTargetObjectRepresentation::Symbol { symbol_id, .. } =
         LeanTargetObjectRepresentation::lower(source_operand)?
     {
+        if context
+            .semantic_zero_ended_order_symbols
+            .contains(&symbol_id)
+        {
+            let rendered_source = render_obj(source_operand, context)?;
+            let rendered_target = render_numeric_obj(source_operand, context)?;
+            if rendered_source == rendered_target {
+                return Ok(source_proof.to_string());
+            }
+            let equality = context
+                .numeric_representation_equalities
+                .get(&symbol_id)
+                .ok_or_else(|| {
+                    format!(
+                        "semantic zero-order proof for `{rendered_source}` has no visible exact numeric equality bridge"
+                    )
+                })?;
+            return Ok(format!(
+                "({predicate}.congr ({equality})).mp ({source_proof})"
+            ));
+        }
         if let Some(real) = context.numeric_real_values.get(&symbol_id) {
             let theorem = match (is_literal_zero(source_left), strict) {
                 (true, true) => "realCastPositive",

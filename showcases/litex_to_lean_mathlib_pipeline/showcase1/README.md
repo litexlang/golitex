@@ -143,9 +143,9 @@ From the repository root:
 
 ```bash
 cargo build --release
-target/release/litex -compact -strict -runner -isolated \
+target/release/litex -compact -strict -graph -isolated \
   -f showcases/litex_to_lean_mathlib_pipeline/main.lit
-target/release/litex -compact -strict -runner -isolated \
+target/release/litex -compact -strict -graph -isolated \
   -f showcases/litex_to_lean_mathlib_pipeline/property_flow.lit
 target/release/stmt_result_to_lean_compiler compile \
   showcases/litex_to_lean_mathlib_pipeline/main.lit \

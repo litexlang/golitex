@@ -85,7 +85,7 @@ fn local_real_completeness_replays_the_typed_builtin_application() {
             generated.contains("Litex.Rules.realLeastUpperBoundExists"),
             "{generated}"
         );
-        assert!(generated.contains("have __step1 : ∃"), "{generated}");
+        assert!(generated.contains("have __step1_0 : ∃"), "{generated}");
         for forbidden in ["LitexObject", "Litex.Object", "sorry", "axiom "] {
             assert!(
                 !generated.contains(forbidden),
@@ -250,15 +250,53 @@ fn local_transparent_set_membership_rejects_a_changed_definition_fact_id() {
 }
 
 #[test]
-fn local_real_glb_remains_an_explicit_uninstalled_adapter_boundary() {
+fn local_real_glb_replays_the_typed_builtin_application() {
     run_registered_rule_test(|| {
         let results = execute_source(LOCAL_REAL_GLB_SOURCE, "local_real_glb_boundary.lit");
+        let generated = StmtResultToLeanCompiler::new("local_real_glb_boundary.lit")
+            .compile_stmt_results_to_lean_source(&results)
+            .expect("compile local real greatest-lower-bound proof step");
+        assert!(
+            generated.contains("Litex.Rules.realGreatestLowerBoundExists"),
+            "{generated}"
+        );
+        assert!(generated.contains("have __step1_0 : ∃"), "{generated}");
+        for forbidden in ["LitexObject", "Litex.Object", "sorry", "axiom "] {
+            assert!(
+                !generated.contains(forbidden),
+                "forbidden `{forbidden}` in:\n{generated}"
+            );
+        }
+    });
+}
+
+#[test]
+fn local_real_glb_rejects_a_changed_requirement_schema() {
+    run_registered_rule_test(|| {
+        let mut results = execute_source(LOCAL_REAL_GLB_SOURCE, "local_real_glb_boundary.lit");
+        let proof_steps = theorem_proof_steps_mut(&mut results);
+        let StmtResult::Success(SuccessStmtResult::ReleaseThmStmt(application)) =
+            &mut proof_steps[0]
+        else {
+            panic!("expected local release-thm as proof step one")
+        };
+        let verification = application
+            .verification
+            .as_mut()
+            .expect("local release-thm retains verification");
+        let SuccessVerifyTheoremApplicationSourceResult::Builtin(source) = &mut verification.source
+        else {
+            panic!("real GLB completeness retains builtin theorem evidence")
+        };
+        source.requirement_roles.pop();
+
         let error = StmtResultToLeanCompiler::new("local_real_glb_boundary.lit")
             .compile_stmt_results_to_lean_source(&results)
-            .expect_err("the uninstalled GLB adapter must fail closed");
+            .expect_err("a changed GLB builtin requirement schema must fail closed");
         assert!(
-            error.contains("greatest-lower-bound")
-                && error.contains("Lean rule adapter has not been installed"),
+            error.contains("typed requirement schema")
+                || error.contains("requirement role")
+                || error.contains("requirement count"),
             "{error}"
         );
     });

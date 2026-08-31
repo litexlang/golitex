@@ -383,6 +383,17 @@ impl StmtResultToLeanCompiler {
                         &builtin.subgoals,
                     );
                 }
+                if matches!(
+                    builtin.evidence.typed(),
+                    Some(BuiltinRuleEvidence::Uncatalogued(
+                        UncataloguedBuiltinRule::VerifyInFactByKnownDirectSuperset
+                    ))
+                ) {
+                    return self.construct_lean_direct_superset_membership_from_result(
+                        &source_fact,
+                        &builtin.subgoals,
+                    );
+                }
                 if let Some(evidence) = builtin.evidence.typed() {
                     if let Some(limitation) = direct_builtin_rule_compiler_limitation(evidence) {
                         let children = builtin

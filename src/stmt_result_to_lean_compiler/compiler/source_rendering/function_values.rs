@@ -250,13 +250,31 @@ pub(in super::super) fn render_anonymous_function(
     function: &LeanTargetAnonymousFunctionRepresentation,
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
-    let occurrence = function.source_occurrence_id.ok_or_else(|| {
-        "anonymous function has no parser-owned source occurrence identity".to_string()
-    })?;
     let result_context = context
         .well_definedness
         .as_ref()
         .ok_or_else(|| "anonymous function has no active Result-owned WD context".to_string())?;
+    let synthetic_occurrence = function.source_occurrence_id.is_none();
+    let occurrence = if let Some(occurrence) = function.source_occurrence_id {
+        occurrence
+    } else {
+        let mut owners = result_context
+            .anonymous_functions
+            .iter()
+            .filter_map(|(owner, certificate)| {
+                (obj_equality_key(&certificate.source_function) == function.semantic_key)
+                    .then_some(*owner)
+            })
+            .collect::<Vec<_>>();
+        owners.sort_by_key(|owner| owner.value());
+        let [owner] = owners.as_slice() else {
+            return Err(format!(
+                "synthetic anonymous function has {} alpha-equivalent Result owners",
+                owners.len()
+            ));
+        };
+        *owner
+    };
     let owner_occurrence = result_context
         .anonymous_function_occurrence_aliases
         .get(&occurrence)
@@ -291,16 +309,13 @@ pub(in super::super) fn render_anonymous_function(
             "anonymous function Result context changed its source body or signature".into(),
         );
     }
-    let function = if owner_occurrence == occurrence {
-        function.clone()
-    } else {
-        let LeanTargetObjectRepresentation::AnonymousFunction(function) =
-            LeanTargetObjectRepresentation::lower(&anonymous_context.source_function)?
-        else {
-            return Err("anonymous-function Result owner lowered to another object".into());
-        };
-        *function
-    };
+    // Keep the current source occurrence.  An alpha-equivalent Result owner
+    // supplies the binder/closure certificate, but its stored source object
+    // may have been produced by substitution and therefore lack parser-owned
+    // occurrence identities on nested applications.  Replacing the current
+    // object with that synthetic owner would discard exactly the identities
+    // needed to select nested WD certificates.
+    let function = function.clone();
     validate_function_type(&function.function)?;
 
     let mut nested = context.clone();
@@ -308,21 +323,37 @@ pub(in super::super) fn render_anonymous_function(
     let mut binders = Vec::with_capacity(function.function.parameters.len());
     let mut parameter_values = HashMap::new();
     for (parameter_index, parameter) in function.function.parameters.iter().enumerate() {
-        let matches = anonymous_context
+        let mut parameter_premises = anonymous_context
             .parameters
             .iter()
-            .filter(|premise| {
-                matches!(
-                    premise.role,
-                    WellDefinedBinderPremiseRole::ParameterMembership { .. }
-                ) && premise.symbol_id == Some(parameter.symbol_id)
+            .filter_map(|premise| {
+                let WellDefinedBinderPremiseRole::ParameterMembership {
+                    parameter_group_index,
+                    parameter_index,
+                } = premise.role
+                else {
+                    return None;
+                };
+                Some(((parameter_group_index, parameter_index), premise))
             })
             .collect::<Vec<_>>();
-        let [parameter_premise] = matches.as_slice() else {
+        parameter_premises.sort_by_key(|(position, _)| *position);
+        let parameter_premise = parameter_premises
+            .get(parameter_index)
+            .map(|(_, premise)| *premise)
+            .ok_or_else(|| {
+                format!(
+                    "anonymous function has no ordered membership premise for parameter {parameter_index}"
+                )
+            })?;
+        if !synthetic_occurrence
+            && owner_occurrence == occurrence
+            && parameter_premise.symbol_id != Some(parameter.symbol_id)
+        {
             return Err(format!(
-                "anonymous function requires one exact membership premise for parameter {parameter_index}"
+                "anonymous function parameter {parameter_index} changed its exact SymbolId"
             ));
-        };
+        }
         let suffix = if uses_telescope {
             (parameter_index + 1).to_string()
         } else {
@@ -341,6 +372,21 @@ pub(in super::super) fn render_anonymous_function(
         nested
             .symbol_names
             .insert(parameter.symbol_id, argument.clone());
+        if synthetic_occurrence || owner_occurrence != occurrence {
+            let owner_symbol_id = parameter_premise.symbol_id.ok_or_else(|| {
+                format!("anonymous function owner has no SymbolId for parameter {parameter_index}")
+            })?;
+            nested
+                .symbol_names
+                .insert(owner_symbol_id, argument.clone());
+            install_numeric_representations_from_membership(
+                owner_symbol_id,
+                &parameter.set,
+                &argument,
+                &membership,
+                &mut nested,
+            );
+        }
         nested
             .fact_names
             .insert(parameter_premise.fact_id, membership.clone());
@@ -348,6 +394,16 @@ pub(in super::super) fn render_anonymous_function(
             parameter_premise.fact_id,
             parameter_premise.proposition.clone(),
         );
+        install_rendered_parameter_aliases(
+            parameter.symbol_id,
+            &format!("Litex.In {argument} {domain}"),
+            &membership,
+            None,
+            &mut nested,
+        )
+        .map_err(|error| {
+            format!("anonymous function parameter {parameter_index} aliases failed: {error}")
+        })?;
         if let Some(real) = membership_real_value(&parameter.set, &argument, &membership) {
             nested.numeric_real_values.insert(parameter.symbol_id, real);
         }
@@ -411,9 +467,15 @@ pub(in super::super) fn render_anonymous_function(
     let selected_return = match closure.role {
         WellDefinednessRequirementRole::AnonymousFunctionBodyMembership => {
             let (body, return_set) = membership_parts(&closure.expected_proposition)?;
-            if LeanTargetObjectRepresentation::lower(body)? != *function.body
-                || LeanTargetObjectRepresentation::lower(return_set)?
-                    != *function.function.return_set
+            let owner_body_changed = if !synthetic_occurrence && owner_occurrence == occurrence {
+                obj_equality_key(body) != obj_equality_key(&function.source_body)
+            } else {
+                false
+            };
+            if owner_body_changed
+                || LeanTargetObjectRepresentation::lower(return_set).map_err(|error| {
+                    format!("anonymous function return carrier failed to lower: {error}")
+                })? != *function.function.return_set
             {
                 return Err(
                     "anonymous function return closure changed its exact body or carrier".into(),
@@ -421,14 +483,18 @@ pub(in super::super) fn render_anonymous_function(
             }
             match function.function.return_set.as_ref() {
                 LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Real) => {
-                    render_real_target_object_representation(&function.body, &nested)?
+                    render_real_source_object(&function.source_body, &nested).map_err(|error| {
+                        format!("anonymous function real body failed to render: {error}")
+                    })?
                 }
                 LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Integer) => {
-                    render_integer_target_object_representation(&function.body, &nested)?
+                    render_integer_obj(&function.source_body, &nested).map_err(|error| {
+                        format!("anonymous function integer body failed to render: {error}")
+                    })?
                 }
                 _ => format!(
                     "Litex.In.rep {} ({})",
-                    render_obj(body, &nested)?,
+                    render_obj(&function.source_body, &nested)?,
                     closure.proof_expression.as_ref().ok_or_else(|| {
                         "anonymous function body-membership Result was not compiled".to_string()
                     })?
@@ -464,14 +530,13 @@ pub(in super::super) fn render_anonymous_function(
             && function.function.return_set.as_ref()
                 == &LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Integer);
         if exact_unary_integer {
-            let own_body = render_integer_function_body_with_parameters(
-                &function.body,
-                &HashMap::from([(
-                    function.function.parameters[0].symbol_id,
-                    "__arg".to_string(),
-                )]),
-                context,
-            )?;
+            let mut own_context = context.clone();
+            install_structured_induction_native_integer_symbol(
+                function.function.parameters[0].symbol_id,
+                "__arg",
+                &mut own_context,
+            );
+            let own_body = render_integer_obj(&function.source_body, &own_context)?;
             format!(
                 "{{ call := fun {{__alpha}} (__arg : __alpha) __arg_in => {checked_body}, callOwn := fun (__arg : ℤ) => {own_body} }}"
             )

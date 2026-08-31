@@ -11,8 +11,10 @@ pub(in super::super) fn install_exact_set_builder_parameter_representation(
     context
         .exact_carrier_values
         .insert(symbol_id, value.to_string());
-    if let Some(real) = exact_set_real_value(base_set, value) {
-        context.numeric_real_values.insert(symbol_id, real);
+    let observed_real = exact_set_real_value(base_set, value)
+        .or_else(|| render_real_set_observer(base_set, context, value).ok());
+    if let Some(real) = &observed_real {
+        context.numeric_real_values.insert(symbol_id, real.clone());
     } else {
         // A non-exact carrier still needs the representation-invariant sign
         // predicate used by heterogeneous set-builder transport.
@@ -24,12 +26,24 @@ pub(in super::super) fn install_exact_set_builder_parameter_representation(
     if let Some(rational) = exact_set_rational_value(base_set, value) {
         context.numeric_rational_values.insert(symbol_id, rational);
     }
-    if let Some(representation) = exact_set_numeric_value(base_set, value) {
+    let numeric_representation = exact_set_numeric_value(base_set, value).or_else(|| {
+        observed_real
+            .as_ref()
+            .map(|real| format!("((({real} : ℝ)) : ℂ)"))
+    });
+    if let Some(representation) = numeric_representation {
         context
             .numeric_representations
             .insert(symbol_id, representation);
     }
-    if let Some(equality) = exact_set_numeric_equality(base_set, value) {
+    let numeric_equality = exact_set_numeric_equality(base_set, value).or_else(|| {
+        let observer_same = render_real_set_observer_same(base_set, context, value).ok()?;
+        let real = observed_real.as_ref()?;
+        Some(format!(
+            "Litex.Same.trans ({observer_same}) (Litex.Same.realComplex ({real}))"
+        ))
+    });
+    if let Some(equality) = numeric_equality {
         context
             .numeric_representation_equalities
             .insert(symbol_id, equality);
@@ -38,6 +52,10 @@ pub(in super::super) fn install_exact_set_builder_parameter_representation(
         context
             .numeric_representation_memberships
             .insert(symbol_id, proof);
+    } else if let Some(real) = observed_real {
+        context
+            .numeric_representation_memberships
+            .insert(symbol_id, format!("Litex.Rules.complexRealInR ({real})"));
     }
 }
 

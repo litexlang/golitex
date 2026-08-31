@@ -418,6 +418,15 @@ FactId; the compiler validates that record, unfolds only `E`, and recursively
 replays ordinary literal set-builder membership. There is no theorem-name or
 set-name specialization.
 
+`69_RealCauchyFromCompleteness.lit` is the broad real-analysis regression. It
+derives convergence of every real Cauchy sequence from the general
+least-upper-bound interface, using the Archimedean interface to select named
+positive-natural common tail indices. The generated proof exercises exact
+function carriers, concrete predicates, nested forall/existential transport,
+local typed set builders, transparent membership, LUB observers, algebraic
+equality rewrites, and typed order transitivity. It introduces no
+sequence-specific builtin or project axiom.
+
 Generated `.lean` files are review artifacts, not editing surfaces. A new
 compiler feature must add the next numbered same-name pair. Unsupported
 statements, objects, facts, or proof routes fail closed.

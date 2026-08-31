@@ -15,7 +15,7 @@ impl Runtime {
 #[test]
 fn isolated_source_registers_the_root_module_file() {
     let mut runtime = Runtime::default();
-    runtime.start_isolated_source("<-e>");
+    runtime.start_isolated_source("eval");
 
     assert!(runtime.module_manager.module(ModuleId::ROOT).is_some());
     let frame = runtime
@@ -24,13 +24,13 @@ fn isolated_source_registers_the_root_module_file() {
         .expect("isolated source frame should exist");
     assert_eq!(frame.module_file_info.module_id, ModuleId::ROOT);
     assert_eq!(frame.module_file_info.file_id, FileId(0));
-    assert_eq!(frame.module_file_info.source_path.as_ref(), "<-e>");
+    assert_eq!(frame.module_file_info.source_path.as_ref(), "eval");
     let file = runtime
         .module_manager
         .module(ModuleId::ROOT)
         .and_then(|module| module.file(FileId(0)))
         .expect("isolated source should be registered as a module file");
-    assert_eq!(file.source_path, "<-e>");
+    assert_eq!(file.source_path, "eval");
     assert!(file.is_virtual_source);
 }
 

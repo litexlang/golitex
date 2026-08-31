@@ -20,7 +20,7 @@
 # because no proof of `x $in s` exists.
 #
 # Evidence:
-# target/release/litex -compact -strict -runner -f lean/examples/4_FunctionSet.lit
+# target/release/litex -compact -strict -graph -f lean/examples/4_FunctionSet.lit
 # cd lean && ./stmt_result_to_lean_compiler.sh compile examples/4_FunctionSet.lit
 # cd lean && ./stmt_result_to_lean_compiler.sh check examples && lake env lean examples/4_FunctionSet.lean
 

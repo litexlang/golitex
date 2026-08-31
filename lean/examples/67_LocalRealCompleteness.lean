@@ -6,12 +6,21 @@ set_option linter.style.nameCheck false
 namespace __Compiler_67_LocalRealCompleteness
 
 theorem local_real_completeness :
-    ∀ (S : Litex.Set) {__carrier0_2 : Type} (upper : __carrier0_2) (__h16 : Litex.In upper Litex.R) (__domain1 : Litex.Subset S Litex.R) (__domain2 : Litex.Set.Nonempty S) (__domain3 : ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.R) (__domain1 : Litex.In __p1 S), Litex.Le (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (((Litex.In.rep upper __h16 : ℝ)) : ℂ)),
-      ∃ (L : ℂ), ∃ (__type_L : Litex.In L Litex.R), Litex.RealLeastUpperBound S L := by
-  intro S __carrier0_2 upper __h16 __domain1 __domain2 __domain3
-  have __step1 : ∃ (lub : ℂ), ∃ (__type_lub : Litex.In lub Litex.R), Litex.RealLeastUpperBound S lub := by
-    exact Litex.Rules.realLeastUpperBoundExists S upper (__domain1) (__domain2) (__h16) (__domain3)
-  have __c0_0 : ∃ (L : ℂ), ∃ (__type_L : Litex.In L Litex.R), Litex.RealLeastUpperBound S L := __step1
-  exact __c0_0
+    ∀ (S : Litex.Set) (upper : (Litex.R).Carrier) (__h16 : Litex.In upper Litex.R) (__domain_f17 : Litex.Subset S Litex.R) (__domain_f21 : Litex.Set.Nonempty S) (__domain_f25 : ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In __p1 Litex.R) (__domain1 : Litex.In __p1 S), Litex.Le (((__p1 : ℝ)) : ℂ) (((upper : ℝ)) : ℂ)),
+      ∃ (L : (Litex.R).Carrier), ∃ (__type_L : Litex.In L Litex.R), Litex.RealLeastUpperBound S L := by
+  intro S upper __h16 __domain_f17 __domain_f21 __domain_f25
+  have __fact0 :
+      ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 S), Litex.Le (((Litex.In.rep __p1 (((__domain_f17)) __p1 (__type1))) : ℝ) : ℂ) (((upper : ℝ)) : ℂ) := by
+    intro __carrier1 member __h28
+    have __prior0_0 : Litex.Le (((Litex.In.rep member (((__domain_f17)) member (__h28))) : ℝ) : ℂ) (((upper : ℝ)) : ℂ) := (by
+      simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (__domain_f25 (Litex.In.rep member (((__domain_f17)) member (__h28))) (Litex.In.own Litex.R (Litex.In.rep member (((__domain_f17)) member (__h28)))) ((Litex.In.congr (Litex.Same.trans (Litex.Same.trans (Litex.In.same_rep member (((__domain_f17)) member (__h28))) (Litex.Same.realComplex (Litex.In.rep member (((__domain_f17)) member (__h28))))) (Litex.Same.symm (Litex.Same.realComplex ((Litex.In.rep member (((__domain_f17)) member (__h28))))))) S).mp (__h28))))
+    exact __prior0_0
+  have __step1_0 : ∃ (lub : (Litex.R).Carrier), ∃ (__type_lub : Litex.In lub Litex.R), Litex.RealLeastUpperBound S lub := by
+    exact Litex.Rules.realLeastUpperBoundExists S (upper : ℝ)  (__domain_f17) (__domain_f21) (Litex.In.own Litex.R (upper : ℝ)) ((fun member memberInSet => by
+    have __member_rep : Litex.In.rep member (((__domain_f17)) member memberInSet) = member :=
+      Litex.In.rep_exact (set := Litex.R) member (((__domain_f17)) member memberInSet)
+    simpa only [__member_rep] using ((__fact0) member memberInSet)))
+  have __c1_0 : ∃ (L : (Litex.R).Carrier), ∃ (__type_L : Litex.In L Litex.R), Litex.RealLeastUpperBound S L := __step1_0
+  exact __c1_0
 
 end __Compiler_67_LocalRealCompleteness

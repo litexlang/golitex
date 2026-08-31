@@ -13,7 +13,7 @@
 # Other atomic predicates and arithmetic operators still fail closed.
 #
 # Evidence:
-# target/release/litex -compact -strict -runner -f lean/examples/3_AtomicEquality.lit
+# target/release/litex -compact -strict -graph -f lean/examples/3_AtomicEquality.lit
 # cd lean && ./stmt_result_to_lean_compiler.sh compile examples/3_AtomicEquality.lit
 # cd lean && ./stmt_result_to_lean_compiler.sh check examples
 

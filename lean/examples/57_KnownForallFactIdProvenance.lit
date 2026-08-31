@@ -36,5 +36,5 @@ $first_left(2) and $first_right(2)
 $second_left(2) and $second_right(2)
 
 # Evidence:
-# target/release/litex -compact -strict -isolated -runner -f lean/examples/57_KnownForallFactIdProvenance.lit
+# target/release/litex -compact -strict -isolated -graph -f lean/examples/57_KnownForallFactIdProvenance.lit
 # cargo test --release --test stmt_result_to_lean_compiler_tracers known_forall_multi_conclusion_fact_id_provenance_compiles_both_exact_projections -- --nocapture

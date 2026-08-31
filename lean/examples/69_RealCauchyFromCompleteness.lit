@@ -1,0 +1,136 @@
+# Regression: derive sequential completeness of the reals from the general
+# least-upper-bound and Archimedean interfaces. This is intentionally a broad
+# StmtResult-to-Lean stress test; showcase2 remains the smaller scalar-limit
+# pipeline intended for readers.
+
+prop is_tail_epsilon_steady(a seq(R), epsilon R+, n0 N+):
+    forall j, k N+:
+        j >= n0
+        k >= n0
+        =>:
+            abs(a(j) - a(k)) < epsilon
+
+prop is_cauchy_sequence(a seq(R)):
+    forall epsilon R+:
+        exist n0 N+ st {$is_tail_epsilon_steady(a, epsilon, n0)}
+
+prop is_tail_close_to(a seq(R), L R, epsilon R+, n0 N+):
+    forall n N+:
+        n >= n0
+        =>:
+            abs(a(n) - L) < epsilon
+
+prop has_limit(a seq(R), L R):
+    forall epsilon R+:
+        exist n0 N+ st {$is_tail_close_to(a, L, epsilon, n0)}
+
+prop is_convergent_sequence(a seq(R)):
+    exist L R st {$has_limit(a, L)}
+
+prop is_tail_lower_bound(a seq(R), n0 N+, B R):
+    forall n N+:
+        n >= n0
+        =>:
+            B <= a(n)
+
+prop has_eventual_lower_bound(a seq(R), B R):
+    exist n0 N+ st {$is_tail_lower_bound(a, n0, B)}
+
+thm cauchy_sequence_converges:
+    ? forall a seq(R):
+        $is_cauchy_sequence(a)
+        =>:
+            $is_convergent_sequence(a)
+    obtain one_n0 from exist n0 N+ st {$is_tail_epsilon_steady(a, 1, n0)}
+    have E power_set(R) = {x R: $has_eventual_lower_bound(a, x)}
+    claim:
+        ? $is_nonempty_set(E)
+        forall n N+:
+            n >= one_n0
+            =>:
+                abs(a(one_n0) - a(n)) < 1
+                a(one_n0) - a(n) <= abs(a(one_n0) - a(n)) < 1
+                a(one_n0) - 1 < a(one_n0) - (a(one_n0) - a(n)) = a(n)
+                a(one_n0) - 1 <= a(n)
+        by def:
+            ? $is_tail_lower_bound(a, one_n0, a(one_n0) - 1)
+        witness $has_eventual_lower_bound(a, a(one_n0) - 1) from one_n0
+        a(one_n0) - 1 $in E
+        witness $is_nonempty_set(E) from a(one_n0) - 1
+    claim:
+        ? forall x R:
+            x $in E
+            =>:
+                x <= a(one_n0) + 1
+        obtain n1 from $has_eventual_lower_bound(a, x)
+        release thm real_archimedean_natural_upper_bound(one_n0 + n1)
+        obtain common_n from exist natural N+ st {one_n0 + n1 < natural}
+        one_n0 + n1 >= one_n0
+        one_n0 + n1 >= n1
+        common_n >= one_n0
+        common_n >= n1
+        abs(a(common_n) - a(one_n0)) < 1
+        a(common_n) - a(one_n0) <= abs(a(common_n) - a(one_n0)) < 1
+        a(common_n) < a(one_n0) + 1
+        a(common_n) <= a(one_n0) + 1
+        x <= a(common_n) <= a(one_n0) + 1
+    release thm real_least_upper_bound_exists(E, a(one_n0) + 1)
+    obtain L from exist candidate R st {$is_real_least_upper_bound(E, candidate)}
+    claim:
+        ? forall epsilon R+:
+            exist n0 N+ st {$is_tail_close_to(a, L, epsilon, n0)}
+        obtain n0 from exist cutoff N+ st {$is_tail_epsilon_steady(a, epsilon / 2, cutoff)}
+        claim:
+            ? forall n N+:
+                n >= n0
+                =>:
+                    abs(a(n) - L) < epsilon
+            claim:
+                ? a(n) - epsilon / 2 <= L
+                forall k N+:
+                    k >= n0
+                    =>:
+                        abs(a(n) - a(k)) < epsilon / 2
+                        a(n) - a(k) <= abs(a(n) - a(k)) < epsilon / 2
+                        a(n) - epsilon / 2 < a(k)
+                        a(n) - epsilon / 2 <= a(k)
+                by def:
+                    ? $is_tail_lower_bound(a, n0, a(n) - epsilon / 2)
+                witness $has_eventual_lower_bound(a, a(n) - epsilon / 2) from n0
+                have lower_member E = a(n) - epsilon / 2
+                release thm real_member_le_least_upper_bound(E, L, lower_member)
+                lower_member = a(n) - epsilon / 2 <= L
+            claim:
+                ? L <= a(n) + epsilon / 2
+                claim:
+                    ? forall x R:
+                        x $in E
+                        =>:
+                            x <= a(n) + epsilon / 2
+                    obtain n1 from $has_eventual_lower_bound(a, x)
+                    release thm real_archimedean_natural_upper_bound(n0 + n1)
+                    obtain common_n from exist natural N+ st {n0 + n1 < natural}
+                    n0 + n1 >= n0
+                    n0 + n1 >= n1
+                    common_n >= n0
+                    common_n >= n1
+                    abs(a(common_n) - a(n)) < epsilon / 2
+                    a(common_n) - a(n) <= abs(a(common_n) - a(n)) < epsilon / 2
+                    a(common_n) < a(n) + epsilon / 2
+                    a(common_n) <= a(n) + epsilon / 2
+                    x <= a(common_n) <= a(n) + epsilon / 2
+                release thm real_least_upper_bound_le_upper_bound(E, L, a(n) + epsilon / 2)
+            a(n) - L <= epsilon / 2
+            -(epsilon / 2) = a(n) - (a(n) + epsilon / 2)
+            a(n) - (a(n) + epsilon / 2) <= a(n) - L
+            -(epsilon / 2) <= a(n) - L
+            -(a(n) - L) <= epsilon / 2
+            abs(a(n) - L) <= epsilon / 2 < epsilon
+        witness exist cutoff N+ st {$is_tail_close_to(a, L, epsilon, cutoff)} from n0:
+            forall n N+:
+                n >= n0
+                =>:
+                    abs(a(n) - L) < epsilon
+            by def $is_tail_close_to(a, L, epsilon, n0)
+    by def $has_limit(a, L)
+    witness $is_convergent_sequence(a) from L

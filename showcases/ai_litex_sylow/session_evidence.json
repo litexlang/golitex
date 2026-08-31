@@ -3,8 +3,8 @@
   "recorded_on": "2026-08-29",
   "recorded_target": "tmp/2026-08-29/ai-litex-sylow-showcase/main.lit",
   "published_target": "showcases/ai_litex_sylow/main.lit",
-  "recorded_session_command": "target/release/litex -compact -session -before tmp/2026-08-29/ai-litex-sylow-showcase/main.lit",
-  "replay_session_command": "target/release/litex -compact -session -before showcases/ai_litex_sylow/main.lit",
+  "recorded_session_mode": "historical pre-target session available on 2026-08-29",
+  "replay_session_command": "python3 showcases/ai_litex_sylow/replay_session.py --output <events.jsonl>",
   "raw_jsonl": {
     "sha256": "2c91399d6ae206fb372e079c7d849b9ef47a1d6239e8d090568a9a44f7d971e2",
     "bytes": 1644271,

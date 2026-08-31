@@ -19,6 +19,6 @@ $marked(1)
 # - `-strict` intentionally rejects this explicit unsafe source file, while
 #   the ordinary runner, compiler axiom audit, and real Lean kernel accept the
 #   declared boundary exactly as written.
-# Evidence: target/release/litex -compact -runner -f lean/examples/25_ExplicitSourceAxioms.lit
+# Evidence: target/release/litex -compact -graph -f lean/examples/25_ExplicitSourceAxioms.lit
 # cargo test --release --test stmt_result_to_lean_compiler_tracers
 # and cd lean && lake env lean examples/25_ExplicitSourceAxioms.lean

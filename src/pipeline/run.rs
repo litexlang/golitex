@@ -21,9 +21,7 @@ pub struct RunOutcome {
 pub fn run_code(source: &str, options: RunOptions) -> RunOutcome {
     let mut runtime = Runtime::new(options);
     let target = RunTarget::Eval;
-    runtime.start_isolated_source(
-        ExecutionTarget::Run(target.clone()).source_label(),
-    );
+    runtime.start_isolated_source(ExecutionTarget::Run(target.clone()).source_label());
     let (stmt_results, runtime_error) = runtime
         .execute_source(remove_windows_carriage_from_str(source).as_str())
         .into_parts();
@@ -39,11 +37,21 @@ pub fn run_code(source: &str, options: RunOptions) -> RunOutcome {
 }
 
 pub fn run_file(path: &str, options: RunOptions) -> RunOutcome {
-    run_file_with_mode(path, FileRunMode::Project, options)
+    run_file_with_mode(
+        path,
+        FileRunMode::from_isolated(options.is_isolated),
+        options,
+    )
 }
 
 pub fn run_isolated_file(path: &str, options: RunOptions) -> RunOutcome {
-    run_file_with_mode(path, FileRunMode::Isolated, options)
+    run_file(
+        path,
+        RunOptions {
+            is_isolated: true,
+            ..options
+        },
+    )
 }
 
 fn run_file_with_mode(path: &str, mode: FileRunMode, options: RunOptions) -> RunOutcome {

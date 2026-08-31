@@ -347,9 +347,8 @@ the set extension itself; no additional native `Set.univ` value is stored. -/
 structure Set where
   Carrier : Litex.u.{u}
   /-- Optional canonical native-real observation for exact carriers used by
-  the analysis layer. Ordinary sets remain valid without one; real-set
-  constructors preserve a single observation instead of reselecting semantic
-  representatives. -/
+  target rendering. Completeness does not trust this function as membership
+  evidence; its native set is defined by heterogeneous `In` instead. -/
   realValue : Option (Carrier → ℝ) := none
 
 namespace Set
@@ -2031,25 +2030,50 @@ canonical native-real observation. -/
 def Set.RealValued (set : Litex.Set) : Prop :=
   ∃ observe : set.Carrier → ℝ, set.realValue = some observe
 
-/-- Native real values of an explicitly real-valued exact carrier. Sets
-without a registered real observation contribute no native values; analysis
-rules require and retain the corresponding `RealValued` certificate. -/
+/-- Native real values which are heterogeneous members of a Litex set.  This
+is the representation-independent set used by completeness: it does not
+trust a target-rendering observer to prove source membership. -/
 def realMemberValues (set : Litex.Set) : _root_.Set ℝ :=
-  match set.realValue with
-  | none => ∅
-  | some observe => _root_.Set.range observe
+  {value | Litex.In value set}
 
-/-- A verifier-owned certificate that the compiler's canonical real
-observation of a source complex value is the least upper bound of the real
-members of `set`. Possessing this certificate is the explicit evidence that
-allows later compilation to keep the candidate's `OrderValue` representation. -/
+/-- One native-real representative selected from a checked `set ⊆ R`
+certificate. Completeness itself is defined over all native real members, but
+this helper remains useful when a proof must observe an exact set carrier. -/
+noncomputable def realSubsetObserve
+    (set : Litex.Set)
+    (setSubsetReal : Litex.Subset set Litex.R)
+    (member : set.Carrier) : ℝ :=
+  Litex.In.rep member
+    (setSubsetReal member (Litex.In.own set member))
+
+theorem realSubsetObserve_same
+    (set : Litex.Set)
+    (setSubsetReal : Litex.Subset set Litex.R)
+    (member : set.Carrier) :
+    Litex.Same member (realSubsetObserve set setSubsetReal member : ℂ) :=
+  Litex.Same.trans
+    (Litex.In.same_rep member
+      (setSubsetReal member (Litex.In.own set member)))
+    (Litex.Same.realComplex (realSubsetObserve set setSubsetReal member))
+
+/-- The real-member set paired with the checked subset certificate.  The
+certificate is retained in the LUB/GLB proposition, while the extension is
+defined solely by `In`, so all producers and consumers use the same values. -/
+def realSubsetMemberValues
+    (set : Litex.Set)
+    (_setSubsetReal : Litex.Subset set Litex.R) : _root_.Set ℝ :=
+  realMemberValues set
+
+/-- A verifier-owned least-upper-bound certificate over the native real values
+which actually belong to the Litex set. -/
 def RealLeastUpperBound (set : Litex.Set) (candidate : ℂ) : Prop :=
-  IsLUB (realMemberValues set) (OrderValue candidate)
+  ∃ setSubsetReal : Litex.Subset set Litex.R,
+    IsLUB (realSubsetMemberValues set setSubsetReal) (OrderValue candidate)
 
-/-- The greatest-lower-bound certificate dual to `RealLeastUpperBound`, over
-the same canonical native-real observation owned by the exact set carrier. -/
+/-- Greatest-lower-bound certificate dual to `RealLeastUpperBound`. -/
 def RealGreatestLowerBound (set : Litex.Set) (candidate : ℂ) : Prop :=
-  IsGLB (realMemberValues set) (OrderValue candidate)
+  ∃ setSubsetReal : Litex.Subset set Litex.R,
+    IsGLB (realSubsetMemberValues set setSubsetReal) (OrderValue candidate)
 
 /-- A bounded positive-natural function parameter is compared through one
 source complex observation. This keeps the telescope requirement usable for a

@@ -7,9 +7,14 @@ commands render the resulting `RunOutcome` without redispatching the input.
 ```text
 run_code(source, options)         -> Runtime::new -> execute source
 run_file(path, options)           -> Runtime::new -> resolve and execute file
+run_isolated_file(path, options)  -> Runtime::new -> resolve and execute isolated file
 run_repository(path, options)     -> Runtime::new -> discover and execute repository
                                    -> render output and optional summary once
 ```
+
+Each outcome retains one typed `RunTarget`. Project versus isolated file
+execution is part of that target; repository discovery identifiers remain
+internal to the module system.
 
 The files on this path import their dependency owners directly. Reading from
 `run.rs` into `source_execution.rs`, `statement_parsing.rs`, and the executor
@@ -22,15 +27,17 @@ or `module_manager` without first expanding the crate-wide prelude.
 | --- | --- |
 | `litex -e '1 = 1'` | Runs source code in an isolated runtime. |
 | `litex -f chapter.lit` | Discovers project context and runs the registered prefix through that file. |
+| `litex -isolated -f scratch.lit` | Runs one standalone file and continues in the same isolated REPL runtime. |
 | `litex -r std/basics` | Runs the module's recursive export tree. |
-| `litex -session -before chapter.lit` | Preloads the registered prefix before the target and then accepts framed statements. |
+| `litex -session -f chapter.lit` | Runs a verified registered prefix through the target and then accepts framed statements. |
 | `litex -f litex.config` | Rejected because configuration is not executable Litex source. |
 
 ## Start here
 
 | File | Example |
 | --- | --- |
-| [`run.rs`](run.rs) | Owns the explicit `run_code`, `run_file`, and `run_repository` entries, Runtime creation, and their shared outcome rendering. The canonical `RunOptions` lives in [`../runtime/run_options.rs`](../runtime/run_options.rs). |
+| [`target.rs`](target.rs) | Models batch, REPL, file-mode, and session targets and their canonical source labels. |
+| [`run.rs`](run.rs) | Owns the explicit batch entries, Runtime creation, and their shared outcome rendering. The canonical `RunOptions` lives in [`../runtime/run_options.rs`](../runtime/run_options.rs). |
 | [`source_execution.rs`](source_execution.rs) | Tokenizes, parses, and executes source inside an already initialized Runtime. |
 | [`file_execution.rs`](file_execution.rs) | Resolves `-f`, discovers project context, and selects repository-prefix or isolated-file execution. |
 | [`output_rendering.rs`](output_rendering.rs) | Renders statement results, errors, and unverified-import warnings. |

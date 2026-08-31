@@ -506,7 +506,7 @@ after = "./after.lit"
         let (_, strict_error) = execute_file_in_runtime(
             target.as_str(),
             &mut strict_runtime,
-            FileExecutionOptions::default(),
+            FileRunMode::Project,
         );
         let strict_error = strict_error.expect("strict -f must verify its export prefix");
         assert!(format!("{strict_error:?}").contains("1 = 0"));

@@ -126,7 +126,7 @@ tests, and no undocumented old-only source route remains. The final audit must
 use the current versions of these gates:
 
 ```sh
-target/release/litex -compact -strict -runner -f lean/examples/<tracer>.lit
+target/release/litex -compact -strict -graph -f lean/examples/<tracer>.lit
 cargo test --release --test stmt_result_to_lean_compiler_tracers
 cd lean && ./stmt_result_to_lean_compiler.sh check examples
 cd lean && lake build

@@ -13,6 +13,100 @@ impl StmtResultToLeanCompiler {
         rule: AbsoluteValueBuiltinRule,
         subgoals: &[StmtResult],
     ) -> Result<Option<String>, String> {
+        if rule == AbsoluteValueBuiltinRule::UpperBound {
+            let (target_left, bound, target_strict) = order_relation_parts(target)?;
+            let Obj::Abs(absolute) = target_left else {
+                return Err("absolute-value upper bound lost its absolute-value target".into());
+            };
+            let argument = absolute.arg.as_ref();
+            let [upper, lower] = subgoals else {
+                return Err(
+                    "absolute-value upper bound requires two retained order premises".into(),
+                );
+            };
+            let mut compile_child = |child: &StmtResult, role: &str| {
+                let child = child
+                    .factual_success()
+                    .ok_or_else(|| format!("absolute-value {role} premise is not factual"))?;
+                if !child.store.infers.is_empty() {
+                    return Err(format!(
+                        "absolute-value {role} premise unexpectedly published effects"
+                    ));
+                }
+                let proof = self
+                    .construct_lean_proof_from_direct_fact_result(child)?
+                    .ok_or_else(|| {
+                        format!("absolute-value {role} premise has no direct proof consumer")
+                    })?;
+                Ok::<_, String>((child.fact(), proof))
+            };
+            let (upper_fact, upper_proof) = compile_child(upper, "upper")?;
+            let (lower_fact, lower_proof) = compile_child(lower, "lower")?;
+            let (upper_left, upper_right, upper_strict) = order_relation_parts(&upper_fact)?;
+            if obj_equality_key(upper_left) != obj_equality_key(argument)
+                || obj_equality_key(upper_right) != obj_equality_key(bound)
+                || upper_strict != target_strict
+            {
+                return Err(
+                    "absolute-value upper premise changed its endpoints or strictness".into(),
+                );
+            }
+            let (lower_left, lower_right, lower_strict) = order_relation_parts(&lower_fact)?;
+            if lower_strict != target_strict {
+                return Err("absolute-value lower premise changed relation strictness".into());
+            }
+            let negated_argument = |candidate: &Obj, expected: &Obj| {
+                let Obj::Mul(product) = candidate else {
+                    return false;
+                };
+                let is_negative_one = |object: &Obj| matches!(object, Obj::Number(number) if number.normalized_value == "-1");
+                (is_negative_one(product.left.as_ref())
+                    && obj_equality_key(product.right.as_ref()) == obj_equality_key(expected))
+                    || (is_negative_one(product.right.as_ref())
+                        && obj_equality_key(product.left.as_ref()) == obj_equality_key(expected))
+            };
+            let lower_is_neg_bound = negated_argument(lower_left, bound)
+                && obj_equality_key(lower_right) == obj_equality_key(argument);
+            let lower_is_neg_argument = negated_argument(lower_left, argument)
+                && obj_equality_key(lower_right) == obj_equality_key(bound);
+            if !lower_is_neg_bound && !lower_is_neg_argument {
+                return Err("absolute-value lower premise changed its sandwich endpoints".into());
+            }
+            let argument_real = render_real_target_object_representation(
+                &LeanTargetObjectRepresentation::lower(argument)?,
+                &self.environment_stack,
+            )?;
+            let bound_real = render_real_target_object_representation(
+                &LeanTargetObjectRepresentation::lower(bound)?,
+                &self.environment_stack,
+            )?;
+            render_fact(target, &self.environment_stack)?;
+            let relation = if target_strict {
+                "Litex.Lt"
+            } else {
+                "Litex.Le"
+            };
+            let theorem = match (target_strict, lower_is_neg_bound) {
+                (false, true) => "Litex.Rules.realCastAbsLeOfUpperAndLower",
+                (false, false) => "Litex.Rules.realCastAbsLeOfUpperAndNegUpper",
+                (true, true) => "Litex.Rules.realCastAbsLtOfUpperAndLower",
+                (true, false) => "Litex.Rules.realCastAbsLtOfUpperAndNegUpper",
+            };
+            let lower_native_left = if lower_is_neg_bound {
+                format!("(-({bound_real}) : ℝ)")
+            } else {
+                format!("(-({argument_real}) : ℝ)")
+            };
+            let lower_native_right = if lower_is_neg_bound {
+                argument_real.clone()
+            } else {
+                bound_real.clone()
+            };
+            let simp = "Litex.fnApply, Litex.fnApplyOwn, ← Complex.ofReal_one, ← Complex.ofReal_add, ← Complex.ofReal_sub, ← Complex.ofReal_mul, ← Complex.ofReal_div";
+            return Ok(Some(format!(
+                "(by\n  have __abs_upper : {relation} (({argument_real} : ℝ) : ℂ) (({bound_real} : ℝ) : ℂ) := by\n    convert ({upper_proof}) using 1 <;> simp [{simp}] <;> norm_num <;> norm_cast\n  have __abs_lower : {relation} (({lower_native_left} : ℝ) : ℂ) (({lower_native_right} : ℝ) : ℂ) := by\n    convert ({lower_proof}) using 1 <;> simp [{simp}] <;> norm_num <;> norm_cast\n  convert ({theorem} (a := {argument_real}) (b := {bound_real}) __abs_upper __abs_lower) using 1 <;> simp [{simp}] <;> norm_num <;> norm_cast)"
+            )));
+        }
         if matches!(
             rule,
             AbsoluteValueBuiltinRule::Nonnegative
@@ -357,6 +451,9 @@ impl StmtResultToLeanCompiler {
                     Ok(Some(format!(
                         "Litex.Rules.absPositiveOfNotSame {source} {native_real} ({source_to_selected}) ({child_proof})"
                     )))
+                }
+                AbsoluteValueBuiltinRule::UpperBound => {
+                    unreachable!("absolute-value upper-bound rule returned above")
                 }
                 AbsoluteValueBuiltinRule::Product => unreachable!(),
                 AbsoluteValueBuiltinRule::Nonnegative

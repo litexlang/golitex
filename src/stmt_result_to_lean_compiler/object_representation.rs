@@ -144,14 +144,40 @@ impl std::fmt::Debug for LeanTargetSetBuilderRepresentation {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone)]
 pub struct LeanTargetAnonymousFunctionRepresentation {
     pub source_occurrence_id: Option<SourceObjectOccurrenceId>,
     /// Structural identity used only after occurrence selection to detect a
     /// retargeted representation node; it is never a certificate-selection key.
     pub semantic_key: String,
     pub function: LeanTargetFunctionTypeRepresentation,
-    pub body: Box<LeanTargetObjectRepresentation>,
+    /// Keep the source body until a Result-owned binder context is active.
+    /// Definition replay may synthesize occurrence-free application nodes;
+    /// context-free IR lowering cannot select their verifier certificates.
+    pub source_body: Obj,
+}
+
+impl PartialEq for LeanTargetAnonymousFunctionRepresentation {
+    fn eq(&self, other: &Self) -> bool {
+        self.source_occurrence_id == other.source_occurrence_id
+            && self.semantic_key == other.semantic_key
+            && self.function == other.function
+            && obj_equality_key(&self.source_body) == obj_equality_key(&other.source_body)
+    }
+}
+
+impl Eq for LeanTargetAnonymousFunctionRepresentation {}
+
+impl std::fmt::Debug for LeanTargetAnonymousFunctionRepresentation {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter
+            .debug_struct("LeanTargetAnonymousFunctionRepresentation")
+            .field("source_occurrence_id", &self.source_occurrence_id)
+            .field("semantic_key", &self.semantic_key)
+            .field("function", &self.function)
+            .field("source_body", &self.source_body.to_string())
+            .finish()
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -275,7 +301,7 @@ impl LeanTargetObjectRepresentation {
                     source_occurrence_id: function.source_occurrence_id,
                     semantic_key: obj_equality_key(obj),
                     function: LeanTargetFunctionTypeRepresentation::lower_anonymous(function)?,
-                    body: Box::new(LeanTargetObjectRepresentation::lower(function.equal_to.as_ref())?),
+                    source_body: function.equal_to.as_ref().clone(),
                 },
             ))),
             Obj::FnObj(application) => lower_function_application(application),

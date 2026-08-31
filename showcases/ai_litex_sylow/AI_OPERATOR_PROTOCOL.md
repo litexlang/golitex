@@ -13,7 +13,7 @@ Give the AI:
 3. the ordered natural-language proof spine;
 4. the currently visible imported and local interfaces;
 5. the proof journal path; and
-6. the exact release commands used for session and final replay.
+6. the exact release commands used for each probe and final replay.
 
 The AI must not begin syntax search until it can name the current DAG node and
 the contract needed by its next consumer.
@@ -37,13 +37,10 @@ One AI can perform all six roles, but it must keep their outputs distinct.
 write proof spine
       |
       v
-start release -session -before target
+materialize one outermost try in target
       |
       v
-wait for {event: ready}
-      |
-      v
-send run frame containing outermost try
+run release -graph -f target
       |
       +---- ok:false ----> classify earliest phase
       |                         |
@@ -55,18 +52,19 @@ send run frame containing outermost try
       +---- ok:true -----> journal accepted source without try
                                 |
                                 v
-                       send next source block
+                       materialize next source block
                                 |
                                 v
                      materialize accepted prefix
                                 |
                                 v
-                  clean release -runner -f target
+                  clean release -graph -f target
 ```
 
-Restart the session only when the process exits, the registered prefix
-changes, or an already committed declaration must be replaced. A failed
-outermost `try:` is not a restart condition.
+Each probe reconstructs the registered prefix and checks the real target file;
+there is no separate pre-target session state. A rolled-back outermost `try:`
+changes only the current candidate. Remove the wrapper from accepted source
+before the final clean registered-file runner.
 
 ## Candidate output contract
 

@@ -68,7 +68,7 @@ source `1 + 1 = 2`
 
 | Directory | Concrete example |
 | --- | --- |
-| [`cli/`](cli/README.md) | `litex -runner -e '1 + 1 = 2'` selects the runner command. |
+| [`cli/`](cli/README.md) | `litex -graph -e '1 + 1 = 2' graph.json` matches one exact command shape before dispatch. |
 | [`compatibility/`](compatibility/README.md) | `litex::common::fact_id::FactId` temporarily re-exports `litex::fact::id::FactId`. |
 | [`environment/`](environment/README.md) | After checking `a = 1`, later statements can reuse that equality. |
 | [`error/`](error/README.md) | `1 / 0 = 0` becomes a well-definedness error. |

@@ -1,0 +1,36 @@
+# Tracer for the greatest-lower-bound half of real completeness.  The three
+# theorems exercise existence and both characteristic inequalities through
+# the reserved typed interfaces; none of them is a sequence-specific builtin.
+
+thm local_real_greatest_lower_bound_exists:
+    ? forall S set, lower R:
+        S $subset R
+        $is_nonempty_set(S)
+        forall member R:
+            member $in S
+            =>:
+                lower <= member
+        =>:
+            exist G R st {$is_real_greatest_lower_bound(S, G)}
+    release thm real_greatest_lower_bound_exists(S, lower)
+
+thm local_real_greatest_lower_bound_le_member:
+    ? forall S set, G, member R:
+        S $subset R
+        $is_real_greatest_lower_bound(S, G)
+        member $in S
+        =>:
+            G <= member
+    release thm real_greatest_lower_bound_le_member(S, G, member)
+
+thm local_real_lower_bound_le_greatest_lower_bound:
+    ? forall S set, G, lower R:
+        S $subset R
+        $is_real_greatest_lower_bound(S, G)
+        forall member R:
+            member $in S
+            =>:
+                lower <= member
+        =>:
+            lower <= G
+    release thm real_lower_bound_le_greatest_lower_bound(S, G, lower)
