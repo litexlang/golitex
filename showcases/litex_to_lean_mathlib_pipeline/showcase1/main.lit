@@ -5,9 +5,8 @@
 # matches the checked function reductions, typed sum rules, exact
 # induction hypothesis, and arithmetic facts automatically.
 #
-# ToLean translates only the declarations and proof in this file. The native
-# Mathlib adapter in this showcase is authored separately by external AI and
-# is not part of compiler output.
+# ToLean translates only the declarations and proofs in this file.
+# Adapter.lean is handwritten and is not part of compiler output.
 
 have fn kth_odd(k Z) Z = 2 * k - 1
 

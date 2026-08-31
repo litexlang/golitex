@@ -37,10 +37,10 @@ or `module_manager` without first expanding the crate-wide prelude.
 
 | File | Example |
 | --- | --- |
-| [`target.rs`](target.rs) | Models batch, REPL, file-mode, and session targets and their canonical source labels. |
+| [`target.rs`](target.rs) | Models batch, REPL, distinct project-file and isolated-file targets, and their canonical source labels. |
 | [`run.rs`](run.rs) | Owns the explicit code, project-file, isolated-file, and repository batch entries, Runtime creation, and their shared outcome rendering. The canonical `RunOptions` lives in [`../runtime/run_options.rs`](../runtime/run_options.rs). |
 | [`source_execution.rs`](source_execution.rs) | Tokenizes, parses, and executes source inside an already initialized Runtime. |
-| [`file_execution.rs`](file_execution.rs) | Resolves `-f`, discovers project context, and selects repository-prefix or isolated-file execution. |
+| [`file_execution.rs`](file_execution.rs) | Owns distinct project-file discovery/execution and isolated-file reading/execution functions. |
 | [`output_rendering.rs`](output_rendering.rs) | Renders statement results, errors, and JSONL stream envelopes. |
 | [`terminal_import.rs`](terminal_import.rs) | Parses REPL-only `import` commands before source parsing and mutates the terminal's ephemeral module manifest. |
 | [`repository_execution.rs`](repository_execution.rs) | Runs ordered project imports, module trees, file targets, and registered prefixes. |

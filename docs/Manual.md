@@ -152,10 +152,10 @@ of the negative value. Parenthesize a negative exponent too: `t^(-1)`, not
 `t^-1`. This explicit-parentheses rule applies to generated and agent-authored
 Litex as well as handwritten source.
 
-User-defined names may begin with a letter or underscores and may then use
-letters, numbers, and underscores. The prefix `____` (four underscores) is
-reserved for Litex-generated symbols and is rejected during tokenization.
-Names beginning with one, two, or three underscores remain ordinary user
+User-defined names may begin with a letter or one underscore and may then use
+letters, numbers, and underscores. The prefix `__` (two underscores) is
+reserved for generated symbols, including names in Lean output, and is rejected
+during tokenization. Names beginning with one underscore remain ordinary user
 space, as do prefixes such as `h_` and `fn_`. Comments and quoted strings are
 not symbol tokens and may contain the reserved spelling.
 

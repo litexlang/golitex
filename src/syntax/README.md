@@ -2,7 +2,7 @@
 
 This directory owns lexical constants, source names, locations, and formatting
 conventions. For example, `forall` is recognized as a reserved keyword, while
-`user_name` passes name validation and `____internal` is rejected for user code.
+`user_name` passes name validation and `__generated` is rejected for user code.
 
 ## Examples and boundaries
 
