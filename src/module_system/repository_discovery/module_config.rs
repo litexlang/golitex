@@ -1,4 +1,4 @@
-//! Module configuration, bare symbols, and active mount cycles.
+//! Module configuration and active mount cycles.
 
 use super::*;
 
@@ -11,9 +11,6 @@ pub(super) fn discover_module_config(
 ) -> Result<(), RuntimeError> {
     let module_flatten = config.module_flatten;
     let module_flatten_line = config.module_flatten_line;
-    let allow_bare_exports = config.allow_bare_exports.clone();
-    let allow_bare_std_imports = config.allow_bare_std_imports.clone();
-    let allow_bare_imports = config.allow_bare_imports.clone();
     let module_hierarchy = runtime
         .module_manager
         .module(module_id)
@@ -80,89 +77,6 @@ pub(super) fn discover_module_config(
         };
         module.flattened_export_file = Some(file_id);
     }
-    record_bare_symbol_sources(
-        runtime,
-        module_id,
-        config_path,
-        &allow_bare_exports,
-        &allow_bare_std_imports,
-        &allow_bare_imports,
-    )?;
-    Ok(())
-}
-
-pub(super) fn record_bare_symbol_sources(
-    runtime: &mut Runtime,
-    module_id: ModuleId,
-    config_path: &Path,
-    allow_bare_exports: &[ProjectBareName],
-    allow_bare_std_imports: &[ProjectBareName],
-    allow_bare_imports: &[ProjectBareName],
-) -> Result<(), RuntimeError> {
-    let config_label: Rc<str> = Rc::from(config_path.to_string_lossy().to_string());
-    let mut sources = Vec::new();
-    {
-        let module = runtime
-            .module_manager
-            .module(module_id)
-            .expect("manifest owner module should exist");
-        for allowed in allow_bare_exports {
-            let target = module
-                .exports
-                .get(&allowed.name)
-                .expect("allowed export was checked present")
-                .target(module_id);
-            if !matches!(target, ImportTarget::Module(_)) {
-                return Err(repository_error(
-                    format!(
-                        "[allow bare export] `{}` must name an exported folder/submodule, not a .lit file",
-                        allowed.name
-                    ),
-                    &config_path.to_string_lossy(),
-                    allowed.line,
-                ));
-            }
-            sources.push(ConfigBareSymbolSource {
-                name: allowed.name.clone(),
-                target,
-                kind: BareSymbolSourceKind::Export,
-                line_file: (allowed.line, config_label.clone()),
-            });
-        }
-        for allowed in allow_bare_std_imports {
-            let config_import = module
-                .config_imports
-                .iter()
-                .find(|import| {
-                    import.name == allowed.name && import.kind == ConfigImportKind::Standard
-                })
-                .expect("allowed standard import was checked present");
-            sources.push(ConfigBareSymbolSource {
-                name: allowed.name.clone(),
-                target: ImportTarget::Module(config_import.module_id),
-                kind: BareSymbolSourceKind::StandardImport,
-                line_file: (allowed.line, config_label.clone()),
-            });
-        }
-        for allowed in allow_bare_imports {
-            let config_import = module
-                .config_imports
-                .iter()
-                .find(|import| import.name == allowed.name && import.kind == ConfigImportKind::Path)
-                .expect("allowed path import was checked present");
-            sources.push(ConfigBareSymbolSource {
-                name: allowed.name.clone(),
-                target: ImportTarget::Module(config_import.module_id),
-                kind: BareSymbolSourceKind::Import,
-                line_file: (allowed.line, config_label.clone()),
-            });
-        }
-    }
-    runtime
-        .module_manager
-        .module_mut(module_id)
-        .expect("manifest owner module should exist")
-        .bare_symbol_sources = sources;
     Ok(())
 }
 

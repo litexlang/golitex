@@ -172,14 +172,6 @@ impl Runtime {
         binding: &SymbolBinding,
         scope: BindingScope,
     ) -> Result<(), RuntimeError> {
-        let name = binding.name();
-        if scope.respects_bare_symbols(name) {
-            if let Some(external) = self.bare_symbol(name) {
-                return Err(crate::runtime::bare_symbol_name_reserved_error(
-                    name, external, None,
-                ));
-            }
-        }
         let role = match scope {
             BindingScope::DefinitionBinding => SymbolRole::Object,
             BindingScope::StructureField => SymbolRole::StructureField,

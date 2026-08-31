@@ -37,9 +37,9 @@ have pair_value &Pair = (1, 2)
 }
 
 #[test]
-fn allow_bare_export_collects_recursive_public_symbols_once_per_file() {
-    run_repository_test_with_large_stack("allow-bare-recursive-export", || {
-        let fixture = Fixture::new("allow-bare-recursive-export");
+fn qualified_export_paths_work_across_submodules() {
+    run_repository_test_with_large_stack("qualified-recursive-export", || {
+        let fixture = Fixture::new("qualified-recursive-export");
         let root = fixture.path("root");
         write_file(
             &root.join("litex.config"),
@@ -50,9 +50,6 @@ module
 A = "./A"
 B = "./B"
 main = "./main.lit"
-
-[allow bare export]
-A
 "#,
         );
         write_file(
@@ -73,11 +70,11 @@ chap3 = "./chap3.lit"
         );
         write_file(
             &root.join("B/consumer.lit"),
-            "z = 1\nhave inherited R = 1\n",
+            "A::chap3::z = 1\nhave inherited R = 1\n",
         );
         write_file(
                 &root.join("main.lit"),
-                "z = 1\nA::chap3::z = 1\nB::consumer::inherited = 1\nhave A R = 1\nA = 1\nstruct Holder:\n    z R\nhave answer R = 1\n",
+                "A::chap3::z = 1\nB::consumer::inherited = 1\nhave A R = 1\nA = 1\nstruct Holder:\n    z R\nhave answer R = 1\n",
             );
 
         let (ok, output) = run_repository(&root);
@@ -87,9 +84,9 @@ chap3 = "./chap3.lit"
 }
 
 #[test]
-fn allow_bare_import_resolves_flattened_package_symbols() {
-    run_repository_test_with_large_stack("allow-bare-flattened-import", || {
-        let fixture = Fixture::new("allow-bare-flattened-import");
+fn qualified_import_resolves_flattened_package_symbols() {
+    run_repository_test_with_large_stack("qualified-flattened-import", || {
+        let fixture = Fixture::new("qualified-flattened-import");
         let package = fixture.path("package");
         write_file(
             &package.join("litex.config"),
@@ -119,14 +116,11 @@ A = "../package"
 
 [export]
 main = "./main.lit"
-
-[allow bare import]
-A
 "#,
         );
         write_file(
             &root.join("main.lit"),
-            "b = 1\nA::b = 1\neval f(1)\nhave answer R = 1\n",
+            "A::b = 1\neval A::f(1)\nhave answer R = 1\n",
         );
 
         let (ok, output) = run_repository(&root);
@@ -135,15 +129,15 @@ A
         let python = crate::python_extractor::to_python_from_repository(
             root.to_str().expect("temporary repository path is UTF-8"),
         )
-        .expect("Python project traversal should share allow-bare resolution");
+        .expect("Python project traversal should preserve qualified resolution");
         assert!(python.contains("def f(x):"), "{python}");
     });
 }
 
 #[test]
-fn allow_bare_standard_import_uses_its_own_opt_in_table() {
-    run_repository_test_with_large_stack("allow-bare-standard-import", || {
-        let fixture = Fixture::new("allow-bare-standard-import");
+fn standard_import_uses_qualified_symbols() {
+    run_repository_test_with_large_stack("qualified-standard-import", || {
+        let fixture = Fixture::new("qualified-standard-import");
         let std_root = fixture.path("std");
         write_file(
             &std_root.join("demo/litex.config"),
@@ -170,14 +164,11 @@ demo
 
 [export]
 main = "./main.lit"
-
-[allow bare import std]
-demo
 "#,
         );
         write_file(
             &root.join("main.lit"),
-            "std_value = 1\ndemo::std_value = 1\n",
+            "demo::std_value = 1\n",
         );
 
         with_standard_library_root(&std_root, || {
@@ -188,9 +179,9 @@ demo
 }
 
 #[test]
-fn allow_bare_rejects_ambiguous_terminals_and_source_name_reuse() {
-    run_repository_test_with_large_stack("allow-bare-conflicts", || {
-        let fixture = Fixture::new("allow-bare-conflicts");
+fn qualified_symbols_keep_terminal_names_in_separate_namespaces() {
+    run_repository_test_with_large_stack("qualified-symbol-namespaces", || {
+        let fixture = Fixture::new("qualified-symbol-namespaces");
 
         let ambiguous = fixture.path("ambiguous");
         write_file(
@@ -201,9 +192,6 @@ module
 [export]
 A = "./A"
 main = "./main.lit"
-
-[allow bare export]
-A
 "#,
         );
         write_file(
@@ -212,11 +200,12 @@ A
         );
         write_file(&ambiguous.join("A/one.lit"), "have same R = 1\n");
         write_file(&ambiguous.join("A/two.lit"), "have same R = 2\n");
-        write_file(&ambiguous.join("main.lit"), "have answer R = 1\n");
+        write_file(
+            &ambiguous.join("main.lit"),
+            "A::one::same = 1\nA::two::same = 2\nhave answer R = 1\n",
+        );
         let (ok, output) = run_repository(&ambiguous);
-        assert!(!ok, "ambiguous bare names must fail");
-        assert!(output.contains("ambiguous bare symbol `same`"), "{output}");
-        assert!(output.contains("[allow bare export]"), "{output}");
+        assert!(ok, "qualified terminal names must remain distinct: {output}");
 
         let reserved = fixture.path("reserved");
         write_file(
@@ -227,9 +216,6 @@ module
 [export]
 A = "./A"
 main = "./main.lit"
-
-[allow bare export]
-A
 "#,
         );
         write_file(
@@ -237,13 +223,12 @@ A
             "[hierarchy]\nsubmodule\n\n[export]\nvalue = \"./value.lit\"\n",
         );
         write_file(&reserved.join("A/value.lit"), "have z R = 1\n");
-        write_file(&reserved.join("main.lit"), "have z R = 1\n");
-        let (ok, output) = run_repository(&reserved);
-        assert!(
-            !ok,
-            "local declaration must not shadow an allowed bare symbol"
+        write_file(
+            &reserved.join("main.lit"),
+            "A::value::z = 1\nhave z R = 1\n",
         );
-        assert!(output.contains("name `z` is reserved"), "{output}");
+        let (ok, output) = run_repository(&reserved);
+        assert!(ok, "qualified external names must not reserve local names: {output}");
 
         let binder = fixture.path("binder");
         write_file(
@@ -254,9 +239,6 @@ module
 [export]
 A = "./A"
 main = "./main.lit"
-
-[allow bare export]
-A
 "#,
         );
         write_file(
@@ -264,17 +246,19 @@ A
             "[hierarchy]\nsubmodule\n\n[export]\nvalue = \"./value.lit\"\n",
         );
         write_file(&binder.join("A/value.lit"), "have z R = 1\n");
-        write_file(&binder.join("main.lit"), "forall z R:\n    z = z\n");
+        write_file(
+            &binder.join("main.lit"),
+            "A::value::z = 1\nforall z R:\n    z = z\n",
+        );
         let (ok, output) = run_repository(&binder);
-        assert!(!ok, "source binders must not shadow an allowed bare symbol");
-        assert!(output.contains("name `z` is reserved"), "{output}");
+        assert!(ok, "qualified external names must not reserve binder names: {output}");
     });
 }
 
 #[test]
-fn allow_bare_export_does_not_reveal_a_later_target_to_an_earlier_file() {
-    run_repository_test_with_large_stack("allow-bare-export-boundary", || {
-        let fixture = Fixture::new("allow-bare-export-boundary");
+fn unqualified_name_does_not_resolve_a_later_export() {
+    run_repository_test_with_large_stack("qualified-export-boundary", || {
+        let fixture = Fixture::new("qualified-export-boundary");
         let root = fixture.path("root");
         write_file(
             &root.join("litex.config"),
@@ -284,9 +268,6 @@ module
 [export]
 before = "./before.lit"
 A = "./A"
-
-[allow bare export]
-A
 "#,
         );
         write_file(&root.join("before.lit"), "z = 1\n");

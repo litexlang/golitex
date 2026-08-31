@@ -250,24 +250,6 @@ names such as `Part2::chap3::theorem` or
 `basics::theorem`. No `.lit` source file can write imports; this includes
 standalone files run with `-isolated -f`.
 
-Manifest authors may opt selected sources into recursive bare-symbol lookup:
-
-```ini
-[allow bare export]
-Part2
-
-[allow bare import std]
-basics
-
-[allow bare import]
-Algebra
-```
-
-Each name must occur in its matching table; an allow-bare export must be a
-folder/submodule. The default remains qualified-only. Enabled sources expose
-only terminal symbols in their recursive public `[export]` trees, after those
-targets are loaded; private imports are not re-exported.
-
 The ordinary REPL, and the continued terminal after a successful isolated
 `-f`, may load further interfaces dynamically with terminal commands:
 
@@ -551,9 +533,6 @@ Use `litex.config` to organize a folder tree:
   `[import std]`, only in the top-level module;
 - cite earlier entries with their canonical export path, such as
   `Part2::chap7::name` or `basics::name`.
-- optionally list selected export submodules, standard imports, or path imports
-  under `[allow bare export]`, `[allow bare import std]`, or
-  `[allow bare import]` respectively.
 
 A configured folder may contain `litex.config`, non-Litex sidecar files, the
 direct module children listed in `[export]`, an optional local `.drafts/`
@@ -578,16 +557,6 @@ uses its manifest, while only an interactive terminal recognizes import commands
 Each `[import]` declaration creates a private module instance. Two aliases of
 one physical folder remain distinct, and imports internal to an imported module
 do not become public to its importer.
-
-Allow-bare lookup is a per-file index, not a fallback global search. It scans
-each enabled public tree once and requires every terminal name to identify one
-unique symbol. Different symbols with the same terminal name are a configuration
-error; no later source overwrites an earlier one. Explicit `A::name` always
-bypasses this index. Module aliases are a separate namespace from symbols, but
-an active external bare symbol reserves its spelling against every local symbol
-or binder in that source file; struct fields remain separate. Permissions from
-ancestor manifests are inherited by descendant submodules. A later export is
-not active in an earlier file, and terminal imports never enable bare lookup.
 
 `litex -r <project>` verifies the complete ordered `[export]` tree. In contrast,
 `litex -f <file>` trusts and loads only the earlier `[export]` entries needed to

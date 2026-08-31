@@ -104,8 +104,9 @@ fn litex_to_mathlib_pipeline_showcase_generated_lean_has_not_drifted() {
 
     assert_eq!(generated, CHECKED_IN);
     assert!(generated.contains("theorem sum_first_odds :"));
-    assert!(generated.contains("theorem sum_first_ten_odds :"));
-    assert!(generated.contains("sum_first_odds (10 : ℤ)"));
+    assert!(!generated.contains("theorem odd_sum_integer :"));
+    assert!(!generated.contains("theorem square_integer :"));
+    assert!(!generated.contains("theorem sum_first_ten_odds :"));
     assert!(!generated.contains("private theorem __native_certificate"));
     assert!(!generated.contains("namespace Native"));
     assert!(!generated.contains("namespace MathlibConsumer"));
@@ -114,8 +115,11 @@ fn litex_to_mathlib_pipeline_showcase_generated_lean_has_not_drifted() {
     assert!(!SOURCE.contains("thm odd_sum_step"));
     assert!(!SOURCE.contains("thm odd_square_step"));
     assert!(!SOURCE.contains("by thm"));
+    assert_eq!(SOURCE.matches("\nforall n Z:").count(), 2);
+    assert_eq!(SOURCE.matches("\nthm ").count(), 1);
     assert!(SOURCE.contains("n^2 + kth_odd(n + 1) = n^2 + (2 * (n + 1) - 1) = (n + 1)^2"));
-    assert!(SOURCE.contains("sum(1, 10, kth_odd) = 10^2 = 100"));
+    assert!(!SOURCE.contains("sum_first_ten_odds"));
+    assert!(!SOURCE.contains("sum(1, 10, kth_odd)"));
     assert!(generated.contains("unfold Litex.fnApplyCarrier kth_odd"));
     assert!(!generated.contains("unfold Litex.fnApplyOwn kth_odd"));
     assert!(!generated.contains("theorem odd_sum_step"));

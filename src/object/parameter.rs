@@ -40,10 +40,6 @@ impl BindingScope {
     pub fn reuses_active_binding(self) -> bool {
         self == Self::ReuseActiveBinder
     }
-
-    pub fn respects_bare_symbols(self, name: &str) -> bool {
-        !name.starts_with(INTERNAL_SYMBOL_PREFIX) && self != Self::StructureField
-    }
 }
 
 pub const FREE_PARAM_DISPLAY_TAG_PREFIX: char = '~';

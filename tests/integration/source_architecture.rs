@@ -553,7 +553,6 @@ fn compiler_and_test_directories_follow_the_repository_layout() {
         (
             "name_resolution",
             &[
-                "bare_symbols.rs",
                 "free_parameters.rs",
                 "local_scopes.rs",
                 "name_generation.rs",

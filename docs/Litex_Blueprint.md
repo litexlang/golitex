@@ -6,7 +6,11 @@ Website: https://litexlang.com/doc/Litex_Blueprint
 
 Chinese version: https://litexlang.com/doc/Litex中文蓝图
 
-> **Litex is an experimental hobby project and remains in beta. Expect edge cases.**
+Litex is a set-theoretic, fact-oriented formal language that builds proof flows
+from the bottom up and is compatible with Lean. It lets humans and AI write
+mathematical facts directly and see why verification succeeds or where it stops.
+
+> **Litex is an experimental hobby project in beta; expect rough edges.**
 
 <!-- Blueprint spine: reasoning abundance → scientific object → design hypothesis → measurable costs → potential capacity impact → verification and understanding bottlenecks → two participation barriers → the human–AI verification loop → four language choices → definition and verification → ToLean/adapter handoff → ecosystem role → success criterion -->
 
