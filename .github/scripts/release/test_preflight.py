@@ -48,11 +48,21 @@ class ReleasePreflightTest(unittest.TestCase):
     def test_result_graph_contract_requires_exit_zero_and_top_level_ok(self) -> None:
         successful = json.dumps(
             {
-                "graph": "litex-result-graph",
-                "graph_version": "3",
-                "result": "success",
+                "kind": "artifact",
                 "ok": True,
-                "target": {"kind": "file"},
+                "artifact": "result_graph",
+                "format": "json",
+                "target": "file",
+                "path": "smoke.lit",
+                "output_path": None,
+                "content": {
+                    "graph": "litex-result-graph",
+                    "graph_version": "3",
+                    "result": "success",
+                    "ok": True,
+                    "target": {"kind": "file"},
+                },
+                "error": None,
             }
         )
         preflight.validate_result_graph_output(successful, 0)
@@ -65,6 +75,14 @@ class ReleasePreflightTest(unittest.TestCase):
                 ),
                 1,
             )
+
+    def test_version_contract_requires_minimal_json_envelope(self) -> None:
+        successful = json.dumps({"kind": "version", "ok": True, "version": "1.2.3"})
+        preflight.validate_version_output(successful, 0, "1.2.3")
+        with self.assertRaises(preflight.PreflightError):
+            preflight.validate_version_output("Litex Kernel: litex 1.2.3", 0, "1.2.3")
+        with self.assertRaises(preflight.PreflightError):
+            preflight.validate_version_output(successful, 1, "1.2.3")
 
     def test_tar_archive_contains_only_root_binary_and_std(self) -> None:
         with tempfile.TemporaryDirectory(

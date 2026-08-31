@@ -62,18 +62,20 @@ fn failed_terminal_import_rolls_back_before_the_same_alias_is_retried() {
 
     let mut runtime = Runtime::default();
     runtime.start_isolated_source("repl");
-    let failed = run_terminal_import(
+    let (failed_ok, failed) = run_terminal_import(
         format!("import \"{}\" as Retry", broken.to_string_lossy()).as_str(),
         &mut runtime,
     );
+    assert!(!failed_ok);
     assert!(failed.contains("error"), "{failed}");
     assert!(runtime.module_manager.module_id_by_name("Retry").is_none());
     assert!(runtime.unverified_imports().is_empty());
 
-    let retried = run_terminal_import(
+    let (retried_ok, retried) = run_terminal_import(
         format!("import \"{}\" as Retry", valid.to_string_lossy()).as_str(),
         &mut runtime,
     );
+    assert!(retried_ok);
     assert!(retried.contains("\"execution\": \"executed\""), "{retried}");
     let (_, use_error) = execute_source("Retry::main::value = 7", &mut runtime);
     assert!(use_error.is_none(), "{use_error:?}");
@@ -93,11 +95,12 @@ fn standard_terminal_import_records_execution_then_reuse() {
     runtime.start_isolated_source("repl");
 
     with_standard_library_root(&std_root, || {
-        let first = run_terminal_import("import std basics", &mut runtime);
+        let (first_ok, first) = run_terminal_import("import std basics", &mut runtime);
+        assert!(first_ok);
         assert!(first.contains("\"execution\": \"executed\""), "{first}");
-        assert!(first.contains("terminal_std_import"), "{first}");
 
-        let second = run_terminal_import("import std basics", &mut runtime);
+        let (second_ok, second) = run_terminal_import("import std basics", &mut runtime);
+        assert!(second_ok);
         assert!(second.contains("\"execution\": \"reused\""), "{second}");
     });
 }
@@ -114,7 +117,7 @@ fn strict_terminal_import_verifies_and_rolls_back_a_failing_module() {
 
     let mut runtime = Runtime::new(RunOptions::strict_execute(ExecutionOption::Repl));
     runtime.start_isolated_source("repl");
-    let output = run_terminal_import(
+    let (ok, output) = run_terminal_import(
         format!(
             "import \"{}\" as StrictDependency",
             dependency.to_string_lossy()
@@ -122,6 +125,7 @@ fn strict_terminal_import_verifies_and_rolls_back_a_failing_module() {
         .as_str(),
         &mut runtime,
     );
+    assert!(!ok);
     assert!(output.contains("1 = 0"), "{output}");
     assert!(runtime
         .module_manager

@@ -39,8 +39,10 @@ fn repl_accepts_multiline_block_after_blank_line() {
     .unwrap();
 
     let output_text = String::from_utf8(stdout_writer).unwrap();
-    assert!(output_text.contains("... "));
-    assert!(output_text.contains("\"outcome\": \"success\""));
+    assert!(output_text.contains("\"event\":\"prompt\""));
+    assert!(output_text.contains("\"content\":\"... \""));
+    assert!(output_text.contains("\"event\":\"result\""));
+    assert!(output_text.contains("\"outcome\":\"success\""));
     assert!(!output_text.contains("block header missing body"));
     assert!(!output_text.contains("unexpected indent"));
 }
@@ -60,7 +62,9 @@ fn repl_still_executes_single_line_input_immediately() {
     .unwrap();
 
     let output_text = String::from_utf8(stdout_writer).unwrap();
-    assert!(output_text.contains("\"outcome\": \"success\""));
+    assert!(output_text.contains("\"kind\":\"stream\""));
+    assert!(output_text.contains("\"stream\":\"repl\""));
+    assert!(output_text.contains("\"outcome\":\"success\""));
 }
 
 #[test]
@@ -100,8 +104,9 @@ fn repl_routes_import_to_its_ephemeral_module_manifest_before_source_parsing() {
     .unwrap();
 
     let output = String::from_utf8(stdout_writer).expect("UTF-8 REPL output");
-    assert!(output.contains("\"type\": \"terminal import\""), "{output}");
-    assert!(output.contains("\"outcome\": \"success\""), "{output}");
+    assert!(output.contains("\"event\":\"result\""), "{output}");
+    assert!(output.contains("\"type\":\"terminal import\""), "{output}");
+    assert!(output.contains("\"outcome\":\"success\""), "{output}");
     assert!(
         !output.contains("not a Litex statement"),
         "REPL import must bypass source parsing: {output}"
@@ -125,7 +130,8 @@ fn repl_startup_shows_version_without_a_retired_upgrade_command() {
     .unwrap();
 
     let output_text = String::from_utf8(stdout_writer).unwrap();
-    assert!(output_text.contains("Litex version test-version"));
+    assert!(output_text.contains("\"event\":\"ready\""));
+    assert!(output_text.contains("\"version\":\"test-version\""));
     assert!(!output_text.contains("litex -upgrade"));
 }
 
@@ -138,6 +144,8 @@ fn latex_repl_outputs_latex_for_single_line_input() {
     run_latex_repl_loop_with_readers("test", &mut stdin_reader, &mut stdout_writer).unwrap();
 
     let output_text = String::from_utf8(stdout_writer).unwrap();
+    assert!(output_text.contains("\"stream\":\"latex_repl\""));
+    assert!(output_text.contains("\"event\":\"result\""));
     assert!(output_text.contains(r"\["));
     assert!(output_text.contains(r"\]"));
     assert!(output_text.contains("1 = 1"));
@@ -167,8 +175,8 @@ fn isolated_file_continues_in_the_same_repl_runtime() {
     run_isolated_repl_with_runtime_and_readers("test", &mut runtime, &mut input, &mut output)
         .expect("continue isolated REPL");
     let output = String::from_utf8(output).expect("UTF-8 REPL output");
-    assert!(output.contains("Continuing isolated REPL."));
-    assert!(output.contains("\"outcome\": \"success\""), "{output}");
+    assert!(output.contains("\"mode\":\"continued\""));
+    assert!(output.contains("\"outcome\":\"success\""), "{output}");
 
     let (_, continuation_error) = execute_source("from_repl = 2", &mut runtime);
     assert!(continuation_error.is_none(), "{continuation_error:?}");

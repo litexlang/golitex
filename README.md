@@ -7,7 +7,7 @@
 
 Created and maintained by Jiachen Shen.
 
-[Website](https://litexlang.com) · [Blueprint](docs/Litex_Blueprint.md) · [中文蓝图](docs/Litex中文蓝图.md) · [Manual](docs/Manual.md) · [Cheat Sheet](docs/cheatsheet.md) · [Install](docs/cli.md#install-litex-locally) · [Examples](examples/README.md) · [Zulip](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/)
+[Website](https://litexlang.com) · [Blueprint](docs/Litex_Blueprint.md) · [中文蓝图](docs/Litex中文蓝图.md) · [Manual](docs/Manual.md) · [Cheat Sheet](docs/cheatsheet.md) · [Install](docs/setup.md) · [Examples](examples/README.md) · [Zulip](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/)
 
 **Litex is an experimental hobby project in beta. Expect rough edges.**
 
@@ -292,7 +292,7 @@ fields—and whether supported paths interoperate with existing formal systems.*
 ## Try Litex
 
 The fastest route is the [online playground](https://litexlang.com). For a
-local installation, see the [CLI guide](docs/cli.md#install-litex-locally). On
+local installation, see the short [setup guide](docs/setup.md). On
 macOS and Linux with Homebrew:
 
 ```bash
@@ -301,8 +301,10 @@ litex -version
 litex -e '1 = 1'
 ```
 
-Then continue with the [examples](examples/README.md), the compact
-[cheat sheet](docs/cheatsheet.md), or the full [manual](docs/Manual.md). The
+For more commands and JSON output details, use the complete
+[CLI reference](docs/cli.md). Then continue with the
+[examples](examples/README.md), the compact [cheat sheet](docs/cheatsheet.md),
+or the full [manual](docs/Manual.md). The
 [blueprint](docs/Litex_Blueprint.md) and [Chinese blueprint](docs/Litex中文蓝图.md)
 give the complete design argument and comparisons.
 

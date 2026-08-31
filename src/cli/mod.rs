@@ -2,6 +2,7 @@ mod command;
 mod command_dispatch;
 mod command_handlers;
 mod conversion_commands;
+mod json_output;
 mod lean_commands;
 mod messages;
 

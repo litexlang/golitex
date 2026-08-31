@@ -93,26 +93,27 @@ fn strictness_is_derived_only_from_strict_run_variants() {
 #[test]
 fn help_lists_strict_command() {
     let message = help_message();
-    assert!(message.contains("litex -strict"));
+    assert!(message.contains("\"usage\": \"-strict\""));
 }
 
 #[test]
 fn help_lists_summarize_command() {
     let message = help_message();
-    assert!(message.contains("litex -summarize"));
+    assert!(message.contains("\"usage\": \"-summarize\""));
 }
 
 #[test]
 fn help_names_simplified_and_traditional_chinese_unambiguously() {
     let message = help_message();
-    assert!(message.contains("zh|zh-Hans|zh-Hant"));
+    assert!(message.contains("\"usage\": \"-lang <language>\""));
 }
 
 #[test]
 fn help_lists_compact_output() {
     let message = help_message();
-    assert!(message.contains("litex -compact"));
-    assert!(message.contains("RuntimeError output always uses full detailed diagnostics"));
+    assert!(message.contains("\"usage\": \"-compact\""));
+    assert!(message.contains("Use compact verification output."));
+    assert!(message.contains("detailed verification output (the default)"));
 }
 
 #[test]
@@ -323,19 +324,19 @@ fn help_omits_retired_commands() {
 #[test]
 fn help_lists_graph_command() {
     let message = help_message();
-    assert!(message.contains("litex -graph -f <file> <json>"));
+    assert!(message.contains("litex -graph <-e|-f|-r> <target> [output.json]"));
 }
 
 #[test]
 fn help_lists_fact_graph_command() {
     let message = help_message();
-    assert!(message.contains("litex -factgraph -f <file> <json>"));
+    assert!(message.contains("litex -factgraph <-e|-f|-r> <target> [output.json]"));
 }
 
 #[test]
 fn help_lists_definition_graph_command() {
     let message = help_message();
-    assert!(message.contains("litex -defgraph -f <file> <json>"));
+    assert!(message.contains("litex -defgraph <-e|-f|-r> <target> [output.json]"));
 }
 
 #[test]
@@ -364,8 +365,9 @@ fn graph_command_rejects_more_than_one_save_path() {
 #[test]
 fn help_explains_project_file_and_run_plan_modes() {
     let message = help_message();
-    assert!(message.contains("module prefix through this file"));
+    assert!(message.contains("\"kind\": \"help\""));
+    assert!(message.contains("\"entries\": ["));
+    assert!(message.contains("Run a registered Litex file."));
     assert!(message.contains("litex -isolated -f <file>"));
-    assert!(message.contains("recursive [export] tree"));
-    assert!(message.contains("selected submodule"));
+    assert!(message.contains("litex -r <directory>"));
 }

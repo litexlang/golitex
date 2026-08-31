@@ -37,6 +37,7 @@ pub fn json_value_is_empty_in_normal_output(value: &JsonValue) -> bool {
         JsonValue::JsonString(value) => value.is_empty(),
         JsonValue::Array(items) => items.is_empty(),
         JsonValue::Object(fields) => fields.is_empty(),
+        JsonValue::RawJson(value) => value.trim().is_empty(),
         JsonValue::Bool(_) | JsonValue::Number(_) => false,
     }
 }

@@ -7,6 +7,7 @@ pub enum JsonValue {
     Bool(bool),
     Number(usize),
     JsonString(String),
+    RawJson(String),
     Array(Vec<JsonValue>),
     Object(Vec<(String, JsonValue)>),
 }
@@ -74,10 +75,20 @@ fn render_json_primitive(v: &JsonValue) -> String {
         JsonValue::Bool(b) => b.to_string(),
         JsonValue::Number(n) => n.to_string(),
         JsonValue::JsonString(s) => json_string_literal(s),
-        JsonValue::Array(_) | JsonValue::Object(_) => {
+        JsonValue::RawJson(_) | JsonValue::Array(_) | JsonValue::Object(_) => {
             unreachable!("render_json_primitive: non-primitive")
         }
     }
+}
+
+fn render_raw_json(source: &str, depth: usize) -> String {
+    let indent = json_one_level_indent(depth);
+    source
+        .trim()
+        .lines()
+        .map(|line| format!("{}{}", indent, line))
+        .collect::<Vec<_>>()
+        .join("\n")
 }
 
 /// JSON fragment for `"line"`: `null` when [`is_default_line_file`], else the line number (unquoted).
@@ -107,6 +118,9 @@ fn render_json_array(items: &[JsonValue], depth: usize) -> String {
             JsonValue::Array(nested_items) => {
                 output.push_str(&indent_inner);
                 output.push_str(&render_json_array(nested_items, depth + 1));
+            }
+            JsonValue::RawJson(source) => {
+                output.push_str(&render_raw_json(source, depth + 1));
             }
             _ => {
                 output.push_str(&indent_inner);
@@ -148,6 +162,13 @@ pub fn render_json_value(v: &JsonValue, depth: usize) -> String {
                             .unwrap_or(rendered.as_str());
                         format!("{}\"{}\": {}", indent_inner, key, rendered)
                     }
+                    JsonValue::RawJson(source) => {
+                        let rendered = render_raw_json(source, depth + 1);
+                        let rendered = rendered
+                            .strip_prefix(indent_inner.as_str())
+                            .unwrap_or(rendered.as_str());
+                        format!("{}\"{}\": {}", indent_inner, key, rendered)
+                    }
                     _ => {
                         format!(
                             "{}\"{}\": {}",
@@ -169,8 +190,63 @@ pub fn render_json_value(v: &JsonValue, depth: usize) -> String {
         JsonValue::Array(_) => {
             unreachable!("render_json_value: Array only appears as object field value")
         }
+        JsonValue::RawJson(source) => render_raw_json(source, depth),
         JsonValue::Null | JsonValue::Bool(_) | JsonValue::Number(_) | JsonValue::JsonString(_) => {
             render_json_primitive(v)
         }
     }
+}
+
+pub fn render_json_value_compact(value: &JsonValue) -> String {
+    match value {
+        JsonValue::Null => "null".to_string(),
+        JsonValue::Bool(value) => value.to_string(),
+        JsonValue::Number(value) => value.to_string(),
+        JsonValue::JsonString(value) => json_string_literal(value),
+        JsonValue::RawJson(value) => compact_raw_json(value),
+        JsonValue::Array(items) => format!(
+            "[{}]",
+            items
+                .iter()
+                .map(render_json_value_compact)
+                .collect::<Vec<_>>()
+                .join(",")
+        ),
+        JsonValue::Object(fields) => format!(
+            "{{{}}}",
+            fields
+                .iter()
+                .map(|(key, value)| format!(
+                    "{}:{}",
+                    json_string_literal(key),
+                    render_json_value_compact(value)
+                ))
+                .collect::<Vec<_>>()
+                .join(",")
+        ),
+    }
+}
+
+fn compact_raw_json(source: &str) -> String {
+    let mut output = String::with_capacity(source.len());
+    let mut inside_string = false;
+    let mut escaped = false;
+    for character in source.trim().chars() {
+        if inside_string {
+            output.push(character);
+            if escaped {
+                escaped = false;
+            } else if character == '\\' {
+                escaped = true;
+            } else if character == '"' {
+                inside_string = false;
+            }
+        } else if character == '"' {
+            inside_string = true;
+            output.push(character);
+        } else if !character.is_whitespace() {
+            output.push(character);
+        }
+    }
+    output
 }

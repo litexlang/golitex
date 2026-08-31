@@ -26,7 +26,7 @@ by def $unit(1)
         "by def output fixture failed:\n{}",
         run_output
     );
-    assert!(run_output.contains("\"schema\": \"litex.statement-result.v2\""));
+    assert!(!run_output.contains("\"schema\":"));
     assert!(run_output.contains("\"kind\": \"ByDefStmt\""));
     assert!(run_output.contains("\"kind\": \"SuccessVerifyByDefinitionResult\""));
     assert!(run_output.contains("\"prop\": \"unit\""));
@@ -677,7 +677,7 @@ fn zh_output_localizes_unproved_trust_labels() {
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(run_succeeded, "Chinese output run failed:\n{}", run_output);
-    assert!(run_output.contains("\"schema\": \"litex.statement-result.v2\""));
+    assert!(!run_output.contains("\"schema\":"));
     assert!(run_output.contains("\"outcome\": \"success\""));
     assert!(run_output.contains("\"kind\": \"TrustStmt\""));
     assert!(run_output.contains("\"statement\": \"trust exist! m, n R st {$tmp_rel("));
@@ -957,7 +957,7 @@ fn non_english_languages_localize_unproved_trust_labels() {
         );
         let _legacy_localized_fields =
             (result_key, success_text, type_key, type_text, statement_key);
-        assert!(run_output.contains("\"schema\": \"litex.statement-result.v2\""));
+        assert!(!run_output.contains("\"schema\":"));
         assert!(run_output.contains("\"outcome\": \"success\""));
         assert!(run_output.contains("\"kind\": \"TrustStmt\""));
         assert!(run_output.contains("\"statement\": \"trust 1 = 1\""));
@@ -2526,10 +2526,10 @@ fn error_output_parse_and_well_definedness_only_show_real_diagnostics() {
         assert_eq!(normal, detailed);
 
         if source_code == "@" {
-            assert!(detailed.contains("\"error_type\": \"ParseError\""));
+            assert!(detailed.contains("\"kind\": \"parse_error\""));
             assert!(!detailed.contains("\"phases\": {"));
         } else {
-            assert!(detailed.contains("\"error_type\": \"WellDefinedError\""));
+            assert!(detailed.contains("\"kind\": \"well_defined_error\""));
             assert!(detailed.contains("\"phases\": {"));
             assert!(detailed.contains("\"status\": \"error\""));
         }
@@ -2557,7 +2557,7 @@ fn error_output_compound_failure_keeps_detailed_inside_results_in_all_styles() {
 
     assert_eq!(compact, normal);
     assert_eq!(normal, detailed);
-    assert!(detailed.contains("\"error_type\": \"ExecStmtError\""));
+    assert!(detailed.contains("\"kind\": \"exec_stmt_error\""));
     assert!(detailed.contains("\"inside_results\": ["));
     assert!(detailed.contains("\"statement\": \"1 = 1\""));
     assert!(detailed.contains("\"verification\": {"));
@@ -2583,13 +2583,13 @@ fn error_output_does_not_change_the_style_of_earlier_successes() {
         assert_eq!(runtime.effective_output_style(), output_style);
 
         let success_output = display_stmt_exec_result_json(&runtime, &stmt_results[0], false);
-        assert!(success_output.contains("\"schema\": \"litex.statement-result.v2\""));
+        assert!(!success_output.contains("\"schema\":"));
         assert!(success_output.contains("\"verification\": {"));
         assert!(success_output.contains("\"execution_trace\": {"));
 
         let (_, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
         let error_start = run_output
-            .find("\"error_type\":")
+            .find("\"kind\": \"verify_error\"")
             .expect("combined output should contain an error");
         let error_output = &run_output[error_start..];
         assert!(error_output.contains("\"phases\": {"));

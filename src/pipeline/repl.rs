@@ -24,7 +24,10 @@ pub fn run_repl(version: &str, options: RunOptions) {
     match result {
         Ok(()) => {}
         Err(write_error) => {
-            eprintln!("repl output error: {}", write_error);
+            eprintln!(
+                "{}",
+                repl_io_error("repl", "output_error", write_error.to_string().as_str())
+            );
         }
     }
 }
@@ -37,7 +40,14 @@ pub fn run_latex_repl(version: &str) {
     match run_latex_repl_loop_with_readers(version, &mut stdin_locked, &mut stdout_locked) {
         Ok(()) => {}
         Err(write_error) => {
-            eprintln!("repl output error: {}", write_error);
+            eprintln!(
+                "{}",
+                repl_io_error(
+                    "latex_repl",
+                    "output_error",
+                    write_error.to_string().as_str(),
+                )
+            );
         }
     }
 }
@@ -63,18 +73,24 @@ fn run_repl_loop_with_readers_and_mode(
     stdout_writer: &mut dyn Write,
     output_mode: ReplOutputMode,
 ) -> io::Result<()> {
-    writeln!(stdout_writer, "Litex version {}", version_banner)?;
-    writeln!(stdout_writer, "Copyright (C) 2024-2026 Jiachen Shen")?;
-    writeln!(stdout_writer, "website: https://litexlang.com")?;
-    writeln!(
-        stdout_writer,
-        "github: https://github.com/litexlang/golitex"
-    )?;
-    writeln!(stdout_writer, "Ctrl+D to exit.")?;
-
     let mut runtime = Runtime::new(options);
     initialize_isolated_repl_runtime(&mut runtime);
-    writeln!(stdout_writer, "Isolated REPL.")?;
+    let stream = output_mode.stream_name();
+    let content = JsonValue::Object(vec![
+        (
+            "version".to_string(),
+            JsonValue::JsonString(version_banner.to_string()),
+        ),
+        (
+            "mode".to_string(),
+            JsonValue::JsonString("isolated".to_string()),
+        ),
+    ]);
+    writeln!(
+        stdout_writer,
+        "{}",
+        render_stream_output(stream, "ready", true, None, &[], content, JsonValue::Null)
+    )?;
 
     run_repl_prompt_loop_with_runtime(&mut runtime, stdin_reader, stdout_writer, output_mode)
 }
@@ -91,7 +107,10 @@ pub fn run_isolated_repl_with_runtime(version_banner: &str, runtime: &mut Runtim
         &mut stdout_locked,
     );
     if let Err(write_error) = result {
-        eprintln!("repl output error: {}", write_error);
+        eprintln!(
+            "{}",
+            repl_io_error("repl", "output_error", write_error.to_string().as_str())
+        );
     }
 }
 
@@ -101,8 +120,21 @@ fn run_isolated_repl_with_runtime_and_readers(
     stdin_reader: &mut dyn BufRead,
     stdout_writer: &mut dyn Write,
 ) -> io::Result<()> {
-    writeln!(stdout_writer, "Litex version {}", version_banner)?;
-    writeln!(stdout_writer, "Continuing isolated REPL. Ctrl+D to exit.")?;
+    let content = JsonValue::Object(vec![
+        (
+            "version".to_string(),
+            JsonValue::JsonString(version_banner.to_string()),
+        ),
+        (
+            "mode".to_string(),
+            JsonValue::JsonString("continued".to_string()),
+        ),
+    ]);
+    writeln!(
+        stdout_writer,
+        "{}",
+        render_stream_output("repl", "ready", true, None, &[], content, JsonValue::Null,)
+    )?;
     run_repl_prompt_loop_with_runtime(runtime, stdin_reader, stdout_writer, ReplOutputMode::Json)
 }
 
@@ -115,41 +147,65 @@ fn run_repl_prompt_loop_with_runtime(
     let mut line_buffer = String::new();
     let mut source_buffer = String::new();
     let mut collecting_multiline = false;
+    let stream = output_mode.stream_name();
 
     loop {
-        if collecting_multiline {
-            write!(stdout_writer, "... ")?;
-        } else {
-            write!(stdout_writer, ">>> ")?;
-        }
+        let prompt = if collecting_multiline { "... " } else { ">>> " };
+        writeln!(
+            stdout_writer,
+            "{}",
+            render_stream_output(
+                stream,
+                "prompt",
+                true,
+                None,
+                &[],
+                JsonValue::JsonString(prompt.to_string()),
+                JsonValue::Null,
+            )
+        )?;
         stdout_writer.flush()?;
 
         line_buffer.clear();
         let bytes_read = match stdin_reader.read_line(&mut line_buffer) {
             Ok(byte_count) => byte_count,
             Err(read_error) => {
-                writeln!(stdout_writer, "stdin read error: {}", read_error)?;
+                writeln!(
+                    stdout_writer,
+                    "{}",
+                    repl_io_error(stream, "input_error", read_error.to_string().as_str())
+                )?;
                 break;
             }
         };
 
         if bytes_read == 0 {
-            let output_text = run_repl_source_if_not_empty(&source_buffer, runtime, output_mode);
-            if !output_text.is_empty() {
-                writeln!(stdout_writer, "{}", output_text)?;
-            }
-            writeln!(stdout_writer)?;
+            write_repl_source_if_not_empty(&source_buffer, runtime, stdout_writer, output_mode)?;
+            writeln!(
+                stdout_writer,
+                "{}",
+                render_stream_output(
+                    stream,
+                    "closed",
+                    true,
+                    None,
+                    &[],
+                    JsonValue::Null,
+                    JsonValue::Null,
+                )
+            )?;
             break;
         }
 
         let trimmed_line = line_buffer.trim();
         if trimmed_line.is_empty() {
             if collecting_multiline {
-                let output_text =
-                    run_repl_source_if_not_empty(&source_buffer, runtime, output_mode);
-                if !output_text.is_empty() {
-                    writeln!(stdout_writer, "{}", output_text)?;
-                }
+                write_repl_source_if_not_empty(
+                    &source_buffer,
+                    runtime,
+                    stdout_writer,
+                    output_mode,
+                )?;
                 source_buffer.clear();
                 collecting_multiline = false;
             }
@@ -168,45 +224,128 @@ fn run_repl_prompt_loop_with_runtime(
             continue;
         }
 
-        let output_text = run_repl_source_if_not_empty(trimmed_line, runtime, output_mode);
-        if !output_text.is_empty() {
-            writeln!(stdout_writer, "{}", output_text)?;
-        }
+        write_repl_source_if_not_empty(trimmed_line, runtime, stdout_writer, output_mode)?;
     }
 
     Ok(())
 }
 
-fn run_repl_source_if_not_empty(
+fn write_repl_source_if_not_empty(
     source: &str,
     runtime: &mut Runtime,
+    stdout_writer: &mut dyn Write,
     output_mode: ReplOutputMode,
-) -> String {
+) -> io::Result<()> {
     if source.trim().is_empty() {
-        return String::new();
+        return Ok(());
     }
 
     let normalized_source = remove_windows_carriage_from_str(source);
     if super::terminal_import::terminal_input_starts_with_import(normalized_source.as_str()) {
-        return super::terminal_import::run_terminal_import(normalized_source.as_str(), runtime)
-            .trim()
-            .to_string();
+        let (ok, output) =
+            super::terminal_import::run_terminal_import(normalized_source.as_str(), runtime);
+        let (content, error) = if ok {
+            (JsonValue::RawJson(output), JsonValue::Null)
+        } else {
+            (JsonValue::Null, JsonValue::RawJson(output))
+        };
+        return writeln!(
+            stdout_writer,
+            "{}",
+            render_stream_output(
+                output_mode.stream_name(),
+                "result",
+                ok,
+                None,
+                &[],
+                content,
+                error,
+            )
+        );
     }
     match output_mode {
         ReplOutputMode::Json => {
             let (stmt_results, runtime_error) = runtime
                 .execute_source(normalized_source.as_str())
                 .into_parts();
-            let (_, output_text) = render_run_output(runtime, &stmt_results, &runtime_error);
-            output_text.trim().to_string()
+            let ok = runtime_error.is_none();
+            let error = runtime_error
+                .as_ref()
+                .map(|error| JsonValue::RawJson(display_runtime_error_json(runtime, error, true)))
+                .unwrap_or(JsonValue::Null);
+            writeln!(
+                stdout_writer,
+                "{}",
+                render_stream_output(
+                    "repl",
+                    "result",
+                    ok,
+                    None,
+                    stmt_results.as_slice(),
+                    JsonValue::Null,
+                    error,
+                )
+            )
         }
         ReplOutputMode::Latex => match to_latex(normalized_source.as_str(), runtime) {
-            Ok(output_text) => output_text.trim().to_string(),
-            Err(error) => display_runtime_error_json(runtime, &error, true)
-                .trim()
-                .to_string(),
+            Ok(output_text) => writeln!(
+                stdout_writer,
+                "{}",
+                render_stream_output(
+                    "latex_repl",
+                    "result",
+                    true,
+                    None,
+                    &[],
+                    JsonValue::JsonString(output_text.trim().to_string()),
+                    JsonValue::Null,
+                )
+            ),
+            Err(error) => writeln!(
+                stdout_writer,
+                "{}",
+                render_stream_output(
+                    "latex_repl",
+                    "result",
+                    false,
+                    None,
+                    &[],
+                    JsonValue::Null,
+                    JsonValue::RawJson(display_runtime_error_json(runtime, &error, true)),
+                )
+            ),
         },
     }
+}
+
+impl ReplOutputMode {
+    fn stream_name(self) -> &'static str {
+        match self {
+            Self::Json => "repl",
+            Self::Latex => "latex_repl",
+        }
+    }
+}
+
+fn repl_io_error(stream: &str, event: &str, message: &str) -> String {
+    render_stream_output(
+        stream,
+        event,
+        false,
+        None,
+        &[],
+        JsonValue::Null,
+        JsonValue::Object(vec![
+            (
+                "kind".to_string(),
+                JsonValue::JsonString("io_error".to_string()),
+            ),
+            (
+                "message".to_string(),
+                JsonValue::JsonString(message.to_string()),
+            ),
+        ]),
+    )
 }
 
 fn initialize_isolated_repl_runtime(runtime: &mut Runtime) {

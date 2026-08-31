@@ -99,7 +99,7 @@ impl StmtResultJsonV2 {
             .map(JsonValue::JsonString)
             .unwrap_or(JsonValue::Null);
         object(vec![
-            string_field("error_type", error.display_label()),
+            string_field("kind", error.json_kind()),
             string_field("message", error.trace_message()),
             ("line".to_string(), JsonValue::Number(details.line_file.0)),
             string_field("file", details.line_file.1.to_string()),

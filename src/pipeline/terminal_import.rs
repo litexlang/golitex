@@ -1,4 +1,4 @@
-use super::{display_runtime_error_json, render_run_output};
+use super::display_runtime_error_json;
 use crate::error::{ParseRuntimeError, RuntimeError, RuntimeErrorStruct};
 use crate::module_system::{discover_terminal_module_import, discover_terminal_std_import};
 use crate::module_system::{ImportTarget, ModuleStatus};
@@ -53,10 +53,10 @@ pub(super) fn terminal_input_starts_with_import(source: &str) -> bool {
     source.split_ascii_whitespace().next() == Some(IMPORT)
 }
 
-pub(super) fn run_terminal_import(source: &str, runtime: &mut Runtime) -> String {
+pub(super) fn run_terminal_import(source: &str, runtime: &mut Runtime) -> (bool, String) {
     let command = match parse_terminal_import(source, runtime.current_file_path_rc()) {
         Ok(command) => command,
-        Err(error) => return display_runtime_error_json(runtime, &error, false),
+        Err(error) => return (false, display_runtime_error_json(runtime, &error, false)),
     };
 
     let module_manager_before = runtime.module_manager.clone();
@@ -79,7 +79,7 @@ pub(super) fn run_terminal_import(source: &str, runtime: &mut Runtime) -> String
         Ok(module_id) => module_id,
         Err(error) => {
             runtime.module_manager = module_manager_before;
-            return display_runtime_error_json(runtime, &error, false);
+            return (false, display_runtime_error_json(runtime, &error, false));
         }
     };
     let module_status_before = runtime
@@ -105,7 +105,7 @@ pub(super) fn run_terminal_import(source: &str, runtime: &mut Runtime) -> String
     );
     if let Some(error) = runtime_error {
         runtime.module_manager = module_manager_before;
-        return display_runtime_error_json(runtime, &error, false);
+        return (false, display_runtime_error_json(runtime, &error, false));
     }
 
     let target = runtime
@@ -152,13 +152,7 @@ pub(super) fn run_terminal_import(source: &str, runtime: &mut Runtime) -> String
         ]),
         0,
     );
-    let no_error = None;
-    let (_, warning) = render_run_output(runtime, &[], &no_error);
-    if warning.trim().is_empty() {
-        result
-    } else {
-        format!("{}\n{}", result, warning.trim())
-    }
+    (true, result)
 }
 
 fn parse_terminal_import(

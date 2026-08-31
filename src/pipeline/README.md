@@ -39,7 +39,7 @@ or `module_manager` without first expanding the crate-wide prelude.
 | [`run.rs`](run.rs) | Owns the explicit batch entries, Runtime creation, and their shared outcome rendering. The canonical `RunOptions` lives in [`../runtime/run_options.rs`](../runtime/run_options.rs). |
 | [`source_execution.rs`](source_execution.rs) | Tokenizes, parses, and executes source inside an already initialized Runtime. |
 | [`file_execution.rs`](file_execution.rs) | Resolves `-f`, discovers project context, and selects repository-prefix or isolated-file execution. |
-| [`output_rendering.rs`](output_rendering.rs) | Renders statement results, errors, and unverified-import warnings. |
+| [`output_rendering.rs`](output_rendering.rs) | Renders statement results, errors, and JSONL stream envelopes. |
 | [`terminal_import.rs`](terminal_import.rs) | Parses REPL-only `import` commands before source parsing and mutates the terminal's ephemeral module manifest. |
 | [`repository_execution.rs`](repository_execution.rs) | Runs ordered project imports, module trees, file targets, and registered prefixes. |
 | [`session.rs`](session.rs) | Keeps one runtime alive for `-session`. |

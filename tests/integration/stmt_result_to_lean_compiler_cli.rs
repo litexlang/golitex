@@ -14,7 +14,7 @@ fn lean_command_reproduces_the_checked_in_examples() {
 
     let output = Command::new(env!("CARGO_BIN_EXE_litex"))
         .current_dir(root)
-        .args(["-f", SOURCE, "-isolated", "-lean"])
+        .args(["-isolated", "-f", SOURCE, "-lean"])
         .arg(&output_path)
         .output()
         .expect("run single-file -lean");
@@ -25,7 +25,15 @@ fn lean_command_reproduces_the_checked_in_examples() {
         String::from_utf8_lossy(&output.stdout),
         String::from_utf8_lossy(&output.stderr)
     );
-    assert!(String::from_utf8_lossy(&output.stdout).contains("wrote freshly generated Lean"));
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("\"kind\": \"artifact\""), "{stdout}");
+    assert!(stdout.contains("\"ok\": true"), "{stdout}");
+    assert!(
+        stdout.contains("\"artifact\": \"compiled_source\""),
+        "{stdout}"
+    );
+    assert!(stdout.contains("\"format\": \"lean\""), "{stdout}");
+    assert!(stdout.contains("\"error\": null"), "{stdout}");
 
     let generated = fs::read_to_string(&output_path).expect("read generated Lean output");
     let checked_in = fs::read_to_string(root.join(GENERATED)).expect("read checked-in Lean output");
@@ -53,16 +61,24 @@ fn lean_command_preserves_existing_output_when_compilation_fails() {
 
     let output = Command::new(env!("CARGO_BIN_EXE_litex"))
         .current_dir(root)
+        .arg("-isolated")
         .arg("-f")
         .arg(&source_path)
-        .arg("-isolated")
         .arg("-lean")
         .arg(&output_path)
         .output()
         .expect("run failing single-file -lean");
 
     assert!(!output.status.success());
-    assert!(String::from_utf8_lossy(&output.stderr).contains("failed to compile"));
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("\"kind\": \"artifact\""), "{stdout}");
+    assert!(stdout.contains("\"ok\": false"), "{stdout}");
+    assert!(
+        stdout.contains("\"kind\": \"lean_compilation_error\""),
+        "{stdout}"
+    );
+    assert!(stdout.contains("failed to compile"), "{stdout}");
+    assert!(output.stderr.is_empty());
     assert_eq!(
         fs::read_to_string(&output_path).expect("read preserved output"),
         sentinel
@@ -79,17 +95,26 @@ fn lean_command_rejects_the_litex_file_as_its_output() {
 
     let output = Command::new(env!("CARGO_BIN_EXE_litex"))
         .current_dir(root)
+        .arg("-isolated")
         .arg("-f")
         .arg(&source_path)
-        .arg("-isolated")
         .arg("-lean")
         .arg(&source_path)
         .output()
         .expect("run same-path single-file -lean");
 
     assert!(!output.status.success());
-    assert!(String::from_utf8_lossy(&output.stderr)
-        .contains("Litex input and Lean output paths must be different"));
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("\"kind\": \"artifact\""), "{stdout}");
+    assert!(
+        stdout.contains("\"kind\": \"lean_compilation_error\""),
+        "{stdout}"
+    );
+    assert!(
+        stdout.contains("Litex input and Lean output paths must be different"),
+        "{stdout}"
+    );
+    assert!(output.stderr.is_empty());
     assert_eq!(
         fs::read_to_string(&source_path).expect("read preserved input"),
         source
@@ -106,18 +131,24 @@ fn lean_command_rejects_legacy_imports_before_single_file_compilation() {
 
     let output = Command::new(env!("CARGO_BIN_EXE_litex"))
         .current_dir(root)
+        .arg("-isolated")
         .arg("-f")
         .arg(&source_path)
-        .arg("-isolated")
         .arg("-lean")
         .arg(&output_path)
         .output()
         .expect("run importing single-file -lean");
 
     assert!(!output.status.success());
-    let stderr = String::from_utf8_lossy(&output.stderr);
-    assert!(stderr.contains("`import` is a terminal command, not a Litex statement"));
-    assert!(stderr.contains("declare source dependencies in litex.config"));
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(stdout.contains("\"kind\": \"artifact\""), "{stdout}");
+    assert!(
+        stdout.contains("\"kind\": \"lean_compilation_error\""),
+        "{stdout}"
+    );
+    assert!(stdout.contains("`import` is a terminal command, not a Litex statement"));
+    assert!(stdout.contains("declare source dependencies in litex.config"));
+    assert!(output.stderr.is_empty());
     assert!(!output_path.exists());
 }
 

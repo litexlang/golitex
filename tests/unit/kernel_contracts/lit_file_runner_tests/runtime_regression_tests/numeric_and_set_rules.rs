@@ -2557,8 +2557,8 @@ fn real_exponent_power_of_power_requires_positive_base() {
                 run_output
             );
             assert!(
-                run_output.contains("\"error_type\": \"UnknownError\"")
-                    && !run_output.contains("WellDefinedError"),
+                run_output.contains("\"kind\": \"unknown_error\"")
+                    && !run_output.contains("well_defined_error"),
                 "both sides should be well-defined and the false equality itself should fail:\n{}",
                 run_output
             );
