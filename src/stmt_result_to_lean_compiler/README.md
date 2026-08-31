@@ -256,7 +256,7 @@ The completed scope of this round is exact:
   names have been physically removed;
 - compilation happens after the execution `Runtime` is dropped, so the
   compiler cannot recover missing evidence from the live kernel environment;
-- successful CLI output is JSON v2 produced directly from `StmtResult`, and
+- successful CLI output is statement-result JSON produced directly from `StmtResult`, and
   result graphs are read-only presentations of the same returned structure;
 - unsupported Result shapes fail closed. The migration does not claim to add
   Lean support for every Litex program that the kernel can execute.
@@ -355,7 +355,7 @@ Litex source
             -> attach exact FactIds
             -> attach execution trace
   -> one completed StmtResult
-       |-> JSON v2 / result graph
+       |-> statement-result JSON / result graph
        `-> StmtResultToLeanCompiler
             -> match the SuccessStmtResult family
             -> enter named recursive child Result fields
@@ -2330,10 +2330,10 @@ This separation also preserves the Litex execution contract: a Litex program
 may execute successfully even when the Lean backend does not yet implement
 its result shape. Compiler support is narrower than kernel execution support.
 
-## JSON v2 and Result Graphs
+## Statement-result JSON and Result Graphs
 
 The ordinary CLI renders the recursive Result directly through
-[`result_json_v2/`](../output/result_json_v2) inside the `statement_results`
+[`statement_result/`](../output/statement_result) inside the `statement_results`
 array of the `run` envelope. It does not first project the result back into the
 old flattened output model or add a per-result `schema` field. Shared `Rc`
 nodes receive stable local `$id` references so a DAG remains finite in JSON.

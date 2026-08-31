@@ -37,7 +37,7 @@ fn compile_direct_result_only_on_verifier_stack(
         .expect("direct Result compiler verifier thread panicked")
 }
 
-fn capture_stmt_results_json_v2_on_verifier_stack(
+fn capture_statement_results_json_on_verifier_stack(
     source: &'static str,
     label: &'static str,
 ) -> Result<String, String> {
@@ -64,13 +64,13 @@ fn capture_stmt_results_json_v2_on_verifier_stack(
             drop(runtime);
             let rendered_results = results
                 .iter()
-                .map(litex::output::display_stmt_result_json_v2)
+                .map(litex::output::render_statement_result_json)
                 .collect::<Vec<_>>();
             Ok(format!("[\n{}\n]", rendered_results.join(",\n")))
         })
-        .expect("spawn statement Result JSON v2 verifier thread")
+        .expect("spawn statement-result JSON verifier thread")
         .join()
-        .expect("statement Result JSON v2 verifier thread panicked")
+        .expect("statement-result JSON verifier thread panicked")
 }
 
 #[test]
@@ -132,7 +132,7 @@ fn litex_to_mathlib_pipeline_showcase_generated_lean_has_not_drifted() {
 fn litex_to_mathlib_pipeline_property_companion_verifies_without_trust() {
     const SOURCE: &str = include_str!("fixtures/stmt_result_to_lean_compiler/property_flow.lit");
 
-    let results = capture_stmt_results_json_v2_on_verifier_stack(SOURCE, "property_flow.lit")
+    let results = capture_statement_results_json_on_verifier_stack(SOURCE, "property_flow.lit")
         .expect("verify the property-centered companion source");
 
     assert!(results.contains("DefPropStmt"), "{results}");
@@ -154,7 +154,7 @@ fn convergence_under_constant_scaling_generates_without_name_specialization() {
     const CHECKED_IN: &str =
         include_str!("../../showcases/litex_to_lean_mathlib_pipeline/showcase2/LitexGenerate.lean");
 
-    let results = capture_stmt_results_json_v2_on_verifier_stack(SOURCE, "main.lit")
+    let results = capture_statement_results_json_on_verifier_stack(SOURCE, "main.lit")
         .expect("verify the convergence-under-scaling showcase");
     assert!(results.contains("is_eventually_close"));
     assert!(results.contains("converges_to_mul_const"));
@@ -559,11 +559,11 @@ fn top_level_atomic_equality_compiles_typed_result_evidence() {
 fn complex_algebraic_normalization_records_typed_boundary_rule_id() {
     const SOURCE: &str = include_str!("../../lean/examples/54_ComplexAlgebraicCalculation.lit");
     const BOUNDARY_SOURCE: &str = "1 / i = -1 * i\n";
-    let result_json = capture_stmt_results_json_v2_on_verifier_stack(
+    let result_json = capture_statement_results_json_on_verifier_stack(
         SOURCE,
         "54_ComplexAlgebraicCalculation.lit",
     )
-    .expect("capture complex-algebraic-normalization Result JSON v2");
+    .expect("capture complex-algebraic-normalization statement-result JSON");
     assert_eq!(
         result_json.matches("ComplexAlgebraicNormalization").count(),
         3,
@@ -579,7 +579,7 @@ fn complex_algebraic_normalization_records_typed_boundary_rule_id() {
     assert!(!generated.contains("axiom "), "{generated}");
     assert!(!generated.contains("sorry"), "{generated}");
 
-    let boundary_json = capture_stmt_results_json_v2_on_verifier_stack(
+    let boundary_json = capture_statement_results_json_on_verifier_stack(
         BOUNDARY_SOURCE,
         "54_ComplexAlgebraicCalculationBoundary.lit",
     )
@@ -791,8 +791,8 @@ fn inference_compilation_does_not_parse_rendered_lean_statements() {
 fn native_constants_use_mathlib_terms_and_exact_membership_rules() {
     const SOURCE: &str = "i = i\ne = e\npi = pi\n\ni $in C\ne $in R\npi $in R\ne $in C\npi $in C\n";
     let result_json =
-        capture_stmt_results_json_v2_on_verifier_stack(SOURCE, "19_NativeConstants.lit")
-            .expect("capture native-constant Result JSON v2");
+        capture_statement_results_json_on_verifier_stack(SOURCE, "19_NativeConstants.lit")
+            .expect("capture native-constant statement-result JSON");
     for evidence in [
         "ImaginaryUnitInComplex",
         "EulerNumberInReal",
@@ -827,8 +827,8 @@ fn native_constants_use_mathlib_terms_and_exact_membership_rules() {
 fn standard_set_hierarchy_replays_exact_projection_chain() {
     const SOURCE: &str = "forall n N:\n    n $in Z\n\nforall n N:\n    n $in Q\n\nforall n N:\n    n $in R\n\nforall n N:\n    n $in C\n\nforall z Z:\n    z $in Q\n\nforall z Z:\n    z $in R\n\nforall z Z:\n    z $in C\n\nforall q Q:\n    q $in R\n\nforall q Q:\n    q $in C\n\nforall r R:\n    r $in C\n";
     let result_json =
-        capture_stmt_results_json_v2_on_verifier_stack(SOURCE, "16_StandardSetHierarchy.lit")
-            .expect("capture standard-set hierarchy Result JSON v2");
+        capture_statement_results_json_on_verifier_stack(SOURCE, "16_StandardSetHierarchy.lit")
+            .expect("capture standard-set hierarchy statement-result JSON");
     assert_eq!(
         result_json
             .matches("StandardSetMembershipProjection")
@@ -858,8 +858,8 @@ fn positive_natural_uses_exact_subtype_and_projection() {
     assert!(core.contains("abbrev NPos : Litex.Set := setBuilder N (fun n => 0 < n)"));
 
     let result_json =
-        capture_stmt_results_json_v2_on_verifier_stack(SOURCE, "20_PositiveNaturalCarrier.lit")
-            .expect("capture positive-natural Result JSON v2");
+        capture_statement_results_json_on_verifier_stack(SOURCE, "20_PositiveNaturalCarrier.lit")
+            .expect("capture positive-natural statement-result JSON");
     assert!(
         result_json.contains("ClosedNumericMembership"),
         "{result_json}"
@@ -899,8 +899,8 @@ fn positive_real_uses_exact_projection_and_uncatalogued_constructor_fails_closed
     assert!(core.contains("abbrev RPos : Litex.Set := setBuilder R (fun r => 0 < r)"));
 
     let result_json =
-        capture_stmt_results_json_v2_on_verifier_stack(SOURCE, "21_PositiveRealCarrier.lit")
-            .expect("capture positive-real statement Result JSON v2");
+        capture_statement_results_json_on_verifier_stack(SOURCE, "21_PositiveRealCarrier.lit")
+            .expect("capture positive-real statement-result JSON");
     for expected in [
         "ClosedNumericMembership",
         "EulerNumberInPositiveReal",
@@ -936,7 +936,7 @@ fn positive_real_uses_exact_projection_and_uncatalogued_constructor_fails_closed
     assert!(!generated.contains("axiom "));
     assert!(!generated.contains("sorry"));
 
-    let boundary_json = capture_stmt_results_json_v2_on_verifier_stack(
+    let boundary_json = capture_statement_results_json_on_verifier_stack(
         BOUNDARY_SOURCE,
         "unsupported_generic_r_pos_constructor.lit",
     )
@@ -1061,8 +1061,8 @@ fn nonzero_numeric_carriers_replay_exact_constructors_and_widening() {
 fn numeric_carrier_closures_replay_exact_rules() {
     const SOURCE: &str = "forall a, b C:\n    a + b $in C\n\nforall a, b C:\n    a - b $in C\n\nforall a, b C:\n    a * b $in C\n\nforall a, b C:\n    b != 0\n    =>:\n        a / b $in C\n\nforall a, b Z:\n    a + b $in Z\n\nforall a, b Z:\n    a - b $in Z\n\nforall a, b Z:\n    a * b $in Z\n\nforall a, b Z:\n    b != 0\n    =>:\n        a % b $in Z\n";
     let result_json =
-        capture_stmt_results_json_v2_on_verifier_stack(SOURCE, "17_NumericCarrierClosures.lit")
-            .expect("capture numeric carrier-closure Result JSON v2");
+        capture_statement_results_json_on_verifier_stack(SOURCE, "17_NumericCarrierClosures.lit")
+            .expect("capture numeric carrier-closure statement-result JSON");
     assert_eq!(
         result_json
             .matches("ComplexArithmeticMembershipClosure")
@@ -1110,8 +1110,8 @@ fn numeric_carrier_closures_replay_exact_rules() {
 fn rational_and_natural_carrier_closures_replay_exact_rules() {
     const SOURCE: &str = "forall a, b Q:\n    a + b $in Q\n\nforall a, b Q:\n    a - b $in Q\n\nforall a, b Q:\n    a * b $in Q\n\nforall a, b Q:\n    b != 0\n    =>:\n        a / b $in Q\n\nforall a, b N:\n    a + b $in N\n\nforall a, b N:\n    a * b $in N\n\nforall a Q, z Z:\n    a != 0\n    =>:\n        a^z $in Q\n";
     let result_json =
-        capture_stmt_results_json_v2_on_verifier_stack(SOURCE, "18_RationalNaturalClosures.lit")
-            .expect("capture rational/natural carrier-closure Result JSON v2");
+        capture_statement_results_json_on_verifier_stack(SOURCE, "18_RationalNaturalClosures.lit")
+            .expect("capture rational/natural carrier-closure statement-result JSON");
     assert_eq!(
         result_json.matches("RationalMembershipClosure").count(),
         5,
@@ -1161,8 +1161,9 @@ fn rational_and_natural_carrier_closures_replay_exact_rules() {
 #[test]
 fn known_equality_paths_replay_same_symmetry_and_transitivity() {
     const SOURCE: &str = "forall a, b set:\n    a = b\n    =>:\n        b = a\n\nforall a, b, c set:\n    a = b\n    b = c\n    =>:\n        a = c\n";
-    let result_json = capture_stmt_results_json_v2_on_verifier_stack(SOURCE, "known_equality.lit")
-        .expect("capture exact known-equality Result paths");
+    let result_json =
+        capture_statement_results_json_on_verifier_stack(SOURCE, "known_equality.lit")
+            .expect("capture exact known-equality Result paths");
     assert!(result_json.contains("ForallProof"));
     assert!(result_json.contains("KnownEqualityPath"));
     assert!(result_json.contains("source_fact_id"));
@@ -1250,8 +1251,8 @@ fn multilayer_application_preserves_each_unary_source_contract() {
     const SOURCE: &str =
         "forall S, T, U set, a S, b T, g fn(x S) fn(y T) U:\n    g(a)(b) = g(a)(b)\n";
     let result_json =
-        capture_stmt_results_json_v2_on_verifier_stack(SOURCE, "23_MultilayerApplication.lit")
-            .expect("capture multi-layer application Result JSON v2");
+        capture_statement_results_json_on_verifier_stack(SOURCE, "23_MultilayerApplication.lit")
+            .expect("capture multi-layer application statement-result JSON");
     assert!(
         result_json.contains("\"through_layer_index\": 0"),
         "{result_json}"
@@ -1277,9 +1278,11 @@ fn multilayer_application_preserves_each_unary_source_contract() {
 
     const SAME_LAYER: &str =
         "forall S, T, U set, a S, b T, f fn(x S, y T) U:\n    f(a, b) = f(a, b)\n";
-    let same_layer_result_json =
-        capture_stmt_results_json_v2_on_verifier_stack(SAME_LAYER, "23_MultilayerApplication.lit")
-            .expect("capture same-layer telescope Result JSON v2");
+    let same_layer_result_json = capture_statement_results_json_on_verifier_stack(
+        SAME_LAYER,
+        "23_MultilayerApplication.lit",
+    )
+    .expect("capture same-layer telescope statement-result JSON");
     assert!(same_layer_result_json.contains("\"parameter_index\": 0"));
     assert!(same_layer_result_json.contains("\"parameter_index\": 1"));
     let same_layer = compile_on_verifier_stack(SAME_LAYER, "23_MultilayerApplication.lit")
@@ -1346,9 +1349,11 @@ fn dependent_function_sets_keep_parameter_and_return_carriers() {
 #[test]
 fn compound_anonymous_functions_replay_their_owned_wd_scope() {
     const SOURCE: &str = "fn(x R) R {x + 1} = fn(y R) R {y + 1}\n\nforall a R:\n    fn(x R) R {x + 1}(a) = fn(x R) R {x + 1}(a)\n";
-    let result_json =
-        capture_stmt_results_json_v2_on_verifier_stack(SOURCE, "24_DependentAnonymousFunction.lit")
-            .expect("capture compound anonymous-function WD Result JSON v2");
+    let result_json = capture_statement_results_json_on_verifier_stack(
+        SOURCE,
+        "24_DependentAnonymousFunction.lit",
+    )
+    .expect("capture compound anonymous-function WD statement-result JSON");
     assert!(
         result_json.contains("AnonymousFunctionBodyMembership"),
         "{result_json}"
@@ -1606,8 +1611,8 @@ fn concrete_predicate_definition_and_by_def_replay_checked_components() {
 fn abstract_predicate_and_explicit_trust_emit_only_source_axioms() {
     const SOURCE: &str = "abstract_prop marked(x)\n\ntrust $marked(1)\n\n$marked(1)\n";
     let result_json =
-        capture_stmt_results_json_v2_on_verifier_stack(SOURCE, "25_ExplicitSourceAxioms.lit")
-            .expect("capture abstract-predicate and explicit-trust Result JSON v2");
+        capture_statement_results_json_on_verifier_stack(SOURCE, "25_ExplicitSourceAxioms.lit")
+            .expect("capture abstract-predicate and explicit-trust statement-result JSON");
     assert!(result_json.contains("DefAbstractPropStmt"), "{result_json}");
     assert_eq!(
         result_json.matches("\"kind\": \"TrustStmt\"").count(),
@@ -1691,8 +1696,8 @@ fn set_builder_predicate_transport_is_not_specialized_to_one_argument() {
 fn builtin_strategy_result_marks_each_selected_layer_and_replays_exact_rules() {
     const SOURCE: &str = "forall a, b, c, d R:\n    a > 0\n    b >= 0\n    c >= 0\n    d >= 0\n    =>:\n        (a + b) + (c + d) > 0\n";
     let result_json =
-        capture_stmt_results_json_v2_on_verifier_stack(SOURCE, "15_BuiltinStrategy.lit")
-            .expect("capture builtin-strategy Result JSON v2");
+        capture_statement_results_json_on_verifier_stack(SOURCE, "15_BuiltinStrategy.lit")
+            .expect("capture builtin-strategy statement-result JSON");
     assert_eq!(
         result_json.matches("\"kind\": \"BuiltinStrategy\"").count(),
         2,
@@ -1732,11 +1737,11 @@ fn builtin_strategy_result_marks_each_selected_layer_and_replays_exact_rules() {
     assert!(!generated.contains("sorry"));
 
     const REAL_ADDITION_CARRIER_SOURCE: &str = "forall a, b R:\n    a + b $in R\n";
-    let carrier_result_json = capture_stmt_results_json_v2_on_verifier_stack(
+    let carrier_result_json = capture_statement_results_json_on_verifier_stack(
         REAL_ADDITION_CARRIER_SOURCE,
         "15_BuiltinStrategy.lit",
     )
-    .expect("capture real-addition carrier Result JSON v2");
+    .expect("capture real-addition carrier statement-result JSON");
     assert!(
         carrier_result_json.contains("RealArithmeticMembershipClosure"),
         "{carrier_result_json}"
@@ -1749,11 +1754,11 @@ fn builtin_strategy_result_marks_each_selected_layer_and_replays_exact_rules() {
     assert!(carrier_generated.contains("Litex.Rules.complexRealInR ((Litex.In.rep b"));
 
     const RIGHT_STRICT_SOURCE: &str = "forall a, b, c, d R:\n    a >= 0\n    b >= 0\n    c >= 0\n    d > 0\n    =>:\n        (a + b) + (c + d) > 0\n";
-    let right_result_json = capture_stmt_results_json_v2_on_verifier_stack(
+    let right_result_json = capture_statement_results_json_on_verifier_stack(
         RIGHT_STRICT_SOURCE,
         "15_BuiltinStrategy.lit",
     )
-    .expect("capture right-strict builtin-strategy Result JSON v2");
+    .expect("capture right-strict builtin-strategy statement-result JSON");
     assert!(
         right_result_json.contains("AddPositiveRightStrict"),
         "{right_result_json}"
@@ -1781,8 +1786,8 @@ fn builtin_strategy_result_marks_each_selected_layer_and_replays_exact_rules() {
 fn real_arithmetic_membership_closures_replay_exact_rules() {
     const SOURCE: &str = "forall a, b R:\n    a + b $in R\n\nforall a, b R:\n    a - b $in R\n\nforall a, b R:\n    a * b $in R\n\nforall a, b R:\n    b != 0\n    =>:\n        a / b $in R\n";
     let result_json =
-        capture_stmt_results_json_v2_on_verifier_stack(SOURCE, "15_BuiltinStrategy.lit")
-            .expect("capture real arithmetic closure Result JSON v2");
+        capture_statement_results_json_on_verifier_stack(SOURCE, "15_BuiltinStrategy.lit")
+            .expect("capture real arithmetic closure statement-result JSON");
     assert!(
         result_json
             .matches("RealArithmeticMembershipClosure")
@@ -1814,8 +1819,8 @@ fn real_arithmetic_membership_closures_replay_exact_rules() {
 fn multiplicative_strategy_replays_canonical_mathlib_order_evidence() {
     const SOURCE: &str = "forall a, b, c, d R:\n    a >= 0\n    b >= 0\n    c >= 0\n    d >= 0\n    =>:\n        (a * b) * (c * d) >= 0\n";
     let result_json =
-        capture_stmt_results_json_v2_on_verifier_stack(SOURCE, "15_BuiltinStrategy.lit")
-            .expect("capture nested multiplicative strategy Result JSON v2");
+        capture_statement_results_json_on_verifier_stack(SOURCE, "15_BuiltinStrategy.lit")
+            .expect("capture nested multiplicative strategy statement-result JSON");
     assert!(result_json.contains("BuiltinStrategy"), "{result_json}");
     assert!(result_json.contains("MulNonnegative"), "{result_json}");
 
@@ -1838,8 +1843,8 @@ fn multiplicative_strategy_replays_canonical_mathlib_order_evidence() {
 fn direct_multiplicative_and_divisive_sign_rules_all_compile() {
     const SOURCE: &str = "forall a, b R:\n    a >= 0\n    b >= 0\n    =>:\n        a * b >= 0\n\nforall a, b R:\n    a > 0\n    b > 0\n    =>:\n        a * b > 0\n\nforall a, b R:\n    a >= 0\n    b > 0\n    =>:\n        a / b >= 0\n\nforall a, b R:\n    a > 0\n    b > 0\n    =>:\n        a / b > 0\n";
     let result_json =
-        capture_stmt_results_json_v2_on_verifier_stack(SOURCE, "15_BuiltinStrategy.lit")
-            .expect("capture direct multiplication/division sign Result JSON v2");
+        capture_statement_results_json_on_verifier_stack(SOURCE, "15_BuiltinStrategy.lit")
+            .expect("capture direct multiplication/division sign statement-result JSON");
     for rule in [
         "MulNonnegative",
         "MulPositive",
@@ -1872,7 +1877,7 @@ fn direct_multiplicative_and_divisive_sign_rules_all_compile() {
 #[test]
 fn subtractive_strategy_rule_compiles_from_registered_certificate() {
     const SOURCE: &str = "forall a, b R:\n    a <= b\n    =>:\n        b - a >= 0\n";
-    let result_json = capture_stmt_results_json_v2_on_verifier_stack(
+    let result_json = capture_statement_results_json_on_verifier_stack(
         SOURCE,
         "subtractive_builtin_strategy_rule.lit",
     )
@@ -1949,11 +1954,11 @@ fn indexed_sequence_definition_uses_the_recursive_result_environment() {
 fn template_sequence_alias_compiles_from_recursive_results_without_index_shift() {
     const SOURCE: &str =
         include_str!("../../lean/examples/55_TemplateSequenceInstantiationResult.lit");
-    let result_json = capture_stmt_results_json_v2_on_verifier_stack(
+    let result_json = capture_statement_results_json_on_verifier_stack(
         SOURCE,
         "55_TemplateSequenceInstantiationResult.lit",
     )
-    .expect("capture Template definition and Created/Reused Result JSON v2");
+    .expect("capture Template definition and Created/Reused statement-result JSON");
     for retained_field in [
         "\"template_parameter_groups\"",
         "\"body_statement_result\"",
@@ -2068,8 +2073,8 @@ fn multiple_existential_witnesses_fail_closed() {
 fn collections_and_aggregates_use_exact_typed_carriers() {
     const SOURCE: &str = include_str!("../../lean/examples/26_CollectionsAndAggregates.lit");
     let result_json =
-        capture_stmt_results_json_v2_on_verifier_stack(SOURCE, "26_CollectionsAndAggregates.lit")
-            .expect("capture collection and aggregate Result JSON v2");
+        capture_statement_results_json_on_verifier_stack(SOURCE, "26_CollectionsAndAggregates.lit")
+            .expect("capture collection and aggregate statement-result JSON");
     for evidence in ["\"kind\": \"FiniteSet\"", "ListSetMembership"] {
         assert!(
             result_json.contains(evidence),
@@ -2105,8 +2110,9 @@ fn set_operators_replay_catalog_certificates_and_reject_non_catalog_rules() {
         "forall A, B, D set, x D:\n    not x $in A\n    =>:\n        not x $in intersect(A, B)\n";
     const RIGHT_BOUNDARY: &str =
         "forall A, B, D set, x D:\n    not x $in B\n    =>:\n        not x $in intersect(A, B)\n";
-    let result_json = capture_stmt_results_json_v2_on_verifier_stack(SOURCE, "27_SetOperators.lit")
-        .expect("capture set-operator Result JSON v2");
+    let result_json =
+        capture_statement_results_json_on_verifier_stack(SOURCE, "27_SetOperators.lit")
+            .expect("capture set-operator statement-result JSON");
     for rule in [
         "set.union_commutative",
         "set.union_associative",
@@ -2141,7 +2147,7 @@ fn set_operators_replay_catalog_certificates_and_reject_non_catalog_rules() {
         (RIGHT_BOUNDARY, "set.intersect_nonmembership_right"),
     ] {
         let boundary_json =
-            capture_stmt_results_json_v2_on_verifier_stack(source, "27_SetOperatorsBoundary.lit")
+            capture_statement_results_json_on_verifier_stack(source, "27_SetOperatorsBoundary.lit")
                 .expect("non-catalog intersection nonmembership verifies with typed evidence");
         assert!(
             boundary_json.contains(&format!("\"rule_id\": \"{rule_id}\"")),
@@ -2158,7 +2164,7 @@ fn set_operators_replay_catalog_certificates_and_reject_non_catalog_rules() {
 fn extended_set_rules_use_exact_power_set_and_subset_certificates() {
     const SOURCE: &str = include_str!("../../lean/examples/28_ExtendedSetRules.lit");
     let result_json =
-        capture_stmt_results_json_v2_on_verifier_stack(SOURCE, "28_ExtendedSetRules.lit")
+        capture_statement_results_json_on_verifier_stack(SOURCE, "28_ExtendedSetRules.lit")
             .expect("capture extended set-rule certificates");
     for rule in [
         "set.empty_subset",
@@ -2201,7 +2207,7 @@ fn elementary_set_algebra_completion_replays_exact_certificates() {
     const SOURCE: &str = include_str!("../../lean/examples/58_ElementarySetAlgebraCompletion.lit");
     const BOUNDARY_SOURCE: &str =
         "forall A, B, D set:\n    A $subset B\n    B $subset D\n    =>:\n        A $subset D\n";
-    let result_json = capture_stmt_results_json_v2_on_verifier_stack(
+    let result_json = capture_statement_results_json_on_verifier_stack(
         SOURCE,
         "58_ElementarySetAlgebraCompletion.lit",
     )
@@ -2234,7 +2240,7 @@ fn elementary_set_algebra_completion_replays_exact_certificates() {
     assert!(!generated.contains("axiom "));
     assert!(!generated.contains("sorry"));
 
-    let boundary_json = capture_stmt_results_json_v2_on_verifier_stack(
+    let boundary_json = capture_statement_results_json_on_verifier_stack(
         BOUNDARY_SOURCE,
         "58_ElementarySetAlgebraCompletionBoundary.lit",
     )
@@ -2253,7 +2259,7 @@ fn elementary_set_algebra_completion_replays_exact_certificates() {
 fn transparent_let_resolution_replays_exact_definition_certificate() {
     const SOURCE: &str = include_str!("../../lean/examples/59_TransparentLetResolution.lit");
     let result_json =
-        capture_stmt_results_json_v2_on_verifier_stack(SOURCE, "59_TransparentLetResolution.lit")
+        capture_statement_results_json_on_verifier_stack(SOURCE, "59_TransparentLetResolution.lit")
             .expect("capture transparent let definition certificate");
     assert!(
         result_json.contains(r#""kind": "TransparentDefinitionReduction""#),

@@ -42,7 +42,7 @@ pub fn render_fact_graph_from_stmt_results(
     if let Some(error) = runtime_error {
         fields.push((
             "error".to_string(),
-            JsonValue::JsonString(display_runtime_error_json(runtime, error, true)),
+            JsonValue::JsonString(render_runtime_error_json(runtime, error, true)),
         ));
     } else {
         fields.push(("error".to_string(), JsonValue::Null));

@@ -26,7 +26,7 @@ pub enum SummaryOption {
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct RunOptions {
     run: RunOption,
-    output_style: OutputStyle,
+    output_detail: OutputDetail,
     output_language: OutputLanguage,
     summary: SummaryOption,
 }
@@ -43,7 +43,7 @@ impl RunOptions {
     fn new(run: RunOption) -> Self {
         Self {
             run,
-            output_style: OutputStyle::Normal,
+            output_detail: OutputDetail::Normal,
             output_language: OutputLanguage::English,
             summary: SummaryOption::None,
         }
@@ -74,17 +74,27 @@ impl RunOptions {
         self.summary == SummaryOption::Summarize
     }
 
-    pub fn output_style(&self) -> OutputStyle {
-        self.output_style
+    pub fn output_detail(&self) -> OutputDetail {
+        self.output_detail
     }
 
     pub fn output_language(&self) -> OutputLanguage {
         self.output_language
     }
 
-    pub fn with_output_style(mut self, output_style: OutputStyle) -> Self {
-        self.output_style = output_style;
+    pub fn with_output_detail(mut self, output_detail: OutputDetail) -> Self {
+        self.output_detail = output_detail;
         self
+    }
+
+    #[deprecated(note = "use `output_detail`")]
+    pub fn output_style(&self) -> OutputDetail {
+        self.output_detail()
+    }
+
+    #[deprecated(note = "use `with_output_detail`")]
+    pub fn with_output_style(self, output_detail: OutputDetail) -> Self {
+        self.with_output_detail(output_detail)
     }
 
     pub fn with_output_language(mut self, output_language: OutputLanguage) -> Self {

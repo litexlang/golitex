@@ -1,4 +1,4 @@
-use crate::output::display_stmt_result_json_v2;
+use crate::output::render_statement_result_json;
 use crate::prelude::*;
 use crate::test_support::execute_source;
 
@@ -50,7 +50,7 @@ fn conjunction_store_returns_typed_component_results_with_exact_fact_ids() {
         assert_eq!(component_store.fact_id, Some(component_fact_id));
     }
 
-    let json = display_stmt_result_json_v2(&result);
+    let json = render_statement_result_json(&result);
     assert!(json.contains("\"rule\": \"ConjunctionImpliesComponent\""));
     assert!(json.contains("\"component_index\": 0"));
     assert!(json.contains("\"component_count\": 2"));

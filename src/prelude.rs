@@ -231,20 +231,21 @@ pub use crate::object::Union;
 pub use crate::object::{
     strip_free_param_numeric_tags_in_display, strip_parsing_free_param_tags_for_user_display,
 };
-pub use crate::output::display_stmt_result_json_v2;
 pub use crate::output::json_value::{
     render_json_value, render_json_value_compact, run_target_json_value, JsonValue,
 };
 pub use crate::output::language::OutputLanguage;
-pub use crate::output::style::OutputStyle;
+#[allow(deprecated)]
+pub use crate::output::{display_stmt_result_json_v2, render_statement_result_json};
 pub use crate::parsing::{TokenBlock, Tokenizer};
+#[allow(deprecated)]
 pub use crate::pipeline::{
-    display_runtime_error_json, display_stmt_exec_result_json, execute_file_in_runtime,
-    execute_isolated_file_in_runtime, execute_repository_target, render_run_output,
-    render_run_summary, render_stream_output, resolve_source_file_path, run_code, run_file,
-    run_isolated_file, run_isolated_repl_with_runtime, run_latex_repl, run_repl, run_repository,
-    run_session, ExecutionTarget, RunOutcome, RunSummary, RunSummaryRequest, RunTarget,
-    RunTargetKind, SessionRequest, SessionTarget, SourceRunOutcome,
+    display_stmt_exec_result_json, execute_file_in_runtime, execute_isolated_file_in_runtime,
+    execute_repository_target, render_run_output, render_run_summary, render_runtime_error_json,
+    render_stream_output, resolve_source_file_path, run_code, run_file, run_isolated_file,
+    run_isolated_repl_with_runtime, run_latex_repl, run_repl, run_repository, run_session,
+    ExecutionTarget, RunOutcome, RunSummary, RunSummaryRequest, RunTarget, RunTargetKind,
+    SessionRequest, SessionTarget, SourceRunOutcome,
 };
 pub use crate::result::BuiltinTheoremProvenance;
 pub use crate::result::BuiltinTheoremRequirementRole;
@@ -485,11 +486,13 @@ pub use crate::result::{SuccessBuiltinFactProofEvidenceResult, SuccessBuiltinFac
 pub use crate::runner::render_runner;
 pub use crate::runtime::ExecutionMode;
 pub use crate::runtime::FreeParamCollection;
+#[allow(deprecated)]
+pub use crate::runtime::OutputStyle;
 pub use crate::runtime::ParseContext;
 pub use crate::runtime::ScopeFrame;
 pub use crate::runtime::{
-    ExecutionFrame, ExecutionModuleFileInfo, ExecutionOption, RunOption, RunOptions, Runtime,
-    StatementProofStateStack, SummaryOption,
+    ExecutionFrame, ExecutionModuleFileInfo, ExecutionOption, OutputDetail, RunOption, RunOptions,
+    Runtime, StatementProofStateStack, SummaryOption,
 };
 pub use crate::statement::claim_stmt::ClaimStmt;
 pub use crate::statement::define_algorithm_stmt::AlgoCase;

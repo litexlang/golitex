@@ -1,4 +1,4 @@
-use crate::output::display_stmt_result_json_v2;
+use crate::output::render_statement_result_json;
 use crate::prelude::*;
 use crate::test_support::execute_source;
 
@@ -70,7 +70,7 @@ fn defined_predicate_inference_retains_parameter_and_clause_projection_results()
         "R = C"
     );
 
-    let json = display_stmt_result_json_v2(trust_result);
+    let json = render_statement_result_json(trust_result);
     assert!(json.contains("DefinedPredicateParameterRequirementProjection"));
     assert!(json.contains("DefinedPredicateDefinitionClauseProjection"));
     assert!(json.contains("\"predicate_name\": \"same_set\""));

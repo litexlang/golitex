@@ -489,7 +489,7 @@ fn set_builder_membership_combines_its_ordered_child_results_directly() {
         "{generated}"
     );
     assert!(generated.contains("inSetBuilder_iff.mp"), "{generated}");
-    let json = crate::output::display_stmt_result_json_v2(&results[0]);
+    let json = crate::output::render_statement_result_json(&results[0]);
     assert!(
         json.contains("\"rule\": \"SetBuilderBaseMembershipProjection\""),
         "{json}"

@@ -186,7 +186,7 @@ fn numeric_eval_wraps_recursive_computation_and_publishes_its_exact_fact_id() {
             "{generated}"
         );
 
-        let json = crate::output::display_stmt_result_json_v2(&results[0]);
+        let json = crate::output::render_statement_result_json(&results[0]);
         assert!(
             json.contains("\"recursive_numeric_evaluation\": {"),
             "{json}"

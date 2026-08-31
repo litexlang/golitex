@@ -5,7 +5,7 @@ use std::fmt;
 
 impl std::error::Error for RuntimeError {}
 
-// Display outputs a short placeholder; JSON: `display_runtime_error_json` in `crate::pipeline`.
+// Display outputs a short placeholder; JSON: `render_runtime_error_json` in `crate::pipeline`.
 impl fmt::Display for RuntimeError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(f, "{}", "error")

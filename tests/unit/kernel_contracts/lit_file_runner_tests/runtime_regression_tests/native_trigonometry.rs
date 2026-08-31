@@ -554,7 +554,7 @@ fn run_trigonometric_source(source_code: &str, label: &str) -> (bool, String) {
 
 fn run_trigonometric_source_detailed(source_code: &str, label: &str) -> (bool, String) {
     let mut runtime = Runtime::default();
-    runtime.set_output_style(OutputStyle::Detailed);
+    runtime.set_output_detail(OutputDetail::Detailed);
     runtime.start_isolated_source(label);
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     render_run_output(&runtime, &stmt_results, &runtime_error)

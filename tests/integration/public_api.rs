@@ -1,6 +1,6 @@
 use litex::api::{
     compile_litex_source_to_lean_compilation_report, compile_litex_source_to_lean_source, run_code,
-    run_file, run_isolated_file, run_repository, ExecutionOption, OutputLanguage, OutputStyle,
+    run_file, run_isolated_file, run_repository, ExecutionOption, OutputDetail, OutputLanguage,
     RunOption, RunOptions, RunOutcome, RunTarget, RunTargetKind, Runtime, SourceRunOutcome,
     StmtResult, StmtResultToLeanCompilationReport, SummaryOption,
 };
@@ -8,7 +8,7 @@ use litex::api::{
 #[test]
 fn curated_api_executes_litex_inside_an_existing_runtime() {
     let mut runtime = Runtime::new(
-        RunOptions::execute(ExecutionOption::Eval).with_output_style(OutputStyle::Compact),
+        RunOptions::execute(ExecutionOption::Eval).with_output_detail(OutputDetail::Compact),
     );
     runtime.start_isolated_source("public-api.lit");
 
@@ -25,7 +25,7 @@ fn curated_api_executes_litex_inside_an_existing_runtime() {
 #[test]
 fn curated_api_exposes_one_owned_entry_for_every_batch_input() {
     let options = RunOptions::strict_execute(ExecutionOption::Eval)
-        .with_output_style(OutputStyle::Compact)
+        .with_output_detail(OutputDetail::Compact)
         .with_output_language(OutputLanguage::SimplifiedChinese)
         .with_summary(SummaryOption::Summarize);
     let code = run_code("1 = 1", options);
@@ -115,4 +115,22 @@ fn curated_api_keeps_only_canonical_execution_paths_public() {
         litex::to_python::to_python_from_source;
     let _: fn(&str, &str) -> Result<String, litex::error::RuntimeError> =
         litex::to_c::to_c_from_source;
+}
+
+#[test]
+#[allow(deprecated)]
+fn output_api_exposes_canonical_names_and_legacy_shims() {
+    let _: fn(&StmtResult) -> String = litex::api::render_statement_result_json;
+    let _: fn(&Runtime, &litex::error::RuntimeError, bool) -> String =
+        litex::api::render_runtime_error_json;
+    let _: Option<OutputDetail> = None;
+
+    let _: fn(&StmtResult) -> String = litex::api::display_stmt_result_json_v2;
+    let _: fn(&Runtime, &StmtResult, bool) -> String = litex::api::display_stmt_exec_result_json;
+    let _: Option<litex::api::OutputStyle> = None;
+    let _: fn(
+        &Runtime,
+        &litex::error::RuntimeErrorUnknownResult,
+        OutputDetail,
+    ) -> litex::output::json_value::JsonValue = litex::output::unknown_result_json_value;
 }

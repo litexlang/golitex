@@ -1,9 +1,7 @@
 use crate::error::RuntimeError;
 use crate::object::strip_free_param_numeric_tags_in_display;
 use crate::output::json_value::{render_json_value_compact, JsonValue};
-use crate::output::{
-    display_runtime_error_json, display_stmt_exec_result_json, display_stmt_result_json_v2,
-};
+use crate::output::{render_runtime_error_json, render_statement_result_json};
 use crate::result::StmtResult;
 use crate::runtime::Runtime;
 
@@ -17,14 +15,14 @@ pub fn render_run_output(
     let mut output_text = String::new();
     for stmt_result in stmt_results.iter() {
         output_text.push('\n');
-        output_text.push_str(display_stmt_exec_result_json(runtime, stmt_result, false).as_str());
+        output_text.push_str(render_statement_result_json(stmt_result).as_str());
         output_text.push('\n');
     }
 
     let ok = runtime_error.is_none();
     if let Some(error) = runtime_error {
         output_text.push('\n');
-        output_text.push_str(display_runtime_error_json(runtime, error, false).as_str());
+        output_text.push_str(render_runtime_error_json(runtime, error, false).as_str());
         output_text.push('\n');
     }
 
@@ -44,7 +42,7 @@ pub fn render_stream_output(
 ) -> String {
     let statement_results = statement_results
         .iter()
-        .map(|result| JsonValue::RawJson(display_stmt_result_json_v2(result)))
+        .map(|result| JsonValue::RawJson(render_statement_result_json(result)))
         .collect::<Vec<_>>();
     render_json_value_compact(&JsonValue::Object(vec![
         (

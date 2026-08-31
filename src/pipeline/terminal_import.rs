@@ -1,4 +1,4 @@
-use super::display_runtime_error_json;
+use super::render_runtime_error_json;
 use crate::error::{ParseRuntimeError, RuntimeError, RuntimeErrorStruct};
 use crate::module_system::{discover_terminal_module_import, discover_terminal_std_import};
 use crate::module_system::{ImportTarget, ModuleStatus};
@@ -56,7 +56,7 @@ pub(super) fn terminal_input_starts_with_import(source: &str) -> bool {
 pub(super) fn run_terminal_import(source: &str, runtime: &mut Runtime) -> (bool, String) {
     let command = match parse_terminal_import(source, runtime.current_file_path_rc()) {
         Ok(command) => command,
-        Err(error) => return (false, display_runtime_error_json(runtime, &error, false)),
+        Err(error) => return (false, render_runtime_error_json(runtime, &error, false)),
     };
 
     let module_manager_before = runtime.module_manager.clone();
@@ -79,7 +79,7 @@ pub(super) fn run_terminal_import(source: &str, runtime: &mut Runtime) -> (bool,
         Ok(module_id) => module_id,
         Err(error) => {
             runtime.module_manager = module_manager_before;
-            return (false, display_runtime_error_json(runtime, &error, false));
+            return (false, render_runtime_error_json(runtime, &error, false));
         }
     };
     let module_status_before = runtime
@@ -105,7 +105,7 @@ pub(super) fn run_terminal_import(source: &str, runtime: &mut Runtime) -> (bool,
     );
     if let Some(error) = runtime_error {
         runtime.module_manager = module_manager_before;
-        return (false, display_runtime_error_json(runtime, &error, false));
+        return (false, render_runtime_error_json(runtime, &error, false));
     }
 
     let target = runtime

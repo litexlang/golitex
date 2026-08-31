@@ -70,7 +70,7 @@ fn virtual_source_reference_uses_its_concrete_label() {
     ))
     .into();
 
-    let output = display_runtime_error_json(&runtime, &error, true);
+    let output = render_runtime_error_json(&runtime, &error, true);
 
     assert!(output.contains(r#""source": "repl""#), "{output}");
     assert!(!output.contains(r#""source_kind""#), "{output}");
@@ -78,7 +78,7 @@ fn virtual_source_reference_uses_its_concrete_label() {
 }
 
 #[test]
-fn json_v2_normal_output_keeps_structural_empty_arrays() {
+fn statement_result_json_normal_output_keeps_structural_empty_arrays() {
     let source_code = "have a R\nhave a R";
 
     let mut runtime = Runtime::default();
@@ -182,12 +182,12 @@ fn matrix_operator_latex_escapes_the_apostrophe_power_token() {
 }
 
 #[test]
-fn json_v2_detailed_output_keeps_the_same_structural_empty_arrays() {
+fn statement_result_json_detailed_output_keeps_the_same_structural_empty_arrays() {
     let source_code = "have a R\nhave a R";
 
     let mut runtime = Runtime::default();
     runtime.start_isolated_source("detail_output_keeps_empty_fields");
-    runtime.set_output_style(OutputStyle::Detailed);
+    runtime.set_output_detail(OutputDetail::Detailed);
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
@@ -363,7 +363,7 @@ witness exist x R st {x = 1} from 1:
         assert_no_legacy_acceptance_field(&run_output, "normal");
         assert!(
             run_output.contains("\"proof_steps\": [") && run_output.contains("\"branches\": ["),
-            "Result JSON v2 should retain semantically named recursive children:\n{}",
+            "statement-result JSON should retain semantically named recursive children:\n{}",
             run_output
         );
         assert!(run_output.contains("\"verification\": {"));
@@ -372,7 +372,7 @@ witness exist x R st {x = 1} from 1:
 }
 
 #[test]
-fn output_styles_project_one_full_execution_trace() {
+fn output_details_project_one_full_execution_trace() {
     let source_code = r#"
 sketch:
     forall y R, z N:
@@ -381,7 +381,7 @@ sketch:
     $is_set(1)
 "#;
     let mut runtime = Runtime::default();
-    runtime.start_isolated_source("output_styles_project_full_trace");
+    runtime.start_isolated_source("output_details_project_full_trace");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
 
     assert!(runtime_error.is_none());
@@ -394,11 +394,11 @@ sketch:
     assert!(normal_output.contains("\"execution_trace\": {"));
     assert!(normal_output.contains("\"infers\": {"));
 
-    runtime.set_output_style(OutputStyle::Compact);
+    runtime.set_output_detail(OutputDetail::Compact);
     let (_, compact_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     assert_eq!(compact_output, normal_output);
 
-    runtime.set_output_style(OutputStyle::Detailed);
+    runtime.set_output_detail(OutputDetail::Detailed);
     let (_, detailed_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     assert_eq!(detailed_output, normal_output);
     assert!(detailed_output.contains("\"children\": ["));
@@ -473,7 +473,7 @@ witness exist x R st {x = 1} from 1:
 
         let mut runtime = Runtime::default();
         runtime.start_isolated_source("detail_output_expands_proof_trace");
-        runtime.set_output_style(OutputStyle::Detailed);
+        runtime.set_output_detail(OutputDetail::Detailed);
         let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -535,7 +535,7 @@ by induc n from 0:
 
     let mut detail_runtime = Runtime::default();
     detail_runtime.start_isolated_source("by_induc_detail_trace");
-    detail_runtime.set_output_style(OutputStyle::Detailed);
+    detail_runtime.set_output_detail(OutputDetail::Detailed);
     let (detail_stmt_results, detail_runtime_error) =
         execute_source(source_code, &mut detail_runtime);
     let (detail_run_succeeded, detail_run_output) =
@@ -569,7 +569,7 @@ witness exist x R st {x = 1} from 1:
 
     let mut runtime = Runtime::default();
     runtime.start_isolated_source("witness_detail_output_keeps_trace");
-    runtime.set_output_style(OutputStyle::Detailed);
+    runtime.set_output_detail(OutputDetail::Detailed);
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
@@ -1157,7 +1157,7 @@ forall x R:
 
     let mut runtime = Runtime::default();
     runtime.start_isolated_source("factual_verified_by_stable_shape");
-    runtime.set_output_style(OutputStyle::Detailed);
+    runtime.set_output_detail(OutputDetail::Detailed);
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
@@ -1306,7 +1306,7 @@ forall x R+:
     );
     assert!(
         run_output.contains("\"subgoals\": ["),
-        "JSON v2 should retain recursive builtin subgoals:\n{}",
+        "statement-result JSON should retain recursive builtin subgoals:\n{}",
         run_output
     );
 }
@@ -1411,7 +1411,7 @@ $q(1)
     assert!(run_output.contains(format!("\"reason\": \"{}\"", TrustStmt::store_reason()).as_str()));
 
     let mut detail_runtime = Runtime::default();
-    detail_runtime.set_output_style(OutputStyle::Detailed);
+    detail_runtime.set_output_detail(OutputDetail::Detailed);
     detail_runtime
         .start_isolated_source("detail_output_moves_store_facts_into_environment_effects_detail");
     let (detail_results, detail_error) = execute_source(source_code, &mut detail_runtime);
@@ -1454,7 +1454,7 @@ forall b R:
         b^2 = 4
 "#;
     let mut runtime = Runtime::default();
-    runtime.set_output_style(OutputStyle::Detailed);
+    runtime.set_output_detail(OutputDetail::Detailed);
     runtime.start_isolated_source("detail_output_exposes_statement_execution_phases");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -1484,7 +1484,7 @@ fn detail_output_marks_failed_phase_and_does_not_claim_environment_effects() {
 
 fn detail_output_marks_failed_phase_and_does_not_claim_environment_effects_impl() {
     let mut runtime = Runtime::default();
-    runtime.set_output_style(OutputStyle::Detailed);
+    runtime.set_output_detail(OutputDetail::Detailed);
     runtime.start_isolated_source(
         "detail_output_marks_failed_phase_and_does_not_claim_environment_effects",
     );
@@ -1550,7 +1550,7 @@ obtain c from exist x R st {x = x}
 "#;
 
             let mut runtime = Runtime::default();
-            runtime.set_output_style(OutputStyle::Detailed);
+            runtime.set_output_detail(OutputDetail::Detailed);
             runtime
                 .start_isolated_source("object_definition_output_exposes_checks_and_defined_facts");
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
@@ -1660,7 +1660,7 @@ forall a, b, c, d, e1, f R:
             assert!(run_output.contains("\"statement\": \"a = d\""));
             assert!(run_output.contains("\"statement\": \"b = e1\""));
             assert!(run_output.contains("\"statement\": \"c = f\""));
-            // Result JSON v2 is a direct recursive projection. The same proposition is
+            // statement-result JSON is a direct recursive projection. The same proposition is
             // therefore visible at the binder-premise node, its WD proof, and its store
             // effect; these are three views of one typed premise, not three executions.
             assert_eq!(run_output.matches("\"statement\": \"a $in R\"").count(), 3);
@@ -1906,7 +1906,7 @@ by cases:
 
         let mut runtime = Runtime::default();
         runtime.start_isolated_source("by_cases_detail_output_expands_cases");
-        runtime.set_output_style(OutputStyle::Detailed);
+        runtime.set_output_detail(OutputDetail::Detailed);
         let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -2085,7 +2085,7 @@ by symmetric_prop:
             assert!(run_output.contains("\"kind\": \"SuccessVerifyByPropRegistrationResult\""));
             assert!(
                 run_output.contains("\"forall_check\": {"),
-                "predicate registration JSON v2 should expose its complete recursive forall Result:\n{}",
+                "predicate registration statement-result JSON should expose its complete recursive forall Result:\n{}",
                 run_output
             );
             assert!(run_output.contains("\"kind\": \"TrustStmt\""));
@@ -2184,7 +2184,7 @@ pub(super) fn detail_output_keeps_composite_fact_step_metadata() {
 
     let mut runtime = Runtime::default();
     runtime.start_isolated_source("detail_output_keeps_composite_fact_step_metadata");
-    runtime.set_output_style(OutputStyle::Detailed);
+    runtime.set_output_detail(OutputDetail::Detailed);
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
@@ -2340,7 +2340,7 @@ forall x R:
 
     let mut runtime = Runtime::default();
     runtime.start_isolated_source("detail_unknown_output_keeps_failed_part_position_metadata");
-    runtime.set_output_style(OutputStyle::Detailed);
+    runtime.set_output_detail(OutputDetail::Detailed);
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
@@ -2425,7 +2425,7 @@ claim:
 
     let mut runtime = Runtime::default();
     runtime.start_isolated_source("detail_proof_block_failure_keeps_then_clause_position_metadata");
-    runtime.set_output_style(OutputStyle::Detailed);
+    runtime.set_output_detail(OutputDetail::Detailed);
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
@@ -2475,21 +2475,21 @@ by cases:
 }
 
 #[test]
-fn error_output_styles_render_the_same_detailed_validation_failure() {
-    let compact = render_failure_for_output_style(
+fn error_output_details_render_the_same_detailed_validation_failure() {
+    let compact = render_failure_for_output_detail(
         "1 = 0",
-        "error_output_style_validation",
-        OutputStyle::Compact,
+        "error_output_detail_validation",
+        OutputDetail::Compact,
     );
-    let normal = render_failure_for_output_style(
+    let normal = render_failure_for_output_detail(
         "1 = 0",
-        "error_output_style_validation",
-        OutputStyle::Normal,
+        "error_output_detail_validation",
+        OutputDetail::Normal,
     );
-    let detailed = render_failure_for_output_style(
+    let detailed = render_failure_for_output_detail(
         "1 = 0",
-        "error_output_style_validation",
-        OutputStyle::Detailed,
+        "error_output_detail_validation",
+        OutputDetail::Detailed,
     );
 
     assert_eq!(compact, normal);
@@ -2507,20 +2507,20 @@ fn error_output_styles_render_the_same_detailed_validation_failure() {
 #[test]
 fn error_output_parse_and_well_definedness_only_show_real_diagnostics() {
     for source_code in ["@", "$missing(1)"] {
-        let compact = render_failure_for_output_style(
+        let compact = render_failure_for_output_detail(
             source_code,
             "error_output_real_diagnostics",
-            OutputStyle::Compact,
+            OutputDetail::Compact,
         );
-        let normal = render_failure_for_output_style(
+        let normal = render_failure_for_output_detail(
             source_code,
             "error_output_real_diagnostics",
-            OutputStyle::Normal,
+            OutputDetail::Normal,
         );
-        let detailed = render_failure_for_output_style(
+        let detailed = render_failure_for_output_detail(
             source_code,
             "error_output_real_diagnostics",
-            OutputStyle::Detailed,
+            OutputDetail::Detailed,
         );
         assert_eq!(compact, normal);
         assert_eq!(normal, detailed);
@@ -2545,14 +2545,20 @@ fn error_output_parse_and_well_definedness_only_show_real_diagnostics() {
 #[test]
 fn error_output_compound_failure_keeps_detailed_inside_results_in_all_styles() {
     let source_code = "sketch:\n    1 = 1\n    1 = 0";
-    let compact =
-        render_failure_for_output_style(source_code, "error_output_compound", OutputStyle::Compact);
-    let normal =
-        render_failure_for_output_style(source_code, "error_output_compound", OutputStyle::Normal);
-    let detailed = render_failure_for_output_style(
+    let compact = render_failure_for_output_detail(
         source_code,
         "error_output_compound",
-        OutputStyle::Detailed,
+        OutputDetail::Compact,
+    );
+    let normal = render_failure_for_output_detail(
+        source_code,
+        "error_output_compound",
+        OutputDetail::Normal,
+    );
+    let detailed = render_failure_for_output_detail(
+        source_code,
+        "error_output_compound",
+        OutputDetail::Detailed,
     );
 
     assert_eq!(compact, normal);
@@ -2568,21 +2574,21 @@ fn error_output_compound_failure_keeps_detailed_inside_results_in_all_styles() {
 
 #[test]
 fn error_output_does_not_change_the_style_of_earlier_successes() {
-    for output_style in [
-        OutputStyle::Compact,
-        OutputStyle::Normal,
-        OutputStyle::Detailed,
+    for output_detail in [
+        OutputDetail::Compact,
+        OutputDetail::Normal,
+        OutputDetail::Detailed,
     ] {
         let mut runtime = Runtime::default();
         runtime.start_isolated_source("error_output_previous_success");
-        runtime.set_output_style(output_style);
+        runtime.set_output_detail(output_detail);
         let (stmt_results, runtime_error) = execute_source("1 = 1\n1 = 0", &mut runtime);
 
         assert_eq!(stmt_results.len(), 1);
         assert!(runtime_error.is_some());
-        assert_eq!(runtime.effective_output_style(), output_style);
+        assert_eq!(runtime.effective_output_detail(), output_detail);
 
-        let success_output = display_stmt_exec_result_json(&runtime, &stmt_results[0], false);
+        let success_output = render_statement_result_json(&stmt_results[0]);
         assert!(!success_output.contains("\"schema\":"));
         assert!(success_output.contains("\"verification\": {"));
         assert!(success_output.contains("\"execution_trace\": {"));
@@ -2622,13 +2628,13 @@ fn error_output_preserves_failed_step_and_step_indexes_in_all_styles() {
         .expect_err("synthetic proof-step error should remain an error");
 
     let mut outputs = Vec::new();
-    for output_style in [
-        OutputStyle::Compact,
-        OutputStyle::Normal,
-        OutputStyle::Detailed,
+    for output_detail in [
+        OutputDetail::Compact,
+        OutputDetail::Normal,
+        OutputDetail::Detailed,
     ] {
-        runtime.set_output_style(output_style);
-        outputs.push(display_runtime_error_json(&runtime, &error, false));
+        runtime.set_output_detail(output_detail);
+        outputs.push(render_runtime_error_json(&runtime, &error, false));
     }
 
     assert_eq!(outputs[0], outputs[1]);
@@ -2646,7 +2652,7 @@ fn by_thm_selected_fact_output_distinguishes_temporary_and_parent_facts() {
     let source_code = "by thm set_builder_member(1, {x R: x > 0}) => 1 $in {x R: x > 0}";
     let mut runtime = Runtime::default();
     runtime.start_isolated_source("by_thm_selected_fact_output");
-    runtime.set_output_style(OutputStyle::Detailed);
+    runtime.set_output_detail(OutputDetail::Detailed);
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
@@ -2666,14 +2672,14 @@ fn by_thm_selected_fact_output_distinguishes_temporary_and_parent_facts() {
     assert!(run_output.contains("selected theorem consequence"));
 }
 
-fn render_failure_for_output_style(
+fn render_failure_for_output_detail(
     source_code: &str,
     source_label: &str,
-    output_style: OutputStyle,
+    output_detail: OutputDetail,
 ) -> String {
     let mut runtime = Runtime::default();
     runtime.start_isolated_source(source_label);
-    runtime.set_output_style(output_style);
+    runtime.set_output_detail(output_detail);
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     assert!(

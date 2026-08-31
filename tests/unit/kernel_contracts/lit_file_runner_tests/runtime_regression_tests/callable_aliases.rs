@@ -15,7 +15,7 @@ g(1) = 2
     let (succeeded, output) = render_run_output(&runtime, &results, &error);
 
     assert!(succeeded, "transparent callable alias failed:\n{output}");
-    let json = crate::output::display_stmt_result_json_v2(&results[2]);
+    let json = crate::output::render_statement_result_json(&results[2]);
     assert!(
         json.contains(r#""kind": "TransparentDefinitionReduction""#),
         "the proof must retain its transparent reduction:\n{json}"
@@ -69,7 +69,7 @@ fn transparent_definition_reduction_applies_to_non_equality_atomic_facts() {
     let (succeeded, output) = render_run_output(&runtime, &results, &error);
 
     assert!(succeeded, "transparent membership failed:\n{output}");
-    let json = crate::output::display_stmt_result_json_v2(&results[1]);
+    let json = crate::output::render_statement_result_json(&results[1]);
     assert!(
         json.contains(r#""kind": "TransparentDefinitionReduction""#),
         "the membership proof must retain transparent reduction evidence:\n{json}"
@@ -177,7 +177,7 @@ thm local_struct_field_alias:
 
     assert!(succeeded, "struct field callable alias failed:\n{output}");
     let theorem = results.last().expect("the theorem result");
-    let json = crate::output::display_stmt_result_json_v2(theorem);
+    let json = crate::output::render_statement_result_json(theorem);
     assert!(
         json.contains(r#""kind": "TransparentDefinitionReduction""#),
         "the theorem must retain the let reduction:\n{json}"

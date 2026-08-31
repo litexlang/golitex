@@ -5,7 +5,7 @@ fn run_source(source: &str, label: &str, detailed: bool) -> (Runtime, bool, Stri
     let mut runtime = Runtime::default();
     runtime.start_isolated_source(label);
     if detailed {
-        runtime.set_output_style(OutputStyle::Detailed);
+        runtime.set_output_detail(OutputDetail::Detailed);
     }
     let (results, error) = execute_source(source, &mut runtime);
     let (succeeded, output) = render_run_output(&runtime, &results, &error);

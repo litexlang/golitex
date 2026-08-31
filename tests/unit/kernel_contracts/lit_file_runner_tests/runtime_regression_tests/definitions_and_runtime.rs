@@ -1908,7 +1908,7 @@ fn run_isolated_file_from_path_impl() {
         run_output, path_str, status_label, duration_ms
     );
     let error_json = match &runtime_error {
-        Some(error) => display_runtime_error_json(&runtime, error, false),
+        Some(error) => render_runtime_error_json(&runtime, error, false),
         None => run_output.clone(),
     };
     assert!(

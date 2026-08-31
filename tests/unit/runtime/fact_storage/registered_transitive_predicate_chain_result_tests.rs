@@ -1,6 +1,6 @@
 //! Result contracts for fact storage and transitive closure inference.
 
-use crate::output::display_stmt_result_json_v2;
+use crate::output::render_statement_result_json;
 use crate::prelude::*;
 use crate::test_support::execute_source;
 
@@ -67,7 +67,7 @@ fn registered_transitive_predicate_chain_store_returns_typed_closure_inference()
                         && *fact_id == conclusion.fact_id
                 })
         }));
-    let json = display_stmt_result_json_v2(&result);
+    let json = render_statement_result_json(&result);
     assert!(json.contains("\"rule\": \"RegisteredTransitivePredicateChainClosure\""));
     assert!(json.contains("\"predicate_name\": \"same_set\""));
     assert!(json.contains("\"start_object_index\": 0"));

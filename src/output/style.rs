@@ -1,12 +1,4 @@
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum OutputStyle {
-    Compact,
-    Normal,
-    Detailed,
-}
+//! Deprecated compatibility path for the runtime-owned output detail option.
 
-impl OutputStyle {
-    pub fn is_detailed(self) -> bool {
-        self == OutputStyle::Detailed
-    }
-}
+#[allow(deprecated)]
+pub use crate::runtime::output_detail::{OutputDetail, OutputStyle};

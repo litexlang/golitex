@@ -8,8 +8,8 @@ use crate::extract_code_of_other_languages_from_litex::python::{
     to_python_from_file, to_python_from_repository, to_python_from_source,
 };
 use crate::latex_renderer::{to_latex_from_file, to_latex_from_repository, to_latex_from_source};
-use crate::output::display_runtime_error_json;
 use crate::output::language::OutputLanguage;
+use crate::output::render_runtime_error_json;
 use crate::prelude::{render_json_value, JsonValue};
 use crate::runtime::{ExecutionOption, RunOptions, Runtime};
 use crate::syntax::source_formatting::remove_windows_carriage_from_str;
@@ -196,7 +196,7 @@ fn extraction_command_flag(target: ExtractionKind) -> &'static str {
 
 fn render_conversion_error(output_language: OutputLanguage, error: &RuntimeError) -> String {
     let runtime = Runtime::new(RunOptions::default().with_output_language(output_language));
-    display_runtime_error_json(&runtime, error, true)
+    render_runtime_error_json(&runtime, error, true)
 }
 
 fn print_conversion_result(

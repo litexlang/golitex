@@ -271,7 +271,7 @@ fn write_repl_source_if_not_empty(
             let ok = runtime_error.is_none();
             let error = runtime_error
                 .as_ref()
-                .map(|error| JsonValue::RawJson(display_runtime_error_json(runtime, error, true)))
+                .map(|error| JsonValue::RawJson(render_runtime_error_json(runtime, error, true)))
                 .unwrap_or(JsonValue::Null);
             writeln!(
                 stdout_writer,
@@ -311,7 +311,7 @@ fn write_repl_source_if_not_empty(
                     None,
                     &[],
                     JsonValue::Null,
-                    JsonValue::RawJson(display_runtime_error_json(runtime, &error, true)),
+                    JsonValue::RawJson(render_runtime_error_json(runtime, &error, true)),
                 )
             ),
         },

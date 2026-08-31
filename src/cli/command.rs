@@ -262,7 +262,7 @@ fn run_options(execution: ExecutionOption, modifiers: ParsedModifiers) -> RunOpt
         RunOptions::execute(execution)
     };
     options
-        .with_output_style(OutputStyle::Detailed)
+        .with_output_detail(OutputDetail::Detailed)
         .with_output_language(modifiers.output_language.unwrap_or(OutputLanguage::English))
 }
 

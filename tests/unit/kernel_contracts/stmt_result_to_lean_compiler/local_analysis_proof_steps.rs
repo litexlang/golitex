@@ -219,7 +219,7 @@ fn local_transparent_set_membership_replays_the_defining_fact_id() {
             "{generated}"
         );
         assert!(generated.contains("simpa [E]"), "{generated}");
-        let json = crate::output::display_stmt_result_json_v2(&theorem_proof_steps(&results)[1]);
+        let json = crate::output::render_statement_result_json(&theorem_proof_steps(&results)[1]);
         assert!(json.contains("TransparentDefinitionReduction"), "{json}");
         assert!(json.contains("defining_equality_fact_id"), "{json}");
     });

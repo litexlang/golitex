@@ -14,7 +14,7 @@ try:
 
     let mut runtime = Runtime::default();
     runtime.start_isolated_source("let_defines_an_untyped_object_and_stores_its_equality");
-    runtime.set_output_style(OutputStyle::Detailed);
+    runtime.set_output_detail(OutputDetail::Detailed);
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 

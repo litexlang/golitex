@@ -715,7 +715,7 @@ fn release_thm_uses_the_exact_source_fact_id_and_argument_check_result() {
     let source_fact_id = source
         .source_fact_id
         .expect("release-thm retains its source theorem FactId");
-    let json = crate::output::display_stmt_result_json_v2(&results[1]);
+    let json = crate::output::render_statement_result_json(&results[1]);
     assert!(json.contains(&format!("\"source_fact_id\": \"{source_fact_id}\"")));
 
     let lean = StmtResultToLeanCompiler::new("direct_theorem_instantiation.lit")
@@ -779,7 +779,7 @@ fn builtin_release_theorems_replay_typed_constructor_and_pointwise_results() {
     );
     assert!(generated.contains("∀ (__p1 : ℤ)"), "{generated}");
 
-    let sum_json = crate::output::display_stmt_result_json_v2(
+    let sum_json = crate::output::render_statement_result_json(
         results.last().expect("sum theorem Result is retained"),
     );
     assert!(
@@ -970,7 +970,7 @@ fn by_thm_replays_temporary_conclusions_in_a_child_scope_and_publishes_only_sele
     );
     assert!(compiler.declarations[1].contains("Litex.Same.trans"));
 
-    let json = crate::output::display_stmt_result_json_v2(&results[1]);
+    let json = crate::output::render_statement_result_json(&results[1]);
     assert!(json.contains("\"temporary_application\""), "{json}");
     assert!(json.contains("\"selected_fact_check\""), "{json}");
 }
@@ -1110,7 +1110,7 @@ fn odd_sum_flagship_exports_only_source_owned_declarations() {
     let results = execute_odd_sum_to_square_flagship();
     let result_audit = results
         .iter()
-        .map(crate::output::display_stmt_result_json_v2)
+        .map(crate::output::render_statement_result_json)
         .collect::<Vec<_>>()
         .join("\n");
     let lean = StmtResultToLeanCompiler::new("main.lit")
