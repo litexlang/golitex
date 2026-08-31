@@ -2337,8 +2337,8 @@ Important rules:
    configured child directory.
 2. Direct child `.lit` files and configured submodule directories appear once;
    Markdown and other non-Litex sidecars are not exports. The reserved local
-   `.drafts/` directory is excluded from module discovery; every other direct
-   child directory must still be exported.
+   `.drafts/` and Lake's generated `.lake/` directory are excluded from module
+   discovery; every other direct child directory must still be exported.
 3. Only a `module` imports. `[import]` mounts another module; `[import std]`
    mounts an installed standard package.
 4. An optional module-only `[module] flatten = true` removes one file namespace
@@ -3147,9 +3147,8 @@ available when only nonemptiness of a general Cartesian product is needed.
 Normal output should identify the statement, its result, nested proof results,
 and the reason a fact verified. A direct builtin route includes a rule
 description; structural recursion is labeled `builtin strategy`; a theorem
-route includes citation information. `-compact` reduces detail.
-`-detail` retains raw phases, requirements, instantiations, and inference
-effects useful for debugging.
+route includes citation information. The CLI always retains raw phases,
+requirements, instantiations, and inference effects useful for debugging.
 
 When a result is `unknown`, read the failed node rather than adding broad
 automation immediately:

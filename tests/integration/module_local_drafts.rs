@@ -23,6 +23,25 @@ fn local_drafts_directory_is_not_a_module_child() {
 }
 
 #[test]
+fn lake_build_directory_is_not_a_module_child() {
+    let fixture = Fixture::new("lake-build-directory");
+    write_module(&fixture.root);
+    write_file(
+        &fixture.root.join(".lake/build/lib/lean/Main.olean"),
+        "generated Lake artifact\n",
+    );
+
+    let output = run_module(&fixture.root);
+    assert!(
+        output.status.success(),
+        "module next to Lake build metadata failed:\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr),
+    );
+    assert!(String::from_utf8_lossy(&output.stdout).contains("\"ok\": true"));
+}
+
+#[test]
 fn ordinary_unexported_directory_is_still_rejected() {
     let fixture = Fixture::new("rejected");
     write_module(&fixture.root);
@@ -57,7 +76,6 @@ main = "./main.lit"
 fn run_module(root: &Path) -> Output {
     Command::new(litex_binary())
         .args([
-            "-compact",
             "-graph",
             "-r",
             root.to_str().expect("fixture path must be UTF-8"),

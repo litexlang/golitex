@@ -142,7 +142,6 @@ fn run_showcase_worker(
         let start = Instant::now();
         let output = Command::new(litex_binary())
             .args([
-                "-compact",
                 "-graph",
                 "-f",
                 showcase_file

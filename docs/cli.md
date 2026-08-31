@@ -66,7 +66,7 @@ litex -version
 ## Basic Shape
 
 ```text
-litex [-compact|-detail] [-strict] [-summarize] [-lang <code>] [-isolated] <command>
+litex [-strict] [-lang <code>] [-isolated] <command>
 ```
 
 With no command, `litex` starts an isolated interactive verifier REPL. It does
@@ -80,9 +80,8 @@ parsing: repeated, out-of-order, trailing, or meaningless options are rejected.
 For example:
 
 ```bash
-litex -detail -strict -isolated -f examples/tmp.lit
-litex -summarize -isolated -f examples/tmp.lit
-litex -compact -session -f chapter.lit
+litex -strict -isolated -f examples/tmp.lit
+litex -session -f chapter.lit
 litex -lang zh -e "1 = 1"
 ```
 
@@ -97,11 +96,7 @@ For example, `litex -strict -e "1 = 1"` is valid, while
 
 | Option | Meaning |
 |--------|---------|
-| `-compact` | Request the compact verification projection. Runtime errors remain detailed. |
-| *(no output flag)* | Use detailed output. This is the default. |
-| `-detail` | Explicitly select detailed statement results, including well-definedness, verification, environment, and execution-trace data. Graph output keeps raw file paths in this mode. |
 | `-strict` | Select a strict execution variant. Verify every configured import and every export loaded by `-f`, then reject user `trust`, `trust have`, and `axiom`. `-r` already verifies its complete export tree. It is rejected for help, version, LaTeX, extraction, and Lean commands. |
-| `-summarize` | Add a `summary` value to the single `run` JSON object. |
 | `-lang <code>` | Localize human-readable messages and labels. JSON field names and machine discriminator values stay stable. Mathematical source strings remain in Litex syntax. |
 
 Supported language codes are:
@@ -130,25 +125,24 @@ Current mappings:
 | `vi` | Vietnamese |
 | `id` | Indonesian |
 
-Output style controls successful statement results. Every `RuntimeError` is
-rendered with the detailed error projection, whether the command uses
-`-compact`, the default detailed view, or explicit `-detail`. Detailed errors
-preserve available `phases`, causal `previous_error` data, `failed_step`,
+Successful statement results and every `RuntimeError` use one canonical
+detailed JSON projection. Detailed errors preserve available `phases`, causal
+`previous_error` data, `failed_step`,
 `failed_goal`, nested `unknown_result` data, step indexes, and internal
 execution results. This includes parse, well-definedness, verification,
 unknown, execution, instantiation, and inference failures. Fields for
 diagnostic data that does not exist are omitted rather than synthesized.
 
-Earlier successful statements retain the selected output style. The CLI does
-not have a warning branch or a top-level `warnings` field. This contract is
-consistent across file, repository, REPL, session, and `try:` execution paths.
+The CLI does not have a warning branch or a top-level `warnings` field. This
+contract is consistent across file, repository, REPL, session, and `try:`
+execution paths.
 
-`-compact`, `-detail`, and `-lang` affect the command families that render
-verifier output. `-strict` applies only to execution, graph, and session
-variants. `-summarize` applies only to ordinary `-e`, `-f`, and `-r`
-execution. `-isolated` applies only to file, file-graph, file-session,
-file-conversion, and Lean variants. An option is rejected when its selected
-command has no corresponding typed run variant.
+`-compact`, `-detail`, and `-summarize` are not CLI options; using any of them
+returns a `cli_error`. `-lang` affects command families that render verifier
+output. `-strict` applies only to execution, graph, and session variants.
+`-isolated` applies only to file, file-graph, file-session, file-conversion, and
+Lean variants. An option is rejected when its selected command has no
+corresponding typed run variant.
 
 ## JSON Output Contract
 
@@ -298,20 +292,10 @@ For `-e`, `-f`, and `-r`, Litex emits one `run` object. The main payload is the
 is null for inline source and contains the requested path for file and
 repository targets. `error` is null on success.
 
-With `-summarize`, the same object gains a `summary` field. The summary reports
-top-level and expanded statement counts, definition and proof counts, trust
-boundaries, abstract interfaces, statement categories, and source locations.
-Only successfully committed statements contribute. Nothing is appended after
-the `run` object.
-Prefer:
-
-```bash
-litex -summarize -isolated -f examples/tmp.lit
-```
-
 Ordinary verifier commands are designed for both inspection and automation.
 Programs should read `ok`, `statement_results`, and `error`; the exit status is
-also nonzero for a failed run.
+also nonzero for a failed run. Ordinary `run` objects do not contain a
+`summary` field.
 
 ### Run Output Examples
 
@@ -423,7 +407,7 @@ not make a parse failure in that outer statement recoverable.
 
 ### Iterating after a verified file
 
-Use `target/release/litex -compact -session -f chap4.lit` when the registered
+Use `target/release/litex -session -f chap4.lit` when the registered
 prefix through `chap4.lit` already verifies and later framed experiments should
 reuse that environment. A committed outermost `try:` publishes its definitions
 and facts to the persistent Runtime; a rolled-back `try:` discards only that
@@ -446,8 +430,6 @@ The byte count covers only the source bytes after the frame header; clients
 should compute it from the UTF-8 payload. Prefix execution is the cold part of
 the run. File preload pays that cost once and keeps the populated Runtime;
 later frames parse and verify only their submitted source.
-`-compact` reduces rendered output but does not replace release optimization or
-Runtime reuse.
 
 ## Graph Commands
 
@@ -471,8 +453,8 @@ stored-fact edges use `FactId`, while memo reuse points to the exact shared
 proof node. The wrapper includes a `summary`, machine-readable `nodes` and
 `edges`, and a Mermaid `flowchart LR` string for quick rendering.
 Its target metadata follows the runner contract: `kind` is always present and
-`path` appears only under `-detail`. The fact graph uses contract version 0.2,
-and the definition graph uses contract version 0.3.
+`path` is included when a source path exists. The fact graph uses contract
+version 0.2, and the definition graph uses contract version 0.3.
 If the final `<json>` path is omitted, Litex returns an `artifact` object whose
 `content` is the graph JSON object. If a path is supplied, Litex writes the raw
 graph JSON to that file and returns an `artifact` object with `output_path` set
@@ -563,8 +545,8 @@ Use `litex.config` to organize a folder tree:
 - put `module` under `[hierarchy]` at an independently runnable/importable root;
 - put `submodule` under `[hierarchy]` in every exported child folder;
 - list every direct child `.lit` file and module folder exactly once, in
-  mathematical order, under `[export]`; the reserved local `.drafts/`
-  directory is ignored by module discovery;
+  mathematical order, under `[export]`; the reserved local `.drafts/` and
+  Lake-generated `.lake/` directories are ignored by module discovery;
 - declare external module folders under `[import]` and installed packages under
   `[import std]`, only in the top-level module;
 - cite earlier entries with their canonical export path, such as
@@ -574,11 +556,11 @@ Use `litex.config` to organize a folder tree:
   `[allow bare import]` respectively.
 
 A configured folder may contain `litex.config`, non-Litex sidecar files, the
-direct module children listed in `[export]`, and an optional local `.drafts/`
-directory. Exported folders must be submodules. Every other direct child
-directory and `.lit` file remains an error. Imported targets must be external
-module folders; imports cannot target files, submodules, or descendants of the
-importing module.
+direct module children listed in `[export]`, an optional local `.drafts/`
+directory, and Lake's generated `.lake/` directory. Exported folders must be
+submodules. Every other direct child directory and `.lit` file remains an
+error. Imported targets must be external module folders; imports cannot target
+files, submodules, or descendants of the importing module.
 
 `-r` and `-f` share one recursive left-to-right order. Running a top-level
 module runs the whole tree. Running a submodule traces back to its module,
@@ -639,10 +621,10 @@ Run a one-line fact:
 litex -e "1 = 1"
 ```
 
-Run a file with fuller output:
+Run a standalone file:
 
 ```bash
-litex -detail -isolated -f examples/tmp.lit
+litex -isolated -f examples/tmp.lit
 ```
 
 Run a project plan:

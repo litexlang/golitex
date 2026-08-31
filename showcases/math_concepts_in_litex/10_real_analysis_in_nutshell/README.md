@@ -5,7 +5,7 @@ constant sequences converge, proves uniqueness of sequence limits, and then
 uses that existence-and-uniqueness result to define a canonical `lim` selector.
 
 ```bash
-target/release/litex -compact -graph -r showcases/math_concepts_in_litex/10_real_analysis_in_nutshell
+target/release/litex -graph -r showcases/math_concepts_in_litex/10_real_analysis_in_nutshell
 cd lean
 lake env lean ../showcases/math_concepts_in_litex/10_real_analysis_in_nutshell/same_math_in_lean.lean
 ```

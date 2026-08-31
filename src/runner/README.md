@@ -50,6 +50,6 @@ above. Passing `true` keeps file paths out of the rendered target metadata.
 
 The target kind remains a `RunTargetKind` until this JSON object is rendered.
 Inline code therefore needs no synthetic label; its source keeps the stable
-internal source label `eval`. File and repository targets expose only `kind` by
-default, while `-detail` adds their real `path`. Command spellings never enter
-Runtime state.
+internal source label `eval`. Embedding callers choose whether target paths are
+hidden; the CLI's canonical detailed projection includes available paths.
+Command spellings never enter Runtime state.

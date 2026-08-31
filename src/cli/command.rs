@@ -43,28 +43,11 @@ pub(super) enum CliCommand {
 
 pub(super) fn parse_cli_command(args: &[String]) -> Result<CliCommand, String> {
     let mut index = 0;
-    let output_style = match args.get(index).map(String::as_str) {
-        Some("-compact") => {
-            index += 1;
-            Some(OutputStyle::Compact)
-        }
-        Some("-detail") => {
-            index += 1;
-            Some(OutputStyle::Detailed)
-        }
-        _ => None,
-    };
     let strict = if args.get(index).is_some_and(|arg| arg == "-strict") {
         index += 1;
         true
     } else {
         false
-    };
-    let summary = if args.get(index).is_some_and(|arg| arg == "-summarize") {
-        index += 1;
-        SummaryOption::Summarize
-    } else {
-        SummaryOption::None
     };
     let output_language = if args.get(index).is_some_and(|arg| arg == "-lang") {
         let Some(language) = args.get(index + 1) else {
@@ -87,9 +70,7 @@ pub(super) fn parse_cli_command(args: &[String]) -> Result<CliCommand, String> {
 
     let command = &args[index..];
     let modifiers = ParsedModifiers {
-        output_style,
         strict,
-        summary,
         output_language,
         isolated,
     };
@@ -98,15 +79,11 @@ pub(super) fn parse_cli_command(args: &[String]) -> Result<CliCommand, String> {
             .get(index)
             .is_some_and(|value| !value.starts_with('-'))
     };
-    let summary_was_set = modifiers.summary == SummaryOption::Summarize;
-    let no_modifiers = modifiers.output_style.is_none()
-        && !modifiers.strict
-        && !summary_was_set
-        && modifiers.output_language.is_none()
-        && !modifiers.isolated;
+    let no_modifiers =
+        !modifiers.strict && modifiers.output_language.is_none() && !modifiers.isolated;
 
     if command.is_empty() {
-        if modifiers.isolated || summary_was_set {
+        if modifiers.isolated {
             return unsupported();
         }
         return Ok(CliCommand::Repl(run_options(
@@ -167,12 +144,7 @@ pub(super) fn parse_cli_command(args: &[String]) -> Result<CliCommand, String> {
         && command[2] == "-lean"
         && is_value(3)
     {
-        if modifiers.output_style.is_some()
-            || modifiers.strict
-            || summary_was_set
-            || modifiers.output_language.is_some()
-            || !modifiers.isolated
-        {
+        if modifiers.strict || modifiers.output_language.is_some() || !modifiers.isolated {
             return unsupported();
         }
         return Ok(CliCommand::Lean {
@@ -189,7 +161,7 @@ pub(super) fn parse_cli_command(args: &[String]) -> Result<CliCommand, String> {
         && is_value(2)
         && (command.len() == 3 || is_value(3))
     {
-        if summary_was_set || (modifiers.isolated && command[1] != "-f") {
+        if modifiers.isolated && command[1] != "-f" {
             return unsupported();
         }
         let execution = execution_option(command[1].as_str(), modifiers.isolated);
@@ -210,9 +182,6 @@ pub(super) fn parse_cli_command(args: &[String]) -> Result<CliCommand, String> {
     if (command.len() == 1 && command[0] == "-session")
         || (command.len() == 3 && command[0] == "-session" && command[1] == "-f" && is_value(2))
     {
-        if summary_was_set {
-            return unsupported();
-        }
         let execution = if modifiers.isolated {
             ExecutionOption::IsolatedSession
         } else {
@@ -236,11 +205,7 @@ pub(super) fn parse_cli_command(args: &[String]) -> Result<CliCommand, String> {
         && matches!(command[1].as_str(), "-e" | "-f" | "-r")
         && is_value(2)
     {
-        if modifiers.output_style.is_some()
-            || modifiers.strict
-            || summary_was_set
-            || (modifiers.isolated && command[1] != "-f")
-        {
+        if modifiers.strict || (modifiers.isolated && command[1] != "-f") {
             return unsupported();
         }
         let execution = execution_option(command[1].as_str(), modifiers.isolated);
@@ -254,11 +219,7 @@ pub(super) fn parse_cli_command(args: &[String]) -> Result<CliCommand, String> {
         && matches!(command[0].as_str(), "-extractpython" | "-extractc")
         && is_value(1)
     {
-        if modifiers.output_style.is_some()
-            || modifiers.strict
-            || summary_was_set
-            || modifiers.isolated
-        {
+        if modifiers.strict || modifiers.isolated {
             return unsupported();
         }
         return Ok(CliCommand::Extract {
@@ -273,11 +234,7 @@ pub(super) fn parse_cli_command(args: &[String]) -> Result<CliCommand, String> {
         && matches!(command[1].as_str(), "-f" | "-r")
         && is_value(2)
     {
-        if modifiers.output_style.is_some()
-            || modifiers.strict
-            || summary_was_set
-            || (modifiers.isolated && command[1] != "-f")
-        {
+        if modifiers.strict || (modifiers.isolated && command[1] != "-f") {
             return unsupported();
         }
         let execution = execution_option(command[1].as_str(), modifiers.isolated);
@@ -293,9 +250,7 @@ pub(super) fn parse_cli_command(args: &[String]) -> Result<CliCommand, String> {
 
 #[derive(Clone, Copy)]
 struct ParsedModifiers {
-    output_style: Option<OutputStyle>,
     strict: bool,
-    summary: SummaryOption,
     output_language: Option<OutputLanguage>,
     isolated: bool,
 }
@@ -307,9 +262,8 @@ fn run_options(execution: ExecutionOption, modifiers: ParsedModifiers) -> RunOpt
         RunOptions::execute(execution)
     };
     options
-        .with_output_style(modifiers.output_style.unwrap_or(OutputStyle::Detailed))
+        .with_output_style(OutputStyle::Detailed)
         .with_output_language(modifiers.output_language.unwrap_or(OutputLanguage::English))
-        .with_summary(modifiers.summary)
 }
 
 fn execution_option(flag: &str, isolated: bool) -> ExecutionOption {

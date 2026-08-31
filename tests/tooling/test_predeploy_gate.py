@@ -361,7 +361,6 @@ class PredeployGateTest(unittest.TestCase):
             textbook_file_command(Path("/repo/litex"), Path("/repo/book/ch1.lit")),
             [
                 "/repo/litex",
-                "-compact",
                 "-graph",
                 "-f",
                 "/repo/book/ch1.lit",

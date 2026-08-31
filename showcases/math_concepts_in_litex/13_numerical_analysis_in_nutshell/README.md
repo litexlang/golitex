@@ -9,7 +9,7 @@ from `x₀ = 1`. Everything is kept in one `main.lit`, in this order:
 - two exact Newton updates and the concrete checkpoint `g₂ ≤ 1/64`.
 
 ```bash
-target/release/litex -compact -graph -r showcases/math_concepts_in_litex/13_numerical_analysis_in_nutshell
+target/release/litex -graph -r showcases/math_concepts_in_litex/13_numerical_analysis_in_nutshell
 cd lean
 lake env lean ../showcases/math_concepts_in_litex/13_numerical_analysis_in_nutshell/same_math_in_lean.lean
 ```

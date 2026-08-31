@@ -176,8 +176,9 @@ pub(super) fn validate_config_directory_contents(
         if name == LITEX_CONFIG {
             continue;
         }
-        // Local work records are outside the ordered, publishable module tree.
-        if name == LOCAL_DRAFTS {
+        // Local work records and Lake's generated build metadata are outside
+        // the ordered, publishable Litex module tree.
+        if name == LOCAL_DRAFTS || name == LAKE_BUILD_DIRECTORY {
             continue;
         }
         if name == LITEX_TODO {

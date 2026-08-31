@@ -169,9 +169,9 @@ file gate before it can be considered for permanent skill promotion.
 | Check one source string | `litex -e '1 = 1'` |
 | Check a registered project file | `litex -f path/to/file.lit` |
 | Check a standalone scratch file | `litex -isolated -f scratch.lit` |
-| Inspect full failure phases | `litex -detail -f path/to/file.lit` |
+| Inspect full failure phases | `litex -f path/to/file.lit` |
 | Audit a complete project and reject explicit trust | `litex -strict -r path/to/project` |
-| Probe repeatedly after one verified registered file | `litex -compact -session -f path/to/file.lit` |
+| Probe repeatedly after one verified registered file | `litex -session -f path/to/file.lit` |
 
 `-f` requires a `litex.config` in the file's direct parent. Use `-isolated -f`
 for a standalone file, `-r` for a project's complete export tree, and `-strict`

@@ -36,7 +36,7 @@ pub(super) fn render_run(outcome: &RunOutcome, input_path: Option<&str>) -> Stri
     } else {
         JsonValue::Null
     };
-    let mut fields = vec![
+    let fields = vec![
         string_field("kind", "run"),
         ("ok".to_string(), JsonValue::Bool(outcome.ok)),
         string_field("target", target),
@@ -50,18 +50,8 @@ pub(super) fn render_run(outcome: &RunOutcome, input_path: Option<&str>) -> Stri
             "statement_results".to_string(),
             JsonValue::Array(statement_results),
         ),
+        ("error".to_string(), error),
     ];
-    if outcome.runtime.run_options.should_summarize() && outcome.target_error.is_none() {
-        fields.push((
-            "summary".to_string(),
-            JsonValue::RawJson(render_run_summary(RunSummaryRequest {
-                runtime: &outcome.runtime,
-                stmt_results: outcome.stmt_results.as_slice(),
-                runtime_error: &outcome.runtime_error,
-            })),
-        ));
-    }
-    fields.push(("error".to_string(), error));
     strip_free_param_numeric_tags_in_display(&render_json_value(&JsonValue::Object(fields), 0))
 }
 

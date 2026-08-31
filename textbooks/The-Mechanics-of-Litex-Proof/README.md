@@ -15,13 +15,13 @@ Build and verify the complete module with the release binary:
 
 ```text
 cargo build --release
-target/release/litex -compact -graph -r scripts/The-Mechanics-of-Litex-Proof/textbook
+target/release/litex -graph -r scripts/The-Mechanics-of-Litex-Proof/textbook
 ```
 
 For an individual registered chapter, use:
 
 ```text
-target/release/litex -compact -graph -f scripts/The-Mechanics-of-Litex-Proof/textbook/chapter09-sets.lit
+target/release/litex -graph -f scripts/The-Mechanics-of-Litex-Proof/textbook/chapter09-sets.lit
 ```
 
 As of 2026-08-17, every registered `.lit` file passes `-f`, and the complete
@@ -88,7 +88,7 @@ For proof iteration, put one literal outermost `try:` block in the current
 registered file and run the real configured prefix:
 
 ```text
-target/release/litex -compact -graph -f \
+target/release/litex -graph -f \
   scripts/The-Mechanics-of-Litex-Proof/textbook/chapter10-relations.lit
 ```
 

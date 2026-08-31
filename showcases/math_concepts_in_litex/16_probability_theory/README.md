@@ -18,7 +18,7 @@ sigma-algebra + real series convergence
 Run the checked Litex module from the repository root:
 
 ```bash
-target/release/litex -compact -graph -r showcases/math_concepts_in_litex/16_probability_theory
+target/release/litex -graph -r showcases/math_concepts_in_litex/16_probability_theory
 ```
 
 Run the handwritten Lean analogy through the repository's Mathlib environment:

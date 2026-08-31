@@ -47,19 +47,14 @@ def run(command: list[str], cwd: Path) -> subprocess.CompletedProcess[str]:
     )
 
 
-def run_summary(output: str) -> dict[str, object]:
-    decoder = json.JSONDecoder()
-    summaries: list[dict[str, object]] = []
-    for match in re.finditer(r'(?m)^\{\n  "result":', output):
-        try:
-            value, _ = decoder.raw_decode(output[match.start() :])
-        except json.JSONDecodeError:
-            continue
-        if isinstance(value, dict) and value.get("output_type") == "run summary":
-            summaries.append(value)
-    if not summaries:
-        raise ValueError("verifier output has no run summary")
-    return summaries[-1]
+def run_envelope(output: str) -> dict[str, object]:
+    try:
+        value = json.loads(output)
+    except json.JSONDecodeError as error:
+        raise ValueError("verifier output is not one JSON document") from error
+    if not isinstance(value, dict) or value.get("kind") != "run":
+        raise ValueError("verifier output is not a run envelope")
+    return value
 
 
 def fail(message: str) -> int:
@@ -92,23 +87,32 @@ def main() -> int:
     verifier_hash = sha256(VERIFIER)
     compiler_hash = sha256(COMPILER)
 
-    isolated_command = [str(VERIFIER), "-compact", "-strict", "-summarize", "-isolated", "-f", str(TRACER)]
-    project_command = [str(VERIFIER), "-compact", "-strict", "-summarize", "-f", str(TRACER)]
+    isolated_command = [
+        str(VERIFIER),
+        "-strict",
+        "-isolated",
+        "-f",
+        str(TRACER),
+    ]
+    project_command = [str(VERIFIER), "-strict", "-f", str(TRACER)]
     isolated = run(isolated_command, ROOT)
     project = run(project_command, ROOT)
     try:
-        isolated_summary = run_summary(isolated.stdout)
-        project_summary = run_summary(project.stdout)
+        isolated_run = run_envelope(isolated.stdout)
+        project_run = run_envelope(project.stdout)
     except ValueError as error:
         return fail(str(error))
-    if isolated.returncode != 0 or isolated_summary.get("result") != "success":
+    if (
+        isolated.returncode != 0
+        or isolated_run.get("ok") is not True
+        or isolated_run.get("error") is not None
+    ):
         return fail("isolated strict verifier did not report success")
-    for field in ("direct_trust", "axioms", "trusted_object_assumptions"):
-        if isolated_summary.get(field) != 0:
-            return fail(f"isolated strict verifier reported nonzero {field}")
-    if isolated_summary.get("unverified_imports") != []:
-        return fail("isolated strict verifier reported unverified imports")
-    if project.returncode != 0 or project_summary.get("result") != "error":
+    if (
+        project.returncode != 1
+        or project_run.get("ok") is not False
+        or not isinstance(project_run.get("error"), dict)
+    ):
         return fail("project-mode trust-boundary negative gate changed behavior")
     if "25_ExplicitSourceAxioms.lit" not in project.stdout:
         return fail("project-mode negative gate did not stop at Example 25")
@@ -152,8 +156,8 @@ def main() -> int:
         "tracer": TRACER.relative_to(ROOT).as_posix(),
         "source_sha256": source_hash,
         "checked_in_lean": {"recorded_at": now, "path": CHECKED.relative_to(ROOT).as_posix(), "sha256": checked_hash, "kernel_command": "cd lean && lake env lean examples/54_ComplexAlgebraicCalculation.lean", "kernel_exit": 0},
-        "project_mode_verifier": {"recorded_at": now, "command": "target/release/litex -compact -strict -summarize -f lean/examples/54_ComplexAlgebraicCalculation.lit", "exit": project.returncode, "top_level_ok": False, "summary_result": "error", "config_path": CONFIG.relative_to(ROOT).as_posix(), "config_sha256": config_hash, "first_failure": "lean/examples/25_ExplicitSourceAxioms.lit:10 strict mode rejects the explicit trust statement", "classification": "test_gap", "boundary": "Project mode loads the registered trust-boundary example; isolated strict mode is the primary positive envelope."},
-        "isolated_verifier": {"recorded_at": now, "command": "target/release/litex -compact -strict -summarize -isolated -f lean/examples/54_ComplexAlgebraicCalculation.lit", "exit": isolated.returncode, "top_level_ok": True, "summary_result": "success", "direct_trust": 0, "axioms": 0, "trusted_object_assumptions": 0, "unverified_imports": []},
+        "project_mode_verifier": {"recorded_at": now, "command": "target/release/litex -strict -f lean/examples/54_ComplexAlgebraicCalculation.lit", "exit": project.returncode, "top_level_ok": False, "config_path": CONFIG.relative_to(ROOT).as_posix(), "config_sha256": config_hash, "first_failure": "lean/examples/25_ExplicitSourceAxioms.lit:10 strict mode rejects the explicit trust statement", "classification": "test_gap", "boundary": "Project mode loads the registered trust-boundary example; isolated strict mode is the primary positive envelope."},
+        "isolated_verifier": {"recorded_at": now, "command": "target/release/litex -strict -isolated -f lean/examples/54_ComplexAlgebraicCalculation.lit", "exit": isolated.returncode, "top_level_ok": True, "strict_contract": True},
         "compiler": {"recorded_at": now, "binary_path": COMPILER.relative_to(ROOT).as_posix(), "binary_sha256": compiler_hash, "command": "target/release/stmt_result_to_lean_compiler compile lean/examples/54_ComplexAlgebraicCalculation.lit tmp/2026-08-30/one-week-tolean-day1/54_ComplexAlgebraicCalculation.generated.lean", "exit": 0, "generated_path": OUTPUT.relative_to(ROOT).as_posix(), "generated_sha256": generated_hash},
         "generated_drift": {"recorded_at": now, "command": "cmp generated checked-in", "exit": 0 if generated_hash == checked_hash else 1, "matches_checked_in": generated_hash == checked_hash},
         "generated_kernel": {"recorded_at": now, "command": "cd lean && lake env lean ../tmp/2026-08-30/one-week-tolean-day1/54_ComplexAlgebraicCalculation.generated.lean", "exit": 0},

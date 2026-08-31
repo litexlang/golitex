@@ -937,7 +937,7 @@ $target_thm_prop(1)
 
 #[test]
 fn release_thm_releases_instantiated_then_facts() {
-    // Acceptance artifact: target/release/litex -compact -isolated -graph -f
+    // Acceptance artifact: target/release/litex -isolated -graph -f
     // examples/01_proof_patterns/release_theorem_consequences.lit
     run_with_large_stack("release_thm_releases_instantiated_then_facts", || {
         let source_code = r#"

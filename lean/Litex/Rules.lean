@@ -67,7 +67,9 @@ theorem complexEqRealNonnegative
     (nonnegative : 0 ≤ value) :
     Litex.Nonnegative source :=
   ⟨value,
-    Litex.Same.trans (Litex.Same.ofEq same) (Litex.Same.complexReal value),
+    Litex.Same.transNoObservation
+      (Litex.Same.ofEqNoObservation same)
+      (Litex.Same.complexRealNoObservation value),
     nonnegative⟩
 
 theorem complexEqRealPositive
@@ -77,7 +79,9 @@ theorem complexEqRealPositive
     (positive : 0 < value) :
     Litex.Positive source :=
   ⟨value,
-    Litex.Same.trans (Litex.Same.ofEq same) (Litex.Same.complexReal value),
+    Litex.Same.transNoObservation
+      (Litex.Same.ofEqNoObservation same)
+      (Litex.Same.complexRealNoObservation value),
     positive⟩
 
 theorem complexEqRealNonpositive
@@ -87,7 +91,9 @@ theorem complexEqRealNonpositive
     (nonpositive : value ≤ 0) :
     Litex.Nonpositive source :=
   ⟨value,
-    Litex.Same.trans (Litex.Same.ofEq same) (Litex.Same.complexReal value),
+    Litex.Same.transNoObservation
+      (Litex.Same.ofEqNoObservation same)
+      (Litex.Same.complexRealNoObservation value),
     nonpositive⟩
 
 theorem complexEqRealNegative
@@ -97,7 +103,9 @@ theorem complexEqRealNegative
     (negative : value < 0) :
     Litex.Negative source :=
   ⟨value,
-    Litex.Same.trans (Litex.Same.ofEq same) (Litex.Same.complexReal value),
+    Litex.Same.transNoObservation
+      (Litex.Same.ofEqNoObservation same)
+      (Litex.Same.complexRealNoObservation value),
     negative⟩
 
 theorem absEqSelfOfLe (r : ℝ) (h : Litex.Le (0 : ℂ) (r : ℂ)) :
@@ -352,9 +360,10 @@ theorem singletonSubset
     Litex.Subset (Litex.Set.singleton value) target := by
   intro beta candidate candidateInSingleton
   have candidateSameValue : Litex.Same candidate value :=
-    Litex.Same.trans
+    Litex.Same.transNoObservation
       (Litex.In.same_rep candidate candidateInSingleton)
-      (Litex.Same.symm (Litex.Same.singleton value))
+      (Litex.Same.symmNoObservation
+        (Litex.Same.singletonNoObservation value))
   exact (Litex.In.congr candidateSameValue target).mpr valueInTarget
 
 theorem coproductSubset
@@ -369,16 +378,16 @@ theorem coproductSubset
   · exact rightSubset candidate candidateInRight
 
 theorem complexNatInN (n : ℕ) : Litex.In (n : ℂ) Litex.N :=
-  ⟨n, Litex.Same.complexNat n⟩
+  ⟨n, Litex.Same.complexNatNoObservation n⟩
 
 theorem complexIntInZ (z : ℤ) : Litex.In (z : ℂ) Litex.Z :=
-  ⟨z, Litex.Same.complexInt z⟩
+  ⟨z, Litex.Same.complexIntNoObservation z⟩
 
 theorem complexRatInQ (q : ℚ) : Litex.In (q : ℂ) Litex.Q :=
-  ⟨q, Litex.Same.complexRat q⟩
+  ⟨q, Litex.Same.complexRatNoObservation q⟩
 
 theorem complexRealInR (r : ℝ) : Litex.In (r : ℂ) Litex.R :=
-  ⟨r, Litex.Same.complexReal r⟩
+  ⟨r, Litex.Same.complexRealNoObservation r⟩
 
 theorem imaginaryUnitInC : Litex.In Complex.I Litex.C :=
   complexInC Complex.I
@@ -396,11 +405,12 @@ theorem inZOfInN
     (hx : Litex.In x Litex.N) :
     Litex.In x Litex.Z := by
   rcases hx with ⟨n, hxn⟩
-  exact ⟨(n : ℤ), Litex.Same.trans hxn
-    (Litex.Same.trans (Litex.Same.natComplex n)
-      (Litex.Same.trans
-        (Litex.Same.ofEq (by norm_num : (n : ℂ) = ((n : ℤ) : ℂ)))
-        (Litex.Same.complexInt (n : ℤ))))⟩
+  exact ⟨(n : ℤ), Litex.Same.transNoObservation hxn
+    (Litex.Same.transNoObservation (Litex.Same.natComplexNoObservation n)
+      (Litex.Same.transNoObservation
+        (Litex.Same.ofEqNoObservation
+          (by norm_num : (n : ℂ) = ((n : ℤ) : ℂ)))
+        (Litex.Same.complexIntNoObservation (n : ℤ))))⟩
 
 /-- Standard hierarchy projection from integer to rational membership. -/
 theorem inQOfInZ
@@ -409,11 +419,12 @@ theorem inQOfInZ
     (hx : Litex.In x Litex.Z) :
     Litex.In x Litex.Q := by
   rcases hx with ⟨z, hxz⟩
-  exact ⟨(z : ℚ), Litex.Same.trans hxz
-    (Litex.Same.trans (Litex.Same.intComplex z)
-      (Litex.Same.trans
-        (Litex.Same.ofEq (by norm_num : (z : ℂ) = ((z : ℚ) : ℂ)))
-        (Litex.Same.complexRat (z : ℚ))))⟩
+  exact ⟨(z : ℚ), Litex.Same.transNoObservation hxz
+    (Litex.Same.transNoObservation (Litex.Same.intComplexNoObservation z)
+      (Litex.Same.transNoObservation
+        (Litex.Same.ofEqNoObservation
+          (by norm_num : (z : ℂ) = ((z : ℚ) : ℂ)))
+        (Litex.Same.complexRatNoObservation (z : ℚ))))⟩
 
 /-- Standard hierarchy projection from rational to real membership. -/
 theorem inROfInQ
@@ -422,11 +433,12 @@ theorem inROfInQ
     (hx : Litex.In x Litex.Q) :
     Litex.In x Litex.R := by
   rcases hx with ⟨q, hxq⟩
-  exact ⟨(q : ℝ), Litex.Same.trans hxq
-    (Litex.Same.trans (Litex.Same.ratComplex q)
-      (Litex.Same.trans
-        (Litex.Same.ofEq (by norm_num : (q : ℂ) = ((q : ℝ) : ℂ)))
-        (Litex.Same.complexReal (q : ℝ))))⟩
+  exact ⟨(q : ℝ), Litex.Same.transNoObservation hxq
+    (Litex.Same.transNoObservation (Litex.Same.ratComplexNoObservation q)
+      (Litex.Same.transNoObservation
+        (Litex.Same.ofEqNoObservation
+          (by norm_num : (q : ℂ) = ((q : ℝ) : ℂ)))
+        (Litex.Same.complexRealNoObservation (q : ℝ))))⟩
 
 /-- Standard hierarchy projection from real to complex membership. -/
 theorem inCOfInR
@@ -435,7 +447,8 @@ theorem inCOfInR
     (hx : Litex.In x Litex.R) :
     Litex.In x Litex.C := by
   rcases hx with ⟨r, hxr⟩
-  exact ⟨(r : ℂ), Litex.Same.trans hxr (Litex.Same.realComplex r)⟩
+  exact ⟨(r : ℂ), Litex.Same.transNoObservation hxr
+    (Litex.Same.realComplexNoObservation r)⟩
 
 theorem naturalNonempty : Litex.Set.Nonempty Litex.N :=
   ⟨0⟩
@@ -458,7 +471,9 @@ theorem complexEqNatInN
     (n : ℕ)
     (h : z = (n : ℂ)) :
     Litex.In z Litex.N :=
-  ⟨n, Litex.Same.trans (Litex.Same.ofEq h) (Litex.Same.complexNat n)⟩
+  ⟨n, Litex.Same.transNoObservation
+    (Litex.Same.ofEqNoObservation h)
+    (Litex.Same.complexNatNoObservation n)⟩
 
 /-- Natural membership carries the exact nonnegativity inference used by Litex. -/
 theorem nonnegativeOfInN
@@ -467,7 +482,8 @@ theorem nonnegativeOfInN
     (hx : Litex.In x Litex.N) :
     Litex.Nonnegative x := by
   rcases hx with ⟨n, hxn⟩
-  exact ⟨(n : ℝ), Litex.Same.trans hxn (Litex.AsReal.nat n), Nat.cast_nonneg n⟩
+  exact ⟨(n : ℝ), Litex.Same.transNoObservation hxn
+    (Litex.AsReal.nat n), Nat.cast_nonneg n⟩
 
 /-- The exact natural representative selected by the same membership
 certificate is nonnegative in the native complex order ABI. -/
@@ -484,7 +500,9 @@ theorem complexEqIntInZ
     (n : ℤ)
     (h : z = (n : ℂ)) :
     Litex.In z Litex.Z :=
-  ⟨n, Litex.Same.trans (Litex.Same.ofEq h) (Litex.Same.complexInt n)⟩
+  ⟨n, Litex.Same.transNoObservation
+    (Litex.Same.ofEqNoObservation h)
+    (Litex.Same.complexIntNoObservation n)⟩
 
 /-- A complex value proved equal to a rational cast belongs to `Q`. -/
 theorem complexEqRatInQ
@@ -492,7 +510,9 @@ theorem complexEqRatInQ
     (q : ℚ)
     (h : z = (q : ℂ)) :
     Litex.In z Litex.Q :=
-  ⟨q, Litex.Same.trans (Litex.Same.ofEq h) (Litex.Same.complexRat q)⟩
+  ⟨q, Litex.Same.transNoObservation
+    (Litex.Same.ofEqNoObservation h)
+    (Litex.Same.complexRatNoObservation q)⟩
 
 /-- Negated Litex semantic equality is symmetric because `Same` itself is
 symmetric. Example: `a != b` proves `b != a`. -/
@@ -503,7 +523,7 @@ theorem notSameSymm
     (h : ¬ Litex.Same a b) :
     ¬ Litex.Same b a := by
   intro hba
-  exact h (Litex.Same.symm hba)
+  exact h (Litex.Same.symmNoObservation hba)
 
 private theorem complexAddAsReal
     {a b : ℂ}
@@ -511,8 +531,10 @@ private theorem complexAddAsReal
     (ha : Litex.AsReal a r)
     (hb : Litex.AsReal b s) :
     Litex.AsReal (a + b) (r + s) :=
-  Litex.Same.symm
-    (Litex.Same.realAddComplex (Litex.Same.symm ha) (Litex.Same.symm hb))
+  Litex.Same.symmNoObservation
+    (Litex.Same.realAddComplexNoObservation
+      (Litex.Same.symmNoObservation ha)
+      (Litex.Same.symmNoObservation hb))
 
 private theorem complexSubAsReal
     {a b : ℂ}
@@ -520,8 +542,10 @@ private theorem complexSubAsReal
     (ha : Litex.AsReal a r)
     (hb : Litex.AsReal b s) :
     Litex.AsReal (a - b) (r - s) :=
-  Litex.Same.symm
-    (Litex.Same.realSubComplex (Litex.Same.symm ha) (Litex.Same.symm hb))
+  Litex.Same.symmNoObservation
+    (Litex.Same.realSubComplexNoObservation
+      (Litex.Same.symmNoObservation ha)
+      (Litex.Same.symmNoObservation hb))
 
 private theorem complexMulAsReal
     {a b : ℂ}
@@ -529,8 +553,10 @@ private theorem complexMulAsReal
     (ha : Litex.AsReal a r)
     (hb : Litex.AsReal b s) :
     Litex.AsReal (a * b) (r * s) :=
-  Litex.Same.symm
-    (Litex.Same.realMulComplex (Litex.Same.symm ha) (Litex.Same.symm hb))
+  Litex.Same.symmNoObservation
+    (Litex.Same.realMulComplexNoObservation
+      (Litex.Same.symmNoObservation ha)
+      (Litex.Same.symmNoObservation hb))
 
 private theorem complexDivAsReal
     {a b : ℂ}
@@ -538,59 +564,88 @@ private theorem complexDivAsReal
     (ha : Litex.AsReal a r)
     (hb : Litex.AsReal b s) :
     Litex.AsReal (a / b) (r / s) :=
-  Litex.Same.symm
-    (Litex.Same.realDivComplex (Litex.Same.symm ha) (Litex.Same.symm hb))
+  Litex.Same.symmNoObservation
+    (Litex.Same.realDivComplexNoObservation
+      (Litex.Same.symmNoObservation ha)
+      (Litex.Same.symmNoObservation hb))
 
 private theorem complexIntAsReal
     {a : ℂ}
     {z : ℤ}
-    (haz : Litex.Same a z) :
+    (haz : @Litex.Same ℂ ℤ
+      (Litex.ComplexObserver.none ℂ)
+      (Litex.ComplexObserver.none ℤ)
+      a z) :
     Litex.AsReal a (z : ℝ) :=
-  Litex.Same.trans haz
-    (Litex.Same.trans (Litex.Same.intComplex z)
-      (Litex.Same.trans
-        (Litex.Same.ofEq (by norm_num : (z : ℂ) = ((z : ℝ) : ℂ)))
-        (Litex.Same.complexReal (z : ℝ))))
+  Litex.Same.transNoObservation haz
+    (Litex.Same.transNoObservation (Litex.Same.intComplexNoObservation z)
+      (Litex.Same.transNoObservation
+        (Litex.Same.ofEqNoObservation
+          (by norm_num : (z : ℂ) = ((z : ℝ) : ℂ)))
+        (Litex.Same.complexRealNoObservation (z : ℝ))))
 
-private theorem realSameInt (z : ℤ) : Litex.Same (z : ℝ) z :=
-  Litex.Same.trans (Litex.Same.realComplex (z : ℝ))
-    (Litex.Same.trans
-      (Litex.Same.ofEq (by norm_num : ((z : ℝ) : ℂ) = (z : ℂ)))
-      (Litex.Same.complexInt z))
+private theorem realSameInt (z : ℤ) :
+    @Litex.Same ℝ ℤ
+      (Litex.ComplexObserver.none ℝ)
+      (Litex.ComplexObserver.none ℤ)
+      (z : ℝ) z :=
+  Litex.Same.transNoObservation (Litex.Same.realComplexNoObservation (z : ℝ))
+    (Litex.Same.transNoObservation
+      (Litex.Same.ofEqNoObservation
+        (by norm_num : ((z : ℝ) : ℂ) = (z : ℂ)))
+      (Litex.Same.complexIntNoObservation z))
 
 private theorem complexNatAsReal
     {a : ℂ}
     {n : ℕ}
-    (han : Litex.Same a n) :
+    (han : @Litex.Same ℂ ℕ
+      (Litex.ComplexObserver.none ℂ)
+      (Litex.ComplexObserver.none ℕ)
+      a n) :
     Litex.AsReal a (n : ℝ) :=
-  Litex.Same.trans han
-    (Litex.Same.trans (Litex.Same.natComplex n)
-      (Litex.Same.trans
-        (Litex.Same.ofEq (by norm_num : (n : ℂ) = ((n : ℝ) : ℂ)))
-        (Litex.Same.complexReal (n : ℝ))))
+  Litex.Same.transNoObservation han
+    (Litex.Same.transNoObservation (Litex.Same.natComplexNoObservation n)
+      (Litex.Same.transNoObservation
+        (Litex.Same.ofEqNoObservation
+          (by norm_num : (n : ℂ) = ((n : ℝ) : ℂ)))
+        (Litex.Same.complexRealNoObservation (n : ℝ))))
 
-private theorem realSameNat (n : ℕ) : Litex.Same (n : ℝ) n :=
-  Litex.Same.trans (Litex.Same.realComplex (n : ℝ))
-    (Litex.Same.trans
-      (Litex.Same.ofEq (by norm_num : ((n : ℝ) : ℂ) = (n : ℂ)))
-      (Litex.Same.complexNat n))
+private theorem realSameNat (n : ℕ) :
+    @Litex.Same ℝ ℕ
+      (Litex.ComplexObserver.none ℝ)
+      (Litex.ComplexObserver.none ℕ)
+      (n : ℝ) n :=
+  Litex.Same.transNoObservation (Litex.Same.realComplexNoObservation (n : ℝ))
+    (Litex.Same.transNoObservation
+      (Litex.Same.ofEqNoObservation
+        (by norm_num : ((n : ℝ) : ℂ) = (n : ℂ)))
+      (Litex.Same.complexNatNoObservation n))
 
 private theorem complexRatAsReal
     {a : ℂ}
     {q : ℚ}
-    (haq : Litex.Same a q) :
+    (haq : @Litex.Same ℂ ℚ
+      (Litex.ComplexObserver.none ℂ)
+      (Litex.ComplexObserver.none ℚ)
+      a q) :
     Litex.AsReal a (q : ℝ) :=
-  Litex.Same.trans haq
-    (Litex.Same.trans (Litex.Same.ratComplex q)
-      (Litex.Same.trans
-        (Litex.Same.ofEq (by norm_num : (q : ℂ) = ((q : ℝ) : ℂ)))
-        (Litex.Same.complexReal (q : ℝ))))
+  Litex.Same.transNoObservation haq
+    (Litex.Same.transNoObservation (Litex.Same.ratComplexNoObservation q)
+      (Litex.Same.transNoObservation
+        (Litex.Same.ofEqNoObservation
+          (by norm_num : (q : ℂ) = ((q : ℝ) : ℂ)))
+        (Litex.Same.complexRealNoObservation (q : ℝ))))
 
-private theorem realSameRat (q : ℚ) : Litex.Same (q : ℝ) q :=
-  Litex.Same.trans (Litex.Same.realComplex (q : ℝ))
-    (Litex.Same.trans
-      (Litex.Same.ofEq (by norm_num : ((q : ℝ) : ℂ) = (q : ℂ)))
-      (Litex.Same.complexRat q))
+private theorem realSameRat (q : ℚ) :
+    @Litex.Same ℝ ℚ
+      (Litex.ComplexObserver.none ℝ)
+      (Litex.ComplexObserver.none ℚ)
+      (q : ℝ) q :=
+  Litex.Same.transNoObservation (Litex.Same.realComplexNoObservation (q : ℝ))
+    (Litex.Same.transNoObservation
+      (Litex.Same.ofEqNoObservation
+        (by norm_num : ((q : ℝ) : ℂ) = (q : ℂ)))
+      (Litex.Same.complexRatNoObservation q))
 
 /-- Addition preserves real membership for complex-carrier source values. -/
 theorem complexAddInR
@@ -636,9 +691,10 @@ theorem complexDivInR
 /-- The Litex absolute-value representation always selects the corresponding
 native real norm. -/
 theorem complexAbsInR
-    (z : ℂ) :
+  (z : ℂ) :
     Litex.In (Litex.abs z) Litex.R := by
-  exact ⟨‖z‖, by simpa [Litex.abs] using Litex.Same.complexReal ‖z‖⟩
+  exact ⟨‖z‖, by simpa [Litex.abs] using
+    Litex.Same.complexRealNoObservation ‖z‖⟩
 
 /-- Addition preserves integer membership for complex-carrier source values. -/
 theorem complexAddInZ
@@ -648,10 +704,10 @@ theorem complexAddInZ
     Litex.In (a + b) Litex.Z := by
   rcases ha with ⟨za, hza⟩
   rcases hb with ⟨zb, hzb⟩
-  exact ⟨za + zb, Litex.Same.trans
+  exact ⟨za + zb, Litex.Same.transNoObservation
     (complexAddAsReal (complexIntAsReal hza) (complexIntAsReal hzb))
-    (Litex.Same.trans
-      (Litex.Same.ofEq (by norm_cast : (za : ℝ) + (zb : ℝ) = ((za + zb : ℤ) : ℝ)))
+    (Litex.Same.transNoObservation
+      (Litex.Same.ofEqNoObservation (by norm_cast : (za : ℝ) + (zb : ℝ) = ((za + zb : ℤ) : ℝ)))
       (realSameInt (za + zb)))⟩
 
 /-- Subtraction preserves integer membership for complex-carrier source values. -/
@@ -662,10 +718,10 @@ theorem complexSubInZ
     Litex.In (a - b) Litex.Z := by
   rcases ha with ⟨za, hza⟩
   rcases hb with ⟨zb, hzb⟩
-  exact ⟨za - zb, Litex.Same.trans
+  exact ⟨za - zb, Litex.Same.transNoObservation
     (complexSubAsReal (complexIntAsReal hza) (complexIntAsReal hzb))
-    (Litex.Same.trans
-      (Litex.Same.ofEq (by norm_cast : (za : ℝ) - (zb : ℝ) = ((za - zb : ℤ) : ℝ)))
+    (Litex.Same.transNoObservation
+      (Litex.Same.ofEqNoObservation (by norm_cast : (za : ℝ) - (zb : ℝ) = ((za - zb : ℤ) : ℝ)))
       (realSameInt (za - zb)))⟩
 
 /-- Multiplication preserves integer membership for complex-carrier source values. -/
@@ -676,10 +732,10 @@ theorem complexMulInZ
     Litex.In (a * b) Litex.Z := by
   rcases ha with ⟨za, hza⟩
   rcases hb with ⟨zb, hzb⟩
-  exact ⟨za * zb, Litex.Same.trans
+  exact ⟨za * zb, Litex.Same.transNoObservation
     (complexMulAsReal (complexIntAsReal hza) (complexIntAsReal hzb))
-    (Litex.Same.trans
-      (Litex.Same.ofEq (by norm_cast : (za : ℝ) * (zb : ℝ) = ((za * zb : ℤ) : ℝ)))
+    (Litex.Same.transNoObservation
+      (Litex.Same.ofEqNoObservation (by norm_cast : (za : ℝ) * (zb : ℝ) = ((za * zb : ℤ) : ℝ)))
       (realSameInt (za * zb)))⟩
 
 /-- A rational observation of an integer base raised to a natural exponent
@@ -694,8 +750,9 @@ theorem complexIntPowNatInZ
         (((base ^ exponent : ℤ) : ℂ)) := by
     norm_cast
   exact ⟨base ^ exponent,
-    Litex.Same.trans (Litex.Same.ofEq power_cast)
-      (Litex.Same.complexInt (base ^ exponent))⟩
+    Litex.Same.transNoObservation
+      (Litex.Same.ofEqNoObservation power_cast)
+      (Litex.Same.complexIntNoObservation (base ^ exponent))⟩
 
 private theorem integerRangeSumSingleNative
     (start : ℤ)
@@ -831,10 +888,10 @@ theorem complexAddInN
     Litex.In (a + b) Litex.N := by
   rcases ha with ⟨na, hna⟩
   rcases hb with ⟨nb, hnb⟩
-  exact ⟨na + nb, Litex.Same.trans
+  exact ⟨na + nb, Litex.Same.transNoObservation
     (complexAddAsReal (complexNatAsReal hna) (complexNatAsReal hnb))
-    (Litex.Same.trans
-      (Litex.Same.ofEq (by norm_cast : (na : ℝ) + (nb : ℝ) = ((na + nb : ℕ) : ℝ)))
+    (Litex.Same.transNoObservation
+      (Litex.Same.ofEqNoObservation (by norm_cast : (na : ℝ) + (nb : ℝ) = ((na + nb : ℕ) : ℝ)))
       (realSameNat (na + nb)))⟩
 
 /-- Multiplication preserves natural membership for complex-carrier source values. -/
@@ -845,10 +902,10 @@ theorem complexMulInN
     Litex.In (a * b) Litex.N := by
   rcases ha with ⟨na, hna⟩
   rcases hb with ⟨nb, hnb⟩
-  exact ⟨na * nb, Litex.Same.trans
+  exact ⟨na * nb, Litex.Same.transNoObservation
     (complexMulAsReal (complexNatAsReal hna) (complexNatAsReal hnb))
-    (Litex.Same.trans
-      (Litex.Same.ofEq (by norm_cast : (na : ℝ) * (nb : ℝ) = ((na * nb : ℕ) : ℝ)))
+    (Litex.Same.transNoObservation
+      (Litex.Same.ofEqNoObservation (by norm_cast : (na : ℝ) * (nb : ℝ) = ((na * nb : ℕ) : ℝ)))
       (realSameNat (na * nb)))⟩
 
 /-- Addition preserves rational membership for complex-carrier source values. -/
@@ -859,10 +916,10 @@ theorem complexAddInQ
     Litex.In (a + b) Litex.Q := by
   rcases ha with ⟨qa, hqa⟩
   rcases hb with ⟨qb, hqb⟩
-  exact ⟨qa + qb, Litex.Same.trans
+  exact ⟨qa + qb, Litex.Same.transNoObservation
     (complexAddAsReal (complexRatAsReal hqa) (complexRatAsReal hqb))
-    (Litex.Same.trans
-      (Litex.Same.ofEq (by norm_cast : (qa : ℝ) + (qb : ℝ) = ((qa + qb : ℚ) : ℝ)))
+    (Litex.Same.transNoObservation
+      (Litex.Same.ofEqNoObservation (by norm_cast : (qa : ℝ) + (qb : ℝ) = ((qa + qb : ℚ) : ℝ)))
       (realSameRat (qa + qb)))⟩
 
 /-- Subtraction preserves rational membership for complex-carrier source values. -/
@@ -873,10 +930,10 @@ theorem complexSubInQ
     Litex.In (a - b) Litex.Q := by
   rcases ha with ⟨qa, hqa⟩
   rcases hb with ⟨qb, hqb⟩
-  exact ⟨qa - qb, Litex.Same.trans
+  exact ⟨qa - qb, Litex.Same.transNoObservation
     (complexSubAsReal (complexRatAsReal hqa) (complexRatAsReal hqb))
-    (Litex.Same.trans
-      (Litex.Same.ofEq (by norm_cast : (qa : ℝ) - (qb : ℝ) = ((qa - qb : ℚ) : ℝ)))
+    (Litex.Same.transNoObservation
+      (Litex.Same.ofEqNoObservation (by norm_cast : (qa : ℝ) - (qb : ℝ) = ((qa - qb : ℚ) : ℝ)))
       (realSameRat (qa - qb)))⟩
 
 /-- Multiplication preserves rational membership for complex-carrier source values. -/
@@ -887,10 +944,10 @@ theorem complexMulInQ
     Litex.In (a * b) Litex.Q := by
   rcases ha with ⟨qa, hqa⟩
   rcases hb with ⟨qb, hqb⟩
-  exact ⟨qa * qb, Litex.Same.trans
+  exact ⟨qa * qb, Litex.Same.transNoObservation
     (complexMulAsReal (complexRatAsReal hqa) (complexRatAsReal hqb))
-    (Litex.Same.trans
-      (Litex.Same.ofEq (by norm_cast : (qa : ℝ) * (qb : ℝ) = ((qa * qb : ℚ) : ℝ)))
+    (Litex.Same.transNoObservation
+      (Litex.Same.ofEqNoObservation (by norm_cast : (qa : ℝ) * (qb : ℝ) = ((qa * qb : ℚ) : ℝ)))
       (realSameRat (qa * qb)))⟩
 
 /-- Division preserves rational membership for complex-carrier source values.
@@ -902,10 +959,10 @@ theorem complexDivInQ
     Litex.In (a / b) Litex.Q := by
   rcases ha with ⟨qa, hqa⟩
   rcases hb with ⟨qb, hqb⟩
-  exact ⟨qa / qb, Litex.Same.trans
+  exact ⟨qa / qb, Litex.Same.transNoObservation
     (complexDivAsReal (complexRatAsReal hqa) (complexRatAsReal hqb))
-    (Litex.Same.trans
-      (Litex.Same.ofEq (by norm_cast : (qa : ℝ) / (qb : ℝ) = ((qa / qb : ℚ) : ℝ)))
+    (Litex.Same.transNoObservation
+      (Litex.Same.ofEqNoObservation (by norm_cast : (qa : ℝ) / (qb : ℝ) = ((qa / qb : ℚ) : ℝ)))
       (realSameRat (qa / qb)))⟩
 
 /-- The complex-carrier adapter for nonnegative addition. Zero-ended order
@@ -972,8 +1029,8 @@ theorem complexNegativeOneMulNonpositive
     Litex.Nonpositive ((-1 : ℂ) * a) := by
   rcases ha with ⟨ra, hra, haOrder⟩
   have minusOneAsReal : Litex.AsReal (-1 : ℂ) (-1 : ℝ) :=
-    Litex.Same.trans
-      (Litex.Same.ofEq (by norm_num : (-1 : ℂ) = ((-1 : ℝ) : ℂ)))
+    Litex.Same.transNoObservation
+      (Litex.Same.ofEqNoObservation (by norm_num : (-1 : ℂ) = ((-1 : ℝ) : ℂ)))
       (Litex.AsReal.complex (-1 : ℝ))
   exact ⟨-1 * ra, complexMulAsReal minusOneAsReal hra, by linarith⟩
 
@@ -985,8 +1042,8 @@ theorem complexNegativeOneMulNegative
     Litex.Negative ((-1 : ℂ) * a) := by
   rcases ha with ⟨ra, hra, haOrder⟩
   have minusOneAsReal : Litex.AsReal (-1 : ℂ) (-1 : ℝ) :=
-    Litex.Same.trans
-      (Litex.Same.ofEq (by norm_num : (-1 : ℂ) = ((-1 : ℝ) : ℂ)))
+    Litex.Same.transNoObservation
+      (Litex.Same.ofEqNoObservation (by norm_num : (-1 : ℂ) = ((-1 : ℝ) : ℂ)))
       (Litex.AsReal.complex (-1 : ℝ))
   exact ⟨-1 * ra, complexMulAsReal minusOneAsReal hra, by linarith⟩
 
@@ -998,8 +1055,8 @@ theorem complexNegativeOneMulNonnegative
     Litex.Nonnegative ((-1 : ℂ) * a) := by
   rcases ha with ⟨ra, hra, haOrder⟩
   have minusOneAsReal : Litex.AsReal (-1 : ℂ) (-1 : ℝ) :=
-    Litex.Same.trans
-      (Litex.Same.ofEq (by norm_num : (-1 : ℂ) = ((-1 : ℝ) : ℂ)))
+    Litex.Same.transNoObservation
+      (Litex.Same.ofEqNoObservation (by norm_num : (-1 : ℂ) = ((-1 : ℝ) : ℂ)))
       (Litex.AsReal.complex (-1 : ℝ))
   exact ⟨-1 * ra, complexMulAsReal minusOneAsReal hra, by linarith⟩
 
@@ -1355,7 +1412,9 @@ theorem complexEqNatInNPos
     (h : 0 < n) :
     Litex.In z Litex.NPos :=
   inSetBuilder
-    (Litex.Same.trans (Litex.Same.ofEq hz) (Litex.Same.complexNat n))
+    (Litex.Same.transNoObservation
+      (Litex.Same.ofEqNoObservation hz)
+      (Litex.Same.complexNatNoObservation n))
     h
 
 /-- Forget only the refining predicate carried by `N+`; the selected natural
@@ -1377,10 +1436,10 @@ theorem complexAddInNPosOfLeftPositive
   rcases (inSetBuilder_iff.mp ha) with ⟨na, hna, hxa⟩
   rcases hb with ⟨nb, hxb⟩
   refine inSetBuilder ?_ (Nat.add_pos_left hna nb)
-  exact Litex.Same.trans
+  exact Litex.Same.transNoObservation
     (complexAddAsReal (complexNatAsReal hxa) (complexNatAsReal hxb))
-    (Litex.Same.trans
-      (Litex.Same.ofEq (by norm_cast : (na : ℝ) + (nb : ℝ) = ((na + nb : ℕ) : ℝ)))
+    (Litex.Same.transNoObservation
+      (Litex.Same.ofEqNoObservation (by norm_cast : (na : ℝ) + (nb : ℝ) = ((na + nb : ℕ) : ℝ)))
       (realSameNat (na + nb)))
 
 /-- Adding a natural and a positive natural preserves the exact `N+`
@@ -1393,10 +1452,10 @@ theorem complexAddInNPosOfRightPositive
   rcases ha with ⟨na, hxa⟩
   rcases (inSetBuilder_iff.mp hb) with ⟨nb, hnb, hxb⟩
   refine inSetBuilder ?_ (Nat.add_pos_right na hnb)
-  exact Litex.Same.trans
+  exact Litex.Same.transNoObservation
     (complexAddAsReal (complexNatAsReal hxa) (complexNatAsReal hxb))
-    (Litex.Same.trans
-      (Litex.Same.ofEq (by norm_cast : (na : ℝ) + (nb : ℝ) = ((na + nb : ℕ) : ℝ)))
+    (Litex.Same.transNoObservation
+      (Litex.Same.ofEqNoObservation (by norm_cast : (na : ℝ) + (nb : ℝ) = ((na + nb : ℕ) : ℝ)))
       (realSameNat (na + nb)))
 
 /-- The verifier's two-positive addition rule retains both stronger premises. -/
@@ -1416,10 +1475,10 @@ theorem complexMulInNPos
   rcases (inSetBuilder_iff.mp ha) with ⟨na, hna, hxa⟩
   rcases (inSetBuilder_iff.mp hb) with ⟨nb, hnb, hxb⟩
   refine inSetBuilder ?_ (Nat.mul_pos hna hnb)
-  exact Litex.Same.trans
+  exact Litex.Same.transNoObservation
     (complexMulAsReal (complexNatAsReal hxa) (complexNatAsReal hxb))
-    (Litex.Same.trans
-      (Litex.Same.ofEq (by norm_cast : (na : ℝ) * (nb : ℝ) = ((na * nb : ℕ) : ℝ)))
+    (Litex.Same.transNoObservation
+      (Litex.Same.ofEqNoObservation (by norm_cast : (na : ℝ) * (nb : ℝ) = ((na * nb : ℕ) : ℝ)))
       (realSameNat (na * nb)))
 
 /-- Exact `N+` membership exposes strict positivity through the retained
@@ -1430,7 +1489,8 @@ theorem positiveOfInNPos
     (h : Litex.In x Litex.NPos) :
     Litex.Positive x := by
   rcases (inSetBuilder_iff.mp h) with ⟨n, hn, hxn⟩
-  refine Litex.Positive.intro (Litex.Same.trans hxn (Litex.AsReal.nat n)) ?_
+  refine Litex.Positive.intro
+    (Litex.Same.transNoObservation hxn (Litex.AsReal.nat n)) ?_
   exact_mod_cast hn
 
 /-- `N+` retains positivity on its exact selected subtype representative. -/
@@ -1461,7 +1521,9 @@ theorem complexEqRatInQPos
     (h : 0 < q) :
     Litex.In z Litex.QPos :=
   inSetBuilder
-    (Litex.Same.trans (Litex.Same.ofEq hz) (Litex.Same.complexRat q))
+    (Litex.Same.transNoObservation
+      (Litex.Same.ofEqNoObservation hz)
+      (Litex.Same.complexRatNoObservation q))
     h
 
 /-- Exact `Q+` membership exposes strict positivity through its retained
@@ -1472,7 +1534,9 @@ theorem positiveOfInQPos
     (h : Litex.In x Litex.QPos) :
     Litex.Positive x := by
   rcases (inSetBuilder_iff.mp h) with ⟨q, hq, hxq⟩
-  exact Litex.Positive.intro (Litex.Same.trans hxq (Litex.AsReal.rat q)) (by exact_mod_cast hq)
+  exact Litex.Positive.intro
+    (Litex.Same.transNoObservation hxq (Litex.AsReal.rat q))
+    (by exact_mod_cast hq)
 
 /-- `Q+` retains positivity on its exact selected subtype representative. -/
 theorem positiveRationalRepPositive
@@ -1494,7 +1558,9 @@ theorem complexEqRealInRPos
     (h : 0 < r) :
     Litex.In z Litex.RPos :=
   inSetBuilder
-    (Litex.Same.trans (Litex.Same.ofEq hz) (Litex.Same.complexReal r))
+    (Litex.Same.transNoObservation
+      (Litex.Same.ofEqNoObservation hz)
+      (Litex.Same.complexRealNoObservation r))
     h
 
 /-- Introduce exact `R+` membership from the verifier's ordinary real
@@ -1529,10 +1595,10 @@ theorem positiveIntegerRationalPowInRPos
     exact_mod_cast zpow_pos basePositiveRational exponent
 
 theorem eInRPos : Litex.In ((Real.exp 1 : ℝ) : ℂ) Litex.RPos :=
-  inSetBuilder (Litex.Same.complexReal (Real.exp 1)) (Real.exp_pos 1)
+  inSetBuilder (Litex.Same.complexRealNoObservation (Real.exp 1)) (Real.exp_pos 1)
 
 theorem piInRPos : Litex.In ((Real.pi : ℝ) : ℂ) Litex.RPos :=
-  inSetBuilder (Litex.Same.complexReal Real.pi) Real.pi_pos
+  inSetBuilder (Litex.Same.complexRealNoObservation Real.pi) Real.pi_pos
 
 /-- Forget the refining predicate carried by `R+` while retaining its selected
 native real representative. -/
@@ -1578,7 +1644,9 @@ theorem complexEqIntInZNeg
     (h : n < 0) :
     Litex.In z Litex.ZNeg :=
   inSetBuilder
-    (Litex.Same.trans (Litex.Same.ofEq hz) (Litex.Same.complexInt n))
+    (Litex.Same.transNoObservation
+      (Litex.Same.ofEqNoObservation hz)
+      (Litex.Same.complexIntNoObservation n))
     h
 
 theorem complexEqRatInQNeg
@@ -1588,7 +1656,9 @@ theorem complexEqRatInQNeg
     (h : q < 0) :
     Litex.In z Litex.QNeg :=
   inSetBuilder
-    (Litex.Same.trans (Litex.Same.ofEq hz) (Litex.Same.complexRat q))
+    (Litex.Same.transNoObservation
+      (Litex.Same.ofEqNoObservation hz)
+      (Litex.Same.complexRatNoObservation q))
     h
 
 theorem complexEqRealInRNeg
@@ -1598,7 +1668,9 @@ theorem complexEqRealInRNeg
     (h : r < 0) :
     Litex.In z Litex.RNeg :=
   inSetBuilder
-    (Litex.Same.trans (Litex.Same.ofEq hz) (Litex.Same.complexReal r))
+    (Litex.Same.transNoObservation
+      (Litex.Same.ofEqNoObservation hz)
+      (Litex.Same.complexRealNoObservation r))
     h
 
 /-- Exact negative-carrier memberships expose one selected real
@@ -1610,7 +1682,9 @@ theorem negativeOfInZNeg
     (h : Litex.In x Litex.ZNeg) :
     Litex.Negative x := by
   rcases (inSetBuilder_iff.mp h) with ⟨z, hz, hxz⟩
-  exact Litex.Negative.intro (Litex.Same.trans hxz (Litex.AsReal.int z)) (by exact_mod_cast hz)
+  exact Litex.Negative.intro
+    (Litex.Same.transNoObservation hxz (Litex.AsReal.int z))
+    (by exact_mod_cast hz)
 
 /-- `Z-` retains negativity on its exact selected integer representative. -/
 theorem negativeIntegerRepNegative
@@ -1629,7 +1703,9 @@ theorem negativeOfInQNeg
     (h : Litex.In x Litex.QNeg) :
     Litex.Negative x := by
   rcases (inSetBuilder_iff.mp h) with ⟨q, hq, hxq⟩
-  exact Litex.Negative.intro (Litex.Same.trans hxq (Litex.AsReal.rat q)) (by exact_mod_cast hq)
+  exact Litex.Negative.intro
+    (Litex.Same.transNoObservation hxq (Litex.AsReal.rat q))
+    (by exact_mod_cast hq)
 
 /-- `Q-` retains negativity on its exact selected rational representative. -/
 theorem negativeRationalRepNegative
@@ -1664,14 +1740,17 @@ theorem inZStarOfInZNotSameZero
     {alpha : Type}
     {x : alpha}
     (hbase : Litex.In x Litex.Z)
-    (hnonzero : ¬ Litex.Same x (0 : ℂ)) :
+    (hnonzero :
+      ¬ @Litex.Same alpha ℂ
+        (Litex.ComplexObserver.none alpha)
+        (Litex.ComplexObserver.none ℂ) x (0 : ℂ)) :
     Litex.In x Litex.ZStar := by
   rcases inCOfInR (inROfInQ (inQOfInZ hbase)) with ⟨z, hxz⟩
   apply inSetBuilder hxz
   constructor
   · exact (Litex.In.congr hxz Litex.Z).mp hbase
   · intro hz
-    exact hnonzero (Litex.Same.trans hxz hz)
+    exact hnonzero (Litex.Same.transNoObservation hxz hz)
 
 /-- Construct exact nonzero-rational membership from the verifier's base
 membership and heterogeneous non-equality premises. -/
@@ -1679,14 +1758,17 @@ theorem inQStarOfInQNotSameZero
     {alpha : Type}
     {x : alpha}
     (hbase : Litex.In x Litex.Q)
-    (hnonzero : ¬ Litex.Same x (0 : ℂ)) :
+    (hnonzero :
+      ¬ @Litex.Same alpha ℂ
+        (Litex.ComplexObserver.none alpha)
+        (Litex.ComplexObserver.none ℂ) x (0 : ℂ)) :
     Litex.In x Litex.QStar := by
   rcases inCOfInR (inROfInQ hbase) with ⟨z, hxz⟩
   apply inSetBuilder hxz
   constructor
   · exact (Litex.In.congr hxz Litex.Q).mp hbase
   · intro hz
-    exact hnonzero (Litex.Same.trans hxz hz)
+    exact hnonzero (Litex.Same.transNoObservation hxz hz)
 
 /-- Construct exact nonzero-real membership from the verifier's base
 membership and heterogeneous non-equality premises. -/
@@ -1694,14 +1776,17 @@ theorem inRStarOfInRNotSameZero
     {alpha : Type}
     {x : alpha}
     (hbase : Litex.In x Litex.R)
-    (hnonzero : ¬ Litex.Same x (0 : ℂ)) :
+    (hnonzero :
+      ¬ @Litex.Same alpha ℂ
+        (Litex.ComplexObserver.none alpha)
+        (Litex.ComplexObserver.none ℂ) x (0 : ℂ)) :
     Litex.In x Litex.RStar := by
   rcases inCOfInR hbase with ⟨z, hxz⟩
   apply inSetBuilder hxz
   constructor
   · exact (Litex.In.congr hxz Litex.R).mp hbase
   · intro hz
-    exact hnonzero (Litex.Same.trans hxz hz)
+    exact hnonzero (Litex.Same.transNoObservation hxz hz)
 
 /-- Construct exact nonzero-complex membership from the verifier's base
 membership and heterogeneous non-equality premises. -/
@@ -1709,14 +1794,17 @@ theorem inCStarOfInCNotSameZero
     {alpha : Type}
     {x : alpha}
     (hbase : Litex.In x Litex.C)
-    (hnonzero : ¬ Litex.Same x (0 : ℂ)) :
+    (hnonzero :
+      ¬ @Litex.Same alpha ℂ
+        (Litex.ComplexObserver.none alpha)
+        (Litex.ComplexObserver.none ℂ) x (0 : ℂ)) :
     Litex.In x Litex.CStar := by
   rcases hbase with ⟨z, hxz⟩
   apply inSetBuilder hxz
   constructor
   · exact Litex.In.own Litex.C z
   · intro hz
-    exact hnonzero (Litex.Same.trans hxz hz)
+    exact hnonzero (Litex.Same.transNoObservation hxz hz)
 
 theorem inZOfInZStar
     {alpha : Type}
@@ -1755,40 +1843,56 @@ theorem notSameZeroOfInZStar
     {alpha : Type}
     {x : alpha}
     (h : Litex.In x Litex.ZStar) :
-    ¬ Litex.Same x (0 : ℂ) := by
+    ¬ @Litex.Same alpha ℂ
+      (Litex.ComplexObserver.none alpha)
+      (Litex.ComplexObserver.none ℂ) x (0 : ℂ) := by
   rcases (inSetBuilder_iff.mp h) with ⟨z, hz, hxz⟩
   intro hx
-  exact hz.2 (Litex.Same.trans (Litex.Same.symm hxz) hx)
+  exact hz.2
+    (Litex.Same.transNoObservation
+      (Litex.Same.symmNoObservation hxz) hx)
 
 /-- Exact `Q*` membership exposes the retained semantic nonzero certificate. -/
 theorem notSameZeroOfInQStar
     {alpha : Type}
     {x : alpha}
     (h : Litex.In x Litex.QStar) :
-    ¬ Litex.Same x (0 : ℂ) := by
+    ¬ @Litex.Same alpha ℂ
+      (Litex.ComplexObserver.none alpha)
+      (Litex.ComplexObserver.none ℂ) x (0 : ℂ) := by
   rcases (inSetBuilder_iff.mp h) with ⟨z, hz, hxz⟩
   intro hx
-  exact hz.2 (Litex.Same.trans (Litex.Same.symm hxz) hx)
+  exact hz.2
+    (Litex.Same.transNoObservation
+      (Litex.Same.symmNoObservation hxz) hx)
 
 /-- Exact `R*` membership exposes the retained semantic nonzero certificate. -/
 theorem notSameZeroOfInRStar
     {alpha : Type}
     {x : alpha}
     (h : Litex.In x Litex.RStar) :
-    ¬ Litex.Same x (0 : ℂ) := by
+    ¬ @Litex.Same alpha ℂ
+      (Litex.ComplexObserver.none alpha)
+      (Litex.ComplexObserver.none ℂ) x (0 : ℂ) := by
   rcases (inSetBuilder_iff.mp h) with ⟨z, hz, hxz⟩
   intro hx
-  exact hz.2 (Litex.Same.trans (Litex.Same.symm hxz) hx)
+  exact hz.2
+    (Litex.Same.transNoObservation
+      (Litex.Same.symmNoObservation hxz) hx)
 
 /-- Exact `C*` membership exposes the retained semantic nonzero certificate. -/
 theorem notSameZeroOfInCStar
     {alpha : Type}
     {x : alpha}
     (h : Litex.In x Litex.CStar) :
-    ¬ Litex.Same x (0 : ℂ) := by
+    ¬ @Litex.Same alpha ℂ
+      (Litex.ComplexObserver.none alpha)
+      (Litex.ComplexObserver.none ℂ) x (0 : ℂ) := by
   rcases (inSetBuilder_iff.mp h) with ⟨z, hz, hxz⟩
   intro hx
-  exact hz.2 (Litex.Same.trans (Litex.Same.symm hxz) hx)
+  exact hz.2
+    (Litex.Same.transNoObservation
+      (Litex.Same.symmNoObservation hxz) hx)
 
 /-- Widen retained nonzero-integer evidence to nonzero-rational evidence. -/
 theorem inQStarOfInZStar

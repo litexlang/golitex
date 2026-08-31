@@ -3,8 +3,8 @@
 这个 showcase 只讲一条主线：先在 Lean 里写下想证明的目标，再用
 Litex 完成数学证明，把 Litex 编译成 Lean，最后在一个短小的 Lean
 证明里引用生成定理。最终 theorem 的数学 conclusion 必须完全不知道
-Litex 存在；`Litex.*` 和 generated names 只出现在 Adapter 里。当前
-`Final.lean` 显式接收一个 Adapter bridge 证书，在证明体里 cite Adapter。
+Litex 存在；`Litex.*` 和 generated names 只出现在 Adapter 里。
+`Final.lean` 的 statement 是纯 Lean/Mathlib，只有证明体 cite Adapter。
 
 贯穿全流程的命题是：前 `n` 个正奇数之和等于 `n²`。
 
@@ -20,7 +20,7 @@ showcase1/
 ├── main.lit                # 1. Litex 数学与证明；唯一源文件
 ├── Generated.lean          # 2. 编译器生成；禁止手改
 ├── Adapter.lean            # 3. 真实 cite 生成定理并整理接口
-├── Final.lean              # 4. 可执行的原生 conclusion；显式接收 bridge
+├── Final.lean              # 4. 无参数、可执行的原生 Lean theorem
 ├── litex.config            # Litex 文件顺序
 ├── lakefile.toml           # 本目录自己的 Lean/Lake 工程入口
 ├── lake-manifest.json      # 本地 path dependency 与 Mathlib 版本锁定
@@ -44,15 +44,14 @@ main.lit：用 Litex 写出并检查数学证明
                 ↓ stmt_result_to_lean_compiler
 Generated.lean：生成可由 Lean kernel 检查的定理
                 ↓ import + cite
-Adapter.lean：cite 生成定理，并用 Same → Eq 证书整理出原生 conclusion
-                ↓ 显式传入 Adapter bridge
-Final.lean：cite Adapter，得到可执行的 conditional theorem
+Adapter.lean：cite 生成定理，用 Core 的 Same → Eq 定理整理出原生 conclusion
+                ↓ import + cite
+Final.lean：statement 完全不知道 Litex，proof 只 cite Adapter
 ```
 
 关键纪律是：`Generated.lean` 只能由编译器重生成；手写的接口整理必须
-放在 `Adapter.lean`；最终使用必须放在 `Final.lean`。当前 Final
-对 bridge 是显式 conditional 的，不用公理、proof hole 或独立重证
-伪装成无条件结果。
+放在 `Adapter.lean`；最终使用必须放在 `Final.lean`。整条链不用
+公理、proof hole 或独立重证伪装 generated theorem 被复用。
 
 ## 第 0 步：先在 Lean 里写目标
 
@@ -127,59 +126,69 @@ __Compiler_main.sum_first_odds :
 生成文件可能很长，因为它重放 Litex verifier 已经选中的证据路径。下游
 不需要读完它，更不应该手改它；只要 import 并使用公开定理即可。
 
-## 第 3 步：adapter 必须真的 cite，再消成原生 `Eq`
+## 第 3 步：Adapter 必须真的 cite，再消成原生 `Eq`
 
 [`Adapter.lean`](Adapter.lean) 首先把普通 Lean 前提 `(1 : ℤ) ≤ n` 转成生成
-定理需要的 `Litex.Le`，然后定义一个局部、待审核的消元证书：
-
-真正关键的调用是：
+定理需要的 `Litex.Le`，然后直接引用生成定理：
 
 ```lean
-structure IntegerSameEqBridge : Prop where
-  toEq {left right : ℤ} :
-    Litex.Same left (right : ℂ) → left = right
+have generated :=
+  __Compiler_main.sum_first_odds n
+    (Litex.OrderBridge.leOfComplexReals ...)
 ```
 
-这个 structure 没有定义任何 inhabitant，也不是把 `Equal` 重新定义成
-`Same`。它要求一个真正的 Lean 证明：对于整数值语义等式，
-`Same left (right : ℂ)` 能安全消成 `left = right`。
+Core 中的数值 `Same` 证据保存两端的原生复数观察。
+`Litex.AsComplex x z` 表示 `x` 的原生观察正是 `z`；它的定义不
+依赖 `Litex.Same`。`Litex.InComplex x` 则表示这样的 `z` 存在。
 
-Adapter 中的 `sumFirstOddsNative` 已由 Lean 4.31 检查。它的 conclusion 是普通
-Mathlib 命题：
+因此公开定理 `Litex.Same.complexEq` 能用 `Same` 和两端的
+`AsComplex` 证据得到原生复数 `=`。如果手上拿的是两端
+`InComplex` 证据，直接用 `Litex.Same.inComplexEq`。整数对复数的
+便利版是：
+
+```lean
+Litex.Same.intComplexEq :
+  Litex.Same (left : ℤ) (right : ℂ) → (left : ℂ) = right
+```
+
+这不是 axiom，也不是用 `True` 充当规则。每一条可构造的数值
+`Same` 规则都必须同时提供“两端观察相等”的 Lean 证明；
+`Same.intComplexEq` 只是把这份已检查的证据取出来。
+
+Adapter 中的 `sumFirstOddsNative` 把这个复数等式再用 Lean 的 cast
+单射性变回整数等式。它的 conclusion 是普通 Mathlib 命题：
 
 ```lean
 theorem sumFirstOddsNative
-    (bridge : IntegerSameEqBridge)
     (n : ℤ)
     (oneLeN : (1 : ℤ) ≤ n) :
     ∑ k ∈ Finset.Icc (1 : ℤ) n, (2 * k - 1) = n ^ 2 := by
   have generated := __Compiler_main.sum_first_odds n …
-  …
-  have exactCarrierEq := bridge.toEq exactCarrierSame
+  have observedComplexEq := Litex.Same.intComplexEq generated
+  have exactCarrierEq : Litex.sum … = n ^ 2 := by
+    exact_mod_cast observedComplexEq
   simpa [Litex.sum, Litex.integerRangeSum, __Compiler_main.kth_odd] using
     exactCarrierEq
 ```
 
-这里 generated theorem 是 live dependency：删掉 `generated` 或 `exactCarrierSame` 就无法构造
+这里 generated theorem 是 live dependency：删掉 `generated` 或 `observedComplexEq` 就无法构造
 `exactCarrierEq`。Adapter 没有重写 odd-sum 归纳。
 
-## 第 4 步：Final 直接 cite Adapter bridge
+## 第 4 步：Final 只在证明体 cite Adapter
 
 [`Final.lean`](Final.lean) 现在不再是全注释，而是真正会被
 Lean kernel 检查的 theorem：
 
 ```lean
 theorem firstHundredPositiveOddIntegersSum
-    (bridge : OddSumPipeline.IntegerSameEqBridge) :
-    ∑ k ∈ Finset.Icc (1 : ℤ) 100, (2 * k - 1) = 10000 := by
-  exact OddSumPipeline.sumFirstOddsNative bridge 100 (by norm_num)
+    : ∑ k ∈ Finset.Icc (1 : ℤ) 100, (2 * k - 1) = 10000 := by
+  exact OddSumPipeline.sumFirstOddsNative 100 (by norm_num)
 ```
 
 冒号后的数学 proposition 只有 `Finset.Icc`、`ℤ`、求和与 Lean `=`；
-它没有 `Litex.Same`、`Litex.sum` 或 `__Compiler_main.*`。`bridge`
-是 Adapter 的证明前提，不是生成代码里的数学谓词。这一版是 conditional
-theorem；如果以后 Adapter 内部真正构造了 bridge 值，Final 只需删掉
-这个显式参数，不需改数学 proposition。
+它没有 `Litex.Same`、`Litex.sum`、`__Compiler_main.*`、Adapter 的概念，
+也没有 bridge 参数。换句话说：题目本身完全不知道 Litex 存在；
+只有 `by` 后面的证明过程通过 Adapter 使用了 Litex 生成的定理。
 
 ## 解决编辑器里的 `unknown module prefix`
 
@@ -213,7 +222,7 @@ lake build
 ```bash
 cargo build --release
 
-target/release/litex -compact -strict -summarize \
+target/release/litex -strict \
   -f showcases/litex_to_lean_mathlib_pipeline/showcase1/main.lit
 
 target/release/stmt_result_to_lean_compiler compile \
@@ -237,31 +246,25 @@ Litex 命令必须退出 `0`，且末尾 run summary 的 `result` 必须为
 
 ## 当前诚实边界
 
-当前 generated theorem 的结论是异构语义等式 `Litex.Same`。它已经能在
-Lean 中被引用和组合，但当前公共 Core 还没有一个已证明的 eliminator，
-把这一特定的 `Litex.Same (integer sum) (complex square)` 直接消成普通
-Mathlib 整数等式：
+generated theorem 的结论仍然是异构语义等式 `Litex.Same`，compiler
+没有为这个例子做特殊编译。改变的是 Core 对数值 `Same` 证据的
+保存方式：它现在能由 Lean kernel 证明地反射到原生 `=`。因此
+Adapter 现在已经无条件地得到：
 
 ```lean
 ∑ k ∈ Finset.Icc (1 : ℤ) n, (2 * k - 1) = n ^ 2
 ```
 
-因此，本 showcase 目前已检查的是两层：
+这条路径的全部组件都由 Lean kernel 检查：
 
-- 无条件的 `Litex → generated Lean → Litex.Same`；
-- 以 `IntegerSameEqBridge` 证书为显式前提的
-  `generated Lean → 原生 Finset 等式`。
+- Litex 已检查的证明生成 `Litex.Same`；
+- 每个数值 Same 规则携带对应观察等式的证明；
+- Core 的公开 eliminator 得到复数 `=`；
+- Lean 的 cast 单射性得到整数 `=`；
+- Final 只 cite Adapter，没有独立归纳。
 
-第二层的 Adapter proof 和显式接收 bridge 的 Final theorem 都由 Lean
-kernel 检查。bridge 证书本身尚未实现，所以当前 Final 是条件定理，
-不是无条件定理。以前的 adapter 虽然 import 了 generated
-module，却独立写了一遍 `Int.leInduction`；那不能证明 generated theorem
-被复用，所以已经移除。
-
-如果以后需要把 Final 变成无参数的无条件定理，下一步不是再写
-一份归纳，而是在 Adapter 能使用的信任边界内构造
-`IntegerSameEqBridge.toEq` 的 sound proof。这个缺口不能用
-`axiom`、`sorry`、`admit`、未使用的 generated 假设或独立重证掩盖。
+对任意非数值对象、以及集合的外延相等，Core 并没有声称都能反射
+成 Lean `=`；这些需要各自的观察与 extensionality 设计，不在本例范围内。
 
 `extras/property_flow.lit` 还演示了
 `prop definition → reusable law → instance → composition`，但其若干局部
