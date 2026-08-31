@@ -10,7 +10,7 @@ mod target;
 mod terminal_import;
 
 pub use file_execution::{execute_file_in_runtime, resolve_source_file_path};
-pub use output_rendering::render_run_output;
+pub use output_rendering::{render_run_output, render_stream_output};
 
 pub use crate::output::{display_runtime_error_json, display_stmt_exec_result_json};
 pub use crate::runtime::{ExecutionOption, RunOption, RunOptions, SummaryOption};

@@ -11,9 +11,8 @@ use super::source_references::{source_ref_json_fields, stmt_json_field_lines, st
 use super::success_rendering::display_stmt_exec_result_json_with_style;
 use super::unknown_result_json_value;
 use super::user_visible_text::{
-    user_visible_stmt_or_msg_text, JSON_KEY_ERROR_TYPE, JSON_KEY_FAILED_GOAL, JSON_KEY_FAILED_STEP,
-    JSON_KEY_INSIDE_RESULTS, JSON_KEY_MESSAGE, JSON_KEY_PREVIOUS_ERROR, JSON_KEY_RESULT,
-    JSON_KEY_UNKNOWN_RESULT, JSON_VALUE_ERROR,
+    user_visible_stmt_or_msg_text, JSON_KEY_FAILED_GOAL, JSON_KEY_FAILED_STEP,
+    JSON_KEY_INSIDE_RESULTS, JSON_KEY_MESSAGE, JSON_KEY_PREVIOUS_ERROR, JSON_KEY_UNKNOWN_RESULT,
 };
 
 pub fn display_runtime_error_json(
@@ -268,15 +267,8 @@ fn build_display_error_json_object(
         runtime,
         &mut field_lines,
         indent_inner.as_str(),
-        JSON_KEY_ERROR_TYPE,
-        JsonValue::JsonString(error.display_label().to_string()),
-    );
-    push_json_value_field_line(
-        runtime,
-        &mut field_lines,
-        indent_inner.as_str(),
-        JSON_KEY_RESULT,
-        JsonValue::JsonString(JSON_VALUE_ERROR.to_string()),
+        "kind",
+        JsonValue::JsonString(error.json_kind().to_string()),
     );
 
     let line_file = error.line_file();

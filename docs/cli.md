@@ -1,9 +1,9 @@
 # Litex CLI
 
-<!-- Blueprint spine: try online → install for one platform → verify the installation → learn the command shape → choose a run mode → inspect or automate the result -->
+<!-- CLI spine: choose a command family → run one typed command shape → inspect its JSON result → use the detailed family contract when needed -->
 
-This is the canonical installation guide and command-line reference for the
-Rust `litex` binary.
+This is the complete command-line reference for the Rust `litex` binary. If
+Litex is not installed yet, start with the short [setup guide](setup.md).
 
 Created and maintained by Jiachen Shen.
 
@@ -13,240 +13,11 @@ Markdown source: https://github.com/litexlang/golitex/blob/main/docs/cli.md
 
 > **Litex is an experimental hobby project still in beta. Expect rough edges.**
 
-## Try Litex Online
+## Before You Start
 
-To quickly try Litex without installing it, use the Playground on the official
-website:
-
-- https://litexlang.com
-
-You can run Litex code there and translate Litex code into LaTeX.
-
-## Install Litex Locally
-
-Release assets are published on the
-[GitHub Releases page](https://github.com/litexlang/golitex/releases). Each
-official archive or package contains both the `litex` executable and the
-standard library.
-
-After any installation, check both the version and a small verified statement:
-
-```bash
-litex -version
-litex -e '1 = 1'
-```
-
-### macOS and Linux (Homebrew)
-
-Homebrew is the shortest supported installation route on Apple Silicon macOS
-and on Linux (`amd64` or `arm64`).
-
-Install:
-
-```bash
-brew install litexlang/tap/litex
-```
-
-Upgrade:
-
-```bash
-brew update
-brew upgrade litexlang/tap/litex
-```
-
-If upgrade fails or is too slow on your machine, use:
-
-```bash
-brew uninstall litex
-brew install litexlang/tap/litex
-```
-
-The current Homebrew macOS package targets Apple Silicon. For another macOS
-architecture, build from source until a matching release asset is available.
-
-### Linux (Ubuntu/Debian)
-
-Official `.deb` packages are available for `amd64` and `arm64`. This command
-detects the current Debian architecture and installs the latest release:
-
-```bash
-tag=$(curl -fsSL https://api.github.com/repos/litexlang/golitex/releases/latest | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')
-arch=$(dpkg --print-architecture)
-case "$arch" in amd64|arm64) ;; *) echo "Unsupported architecture: $arch"; exit 1 ;; esac
-wget "https://github.com/litexlang/golitex/releases/download/${tag}/litex_${tag}_${arch}.deb"
-sudo dpkg -i "litex_${tag}_${arch}.deb"
-```
-
-If you want a fixed release, replace `<tag>` and `<arch>` (`amd64` or `arm64`)
-manually:
-
-```bash
-wget "https://github.com/litexlang/golitex/releases/download/<tag>/litex_<tag>_<arch>.deb"
-sudo dpkg -i "litex_<tag>_<arch>.deb"
-```
-
-If needed, fix dependencies:
-
-```bash
-sudo apt-get install -f
-```
-
-The `.deb` package installs the Litex executable together with its standard
-library. Verify the executable with a checked statement:
-
-```bash
-litex -e '1 = 1' | grep '"result": "success"'
-```
-
-#### Upgrade Litex on Linux
-
-If you installed from the `.deb` in Releases, upgrade by downloading the
-latest tag and installing it again. This replaces the older version:
-
-```bash
-tag=$(curl -fsSL https://api.github.com/repos/litexlang/golitex/releases/latest | grep '"tag_name"' | sed -E 's/.*"([^"]+)".*/\1/')
-arch=$(dpkg --print-architecture)
-case "$arch" in amd64|arm64) ;; *) echo "Unsupported architecture: $arch"; exit 1 ;; esac
-wget "https://github.com/litexlang/golitex/releases/download/${tag}/litex_${tag}_${arch}.deb"
-sudo dpkg -i "litex_${tag}_${arch}.deb"
-```
-
-Then verify:
-
-```bash
-litex -version
-litex -e '1 = 1' | grep '"result": "success"'
-```
-
-### Windows
-
-#### Option A (recommended): Scoop
-
-The release workflow keeps the Litex Scoop bucket up to date. In PowerShell:
-
-```powershell
-scoop bucket add litex https://github.com/litexlang/scoop-litex
-scoop install litex
-```
-
-Upgrade later with:
-
-```powershell
-scoop update
-scoop update litex
-```
-
-#### Option B: direct PowerShell install
-
-If you do not use Scoop, this script installs the latest release under
-`%LOCALAPPDATA%\litex` and adds that directory to the user `Path`:
-
-```powershell
-$ErrorActionPreference = 'Stop'
-$repo = 'litexlang/golitex'
-$tag = (Invoke-RestMethod -Uri "https://api.github.com/repos/$repo/releases/latest" -Headers @{ 'User-Agent' = 'litex-install' }).tag_name
-$name = "litex_${tag}_windows_amd64.zip"
-$url = "https://github.com/$repo/releases/download/$tag/$name"
-$dir = Join-Path $env:LOCALAPPDATA 'litex'
-$zip = Join-Path $env:TEMP $name
-$exe = Join-Path $dir 'litex.exe'
-New-Item -ItemType Directory -Force -Path $dir | Out-Null
-Invoke-WebRequest -Uri $url -OutFile $zip
-Expand-Archive -Path $zip -DestinationPath $dir -Force
-Remove-Item -Force $zip
-
-$userPath = [Environment]::GetEnvironmentVariable('Path', 'User')
-if (-not $userPath) { $userPath = '' }
-if ($userPath -notlike "*$dir*") {
-    $newPath = if ($userPath) { "$userPath;$dir" } else { $dir }
-    [Environment]::SetEnvironmentVariable('Path', $newPath, 'User')
-}
-
-$env:Path = "$dir;$env:Path"
-Write-Host "Installed: $exe"
-Write-Host "Open a new terminal and run: litex -version"
-```
-
-What this command changes on the user machine:
-
-1. Downloads `litex_<tag>_windows_amd64.zip` from GitHub Releases.
-2. Extracts `litex.exe` and the `std` directory into `%LOCALAPPDATA%\litex`.
-3. Appends `%LOCALAPPDATA%\litex` to the **User** `Path` environment variable.
-4. Updates `Path` in the current PowerShell session.
-
-It does **not** install services or edit firewall settings.
-
-After running the command:
-
-1. Open a **new** terminal window.
-2. Run:
-
-```powershell
-litex -version
-litex -e "1 = 1" | Select-String '"result": "success"'
-```
-
-Now users can run `litex` directly in a terminal.
-
-If you want a fixed tag, replace `<tag>` manually:
-
-```powershell
-$ErrorActionPreference = 'Stop'
-$tag = '<tag>'
-$repo = 'litexlang/golitex'
-$name = "litex_${tag}_windows_amd64.zip"
-$url = "https://github.com/$repo/releases/download/$tag/$name"
-$dir = Join-Path $env:LOCALAPPDATA 'litex'
-$zip = Join-Path $env:TEMP $name
-$exe = Join-Path $dir 'litex.exe'
-New-Item -ItemType Directory -Force -Path $dir | Out-Null
-Invoke-WebRequest -Uri $url -OutFile $zip
-Expand-Archive -Path $zip -DestinationPath $dir -Force
-Remove-Item -Force $zip
-
-$userPath = [Environment]::GetEnvironmentVariable('Path', 'User')
-if (-not $userPath) { $userPath = '' }
-if ($userPath -notlike "*$dir*") {
-    $newPath = if ($userPath) { "$userPath;$dir" } else { $dir }
-    [Environment]::SetEnvironmentVariable('Path', $newPath, 'User')
-}
-
-$env:Path = "$dir;$env:Path"
-litex -version
-litex -e "1 = 1" | Select-String '"result": "success"'
-```
-
-To upgrade a direct PowerShell installation, rerun the same script. It replaces
-the executable and bundled `std` directory while preserving the existing
-`Path` entry.
-
-### Docker
-
-The release workflow publishes multi-architecture Linux images for `amd64` and
-`arm64`. Prereleases use the `beta` tag; stable releases also update `latest`.
-
-```bash
-docker pull ghcr.io/litexlang/litex:beta
-docker run --rm ghcr.io/litexlang/litex:beta -e '1 = 1'
-```
-
-Use a version tag such as `0.9.109-beta` when reproducibility matters.
-
-### Build from Source
-
-For kernel development, install the stable Rust toolchain, clone this
-repository, and build from the repository root:
-
-```bash
-git clone https://github.com/litexlang/golitex.git
-cd golitex
-cargo build --release
-target/release/litex -e '1 = 1'
-```
-
-Running from the repository root lets Litex find the checked-in `std`
-directory. Packaged installations place the same standard library beside the
-binary or in the platform installation directory.
+To install Litex, verify the installation, or choose a package for your
+platform, use the short [setup guide](setup.md). To try Litex without a local
+installation, use the [online playground](https://litexlang.com).
 
 ## First Run
 
@@ -260,16 +31,16 @@ The ordinary REPL is always isolated, including when the current directory
 contains `litex.config`. It is a persistent terminal environment, not a
 project run.
 
-Typical startup output:
+Startup output is JSON Lines. A terminal initially receives a `ready` event
+and a `prompt` event:
 
-```text
-Litex version <version>
-Copyright (C) 2024-2026 Jiachen Shen
-website: https://litexlang.com
-github: https://github.com/litexlang/golitex
-Ctrl+D to exit. On Windows PowerShell, press Ctrl+Z and then Enter.
->>>
+```json
+{"kind":"stream","ok":true,"stream":"repl","event":"ready","id":null,"statement_results":[],"content":{"version":"<version>","mode":"isolated"},"error":null}
+{"kind":"stream","ok":true,"stream":"repl","event":"prompt","id":null,"statement_results":[],"content":">>> ","error":null}
 ```
+
+Use Ctrl+D to exit. On Windows PowerShell, press Ctrl+Z and then Enter. The
+REPL emits a final `closed` event before exiting.
 
 Run a standalone `.lit` file:
 
@@ -326,12 +97,12 @@ For example, `litex -strict -e "1 = 1"` is valid, while
 
 | Option | Meaning |
 |--------|---------|
-| `-compact` | Show only `result`, `type`, `line`, and `statement` for successful execution results. Any `RuntimeError` is always detailed. |
-| *(no output flag)* | Use the normal reading view for successful results: internal statements plus assumptions, conclusions, and direct `why_verified` reasons, without audit duplication. Any `RuntimeError` is always detailed. |
-| `-detail` | Include fuller JSON trace details for both successful results and errors, including well-definedness, verification, and environment phases. Machine-rendered graph output also keeps raw file paths in this mode. |
+| `-compact` | Request the compact verification projection. Runtime errors remain detailed. |
+| *(no output flag)* | Use detailed output. This is the default. |
+| `-detail` | Explicitly select detailed statement results, including well-definedness, verification, environment, and execution-trace data. Graph output keeps raw file paths in this mode. |
 | `-strict` | Select a strict execution variant. Verify every configured import and every export loaded by `-f`, then reject user `trust`, `trust have`, and `axiom`. `-r` already verifies its complete export tree. It is rejected for help, version, LaTeX, extraction, and Lean commands. |
-| `-summarize` | Append one final run-summary JSON object after ordinary verifier command output. |
-| `-lang <code>` | Localize JSON keys and explanatory labels. Mathematical source strings inside fields such as `statement`, `fact`, and `cited_statement` stay in Litex syntax. |
+| `-summarize` | Add a `summary` value to the single `run` JSON object. |
+| `-lang <code>` | Localize human-readable messages and labels. JSON field names and machine discriminator values stay stable. Mathematical source strings remain in Litex syntax. |
 
 Supported language codes are:
 
@@ -361,19 +132,16 @@ Current mappings:
 
 Output style controls successful statement results. Every `RuntimeError` is
 rendered with the detailed error projection, whether the command uses
-`-compact`, the normal view, or `-detail`. Detailed errors preserve available
-`phases`, causal `previous_error` data, `failed_step`, `failed_goal`, nested
-`unknown_result` data, step indexes, and internal execution results. This
-includes parse, well-definedness, verification, unknown, execution,
-instantiation, and inference failures. Fields for diagnostic data that does
-not exist are omitted rather than synthesized.
+`-compact`, the default detailed view, or explicit `-detail`. Detailed errors
+preserve available `phases`, causal `previous_error` data, `failed_step`,
+`failed_goal`, nested `unknown_result` data, step indexes, and internal
+execution results. This includes parse, well-definedness, verification,
+unknown, execution, instantiation, and inference failures. Fields for
+diagnostic data that does not exist are omitted rather than synthesized.
 
-Only the failing result is upgraded. Earlier successful statements retain the
-selected output style, and warning-only successful results are not
-automatically expanded. This contract is consistent across file, repository,
-REPL, runner, session, and `try:` execution paths. Existing error fields and
-exit-code behavior are unchanged; compact and normal failures may contain
-additional diagnostic fields.
+Earlier successful statements retain the selected output style. The CLI does
+not have a warning branch or a top-level `warnings` field. This contract is
+consistent across file, repository, REPL, session, and `try:` execution paths.
 
 `-compact`, `-detail`, and `-lang` affect the command families that render
 verifier output. `-strict` applies only to execution, graph, and session
@@ -381,6 +149,52 @@ variants. `-summarize` applies only to ordinary `-e`, `-f`, and `-r`
 execution. `-isolated` applies only to file, file-graph, file-session,
 file-conversion, and Lean variants. An option is rejected when its selected
 command has no corresponding typed run variant.
+
+## JSON Output Contract
+
+Every Litex CLI response is JSON. Batch commands write one JSON document;
+interactive commands write JSON Lines, with one complete JSON object per
+event. Litex never prints a bare help string, version string, generated source,
+graph, or handled error to stdout.
+
+The intentionally small common envelope is:
+
+```json
+{
+  "kind": "run",
+  "ok": true
+}
+```
+
+`kind` selects the command-family payload and `ok` reports whether that
+operation succeeded. There is no `schema`, `program`, or `warnings` field.
+The top-level kinds are deliberately few:
+
+| `kind` | Commands |
+|--------|----------|
+| `help` | `litex -help` |
+| `version` | `litex -version` |
+| `run` | `litex -e`, `litex -f`, and `litex -r` |
+| `artifact` | graph, LaTeX, Python, C, and Lean commands |
+| `stream` | verifier REPL, LaTeX REPL, and framed session events |
+| `cli_error` | unknown options, extra arguments, and unsupported combinations |
+
+Handled errors use an `error` object. Its discriminator is also named `kind`,
+not `code` or `error_type`:
+
+```json
+{
+  "kind": "cli_error",
+  "ok": false,
+  "message": "unsupported CLI command combination"
+}
+```
+
+For batch commands, exit status `0` means success, `1` means a recognized run
+or artifact command failed, and `2` means the command line itself was invalid.
+The JSON `ok` field is the primary machine-readable result and agrees with
+these statuses. Interactive processes report individual operation failures in
+their stream events and may continue running.
 
 ## Value Rules
 
@@ -479,79 +293,82 @@ disk, disappears when the process exits, and never becomes a Litex statement
 or statement Result. For reproducible source, declare the dependency in the
 real project manifest.
 
-For `-e`, `-f`, and `-r`, Litex prints statement-by-statement JSON output. A
-successful run prints one success object per statement. A failed run prints the
-successful prefix in the selected success style followed by a detailed error
-object.
+For `-e`, `-f`, and `-r`, Litex emits one `run` object. The main payload is the
+`statement_results` array. `target` is `eval`, `file`, or `repository`; `path`
+is null for inline source and contains the requested path for file and
+repository targets. `error` is null on success.
 
-With `-summarize`, Litex appends one final JSON object whose `output_type` is
-`"run summary"`. The ordinary statement output before that object is unchanged.
-The summary reports top-level and expanded statement counts, fact/prop/theorem
-definition counts, proof-block and `by` counts, direct `trust` statements,
-`trust have` assumptions, axioms, abstract interfaces, and stack/runner
-warnings. These are direct statement counts; the runtime does not classify
-theorems or derived facts by transitive trust dependency. It also includes
-`statement_type_counts`, `output_type_counts`, and a `statements` array with
-line numbers and rendered statement text for editor-side cursor selection.
-Only successfully committed statements contribute to these counts. A failed
-atomic `trust` or `trust have` remains visible in the error object, but its
-staged facts, bindings, and inference do not appear in the environment summary
-or graph artifacts. An earlier, separately successful statement remains part
-of the successful prefix.
+With `-summarize`, the same object gains a `summary` field. The summary reports
+top-level and expanded statement counts, definition and proof counts, trust
+boundaries, abstract interfaces, statement categories, and source locations.
+Only successfully committed statements contribute. Nothing is appended after
+the `run` object.
 Prefer:
 
 ```bash
 litex -summarize -isolated -f examples/tmp.lit
 ```
 
-Ordinary verifier commands are designed for interactive inspection. Programs
-should read the JSON result instead of relying only on the process exit code.
-The CLI does not add a second wrapper command around that statement stream.
+Ordinary verifier commands are designed for both inspection and automation.
+Programs should read `ok`, `statement_results`, and `error`; the exit status is
+also nonzero for a failed run.
 
-### Statement Output Examples
+### Run Output Examples
 
-A successful statement object has `"result": "success"`. The normal reading
-view includes its direct proof route when one is available:
+A successful inline run has this outer shape. Statement results contain the
+detailed verifier-owned proof and execution data; the example abbreviates one
+result for readability:
 
 ```json
 {
-  "result": "success",
-  "type": "equality fact",
-  "line": 1,
-  "statement": "1 + 1 = 2",
-  "why_verified": {
-    "type": "builtin rule",
-    "rule": "calculation"
-  }
+  "kind": "run",
+  "ok": true,
+  "target": "eval",
+  "path": null,
+  "statement_results": [
+    {
+      "outcome": "success",
+      "result": {
+        "kind": "Fact",
+        "statement": "1 + 1 = 2"
+      }
+    }
+  ],
+  "error": null
 }
 ```
 
-If an error occurs, the most useful fields are usually `error_type`, `message`,
-`statement`, and `previous_error`. The exact output may differ by version:
+If verification fails, the successful prefix remains in `statement_results`
+and `error` contains the detailed failure. The most useful error fields are
+usually `kind`, `message`, `line`, `statement`, and `previous_error`:
 
 ```json
 {
-  "error_type": "VerifyError",
-  "result": "error",
-  "line": 1,
-  "message": "verification failed",
-  "type": "equality fact",
-  "statement": "1 = 0",
-  "previous_error": {
-    "error_type": "UnknownError",
-    "result": "error",
+  "kind": "run",
+  "ok": false,
+  "target": "eval",
+  "path": null,
+  "statement_results": [],
+  "error": {
+    "kind": "verify_error",
     "line": 1,
-    "message": "unknown result",
-    "type": "equality fact",
+    "message": "verification failed",
     "statement": "1 = 0",
-    "failed_goal": "1 = 0"
+    "previous_error": {
+      "kind": "unknown_error",
+      "line": 1,
+      "message": "unknown result",
+      "statement": "1 = 0",
+      "failed_goal": "1 = 0"
+    }
   }
 }
 ```
 
-Programs should inspect the emitted statement JSON rather than infer verifier
-success from an ordinary command's process status. CLI usage errors, including
-unsupported command combinations and extra arguments, exit with code `2`.
+A successfully verified `litex -isolated -f <file>` continues into a REPL. For
+that transitioning command, the initial `run` object is emitted as one compact
+JSON line and is followed by `stream` JSON lines. A failed isolated file emits
+one ordinary `run` object and does not start the REPL.
 
 ## Session Command
 
@@ -564,9 +381,9 @@ disables that project context.
 ordinary registered-file `-f` command. If the prefix verifies, the process
 emits `ready` and accepts later blocks in the same Runtime, so definitions and
 facts from the prefix are already available. If the prefix fails, the process
-emits `startup_error` with the verifier trace and does not enter the session
-loop. `litex -isolated -session -f <file>` provides the analogous behavior for
-an intentionally standalone file.
+emits `startup_error` with `statement_results` and an `error` object, then does
+not enter the session loop. `litex -isolated -session -f <file>` provides the
+analogous behavior for an intentionally standalone file.
 
 The session writes one JSON object per event and accepts these stdin frames:
 
@@ -577,17 +394,24 @@ close
 ```
 
 `run` executes exactly one arbitrary, including multiline, source block in the
-same persistent Runtime. `artifacts` returns the accumulated summary, relation
-graph, and fact graph, including a successful preloaded prefix. The event
-values are `ready`, `startup_error`, `block`, `artifacts`, `skipped`, and
-`protocol_error`; textual verifier output is returned in the JSON-string
-`trace` field so a client never has to parse terminal prompts.
+same persistent Runtime. `artifacts` returns the accumulated summary, result
+graph, fact graph, and definition graph, including a successful preloaded
+prefix. Every response uses the same shallow stream envelope:
+
+```json
+{"kind":"stream","ok":true,"stream":"session","event":"result","id":"example-1","statement_results":[],"content":null,"error":null}
+```
+
+The event values are `ready`, `startup_error`, `result`, `artifacts`,
+`artifacts_unavailable`, `skipped`, `protocol_error`, and `closed`. Structured
+verifier results are values in `statement_results` and `error`; they are not
+escaped into a `trace` string.
 
 Session `run` frames are Litex source, not terminal input. They reject
 `import`, and the protocol intentionally defines no separate import frame;
 dependencies for a session come from its `litex.config` preload.
 
-A parsed top-level `try:` block always returns a `block` event with `ok: true`.
+A parsed top-level `try:` block always returns a `result` event with `ok: true`.
 Its statement result reports whether the isolated body was `Committed` or
 `RolledBack`; a rollback keeps its diagnostic but publishes no environment
 changes. The client may submit another `run` frame, and `artifacts` remains
@@ -649,8 +473,11 @@ proof node. The wrapper includes a `summary`, machine-readable `nodes` and
 Its target metadata follows the runner contract: `kind` is always present and
 `path` appears only under `-detail`. The fact graph uses contract version 0.2,
 and the definition graph uses contract version 0.3.
-If the final `<json>` path is omitted, Litex prints the graph JSON to stdout for
-quick debugging. In this repository, generated graph JSON, Mermaid, SVG, or PNG
+If the final `<json>` path is omitted, Litex returns an `artifact` object whose
+`content` is the graph JSON object. If a path is supplied, Litex writes the raw
+graph JSON to that file and returns an `artifact` object with `output_path` set
+and `content` null. The graph is never encoded as a JSON string inside the
+wrapper. In this repository, generated graph JSON, Mermaid, SVG, or PNG
 artifacts should be written under `tmp/graphs/`; `tmp/` is ignored by git.
 
 `-factgraph` is the preview proof-flow view. It deliberately omits `prop`,
@@ -664,7 +491,7 @@ theorem without mixing it with the definition graph.
 
 `-defgraph` inventories definitions from the final Runtime environment and
 records their dependency and provenance edges. Like the other graph commands,
-it prints JSON to stdout when the final output path is omitted.
+it returns the graph under the artifact envelope when no output path is given.
 
 ## LaTeX Commands
 
@@ -678,9 +505,11 @@ it prints JSON to stdout when the final output path is omitted.
 After `-latex`, the only accepted target selectors are `-e`, `-f`, and `-r`.
 If no selector follows `-latex`, Litex starts the interactive LaTeX REPL.
 
-The LaTeX path is a compile/pretty-print path, not the same JSON proof trace as
-the verifier commands. If LaTeX compilation hits a Litex error, the CLI prints a
-JSON error object.
+The LaTeX path is a compile/pretty-print path, not the same proof trace as the
+verifier commands. Batch commands return an `artifact` object with
+`artifact: "rendered_source"`, `format: "latex"`, and the generated text in
+`content`. Failures set `ok` to false, `content` to null, and populate `error`.
+The interactive LaTeX REPL emits `stream` JSON lines.
 
 ## Executable Code Extraction Commands
 
@@ -704,14 +533,28 @@ translation unit remains valid C. Neither target proves IEEE-754 behavior.
 Inline source follows the extraction flag directly; `-e` is not accepted.
 The retired `-python` command is not a compatibility alias.
 
+Extraction returns an `artifact` object with `artifact: "extracted_code"`,
+`format: "python"` or `"c"`, and the generated source in `content`. The Lean
+compiler similarly returns `artifact: "compiled_source"`, `format: "lean"`,
+and its written file in `output_path`.
+
 ## Information Commands
 
 | Command | Behavior |
 |---------|----------|
-| `litex -help` | Print help and exit. |
-| `litex -version` | Print the installed Litex kernel version and exit. |
+| `litex -help` | Return `{"kind":"help","ok":true,"entries":[...]}` and exit. |
+| `litex -version` | Return `{"kind":"version","ok":true,"version":"..."}` and exit. |
 
-Unknown commands print an error and the help message, then exit with code `2`.
+Unknown commands return one `cli_error` object and exit with code `2`. They do
+not append help text. For example, `litex -j` returns:
+
+```json
+{
+  "kind": "cli_error",
+  "ok": false,
+  "message": "unsupported CLI command combination"
+}
+```
 
 ## Project Modules
 

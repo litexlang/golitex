@@ -85,14 +85,15 @@ fn project_session_keeps_previous_blocks() {
     .expect("session must run");
 
     let output = String::from_utf8(stdout_writer).expect("UTF-8 output");
-    assert!(output.contains("\"event\":\"ready\",\"mode\":\"project\""));
-    assert!(output.contains("\"id\":\"definition\",\"ok\":true"));
-    assert!(output.contains("\"id\":\"proof\",\"ok\":true"));
+    assert!(output.contains("\"event\":\"ready\""));
+    assert!(output.contains("\"content\":{\"mode\":\"project\"}"));
+    assert!(output.contains("\"event\":\"result\",\"id\":\"definition\""));
+    assert!(output.contains("\"event\":\"result\",\"id\":\"proof\""));
     assert!(output.contains("y = 2"));
     assert!(output.contains("\"event\":\"artifacts\",\"id\":\"final\""));
     assert!(output.contains("litex-fact-graph"));
     assert!(output.contains("litex-definition-graph"));
-    assert!(output.contains("\\\"kind\\\": \\\"session\\\""));
+    assert!(output.contains("\"kind\":\"session\""));
     assert!(output.contains("session"), "{output}");
     assert!(!output.contains("<session>"), "{output}");
 
@@ -133,8 +134,9 @@ fn project_file_session_preloads_registered_prefix() {
     .expect("session must run");
 
     let output = String::from_utf8(stdout_writer).expect("UTF-8 output");
-    assert!(output.contains("\"event\":\"ready\",\"mode\":\"project\""));
-    assert!(output.contains("\"id\":\"use_prefix\",\"ok\":true"));
+    assert!(output.contains("\"event\":\"ready\""));
+    assert!(output.contains("\"content\":{\"mode\":\"project\"}"));
+    assert!(output.contains("\"event\":\"result\",\"id\":\"use_prefix\""));
     assert!(output.contains("before::planned_value = 9"));
     assert!(output.contains("\"event\":\"artifacts\",\"id\":\"final\""));
     assert!(!output.contains("1 = 0"));
@@ -172,7 +174,7 @@ fn project_file_session_reports_a_failing_prefix_before_ready() {
 
     let output = String::from_utf8(stdout_writer).expect("UTF-8 output");
     assert!(output.contains("\"event\":\"startup_error\""));
-    assert!(output.contains("\"trace\""));
+    assert!(output.contains("\"kind\":\"verify_error\""));
     assert!(output.contains("1 = 0"));
     assert!(!output.contains("\"event\":\"ready\""));
 
@@ -202,8 +204,9 @@ fn explicit_isolated_session_ignores_a_broken_current_directory_project() {
     .expect("isolated session must bypass project discovery");
 
     let output = String::from_utf8(stdout_writer).expect("UTF-8 output");
-    assert!(output.contains("\"event\":\"ready\",\"mode\":\"isolated\""));
-    assert!(output.contains("\"id\":\"proof\",\"ok\":true"));
+    assert!(output.contains("\"event\":\"ready\""));
+    assert!(output.contains("\"content\":{\"mode\":\"isolated\"}"));
+    assert!(output.contains("\"event\":\"result\",\"id\":\"proof\""));
 
     let _ = fs::remove_dir_all(&root);
 }
@@ -232,8 +235,9 @@ fn isolated_file_session_preloads_the_standalone_file() {
     .expect("isolated file session must run");
 
     let output = String::from_utf8(stdout_writer).expect("UTF-8 output");
-    assert!(output.contains("\"event\":\"ready\",\"mode\":\"isolated\""));
-    assert!(output.contains("\"id\":\"use_file\",\"ok\":true"));
+    assert!(output.contains("\"event\":\"ready\""));
+    assert!(output.contains("\"content\":{\"mode\":\"isolated\"}"));
+    assert!(output.contains("\"event\":\"result\",\"id\":\"use_file\""));
 
     let _ = fs::remove_dir_all(&root);
 }
@@ -260,7 +264,7 @@ fn session_accepts_a_multiline_code_block() {
     .expect("session must run");
 
     let output = String::from_utf8(stdout_writer).expect("UTF-8 output");
-    assert!(output.contains("\"id\":\"block\",\"ok\":true"));
+    assert!(output.contains("\"event\":\"result\",\"id\":\"block\""));
     assert!(!output.contains("block header missing body"));
 
     let _ = fs::remove_dir_all(&root);
@@ -276,7 +280,8 @@ fn session_run_frames_do_not_dispatch_terminal_import_commands() {
     let output = run_isolated_session("source-only-import-boundary", input);
 
     assert!(
-        output.contains("\"id\":\"import\",\"ok\":false"),
+        output
+            .contains("\"ok\":false,\"stream\":\"session\",\"event\":\"result\",\"id\":\"import\""),
         "{output}"
     );
     assert!(
@@ -299,7 +304,9 @@ fn session_stops_when_try_source_never_forms_an_ast() {
     );
     let output = run_isolated_session("failed-try-parse", input);
 
-    assert!(output.contains("\"id\":\"failed_try\",\"ok\":false"));
+    assert!(output.contains(
+        "\"ok\":false,\"stream\":\"session\",\"event\":\"result\",\"id\":\"failed_try\""
+    ));
     assert!(output.contains("\"event\":\"skipped\",\"id\":\"next\""));
     assert!(output.contains("\"event\":\"artifacts_unavailable\",\"id\":\"final\""));
 }
@@ -316,7 +323,9 @@ fn session_stops_when_try_source_cannot_be_tokenized() {
     );
     let output = run_isolated_session("failed-try-block-tokenization", input);
 
-    assert!(output.contains("\"id\":\"failed_try\",\"ok\":false"));
+    assert!(output.contains(
+        "\"ok\":false,\"stream\":\"session\",\"event\":\"result\",\"id\":\"failed_try\""
+    ));
     assert!(output.contains("\"event\":\"skipped\",\"id\":\"next\""));
 }
 
@@ -329,9 +338,10 @@ fn session_continues_after_a_try_rolls_back() {
     );
     let output = run_isolated_session("failed-try-execution", input);
 
-    assert!(output.contains("\"id\":\"failed_try\",\"ok\":true"));
-    assert!(output.contains("\\\"kind\\\": \\\"RolledBack\\\""));
-    assert!(output.contains("\"id\":\"next\",\"ok\":true"));
+    assert!(output
+        .contains("\"ok\":true,\"stream\":\"session\",\"event\":\"result\",\"id\":\"failed_try\""));
+    assert!(output.contains("\"kind\":\"RolledBack\""));
+    assert!(output.contains("\"event\":\"result\",\"id\":\"next\""));
     assert!(output.contains("\"event\":\"artifacts\",\"id\":\"final\""));
     assert!(!output.contains("\"event\":\"skipped\""));
 }
@@ -345,9 +355,10 @@ fn session_stops_after_failed_non_try_statement() {
     );
     let output = run_isolated_session("failed-non-try", input);
 
-    assert!(output.contains("\"id\":\"failed\",\"ok\":false"));
     assert!(output
-        .contains("\"event\":\"skipped\",\"id\":\"next\",\"error\":\"an earlier block failed\""));
+        .contains("\"ok\":false,\"stream\":\"session\",\"event\":\"result\",\"id\":\"failed\""));
+    assert!(output.contains("\"event\":\"skipped\",\"id\":\"next\""));
+    assert!(output.contains("\"kind\":\"earlier_block_failed\""));
     assert!(output.contains("\"event\":\"artifacts_unavailable\",\"id\":\"final\""));
 }
 
@@ -363,9 +374,11 @@ fn nested_try_does_not_make_outer_statement_recoverable() {
     );
     let output = run_isolated_session("nested-failed-try", input);
 
-    assert!(output.contains("\"id\":\"failed_claim\",\"ok\":false"));
-    assert!(output
-        .contains("\"event\":\"skipped\",\"id\":\"next\",\"error\":\"an earlier block failed\""));
+    assert!(output.contains(
+        "\"ok\":false,\"stream\":\"session\",\"event\":\"result\",\"id\":\"failed_claim\""
+    ));
+    assert!(output.contains("\"event\":\"skipped\",\"id\":\"next\""));
+    assert!(output.contains("\"kind\":\"earlier_block_failed\""));
 }
 
 #[test]
@@ -393,12 +406,12 @@ fn rolled_back_try_output_is_detailed_in_every_style() {
             .expect("session should emit the rolled-back try event")
             .to_string();
         assert!(rollback_event.contains("\"ok\":true"));
-        assert!(rollback_event.contains("\\\"kind\\\": \\\"RolledBack\\\""));
-        assert!(rollback_event.contains("\\\"phases\\\": {"));
-        assert!(rollback_event.contains("\\\"previous_error\\\":"));
-        assert!(rollback_event.contains("\\\"failed_goal\\\": \\\"1 = 0\\\""));
-        assert!(rollback_event.contains("\\\"unknown_result\\\":"));
-        assert!(output.contains("\"id\":\"next\",\"ok\":true"));
+        assert!(rollback_event.contains("\"kind\":\"RolledBack\""));
+        assert!(rollback_event.contains("\"phases\":{"));
+        assert!(rollback_event.contains("\"previous_error\":"));
+        assert!(rollback_event.contains("\"failed_goal\":\"1 = 0\""));
+        assert!(rollback_event.contains("\"unknown_result\":"));
+        assert!(output.contains("\"event\":\"result\",\"id\":\"next\""));
         assert!(!output.contains("\"event\":\"skipped\""));
         rollback_events.push(rollback_event);
     }

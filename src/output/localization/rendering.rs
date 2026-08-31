@@ -18,7 +18,10 @@ fn localize_json_value_for_language(
 }
 
 pub fn localize_json_key(output_language: OutputLanguage, key: &str) -> String {
-    key_translation(output_language, key).unwrap_or_else(|| key.to_string())
+    // JSON field names are part of the machine contract and must not change
+    // with the language selected for human-readable messages and labels.
+    let _legacy_translation = key_translation(output_language, key);
+    key.to_string()
 }
 
 fn localize_json_value_for_key(
@@ -53,6 +56,7 @@ fn localize_json_value_for_key(
             }
             JsonValue::Object(localized_fields)
         }
+        JsonValue::RawJson(_) => value,
         JsonValue::Null | JsonValue::Bool(_) | JsonValue::Number(_) => value,
     }
 }

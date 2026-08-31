@@ -2,8 +2,6 @@
 
 use super::*;
 
-pub(super) const SCHEMA: &str = "litex.statement-result.v2";
-
 /// Deterministic structural JSON for the recursive runtime result.
 ///
 /// This visitor reads the result only. It does not query `Runtime`, infer a

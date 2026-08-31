@@ -99,4 +99,21 @@ impl RuntimeError {
             RuntimeError::InstantiateError(_) => "InstantiateError",
         }
     }
+
+    pub fn json_kind(&self) -> &'static str {
+        match self {
+            RuntimeError::ArithmeticError(_) => "arithmetic_error",
+            RuntimeError::NewFactError(_) => "new_fact_error",
+            RuntimeError::StoreFactError(_) => "store_fact_error",
+            RuntimeError::ParseError(_) => "parse_error",
+            RuntimeError::ExecStmtError(_) => "exec_stmt_error",
+            RuntimeError::WellDefinedError(_) => "well_defined_error",
+            RuntimeError::VerifyError(_) => "verify_error",
+            RuntimeError::UnknownError(_) => "unknown_error",
+            RuntimeError::InferError(_) => "infer_error",
+            RuntimeError::NameAlreadyUsedError(_) => "name_already_used_error",
+            RuntimeError::DefineParamsError(_) => "define_params_error",
+            RuntimeError::InstantiateError(_) => "instantiate_error",
+        }
+    }
 }

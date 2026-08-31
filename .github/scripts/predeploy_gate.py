@@ -614,7 +614,7 @@ def file_result_from_completed(
             source_path=source_path,
             line=line,
             statement=statement,
-            message=f"invalid result-graph JSON ({exit_description}): {error}",
+            message=f"invalid result-graph artifact JSON ({exit_description}): {error}",
             output=diagnostic_tail(stdout, stderr),
         )
 
@@ -636,7 +636,8 @@ def file_result_from_completed(
             wall_seconds=wall_seconds,
         )
 
-    diagnostic = envelope.get("error", "")
+    graph_error = envelope["error"]
+    diagnostic = graph_error.get("error", "")
     source_path, line, statement, message = trace_diagnostic(diagnostic)
     return FileResult(
         textbook_file=textbook_file,
@@ -657,24 +658,46 @@ def file_result_from_completed(
 
 def result_graph_contract_error(envelope: object, returncode: int) -> str | None:
     if not isinstance(envelope, dict):
-        return "result-graph output is not an object"
-    if envelope.get("graph") != "litex-result-graph":
-        return "graph is not litex-result-graph"
-    if envelope.get("graph_version") != RESULT_GRAPH_VERSION:
-        return f"unexpected graph_version={envelope.get('graph_version')!r}"
+        return "result-graph artifact output is not an object"
+    if envelope.get("kind") != "artifact":
+        return "result-graph output kind is not artifact"
+    if envelope.get("artifact") != "result_graph":
+        return "artifact is not result_graph"
+    if envelope.get("format") != "json":
+        return "result-graph artifact format is not json"
+    if envelope.get("target") != "file":
+        return "result-graph artifact target is not file"
+    if not isinstance(envelope.get("path"), str):
+        return "result-graph artifact path is not a string"
+    if envelope.get("output_path") is not None:
+        return "result-graph artifact unexpectedly has an output_path"
     ok = envelope.get("ok")
     if not isinstance(ok, bool):
-        return "result-graph ok is not boolean"
-    expected_result = "success" if ok else "error"
+        return "result-graph artifact ok is not boolean"
     expected_returncode = 0 if ok else 1
-    if envelope.get("result") != expected_result:
-        return f"result-graph result disagrees with ok={ok!r}"
     if returncode != expected_returncode:
         return f"exit={returncode} disagrees with ok={ok!r}"
-    target = envelope.get("target")
+    graph = envelope.get("content") if ok else envelope.get("error")
+    empty_side = envelope.get("error") if ok else envelope.get("content")
+    if empty_side is not None:
+        field = "error" if ok else "content"
+        return f"successful/failed result-graph artifact has non-null {field}"
+    if not isinstance(graph, dict):
+        field = "content" if ok else "error"
+        return f"result-graph artifact {field} is not an object"
+    if graph.get("graph") != "litex-result-graph":
+        return "graph is not litex-result-graph"
+    if graph.get("graph_version") != RESULT_GRAPH_VERSION:
+        return f"unexpected graph_version={graph.get('graph_version')!r}"
+    if graph.get("ok") is not ok:
+        return "result-graph payload ok disagrees with artifact ok"
+    expected_result = "success" if ok else "error"
+    if graph.get("result") != expected_result:
+        return f"result-graph result disagrees with ok={ok!r}"
+    target = graph.get("target")
     if not isinstance(target, dict) or target.get("kind") != "file":
         return "result-graph target kind is not file"
-    if envelope.get("error") is not None and not isinstance(envelope.get("error"), str):
+    if graph.get("error") is not None and not isinstance(graph.get("error"), str):
         return "result-graph error is neither null nor a string"
     return None
 

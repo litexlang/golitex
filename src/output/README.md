@@ -4,7 +4,6 @@ For `1 + 1 = 2`, statement-result JSON v2 reports `"outcome": "success"` and kee
 
 ```json
 {
-  "schema": "litex.statement-result.v2",
   "outcome": "success",
   "result": {
     "kind": "Fact",
@@ -21,7 +20,7 @@ For `1 + 1 = 2`, statement-result JSON v2 reports `"outcome": "success"` and kee
 | `1 + 1 = 2` | Emits the statement, proof, well-definedness, store, inference, and phase fields. |
 | `-compact -e '1 = 1'` | Reduces success display while retaining full error diagnostics. |
 | `-detail -e '1 = 1'` | Includes detailed audit fields and raw source paths. |
-| `-lang zh -e '1 = 2'` | Localizes error keys and text; for example, `VerifyError` becomes `验证错误`. |
+| `-lang zh -e '1 = 2'` | Keeps machine keys stable and localizes human-readable messages and labels. |
 | Two references to one shared proof Result | Use `$id`/`$ref` rather than flattening two copies. |
 
 Start with [`result_json_v2/renderer/model.rs`](result_json_v2/renderer/model.rs)
@@ -32,7 +31,7 @@ those files; for example, fact verification, object well-definedness, proof
 blocks, and theorem statements do not share one catch-all implementation file.
 The stateless encoders live in
 [`result_json_v2/helpers.rs`](result_json_v2/helpers.rs), and the black-box
-schema regressions live in
+structural JSON regressions live in
 [`tests/integration/result_json_v2.rs`](../../tests/integration/result_json_v2.rs).
 
 Localization follows the same boundary:

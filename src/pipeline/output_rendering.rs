@@ -1,7 +1,9 @@
 use crate::error::RuntimeError;
 use crate::object::strip_free_param_numeric_tags_in_display;
-use crate::output::json_value::{render_json_value, JsonValue};
-use crate::output::{display_runtime_error_json, display_stmt_exec_result_json};
+use crate::output::json_value::{render_json_value_compact, JsonValue};
+use crate::output::{
+    display_runtime_error_json, display_stmt_exec_result_json, display_stmt_result_json_v2,
+};
 use crate::result::StmtResult;
 use crate::runtime::Runtime;
 
@@ -26,58 +28,48 @@ pub fn render_run_output(
         output_text.push('\n');
     }
 
-    if ok && !runtime.unverified_imports().is_empty() {
-        output_text.push('\n');
-        output_text.push_str(unverified_import_warning_json(runtime).as_str());
-        output_text.push('\n');
-    }
-
     let output_text = strip_free_param_numeric_tags_in_display(&output_text);
 
     (ok, output_text)
 }
 
-fn unverified_import_warning_json(runtime: &Runtime) -> String {
-    let imports = runtime
-        .unverified_imports()
+pub fn render_stream_output(
+    stream: &str,
+    event: &str,
+    ok: bool,
+    id: Option<&str>,
+    statement_results: &[StmtResult],
+    content: JsonValue,
+    error: JsonValue,
+) -> String {
+    let statement_results = statement_results
         .iter()
-        .map(|entry| {
-            JsonValue::Object(vec![
-                (
-                    "kind".to_string(),
-                    JsonValue::JsonString(entry.kind.clone()),
-                ),
-                (
-                    "name".to_string(),
-                    JsonValue::JsonString(entry.name.clone()),
-                ),
-                ("line".to_string(), JsonValue::Number(entry.line_file.0)),
-                (
-                    "file".to_string(),
-                    JsonValue::JsonString(entry.line_file.1.to_string()),
-                ),
-            ])
-        })
-        .collect();
-    render_json_value(
-        &JsonValue::Object(vec![
-            (
-                "result".to_string(),
-                JsonValue::JsonString("success".to_string()),
-            ),
-            (
-                "type".to_string(),
-                JsonValue::JsonString("unverified import warning".to_string()),
-            ),
-            (
-                "message".to_string(),
-                JsonValue::JsonString(
-                    "configured imports, terminal imports, and -f prefix exports are trusted by default for faster runs; rerun with -strict to verify loaded dependencies"
-                        .to_string(),
-                ),
-            ),
-            ("unverified_imports".to_string(), JsonValue::Array(imports)),
-        ]),
-        0,
-    )
+        .map(|result| JsonValue::RawJson(display_stmt_result_json_v2(result)))
+        .collect::<Vec<_>>();
+    render_json_value_compact(&JsonValue::Object(vec![
+        (
+            "kind".to_string(),
+            JsonValue::JsonString("stream".to_string()),
+        ),
+        ("ok".to_string(), JsonValue::Bool(ok)),
+        (
+            "stream".to_string(),
+            JsonValue::JsonString(stream.to_string()),
+        ),
+        (
+            "event".to_string(),
+            JsonValue::JsonString(event.to_string()),
+        ),
+        (
+            "id".to_string(),
+            id.map(|id| JsonValue::JsonString(id.to_string()))
+                .unwrap_or(JsonValue::Null),
+        ),
+        (
+            "statement_results".to_string(),
+            JsonValue::Array(statement_results),
+        ),
+        ("content".to_string(), content),
+        ("error".to_string(), error),
+    ]))
 }

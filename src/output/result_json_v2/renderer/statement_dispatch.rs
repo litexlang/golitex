@@ -6,12 +6,10 @@ impl StmtResultJsonV2 {
     pub(in super::super) fn stmt_result(&mut self, result: &StmtResult) -> JsonValue {
         match result {
             StmtResult::Success(success) => object(vec![
-                string_field("schema", SCHEMA),
                 string_field("outcome", "success"),
                 ("result".to_string(), self.success_stmt(success)),
             ]),
             StmtResult::Unknown(unknown) => object(vec![
-                string_field("schema", SCHEMA),
                 string_field("outcome", "unknown"),
                 ("result".to_string(), self.unknown_stmt(unknown)),
             ]),

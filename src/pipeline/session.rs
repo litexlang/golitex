@@ -34,8 +34,11 @@ pub fn run_session(request: SessionRequest) {
             let _ = write_session_event(
                 &mut stdout_locked,
                 "startup_error",
+                false,
                 None,
-                &[('e', error.to_string())],
+                &[],
+                JsonValue::Null,
+                session_error("current_directory_error", error.to_string().as_str()),
             );
             return;
         }
@@ -48,7 +51,18 @@ pub fn run_session(request: SessionRequest) {
         options,
         target,
     ) {
-        eprintln!("session output error: {}", error);
+        eprintln!(
+            "{}",
+            render_stream_output(
+                "session",
+                "output_error",
+                false,
+                None,
+                &[],
+                JsonValue::Null,
+                session_error("io_error", error.to_string().as_str()),
+            )
+        );
     }
 }
 
@@ -66,13 +80,14 @@ fn run_session_loop_with_readers_and_target(
             Ok(startup) => startup,
             Err((stmt_results, error)) => {
                 let error_json = display_runtime_error_json(&runtime, &error, true);
-                let runtime_error = Some(error);
-                let (_, trace) = render_run_output(&runtime, &stmt_results, &runtime_error);
                 write_session_event(
                     stdout_writer,
                     "startup_error",
+                    false,
                     None,
-                    &[('e', error_json), ('t', trace.trim().to_string())],
+                    stmt_results.as_slice(),
+                    JsonValue::Null,
+                    JsonValue::RawJson(error_json),
                 )?;
                 return Ok(());
             }
@@ -80,8 +95,14 @@ fn run_session_loop_with_readers_and_target(
     write_session_event(
         stdout_writer,
         "ready",
+        true,
         None,
-        &[('m', startup_mode.to_string())],
+        &[],
+        JsonValue::Object(vec![(
+            "mode".to_string(),
+            JsonValue::JsonString(startup_mode.to_string()),
+        )]),
+        JsonValue::Null,
     )?;
 
     let mut has_failed = false;
@@ -90,6 +111,15 @@ fn run_session_loop_with_readers_and_target(
     loop {
         header.clear();
         if stdin_reader.read_line(&mut header)? == 0 {
+            write_session_event(
+                stdout_writer,
+                "closed",
+                true,
+                None,
+                &[],
+                JsonValue::Null,
+                JsonValue::Null,
+            )?;
             return Ok(());
         }
         let header = header.trim_end_matches(['\n', '\r']);
@@ -108,8 +138,11 @@ fn run_session_loop_with_readers_and_target(
                     write_session_event(
                         stdout_writer,
                         "protocol_error",
+                        false,
                         if id.is_empty() { None } else { Some(id) },
-                        &[('e', "run requires: run <id> <utf8-byte-count>".to_string())],
+                        &[],
+                        JsonValue::Null,
+                        session_error("invalid_frame", "run requires: run <id> <utf8-byte-count>"),
                     )?;
                     continue;
                 }
@@ -118,8 +151,14 @@ fn run_session_loop_with_readers_and_target(
                     write_session_event(
                         stdout_writer,
                         "protocol_error",
+                        false,
                         Some(id),
-                        &[('e', format!("could not read source frame: {}", error))],
+                        &[],
+                        JsonValue::Null,
+                        session_error(
+                            "frame_read_error",
+                            format!("could not read source frame: {}", error).as_str(),
+                        ),
                     )?;
                     return Ok(());
                 }
@@ -129,8 +168,14 @@ fn run_session_loop_with_readers_and_target(
                         write_session_event(
                             stdout_writer,
                             "protocol_error",
+                            false,
                             Some(id),
-                            &[('e', format!("source frame must be UTF-8: {}", error))],
+                            &[],
+                            JsonValue::Null,
+                            session_error(
+                                "invalid_utf8",
+                                format!("source frame must be UTF-8: {}", error).as_str(),
+                            ),
                         )?;
                         continue;
                     }
@@ -140,8 +185,11 @@ fn run_session_loop_with_readers_and_target(
                     write_session_event(
                         stdout_writer,
                         "skipped",
+                        false,
                         Some(id),
-                        &[('e', "an earlier block failed".to_string())],
+                        &[],
+                        JsonValue::Null,
+                        session_error("earlier_block_failed", "an earlier block failed"),
                     )?;
                     continue;
                 }
@@ -150,35 +198,36 @@ fn run_session_loop_with_readers_and_target(
                     stmt_results: mut results,
                     runtime_error,
                 } = runtime.execute_source(source.replace('\r', "").as_str());
-                let (ok, trace) = render_run_output(&runtime, &results, &runtime_error);
-                all_results.append(&mut results);
+                let ok = runtime_error.is_none();
                 if !ok {
                     has_failed = true;
                 }
                 write_session_event(
                     stdout_writer,
-                    "block",
+                    "result",
+                    ok,
                     Some(id),
-                    &[
-                        (
-                            'o',
-                            if ok {
-                                "true".to_string()
-                            } else {
-                                "false".to_string()
-                            },
-                        ),
-                        ('t', trace.trim().to_string()),
-                    ],
+                    results.as_slice(),
+                    JsonValue::Null,
+                    runtime_error
+                        .as_ref()
+                        .map(|error| {
+                            JsonValue::RawJson(display_runtime_error_json(&runtime, error, true))
+                        })
+                        .unwrap_or(JsonValue::Null),
                 )?;
+                all_results.append(&mut results);
             }
             "artifacts" => {
                 if id.is_empty() || fields.next().is_some() {
                     write_session_event(
                         stdout_writer,
                         "protocol_error",
+                        false,
                         if id.is_empty() { None } else { Some(id) },
-                        &[('e', "artifacts requires: artifacts <id>".to_string())],
+                        &[],
+                        JsonValue::Null,
+                        session_error("invalid_frame", "artifacts requires: artifacts <id>"),
                     )?;
                     continue;
                 }
@@ -186,11 +235,14 @@ fn run_session_loop_with_readers_and_target(
                     write_session_event(
                         stdout_writer,
                         "artifacts_unavailable",
+                        false,
                         Some(id),
-                        &[(
-                            'e',
-                            "artifacts are unavailable after a failed block".to_string(),
-                        )],
+                        &[],
+                        JsonValue::Null,
+                        session_error(
+                            "earlier_block_failed",
+                            "artifacts are unavailable after a failed block",
+                        ),
                     )?;
                     continue;
                 }
@@ -228,22 +280,42 @@ fn run_session_loop_with_readers_and_target(
                 write_session_event(
                     stdout_writer,
                     "artifacts",
+                    true,
                     Some(id),
-                    &[
-                        ('s', summary),
-                        ('g', graph),
-                        ('f', fact_graph),
-                        ('d', definition_graph),
-                    ],
+                    &[],
+                    JsonValue::Object(vec![
+                        ("summary".to_string(), JsonValue::RawJson(summary)),
+                        ("graph".to_string(), JsonValue::RawJson(graph)),
+                        ("fact_graph".to_string(), JsonValue::RawJson(fact_graph)),
+                        (
+                            "definition_graph".to_string(),
+                            JsonValue::RawJson(definition_graph),
+                        ),
+                    ]),
+                    JsonValue::Null,
                 )?;
             }
-            "close" if id.is_empty() && fields.next().is_none() => return Ok(()),
+            "close" if id.is_empty() && fields.next().is_none() => {
+                write_session_event(
+                    stdout_writer,
+                    "closed",
+                    true,
+                    None,
+                    &[],
+                    JsonValue::Null,
+                    JsonValue::Null,
+                )?;
+                return Ok(());
+            }
             _ => {
                 write_session_event(
                     stdout_writer,
                     "protocol_error",
+                    false,
                     if id.is_empty() { None } else { Some(id) },
-                    &[('e', "expected run, artifacts, or close".to_string())],
+                    &[],
+                    JsonValue::Null,
+                    session_error("unknown_frame", "expected run, artifacts, or close"),
                 )?;
             }
         }
@@ -304,35 +376,27 @@ fn initialize_session_runtime(
 fn write_session_event(
     stdout_writer: &mut dyn Write,
     event: &str,
+    ok: bool,
     id: Option<&str>,
-    fields: &[(char, String)],
+    statement_results: &[StmtResult],
+    content: JsonValue,
+    error: JsonValue,
 ) -> io::Result<()> {
-    let mut output = format!("{{\"event\":{}}}", json_string(event));
-    output.pop();
-    if let Some(id) = id {
-        output.push_str(format!(",\"id\":{}", json_string(id)).as_str());
-    }
-    for (key, value) in fields {
-        match key {
-            'o' => output.push_str(format!(",\"ok\":{}", value).as_str()),
-            'm' => output.push_str(format!(",\"mode\":{}", json_string(value)).as_str()),
-            't' => output.push_str(format!(",\"trace\":{}", json_string(value)).as_str()),
-            's' => output.push_str(format!(",\"summary\":{}", json_string(value)).as_str()),
-            'g' => output.push_str(format!(",\"graph\":{}", json_string(value)).as_str()),
-            'f' => output.push_str(format!(",\"fact_graph\":{}", json_string(value)).as_str()),
-            'd' => {
-                output.push_str(format!(",\"definition_graph\":{}", json_string(value)).as_str())
-            }
-            'e' => output.push_str(format!(",\"error\":{}", json_string(value)).as_str()),
-            _ => {}
-        }
-    }
-    output.push('}');
-    writeln!(stdout_writer, "{}", output)
+    writeln!(
+        stdout_writer,
+        "{}",
+        render_stream_output("session", event, ok, id, statement_results, content, error,)
+    )
 }
 
-fn json_string(value: &str) -> String {
-    render_json_value(&JsonValue::JsonString(value.to_string()), 0)
+fn session_error(kind: &str, message: &str) -> JsonValue {
+    JsonValue::Object(vec![
+        ("kind".to_string(), JsonValue::JsonString(kind.to_string())),
+        (
+            "message".to_string(),
+            JsonValue::JsonString(message.to_string()),
+        ),
+    ])
 }
 
 #[cfg(test)]

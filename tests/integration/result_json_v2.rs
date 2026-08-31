@@ -90,7 +90,7 @@ fn numeric_fact_json_v2_retains_normalization_store_and_infer() {
     );
 
     let json = display_stmt_result_json_v2(&result);
-    assert!(json.contains("\"schema\": \"litex.statement-result.v2\""));
+    assert!(!json.contains("\"schema\":"));
     assert!(json.contains("\"kind\": \"Typed\""));
     assert!(json.contains("\"kind\": \"ClosedNumericMembership\""));
     assert!(json.contains("\"operator\": \"Add\""));

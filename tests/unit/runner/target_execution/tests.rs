@@ -37,8 +37,8 @@ fn runner_failure_returns_trace() {
 
     assert!(!ok, "runner unknown run should fail:\n{}", output);
     assert!(output.contains("\"result\": \"error\""));
-    assert!(output.contains("\\\"error_type\\\": \\\"VerifyError\\\""));
-    assert!(output.contains("\\\"error_type\\\": \\\"UnknownError\\\""));
+    assert!(output.contains("\\\"kind\\\": \\\"verify_error\\\""));
+    assert!(output.contains("\\\"kind\\\": \\\"unknown_error\\\""));
     assert!(output.contains("\\\"phases\\\": {"));
     assert!(output.contains("\\\"failed_goal\\\": \\\"1 = 0\\\""));
     assert!(output.contains("\\\"unknown_result\\\": {"));
@@ -52,7 +52,7 @@ fn runner_target_error_returns_message() {
     assert!(output.contains("\"target\": {\n    \"kind\": \"file\"\n  }"));
     assert!(!output.contains("\"label\""));
     assert!(output.contains("\"error\": null"));
-    assert!(output.contains("\\\"error_type\\\": \\\"ParseError\\\""));
+    assert!(output.contains("\\\"kind\\\": \\\"parse_error\\\""));
     assert!(output.contains("\\\"source_kind\\\": \\\"file\\\""));
     assert!(output.contains("does_not_exist.lit"));
     assert!(!output.contains("\"kind\": \"target_error\""));

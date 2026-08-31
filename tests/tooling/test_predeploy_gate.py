@@ -220,7 +220,7 @@ class PredeployGateTest(unittest.TestCase):
         )
         error_trace = json.dumps(
             {
-                "error_type": "VerifyError",
+                "kind": "verify_error",
                 "line": 42,
                 "path": "/repo/scripts/Book/textbook/chapter.lit",
                 "message": "verification failed",
@@ -230,12 +230,22 @@ class PredeployGateTest(unittest.TestCase):
         )
         envelope = json.dumps(
             {
-                "graph": "litex-result-graph",
-                "graph_version": "3",
-                "result": "error",
+                "kind": "artifact",
                 "ok": False,
-                "target": {"kind": "file"},
-                "error": successful_prefix + "\n\n" + error_trace,
+                "artifact": "result_graph",
+                "format": "json",
+                "target": "file",
+                "path": "/repo/scripts/Book/textbook/chapter.lit",
+                "output_path": None,
+                "content": None,
+                "error": {
+                    "graph": "litex-result-graph",
+                    "graph_version": "3",
+                    "result": "error",
+                    "ok": False,
+                    "target": {"kind": "file"},
+                    "error": successful_prefix + "\n\n" + error_trace,
+                },
             }
         )
 

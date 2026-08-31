@@ -20,11 +20,14 @@ fn unsupported_combinations_are_rejected_before_dispatch() {
             .expect("run Litex CLI");
 
         assert_eq!(output.status.code(), Some(2));
-        let stderr = String::from_utf8(output.stderr).expect("stderr is UTF-8");
+        let stdout = String::from_utf8(output.stdout).expect("stdout is UTF-8");
         assert!(
-            stderr.contains("unsupported CLI command combination"),
-            "{stderr}"
+            stdout.contains("\"kind\": \"cli_error\"")
+                && stdout.contains("\"ok\": false")
+                && stdout.contains("unsupported CLI command combination"),
+            "{stdout}"
         );
+        assert!(output.stderr.is_empty(), "CLI errors belong to stdout JSON");
     }
 }
 
@@ -37,6 +40,8 @@ fn strict_execute_uses_the_canonical_prefix_position() {
 
     assert!(output.status.success());
     let stdout = String::from_utf8(output.stdout).expect("stdout is UTF-8");
+    assert!(stdout.contains("\"kind\": \"run\""), "{stdout}");
+    assert!(stdout.contains("\"ok\": true"), "{stdout}");
     assert!(stdout.contains("\"outcome\": \"success\""), "{stdout}");
 }
 
@@ -55,11 +60,13 @@ fn retired_commands_are_no_longer_cli_combinations() {
             .expect("run Litex CLI");
 
         assert_eq!(output.status.code(), Some(2));
-        let stderr = String::from_utf8(output.stderr).expect("stderr is UTF-8");
+        let stdout = String::from_utf8(output.stdout).expect("stdout is UTF-8");
         assert!(
-            stderr.contains("unsupported CLI command combination"),
-            "{stderr}"
+            stdout.contains("\"kind\": \"cli_error\"")
+                && stdout.contains("unsupported CLI command combination"),
+            "{stdout}"
         );
+        assert!(output.stderr.is_empty(), "CLI errors belong to stdout JSON");
     }
 }
 
@@ -71,11 +78,13 @@ fn retired_session_before_target_is_rejected() {
         .expect("run Litex CLI");
 
     assert_eq!(output.status.code(), Some(2));
-    let stderr = String::from_utf8(output.stderr).expect("stderr is UTF-8");
+    let stdout = String::from_utf8(output.stdout).expect("stdout is UTF-8");
     assert!(
-        stderr.contains("unsupported CLI command combination"),
-        "{stderr}"
+        stdout.contains("\"kind\": \"cli_error\"")
+            && stdout.contains("unsupported CLI command combination"),
+        "{stdout}"
     );
+    assert!(output.stderr.is_empty(), "CLI errors belong to stdout JSON");
 }
 
 #[test]
@@ -87,6 +96,69 @@ fn eval_graph_uses_the_canonical_eval_source_label() {
 
     assert!(output.status.success());
     let stdout = String::from_utf8(output.stdout).expect("stdout is UTF-8");
+    assert!(stdout.contains("\"kind\": \"artifact\""), "{stdout}");
+    assert!(stdout.contains("\"artifact\": \"fact_graph\""), "{stdout}");
+    assert!(stdout.contains("\"content\": {"), "{stdout}");
     assert!(stdout.contains("fact:eval:1:1 = 1"), "{stdout}");
     assert!(!stdout.contains("<-e>"), "{stdout}");
+}
+
+#[test]
+fn help_version_and_unknown_option_use_minimal_json_envelopes() {
+    let help = Command::new(env!("CARGO_BIN_EXE_litex"))
+        .arg("-help")
+        .output()
+        .expect("run help");
+    assert!(help.status.success());
+    let help_stdout = String::from_utf8(help.stdout).expect("help stdout is UTF-8");
+    assert!(help_stdout.contains("\"kind\": \"help\""), "{help_stdout}");
+    assert!(help_stdout.contains("\"ok\": true"), "{help_stdout}");
+    assert!(help_stdout.contains("\"entries\": ["), "{help_stdout}");
+    assert!(help.stderr.is_empty());
+
+    let version = Command::new(env!("CARGO_BIN_EXE_litex"))
+        .arg("-version")
+        .output()
+        .expect("run version");
+    assert!(version.status.success());
+    let version_stdout = String::from_utf8(version.stdout).expect("version stdout is UTF-8");
+    assert!(
+        version_stdout.contains("\"kind\": \"version\"")
+            && version_stdout.contains("\"ok\": true")
+            && version_stdout.contains("\"version\":"),
+        "{version_stdout}"
+    );
+    assert!(version.stderr.is_empty());
+
+    let unknown = Command::new(env!("CARGO_BIN_EXE_litex"))
+        .arg("-j")
+        .output()
+        .expect("run unknown option");
+    assert_eq!(unknown.status.code(), Some(2));
+    let unknown_stdout = String::from_utf8(unknown.stdout).expect("error stdout is UTF-8");
+    assert!(
+        unknown_stdout.contains("\"kind\": \"cli_error\"")
+            && unknown_stdout.contains("\"ok\": false")
+            && unknown_stdout.contains("\"message\":"),
+        "{unknown_stdout}"
+    );
+    assert!(unknown.stderr.is_empty());
+}
+
+#[test]
+fn language_selection_keeps_machine_keys_stable() {
+    let output = Command::new(env!("CARGO_BIN_EXE_litex"))
+        .args(["-lang", "zh", "-e", "1 = 0"])
+        .output()
+        .expect("run localized verifier error");
+
+    assert_eq!(output.status.code(), Some(1));
+    let stdout = String::from_utf8(output.stdout).expect("stdout is UTF-8");
+    assert!(stdout.contains("\"kind\": \"run\""), "{stdout}");
+    assert!(stdout.contains("\"statement_results\": ["), "{stdout}");
+    assert!(stdout.contains("\"error\": {"), "{stdout}");
+    assert!(stdout.contains("\"kind\": \"verify_error\""), "{stdout}");
+    assert!(stdout.contains("\"previous_error\":"), "{stdout}");
+    assert!(!stdout.contains("\"错误\":"), "{stdout}");
+    assert!(output.stderr.is_empty());
 }

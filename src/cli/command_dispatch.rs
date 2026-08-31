@@ -1,9 +1,9 @@
 use super::command::{parse_cli_command, CliCommand};
 use super::command_handlers::{
-    print_or_save_graph_output, run_code_command, run_file_command, run_graph_command,
-    run_repository_command, VERSION,
+    run_code_command, run_file_command, run_graph_command, run_repository_command, VERSION,
 };
 use super::conversion_commands::{run_code_extraction_command, run_latex_command};
+use super::json_output::{render_cli_error, render_version};
 use super::lean_commands::run_lean_file_command;
 use super::messages::print_help_message;
 use crate::prelude::*;
@@ -15,42 +15,39 @@ pub fn run_cli() {
     let command = match parse_cli_command(&raw_args) {
         Ok(command) => command,
         Err(message) => {
-            eprintln!("{}", message);
-            print_help_message();
+            println!("{}", render_cli_error(message.as_str()));
             process::exit(2);
         }
     };
 
     match command {
         CliCommand::Repl(options) => run_repl(VERSION, options),
-        CliCommand::Help => {
-            print_help_message();
-            println!();
-            println!("If no options are provided, starts interactive REPL mode.");
+        CliCommand::Help => print_help_message(),
+        CliCommand::Version => println!("{}", render_version(VERSION)),
+        CliCommand::Execute { target, options } => {
+            let ok = match options.execution() {
+                ExecutionOption::Eval => run_code_command(target.as_str(), options),
+                ExecutionOption::File | ExecutionOption::IsolatedFile => {
+                    run_file_command(target.as_str(), options)
+                }
+                ExecutionOption::Repo => run_repository_command(target.as_str(), options),
+                ExecutionOption::Repl
+                | ExecutionOption::Session
+                | ExecutionOption::IsolatedSession => {
+                    unreachable!("execute command was resolved to a non-batch target")
+                }
+            };
+            if !ok {
+                process::exit(1);
+            }
         }
-        CliCommand::Version => println!("Litex Kernel: litex {}", VERSION),
-        CliCommand::Execute { target, options } => match options.execution() {
-            ExecutionOption::Eval => run_code_command(target.as_str(), options),
-            ExecutionOption::File | ExecutionOption::IsolatedFile => {
-                run_file_command(target.as_str(), options)
-            }
-            ExecutionOption::Repo => run_repository_command(target.as_str(), options),
-            ExecutionOption::Repl | ExecutionOption::Session | ExecutionOption::IsolatedSession => {
-                unreachable!("execute command was resolved to a non-batch target")
-            }
-        },
         CliCommand::Graph {
             kind,
             target,
             save_path,
             options,
         } => {
-            let (ok, output) = run_graph_command(kind, target.as_str(), options);
-            if let Err(message) = print_or_save_graph_output(kind, &output, save_path.as_deref()) {
-                eprintln!("{}", message);
-                process::exit(1);
-            }
-            if !ok {
+            if !run_graph_command(kind, target.as_str(), save_path.as_deref(), options) {
                 process::exit(1);
             }
         }
@@ -71,16 +68,28 @@ pub fn run_cli() {
             run_session(SessionRequest::new(options, target));
         }
         CliCommand::LatexRepl => run_latex_repl(VERSION),
-        CliCommand::Latex { target, options } => run_latex_command(target.as_str(), options),
+        CliCommand::Latex { target, options } => {
+            if !run_latex_command(target.as_str(), options) {
+                process::exit(1);
+            }
+        }
         CliCommand::Extract {
             kind,
             target,
             options,
-        } => run_code_extraction_command(target.as_str(), options, kind),
+        } => {
+            if !run_code_extraction_command(target.as_str(), options, kind) {
+                process::exit(1);
+            }
+        }
         CliCommand::Lean {
             input_path,
             output_path,
-        } => run_lean_file_command(input_path.as_str(), output_path.as_str()),
+        } => {
+            if !run_lean_file_command(input_path.as_str(), output_path.as_str()) {
+                process::exit(1);
+            }
+        }
     }
 }
 

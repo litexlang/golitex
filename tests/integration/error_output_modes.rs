@@ -9,6 +9,7 @@ fn error_output_cli_modes_emit_the_same_detailed_runtime_error() {
 
     assert_eq!(compact.status.code(), normal.status.code());
     assert_eq!(normal.status.code(), detailed.status.code());
+    assert_eq!(detailed.status.code(), Some(1));
 
     let compact_stdout = String::from_utf8(compact.stdout).expect("compact output must be UTF-8");
     let normal_stdout = String::from_utf8(normal.stdout).expect("normal output must be UTF-8");
@@ -17,6 +18,9 @@ fn error_output_cli_modes_emit_the_same_detailed_runtime_error() {
 
     assert_eq!(compact_stdout.trim(), normal_stdout.trim());
     assert_eq!(normal_stdout.trim(), detailed_stdout.trim());
+    assert!(detailed_stdout.contains("\"kind\": \"run\""));
+    assert!(detailed_stdout.contains("\"ok\": false"));
+    assert!(detailed_stdout.contains("\"kind\": \"verify_error\""));
     assert!(detailed_stdout.contains("\"phases\": {"));
     assert!(detailed_stdout.contains("\"previous_error\":"));
     assert!(detailed_stdout.contains("\"failed_goal\": \"1 = 0\""));
@@ -24,7 +28,7 @@ fn error_output_cli_modes_emit_the_same_detailed_runtime_error() {
 }
 
 #[test]
-fn success_output_cli_modes_all_print_the_same_statement_result_json_v2() {
+fn success_output_cli_modes_all_print_the_same_detailed_run_json() {
     let compact = run_litex(&["-compact", "-e", "1 = 1"]);
     let normal = run_litex(&["-e", "1 = 1"]);
     let detailed = run_litex(&["-detail", "-e", "1 = 1"]);
@@ -40,7 +44,10 @@ fn success_output_cli_modes_all_print_the_same_statement_result_json_v2() {
 
     assert_eq!(compact_stdout.trim(), normal_stdout.trim());
     assert_eq!(normal_stdout.trim(), detailed_stdout.trim());
-    assert!(compact_stdout.contains("\"schema\": \"litex.statement-result.v2\""));
+    assert!(compact_stdout.contains("\"kind\": \"run\""));
+    assert!(compact_stdout.contains("\"ok\": true"));
+    assert!(compact_stdout.contains("\"statement_results\": ["));
+    assert!(!compact_stdout.contains("\"schema\":"));
     assert!(compact_stdout.contains("\"outcome\": \"success\""));
     assert!(compact_stdout.contains("\"verification\": {"));
     assert!(compact_stdout.contains("\"well_definedness\": {"));

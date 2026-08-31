@@ -261,15 +261,7 @@ def check_archive(
         stderr=subprocess.STDOUT,
         check=False,
     )
-    expected_version_output = f"Litex Kernel: litex {version}"
-    if (
-        version_result.returncode != 0
-        or version_result.stdout.strip() != expected_version_output
-    ):
-        raise PreflightError(
-            f"archive binary version check failed for {version!r}:\n"
-            f"{version_result.stdout}"
-        )
+    validate_version_output(version_result.stdout, version_result.returncode, version)
 
     smoke_file = extracted / "smoke.lit"
     smoke_file.write_text(SMOKE_SOURCE, encoding="utf-8")
@@ -321,16 +313,44 @@ def validate_result_graph_output(output: str, returncode: int) -> None:
     if returncode != 0:
         raise PreflightError(f"smoke test exited with {returncode}:\n{output}")
     if not isinstance(envelope, dict):
-        raise PreflightError("smoke test result-graph output is not an object")
-    if envelope.get("graph") != "litex-result-graph":
+        raise PreflightError("smoke test result-graph artifact is not an object")
+    if envelope.get("kind") != "artifact":
+        raise PreflightError("smoke test output kind is not artifact")
+    if envelope.get("artifact") != "result_graph":
+        raise PreflightError("smoke test artifact is not result_graph")
+    if envelope.get("format") != "json":
+        raise PreflightError("smoke test result-graph artifact format is not json")
+    if envelope.get("target") != "file" or not isinstance(envelope.get("path"), str):
+        raise PreflightError("smoke test result-graph artifact target is not a file")
+    if envelope.get("output_path") is not None:
+        raise PreflightError("smoke test result-graph artifact has an output path")
+    if envelope.get("ok") is not True or envelope.get("error") is not None:
+        raise PreflightError(f"smoke test did not verify successfully:\n{output}")
+    graph = envelope.get("content")
+    if not isinstance(graph, dict):
+        raise PreflightError("smoke test result-graph content is not an object")
+    if graph.get("graph") != "litex-result-graph":
         raise PreflightError("smoke test output is not a Litex result graph")
-    if envelope.get("graph_version") != "3":
+    if graph.get("graph_version") != "3":
         raise PreflightError("smoke test returned an unsupported result-graph version")
-    target = envelope.get("target")
+    target = graph.get("target")
     if not isinstance(target, dict) or target.get("kind") != "file":
         raise PreflightError("smoke test result-graph target is not a file")
-    if envelope.get("result") != "success" or envelope.get("ok") is not True:
+    if graph.get("result") != "success" or graph.get("ok") is not True:
         raise PreflightError(f"smoke test did not verify successfully:\n{output}")
+
+
+def validate_version_output(output: str, returncode: int, version: str) -> None:
+    try:
+        envelope = json.loads(output)
+    except json.JSONDecodeError as error:
+        raise PreflightError(f"version command did not return JSON:\n{output}") from error
+    if returncode != 0:
+        raise PreflightError(f"version command exited with {returncode}:\n{output}")
+    if envelope != {"kind": "version", "ok": True, "version": version}:
+        raise PreflightError(
+            f"archive binary version check failed for {version!r}:\n{output}"
+        )
 
 
 if __name__ == "__main__":

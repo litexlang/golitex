@@ -57,7 +57,7 @@ class IssueTriageTest(unittest.TestCase):
         self.assertEqual(len(github.added_comments), 1)
         self.assertIn("brew install litexlang/tap/litex", github.added_comments[0])
         self.assertIn(
-            "docs/cli.md#install-litex-locally", github.added_comments[0]
+            "docs/setup.md", github.added_comments[0]
         )
         self.assertIn(
             "<!-- litex-issue-bot:v1:answered -->", github.added_comments[0]

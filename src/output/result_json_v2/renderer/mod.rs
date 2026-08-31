@@ -32,4 +32,3 @@ mod witnesses;
 
 pub use model::display_stmt_result_json_v2;
 pub(super) use model::StmtResultJsonV2;
-use model::SCHEMA;

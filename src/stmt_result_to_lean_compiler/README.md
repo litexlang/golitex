@@ -2333,10 +2333,10 @@ its result shape. Compiler support is narrower than kernel execution support.
 ## JSON v2 and Result Graphs
 
 The ordinary CLI renders the recursive Result directly through
-[`result_json_v2/`](../output/result_json_v2) with schema
-`litex.statement-result.v2`. It does not first project the result back into the
-old flattened output model. Shared `Rc` nodes receive stable local `$id`
-references so a DAG remains finite in JSON.
+[`result_json_v2/`](../output/result_json_v2) inside the `statement_results`
+array of the `run` envelope. It does not first project the result back into the
+old flattened output model or add a per-result `schema` field. Shared `Rc`
+nodes receive stable local `$id` references so a DAG remains finite in JSON.
 
 The result graph in
 [`result_graph/`](../graph/result_graph) is another read-only projection

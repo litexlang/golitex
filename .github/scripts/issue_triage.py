@@ -268,8 +268,7 @@ def build_plan(
     templates = {
         "installation": (
             "The supported installation and upgrade routes are documented in "
-            f"[Install Litex]({source_root}/docs/cli.md"
-            "#install-litex-locally). For macOS and Linux "
+            f"[Install Litex]({source_root}/docs/setup.md). For macOS and Linux "
             "with Homebrew, run `brew install litexlang/tap/litex`; for Windows, "
             "the guide recommends Scoop. After installation, check `litex "
             "-version` and `litex -e '1 = 1'`. The [online playground]"
@@ -278,8 +277,7 @@ def build_plan(
         "getting_started": (
             "The quickest starting point is the [online playground]"
             "(https://litexlang.com). For a local run, follow the "
-            f"[installation guide]({source_root}/docs/cli.md"
-            "#install-litex-locally), then try "
+            f"[installation guide]({source_root}/docs/setup.md), then try "
             "`litex -e '1 = 1'`. The repository [examples]"
             f"({source_root}/examples/README.md) provide the next small proof "
             "patterns."
