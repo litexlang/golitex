@@ -7,10 +7,8 @@ thm local_real_completeness:
     ? forall S set, upper R:
         S $subset R
         $is_nonempty_set(S)
-        forall member R:
-            member $in S
-            =>:
-                member <= upper
+        forall member S:
+            member <= upper
         =>:
             exist L R st {$is_real_least_upper_bound(S, L)}
     release thm real_least_upper_bound_exists(S, upper)
@@ -32,10 +30,8 @@ thm local_real_glb_boundary:
     ? forall S set, lower R:
         S $subset R
         $is_nonempty_set(S)
-        forall member R:
-            member $in S
-            =>:
-                lower <= member
+        forall member S:
+            lower <= member
         =>:
             exist L R st {$is_real_greatest_lower_bound(S, L)}
     release thm real_greatest_lower_bound_exists(S, lower)
@@ -46,6 +42,18 @@ release thm rational_between_reals(0, 1)
 obtain q from exist rational Q st {0 < rational and rational < 1}
 0 < q
 q < 1
+"#;
+
+const RENAMED_LOCAL_REAL_COMPLETENESS_SOURCE: &str = r#"
+thm renamed_local_real_completeness:
+    ? forall Region set, ceiling R:
+        Region $subset R
+        $is_nonempty_set(Region)
+        forall point Region:
+            point <= ceiling
+        =>:
+            exist supremum R st {$is_real_least_upper_bound(Region, supremum)}
+    release thm real_least_upper_bound_exists(Region, ceiling)
 "#;
 
 fn execute_source(source: &str, path: &str) -> Vec<StmtResult> {
@@ -85,7 +93,35 @@ fn local_real_completeness_replays_the_typed_builtin_application() {
             generated.contains("Litex.Rules.realLeastUpperBoundExists"),
             "{generated}"
         );
-        assert!(generated.contains("have __step1_0 : ∃"), "{generated}");
+        assert!(generated.contains(": ∃ (lub"), "{generated}");
+        assert!(!generated.contains("fun member memberInSet"), "{generated}");
+        assert!(!generated.contains("__member_rep"), "{generated}");
+        for forbidden in ["LitexObject", "Litex.Object", "sorry", "axiom "] {
+            assert!(
+                !generated.contains(forbidden),
+                "forbidden `{forbidden}` in:\n{generated}"
+            );
+        }
+    });
+}
+
+#[test]
+fn renamed_local_real_completeness_uses_the_same_subset_transport_framework() {
+    run_registered_rule_test(|| {
+        let results = execute_source(
+            RENAMED_LOCAL_REAL_COMPLETENESS_SOURCE,
+            "renamed_local_real_completeness.lit",
+        );
+        let generated = StmtResultToLeanCompiler::new("renamed_local_real_completeness.lit")
+            .compile_stmt_results_to_lean_source(&results)
+            .expect("compile renamed local real-completeness proof step");
+
+        assert!(
+            generated.contains("Litex.Rules.realLeastUpperBoundExists"),
+            "{generated}"
+        );
+        assert!(!generated.contains("fun member memberInSet"), "{generated}");
+        assert!(!generated.contains("__member_rep"), "{generated}");
         for forbidden in ["LitexObject", "Litex.Object", "sorry", "axiom "] {
             assert!(
                 !generated.contains(forbidden),
@@ -260,7 +296,9 @@ fn local_real_glb_replays_the_typed_builtin_application() {
             generated.contains("Litex.Rules.realGreatestLowerBoundExists"),
             "{generated}"
         );
-        assert!(generated.contains("have __step1_0 : ∃"), "{generated}");
+        assert!(generated.contains(": ∃ (glb"), "{generated}");
+        assert!(!generated.contains("fun member memberInSet"), "{generated}");
+        assert!(!generated.contains("__member_rep"), "{generated}");
         for forbidden in ["LitexObject", "Litex.Object", "sorry", "axiom "] {
             assert!(
                 !generated.contains(forbidden),

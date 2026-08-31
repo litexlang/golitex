@@ -360,6 +360,19 @@ pub(in super::super) fn render_exact_predicate_argument_same_to_source(
     if exact == source {
         return Ok(format!("Litex.Same.refl ({exact})"));
     }
+    if let Ok(LeanTargetObjectRepresentation::Symbol { symbol_id, .. }) =
+        LeanTargetObjectRepresentation::lower(object)
+    {
+        if let Some(binding) = context.exact_carrier_source_equalities.get(&symbol_id) {
+            if context
+                .exact_carrier_values
+                .get(&symbol_id)
+                .is_some_and(|retained| retained == &binding.exact_value)
+            {
+                return Ok(binding.proof_expression.clone());
+            }
+        }
+    }
     if matches!(set, Obj::StandardSet(StandardSet::R))
         && (exact == format!("({source} : ℝ)") || exact == format!("(({source}) : ℝ)"))
     {

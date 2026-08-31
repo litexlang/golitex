@@ -231,6 +231,24 @@ def rust_source_fingerprint() -> str:
     return digest.hexdigest()
 
 
+def registered_example_input_fingerprint() -> str:
+    config_path = ROOT / "lean/examples/litex.config"
+    config = config_path.read_text(encoding="utf-8")
+    sources = [
+        source
+        for source in sorted((ROOT / "lean/examples").glob("*.lit"))
+        if f'"./{source.name}"' in config
+    ]
+    paths = [config_path, *sources, *(source.with_suffix(".lean") for source in sources)]
+    digest = hashlib.sha256()
+    for path in sorted(set(paths)):
+        digest.update(path.relative_to(ROOT).as_posix().encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(path.read_bytes())
+        digest.update(b"\0")
+    return digest.hexdigest()
+
+
 def file_sha256(relative: str) -> str | None:
     path = ROOT / relative
     if not path.is_file():
@@ -2074,6 +2092,14 @@ def validate_checked_example_gate_evidence() -> None:
         raise ValueError("checked-example gate totals do not reconcile")
     if report.get("current_valid") is not True:
         raise ValueError("checked-example gate snapshot is unstable")
+    input_before = report.get("example_input_fingerprint_before")
+    input_after = report.get("example_input_fingerprint_after")
+    if not input_before == input_after == registered_example_input_fingerprint():
+        raise ValueError("registered example inputs changed after checked-example gate")
+    if report.get("lean_dependency_fingerprint_before") != report.get(
+        "lean_dependency_fingerprint_after"
+    ):
+        raise ValueError("Lean dependencies changed during checked-example gate")
     if report.get("lean_dependency_fingerprint_after") != lean_dependency_fingerprint():
         raise ValueError("Lean dependencies changed after checked-example gate")
     if report.get("olean_precondition_errors_before") or report.get("olean_precondition_errors_after"):

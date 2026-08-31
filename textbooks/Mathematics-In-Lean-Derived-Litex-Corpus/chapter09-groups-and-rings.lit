@@ -181,7 +181,7 @@ thm group_mul_inv_cancel:
         group.mul(x, group.inv(x)) = group.one
     by def:
         ? $chap2::group_laws(G, group.mul, group.one, group.inv)
-1release thm chap2::mul_inv_cancel(G, group.mul, group.one, group.inv, x)
+1release thm chap2::mul_inv_cancel_structure(G, group.mul, group.one, group.inv, x)
 
 thm group_hom_map_mul:
     ? forall G, H nonempty_set, source &chap2::Group<G>, target &chap2::Group<H>, f fn(x G) H, x, y G:
@@ -196,18 +196,18 @@ thm group_normalization_identity:
         group.mul(group.mul(group.mul(x, group.mul(y, z)), group.inv(group.mul(x, z))), group.inv(group.mul(group.mul(x, y), group.inv(x)))) = group.one
     by def:
         ? $chap2::group_laws(G, group.mul, group.one, group.inv)
-1release thm chap2::mul_inv_rev(G, group.mul, group.one, group.inv, x, z)
+1release thm chap2::mul_inv_rev_structure(G, group.mul, group.one, group.inv, x, z)
     group.inv(group.mul(x, z)) = group.mul(group.inv(z), group.inv(x))
     group.mul(group.mul(x, group.mul(y, z)), group.inv(group.mul(x, z))) = group.mul(group.mul(x, group.mul(y, z)), group.mul(group.inv(z), group.inv(x)))
     group.mul(group.mul(x, group.mul(y, z)), group.mul(group.inv(z), group.inv(x))) = group.mul(x, group.mul(group.mul(y, z), group.mul(group.inv(z), group.inv(x))))
     group.mul(z, group.mul(group.inv(z), group.inv(x))) = group.mul(group.mul(z, group.inv(z)), group.inv(x))
-1release thm chap2::mul_inv_cancel(G, group.mul, group.one, group.inv, z)
+1release thm chap2::mul_inv_cancel_structure(G, group.mul, group.one, group.inv, z)
     group.mul(group.mul(z, group.inv(z)), group.inv(x)) = group.mul(group.one, group.inv(x)) = group.inv(x)
     group.mul(group.mul(y, z), group.mul(group.inv(z), group.inv(x))) = group.mul(y, group.mul(z, group.mul(group.inv(z), group.inv(x)))) = group.mul(y, group.mul(group.mul(z, group.inv(z)), group.inv(x))) = group.mul(y, group.inv(x))
     group.mul(x, group.mul(group.mul(y, z), group.mul(group.inv(z), group.inv(x)))) = group.mul(x, group.mul(y, group.inv(x)))
     group.mul(x, group.mul(y, group.inv(x))) = group.mul(group.mul(x, y), group.inv(x))
     group.mul(group.mul(x, group.mul(y, z)), group.inv(group.mul(x, z))) = group.mul(group.mul(x, y), group.inv(x))
-1release thm chap2::mul_inv_cancel(G, group.mul, group.one, group.inv, group.mul(group.mul(x, y), group.inv(x)))
+1release thm chap2::mul_inv_cancel_structure(G, group.mul, group.one, group.inv, group.mul(group.mul(x, y), group.inv(x)))
     group.mul(group.mul(group.mul(x, group.mul(y, z)), group.inv(group.mul(x, z))), group.inv(group.mul(group.mul(x, y), group.inv(x)))) = group.mul(group.mul(group.mul(x, y), group.inv(x)), group.inv(group.mul(group.mul(x, y), group.inv(x)))) = group.one
 
 # A group homomorphism preserves inverses. This is the source map_inv example.
@@ -220,9 +220,9 @@ thm group_hom_map_inv:
         ? $chap2::group_laws(H, target.mul, target.one, target.inv)
     source.mul(source.inv(x), x) = source.one
     target.mul(f(source.inv(x)), f(x)) = f(source.mul(source.inv(x), x)) = f(source.one) = target.one
-1release thm chap2::mul_inv_cancel(H, target.mul, target.one, target.inv, f(x))
+1release thm chap2::mul_inv_cancel_structure(H, target.mul, target.one, target.inv, f(x))
     target.mul(f(x), target.inv(f(x))) = target.one
-1release thm chap2::mul_one(H, target.mul, target.one, target.inv, f(source.inv(x)))
+1release thm chap2::mul_one_structure(H, target.mul, target.one, target.inv, f(source.inv(x)))
     f(source.inv(x)) = target.mul(f(source.inv(x)), target.one) = target.mul(f(source.inv(x)), target.mul(f(x), target.inv(f(x))))
     target.mul(f(source.inv(x)), target.mul(f(x), target.inv(f(x)))) = target.mul(target.mul(f(source.inv(x)), f(x)), target.inv(f(x)))
     target.mul(target.mul(f(source.inv(x)), f(x)), target.inv(f(x))) = target.mul(target.one, target.inv(f(x))) = target.inv(f(x))
@@ -437,7 +437,7 @@ thm group_kernel_closed:
 1release thm group_hom_map_inv(G, H, source, target, f, x)
         f(source.inv(x)) = target.inv(f(x)) = target.inv(target.one)
         target.mul(target.inv(target.one), target.one) = target.one
-1release thm chap2::mul_one(H, target.mul, target.one, target.inv, target.inv(target.one))
+1release thm chap2::mul_one_structure(H, target.mul, target.one, target.inv, target.inv(target.one))
         target.mul(target.inv(target.one), target.one) = target.inv(target.one)
         target.inv(target.one) = target.one
         f(source.inv(x)) = target.one
@@ -696,7 +696,7 @@ thm group_action_gives_permutation:
             \toPermHom<G, X, act>(g)(inverse_action(y)) = act(g, inverse_action(y))
             \toPermHom<G, X, act>(g)(inverse_action(y)) = act(g, act(group.inv(g), y))
             act(g, act(group.inv(g), y)) = act(group.mul(g, group.inv(g)), y)
-1release thm chap2::mul_inv_cancel(G, group.mul, group.one, group.inv, g)
+1release thm chap2::mul_inv_cancel_structure(G, group.mul, group.one, group.inv, g)
 1release thm function_substitution(G, X, fn(a G) X {act(a, y)}, group.mul(g, group.inv(g)), group.one)
             \toPermHom<G, X, act>(g)(inverse_action(y)) = act(g, act(group.inv(g), y)) = act(group.mul(g, group.inv(g)), y) = act(group.one, y) = y
         by def:
@@ -732,8 +732,8 @@ thm cayley_map_injective:
         \CayleyIsoMorphism<G, group>(b)(group.one) = group.mul(b, group.one)
         (fn(h fn(y G) G) G {h(group.one)})(\CayleyIsoMorphism<G, group>(b)) = \CayleyIsoMorphism<G, group>(b)(group.one)
         (fn(h fn(y G) G) G {h(group.one)})(\CayleyIsoMorphism<G, group>(b)) = group.mul(b, group.one)
-1release thm chap2::mul_one(G, group.mul, group.one, group.inv, a)
-1release thm chap2::mul_one(G, group.mul, group.one, group.inv, b)
+1release thm chap2::mul_one_structure(G, group.mul, group.one, group.inv, a)
+1release thm chap2::mul_one_structure(G, group.mul, group.one, group.inv, b)
         a = group.mul(a, group.one) = group.mul(b, group.one) = b
     by def:
         ? $injective(G, fn(y G) G, \CayleyIsoMorphism<G, group>)
@@ -754,7 +754,7 @@ thm conjugate_subgroup_by_one:
         ? $chap2::group_laws(G, group.mul, group.one, group.inv)
     \conjugate_subgroup<G, group>(group.one, H) = {q G: $conjugate_subgroup_member(G, group, H, group.one, q)}
     group.mul(group.inv(group.one), group.one) = group.one
-1release thm chap2::mul_one(G, group.mul, group.one, group.inv, group.inv(group.one))
+1release thm chap2::mul_one_structure(G, group.mul, group.one, group.inv, group.inv(group.one))
     group.mul(group.inv(group.one), group.one) = group.inv(group.one)
     group.inv(group.one) = group.one
     claim:
@@ -767,7 +767,7 @@ thm conjugate_subgroup_by_one:
         obtain h from $conjugate_subgroup_member(G, group, H, group.one, x)
         group.mul(group.one, h) = h
         group.mul(group.mul(group.one, h), group.inv(group.one)) = group.mul(h, group.one)
-1release thm chap2::mul_one(G, group.mul, group.one, group.inv, h)
+1release thm chap2::mul_one_structure(G, group.mul, group.one, group.inv, h)
         group.mul(h, group.one) = h
         x = h
     by def:
@@ -781,7 +781,7 @@ thm conjugate_subgroup_by_one:
         witness $conjugate_subgroup_member(G, group, H, group.one, h) from h:
             group.mul(group.one, h) = h
             group.mul(group.mul(group.one, h), group.inv(group.one)) = group.mul(h, group.one)
-1release thm chap2::mul_one(G, group.mul, group.one, group.inv, h)
+1release thm chap2::mul_one_structure(G, group.mul, group.one, group.inv, h)
             group.mul(h, group.one) = h
             h = group.mul(group.mul(group.one, h), group.inv(group.one))
 1release thm set_builder_member(h, {q G: $conjugate_subgroup_member(G, group, H, group.one, q)})
@@ -862,11 +862,11 @@ thm group_inv_inv:
         group.inv(group.inv(x)) = x
     by def:
         ? $chap2::group_laws(G, group.mul, group.one, group.inv)
-1release thm chap2::mul_inv_cancel(G, group.mul, group.one, group.inv, group.inv(x))
+1release thm chap2::mul_inv_cancel_structure(G, group.mul, group.one, group.inv, group.inv(x))
     group.mul(group.inv(x), group.inv(group.inv(x))) = group.one
     group.mul(group.inv(x), x) = group.one
     group.mul(group.inv(x), group.inv(group.inv(x))) = group.mul(group.inv(x), x)
-1release thm chap2::_group_left_cancel(G, group.mul, group.one, group.inv, group.inv(x), group.inv(group.inv(x)), x)
+1release thm chap2::_group_left_cancel_structure(G, group.mul, group.one, group.inv, group.inv(x), group.inv(group.inv(x)), x)
 
 thm left_coset_center_mem:
     ? forall G nonempty_set, group &chap2::Group<G>, H power_set(G), g G:
@@ -877,7 +877,7 @@ thm left_coset_center_mem:
         ? $chap2::group_laws(G, group.mul, group.one, group.inv)
     \left_coset<G, group>(H, g) = {x G: $left_coset_member(G, group, H, g, x)}
     group.one $in H
-1release thm chap2::mul_one(G, group.mul, group.one, group.inv, g)
+1release thm chap2::mul_one_structure(G, group.mul, group.one, group.inv, g)
     witness $left_coset_member(G, group, H, g, g) from group.one
 1release thm set_builder_member(g, {x G: $left_coset_member(G, group, H, g, x)})
     g $in {x G: $left_coset_member(G, group, H, g, x)}
@@ -911,7 +911,7 @@ thm left_coset_eq_of_mem:
         obtain w from $left_coset_member(G, group, H, g, z)
         group.inv(u) $in H
         group.mul(group.inv(u), w) $in H
-1release thm chap2::mul_inv_cancel(G, group.mul, group.one, group.inv, u)
+1release thm chap2::mul_inv_cancel_structure(G, group.mul, group.one, group.inv, u)
         group.mul(u, group.mul(group.inv(u), w)) = group.mul(group.mul(u, group.inv(u)), w)
 1release thm object_substitution(G, G, fn(t G) G {group.mul(g, t)}, group.mul(u, group.mul(group.inv(u), w)), group.mul(group.mul(u, group.inv(u)), w))
         group.mul(g, group.mul(u, group.mul(group.inv(u), w))) = group.mul(g, group.mul(group.mul(u, group.inv(u)), w))
@@ -953,7 +953,7 @@ thm left_coset_mul_mem:
     have moved G = group.mul(group.mul(group.inv(b), u), b)
     moved $in H
     group.mul(moved, v) $in H
-1release thm chap2::mul_inv_cancel(G, group.mul, group.one, group.inv, b)
+1release thm chap2::mul_inv_cancel_structure(G, group.mul, group.one, group.inv, b)
     group.mul(b, group.mul(group.inv(b), u)) = group.mul(group.mul(b, group.inv(b)), u)
 1release thm object_substitution(G, G, fn(t G) G {group.mul(t, b)}, group.mul(b, group.mul(group.inv(b), u)), group.mul(group.mul(b, group.inv(b)), u))
     group.mul(b, moved) = group.mul(b, group.mul(group.mul(group.inv(b), u), b)) = group.mul(group.mul(b, group.mul(group.inv(b), u)), b) = group.mul(group.mul(group.mul(b, group.inv(b)), u), b)
@@ -1036,7 +1036,7 @@ thm left_coset_inv_mem:
     group.mul(group.mul(a, group.inv(u)), group.inv(a)) $in H
     have moved G = group.mul(group.mul(a, group.inv(u)), group.inv(a))
     moved $in H
-1release thm chap2::mul_inv_cancel(G, group.mul, group.one, group.inv, a)
+1release thm chap2::mul_inv_cancel_structure(G, group.mul, group.one, group.inv, a)
     group.mul(group.inv(a), group.mul(a, group.inv(u))) = group.mul(group.mul(group.inv(a), a), group.inv(u))
 1release thm object_substitution(G, G, fn(t G) G {group.mul(t, group.inv(a))}, group.mul(group.inv(a), group.mul(a, group.inv(u))), group.mul(group.mul(group.inv(a), a), group.inv(u)))
     group.mul(group.inv(a), moved) = group.mul(group.inv(a), group.mul(group.mul(a, group.inv(u)), group.inv(a))) = group.mul(group.mul(group.inv(a), group.mul(a, group.inv(u))), group.inv(a)) = group.mul(group.mul(group.mul(group.inv(a), a), group.inv(u)), group.inv(a))
@@ -1047,7 +1047,7 @@ thm left_coset_inv_mem:
 1release thm object_substitution(G, G, fn(t G) G {group.mul(t, group.inv(a))}, group.mul(group.one, group.inv(u)), group.inv(u))
     group.mul(group.mul(group.one, group.inv(u)), group.inv(a)) = group.mul(group.inv(u), group.inv(a))
     group.mul(group.inv(a), moved) = group.mul(group.inv(u), group.inv(a))
-1release thm chap2::mul_inv_rev(G, group.mul, group.one, group.inv, a, u)
+1release thm chap2::mul_inv_rev_structure(G, group.mul, group.one, group.inv, a, u)
     group.inv(x) = group.inv(group.mul(a, u)) = group.mul(group.inv(u), group.inv(a)) = group.mul(group.inv(a), moved)
     witness $left_coset_member(G, group, H, group.inv(a), group.inv(x)) from moved
 1release thm set_builder_member(group.inv(x), {q G: $left_coset_member(G, group, H, group.inv(a), q)})
@@ -1278,7 +1278,7 @@ template<G, Target nonempty_set, source &chap2::Group<G>, target &chap2::Group<T
             obtain h from exist token G st {token $in H, g2 = source.mul(g1, token)}
             f(source.mul(g1, h)) = target.mul(f(g1), f(h))
             f(h) = target.one
-1release thm chap2::mul_one(Target, target.mul, target.one, target.inv, f(g1))
+1release thm chap2::mul_one_structure(Target, target.mul, target.one, target.inv, f(g1))
             y2 = f(g2) = f(source.mul(g1, h)) = target.mul(f(g1), f(h)) = target.mul(f(g1), target.one) = f(g1) = y1
 
 # ---------------------------------------------------------------------------
@@ -1318,7 +1318,7 @@ thm commutative_ring_square_sum:
     ring.mul(y, ring.add(x, y)) = ring.add(ring.mul(y, x), ring.mul(y, y))
     ring.mul(y, x) = ring.mul(x, y)
     ring.add(ring.mul(y, x), ring.mul(y, y)) = ring.add(ring.mul(y, y), ring.mul(y, x)) = ring.add(ring.mul(y, y), ring.mul(x, y))
-1release thm chap2::add_reorder_four(A, ring.add, ring.zero, ring.neg, ring.mul(x, x), ring.mul(x, y), ring.mul(y, y), ring.mul(x, y))
+1release thm chap2::add_reorder_four_structure(A, ring.add, ring.zero, ring.neg, ring.mul(x, x), ring.mul(x, y), ring.mul(y, y), ring.mul(x, y))
     ring.mul(ring.add(x, y), ring.add(x, y)) = ring.add(ring.mul(x, ring.add(x, y)), ring.mul(y, ring.add(x, y))) = ring.add(ring.add(ring.mul(x, x), ring.mul(x, y)), ring.add(ring.mul(y, x), ring.mul(y, y))) = ring.add(ring.add(ring.mul(x, x), ring.mul(x, y)), ring.add(ring.mul(y, y), ring.mul(y, x))) = ring.add(ring.add(ring.mul(x, x), ring.mul(x, y)), ring.add(ring.mul(y, y), ring.mul(x, y))) = ring.add(ring.add(ring.mul(x, x), ring.mul(y, y)), ring.add(ring.mul(x, y), ring.mul(x, y)))
 
 thm natural_square_sum:
@@ -1802,7 +1802,7 @@ thm ideal_coset_add_mem:
     obtain u from exist idx A st {idx $in I, x = ring.add(a, idx)}
     obtain v from exist idx A st {idx $in I, y = ring.add(b, idx)}
     ring.add(u, v) $in I
-1release thm chap2::add_reorder_four(A, ring.add, ring.zero, ring.neg, a, u, b, v)
+1release thm chap2::add_reorder_four_structure(A, ring.add, ring.zero, ring.neg, a, u, b, v)
     ring.add(x, y) = ring.add(ring.add(a, u), ring.add(b, v)) = ring.add(ring.add(a, b), ring.add(u, v))
     witness $ideal_coset_member(A, ring, I, ring.add(a, b), ring.add(x, y)) from ring.add(u, v)
 1release thm set_builder_member(ring.add(x, y), {q A: $ideal_coset_member(A, ring, I, ring.add(a, b), q)})
@@ -1820,11 +1820,11 @@ thm ideal_coset_neg_mem:
     $chap2::additive_commutative_group_laws(A, ring.add, ring.zero, ring.neg)
     obtain u from exist idx A st {idx $in I, x = ring.add(a, idx)}
     ring.neg(u) $in I
-1release thm chap2::add_reorder_four(A, ring.add, ring.zero, ring.neg, a, u, ring.neg(a), ring.neg(u))
+1release thm chap2::add_reorder_four_structure(A, ring.add, ring.zero, ring.neg, a, u, ring.neg(a), ring.neg(u))
 1release thm chap2::add_neg_cancel_from_laws(A, ring.add, ring.zero, ring.neg, a)
 1release thm chap2::add_neg_cancel_from_laws(A, ring.add, ring.zero, ring.neg, u)
     ring.add(ring.add(a, u), ring.add(ring.neg(a), ring.neg(u))) = ring.add(ring.add(a, ring.neg(a)), ring.add(u, ring.neg(u))) = ring.add(ring.zero, ring.zero) = ring.zero
-1release thm chap2::eq_neg_of_add_eq_zero(A, ring.add, ring.zero, ring.neg, ring.add(a, u), ring.add(ring.neg(a), ring.neg(u)))
+1release thm chap2::eq_neg_of_add_eq_zero_structure(A, ring.add, ring.zero, ring.neg, ring.add(a, u), ring.add(ring.neg(a), ring.neg(u)))
     ring.add(ring.neg(a), ring.neg(u)) = ring.neg(ring.add(a, u))
     ring.neg(x) = ring.neg(ring.add(a, u)) = ring.add(ring.neg(a), ring.neg(u))
     witness $ideal_coset_member(A, ring, I, ring.neg(a), ring.neg(x)) from ring.neg(u)

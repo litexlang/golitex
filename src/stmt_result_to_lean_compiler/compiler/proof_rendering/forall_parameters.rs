@@ -301,11 +301,12 @@ pub(in super::super) fn render_forall_fact_type(
         )?;
     }
     for (index, premise) in forall.dom_facts.iter().enumerate() {
+        let proof_name = format!("__domain{}", index + 1);
         binders.push(format!(
-            "(__domain{} : {})",
-            index + 1,
+            "({proof_name} : {})",
             render_fact(premise, &context)?
         ));
+        install_subset_transport_from_fact(premise, &proof_name, &mut context)?;
     }
     let conclusions = forall
         .then_facts
@@ -414,6 +415,13 @@ pub(in super::super) fn install_parameter_fact_aliases(
         .cloned()
         .ok_or_else(|| "parameter alias has no visible compiler symbol".to_string())?;
     let exact_carrier_value = format!("(Litex.In.rep {source_name} {proof_name})");
+    context.exact_carrier_source_equalities.insert(
+        symbol_id,
+        ExactCarrierSourceEqualityBinding::new(
+            exact_carrier_value.clone(),
+            format!("Litex.Same.symm (Litex.In.same_rep {source_name} {proof_name})"),
+        ),
+    );
     install_exact_set_builder_parameter_representation(
         symbol_id,
         &lowered_set,

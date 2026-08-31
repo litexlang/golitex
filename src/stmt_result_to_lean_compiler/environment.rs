@@ -145,6 +145,11 @@ pub(super) struct StmtResultToLeanCompilerBindings {
     /// being wrapped in a second heterogeneous `In.rep` during definition
     /// rendering or replay.
     pub(super) exact_carrier_values: HashMap<SymbolId, String>,
+    /// `Litex.Same exact source` certificates paired with
+    /// `exact_carrier_values`. Exact predicate transport consumes this edge
+    /// directly instead of attempting to reconstruct it from rendered syntax.
+    pub(super) exact_carrier_source_equalities:
+        HashMap<SymbolId, ExactCarrierSourceEqualityBinding>,
     /// Exact `R+` carrier values whose subtype property is a native strict
     /// positivity certificate.  Arithmetic constructors use these proofs
     /// directly instead of selecting another representative through `In`.
@@ -200,6 +205,21 @@ pub(super) struct StmtResultToLeanCompilerBindings {
 }
 
 #[derive(Clone)]
+pub(super) struct ExactCarrierSourceEqualityBinding {
+    pub(super) exact_value: String,
+    pub(super) proof_expression: String,
+}
+
+impl ExactCarrierSourceEqualityBinding {
+    pub(super) fn new(exact_value: String, proof_expression: String) -> Self {
+        Self {
+            exact_value,
+            proof_expression,
+        }
+    }
+}
+
+#[derive(Clone)]
 pub(super) struct SubsetMembershipTransportBinding {
     pub(super) source_set: Obj,
     pub(super) target_set: Obj,
@@ -207,11 +227,7 @@ pub(super) struct SubsetMembershipTransportBinding {
 }
 
 impl SubsetMembershipTransportBinding {
-    pub(super) fn new(
-        source_set: Obj,
-        target_set: Obj,
-        proof_expression: String,
-    ) -> Self {
+    pub(super) fn new(source_set: Obj, target_set: Obj, proof_expression: String) -> Self {
         Self {
             source_set,
             target_set,

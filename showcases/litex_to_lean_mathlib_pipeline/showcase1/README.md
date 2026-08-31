@@ -2,8 +2,9 @@
 
 这个 showcase 只讲一条主线：先在 Lean 里写下想证明的目标，再用
 Litex 完成数学证明，把 Litex 编译成 Lean，最后在一个短小的 Lean
-证明里引用生成定理。最终 theorem 的 statement 必须完全不知道
-Litex 存在；`Litex.*` 和 generated names 只允许出现在 `:= by` 之后。
+证明里引用生成定理。最终 theorem 的数学 conclusion 必须完全不知道
+Litex 存在；`Litex.*` 和 generated names 只出现在 Adapter 里。当前
+`Final.lean` 显式接收一个 Adapter bridge 证书，在证明体里 cite Adapter。
 
 贯穿全流程的命题是：前 `n` 个正奇数之和等于 `n²`。
 
@@ -19,7 +20,7 @@ showcase1/
 ├── main.lit                # 1. Litex 数学与证明；唯一源文件
 ├── Generated.lean          # 2. 编译器生成；禁止手改
 ├── Adapter.lean            # 3. 真实 cite 生成定理并整理接口
-├── Final.lean              # 4. 原生 Final 目标；等待已证明的 bridge
+├── Final.lean              # 4. 可执行的原生 conclusion；显式接收 bridge
 ├── litex.config            # Litex 文件顺序
 ├── lakefile.toml           # 本目录自己的 Lean/Lake 工程入口
 ├── lake-manifest.json      # 本地 path dependency 与 Mathlib 版本锁定
@@ -43,15 +44,15 @@ main.lit：用 Litex 写出并检查数学证明
                 ↓ stmt_result_to_lean_compiler
 Generated.lean：生成可由 Lean kernel 检查的定理
                 ↓ import + cite
-Adapter.lean：cite 生成定理，并原型化 Same → Eq 证书
-                ↓ 等 Core 提供已证明的证书
-Final.lean：声明完全原生的 theorem
+Adapter.lean：cite 生成定理，并用 Same → Eq 证书整理出原生 conclusion
+                ↓ 显式传入 Adapter bridge
+Final.lean：cite Adapter，得到可执行的 conditional theorem
 ```
 
 关键纪律是：`Generated.lean` 只能由编译器重生成；手写的接口整理必须
-放在 `Adapter.lean`；最终使用必须放在 `Final.lean`。在原生消元
-bridge 真正被证明之前，`Final.lean` 不得用公理、proof hole 或独立重证
-伪装成已打通。
+放在 `Adapter.lean`；最终使用必须放在 `Final.lean`。当前 Final
+对 bridge 是显式 conditional 的，不用公理、proof hole 或独立重证
+伪装成无条件结果。
 
 ## 第 0 步：先在 Lean 里写目标
 
@@ -140,7 +141,7 @@ structure IntegerSameEqBridge : Prop where
 ```
 
 这个 structure 没有定义任何 inhabitant，也不是把 `Equal` 重新定义成
-`Same`。它要求 Core 最终提供一个真正的 Lean 证明：对于整数值语义等式，
+`Same`。它要求一个真正的 Lean 证明：对于整数值语义等式，
 `Same left (right : ℂ)` 能安全消成 `left = right`。
 
 Adapter 中的 `sumFirstOddsNative` 已由 Lean 4.31 检查。它的 conclusion 是普通
@@ -162,22 +163,23 @@ theorem sumFirstOddsNative
 这里 generated theorem 是 live dependency：删掉 `generated` 或 `exactCarrierSame` 就无法构造
 `exactCarrierEq`。Adapter 没有重写 odd-sum 归纳。
 
-## 第 4 步：bridge 证明后，再关闭 Final
+## 第 4 步：Final 直接 cite Adapter bridge
 
-[`Final.lean`](Final.lean) 现在只保留原生目标规格，还没有声明一个无条件
-theorem。原因很具体：`IntegerSameEqBridge` 的类型和条件性使用已经通过，
-但该证书尚未在 Core 中被构造。
+[`Final.lean`](Final.lean) 现在不再是全注释，而是真正会被
+Lean kernel 检查的 theorem：
 
 ```lean
-theorem firstHundredPositiveOddIntegersSum :
+theorem firstHundredPositiveOddIntegersSum
+    (bridge : OddSumPipeline.IntegerSameEqBridge) :
     ∑ k ∈ Finset.Icc (1 : ℤ) 100, (2 * k - 1) = 10000 := by
-  exact OddSumPipeline.sumFirstOddsNative
-    Litex.integerSameEqBridge 100 (by norm_num)
+  exact OddSumPipeline.sumFirstOddsNative bridge 100 (by norm_num)
 ```
 
-上面是 bridge 被证明并命名后的最终形状，不是当前可执行代码。特别注意：
-statement 完全不知道 Litex 存在；只有 `by` 之后的 proof 会经由 Adapter
-间接使用 generated theorem。
+冒号后的数学 proposition 只有 `Finset.Icc`、`ℤ`、求和与 Lean `=`；
+它没有 `Litex.Same`、`Litex.sum` 或 `__Compiler_main.*`。`bridge`
+是 Adapter 的证明前提，不是生成代码里的数学谓词。这一版是 conditional
+theorem；如果以后 Adapter 内部真正构造了 bridge 值，Final 只需删掉
+这个显式参数，不需改数学 proposition。
 
 ## 解决编辑器里的 `unknown module prefix`
 
@@ -250,14 +252,15 @@ Mathlib 整数等式：
 - 以 `IntegerSameEqBridge` 证书为显式前提的
   `generated Lean → 原生 Finset 等式`。
 
-第二层的 Adapter proof 已通过 Lean kernel，但 bridge 证书本身尚未实现，
-所以无条件 Final theorem 仍未声明。以前的 adapter 虽然 import 了 generated
+第二层的 Adapter proof 和显式接收 bridge 的 Final theorem 都由 Lean
+kernel 检查。bridge 证书本身尚未实现，所以当前 Final 是条件定理，
+不是无条件定理。以前的 adapter 虽然 import 了 generated
 module，却独立写了一遍 `Int.leInduction`；那不能证明 generated theorem
 被复用，所以已经移除。
 
-下一步不是再写一份归纳，而是审核 `IntegerSameEqBridge.toEq`
-这个精确接口，然后在 Core 内部使用封闭的 `Same` 构造子给出 sound proof，
-或让 compiler 从 verifier evidence 直接生成等价证书。这个缺口不能用
+如果以后需要把 Final 变成无参数的无条件定理，下一步不是再写
+一份归纳，而是在 Adapter 能使用的信任边界内构造
+`IntegerSameEqBridge.toEq` 的 sound proof。这个缺口不能用
 `axiom`、`sorry`、`admit`、未使用的 generated 假设或独立重证掩盖。
 
 `extras/property_flow.lit` 还演示了

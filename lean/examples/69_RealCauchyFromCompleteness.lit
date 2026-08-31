@@ -2,6 +2,16 @@
 # least-upper-bound and Archimedean interfaces. This is intentionally a broad
 # StmtResult-to-Lean stress test; showcase2 remains the smaller scalar-limit
 # pipeline intended for readers.
+# Before: the compiler rewrote only real-analysis bound callbacks to native-
+# real members, so this file could compile while the generated Lean still
+# failed at the kernel boundary.
+# Now: `forall x E` stays heterogeneous and consumes the lexical proof
+# `E subset R` through the shared subset-membership transport environment.
+# Boundary: the verifier owns the subset FactId and forall structure; the
+# compiler only selects `Subset.rep` from that retained evidence.
+# Evidence: this exact `.lit`/generated `.lean` pair is checked by real Lean;
+# renamed LUB/GLB tests and a captured two-argument predicate test guard against
+# file names, theorem names, and one-parameter shapes becoming hidden inputs.
 
 prop is_tail_epsilon_steady(a seq(R), epsilon R+, n0 N+):
     forall j, k N+:

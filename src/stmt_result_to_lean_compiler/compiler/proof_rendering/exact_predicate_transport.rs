@@ -190,6 +190,29 @@ pub(in super::super) fn render_fact_proof_across_exact_predicate_arguments(
     target_context: &StmtResultToLeanCompilerEnvironmentStack,
     source_proof: &str,
 ) -> Result<String, String> {
+    render_fact_proof_across_exact_predicate_arguments_with_source_bridges(
+        source,
+        target,
+        source_context,
+        target_context,
+        source_proof,
+        &[],
+    )
+}
+
+/// The general exact-predicate transport with explicit semantic edges between
+/// the source and target renderings of selected Litex symbols. Set-builder
+/// elimination uses this for its verified `Same source representative`
+/// certificate; ordinary callers pass no bridges and therefore require the
+/// two source renderings to be identical.
+pub(in super::super) fn render_fact_proof_across_exact_predicate_arguments_with_source_bridges(
+    source: &Fact,
+    target: &Fact,
+    source_context: &StmtResultToLeanCompilerEnvironmentStack,
+    target_context: &StmtResultToLeanCompilerEnvironmentStack,
+    source_proof: &str,
+    source_bridges: &[(SymbolId, String)],
+) -> Result<String, String> {
     if render_fact(source, source_context)? == render_fact(target, target_context)? {
         return Ok(source_proof.to_string());
     }
@@ -205,13 +228,16 @@ pub(in super::super) fn render_fact_proof_across_exact_predicate_arguments(
             .enumerate()
         {
             let selector = conjunction_selector(index, source_and.facts.len())?;
-            proofs.push(render_fact_proof_across_exact_predicate_arguments(
-                &Fact::from(source_component.clone()),
-                &Fact::from(target_component.clone()),
-                source_context,
-                target_context,
-                &format!("({source_proof}){selector}"),
-            )?);
+            proofs.push(
+                render_fact_proof_across_exact_predicate_arguments_with_source_bridges(
+                    &Fact::from(source_component.clone()),
+                    &Fact::from(target_component.clone()),
+                    source_context,
+                    target_context,
+                    &format!("({source_proof}){selector}"),
+                    source_bridges,
+                )?,
+            );
         }
         return Ok(format!("⟨{}⟩", proofs.join(", ")));
     }
@@ -303,13 +329,32 @@ pub(in super::super) fn render_fact_proof_across_exact_predicate_arguments(
             render_exact_predicate_argument_same_to_source(source_argument, set, source_context)?;
         let target_to_original =
             render_exact_predicate_argument_same_to_source(target_argument, set, target_context)?;
+        let original_bridge = if source_original == target_original {
+            format!("Litex.Same.refl ({source_original})")
+        } else {
+            let LeanTargetObjectRepresentation::Symbol { symbol_id, .. } =
+                LeanTargetObjectRepresentation::lower(source_argument)?
+            else {
+                return Err(format!(
+                    "predicate `{predicate_name}` exact parameter {index} changed its source rendering without a direct symbol bridge"
+                ));
+            };
+            source_bridges
+                .iter()
+                .find_map(|(candidate, proof)| (*candidate == symbol_id).then(|| proof.clone()))
+                .ok_or_else(|| {
+                    format!(
+                        "predicate `{predicate_name}` exact parameter {index} changed its source rendering from `{source_original}` to `{target_original}` without verifier-owned Same evidence"
+                    )
+                })?
+        };
         transports.push((
             parameter.id(),
             set.clone(),
             source_value,
             target_value,
             format!(
-                "Litex.Same.trans ({source_to_original}) (Litex.Same.symm ({target_to_original}))"
+                "Litex.Same.trans ({source_to_original}) (Litex.Same.trans ({original_bridge}) (Litex.Same.symm ({target_to_original})))"
             ),
         ));
     }

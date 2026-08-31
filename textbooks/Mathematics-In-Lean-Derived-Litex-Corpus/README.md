@@ -7,6 +7,8 @@ mathematics, together with the callable structure, Gaussian-integer, and
 group-and-ring construction slices. The single reader-facing `chap2` export
 starts with named settings and retains the first-class structure values, their
 laws, and later-chapter interfaces in the same Chapter 2 file.
+Where the former two surfaces had the same theorem name, the setting theorem
+keeps that name and the bundled structure-facing theorem uses `_structure`.
 
 Chapter 4 returned to the runnable module after the kernel learned to reuse an
 identical template object committed from a theorem child environment. Its

@@ -502,6 +502,11 @@ impl StmtResultToLeanCompiler {
                     )
                 })?;
                     intro_names.push(premise_name.clone());
+                    install_subset_transport_from_fact(
+                        &source_premise,
+                        &premise_name,
+                        &mut self.environment_stack,
+                    )?;
                     premises.push(LeanLocalFactPremise::new(*fact_id, source_premise));
                 }
 
@@ -827,9 +832,10 @@ impl StmtResultToLeanCompiler {
                     proof_lines.push(format!("exact ⟨{}⟩", conclusion_names.join(", ")));
                 }
                 let projected_fact: Fact = publication_selection.forall_fact.clone().into();
-                let proposition = render_fact(&projected_fact, &self.environment_stack).map_err(|error| {
-                    format!("ForallProof target failed to render in its binder: {error}")
-                })?;
+                let proposition =
+                    render_fact(&projected_fact, &self.environment_stack).map_err(|error| {
+                        format!("ForallProof target failed to render in its binder: {error}")
+                    })?;
                 let mut lines = vec!["by".to_string()];
                 if !intro_names.is_empty() {
                     lines.push(format!("  intro {}", intro_names.join(" ")));

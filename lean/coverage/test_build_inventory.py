@@ -544,6 +544,10 @@ class CoverageInventoryTests(unittest.TestCase):
             KERNEL_MATRIX.rust_source_fingerprint(),
             BUILD_INVENTORY.rust_source_fingerprint(),
         )
+        self.assertEqual(
+            KERNEL_MATRIX.example_input_fingerprint(KERNEL_MATRIX.registered_sources()),
+            BUILD_INVENTORY.registered_example_input_fingerprint(),
+        )
         self.assertEqual(BUILD_INVENTORY.lean_dependency_forbidden_hits(), [])
 
     def test_integration_failure_family_ledger_reconciles_current_baseline(self) -> None:
