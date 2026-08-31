@@ -1099,10 +1099,13 @@ fn odd_sum_flagship_exports_only_source_owned_declarations() {
     assert!(!litex_source.contains("thm odd_sum_step"));
     assert!(!litex_source.contains("thm odd_square_step"));
     assert!(!litex_source.contains("by thm"));
+    assert_eq!(litex_source.matches("\nforall n Z:").count(), 2);
+    assert_eq!(litex_source.matches("\nthm ").count(), 1);
     assert!(litex_source.contains("kth_odd(1) = 2 * 1 - 1 = 1"));
     assert!(litex_source.contains("n^2 + kth_odd(n + 1) = n^2 + (2 * (n + 1) - 1) = (n + 1)^2"));
-    assert!(litex_source.contains("thm sum_first_ten_odds"));
-    assert!(litex_source.contains("sum(1, 10, kth_odd) = 10^2 = 100"));
+    assert!(!litex_source.contains("thm odd_sum_integer"));
+    assert!(!litex_source.contains("thm square_integer"));
+    assert!(!litex_source.contains("thm sum_first_ten_odds"));
 
     let results = execute_odd_sum_to_square_flagship();
     let result_audit = results
@@ -1119,8 +1122,9 @@ fn odd_sum_flagship_exports_only_source_owned_declarations() {
 
     assert_eq!(lean, checked_in);
     assert!(lean.contains("theorem sum_first_odds :"));
-    assert!(lean.contains("theorem sum_first_ten_odds :"));
-    assert!(lean.contains("sum_first_odds (10 : ℤ)"));
+    assert!(!lean.contains("theorem odd_sum_integer :"));
+    assert!(!lean.contains("theorem square_integer :"));
+    assert!(!lean.contains("theorem sum_first_ten_odds :"));
     assert!(lean.contains("Litex.sum (1 : ℤ) n kth_odd"));
     assert!(!lean.contains("private theorem __native_certificate"));
     assert!(!lean.contains("namespace Native"));
@@ -1137,7 +1141,7 @@ fn odd_sum_flagship_exports_only_source_owned_declarations() {
     assert!(result_audit.contains("\"rule_id\": \"aggregate.sum_split_last\""));
     assert!(result_audit.contains("PowNat"));
     assert!(result_audit.contains("\"kind\": \"Iteration\""));
-    assert!(result_audit.contains("\"argument\": \"10\""));
+    assert!(!result_audit.contains("\"argument\": \"10\""));
     assert!(!lean.contains("SumExpr"));
     assert!(!lean.contains("theorem odd_sum_step"));
     assert!(!lean.contains("theorem odd_square_step"));

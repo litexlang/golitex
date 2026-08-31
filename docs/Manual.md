@@ -2320,15 +2320,6 @@ basics
 chap1 = "./chapter01.lit"
 Part2 = "./Part2"
 chap3 = "./chapter03.lit"
-
-[allow bare export]
-Part2
-
-[allow bare import std]
-basics
-
-[allow bare import]
-Algebra
 ```
 
 Important rules:
@@ -2346,39 +2337,18 @@ Important rules:
 5. Canonical names follow the mounted module and export path, for example
    `Algebra::chapter::name`.
 
-The three `allow bare` tables are optional, explicit conveniences. Each line is
-one name from its matching source table: `[allow bare export]` accepts only an
-exported folder/submodule (never a `.lit` file), `[allow bare import std]`
-selects an `[import std]` package, and `[allow bare import]` selects an
-`[import]` alias. Without these tables, existing projects remain
-qualified-only.
-
-For each source file, Litex builds one bare-name index after configured imports
-and preceding exports have loaded. An enabled package contributes the terminal
-symbols from its entire recursive public `[export]` tree, but not anything from
-its private imports. A flattened package behaves the same way: bare `b` and
-public `A::b` resolve to the symbol stored in its sole exported file. Re-export
-of the same symbol is deduplicated; two different symbols with the same
-terminal name make the allow-bare configuration invalid. The stable diagnostic
-scan order is export, standard import, then path import; it is not an overwrite
-precedence.
-
-Explicit `A::b` always resolves `A` in the module namespace and bypasses the
-bare index. Module aliases and symbols are separate, so a local symbol may also
-be named `A`; field selection such as `obj.b` likewise remains in the field
-namespace. Once external bare `b` is active, however, the source file may not
-define or bind another symbol named `b` at any level. Struct field names are
-the exception because they are selected through a struct/field namespace. An
-enabled export is unavailable while it is still loading, so an earlier file
-cannot cite a later export by its bare name. These permissions inherit into
-descendant submodules.
+Cross-module references always use canonical qualified names. Module aliases
+and symbols are separate, so a local symbol may also be named `A`; field
+selection such as `obj.b` remains in the field namespace. An export is
+unavailable while it is still loading, so an earlier file cannot cite a later
+export.
 
 `import "../Algebra" as Algebra` and `import std basics` are interactive
 terminal commands, not Litex statements. The REPL handles them before source
 parsing and keeps their qualified environments in a session-only, in-memory
 manifest. Every `.lit` file—including one run with `-isolated -f`—rejects
 `import`; reproducible dependencies belong in `litex.config`. Terminal imports
-remain qualified-only and never activate manifest allow-bare tables.
+remain qualified-only.
 
 ```text
 [hierarchy]

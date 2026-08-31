@@ -439,9 +439,6 @@ impl Runtime {
             Ok(AtomicName::WithMod(module_name, right))
         } else {
             validate_litex_name_for_parse(&left, tb.line_file.clone())?;
-            if let Some(symbol) = self.bare_symbol(&left) {
-                return Ok(AtomicName::WithMod(symbol.canonical_owner.clone(), left));
-            }
             match self.current_parse_module_name() {
                 Some(module_name) => Ok(AtomicName::WithMod(module_name, left)),
                 None => Ok(AtomicName::WithoutMod(left)),
@@ -460,16 +457,6 @@ impl Runtime {
             return Identifier::new_bound(id.name, symbol).into();
         }
         let symbol = self.resolved_identifier_symbol(&id.name);
-        if symbol.is_none() {
-            if let Some(bare) = self.bare_symbol(&id.name) {
-                return IdentifierWithMod::new_bound(
-                    bare.canonical_owner.clone(),
-                    id.name,
-                    bare.symbol.clone(),
-                )
-                .into();
-            }
-        }
         let Some(module_name) = self.current_parse_module_name() else {
             return match symbol {
                 Some(symbol) => Identifier::new_bound(id.name, symbol).into(),
@@ -485,9 +472,6 @@ impl Runtime {
     pub(super) fn qualify_bare_atomic_name_if_needed(&self, name: String) -> AtomicName {
         if is_builtin_predicate(&name) {
             return AtomicName::WithoutMod(name);
-        }
-        if let Some(symbol) = self.bare_symbol(&name) {
-            return AtomicName::WithMod(symbol.canonical_owner.clone(), name);
         }
         let Some(module_name) = self.current_parse_module_name() else {
             return AtomicName::WithoutMod(name);

@@ -219,9 +219,7 @@ fn extract_project_target(
                 .expect("registered project file should exist")
                 .status = FileStatus::Loading;
             runtime.push_file_execution_frame(module_id, file_id);
-            let output = runtime
-                .refresh_current_bare_symbol_index()
-                .and_then(|_| read_source(source_path.as_str()))
+            let output = read_source(source_path.as_str())
                 .and_then(|source| extract_code(source.as_str(), runtime, target));
             runtime.pop_execution_frame();
             runtime

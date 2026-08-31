@@ -151,7 +151,11 @@ impl Runtime {
     }
 
     pub fn push_file_execution_frame(&mut self, module_id: ModuleId, file_id: FileId) {
-        self.push_file_execution_frame_with_mode(module_id, file_id, ExecutionMode::Verified);
+        self.push_file_execution_frame_with_mode(
+            module_id,
+            file_id,
+            ExecutionMode::RequireVerification,
+        );
     }
 
     pub fn push_file_execution_frame_with_mode(
@@ -206,7 +210,7 @@ impl Runtime {
         self.execution_stack
             .last()
             .map(|frame| frame.execution_mode)
-            .unwrap_or(ExecutionMode::Verified)
+            .unwrap_or(ExecutionMode::RequireVerification)
     }
 
     pub fn current_execution_is_trusted_file(&self) -> bool {
@@ -389,7 +393,7 @@ impl Runtime {
             .expect("repository REPL source should be registered");
         self.execution_stack
             .push(ExecutionFrame::new(module_file_info));
-        self.refresh_current_bare_symbol_index()
+        Ok(())
     }
 }
 

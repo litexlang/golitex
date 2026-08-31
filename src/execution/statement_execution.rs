@@ -9,7 +9,7 @@ impl Runtime {
         let execution_mode = self.current_execution_mode();
         let result = match execution_mode {
             ExecutionMode::Trusted => self.execute_statement_without_verification(stmt),
-            ExecutionMode::Verified => self.execute_verified_statement(stmt),
+            ExecutionMode::RequireVerification => self.execute_verified_statement(stmt),
         };
         let result = self.finish_statement_execution(result, execution_mode);
         self.clear_statement_proof_state();
@@ -26,7 +26,7 @@ impl Runtime {
                 self.attach_known_fact_ids_to_stmt_result(&mut result)?;
                 let trace = match execution_mode {
                     ExecutionMode::Trusted => StatementExecutionTrace::trusted(),
-                    ExecutionMode::Verified => {
+                    ExecutionMode::RequireVerification => {
                         StatementExecutionTrace::verified(result.is_unknown())
                     }
                 };

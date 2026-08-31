@@ -336,10 +336,6 @@ impl SymbolRole {
         }
     }
 
-    pub fn is_public_definition(self) -> bool {
-        !matches!(self, SymbolRole::StructureField | SymbolRole::Binder)
-    }
-
     pub fn is_object_symbol(self) -> bool {
         matches!(
             self,

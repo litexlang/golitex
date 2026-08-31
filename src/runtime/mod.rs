@@ -13,8 +13,7 @@ pub use crate::output::style::OutputStyle;
 pub use execution_frame::{ExecutionFrame, ExecutionMode};
 pub use execution_module_file_info::ExecutionModuleFileInfo;
 pub use name_resolution::{
-    bare_symbol_name_reserved_error, BareSymbol, FreeParamCollection, FreeParamTypeAndLineFile,
-    TransparentObjectDefinitionUse,
+    FreeParamCollection, FreeParamTypeAndLineFile, TransparentObjectDefinitionUse,
 };
 pub use parse_context::{ParseContext, ScopeFrame};
 pub use run_options::{ExecutionOption, RunOption, RunOptions, SummaryOption};

@@ -173,13 +173,6 @@ impl Runtime {
             {
                 return Err(super::symbols::active_parse_name_error(name, &line_file));
             }
-            if let Some(external) = self.bare_symbol(name) {
-                return Err(super::symbols::bare_symbol_name_reserved_error(
-                    name,
-                    external,
-                    Some(line_file.clone()),
-                ));
-            }
         }
         self.current_parse_context_mut().free_params.begin_scope(
             BindingScope::DefinitionBinding,
@@ -242,15 +235,6 @@ impl Runtime {
             .map(|binding| binding.name().to_string())
             .collect::<Vec<_>>();
         for binding in bindings {
-            if scope.respects_bare_symbols(binding.name()) {
-                if let Some(external) = self.bare_symbol(binding.name()) {
-                    return Err(super::symbols::bare_symbol_name_reserved_error(
-                        binding.name(),
-                        external,
-                        Some(line_file.clone()),
-                    ));
-                }
-            }
             if let Some(active) = self.current_parse_context().active_binding(binding.name()) {
                 if active.id() != binding.id() {
                     return Err(super::symbols::active_parse_name_error(

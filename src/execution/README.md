@@ -5,7 +5,7 @@ For `1 + 1 = 2`, execution checks the expression, verifies the equality, stores 
 ```text
 execute_statement(Stmt::Fact(1 + 1 = 2))
   clear statement-local proof caches
-  read ExecutionMode::Verified or ExecutionMode::Trusted
+  read ExecutionMode::RequireVerification or ExecutionMode::Trusted
   verify both sides are well-defined
   verify 1 + 1 = 2
   store the fact and allocate its FactId

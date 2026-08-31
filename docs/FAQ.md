@@ -503,26 +503,10 @@ known-fact and known-`forall` space closer to the topic of the current proof.
 
 ## Can an imported package's public symbols be used without the module prefix?
 
-Yes, but only through an explicit `litex.config` opt-in. Use
-`[allow bare export]`, `[allow bare import std]`, or `[allow bare import]` with
-one name per line from the matching `[export]`, `[import std]`, or `[import]`
-table. Existing configurations remain qualified-only.
-
-Litex indexes terminal symbols from the enabled package's complete recursive
-public export tree once when a source file is entered. It does not expose the
-package's private imports. Flattened packages participate normally, so bare
-`b` can denote the same underlying symbol as public `A::b`. If two enabled
-trees expose different symbols both named `b`, the manifest is rejected; there
-is no Python-style last-import-wins rule.
-
-Explicit `A::b` always bypasses bare lookup. Module names and symbol names are
-separate, so `A` may still be both a module head and a local object. In contrast,
-once external bare `b` is active, no local definition or binder may also use
-`b`; struct fields such as `value.b` remain separate. Permissions inherit into
-submodules, but an export is not visible until it has loaded, so an earlier file
-cannot accidentally cite a later file. Interactive terminal imports remain
-qualified-only; they update the REPL's ephemeral manifest and are not valid
-inside Litex source.
+No. Cross-module references always use canonical qualified names such as
+`A::b` or `basics::theorem`. Module names and symbol names are separate, so
+`A` may still be both a module head and a local object. Interactive terminal
+imports are also qualified-only and are not valid inside Litex source.
 
 A practical rule of thumb is:
 

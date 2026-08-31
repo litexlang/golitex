@@ -77,7 +77,7 @@ impl DefinitionGraphBuilder {
         source_path: &str,
         node_ids: &[String],
     ) {
-        if execution_mode == ExecutionMode::Verified || node_ids.is_empty() {
+        if execution_mode == ExecutionMode::RequireVerification || node_ids.is_empty() {
             return;
         }
         let unverified = runtime

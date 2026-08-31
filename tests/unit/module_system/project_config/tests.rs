@@ -41,52 +41,21 @@ fn parses_standard_imports_separately_from_path_imports() {
 }
 
 #[test]
-fn parses_three_allow_bare_tables_without_enabling_them_by_default() {
-    let config = parse_project_config(
-            "[hierarchy]\nmodule\n\n[import]\nLocal = \"../local\"\n\n[import std]\nbasics\n\n[export]\nPublic = \"./Public\"\nmain = \"./main.lit\"\n\n[allow bare export]\nPublic\n\n[allow bare import std]\nbasics\n\n[allow bare import]\nLocal\n",
-            "litex.config",
-        )
-        .expect("parse allow-bare configuration");
-
-    assert_eq!(config.allow_bare_exports[0].name, "Public");
-    assert_eq!(config.allow_bare_std_imports[0].name, "basics");
-    assert_eq!(config.allow_bare_imports[0].name, "Local");
-
-    let default_config = parse_project_config(
-        "[hierarchy]\nmodule\n\n[export]\nmain = \"./main.lit\"\n",
-        "litex.config",
-    )
-    .expect("legacy qualified-only configuration");
-    assert!(default_config.allow_bare_exports.is_empty());
-    assert!(default_config.allow_bare_std_imports.is_empty());
-    assert!(default_config.allow_bare_imports.is_empty());
-}
-
-#[test]
-fn allow_bare_entries_are_strict_and_category_checked() {
-    for (source, expected) in [
-            (
-                "[hierarchy]\nmodule\n\n[export]\nA = \"./A\"\n\n[allow bare export]\nA = true\n",
-                "expects exactly one module name per line",
-            ),
-            (
-                "[hierarchy]\nmodule\n\n[export]\nA = \"./A\"\n\n[allow bare export]\nA\nA\n",
-                "duplicate module name `A`",
-            ),
-            (
-                "[hierarchy]\nmodule\n\n[import]\nA = \"../A\"\n\n[export]\nmain = \"./main.lit\"\n\n[allow bare export]\nA\n",
-                "must be declared in [export]",
-            ),
-            (
-                "[hierarchy]\nmodule\n\n[export]\nmain = \"./main.lit\"\n\n[allow bare export]\nmain\n",
-                "must name an exported folder/submodule",
-            ),
-        ] {
-            let Err(error) = parse_project_config(source, "litex.config") else {
-                panic!("invalid allow-bare entry must be rejected");
-            };
-            assert!(format!("{error:?}").contains(expected), "{error:?}");
-        }
+fn removed_allow_bare_tables_are_rejected() {
+    for table in [
+        "[allow bare export]",
+        "[allow bare import std]",
+        "[allow bare import]",
+    ] {
+        let source =
+            format!("[hierarchy]\nmodule\n\n[export]\nmain = \"./main.lit\"\n\n{table}\nA\n");
+        let Err(error) = parse_project_config(&source, "litex.config") else {
+            panic!("removed configuration table must be rejected: {table}");
+        };
+        let output = format!("{error:?}");
+        assert!(output.contains("only supports"), "{output}");
+        assert!(!output.contains(table), "{output}");
+    }
 }
 
 #[test]

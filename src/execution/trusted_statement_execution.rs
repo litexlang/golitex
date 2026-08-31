@@ -109,7 +109,7 @@ impl Runtime {
             // contract incomplete.
             Stmt::Definition(DefinitionStmt::DefTemplateStmt(s)) => {
                 let previous_execution_mode =
-                    self.replace_current_execution_mode(ExecutionMode::Verified);
+                    self.replace_current_execution_mode(ExecutionMode::RequireVerification);
                 let result = self.exec_def_template_stmt(s);
                 self.replace_current_execution_mode(previous_execution_mode);
                 result

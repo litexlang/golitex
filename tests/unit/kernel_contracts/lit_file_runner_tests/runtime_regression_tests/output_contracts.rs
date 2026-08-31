@@ -2618,7 +2618,7 @@ fn error_output_preserves_failed_step_and_step_indexes_in_all_styles() {
     ))
     .into();
     let error = runtime
-        .finish_statement_execution(Err(error), ExecutionMode::Verified)
+        .finish_statement_execution(Err(error), ExecutionMode::RequireVerification)
         .expect_err("synthetic proof-step error should remain an error");
 
     let mut outputs = Vec::new();

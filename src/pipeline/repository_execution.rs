@@ -111,7 +111,7 @@ fn run_repository_module_with_mode(
     }
     if module.status == ModuleStatus::Loaded {
         if matches!(module_run, RepositoryModuleRun::Complete)
-            && execution_mode == ExecutionMode::Verified
+            && execution_mode == ExecutionMode::RequireVerification
             && module.execution_mode == ExecutionMode::Trusted
         {
             return (
@@ -345,7 +345,7 @@ fn config_import_execution_mode(
     config_import: &ConfigImport,
 ) -> ExecutionMode {
     if runtime.run_options.is_strict() {
-        return ExecutionMode::Verified;
+        return ExecutionMode::RequireVerification;
     }
     let import_target = ImportTarget::Module(config_import.module_id);
     let name = runtime
@@ -363,7 +363,7 @@ fn project_target_execution_mode(
     target: ImportTarget,
 ) -> ExecutionMode {
     if runtime.run_options.is_strict() {
-        return ExecutionMode::Verified;
+        return ExecutionMode::RequireVerification;
     }
     let line_file = runtime
         .module_manager
@@ -426,11 +426,6 @@ fn run_repository_exported_file_target_with_mode(
         .expect("registered project file should exist")
         .execution_mode = execution_mode;
     runtime.push_file_execution_frame_with_mode(module_id, file_id, execution_mode);
-    if let Err(error) = runtime.refresh_current_bare_symbol_index() {
-        runtime.pop_execution_frame();
-        runtime.module_manager = module_manager_before;
-        return (vec![], Some(error));
-    }
     let result = run_repository_source_file(runtime, source_path.as_str());
     runtime.pop_execution_frame();
     if result.1.is_some() {

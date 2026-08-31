@@ -88,7 +88,7 @@ pub(super) fn run_terminal_import(source: &str, runtime: &mut Runtime) -> (bool,
         .expect("terminal import module should be registered")
         .status;
     let execution_mode = if runtime.run_options.is_strict() {
-        ExecutionMode::Verified
+        ExecutionMode::RequireVerification
     } else {
         let name = runtime
             .module_manager
@@ -143,7 +143,7 @@ pub(super) fn run_terminal_import(source: &str, runtime: &mut Runtime) -> (bool,
                 "execution_mode".to_string(),
                 JsonValue::JsonString(
                     match execution_mode {
-                        ExecutionMode::Verified => "verified",
+                        ExecutionMode::RequireVerification => "verified",
                         ExecutionMode::Trusted => "trusted",
                     }
                     .to_string(),
