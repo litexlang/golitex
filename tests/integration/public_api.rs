@@ -30,6 +30,7 @@ fn curated_api_exposes_one_owned_entry_for_every_batch_input() {
         strict_mode: true,
         output_language: OutputLanguage::SimplifiedChinese,
         summarize: true,
+        is_isolated: false,
     };
     let code = run_code("1 = 1", options);
     assert!(code.ok, "{}", code.output);
@@ -37,6 +38,42 @@ fn curated_api_exposes_one_owned_entry_for_every_batch_input() {
     assert_eq!(code.target.kind(), RunTargetKind::Code);
     assert!(code.target.path().is_none());
     assert_eq!(code.runtime.run_options, options);
+
+    let project_file = run_file("missing-project-file.lit", RunOptions::default());
+    assert!(matches!(
+        project_file.target,
+        RunTarget::File {
+            mode: FileRunMode::Project,
+            ..
+        }
+    ));
+    let isolated_file = run_file(
+        "missing-isolated-file.lit",
+        RunOptions {
+            is_isolated: true,
+            ..RunOptions::default()
+        },
+    );
+    assert!(matches!(
+        isolated_file.target,
+        RunTarget::File {
+            mode: FileRunMode::Isolated,
+            ..
+        }
+    ));
+    assert!(isolated_file.runtime.run_options.is_isolated);
+    let compatibility_isolated_file =
+        run_isolated_file("missing-compatibility-file.lit", RunOptions::default());
+    assert!(matches!(
+        compatibility_isolated_file.target,
+        RunTarget::File {
+            mode: FileRunMode::Isolated,
+            ..
+        }
+    ));
+    assert!(compatibility_isolated_file.runtime.run_options.is_isolated);
+    let repository = run_repository("missing-project", RunOptions::default());
+    assert!(matches!(repository.target, RunTarget::Repository { .. }));
 
     let _: fn(&str, RunOptions) -> RunOutcome = run_code;
     let _: fn(&str, RunOptions) -> RunOutcome = run_file;

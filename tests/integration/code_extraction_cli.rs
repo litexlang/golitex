@@ -24,7 +24,7 @@ fn direct_inline_extraction_uses_the_new_python_and_c_commands() {
 }
 
 #[test]
-fn extraction_commands_reject_the_old_inline_selector() {
+fn central_whitelist_rejects_the_old_extraction_inline_selector() {
     for flag in ["-extractpython", "-extractc"] {
         let output = Command::new(env!("CARGO_BIN_EXE_litex"))
             .args([flag, "-e", "have a R = 1"])
@@ -32,7 +32,10 @@ fn extraction_commands_reject_the_old_inline_selector() {
             .expect("run extraction CLI with retired -e selector");
         assert_eq!(output.status.code(), Some(2), "{output:?}");
         let stderr = String::from_utf8(output.stderr).expect("stderr is UTF-8");
-        assert!(stderr.contains("remove `-e`"), "{stderr}");
+        assert!(
+            stderr.contains("unsupported CLI command combination"),
+            "{stderr}"
+        );
     }
 }
 

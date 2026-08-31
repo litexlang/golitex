@@ -29,5 +29,5 @@ $release_right(1)
 
 # Boundary: `release thm ... => fact` and indented proof/goal bodies remain
 # rejected; use `by thm ... => fact` to select one atomic consequence.
-# Evidence: direct isolated-runner coverage plus the focused parser and runtime
+# Evidence: direct isolated-graph coverage plus the focused parser and runtime
 # regressions for `release thm`.

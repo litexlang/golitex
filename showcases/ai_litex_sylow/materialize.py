@@ -90,8 +90,8 @@ def build_evidence(raw: bytes, events: list[dict], target: str) -> dict:
         "recorded_on": "2026-08-29",
         "recorded_target": "tmp/2026-08-29/ai-litex-sylow-showcase/main.lit",
         "published_target": target,
-        "recorded_session_command": "target/release/litex -compact -session -before tmp/2026-08-29/ai-litex-sylow-showcase/main.lit",
-        "replay_session_command": f"target/release/litex -compact -session -before {target}",
+        "recorded_session_mode": "historical pre-target session available on 2026-08-29",
+        "replay_session_command": "python3 showcases/ai_litex_sylow/replay_session.py --output <events.jsonl>",
         "raw_jsonl": {
             "sha256": sha256_bytes(raw),
             "bytes": len(raw),
@@ -110,7 +110,7 @@ def build_journal(showcase_dir: Path, target: str) -> dict:
     return {
         "schema_version": 1,
         "target": target,
-        "session_command": f"target/release/litex -compact -session -before {target}",
+        "session_command": "python3 showcases/ai_litex_sylow/replay_session.py --output <events.jsonl>",
         "proof_spine": [
             "Use the canonical coordinate-bijection theorem to obtain finiteness and the exact quotient-preimage cardinality.",
             "Substitute |K| = p and |H| = p^k to obtain the successor order p^(k+1).",
@@ -182,7 +182,7 @@ def build_journal(showcase_dir: Path, target: str) -> dict:
         "materialization": {
             "block_ids": ["P001", "P002", "P003"],
             "source_matches_frames": True,
-            "file_gate_command": f"target/release/litex -compact -runner -f {target}",
+            "file_gate_command": f"target/release/litex -compact -graph -f {target}",
             "file_gate_result": "not_run",
         },
     }

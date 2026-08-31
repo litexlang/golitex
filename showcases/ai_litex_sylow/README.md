@@ -126,7 +126,7 @@ projection. It marks the source as pending until the clean gate below passes.
 Finally, verify the materialized file from a clean process:
 
 ```bash
-target/release/litex -compact -runner -f \
+target/release/litex -compact -graph -f \
   showcases/ai_litex_sylow/main.lit
 ```
 

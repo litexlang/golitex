@@ -16,7 +16,7 @@ This independent first version implements a checked derivative tranche:
 Run it from the repository root with:
 
 ```bash
-target/release/litex -compact -runner -r showcases/math_concepts_in_litex/7_calculus
+target/release/litex -compact -graph -r showcases/math_concepts_in_litex/7_calculus
 ```
 
 The executable file contains no `trust` or local axiom. Derivatives remain a

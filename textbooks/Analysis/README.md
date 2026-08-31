@@ -20,7 +20,7 @@ logic and proof-language examples.
 Verify the final registered chapter under its configured prefix with:
 
 ```text
-target/release/litex -compact -runner -f scripts/Analysis/textbook/chapter11-riemann-integral.lit
+target/release/litex -compact -graph -f scripts/Analysis/textbook/chapter11-riemann-integral.lit
 ```
 
 The historical full-book README and comment-only `todo.lit` ledger remain in

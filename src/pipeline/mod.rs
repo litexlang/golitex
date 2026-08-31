@@ -20,6 +20,4 @@ pub use run::{run_code, run_file, run_isolated_file, run_repository, RunOutcome}
 pub use session::{run_session, SessionRequest};
 pub use source_execution::SourceRunOutcome;
 pub use summary::{render_run_summary, RunSummary, RunSummaryRequest};
-pub use target::{
-    ExecutionTarget, FileRunMode, RunTarget, RunTargetKind, SessionTarget,
-};
+pub use target::{ExecutionTarget, FileRunMode, RunTarget, RunTargetKind, SessionTarget};

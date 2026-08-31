@@ -574,14 +574,32 @@ fn order_transitivity_builtin_mut(
 }
 
 #[test]
-fn order_transitivity_fails_closed_without_a_reviewed_mapping() {
+fn order_transitivity_replays_its_reviewed_mixed_path() {
     run_registered_rule_test(|| {
         let mut results = execute_order_transitivity();
         order_transitivity_builtin_mut(&mut results);
+        let generated = StmtResultToLeanCompiler::new("direct_order_transitivity.lit")
+            .compile_stmt_results_to_lean_source(&results)
+            .expect("compile reviewed mixed order transitivity");
+        assert!(generated.contains("Litex.Le.transLt"), "{generated}");
+        for forbidden in ["axiom ", "sorry", "admit", "trust"] {
+            assert!(!generated.contains(forbidden), "{generated}");
+        }
+    });
+}
+
+#[test]
+fn order_transitivity_rejects_a_corrupted_ordered_path() {
+    run_registered_rule_test(|| {
+        let mut results = execute_order_transitivity();
+        let builtin = order_transitivity_builtin_mut(&mut results);
+        let child_count = builtin.subgoals.len();
+        builtin.subgoals.swap(child_count - 2, child_count - 1);
+
         let error = StmtResultToLeanCompiler::new("direct_order_transitivity.lit")
             .compile_stmt_results_to_lean_source(&results)
-            .expect_err("non-catalog order transitivity must fail closed");
-        assert!(error.contains("order.transitivity"), "{error}");
+            .expect_err("a reordered transitivity path must fail closed");
+        assert!(error.contains("endpoint path"), "{error}");
     });
 }
 

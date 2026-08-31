@@ -168,16 +168,15 @@ file gate before it can be considered for permanent skill promotion.
 |---|---|
 | Check one source string | `litex -e '1 = 1'` |
 | Check a registered project file | `litex -f path/to/file.lit` |
-| Check a standalone scratch file and exit | `litex -runner -isolated -f scratch.lit` |
-| Get one machine-readable result | `litex -runner -f path/to/file.lit` |
+| Check a standalone scratch file | `litex -isolated -f scratch.lit` |
 | Inspect full failure phases | `litex -detail -f path/to/file.lit` |
-| Audit a complete project and reject explicit trust | `litex -strict -runner -r path/to/project` |
-| Probe repeatedly before one registered file | `litex -compact -session -before path/to/file.lit` |
+| Audit a complete project and reject explicit trust | `litex -strict -r path/to/project` |
+| Probe repeatedly after one verified registered file | `litex -compact -session -f path/to/file.lit` |
 
 `-f` requires a `litex.config` in the file's direct parent. Use `-isolated -f`
-for a standalone file, `-r` for a project's complete export tree, `-runner`
-for scripts and CI, and `-strict` for a full dependency and trust audit. See
-[CLI](cli.md) for precise loading, output, exit-code, and session contracts.
+for a standalone file, `-r` for a project's complete export tree, and `-strict`
+for a full dependency and trust audit. Scripts must inspect the emitted JSON
+results. See [CLI](cli.md) for precise loading, output, and session contracts.
 
 ## Hard Boundaries
 

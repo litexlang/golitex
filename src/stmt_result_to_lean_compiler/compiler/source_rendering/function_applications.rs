@@ -10,6 +10,9 @@ pub(in super::super) fn matches_directly_or_after_one_transparent_definition_pas
     if obj_equality_key(source) == obj_equality_key(target) {
         return Ok(true);
     }
+    if objects_match_under_installed_symbol_aliases(source, target, context)? {
+        return Ok(true);
+    }
     let substitutions = context
         .transparent_object_definitions
         .iter()
@@ -27,6 +30,47 @@ pub(in super::super) fn matches_directly_or_after_one_transparent_definition_pas
             )
         })?;
     Ok(obj_equality_key(&reduced) == obj_equality_key(target))
+}
+
+/// Compare two occurrence-distinct application sources only through symbol
+/// aliases already installed by an enclosing Result-owned binder replay.  A
+/// textual identifier-erased match is necessary but not sufficient: every
+/// differing atom must resolve to the same visible Lean binder.  This permits
+/// alpha-renamed anonymous-function bodies without turning semantic keys into
+/// a global certificate lookup.
+fn objects_match_under_installed_symbol_aliases(
+    source: &Obj,
+    target: &Obj,
+    context: &StmtResultToLeanCompilerEnvironmentStack,
+) -> Result<bool, String> {
+    if obj_equality_key(source) == obj_equality_key(target) {
+        return Ok(true);
+    }
+    if source_display_without_symbol_ids(&source.to_string())
+        != source_display_without_symbol_ids(&target.to_string())
+    {
+        return Ok(false);
+    }
+    if let (Obj::Atom(source_atom), Obj::Atom(target_atom)) = (source, target) {
+        let (Some(source_symbol), Some(target_symbol)) =
+            (source_atom.symbol_ref(), target_atom.symbol_ref())
+        else {
+            return Ok(false);
+        };
+        return Ok(context
+            .symbol_names
+            .get(&source_symbol.id())
+            .is_some_and(|source_name| {
+                context.symbol_names.get(&target_symbol.id()) == Some(source_name)
+            }));
+    }
+    Runtime::same_shape_and_corresponding_args_match(
+        source,
+        target,
+        &mut |source_child, target_child| {
+            objects_match_under_installed_symbol_aliases(source_child, target_child, context)
+        },
+    )
 }
 
 pub(in super::super) fn matches_result_owned_application_source(
@@ -686,7 +730,7 @@ pub(in super::super) fn render_function_application(
                 } else {
                     "Litex.fnApplySelectedCarrier"
                 };
-                format!("({apply} {head} {membership_proof} {})", arguments[0])
+                format!("({apply} {head} ({membership_proof}) {})", arguments[0])
             } else {
                 let apply = match (direct, domain_proofs.is_empty()) {
                     (true, true) => "Litex.fnApplyOwn",
@@ -698,7 +742,7 @@ pub(in super::super) fn render_function_application(
                 let argument_membership = &argument_memberships[0];
                 if domain_proofs.is_empty() {
                     format!(
-                        "({apply} {head} {membership_proof} {argument} ({argument_membership}))"
+                        "({apply} {head} ({membership_proof}) {argument} ({argument_membership}))"
                     )
                 } else {
                     let domain_proof = if domain_proofs.len() == 1 {
@@ -707,7 +751,7 @@ pub(in super::super) fn render_function_application(
                         format!("⟨{}⟩", domain_proofs.join(", "))
                     };
                     format!(
-                    "({apply} {head} {membership_proof} {argument} ({argument_membership}) ({domain_proof}))"
+                    "({apply} {head} ({membership_proof}) {argument} ({argument_membership}) ({domain_proof}))"
                 )
                 }
             }
@@ -717,7 +761,7 @@ pub(in super::super) fn render_function_application(
             } else {
                 "Litex.fnTelescopeApply"
             };
-            let mut term = format!("({apply} {head} {membership_proof})");
+            let mut term = format!("({apply} {head} ({membership_proof}))");
             for (argument, argument_membership) in arguments.iter().zip(argument_memberships.iter())
             {
                 term = format!("({term} {argument} ({argument_membership}))");

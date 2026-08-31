@@ -149,6 +149,56 @@ theorem absSubAbsLeAbsSub (a b : ℂ) :
   rw [sub_add_cancel] at h
   linarith
 
+/-- The non-strict real sandwich characterization used by registered rule
+`order.abs_upper_bound`.  The compiler supplies the exact native-real
+representatives selected by verifier-owned well-definedness evidence. -/
+theorem realCastAbsLeOfUpperAndLower
+    {a b : ℝ}
+    (upper : Litex.Le (a : ℂ) (b : ℂ))
+    (lower : Litex.Le ((-b : ℝ) : ℂ) (a : ℂ)) :
+    Litex.Le (Litex.abs (a : ℂ)) (b : ℂ) := by
+  have hab : a ≤ b := by
+    simpa [Litex.Le, Litex.OrderValue] using upper
+  have hba : -b ≤ a := by
+    simpa [Litex.Le, Litex.OrderValue] using lower
+  simpa [Litex.Le, Litex.OrderValue, Litex.abs, Complex.norm_real,
+    Real.norm_eq_abs] using (abs_le.mpr ⟨hba, hab⟩)
+
+/-- Equivalent non-strict spelling of the lower side as `-a ≤ b`. -/
+theorem realCastAbsLeOfUpperAndNegUpper
+    {a b : ℝ}
+    (upper : Litex.Le (a : ℂ) (b : ℂ))
+    (negUpper : Litex.Le ((-a : ℝ) : ℂ) (b : ℂ)) :
+    Litex.Le (Litex.abs (a : ℂ)) (b : ℂ) := by
+  apply realCastAbsLeOfUpperAndLower upper
+  have h : -a ≤ b := by
+    simpa [Litex.Le, Litex.OrderValue] using negUpper
+  simpa [Litex.Le, Litex.OrderValue] using (show -b ≤ a by linarith)
+
+/-- Strict real sandwich counterpart of `realCastAbsLeOfUpperAndLower`. -/
+theorem realCastAbsLtOfUpperAndLower
+    {a b : ℝ}
+    (upper : Litex.Lt (a : ℂ) (b : ℂ))
+    (lower : Litex.Lt ((-b : ℝ) : ℂ) (a : ℂ)) :
+    Litex.Lt (Litex.abs (a : ℂ)) (b : ℂ) := by
+  have hab : a < b := by
+    simpa [Litex.Lt, Litex.OrderValue] using upper
+  have hba : -b < a := by
+    simpa [Litex.Lt, Litex.OrderValue] using lower
+  simpa [Litex.Lt, Litex.OrderValue, Litex.abs, Complex.norm_real,
+    Real.norm_eq_abs] using (abs_lt.mpr ⟨hba, hab⟩)
+
+/-- Equivalent strict spelling of the lower side as `-a < b`. -/
+theorem realCastAbsLtOfUpperAndNegUpper
+    {a b : ℝ}
+    (upper : Litex.Lt (a : ℂ) (b : ℂ))
+    (negUpper : Litex.Lt ((-a : ℝ) : ℂ) (b : ℂ)) :
+    Litex.Lt (Litex.abs (a : ℂ)) (b : ℂ) := by
+  apply realCastAbsLtOfUpperAndLower upper
+  have h : -a < b := by
+    simpa [Litex.Lt, Litex.OrderValue] using negUpper
+  simpa [Litex.Lt, Litex.OrderValue] using (show -b < a by linarith)
+
 theorem negAbsLe (z : ℂ) : Litex.Le ((-1 : ℂ) * Litex.abs z) z := by
   simpa [Litex.Le, Litex.OrderValue, Litex.abs] using
     (le_trans (neg_le_neg (Complex.abs_re_le_norm z)) (neg_abs_le z.re))
@@ -1001,6 +1051,22 @@ theorem complexDivPositive
   rcases hb with ⟨rb, hrb, hbOrder⟩
   exact ⟨ra / rb, complexDivAsReal hra hrb, div_pos haOrder hbOrder⟩
 
+/-- Dividing a positive real observation by a factor greater than one makes
+it strictly smaller. This packages registered rule
+`order.div_lt_self_of_pos_of_one_lt` over the compiler-selected real carrier. -/
+theorem realCastDivLtSelfOfPositiveOfOneLt
+    {a b : ℝ}
+    (aPositive : Litex.Lt (0 : ℂ) (a : ℂ))
+    (bGreaterThanOne : Litex.Lt (1 : ℂ) (b : ℂ)) :
+    Litex.Lt ((a / b : ℝ) : ℂ) (a : ℂ) := by
+  have ha : 0 < a := by
+    simpa [Litex.Lt, Litex.OrderValue] using aPositive
+  have hb : 1 < b := by
+    simpa [Litex.Lt, Litex.OrderValue] using bGreaterThanOne
+  have hb0 : 0 < b := lt_trans zero_lt_one hb
+  have hab : a < a * b := by nlinarith
+  simpa [Litex.Lt, Litex.OrderValue] using (div_lt_iff₀ hb0).2 hab
+
 /-- Subtracting a smaller real observation from a larger one produces the
 exact nonnegative complex-carrier expression retained by registered rule
 `order.sub_nonnegative_of_less_equal`. -/
@@ -1762,56 +1828,53 @@ translate the retained exact-carrier evidence to native real analysis.
 theorem realLeastUpperBoundExists
     (set : Litex.Set)
     (upperBound : ℝ)
-    (observe : set.Carrier → ℝ)
-    (observation : set.realValue = some observe)
-    (observeSame : ∀ member : set.Carrier, Litex.Same member (observe member))
     (setSubsetReal : Litex.Subset set Litex.R)
     (setNonempty : Litex.Set.Nonempty set)
     (upperBoundReal : Litex.In upperBound Litex.R)
     (boundsEveryMember :
-      ∀ (member : set.Carrier),
-        Litex.In member set →
-          Litex.Le (observe member : ℂ) (upperBound : ℂ)) :
+      ∀ member : ℝ,
+        Litex.In member set → Litex.Le (member : ℂ) (upperBound : ℂ)) :
     ∃ candidate : ℝ,
       ∃ _candidateReal : Litex.In candidate Litex.R,
         Litex.RealLeastUpperBound set (candidate : ℂ) := by
-  let values : _root_.Set ℝ := _root_.Set.range observe
-  have valuesAreRegistered : Litex.realMemberValues set = values := by
-    simp [Litex.realMemberValues, observation, values]
+  let values : _root_.Set ℝ :=
+    Litex.realSubsetMemberValues set setSubsetReal
   have valuesNonempty : values.Nonempty := by
     rcases setNonempty with ⟨member⟩
-    exact ⟨observe member, ⟨member, rfl⟩⟩
+    let memberInReal := setSubsetReal member (Litex.In.own set member)
+    let value : ℝ := Litex.In.rep member memberInReal
+    have valueInSet : Litex.In value set :=
+      (Litex.In.congr (Litex.In.same_rep member memberInReal) set).mp
+        (Litex.In.own set member)
+    exact ⟨value, by simpa [values, Litex.realSubsetMemberValues,
+      Litex.realMemberValues] using valueInSet⟩
   have valuesBounded : BddAbove values := by
     refine ⟨upperBound, ?_⟩
     intro value valueInSet
-    rcases valueInSet with ⟨member, rfl⟩
-    have ordered := boundsEveryMember member (Litex.In.own set member)
+    have ordered := boundsEveryMember value (by
+      simpa [values, Litex.realSubsetMemberValues, Litex.realMemberValues] using valueInSet)
     simpa [Litex.Le, Litex.OrderValue] using ordered
   let supremum : ℝ := sSup values
   have supremumIsLUB : IsLUB values supremum := by
     exact isLUB_csSup valuesNonempty valuesBounded
   have candidateReal : Litex.In supremum Litex.R := Litex.In.own Litex.R supremum
-  refine ⟨supremum, candidateReal, ?_⟩
-  simpa [Litex.RealLeastUpperBound, Litex.OrderValue, supremum,
-    valuesAreRegistered] using supremumIsLUB
+  refine ⟨supremum, candidateReal, setSubsetReal, ?_⟩
+  simpa [Litex.OrderValue, supremum, values] using supremumIsLUB
 
 theorem realMemberLeLeastUpperBound
     (set : Litex.Set)
     (candidate : ℂ)
-    {alpha : Type}
-    (member : alpha)
-    (observe : set.Carrier → ℝ)
-    (observation : set.realValue = some observe)
+    (member : ℝ)
     (setSubsetReal : Litex.Subset set Litex.R)
     (candidateReal : Litex.In candidate Litex.R)
     (candidateIsLUB : Litex.RealLeastUpperBound set candidate)
     (memberInSet : Litex.In member set) :
-    Litex.Le (observe (Litex.In.rep member memberInSet) : ℂ) candidate := by
-  let lub := candidateIsLUB
+    Litex.Le (member : ℂ) candidate := by
+  rcases candidateIsLUB with ⟨certificateSubset, lub⟩
   have memberValue :
-      observe (Litex.In.rep member memberInSet) ∈
-        Litex.realMemberValues set := by
-    simp [Litex.realMemberValues, observation]
+      member ∈
+        Litex.realSubsetMemberValues set setSubsetReal := by
+    simpa [Litex.realSubsetMemberValues, Litex.realMemberValues] using memberInSet
   have ordered := lub.1 memberValue
   simpa [Litex.Le, Litex.OrderValue] using ordered
 
@@ -1819,27 +1882,23 @@ theorem realLeastUpperBoundLeUpperBound
     (set : Litex.Set)
     (candidate : ℂ)
     (upperBound : ℝ)
-    (observe : set.Carrier → ℝ)
-    (observation : set.realValue = some observe)
     (setSubsetReal : Litex.Subset set Litex.R)
     (candidateReal : Litex.In candidate Litex.R)
     (candidateIsLUB : Litex.RealLeastUpperBound set candidate)
     (upperBoundReal : Litex.In upperBound Litex.R)
     (boundsEveryMember :
-      ∀ (member : set.Carrier),
-        Litex.In member set →
-          Litex.Le (observe member : ℂ) (upperBound : ℂ)) :
+      ∀ member : ℝ,
+        Litex.In member set → Litex.Le (member : ℂ) (upperBound : ℂ)) :
     Litex.Le
       candidate
       (upperBound : ℂ) := by
-  let lub := candidateIsLUB
+  rcases candidateIsLUB with ⟨certificateSubset, lub⟩
   have suppliedIsUpperBound :
-      ∀ value ∈ Litex.realMemberValues set,
+      ∀ value ∈ Litex.realSubsetMemberValues set setSubsetReal,
         value ≤ upperBound := by
     intro value valueInSet
-    rw [Litex.realMemberValues, observation] at valueInSet
-    rcases valueInSet with ⟨member, rfl⟩
-    have ordered := boundsEveryMember member (Litex.In.own set member)
+    have ordered := boundsEveryMember value (by
+      simpa [Litex.realSubsetMemberValues, Litex.realMemberValues] using valueInSet)
     simpa [Litex.Le, Litex.OrderValue] using ordered
   have ordered := lub.2 suppliedIsUpperBound
   simpa [Litex.Le, Litex.OrderValue] using ordered
@@ -1849,56 +1908,53 @@ conditionally complete order on the exact observed real member values. -/
 theorem realGreatestLowerBoundExists
     (set : Litex.Set)
     (lowerBound : ℝ)
-    (observe : set.Carrier → ℝ)
-    (observation : set.realValue = some observe)
-    (observeSame : ∀ member : set.Carrier, Litex.Same member (observe member))
     (setSubsetReal : Litex.Subset set Litex.R)
     (setNonempty : Litex.Set.Nonempty set)
     (lowerBoundReal : Litex.In lowerBound Litex.R)
     (boundsEveryMember :
-      ∀ (member : set.Carrier),
-        Litex.In member set →
-          Litex.Le (lowerBound : ℂ) (observe member : ℂ)) :
+      ∀ member : ℝ,
+        Litex.In member set → Litex.Le (lowerBound : ℂ) (member : ℂ)) :
     ∃ candidate : ℝ,
       ∃ _candidateReal : Litex.In candidate Litex.R,
         Litex.RealGreatestLowerBound set (candidate : ℂ) := by
-  let values : _root_.Set ℝ := _root_.Set.range observe
-  have valuesAreRegistered : Litex.realMemberValues set = values := by
-    simp [Litex.realMemberValues, observation, values]
+  let values : _root_.Set ℝ :=
+    Litex.realSubsetMemberValues set setSubsetReal
   have valuesNonempty : values.Nonempty := by
     rcases setNonempty with ⟨member⟩
-    exact ⟨observe member, ⟨member, rfl⟩⟩
+    let memberInReal := setSubsetReal member (Litex.In.own set member)
+    let value : ℝ := Litex.In.rep member memberInReal
+    have valueInSet : Litex.In value set :=
+      (Litex.In.congr (Litex.In.same_rep member memberInReal) set).mp
+        (Litex.In.own set member)
+    exact ⟨value, by simpa [values, Litex.realSubsetMemberValues,
+      Litex.realMemberValues] using valueInSet⟩
   have valuesBounded : BddBelow values := by
     refine ⟨lowerBound, ?_⟩
     intro value valueInSet
-    rcases valueInSet with ⟨member, rfl⟩
-    have ordered := boundsEveryMember member (Litex.In.own set member)
+    have ordered := boundsEveryMember value (by
+      simpa [values, Litex.realSubsetMemberValues, Litex.realMemberValues] using valueInSet)
     simpa [Litex.Le, Litex.OrderValue] using ordered
   let infimum : ℝ := sInf values
   have infimumIsGLB : IsGLB values infimum := by
     exact isGLB_csInf valuesNonempty valuesBounded
   have candidateReal : Litex.In infimum Litex.R := Litex.In.own Litex.R infimum
-  refine ⟨infimum, candidateReal, ?_⟩
-  simpa [Litex.RealGreatestLowerBound, Litex.OrderValue, infimum,
-    valuesAreRegistered] using infimumIsGLB
+  refine ⟨infimum, candidateReal, setSubsetReal, ?_⟩
+  simpa [Litex.OrderValue, infimum, values] using infimumIsGLB
 
 theorem realGreatestLowerBoundLeMember
     (set : Litex.Set)
     (candidate : ℂ)
-    {alpha : Type}
-    (member : alpha)
-    (observe : set.Carrier → ℝ)
-    (observation : set.realValue = some observe)
+    (member : ℝ)
     (setSubsetReal : Litex.Subset set Litex.R)
     (candidateReal : Litex.In candidate Litex.R)
     (candidateIsGLB : Litex.RealGreatestLowerBound set candidate)
     (memberInSet : Litex.In member set) :
-    Litex.Le candidate (observe (Litex.In.rep member memberInSet) : ℂ) := by
-  let glb := candidateIsGLB
+    Litex.Le candidate (member : ℂ) := by
+  rcases candidateIsGLB with ⟨certificateSubset, glb⟩
   have memberValue :
-      observe (Litex.In.rep member memberInSet) ∈
-        Litex.realMemberValues set := by
-    simp [Litex.realMemberValues, observation]
+      member ∈
+        Litex.realSubsetMemberValues set setSubsetReal := by
+    simpa [Litex.realSubsetMemberValues, Litex.realMemberValues] using memberInSet
   have ordered := glb.1 memberValue
   simpa [Litex.Le, Litex.OrderValue] using ordered
 
@@ -1906,25 +1962,21 @@ theorem realLowerBoundLeGreatestLowerBound
     (set : Litex.Set)
     (candidate : ℂ)
     (lowerBound : ℝ)
-    (observe : set.Carrier → ℝ)
-    (observation : set.realValue = some observe)
     (setSubsetReal : Litex.Subset set Litex.R)
     (candidateReal : Litex.In candidate Litex.R)
     (candidateIsGLB : Litex.RealGreatestLowerBound set candidate)
     (lowerBoundReal : Litex.In lowerBound Litex.R)
     (boundsEveryMember :
-      ∀ (member : set.Carrier),
-        Litex.In member set →
-          Litex.Le (lowerBound : ℂ) (observe member : ℂ)) :
+      ∀ member : ℝ,
+        Litex.In member set → Litex.Le (lowerBound : ℂ) (member : ℂ)) :
     Litex.Le (lowerBound : ℂ) candidate := by
-  let glb := candidateIsGLB
+  rcases candidateIsGLB with ⟨certificateSubset, glb⟩
   have suppliedIsLowerBound :
-      ∀ value ∈ Litex.realMemberValues set,
+      ∀ value ∈ Litex.realSubsetMemberValues set setSubsetReal,
         lowerBound ≤ value := by
     intro value valueInSet
-    rw [Litex.realMemberValues, observation] at valueInSet
-    rcases valueInSet with ⟨member, rfl⟩
-    have ordered := boundsEveryMember member (Litex.In.own set member)
+    have ordered := boundsEveryMember value (by
+      simpa [Litex.realSubsetMemberValues, Litex.realMemberValues] using valueInSet)
     simpa [Litex.Le, Litex.OrderValue] using ordered
   have ordered := glb.2 suppliedIsLowerBound
   simpa [Litex.Le, Litex.OrderValue] using ordered

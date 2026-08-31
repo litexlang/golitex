@@ -2659,7 +2659,9 @@ impl Runtime {
                     SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         atomic_fact.clone().into(),
                         "a / b < a from 0 < a and 1 < b".to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryLessAlgebra13),
+                        BuiltinRuleEvidence::Arithmetic(
+                            ArithmeticBuiltinRule::DivByGreaterThanOneLessSelf,
+                        ),
                         vec![r_pos, r_denom_gt_one],
                     ),
                 )));

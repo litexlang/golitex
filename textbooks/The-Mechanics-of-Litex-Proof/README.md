@@ -15,13 +15,13 @@ Build and verify the complete module with the release binary:
 
 ```text
 cargo build --release
-target/release/litex -compact -runner -r scripts/The-Mechanics-of-Litex-Proof/textbook
+target/release/litex -compact -graph -r scripts/The-Mechanics-of-Litex-Proof/textbook
 ```
 
 For an individual registered chapter, use:
 
 ```text
-target/release/litex -compact -runner -f scripts/The-Mechanics-of-Litex-Proof/textbook/chapter09-sets.lit
+target/release/litex -compact -graph -f scripts/The-Mechanics-of-Litex-Proof/textbook/chapter09-sets.lit
 ```
 
 As of 2026-08-17, every registered `.lit` file passes `-f`, and the complete
@@ -84,15 +84,17 @@ the shipping module in
 
 ## Editing workflow
 
-For proof iteration, start one persistent release session before the current
-registered file and submit literal outermost `try:` blocks:
+For proof iteration, put one literal outermost `try:` block in the current
+registered file and run the real configured prefix:
 
 ```text
-target/release/litex -compact -session -before \
+target/release/litex -compact -graph -f \
   scripts/The-Mechanics-of-Litex-Proof/textbook/chapter10-relations.lit
 ```
 
 Record materially distinct failures and the accepted replacement in the
 chapter's JSON proof journal. Materialize accepted source without the outer
 `try:` wrapper, then finish with a clean release `-f` and the complete release
-`-r` gate. Keep working records in the owning workspace, outside `textbook/`.
+`-r` gate. A session can preload only a file that already verifies; it is not a
+pre-target repair environment. Keep working records in the owning workspace,
+outside `textbook/`.

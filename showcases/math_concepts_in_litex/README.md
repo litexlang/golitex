@@ -36,7 +36,7 @@ Every directory publishes the same five artifacts:
 Run any project from the repository root:
 
 ```bash
-target/release/litex -compact -runner -r showcases/math_concepts_in_litex/4_discrete_mathematics_in_nutshell
+target/release/litex -compact -graph -r showcases/math_concepts_in_litex/4_discrete_mathematics_in_nutshell
 lean showcases/math_concepts_in_litex/4_discrete_mathematics_in_nutshell/same_math_in_lean.lean
 ```
 

@@ -8,6 +8,7 @@ import json
 import select
 import subprocess
 import sys
+import tempfile
 import time
 from pathlib import Path
 
@@ -57,14 +58,34 @@ def main() -> int:
 
     showcase_dir = Path(__file__).resolve().parent
     repo_root = find_repo_root(showcase_dir)
-    target = showcase_dir / "main.lit"
+    session_fixture = tempfile.TemporaryDirectory(prefix="litex-sylow-session-")
+    session_root = Path(session_fixture.name)
+    preload = session_root / "preload.lit"
+    preload.write_text("", encoding="utf-8")
+    (session_root / "litex.config").write_text(
+        "\n".join(
+            (
+                "[hierarchy]",
+                "module",
+                "",
+                "[import]",
+                f"MIL = {json.dumps(str(repo_root / 'scripts/mathematics_in_litex/textbook'))}",
+                f"MILAlternative = {json.dumps(str(repo_root / 'scripts/mathematics_in_litex/textbook2'))}",
+                "",
+                "[export]",
+                'preload = "./preload.lit"',
+                "",
+            )
+        ),
+        encoding="utf-8",
+    )
     command = [
         str(repo_root / "target/release/litex"),
         "-compact",
     ]
     if args.strict:
         command.append("-strict")
-    command.extend(["-session", "-before", str(target)])
+    command.extend(["-session", "-f", str(preload)])
 
     started = time.monotonic()
     with args.output.open("wb") as events_file:
@@ -116,6 +137,7 @@ def main() -> int:
             if process.poll() is None:
                 process.terminate()
                 process.wait(timeout=10)
+            session_fixture.cleanup()
 
 
 if __name__ == "__main__":

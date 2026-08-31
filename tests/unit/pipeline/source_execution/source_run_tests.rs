@@ -86,5 +86,5 @@ fn code_run_uses_the_explicit_e_source_label() {
         .expect("code run should retain its source frame");
     assert_eq!(frame.module_file_info.module_id, ModuleId::ROOT);
     assert_eq!(frame.module_file_info.file_id, FileId(0));
-    assert_eq!(frame.module_file_info.source_path.as_ref(), "<-e>");
+    assert_eq!(frame.module_file_info.source_path.as_ref(), "eval");
 }

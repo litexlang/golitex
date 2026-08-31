@@ -230,13 +230,12 @@ class PredeployGateTest(unittest.TestCase):
         )
         envelope = json.dumps(
             {
-                "runner": "litex-runner",
-                "runner_version": "0.2",
+                "graph": "litex-result-graph",
+                "graph_version": "3",
                 "result": "error",
                 "ok": False,
                 "target": {"kind": "file"},
-                "error": None,
-                "trace": successful_prefix + "\n\n" + error_trace,
+                "error": successful_prefix + "\n\n" + error_trace,
             }
         )
 
@@ -347,13 +346,13 @@ class PredeployGateTest(unittest.TestCase):
             self.assertEqual(result.line, 3)
             self.assertEqual(result.statement, "x = x")
 
-    def test_textbook_command_uses_structured_file_runner(self) -> None:
+    def test_textbook_command_uses_result_graph(self) -> None:
         self.assertEqual(
             textbook_file_command(Path("/repo/litex"), Path("/repo/book/ch1.lit")),
             [
                 "/repo/litex",
                 "-compact",
-                "-runner",
+                "-graph",
                 "-f",
                 "/repo/book/ch1.lit",
             ],

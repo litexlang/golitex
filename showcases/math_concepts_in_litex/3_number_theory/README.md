@@ -13,7 +13,7 @@ This independent first version grows from explicit integer witnesses:
 Run it from the repository root with:
 
 ```bash
-target/release/litex -compact -runner -r showcases/math_concepts_in_litex/3_number_theory
+target/release/litex -compact -graph -r showcases/math_concepts_in_litex/3_number_theory
 ```
 
 The module has no `trust` or local axiom. Its gcd is a proof-facing

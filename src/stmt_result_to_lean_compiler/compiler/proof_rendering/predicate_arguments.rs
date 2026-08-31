@@ -126,6 +126,76 @@ pub(in super::super) fn render_exact_predicate_argument(
     set: &Obj,
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
+    // A verifier-checked closed numeric argument of a refined standard set
+    // has a canonical exact carrier: the normalized native value paired with
+    // its refinement proof. Recheck both the sign/integrality classification
+    // here and the proposition in generated Lean. This is the closed-value
+    // counterpart of selecting a variable through its retained `In` proof;
+    // it does not search for or invent a different mathematical fact.
+    if let (Obj::StandardSet(standard_set), Some(evaluation)) =
+        (set, object.evaluate_to_normalized_decimal_number())
+    {
+        let normalized = &evaluation.normalized_value;
+        let sign = compare_normalized_number_str_to_zero(normalized);
+        let native_type = match standard_set {
+            StandardSet::NPos
+                if matches!(sign, NumberCompareResult::Greater)
+                    && normalized
+                        .chars()
+                        .all(|character| character.is_ascii_digit()) =>
+            {
+                Some("ℕ")
+            }
+            StandardSet::QPos if matches!(sign, NumberCompareResult::Greater) => Some("ℚ"),
+            StandardSet::RPos if matches!(sign, NumberCompareResult::Greater) => Some("ℝ"),
+            StandardSet::ZNeg
+                if matches!(sign, NumberCompareResult::Less)
+                    && normalized.parse::<i128>().is_ok() =>
+            {
+                Some("ℤ")
+            }
+            StandardSet::QNeg if matches!(sign, NumberCompareResult::Less) => Some("ℚ"),
+            StandardSet::RNeg if matches!(sign, NumberCompareResult::Less) => Some("ℝ"),
+            _ => None,
+        };
+        if let Some(native_type) = native_type {
+            let rendered_set = render_obj(set, context)?;
+            return Ok(format!(
+                "(⟨({normalized} : {native_type}), by norm_num⟩ : ({rendered_set}).Carrier)"
+            ));
+        }
+    }
+    if matches!(set, Obj::StandardSet(StandardSet::RPos))
+        && !matches!(
+            LeanTargetObjectRepresentation::lower(object),
+            Ok(LeanTargetObjectRepresentation::Symbol { .. })
+        )
+    {
+        if let Ok(real) = render_real_source_object(object, context) {
+            let mut positive_carriers = context
+                .exact_positive_real_carriers
+                .values()
+                .cloned()
+                .collect::<Vec<_>>();
+            positive_carriers.sort();
+            positive_carriers.dedup();
+            let premises = positive_carriers
+                .iter()
+                .enumerate()
+                .map(|(index, carrier)| {
+                    format!(
+                        "have __exact_positive{index} : 0 < (({carrier}).val : ℝ) := ({carrier}).property"
+                    )
+                })
+                .collect::<Vec<_>>();
+            let positivity = if premises.is_empty() {
+                "by positivity".to_string()
+            } else {
+                format!("by\n  {}\n  positivity", premises.join("\n  "))
+            };
+            return Ok(format!("(⟨{real}, {positivity}⟩ : (Litex.RPos).Carrier)"));
+        }
+    }
     if let Ok(LeanTargetObjectRepresentation::Symbol { symbol_id, name }) =
         LeanTargetObjectRepresentation::lower(object)
     {
@@ -413,7 +483,7 @@ pub(in super::super) fn render_exact_predicate_argument_same_to_source(
         .is_ok_and(|rendered_numeric_source| rendered_numeric_source == source)
     {
         return Ok(format!(
-            "Litex.Same.trans ({exact_to_numeric}) (Litex.Same.ofEq (by norm_num))"
+            "Litex.Same.trans ({exact_to_numeric}) (Litex.Same.ofEq (by norm_cast <;> norm_num))"
         ));
     }
     Err(format!(

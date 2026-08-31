@@ -185,6 +185,52 @@ fn definition_graph_file_uses_selected_export_environment() {
 }
 
 #[test]
+fn definition_graph_repository_uses_the_selected_submodule_environment() {
+    let fixture = DefinitionGraphFixture::new("selected-submodule");
+    write_file(
+        &fixture.path("litex.config"),
+        "[hierarchy]\nmodule\n\n[export]\nroot_before = \"./root_before.lit\"\nB = \"./B\"\n",
+    );
+    write_file(
+        &fixture.path("root_before.lit"),
+        "prop root_prop(x R):\n    x = x\n",
+    );
+    write_file(
+        &fixture.path("B/litex.config"),
+        "[hierarchy]\nsubmodule\n\n[export]\nmain = \"./main.lit\"\n",
+    );
+    write_file(
+        &fixture.path("B/main.lit"),
+        "prop submodule_prop(x R):\n    x = x\n",
+    );
+    let target = fixture.path("B");
+    let target = target.to_str().expect("fixture path is UTF-8").to_string();
+    let output = std::thread::Builder::new()
+        .name("definition_graph_selected_submodule".to_string())
+        .stack_size(64 * 1024 * 1024)
+        .spawn(move || {
+            render_graph(
+                GraphKind::Definition,
+                run_repository(target.as_str(), RunOptions::default()),
+                true,
+            )
+            .1
+        })
+        .expect("spawn selected submodule definition graph test")
+        .join()
+        .expect("selected submodule definition graph test panicked");
+
+    assert!(
+        output.contains("definition:prop:submodule_prop"),
+        "{output}"
+    );
+    assert!(
+        !output.contains("definition:prop:root_before::root_prop"),
+        "{output}"
+    );
+}
+
+#[test]
 fn definition_graph_project_proof_sources_normalize_local_qualifier() {
     let fixture = DefinitionGraphFixture::new("local-proof-source");
     write_file(

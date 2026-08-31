@@ -45,6 +45,10 @@ impl StmtResultToLeanCompiler {
         else {
             return Ok(false);
         };
+        let native_equality = self
+            .construct_lean_native_equality_proof_from_direct_fact_result_using_its_well_definedness(
+                result,
+            )?;
         if matches!(source_fact, Fact::AtomicFact(_)) {
             validate_atomic_fact_well_definedness_result(&result.well_definedness, &source_fact)?;
         }
@@ -60,6 +64,13 @@ impl StmtResultToLeanCompiler {
         self.environment_stack
             .fact_propositions
             .insert(source_fact_id, source_fact.clone());
+        if let Some(native_equality) = native_equality {
+            self.retain_native_equality_proof_in_current_environment(
+                source_fact_id,
+                &source_fact,
+                native_equality,
+            )?;
+        }
         self.next_fact_name_index += 1;
         let mut allowed_sources = self
             .install_equality_chain_adjacent_projections_for_typed_inference(

@@ -54,6 +54,10 @@ name = "public_api"
 path = "tests/integration/public_api.rs"
 
 [[test]]
+name = "run_target_cli"
+path = "tests/integration/run_target_cli.rs"
+
+[[test]]
 name = "retired_cli_commands"
 path = "tests/integration/retired_cli_commands.rs"
 
@@ -80,10 +84,6 @@ path = "tests/integration/stmt_result_to_lean_compiler_cli.rs"
 [[test]]
 name = "stmt_result_to_lean_compiler_tracers"
 path = "tests/integration/stmt_result_to_lean_compiler_tracers.rs"
-
-[[test]]
-name = "stmt_result_to_lean_markdown_code_blocks_cli"
-path = "tests/integration/stmt_result_to_lean_markdown_code_blocks_cli.rs"
 
 [dependencies]
 

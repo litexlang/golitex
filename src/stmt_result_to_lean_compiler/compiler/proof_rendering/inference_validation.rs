@@ -328,19 +328,14 @@ pub(in super::super) fn validate_standard_numeric_membership_inference_target(
                 Ok(LeanTargetObjectRepresentation::Symbol { symbol_id, .. })
                     if context.exact_positive_real_carriers.contains_key(&symbol_id)
             );
-            let exact_positive_natural_carrier = matches!(
-                LeanTargetObjectRepresentation::lower(source_element),
-                Ok(LeanTargetObjectRepresentation::Symbol { symbol_id, .. })
-                    if rule.source_set == StandardSet::NPos
-                        && context.exact_carrier_values.contains_key(&symbol_id)
-            );
             let lean_theorem_name = match (rule.source_set, semantic) {
                 (StandardSet::NPos, true) => "positiveOfInNPos",
                 (StandardSet::QPos, true) => "positiveOfInQPos",
                 (StandardSet::RPos, true) => "positiveOfInRPos",
-                (StandardSet::NPos, false) if exact_positive_natural_carrier => {
-                    "positiveNaturalCarrierPositive"
-                }
+                // The source binder may be heterogeneous even when its
+                // compiler rendering is the exact selected N+ carrier.  The
+                // representative theorem covers both cases; `In.rep_exact`
+                // simplifies it back to the carrier value when appropriate.
                 (StandardSet::NPos, false) => "positiveNaturalRepPositive",
                 (StandardSet::QPos, false) => "positiveRationalRepPositive",
                 (StandardSet::RPos, false) if exact_positive_real_carrier => {

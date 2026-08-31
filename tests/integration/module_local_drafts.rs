@@ -58,7 +58,7 @@ fn run_module(root: &Path) -> Output {
     Command::new(litex_binary())
         .args([
             "-compact",
-            "-runner",
+            "-graph",
             "-r",
             root.to_str().expect("fixture path must be UTF-8"),
         ])

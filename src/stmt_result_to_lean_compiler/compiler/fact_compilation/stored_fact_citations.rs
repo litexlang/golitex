@@ -16,8 +16,10 @@ impl StmtResultToLeanCompiler {
         // an ordinary standalone normalization fact could be cited by FactId
         // but not used as a native rewrite. Construct it from the same Result
         // before publication, then bind it to the statement's exact FactId.
-        let native_equality =
-            self.construct_lean_native_equality_proof_from_direct_fact_result(result)?;
+        let native_equality = self
+            .construct_lean_native_equality_proof_from_direct_fact_result_using_its_well_definedness(
+                result,
+            )?;
         // Most facts render solely from the compiler environment. Function
         // applications are the remaining target-side exception: their exact
         // application term still reads the temporary WD rendering view. Only

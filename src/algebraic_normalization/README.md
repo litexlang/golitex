@@ -38,5 +38,5 @@ Submit the target equality, for example `x ^ 2 - 1 = (x - 1) * (x + 1)`, and put
 
 ```bash
 cargo test --release algebraic_normalization::normalization::algebraic_identity_tests
-target/release/litex -compact -strict -isolated -runner -f lean/examples/54_ComplexAlgebraicCalculation.lit
+target/release/litex -compact -strict -isolated -graph -f lean/examples/54_ComplexAlgebraicCalculation.lit
 ```

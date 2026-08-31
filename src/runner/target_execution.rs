@@ -7,12 +7,7 @@ pub fn render_runner(outcome: RunOutcome, hide_file_paths: bool) -> (bool, Strin
     let target_kind = outcome.target.kind();
     let target_path = outcome.target.path();
     if let Some(message) = outcome.target_error {
-        return runner_target_error_output(
-            target_kind,
-            target_path,
-            hide_file_paths,
-            message,
-        );
+        return runner_target_error_output(target_kind, target_path, hide_file_paths, message);
     }
     runner_output_from_trace(
         target_kind,

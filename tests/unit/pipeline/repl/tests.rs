@@ -2,7 +2,7 @@ use super::{
     initialize_isolated_repl_runtime, run_isolated_repl_with_runtime_and_readers,
     run_latex_repl_loop_with_readers, run_repl_loop_with_readers_and_mode, ReplOutputMode,
 };
-use crate::pipeline::{execute_file_in_runtime, FileExecutionOptions};
+use crate::pipeline::{execute_file_in_runtime, FileRunMode};
 use crate::prelude::OutputStyle;
 use crate::runtime::{RunOptions, Runtime};
 use crate::test_support::execute_source;
@@ -71,7 +71,7 @@ fn isolated_repl_uses_the_explicit_repl_source_label() {
     let mut runtime = Runtime::default();
     initialize_isolated_repl_runtime(&mut runtime);
 
-    assert_eq!(runtime.current_file_path_rc().as_ref(), "<repl>");
+    assert_eq!(runtime.current_file_path_rc().as_ref(), "repl");
 }
 
 #[test]
@@ -114,7 +114,7 @@ fn repl_routes_import_to_its_ephemeral_module_manifest_before_source_parsing() {
 }
 
 #[test]
-fn repl_startup_shows_version_and_upgrade_hint() {
+fn repl_startup_shows_version_without_a_retired_upgrade_command() {
     let input = b"";
     let mut stdin_reader = Cursor::new(input.as_slice());
     let mut stdout_writer = Vec::new();
@@ -129,7 +129,7 @@ fn repl_startup_shows_version_and_upgrade_hint() {
 
     let output_text = String::from_utf8(stdout_writer).unwrap();
     assert!(output_text.contains("Litex version test-version"));
-    assert!(output_text.contains("litex -upgrade"));
+    assert!(!output_text.contains("litex -upgrade"));
 }
 
 #[test]
@@ -162,9 +162,7 @@ fn isolated_file_continues_in_the_same_repl_runtime() {
     let (_, file_error) = execute_file_in_runtime(
         file.to_str().expect("file path is UTF-8"),
         &mut runtime,
-        FileExecutionOptions {
-            force_isolated: true,
-        },
+        FileRunMode::Isolated,
     );
     assert!(file_error.is_none(), "{file_error:?}");
     let mut input = Cursor::new(b"from_file = 1\nhave from_repl R = 2\n".as_slice());
@@ -194,9 +192,7 @@ fn isolated_file_rejects_inline_import_before_repl_continuation() {
     let (results, error) = execute_file_in_runtime(
         file.to_str().expect("file path is UTF-8"),
         &mut runtime,
-        FileExecutionOptions {
-            force_isolated: true,
-        },
+        FileRunMode::Isolated,
     );
     assert!(results.is_empty());
     let error = error.expect("-isolated -f must reject inline import");

@@ -10,17 +10,17 @@ The runtime had two overlapping ways to describe the selected execution target:
 The module system also duplicated root identity in `ModuleManager.entry_module_id` and
 `ModuleManager.entry_path_rc`, even though `ModuleId::ROOT` and the root
 `ModuleRunner.main_file_path` already carried the same information. Source rendering could
-therefore replace concrete virtual paths such as `<-e>` or `<repl>` with the synthetic source
-name `entry`.
+therefore replace concrete virtual paths such as the old eval and REPL markers with the
+synthetic source name `entry`.
 
 ## Now
 
-- Target classification is owned by `RunTargetKind`.
+- Requested batch execution is owned by the typed `RunTarget`; `RunTargetKind` is derived only
+  when an output renderer needs the stable JSON kind.
 - Compact target JSON contains only `kind`; detailed file and repository JSON may additionally
   contain the real `path`. There is no target display label.
 - Root module identity is derived from `ModuleId::ROOT`; its path is read from the root module.
-- Virtual source references preserve their concrete registered names: `<-e>`, `<repl>`, and
-  `<session>`.
+- Synthetic interactive sources use the target-derived labels `eval`, `repl`, and `session`.
 - The public contract versions are runner `0.2`, result graph `3`, fact graph `0.2`, and
   definition graph `0.3`.
 - Release and predeploy consumers validate runner `0.2`.

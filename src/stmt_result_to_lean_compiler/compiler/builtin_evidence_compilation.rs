@@ -15,6 +15,75 @@ fn negative_one_product_argument(object: &Obj) -> Option<&Obj> {
 }
 
 impl StmtResultToLeanCompiler {
+    /// `Combine`: replay membership monotonicity along one exact retained
+    /// subset/superset edge.  The verifier may discover equal objects while
+    /// searching its environment, but that equality path is not part of this
+    /// legacy Result.  We therefore accept only structurally identical
+    /// endpoints and fail closed when an equality transport would be needed.
+    pub(super) fn construct_lean_direct_superset_membership_from_result(
+        &mut self,
+        target: &Fact,
+        subgoals: &[StmtResult],
+    ) -> Result<Option<String>, String> {
+        let [membership_result, inclusion_result] = subgoals else {
+            return Err(
+                "membership through a direct superset requires exactly two ordered child Results"
+                    .into(),
+            );
+        };
+        let membership_result = membership_result
+            .factual_success()
+            .ok_or_else(|| "direct-superset membership child is not factual".to_string())?;
+        let inclusion_result = inclusion_result
+            .factual_success()
+            .ok_or_else(|| "direct-superset inclusion child is not factual".to_string())?;
+        for (name, result) in [
+            ("membership", membership_result),
+            ("inclusion", inclusion_result),
+        ] {
+            if result.store.fact.to_string() != result.fact().to_string()
+                || !result.store.infers.is_empty()
+            {
+                return Err(format!(
+                    "direct-superset {name} child changed its stored fact or published effects"
+                ));
+            }
+        }
+
+        let (target_element, target_set) = membership_parts(target)?;
+        let membership_fact = membership_result.fact();
+        let inclusion_fact = inclusion_result.fact();
+        let (source_element, source_set) = membership_parts(&membership_fact)?;
+        if obj_equality_key(target_element) != obj_equality_key(source_element) {
+            return Err(
+                "direct-superset membership requires an unretained element equality transport"
+                    .into(),
+            );
+        }
+        let (inclusion_source, inclusion_target) = subset_parts(&inclusion_fact)
+            .map_err(|_| {
+                "direct-superset membership currently requires a retained subset or superset fact; power-set membership needs its own elimination certificate"
+                    .to_string()
+            })?;
+        if obj_equality_key(source_set) != obj_equality_key(inclusion_source)
+            || obj_equality_key(target_set) != obj_equality_key(inclusion_target)
+        {
+            return Err("direct-superset membership changed its inclusion endpoints".into());
+        }
+
+        let Some(membership_proof) =
+            self.construct_lean_proof_from_direct_fact_result(membership_result)?
+        else {
+            return Ok(None);
+        };
+        let Some(inclusion_proof) =
+            self.construct_lean_proof_from_direct_fact_result(inclusion_result)?
+        else {
+            return Ok(None);
+        };
+        Ok(Some(format!("({inclusion_proof}) _ ({membership_proof})")))
+    }
+
     /// `Leaf`: intervals and rays retain exact native-real endpoints, so the
     /// Core inclusion theorem is selected solely from the retained source
     /// constructor after the complete target proposition renders.
@@ -1239,10 +1308,7 @@ impl StmtResultToLeanCompiler {
         subgoals: &[StmtResult],
     ) -> Result<Option<String>, String> {
         if rule == ArithmeticBuiltinRule::OrderTransitivity {
-            return Err(format!(
-                "builtin rule `{}` has no reviewed ToLean mapping",
-                rule.rule_id()
-            ));
+            return self.construct_lean_order_transitivity_from_result(target, subgoals);
         }
         let sign_rule = match rule {
             ArithmeticBuiltinRule::AddNonnegative => {
@@ -1296,7 +1362,8 @@ impl StmtResultToLeanCompiler {
             | ArithmeticBuiltinRule::AddComponentwiseLessEqualLess
             | ArithmeticBuiltinRule::SubComponentwiseLessEqualLess
             | ArithmeticBuiltinRule::SubComponentwiseLessEqual
-            | ArithmeticBuiltinRule::SubRightNonnegativeLessEqual => {
+            | ArithmeticBuiltinRule::SubRightNonnegativeLessEqual
+            | ArithmeticBuiltinRule::DivByGreaterThanOneLessSelf => {
                 if rule == ArithmeticBuiltinRule::MulComponentwiseLessEqual {
                     4
                 } else {
@@ -1345,6 +1412,52 @@ impl StmtResultToLeanCompiler {
                 &children,
                 &self.environment_stack,
             )?));
+        }
+
+        if rule == ArithmeticBuiltinRule::DivByGreaterThanOneLessSelf {
+            let [positive, denominator_gt_one] = children.as_slice() else {
+                unreachable!("division contraction retained two children")
+            };
+            let (target_left, target_right, target_strict) = order_relation_parts(target)?;
+            let Obj::Div(division) = target_left else {
+                return Err("division contraction changed its target quotient".into());
+            };
+            if !target_strict
+                || obj_equality_key(division.left.as_ref()) != obj_equality_key(target_right)
+            {
+                return Err("division contraction changed its strict self-bound target".into());
+            }
+            let (positive_left, positive_right, positive_strict) =
+                order_relation_parts(&positive.fact)?;
+            if !positive_strict
+                || !is_literal_zero(positive_left)
+                || obj_equality_key(positive_right) != obj_equality_key(target_right)
+            {
+                return Err("division contraction changed its positive-numerator premise".into());
+            }
+            let (one, denominator, denominator_strict) =
+                order_relation_parts(&denominator_gt_one.fact)?;
+            if !denominator_strict
+                || !matches!(one, Obj::Number(number) if number.normalized_value == "1")
+                || obj_equality_key(denominator) != obj_equality_key(division.right.as_ref())
+            {
+                return Err("division contraction changed its denominator premise".into());
+            }
+            let numerator_real = render_real_target_object_representation(
+                &LeanTargetObjectRepresentation::lower(target_right)?,
+                &self.environment_stack,
+            )?;
+            let denominator_real = render_real_target_object_representation(
+                &LeanTargetObjectRepresentation::lower(division.right.as_ref())?,
+                &self.environment_stack,
+            )?;
+            render_fact(target, &self.environment_stack)?;
+            let simp = "Litex.fnApply, Litex.fnApplyOwn, ← Complex.ofReal_one, ← Complex.ofReal_add, ← Complex.ofReal_sub, ← Complex.ofReal_mul, ← Complex.ofReal_div";
+            return Ok(Some(format!(
+                "(by\n  have __div_positive : Litex.Lt (0 : ℂ) (({numerator_real} : ℝ) : ℂ) := by\n    convert ({}) using 1 <;> simp [{simp}] <;> norm_num <;> norm_cast\n  have __div_denominator : Litex.Lt (1 : ℂ) (({denominator_real} : ℝ) : ℂ) := by\n    convert ({}) using 1 <;> simp [{simp}] <;> norm_num <;> norm_cast\n  convert (Litex.Rules.realCastDivLtSelfOfPositiveOfOneLt (a := {numerator_real}) (b := {denominator_real}) __div_positive __div_denominator) using 1 <;> simp [{simp}] <;> norm_num <;> norm_cast)",
+                positive.proof_expression,
+                denominator_gt_one.proof_expression,
+            )));
         }
 
         if rule == ArithmeticBuiltinRule::NegateOrder {
@@ -1939,11 +2052,145 @@ impl StmtResultToLeanCompiler {
             return Err("strict-to-weak order rule changed its endpoints or orientation".into());
         }
         render_fact(target, &self.environment_stack)?;
-        Ok(Some(if target_left.to_string() == "0" {
-            format!("Litex.Positive.toNonnegative ({})", source.proof_expression)
-        } else {
-            format!("Litex.Lt.toLe ({})", source.proof_expression)
-        }))
+        Ok(Some(format!("Litex.Lt.toLe ({})", source.proof_expression)))
+    }
+
+    /// `Combine`: consume every verifier-owned numeric carrier check followed
+    /// by the two ordered edges of the retained transitivity path.  The type
+    /// checks do not become theorem arguments, but compiling them here keeps
+    /// all child Results mandatory and fail-closed.  Only the four fixed
+    /// `Litex.Le`/`Litex.Lt` transitivity constructors may discharge the
+    /// target.
+    fn construct_lean_order_transitivity_from_result(
+        &mut self,
+        target: &Fact,
+        subgoals: &[StmtResult],
+    ) -> Result<Option<String>, String> {
+        if subgoals.len() < 2 {
+            return Err("order transitivity lost its two ordered child Results".into());
+        }
+        let (carrier_checks, order_children) = subgoals.split_at(subgoals.len() - 2);
+        for (index, check) in carrier_checks.iter().enumerate() {
+            let check = check.factual_success().ok_or_else(|| {
+                format!("order transitivity carrier child {index} is not factual")
+            })?;
+            if !check.store.infers.is_empty() {
+                return Err(format!(
+                    "order transitivity carrier child {index} published effects"
+                ));
+            }
+            let check_fact = check.fact();
+            if let Ok((_, set)) = membership_parts(&check_fact) {
+                let Obj::StandardSet(actual_set) = set else {
+                    return Err(format!(
+                        "order transitivity carrier child {index} changed its numeric carrier"
+                    ));
+                };
+                if !actual_set.is_subset_eq(&StandardSet::R) {
+                    return Err(format!(
+                        "order transitivity carrier child {index} is not in the ordered-real hierarchy"
+                    ));
+                }
+            } else if let Ok((left, right)) = subset_parts(&check_fact) {
+                let (Obj::StandardSet(left_set), Obj::StandardSet(right_set)) = (left, right)
+                else {
+                    return Err(format!(
+                        "order transitivity carrier child {index} changed its subset hierarchy"
+                    ));
+                };
+                if !left_set.is_subset_eq(right_set) || !right_set.is_subset_eq(&StandardSet::R) {
+                    return Err(format!(
+                        "order transitivity carrier child {index} retained an invalid ordered-real subset"
+                    ));
+                }
+            } else if let Ok(components) = conjunction_components(&check_fact) {
+                if components.is_empty() {
+                    return Err(format!(
+                        "order transitivity carrier child {index} retained an empty conjunction"
+                    ));
+                }
+                for component in components {
+                    let (_, set) = membership_parts(&component).map_err(|_| {
+                        format!(
+                            "order transitivity carrier child {index} conjunction contains a non-membership fact"
+                        )
+                    })?;
+                    let Obj::StandardSet(actual_set) = set else {
+                        return Err(format!(
+                            "order transitivity carrier child {index} conjunction changed a numeric carrier"
+                        ));
+                    };
+                    if !actual_set.is_subset_eq(&StandardSet::R) {
+                        return Err(format!(
+                            "order transitivity carrier child {index} conjunction left the ordered-real hierarchy"
+                        ));
+                    }
+                }
+            } else {
+                return Err(format!(
+                    "order transitivity carrier child {index} is neither numeric membership nor subset evidence"
+                ));
+            }
+            if self
+                .construct_lean_proof_from_direct_fact_result(check)?
+                .is_none()
+            {
+                return Err(format!(
+                    "order transitivity carrier child {index} has no direct proof consumer"
+                ));
+            }
+        }
+
+        let [first_result, second_result] = order_children else {
+            unreachable!("order transitivity split retained two ordered children")
+        };
+        let first_result = first_result
+            .factual_success()
+            .ok_or_else(|| "order transitivity first edge is not factual".to_string())?;
+        let second_result = second_result
+            .factual_success()
+            .ok_or_else(|| "order transitivity second edge is not factual".to_string())?;
+        if !first_result.store.infers.is_empty() || !second_result.store.infers.is_empty() {
+            return Err("order transitivity ordered child published effects".into());
+        }
+        let first_proof = self
+            .construct_lean_proof_from_direct_fact_result(first_result)?
+            .ok_or_else(|| {
+                "order transitivity first edge has no direct proof consumer".to_string()
+            })?;
+        let second_proof = self
+            .construct_lean_proof_from_direct_fact_result(second_result)?
+            .ok_or_else(|| {
+                "order transitivity second edge has no direct proof consumer".to_string()
+            })?;
+
+        let (target_left, target_right, target_strict) = order_relation_parts(target)?;
+        let first_fact = first_result.fact();
+        let second_fact = second_result.fact();
+        let (first_left, first_right, first_strict) = order_relation_parts(&first_fact)?;
+        let (second_left, second_right, second_strict) = order_relation_parts(&second_fact)?;
+        if obj_equality_key(first_left) != obj_equality_key(target_left)
+            || obj_equality_key(first_right) != obj_equality_key(second_left)
+            || obj_equality_key(second_right) != obj_equality_key(target_right)
+        {
+            return Err("order transitivity changed its retained endpoint path".into());
+        }
+        if target_strict && !first_strict && !second_strict {
+            return Err("strict order transitivity retained no strict edge".into());
+        }
+
+        let theorem = match (first_strict, second_strict) {
+            (false, false) => "Litex.Le.trans",
+            (false, true) => "Litex.Le.transLt",
+            (true, false) => "Litex.Lt.transLe",
+            (true, true) => "Litex.Lt.trans",
+        };
+        let mut proof = format!("{theorem} ({first_proof}) ({second_proof})");
+        if !target_strict && (first_strict || second_strict) {
+            proof = format!("Litex.Lt.toLe ({proof})");
+        }
+        render_fact(target, &self.environment_stack)?;
+        Ok(Some(format!("(by simpa using ({proof}))")))
     }
 
     pub(super) fn construct_lean_additive_order_rule_from_compiled_children(

@@ -19,7 +19,7 @@ from pathlib import Path
 from typing import Callable
 
 
-RUNNER_VERSION = "0.2"
+RESULT_GRAPH_VERSION = "3"
 DEFAULT_GLOBAL_TIMEOUT_SECONDS = 240.0
 DEFAULT_FILE_TIMEOUT_SECONDS = 600.0
 DEFAULT_TEXTBOOK_JOBS = min(4, os.cpu_count() or 1)
@@ -614,11 +614,11 @@ def file_result_from_completed(
             source_path=source_path,
             line=line,
             statement=statement,
-            message=f"invalid runner JSON ({exit_description}): {error}",
+            message=f"invalid result-graph JSON ({exit_description}): {error}",
             output=diagnostic_tail(stdout, stderr),
         )
 
-    contract_error = runner_contract_error(envelope, completed.returncode)
+    contract_error = result_graph_contract_error(envelope, completed.returncode)
     if contract_error:
         return FileResult(
             textbook_file=textbook_file,
@@ -636,9 +636,8 @@ def file_result_from_completed(
             wall_seconds=wall_seconds,
         )
 
-    source_path, line, statement, message = trace_diagnostic(
-        envelope.get("trace", "")
-    )
+    diagnostic = envelope.get("error", "")
+    source_path, line, statement, message = trace_diagnostic(diagnostic)
     return FileResult(
         textbook_file=textbook_file,
         status="failed",
@@ -652,31 +651,31 @@ def file_result_from_completed(
         line=line,
         statement=statement,
         message=message or "Litex verification failed",
-        output=diagnostic_tail(envelope.get("trace", ""), stderr),
+        output=diagnostic_tail(diagnostic, stderr),
     )
 
 
-def runner_contract_error(envelope: object, returncode: int) -> str | None:
+def result_graph_contract_error(envelope: object, returncode: int) -> str | None:
     if not isinstance(envelope, dict):
-        return "runner output is not an object"
-    if envelope.get("runner") != "litex-runner":
-        return "runner is not litex-runner"
-    if envelope.get("runner_version") != RUNNER_VERSION:
-        return f"unexpected runner_version={envelope.get('runner_version')!r}"
+        return "result-graph output is not an object"
+    if envelope.get("graph") != "litex-result-graph":
+        return "graph is not litex-result-graph"
+    if envelope.get("graph_version") != RESULT_GRAPH_VERSION:
+        return f"unexpected graph_version={envelope.get('graph_version')!r}"
     ok = envelope.get("ok")
     if not isinstance(ok, bool):
-        return "runner ok is not boolean"
+        return "result-graph ok is not boolean"
     expected_result = "success" if ok else "error"
     expected_returncode = 0 if ok else 1
     if envelope.get("result") != expected_result:
-        return f"runner result disagrees with ok={ok!r}"
+        return f"result-graph result disagrees with ok={ok!r}"
     if returncode != expected_returncode:
         return f"exit={returncode} disagrees with ok={ok!r}"
     target = envelope.get("target")
     if not isinstance(target, dict) or target.get("kind") != "file":
-        return "runner target kind is not file"
-    if not isinstance(envelope.get("trace"), str):
-        return "runner trace is not a string"
+        return "result-graph target kind is not file"
+    if envelope.get("error") is not None and not isinstance(envelope.get("error"), str):
+        return "result-graph error is neither null nor a string"
     return None
 
 
@@ -897,7 +896,7 @@ def cargo_test_command(test_name: str) -> list[str]:
 
 
 def textbook_file_command(binary: Path, file_path: Path) -> list[str]:
-    return [str(binary), "-compact", "-runner", "-f", str(file_path)]
+    return [str(binary), "-compact", "-graph", "-f", str(file_path)]
 
 
 def positive_int(value: str) -> int:

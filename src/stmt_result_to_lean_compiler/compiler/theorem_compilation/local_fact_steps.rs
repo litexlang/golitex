@@ -6,7 +6,7 @@ impl StmtResultToLeanCompiler {
     pub(in super::super) fn compile_fact_stmt_result_as_local_proof_step(
         &mut self,
         result: &SuccessFactStmtResult,
-        proof_step_index: usize,
+        _proof_step_index: usize,
     ) -> Result<Option<String>, String> {
         let source_fact = result.fact();
         if result.store.fact.to_string() != source_fact.to_string() {
@@ -69,6 +69,23 @@ impl StmtResultToLeanCompiler {
             }
             let proof = self.construct_lean_proof_from_direct_fact_result(result)?;
             let proposition = render_fact(&source_fact, &self.environment_stack)?;
+            // Local proof steps are the theorem-body counterpart of ordinary
+            // stored facts.  A reviewed equality Result must therefore retain
+            // the same native `=` certificate here as it does at top level;
+            // later sibling steps may cite this exact FactId for an order
+            // rewrite.  Construct and retain it while the child-owned WD
+            // occurrence map is still active, so function applications and
+            // exact numeric representatives render in the source occurrence
+            // that the verifier actually checked.
+            if let Some(native_equality) =
+                self.construct_lean_native_equality_proof_from_direct_fact_result(result)?
+            {
+                self.retain_native_equality_proof_in_current_environment(
+                    fact_id,
+                    &source_fact,
+                    native_equality,
+                )?;
+            }
             Ok::<_, String>((proof, proposition))
         })();
         if let Some(parent_certificate) = parent_certificate {
@@ -77,7 +94,7 @@ impl StmtResultToLeanCompiler {
         let (Some(proof), proposition) = compiled? else {
             return Ok(None);
         };
-        let name = format!("__step{proof_step_index}");
+        let name = self.next_local_proof_step_base_name();
         self.environment_stack
             .fact_names
             .insert(fact_id, name.clone());

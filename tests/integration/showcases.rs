@@ -143,7 +143,7 @@ fn run_showcase_worker(
         let output = Command::new(litex_binary())
             .args([
                 "-compact",
-                "-runner",
+                "-graph",
                 "-f",
                 showcase_file
                     .to_str()
@@ -154,7 +154,7 @@ fn run_showcase_worker(
             .unwrap_or_else(|error| panic!("failed to run showcase {label}: {error}"));
         let stdout = String::from_utf8_lossy(&output.stdout);
         let succeeded = output.status.success()
-            && stdout.contains("\"runner\": \"litex-runner\"")
+            && stdout.contains("\"graph\": \"litex-result-graph\"")
             && stdout.contains("\"result\": \"success\"")
             && stdout.contains("\"ok\": true");
         let combined_output = if succeeded {

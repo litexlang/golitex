@@ -3,6 +3,19 @@
 use super::super::*;
 
 impl StmtResultToLeanCompiler {
+    /// Allocate one proof-local base name from the compiler-wide local-name
+    /// counter. Source proof-step indices restart inside nested claims and
+    /// forall bodies, so they are not valid Lean identifiers on their own:
+    /// all emitted `have` declarations share one surrounding tactic scope.
+    pub(in super::super) fn next_local_proof_step_base_name(&mut self) -> String {
+        let name = format!(
+            "__step{}_{}",
+            self.next_fact_name_index, self.next_local_inference_name_index
+        );
+        self.next_local_inference_name_index += 1;
+        name
+    }
+
     pub(in super::super) fn next_local_inference_fact_proof_name(&mut self) -> String {
         let name = format!(
             "__infer{}_{}",

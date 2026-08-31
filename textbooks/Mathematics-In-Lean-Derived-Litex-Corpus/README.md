@@ -33,7 +33,7 @@ so it is also preserved under `../todo_textbook_chapters/` rather than
 published as a coherent chapter.
 
 ```text
-target/release/litex -compact -runner -r scripts/mathematics_in_litex/textbook
+target/release/litex -compact -graph -r scripts/mathematics_in_litex/textbook
 ```
 
 The previous full-corpus README is preserved with the quarantined chapters.

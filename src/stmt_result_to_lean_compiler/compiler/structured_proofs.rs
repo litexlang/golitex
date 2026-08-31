@@ -966,7 +966,7 @@ impl StmtResultToLeanCompiler {
         bindings: &[SymbolBinding],
         common: &SuccessStmtCommonResult,
         verification: &SuccessVerifyExistentialEliminationResult,
-        proof_step_index: usize,
+        _proof_step_index: usize,
     ) -> Result<Option<Vec<String>>, String> {
         let existential = &verification.source_exist_fact;
         if !existential.is_plain_exist()
@@ -1072,8 +1072,9 @@ impl StmtResultToLeanCompiler {
         if rendered_type_fact != expected_type_fact {
             return Err("local existential elimination changed its witness type projection".into());
         }
-        let type_name = format!("__step{proof_step_index}_type");
-        let body_name = format!("__step{proof_step_index}_body");
+        let step_name = self.next_local_proof_step_base_name();
+        let type_name = format!("{step_name}_type");
+        let body_name = format!("{step_name}_body");
         self.environment_stack
             .fact_names
             .insert(*witness_type_fact_id, type_name.clone());

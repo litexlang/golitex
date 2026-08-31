@@ -79,6 +79,7 @@ impl StmtResultToLeanCompiler {
             let multiple_outputs = conclusions.len() > 1;
             lines.reserve(conclusions.len());
             let mut real_analysis_sources = Vec::new();
+            let step_name = self.next_local_proof_step_base_name();
             for (output_index, conclusion) in conclusions.into_iter().enumerate() {
                 let fact_id = conclusion.retained_fact_id.ok_or_else(|| {
                     format!(
@@ -87,9 +88,9 @@ impl StmtResultToLeanCompiler {
                     )
                 })?;
                 let name = if multiple_outputs {
-                    format!("__step{proof_step_index}_{}", output_index + 1)
+                    format!("{step_name}_{}", output_index + 1)
                 } else {
-                    format!("__step{proof_step_index}")
+                    step_name.clone()
                 };
                 self.environment_stack
                     .fact_names
@@ -125,7 +126,7 @@ impl StmtResultToLeanCompiler {
                 else {
                     return Ok(None);
                 };
-                let name = format!("__step{proof_step_index}");
+                let name = self.next_local_proof_step_base_name();
                 self.environment_stack
                     .fact_names
                     .insert(body.retained_fact_id, name.clone());
@@ -164,7 +165,7 @@ impl StmtResultToLeanCompiler {
                     &proof.fact,
                     "local by-enumerate generated forall",
                 )?;
-                let name = format!("__step{proof_step_index}");
+                let name = self.next_local_proof_step_base_name();
                 self.environment_stack
                     .fact_names
                     .insert(fact_id, name.clone());
@@ -185,7 +186,7 @@ impl StmtResultToLeanCompiler {
                     &proof.fact,
                     "local by-for generated forall",
                 )?;
-                let name = format!("__step{proof_step_index}");
+                let name = self.next_local_proof_step_base_name();
                 self.environment_stack
                     .fact_names
                     .insert(fact_id, name.clone());
@@ -208,7 +209,7 @@ impl StmtResultToLeanCompiler {
                     &proof.fact,
                     "local structured integer induction generated forall",
                 )?;
-                let name = format!("__step{proof_step_index}");
+                let name = self.next_local_proof_step_base_name();
                 self.environment_stack
                     .fact_names
                     .insert(fact_id, name.clone());
@@ -248,11 +249,12 @@ impl StmtResultToLeanCompiler {
             )?;
             let multiple_outputs = proofs.len() > 1;
             let mut lines = Vec::with_capacity(proofs.len());
+            let step_name = self.next_local_proof_step_base_name();
             for (output_index, (proof, fact_id)) in proofs.into_iter().zip(fact_ids).enumerate() {
                 let name = if multiple_outputs {
-                    format!("__step{proof_step_index}_{}", output_index + 1)
+                    format!("{step_name}_{}", output_index + 1)
                 } else {
-                    format!("__step{proof_step_index}")
+                    step_name.clone()
                 };
                 if let Some(fact_id) = fact_id {
                     self.environment_stack
@@ -298,7 +300,7 @@ impl StmtResultToLeanCompiler {
             &existential,
             "local existential witness effect",
         )?;
-        let name = format!("__step{proof_step_index}");
+        let name = self.next_local_proof_step_base_name();
         self.environment_stack
             .fact_names
             .insert(fact_id, name.clone());

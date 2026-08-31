@@ -14,7 +14,7 @@ prefix but directly depend on one of those quarantined namespaces, so they are
 not a coherent publication without the missing earlier layer.
 
 ```text
-target/release/litex -compact -runner -r scripts/linear_algebra_done_right/textbook
+target/release/litex -compact -graph -r scripts/linear_algebra_done_right/textbook
 ```
 
 The previous full-module README is preserved beside the quarantined files.

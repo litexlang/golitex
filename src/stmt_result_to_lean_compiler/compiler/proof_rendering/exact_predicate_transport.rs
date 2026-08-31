@@ -64,6 +64,18 @@ pub(in super::super) fn instantiated_predicate_components(
                         set,
                         &mut nested,
                     )?;
+                    if binding.exact_parameters[argument_index] {
+                        // Every FactId alias for an exact predicate function
+                        // parameter denotes the same already-selected carrier.
+                        // Leaving an alias in heterogeneous mode lets the
+                        // application Result choose `fnApply` even though the
+                        // definition itself used `fnApplyOwn`.
+                        for function_binding in nested.function_bindings.values_mut() {
+                            if function_binding.symbol_id == parameter.id() {
+                                function_binding.direct = true;
+                            }
+                        }
+                    }
                 }
             }
             if binding.exact_parameters[argument_index] {
@@ -349,9 +361,16 @@ pub(in super::super) fn render_fact_proof_across_exact_predicate_arguments(
                 // those closed constructors here.  Lean must prove the whole
                 // clause conversion (including forall/implication nesting);
                 // no `Same ℝ ℝ -> Eq` principle is introduced.
-                component_proofs.push(format!(
-                    "(by simpa [Litex.In.rep, Litex.Rules.complexRealInR, Litex.Rules.complexAddInR, Litex.Rules.complexSubInR, Litex.Rules.complexMulInR, Litex.Rules.complexDivInR, Litex.Rules.inROfInRPos, Litex.Le, Litex.Lt, Litex.OrderValue] using (__source{selector}))"
-                ));
+                let conversion = if matches!(clause, Fact::ForallFact(_)) {
+                    format!(
+                        "(by convert (@__source{selector}) using 1 <;> simp [Litex.In.rep, Litex.Rules.complexRealInR, Litex.Rules.complexAddInR, Litex.Rules.complexSubInR, Litex.Rules.complexMulInR, Litex.Rules.complexDivInR, Litex.Rules.inROfInRPos, Litex.Le, Litex.Lt, Litex.OrderValue])"
+                    )
+                } else {
+                    format!(
+                        "(by simpa [Litex.In.rep, Litex.Rules.complexRealInR, Litex.Rules.complexAddInR, Litex.Rules.complexSubInR, Litex.Rules.complexMulInR, Litex.Rules.complexDivInR, Litex.Rules.inROfInRPos, Litex.Le, Litex.Lt, Litex.OrderValue] using (__source{selector}))"
+                    )
+                };
+                component_proofs.push(conversion);
                 continue;
             }
             return Err(format!(

@@ -501,7 +501,7 @@ impl Runtime {
             SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 rule.to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyAbsUpperBound),
+                BuiltinRuleEvidence::AbsoluteValue(AbsoluteValueBuiltinRule::UpperBound),
                 vec![r1, r2],
             ),
         )))

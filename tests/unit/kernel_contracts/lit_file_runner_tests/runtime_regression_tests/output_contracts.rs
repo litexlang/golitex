@@ -59,20 +59,20 @@ fn hidden_file_path_output_omits_source_fields() {
 #[test]
 fn virtual_source_reference_uses_its_concrete_label() {
     let mut runtime = Runtime::default();
-    runtime.start_isolated_source("<-e>");
+    runtime.start_isolated_source("eval");
     runtime
         .module_manager
-        .create_execution_file(ModuleId::ROOT, "<repl>")
+        .create_execution_file(ModuleId::ROOT, "repl")
         .expect("REPL source should be registered");
     let error: RuntimeError = ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(
         "virtual source probe".to_string(),
-        (1, Rc::from("<repl>")),
+        (1, Rc::from("repl")),
     ))
     .into();
 
     let output = display_runtime_error_json(&runtime, &error, true);
 
-    assert!(output.contains(r#""source": "<repl>""#), "{output}");
+    assert!(output.contains(r#""source": "repl""#), "{output}");
     assert!(!output.contains(r#""source_kind""#), "{output}");
     assert!(!output.contains(r#""source": "entry""#), "{output}");
 }

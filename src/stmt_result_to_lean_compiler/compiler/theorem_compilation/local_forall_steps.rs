@@ -11,8 +11,39 @@ impl StmtResultToLeanCompiler {
         &mut self,
         result: &SuccessFactStmtResult,
     ) -> Result<Option<Vec<String>>, String> {
+        self.compile_direct_forall_fact_result_as_local_proof_steps_with_optional_real_subset_observer(
+            result, None,
+        )
+    }
+
+    pub(in super::super) fn compile_direct_forall_fact_result_as_local_proof_steps_with_real_subset_observer(
+        &mut self,
+        result: &SuccessFactStmtResult,
+        observed_set: &Obj,
+        subset_proof: &str,
+    ) -> Result<Option<Vec<String>>, String> {
+        self.compile_direct_forall_fact_result_as_local_proof_steps_with_optional_real_subset_observer(
+            result,
+            Some((observed_set, subset_proof)),
+        )
+    }
+
+    fn compile_direct_forall_fact_result_as_local_proof_steps_with_optional_real_subset_observer(
+        &mut self,
+        result: &SuccessFactStmtResult,
+        real_subset_observer: Option<(&Obj, &str)>,
+    ) -> Result<Option<Vec<String>>, String> {
         let declaration_count = self.declarations.len();
-        if !self.compile_direct_forall_fact_result(result)? {
+        let compiled = if let Some((observed_set, subset_proof)) = real_subset_observer {
+            self.compile_direct_forall_fact_result_with_real_subset_observer(
+                result,
+                observed_set,
+                subset_proof,
+            )?
+        } else {
+            self.compile_direct_forall_fact_result(result)?
+        };
+        if !compiled {
             return Ok(None);
         }
         if self.declarations.len() == declaration_count {

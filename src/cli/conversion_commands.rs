@@ -1,6 +1,4 @@
-use super::arguments::{
-    read_any_value_after_flag, read_non_flag_value_after_flag, reject_meaningless_isolated,
-};
+use super::arguments::{read_any_value_after_flag, read_non_flag_value_after_flag};
 use super::command_handlers::VERSION;
 use super::messages::print_help_message;
 use crate::error::RuntimeError;
@@ -25,15 +23,9 @@ pub(super) enum CodeExtractionCommand {
     C,
 }
 
-pub(super) fn run_latex_command(
-    args: &[String],
-    index: &mut usize,
-    output_language: OutputLanguage,
-    force_isolated: bool,
-) {
+pub(super) fn run_latex_command(args: &[String], index: &mut usize, options: RunOptions) {
     *index += 1;
     if *index >= args.len() {
-        exit_on_meaningless_isolated(force_isolated, "-latex");
         run_latex_repl(VERSION);
         return;
     }
@@ -55,10 +47,13 @@ pub(super) fn run_latex_command(
                     process::exit(2);
                 }
             };
-            compile_file_to_latex(file_path.as_str(), output_language, force_isolated)
+            compile_file_to_latex(
+                file_path.as_str(),
+                options.output_language,
+                options.is_isolated,
+            )
         }
         "-e" => {
-            exit_on_meaningless_isolated(force_isolated, "-latex -e");
             let code = match read_non_flag_value_after_flag(args, index, "-e") {
                 Ok(value) => value,
                 Err(message) => {
@@ -67,10 +62,9 @@ pub(super) fn run_latex_command(
                     process::exit(2);
                 }
             };
-            compile_code_to_latex(code.as_str(), output_language)
+            compile_code_to_latex(code.as_str(), options.output_language)
         }
         "-r" => {
-            exit_on_meaningless_isolated(force_isolated, "-latex -r");
             let repo_path = match read_non_flag_value_after_flag(args, index, "-r") {
                 Ok(value) => value,
                 Err(message) => {
@@ -79,7 +73,7 @@ pub(super) fn run_latex_command(
                     process::exit(2);
                 }
             };
-            compile_repo_to_latex(repo_path.as_str(), output_language)
+            compile_repo_to_latex(repo_path.as_str(), options.output_language)
         }
         _ => {
             eprintln!("-latex must be followed by one of: -f <file>, -e <code>, -r <repo>");
@@ -93,8 +87,7 @@ pub(super) fn run_latex_command(
 pub(super) fn run_code_extraction_command(
     args: &[String],
     index: &mut usize,
-    output_language: OutputLanguage,
-    force_isolated: bool,
+    options: RunOptions,
     target: CodeExtractionCommand,
 ) {
     *index += 1;
@@ -119,13 +112,12 @@ pub(super) fn run_code_extraction_command(
             };
             compile_file_to_extracted_code(
                 file_path.as_str(),
-                output_language,
-                force_isolated,
+                options.output_language,
+                options.is_isolated,
                 target,
             )
         }
         "-r" => {
-            exit_on_meaningless_isolated(force_isolated, format!("{} -r", command_flag).as_str());
             let repo_path = match read_non_flag_value_after_flag(args, index, "-r") {
                 Ok(value) => value,
                 Err(message) => {
@@ -134,7 +126,11 @@ pub(super) fn run_code_extraction_command(
                     process::exit(2);
                 }
             };
-            compile_repository_to_extracted_code(repo_path.as_str(), output_language, target)
+            compile_repository_to_extracted_code(
+                repo_path.as_str(),
+                options.output_language,
+                target,
+            )
         }
         "-e" => {
             eprintln!(
@@ -145,8 +141,7 @@ pub(super) fn run_code_extraction_command(
             process::exit(2);
         }
         code if !code.starts_with('-') => {
-            exit_on_meaningless_isolated(force_isolated, command_flag);
-            compile_code_to_extracted_code(code, output_language, target, command_flag)
+            compile_code_to_extracted_code(code, options.output_language, target, command_flag)
         }
         _ => {
             eprintln!(
@@ -168,14 +163,6 @@ pub(super) fn run_code_extraction_command(
     println!("{}", output);
 }
 
-fn exit_on_meaningless_isolated(isolated: bool, target: &str) {
-    if let Err(message) = reject_meaningless_isolated(isolated, target) {
-        eprintln!("{}", message);
-        print_help_message();
-        process::exit(2);
-    }
-}
-
 pub(super) fn compile_code_to_latex(code: &str, output_language: OutputLanguage) -> String {
     let code = remove_windows_carriage_from_str(code);
     match to_latex_from_source(code.as_str(), "-latex -e") {
@@ -187,9 +174,9 @@ pub(super) fn compile_code_to_latex(code: &str, output_language: OutputLanguage)
 pub(super) fn compile_file_to_latex(
     file_path: &str,
     output_language: OutputLanguage,
-    force_isolated: bool,
+    isolated: bool,
 ) -> String {
-    if !force_isolated {
+    if !isolated {
         return match to_latex_from_file(file_path) {
             Ok(s) => s,
             Err(error) => render_conversion_error(output_language, &error),
@@ -232,10 +219,10 @@ fn compile_code_to_extracted_code(
 fn compile_file_to_extracted_code(
     file_path: &str,
     output_language: OutputLanguage,
-    force_isolated: bool,
+    isolated: bool,
     target: CodeExtractionCommand,
 ) -> String {
-    if !force_isolated {
+    if !isolated {
         let result = match target {
             CodeExtractionCommand::Python => to_python_from_file(file_path),
             CodeExtractionCommand::C => to_c_from_file(file_path),

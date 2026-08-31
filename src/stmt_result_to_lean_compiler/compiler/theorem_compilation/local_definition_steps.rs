@@ -9,7 +9,7 @@ impl StmtResultToLeanCompiler {
     pub(in super::super) fn compile_have_obj_equal_stmt_result_as_local_proof_steps(
         &mut self,
         result: &SuccessHaveObjEqualStmtResult,
-        proof_step_index: usize,
+        _proof_step_index: usize,
     ) -> Result<Option<Vec<String>>, String> {
         let verification = result.verification.as_ref().ok_or_else(|| {
             "local have-object equality has no structured value type-check results".to_string()
@@ -74,31 +74,24 @@ impl StmtResultToLeanCompiler {
                 )
             })?;
 
-        let canonical_exact_value = match (param_type, type_check.proof()) {
-            (
-                ParamType::Obj(Obj::SetBuilder(_)),
-                SuccessFactProofResult::BuiltinRule(builtin)
-                | SuccessFactProofResult::BuiltinStrategy(builtin),
-            ) => match builtin.evidence.typed() {
-                Some(BuiltinRuleEvidence::SetBuilderMembership(evidence)) => self
-                    .construct_lean_exact_set_builder_value_from_result(
-                        &expected_value_type,
-                        evidence,
-                        &builtin.subgoals,
-                    )?,
-                _ => None,
-            },
-            (ParamType::Obj(target_set), _) if !matches!(target_set, Obj::PowerSet(_)) => {
-                render_exact_predicate_argument(value, target_set, &self.environment_stack)
-                    .and_then(|exact| {
-                        render_exact_predicate_argument_same_to_source(
-                            value,
-                            target_set,
-                            &self.environment_stack,
-                        )
-                        .map(|same| (exact, same))
-                    })
-                    .ok()
+        let canonical_exact_value = match param_type {
+            ParamType::Obj(target_set) if !matches!(target_set, Obj::PowerSet(_)) => {
+                if let Some(exact) = self.construct_lean_exact_set_builder_value_from_fact_result(
+                    type_check.verification.as_ref(),
+                )? {
+                    Some(exact)
+                } else {
+                    render_exact_predicate_argument(value, target_set, &self.environment_stack)
+                        .and_then(|exact| {
+                            render_exact_predicate_argument_same_to_source(
+                                value,
+                                target_set,
+                                &self.environment_stack,
+                            )
+                            .map(|same| (exact, same))
+                        })
+                        .ok()
+                }
             }
             _ => None,
         };
@@ -156,8 +149,9 @@ impl StmtResultToLeanCompiler {
 
         let rendered_type_fact = render_fact(&stored_type_fact, &self.environment_stack)?;
         let rendered_equality = render_fact(&stored_equality, &self.environment_stack)?;
-        let type_name = format!("__step{proof_step_index}_type");
-        let equality_name = format!("__step{proof_step_index}_equality");
+        let step_name = self.next_local_proof_step_base_name();
+        let type_name = format!("{step_name}_type");
+        let equality_name = format!("{step_name}_equality");
         let let_binding = match (param_type, rendered_exact_target_set.as_deref()) {
             (ParamType::Set(_), _) | (ParamType::Obj(Obj::PowerSet(_)), _) => {
                 format!("let {lean_name} : Litex.Set := {rendered_value}")
@@ -180,7 +174,7 @@ impl StmtResultToLeanCompiler {
         };
         let equality_proof = if let Some((_, exact_base_same_source)) = &canonical_exact_value {
             format!(
-                "Litex.Same.trans (Litex.Same.subtype {lean_name}) (by simpa [{lean_name}] using ({exact_base_same_source}))"
+                "Litex.Same.trans (Litex.Same.subtype {lean_name}) (by\n  convert ({exact_base_same_source}) using 1 <;> norm_num <;> norm_cast)"
             )
         } else if rendered_exact_target_set.is_some() {
             format!("Litex.Same.symm (Litex.In.same_rep {rendered_value} ({type_check_proof}))")
@@ -245,7 +239,7 @@ impl StmtResultToLeanCompiler {
                 value,
                 &defined_object,
                 type_check,
-                proof_step_index,
+                &step_name,
                 &mut lines,
                 &result.common.infers,
             )?;
@@ -275,7 +269,7 @@ impl StmtResultToLeanCompiler {
         value: &Obj,
         defined_object: &Obj,
         type_check: &SuccessFactStmtResult,
-        proof_step_index: usize,
+        step_name: &str,
         lines: &mut Vec<String>,
         infers: &SuccessInferResult,
     ) -> Result<(), String> {
@@ -396,7 +390,7 @@ impl StmtResultToLeanCompiler {
             &elementwise.fact,
         )?;
 
-        let subset_name = format!("__step{proof_step_index}_subset");
+        let subset_name = format!("{step_name}_subset");
         let subset_proposition = render_fact(&expected_subset, &self.environment_stack)?;
         lines.push(format!(
             "have {subset_name} : {subset_proposition} := by\n  unfold {}\n  exact Litex.Rules.setBuilderSubsetViaParamSubset ({child_proof})",
@@ -409,7 +403,7 @@ impl StmtResultToLeanCompiler {
             .fact_propositions
             .insert(subset_fact_id, expected_subset);
 
-        let elementwise_name = format!("__step{proof_step_index}_elements");
+        let elementwise_name = format!("{step_name}_elements");
         let elementwise_proposition = render_fact(&elementwise.fact, &self.environment_stack)?;
         lines.push(format!(
             "have {elementwise_name} : {elementwise_proposition} := by\n  exact {subset_name}"
@@ -430,7 +424,7 @@ impl StmtResultToLeanCompiler {
     pub(in super::super) fn compile_let_obj_stmt_result_as_local_proof_steps(
         &mut self,
         result: &SuccessLetObjStmtResult,
-        proof_step_index: usize,
+        _proof_step_index: usize,
     ) -> Result<Option<Vec<String>>, String> {
         if !result.common.infers.rule_applications.is_empty() {
             return Err("local let-object retained unexpected typed inference rules".into());
@@ -473,7 +467,7 @@ impl StmtResultToLeanCompiler {
             ));
         }
         let rendered_equality = render_fact(&defining_equality, &self.environment_stack)?;
-        let theorem_name = format!("__step{proof_step_index}");
+        let theorem_name = self.next_local_proof_step_base_name();
         self.environment_stack
             .fact_names
             .insert(defining_equality_fact_id, theorem_name.clone());
@@ -506,7 +500,7 @@ impl StmtResultToLeanCompiler {
     pub(in super::super) fn compile_by_definition_stmt_result_as_local_proof_steps(
         &mut self,
         result: &SuccessByDefStmtResult,
-        proof_step_index: usize,
+        _proof_step_index: usize,
     ) -> Result<Option<Vec<String>>, String> {
         let mut prerequisite_lines = Vec::new();
         if let Some(verification) = &result.verification {
@@ -515,6 +509,10 @@ impl StmtResultToLeanCompiler {
                     format!("by-definition clause check {clause_index} is not factual")
                 })?;
                 if matches!(check.proof(), SuccessFactProofResult::ForallProof(_)) {
+                    self.install_fact_anonymous_function_occurrence_aliases(
+                        &check.fact(),
+                        &format!("by-definition forall clause {clause_index} prerequisite"),
+                    )?;
                     let clause_environment =
                         self.by_definition_clause_application_environment(result)?;
                     let parent_environment =
@@ -614,7 +612,7 @@ impl StmtResultToLeanCompiler {
         let target_fact_id = output
             .fact_id
             .ok_or_else(|| "local by-definition target has no FactId".to_string())?;
-        let target_name = format!("__step{proof_step_index}");
+        let target_name = self.next_local_proof_step_base_name();
         prerequisite_lines.push(format!(
             "have {target_name} : {} := by\n  exact {}",
             proof.target.proposition, proof.target.proof_expression

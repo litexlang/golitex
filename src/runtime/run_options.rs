@@ -6,6 +6,7 @@ pub struct RunOptions {
     pub strict_mode: bool,
     pub output_language: OutputLanguage,
     pub summarize: bool,
+    pub is_isolated: bool,
 }
 
 impl Default for RunOptions {
@@ -15,6 +16,7 @@ impl Default for RunOptions {
             strict_mode: false,
             output_language: OutputLanguage::English,
             summarize: false,
+            is_isolated: false,
         }
     }
 }
