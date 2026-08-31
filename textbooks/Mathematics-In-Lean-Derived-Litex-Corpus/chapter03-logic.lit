@@ -314,7 +314,7 @@ prop is_sum_of_two_squares(A set, add fn(x, y A) A, mul fn(x, y A) A, z A):
 # product as witnesses, and verify the generic commutative-ring identity.
 thm sum_of_two_squares_mul:
     ? forall A set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A, z, w A:
-        $MILAlternative::chap2_struct::ring_laws(A, add, zero, neg, mul, one)
+        $chap2::ring_laws(A, add, zero, neg, mul, one)
         forall x, y A:
             mul(x, y) = mul(y, x)
         $is_sum_of_two_squares(A, add, mul, z)

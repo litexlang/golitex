@@ -1383,9 +1383,10 @@ fn direct_calculation_builtin_rule_output_localizes_to_zh() {
         || {
             let source_code = "(-1 * sqrt (2)) ^ 2 = 2";
 
-            let mut runtime = Runtime::default();
+            let mut runtime = Runtime::new(
+                RunOptions::default().with_output_language(OutputLanguage::SimplifiedChinese),
+            );
             runtime.start_isolated_source("direct_calculation_builtin_rule_output_localizes_to_zh");
-            runtime.run_options.output_language = OutputLanguage::SimplifiedChinese;
 
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
@@ -1411,7 +1412,8 @@ forall a, b R:
         0 = 2 * a^2 + b
 "#;
 
-    let mut runtime = Runtime::default();
+    let mut runtime =
+        Runtime::new(RunOptions::default().with_output_language(OutputLanguage::SimplifiedChinese));
     runtime
         .start_isolated_source("known_equality_candidate_uses_rational_expression_simplification");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
@@ -1441,7 +1443,6 @@ forall a, b R:
     runtime.start_isolated_source(
         "rational_expression_simplification_builtin_rule_output_localizes_to_zh",
     );
-    runtime.run_options.output_language = OutputLanguage::SimplifiedChinese;
 
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);

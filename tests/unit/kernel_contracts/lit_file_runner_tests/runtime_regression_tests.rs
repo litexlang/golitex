@@ -18,20 +18,23 @@ fn run_repository_for_test(
     output_language: OutputLanguage,
     summarize: bool,
 ) -> (bool, String) {
-    let outcome = run_repository(
-        repository_path,
-        RunOptions {
-            output_style: if detailed_output {
-                OutputStyle::Detailed
-            } else {
-                OutputStyle::Normal
-            },
-            strict_mode,
-            output_language,
-            summarize,
-            ..RunOptions::default()
-        },
-    );
+    let options = if strict_mode {
+        RunOptions::strict_execute(ExecutionOption::Repo)
+    } else {
+        RunOptions::execute(ExecutionOption::Repo)
+    }
+    .with_output_style(if detailed_output {
+        OutputStyle::Detailed
+    } else {
+        OutputStyle::Normal
+    })
+    .with_output_language(output_language)
+    .with_summary(if summarize {
+        SummaryOption::Summarize
+    } else {
+        SummaryOption::None
+    });
+    let outcome = run_repository(repository_path, options);
     (outcome.ok, outcome.output)
 }
 
@@ -64,9 +67,8 @@ pub(super) fn run_runtime_contract_suite_impl() {
 fn runtime_contract_builtin() {
     let source_code = "1 = 1";
 
-    let mut import_runtime = Runtime::default();
+    let mut import_runtime = Runtime::new(RunOptions::strict_execute(ExecutionOption::Eval));
     import_runtime.start_isolated_source("runtime_contract_import");
-    import_runtime.run_options.strict_mode = true;
     let (import_stmt_results, import_runtime_error) =
         execute_source(source_code, &mut import_runtime);
     let (import_run_succeeded, import_run_output) =

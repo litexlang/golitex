@@ -352,8 +352,10 @@ impl StmtResultToLeanCompiler {
                 return Err("have-fn unique-existence property requires one witness binder".into());
             };
             let witness_set = parameter_set(&witness_group.param_type)?;
+            let rendered_domain = render_obj(source_parameter_set, &self.environment_stack)?;
+            let rendered_codomain = render_obj(witness_set, &self.environment_stack)?;
             let selected_value = format!(
-                "(Litex.fnApplyOwn {name} {} __arg __arg_in)",
+                "(Litex.fnApplyOwn (domain := {rendered_domain}) (codomain := {rendered_codomain}) {name} {} __arg __arg_in)",
                 self.environment_stack
                     .fact_names
                     .get(&stored_fact_ids[0])

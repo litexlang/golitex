@@ -1,5 +1,5 @@
 use super::run_terminal_import;
-use crate::runtime::Runtime;
+use crate::runtime::{ExecutionOption, RunOptions, Runtime};
 use crate::test_support::{execute_source, with_standard_library_root};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -112,8 +112,7 @@ fn strict_terminal_import_verifies_and_rolls_back_a_failing_module() {
     );
     write_file(&dependency.join("assumption.lit"), "1 = 0\n");
 
-    let mut runtime = Runtime::default();
-    runtime.run_options.strict_mode = true;
+    let mut runtime = Runtime::new(RunOptions::strict_execute(ExecutionOption::Repl));
     runtime.start_isolated_source("repl");
     let output = run_terminal_import(
         format!(

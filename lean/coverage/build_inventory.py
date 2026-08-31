@@ -30,6 +30,13 @@ LEAN_ADAPTER_SYMBOLS_PATH = COVERAGE_DIR / "lean_adapter_symbols.tsv"
 DYNAMIC_LEAN_ADAPTER_SITES_PATH = COVERAGE_DIR / "dynamic_lean_adapter_sites.tsv"
 LEAN_ADAPTER_CHECKS_PATH = COVERAGE_DIR / "LeanAdapterSymbols.lean"
 LEAN_ADAPTER_GATE_EVIDENCE_PATH = COVERAGE_DIR / "lean_adapter_gate_evidence.json"
+INTEGRATION_GATE_EVIDENCE_PATH = COVERAGE_DIR / "integration_gate_evidence.json"
+INTEGRATION_FAILURE_FAMILIES_PATH = COVERAGE_DIR / "integration_failure_families.tsv"
+INTEGRATION_TEST_INVENTORY_PATH = COVERAGE_DIR / "integration_test_inventory.tsv"
+EXAMPLE_MATRIX_PATH = COVERAGE_DIR / "example_kernel_matrix.json"
+CHECKED_EXAMPLE_GATE_PATH = COVERAGE_DIR / "checked_example_kernel_evidence.json"
+EXAMPLE_TRUST_BOUNDARIES_PATH = COVERAGE_DIR / "example_trust_boundaries.tsv"
+REQUIRED_TRACER_QUEUE_PATH = COVERAGE_DIR / "required_tracer_queue.tsv"
 
 STATUS_KERNEL_CHECKED = "kernel_checked"
 STATUS_MAPPED = "mapped_not_kernel_checked"
@@ -97,6 +104,16 @@ MECHANISM_MIGRATIONS = {
         "Freeze the exact native carrier/wrapper and required eliminators before changing the certificate.",
         "Block emission until the user-owned semantic decision has a proved Core/Rules contract.",
     ),
+}
+
+MECHANISM_ROUTE_KINDS = {
+    "mathematical_leaf_law": "leaf_theorem_adapter",
+    "checked_computation_or_reflection": "fixed_reflection_adapter",
+    "proof_composition_or_recursive_strategy": "recursive_result_composition",
+    "dispatcher_or_search_helper": "selected_semantic_child",
+    "duplicate_or_orientation_candidate": "shared_adapter_candidate",
+    "evidence_contract_gap": "blocked_evidence_contract",
+    "target_abi_decision": "blocked_target_abi",
 }
 
 
@@ -196,6 +213,29 @@ def lean_dependency_fingerprint() -> str:
         digest.update(path.read_bytes())
         digest.update(b"\0")
     return digest.hexdigest()
+
+
+def rust_source_fingerprint() -> str:
+    paths = list((ROOT / "src").rglob("*.rs"))
+    paths.extend(
+        path
+        for path in (ROOT / "Cargo.toml", ROOT / "Cargo.lock")
+        if path.exists()
+    )
+    digest = hashlib.sha256()
+    for path in sorted(set(paths)):
+        digest.update(path.relative_to(ROOT).as_posix().encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(path.read_bytes())
+        digest.update(b"\0")
+    return digest.hexdigest()
+
+
+def file_sha256(relative: str) -> str | None:
+    path = ROOT / relative
+    if not path.is_file():
+        return None
+    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def lean_dependency_forbidden_hits() -> list[str]:
@@ -380,6 +420,18 @@ def builtin_route_resolution(
     return resolution, literals, dynamic
 
 
+def builtin_route_kind(item: dict[str, object]) -> str:
+    if item["axis"] == "builtin_uncatalogued":
+        return MECHANISM_ROUTE_KINDS[str(item["mechanism"])]
+    if item["status"] == STATUS_ABI_DECISION:
+        return "blocked_target_abi"
+    if item["status"] == STATUS_EVIDENCE_GAP:
+        return "blocked_evidence_contract"
+    if item["status"] == STATUS_COMPILER_GAP:
+        return "missing_typed_certificate_route"
+    return "typed_certificate_route"
+
+
 def selector_binding(
     path: str, lines: list[str], line_number: int, selector: str
 ) -> tuple[str, str]:
@@ -478,6 +530,29 @@ def default_next_gate(axis: str, source_id: str, status: str) -> str:
     return f"attach a positive tracer and real Lean kernel gate for {source_id}"
 
 
+def default_positive_tracer(
+    axis: str, source_id: str, status: str, occurrence_role: str | None
+) -> str:
+    if status in (STATUS_UNREACHABLE, STATUS_DEAD_OR_DUPLICATE):
+        return "not applicable until a production route is proved or the identity is retired"
+    role = f" in its {occurrence_role} role" if occurrence_role else ""
+    if axis.startswith("builtin_"):
+        return f"required: smallest .lit source whose Result selects stable ID {source_id}"
+    return f"required: smallest .lit source whose completed Result contains {source_id}{role}"
+
+
+def default_negative_boundary(source_id: str, status: str) -> str:
+    if status == STATUS_ABI_DECISION:
+        return f"reject {source_id} emission until its target ABI and eliminators are frozen"
+    if status == STATUS_EVIDENCE_GAP:
+        return f"reject {source_id} when target, ordered children, FactIds, bindings, or scope evidence is absent"
+    if status == STATUS_COMPILER_GAP:
+        return f"return an explicit incomplete/error result for {source_id}; never accept partial Lean"
+    if status in (STATUS_UNREACHABLE, STATUS_DEAD_OR_DUPLICATE):
+        return f"do not count a synthetic {source_id} constructor as production coverage"
+    return f"reject a forged {source_id} Result with mismatched target, evidence, order, or effects"
+
+
 def explicit_source_limitations() -> dict[str, tuple[str, str, str]]:
     object_path = "src/stmt_result_to_lean_compiler/object_representation.rs"
     audit_path = (
@@ -572,6 +647,13 @@ def row(
 ) -> dict[str, object]:
     reachable = "source_reference" if producers else "not_proven"
     owner = "user" if status == STATUS_ABI_DECISION else "Codex"
+    tracer_state = (
+        "existing"
+        if positive_tracer
+        else "not_applicable_until_reachable"
+        if status in (STATUS_UNREACHABLE, STATUS_DEAD_OR_DUPLICATE)
+        else "required"
+    )
     return {
         "axis": axis,
         "source_id": source_id,
@@ -590,8 +672,11 @@ def row(
         "compiler_consumers": consumers,
         "consumer_route": consumer_route
         or ("direct_source_reference" if consumers else None),
-        "positive_tracer": positive_tracer,
-        "negative_boundary": negative_boundary,
+        "positive_tracer": positive_tracer
+        or default_positive_tracer(axis, source_id, status, occurrence_role),
+        "negative_boundary": negative_boundary
+        or default_negative_boundary(source_id, status),
+        "tracer_evidence_state": tracer_state,
         "status": status,
         "owner": owner,
         "next_gate": default_next_gate(axis, source_id, status),
@@ -999,6 +1084,12 @@ def tracer_rows() -> list[dict[str, object]]:
             and gate_evidence.get("current_valid") is True
             and gate_evidence.get("lean_dependency_fingerprint_sha256")
             == lean_dependency_fingerprint()
+            and gate_evidence.get("rust_source_fingerprint_sha256")
+            == rust_source_fingerprint()
+            and file_sha256(str(gate_evidence["verifier_binary"]["path"]))
+            == gate_evidence["verifier_binary"]["sha256"]
+            and file_sha256(str(gate_evidence["compiler"]["binary_path"]))
+            == gate_evidence["compiler"]["binary_sha256"]
         )
         kernel_checked = (
             source_gate_is_current
@@ -1070,6 +1161,10 @@ def build_inventory() -> dict[str, object]:
     )
     axes = collections.Counter(str(item["axis"]) for item in rows)
     statuses = collections.Counter(str(item["status"]) for item in rows)
+    owners = collections.Counter(str(item["owner"]) for item in rows)
+    tracer_states = collections.Counter(
+        str(item["tracer_evidence_state"]) for item in rows
+    )
     mechanisms = collections.Counter(
         str(item["mechanism"]) for item in rows if item.get("mechanism")
     )
@@ -1086,6 +1181,11 @@ def build_inventory() -> dict[str, object]:
     builtin_route_resolutions = collections.Counter(
         builtin_route_resolution(item, files)[0] for item in builtin_rows_only
     )
+    builtin_route_kinds = collections.Counter(
+        builtin_route_kind(item) for item in builtin_rows_only
+    )
+    trust_rows = example_trust_boundary_rows()
+    trust_classes = collections.Counter(row["classification"] for row in trust_rows)
     source_fingerprint_after = inventory_source_fingerprint()
     if source_fingerprint_before != source_fingerprint_after:
         raise RuntimeError(
@@ -1099,6 +1199,8 @@ def build_inventory() -> dict[str, object]:
             "row_count": len(rows),
             "axes": dict(sorted(axes.items())),
             "statuses": dict(sorted(statuses.items())),
+            "owners": dict(sorted(owners.items())),
+            "tracer_evidence_states": dict(sorted(tracer_states.items())),
             "axis_statuses": dict(sorted(axis_statuses.items())),
             "uncatalogued_mechanisms": dict(sorted(mechanisms.items())),
             "builtin": {
@@ -1128,6 +1230,15 @@ def build_inventory() -> dict[str, object]:
             "builtin_route_candidate_resolutions": dict(
                 sorted(builtin_route_resolutions.items())
             ),
+            "builtin_route_kinds": dict(sorted(builtin_route_kinds.items())),
+            "example_trust_boundaries": {
+                "registered": len(trust_rows),
+                "trust_free": trust_classes["trust_free"],
+                "source_declared": trust_classes["source_declared_trust_boundary"],
+                "unexpected_generated_axiom": trust_classes[
+                    "unexpected_generated_axiom"
+                ],
+            },
         },
         "rows": rows,
     }
@@ -1157,6 +1268,23 @@ def validate_inventory_contract(inventory: dict[str, object]) -> None:
         status = str(item["status"])
         if status not in allowed_statuses:
             raise ValueError(f"unknown inventory status for {source_id}: {status}")
+        for field in (
+            "result_evidence",
+            "lean_dependency",
+            "positive_tracer",
+            "negative_boundary",
+            "owner",
+            "next_gate",
+        ):
+            if not item.get(field):
+                raise ValueError(f"inventory row lacks {field}: {source_id}")
+        tracer_state = str(item.get("tracer_evidence_state"))
+        if tracer_state not in (
+            "existing",
+            "required",
+            "not_applicable_until_reachable",
+        ):
+            raise ValueError(f"invalid tracer evidence state for {source_id}")
         producer_count = int(item["producer_reference_count"])
         consumer_count = int(item["compiler_consumer_count"])
         if status in (STATUS_MAPPED, STATUS_KERNEL_CHECKED) and not consumer_count:
@@ -1230,6 +1358,29 @@ def render_summary(inventory: dict[str, object]) -> str:
     lines.extend(["", "## Rows by status", "", "| Status | Rows |", "| --- | ---: |"]) 
     for name, count in summary["statuses"].items():
         lines.append(f"| `{name}` | {count} |")
+    lines.extend(
+        [
+            "",
+            "## Rows by owner",
+            "",
+            f"- Codex implementation/evidence rows: **{summary['owners'].get('Codex', 0)}**",
+            f"- User semantic-decision rows: **{summary['owners'].get('user', 0)}**",
+            "",
+            "Repeated role rows are collapsed into the seven questions in the Day 1 user decision packet.",
+        ]
+    )
+    lines.extend(
+        [
+            "",
+            "## Tracer obligations",
+            "",
+            f"- Existing source tracers: **{summary['tracer_evidence_states'].get('existing', 0)}**",
+            f"- Required per-route tracers: **{summary['tracer_evidence_states'].get('required', 0)}**",
+            f"- Not applicable until reachability/dead-code resolution: **{summary['tracer_evidence_states'].get('not_applicable_until_reachable', 0)}**",
+            "",
+            "A `required` string is an explicit obligation, not a claim that the tracer already exists.",
+        ]
+    )
     status_names = sorted(summary["statuses"])
     lines.extend(
         [
@@ -1264,6 +1415,17 @@ def render_summary(inventory: dict[str, object]) -> str:
             "templates that require Result-driven generated-module tracers.",
         ]
     )
+    lines.extend(
+        [
+            "",
+            "### Builtin implementation route kinds",
+            "",
+            "| Route kind | Stable IDs |",
+            "| --- | ---: |",
+        ]
+    )
+    for name, count in summary["builtin_route_kinds"].items():
+        lines.append(f"| `{name}` | {count} |")
     builtin = summary["builtin"]
     lines.extend(
         [
@@ -1290,6 +1452,20 @@ def render_summary(inventory: dict[str, object]) -> str:
     )
     for pair, count in summary["statement_result_parity"].items():
         lines.append(f"| `{pair}` | {count} |")
+    trust = summary["example_trust_boundaries"]
+    lines.extend(
+        [
+            "",
+            "## Checked example trust boundaries",
+            "",
+            f"- Registered pairs: **{trust['registered']}**",
+            f"- Trust-free positive pairs: **{trust['trust_free']}**",
+            f"- Explicit source-declared trust/axiom pairs: **{trust['source_declared']}**",
+            f"- Checked Lean axioms without a source boundary: **{trust['unexpected_generated_axiom']}**",
+            "",
+            "See `example_trust_boundaries.tsv` for exact source and Lean line references.",
+        ]
+    )
     lines.extend(
         [
             "",
@@ -1408,6 +1584,7 @@ def render_builtin_route_candidates(
             "axis",
             "status",
             "owner",
+            "route_kind",
             "compiler_consumers",
             "local_literal_adapter_candidates",
             "local_dynamic_adapter_templates",
@@ -1417,12 +1594,14 @@ def render_builtin_route_candidates(
     )
     for item in rows:
         resolution, literals, dynamic = builtin_route_resolution(item, files)
+        route_kind = builtin_route_kind(item)
         writer.writerow(
             (
                 item["source_id"],
                 item["axis"],
                 item["status"],
                 item["owner"],
+                route_kind,
                 ";".join(item["compiler_consumers"]),
                 ";".join(sorted(literals)),
                 ";".join(sorted(dynamic)),
@@ -1628,6 +1807,19 @@ def validate_tracer_gate_evidence() -> None:
         raise ValueError("Lean dependencies changed after primary tracer evidence")
     if evidence.get("current_valid") is not True:
         raise ValueError("primary tracer evidence is marked invalid")
+    rust_fingerprint = evidence.get("rust_source_fingerprint_sha256")
+    if rust_fingerprint is None:
+        raise ValueError("primary tracer evidence does not bind Rust sources")
+    if rust_fingerprint != rust_source_fingerprint():
+        raise ValueError("Rust sources changed after primary tracer evidence")
+    verifier_binary = evidence.get("verifier_binary")
+    if not isinstance(verifier_binary, dict):
+        raise ValueError("primary tracer evidence does not bind the verifier binary")
+    if digest(str(verifier_binary["path"])) != verifier_binary["sha256"]:
+        raise ValueError("verifier binary changed after primary tracer evidence")
+    compiler_binary_path = str(evidence["compiler"]["binary_path"])
+    if digest(compiler_binary_path) != evidence["compiler"]["binary_sha256"]:
+        raise ValueError("compiler binary changed after primary tracer evidence")
 
     actual_source = digest(str(evidence["tracer"]))
     if actual_source != evidence["source_sha256"]:
@@ -1683,6 +1875,12 @@ def validate_lean_adapter_gate_evidence(files: dict[str, list[str]]) -> None:
         raise ValueError("Lean adapter evidence does not bind Lean dependencies")
     if dependency_fingerprint != lean_dependency_fingerprint():
         raise ValueError("Lean dependencies changed after adapter evidence")
+    source_fingerprint = evidence.get("inventory_source_fingerprint_sha256")
+    if source_fingerprint != inventory_source_fingerprint():
+        raise ValueError("inventory source changed after adapter evidence")
+    rust_fingerprint = evidence.get("rust_source_fingerprint_sha256")
+    if rust_fingerprint != rust_source_fingerprint():
+        raise ValueError("Rust sources changed after adapter evidence")
     if evidence.get("current_valid") is not True:
         raise ValueError("Lean adapter evidence is marked invalid")
 
@@ -1695,6 +1893,425 @@ def validate_lean_adapter_gate_evidence(files: dict[str, list[str]]) -> None:
         raise ValueError("Lean adapter #check file changed after gate evidence was recorded")
     if digest(str(evidence["ledger_path"])) != evidence["ledger_sha256"]:
         raise ValueError("Lean adapter symbol ledger changed after gate evidence was recorded")
+
+
+def validate_integration_gate_evidence() -> None:
+    evidence = json.loads(
+        INTEGRATION_GATE_EVIDENCE_PATH.read_text(encoding="utf-8")
+    )
+
+    recorded_rust_fingerprint = evidence.get("rust_source_fingerprint_sha256")
+    if not isinstance(recorded_rust_fingerprint, str) or len(recorded_rust_fingerprint) != 64:
+        raise ValueError("compiler integration evidence lacks a Rust fingerprint")
+    binary = evidence.get("test_binary")
+    if not isinstance(binary, dict):
+        raise ValueError("compiler integration evidence does not bind a test binary")
+    if file_sha256(str(binary["path"])) != binary["sha256"]:
+        raise ValueError("compiler integration test binary changed after evidence")
+    cargo_binding = evidence.get("cargo_binding")
+    if not isinstance(cargo_binding, dict) or cargo_binding.get("exit") != 0:
+        raise ValueError("compiler integration evidence lacks a Cargo binding")
+    if (
+        cargo_binding.get("source_fingerprint_before") != recorded_rust_fingerprint
+        or cargo_binding.get("source_fingerprint_after")
+        != recorded_rust_fingerprint
+    ):
+        raise ValueError("Rust sources changed while binding the integration binary")
+    source = evidence.get("test_source")
+    if not isinstance(source, dict):
+        raise ValueError("compiler integration evidence does not bind its test source")
+    if file_sha256(str(source["path"])) != source["sha256"]:
+        raise ValueError("compiler integration test source changed after evidence")
+    ledger = evidence.get("failure_ledger")
+    if not isinstance(ledger, dict):
+        raise ValueError("compiler integration evidence does not bind its failure ledger")
+    if file_sha256(str(ledger["path"])) != ledger["sha256"]:
+        raise ValueError("compiler integration failure ledger changed after evidence")
+
+    run = evidence.get("run")
+    if not isinstance(run, dict) or run.get("exit") != 101:
+        raise ValueError("compiler integration evidence lacks the expected red baseline")
+    if (
+        run.get("total") != 76
+        or run.get("ignored") != 0
+        or run.get("passed", 0) + run.get("failed", 0) != run.get("total")
+    ):
+        raise ValueError("compiler integration evidence totals do not reconcile")
+    if (
+        run.get("source_fingerprint_before") != recorded_rust_fingerprint
+        or run.get("source_fingerprint_after") != recorded_rust_fingerprint
+        or run.get("binary_sha256_before") != binary["sha256"]
+        or run.get("binary_sha256_after") != binary["sha256"]
+    ):
+        raise ValueError("compiler integration run was not one stable snapshot")
+
+    with INTEGRATION_FAILURE_FAMILIES_PATH.open(
+        encoding="utf-8", newline=""
+    ) as stream:
+        rows = list(csv.DictReader(stream, delimiter="\t"))
+    if len(rows) != run["failed"]:
+        raise ValueError("compiler integration ledger does not cover every failure")
+    failure_names = [str(name) for name in run.get("failure_names", [])]
+    ledger_names = [row["test"] for row in rows]
+    if sorted(failure_names) != sorted(ledger_names):
+        raise ValueError("compiler integration failure names disagree with the ledger")
+    classes = collections.Counter(row["current_class"] for row in rows)
+    if dict(sorted(classes.items())) != dict(
+        sorted(evidence.get("classification_counts", {}).items())
+    ):
+        raise ValueError("compiler integration classifications do not reconcile")
+    if evidence.get("current_valid") is not True:
+        raise ValueError("compiler integration evidence is marked invalid")
+    if recorded_rust_fingerprint != rust_source_fingerprint():
+        raise ValueError("Rust sources changed after compiler integration evidence")
+
+
+def validate_example_matrix_evidence() -> None:
+    report = json.loads(EXAMPLE_MATRIX_PATH.read_text(encoding="utf-8"))
+    schema_version = report.get("schema_version")
+    if schema_version not in (2, 3):
+        raise ValueError("example matrix has an unsupported schema")
+    rows = report.get("rows")
+    totals = report.get("totals")
+    if not isinstance(rows, list) or not isinstance(totals, dict):
+        raise ValueError("example matrix lacks rows or totals")
+    names = [str(row["example"]) for row in rows]
+    if len(names) != len(set(names)) or totals.get("registered") != len(rows):
+        raise ValueError("example matrix row identities do not reconcile")
+
+    config = (ROOT / "lean/examples/litex.config").read_text(encoding="utf-8")
+    current_names = sorted(
+        source.name
+        for source in (ROOT / "lean/examples").glob("*.lit")
+        if f'"./{source.name}"' in config
+    )
+    if sorted(names) != current_names:
+        raise ValueError("registered example set changed after the matrix")
+    expected_totals: dict[str, int] = {
+        "registered": len(rows),
+        "compiler_pass": sum(row["compiler_exit"] == 0 for row in rows),
+        "matches_checked_in": sum(bool(row["matches_checked_in"]) for row in rows),
+    }
+    for prefix in ("generated_kernel", "checked_in_kernel"):
+        for classification in (
+            "pass",
+            "kernel_reject",
+            "infrastructure_failure",
+            "not_run",
+        ):
+            expected_totals[f"{prefix}_{classification}"] = sum(
+                row[f"{prefix}_class"] == classification for row in rows
+            )
+    if schema_version >= 3:
+        expected_totals["generated_forbidden_rows"] = sum(
+            bool(row["generated_forbidden_hits"]) for row in rows
+        )
+        expected_totals["checked_in_forbidden_rows"] = sum(
+            bool(row["checked_in_forbidden_hits"]) for row in rows
+        )
+    if totals != expected_totals:
+        raise ValueError("example matrix totals do not reconcile with its rows")
+
+    if report.get("snapshot_valid") is not True:
+        raise ValueError("example matrix is not a stable Rust/compiler/Lean snapshot")
+    if report.get("compiler_stable_during_run") is not True:
+        raise ValueError("example matrix compiler changed during the run")
+    if report.get("example_inputs_stable_during_run") is not True:
+        raise ValueError("example matrix inputs changed during the run")
+    if report.get("lean_dependency_stable_during_run") is not True:
+        raise ValueError("example matrix Lean dependencies changed during the run")
+    if report.get("rust_source_stable_during_build_and_matrix") is not True:
+        raise ValueError("example matrix lacks a stable Rust source binding")
+    if report.get("olean_precondition_errors_before") or report.get(
+        "olean_precondition_errors_after"
+    ):
+        raise ValueError("example matrix has stale or missing Lean object evidence")
+    if schema_version < 3:
+        raise ValueError("example matrix predates forbidden-output auditing")
+    if totals.get("generated_forbidden_rows") or totals.get(
+        "checked_in_forbidden_rows"
+    ):
+        raise ValueError("example matrix contains forbidden generated output")
+    if report.get("lean_dependency_fingerprint_after") != lean_dependency_fingerprint():
+        raise ValueError("Lean dependencies changed after the example matrix")
+    if report.get("rust_source_fingerprint_after_matrix") != rust_source_fingerprint():
+        raise ValueError("Rust sources changed after the example matrix")
+    compiler_path = str(report["compiler_path"])
+    if file_sha256(compiler_path) != report.get("compiler_sha256"):
+        raise ValueError("release compiler changed after the example matrix")
+    for row in rows:
+        source = ROOT / "lean/examples" / str(row["example"])
+        checked = ROOT / str(row["checked_in_path"])
+        if hashlib.sha256(source.read_bytes()).hexdigest() != row["source_sha256"]:
+            raise ValueError(f"example source changed after matrix: {row['example']}")
+        if hashlib.sha256(checked.read_bytes()).hexdigest() != row["checked_in_sha256"]:
+            raise ValueError(f"checked Lean changed after matrix: {row['example']}")
+
+
+def validate_checked_example_gate_evidence() -> None:
+    report = json.loads(CHECKED_EXAMPLE_GATE_PATH.read_text(encoding="utf-8"))
+    rows = report.get("rows")
+    totals = report.get("totals")
+    if report.get("schema_version") != 1 or not isinstance(rows, list) or not isinstance(totals, dict):
+        raise ValueError("checked-example gate has an unsupported schema")
+    names = [str(row["example"]) for row in rows]
+    config = (ROOT / "lean/examples/litex.config").read_text(encoding="utf-8")
+    current_names = sorted(
+        source.name
+        for source in (ROOT / "lean/examples").glob("*.lit")
+        if f'"./{source.name}"' in config
+    )
+    if sorted(names) != current_names or len(names) != len(set(names)):
+        raise ValueError("checked-example gate does not cover the registered set")
+    expected = {
+        "registered": len(rows),
+        "pass": sum(row["kernel_class"] == "pass" for row in rows),
+        "kernel_reject": sum(row["kernel_class"] == "kernel_reject" for row in rows),
+        "infrastructure_failure": sum(row["kernel_class"] == "infrastructure_failure" for row in rows),
+        "forbidden_rows": sum(bool(row["forbidden_hits"]) for row in rows),
+    }
+    if totals != expected:
+        raise ValueError("checked-example gate totals do not reconcile")
+    if report.get("current_valid") is not True:
+        raise ValueError("checked-example gate snapshot is unstable")
+    if report.get("lean_dependency_fingerprint_after") != lean_dependency_fingerprint():
+        raise ValueError("Lean dependencies changed after checked-example gate")
+    if report.get("olean_precondition_errors_before") or report.get("olean_precondition_errors_after"):
+        raise ValueError("checked-example gate has stale or missing oleans")
+    for row in rows:
+        source = ROOT / "lean/examples" / str(row["example"])
+        checked = ROOT / str(row["checked_in_path"])
+        if hashlib.sha256(source.read_bytes()).hexdigest() != row["source_sha256"]:
+            raise ValueError(f"checked-example source changed: {row['example']}")
+        if hashlib.sha256(checked.read_bytes()).hexdigest() != row["checked_in_sha256"]:
+            raise ValueError(f"checked Lean changed: {row['example']}")
+    if totals.get("forbidden_rows"):
+        raise ValueError("checked examples contain forbidden output")
+    if totals.get("pass") != totals.get("registered"):
+        raise ValueError("checked examples contain kernel rejections")
+
+
+def evidence_gate_issues(files: dict[str, list[str]]) -> list[str]:
+    gates = (
+        ("primary tracer", validate_tracer_gate_evidence),
+        ("Lean adapter", lambda: validate_lean_adapter_gate_evidence(files)),
+        ("compiler integration", validate_integration_gate_evidence),
+        ("checked examples", validate_checked_example_gate_evidence),
+        ("example matrix", validate_example_matrix_evidence),
+    )
+    issues: list[str] = []
+    for label, gate in gates:
+        try:
+            gate()
+        except (KeyError, TypeError, ValueError, json.JSONDecodeError) as error:
+            issues.append(f"{label}: {error}")
+    return issues
+
+
+def integration_test_rows() -> list[dict[str, str]]:
+    relative_source = "tests/integration/stmt_result_to_lean_compiler_tracers.rs"
+    lines = (ROOT / relative_source).read_text(encoding="utf-8").splitlines()
+    test_pattern = re.compile(r"^fn ([A-Za-z_][A-Za-z0-9_]*)\(\) \{")
+    tests = [
+        (match.group(1), line_number)
+        for line_number, line in enumerate(lines, 1)
+        if (match := test_pattern.match(line))
+    ]
+    with INTEGRATION_FAILURE_FAMILIES_PATH.open(
+        encoding="utf-8", newline=""
+    ) as stream:
+        failures = {
+            row["test"]: row for row in csv.DictReader(stream, delimiter="\t")
+        }
+    names = {name for name, _ in tests}
+    unknown = sorted(set(failures) - names)
+    if unknown:
+        raise ValueError(
+            "integration failure ledger names missing from source: " + unknown[0]
+        )
+    rows: list[dict[str, str]] = []
+    for name, line_number in tests:
+        failure = failures.get(name)
+        rows.append(
+            {
+                "test": name,
+                "source_reference": f"{relative_source}:{line_number}",
+                "baseline_outcome": "failed" if failure else "passed",
+                "current_class": (
+                    failure["current_class"] if failure else "baseline_pass"
+                ),
+                "first_boundary": failure["first_boundary"] if failure else "",
+                "kernel_probe": failure["kernel_probe"] if failure else "broad gate pass",
+                "owner": failure["owner"] if failure else "Codex regression gate",
+                "next_gate": (
+                    failure["next_gate"]
+                    if failure
+                    else "retain as a passing regression during focused repairs"
+                ),
+            }
+        )
+    return rows
+
+
+def render_integration_test_inventory() -> str:
+    columns = (
+        "test",
+        "source_reference",
+        "baseline_outcome",
+        "current_class",
+        "first_boundary",
+        "kernel_probe",
+        "owner",
+        "next_gate",
+    )
+    output = io.StringIO()
+    writer = csv.DictWriter(
+        output, fieldnames=columns, delimiter="\t", lineterminator="\n"
+    )
+    writer.writeheader()
+    writer.writerows(integration_test_rows())
+    return output.getvalue()
+
+
+def example_trust_boundary_rows() -> list[dict[str, str]]:
+    examples = ROOT / "lean/examples"
+    config = (examples / "litex.config").read_text(encoding="utf-8")
+    source_pattern = re.compile(r"^\s*(abstract_prop|axiom|trust)\b")
+    lean_axiom_pattern = re.compile(r"^\s*axiom\b")
+    rows: list[dict[str, str]] = []
+    for source in sorted(examples.glob("*.lit")):
+        if f'"./{source.name}"' not in config:
+            continue
+        checked = source.with_suffix(".lean")
+        source_boundaries: list[tuple[str, int]] = []
+        for line_number, line in enumerate(
+            source.read_text(encoding="utf-8").splitlines(), 1
+        ):
+            if match := source_pattern.match(line):
+                source_boundaries.append((match.group(1), line_number))
+        checked_axioms = [
+            line_number
+            for line_number, line in enumerate(
+                checked.read_text(encoding="utf-8").splitlines(), 1
+            )
+            if lean_axiom_pattern.match(line)
+        ]
+        if checked_axioms and not source_boundaries:
+            classification = "unexpected_generated_axiom"
+        elif source_boundaries:
+            classification = "source_declared_trust_boundary"
+        else:
+            classification = "trust_free"
+        kinds = collections.Counter(kind for kind, _ in source_boundaries)
+        rows.append(
+            {
+                "example": source.name,
+                "classification": classification,
+                "strict_positive_eligible": str(not source_boundaries).lower(),
+                "source_boundary_count": str(len(source_boundaries)),
+                "source_boundary_kinds": ";".join(
+                    f"{kind}:{count}" for kind, count in sorted(kinds.items())
+                ),
+                "source_references": ";".join(
+                    f"{source.relative_to(ROOT).as_posix()}:{line_number}"
+                    for _, line_number in source_boundaries
+                ),
+                "checked_axiom_count": str(len(checked_axioms)),
+                "checked_axiom_references": ";".join(
+                    f"{checked.relative_to(ROOT).as_posix()}:{line_number}"
+                    for line_number in checked_axioms
+                ),
+            }
+        )
+    return rows
+
+
+def render_example_trust_boundaries() -> str:
+    columns = (
+        "example",
+        "classification",
+        "strict_positive_eligible",
+        "source_boundary_count",
+        "source_boundary_kinds",
+        "source_references",
+        "checked_axiom_count",
+        "checked_axiom_references",
+    )
+    output = io.StringIO()
+    writer = csv.DictWriter(
+        output, fieldnames=columns, delimiter="\t", lineterminator="\n"
+    )
+    writer.writeheader()
+    writer.writerows(example_trust_boundary_rows())
+    return output.getvalue()
+
+
+def render_required_tracer_queue(inventory: dict[str, object]) -> str:
+    columns = (
+        "priority_band",
+        "axis",
+        "source_id",
+        "occurrence_role",
+        "status",
+        "owner",
+        "positive_tracer_obligation",
+        "negative_boundary",
+        "next_gate",
+    )
+    output = io.StringIO()
+    writer = csv.DictWriter(
+        output, fieldnames=columns, delimiter="\t", lineterminator="\n"
+    )
+    writer.writeheader()
+    priority_by_status = {
+        STATUS_ABI_DECISION: "P0_blocked_user_decision",
+        STATUS_COMPILER_GAP: "P1_genuine_compiler_gap",
+        STATUS_EVIDENCE_GAP: "P2_result_evidence_gap",
+        STATUS_MAPPED: "P3_kernelize_mapped_route",
+    }
+    required_rows = [
+        row_item
+        for row_item in inventory["rows"]
+        if row_item["tracer_evidence_state"] == "required"
+    ]
+    required_rows.sort(
+        key=lambda row_item: (
+            priority_by_status[str(row_item["status"])],
+            str(row_item["axis"]),
+            str(row_item["source_id"]),
+            str(row_item.get("occurrence_role") or ""),
+        )
+    )
+    for row_item in required_rows:
+        priority_band = priority_by_status[str(row_item["status"])]
+        writer.writerow(
+            {
+                "priority_band": priority_band,
+                "axis": row_item["axis"],
+                "source_id": row_item["source_id"],
+                "occurrence_role": row_item.get("occurrence_role") or "",
+                "status": row_item["status"],
+                "owner": row_item["owner"],
+                "positive_tracer_obligation": row_item["positive_tracer"],
+                "negative_boundary": row_item["negative_boundary"],
+                "next_gate": row_item["next_gate"],
+            }
+        )
+    return output.getvalue()
+
+
+def checked_example_forbidden_hits() -> list[str]:
+    pattern = re.compile(r"\b(?:sorry|admit|LitexObject)\b|Litex\.Object|Set\.univ")
+    hits: list[str] = []
+    for path in sorted((ROOT / "lean/examples").glob("*.lean")):
+        for line_number, line in enumerate(
+            path.read_text(encoding="utf-8").splitlines(), 1
+        ):
+            if pattern.search(line):
+                hits.append(
+                    f"{path.relative_to(ROOT).as_posix()}:{line_number}:{line.strip()}"
+                )
+    return hits
 
 
 def generate() -> int:
@@ -1722,6 +2339,15 @@ def generate() -> int:
     LEAN_ADAPTER_CHECKS_PATH.write_text(
         render_lean_adapter_checks(files), encoding="utf-8"
     )
+    INTEGRATION_TEST_INVENTORY_PATH.write_text(
+        render_integration_test_inventory(), encoding="utf-8"
+    )
+    EXAMPLE_TRUST_BOUNDARIES_PATH.write_text(
+        render_example_trust_boundaries(), encoding="utf-8"
+    )
+    REQUIRED_TRACER_QUEUE_PATH.write_text(
+        render_required_tracer_queue(inventory), encoding="utf-8"
+    )
     print(f"generated {inventory['summary']['row_count']} coverage rows")
     return 0
 
@@ -1743,6 +2369,9 @@ def check() -> int:
         LEAN_ADAPTER_SYMBOLS_PATH: render_lean_adapter_symbols(files),
         DYNAMIC_LEAN_ADAPTER_SITES_PATH: render_dynamic_lean_adapter_sites(files),
         LEAN_ADAPTER_CHECKS_PATH: render_lean_adapter_checks(files),
+        INTEGRATION_TEST_INVENTORY_PATH: render_integration_test_inventory(),
+        EXAMPLE_TRUST_BOUNDARIES_PATH: render_example_trust_boundaries(),
+        REQUIRED_TRACER_QUEUE_PATH: render_required_tracer_queue(inventory),
     }
     drift = []
     for path, content in expected.items():
@@ -1759,11 +2388,30 @@ def check() -> int:
             file=sys.stderr,
         )
         return 1
-    try:
-        validate_tracer_gate_evidence()
-        validate_lean_adapter_gate_evidence(files)
-    except (KeyError, TypeError, ValueError, json.JSONDecodeError) as error:
-        print(f"coverage gate evidence invalid: {error}", file=sys.stderr)
+    example_forbidden_hits = checked_example_forbidden_hits()
+    if example_forbidden_hits:
+        print(
+            "coverage gate evidence invalid: checked example contains forbidden output: "
+            + example_forbidden_hits[0],
+            file=sys.stderr,
+        )
+        return 1
+    unexpected_axioms = [
+        row
+        for row in example_trust_boundary_rows()
+        if row["classification"] == "unexpected_generated_axiom"
+    ]
+    if unexpected_axioms:
+        print(
+            "coverage gate evidence invalid: checked Lean has an axiom without a source trust boundary: "
+            + unexpected_axioms[0]["example"],
+            file=sys.stderr,
+        )
+        return 1
+    evidence_issues = evidence_gate_issues(files)
+    if evidence_issues:
+        for issue in evidence_issues:
+            print(f"coverage gate evidence invalid: {issue}", file=sys.stderr)
         return 1
     print(
         f"checked {inventory['summary']['row_count']} coverage rows: no drift; "

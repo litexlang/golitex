@@ -1,6 +1,6 @@
 use super::run_session_loop_with_readers_and_target;
 use crate::prelude::{FileRunMode, OutputLanguage, OutputStyle, SessionTarget};
-use crate::runtime::RunOptions;
+use crate::runtime::{ExecutionOption, RunOptions};
 use std::fs;
 use std::io::{self, BufRead, Cursor, Write};
 use std::path::{Path, PathBuf};
@@ -18,12 +18,21 @@ fn run_session_loop_with_readers(
         stdin_reader,
         stdout_writer,
         directory,
-        RunOptions {
-            output_style,
-            strict_mode,
-            output_language,
-            ..RunOptions::default()
-        },
+        if strict_mode {
+            RunOptions::strict_execute(if isolated {
+                ExecutionOption::IsolatedSession
+            } else {
+                ExecutionOption::Session
+            })
+        } else {
+            RunOptions::execute(if isolated {
+                ExecutionOption::IsolatedSession
+            } else {
+                ExecutionOption::Session
+            })
+        }
+        .with_output_style(output_style)
+        .with_output_language(output_language),
         if isolated {
             SessionTarget::Isolated
         } else {

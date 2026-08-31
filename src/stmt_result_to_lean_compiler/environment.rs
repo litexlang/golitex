@@ -168,6 +168,11 @@ pub(super) struct StmtResultToLeanCompilerBindings {
     /// representation-sensitive and cannot be reconstructed from the Litex
     /// fact alone in a later carrier context (notably predicate projections).
     pub(super) fact_lean_propositions: HashMap<FactId, String>,
+    /// Checked subset facts available to later sibling Results in this exact
+    /// Lean lexical scope. A forall binder may use one of these proofs to
+    /// observe a source-set member through the target set without changing
+    /// the member's host carrier.
+    pub(super) subset_membership_transports: Vec<SubsetMembershipTransportBinding>,
     /// A strictly narrower companion to `fact_names`: entries exist only
     /// when the recursive Result was compiled to a native Lean equality on
     /// the exact rendered carrier.  `Litex.Same` is heterogeneous and must
@@ -192,6 +197,27 @@ pub(super) struct StmtResultToLeanCompilerBindings {
         HashMap<String, RegisteredPredicatePropertyTheoremBinding>,
     pub(super) registered_antisymmetric_predicate_theorem_bindings:
         HashMap<String, RegisteredPredicatePropertyTheoremBinding>,
+}
+
+#[derive(Clone)]
+pub(super) struct SubsetMembershipTransportBinding {
+    pub(super) source_set: Obj,
+    pub(super) target_set: Obj,
+    pub(super) proof_expression: String,
+}
+
+impl SubsetMembershipTransportBinding {
+    pub(super) fn new(
+        source_set: Obj,
+        target_set: Obj,
+        proof_expression: String,
+    ) -> Self {
+        Self {
+            source_set,
+            target_set,
+            proof_expression,
+        }
+    }
 }
 
 #[derive(Clone)]

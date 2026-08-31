@@ -8,6 +8,11 @@ Generation fingerprints the full Rust/compiler, Lean dependency, example, and
 configuration surface before and after extraction, and fails if that source
 changes mid-snapshot.
 
+Every inventory row has a nonempty positive-tracer obligation and negative
+boundary. `tracer_evidence_state=required` is deliberately not described as
+an existing test; only `existing` rows have a current source tracer.
+`required_tracer_queue.tsv` is the focused 1,376-row execution backlog.
+
 Generate the inventory from the repository root:
 
 ```sh
@@ -24,7 +29,52 @@ Run the focused generator tests:
 
 ```sh
 python3 lean/coverage/test_build_inventory.py
+python3 -m unittest \
+  lean.coverage.test_run_primary_tracer_gate \
+  lean.coverage.test_run_checked_examples_gate \
+  lean.coverage.test_run_integration_gate \
+  lean.coverage.test_kernel_check_examples
 ```
+
+Rebind the broad integration baseline after Rust sources stabilize:
+
+```sh
+python3 lean/coverage/run_integration_gate.py
+```
+
+The runner leaves the previous evidence untouched if Cargo fails, source or
+binary hashes change during the run, test totals do not reconcile, or the
+failure-name set differs from the maintained 20-row ledger.
+
+Regenerate and bind the literal Lean adapter surface in one stable snapshot:
+
+```sh
+python3 lean/coverage/run_lean_adapter_gate.py
+```
+
+This runner leaves the previous adapter evidence untouched if inventory
+generation, olean freshness, source fingerprints, generated-artifact hashes,
+or the real Lean `#check` gate changes during the command.
+
+Bind the primary Example 54 verifier/compiler/Lean chain atomically:
+
+```sh
+python3 lean/coverage/run_primary_tracer_gate.py
+```
+
+The report is replaced only if both release binaries, isolated strict success,
+the project-mode trust negative, generated and checked Lean, forbidden-output
+scan, and every input/source fingerprint remain stable for the whole command.
+
+When Rust is temporarily unbuildable, bind the independent checked-in Lean
+surface without compiling new output:
+
+```sh
+python3 lean/coverage/run_checked_examples_gate.py --jobs 4
+```
+
+This report separates current Lean/checked-pair kernel health from the Rust
+compiler and still fingerprints all 69 source/pair inputs and Lean dependencies.
 
 Run the complete fast audit (generated drift, source reconciliation,
 statement/result parity, and hash-bound primary tracer evidence):
@@ -45,10 +95,26 @@ python3 lean/coverage/kernel_check_examples.py \
   --output-dir tmp/2026-08-30/one-week-tolean-day1/all-generated --jobs 4
 ```
 
+Before compiling one row, the runner removes only that row's prior generated
+file inside the validated tmp output directory. A current compiler failure can
+therefore never inherit a stale generated hash or false checked-in match.
+
 The matrix refuses to start unless `Litex.olean`, `Core.olean`, and
 `Rules.olean` exist and are at least as new as their sources. It also rechecks
 that precondition after the run, because a concurrent build can invalidate the
-object cache while examples are being checked.
+object cache while examples are being checked. Release compiler and all 69
+source/pair inputs are independently fingerprinted before and after the run;
+coverage totals are current only when every stability flag is true. The
+runner exits nonzero for an unstable fingerprint or stale/missing post-run
+olean even if every individually completed example happened to pass.
+Before checking examples it also runs a stable-fingerprint release build of
+`stmt_result_to_lean_compiler`; Rust sources are fingerprinted through both
+the build and matrix, so a merely old-but-unchanged binary cannot claim current
+source coverage.
+Schema 3 also scans every generated and checked module for proof holes, the
+retired universal-object ABI, and `Set.univ`. Explicit `axiom` declarations
+are handled separately by `example_trust_boundaries.tsv`, so source-declared
+trust is visible without being confused with compiler-invented trust.
 
 The generated artifacts are:
 
@@ -71,7 +137,8 @@ The generated artifacts are:
   Result/Lean migration pattern.
 - `tracer_gate_evidence.json`: hash-bound, layered verifier/compiler/drift/Lean
   evidence for the current primary tracer, including the complete imported
-  Lean dependency fingerprint. A generated module can be
+  Lean dependency fingerprint, full Rust-source fingerprint, and exact
+  verifier/compiler binary hashes. A generated module can be
   kernel-accepted while the checked-in pair still has source drift; those are
   deliberately separate fields.
 - `gaps.md`: human-sized list of unique non-uncatalogued gaps, with object
@@ -91,9 +158,22 @@ The generated artifacts are:
   not yet a verified rule-ID/certificate route. The gate is invalidated by any
   imported Lean dependency change, even when its generated `#check` text is
   unchanged.
-- `integration_failure_families.tsv`: the current 21-test integration failure
+- `integration_failure_families.tsv`: the current 20-test integration failure
   baseline split into kernel-checked expectation drift, checked-in generated
   drift, and genuine compiler gaps, with one next gate per test.
+- `integration_test_inventory.tsv`: all 76 integration tests reconciled to 55
+  passing regression gates and the 21 classified failures, with source lines,
+  ownership, and one next gate per row.
+- `integration_compiler_gap_queue.tsv`: the six genuine red routes split into
+  three mechanical `UD-1` handoff slices and three `UD-2` carrier-decision
+  slices, each with retained evidence and a negative boundary.
+- `example_trust_boundaries.tsv`: all 69 checked pairs classified as 63
+  trust-free positives or six explicit source-declared trust boundaries;
+  checked Lean axioms without a matching source boundary fail the audit.
+- `integration_gate_evidence.json`: Rust-source, test-source, test-binary, and
+  failure-ledger hashes for the broad 76-test baseline. A stable Cargo binding
+  is retained historically and marked invalid as soon as later Rust sources
+  change.
 - `runtime_gap_correlations.md`: the five registered compiler failures plus
   three generated-Lean failures mapped to their exact Result/renderer boundary
   and smallest repair gate.

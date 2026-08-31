@@ -47,27 +47,6 @@ pub(in super::super) fn render_forall_fact_type(
     forall: &ForallFact,
     outer_context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
-    render_forall_fact_type_with_optional_real_subset_observer(forall, outer_context, None)
-}
-
-pub(in super::super) fn render_forall_fact_type_with_real_subset_observer(
-    forall: &ForallFact,
-    outer_context: &StmtResultToLeanCompilerEnvironmentStack,
-    observed_set: &Obj,
-    subset_proof: &str,
-) -> Result<String, String> {
-    render_forall_fact_type_with_optional_real_subset_observer(
-        forall,
-        outer_context,
-        Some((observed_set, subset_proof)),
-    )
-}
-
-fn render_forall_fact_type_with_optional_real_subset_observer(
-    forall: &ForallFact,
-    outer_context: &StmtResultToLeanCompilerEnvironmentStack,
-    real_subset_observer: Option<(&Obj, &str)>,
-) -> Result<String, String> {
     let mut context = outer_context.clone();
     let mut binders = Vec::new();
     for (index, (binding, param_type)) in forall
@@ -230,18 +209,13 @@ fn render_forall_fact_type_with_optional_real_subset_observer(
                     .numeric_representation_memberships
                     .insert(binding.id(), proof);
             }
-            if let Some((observed_set, subset_proof)) = real_subset_observer {
-                if obj_equality_key(set) == obj_equality_key(observed_set) {
-                    install_real_subset_observation_for_parameter(
-                        binding.id(),
-                        &name,
-                        &format!("__type{}", index + 1),
-                        set,
-                        subset_proof,
-                        &mut context,
-                    )?;
-                }
-            }
+            install_visible_subset_transports_for_parameter(
+                binding.id(),
+                &name,
+                &format!("__type{}", index + 1),
+                set,
+                &mut context,
+            )?;
             continue;
         }
         let carrier = format!("__carrier{}", index + 1);
@@ -318,18 +292,13 @@ fn render_forall_fact_type_with_optional_real_subset_observer(
                 .numeric_representation_memberships
                 .insert(binding.id(), proof);
         }
-        if let Some((observed_set, subset_proof)) = real_subset_observer {
-            if obj_equality_key(set) == obj_equality_key(observed_set) {
-                install_real_subset_observation_for_parameter(
-                    binding.id(),
-                    &name,
-                    &format!("__type{}", index + 1),
-                    set,
-                    subset_proof,
-                    &mut context,
-                )?;
-            }
-        }
+        install_visible_subset_transports_for_parameter(
+            binding.id(),
+            &name,
+            &format!("__type{}", index + 1),
+            set,
+            &mut context,
+        )?;
     }
     for (index, premise) in forall.dom_facts.iter().enumerate() {
         binders.push(format!(
@@ -351,41 +320,6 @@ fn render_forall_fact_type_with_optional_real_subset_observer(
         binders.join(" "),
         conjunction(&conclusions)
     ))
-}
-
-pub(in super::super) fn install_real_subset_observation_for_parameter(
-    symbol_id: SymbolId,
-    parameter_name: &str,
-    parameter_membership: &str,
-    _set: &Obj,
-    subset_proof: &str,
-    context: &mut StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<(), String> {
-    // Apply the checked subset proof to the source member itself.  This is
-    // stronger than first selecting the set carrier and observing that
-    // representative: when the caller already supplies a native real,
-    // `In.rep_exact` reduces the selected R representative back to that same
-    // real.  One variable may therefore carry both `x in set` and `x in R`
-    // evidence without either proof changing its Lean carrier.
-    let real_membership = format!("(({subset_proof}) {parameter_name} ({parameter_membership}))");
-    let real_value = format!("(Litex.In.rep {parameter_name} {real_membership})");
-    let equality = format!(
-        "Litex.Same.trans (Litex.In.same_rep {parameter_name} {real_membership}) (Litex.Same.realComplex {real_value})"
-    );
-    context
-        .numeric_real_values
-        .insert(symbol_id, real_value.clone());
-    context
-        .numeric_representations
-        .insert(symbol_id, format!("(({real_value} : ℝ) : ℂ)"));
-    context
-        .numeric_representation_equalities
-        .insert(symbol_id, equality);
-    context.numeric_representation_memberships.insert(
-        symbol_id,
-        format!("Litex.Rules.complexRealInR {real_value}"),
-    );
-    Ok(())
 }
 
 /// While rendering a nested forall type, connect the textual binder

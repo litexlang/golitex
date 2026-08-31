@@ -29,7 +29,7 @@ struct Field<K nonempty_set>:
 
 prop is_vector_space(K, V nonempty_set, scalar_add fn(x, y K) K, scalar_zero K, scalar_neg fn(x K) K, scalar_mul fn(x, y K) K, scalar_one K, scalar_inv fn(x K) K, add fn(x, y V) V, zero V, neg fn(x V) V, smul fn(a K, v V) V):
     $is_field(K, scalar_add, scalar_zero, scalar_neg, scalar_mul, scalar_one, scalar_inv)
-    $MILAlternative::chap2_struct::additive_commutative_group_laws(V, add, zero, neg)
+    $chap2::additive_commutative_group_laws(V, add, zero, neg)
     forall a K, u, v V:
         smul(a, add(u, v)) = add(smul(a, u), smul(a, v))
     forall a, b K, v V:
@@ -108,9 +108,9 @@ thm linear_map_map_zero:
             phi(source.zero) = target.zero
     source.add(source.zero, source.zero) = source.zero
     phi(source.add(source.zero, source.zero)) = target.add(phi(source.zero), phi(source.zero))
-1release thm MILAlternative::chap2_struct::add_zero_from_laws(W, target.add, target.zero, target.neg, phi(source.zero))
+1release thm chap2::add_zero_from_laws(W, target.add, target.zero, target.neg, phi(source.zero))
     target.add(phi(source.zero), phi(source.zero)) = phi(source.add(source.zero, source.zero)) = phi(source.zero) = target.add(phi(source.zero), target.zero)
-1release thm MILAlternative::chap2_struct::add_left_cancel(W, target.add, target.zero, target.neg, phi(source.zero), phi(source.zero), target.zero)
+1release thm chap2::add_left_cancel(W, target.add, target.zero, target.neg, phi(source.zero), phi(source.zero), target.zero)
 
 # Linear maps preserve additive inverses. Map -v + v = 0 and use uniqueness of
 # the target additive inverse.
@@ -128,7 +128,7 @@ thm linear_map_map_neg:
     source.add(source.neg(v), v) = source.zero
 1release thm function_substitution(V, W, phi, source.add(source.neg(v), v), source.zero)
     target.add(phi(v), phi(source.neg(v))) = target.add(phi(source.neg(v)), phi(v)) = phi(source.add(source.neg(v), v)) = phi(source.zero) = target.zero
-1release thm MILAlternative::chap2_struct::neg_eq_of_add_eq_zero(W, target.add, target.zero, target.neg, phi(v), phi(source.neg(v)))
+1release thm chap2::neg_eq_of_add_eq_zero(W, target.add, target.zero, target.neg, phi(v), phi(source.neg(v)))
 
 template<K, V, W nonempty_set, target &VectorSpace<K, W>>:
     have fn linear_map_add_raw(phi, psi fn(v V) W) fn(t V) W = fn(z V) W {target.add(phi(z), psi(z))}
@@ -158,7 +158,7 @@ thm linear_map_add_closed:
             \linear_map_add_raw<K, V, W, target>(phi, psi)(source.add(u, v)) = target.add(\linear_map_add_raw<K, V, W, target>(phi, psi)(u), \linear_map_add_raw<K, V, W, target>(phi, psi)(v))
 1release thm function_substitution(W, W, fn(x W) W {target.add(x, psi(source.add(u, v)))}, phi(source.add(u, v)), target.add(phi(u), phi(v)))
 1release thm function_substitution(W, W, fn(y W) W {target.add(target.add(phi(u), phi(v)), y)}, psi(source.add(u, v)), target.add(psi(u), psi(v)))
-1release thm MILAlternative::chap2_struct::add_reorder_four(W, target.add, target.zero, target.neg, phi(u), phi(v), psi(u), psi(v))
+1release thm chap2::add_reorder_four(W, target.add, target.zero, target.neg, phi(u), phi(v), psi(u), psi(v))
         \linear_map_add_raw<K, V, W, target>(phi, psi)(u) = target.add(phi(u), psi(u))
         \linear_map_add_raw<K, V, W, target>(phi, psi)(v) = target.add(phi(v), psi(v))
         \linear_map_add_raw<K, V, W, target>(phi, psi)(source.add(u, v)) = target.add(phi(source.add(u, v)), psi(source.add(u, v))) = target.add(target.add(phi(u), phi(v)), psi(source.add(u, v))) = target.add(target.add(phi(u), phi(v)), target.add(psi(u), psi(v))) = target.add(target.add(phi(u), psi(u)), target.add(phi(v), psi(v))) = target.add(\linear_map_add_raw<K, V, W, target>(phi, psi)(u), \linear_map_add_raw<K, V, W, target>(phi, psi)(v))
@@ -531,7 +531,7 @@ thm product_vector_space_tuple_is_vector_space:
             \product_vector_add<K, V, W, left, right>(x, y) = \product_vector_add<K, V, W, left, right>(y, x)
 1release thm product_vector_add_comm(K, V, W, left, right, x, y)
     by def:
-        ? $MILAlternative::chap2_struct::additive_commutative_group_laws(cart(V, W), \product_vector_add<K, V, W, left, right>, \product_vector_zero<K, V, W, left, right>, \product_vector_neg<K, V, W, left, right>)
+        ? $chap2::additive_commutative_group_laws(cart(V, W), \product_vector_add<K, V, W, left, right>, \product_vector_zero<K, V, W, left, right>, \product_vector_neg<K, V, W, left, right>)
     claim:
         ? forall a K, x, y cart(V, W):
             \product_vector_smul<K, V, W, left, right>(a, \product_vector_add<K, V, W, left, right>(x, y)) = \product_vector_add<K, V, W, left, right>(\product_vector_smul<K, V, W, left, right>(a, x), \product_vector_smul<K, V, W, left, right>(a, y))
@@ -651,7 +651,7 @@ thm linear_coproduct_is_linear:
         \product_vector_add<K, V, W, left, right>(p, q) = pq
         phi(left.add(p[1], q[1])) = target.add(phi(p[1]), phi(q[1]))
         psi(right.add(p[2], q[2])) = target.add(psi(p[2]), psi(q[2]))
-1release thm MILAlternative::chap2_struct::add_reorder_four(U, target.add, target.zero, target.neg, phi(p[1]), phi(q[1]), psi(p[2]), psi(q[2]))
+1release thm chap2::add_reorder_four(U, target.add, target.zero, target.neg, phi(p[1]), phi(q[1]), psi(p[2]), psi(q[2]))
         \linear_coproduct<U, V, W, target.add>(phi, psi)(pq) = target.add(phi(pq[1]), psi(pq[2])) = target.add(phi(left.add(p[1], q[1])), psi(right.add(p[2], q[2])))
         \linear_coproduct<U, V, W, target.add>(phi, psi)(p) = target.add(phi(p[1]), psi(p[2]))
         \linear_coproduct<U, V, W, target.add>(phi, psi)(q) = target.add(phi(q[1]), psi(q[2]))
@@ -1153,12 +1153,12 @@ thm vector_smul_zero:
     ? forall K, V nonempty_set, space &VectorSpace<K, V>, a K:
         space.smul(a, space.zero) = space.zero
     $is_vector_space(K, V, space.scalar_add, space.scalar_zero, space.scalar_neg, space.scalar_mul, space.scalar_one, space.scalar_inv, space.add, space.zero, space.neg, space.smul)
-    $MILAlternative::chap2_struct::additive_commutative_group_laws(V, space.add, space.zero, space.neg)
+    $chap2::additive_commutative_group_laws(V, space.add, space.zero, space.neg)
     space.add(space.zero, space.zero) = space.zero
     space.smul(a, space.add(space.zero, space.zero)) = space.add(space.smul(a, space.zero), space.smul(a, space.zero))
-1release thm MILAlternative::chap2_struct::add_zero_from_laws(V, space.add, space.zero, space.neg, space.smul(a, space.zero))
+1release thm chap2::add_zero_from_laws(V, space.add, space.zero, space.neg, space.smul(a, space.zero))
     space.add(space.smul(a, space.zero), space.smul(a, space.zero)) = space.smul(a, space.add(space.zero, space.zero)) = space.smul(a, space.zero) = space.add(space.smul(a, space.zero), space.zero)
-1release thm MILAlternative::chap2_struct::add_left_cancel(V, space.add, space.zero, space.neg, space.smul(a, space.zero), space.smul(a, space.zero), space.zero)
+1release thm chap2::add_left_cancel(V, space.add, space.zero, space.neg, space.smul(a, space.zero), space.smul(a, space.zero), space.zero)
 
 # Scalar multiplication by -1 is the additive inverse. The proof identifies
 # (-1) • v as the unique vector whose sum with v is zero.
@@ -1166,18 +1166,18 @@ thm vector_smul_neg_one:
     ? forall K, V nonempty_set, space &VectorSpace<K, V>, v V:
         space.smul(space.scalar_neg(space.scalar_one), v) = space.neg(v)
     $is_vector_space(K, V, space.scalar_add, space.scalar_zero, space.scalar_neg, space.scalar_mul, space.scalar_one, space.scalar_inv, space.add, space.zero, space.neg, space.smul)
-    $MILAlternative::chap2_struct::additive_commutative_group_laws(V, space.add, space.zero, space.neg)
+    $chap2::additive_commutative_group_laws(V, space.add, space.zero, space.neg)
     $is_field(K, space.scalar_add, space.scalar_zero, space.scalar_neg, space.scalar_mul, space.scalar_one, space.scalar_inv)
     $chap7::is_commutative_ring(K, space.scalar_add, space.scalar_zero, space.scalar_neg, space.scalar_mul, space.scalar_one)
-    $MILAlternative::chap2_struct::ring_laws(K, space.scalar_add, space.scalar_zero, space.scalar_neg, space.scalar_mul, space.scalar_one)
-    $MILAlternative::chap2_struct::additive_commutative_group_laws(K, space.scalar_add, space.scalar_zero, space.scalar_neg)
+    $chap2::ring_laws(K, space.scalar_add, space.scalar_zero, space.scalar_neg, space.scalar_mul, space.scalar_one)
+    $chap2::additive_commutative_group_laws(K, space.scalar_add, space.scalar_zero, space.scalar_neg)
     space.scalar_add(space.scalar_neg(space.scalar_one), space.scalar_one) = space.scalar_zero
     space.smul(space.scalar_add(space.scalar_neg(space.scalar_one), space.scalar_one), v) = space.add(space.smul(space.scalar_neg(space.scalar_one), v), space.smul(space.scalar_one, v))
     space.smul(space.scalar_add(space.scalar_neg(space.scalar_one), space.scalar_one), v) = space.smul(space.scalar_zero, v) = space.zero
     space.smul(space.scalar_one, v) = v
     space.add(space.smul(space.scalar_neg(space.scalar_one), v), v) = space.add(space.smul(space.scalar_neg(space.scalar_one), v), space.smul(space.scalar_one, v)) = space.zero
     space.add(v, space.smul(space.scalar_neg(space.scalar_one), v)) = space.add(space.smul(space.scalar_neg(space.scalar_one), v), v) = space.zero
-1release thm MILAlternative::chap2_struct::eq_neg_of_add_eq_zero(V, space.add, space.zero, space.neg, v, space.smul(space.scalar_neg(space.scalar_one), v))
+1release thm chap2::eq_neg_of_add_eq_zero(V, space.add, space.zero, space.neg, v, space.smul(space.scalar_neg(space.scalar_one), v))
 
 # The bottom subspace contains only zero. Its closure under addition follows
 # from the additive identity, and scalar closure follows from `vector_smul_zero`.
@@ -1185,7 +1185,7 @@ thm subspace_bottom_is_subspace:
     ? forall K, V nonempty_set, space &VectorSpace<K, V>:
         $is_subspace(K, V, space, \subspace_bottom<V, space.zero>)
     $is_vector_space(K, V, space.scalar_add, space.scalar_zero, space.scalar_neg, space.scalar_mul, space.scalar_one, space.scalar_inv, space.add, space.zero, space.neg, space.smul)
-    $MILAlternative::chap2_struct::additive_commutative_group_laws(V, space.add, space.zero, space.neg)
+    $chap2::additive_commutative_group_laws(V, space.add, space.zero, space.neg)
     \subspace_bottom<V, space.zero> = {space.zero}
     space.zero $in {space.zero}
     space.zero $in \subspace_bottom<V, space.zero>
@@ -1218,7 +1218,7 @@ thm linear_map_kernel_is_subspace:
             $is_subspace(K, V, source, \linear_kernel<V, W, target.zero, phi>)
 1release thm linear_map_map_zero(K, V, W, source, target, phi)
     $is_vector_space(K, W, target.scalar_add, target.scalar_zero, target.scalar_neg, target.scalar_mul, target.scalar_one, target.scalar_inv, target.add, target.zero, target.neg, target.smul)
-    $MILAlternative::chap2_struct::additive_commutative_group_laws(W, target.add, target.zero, target.neg)
+    $chap2::additive_commutative_group_laws(W, target.add, target.zero, target.neg)
     \linear_kernel<V, W, target.zero, phi> = {x V: phi(x) = target.zero}
 1release thm set_builder_member(source.zero, {x V: phi(x) = target.zero})
     source.zero $in \linear_kernel<V, W, target.zero, phi>
@@ -1291,8 +1291,8 @@ thm linear_map_injective_of_kernel_eq_bottom:
         \linear_kernel<V, W, target.zero, phi> = \subspace_bottom<V, source.zero>
         =>:
             $injective(V, W, phi)
-    $MILAlternative::chap2_struct::additive_commutative_group_laws(V, source.add, source.zero, source.neg)
-    $MILAlternative::chap2_struct::additive_commutative_group_laws(W, target.add, target.zero, target.neg)
+    $chap2::additive_commutative_group_laws(V, source.add, source.zero, source.neg)
+    $chap2::additive_commutative_group_laws(W, target.add, target.zero, target.neg)
     \linear_kernel<V, W, target.zero, phi> = {x V: phi(x) = target.zero}
     \subspace_bottom<V, source.zero> = {source.zero}
     claim:
@@ -1307,8 +1307,8 @@ thm linear_map_injective_of_kernel_eq_bottom:
         source.add(source.neg(x1), x2) $in \subspace_bottom<V, source.zero>
         source.add(source.neg(x1), x2) $in {source.zero}
         source.add(source.neg(x1), x2) = source.zero
-1release thm MILAlternative::chap2_struct::eq_neg_of_add_eq_zero(V, source.add, source.zero, source.neg, source.neg(x1), x2)
-1release thm MILAlternative::chap2_struct::neg_neg(V, source.add, source.zero, source.neg, x1)
+1release thm chap2::eq_neg_of_add_eq_zero(V, source.add, source.zero, source.neg, source.neg(x1), x2)
+1release thm chap2::neg_neg(V, source.add, source.zero, source.neg, x1)
         x2 = source.neg(source.neg(x1)) = x1
     by def:
         ? $injective(V, W, phi)
@@ -1514,7 +1514,7 @@ thm inherited_subspace_tuple_is_vector_space:
         \inherited_subspace_smul<K, V, space, U>(space.scalar_one, v) = space.smul(space.scalar_one, v) = v
         \inherited_subspace_smul<K, V, space, U>(space.scalar_zero, v) = space.smul(space.scalar_zero, v) = space.zero
     by def:
-        ? $MILAlternative::chap2_struct::additive_commutative_group_laws(\inherited_subspace_carrier<K, V, space, U>, \inherited_subspace_add<K, V, space, U>, space.zero, \inherited_subspace_neg<K, V, space, U>)
+        ? $chap2::additive_commutative_group_laws(\inherited_subspace_carrier<K, V, space, U>, \inherited_subspace_add<K, V, space, U>, space.zero, \inherited_subspace_neg<K, V, space, U>)
     by def:
         ? $is_vector_space(K, \inherited_subspace_carrier<K, V, space, U>, space.scalar_add, space.scalar_zero, space.scalar_neg, space.scalar_mul, space.scalar_one, space.scalar_inv, \inherited_subspace_add<K, V, space, U>, space.zero, \inherited_subspace_neg<K, V, space, U>, \inherited_subspace_smul<K, V, space, U>)
     space.scalar_add $in fn(x, y K) K
@@ -1573,12 +1573,12 @@ thm complementary_decomposition_unique:
     space.add(u2, w2) = space.add(pair2[1], pair2[2]) = v
     space.add(u1, w1) = v = space.add(u2, w2)
     space.add(space.add(u1, w1), space.add(space.neg(u2), space.neg(w1))) = space.add(space.add(u2, w2), space.add(space.neg(u2), space.neg(w1)))
-1release thm MILAlternative::chap2_struct::add_reorder_four(V, space.add, space.zero, space.neg, u1, w1, space.neg(u2), space.neg(w1))
+1release thm chap2::add_reorder_four(V, space.add, space.zero, space.neg, u1, w1, space.neg(u2), space.neg(w1))
     space.add(w1, space.neg(w1)) = space.add(space.neg(w1), w1) = space.zero
     space.add(u1, space.neg(u2)) = du
     space.add(du, space.zero) = space.add(space.zero, du) = du
     space.add(space.add(u1, w1), space.add(space.neg(u2), space.neg(w1))) = space.add(space.add(u1, space.neg(u2)), space.add(w1, space.neg(w1))) = space.add(space.add(u1, space.neg(u2)), space.zero) = space.add(du, space.zero) = du
-1release thm MILAlternative::chap2_struct::add_reorder_four(V, space.add, space.zero, space.neg, u2, w2, space.neg(u2), space.neg(w1))
+1release thm chap2::add_reorder_four(V, space.add, space.zero, space.neg, u2, w2, space.neg(u2), space.neg(w1))
     space.add(u2, space.neg(u2)) = space.add(space.neg(u2), u2) = space.zero
     space.add(w2, space.neg(w1)) = dw
     space.add(space.zero, dw) = dw
@@ -1590,10 +1590,10 @@ thm complementary_decomposition_unique:
     du $in {space.zero}
     du = space.zero
     space.add(u1, space.neg(u2)) = du = space.zero = space.add(u2, space.neg(u2))
-1release thm MILAlternative::chap2_struct::add_right_cancel(V, space.add, space.zero, space.neg, u1, space.neg(u2), u2)
+1release thm chap2::add_right_cancel(V, space.add, space.zero, space.neg, u1, space.neg(u2), u2)
     u1 = u2
     space.add(u1, w1) = space.add(u2, w2) = space.add(u1, w2)
-1release thm MILAlternative::chap2_struct::add_left_cancel(V, space.add, space.zero, space.neg, u1, w1, w2)
+1release thm chap2::add_left_cancel(V, space.add, space.zero, space.neg, u1, w1, w2)
     w1 = w2
     pair1[1] = u1
     pair1[2] = w1
@@ -1785,7 +1785,7 @@ thm subspace_translate_eq_of_mem:
         space.add(space.neg(u), w) $in U
         space.add(u, space.add(space.neg(u), w)) = space.add(space.add(u, space.neg(u)), w)
         space.add(v, space.add(u, space.add(space.neg(u), w))) = space.add(v, space.add(space.add(u, space.neg(u)), w))
-1release thm MILAlternative::chap2_struct::add_neg_cancel_from_laws(V, space.add, space.zero, space.neg, u)
+1release thm chap2::add_neg_cancel_from_laws(V, space.add, space.zero, space.neg, u)
         space.add(u, space.neg(u)) = space.zero
         space.add(space.add(u, space.neg(u)), w) = space.add(space.zero, w)
         space.add(v, space.add(space.add(u, space.neg(u)), w)) = space.add(v, space.add(space.zero, w))
@@ -1825,7 +1825,7 @@ thm subspace_translate_add_mem:
 1release thm subspace_translate_witness_of_mem(K, V, space, U, w, y)
     obtain t from exist t0 V st {t0 $in U, y = space.add(w, t0)}
     space.add(u, t) $in U
-1release thm MILAlternative::chap2_struct::add_reorder_four(V, space.add, space.zero, space.neg, v, u, w, t)
+1release thm chap2::add_reorder_four(V, space.add, space.zero, space.neg, v, u, w, t)
     space.add(x, y) = space.add(space.add(v, u), space.add(w, t)) = space.add(space.add(v, w), space.add(u, t))
 1release thm subspace_translate_mem_of_witness(K, V, space, U, space.add(v, w), space.add(x, y), space.add(u, t))
 
@@ -2071,7 +2071,7 @@ thm quotient_vector_tuple_is_vector_space:
 1release thm quotient_vector_add_projection(K, V, space, U, v, space.neg(v))
         \quotient_vector_zero<K, V, space, U> = \quotient_vector_projection<K, V, space, U>(space.zero)
         space.add(space.neg(v), v) = space.zero
-1release thm MILAlternative::chap2_struct::add_neg_cancel_from_laws(V, space.add, space.zero, space.neg, v)
+1release thm chap2::add_neg_cancel_from_laws(V, space.add, space.zero, space.neg, v)
         space.add(v, space.neg(v)) = space.zero
         \quotient_vector_add<K, V, space, U>(\quotient_vector_neg<K, V, space, U>(q), q) = \quotient_vector_add<K, V, space, U>(\quotient_vector_projection<K, V, space, U>(space.neg(v)), \quotient_vector_projection<K, V, space, U>(v)) = \quotient_vector_projection<K, V, space, U>(space.add(space.neg(v), v)) = \quotient_vector_projection<K, V, space, U>(space.zero) = \quotient_vector_zero<K, V, space, U>
         \quotient_vector_add<K, V, space, U>(q, \quotient_vector_neg<K, V, space, U>(q)) = \quotient_vector_add<K, V, space, U>(\quotient_vector_projection<K, V, space, U>(v), \quotient_vector_projection<K, V, space, U>(space.neg(v))) = \quotient_vector_projection<K, V, space, U>(space.add(v, space.neg(v))) = \quotient_vector_projection<K, V, space, U>(space.zero) = \quotient_vector_zero<K, V, space, U>
@@ -2152,7 +2152,7 @@ thm quotient_vector_tuple_is_vector_space:
         \quotient_vector_smul<K, V, space, U>(space.scalar_one, q) = \quotient_vector_smul<K, V, space, U>(space.scalar_one, \quotient_vector_projection<K, V, space, U>(v)) = \quotient_vector_projection<K, V, space, U>(space.smul(space.scalar_one, v)) = \quotient_vector_projection<K, V, space, U>(v) = q
         \quotient_vector_smul<K, V, space, U>(space.scalar_zero, q) = \quotient_vector_smul<K, V, space, U>(space.scalar_zero, \quotient_vector_projection<K, V, space, U>(v)) = \quotient_vector_projection<K, V, space, U>(space.smul(space.scalar_zero, v)) = \quotient_vector_projection<K, V, space, U>(space.zero) = \quotient_vector_zero<K, V, space, U>
     by def:
-        ? $MILAlternative::chap2_struct::additive_commutative_group_laws(\quotient_vector_carrier<K, V, space, U>, \quotient_vector_add<K, V, space, U>, \quotient_vector_zero<K, V, space, U>, \quotient_vector_neg<K, V, space, U>)
+        ? $chap2::additive_commutative_group_laws(\quotient_vector_carrier<K, V, space, U>, \quotient_vector_add<K, V, space, U>, \quotient_vector_zero<K, V, space, U>, \quotient_vector_neg<K, V, space, U>)
     by def:
         ? $is_vector_space(K, \quotient_vector_carrier<K, V, space, U>, space.scalar_add, space.scalar_zero, space.scalar_neg, space.scalar_mul, space.scalar_one, space.scalar_inv, \quotient_vector_add<K, V, space, U>, \quotient_vector_zero<K, V, space, U>, \quotient_vector_neg<K, V, space, U>, \quotient_vector_smul<K, V, space, U>)
     space.scalar_add $in fn(x, y K) K
@@ -2408,7 +2408,7 @@ thm eigenspace_eq_kernel_sub_scalar_raw:
     claim:
         ? forall v \eigenspace<K, V, space>(phi, a):
             v $in \linear_kernel<V, V, space.zero, \endomorphism_sub_scalar_raw<K, V, space>(phi, a)>
-1release thm MILAlternative::chap2_struct::add_neg_cancel_from_laws(V, space.add, space.zero, space.neg, space.smul(a, v))
+1release thm chap2::add_neg_cancel_from_laws(V, space.add, space.zero, space.neg, space.smul(a, v))
         \endomorphism_sub_scalar_raw<K, V, space>(phi, a)(v) = space.add(phi(v), space.neg(space.smul(a, v))) = space.add(space.smul(a, v), space.neg(space.smul(a, v))) = space.zero
 1release thm set_builder_member(v, {x V: \endomorphism_sub_scalar_raw<K, V, space>(phi, a)(x) = space.zero})
         v $in {x V: \endomorphism_sub_scalar_raw<K, V, space>(phi, a)(x) = space.zero}
@@ -2417,9 +2417,9 @@ thm eigenspace_eq_kernel_sub_scalar_raw:
             v $in \eigenspace<K, V, space>(phi, a)
         v $in {x V: \endomorphism_sub_scalar_raw<K, V, space>(phi, a)(x) = space.zero}
         \endomorphism_sub_scalar_raw<K, V, space>(phi, a)(v) = space.zero
-1release thm MILAlternative::chap2_struct::add_neg_cancel_from_laws(V, space.add, space.zero, space.neg, space.smul(a, v))
+1release thm chap2::add_neg_cancel_from_laws(V, space.add, space.zero, space.neg, space.smul(a, v))
         space.add(phi(v), space.neg(space.smul(a, v))) = \endomorphism_sub_scalar_raw<K, V, space>(phi, a)(v) = space.zero = space.add(space.smul(a, v), space.neg(space.smul(a, v)))
-1release thm MILAlternative::chap2_struct::add_right_cancel(V, space.add, space.zero, space.neg, phi(v), space.neg(space.smul(a, v)), space.smul(a, v))
+1release thm chap2::add_right_cancel(V, space.add, space.zero, space.neg, phi(v), space.neg(space.smul(a, v)), space.smul(a, v))
 1release thm set_builder_member(v, {x V: phi(x) = space.smul(a, x)})
     by def:
         ? \eigenspace<K, V, space>(phi, a) $subset \linear_kernel<V, V, space.zero, \endomorphism_sub_scalar_raw<K, V, space>(phi, a)>

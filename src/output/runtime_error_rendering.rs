@@ -31,7 +31,7 @@ fn json_array_field_line(
     json_key: &str,
     json_elements: &[String],
 ) -> String {
-    let localized_key = localize_json_key(runtime.run_options.output_language, json_key);
+    let localized_key = localize_json_key(runtime.run_options.output_language(), json_key);
     if json_elements.is_empty() {
         format!("{}\"{}\": []", indent_inner, localized_key)
     } else {
@@ -532,8 +532,10 @@ fn build_previous_error_field_line(
                 context_for_child,
                 output_style,
             );
-            let previous_error_key =
-                localize_json_key(runtime.run_options.output_language, JSON_KEY_PREVIOUS_ERROR);
+            let previous_error_key = localize_json_key(
+                runtime.run_options.output_language(),
+                JSON_KEY_PREVIOUS_ERROR,
+            );
             Some(format!(
                 "{}\"{}\":\n{}",
                 indent_inner, previous_error_key, previous_error_json

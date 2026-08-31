@@ -204,7 +204,7 @@ fn run_session_loop_with_readers_and_target(
                 let (_, graph) = render_graph_from_stmt_results(
                     RunTargetKind::Session,
                     None,
-                    !options.output_style.is_detailed(),
+                    !options.output_style().is_detailed(),
                     &runtime,
                     all_results.as_slice(),
                     None,
@@ -212,7 +212,7 @@ fn run_session_loop_with_readers_and_target(
                 let (_, fact_graph) = render_fact_graph_from_stmt_results(
                     RunTargetKind::Session,
                     None,
-                    !options.output_style.is_detailed(),
+                    !options.output_style().is_detailed(),
                     &runtime,
                     all_results.as_slice(),
                     None,
@@ -220,7 +220,7 @@ fn run_session_loop_with_readers_and_target(
                 let (_, definition_graph) = render_definition_graph_from_stmt_results(
                     RunTargetKind::Session,
                     None,
-                    !options.output_style.is_detailed(),
+                    !options.output_style().is_detailed(),
                     &mut runtime,
                     all_results.as_slice(),
                     None,

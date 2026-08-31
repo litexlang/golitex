@@ -251,10 +251,7 @@ fn definition_graph_project_proof_sources_normalize_local_qualifier() {
                 GraphKind::Definition,
                 run_file(
                     target_string.as_str(),
-                    RunOptions {
-                        strict_mode: true,
-                        ..RunOptions::default()
-                    },
+                    RunOptions::strict_execute(ExecutionOption::File),
                 ),
                 true,
             )

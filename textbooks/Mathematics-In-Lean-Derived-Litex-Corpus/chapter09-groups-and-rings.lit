@@ -167,24 +167,24 @@ thm additive_hom_comp:
 
 # A group homomorphism is a property of a candidate function between two
 # operation-bearing Chapter 2 group values.
-prop is_group_hom(G, H nonempty_set, source &MILAlternative::chap2_struct::Group<G>, target &MILAlternative::chap2_struct::Group<H>, f fn(x G) H):
+prop is_group_hom(G, H nonempty_set, source &chap2::Group<G>, target &chap2::Group<H>, f fn(x G) H):
     $is_monoid_hom(G, H, source.mul, source.one, target.mul, target.one, f)
 
 # Bijectivity is still a property of one displayed homomorphism. A genuine
 # GroupEquiv would additionally store mutually inverse forward and inverse maps.
-prop is_bijective_group_hom(G, H nonempty_set, source &MILAlternative::chap2_struct::Group<G>, target &MILAlternative::chap2_struct::Group<H>, f fn(x G) H):
+prop is_bijective_group_hom(G, H nonempty_set, source &chap2::Group<G>, target &chap2::Group<H>, f fn(x G) H):
     $is_group_hom(G, H, source, target, f)
     $bijective(G, H, f)
 
 thm group_mul_inv_cancel:
-    ? forall G nonempty_set, group &MILAlternative::chap2_struct::Group<G>, x G:
+    ? forall G nonempty_set, group &chap2::Group<G>, x G:
         group.mul(x, group.inv(x)) = group.one
     by def:
-        ? $MILAlternative::chap2_struct::group_laws(G, group.mul, group.one, group.inv)
-1release thm MILAlternative::chap2_struct::mul_inv_cancel(G, group.mul, group.one, group.inv, x)
+        ? $chap2::group_laws(G, group.mul, group.one, group.inv)
+1release thm chap2::mul_inv_cancel(G, group.mul, group.one, group.inv, x)
 
 thm group_hom_map_mul:
-    ? forall G, H nonempty_set, source &MILAlternative::chap2_struct::Group<G>, target &MILAlternative::chap2_struct::Group<H>, f fn(x G) H, x, y G:
+    ? forall G, H nonempty_set, source &chap2::Group<G>, target &chap2::Group<H>, f fn(x G) H, x, y G:
         $is_group_hom(G, H, source, target, f)
         =>:
             f(source.mul(x, y)) = target.mul(f(x), f(y))
@@ -192,43 +192,43 @@ thm group_hom_map_mul:
 # Source normalization example. The proof uses explicit associativity and
 # inside-out cancellation chains because nested rewrites are not implicit.
 thm group_normalization_identity:
-    ? forall G nonempty_set, group &MILAlternative::chap2_struct::Group<G>, x, y, z G:
+    ? forall G nonempty_set, group &chap2::Group<G>, x, y, z G:
         group.mul(group.mul(group.mul(x, group.mul(y, z)), group.inv(group.mul(x, z))), group.inv(group.mul(group.mul(x, y), group.inv(x)))) = group.one
     by def:
-        ? $MILAlternative::chap2_struct::group_laws(G, group.mul, group.one, group.inv)
-1release thm MILAlternative::chap2_struct::mul_inv_rev(G, group.mul, group.one, group.inv, x, z)
+        ? $chap2::group_laws(G, group.mul, group.one, group.inv)
+1release thm chap2::mul_inv_rev(G, group.mul, group.one, group.inv, x, z)
     group.inv(group.mul(x, z)) = group.mul(group.inv(z), group.inv(x))
     group.mul(group.mul(x, group.mul(y, z)), group.inv(group.mul(x, z))) = group.mul(group.mul(x, group.mul(y, z)), group.mul(group.inv(z), group.inv(x)))
     group.mul(group.mul(x, group.mul(y, z)), group.mul(group.inv(z), group.inv(x))) = group.mul(x, group.mul(group.mul(y, z), group.mul(group.inv(z), group.inv(x))))
     group.mul(z, group.mul(group.inv(z), group.inv(x))) = group.mul(group.mul(z, group.inv(z)), group.inv(x))
-1release thm MILAlternative::chap2_struct::mul_inv_cancel(G, group.mul, group.one, group.inv, z)
+1release thm chap2::mul_inv_cancel(G, group.mul, group.one, group.inv, z)
     group.mul(group.mul(z, group.inv(z)), group.inv(x)) = group.mul(group.one, group.inv(x)) = group.inv(x)
     group.mul(group.mul(y, z), group.mul(group.inv(z), group.inv(x))) = group.mul(y, group.mul(z, group.mul(group.inv(z), group.inv(x)))) = group.mul(y, group.mul(group.mul(z, group.inv(z)), group.inv(x))) = group.mul(y, group.inv(x))
     group.mul(x, group.mul(group.mul(y, z), group.mul(group.inv(z), group.inv(x)))) = group.mul(x, group.mul(y, group.inv(x)))
     group.mul(x, group.mul(y, group.inv(x))) = group.mul(group.mul(x, y), group.inv(x))
     group.mul(group.mul(x, group.mul(y, z)), group.inv(group.mul(x, z))) = group.mul(group.mul(x, y), group.inv(x))
-1release thm MILAlternative::chap2_struct::mul_inv_cancel(G, group.mul, group.one, group.inv, group.mul(group.mul(x, y), group.inv(x)))
+1release thm chap2::mul_inv_cancel(G, group.mul, group.one, group.inv, group.mul(group.mul(x, y), group.inv(x)))
     group.mul(group.mul(group.mul(x, group.mul(y, z)), group.inv(group.mul(x, z))), group.inv(group.mul(group.mul(x, y), group.inv(x)))) = group.mul(group.mul(group.mul(x, y), group.inv(x)), group.inv(group.mul(group.mul(x, y), group.inv(x)))) = group.one
 
 # A group homomorphism preserves inverses. This is the source map_inv example.
 thm group_hom_map_inv:
-    ? forall G, H nonempty_set, source &MILAlternative::chap2_struct::Group<G>, target &MILAlternative::chap2_struct::Group<H>, f fn(x G) H, x G:
+    ? forall G, H nonempty_set, source &chap2::Group<G>, target &chap2::Group<H>, f fn(x G) H, x G:
         $is_group_hom(G, H, source, target, f)
         =>:
             f(source.inv(x)) = target.inv(f(x))
     by def:
-        ? $MILAlternative::chap2_struct::group_laws(H, target.mul, target.one, target.inv)
+        ? $chap2::group_laws(H, target.mul, target.one, target.inv)
     source.mul(source.inv(x), x) = source.one
     target.mul(f(source.inv(x)), f(x)) = f(source.mul(source.inv(x), x)) = f(source.one) = target.one
-1release thm MILAlternative::chap2_struct::mul_inv_cancel(H, target.mul, target.one, target.inv, f(x))
+1release thm chap2::mul_inv_cancel(H, target.mul, target.one, target.inv, f(x))
     target.mul(f(x), target.inv(f(x))) = target.one
-1release thm MILAlternative::chap2_struct::mul_one(H, target.mul, target.one, target.inv, f(source.inv(x)))
+1release thm chap2::mul_one(H, target.mul, target.one, target.inv, f(source.inv(x)))
     f(source.inv(x)) = target.mul(f(source.inv(x)), target.one) = target.mul(f(source.inv(x)), target.mul(f(x), target.inv(f(x))))
     target.mul(f(source.inv(x)), target.mul(f(x), target.inv(f(x)))) = target.mul(target.mul(f(source.inv(x)), f(x)), target.inv(f(x)))
     target.mul(target.mul(f(source.inv(x)), f(x)), target.inv(f(x))) = target.mul(target.one, target.inv(f(x))) = target.inv(f(x))
 
 thm bijective_group_hom_is_equivalence:
-    ? forall G, H nonempty_set, source &MILAlternative::chap2_struct::Group<G>, target &MILAlternative::chap2_struct::Group<H>, f fn(x G) H:
+    ? forall G, H nonempty_set, source &chap2::Group<G>, target &chap2::Group<H>, f fn(x G) H:
         $is_group_hom(G, H, source, target, f)
         $bijective(G, H, f)
         =>:
@@ -240,7 +240,7 @@ thm bijective_group_hom_is_equivalence:
 # 9.1.3 Subgroups
 # ---------------------------------------------------------------------------
 
-prop is_subgroup(G nonempty_set, group &MILAlternative::chap2_struct::Group<G>, H power_set(G)):
+prop is_subgroup(G nonempty_set, group &chap2::Group<G>, H power_set(G)):
     group.one $in H
     forall x, y G:
         x $in H
@@ -253,7 +253,7 @@ prop is_subgroup(G nonempty_set, group &MILAlternative::chap2_struct::Group<G>, 
             group.inv(x) $in H
 
 thm subgroup_mul_mem:
-    ? forall G nonempty_set, group &MILAlternative::chap2_struct::Group<G>, H power_set(G), x, y G:
+    ? forall G nonempty_set, group &chap2::Group<G>, H power_set(G), x, y G:
         $is_subgroup(G, group, H)
         x $in H
         y $in H
@@ -261,7 +261,7 @@ thm subgroup_mul_mem:
             group.mul(x, y) $in H
 
 thm subgroup_inv_mem:
-    ? forall G nonempty_set, group &MILAlternative::chap2_struct::Group<G>, H power_set(G), x G:
+    ? forall G nonempty_set, group &chap2::Group<G>, H power_set(G), x G:
         $is_subgroup(G, group, H)
         x $in H
         =>:
@@ -277,7 +277,7 @@ template<G set, one G>:
     have subgroup_bottom power_set(G) = {one}
 
 thm subgroup_intersection_closed:
-    ? forall G nonempty_set, group &MILAlternative::chap2_struct::Group<G>, H, K power_set(G):
+    ? forall G nonempty_set, group &chap2::Group<G>, H, K power_set(G):
         $is_subgroup(G, group, H)
         $is_subgroup(G, group, K)
         =>:
@@ -325,7 +325,7 @@ template<G, H set, f fn(x G) H>:
 # The source map/comap/kernel/range examples are subgroup constructions.
 # Their carrier formulas are already explicit above; only closure is debt.
 thm subgroup_map_closed:
-    ? forall G, H nonempty_set, source &MILAlternative::chap2_struct::Group<G>, target &MILAlternative::chap2_struct::Group<H>, f fn(x G) H, S power_set(G):
+    ? forall G, H nonempty_set, source &chap2::Group<G>, target &chap2::Group<H>, f fn(x G) H, S power_set(G):
         $is_group_hom(G, H, source, target, f)
         $is_subgroup(G, source, S)
         =>:
@@ -368,7 +368,7 @@ thm subgroup_map_closed:
         ? $is_subgroup(H, target, \subgroup_map<G, H, f>(S))
 
 thm subgroup_comap_closed:
-    ? forall G, H nonempty_set, source &MILAlternative::chap2_struct::Group<G>, target &MILAlternative::chap2_struct::Group<H>, f fn(x G) H, T power_set(H):
+    ? forall G, H nonempty_set, source &chap2::Group<G>, target &chap2::Group<H>, f fn(x G) H, T power_set(H):
         $is_group_hom(G, H, source, target, f)
         $is_subgroup(H, target, T)
         =>:
@@ -409,12 +409,12 @@ thm subgroup_comap_closed:
         ? $is_subgroup(G, source, \subgroup_comap<G, H, f>(T))
 
 thm group_kernel_closed:
-    ? forall G, H nonempty_set, source &MILAlternative::chap2_struct::Group<G>, target &MILAlternative::chap2_struct::Group<H>, f fn(x G) H:
+    ? forall G, H nonempty_set, source &chap2::Group<G>, target &chap2::Group<H>, f fn(x G) H:
         $is_group_hom(G, H, source, target, f)
         =>:
             $is_subgroup(G, source, \group_kernel<G, H, target.one, f>)
     by def:
-        ? $MILAlternative::chap2_struct::group_laws(H, target.mul, target.one, target.inv)
+        ? $chap2::group_laws(H, target.mul, target.one, target.inv)
     \group_kernel<G, H, target.one, f> = {q G: f(q) = target.one}
     f(source.one) = target.one
 1release thm set_builder_member(source.one, {q G: f(q) = target.one})
@@ -437,7 +437,7 @@ thm group_kernel_closed:
 1release thm group_hom_map_inv(G, H, source, target, f, x)
         f(source.inv(x)) = target.inv(f(x)) = target.inv(target.one)
         target.mul(target.inv(target.one), target.one) = target.one
-1release thm MILAlternative::chap2_struct::mul_one(H, target.mul, target.one, target.inv, target.inv(target.one))
+1release thm chap2::mul_one(H, target.mul, target.one, target.inv, target.inv(target.one))
         target.mul(target.inv(target.one), target.one) = target.inv(target.one)
         target.inv(target.one) = target.one
         f(source.inv(x)) = target.one
@@ -447,7 +447,7 @@ thm group_kernel_closed:
         ? $is_subgroup(G, source, \group_kernel<G, H, target.one, f>)
 
 thm group_range_closed:
-    ? forall G, H nonempty_set, source &MILAlternative::chap2_struct::Group<G>, target &MILAlternative::chap2_struct::Group<H>, f fn(x G) H:
+    ? forall G, H nonempty_set, source &chap2::Group<G>, target &chap2::Group<H>, f fn(x G) H:
         $is_group_hom(G, H, source, target, f)
         =>:
             $is_subgroup(H, target, \group_range<G, H, f>)
@@ -464,16 +464,16 @@ prop group_order_coprime(m, n N):
 # Lagrange and the finite subgroup consequences retain their exact finite-set
 # statements. Their cardinality arguments remain explicit proof debt.
 thm subgroup_order_divides_group_order:
-    ? forall G nonempty_set, group &MILAlternative::chap2_struct::Group<G>, H power_set(G):
+    ? forall G nonempty_set, group &chap2::Group<G>, H power_set(G):
         $is_subgroup(G, group, H)
         $is_finite_set(G)
         $is_finite_set(H)
         =>:
-            $MILAlternative::chap2_struct::divides(finite_set_size(H), finite_set_size(G))
-    trust $MILAlternative::chap2_struct::divides(finite_set_size(H), finite_set_size(G))
+            $chap2::divides(finite_set_size(H), finite_set_size(G))
+    trust $chap2::divides(finite_set_size(H), finite_set_size(G))
 
 thm subgroup_eq_bottom_iff_order_one_forward:
-    ? forall G nonempty_set, group &MILAlternative::chap2_struct::Group<G>, H power_set(G):
+    ? forall G nonempty_set, group &chap2::Group<G>, H power_set(G):
         $is_subgroup(G, group, H)
         $is_finite_set(H)
         finite_set_size(H) = 1
@@ -524,7 +524,7 @@ thm subgroup_eq_bottom_iff_order_one_forward:
             x $in H
 
 thm coprime_subgroups_intersection_bottom:
-    ? forall G nonempty_set, group &MILAlternative::chap2_struct::Group<G>, H, K power_set(G):
+    ? forall G nonempty_set, group &chap2::Group<G>, H, K power_set(G):
         $is_subgroup(G, group, H)
         $is_subgroup(G, group, K)
         $is_finite_set(H)
@@ -535,10 +535,10 @@ thm coprime_subgroups_intersection_bottom:
     trust \subgroup_intersection<G>(H, K) = {group.one}
 
 thm p_power_subgroup_exists:
-    ? forall G nonempty_set, group &MILAlternative::chap2_struct::Group<G>, p N+, n N:
+    ? forall G nonempty_set, group &chap2::Group<G>, p N+, n N:
         $is_finite_set(G)
         $prime(p)
-        $MILAlternative::chap2_struct::divides(p^n, finite_set_size(G))
+        $chap2::divides(p^n, finite_set_size(G))
         =>:
             exist H power_set(G) st {$is_subgroup(G, group, H), $is_finite_set(H), finite_set_size(H) = p^n}
     trust exist H power_set(G) st {$is_subgroup(G, group, H), $is_finite_set(H), finite_set_size(H) = p^n}
@@ -546,10 +546,10 @@ thm p_power_subgroup_exists:
 # Source definition `conjugate` and its action law.  The set-level action is
 # defined directly; its preservation of subgroup structure remains implicit in
 # the source's `Subgroup G` carrier.
-prop conjugate_subgroup_member(G nonempty_set, group &MILAlternative::chap2_struct::Group<G>, H power_set(G), g, x G):
+prop conjugate_subgroup_member(G nonempty_set, group &chap2::Group<G>, H power_set(G), g, x G):
     exist h G st {h $in H, x = group.mul(group.mul(g, h), group.inv(g))}
 
-template<G nonempty_set, group &MILAlternative::chap2_struct::Group<G>>:
+template<G nonempty_set, group &chap2::Group<G>>:
     have fn conjugate_subgroup(g G, H power_set(G)) power_set(G) = {x G: $conjugate_subgroup_member(G, group, H, g, x)}
 
 # ---------------------------------------------------------------------------
@@ -582,13 +582,13 @@ template<S set>:
 template<S set>:
     trust have free_group_of fn(x S) \free_group<S>
 
-template<S set, Target nonempty_set, target &MILAlternative::chap2_struct::Group<Target>, f fn(x S) Target>:
+template<S set, Target nonempty_set, target &chap2::Group<Target>, f fn(x S) Target>:
     trust have free_group_lift fn(word \free_group<S>) Target
 
-trust forall S set, Target nonempty_set, target &MILAlternative::chap2_struct::Group<Target>, f fn(x S) Target, x S:
+trust forall S set, Target nonempty_set, target &chap2::Group<Target>, f fn(x S) Target, x S:
     \free_group_lift<S, Target, target, f>(\free_group_of<S>(x)) = f(x)
 
-prop respects_group_relations(S set, Target nonempty_set, relations power_set(\free_group<S>), target &MILAlternative::chap2_struct::Group<Target>, f fn(x S) Target):
+prop respects_group_relations(S set, Target nonempty_set, relations power_set(\free_group<S>), target &chap2::Group<Target>, f fn(x S) Target):
     forall relation relations:
         \free_group_lift<S, Target, target, f>(relation) = target.one
 
@@ -598,10 +598,10 @@ template<S set, relations power_set(\free_group<S>)>:
 template<S set, relations power_set(\free_group<S>)>:
     trust have presented_group_of fn(x S) \presented_group<S, relations>
 
-template<S set, relations power_set(\free_group<S>), Target nonempty_set, target &MILAlternative::chap2_struct::Group<Target>, f fn(x S) Target: $respects_group_relations(S, Target, relations, target, f)>:
+template<S set, relations power_set(\free_group<S>), Target nonempty_set, target &chap2::Group<Target>, f fn(x S) Target: $respects_group_relations(S, Target, relations, target, f)>:
     trust have presented_group_lift fn(x \presented_group<S, relations>) Target
 
-trust forall S set, relations power_set(\free_group<S>), Target nonempty_set, target &MILAlternative::chap2_struct::Group<Target>, f fn(x S) Target, x S:
+trust forall S set, relations power_set(\free_group<S>), Target nonempty_set, target &chap2::Group<Target>, f fn(x S) Target, x S:
     $respects_group_relations(S, Target, relations, target, f)
     =>:
         \presented_group_lift<S, relations, Target, target, f>(\presented_group_of<S, relations>(x)) = f(x)
@@ -610,14 +610,14 @@ trust forall S set, relations power_set(\free_group<S>), Target nonempty_set, ta
 # 9.1.5 Group actions and orbits
 # ---------------------------------------------------------------------------
 
-prop is_group_action(G nonempty_set, X set, group &MILAlternative::chap2_struct::Group<G>, act fn(g G, x X) X):
+prop is_group_action(G nonempty_set, X set, group &chap2::Group<G>, act fn(g G, x X) X):
     forall x X:
         act(group.one, x) = x
     forall g, h G, x X:
         act(g, act(h, x)) = act(group.mul(g, h), x)
 
 thm group_action_associativity:
-    ? forall G nonempty_set, X set, group &MILAlternative::chap2_struct::Group<G>, act fn(g G, x X) X, g, h G, x X:
+    ? forall G nonempty_set, X set, group &chap2::Group<G>, act fn(g G, x X) X, g, h G, x X:
         $is_group_action(G, X, group, act)
         =>:
             act(g, act(h, x)) = act(group.mul(g, h), x)
@@ -625,7 +625,7 @@ thm group_action_associativity:
 template<G, X set, act fn(g G, x X) X>:
     have fn toPermHom(g G) fn(x X) X = fn(y X) X {act(g, y)}
 
-template<G nonempty_set, group &MILAlternative::chap2_struct::Group<G>>:
+template<G nonempty_set, group &chap2::Group<G>>:
     have fn CayleyIsoMorphism(g G) fn(x G) G = fn(y G) G {group.mul(g, y)}
 
 prop orbit_member(G, X set, act fn(g G, x X) X, x, y X):
@@ -647,12 +647,12 @@ template<G, X set, act fn(g G, x X) X>:
     have orbit_partition power_set(power_set(X)) = {O power_set(X): $is_orbit_of(G, X, act, O)}
 
 thm group_action_gives_permutation:
-    ? forall G nonempty_set, X set, group &MILAlternative::chap2_struct::Group<G>, act fn(g G, x X) X, g G:
+    ? forall G nonempty_set, X set, group &chap2::Group<G>, act fn(g G, x X) X, g G:
         $is_group_action(G, X, group, act)
         =>:
             $is_permutation(X, \toPermHom<G, X, act>(g))
     by def:
-        ? $MILAlternative::chap2_struct::group_laws(G, group.mul, group.one, group.inv)
+        ? $chap2::group_laws(G, group.mul, group.one, group.inv)
     \toPermHom<G, X, act>(g) = fn(y X) X {act(g, y)}
     \toPermHom<G, X, act>(g) $in fn(y X) X
     have inverse_action fn(y X) X = fn(y X) X {act(group.inv(g), y)}
@@ -696,7 +696,7 @@ thm group_action_gives_permutation:
             \toPermHom<G, X, act>(g)(inverse_action(y)) = act(g, inverse_action(y))
             \toPermHom<G, X, act>(g)(inverse_action(y)) = act(g, act(group.inv(g), y))
             act(g, act(group.inv(g), y)) = act(group.mul(g, group.inv(g)), y)
-1release thm MILAlternative::chap2_struct::mul_inv_cancel(G, group.mul, group.one, group.inv, g)
+1release thm chap2::mul_inv_cancel(G, group.mul, group.one, group.inv, g)
 1release thm function_substitution(G, X, fn(a G) X {act(a, y)}, group.mul(g, group.inv(g)), group.one)
             \toPermHom<G, X, act>(g)(inverse_action(y)) = act(g, act(group.inv(g), y)) = act(group.mul(g, group.inv(g)), y) = act(group.one, y) = y
         by def:
@@ -709,10 +709,10 @@ thm group_action_gives_permutation:
         ? $is_permutation(X, \toPermHom<G, X, act>(g))
 
 thm cayley_map_injective:
-    ? forall G nonempty_set, group &MILAlternative::chap2_struct::Group<G>:
+    ? forall G nonempty_set, group &chap2::Group<G>:
         $injective(G, fn(y G) G, \CayleyIsoMorphism<G, group>)
     by def:
-        ? $MILAlternative::chap2_struct::group_laws(G, group.mul, group.one, group.inv)
+        ? $chap2::group_laws(G, group.mul, group.one, group.inv)
     claim:
         ? forall a, b G:
             \CayleyIsoMorphism<G, group>(a) = \CayleyIsoMorphism<G, group>(b)
@@ -732,29 +732,29 @@ thm cayley_map_injective:
         \CayleyIsoMorphism<G, group>(b)(group.one) = group.mul(b, group.one)
         (fn(h fn(y G) G) G {h(group.one)})(\CayleyIsoMorphism<G, group>(b)) = \CayleyIsoMorphism<G, group>(b)(group.one)
         (fn(h fn(y G) G) G {h(group.one)})(\CayleyIsoMorphism<G, group>(b)) = group.mul(b, group.one)
-1release thm MILAlternative::chap2_struct::mul_one(G, group.mul, group.one, group.inv, a)
-1release thm MILAlternative::chap2_struct::mul_one(G, group.mul, group.one, group.inv, b)
+1release thm chap2::mul_one(G, group.mul, group.one, group.inv, a)
+1release thm chap2::mul_one(G, group.mul, group.one, group.inv, b)
         a = group.mul(a, group.one) = group.mul(b, group.one) = b
     by def:
         ? $injective(G, fn(y G) G, \CayleyIsoMorphism<G, group>)
 
 thm orbit_stabilizer_equinumerous:
-    ? forall G nonempty_set, X set, group &MILAlternative::chap2_struct::Group<G>, act fn(g G, x X) X, x X:
+    ? forall G nonempty_set, X set, group &chap2::Group<G>, act fn(g G, x X) X, x X:
         $is_group_action(G, X, group, act)
         =>:
             $sets_equinumerous(G, cart(\orbit<G, X, act>(x), \stabilizer<G, X, act, group.one>(x)))
     trust $sets_equinumerous(G, cart(\orbit<G, X, act>(x), \stabilizer<G, X, act, group.one>(x)))
 
 thm conjugate_subgroup_by_one:
-    ? forall G nonempty_set, group &MILAlternative::chap2_struct::Group<G>, H power_set(G):
+    ? forall G nonempty_set, group &chap2::Group<G>, H power_set(G):
         $is_subgroup(G, group, H)
         =>:
             \conjugate_subgroup<G, group>(group.one, H) = H
     by def:
-        ? $MILAlternative::chap2_struct::group_laws(G, group.mul, group.one, group.inv)
+        ? $chap2::group_laws(G, group.mul, group.one, group.inv)
     \conjugate_subgroup<G, group>(group.one, H) = {q G: $conjugate_subgroup_member(G, group, H, group.one, q)}
     group.mul(group.inv(group.one), group.one) = group.one
-1release thm MILAlternative::chap2_struct::mul_one(G, group.mul, group.one, group.inv, group.inv(group.one))
+1release thm chap2::mul_one(G, group.mul, group.one, group.inv, group.inv(group.one))
     group.mul(group.inv(group.one), group.one) = group.inv(group.one)
     group.inv(group.one) = group.one
     claim:
@@ -767,7 +767,7 @@ thm conjugate_subgroup_by_one:
         obtain h from $conjugate_subgroup_member(G, group, H, group.one, x)
         group.mul(group.one, h) = h
         group.mul(group.mul(group.one, h), group.inv(group.one)) = group.mul(h, group.one)
-1release thm MILAlternative::chap2_struct::mul_one(G, group.mul, group.one, group.inv, h)
+1release thm chap2::mul_one(G, group.mul, group.one, group.inv, h)
         group.mul(h, group.one) = h
         x = h
     by def:
@@ -781,7 +781,7 @@ thm conjugate_subgroup_by_one:
         witness $conjugate_subgroup_member(G, group, H, group.one, h) from h:
             group.mul(group.one, h) = h
             group.mul(group.mul(group.one, h), group.inv(group.one)) = group.mul(h, group.one)
-1release thm MILAlternative::chap2_struct::mul_one(G, group.mul, group.one, group.inv, h)
+1release thm chap2::mul_one(G, group.mul, group.one, group.inv, h)
             group.mul(h, group.one) = h
             h = group.mul(group.mul(group.one, h), group.inv(group.one))
 1release thm set_builder_member(h, {q G: $conjugate_subgroup_member(G, group, H, group.one, q)})
@@ -796,29 +796,29 @@ thm conjugate_subgroup_by_one:
 # 9.1.6 Quotient groups
 # ---------------------------------------------------------------------------
 
-prop left_coset_member(G nonempty_set, group &MILAlternative::chap2_struct::Group<G>, H power_set(G), g, x G):
+prop left_coset_member(G nonempty_set, group &chap2::Group<G>, H power_set(G), g, x G):
     exist h G st {h $in H, x = group.mul(g, h)}
 
-template<G nonempty_set, group &MILAlternative::chap2_struct::Group<G>>:
+template<G nonempty_set, group &chap2::Group<G>>:
     have fn left_coset(H power_set(G), g G) power_set(G) = {x G: $left_coset_member(G, group, H, g, x)}
 
-prop is_normal_subgroup(G nonempty_set, group &MILAlternative::chap2_struct::Group<G>, H power_set(G)):
+prop is_normal_subgroup(G nonempty_set, group &chap2::Group<G>, H power_set(G)):
     $is_subgroup(G, group, H)
     forall g, h G:
         h $in H
         =>:
             group.mul(group.mul(g, h), group.inv(g)) $in H
 
-prop is_left_coset_of(G nonempty_set, group &MILAlternative::chap2_struct::Group<G>, H power_set(G), CarrierC power_set(G)):
+prop is_left_coset_of(G nonempty_set, group &chap2::Group<G>, H power_set(G), CarrierC power_set(G)):
     exist g G st {CarrierC = \left_coset<G, group>(H, g)}
 
-template<G nonempty_set, group &MILAlternative::chap2_struct::Group<G>>:
+template<G nonempty_set, group &chap2::Group<G>>:
     have fn quotient_group_carrier(H power_set(G)) power_set(power_set(G)) = {CarrierC power_set(G): $is_left_coset_of(G, group, H, CarrierC)}
 
 # Quotient-group projection and operations are callable constructions.
 # Representative independence and the group law package remain proof debt.
 thm left_coset_in_quotient_group_carrier:
-    ? forall G nonempty_set, group &MILAlternative::chap2_struct::Group<G>, H power_set(G), g G:
+    ? forall G nonempty_set, group &chap2::Group<G>, H power_set(G), g G:
         $is_normal_subgroup(G, group, H)
         =>:
             \left_coset<G, group>(H, g) $in \quotient_group_carrier<G, group>(H)
@@ -828,18 +828,18 @@ thm left_coset_in_quotient_group_carrier:
     \left_coset<G, group>(H, g) $in {CarrierC power_set(G): $is_left_coset_of(G, group, H, CarrierC)}
 
 claim:
-    ? forall G nonempty_set, group &MILAlternative::chap2_struct::Group<G>, H power_set(G):
+    ? forall G nonempty_set, group &chap2::Group<G>, H power_set(G):
         $is_normal_subgroup(G, group, H)
         =>:
             $is_nonempty_set(\quotient_group_carrier<G, group>(H))
 1release thm left_coset_in_quotient_group_carrier(G, group, H, group.one)
     witness $is_nonempty_set(\quotient_group_carrier<G, group>(H)) from \left_coset<G, group>(H, group.one)
 
-template<G nonempty_set, group &MILAlternative::chap2_struct::Group<G>, H power_set(G): $is_normal_subgroup(G, group, H)>:
+template<G nonempty_set, group &chap2::Group<G>, H power_set(G): $is_normal_subgroup(G, group, H)>:
     have quotient_group_nonempty nonempty_set = \quotient_group_carrier<G, group>(H)
 
 claim:
-    ? forall G nonempty_set, group &MILAlternative::chap2_struct::Group<G>, H power_set(G), g G:
+    ? forall G nonempty_set, group &chap2::Group<G>, H power_set(G), g G:
         $is_normal_subgroup(G, group, H)
         =>:
             \left_coset<G, group>(H, g) $in \quotient_group_nonempty<G, group, H>
@@ -848,7 +848,7 @@ claim:
     \quotient_group_nonempty<G, group, H> = \quotient_group_carrier<G, group>(H)
     \left_coset<G, group>(H, g) $in \quotient_group_nonempty<G, group, H>
 
-template<G nonempty_set, group &MILAlternative::chap2_struct::Group<G>, H power_set(G): $is_normal_subgroup(G, group, H)>:
+template<G nonempty_set, group &chap2::Group<G>, H power_set(G): $is_normal_subgroup(G, group, H)>:
     have fn quotient_group_mk(g G) \quotient_group_nonempty<G, group, H> = \left_coset<G, group>(H, g)
 
 thm object_substitution:
@@ -858,38 +858,38 @@ thm object_substitution:
             f(x) = f(y)
 
 thm group_inv_inv:
-    ? forall G nonempty_set, group &MILAlternative::chap2_struct::Group<G>, x G:
+    ? forall G nonempty_set, group &chap2::Group<G>, x G:
         group.inv(group.inv(x)) = x
     by def:
-        ? $MILAlternative::chap2_struct::group_laws(G, group.mul, group.one, group.inv)
-1release thm MILAlternative::chap2_struct::mul_inv_cancel(G, group.mul, group.one, group.inv, group.inv(x))
+        ? $chap2::group_laws(G, group.mul, group.one, group.inv)
+1release thm chap2::mul_inv_cancel(G, group.mul, group.one, group.inv, group.inv(x))
     group.mul(group.inv(x), group.inv(group.inv(x))) = group.one
     group.mul(group.inv(x), x) = group.one
     group.mul(group.inv(x), group.inv(group.inv(x))) = group.mul(group.inv(x), x)
-1release thm MILAlternative::chap2_struct::_group_left_cancel(G, group.mul, group.one, group.inv, group.inv(x), group.inv(group.inv(x)), x)
+1release thm chap2::_group_left_cancel(G, group.mul, group.one, group.inv, group.inv(x), group.inv(group.inv(x)), x)
 
 thm left_coset_center_mem:
-    ? forall G nonempty_set, group &MILAlternative::chap2_struct::Group<G>, H power_set(G), g G:
+    ? forall G nonempty_set, group &chap2::Group<G>, H power_set(G), g G:
         $is_subgroup(G, group, H)
         =>:
             g $in \left_coset<G, group>(H, g)
     by def:
-        ? $MILAlternative::chap2_struct::group_laws(G, group.mul, group.one, group.inv)
+        ? $chap2::group_laws(G, group.mul, group.one, group.inv)
     \left_coset<G, group>(H, g) = {x G: $left_coset_member(G, group, H, g, x)}
     group.one $in H
-1release thm MILAlternative::chap2_struct::mul_one(G, group.mul, group.one, group.inv, g)
+1release thm chap2::mul_one(G, group.mul, group.one, group.inv, g)
     witness $left_coset_member(G, group, H, g, g) from group.one
 1release thm set_builder_member(g, {x G: $left_coset_member(G, group, H, g, x)})
     g $in {x G: $left_coset_member(G, group, H, g, x)}
 
 thm left_coset_eq_of_mem:
-    ? forall G nonempty_set, group &MILAlternative::chap2_struct::Group<G>, H power_set(G), g, x G:
+    ? forall G nonempty_set, group &chap2::Group<G>, H power_set(G), g, x G:
         $is_subgroup(G, group, H)
         x $in \left_coset<G, group>(H, g)
         =>:
             \left_coset<G, group>(H, x) = \left_coset<G, group>(H, g)
     by def:
-        ? $MILAlternative::chap2_struct::group_laws(G, group.mul, group.one, group.inv)
+        ? $chap2::group_laws(G, group.mul, group.one, group.inv)
     \left_coset<G, group>(H, g) = {q G: $left_coset_member(G, group, H, g, q)}
     \left_coset<G, group>(H, x) = {q G: $left_coset_member(G, group, H, x, q)}
     obtain u from exist h G st {h $in H, x = group.mul(g, h)}
@@ -911,7 +911,7 @@ thm left_coset_eq_of_mem:
         obtain w from $left_coset_member(G, group, H, g, z)
         group.inv(u) $in H
         group.mul(group.inv(u), w) $in H
-1release thm MILAlternative::chap2_struct::mul_inv_cancel(G, group.mul, group.one, group.inv, u)
+1release thm chap2::mul_inv_cancel(G, group.mul, group.one, group.inv, u)
         group.mul(u, group.mul(group.inv(u), w)) = group.mul(group.mul(u, group.inv(u)), w)
 1release thm object_substitution(G, G, fn(t G) G {group.mul(g, t)}, group.mul(u, group.mul(group.inv(u), w)), group.mul(group.mul(u, group.inv(u)), w))
         group.mul(g, group.mul(u, group.mul(group.inv(u), w))) = group.mul(g, group.mul(group.mul(u, group.inv(u)), w))
@@ -935,14 +935,14 @@ thm left_coset_eq_of_mem:
         ? \left_coset<G, group>(H, x) = \left_coset<G, group>(H, g)
 
 thm left_coset_mul_mem:
-    ? forall G nonempty_set, group &MILAlternative::chap2_struct::Group<G>, H power_set(G), a, b, x, y G:
+    ? forall G nonempty_set, group &chap2::Group<G>, H power_set(G), a, b, x, y G:
         $is_normal_subgroup(G, group, H)
         x $in \left_coset<G, group>(H, a)
         y $in \left_coset<G, group>(H, b)
         =>:
             group.mul(x, y) $in \left_coset<G, group>(H, group.mul(a, b))
     by def:
-        ? $MILAlternative::chap2_struct::group_laws(G, group.mul, group.one, group.inv)
+        ? $chap2::group_laws(G, group.mul, group.one, group.inv)
     \left_coset<G, group>(H, group.mul(a, b)) = {q G: $left_coset_member(G, group, H, group.mul(a, b), q)}
     obtain u from exist h G st {h $in H, x = group.mul(a, h)}
     obtain v from exist h G st {h $in H, y = group.mul(b, h)}
@@ -953,7 +953,7 @@ thm left_coset_mul_mem:
     have moved G = group.mul(group.mul(group.inv(b), u), b)
     moved $in H
     group.mul(moved, v) $in H
-1release thm MILAlternative::chap2_struct::mul_inv_cancel(G, group.mul, group.one, group.inv, b)
+1release thm chap2::mul_inv_cancel(G, group.mul, group.one, group.inv, b)
     group.mul(b, group.mul(group.inv(b), u)) = group.mul(group.mul(b, group.inv(b)), u)
 1release thm object_substitution(G, G, fn(t G) G {group.mul(t, b)}, group.mul(b, group.mul(group.inv(b), u)), group.mul(group.mul(b, group.inv(b)), u))
     group.mul(b, moved) = group.mul(b, group.mul(group.mul(group.inv(b), u), b)) = group.mul(group.mul(b, group.mul(group.inv(b), u)), b) = group.mul(group.mul(group.mul(b, group.inv(b)), u), b)
@@ -976,10 +976,10 @@ thm left_coset_mul_mem:
 1release thm set_builder_member(group.mul(x, y), {q G: $left_coset_member(G, group, H, group.mul(a, b), q)})
     group.mul(x, y) $in {q G: $left_coset_member(G, group, H, group.mul(a, b), q)}
 
-prop is_quotient_group_mul_value(G nonempty_set, group &MILAlternative::chap2_struct::Group<G>, H power_set(G), q, r, s power_set(G)):
+prop is_quotient_group_mul_value(G nonempty_set, group &chap2::Group<G>, H power_set(G), q, r, s power_set(G)):
     exist a, b G st {q = \left_coset<G, group>(H, a), r = \left_coset<G, group>(H, b), s = \left_coset<G, group>(H, group.mul(a, b))}
 
-template<G nonempty_set, group &MILAlternative::chap2_struct::Group<G>, H power_set(G): $is_normal_subgroup(G, group, H)>:
+template<G nonempty_set, group &chap2::Group<G>, H power_set(G): $is_normal_subgroup(G, group, H)>:
     have fn quotient_group_mul by exist!:
         ? forall q, r \quotient_group_nonempty<G, group, H>:
             exist! s \quotient_group_nonempty<G, group, H> st {$is_quotient_group_mul_value(G, group, H, q, r, s)}
@@ -1023,20 +1023,20 @@ template<G nonempty_set, group &MILAlternative::chap2_struct::Group<G>, H power_
             s2 = \left_coset<G, group>(H, group.mul(a2, b2)) = \left_coset<G, group>(H, group.mul(a1, b1)) = s1
 
 thm left_coset_inv_mem:
-    ? forall G nonempty_set, group &MILAlternative::chap2_struct::Group<G>, H power_set(G), a, x G:
+    ? forall G nonempty_set, group &chap2::Group<G>, H power_set(G), a, x G:
         $is_normal_subgroup(G, group, H)
         x $in \left_coset<G, group>(H, a)
         =>:
             group.inv(x) $in \left_coset<G, group>(H, group.inv(a))
     by def:
-        ? $MILAlternative::chap2_struct::group_laws(G, group.mul, group.one, group.inv)
+        ? $chap2::group_laws(G, group.mul, group.one, group.inv)
     \left_coset<G, group>(H, group.inv(a)) = {q G: $left_coset_member(G, group, H, group.inv(a), q)}
     obtain u from exist h G st {h $in H, x = group.mul(a, h)}
     group.inv(u) $in H
     group.mul(group.mul(a, group.inv(u)), group.inv(a)) $in H
     have moved G = group.mul(group.mul(a, group.inv(u)), group.inv(a))
     moved $in H
-1release thm MILAlternative::chap2_struct::mul_inv_cancel(G, group.mul, group.one, group.inv, a)
+1release thm chap2::mul_inv_cancel(G, group.mul, group.one, group.inv, a)
     group.mul(group.inv(a), group.mul(a, group.inv(u))) = group.mul(group.mul(group.inv(a), a), group.inv(u))
 1release thm object_substitution(G, G, fn(t G) G {group.mul(t, group.inv(a))}, group.mul(group.inv(a), group.mul(a, group.inv(u))), group.mul(group.mul(group.inv(a), a), group.inv(u)))
     group.mul(group.inv(a), moved) = group.mul(group.inv(a), group.mul(group.mul(a, group.inv(u)), group.inv(a))) = group.mul(group.mul(group.inv(a), group.mul(a, group.inv(u))), group.inv(a)) = group.mul(group.mul(group.mul(group.inv(a), a), group.inv(u)), group.inv(a))
@@ -1047,16 +1047,16 @@ thm left_coset_inv_mem:
 1release thm object_substitution(G, G, fn(t G) G {group.mul(t, group.inv(a))}, group.mul(group.one, group.inv(u)), group.inv(u))
     group.mul(group.mul(group.one, group.inv(u)), group.inv(a)) = group.mul(group.inv(u), group.inv(a))
     group.mul(group.inv(a), moved) = group.mul(group.inv(u), group.inv(a))
-1release thm MILAlternative::chap2_struct::mul_inv_rev(G, group.mul, group.one, group.inv, a, u)
+1release thm chap2::mul_inv_rev(G, group.mul, group.one, group.inv, a, u)
     group.inv(x) = group.inv(group.mul(a, u)) = group.mul(group.inv(u), group.inv(a)) = group.mul(group.inv(a), moved)
     witness $left_coset_member(G, group, H, group.inv(a), group.inv(x)) from moved
 1release thm set_builder_member(group.inv(x), {q G: $left_coset_member(G, group, H, group.inv(a), q)})
     group.inv(x) $in {q G: $left_coset_member(G, group, H, group.inv(a), q)}
 
-prop is_quotient_group_inv_value(G nonempty_set, group &MILAlternative::chap2_struct::Group<G>, H power_set(G), q, s power_set(G)):
+prop is_quotient_group_inv_value(G nonempty_set, group &chap2::Group<G>, H power_set(G), q, s power_set(G)):
     exist a G st {q = \left_coset<G, group>(H, a), s = \left_coset<G, group>(H, group.inv(a))}
 
-template<G nonempty_set, group &MILAlternative::chap2_struct::Group<G>, H power_set(G): $is_normal_subgroup(G, group, H)>:
+template<G nonempty_set, group &chap2::Group<G>, H power_set(G): $is_normal_subgroup(G, group, H)>:
     have fn quotient_group_inv by exist!:
         ? forall q \quotient_group_nonempty<G, group, H>:
             exist! s \quotient_group_nonempty<G, group, H> st {$is_quotient_group_inv_value(G, group, H, q, s)}
@@ -1091,11 +1091,11 @@ template<G nonempty_set, group &MILAlternative::chap2_struct::Group<G>, H power_
             \left_coset<G, group>(H, group.inv(a2)) = \left_coset<G, group>(H, group.inv(a1))
             s2 = \left_coset<G, group>(H, group.inv(a2)) = \left_coset<G, group>(H, group.inv(a1)) = s1
 
-template<G nonempty_set, group &MILAlternative::chap2_struct::Group<G>, H power_set(G): $is_normal_subgroup(G, group, H)>:
+template<G nonempty_set, group &chap2::Group<G>, H power_set(G): $is_normal_subgroup(G, group, H)>:
     have quotient_group_one \quotient_group_nonempty<G, group, H> = \quotient_group_mk<G, group, H>(group.one)
 
 thm quotient_group_has_mk_preimage:
-    ? forall G nonempty_set, group &MILAlternative::chap2_struct::Group<G>, H power_set(G), q power_set(G):
+    ? forall G nonempty_set, group &chap2::Group<G>, H power_set(G), q power_set(G):
         $is_normal_subgroup(G, group, H)
         q $in \quotient_group_nonempty<G, group, H>
         =>:
@@ -1110,7 +1110,7 @@ thm quotient_group_has_mk_preimage:
     witness exist representative G st {q = \quotient_group_mk<G, group, H>(representative)} from g
 
 thm quotient_group_mul_mk:
-    ? forall G nonempty_set, group &MILAlternative::chap2_struct::Group<G>, H power_set(G), x, y G:
+    ? forall G nonempty_set, group &chap2::Group<G>, H power_set(G), x, y G:
         $is_normal_subgroup(G, group, H)
         =>:
             \quotient_group_mul<G, group, H>(\quotient_group_mk<G, group, H>(x), \quotient_group_mk<G, group, H>(y)) = \quotient_group_mk<G, group, H>(group.mul(x, y))
@@ -1131,7 +1131,7 @@ thm quotient_group_mul_mk:
     \quotient_group_mul<G, group, H>(\quotient_group_mk<G, group, H>(x), \quotient_group_mk<G, group, H>(y)) = \left_coset<G, group>(H, group.mul(x1, y1)) = \left_coset<G, group>(H, group.mul(x, y)) = \quotient_group_mk<G, group, H>(group.mul(x, y))
 
 thm quotient_group_inv_mk:
-    ? forall G nonempty_set, group &MILAlternative::chap2_struct::Group<G>, H power_set(G), x G:
+    ? forall G nonempty_set, group &chap2::Group<G>, H power_set(G), x G:
         $is_normal_subgroup(G, group, H)
         =>:
             \quotient_group_inv<G, group, H>(\quotient_group_mk<G, group, H>(x)) = \quotient_group_mk<G, group, H>(group.inv(x))
@@ -1148,7 +1148,7 @@ thm quotient_group_inv_mk:
     \quotient_group_inv<G, group, H>(\quotient_group_mk<G, group, H>(x)) = \left_coset<G, group>(H, group.inv(x1)) = \left_coset<G, group>(H, group.inv(x)) = \quotient_group_mk<G, group, H>(group.inv(x))
 
 thm quotient_group_mul_of_representatives:
-    ? forall G nonempty_set, group &MILAlternative::chap2_struct::Group<G>, H, q, r power_set(G), x, y G:
+    ? forall G nonempty_set, group &chap2::Group<G>, H, q, r power_set(G), x, y G:
         $is_normal_subgroup(G, group, H)
         q $in \quotient_group_nonempty<G, group, H>
         r $in \quotient_group_nonempty<G, group, H>
@@ -1164,7 +1164,7 @@ thm quotient_group_mul_of_representatives:
     \quotient_group_mul<G, group, H>(q, r) = \quotient_group_mul<G, group, H>(\quotient_group_mk<G, group, H>(x), r) = \quotient_group_mul<G, group, H>(\quotient_group_mk<G, group, H>(x), \quotient_group_mk<G, group, H>(y)) = \quotient_group_mk<G, group, H>(group.mul(x, y))
 
 thm quotient_group_inv_of_representative:
-    ? forall G nonempty_set, group &MILAlternative::chap2_struct::Group<G>, H, q power_set(G), x G:
+    ? forall G nonempty_set, group &chap2::Group<G>, H, q power_set(G), x G:
         $is_normal_subgroup(G, group, H)
         q $in \quotient_group_nonempty<G, group, H>
         q = \quotient_group_mk<G, group, H>(x)
@@ -1176,10 +1176,10 @@ thm quotient_group_inv_of_representative:
     \quotient_group_inv<G, group, H>(q) = \quotient_group_inv<G, group, H>(\quotient_group_mk<G, group, H>(x)) = \quotient_group_mk<G, group, H>(group.inv(x))
 
 thm quotient_group_tuple_is_group:
-    ? forall G nonempty_set, group &MILAlternative::chap2_struct::Group<G>, H power_set(G):
+    ? forall G nonempty_set, group &chap2::Group<G>, H power_set(G):
         $is_normal_subgroup(G, group, H)
         =>:
-            (\quotient_group_mul<G, group, H>, \quotient_group_one<G, group, H>, \quotient_group_inv<G, group, H>) $in &MILAlternative::chap2_struct::Group<\quotient_group_nonempty<G, group, H>>
+            (\quotient_group_mul<G, group, H>, \quotient_group_one<G, group, H>, \quotient_group_inv<G, group, H>) $in &chap2::Group<\quotient_group_nonempty<G, group, H>>
     claim:
         ? forall q, r, s \quotient_group_nonempty<G, group, H>:
             \quotient_group_mul<G, group, H>(\quotient_group_mul<G, group, H>(q, r), s) = \quotient_group_mul<G, group, H>(q, \quotient_group_mul<G, group, H>(r, s))
@@ -1229,31 +1229,31 @@ thm quotient_group_tuple_is_group:
         \quotient_group_one<G, group, H> = \quotient_group_mk<G, group, H>(group.one)
         \quotient_group_mul<G, group, H>(\quotient_group_inv<G, group, H>(q), q) = \quotient_group_mul<G, group, H>(iq, q) = \quotient_group_mk<G, group, H>(group.mul(group.inv(x), x)) = \quotient_group_mk<G, group, H>(group.one) = \quotient_group_one<G, group, H>
     by def:
-        ? $MILAlternative::chap2_struct::group_laws(\quotient_group_nonempty<G, group, H>, \quotient_group_mul<G, group, H>, \quotient_group_one<G, group, H>, \quotient_group_inv<G, group, H>)
+        ? $chap2::group_laws(\quotient_group_nonempty<G, group, H>, \quotient_group_mul<G, group, H>, \quotient_group_one<G, group, H>, \quotient_group_inv<G, group, H>)
     \quotient_group_mul<G, group, H> $in fn(q, r \quotient_group_nonempty<G, group, H>) \quotient_group_nonempty<G, group, H>
     \quotient_group_one<G, group, H> $in \quotient_group_nonempty<G, group, H>
     \quotient_group_inv<G, group, H> $in fn(q \quotient_group_nonempty<G, group, H>) \quotient_group_nonempty<G, group, H>
 1release thm cart_member_from_coordinates((\quotient_group_mul<G, group, H>, \quotient_group_one<G, group, H>, \quotient_group_inv<G, group, H>), cart(fn(q, r \quotient_group_nonempty<G, group, H>) \quotient_group_nonempty<G, group, H>, \quotient_group_nonempty<G, group, H>, fn(q \quotient_group_nonempty<G, group, H>) \quotient_group_nonempty<G, group, H>))
-1release thm struct_member((\quotient_group_mul<G, group, H>, \quotient_group_one<G, group, H>, \quotient_group_inv<G, group, H>), &MILAlternative::chap2_struct::Group<\quotient_group_nonempty<G, group, H>>)
+1release thm struct_member((\quotient_group_mul<G, group, H>, \quotient_group_one<G, group, H>, \quotient_group_inv<G, group, H>), &chap2::Group<\quotient_group_nonempty<G, group, H>>)
 
-template<G nonempty_set, group &MILAlternative::chap2_struct::Group<G>, H power_set(G): $is_normal_subgroup(G, group, H)>:
-    have quotient_group &MILAlternative::chap2_struct::Group<\quotient_group_nonempty<G, group, H>> = (\quotient_group_mul<G, group, H>, \quotient_group_one<G, group, H>, \quotient_group_inv<G, group, H>)
+template<G nonempty_set, group &chap2::Group<G>, H power_set(G): $is_normal_subgroup(G, group, H)>:
+    have quotient_group &chap2::Group<\quotient_group_nonempty<G, group, H>> = (\quotient_group_mul<G, group, H>, \quotient_group_one<G, group, H>, \quotient_group_inv<G, group, H>)
 
-prop kills_subgroup(G, Target nonempty_set, target &MILAlternative::chap2_struct::Group<Target>, H power_set(G), f fn(x G) Target):
+prop kills_subgroup(G, Target nonempty_set, target &chap2::Group<Target>, H power_set(G), f fn(x G) Target):
     forall h H:
         f(h) = target.one
 
-prop is_quotient_group_lift_value(G, Target nonempty_set, source &MILAlternative::chap2_struct::Group<G>, H power_set(G), f fn(x G) Target, q power_set(G), y Target):
+prop is_quotient_group_lift_value(G, Target nonempty_set, source &chap2::Group<G>, H power_set(G), f fn(x G) Target, q power_set(G), y Target):
     exist g G st {q = \left_coset<G, source>(H, g), y = f(g)}
 
-template<G, Target nonempty_set, source &MILAlternative::chap2_struct::Group<G>, target &MILAlternative::chap2_struct::Group<Target>, H power_set(G), f fn(x G) Target: $is_normal_subgroup(G, source, H), $is_group_hom(G, Target, source, target, f), $kills_subgroup(G, Target, target, H, f)>:
+template<G, Target nonempty_set, source &chap2::Group<G>, target &chap2::Group<Target>, H power_set(G), f fn(x G) Target: $is_normal_subgroup(G, source, H), $is_group_hom(G, Target, source, target, f), $kills_subgroup(G, Target, target, H, f)>:
     have fn quotient_group_lift by exist!:
         ? forall q \quotient_group_nonempty<G, source, H>:
             exist! y Target st {$is_quotient_group_lift_value(G, Target, source, H, f, q, y)}
         by def:
-            ? $MILAlternative::chap2_struct::group_laws(G, source.mul, source.one, source.inv)
+            ? $chap2::group_laws(G, source.mul, source.one, source.inv)
         by def:
-            ? $MILAlternative::chap2_struct::group_laws(Target, target.mul, target.one, target.inv)
+            ? $chap2::group_laws(Target, target.mul, target.one, target.inv)
         \quotient_group_nonempty<G, source, H> = \quotient_group_carrier<G, source>(H)
         q $in \quotient_group_carrier<G, source>(H)
         \quotient_group_carrier<G, source>(H) = {CarrierC power_set(G): $is_left_coset_of(G, source, H, CarrierC)}
@@ -1278,7 +1278,7 @@ template<G, Target nonempty_set, source &MILAlternative::chap2_struct::Group<G>,
             obtain h from exist token G st {token $in H, g2 = source.mul(g1, token)}
             f(source.mul(g1, h)) = target.mul(f(g1), f(h))
             f(h) = target.one
-1release thm MILAlternative::chap2_struct::mul_one(Target, target.mul, target.one, target.inv, f(g1))
+1release thm chap2::mul_one(Target, target.mul, target.one, target.inv, f(g1))
             y2 = f(g2) = f(source.mul(g1, h)) = target.mul(f(g1), f(h)) = target.mul(f(g1), target.one) = f(g1) = y1
 
 # ---------------------------------------------------------------------------
@@ -1286,7 +1286,7 @@ template<G, Target nonempty_set, source &MILAlternative::chap2_struct::Group<G>,
 # ---------------------------------------------------------------------------
 
 prop is_commutative_ring(A set, add fn(x, y A) A, zero A, neg fn(x A) A, mul fn(x, y A) A, one A):
-    $MILAlternative::chap2_struct::ring_laws(A, add, zero, neg, mul, one)
+    $chap2::ring_laws(A, add, zero, neg, mul, one)
     forall x, y A:
         mul(x, y) = mul(y, x)
 
@@ -1311,14 +1311,14 @@ thm commutative_ring_square_sum:
     ? forall A nonempty_set, ring &chap7::CommutativeRing<A>, x, y A:
         ring.mul(ring.add(x, y), ring.add(x, y)) = ring.add(ring.add(ring.mul(x, x), ring.mul(y, y)), ring.add(ring.mul(x, y), ring.mul(x, y)))
     $chap7::is_commutative_ring(A, ring.add, ring.zero, ring.neg, ring.mul, ring.one)
-    $MILAlternative::chap2_struct::ring_laws(A, ring.add, ring.zero, ring.neg, ring.mul, ring.one)
-    $MILAlternative::chap2_struct::additive_commutative_group_laws(A, ring.add, ring.zero, ring.neg)
+    $chap2::ring_laws(A, ring.add, ring.zero, ring.neg, ring.mul, ring.one)
+    $chap2::additive_commutative_group_laws(A, ring.add, ring.zero, ring.neg)
     ring.mul(ring.add(x, y), ring.add(x, y)) = ring.add(ring.mul(x, ring.add(x, y)), ring.mul(y, ring.add(x, y)))
     ring.mul(x, ring.add(x, y)) = ring.add(ring.mul(x, x), ring.mul(x, y))
     ring.mul(y, ring.add(x, y)) = ring.add(ring.mul(y, x), ring.mul(y, y))
     ring.mul(y, x) = ring.mul(x, y)
     ring.add(ring.mul(y, x), ring.mul(y, y)) = ring.add(ring.mul(y, y), ring.mul(y, x)) = ring.add(ring.mul(y, y), ring.mul(x, y))
-1release thm MILAlternative::chap2_struct::add_reorder_four(A, ring.add, ring.zero, ring.neg, ring.mul(x, x), ring.mul(x, y), ring.mul(y, y), ring.mul(x, y))
+1release thm chap2::add_reorder_four(A, ring.add, ring.zero, ring.neg, ring.mul(x, x), ring.mul(x, y), ring.mul(y, y), ring.mul(x, y))
     ring.mul(ring.add(x, y), ring.add(x, y)) = ring.add(ring.mul(x, ring.add(x, y)), ring.mul(y, ring.add(x, y))) = ring.add(ring.add(ring.mul(x, x), ring.mul(x, y)), ring.add(ring.mul(y, x), ring.mul(y, y))) = ring.add(ring.add(ring.mul(x, x), ring.mul(x, y)), ring.add(ring.mul(y, y), ring.mul(y, x))) = ring.add(ring.add(ring.mul(x, x), ring.mul(x, y)), ring.add(ring.mul(y, y), ring.mul(x, y))) = ring.add(ring.add(ring.mul(x, x), ring.mul(y, y)), ring.add(ring.mul(x, y), ring.mul(x, y)))
 
 thm natural_square_sum:
@@ -1454,7 +1454,7 @@ claim:
         $is_monoid(A, mul, one)
         \units_carrier<A, mul, one> $subset A
         =>:
-            (\unit_mul<A, mul, one>, \unit_one<A, mul, one>, \unit_inv<A, mul, one>) $in &MILAlternative::chap2_struct::Group<\units_carrier<A, mul, one>>
+            (\unit_mul<A, mul, one>, \unit_one<A, mul, one>, \unit_inv<A, mul, one>) $in &chap2::Group<\units_carrier<A, mul, one>>
     claim:
         ? forall x, y, z \units_carrier<A, mul, one>:
             \unit_mul<A, mul, one>(\unit_mul<A, mul, one>(x, y), z) = \unit_mul<A, mul, one>(x, \unit_mul<A, mul, one>(y, z))
@@ -1475,15 +1475,15 @@ claim:
         \unit_mul<A, mul, one>(\unit_one<A, mul, one>, x) = mul(one, x) = x
         \unit_mul<A, mul, one>(\unit_inv<A, mul, one>(x), x) = mul(\unit_inv<A, mul, one>(x), x) = one = \unit_one<A, mul, one>
     by def:
-        ? $MILAlternative::chap2_struct::group_laws(\units_carrier<A, mul, one>, \unit_mul<A, mul, one>, \unit_one<A, mul, one>, \unit_inv<A, mul, one>)
+        ? $chap2::group_laws(\units_carrier<A, mul, one>, \unit_mul<A, mul, one>, \unit_one<A, mul, one>, \unit_inv<A, mul, one>)
     \unit_mul<A, mul, one> $in fn(x, y \units_carrier<A, mul, one>) \units_carrier<A, mul, one>
     \unit_one<A, mul, one> $in \units_carrier<A, mul, one>
     \unit_inv<A, mul, one> $in fn(x \units_carrier<A, mul, one>) \units_carrier<A, mul, one>
 1release thm cart_member_from_coordinates((\unit_mul<A, mul, one>, \unit_one<A, mul, one>, \unit_inv<A, mul, one>), cart(fn(x, y \units_carrier<A, mul, one>) \units_carrier<A, mul, one>, \units_carrier<A, mul, one>, fn(x \units_carrier<A, mul, one>) \units_carrier<A, mul, one>))
-1release thm struct_member((\unit_mul<A, mul, one>, \unit_one<A, mul, one>, \unit_inv<A, mul, one>), &MILAlternative::chap2_struct::Group<\units_carrier<A, mul, one>>)
+1release thm struct_member((\unit_mul<A, mul, one>, \unit_one<A, mul, one>, \unit_inv<A, mul, one>), &chap2::Group<\units_carrier<A, mul, one>>)
 
 template<A nonempty_set, mul fn(x, y A) A, one A: $is_monoid(A, mul, one)>:
-    have units_group &MILAlternative::chap2_struct::Group<\units_carrier<A, mul, one>> = (\unit_mul<A, mul, one>, \unit_one<A, mul, one>, \unit_inv<A, mul, one>)
+    have units_group &chap2::Group<\units_carrier<A, mul, one>> = (\unit_mul<A, mul, one>, \unit_one<A, mul, one>, \unit_inv<A, mul, one>)
 
 # Source example: Int.units_eq_one_or. Extract a two-sided inverse y; sign
 # cases and x * y = 1 force the integer unit x to be 1 or -1.
@@ -1555,7 +1555,7 @@ thm integer_units_reverse:
         case x = -1:
             witness $is_unit(Z, fn(a, b Z) Z {a * b}, 1, x) from -1
 
-prop is_ring_hom(A, S nonempty_set, source &MILAlternative::chap2_struct::Ring<A>, target &MILAlternative::chap2_struct::Ring<S>, f fn(x A) S):
+prop is_ring_hom(A, S nonempty_set, source &chap2::Ring<A>, target &chap2::Ring<S>, f fn(x A) S):
     f(source.zero) = target.zero
     f(source.one) = target.one
     forall x, y A:
@@ -1563,7 +1563,7 @@ prop is_ring_hom(A, S nonempty_set, source &MILAlternative::chap2_struct::Ring<A
         f(source.mul(x, y)) = target.mul(f(x), f(y))
 
 claim:
-    ? forall A, S nonempty_set, source &MILAlternative::chap2_struct::Ring<A>, target &MILAlternative::chap2_struct::Ring<S>, f fn(x A) S, x \units<A, source.mul, source.one>:
+    ? forall A, S nonempty_set, source &chap2::Ring<A>, target &chap2::Ring<S>, f fn(x A) S, x \units<A, source.mul, source.one>:
         $is_ring_hom(A, S, source, target, f)
         =>:
             f(x) $in \units<S, target.mul, target.one>
@@ -1582,23 +1582,23 @@ claim:
     f(x) $in {z S: $is_unit(S, target.mul, target.one, z)}
     f(x) $in \units<S, target.mul, target.one>
 
-template<A, S nonempty_set, source &MILAlternative::chap2_struct::Ring<A>, target &MILAlternative::chap2_struct::Ring<S>, f fn(x A) S: $is_ring_hom(A, S, source, target, f)>:
+template<A, S nonempty_set, source &chap2::Ring<A>, target &chap2::Ring<S>, f fn(x A) S: $is_ring_hom(A, S, source, target, f)>:
     have fn ring_hom_on_units(x \units<A, source.mul, source.one>) \units<S, target.mul, target.one> = f(x)
 
 thm ring_hom_map_add:
-    ? forall A, S nonempty_set, source &MILAlternative::chap2_struct::Ring<A>, target &MILAlternative::chap2_struct::Ring<S>, f fn(x A) S, x, y A:
+    ? forall A, S nonempty_set, source &chap2::Ring<A>, target &chap2::Ring<S>, f fn(x A) S, x, y A:
         $is_ring_hom(A, S, source, target, f)
         =>:
             f(source.add(x, y)) = target.add(f(x), f(y))
 
 thm ring_hom_map_zero:
-    ? forall A, S nonempty_set, source &MILAlternative::chap2_struct::Ring<A>, target &MILAlternative::chap2_struct::Ring<S>, f fn(x A) S:
+    ? forall A, S nonempty_set, source &chap2::Ring<A>, target &chap2::Ring<S>, f fn(x A) S:
         $is_ring_hom(A, S, source, target, f)
         =>:
             f(source.zero) = target.zero
 
 thm ring_hom_map_mul:
-    ? forall A, S nonempty_set, source &MILAlternative::chap2_struct::Ring<A>, target &MILAlternative::chap2_struct::Ring<S>, f fn(x A) S, x, y A:
+    ? forall A, S nonempty_set, source &chap2::Ring<A>, target &chap2::Ring<S>, f fn(x A) S, x, y A:
         $is_ring_hom(A, S, source, target, f)
         =>:
             f(source.mul(x, y)) = target.mul(f(x), f(y))
@@ -1608,8 +1608,8 @@ thm commutative_ring_hom_map_zero:
         $is_ring_hom(A, S, (source.add, source.zero, source.neg, source.mul, source.one), (target.add, target.zero, target.neg, target.mul, target.one), f)
         =>:
             f(source.zero) = target.zero
-    have source_ring &MILAlternative::chap2_struct::Ring<A> = (source.add, source.zero, source.neg, source.mul, source.one)
-    have target_ring &MILAlternative::chap2_struct::Ring<S> = (target.add, target.zero, target.neg, target.mul, target.one)
+    have source_ring &chap2::Ring<A> = (source.add, source.zero, source.neg, source.mul, source.one)
+    have target_ring &chap2::Ring<S> = (target.add, target.zero, target.neg, target.mul, target.one)
     $is_ring_hom(A, S, source_ring, target_ring, f)
 1release thm ring_hom_map_zero(A, S, source_ring, target_ring, f)
     source_ring.zero = source.zero
@@ -1621,8 +1621,8 @@ thm commutative_ring_hom_map_add:
         $is_ring_hom(A, S, (source.add, source.zero, source.neg, source.mul, source.one), (target.add, target.zero, target.neg, target.mul, target.one), f)
         =>:
             f(source.add(x, y)) = target.add(f(x), f(y))
-    have source_ring &MILAlternative::chap2_struct::Ring<A> = (source.add, source.zero, source.neg, source.mul, source.one)
-    have target_ring &MILAlternative::chap2_struct::Ring<S> = (target.add, target.zero, target.neg, target.mul, target.one)
+    have source_ring &chap2::Ring<A> = (source.add, source.zero, source.neg, source.mul, source.one)
+    have target_ring &chap2::Ring<S> = (target.add, target.zero, target.neg, target.mul, target.one)
     $is_ring_hom(A, S, source_ring, target_ring, f)
 1release thm ring_hom_map_add(A, S, source_ring, target_ring, f, x, y)
     source_ring.add = source.add
@@ -1634,15 +1634,15 @@ thm commutative_ring_hom_map_mul:
         $is_ring_hom(A, S, (source.add, source.zero, source.neg, source.mul, source.one), (target.add, target.zero, target.neg, target.mul, target.one), f)
         =>:
             f(source.mul(x, y)) = target.mul(f(x), f(y))
-    have source_ring &MILAlternative::chap2_struct::Ring<A> = (source.add, source.zero, source.neg, source.mul, source.one)
-    have target_ring &MILAlternative::chap2_struct::Ring<S> = (target.add, target.zero, target.neg, target.mul, target.one)
+    have source_ring &chap2::Ring<A> = (source.add, source.zero, source.neg, source.mul, source.one)
+    have target_ring &chap2::Ring<S> = (target.add, target.zero, target.neg, target.mul, target.one)
     $is_ring_hom(A, S, source_ring, target_ring, f)
 1release thm ring_hom_map_mul(A, S, source_ring, target_ring, f, x, y)
     source_ring.mul = source.mul
     target_ring.mul = target.mul
     f(source.mul(x, y)) = f(source_ring.mul(x, y)) = target_ring.mul(f(x), f(y)) = target.mul(f(x), f(y))
 
-prop is_subring(A nonempty_set, ring &MILAlternative::chap2_struct::Ring<A>, S power_set(A)):
+prop is_subring(A nonempty_set, ring &chap2::Ring<A>, S power_set(A)):
     ring.zero $in S
     ring.one $in S
     forall x, y A:
@@ -1731,10 +1731,10 @@ thm ideal_coset_center_mem:
             r $in \ideal_coset<A, ring>(I, r)
     \ideal_coset<A, ring>(I, r) = {x A: $ideal_coset_member(A, ring, I, r, x)}
     $chap7::is_commutative_ring(A, ring.add, ring.zero, ring.neg, ring.mul, ring.one)
-    $MILAlternative::chap2_struct::ring_laws(A, ring.add, ring.zero, ring.neg, ring.mul, ring.one)
-    $MILAlternative::chap2_struct::additive_commutative_group_laws(A, ring.add, ring.zero, ring.neg)
+    $chap2::ring_laws(A, ring.add, ring.zero, ring.neg, ring.mul, ring.one)
+    $chap2::additive_commutative_group_laws(A, ring.add, ring.zero, ring.neg)
     ring.zero $in I
-1release thm MILAlternative::chap2_struct::add_zero_from_laws(A, ring.add, ring.zero, ring.neg, r)
+1release thm chap2::add_zero_from_laws(A, ring.add, ring.zero, ring.neg, r)
     witness $ideal_coset_member(A, ring, I, r, r) from ring.zero
 1release thm set_builder_member(r, {x A: $ideal_coset_member(A, ring, I, r, x)})
     r $in {x A: $ideal_coset_member(A, ring, I, r, x)}
@@ -1748,8 +1748,8 @@ thm ideal_coset_eq_of_mem:
     \ideal_coset<A, ring>(I, r) = {q A: $ideal_coset_member(A, ring, I, r, q)}
     \ideal_coset<A, ring>(I, x) = {q A: $ideal_coset_member(A, ring, I, x, q)}
     $chap7::is_commutative_ring(A, ring.add, ring.zero, ring.neg, ring.mul, ring.one)
-    $MILAlternative::chap2_struct::ring_laws(A, ring.add, ring.zero, ring.neg, ring.mul, ring.one)
-    $MILAlternative::chap2_struct::additive_commutative_group_laws(A, ring.add, ring.zero, ring.neg)
+    $chap2::ring_laws(A, ring.add, ring.zero, ring.neg, ring.mul, ring.one)
+    $chap2::additive_commutative_group_laws(A, ring.add, ring.zero, ring.neg)
     obtain u from exist idx A st {idx $in I, x = ring.add(r, idx)}
     claim:
         ? forall z \ideal_coset<A, ring>(I, x):
@@ -1771,7 +1771,7 @@ thm ideal_coset_eq_of_mem:
         ring.add(ring.neg(u), w) $in I
         ring.add(u, ring.add(ring.neg(u), w)) = ring.add(ring.add(u, ring.neg(u)), w)
         ring.add(r, ring.add(u, ring.add(ring.neg(u), w))) = ring.add(r, ring.add(ring.add(u, ring.neg(u)), w))
-1release thm MILAlternative::chap2_struct::add_neg_cancel_from_laws(A, ring.add, ring.zero, ring.neg, u)
+1release thm chap2::add_neg_cancel_from_laws(A, ring.add, ring.zero, ring.neg, u)
         ring.add(u, ring.neg(u)) = ring.zero
         ring.add(ring.add(u, ring.neg(u)), w) = ring.add(ring.zero, w)
         ring.add(r, ring.add(ring.add(u, ring.neg(u)), w)) = ring.add(r, ring.add(ring.zero, w))
@@ -1797,12 +1797,12 @@ thm ideal_coset_add_mem:
             ring.add(x, y) $in \ideal_coset<A, ring>(I, ring.add(a, b))
     \ideal_coset<A, ring>(I, ring.add(a, b)) = {q A: $ideal_coset_member(A, ring, I, ring.add(a, b), q)}
     $chap7::is_commutative_ring(A, ring.add, ring.zero, ring.neg, ring.mul, ring.one)
-    $MILAlternative::chap2_struct::ring_laws(A, ring.add, ring.zero, ring.neg, ring.mul, ring.one)
-    $MILAlternative::chap2_struct::additive_commutative_group_laws(A, ring.add, ring.zero, ring.neg)
+    $chap2::ring_laws(A, ring.add, ring.zero, ring.neg, ring.mul, ring.one)
+    $chap2::additive_commutative_group_laws(A, ring.add, ring.zero, ring.neg)
     obtain u from exist idx A st {idx $in I, x = ring.add(a, idx)}
     obtain v from exist idx A st {idx $in I, y = ring.add(b, idx)}
     ring.add(u, v) $in I
-1release thm MILAlternative::chap2_struct::add_reorder_four(A, ring.add, ring.zero, ring.neg, a, u, b, v)
+1release thm chap2::add_reorder_four(A, ring.add, ring.zero, ring.neg, a, u, b, v)
     ring.add(x, y) = ring.add(ring.add(a, u), ring.add(b, v)) = ring.add(ring.add(a, b), ring.add(u, v))
     witness $ideal_coset_member(A, ring, I, ring.add(a, b), ring.add(x, y)) from ring.add(u, v)
 1release thm set_builder_member(ring.add(x, y), {q A: $ideal_coset_member(A, ring, I, ring.add(a, b), q)})
@@ -1816,15 +1816,15 @@ thm ideal_coset_neg_mem:
             ring.neg(x) $in \ideal_coset<A, ring>(I, ring.neg(a))
     \ideal_coset<A, ring>(I, ring.neg(a)) = {q A: $ideal_coset_member(A, ring, I, ring.neg(a), q)}
     $chap7::is_commutative_ring(A, ring.add, ring.zero, ring.neg, ring.mul, ring.one)
-    $MILAlternative::chap2_struct::ring_laws(A, ring.add, ring.zero, ring.neg, ring.mul, ring.one)
-    $MILAlternative::chap2_struct::additive_commutative_group_laws(A, ring.add, ring.zero, ring.neg)
+    $chap2::ring_laws(A, ring.add, ring.zero, ring.neg, ring.mul, ring.one)
+    $chap2::additive_commutative_group_laws(A, ring.add, ring.zero, ring.neg)
     obtain u from exist idx A st {idx $in I, x = ring.add(a, idx)}
     ring.neg(u) $in I
-1release thm MILAlternative::chap2_struct::add_reorder_four(A, ring.add, ring.zero, ring.neg, a, u, ring.neg(a), ring.neg(u))
-1release thm MILAlternative::chap2_struct::add_neg_cancel_from_laws(A, ring.add, ring.zero, ring.neg, a)
-1release thm MILAlternative::chap2_struct::add_neg_cancel_from_laws(A, ring.add, ring.zero, ring.neg, u)
+1release thm chap2::add_reorder_four(A, ring.add, ring.zero, ring.neg, a, u, ring.neg(a), ring.neg(u))
+1release thm chap2::add_neg_cancel_from_laws(A, ring.add, ring.zero, ring.neg, a)
+1release thm chap2::add_neg_cancel_from_laws(A, ring.add, ring.zero, ring.neg, u)
     ring.add(ring.add(a, u), ring.add(ring.neg(a), ring.neg(u))) = ring.add(ring.add(a, ring.neg(a)), ring.add(u, ring.neg(u))) = ring.add(ring.zero, ring.zero) = ring.zero
-1release thm MILAlternative::chap2_struct::eq_neg_of_add_eq_zero(A, ring.add, ring.zero, ring.neg, ring.add(a, u), ring.add(ring.neg(a), ring.neg(u)))
+1release thm chap2::eq_neg_of_add_eq_zero(A, ring.add, ring.zero, ring.neg, ring.add(a, u), ring.add(ring.neg(a), ring.neg(u)))
     ring.add(ring.neg(a), ring.neg(u)) = ring.neg(ring.add(a, u))
     ring.neg(x) = ring.neg(ring.add(a, u)) = ring.add(ring.neg(a), ring.neg(u))
     witness $ideal_coset_member(A, ring, I, ring.neg(a), ring.neg(x)) from ring.neg(u)
@@ -1840,8 +1840,8 @@ thm ideal_coset_mul_mem:
             ring.mul(x, y) $in \ideal_coset<A, ring>(I, ring.mul(a, b))
     \ideal_coset<A, ring>(I, ring.mul(a, b)) = {q A: $ideal_coset_member(A, ring, I, ring.mul(a, b), q)}
     $chap7::is_commutative_ring(A, ring.add, ring.zero, ring.neg, ring.mul, ring.one)
-    $MILAlternative::chap2_struct::ring_laws(A, ring.add, ring.zero, ring.neg, ring.mul, ring.one)
-    $MILAlternative::chap2_struct::additive_commutative_group_laws(A, ring.add, ring.zero, ring.neg)
+    $chap2::ring_laws(A, ring.add, ring.zero, ring.neg, ring.mul, ring.one)
+    $chap2::additive_commutative_group_laws(A, ring.add, ring.zero, ring.neg)
     obtain u from exist idx A st {idx $in I, x = ring.add(a, idx)}
     obtain v from exist idx A st {idx $in I, y = ring.add(b, idx)}
     ring.mul(a, v) $in I
@@ -2119,8 +2119,8 @@ thm quotient_ring_tuple_is_commutative_ring:
         =>:
             (\quotient_ring_add<A, ring, I>, \quotient_ring_zero<A, ring, I>, \quotient_ring_neg<A, ring, I>, \quotient_ring_mul<A, ring, I>, \quotient_ring_one<A, ring, I>) $in &chap7::CommutativeRing<\quotient_ring_nonempty<A, ring, I>>
     $chap7::is_commutative_ring(A, ring.add, ring.zero, ring.neg, ring.mul, ring.one)
-    $MILAlternative::chap2_struct::ring_laws(A, ring.add, ring.zero, ring.neg, ring.mul, ring.one)
-    $MILAlternative::chap2_struct::additive_commutative_group_laws(A, ring.add, ring.zero, ring.neg)
+    $chap2::ring_laws(A, ring.add, ring.zero, ring.neg, ring.mul, ring.one)
+    $chap2::additive_commutative_group_laws(A, ring.add, ring.zero, ring.neg)
     claim:
         ? forall q, r, s \quotient_ring_nonempty<A, ring, I>:
             \quotient_ring_add<A, ring, I>(\quotient_ring_add<A, ring, I>(q, r), s) = \quotient_ring_add<A, ring, I>(q, \quotient_ring_add<A, ring, I>(r, s))
@@ -2255,9 +2255,9 @@ thm quotient_ring_tuple_is_commutative_ring:
         ring.mul(x, y) = ring.mul(y, x)
         \quotient_ring_mul<A, ring, I>(q, r) = \quotient_ring_mk<A, ring, I>(ring.mul(x, y)) = \quotient_ring_mk<A, ring, I>(ring.mul(y, x)) = \quotient_ring_mul<A, ring, I>(r, q)
     by def:
-        ? $MILAlternative::chap2_struct::additive_commutative_group_laws(\quotient_ring_nonempty<A, ring, I>, \quotient_ring_add<A, ring, I>, \quotient_ring_zero<A, ring, I>, \quotient_ring_neg<A, ring, I>)
+        ? $chap2::additive_commutative_group_laws(\quotient_ring_nonempty<A, ring, I>, \quotient_ring_add<A, ring, I>, \quotient_ring_zero<A, ring, I>, \quotient_ring_neg<A, ring, I>)
     by def:
-        ? $MILAlternative::chap2_struct::ring_laws(\quotient_ring_nonempty<A, ring, I>, \quotient_ring_add<A, ring, I>, \quotient_ring_zero<A, ring, I>, \quotient_ring_neg<A, ring, I>, \quotient_ring_mul<A, ring, I>, \quotient_ring_one<A, ring, I>)
+        ? $chap2::ring_laws(\quotient_ring_nonempty<A, ring, I>, \quotient_ring_add<A, ring, I>, \quotient_ring_zero<A, ring, I>, \quotient_ring_neg<A, ring, I>, \quotient_ring_mul<A, ring, I>, \quotient_ring_one<A, ring, I>)
     by def:
         ? $chap7::is_commutative_ring(\quotient_ring_nonempty<A, ring, I>, \quotient_ring_add<A, ring, I>, \quotient_ring_zero<A, ring, I>, \quotient_ring_neg<A, ring, I>, \quotient_ring_mul<A, ring, I>, \quotient_ring_one<A, ring, I>)
     \quotient_ring_add<A, ring, I> $in fn(q, r \quotient_ring_nonempty<A, ring, I>) \quotient_ring_nonempty<A, ring, I>
@@ -2285,12 +2285,12 @@ thm ideal_contains_finite_range_sum:
         =>:
             \finite_range_sum<A, ring.add, ring.zero>(f, n) $in I
     $chap7::is_commutative_ring(A, ring.add, ring.zero, ring.neg, ring.mul, ring.one)
-    $MILAlternative::chap2_struct::ring_laws(A, ring.add, ring.zero, ring.neg, ring.mul, ring.one)
-    $MILAlternative::chap2_struct::additive_commutative_group_laws(A, ring.add, ring.zero, ring.neg)
+    $chap2::ring_laws(A, ring.add, ring.zero, ring.neg, ring.mul, ring.one)
+    $chap2::additive_commutative_group_laws(A, ring.add, ring.zero, ring.neg)
     claim:
         ? forall x A:
             ring.add(x, ring.zero) = x
-1release thm MILAlternative::chap2_struct::add_zero_from_laws(A, ring.add, ring.zero, ring.neg, x)
+1release thm chap2::add_zero_from_laws(A, ring.add, ring.zero, ring.neg, x)
     by def:
         ? $is_additive_commutative_monoid(A, ring.add, ring.zero)
     prop _ideal_contains_finite_range_sum_at(count N):
@@ -2429,10 +2429,10 @@ thm ring_kernel_is_ideal:
             $is_ideal(A, source, \ring_kernel<A, S, target.zero, f>)
     $chap7::is_commutative_ring(A, source.add, source.zero, source.neg, source.mul, source.one)
     $chap7::is_commutative_ring(S, target.add, target.zero, target.neg, target.mul, target.one)
-    $MILAlternative::chap2_struct::ring_laws(A, source.add, source.zero, source.neg, source.mul, source.one)
-    $MILAlternative::chap2_struct::ring_laws(S, target.add, target.zero, target.neg, target.mul, target.one)
-    $MILAlternative::chap2_struct::additive_commutative_group_laws(A, source.add, source.zero, source.neg)
-    $MILAlternative::chap2_struct::additive_commutative_group_laws(S, target.add, target.zero, target.neg)
+    $chap2::ring_laws(A, source.add, source.zero, source.neg, source.mul, source.one)
+    $chap2::ring_laws(S, target.add, target.zero, target.neg, target.mul, target.one)
+    $chap2::additive_commutative_group_laws(A, source.add, source.zero, source.neg)
+    $chap2::additive_commutative_group_laws(S, target.add, target.zero, target.neg)
     \ring_kernel<A, S, target.zero, f> = {x A: f(x) = target.zero}
 1release thm commutative_ring_hom_map_zero(A, S, source, target, f)
     f(source.zero) = target.zero
@@ -2462,7 +2462,7 @@ thm ring_kernel_is_ideal:
         f(source.add(source.neg(x), x)) = target.add(f(source.neg(x)), f(x))
         f(source.add(source.neg(x), x)) = f(source.zero) = target.zero
         target.add(f(source.neg(x)), f(x)) = target.add(f(source.neg(x)), target.zero)
-1release thm MILAlternative::chap2_struct::add_zero_from_laws(S, target.add, target.zero, target.neg, f(source.neg(x)))
+1release thm chap2::add_zero_from_laws(S, target.add, target.zero, target.neg, f(source.neg(x)))
         target.add(f(source.neg(x)), target.zero) = f(source.neg(x))
         f(source.neg(x)) = target.zero
 1release thm set_builder_member(source.neg(x), {z A: f(z) = target.zero})
@@ -2475,7 +2475,7 @@ thm ring_kernel_is_ideal:
         f(x) = target.zero
 1release thm commutative_ring_hom_map_mul(A, S, source, target, f, r, x)
         f(source.mul(r, x)) = target.mul(f(r), f(x)) = target.mul(f(r), target.zero)
-1release thm MILAlternative::chap2_struct::mul_zero_from_laws(S, target.add, target.zero, target.neg, target.mul, target.one, f(r))
+1release thm chap2::mul_zero_from_laws(S, target.add, target.zero, target.neg, target.mul, target.one, f(r))
         target.mul(f(r), target.zero) = target.zero
         f(source.mul(r, x)) = target.zero
 1release thm set_builder_member(source.mul(r, x), {z A: f(z) = target.zero})
@@ -2536,7 +2536,7 @@ template<A, S nonempty_set, source &chap7::CommutativeRing<A>, target &chap7::Co
             obtain k from exist idx A st {idx $in \ring_kernel<A, S, target.zero, f>, a2 = source.add(a1, idx)}
             f(k) = target.zero
 1release thm commutative_ring_hom_map_add(A, S, source, target, f, a1, k)
-1release thm MILAlternative::chap2_struct::add_zero_from_laws(S, target.add, target.zero, target.neg, f(a1))
+1release thm chap2::add_zero_from_laws(S, target.add, target.zero, target.neg, f(a1))
             f(a2) = f(source.add(a1, k)) = target.add(f(a1), f(k)) = target.add(f(a1), target.zero) = f(a1)
             y2 = f(a2) = f(a1) = y1
 
@@ -2838,12 +2838,12 @@ thm polynomial_mul_coeff_has_finite_support:
     claim:
         ? $is_additive_commutative_monoid(A, ring.add, ring.zero)
         $chap7::is_commutative_ring(A, ring.add, ring.zero, ring.neg, ring.mul, ring.one)
-        $MILAlternative::chap2_struct::ring_laws(A, ring.add, ring.zero, ring.neg, ring.mul, ring.one)
-        $MILAlternative::chap2_struct::additive_commutative_group_laws(A, ring.add, ring.zero, ring.neg)
+        $chap2::ring_laws(A, ring.add, ring.zero, ring.neg, ring.mul, ring.one)
+        $chap2::additive_commutative_group_laws(A, ring.add, ring.zero, ring.neg)
         claim:
             ? forall x A:
                 ring.add(x, ring.zero) = x
-1release thm MILAlternative::chap2_struct::add_zero_from_laws(A, ring.add, ring.zero, ring.neg, x)
+1release thm chap2::add_zero_from_laws(A, ring.add, ring.zero, ring.neg, x)
         by def:
             ? $is_additive_commutative_monoid(A, ring.add, ring.zero)
     have fn support_index_sum(pair cart(support_p, support_q)) N = pair[1] + pair[2]
@@ -2878,7 +2878,7 @@ thm polynomial_mul_coeff_has_finite_support:
                             by cases:
                                 ? \polynomial_mul_term<A, ring>(p, q, n, index) = ring.zero
                                 case p(index) = ring.zero:
-1release thm MILAlternative::chap2_struct::zero_mul_from_laws(A, ring.add, ring.zero, ring.neg, ring.mul, ring.one, q(n - index))
+1release thm chap2::zero_mul_from_laws(A, ring.add, ring.zero, ring.neg, ring.mul, ring.one, q(n - index))
                                     ring.mul(p(index), q(n - index)) = ring.mul(ring.zero, q(n - index)) = ring.zero
                                 case p(index) != ring.zero:
                                     claim:
@@ -2895,7 +2895,7 @@ thm polynomial_mul_coeff_has_finite_support:
                                             n = index + (n - index)
                                             n $in product_support
                                             impossible n $in product_support
-1release thm MILAlternative::chap2_struct::mul_zero_from_laws(A, ring.add, ring.zero, ring.neg, ring.mul, ring.one, p(index))
+1release thm chap2::mul_zero_from_laws(A, ring.add, ring.zero, ring.neg, ring.mul, ring.one, p(index))
                                     ring.mul(p(index), q(n - index)) = ring.mul(p(index), ring.zero) = ring.zero
                         case index > n:
                             \polynomial_mul_term<A, ring>(p, q, n, index) = ring.zero
@@ -3044,22 +3044,22 @@ thm polynomial_X_sub_C_eval:
         p(n) = \polynomial_add<A, ring>(px, pc)(n) = \polynomial_add_coeff<A, ring>(px, pc, n) = ring.add(px(n), pc(n))
     p $in \polynomial_carrier<A, ring.zero>
     $chap7::is_commutative_ring(A, ring.add, ring.zero, ring.neg, ring.mul, ring.one)
-    $MILAlternative::chap2_struct::ring_laws(A, ring.add, ring.zero, ring.neg, ring.mul, ring.one)
+    $chap2::ring_laws(A, ring.add, ring.zero, ring.neg, ring.mul, ring.one)
     claim:
         ? $is_additive_commutative_monoid(A, ring.add, ring.zero)
-        $MILAlternative::chap2_struct::additive_commutative_group_laws(A, ring.add, ring.zero, ring.neg)
+        $chap2::additive_commutative_group_laws(A, ring.add, ring.zero, ring.neg)
         claim:
             ? forall x A:
                 ring.add(x, ring.zero) = x
-1release thm MILAlternative::chap2_struct::add_zero_from_laws(A, ring.add, ring.zero, ring.neg, x)
+1release thm chap2::add_zero_from_laws(A, ring.add, ring.zero, ring.neg, x)
         by def:
             ? $is_additive_commutative_monoid(A, ring.add, ring.zero)
     by cases:
         ? \polynomial_eval<A, ring>(p, r) = ring.zero
         case ring.one = ring.zero:
             $chap7::is_commutative_ring(A, ring.add, ring.zero, ring.neg, ring.mul, ring.one)
-            $MILAlternative::chap2_struct::ring_laws(A, ring.add, ring.zero, ring.neg, ring.mul, ring.one)
-1release thm MILAlternative::chap2_struct::zero_mul_from_laws(A, ring.add, ring.zero, ring.neg, ring.mul, ring.one, \polynomial_eval<A, ring>(p, r))
+            $chap2::ring_laws(A, ring.add, ring.zero, ring.neg, ring.mul, ring.one)
+1release thm chap2::zero_mul_from_laws(A, ring.add, ring.zero, ring.neg, ring.mul, ring.one, \polynomial_eval<A, ring>(p, r))
             ring.mul(ring.one, \polynomial_eval<A, ring>(p, r)) = \polynomial_eval<A, ring>(p, r)
             ring.mul(ring.one, \polynomial_eval<A, ring>(p, r)) = ring.mul(ring.zero, \polynomial_eval<A, ring>(p, r)) = ring.zero
             \polynomial_eval<A, ring>(p, r) = ring.zero
@@ -3075,7 +3075,7 @@ thm polynomial_X_sub_C_eval:
             p(0) = ring.add(px(0), pc(0)) = ring.add(ring.zero, ring.neg(r)) = ring.neg(r)
             px(1) = ring.one
             pc(1) = ring.zero
-1release thm MILAlternative::chap2_struct::add_zero_from_laws(A, ring.add, ring.zero, ring.neg, ring.one)
+1release thm chap2::add_zero_from_laws(A, ring.add, ring.zero, ring.neg, ring.one)
             p(1) = ring.add(px(1), pc(1)) = ring.add(ring.one, ring.zero) = ring.one
             1 $in \polynomial_nonzero_support<A, ring>(p)
             claim:

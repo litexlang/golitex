@@ -3,8 +3,11 @@
 
 from __future__ import annotations
 
+import csv
+import collections
 import importlib.util
 import hashlib
+import io
 import json
 import sys
 import tempfile
@@ -165,6 +168,45 @@ class CoverageInventoryTests(unittest.TestCase):
             builtin["stable_rule_ids"],
         )
 
+    def test_global_ownership_is_semantic_vs_mechanical(self) -> None:
+        self.assertEqual(
+            self.inventory["summary"]["owners"], {"Codex": 1404, "user": 58}
+        )
+        for row in self.inventory["rows"]:
+            if row["owner"] == "user":
+                self.assertEqual(row["status"], "abi_decision")
+
+    def test_every_row_has_an_honest_tracer_and_negative_obligation(self) -> None:
+        self.assertEqual(
+            self.inventory["summary"]["tracer_evidence_states"],
+            {
+                "existing": 69,
+                "not_applicable_until_reachable": 17,
+                "required": 1376,
+            },
+        )
+        for row in self.inventory["rows"]:
+            self.assertTrue(row["positive_tracer"])
+            self.assertTrue(row["negative_boundary"])
+            if row["tracer_evidence_state"] == "required":
+                self.assertTrue(str(row["positive_tracer"]).startswith("required:"))
+        rendered = BUILD_INVENTORY.render_required_tracer_queue(self.inventory)
+        self.assertEqual(len(rendered.splitlines()), 1377)
+        self.assertNotIn("\texisting\t", rendered)
+        self.assertIn("set.subset_transitivity", rendered)
+        queue_rows = list(csv.DictReader(io.StringIO(rendered), delimiter="\t"))
+        self.assertEqual(
+            collections.Counter(row["priority_band"] for row in queue_rows),
+            collections.Counter(
+                {
+                    "P0_blocked_user_decision": 58,
+                    "P1_genuine_compiler_gap": 68,
+                    "P2_result_evidence_gap": 399,
+                    "P3_kernelize_mapped_route": 851,
+                }
+            ),
+        )
+
     def test_explicit_typed_limitations_are_not_reported_mapped(self) -> None:
         inventory = self.inventory
         rows = {row["source_id"]: row for row in inventory["rows"]}
@@ -215,7 +257,10 @@ class CoverageInventoryTests(unittest.TestCase):
             )
         )
         if not evidence["current_valid"]:
-            with self.assertRaisesRegex(ValueError, "does not bind Lean dependencies"):
+            with self.assertRaisesRegex(
+                ValueError,
+                "does not bind Lean dependencies|Lean dependencies changed|marked invalid",
+            ):
                 BUILD_INVENTORY.validate_tracer_gate_evidence()
             tracer = next(
                 row
@@ -248,6 +293,18 @@ class CoverageInventoryTests(unittest.TestCase):
             evidence["compiler"]["generated_sha256"]
             == evidence["checked_in_lean"]["sha256"],
         )
+        self.assertEqual(
+            digest(evidence["verifier_binary"]["path"]),
+            evidence["verifier_binary"]["sha256"],
+        )
+        self.assertEqual(
+            digest(evidence["compiler"]["binary_path"]),
+            evidence["compiler"]["binary_sha256"],
+        )
+        self.assertEqual(
+            evidence["rust_source_fingerprint_sha256"],
+            BUILD_INVENTORY.rust_source_fingerprint(),
+        )
         self.assertTrue(evidence["forbidden_construct_scan"]["clean"])
         tracer_rows = {
             row["source_id"]: row
@@ -263,6 +320,35 @@ class CoverageInventoryTests(unittest.TestCase):
         fingerprint = inventory["source_fingerprint_sha256"]
         self.assertEqual(len(fingerprint), 64)
         self.assertEqual(fingerprint, BUILD_INVENTORY.inventory_source_fingerprint())
+
+    def test_tracer_rows_reject_stale_rust_or_binary_evidence(self) -> None:
+        evidence = json.loads(
+            (MODULE_PATH.parent / "tracer_gate_evidence.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        if evidence["current_valid"]:
+            self.assertEqual(
+                evidence["rust_source_fingerprint_sha256"],
+                BUILD_INVENTORY.rust_source_fingerprint(),
+            )
+            self.assertEqual(
+                BUILD_INVENTORY.file_sha256(evidence["verifier_binary"]["path"]),
+                evidence["verifier_binary"]["sha256"],
+            )
+            self.assertEqual(
+                BUILD_INVENTORY.file_sha256(evidence["compiler"]["binary_path"]),
+                evidence["compiler"]["binary_sha256"],
+            )
+            return
+
+        tracer = next(
+            row
+            for row in self.inventory["rows"]
+            if row["axis"] == "tracer"
+            and row["source_id"] == "54_ComplexAlgebraicCalculation.lit"
+        )
+        self.assertNotEqual(tracer["status"], "kernel_checked")
 
     def test_every_statement_leaf_has_a_same_named_success_result(self) -> None:
         parity = BUILD_INVENTORY.statement_result_parity()
@@ -330,7 +416,10 @@ class CoverageInventoryTests(unittest.TestCase):
         if evidence["current_valid"]:
             BUILD_INVENTORY.validate_lean_adapter_gate_evidence(files)
         else:
-            with self.assertRaisesRegex(ValueError, "does not bind Lean dependencies"):
+            with self.assertRaisesRegex(
+                ValueError,
+                "does not bind Lean dependencies|Lean dependencies changed",
+            ):
                 BUILD_INVENTORY.validate_lean_adapter_gate_evidence(files)
 
     def test_dynamic_lean_adapter_sites_require_result_tracers(self) -> None:
@@ -361,6 +450,9 @@ class CoverageInventoryTests(unittest.TestCase):
         self.assertIn("set.subset_transitivity", rendered)
         self.assertIn("candidate_needs_result_tracer", rendered)
         self.assertIn("callee_trace_required", rendered)
+        self.assertIn("\troute_kind\t", rendered.splitlines()[0])
+        self.assertIn("\tselected_semantic_child\t", rendered)
+        self.assertIn("\ttyped_certificate_route\t", rendered)
         self.assertIn(
             "Function-local co-occurrence is a candidate only", rendered
         )
@@ -370,6 +462,20 @@ class CoverageInventoryTests(unittest.TestCase):
         self.assertEqual(sum(resolutions.values()), 621)
         self.assertGreater(resolutions["candidate_needs_result_tracer"], 0)
         self.assertGreater(resolutions["callee_trace_required"], 0)
+        self.assertEqual(
+            self.inventory["summary"]["builtin_route_kinds"],
+            {
+                "blocked_evidence_contract": 26,
+                "blocked_target_abi": 10,
+                "fixed_reflection_adapter": 22,
+                "leaf_theorem_adapter": 127,
+                "missing_typed_certificate_route": 1,
+                "recursive_result_composition": 28,
+                "selected_semantic_child": 86,
+                "shared_adapter_candidate": 128,
+                "typed_certificate_route": 193,
+            },
+        )
 
     def test_kernel_matrix_separates_missing_olean_from_kernel_rejection(self) -> None:
         self.assertEqual(KERNEL_MATRIX.kernel_class(0, ""), "pass")
@@ -385,20 +491,67 @@ class CoverageInventoryTests(unittest.TestCase):
             "kernel_reject",
         )
 
+    def test_kernel_matrix_rejects_a_mixed_snapshot(self) -> None:
+        self.assertTrue(
+            KERNEL_MATRIX.snapshot_is_stable(
+                "compiler", "compiler", "examples", "examples", "lean", "lean",
+                "rust", "rust", "rust", "rust", []
+            )
+        )
+        self.assertFalse(
+            KERNEL_MATRIX.snapshot_is_stable(
+                "before", "after", "examples", "examples", "lean", "lean",
+                "rust", "rust", "rust", "rust", []
+            )
+        )
+
+    def test_kernel_matrix_forbidden_output_scan_is_source_trust_aware(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "generated.lean"
+            path.write_text(
+                "axiom source_declared : Prop\n"
+                "theorem bad : True := by sorry\n"
+                "#check Litex.Object\n",
+                encoding="utf-8",
+            )
+            hits = KERNEL_MATRIX.forbidden_output_hits(path)
+        self.assertEqual(len(hits), 2)
+        self.assertTrue(any("sorry" in hit for hit in hits))
+        self.assertTrue(any("Litex.Object" in hit for hit in hits))
+        self.assertFalse(
+            KERNEL_MATRIX.snapshot_is_stable(
+                "compiler",
+                "compiler",
+                "examples",
+                "examples",
+                "lean",
+                "lean",
+                "rust",
+                "rust",
+                "rust",
+                "rust",
+                ["stale Core.olean"],
+            )
+        )
+
     def test_kernel_matrix_covers_every_registered_example(self) -> None:
         self.assertEqual(len(KERNEL_MATRIX.registered_sources()), 69)
         self.assertEqual(
             KERNEL_MATRIX.lean_dependency_fingerprint(),
             BUILD_INVENTORY.lean_dependency_fingerprint(),
         )
+        self.assertEqual(
+            KERNEL_MATRIX.rust_source_fingerprint(),
+            BUILD_INVENTORY.rust_source_fingerprint(),
+        )
         self.assertEqual(BUILD_INVENTORY.lean_dependency_forbidden_hits(), [])
 
     def test_integration_failure_family_ledger_reconciles_current_baseline(self) -> None:
         path = Path(__file__).resolve().parent / "integration_failure_families.tsv"
         lines = path.read_text(encoding="utf-8").splitlines()
-        self.assertEqual(len(lines), 22)
+        self.assertEqual(len(lines), 21)
         rows = [line.split("\t") for line in lines[1:]]
-        self.assertEqual(len({row[0] for row in rows}), 21)
+        self.assertEqual(len({row[0] for row in rows}), 20)
         classes = {name: sum(row[1] == name for row in rows) for name in {
             "kernel_checked_expectation_drift",
             "kernel_checked_checked_in_drift",
@@ -408,7 +561,7 @@ class CoverageInventoryTests(unittest.TestCase):
             classes,
             {
                 "kernel_checked_expectation_drift": 13,
-                "kernel_checked_checked_in_drift": 2,
+                "kernel_checked_checked_in_drift": 1,
                 "compiler_gap": 6,
             },
         )
@@ -418,6 +571,87 @@ class CoverageInventoryTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
         for row in rows:
             self.assertIn(f"fn {row[0]}()", integration_source)
+
+    def test_integration_inventory_accounts_for_all_76_tests(self) -> None:
+        rows = BUILD_INVENTORY.integration_test_rows()
+        self.assertEqual(len(rows), 76)
+        self.assertEqual(len({row["test"] for row in rows}), 76)
+        self.assertEqual(
+            sum(row["baseline_outcome"] == "passed" for row in rows), 56
+        )
+        self.assertEqual(
+            sum(row["baseline_outcome"] == "failed" for row in rows), 20
+        )
+        self.assertTrue(all(row["next_gate"] for row in rows))
+
+    def test_integration_compiler_gap_queue_matches_all_six_red_routes(self) -> None:
+        with (MODULE_PATH.parent / "integration_failure_families.tsv").open(
+            encoding="utf-8", newline=""
+        ) as stream:
+            failures = list(csv.DictReader(stream, delimiter="\t"))
+        with (MODULE_PATH.parent / "integration_compiler_gap_queue.tsv").open(
+            encoding="utf-8", newline=""
+        ) as stream:
+            queue = list(csv.DictReader(stream, delimiter="\t"))
+        expected = {
+            row["test"] for row in failures if row["current_class"] == "compiler_gap"
+        }
+        self.assertEqual({row["test"] for row in queue}, expected)
+        self.assertEqual(len(queue), 6)
+        self.assertEqual(
+            sum(row["ready_after_ud1_handoff"] == "true" for row in queue), 3
+        )
+        self.assertTrue(all(row["negative_boundary"] for row in queue))
+
+    def test_checked_example_axioms_are_source_declared(self) -> None:
+        rows = BUILD_INVENTORY.example_trust_boundary_rows()
+        self.assertEqual(len(rows), 69)
+        self.assertEqual(
+            sum(row["classification"] == "source_declared_trust_boundary" for row in rows),
+            6,
+        )
+        self.assertEqual(
+            sum(row["classification"] == "trust_free" for row in rows), 63
+        )
+        self.assertFalse(
+            any(row["classification"] == "unexpected_generated_axiom" for row in rows)
+        )
+        self.assertEqual(BUILD_INVENTORY.checked_example_forbidden_hits(), [])
+        self.assertEqual(
+            self.inventory["summary"]["example_trust_boundaries"],
+            {
+                "registered": 69,
+                "trust_free": 63,
+                "source_declared": 6,
+                "unexpected_generated_axiom": 0,
+            },
+        )
+
+    def test_integration_gate_evidence_is_fail_closed_or_current(self) -> None:
+        evidence = json.loads(
+            (MODULE_PATH.parent / "integration_gate_evidence.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        if evidence["current_valid"]:
+            BUILD_INVENTORY.validate_integration_gate_evidence()
+        else:
+            with self.assertRaisesRegex(
+                ValueError,
+                "marked invalid|test source changed|test binary changed|failure ledger changed",
+            ):
+                BUILD_INVENTORY.validate_integration_gate_evidence()
+
+    def test_evidence_audit_names_every_independent_gate(self) -> None:
+        issues = BUILD_INVENTORY.evidence_gate_issues(BUILD_INVENTORY.rust_files())
+        labels = {issue.split(":", 1)[0] for issue in issues}
+        self.assertTrue(
+            labels.issubset(
+                {"primary tracer", "Lean adapter", "compiler integration", "example matrix"}
+            )
+        )
+        if issues:
+            self.assertEqual(len(labels), len(issues))
 
 
 if __name__ == "__main__":

@@ -501,13 +501,9 @@ after = "./after.lit"
         );
         assert!(project_output.contains("1 = 0"), "{project_output}");
 
-        let mut strict_runtime = Runtime::default();
-        strict_runtime.run_options.strict_mode = true;
-        let (_, strict_error) = execute_file_in_runtime(
-            target.as_str(),
-            &mut strict_runtime,
-            FileRunMode::Project,
-        );
+        let mut strict_runtime = Runtime::new(RunOptions::strict_execute(ExecutionOption::File));
+        let (_, strict_error) =
+            execute_file_in_runtime(target.as_str(), &mut strict_runtime, FileRunMode::Project);
         let strict_error = strict_error.expect("strict -f must verify its export prefix");
         assert!(format!("{strict_error:?}").contains("1 = 0"));
     });
@@ -1457,20 +1453,23 @@ fn run_repository_for_test(
     output_language: OutputLanguage,
     summarize: bool,
 ) -> (bool, String) {
-    let outcome = crate::pipeline::run_repository(
-        repository_path,
-        RunOptions {
-            output_style: if detailed_output {
-                OutputStyle::Detailed
-            } else {
-                OutputStyle::Normal
-            },
-            strict_mode,
-            output_language,
-            summarize,
-            ..RunOptions::default()
-        },
-    );
+    let options = if strict_mode {
+        RunOptions::strict_execute(ExecutionOption::Repo)
+    } else {
+        RunOptions::execute(ExecutionOption::Repo)
+    }
+    .with_output_style(if detailed_output {
+        OutputStyle::Detailed
+    } else {
+        OutputStyle::Normal
+    })
+    .with_output_language(output_language)
+    .with_summary(if summarize {
+        SummaryOption::Summarize
+    } else {
+        SummaryOption::None
+    });
+    let outcome = crate::pipeline::run_repository(repository_path, options);
     (outcome.ok, outcome.output)
 }
 

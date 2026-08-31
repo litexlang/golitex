@@ -720,6 +720,14 @@ pub(in super::super) fn render_function_application(
         }
 
         let application_term = if !function_uses_telescope(&function) {
+            let rendered_domain = render_lean_source_for_target_set_representation(
+                &function.parameters[0].set,
+                context,
+            )?;
+            let rendered_codomain = render_lean_source_for_target_set_representation(
+                function.return_set.as_ref(),
+                context,
+            )?;
             let exact_integer_argument = function.domain_facts.is_empty()
                 && function.parameters.len() == 1
                 && function.parameters[0].set
@@ -730,7 +738,10 @@ pub(in super::super) fn render_function_application(
                 } else {
                     "Litex.fnApplySelectedCarrier"
                 };
-                format!("({apply} {head} ({membership_proof}) {})", arguments[0])
+                format!(
+                    "({apply} (domain := {rendered_domain}) (codomain := {rendered_codomain}) {head} ({membership_proof}) {})",
+                    arguments[0]
+                )
             } else {
                 let apply = match (direct, domain_proofs.is_empty()) {
                     (true, true) => "Litex.fnApplyOwn",
@@ -742,7 +753,7 @@ pub(in super::super) fn render_function_application(
                 let argument_membership = &argument_memberships[0];
                 if domain_proofs.is_empty() {
                     format!(
-                        "({apply} {head} ({membership_proof}) {argument} ({argument_membership}))"
+                        "({apply} (domain := {rendered_domain}) (codomain := {rendered_codomain}) {head} ({membership_proof}) {argument} ({argument_membership}))"
                     )
                 } else {
                     let domain_proof = if domain_proofs.len() == 1 {
@@ -751,7 +762,7 @@ pub(in super::super) fn render_function_application(
                         format!("⟨{}⟩", domain_proofs.join(", "))
                     };
                     format!(
-                    "({apply} {head} ({membership_proof}) {argument} ({argument_membership}) ({domain_proof}))"
+                    "({apply} (domain := {rendered_domain}) (codomain := {rendered_codomain}) {head} ({membership_proof}) {argument} ({argument_membership}) ({domain_proof}))"
                 )
                 }
             }

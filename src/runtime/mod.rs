@@ -17,6 +17,6 @@ pub use name_resolution::{
     TransparentObjectDefinitionUse,
 };
 pub use parse_context::{ParseContext, ScopeFrame};
-pub use run_options::RunOptions;
+pub use run_options::{ExecutionOption, RunOption, RunOptions, SummaryOption};
 pub use state::Runtime;
 pub use statement_proof_state::StatementProofStateStack;

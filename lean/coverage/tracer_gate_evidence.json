@@ -1,14 +1,20 @@
 {
   "schema_version": 2,
   "recorded_at": "2026-08-30 23:16:57 CST",
-  "updated_at": "2026-08-31 09:39:51 CST",
+  "updated_at": "2026-08-31 10:50:33 CST",
   "lean_dependency_fingerprint_sha256": "64652e81a5c21a3ea1ce88daa639a77cf7183010ea068ba388317705ca195c63",
-  "current_valid": true,
+  "rust_source_fingerprint_sha256": null,
+  "current_valid": false,
+  "invalidation": "A 10:47 complete Example 54 chain passed every verifier/compiler/Lean command but Rust changed 7c428556... to 98ac7ae3..., so it was rejected. The new atomic runner then stopped before replacing evidence when the active CLI/RunOptions refactor made the release build red; cargo check first fails at src/cli/command_dispatch.rs:8 on missing HELP_MESSAGE and also changed source fingerprint during the check.",
+  "verifier_binary": {
+    "path": "target/release/litex",
+    "sha256": "f460ef39b4c627d72a0fc7f7e436d8a4bf893c42e2530ed4b53f7959a9e7d91e"
+  },
   "release_build": {
     "command": "cargo build --release --bin litex --bin stmt_result_to_lean_compiler",
     "exit": 0,
-    "duration": "1m08s",
-    "warnings": 6
+    "duration": "1m05s plus a 0.03s dependency-changed no-op confirmation",
+    "warnings": 5
   },
   "tracer": "lean/examples/54_ComplexAlgebraicCalculation.lit",
   "source_sha256": "3d2d49561798c25dfd5ca2296ab1d42db16a15970ae770815ac543b1a115578d",
@@ -43,7 +49,9 @@
     "unverified_imports": []
   },
   "compiler": {
-    "recorded_at": "2026-08-31 09:38:31 CST",
+    "recorded_at": "2026-08-31 09:49:50 CST",
+    "binary_path": "target/release/stmt_result_to_lean_compiler",
+    "binary_sha256": "0d67aec98a42aa7bc50bf1f109488ae4b8036acc08bfa3571ed115919e60bf8b",
     "command": "target/release/stmt_result_to_lean_compiler compile lean/examples/54_ComplexAlgebraicCalculation.lit tmp/2026-08-30/one-week-tolean-day1/54_ComplexAlgebraicCalculation.generated.lean",
     "exit": 0,
     "generated_path": "tmp/2026-08-30/one-week-tolean-day1/54_ComplexAlgebraicCalculation.generated.lean",

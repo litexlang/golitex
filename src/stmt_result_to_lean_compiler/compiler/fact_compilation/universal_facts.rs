@@ -14,30 +14,6 @@ impl StmtResultToLeanCompiler {
         &mut self,
         result: &SuccessFactStmtResult,
     ) -> Result<bool, String> {
-        self.compile_direct_forall_fact_result_with_optional_real_subset_observer(result, None)
-    }
-
-    /// Compile a verifier-owned forall while observing parameters of one
-    /// exact set through the same checked `set subset R` proof consumed by a
-    /// real-completeness theorem.  This is an internal adapter for a theorem
-    /// requirement, not a change to the public heterogeneous forall ABI.
-    pub(in super::super) fn compile_direct_forall_fact_result_with_real_subset_observer(
-        &mut self,
-        result: &SuccessFactStmtResult,
-        observed_set: &Obj,
-        subset_proof: &str,
-    ) -> Result<bool, String> {
-        self.compile_direct_forall_fact_result_with_optional_real_subset_observer(
-            result,
-            Some((observed_set, subset_proof)),
-        )
-    }
-
-    fn compile_direct_forall_fact_result_with_optional_real_subset_observer(
-        &mut self,
-        result: &SuccessFactStmtResult,
-        real_subset_observer: Option<(&Obj, &str)>,
-    ) -> Result<bool, String> {
         let SuccessFactProofResult::ForallProof(proof) = result.proof() else {
             return Ok(false);
         };
@@ -448,18 +424,13 @@ impl StmtResultToLeanCompiler {
                                         .insert(binding.id(), proof);
                                 }
                             }
-                            if let Some((observed_set, subset_proof)) = real_subset_observer {
-                                if obj_equality_key(set) == obj_equality_key(observed_set) {
-                                    install_real_subset_observation_for_parameter(
-                                        binding.id(),
-                                        &parameter_name,
-                                        &hypothesis,
-                                        set,
-                                        subset_proof,
-                                        &mut self.environment_stack,
-                                    )?;
-                                }
-                            }
+                            install_visible_subset_transports_for_parameter(
+                                binding.id(),
+                                &parameter_name,
+                                &hypothesis,
+                                set,
+                                &mut self.environment_stack,
+                            )?;
                             let expected = format!(
                                 "Litex.In {parameter_name} {}",
                                 render_obj(set, &self.environment_stack)?
@@ -856,20 +827,9 @@ impl StmtResultToLeanCompiler {
                     proof_lines.push(format!("exact ⟨{}⟩", conclusion_names.join(", ")));
                 }
                 let projected_fact: Fact = publication_selection.forall_fact.clone().into();
-                let proposition =
-                    if let Some((observed_set, subset_proof)) = real_subset_observer {
-                        render_forall_fact_type_with_real_subset_observer(
-                            &publication_selection.forall_fact,
-                            &self.environment_stack,
-                            observed_set,
-                            subset_proof,
-                        )
-                    } else {
-                        render_fact(&projected_fact, &self.environment_stack)
-                    }
-                    .map_err(|error| {
-                        format!("ForallProof target failed to render in its binder: {error}")
-                    })?;
+                let proposition = render_fact(&projected_fact, &self.environment_stack).map_err(|error| {
+                    format!("ForallProof target failed to render in its binder: {error}")
+                })?;
                 let mut lines = vec!["by".to_string()];
                 if !intro_names.is_empty() {
                     lines.push(format!("  intro {}", intro_names.join(" ")));

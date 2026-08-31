@@ -161,6 +161,10 @@ impl StmtResultToLeanCompiler {
             .environment_stack
             .well_definedness
             .replace(application_well_definedness);
+        let inherited_subset_transport_count = self
+            .environment_stack
+            .subset_membership_transports
+            .len();
         let compilation = (|| {
             // Rational density is a theorem about native real endpoints.  Lower
             // each verifier-checked endpoint once to its exact ℝ observation and
@@ -184,7 +188,8 @@ impl StmtResultToLeanCompiler {
                     None
                 };
 
-            let mut requirement_proofs = Vec::with_capacity(source.requirement_checks.len());
+            let mut requirement_proofs: Vec<String> =
+                Vec::with_capacity(source.requirement_checks.len());
             let mut local_prerequisite_lines = Vec::new();
             for (index, ((requirement, role), check)) in source
                 .requirement_facts
@@ -211,33 +216,12 @@ impl StmtResultToLeanCompiler {
                             index + 1
                         )
                     })?;
-                let real_bound_subset_proof = matches!(
-                    role,
-                    BuiltinTheoremRequirementRole::SuppliedValueBoundsEverySetMember
-                        | BuiltinTheoremRequirementRole::SuppliedValueIsLowerBoundForEverySetMember
-                )
-                .then(|| {
-                    requirement_proofs.first().cloned().ok_or_else(|| {
-                        format!(
-                            "real-analysis builtin requirement {} has no preceding subset-of-R proof",
-                            index + 1
-                        )
-                    })
-                })
-                .transpose()?;
                 let proof = if matches!(check.proof(), SuccessFactProofResult::ForallProof(_)) {
                     let theorem_name = format!("__fact{}", self.next_fact_name_index);
                     let fact_index = self.next_fact_name_index;
                     if requirements_are_local {
-                        let lines = if let Some(subset_proof) = real_bound_subset_proof.as_deref() {
-                            self.compile_direct_forall_fact_result_as_local_proof_steps_with_real_subset_observer(
-                                check,
-                                &verification.arguments[0],
-                                subset_proof,
-                            )?
-                        } else {
-                            self.compile_direct_forall_fact_result_as_local_proof_steps(check)?
-                        };
+                        let lines =
+                            self.compile_direct_forall_fact_result_as_local_proof_steps(check)?;
                         let Some(lines) = lines else {
                             return Err(format!(
                             "real-analysis builtin requirement {} retained an unsupported ForallProof",
@@ -253,16 +237,7 @@ impl StmtResultToLeanCompiler {
                         local_prerequisite_lines.extend(lines);
                     } else {
                         let declaration_count = self.declarations.len();
-                        let compiled =
-                            if let Some(subset_proof) = real_bound_subset_proof.as_deref() {
-                                self.compile_direct_forall_fact_result_with_real_subset_observer(
-                                    check,
-                                    &verification.arguments[0],
-                                    subset_proof,
-                                )?
-                            } else {
-                                self.compile_direct_forall_fact_result(check)?
-                            };
+                        let compiled = self.compile_direct_forall_fact_result(check)?;
                         if !compiled {
                             return Err(format!(
                             "real-analysis builtin requirement {} retained an unsupported ForallProof",
@@ -324,21 +299,6 @@ impl StmtResultToLeanCompiler {
                         &self.environment_stack,
                     )?;
                     format!("Litex.In.own Litex.R {exact_real}")
-                } else if matches!(
-                    role,
-                    BuiltinTheoremRequirementRole::SuppliedValueBoundsEverySetMember
-                        | BuiltinTheoremRequirementRole::SuppliedValueIsLowerBoundForEverySetMember
-                ) {
-                    // The projected proof is generic over source-set members,
-                    // but its numeric occurrence is selected through the
-                    // checked `set subset R` proof above.  Calling it with a
-                    // native real makes that selection definitionally exact.
-                    let subset_proof = real_bound_subset_proof.as_deref().ok_or_else(|| {
-                        "real bound requirement lost its subset-of-R proof".to_string()
-                    })?;
-                    format!(
-                        "(fun member memberInSet => by\n  have __member_rep : Litex.In.rep member (({subset_proof}) member memberInSet) = member :=\n    Litex.In.rep_exact (set := Litex.R) member (({subset_proof}) member memberInSet)\n  simpa only [__member_rep, Complex.ofReal_one, Complex.ofReal_add, Complex.ofReal_sub, Complex.ofReal_mul, Complex.ofReal_div] using (({proof}) member memberInSet))"
-                    )
                 } else if let Some(real_arguments) = rational_density_real_arguments.as_ref() {
                     match role {
                         BuiltinTheoremRequirementRole::LeftArgumentBelongsToReals => {
@@ -376,6 +336,7 @@ impl StmtResultToLeanCompiler {
                 } else {
                     proof
                 };
+                self.install_result_owned_subset_transport(check, &proof)?;
                 requirement_proofs.push(format!("({proof})"));
             }
 
@@ -520,6 +481,9 @@ impl StmtResultToLeanCompiler {
                 },
             }))
         })();
+        self.environment_stack
+            .subset_membership_transports
+            .truncate(inherited_subset_transport_count);
         self.environment_stack.well_definedness = previous_well_definedness;
         compilation
     }

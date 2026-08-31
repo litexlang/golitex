@@ -1328,8 +1328,8 @@ fn cli_dispatch_delegates_execution_and_path_resolution_to_their_owners() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let dispatch = fs::read_to_string(root.join("src/cli/command_dispatch.rs"))
         .expect("CLI dispatch source should be readable");
-    let arguments = fs::read_to_string(root.join("src/cli/arguments.rs"))
-        .expect("CLI arguments source should be readable");
+    let command = fs::read_to_string(root.join("src/cli/command.rs"))
+        .expect("typed CLI command source should be readable");
     let handlers = fs::read_to_string(root.join("src/cli/command_handlers.rs"))
         .expect("CLI handler source should be readable");
     let lean_commands = fs::read_to_string(root.join("src/cli/lean_commands.rs"))
@@ -1353,7 +1353,7 @@ fn cli_dispatch_delegates_execution_and_path_resolution_to_their_owners() {
     let graph_execution = fs::read_to_string(root.join("src/graph/graph_execution.rs"))
         .expect("graph execution source should be readable");
 
-    assert!(dispatch.contains("run_code_from_e_command_line_flag("));
+    assert!(dispatch.contains("run_code_command("));
     assert!(!dispatch.contains("Runtime::default()"));
     assert!(!dispatch.contains("compile_litex_file_to_lean_file("));
     assert!(!dispatch.contains("compile_litex_markdown_code_blocks_to_lean_file("));
@@ -1377,17 +1377,56 @@ fn cli_dispatch_delegates_execution_and_path_resolution_to_their_owners() {
     assert!(target.contains("pub enum ExecutionTarget {"));
     assert!(target.contains("pub enum FileRunMode {"));
     assert!(run_options.contains("pub struct RunOptions"));
-    assert!(run_options.contains("pub is_isolated: bool"));
-    assert!(!arguments.contains("pub struct GlobalOptions"));
-    assert!(arguments.contains("Result<RunOptions, String>"));
-    assert!(arguments.contains("pub fn validate_cli_combination("));
+    assert!(run_options.contains("pub enum RunOption {"));
+    assert!(run_options.contains("Execute(ExecutionOption)"));
+    assert!(run_options.contains("StrictExecute(ExecutionOption)"));
+    assert!(run_options.contains("IsolatedFile"));
+    assert!(run_options.contains("IsolatedSession"));
+    assert!(!run_options.contains("GraphOption"));
+    assert!(!run_options.contains("ConversionOption"));
+    assert!(!run_options.contains("IsolatedExecute"));
+    assert!(!run_options.contains("StrictIsolatedExecute"));
+    assert!(!run_options.contains("StrictGraph"));
+    assert!(!run_options.contains("IsolatedGraph"));
+    assert!(!run_options.contains("IsolatedConvert"));
+    assert!(run_options.contains("pub fn is_strict(&self) -> bool"));
+    assert!(run_options.contains("pub fn is_isolated(&self) -> bool"));
+    assert!(!run_options.contains("pub strict_mode: bool"));
+    assert!(!run_options.contains("pub is_isolated: bool"));
+    assert!(!root.join("src/cli/arguments.rs").exists());
+    assert!(!root.join("src/cli/run_options.rs").exists());
+    assert!(command.contains("pub(super) enum CliCommand"));
+    assert!(command.contains("pub(super) fn parse_cli_command("));
+    assert!(command.contains("RunOptions::strict_execute(execution)"));
+    assert!(!command.contains("args.retain("));
+    assert!(dispatch.contains("parse_cli_command(&raw_args)"));
+    assert!(dispatch.contains("match command"));
+    assert!(!dispatch.contains("command_index"));
+    for raw_command in [
+        "\"-help\"",
+        "\"-version\"",
+        "\"-e\"",
+        "\"-f\"",
+        "\"-r\"",
+        "\"-graph\"",
+        "\"-session\"",
+        "\"-latex\"",
+        "\"-extractpython\"",
+        "\"-extractc\"",
+        "\"-lean\"",
+    ] {
+        assert!(!dispatch.contains(raw_command), "{raw_command}");
+    }
+    assert!(!handlers.contains("args: &[String]"));
+    assert!(!conversion_commands.contains("args: &[String]"));
+    assert!(!lean_commands.contains("args: &[String]"));
     assert!(!dispatch.contains("exit_on_meaningless_isolated("));
     assert!(!handlers.contains("reject_isolated_"));
     assert!(!run.contains("pub struct RunOptions"));
     assert!(!run.contains("pub struct RunRequest"));
     assert!(run.contains("pub fn run_code(source: &str, options: RunOptions)"));
     assert!(run.contains("pub fn run_file(path: &str, options: RunOptions)"));
-    assert!(run.contains("pub fn run_isolated_file(path: &str, options: RunOptions)"));
+    assert!(!run.contains("pub fn run_isolated_file("));
     assert!(run.contains("pub fn run_repository(path: &str, options: RunOptions)"));
     assert!(target.contains("pub enum RunTargetKind"));
     assert!(run.contains("pub target: RunTarget"));
