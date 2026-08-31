@@ -2,7 +2,7 @@ use std::rc::Rc;
 
 pub type LineFile = (usize, Rc<str>); // (line number, file path)
 
-pub const INTERNAL_SYMBOL_PREFIX: &str = "____";
+pub const INTERNAL_SYMBOL_PREFIX: &str = "__";
 pub const INTERNAL_BINDER_PREFIX: &str = "____binder_";
 pub const DEFAULT_MANGLED_FN_PARAM_PREFIX: &str = INTERNAL_SYMBOL_PREFIX;
 

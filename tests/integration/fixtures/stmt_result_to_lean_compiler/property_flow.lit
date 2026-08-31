@@ -1,10 +1,7 @@
-# Property-centered companion to main.lit.
+# Property-centered compiler fixture.
 #
 # This file makes the mathematical interface lifecycle explicit:
 #   define a relation -> prove a reusable law -> prove an instance -> compose.
-# The relation keeps the root as a supplied witness. An existential wrapper
-# can be added later when ToLean supports local predicate-backed `obtain` in a
-# named theorem.
 
 have fn kth_odd(k Z) Z = 2 * k - 1
 
@@ -20,13 +17,9 @@ thm square_integer:
         n^2 $in Z
     n^2 $in Z
 
-# value is the square represented by the supplied integer root.
 prop is_square_of(value, root Z):
     value = root^2
 
-# A reusable consumer of the property: every represented square is
-# nonnegative. The property premise exposes value = root^2, so the only new
-# mathematical move needed here is nonnegativity of root^2.
 thm square_of_is_nonnegative:
     ? forall value, root Z:
         $is_square_of(value, root)
@@ -50,8 +43,6 @@ thm sum_first_odds:
             kth_odd(n + 1) = 2 * (n + 1) - 1
             sum(1, n + 1, kth_odd) = sum(1, n, kth_odd) + kth_odd(n + 1) = n^2 + kth_odd(n + 1) = n^2 + (2 * (n + 1) - 1) = (n + 1)^2
 
-# Construct the property from the already-proved equality. The two lines make
-# theorem reuse and definition folding visible as separate interface steps.
 thm sum_first_odds_is_square_of_n:
     ? forall n Z:
         n >= 1
@@ -60,9 +51,6 @@ thm sum_first_odds_is_square_of_n:
     by thm sum_first_odds(n) => sum(1, n, kth_odd) = n^2
     by def $is_square_of(sum(1, n, kth_odd), n)
 
-# Compose the constructor theorem with the reusable property law. Both calls
-# are retained as reader bridges even though Litex can infer either edge once
-# the other has been selected explicitly.
 thm sum_first_odds_nonnegative:
     ? forall n Z:
         n >= 1

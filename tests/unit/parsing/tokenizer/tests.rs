@@ -31,7 +31,7 @@ fn unicode_identifier_is_one_token() {
 #[test]
 fn reserved_internal_symbol_prefix_is_rejected() {
     let tokenizer = Tokenizer::new();
-    for source in ["____x", "_____x", "have ____value R = 1"] {
+    for source in ["__x", "___x", "____x", "have __value R = 1"] {
         let error = tokenizer
             .tokenize_line(source, (7, Rc::from("reserved_prefix_test.lit")))
             .expect_err(source);
@@ -40,22 +40,22 @@ fn reserved_internal_symbol_prefix_is_rejected() {
         };
         assert_eq!(error.line_file.0, 7);
         assert_eq!(error.line_file.1.as_ref(), "reserved_prefix_test.lit");
-        assert!(error.msg.contains("reserved internal prefix `____`"));
+        assert!(error.msg.contains("reserved internal prefix `__`"));
     }
 }
 
 #[test]
-fn shorter_underscore_prefixes_and_non_symbol_text_remain_allowed() {
+fn single_underscore_prefix_and_non_symbol_text_remain_allowed() {
     let tokenizer = Tokenizer::new();
     assert_eq!(
         tokenizer
-            .tokenize_line("have __x ___y", test_line_file())
+            .tokenize_line("have _x R = x__value", test_line_file())
             .unwrap(),
-        vec!["have", "__x", "___y"]
+        vec!["have", "_x", "R", "=", "x__value"]
     );
     assert!(tokenizer
         .tokenize_line(
-            "import \"../____internal/main.lit\" # ____comment",
+            "import \"../__internal/main.lit\" # __comment",
             test_line_file()
         )
         .is_ok());
@@ -66,7 +66,7 @@ fn reserved_prefix_error_from_block_tokenization_keeps_source_line() {
     let tokenizer = Tokenizer::new();
     let error = tokenizer
         .parse_blocks(
-            "have x R = 1\nhave ____x R = 2",
+            "have x R = 1\nhave __x R = 2",
             Rc::from("reserved_prefix_blocks.lit"),
         )
         .expect_err("reserved prefix should fail block tokenization");
