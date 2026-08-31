@@ -9,6 +9,10 @@ fn unsupported_combinations_are_rejected_before_dispatch() {
         vec!["-f", "missing.lit", "extra"],
         vec!["-e", "1 = 1", "extra"],
         vec!["-help", "extra"],
+        vec!["-strict", "-help"],
+        vec!["-e", "1 = 1", "-strict"],
+        vec!["-strict", "-strict", "-e", "1 = 1"],
+        vec!["-strict", "-compact", "-e", "1 = 1"],
     ] {
         let output = Command::new(env!("CARGO_BIN_EXE_litex"))
             .args(args)
@@ -22,6 +26,18 @@ fn unsupported_combinations_are_rejected_before_dispatch() {
             "{stderr}"
         );
     }
+}
+
+#[test]
+fn strict_execute_uses_the_canonical_prefix_position() {
+    let output = Command::new(env!("CARGO_BIN_EXE_litex"))
+        .args(["-strict", "-e", "1 = 1"])
+        .output()
+        .expect("run strict Litex CLI");
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8(output.stdout).expect("stdout is UTF-8");
+    assert!(stdout.contains("\"outcome\": \"success\""), "{stdout}");
 }
 
 #[test]

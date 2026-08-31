@@ -274,7 +274,7 @@ def check_archive(
     smoke_file = extracted / "smoke.lit"
     smoke_file.write_text(SMOKE_SOURCE, encoding="utf-8")
     smoke_result = subprocess.run(
-        [str(binary), "-graph", "-isolated", "-f", smoke_file.name],
+        [str(binary), "-isolated", "-graph", "-f", smoke_file.name],
         cwd=extracted,
         text=True,
         stdout=subprocess.PIPE,

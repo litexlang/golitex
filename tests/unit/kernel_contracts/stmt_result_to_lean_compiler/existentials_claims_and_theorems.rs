@@ -1114,7 +1114,7 @@ fn odd_sum_flagship_exports_only_source_owned_declarations() {
         .compile_stmt_results_to_lean_source(&results)
         .expect("compile the complete odd-sum Result DAG");
     let checked_in = include_str!(
-        "../../../../showcases/litex_to_lean_mathlib_pipeline/showcase1/LitexToMathlibPipelineGenerated.lean"
+        "../../../../showcases/litex_to_lean_mathlib_pipeline/showcase1/Generated.lean"
     );
 
     assert_eq!(lean, checked_in);

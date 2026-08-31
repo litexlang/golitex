@@ -5,14 +5,6 @@ pub enum FileRunMode {
 }
 
 impl FileRunMode {
-    pub fn from_isolated(isolated: bool) -> Self {
-        if isolated {
-            Self::Isolated
-        } else {
-            Self::Project
-        }
-    }
-
     pub fn is_isolated(self) -> bool {
         self == Self::Isolated
     }

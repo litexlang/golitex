@@ -1,4 +1,4 @@
-mod arguments;
+mod command;
 mod command_dispatch;
 mod command_handlers;
 mod conversion_commands;

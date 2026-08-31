@@ -113,299 +113,265 @@ theorem cauchy_sequence_converges :
       exact ⟨__nonempty_witness⟩
     exact __fact4
   have __step5_12 :
-      ∀ (x : (Litex.R).Carrier) (__h194 : Litex.In x Litex.R) (__domain_f195 : Litex.In x E),
-        Litex.Le (((x : ℝ)) : ℂ) ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) one_n0 (__step0_0_type)) + (1 : ℂ)) := by
-    intro x __h194 __domain_f195
-    rcases (show ∃ (n0 : (Litex.NPos).Carrier), ∃ (__type_n0 : Litex.In n0 Litex.NPos), is_tail_lower_bound a ((((n0).val : ℕ)) : ℂ) (x : ℝ) from (by
-      have __definition := ((by
-      rcases Litex.Rules.inSetBuilder_iff.mp ((by
-      simpa [E] using (__domain_f195))) with ⟨__rep, __predicate, __same⟩
-      have __selected := __predicate
-      exact (by
-      have __source := __selected
-      unfold has_eventual_lower_bound at __source ⊢
-      exact ⟨__source.1, Litex.In.own Litex.R (x : ℝ), (by simpa [Litex.In.rep, Litex.Rules.complexRealInR, Litex.Rules.complexAddInR, Litex.Rules.complexSubInR, Litex.Rules.complexMulInR, Litex.Rules.complexDivInR, Litex.Rules.inROfInRPos, Litex.Le, Litex.Lt, Litex.OrderValue] using (__source.2.2))⟩)))
+      ∀ {__carrier5_1 : Type} (x : __carrier5_1) (__h194 : Litex.In x E),
+        Litex.Le ((((((Litex.In.rep x __h194)).val : ℝ) : ℝ)) : ℂ) ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) one_n0 (__step0_0_type)) + (1 : ℂ)) := by
+    intro __carrier5_1 x __h194
+    rcases (show ∃ (n0 : (Litex.NPos).Carrier), ∃ (__type_n0 : Litex.In n0 Litex.NPos), is_tail_lower_bound a ((((n0).val : ℕ)) : ℂ) (((Litex.In.rep x __h194)).val : ℝ) from (by
+      have __definition := ((((Litex.In.rep x __h194)).property))
       unfold has_eventual_lower_bound at __definition
-      simpa [Litex.In.rep, Litex.Rules.complexRealInR, Litex.Rules.complexAddInR, Litex.Rules.complexSubInR, Litex.Rules.complexMulInR, Litex.Rules.complexDivInR, Litex.Rules.inROfInRPos, Litex.Le, Litex.Lt, Litex.OrderValue] using (__definition.2.2))) with ⟨n1, __step5_15_type, __step5_15_body⟩
-    have __infer5_16 : Litex.Lt (0 : ℂ) ((((n1).val : ℕ)) : ℂ) := (by simpa using (Litex.Rules.positiveNaturalRepPositive (__step5_15_type)))
-    have __step5_17 : ∃ (natural : (Litex.NPos).Carrier), ∃ (__type_natural : Litex.In natural Litex.NPos), Litex.Lt (((((one_n0).val : ℕ)) : ℂ) + ((((n1).val : ℕ)) : ℂ)) ((((natural).val : ℕ)) : ℂ) := by
+      simpa [Litex.In.rep, Litex.Rules.complexRealInR, Litex.Rules.complexAddInR, Litex.Rules.complexSubInR, Litex.Rules.complexMulInR, Litex.Rules.complexDivInR, Litex.Rules.inROfInRPos, Litex.Le, Litex.Lt, Litex.OrderValue] using (__definition.2.2))) with ⟨n1, __step5_16_type, __step5_16_body⟩
+    have __infer5_17 : Litex.Lt (0 : ℂ) ((((n1).val : ℕ)) : ℂ) := (by simpa using (Litex.Rules.positiveNaturalRepPositive (__step5_16_type)))
+    have __step5_18 : ∃ (natural : (Litex.NPos).Carrier), ∃ (__type_natural : Litex.In natural Litex.NPos), Litex.Lt (((((one_n0).val : ℕ)) : ℂ) + ((((n1).val : ℕ)) : ℂ)) ((((natural).val : ℕ)) : ℂ) := by
       exact Litex.Rules.realArchimedeanNaturalUpperBound (((((one_n0).val : ℕ)) : ℝ) + ((((n1).val : ℕ)) : ℝ)) (((((one_n0).val : ℕ)) : ℂ) + ((((n1).val : ℕ)) : ℂ)) (by norm_cast <;> norm_num) (Litex.In.own Litex.R (((((one_n0).val : ℕ)) : ℝ) + ((((n1).val : ℕ)) : ℝ)))
-    rcases (show ∃ (natural : (Litex.NPos).Carrier), ∃ (__type_natural : Litex.In natural Litex.NPos), Litex.Lt (((((one_n0).val : ℕ)) : ℂ) + ((((n1).val : ℕ)) : ℂ)) ((((natural).val : ℕ)) : ℂ) from __step5_17) with ⟨common_n, __step5_18_type, __step5_18_body⟩
-    have __infer5_19 : Litex.Lt (0 : ℂ) ((((common_n).val : ℕ)) : ℂ) := (by simpa using (Litex.Rules.positiveNaturalRepPositive (__step5_18_type)))
-    have __step5_20 : Litex.Le ((((one_n0).val : ℕ)) : ℂ) (((((one_n0).val : ℕ)) : ℂ) + ((((n1).val : ℕ)) : ℂ)) := by
-      exact Litex.Rules.realCastLeAddOfNonnegativeRight ((((one_n0).val : ℕ)) : ℝ) ((((n1).val : ℕ)) : ℝ) (Litex.Lt.toLe (__infer5_16))
-    have __step5_21 : Litex.Le ((((n1).val : ℕ)) : ℂ) (((((one_n0).val : ℕ)) : ℂ) + ((((n1).val : ℕ)) : ℂ)) := by
+    rcases (show ∃ (natural : (Litex.NPos).Carrier), ∃ (__type_natural : Litex.In natural Litex.NPos), Litex.Lt (((((one_n0).val : ℕ)) : ℂ) + ((((n1).val : ℕ)) : ℂ)) ((((natural).val : ℕ)) : ℂ) from __step5_18) with ⟨common_n, __step5_19_type, __step5_19_body⟩
+    have __infer5_20 : Litex.Lt (0 : ℂ) ((((common_n).val : ℕ)) : ℂ) := (by simpa using (Litex.Rules.positiveNaturalRepPositive (__step5_19_type)))
+    have __step5_21 : Litex.Le ((((one_n0).val : ℕ)) : ℂ) (((((one_n0).val : ℕ)) : ℂ) + ((((n1).val : ℕ)) : ℂ)) := by
+      exact Litex.Rules.realCastLeAddOfNonnegativeRight ((((one_n0).val : ℕ)) : ℝ) ((((n1).val : ℕ)) : ℝ) (Litex.Lt.toLe (__infer5_17))
+    have __step5_22 : Litex.Le ((((n1).val : ℕ)) : ℂ) (((((one_n0).val : ℕ)) : ℂ) + ((((n1).val : ℕ)) : ℂ)) := by
       exact (by simpa [add_comm] using (Litex.Rules.realCastLeAddOfNonnegativeRight ((((n1).val : ℕ)) : ℝ) ((((one_n0).val : ℕ)) : ℝ) (Litex.Lt.toLe (__infer0_1))))
-    have __step5_22 : Litex.Le ((((one_n0).val : ℕ)) : ℂ) ((((common_n).val : ℕ)) : ℂ) := by
-      exact (by simpa using (Litex.Lt.toLe (Litex.Le.transLt (__step5_20) (__step5_18_body))))
-    have __step5_23 : Litex.Le ((((n1).val : ℕ)) : ℂ) ((((common_n).val : ℕ)) : ℂ) := by
-      exact (by simpa using (Litex.Lt.toLe (Litex.Le.transLt (__step5_21) (__step5_18_body))))
-    have __step5_24 : Litex.Lt (Litex.abs ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) common_n (__step5_18_type)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) one_n0 (__step0_0_type)))) (1 : ℂ) := by
+    have __step5_23 : Litex.Le ((((one_n0).val : ℕ)) : ℂ) ((((common_n).val : ℕ)) : ℂ) := by
+      exact (by simpa using (Litex.Lt.toLe (Litex.Le.transLt (__step5_21) (__step5_19_body))))
+    have __step5_24 : Litex.Le ((((n1).val : ℕ)) : ℂ) ((((common_n).val : ℕ)) : ℂ) := by
+      exact (by simpa using (Litex.Lt.toLe (Litex.Le.transLt (__step5_22) (__step5_19_body))))
+    have __step5_25 : Litex.Lt (Litex.abs ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) common_n (__step5_19_type)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) one_n0 (__step0_0_type)))) (1 : ℂ) := by
       exact (by
       simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using ((show ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.NPos) {__carrier2 : Type} (__p2 : __carrier2) (__type2 : Litex.In __p2 Litex.NPos) (__domain1 : Litex.Le ((((one_n0).val : ℕ)) : ℂ) ((((Litex.In.rep __p1 __type1).val : ℕ)) : ℂ)) (__domain2 : Litex.Le ((((one_n0).val : ℕ)) : ℂ) ((((Litex.In.rep __p2 __type2).val : ℕ)) : ℂ)), Litex.Lt (Litex.abs ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) __p1 (__type1)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) __p2 (__type2)))) (1 : ℂ) from (by
       have __definition := __step0_0_body
       unfold is_tail_epsilon_steady at __definition
       rcases __definition with ⟨__component0, __component1, __component2, __component3⟩
-      exact @__component3)) common_n (__step5_18_type) one_n0 (__step0_0_type) (by
-      simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (__step5_22)) (by
+      exact @__component3)) common_n (__step5_19_type) one_n0 (__step0_0_type) (by
+      simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (__step5_23)) (by
       simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (Litex.Le.refl ((((one_n0).val : ℕ)) : ℂ)))))
-    have __step5_25 : (Litex.Le ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) common_n (__step5_18_type)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) one_n0 (__step0_0_type))) (Litex.abs ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) common_n (__step5_18_type)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) one_n0 (__step0_0_type))))) ∧ (Litex.Lt (Litex.abs ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) common_n (__step5_18_type)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) one_n0 (__step0_0_type)))) (1 : ℂ)) := by
-      exact ⟨Litex.Rules.selfLeAbs ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) common_n (__step5_18_type)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) one_n0 (__step0_0_type))), __step5_24⟩
-    have __infer5_26 : Litex.Lt ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) common_n (__step5_18_type)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) one_n0 (__step0_0_type))) (1 : ℂ) := Litex.Le.transLt ((__step5_25).1) ((__step5_25).2)
-    have __step5_27 : Litex.Lt (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) common_n (__step5_18_type)) ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) one_n0 (__step0_0_type)) + (1 : ℂ)) := by
-      exact Litex.Rules.complexLtAddOfSubLt (__infer5_26)
-    have __step5_28 : Litex.Le (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) common_n (__step5_18_type)) ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) one_n0 (__step0_0_type)) + (1 : ℂ)) := by
-      exact Litex.Lt.toLe (__step5_27)
-    have __step5_29 : (Litex.Le (((x : ℝ)) : ℂ) (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) common_n (__step5_18_type))) ∧ (Litex.Le (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) common_n (__step5_18_type)) ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) one_n0 (__step0_0_type)) + (1 : ℂ))) := by
+    have __step5_26 : (Litex.Le ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) common_n (__step5_19_type)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) one_n0 (__step0_0_type))) (Litex.abs ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) common_n (__step5_19_type)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) one_n0 (__step0_0_type))))) ∧ (Litex.Lt (Litex.abs ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) common_n (__step5_19_type)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) one_n0 (__step0_0_type)))) (1 : ℂ)) := by
+      exact ⟨Litex.Rules.selfLeAbs ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) common_n (__step5_19_type)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) one_n0 (__step0_0_type))), __step5_25⟩
+    have __infer5_27 : Litex.Lt ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) common_n (__step5_19_type)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) one_n0 (__step0_0_type))) (1 : ℂ) := Litex.Le.transLt ((__step5_26).1) ((__step5_26).2)
+    have __step5_28 : Litex.Lt (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) common_n (__step5_19_type)) ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) one_n0 (__step0_0_type)) + (1 : ℂ)) := by
+      exact Litex.Rules.complexLtAddOfSubLt (__infer5_27)
+    have __step5_29 : Litex.Le (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) common_n (__step5_19_type)) ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) one_n0 (__step0_0_type)) + (1 : ℂ)) := by
+      exact Litex.Lt.toLe (__step5_28)
+    have __step5_30 : (Litex.Le ((((((Litex.In.rep x __h194)).val : ℝ) : ℝ)) : ℂ) (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) common_n (__step5_19_type))) ∧ (Litex.Le (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) common_n (__step5_19_type)) ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) one_n0 (__step0_0_type)) + (1 : ℂ))) := by
       exact ⟨(by
-      simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using ((show ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.NPos) (__domain1 : Litex.Le ((((n1).val : ℕ)) : ℂ) ((((Litex.In.rep __p1 __type1).val : ℕ)) : ℂ)), Litex.Le ((((x : ℝ) : ℝ)) : ℂ) (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) __p1 (__type1)) from (by
-      have __definition := __step5_15_body
+      simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using ((show ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.NPos) (__domain1 : Litex.Le ((((n1).val : ℕ)) : ℂ) ((((Litex.In.rep __p1 __type1).val : ℕ)) : ℂ)), Litex.Le ((((((Litex.In.rep x __h194)).val : ℝ) : ℝ)) : ℂ) (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) __p1 (__type1)) from (by
+      have __definition := __step5_16_body
       unfold is_tail_lower_bound at __definition
       rcases __definition with ⟨__component0, __component1, __component2, __component3⟩
-      exact @__component3)) common_n (__step5_18_type) (by
-      simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (__step5_23)))), __step5_28⟩
-    have __infer5_30 : Litex.Le (((x : ℝ)) : ℂ) ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) one_n0 (__step0_0_type)) + (1 : ℂ)) := Litex.Le.trans ((__step5_29).1) ((__step5_29).2)
-    have __c5_0 : Litex.Le (((x : ℝ)) : ℂ) ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) one_n0 (__step0_0_type)) + (1 : ℂ)) := __infer5_30
+      exact @__component3)) common_n (__step5_19_type) (by
+      simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (__step5_24)))), __step5_29⟩
+    have __infer5_31 : Litex.Le ((((((Litex.In.rep x __h194)).val : ℝ) : ℝ)) : ℂ) ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) one_n0 (__step0_0_type)) + (1 : ℂ)) := Litex.Le.trans ((__step5_30).1) ((__step5_30).2)
+    have __c5_0 : Litex.Le ((((((Litex.In.rep x __h194)).val : ℝ) : ℝ)) : ℂ) ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) one_n0 (__step0_0_type)) + (1 : ℂ)) := __infer5_31
     exact __c5_0
-  have __fact6 :
-      ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 E), Litex.Le (((Litex.In.rep __p1 (((__step0_3_subset)) __p1 (__type1))) : ℝ) : ℂ) ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) one_n0 (__step0_0_type)) + (1 : ℂ)) := by
-    intro __carrier1 member __h243
-    have __infer6_31 : Litex.In member (Litex.setBuilder Litex.R (fun (x : Litex.R.Carrier) => has_eventual_lower_bound a (x : ℝ))) := by
-      simpa [E] using (__h243)
-    have __infer6_32 : Litex.In member Litex.R := Litex.Rules.inBaseOfInSetBuilder (__infer6_31)
-    have __infer6_33 : has_eventual_lower_bound a (Litex.In.rep member (((__step0_3_subset)) member (__h243))) := (by simpa using (((Litex.In.rep member __h243)).property))
-    have __prior6_0 : Litex.Le (((Litex.In.rep member (((__step0_3_subset)) member (__h243))) : ℝ) : ℂ) ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) one_n0 (__step0_0_type)) + (1 : ℂ)) := (by
-      simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (__step5_12 (Litex.In.rep member (((__step0_3_subset)) member (__h243))) (Litex.In.own Litex.R (Litex.In.rep member (((__step0_3_subset)) member (__h243)))) ((Litex.In.congr (Litex.Same.trans (Litex.Same.trans (Litex.In.same_rep member (((__step0_3_subset)) member (__h243))) (Litex.Same.realComplex (Litex.In.rep member (((__step0_3_subset)) member (__h243))))) (Litex.Same.symm (Litex.Same.realComplex ((Litex.In.rep member (((__step0_3_subset)) member (__h243))))))) E).mp (__h243))))
-    exact __prior6_0
-  have __step7_34 : ∃ (lub : (Litex.R).Carrier), ∃ (__type_lub : Litex.In lub Litex.R), Litex.RealLeastUpperBound E lub := by
+  have __step6_32 : ∃ (lub : (Litex.R).Carrier), ∃ (__type_lub : Litex.In lub Litex.R), Litex.RealLeastUpperBound E lub := by
     exact Litex.Rules.realLeastUpperBoundExists E ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) one_n0 (__step0_0_type)) + (1 : ℝ))  (__step0_3_subset) (__step5_11) (Litex.In.own Litex.R ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) one_n0 (__step0_0_type)) + (1 : ℝ))) ((fun member memberInSet => by
     have __member_rep : Litex.In.rep member (((__step0_3_subset)) member memberInSet) = member :=
       Litex.In.rep_exact (set := Litex.R) member (((__step0_3_subset)) member memberInSet)
-    simpa only [__member_rep] using ((__fact6) member memberInSet)))
-  rcases (show ∃ (candidate : (Litex.R).Carrier), ∃ (__type_candidate : Litex.In candidate Litex.R), Litex.RealLeastUpperBound E candidate from __step7_34) with ⟨L, __step7_35_type, __step7_35_body⟩
-  have __step7_36 :
-      ∀ (epsilon : (Litex.RPos).Carrier) (__h265 : Litex.In epsilon Litex.RPos),
+    simpa only [__member_rep] using ((__step5_12) member memberInSet)))
+  rcases (show ∃ (candidate : (Litex.R).Carrier), ∃ (__type_candidate : Litex.In candidate Litex.R), Litex.RealLeastUpperBound E candidate from __step6_32) with ⟨L, __step6_33_type, __step6_33_body⟩
+  have __step6_34 :
+      ∀ (epsilon : (Litex.RPos).Carrier) (__h259 : Litex.In epsilon Litex.RPos),
         ∃ (n0 : (Litex.NPos).Carrier), ∃ (__type_n0 : Litex.In n0 Litex.NPos), is_tail_close_to a (L : ℝ) ((((epsilon).val : ℝ)) : ℂ) ((((n0).val : ℕ)) : ℂ) := by
-    intro epsilon __h265
+    intro epsilon __h259
     rcases (show ∃ (cutoff : (Litex.NPos).Carrier), ∃ (__type_cutoff : Litex.In cutoff Litex.NPos), is_tail_epsilon_steady a (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ)) ((((cutoff).val : ℕ)) : ℂ) from (by
       simpa [Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using ((show ∀ (__p1 : (Litex.RPos).Carrier) (__type1 : Litex.In __p1 Litex.RPos), ∃ (n0 : (Litex.NPos).Carrier), ∃ (__type_n0 : Litex.In n0 Litex.NPos), is_tail_epsilon_steady a ((((__p1).val : ℝ)) : ℂ) ((((n0).val : ℕ)) : ℂ) from (by
       have __definition := __domain_f98
       unfold is_cauchy_sequence at __definition
       exact @(__definition.2))) (⟨(((epsilon).val : ℝ) / (2 : ℝ)), by
       exact div_pos (epsilon).property (by positivity)⟩ : Litex.RPos.Carrier) (Litex.In.own Litex.RPos (⟨(((epsilon).val : ℝ) / (2 : ℝ)), by
-      exact div_pos (epsilon).property (by positivity)⟩ : Litex.RPos.Carrier))))) with ⟨n0, __step7_38_type, __step7_38_body⟩
-    have __infer7_39 : Litex.Lt (0 : ℂ) ((((n0).val : ℕ)) : ℂ) := (by simpa using (Litex.Rules.positiveNaturalRepPositive (__step7_38_type)))
-    have __step7_41 :
-        ∀ {__carrier7_1 : Type} (n : __carrier7_1) (__h290 : Litex.In n Litex.NPos) (__domain_f292 : Litex.Le ((((n0).val : ℕ)) : ℂ) ((((Litex.In.rep n __h290).val : ℕ)) : ℂ)),
-          Litex.Lt (Litex.abs ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - (((L : ℝ)) : ℂ))) ((((epsilon).val : ℝ)) : ℂ) := by
-      intro __carrier7_1 n __h290 __domain_f292
-      have __step11_54 : Litex.Le ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) (((L : ℝ)) : ℂ) := by
-        have __fact7 :
-            ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.NPos) (__domain1 : Litex.Le ((((n0).val : ℕ)) : ℂ) ((((Litex.In.rep __p1 __type1).val : ℕ)) : ℂ)), (Litex.Lt (Litex.abs ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) __p1 (__type1)))) (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) ∧ ((Litex.Le ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) __p1 (__type1))) (Litex.abs ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) __p1 (__type1))))) ∧ (Litex.Lt (Litex.abs ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) __p1 (__type1)))) (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ)))) ∧ (Litex.Le ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) __p1 (__type1))) (Litex.abs ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) __p1 (__type1))))) ∧ (Litex.Lt (Litex.abs ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) __p1 (__type1)))) (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) ∧ (Litex.Lt ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) __p1 (__type1))) (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) ∧ (Litex.Lt ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) __p1 (__type1))) ∧ (Litex.Le ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) __p1 (__type1))) := by
-          intro __carrier1 k __h304 __domain_f306
-          have __infer7_43 : Litex.Lt (0 : ℂ) ((((Litex.In.rep k __h304).val : ℕ)) : ℂ) := (by simpa using (Litex.Rules.positiveNaturalRepPositive (__h304)))
-          have __prior7_0 : Litex.Lt (Litex.abs ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) k (__h304)))) (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ)) := (by
+      exact div_pos (epsilon).property (by positivity)⟩ : Litex.RPos.Carrier))))) with ⟨n0, __step6_36_type, __step6_36_body⟩
+    have __infer6_37 : Litex.Lt (0 : ℂ) ((((n0).val : ℕ)) : ℂ) := (by simpa using (Litex.Rules.positiveNaturalRepPositive (__step6_36_type)))
+    have __step6_39 :
+        ∀ {__carrier6_1 : Type} (n : __carrier6_1) (__h284 : Litex.In n Litex.NPos) (__domain_f286 : Litex.Le ((((n0).val : ℕ)) : ℂ) ((((Litex.In.rep n __h284).val : ℕ)) : ℂ)),
+          Litex.Lt (Litex.abs ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - (((L : ℝ)) : ℂ))) ((((epsilon).val : ℝ)) : ℂ) := by
+      intro __carrier6_1 n __h284 __domain_f286
+      have __step10_52 : Litex.Le ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) (((L : ℝ)) : ℂ) := by
+        have __fact6 :
+            ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.NPos) (__domain1 : Litex.Le ((((n0).val : ℕ)) : ℂ) ((((Litex.In.rep __p1 __type1).val : ℕ)) : ℂ)), (Litex.Lt (Litex.abs ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) __p1 (__type1)))) (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) ∧ ((Litex.Le ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) __p1 (__type1))) (Litex.abs ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) __p1 (__type1))))) ∧ (Litex.Lt (Litex.abs ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) __p1 (__type1)))) (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ)))) ∧ (Litex.Le ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) __p1 (__type1))) (Litex.abs ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) __p1 (__type1))))) ∧ (Litex.Lt (Litex.abs ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) __p1 (__type1)))) (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) ∧ (Litex.Lt ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) __p1 (__type1))) (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) ∧ (Litex.Lt ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) __p1 (__type1))) ∧ (Litex.Le ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) __p1 (__type1))) := by
+          intro __carrier1 k __h298 __domain_f300
+          have __infer6_41 : Litex.Lt (0 : ℂ) ((((Litex.In.rep k __h298).val : ℕ)) : ℂ) := (by simpa using (Litex.Rules.positiveNaturalRepPositive (__h298)))
+          have __prior6_0 : Litex.Lt (Litex.abs ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) k (__h298)))) (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ)) := (by
             simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using ((show ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.NPos) {__carrier2 : Type} (__p2 : __carrier2) (__type2 : Litex.In __p2 Litex.NPos) (__domain1 : Litex.Le ((((n0).val : ℕ)) : ℂ) ((((Litex.In.rep __p1 __type1).val : ℕ)) : ℂ)) (__domain2 : Litex.Le ((((n0).val : ℕ)) : ℂ) ((((Litex.In.rep __p2 __type2).val : ℕ)) : ℂ)), Litex.Lt (Litex.abs ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) __p1 (__type1)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) __p2 (__type2)))) (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ)) from (by
-            have __definition := __step7_38_body
+            have __definition := __step6_36_body
             unfold is_tail_epsilon_steady at __definition
             rcases __definition with ⟨__component0, __component1, __component2, __component3⟩
-            exact @__component3)) n (__h290) k (__h304) (by
-            simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (__domain_f292)) (by
-            simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (__domain_f306))))
-          have __prior7_1 : (Litex.Le ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) k (__h304))) (Litex.abs ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) k (__h304))))) ∧ (Litex.Lt (Litex.abs ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) k (__h304)))) (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) := ⟨Litex.Rules.selfLeAbs ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) k (__h304))), __prior7_0⟩
-          have __infer7_44 : Litex.Lt ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) k (__h304))) (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ)) := Litex.Le.transLt ((__prior7_1).1) ((__prior7_1).2)
-          have __infer7_45 : Litex.Lt ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) k (__h304))) (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ)) := Litex.Le.transLt ((__prior7_1).1) ((__prior7_1).2)
-          have __prior7_2 : Litex.Lt ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) k (__h304)) := Litex.Rules.complexSubLtSwap (__infer7_45)
-          have __prior7_3 : Litex.Le ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) k (__h304)) := Litex.Lt.toLe (Litex.Rules.complexSubLtSwap (__infer7_45))
-          exact ⟨(__prior7_1).2, __prior7_1, (__prior7_1).1, (__prior7_1).2, __infer7_45, __prior7_2, __prior7_3⟩
-        have __fact8 :
-            ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.NPos) (__domain1 : Litex.Le ((((n0).val : ℕ)) : ℂ) ((((Litex.In.rep __p1 __type1).val : ℕ)) : ℂ)), Litex.Le ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) __p1 (__type1)) := by
-          intro __carrier1 ____binder_1958 __h320 __domain_f322
-          have __infer8_46 : Litex.Lt (0 : ℂ) ((((Litex.In.rep ____binder_1958 __h320).val : ℕ)) : ℂ) := (by simpa using (Litex.Rules.positiveNaturalRepPositive (__h320)))
-          have __prior8_0 : Litex.Le ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) ____binder_1958 (__h320)) := (by
-            simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (__fact7 ____binder_1958 (__h320) (by
-            simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (__domain_f322))).2.2.2.2.2.2)
-          exact __prior8_0
-        have __step9_47 : is_tail_lower_bound a ((((n0).val : ℕ)) : ℂ) ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - (((epsilon).val : ℝ) / (2 : ℝ))) := by
+            exact @__component3)) n (__h284) k (__h298) (by
+            simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (__domain_f286)) (by
+            simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (__domain_f300))))
+          have __prior6_1 : (Litex.Le ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) k (__h298))) (Litex.abs ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) k (__h298))))) ∧ (Litex.Lt (Litex.abs ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) k (__h298)))) (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) := ⟨Litex.Rules.selfLeAbs ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) k (__h298))), __prior6_0⟩
+          have __infer6_42 : Litex.Lt ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) k (__h298))) (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ)) := Litex.Le.transLt ((__prior6_1).1) ((__prior6_1).2)
+          have __infer6_43 : Litex.Lt ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) k (__h298))) (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ)) := Litex.Le.transLt ((__prior6_1).1) ((__prior6_1).2)
+          have __prior6_2 : Litex.Lt ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) k (__h298)) := Litex.Rules.complexSubLtSwap (__infer6_43)
+          have __prior6_3 : Litex.Le ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) k (__h298)) := Litex.Lt.toLe (Litex.Rules.complexSubLtSwap (__infer6_43))
+          exact ⟨(__prior6_1).2, __prior6_1, (__prior6_1).1, (__prior6_1).2, __infer6_43, __prior6_2, __prior6_3⟩
+        have __fact7 :
+            ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.NPos) (__domain1 : Litex.Le ((((n0).val : ℕ)) : ℂ) ((((Litex.In.rep __p1 __type1).val : ℕ)) : ℂ)), Litex.Le ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) __p1 (__type1)) := by
+          intro __carrier1 ____binder_1942 __h314 __domain_f316
+          have __infer7_44 : Litex.Lt (0 : ℂ) ((((Litex.In.rep ____binder_1942 __h314).val : ℕ)) : ℂ) := (by simpa using (Litex.Rules.positiveNaturalRepPositive (__h314)))
+          have __prior7_0 : Litex.Le ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) ____binder_1942 (__h314)) := (by
+            simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (__fact6 ____binder_1942 (__h314) (by
+            simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (__domain_f316))).2.2.2.2.2.2)
+          exact __prior7_0
+        have __step8_45 : is_tail_lower_bound a ((((n0).val : ℕ)) : ℂ) ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - (((epsilon).val : ℝ) / (2 : ℝ))) := by
           exact (by
           unfold is_tail_lower_bound
-          exact ⟨Litex.In.own (Litex.sequenceSet Litex.R) a, Litex.Rules.complexEqNatInNPos ((((n0).val : ℕ) : ℂ)) ((n0).val : ℕ) (by rfl) ((n0).property), Litex.In.own Litex.R ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - (((epsilon).val : ℝ) / (2 : ℝ))), (by simpa [Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (@__fact8))⟩)
-        have __fact9 : has_eventual_lower_bound a ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - (((epsilon).val : ℝ) / (2 : ℝ))) := by
+          exact ⟨Litex.In.own (Litex.sequenceSet Litex.R) a, Litex.Rules.complexEqNatInNPos ((((n0).val : ℕ) : ℂ)) ((n0).val : ℕ) (by rfl) ((n0).property), Litex.In.own Litex.R ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - (((epsilon).val : ℝ) / (2 : ℝ))), (by simpa [Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (@__fact7))⟩)
+        have __fact8 : has_eventual_lower_bound a ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - (((epsilon).val : ℝ) / (2 : ℝ))) := by
           unfold has_eventual_lower_bound
-          exact ⟨Litex.In.own (Litex.sequenceSet Litex.R) a, ⟨Litex.In.own Litex.R ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - (((epsilon).val : ℝ) / (2 : ℝ))), (by
-          rcases ((show ∃ (____binder_1986 : (Litex.NPos).Carrier), ∃ (__type_____binder_1986 : Litex.In ____binder_1986 Litex.NPos), is_tail_lower_bound a ((((____binder_1986).val : ℕ)) : ℂ) ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - (((epsilon).val : ℝ) / (2 : ℝ))) from (by
-          exact ⟨n0, (__step7_38_type), (__step9_47)⟩))) with ⟨__transport_witness, __transport_membership, __transport_body⟩
+          exact ⟨Litex.In.own (Litex.sequenceSet Litex.R) a, ⟨Litex.In.own Litex.R ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - (((epsilon).val : ℝ) / (2 : ℝ))), (by
+          rcases ((show ∃ (____binder_1970 : (Litex.NPos).Carrier), ∃ (__type_____binder_1970 : Litex.In ____binder_1970 Litex.NPos), is_tail_lower_bound a ((((____binder_1970).val : ℕ)) : ℂ) ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - (((epsilon).val : ℝ) / (2 : ℝ))) from (by
+          exact ⟨n0, (__step6_36_type), (__step8_45)⟩))) with ⟨__transport_witness, __transport_membership, __transport_body⟩
           exact ⟨__transport_witness, __transport_membership, (by
           have __source := __transport_body
           unfold is_tail_lower_bound at __source ⊢
-          exact ⟨__source.1, __source.2.1, Litex.In.own Litex.R (((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - (((epsilon).val : ℝ) / (2 : ℝ))) : ℝ), (by convert (@__source.2.2.2) using 1 <;> simp [Litex.In.rep, Litex.Rules.complexRealInR, Litex.Rules.complexAddInR, Litex.Rules.complexSubInR, Litex.Rules.complexMulInR, Litex.Rules.complexDivInR, Litex.Rules.inROfInRPos, Litex.Le, Litex.Lt, Litex.OrderValue])⟩)⟩)⟩⟩
-        have __fact10 : ∃ (n0 : (Litex.NPos).Carrier), ∃ (__type_n0 : Litex.In n0 Litex.NPos), is_tail_lower_bound a ((((n0).val : ℕ)) : ℂ) (((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - (((epsilon).val : ℝ) / (2 : ℝ))) : ℝ) := by
+          exact ⟨__source.1, __source.2.1, Litex.In.own Litex.R (((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - (((epsilon).val : ℝ) / (2 : ℝ))) : ℝ), (by convert (@__source.2.2.2) using 1 <;> simp [Litex.In.rep, Litex.Rules.complexRealInR, Litex.Rules.complexAddInR, Litex.Rules.complexSubInR, Litex.Rules.complexMulInR, Litex.Rules.complexDivInR, Litex.Rules.inROfInRPos, Litex.Le, Litex.Lt, Litex.OrderValue])⟩)⟩)⟩⟩
+        have __fact9 : ∃ (n0 : (Litex.NPos).Carrier), ∃ (__type_n0 : Litex.In n0 Litex.NPos), is_tail_lower_bound a ((((n0).val : ℕ)) : ℂ) (((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - (((epsilon).val : ℝ) / (2 : ℝ))) : ℝ) := by
           exact (by
-          have __definition := __fact9
+          have __definition := __fact8
           unfold has_eventual_lower_bound at __definition
           simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using __definition.2.2)
-        let lower_member : (E).Carrier := ⟨((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - (((epsilon).val : ℝ) / (2 : ℝ))), (by simpa using (__fact9))⟩
-        have __step11_48_type : Litex.In lower_member E := by
+        let lower_member : (E).Carrier := ⟨((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - (((epsilon).val : ℝ) / (2 : ℝ))), (by simpa using (__fact8))⟩
+        have __step10_46_type : Litex.In lower_member E := by
           exact Litex.In.own _ lower_member
-        have __step11_48_equality : Litex.Same lower_member ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) := by
+        have __step10_46_equality : Litex.Same lower_member ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) := by
           exact Litex.Same.trans (Litex.Same.subtype lower_member) (by
-          convert (Litex.Same.trans (Litex.Same.realComplex (((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - (((epsilon).val : ℝ) / (2 : ℝ))))) (Litex.Same.ofEq (by norm_cast <;> norm_num))) using 1 <;> norm_num <;> norm_cast)
-        have __infer11_49 : Litex.In lower_member (Litex.setBuilder Litex.R (fun (x : Litex.R.Carrier) => has_eventual_lower_bound a (x : ℝ))) := by
-          simpa [E] using (__step11_48_type)
-        have __infer11_50 : Litex.In lower_member Litex.R := Litex.Rules.inBaseOfInSetBuilder (__infer11_49)
-        have __infer11_51 : has_eventual_lower_bound a ((lower_member).val : ℝ) := ((lower_member).property)
-        have __step11_52 : Litex.Le (((((lower_member).val : ℝ) : ℝ)) : ℂ) (((L : ℝ)) : ℂ) := by
-          exact (by simpa using (Litex.Rules.realMemberLeLeastUpperBound E (((L : ℝ)) : ℂ) ((lower_member).val : ℝ)  (__step0_3_subset) (Litex.Rules.complexRealInR (L : ℝ)) (__step7_35_body) (__step11_48_type)))
-        have __step11_53 : (Litex.Same lower_member ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ)))) ∧ (Litex.Le ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) (((L : ℝ)) : ℂ)) := by
-          exact ⟨__step11_48_equality, (by
-          simpa [lower_member] using (__step11_52))⟩
+          convert (Litex.Same.trans (Litex.Same.realComplex (((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - (((epsilon).val : ℝ) / (2 : ℝ))))) (Litex.Same.ofEq (by norm_cast <;> norm_num))) using 1 <;> norm_num <;> norm_cast)
+        have __infer10_47 : Litex.In lower_member (Litex.setBuilder Litex.R (fun (x : Litex.R.Carrier) => has_eventual_lower_bound a (x : ℝ))) := by
+          simpa [E] using (__step10_46_type)
+        have __infer10_48 : Litex.In lower_member Litex.R := Litex.Rules.inBaseOfInSetBuilder (__infer10_47)
+        have __infer10_49 : has_eventual_lower_bound a ((lower_member).val : ℝ) := ((lower_member).property)
+        have __step10_50 : Litex.Le (((((lower_member).val : ℝ) : ℝ)) : ℂ) (((L : ℝ)) : ℂ) := by
+          exact (by simpa using (Litex.Rules.realMemberLeLeastUpperBound E (((L : ℝ)) : ℂ) ((lower_member).val : ℝ)  (__step0_3_subset) (Litex.Rules.complexRealInR (L : ℝ)) (__step6_33_body) (__step10_46_type)))
+        have __step10_51 : (Litex.Same lower_member ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ)))) ∧ (Litex.Le ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) (((L : ℝ)) : ℂ)) := by
+          exact ⟨__step10_46_equality, (by
+          simpa [lower_member] using (__step10_50))⟩
         exact ((by
-          simpa [lower_member] using (__step11_52)))
-      have __step13_78 : Litex.Le (((L : ℝ)) : ℂ) ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) + (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) := by
-        have __step11_55 :
-            ∀ (x : (Litex.R).Carrier) (__h358 : Litex.In x Litex.R) (__domain_f359 : Litex.In x E),
-              Litex.Le (((x : ℝ)) : ℂ) ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) + (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) := by
-          intro x __h358 __domain_f359
-          rcases (show ∃ (____binder_2366 : (Litex.NPos).Carrier), ∃ (__type_____binder_2366 : Litex.In ____binder_2366 Litex.NPos), is_tail_lower_bound a ((((____binder_2366).val : ℕ)) : ℂ) (x : ℝ) from (by
-            have __definition := ((by
-            rcases Litex.Rules.inSetBuilder_iff.mp ((by
-            simpa [E] using (__domain_f359))) with ⟨__rep, __predicate, __same⟩
-            have __selected := __predicate
-            exact (by
-            have __source := __selected
-            unfold has_eventual_lower_bound at __source ⊢
-            exact ⟨__source.1, Litex.In.own Litex.R (x : ℝ), (by simpa [Litex.In.rep, Litex.Rules.complexRealInR, Litex.Rules.complexAddInR, Litex.Rules.complexSubInR, Litex.Rules.complexMulInR, Litex.Rules.complexDivInR, Litex.Rules.inROfInRPos, Litex.Le, Litex.Lt, Litex.OrderValue] using (__source.2.2))⟩)))
+          simpa [lower_member] using (__step10_50)))
+      have __step11_74 : Litex.Le (((L : ℝ)) : ℂ) ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) + (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) := by
+        have __step10_53 :
+            ∀ {__carrier10_1 : Type} (x : __carrier10_1) (__h352 : Litex.In x E),
+              Litex.Le ((((((Litex.In.rep x __h352)).val : ℝ) : ℝ)) : ℂ) ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) + (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) := by
+          intro __carrier10_1 x __h352
+          rcases (show ∃ (____binder_2350 : (Litex.NPos).Carrier), ∃ (__type_____binder_2350 : Litex.In ____binder_2350 Litex.NPos), is_tail_lower_bound a ((((____binder_2350).val : ℕ)) : ℂ) (((Litex.In.rep x __h352)).val : ℝ) from (by
+            have __definition := ((((Litex.In.rep x __h352)).property))
             unfold has_eventual_lower_bound at __definition
-            simpa [Litex.In.rep, Litex.Rules.complexRealInR, Litex.Rules.complexAddInR, Litex.Rules.complexSubInR, Litex.Rules.complexMulInR, Litex.Rules.complexDivInR, Litex.Rules.inROfInRPos, Litex.Le, Litex.Lt, Litex.OrderValue] using (__definition.2.2))) with ⟨n1, __step11_58_type, __step11_58_body⟩
-          have __infer11_59 : Litex.Lt (0 : ℂ) ((((n1).val : ℕ)) : ℂ) := (by simpa using (Litex.Rules.positiveNaturalRepPositive (__step11_58_type)))
-          have __step11_60 : ∃ (natural : (Litex.NPos).Carrier), ∃ (__type_natural : Litex.In natural Litex.NPos), Litex.Lt (((((n0).val : ℕ)) : ℂ) + ((((n1).val : ℕ)) : ℂ)) ((((natural).val : ℕ)) : ℂ) := by
+            simpa [Litex.In.rep, Litex.Rules.complexRealInR, Litex.Rules.complexAddInR, Litex.Rules.complexSubInR, Litex.Rules.complexMulInR, Litex.Rules.complexDivInR, Litex.Rules.inROfInRPos, Litex.Le, Litex.Lt, Litex.OrderValue] using (__definition.2.2))) with ⟨n1, __step10_57_type, __step10_57_body⟩
+          have __infer10_58 : Litex.Lt (0 : ℂ) ((((n1).val : ℕ)) : ℂ) := (by simpa using (Litex.Rules.positiveNaturalRepPositive (__step10_57_type)))
+          have __step10_59 : ∃ (natural : (Litex.NPos).Carrier), ∃ (__type_natural : Litex.In natural Litex.NPos), Litex.Lt (((((n0).val : ℕ)) : ℂ) + ((((n1).val : ℕ)) : ℂ)) ((((natural).val : ℕ)) : ℂ) := by
             exact Litex.Rules.realArchimedeanNaturalUpperBound (((((n0).val : ℕ)) : ℝ) + ((((n1).val : ℕ)) : ℝ)) (((((n0).val : ℕ)) : ℂ) + ((((n1).val : ℕ)) : ℂ)) (by norm_cast <;> norm_num) (Litex.In.own Litex.R (((((n0).val : ℕ)) : ℝ) + ((((n1).val : ℕ)) : ℝ)))
-          rcases (show ∃ (natural : (Litex.NPos).Carrier), ∃ (__type_natural : Litex.In natural Litex.NPos), Litex.Lt (((((n0).val : ℕ)) : ℂ) + ((((n1).val : ℕ)) : ℂ)) ((((natural).val : ℕ)) : ℂ) from __step11_60) with ⟨common_n, __step11_61_type, __step11_61_body⟩
-          have __infer11_62 : Litex.Lt (0 : ℂ) ((((common_n).val : ℕ)) : ℂ) := (by simpa using (Litex.Rules.positiveNaturalRepPositive (__step11_61_type)))
-          have __step11_63 : Litex.Le ((((n0).val : ℕ)) : ℂ) (((((n0).val : ℕ)) : ℂ) + ((((n1).val : ℕ)) : ℂ)) := by
-            exact Litex.Rules.realCastLeAddOfNonnegativeRight ((((n0).val : ℕ)) : ℝ) ((((n1).val : ℕ)) : ℝ) (Litex.Lt.toLe (__infer11_59))
-          have __step11_64 : Litex.Le ((((n1).val : ℕ)) : ℂ) (((((n0).val : ℕ)) : ℂ) + ((((n1).val : ℕ)) : ℂ)) := by
-            exact (by simpa [add_comm] using (Litex.Rules.realCastLeAddOfNonnegativeRight ((((n1).val : ℕ)) : ℝ) ((((n0).val : ℕ)) : ℝ) (Litex.Lt.toLe (__infer7_39))))
-          have __step11_65 : Litex.Le ((((n0).val : ℕ)) : ℂ) ((((common_n).val : ℕ)) : ℂ) := by
-            exact (by simpa using (Litex.Lt.toLe (Litex.Le.transLt (__step11_63) (__step11_61_body))))
-          have __step11_66 : Litex.Le ((((n1).val : ℕ)) : ℂ) ((((common_n).val : ℕ)) : ℂ) := by
-            exact (by simpa using (Litex.Lt.toLe (Litex.Le.transLt (__step11_64) (__step11_61_body))))
-          have __step11_67 : Litex.Lt (Litex.abs ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) common_n (__step11_61_type)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)))) (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ)) := by
+          rcases (show ∃ (natural : (Litex.NPos).Carrier), ∃ (__type_natural : Litex.In natural Litex.NPos), Litex.Lt (((((n0).val : ℕ)) : ℂ) + ((((n1).val : ℕ)) : ℂ)) ((((natural).val : ℕ)) : ℂ) from __step10_59) with ⟨common_n, __step10_60_type, __step10_60_body⟩
+          have __infer10_61 : Litex.Lt (0 : ℂ) ((((common_n).val : ℕ)) : ℂ) := (by simpa using (Litex.Rules.positiveNaturalRepPositive (__step10_60_type)))
+          have __step10_62 : Litex.Le ((((n0).val : ℕ)) : ℂ) (((((n0).val : ℕ)) : ℂ) + ((((n1).val : ℕ)) : ℂ)) := by
+            exact Litex.Rules.realCastLeAddOfNonnegativeRight ((((n0).val : ℕ)) : ℝ) ((((n1).val : ℕ)) : ℝ) (Litex.Lt.toLe (__infer10_58))
+          have __step10_63 : Litex.Le ((((n1).val : ℕ)) : ℂ) (((((n0).val : ℕ)) : ℂ) + ((((n1).val : ℕ)) : ℂ)) := by
+            exact (by simpa [add_comm] using (Litex.Rules.realCastLeAddOfNonnegativeRight ((((n1).val : ℕ)) : ℝ) ((((n0).val : ℕ)) : ℝ) (Litex.Lt.toLe (__infer6_37))))
+          have __step10_64 : Litex.Le ((((n0).val : ℕ)) : ℂ) ((((common_n).val : ℕ)) : ℂ) := by
+            exact (by simpa using (Litex.Lt.toLe (Litex.Le.transLt (__step10_62) (__step10_60_body))))
+          have __step10_65 : Litex.Le ((((n1).val : ℕ)) : ℂ) ((((common_n).val : ℕ)) : ℂ) := by
+            exact (by simpa using (Litex.Lt.toLe (Litex.Le.transLt (__step10_63) (__step10_60_body))))
+          have __step10_66 : Litex.Lt (Litex.abs ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) common_n (__step10_60_type)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)))) (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ)) := by
             exact (by
             simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using ((show ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.NPos) {__carrier2 : Type} (__p2 : __carrier2) (__type2 : Litex.In __p2 Litex.NPos) (__domain1 : Litex.Le ((((n0).val : ℕ)) : ℂ) ((((Litex.In.rep __p1 __type1).val : ℕ)) : ℂ)) (__domain2 : Litex.Le ((((n0).val : ℕ)) : ℂ) ((((Litex.In.rep __p2 __type2).val : ℕ)) : ℂ)), Litex.Lt (Litex.abs ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) __p1 (__type1)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) __p2 (__type2)))) (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ)) from (by
-            have __definition := __step7_38_body
+            have __definition := __step6_36_body
             unfold is_tail_epsilon_steady at __definition
             rcases __definition with ⟨__component0, __component1, __component2, __component3⟩
-            exact @__component3)) common_n (__step11_61_type) n (__h290) (by
-            simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (__step11_65)) (by
-            simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (__domain_f292))))
-          have __step11_68 : (Litex.Le ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) common_n (__step11_61_type)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290))) (Litex.abs ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) common_n (__step11_61_type)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290))))) ∧ (Litex.Lt (Litex.abs ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) common_n (__step11_61_type)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)))) (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) := by
-            exact ⟨Litex.Rules.selfLeAbs ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) common_n (__step11_61_type)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290))), __step11_67⟩
-          have __infer11_69 : Litex.Lt ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) common_n (__step11_61_type)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290))) (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ)) := Litex.Le.transLt ((__step11_68).1) ((__step11_68).2)
-          have __step11_70 : Litex.Lt (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) common_n (__step11_61_type)) ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) + (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) := by
-            exact Litex.Rules.complexLtAddOfSubLt (__infer11_69)
-          have __step11_71 : Litex.Le (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) common_n (__step11_61_type)) ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) + (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) := by
-            exact Litex.Lt.toLe (__step11_70)
-          have __step11_72 : (Litex.Le (((x : ℝ)) : ℂ) (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) common_n (__step11_61_type))) ∧ (Litex.Le (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) common_n (__step11_61_type)) ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) + (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ)))) := by
+            exact @__component3)) common_n (__step10_60_type) n (__h284) (by
+            simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (__step10_64)) (by
+            simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (__domain_f286))))
+          have __step10_67 : (Litex.Le ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) common_n (__step10_60_type)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284))) (Litex.abs ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) common_n (__step10_60_type)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284))))) ∧ (Litex.Lt (Litex.abs ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) common_n (__step10_60_type)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)))) (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) := by
+            exact ⟨Litex.Rules.selfLeAbs ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) common_n (__step10_60_type)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284))), __step10_66⟩
+          have __infer10_68 : Litex.Lt ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) common_n (__step10_60_type)) - (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284))) (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ)) := Litex.Le.transLt ((__step10_67).1) ((__step10_67).2)
+          have __step10_69 : Litex.Lt (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) common_n (__step10_60_type)) ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) + (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) := by
+            exact Litex.Rules.complexLtAddOfSubLt (__infer10_68)
+          have __step10_70 : Litex.Le (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) common_n (__step10_60_type)) ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) + (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) := by
+            exact Litex.Lt.toLe (__step10_69)
+          have __step10_71 : (Litex.Le ((((((Litex.In.rep x __h352)).val : ℝ) : ℝ)) : ℂ) (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) common_n (__step10_60_type))) ∧ (Litex.Le (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) common_n (__step10_60_type)) ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) + (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ)))) := by
             exact ⟨(by
-            simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using ((show ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.NPos) (__domain1 : Litex.Le ((((n1).val : ℕ)) : ℂ) ((((Litex.In.rep __p1 __type1).val : ℕ)) : ℂ)), Litex.Le ((((x : ℝ) : ℝ)) : ℂ) (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) __p1 (__type1)) from (by
-            have __definition := __step11_58_body
+            simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using ((show ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.NPos) (__domain1 : Litex.Le ((((n1).val : ℕ)) : ℂ) ((((Litex.In.rep __p1 __type1).val : ℕ)) : ℂ)), Litex.Le ((((((Litex.In.rep x __h352)).val : ℝ) : ℝ)) : ℂ) (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) __p1 (__type1)) from (by
+            have __definition := __step10_57_body
             unfold is_tail_lower_bound at __definition
             rcases __definition with ⟨__component0, __component1, __component2, __component3⟩
-            exact @__component3)) common_n (__step11_61_type) (by
-            simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (__step11_66)))), __step11_71⟩
-          have __infer11_73 : Litex.Le (((x : ℝ)) : ℂ) ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) + (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) := Litex.Le.trans ((__step11_72).1) ((__step11_72).2)
-          have __c11_0 : Litex.Le (((x : ℝ)) : ℂ) ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) + (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) := __infer11_73
-          exact __c11_0
-        have __fact12 :
-            ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 E), Litex.Le (((Litex.In.rep __p1 (((__step0_3_subset)) __p1 (__type1))) : ℝ) : ℂ) ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) + (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) := by
-          intro __carrier1 member __h405
-          have __infer12_74 : Litex.In member (Litex.setBuilder Litex.R (fun (x : Litex.R.Carrier) => has_eventual_lower_bound a (x : ℝ))) := by
-            simpa [E] using (__h405)
-          have __infer12_75 : Litex.In member Litex.R := Litex.Rules.inBaseOfInSetBuilder (__infer12_74)
-          have __infer12_76 : has_eventual_lower_bound a (Litex.In.rep member (((__step0_3_subset)) member (__h405))) := (by simpa using (((Litex.In.rep member __h405)).property))
-          have __prior12_0 : Litex.Le (((Litex.In.rep member (((__step0_3_subset)) member (__h405))) : ℝ) : ℂ) ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) + (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) := (by
-            simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (__step11_55 (Litex.In.rep member (((__step0_3_subset)) member (__h405))) (Litex.In.own Litex.R (Litex.In.rep member (((__step0_3_subset)) member (__h405)))) ((Litex.In.congr (Litex.Same.trans (Litex.Same.trans (Litex.In.same_rep member (((__step0_3_subset)) member (__h405))) (Litex.Same.realComplex (Litex.In.rep member (((__step0_3_subset)) member (__h405))))) (Litex.Same.symm (Litex.Same.realComplex ((Litex.In.rep member (((__step0_3_subset)) member (__h405))))))) E).mp (__h405))))
-          exact __prior12_0
-        have __step13_77 : Litex.Le (((L : ℝ)) : ℂ) ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) + (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) := by
-          exact (by convert (Litex.Rules.realLeastUpperBoundLeUpperBound E (((L : ℝ)) : ℂ) ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) + (((epsilon).val : ℝ) / (2 : ℝ)))  (__step0_3_subset) (Litex.Rules.complexRealInR (L : ℝ)) (__step7_35_body) (Litex.In.own Litex.R ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) + (((epsilon).val : ℝ) / (2 : ℝ)))) ((fun member memberInSet => by
+            exact @__component3)) common_n (__step10_60_type) (by
+            simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (__step10_65)))), __step10_70⟩
+          have __infer10_72 : Litex.Le ((((((Litex.In.rep x __h352)).val : ℝ) : ℝ)) : ℂ) ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) + (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) := Litex.Le.trans ((__step10_71).1) ((__step10_71).2)
+          have __c10_0 : Litex.Le ((((((Litex.In.rep x __h352)).val : ℝ) : ℝ)) : ℂ) ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) + (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) := __infer10_72
+          exact __c10_0
+        have __step11_73 : Litex.Le (((L : ℝ)) : ℂ) ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) + (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) := by
+          exact (by convert (Litex.Rules.realLeastUpperBoundLeUpperBound E (((L : ℝ)) : ℂ) ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) + (((epsilon).val : ℝ) / (2 : ℝ)))  (__step0_3_subset) (Litex.Rules.complexRealInR (L : ℝ)) (__step6_33_body) (Litex.In.own Litex.R ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) + (((epsilon).val : ℝ) / (2 : ℝ)))) ((fun member memberInSet => by
           have __member_rep : Litex.In.rep member (((__step0_3_subset)) member memberInSet) = member :=
             Litex.In.rep_exact (set := Litex.R) member (((__step0_3_subset)) member memberInSet)
-          simpa only [__member_rep] using ((__fact12) member memberInSet)))) using 1 <;> norm_num <;> norm_cast)
-        exact __step13_77
-      have __step13_79 : Litex.Le ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - (((L : ℝ)) : ℂ)) (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ)) := by
-        exact Litex.Rules.complexSubLeSwap (__step11_54)
-      have __step13_80 : Litex.Same ((-1 : ℂ) * (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) + (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ)))) := by
-        exact Litex.Same.trans (Litex.Same.refl (((-1 : ℂ) * (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))))) (Litex.Same.trans (Litex.Same.ofEq ((show ((-1 : ℂ) * (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) = ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) + (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ)))) from (by
-        show ((-1 : ℂ) * (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) = ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) + (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))))
+          simpa only [__member_rep] using ((__step10_53) member memberInSet)))) using 1 <;> norm_num <;> norm_cast)
+        exact __step11_73
+      have __step11_75 : Litex.Le ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - (((L : ℝ)) : ℂ)) (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ)) := by
+        exact Litex.Rules.complexSubLeSwap (__step10_52)
+      have __step11_76 : Litex.Same ((-1 : ℂ) * (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) + (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ)))) := by
+        exact Litex.Same.trans (Litex.Same.refl (((-1 : ℂ) * (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))))) (Litex.Same.trans (Litex.Same.ofEq ((show ((-1 : ℂ) * (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) = ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) + (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ)))) from (by
+        show ((-1 : ℂ) * (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) = ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) + (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))))
         have __calculate_nonzero1 : (2 : ℂ) ≠ (0 : ℂ) := by
           show (2 : ℂ) ≠ (0 : ℂ)
           norm_num [Complex.I_mul_I]
-        field_simp [__calculate_nonzero1] <;> ring_nf <;> norm_num [Complex.I_mul_I] <;> ring)))) (Litex.Same.symm (Litex.Same.refl (((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) + (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))))))))
-      have __step13_81 : Litex.Le ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) + (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ)))) ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - (((L : ℝ)) : ℂ)) := by
-        exact Litex.Rules.complexSubPreservesLessEqualComponentwise (Litex.Le.refl (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290))) (__step13_78)
-      have __step13_82 : Litex.Le ((-1 : ℂ) * (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - (((L : ℝ)) : ℂ)) := by
+        field_simp [__calculate_nonzero1] <;> ring_nf <;> norm_num [Complex.I_mul_I] <;> ring)))) (Litex.Same.symm (Litex.Same.refl (((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) + (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))))))))
+      have __step11_77 : Litex.Le ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) + (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ)))) ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - (((L : ℝ)) : ℂ)) := by
+        exact Litex.Rules.complexSubPreservesLessEqualComponentwise (Litex.Le.refl (Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284))) (__step11_74)
+      have __step11_78 : Litex.Le ((-1 : ℂ) * (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - (((L : ℝ)) : ℂ)) := by
         exact (by
-        have __native_equality1 : ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) + (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ)))) = ((-1 : ℂ) * (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) := Eq.symm ((by
-          show ((-1 : ℂ) * (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) = ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) + (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))))
+        have __native_equality1 : ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) + (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ)))) = ((-1 : ℂ) * (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) := Eq.symm ((by
+          show ((-1 : ℂ) * (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) = ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) + (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))))
           have __calculate_nonzero1 : (2 : ℂ) ≠ (0 : ℂ) := by
             show (2 : ℂ) ≠ (0 : ℂ)
             norm_num [Complex.I_mul_I]
           field_simp [__calculate_nonzero1] <;> ring_nf <;> norm_num [Complex.I_mul_I] <;> ring))
-        have __order_equality1 : (((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) + (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ)))) : ℂ) = (((-1 : ℂ) * (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) : ℂ) := by
+        have __order_equality1 : (((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) + (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ)))) : ℂ) = (((-1 : ℂ) * (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) : ℂ) := by
           exact_mod_cast __native_equality1
-        have __transported := (__step13_81)
+        have __transported := (__step11_77)
         rw [__order_equality1] at __transported
         simpa [Litex.Lt, Litex.Le, Litex.OrderValue, Litex.fnApplyOwn] using __transported)
-      have __step13_83 : Litex.Le ((-1 : ℂ) * ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - (((L : ℝ)) : ℂ))) (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ)) := by
-        exact (by simpa [mul_assoc] using (Litex.Rules.complexNegativeOneMulReversesLessEqual (__step13_82)))
-      have __step13_84 : (Litex.Le (Litex.abs ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - (((L : ℝ)) : ℂ))) (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) ∧ (Litex.Lt (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ)) ((((epsilon).val : ℝ)) : ℂ)) := by
+      have __step11_79 : Litex.Le ((-1 : ℂ) * ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - (((L : ℝ)) : ℂ))) (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ)) := by
+        exact (by simpa [mul_assoc] using (Litex.Rules.complexNegativeOneMulReversesLessEqual (__step11_78)))
+      have __step11_80 : (Litex.Le (Litex.abs ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - (((L : ℝ)) : ℂ))) (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ))) ∧ (Litex.Lt (((((epsilon).val : ℝ)) : ℂ) / (2 : ℂ)) ((((epsilon).val : ℝ)) : ℂ)) := by
         exact ⟨(by
-        have __abs_upper : Litex.Le ((((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - (L : ℝ)) : ℝ) : ℂ) (((((epsilon).val : ℝ) / (2 : ℝ)) : ℝ) : ℂ) := by
-          convert (__step13_79) using 1 <;> simp [Litex.fnApply, Litex.fnApplyOwn, ← Complex.ofReal_one, ← Complex.ofReal_add, ← Complex.ofReal_sub, ← Complex.ofReal_mul, ← Complex.ofReal_div] <;> norm_num <;> norm_cast
-        have __abs_lower : Litex.Le (((-((((epsilon).val : ℝ) / (2 : ℝ))) : ℝ) : ℝ) : ℂ) ((((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - (L : ℝ)) : ℝ) : ℂ) := by
-          convert (__step13_82) using 1 <;> simp [Litex.fnApply, Litex.fnApplyOwn, ← Complex.ofReal_one, ← Complex.ofReal_add, ← Complex.ofReal_sub, ← Complex.ofReal_mul, ← Complex.ofReal_div] <;> norm_num <;> norm_cast
-        convert (Litex.Rules.realCastAbsLeOfUpperAndLower (a := ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - (L : ℝ))) (b := (((epsilon).val : ℝ) / (2 : ℝ))) __abs_upper __abs_lower) using 1 <;> simp [Litex.fnApply, Litex.fnApplyOwn, ← Complex.ofReal_one, ← Complex.ofReal_add, ← Complex.ofReal_sub, ← Complex.ofReal_mul, ← Complex.ofReal_div] <;> norm_num <;> norm_cast), (by
+        have __abs_upper : Litex.Le ((((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - (L : ℝ)) : ℝ) : ℂ) (((((epsilon).val : ℝ) / (2 : ℝ)) : ℝ) : ℂ) := by
+          convert (__step11_75) using 1 <;> simp [Litex.fnApply, Litex.fnApplyOwn, ← Complex.ofReal_one, ← Complex.ofReal_add, ← Complex.ofReal_sub, ← Complex.ofReal_mul, ← Complex.ofReal_div] <;> norm_num <;> norm_cast
+        have __abs_lower : Litex.Le (((-((((epsilon).val : ℝ) / (2 : ℝ))) : ℝ) : ℝ) : ℂ) ((((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - (L : ℝ)) : ℝ) : ℂ) := by
+          convert (__step11_78) using 1 <;> simp [Litex.fnApply, Litex.fnApplyOwn, ← Complex.ofReal_one, ← Complex.ofReal_add, ← Complex.ofReal_sub, ← Complex.ofReal_mul, ← Complex.ofReal_div] <;> norm_num <;> norm_cast
+        convert (Litex.Rules.realCastAbsLeOfUpperAndLower (a := ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - (L : ℝ))) (b := (((epsilon).val : ℝ) / (2 : ℝ))) __abs_upper __abs_lower) using 1 <;> simp [Litex.fnApply, Litex.fnApplyOwn, ← Complex.ofReal_one, ← Complex.ofReal_add, ← Complex.ofReal_sub, ← Complex.ofReal_mul, ← Complex.ofReal_div] <;> norm_num <;> norm_cast), (by
         have __div_positive : Litex.Lt (0 : ℂ) ((((epsilon).val : ℝ) : ℝ) : ℂ) := by
-          convert (((by simpa using (Litex.Rules.positiveRealCarrierPositive (__h265))))) using 1 <;> simp [Litex.fnApply, Litex.fnApplyOwn, ← Complex.ofReal_one, ← Complex.ofReal_add, ← Complex.ofReal_sub, ← Complex.ofReal_mul, ← Complex.ofReal_div] <;> norm_num <;> norm_cast
+          convert (((by simpa using (Litex.Rules.positiveRealCarrierPositive (__h259))))) using 1 <;> simp [Litex.fnApply, Litex.fnApplyOwn, ← Complex.ofReal_one, ← Complex.ofReal_add, ← Complex.ofReal_sub, ← Complex.ofReal_mul, ← Complex.ofReal_div] <;> norm_num <;> norm_cast
         have __div_denominator : Litex.Lt (1 : ℂ) (((2 : ℝ) : ℝ) : ℂ) := by
           convert ((Litex.OrderBridge.ltOfComplexReals (by norm_num) : Litex.Lt ((1 : ℂ)) ((2 : ℂ)))) using 1 <;> simp [Litex.fnApply, Litex.fnApplyOwn, ← Complex.ofReal_one, ← Complex.ofReal_add, ← Complex.ofReal_sub, ← Complex.ofReal_mul, ← Complex.ofReal_div] <;> norm_num <;> norm_cast
         convert (Litex.Rules.realCastDivLtSelfOfPositiveOfOneLt (a := ((epsilon).val : ℝ)) (b := (2 : ℝ)) __div_positive __div_denominator) using 1 <;> simp [Litex.fnApply, Litex.fnApplyOwn, ← Complex.ofReal_one, ← Complex.ofReal_add, ← Complex.ofReal_sub, ← Complex.ofReal_mul, ← Complex.ofReal_div] <;> norm_num <;> norm_cast)⟩
-      have __infer13_85 : Litex.Lt (Litex.abs ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - (((L : ℝ)) : ℂ))) ((((epsilon).val : ℝ)) : ℂ) := Litex.Le.transLt ((__step13_84).1) ((__step13_84).2)
-      have __c13_0 : Litex.Lt (Litex.abs ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h290)) - (((L : ℝ)) : ℂ))) ((((epsilon).val : ℝ)) : ℂ) := __infer13_85
-      exact __c13_0
-    have __step14_88 : ∃ (cutoff : (Litex.NPos).Carrier), ∃ (__type_cutoff : Litex.In cutoff Litex.NPos), is_tail_close_to a (L : ℝ) ((((epsilon).val : ℝ)) : ℂ) ((((cutoff).val : ℕ)) : ℂ) := by
+      have __infer11_81 : Litex.Lt (Litex.abs ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - (((L : ℝ)) : ℂ))) ((((epsilon).val : ℝ)) : ℂ) := Litex.Le.transLt ((__step11_80).1) ((__step11_80).2)
+      have __c11_0 : Litex.Lt (Litex.abs ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) n (__h284)) - (((L : ℝ)) : ℂ))) ((((epsilon).val : ℝ)) : ℂ) := __infer11_81
+      exact __c11_0
+    have __step12_84 : ∃ (cutoff : (Litex.NPos).Carrier), ∃ (__type_cutoff : Litex.In cutoff Litex.NPos), is_tail_close_to a (L : ℝ) ((((epsilon).val : ℝ)) : ℂ) ((((cutoff).val : ℕ)) : ℂ) := by
       exact (by
-      have __step14_86 : ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.NPos) (__domain1 : Litex.Le ((((n0).val : ℕ)) : ℂ) ((((Litex.In.rep __p1 __type1).val : ℕ)) : ℂ)), Litex.Lt (Litex.abs ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) __p1 (__type1)) - (((L : ℝ)) : ℂ))) ((((epsilon).val : ℝ)) : ℂ) := by
-        exact __step7_41
-      have __step14_87 : is_tail_close_to a (L : ℝ) ((((epsilon).val : ℝ)) : ℂ) ((((n0).val : ℕ)) : ℂ) := by
+      have __step12_82 : ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.NPos) (__domain1 : Litex.Le ((((n0).val : ℕ)) : ℂ) ((((Litex.In.rep __p1 __type1).val : ℕ)) : ℂ)), Litex.Lt (Litex.abs ((Litex.fnApplyOwn a ((Litex.In.own (Litex.fnSet Litex.NPos Litex.R) a)) __p1 (__type1)) - (((L : ℝ)) : ℂ))) ((((epsilon).val : ℝ)) : ℂ) := by
+        exact __step6_39
+      have __step12_83 : is_tail_close_to a (L : ℝ) ((((epsilon).val : ℝ)) : ℂ) ((((n0).val : ℕ)) : ℂ) := by
         exact (by
         unfold is_tail_close_to
-        exact ⟨Litex.In.own (Litex.sequenceSet Litex.R) a, Litex.In.own Litex.R (L : ℝ), Litex.Rules.complexEqRealInRPos ((((epsilon).val : ℝ) : ℂ)) ((epsilon).val : ℝ) (by rfl) ((epsilon).property), Litex.Rules.complexEqNatInNPos ((((n0).val : ℕ) : ℂ)) ((n0).val : ℕ) (by rfl) ((n0).property), (by simpa [Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (@__step14_86))⟩)
-      exact ⟨n0, (__step7_38_type), (__step14_87)⟩)
-    have __c14_0 : ∃ (n0 : (Litex.NPos).Carrier), ∃ (__type_n0 : Litex.In n0 Litex.NPos), is_tail_close_to a (L : ℝ) ((((epsilon).val : ℝ)) : ℂ) ((((n0).val : ℕ)) : ℂ) := __step14_88
-    exact __c14_0
-  have __fact15 :
+        exact ⟨Litex.In.own (Litex.sequenceSet Litex.R) a, Litex.In.own Litex.R (L : ℝ), Litex.Rules.complexEqRealInRPos ((((epsilon).val : ℝ) : ℂ)) ((epsilon).val : ℝ) (by rfl) ((epsilon).property), Litex.Rules.complexEqNatInNPos ((((n0).val : ℕ) : ℂ)) ((n0).val : ℕ) (by rfl) ((n0).property), (by simpa [Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (@__step12_82))⟩)
+      exact ⟨n0, (__step6_36_type), (__step12_83)⟩)
+    have __c12_0 : ∃ (n0 : (Litex.NPos).Carrier), ∃ (__type_n0 : Litex.In n0 Litex.NPos), is_tail_close_to a (L : ℝ) ((((epsilon).val : ℝ)) : ℂ) ((((n0).val : ℕ)) : ℂ) := __step12_84
+    exact __c12_0
+  have __fact13 :
       ∀ (__p1 : (Litex.RPos).Carrier) (__type1 : Litex.In __p1 Litex.RPos), ∃ (n0 : (Litex.NPos).Carrier), ∃ (__type_n0 : Litex.In n0 Litex.NPos), is_tail_close_to a (L : ℝ) ((((__p1).val : ℝ)) : ℂ) ((((n0).val : ℕ)) : ℂ) := by
-    intro epsilon __h454
-    have __infer15_89 : Litex.Lt (0 : ℂ) ((((epsilon).val : ℝ)) : ℂ) := (by simpa using (Litex.Rules.positiveRealCarrierPositive (__h454)))
-    have __prior15_0 : ∃ (n0 : (Litex.NPos).Carrier), ∃ (__type_n0 : Litex.In n0 Litex.NPos), is_tail_close_to a (L : ℝ) ((((epsilon).val : ℝ)) : ℂ) ((((n0).val : ℕ)) : ℂ) := (by
-      simpa [Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (__step7_36 epsilon (Litex.In.own Litex.RPos epsilon)))
-    exact __prior15_0
-  have __step16_90 : has_limit a (L : ℝ) := by
+    intro epsilon __h442
+    have __infer13_85 : Litex.Lt (0 : ℂ) ((((epsilon).val : ℝ)) : ℂ) := (by simpa using (Litex.Rules.positiveRealCarrierPositive (__h442)))
+    have __prior13_0 : ∃ (n0 : (Litex.NPos).Carrier), ∃ (__type_n0 : Litex.In n0 Litex.NPos), is_tail_close_to a (L : ℝ) ((((epsilon).val : ℝ)) : ℂ) ((((n0).val : ℕ)) : ℂ) := (by
+      simpa [Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (__step6_34 epsilon (Litex.In.own Litex.RPos epsilon)))
+    exact __prior13_0
+  have __step14_86 : has_limit a (L : ℝ) := by
     exact (by
     unfold has_limit
-    exact ⟨Litex.In.own (Litex.sequenceSet Litex.R) a, Litex.In.own Litex.R (L : ℝ), (by simpa [Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (@__fact15))⟩)
-  have __fact16 : is_convergent_sequence a := by
+    exact ⟨Litex.In.own (Litex.sequenceSet Litex.R) a, Litex.In.own Litex.R (L : ℝ), (by simpa [Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (@__fact13))⟩)
+  have __fact14 : is_convergent_sequence a := by
     unfold is_convergent_sequence
-    exact ⟨Litex.In.own (Litex.sequenceSet Litex.R) a, (show ∃ (____binder_4159 : (Litex.R).Carrier), ∃ (__type_____binder_4159 : Litex.In ____binder_4159 Litex.R), has_limit a (____binder_4159 : ℝ) from (by
-    exact ⟨L, (__step7_35_type), (__step16_90)⟩))⟩
-  have __fact17 : ∃ (L : (Litex.R).Carrier), ∃ (__type_L : Litex.In L Litex.R), has_limit a (L : ℝ) := by
+    exact ⟨Litex.In.own (Litex.sequenceSet Litex.R) a, (show ∃ (____binder_4126 : (Litex.R).Carrier), ∃ (__type_____binder_4126 : Litex.In ____binder_4126 Litex.R), has_limit a (____binder_4126 : ℝ) from (by
+    exact ⟨L, (__step6_33_type), (__step14_86)⟩))⟩
+  have __fact15 : ∃ (L : (Litex.R).Carrier), ∃ (__type_L : Litex.In L Litex.R), has_limit a (L : ℝ) := by
     exact (by
-    have __definition := __fact16
+    have __definition := __fact14
     unfold is_convergent_sequence at __definition
     simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using __definition.2)
-  have __c18_0 : is_convergent_sequence a := __fact16
-  exact __c18_0
+  have __c16_0 : is_convergent_sequence a := __fact14
+  exact __c16_0
 
 end __Compiler_69_RealCauchyFromCompleteness

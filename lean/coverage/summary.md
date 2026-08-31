@@ -5,7 +5,7 @@ A source/compiler reference is not a real Lean kernel acceptance result.
 
 Total rows: **1462**
 
-Source fingerprint (SHA-256): `9e80cdcbb4f4b049a5b75d904f98e40f5e8667961170fbb50e38e382ca574af8`
+Source fingerprint (SHA-256): `a4f2f9e287527b4d90396e58010069d75003c2572223d7aea25e2008927605d5`
 
 ## Rows by axis
 
@@ -32,26 +32,40 @@ Source fingerprint (SHA-256): `9e80cdcbb4f4b049a5b75d904f98e40f5e8667961170fbb50
 | `compiler_gap` | 68 |
 | `dead_or_duplicate_candidate` | 16 |
 | `evidence_gap` | 399 |
-| `kernel_checked` | 1 |
-| `mapped_not_kernel_checked` | 919 |
+| `mapped_not_kernel_checked` | 920 |
 | `unreachable` | 1 |
+
+## Rows by owner
+
+- Codex implementation/evidence rows: **1404**
+- User semantic-decision rows: **58**
+
+Repeated role rows are collapsed into the seven questions in the Day 1 user decision packet.
+
+## Tracer obligations
+
+- Existing source tracers: **69**
+- Required per-route tracers: **1376**
+- Not applicable until reachability/dead-code resolution: **17**
+
+A `required` string is an explicit obligation, not a claim that the tracer already exists.
 
 ## Status by axis
 
-| Axis | `abi_decision` | `compiler_gap` | `dead_or_duplicate_candidate` | `evidence_gap` | `kernel_checked` | `mapped_not_kernel_checked` | `unreachable` |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| `atomic_fact` | 0 | 3 | 0 | 0 | 0 | 27 | 0 |
-| `builtin_typed` | 2 | 1 | 0 | 3 | 0 | 193 | 0 |
-| `builtin_uncatalogued` | 8 | 0 | 16 | 395 | 0 | 2 | 1 |
-| `fact` | 0 | 0 | 0 | 0 | 0 | 8 | 0 |
-| `fact_proof` | 0 | 1 | 0 | 1 | 0 | 9 | 0 |
-| `inference` | 0 | 0 | 0 | 0 | 0 | 24 | 0 |
-| `object` | 48 | 48 | 0 | 0 | 0 | 396 | 0 |
-| `object_atom` | 0 | 1 | 0 | 0 | 0 | 2 | 0 |
-| `statement` | 0 | 0 | 0 | 0 | 0 | 63 | 0 |
-| `statement_result` | 0 | 0 | 0 | 0 | 0 | 63 | 0 |
-| `tracer` | 0 | 0 | 0 | 0 | 1 | 68 | 0 |
-| `well_definedness_result` | 0 | 14 | 0 | 0 | 0 | 64 | 0 |
+| Axis | `abi_decision` | `compiler_gap` | `dead_or_duplicate_candidate` | `evidence_gap` | `mapped_not_kernel_checked` | `unreachable` |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| `atomic_fact` | 0 | 3 | 0 | 0 | 27 | 0 |
+| `builtin_typed` | 2 | 1 | 0 | 3 | 193 | 0 |
+| `builtin_uncatalogued` | 8 | 0 | 16 | 395 | 2 | 1 |
+| `fact` | 0 | 0 | 0 | 0 | 8 | 0 |
+| `fact_proof` | 0 | 1 | 0 | 1 | 9 | 0 |
+| `inference` | 0 | 0 | 0 | 0 | 24 | 0 |
+| `object` | 48 | 48 | 0 | 0 | 396 | 0 |
+| `object_atom` | 0 | 1 | 0 | 0 | 2 | 0 |
+| `statement` | 0 | 0 | 0 | 0 | 63 | 0 |
+| `statement_result` | 0 | 0 | 0 | 0 | 63 | 0 |
+| `tracer` | 0 | 0 | 0 | 0 | 69 | 0 |
+| `well_definedness_result` | 0 | 14 | 0 | 0 | 64 | 0 |
 
 ## Lean adapter surface
 
@@ -66,6 +80,20 @@ Source fingerprint (SHA-256): `9e80cdcbb4f4b049a5b75d904f98e40f5e8667961170fbb50
 See `lean_adapter_symbols.tsv` and `LeanAdapterSymbols.lean` for the
 literal declaration gate. See `dynamic_lean_adapter_sites.tsv` for
 templates that require Result-driven generated-module tracers.
+
+### Builtin implementation route kinds
+
+| Route kind | Stable IDs |
+| --- | ---: |
+| `blocked_evidence_contract` | 26 |
+| `blocked_target_abi` | 10 |
+| `fixed_reflection_adapter` | 22 |
+| `leaf_theorem_adapter` | 127 |
+| `missing_typed_certificate_route` | 1 |
+| `recursive_result_composition` | 28 |
+| `selected_semantic_child` | 86 |
+| `shared_adapter_candidate` | 128 |
+| `typed_certificate_route` | 193 |
 
 ## Builtin identity reconciliation
 
@@ -88,6 +116,15 @@ templates that require Result-driven generated-module tracers.
 | `WitnessStmt->SuccessWitnessStmtResult` | 3 |
 | `ProofBlockStmt->SuccessProofBlockStmtResult` | 4 |
 | `CommandStmt->SuccessCommandStmtResult` | 1 |
+
+## Checked example trust boundaries
+
+- Registered pairs: **69**
+- Trust-free positive pairs: **63**
+- Explicit source-declared trust/axiom pairs: **6**
+- Checked Lean axioms without a source boundary: **0**
+
+See `example_trust_boundaries.tsv` for exact source and Lean line references.
 
 ## Used and unused uncatalogued builtin mechanisms
 

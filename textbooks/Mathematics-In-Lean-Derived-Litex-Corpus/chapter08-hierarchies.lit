@@ -110,14 +110,14 @@ struct AdditiveCommutativeGroup<s nonempty_set>:
 # Source instance: every Ring3 has commutative addition. Chapter 2's canonical
 # Ring already exposes this law through its flat additive-group interface.
 thm ring_add_comm:
-    ? forall Carrier nonempty_set, ring &MILAlternative::chap2_struct::Ring<Carrier>, x, y Carrier:
+    ? forall Carrier nonempty_set, ring &chap2::Ring<Carrier>, x, y Carrier:
         ring.add(x, y) = ring.add(y, x)
 
 # Source instance Ring₃ ℤ. Chapter 2 owns the canonical flat Ring interface,
 # so this hierarchy example constructs that record instead of redeclaring it.
 thm integer_ring_laws:
     ? forall anchor {0}:
-        $MILAlternative::chap2_struct::ring_laws(Z, fn(x, y Z) Z {x + y}, 0, fn(x Z) Z {-x}, fn(x, y Z) Z {x * y}, 1)
+        $chap2::ring_laws(Z, fn(x, y Z) Z {x + y}, 0, fn(x Z) Z {-x}, fn(x, y Z) Z {x * y}, 1)
     claim:
         ? forall x, y, z Z:
             fn(a, b Z) Z {a + b}(fn(a, b Z) Z {a + b}(x, y), z) = fn(a, b Z) Z {a + b}(x, fn(a, b Z) Z {a + b}(y, z))
@@ -133,7 +133,7 @@ thm integer_ring_laws:
         fn(a, b Z) Z {a + b}(x, 0) = x + 0 = x
         fn(a Z) Z {-a}(x) + x = -x + x = 0
     by def:
-        ? $MILAlternative::chap2_struct::additive_commutative_group_laws(Z, fn(x, y Z) Z {x + y}, 0, fn(x Z) Z {-x})
+        ? $chap2::additive_commutative_group_laws(Z, fn(x, y Z) Z {x + y}, 0, fn(x Z) Z {-x})
     claim:
         ? forall x, y, z Z:
             fn(a, b Z) Z {a * b}(fn(a, b Z) Z {a * b}(x, y), z) = fn(a, b Z) Z {a * b}(x, fn(a, b Z) Z {a * b}(y, z))
@@ -149,7 +149,7 @@ thm integer_ring_laws:
         fn(a, b Z) Z {a * b}(1, x) = 1 * x = x
         fn(a, b Z) Z {a * b}(x, 1) = x * 1 = x
     by def:
-        ? $MILAlternative::chap2_struct::ring_laws(Z, fn(x, y Z) Z {x + y}, 0, fn(x Z) Z {-x}, fn(x, y Z) Z {x * y}, 1)
+        ? $chap2::ring_laws(Z, fn(x, y Z) Z {x + y}, 0, fn(x Z) Z {-x}, fn(x, y Z) Z {x * y}, 1)
 
 1release thm integer_ring_laws(0)
 1release thm fn_set_member(fn(x, y Z) Z {x + y}, fn(x, y Z) Z)
@@ -158,14 +158,14 @@ thm integer_ring_laws:
 1release thm fn_set_member(fn(x, y Z) Z {x * y}, fn(x, y Z) Z)
 1 $in Z
 1release thm cart_member_from_coordinates((fn(x, y Z) Z {x + y}, 0, fn(x Z) Z {-x}, fn(x, y Z) Z {x * y}, 1), cart(fn(x, y Z) Z, Z, fn(x Z) Z, fn(x, y Z) Z, Z))
-1release thm struct_member((fn(x, y Z) Z {x + y}, 0, fn(x Z) Z {-x}, fn(x, y Z) Z {x * y}, 1), &MILAlternative::chap2_struct::Ring<Z>)
-have integer_ring &MILAlternative::chap2_struct::Ring<Z> = (fn(x, y Z) Z {x + y}, 0, fn(x Z) Z {-x}, fn(x, y Z) Z {x * y}, 1)
+1release thm struct_member((fn(x, y Z) Z {x + y}, 0, fn(x Z) Z {-x}, fn(x, y Z) Z {x * y}, 1), &chap2::Ring<Z>)
+have integer_ring &chap2::Ring<Z> = (fn(x, y Z) Z {x + y}, 0, fn(x Z) Z {-x}, fn(x, y Z) Z {x * y}, 1)
 
 # The source's LE1/Preorder1/PartialOrder1/OrderedCommMonoid1 block is an
 # alternate hierarchy presentation and is outside this core slice.
 
 prop is_module(Scalar, M nonempty_set, scalar_add fn(x, y Scalar) Scalar, scalar_zero Scalar, scalar_neg fn(x Scalar) Scalar, scalar_mul fn(x, y Scalar) Scalar, scalar_one Scalar, add fn(x, y M) M, zero M, neg fn(x M) M, smul fn(r Scalar, m M) M):
-    $MILAlternative::chap2_struct::ring_laws(Scalar, scalar_add, scalar_zero, scalar_neg, scalar_mul, scalar_one)
+    $chap2::ring_laws(Scalar, scalar_add, scalar_zero, scalar_neg, scalar_mul, scalar_one)
     $is_additive_commutative_group(M, add, zero, neg)
     forall m M:
         smul(scalar_zero, m) = zero
@@ -192,10 +192,10 @@ struct Module<Scalar, M nonempty_set>:
 # Source selfModule. The object reuses the ring operations and takes scalar
 # multiplication to be multiplication. Proof debt is the exact structure
 # membership bridge; the underlying ring laws are already stored in ring.
-trust forall Carrier nonempty_set, ring &MILAlternative::chap2_struct::Ring<Carrier>:
+trust forall Carrier nonempty_set, ring &chap2::Ring<Carrier>:
     (ring.add, ring.zero, ring.neg, ring.mul, ring.one, ring.add, ring.zero, ring.neg, ring.mul) $in &Module<Carrier, Carrier>
 
-template<Carrier nonempty_set, ring &MILAlternative::chap2_struct::Ring<Carrier>>:
+template<Carrier nonempty_set, ring &chap2::Ring<Carrier>>:
     have self_module &Module<Carrier, Carrier> = (ring.add, ring.zero, ring.neg, ring.mul, ring.one, ring.add, ring.zero, ring.neg, ring.mul)
 
 # Source definitions nsmul1 and zsmul1. Litex has no generic recursive
@@ -299,14 +299,14 @@ prop is_additive_monoid_hom(G, H nonempty_set, source &AdditiveMonoid<G>, target
 template<G, H nonempty_set, source &AdditiveMonoid<G>, target &AdditiveMonoid<H>>:
     have AdditiveMonoidHom set = {f fn(x G) H: $is_additive_monoid_hom(G, H, source, target, f)}
 
-prop is_ring_hom(A, B nonempty_set, source &MILAlternative::chap2_struct::Ring<A>, target &MILAlternative::chap2_struct::Ring<B>, f fn(x A) B):
+prop is_ring_hom(A, B nonempty_set, source &chap2::Ring<A>, target &chap2::Ring<B>, f fn(x A) B):
     f(source.zero) = target.zero
     f(source.one) = target.one
     forall x, y A:
         f(source.add(x, y)) = target.add(f(x), f(y))
         f(source.mul(x, y)) = target.mul(f(x), f(y))
 
-template<A, B nonempty_set, source &MILAlternative::chap2_struct::Ring<A>, target &MILAlternative::chap2_struct::Ring<B>>:
+template<A, B nonempty_set, source &chap2::Ring<A>, target &chap2::Ring<B>>:
     have RingHom set = {f fn(x A) B: $is_ring_hom(A, B, source, target, f)}
 
 # Source lemma map_inv_of_inv. It is direct once the hom laws are explicit.

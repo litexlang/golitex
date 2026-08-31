@@ -19,12 +19,12 @@
 pub use crate::error::RuntimeError;
 pub use crate::output::{language::OutputLanguage, style::OutputStyle};
 pub use crate::result::StmtResult;
-pub use crate::runtime::{RunOptions, Runtime};
+pub use crate::runtime::{ExecutionOption, RunOption, RunOptions, Runtime, SummaryOption};
 
 // Source, file, and repository execution entry points.
 pub use crate::pipeline::{
-    run_code, run_file, run_isolated_file, run_repository, FileRunMode, RunOutcome, RunSummary,
-    RunTarget, RunTargetKind, SourceRunOutcome,
+    run_code, run_file, run_repository, FileRunMode, RunOutcome, RunSummary, RunTarget,
+    RunTargetKind, SourceRunOutcome,
 };
 
 // Stable rendering entry points for embedding and machine-readable output.

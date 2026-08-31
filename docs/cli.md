@@ -295,7 +295,7 @@ litex -version
 ## Basic Shape
 
 ```text
-litex [global options] [command]
+litex [-compact|-detail] [-strict] [-summarize] [-lang <code>] [-isolated] <command>
 ```
 
 With no command, `litex` starts an isolated interactive verifier REPL. It does
@@ -303,9 +303,10 @@ not discover `litex.config` in the current directory or search parent
 directories. This terminal is deliberately separate from the fixed module
 tree, so it may load modules interactively.
 
-The CLI has one primary command per invocation. Global options are removed
-before the primary command is parsed, so they may appear before or after the
-primary command. Prefer putting them before the command for readability:
+The CLI has one primary command per invocation. The optional prefix has the
+fixed order shown above. Options are not removed or reordered before command
+parsing: repeated, out-of-order, trailing, or meaningless options are rejected.
+For example:
 
 ```bash
 litex -detail -strict -isolated -f examples/tmp.lit
@@ -317,15 +318,18 @@ litex -lang zh -e "1 = 1"
 Every invocation must match one documented command shape exactly. Additional
 tokens are rejected, except for the one documented optional graph-output path.
 The parser is a hardcoded command whitelist, not a general argument parser.
+For example, `litex -strict -e "1 = 1"` is valid, while
+`litex -e "1 = 1" -strict`, `litex -strict -strict -e "1 = 1"`, and
+`litex -strict -help` are invalid.
 
-## Global Options
+## Command Prefix Options
 
 | Option | Meaning |
 |--------|---------|
 | `-compact` | Show only `result`, `type`, `line`, and `statement` for successful execution results. Any `RuntimeError` is always detailed. |
 | *(no output flag)* | Use the normal reading view for successful results: internal statements plus assumptions, conclusions, and direct `why_verified` reasons, without audit duplication. Any `RuntimeError` is always detailed. |
 | `-detail` | Include fuller JSON trace details for both successful results and errors, including well-definedness, verification, and environment phases. Machine-rendered graph output also keeps raw file paths in this mode. |
-| `-strict` | Verify every configured import and every export loaded by `-f`, then reject user `trust`, `trust have`, and `axiom`. `-r` already verifies its complete export tree. Use it for CI or a complete dependency audit. |
+| `-strict` | Select a strict execution variant. Verify every configured import and every export loaded by `-f`, then reject user `trust`, `trust have`, and `axiom`. `-r` already verifies its complete export tree. It is rejected for help, version, LaTeX, extraction, and Lean commands. |
 | `-summarize` | Append one final run-summary JSON object after ordinary verifier command output. |
 | `-lang <code>` | Localize JSON keys and explanatory labels. Mathematical source strings inside fields such as `statement`, `fact`, and `cited_statement` stay in Litex syntax. |
 
@@ -371,9 +375,12 @@ REPL, runner, session, and `try:` execution paths. Existing error fields and
 exit-code behavior are unchanged; compact and normal failures may contain
 additional diagnostic fields.
 
-`-compact` affects ordinary verifier commands. `-detail`, `-strict`, and `-lang` mainly affect verifier, runner, and graph commands.
-`-summarize` affects ordinary verifier commands.
-They do not make module-management or tutorial placeholder commands functional.
+`-compact`, `-detail`, and `-lang` affect the command families that render
+verifier output. `-strict` applies only to execution, graph, and session
+variants. `-summarize` applies only to ordinary `-e`, `-f`, and `-r`
+execution. `-isolated` applies only to file, file-graph, file-session,
+file-conversion, and Lean variants. An option is rejected when its selected
+command has no corresponding typed run variant.
 
 ## Value Rules
 
@@ -391,16 +398,15 @@ litex -r examples/08_module_repository
 This means source code beginning with `-` should usually be put in a `.lit`
 file and run with `-f`.
 
-Because `-compact`, `-detail`, `-strict`, and `-summarize` are removed globally
-before command parsing, do not use a standalone command value exactly equal to
-any of those flags. `-lang` also consumes the next token globally.
+Prefix options are parsed only in their fixed positions before the command.
+A command value still cannot start with `-`; `-lang` consumes the following
+language-code token in the prefix.
 
 ## Verifier Commands
 
 | Command | Behavior |
 |---------|----------|
 | `litex` | Start an isolated interactive verifier REPL. |
-| `litex -isolated` | Compatibility spelling for the same isolated interactive REPL. |
 | `litex -e <code>` | Run a Litex source string. |
 | `litex -f <file>` | Require `litex.config` in the direct parent, trace to the module root, and run the recursive `[export]` prefix through this file. It fails if that direct configuration is absent. |
 | `litex -isolated -f <file>` | Run one Litex file as an isolated script, without project discovery; a successful ordinary CLI run then continues in an isolated REPL. |
@@ -817,7 +823,7 @@ litex -graph -f examples/04_case_studies/gcd_from_finite_divisors.lit tmp/graphs
 Generate a fact-only verification chain:
 
 ```bash
-litex -factgraph -isolated -f examples/tmp.lit tmp/graphs/tmp_fact_graph.json
+litex -isolated -factgraph -f examples/tmp.lit tmp/graphs/tmp_fact_graph.json
 ```
 
 Run with Chinese output labels:
@@ -829,5 +835,5 @@ litex -lang zh -e "1 = 1"
 Compile a file to LaTeX:
 
 ```bash
-litex -latex -isolated -f examples/tmp.lit
+litex -isolated -latex -f examples/tmp.lit
 ```

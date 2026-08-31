@@ -4,7 +4,7 @@ use super::{
 };
 use crate::pipeline::{execute_file_in_runtime, FileRunMode};
 use crate::prelude::OutputStyle;
-use crate::runtime::{RunOptions, Runtime};
+use crate::runtime::{ExecutionOption, RunOptions, Runtime};
 use crate::test_support::execute_source;
 use std::fs;
 use std::io::{self, BufRead, Cursor, Write};
@@ -17,10 +17,7 @@ fn run_repl_loop_with_readers(
 ) -> io::Result<()> {
     run_repl_loop_with_readers_and_mode(
         version_banner,
-        RunOptions {
-            output_style,
-            ..RunOptions::default()
-        },
+        RunOptions::execute(ExecutionOption::Repl).with_output_style(output_style),
         stdin_reader,
         stdout_writer,
         ReplOutputMode::Json,

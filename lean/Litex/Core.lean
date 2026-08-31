@@ -343,27 +343,15 @@ theorem intMulComplex
 end Same
 
 /-- A Litex set is represented by its exact element carrier. The carrier is
-the set extension itself; no additional native `Set.univ` value is stored. -/
+the set extension itself; no target-type-specific observation is stored. -/
 structure Set where
   Carrier : Litex.u.{u}
-  /-- Optional canonical native-real observation for exact carriers used by
-  target rendering. Completeness does not trust this function as membership
-  evidence; its native set is defined by heterogeneous `In` instead. -/
-  realValue : Option (Carrier → ℝ) := none
 
 namespace Set
 
 /-- Package an exact Lean carrier as a Litex set. -/
 abbrev ofType (α : Litex.u.{u}) : Litex.Set.{u} :=
-  ⟨α, none⟩
-
-/-- Package an exact carrier together with its canonical native-real
-observation. -/
-abbrev ofRealCarrier
-    (α : Litex.u.{u})
-    (value : α → ℝ) :
-    Litex.Set.{u} :=
-  ⟨α, some value⟩
+  ⟨α⟩
 
 /-- A Litex set is nonempty exactly when its exact carrier is inhabited. -/
 def Nonempty (set : Litex.Set.{u}) : Prop :=
@@ -501,6 +489,43 @@ carrier remains heterogeneous; a subset proof transports `In` evidence and
 does not retype the source value. -/
 def Subset (left right : Litex.Set.{u}) : Prop :=
   ∀ {alpha : Litex.u.{u}} (x : alpha), In x left → In x right
+
+namespace Subset
+
+/-- Select the target-carrier representative supplied by one checked subset
+transport. This is uniform in both sets; numeric sets, function sets, refined
+sets, and user-defined sets all use the same operation. -/
+noncomputable def rep
+    {left right : Litex.Set.{u}}
+    (subset : Litex.Subset left right)
+    {α : Litex.u.{u}}
+    (value : α)
+    (valueInLeft : Litex.In value left) :
+    right.Carrier :=
+  Litex.In.rep value (subset value valueInLeft)
+
+/-- The target representative selected by `Subset.rep` is semantically the
+same value as its source. -/
+theorem same_rep
+    {left right : Litex.Set.{u}}
+    (subset : Litex.Subset left right)
+    {α : Litex.u.{u}}
+    (value : α)
+    (valueInLeft : Litex.In value left) :
+    Litex.Same value (rep subset value valueInLeft) :=
+  Litex.In.same_rep value (subset value valueInLeft)
+
+/-- If the source value already has the target carrier, generic subset
+transport preserves it definitionally. -/
+@[simp] theorem rep_exact
+    {left right : Litex.Set.{u}}
+    (subset : Litex.Subset left right)
+    (value : right.Carrier)
+    (valueInLeft : Litex.In value left) :
+    rep subset value valueInLeft = value :=
+  Litex.In.rep_exact value (subset value valueInLeft)
+
+end Subset
 
 namespace Set
 
@@ -1264,11 +1289,9 @@ def fnRangeOwn
     {codomain : Litex.Set.{v}}
     (f : Fn domain codomain) :
     Litex.Set.{v} :=
-  ⟨
+  Set.ofType
     {value : codomain.Carrier //
-      ∃ (α : Type u) (x : α) (hx : In x domain), value = f.call x hx},
-    codomain.realValue.map (fun observe value => observe value.val)
-  ⟩
+      ∃ (α : Type u) (x : α) (hx : In x domain), value = f.call x hx}
 
 /-- Exact range of a unary Litex function with a source-domain predicate. -/
 def fnWhereRangeOwn
@@ -1277,12 +1300,10 @@ def fnWhereRangeOwn
     {requires : {α : Type u} → α → Prop}
     (f : FnWhere domain codomain requires) :
     Litex.Set.{v} :=
-  ⟨
+  Set.ofType
     {value : codomain.Carrier //
       ∃ (α : Type u) (x : α) (hx : In x domain) (hr : requires x),
-        value = f.call x hx hr},
-    codomain.realValue.map (fun observe value => observe value.val)
-  ⟩
+        value = f.call x hx hr}
 
 /-- Every checked application of an exact total function belongs to its exact
 range. -/
@@ -1422,7 +1443,7 @@ def fnTelescopeApplyOwn
 abbrev N : Litex.Set := Set.ofType ℕ
 abbrev Z : Litex.Set := Set.ofType ℤ
 abbrev Q : Litex.Set := Set.ofType ℚ
-abbrev R : Litex.Set := Set.ofRealCarrier ℝ id
+abbrev R : Litex.Set := Set.ofType ℝ
 abbrev C : Litex.Set := Set.ofType ℂ
 
 /-- A real interval with independently open or closed endpoints.  Its exact
@@ -1431,29 +1452,24 @@ def realInterval
     (leftClosed rightClosed : Bool)
     (start finish : ℝ) :
     Litex.Set :=
-  Set.ofRealCarrier
+  Set.ofType
     {value : ℝ //
       (if leftClosed then start ≤ value else start < value) ∧
       (if rightClosed then value ≤ finish else value < finish)}
-    Subtype.val
 
 /-- A real ray extending rightward from one open or closed endpoint. -/
 def realLeftRay
     (closed : Bool)
     (start : ℝ) :
     Litex.Set :=
-  Set.ofRealCarrier
-    {value : ℝ // if closed then start ≤ value else start < value}
-    Subtype.val
+  Set.ofType {value : ℝ // if closed then start ≤ value else start < value}
 
 /-- A real ray extending leftward to one open or closed endpoint. -/
 def realRightRay
     (closed : Bool)
     (finish : ℝ) :
     Litex.Set :=
-  Set.ofRealCarrier
-    {value : ℝ // if closed then value ≤ finish else value < finish}
-    Subtype.val
+  Set.ofType {value : ℝ // if closed then value ≤ finish else value < finish}
 
 theorem realIntervalSubsetR
     (leftClosed rightClosed : Bool)
@@ -1507,8 +1523,7 @@ def setBuilder
     (base : Litex.Set.{u})
     (predicate : base.Carrier → Prop) :
     Litex.Set.{u} :=
-  ⟨Subtype predicate,
-    base.realValue.map (fun observe value => observe value.val)⟩
+  Set.ofType (Subtype predicate)
 
 /-- Positive naturals use the exact subtype of native naturals carrying their
 strict-positivity proof. This is not an alias of `N`: membership retains the
@@ -2025,36 +2040,11 @@ def Lt (x y : ℂ) : Prop :=
 def Le (x y : ℂ) : Prop :=
   OrderValue x ≤ OrderValue y
 
-/-- A Litex set is explicitly real-valued when its exact carrier owns one
-canonical native-real observation. -/
-def Set.RealValued (set : Litex.Set) : Prop :=
-  ∃ observe : set.Carrier → ℝ, set.realValue = some observe
-
 /-- Native real values which are heterogeneous members of a Litex set.  This
 is the representation-independent set used by completeness: it does not
 trust a target-rendering observer to prove source membership. -/
 def realMemberValues (set : Litex.Set) : _root_.Set ℝ :=
   {value | Litex.In value set}
-
-/-- One native-real representative selected from a checked `set ⊆ R`
-certificate. Completeness itself is defined over all native real members, but
-this helper remains useful when a proof must observe an exact set carrier. -/
-noncomputable def realSubsetObserve
-    (set : Litex.Set)
-    (setSubsetReal : Litex.Subset set Litex.R)
-    (member : set.Carrier) : ℝ :=
-  Litex.In.rep member
-    (setSubsetReal member (Litex.In.own set member))
-
-theorem realSubsetObserve_same
-    (set : Litex.Set)
-    (setSubsetReal : Litex.Subset set Litex.R)
-    (member : set.Carrier) :
-    Litex.Same member (realSubsetObserve set setSubsetReal member : ℂ) :=
-  Litex.Same.trans
-    (Litex.In.same_rep member
-      (setSubsetReal member (Litex.In.own set member)))
-    (Litex.Same.realComplex (realSubsetObserve set setSubsetReal member))
 
 /-- The real-member set paired with the checked subset certificate.  The
 certificate is retained in the LUB/GLB proposition, while the extension is

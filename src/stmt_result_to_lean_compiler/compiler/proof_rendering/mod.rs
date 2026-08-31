@@ -19,6 +19,7 @@ mod set_algebra_rules;
 mod set_builder_membership;
 mod standard_set_projection;
 mod structural_set_equality;
+mod subset_transports;
 
 pub(super) use abstract_predicate_definitions::*;
 pub(super) use exact_predicate_transport::*;
@@ -41,3 +42,4 @@ pub(super) use set_algebra_rules::*;
 pub(super) use set_builder_membership::*;
 pub(super) use standard_set_projection::*;
 pub(super) use structural_set_equality::*;
+pub(super) use subset_transports::*;

@@ -1,14 +1,10 @@
-use super::arguments::{read_any_value_after_flag, read_non_flag_value_after_flag};
-use crate::graph::{render_graph, GraphKind};
-use crate::pipeline::{
-    run_code, run_file, run_isolated_repl_with_runtime, run_repository, RunOptions,
-};
+use crate::prelude::*;
 use std::fs;
 use std::path::Path;
 
 pub(super) const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-pub(super) fn run_code_from_e_command_line_flag(code: &str, options: RunOptions) {
+pub(super) fn run_code_command(code: &str, options: RunOptions) {
     let outcome = run_code(code, options);
     println!("{}", outcome.output.trim());
 }
@@ -20,7 +16,7 @@ pub(super) fn run_file_command(file_flag: &str, options: RunOptions) {
         return;
     }
     println!("{}", outcome.output.trim());
-    if outcome.ok && options.is_isolated {
+    if outcome.ok && options.is_isolated() {
         run_isolated_repl_with_runtime(VERSION, &mut outcome.runtime);
     }
 }
@@ -32,55 +28,19 @@ pub(super) fn run_repository_command(repo_path: &str, options: RunOptions) {
 
 pub(super) fn run_graph_command(
     graph_kind: GraphKind,
-    args: &[String],
-    index: &mut usize,
+    target: &str,
     options: RunOptions,
-) -> Result<(bool, String, Option<String>), String> {
-    let command_flag = graph_kind.flag();
-    let target_flag = read_any_value_after_flag(args, index, command_flag)?;
-    let target = match target_flag.as_str() {
-        "-e" | "-f" | "-r" => read_non_flag_value_after_flag(args, index, target_flag.as_str())?,
-        _ => {
-            return Err(format!(
-                "{} must be followed by one of: -f <file> [json], -e <code> [json], -r <repo> [json]",
-                command_flag
-            ));
+) -> (bool, String) {
+    let hide_file_paths = !options.output_style().is_detailed();
+    let outcome = match options.execution() {
+        ExecutionOption::Eval => run_code(target, options),
+        ExecutionOption::File | ExecutionOption::IsolatedFile => run_file(target, options),
+        ExecutionOption::Repo => run_repository(target, options),
+        ExecutionOption::Repl | ExecutionOption::Session | ExecutionOption::IsolatedSession => {
+            unreachable!("graph command was resolved to a non-batch target")
         }
     };
-    let save_path = read_optional_graph_save_path(args, index, command_flag)?;
-    let hide_file_paths = !options.output_style.is_detailed();
-    let outcome = match target_flag.as_str() {
-        "-e" => run_code(&target, options),
-        "-f" => run_file(&target, options),
-        "-r" => run_repository(&target, options),
-        _ => unreachable!("graph target flag was already validated"),
-    };
-    let output = render_graph(graph_kind, outcome, hide_file_paths);
-
-    Ok((output.0, output.1, save_path))
-}
-
-pub(super) fn read_optional_graph_save_path(
-    args: &[String],
-    index: &mut usize,
-    command_flag: &str,
-) -> Result<Option<String>, String> {
-    let save_path = match args.get(*index) {
-        Some(candidate) if !candidate.starts_with('-') => {
-            *index += 1;
-            Some(candidate.clone())
-        }
-        _ => None,
-    };
-
-    if let Some(unexpected) = args.get(*index) {
-        return Err(format!(
-            "unexpected argument after {} target: {}",
-            command_flag, unexpected
-        ));
-    }
-
-    Ok(save_path)
+    render_graph(graph_kind, outcome, hide_file_paths)
 }
 
 pub(super) fn print_or_save_graph_output(

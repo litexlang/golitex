@@ -5,7 +5,7 @@ use super::{
 use crate::error::RuntimeError;
 use crate::module_system::discover_repository;
 use crate::result::StmtResult;
-use crate::runtime::{RunOptions, Runtime};
+use crate::runtime::{ExecutionOption, RunOptions, Runtime};
 use crate::syntax::source_formatting::remove_windows_carriage_from_str;
 
 pub struct RunOutcome {
@@ -19,6 +19,7 @@ pub struct RunOutcome {
 }
 
 pub fn run_code(source: &str, options: RunOptions) -> RunOutcome {
+    let options = options.with_execution(ExecutionOption::Eval);
     let mut runtime = Runtime::new(options);
     let target = RunTarget::Eval;
     runtime.start_isolated_source(ExecutionTarget::Run(target.clone()).source_label());
@@ -32,26 +33,18 @@ pub fn run_code(source: &str, options: RunOptions) -> RunOutcome {
         stmt_results,
         runtime_error,
         None,
-        options.summarize,
+        options.should_summarize(),
     )
 }
 
 pub fn run_file(path: &str, options: RunOptions) -> RunOutcome {
-    run_file_with_mode(
-        path,
-        FileRunMode::from_isolated(options.is_isolated),
-        options,
-    )
-}
-
-pub fn run_isolated_file(path: &str, options: RunOptions) -> RunOutcome {
-    run_file(
-        path,
-        RunOptions {
-            is_isolated: true,
-            ..options
-        },
-    )
+    let (execution, mode) = if options.is_isolated() {
+        (ExecutionOption::IsolatedFile, FileRunMode::Isolated)
+    } else {
+        (ExecutionOption::File, FileRunMode::Project)
+    };
+    let options = options.with_execution(execution);
+    run_file_with_mode(path, mode, options)
 }
 
 fn run_file_with_mode(path: &str, mode: FileRunMode, options: RunOptions) -> RunOutcome {
@@ -78,11 +71,12 @@ fn run_file_with_mode(path: &str, mode: FileRunMode, options: RunOptions) -> Run
         stmt_results,
         runtime_error,
         target_error,
-        options.summarize,
+        options.should_summarize(),
     )
 }
 
 pub fn run_repository(path: &str, options: RunOptions) -> RunOutcome {
+    let options = options.with_execution(ExecutionOption::Repo);
     let mut runtime = Runtime::new(options);
     let normalized_path = remove_windows_carriage_from_str(path);
     let (stmt_results, runtime_error) =
@@ -99,7 +93,7 @@ pub fn run_repository(path: &str, options: RunOptions) -> RunOutcome {
         stmt_results,
         runtime_error,
         None,
-        options.summarize,
+        options.should_summarize(),
     )
 }
 

@@ -58,10 +58,8 @@ thm cauchy_sequence_converges:
         a(one_n0) - 1 $in E
         witness $is_nonempty_set(E) from a(one_n0) - 1
     claim:
-        ? forall x R:
-            x $in E
-            =>:
-                x <= a(one_n0) + 1
+        ? forall x E:
+            x <= a(one_n0) + 1
         obtain n1 from $has_eventual_lower_bound(a, x)
         release thm real_archimedean_natural_upper_bound(one_n0 + n1)
         obtain common_n from exist natural N+ st {one_n0 + n1 < natural}
@@ -103,10 +101,8 @@ thm cauchy_sequence_converges:
             claim:
                 ? L <= a(n) + epsilon / 2
                 claim:
-                    ? forall x R:
-                        x $in E
-                        =>:
-                            x <= a(n) + epsilon / 2
+                    ? forall x E:
+                        x <= a(n) + epsilon / 2
                     obtain n1 from $has_eventual_lower_bound(a, x)
                     release thm real_archimedean_natural_upper_bound(n0 + n1)
                     obtain common_n from exist natural N+ st {n0 + n1 < natural}

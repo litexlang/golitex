@@ -239,9 +239,9 @@ pub use crate::parsing::{TokenBlock, Tokenizer};
 pub use crate::pipeline::{
     display_runtime_error_json, display_stmt_exec_result_json, execute_file_in_runtime,
     execute_repository_target, render_run_output, render_run_summary, resolve_source_file_path,
-    run_code, run_file, run_isolated_file, run_isolated_repl_with_runtime, run_latex_repl,
-    run_repl, run_repository, run_session, ExecutionTarget, FileRunMode, RunOutcome, RunSummary,
-    RunSummaryRequest, RunTarget, RunTargetKind, SessionRequest, SessionTarget, SourceRunOutcome,
+    run_code, run_file, run_isolated_repl_with_runtime, run_latex_repl, run_repl, run_repository,
+    run_session, ExecutionTarget, FileRunMode, RunOutcome, RunSummary, RunSummaryRequest,
+    RunTarget, RunTargetKind, SessionRequest, SessionTarget, SourceRunOutcome,
 };
 pub use crate::result::BuiltinTheoremProvenance;
 pub use crate::result::BuiltinTheoremRequirementRole;
@@ -485,8 +485,8 @@ pub use crate::runtime::FreeParamCollection;
 pub use crate::runtime::ParseContext;
 pub use crate::runtime::ScopeFrame;
 pub use crate::runtime::{
-    BareSymbol, ExecutionFrame, ExecutionModuleFileInfo, RunOptions, Runtime,
-    StatementProofStateStack,
+    BareSymbol, ExecutionFrame, ExecutionModuleFileInfo, ExecutionOption, RunOption, RunOptions,
+    Runtime, StatementProofStateStack, SummaryOption,
 };
 pub use crate::statement::claim_stmt::ClaimStmt;
 pub use crate::statement::define_algorithm_stmt::AlgoCase;

@@ -3,14 +3,13 @@
 `litex -e '1 + 1 = 2'` executes inline source through the shared batch entry.
 
 ```text
-args = parse global fields (-compact, -strict, -lang, ...)
-validate one hardcoded command shape and exact argument count
-match first command:
-  -e/-f/-r -> enter the matching run_*_command handler
-             -> call pipeline::run_code/run_file/run_repository
-  graph commands -> execute the selected entry and render its RunOutcome
-  -latex   -> render LaTeX
-  -extractpython/-extractc -> verify and extract the supported executable subset
+args -> command::parse_cli_command
+     -> validate one hardcoded command shape and exact argument count
+     -> produce one resolved CliCommand with owned values and RunOptions
+match typed command:
+  Execute -> call pipeline::run_code/run_file/run_repository
+  Graph   -> execute the resolved input and render its RunOutcome
+  Latex/Extract/Lean -> run the selected typed conversion
 invalid combination -> print help and exit 2
 ```
 
@@ -28,13 +27,9 @@ invalid combination -> print help and exit 2
 
 | File | Responsibility |
 | --- | --- |
-| [`command_dispatch.rs`](command_dispatch.rs) | `run_cli` selects one command and preserves its exit behavior. |
-| [`arguments.rs`](arguments.rs) | Removes global flags into `RunOptions` and validates the finite command whitelist. |
-| [`command_handlers.rs`](command_handlers.rs) | Owns command-level adapters such as `run_code_from_e_command_line_flag`, calls the matching explicit pipeline entry, and hands graph outcomes to graph rendering while preserving process behavior. |
-| [`lean_commands.rs`](lean_commands.rs) | Validates and executes single-file Lean compilation commands. |
-| [`conversion_commands.rs`](conversion_commands.rs) | Owns complete `-latex`, `-extractpython`, and `-extractc` command handling and their adapters. |
+| [`command.rs`](command.rs) | Parses the complete argv once into a legal `CliCommand`, including resolved values, targets, save paths, and execution options. |
+| [`command_dispatch.rs`](command_dispatch.rs) | `run_cli` matches only typed commands and preserves their exit behavior. It does not interpret raw flags. |
+| [`command_handlers.rs`](command_handlers.rs) | Owns typed command adapters such as `run_code_command`, calls the matching explicit pipeline entry, and hands graph outcomes to graph rendering while preserving process behavior. |
+| [`lean_commands.rs`](lean_commands.rs) | Executes an already validated single-file Lean compilation command. |
+| [`conversion_commands.rs`](conversion_commands.rs) | Executes already resolved `-latex`, `-extractpython`, and `-extractc` inputs. |
 | [`messages.rs`](messages.rs) | Owns stable help text. |
-
-These entry files name dependencies from `graph`, `pipeline`, and `runtime`
-explicitly. They intentionally do not use the kernel-wide prelude,
-so a reader can follow each imported command directly to its owner.

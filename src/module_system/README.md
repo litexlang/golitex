@@ -31,7 +31,7 @@ module-only execution frame.
 | Configuration | Behavior |
 | --- | --- |
 | `[export] main = "./main.lit"` | Registers one ordered source file. |
-| `[import]`<br>`MILAlternative = "../textbook2"` | Resolves the sibling module under the local alias `MILAlternative`. |
+| `[import]`<br>`MIL = "../mathematics_in_litex/textbook"` | Resolves another canonical module under the local alias `MIL`. |
 | Two exports with the same name `main` | Rejected as a duplicate config name. |
 | An export path outside the recursive tree | Rejected instead of running an unregistered file as a project prefix. |
 | `A` imports `B` and `B` imports `A` | Rejected through `Loading` cycle state. |

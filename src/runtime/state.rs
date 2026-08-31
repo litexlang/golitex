@@ -54,11 +54,11 @@ impl Runtime {
     }
 
     pub fn set_output_style(&mut self, output_style: OutputStyle) {
-        self.run_options.output_style = output_style;
+        self.run_options = self.run_options.with_output_style(output_style);
     }
 
     pub fn effective_output_style(&self) -> OutputStyle {
-        self.run_options.output_style
+        self.run_options.output_style()
     }
 
     pub fn is_compact_output(&self) -> bool {
@@ -186,7 +186,7 @@ impl Runtime {
     }
 
     pub fn strict_mode_applies_to_current_module(&self) -> bool {
-        if !self.run_options.strict_mode {
+        if !self.run_options.is_strict() {
             return false;
         }
         let Some(frame) = self.execution_stack.last() else {

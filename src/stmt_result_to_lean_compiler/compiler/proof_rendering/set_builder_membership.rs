@@ -603,7 +603,8 @@ pub(in super::super) fn render_set_builder_predicate_projection_from_fact_and_pr
         return Err("set-builder concrete predicate projected to another fact family".into());
     };
     if predicate.predicate.to_string() != target_predicate.predicate.to_string()
-        || predicate.body.len() != target_predicate.body.len()
+        || predicate.body.len() != 1
+        || target_predicate.body.len() != 1
     {
         let exact_carrier = LeanTargetObjectRepresentation::lower(element)
             .ok()
@@ -624,68 +625,83 @@ pub(in super::super) fn render_set_builder_predicate_projection_from_fact_and_pr
         .predicate_bindings
         .get(&predicate_name)
         .ok_or_else(|| format!("unavailable concrete set-builder predicate {predicate_name}"))?;
-    if binding.parameter_count != predicate.body.len() {
-        return Err("set-builder concrete predicate changed its parameter arity".into());
+    if binding.parameter_count != 1 || binding.requirement_count != 1 {
+        return Err(
+            "set-builder predicate projection requires one concrete member parameter".into(),
+        );
     }
-    binding.definition.as_ref().ok_or_else(|| {
+    let definition = binding.definition.as_ref().ok_or_else(|| {
         "abstract set-builder predicates have no projection definition".to_string()
     })?;
-
-    // The verifier has already checked that `target` is the binder
-    // substitution of this set-builder clause.  Re-render the same retained
-    // predicate AST under two carrier environments: once at the exact base
-    // representative exposed by `inSetBuilder_iff`, and once at the source
-    // element.  The general exact-predicate transporter then handles every
-    // captured parameter as well as the one parameter occupied by the
-    // set-builder binder.  This is deliberately arity-independent: a clause
-    // such as `P(a, x)` is no more special than `P(x)`.
+    let group = definition
+        .typed_parameters
+        .groups
+        .first()
+        .ok_or_else(|| "concrete predicate lost its parameter group".to_string())?;
+    let [definition_parameter] = group.params.as_slice() else {
+        return Err("set-builder concrete predicate requires one definition parameter".into());
+    };
+    let set = parameter_set(&group.param_type)?;
+    let component_count = binding.requirement_count + definition.iff_facts.len();
+    let membership_selector = conjunction_selector(0, component_count)?;
+    let rendered_set = render_obj(set, context)?;
+    let (predicate_target_value, representative_same_predicate_target) =
+        if binding.exact_parameters[0] {
+            let predicate_target_value = render_exact_predicate_argument(
+                &target_predicate.body[0],
+                &source_builder.param_set,
+                context,
+            )?;
+            let predicate_target_same_external = render_exact_predicate_argument_same_to_source(
+                &target_predicate.body[0],
+                &source_builder.param_set,
+                context,
+            )?;
+            let predicate_target_same_representative =
+                format!("Litex.Same.trans ({predicate_target_same_external}) (__same)");
+            (
+                predicate_target_value,
+                format!("Litex.Same.symm ({predicate_target_same_representative})"),
+            )
+        } else {
+            (rendered_element.clone(), "Litex.Same.symm __same".into())
+        };
+    let mut component_proofs = vec![format!(
+        "(Litex.In.congr (Litex.Same.symm ({representative_same_predicate_target})) {rendered_set}).mpr (__selected{membership_selector})"
+    )];
     let mut representative_context = context.clone();
     representative_context
         .symbol_names
-        .insert(builder.symbol_id, "__rep".into());
-    representative_context
-        .exact_carrier_values
-        .insert(builder.symbol_id, "__rep".into());
-    representative_context
-        .semantic_zero_ended_order_symbols
-        .insert(builder.symbol_id);
-    install_exact_predicate_carrier_value(
-        builder.symbol_id,
-        &source_builder.param_set,
-        "__rep",
-        &mut representative_context,
-    )?;
+        .insert(definition_parameter.id(), "__rep".into());
     let mut element_context = context.clone();
     element_context
         .symbol_names
-        .insert(builder.symbol_id, rendered_element.clone());
-    element_context
-        .exact_carrier_values
-        .insert(builder.symbol_id, rendered_element.clone());
-    element_context
-        .semantic_zero_ended_order_symbols
-        .insert(builder.symbol_id);
-    install_exact_predicate_carrier_value(
-        builder.symbol_id,
-        &source_builder.param_set,
-        &rendered_element,
-        &mut element_context,
-    )?;
-    let expected_target = render_fact(clause, &element_context)?;
-    let retained_target = render_fact(target, context)?;
-    if expected_target != retained_target {
-        return Err(format!(
-            "set-builder concrete predicate projection changed its binder substitution from `{expected_target}` to `{retained_target}`"
-        ));
+        .insert(definition_parameter.id(), predicate_target_value.clone());
+    for (definition_clause_index, definition_clause) in definition.iff_facts.iter().enumerate() {
+        let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = definition_clause else {
+            return Err(
+                "set-builder concrete predicate projection currently transports equality clauses"
+                    .into(),
+            );
+        };
+        let selector = conjunction_selector(
+            binding.requirement_count + definition_clause_index,
+            component_count,
+        )?;
+        component_proofs.push(render_equality_across_representative(
+            equality,
+            &representative_context,
+            &element_context,
+            "__rep",
+            &predicate_target_value,
+            &representative_same_predicate_target,
+            &format!("__selected{selector}"),
+        )?);
     }
-    let transported = render_fact_proof_across_exact_predicate_arguments(
-        clause,
-        clause,
-        &representative_context,
-        &element_context,
-        "__selected",
-    )?;
     Ok(format!(
-        "(show {retained_target} from (by\n  rcases Litex.Rules.inSetBuilder_iff.mp ({source_proof}) with ⟨__rep, __predicate, __same⟩\n  have __selected := __predicate{predicate_selector}\n  exact {transported}))"
+        "(by\n  rcases Litex.Rules.inSetBuilder_iff.mp ({}) with ⟨__rep, __predicate, __same⟩\n  have __selected := __predicate{predicate_selector}\n  unfold {} at __selected ⊢\n  exact ⟨{}⟩)",
+        source_proof,
+        binding.lean_name,
+        component_proofs.join(", ")
     ))
 }

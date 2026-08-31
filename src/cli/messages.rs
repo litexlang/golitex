@@ -11,7 +11,7 @@ litex -e <code> : execute the given code
 litex -session : run a machine-readable project REPL for framed code blocks
 litex -session -f <file> : load the project prefix through a registered file, then keep the same Runtime in session mode
 litex -isolated -session -f <file> : load one standalone file, then keep the same Runtime in session mode
-litex -f <input.lit> -isolated -lean <output.lean> : verify every statement in one standalone file, then compile the complete result to Lean
+litex -isolated -f <input.lit> -lean <output.lean> : verify every statement in one standalone file, then compile the complete result to Lean
 litex -graph -f <file> <json> : run a file and save a recursive result/proof/FactId graph JSON object
 litex -graph -e <code> <json> : run source code and save a recursive result/proof/FactId graph JSON object
 litex -graph -r <project> <json> : run a project and save a recursive result/proof/FactId graph JSON object
@@ -36,9 +36,10 @@ litex -version : show the version
 litex -compact : show minimal success output; RuntimeError output always uses full detailed diagnostics
 litex : show normal success output with internal statements and direct verification reasons; RuntimeError output is detailed
 litex -detail : include full audit trace details and raw source paths for both success and RuntimeError JSON output
-litex -strict : verify configured imports and -f prefix entries, and reject user trust, trust have, and axiom statements
+litex -strict : strict execution prefix; verify configured imports and -f prefix entries, and reject user trust, trust have, and axiom statements
 litex -summarize : append one run summary JSON object after ordinary verifier command output
 litex -lang <en|zh|zh-Hans|zh-Hant|ja|ko|es|fr|de|pt|ru|ar|hi|vi|id> : choose output language
+prefix order: [-compact|-detail] [-strict] [-summarize] [-lang <code>] [-isolated] <command>; unsupported, repeated, out-of-order, and meaningless options are rejected
 "#;
     result.to_string()
 }

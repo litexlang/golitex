@@ -4,8 +4,9 @@ This release-verified subset exports the introduction and Chapters 1--10. It
 includes introductory functions and bounds, setting-based algebraic basics,
 propositional logic, sets and functions, elementary number theory, and discrete
 mathematics, together with the callable structure, Gaussian-integer, and
-group-and-ring construction slices.
-The alternative structured-basics submodule remains an explicit import.
+group-and-ring construction slices. The single reader-facing `chap2` export
+starts with named settings and retains the first-class structure values, their
+laws, and later-chapter interfaces in the same Chapter 2 file.
 
 Chapter 4 returned to the runnable module after the kernel learned to reuse an
 identical template object committed from a theorem child environment. Its

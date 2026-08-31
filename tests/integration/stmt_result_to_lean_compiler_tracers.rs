@@ -97,7 +97,7 @@ fn litex_to_mathlib_pipeline_showcase_generated_lean_has_not_drifted() {
     const SOURCE: &str =
         include_str!("../../showcases/litex_to_lean_mathlib_pipeline/showcase1/main.lit");
     const CHECKED_IN: &str = include_str!(
-        "../../showcases/litex_to_lean_mathlib_pipeline/showcase1/LitexToMathlibPipelineGenerated.lean"
+        "../../showcases/litex_to_lean_mathlib_pipeline/showcase1/Generated.lean"
     );
 
     let generated =
@@ -128,7 +128,7 @@ fn litex_to_mathlib_pipeline_showcase_generated_lean_has_not_drifted() {
 #[test]
 fn litex_to_mathlib_pipeline_property_companion_verifies_without_trust() {
     const SOURCE: &str =
-        include_str!("../../showcases/litex_to_lean_mathlib_pipeline/showcase1/property_flow.lit");
+        include_str!("../../showcases/litex_to_lean_mathlib_pipeline/showcase1/extras/property_flow.lit");
 
     let results = capture_stmt_results_json_v2_on_verifier_stack(SOURCE, "property_flow.lit")
         .expect("verify the property-centered companion source");

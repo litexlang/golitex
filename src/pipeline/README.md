@@ -7,7 +7,6 @@ commands render the resulting `RunOutcome` without redispatching the input.
 ```text
 run_code(source, options)         -> Runtime::new -> execute source
 run_file(path, options)           -> Runtime::new -> resolve and execute file
-run_isolated_file(path, options)  -> Runtime::new -> resolve and execute isolated file
 run_repository(path, options)     -> Runtime::new -> discover and execute repository
                                    -> render output and optional summary once
 ```

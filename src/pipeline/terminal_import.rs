@@ -87,7 +87,7 @@ pub(super) fn run_terminal_import(source: &str, runtime: &mut Runtime) -> String
         .module(module_id)
         .expect("terminal import module should be registered")
         .status;
-    let execution_mode = if runtime.run_options.strict_mode {
+    let execution_mode = if runtime.run_options.is_strict() {
         ExecutionMode::Verified
     } else {
         let name = runtime

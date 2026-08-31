@@ -83,3 +83,58 @@ boundary without another Cargo build.
 The focused probes live only in
 `tmp/2026-08-30/one-week-tolean-day1/`. No integration assertion, checked-in
 generated module, or active compiler path was rewritten during this audit.
+
+## Hash-bound H3 replay
+
+Recorded: 2026-08-31 09:59–10:03 CST
+
+The newest release test executable listed all 76 tests and, while both its
+SHA-256 and the Rust-source fingerprint stayed fixed, reproduced the exact
+same result in 5.38s: exit `101`, 55 passed, 21 failed. Its failure-name set is
+identical to `integration_failure_families.tsv`.
+
+`cargo test --release --test stmt_result_to_lean_compiler_tracers --no-run`
+then completed once at the same Rust fingerprint and named that same binary,
+proving a source-to-binary binding for the recorded historical snapshot. The
+full structured record is `integration_gate_evidence.json`.
+
+Immediately afterward the active RunOptions/pipeline/API refactor changed the
+Rust fingerprint, so the evidence is correctly `current_valid:false`. One
+dependency-changed rebind was attempted and exited `101` with 15 compiler
+errors while its own source fingerprint changed. The first error was
+`src/pipeline/run.rs:22:41`: `ExecutionOption` was not imported. This is
+`B-H3-02 baseline_external`; Codex did not edit the active runtime, pipeline,
+or CLI paths and will not retry until that refactor reaches a new coherent
+state.
+
+`run_integration_gate.py` now automates that binding and refuses to overwrite
+the prior report on Cargo failure, fingerprint drift, binary drift, total
+drift, or failure-ledger drift. Its first real run reached a new compiled test
+binary but exited `1` because Rust source changed during the Cargo phase; the
+mtime of `integration_gate_evidence.json` remained 10:03:47, proving the
+failed attempt did not replace the historical evidence.
+
+## Current 56/20 transition
+
+Recorded: 2026-08-31 10:37–10:38 CST
+
+The RunOptions/pipeline refactor reached a coherent Rust snapshot:
+`cargo check --all-targets` passed at unchanged fingerprint `e7479016...`.
+The hash-bound integration runner then built and executed the release test
+binary. It deliberately rejected the old ledger because the result improved
+from 55/21 to 56/20: there were no new failures, and
+`litex_to_mathlib_pipeline_showcase_generated_lean_has_not_drifted` is now a
+pass. The maintained ledger and 76-row inventory were updated by removing only
+that resolved row.
+
+The current 20 failures classify as 13 kernel-checked expectation drifts, one
+checked-in Example 64 drift, and six genuine compiler gaps. A second gate run
+must reproduce exactly this set under one unchanged source/binary fingerprint
+before `integration_gate_evidence.json` becomes current again.
+
+That exact second run succeeded at 10:44 CST: Cargo bound the test binary to
+Rust fingerprint `4eb404d6...`, and the unchanged binary reported 56 pass / 20
+classified failures / 76 total. `integration_gate_evidence.json` was current
+for that snapshot. At 10:47 the active CLI/runtime refactor changed Rust again,
+so the report is now deliberately marked historical; the 56/20 transition is
+still reproducible evidence, not a claim about the later incomplete refactor.

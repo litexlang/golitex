@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-08-31 10:44:42 CST",
+  "current_valid": false,
+  "invalidation": "Rust sources changed from 4eb404d6... to 0f969c4b... after the stable 56/20/76 Cargo-bound run; the result is historical.",
+  "rust_source_fingerprint_sha256": "4eb404d676e0d2ecc29002ebb70b4d6e8e3886366577bbb408ea39910e12cd8e",
+  "test_source": {
+    "path": "tests/integration/stmt_result_to_lean_compiler_tracers.rs",
+    "sha256": "939b2dee252c0da1daf8fc343fbf2186580741b3b664f3ae23fa16b67e7f942b"
+  },
+  "test_binary": {
+    "path": "target/release/deps/stmt_result_to_lean_compiler_tracers-41e7fd8fb7bd7dc1",
+    "sha256": "4895de2a214d41364148f78888f074dccda19f777067cc54b5a6e3ea9fc3b5fa"
+  },
+  "cargo_binding": {
+    "command": "cargo test --release --test stmt_result_to_lean_compiler_tracers --no-run --message-format=json",
+    "exit": 0,
+    "source_fingerprint_before": "4eb404d676e0d2ecc29002ebb70b4d6e8e3886366577bbb408ea39910e12cd8e",
+    "source_fingerprint_after": "4eb404d676e0d2ecc29002ebb70b4d6e8e3886366577bbb408ea39910e12cd8e"
+  },
+  "failure_ledger": {
+    "path": "lean/coverage/integration_failure_families.tsv",
+    "sha256": "62e860ee395bad47d7f8575483c10d6bad336c02a16039bc05d1ef8567b9e35b"
+  },
+  "run": {
+    "command": "target/release/deps/stmt_result_to_lean_compiler_tracers-41e7fd8fb7bd7dc1 --nocapture",
+    "exit": 101,
+    "duration_seconds": 5.61,
+    "passed": 56,
+    "failed": 20,
+    "ignored": 0,
+    "total": 76,
+    "source_fingerprint_before": "4eb404d676e0d2ecc29002ebb70b4d6e8e3886366577bbb408ea39910e12cd8e",
+    "source_fingerprint_after": "4eb404d676e0d2ecc29002ebb70b4d6e8e3886366577bbb408ea39910e12cd8e",
+    "binary_sha256_before": "4895de2a214d41364148f78888f074dccda19f777067cc54b5a6e3ea9fc3b5fa",
+    "binary_sha256_after": "4895de2a214d41364148f78888f074dccda19f777067cc54b5a6e3ea9fc3b5fa",
+    "failure_names": [
+      "builtin_strategy_result_marks_each_selected_layer_and_replays_exact_rules",
+      "collections_and_aggregates_use_exact_typed_carriers",
+      "compound_anonymous_functions_replay_their_owned_wd_scope",
+      "conjunction_disjunction_and_alpha_forall_citations_replay_exact_evidence",
+      "conjunction_projection_replays_inferred_fact_ids",
+      "existential_intro_and_elim_use_native_carrier_and_exact_projections",
+      "known_equality_paths_replay_same_symmetry_and_transitivity",
+      "known_forall_multi_conclusion_fact_id_provenance_compiles_both_exact_projections",
+      "multilayer_application_preserves_each_unary_source_contract",
+      "named_real_functions_compile_compound_bodies_and_domain_clauses",
+      "nested_forall_premises_replay_parameter_aliases_and_normalization",
+      "not_equal_symmetry_negates_heterogeneous_same",
+      "order_tracer_compiles_catalog_rule_and_rejects_non_catalog_transitivity",
+      "predicate_backed_witness_compiles_all_retained_fact_ids",
+      "proof_scope_tracer_emits_named_theorem_claim_and_example",
+      "rational_and_natural_carrier_closures_replay_exact_rules",
+      "real_sequence_definitions_stable_tracer_generated_lean_has_not_drifted",
+      "set_extension_combines_two_typed_subset_reflexivity_child_results",
+      "set_extension_compiles_nested_finite_enumeration_proof_steps",
+      "subtractive_strategy_rule_compiles_from_registered_certificate"
+    ]
+  },
+  "classification_counts": {
+    "compiler_gap": 6,
+    "kernel_checked_checked_in_drift": 1,
+    "kernel_checked_expectation_drift": 13
+  }
+}

@@ -9,6 +9,7 @@ enum ReplOutputMode {
 }
 
 pub fn run_repl(version: &str, options: RunOptions) {
+    let options = options.with_execution(ExecutionOption::Repl);
     let stdin_handle = io::stdin();
     let stdout_handle = io::stdout();
     let mut stdin_locked = stdin_handle.lock();

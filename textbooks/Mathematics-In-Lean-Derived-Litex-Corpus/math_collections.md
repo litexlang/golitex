@@ -94,20 +94,17 @@ source uses an admitted proof term, but the current completion target requires
 a real checked theorem. Its natural-number statement and full proof therefore
 remain explicit Litex proof debt rather than an exclusion or assumption.
 
-## Independent setting-first and structure-first presentations
+## Setting-first narrative with structure interfaces
 
 The default `chap2` theorem surface uses named settings for reasoning inside
 one ambient mathematical system. Its operations remain direct subjects:
-`add(a,b)`, `mul(a,b)`, `meet(a,b)`, and `dist(x,y)`. It states its laws
-directly and proves every theorem from those laws or earlier theorems in the
-same file.
-
-The separate `../textbook2` module provides a structure-first presentation.
-Its `chap2_struct` export owns first-class structure values for construction,
-comparison, transport, and downstream APIs that need a system as an object.
-Neither Chapter 2 presentation cites the other. This independence is the
-important comparison boundary: they are two formalizations, not one proof
-library with a wrapper surface.
+`add(a,b)`, `mul(a,b)`, `meet(a,b)`, and `dist(x,y)`. It states the ambient
+laws directly, so the reader follows setting parameters rather than packaged
+objects. The second half of the same `chapter02-basics.lit` file retains
+first-class structure values for construction, comparison, transport, and
+downstream APIs that need a system as an object. It also owns shared law
+predicates and generic results. This is one export and one file with two
+interface roles.
 
 Inside the structure-first presentation, the dependency direction is:
 
@@ -116,14 +113,14 @@ candidate data -> *_laws -> structure object -> residual property/theorem
 ```
 
 Reversing that arrow by defining a structure in terms of a property that
-already requires the structure would be circular. The setting presentation
-has its own independent direction:
+already requires the structure would be circular. The setting-facing route is
+deliberately direct:
 
 ```text
-setting laws -> local setting theorem -> later local setting theorem
+setting laws -> setting theorem
 ```
 
-### Two interfaces and an explicit call boundary
+### Two interfaces in one chapter
 
 `chapter02-basics.lit`, exported as `chap2`, names repeated universal
 environments such as
@@ -134,15 +131,11 @@ and `dist(x, y)`.
 
 A setting is an elaboration-only formal-parameter prefix, not a second
 mathematical object and not a runtime package. Settings expand only in
-`forall` positions, not in definition or template headers. The current
-setting-first proofs do not fold into, cite, or otherwise depend on the
-structure-first law predicates.
-
-`../textbook2/chapter02-basics-struct.lit`, exported as `chap2_struct`, is the
-independent structure-oriented chapter. The main module imports its containing
-module as `MILAlternative` only because later chapters retain first-class
-structure signatures. At a deliberate boundary between the two styles, the
-parameter's direct struct declaration supplies the fields:
+`forall` positions, not in definition or template headers. The first half of
+`chapter02-basics.lit` uses this form directly. Its later structure section
+declares the packaged values, law predicates, and structure-facing theorem
+variants under the same `chap2` namespace. At the boundary between the two
+interfaces, a struct parameter's declaration supplies its fields directly:
 
 ```litex
 chap2::add_neg_cancel(
@@ -272,7 +265,7 @@ are checked; group normalization, finite-group theory, selected inverses, and
 larger structure assemblies remain deferred where their proof chain is absent.
 
 Chapter 8's source-local integer ring experiment constructs
-`MILAlternative::chap2_struct::Ring<Z>` directly. Its fields are integer addition, zero, negation,
+`chap2::Ring<Z>` directly. Its fields are integer addition, zero, negation,
 multiplication, and one. The rejected forms are a duplicate canonical `Ring`
 declaration and a proposition merely asserting that the integers form a ring.
 Chapter 8 retains `TwoSidedGroup` under a distinct name because that source
@@ -301,7 +294,7 @@ projections use the same declaration-owned interface as an ordinary binding.
 Chapter 8's `Module<Scalar,M>` follows the same flat-data rule. It exposes the
 five scalar-ring operations, the three additive operations on `M`, and scalar
 multiplication directly. Its body composes
-`MILAlternative::chap2_struct::ring_laws`,
+`chap2::ring_laws`,
 `is_additive_commutative_group`, and `is_module`. A nested `module.ring` or
 `module.additive_group` field was rejected because it would make later vector
 and normed-space access paths reflect implementation hierarchy rather than
@@ -327,7 +320,7 @@ visible trust debt.
 
 Chapter 9 keeps algebraic constructions callable. A normal subgroup produces
 a nonempty quotient carrier together with projection, multiplication, inverse,
-and a `MILAlternative::chap2_struct::Group` object; the projection and
+and a `chap2::Group` object; the projection and
 universal lift are functions,
 not propositions. Free and presented groups likewise expose their carriers,
 generator maps, and universal lifts as parameterized objects/functions, while
@@ -410,7 +403,7 @@ domain.remainder(x,y)) = x`.
 Chapter 7's permutation group uses `Equiv<s,s>` as its carrier. Because this
 carrier contains the identity even when `s` is empty, `permutation_carrier<s>`
 records it as a `nonempty_set`; `permutation_group<s>` is then an actual
-`MILAlternative::chap2_struct::Group` object with reversed composition,
+`chap2::Group` object with reversed composition,
 identity, and inverse fields.
 A proposition-only `is_permutation_group` wrapper was rejected because later
 clients need the operations. The remaining group-record membership proof is

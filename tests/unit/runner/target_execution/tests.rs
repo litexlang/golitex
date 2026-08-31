@@ -100,10 +100,8 @@ fn runner_accepts_trust_have_as_normal_execution() {
 fn zh_runner_keeps_machine_wrapper_keys_and_localizes_trace() {
     let (ok, output) = run_runner_for_test(
         "trust 1 = 1",
-        RunOptions {
-            output_language: OutputLanguage::SimplifiedChinese,
-            ..RunOptions::default()
-        },
+        RunOptions::execute(ExecutionOption::Eval)
+            .with_output_language(OutputLanguage::SimplifiedChinese),
     );
 
     assert!(ok, "Chinese runner should succeed:\n{}", output);
@@ -132,10 +130,7 @@ fn non_english_runner_keeps_machine_wrapper_keys() {
     ] {
         let (ok, output) = run_runner_for_test(
             "trust 1 = 1",
-            RunOptions {
-                output_language: language,
-                ..RunOptions::default()
-            },
+            RunOptions::execute(ExecutionOption::Eval).with_output_language(language),
         );
 
         assert!(ok, "localized runner should succeed:\n{}", output);
@@ -151,10 +146,7 @@ fn non_english_runner_keeps_machine_wrapper_keys() {
 fn strict_runner_rejects_user_trust() {
     let (ok, output) = run_runner_for_test(
         "trust 1 = 0",
-        RunOptions {
-            strict_mode: true,
-            ..RunOptions::default()
-        },
+        RunOptions::strict_execute(ExecutionOption::Eval),
     );
 
     assert!(
@@ -175,10 +167,7 @@ axiom strict_axiom:
 "#;
     let (ok, output) = run_runner_for_test(
         source_code,
-        RunOptions {
-            strict_mode: true,
-            ..RunOptions::default()
-        },
+        RunOptions::strict_execute(ExecutionOption::Eval),
     );
 
     assert!(
@@ -195,10 +184,7 @@ fn strict_runner_rejects_user_trust_have() {
     run_with_large_stack("strict_runner_rejects_user_trust_have", || {
         let (ok, output) = run_runner_for_test(
             "trust have x R",
-            RunOptions {
-                strict_mode: true,
-                ..RunOptions::default()
-            },
+            RunOptions::strict_execute(ExecutionOption::Eval),
         );
 
         assert!(

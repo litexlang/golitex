@@ -241,15 +241,15 @@ template<s set>:
 # exact record-membership fact used by the callable source object.
 thm permutation_group_closed:
     ? forall s set:
-        (\permutation_mul<s>, \permutation_one<s>, \permutation_inv<s>) $in &MILAlternative::chap2_struct::Group<\permutation_carrier<s>>
-    trust (\permutation_mul<s>, \permutation_one<s>, \permutation_inv<s>) $in &MILAlternative::chap2_struct::Group<\permutation_carrier<s>>
+        (\permutation_mul<s>, \permutation_one<s>, \permutation_inv<s>) $in &chap2::Group<\permutation_carrier<s>>
+    trust (\permutation_mul<s>, \permutation_one<s>, \permutation_inv<s>) $in &chap2::Group<\permutation_carrier<s>>
 
 template<s set>:
-    have permutation_group &MILAlternative::chap2_struct::Group<\permutation_carrier<s>> = (\permutation_mul<s>, \permutation_one<s>, \permutation_inv<s>)
+    have permutation_group &chap2::Group<\permutation_carrier<s>> = (\permutation_mul<s>, \permutation_one<s>, \permutation_inv<s>)
 
 # Source definition mySquare, kept as a callable construction. Group2 is only a
 # typeclass presentation of the same Group interface and is collapsed here.
-template<s nonempty_set, group &MILAlternative::chap2_struct::Group<s>>:
+template<s nonempty_set, group &chap2::Group<s>>:
     have fn group_square(x s) s = group.mul(x, x)
 
 # The source's bundled Grp record stores a type universe as a field. Litex uses
@@ -355,7 +355,7 @@ thm gauss_mul_im:
 1release thm gauss_mul_im_from_result(x, y, gauss_mul(x, y))
 
 prop is_commutative_ring(s nonempty_set, add fn(x, y s) s, zero s, neg fn(x s) s, mul fn(x, y s) s, one s):
-    $MILAlternative::chap2_struct::ring_laws(s, add, zero, neg, mul, one)
+    $chap2::ring_laws(s, add, zero, neg, mul, one)
     forall x, y s:
         mul(x, y) = mul(y, x)
 

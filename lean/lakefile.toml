@@ -11,22 +11,6 @@ rev = "v4.31.0"
 name = "Litex"
 
 [[lean_lib]]
-name = "LitexToMathlibPipeline"
-srcDir = "../showcases/litex_to_lean_mathlib_pipeline/showcase1"
-
-[[lean_lib]]
-name = "LitexToMathlibPipelineGenerated"
-srcDir = "../showcases/litex_to_lean_mathlib_pipeline/showcase1"
-
-[[lean_lib]]
-name = "LitexToMathlibPipelineAdapter"
-srcDir = "../showcases/litex_to_lean_mathlib_pipeline/showcase1"
-
-[[lean_lib]]
-name = "LitexToMathlibPipelineDownstream"
-srcDir = "../showcases/litex_to_lean_mathlib_pipeline/showcase1"
-
-[[lean_lib]]
 name = "LitexGenerate"
 srcDir = "../showcases/litex_to_lean_mathlib_pipeline/showcase2"
 

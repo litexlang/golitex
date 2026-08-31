@@ -22,7 +22,7 @@
 #
 # Evidence:
 # target/release/litex -compact -strict -graph -f lean/examples/6_FactReplay.lit
-# target/release/litex -f lean/examples/6_FactReplay.lit -isolated -lean lean/examples/6_FactReplay.lean
+# target/release/litex -isolated -f lean/examples/6_FactReplay.lit -lean lean/examples/6_FactReplay.lean
 # cd lean && ./stmt_result_to_lean_compiler.sh check examples
 
 forall a, b set:

@@ -113,14 +113,14 @@ route with `main::real_field`, `main::real_plane`, and
 Run from the repository root:
 
 ```bash
-target/release/litex -compact -runner -f showcases/math_concepts_in_litex/5_linear_algebra/main.lit -summarize
-target/release/litex -compact -runner -f showcases/math_concepts_in_litex/5_linear_algebra/main2.lit -summarize
-target/release/litex -compact -runner -r showcases/math_concepts_in_litex/5_linear_algebra -summarize
+target/release/litex -compact -summarize -f showcases/math_concepts_in_litex/5_linear_algebra/main.lit
+target/release/litex -compact -summarize -f showcases/math_concepts_in_litex/5_linear_algebra/main2.lit
+target/release/litex -compact -summarize -r showcases/math_concepts_in_litex/5_linear_algebra
 ```
 
-Acceptance requires exit status zero and top-level `ok: true` for all three
-commands, plus no newly introduced direct `trust` or local `axiom` in the
-published Litex files.
+Acceptance requires exit status zero and a final run-summary object for all
+three commands, plus no newly introduced direct `trust` or local `axiom` in
+the published Litex files.
 
 Recorded on 2026-08-21: all three commands exited zero and reported top-level
 `ok: true`. The directory gate verified `main` and `main2` together.
