@@ -156,13 +156,111 @@ Litex classification       hx : Litex.In x S
 Litex identity             hxy : Litex.Same x y
 ```
 
-The equality bridge is deliberately asymmetric. Native Lean equality always
-lifts to semantic equality through `Litex.Same.ofEq`. The reverse direction
-exists only at reviewed specialization boundaries where both endpoints have
-the same canonical carrier and the semantic observation is injective. For
-example, `Litex.Same.complexNativeEq` turns `Same x y` into `x = y` for
-`x y : ℂ`. There is no global `Same x y → x = y`, and arbitrary `Same`
-evidence is not a Lean rewrite certificate.
+The global identity relation is:
+
+```text
+Lean Eq ⊆ Litex.Same
+```
+
+Native Lean equality always constructs semantic equality through
+`Litex.Same.ofEq`. The inclusion is strict in general. In particular,
+**having the same Lean host type is necessary but not sufficient** for
+reflecting `Same` back to `Eq`: two values of type `Litex.Set` may be
+extensionally `Same` while using different exact carriers. The reverse
+direction exists only at reviewed specialization boundaries where the common
+carrier has a faithful/injective semantic observation. For example,
+`Litex.Same.complexNativeEq` turns `Same x y` into `x = y` for `x y : ℂ`.
+Arbitrary `Same` evidence is not a Lean rewrite certificate.
+
+### Parameter kinds are not membership domains
+
+The source Result already distinguishes these two forms, and compiler must
+preserve the distinction:
+
+| Litex source binder | Retained source fact | Meaning |
+| --- | --- | --- |
+| `forall x S` | `InFact(x, S)` | `x` belongs to the particular set object `S` |
+| `forall A set` | `IsSetFact(A)` | `A` is a mathematical set object |
+| `have A set` | `IsSetFact(A)` | the introduced object is known only to be a set |
+
+The token `set` is a **parameter kind**. It is neither a universal Litex set
+nor a request to prove `Litex.In A Litex.Set`; `Litex.Set` is a Lean host type,
+not a source-level set of all sets. Consequently compiler must not discharge
+`IsSetFact(A)` merely by choosing the host binder type `A : Litex.Set`, and it
+must not lower the fact to `True`.
+
+The target semantic interface is an explicit set view:
+
+```lean
+Litex.IsSet.{u} {α : Type (u + 1)} (A : α) : Prop
+Litex.IsSet.rep (A : α) (hA : Litex.IsSet A) : Litex.Set.{u}
+Litex.IsSet.same_rep (A : α) (hA : Litex.IsSet A) :
+  Litex.Same A (Litex.IsSet.rep A hA)
+Litex.IsSet.own (S : Litex.Set.{u}) : Litex.IsSet S
+```
+
+`rep` is the reviewed elimination from the representation-independent set
+object to the exact carrier required by `Litex.In`, `Subset`, set operations,
+and function-set construction. This API also needs a proved coherence law:
+if `A` and `B` are sets and `Same A B`, membership in their selected exact
+representatives is equivalent. Merely defining `IsSet A` as
+`∃ S, Same A S` is not sufficient unless that membership coherence follows
+from the strengthened `Same`/set contract. The current Core does not yet
+provide this general eliminator, so the Core design and the lowering must land
+together rather than hiding the gap in emitter code.
+
+For the current universe-zero set slice, the target shape is:
+
+```litex
+forall A set, x A:
+    x = x
+```
+
+```lean
+∀ {αA : Type 1} (A : αA) (hA : Litex.IsSet A)
+  {αx : Type} (x : αx)
+  (hx : Litex.In x (Litex.IsSet.rep A hA)),
+  Litex.Same x x
+```
+
+Every important source execution node therefore has a visible target:
+
+```text
+ParamType::Set
+  -> IsSetFact(A)
+  -> binder A
+  -> explicit hA : Litex.IsSet A, registered by the retained FactId
+  -> Litex.IsSet.rep A hA at each operation that needs an exact set
+
+ParamType::Obj(S)
+  -> InFact(x, S)
+  -> binder x
+  -> explicit hx : Litex.In x <exact representation of S>
+```
+
+`nonempty_set` and `finite_set` must follow the same hierarchy: their target
+predicates imply `IsSet` and add nonemptiness or finiteness of the selected
+exact representative. They must not become `A : Litex.Set` plus an erased
+sethood premise.
+
+Construction and quantification use the same property but need different host
+introduction rules:
+
+- `forall A set` is universally representation-polymorphic and must bind both
+  `A` and `hA : IsSet A`.
+- `have A set = E` may use compiler-owned exact representation
+  `A : Litex.Set := E`, but must still retain and register an explicit
+  `IsSet.own A` proof for the source `IsSetFact`.
+- bare `have A set` needs a checked fresh-set constructor or remains
+  fail-closed. It must not transparently choose `empty`, invent an axiom, or
+  expose more source facts than `IsSet A`.
+
+This is an incompatible replacement for the current v2 lowering, which emits
+`(A : Litex.Set)` and records the retained `IsSetFact` as `True.intro`. Until
+the Core contract, compiler paths, generated tracers, and real Lean gates are
+migrated together, documentation must label the shape above as the **target**
+contract rather than implemented compiler behavior. The implementation change
+must bump `abiVersion`; this design-only change does not.
 
 ### Binder carrier selection
 
@@ -204,7 +302,8 @@ An external Adapter may specialize `hab` to native `a = b` with
 `Same.complexNativeEq`. The generated theorem still preserves `Same` as the
 source-level equality contract.
 
-By contrast, a genuinely generic source binder remains generic:
+By contrast, a genuinely generic object-domain binder remains generic, while
+its set-kind binder carries explicit sethood evidence:
 
 ```litex
 forall s set, x s:
@@ -212,8 +311,9 @@ forall s set, x s:
 ```
 
 ```lean
-∀ (s : Litex.Set) {α : Type}
-  (x : α) (hx : Litex.In x s),
+∀ {αs : Type 1} (s : αs) (hs : Litex.IsSet s)
+  {α : Type} (x : α)
+  (hx : Litex.In x (Litex.IsSet.rep s hs)),
   Litex.Same x x
 ```
 
