@@ -40,17 +40,35 @@ impl Runtime {
         self.store_def_thm(stmt)
             .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
 
-        if self.current_execution_is_trusted_file() {
-            return self.store_fact_with_trust_and_infer_with_reason(
+        let mut infer_result = if self.current_execution_is_trusted_file() {
+            self.store_fact_with_trust_and_infer_with_reason(
                 stmt.fact.clone(),
                 InferReason::Other(stmt.store_reason().to_string()),
-            );
+            )?
+        } else {
+            self.store_without_well_defined_verification_and_infer_with_reason(
+                stmt.fact.clone(),
+                InferReason::Other(stmt.store_reason().to_string()),
+            )?
+        };
+
+        // General forall storage may retain a canonical expansion (for
+        // example, relation-chain closure or safe parameter projection)
+        // instead of this exact named interface. Keep those ordinary
+        // inferences, then freeze the declaration's original Fact under its
+        // own identity so a later explicit theorem call can cite precisely
+        // what the user named.
+        if self.known_fact_id_for_fact(&stmt.fact)?.is_none() {
+            let mut exact_source = self
+                .store_fact_without_well_defined_verified_and_without_infer_with_reason(
+                    stmt.fact.clone(),
+                    InferReason::Other(stmt.store_reason().to_string()),
+                )?;
+            exact_source.new_infer_result_inside(infer_result);
+            infer_result = exact_source;
         }
 
-        self.store_without_well_defined_verification_and_infer_with_reason(
-            stmt.fact.clone(),
-            InferReason::Other(stmt.store_reason().to_string()),
-        )
+        Ok(infer_result)
     }
 
     pub fn exec_def_thm_stmt_affect_environment_only(

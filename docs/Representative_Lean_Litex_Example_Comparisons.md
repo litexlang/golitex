@@ -35,10 +35,75 @@ Blueprint](https://litexlang.com/doc/Litex_Blueprint). For language details,
 see the [Manual](https://litexlang.com/doc/Manual) and [System
 Map](https://litexlang.com/doc/Litex_System_Map). The current Litex-to-Lean
 experiment has a deliberately narrow boundary documented in the
-[compiler README](../lean/README.md).
+[Lean ABI README](../lean/README.md).
 
 The complete `Group` comparison is kept in the Blueprint rather than repeated
 here. This page concentrates on examples that add distinct evidence.
+
+## A Semantic Difference Behind the Syntax: `Eq` and `Same`
+
+One of the most important differences is not visible from surface proof
+length. Lean's propositional equality is homogeneous:
+
+```lean
+Eq : {α : Sort u} → α → α → Prop
+```
+
+Thus `x = y` requires both terms to inhabit the same Lean type. It says that
+they are the same value in that carrier and supports substitution, rewriting,
+and dependent transport.
+
+Litex source equality compiles to `Litex.Same`, a heterogeneous semantic
+equality across representations. For example:
+
+```lean
+n       : ℕ
+(n : ℤ) : ℤ
+(n : ℂ) : ℂ
+```
+
+These are not endpoints of one Lean `Eq`, because their carriers differ. With
+the reviewed numeric representation bridges, however, they can be shown to
+represent the same Litex mathematical value. `Same` is also not merely Lean's
+`HEq`: `HEq` belongs to dependent type theory's account of term identity,
+whereas `Same` deliberately records mathematical identification between
+approved representations.
+
+The precise design description is **membership-oriented,
+representation-independent semantics**. This does not mean generated Lean is
+untyped. It means that Litex does not permanently encode an object's complete
+mathematical classification in one unique source type. Facts such as
+`x $in N`, `x $in Z`, and `x $in R` may accumulate without retyping or
+replacing `x`. `Litex.In x S` records that the semantic value represented by
+`x` has a `Same` representative in the exact carrier of `S`.
+
+A useful conceptual picture is:
+
+```text
+(α, x)      (β, y)      (γ, z)
+    \          |          /
+          Litex.Same
+               |
+    one Litex mathematical value
+```
+
+This resembles taking an equivalence class of host representations. The
+actual Lean wrapper does not construct a quotient; it preserves concrete
+representatives and proof evidence so the kernel can check every bridge.
+
+The boundary is deliberately asymmetric. Lean equality always yields
+`Same` through `Same.ofEq`. Recovering native Lean equality requires both
+endpoints to reach the same canonical carrier through a reviewed injective
+observation. Thus `Same.complexNativeEq` may turn `Same x y` into `x = y` for
+`x y : ℂ`, while no global conversion from heterogeneous `Same` to Lean
+`Eq` exists.
+
+This is a difference in default semantic interface, not a claim that Lean
+cannot express set-oriented mathematics or heterogeneous relations. The
+Litex wrapper is itself defined and checked in Lean. The design choice is to
+make membership and cross-representation identity explicit source-semantic
+obligations, then recover native Lean equality only at audited specialization
+boundaries.
 
 ---
 
