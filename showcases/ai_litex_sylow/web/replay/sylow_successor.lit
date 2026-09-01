@@ -1,0 +1,36 @@
+# One-step prime-power subgroup growth and its arithmetic predecessor lemma.
+
+thm p_power_subgroup_successor:
+    ? forall G nonempty_set, group &group::Group<G>, H power_set(G), p N+, k N:
+        $subgroup::is_subgroup(G, group, H)
+        $is_finite_set(G)
+        $is_finite_set(H)
+        $prime(p)
+        finite_set_size(H) = p^k
+        $group::divides(p^(k + 1), finite_set_size(G))
+        =>:
+            exist P power_set(G) st {$subgroup::is_subgroup(G, group, P), $is_finite_set(P), finite_set_size(P) = p^(k + 1)}
+    release thm normalizer::subgroup_normalizer_closed(G, group, H)
+    release thm normalizer::subgroup_normal_in_normalizer(G, group, H)
+    release thm normalizer_quotient::normalizer_quotient_has_prime_subgroup(G, group, H, p, k)
+    obtain K from exist K power_set(\quotient_groups::quotient_group_nonempty<\subgroup_structure::subgroup_carrier<G, group, \normalizer::subgroup_normalizer<G, group>(H)>, \subgroup_structure::subgroup_group<G, group, \normalizer::subgroup_normalizer<G, group>(H)>, H>) st {$subgroup::is_subgroup(\quotient_groups::quotient_group_nonempty<\subgroup_structure::subgroup_carrier<G, group, \normalizer::subgroup_normalizer<G, group>(H)>, \subgroup_structure::subgroup_group<G, group, \normalizer::subgroup_normalizer<G, group>(H)>, H>, \quotient_groups::quotient_group<\subgroup_structure::subgroup_carrier<G, group, \normalizer::subgroup_normalizer<G, group>(H)>, \subgroup_structure::subgroup_group<G, group, \normalizer::subgroup_normalizer<G, group>(H)>, H>, K), $is_finite_set(K), finite_set_size(K) = p}
+    release thm quotient_preimage::sylow_quotient_preimage_closed(G, group, H, K)
+    release thm quotient_preimage::sylow_quotient_preimage_finite(G, group, H, K)
+    release thm quotient_preimage_cardinality::sylow_quotient_preimage_cardinality(G, group, H, K)
+    finite_set_size(\quotient_preimage::sylow_quotient_preimage<G, group, H>(K)) = finite_set_size(K) * finite_set_size(H) = p * p^k = p^(k + 1)
+    have P power_set(G) = \quotient_preimage::sylow_quotient_preimage<G, group, H>(K)
+    finite_set_size(P) = finite_set_size(\quotient_preimage::sylow_quotient_preimage<G, group, H>(K)) = p^(k + 1)
+    witness exist next_subgroup power_set(G) st {$subgroup::is_subgroup(G, group, next_subgroup), $is_finite_set(next_subgroup), finite_set_size(next_subgroup) = p^(k + 1)} from P
+
+thm prime_power_divisor_predecessor:
+    ? forall p N+, k, value N:
+        $group::divides(p^(k + 1), value)
+        =>:
+            $group::divides(p^k, value)
+    obtain quotient from $group::divides(p^(k + 1), value)
+    p^(k + 1) = p^k * p
+    release thm cosets::object_substitution(Z, Z, fn(t Z) Z {t * quotient}, p^(k + 1), p^k * p)
+    p^(k + 1) * quotient = (p^k * p) * quotient
+    (p^k * p) * quotient = p^k * (p * quotient)
+    value = p^(k + 1) * quotient = (p^k * p) * quotient = p^k * (p * quotient)
+    witness $group::divides(p^k, value) from p * quotient

@@ -1,0 +1,162 @@
+{
+  "schema_version": 1,
+  "journal_id": "AI-LITEX-SYLOW-NORMAL-SUBGROUP-2026-08-31",
+  "target": "scripts/ai_litex_sylow/normal_subgroup.lit",
+  "source_anchor": "scripts/mathematics_in_litex/textbook/chapter09-groups-and-rings.lit#9.1.6",
+  "binary": "target/release/litex 0.9.116-beta",
+  "session_command": "target/release/litex -session -f scripts/ai_litex_sylow/web/replay/normal_subgroup.lit",
+  "session_environment": "The registered normal_subgroup target contained comments only, so the session loaded group.lit and subgroup.lit before accepting the new source-order declarations.",
+  "replay_command": "target/release/litex -session -f scripts/ai_litex_sylow/web/replay/normal_checkpoint.lit",
+  "replay_environment": "The normal checkpoint follows byte-identical group and subgroup mirrors and precedes normal_subgroup.lit, so N001-N004 can be replayed without preloading their declarations.",
+  "interface_decision": {
+    "semantic_role": "property of a supplied subgroup relative to an ambient group",
+    "litex_form": "prop is_normal_subgroup",
+    "rejected_nearest_form": "a NormalGroup struct would incorrectly repackage the ambient group operations; normality classifies H and belongs on the subgroup layer",
+    "immediate_use": "normal_subgroup_intersection_closed"
+  },
+  "proof_spine": [
+    "A normal subgroup is first an ordinary subgroup.",
+    "Conjugating any member by any ambient group element stays in the subgroup.",
+    "For an intersection, reuse subgroup_intersection_closed for the subgroup part.",
+    "Prove conjugation closure componentwise in H and K, then fold is_normal_subgroup."
+  ],
+  "replay_gate": {
+    "command": "target/release/litex -session -f scripts/ai_litex_sylow/web/replay/normal_checkpoint.lit",
+    "block_ids": [
+      "REPLAY-N001",
+      "REPLAY-N002",
+      "REPLAY-N003",
+      "REPLAY-N004"
+    ],
+    "result": "all_delivered_true_and_committed",
+    "final_verify_process": "Success"
+  },
+  "blocks": [
+    {
+      "id": "N001",
+      "source_order": 1,
+      "intent": "Define a normal subgroup as an ordinary subgroup closed under ambient conjugation.",
+      "dependencies": [
+        "group::Group",
+        "subgroup::is_subgroup"
+      ],
+      "attempts": [
+        {
+          "candidate": "prop is_normal_subgroup(G nonempty_set, group &group::Group<G>, H power_set(G)):\n    $subgroup::is_subgroup(G, group, H)\n    forall g, h G:\n        h $in H\n        =>:\n            group.mul(group.mul(g, h), group.inv(g)) $in H",
+          "result": "accepted",
+          "verifier_evidence": "session block N001 returned ok: true; TryStmt execution kind: Committed; inner result kind: DefPropStmt; verify_process: Success",
+          "diagnosis": "The existing group and subgroup interfaces provide the exact carrier and ordinary closure facts needed by the source definition.",
+          "next_change": "Expose the ordinary-subgroup component as a direct projection."
+        }
+      ],
+      "accepted_litex": "prop is_normal_subgroup(G nonempty_set, group &group::Group<G>, H power_set(G)):\n    $subgroup::is_subgroup(G, group, H)\n    forall g, h G:\n        h $in H\n        =>:\n            group.mul(group.mul(g, h), group.inv(g)) $in H",
+      "reusable_lesson": "Model normality as a property of H relative to the ambient group; keep the ambient operations in group::Group and reuse subgroup::is_subgroup.",
+      "status": "materialized"
+    },
+    {
+      "id": "N002",
+      "source_order": 2,
+      "intent": "Expose the ordinary-subgroup component of normality as a reusable projection.",
+      "dependencies": [
+        "N001 is_normal_subgroup",
+        "subgroup::is_subgroup"
+      ],
+      "attempts": [
+        {
+          "candidate": "thm normal_subgroup_is_subgroup:\n    ? forall G nonempty_set, group &group::Group<G>, H power_set(G):\n        $is_normal_subgroup(G, group, H)\n        =>:\n            $subgroup::is_subgroup(G, group, H)",
+          "result": "accepted",
+          "verifier_evidence": "session block N002 returned ok: true; TryStmt execution kind: Committed; inner result kind: DefThmStmt; verify_process: Success",
+          "diagnosis": "The conclusion is the first stored clause of is_normal_subgroup, so the theorem needs no proof-body echo.",
+          "next_change": "Expose conjugation closure with the same direct projection pattern."
+        }
+      ],
+      "accepted_litex": "thm normal_subgroup_is_subgroup:\n    ? forall G nonempty_set, group &group::Group<G>, H power_set(G):\n        $is_normal_subgroup(G, group, H)\n        =>:\n            $subgroup::is_subgroup(G, group, H)",
+      "reusable_lesson": "A named normal-to-subgroup coercion can remain a bodyless theorem because the definition stores the exact fact.",
+      "status": "materialized"
+    },
+    {
+      "id": "N003",
+      "source_order": 3,
+      "intent": "Expose conjugation closure as the characteristic reusable normal-subgroup fact.",
+      "dependencies": [
+        "N001 is_normal_subgroup",
+        "group::Group.mul",
+        "group::Group.inv"
+      ],
+      "attempts": [
+        {
+          "candidate": "thm normal_subgroup_conjugate_mem:\n    ? forall G nonempty_set, group &group::Group<G>, H power_set(G), g, h G:\n        $is_normal_subgroup(G, group, H)\n        h $in H\n        =>:\n            group.mul(group.mul(g, h), group.inv(g)) $in H",
+          "result": "accepted",
+          "verifier_evidence": "session block N003 returned ok: true; TryStmt execution kind: Committed; inner result kind: DefThmStmt; verify_process: Success",
+          "diagnosis": "The theorem is the second stored clause of is_normal_subgroup and verifies without a proof-body echo.",
+          "next_change": "Use ordinary subgroup closure plus componentwise conjugation closure for the intersection theorem."
+        }
+      ],
+      "accepted_litex": "thm normal_subgroup_conjugate_mem:\n    ? forall G nonempty_set, group &group::Group<G>, H power_set(G), g, h G:\n        $is_normal_subgroup(G, group, H)\n        h $in H\n        =>:\n            group.mul(group.mul(g, h), group.inv(g)) $in H",
+      "reusable_lesson": "Keep conjugation closure visible as the fact that separates normal subgroups from ordinary subgroups.",
+      "status": "materialized"
+    },
+    {
+      "id": "N004",
+      "source_order": 4,
+      "intent": "Prove that the intersection of two normal subgroups is normal, while keeping the subgroup and conjugation layers visible.",
+      "dependencies": [
+        "N001 is_normal_subgroup",
+        "subgroup::subgroup_intersection_closed"
+      ],
+      "attempts": [
+        {
+          "attempt_id": "N004-A1",
+          "candidate": "thm normal_subgroup_intersection_closed:\n    ? forall G nonempty_set, group &group::Group<G>, H, K power_set(G):\n        $is_normal_subgroup(G, group, H)\n        $is_normal_subgroup(G, group, K)\n        =>:\n            $is_normal_subgroup(G, group, {x G: x $in H and x $in K})\n    by thm subgroup::subgroup_intersection_closed(G, group, H, K) => $subgroup::is_subgroup(G, group, {x G: x $in H and x $in K})\n    claim:\n        ? forall g, h G:\n            h $in {x G: x $in H and x $in K}\n            =>:\n                group.mul(group.mul(g, h), group.inv(g)) $in {x G: x $in H and x $in K}\n        group.mul(group.mul(g, h), group.inv(g)) $in H\n        group.mul(group.mul(g, h), group.inv(g)) $in K\n    by def $is_normal_subgroup(G, group, {x G: x $in H and x $in K})",
+          "result": "accepted_final",
+          "verifier_evidence": "persistent session block N004-A1 returned Committed/Success; after the deletion probe rolled back, fresh-session block N004-A1-REPLAY again returned ok: true, Committed, DefThmStmt, and verify_process: Success",
+          "diagnosis": "The proof follows the exact mathematical decomposition: reuse the ordinary subgroup-intersection theorem, then prove conjugation closure componentwise in H and K.",
+          "next_change": "Run a body-deletion probe in a fresh persistent session to distinguish verifier-required proof text from a deliberate reader bridge."
+        },
+        {
+          "attempt_id": "N004-A2",
+          "candidate": "thm normal_subgroup_intersection_closed:\n    ? forall G nonempty_set, group &group::Group<G>, H, K power_set(G):\n        $is_normal_subgroup(G, group, H)\n        $is_normal_subgroup(G, group, K)\n        =>:\n            $is_normal_subgroup(G, group, {x G: x $in H and x $in K})",
+          "result": "rejected",
+          "verifier_evidence": "fresh persistent session block N004-A2 returned TryStmt execution kind: RolledBack; failed_goal was the final is_normal_subgroup conclusion; verify_process reported Error: cannot prove then-clause",
+          "diagnosis": "Normal-subgroup intersection is not synthesized from the statement alone. The verifier needs the proof to expose both the inherited subgroup closure and the new conjugation closure.",
+          "next_change": "Replay N004-A1 unchanged and materialize it as the live proof."
+        }
+      ],
+      "accepted_litex": "thm normal_subgroup_intersection_closed:\n    ? forall G nonempty_set, group &group::Group<G>, H, K power_set(G):\n        $is_normal_subgroup(G, group, H)\n        $is_normal_subgroup(G, group, K)\n        =>:\n            $is_normal_subgroup(G, group, {x G: x $in H and x $in K})\n    by thm subgroup::subgroup_intersection_closed(G, group, H, K) => $subgroup::is_subgroup(G, group, {x G: x $in H and x $in K})\n    claim:\n        ? forall g, h G:\n            h $in {x G: x $in H and x $in K}\n            =>:\n                group.mul(group.mul(g, h), group.inv(g)) $in {x G: x $in H and x $in K}\n        group.mul(group.mul(g, h), group.inv(g)) $in H\n        group.mul(group.mul(g, h), group.inv(g)) $in K\n    by def $is_normal_subgroup(G, group, {x G: x $in H and x $in K})",
+      "reader_bridge": "The explicit subgroup theorem call and the componentwise conjugation claim make the new normal-subgroup layer legible to mathematicians and AI engineers.",
+      "reusable_lesson": "When a stronger structure extends a weaker predicate, prove closure constructions in layers: reuse the weaker construction theorem, then discharge only the new characteristic clause.",
+      "status": "materialized"
+    }
+  ],
+  "materialization": {
+    "block_ids": [
+      "N001",
+      "N002",
+      "N003",
+      "N004"
+    ],
+    "mirror_contract": "web/replay/group.lit, web/replay/subgroup.lit, and web/replay/normal_subgroup.lit are generated byte-identical mirrors of the reader-facing root sources; render_showcase.mjs --check rejects drift.",
+    "file_gate_command": "target/release/litex -strict -f scripts/ai_litex_sylow/web/replay/normal_subgroup.lit",
+    "file_gate_result": {
+      "result": "success",
+      "process_exit_code": 0,
+      "output_type": "strict full run",
+      "statement_count": 19,
+      "direct_trust": 0,
+      "axioms": 0,
+      "trusted_object_assumptions": 0,
+      "unverified_imports": []
+    },
+    "module_gate_command": "target/release/litex -strict -r scripts/ai_litex_sylow/web/replay",
+    "module_gate_result": {
+      "result": "success",
+      "process_exit_code": 0,
+      "output_type": "strict full run",
+      "statement_count": 19,
+      "direct_trust": 0,
+      "axioms": 0,
+      "trusted_object_assumptions": 0,
+      "unverified_imports": []
+    }
+  }
+}

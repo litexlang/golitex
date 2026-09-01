@@ -1,0 +1,220 @@
+{
+  "schema_version": 1,
+  "journal_id": "AI-LITEX-SYLOW-FINITE-FUNCTION-SPACES-2026-08-31",
+  "target": "scripts/ai_litex_sylow/finite_function_spaces.lit",
+  "source_anchor": "scripts/mathematics_in_litex/textbook/chapter09-groups-and-rings.lit:2332-2747",
+  "session_command": "target/release/litex -session -f scripts/ai_litex_sylow/web/replay/finite_function_spaces.lit",
+  "interface_decision": {
+    "semantic_role": "general finite function-space cardinality used by cyclic-tuple counting in Cauchy's theorem",
+    "litex_form": "an explicit one-point extension bijection followed by finite-set induction",
+    "exact_prerequisites": [],
+    "intentionally_omitted": ["group actions", "prime arithmetic", "cyclic groups", "Cauchy's theorem"],
+    "immediate_consumer": "cauchy::cyclic_tuple_space_cardinality"
+  },
+  "proof_spine": [
+    "A function on the empty set is the unique empty-domain function.",
+    "A function on {z} union S is equivalent to a function on S together with one value at z.",
+    "The explicit extension map is injective and surjective.",
+    "Finite-set induction turns the one-point product recurrence into |B|^|A|."
+  ],
+  "blocks": [
+    {
+      "id": "FF001",
+      "name": "empty_function_space_singleton",
+      "source_order": 1,
+      "attempts": [
+        {
+          "attempt_id": "FF001A1",
+          "result": "accepted",
+          "verifier_evidence": "Literal outer try committed; verify_well_definedness, verify_process, and affect_environment all returned Success."
+        }
+      ],
+      "accepted_litex": "thm empty_function_space_singleton:\n    ? forall B nonempty_set, b B:\n        fn(input {}) B = {fn(input {}) B {b}}\n    claim:\n        ? forall f fn(input {}) B:\n            f = fn(input {}) B {b}\n        claim:\n            ? forall empty_input {}:\n                f(empty_input) = fn(input {}) B {b}(empty_input)\n            by contra:\n                ? f(empty_input) = fn(input {}) B {b}(empty_input)\n                impossible empty_input $in {}\n        by def:\n            ? $fn_eq(f, fn(input {}) B {b})\n    by extension:\n        ? fn(input {}) B = {fn(input {}) B {b}}\n        claim:\n            ? forall f fn(input {}) B:\n                f $in {fn(input {}) B {b}}\n            f = fn(input {}) B {b}\n        claim:\n            ? forall f {fn(input {}) B {b}}:\n                f $in fn(input {}) B",
+      "status": "materialized"
+    },
+    {
+      "id": "FF002",
+      "name": "is_new_point_extension_value",
+      "source_order": 2,
+      "attempts": [{"attempt_id":"FF002A1","result":"accepted","verifier_evidence":"Literal outer try committed; all verifier phases returned Success."}],
+      "accepted_litex": "prop is_new_point_extension_value(A set, z A, S power_set(A), B nonempty_set, pair cart(fn(x S) B, B), input union({z}, S), output B):\n    input = z\n    output = pair[2]",
+      "status": "materialized"
+    },
+    {
+      "id": "FF003",
+      "name": "is_old_point_extension_value",
+      "source_order": 3,
+      "attempts": [{"attempt_id":"FF003A1","result":"accepted","verifier_evidence":"Literal outer try committed; all verifier phases returned Success."}],
+      "accepted_litex": "prop is_old_point_extension_value(A set, z A, S power_set(A), B nonempty_set, pair cart(fn(x S) B, B), input union({z}, S), output B):\n    input != z\n    exist old_input S st {old_input = input, output = pair[1](old_input)}",
+      "status": "materialized"
+    },
+    {
+      "id": "FF004",
+      "name": "is_point_extension_value",
+      "source_order": 4,
+      "attempts": [{"attempt_id":"FF004A1","result":"accepted","verifier_evidence":"Literal outer try committed; all verifier phases returned Success."}],
+      "accepted_litex": "prop is_point_extension_value(A set, z A, S power_set(A), B nonempty_set, pair cart(fn(x S) B, B), input union({z}, S), output B):\n    $is_new_point_extension_value(A, z, S, B, pair, input, output) or $is_old_point_extension_value(A, z, S, B, pair, input, output)",
+      "status": "materialized"
+    },
+    {
+      "id": "FF005",
+      "name": "point_extension_value_exists_unique",
+      "source_order": 5,
+      "attempts": [{"attempt_id":"FF005A1","result":"accepted","verifier_evidence":"Literal outer try completed all proof branches successfully and committed; the result tail contains only successful conclusion checks and no rollback marker."}],
+      "accepted_source": {
+        "path": "scripts/mathematics_in_litex/textbook/chapter09-groups-and-rings.lit",
+        "start_line": 2367,
+        "end_line": 2460,
+        "sha256_with_trailing_newline": "bdd89651d2bb7bdda8ff343677fb07a4d3a6a54c2ce605dbba565f72d0d55516",
+        "transform": "identity"
+      },
+      "status": "materialized"
+    },
+    {
+      "id": "FF006",
+      "name": "point_extension_value_selected",
+      "source_order": 6,
+      "attempts": [{"attempt_id":"FF006A1","result":"accepted","verifier_evidence":"Literal outer try committed; it also corroborates that FF005 affected the session environment."}],
+      "accepted_litex": "template<A set, z A, S power_set(A), B nonempty_set: not z $in S>:\n    have fn point_extension_value_selected by exist!:\n        ? forall pair cart(fn(x S) B, B), input union({z}, S):\n            exist! output B st {$is_point_extension_value(A, z, S, B, pair, input, output)}\n        release thm point_extension_value_exists_unique(A, z, S, B, pair, input)",
+      "status": "materialized"
+    },
+    {
+      "id": "FF007",
+      "name": "point_extend",
+      "source_order": 7,
+      "attempts": [{"attempt_id":"FF007A1","result":"accepted","verifier_evidence":"Literal outer try committed; all verifier phases returned Success."}],
+      "accepted_litex": "template<A set, z A, S power_set(A), B nonempty_set: not z $in S>:\n    have fn point_extend(pair cart(fn(x S) B, B)) fn(output union({z}, S)) B = fn(input union({z}, S)) B {\\point_extension_value_selected<A, z, S, B>(pair, input)}",
+      "status": "materialized"
+    },
+    {
+      "id": "FF008",
+      "name": "point_extend_value_relation",
+      "source_order": 8,
+      "attempts": [{"attempt_id":"FF008A1","result":"accepted","verifier_evidence":"Literal outer try committed; all verifier phases returned Success."}],
+      "accepted_source": {"path":"scripts/mathematics_in_litex/textbook/chapter09-groups-and-rings.lit","start_line":2470,"end_line":2480,"sha256_with_trailing_newline":"d1c1f012bbc5790ff86c23acaf2f78e3584388679b961edbd449f2f82fa0fb29","transform":"identity"},
+      "status": "materialized"
+    },
+    {
+      "id": "FF009",
+      "name": "point_extend_at_new",
+      "source_order": 9,
+      "attempts": [{"attempt_id":"FF009A1","result":"accepted","verifier_evidence":"Literal outer try committed; all verifier phases returned Success."}],
+      "accepted_source": {"path":"scripts/mathematics_in_litex/textbook/chapter09-groups-and-rings.lit","start_line":2481,"end_line":2496,"sha256_with_trailing_newline":"a2697912c0bf767a5f6d85e7ab3ec7903c4144f92c77bd36597ba459369e042d","transform":"identity"},
+      "status": "materialized"
+    },
+    {
+      "id": "FF010",
+      "name": "point_extend_at_old",
+      "source_order": 10,
+      "attempts": [{"attempt_id":"FF010A1","result":"accepted","verifier_evidence":"Literal outer try committed; all verifier phases returned Success."}],
+      "accepted_source": {"path":"scripts/mathematics_in_litex/textbook/chapter09-groups-and-rings.lit","start_line":2497,"end_line":2516,"sha256_with_trailing_newline":"4597e9036801d0b11bcd4f7bfdc5d1da9f61171f52078ab20a57e733bbc80637","transform":"identity"},
+      "status": "materialized"
+    },
+    {
+      "id": "FF011",
+      "name": "equal_functions_equal_at",
+      "source_order": 11,
+      "attempts": [{"attempt_id":"FF011A1","result":"accepted","verifier_evidence":"Literal outer try committed; all verifier phases returned Success."}],
+      "accepted_source": {"path":"scripts/mathematics_in_litex/textbook/chapter09-groups-and-rings.lit","start_line":2517,"end_line":2525,"sha256_with_trailing_newline":"2078c97325f29df875ac893480f678136823cf3a1afec0e0d343c0a2f1a89688","transform":"identity"},
+      "status": "materialized"
+    },
+    {
+      "id": "FF012",
+      "name": "function_equal_on_equal_inputs",
+      "source_order": 12,
+      "attempts": [{"attempt_id":"FF012A1","result":"accepted","verifier_evidence":"Literal outer try committed; all verifier phases returned Success."}],
+      "accepted_source": {"path":"scripts/mathematics_in_litex/textbook/chapter09-groups-and-rings.lit","start_line":2526,"end_line":2532,"sha256_with_trailing_newline":"bfbf2ba5f18fe7abe53a718853cdc3ce955fffb5aa185edf0a5037414af09c3d","transform":"identity"},
+      "status": "materialized"
+    },
+    {
+      "id": "FF013",
+      "name": "point_extend_injective",
+      "source_order": 13,
+      "attempts": [{"attempt_id":"FF013A1","result":"accepted","verifier_evidence":"Literal outer try committed the coordinatewise injectivity proof; all verifier phases returned Success."}],
+      "accepted_source": {"path":"scripts/mathematics_in_litex/textbook/chapter09-groups-and-rings.lit","start_line":2533,"end_line":2578,"sha256_with_trailing_newline":"45acdc9907b051b7a444b15884dd18c4c7a3e938f8c583a23c68fabb27450929","transform":"identity"},
+      "status": "materialized"
+    },
+    {
+      "id": "FF014",
+      "name": "point_extend_surjective",
+      "source_order": 14,
+      "attempts": [{"attempt_id":"FF014A1","result":"accepted","verifier_evidence":"Literal outer try committed the restriction-plus-new-value surjectivity proof; all verifier phases returned Success."}],
+      "accepted_source": {"path":"scripts/mathematics_in_litex/textbook/chapter09-groups-and-rings.lit","start_line":2579,"end_line":2626,"sha256_with_trailing_newline":"9bb038f0d188f36ec154610b53b9dea26a4456fe02b4914413f5f7a73e80b8ad","transform":"identity"},
+      "status": "materialized"
+    },
+    {
+      "id": "FF015",
+      "name": "point_extend_range_eq",
+      "source_order": 15,
+      "attempts": [{"attempt_id":"FF015A1","result":"accepted","verifier_evidence":"Literal outer try committed the range-equals-function-space theorem; all verifier phases returned Success."}],
+      "accepted_source": {"path":"scripts/mathematics_in_litex/textbook/chapter09-groups-and-rings.lit","start_line":2627,"end_line":2651,"sha256_with_trailing_newline":"58b9d2dd66b608e9eb4396b4b5a4f6e00ee4e77ac9754124d4a0b3a06d62a0e3","transform":"identity"},
+      "status": "materialized"
+    },
+    {
+      "id": "FF016",
+      "name": "finite_function_space_count_property",
+      "source_order": 16,
+      "attempts": [{"attempt_id":"FF016A1","result":"accepted","verifier_evidence":"Literal outer try committed; all verifier phases returned Success."}],
+      "accepted_litex": "prop finite_function_space_count_property(P, B finite_set):\n    $is_finite_set(fn(x P) B)\n    finite_set_size(fn(x P) B) = finite_set_size(B)^finite_set_size(P)",
+      "status": "materialized"
+    },
+    {
+      "id": "FF017",
+      "name": "singleton_intersection_empty",
+      "source_order": 17,
+      "attempts": [{"attempt_id":"FF017A1","result":"accepted","verifier_evidence":"Literal outer try committed; all verifier phases returned Success."}],
+      "accepted_source": {"path":"scripts/mathematics_in_litex/textbook/chapter09-groups-and-rings.lit","start_line":2656,"end_line":2679,"sha256_with_trailing_newline":"cd8b86eb420f44c78ea47877c45b25c6b3c788aab6ff8e1bf1c46a40ec9e85bb","transform":"identity"},
+      "status": "materialized"
+    },
+    {
+      "id": "FF018",
+      "name": "finite_function_space_count_insert_step",
+      "source_order": 18,
+      "attempts": [{"attempt_id":"FF018A1","result":"accepted","verifier_evidence":"Literal outer try committed the one-point cardinality recurrence; all verifier phases returned Success."}],
+      "accepted_source": {"path":"scripts/mathematics_in_litex/textbook/chapter09-groups-and-rings.lit","start_line":2680,"end_line":2716,"sha256_with_trailing_newline":"3f346b43febc77a3f385ee976f62988e36212fba9912e918a7f9aaa5436703d4","transform":"identity"},
+      "status": "materialized"
+    },
+    {
+      "id": "FF019",
+      "name": "finite_function_space_count_empty",
+      "source_order": 19,
+      "attempts": [{"attempt_id":"FF019A1","result":"accepted","verifier_evidence":"Literal outer try committed the empty-domain base case; all verifier phases returned Success."}],
+      "accepted_source": {"path":"scripts/mathematics_in_litex/textbook/chapter09-groups-and-rings.lit","start_line":2717,"end_line":2732,"sha256_with_trailing_newline":"c04df9b8f7f040f52ebf55c81935e9606f2bca878ce364b79a098440df644ce2","transform":"identity"},
+      "status": "materialized"
+    },
+    {
+      "id": "FF020",
+      "name": "finite_function_space_count",
+      "source_order": 20,
+      "attempts": [
+        {"attempt_id":"FF020A1","result":"accepted","verifier_evidence":"Literal outer try committed the finite-set induction theorem; all verifier phases returned Success."},
+        {"attempt_id":"FF020A2","result":"accepted_clean_replay","verifier_evidence":"After replaying exactly FF001-FF019 and observing the bodyless rollback, the exact production proof committed again."}
+      ],
+      "accepted_source": {"path":"scripts/mathematics_in_litex/textbook/chapter09-groups-and-rings.lit","start_line":2733,"end_line":2747,"sha256_with_trailing_newline":"29a0ece6109d4c94f305af01fa9711879cd7138b5072a774924ad256e66786de","transform":"identity"},
+      "status": "materialized"
+    }
+  ],
+  "liveness_probe": {
+    "frame_id": "FF020-BODYLESS",
+    "result": "rejected_rolled_back",
+    "verify_well_definedness": "Success",
+    "execution_kind": "RolledBack",
+    "failed_goal": "$finite_function_space_count_property(A, B)",
+    "diagnosis": "After a clean FF001-FF019 replay, the exact final theorem header is meaningful but the cardinality property is not available without the induction proof."
+  },
+  "replay_gate": {
+    "result": "all_delivered_true_and_committed",
+    "prefix_block_ids": ["FF001","FF002","FF003","FF004","FF005","FF006","FF007","FF008","FF009","FF010","FF011","FF012","FF013","FF014","FF015","FF016","FF017","FF018","FF019"],
+    "final_block_id": "FF020",
+    "final_verify_process": "Success",
+    "notes": "The generic web/replay_journal.mjs client replayed the exact journal prefix in one persistent session, rejected the bodyless final theorem, and then committed the accepted final proof."
+  },
+  "materialization": {
+    "block_ids": ["FF001","FF002","FF003","FF004","FF005","FF006","FF007","FF008","FF009","FF010","FF011","FF012","FF013","FF014","FF015","FF016","FF017","FF018","FF019","FF020"],
+    "file_gate_command": "target/release/litex -strict -f scripts/ai_litex_sylow/web/replay/finite_function_spaces.lit",
+    "file_gate_result": {"result":"success","process_exit_code":0,"top_level_ok":true,"output_type":"strict full run","output_bytes":281132176,"statement_count":239,"all_statement_outcomes_success":true,"direct_trust":0,"axioms":0,"trusted_object_assumptions":0,"unverified_imports":[]},
+    "module_gate_command": "target/release/litex -strict -r scripts/ai_litex_sylow/web/replay",
+    "module_gate_result": {"result":"success","process_exit_code":0,"top_level_ok":true,"output_type":"strict full run","output_bytes":278552988,"statement_count":239,"all_statement_outcomes_success":true,"direct_trust":0,"axioms":0,"trusted_object_assumptions":0,"unverified_imports":[]},
+    "source_scan": {"active_trust_or_axiom_syntax":0,"root_replay_byte_identical":true,"root_bytes":22772,"replay_bytes":22772,"command":"grep active trust/axiom forms and cmp root/replay for finite_function_spaces.lit"}
+  }
+}

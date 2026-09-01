@@ -1,0 +1,40 @@
+# Chapter 9 group-homomorphism foundation built on the visible group layer.
+#
+# This file classifies a supplied function rather than packaging a second
+# function object. Multiplication preservation is a direct projection of the
+# definition; inverse preservation is the first derived calculation.
+
+prop is_monoid_hom(M, T set, mulM fn(x, y M) M, oneM M, mulT fn(x, y T) T, oneT T, f fn(x M) T):
+    f(oneM) = oneT
+    forall x, y M:
+        f(mulM(x, y)) = mulT(f(x), f(y))
+
+prop is_group_hom(G, H nonempty_set, source &group::Group<G>, target &group::Group<H>, f fn(x G) H):
+    $is_monoid_hom(G, H, source.mul, source.one, target.mul, target.one, f)
+
+thm group_mul_inv_cancel:
+    ? forall G nonempty_set, group &group::Group<G>, x G:
+        group.mul(x, group.inv(x)) = group.one
+    by def $group::group_laws(G, group.mul, group.one, group.inv)
+    release thm group::mul_inv_cancel(G, group.mul, group.one, group.inv, x)
+
+thm group_hom_map_mul:
+    ? forall G, H nonempty_set, source &group::Group<G>, target &group::Group<H>, f fn(x G) H, x, y G:
+        $is_group_hom(G, H, source, target, f)
+        =>:
+            f(source.mul(x, y)) = target.mul(f(x), f(y))
+
+thm group_hom_map_inv:
+    ? forall G, H nonempty_set, source &group::Group<G>, target &group::Group<H>, f fn(x G) H, x G:
+        $is_group_hom(G, H, source, target, f)
+        =>:
+            f(source.inv(x)) = target.inv(f(x))
+    by def $group::group_laws(H, target.mul, target.one, target.inv)
+    source.mul(source.inv(x), x) = source.one
+    target.mul(f(source.inv(x)), f(x)) = f(source.mul(source.inv(x), x)) = f(source.one) = target.one
+    release thm group::mul_inv_cancel(H, target.mul, target.one, target.inv, f(x))
+    target.mul(f(x), target.inv(f(x))) = target.one
+    release thm group::mul_one(H, target.mul, target.one, target.inv, f(source.inv(x)))
+    f(source.inv(x)) = target.mul(f(source.inv(x)), target.one) = target.mul(f(source.inv(x)), target.mul(f(x), target.inv(f(x))))
+    target.mul(f(source.inv(x)), target.mul(f(x), target.inv(f(x)))) = target.mul(target.mul(f(source.inv(x)), f(x)), target.inv(f(x)))
+    target.mul(target.mul(f(source.inv(x)), f(x)), target.inv(f(x))) = target.mul(target.one, target.inv(f(x))) = target.inv(f(x))

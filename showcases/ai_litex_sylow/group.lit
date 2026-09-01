@@ -1,0 +1,139 @@
+# Chapter 2 group layer for the Chapter 9 Sylow development.
+#
+# These declarations are source-preserving excerpts from
+# scripts/mathematics_in_litex/textbook/chapter02-basics-struct.lit.
+# This file imports no mathematical module: later showcase files cite this
+# ordered export as group::Group, group::group_laws, and so on.
+
+# A multiplicative group uses associativity, a left identity, and a left
+# inverse as primitive laws. The right-facing laws are derived below.
+prop group_laws(A set, mul fn(x, y A) A, one A, inv fn(x A) A):
+    forall x, y, z A:
+        mul(mul(x, y), z) = mul(x, mul(y, z))
+    forall x A:
+        mul(one, x) = x
+    forall x A:
+        mul(inv(x), x) = one
+
+# Chapter 2 packages the carrier operations and primitive laws as the
+# first-class group object consumed throughout Chapter 9.
+struct Group<s nonempty_set>:
+    mul fn(x, y s) s
+    one s
+    inv fn(x s) s
+    <=>:
+        forall x, y, z s:
+            mul(mul(x, y), z) = mul(x, mul(y, z))
+        forall x s:
+            mul(one, x) = x
+        forall x s:
+            mul(inv(x), x) = one
+
+# Applying inv(a) on the left gives cancellation for a packaged Group.
+thm _group_left_cancel_struct:
+    ? forall s nonempty_set, group &Group<s>, a, b, c s:
+        group.mul(a, b) = group.mul(a, c)
+        =>:
+            b = c
+    group.mul(group.inv(a), group.mul(a, b)) = group.mul(group.inv(a), group.mul(a, c))
+    group.mul(group.inv(a), a) = group.one
+    group.mul(group.one, b) = b
+    group.mul(group.one, c) = c
+    group.mul(group.mul(group.inv(a), a), b) = group.mul(group.one, b)
+    group.mul(group.mul(group.inv(a), a), c) = group.mul(group.one, c)
+    group.mul(group.inv(a), group.mul(a, b)) = group.mul(group.mul(group.inv(a), a), b) = group.mul(group.one, b) = b
+    group.mul(group.inv(a), group.mul(a, c)) = group.mul(group.mul(group.inv(a), a), c) = group.mul(group.one, c) = c
+
+# This is the immediate downstream use probe for Group: its stored left-facing
+# laws imply the right identity.
+thm group_mul_one:
+    ? forall s nonempty_set, group &Group<s>, a s:
+        group.mul(a, group.one) = a
+    group.mul(group.inv(a), a) = group.one
+    group.mul(group.one, group.one) = group.one
+    group.mul(group.mul(group.inv(a), a), group.one) = group.mul(group.one, group.one)
+    group.mul(group.inv(a), group.mul(a, group.one)) = group.mul(group.mul(group.inv(a), a), group.one) = group.mul(group.one, group.one) = group.one
+    group.mul(group.inv(a), group.mul(a, group.one)) = group.mul(group.inv(a), a)
+    release thm _group_left_cancel_struct(s, group, group.inv(a), group.mul(a, group.one), a)
+
+# The following carrier-parametric results are the exact Chapter 2 interfaces
+# that Chapter 9 calls after exposing group_laws for a Group's fields.
+thm _group_left_cancel:
+    ? forall A set, mul fn(x, y A) A, one A, inv fn(x A) A, a, b, c A:
+        $group_laws(A, mul, one, inv)
+        mul(a, b) = mul(a, c)
+        =>:
+            b = c
+    mul(inv(a), mul(a, b)) = mul(inv(a), mul(a, c))
+    mul(inv(a), a) = one
+    mul(one, b) = b
+    mul(one, c) = c
+    mul(mul(inv(a), a), b) = mul(one, b)
+    mul(mul(inv(a), a), c) = mul(one, c)
+    mul(inv(a), mul(a, b)) = mul(mul(inv(a), a), b) = mul(one, b) = b
+    mul(inv(a), mul(a, c)) = mul(mul(inv(a), a), c) = mul(one, c) = c
+
+thm _group_mul_one:
+    ? forall A set, mul fn(x, y A) A, one A, inv fn(x A) A, a A:
+        $group_laws(A, mul, one, inv)
+        =>:
+            mul(a, one) = a
+    mul(inv(a), a) = one
+    mul(one, one) = one
+    mul(mul(inv(a), a), one) = mul(one, one)
+    mul(inv(a), mul(a, one)) = mul(mul(inv(a), a), one) = mul(one, one) = one
+    mul(inv(a), a) = one
+    mul(inv(a), mul(a, one)) = mul(inv(a), a)
+    release thm _group_left_cancel(A, mul, one, inv, inv(a), mul(a, one), a)
+
+thm mul_inv_cancel:
+    ? forall A set, mul fn(x, y A) A, one A, inv fn(x A) A, a A:
+        $group_laws(A, mul, one, inv)
+        =>:
+            mul(a, inv(a)) = one
+    mul(inv(a), a) = one
+    mul(one, inv(a)) = inv(a)
+    mul(mul(inv(a), a), inv(a)) = mul(one, inv(a))
+    mul(inv(a), mul(a, inv(a))) = mul(mul(inv(a), a), inv(a)) = mul(one, inv(a)) = inv(a)
+    release thm _group_mul_one(A, mul, one, inv, inv(a))
+    mul(inv(a), one) = inv(a)
+    mul(inv(a), mul(a, inv(a))) = mul(inv(a), one)
+    release thm _group_left_cancel(A, mul, one, inv, inv(a), mul(a, inv(a)), one)
+
+thm mul_one:
+    ? forall A set, mul fn(x, y A) A, one A, inv fn(x A) A, a A:
+        $group_laws(A, mul, one, inv)
+        =>:
+            mul(a, one) = a
+    release thm _group_mul_one(A, mul, one, inv, a)
+
+thm mul_inv_rev:
+    ? forall A set, mul fn(x, y A) A, one A, inv fn(x A) A, a, b A:
+        $group_laws(A, mul, one, inv)
+        =>:
+            inv(mul(a, b)) = mul(inv(b), inv(a))
+    mul(inv(a), mul(a, b)) = mul(mul(inv(a), a), b)
+    mul(inv(b), mul(inv(a), mul(a, b))) = mul(inv(b), mul(mul(inv(a), a), b))
+    mul(inv(a), a) = one
+    mul(mul(inv(a), a), b) = mul(one, b)
+    mul(inv(b), mul(mul(inv(a), a), b)) = mul(inv(b), mul(one, b))
+    mul(one, b) = b
+    mul(inv(b), mul(one, b)) = mul(inv(b), b)
+    mul(inv(b), b) = one
+    mul(mul(inv(b), inv(a)), mul(a, b)) = mul(inv(b), mul(inv(a), mul(a, b)))
+    mul(mul(inv(b), inv(a)), mul(a, b)) = mul(inv(b), mul(inv(a), mul(a, b))) = mul(inv(b), mul(mul(inv(a), a), b)) = mul(inv(b), mul(one, b)) = mul(inv(b), b) = one
+    release thm mul_inv_cancel(A, mul, one, inv, mul(a, b))
+    mul(mul(a, b), inv(mul(a, b))) = one
+    release thm _group_mul_one(A, mul, one, inv, mul(inv(b), inv(a)))
+    mul(inv(b), inv(a)) = mul(mul(inv(b), inv(a)), one)
+    mul(mul(inv(b), inv(a)), one) = mul(mul(inv(b), inv(a)), mul(mul(a, b), inv(mul(a, b))))
+    mul(mul(inv(b), inv(a)), mul(mul(a, b), inv(mul(a, b)))) = mul(mul(mul(inv(b), inv(a)), mul(a, b)), inv(mul(a, b)))
+    mul(mul(inv(b), inv(a)), mul(a, b)) = one
+    mul(mul(mul(inv(b), inv(a)), mul(a, b)), inv(mul(a, b))) = mul(one, inv(mul(a, b)))
+    mul(one, inv(mul(a, b))) = inv(mul(a, b))
+    mul(mul(mul(inv(b), inv(a)), mul(a, b)), inv(mul(a, b))) = mul(one, inv(mul(a, b))) = inv(mul(a, b))
+
+# The First Sylow theorem's prime-power hypothesis uses Chapter 2's explicit
+# integer-witness definition of divisibility.
+prop divides(a Z, b Z):
+    exist k Z st {b = a * k}

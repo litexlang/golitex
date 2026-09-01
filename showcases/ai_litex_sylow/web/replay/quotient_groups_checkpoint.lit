@@ -1,0 +1,352 @@
+# MIL Chapter 9 quotient-group layer used by the Sylow normalizer quotient.
+#
+# It constructs coset multiplication and inverse from representative-independent
+# values, packages the quotient Group, and proves the canonical projection is a homomorphism.
+thm left_coset_in_quotient_group_carrier:
+    ? forall G nonempty_set, group &group::Group<G>, H power_set(G), g G:
+        $normal_subgroup::is_normal_subgroup(G, group, H)
+        =>:
+            \cosets::left_coset<G, group>(H, g) $in \cosets::quotient_group_carrier<G, group>(H)
+    \cosets::quotient_group_carrier<G, group>(H) = {CarrierC power_set(G): $cosets::is_left_coset_of(G, group, H, CarrierC)}
+    witness $cosets::is_left_coset_of(G, group, H, \cosets::left_coset<G, group>(H, g)) from g
+    release thm set_builder_member(\cosets::left_coset<G, group>(H, g), {CarrierC power_set(G): $cosets::is_left_coset_of(G, group, H, CarrierC)})
+    \cosets::left_coset<G, group>(H, g) $in {CarrierC power_set(G): $cosets::is_left_coset_of(G, group, H, CarrierC)}
+
+thm quotient_group_carrier_is_nonempty:
+    ? forall G nonempty_set, group &group::Group<G>, H power_set(G):
+        $normal_subgroup::is_normal_subgroup(G, group, H)
+        =>:
+            $is_nonempty_set(\cosets::quotient_group_carrier<G, group>(H))
+    release thm left_coset_in_quotient_group_carrier(G, group, H, group.one)
+    witness $is_nonempty_set(\cosets::quotient_group_carrier<G, group>(H)) from \cosets::left_coset<G, group>(H, group.one)
+
+template<G nonempty_set, group &group::Group<G>, H power_set(G): $normal_subgroup::is_normal_subgroup(G, group, H)>:
+    have quotient_group_nonempty nonempty_set = \cosets::quotient_group_carrier<G, group>(H)
+
+thm left_coset_in_quotient_group_nonempty:
+    ? forall G nonempty_set, group &group::Group<G>, H power_set(G), g G:
+        $normal_subgroup::is_normal_subgroup(G, group, H)
+        =>:
+            \cosets::left_coset<G, group>(H, g) $in \quotient_group_nonempty<G, group, H>
+    release thm left_coset_in_quotient_group_carrier(G, group, H, g)
+    \cosets::left_coset<G, group>(H, g) $in \cosets::quotient_group_carrier<G, group>(H)
+    \quotient_group_nonempty<G, group, H> = \cosets::quotient_group_carrier<G, group>(H)
+    \cosets::left_coset<G, group>(H, g) $in \quotient_group_nonempty<G, group, H>
+
+template<G nonempty_set, group &group::Group<G>, H power_set(G): $normal_subgroup::is_normal_subgroup(G, group, H)>:
+    have fn quotient_group_mk(g G) \quotient_group_nonempty<G, group, H> = \cosets::left_coset<G, group>(H, g)
+
+thm group_inv_inv:
+    ? forall G nonempty_set, group &group::Group<G>, x G:
+        group.inv(group.inv(x)) = x
+    by def $group::group_laws(G, group.mul, group.one, group.inv)
+    release thm group::mul_inv_cancel(G, group.mul, group.one, group.inv, group.inv(x))
+    group.mul(group.inv(x), group.inv(group.inv(x))) = group.one
+    group.mul(group.inv(x), x) = group.one
+    group.mul(group.inv(x), group.inv(group.inv(x))) = group.mul(group.inv(x), x)
+    release thm group::_group_left_cancel(G, group.mul, group.one, group.inv, group.inv(x), group.inv(group.inv(x)), x)
+
+thm left_coset_mul_mem:
+    ? forall G nonempty_set, group &group::Group<G>, H power_set(G), a, b, x, y G:
+        $normal_subgroup::is_normal_subgroup(G, group, H)
+        x $in \cosets::left_coset<G, group>(H, a)
+        y $in \cosets::left_coset<G, group>(H, b)
+        =>:
+            group.mul(x, y) $in \cosets::left_coset<G, group>(H, group.mul(a, b))
+    by def:
+        ? $group::group_laws(G, group.mul, group.one, group.inv)
+    \cosets::left_coset<G, group>(H, group.mul(a, b)) = {q G: $cosets::left_coset_member(G, group, H, group.mul(a, b), q)}
+    obtain u from exist h G st {h $in H, x = group.mul(a, h)}
+    obtain v from exist h G st {h $in H, y = group.mul(b, h)}
+    release thm group_inv_inv(G, group, b)
+    group.mul(group.mul(group.inv(b), u), group.inv(group.inv(b))) $in H
+    group.inv(group.inv(b)) = b
+    group.mul(group.mul(group.inv(b), u), group.inv(group.inv(b))) = group.mul(group.mul(group.inv(b), u), b)
+    have moved G = group.mul(group.mul(group.inv(b), u), b)
+    moved $in H
+    group.mul(moved, v) $in H
+    release thm group::mul_inv_cancel(G, group.mul, group.one, group.inv, b)
+    group.mul(b, group.mul(group.inv(b), u)) = group.mul(group.mul(b, group.inv(b)), u)
+    release thm cosets::object_substitution(G, G, fn(t G) G {group.mul(t, b)}, group.mul(b, group.mul(group.inv(b), u)), group.mul(group.mul(b, group.inv(b)), u))
+    group.mul(b, moved) = group.mul(b, group.mul(group.mul(group.inv(b), u), b)) = group.mul(group.mul(b, group.mul(group.inv(b), u)), b) = group.mul(group.mul(group.mul(b, group.inv(b)), u), b)
+    group.mul(b, group.inv(b)) = group.one
+    release thm cosets::object_substitution(G, G, fn(t G) G {group.mul(group.mul(t, u), b)}, group.mul(b, group.inv(b)), group.one)
+    group.mul(group.mul(group.mul(b, group.inv(b)), u), b) = group.mul(group.mul(group.one, u), b)
+    group.mul(group.one, u) = u
+    release thm cosets::object_substitution(G, G, fn(t G) G {group.mul(t, b)}, group.mul(group.one, u), u)
+    group.mul(group.mul(group.one, u), b) = group.mul(u, b)
+    group.mul(b, moved) = group.mul(u, b)
+    group.mul(u, group.mul(b, v)) = group.mul(group.mul(u, b), v)
+    release thm cosets::object_substitution(G, G, fn(t G) G {group.mul(t, v)}, group.mul(u, b), group.mul(b, moved))
+    group.mul(group.mul(u, b), v) = group.mul(group.mul(b, moved), v)
+    group.mul(group.mul(b, moved), v) = group.mul(b, group.mul(moved, v))
+    group.mul(u, group.mul(b, v)) = group.mul(b, group.mul(moved, v))
+    release thm cosets::object_substitution(G, G, fn(t G) G {group.mul(a, t)}, group.mul(u, group.mul(b, v)), group.mul(b, group.mul(moved, v)))
+    group.mul(a, group.mul(u, group.mul(b, v))) = group.mul(a, group.mul(b, group.mul(moved, v)))
+    group.mul(x, y) = group.mul(group.mul(a, u), group.mul(b, v)) = group.mul(a, group.mul(u, group.mul(b, v))) = group.mul(a, group.mul(b, group.mul(moved, v))) = group.mul(group.mul(a, b), group.mul(moved, v))
+    witness $cosets::left_coset_member(G, group, H, group.mul(a, b), group.mul(x, y)) from group.mul(moved, v)
+    release thm set_builder_member(group.mul(x, y), {q G: $cosets::left_coset_member(G, group, H, group.mul(a, b), q)})
+    group.mul(x, y) $in {q G: $cosets::left_coset_member(G, group, H, group.mul(a, b), q)}
+
+prop is_quotient_group_mul_value(G nonempty_set, group &group::Group<G>, H power_set(G), q, r, s power_set(G)):
+    exist a, b G st {q = \cosets::left_coset<G, group>(H, a), r = \cosets::left_coset<G, group>(H, b), s = \cosets::left_coset<G, group>(H, group.mul(a, b))}
+
+template<G nonempty_set, group &group::Group<G>, H power_set(G): $normal_subgroup::is_normal_subgroup(G, group, H)>:
+    have fn quotient_group_mul by exist!:
+        ? forall q, r \quotient_group_nonempty<G, group, H>:
+            exist! s \quotient_group_nonempty<G, group, H> st {$is_quotient_group_mul_value(G, group, H, q, r, s)}
+        \quotient_group_nonempty<G, group, H> = \cosets::quotient_group_carrier<G, group>(H)
+        q $in \cosets::quotient_group_carrier<G, group>(H)
+        \cosets::quotient_group_carrier<G, group>(H) = {CarrierC power_set(G): $cosets::is_left_coset_of(G, group, H, CarrierC)}
+        q $in {CarrierC power_set(G): $cosets::is_left_coset_of(G, group, H, CarrierC)}
+        $cosets::is_left_coset_of(G, group, H, q)
+        obtain a from $cosets::is_left_coset_of(G, group, H, q)
+        r $in \cosets::quotient_group_carrier<G, group>(H)
+        r $in {CarrierC power_set(G): $cosets::is_left_coset_of(G, group, H, CarrierC)}
+        $cosets::is_left_coset_of(G, group, H, r)
+        obtain b from $cosets::is_left_coset_of(G, group, H, r)
+        release thm left_coset_in_quotient_group_carrier(G, group, H, group.mul(a, b))
+        \cosets::left_coset<G, group>(H, group.mul(a, b)) $in \cosets::quotient_group_carrier<G, group>(H)
+        \quotient_group_nonempty<G, group, H> = \cosets::quotient_group_carrier<G, group>(H)
+        \cosets::left_coset<G, group>(H, group.mul(a, b)) $in \quotient_group_nonempty<G, group, H>
+        have candidate \quotient_group_nonempty<G, group, H> = \cosets::left_coset<G, group>(H, group.mul(a, b))
+        witness exist s \quotient_group_nonempty<G, group, H> st {$is_quotient_group_mul_value(G, group, H, q, r, s)} from candidate:
+            witness $is_quotient_group_mul_value(G, group, H, q, r, candidate) from a, b
+        claim:
+            ? forall s1, s2 \quotient_group_nonempty<G, group, H>:
+                $is_quotient_group_mul_value(G, group, H, q, r, s1)
+                $is_quotient_group_mul_value(G, group, H, q, r, s2)
+                =>:
+                    s1 = s2
+            obtain a1, b1 from $is_quotient_group_mul_value(G, group, H, q, r, s1)
+            obtain a2, b2 from $is_quotient_group_mul_value(G, group, H, q, r, s2)
+            release thm cosets::left_coset_center_mem(G, group, H, a2)
+            a2 $in \cosets::left_coset<G, group>(H, a2)
+            \cosets::left_coset<G, group>(H, a2) = q = \cosets::left_coset<G, group>(H, a1)
+            a2 $in \cosets::left_coset<G, group>(H, a1)
+            release thm cosets::left_coset_center_mem(G, group, H, b2)
+            b2 $in \cosets::left_coset<G, group>(H, b2)
+            \cosets::left_coset<G, group>(H, b2) = r = \cosets::left_coset<G, group>(H, b1)
+            b2 $in \cosets::left_coset<G, group>(H, b1)
+            release thm left_coset_mul_mem(G, group, H, a1, b1, a2, b2)
+            group.mul(a2, b2) $in \cosets::left_coset<G, group>(H, group.mul(a1, b1))
+            release thm cosets::left_coset_eq_of_mem(G, group, H, group.mul(a1, b1), group.mul(a2, b2))
+            \cosets::left_coset<G, group>(H, group.mul(a2, b2)) = \cosets::left_coset<G, group>(H, group.mul(a1, b1))
+            s2 = \cosets::left_coset<G, group>(H, group.mul(a2, b2)) = \cosets::left_coset<G, group>(H, group.mul(a1, b1)) = s1
+
+thm left_coset_inv_mem:
+    ? forall G nonempty_set, group &group::Group<G>, H power_set(G), a, x G:
+        $normal_subgroup::is_normal_subgroup(G, group, H)
+        x $in \cosets::left_coset<G, group>(H, a)
+        =>:
+            group.inv(x) $in \cosets::left_coset<G, group>(H, group.inv(a))
+    by def:
+        ? $group::group_laws(G, group.mul, group.one, group.inv)
+    \cosets::left_coset<G, group>(H, group.inv(a)) = {q G: $cosets::left_coset_member(G, group, H, group.inv(a), q)}
+    obtain u from exist h G st {h $in H, x = group.mul(a, h)}
+    group.inv(u) $in H
+    group.mul(group.mul(a, group.inv(u)), group.inv(a)) $in H
+    have moved G = group.mul(group.mul(a, group.inv(u)), group.inv(a))
+    moved $in H
+    release thm group::mul_inv_cancel(G, group.mul, group.one, group.inv, a)
+    group.mul(group.inv(a), group.mul(a, group.inv(u))) = group.mul(group.mul(group.inv(a), a), group.inv(u))
+    release thm cosets::object_substitution(G, G, fn(t G) G {group.mul(t, group.inv(a))}, group.mul(group.inv(a), group.mul(a, group.inv(u))), group.mul(group.mul(group.inv(a), a), group.inv(u)))
+    group.mul(group.inv(a), moved) = group.mul(group.inv(a), group.mul(group.mul(a, group.inv(u)), group.inv(a))) = group.mul(group.mul(group.inv(a), group.mul(a, group.inv(u))), group.inv(a)) = group.mul(group.mul(group.mul(group.inv(a), a), group.inv(u)), group.inv(a))
+    group.mul(group.inv(a), a) = group.one
+    release thm cosets::object_substitution(G, G, fn(t G) G {group.mul(group.mul(t, group.inv(u)), group.inv(a))}, group.mul(group.inv(a), a), group.one)
+    group.mul(group.mul(group.mul(group.inv(a), a), group.inv(u)), group.inv(a)) = group.mul(group.mul(group.one, group.inv(u)), group.inv(a))
+    group.mul(group.one, group.inv(u)) = group.inv(u)
+    release thm cosets::object_substitution(G, G, fn(t G) G {group.mul(t, group.inv(a))}, group.mul(group.one, group.inv(u)), group.inv(u))
+    group.mul(group.mul(group.one, group.inv(u)), group.inv(a)) = group.mul(group.inv(u), group.inv(a))
+    group.mul(group.inv(a), moved) = group.mul(group.inv(u), group.inv(a))
+    release thm group::mul_inv_rev(G, group.mul, group.one, group.inv, a, u)
+    group.inv(x) = group.inv(group.mul(a, u)) = group.mul(group.inv(u), group.inv(a)) = group.mul(group.inv(a), moved)
+    witness $cosets::left_coset_member(G, group, H, group.inv(a), group.inv(x)) from moved
+    release thm set_builder_member(group.inv(x), {q G: $cosets::left_coset_member(G, group, H, group.inv(a), q)})
+    group.inv(x) $in {q G: $cosets::left_coset_member(G, group, H, group.inv(a), q)}
+
+prop is_quotient_group_inv_value(G nonempty_set, group &group::Group<G>, H power_set(G), q, s power_set(G)):
+    exist a G st {q = \cosets::left_coset<G, group>(H, a), s = \cosets::left_coset<G, group>(H, group.inv(a))}
+
+template<G nonempty_set, group &group::Group<G>, H power_set(G): $normal_subgroup::is_normal_subgroup(G, group, H)>:
+    have fn quotient_group_inv by exist!:
+        ? forall q \quotient_group_nonempty<G, group, H>:
+            exist! s \quotient_group_nonempty<G, group, H> st {$is_quotient_group_inv_value(G, group, H, q, s)}
+        \quotient_group_nonempty<G, group, H> = \cosets::quotient_group_carrier<G, group>(H)
+        q $in \cosets::quotient_group_carrier<G, group>(H)
+        \cosets::quotient_group_carrier<G, group>(H) = {CarrierC power_set(G): $cosets::is_left_coset_of(G, group, H, CarrierC)}
+        q $in {CarrierC power_set(G): $cosets::is_left_coset_of(G, group, H, CarrierC)}
+        $cosets::is_left_coset_of(G, group, H, q)
+        obtain a from $cosets::is_left_coset_of(G, group, H, q)
+        release thm left_coset_in_quotient_group_carrier(G, group, H, group.inv(a))
+        \cosets::left_coset<G, group>(H, group.inv(a)) $in \cosets::quotient_group_carrier<G, group>(H)
+        \quotient_group_nonempty<G, group, H> = \cosets::quotient_group_carrier<G, group>(H)
+        \cosets::left_coset<G, group>(H, group.inv(a)) $in \quotient_group_nonempty<G, group, H>
+        have candidate \quotient_group_nonempty<G, group, H> = \cosets::left_coset<G, group>(H, group.inv(a))
+        witness exist s \quotient_group_nonempty<G, group, H> st {$is_quotient_group_inv_value(G, group, H, q, s)} from candidate:
+            witness $is_quotient_group_inv_value(G, group, H, q, candidate) from a
+        claim:
+            ? forall s1, s2 \quotient_group_nonempty<G, group, H>:
+                $is_quotient_group_inv_value(G, group, H, q, s1)
+                $is_quotient_group_inv_value(G, group, H, q, s2)
+                =>:
+                    s1 = s2
+            obtain a1 from $is_quotient_group_inv_value(G, group, H, q, s1)
+            obtain a2 from $is_quotient_group_inv_value(G, group, H, q, s2)
+            release thm cosets::left_coset_center_mem(G, group, H, a2)
+            a2 $in \cosets::left_coset<G, group>(H, a2)
+            \cosets::left_coset<G, group>(H, a2) = q = \cosets::left_coset<G, group>(H, a1)
+            a2 $in \cosets::left_coset<G, group>(H, a1)
+            release thm left_coset_inv_mem(G, group, H, a1, a2)
+            group.inv(a2) $in \cosets::left_coset<G, group>(H, group.inv(a1))
+            release thm cosets::left_coset_eq_of_mem(G, group, H, group.inv(a1), group.inv(a2))
+            \cosets::left_coset<G, group>(H, group.inv(a2)) = \cosets::left_coset<G, group>(H, group.inv(a1))
+            s2 = \cosets::left_coset<G, group>(H, group.inv(a2)) = \cosets::left_coset<G, group>(H, group.inv(a1)) = s1
+
+template<G nonempty_set, group &group::Group<G>, H power_set(G): $normal_subgroup::is_normal_subgroup(G, group, H)>:
+    have quotient_group_one \quotient_group_nonempty<G, group, H> = \quotient_group_mk<G, group, H>(group.one)
+
+thm quotient_group_has_mk_preimage:
+    ? forall G nonempty_set, group &group::Group<G>, H power_set(G), q power_set(G):
+        $normal_subgroup::is_normal_subgroup(G, group, H)
+        q $in \quotient_group_nonempty<G, group, H>
+        =>:
+            exist g G st {q = \quotient_group_mk<G, group, H>(g)}
+    \quotient_group_nonempty<G, group, H> = \cosets::quotient_group_carrier<G, group>(H)
+    q $in \cosets::quotient_group_carrier<G, group>(H)
+    \cosets::quotient_group_carrier<G, group>(H) = {CarrierC power_set(G): $cosets::is_left_coset_of(G, group, H, CarrierC)}
+    q $in {CarrierC power_set(G): $cosets::is_left_coset_of(G, group, H, CarrierC)}
+    $cosets::is_left_coset_of(G, group, H, q)
+    obtain g from $cosets::is_left_coset_of(G, group, H, q)
+    \quotient_group_mk<G, group, H>(g) = \cosets::left_coset<G, group>(H, g)
+    witness exist representative G st {q = \quotient_group_mk<G, group, H>(representative)} from g
+
+thm quotient_group_mul_mk:
+    ? forall G nonempty_set, group &group::Group<G>, H power_set(G), x, y G:
+        $normal_subgroup::is_normal_subgroup(G, group, H)
+        =>:
+            \quotient_group_mul<G, group, H>(\quotient_group_mk<G, group, H>(x), \quotient_group_mk<G, group, H>(y)) = \quotient_group_mk<G, group, H>(group.mul(x, y))
+    $is_quotient_group_mul_value(G, group, H, \quotient_group_mk<G, group, H>(x), \quotient_group_mk<G, group, H>(y), \quotient_group_mul<G, group, H>(\quotient_group_mk<G, group, H>(x), \quotient_group_mk<G, group, H>(y)))
+    obtain x1, y1 from exist a, b G st {\quotient_group_mk<G, group, H>(x) = \cosets::left_coset<G, group>(H, a), \quotient_group_mk<G, group, H>(y) = \cosets::left_coset<G, group>(H, b), \quotient_group_mul<G, group, H>(\quotient_group_mk<G, group, H>(x), \quotient_group_mk<G, group, H>(y)) = \cosets::left_coset<G, group>(H, group.mul(a, b))}
+    release thm cosets::left_coset_center_mem(G, group, H, x)
+    x $in \cosets::left_coset<G, group>(H, x)
+    \cosets::left_coset<G, group>(H, x) = \quotient_group_mk<G, group, H>(x) = \cosets::left_coset<G, group>(H, x1)
+    x $in \cosets::left_coset<G, group>(H, x1)
+    release thm cosets::left_coset_center_mem(G, group, H, y)
+    y $in \cosets::left_coset<G, group>(H, y)
+    \cosets::left_coset<G, group>(H, y) = \quotient_group_mk<G, group, H>(y) = \cosets::left_coset<G, group>(H, y1)
+    y $in \cosets::left_coset<G, group>(H, y1)
+    release thm left_coset_mul_mem(G, group, H, x1, y1, x, y)
+    group.mul(x, y) $in \cosets::left_coset<G, group>(H, group.mul(x1, y1))
+    release thm cosets::left_coset_eq_of_mem(G, group, H, group.mul(x1, y1), group.mul(x, y))
+    \cosets::left_coset<G, group>(H, group.mul(x, y)) = \cosets::left_coset<G, group>(H, group.mul(x1, y1))
+    \quotient_group_mul<G, group, H>(\quotient_group_mk<G, group, H>(x), \quotient_group_mk<G, group, H>(y)) = \cosets::left_coset<G, group>(H, group.mul(x1, y1)) = \cosets::left_coset<G, group>(H, group.mul(x, y)) = \quotient_group_mk<G, group, H>(group.mul(x, y))
+
+thm quotient_group_inv_mk:
+    ? forall G nonempty_set, group &group::Group<G>, H power_set(G), x G:
+        $normal_subgroup::is_normal_subgroup(G, group, H)
+        =>:
+            \quotient_group_inv<G, group, H>(\quotient_group_mk<G, group, H>(x)) = \quotient_group_mk<G, group, H>(group.inv(x))
+    $is_quotient_group_inv_value(G, group, H, \quotient_group_mk<G, group, H>(x), \quotient_group_inv<G, group, H>(\quotient_group_mk<G, group, H>(x)))
+    obtain x1 from exist a G st {\quotient_group_mk<G, group, H>(x) = \cosets::left_coset<G, group>(H, a), \quotient_group_inv<G, group, H>(\quotient_group_mk<G, group, H>(x)) = \cosets::left_coset<G, group>(H, group.inv(a))}
+    release thm cosets::left_coset_center_mem(G, group, H, x)
+    x $in \cosets::left_coset<G, group>(H, x)
+    \cosets::left_coset<G, group>(H, x) = \quotient_group_mk<G, group, H>(x) = \cosets::left_coset<G, group>(H, x1)
+    x $in \cosets::left_coset<G, group>(H, x1)
+    release thm left_coset_inv_mem(G, group, H, x1, x)
+    group.inv(x) $in \cosets::left_coset<G, group>(H, group.inv(x1))
+    release thm cosets::left_coset_eq_of_mem(G, group, H, group.inv(x1), group.inv(x))
+    \cosets::left_coset<G, group>(H, group.inv(x)) = \cosets::left_coset<G, group>(H, group.inv(x1))
+    \quotient_group_inv<G, group, H>(\quotient_group_mk<G, group, H>(x)) = \cosets::left_coset<G, group>(H, group.inv(x1)) = \cosets::left_coset<G, group>(H, group.inv(x)) = \quotient_group_mk<G, group, H>(group.inv(x))
+
+thm quotient_group_mul_of_representatives:
+    ? forall G nonempty_set, group &group::Group<G>, H, q, r power_set(G), x, y G:
+        $normal_subgroup::is_normal_subgroup(G, group, H)
+        q $in \quotient_group_nonempty<G, group, H>
+        r $in \quotient_group_nonempty<G, group, H>
+        q = \quotient_group_mk<G, group, H>(x)
+        r = \quotient_group_mk<G, group, H>(y)
+        =>:
+            \quotient_group_mul<G, group, H>(q, r) = \quotient_group_mk<G, group, H>(group.mul(x, y))
+    release thm cosets::object_substitution(\quotient_group_nonempty<G, group, H>, \quotient_group_nonempty<G, group, H>, fn(t \quotient_group_nonempty<G, group, H>) \quotient_group_nonempty<G, group, H> {\quotient_group_mul<G, group, H>(t, r)}, q, \quotient_group_mk<G, group, H>(x))
+    \quotient_group_mul<G, group, H>(q, r) = \quotient_group_mul<G, group, H>(\quotient_group_mk<G, group, H>(x), r)
+    release thm cosets::object_substitution(\quotient_group_nonempty<G, group, H>, \quotient_group_nonempty<G, group, H>, fn(t \quotient_group_nonempty<G, group, H>) \quotient_group_nonempty<G, group, H> {\quotient_group_mul<G, group, H>(\quotient_group_mk<G, group, H>(x), t)}, r, \quotient_group_mk<G, group, H>(y))
+    \quotient_group_mul<G, group, H>(\quotient_group_mk<G, group, H>(x), r) = \quotient_group_mul<G, group, H>(\quotient_group_mk<G, group, H>(x), \quotient_group_mk<G, group, H>(y))
+    release thm quotient_group_mul_mk(G, group, H, x, y)
+    \quotient_group_mul<G, group, H>(q, r) = \quotient_group_mul<G, group, H>(\quotient_group_mk<G, group, H>(x), r) = \quotient_group_mul<G, group, H>(\quotient_group_mk<G, group, H>(x), \quotient_group_mk<G, group, H>(y)) = \quotient_group_mk<G, group, H>(group.mul(x, y))
+
+thm quotient_group_inv_of_representative:
+    ? forall G nonempty_set, group &group::Group<G>, H, q power_set(G), x G:
+        $normal_subgroup::is_normal_subgroup(G, group, H)
+        q $in \quotient_group_nonempty<G, group, H>
+        q = \quotient_group_mk<G, group, H>(x)
+        =>:
+            \quotient_group_inv<G, group, H>(q) = \quotient_group_mk<G, group, H>(group.inv(x))
+    release thm cosets::object_substitution(\quotient_group_nonempty<G, group, H>, \quotient_group_nonempty<G, group, H>, \quotient_group_inv<G, group, H>, q, \quotient_group_mk<G, group, H>(x))
+    \quotient_group_inv<G, group, H>(q) = \quotient_group_inv<G, group, H>(\quotient_group_mk<G, group, H>(x))
+    release thm quotient_group_inv_mk(G, group, H, x)
+    \quotient_group_inv<G, group, H>(q) = \quotient_group_inv<G, group, H>(\quotient_group_mk<G, group, H>(x)) = \quotient_group_mk<G, group, H>(group.inv(x))
+
+thm quotient_group_tuple_is_group:
+    ? forall G nonempty_set, group &group::Group<G>, H power_set(G):
+        $normal_subgroup::is_normal_subgroup(G, group, H)
+        =>:
+            (\quotient_group_mul<G, group, H>, \quotient_group_one<G, group, H>, \quotient_group_inv<G, group, H>) $in &group::Group<\quotient_group_nonempty<G, group, H>>
+    claim:
+        ? forall q, r, s \quotient_group_nonempty<G, group, H>:
+            \quotient_group_mul<G, group, H>(\quotient_group_mul<G, group, H>(q, r), s) = \quotient_group_mul<G, group, H>(q, \quotient_group_mul<G, group, H>(r, s))
+        \quotient_group_nonempty<G, group, H> = \cosets::quotient_group_carrier<G, group>(H)
+        q $in \cosets::quotient_group_carrier<G, group>(H)
+        r $in \cosets::quotient_group_carrier<G, group>(H)
+        s $in \cosets::quotient_group_carrier<G, group>(H)
+        release thm quotient_group_has_mk_preimage(G, group, H, q)
+        obtain x from exist g G st {q = \quotient_group_mk<G, group, H>(g)}
+        release thm quotient_group_has_mk_preimage(G, group, H, r)
+        obtain y from exist g G st {r = \quotient_group_mk<G, group, H>(g)}
+        release thm quotient_group_has_mk_preimage(G, group, H, s)
+        obtain z from exist g G st {s = \quotient_group_mk<G, group, H>(g)}
+        release thm quotient_group_mul_of_representatives(G, group, H, q, r, x, y)
+        have qr \quotient_group_nonempty<G, group, H> = \quotient_group_mul<G, group, H>(q, r)
+        qr = \quotient_group_mk<G, group, H>(group.mul(x, y))
+        release thm quotient_group_mul_of_representatives(G, group, H, qr, s, group.mul(x, y), z)
+        release thm quotient_group_mul_of_representatives(G, group, H, r, s, y, z)
+        have rs \quotient_group_nonempty<G, group, H> = \quotient_group_mul<G, group, H>(r, s)
+        rs = \quotient_group_mk<G, group, H>(group.mul(y, z))
+        release thm quotient_group_mul_of_representatives(G, group, H, q, rs, x, group.mul(y, z))
+        group.mul(group.mul(x, y), z) = group.mul(x, group.mul(y, z))
+        \quotient_group_mul<G, group, H>(\quotient_group_mul<G, group, H>(q, r), s) = \quotient_group_mul<G, group, H>(qr, s) = \quotient_group_mk<G, group, H>(group.mul(group.mul(x, y), z)) = \quotient_group_mk<G, group, H>(group.mul(x, group.mul(y, z))) = \quotient_group_mul<G, group, H>(q, rs) = \quotient_group_mul<G, group, H>(q, \quotient_group_mul<G, group, H>(r, s))
+    claim:
+        ? forall q \quotient_group_nonempty<G, group, H>:
+            \quotient_group_mul<G, group, H>(\quotient_group_one<G, group, H>, q) = q
+        \quotient_group_nonempty<G, group, H> = \cosets::quotient_group_carrier<G, group>(H)
+        q $in \cosets::quotient_group_carrier<G, group>(H)
+        release thm quotient_group_has_mk_preimage(G, group, H, q)
+        obtain x from exist g G st {q = \quotient_group_mk<G, group, H>(g)}
+        \quotient_group_one<G, group, H> = \quotient_group_mk<G, group, H>(group.one)
+        release thm quotient_group_mul_of_representatives(G, group, H, \quotient_group_one<G, group, H>, q, group.one, x)
+        group.mul(group.one, x) = x
+        \quotient_group_mul<G, group, H>(\quotient_group_one<G, group, H>, q) = \quotient_group_mk<G, group, H>(group.mul(group.one, x)) = \quotient_group_mk<G, group, H>(x) = q
+    claim:
+        ? forall q \quotient_group_nonempty<G, group, H>:
+            \quotient_group_mul<G, group, H>(\quotient_group_inv<G, group, H>(q), q) = \quotient_group_one<G, group, H>
+        \quotient_group_nonempty<G, group, H> = \cosets::quotient_group_carrier<G, group>(H)
+        q $in \cosets::quotient_group_carrier<G, group>(H)
+        release thm quotient_group_has_mk_preimage(G, group, H, q)
+        obtain x from exist g G st {q = \quotient_group_mk<G, group, H>(g)}
+        release thm quotient_group_inv_of_representative(G, group, H, q, x)
+        have iq \quotient_group_nonempty<G, group, H> = \quotient_group_inv<G, group, H>(q)
+        iq = \quotient_group_mk<G, group, H>(group.inv(x))
+        release thm quotient_group_mul_of_representatives(G, group, H, iq, q, group.inv(x), x)
+        group.mul(group.inv(x), x) = group.one
+        \quotient_group_one<G, group, H> = \quotient_group_mk<G, group, H>(group.one)
+        \quotient_group_mul<G, group, H>(\quotient_group_inv<G, group, H>(q), q) = \quotient_group_mul<G, group, H>(iq, q) = \quotient_group_mk<G, group, H>(group.mul(group.inv(x), x)) = \quotient_group_mk<G, group, H>(group.one) = \quotient_group_one<G, group, H>
+    by def:
+        ? $group::group_laws(\quotient_group_nonempty<G, group, H>, \quotient_group_mul<G, group, H>, \quotient_group_one<G, group, H>, \quotient_group_inv<G, group, H>)
+    \quotient_group_mul<G, group, H> $in fn(q, r \quotient_group_nonempty<G, group, H>) \quotient_group_nonempty<G, group, H>
+    \quotient_group_one<G, group, H> $in \quotient_group_nonempty<G, group, H>
+    \quotient_group_inv<G, group, H> $in fn(q \quotient_group_nonempty<G, group, H>) \quotient_group_nonempty<G, group, H>
+    release thm cart_member_from_coordinates((\quotient_group_mul<G, group, H>, \quotient_group_one<G, group, H>, \quotient_group_inv<G, group, H>), cart(fn(q, r \quotient_group_nonempty<G, group, H>) \quotient_group_nonempty<G, group, H>, \quotient_group_nonempty<G, group, H>, fn(q \quotient_group_nonempty<G, group, H>) \quotient_group_nonempty<G, group, H>))
+    release thm struct_member((\quotient_group_mul<G, group, H>, \quotient_group_one<G, group, H>, \quotient_group_inv<G, group, H>), &group::Group<\quotient_group_nonempty<G, group, H>>)
+
+template<G nonempty_set, group &group::Group<G>, H power_set(G): $normal_subgroup::is_normal_subgroup(G, group, H)>:
+    have quotient_group &group::Group<\quotient_group_nonempty<G, group, H>> = (\quotient_group_mul<G, group, H>, \quotient_group_one<G, group, H>, \quotient_group_inv<G, group, H>)

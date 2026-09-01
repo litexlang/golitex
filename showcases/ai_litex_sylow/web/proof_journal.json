@@ -1,0 +1,265 @@
+{
+  "schema_version": 1,
+  "journal_id": "AI-LITEX-SYLOW-SUBGROUPS-2026-08-31",
+  "target": "scripts/ai_litex_sylow/subgroup.lit",
+  "source_anchor": "scripts/mathematics_in_litex/textbook/chapter09-groups-and-rings.lit#9.1.3",
+  "binary": "target/release/litex 0.9.116-beta",
+  "session_command": "target/release/litex -session -f scripts/ai_litex_sylow/subgroup.lit",
+  "session_environment": "The registered target contained comments only, so -session -f loaded group plus an empty Chapter 9 declaration layer before the first candidate.",
+  "replay_command": "target/release/litex -session -f scripts/ai_litex_sylow/web/replay/session_checkpoint.lit",
+  "replay_environment": "The generated replay checkpoint follows the byte-identical group mirror and precedes the byte-identical subgroup mirror, so replay loads Chapter 2 without preloading any B001-B005 declaration.",
+  "transport_events": [
+    {
+      "id": "T001",
+      "result": "startup_error",
+      "failed_phase": "transport",
+      "verifier_evidence": "configured folder contains unexported Litex module path `proof_journals`",
+      "diagnosis": "A direct child directory of a configured module is treated as a module path and must be exported.",
+      "minimal_fix": "Keep the JSON journal as a top-level non-Litex file named proof_journal.json."
+    },
+    {
+      "id": "T002",
+      "result": "startup_error",
+      "failed_phase": "transport",
+      "verifier_evidence": "configured folder contains unexported Litex module path `web`",
+      "diagnosis": "The module loader treats every direct child directory as a candidate Litex module, even when it contains only website assets.",
+      "minimal_fix": "Keep the static website assets as top-level non-Litex files in the configured showcase directory.",
+      "final_resolution": "The final cabinet removes litex.config from the reader-facing root and places a self-contained generated replay module under web/replay, so the root can contain one web directory without entering module discovery."
+    }
+  ],
+  "session_restarts": [
+    {
+      "id": "R001",
+      "reason": "B005-A1 committed under the theorem name; restart was required to deletion-probe a replacement with the same name.",
+      "replayed_blocks": [
+        "B001-R1",
+        "B002-R1",
+        "B003-R1",
+        "B004-R1"
+      ],
+      "result": "all_replayed_ok_true"
+    },
+    {
+      "id": "R002",
+      "reason": "B005-A4 committed under the theorem name; restart was required to test whether refined-set parameter membership echoes were redundant.",
+      "replayed_blocks": [
+        "B001-R2",
+        "B002-R2",
+        "B003-R2",
+        "B004-R2"
+      ],
+      "result": "all_replayed_and_consumed_by_committed_B005_A5"
+    }
+  ],
+  "replay_gate": {
+    "command": "target/release/litex -session -f scripts/ai_litex_sylow/web/replay/session_checkpoint.lit",
+    "block_ids": [
+      "REPLAY-B001",
+      "REPLAY-B002",
+      "REPLAY-B003",
+      "REPLAY-B004",
+      "REPLAY-B005"
+    ],
+    "result": "all_delivered_true_and_committed",
+    "final_verify_process": "Success",
+    "post_rename_replay": "B001-B005 each returned delivered ok: true, execution kind: Committed, with B005 verify status Success under group:: and subgroup:: namespaces"
+  },
+  "build_gate": {
+    "command": "cargo build --release",
+    "result": "success",
+    "process_exit_code": 0,
+    "note": "Release build completed; existing dead-code warnings are outside this showcase's source slice."
+  },
+  "proof_spine": [
+    "Expose the three closure obligations that define a subgroup.",
+    "Read membership in an intersection as membership in both component subgroups.",
+    "Use each component's closure under identity, multiplication, and inverse.",
+    "Reconstruct membership in the set-builder intersection and fold the subgroup definition."
+  ],
+  "blocks": [
+    {
+      "id": "B001",
+      "source_order": 1,
+      "intent": "Define a subgroup as containing the identity and being closed under multiplication and inverse.",
+      "dependencies": [
+        "group::Group"
+      ],
+      "attempts": [
+        {
+          "candidate": "prop is_subgroup(G nonempty_set, group &group::Group<G>, H power_set(G)):\n    group.one $in H\n    forall x, y G:\n        x $in H\n        y $in H\n        =>:\n            group.mul(x, y) $in H\n    forall x G:\n        x $in H\n        =>:\n            group.inv(x) $in H",
+          "result": "accepted",
+          "verifier_evidence": "session block B001 returned ok: true; TryStmt execution kind: Committed; inner result kind: DefPropStmt",
+          "diagnosis": "The visible Chapter 2 Group interface supplies exactly the callable operations and carrier facts required by the definition.",
+          "next_change": "Proceed to the direct closure projections in source order."
+        }
+      ],
+      "accepted_litex": "prop is_subgroup(G nonempty_set, group &group::Group<G>, H power_set(G)):\n    group.one $in H\n    forall x, y G:\n        x $in H\n        y $in H\n        =>:\n            group.mul(x, y) $in H\n    forall x G:\n        x $in H\n        =>:\n            group.inv(x) $in H",
+      "reusable_lesson": "Cite the packaged group object at the concept boundary; do not redeclare its operations in the Chapter 9 file.",
+      "status": "materialized"
+    },
+    {
+      "id": "B002",
+      "source_order": 2,
+      "intent": "Expose multiplication closure as a reusable theorem projection from is_subgroup.",
+      "dependencies": [
+        "B001 is_subgroup",
+        "group::Group.mul"
+      ],
+      "attempts": [
+        {
+          "candidate": "thm subgroup_mul_mem:\n    ? forall G nonempty_set, group &group::Group<G>, H power_set(G), x, y G:\n        $is_subgroup(G, group, H)\n        x $in H\n        y $in H\n        =>:\n            group.mul(x, y) $in H",
+          "result": "accepted",
+          "verifier_evidence": "session block B002 returned ok: true; TryStmt execution kind: Committed; inner result kind: DefThmStmt",
+          "diagnosis": "The theorem is an exact projection of the defining closure fact, so no proof-body echo is required.",
+          "next_change": "Expose inverse closure with the same projection pattern."
+        }
+      ],
+      "accepted_litex": "thm subgroup_mul_mem:\n    ? forall G nonempty_set, group &group::Group<G>, H power_set(G), x, y G:\n        $is_subgroup(G, group, H)\n        x $in H\n        y $in H\n        =>:\n            group.mul(x, y) $in H",
+      "reusable_lesson": "When a theorem conclusion is already a direct component of a known definition, keep the theorem body empty and let the stored fact interface do the work.",
+      "status": "materialized"
+    },
+    {
+      "id": "B003",
+      "source_order": 3,
+      "intent": "Expose inverse closure as a reusable theorem projection from is_subgroup.",
+      "dependencies": [
+        "B001 is_subgroup",
+        "group::Group.inv"
+      ],
+      "attempts": [
+        {
+          "candidate": "thm subgroup_inv_mem:\n    ? forall G nonempty_set, group &group::Group<G>, H power_set(G), x G:\n        $is_subgroup(G, group, H)\n        x $in H\n        =>:\n            group.inv(x) $in H",
+          "result": "accepted",
+          "verifier_evidence": "session block B003 returned ok: true; TryStmt execution kind: Committed; inner result kind: DefThmStmt",
+          "diagnosis": "As with multiplication, inverse closure is already present in the unfolded subgroup fact.",
+          "next_change": "Introduce the intersection object used by the tracer theorem."
+        }
+      ],
+      "accepted_litex": "thm subgroup_inv_mem:\n    ? forall G nonempty_set, group &group::Group<G>, H power_set(G), x G:\n        $is_subgroup(G, group, H)\n        x $in H\n        =>:\n            group.inv(x) $in H",
+      "reusable_lesson": "A readable named theorem can be a zero-body projection when the underlying definition already stores the exact quantified fact.",
+      "status": "materialized"
+    },
+    {
+      "id": "B004",
+      "source_order": 4,
+      "intent": "Name the set-builder intersection so later Chapter 9 statements can cite one explicit construction.",
+      "dependencies": [
+        "power_set",
+        "set-builder notation"
+      ],
+      "attempts": [
+        {
+          "candidate": "template<G set>:\n    have fn subgroup_intersection(H, K power_set(G)) power_set(G) = {x G: x $in H and x $in K}",
+          "result": "accepted",
+          "verifier_evidence": "session block B004 returned ok: true; TryStmt execution kind: Committed; inner result kind: DefTemplateStmt",
+          "diagnosis": "The set-builder is recognized as an element of power_set(G), so the construction is callable without an external set library.",
+          "next_change": "Attempt the closure proof with the ordinary mathematical component facts first."
+        }
+      ],
+      "accepted_litex": "template<G set>:\n    have fn subgroup_intersection(H, K power_set(G)) power_set(G) = {x G: x $in H and x $in K}",
+      "reusable_lesson": "Use a template when a construction depends on a carrier supplied by later callers; keep the actual subset formula visible.",
+      "status": "materialized"
+    },
+    {
+      "id": "B005",
+      "source_order": 5,
+      "intent": "Prove that the set-builder intersection of two subgroups is a subgroup.",
+      "dependencies": [
+        "B001 is_subgroup",
+        "B002 subgroup_mul_mem",
+        "B003 subgroup_inv_mem",
+        "set_builder_member"
+      ],
+      "proof_spine_move": "Prove identity, multiplication, and inverse closure componentwise, then fold is_subgroup.",
+      "attempts": [
+        {
+          "attempt_id": "B005-A1",
+          "parent_attempt_id": null,
+          "candidate": "thm subgroup_intersection_closed:\n    ? forall G nonempty_set, group &group::Group<G>, H, K power_set(G):\n        $is_subgroup(G, group, H)\n        $is_subgroup(G, group, K)\n        =>:\n            $is_subgroup(G, group, {x G: x $in H and x $in K})\n    group.one $in H\n    group.one $in K\n    group.one $in {x G: x $in H and x $in K}\n    claim:\n        ? forall x, y {q G: q $in H and q $in K}:\n            group.mul(x, y) $in {q G: q $in H and q $in K}\n        x $in H\n        x $in K\n        y $in H\n        y $in K\n        group.mul(x, y) $in H\n        group.mul(x, y) $in K\n        release thm set_builder_member(group.mul(x, y), {q G: q $in H and q $in K})\n    claim:\n        ? forall x {q G: q $in H and q $in K}:\n            group.inv(x) $in {q G: q $in H and q $in K}\n        x $in H\n        x $in K\n        group.inv(x) $in H\n        group.inv(x) $in K\n        release thm set_builder_member(group.inv(x), {q G: q $in H and q $in K})\n    by def:\n        ? $is_subgroup(G, group, {x G: x $in H and x $in K})",
+          "result": "accepted_provisional",
+          "verifier_evidence": "session block B005-A1 returned ok: true; TryStmt execution kind: Committed; inner result kind: DefThmStmt",
+          "diagnosis": "Current inference constructs the identity's set-builder membership from the two component membership facts; the expected missing-bridge failure does not exist.",
+          "next_change": "Restart, replay B001-B004, and deletion-probe the explicit closure proof instead of preserving verifier-redundant lines."
+        },
+        {
+          "attempt_id": "B005-A2",
+          "parent_attempt_id": "B005-A1",
+          "candidate": "thm subgroup_intersection_closed:\n    ? forall G nonempty_set, group &group::Group<G>, H, K power_set(G):\n        $is_subgroup(G, group, H)\n        $is_subgroup(G, group, K)\n        =>:\n            $is_subgroup(G, group, {x G: x $in H and x $in K})",
+          "result": "failed",
+          "failed_phase": "proof",
+          "verifier_evidence": "session event ok: true, but TryStmt execution kind: RolledBack; failed_goal: $is_subgroup(G, group, {x G: x $in H and x $in K}); verify_process: Error; message: thm `subgroup_intersection_closed` failed: cannot prove then-clause",
+          "failure_mechanism": "The transaction was transported successfully, but no proof facts established the three closure components required by is_subgroup.",
+          "diagnosis": "Protocol-level ok does not mean the candidate committed; the AI must inspect execution.kind and the nested phase result.",
+          "minimal_fix": "Add the identity, multiplication-closure, and inverse-closure goals as a minimal mathematical skeleton, then fold is_subgroup.",
+          "next_change": "Submit only the three closure obligations and by def, leaving their internal facts to current inference."
+        },
+        {
+          "attempt_id": "B005-A3",
+          "parent_attempt_id": "B005-A2",
+          "candidate": "thm subgroup_intersection_closed:\n    ? forall G nonempty_set, group &group::Group<G>, H, K power_set(G):\n        $is_subgroup(G, group, H)\n        $is_subgroup(G, group, K)\n        =>:\n            $is_subgroup(G, group, {x G: x $in H and x $in K})\n    group.one $in {x G: x $in H and x $in K}\n    claim:\n        ? forall x, y {q G: q $in H and q $in K}:\n            group.mul(x, y) $in {q G: q $in H and q $in K}\n    claim:\n        ? forall x {q G: q $in H and q $in K}:\n            group.inv(x) $in {q G: q $in H and q $in K}\n    by def:\n        ? $is_subgroup(G, group, {x G: x $in H and x $in K})",
+          "result": "failed",
+          "failed_phase": "proof",
+          "verifier_evidence": "TryStmt execution kind: RolledBack; failed_goal: group.mul(x, y) $in {q G: q $in H and q $in K}; verify_process: Error; message: claim failed: cannot prove then-clause",
+          "failure_mechanism": "The outer identity obligation is inferred, but the nested multiplication claim does not automatically expose and reuse all component-membership and subgroup-closure facts.",
+          "diagnosis": "The three-obligation skeleton is mathematically right, but nested claim scopes need explicit component facts before the set-builder target becomes inferable.",
+          "minimal_fix": "Inside each nested claim, expose membership in H and K and the corresponding closure results; deletion-probe the explicit set_builder_member releases separately.",
+          "next_change": "Add component membership and component closure facts, while omitting the old explicit set-builder releases."
+        },
+        {
+          "attempt_id": "B005-A4",
+          "parent_attempt_id": "B005-A3",
+          "candidate": "thm subgroup_intersection_closed:\n    ? forall G nonempty_set, group &group::Group<G>, H, K power_set(G):\n        $is_subgroup(G, group, H)\n        $is_subgroup(G, group, K)\n        =>:\n            $is_subgroup(G, group, {x G: x $in H and x $in K})\n    group.one $in {x G: x $in H and x $in K}\n    claim:\n        ? forall x, y {q G: q $in H and q $in K}:\n            group.mul(x, y) $in {q G: q $in H and q $in K}\n        x $in H\n        x $in K\n        y $in H\n        y $in K\n        group.mul(x, y) $in H\n        group.mul(x, y) $in K\n    claim:\n        ? forall x {q G: q $in H and q $in K}:\n            group.inv(x) $in {q G: q $in H and q $in K}\n        x $in H\n        x $in K\n        group.inv(x) $in H\n        group.inv(x) $in K\n    by def:\n        ? $is_subgroup(G, group, {x G: x $in H and x $in K})",
+          "result": "accepted_provisional",
+          "verifier_evidence": "TryStmt execution kind: Committed; inner result kind: DefThmStmt; verify_process: Success",
+          "diagnosis": "The component facts are sufficient; current inference constructs all three set-builder memberships without explicit set_builder_member releases.",
+          "next_change": "Restart and deletion-probe the explicit x/y membership echoes while retaining the component closure results."
+        },
+        {
+          "attempt_id": "B005-A5",
+          "parent_attempt_id": "B005-A4",
+          "candidate": "thm subgroup_intersection_closed:\n    ? forall G nonempty_set, group &group::Group<G>, H, K power_set(G):\n        $is_subgroup(G, group, H)\n        $is_subgroup(G, group, K)\n        =>:\n            $is_subgroup(G, group, {x G: x $in H and x $in K})\n    group.one $in {x G: x $in H and x $in K}\n    claim:\n        ? forall x, y {q G: q $in H and q $in K}:\n            group.mul(x, y) $in {q G: q $in H and q $in K}\n        group.mul(x, y) $in H\n        group.mul(x, y) $in K\n    claim:\n        ? forall x {q G: q $in H and q $in K}:\n            group.inv(x) $in {q G: q $in H and q $in K}\n        group.inv(x) $in H\n        group.inv(x) $in K\n    by def:\n        ? $is_subgroup(G, group, {x G: x $in H and x $in K})",
+          "result": "accepted",
+          "verifier_evidence": "session block B005-A5 returned ok: true; TryStmt execution kind: Committed; inner result kind: DefThmStmt; verify_process: Success",
+          "diagnosis": "Refined-set parameters already expose membership in H and K. The irreducible readable proof surface is the three closure obligations plus the two component closure results inside each nested claim.",
+          "minimal_fix": "Accepted as the materialization candidate; retain the mathematical skeleton and remove verifier-redundant membership and release echoes.",
+          "next_change": "Materialize the contiguous B001-B005 prefix and run the strict registered-file gate."
+        }
+      ],
+      "accepted_litex": "thm subgroup_intersection_closed:\n    ? forall G nonempty_set, group &group::Group<G>, H, K power_set(G):\n        $is_subgroup(G, group, H)\n        $is_subgroup(G, group, K)\n        =>:\n            $is_subgroup(G, group, {x G: x $in H and x $in K})\n    group.one $in {x G: x $in H and x $in K}\n    claim:\n        ? forall x, y {q G: q $in H and q $in K}:\n            group.mul(x, y) $in {q G: q $in H and q $in K}\n        group.mul(x, y) $in H\n        group.mul(x, y) $in K\n    claim:\n        ? forall x {q G: q $in H and q $in K}:\n            group.inv(x) $in {q G: q $in H and q $in K}\n        group.inv(x) $in H\n        group.inv(x) $in K\n    by def:\n        ? $is_subgroup(G, group, {x G: x $in H and x $in K})",
+      "reusable_lesson": "Use transactional deletion probes after acceptance: retain the visible mathematical obligations, but remove component-membership and set-builder-construction echoes that the current verifier supplies.",
+      "status": "materialized"
+    }
+  ],
+  "materialization": {
+    "block_ids": [
+      "B001",
+      "B002",
+      "B003",
+      "B004",
+      "B005"
+    ],
+    "mirror_contract": "web/replay/group.lit and web/replay/subgroup.lit are generated byte-identical mirrors of the two reader-facing root sources; render_showcase.mjs --check rejects drift.",
+    "file_gate_command": "target/release/litex -strict -f scripts/ai_litex_sylow/web/replay/subgroup.lit",
+    "file_gate_result": {
+      "result": "success",
+      "process_exit_code": 0,
+      "output_type": "strict full run",
+      "statement_count": 15,
+      "direct_trust": 0,
+      "axioms": 0,
+      "trusted_object_assumptions": 0,
+      "unverified_imports": []
+    },
+    "module_gate_command": "target/release/litex -strict -r scripts/ai_litex_sylow/web/replay",
+    "module_gate_result": {
+      "result": "success",
+      "process_exit_code": 0,
+      "output_type": "strict full run",
+      "statement_count": 19,
+      "direct_trust": 0,
+      "axioms": 0,
+      "trusted_object_assumptions": 0,
+      "unverified_imports": []
+    }
+  }
+}

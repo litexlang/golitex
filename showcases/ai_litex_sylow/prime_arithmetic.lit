@@ -1,0 +1,298 @@
+# Minimal explicit prime-arithmetic layer used by finite p-group orbit counting.
+#
+# It exposes gcd/Bezout foundations, Euclid's prime-divides-product lemma,
+# and integer multiplication cancellation without importing a number-theory library.
+have fn integer_quotient by exist!:
+    ? forall a Z, d N+:
+        exist! q Z st {a = d * q + a % d}
+
+thm _positive_divisor_le_abs:
+    ? forall d N+, a Z:
+        $group::divides(d, a)
+        a != 0
+        =>:
+            d <= abs(a)
+    obtain k from exist k Z st {a = d * k}
+    by contra:
+        ? k != 0
+        k = 0
+        a = d * k = d * 0 = 0
+        impossible a != 0
+    abs(k) > 0
+    abs(k) $in N+
+    d * 1 <= d * abs(k)
+    abs(d) = d
+    abs(a) = abs(d * k) = abs(d) * abs(k) = d * abs(k)
+    d = d * 1 <= d * abs(k) = abs(a)
+
+# For a nonzero pair, the positive common divisors form a finite nonempty set.
+# This is the well-definedness bridge for the source-local gcd construction.
+
+thm gcd_positive:
+    ? forall a, b Z:
+        a != 0 or b != 0
+        =>:
+            gcd(a, b) $in N+
+
+
+thm gcd_divides_left:
+    ? forall a, b Z:
+        a != 0 or b != 0
+        =>:
+            $group::divides(gcd(a, b), a)
+    release thm gcd_positive(a, b)
+    a % gcd(a, b) = 0
+    exist k Z st {a = gcd(a, b) * k}
+    by def:
+        ? $group::divides(gcd(a, b), a)
+
+
+thm gcd_divides_right:
+    ? forall a, b Z:
+        a != 0 or b != 0
+        =>:
+            $group::divides(gcd(a, b), b)
+    release thm gcd_positive(a, b)
+    b % gcd(a, b) = 0
+    exist k Z st {b = gcd(a, b) * k}
+    by def:
+        ? $group::divides(gcd(a, b), b)
+
+
+thm common_divisor_le_gcd:
+    ? forall a, b Z, d N+:
+        a != 0 or b != 0
+        $group::divides(d, a)
+        $group::divides(d, b)
+        =>:
+            d <= gcd(a, b)
+    release thm gcd_positive(a, b)
+    obtain ka from exist ka Z st {a = d * ka}
+    obtain kb from exist kb Z st {b = d * kb}
+    d = d * 1 + 0
+    0 < d
+    d % d = 0
+    a % d = (d * ka) % d = ((d % d) * (ka % d)) % d = (0 * (ka % d)) % d = 0 % d = 0
+    b % d = (d * kb) % d = ((d % d) * (kb % d)) % d = (0 * (kb % d)) % d = 0 % d = 0
+
+
+thm gcd_euclidean_base:
+    ? forall a Z:
+        a != 0
+        =>:
+            gcd(a, 0) = abs(a)
+    release thm gcd_positive(a, 0)
+    release thm gcd_divides_left(a, 0)
+    release thm _positive_divisor_le_abs(gcd(a, 0), a)
+    gcd(a, 0) <= abs(a)
+    abs(a) > 0
+    abs(a) $in N+
+    by cases:
+        ? $group::divides(abs(a), a)
+        case a >= 0:
+            abs(a) = a
+            a = a * 1
+            abs(a) * 1 = a * 1
+            a = abs(a) * 1
+            witness exist k Z st {a = abs(a) * k} from 1
+            by def:
+                ? $group::divides(abs(a), a)
+        case a < 0:
+            abs(a) = -a
+            a = abs(a) * (-1)
+            witness exist k Z st {a = abs(a) * k} from -1
+            by def:
+                ? $group::divides(abs(a), a)
+    witness exist k Z st {0 = abs(a) * k} from 0:
+        0 = abs(a) * 0
+    by def:
+        ? $group::divides(abs(a), 0)
+    $group::divides(abs(a), 0)
+    release thm common_divisor_le_gcd(a, 0, abs(a))
+    abs(a) <= gcd(a, 0)
+
+thm gcd_euclidean_step_positive:
+    ? forall a N, b N+:
+        gcd(a, b) = gcd(b, a % b)
+    have q Z = integer_quotient(a, b)
+    a % b >= 0
+    abs(a % b) = a % b
+    have r N = abs(a % b)
+    r = a % b
+    a = b * integer_quotient(a, b) + a % b
+    a = b * integer_quotient(a, b) + a % b = b * q + a % b = b * q + r
+    release thm gcd_positive(a, b)
+    have g N+ = gcd(a, b)
+    release thm gcd_divides_left(a, b)
+    release thm gcd_divides_right(a, b)
+    $group::divides(g, a)
+    $group::divides(g, b)
+    obtain u from exist u Z st {a = g * u}
+    obtain v from exist v Z st {b = g * v}
+    witness $group::divides(g, r) from u - v * q:
+        r = a - b * q = g * u - g * v * q = g * (u - v * q)
+    release thm common_divisor_le_gcd(b, r, g)
+    g <= gcd(b, r)
+    release thm gcd_positive(b, r)
+    have h N+ = gcd(b, r)
+    release thm gcd_divides_left(b, r)
+    release thm gcd_divides_right(b, r)
+    $group::divides(h, b)
+    $group::divides(h, r)
+    obtain x from exist x Z st {b = h * x}
+    obtain y from exist y Z st {r = h * y}
+    witness $group::divides(h, a) from x * q + y:
+        a = b * q + r = h * x * q + h * y = h * (x * q + y)
+    release thm common_divisor_le_gcd(a, b, h)
+    h <= gcd(a, b) = g
+    g = h
+    gcd(a, b) = g = h = gcd(b, a % b)
+
+
+prop has_bezout_for_second(b N):
+    forall a N+:
+        exist x, y Z st {gcd(a, b) = a * x + b * y}
+
+
+thm bezout_identity_positive_first:
+    ? forall a N+, b N:
+        exist x, y Z st {gcd(a, b) = a * x + b * y}
+    claim:
+        ? forall s N:
+            $has_bezout_for_second(s)
+        by strong_induc s from 0:
+            ? $has_bezout_for_second(s)
+            ? from s = 0:
+                claim:
+                    ? forall c N+:
+                        exist x, y Z st {gcd(c, 0) = c * x + 0 * y}
+                    release thm gcd_euclidean_base(c)
+                    abs(c) = c
+                    gcd(c, 0) = c = c * 1 + 0 * 0
+                    witness exist x, y Z st {gcd(c, 0) = c * x + 0 * y} from 1, 0
+                by def $has_bezout_for_second(0)
+                $has_bezout_for_second(0)
+            ? strong_induc:
+                forall j N:
+                    j >= 0
+                    j <= s
+                    =>:
+                        $has_bezout_for_second(j)
+                s + 1 > 0
+                s + 1 $in N+
+                claim:
+                    ? forall c N+:
+                        exist x, y Z st {gcd(c, s + 1) = c * x + (s + 1) * y}
+                    have q Z = integer_quotient(c, s + 1)
+                    c % (s + 1) >= 0
+                    abs(c % (s + 1)) = c % (s + 1)
+                    have r N = abs(c % (s + 1))
+                    r = c % (s + 1)
+                    c = (s + 1) * integer_quotient(c, s + 1) + c % (s + 1)
+                    c = (s + 1) * integer_quotient(c, s + 1) + c % (s + 1) = (s + 1) * q + c % (s + 1) = (s + 1) * q + r
+                    c % (s + 1) < s + 1
+                    r = c % (s + 1) < s + 1
+                    r <= s
+                    $has_bezout_for_second(r)
+                    obtain x, y from exist x, y Z st {gcd(s + 1, r) = (s + 1) * x + r * y}
+                    release thm gcd_euclidean_step_positive(c, s + 1)
+                    gcd(c, s + 1) = gcd(s + 1, c % (s + 1))
+                    gcd(c, s + 1) = gcd(s + 1, c % (s + 1)) = gcd(s + 1, r)
+                    gcd(c, s + 1) = (s + 1) * x + r * y
+                    r = c - (s + 1) * q
+                    (s + 1) * x + r * y = (s + 1) * x + (c - (s + 1) * q) * y
+                    (s + 1) * x + (c - (s + 1) * q) * y = (s + 1) * x + c * y - (s + 1) * q * y
+                    (s + 1) * x + c * y - (s + 1) * q * y = c * y + ((s + 1) * x - (s + 1) * q * y)
+                    c * y + ((s + 1) * x - (s + 1) * q * y) = c * y + (s + 1) * (x - q * y)
+                    witness exist u, v Z st {gcd(c, s + 1) = c * u + (s + 1) * v} from y, x - q * y
+                by def $has_bezout_for_second(s + 1)
+                $has_bezout_for_second(s + 1)
+    $has_bezout_for_second(b)
+    exist x, y Z st {gcd(a, b) = a * x + b * y}
+
+
+thm prime_divides_product:
+    ? forall p N+, a, b N:
+        $prime(p)
+        $group::divides(p, a * b)
+        =>:
+            $group::divides(p, a) or $group::divides(p, b)
+    by cases:
+        ? $group::divides(p, a) or $group::divides(p, b)
+        case $group::divides(p, a):
+            $group::divides(p, a) or $group::divides(p, b)
+        case not $group::divides(p, a):
+            release thm gcd_positive(p, a)
+            have g N+ = gcd(p, a)
+            release thm gcd_divides_left(p, a)
+            release thm gcd_divides_right(p, a)
+            $group::divides(g, p)
+            $group::divides(g, a)
+            claim:
+                ? g = 1
+                by contra:
+                    ? g = 1
+                    g != 1
+                    g >= 1
+                    g $in N
+                    claim:
+                        ? g >= 2
+                        by contra:
+                            ? g >= 2
+                            g < 2
+                            g <= 1
+                            g >= 1
+                            g = 1
+                            impossible g != 1
+                    release thm _positive_divisor_le_abs(g, p)
+                    g <= abs(p) = p
+                    claim:
+                        ? g = p
+                        by contra:
+                            ? g = p
+                            g != p
+                            claim:
+                                ? g < p
+                                by contra:
+                                    ? g < p
+                                    g >= p
+                                    g <= p
+                                    g = p
+                                    impossible g != p
+                            g $in range(2, p)
+                            claim:
+                                ? p % g != 0
+                                by def $prime(p)
+                            obtain d from exist d Z st {p = g * d}
+                            p % g = (g * d) % g = 0
+                            impossible p % g != 0
+                    $group::divides(p, a)
+                    impossible not $group::divides(p, a)
+            release thm bezout_identity_positive_first(p, a)
+            obtain x, y from exist x, y Z st {gcd(p, a) = p * x + a * y}
+            obtain z from exist z Z st {a * b = p * z}
+            a * y * b = (a * b) * y = p * z * y
+            (p * x + a * y) * b = p * x * b + a * y * b = p * x * b + p * z * y
+            witness $group::divides(p, b) from x * b + z * y:
+                b = 1 * b = gcd(p, a) * b = (p * x + a * y) * b = p * x * b + p * z * y = p * (x * b + z * y)
+            $group::divides(p, a) or $group::divides(p, b)
+
+
+thm integer_left_multiplication_cancellation:
+    ? forall c, a, b Z:
+        c * a = c * b
+        c != 0
+        =>:
+            a = b
+    (a - b) * c = a * c - b * c = c * a - c * b = 0
+    (a - b) * c = 0
+    a - b = 0 or c = 0
+    by cases:
+        ? a = b
+        case a - b = 0:
+            a = a - b + b = b
+        case c = 0:
+            impossible c != 0
+
+# Source theorem: factorization_mul'.  Select prime-free residuals for both
+# factors, cancel the common prime power, and apply Euclid's lemma.

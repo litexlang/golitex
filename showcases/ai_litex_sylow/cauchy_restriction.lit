@@ -1,0 +1,358 @@
+# Restriction, bijection, and cardinality of product-one tuples for Cauchy's theorem.
+
+prop is_cauchy_restriction_value(p N+, G set, candidate fn(index \cyclic_group::cyclic_indices<p>) G, prefix_index \cauchy_tuples::cauchy_prefix_indices<p>, value G):
+    exist full_index \cyclic_group::cyclic_indices<p> st {full_index = prefix_index, value = candidate(full_index)}
+
+thm cauchy_restriction_value_exists_unique:
+    ? forall p N+, G set, candidate fn(index \cyclic_group::cyclic_indices<p>) G, prefix_index \cauchy_tuples::cauchy_prefix_indices<p>:
+        $prime(p)
+        =>:
+            exist! value G st {$is_cauchy_restriction_value(p, G, candidate, prefix_index, value)}
+    p > 1
+    \cauchy_tuples::cauchy_prefix_indices<p> = closed_range(0, p - 2)
+    0 <= prefix_index <= p - 2
+    p - 2 < p - 1
+    prefix_index < p - 1
+    prefix_index <= p - 1
+    prefix_index $in closed_range(0, p - 1) = \cyclic_group::cyclic_indices<p>
+    have full_index \cyclic_group::cyclic_indices<p> = prefix_index
+    witness exist! value G st {$is_cauchy_restriction_value(p, G, candidate, prefix_index, value)} from candidate(full_index):
+        witness $is_cauchy_restriction_value(p, G, candidate, prefix_index, candidate(full_index)) from full_index
+        claim:
+            ? forall left, right G:
+                $is_cauchy_restriction_value(p, G, candidate, prefix_index, left)
+                $is_cauchy_restriction_value(p, G, candidate, prefix_index, right)
+                =>:
+                    left = right
+            obtain left_index from exist left_index \cyclic_group::cyclic_indices<p> st {left_index = prefix_index, left = candidate(left_index)}
+            obtain right_index from exist right_index \cyclic_group::cyclic_indices<p> st {right_index = prefix_index, right = candidate(right_index)}
+            left_index = prefix_index = right_index
+            left = candidate(left_index) = candidate(right_index) = right
+
+template<p N+, G set: $prime(p)>:
+    have fn cauchy_restriction_value_selected by exist!:
+        ? forall candidate fn(index \cyclic_group::cyclic_indices<p>) G, prefix_index \cauchy_tuples::cauchy_prefix_indices<p>:
+            exist! value G st {$is_cauchy_restriction_value(p, G, candidate, prefix_index, value)}
+        release thm cauchy_restriction_value_exists_unique(p, G, candidate, prefix_index)
+
+template<p N+, G set: $prime(p)>:
+    have fn cauchy_restrict(candidate fn(index \cyclic_group::cyclic_indices<p>) G) fn(prefix_index \cauchy_tuples::cauchy_prefix_indices<p>) G = fn(current_index \cauchy_tuples::cauchy_prefix_indices<p>) G {\cauchy_restriction_value_selected<p, G>(candidate, current_index)}
+
+thm cauchy_restrict_at_prefix:
+    ? forall p N+, G set, candidate fn(index \cyclic_group::cyclic_indices<p>) G, prefix_index \cauchy_tuples::cauchy_prefix_indices<p>:
+        $prime(p)
+        =>:
+            exist full_index \cyclic_group::cyclic_indices<p> st {full_index = prefix_index, \cauchy_restrict<p, G>(candidate)(prefix_index) = candidate(full_index)}
+    $is_cauchy_restriction_value(p, G, candidate, prefix_index, \cauchy_restriction_value_selected<p, G>(candidate, prefix_index))
+    \cauchy_restrict<p, G>(candidate) = fn(current_index \cauchy_tuples::cauchy_prefix_indices<p>) G {\cauchy_restriction_value_selected<p, G>(candidate, current_index)}
+    \cauchy_restrict<p, G>(candidate)(prefix_index) = \cauchy_restriction_value_selected<p, G>(candidate, prefix_index)
+    \cauchy_restriction_value_selected<p, G>(candidate, prefix_index) = \cauchy_restrict<p, G>(candidate)(prefix_index)
+    by def:
+        ? $is_cauchy_restriction_value(p, G, candidate, prefix_index, \cauchy_restriction_value_selected<p, G>(candidate, prefix_index))
+    obtain full_index from exist full_index \cyclic_group::cyclic_indices<p> st {full_index = prefix_index, \cauchy_restriction_value_selected<p, G>(candidate, prefix_index) = candidate(full_index)}
+    witness exist chosen_full \cyclic_group::cyclic_indices<p> st {chosen_full = prefix_index, \cauchy_restrict<p, G>(candidate)(prefix_index) = candidate(chosen_full)} from full_index
+
+thm cauchy_extend_restrict_last:
+    ? forall p N+, G set, candidate fn(index \cyclic_group::cyclic_indices<p>) G, last_index \cyclic_group::cyclic_indices<p>:
+        $prime(p)
+        last_index = p - 1
+        =>:
+            candidate = \cauchy_tuples::cauchy_extend<p, G>(\cauchy_restrict<p, G>(candidate), candidate(last_index))
+    p > 1
+    claim:
+        ? forall full_index \cyclic_group::cyclic_indices<p>:
+            candidate(full_index) = \cauchy_tuples::cauchy_extend<p, G>(\cauchy_restrict<p, G>(candidate), candidate(last_index))(full_index)
+        \cyclic_group::cyclic_indices<p> = closed_range(0, p - 1)
+        0 <= full_index <= p - 1
+        by cases:
+            ? candidate(full_index) = \cauchy_tuples::cauchy_extend<p, G>(\cauchy_restrict<p, G>(candidate), candidate(last_index))(full_index)
+            case full_index = p - 1:
+                full_index = p - 1 = last_index
+                release thm finite_function_spaces::function_equal_on_equal_inputs(\cyclic_group::cyclic_indices<p>, G, candidate, full_index, last_index)
+                release thm cauchy_tuples::cauchy_extend_at_last(p, G, \cauchy_restrict<p, G>(candidate), candidate(last_index))
+                obtain extension_last from exist extension_last \cyclic_group::cyclic_indices<p> st {extension_last = p - 1, \cauchy_tuples::cauchy_extend<p, G>(\cauchy_restrict<p, G>(candidate), candidate(last_index))(extension_last) = candidate(last_index)}
+                extension_last = p - 1 = full_index
+                release thm finite_function_spaces::function_equal_on_equal_inputs(\cyclic_group::cyclic_indices<p>, G, \cauchy_tuples::cauchy_extend<p, G>(\cauchy_restrict<p, G>(candidate), candidate(last_index)), extension_last, full_index)
+                candidate(full_index) = candidate(last_index) = \cauchy_tuples::cauchy_extend<p, G>(\cauchy_restrict<p, G>(candidate), candidate(last_index))(extension_last) = \cauchy_tuples::cauchy_extend<p, G>(\cauchy_restrict<p, G>(candidate), candidate(last_index))(full_index)
+            case full_index != p - 1:
+                claim:
+                    ? full_index < p - 1
+                    by contra:
+                        ? full_index < p - 1
+                        full_index >= p - 1
+                        full_index <= p - 1
+                        full_index = p - 1
+                        impossible full_index != p - 1
+                full_index + 1 <= p - 1
+                full_index <= (p - 1) - 1 = p - 2
+                full_index $in closed_range(0, p - 2) = \cauchy_tuples::cauchy_prefix_indices<p>
+                have prefix_index \cauchy_tuples::cauchy_prefix_indices<p> = full_index
+                release thm cauchy_restrict_at_prefix(p, G, candidate, prefix_index)
+                obtain restricted_full from exist restricted_full \cyclic_group::cyclic_indices<p> st {restricted_full = prefix_index, \cauchy_restrict<p, G>(candidate)(prefix_index) = candidate(restricted_full)}
+                release thm cauchy_tuples::cauchy_extend_at_prefix(p, G, \cauchy_restrict<p, G>(candidate), candidate(last_index), prefix_index)
+                obtain extension_full from exist extension_full \cyclic_group::cyclic_indices<p> st {extension_full = prefix_index, \cauchy_tuples::cauchy_extend<p, G>(\cauchy_restrict<p, G>(candidate), candidate(last_index))(extension_full) = \cauchy_restrict<p, G>(candidate)(prefix_index)}
+                restricted_full = prefix_index = full_index = extension_full
+                release thm finite_function_spaces::function_equal_on_equal_inputs(\cyclic_group::cyclic_indices<p>, G, candidate, full_index, restricted_full)
+                release thm finite_function_spaces::function_equal_on_equal_inputs(\cyclic_group::cyclic_indices<p>, G, \cauchy_tuples::cauchy_extend<p, G>(\cauchy_restrict<p, G>(candidate), candidate(last_index)), extension_full, full_index)
+                candidate(full_index) = candidate(restricted_full) = \cauchy_restrict<p, G>(candidate)(prefix_index) = \cauchy_tuples::cauchy_extend<p, G>(\cauchy_restrict<p, G>(candidate), candidate(last_index))(extension_full) = \cauchy_tuples::cauchy_extend<p, G>(\cauchy_restrict<p, G>(candidate), candidate(last_index))(full_index)
+    by def:
+        ? $fn_eq(candidate, \cauchy_tuples::cauchy_extend<p, G>(\cauchy_restrict<p, G>(candidate), candidate(last_index)))
+
+thm cauchy_product_one_tuple_is_completion:
+    ? forall G nonempty_set, group &group::Group<G>, p N+, candidate \cauchy_tuples::cauchy_product_one_tuples<G, group, p>:
+        $prime(p)
+        =>:
+            candidate = \cauchy_tuples::cauchy_completion_map<G, group, p>(\cauchy_restriction::cauchy_restrict<p, G>(candidate))
+    p > 1
+    p - 1 >= 0
+    p - 1 <= p - 1
+    p - 1 $in closed_range(0, p - 1) = \cyclic_group::cyclic_indices<p>
+    have last_index \cyclic_group::cyclic_indices<p> = p - 1
+    have last_natural N = p - 1
+    last_index = p - 1
+    last_natural = p - 1
+    p - 1 < p
+    last_natural = p - 1 < p
+    last_natural <= p - 1
+    last_natural <= p
+    \cauchy_tuples::cauchy_product_one_tuples<G, group, p> = {target fn(index \cyclic_group::cyclic_indices<p>) G: $cauchy_tuples::cauchy_tuple_product_one(G, group, p, target)}
+    candidate $in \cauchy_tuples::cauchy_product_one_tuples<G, group, p>
+    candidate $in {target fn(index \cyclic_group::cyclic_indices<p>) G: $cauchy_tuples::cauchy_tuple_product_one(G, group, p, target)}
+    by def:
+        ? $cauchy_tuples::cauchy_tuple_product_one(G, group, p, candidate)
+    \cauchy_tuples::cyclic_tuple_prefix_product<G, group, p>(candidate, p) = group.one
+    release thm cauchy_restriction::cauchy_extend_restrict_last(p, G, candidate, last_index)
+    candidate = \cauchy_tuples::cauchy_extend<p, G>(\cauchy_restriction::cauchy_restrict<p, G>(candidate), candidate(last_index))
+    release thm cosets::object_substitution(fn(index \cyclic_group::cyclic_indices<p>) G, G, fn(target fn(index \cyclic_group::cyclic_indices<p>) G) G {\cauchy_tuples::cyclic_tuple_prefix_product<G, group, p>(target, p)}, candidate, \cauchy_tuples::cauchy_extend<p, G>(\cauchy_restriction::cauchy_restrict<p, G>(candidate), candidate(last_index)))
+    \cauchy_tuples::cyclic_tuple_prefix_product<G, group, p>(\cauchy_tuples::cauchy_extend<p, G>(\cauchy_restriction::cauchy_restrict<p, G>(candidate), candidate(last_index)), p) = \cauchy_tuples::cyclic_tuple_prefix_product<G, group, p>(candidate, p) = group.one
+    release thm cauchy_tuples::cauchy_prefix_product_independent_of_last(G, group, p, \cauchy_restriction::cauchy_restrict<p, G>(candidate), candidate(last_index), group.one, last_natural)
+    \cauchy_tuples::cyclic_tuple_prefix_product<G, group, p>(\cauchy_tuples::cauchy_extend<p, G>(\cauchy_restriction::cauchy_restrict<p, G>(candidate), candidate(last_index)), last_natural) = \cauchy_tuples::cyclic_tuple_prefix_product<G, group, p>(\cauchy_tuples::cauchy_extend<p, G>(\cauchy_restriction::cauchy_restrict<p, G>(candidate), group.one), last_natural) = \cauchy_tuples::cauchy_prefix_product<G, group, p>(\cauchy_restriction::cauchy_restrict<p, G>(candidate))
+    release thm cauchy_tuples::cauchy_extend_entry_at_last(p, G, \cauchy_restriction::cauchy_restrict<p, G>(candidate), candidate(last_index), last_natural)
+    \cauchy_tuples::cyclic_tuple_entry<p, G>(\cauchy_tuples::cauchy_extend<p, G>(\cauchy_restriction::cauchy_restrict<p, G>(candidate), candidate(last_index)), last_natural) = candidate(last_index)
+    release thm cauchy_tuples::cyclic_tuple_prefix_product_succ(G, group, p, \cauchy_tuples::cauchy_extend<p, G>(\cauchy_restriction::cauchy_restrict<p, G>(candidate), candidate(last_index)), last_natural)
+    last_natural + 1 = (p - 1) + 1 = p
+    release thm cosets::object_substitution(G, G, fn(t G) G {group.mul(t, \cauchy_tuples::cyclic_tuple_entry<p, G>(\cauchy_tuples::cauchy_extend<p, G>(\cauchy_restriction::cauchy_restrict<p, G>(candidate), candidate(last_index)), last_natural))}, \cauchy_tuples::cyclic_tuple_prefix_product<G, group, p>(\cauchy_tuples::cauchy_extend<p, G>(\cauchy_restriction::cauchy_restrict<p, G>(candidate), candidate(last_index)), last_natural), \cauchy_tuples::cauchy_prefix_product<G, group, p>(\cauchy_restriction::cauchy_restrict<p, G>(candidate)))
+    release thm cosets::object_substitution(G, G, fn(t G) G {group.mul(\cauchy_tuples::cauchy_prefix_product<G, group, p>(\cauchy_restriction::cauchy_restrict<p, G>(candidate)), t)}, \cauchy_tuples::cyclic_tuple_entry<p, G>(\cauchy_tuples::cauchy_extend<p, G>(\cauchy_restriction::cauchy_restrict<p, G>(candidate), candidate(last_index)), last_natural), candidate(last_index))
+    \cauchy_tuples::cyclic_tuple_prefix_product<G, group, p>(\cauchy_tuples::cauchy_extend<p, G>(\cauchy_restriction::cauchy_restrict<p, G>(candidate), candidate(last_index)), p) = \cauchy_tuples::cyclic_tuple_prefix_product<G, group, p>(\cauchy_tuples::cauchy_extend<p, G>(\cauchy_restriction::cauchy_restrict<p, G>(candidate), candidate(last_index)), last_natural + 1) = group.mul(\cauchy_tuples::cyclic_tuple_prefix_product<G, group, p>(\cauchy_tuples::cauchy_extend<p, G>(\cauchy_restriction::cauchy_restrict<p, G>(candidate), candidate(last_index)), last_natural), \cauchy_tuples::cyclic_tuple_entry<p, G>(\cauchy_tuples::cauchy_extend<p, G>(\cauchy_restriction::cauchy_restrict<p, G>(candidate), candidate(last_index)), last_natural)) = group.mul(\cauchy_tuples::cauchy_prefix_product<G, group, p>(\cauchy_restriction::cauchy_restrict<p, G>(candidate)), \cauchy_tuples::cyclic_tuple_entry<p, G>(\cauchy_tuples::cauchy_extend<p, G>(\cauchy_restriction::cauchy_restrict<p, G>(candidate), candidate(last_index)), last_natural)) = group.mul(\cauchy_tuples::cauchy_prefix_product<G, group, p>(\cauchy_restriction::cauchy_restrict<p, G>(candidate)), candidate(last_index))
+    group.mul(\cauchy_tuples::cauchy_prefix_product<G, group, p>(\cauchy_restriction::cauchy_restrict<p, G>(candidate)), candidate(last_index)) = group.one
+    release thm group::mul_inv_cancel(G, group.mul, group.one, group.inv, \cauchy_tuples::cauchy_prefix_product<G, group, p>(\cauchy_restriction::cauchy_restrict<p, G>(candidate)))
+    group.mul(\cauchy_tuples::cauchy_prefix_product<G, group, p>(\cauchy_restriction::cauchy_restrict<p, G>(candidate)), group.inv(\cauchy_tuples::cauchy_prefix_product<G, group, p>(\cauchy_restriction::cauchy_restrict<p, G>(candidate)))) = group.one
+    group.mul(\cauchy_tuples::cauchy_prefix_product<G, group, p>(\cauchy_restriction::cauchy_restrict<p, G>(candidate)), candidate(last_index)) = group.mul(\cauchy_tuples::cauchy_prefix_product<G, group, p>(\cauchy_restriction::cauchy_restrict<p, G>(candidate)), group.inv(\cauchy_tuples::cauchy_prefix_product<G, group, p>(\cauchy_restriction::cauchy_restrict<p, G>(candidate))))
+    release thm group::_group_left_cancel(G, group.mul, group.one, group.inv, \cauchy_tuples::cauchy_prefix_product<G, group, p>(\cauchy_restriction::cauchy_restrict<p, G>(candidate)), candidate(last_index), group.inv(\cauchy_tuples::cauchy_prefix_product<G, group, p>(\cauchy_restriction::cauchy_restrict<p, G>(candidate))))
+    candidate(last_index) = group.inv(\cauchy_tuples::cauchy_prefix_product<G, group, p>(\cauchy_restriction::cauchy_restrict<p, G>(candidate)))
+    claim:
+        ? forall index \cyclic_group::cyclic_indices<p>:
+            \cauchy_tuples::cauchy_tuple_from_prefix<G, group, p>(\cauchy_restriction::cauchy_restrict<p, G>(candidate))(index) = \cauchy_tuples::cauchy_extend<p, G>(\cauchy_restriction::cauchy_restrict<p, G>(candidate), candidate(last_index))(index)
+        release thm cosets::object_substitution(G, G, fn(t G) G {\cauchy_tuples::cauchy_extend<p, G>(\cauchy_restriction::cauchy_restrict<p, G>(candidate), t)(index)}, group.inv(\cauchy_tuples::cauchy_prefix_product<G, group, p>(\cauchy_restriction::cauchy_restrict<p, G>(candidate))), candidate(last_index))
+        \cauchy_tuples::cauchy_tuple_from_prefix<G, group, p>(\cauchy_restriction::cauchy_restrict<p, G>(candidate))(index) = \cauchy_tuples::cauchy_extend<p, G>(\cauchy_restriction::cauchy_restrict<p, G>(candidate), group.inv(\cauchy_tuples::cauchy_prefix_product<G, group, p>(\cauchy_restriction::cauchy_restrict<p, G>(candidate))))(index) = \cauchy_tuples::cauchy_extend<p, G>(\cauchy_restriction::cauchy_restrict<p, G>(candidate), candidate(last_index))(index)
+    by def:
+        ? $fn_eq(\cauchy_tuples::cauchy_tuple_from_prefix<G, group, p>(\cauchy_restriction::cauchy_restrict<p, G>(candidate)), \cauchy_tuples::cauchy_extend<p, G>(\cauchy_restriction::cauchy_restrict<p, G>(candidate), candidate(last_index)))
+    candidate = \cauchy_tuples::cauchy_extend<p, G>(\cauchy_restriction::cauchy_restrict<p, G>(candidate), candidate(last_index)) = \cauchy_tuples::cauchy_tuple_from_prefix<G, group, p>(\cauchy_restriction::cauchy_restrict<p, G>(candidate))
+    release thm cauchy_tuples::cauchy_completion_map_relation(G, group, p, \cauchy_restriction::cauchy_restrict<p, G>(candidate))
+    candidate = \cauchy_tuples::cauchy_tuple_from_prefix<G, group, p>(\cauchy_restriction::cauchy_restrict<p, G>(candidate)) = \cauchy_tuples::cauchy_completion_map<G, group, p>(\cauchy_restriction::cauchy_restrict<p, G>(candidate))
+
+thm cauchy_completion_map_surjective:
+    ? forall G nonempty_set, group &group::Group<G>, p N+:
+        $prime(p)
+        =>:
+            $surjective(fn(index \cauchy_tuples::cauchy_prefix_indices<p>) G, \cauchy_tuples::cauchy_product_one_tuples<G, group, p>, \cauchy_tuples::cauchy_completion_map<G, group, p>)
+    claim:
+        ? forall candidate \cauchy_tuples::cauchy_product_one_tuples<G, group, p>:
+            exist prefix fn(index \cauchy_tuples::cauchy_prefix_indices<p>) G st {candidate = \cauchy_tuples::cauchy_completion_map<G, group, p>(prefix)}
+        release thm cauchy_product_one_tuple_is_completion(G, group, p, candidate)
+        witness exist prefix fn(index \cauchy_tuples::cauchy_prefix_indices<p>) G st {candidate = \cauchy_tuples::cauchy_completion_map<G, group, p>(prefix)} from \cauchy_restriction::cauchy_restrict<p, G>(candidate)
+    by def:
+        ? $surjective(fn(index \cauchy_tuples::cauchy_prefix_indices<p>) G, \cauchy_tuples::cauchy_product_one_tuples<G, group, p>, \cauchy_tuples::cauchy_completion_map<G, group, p>)
+
+thm cauchy_completion_map_bijective:
+    ? forall G nonempty_set, group &group::Group<G>, p N+:
+        $prime(p)
+        =>:
+            $bijective(fn(index \cauchy_tuples::cauchy_prefix_indices<p>) G, \cauchy_tuples::cauchy_product_one_tuples<G, group, p>, \cauchy_tuples::cauchy_completion_map<G, group, p>)
+    release thm cauchy_tuples::cauchy_completion_map_injective(G, group, p)
+    release thm cauchy_completion_map_surjective(G, group, p)
+    by def:
+        ? $bijective(fn(index \cauchy_tuples::cauchy_prefix_indices<p>) G, \cauchy_tuples::cauchy_product_one_tuples<G, group, p>, \cauchy_tuples::cauchy_completion_map<G, group, p>)
+
+thm finite_injection_range_cardinality:
+    ? forall A, B finite_set, f fn(x A) B:
+        $is_finite_set(fn_range(f))
+        $injective(A, B, f)
+        =>:
+            finite_set_size(fn_range(f)) = finite_set_size(A)
+    finite_set_size(fn_range(f)) = finite_set_size(A)
+
+thm cauchy_prefix_indices_finite_size:
+    ? forall p N+:
+        $prime(p)
+        =>:
+            $is_finite_set(\cauchy_tuples::cauchy_prefix_indices<p>)
+            finite_set_size(\cauchy_tuples::cauchy_prefix_indices<p>) = p - 1
+    p > 1
+    p >= 2
+    p - 2 >= 0
+    abs(p - 2) = p - 2
+    have prefix_last N = abs(p - 2)
+    prefix_last = p - 2
+    \cauchy_tuples::cauchy_prefix_indices<p> = closed_range(0, p - 2)
+    release thm cosets::object_substitution(Z, power_set(Z), fn(t Z) power_set(Z) {closed_range(0, t)}, p - 2, prefix_last)
+    closed_range(0, p - 2) = closed_range(0, prefix_last)
+    $is_finite_set(closed_range(0, prefix_last))
+    $is_finite_set(\cauchy_tuples::cauchy_prefix_indices<p>)
+    finite_set_size(closed_range(0, prefix_last)) = prefix_last - 0 + 1 = prefix_last + 1
+    prefix_last + 1 = (p - 2) + 1 = p - 1
+    finite_set_size(\cauchy_tuples::cauchy_prefix_indices<p>) = finite_set_size(closed_range(0, p - 2)) = finite_set_size(closed_range(0, prefix_last)) = p - 1
+
+thm cauchy_completion_map_range_eq:
+    ? forall G nonempty_set, group &group::Group<G>, p N+:
+        $prime(p)
+        =>:
+            fn_range(\cauchy_tuples::cauchy_completion_map<G, group, p>) = \cauchy_tuples::cauchy_product_one_tuples<G, group, p>
+    release thm cauchy_completion_map_surjective(G, group, p)
+    by def:
+        ? $surjective(fn(index \cauchy_tuples::cauchy_prefix_indices<p>) G, \cauchy_tuples::cauchy_product_one_tuples<G, group, p>, \cauchy_tuples::cauchy_completion_map<G, group, p>)
+    by extension:
+        ? fn_range(\cauchy_tuples::cauchy_completion_map<G, group, p>) = \cauchy_tuples::cauchy_product_one_tuples<G, group, p>
+        claim:
+            ? forall target fn_range(\cauchy_tuples::cauchy_completion_map<G, group, p>):
+                target $in \cauchy_tuples::cauchy_product_one_tuples<G, group, p>
+            have by preimage prefix from target $in fn_range(\cauchy_tuples::cauchy_completion_map<G, group, p>)
+            \cauchy_tuples::cauchy_completion_map<G, group, p>(prefix) $in \cauchy_tuples::cauchy_product_one_tuples<G, group, p>
+            target = \cauchy_tuples::cauchy_completion_map<G, group, p>(prefix)
+            target $in \cauchy_tuples::cauchy_product_one_tuples<G, group, p>
+        claim:
+            ? forall target \cauchy_tuples::cauchy_product_one_tuples<G, group, p>:
+                target $in fn_range(\cauchy_tuples::cauchy_completion_map<G, group, p>)
+            obtain prefix from exist prefix fn(index \cauchy_tuples::cauchy_prefix_indices<p>) G st {target = \cauchy_tuples::cauchy_completion_map<G, group, p>(prefix)}
+            \cauchy_tuples::cauchy_completion_map<G, group, p>(prefix) $in fn_range(\cauchy_tuples::cauchy_completion_map<G, group, p>)
+            target = \cauchy_tuples::cauchy_completion_map<G, group, p>(prefix)
+            target $in fn_range(\cauchy_tuples::cauchy_completion_map<G, group, p>)
+
+thm cauchy_tuple_from_prefix_injective:
+    ? forall G nonempty_set, group &group::Group<G>, p N+:
+        $prime(p)
+        =>:
+            $injective(fn(index \cauchy_tuples::cauchy_prefix_indices<p>) G, fn(index \cyclic_group::cyclic_indices<p>) G, \cauchy_tuples::cauchy_tuple_from_prefix<G, group, p>)
+    claim:
+        ? forall left, right fn(index \cauchy_tuples::cauchy_prefix_indices<p>) G:
+            \cauchy_tuples::cauchy_tuple_from_prefix<G, group, p>(left) = \cauchy_tuples::cauchy_tuple_from_prefix<G, group, p>(right)
+            =>:
+                left = right
+        release thm cauchy_tuples::cauchy_completion_map_relation(G, group, p, left)
+        release thm cauchy_tuples::cauchy_completion_map_relation(G, group, p, right)
+        \cauchy_tuples::cauchy_completion_map<G, group, p>(left) = \cauchy_tuples::cauchy_tuple_from_prefix<G, group, p>(left) = \cauchy_tuples::cauchy_tuple_from_prefix<G, group, p>(right) = \cauchy_tuples::cauchy_completion_map<G, group, p>(right)
+        release thm cauchy_tuples::cauchy_completion_map_injective(G, group, p)
+        by def:
+            ? $injective(fn(index \cauchy_tuples::cauchy_prefix_indices<p>) G, \cauchy_tuples::cauchy_product_one_tuples<G, group, p>, \cauchy_tuples::cauchy_completion_map<G, group, p>)
+    by def:
+        ? $injective(fn(index \cauchy_tuples::cauchy_prefix_indices<p>) G, fn(index \cyclic_group::cyclic_indices<p>) G, \cauchy_tuples::cauchy_tuple_from_prefix<G, group, p>)
+
+thm cauchy_tuple_from_prefix_range_eq:
+    ? forall G nonempty_set, group &group::Group<G>, p N+:
+        $prime(p)
+        =>:
+            fn_range(\cauchy_tuples::cauchy_tuple_from_prefix<G, group, p>) = \cauchy_tuples::cauchy_product_one_tuples<G, group, p>
+    by extension:
+        ? fn_range(\cauchy_tuples::cauchy_tuple_from_prefix<G, group, p>) = \cauchy_tuples::cauchy_product_one_tuples<G, group, p>
+        claim:
+            ? forall target fn_range(\cauchy_tuples::cauchy_tuple_from_prefix<G, group, p>):
+                target $in \cauchy_tuples::cauchy_product_one_tuples<G, group, p>
+            have by preimage prefix from target $in fn_range(\cauchy_tuples::cauchy_tuple_from_prefix<G, group, p>)
+            release thm cauchy_tuples::cauchy_tuple_from_prefix_product_one(G, group, p, prefix)
+            release thm set_builder_member(\cauchy_tuples::cauchy_tuple_from_prefix<G, group, p>(prefix), {candidate fn(index \cyclic_group::cyclic_indices<p>) G: $cauchy_tuples::cauchy_tuple_product_one(G, group, p, candidate)})
+            \cauchy_tuples::cauchy_tuple_from_prefix<G, group, p>(prefix) $in \cauchy_tuples::cauchy_product_one_tuples<G, group, p>
+            target = \cauchy_tuples::cauchy_tuple_from_prefix<G, group, p>(prefix)
+            target $in \cauchy_tuples::cauchy_product_one_tuples<G, group, p>
+        claim:
+            ? forall target \cauchy_tuples::cauchy_product_one_tuples<G, group, p>:
+                target $in fn_range(\cauchy_tuples::cauchy_tuple_from_prefix<G, group, p>)
+            release thm cauchy_completion_map_surjective(G, group, p)
+            by def:
+                ? $surjective(fn(index \cauchy_tuples::cauchy_prefix_indices<p>) G, \cauchy_tuples::cauchy_product_one_tuples<G, group, p>, \cauchy_tuples::cauchy_completion_map<G, group, p>)
+            obtain prefix from exist prefix fn(index \cauchy_tuples::cauchy_prefix_indices<p>) G st {target = \cauchy_tuples::cauchy_completion_map<G, group, p>(prefix)}
+            release thm cauchy_tuples::cauchy_completion_map_relation(G, group, p, prefix)
+            target = \cauchy_tuples::cauchy_completion_map<G, group, p>(prefix) = \cauchy_tuples::cauchy_tuple_from_prefix<G, group, p>(prefix)
+            \cauchy_tuples::cauchy_tuple_from_prefix<G, group, p>(prefix) $in fn_range(\cauchy_tuples::cauchy_tuple_from_prefix<G, group, p>)
+            target $in fn_range(\cauchy_tuples::cauchy_tuple_from_prefix<G, group, p>)
+
+thm cauchy_product_one_tuple_count:
+    ? forall G nonempty_set, group &group::Group<G>, p N+:
+        $is_finite_set(G)
+        $prime(p)
+        =>:
+            $is_finite_set(\cauchy_tuples::cauchy_product_one_tuples<G, group, p>)
+            finite_set_size(\cauchy_tuples::cauchy_product_one_tuples<G, group, p>) = finite_set_size(G)^(p - 1)
+    release thm cauchy_prefix_indices_finite_size(p)
+    release thm finite_function_spaces::finite_function_space_count(\cauchy_tuples::cauchy_prefix_indices<p>, G, group.one)
+    by def:
+        ? $finite_function_spaces::finite_function_space_count_property(\cauchy_tuples::cauchy_prefix_indices<p>, G)
+    $is_finite_set(fn(index \cauchy_tuples::cauchy_prefix_indices<p>) G)
+    finite_set_size(fn(index \cauchy_tuples::cauchy_prefix_indices<p>) G) = finite_set_size(G)^finite_set_size(\cauchy_tuples::cauchy_prefix_indices<p>) = finite_set_size(G)^(p - 1)
+    release thm cyclic_group::cyclic_indices_are_finite(p)
+    release thm finite_function_spaces::finite_function_space_count(\cyclic_group::cyclic_indices<p>, G, group.one)
+    by def:
+        ? $finite_function_spaces::finite_function_space_count_property(\cyclic_group::cyclic_indices<p>, G)
+    $is_finite_set(fn(index \cyclic_group::cyclic_indices<p>) G)
+    claim:
+        ? \cauchy_tuples::cauchy_product_one_tuples<G, group, p> $subset fn(index \cyclic_group::cyclic_indices<p>) G
+        claim:
+            ? forall candidate \cauchy_tuples::cauchy_product_one_tuples<G, group, p>:
+                candidate $in fn(index \cyclic_group::cyclic_indices<p>) G
+        by def:
+            ? \cauchy_tuples::cauchy_product_one_tuples<G, group, p> $subset fn(index \cyclic_group::cyclic_indices<p>) G
+    release thm subset_of_finite_set_is_finite(\cauchy_tuples::cauchy_product_one_tuples<G, group, p>, fn(index \cyclic_group::cyclic_indices<p>) G)
+    $is_finite_set(\cauchy_tuples::cauchy_product_one_tuples<G, group, p>)
+    release thm cauchy_tuple_from_prefix_injective(G, group, p)
+    release thm cauchy_tuple_from_prefix_range_eq(G, group, p)
+    have fn completion(prefix fn(index \cauchy_tuples::cauchy_prefix_indices<p>) G) fn(index \cyclic_group::cyclic_indices<p>) G = \cauchy_tuples::cauchy_tuple_from_prefix<G, group, p>(prefix)
+    claim:
+        ? forall left, right fn(index \cauchy_tuples::cauchy_prefix_indices<p>) G:
+            completion(left) = completion(right)
+            =>:
+                left = right
+        completion(left) = \cauchy_tuples::cauchy_tuple_from_prefix<G, group, p>(left)
+        completion(right) = \cauchy_tuples::cauchy_tuple_from_prefix<G, group, p>(right)
+        \cauchy_tuples::cauchy_tuple_from_prefix<G, group, p>(left) = \cauchy_tuples::cauchy_tuple_from_prefix<G, group, p>(right)
+        by def:
+            ? $injective(fn(index \cauchy_tuples::cauchy_prefix_indices<p>) G, fn(index \cyclic_group::cyclic_indices<p>) G, \cauchy_tuples::cauchy_tuple_from_prefix<G, group, p>)
+    by def:
+        ? $injective(fn(index \cauchy_tuples::cauchy_prefix_indices<p>) G, fn(index \cyclic_group::cyclic_indices<p>) G, completion)
+    claim:
+        ? fn_range(completion) $subset fn(index \cyclic_group::cyclic_indices<p>) G
+        claim:
+            ? forall target fn_range(completion):
+                target $in fn(index \cyclic_group::cyclic_indices<p>) G
+            have by preimage prefix from target $in fn_range(completion)
+            completion(prefix) $in fn(index \cyclic_group::cyclic_indices<p>) G
+            target = completion(prefix)
+            target $in fn(index \cyclic_group::cyclic_indices<p>) G
+        by def:
+            ? fn_range(completion) $subset fn(index \cyclic_group::cyclic_indices<p>) G
+    release thm subset_of_finite_set_is_finite(fn_range(completion), fn(index \cyclic_group::cyclic_indices<p>) G)
+    $is_finite_set(fn_range(completion))
+    release thm finite_injection_range_cardinality(fn(index \cauchy_tuples::cauchy_prefix_indices<p>) G, fn(index \cyclic_group::cyclic_indices<p>) G, completion)
+    finite_set_size(fn_range(completion)) = finite_set_size(fn(index \cauchy_tuples::cauchy_prefix_indices<p>) G)
+    claim:
+        ? fn_range(completion) = \cauchy_tuples::cauchy_product_one_tuples<G, group, p>
+        by extension:
+            ? fn_range(completion) = \cauchy_tuples::cauchy_product_one_tuples<G, group, p>
+            claim:
+                ? forall target fn_range(completion):
+                    target $in \cauchy_tuples::cauchy_product_one_tuples<G, group, p>
+                have by preimage prefix from target $in fn_range(completion)
+                completion(prefix) = \cauchy_tuples::cauchy_tuple_from_prefix<G, group, p>(prefix)
+                release thm cauchy_tuples::cauchy_tuple_from_prefix_product_one(G, group, p, prefix)
+                release thm set_builder_member(\cauchy_tuples::cauchy_tuple_from_prefix<G, group, p>(prefix), {candidate fn(index \cyclic_group::cyclic_indices<p>) G: $cauchy_tuples::cauchy_tuple_product_one(G, group, p, candidate)})
+                \cauchy_tuples::cauchy_tuple_from_prefix<G, group, p>(prefix) $in \cauchy_tuples::cauchy_product_one_tuples<G, group, p>
+                target = completion(prefix) = \cauchy_tuples::cauchy_tuple_from_prefix<G, group, p>(prefix)
+                target $in \cauchy_tuples::cauchy_product_one_tuples<G, group, p>
+            claim:
+                ? forall target \cauchy_tuples::cauchy_product_one_tuples<G, group, p>:
+                    target $in fn_range(completion)
+                fn_range(\cauchy_tuples::cauchy_tuple_from_prefix<G, group, p>) = \cauchy_tuples::cauchy_product_one_tuples<G, group, p>
+                target $in fn_range(\cauchy_tuples::cauchy_tuple_from_prefix<G, group, p>)
+                have by preimage prefix from target $in fn_range(\cauchy_tuples::cauchy_tuple_from_prefix<G, group, p>)
+                completion(prefix) = \cauchy_tuples::cauchy_tuple_from_prefix<G, group, p>(prefix) = target
+                completion(prefix) $in fn_range(completion)
+                target $in fn_range(completion)
+    finite_set_size(\cauchy_tuples::cauchy_product_one_tuples<G, group, p>) = finite_set_size(fn_range(completion)) = finite_set_size(fn(index \cauchy_tuples::cauchy_prefix_indices<p>) G) = finite_set_size(G)^(p - 1)
