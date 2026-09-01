@@ -138,8 +138,35 @@ impl StmtResultToLeanCompiler {
         }
 
         let theorem_fact: Fact = (*verification.forall_fact).clone().into();
-        let retained_store_fact_id =
-            if let Some(environment_effects) = verification.outer_environment_effects {
+        let retained_store_fact_id = if let Some(environment_effects) =
+            verification.outer_environment_effects
+        {
+            if let Some(source_fact_id) = verification.source_fact_id {
+                let matching_source =
+                    environment_effects
+                        .store_fact_outputs
+                        .iter()
+                        .find(|stored| {
+                            stored.fact_id == Some(source_fact_id)
+                                && stored.itself_and_why_itself_is_stored.0.to_string()
+                                    == theorem_fact.to_string()
+                        });
+                match matching_source {
+                    Some(stored)
+                        if stored.inferred_facts.is_empty()
+                            && stored.inferred_fact_ids.is_empty() =>
+                    {
+                        Some(source_fact_id)
+                    }
+                    Some(_) => {
+                        return Err("named forall exact source store retained inferred facts".into())
+                    }
+                    None if environment_effects.store_fact_outputs.is_empty() => None,
+                    None => {
+                        return Err("named forall Result lost its exact source FactId store".into())
+                    }
+                }
+            } else {
                 if !environment_effects.rule_applications.is_empty()
                     || environment_effects.store_fact_outputs.len() > 1
                 {
@@ -156,12 +183,12 @@ impl StmtResultToLeanCompiler {
                         }
                         stored.fact_id
                     }
-                    None if verification.source_fact_id.is_some() => None,
                     None => return Err("named forall Result has no outer store effect".into()),
                 }
-            } else {
-                None
-            };
+            }
+        } else {
+            None
+        };
         if let (Some(expected), Some(stored)) =
             (verification.source_fact_id, retained_store_fact_id)
         {

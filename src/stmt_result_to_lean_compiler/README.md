@@ -101,81 +101,131 @@ Its private unit tests live under
 
 ## Representation of Litex Mathematics in Lean
 
-## System-Wide Implicit Host-Type Convention
+## Membership-Oriented Semantics and Domain-Directed Host Carriers
 
-Status: confirmed on 2026-08-21; this is the target ABI used by the direct
-StmtResult-to-Lean compiler.
+Status: this is the target semantic contract confirmed on 2026-09-01. The
+active emitter is still migrating toward it; current generated examples must
+not be cited as evidence that every binder already follows this policy.
 
-**System-wide invariant:** every Lean type parameter introduced solely to host
-a Litex source value must be implicit. This applies recursively throughout the
-compiler ABI: top-level and nested `forall` binders, named and anonymous
-function inputs, predicate and theorem inputs, dependent binder scopes, and
-every other source-value input position. Each independently bound source value
-gets its own inferred carrier unless the source evidence explicitly establishes
-a shared representation. Generated source must use `{alpha : Type}` rather
-than `(alpha : Type)`, and the carrier argument must never become part of the
-Litex-facing call syntax.
+Litex uses **membership-oriented, representation-independent semantics**.
+Lean's native equality is homogeneous:
 
-This convention does not claim that generated Lean terms are untyped. It
-separates host typing from Litex mathematical classification: Lean still checks
-every term against a concrete or inferred host type, while Litex set membership
-is represented only by explicit `Litex.In` evidence. A compiler-owned value
-that already inhabits an exact `S.Carrier` needs no additional host-type
-parameter, so exact-carrier outputs and fixed Mathlib constants do not violate
-the invariant.
+```lean
+Eq : {α : Sort u} → α → α → Prop
+```
 
-Every Litex input-value binder must use its own implicit Lean host carrier.
-The host type represents and transports the source value but carries no Litex
-mathematical classification. For example, the target shape of:
+An equality `x = y` is available only after both terms inhabit the same Lean
+type. It identifies two terms inside that carrier and supports native
+substitution, rewriting, and dependent transport.
+
+`Litex.Same` instead expresses **heterogeneous semantic equality across
+representations**. It may relate terms with different Lean host types when a
+reviewed representation bridge proves that they denote the same Litex
+mathematical value. For example, `n : ℕ`, `(n : ℤ)`, and `(n : ℂ)` are
+different Lean terms in different carriers, but the supported numeric bridges
+can relate their representations with `Same`. This is intentionally broader
+than Lean `Eq`, and it is not merely Lean `HEq`: `HEq` still expresses identity
+inside dependent type theory, whereas `Same` records mathematical identity
+across approved representations.
+
+A useful conceptual model is:
+
+```text
+(α, x)      (β, y)      (γ, z)
+    \          |          /
+          Litex.Same
+               |
+    one Litex mathematical value
+```
+
+Conceptually, a Litex value is an equivalence class of host representations
+under `Same`. The implementation does not construct this quotient; it keeps
+the representatives and their proof evidence explicit.
+
+`Litex.In x S` means that the semantic value represented by `x` has a `Same`
+representative in the exact carrier `S.Carrier`. Membership is therefore a
+proposition about mathematical classification, not a mutation of the Lean
+type of `x`. One value may accumulate proofs of membership in several sets;
+each proof adds knowledge without retyping or replacing the value.
+
+The To-Lean boundary consequently keeps three responsibilities distinct:
+
+```text
+Lean host representation   x : α
+Litex classification       hx : Litex.In x S
+Litex identity             hxy : Litex.Same x y
+```
+
+The equality bridge is deliberately asymmetric. Native Lean equality always
+lifts to semantic equality through `Litex.Same.ofEq`. The reverse direction
+exists only at reviewed specialization boundaries where both endpoints have
+the same canonical carrier and the semantic observation is injective. For
+example, `Litex.Same.complexNativeEq` turns `Same x y` into `x = y` for
+`x y : ℂ`. There is no global `Same x y → x = y`, and arbitrary `Same`
+evidence is not a Lean rewrite certificate.
+
+### Binder carrier selection
+
+The compiler chooses a binder's Lean host carrier from its statically resolved
+source domain, once, at the binder declaration:
+
+- Adapter-facing binders whose declared domain resolves to the reviewed
+  numeric source views `R` or `C` use native `ℂ`, together with explicit
+  `Litex.In` evidence for the declared set.
+- A binder over an arbitrary source set uses its own implicit host carrier,
+  together with explicit `Litex.In` evidence.
+- Compiler-owned outputs and structurally exact domains may use an exact
+  `S.Carrier` under their own reviewed contracts.
+
+Later premises such as `x = 1` or newly proved facts such as `x $in R` never
+retroactively change the binder's Lean type. They add semantic evidence only.
+This keeps generic theorems generic and makes native numeric equality available
+only when the source domain made that representation choice explicit.
+
+For example, the target shape of:
 
 ```litex
 forall a R, b C:
-    a + b = b + a
+    a = b
+    =>:
+        b $in R
 ```
 
 is:
 
 ```lean
-∀ {α β : Type}
-  (a : α) (haR : Litex.In a Litex.R)
-  (b : β) (hbC : Litex.In b Litex.C),
-  Litex.Same
-    ((Litex.In.rep a haR : ℝ) + (Litex.In.rep b hbC : ℂ))
-    ((Litex.In.rep b hbC : ℂ) + (Litex.In.rep a haR : ℝ))
+∀ (a : ℂ) (haR : Litex.In a Litex.R)
+  (b : ℂ) (hbC : Litex.In b Litex.C)
+  (hab : Litex.Same a b),
+  Litex.In b Litex.R
 ```
 
-Thus Lean typing is the host representation layer, `Litex.In` is the source
-mathematical-classification layer, and `Litex.In.rep` is the proved route from
-one visible membership fact to the exact native carrier required by an
-operation. Proving another membership for `a` never changes `α`; it supplies
-another independently usable representative. The compiler must select the
-membership FactId retained for the exact source occurrence and must fail
-closed when the required membership evidence is absent.
+An external Adapter may specialize `hab` to native `a = b` with
+`Same.complexNativeEq`. The generated theorem still preserves `Same` as the
+source-level equality contract.
 
-The policy does not hide Litex set parameters, erase the fixed Mathlib carriers
-of native constants, or re-box compiler results that already inhabit an exact
-`S.Carrier`. Existential and `have` outputs may use the exact carrier of the set
-from which the compiler constructs their representative; they introduce no
-separate explicit host-type parameter. In short:
+By contrast, a genuinely generic source binder remains generic:
 
-```text
-input value  = implicit host carrier + explicit Litex.In evidence
-output value = exact target-set carrier
-operation    = verifier-selected evidence + Litex.In.rep
+```litex
+forall s set, x s:
+    x = x
 ```
 
-Two proof-replay details are part of this contract. First, when a source value
-already has the exact Lean carrier required by its set, `Litex.In.rep_exact`
-reduces the selected representative to that value; native consumers can
-therefore instantiate a Litex `N` binder directly with `n : ℕ`. Second, when
-the compiler reuses a proof of an entire generated `forall`, it applies the
-proof with `@` so that these implicit host-carrier parameters remain available
-to elaboration. Neither rule identifies arbitrary heterogeneous
-representations or assumes that a `Litex.Fn` returns equal values on them.
+```lean
+∀ (s : Litex.Set) {α : Type}
+  (x : α) (hx : Litex.In x s),
+  Litex.Same x x
+```
 
-Nearest rejected forms are binding `forall a R` directly as `a : ℝ`, binding
-all standard numeric inputs as `a : ℂ`, or choosing a representative from an
-unrelated membership merely because it elaborates to the desired Lean type.
+When an operation requires an exact native carrier, the compiler uses the
+verifier-selected membership FactId and `Litex.In.rep`. It must fail closed
+when that evidence is absent. A compiler-owned value already inhabiting an
+exact `S.Carrier` needs no extra host parameter, and `Litex.In.rep_exact`
+reduces its selected representative to the original value. When replaying an
+entire generated generic `forall`, the compiler applies the proof with `@` so
+that implicit carrier parameters remain available to elaboration. None of
+these rules permits choosing an unrelated membership merely because it
+elaborates to the desired Lean type.
 
 When a verifier-selected membership proof supplies an exact real
 representative and the surrounding native arithmetic expression unambiguously

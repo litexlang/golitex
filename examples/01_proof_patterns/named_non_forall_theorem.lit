@@ -30,6 +30,15 @@ thm relation_chain:
 
 release thm relation_chain
 
+# Existing root-forall syntax remains parenthesized, including when its
+# declaration storage also derives relation-chain closure facts.
+thm forall_relation_chain:
+    ? forall x R:
+        x = x = x
+    x = x = x
+
+release thm forall_relation_chain(1)
+
 thm zero_exists:
     ? exist x R st {x = 0}
     witness exist x R st {x = 0} from 0:

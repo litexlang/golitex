@@ -2409,6 +2409,14 @@ thm zero_parameter_forall:
         3 = 3
 release thm zero_parameter_forall()
 
+thm forall_relation_chain:
+    ? forall x R:
+        x = 1
+        =>:
+            x + 1 = 1 + 1 = 2
+    x + 1 = 1 + 1 = 2
+release thm forall_relation_chain(1)
+
 thm zero_exists:
     ? exist x R st {x = 0}
     witness exist x R st {x = 0} from 0:
@@ -2438,6 +2446,7 @@ zero = 0
     assert!(run_output.contains("\"fact\": \"1 = 1 or 2 = 3\""));
     assert!(run_output.contains("\"fact\": \"1 <= 1 = 1\""));
     assert!(run_output.contains("\"statement\": \"release thm zero_parameter_forall()\""));
+    assert!(run_output.contains("\"statement\": \"release thm forall_relation_chain(1)\""));
     assert!(run_output.contains("\"statement\": \"obtain zero from thm zero_exists\""));
 }
 

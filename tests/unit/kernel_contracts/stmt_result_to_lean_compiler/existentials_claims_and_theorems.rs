@@ -614,7 +614,7 @@ fn zero_binder_named_theorem_compiler_rejects_missing_outer_fact_id() {
         .compile_stmt_results_to_lean_source(&results)
         .expect_err("theorem without its frozen outer FactId must fail closed");
     assert!(
-        error.contains("named forall outer store has no FactId"),
+        error.contains("named forall Result lost its exact source FactId store"),
         "{error}"
     );
 }

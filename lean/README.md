@@ -27,6 +27,39 @@ layer. `Litex.lean` is the public umbrella module: generated files import only
 `Litex`, while this file gathers `Core`, `Rules`, and future supported modules
 such as theorem or strategy libraries.
 
+## Semantic Identity Is Not Host Equality
+
+Litex uses **membership-oriented, representation-independent semantics**.
+Lean's `Eq` is homogeneous: `x = y` requires `x` and `y` to inhabit the same
+Lean type, after which equality supports native rewriting and dependent
+transport. `Litex.Same` is instead heterogeneous semantic equality across
+representations. It can relate values carried by different Lean types when a
+reviewed bridge establishes that they denote the same mathematical value.
+It is not simply `HEq`: `Same` deliberately includes mathematical
+identifications such as compatible natural, integer, real, and complex
+representations.
+
+`Litex.In x S` classifies the value represented by `x`: it says that this
+semantic value has a `Same` representative in the exact carrier `S.Carrier`.
+Proving another membership adds knowledge about `x`; it does not retype or
+replace `x`. Conceptually, one Litex mathematical value may therefore be
+viewed as an equivalence class of host representations under `Same`, although
+the implementation keeps representatives and evidence explicit rather than
+constructing that quotient.
+
+The conversion boundary is intentionally one-way by default:
+
+```text
+Lean Eq  --Same.ofEq-->  Litex.Same
+Litex.Same --reviewed same-carrier, injective observation--> Lean Eq
+```
+
+For example, `Same.complexNativeEq` recovers `x = y` from `Same x y` when
+`x y : ℂ`. No global `Same → Eq` rule exists, so heterogeneous semantic
+equality cannot silently become a native Lean rewrite. See the
+[compiler semantic contract](../src/stmt_result_to_lean_compiler/README.md#membership-oriented-semantics-and-domain-directed-host-carriers)
+for the complete binder and evidence policy.
+
 The wrapper library itself is axiom-free. Example 25 is the only intentional
 generated trust boundary: source `abstract_prop` creates its exact opaque
 predicate interface and explicit source `trust` creates its exact proposition
