@@ -18,6 +18,11 @@ impl FactGraphBuilder {
         }
 
         let source_stmt = success.statement();
+        if let SuccessStmtResult::ProofBlock(SuccessProofBlockStmtResult::ClaimStmt(result)) =
+            success
+        {
+            self.add_infer_edges(&result.environment_effects);
+        }
         success.visit_child_results(&mut |child| self.collect_result_edges(child));
         success.visit_success_child_results(&mut |child| self.collect_success_edges(child));
         if let SuccessStmtResult::By(SuccessByStmtResult::ByDefStmt(result)) = success {
@@ -45,7 +50,7 @@ impl FactGraphBuilder {
             self.add_infer_edges(&common.infers);
             let membership: Fact = InFact::new(
                 result.statement.obj.clone(),
-                result.statement.struct_obj.clone().into(),
+                result.struct_obj.clone().into(),
                 result.statement.line_file.clone(),
             )
             .into();

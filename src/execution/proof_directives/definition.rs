@@ -260,7 +260,7 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         let target_fact: Fact = stmt.fact.clone().into();
         let infer_result = self.run_in_local_env_and_commit(|rt| {
-            rt.store_trusted_fact_and_infer_with_reason(
+            rt.store_fact_with_trust_and_infer_with_reason(
                 target_fact.clone(),
                 InferReason::Other(ByDefStmt::store_reason().to_string()),
             )

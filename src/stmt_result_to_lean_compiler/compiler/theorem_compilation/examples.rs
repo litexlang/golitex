@@ -10,16 +10,23 @@ impl StmtResultToLeanCompiler {
         &mut self,
         result: &SuccessExampleStmtResult,
     ) -> Result<bool, String> {
-        let Some(SuccessVerifyClaimResult::Fact(verification)) = &result.verification else {
+        let Some(verification) = &result.verification else {
             return Ok(false);
         };
+        if matches!(verification.fact, Fact::ForallFact(_)) {
+            return Ok(false);
+        }
         if !result.common.infers.is_empty() {
             return Err("an ordinary `example` unexpectedly exported environment effects".into());
         }
         let Some(mut body) = self.compile_ordinary_fact_goal_proof_body(
             &result.statement.fact,
             result.statement.proof.len(),
-            verification,
+            &verification.fact,
+            &verification.well_definedness,
+            &verification.domain,
+            &verification.proof_steps,
+            &verification.conclusion_checks,
         )?
         else {
             return Ok(false);

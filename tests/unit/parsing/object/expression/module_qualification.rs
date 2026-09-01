@@ -83,9 +83,23 @@ fn parses_angle_bracketed_struct_params_and_defined_field_access() {
     let Obj::ObjAsStructInstanceWithFieldAccess(access) = obj else {
         panic!("expected struct field access");
     };
-    assert_without_mod(&access.struct_obj.name, "Group");
-    assert_eq!(access.struct_obj.params.len(), 1);
     assert_eq!(access.field_name, "op");
+    assert!(
+        access.resolved_struct_carrier.is_none(),
+        "parsing must not select or embed a struct carrier"
+    );
+    let Obj::Atom(receiver) = access.obj.as_ref() else {
+        panic!("expected field receiver symbol");
+    };
+    let carrier = rt
+        .direct_struct_carrier_for_symbol(
+            receiver
+                .symbol_ref()
+                .expect("executed receiver should have a bound symbol"),
+        )
+        .expect("execution should record the direct struct carrier");
+    assert_without_mod(&carrier.name, "Group");
+    assert_eq!(carrier.params.len(), 1);
     assert_eq!(
         strip_free_param_numeric_tags_in_display(&format!("{}", access)),
         "p.op"

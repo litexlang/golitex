@@ -26,5 +26,4 @@ pub struct RuntimeErrorStruct {
     pub previous_error: Option<Box<RuntimeError>>,
     pub inside_results: Vec<StmtResult>,
     pub output: Box<RuntimeErrorOutput>,
-    pub execution_trace: Option<StatementExecutionTrace>,
 }

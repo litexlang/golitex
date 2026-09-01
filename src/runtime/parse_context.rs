@@ -1,5 +1,4 @@
 use crate::prelude::*;
-use std::collections::HashMap;
 
 #[derive(Clone)]
 pub struct ScopeFrame {
@@ -28,8 +27,6 @@ pub struct ParseContext {
     pub free_params: FreeParamCollection,
     pub local_binding_scope_depth: usize,
     pub scope_frames: Vec<ScopeFrame>,
-    pub default_struct_views: HashMap<SymbolId, StructObj>,
-    pub default_tuple_views: HashMap<SymbolId, Cart>,
 }
 
 impl ParseContext {
@@ -38,8 +35,6 @@ impl ParseContext {
             free_params: FreeParamCollection::new(),
             local_binding_scope_depth: 0,
             scope_frames: vec![],
-            default_struct_views: HashMap::new(),
-            default_tuple_views: HashMap::new(),
         }
     }
 

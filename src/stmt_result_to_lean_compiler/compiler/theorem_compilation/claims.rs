@@ -10,14 +10,11 @@ impl StmtResultToLeanCompiler {
         &mut self,
         result: &SuccessClaimStmtResult,
     ) -> Result<bool, String> {
-        let Some(verification) = &result.verification else {
+        let Some(well_definedness) = &result.well_definedness else {
             return Ok(false);
         };
-        if let SuccessVerifyClaimResult::Forall(verification) = verification {
-            if Fact::from(verification.forall_fact.clone()).to_string()
-                != result.statement.fact.to_string()
-                || verification.proof_steps.len() != result.statement.proof.len()
-            {
+        if let Fact::ForallFact(forall_fact) = &result.statement.fact {
+            if result.proof_steps.len() != result.statement.proof.len() {
                 return Err(
                     "forall `claim` Result changed its statement or proof-step order".into(),
                 );
@@ -26,37 +23,36 @@ impl StmtResultToLeanCompiler {
             return self.compile_named_forall_statement_result_to_lean_source(
                 NamedForallStatementResultCompilationInput {
                     name: &claim_name,
-                    forall_fact: &verification.forall_fact,
-                    well_definedness: &verification.well_definedness,
-                    proof_scope_assumption_infers: &verification.proof_scope.assumption_infers,
-                    proof_scope_assumption_components: &verification
-                        .proof_scope
-                        .assumption_components,
-                    proof_steps: &verification.proof_steps,
-                    conclusion_checks: verification.conclusion_checks.iter().collect(),
-                    outer_statement_common: Some(&result.common),
+                    forall_fact,
+                    well_definedness,
+                    proof_scope_assumption_infers: &result.domain.assumption_infers,
+                    proof_scope_assumption_components: &result.domain.assumption_components,
+                    proof_steps: &result.proof_steps,
+                    conclusion_checks: result.conclusion_checks.iter().collect(),
+                    outer_environment_effects: Some(&result.environment_effects),
                 },
             );
         }
-        let SuccessVerifyClaimResult::Fact(verification) = verification else {
-            unreachable!("forall claim returned above")
-        };
         let Some(mut body) = self.compile_ordinary_fact_goal_proof_body(
             &result.statement.fact,
             result.statement.proof.len(),
-            verification,
+            &result.statement.fact,
+            well_definedness,
+            &result.domain,
+            &result.proof_steps,
+            &result.conclusion_checks,
         )?
         else {
             return Ok(false);
         };
 
-        if !result.common.infers.rule_applications.is_empty()
-            || result.common.infers.store_fact_outputs.len() != 1
+        if !result.environment_effects.rule_applications.is_empty()
+            || result.environment_effects.store_fact_outputs.len() != 1
         {
             return Err("ordinary `claim` must retain exactly one outer store effect".into());
         }
-        let stored = &result.common.infers.store_fact_outputs[0];
-        if stored.itself_and_why_itself_is_stored.0.to_string() != verification.fact.to_string()
+        let stored = &result.environment_effects.store_fact_outputs[0];
+        if stored.itself_and_why_itself_is_stored.0.to_string() != result.statement.fact.to_string()
             || !stored.inferred_facts.is_empty()
             || !stored.inferred_fact_ids.is_empty()
         {
@@ -79,7 +75,7 @@ impl StmtResultToLeanCompiler {
             .insert(fact_id, theorem_name);
         self.environment_stack
             .fact_propositions
-            .insert(fact_id, verification.fact.clone());
+            .insert(fact_id, result.statement.fact.clone());
         self.next_fact_name_index += 1;
         Ok(true)
     }
@@ -89,13 +85,13 @@ impl StmtResultToLeanCompiler {
         result: &SuccessClaimStmtResult,
         _proof_step_index: usize,
     ) -> Result<Option<Vec<String>>, String> {
-        let Some(SuccessVerifyClaimResult::Forall(verification)) = &result.verification else {
+        let Some(well_definedness) = &result.well_definedness else {
             return Ok(None);
         };
-        if Fact::from(verification.forall_fact.clone()).to_string()
-            != result.statement.fact.to_string()
-            || verification.proof_steps.len() != result.statement.proof.len()
-        {
+        let Fact::ForallFact(forall_fact) = &result.statement.fact else {
+            return Ok(None);
+        };
+        if result.proof_steps.len() != result.statement.proof.len() {
             return Err(
                 "local forall `claim` Result changed its statement or proof-step order".into(),
             );
@@ -106,13 +102,13 @@ impl StmtResultToLeanCompiler {
         let compiled = self.compile_named_forall_statement_result_to_lean_source(
             NamedForallStatementResultCompilationInput {
                 name: &claim_name,
-                forall_fact: &verification.forall_fact,
-                well_definedness: &verification.well_definedness,
-                proof_scope_assumption_infers: &verification.proof_scope.assumption_infers,
-                proof_scope_assumption_components: &verification.proof_scope.assumption_components,
-                proof_steps: &verification.proof_steps,
-                conclusion_checks: verification.conclusion_checks.iter().collect(),
-                outer_statement_common: Some(&result.common),
+                forall_fact,
+                well_definedness,
+                proof_scope_assumption_infers: &result.domain.assumption_infers,
+                proof_scope_assumption_components: &result.domain.assumption_components,
+                proof_steps: &result.proof_steps,
+                conclusion_checks: result.conclusion_checks.iter().collect(),
+                outer_environment_effects: Some(&result.environment_effects),
             },
         )?;
         if !compiled {
@@ -145,24 +141,31 @@ impl StmtResultToLeanCompiler {
         result: &SuccessClaimStmtResult,
         _proof_step_index: usize,
     ) -> Result<Option<Vec<String>>, String> {
-        let Some(SuccessVerifyClaimResult::Fact(verification)) = &result.verification else {
+        let Some(well_definedness) = &result.well_definedness else {
             return Ok(None);
         };
+        if matches!(&result.statement.fact, Fact::ForallFact(_)) {
+            return Ok(None);
+        }
         let Some(mut body) = self.compile_ordinary_fact_goal_proof_body(
             &result.statement.fact,
             result.statement.proof.len(),
-            verification,
+            &result.statement.fact,
+            well_definedness,
+            &result.domain,
+            &result.proof_steps,
+            &result.conclusion_checks,
         )?
         else {
             return Ok(None);
         };
-        if !result.common.infers.rule_applications.is_empty()
-            || result.common.infers.store_fact_outputs.len() != 1
+        if !result.environment_effects.rule_applications.is_empty()
+            || result.environment_effects.store_fact_outputs.len() != 1
         {
             return Err("local ordinary `claim` must retain one outer store effect".into());
         }
-        let stored = &result.common.infers.store_fact_outputs[0];
-        if stored.itself_and_why_itself_is_stored.0.to_string() != verification.fact.to_string()
+        let stored = &result.environment_effects.store_fact_outputs[0];
+        if stored.itself_and_why_itself_is_stored.0.to_string() != result.statement.fact.to_string()
             || !stored.inferred_facts.is_empty()
             || !stored.inferred_fact_ids.is_empty()
         {
@@ -181,7 +184,7 @@ impl StmtResultToLeanCompiler {
             .insert(fact_id, name.clone());
         self.environment_stack
             .fact_propositions
-            .insert(fact_id, verification.fact.clone());
+            .insert(fact_id, result.statement.fact.clone());
         Ok(Some(vec![format!(
             "have {name} : {} := by\n{}",
             body.proposition,

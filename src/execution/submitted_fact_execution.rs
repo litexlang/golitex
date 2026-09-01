@@ -42,16 +42,16 @@ impl Runtime {
         let mut infer_result =
             self.store_without_well_defined_verification_and_infer(fact.clone())?;
         if verification_store_facts.contains_added_fact(fact) {
-            infer_result.remove_first_verified_statement_for_fact(fact);
+            infer_result.remove_first_statement_with_verification_for_fact(fact);
         }
 
         Ok(infer_result)
     }
 
-    pub fn execute_trusted_fact(&mut self, fact: &Fact) -> Result<StmtResult, RuntimeError> {
-        let infer_result = self.store_trusted_fact_and_infer_with_reason(
+    pub fn execute_fact_with_trust(&mut self, fact: &Fact) -> Result<StmtResult, RuntimeError> {
+        let infer_result = self.store_fact_with_trust_and_infer_with_reason(
             fact.clone(),
-            InferReason::VerifiedStatement,
+            InferReason::StatementWithVerification,
         )?;
 
         Ok(SuccessFactStmtResult::new(

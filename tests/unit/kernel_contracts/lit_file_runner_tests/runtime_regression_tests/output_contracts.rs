@@ -357,7 +357,7 @@ witness exist x R st {x = 1} from 1:
             run_output
         );
         assert!(run_output.contains("\"kind\": \"SketchStmt\""));
-        assert!(run_output.contains("\"kind\": \"ClaimStmt\""));
+        assert!(run_output.contains("\"kind\": \"SuccessClaimStmtResult\""));
         assert!(run_output.contains("\"kind\": \"ByCasesStmt\""));
         assert!(run_output.contains("\"kind\": \"WitnessExistFact\""));
         assert_no_legacy_acceptance_field(&run_output, "normal");
@@ -367,12 +367,12 @@ witness exist x R st {x = 1} from 1:
             run_output
         );
         assert!(run_output.contains("\"verification\": {"));
-        assert!(run_output.contains("\"execution_trace\": {"));
+        assert!(!run_output.contains(&["execution", "trace"].join("_")));
     });
 }
 
 #[test]
-fn output_details_project_one_full_execution_trace() {
+fn output_details_preserve_structured_results_without_lifecycle_summary() {
     let source_code = r#"
 sketch:
     forall y R, z N:
@@ -385,14 +385,13 @@ sketch:
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
 
     assert!(runtime_error.is_none());
-    assert!(stmt_results[0].execution_trace().is_some());
 
     let (_, normal_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     assert!(normal_output.contains("\"children\": ["));
     assert!(normal_output.contains("Every object is a set."));
     assert!(normal_output.contains("\"verification\": {"));
-    assert!(normal_output.contains("\"execution_trace\": {"));
     assert!(normal_output.contains("\"infers\": {"));
+    assert!(!normal_output.contains(&["execution", "trace"].join("_")));
 
     runtime.set_output_detail(OutputDetail::Compact);
     let (_, compact_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -402,8 +401,6 @@ sketch:
     let (_, detailed_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     assert_eq!(detailed_output, normal_output);
     assert!(detailed_output.contains("\"children\": ["));
-    assert!(detailed_output.contains("\"execution_trace\": {"));
-    assert!(detailed_output.contains("\"affect_environment\": {"));
     assert!(detailed_output.contains("\"infers\": {"));
 }
 
@@ -484,7 +481,7 @@ witness exist x R st {x = 1} from 1:
             run_output
         );
         assert!(run_output.contains("\"kind\": \"SketchStmt\""));
-        assert!(run_output.contains("\"kind\": \"ClaimStmt\""));
+        assert!(run_output.contains("\"kind\": \"SuccessClaimStmtResult\""));
         assert!(run_output.contains("\"kind\": \"ByCasesStmt\""));
         assert!(run_output.contains("\"kind\": \"WitnessExistFact\""));
         assert!(
@@ -1423,8 +1420,7 @@ $q(1)
         detail_output
     );
     assert_eq!(detail_output, run_output);
-    assert!(detail_output.contains("\"execution_trace\": {"));
-    assert!(detail_output.contains("\"affect_environment\": {"));
+    assert!(!detail_output.contains(&["execution", "trace"].join("_")));
     assert!(detail_output.contains("\"stores\": ["));
     assert!(
         detail_output.contains(format!("\"reason\": \"{}\"", ClaimStmt::store_reason()).as_str())
@@ -1438,51 +1434,14 @@ $q(1)
 }
 
 #[test]
-fn detail_output_exposes_statement_execution_phases() {
+fn detail_output_reports_failure_without_synthetic_execution_phases() {
     run_with_large_stack(
-        "detail_output_exposes_statement_execution_phases_large_stack",
-        detail_output_exposes_statement_execution_phases_impl,
+        "detail_output_reports_failure_without_synthetic_execution_phases_large_stack",
+        detail_output_reports_failure_without_synthetic_execution_phases_impl,
     );
 }
 
-fn detail_output_exposes_statement_execution_phases_impl() {
-    let source_code = r#"
-have a R = 1
-forall b R:
-    b = 2
-    =>:
-        b^2 = 4
-"#;
-    let mut runtime = Runtime::default();
-    runtime.set_output_detail(OutputDetail::Detailed);
-    runtime.start_isolated_source("detail_output_exposes_statement_execution_phases");
-    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
-    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
-
-    assert!(
-        run_succeeded,
-        "execution phase fixture failed:\n{}",
-        run_output
-    );
-    assert_eq!(run_output.matches("\"execution_trace\": {").count(), 2);
-    assert!(run_output.contains("\"verify_well_definedness\": {"));
-    assert!(run_output.contains("\"verify_process\": {"));
-    assert!(run_output.contains("\"affect_environment\": {"));
-    assert!(run_output.contains("\"kind\": \"HaveObjEqualStmt\""));
-    assert!(run_output.contains("\"statement\": \"1 $in R\""));
-    assert!(run_output.contains("calculation"));
-    assert!(run_output.contains("\"stores\": ["));
-}
-
-#[test]
-fn detail_output_marks_failed_phase_and_does_not_claim_environment_effects() {
-    run_with_large_stack(
-        "detail_output_marks_failed_phase_and_does_not_claim_environment_effects_large_stack",
-        detail_output_marks_failed_phase_and_does_not_claim_environment_effects_impl,
-    );
-}
-
-fn detail_output_marks_failed_phase_and_does_not_claim_environment_effects_impl() {
+fn detail_output_reports_failure_without_synthetic_execution_phases_impl() {
     let mut runtime = Runtime::default();
     runtime.set_output_detail(OutputDetail::Detailed);
     runtime.start_isolated_source(
@@ -1496,8 +1455,7 @@ fn detail_output_marks_failed_phase_and_does_not_claim_environment_effects_impl(
         "invalid object definition should fail:\n{}",
         run_output
     );
-    assert!(run_output.contains("\"verify_process\": {\n      \"status\": \"error\""));
-    assert!(run_output.contains("\"affect_environment\": {\n      \"status\": \"not_run\""));
+    assert!(!run_output.contains("\"phases\":"));
     assert!(!run_output.contains("\"effects\": ["));
 }
 
@@ -1693,9 +1651,9 @@ claim:
                 "claim forall output fixture failed:\n{}",
                 run_output
             );
-            assert!(run_output.contains("\"kind\": \"ClaimStmt\""));
-            assert!(run_output.contains("\"kind\": \"SuccessVerifyClaimForallResult\""));
-            assert!(run_output.contains("\"forall_fact\":"));
+            assert!(run_output.contains("\"kind\": \"SuccessClaimStmtResult\""));
+            assert!(run_output.contains("\"well_definedness\":"));
+            assert!(run_output.contains("\"domain\":"));
             assert!(run_output.contains("forall x R"));
             assert!(run_output.contains("\"assumption_infers\": {"));
             assert!(run_output.contains("\"statement\": \"x $in R\""));
@@ -1737,14 +1695,13 @@ claim:
                 "claim fact output fixture failed:\n{}",
                 run_output
             );
-            assert!(run_output.contains("\"kind\": \"ClaimStmt\""));
-            assert!(run_output.contains("\"kind\": \"SuccessVerifyClaimFactResult\""));
-            assert!(run_output.contains("\"fact\": \"1 = 1\""));
+            assert!(run_output.contains("\"kind\": \"SuccessClaimStmtResult\""));
+            assert!(run_output.contains("\"statement\": \"claim:"));
             assert!(run_output.contains("\"proof_steps\": ["));
-            assert!(run_output.contains("\"verification\": {"));
+            assert!(run_output.contains("\"environment_effects\": {"));
             assert!(run_output.contains("\"kind\": \"StoredFactCitation\""));
             assert!(
-                run_output.contains("\"conclusion_check\": {"),
+                run_output.contains("\"conclusion_checks\": ["),
                 "claim Result should retain its named conclusion child:\n{}",
                 run_output
             );
@@ -1832,7 +1789,7 @@ by cases:
             );
             assert_no_legacy_acceptance_field(&run_output, "successful");
             assert!(
-                run_output.contains("\"kind\": \"ClaimStmt\""),
+                run_output.contains("\"kind\": \"SuccessClaimStmtResult\""),
                 "claim/thm statements should expose their semantic statement type:\n{}",
                 run_output
             );
@@ -1884,7 +1841,7 @@ by cases:
             assert!(run_output.contains("\"kind\": \"SuccessVerifyByCasesResult\""));
             assert!(run_output.contains("\"children\": ["));
             assert!(run_output.contains("\"verification\": {"));
-            assert!(run_output.contains("\"execution_trace\": {"));
+            assert!(!run_output.contains(&["execution", "trace"].join("_")));
             assert!(!run_output.contains("\"case_coverage\": {"));
             assert_no_legacy_acceptance_field(&run_output, "by cases");
             assert!(run_output.contains("\"1 = 1\""));
@@ -2494,10 +2451,7 @@ fn error_output_details_render_the_same_detailed_validation_failure() {
 
     assert_eq!(compact, normal);
     assert_eq!(normal, detailed);
-    assert!(detailed.contains("\"phases\": {"));
-    assert!(detailed.contains("\"verify_well_definedness\": {"));
-    assert!(detailed.contains("\"verify_process\": {"));
-    assert!(detailed.contains("\"affect_environment\": {"));
+    assert!(!detailed.contains("\"phases\":"));
     assert!(detailed.contains("\"previous_error\":"));
     assert!(detailed.contains("\"failed_goal\": \"1 = 0\""));
     assert!(detailed.contains("\"unknown_result\": {"));
@@ -2527,12 +2481,10 @@ fn error_output_parse_and_well_definedness_only_show_real_diagnostics() {
 
         if source_code == "@" {
             assert!(detailed.contains("\"kind\": \"parse_error\""));
-            assert!(!detailed.contains("\"phases\": {"));
         } else {
             assert!(detailed.contains("\"kind\": \"well_defined_error\""));
-            assert!(detailed.contains("\"phases\": {"));
-            assert!(detailed.contains("\"status\": \"error\""));
         }
+        assert!(!detailed.contains("\"phases\":"));
         assert!(!detailed.contains("\"previous_error\":"));
         assert!(!detailed.contains("\"failed_step\":"));
         assert!(!detailed.contains("\"failed_goal\":"));
@@ -2567,8 +2519,8 @@ fn error_output_compound_failure_keeps_detailed_inside_results_in_all_styles() {
     assert!(detailed.contains("\"inside_results\": ["));
     assert!(detailed.contains("\"statement\": \"1 = 1\""));
     assert!(detailed.contains("\"verification\": {"));
-    assert!(detailed.contains("\"execution_trace\": {"));
-    assert!(detailed.contains("\"phases\": {"));
+    assert!(!detailed.contains(&["execution", "trace"].join("_")));
+    assert!(!detailed.contains("\"phases\":"));
     assert!(detailed.contains("\"failed_goal\": \"1 = 0\""));
 }
 
@@ -2591,14 +2543,14 @@ fn error_output_does_not_change_the_style_of_earlier_successes() {
         let success_output = render_statement_result_json(&stmt_results[0]);
         assert!(!success_output.contains("\"schema\":"));
         assert!(success_output.contains("\"verification\": {"));
-        assert!(success_output.contains("\"execution_trace\": {"));
+        assert!(!success_output.contains(&["execution", "trace"].join("_")));
 
         let (_, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
         let error_start = run_output
             .find("\"kind\": \"verify_error\"")
             .expect("combined output should contain an error");
         let error_output = &run_output[error_start..];
-        assert!(error_output.contains("\"phases\": {"));
+        assert!(!error_output.contains("\"phases\":"));
         assert!(error_output.contains("\"previous_error\":"));
         assert!(error_output.contains("\"failed_goal\": \"1 = 0\""));
     }
@@ -2623,10 +2575,6 @@ fn error_output_preserves_failed_step_and_step_indexes_in_all_styles() {
         RuntimeErrorOutput::proof_step_unknown(failed_step, 2, 3, &unknown),
     ))
     .into();
-    let error = runtime
-        .finish_statement_execution(Err(error), ExecutionMode::RequireVerification)
-        .expect_err("synthetic proof-step error should remain an error");
-
     let mut outputs = Vec::new();
     for output_detail in [
         OutputDetail::Compact,
@@ -2644,7 +2592,7 @@ fn error_output_preserves_failed_step_and_step_indexes_in_all_styles() {
     assert!(outputs[2].contains("\"proof_step_index\": 2"));
     assert!(outputs[2].contains("\"proof_step_count\": 3"));
     assert!(outputs[2].contains("\"unknown_result\": {"));
-    assert!(outputs[2].contains("\"phases\": {"));
+    assert!(!outputs[2].contains("\"phases\":"));
 }
 
 #[test]

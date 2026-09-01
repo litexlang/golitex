@@ -54,7 +54,6 @@ pub const RIGHT_BRACKET: &str = "]";
 pub const DOUBLE_QUOTE: &str = "\"";
 pub const COLON: &str = ":";
 pub const SETTING: &str = "setting";
-pub const UNFOLD: &str = "unfold";
 
 pub const UNION: &str = "union";
 pub const INTERSECT: &str = "intersect";
@@ -421,7 +420,6 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         STRUCT,
         TEMPLATE,
         SETTING,
-        UNFOLD,
         STRATEGY,
         FN_EQ_IN,
         FN_EQ,

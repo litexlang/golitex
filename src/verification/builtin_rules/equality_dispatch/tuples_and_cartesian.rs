@@ -137,10 +137,11 @@ impl Runtime {
         )
         .into();
         let coordinate_params = TypedParameterList::new(vec![coordinate_group]);
-        let coordinate_result = self.run_in_local_env(|rt| {
-            rt.define_params_with_type(&coordinate_params, false, BindingScope::LocalBinder)?;
-            rt.verify_atomic_fact_with_known_forall(&coordinate_equality, verify_state)
-        })?;
+        let coordinate_result =
+            self.run_in_local_verification_env(verify_state, |rt, local_verify_state| {
+                rt.define_params_with_type(&coordinate_params, false, BindingScope::LocalBinder)?;
+                rt.verify_atomic_fact_with_known_forall(&coordinate_equality, local_verify_state)
+            })?;
         if !coordinate_result.is_success() {
             return Ok(None);
         }

@@ -685,7 +685,7 @@ template<S set>:
         .parse_statement(&mut blocks[0])
         .expect("parse template definition");
     let error = runtime
-        .execute_preverified_statement(&stmt)
+        .execute_statement_with_prior_verification(&stmt)
         .expect_err("a template instance body must not become a nested template definition");
 
     assert!(error
@@ -1166,9 +1166,9 @@ template<s set>:
 }
 
 #[test]
-fn struct_filter_predicate_unfolds_for_default_field_view() {
+fn struct_filter_predicate_unfolds_for_direct_field_carrier() {
     run_with_large_stack(
-        "struct_filter_predicate_unfolds_for_default_field_view",
+        "struct_filter_predicate_unfolds_for_direct_field_carrier",
         || {
             let source_code = r#"
 prop is_group(s nonempty_set, inv fn(x s) s, op fn(x, y s) s, identity s):
@@ -1194,14 +1194,15 @@ claim:
 "#;
 
             let mut runtime = Runtime::default();
-            runtime.start_isolated_source("struct_filter_predicate_unfolds_for_default_field_view");
+            runtime
+                .start_isolated_source("struct_filter_predicate_unfolds_for_direct_field_carrier");
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
-                "struct_filter_predicate_unfolds_for_explicit_field_view failed:\n{}",
+                "struct_filter_predicate_unfolds_for_direct_field_carrier failed:\n{}",
                 run_output
             );
         },
@@ -1256,9 +1257,9 @@ p2.first = 1
 }
 
 #[test]
-fn struct_unfold_spreads_defined_fields_through_call_argument_lists() {
+fn explicit_struct_fields_and_tuple_indexes_work_through_call_argument_lists() {
     run_with_large_stack(
-        "struct_unfold_spreads_defined_fields_through_call_argument_lists",
+        "explicit_struct_fields_and_tuple_indexes_work_through_call_argument_lists",
         || {
             let source_code = r#"
 struct GroupData<S nonempty_set>:
@@ -1279,23 +1280,23 @@ thm consume_group_fields:
         consume(identity, inverse, combine) = identity
     consume(identity, inverse, combine) = identity
 
-thm default_struct_unfold_reaches_function_prop_and_theorem:
+thm explicit_struct_fields_reach_function_prop_and_theorem:
     ? forall G &GroupData<R>:
-        consume(unfold G) = G.identity
-        $has_group_fields(unfold G)
-    release thm consume_group_fields(unfold G)
-    by def $has_group_fields(unfold G)
+        consume(G.identity, G.inverse, G.combine) = G.identity
+        $has_group_fields(G.identity, G.inverse, G.combine)
+    release thm consume_group_fields(G.identity, G.inverse, G.combine)
+    by def $has_group_fields(G.identity, G.inverse, G.combine)
 
 have fn first_of_three(x, y, z R) R = x
-first_of_three(unfold (1, 2, 3)) = 1
+first_of_three(1, 2, 3) = 1
 
-thm statically_typed_tuple_unfold_uses_index_order:
+thm explicit_tuple_indexes_use_source_order:
     ? forall values cart(R, R, R):
-        first_of_three(unfold values) = values[1]
-    first_of_three(unfold values) = values[1]
+        first_of_three(values[1], values[2], values[3]) = values[1]
+    first_of_three(values[1], values[2], values[3]) = values[1]
 
 have named_values cart(R, R, R) = (1, 2, 3)
-first_of_three(unfold named_values) = 1
+first_of_three(named_values[1], named_values[2], named_values[3]) = 1
 
 struct Pair:
     first R
@@ -1303,7 +1304,7 @@ struct Pair:
 
 have fn make_pair(first, second R) &Pair = (first, second)
 have fn add_pair(first, second R) R = first + second
-add_pair(unfold make_pair(1, 2)) $in R
+add_pair(make_pair(1, 2).first, make_pair(1, 2).second) $in R
 
 struct ValueBox<S set>:
     value S
@@ -1316,7 +1317,7 @@ template<n N>:
 
 \template_pair<1>.first $in R
 \template_pair<1>.first = 1
-add_pair(unfold \template_pair<1>) $in R
+add_pair(\template_pair<1>.first, \template_pair<1>.second) $in R
 
 template<n N>:
     trust have trusted_pair &Pair:
@@ -1341,7 +1342,7 @@ template<n N>:
 
             let mut runtime = Runtime::default();
             runtime.start_isolated_source(
-                "struct_unfold_spreads_defined_fields_through_call_argument_lists",
+                "explicit_struct_fields_and_tuple_indexes_work_through_call_argument_lists",
             );
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
@@ -1349,15 +1350,11 @@ template<n N>:
 
             assert!(
                 run_succeeded,
-                "unfold should spread tuple elements and struct fields through function, prop, and theorem calls:\n{}",
+                "explicit tuple indexes and struct fields should work through function, prop, and theorem calls:\n{}",
                 run_output
             );
             assert!(
-                !run_output.contains("consume(unfold G)")
-                    && !run_output.contains("$has_group_fields(unfold G)")
-                    && !run_output.contains("first_of_three(unfold (1, 2, 3))")
-                    && !run_output.contains("first_of_three(unfold values)")
-                    && run_output.contains("G.identity")
+                run_output.contains("G.identity")
                     && run_output.contains("G.inverse")
                     && run_output.contains("G.combine")
                     && run_output.contains("first_of_three(values[1], values[2], values[3])")
@@ -1368,7 +1365,7 @@ template<n N>:
                     && run_output.contains(
                         "add_pair(\\\\template_pair<1>.first, \\\\template_pair<1>.second)"
                     ),
-                "unfold should disappear during parsing and leave explicit field accesses:\n{}",
+                "written tuple indexes and fields should remain explicit:\n{}",
                 run_output
             );
         },
@@ -1376,94 +1373,69 @@ template<n N>:
 }
 
 #[test]
-fn struct_unfold_rejects_missing_definition_carriers_and_explicit_selection() {
-    let scalar_source = r#"
-have fn identity(x R) R = x
-identity(unfold 1) = 1
+fn removed_unfold_syntax_is_rejected_and_name_is_available() {
+    let identifier_source = r#"
+have unfold R = 1
+unfold = 1
 "#;
-    let mut scalar_runtime = Runtime::default();
-    scalar_runtime.start_isolated_source("struct_unfold_rejects_non_tuple_non_struct_objects");
-    let (stmt_results, runtime_error) = execute_source(scalar_source, &mut scalar_runtime);
+    let mut identifier_runtime = Runtime::default();
+    identifier_runtime.start_isolated_source("unfold_is_no_longer_a_keyword");
+    let (stmt_results, runtime_error) = execute_source(identifier_source, &mut identifier_runtime);
     let (run_succeeded, run_output) =
-        render_run_output(&scalar_runtime, &stmt_results, &runtime_error);
+        render_run_output(&identifier_runtime, &stmt_results, &runtime_error);
     assert!(
-        !run_succeeded
-            && run_output.contains(
-                "unfold expects a tuple with compile-time arity or an object whose definition has a direct `&Struct` carrier"
-            ),
-        "unfold must reject an object without a compile-time tuple or struct view:\n{}",
+        run_succeeded,
+        "the removed keyword should be available as an ordinary identifier:\n{}",
         run_output
     );
 
-    let explicit_selection_source = r#"
-struct Pair:
-    first R
-    second R
-
-have fn add_pair(first, second R) R = first + second
-add_pair(unfold &Pair{1}) = 1
-"#;
-    let mut explicit_selection_runtime = Runtime::default();
-    explicit_selection_runtime
-        .start_isolated_source("struct_unfold_rejects_removed_explicit_selection");
-    let (stmt_results, runtime_error) =
-        execute_source(explicit_selection_source, &mut explicit_selection_runtime);
-    let (run_succeeded, run_output) =
-        render_run_output(&explicit_selection_runtime, &stmt_results, &runtime_error);
-    assert!(
-        !run_succeeded && run_output.contains("explicit struct selection"),
-        "the removed explicit struct-selection syntax must fail directly:\n{}",
-        run_output
-    );
-
-    let cart_set_source = r#"
-have ProductSet set = cart(R, R)
+    let removed_syntax_source = r#"
 have fn first(left, right R) R = left
-first(unfold ProductSet) = first(unfold ProductSet)
+have pair cart(R, R) = (1, 2)
+first(unfold pair) = 1
 "#;
-    let mut cart_set_runtime = Runtime::default();
-    cart_set_runtime.start_isolated_source(
-        "struct_unfold_does_not_treat_a_cartesian_product_set_as_a_tuple_value",
-    );
-    let (stmt_results, runtime_error) = execute_source(cart_set_source, &mut cart_set_runtime);
+    let mut removed_syntax_runtime = Runtime::default();
+    removed_syntax_runtime.start_isolated_source("removed_unfold_syntax_is_rejected");
+    let (stmt_results, runtime_error) =
+        execute_source(removed_syntax_source, &mut removed_syntax_runtime);
     let (run_succeeded, run_output) =
-        render_run_output(&cart_set_runtime, &stmt_results, &runtime_error);
+        render_run_output(&removed_syntax_runtime, &stmt_results, &runtime_error);
     assert!(
-        !run_succeeded
-            && run_output.contains(
-                "unfold expects a tuple with compile-time arity or an object whose definition has a direct `&Struct` carrier"
-            ),
-        "a set equal to cart(A, B) is not itself a tuple value and must not unfold:\n{}",
+        !run_succeeded,
+        "the former argument-spread syntax must be rejected:\n{}",
         run_output
     );
 }
 
 #[test]
-fn default_struct_view_replays_from_theorem_goal_into_proof() {
+fn direct_struct_carrier_replays_from_theorem_goal_into_proof() {
     run_with_large_stack(
-        "default_struct_view_replays_from_theorem_goal_into_proof",
+        "direct_struct_carrier_replays_from_theorem_goal_into_proof",
         || {
             let source_code = r#"
 struct Point:
     x R
     y R
 
-thm point_default_view_is_available_in_proof:
+thm point_direct_carrier_is_available_in_proof:
     ? forall p &Point:
         p.x = p.x
     p.x = p.x
+
+release thm point_direct_carrier_is_available_in_proof((1, 2))
 "#;
 
             let mut runtime = Runtime::default();
-            runtime
-                .start_isolated_source("default_struct_view_replays_from_theorem_goal_into_proof");
+            runtime.start_isolated_source(
+                "direct_struct_carrier_replays_from_theorem_goal_into_proof",
+            );
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
-                "theorem proof parsing should replay the goal binder's default struct view:\n{}",
+                "theorem execution and later instantiation should preserve the goal binder's direct struct carrier:\n{}",
                 run_output
             );
         },
@@ -1471,16 +1443,16 @@ thm point_default_view_is_available_in_proof:
 }
 
 #[test]
-fn parameterized_default_struct_view_keeps_dependent_symbol_ids() {
+fn parameterized_direct_struct_carrier_keeps_dependent_symbol_ids() {
     run_with_large_stack(
-        "parameterized_default_struct_view_keeps_dependent_symbol_ids",
+        "parameterized_direct_struct_carrier_keeps_dependent_symbol_ids",
         || {
             let source_code = r#"
 struct Box<s set>:
     value s
     tag N
 
-thm box_default_view_keeps_its_carrier:
+thm box_direct_carrier_keeps_its_identity:
     ? forall s nonempty_set, b &Box<s>:
         b.value = b.value
     b.value = b.value
@@ -1488,7 +1460,7 @@ thm box_default_view_keeps_its_carrier:
 
             let mut runtime = Runtime::default();
             runtime.start_isolated_source(
-                "parameterized_default_struct_view_keeps_dependent_symbol_ids",
+                "parameterized_direct_struct_carrier_keeps_dependent_symbol_ids",
             );
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
@@ -1496,7 +1468,7 @@ thm box_default_view_keeps_its_carrier:
 
             assert!(
                 run_succeeded,
-                "a parameterized default view should retain earlier binder identities:\n{}",
+                "a parameterized direct carrier should retain earlier binder identities:\n{}",
                 run_output
             );
         },
@@ -1504,7 +1476,7 @@ thm box_default_view_keeps_its_carrier:
 }
 
 #[test]
-fn struct_membership_fact_does_not_enable_default_field_syntax() {
+fn struct_membership_fact_does_not_enable_direct_field_access() {
     let source_code = r#"
 struct Point:
     x R
@@ -1516,7 +1488,7 @@ p.x = p.x
 "#;
 
     let mut runtime = Runtime::default();
-    runtime.start_isolated_source("struct_membership_fact_does_not_enable_default_field_syntax");
+    runtime.start_isolated_source("struct_membership_fact_does_not_enable_direct_field_access");
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
@@ -1533,9 +1505,9 @@ p.x = p.x
 }
 
 #[test]
-fn separate_same_name_binders_keep_symbol_specific_default_struct_views() {
+fn separate_same_name_binders_keep_symbol_specific_direct_struct_carriers() {
     run_with_large_stack(
-        "separate_same_name_binders_keep_symbol_specific_default_struct_views",
+        "separate_same_name_binders_keep_symbol_specific_direct_struct_carriers",
         || {
             let source_code = r#"
 struct Point:
@@ -1559,7 +1531,7 @@ thm tagged_integer_view_for_item:
 
             let mut runtime = Runtime::default();
             runtime.start_isolated_source(
-                "separate_same_name_binders_keep_symbol_specific_default_struct_views",
+                "separate_same_name_binders_keep_symbol_specific_direct_struct_carriers",
             );
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
@@ -1567,7 +1539,7 @@ thm tagged_integer_view_for_item:
 
             assert!(
                 run_succeeded,
-                "separate `item` binders should replay defaults by SymbolId, not surface name:\n{}",
+                "separate `item` binders should replay direct carriers by SymbolId, not surface name:\n{}",
                 run_output
             );
         },
@@ -1575,9 +1547,9 @@ thm tagged_integer_view_for_item:
 }
 
 #[test]
-fn default_struct_view_function_field_remains_callable() {
+fn direct_struct_carrier_function_field_remains_callable() {
     run_with_large_stack(
-        "default_struct_view_function_field_remains_callable",
+        "direct_struct_carrier_function_field_remains_callable",
         || {
             let source_code = r#"
 struct Endomorphism:
@@ -1589,14 +1561,14 @@ endomorphism.apply(2) = endomorphism.apply(2)
 "#;
 
             let mut runtime = Runtime::default();
-            runtime.start_isolated_source("default_struct_view_function_field_remains_callable");
+            runtime.start_isolated_source("direct_struct_carrier_function_field_remains_callable");
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
 
             assert!(
                 run_succeeded,
-                "a callable default field should parse as the existing explicit callable AST:\n{}",
+                "a directly typed callable field should remain callable:\n{}",
                 run_output
             );
         },
@@ -1604,9 +1576,9 @@ endomorphism.apply(2) = endomorphism.apply(2)
 }
 
 #[test]
-fn chained_default_struct_views_support_bundled_vector_space_operations() {
+fn chained_direct_struct_carriers_support_bundled_vector_space_operations() {
     run_with_large_stack(
-        "chained_default_struct_views_support_bundled_vector_space_operations",
+        "chained_direct_struct_carriers_support_bundled_vector_space_operations",
         || {
             let source_code = r#"
 struct ScalarSystem<s nonempty_set>:
@@ -1634,7 +1606,7 @@ prop share_scalar_system(s, v, w nonempty_set, Vspace &VectorSpace<s, v>, Wspace
 
             let mut runtime = Runtime::default();
             runtime.start_isolated_source(
-                "chained_default_struct_views_support_bundled_vector_space_operations",
+                "chained_direct_struct_carriers_support_bundled_vector_space_operations",
             );
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
@@ -1805,9 +1777,9 @@ have fn invalid_scalar_call(f fn(k N+) N, idx N+) N = boxed(f).tag(idx)
 }
 
 #[test]
-fn chained_default_struct_views_support_module_qualified_field_types() {
+fn chained_direct_struct_carriers_support_module_qualified_field_types() {
     run_with_large_stack(
-        "chained_default_struct_views_support_module_qualified_field_types",
+        "chained_direct_struct_carriers_support_module_qualified_field_types",
         || {
             let source_code = r#"
 struct ScalarSystem<s nonempty_set>:
@@ -1826,7 +1798,7 @@ claim:
 
             let mut runtime = Runtime::default();
             runtime.start_isolated_source(
-                "chained_default_struct_views_support_module_qualified_field_types",
+                "chained_direct_struct_carriers_support_module_qualified_field_types",
             );
             runtime.current_module_mut().module_name = "Current".to_string();
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
@@ -2001,9 +1973,9 @@ raw(1).x = 1
 }
 
 #[test]
-fn default_struct_view_is_available_in_set_builder_body() {
+fn direct_struct_carrier_is_available_in_set_builder_body() {
     run_with_large_stack(
-        "default_struct_view_is_available_in_set_builder_body",
+        "direct_struct_carrier_is_available_in_set_builder_body",
         || {
             let source_code = r#"
 struct Point:
@@ -2014,7 +1986,7 @@ have right_half_plane set = {p &Point: p.x >= 0}
 "#;
 
             let mut runtime = Runtime::default();
-            runtime.start_isolated_source("default_struct_view_is_available_in_set_builder_body");
+            runtime.start_isolated_source("direct_struct_carrier_is_available_in_set_builder_body");
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -2073,9 +2045,11 @@ by def $maps_into(R, f, {0})
 }
 
 #[test]
-fn default_struct_view_is_available_for_struct_fields() {
-    run_with_large_stack("default_struct_view_is_available_for_struct_fields", || {
-        let source_code = r#"
+fn direct_struct_carrier_is_available_for_struct_fields() {
+    run_with_large_stack(
+        "direct_struct_carrier_is_available_for_struct_fields",
+        || {
+            let source_code = r#"
 struct Point:
     x R
     y R
@@ -2087,23 +2061,24 @@ struct PointHolder:
         point.x = point.x
 "#;
 
-        let mut runtime = Runtime::default();
-        runtime.start_isolated_source("default_struct_view_is_available_for_struct_fields");
-        let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
-        let (run_succeeded, run_output) =
-            render_run_output(&runtime, &stmt_results, &runtime_error);
+            let mut runtime = Runtime::default();
+            runtime.start_isolated_source("direct_struct_carrier_is_available_for_struct_fields");
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_output(&runtime, &stmt_results, &runtime_error);
 
-        assert!(
-            run_succeeded,
-            "a struct field typed by `&Point` should use that default view in the filter:\n{}",
-            run_output
-        );
-    });
+            assert!(
+                run_succeeded,
+                "a struct field typed by `&Point` should expose that direct carrier in the filter:\n{}",
+                run_output
+            );
+        },
+    );
 }
 
 #[test]
-fn obtain_inherits_default_struct_view() {
-    run_with_large_stack("obtain_inherits_default_struct_view", || {
+fn obtain_inherits_direct_struct_carrier() {
+    run_with_large_stack("obtain_inherits_direct_struct_carrier", || {
         let source_code = r#"
 struct Point:
     x R
@@ -2116,7 +2091,7 @@ point.x = point.x
 "#;
 
         let mut runtime = Runtime::default();
-        runtime.start_isolated_source("obtain_inherits_default_struct_view");
+        runtime.start_isolated_source("obtain_inherits_direct_struct_carrier");
         let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
         let (run_succeeded, run_output) =
             render_run_output(&runtime, &stmt_results, &runtime_error);
@@ -2130,9 +2105,9 @@ point.x = point.x
 }
 
 #[test]
-fn obtain_instantiates_parameterized_default_struct_view_by_symbol_id() {
+fn obtain_instantiates_parameterized_direct_struct_carrier_by_symbol_id() {
     run_with_large_stack(
-        "obtain_instantiates_parameterized_default_struct_view_by_symbol_id",
+        "obtain_instantiates_parameterized_direct_struct_carrier_by_symbol_id",
         || {
             let source_code = r#"
 struct Box<s set>:
@@ -2147,7 +2122,7 @@ box.value = box.value
 
             let mut runtime = Runtime::default();
             runtime.start_isolated_source(
-                "obtain_instantiates_parameterized_default_struct_view_by_symbol_id",
+                "obtain_instantiates_parameterized_direct_struct_carrier_by_symbol_id",
             );
             let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
             let (run_succeeded, run_output) =

@@ -161,16 +161,19 @@ impl Runtime {
         // Parsed set-builder facts use SetBuilder-tagged bound vars; a mismatched tag means
         // e.g. `x $in N` is never found when checking `b ^ x`, so pow domain fails.
         // Run in local env so param binding and body facts do not leak into the outer scope.
-        self.run_in_local_env(|rt| {
+        self.run_in_local_verification_env(verify_state, |rt, local_verify_state| {
             rt.verify_child_obj_well_defined_and_store_cache(
                 &x.param_set,
-                &VerifyState::initial(),
+                local_verify_state,
                 WellDefinedObjChildRole::BinderParameterCarrier {
                     parameter_group_index: 0,
                 },
             )?;
-            if let Err(e) = rt.store_parameter_binding(&x.param_binding, BindingScope::LocalBinder)
-            {
+            if let Err(e) = rt.store_set_bound_parameter_binding(
+                &x.param_binding,
+                BindingScope::LocalBinder,
+                &x.param_set,
+            ) {
                 return Err(RuntimeError::from(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_cause(
                         format!("failed to verify well-defined of set builder {}", x),
@@ -185,8 +188,9 @@ impl Runtime {
             )
             .into();
             let mut parameter_infers = rt
-                .store_with_well_defined_verification_and_infer_with_default_verify_state(
+                .store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
                     param_in_set,
+                    local_verify_state.inference_state(),
                 )
                 .map_err(|e| {
                     RuntimeError::from(WellDefinedRuntimeError(
@@ -203,22 +207,22 @@ impl Runtime {
                     QuantifierFreeFact::AtomicFact(f) => rt
                         .store_quantifier_free_fact_with_well_defined_verification_and_infer(
                             &QuantifierFreeFact::AtomicFact(f.clone()),
-                            verify_state,
+                            local_verify_state,
                         ),
                     QuantifierFreeFact::AndFact(f) => rt
                         .store_quantifier_free_fact_with_well_defined_verification_and_infer(
                             &QuantifierFreeFact::AndFact(f.clone()),
-                            verify_state,
+                            local_verify_state,
                         ),
                     QuantifierFreeFact::ChainFact(f) => rt
                         .store_quantifier_free_fact_with_well_defined_verification_and_infer(
                             &QuantifierFreeFact::ChainFact(f.clone()),
-                            verify_state,
+                            local_verify_state,
                         ),
                     QuantifierFreeFact::OrFact(f) => rt
                         .store_quantifier_free_fact_with_well_defined_verification_and_infer(
                             &QuantifierFreeFact::OrFact(f.clone()),
-                            verify_state,
+                            local_verify_state,
                         ),
                 }
                 .map_err(|e| {
@@ -332,13 +336,13 @@ impl Runtime {
             return self.verify_anonymous_fn_well_defined(&renamed, verify_state);
         }
 
-        self.run_in_local_env(|rt| {
+        self.run_in_local_verification_env(verify_state, |rt, local_verify_state| {
             for (parameter_group_index, param_def_with_set) in
                 x.body.set_bound_parameters.iter().enumerate()
             {
                 rt.verify_child_obj_well_defined_and_store_cache(
                     param_def_with_set.set_obj(),
-                    verify_state,
+                    local_verify_state,
                     WellDefinedObjChildRole::BinderParameterCarrier {
                         parameter_group_index,
                     },
@@ -365,7 +369,7 @@ impl Runtime {
                 let mut domain_infers = rt
                     .store_quantifier_free_fact_with_well_defined_verification_and_infer(
                         fact,
-                        verify_state,
+                        local_verify_state,
                     )
                     .map_err(|e| {
                         RuntimeError::from(WellDefinedRuntimeError(
@@ -383,7 +387,7 @@ impl Runtime {
 
             if let Err(e) = rt.verify_child_obj_well_defined_and_store_cache(
                 &x.body.ret_set,
-                verify_state,
+                local_verify_state,
                 WellDefinedObjChildRole::BinderReturnCarrier,
             ) {
                 return Err(RuntimeError::from(WellDefinedRuntimeError(
@@ -399,7 +403,7 @@ impl Runtime {
 
             if let Err(e) = rt.verify_child_obj_well_defined_and_store_cache(
                 &x.equal_to,
-                verify_state,
+                local_verify_state,
                 WellDefinedObjChildRole::BinderBody,
             ) {
                 return Err(RuntimeError::from(WellDefinedRuntimeError(
@@ -416,9 +420,9 @@ impl Runtime {
             let mut return_value_verified = !rt
                 .verify_value_in_definition_return_set(
                 (*x.equal_to).clone(),
-                (*x.body.ret_set).clone(),
-                default_line_file(),
-                verify_state,
+                    (*x.body.ret_set).clone(),
+                    default_line_file(),
+                    local_verify_state,
             )?
                 .is_unknown();
             if !return_value_verified {
@@ -438,7 +442,8 @@ impl Runtime {
                             default_line_file(),
                         )
                         .into();
-                        let subset_result = rt.verify_atomic_fact(&subset_fact, verify_state)?;
+                        let subset_result =
+                            rt.verify_atomic_fact(&subset_fact, local_verify_state)?;
                         if subset_result.is_success() {
                             return_value_verified = true;
                             break 'parameter_groups;
@@ -939,16 +944,22 @@ impl Runtime {
             let renamed = self.alpha_rename_set_builder(value, &rename_map)?;
             return self.verify_set_builder_well_defined_result(&renamed, verify_state);
         }
-        self.run_in_local_env(|runtime| {
+        self.run_in_local_verification_env(
+            verify_state,
+            |runtime, local_verify_state| {
             let parameter_carrier = runtime.verify_child_obj_well_defined_result(
                 &value.param_set,
-                &VerifyState::initial(),
+                local_verify_state,
                 WellDefinedObjChildRole::BinderParameterCarrier {
                     parameter_group_index: 0,
                 },
             )?;
             runtime
-                .store_parameter_binding(&value.param_binding, BindingScope::LocalBinder)
+                .store_set_bound_parameter_binding(
+                    &value.param_binding,
+                    BindingScope::LocalBinder,
+                    &value.param_set,
+                )
                 .map_err(|error| {
                     RuntimeError::from(WellDefinedRuntimeError(
                         RuntimeErrorStruct::new_with_msg_and_cause(
@@ -965,14 +976,15 @@ impl Runtime {
             )
             .into();
             let parameter_well_definedness =
-                runtime.verify_fact_well_defined_result(&parameter_fact, verify_state)?;
+                runtime.verify_fact_well_defined_result(&parameter_fact, local_verify_state)?;
             let Fact::AtomicFact(parameter_atomic_fact) = parameter_fact.clone() else {
                 unreachable!("set-builder parameter membership is atomic")
             };
             let mut parameter_infers = runtime
-                .store_atomic_fact_without_well_defined_verified_and_infer_with_reason(
+                .store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
                     parameter_atomic_fact,
                     InferReason::ParameterDefinition.store_reason(),
+                    local_verify_state.inference_state(),
                 )?;
             runtime.attach_known_fact_ids_to_infer_result(&mut parameter_infers)?;
             let parameter = SuccessVerifyBinderPremiseResult::new(
@@ -990,10 +1002,12 @@ impl Runtime {
             for (condition_index, condition) in value.facts.iter().enumerate() {
                 let condition_fact: Fact = condition.clone().into();
                 let well_definedness =
-                    runtime.verify_fact_well_defined_result(&condition_fact, verify_state)?;
+                    runtime.verify_fact_well_defined_result(&condition_fact, local_verify_state)?;
                 let mut infers = runtime
-                    .store_quantifier_free_fact_without_well_defined_verified_and_infer(
+                    .store_quantifier_free_fact_without_well_defined_verified_and_infer_with_reason_and_state(
                         condition.clone(),
+                        InferReason::StoredFact.store_reason(),
+                        local_verify_state.inference_state(),
                     )?;
                 runtime.attach_known_fact_ids_to_infer_result(&mut infers)?;
                 let fact_id = runtime.known_fact_id_for_fact(&condition_fact)?;
@@ -1019,7 +1033,8 @@ impl Runtime {
                 )),
             ));
             Ok(steps)
-        })
+        },
+        )
     }
 
     pub(in crate::verification) fn verify_fn_set_well_defined_result(
@@ -1033,16 +1048,16 @@ impl Runtime {
             let renamed = self.alpha_rename_fn_set(value, &rename_map)?;
             return self.verify_fn_set_well_defined_result(&renamed, verify_state);
         }
-        self.run_in_local_env(|runtime| {
+        self.run_in_local_verification_env(verify_state, |runtime, local_verify_state| {
             let (parameter_carriers, parameters, domains) = runtime
                 .verify_fn_binder_inputs_result(
                     &value.body.set_bound_parameters,
                     &value.body.dom_facts,
-                    verify_state,
+                    local_verify_state,
                 )?;
             let return_carrier = runtime.verify_child_obj_well_defined_result(
                 &value.body.ret_set,
-                verify_state,
+                local_verify_state,
                 WellDefinedObjChildRole::BinderReturnCarrier,
             )?;
             let mut steps = SuccessVerifyObjWellDefinedStepsResult::new();
@@ -1071,21 +1086,23 @@ impl Runtime {
             let renamed = self.alpha_rename_anonymous_fn(value, &rename_map)?;
             return self.verify_anonymous_fn_well_defined_result(&renamed, verify_state);
         }
-        self.run_in_local_env(|runtime| {
+        self.run_in_local_verification_env(
+            verify_state,
+            |runtime, local_verify_state| {
             let (parameter_carriers, parameters, domains) = runtime
                 .verify_fn_binder_inputs_result(
                     &value.body.set_bound_parameters,
                     &value.body.dom_facts,
-                    verify_state,
+                    local_verify_state,
                 )?;
             let return_carrier = runtime.verify_child_obj_well_defined_result(
                 &value.body.ret_set,
-                verify_state,
+                local_verify_state,
                 WellDefinedObjChildRole::BinderReturnCarrier,
             )?;
             let body = runtime.verify_child_obj_well_defined_result(
                 &value.equal_to,
-                verify_state,
+                local_verify_state,
                 WellDefinedObjChildRole::BinderBody,
             )?;
             let parent: Obj = value.clone().into();
@@ -1093,7 +1110,7 @@ impl Runtime {
                 (*value.equal_to).clone(),
                 (*value.body.ret_set).clone(),
                 default_line_file(),
-                verify_state,
+                local_verify_state,
             )?;
             let body_membership = if direct_membership.is_success() {
                 super::success_obj_target_requirement(
@@ -1121,7 +1138,7 @@ impl Runtime {
                             default_line_file(),
                         )
                         .into();
-                        let result = runtime.verify_atomic_fact(&subset, verify_state)?;
+                        let result = runtime.verify_atomic_fact(&subset, local_verify_state)?;
                         if result.is_success() {
                             subset_result = Some(super::success_obj_target_requirement(
                                 value.clone().into(),
@@ -1158,7 +1175,8 @@ impl Runtime {
                 )),
             ));
             Ok(steps)
-        })
+        },
+        )
     }
 
     pub(in crate::verification) fn verify_fn_binder_inputs_result(
@@ -1185,7 +1203,11 @@ impl Runtime {
                 },
             )?);
             for (parameter_index, binding) in group.params.iter().enumerate() {
-                self.store_parameter_binding(binding, BindingScope::LocalBinder)?;
+                self.store_set_bound_parameter_binding(
+                    binding,
+                    BindingScope::LocalBinder,
+                    group.set_obj(),
+                )?;
                 let proposition: Fact = InFact::new(
                     obj_for_bound_param_in_scope(binding),
                     group.set_obj().clone(),
@@ -1198,9 +1220,10 @@ impl Runtime {
                     unreachable!("function parameter membership is atomic")
                 };
                 let mut infers = self
-                    .store_atomic_fact_without_well_defined_verified_and_infer_with_reason(
+                    .store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
                         atomic,
                         InferReason::ParameterDefinition.store_reason(),
+                        verify_state.inference_state(),
                     )?;
                 self.attach_known_fact_ids_to_infer_result(&mut infers)?;
                 parameters.push(SuccessVerifyBinderPremiseResult::new(
@@ -1222,8 +1245,10 @@ impl Runtime {
             let well_definedness =
                 self.verify_fact_well_defined_result(&proposition, verify_state)?;
             let mut infers = self
-                .store_quantifier_free_fact_without_well_defined_verified_and_infer(
+                .store_quantifier_free_fact_without_well_defined_verified_and_infer_with_reason_and_state(
                     domain.clone(),
+                    InferReason::StoredFact.store_reason(),
+                    verify_state.inference_state(),
                 )?;
             self.attach_known_fact_ids_to_infer_result(&mut infers)?;
             domains.push(SuccessVerifyBinderPremiseResult::new(

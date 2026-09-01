@@ -12,135 +12,13 @@ impl Runtime {
             tb.skip_token(RIGHT_BRACE)?;
             return Ok(vec![]);
         }
-        let mut objs = self.parse_call_argument_or_unfold(tb)?;
+        let mut objs = vec![self.parse_obj(tb)?];
         while tb.current_token_is_equal_to(COMMA) {
             tb.skip_token(COMMA)?;
-            objs.extend(self.parse_call_argument_or_unfold(tb)?);
+            objs.push(self.parse_obj(tb)?);
         }
         tb.skip_token(RIGHT_BRACE)?;
         Ok(objs)
-    }
-
-    /// `unfold value` is an argument-list spread. A tuple literal contributes
-    /// its elements; a struct-defined value contributes its defined fields in source
-    /// order. Struct header parameters and `<=>:` facts are never arguments.
-    /// Example: `f(unfold pair, unfold group)`.
-    fn parse_call_argument_or_unfold(
-        &mut self,
-        tb: &mut TokenBlock,
-    ) -> Result<Vec<Obj>, RuntimeError> {
-        if !tb.current_token_is_equal_to(UNFOLD) {
-            return Ok(vec![self.parse_obj(tb)?]);
-        }
-
-        self.parse_unfold_call_argument(tb)
-    }
-
-    // Keep the comparatively large unfold/error path out of the ordinary
-    // braced-object parser frame. Parser recursion is already deep for nested
-    // set builders and function signatures, and Rust's test threads use a
-    // deliberately small default stack.
-    #[inline(never)]
-    fn parse_unfold_call_argument(
-        &mut self,
-        tb: &mut TokenBlock,
-    ) -> Result<Vec<Obj>, RuntimeError> {
-        let line_file = tb.line_file.clone();
-        tb.skip_token(UNFOLD)?;
-        if tb.exceed_end_of_head()
-            || tb.current_token_is_equal_to(COMMA)
-            || tb.current_token_is_equal_to(RIGHT_BRACE)
-        {
-            return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "unfold expects a tuple value or an object defined with a struct carrier"
-                        .to_string(),
-                    line_file,
-                ),
-            )));
-        }
-
-        let obj = self.parse_obj(tb)?;
-
-        if let Obj::Tuple(tuple) = &obj {
-            return Ok(tuple.args.iter().map(|arg| arg.as_ref().clone()).collect());
-        }
-
-        // A definition-owned struct carrier wins over tuple facts learned
-        // later. In particular, materializing a template instance may expose
-        // its tuple constructor, but `unfold` must still preserve the fields
-        // selected by the template body's direct definition.
-        if let Ok(struct_obj) = self.struct_view_for_field_access_receiver(&obj, line_file.clone())
-        {
-            return self.struct_field_arguments_for_unfold(&obj, struct_obj, line_file);
-        }
-
-        let known_tuple_arity = self
-            .get_obj_equal_to_tuple(&obj)
-            .map(|tuple| tuple.args.len())
-            .or_else(|| {
-                let symbol = match &obj {
-                    Obj::Atom(atom) => atom.symbol_ref(),
-                    _ => None,
-                }?;
-                self.default_tuple_view_for_symbol(symbol)
-                    .map(|cart| cart.args.len())
-            })
-            .or_else(|| self.get_obj_tuple_cart(&obj).map(|cart| cart.args.len()));
-        if let Some(arity) = known_tuple_arity {
-            return Ok((1..=arity)
-                .map(|index| {
-                    ObjAtIndex::new(obj.clone(), Number::new(index.to_string()).into()).into()
-                })
-                .collect());
-        }
-
-        let struct_obj = self
-            .struct_view_for_field_access_receiver(&obj, line_file.clone())
-            .map_err(|cause| {
-                RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    "unfold expects a tuple with compile-time arity or an object whose definition has a direct `&Struct` carrier"
-                        .to_string(),
-                    line_file.clone(),
-                    Some(cause),
-                    vec![],
-                )))
-            })?;
-        self.struct_field_arguments_for_unfold(&obj, struct_obj, line_file)
-    }
-
-    fn struct_field_arguments_for_unfold(
-        &self,
-        obj: &Obj,
-        struct_obj: StructObj,
-        line_file: LineFile,
-    ) -> Result<Vec<Obj>, RuntimeError> {
-        let struct_name = struct_obj.name.to_string();
-        let definition = self
-            .get_struct_definition_by_name(&struct_name)
-            .or_else(|| self.parsed_struct_definition_by_name(&struct_name))
-            .ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        format!("cannot unfold undefined struct `{}`", struct_name),
-                        line_file.clone(),
-                    ),
-                ))
-            })?;
-
-        Ok(definition
-            .fields
-            .iter()
-            .map(|field| {
-                ObjAsStructInstanceWithFieldAccess::new(
-                    struct_obj.clone(),
-                    obj.clone(),
-                    field.name().to_string(),
-                )
-                .into()
-            })
-            .collect())
     }
 
     pub(super) fn parse_two_sided_interval_literal(
@@ -467,11 +345,8 @@ impl Runtime {
                 tb.line_file.clone(),
             )?;
             let parsed = (|| -> Result<Obj, RuntimeError> {
-                let (second, default_struct_view) = this.parse_obj_with_default_struct_view(tb)?;
+                let second = this.parse_obj(tb)?;
                 if tb.current()? == COLON {
-                    if let Some(struct_obj) = default_struct_view.as_ref() {
-                        this.register_default_struct_view(&bindings, struct_obj);
-                    }
                     tb.skip_token(COLON)?;
 
                     let user_names = vec![a.name.clone()];

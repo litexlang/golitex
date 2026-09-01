@@ -26,9 +26,13 @@ impl Runtime {
             return Ok((UnknownGenericStmtResult::new()).into());
         }
 
+        let struct_obj = self.direct_struct_owner_carrier_for_field_access(
+            field_access,
+            in_fact.line_file.clone(),
+        )?;
         let receiver_membership: AtomicFact = InFact::new(
             (*field_access.obj).clone(),
-            (*field_access.struct_obj).clone().into(),
+            struct_obj.into(),
             in_fact.line_file.clone(),
         )
         .into();

@@ -404,7 +404,7 @@ fn rolled_back_try_output_is_detailed_in_every_style() {
             .to_string();
         assert!(rollback_event.contains("\"ok\":true"));
         assert!(rollback_event.contains("\"kind\":\"RolledBack\""));
-        assert!(rollback_event.contains("\"phases\":{"));
+        assert!(!rollback_event.contains("\"phases\":"));
         assert!(rollback_event.contains("\"previous_error\":"));
         assert!(rollback_event.contains("\"failed_goal\":\"1 = 0\""));
         assert!(rollback_event.contains("\"unknown_result\":"));

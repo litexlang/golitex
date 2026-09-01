@@ -21,10 +21,15 @@ impl StmtResult {
         if let Some(success) = self.factual_success() {
             success.infers.clone()
         } else if let StmtResult::Success(success) = self {
-            success
-                .common()
-                .map(|common| common.infers.clone())
-                .unwrap_or_else(SuccessInferResult::new)
+            match success {
+                SuccessStmtResult::ProofBlock(SuccessProofBlockStmtResult::ClaimStmt(claim)) => {
+                    claim.environment_effects.clone()
+                }
+                _ => success
+                    .common()
+                    .map(|common| common.infers.clone())
+                    .unwrap_or_else(SuccessInferResult::new),
+            }
         } else {
             SuccessInferResult::new()
         }

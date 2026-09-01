@@ -464,13 +464,10 @@ fn ordinary_claim_result_mut(results: &mut [StmtResult]) -> &mut SuccessClaimStm
 fn local_claim_proof_step_store_keeps_its_local_fact_id_after_outer_store() {
     let mut results = execute_ordinary_claim();
     let claim = ordinary_claim_result_mut(&mut results);
-    let outer_fact_id = claim.common.infers.store_fact_outputs[0]
+    let outer_fact_id = claim.environment_effects.store_fact_outputs[0]
         .fact_id
         .expect("claim outer store has a FactId");
-    let Some(SuccessVerifyClaimResult::Fact(verification)) = &claim.verification else {
-        panic!("ordinary claim retains ordinary-fact verification")
-    };
-    let local = verification.proof_steps[0]
+    let local = claim.proof_steps[0]
         .factual_success()
         .expect("claim proof step is factual");
     let local_fact_id = local
@@ -483,8 +480,7 @@ fn local_claim_proof_step_store_keeps_its_local_fact_id_after_outer_store() {
         local.store.infers.store_fact_outputs[0].fact_id,
         Some(local_fact_id)
     );
-    let SuccessFactProofResult::StoredFactCitation(citation) = verification
-        .conclusion_check
+    let SuccessFactProofResult::StoredFactCitation(citation) = claim.conclusion_checks[0]
         .factual_success()
         .expect("claim conclusion is factual")
         .proof()
@@ -519,8 +515,8 @@ fn ordinary_claim_and_example_compile_directly_from_recursive_results() {
         .compile_example_stmt_result_to_lean_source(example)
         .expect("direct example compilation succeeds"));
     assert!(compiler.declarations[0].contains("theorem __fact0"));
-    assert!(compiler.declarations[0].contains("have __step1"));
-    assert!(compiler.declarations[0].contains("exact __step1"));
+    assert!(compiler.declarations[0].contains("have __step"));
+    assert!(compiler.declarations[0].contains("exact __step"));
     assert!(compiler.declarations[1].starts_with("example :"));
     assert!(compiler.declarations[1].contains("have __step1"));
 }
@@ -529,13 +525,10 @@ fn ordinary_claim_and_example_compile_directly_from_recursive_results() {
 fn direct_claim_compiler_rejects_a_local_store_retargeted_to_the_outer_fact_id() {
     let mut results = execute_ordinary_claim();
     let claim = ordinary_claim_result_mut(&mut results);
-    let outer_fact_id = claim.common.infers.store_fact_outputs[0]
+    let outer_fact_id = claim.environment_effects.store_fact_outputs[0]
         .fact_id
         .expect("claim outer store has a FactId");
-    let Some(SuccessVerifyClaimResult::Fact(verification)) = &mut claim.verification else {
-        panic!("ordinary claim retains ordinary-fact verification")
-    };
-    verification.proof_steps[0]
+    claim.proof_steps[0]
         .factual_success_mut()
         .expect("claim proof step is factual")
         .store

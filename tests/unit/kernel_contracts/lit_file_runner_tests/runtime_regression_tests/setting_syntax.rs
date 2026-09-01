@@ -357,7 +357,7 @@ forall [OneElement(Y, y)]:
 }
 
 #[test]
-fn setting_expansion_replays_parameterized_default_struct_views() {
+fn setting_expansion_replays_parameterized_direct_struct_carriers() {
     let source = r#"
 struct Box<s set>:
     value s
@@ -371,16 +371,16 @@ forall [BoxSetting]:
 forall [BoxSetting]:
     box.value = box.value
 "#;
-    let (succeeded, output) = run_setting_source(source, "setting_default_struct_view");
+    let (succeeded, output) = run_setting_source(source, "setting_direct_struct_carrier");
     assert!(
         succeeded,
-        "setting expansion should replay each fresh binder's instantiated default struct view:\n{}",
+        "setting expansion should replay each fresh binder's instantiated direct struct carrier:\n{}",
         output
     );
 }
 
 #[test]
-fn setting_expansion_does_not_invent_default_struct_views() {
+fn setting_expansion_does_not_invent_direct_struct_carriers() {
     let source = r#"
 struct Point:
     x R
@@ -391,10 +391,10 @@ setting UntypedPoint(point set)
 forall [UntypedPoint]:
     point.x = point.x
 "#;
-    let (succeeded, output) = run_setting_source(source, "setting_without_default_struct_view");
+    let (succeeded, output) = run_setting_source(source, "setting_without_direct_struct_carrier");
     assert!(
         !succeeded,
-        "an untyped setting parameter must not acquire a default struct view:\n{}",
+        "an untyped setting parameter must not acquire a direct struct carrier:\n{}",
         output
     );
     assert!(output.contains("definition-time struct carrier"));

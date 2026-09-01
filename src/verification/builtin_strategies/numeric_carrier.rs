@@ -7,6 +7,7 @@ impl Runtime {
     pub fn verify_numeric_carrier_with_builtin_strategy(
         &mut self,
         fact: &InFact,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let Obj::StandardSet(target) = &fact.set else {
             return Ok(UnknownGenericStmtResult::new().into());
@@ -26,7 +27,8 @@ impl Runtime {
                     size.set.as_ref().clone(),
                     lf.clone(),
                 ))];
-                let Some(children) = self.verify_numeric_carrier_strategy_children(&required)?
+                let Some(children) =
+                    self.verify_numeric_carrier_strategy_children(&required, verify_state)?
                 else {
                     return Ok(UnknownGenericStmtResult::new().into());
                 };
@@ -42,8 +44,12 @@ impl Runtime {
                 );
             }
             if let Some(set) = extremum_set {
-                let Some(children) =
-                    self.verify_set_elements_in_numeric_carrier_strategy(set, target, &lf)?
+                let Some(children) = self.verify_set_elements_in_numeric_carrier_strategy(
+                    set,
+                    target,
+                    &lf,
+                    verify_state,
+                )?
                 else {
                     return Ok(UnknownGenericStmtResult::new().into());
                 };
@@ -60,7 +66,9 @@ impl Runtime {
             }
         }
         if let Some(required) = self.refined_numeric_carrier_children(fact, target, &lf) {
-            let Some(children) = self.verify_numeric_carrier_strategy_children(&required)? else {
+            let Some(children) =
+                self.verify_numeric_carrier_strategy_children(&required, verify_state)?
+            else {
                 return Ok(UnknownGenericStmtResult::new().into());
             };
             return Ok(
@@ -86,14 +94,16 @@ impl Runtime {
             StandardSet::Z => self.integer_carrier_children(&fact.element, &lf),
             StandardSet::N => self.natural_carrier_children(&fact.element, &lf),
             StandardSet::NPos => {
-                return self.verify_positive_natural_carrier_strategy(fact);
+                return self.verify_positive_natural_carrier_strategy(fact, verify_state);
             }
             _ => None,
         };
         let Some(required) = required else {
             return Ok(UnknownGenericStmtResult::new().into());
         };
-        let Some(children) = self.verify_numeric_carrier_strategy_children(&required)? else {
+        let Some(children) =
+            self.verify_numeric_carrier_strategy_children(&required, verify_state)?
+        else {
             return Ok(UnknownGenericStmtResult::new().into());
         };
         let real_rule = if matches!(target, StandardSet::R) {
@@ -360,6 +370,7 @@ impl Runtime {
     fn verify_positive_natural_carrier_strategy(
         &mut self,
         fact: &InFact,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let lf = fact.line_file.clone();
         let n: Obj = StandardSet::N.into();
@@ -410,7 +421,9 @@ impl Runtime {
         };
 
         for required in alternatives {
-            if let Some(children) = self.verify_numeric_carrier_strategy_children(&required)? {
+            if let Some(children) =
+                self.verify_numeric_carrier_strategy_children(&required, verify_state)?
+            {
                 return Ok(
                     SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                         fact.clone().into(),
@@ -428,10 +441,11 @@ impl Runtime {
     fn verify_numeric_carrier_strategy_children(
         &mut self,
         required: &[AtomicFact],
+        verify_state: &VerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         let mut results = Vec::with_capacity(required.len());
         for child in required {
-            let result = self.verify_builtin_strategy_child(child)?;
+            let result = self.verify_builtin_strategy_child(child, verify_state)?;
             if !result.is_success() {
                 return Ok(None);
             }
@@ -445,11 +459,13 @@ impl Runtime {
         set: &Obj,
         target: &StandardSet,
         lf: &LineFile,
+        verify_state: &VerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         let target_obj: Obj = target.clone().into();
         let subset: AtomicFact =
             SubsetFact::new(set.clone(), target_obj.clone(), lf.clone()).into();
-        let direct = self.verify_non_equational_atomic_fact_with_bounded_builtin_routes(&subset)?;
+        let direct = self
+            .verify_non_equational_atomic_fact_with_bounded_builtin_routes(&subset, verify_state)?;
         if direct.is_success() {
             return Ok(Some(vec![direct]));
         }
@@ -461,15 +477,21 @@ impl Runtime {
                     let child: AtomicFact =
                         InFact::new(element.as_ref().clone(), target_obj.clone(), lf.clone())
                             .into();
-                    let direct =
-                        self.verify_non_equational_atomic_fact_with_bounded_builtin_routes(&child)?;
+                    let direct = self
+                        .verify_non_equational_atomic_fact_with_bounded_builtin_routes(
+                            &child,
+                            verify_state,
+                        )?;
                     let result = if direct.is_success() {
                         direct
                     } else {
                         let AtomicFact::InFact(child_fact) = child else {
                             unreachable!("constructed a membership fact")
                         };
-                        self.verify_numeric_carrier_with_builtin_strategy(&child_fact)?
+                        self.verify_numeric_carrier_with_builtin_strategy(
+                            &child_fact,
+                            verify_state,
+                        )?
                     };
                     if !result.is_success() {
                         return Ok(None);
@@ -479,8 +501,13 @@ impl Runtime {
             }
             Obj::Union(x) => {
                 for child in [x.left.as_ref(), x.right.as_ref()] {
-                    let Some(mut child_results) =
-                        self.verify_set_elements_in_numeric_carrier_strategy(child, target, lf)?
+                    let Some(mut child_results) = self
+                        .verify_set_elements_in_numeric_carrier_strategy(
+                            child,
+                            target,
+                            lf,
+                            verify_state,
+                        )?
                     else {
                         return Ok(None);
                     };
@@ -489,7 +516,12 @@ impl Runtime {
             }
             Obj::Intersect(x) => {
                 let Some(mut child_results) = self
-                    .verify_set_elements_in_numeric_carrier_strategy(x.left.as_ref(), target, lf)?
+                    .verify_set_elements_in_numeric_carrier_strategy(
+                        x.left.as_ref(),
+                        target,
+                        lf,
+                        verify_state,
+                    )?
                 else {
                     return Ok(None);
                 };
@@ -497,7 +529,12 @@ impl Runtime {
             }
             Obj::SetMinus(x) => {
                 let Some(mut child_results) = self
-                    .verify_set_elements_in_numeric_carrier_strategy(x.left.as_ref(), target, lf)?
+                    .verify_set_elements_in_numeric_carrier_strategy(
+                        x.left.as_ref(),
+                        target,
+                        lf,
+                        verify_state,
+                    )?
                 else {
                     return Ok(None);
                 };
@@ -509,6 +546,7 @@ impl Runtime {
                         x.param_set.as_ref(),
                         target,
                         lf,
+                        verify_state,
                     )?
                 else {
                     return Ok(None);

@@ -474,9 +474,6 @@ fn mark_forall_param_coverage_in_obj(
             }
         }
         Obj::ObjAsStructInstanceWithFieldAccess(field_access) => {
-            for o in field_access.struct_obj.params.iter() {
-                mark_forall_param_coverage_in_obj(o, coverage_by_forall_param);
-            }
             mark_forall_param_coverage_in_obj(field_access.obj.as_ref(), coverage_by_forall_param);
         }
         Obj::InstantiatedTemplateObj(template_obj) => {

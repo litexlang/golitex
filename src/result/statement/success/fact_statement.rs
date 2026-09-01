@@ -11,7 +11,6 @@ pub struct SuccessFactStmtResult {
     pub verification: Rc<SuccessVerifyFactResult>,
     pub well_definedness: SuccessVerifyFactWellDefinedResult,
     pub store: SuccessStoreFactResult,
-    pub execution_trace: Option<StatementExecutionTrace>,
 }
 
 impl SuccessFactStmtResult {
@@ -20,7 +19,6 @@ impl SuccessFactStmtResult {
             verification: Rc::new(SuccessVerifyFactResult::new(statement.clone(), proof)),
             well_definedness: SuccessVerifyFactWellDefinedResult::default(),
             store: SuccessStoreFactResult::new(statement, infers),
-            execution_trace: None,
         }
     }
 
@@ -64,7 +62,6 @@ impl fmt::Debug for SuccessFactStmtResult {
             .field("verification", &self.verification)
             .field("well_definedness", &self.well_definedness)
             .field("store", &self.store)
-            .field("execution_trace", &self.execution_trace)
             .finish()
     }
 }

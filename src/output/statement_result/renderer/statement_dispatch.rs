@@ -71,13 +71,10 @@ impl StatementResultRenderer {
     }
 
     pub(in super::super) fn common(&mut self, common: &SuccessStmtCommonResult) -> JsonValue {
-        object(vec![
-            ("infers".to_string(), infer_result_value(&common.infers)),
-            (
-                "execution_trace".to_string(),
-                optional_trace(common.execution_trace.as_ref()),
-            ),
-        ])
+        object(vec![(
+            "infers".to_string(),
+            infer_result_value(&common.infers),
+        )])
     }
 
     pub(in super::super) fn stmt_results(&mut self, results: &[StmtResult]) -> JsonValue {

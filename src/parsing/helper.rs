@@ -106,12 +106,6 @@ impl Runtime {
             let group_names = target_names[target_index..target_index + group_len].to_vec();
             let target_bindings =
                 self.begin_parsing_scope(target_scope, &group_names, tb.line_file.clone())?;
-            if let ParamType::Obj(Obj::StructObj(struct_obj)) = &instantiated_type {
-                self.register_default_struct_view(&target_bindings, struct_obj);
-            }
-            if let ParamType::Obj(Obj::Cart(cart)) = &instantiated_type {
-                self.register_default_tuple_view(&target_bindings, cart);
-            }
             for (source, target) in source_group.params.iter().zip(target_bindings.iter()) {
                 insert_symbol_substitution(
                     &mut source_to_target,

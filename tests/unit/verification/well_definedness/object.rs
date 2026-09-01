@@ -32,9 +32,10 @@ fn ordinary_well_definedness_keeps_historical_active_reentry_suppression() {
     let mut runtime = Runtime::default();
     runtime.start_isolated_source("ordinary-active-wd-reentry.lit");
     let object: Obj = Number::new("1".to_string()).into();
-    runtime.begin_well_defined_object(&obj_equality_key(&object));
+    let verify_state = VerifyState::initial();
+    verify_state.begin_well_defined_object(&obj_equality_key(&object));
 
     runtime
-        .verify_obj_well_defined_and_store_cache(&object, &VerifyState::initial())
+        .verify_obj_well_defined_and_store_cache(&object, &verify_state)
         .expect("ordinary Litex verification should retain active-object suppression");
 }

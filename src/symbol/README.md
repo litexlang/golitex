@@ -22,11 +22,11 @@ alpha-key both first parameter slots as binder #0
 | Substitute | Instantiating `forall x R:` / `x = x` with `1` maps its binder symbol to object `1`. |
 | Reject duplicate definition | Defining `a` twice in the same scope raises a name-used error. |
 | Compare binders | `fn(x R) R {x}` and `fn(y R) R {y}` are alpha-equivalent despite different source names. |
-| Preserve a definition type | After `have point &Point = (1, 2)`, the exact definition of `point` owns its struct view. An exported `main::point.left` resolves that view by the same `SymbolId`; it does not infer a definition type from later membership or equality facts. |
+| Preserve a direct carrier | After `have point &Point = (1, 2)`, execution records `&Point` on the exact definition of `point`. An exported `main::point.left` resolves that carrier by the same `SymbolId`; it does not infer named-field access from later membership or equality facts. |
 
 Start with [`symbol_registry.rs`](symbol_registry.rs); for example,
 `SymbolTable` maps a visible name to a `SymbolBinding` containing its stable
 `SymbolId`. `SymbolDefinition` pairs that binding with its definition role and
-the optional struct/tuple views recorded by the definition. The parser keeps
-the same views temporarily before execution; successful symbol storage freezes
-them into the definition that is cloned or exported with its environment.
+the optional direct struct carrier recorded by execution. The parser does not
+record carrier maps or embed a selected struct in field-access syntax; the
+executed definition is cloned or exported with its environment.

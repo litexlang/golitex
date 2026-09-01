@@ -1,4 +1,4 @@
-//! Inference and execution-trace envelope shared by successful statements.
+//! Inference result shared by successful non-factual statements.
 
 use crate::prelude::*;
 
@@ -8,14 +8,10 @@ use crate::prelude::*;
 #[derive(Debug)]
 pub struct SuccessStmtCommonResult {
     pub infers: SuccessInferResult,
-    pub execution_trace: Option<StatementExecutionTrace>,
 }
 
 impl SuccessStmtCommonResult {
     pub fn new(infers: SuccessInferResult) -> Self {
-        Self {
-            infers,
-            execution_trace: None,
-        }
+        Self { infers }
     }
 }

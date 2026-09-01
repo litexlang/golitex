@@ -550,7 +550,9 @@ impl Runtime {
             );
         }
 
-        if let Some(result) = self.try_verify_integer_discrete_split_or_builtin_rule(or_fact)? {
+        if let Some(result) =
+            self.try_verify_integer_discrete_split_or_builtin_rule(or_fact, verify_state)?
+        {
             return Ok(result);
         }
 
@@ -637,12 +639,13 @@ impl Runtime {
             let Ok(assumed_opposite) = disjunction_branch.logical_negation() else {
                 continue;
             };
-            let conclusion_result = self.run_in_local_env(|rt| {
-                rt.store_and_chain_atomic_fact_without_well_defined_verified_and_infer(
-                    assumed_opposite.clone().into(),
-                )?;
-                rt.verify_atomic_fact(conclusion, verify_state)
-            })?;
+            let conclusion_result =
+                self.run_in_local_verification_env(verify_state, |rt, local_verify_state| {
+                    rt.store_and_chain_atomic_fact_without_well_defined_verified_and_infer(
+                        assumed_opposite.clone().into(),
+                    )?;
+                    rt.verify_atomic_fact(conclusion, local_verify_state)
+                })?;
             if conclusion_result.is_success() {
                 return Ok(Some(
                     SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(

@@ -25,7 +25,7 @@ impl Environment {
                         .symbols
                         .get_by_id_mut(existing_symbol_id)
                         .expect("the matching parent symbol should remain present")
-                        .merge_missing_definition_type_views_from(definition);
+                        .merge_missing_direct_struct_carrier_from(definition);
                     self.definitions
                         .symbols
                         .get_by_id_mut(existing_symbol_id)

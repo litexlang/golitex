@@ -156,9 +156,9 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         let choice_fact =
             axiom_of_choice_exist_fact(self, stmt.family.clone(), stmt.line_file.clone())?;
-        let infer_result = self.store_trusted_fact_and_infer_with_reason(
+        let infer_result = self.store_fact_with_trust_and_infer_with_reason(
             choice_fact,
-            InferReason::VerifiedStatement,
+            InferReason::StatementWithVerification,
         )?;
         Ok(
             SuccessByStmtResult::ByAxiomOfChoiceStmt(Box::new(SuccessByAxiomOfChoiceStmtResult {

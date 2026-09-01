@@ -582,6 +582,7 @@ impl Runtime {
             let Some(integer_steps) = self.verify_objects_are_known_integers_in_builtin_leaf(
                 &[dividend, quotient],
                 &line_file,
+                builtin_state.verify_state(),
             )?
             else {
                 continue;

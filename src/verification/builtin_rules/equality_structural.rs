@@ -135,11 +135,6 @@ impl Runtime {
         &self,
         equal_fact: &EqualFact,
     ) -> StmtResult {
-        let goal: AtomicFact = equal_fact.clone().into();
-        if let Some(cached_result) = self.verification_result_from_statement_proof_cache(&goal) {
-            return cached_result;
-        }
-
         let direct_result = self.verify_equal_fact_directly_known_only(equal_fact);
         if direct_result.is_success() {
             return direct_result;
@@ -221,10 +216,6 @@ impl Runtime {
         }
         let direct_evaluation_result = self.verify_equal_fact_by_direct_evaluation(equal_fact);
         if direct_evaluation_result.is_success() {
-            self.cache_successful_atomic_fact_for_statement(
-                &equal_fact.clone().into(),
-                direct_evaluation_result,
-            );
             return Ok(true);
         }
 
@@ -437,16 +428,10 @@ impl Runtime {
                 Obj::ObjAsStructInstanceWithFieldAccess(left),
                 Obj::ObjAsStructInstanceWithFieldAccess(right),
             ) => {
-                if left.field_name != right.field_name
-                    || left.struct_obj.name != right.struct_obj.name
-                    || left.struct_obj.params.len() != right.struct_obj.params.len()
-                {
+                if left.field_name != right.field_name {
                     return Ok(false);
                 }
-                if !compare(left.obj.as_ref(), right.obj.as_ref())? {
-                    return Ok(false);
-                }
-                compare_slices!(left.struct_obj.params, right.struct_obj.params)
+                compare(left.obj.as_ref(), right.obj.as_ref())
             }
             (Obj::FnObj(left), Obj::FnObj(right)) => {
                 let mut left_group_count = left.body.len();

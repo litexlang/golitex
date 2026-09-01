@@ -29,7 +29,6 @@ impl FnObjHead {
                 );
             }
             FnObjHead::ObjAsStructInstanceWithFieldAccess(field_access) => {
-                collect_forall_free_param_names_in_objs(&field_access.struct_obj.params, collector);
                 field_access.obj.collect_free_param_names_into(collector);
             }
             FnObjHead::InstantiatedTemplateObj(template) => {
@@ -223,7 +222,6 @@ impl Obj {
             }
             Obj::StructObj(x) => collect_forall_free_param_names_in_objs(&x.params, collector),
             Obj::ObjAsStructInstanceWithFieldAccess(x) => {
-                collect_forall_free_param_names_in_objs(&x.struct_obj.params, collector);
                 x.obj.collect_free_param_names_into(collector);
             }
             Obj::InstantiatedTemplateObj(x) => {

@@ -13,7 +13,16 @@ use crate::statement::{
 };
 
 impl Runtime {
-    pub fn execute_preverified_statement(
+    pub(super) fn execute_statement_with_trust(
+        &mut self,
+        stmt: &Stmt,
+    ) -> Result<StmtResult, RuntimeError> {
+        let mut result = self.execute_statement_with_trust_body(stmt)?;
+        self.attach_known_fact_ids_to_stmt_result(&mut result)?;
+        Ok(result)
+    }
+
+    pub fn execute_statement_with_prior_verification(
         &mut self,
         stmt: &Stmt,
     ) -> Result<StmtResult, RuntimeError> {
@@ -28,17 +37,17 @@ impl Runtime {
         // Reuse the no-verification environment path for a statement whose
         // generic form was already checked before capture-avoiding substitution.
         let previous_execution_mode = self.replace_current_execution_mode(ExecutionMode::Trusted);
-        let result = self.execute_statement_without_verification(stmt);
+        let result = self.execute_statement_with_trust_body(stmt);
         self.replace_current_execution_mode(previous_execution_mode);
         result
     }
 
-    pub(super) fn execute_statement_without_verification(
+    pub(super) fn execute_statement_with_trust_body(
         &mut self,
         stmt: &Stmt,
     ) -> Result<StmtResult, RuntimeError> {
         match stmt {
-            Stmt::Fact(fact) => self.execute_trusted_fact(fact),
+            Stmt::Fact(fact) => self.execute_fact_with_trust(fact),
             Stmt::UnsafeStmt(UnsafeStmt::TrustStmt(s)) => {
                 self.exec_trust_stmt_affect_environment_only(s)
             }

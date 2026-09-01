@@ -87,12 +87,13 @@ impl Runtime {
             let current_type = &current_type_holder;
             for name in param_def.params.iter() {
                 let current_param_equal_to = &have_obj_equal_stmt.objs_equal_to[current_index];
+                let verify_state = VerifyState::initial();
 
                 let mut verify_result = self
                     .verify_obj_satisfies_param_type(
                         current_param_equal_to.clone(),
                         current_type,
-                        &VerifyState::initial(),
+                        &verify_state,
                     )
                     .map_err(|verify_error| {
                         short_exec_error(
@@ -120,6 +121,7 @@ impl Runtime {
                                     target_set.clone(),
                                     have_obj_equal_stmt.line_file.clone(),
                                 ),
+                                &verify_state,
                             )?;
                             if !set_equality.is_unknown() {
                                 verify_result = set_equality;
@@ -208,7 +210,7 @@ impl Runtime {
         let mut infer_result = SuccessInferResult::new();
 
         let mut param_infer_result = if self.current_execution_is_trusted_file() {
-            self.define_params_with_type_trusted(
+            self.define_typed_params_with_trust(
                 &have_obj_equal_stmt.param_def,
                 BindingScope::DefinitionBinding,
             )

@@ -31,7 +31,7 @@ impl StmtResultToLeanCompiler {
                 proof_scope_assumption_components: &verification.proof_scope.assumption_components,
                 proof_steps: &verification.proof_steps,
                 conclusion_checks: verification.conclusion_checks.iter().collect(),
-                outer_statement_common: Some(&result.common),
+                outer_environment_effects: Some(&result.common.infers),
             },
         )? {
             Ok(())

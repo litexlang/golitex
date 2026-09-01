@@ -118,7 +118,7 @@ impl Runtime {
 
     /// A one-field struct is an identity view of its sole carrier.  For WD,
     /// recover a callable carrier directly from the bound symbol's definition
-    /// struct view without storing membership, tuple bridges, or struct laws.
+    /// direct struct carrier without storing membership, tuple bridges, or struct laws.
     fn definition_owned_one_field_callable_body(&self, obj: &Obj) -> Option<FnSetBody> {
         let struct_obj = self.known_struct_carrier_for_obj(obj)?;
         let def = self.get_struct_definition_by_name(&struct_obj.name.to_string())?;
@@ -237,10 +237,16 @@ impl Runtime {
         // Example: `\selected<a>.second(x)` reduces when
         // `\selected<a> = (first_value, fn(t T) U {...})` is known.
         let callable_projection = match fn_obj.head.as_ref() {
-            FnObjHead::ObjAsStructInstanceWithFieldAccess(field_access) => Some((
-                field_access.obj.as_ref().clone(),
-                self.struct_field_index(&field_access.struct_obj, &field_access.field_name)?,
-            )),
+            FnObjHead::ObjAsStructInstanceWithFieldAccess(field_access) => {
+                let struct_obj = self.direct_struct_owner_carrier_for_field_access(
+                    field_access,
+                    default_line_file(),
+                )?;
+                Some((
+                    field_access.obj.as_ref().clone(),
+                    self.struct_field_index(&struct_obj, &field_access.field_name)?,
+                ))
+            }
             FnObjHead::ObjAtIndex(obj_at_index) => {
                 let index = self
                     .resolve_obj_to_number(obj_at_index.index.as_ref())
@@ -591,31 +597,29 @@ impl Runtime {
         contracts: &mut Vec<WellDefinedFunctionContract>,
     ) -> bool {
         if let Obj::FnObj(fn_obj) = obj {
-            let head_is_cacheable =
-                match fn_obj.head.as_ref() {
-                    FnObjHead::AnonymousFnLiteral(_) => false,
-                    FnObjHead::FiniteSeqListObj(list) => list.objs.iter().all(|child| {
-                        self.collect_well_defined_function_contracts(child, contracts)
-                    }),
-                    FnObjHead::MatrixOperator(matrix) => {
-                        self.collect_well_defined_function_contracts(matrix, contracts)
+            let head_is_cacheable = match fn_obj.head.as_ref() {
+                FnObjHead::AnonymousFnLiteral(_) => false,
+                FnObjHead::FiniteSeqListObj(list) => list
+                    .objs
+                    .iter()
+                    .all(|child| self.collect_well_defined_function_contracts(child, contracts)),
+                FnObjHead::MatrixOperator(matrix) => {
+                    self.collect_well_defined_function_contracts(matrix, contracts)
+                }
+                FnObjHead::ObjAsStructInstanceWithFieldAccess(field) => {
+                    self.collect_well_defined_function_contracts(&field.obj, contracts)
+                }
+                head => {
+                    let head_obj: Obj = head.clone().into();
+                    let Some(contract) = self.known_function_contract_for_obj(&head_obj) else {
+                        return false;
+                    };
+                    if !contracts.contains(&contract) {
+                        contracts.push(contract);
                     }
-                    FnObjHead::ObjAsStructInstanceWithFieldAccess(field) => {
-                        field.struct_obj.params.iter().all(|child| {
-                            self.collect_well_defined_function_contracts(child, contracts)
-                        }) && self.collect_well_defined_function_contracts(&field.obj, contracts)
-                    }
-                    head => {
-                        let head_obj: Obj = head.clone().into();
-                        let Some(contract) = self.known_function_contract_for_obj(&head_obj) else {
-                            return false;
-                        };
-                        if !contracts.contains(&contract) {
-                            contracts.push(contract);
-                        }
-                        self.collect_well_defined_function_contracts(&head_obj, contracts)
-                    }
-                };
+                    self.collect_well_defined_function_contracts(&head_obj, contracts)
+                }
+            };
             return head_is_cacheable
                 && fn_obj.body.iter().flatten().all(|argument| {
                     self.collect_well_defined_function_contracts(argument, contracts)
@@ -712,9 +716,7 @@ impl Runtime {
             Obj::FiniteSeqListObj(x) => x.objs.iter().all(|child| collect(child)),
             Obj::MatrixListObj(x) => x.rows.iter().flatten().all(|child| collect(child)),
             Obj::StructObj(x) => x.params.iter().all(|child| collect(child)),
-            Obj::ObjAsStructInstanceWithFieldAccess(x) => {
-                x.struct_obj.params.iter().all(|child| collect(child)) && collect(&x.obj)
-            }
+            Obj::ObjAsStructInstanceWithFieldAccess(x) => collect(&x.obj),
             Obj::InstantiatedTemplateObj(x) => x.args.iter().all(|child| collect(child)),
             // Their WD traversals open binder scopes and may contain facts
             // whose callable contracts are not children in the object AST.
@@ -1448,10 +1450,6 @@ fn collect_module_names_from_obj(obj: &Obj, module_names: &mut Vec<String>) {
             }
         }
         Obj::ObjAsStructInstanceWithFieldAccess(x) => {
-            collect_module_name_from_atomic_name(&x.struct_obj.name, module_names);
-            for param in x.struct_obj.params.iter() {
-                collect_module_names_from_obj(param, module_names);
-            }
             collect_module_names_from_obj(&x.obj, module_names);
         }
         Obj::InstantiatedTemplateObj(x) => {
@@ -1489,10 +1487,6 @@ fn collect_module_names_from_fn_obj_head(head: &FnObjHead, module_names: &mut Ve
             collect_module_names_from_obj(&obj_at_index.index, module_names);
         }
         FnObjHead::ObjAsStructInstanceWithFieldAccess(field_access) => {
-            collect_module_name_from_atomic_name(&field_access.struct_obj.name, module_names);
-            for param in field_access.struct_obj.params.iter() {
-                collect_module_names_from_obj(param, module_names);
-            }
             collect_module_names_from_obj(&field_access.obj, module_names);
         }
         FnObjHead::InstantiatedTemplateObj(template_obj) => {

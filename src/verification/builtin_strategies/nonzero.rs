@@ -15,6 +15,7 @@ impl Runtime {
     pub fn verify_nonzero_product_with_builtin_strategy(
         &mut self,
         fact: &NotEqualFact,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let expression = if self.obj_represents_zero_for_not_equal_builtin_rules(&fact.right) {
             &fact.left
@@ -39,7 +40,7 @@ impl Runtime {
         ];
         let mut children = Vec::with_capacity(required.len());
         for child in &required {
-            let result = self.verify_builtin_strategy_child(child)?;
+            let result = self.verify_builtin_strategy_child(child, verify_state)?;
             if !result.is_success() {
                 return Ok(UnknownGenericStmtResult::new().into());
             }

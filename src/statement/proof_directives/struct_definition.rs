@@ -4,17 +4,12 @@ use std::fmt;
 #[derive(Clone)]
 pub struct ByStructDefStmt {
     pub obj: Obj,
-    pub struct_obj: StructObj,
     pub line_file: LineFile,
 }
 
 impl ByStructDefStmt {
-    pub fn new(obj: Obj, struct_obj: StructObj, line_file: LineFile) -> Self {
-        Self {
-            obj,
-            struct_obj,
-            line_file,
-        }
+    pub fn new(obj: Obj, line_file: LineFile) -> Self {
+        Self { obj, line_file }
     }
 
     pub fn store_reason() -> &'static str {

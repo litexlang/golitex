@@ -464,20 +464,11 @@ fn check_obj_has_no_duplicate_free_parameter(
             }
             Ok(())
         }
-        Obj::ObjAsStructInstanceWithFieldAccess(obj) => {
-            for param in obj.struct_obj.params.iter() {
-                check_obj_has_no_duplicate_free_parameter(
-                    param,
-                    free_param_type,
-                    params_already_used,
-                )?;
-            }
-            check_obj_has_no_duplicate_free_parameter(
-                &obj.obj,
-                free_param_type,
-                params_already_used,
-            )
-        }
+        Obj::ObjAsStructInstanceWithFieldAccess(obj) => check_obj_has_no_duplicate_free_parameter(
+            &obj.obj,
+            free_param_type,
+            params_already_used,
+        ),
         Obj::InstantiatedTemplateObj(obj) => {
             for arg in obj.args.iter() {
                 check_obj_has_no_duplicate_free_parameter(

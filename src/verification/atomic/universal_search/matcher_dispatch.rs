@@ -455,25 +455,13 @@ impl ArgMatcher<'_> {
             },
             Obj::ObjAsStructInstanceWithFieldAccess(known) => match given_arg {
                 Obj::ObjAsStructInstanceWithFieldAccess(given) => {
-                    if known.struct_obj.name.to_string() != given.struct_obj.name.to_string()
-                        || known.field_name != given.field_name
-                    {
+                    if known.field_name != given.field_name {
                         return Ok(None);
                     }
-                    let params_result = self.match_arg_vec_then_merge(
-                        &known.struct_obj.params,
-                        &given.struct_obj.params,
-                    )?;
-                    let obj_result = self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
+                    self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
                         known.obj.as_ref(),
                         given.obj.as_ref(),
-                    )?;
-                    match (params_result, obj_result) {
-                        (Some(params_map), Some(obj_map)) => {
-                            Ok(self.merge_arg_match_maps(params_map, obj_map))
-                        }
-                        _ => Ok(None),
-                    }
+                    )
                 }
                 _ => Ok(None),
             },

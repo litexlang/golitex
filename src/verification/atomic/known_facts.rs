@@ -23,12 +23,6 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
     ) -> Result<StmtResult, RuntimeError> {
-        if let Some(cached_result) =
-            self.verification_result_from_statement_proof_cache(atomic_fact)
-        {
-            return Ok(cached_result);
-        }
-
         let result = if atomic_fact.number_of_args() == 1 {
             self.verify_atomic_fact_not_equality_with_known_atomic_fact_with_1_param(atomic_fact)?
         } else if atomic_fact.number_of_args() == 2 {
@@ -39,7 +33,7 @@ impl Runtime {
             )?
         };
 
-        Ok(self.cache_successful_atomic_fact_for_statement(atomic_fact, result))
+        Ok(result)
     }
 
     fn verify_atomic_fact_not_equality_with_known_atomic_fact_with_1_param(

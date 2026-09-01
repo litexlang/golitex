@@ -14,7 +14,7 @@ impl Runtime {
         binding_scope: BindingScope,
     ) -> Result<SuccessInferResult, RuntimeError> {
         if self.current_execution_is_trusted_file() {
-            return self.define_params_with_set_in_scope_trusted(param_def, binding_scope);
+            return self.define_set_bound_params_in_scope_with_trust(param_def, binding_scope);
         }
 
         let param_set = param_def.set_obj();
@@ -37,7 +37,7 @@ impl Runtime {
         let facts = param_def.facts();
         for (binding, fact) in param_def.params.iter().zip(facts.iter()) {
             let name = binding.name();
-            self.store_parameter_binding(binding, binding_scope)
+            self.store_set_bound_parameter_binding(binding, binding_scope, param_set)
                 .map_err(|runtime_error| {
                     RuntimeError::from(DefineParamsRuntimeError(
                         RuntimeErrorStruct::new_with_msg_and_cause(
@@ -74,7 +74,7 @@ impl Runtime {
         Ok(infer_result)
     }
 
-    fn define_params_with_set_in_scope_trusted(
+    fn define_set_bound_params_in_scope_with_trust(
         &mut self,
         param_def: &SetBoundParameterGroup,
         binding_scope: BindingScope,
@@ -83,7 +83,7 @@ impl Runtime {
         let facts = param_def.facts();
         for (binding, fact) in param_def.params.iter().zip(facts.iter()) {
             let name = binding.name();
-            self.store_parameter_binding(binding, binding_scope)
+            self.store_set_bound_parameter_binding(binding, binding_scope, param_def.set_obj())
                 .map_err(|runtime_error| {
                     RuntimeError::from(DefineParamsRuntimeError(
                         RuntimeErrorStruct::new_with_msg_and_cause(
@@ -96,7 +96,7 @@ impl Runtime {
                     ))
                 })?;
             let fact_infer_result = self
-                .store_trusted_fact_and_infer_with_reason(
+                .store_fact_with_trust_and_infer_with_reason(
                     fact.clone(),
                     InferReason::ParameterDefinition,
                 )

@@ -219,7 +219,7 @@ impl Runtime {
                 })?;
             direct_conclusions.push(instantiated_then.clone().to_fact());
             infer_result.new_infer_result_inside(
-                self.store_trusted_fact_and_infer_with_reason(
+                self.store_fact_with_trust_and_infer_with_reason(
                     instantiated_then.clone().to_fact(),
                     InferReason::TheoremInstantiation,
                 )
@@ -403,7 +403,7 @@ impl Runtime {
 
         let infer_result = self
             .run_in_local_env_and_commit(|rt| {
-                rt.store_trusted_fact_and_infer_with_reason(
+                rt.store_fact_with_trust_and_infer_with_reason(
                     selected_fact.clone().into(),
                     InferReason::Other(ByThmStmt::selected_fact_store_reason().to_string()),
                 )
@@ -563,7 +563,7 @@ impl Runtime {
                     store_reason.store_reason(),
                 )?
             } else {
-                self.store_trusted_fact_and_infer_with_reason(
+                self.store_fact_with_trust_and_infer_with_reason(
                     conclusion.clone().into(),
                     store_reason,
                 )?
@@ -644,7 +644,7 @@ impl Runtime {
                     store_reason.store_reason(),
                 )?
             } else {
-                self.store_trusted_fact_and_infer_with_reason(
+                self.store_fact_with_trust_and_infer_with_reason(
                     conclusion.clone().to_fact(),
                     store_reason,
                 )?
@@ -741,7 +741,7 @@ impl Runtime {
                     store_reason.store_reason(),
                 )?
             } else {
-                self.store_trusted_fact_and_infer_with_reason(
+                self.store_fact_with_trust_and_infer_with_reason(
                     conclusion.clone().to_fact(),
                     store_reason,
                 )?
@@ -799,6 +799,7 @@ impl Runtime {
                     let automatic_result = self
                         .verify_non_equational_atomic_fact_with_bounded_builtin_routes(
                             &conclusion,
+                            &verify_state,
                         )?;
                     if automatic_result.is_success() {
                         Some(automatic_result)
@@ -1008,6 +1009,7 @@ impl Runtime {
                     let automatic = self
                         .verify_non_equational_atomic_fact_with_bounded_builtin_routes(
                             &conclusion,
+                            &verify_state,
                         )?;
                     if automatic.is_success() {
                         Some(automatic)
@@ -1399,7 +1401,10 @@ impl Runtime {
                 store_reason.store_reason(),
             )?
         } else {
-            self.store_trusted_fact_and_infer_with_reason(conclusion.clone().into(), store_reason)?
+            self.store_fact_with_trust_and_infer_with_reason(
+                conclusion.clone().into(),
+                store_reason,
+            )?
         };
         let verification = SuccessVerifyTheoremApplicationResult::new_builtin(
             theorem_id,
@@ -1767,7 +1772,7 @@ impl Runtime {
                 reason,
             )?
         } else {
-            self.store_trusted_fact_and_infer_with_reason(conclusion.clone(), reason)?
+            self.store_fact_with_trust_and_infer_with_reason(conclusion.clone(), reason)?
         };
         let verification = if let Some(well_definedness) = conclusion_well_definedness {
             SuccessVerifyTheoremApplicationResult::new_builtin_with_conclusion_well_definedness(

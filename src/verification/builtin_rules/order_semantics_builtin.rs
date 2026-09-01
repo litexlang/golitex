@@ -231,6 +231,7 @@ impl Runtime {
                     None => self.verify_objects_are_known_integers_in_builtin_leaf(
                         &[&target_left, &middle, &target_right],
                         &line_file,
+                        builtin_state.verify_state(),
                     )?,
                 };
                 let Some(mut steps) = type_steps else {
@@ -467,6 +468,7 @@ impl Runtime {
                 if let Some(mut steps) = self.verify_objects_are_known_integers_in_builtin_leaf(
                     &[difference.left.as_ref(), difference.right.as_ref()],
                     &fact.line_file,
+                    builtin_state.verify_state(),
                 )? {
                     let strict: AtomicFact = LessFact::new(
                         difference.right.as_ref().clone(),
@@ -497,6 +499,7 @@ impl Runtime {
         if let Some(mut steps) = self.verify_objects_are_known_integers_in_builtin_leaf(
             &[&fact.left, &fact.right],
             &fact.line_file,
+            builtin_state.verify_state(),
         )? {
             let strict: AtomicFact = LessFact::new(
                 fact.left.clone(),
@@ -524,6 +527,7 @@ impl Runtime {
             let Some(mut steps) = self.verify_objects_are_known_integers_in_builtin_leaf(
                 &[&predecessor, &fact.right],
                 &fact.line_file,
+                builtin_state.verify_state(),
             )?
             else {
                 return Ok(None);
@@ -550,6 +554,7 @@ impl Runtime {
             let Some(mut steps) = self.verify_objects_are_known_integers_in_builtin_leaf(
                 &[&fact.left, &successor],
                 &fact.line_file,
+                builtin_state.verify_state(),
             )?
             else {
                 return Ok(None);
@@ -586,8 +591,11 @@ impl Runtime {
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
         for (subject, base) in [(left, right), (right, left)] {
-            let Some(mut steps) = self
-                .verify_objects_are_known_integers_in_builtin_leaf(&[subject, base], &line_file)?
+            let Some(mut steps) = self.verify_objects_are_known_integers_in_builtin_leaf(
+                &[subject, base],
+                &line_file,
+                builtin_state.verify_state(),
+            )?
             else {
                 continue;
             };
@@ -624,8 +632,11 @@ impl Runtime {
             let Some(base) = obj_plus_one_base(successor) else {
                 continue;
             };
-            let Some(mut steps) = self
-                .verify_objects_are_known_integers_in_builtin_leaf(&[subject, &base], &line_file)?
+            let Some(mut steps) = self.verify_objects_are_known_integers_in_builtin_leaf(
+                &[subject, &base],
+                &line_file,
+                builtin_state.verify_state(),
+            )?
             else {
                 continue;
             };
@@ -663,6 +674,7 @@ impl Runtime {
     pub fn try_verify_integer_discrete_split_or_builtin_rule(
         &mut self,
         or_fact: &OrFact,
+        verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if or_fact.facts.len() != 2 {
             return Ok(None);
@@ -696,6 +708,7 @@ impl Runtime {
         let Some(steps) = self.verify_objects_are_known_integers_in_builtin_leaf(
             &[&subject, &base],
             &or_fact.line_file,
+            verify_state,
         )?
         else {
             return Ok(None);

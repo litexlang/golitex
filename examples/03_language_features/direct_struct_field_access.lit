@@ -1,0 +1,71 @@
+# Tracer: direct struct carriers support explicit and chained field arguments.
+#
+# Before (removed syntax):
+# consume(unfold G)
+# first_of_three(unfold values)
+# Former behavior: `unfold` spread struct fields or statically known tuple
+# entries into a call during parsing.
+#
+# Now (verified): callers name every argument explicitly, while field carriers
+# are resolved from the receiver's executed definition.
+struct GroupData<S nonempty_set>:
+    identity S
+    inverse fn(x S) S
+    combine fn(x, y S) S
+    <=>:
+        forall x S:
+            combine(identity, x) = x
+
+have fn consume(identity R, inverse fn(x R) R, combine fn(x, y R) R) R = identity
+
+prop has_group_fields(identity R, inverse fn(x R) R, combine fn(x, y R) R):
+    identity = identity
+
+thm consume_group_fields:
+    ? forall identity R, inverse fn(x R) R, combine fn(x, y R) R:
+        consume(identity, inverse, combine) = identity
+    consume(identity, inverse, combine) = identity
+
+thm explicit_struct_fields_reach_function_prop_and_theorem:
+    ? forall G &GroupData<R>:
+        consume(G.identity, G.inverse, G.combine) = G.identity
+        $has_group_fields(G.identity, G.inverse, G.combine)
+    release thm consume_group_fields(G.identity, G.inverse, G.combine)
+    by def $has_group_fields(G.identity, G.inverse, G.combine)
+
+have fn first_of_three(x, y, z R) R = x
+
+thm explicit_tuple_indexes_keep_source_order:
+    ? forall values cart(R, R, R):
+        first_of_three(values[1], values[2], values[3]) = values[1]
+    first_of_three(values[1], values[2], values[3]) = values[1]
+
+struct Coordinates:
+    x R
+    y R
+
+have fn coordinate_x(point &Coordinates) R = point.x
+coordinate_x((1, 2)) = coordinate_x((1, 2))
+
+thm coordinate_x_reflexive:
+    ? forall point &Coordinates:
+        point.x = point.x
+    point.x = point.x
+
+release thm coordinate_x_reflexive((1, 2))
+
+struct TaggedPoint:
+    point &Coordinates
+    tag N
+
+have item &TaggedPoint = ((1, 2), 0)
+by struct def item.point
+item.point.x = 1
+
+# Current behavior: argument lists are explicit; `item.point.x` obtains
+# `TaggedPoint` from `item`'s definition and `Coordinates` from `point`'s
+# declared field carrier.
+#
+# Boundary: `unfold` is no longer a Litex keyword or argument-list operation.
+# The executable Rust regression rejects the former call syntax.
+# Evidence: target/release/litex -isolated -f examples/03_language_features/direct_struct_field_access.lit

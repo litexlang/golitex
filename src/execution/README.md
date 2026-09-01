@@ -1,23 +1,23 @@
 # Executing statements
 
-For `1 + 1 = 2`, execution checks the expression, verifies the equality, stores the fact, and attaches a statement trace.
+For `1 + 1 = 2`, execution checks the expression, verifies the equality, stores the fact, and returns the retained proof and environment effects.
 
 ```text
 execute_statement(Stmt::Fact(1 + 1 = 2))
-  clear statement-local proof caches
   read ExecutionMode::RequireVerification or ExecutionMode::Trusted
   verify both sides are well-defined
   verify 1 + 1 = 2
   store the fact and allocate its FactId
   run inference from the stored fact
-  attach proof FactIds and execution phases
+  attach proof FactIds
   return StmtResult::Success
 ```
 
-`ExecutionMode` says whether the current source is verified or is a configured
-trusted import. There is no second per-statement execution context: every
-statement follows the same lifecycle and only the source frame selects its
-verification mode.
+`ExecutionMode` says whether the current source requires verification or is a
+configured trusted import. The two modes have separate lifecycle owners.
+`execute_statement_with_verification` and
+`execute_statement_with_trust` each dispatch their body and attach FactIds;
+`execute_statement` only selects one of them.
 
 ## Concrete `forall` claim pipeline
 
@@ -39,18 +39,18 @@ that must remain available only until the receiving stage finishes.
 ```mermaid
 flowchart TD
     A[execute_source_blocks] --> B[execute_statement]
-    B --> C[execute_verified_statement]
+    B --> C[execute_statement_with_verification]
     C --> D[exec_claim_stmt]
 
-    D --> E[exec_checked_goal_block]
+    D --> E[verify_checked_goal_block]
     E --> F[verify_checked_goal_block_well_definedness]
     F --> G[verify_forall_fact_well_defined_and_collect_certificate]
-    G --> WD[verification.well_definedness]
-    G -. WellDefinednessEnvironmentDelta .-> H[verify_checked_goal_block]
+    G --> WD[well_definedness]
+    G -. WellDefinednessEnvironmentDelta .-> H[verify_checked_goal_block_after_well_definedness]
 
     H --> I[run_in_local_env]
     I --> J[forall_assume_params_and_dom_in_current_env]
-    J --> DOMAIN[proof_scope.assumption_infers]
+    J --> DOMAIN[domain]
 
     J --> K[execute_statement for each source proof statement]
     K --> STEPS[proof_steps]
@@ -59,15 +59,12 @@ flowchart TD
 
     L --> M[verify_exist_or_and_chain_atomic_fact for each conclusion]
     M --> CHECKS[conclusion_checks]
-    M --> N[attach_known_fact_ids_to_infer_result and child StmtResults]
-    N --> O[construct SuccessVerifyClaimForallResult]
-
-    O --> P[exec_claim_stmt_affect_environment]
-    P --> EFFECTS[common.infers]
-    O --> MERGE[attach environment effects to the result]
-    EFFECTS --> MERGE
-    MERGE --> Q[finish_statement_execution]
-    Q --> TRACE[common.execution_trace]
+    M --> N[return SuccessCheckedGoalBlockResult]
+    N --> P[exec_claim_stmt_affect_environment]
+    P --> EFFECTS[environment_effects]
+    N --> O[construct SuccessClaimStmtResult]
+    EFFECTS --> O
+    O --> Q[attach_known_fact_ids_to_stmt_result]
     Q --> R[completed StmtResult]
 ```
 
@@ -76,18 +73,17 @@ from type names:
 
 | Durable result part | Producing execution node | Meaning |
 | --- | --- | --- |
-| `statement` / `forall_fact` | `parse_statement`, then verified dispatch | The source object being executed. |
-| `verification.well_definedness` | `verify_checked_goal_block_well_definedness` | Why the complete goal is meaningful before proof execution. |
-| `proof_scope.assumption_infers` | `forall_assume_params_and_dom_in_current_env` | Parameter facts, source premises, and their ordered inferred consequences in the local proof domain. |
+| `statement` | `parse_statement`, then verification-required dispatch | The source claim being executed, including its goal and authored proof. |
+| `well_definedness` | `verify_checked_goal_block_well_definedness` | Why the complete goal is meaningful before proof execution. |
+| `domain` | `forall_assume_params_and_dom_in_current_env` | Parameter facts, source premises, and their ordered inferred consequences in the local proof domain. |
 | `proof_steps` | the `execute_statement(proof_stmt)` loop | One recursive `StmtResult` for every source-authored proof statement, in source order. |
 | `conclusion_checks` | the `verify_exist_or_and_chain_atomic_fact` loop | The kernel checks performed after the authored proof body to close each `then` clause. |
-| `common.infers` | `exec_claim_stmt_affect_environment` | Effects produced when the completed claim is published to the surrounding mathematical environment. |
-| `common.execution_trace` | `finish_statement_execution` | Final phase status after verification and environment mutation. |
+| `environment_effects` | `exec_claim_stmt_affect_environment` | Effects produced when the completed claim is published to the surrounding mathematical environment. |
 
 Two values deliberately do not correspond to durable fields. The
 `WellDefinednessEnvironmentDelta` is an edge value passed from preflight into
-proof execution, and statement-local memo or recursion state is execution
-context used while recursive verifier nodes are active. Persisting either one
+proof execution, and `VerifyState` carries the memo/recursion context used
+while recursive verifier nodes are active. Persisting either one
 merely because it crosses several functions would confuse pipeline support
 with proof evidence.
 
@@ -112,9 +108,9 @@ This gives a structural test for future result changes:
 
 | File | Example |
 | --- | --- |
-| [`statement_execution.rs`](statement_execution.rs) | Owns statement lifecycle, chooses verified or trusted execution, and attaches the final execution trace. |
-| [`verified_statement_execution.rs`](verified_statement_execution.rs) | Dispatches every verified `Stmt` family to its executor. |
-| [`trusted_statement_execution.rs`](trusted_statement_execution.rs) | Replays trusted and preverified statements into the environment. |
+| [`statement_execution.rs`](statement_execution.rs) | Chooses the verification-required or trusted lifecycle. |
+| [`statement_with_verification_execution.rs`](statement_with_verification_execution.rs) | Owns verification-required dispatch and FactId attachment. |
+| [`statement_with_trust_execution.rs`](statement_with_trust_execution.rs) | Owns trusted replay and FactId attachment. |
 | [`attach_fact_ids_to_stmt_result.rs`](attach_fact_ids_to_stmt_result.rs) | Fills missing FactIds in the completed recursive Result tree without retargeting frozen local evidence. |
 | [`submitted_fact_execution.rs`](submitted_fact_execution.rs) | Executes a submitted fact through well-definedness, proof verification, storage, and inference. |
 | [`definition_execution/object/`](definition_execution/object/) | Executes object, function, tuple, sequence, matrix, preimage, and existential-elimination definitions and bindings. |

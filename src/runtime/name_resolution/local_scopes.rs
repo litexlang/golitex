@@ -46,7 +46,6 @@ impl Runtime {
         frame
             .local_environment_stack
             .push(Box::new(Environment::new_empty_env()));
-        self.statement_proof_state.push_scope();
     }
 
     /// Runs a closure in a temporary child environment and pops it on normal return.
@@ -62,7 +61,6 @@ impl Runtime {
             .last_mut()
             .and_then(|frame| frame.local_environment_stack.pop())
             .expect("local environment should exist after push_env");
-        self.statement_proof_state.pop_scope();
         result
     }
 
@@ -79,7 +77,6 @@ impl Runtime {
             .last_mut()
             .and_then(|frame| frame.local_environment_stack.pop())
             .expect("local environment should exist after push_env");
-        self.statement_proof_state.pop_scope();
         result.map(|value| (value, *child))
     }
 
@@ -99,8 +96,6 @@ impl Runtime {
             .last_mut()
             .and_then(|frame| frame.local_environment_stack.pop())
             .expect("local environment should exist after push_env");
-        self.statement_proof_state.pop_scope();
-
         if result.is_ok() {
             self.current_parse_context_mut()
                 .restore_scoped_state(parse_context_before);
@@ -116,7 +111,7 @@ impl Runtime {
     /// Restores the current frame's scoped parsing state after `f` so parse-time bindings (e.g.
     /// `have x …` without `=`) do not leak across sibling `?` goal blocks or out of nested parses
     /// that use this wrapper (`forall`, `exist`, goal blocks, `prop` bodies, etc.). Successful
-    /// parses retain SymbolId-indexed notation metadata owned by the source frame.
+    /// parses retain only non-scoped parser metadata owned by the source frame.
     pub fn run_in_local_parsing_time_name_scope<T, E, F>(&mut self, f: F) -> Result<T, E>
     where
         F: FnOnce(&mut Self) -> Result<T, E>,

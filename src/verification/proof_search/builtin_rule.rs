@@ -189,6 +189,12 @@ impl Runtime {
         child: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<StmtResult, RuntimeError> {
+        if let Some(result) =
+            self.verification_result_from_proof_search_memo(child, builtin_state.verify_state())
+        {
+            return Ok(result);
+        }
+
         match child {
             AtomicFact::EqualFact(equal_fact) => {
                 let zero_premise_result =

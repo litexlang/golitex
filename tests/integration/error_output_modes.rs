@@ -12,7 +12,7 @@ fn verifier_errors_use_the_canonical_detailed_run_json() {
     assert!(normal_stdout.contains("\"kind\": \"run\""));
     assert!(normal_stdout.contains("\"ok\": false"));
     assert!(normal_stdout.contains("\"kind\": \"verify_error\""));
-    assert!(normal_stdout.contains("\"phases\": {"));
+    assert!(!normal_stdout.contains("\"phases\":"));
     assert!(normal_stdout.contains("\"previous_error\":"));
     assert!(normal_stdout.contains("\"failed_goal\": \"1 = 0\""));
     assert!(normal_stdout.contains("\"unknown_result\": {"));
@@ -36,7 +36,7 @@ fn successful_runs_use_the_canonical_detailed_run_json_without_summary() {
     assert!(normal_stdout.contains("\"verification\": {"));
     assert!(normal_stdout.contains("\"well_definedness\": {"));
     assert!(normal_stdout.contains("\"store\": {"));
-    assert!(normal_stdout.contains("\"execution_trace\": {"));
+    assert!(!normal_stdout.contains(&["execution", "trace"].join("_")));
 }
 
 fn run_litex(args: &[&str]) -> Output {

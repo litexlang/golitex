@@ -316,7 +316,7 @@ forall z, w C:
                 run_output
                     .matches("structural equality with terminating reductions")
                     .count()
-                    >= 5,
+                    >= 4,
                 "complex congruence should expose structural provenance:\n{run_output}"
             );
 

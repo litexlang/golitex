@@ -99,6 +99,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         builtin_state: &BuiltinRuleSearchState,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Obj::MatrixSet(expected_matrix_set) = &in_fact.set {
             if matches!(
@@ -111,7 +112,7 @@ impl Runtime {
             ) {
                 if let Ok(inferred_matrix_set) = self.real_matrix_type(
                     &in_fact.element,
-                    &VerifyState::final_round_after_well_definedness(),
+                    &verify_state.with_final_round_after_well_definedness(),
                     "membership",
                 ) {
                     let inferred_obj: Obj = inferred_matrix_set.clone().into();
@@ -143,7 +144,7 @@ impl Runtime {
                 &in_fact.element,
                 fn_set,
                 in_fact,
-                &VerifyState::after_well_definedness(),
+                &verify_state.with_well_definedness_verified(),
             )? {
                 return Ok(result);
             }
@@ -168,7 +169,7 @@ impl Runtime {
                         anonymous_fn,
                         fn_set,
                         in_fact,
-                        &VerifyState::after_well_definedness(),
+                        &verify_state.with_well_definedness_verified(),
                     )?;
                 if transported_result.is_success() {
                     return Ok(transported_result);
@@ -179,14 +180,14 @@ impl Runtime {
             let result = self.verify_in_fact_in_general_cart_by_defining_facts(
                 in_fact,
                 general_cart,
-                &VerifyState::after_well_definedness(),
+                &verify_state.with_well_definedness_verified(),
             )?;
             if result.is_success() {
                 return Ok(result);
             }
         }
         if let Some(result) =
-            self.try_verify_set_builder_membership_definition_transport(in_fact)?
+            self.try_verify_set_builder_membership_definition_transport(in_fact, verify_state)?
         {
             return Ok(result);
         }

@@ -138,7 +138,7 @@ impl StmtResultToLeanCompiler {
                 proof_scope_assumption_components: &[],
                 proof_steps: &verification.proof_steps,
                 conclusion_checks,
-                outer_statement_common: None,
+                outer_environment_effects: None,
             },
         )?;
         if !compiled {

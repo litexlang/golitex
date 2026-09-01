@@ -891,7 +891,7 @@ properties are needed.
 #### Field-access well-definedness
 
 Field syntax and property release are separate. To decide whether `e.y` is a
-well-defined object, Litex only determines the definition-owned struct view
+well-defined object, Litex only determines the definition-owned struct carrier
 of `e` and checks that this struct defines `y`. To decide `e.y.z`, it also
 checks that `y` is defined directly with a struct carrier that defines `z`.
 This WD traversal does not store any field carrier, tuple bridge, or struct
@@ -949,9 +949,8 @@ by struct def make_point(1, 2)
 make_point(1, 2).x = 1
 ```
 
-Inside a parenthesized function, proposition, or theorem argument list,
-`unfold` is a compile-time argument spread. For a struct value it contributes
-all defined fields, strictly in definition order:
+Function, proposition, and theorem argument lists are explicit. Pass struct
+fields by name and tuple entries by index:
 
 ```litex
 struct Point:
@@ -965,21 +964,13 @@ prop has_point_coordinates(x, y R):
     x = x
 
 by def:
-    ? $has_point_coordinates(unfold p)
+    ? $has_point_coordinates(p.x, p.y)
 ```
 
-The call elaborates during parsing to
-`$has_point_coordinates(p.x, p.y)`. Only fields are spread. Struct header
-parameters and `<=>:` facts are not positional arguments. Consequently,
-adding, removing, or reordering a struct field intentionally changes the
-argument list produced by `unfold`.
-
-Tuple literals can also be spread, as in `f(unfold (a, b, c))`. A named tuple
-is accepted when its arity is known at compile time, including a binder typed
-by `cart(A, B, C)`; it elaborates to `f(t[1], t[2], t[3])`. A tuple known only
-to satisfy `$is_tuple(t)` has no static arity and is rejected. `unfold` is not
-a runtime object, and ordinary arity, membership, and function-domain checks
-run on the expanded arguments.
+Struct header parameters and `<=>:` facts are not positional fields. Tuple
+calls likewise name entries explicitly, for example `f(t[1], t[2], t[3])`.
+Ordinary arity, membership, and function-domain checks apply to every written
+argument.
 
 If a selected field is itself defined directly with a struct type, field
 notation may continue through that defined view:
@@ -1212,7 +1203,6 @@ Every row also requires its subobjects to be well-defined.
 | A finite sum or product | The index domain is suitable, the unary iterand is defined throughout it, and its defined return set is a subset of `C`. |
 | A real interval | Finite endpoints are real; reversed endpoints denote an empty interval rather than an ill-defined object. |
 | `&Struct<args>` or field access | The struct, arguments, field, and membership obligations check. |
-| `unfold value` in an argument list | The value has a compile-time tuple arity or a definition-owned struct carrier; every expanded argument then passes its ordinary checks. |
 | `\Template<args>` | The template exists and its parameter obligations check. |
 
 After `fn(...) T {body}` has passed these checks, Litex can prove that it
@@ -1550,8 +1540,8 @@ struct GroupAction<[GroupSetting(G, mul_G, one_G, inv_G)], V nonempty_set>:
 ```
 
 Consequently membership in `&GroupAction<G, mul_G, one_G, inv_G, V>` exposes
-the instantiated group laws. `G`, `mul_G`, `one_G`, and `inv_G` are not struct
-fields and are not emitted by `unfold`. Setting bundles are not currently
+the instantiated group laws. `G`, `mul_G`, `one_G`, and `inv_G` are header
+parameters rather than struct fields. Setting bundles are not currently
 accepted in `abstract_prop` or `template` headers, in struct field lists, or in
 object expressions.
 
@@ -1839,7 +1829,7 @@ introducing another theorem or opaque definition.
 
 The last two lines also show the carrier boundary. `let` records only the
 transparent equality; it does not declare `chosen $in &Triple<R>` or attach a
-definition-owned struct view to `chosen`. Consequently, `chosen.first` and
+definition-owned struct carrier to `chosen`. Consequently, `chosen.first` and
 `triple_R(4, 5, 6).first` are errors. When field projection is needed, bind the
 result with the exact struct carrier, as `chosen_struct` does above. See the
 [complete runnable example](../examples/03_language_features/let_template_struct_aliases.lit).
@@ -1862,7 +1852,7 @@ thm use_short_operation_name:
 ```
 
 Here `scalar_add` is not registered as a second function. Well-definedness
-reduces the `let` once, reads the frozen `ScalarOps` field view carried by
+reduces the `let` once, reads the frozen `ScalarOps` field carrier reached through
 `space.scalars.add`, and derives its original function space. The usual arity
 and argument-domain checks therefore still apply. The statement result records
 the existing transparent-definition reduction, including the defining equality
@@ -2416,7 +2406,7 @@ introductions.
 | `by cases`, `by contra` | Every branch closes the target, or an explicit contradiction is produced. | The requested target only. |
 | Enumeration, induction, `by for`, `by extension` | The target has the exact finite/range/discrete/extensional shape and every generated subgoal closes. | The requested universal/equality/atomic target. |
 | `by def` | One positive concrete/builtin definitional target and every defining clause. | The target with explicit definition provenance. |
-| `by struct def e` | `e` has a definition-owned struct view and `e $in &Struct` verifies. | Exactly one layer of tuple/identity bridges, field carriers, and instantiated struct laws. |
+| `by struct def e` | `e` has a definition-owned struct carrier and `e $in &Struct` verifies. | Exactly one layer of tuple/identity bridges, field carriers, and instantiated struct laws. |
 | Predicate-property registrations | The proof has the exact reflexive/symmetric/transitive/antisymmetric predicate shape. | A reusable property route; antisymmetry may later close equality. |
 | `by regularity_axiom` | Its displayed set/nonemptiness obligations. | An explicitly trusted set-theoretic conclusion; strict mode rejects the step. |
 | `by axiom_of_choice` | The family is a set and every member is proved nonempty. | Stores `exist f fn(A S)big_union(S) st {$is_choice_function_for(S,S,fn(A S)S {A},f)}`. The existential body is atomic. |
@@ -3117,8 +3107,8 @@ available when only nonemptiness of a general Cartesian product is needed.
 Normal output should identify the statement, its result, nested proof results,
 and the reason a fact verified. A direct builtin route includes a rule
 description; structural recursion is labeled `builtin strategy`; a theorem
-route includes citation information. The CLI always retains raw phases,
-requirements, instantiations, and inference effects useful for debugging.
+route includes citation information. The CLI retains requirements,
+instantiations, and inference effects useful for debugging.
 
 When a result is `unknown`, read the failed node rather than adding broad
 automation immediately:

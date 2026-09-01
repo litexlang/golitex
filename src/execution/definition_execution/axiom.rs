@@ -57,7 +57,7 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         self.store_axiom(stmt)
             .map_err(|error| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), error))?;
-        let infer_result = self.store_trusted_fact_and_infer_with_reason(
+        let infer_result = self.store_fact_with_trust_and_infer_with_reason(
             Fact::ForallFact(stmt.forall_fact.clone()),
             InferReason::Other(AxiomStmt::store_reason().to_string()),
         )?;

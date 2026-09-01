@@ -39,7 +39,7 @@ fn runner_failure_returns_trace() {
     assert!(output.contains("\"result\": \"error\""));
     assert!(output.contains("\\\"kind\\\": \\\"verify_error\\\""));
     assert!(output.contains("\\\"kind\\\": \\\"unknown_error\\\""));
-    assert!(output.contains("\\\"phases\\\": {"));
+    assert!(!output.contains("\\\"phases\\\":"));
     assert!(output.contains("\\\"failed_goal\\\": \\\"1 = 0\\\""));
     assert!(output.contains("\\\"unknown_result\\\": {"));
 }

@@ -132,9 +132,9 @@ impl Runtime {
         let mut infer_result = SuccessInferResult::new();
         for then_fact in stmt.then_facts.iter() {
             let one_then_fact_infer_result = if self.current_execution_is_trusted_file() {
-                self.store_trusted_fact_and_infer_with_reason(
+                self.store_fact_with_trust_and_infer_with_reason(
                     then_fact.clone(),
-                    InferReason::VerifiedStatement,
+                    InferReason::StatementWithVerification,
                 )
             } else {
                 self.store_with_well_defined_verification_and_infer_with_default_verify_state(

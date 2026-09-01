@@ -93,7 +93,7 @@ impl Runtime {
         }
 
         let (function, fn_body) = self.preimage_function_and_body(stmt)?;
-        self.store_preimage_names(stmt)?;
+        self.store_preimage_names(stmt, &fn_body)?;
         let preimage_objs: Vec<Obj> = stmt
             .preimage_bindings
             .iter()
@@ -165,10 +165,35 @@ impl Runtime {
         })
     }
 
-    fn store_preimage_names(&mut self, stmt: &HaveByPreimageStmt) -> Result<(), RuntimeError> {
-        for binding in &stmt.preimage_bindings {
-            self.store_parameter_binding(binding, BindingScope::DefinitionBinding)
-                .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
+    fn store_preimage_names(
+        &mut self,
+        stmt: &HaveByPreimageStmt,
+        fn_body: &FnSetBody,
+    ) -> Result<(), RuntimeError> {
+        let preimage_objs: Vec<Obj> = stmt
+            .preimage_bindings
+            .iter()
+            .map(|binding| {
+                Identifier::new_bound(binding.name().to_string(), binding.as_ref()).into()
+            })
+            .collect();
+        let instantiated_param_sets = self
+            .inst_param_def_with_set_one_by_one(
+                &fn_body.set_bound_parameters,
+                &preimage_objs,
+                SubstitutionMode::Exact,
+            )
+            .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
+        let flat_param_sets = fn_body
+            .set_bound_parameters
+            .flat_instantiated_param_sets_for_args(&instantiated_param_sets);
+        for (binding, param_set) in stmt.preimage_bindings.iter().zip(flat_param_sets.iter()) {
+            self.store_set_bound_parameter_binding(
+                binding,
+                BindingScope::DefinitionBinding,
+                param_set,
+            )
+            .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
         }
         Ok(())
     }
@@ -179,8 +204,12 @@ impl Runtime {
         replacement: &Replacement,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let preimage_binding = &stmt.preimage_bindings[0];
-        self.store_parameter_binding(preimage_binding, BindingScope::DefinitionBinding)
-            .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
+        self.store_set_bound_parameter_binding(
+            preimage_binding,
+            BindingScope::DefinitionBinding,
+            &replacement.source_set,
+        )
+        .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
         let preimage_obj: Obj = Identifier::new_bound(
             preimage_binding.name().to_string(),
             preimage_binding.as_ref(),

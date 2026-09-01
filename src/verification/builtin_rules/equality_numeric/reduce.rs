@@ -714,38 +714,42 @@ impl Runtime {
                 translated.end.as_ref().clone(),
             )
             .into();
-            let pointwise_result = self.run_in_local_env(|rt| {
-                let index_name = rt.generate_random_unused_name();
-                let (index_binding, index) = rt.fresh_bound_param(index_name)?;
-                let params = TypedParameterList::new(vec![TypedParameterGroup::new(
-                    vec![index_binding],
-                    ParamType::Obj(translated_set),
-                )]);
-                rt.define_params_with_type(&params, false, BindingScope::LocalBinder)?;
+            let pointwise_result = self.run_in_local_verification_env(
+                builtin_state.verify_state(),
+                |rt, local_verify_state| {
+                    let local_builtin_state = builtin_state.with_verify_state(local_verify_state);
+                    let index_name = rt.generate_random_unused_name();
+                    let (index_binding, index) = rt.fresh_bound_param(index_name)?;
+                    let params = TypedParameterList::new(vec![TypedParameterGroup::new(
+                        vec![index_binding],
+                        ParamType::Obj(translated_set),
+                    )]);
+                    rt.define_params_with_type(&params, false, BindingScope::LocalBinder)?;
 
-                let offset: Obj = Sub::new(index.clone(), translated_start).into();
-                let source_index: Obj = Add::new(source_start, offset).into();
-                let Some(source_value) =
-                    rt.instantiate_reduce_function_at(&source_func, &[source_index])?
-                else {
-                    return Ok(UnknownGenericStmtResult::new().into());
-                };
-                let Some(translated_value) =
-                    rt.instantiate_reduce_function_at(&translated_func, &[index])?
-                else {
-                    return Ok(UnknownGenericStmtResult::new().into());
-                };
-                let equality: AtomicFact =
-                    EqualFact::new(source_value, translated_value, line_file.clone()).into();
-                let known_forall = rt.verify_atomic_fact_with_known_forall(
-                    &equality,
-                    &VerifyState::after_well_definedness(),
-                )?;
-                if known_forall.is_success() {
-                    return Ok(known_forall);
-                }
-                rt.verify_atomic_fact_as_builtin_rule_premise(&equality, builtin_state)
-            })?;
+                    let offset: Obj = Sub::new(index.clone(), translated_start).into();
+                    let source_index: Obj = Add::new(source_start, offset).into();
+                    let Some(source_value) =
+                        rt.instantiate_reduce_function_at(&source_func, &[source_index])?
+                    else {
+                        return Ok(UnknownGenericStmtResult::new().into());
+                    };
+                    let Some(translated_value) =
+                        rt.instantiate_reduce_function_at(&translated_func, &[index])?
+                    else {
+                        return Ok(UnknownGenericStmtResult::new().into());
+                    };
+                    let equality: AtomicFact =
+                        EqualFact::new(source_value, translated_value, line_file.clone()).into();
+                    let known_forall = rt.verify_atomic_fact_with_known_forall(
+                        &equality,
+                        &local_verify_state.with_well_definedness_verified(),
+                    )?;
+                    if known_forall.is_success() {
+                        return Ok(known_forall);
+                    }
+                    rt.verify_atomic_fact_as_builtin_rule_premise(&equality, &local_builtin_state)
+                },
+            )?;
             if !pointwise_result.is_success() {
                 continue;
             }
@@ -1087,21 +1091,28 @@ impl Runtime {
             };
             let pointwise_fact: AtomicFact =
                 EqualFact::new(pullback_at_y, source_at_map_y, line_file.clone()).into();
-            let pointwise_result = self.run_in_local_env(|rt| {
-                let params_def = TypedParameterList::new(vec![TypedParameterGroup::new(
-                    vec![y_binding],
-                    ParamType::Obj(pullback.set.as_ref().clone()),
-                )]);
-                rt.define_params_with_type(&params_def, false, BindingScope::LocalBinder)?;
-                let known_forall = rt.verify_atomic_fact_with_known_forall(
-                    &pointwise_fact,
-                    &VerifyState::after_well_definedness(),
-                )?;
-                if known_forall.is_success() {
-                    return Ok(known_forall);
-                }
-                rt.verify_atomic_fact_as_builtin_rule_premise(&pointwise_fact, builtin_state)
-            })?;
+            let pointwise_result = self.run_in_local_verification_env(
+                builtin_state.verify_state(),
+                |rt, local_verify_state| {
+                    let local_builtin_state = builtin_state.with_verify_state(local_verify_state);
+                    let params_def = TypedParameterList::new(vec![TypedParameterGroup::new(
+                        vec![y_binding],
+                        ParamType::Obj(pullback.set.as_ref().clone()),
+                    )]);
+                    rt.define_params_with_type(&params_def, false, BindingScope::LocalBinder)?;
+                    let known_forall = rt.verify_atomic_fact_with_known_forall(
+                        &pointwise_fact,
+                        &local_verify_state.with_well_definedness_verified(),
+                    )?;
+                    if known_forall.is_success() {
+                        return Ok(known_forall);
+                    }
+                    rt.verify_atomic_fact_as_builtin_rule_premise(
+                        &pointwise_fact,
+                        &local_builtin_state,
+                    )
+                },
+            )?;
             if !pointwise_result.is_success() {
                 continue;
             }
@@ -1280,32 +1291,37 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         let operation = operation.clone();
         let carrier = carrier.clone();
-        self.run_in_local_env(|rt| {
-            let x_name = rt.generate_random_unused_name();
-            let y_name = rt.generate_random_unused_name();
-            let (x_binding, x) = rt.fresh_bound_param(x_name)?;
-            let (y_binding, y) = rt.fresh_bound_param(y_name)?;
-            let params = TypedParameterList::new(vec![TypedParameterGroup::new(
-                vec![x_binding, y_binding],
-                ParamType::Obj(carrier),
-            )]);
-            rt.define_params_with_type(&params, false, BindingScope::LocalBinder)?;
-            let Some(actual) =
-                rt.instantiate_reduce_function_at(&operation, &[x.clone(), y.clone()])?
-            else {
-                return Ok(UnknownGenericStmtResult::new().into());
-            };
-            let expected = specialization.apply(x, y);
-            let equality: AtomicFact = EqualFact::new(actual, expected, line_file.clone()).into();
-            let known_forall = rt.verify_atomic_fact_with_known_forall(
-                &equality,
-                &VerifyState::after_well_definedness(),
-            )?;
-            if known_forall.is_success() {
-                return Ok(known_forall);
-            }
-            rt.verify_atomic_fact_as_builtin_rule_premise(&equality, builtin_state)
-        })
+        self.run_in_local_verification_env(
+            builtin_state.verify_state(),
+            |rt, local_verify_state| {
+                let local_builtin_state = builtin_state.with_verify_state(local_verify_state);
+                let x_name = rt.generate_random_unused_name();
+                let y_name = rt.generate_random_unused_name();
+                let (x_binding, x) = rt.fresh_bound_param(x_name)?;
+                let (y_binding, y) = rt.fresh_bound_param(y_name)?;
+                let params = TypedParameterList::new(vec![TypedParameterGroup::new(
+                    vec![x_binding, y_binding],
+                    ParamType::Obj(carrier),
+                )]);
+                rt.define_params_with_type(&params, false, BindingScope::LocalBinder)?;
+                let Some(actual) =
+                    rt.instantiate_reduce_function_at(&operation, &[x.clone(), y.clone()])?
+                else {
+                    return Ok(UnknownGenericStmtResult::new().into());
+                };
+                let expected = specialization.apply(x, y);
+                let equality: AtomicFact =
+                    EqualFact::new(actual, expected, line_file.clone()).into();
+                let known_forall = rt.verify_atomic_fact_with_known_forall(
+                    &equality,
+                    &local_verify_state.with_well_definedness_verified(),
+                )?;
+                if known_forall.is_success() {
+                    return Ok(known_forall);
+                }
+                rt.verify_atomic_fact_as_builtin_rule_premise(&equality, &local_builtin_state)
+            },
+        )
     }
 
     fn verify_reduce_functions_pointwise_on_set(
@@ -1342,32 +1358,38 @@ impl Runtime {
         let left_func = left_func.clone();
         let right_func = right_func.clone();
         let set = set.clone();
-        self.run_in_local_env(|rt| {
-            let x_name = rt.generate_random_unused_name();
-            let (x_binding, x) = rt.fresh_bound_param(x_name)?;
-            let params = TypedParameterList::new(vec![TypedParameterGroup::new(
-                vec![x_binding],
-                ParamType::Obj(set),
-            )]);
-            rt.define_params_with_type(&params, false, BindingScope::LocalBinder)?;
-            let Some(left_value) = rt.instantiate_reduce_function_at(&left_func, &[x.clone()])?
-            else {
-                return Ok(UnknownGenericStmtResult::new().into());
-            };
-            let Some(right_value) = rt.instantiate_reduce_function_at(&right_func, &[x])? else {
-                return Ok(UnknownGenericStmtResult::new().into());
-            };
-            let equality: AtomicFact =
-                EqualFact::new(left_value, right_value, line_file.clone()).into();
-            let known_forall = rt.verify_atomic_fact_with_known_forall(
-                &equality,
-                &VerifyState::after_well_definedness(),
-            )?;
-            if known_forall.is_success() {
-                return Ok(known_forall);
-            }
-            rt.verify_atomic_fact_as_builtin_rule_premise(&equality, builtin_state)
-        })
+        self.run_in_local_verification_env(
+            builtin_state.verify_state(),
+            |rt, local_verify_state| {
+                let local_builtin_state = builtin_state.with_verify_state(local_verify_state);
+                let x_name = rt.generate_random_unused_name();
+                let (x_binding, x) = rt.fresh_bound_param(x_name)?;
+                let params = TypedParameterList::new(vec![TypedParameterGroup::new(
+                    vec![x_binding],
+                    ParamType::Obj(set),
+                )]);
+                rt.define_params_with_type(&params, false, BindingScope::LocalBinder)?;
+                let Some(left_value) =
+                    rt.instantiate_reduce_function_at(&left_func, &[x.clone()])?
+                else {
+                    return Ok(UnknownGenericStmtResult::new().into());
+                };
+                let Some(right_value) = rt.instantiate_reduce_function_at(&right_func, &[x])?
+                else {
+                    return Ok(UnknownGenericStmtResult::new().into());
+                };
+                let equality: AtomicFact =
+                    EqualFact::new(left_value, right_value, line_file.clone()).into();
+                let known_forall = rt.verify_atomic_fact_with_known_forall(
+                    &equality,
+                    &local_verify_state.with_well_definedness_verified(),
+                )?;
+                if known_forall.is_success() {
+                    return Ok(known_forall);
+                }
+                rt.verify_atomic_fact_as_builtin_rule_premise(&equality, &local_builtin_state)
+            },
+        )
     }
 }
 

@@ -10,10 +10,7 @@ forall x R:
 ```text
 RuntimeError::WellDefinedError {
   line: 2,
-  message: "divisor `x` must be non-zero",
-  execution_phase: verify_well_definedness,
-  verify_process: not_run,
-  affect_environment: not_run
+  message: "divisor `x` must be non-zero"
 }
 ```
 

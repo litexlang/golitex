@@ -465,11 +465,7 @@ impl Runtime {
                 .iter()
                 .any(|obj| Self::obj_depends_on_given_exist_param(obj, symbol_ids)),
             Obj::ObjAsStructInstanceWithFieldAccess(x) => {
-                x.struct_obj
-                    .params
-                    .iter()
-                    .any(|obj| Self::obj_depends_on_given_exist_param(obj, symbol_ids))
-                    || Self::obj_depends_on_given_exist_param(x.obj.as_ref(), symbol_ids)
+                Self::obj_depends_on_given_exist_param(x.obj.as_ref(), symbol_ids)
             }
             Obj::InstantiatedTemplateObj(x) => x
                 .args

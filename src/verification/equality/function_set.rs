@@ -85,12 +85,12 @@ impl Runtime {
         line_file: LineFile,
         verify_state: &VerifyState,
     ) -> Result<bool, RuntimeError> {
-        self.run_in_local_env(|rt| {
+        self.run_in_local_verification_env(verify_state, |rt, local_verify_state| {
             rt.verify_fn_set_with_params_directionally_in_local_env_body(
                 source,
                 target,
                 line_file,
-                verify_state,
+                local_verify_state,
             )
         })
     }

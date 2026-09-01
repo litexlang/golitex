@@ -437,7 +437,10 @@ impl Runtime {
         let witness_stmt = stmt.clone().into();
         let fact = stmt.exist_fact_in_witness.clone().into();
         let store_result = if self.current_execution_is_trusted_file() {
-            self.store_trusted_fact_and_infer_with_reason(fact, InferReason::VerifiedStatement)
+            self.store_fact_with_trust_and_infer_with_reason(
+                fact,
+                InferReason::StatementWithVerification,
+            )
         } else {
             self.store_with_well_defined_verification_and_infer_with_default_verify_state(fact)
         };
@@ -475,7 +478,10 @@ impl Runtime {
         let atomic_fact: AtomicFact = stmt.atomic_fact.clone().into();
         let fact: Fact = atomic_fact.into();
         let store_result = if self.current_execution_is_trusted_file() {
-            self.store_trusted_fact_and_infer_with_reason(fact, InferReason::VerifiedStatement)
+            self.store_fact_with_trust_and_infer_with_reason(
+                fact,
+                InferReason::StatementWithVerification,
+            )
         } else {
             self.store_with_well_defined_verification_and_infer_with_default_verify_state(fact)
         };
@@ -594,6 +600,7 @@ impl Runtime {
                 }
             }
 
+            let verify_state_for_proof_check = VerifyState::initial();
             if let Obj::FnSet(fn_set) = &stmt.set {
                 let ret_nonempty_fact = IsNonemptySetFact::new(
                     fn_set.body.ret_set.as_ref().clone(),
@@ -602,6 +609,7 @@ impl Runtime {
                 .into();
                 let ret_check = rt.verify_non_equational_atomic_fact_with_bounded_builtin_routes(
                     &ret_nonempty_fact,
+                    &verify_state_for_proof_check,
                 )?;
                 if ret_check.is_success() {
                     inside_results.push(ret_check);
@@ -611,7 +619,6 @@ impl Runtime {
 
             let membership_fact =
                 InFact::new(stmt.obj.clone(), stmt.set.clone(), stmt.line_file.clone()).into();
-            let verify_state_for_proof_check = VerifyState::initial();
             let membership_result = rt
                 .verify_fact_or_error(&membership_fact, &verify_state_for_proof_check)
                 .map_err(|verify_error| {
@@ -638,7 +645,10 @@ impl Runtime {
         let witness_stmt = stmt.clone().into();
         let fact = IsNonemptySetFact::new(stmt.set.clone(), stmt.line_file.clone()).into();
         let store_result = if self.current_execution_is_trusted_file() {
-            self.store_trusted_fact_and_infer_with_reason(fact, InferReason::VerifiedStatement)
+            self.store_fact_with_trust_and_infer_with_reason(
+                fact,
+                InferReason::StatementWithVerification,
+            )
         } else {
             self.store_with_well_defined_verification_and_infer_with_default_verify_state(fact)
         };

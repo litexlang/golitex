@@ -88,8 +88,8 @@ fn success_stmt_result_inferred_fact_id(
     if let Some(fact) = result.fact() {
         return infer_result_fact_id(&fact.infers, target);
     }
-    if let Some(common) = result.common() {
-        if let Some(fact_id) = infer_result_fact_id(&common.infers, target) {
+    if let Some(environment_effects) = result.environment_effects() {
+        if let Some(fact_id) = infer_result_fact_id(environment_effects, target) {
             return Some(fact_id);
         }
     }

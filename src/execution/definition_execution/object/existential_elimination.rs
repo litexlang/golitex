@@ -486,16 +486,32 @@ impl Runtime {
         source_exist_fact: &ExistFactEnum,
         line_file: LineFile,
     ) -> Result<SuccessInferResult, RuntimeError> {
-        for binding in defined_bindings {
-            self.store_parameter_binding(binding, BindingScope::DefinitionBinding)?;
-        }
-
         let new_obj_names_as_identifier_objs: Vec<Obj> = defined_bindings
             .iter()
             .map(|binding| {
                 Identifier::new_bound(binding.name().to_string(), binding.as_ref()).into()
             })
             .collect();
+
+        let param_to_obj_map = source_exist_fact
+            .typed_parameters()
+            .param_defs_and_args_to_param_to_arg_map(new_obj_names_as_identifier_objs.as_slice());
+        let mut binding_index = 0;
+        for group in source_exist_fact.typed_parameters().groups.iter() {
+            let instantiated_type = self.inst_param_type(
+                &group.param_type,
+                &param_to_obj_map,
+                SubstitutionMode::Exact,
+            )?;
+            for _ in group.params.iter() {
+                self.store_typed_parameter_binding(
+                    &defined_bindings[binding_index],
+                    BindingScope::DefinitionBinding,
+                    &instantiated_type,
+                )?;
+                binding_index += 1;
+            }
+        }
 
         let mut infer_result = self
             .store_args_satisfy_param_type_when_not_defining_new_identifiers_with_reason(
@@ -506,10 +522,6 @@ impl Runtime {
                 InferReason::ExistElimination,
             )
             .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone(), e))?;
-
-        let param_to_obj_map = source_exist_fact
-            .typed_parameters()
-            .param_defs_and_args_to_param_to_arg_map(new_obj_names_as_identifier_objs.as_slice());
 
         let body_fact_verify_state = VerifyState::initial();
         for fact in source_exist_fact.facts().iter() {

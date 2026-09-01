@@ -7,13 +7,17 @@ impl Runtime {
     pub fn verify_additive_sign_with_builtin_strategy(
         &mut self,
         atomic_fact: &AtomicFact,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let Some(normalized) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(UnknownGenericStmtResult::new().into());
         };
         if normalized.to_string() != atomic_fact.to_string() {
-            let normalized_result =
-                self.verify_non_equational_atomic_fact_with_bounded_builtin_routes(&normalized)?;
+            let normalized_result = self
+                .verify_non_equational_atomic_fact_with_bounded_builtin_routes(
+                    &normalized,
+                    verify_state,
+                )?;
             if normalized_result.is_success() {
                 return Ok(
                     SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
@@ -26,7 +30,7 @@ impl Runtime {
                 );
             }
         }
-        if let Some(children) = self.verify_structural_order_strategy(&normalized)? {
+        if let Some(children) = self.verify_structural_order_strategy(&normalized, verify_state)? {
             let strategy_label =
                 "numeric-order strategy: structurally smaller order goals".to_string();
             let success = match structural_order_strategy_rule_evidence(&normalized, &children) {
@@ -55,6 +59,7 @@ impl Runtime {
                     add.left.as_ref(),
                     true,
                     &fact.line_file,
+                    verify_state,
                 )?;
                 if !left.is_success() {
                     return Ok(UnknownGenericStmtResult::new().into());
@@ -63,6 +68,7 @@ impl Runtime {
                     add.right.as_ref(),
                     true,
                     &fact.line_file,
+                    verify_state,
                 )?;
                 if !right.is_success() {
                     return Ok(UnknownGenericStmtResult::new().into());
@@ -85,6 +91,7 @@ impl Runtime {
                     add.left.as_ref(),
                     add.right.as_ref(),
                     &fact.line_file,
+                    verify_state,
                 )? {
                     return Ok(
                         SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
@@ -108,20 +115,25 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: &LineFile,
+        verify_state: &VerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
-        let left_strict = self.verify_additive_sign_strategy_child(left, false, line_file)?;
+        let left_strict =
+            self.verify_additive_sign_strategy_child(left, false, line_file, verify_state)?;
         if left_strict.is_success() {
-            let right_weak = self.verify_additive_sign_strategy_child(right, true, line_file)?;
+            let right_weak =
+                self.verify_additive_sign_strategy_child(right, true, line_file, verify_state)?;
             if right_weak.is_success() {
                 return Ok(Some(vec![left_strict, right_weak]));
             }
         }
 
-        let left_weak = self.verify_additive_sign_strategy_child(left, true, line_file)?;
+        let left_weak =
+            self.verify_additive_sign_strategy_child(left, true, line_file, verify_state)?;
         if !left_weak.is_success() {
             return Ok(None);
         }
-        let right_strict = self.verify_additive_sign_strategy_child(right, false, line_file)?;
+        let right_strict =
+            self.verify_additive_sign_strategy_child(right, false, line_file, verify_state)?;
         if right_strict.is_success() {
             Ok(Some(vec![left_weak, right_strict]))
         } else {
@@ -134,6 +146,7 @@ impl Runtime {
         obj: &Obj,
         weak: bool,
         line_file: &LineFile,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let zero: Obj = Number::new("0".to_string()).into();
         let child: AtomicFact = if weak {
@@ -141,16 +154,21 @@ impl Runtime {
         } else {
             LessFact::new(zero, obj.clone(), line_file.clone()).into()
         };
-        self.verify_builtin_strategy_child(&child)
+        self.verify_builtin_strategy_child(&child, verify_state)
     }
 
     fn verify_structural_order_strategy(
         &mut self,
         normalized: &AtomicFact,
+        verify_state: &VerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         match normalized {
-            AtomicFact::LessEqualFact(fact) => self.verify_weak_structural_order_strategy(fact),
-            AtomicFact::LessFact(fact) => self.verify_strict_structural_order_strategy(fact),
+            AtomicFact::LessEqualFact(fact) => {
+                self.verify_weak_structural_order_strategy(fact, verify_state)
+            }
+            AtomicFact::LessFact(fact) => {
+                self.verify_strict_structural_order_strategy(fact, verify_state)
+            }
             _ => Ok(None),
         }
     }
@@ -158,6 +176,7 @@ impl Runtime {
     fn verify_weak_structural_order_strategy(
         &mut self,
         fact: &LessEqualFact,
+        verify_state: &VerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         let zero: Obj = Number::new("0".to_string()).into();
         let one: Obj = Number::new("1".to_string()).into();
@@ -484,12 +503,13 @@ impl Runtime {
             &lf,
             &mut alternatives,
         );
-        self.verify_order_strategy_alternatives(alternatives)
+        self.verify_order_strategy_alternatives(alternatives, verify_state)
     }
 
     fn verify_strict_structural_order_strategy(
         &mut self,
         fact: &LessFact,
+        verify_state: &VerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         let zero: Obj = Number::new("0".to_string()).into();
         let lf = fact.line_file.clone();
@@ -689,7 +709,7 @@ impl Runtime {
             &lf,
             &mut alternatives,
         );
-        self.verify_order_strategy_alternatives(alternatives)
+        self.verify_order_strategy_alternatives(alternatives, verify_state)
     }
 
     fn finite_set_constructor_children(set: &Obj) -> Option<Vec<Obj>> {
@@ -743,12 +763,13 @@ impl Runtime {
     fn verify_order_strategy_alternatives(
         &mut self,
         alternatives: Vec<Vec<AtomicFact>>,
+        verify_state: &VerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         for required in alternatives {
             let mut results = Vec::with_capacity(required.len());
             let mut complete = true;
             for child in required {
-                let result = self.verify_builtin_strategy_child(&child)?;
+                let result = self.verify_builtin_strategy_child(&child, verify_state)?;
                 if !result.is_success() {
                     complete = false;
                     break;

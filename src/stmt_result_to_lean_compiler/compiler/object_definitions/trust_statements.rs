@@ -1,4 +1,4 @@
-//! Trust statements, trusted facts, and source axioms.
+//! Trust statements, facts accepted with trust, and source axioms.
 
 use super::super::*;
 

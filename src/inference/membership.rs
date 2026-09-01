@@ -130,6 +130,7 @@ impl Runtime {
     fn infer_membership_in_equal_fn_set_from_in_fact(
         &mut self,
         in_fact: &InFact,
+        inference_state: &InferenceState,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let mut result = SuccessInferResult::new();
         for equal_set in self
@@ -146,7 +147,11 @@ impl Runtime {
             )
             .into();
             result.new_infer_result_inside(
-                self.store_atomic_fact_without_well_defined_verified_and_infer(expanded_atomic)?,
+                self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
+                    expanded_atomic,
+                    InferReason::StoredFact.store_reason(),
+                    inference_state,
+                )?,
             );
         }
         Ok(result)
@@ -155,6 +160,7 @@ impl Runtime {
     fn infer_membership_in_equal_set_representatives_from_in_fact(
         &mut self,
         in_fact: &InFact,
+        inference_state: &InferenceState,
     ) -> Result<SuccessInferResult, RuntimeError> {
         // A local proof binder may be tested against the same ambient carrier
         // many times while that carrier is equal to an arbitrarily deep user
@@ -211,13 +217,21 @@ impl Runtime {
                 )
             } else {
                 result.new_infer_result_inside(
-                    self.store_atomic_fact_without_well_defined_verified_and_infer(expanded_fact)?,
+                    self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
+                        expanded_fact,
+                        InferReason::StoredFact.store_reason(),
+                        inference_state,
+                    )?,
                 );
                 continue;
             };
             let conclusion_fact: Fact = expanded_fact.clone().into();
-            let conclusion_infers =
-                self.store_atomic_fact_without_well_defined_verified_and_infer(expanded_fact)?;
+            let conclusion_infers = self
+                .store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
+                    expanded_fact,
+                    InferReason::StoredFact.store_reason(),
+                    inference_state,
+                )?;
             result.add_rule_application_preserving_conclusion_result_structure(
                 InferRule::MembershipInSetWithKnownEqualityImpliesMembershipInEqualSet(
                     MembershipInSetWithKnownEqualityImpliesMembershipInEqualSetInferRule {
@@ -235,10 +249,11 @@ impl Runtime {
     }
 
     // RHS is set-builder `{ x $in S | ... }`: emit `element $in S` and each defining fact with `x := element`.
-    pub fn infer_membership_in_set_builder_from_in_fact(
+    pub(in crate::inference) fn infer_membership_in_set_builder_from_in_fact(
         &mut self,
         in_fact: &InFact,
         set_builder: &SetBuilder,
+        inference_state: &InferenceState,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let unfolded_membership: Fact = InFact::new(
             in_fact.element.clone(),
@@ -273,8 +288,9 @@ impl Runtime {
         let mut result = SuccessInferResult::new();
         result.new_fact(&element_in_param_set_fact);
         let element_in_param_set_infers = self
-            .store_with_well_defined_verification_and_infer_with_default_verify_state(
+            .store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
                 element_in_param_set_fact.clone(),
+                inference_state,
             )?;
         result.add_rule_application(
             InferRule::SetBuilderBaseMembershipProjection,
@@ -309,8 +325,9 @@ impl Runtime {
 
             result.new_fact(&fact_to_store);
             let conclusion_infers = self
-                .store_with_well_defined_verification_and_infer_with_default_verify_state(
+                .store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
                     fact_to_store.clone(),
+                    inference_state,
                 )?;
             result.add_rule_application(
                 InferRule::SetBuilderPredicateProjection { clause_index },
@@ -324,10 +341,11 @@ impl Runtime {
         Ok(result)
     }
 
-    pub fn infer_membership_in_general_cart_from_in_fact(
+    pub(in crate::inference) fn infer_membership_in_general_cart_from_in_fact(
         &mut self,
         in_fact: &InFact,
         general_cart: &GeneralCart,
+        inference_state: &InferenceState,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let fn_set_fact: Fact = InFact::new(
             in_fact.element.clone(),
@@ -338,7 +356,10 @@ impl Runtime {
 
         let mut result = SuccessInferResult::new();
         result.new_fact(&fn_set_fact);
-        self.store_with_well_defined_verification_and_infer_with_default_verify_state(fn_set_fact)?;
+        self.store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
+            fn_set_fact,
+            inference_state,
+        )?;
 
         let choice_fact: Fact = crate::verification::general_cart_member_choice_fact(
             general_cart,
@@ -347,7 +368,10 @@ impl Runtime {
         )
         .into();
         result.new_fact(&choice_fact);
-        self.store_with_well_defined_verification_and_infer_with_default_verify_state(choice_fact)?;
+        self.store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
+            choice_fact,
+            inference_state,
+        )?;
 
         Ok(result)
     }
@@ -358,6 +382,7 @@ impl Runtime {
     fn infer_membership_in_symbolic_cart_from_in_fact(
         &mut self,
         in_fact: &InFact,
+        inference_state: &InferenceState,
     ) -> Result<SuccessInferResult, RuntimeError> {
         // Literal carts are handled by the dedicated `Obj::Cart` branch.  The
         // symbolic fallback requires either an exact stored `$is_cart(C)` fact
@@ -379,7 +404,11 @@ impl Runtime {
             IsTupleFact::new(in_fact.element.clone(), in_fact.line_file.clone()).into();
         result.push_atomic_fact(&is_tuple_fact);
         result.new_infer_result_inside(
-            self.store_atomic_fact_without_well_defined_verified_and_infer(is_tuple_fact)?,
+            self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
+                is_tuple_fact,
+                InferReason::StoredFact.store_reason(),
+                inference_state,
+            )?,
         );
 
         let tuple_dim_fact: AtomicFact = EqualFact::new(
@@ -390,7 +419,11 @@ impl Runtime {
         .into();
         result.push_atomic_fact(&tuple_dim_fact);
         result.new_infer_result_inside(
-            self.store_atomic_fact_without_well_defined_verified_and_infer(tuple_dim_fact)?,
+            self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
+                tuple_dim_fact,
+                InferReason::StoredFact.store_reason(),
+                inference_state,
+            )?,
         );
 
         let index_name = self.generate_random_unused_name();
@@ -417,8 +450,9 @@ impl Runtime {
         .into();
         result.new_fact(&coordinate_forall_fact);
         result.new_infer_result_inside(
-            self.store_with_well_defined_verification_and_infer_with_default_verify_state(
+            self.store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
                 coordinate_forall_fact,
+                inference_state,
             )?,
         );
 
@@ -429,6 +463,7 @@ impl Runtime {
     pub(in crate::inference) fn membership(
         &mut self,
         in_fact: &InFact,
+        inference_state: &InferenceState,
     ) -> Result<SuccessInferResult, RuntimeError> {
         match &in_fact.set {
             // Function-space knowledge is retained for later typing and satisfaction checks.
@@ -439,11 +474,13 @@ impl Runtime {
             // and has a preimage in the function domain.
             // Example: if `f fn(x S) T`, storing `z $in fn_range(f)` infers
             // `z $in T` and `exist x S st {z = f(x)}`.
-            Obj::FnRange(fn_range) => self.infer_membership_in_fn_range(in_fact, fn_range),
+            Obj::FnRange(fn_range) => {
+                self.infer_membership_in_fn_range(in_fact, fn_range, inference_state)
+            }
             // Replacement elimination: `y $in replacement(P, A)` infers a preimage witness exists.
             // Example: `y $in replacement(P, A)` infers `exist x A st {$P(x, y)}`.
             Obj::Replacement(replacement) => {
-                self.infer_membership_in_replacement(in_fact, replacement)
+                self.infer_membership_in_replacement(in_fact, replacement, inference_state)
             }
             // Finite enum set: `a $in {1,2}` => fact `(a = 1) or (a = 2)`.
             Obj::ListSet(list_set) => {
@@ -468,7 +505,7 @@ impl Runtime {
                     self.top_level_env()
                         .store_atomic_fact(equal_atomic_fact.clone())?;
                     self.store_fact_cache_keys_with_nested_obj_binders(&equal_atomic_fact.into())?;
-                    let conclusion_infers = self.infer_equal_fact(&equal_fact)?;
+                    let conclusion_infers = self.infer_equal_fact(&equal_fact, inference_state)?;
                     result.add_rule_application_preserving_conclusion_result_structure(
                         InferRule::ListSetMembershipImpliesEqualityAlternatives(
                             ListSetMembershipImpliesEqualityAlternativesInferRule {
@@ -500,8 +537,9 @@ impl Runtime {
                 let mut result = SuccessInferResult::new();
                 result.new_fact(&or_fact);
                 let conclusion_infers = self
-                    .store_with_well_defined_verification_and_infer_with_default_verify_state(
+                    .store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
                         or_fact.clone(),
+                        inference_state,
                     )?;
                 result.add_rule_application_preserving_conclusion_result_structure(
                     InferRule::ListSetMembershipImpliesEqualityAlternatives(
@@ -515,16 +553,20 @@ impl Runtime {
                 Ok(result)
             }
             // Set comprehension: membership in parameter domain plus instantiated filter facts.
-            Obj::SetBuilder(set_builder) => {
-                self.infer_membership_in_set_builder_from_in_fact(in_fact, set_builder)
-            }
+            Obj::SetBuilder(set_builder) => self.infer_membership_in_set_builder_from_in_fact(
+                in_fact,
+                set_builder,
+                inference_state,
+            ),
             // General Cartesian product: membership gives the choice function type and the
             // pointwise factor-membership forall.
             // Example: `c $in general_cart(I, s, g)` infers
             // `c $in fn(t I)big_union(s)` and `forall t I: c(t) $in g(t)`.
-            Obj::GeneralCart(general_cart) => {
-                self.infer_membership_in_general_cart_from_in_fact(in_fact, general_cart)
-            }
+            Obj::GeneralCart(general_cart) => self.infer_membership_in_general_cart_from_in_fact(
+                in_fact,
+                general_cart,
+                inference_state,
+            ),
             // Power set membership: `A $in power_set(B)` means `A $subset B`.
             // Example: from `A $in power_set(Z)`, infer `A $subset Z`.
             Obj::PowerSet(power_set) => {
@@ -537,7 +579,11 @@ impl Runtime {
                 let mut result = SuccessInferResult::new();
                 result.push_atomic_fact(&subset_fact);
                 result.new_infer_result_inside(
-                    self.store_atomic_fact_without_well_defined_verified_and_infer(subset_fact)?,
+                    self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
+                        subset_fact,
+                        InferReason::StoredFact.store_reason(),
+                        inference_state,
+                    )?,
                 );
                 Ok(result)
             }
@@ -553,8 +599,9 @@ impl Runtime {
 
                 result.new_fact(&is_cart_fact);
                 let tuple_shape_infers = self
-                    .store_with_well_defined_verification_and_infer_with_default_verify_state(
+                    .store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
                         is_cart_fact.clone(),
+                        inference_state,
                     )?;
                 result.add_rule_application(
                     InferRule::CartesianMembershipProjection(
@@ -582,8 +629,9 @@ impl Runtime {
 
                 result.new_fact(&tuple_dim_fact);
                 let tuple_dimension_infers = self
-                    .store_with_well_defined_verification_and_infer_with_default_verify_state(
+                    .store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
                         tuple_dim_fact.clone(),
+                        inference_state,
                     )?;
                 result.add_rule_application(
                     InferRule::CartesianMembershipProjection(
@@ -625,8 +673,9 @@ impl Runtime {
                             .into();
                     result.new_fact(&projected_in_factor);
                     let coordinate_infers = self
-                        .store_with_well_defined_verification_and_infer_with_default_verify_state(
+                        .store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
                             projected_in_factor.clone(),
+                            inference_state,
                         )?;
                     result.add_rule_application(
                         InferRule::CartesianMembershipProjection(
@@ -649,22 +698,37 @@ impl Runtime {
             Obj::Range(r) => {
                 let start = (*r.start).clone();
                 let end = (*r.end).clone();
-                self.infer_in_fact_element_in_integer_interval(in_fact, start, end, false)
+                self.infer_in_fact_element_in_integer_interval(
+                    in_fact,
+                    start,
+                    end,
+                    false,
+                    inference_state,
+                )
             }
             // Closed integer interval: `i $in closed_range(a,b)` => `i $in Z`, `a <= i`, `i <= b`.
             Obj::ClosedRange(c) => {
                 let start = (*c.start).clone();
                 let end = (*c.end).clone();
-                self.infer_in_fact_element_in_integer_interval(in_fact, start, end, true)
+                self.infer_in_fact_element_in_integer_interval(
+                    in_fact,
+                    start,
+                    end,
+                    true,
+                    inference_state,
+                )
             }
             // Real interval membership: `x $in '(a, b]` => `x $in R`, `a < x`, `x <= b`.
             Obj::IntervalObj(interval) => {
-                self.infer_in_fact_element_in_real_interval(in_fact, interval)
+                self.infer_in_fact_element_in_real_interval(in_fact, interval, inference_state)
             }
             // Half-infinite real interval membership: `x $in '[a,)` => `x $in R`, `a <= x`.
-            Obj::OneSideInfinityIntervalObj(interval) => {
-                self.infer_in_fact_element_in_one_side_infinity_interval(in_fact, interval)
-            }
+            Obj::OneSideInfinityIntervalObj(interval) => self
+                .infer_in_fact_element_in_one_side_infinity_interval(
+                    in_fact,
+                    interval,
+                    inference_state,
+                ),
             // Strictly positive number sets: `x $in R+` (etc.) => `0 < x`.
             Obj::StandardSet(
                 source_set @ (StandardSet::QPos | StandardSet::RPos | StandardSet::NPos),
@@ -677,8 +741,10 @@ impl Runtime {
                 let mut result = SuccessInferResult::new();
                 result.push_atomic_fact(&inferred_atomic_fact);
                 let conclusion_infers = self
-                    .store_atomic_fact_without_well_defined_verified_and_infer(
+                    .store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
                         inferred_atomic_fact.clone(),
+                        InferReason::StoredFact.store_reason(),
+                        inference_state,
                     )?;
                 result.add_rule_application(
                     InferRule::PositiveStandardSetMembershipImpliesPositive(
@@ -706,8 +772,10 @@ impl Runtime {
                 let mut result = SuccessInferResult::new();
                 result.push_atomic_fact(&inferred_atomic_fact);
                 let conclusion_infers = self
-                    .store_atomic_fact_without_well_defined_verified_and_infer(
+                    .store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
                         inferred_atomic_fact.clone(),
+                        InferReason::StoredFact.store_reason(),
+                        inference_state,
                     )?;
                 result.add_rule_application(
                     InferRule::NegativeStandardSetMembershipImpliesNegative(
@@ -738,8 +806,10 @@ impl Runtime {
                 let mut result = SuccessInferResult::new();
                 result.push_atomic_fact(&inferred_atomic_fact);
                 let conclusion_infers = self
-                    .store_atomic_fact_without_well_defined_verified_and_infer(
+                    .store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
                         inferred_atomic_fact.clone(),
+                        InferReason::StoredFact.store_reason(),
+                        inference_state,
                     )?;
                 result.add_rule_application(
                     InferRule::NonzeroStandardSetMembershipImpliesNonzero(
@@ -769,8 +839,10 @@ impl Runtime {
                 let mut result = SuccessInferResult::new();
                 result.push_atomic_fact(&inferred_atomic_fact);
                 let conclusion_infers = self
-                    .store_atomic_fact_without_well_defined_verified_and_infer(
+                    .store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
                         inferred_atomic_fact.clone(),
+                        InferReason::StoredFact.store_reason(),
+                        inference_state,
                     )?;
                 result.add_rule_application(
                     InferRule::NaturalMembershipImpliesNonnegative,
@@ -803,8 +875,10 @@ impl Runtime {
                 )
                 .into();
                 result.new_infer_result_inside(
-                    self.store_atomic_fact_without_well_defined_verified_and_infer(
+                    self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
                         expanded_atomic,
+                        InferReason::StoredFact.store_reason(),
+                        inference_state,
                     )?,
                 );
                 Ok(result)
@@ -820,8 +894,10 @@ impl Runtime {
                 )
                 .into();
                 result.new_infer_result_inside(
-                    self.store_atomic_fact_without_well_defined_verified_and_infer(
+                    self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
                         expanded_atomic,
+                        InferReason::StoredFact.store_reason(),
+                        inference_state,
                     )?,
                 );
                 Ok(result)
@@ -842,8 +918,10 @@ impl Runtime {
                 )
                 .into();
                 result.new_infer_result_inside(
-                    self.store_atomic_fact_without_well_defined_verified_and_infer(
+                    self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
                         expanded_atomic,
+                        InferReason::StoredFact.store_reason(),
+                        inference_state,
                     )?,
                 );
                 Ok(result)
@@ -868,8 +946,9 @@ impl Runtime {
                 let mut result = SuccessInferResult::new();
                 result.new_fact(&union_membership_cases);
                 result.new_infer_result_inside(
-                    self.store_with_well_defined_verification_and_infer_with_default_verify_state(
+                    self.store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
                         union_membership_cases,
+                        inference_state,
                     )?,
                 );
                 Ok(result)
@@ -893,14 +972,16 @@ impl Runtime {
                 let mut result = SuccessInferResult::new();
                 result.new_fact(&element_in_left);
                 result.new_infer_result_inside(
-                    self.store_with_well_defined_verification_and_infer_with_default_verify_state(
+                    self.store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
                         element_in_left,
+                        inference_state,
                     )?,
                 );
                 result.new_fact(&element_in_right);
                 result.new_infer_result_inside(
-                    self.store_with_well_defined_verification_and_infer_with_default_verify_state(
+                    self.store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
                         element_in_right,
+                        inference_state,
                     )?,
                 );
                 Ok(result)
@@ -916,14 +997,16 @@ impl Runtime {
                 let mut result = SuccessInferResult::new();
                 result.new_fact(&element_in_left);
                 result.new_infer_result_inside(
-                    self.store_with_well_defined_verification_and_infer_with_default_verify_state(
+                    self.store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
                         element_in_left,
+                        inference_state,
                     )?,
                 );
                 result.new_fact(&element_not_in_right);
                 result.new_infer_result_inside(
-                    self.store_with_well_defined_verification_and_infer_with_default_verify_state(
+                    self.store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
                         element_not_in_right,
+                        inference_state,
                     )?,
                 );
                 // Singleton exclusion: `x $in set_minus(A, {a})` implies `x != a`.
@@ -938,8 +1021,9 @@ impl Runtime {
                         .into();
                         result.new_fact(&element_not_equal);
                         result.new_infer_result_inside(
-                            self.store_with_well_defined_verification_and_infer_with_default_verify_state(
+                            self.store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
                                 element_not_equal,
+                                inference_state,
                             )?,
                         );
                     }
@@ -948,26 +1032,31 @@ impl Runtime {
             }
             // Family union elimination: `x $in big_union(F)` means `x` lies in some member set of `F`.
             // Example: from `x $in big_union(F)`, infer `exist item F st {x $in item}`.
-            Obj::BigUnion(big_union) => self.infer_membership_in_big_union(in_fact, big_union),
+            Obj::BigUnion(big_union) => {
+                self.infer_membership_in_big_union(in_fact, big_union, inference_state)
+            }
             Obj::IndexUnion(index_union) => {
-                self.infer_membership_in_index_union(in_fact, index_union)
+                self.infer_membership_in_index_union(in_fact, index_union, inference_state)
             }
             Obj::IndexIntersect(index_intersect) => {
-                self.infer_membership_in_index_intersect(in_fact, index_intersect)
+                self.infer_membership_in_index_intersect(in_fact, index_intersect, inference_state)
             }
             set_obj => {
                 let symbolic_cart_infer =
-                    self.infer_membership_in_symbolic_cart_from_in_fact(in_fact)?;
+                    self.infer_membership_in_symbolic_cart_from_in_fact(in_fact, inference_state)?;
                 if !symbolic_cart_infer.is_empty() {
                     return Ok(symbolic_cart_infer);
                 }
-                let equal_set_infer =
-                    self.infer_membership_in_equal_set_representatives_from_in_fact(in_fact)?;
+                let equal_set_infer = self
+                    .infer_membership_in_equal_set_representatives_from_in_fact(
+                        in_fact,
+                        inference_state,
+                    )?;
                 if !equal_set_infer.is_empty() {
                     return Ok(equal_set_infer);
                 }
                 let equal_fn_set_infer =
-                    self.infer_membership_in_equal_fn_set_from_in_fact(in_fact)?;
+                    self.infer_membership_in_equal_fn_set_from_in_fact(in_fact, inference_state)?;
                 if !equal_fn_set_infer.is_empty() {
                     return Ok(equal_fn_set_infer);
                 }
@@ -977,11 +1066,18 @@ impl Runtime {
                 if let Some(set_builder) = self
                     .unfold_known_fn_application_to_set_builder(set_obj, &VerifyState::initial())?
                 {
-                    return self
-                        .infer_membership_in_set_builder_from_in_fact(in_fact, &set_builder);
+                    return self.infer_membership_in_set_builder_from_in_fact(
+                        in_fact,
+                        &set_builder,
+                        inference_state,
+                    );
                 }
                 if let Some(set_builder) = self.get_obj_equal_to_set_builder(set_obj) {
-                    self.infer_membership_in_set_builder_from_in_fact(in_fact, &set_builder)
+                    self.infer_membership_in_set_builder_from_in_fact(
+                        in_fact,
+                        &set_builder,
+                        inference_state,
+                    )
                 } else {
                     Ok(SuccessInferResult::new())
                 }
@@ -993,6 +1089,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         fn_range: &FnRange,
+        inference_state: &InferenceState,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let Some(body) = self.get_fn_range_function_body(&fn_range.function) else {
             return Ok(SuccessInferResult::new());
@@ -1006,8 +1103,12 @@ impl Runtime {
         let codomain_fact: Fact = codomain_atomic.clone().into();
         let mut result = SuccessInferResult::new();
         result.new_fact(&codomain_fact);
-        let codomain_infers =
-            self.store_atomic_fact_without_well_defined_verified_and_infer(codomain_atomic)?;
+        let codomain_infers = self
+            .store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
+                codomain_atomic,
+                InferReason::StoredFact.store_reason(),
+                inference_state,
+            )?;
         result.add_rule_application(
             InferRule::FunctionRangeMembershipImpliesCodomainMembership,
             in_fact.clone().into(),
@@ -1033,8 +1134,9 @@ impl Runtime {
             {
                 result.new_fact(&exist_fact);
                 result.new_infer_result_inside(
-                    self.store_with_well_defined_verification_and_infer_with_default_verify_state(
+                    self.store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
                         exist_fact,
+                        inference_state,
                     )?,
                 );
             }
@@ -1122,6 +1224,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         big_union: &BigUnion,
+        inference_state: &InferenceState,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let member_name = self.generate_internal_binder_name();
         let member_group = self.fresh_param_group_with_type(
@@ -1144,8 +1247,9 @@ impl Runtime {
         let mut result = SuccessInferResult::new();
         result.new_fact(&exist_fact);
         result.new_infer_result_inside(
-            self.store_with_well_defined_verification_and_infer_with_default_verify_state(
+            self.store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
                 exist_fact,
+                inference_state,
             )?,
         );
         Ok(result)
@@ -1170,6 +1274,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         index_union: &IndexUnion,
+        inference_state: &InferenceState,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let mut result = SuccessInferResult::new();
         let ambient_membership: Fact = InFact::new(
@@ -1180,8 +1285,9 @@ impl Runtime {
         .into();
         result.new_fact(&ambient_membership);
         result.new_infer_result_inside(
-            self.store_with_well_defined_verification_and_infer_with_default_verify_state(
+            self.store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
                 ambient_membership,
+                inference_state,
             )?,
         );
 
@@ -1206,8 +1312,9 @@ impl Runtime {
         .into();
         result.new_fact(&exist_fact);
         result.new_infer_result_inside(
-            self.store_with_well_defined_verification_and_infer_with_default_verify_state(
+            self.store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
                 exist_fact,
+                inference_state,
             )?,
         );
         Ok(result)
@@ -1217,6 +1324,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         index_intersect: &IndexIntersect,
+        inference_state: &InferenceState,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let mut result = SuccessInferResult::new();
         let ambient_membership: Fact = InFact::new(
@@ -1227,8 +1335,9 @@ impl Runtime {
         .into();
         result.new_fact(&ambient_membership);
         result.new_infer_result_inside(
-            self.store_with_well_defined_verification_and_infer_with_default_verify_state(
+            self.store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
                 ambient_membership,
+                inference_state,
             )?,
         );
 
@@ -1254,8 +1363,9 @@ impl Runtime {
         .into();
         result.new_fact(&forall_fact);
         result.new_infer_result_inside(
-            self.store_with_well_defined_verification_and_infer_with_default_verify_state(
+            self.store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
                 forall_fact,
+                inference_state,
             )?,
         );
         Ok(result)
@@ -1265,6 +1375,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         replacement: &Replacement,
+        inference_state: &InferenceState,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let preimage_name = self.generate_internal_binder_name();
         let preimage_group = self.fresh_param_group_with_type(
@@ -1287,8 +1398,9 @@ impl Runtime {
         let mut result = SuccessInferResult::new();
         result.new_fact(&exist_fact);
         result.new_infer_result_inside(
-            self.store_with_well_defined_verification_and_infer_with_default_verify_state(
+            self.store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
                 exist_fact,
+                inference_state,
             )?,
         );
         Ok(result)
@@ -1301,6 +1413,7 @@ impl Runtime {
         start: Obj,
         end: Obj,
         end_inclusive: bool,
+        inference_state: &InferenceState,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let element = in_fact.element.clone();
         let lf = in_fact.line_file.clone();
@@ -1309,11 +1422,19 @@ impl Runtime {
             InFact::new(element.clone(), StandardSet::Z.into(), lf.clone()).into();
         let mut result = SuccessInferResult::new();
         result.push_atomic_fact(&inferred_in_z_fact);
-        self.store_atomic_fact_without_well_defined_verified_and_infer(inferred_in_z_fact.clone())?;
+        self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
+            inferred_in_z_fact.clone(),
+            InferReason::StoredFact.store_reason(),
+            inference_state,
+        )?;
 
         let lower_bound = LessEqualFact::new(start.clone(), element.clone(), lf.clone()).into();
         result.push_atomic_fact(&lower_bound);
-        self.store_atomic_fact_without_well_defined_verified_and_infer(lower_bound.clone())?;
+        self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
+            lower_bound.clone(),
+            InferReason::StoredFact.store_reason(),
+            inference_state,
+        )?;
 
         let upper_bound = if end_inclusive {
             LessEqualFact::new(element.clone(), end.clone(), lf.clone()).into()
@@ -1321,14 +1442,22 @@ impl Runtime {
             LessFact::new(element.clone(), end.clone(), lf.clone()).into()
         };
         result.push_atomic_fact(&upper_bound);
-        self.store_atomic_fact_without_well_defined_verified_and_infer(upper_bound.clone())?;
+        self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
+            upper_bound.clone(),
+            InferReason::StoredFact.store_reason(),
+            inference_state,
+        )?;
 
         if let Some(singleton) =
             self.singleton_value_for_integer_interval(&start, &end, end_inclusive)
         {
             let equal_fact = EqualFact::new(element, singleton, lf).into();
             result.push_atomic_fact(&equal_fact);
-            self.store_atomic_fact_without_well_defined_verified_and_infer(equal_fact)?;
+            self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
+                equal_fact,
+                InferReason::StoredFact.store_reason(),
+                inference_state,
+            )?;
         }
 
         Ok(result)
@@ -1339,6 +1468,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         interval: &IntervalObj,
+        inference_state: &InferenceState,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let element = in_fact.element.clone();
         let lf = in_fact.line_file.clone();
@@ -1347,7 +1477,11 @@ impl Runtime {
             InFact::new(element.clone(), StandardSet::R.into(), lf.clone()).into();
         let mut result = SuccessInferResult::new();
         result.push_atomic_fact(&inferred_in_r_fact);
-        self.store_atomic_fact_without_well_defined_verified_and_infer(inferred_in_r_fact.clone())?;
+        self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
+            inferred_in_r_fact.clone(),
+            InferReason::StoredFact.store_reason(),
+            inference_state,
+        )?;
 
         let lower_bound = if interval.left_closed() {
             LessEqualFact::new(interval.start().clone(), element.clone(), lf.clone()).into()
@@ -1355,7 +1489,11 @@ impl Runtime {
             LessFact::new(interval.start().clone(), element.clone(), lf.clone()).into()
         };
         result.push_atomic_fact(&lower_bound);
-        self.store_atomic_fact_without_well_defined_verified_and_infer(lower_bound.clone())?;
+        self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
+            lower_bound.clone(),
+            InferReason::StoredFact.store_reason(),
+            inference_state,
+        )?;
 
         let upper_bound = if interval.right_closed() {
             LessEqualFact::new(element.clone(), interval.end().clone(), lf.clone()).into()
@@ -1363,7 +1501,11 @@ impl Runtime {
             LessFact::new(element.clone(), interval.end().clone(), lf.clone()).into()
         };
         result.push_atomic_fact(&upper_bound);
-        self.store_atomic_fact_without_well_defined_verified_and_infer(upper_bound.clone())?;
+        self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
+            upper_bound.clone(),
+            InferReason::StoredFact.store_reason(),
+            inference_state,
+        )?;
 
         Ok(result)
     }
@@ -1372,6 +1514,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         interval: &OneSideInfinityIntervalObj,
+        inference_state: &InferenceState,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let element = in_fact.element.clone();
         let lf = in_fact.line_file.clone();
@@ -1380,7 +1523,11 @@ impl Runtime {
             InFact::new(element.clone(), StandardSet::R.into(), lf.clone()).into();
         let mut result = SuccessInferResult::new();
         result.push_atomic_fact(&inferred_in_r_fact);
-        self.store_atomic_fact_without_well_defined_verified_and_infer(inferred_in_r_fact.clone())?;
+        self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
+            inferred_in_r_fact.clone(),
+            InferReason::StoredFact.store_reason(),
+            inference_state,
+        )?;
 
         let bound = match interval {
             OneSideInfinityIntervalObj::LeftOpen(_) => {
@@ -1397,7 +1544,11 @@ impl Runtime {
             }
         };
         result.push_atomic_fact(&bound);
-        self.store_atomic_fact_without_well_defined_verified_and_infer(bound.clone())?;
+        self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
+            bound.clone(),
+            InferReason::StoredFact.store_reason(),
+            inference_state,
+        )?;
 
         Ok(result)
     }
@@ -1427,9 +1578,10 @@ impl Runtime {
     // Every Litex cartesian product has at least two coordinate factors.
     // Example: `$is_cart(C)` infers `cart_dim(C) >= 2`, which permits a
     // symbolic `have tuple ... for i <= cart_dim(C)` construction.
-    pub fn infer_is_cart_dimension_lower_bound(
+    pub(in crate::inference) fn infer_is_cart_dimension_lower_bound(
         &mut self,
         is_cart_fact: &IsCartFact,
+        inference_state: &InferenceState,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let lower_bound: AtomicFact = GreaterEqualFact::new(
             CartDim::new(is_cart_fact.set.clone()).into(),
@@ -1439,7 +1591,11 @@ impl Runtime {
         .into();
         let mut result = SuccessInferResult::new();
         result.push_atomic_fact(&lower_bound);
-        self.store_atomic_fact_without_well_defined_verified_and_infer(lower_bound)?;
+        self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
+            lower_bound,
+            InferReason::StoredFact.store_reason(),
+            inference_state,
+        )?;
         Ok(result)
     }
 }

@@ -1275,35 +1275,6 @@ pub(super) fn eval_stmt_execution_result_value(
     }
 }
 
-pub(super) fn optional_trace(trace: Option<&StatementExecutionTrace>) -> JsonValue {
-    trace
-        .map(|trace| {
-            object(vec![
-                (
-                    "verify_well_definedness".to_string(),
-                    phase_trace_value(&trace.verify_well_definedness),
-                ),
-                (
-                    "verify_process".to_string(),
-                    phase_trace_value(&trace.verify_process),
-                ),
-                (
-                    "affect_environment".to_string(),
-                    phase_trace_value(&trace.affect_environment),
-                ),
-                optional_string_field("verification_status", trace.verification_status.as_deref()),
-            ])
-        })
-        .unwrap_or(JsonValue::Null)
-}
-
-pub(super) fn phase_trace_value(trace: &ExecutionPhaseTrace) -> JsonValue {
-    object(vec![
-        string_field("status", phase_status(trace.status)),
-        optional_string_field("message", trace.message.as_deref()),
-    ])
-}
-
 pub(super) fn equality_transport_value(result: Option<&EqualityTransportEvidence>) -> JsonValue {
     result
         .map(|result| {
@@ -1788,16 +1759,6 @@ pub(super) fn wd_requirement_role(role: WellDefinednessRequirementRole) -> JsonV
             number_field("parameter_group_index", parameter_group_index),
             number_field("parameter_index", parameter_index),
         ]),
-    }
-}
-
-pub(super) fn phase_status(status: StatementPhaseStatus) -> &'static str {
-    match status {
-        StatementPhaseStatus::Success => "Success",
-        StatementPhaseStatus::Unknown => "Unknown",
-        StatementPhaseStatus::Error => "Error",
-        StatementPhaseStatus::Skipped => "Skipped",
-        StatementPhaseStatus::NotRun => "NotRun",
     }
 }
 

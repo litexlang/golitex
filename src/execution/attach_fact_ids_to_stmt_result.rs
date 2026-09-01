@@ -30,7 +30,12 @@ impl Runtime {
                 self.attach_known_fact_ids_to_verified_by(verification.proof_mut())?;
             }
         } else {
-            if let Some(common) = success.common_mut() {
+            if let SuccessStmtResult::ProofBlock(SuccessProofBlockStmtResult::ClaimStmt(claim)) =
+                success
+            {
+                self.attach_known_fact_ids_to_infer_result(&mut claim.environment_effects)?;
+                self.attach_known_fact_ids_to_infer_result(&mut claim.domain.assumption_infers)?;
+            } else if let Some(common) = success.common_mut() {
                 self.attach_known_fact_ids_to_infer_result(&mut common.infers)?;
             }
             success.try_visit_child_results_mut(&mut |child| {

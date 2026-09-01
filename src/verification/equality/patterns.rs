@@ -174,11 +174,6 @@ pub fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
         Obj::StructObj(so) => so.params.iter().any(|p| obj_expr_mentions_bare_id(p, id)),
         Obj::ObjAsStructInstanceWithFieldAccess(fa) => {
             obj_expr_mentions_bare_id(fa.obj.as_ref(), id)
-                || fa
-                    .struct_obj
-                    .params
-                    .iter()
-                    .any(|p| obj_expr_mentions_bare_id(p, id))
         }
         Obj::InstantiatedTemplateObj(t) => {
             t.args.iter().any(|arg| obj_expr_mentions_bare_id(arg, id))

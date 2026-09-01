@@ -6,22 +6,29 @@ impl Runtime {
     pub fn verify_builtin_strategy_child(
         &mut self,
         atomic_fact: &AtomicFact,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         match atomic_fact {
             AtomicFact::EqualFact(equal_fact) => {
-                let direct = self.verify_equal_fact_with_bounded_builtin_routes(equal_fact)?;
+                let direct =
+                    self.verify_equal_fact_with_bounded_builtin_routes(equal_fact, verify_state)?;
                 if direct.is_success() {
                     return Ok(direct);
                 }
-                self.verify_equal_fact_with_builtin_strategy_routes(equal_fact)
+                self.verify_equal_fact_with_builtin_strategy_routes(equal_fact, verify_state)
             }
             _ => {
-                let direct = self
-                    .verify_non_equational_atomic_fact_with_bounded_builtin_routes(atomic_fact)?;
+                let direct = self.verify_non_equational_atomic_fact_with_bounded_builtin_routes(
+                    atomic_fact,
+                    verify_state,
+                )?;
                 if direct.is_success() {
                     return Ok(direct);
                 }
-                self.verify_non_equational_atomic_fact_with_builtin_strategy(atomic_fact)
+                self.verify_non_equational_atomic_fact_with_builtin_strategy(
+                    atomic_fact,
+                    verify_state,
+                )
             }
         }
     }
@@ -29,65 +36,60 @@ impl Runtime {
     pub fn verify_atomic_fact_with_builtin_strategy(
         &mut self,
         atomic_fact: &AtomicFact,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         match atomic_fact {
             AtomicFact::EqualFact(equal_fact) => {
-                self.verify_equal_fact_with_builtin_strategy_routes(equal_fact)
+                self.verify_equal_fact_with_builtin_strategy_routes(equal_fact, verify_state)
             }
-            _ => self.verify_non_equational_atomic_fact_with_builtin_strategy(atomic_fact),
+            _ => self
+                .verify_non_equational_atomic_fact_with_builtin_strategy(atomic_fact, verify_state),
         }
     }
 
     fn verify_equal_fact_with_builtin_strategy_routes(
         &mut self,
         equal_fact: &EqualFact,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
-        let atomic_fact: AtomicFact = equal_fact.clone().into();
-        if let Some(cached_result) =
-            self.verification_result_from_statement_proof_cache(&atomic_fact)
-        {
-            return Ok(cached_result);
-        }
-        let result = self.verify_equality_with_builtin_strategy(equal_fact)?;
-        Ok(self.cache_successful_atomic_fact_for_statement(&atomic_fact, result))
+        self.verify_equality_with_builtin_strategy(equal_fact, verify_state)
     }
 
     fn verify_non_equational_atomic_fact_with_builtin_strategy(
         &mut self,
         atomic_fact: &AtomicFact,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         debug_assert!(!matches!(atomic_fact, AtomicFact::EqualFact(_)));
-        if let Some(cached_result) =
-            self.verification_result_from_statement_proof_cache(atomic_fact)
-        {
-            return Ok(cached_result);
-        }
         let result = match atomic_fact {
             AtomicFact::InFact(fact) => {
-                let numeric = self.verify_numeric_carrier_with_builtin_strategy(fact)?;
+                let numeric =
+                    self.verify_numeric_carrier_with_builtin_strategy(fact, verify_state)?;
                 if numeric.is_success() {
                     Ok(numeric)
                 } else {
-                    self.verify_set_membership_with_builtin_strategy(fact)
+                    self.verify_set_membership_with_builtin_strategy(fact, verify_state)
                 }
             }
-            AtomicFact::SubsetFact(fact) => self.verify_subset_with_builtin_strategy(fact),
+            AtomicFact::SubsetFact(fact) => {
+                self.verify_subset_with_builtin_strategy(fact, verify_state)
+            }
             AtomicFact::SupersetFact(fact) => {
                 let subset = SubsetFact::new(
                     fact.right.clone(),
                     fact.left.clone(),
                     fact.line_file.clone(),
                 );
-                self.verify_subset_with_builtin_strategy(&subset)
+                self.verify_subset_with_builtin_strategy(&subset, verify_state)
             }
             AtomicFact::IsFiniteSetFact(fact) => {
-                self.verify_is_finite_set_with_builtin_strategy(fact)
+                self.verify_is_finite_set_with_builtin_strategy(fact, verify_state)
             }
             AtomicFact::IsNonemptySetFact(fact) => {
-                self.verify_is_nonempty_set_with_builtin_strategy(fact)
+                self.verify_is_nonempty_set_with_builtin_strategy(fact, verify_state)
             }
             AtomicFact::NotEqualFact(fact) => {
-                self.verify_nonzero_product_with_builtin_strategy(fact)
+                self.verify_nonzero_product_with_builtin_strategy(fact, verify_state)
             }
             AtomicFact::NotLessFact(_)
             | AtomicFact::NotGreaterFact(_)
@@ -97,13 +99,13 @@ impl Runtime {
             | AtomicFact::GreaterFact(_)
             | AtomicFact::LessEqualFact(_)
             | AtomicFact::GreaterEqualFact(_) => {
-                self.verify_additive_sign_with_builtin_strategy(atomic_fact)
+                self.verify_additive_sign_with_builtin_strategy(atomic_fact, verify_state)
             }
             AtomicFact::EqualFact(_) => {
                 unreachable!("equality has an owner-specific builtin strategy route")
             }
             _ => Ok(UnknownGenericStmtResult::new().into()),
         }?;
-        Ok(self.cache_successful_atomic_fact_for_statement(atomic_fact, result))
+        Ok(result)
     }
 }

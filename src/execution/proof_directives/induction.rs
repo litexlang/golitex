@@ -111,9 +111,9 @@ impl Runtime {
                         vec![],
                     )
                 })?;
-        let infer_result = self.store_trusted_fact_and_infer_with_reason(
+        let infer_result = self.store_fact_with_trust_and_infer_with_reason(
             corresponding_forall_fact,
-            InferReason::VerifiedStatement,
+            InferReason::StatementWithVerification,
         )?;
         Ok(
             SuccessByStmtResult::ByInducStmt(Box::new(SuccessByInducStmtResult {

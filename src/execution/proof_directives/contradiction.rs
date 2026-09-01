@@ -194,9 +194,9 @@ impl Runtime {
         let to_prove_fact = stmt.to_prove.clone();
         let to_prove_fact_display_string = to_prove_fact.to_string();
         if self.current_execution_is_trusted_file() {
-            return self.store_trusted_fact_and_infer_with_reason(
+            return self.store_fact_with_trust_and_infer_with_reason(
                 to_prove_fact,
-                InferReason::VerifiedStatement,
+                InferReason::StatementWithVerification,
             );
         }
         self.store_with_well_defined_verification_and_infer_with_default_verify_state(to_prove_fact)

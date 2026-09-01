@@ -18,7 +18,6 @@ impl RuntimeErrorStruct {
             previous_error: previous_error.map(Box::new),
             inside_results,
             output: Box::new(RuntimeErrorOutput::new()),
-            execution_trace: None,
         }
     }
 
@@ -37,7 +36,6 @@ impl RuntimeErrorStruct {
             previous_error: previous_error.map(Box::new),
             inside_results,
             output: Box::new(output),
-            execution_trace: None,
         }
     }
 }

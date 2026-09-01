@@ -18,11 +18,15 @@ impl Runtime {
         equal_fact: &EqualFact,
         result: &mut SuccessInferResult,
         infer_step_description: &str,
+        inference_state: &InferenceState,
     ) -> Result<SuccessStoreFactResult, RuntimeError> {
         result.new_fact(&inferred_fact);
         let conclusion_fact = inferred_fact.clone();
         let conclusion_infers = self
-            .store_with_well_defined_verification_and_infer_with_default_verify_state(inferred_fact)
+            .store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
+                inferred_fact,
+                inference_state,
+            )
             .map_err(|previous_error| {
                 RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
                     None,
@@ -48,6 +52,7 @@ impl Runtime {
         target_obj: &Obj,
         equal_fact: &EqualFact,
         result: &mut SuccessInferResult,
+        inference_state: &InferenceState,
     ) -> Result<(), RuntimeError> {
         let target_is_cart_fact =
             IsCartFact::new(target_obj.clone(), equal_fact.line_file.clone()).into();
@@ -56,6 +61,7 @@ impl Runtime {
             equal_fact,
             result,
             "cart fact",
+            inference_state,
         )?;
 
         let target_cart_dim_obj = CartDim::new(target_obj.clone()).into();
@@ -71,6 +77,7 @@ impl Runtime {
             equal_fact,
             result,
             "cart_dim fact",
+            inference_state,
         )?;
         self.store_known_cart_obj(
             &known_cart_obj_as_symbol.to_string(),
@@ -92,6 +99,7 @@ impl Runtime {
         equal_fact: &EqualFact,
         result: &mut SuccessInferResult,
         known_side: KnownTupleEqualitySide,
+        inference_state: &InferenceState,
     ) -> Result<(), RuntimeError> {
         if known_tuple_obj.args.len() < 2 {
             return Ok(());
@@ -103,6 +111,7 @@ impl Runtime {
             equal_fact,
             result,
             "tuple fact",
+            inference_state,
         )?;
 
         let target_tuple_dim_obj = TupleDim::new(target_obj.clone()).into();
@@ -118,6 +127,7 @@ impl Runtime {
             equal_fact,
             result,
             "tuple_dim fact",
+            inference_state,
         )?;
 
         result.add_rule_application(
@@ -219,22 +229,26 @@ impl Runtime {
     // From `u = v`: merge numeric normal forms in the env; if one side is `a-b` and the other `0`, emit `a=b`;
     // if one side is a literal cart/tuple/set-builder/finite-seq/matrix list, record shape for the other symbol.
     // Example: `a = 1+2` binds `a` to normalized `3`; `0 = x-y` yields fact `x = y`.
-    pub fn infer_equal_fact(
+    pub(in crate::inference) fn infer_equal_fact(
         &mut self,
         equal_fact: &EqualFact,
+        inference_state: &InferenceState,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let mut result = SuccessInferResult::new();
         result.new_infer_result_inside(
-            self.infer_equal_fact_from_subtraction_equals_zero(equal_fact)?,
+            self.infer_equal_fact_from_subtraction_equals_zero(equal_fact, inference_state)?,
         );
         result.new_infer_result_inside(self.infer_equal_fact_and_give_value_to_obj(equal_fact)?);
-        result.new_infer_result_inside(self.infer_equal_fact_by_cart(equal_fact)?);
-        result.new_infer_result_inside(self.infer_equal_fact_by_tuple(equal_fact)?);
+        result.new_infer_result_inside(self.infer_equal_fact_by_cart(equal_fact, inference_state)?);
+        result
+            .new_infer_result_inside(self.infer_equal_fact_by_tuple(equal_fact, inference_state)?);
         result.new_infer_result_inside(self.infer_equal_fact_by_set_builder(equal_fact)?);
         result.new_infer_result_inside(self.infer_equal_fact_by_finite_seq_list(equal_fact)?);
         result.new_infer_result_inside(self.infer_equal_fact_by_matrix_list(equal_fact)?);
         result.new_infer_result_inside(self.infer_equal_fact_by_anonymous_fn(equal_fact)?);
-        result.new_infer_result_inside(self.infer_equal_fact_by_positive_real_power(equal_fact)?);
+        result.new_infer_result_inside(
+            self.infer_equal_fact_by_positive_real_power(equal_fact, inference_state)?,
+        );
 
         Ok(result)
     }
@@ -280,6 +294,7 @@ impl Runtime {
     fn infer_equal_fact_from_subtraction_equals_zero(
         &mut self,
         equal_fact: &EqualFact,
+        inference_state: &InferenceState,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let mut result = SuccessInferResult::new();
         let (a, b) = if obj_is_infer_literal_zero(&equal_fact.left) {
@@ -304,6 +319,7 @@ impl Runtime {
             equal_fact,
             &mut result,
             "equality from a - b = 0",
+            inference_state,
         )?;
         Ok(result)
     }
@@ -311,6 +327,7 @@ impl Runtime {
     fn infer_equal_fact_by_cart(
         &mut self,
         equal_fact: &EqualFact,
+        inference_state: &InferenceState,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let mut result = SuccessInferResult::new();
 
@@ -321,6 +338,7 @@ impl Runtime {
                 &equal_fact.right,
                 equal_fact,
                 &mut result,
+                inference_state,
             )?;
         }
 
@@ -331,6 +349,7 @@ impl Runtime {
                 &equal_fact.left,
                 equal_fact,
                 &mut result,
+                inference_state,
             )?;
         }
 
@@ -395,6 +414,7 @@ impl Runtime {
     fn infer_equal_fact_by_tuple(
         &mut self,
         equal_fact: &EqualFact,
+        inference_state: &InferenceState,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let mut result = SuccessInferResult::new();
 
@@ -405,6 +425,7 @@ impl Runtime {
                 equal_fact,
                 &mut result,
                 KnownTupleEqualitySide::Left,
+                inference_state,
             )?;
         }
 
@@ -416,6 +437,7 @@ impl Runtime {
                     equal_fact,
                     &mut result,
                     KnownTupleEqualitySide::Right,
+                    inference_state,
                 )?;
             }
         }
@@ -454,6 +476,7 @@ impl Runtime {
     fn infer_equal_fact_by_positive_real_power(
         &mut self,
         equal_fact: &EqualFact,
+        inference_state: &InferenceState,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let mut result = SuccessInferResult::new();
         self.infer_positive_real_power_membership_to_equal_side(
@@ -461,12 +484,14 @@ impl Runtime {
             &equal_fact.right,
             equal_fact,
             &mut result,
+            inference_state,
         )?;
         self.infer_positive_real_power_membership_to_equal_side(
             &equal_fact.right,
             &equal_fact.left,
             equal_fact,
             &mut result,
+            inference_state,
         )?;
         Ok(result)
     }
@@ -477,6 +502,7 @@ impl Runtime {
         target: &Obj,
         equal_fact: &EqualFact,
         result: &mut SuccessInferResult,
+        inference_state: &InferenceState,
     ) -> Result<(), RuntimeError> {
         if maybe_power.to_string() == target.to_string() {
             return Ok(());
@@ -491,8 +517,11 @@ impl Runtime {
             equal_fact.line_file.clone(),
         )
         .into();
-        let power_result =
-            self.verify_non_equational_atomic_fact_with_bounded_builtin_routes(&power_in_r_pos)?;
+        let verify_state = VerifyState::initial();
+        let power_result = self.verify_non_equational_atomic_fact_with_bounded_builtin_routes(
+            &power_in_r_pos,
+            &verify_state,
+        )?;
         if !power_result.is_success() {
             return Ok(());
         }
@@ -505,7 +534,11 @@ impl Runtime {
         .into();
         let target_fact: Fact = target_in_r_pos.clone().into();
         let nested_infer = self
-            .store_atomic_fact_without_well_defined_verified_and_infer(target_in_r_pos.clone())?;
+            .store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
+                target_in_r_pos.clone(),
+                InferReason::StoredFact.store_reason(),
+                inference_state,
+            )?;
         let conclusion = SuccessStoreFactResult::new(target_fact, nested_infer.clone());
         let is_closed_positive_power = maybe_power
             .evaluate_to_normalized_decimal_number()
@@ -578,9 +611,10 @@ impl Runtime {
     // Positive builtin predicates expose their definition facts before ordinary `prop` inference.
     // Example: `A $proper_subset B` infers both `A $subset B` and `A != B`.
     // For `P(args)`, each instantiated `iff` body is stored after checking parameter types.
-    pub fn infer_normal_atomic_fact(
+    pub(in crate::inference) fn infer_normal_atomic_fact(
         &mut self,
         normal_atomic_fact: &NormalAtomicFact,
+        inference_state: &InferenceState,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let predicate_name = normal_atomic_fact.predicate.to_string();
         let firing_key = format!(
@@ -621,9 +655,10 @@ impl Runtime {
             for fact in definition_facts {
                 result.add_fact_by_definition(&fact);
                 result.new_infer_result_inside(
-                    self.store_with_well_defined_verification_and_infer_with_default_verify_state_and_reason(
+                    self.store_with_well_defined_verification_and_infer_with_default_verify_state_and_reason_and_state(
                         fact,
                         reason.clone(),
+                        inference_state,
                     )?,
                 );
             }
@@ -636,9 +671,10 @@ impl Runtime {
                 let rule = "bijective functions have unique preimages";
                 result.add_builtin_inference(rule, &unique_preimage);
                 result.new_infer_result_inside(
-                    self.store_with_well_defined_verification_and_infer_with_default_verify_state_and_reason(
+                    self.store_with_well_defined_verification_and_infer_with_default_verify_state_and_reason_and_state(
                         unique_preimage,
                         InferReason::BuiltinInference(rule.to_string()),
+                        inference_state,
                     )?,
                 );
             }
@@ -676,9 +712,10 @@ impl Runtime {
             parameter_requirement_facts.into_iter().enumerate()
         {
             let stored_parameter_requirement = self
-                .store_with_well_defined_verification_and_infer_with_default_verify_state_and_reason(
+                .store_with_well_defined_verification_and_infer_with_default_verify_state_and_reason_and_state(
                     parameter_requirement_fact.clone(),
                     by_definition_reason.clone(),
+                    inference_state,
                 )
                 .map_err(|previous_error| {
                     RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
@@ -743,9 +780,10 @@ impl Runtime {
             // capture-avoiding substitution preserves well-definedness.
             // The active-fact guard and firing cache stop cyclic definitions.
             let stored_clause = self
-                .store_without_well_defined_verification_and_infer_with_reason(
+                .store_without_well_defined_verification_and_infer_with_reason_and_state(
                     fact_to_store.clone(),
                     by_definition_reason.clone(),
+                    inference_state,
                 )
                 .map_err(|previous_error| {
                     RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(

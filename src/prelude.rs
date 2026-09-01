@@ -103,6 +103,7 @@ pub use crate::graph::{
     render_definition_graph_from_stmt_results, render_fact_graph_from_stmt_results, render_graph,
     render_graph_from_stmt_results, render_result_graph_from_stmt_results, GraphKind,
 };
+pub use crate::inference::InferenceState;
 pub use crate::inference::{
     CartesianMembershipProjectionInferRule, CartesianMembershipProjectionKind,
     ClosedPositivePowerEqualityImpliesEqualSideMembershipInferRule,
@@ -255,17 +256,14 @@ pub use crate::result::DefinitionReductionVerificationEvidence;
 pub use crate::result::DivNotEqualZeroBuiltinRuleEvidence;
 pub use crate::result::EqualityTransportEvidence;
 pub use crate::result::EqualityTransportStep;
-pub use crate::result::ExecutionPhaseTrace;
 pub use crate::result::FactTransformationEvidence;
 pub use crate::result::FactTransformationRule;
 pub use crate::result::FactTransformationStep;
 pub use crate::result::NonzeroExpressionOrientation;
 pub use crate::result::ObjectDefinitionItem;
-pub use crate::result::StatementExecutionPhase;
-pub use crate::result::StatementExecutionTrace;
-pub use crate::result::StatementPhaseStatus;
 pub use crate::result::StmtResult;
 pub use crate::result::SuccessCheckedFunctionDefinitionReductionFactProofResult;
+pub use crate::result::SuccessCheckedGoalBlockResult;
 pub use crate::result::SuccessCombinedFactProofResult;
 pub use crate::result::SuccessDefinitionReductionFactProofResult;
 pub use crate::result::SuccessDiagnosticFactProofResult;
@@ -319,9 +317,6 @@ pub use crate::result::SuccessVerifyByStructuredIntegerInducResult;
 pub use crate::result::SuccessVerifyByTheoremSelectionResult;
 pub use crate::result::SuccessVerifyByUnstructuredIntegerInducResult;
 pub use crate::result::SuccessVerifyCaseFunctionDefinitionResult;
-pub use crate::result::SuccessVerifyClaimFactResult;
-pub use crate::result::SuccessVerifyClaimForallResult;
-pub use crate::result::SuccessVerifyClaimResult;
 pub use crate::result::SuccessVerifyContradictionResult;
 pub use crate::result::SuccessVerifyExistentialEliminationResult;
 pub use crate::result::SuccessVerifyFunctionDefinitionResult;
@@ -492,7 +487,7 @@ pub use crate::runtime::ParseContext;
 pub use crate::runtime::ScopeFrame;
 pub use crate::runtime::{
     ExecutionFrame, ExecutionModuleFileInfo, ExecutionOption, OutputDetail, RunOption, RunOptions,
-    Runtime, StatementProofStateStack, SummaryOption,
+    Runtime, SummaryOption,
 };
 pub use crate::statement::claim_stmt::ClaimStmt;
 pub use crate::statement::define_algorithm_stmt::AlgoCase;
@@ -773,7 +768,6 @@ pub use crate::syntax::keywords::TRUST;
 pub use crate::syntax::keywords::TRY;
 pub use crate::syntax::keywords::TUPLE;
 pub use crate::syntax::keywords::TUPLE_DIM;
-pub use crate::syntax::keywords::UNFOLD;
 pub use crate::syntax::keywords::UNICODE_CART;
 pub use crate::syntax::keywords::UNICODE_INTERSECT;
 pub use crate::syntax::keywords::UNICODE_NOT_IN;

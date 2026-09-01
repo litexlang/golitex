@@ -15,10 +15,10 @@ pub struct Runtime {
     pub next_fact_id: u64,
     pub symbol_id_allocator: Rc<SymbolIdAllocator>,
     pub template_instance_interner: RefCell<HashMap<String, SymbolBinding>>,
-    /// Statement-local proof reuse and recursion guards. These scopes mirror
-    /// temporary runtime environments, but are not part of the persistent
-    /// mathematical environment and are never merged or snapshotted.
-    pub statement_proof_state: StatementProofStateStack,
+    /// Direct struct carriers learned only when a typed binding executes.
+    /// This keeps exact transient binder identities usable after their local
+    /// environment has ended, for example when a stored theorem is instantiated.
+    pub(crate) executed_direct_struct_carriers: HashMap<SymbolId, StructObj>,
     pub run_options: RunOptions,
 }
 
@@ -30,7 +30,7 @@ impl Runtime {
             next_fact_id: 1,
             symbol_id_allocator: Rc::new(SymbolIdAllocator::new()),
             template_instance_interner: RefCell::new(HashMap::new()),
-            statement_proof_state: StatementProofStateStack::new(),
+            executed_direct_struct_carriers: HashMap::new(),
             run_options,
         }
     }
