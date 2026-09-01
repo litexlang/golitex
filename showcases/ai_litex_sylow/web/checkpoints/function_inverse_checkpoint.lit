@@ -1,0 +1,3 @@
+# Persistent-session checkpoint immediately before function_inverse.lit.
+# The target file is comment-only during construction, so no declaration from
+# the layer under test is preloaded.

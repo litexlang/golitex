@@ -1,0 +1,40 @@
+# Chapter 9 normal-subgroup layer built on the checked subgroup interface.
+
+# Normality adds ambient conjugation closure to the ordinary subgroup laws.
+prop is_normal_subgroup(G nonempty_set, group &group::Group<G>, H power_set(G)):
+    $subgroup::is_subgroup(G, group, H)
+    forall g, h G:
+        h $in H
+        =>:
+            group.mul(group.mul(g, h), group.inv(g)) $in H
+
+thm normal_subgroup_is_subgroup:
+    ? forall G nonempty_set, group &group::Group<G>, H power_set(G):
+        $is_normal_subgroup(G, group, H)
+        =>:
+            $subgroup::is_subgroup(G, group, H)
+
+thm normal_subgroup_conjugate_mem:
+    ? forall G nonempty_set, group &group::Group<G>, H power_set(G), g, h G:
+        $is_normal_subgroup(G, group, H)
+        h $in H
+        =>:
+            group.mul(group.mul(g, h), group.inv(g)) $in H
+
+# The construction separates into the inherited subgroup fact and the one new
+# obligation: conjugation closure in each component of the intersection.
+thm normal_subgroup_intersection_closed:
+    ? forall G nonempty_set, group &group::Group<G>, H, K power_set(G):
+        $is_normal_subgroup(G, group, H)
+        $is_normal_subgroup(G, group, K)
+        =>:
+            $is_normal_subgroup(G, group, {x G: x $in H and x $in K})
+    by thm subgroup::subgroup_intersection_closed(G, group, H, K) => $subgroup::is_subgroup(G, group, {x G: x $in H and x $in K})
+    claim:
+        ? forall g, h G:
+            h $in {x G: x $in H and x $in K}
+            =>:
+                group.mul(group.mul(g, h), group.inv(g)) $in {x G: x $in H and x $in K}
+        group.mul(group.mul(g, h), group.inv(g)) $in H
+        group.mul(group.mul(g, h), group.inv(g)) $in K
+    by def $is_normal_subgroup(G, group, {x G: x $in H and x $in K})

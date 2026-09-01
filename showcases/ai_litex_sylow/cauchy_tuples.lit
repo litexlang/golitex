@@ -1,0 +1,465 @@
+# Product-one tuple carrier and finite counting infrastructure for Cauchy's theorem.
+
+prop is_cyclic_tuple_entry_value(p N+, G set, a fn(index \cyclic_group::cyclic_indices<p>) G, n N, value G):
+    exist index \cyclic_group::cyclic_indices<p> st {index = n, value = a(index)}
+
+template<p N+, G set>:
+    have fn cyclic_tuple_entry by exist!:
+        ? forall a fn(index \cyclic_group::cyclic_indices<p>) G, n N:
+            n < p
+            =>:
+                exist! value G st {$is_cyclic_tuple_entry_value(p, G, a, n, value)}
+        n <= p - 1
+        n $in closed_range(0, p - 1) = \cyclic_group::cyclic_indices<p>
+        have index \cyclic_group::cyclic_indices<p> = n
+        witness exist value G st {$is_cyclic_tuple_entry_value(p, G, a, n, value)} from a(index):
+            witness $is_cyclic_tuple_entry_value(p, G, a, n, a(index)) from index
+        claim:
+            ? forall left, right G:
+                $is_cyclic_tuple_entry_value(p, G, a, n, left)
+                $is_cyclic_tuple_entry_value(p, G, a, n, right)
+                =>:
+                    left = right
+            obtain left_index from exist left_index \cyclic_group::cyclic_indices<p> st {left_index = n, left = a(left_index)}
+            obtain right_index from exist right_index \cyclic_group::cyclic_indices<p> st {right_index = n, right = a(right_index)}
+            left_index = n = right_index
+            left = a(left_index) = a(right_index) = right
+
+thm cyclic_tuple_entry_apply:
+    ? forall p N+, G set, a fn(index \cyclic_group::cyclic_indices<p>) G, n N:
+        n < p
+        =>:
+            exist index \cyclic_group::cyclic_indices<p> st {index = n, \cyclic_tuple_entry<p, G>(a, n) = a(index)}
+    $is_cyclic_tuple_entry_value(p, G, a, n, \cyclic_tuple_entry<p, G>(a, n))
+    by def:
+        ? $is_cyclic_tuple_entry_value(p, G, a, n, \cyclic_tuple_entry<p, G>(a, n))
+
+template<G nonempty_set, group &group::Group<G>, p N+>:
+    have fn cyclic_tuple_prefix_product(a fn(index \cyclic_group::cyclic_indices<p>) G, n N: n <= p) G by induc n from 0:
+        case n = 0: group.one
+        case n > 0: group.mul(cyclic_tuple_prefix_product(a, n - 1), \cyclic_tuple_entry<p, G>(a, n - 1))
+
+thm cyclic_tuple_prefix_product_zero:
+    ? forall G nonempty_set, group &group::Group<G>, p N+, a fn(index \cyclic_group::cyclic_indices<p>) G:
+        \cyclic_tuple_prefix_product<G, group, p>(a, 0) = group.one
+    \cyclic_tuple_prefix_product<G, group, p>(a, 0) = group.one
+
+thm cyclic_tuple_prefix_product_succ:
+    ? forall G nonempty_set, group &group::Group<G>, p N+, a fn(index \cyclic_group::cyclic_indices<p>) G, n N:
+        n < p
+        =>:
+            \cyclic_tuple_prefix_product<G, group, p>(a, n + 1) = group.mul(\cyclic_tuple_prefix_product<G, group, p>(a, n), \cyclic_tuple_entry<p, G>(a, n))
+    n + 1 <= p
+    \cyclic_tuple_prefix_product<G, group, p>(a, n + 1) = group.mul(\cyclic_tuple_prefix_product<G, group, p>(a, (n + 1) - 1), \cyclic_tuple_entry<p, G>(a, (n + 1) - 1)) = group.mul(\cyclic_tuple_prefix_product<G, group, p>(a, n), \cyclic_tuple_entry<p, G>(a, n))
+
+template<p N+>:
+    have cauchy_prefix_indices set = closed_range(0, p - 2)
+
+prop is_cauchy_new_last_value(p N+, G set, prefix fn(index \cauchy_prefix_indices<p>) G, last G, index \cyclic_group::cyclic_indices<p>, value G):
+    index = p - 1
+    value = last
+
+prop is_cauchy_old_prefix_value(p N+, G set, prefix fn(index \cauchy_prefix_indices<p>) G, last G, index \cyclic_group::cyclic_indices<p>, value G):
+    index != p - 1
+    exist prefix_index \cauchy_prefix_indices<p> st {prefix_index = index, value = prefix(prefix_index)}
+
+prop is_cauchy_extension_value(p N+, G set, prefix fn(index \cauchy_prefix_indices<p>) G, last G, index \cyclic_group::cyclic_indices<p>, value G):
+    $is_cauchy_new_last_value(p, G, prefix, last, index, value) or $is_cauchy_old_prefix_value(p, G, prefix, last, index, value)
+
+thm cauchy_extension_value_exists_unique:
+    ? forall p N+, G set, prefix fn(index \cauchy_prefix_indices<p>) G, last G, index \cyclic_group::cyclic_indices<p>:
+        $prime(p)
+        =>:
+            exist! value G st {$is_cauchy_extension_value(p, G, prefix, last, index, value)}
+    p > 1
+    by cases:
+        ? exist! value G st {$is_cauchy_extension_value(p, G, prefix, last, index, value)}
+        case index = p - 1:
+            witness exist! value G st {$is_cauchy_extension_value(p, G, prefix, last, index, value)} from last:
+                by def:
+                    ? $is_cauchy_new_last_value(p, G, prefix, last, index, last)
+                claim:
+                    ? forall left, right G:
+                        $is_cauchy_extension_value(p, G, prefix, last, index, left)
+                        $is_cauchy_extension_value(p, G, prefix, last, index, right)
+                        =>:
+                            left = right
+                    claim:
+                        ? left = last
+                        by def:
+                            ? $is_cauchy_extension_value(p, G, prefix, last, index, left)
+                        by cases:
+                            ? left = last
+                            case $is_cauchy_new_last_value(p, G, prefix, last, index, left):
+                                by def $is_cauchy_new_last_value(p, G, prefix, last, index, left)
+                            case $is_cauchy_old_prefix_value(p, G, prefix, last, index, left):
+                                by def $is_cauchy_old_prefix_value(p, G, prefix, last, index, left)
+                                impossible index = p - 1
+                    claim:
+                        ? right = last
+                        by def:
+                            ? $is_cauchy_extension_value(p, G, prefix, last, index, right)
+                        by cases:
+                            ? right = last
+                            case $is_cauchy_new_last_value(p, G, prefix, last, index, right):
+                                by def $is_cauchy_new_last_value(p, G, prefix, last, index, right)
+                            case $is_cauchy_old_prefix_value(p, G, prefix, last, index, right):
+                                by def $is_cauchy_old_prefix_value(p, G, prefix, last, index, right)
+                                impossible index = p - 1
+                    left = last = right
+        case index != p - 1:
+            \cyclic_group::cyclic_indices<p> = closed_range(0, p - 1)
+            0 <= index <= p - 1
+            claim:
+                ? index < p - 1
+                by contra:
+                    ? index < p - 1
+                    index >= p - 1
+                    index <= p - 1
+                    index = p - 1
+                    impossible index != p - 1
+            index + 1 <= p - 1
+            index <= (p - 1) - 1 = p - 2
+            index $in closed_range(0, p - 2) = \cauchy_prefix_indices<p>
+            have prefix_index \cauchy_prefix_indices<p> = index
+            witness exist! value G st {$is_cauchy_extension_value(p, G, prefix, last, index, value)} from prefix(prefix_index):
+                claim:
+                    ? $is_cauchy_old_prefix_value(p, G, prefix, last, index, prefix(prefix_index))
+                    witness exist old_index \cauchy_prefix_indices<p> st {old_index = index, prefix(prefix_index) = prefix(old_index)} from prefix_index
+                by def:
+                    ? $is_cauchy_extension_value(p, G, prefix, last, index, prefix(prefix_index))
+                claim:
+                    ? forall left, right G:
+                        $is_cauchy_extension_value(p, G, prefix, last, index, left)
+                        $is_cauchy_extension_value(p, G, prefix, last, index, right)
+                        =>:
+                            left = right
+                    claim:
+                        ? left = prefix(prefix_index)
+                        by def:
+                            ? $is_cauchy_extension_value(p, G, prefix, last, index, left)
+                        by cases:
+                            ? left = prefix(prefix_index)
+                            case $is_cauchy_new_last_value(p, G, prefix, last, index, left):
+                                by def $is_cauchy_new_last_value(p, G, prefix, last, index, left)
+                                impossible index != p - 1
+                            case $is_cauchy_old_prefix_value(p, G, prefix, last, index, left):
+                                by def $is_cauchy_old_prefix_value(p, G, prefix, last, index, left)
+                                obtain old_index from exist old_index \cauchy_prefix_indices<p> st {old_index = index, left = prefix(old_index)}
+                                old_index = index = prefix_index
+                                left = prefix(old_index) = prefix(prefix_index)
+                    claim:
+                        ? right = prefix(prefix_index)
+                        by def:
+                            ? $is_cauchy_extension_value(p, G, prefix, last, index, right)
+                        by cases:
+                            ? right = prefix(prefix_index)
+                            case $is_cauchy_new_last_value(p, G, prefix, last, index, right):
+                                by def $is_cauchy_new_last_value(p, G, prefix, last, index, right)
+                                impossible index != p - 1
+                            case $is_cauchy_old_prefix_value(p, G, prefix, last, index, right):
+                                by def $is_cauchy_old_prefix_value(p, G, prefix, last, index, right)
+                                obtain old_index from exist old_index \cauchy_prefix_indices<p> st {old_index = index, right = prefix(old_index)}
+                                old_index = index = prefix_index
+                                right = prefix(old_index) = prefix(prefix_index)
+                    left = prefix(prefix_index) = right
+
+template<p N+, G set: $prime(p)>:
+    have fn cauchy_extension_value_selected by exist!:
+        ? forall prefix fn(index \cauchy_prefix_indices<p>) G, last G, index \cyclic_group::cyclic_indices<p>:
+            exist! value G st {$is_cauchy_extension_value(p, G, prefix, last, index, value)}
+        release thm cauchy_extension_value_exists_unique(p, G, prefix, last, index)
+
+template<p N+, G set: $prime(p)>:
+    have fn cauchy_extend(prefix fn(prefix_input \cauchy_prefix_indices<p>) G, last G) fn(output_index \cyclic_group::cyclic_indices<p>) G = fn(input_index \cyclic_group::cyclic_indices<p>) G {\cauchy_extension_value_selected<p, G>(prefix, last, input_index)}
+
+thm cauchy_extend_value_relation:
+    ? forall p N+, G set, prefix fn(prefix_index \cauchy_prefix_indices<p>) G, last G, index \cyclic_group::cyclic_indices<p>:
+        $prime(p)
+        =>:
+            $is_cauchy_extension_value(p, G, prefix, last, index, \cauchy_extend<p, G>(prefix, last)(index))
+    $is_cauchy_extension_value(p, G, prefix, last, index, \cauchy_extension_value_selected<p, G>(prefix, last, index))
+    \cauchy_extend<p, G>(prefix, last) = fn(current_index \cyclic_group::cyclic_indices<p>) G {\cauchy_extension_value_selected<p, G>(prefix, last, current_index)}
+    \cauchy_extend<p, G>(prefix, last)(index) = \cauchy_extension_value_selected<p, G>(prefix, last, index)
+    \cauchy_extension_value_selected<p, G>(prefix, last, index) = \cauchy_extend<p, G>(prefix, last)(index)
+    $is_cauchy_extension_value(p, G, prefix, last, index, \cauchy_extend<p, G>(prefix, last)(index))
+
+thm cauchy_extend_at_last:
+    ? forall p N+, G set, prefix fn(index \cauchy_prefix_indices<p>) G, last G:
+        $prime(p)
+        =>:
+            exist last_index \cyclic_group::cyclic_indices<p> st {last_index = p - 1, \cauchy_extend<p, G>(prefix, last)(last_index) = last}
+    p > 1
+    p - 1 >= 0
+    p - 1 <= p - 1
+    p - 1 $in closed_range(0, p - 1) = \cyclic_group::cyclic_indices<p>
+    have last_index \cyclic_group::cyclic_indices<p> = p - 1
+    release thm cauchy_extend_value_relation(p, G, prefix, last, last_index)
+    by def:
+        ? $is_cauchy_extension_value(p, G, prefix, last, last_index, \cauchy_extend<p, G>(prefix, last)(last_index))
+    by cases:
+        ? \cauchy_extend<p, G>(prefix, last)(last_index) = last
+        case $is_cauchy_new_last_value(p, G, prefix, last, last_index, \cauchy_extend<p, G>(prefix, last)(last_index)):
+            by def $is_cauchy_new_last_value(p, G, prefix, last, last_index, \cauchy_extend<p, G>(prefix, last)(last_index))
+        case $is_cauchy_old_prefix_value(p, G, prefix, last, last_index, \cauchy_extend<p, G>(prefix, last)(last_index)):
+            by def $is_cauchy_old_prefix_value(p, G, prefix, last, last_index, \cauchy_extend<p, G>(prefix, last)(last_index))
+            impossible last_index = p - 1
+    witness exist chosen_last \cyclic_group::cyclic_indices<p> st {chosen_last = p - 1, \cauchy_extend<p, G>(prefix, last)(chosen_last) = last} from last_index
+
+thm cauchy_extend_at_prefix:
+    ? forall p N+, G set, prefix fn(index \cauchy_prefix_indices<p>) G, last G, prefix_index \cauchy_prefix_indices<p>:
+        $prime(p)
+        =>:
+            exist full_index \cyclic_group::cyclic_indices<p> st {full_index = prefix_index, \cauchy_extend<p, G>(prefix, last)(full_index) = prefix(prefix_index)}
+    p > 1
+    \cauchy_prefix_indices<p> = closed_range(0, p - 2)
+    0 <= prefix_index <= p - 2
+    p - 2 < p - 1
+    prefix_index < p - 1
+    prefix_index <= p - 1
+    prefix_index $in closed_range(0, p - 1) = \cyclic_group::cyclic_indices<p>
+    have full_index \cyclic_group::cyclic_indices<p> = prefix_index
+    release thm cauchy_extend_value_relation(p, G, prefix, last, full_index)
+    by def:
+        ? $is_cauchy_extension_value(p, G, prefix, last, full_index, \cauchy_extend<p, G>(prefix, last)(full_index))
+    by cases:
+        ? \cauchy_extend<p, G>(prefix, last)(full_index) = prefix(prefix_index)
+        case $is_cauchy_new_last_value(p, G, prefix, last, full_index, \cauchy_extend<p, G>(prefix, last)(full_index)):
+            by def $is_cauchy_new_last_value(p, G, prefix, last, full_index, \cauchy_extend<p, G>(prefix, last)(full_index))
+            impossible full_index != p - 1
+        case $is_cauchy_old_prefix_value(p, G, prefix, last, full_index, \cauchy_extend<p, G>(prefix, last)(full_index)):
+            by def $is_cauchy_old_prefix_value(p, G, prefix, last, full_index, \cauchy_extend<p, G>(prefix, last)(full_index))
+            obtain old_index from exist old_index \cauchy_prefix_indices<p> st {old_index = full_index, \cauchy_extend<p, G>(prefix, last)(full_index) = prefix(old_index)}
+            old_index = full_index = prefix_index
+            \cauchy_extend<p, G>(prefix, last)(full_index) = prefix(old_index) = prefix(prefix_index)
+    witness exist chosen_full_index \cyclic_group::cyclic_indices<p> st {chosen_full_index = prefix_index, \cauchy_extend<p, G>(prefix, last)(chosen_full_index) = prefix(prefix_index)} from full_index
+
+thm cauchy_extend_entry_before_last:
+    ? forall p N+, G set, prefix fn(index \cauchy_prefix_indices<p>) G, last G, n N:
+        $prime(p)
+        n <= p - 2
+        n < p
+        =>:
+            exist prefix_index \cauchy_prefix_indices<p> st {prefix_index = n, \cyclic_tuple_entry<p, G>(\cauchy_extend<p, G>(prefix, last), n) = prefix(prefix_index)}
+    p > 1
+    n < p
+    n $in closed_range(0, p - 2) = \cauchy_prefix_indices<p>
+    have prefix_index \cauchy_prefix_indices<p> = n
+    release thm cauchy_extend_at_prefix(p, G, prefix, last, prefix_index)
+    obtain full_index from exist full_index \cyclic_group::cyclic_indices<p> st {full_index = prefix_index, \cauchy_extend<p, G>(prefix, last)(full_index) = prefix(prefix_index)}
+    release thm cyclic_tuple_entry_apply(p, G, \cauchy_extend<p, G>(prefix, last), n)
+    obtain selected_index from exist selected_index \cyclic_group::cyclic_indices<p> st {selected_index = n, \cyclic_tuple_entry<p, G>(\cauchy_extend<p, G>(prefix, last), n) = \cauchy_extend<p, G>(prefix, last)(selected_index)}
+    selected_index = n = prefix_index = full_index
+    \cauchy_extend<p, G>(prefix, last)(selected_index) = \cauchy_extend<p, G>(prefix, last)(full_index)
+    \cyclic_tuple_entry<p, G>(\cauchy_extend<p, G>(prefix, last), n) = \cauchy_extend<p, G>(prefix, last)(selected_index) = \cauchy_extend<p, G>(prefix, last)(full_index) = prefix(prefix_index)
+    witness exist chosen_prefix_index \cauchy_prefix_indices<p> st {chosen_prefix_index = n, \cyclic_tuple_entry<p, G>(\cauchy_extend<p, G>(prefix, last), n) = prefix(chosen_prefix_index)} from prefix_index
+
+thm cauchy_extend_entry_at_last:
+    ? forall p N+, G set, prefix fn(index \cauchy_prefix_indices<p>) G, last G, n N:
+        $prime(p)
+        n = p - 1
+        n < p
+        =>:
+            \cyclic_tuple_entry<p, G>(\cauchy_extend<p, G>(prefix, last), n) = last
+    p > 1
+    p - 1 >= 0
+    p - 1 < p
+    release thm cauchy_extend_at_last(p, G, prefix, last)
+    obtain full_last from exist full_last \cyclic_group::cyclic_indices<p> st {full_last = p - 1, \cauchy_extend<p, G>(prefix, last)(full_last) = last}
+    release thm cyclic_tuple_entry_apply(p, G, \cauchy_extend<p, G>(prefix, last), n)
+    obtain selected_last from exist selected_last \cyclic_group::cyclic_indices<p> st {selected_last = n, \cyclic_tuple_entry<p, G>(\cauchy_extend<p, G>(prefix, last), n) = \cauchy_extend<p, G>(prefix, last)(selected_last)}
+    selected_last = n = p - 1 = full_last
+    \cauchy_extend<p, G>(prefix, last)(selected_last) = \cauchy_extend<p, G>(prefix, last)(full_last) = last
+    \cyclic_tuple_entry<p, G>(\cauchy_extend<p, G>(prefix, last), n) = \cauchy_extend<p, G>(prefix, last)(selected_last) = last
+
+thm cauchy_prefix_product_independent_of_last:
+    ? forall G nonempty_set, group &group::Group<G>, p N+, prefix fn(index \cauchy_prefix_indices<p>) G, left_last, right_last G, n N:
+        $prime(p)
+        n <= p - 1
+        n <= p
+        =>:
+            \cyclic_tuple_prefix_product<G, group, p>(\cauchy_extend<p, G>(prefix, left_last), n) = \cyclic_tuple_prefix_product<G, group, p>(\cauchy_extend<p, G>(prefix, right_last), n)
+    prop same_prefix_product(k N):
+        forall:
+            k <= p - 1
+            k <= p
+            =>:
+                \cyclic_tuple_prefix_product<G, group, p>(\cauchy_extend<p, G>(prefix, left_last), k) = \cyclic_tuple_prefix_product<G, group, p>(\cauchy_extend<p, G>(prefix, right_last), k)
+    claim:
+        ? forall k N:
+            $same_prefix_product(k)
+        by induc k from 0:
+            ? $same_prefix_product(k)
+            ? from k = 0:
+                claim:
+                    ? forall:
+                        0 <= p - 1
+                        0 <= p
+                        =>:
+                            \cyclic_tuple_prefix_product<G, group, p>(\cauchy_extend<p, G>(prefix, left_last), 0) = \cyclic_tuple_prefix_product<G, group, p>(\cauchy_extend<p, G>(prefix, right_last), 0)
+                    release thm cyclic_tuple_prefix_product_zero(G, group, p, \cauchy_extend<p, G>(prefix, left_last))
+                    release thm cyclic_tuple_prefix_product_zero(G, group, p, \cauchy_extend<p, G>(prefix, right_last))
+                    \cyclic_tuple_prefix_product<G, group, p>(\cauchy_extend<p, G>(prefix, left_last), 0) = group.one = \cyclic_tuple_prefix_product<G, group, p>(\cauchy_extend<p, G>(prefix, right_last), 0)
+                by def:
+                    ? $same_prefix_product(0)
+            ? induc:
+                claim:
+                    ? forall:
+                        k + 1 <= p - 1
+                        k + 1 <= p
+                        =>:
+                            \cyclic_tuple_prefix_product<G, group, p>(\cauchy_extend<p, G>(prefix, left_last), k + 1) = \cyclic_tuple_prefix_product<G, group, p>(\cauchy_extend<p, G>(prefix, right_last), k + 1)
+                    k <= (p - 1) - 1 = p - 2
+                    p - 1 < p
+                    k + 1 <= p - 1 < p
+                    k < k + 1 < p
+                    k <= p - 1
+                    k <= p
+                    \cyclic_tuple_prefix_product<G, group, p>(\cauchy_extend<p, G>(prefix, left_last), k) = \cyclic_tuple_prefix_product<G, group, p>(\cauchy_extend<p, G>(prefix, right_last), k)
+                    release thm cauchy_extend_entry_before_last(p, G, prefix, left_last, k)
+                    obtain left_index from exist left_index \cauchy_prefix_indices<p> st {left_index = k, \cyclic_tuple_entry<p, G>(\cauchy_extend<p, G>(prefix, left_last), k) = prefix(left_index)}
+                    release thm cauchy_extend_entry_before_last(p, G, prefix, right_last, k)
+                    obtain right_index from exist right_index \cauchy_prefix_indices<p> st {right_index = k, \cyclic_tuple_entry<p, G>(\cauchy_extend<p, G>(prefix, right_last), k) = prefix(right_index)}
+                    left_index = k = right_index
+                    prefix(left_index) = prefix(right_index)
+                    \cyclic_tuple_entry<p, G>(\cauchy_extend<p, G>(prefix, left_last), k) = prefix(left_index) = prefix(right_index) = \cyclic_tuple_entry<p, G>(\cauchy_extend<p, G>(prefix, right_last), k)
+                    release thm cyclic_tuple_prefix_product_succ(G, group, p, \cauchy_extend<p, G>(prefix, left_last), k)
+                    release thm cyclic_tuple_prefix_product_succ(G, group, p, \cauchy_extend<p, G>(prefix, right_last), k)
+                    release thm cosets::object_substitution(G, G, fn(t G) G {group.mul(t, \cyclic_tuple_entry<p, G>(\cauchy_extend<p, G>(prefix, left_last), k))}, \cyclic_tuple_prefix_product<G, group, p>(\cauchy_extend<p, G>(prefix, left_last), k), \cyclic_tuple_prefix_product<G, group, p>(\cauchy_extend<p, G>(prefix, right_last), k))
+                    release thm cosets::object_substitution(G, G, fn(t G) G {group.mul(\cyclic_tuple_prefix_product<G, group, p>(\cauchy_extend<p, G>(prefix, right_last), k), t)}, \cyclic_tuple_entry<p, G>(\cauchy_extend<p, G>(prefix, left_last), k), \cyclic_tuple_entry<p, G>(\cauchy_extend<p, G>(prefix, right_last), k))
+                    group.mul(\cyclic_tuple_prefix_product<G, group, p>(\cauchy_extend<p, G>(prefix, left_last), k), \cyclic_tuple_entry<p, G>(\cauchy_extend<p, G>(prefix, left_last), k)) = group.mul(\cyclic_tuple_prefix_product<G, group, p>(\cauchy_extend<p, G>(prefix, right_last), k), \cyclic_tuple_entry<p, G>(\cauchy_extend<p, G>(prefix, left_last), k)) = group.mul(\cyclic_tuple_prefix_product<G, group, p>(\cauchy_extend<p, G>(prefix, right_last), k), \cyclic_tuple_entry<p, G>(\cauchy_extend<p, G>(prefix, right_last), k))
+                    \cyclic_tuple_prefix_product<G, group, p>(\cauchy_extend<p, G>(prefix, left_last), k + 1) = group.mul(\cyclic_tuple_prefix_product<G, group, p>(\cauchy_extend<p, G>(prefix, left_last), k), \cyclic_tuple_entry<p, G>(\cauchy_extend<p, G>(prefix, left_last), k)) = group.mul(\cyclic_tuple_prefix_product<G, group, p>(\cauchy_extend<p, G>(prefix, right_last), k), \cyclic_tuple_entry<p, G>(\cauchy_extend<p, G>(prefix, right_last), k)) = \cyclic_tuple_prefix_product<G, group, p>(\cauchy_extend<p, G>(prefix, right_last), k + 1)
+                by def:
+                    ? $same_prefix_product(k + 1)
+    $same_prefix_product(n)
+    n <= p - 1
+    n <= p
+    \cyclic_tuple_prefix_product<G, group, p>(\cauchy_extend<p, G>(prefix, left_last), n) = \cyclic_tuple_prefix_product<G, group, p>(\cauchy_extend<p, G>(prefix, right_last), n)
+
+template<G nonempty_set, group &group::Group<G>, p N+: $prime(p)>:
+    have fn cauchy_prefix_product(prefix fn(index \cauchy_prefix_indices<p>) G) G = \cyclic_tuple_prefix_product<G, group, p>(\cauchy_extend<p, G>(prefix, group.one), p - 1)
+
+template<G nonempty_set, group &group::Group<G>, p N+: $prime(p)>:
+    have fn cauchy_tuple_from_prefix(prefix fn(index \cauchy_prefix_indices<p>) G) fn(index \cyclic_group::cyclic_indices<p>) G = \cauchy_extend<p, G>(prefix, group.inv(\cauchy_prefix_product<G, group, p>(prefix)))
+
+prop cauchy_tuple_product_one(G nonempty_set, group &group::Group<G>, p N+, candidate fn(index \cyclic_group::cyclic_indices<p>) G):
+    \cyclic_tuple_prefix_product<G, group, p>(candidate, p) = group.one
+
+thm cauchy_tuple_from_prefix_product_one:
+    ? forall G nonempty_set, group &group::Group<G>, p N+, prefix fn(index \cauchy_prefix_indices<p>) G:
+        $prime(p)
+        =>:
+            $cauchy_tuple_product_one(G, group, p, \cauchy_tuple_from_prefix<G, group, p>(prefix))
+    p > 1
+    p - 1 >= 0
+    have last_natural N = p - 1
+    last_natural = p - 1
+    p - 1 < p
+    last_natural = p - 1 < p
+    last_natural <= p - 1
+    last_natural <= p
+    have prefix_product G = \cauchy_prefix_product<G, group, p>(prefix)
+    have last_value G = group.inv(prefix_product)
+    \cauchy_prefix_product<G, group, p>(prefix) = prefix_product
+    group.inv(prefix_product) = last_value
+    release thm cosets::object_substitution(G, G, group.inv, \cauchy_prefix_product<G, group, p>(prefix), prefix_product)
+    group.inv(\cauchy_prefix_product<G, group, p>(prefix)) = group.inv(prefix_product) = last_value
+    claim:
+        ? forall index \cyclic_group::cyclic_indices<p>:
+            \cauchy_tuple_from_prefix<G, group, p>(prefix)(index) = \cauchy_extend<p, G>(prefix, last_value)(index)
+        release thm cosets::object_substitution(G, G, fn(t G) G {\cauchy_extend<p, G>(prefix, t)(index)}, group.inv(\cauchy_prefix_product<G, group, p>(prefix)), last_value)
+        \cauchy_tuple_from_prefix<G, group, p>(prefix)(index) = \cauchy_extend<p, G>(prefix, group.inv(\cauchy_prefix_product<G, group, p>(prefix)))(index) = \cauchy_extend<p, G>(prefix, last_value)(index)
+    by def:
+        ? $fn_eq(\cauchy_tuple_from_prefix<G, group, p>(prefix), \cauchy_extend<p, G>(prefix, last_value))
+    \cauchy_tuple_from_prefix<G, group, p>(prefix) = \cauchy_extend<p, G>(prefix, last_value)
+    release thm cauchy_prefix_product_independent_of_last(G, group, p, prefix, last_value, group.one, last_natural)
+    \cyclic_tuple_prefix_product<G, group, p>(\cauchy_extend<p, G>(prefix, last_value), last_natural) = \cyclic_tuple_prefix_product<G, group, p>(\cauchy_extend<p, G>(prefix, group.one), last_natural) = \cauchy_prefix_product<G, group, p>(prefix) = prefix_product
+    release thm cauchy_extend_entry_at_last(p, G, prefix, last_value, last_natural)
+    \cyclic_tuple_entry<p, G>(\cauchy_extend<p, G>(prefix, last_value), last_natural) = last_value
+    release thm cyclic_tuple_prefix_product_succ(G, group, p, \cauchy_extend<p, G>(prefix, last_value), last_natural)
+    last_natural + 1 = (p - 1) + 1 = p
+    release thm cosets::object_substitution(G, G, fn(t G) G {group.mul(t, \cyclic_tuple_entry<p, G>(\cauchy_extend<p, G>(prefix, last_value), last_natural))}, \cyclic_tuple_prefix_product<G, group, p>(\cauchy_extend<p, G>(prefix, last_value), last_natural), prefix_product)
+    release thm cosets::object_substitution(G, G, fn(t G) G {group.mul(prefix_product, t)}, \cyclic_tuple_entry<p, G>(\cauchy_extend<p, G>(prefix, last_value), last_natural), last_value)
+    last_value = group.inv(prefix_product)
+    release thm cosets::object_substitution(G, G, fn(t G) G {group.mul(prefix_product, t)}, last_value, group.inv(prefix_product))
+    \cyclic_tuple_prefix_product<G, group, p>(\cauchy_extend<p, G>(prefix, last_value), p) = \cyclic_tuple_prefix_product<G, group, p>(\cauchy_extend<p, G>(prefix, last_value), last_natural + 1) = group.mul(\cyclic_tuple_prefix_product<G, group, p>(\cauchy_extend<p, G>(prefix, last_value), last_natural), \cyclic_tuple_entry<p, G>(\cauchy_extend<p, G>(prefix, last_value), last_natural)) = group.mul(prefix_product, \cyclic_tuple_entry<p, G>(\cauchy_extend<p, G>(prefix, last_value), last_natural)) = group.mul(prefix_product, last_value) = group.mul(prefix_product, group.inv(prefix_product))
+    release thm group::mul_inv_cancel(G, group.mul, group.one, group.inv, prefix_product)
+    group.mul(prefix_product, group.inv(prefix_product)) = group.one
+    release thm cosets::object_substitution(fn(index \cyclic_group::cyclic_indices<p>) G, G, fn(candidate fn(index \cyclic_group::cyclic_indices<p>) G) G {\cyclic_tuple_prefix_product<G, group, p>(candidate, p)}, \cauchy_tuple_from_prefix<G, group, p>(prefix), \cauchy_extend<p, G>(prefix, last_value))
+    \cyclic_tuple_prefix_product<G, group, p>(\cauchy_tuple_from_prefix<G, group, p>(prefix), p) = group.one
+    by def:
+        ? $cauchy_tuple_product_one(G, group, p, \cauchy_tuple_from_prefix<G, group, p>(prefix))
+
+template<G nonempty_set, group &group::Group<G>, p N+>:
+    have cauchy_product_one_tuples set = {candidate fn(index \cyclic_group::cyclic_indices<p>) G: $cauchy_tuple_product_one(G, group, p, candidate)}
+
+prop is_cauchy_completion_value(G nonempty_set, group &group::Group<G>, p N+, prefix fn(index \cauchy_prefix_indices<p>) G, candidate \cauchy_product_one_tuples<G, group, p>):
+    $prime(p)
+    candidate = \cauchy_tuple_from_prefix<G, group, p>(prefix)
+
+thm cauchy_completion_value_exists_unique:
+    ? forall G nonempty_set, group &group::Group<G>, p N+, prefix fn(index \cauchy_prefix_indices<p>) G:
+        $prime(p)
+        =>:
+            exist! candidate \cauchy_product_one_tuples<G, group, p> st {$is_cauchy_completion_value(G, group, p, prefix, candidate)}
+    release thm cauchy_tuple_from_prefix_product_one(G, group, p, prefix)
+    release thm set_builder_member(\cauchy_tuple_from_prefix<G, group, p>(prefix), {candidate fn(index \cyclic_group::cyclic_indices<p>) G: $cauchy_tuple_product_one(G, group, p, candidate)})
+    \cauchy_tuple_from_prefix<G, group, p>(prefix) $in \cauchy_product_one_tuples<G, group, p>
+    have completed \cauchy_product_one_tuples<G, group, p> = \cauchy_tuple_from_prefix<G, group, p>(prefix)
+    witness exist! candidate \cauchy_product_one_tuples<G, group, p> st {$is_cauchy_completion_value(G, group, p, prefix, candidate)} from completed:
+        by def:
+            ? $is_cauchy_completion_value(G, group, p, prefix, completed)
+        claim:
+            ? forall left, right \cauchy_product_one_tuples<G, group, p>:
+                $is_cauchy_completion_value(G, group, p, prefix, left)
+                $is_cauchy_completion_value(G, group, p, prefix, right)
+                =>:
+                    left = right
+            by def $is_cauchy_completion_value(G, group, p, prefix, left)
+            by def $is_cauchy_completion_value(G, group, p, prefix, right)
+            left = \cauchy_tuple_from_prefix<G, group, p>(prefix) = right
+
+template<G nonempty_set, group &group::Group<G>, p N+: $prime(p)>:
+    have fn cauchy_completion_map by exist!:
+        ? forall prefix fn(index \cauchy_prefix_indices<p>) G:
+            exist! candidate \cauchy_product_one_tuples<G, group, p> st {$is_cauchy_completion_value(G, group, p, prefix, candidate)}
+        release thm cauchy_completion_value_exists_unique(G, group, p, prefix)
+
+thm cauchy_completion_map_relation:
+    ? forall G nonempty_set, group &group::Group<G>, p N+, prefix fn(index \cauchy_prefix_indices<p>) G:
+        $prime(p)
+        =>:
+            \cauchy_completion_map<G, group, p>(prefix) = \cauchy_tuple_from_prefix<G, group, p>(prefix)
+    $is_cauchy_completion_value(G, group, p, prefix, \cauchy_completion_map<G, group, p>(prefix))
+    by def $is_cauchy_completion_value(G, group, p, prefix, \cauchy_completion_map<G, group, p>(prefix))
+
+thm cauchy_completion_map_injective:
+    ? forall G nonempty_set, group &group::Group<G>, p N+:
+        $prime(p)
+        =>:
+            $injective(fn(index \cauchy_prefix_indices<p>) G, \cauchy_product_one_tuples<G, group, p>, \cauchy_completion_map<G, group, p>)
+    claim:
+        ? forall left, right fn(index \cauchy_prefix_indices<p>) G:
+            \cauchy_completion_map<G, group, p>(left) = \cauchy_completion_map<G, group, p>(right)
+            =>:
+                left = right
+        release thm cauchy_completion_map_relation(G, group, p, left)
+        release thm cauchy_completion_map_relation(G, group, p, right)
+        \cauchy_tuple_from_prefix<G, group, p>(left) = \cauchy_completion_map<G, group, p>(left) = \cauchy_completion_map<G, group, p>(right) = \cauchy_tuple_from_prefix<G, group, p>(right)
+        claim:
+            ? forall prefix_index \cauchy_prefix_indices<p>:
+                left(prefix_index) = right(prefix_index)
+            release thm cauchy_extend_at_prefix(p, G, left, group.inv(\cauchy_prefix_product<G, group, p>(left)), prefix_index)
+            obtain left_full from exist left_full \cyclic_group::cyclic_indices<p> st {left_full = prefix_index, \cauchy_extend<p, G>(left, group.inv(\cauchy_prefix_product<G, group, p>(left)))(left_full) = left(prefix_index)}
+            release thm cauchy_extend_at_prefix(p, G, right, group.inv(\cauchy_prefix_product<G, group, p>(right)), prefix_index)
+            obtain right_full from exist right_full \cyclic_group::cyclic_indices<p> st {right_full = prefix_index, \cauchy_extend<p, G>(right, group.inv(\cauchy_prefix_product<G, group, p>(right)))(right_full) = right(prefix_index)}
+            \cauchy_tuple_from_prefix<G, group, p>(left)(left_full) = \cauchy_extend<p, G>(left, group.inv(\cauchy_prefix_product<G, group, p>(left)))(left_full) = left(prefix_index)
+            \cauchy_tuple_from_prefix<G, group, p>(right)(right_full) = \cauchy_extend<p, G>(right, group.inv(\cauchy_prefix_product<G, group, p>(right)))(right_full) = right(prefix_index)
+            release thm finite_function_spaces::equal_functions_equal_at(\cyclic_group::cyclic_indices<p>, G, \cauchy_tuple_from_prefix<G, group, p>(left), \cauchy_tuple_from_prefix<G, group, p>(right), left_full)
+            left_full = prefix_index = right_full
+            release thm finite_function_spaces::function_equal_on_equal_inputs(\cyclic_group::cyclic_indices<p>, G, \cauchy_tuple_from_prefix<G, group, p>(right), left_full, right_full)
+            left(prefix_index) = \cauchy_tuple_from_prefix<G, group, p>(left)(left_full) = \cauchy_tuple_from_prefix<G, group, p>(right)(left_full) = \cauchy_tuple_from_prefix<G, group, p>(right)(right_full) = right(prefix_index)
+        by def:
+            ? $fn_eq(left, right)
+    by def:
+        ? $injective(fn(index \cauchy_prefix_indices<p>) G, \cauchy_product_one_tuples<G, group, p>, \cauchy_completion_map<G, group, p>)

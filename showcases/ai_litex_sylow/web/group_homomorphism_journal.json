@@ -1,0 +1,182 @@
+{
+  "schema_version": 1,
+  "journal_id": "AI-LITEX-SYLOW-GROUP-HOMOMORPHISM-2026-08-31",
+  "target": "scripts/ai_litex_sylow/group_homomorphism.lit",
+  "source_anchor": "scripts/mathematics_in_litex/textbook/chapter09-groups-and-rings.lit:111,172-231",
+  "session_command": "target/release/litex -session -f scripts/ai_litex_sylow/web/replay/group_homomorphism.lit",
+  "session_environment": "The registered target contains comments only and follows group.lit plus a comment-only checkpoint, so the session loads group:: without preloading any group_homomorphism:: declaration.",
+  "transport_events": [
+    {
+      "id": "GH-T001",
+      "result": "startup_error",
+      "failed_phase": "transport",
+      "verifier_evidence": "unsupported CLI command combination",
+      "diagnosis": "Litex 0.9.116-beta rejects the documented -compact -session -before command shape.",
+      "minimal_fix": "Use the cabinet's established -session -f route against the registered comment-only target."
+    },
+    {
+      "id": "GH-T002",
+      "result": "protocol_error",
+      "failed_phase": "transport",
+      "verifier_evidence": "The live session returned unknown_frame and continued waiting for input.",
+      "diagnosis": "Session stdin accepts framed requests, not raw Litex source.",
+      "minimal_fix": "Send run <id> <utf8-byte-count> followed by the exact source bytes."
+    },
+    {
+      "id": "GH-T003",
+      "result": "cli_error",
+      "failed_phase": "cold_gate_transport",
+      "verifier_evidence": "The rebuilt current CLI rejected -compact -runner -f with unsupported CLI command combination.",
+      "diagnosis": "The current CLI uses -strict as a leading modifier and direct -f/-r execution; the older -compact -runner form is no longer accepted.",
+      "minimal_fix": "Run target/release/litex -strict -f for the focused gate and -strict -r for the module gate."
+    }
+  ],
+  "interface_decision": {
+    "semantic_role": "properties of a supplied function between operation-bearing group carriers",
+    "litex_form": "prop is_monoid_hom and prop is_group_hom, followed by named theorem projections and consequences",
+    "rejected_nearest_form": "a homomorphism struct would duplicate the supplied function even though this slice only classifies and reasons about f",
+    "immediate_use": "group_hom_map_inv"
+  },
+  "proof_spine": [
+    "A monoid homomorphism preserves identity and multiplication.",
+    "A group homomorphism is the same property specialized to packaged Group operations.",
+    "The defining property directly exposes multiplication preservation.",
+    "Multiplication preservation plus the group laws proves inverse preservation."
+  ],
+  "blocks": [
+    {
+      "id": "GH001",
+      "source_order": 1,
+      "intent": "Define preservation of monoid identity and multiplication for a supplied function.",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "try:\n    prop is_monoid_hom(M, T set, mulM fn(x, y M) M, oneM M, mulT fn(x, y T) T, oneT T, f fn(x M) T):\n        f(oneM) = oneT\n        forall x, y M:\n            f(mulM(x, y)) = mulT(f(x), f(y))",
+          "result": "accepted",
+          "verifier_evidence": "Session request GH001 returned ok:true; the TryStmt execution kind was Committed; well-definedness, verification, and environment update all reported Success.",
+          "diagnosis": "The supplied carriers, operations, identities, and function make both preservation clauses well defined without an external monoid package.",
+          "next_change": "Specialize this property to packaged group operations."
+        }
+      ],
+      "accepted_litex": "prop is_monoid_hom(M, T set, mulM fn(x, y M) M, oneM M, mulT fn(x, y T) T, oneT T, f fn(x M) T):\n    f(oneM) = oneT\n    forall x, y M:\n        f(mulM(x, y)) = mulT(f(x), f(y))",
+      "reusable_lesson": "A homomorphism can remain a property classifying a supplied function; this layer does not need a second function wrapper.",
+      "status": "materialized"
+    },
+    {
+      "id": "GH002",
+      "source_order": 2,
+      "intent": "Specialize the monoid-homomorphism property to two packaged groups.",
+      "dependencies": ["GH001 is_monoid_hom", "group::Group"],
+      "attempts": [
+        {
+          "candidate": "try:\n    prop is_group_hom(G, H nonempty_set, source &group::Group<G>, target &group::Group<H>, f fn(x G) H):\n        $is_monoid_hom(G, H, source.mul, source.one, target.mul, target.one, f)",
+          "result": "accepted",
+          "verifier_evidence": "Session request GH002 returned ok:true; the TryStmt committed a DefPropStmt and all three execution phases reported Success.",
+          "diagnosis": "The Group fields supply exactly the multiplication and identity arguments required by is_monoid_hom.",
+          "next_change": "Expose the packaged group cancellation lemma needed by inverse preservation."
+        }
+      ],
+      "accepted_litex": "prop is_group_hom(G, H nonempty_set, source &group::Group<G>, target &group::Group<H>, f fn(x G) H):\n    $is_monoid_hom(G, H, source.mul, source.one, target.mul, target.one, f)",
+      "reusable_lesson": "A specialized property can cite the generic property directly through structure fields, keeping the dependency visible.",
+      "status": "materialized"
+    },
+    {
+      "id": "GH003",
+      "source_order": 3,
+      "intent": "Expose right inverse cancellation for a packaged group as a local Chapter 9 support theorem.",
+      "dependencies": ["group::group_laws", "group::mul_inv_cancel"],
+      "attempts": [
+        {
+          "candidate": "try:\n    thm group_mul_inv_cancel:\n        ? forall G nonempty_set, group &group::Group<G>, x G:\n            group.mul(x, group.inv(x)) = group.one\n        by def $group::group_laws(G, group.mul, group.one, group.inv)\n        release thm group::mul_inv_cancel(G, group.mul, group.one, group.inv, x)",
+          "result": "accepted",
+          "verifier_evidence": "Session request GH003 returned ok:true; the TryStmt committed a DefThmStmt and the conclusion check succeeded.",
+          "diagnosis": "Opening the packaged group laws supplies the exact domain required by the already-proved raw-operation cancellation theorem.",
+          "next_change": "Project multiplication preservation directly from is_group_hom."
+        }
+      ],
+      "accepted_litex": "thm group_mul_inv_cancel:\n    ? forall G nonempty_set, group &group::Group<G>, x G:\n        group.mul(x, group.inv(x)) = group.one\n    by def $group::group_laws(G, group.mul, group.one, group.inv)\n    release thm group::mul_inv_cancel(G, group.mul, group.one, group.inv, x)",
+      "reusable_lesson": "A small packaged theorem is useful when later calculations need a group law in structure-field notation.",
+      "status": "materialized"
+    },
+    {
+      "id": "GH004",
+      "source_order": 4,
+      "intent": "Expose multiplication preservation as the direct reusable projection of is_group_hom.",
+      "dependencies": ["GH002 is_group_hom"],
+      "attempts": [
+        {
+          "candidate": "try:\n    thm group_hom_map_mul:\n        ? forall G, H nonempty_set, source &group::Group<G>, target &group::Group<H>, f fn(x G) H, x, y G:\n            $is_group_hom(G, H, source, target, f)\n            =>:\n                f(source.mul(x, y)) = target.mul(f(x), f(y))",
+          "result": "accepted",
+          "verifier_evidence": "Session request GH004 returned ok:true; the bodyless DefThmStmt committed and its conclusion was discharged by instantiating the predicate's projected forall fact.",
+          "diagnosis": "Multiplication preservation is already a defining clause of is_monoid_hom and is projected transitively through is_group_hom.",
+          "next_change": "Use this projection inside the first genuinely derived theorem, inverse preservation."
+        }
+      ],
+      "accepted_litex": "thm group_hom_map_mul:\n    ? forall G, H nonempty_set, source &group::Group<G>, target &group::Group<H>, f fn(x G) H, x, y G:\n        $is_group_hom(G, H, source, target, f)\n        =>:\n            f(source.mul(x, y)) = target.mul(f(x), f(y))",
+      "reusable_lesson": "When a theorem is only a named projection of a prop clause, a proof body is redundant and should be omitted.",
+      "status": "materialized"
+    },
+    {
+      "id": "GH005",
+      "source_order": 5,
+      "intent": "Prove that a group homomorphism preserves inverse.",
+      "dependencies": ["GH002 is_group_hom", "group::group_laws", "group::mul_inv_cancel", "group::mul_one"],
+      "attempts": [
+        {
+          "candidate": "try:\n    thm group_hom_map_inv:\n        ? forall G, H nonempty_set, source &group::Group<G>, target &group::Group<H>, f fn(x G) H, x G:\n            $is_group_hom(G, H, source, target, f)\n            =>:\n                f(source.inv(x)) = target.inv(f(x))",
+          "result": "rejected_rolled_back",
+          "failed_phase": "verification",
+          "verifier_evidence": "Session request GH005A1 returned a RolledBack TryStmt: cannot prove then-clause; failed goal f(source.inv(x)) = target.inv(f(x)).",
+          "diagnosis": "Inverse preservation is not a definitional projection of is_group_hom; it must be derived from multiplication preservation and group cancellation.",
+          "next_change": "Add the explicit target-group calculation proving that f(source.inv(x)) is the inverse of f(x)."
+        },
+        {
+          "candidate": "try:\n    thm group_hom_map_inv:\n        ? forall G, H nonempty_set, source &group::Group<G>, target &group::Group<H>, f fn(x G) H, x G:\n            $is_group_hom(G, H, source, target, f)\n            =>:\n                f(source.inv(x)) = target.inv(f(x))\n        by def $group::group_laws(H, target.mul, target.one, target.inv)\n        source.mul(source.inv(x), x) = source.one\n        target.mul(f(source.inv(x)), f(x)) = f(source.mul(source.inv(x), x)) = f(source.one) = target.one\n        release thm group::mul_inv_cancel(H, target.mul, target.one, target.inv, f(x))\n        target.mul(f(x), target.inv(f(x))) = target.one\n        release thm group::mul_one(H, target.mul, target.one, target.inv, f(source.inv(x)))\n        f(source.inv(x)) = target.mul(f(source.inv(x)), target.one) = target.mul(f(source.inv(x)), target.mul(f(x), target.inv(f(x))))\n        target.mul(f(source.inv(x)), target.mul(f(x), target.inv(f(x)))) = target.mul(target.mul(f(source.inv(x)), f(x)), target.inv(f(x)))\n        target.mul(target.mul(f(source.inv(x)), f(x)), target.inv(f(x))) = target.mul(target.one, target.inv(f(x))) = target.inv(f(x))",
+          "result": "accepted",
+          "verifier_evidence": "Session request GH005A2 returned ok:true; the TryStmt committed a DefThmStmt, every execution phase succeeded, and the final equality was discharged by the known equality path.",
+          "diagnosis": "The homomorphism sends source.inv(x) * x to one; associativity and the target inverse law then cancel f(x) on the right.",
+          "next_change": "Materialize all five accepted blocks in their own namespace and run the file and module gates."
+        }
+      ],
+      "accepted_litex": "thm group_hom_map_inv:\n    ? forall G, H nonempty_set, source &group::Group<G>, target &group::Group<H>, f fn(x G) H, x G:\n        $is_group_hom(G, H, source, target, f)\n        =>:\n            f(source.inv(x)) = target.inv(f(x))\n    by def $group::group_laws(H, target.mul, target.one, target.inv)\n    source.mul(source.inv(x), x) = source.one\n    target.mul(f(source.inv(x)), f(x)) = f(source.mul(source.inv(x), x)) = f(source.one) = target.one\n    release thm group::mul_inv_cancel(H, target.mul, target.one, target.inv, f(x))\n    target.mul(f(x), target.inv(f(x))) = target.one\n    release thm group::mul_one(H, target.mul, target.one, target.inv, f(source.inv(x)))\n    f(source.inv(x)) = target.mul(f(source.inv(x)), target.one) = target.mul(f(source.inv(x)), target.mul(f(x), target.inv(f(x))))\n    target.mul(f(source.inv(x)), target.mul(f(x), target.inv(f(x)))) = target.mul(target.mul(f(source.inv(x)), f(x)), target.inv(f(x)))\n    target.mul(target.mul(f(source.inv(x)), f(x)), target.inv(f(x))) = target.mul(target.one, target.inv(f(x))) = target.inv(f(x))",
+      "reusable_lesson": "To prove inverse preservation without a library lemma, show the image of the source inverse is a target inverse and perform one explicit cancellation calculation.",
+      "status": "materialized"
+    }
+  ],
+  "build_gate": {
+    "command": "cargo build --release",
+    "result": "success",
+    "process_exit_code": 0
+  },
+  "materialization": {
+    "block_ids": ["GH001", "GH002", "GH003", "GH004", "GH005"],
+    "file_gate_command": "target/release/litex -strict -f scripts/ai_litex_sylow/web/replay/group_homomorphism.lit",
+    "file_gate_result": {
+      "result": "success",
+      "process_exit_code": 0,
+      "top_level_ok": true,
+      "target": "file",
+      "statement_count": 15,
+      "outcomes": ["success"],
+      "strict_mode": true,
+      "direct_trust": 0,
+      "axioms": 0,
+      "trusted_object_assumptions": 0,
+      "unverified_imports": []
+    },
+    "module_gate_command": "target/release/litex -strict -r scripts/ai_litex_sylow/web/replay",
+    "module_gate_result": {
+      "result": "success",
+      "process_exit_code": 0,
+      "top_level_ok": true,
+      "target": "repository",
+      "statement_count": 24,
+      "outcomes": ["success"],
+      "strict_mode": true,
+      "direct_trust": 0,
+      "axioms": 0,
+      "trusted_object_assumptions": 0,
+      "unverified_imports": []
+    }
+  }
+}

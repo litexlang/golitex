@@ -1,0 +1,97 @@
+# MIL Chapter 9 subgroup-internal group-structure layer.
+#
+# It restricts the ambient operations to a subgroup, packages the result
+# as a Group, and applies Lagrange inside a larger subgroup.
+thm subgroup_carrier_is_nonempty:
+    ? forall G nonempty_set, group &group::Group<G>, H power_set(G):
+        $subgroup::is_subgroup(G, group, H)
+        =>:
+            $is_nonempty_set(H)
+    group.one $in H
+    witness $is_nonempty_set(H) from group.one
+
+template<G nonempty_set, group &group::Group<G>, H power_set(G): $subgroup::is_subgroup(G, group, H)>:
+    have subgroup_carrier nonempty_set = H
+
+template<G nonempty_set, group &group::Group<G>, H power_set(G): $subgroup::is_subgroup(G, group, H)>:
+    have fn subgroup_mul(x, y \subgroup_carrier<G, group, H>) H = group.mul(x, y)
+
+template<G nonempty_set, group &group::Group<G>, H power_set(G): $subgroup::is_subgroup(G, group, H)>:
+    have subgroup_one H = group.one
+
+template<G nonempty_set, group &group::Group<G>, H power_set(G): $subgroup::is_subgroup(G, group, H)>:
+    have fn subgroup_inv(x \subgroup_carrier<G, group, H>) H = group.inv(x)
+
+thm subgroup_group_laws:
+    ? forall G nonempty_set, group &group::Group<G>, H power_set(G):
+        $subgroup::is_subgroup(G, group, H)
+        =>:
+            $group::group_laws(\subgroup_carrier<G, group, H>, \subgroup_mul<G, group, H>, \subgroup_one<G, group, H>, \subgroup_inv<G, group, H>)
+    by def $group::group_laws(G, group.mul, group.one, group.inv)
+    claim:
+        ? forall x, y, z \subgroup_carrier<G, group, H>:
+            \subgroup_mul<G, group, H>(\subgroup_mul<G, group, H>(x, y), z) = \subgroup_mul<G, group, H>(x, \subgroup_mul<G, group, H>(y, z))
+        \subgroup_mul<G, group, H>(\subgroup_mul<G, group, H>(x, y), z) = group.mul(group.mul(x, y), z) = group.mul(x, group.mul(y, z)) = \subgroup_mul<G, group, H>(x, \subgroup_mul<G, group, H>(y, z))
+    claim:
+        ? forall x \subgroup_carrier<G, group, H>:
+            \subgroup_mul<G, group, H>(\subgroup_one<G, group, H>, x) = x
+        \subgroup_mul<G, group, H>(\subgroup_one<G, group, H>, x) = group.mul(group.one, x) = x
+    claim:
+        ? forall x \subgroup_carrier<G, group, H>:
+            \subgroup_mul<G, group, H>(x, \subgroup_one<G, group, H>) = x
+        \subgroup_mul<G, group, H>(x, \subgroup_one<G, group, H>) = group.mul(x, group.one) = x
+    claim:
+        ? forall x \subgroup_carrier<G, group, H>:
+            \subgroup_mul<G, group, H>(x, \subgroup_inv<G, group, H>(x)) = \subgroup_one<G, group, H>
+        \subgroup_mul<G, group, H>(x, \subgroup_inv<G, group, H>(x)) = group.mul(x, group.inv(x)) = group.one = \subgroup_one<G, group, H>
+    claim:
+        ? forall x \subgroup_carrier<G, group, H>:
+            \subgroup_mul<G, group, H>(\subgroup_inv<G, group, H>(x), x) = \subgroup_one<G, group, H>
+        \subgroup_mul<G, group, H>(\subgroup_inv<G, group, H>(x), x) = group.mul(group.inv(x), x) = group.one = \subgroup_one<G, group, H>
+    by def $group::group_laws(\subgroup_carrier<G, group, H>, \subgroup_mul<G, group, H>, \subgroup_one<G, group, H>, \subgroup_inv<G, group, H>)
+
+thm subgroup_group_member:
+    ? forall G nonempty_set, group &group::Group<G>, H power_set(G):
+        $subgroup::is_subgroup(G, group, H)
+        =>:
+            (\subgroup_mul<G, group, H>, \subgroup_one<G, group, H>, \subgroup_inv<G, group, H>) $in &group::Group<\subgroup_carrier<G, group, H>>
+    release thm subgroup_group_laws(G, group, H)
+    release thm cart_member_from_coordinates((\subgroup_mul<G, group, H>, \subgroup_one<G, group, H>, \subgroup_inv<G, group, H>), cart(fn(x, y \subgroup_carrier<G, group, H>) \subgroup_carrier<G, group, H>, \subgroup_carrier<G, group, H>, fn(x \subgroup_carrier<G, group, H>) \subgroup_carrier<G, group, H>))
+    release thm struct_member((\subgroup_mul<G, group, H>, \subgroup_one<G, group, H>, \subgroup_inv<G, group, H>), &group::Group<\subgroup_carrier<G, group, H>>)
+
+template<G nonempty_set, group &group::Group<G>, H power_set(G): $subgroup::is_subgroup(G, group, H)>:
+    have subgroup_group &group::Group<\subgroup_carrier<G, group, H>> = (\subgroup_mul<G, group, H>, \subgroup_one<G, group, H>, \subgroup_inv<G, group, H>)
+
+thm nested_subgroup_closed:
+    ? forall G nonempty_set, group &group::Group<G>, A, B power_set(G):
+        $subgroup::is_subgroup(G, group, A)
+        $subgroup::is_subgroup(G, group, B)
+        A $subset B
+        =>:
+            $subgroup::is_subgroup(\subgroup_carrier<G, group, B>, \subgroup_group<G, group, B>, A)
+    A $in power_set(B)
+    \subgroup_carrier<G, group, B> = B
+    A $in power_set(\subgroup_carrier<G, group, B>)
+    \subgroup_group<G, group, B> = (\subgroup_mul<G, group, B>, \subgroup_one<G, group, B>, \subgroup_inv<G, group, B>)
+    \subgroup_group<G, group, B>.mul = \subgroup_mul<G, group, B>
+    \subgroup_group<G, group, B>.one = \subgroup_one<G, group, B>
+    \subgroup_group<G, group, B>.inv = \subgroup_inv<G, group, B>
+    \subgroup_one<G, group, B> = group.one
+    group.one $in A
+    \subgroup_group<G, group, B>.one $in A
+    claim:
+        ? forall x, y \subgroup_carrier<G, group, B>:
+            x $in A
+            y $in A
+            =>:
+                \subgroup_group<G, group, B>.mul(x, y) $in A
+        \subgroup_group<G, group, B>.mul(x, y) = \subgroup_mul<G, group, B>(x, y) = group.mul(x, y)
+        group.mul(x, y) $in A
+    claim:
+        ? forall x \subgroup_carrier<G, group, B>:
+            x $in A
+            =>:
+                \subgroup_group<G, group, B>.inv(x) $in A
+        \subgroup_group<G, group, B>.inv(x) = \subgroup_inv<G, group, B>(x) = group.inv(x)
+        group.inv(x) $in A
+    by def $subgroup::is_subgroup(\subgroup_carrier<G, group, B>, \subgroup_group<G, group, B>, A)

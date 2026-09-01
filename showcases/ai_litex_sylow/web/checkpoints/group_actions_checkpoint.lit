@@ -1,0 +1,196 @@
+# MIL Chapter 9 group-action layer used by finite p-group counting.
+#
+# It exposes actions, orbits, stabilizers, chosen orbit representatives,
+# and the explicit orbit-stabilizer coordinate bijection.
+prop is_group_action(G nonempty_set, X set, group &group::Group<G>, act fn(g G, x X) X):
+    forall x X:
+        act(group.one, x) = x
+    forall g, h G, x X:
+        act(g, act(h, x)) = act(group.mul(g, h), x)
+
+thm group_action_associativity:
+    ? forall G nonempty_set, X set, group &group::Group<G>, act fn(g G, x X) X, g, h G, x X:
+        $is_group_action(G, X, group, act)
+        =>:
+            act(g, act(h, x)) = act(group.mul(g, h), x)
+
+prop orbit_member(G, X set, act fn(g G, x X) X, x, y X):
+    exist g G st {y = act(g, x)}
+
+template<G, X set, act fn(g G, x X) X>:
+    have fn orbit(x X) power_set(X) = {y X: $orbit_member(G, X, act, x, y)}
+
+prop stabilizer_member(G nonempty_set, X set, act fn(g G, x X) X, fixed X, candidate G):
+    act(candidate, fixed) = fixed
+
+template<G nonempty_set, X set, act fn(g G, x X) X, one G>:
+    have fn stabilizer(x X) power_set(G) = {g G: $stabilizer_member(G, X, act, x, g)}
+
+thm group_action_stabilizer_closed:
+    ? forall G nonempty_set, X set, group &group::Group<G>, act fn(g G, x X) X, x X:
+        $is_group_action(G, X, group, act)
+        =>:
+            $subgroup::is_subgroup(G, group, \stabilizer<G, X, act, group.one>(x))
+    by def $group::group_laws(G, group.mul, group.one, group.inv)
+    \stabilizer<G, X, act, group.one>(x) = {g G: $stabilizer_member(G, X, act, x, g)}
+    act(group.one, x) = x
+    release thm set_builder_member(group.one, {g G: $stabilizer_member(G, X, act, x, g)})
+    group.one $in \stabilizer<G, X, act, group.one>(x)
+    claim:
+        ? forall a, b G:
+            a $in \stabilizer<G, X, act, group.one>(x)
+            b $in \stabilizer<G, X, act, group.one>(x)
+            =>:
+                group.mul(a, b) $in \stabilizer<G, X, act, group.one>(x)
+        a $in {g G: $stabilizer_member(G, X, act, x, g)}
+        b $in {g G: $stabilizer_member(G, X, act, x, g)}
+        act(a, x) = x
+        act(b, x) = x
+        act(group.mul(a, b), x) = act(a, act(b, x)) = act(a, x) = x
+        release thm set_builder_member(group.mul(a, b), {g G: $stabilizer_member(G, X, act, x, g)})
+        group.mul(a, b) $in \stabilizer<G, X, act, group.one>(x)
+    claim:
+        ? forall a G:
+            a $in \stabilizer<G, X, act, group.one>(x)
+            =>:
+                group.inv(a) $in \stabilizer<G, X, act, group.one>(x)
+        a $in {g G: $stabilizer_member(G, X, act, x, g)}
+        act(a, x) = x
+        release thm cosets::object_substitution(X, X, fn(y X) X {act(group.inv(a), y)}, act(a, x), x)
+        act(group.inv(a), act(a, x)) = act(group.inv(a), x)
+        group.mul(group.inv(a), a) = group.one
+        act(group.inv(a), act(a, x)) = act(group.mul(group.inv(a), a), x) = act(group.one, x) = x
+        act(group.inv(a), x) = x
+        release thm set_builder_member(group.inv(a), {g G: $stabilizer_member(G, X, act, x, g)})
+        group.inv(a) $in \stabilizer<G, X, act, group.one>(x)
+    by def $subgroup::is_subgroup(G, group, \stabilizer<G, X, act, group.one>(x))
+
+thm group_action_mem_orbit:
+    ? forall G nonempty_set, X set, group &group::Group<G>, act fn(g G, x X) X, x X, g G:
+        $is_group_action(G, X, group, act)
+        =>:
+            act(g, x) $in \orbit<G, X, act>(x)
+    \orbit<G, X, act>(x) = {y X: $orbit_member(G, X, act, x, y)}
+    witness $orbit_member(G, X, act, x, act(g, x)) from g
+    release thm set_builder_member(act(g, x), {y X: $orbit_member(G, X, act, x, y)})
+
+template<G nonempty_set, X set, group &group::Group<G>, act fn(g G, x X) X, x X: $is_group_action(G, X, group, act)>:
+    have fn orbit_projection(g G) \orbit<G, X, act>(x) = act(g, x)
+
+thm orbit_projection_surjective:
+    ? forall G nonempty_set, X set, group &group::Group<G>, act fn(g G, x X) X, x X:
+        $is_group_action(G, X, group, act)
+        =>:
+            $surjective(G, \orbit<G, X, act>(x), \orbit_projection<G, X, group, act, x>)
+    claim:
+        ? forall y \orbit<G, X, act>(x):
+            exist source_g G st {y = \orbit_projection<G, X, group, act, x>(source_g)}
+        \orbit<G, X, act>(x) = {candidate X: $orbit_member(G, X, act, x, candidate)}
+        y $in {candidate X: $orbit_member(G, X, act, x, candidate)}
+        by def $orbit_member(G, X, act, x, y)
+        obtain preimage_g from $orbit_member(G, X, act, x, y)
+        witness exist source_g G st {y = \orbit_projection<G, X, group, act, x>(source_g)} from preimage_g:
+            \orbit_projection<G, X, group, act, x>(preimage_g) = act(preimage_g, x) = y
+    by def $surjective(G, \orbit<G, X, act>(x), \orbit_projection<G, X, group, act, x>)
+
+thm orbit_projection_has_total_inverse:
+    ? forall G nonempty_set, X set, group &group::Group<G>, act fn(g G, x X) X, x X:
+        $is_group_action(G, X, group, act)
+        =>:
+            $function_inverse::has_total_inverse(G, \orbit<G, X, act>(x), group.one, \orbit_projection<G, X, group, act, x>)
+    release thm function_inverse::total_inverse_available(G, \orbit<G, X, act>(x), group.one, \orbit_projection<G, X, group, act, x>)
+
+template<G nonempty_set, X set, group &group::Group<G>, act fn(g G, x X) X, x X: $is_group_action(G, X, group, act)>:
+    have fn orbit_representative(y \orbit<G, X, act>(x)) G = \function_inverse::inverse<G, \orbit<G, X, act>(x), group.one, \orbit_projection<G, X, group, act, x>>(y)
+
+thm orbit_representative_spec:
+    ? forall G nonempty_set, X set, group &group::Group<G>, act fn(g G, x X) X, x X, y \orbit<G, X, act>(x):
+        $is_group_action(G, X, group, act)
+        =>:
+            \orbit_projection<G, X, group, act, x>(\orbit_representative<G, X, group, act, x>(y)) = y
+    release thm orbit_projection_surjective(G, X, group, act, x)
+    by def $surjective(G, \orbit<G, X, act>(x), \orbit_projection<G, X, group, act, x>)
+    obtain preimage_g from exist source_g G st {y = \orbit_projection<G, X, group, act, x>(source_g)}
+    witness $function_inverse::has_preimage(G, \orbit<G, X, act>(x), \orbit_projection<G, X, group, act, x>, y) from preimage_g
+    release thm function_inverse::inverse_spec(G, \orbit<G, X, act>(x), group.one, \orbit_projection<G, X, group, act, x>, y)
+    \orbit_representative<G, X, group, act, x>(y) = \function_inverse::inverse<G, \orbit<G, X, act>(x), group.one, \orbit_projection<G, X, group, act, x>>(y)
+    \orbit_projection<G, X, group, act, x>(\orbit_representative<G, X, group, act, x>(y)) = \orbit_projection<G, X, group, act, x>(\function_inverse::inverse<G, \orbit<G, X, act>(x), group.one, \orbit_projection<G, X, group, act, x>>(y)) = y
+
+thm orbit_coordinate_mem_stabilizer:
+    ? forall G nonempty_set, X set, group &group::Group<G>, act fn(g G, x X) X, x X, g G:
+        $is_group_action(G, X, group, act)
+        =>:
+            group.mul(group.inv(\orbit_representative<G, X, group, act, x>(\orbit_projection<G, X, group, act, x>(g))), g) $in \stabilizer<G, X, act, group.one>(x)
+    by def $group::group_laws(G, group.mul, group.one, group.inv)
+    release thm orbit_representative_spec(G, X, group, act, x, \orbit_projection<G, X, group, act, x>(g))
+    have representative_g G = \orbit_representative<G, X, group, act, x>(\orbit_projection<G, X, group, act, x>(g))
+    \orbit_projection<G, X, group, act, x>(representative_g) = \orbit_projection<G, X, group, act, x>(\orbit_representative<G, X, group, act, x>(\orbit_projection<G, X, group, act, x>(g))) = \orbit_projection<G, X, group, act, x>(g)
+    \orbit_projection<G, X, group, act, x>(representative_g) = act(representative_g, x)
+    \orbit_projection<G, X, group, act, x>(g) = act(g, x)
+    act(representative_g, x) = act(g, x)
+    release thm cosets::object_substitution(X, X, fn(y X) X {act(group.inv(representative_g), y)}, act(representative_g, x), act(g, x))
+    act(group.inv(representative_g), act(representative_g, x)) = act(group.inv(representative_g), act(g, x))
+    group.mul(group.inv(representative_g), representative_g) = group.one
+    act(group.inv(representative_g), act(representative_g, x)) = act(group.mul(group.inv(representative_g), representative_g), x) = act(group.one, x) = x
+    act(group.inv(representative_g), act(g, x)) = act(group.mul(group.inv(representative_g), g), x)
+    act(group.mul(group.inv(representative_g), g), x) = x
+    \stabilizer<G, X, act, group.one>(x) = {h G: $stabilizer_member(G, X, act, x, h)}
+    by def $stabilizer_member(G, X, act, x, group.mul(group.inv(representative_g), g))
+    release thm set_builder_member(group.mul(group.inv(representative_g), g), {h G: $stabilizer_member(G, X, act, x, h)})
+    group.mul(group.inv(representative_g), g) $in \stabilizer<G, X, act, group.one>(x)
+
+template<G nonempty_set, X set, group &group::Group<G>, act fn(g G, x X) X, x X: $is_group_action(G, X, group, act)>:
+    have fn orbit_coordinate(g G) \stabilizer<G, X, act, group.one>(x) = group.mul(group.inv(\orbit_representative<G, X, group, act, x>(\orbit_projection<G, X, group, act, x>(g))), g)
+
+thm orbit_stabilizer_forward_pair_member:
+    ? forall G nonempty_set, X set, group &group::Group<G>, act fn(g G, x X) X, x X, g G:
+        $is_group_action(G, X, group, act)
+        =>:
+            (\orbit_projection<G, X, group, act, x>(g), \orbit_coordinate<G, X, group, act, x>(g)) $in cart(\orbit<G, X, act>(x), \stabilizer<G, X, act, group.one>(x))
+    release thm cart_member_from_coordinates((\orbit_projection<G, X, group, act, x>(g), \orbit_coordinate<G, X, group, act, x>(g)), cart(\orbit<G, X, act>(x), \stabilizer<G, X, act, group.one>(x)))
+
+template<G nonempty_set, X set, group &group::Group<G>, act fn(g G, x X) X, x X: $is_group_action(G, X, group, act)>:
+    have fn orbit_stabilizer_forward(g G) cart(\orbit<G, X, act>(x), \stabilizer<G, X, act, group.one>(x)) = (\orbit_projection<G, X, group, act, x>(g), \orbit_coordinate<G, X, group, act, x>(g))
+
+template<G nonempty_set, X set, group &group::Group<G>, act fn(g G, x X) X, x X: $is_group_action(G, X, group, act)>:
+    have fn orbit_stabilizer_backward(pair cart(\orbit<G, X, act>(x), \stabilizer<G, X, act, group.one>(x))) G = group.mul(\orbit_representative<G, X, group, act, x>(pair[1]), pair[2])
+
+thm orbit_stabilizer_backward_forward:
+    ? forall G nonempty_set, X set, group &group::Group<G>, act fn(g G, x X) X, x X, g G:
+        $is_group_action(G, X, group, act)
+        =>:
+            \orbit_stabilizer_backward<G, X, group, act, x>(\orbit_stabilizer_forward<G, X, group, act, x>(g)) = g
+    by def $group::group_laws(G, group.mul, group.one, group.inv)
+    \orbit_stabilizer_forward<G, X, group, act, x>(g) = (\orbit_projection<G, X, group, act, x>(g), \orbit_coordinate<G, X, group, act, x>(g))
+    \orbit_stabilizer_forward<G, X, group, act, x>(g)[1] = \orbit_projection<G, X, group, act, x>(g)
+    \orbit_stabilizer_forward<G, X, group, act, x>(g)[2] = \orbit_coordinate<G, X, group, act, x>(g)
+    \orbit_stabilizer_backward<G, X, group, act, x>(\orbit_stabilizer_forward<G, X, group, act, x>(g)) = group.mul(\orbit_representative<G, X, group, act, x>(\orbit_projection<G, X, group, act, x>(g)), \orbit_coordinate<G, X, group, act, x>(g))
+    \orbit_coordinate<G, X, group, act, x>(g) = group.mul(group.inv(\orbit_representative<G, X, group, act, x>(\orbit_projection<G, X, group, act, x>(g))), g)
+    release thm group::mul_inv_cancel(G, group.mul, group.one, group.inv, \orbit_representative<G, X, group, act, x>(\orbit_projection<G, X, group, act, x>(g)))
+    release thm cosets::object_substitution(G, G, fn(t G) G {group.mul(t, g)}, group.mul(\orbit_representative<G, X, group, act, x>(\orbit_projection<G, X, group, act, x>(g)), group.inv(\orbit_representative<G, X, group, act, x>(\orbit_projection<G, X, group, act, x>(g)))), group.one)
+    \orbit_stabilizer_backward<G, X, group, act, x>(\orbit_stabilizer_forward<G, X, group, act, x>(g)) = group.mul(\orbit_representative<G, X, group, act, x>(\orbit_projection<G, X, group, act, x>(g)), group.mul(group.inv(\orbit_representative<G, X, group, act, x>(\orbit_projection<G, X, group, act, x>(g))), g)) = group.mul(group.mul(\orbit_representative<G, X, group, act, x>(\orbit_projection<G, X, group, act, x>(g)), group.inv(\orbit_representative<G, X, group, act, x>(\orbit_projection<G, X, group, act, x>(g)))), g) = group.mul(group.one, g) = g
+
+thm orbit_stabilizer_forward_backward:
+    ? forall G nonempty_set, X set, group &group::Group<G>, act fn(g G, x X) X, x X, pair cart(\orbit<G, X, act>(x), \stabilizer<G, X, act, group.one>(x)):
+        $is_group_action(G, X, group, act)
+        =>:
+            \orbit_stabilizer_forward<G, X, group, act, x>(\orbit_stabilizer_backward<G, X, group, act, x>(pair)) = pair
+    by def $group::group_laws(G, group.mul, group.one, group.inv)
+    have y \orbit<G, X, act>(x) = pair[1]
+    have h \stabilizer<G, X, act, group.one>(x) = pair[2]
+    have g G = \orbit_stabilizer_backward<G, X, group, act, x>(pair)
+    g = \orbit_stabilizer_backward<G, X, group, act, x>(pair) = group.mul(\orbit_representative<G, X, group, act, x>(pair[1]), pair[2]) = group.mul(\orbit_representative<G, X, group, act, x>(y), h)
+    h $in {candidate G: $stabilizer_member(G, X, act, x, candidate)}
+    act(h, x) = x
+    act(g, x) = act(group.mul(\orbit_representative<G, X, group, act, x>(y), h), x) = act(\orbit_representative<G, X, group, act, x>(y), act(h, x)) = act(\orbit_representative<G, X, group, act, x>(y), x)
+    release thm orbit_representative_spec(G, X, group, act, x, y)
+    act(\orbit_representative<G, X, group, act, x>(y), x) = \orbit_projection<G, X, group, act, x>(\orbit_representative<G, X, group, act, x>(y)) = y
+    \orbit_projection<G, X, group, act, x>(g) = act(g, x) = y
+    group.mul(group.inv(\orbit_representative<G, X, group, act, x>(y)), \orbit_representative<G, X, group, act, x>(y)) = group.one
+    release thm cosets::object_substitution(G, G, fn(t G) G {group.mul(t, h)}, group.mul(group.inv(\orbit_representative<G, X, group, act, x>(y)), \orbit_representative<G, X, group, act, x>(y)), group.one)
+    \orbit_coordinate<G, X, group, act, x>(g) = group.mul(group.inv(\orbit_representative<G, X, group, act, x>(\orbit_projection<G, X, group, act, x>(g))), g) = group.mul(group.inv(\orbit_representative<G, X, group, act, x>(y)), group.mul(\orbit_representative<G, X, group, act, x>(y), h)) = group.mul(group.mul(group.inv(\orbit_representative<G, X, group, act, x>(y)), \orbit_representative<G, X, group, act, x>(y)), h) = group.mul(group.one, h) = h
+    \orbit_stabilizer_forward<G, X, group, act, x>(g) = (\orbit_projection<G, X, group, act, x>(g), \orbit_coordinate<G, X, group, act, x>(g)) = (y, h)
+    release thm tuple_equal_from_coordinates(pair, (pair[1], pair[2]))
+    pair = (pair[1], pair[2]) = (y, h)
+    g = \orbit_stabilizer_backward<G, X, group, act, x>(pair)
+    \orbit_stabilizer_forward<G, X, group, act, x>(\orbit_stabilizer_backward<G, X, group, act, x>(pair)) = \orbit_stabilizer_forward<G, X, group, act, x>(g) = (y, h) = pair

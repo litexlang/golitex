@@ -1,0 +1,317 @@
+# The cyclic power homomorphism used to turn Cauchy's element into a subgroup.
+
+thm cauchy_group_power_add:
+    ? forall G nonempty_set, group &group::Group<G>, x G, left, right N:
+        \cauchy_fixed_points::cauchy_group_power<G, group>(x, left + right) = group.mul(\cauchy_fixed_points::cauchy_group_power<G, group>(x, left), \cauchy_fixed_points::cauchy_group_power<G, group>(x, right))
+    by def:
+        ? $group::group_laws(G, group.mul, group.one, group.inv)
+    by induc right from 0:
+        ? \cauchy_fixed_points::cauchy_group_power<G, group>(x, left + right) = group.mul(\cauchy_fixed_points::cauchy_group_power<G, group>(x, left), \cauchy_fixed_points::cauchy_group_power<G, group>(x, right))
+        ? from right = 0:
+            release thm cauchy_fixed_points::cauchy_group_power_zero(G, group, x)
+            release thm group::mul_one(G, group.mul, group.one, group.inv, \cauchy_fixed_points::cauchy_group_power<G, group>(x, left))
+            left + 0 = left
+            \cauchy_fixed_points::cauchy_group_power<G, group>(x, left + 0) = \cauchy_fixed_points::cauchy_group_power<G, group>(x, left) = group.mul(\cauchy_fixed_points::cauchy_group_power<G, group>(x, left), group.one) = group.mul(\cauchy_fixed_points::cauchy_group_power<G, group>(x, left), \cauchy_fixed_points::cauchy_group_power<G, group>(x, 0))
+        ? induc:
+            left + (right + 1) = (left + right) + 1
+            release thm cauchy_fixed_points::cauchy_group_power_succ(G, group, x, left + right)
+            release thm cauchy_fixed_points::cauchy_group_power_succ(G, group, x, right)
+            \cauchy_fixed_points::cauchy_group_power<G, group>(x, left + (right + 1)) = \cauchy_fixed_points::cauchy_group_power<G, group>(x, (left + right) + 1) = group.mul(\cauchy_fixed_points::cauchy_group_power<G, group>(x, left + right), x) = group.mul(group.mul(\cauchy_fixed_points::cauchy_group_power<G, group>(x, left), \cauchy_fixed_points::cauchy_group_power<G, group>(x, right)), x)
+            group.mul(group.mul(\cauchy_fixed_points::cauchy_group_power<G, group>(x, left), \cauchy_fixed_points::cauchy_group_power<G, group>(x, right)), x) = group.mul(\cauchy_fixed_points::cauchy_group_power<G, group>(x, left), group.mul(\cauchy_fixed_points::cauchy_group_power<G, group>(x, right), x)) = group.mul(\cauchy_fixed_points::cauchy_group_power<G, group>(x, left), \cauchy_fixed_points::cauchy_group_power<G, group>(x, right + 1))
+
+thm cauchy_group_power_period:
+    ? forall G nonempty_set, group &group::Group<G>, x G, p N+, n N:
+        \cauchy_fixed_points::cauchy_group_power<G, group>(x, p) = group.one
+        =>:
+            \cauchy_fixed_points::cauchy_group_power<G, group>(x, n + p) = \cauchy_fixed_points::cauchy_group_power<G, group>(x, n)
+    release thm cauchy_group_power_add(G, group, x, n, p)
+    release thm group::mul_one(G, group.mul, group.one, group.inv, \cauchy_fixed_points::cauchy_group_power<G, group>(x, n))
+    \cauchy_fixed_points::cauchy_group_power<G, group>(x, n + p) = group.mul(\cauchy_fixed_points::cauchy_group_power<G, group>(x, n), \cauchy_fixed_points::cauchy_group_power<G, group>(x, p)) = group.mul(\cauchy_fixed_points::cauchy_group_power<G, group>(x, n), group.one) = \cauchy_fixed_points::cauchy_group_power<G, group>(x, n)
+
+template<G nonempty_set, group &group::Group<G>, p N+, x G>:
+    have fn cauchy_power_map(index \cyclic_group::cyclic_indices<p>) G = \cauchy_fixed_points::cauchy_group_power<G, group>(x, abs(index))
+
+thm cauchy_power_map_zero:
+    ? forall G nonempty_set, group &group::Group<G>, p N+, x G:
+        \cauchy_power_map<G, group, p, x>(\cyclic_group::cyclic_zero<p>) = group.one
+    release thm cyclic_group::cyclic_zero_apply(p)
+    abs(\cyclic_group::cyclic_zero<p>) = abs(0) = 0
+    release thm cauchy_fixed_points::cauchy_group_power_zero(G, group, x)
+    \cauchy_power_map<G, group, p, x>(\cyclic_group::cyclic_zero<p>) = \cauchy_fixed_points::cauchy_group_power<G, group>(x, abs(\cyclic_group::cyclic_zero<p>)) = \cauchy_fixed_points::cauchy_group_power<G, group>(x, 0) = group.one
+
+thm cauchy_power_map_add:
+    ? forall G nonempty_set, group &group::Group<G>, p N+, x G, left, right \cyclic_group::cyclic_indices<p>:
+        \cauchy_fixed_points::cauchy_group_power<G, group>(x, p) = group.one
+        =>:
+            \cauchy_power_map<G, group, p, x>(\cyclic_group::cyclic_add<p>(left, right)) = group.mul(\cauchy_power_map<G, group, p, x>(left), \cauchy_power_map<G, group, p, x>(right))
+    \cyclic_group::cyclic_indices<p> = closed_range(0, p - 1)
+    0 <= left <= p - 1
+    0 <= right <= p - 1
+    abs(left) = left
+    abs(right) = right
+    left + right >= 0
+    abs(left + right) = left + right
+    have natural_sum N = abs(left + right)
+    natural_sum = left + right
+    release thm cyclic_group::cyclic_add_apply(p, left, right)
+    release thm cauchy_group_power_add(G, group, x, abs(left), abs(right))
+    left + right < p or left + right >= p
+    by cases:
+        ? \cauchy_power_map<G, group, p, x>(\cyclic_group::cyclic_add<p>(left, right)) = group.mul(\cauchy_power_map<G, group, p, x>(left), \cauchy_power_map<G, group, p, x>(right))
+        case left + right < p:
+            natural_sum = p * 0 + natural_sum
+            natural_sum % p = natural_sum
+            (left + right) % p = natural_sum % p = natural_sum = left + right
+            \cyclic_group::cyclic_add<p>(left, right) = (left + right) % p = left + right
+            abs(\cyclic_group::cyclic_add<p>(left, right)) = left + right
+            \cauchy_power_map<G, group, p, x>(\cyclic_group::cyclic_add<p>(left, right)) = \cauchy_fixed_points::cauchy_group_power<G, group>(x, left + right) = \cauchy_fixed_points::cauchy_group_power<G, group>(x, abs(left) + abs(right)) = group.mul(\cauchy_fixed_points::cauchy_group_power<G, group>(x, abs(left)), \cauchy_fixed_points::cauchy_group_power<G, group>(x, abs(right))) = group.mul(\cauchy_power_map<G, group, p, x>(left), \cauchy_power_map<G, group, p, x>(right))
+        case left + right >= p:
+            left + right <= (p - 1) + (p - 1) = 2 * p - 2 < 2 * p
+            left + right - p >= 0
+            abs(left + right - p) = left + right - p
+            have remainder N = abs(left + right - p)
+            remainder = left + right - p
+            remainder = left + right - p < 2 * p - p = p
+            natural_sum = left + right = p * 1 + (left + right - p) = p * 1 + remainder
+            natural_sum % p = remainder
+            (left + right) % p = natural_sum % p = remainder
+            \cyclic_group::cyclic_add<p>(left, right) = (left + right) % p = remainder
+            abs(\cyclic_group::cyclic_add<p>(left, right)) = remainder
+            remainder + p = left + right
+            release thm cauchy_group_power_period(G, group, x, p, remainder)
+            \cauchy_fixed_points::cauchy_group_power<G, group>(x, remainder) = \cauchy_fixed_points::cauchy_group_power<G, group>(x, remainder + p) = \cauchy_fixed_points::cauchy_group_power<G, group>(x, left + right)
+            \cauchy_power_map<G, group, p, x>(\cyclic_group::cyclic_add<p>(left, right)) = \cauchy_fixed_points::cauchy_group_power<G, group>(x, remainder) = \cauchy_fixed_points::cauchy_group_power<G, group>(x, left + right) = \cauchy_fixed_points::cauchy_group_power<G, group>(x, abs(left) + abs(right)) = group.mul(\cauchy_fixed_points::cauchy_group_power<G, group>(x, abs(left)), \cauchy_fixed_points::cauchy_group_power<G, group>(x, abs(right))) = group.mul(\cauchy_power_map<G, group, p, x>(left), \cauchy_power_map<G, group, p, x>(right))
+
+thm cauchy_power_map_is_group_hom:
+    ? forall G nonempty_set, group &group::Group<G>, p N+, x G:
+        \cauchy_fixed_points::cauchy_group_power<G, group>(x, p) = group.one
+        =>:
+            $group_homomorphism::is_group_hom(\cyclic_group::cyclic_indices<p>, G, \cyclic_group::cyclic_prime_group<p>, group, \cauchy_power_map<G, group, p, x>)
+    release thm cauchy_power_map_zero(G, group, p, x)
+    claim:
+        ? forall left, right \cyclic_group::cyclic_indices<p>:
+            \cauchy_power_map<G, group, p, x>(\cyclic_group::cyclic_add<p>(left, right)) = group.mul(\cauchy_power_map<G, group, p, x>(left), \cauchy_power_map<G, group, p, x>(right))
+        release thm cauchy_power_map_add(G, group, p, x, left, right)
+    by def:
+        ? $group_homomorphism::is_monoid_hom(\cyclic_group::cyclic_indices<p>, G, \cyclic_group::cyclic_add<p>, \cyclic_group::cyclic_zero<p>, group.mul, group.one, \cauchy_power_map<G, group, p, x>)
+    \cyclic_group::cyclic_prime_group<p>.mul = \cyclic_group::cyclic_add<p>
+    \cyclic_group::cyclic_prime_group<p>.one = \cyclic_group::cyclic_zero<p>
+    \cauchy_power_map<G, group, p, x>(\cyclic_group::cyclic_prime_group<p>.one) = \cauchy_power_map<G, group, p, x>(\cyclic_group::cyclic_zero<p>) = group.one
+    claim:
+        ? forall left, right \cyclic_group::cyclic_indices<p>:
+            \cauchy_power_map<G, group, p, x>(\cyclic_group::cyclic_prime_group<p>.mul(left, right)) = group.mul(\cauchy_power_map<G, group, p, x>(left), \cauchy_power_map<G, group, p, x>(right))
+        \cyclic_group::cyclic_prime_group<p>.mul(left, right) = \cyclic_group::cyclic_add<p>(left, right)
+        release thm cauchy_power_map_add(G, group, p, x, left, right)
+        \cauchy_power_map<G, group, p, x>(\cyclic_group::cyclic_prime_group<p>.mul(left, right)) = \cauchy_power_map<G, group, p, x>(\cyclic_group::cyclic_add<p>(left, right)) = group.mul(\cauchy_power_map<G, group, p, x>(left), \cauchy_power_map<G, group, p, x>(right))
+    by def:
+        ? $group_homomorphism::is_monoid_hom(\cyclic_group::cyclic_indices<p>, G, \cyclic_group::cyclic_prime_group<p>.mul, \cyclic_group::cyclic_prime_group<p>.one, group.mul, group.one, \cauchy_power_map<G, group, p, x>)
+    by def:
+        ? $group_homomorphism::is_group_hom(\cyclic_group::cyclic_indices<p>, G, \cyclic_group::cyclic_prime_group<p>, group, \cauchy_power_map<G, group, p, x>)
+
+thm positive_prime_divisor_at_least_two_is_prime:
+    ? forall p, divisor N+:
+        $prime(p)
+        $group::divides(divisor, p)
+        divisor >= 2
+        =>:
+            divisor = p
+    obtain quotient from $group::divides(divisor, p)
+    p = divisor * quotient
+    release thm prime_arithmetic::_positive_divisor_le_abs(divisor, p)
+    abs(p) = p
+    divisor <= p
+    divisor = p or divisor < p
+    by cases:
+        ? divisor = p
+        case divisor = p:
+            divisor = p
+        case divisor < p:
+            divisor <= p - 1
+            divisor $in closed_range(2, p - 1)
+            by def $prime(p)
+            p % divisor != 0
+            p % divisor = (divisor * quotient) % divisor = 0
+            impossible p % divisor != 0
+
+thm finite_subset_equal_of_same_size:
+    ? forall A, B set:
+        $is_finite_set(A)
+        $is_finite_set(B)
+        A $subset B
+        finite_set_size(A) = finite_set_size(B)
+        =>:
+            A = B
+    claim:
+        ? intersect(B, A) = A
+        by extension:
+            ? intersect(B, A) = A
+            claim:
+                ? forall x intersect(B, A):
+                    x $in A
+                x $in A
+            claim:
+                ? forall x A:
+                    x $in intersect(B, A)
+                x $in B
+                x $in A
+    $is_finite_set(set_minus(B, A))
+    finite_set_size(set_minus(B, A)) = finite_set_size(B) - finite_set_size(intersect(B, A)) = finite_set_size(B) - finite_set_size(A) = 0
+    by extension:
+        ? A = B
+        claim:
+            ? forall x A:
+                x $in B
+            x $in B
+        claim:
+            ? forall x B:
+                x $in A
+            by contra:
+                ? x $in A
+                not x $in A
+                x $in set_minus(B, A)
+                witness $is_nonempty_set(set_minus(B, A)) from x
+                finite_set_size(set_minus(B, A)) >= 1
+                impossible finite_set_size(set_minus(B, A)) = 0
+
+thm cauchy_power_kernel_is_trivial:
+    ? forall G nonempty_set, group &group::Group<G>, p N+, x G:
+        $prime(p)
+        x != group.one
+        \cauchy_fixed_points::cauchy_group_power<G, group>(x, p) = group.one
+        =>:
+            \subgroup_maps::group_kernel<\cyclic_group::cyclic_indices<p>, G, group.one, \cauchy_power_map<G, group, p, x>> = {\cyclic_group::cyclic_zero<p>}
+    release thm cauchy_power_map_is_group_hom(G, group, p, x)
+    release thm subgroup_maps::group_kernel_closed(\cyclic_group::cyclic_indices<p>, G, \cyclic_group::cyclic_prime_group<p>, group, \cauchy_power_map<G, group, p, x>)
+    claim:
+        ? \subgroup_maps::group_kernel<\cyclic_group::cyclic_indices<p>, G, group.one, \cauchy_power_map<G, group, p, x>> $subset \cyclic_group::cyclic_indices<p>
+    release thm cyclic_group::cyclic_indices_are_finite(p)
+    release thm subset_of_finite_set_is_finite(\subgroup_maps::group_kernel<\cyclic_group::cyclic_indices<p>, G, group.one, \cauchy_power_map<G, group, p, x>>, \cyclic_group::cyclic_indices<p>)
+    release thm lagrange::subgroup_order_divides_group_order(\cyclic_group::cyclic_indices<p>, \cyclic_group::cyclic_prime_group<p>, \subgroup_maps::group_kernel<\cyclic_group::cyclic_indices<p>, G, group.one, \cauchy_power_map<G, group, p, x>>)
+    release thm cyclic_group::cyclic_indices_have_prime_size(p)
+    $group::divides(finite_set_size(\subgroup_maps::group_kernel<\cyclic_group::cyclic_indices<p>, G, group.one, \cauchy_power_map<G, group, p, x>>), p)
+    \cyclic_group::cyclic_prime_group<p>.one = \cyclic_group::cyclic_zero<p>
+    \cyclic_group::cyclic_prime_group<p>.one $in \subgroup_maps::group_kernel<\cyclic_group::cyclic_indices<p>, G, group.one, \cauchy_power_map<G, group, p, x>>
+    witness $is_nonempty_set(\subgroup_maps::group_kernel<\cyclic_group::cyclic_indices<p>, G, group.one, \cauchy_power_map<G, group, p, x>>) from \cyclic_group::cyclic_prime_group<p>.one
+    finite_set_size(\subgroup_maps::group_kernel<\cyclic_group::cyclic_indices<p>, G, group.one, \cauchy_power_map<G, group, p, x>>) >= 1
+    finite_set_size(\subgroup_maps::group_kernel<\cyclic_group::cyclic_indices<p>, G, group.one, \cauchy_power_map<G, group, p, x>>) = 1 or finite_set_size(\subgroup_maps::group_kernel<\cyclic_group::cyclic_indices<p>, G, group.one, \cauchy_power_map<G, group, p, x>>) > 1
+    by cases:
+        ? \subgroup_maps::group_kernel<\cyclic_group::cyclic_indices<p>, G, group.one, \cauchy_power_map<G, group, p, x>> = {\cyclic_group::cyclic_zero<p>}
+        case finite_set_size(\subgroup_maps::group_kernel<\cyclic_group::cyclic_indices<p>, G, group.one, \cauchy_power_map<G, group, p, x>>) = 1:
+            release thm lagrange::subgroup_eq_bottom_iff_order_one_forward(\cyclic_group::cyclic_indices<p>, \cyclic_group::cyclic_prime_group<p>, \subgroup_maps::group_kernel<\cyclic_group::cyclic_indices<p>, G, group.one, \cauchy_power_map<G, group, p, x>>)
+            \subgroup_maps::group_kernel<\cyclic_group::cyclic_indices<p>, G, group.one, \cauchy_power_map<G, group, p, x>> = {\cyclic_group::cyclic_prime_group<p>.one} = {\cyclic_group::cyclic_zero<p>}
+        case finite_set_size(\subgroup_maps::group_kernel<\cyclic_group::cyclic_indices<p>, G, group.one, \cauchy_power_map<G, group, p, x>>) > 1:
+            finite_set_size(\subgroup_maps::group_kernel<\cyclic_group::cyclic_indices<p>, G, group.one, \cauchy_power_map<G, group, p, x>>) >= 2
+            release thm positive_prime_divisor_at_least_two_is_prime(p, finite_set_size(\subgroup_maps::group_kernel<\cyclic_group::cyclic_indices<p>, G, group.one, \cauchy_power_map<G, group, p, x>>))
+            finite_set_size(\subgroup_maps::group_kernel<\cyclic_group::cyclic_indices<p>, G, group.one, \cauchy_power_map<G, group, p, x>>) = p = finite_set_size(\cyclic_group::cyclic_indices<p>)
+            release thm finite_subset_equal_of_same_size(\subgroup_maps::group_kernel<\cyclic_group::cyclic_indices<p>, G, group.one, \cauchy_power_map<G, group, p, x>>, \cyclic_group::cyclic_indices<p>)
+            \subgroup_maps::group_kernel<\cyclic_group::cyclic_indices<p>, G, group.one, \cauchy_power_map<G, group, p, x>> = \cyclic_group::cyclic_indices<p>
+            p >= 2
+            1 <= p - 1
+            1 $in closed_range(0, p - 1) = \cyclic_group::cyclic_indices<p>
+            have one_index \cyclic_group::cyclic_indices<p> = 1
+            one_index $in \subgroup_maps::group_kernel<\cyclic_group::cyclic_indices<p>, G, group.one, \cauchy_power_map<G, group, p, x>>
+            \subgroup_maps::group_kernel<\cyclic_group::cyclic_indices<p>, G, group.one, \cauchy_power_map<G, group, p, x>> = {candidate \cyclic_group::cyclic_indices<p>: \cauchy_power_map<G, group, p, x>(candidate) = group.one}
+            one_index $in {candidate \cyclic_group::cyclic_indices<p>: \cauchy_power_map<G, group, p, x>(candidate) = group.one}
+            release thm set_builder_member(one_index, {candidate \cyclic_group::cyclic_indices<p>: \cauchy_power_map<G, group, p, x>(candidate) = group.one})
+            \cauchy_power_map<G, group, p, x>(one_index) = group.one
+            abs(one_index) = abs(1) = 1
+            release thm cauchy_fixed_points::cauchy_group_power_succ(G, group, x, 0)
+            release thm cauchy_fixed_points::cauchy_group_power_zero(G, group, x)
+            \cauchy_fixed_points::cauchy_group_power<G, group>(x, 1) = group.mul(\cauchy_fixed_points::cauchy_group_power<G, group>(x, 0), x) = group.mul(group.one, x) = x
+            \cauchy_power_map<G, group, p, x>(one_index) = \cauchy_fixed_points::cauchy_group_power<G, group>(x, abs(one_index)) = \cauchy_fixed_points::cauchy_group_power<G, group>(x, 1) = x
+            x = group.one
+            impossible x != group.one
+
+thm group_hom_injective_of_trivial_kernel:
+    ? forall G, H nonempty_set, source &group::Group<G>, target &group::Group<H>, f fn(x G) H:
+        $group_homomorphism::is_group_hom(G, H, source, target, f)
+        \subgroup_maps::group_kernel<G, H, target.one, f> = {source.one}
+        =>:
+            $injective(G, H, f)
+    claim:
+        ? forall left, right G:
+            f(left) = f(right)
+            =>:
+                left = right
+        release thm group_homomorphism::group_hom_map_inv(G, H, source, target, f, left)
+        release thm group_homomorphism::group_hom_map_mul(G, H, source, target, f, source.inv(left), right)
+        by def:
+            ? $group::group_laws(H, target.mul, target.one, target.inv)
+        target.mul(target.inv(f(left)), f(left)) = target.one
+        f(source.mul(source.inv(left), right)) = target.mul(f(source.inv(left)), f(right)) = target.mul(target.inv(f(left)), f(right)) = target.mul(target.inv(f(left)), f(left)) = target.one
+        \subgroup_maps::group_kernel<G, H, target.one, f> = {candidate G: f(candidate) = target.one}
+        release thm set_builder_member(source.mul(source.inv(left), right), {candidate G: f(candidate) = target.one})
+        source.mul(source.inv(left), right) $in \subgroup_maps::group_kernel<G, H, target.one, f> = {source.one}
+        source.mul(source.inv(left), right) = source.one
+        by def:
+            ? $group::group_laws(G, source.mul, source.one, source.inv)
+        release thm group_homomorphism::group_mul_inv_cancel(G, source, left)
+        release thm group::mul_one(G, source.mul, source.one, source.inv, left)
+        source.mul(left, source.mul(source.inv(left), right)) = source.mul(source.mul(left, source.inv(left)), right) = source.mul(source.one, right) = right
+        source.mul(left, source.mul(source.inv(left), right)) = source.mul(left, source.one) = left
+        left = right
+    by def:
+        ? $injective(G, H, f)
+
+thm cauchy_power_map_is_injective:
+    ? forall G nonempty_set, group &group::Group<G>, p N+, x G:
+        $prime(p)
+        x != group.one
+        \cauchy_fixed_points::cauchy_group_power<G, group>(x, p) = group.one
+        =>:
+            $injective(\cyclic_group::cyclic_indices<p>, G, \cauchy_power_map<G, group, p, x>)
+    release thm cauchy_power_map_is_group_hom(G, group, p, x)
+    release thm cauchy_power_kernel_is_trivial(G, group, p, x)
+    \cyclic_group::cyclic_prime_group<p>.one = \cyclic_group::cyclic_zero<p>
+    \subgroup_maps::group_kernel<\cyclic_group::cyclic_indices<p>, G, group.one, \cauchy_power_map<G, group, p, x>> = {\cyclic_group::cyclic_zero<p>} = {\cyclic_group::cyclic_prime_group<p>.one}
+    release thm group_hom_injective_of_trivial_kernel(\cyclic_group::cyclic_indices<p>, G, \cyclic_group::cyclic_prime_group<p>, group, \cauchy_power_map<G, group, p, x>)
+
+thm group_range_eq_fn_range:
+    ? forall G, H set, f fn(x G) H:
+        \subgroup_maps::group_range<G, H, f> = fn_range(f)
+    \subgroup_maps::group_range<G, H, f> = \subgroup_maps::subgroup_map<G, H, f>(G) = {y H: $subgroup_maps::has_subgroup_map_preimage(G, H, f, G, y)}
+    by extension:
+        ? \subgroup_maps::group_range<G, H, f> = fn_range(f)
+        claim:
+            ? forall y \subgroup_maps::group_range<G, H, f>:
+                y $in fn_range(f)
+            y $in {target H: $subgroup_maps::has_subgroup_map_preimage(G, H, f, G, target)}
+            release thm set_builder_member(y, {target H: $subgroup_maps::has_subgroup_map_preimage(G, H, f, G, target)})
+            by def:
+                ? $subgroup_maps::has_subgroup_map_preimage(G, H, f, G, y)
+            obtain x from $subgroup_maps::has_subgroup_map_preimage(G, H, f, G, y)
+            f(x) = y
+            f(x) $in fn_range(f)
+            y $in fn_range(f)
+        claim:
+            ? forall y fn_range(f):
+                y $in \subgroup_maps::group_range<G, H, f>
+            have by preimage x from y $in fn_range(f)
+            witness $subgroup_maps::has_subgroup_map_preimage(G, H, f, G, y) from x:
+                x $in G
+                f(x) = y
+            release thm set_builder_member(y, {target H: $subgroup_maps::has_subgroup_map_preimage(G, H, f, G, target)})
+            y $in {target H: $subgroup_maps::has_subgroup_map_preimage(G, H, f, G, target)} = \subgroup_maps::group_range<G, H, f>
+
+thm cauchy_power_range_is_prime_subgroup:
+    ? forall G nonempty_set, group &group::Group<G>, p N+, x G:
+        $is_finite_set(G)
+        $prime(p)
+        x != group.one
+        \cauchy_fixed_points::cauchy_group_power<G, group>(x, p) = group.one
+        =>:
+            $subgroup::is_subgroup(G, group, \subgroup_maps::group_range<\cyclic_group::cyclic_indices<p>, G, \cauchy_power_map<G, group, p, x>>)
+            $is_finite_set(\subgroup_maps::group_range<\cyclic_group::cyclic_indices<p>, G, \cauchy_power_map<G, group, p, x>>)
+            finite_set_size(\subgroup_maps::group_range<\cyclic_group::cyclic_indices<p>, G, \cauchy_power_map<G, group, p, x>>) = p
+    release thm cauchy_power_map_is_group_hom(G, group, p, x)
+    release thm subgroup_maps::group_range_closed(\cyclic_group::cyclic_indices<p>, G, \cyclic_group::cyclic_prime_group<p>, group, \cauchy_power_map<G, group, p, x>)
+    release thm cauchy_power_map_is_injective(G, group, p, x)
+    release thm cyclic_group::cyclic_indices_are_finite(p)
+    $is_finite_set(fn_range(\cauchy_power_map<G, group, p, x>))
+    release thm cauchy_restriction::finite_injection_range_cardinality(\cyclic_group::cyclic_indices<p>, G, \cauchy_power_map<G, group, p, x>)
+    release thm cyclic_group::cyclic_indices_have_prime_size(p)
+    finite_set_size(fn_range(\cauchy_power_map<G, group, p, x>)) = finite_set_size(\cyclic_group::cyclic_indices<p>) = p
+    release thm group_range_eq_fn_range(\cyclic_group::cyclic_indices<p>, G, \cauchy_power_map<G, group, p, x>)
+    \subgroup_maps::group_range<\cyclic_group::cyclic_indices<p>, G, \cauchy_power_map<G, group, p, x>> = fn_range(\cauchy_power_map<G, group, p, x>)
+    $is_finite_set(\subgroup_maps::group_range<\cyclic_group::cyclic_indices<p>, G, \cauchy_power_map<G, group, p, x>>)
+    finite_set_size(\subgroup_maps::group_range<\cyclic_group::cyclic_indices<p>, G, \cauchy_power_map<G, group, p, x>>) = finite_set_size(fn_range(\cauchy_power_map<G, group, p, x>)) = p

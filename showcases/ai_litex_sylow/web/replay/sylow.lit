@@ -1,0 +1,92 @@
+# First Sylow theorem: every prime power dividing a finite group order is
+# realized as the order of a subgroup.  The induction step is isolated in
+# sylow_successor.lit; this file contains only the induction interface and proof.
+
+prop p_power_subgroup_exists_at(G nonempty_set, group &group::Group<G>, p N+, exponent N):
+    forall token N:
+        $is_finite_set(G)
+        token = exponent
+        $group::divides(p^token, finite_set_size(G))
+        =>:
+            exist H power_set(G) st {$subgroup::is_subgroup(G, group, H), $is_finite_set(H), finite_set_size(H) = p^token}
+
+thm p_power_subgroup_exists:
+    ? forall G nonempty_set, group &group::Group<G>, p N+, n N:
+        $is_finite_set(G)
+        $prime(p)
+        $group::divides(p^n, finite_set_size(G))
+        =>:
+            exist H power_set(G) st {$subgroup::is_subgroup(G, group, H), $is_finite_set(H), finite_set_size(H) = p^n}
+    claim:
+        ? forall exponent N:
+            $p_power_subgroup_exists_at(G, group, p, exponent)
+        by induc exponent from 0:
+            ? $p_power_subgroup_exists_at(G, group, p, exponent)
+
+            ? from exponent = 0:
+                claim:
+                    ? forall token N:
+                        $is_finite_set(G)
+                        token = exponent
+                        $group::divides(p^token, finite_set_size(G))
+                        =>:
+                            exist H power_set(G) st {$subgroup::is_subgroup(G, group, H), $is_finite_set(H), finite_set_size(H) = p^token}
+                    token = exponent = 0
+                    have bottom power_set(G) = {group.one}
+                    claim:
+                        ? $subgroup::is_subgroup(G, group, bottom)
+                        group.one $in {group.one}
+                        group.one $in bottom
+                        claim:
+                            ? forall x, y G:
+                                x $in bottom
+                                y $in bottom
+                                =>:
+                                    group.mul(x, y) $in bottom
+                            x = group.one
+                            y = group.one
+                            group.mul(x, y) = group.mul(group.one, group.one) = group.one
+                            group.one $in bottom
+                        claim:
+                            ? forall x G:
+                                x $in bottom
+                                =>:
+                                    group.inv(x) $in bottom
+                            x = group.one
+                            group.mul(group.inv(group.one), group.one) = group.one
+                            release thm group::group_mul_one(G, group, group.inv(group.one))
+                            group.mul(group.inv(group.one), group.one) = group.inv(group.one)
+                            group.inv(group.one) = group.one
+                            group.inv(x) = group.inv(group.one) = group.one
+                            group.one $in bottom
+                        by def $subgroup::is_subgroup(G, group, bottom)
+                    $is_finite_set({group.one})
+                    $is_finite_set(bottom)
+                    finite_set_size(bottom) = finite_set_size({group.one}) = 1 = p^0 = p^token
+                    witness exist H power_set(G) st {$subgroup::is_subgroup(G, group, H), $is_finite_set(H), finite_set_size(H) = p^token} from bottom
+                by def $p_power_subgroup_exists_at(G, group, p, exponent)
+
+            ? induc:
+                $p_power_subgroup_exists_at(G, group, p, exponent)
+                claim:
+                    ? forall token N:
+                        $is_finite_set(G)
+                        token = exponent + 1
+                        $group::divides(p^token, finite_set_size(G))
+                        =>:
+                            exist H power_set(G) st {$subgroup::is_subgroup(G, group, H), $is_finite_set(H), finite_set_size(H) = p^token}
+                    token = exponent + 1
+                    p^token = p^(exponent + 1)
+                    $group::divides(p^(exponent + 1), finite_set_size(G))
+                    release thm sylow_successor::prime_power_divisor_predecessor(p, exponent, finite_set_size(G))
+                    $group::divides(p^exponent, finite_set_size(G))
+                    exponent = exponent
+                    obtain H from exist H power_set(G) st {$subgroup::is_subgroup(G, group, H), $is_finite_set(H), finite_set_size(H) = p^exponent}
+                    release thm sylow_successor::p_power_subgroup_successor(G, group, H, p, exponent)
+                    obtain P from exist P power_set(G) st {$subgroup::is_subgroup(G, group, P), $is_finite_set(P), finite_set_size(P) = p^(exponent + 1)}
+                    finite_set_size(P) = p^(exponent + 1) = p^token
+                    witness exist next_subgroup power_set(G) st {$subgroup::is_subgroup(G, group, next_subgroup), $is_finite_set(next_subgroup), finite_set_size(next_subgroup) = p^token} from P
+                by def $p_power_subgroup_exists_at(G, group, p, exponent + 1)
+    $p_power_subgroup_exists_at(G, group, p, n)
+    n = n
+    exist H power_set(G) st {$subgroup::is_subgroup(G, group, H), $is_finite_set(H), finite_set_size(H) = p^n}

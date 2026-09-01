@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "journal_id": "AI-LITEX-SYLOW-QUOTIENT-PREIMAGE-COORDINATES-2026-09-01",
+  "target": "scripts/ai_litex_sylow/quotient_preimage_coordinates.lit",
+  "source_anchor": "scripts/mathematics_in_litex/textbook/chapter09-groups-and-rings.lit:7025",
+  "blocks": [
+    {
+      "id": "QPC001",
+      "name": "quotient_reconstruction_first_coordinate",
+      "source_order": 1,
+      "attempts": [
+        {
+          "attempt_id": "QPC001A1",
+          "result": "accepted",
+          "verifier_evidence": "The literal outer try committed the scalar first-coordinate reconstruction qmk(rep(q) * h) = q. The proof uses only left-coset membership, equality of cosets, and the representative specification; error null."
+        }
+      ],
+      "status": "materialized"
+    },
+    {
+      "id": "QPC002",
+      "name": "quotient_reconstruction_second_coordinate",
+      "source_order": 2,
+      "attempts": [
+        {
+          "attempt_id": "QPC002A1",
+          "result": "rolled_back",
+          "verifier_evidence": "The literal outer try passed the first-coordinate citation, projection equality, and representative substitution, then rolled back only at group.mul(group.inv(rep(q)), rep(q)) = group.one inside the cancellation chain.",
+          "diagnosis": "Expose the packaged Group laws explicitly with by def $group::group_laws, state the inverse cancellation, and transport it through multiplication by h with object_substitution before closing the coordinate chain."
+        },
+        {
+          "attempt_id": "QPC002A2",
+          "result": "accepted",
+          "verifier_evidence": "After explicitly exposing group_laws and transporting inverse cancellation through right multiplication by h, the literal outer try committed coordinate(rep(q) * h) = h; error null."
+        }
+      ],
+      "status": "materialized"
+    },
+    {
+      "id": "QPC003",
+      "name": "quotient_reconstruction_element",
+      "source_order": 3,
+      "attempts": [
+        {
+          "attempt_id": "QPC003A1",
+          "result": "rolled_back",
+          "verifier_evidence": "The literal outer try rolled back during theorem-header well-definedness: left_coset_representative expects quotient_group_carrier, while quotient_group_mk(x) is intrinsically typed in the extensionally equal quotient_group_nonempty carrier.",
+          "diagnosis": "State the native coset-coordinate interface with left_coset_projection(x), whose carrier matches left_coset_representative directly. The later Sylow forward map can likewise use projection after explicitly transporting qmk membership through qmk = projection."
+        },
+        {
+          "attempt_id": "QPC003A2",
+          "result": "accepted",
+          "verifier_evidence": "The literal outer try committed the native element reconstruction rep(projection(x)) * coordinate(x) = x by citing cosets::left_coset_backward_forward and unfolding the two coordinate functions; error null."
+        }
+      ],
+      "status": "materialized"
+    },
+    {
+      "id": "QPC004",
+      "name": "quotient_reconstruction_pair",
+      "source_order": 4,
+      "attempts": [
+        {
+          "attempt_id": "QPC004A1",
+          "result": "accepted",
+          "verifier_evidence": "The literal outer try committed the explicit pair reconstruction by deriving projection(rep(q) * h) = q and coordinate(rep(q) * h) = h from QPC001-QPC002, then assembling two tuple-literal equalities; error null."
+        }
+      ],
+      "status": "materialized"
+    }
+  ],
+  "materialization": {
+    "status": "clean_replay_passed",
+    "root_sha256": "8d5ffe737685254b11bbc95a71d6fd21c4bb6a703c18dee9b4d991902f0aff52",
+    "replay_sha256": "8d5ffe737685254b11bbc95a71d6fd21c4bb6a703c18dee9b4d991902f0aff52",
+    "evidence": "After extending the module to four reconstruction interfaces, a fresh noncanonical, echo-disabled file-backed session loaded web/replay/quotient_preimage_coordinates.lit and emitted the ready event with error null."
+  }
+}

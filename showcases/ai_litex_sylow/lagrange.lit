@@ -1,0 +1,74 @@
+# MIL Chapter 9 Lagrange layer.
+#
+# The coset-coordinate bijection supplies the quotient factor explicitly;
+# the second theorem isolates the finite order-one subgroup corollary.
+thm subgroup_order_divides_group_order:
+    ? forall G nonempty_set, group &group::Group<G>, H power_set(G):
+        $subgroup::is_subgroup(G, group, H)
+        $is_finite_set(G)
+        $is_finite_set(H)
+        =>:
+            $group::divides(finite_set_size(H), finite_set_size(G))
+    release thm cosets::left_coset_space_finite(G, group, H)
+    release thm cosets::left_coset_forward_bijective(G, group, H)
+    $is_finite_set(cart(\cosets::quotient_group_carrier<G, group>(H), H))
+    finite_set_size(G) = finite_set_size(cart(\cosets::quotient_group_carrier<G, group>(H), H))
+    finite_set_size(cart(\cosets::quotient_group_carrier<G, group>(H), H)) = finite_set_size(\cosets::quotient_group_carrier<G, group>(H)) * finite_set_size(H)
+    finite_set_size(G) = finite_set_size(\cosets::quotient_group_carrier<G, group>(H)) * finite_set_size(H) = finite_set_size(H) * finite_set_size(\cosets::quotient_group_carrier<G, group>(H))
+    witness $group::divides(finite_set_size(H), finite_set_size(G)) from finite_set_size(\cosets::quotient_group_carrier<G, group>(H)):
+        finite_set_size(G) = finite_set_size(H) * finite_set_size(\cosets::quotient_group_carrier<G, group>(H))
+
+thm subgroup_eq_bottom_iff_order_one_forward:
+    ? forall G nonempty_set, group &group::Group<G>, H power_set(G):
+        $subgroup::is_subgroup(G, group, H)
+        $is_finite_set(H)
+        finite_set_size(H) = 1
+        =>:
+            H = {group.one}
+    claim:
+        ? forall x H:
+            x = group.one
+        by cases:
+            ? x = group.one
+            case x = group.one:
+                x = group.one
+            case x != group.one:
+                group.one $in H
+                claim:
+                    ? group.one != x
+                    by contra:
+                        ? group.one != x
+                        group.one = x
+                        x = group.one
+                        impossible x != group.one
+                claim:
+                    ? forall y {group.one, x}:
+                        y $in H
+                    by cases:
+                        ? y $in H
+                        case y = group.one:
+                            y = group.one
+                            group.one $in H
+                            y $in H
+                        case y = x:
+                            y = x
+                            x $in H
+                            y $in H
+                {group.one, x} $subset H
+                finite_set_size({group.one, x}) = 2
+                finite_set_size({group.one, x}) <= finite_set_size(H)
+                2 <= 1
+                impossible 2 <= 1
+    by extension:
+        ? H = {group.one}
+        claim:
+            ? forall x H:
+                x $in {group.one}
+            x = group.one
+            x $in {group.one}
+        claim:
+            ? forall x {group.one}:
+                x $in H
+            x = group.one
+            group.one $in H
+            x $in H

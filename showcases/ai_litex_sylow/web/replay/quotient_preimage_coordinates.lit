@@ -1,0 +1,66 @@
+# Recover the two quotient-coset coordinates of rep(q) * h separately.
+# Keeping these scalar identities independent avoids opaque tuple round trips.
+
+thm quotient_reconstruction_first_coordinate:
+    ? forall G nonempty_set, group &group::Group<G>, H power_set(G), q power_set(G), h G:
+        $normal_subgroup::is_normal_subgroup(G, group, H)
+        q $in \quotient_groups::quotient_group_nonempty<G, group, H>
+        h $in H
+        =>:
+            \quotient_groups::quotient_group_mk<G, group, H>(group.mul(\cosets::left_coset_representative<G, group, H>(q), h)) = q
+    \quotient_groups::quotient_group_nonempty<G, group, H> = \cosets::quotient_group_carrier<G, group>(H)
+    q $in \cosets::quotient_group_carrier<G, group>(H)
+    release thm cosets::left_coset_center_mem(G, group, H, \cosets::left_coset_representative<G, group, H>(q))
+    \cosets::left_coset_representative<G, group, H>(q) $in \cosets::left_coset<G, group>(H, \cosets::left_coset_representative<G, group, H>(q))
+    witness $cosets::left_coset_member(G, group, H, \cosets::left_coset_representative<G, group, H>(q), group.mul(\cosets::left_coset_representative<G, group, H>(q), h)) from h:
+        group.mul(\cosets::left_coset_representative<G, group, H>(q), h) = group.mul(\cosets::left_coset_representative<G, group, H>(q), h)
+    release thm set_builder_member(group.mul(\cosets::left_coset_representative<G, group, H>(q), h), {candidate G: $cosets::left_coset_member(G, group, H, \cosets::left_coset_representative<G, group, H>(q), candidate)})
+    \cosets::left_coset<G, group>(H, \cosets::left_coset_representative<G, group, H>(q)) = {candidate G: $cosets::left_coset_member(G, group, H, \cosets::left_coset_representative<G, group, H>(q), candidate)}
+    group.mul(\cosets::left_coset_representative<G, group, H>(q), h) $in \cosets::left_coset<G, group>(H, \cosets::left_coset_representative<G, group, H>(q))
+    release thm cosets::left_coset_eq_of_mem(G, group, H, \cosets::left_coset_representative<G, group, H>(q), group.mul(\cosets::left_coset_representative<G, group, H>(q), h))
+    \cosets::left_coset<G, group>(H, group.mul(\cosets::left_coset_representative<G, group, H>(q), h)) = \cosets::left_coset<G, group>(H, \cosets::left_coset_representative<G, group, H>(q))
+    \quotient_groups::quotient_group_mk<G, group, H>(group.mul(\cosets::left_coset_representative<G, group, H>(q), h)) = \cosets::left_coset<G, group>(H, group.mul(\cosets::left_coset_representative<G, group, H>(q), h))
+    release thm cosets::left_coset_representative_spec(G, group, H, q)
+    \cosets::left_coset<G, group>(H, \cosets::left_coset_representative<G, group, H>(q)) = \cosets::left_coset_projection<G, group, H>(\cosets::left_coset_representative<G, group, H>(q)) = q
+    \quotient_groups::quotient_group_mk<G, group, H>(group.mul(\cosets::left_coset_representative<G, group, H>(q), h)) = q
+
+thm quotient_reconstruction_second_coordinate:
+    ? forall G nonempty_set, group &group::Group<G>, H power_set(G), q power_set(G), h G:
+        $normal_subgroup::is_normal_subgroup(G, group, H)
+        q $in \quotient_groups::quotient_group_nonempty<G, group, H>
+        h $in H
+        =>:
+            \cosets::left_coset_coordinate<G, group, H>(group.mul(\cosets::left_coset_representative<G, group, H>(q), h)) = h
+    by def $group::group_laws(G, group.mul, group.one, group.inv)
+    release thm quotient_reconstruction_first_coordinate(G, group, H, q, h)
+    \quotient_groups::quotient_group_mk<G, group, H>(group.mul(\cosets::left_coset_representative<G, group, H>(q), h)) = q
+    \quotient_groups::quotient_group_mk<G, group, H>(group.mul(\cosets::left_coset_representative<G, group, H>(q), h)) = \cosets::left_coset<G, group>(H, group.mul(\cosets::left_coset_representative<G, group, H>(q), h)) = \cosets::left_coset_projection<G, group, H>(group.mul(\cosets::left_coset_representative<G, group, H>(q), h))
+    \cosets::left_coset_projection<G, group, H>(group.mul(\cosets::left_coset_representative<G, group, H>(q), h)) = q
+    release thm cosets::object_substitution(\cosets::quotient_group_carrier<G, group>(H), G, \cosets::left_coset_representative<G, group, H>, \cosets::left_coset_projection<G, group, H>(group.mul(\cosets::left_coset_representative<G, group, H>(q), h)), q)
+    \cosets::left_coset_representative<G, group, H>(\cosets::left_coset_projection<G, group, H>(group.mul(\cosets::left_coset_representative<G, group, H>(q), h))) = \cosets::left_coset_representative<G, group, H>(q)
+    group.mul(group.inv(\cosets::left_coset_representative<G, group, H>(q)), \cosets::left_coset_representative<G, group, H>(q)) = group.one
+    release thm cosets::object_substitution(G, G, fn(t G) G {group.mul(t, h)}, group.mul(group.inv(\cosets::left_coset_representative<G, group, H>(q)), \cosets::left_coset_representative<G, group, H>(q)), group.one)
+    \cosets::left_coset_coordinate<G, group, H>(group.mul(\cosets::left_coset_representative<G, group, H>(q), h)) = group.mul(group.inv(\cosets::left_coset_representative<G, group, H>(\cosets::left_coset_projection<G, group, H>(group.mul(\cosets::left_coset_representative<G, group, H>(q), h)))), group.mul(\cosets::left_coset_representative<G, group, H>(q), h)) = group.mul(group.inv(\cosets::left_coset_representative<G, group, H>(q)), group.mul(\cosets::left_coset_representative<G, group, H>(q), h)) = group.mul(group.mul(group.inv(\cosets::left_coset_representative<G, group, H>(q)), \cosets::left_coset_representative<G, group, H>(q)), h) = group.mul(group.one, h) = h
+
+thm quotient_reconstruction_element:
+    ? forall G nonempty_set, group &group::Group<G>, H power_set(G), x G:
+        $subgroup::is_subgroup(G, group, H)
+        =>:
+            group.mul(\cosets::left_coset_representative<G, group, H>(\cosets::left_coset_projection<G, group, H>(x)), \cosets::left_coset_coordinate<G, group, H>(x)) = x
+    release thm cosets::left_coset_backward_forward(G, group, H, x)
+    group.mul(\cosets::left_coset_representative<G, group, H>(\cosets::left_coset_projection<G, group, H>(x)), \cosets::left_coset_coordinate<G, group, H>(x)) = \cosets::left_coset_backward<G, group, H>(\cosets::left_coset_forward<G, group, H>(x)) = x
+
+thm quotient_reconstruction_pair:
+    ? forall G nonempty_set, group &group::Group<G>, H power_set(G), q \cosets::quotient_group_carrier<G, group>(H), h H:
+        $normal_subgroup::is_normal_subgroup(G, group, H)
+        =>:
+            (\cosets::left_coset_projection<G, group, H>(group.mul(\cosets::left_coset_representative<G, group, H>(q), h)), \cosets::left_coset_coordinate<G, group, H>(group.mul(\cosets::left_coset_representative<G, group, H>(q), h))) = (q, h)
+    \quotient_groups::quotient_group_nonempty<G, group, H> = \cosets::quotient_group_carrier<G, group>(H)
+    q $in \quotient_groups::quotient_group_nonempty<G, group, H>
+    release thm quotient_reconstruction_first_coordinate(G, group, H, q, h)
+    \quotient_groups::quotient_group_mk<G, group, H>(group.mul(\cosets::left_coset_representative<G, group, H>(q), h)) = q
+    \quotient_groups::quotient_group_mk<G, group, H>(group.mul(\cosets::left_coset_representative<G, group, H>(q), h)) = \cosets::left_coset<G, group>(H, group.mul(\cosets::left_coset_representative<G, group, H>(q), h)) = \cosets::left_coset_projection<G, group, H>(group.mul(\cosets::left_coset_representative<G, group, H>(q), h))
+    \cosets::left_coset_projection<G, group, H>(group.mul(\cosets::left_coset_representative<G, group, H>(q), h)) = q
+    release thm quotient_reconstruction_second_coordinate(G, group, H, q, h)
+    \cosets::left_coset_coordinate<G, group, H>(group.mul(\cosets::left_coset_representative<G, group, H>(q), h)) = h
+    (\cosets::left_coset_projection<G, group, H>(group.mul(\cosets::left_coset_representative<G, group, H>(q), h)), \cosets::left_coset_coordinate<G, group, H>(group.mul(\cosets::left_coset_representative<G, group, H>(q), h))) = (q, \cosets::left_coset_coordinate<G, group, H>(group.mul(\cosets::left_coset_representative<G, group, H>(q), h))) = (q, h)

@@ -1,0 +1,418 @@
+# The subgroup H acts on the left-coset space G/H by left multiplication.
+# This module develops the fixed-coset/normalizer correspondence and its
+# cardinality consequence for the Sylow induction step.
+
+template<G nonempty_set, group &group::Group<G>, H power_set(G): $subgroup::is_subgroup(G, group, H)>:
+    have fn sylow_coset_action(h \subgroup_structure::subgroup_carrier<G, group, H>, q \cosets::quotient_group_carrier<G, group>(H)) \cosets::quotient_group_carrier<G, group>(H) = \cosets::left_coset_projection<G, group, H>(group.mul(h, \cosets::left_coset_representative<G, group, H>(q)))
+
+thm sylow_coset_action_is_group_action:
+    ? forall G nonempty_set, group &group::Group<G>, H power_set(G):
+        $subgroup::is_subgroup(G, group, H)
+        =>:
+            $group_actions::is_group_action(\subgroup_structure::subgroup_carrier<G, group, H>, \cosets::quotient_group_carrier<G, group>(H), \subgroup_structure::subgroup_group<G, group, H>, \sylow_coset_action<G, group, H>)
+    claim:
+        ? forall q \cosets::quotient_group_carrier<G, group>(H):
+            \sylow_coset_action<G, group, H>(\subgroup_structure::subgroup_group<G, group, H>.one, q) = q
+        \subgroup_structure::subgroup_group<G, group, H>.one = \subgroup_structure::subgroup_one<G, group, H> = group.one
+        \sylow_coset_action<G, group, H>(\subgroup_structure::subgroup_group<G, group, H>.one, q) = \cosets::left_coset_projection<G, group, H>(group.mul(group.one, \cosets::left_coset_representative<G, group, H>(q)))
+        group.mul(group.one, \cosets::left_coset_representative<G, group, H>(q)) = \cosets::left_coset_representative<G, group, H>(q)
+        release thm cosets::object_substitution(G, \cosets::quotient_group_carrier<G, group>(H), \cosets::left_coset_projection<G, group, H>, group.mul(group.one, \cosets::left_coset_representative<G, group, H>(q)), \cosets::left_coset_representative<G, group, H>(q))
+        \cosets::left_coset_projection<G, group, H>(group.mul(group.one, \cosets::left_coset_representative<G, group, H>(q))) = \cosets::left_coset_projection<G, group, H>(\cosets::left_coset_representative<G, group, H>(q))
+        release thm cosets::left_coset_representative_spec(G, group, H, q)
+        \cosets::left_coset_projection<G, group, H>(\cosets::left_coset_representative<G, group, H>(q)) = q
+    claim:
+        ? forall a, b \subgroup_structure::subgroup_carrier<G, group, H>, q \cosets::quotient_group_carrier<G, group>(H):
+            \sylow_coset_action<G, group, H>(a, \sylow_coset_action<G, group, H>(b, q)) = \sylow_coset_action<G, group, H>(\subgroup_structure::subgroup_group<G, group, H>.mul(a, b), q)
+        have r \cosets::quotient_group_carrier<G, group>(H) = \sylow_coset_action<G, group, H>(b, q)
+        \sylow_coset_action<G, group, H>(b, q) = \cosets::left_coset_projection<G, group, H>(group.mul(b, \cosets::left_coset_representative<G, group, H>(q)))
+        r = \sylow_coset_action<G, group, H>(b, q)
+        r = \cosets::left_coset_projection<G, group, H>(group.mul(b, \cosets::left_coset_representative<G, group, H>(q)))
+        release thm cosets::left_coset_representative_spec(G, group, H, r)
+        \cosets::left_coset_projection<G, group, H>(\cosets::left_coset_representative<G, group, H>(r)) = r = \cosets::left_coset_projection<G, group, H>(group.mul(b, \cosets::left_coset_representative<G, group, H>(q)))
+        release thm cosets::left_coset_center_mem(G, group, H, \cosets::left_coset_representative<G, group, H>(r))
+        \cosets::left_coset_representative<G, group, H>(r) $in \cosets::left_coset<G, group>(H, \cosets::left_coset_representative<G, group, H>(r))
+        \cosets::left_coset<G, group>(H, \cosets::left_coset_representative<G, group, H>(r)) = \cosets::left_coset_projection<G, group, H>(\cosets::left_coset_representative<G, group, H>(r)) = \cosets::left_coset_projection<G, group, H>(group.mul(b, \cosets::left_coset_representative<G, group, H>(q))) = \cosets::left_coset<G, group>(H, group.mul(b, \cosets::left_coset_representative<G, group, H>(q)))
+        \cosets::left_coset_representative<G, group, H>(r) $in \cosets::left_coset<G, group>(H, group.mul(b, \cosets::left_coset_representative<G, group, H>(q)))
+        obtain offset from $cosets::left_coset_member(G, group, H, group.mul(b, \cosets::left_coset_representative<G, group, H>(q)), \cosets::left_coset_representative<G, group, H>(r))
+        offset $in H
+        \cosets::left_coset_representative<G, group, H>(r) = group.mul(group.mul(b, \cosets::left_coset_representative<G, group, H>(q)), offset)
+        \subgroup_structure::subgroup_group<G, group, H>.mul(a, b) = \subgroup_structure::subgroup_mul<G, group, H>(a, b) = group.mul(a, b)
+        claim:
+            ? group.mul(a, \cosets::left_coset_representative<G, group, H>(r)) $in \cosets::left_coset<G, group>(H, group.mul(group.mul(a, b), \cosets::left_coset_representative<G, group, H>(q)))
+            \cosets::left_coset<G, group>(H, group.mul(group.mul(a, b), \cosets::left_coset_representative<G, group, H>(q))) = {x G: $cosets::left_coset_member(G, group, H, group.mul(group.mul(a, b), \cosets::left_coset_representative<G, group, H>(q)), x)}
+            witness $cosets::left_coset_member(G, group, H, group.mul(group.mul(a, b), \cosets::left_coset_representative<G, group, H>(q)), group.mul(a, \cosets::left_coset_representative<G, group, H>(r))) from offset:
+                release thm cosets::object_substitution(G, G, fn(t G) G {group.mul(a, t)}, \cosets::left_coset_representative<G, group, H>(r), group.mul(group.mul(b, \cosets::left_coset_representative<G, group, H>(q)), offset))
+                group.mul(a, \cosets::left_coset_representative<G, group, H>(r)) = group.mul(a, group.mul(group.mul(b, \cosets::left_coset_representative<G, group, H>(q)), offset))
+                group.mul(a, group.mul(group.mul(b, \cosets::left_coset_representative<G, group, H>(q)), offset)) = group.mul(group.mul(a, group.mul(b, \cosets::left_coset_representative<G, group, H>(q))), offset)
+                group.mul(a, group.mul(b, \cosets::left_coset_representative<G, group, H>(q))) = group.mul(group.mul(a, b), \cosets::left_coset_representative<G, group, H>(q))
+                release thm cosets::object_substitution(G, G, fn(t G) G {group.mul(t, offset)}, group.mul(a, group.mul(b, \cosets::left_coset_representative<G, group, H>(q))), group.mul(group.mul(a, b), \cosets::left_coset_representative<G, group, H>(q)))
+                group.mul(group.mul(a, group.mul(b, \cosets::left_coset_representative<G, group, H>(q))), offset) = group.mul(group.mul(group.mul(a, b), \cosets::left_coset_representative<G, group, H>(q)), offset)
+                group.mul(a, \cosets::left_coset_representative<G, group, H>(r)) = group.mul(group.mul(group.mul(a, b), \cosets::left_coset_representative<G, group, H>(q)), offset)
+            release thm set_builder_member(group.mul(a, \cosets::left_coset_representative<G, group, H>(r)), {x G: $cosets::left_coset_member(G, group, H, group.mul(group.mul(a, b), \cosets::left_coset_representative<G, group, H>(q)), x)})
+        release thm cosets::left_coset_eq_of_mem(G, group, H, group.mul(group.mul(a, b), \cosets::left_coset_representative<G, group, H>(q)), group.mul(a, \cosets::left_coset_representative<G, group, H>(r)))
+        \cosets::left_coset_projection<G, group, H>(group.mul(a, \cosets::left_coset_representative<G, group, H>(r))) = \cosets::left_coset<G, group>(H, group.mul(a, \cosets::left_coset_representative<G, group, H>(r))) = \cosets::left_coset<G, group>(H, group.mul(group.mul(a, b), \cosets::left_coset_representative<G, group, H>(q))) = \cosets::left_coset_projection<G, group, H>(group.mul(group.mul(a, b), \cosets::left_coset_representative<G, group, H>(q)))
+        \sylow_coset_action<G, group, H>(a, \sylow_coset_action<G, group, H>(b, q)) = \sylow_coset_action<G, group, H>(a, r) = \cosets::left_coset_projection<G, group, H>(group.mul(a, \cosets::left_coset_representative<G, group, H>(r)))
+        \sylow_coset_action<G, group, H>(\subgroup_structure::subgroup_group<G, group, H>.mul(a, b), q) = \cosets::left_coset_projection<G, group, H>(group.mul(group.mul(a, b), \cosets::left_coset_representative<G, group, H>(q)))
+    by def:
+        ? $group_actions::is_group_action(\subgroup_structure::subgroup_carrier<G, group, H>, \cosets::quotient_group_carrier<G, group>(H), \subgroup_structure::subgroup_group<G, group, H>, \sylow_coset_action<G, group, H>)
+
+thm normalizer_coset_is_fixed:
+    ? forall G nonempty_set, group &group::Group<G>, H power_set(G), g G:
+        $subgroup::is_subgroup(G, group, H)
+        g $in \normalizer::subgroup_normalizer<G, group>(H)
+        =>:
+            $p_group_actions::action_fixed_point(\subgroup_structure::subgroup_carrier<G, group, H>, \cosets::quotient_group_carrier<G, group>(H), \sylow_coset_action<G, group, H>, \cosets::left_coset_projection<G, group, H>(g))
+    release thm set_builder_member(g, {candidate G: $normalizer::normalizes_subgroup(G, group, H, candidate)})
+    by def:
+        ? $normalizer::normalizes_subgroup(G, group, H, g)
+    have q \cosets::quotient_group_carrier<G, group>(H) = \cosets::left_coset_projection<G, group, H>(g)
+    release thm cosets::left_coset_representative_spec(G, group, H, q)
+    release thm cosets::left_coset_center_mem(G, group, H, \cosets::left_coset_representative<G, group, H>(q))
+    \cosets::left_coset_representative<G, group, H>(q) $in \cosets::left_coset<G, group>(H, \cosets::left_coset_representative<G, group, H>(q))
+    \cosets::left_coset<G, group>(H, \cosets::left_coset_representative<G, group, H>(q)) = \cosets::left_coset_projection<G, group, H>(\cosets::left_coset_representative<G, group, H>(q)) = q = \cosets::left_coset_projection<G, group, H>(g) = \cosets::left_coset<G, group>(H, g)
+    \cosets::left_coset_representative<G, group, H>(q) $in \cosets::left_coset<G, group>(H, g)
+    obtain tail from $cosets::left_coset_member(G, group, H, g, \cosets::left_coset_representative<G, group, H>(q))
+    tail $in H
+    \cosets::left_coset_representative<G, group, H>(q) = group.mul(g, tail)
+    claim:
+        ? forall h \subgroup_structure::subgroup_carrier<G, group, H>:
+            \sylow_coset_action<G, group, H>(h, q) = q
+        h $in H
+        group.mul(group.mul(group.inv(g), h), g) $in H
+        have moved G = group.mul(group.mul(group.inv(g), h), g)
+        moved $in H
+        group.mul(moved, tail) $in H
+        claim:
+            ? group.mul(h, \cosets::left_coset_representative<G, group, H>(q)) $in \cosets::left_coset<G, group>(H, g)
+            \cosets::left_coset<G, group>(H, g) = {x G: $cosets::left_coset_member(G, group, H, g, x)}
+            witness $cosets::left_coset_member(G, group, H, g, group.mul(h, \cosets::left_coset_representative<G, group, H>(q))) from group.mul(moved, tail):
+                release thm group::mul_inv_cancel(G, group.mul, group.one, group.inv, g)
+                group.mul(g, moved) = group.mul(g, group.mul(group.mul(group.inv(g), h), g))
+                group.mul(g, group.mul(group.mul(group.inv(g), h), g)) = group.mul(group.mul(g, group.mul(group.inv(g), h)), g)
+                group.mul(g, group.mul(group.inv(g), h)) = group.mul(group.mul(g, group.inv(g)), h)
+                group.mul(group.mul(g, group.inv(g)), h) = group.mul(group.one, h) = h
+                group.mul(g, group.mul(group.inv(g), h)) = h
+                release thm cosets::object_substitution(G, G, fn(t G) G {group.mul(t, g)}, group.mul(g, group.mul(group.inv(g), h)), h)
+                group.mul(group.mul(g, group.mul(group.inv(g), h)), g) = group.mul(h, g)
+                group.mul(g, moved) = group.mul(h, g)
+                group.mul(h, g) = group.mul(g, moved)
+                release thm cosets::object_substitution(G, G, fn(t G) G {group.mul(t, tail)}, group.mul(h, g), group.mul(g, moved))
+                release thm cosets::object_substitution(G, G, fn(t G) G {group.mul(h, t)}, \cosets::left_coset_representative<G, group, H>(q), group.mul(g, tail))
+                group.mul(h, \cosets::left_coset_representative<G, group, H>(q)) = group.mul(h, group.mul(g, tail))
+                group.mul(h, group.mul(g, tail)) = group.mul(group.mul(h, g), tail)
+                group.mul(group.mul(h, g), tail) = group.mul(group.mul(g, moved), tail)
+                group.mul(group.mul(g, moved), tail) = group.mul(g, group.mul(moved, tail))
+            release thm set_builder_member(group.mul(h, \cosets::left_coset_representative<G, group, H>(q)), {x G: $cosets::left_coset_member(G, group, H, g, x)})
+        release thm cosets::left_coset_eq_of_mem(G, group, H, g, group.mul(h, \cosets::left_coset_representative<G, group, H>(q)))
+        \cosets::left_coset_projection<G, group, H>(group.mul(h, \cosets::left_coset_representative<G, group, H>(q))) = \cosets::left_coset<G, group>(H, group.mul(h, \cosets::left_coset_representative<G, group, H>(q))) = \cosets::left_coset<G, group>(H, g) = \cosets::left_coset_projection<G, group, H>(g) = q
+        \sylow_coset_action<G, group, H>(h, q) = \cosets::left_coset_projection<G, group, H>(group.mul(h, \cosets::left_coset_representative<G, group, H>(q))) = q
+    by def:
+        ? $p_group_actions::action_fixed_point(\subgroup_structure::subgroup_carrier<G, group, H>, \cosets::quotient_group_carrier<G, group>(H), \sylow_coset_action<G, group, H>, q)
+
+thm fixed_coset_representative_in_normalizer:
+    ? forall G nonempty_set, group &group::Group<G>, H power_set(G), q \cosets::quotient_group_carrier<G, group>(H):
+        $subgroup::is_subgroup(G, group, H)
+        $is_finite_set(H)
+        $p_group_actions::action_fixed_point(\subgroup_structure::subgroup_carrier<G, group, H>, \cosets::quotient_group_carrier<G, group>(H), \sylow_coset_action<G, group, H>, q)
+        =>:
+            \cosets::left_coset_representative<G, group, H>(q) $in \normalizer::subgroup_normalizer<G, group>(H)
+    have g G = \cosets::left_coset_representative<G, group, H>(q)
+    claim:
+        ? forall h G:
+            h $in H
+            =>:
+                group.mul(group.mul(group.inv(g), h), g) $in H
+        have refined_h \subgroup_structure::subgroup_carrier<G, group, H> = h
+        by def:
+            ? $p_group_actions::action_fixed_point(\subgroup_structure::subgroup_carrier<G, group, H>, \cosets::quotient_group_carrier<G, group>(H), \sylow_coset_action<G, group, H>, q)
+        \sylow_coset_action<G, group, H>(refined_h, q) = q
+        \sylow_coset_action<G, group, H>(refined_h, q) = \cosets::left_coset_projection<G, group, H>(group.mul(h, g))
+        release thm cosets::left_coset_representative_spec(G, group, H, q)
+        release thm cosets::object_substitution(G, \cosets::quotient_group_carrier<G, group>(H), \cosets::left_coset_projection<G, group, H>, g, \cosets::left_coset_representative<G, group, H>(q))
+        \cosets::left_coset_projection<G, group, H>(g) = \cosets::left_coset_projection<G, group, H>(\cosets::left_coset_representative<G, group, H>(q))
+        \cosets::left_coset_projection<G, group, H>(g) = q
+        \cosets::left_coset<G, group>(H, group.mul(h, g)) = \cosets::left_coset_projection<G, group, H>(group.mul(h, g)) = q = \cosets::left_coset_projection<G, group, H>(g) = \cosets::left_coset<G, group>(H, g)
+        release thm cosets::left_coset_center_mem(G, group, H, group.mul(h, g))
+        group.mul(h, g) $in \cosets::left_coset<G, group>(H, group.mul(h, g)) = \cosets::left_coset<G, group>(H, g)
+        obtain offset from $cosets::left_coset_member(G, group, H, g, group.mul(h, g))
+        offset $in H
+        group.mul(h, g) = group.mul(g, offset)
+        group.mul(group.mul(group.inv(g), h), g) = group.mul(group.inv(g), group.mul(h, g))
+        release thm cosets::object_substitution(G, G, fn(t G) G {group.mul(group.inv(g), t)}, group.mul(h, g), group.mul(g, offset))
+        group.mul(group.inv(g), group.mul(h, g)) = group.mul(group.inv(g), group.mul(g, offset))
+        group.mul(group.inv(g), group.mul(g, offset)) = group.mul(group.mul(group.inv(g), g), offset)
+        group.mul(group.inv(g), g) = group.one
+        release thm cosets::object_substitution(G, G, fn(t G) G {group.mul(t, offset)}, group.mul(group.inv(g), g), group.one)
+        group.mul(group.mul(group.inv(g), g), offset) = group.mul(group.one, offset) = offset
+        group.mul(group.mul(group.inv(g), h), g) = offset
+        group.mul(group.mul(group.inv(g), h), g) $in H
+    by def:
+        ? $normalizer::conjugates_back_into_subgroup(G, group, H, g)
+    release thm normalizer::finite_one_sided_normalizer_promotes(G, group, H, g)
+    $normalizer::normalizes_subgroup(G, group, H, g)
+    release thm set_builder_member(g, {candidate G: $normalizer::normalizes_subgroup(G, group, H, candidate)})
+    g $in {candidate G: $normalizer::normalizes_subgroup(G, group, H, candidate)} = \normalizer::subgroup_normalizer<G, group>(H)
+
+thm fixed_coset_center_in_normalizer:
+    ? forall G nonempty_set, group &group::Group<G>, H power_set(G), g G:
+        $subgroup::is_subgroup(G, group, H)
+        $is_finite_set(H)
+        $p_group_actions::action_fixed_point(\subgroup_structure::subgroup_carrier<G, group, H>, \cosets::quotient_group_carrier<G, group>(H), \sylow_coset_action<G, group, H>, \cosets::left_coset_projection<G, group, H>(g))
+        =>:
+            g $in \normalizer::subgroup_normalizer<G, group>(H)
+    have q \cosets::quotient_group_carrier<G, group>(H) = \cosets::left_coset_projection<G, group, H>(g)
+    release thm fixed_coset_representative_in_normalizer(G, group, H, q)
+    \cosets::left_coset_representative<G, group, H>(q) $in \normalizer::subgroup_normalizer<G, group>(H)
+    release thm cosets::left_coset_representative_spec(G, group, H, q)
+    release thm cosets::left_coset_center_mem(G, group, H, g)
+    g $in \cosets::left_coset<G, group>(H, g)
+    \cosets::left_coset<G, group>(H, g) = \cosets::left_coset_projection<G, group, H>(g) = q = \cosets::left_coset_projection<G, group, H>(\cosets::left_coset_representative<G, group, H>(q)) = \cosets::left_coset<G, group>(H, \cosets::left_coset_representative<G, group, H>(q))
+    g $in \cosets::left_coset<G, group>(H, \cosets::left_coset_representative<G, group, H>(q))
+    obtain tail from $cosets::left_coset_member(G, group, H, \cosets::left_coset_representative<G, group, H>(q), g)
+    tail $in H
+    g = group.mul(\cosets::left_coset_representative<G, group, H>(q), tail)
+    release thm normalizer::subgroup_subset_normalizer(G, group, H)
+    tail $in \normalizer::subgroup_normalizer<G, group>(H)
+    release thm normalizer::subgroup_normalizer_closed(G, group, H)
+    group.mul(\cosets::left_coset_representative<G, group, H>(q), tail) $in \normalizer::subgroup_normalizer<G, group>(H)
+    g $in \normalizer::subgroup_normalizer<G, group>(H)
+
+template<G nonempty_set, group &group::Group<G>, H power_set(G): $subgroup::is_subgroup(G, group, H)>:
+    have sylow_fixed_cosets power_set(\cosets::quotient_group_carrier<G, group>(H)) = \p_group_actions::action_fixed_points<\subgroup_structure::subgroup_carrier<G, group, H>, \cosets::quotient_group_carrier<G, group>(H), \sylow_coset_action<G, group, H>>
+
+thm normalizer_fixed_forward_pair_mem:
+    ? forall G nonempty_set, group &group::Group<G>, H power_set(G), g \normalizer::subgroup_normalizer<G, group>(H):
+        $subgroup::is_subgroup(G, group, H)
+        =>:
+            (\cosets::left_coset_projection<G, group, H>(g), \cosets::left_coset_coordinate<G, group, H>(g)) $in cart(\sylow_fixed_cosets<G, group, H>, H)
+    release thm normalizer_coset_is_fixed(G, group, H, g)
+    release thm set_builder_member(\cosets::left_coset_projection<G, group, H>(g), {q \cosets::quotient_group_carrier<G, group>(H): $p_group_actions::action_fixed_point(\subgroup_structure::subgroup_carrier<G, group, H>, \cosets::quotient_group_carrier<G, group>(H), \sylow_coset_action<G, group, H>, q)})
+    \cosets::left_coset_projection<G, group, H>(g) $in {q \cosets::quotient_group_carrier<G, group>(H): $p_group_actions::action_fixed_point(\subgroup_structure::subgroup_carrier<G, group, H>, \cosets::quotient_group_carrier<G, group>(H), \sylow_coset_action<G, group, H>, q)} = \p_group_actions::action_fixed_points<\subgroup_structure::subgroup_carrier<G, group, H>, \cosets::quotient_group_carrier<G, group>(H), \sylow_coset_action<G, group, H>> = \sylow_fixed_cosets<G, group, H>
+    \cosets::left_coset_coordinate<G, group, H>(g) $in H
+    release thm cart_member_from_coordinates((\cosets::left_coset_projection<G, group, H>(g), \cosets::left_coset_coordinate<G, group, H>(g)), cart(\sylow_fixed_cosets<G, group, H>, H))
+
+template<G nonempty_set, group &group::Group<G>, H power_set(G): $subgroup::is_subgroup(G, group, H)>:
+    have fn normalizer_fixed_forward(g \normalizer::subgroup_normalizer<G, group>(H)) cart(\sylow_fixed_cosets<G, group, H>, H) = (\cosets::left_coset_projection<G, group, H>(g), \cosets::left_coset_coordinate<G, group, H>(g))
+
+thm normalizer_fixed_backward_mem:
+    ? forall G nonempty_set, group &group::Group<G>, H power_set(G), pair cart(\cosets::quotient_group_carrier<G, group>(H), H):
+        $subgroup::is_subgroup(G, group, H)
+        $is_finite_set(H)
+        pair[1] $in \sylow_fixed_cosets<G, group, H>
+        =>:
+            group.mul(\cosets::left_coset_representative<G, group, H>(pair[1]), pair[2]) $in \normalizer::subgroup_normalizer<G, group>(H)
+    pair[1] $in \sylow_fixed_cosets<G, group, H> = \p_group_actions::action_fixed_points<\subgroup_structure::subgroup_carrier<G, group, H>, \cosets::quotient_group_carrier<G, group>(H), \sylow_coset_action<G, group, H>>
+    \p_group_actions::action_fixed_points<\subgroup_structure::subgroup_carrier<G, group, H>, \cosets::quotient_group_carrier<G, group>(H), \sylow_coset_action<G, group, H>> = {q \cosets::quotient_group_carrier<G, group>(H): $p_group_actions::action_fixed_point(\subgroup_structure::subgroup_carrier<G, group, H>, \cosets::quotient_group_carrier<G, group>(H), \sylow_coset_action<G, group, H>, q)}
+    release thm set_builder_member(pair[1], {q \cosets::quotient_group_carrier<G, group>(H): $p_group_actions::action_fixed_point(\subgroup_structure::subgroup_carrier<G, group, H>, \cosets::quotient_group_carrier<G, group>(H), \sylow_coset_action<G, group, H>, q)})
+    $p_group_actions::action_fixed_point(\subgroup_structure::subgroup_carrier<G, group, H>, \cosets::quotient_group_carrier<G, group>(H), \sylow_coset_action<G, group, H>, pair[1])
+    release thm fixed_coset_representative_in_normalizer(G, group, H, pair[1])
+    \cosets::left_coset_representative<G, group, H>(pair[1]) $in \normalizer::subgroup_normalizer<G, group>(H)
+    pair[2] $in H
+    release thm normalizer::subgroup_subset_normalizer(G, group, H)
+    pair[2] $in \normalizer::subgroup_normalizer<G, group>(H)
+    release thm normalizer::subgroup_normalizer_closed(G, group, H)
+    group.mul(\cosets::left_coset_representative<G, group, H>(pair[1]), pair[2]) $in \normalizer::subgroup_normalizer<G, group>(H)
+
+template<G nonempty_set, group &group::Group<G>, H power_set(G): $subgroup::is_subgroup(G, group, H), $is_finite_set(H)>:
+    have fn normalizer_fixed_backward by exist!:
+        ? forall pair cart(\sylow_fixed_cosets<G, group, H>, H):
+            exist! output \normalizer::subgroup_normalizer<G, group>(H) st {output = group.mul(\cosets::left_coset_representative<G, group, H>(pair[1]), pair[2])}
+        pair[1] $in \sylow_fixed_cosets<G, group, H>
+        pair[1] $in \cosets::quotient_group_carrier<G, group>(H)
+        pair[2] $in H
+        release thm cart_member_from_coordinates((pair[1], pair[2]), cart(\cosets::quotient_group_carrier<G, group>(H), H))
+        have broad_pair cart(\cosets::quotient_group_carrier<G, group>(H), H) = (pair[1], pair[2])
+        broad_pair[1] = pair[1]
+        broad_pair[2] = pair[2]
+        broad_pair[1] $in \sylow_fixed_cosets<G, group, H>
+        release thm normalizer_fixed_backward_mem(G, group, H, broad_pair)
+        group.mul(\cosets::left_coset_representative<G, group, H>(broad_pair[1]), broad_pair[2]) $in \normalizer::subgroup_normalizer<G, group>(H)
+        release thm cosets::object_substitution(\cosets::quotient_group_carrier<G, group>(H), G, \cosets::left_coset_representative<G, group, H>, broad_pair[1], pair[1])
+        \cosets::left_coset_representative<G, group, H>(broad_pair[1]) = \cosets::left_coset_representative<G, group, H>(pair[1])
+        release thm cosets::object_substitution(G, G, fn(t G) G {group.mul(t, broad_pair[2])}, \cosets::left_coset_representative<G, group, H>(broad_pair[1]), \cosets::left_coset_representative<G, group, H>(pair[1]))
+        group.mul(\cosets::left_coset_representative<G, group, H>(broad_pair[1]), broad_pair[2]) = group.mul(\cosets::left_coset_representative<G, group, H>(pair[1]), broad_pair[2])
+        release thm cosets::object_substitution(G, G, fn(t G) G {group.mul(\cosets::left_coset_representative<G, group, H>(pair[1]), t)}, broad_pair[2], pair[2])
+        group.mul(\cosets::left_coset_representative<G, group, H>(pair[1]), broad_pair[2]) = group.mul(\cosets::left_coset_representative<G, group, H>(pair[1]), pair[2])
+        group.mul(\cosets::left_coset_representative<G, group, H>(pair[1]), pair[2]) $in \normalizer::subgroup_normalizer<G, group>(H)
+        have selected_output \normalizer::subgroup_normalizer<G, group>(H) = group.mul(\cosets::left_coset_representative<G, group, H>(pair[1]), pair[2])
+        claim:
+            ? forall output1, output2 \normalizer::subgroup_normalizer<G, group>(H):
+                output1 = group.mul(\cosets::left_coset_representative<G, group, H>(pair[1]), pair[2])
+                output2 = group.mul(\cosets::left_coset_representative<G, group, H>(pair[1]), pair[2])
+                =>:
+                    output1 = output2
+            output1 = group.mul(\cosets::left_coset_representative<G, group, H>(pair[1]), pair[2]) = output2
+        witness exist! output \normalizer::subgroup_normalizer<G, group>(H) st {output = group.mul(\cosets::left_coset_representative<G, group, H>(pair[1]), pair[2])} from selected_output
+
+thm normalizer_fixed_backward_forward:
+    ? forall G nonempty_set, group &group::Group<G>, H power_set(G), g \normalizer::subgroup_normalizer<G, group>(H):
+        $subgroup::is_subgroup(G, group, H)
+        $is_finite_set(H)
+        =>:
+            \normalizer_fixed_backward<G, group, H>(\normalizer_fixed_forward<G, group, H>(g)) = g
+    \normalizer_fixed_forward<G, group, H>(g) = (\cosets::left_coset_projection<G, group, H>(g), \cosets::left_coset_coordinate<G, group, H>(g))
+    \normalizer_fixed_forward<G, group, H>(g)[1] = \cosets::left_coset_projection<G, group, H>(g)
+    \normalizer_fixed_forward<G, group, H>(g)[2] = \cosets::left_coset_coordinate<G, group, H>(g)
+    \normalizer_fixed_backward<G, group, H>(\normalizer_fixed_forward<G, group, H>(g)) = group.mul(\cosets::left_coset_representative<G, group, H>(\normalizer_fixed_forward<G, group, H>(g)[1]), \normalizer_fixed_forward<G, group, H>(g)[2])
+    release thm cosets::object_substitution(\cosets::quotient_group_carrier<G, group>(H), G, \cosets::left_coset_representative<G, group, H>, \normalizer_fixed_forward<G, group, H>(g)[1], \cosets::left_coset_projection<G, group, H>(g))
+    \cosets::left_coset_representative<G, group, H>(\normalizer_fixed_forward<G, group, H>(g)[1]) = \cosets::left_coset_representative<G, group, H>(\cosets::left_coset_projection<G, group, H>(g))
+    release thm cosets::object_substitution(G, G, fn(t G) G {group.mul(t, \normalizer_fixed_forward<G, group, H>(g)[2])}, \cosets::left_coset_representative<G, group, H>(\normalizer_fixed_forward<G, group, H>(g)[1]), \cosets::left_coset_representative<G, group, H>(\cosets::left_coset_projection<G, group, H>(g)))
+    group.mul(\cosets::left_coset_representative<G, group, H>(\normalizer_fixed_forward<G, group, H>(g)[1]), \normalizer_fixed_forward<G, group, H>(g)[2]) = group.mul(\cosets::left_coset_representative<G, group, H>(\cosets::left_coset_projection<G, group, H>(g)), \normalizer_fixed_forward<G, group, H>(g)[2])
+    release thm cosets::object_substitution(G, G, fn(t G) G {group.mul(\cosets::left_coset_representative<G, group, H>(\cosets::left_coset_projection<G, group, H>(g)), t)}, \normalizer_fixed_forward<G, group, H>(g)[2], \cosets::left_coset_coordinate<G, group, H>(g))
+    group.mul(\cosets::left_coset_representative<G, group, H>(\cosets::left_coset_projection<G, group, H>(g)), \normalizer_fixed_forward<G, group, H>(g)[2]) = group.mul(\cosets::left_coset_representative<G, group, H>(\cosets::left_coset_projection<G, group, H>(g)), \cosets::left_coset_coordinate<G, group, H>(g))
+    group.mul(\cosets::left_coset_representative<G, group, H>(\cosets::left_coset_projection<G, group, H>(g)), \cosets::left_coset_coordinate<G, group, H>(g)) = \cosets::left_coset_backward<G, group, H>(\cosets::left_coset_forward<G, group, H>(g))
+    release thm cosets::left_coset_backward_forward(G, group, H, g)
+    \cosets::left_coset_backward<G, group, H>(\cosets::left_coset_forward<G, group, H>(g)) = g
+
+thm normalizer_fixed_forward_bijective:
+    ? forall G nonempty_set, group &group::Group<G>, H power_set(G):
+        $subgroup::is_subgroup(G, group, H)
+        $is_finite_set(H)
+        =>:
+            $bijective(\normalizer::subgroup_normalizer<G, group>(H), cart(\sylow_fixed_cosets<G, group, H>, H), \normalizer_fixed_forward<G, group, H>)
+    claim:
+        ? $function_inverse::is_left_inverse(\normalizer::subgroup_normalizer<G, group>(H), cart(\sylow_fixed_cosets<G, group, H>, H), \normalizer_fixed_forward<G, group, H>, \normalizer_fixed_backward<G, group, H>)
+        claim:
+            ? forall g \normalizer::subgroup_normalizer<G, group>(H):
+                \normalizer_fixed_backward<G, group, H>(\normalizer_fixed_forward<G, group, H>(g)) = g
+            release thm normalizer_fixed_backward_forward(G, group, H, g)
+        by def:
+            ? $function_inverse::is_left_inverse(\normalizer::subgroup_normalizer<G, group>(H), cart(\sylow_fixed_cosets<G, group, H>, H), \normalizer_fixed_forward<G, group, H>, \normalizer_fixed_backward<G, group, H>)
+    release thm function_inverse::injective_of_left_inverse(\normalizer::subgroup_normalizer<G, group>(H), cart(\sylow_fixed_cosets<G, group, H>, H), \normalizer_fixed_forward<G, group, H>, \normalizer_fixed_backward<G, group, H>)
+    claim:
+        ? $function_inverse::is_right_inverse(\normalizer::subgroup_normalizer<G, group>(H), cart(\sylow_fixed_cosets<G, group, H>, H), \normalizer_fixed_forward<G, group, H>, \normalizer_fixed_backward<G, group, H>)
+        claim:
+            ? forall pair cart(\sylow_fixed_cosets<G, group, H>, H):
+                \normalizer_fixed_forward<G, group, H>(\normalizer_fixed_backward<G, group, H>(pair)) = pair
+            pair[1] $in \cosets::quotient_group_carrier<G, group>(H)
+            pair[2] $in H
+            release thm cart_member_from_coordinates((pair[1], pair[2]), cart(\cosets::quotient_group_carrier<G, group>(H), H))
+            have broad_pair cart(\cosets::quotient_group_carrier<G, group>(H), H) = (pair[1], pair[2])
+            have q \cosets::quotient_group_carrier<G, group>(H) = broad_pair[1]
+            have h H = broad_pair[2]
+            have g G = \cosets::left_coset_backward<G, group, H>(broad_pair)
+            g = \cosets::left_coset_backward<G, group, H>(broad_pair) = group.mul(\cosets::left_coset_representative<G, group, H>(broad_pair[1]), broad_pair[2]) = group.mul(\cosets::left_coset_representative<G, group, H>(q), h)
+            release thm cosets::left_coset_center_mem(G, group, H, \cosets::left_coset_representative<G, group, H>(q))
+            \cosets::left_coset_representative<G, group, H>(q) $in \cosets::left_coset<G, group>(H, \cosets::left_coset_representative<G, group, H>(q))
+            witness $cosets::left_coset_member(G, group, H, \cosets::left_coset_representative<G, group, H>(q), g) from h:
+                g = group.mul(\cosets::left_coset_representative<G, group, H>(q), h)
+            release thm set_builder_member(g, {x G: $cosets::left_coset_member(G, group, H, \cosets::left_coset_representative<G, group, H>(q), x)})
+            \cosets::left_coset<G, group>(H, \cosets::left_coset_representative<G, group, H>(q)) = {x G: $cosets::left_coset_member(G, group, H, \cosets::left_coset_representative<G, group, H>(q), x)}
+            g $in \cosets::left_coset<G, group>(H, \cosets::left_coset_representative<G, group, H>(q))
+            release thm cosets::left_coset_eq_of_mem(G, group, H, \cosets::left_coset_representative<G, group, H>(q), g)
+            \cosets::left_coset<G, group>(H, g) = \cosets::left_coset<G, group>(H, \cosets::left_coset_representative<G, group, H>(q))
+            \cosets::left_coset_projection<G, group, H>(g) = \cosets::left_coset<G, group>(H, g)
+            release thm cosets::left_coset_representative_spec(G, group, H, q)
+            \cosets::left_coset<G, group>(H, \cosets::left_coset_representative<G, group, H>(q)) = \cosets::left_coset_projection<G, group, H>(\cosets::left_coset_representative<G, group, H>(q)) = q
+            \cosets::left_coset_projection<G, group, H>(g) = q
+            group.mul(group.inv(\cosets::left_coset_representative<G, group, H>(q)), \cosets::left_coset_representative<G, group, H>(q)) = group.one
+            release thm cosets::object_substitution(G, G, fn(t G) G {group.mul(t, h)}, group.mul(group.inv(\cosets::left_coset_representative<G, group, H>(q)), \cosets::left_coset_representative<G, group, H>(q)), group.one)
+            \cosets::left_coset_coordinate<G, group, H>(g) = group.mul(group.inv(\cosets::left_coset_representative<G, group, H>(\cosets::left_coset_projection<G, group, H>(g))), g) = group.mul(group.inv(\cosets::left_coset_representative<G, group, H>(q)), group.mul(\cosets::left_coset_representative<G, group, H>(q), h)) = group.mul(group.mul(group.inv(\cosets::left_coset_representative<G, group, H>(q)), \cosets::left_coset_representative<G, group, H>(q)), h) = group.mul(group.one, h) = h
+            broad_pair = (pair[1], pair[2]) = pair
+            g = \cosets::left_coset_backward<G, group, H>(broad_pair) = group.mul(\cosets::left_coset_representative<G, group, H>(pair[1]), pair[2]) = \normalizer_fixed_backward<G, group, H>(pair)
+            \normalizer_fixed_forward<G, group, H>(\normalizer_fixed_backward<G, group, H>(pair)) = (\cosets::left_coset_projection<G, group, H>(\normalizer_fixed_backward<G, group, H>(pair)), \cosets::left_coset_coordinate<G, group, H>(\normalizer_fixed_backward<G, group, H>(pair))) = (\cosets::left_coset_projection<G, group, H>(g), \cosets::left_coset_coordinate<G, group, H>(g)) = (q, h) = broad_pair = pair
+        by def:
+            ? $function_inverse::is_right_inverse(\normalizer::subgroup_normalizer<G, group>(H), cart(\sylow_fixed_cosets<G, group, H>, H), \normalizer_fixed_forward<G, group, H>, \normalizer_fixed_backward<G, group, H>)
+    release thm function_inverse::surjective_of_right_inverse(\normalizer::subgroup_normalizer<G, group>(H), cart(\sylow_fixed_cosets<G, group, H>, H), \normalizer_fixed_forward<G, group, H>, \normalizer_fixed_backward<G, group, H>)
+    by def:
+        ? $bijective(\normalizer::subgroup_normalizer<G, group>(H), cart(\sylow_fixed_cosets<G, group, H>, H), \normalizer_fixed_forward<G, group, H>)
+
+thm normalizer_cardinality_via_fixed_cosets:
+    ? forall G nonempty_set, group &group::Group<G>, H power_set(G):
+        $subgroup::is_subgroup(G, group, H)
+        $is_finite_set(G)
+        $is_finite_set(H)
+        =>:
+            $is_finite_set(\sylow_fixed_cosets<G, group, H>)
+            finite_set_size(\normalizer::subgroup_normalizer<G, group>(H)) = finite_set_size(\sylow_fixed_cosets<G, group, H>) * finite_set_size(H)
+    release thm cosets::left_coset_space_finite(G, group, H)
+    release thm p_group_actions::action_fixed_points_are_finite(\subgroup_structure::subgroup_carrier<G, group, H>, \cosets::quotient_group_carrier<G, group>(H), \sylow_coset_action<G, group, H>)
+    $is_finite_set(\sylow_fixed_cosets<G, group, H>)
+    release thm normalizer::subgroup_normalizer_finite(G, group, H)
+    release thm normalizer_fixed_forward_bijective(G, group, H)
+    $is_finite_set(cart(\sylow_fixed_cosets<G, group, H>, H))
+    finite_set_size(\normalizer::subgroup_normalizer<G, group>(H)) = finite_set_size(cart(\sylow_fixed_cosets<G, group, H>, H)) = finite_set_size(\sylow_fixed_cosets<G, group, H>) * finite_set_size(H)
+
+thm finite_group_coset_cardinality_product:
+    ? forall G nonempty_set, group &group::Group<G>, H power_set(G):
+        $subgroup::is_subgroup(G, group, H)
+        $is_finite_set(G)
+        $is_finite_set(H)
+        =>:
+            $is_finite_set(\cosets::quotient_group_carrier<G, group>(H))
+            finite_set_size(G) = finite_set_size(\cosets::quotient_group_carrier<G, group>(H)) * finite_set_size(H)
+    release thm cosets::left_coset_space_finite(G, group, H)
+    release thm cosets::left_coset_forward_bijective(G, group, H)
+    $is_finite_set(cart(\cosets::quotient_group_carrier<G, group>(H), H))
+    finite_set_size(G) = finite_set_size(cart(\cosets::quotient_group_carrier<G, group>(H), H)) = finite_set_size(\cosets::quotient_group_carrier<G, group>(H)) * finite_set_size(H)
+
+thm next_prime_power_divides_coset_count:
+    ? forall G nonempty_set, group &group::Group<G>, H power_set(G), p N+, k N:
+        $subgroup::is_subgroup(G, group, H)
+        $is_finite_set(G)
+        $is_finite_set(H)
+        $is_finite_set(\cosets::quotient_group_carrier<G, group>(H))
+        $prime(p)
+        finite_set_size(H) = p^k
+        $group::divides(p^(k + 1), finite_set_size(G))
+        =>:
+            $group::divides(p, finite_set_size(\cosets::quotient_group_carrier<G, group>(H)))
+    release thm finite_group_coset_cardinality_product(G, group, H)
+    finite_set_size(G) = finite_set_size(\cosets::quotient_group_carrier<G, group>(H)) * finite_set_size(H) = finite_set_size(\cosets::quotient_group_carrier<G, group>(H)) * p^k = p^k * finite_set_size(\cosets::quotient_group_carrier<G, group>(H))
+    obtain quotient from $group::divides(p^(k + 1), finite_set_size(G))
+    finite_set_size(G) = p^(k + 1) * quotient
+    p^(k + 1) > 0
+    finite_set_size(G) >= 1
+    finite_set_size(G) > 0
+    by cases:
+        ? $group::divides(p, finite_set_size(\cosets::quotient_group_carrier<G, group>(H)))
+        case quotient > 0:
+            have positive_quotient N+ = quotient
+            release thm cosets::object_substitution(Z, Z, fn(t Z) Z {p^(k + 1) * t}, positive_quotient, quotient)
+            p^(k + 1) * positive_quotient = p^(k + 1) * quotient = finite_set_size(G)
+            p^(k + 1) = p^k * p
+            release thm cosets::object_substitution(Z, Z, fn(t Z) Z {t * positive_quotient}, p^(k + 1), p^k * p)
+            p^k * (p * positive_quotient) = p^(k + 1) * positive_quotient = finite_set_size(G) = p^k * finite_set_size(\cosets::quotient_group_carrier<G, group>(H))
+            p^k != 0
+            release thm prime_arithmetic::integer_left_multiplication_cancellation(p^k, p * positive_quotient, finite_set_size(\cosets::quotient_group_carrier<G, group>(H)))
+            p * positive_quotient = finite_set_size(\cosets::quotient_group_carrier<G, group>(H))
+            witness $group::divides(p, finite_set_size(\cosets::quotient_group_carrier<G, group>(H))) from positive_quotient
+        case quotient = 0:
+            finite_set_size(G) = p^(k + 1) * quotient = 0
+            finite_set_size(G) > 0
+            impossible finite_set_size(G) > 0
+        case quotient < 0:
+            p^(k + 1) * quotient < 0
+            finite_set_size(G) = p^(k + 1) * quotient < 0
+            finite_set_size(G) >= 0
+            impossible finite_set_size(G) < 0
+
+thm sylow_fixed_coset_count_divisible:
+    ? forall G nonempty_set, group &group::Group<G>, H power_set(G), p N+, k N:
+        $subgroup::is_subgroup(G, group, H)
+        $is_finite_set(G)
+        $is_finite_set(H)
+        $is_finite_set(\cosets::quotient_group_carrier<G, group>(H))
+        $is_finite_set(\sylow_fixed_cosets<G, group, H>)
+        $prime(p)
+        finite_set_size(H) = p^k
+        $group::divides(p^(k + 1), finite_set_size(G))
+        =>:
+            $group::divides(p, finite_set_size(\sylow_fixed_cosets<G, group, H>))
+    release thm finite_group_coset_cardinality_product(G, group, H)
+    release thm sylow_coset_action_is_group_action(G, group, H)
+    release thm p_group_actions::action_fixed_points_are_finite(\subgroup_structure::subgroup_carrier<G, group, H>, \cosets::quotient_group_carrier<G, group>(H), \sylow_coset_action<G, group, H>)
+    $is_finite_set(\sylow_fixed_cosets<G, group, H>)
+    finite_set_size(\subgroup_structure::subgroup_carrier<G, group, H>) = finite_set_size(H) = p^k
+    release thm p_group_actions::finite_p_group_fixed_point_congruence(\subgroup_structure::subgroup_carrier<G, group, H>, \cosets::quotient_group_carrier<G, group>(H), \subgroup_structure::subgroup_group<G, group, H>, \sylow_coset_action<G, group, H>, p, k)
+    $group::divides(p, finite_set_size(\cosets::quotient_group_carrier<G, group>(H)) - finite_set_size(\sylow_fixed_cosets<G, group, H>))
+    release thm next_prime_power_divides_coset_count(G, group, H, p, k)
+    obtain total_quotient from $group::divides(p, finite_set_size(\cosets::quotient_group_carrier<G, group>(H)))
+    obtain defect_quotient from $group::divides(p, finite_set_size(\cosets::quotient_group_carrier<G, group>(H)) - finite_set_size(\sylow_fixed_cosets<G, group, H>))
+    \sylow_fixed_cosets<G, group, H> $subset \cosets::quotient_group_carrier<G, group>(H)
+    finite_set_size(\sylow_fixed_cosets<G, group, H>) <= finite_set_size(\cosets::quotient_group_carrier<G, group>(H))
+    finite_set_size(\cosets::quotient_group_carrier<G, group>(H)) - finite_set_size(\sylow_fixed_cosets<G, group, H>) + finite_set_size(\sylow_fixed_cosets<G, group, H>) = finite_set_size(\cosets::quotient_group_carrier<G, group>(H))
+    finite_set_size(\cosets::quotient_group_carrier<G, group>(H)) = p * total_quotient
+    finite_set_size(\cosets::quotient_group_carrier<G, group>(H)) - finite_set_size(\sylow_fixed_cosets<G, group, H>) = p * defect_quotient
+    finite_set_size(\sylow_fixed_cosets<G, group, H>) = finite_set_size(\cosets::quotient_group_carrier<G, group>(H)) - (finite_set_size(\cosets::quotient_group_carrier<G, group>(H)) - finite_set_size(\sylow_fixed_cosets<G, group, H>)) = p * total_quotient - p * defect_quotient = p * (total_quotient - defect_quotient)
+    witness $group::divides(p, finite_set_size(\sylow_fixed_cosets<G, group, H>)) from total_quotient - defect_quotient

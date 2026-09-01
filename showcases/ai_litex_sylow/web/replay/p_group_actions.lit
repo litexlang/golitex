@@ -1,0 +1,763 @@
+# Finite p-group action and fixed-point counting layer.
+#
+# Orbit divisibility, fixed points, invariant subsets, and the p-group congruence.
+
+thm nontrivial_orbit_size_divisible_by_prime:
+    ? forall G nonempty_set, X finite_set, group &group::Group<G>, act fn(g G, x X) X, p N+, n N, x X:
+        $is_finite_set(G)
+        $group_actions::is_group_action(G, X, group, act)
+        $prime(p)
+        finite_set_size(G) = p^n
+        $is_finite_set(\group_actions::orbit<G, X, act>(x))
+        finite_set_size(\group_actions::orbit<G, X, act>(x)) > 1
+        =>:
+            $group::divides(p, finite_set_size(\group_actions::orbit<G, X, act>(x)))
+    \group_actions::orbit<G, X, act>(x) $subset X
+    release thm subset_of_finite_set_is_finite(\group_actions::orbit<G, X, act>(x), X)
+    $is_finite_set(\group_actions::orbit<G, X, act>(x))
+    release thm group_actions::group_action_mem_orbit(G, X, group, act, x, group.one)
+    act(group.one, x) = x
+    x $in \group_actions::orbit<G, X, act>(x)
+    witness $is_nonempty_set(\group_actions::orbit<G, X, act>(x)) from x
+    finite_set_size(\group_actions::orbit<G, X, act>(x)) >= 1
+    have orbit_count N+ = finite_set_size(\group_actions::orbit<G, X, act>(x))
+    release thm group_actions::group_action_stabilizer_closed(G, X, group, act, x)
+    $subgroup::is_subgroup(G, group, \group_actions::stabilizer<G, X, act, group.one>(x))
+    \group_actions::stabilizer<G, X, act, group.one>(x) $subset G
+    release thm subset_of_finite_set_is_finite(\group_actions::stabilizer<G, X, act, group.one>(x), G)
+    $is_finite_set(\group_actions::stabilizer<G, X, act, group.one>(x))
+    group.one $in \group_actions::stabilizer<G, X, act, group.one>(x)
+    witness $is_nonempty_set(\group_actions::stabilizer<G, X, act, group.one>(x)) from group.one
+    finite_set_size(\group_actions::stabilizer<G, X, act, group.one>(x)) >= 1
+    have stabilizer_count N+ = finite_set_size(\group_actions::stabilizer<G, X, act, group.one>(x))
+    release thm group_actions::orbit_stabilizer_forward_bijective(G, X, group, act, x)
+    $is_finite_set(cart(\group_actions::orbit<G, X, act>(x), \group_actions::stabilizer<G, X, act, group.one>(x)))
+    finite_set_size(G) = finite_set_size(cart(\group_actions::orbit<G, X, act>(x), \group_actions::stabilizer<G, X, act, group.one>(x)))
+    finite_set_size(cart(\group_actions::orbit<G, X, act>(x), \group_actions::stabilizer<G, X, act, group.one>(x))) = finite_set_size(\group_actions::orbit<G, X, act>(x)) * finite_set_size(\group_actions::stabilizer<G, X, act, group.one>(x))
+    finite_set_size(G) = finite_set_size(\group_actions::orbit<G, X, act>(x)) * finite_set_size(\group_actions::stabilizer<G, X, act, group.one>(x))
+    release thm cosets::object_substitution(N, N, fn(t N) N {t * stabilizer_count}, orbit_count, finite_set_size(\group_actions::orbit<G, X, act>(x)))
+    orbit_count * stabilizer_count = finite_set_size(\group_actions::orbit<G, X, act>(x)) * stabilizer_count
+    release thm cosets::object_substitution(N, N, fn(t N) N {finite_set_size(\group_actions::orbit<G, X, act>(x)) * t}, stabilizer_count, finite_set_size(\group_actions::stabilizer<G, X, act, group.one>(x)))
+    finite_set_size(\group_actions::orbit<G, X, act>(x)) * stabilizer_count = finite_set_size(\group_actions::orbit<G, X, act>(x)) * finite_set_size(\group_actions::stabilizer<G, X, act, group.one>(x))
+    orbit_count * stabilizer_count = finite_set_size(G) = p^n
+    orbit_count > 1
+    release thm prime_power_factors::prime_divides_nontrivial_factor_of_prime_power(p, n, orbit_count, stabilizer_count)
+    $group::divides(p, orbit_count)
+    obtain orbit_quotient from $group::divides(p, orbit_count)
+    orbit_count = p * orbit_quotient
+    orbit_count = finite_set_size(\group_actions::orbit<G, X, act>(x))
+    witness $group::divides(p, finite_set_size(\group_actions::orbit<G, X, act>(x))) from orbit_quotient:
+        finite_set_size(\group_actions::orbit<G, X, act>(x)) = orbit_count = p * orbit_quotient
+
+# Fixed points and invariant subsets for a finite p-group action.
+
+prop action_fixed_point(G nonempty_set, X set, act fn(g G, x X) X, x X):
+    forall g G:
+        act(g, x) = x
+
+template<G nonempty_set, X set, act fn(g G, x X) X>:
+    have action_fixed_points power_set(X) = {x X: $action_fixed_point(G, X, act, x)}
+
+prop action_invariant_subset(G nonempty_set, X set, act fn(g G, x X) X, S power_set(X)):
+    forall g G, x X:
+        x $in S
+        =>:
+            act(g, x) $in S
+
+thm action_point_mem_orbit:
+    ? forall G nonempty_set, X set, group &group::Group<G>, act fn(g G, x X) X, x X:
+        $group_actions::is_group_action(G, X, group, act)
+        =>:
+            x $in \group_actions::orbit<G, X, act>(x)
+    release thm group_actions::group_action_mem_orbit(G, X, group, act, x, group.one)
+    act(group.one, x) = x
+    x $in \group_actions::orbit<G, X, act>(x)
+
+thm action_orbit_invariant:
+    ? forall G nonempty_set, X set, group &group::Group<G>, act fn(g G, x X) X, x X:
+        $group_actions::is_group_action(G, X, group, act)
+        =>:
+            $p_group_actions::action_invariant_subset(G, X, act, \group_actions::orbit<G, X, act>(x))
+    claim:
+        ? forall g G, y X:
+            y $in \group_actions::orbit<G, X, act>(x)
+            =>:
+                act(g, y) $in \group_actions::orbit<G, X, act>(x)
+        by def:
+            ? $group_actions::orbit_member(G, X, act, x, y)
+        obtain h from $group_actions::orbit_member(G, X, act, x, y)
+        y = act(h, x)
+        release thm group_actions::group_action_associativity(G, X, group, act, g, h, x)
+        act(g, y) = act(g, act(h, x)) = act(group.mul(g, h), x)
+        release thm group_actions::group_action_mem_orbit(G, X, group, act, x, group.mul(g, h))
+        act(group.mul(g, h), x) $in \group_actions::orbit<G, X, act>(x)
+    by def:
+        ? $p_group_actions::action_invariant_subset(G, X, act, \group_actions::orbit<G, X, act>(x))
+
+thm action_invariant_set_minus:
+    ? forall G nonempty_set, X set, group &group::Group<G>, act fn(g G, x X) X, S, T power_set(X):
+        $group_actions::is_group_action(G, X, group, act)
+        $p_group_actions::action_invariant_subset(G, X, act, S)
+        $p_group_actions::action_invariant_subset(G, X, act, T)
+        =>:
+            $p_group_actions::action_invariant_subset(G, X, act, set_minus(S, T))
+    claim:
+        ? forall g G, x X:
+            x $in set_minus(S, T)
+            =>:
+                act(g, x) $in set_minus(S, T)
+        x $in S
+        not x $in T
+        act(g, x) $in S
+        by cases:
+            ? act(g, x) $in set_minus(S, T)
+            case act(g, x) $in T:
+                act(group.inv(g), act(g, x)) $in T
+                release thm group_actions::group_action_associativity(G, X, group, act, group.inv(g), g, x)
+                by def:
+                    ? $group::group_laws(G, group.mul, group.one, group.inv)
+                group.mul(group.inv(g), g) = group.one
+                act(group.inv(g), act(g, x)) = act(group.mul(group.inv(g), g), x) = act(group.one, x) = x
+                x $in T
+                impossible x $in T
+            case not act(g, x) $in T:
+                act(g, x) $in set_minus(S, T)
+    by def:
+        ? $p_group_actions::action_invariant_subset(G, X, act, set_minus(S, T))
+
+thm nonfixed_point_orbit_has_size_greater_than_one:
+    ? forall G nonempty_set, X finite_set, group &group::Group<G>, act fn(g G, x X) X, x X:
+        $group_actions::is_group_action(G, X, group, act)
+        not $p_group_actions::action_fixed_point(G, X, act, x)
+        $is_finite_set(\group_actions::orbit<G, X, act>(x))
+        =>:
+            finite_set_size(\group_actions::orbit<G, X, act>(x)) > 1
+    by contra:
+        ? finite_set_size(\group_actions::orbit<G, X, act>(x)) > 1
+        finite_set_size(\group_actions::orbit<G, X, act>(x)) <= 1
+        claim:
+            ? forall g G:
+                act(g, x) = x
+            by contra:
+                ? act(g, x) = x
+                release thm p_group_actions::action_point_mem_orbit(G, X, group, act, x)
+                release thm group_actions::group_action_mem_orbit(G, X, group, act, x, g)
+                x $in \group_actions::orbit<G, X, act>(x)
+                act(g, x) $in \group_actions::orbit<G, X, act>(x)
+                claim:
+                    ? {x, act(g, x)} $subset \group_actions::orbit<G, X, act>(x)
+                    claim:
+                        ? forall y {x, act(g, x)}:
+                            y $in \group_actions::orbit<G, X, act>(x)
+                        by cases:
+                            ? y $in \group_actions::orbit<G, X, act>(x)
+                            case y = x:
+                                x $in \group_actions::orbit<G, X, act>(x)
+                            case y = act(g, x):
+                                act(g, x) $in \group_actions::orbit<G, X, act>(x)
+                    by def:
+                        ? {x, act(g, x)} $subset \group_actions::orbit<G, X, act>(x)
+                finite_set_size({x, act(g, x)}) = 2
+                finite_set_size({x, act(g, x)}) <= finite_set_size(\group_actions::orbit<G, X, act>(x)) <= 1
+                impossible 2 <= 1
+        by def:
+            ? $p_group_actions::action_fixed_point(G, X, act, x)
+        impossible $p_group_actions::action_fixed_point(G, X, act, x)
+
+thm nonfixed_orbit_has_no_fixed_points:
+    ? forall G nonempty_set, X set, group &group::Group<G>, act fn(g G, x X) X, x X:
+        $group_actions::is_group_action(G, X, group, act)
+        not $p_group_actions::action_fixed_point(G, X, act, x)
+        =>:
+            intersect(\group_actions::orbit<G, X, act>(x), \p_group_actions::action_fixed_points<G, X, act>) = {}
+    claim:
+        ? forall y X:
+            y $in intersect(\group_actions::orbit<G, X, act>(x), \p_group_actions::action_fixed_points<G, X, act>)
+            =>:
+                y $in {}
+        y $in \group_actions::orbit<G, X, act>(x)
+        y $in \p_group_actions::action_fixed_points<G, X, act>
+        by def:
+            ? $group_actions::orbit_member(G, X, act, x, y)
+        obtain h from $group_actions::orbit_member(G, X, act, x, y)
+        y = act(h, x)
+        $p_group_actions::action_fixed_point(G, X, act, y)
+        act(group.inv(h), y) = y
+        release thm group_actions::group_action_associativity(G, X, group, act, group.inv(h), h, x)
+        by def:
+            ? $group::group_laws(G, group.mul, group.one, group.inv)
+        group.mul(group.inv(h), h) = group.one
+        act(group.inv(h), y) = act(group.inv(h), act(h, x)) = act(group.mul(group.inv(h), h), x) = act(group.one, x) = x
+        x = y
+        claim:
+            ? forall g G:
+                act(g, x) = x
+            act(g, x) = act(g, y) = y = x
+        by def:
+            ? $p_group_actions::action_fixed_point(G, X, act, x)
+        by contra:
+            ? y $in {}
+            impossible $p_group_actions::action_fixed_point(G, X, act, x)
+    by def:
+        ? intersect(\group_actions::orbit<G, X, act>(x), \p_group_actions::action_fixed_points<G, X, act>) $subset {}
+    by def:
+        ? {} $subset intersect(\group_actions::orbit<G, X, act>(x), \p_group_actions::action_fixed_points<G, X, act>)
+    by extension:
+        ? intersect(\group_actions::orbit<G, X, act>(x), \p_group_actions::action_fixed_points<G, X, act>) = {}
+
+thm fixed_point_orbit_is_fixed:
+    ? forall G nonempty_set, X set, group &group::Group<G>, act fn(g G, x X) X, x X:
+        $group_actions::is_group_action(G, X, group, act)
+        $p_group_actions::action_fixed_point(G, X, act, x)
+        =>:
+            \group_actions::orbit<G, X, act>(x) $subset \p_group_actions::action_fixed_points<G, X, act>
+    claim:
+        ? forall y X:
+            y $in \group_actions::orbit<G, X, act>(x)
+            =>:
+                y $in \p_group_actions::action_fixed_points<G, X, act>
+        by def:
+            ? $group_actions::orbit_member(G, X, act, x, y)
+        obtain h from $group_actions::orbit_member(G, X, act, x, y)
+        y = act(h, x) = x
+        $p_group_actions::action_fixed_point(G, X, act, x)
+        $p_group_actions::action_fixed_point(G, X, act, y)
+        release thm set_builder_member(y, {q X: $p_group_actions::action_fixed_point(G, X, act, q)})
+        y $in {q X: $p_group_actions::action_fixed_point(G, X, act, q)} = \p_group_actions::action_fixed_points<G, X, act>
+    by def:
+        ? \group_actions::orbit<G, X, act>(x) $subset \p_group_actions::action_fixed_points<G, X, act>
+
+thm orbit_fixed_point_defect_divisible:
+    ? forall G nonempty_set, X finite_set, group &group::Group<G>, act fn(g G, x X) X, p N+, n N, x X:
+        $is_finite_set(G)
+        $group_actions::is_group_action(G, X, group, act)
+        $prime(p)
+        finite_set_size(G) = p^n
+        $is_finite_set(\group_actions::orbit<G, X, act>(x))
+        $is_finite_set(intersect(\group_actions::orbit<G, X, act>(x), \p_group_actions::action_fixed_points<G, X, act>))
+        =>:
+            $group::divides(p, finite_set_size(\group_actions::orbit<G, X, act>(x)) - finite_set_size(intersect(\group_actions::orbit<G, X, act>(x), \p_group_actions::action_fixed_points<G, X, act>)))
+    by cases:
+        ? $group::divides(p, finite_set_size(\group_actions::orbit<G, X, act>(x)) - finite_set_size(intersect(\group_actions::orbit<G, X, act>(x), \p_group_actions::action_fixed_points<G, X, act>)))
+        case $p_group_actions::action_fixed_point(G, X, act, x):
+            release thm p_group_actions::fixed_point_orbit_is_fixed(G, X, group, act, x)
+            claim:
+                ? intersect(\group_actions::orbit<G, X, act>(x), \p_group_actions::action_fixed_points<G, X, act>) = \group_actions::orbit<G, X, act>(x)
+                claim:
+                    ? forall y X:
+                        y $in intersect(\group_actions::orbit<G, X, act>(x), \p_group_actions::action_fixed_points<G, X, act>)
+                        =>:
+                            y $in \group_actions::orbit<G, X, act>(x)
+                claim:
+                    ? forall y X:
+                        y $in \group_actions::orbit<G, X, act>(x)
+                        =>:
+                            y $in intersect(\group_actions::orbit<G, X, act>(x), \p_group_actions::action_fixed_points<G, X, act>)
+                    y $in \p_group_actions::action_fixed_points<G, X, act>
+                by extension:
+                    ? intersect(\group_actions::orbit<G, X, act>(x), \p_group_actions::action_fixed_points<G, X, act>) = \group_actions::orbit<G, X, act>(x)
+            finite_set_size(intersect(\group_actions::orbit<G, X, act>(x), \p_group_actions::action_fixed_points<G, X, act>)) = finite_set_size(\group_actions::orbit<G, X, act>(x))
+            finite_set_size(\group_actions::orbit<G, X, act>(x)) - finite_set_size(intersect(\group_actions::orbit<G, X, act>(x), \p_group_actions::action_fixed_points<G, X, act>)) = 0
+            witness $group::divides(p, 0) from 0
+        case not $p_group_actions::action_fixed_point(G, X, act, x):
+            release thm p_group_actions::nonfixed_orbit_has_no_fixed_points(G, X, group, act, x)
+            finite_set_size(intersect(\group_actions::orbit<G, X, act>(x), \p_group_actions::action_fixed_points<G, X, act>)) = finite_set_size({}) = 0
+            release thm p_group_actions::nonfixed_point_orbit_has_size_greater_than_one(G, X, group, act, x)
+            release thm p_group_actions::nontrivial_orbit_size_divisible_by_prime(G, X, group, act, p, n, x)
+            obtain quotient from $group::divides(p, finite_set_size(\group_actions::orbit<G, X, act>(x)))
+            witness $group::divides(p, finite_set_size(\group_actions::orbit<G, X, act>(x)) - finite_set_size(intersect(\group_actions::orbit<G, X, act>(x), \p_group_actions::action_fixed_points<G, X, act>))) from quotient:
+                finite_set_size(\group_actions::orbit<G, X, act>(x)) - finite_set_size(intersect(\group_actions::orbit<G, X, act>(x), \p_group_actions::action_fixed_points<G, X, act>)) = finite_set_size(\group_actions::orbit<G, X, act>(x)) - 0 = finite_set_size(\group_actions::orbit<G, X, act>(x)) = p * quotient
+
+thm natural_sum_subtraction_split:
+    ? forall whole, left, right, whole_fixed, left_fixed, right_fixed N:
+        whole = left + right
+        whole_fixed = left_fixed + right_fixed
+        =>:
+            whole - whole_fixed = (left - left_fixed) + (right - right_fixed)
+    whole - whole_fixed = (left + right) - (left_fixed + right_fixed)
+    (left + right) - (left_fixed + right_fixed) = (left - left_fixed) + (right - right_fixed)
+
+thm finite_subset_defect_split:
+    ? forall X set, S, T, F power_set(X):
+        $is_finite_set(S)
+        $is_finite_set(T)
+        T $subset S
+        $is_finite_set(intersect(S, F))
+        $is_finite_set(set_minus(S, T))
+        $is_finite_set(intersect(set_minus(S, T), F))
+        $is_finite_set(intersect(T, F))
+        =>:
+            finite_set_size(S) - finite_set_size(intersect(S, F)) = (finite_set_size(set_minus(S, T)) - finite_set_size(intersect(set_minus(S, T), F))) + (finite_set_size(T) - finite_set_size(intersect(T, F)))
+    intersect(S, T) = T
+    finite_set_size(T) <= finite_set_size(S)
+    finite_set_size(set_minus(S, T)) = finite_set_size(S) - finite_set_size(intersect(S, T)) = finite_set_size(S) - finite_set_size(T)
+    finite_set_size(set_minus(S, T)) + finite_set_size(T) = (finite_set_size(S) - finite_set_size(T)) + finite_set_size(T) = finite_set_size(S)
+    finite_set_size(S) = finite_set_size(set_minus(S, T)) + finite_set_size(T)
+    claim:
+        ? intersect(S, F) = union(intersect(set_minus(S, T), F), intersect(T, F))
+        claim:
+            ? forall x intersect(S, F):
+                x $in union(intersect(set_minus(S, T), F), intersect(T, F))
+            by cases:
+                ? x $in union(intersect(set_minus(S, T), F), intersect(T, F))
+                case x $in T:
+                    x $in intersect(T, F)
+                case not x $in T:
+                    x $in set_minus(S, T)
+                    x $in intersect(set_minus(S, T), F)
+        claim:
+            ? forall x union(intersect(set_minus(S, T), F), intersect(T, F)):
+                x $in intersect(S, F)
+            by cases:
+                ? x $in intersect(S, F)
+                case x $in intersect(set_minus(S, T), F):
+                    x $in set_minus(S, T)
+                    x $in S
+                case x $in intersect(T, F):
+                    x $in T
+                    x $in S
+        by extension:
+            ? intersect(S, F) = union(intersect(set_minus(S, T), F), intersect(T, F))
+    claim:
+        ? intersect(intersect(set_minus(S, T), F), intersect(T, F)) = {}
+        claim:
+            ? forall x intersect(intersect(set_minus(S, T), F), intersect(T, F)):
+                x $in {}
+            x $in set_minus(S, T)
+            not x $in T
+            x $in T
+            by contra:
+                ? x $in {}
+                impossible x $in T
+        claim:
+            ? forall x {}:
+                x $in intersect(intersect(set_minus(S, T), F), intersect(T, F))
+            by contra:
+                ? x $in intersect(intersect(set_minus(S, T), F), intersect(T, F))
+                impossible x $in {}
+        by extension:
+            ? intersect(intersect(set_minus(S, T), F), intersect(T, F)) = {}
+    finite_set_size(intersect(S, F)) = finite_set_size(union(intersect(set_minus(S, T), F), intersect(T, F)))
+    finite_set_size(union(intersect(set_minus(S, T), F), intersect(T, F))) = finite_set_size(intersect(set_minus(S, T), F)) + finite_set_size(intersect(T, F)) - finite_set_size(intersect(intersect(set_minus(S, T), F), intersect(T, F)))
+    finite_set_size(intersect(intersect(set_minus(S, T), F), intersect(T, F))) = finite_set_size({}) = 0
+    release thm cosets::object_substitution(N, Z, fn(t N) Z {finite_set_size(intersect(set_minus(S, T), F)) + finite_set_size(intersect(T, F)) - t}, finite_set_size(intersect(intersect(set_minus(S, T), F), intersect(T, F))), 0)
+    finite_set_size(intersect(set_minus(S, T), F)) + finite_set_size(intersect(T, F)) - finite_set_size(intersect(intersect(set_minus(S, T), F), intersect(T, F))) = finite_set_size(intersect(set_minus(S, T), F)) + finite_set_size(intersect(T, F)) - 0
+    finite_set_size(union(intersect(set_minus(S, T), F), intersect(T, F))) = finite_set_size(intersect(set_minus(S, T), F)) + finite_set_size(intersect(T, F)) - finite_set_size(intersect(intersect(set_minus(S, T), F), intersect(T, F))) = finite_set_size(intersect(set_minus(S, T), F)) + finite_set_size(intersect(T, F)) - 0 = finite_set_size(intersect(set_minus(S, T), F)) + finite_set_size(intersect(T, F))
+    finite_set_size(intersect(S, F)) = finite_set_size(union(intersect(set_minus(S, T), F), intersect(T, F))) = finite_set_size(intersect(set_minus(S, T), F)) + finite_set_size(intersect(T, F))
+    release thm p_group_actions::natural_sum_subtraction_split(finite_set_size(S), finite_set_size(set_minus(S, T)), finite_set_size(T), finite_set_size(intersect(S, F)), finite_set_size(intersect(set_minus(S, T), F)), finite_set_size(intersect(T, F)))
+
+thm finite_intersection_size_zero_of_base_size_zero:
+    ? forall X set, S, F power_set(X):
+        $is_finite_set(S)
+        $is_finite_set(intersect(S, F))
+        finite_set_size(S) = 0
+        =>:
+            finite_set_size(intersect(S, F)) = 0
+    intersect(S, F) $subset S
+    finite_set_size(intersect(S, F)) <= finite_set_size(S) = 0
+    finite_set_size(intersect(S, F)) >= 0
+
+thm finite_set_nonempty_of_positive_size:
+    ? forall X finite_set:
+        finite_set_size(X) > 0
+        =>:
+            $is_nonempty_set(X)
+    by contra:
+        ? $is_nonempty_set(X)
+        X = {}
+        finite_set_size(X) = finite_set_size({}) = 0
+        impossible finite_set_size(X) > 0
+
+thm finite_set_minus_nonempty_subset_has_smaller_size:
+    ? forall X finite_set, S, T power_set(X):
+        $is_finite_set(S)
+        $is_finite_set(T)
+        $is_nonempty_set(T)
+        T $subset S
+        =>:
+            finite_set_size(set_minus(S, T)) < finite_set_size(S)
+    claim:
+        ? intersect(S, T) = T
+        claim:
+            ? forall x X:
+                x $in intersect(S, T)
+                =>:
+                    x $in T
+        claim:
+            ? forall x X:
+                x $in T
+                =>:
+                    x $in intersect(S, T)
+            x $in S
+        by extension:
+            ? intersect(S, T) = T
+    $is_finite_set(intersect(S, T))
+    $is_finite_set(set_minus(S, T))
+    finite_set_size(T) >= 1
+    finite_set_size(T) <= finite_set_size(S)
+    finite_set_size(S) >= finite_set_size(T) >= 1
+    finite_set_size(set_minus(S, T)) = finite_set_size(S) - finite_set_size(intersect(S, T)) = finite_set_size(S) - finite_set_size(T)
+    finite_set_size(S) - finite_set_size(T) <= finite_set_size(S) - 1 < finite_set_size(S)
+    finite_set_size(set_minus(S, T)) < finite_set_size(S)
+
+thm integer_divisibility_add:
+    ? forall divisor, left, right Z:
+        $group::divides(divisor, left)
+        $group::divides(divisor, right)
+        =>:
+            $group::divides(divisor, left + right)
+    obtain left_quotient from $group::divides(divisor, left)
+    obtain right_quotient from $group::divides(divisor, right)
+    witness $group::divides(divisor, left + right) from left_quotient + right_quotient:
+        left + right = divisor * left_quotient + divisor * right_quotient = divisor * (left_quotient + right_quotient)
+
+thm integer_divisibility_substitution:
+    ? forall divisor, left, right Z:
+        left = right
+        $group::divides(divisor, left)
+        =>:
+            $group::divides(divisor, right)
+    obtain quotient from $group::divides(divisor, left)
+    witness $group::divides(divisor, right) from quotient:
+        right = left = divisor * quotient
+
+thm integer_divisibility_sum_substitution:
+    ? forall divisor, left, right, total Z:
+        $group::divides(divisor, left)
+        $group::divides(divisor, right)
+        total = left + right
+        =>:
+            $group::divides(divisor, total)
+    release thm p_group_actions::integer_divisibility_add(divisor, left, right)
+    release thm p_group_actions::integer_divisibility_substitution(divisor, left + right, total)
+
+prop invariant_subset_fixed_point_defect_divisible_at_size(G nonempty_set, X finite_set, group &group::Group<G>, act fn(g G, x X) X, p N+, size_bound N):
+    forall S power_set(X):
+        $is_finite_set(S)
+        $is_finite_set(intersect(S, \p_group_actions::action_fixed_points<G, X, act>))
+        finite_set_size(S) = size_bound
+        $p_group_actions::action_invariant_subset(G, X, act, S)
+        =>:
+            $group::divides(p, finite_set_size(S) - finite_set_size(intersect(S, \p_group_actions::action_fixed_points<G, X, act>)))
+
+thm invariant_subset_fixed_point_defect_divisible_base:
+    ? forall G nonempty_set, X finite_set, group &group::Group<G>, act fn(g G, x X) X, p N+, n N:
+        $is_finite_set(G)
+        $group_actions::is_group_action(G, X, group, act)
+        $prime(p)
+        finite_set_size(G) = p^n
+        =>:
+            $p_group_actions::invariant_subset_fixed_point_defect_divisible_at_size(G, X, group, act, p, 0)
+    claim:
+        ? forall S power_set(X):
+            $is_finite_set(S)
+            $is_finite_set(intersect(S, \p_group_actions::action_fixed_points<G, X, act>))
+            finite_set_size(S) = 0
+            $p_group_actions::action_invariant_subset(G, X, act, S)
+            =>:
+                $group::divides(p, finite_set_size(S) - finite_set_size(intersect(S, \p_group_actions::action_fixed_points<G, X, act>)))
+        release thm p_group_actions::finite_intersection_size_zero_of_base_size_zero(X, S, \p_group_actions::action_fixed_points<G, X, act>)
+        finite_set_size(intersect(S, \p_group_actions::action_fixed_points<G, X, act>)) = 0
+        finite_set_size(S) - finite_set_size(intersect(S, \p_group_actions::action_fixed_points<G, X, act>)) = 0
+        witness $group::divides(p, finite_set_size(S) - finite_set_size(intersect(S, \p_group_actions::action_fixed_points<G, X, act>))) from 0
+    by def:
+        ? $p_group_actions::invariant_subset_fixed_point_defect_divisible_at_size(G, X, group, act, p, 0)
+
+thm orbit_subset_of_invariant_subset:
+    ? forall G nonempty_set, X set, group &group::Group<G>, act fn(g G, x X) X, S power_set(X), x X:
+        $group_actions::is_group_action(G, X, group, act)
+        $p_group_actions::action_invariant_subset(G, X, act, S)
+        x $in S
+        =>:
+            \group_actions::orbit<G, X, act>(x) $subset S
+    claim:
+        ? forall y X:
+            y $in \group_actions::orbit<G, X, act>(x)
+            =>:
+                y $in S
+        \group_actions::orbit<G, X, act>(x) = {candidate X: $group_actions::orbit_member(G, X, act, x, candidate)}
+        y $in {candidate X: $group_actions::orbit_member(G, X, act, x, candidate)}
+        by def:
+            ? $group_actions::orbit_member(G, X, act, x, y)
+        obtain h from $group_actions::orbit_member(G, X, act, x, y)
+        act(h, x) $in S
+        have selected S = act(h, x)
+        selected = act(h, x) = y
+        y $in S
+    by def:
+        ? \group_actions::orbit<G, X, act>(x) $subset S
+
+thm finite_intersection_of_subset_from_finite_intersection:
+    ? forall X set, S, T, F power_set(X):
+        T $subset S
+        $is_finite_set(intersect(S, F))
+        =>:
+            $is_finite_set(intersect(T, F))
+    claim:
+        ? intersect(T, F) $subset intersect(S, F)
+        claim:
+            ? forall x X:
+                x $in intersect(T, F)
+                =>:
+                    x $in intersect(S, F)
+            x $in T
+            x $in S
+            x $in F
+        by def:
+            ? intersect(T, F) $subset intersect(S, F)
+    release thm subset_of_finite_set_is_finite(intersect(T, F), intersect(S, F))
+
+thm finite_intersection_from_finite_left:
+    ? forall X set, T, F power_set(X):
+        $is_finite_set(T)
+        =>:
+            $is_finite_set(intersect(T, F))
+    claim:
+        ? intersect(T, F) $subset T
+    release thm subset_of_finite_set_is_finite(intersect(T, F), T)
+
+thm finite_subset_defect_divisibility_split:
+    ? forall X set, S, T, F power_set(X), p N+:
+        $is_finite_set(S)
+        $is_finite_set(T)
+        T $subset S
+        $is_finite_set(intersect(S, F))
+        $is_finite_set(set_minus(S, T))
+        $is_finite_set(intersect(set_minus(S, T), F))
+        $is_finite_set(intersect(T, F))
+        $group::divides(p, finite_set_size(set_minus(S, T)) - finite_set_size(intersect(set_minus(S, T), F)))
+        $group::divides(p, finite_set_size(T) - finite_set_size(intersect(T, F)))
+        =>:
+            $group::divides(p, finite_set_size(S) - finite_set_size(intersect(S, F)))
+    release thm p_group_actions::finite_subset_defect_split(X, S, T, F)
+    have left_defect Z = finite_set_size(set_minus(S, T)) - finite_set_size(intersect(set_minus(S, T), F))
+    have right_defect Z = finite_set_size(T) - finite_set_size(intersect(T, F))
+    have total_defect Z = finite_set_size(S) - finite_set_size(intersect(S, F))
+    obtain left_quotient from $group::divides(p, finite_set_size(set_minus(S, T)) - finite_set_size(intersect(set_minus(S, T), F)))
+    obtain right_quotient from $group::divides(p, finite_set_size(T) - finite_set_size(intersect(T, F)))
+    witness $group::divides(p, left_defect) from left_quotient:
+        left_defect = finite_set_size(set_minus(S, T)) - finite_set_size(intersect(set_minus(S, T), F)) = p * left_quotient
+    witness $group::divides(p, right_defect) from right_quotient:
+        right_defect = finite_set_size(T) - finite_set_size(intersect(T, F)) = p * right_quotient
+    total_defect = finite_set_size(S) - finite_set_size(intersect(S, F)) = (finite_set_size(set_minus(S, T)) - finite_set_size(intersect(set_minus(S, T), F))) + (finite_set_size(T) - finite_set_size(intersect(T, F))) = left_defect + right_defect
+    release thm p_group_actions::integer_divisibility_sum_substitution(p, left_defect, right_defect, total_defect)
+    obtain total_quotient from $group::divides(p, total_defect)
+    witness $group::divides(p, finite_set_size(S) - finite_set_size(intersect(S, F))) from total_quotient:
+        finite_set_size(S) - finite_set_size(intersect(S, F)) = total_defect = p * total_quotient
+
+thm invariant_subset_smaller_defect_from_induction_hypothesis:
+    ? forall G nonempty_set, X finite_set, group &group::Group<G>, act fn(g G, x X) X, p N+, size_bound N, T power_set(X):
+        forall smaller_size N:
+            smaller_size <= size_bound
+            =>:
+                $p_group_actions::invariant_subset_fixed_point_defect_divisible_at_size(G, X, group, act, p, smaller_size)
+        $is_finite_set(T)
+        $is_finite_set(intersect(T, \p_group_actions::action_fixed_points<G, X, act>))
+        finite_set_size(T) <= size_bound
+        $p_group_actions::action_invariant_subset(G, X, act, T)
+        =>:
+            $group::divides(p, finite_set_size(T) - finite_set_size(intersect(T, \p_group_actions::action_fixed_points<G, X, act>)))
+    $p_group_actions::invariant_subset_fixed_point_defect_divisible_at_size(G, X, group, act, p, finite_set_size(T))
+    $group::divides(p, finite_set_size(T) - finite_set_size(intersect(T, \p_group_actions::action_fixed_points<G, X, act>)))
+
+thm orbit_remainder_is_invariant:
+    ? forall G nonempty_set, X set, group &group::Group<G>, act fn(g G, x X) X, S power_set(X), selected_point X:
+        $group_actions::is_group_action(G, X, group, act)
+        $p_group_actions::action_invariant_subset(G, X, act, S)
+        =>:
+            $p_group_actions::action_invariant_subset(G, X, act, set_minus(S, \group_actions::orbit<G, X, act>(selected_point)))
+    release thm p_group_actions::action_orbit_invariant(G, X, group, act, selected_point)
+    release thm p_group_actions::action_invariant_set_minus(G, X, group, act, S, \group_actions::orbit<G, X, act>(selected_point))
+
+thm orbit_remainder_defects_combine:
+    ? forall G nonempty_set, X finite_set, group &group::Group<G>, act fn(g G, x X) X, p N+, S power_set(X), selected_point X:
+        $is_finite_set(S)
+        $is_finite_set(\group_actions::orbit<G, X, act>(selected_point))
+        \group_actions::orbit<G, X, act>(selected_point) $subset S
+        $is_finite_set(intersect(S, \p_group_actions::action_fixed_points<G, X, act>))
+        $is_finite_set(set_minus(S, \group_actions::orbit<G, X, act>(selected_point)))
+        $is_finite_set(intersect(set_minus(S, \group_actions::orbit<G, X, act>(selected_point)), \p_group_actions::action_fixed_points<G, X, act>))
+        $is_finite_set(intersect(\group_actions::orbit<G, X, act>(selected_point), \p_group_actions::action_fixed_points<G, X, act>))
+        $group::divides(p, finite_set_size(set_minus(S, \group_actions::orbit<G, X, act>(selected_point))) - finite_set_size(intersect(set_minus(S, \group_actions::orbit<G, X, act>(selected_point)), \p_group_actions::action_fixed_points<G, X, act>)))
+        $group::divides(p, finite_set_size(\group_actions::orbit<G, X, act>(selected_point)) - finite_set_size(intersect(\group_actions::orbit<G, X, act>(selected_point), \p_group_actions::action_fixed_points<G, X, act>)))
+        =>:
+            $group::divides(p, finite_set_size(S) - finite_set_size(intersect(S, \p_group_actions::action_fixed_points<G, X, act>)))
+    release thm p_group_actions::finite_subset_defect_divisibility_split(X, S, \group_actions::orbit<G, X, act>(selected_point), \p_group_actions::action_fixed_points<G, X, act>, p)
+
+thm invariant_subset_fixed_point_defect_divisible_from_selected_point:
+    ? forall G nonempty_set, X finite_set, group &group::Group<G>, act fn(g G, x X) X, p N+, n, size_bound N, S power_set(X), selected_point S:
+        $is_finite_set(G)
+        $group_actions::is_group_action(G, X, group, act)
+        $prime(p)
+        finite_set_size(G) = p^n
+        forall smaller_size N:
+            smaller_size <= size_bound
+            =>:
+                $p_group_actions::invariant_subset_fixed_point_defect_divisible_at_size(G, X, group, act, p, smaller_size)
+        $is_finite_set(S)
+        $is_finite_set(intersect(S, \p_group_actions::action_fixed_points<G, X, act>))
+        finite_set_size(S) = size_bound + 1
+        $p_group_actions::action_invariant_subset(G, X, act, S)
+        =>:
+            $group::divides(p, finite_set_size(S) - finite_set_size(intersect(S, \p_group_actions::action_fixed_points<G, X, act>)))
+    release thm p_group_actions::action_point_mem_orbit(G, X, group, act, selected_point)
+    selected_point $in \group_actions::orbit<G, X, act>(selected_point)
+    witness $is_nonempty_set(\group_actions::orbit<G, X, act>(selected_point)) from selected_point
+    release thm p_group_actions::orbit_subset_of_invariant_subset(G, X, group, act, S, selected_point)
+    \group_actions::orbit<G, X, act>(selected_point) $subset S
+    release thm subset_of_finite_set_is_finite(\group_actions::orbit<G, X, act>(selected_point), S)
+    $is_finite_set(\group_actions::orbit<G, X, act>(selected_point))
+    release thm p_group_actions::finite_intersection_from_finite_left(X, \group_actions::orbit<G, X, act>(selected_point), \p_group_actions::action_fixed_points<G, X, act>)
+    $is_finite_set(intersect(\group_actions::orbit<G, X, act>(selected_point), \p_group_actions::action_fixed_points<G, X, act>))
+    release thm p_group_actions::orbit_remainder_is_invariant(G, X, group, act, S, selected_point)
+    $p_group_actions::action_invariant_subset(G, X, act, set_minus(S, \group_actions::orbit<G, X, act>(selected_point)))
+    $is_finite_set(set_minus(S, \group_actions::orbit<G, X, act>(selected_point)))
+    release thm p_group_actions::finite_intersection_from_finite_left(X, set_minus(S, \group_actions::orbit<G, X, act>(selected_point)), \p_group_actions::action_fixed_points<G, X, act>)
+    $is_finite_set(intersect(set_minus(S, \group_actions::orbit<G, X, act>(selected_point)), \p_group_actions::action_fixed_points<G, X, act>))
+    release thm p_group_actions::finite_set_minus_nonempty_subset_has_smaller_size(X, S, \group_actions::orbit<G, X, act>(selected_point))
+    finite_set_size(set_minus(S, \group_actions::orbit<G, X, act>(selected_point))) < finite_set_size(S) = size_bound + 1
+    finite_set_size(set_minus(S, \group_actions::orbit<G, X, act>(selected_point))) <= size_bound
+    release thm p_group_actions::invariant_subset_smaller_defect_from_induction_hypothesis(G, X, group, act, p, size_bound, set_minus(S, \group_actions::orbit<G, X, act>(selected_point)))
+    $group::divides(p, finite_set_size(set_minus(S, \group_actions::orbit<G, X, act>(selected_point))) - finite_set_size(intersect(set_minus(S, \group_actions::orbit<G, X, act>(selected_point)), \p_group_actions::action_fixed_points<G, X, act>)))
+    release thm p_group_actions::orbit_fixed_point_defect_divisible(G, X, group, act, p, n, selected_point)
+    $group::divides(p, finite_set_size(\group_actions::orbit<G, X, act>(selected_point)) - finite_set_size(intersect(\group_actions::orbit<G, X, act>(selected_point), \p_group_actions::action_fixed_points<G, X, act>)))
+    release thm p_group_actions::orbit_remainder_defects_combine(G, X, group, act, p, S, selected_point)
+
+thm invariant_subset_fixed_point_defect_divisible_choose_point:
+    ? forall G nonempty_set, X finite_set, group &group::Group<G>, act fn(g G, x X) X, p N+, n, size_bound N, S power_set(X):
+        $is_finite_set(G)
+        $group_actions::is_group_action(G, X, group, act)
+        $prime(p)
+        finite_set_size(G) = p^n
+        forall smaller_size N:
+            smaller_size <= size_bound
+            =>:
+                $p_group_actions::invariant_subset_fixed_point_defect_divisible_at_size(G, X, group, act, p, smaller_size)
+        $is_finite_set(S)
+        $is_finite_set(intersect(S, \p_group_actions::action_fixed_points<G, X, act>))
+        finite_set_size(S) = size_bound + 1
+        $p_group_actions::action_invariant_subset(G, X, act, S)
+        $is_nonempty_set(S)
+        =>:
+            $group::divides(p, finite_set_size(S) - finite_set_size(intersect(S, \p_group_actions::action_fixed_points<G, X, act>)))
+    have selected_point S
+    release thm p_group_actions::invariant_subset_fixed_point_defect_divisible_from_selected_point(G, X, group, act, p, n, size_bound, S, selected_point)
+
+thm invariant_subset_fixed_point_defect_divisible_step:
+    ? forall G nonempty_set, X finite_set, group &group::Group<G>, act fn(g G, x X) X, p N+, n, size_bound N:
+        $is_finite_set(G)
+        $group_actions::is_group_action(G, X, group, act)
+        $prime(p)
+        finite_set_size(G) = p^n
+        forall smaller_size N:
+            smaller_size <= size_bound
+            =>:
+                $p_group_actions::invariant_subset_fixed_point_defect_divisible_at_size(G, X, group, act, p, smaller_size)
+        =>:
+            $p_group_actions::invariant_subset_fixed_point_defect_divisible_at_size(G, X, group, act, p, size_bound + 1)
+    claim:
+        ? forall S power_set(X):
+            $is_finite_set(S)
+            $is_finite_set(intersect(S, \p_group_actions::action_fixed_points<G, X, act>))
+            finite_set_size(S) = size_bound + 1
+            $p_group_actions::action_invariant_subset(G, X, act, S)
+            =>:
+                $group::divides(p, finite_set_size(S) - finite_set_size(intersect(S, \p_group_actions::action_fixed_points<G, X, act>)))
+        finite_set_size(S) = size_bound + 1 > 0
+        release thm p_group_actions::finite_set_nonempty_of_positive_size(S)
+        $is_nonempty_set(S)
+        release thm p_group_actions::invariant_subset_fixed_point_defect_divisible_choose_point(G, X, group, act, p, n, size_bound, S)
+        $group::divides(p, finite_set_size(S) - finite_set_size(intersect(S, \p_group_actions::action_fixed_points<G, X, act>)))
+    by def:
+        ? $p_group_actions::invariant_subset_fixed_point_defect_divisible_at_size(G, X, group, act, p, size_bound + 1)
+
+thm finite_p_group_invariant_subset_fixed_point_defect_divisible:
+    ? forall G nonempty_set, X finite_set, group &group::Group<G>, act fn(g G, x X) X, p N+, n N, S power_set(X):
+        $is_finite_set(G)
+        $group_actions::is_group_action(G, X, group, act)
+        $prime(p)
+        finite_set_size(G) = p^n
+        $is_finite_set(S)
+        $is_finite_set(intersect(S, \p_group_actions::action_fixed_points<G, X, act>))
+        $p_group_actions::action_invariant_subset(G, X, act, S)
+        =>:
+            $group::divides(p, finite_set_size(S) - finite_set_size(intersect(S, \p_group_actions::action_fixed_points<G, X, act>)))
+    claim:
+        ? forall size_bound N:
+            $p_group_actions::invariant_subset_fixed_point_defect_divisible_at_size(G, X, group, act, p, size_bound)
+        by strong_induc size_bound from 0:
+            ? $p_group_actions::invariant_subset_fixed_point_defect_divisible_at_size(G, X, group, act, p, size_bound)
+            ? from size_bound = 0:
+                release thm p_group_actions::invariant_subset_fixed_point_defect_divisible_base(G, X, group, act, p, n)
+                $p_group_actions::invariant_subset_fixed_point_defect_divisible_at_size(G, X, group, act, p, 0)
+            ? strong_induc:
+                forall smaller_size N:
+                    smaller_size >= 0
+                    smaller_size <= size_bound
+                    =>:
+                        $p_group_actions::invariant_subset_fixed_point_defect_divisible_at_size(G, X, group, act, p, smaller_size)
+                claim:
+                    ? forall earlier_size N:
+                        earlier_size <= size_bound
+                        =>:
+                            $p_group_actions::invariant_subset_fixed_point_defect_divisible_at_size(G, X, group, act, p, earlier_size)
+                    earlier_size >= 0
+                    $p_group_actions::invariant_subset_fixed_point_defect_divisible_at_size(G, X, group, act, p, earlier_size)
+                release thm p_group_actions::invariant_subset_fixed_point_defect_divisible_step(G, X, group, act, p, n, size_bound)
+                $p_group_actions::invariant_subset_fixed_point_defect_divisible_at_size(G, X, group, act, p, size_bound + 1)
+    $p_group_actions::invariant_subset_fixed_point_defect_divisible_at_size(G, X, group, act, p, finite_set_size(S))
+    $group::divides(p, finite_set_size(S) - finite_set_size(intersect(S, \p_group_actions::action_fixed_points<G, X, act>)))
+
+thm action_fixed_points_are_finite:
+    ? forall G nonempty_set, X finite_set, act fn(g G, x X) X:
+        $is_finite_set(\p_group_actions::action_fixed_points<G, X, act>)
+    claim:
+        ? \p_group_actions::action_fixed_points<G, X, act> $subset X
+    release thm subset_of_finite_set_is_finite(\p_group_actions::action_fixed_points<G, X, act>, X)
+
+thm whole_action_carrier_is_invariant:
+    ? forall G nonempty_set, X set, act fn(g G, x X) X:
+        $p_group_actions::action_invariant_subset(G, X, act, X)
+    claim:
+        ? forall g G, y X:
+            y $in X
+            =>:
+                act(g, y) $in X
+    by def:
+        ? $p_group_actions::action_invariant_subset(G, X, act, X)
+
+thm finite_p_group_fixed_point_congruence:
+    ? forall G nonempty_set, X finite_set, group &group::Group<G>, act fn(g G, x X) X, p N+, n N:
+        $is_finite_set(G)
+        $group_actions::is_group_action(G, X, group, act)
+        $prime(p)
+        finite_set_size(G) = p^n
+        $is_finite_set(\p_group_actions::action_fixed_points<G, X, act>)
+        =>:
+            $group::divides(p, finite_set_size(X) - finite_set_size(\p_group_actions::action_fixed_points<G, X, act>))
+    release thm p_group_actions::finite_intersection_from_finite_left(X, X, \p_group_actions::action_fixed_points<G, X, act>)
+    $is_finite_set(intersect(X, \p_group_actions::action_fixed_points<G, X, act>))
+    release thm p_group_actions::whole_action_carrier_is_invariant(G, X, act)
+    release thm p_group_actions::finite_p_group_invariant_subset_fixed_point_defect_divisible(G, X, group, act, p, n, X)
+    $group::divides(p, finite_set_size(X) - finite_set_size(intersect(X, \p_group_actions::action_fixed_points<G, X, act>)))
+    claim:
+        ? intersect(X, \p_group_actions::action_fixed_points<G, X, act>) = \p_group_actions::action_fixed_points<G, X, act>
+        claim:
+            ? forall x X:
+                x $in intersect(X, \p_group_actions::action_fixed_points<G, X, act>)
+                =>:
+                    x $in \p_group_actions::action_fixed_points<G, X, act>
+        claim:
+            ? forall x X:
+                x $in \p_group_actions::action_fixed_points<G, X, act>
+                =>:
+                    x $in intersect(X, \p_group_actions::action_fixed_points<G, X, act>)
+        by extension:
+            ? intersect(X, \p_group_actions::action_fixed_points<G, X, act>) = \p_group_actions::action_fixed_points<G, X, act>
+    finite_set_size(intersect(X, \p_group_actions::action_fixed_points<G, X, act>)) = finite_set_size(\p_group_actions::action_fixed_points<G, X, act>)
+    obtain quotient from $group::divides(p, finite_set_size(X) - finite_set_size(intersect(X, \p_group_actions::action_fixed_points<G, X, act>)))
+    witness $group::divides(p, finite_set_size(X) - finite_set_size(\p_group_actions::action_fixed_points<G, X, act>)) from quotient:
+        finite_set_size(X) - finite_set_size(\p_group_actions::action_fixed_points<G, X, act>) = finite_set_size(X) - finite_set_size(intersect(X, \p_group_actions::action_fixed_points<G, X, act>)) = p * quotient
+
+
+# Checked concrete cyclic group of prime order for the Cauchy counting action.
