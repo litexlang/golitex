@@ -32,6 +32,7 @@ impl StmtResultToLeanCompiler {
                 proof_steps: &verification.proof_steps,
                 conclusion_checks: verification.conclusion_checks.iter().collect(),
                 outer_environment_effects: Some(&result.common.infers),
+                source_fact_id: None,
             },
         )? {
             Ok(())

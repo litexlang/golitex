@@ -4,7 +4,7 @@ impl Runtime {
     pub fn parse_release_thm_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(RELEASE)?;
         tb.skip_token(THM)?;
-        let (name, args) = self.parse_theorem_call(tb)?;
+        let call = self.parse_theorem_call(tb)?;
         if !tb.exceed_end_of_head() || !tb.body.is_empty() {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
@@ -14,12 +14,12 @@ impl Runtime {
                 ),
             )));
         }
-        Ok(ReleaseThmStmt::new(name, args, tb.line_file.clone()).into())
+        Ok(ReleaseThmStmt::new_with_call(call, tb.line_file.clone()).into())
     }
 
     pub fn parse_by_thm_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(THM)?;
-        let (name, args) = self.parse_theorem_call(tb)?;
+        let call = self.parse_theorem_call(tb)?;
         if !tb.current_token_is_equal_to(RIGHT_ARROW) {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
@@ -55,22 +55,23 @@ impl Runtime {
                 ),
             )));
         }
-        Ok(ByThmStmt::new(name, args, selected_fact, tb.line_file.clone()).into())
+        Ok(ByThmStmt::new_with_call(call, selected_fact, tb.line_file.clone()).into())
     }
 
-    /// Parse the shared `name(args)` portion of an explicit theorem call.
-    pub fn parse_theorem_call(
-        &mut self,
-        tb: &mut TokenBlock,
-    ) -> Result<(AtomicName, Vec<Obj>), RuntimeError> {
+    /// Parse the shared `name` or `name(args)` portion of an explicit theorem call.
+    pub fn parse_theorem_call(&mut self, tb: &mut TokenBlock) -> Result<TheoremCall, RuntimeError> {
         let name = if is_builtin_theorem_name(tb.current()?) && tb.token_at_add_index(1) != MOD_SIGN
         {
             AtomicName::WithoutMod(tb.advance()?)
         } else {
             self.parse_module_qualified_reference_name(tb)?
         };
-        let args = self.parse_braced_objs(tb)?;
-        Ok((name, args))
+        let arguments = if !tb.exceed_end_of_head() && tb.current_token_is_equal_to(LEFT_BRACE) {
+            TheoremCallArguments::Parenthesized(self.parse_braced_objs(tb)?)
+        } else {
+            TheoremCallArguments::Bare
+        };
+        Ok(TheoremCall::new(name, arguments))
     }
 }
 

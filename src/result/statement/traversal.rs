@@ -172,13 +172,20 @@ impl SuccessReleaseThmStmtResult {
         if let Some(verification) = &self.verification {
             match &verification.source {
                 SuccessVerifyTheoremApplicationSourceResult::Litex(source) => {
-                    if let Some(arguments) = &source.argument_verification {
-                        for check in &arguments.checks {
+                    if let SuccessVerifyLitexTheoremApplicationMode::ForallInstantiation {
+                        argument_verification,
+                        domain_checks,
+                        ..
+                    } = &source.mode
+                    {
+                        if let Some(arguments) = argument_verification {
+                            for check in &arguments.checks {
+                                visitor(check);
+                            }
+                        }
+                        for check in domain_checks {
                             visitor(check);
                         }
-                    }
-                    for check in &source.domain_checks {
-                        visitor(check);
                     }
                 }
                 SuccessVerifyTheoremApplicationSourceResult::Builtin(source) => {
@@ -197,13 +204,20 @@ impl SuccessReleaseThmStmtResult {
         if let Some(verification) = &mut self.verification {
             match &mut verification.source {
                 SuccessVerifyTheoremApplicationSourceResult::Litex(source) => {
-                    if let Some(arguments) = &mut source.argument_verification {
-                        for check in &mut arguments.checks {
+                    if let SuccessVerifyLitexTheoremApplicationMode::ForallInstantiation {
+                        argument_verification,
+                        domain_checks,
+                        ..
+                    } = &mut source.mode
+                    {
+                        if let Some(arguments) = argument_verification {
+                            for check in &mut arguments.checks {
+                                visitor(check)?;
+                            }
+                        }
+                        for check in domain_checks {
                             visitor(check)?;
                         }
-                    }
-                    for check in &mut source.domain_checks {
-                        visitor(check)?;
                     }
                 }
                 SuccessVerifyTheoremApplicationSourceResult::Builtin(source) => {
@@ -221,10 +235,17 @@ impl SuccessReleaseThmStmtResult {
         if let Some(verification) = self.verification {
             match verification.source {
                 SuccessVerifyTheoremApplicationSourceResult::Litex(source) => {
-                    if let Some(arguments) = source.argument_verification {
-                        children.extend(arguments.checks);
+                    if let SuccessVerifyLitexTheoremApplicationMode::ForallInstantiation {
+                        argument_verification,
+                        domain_checks,
+                        ..
+                    } = source.mode
+                    {
+                        if let Some(arguments) = argument_verification {
+                            children.extend(arguments.checks);
+                        }
+                        children.extend(domain_checks);
                     }
-                    children.extend(source.domain_checks);
                 }
                 SuccessVerifyTheoremApplicationSourceResult::Builtin(source) => {
                     children.extend(source.requirement_checks);

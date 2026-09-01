@@ -14,6 +14,16 @@ impl StmtResultToLeanCompiler {
         else {
             return Ok(false);
         };
+        if let Some(visible) = self
+            .environment_stack
+            .fact_propositions
+            .get(&body.retained_fact_id)
+        {
+            if visible.to_string() != body.fact.to_string() {
+                return Err("by-thm reused FactId changed its selected proposition".into());
+            }
+            return Ok(true);
+        }
         let theorem_name = format!("__fact{}", self.next_fact_name_index);
         self.declarations.push(format!(
             "theorem {theorem_name} : {} := by\n{}",
@@ -54,13 +64,13 @@ impl StmtResultToLeanCompiler {
         else {
             return Err("by-thm Result did not retain a temporary release-thm statement".into());
         };
-        if application.statement.name.to_string() != result.statement.name.to_string()
-            || application.statement.args.len() != result.statement.args.len()
+        if application.statement.name().to_string() != result.statement.name().to_string()
+            || application.statement.args().len() != result.statement.args().len()
             || application
                 .statement
-                .args
+                .args()
                 .iter()
-                .zip(result.statement.args.iter())
+                .zip(result.statement.args().iter())
                 .any(|(actual, expected)| obj_equality_key(actual) != obj_equality_key(expected))
         {
             return Err("by-thm temporary application changed its theorem or arguments".into());
@@ -90,7 +100,20 @@ impl StmtResultToLeanCompiler {
             };
             proof_lines.push(format!("exact {selected_proof}"));
             let proposition = render_fact(&selected_fact, &self.environment_stack)?;
-            let retained_fact_id = if result.common.infers.rule_applications.is_empty() {
+            let retained_fact_id = if result.common.infers.is_empty() {
+                let fact_id = selected_check
+                    .fact_id
+                    .ok_or_else(|| "by-thm reused selected fact has no exact FactId".to_string())?;
+                let visible = self
+                    .environment_stack
+                    .fact_propositions
+                    .get(&fact_id)
+                    .ok_or_else(|| format!("by-thm selected FactId `{fact_id}` is not visible"))?;
+                if visible.to_string() != selected_fact.to_string() {
+                    return Err("by-thm selected FactId changed its proposition".into());
+                }
+                fact_id
+            } else if result.common.infers.rule_applications.is_empty() {
                 validate_generated_fact_publication_effects(
                     &result.common.infers,
                     &selected_fact,

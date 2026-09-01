@@ -8,6 +8,7 @@ impl Runtime {
         let path = self.current_file_path_rc().to_string();
         self.module_manager = Box::new(ModuleManager::new());
         self.execution_stack.clear();
+        self.parse_context = ParseContext::new();
         self.start_isolated_source(path.as_str());
     }
 }
@@ -52,4 +53,15 @@ fn changing_the_current_source_path_keeps_frame_and_registry_in_sync() {
         .and_then(|module| module.file(frame.module_file_info.file_id))
         .expect("current source file should remain registered");
     assert_eq!(file.source_path, "second.lit");
+}
+
+#[test]
+fn isolated_runner_reset_reinitializes_the_runtime_owned_parse_context() {
+    let mut runtime = Runtime::default();
+    runtime.start_isolated_source("first.lit");
+    runtime.parse_context.local_binding_scope_depth = 1;
+
+    runtime.reset_for_isolated_runner_item();
+
+    assert!(runtime.parse_context.is_at_root_scope());
 }

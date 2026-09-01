@@ -44,11 +44,8 @@ impl Runtime {
         obtain: &ObtainObjFromThm,
     ) -> Result<StmtResult, RuntimeError> {
         let stmt: Stmt = obtain.clone().into();
-        let theorem_call = ReleaseThmStmt::new(
-            obtain.thm_name.clone(),
-            obtain.args.clone(),
-            obtain.line_file.clone(),
-        );
+        let theorem_call =
+            ReleaseThmStmt::new_with_call(obtain.call.clone(), obtain.line_file.clone());
         let application_result = self
             .run_in_local_env(|rt| rt.exec_release_thm_stmt(&theorem_call))
             .map_err(|cause| exec_stmt_error_with_stmt_and_cause(stmt.clone(), cause))?;
@@ -119,11 +116,8 @@ impl Runtime {
         obtain: &ObtainObjFromThm,
     ) -> Result<StmtResult, RuntimeError> {
         let stmt: Stmt = obtain.clone().into();
-        let theorem_call = ReleaseThmStmt::new(
-            obtain.thm_name.clone(),
-            obtain.args.clone(),
-            obtain.line_file.clone(),
-        );
+        let theorem_call =
+            ReleaseThmStmt::new_with_call(obtain.call.clone(), obtain.line_file.clone());
         let application_result = self
             .run_in_local_env(|rt| rt.exec_release_thm_stmt_affect_environment_only(&theorem_call))
             .map_err(|cause| exec_stmt_error_with_stmt_and_cause(stmt.clone(), cause))?;

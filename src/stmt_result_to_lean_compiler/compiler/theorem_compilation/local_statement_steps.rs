@@ -81,12 +81,9 @@ impl StmtResultToLeanCompiler {
             let mut real_analysis_sources = Vec::new();
             let step_name = self.next_local_proof_step_base_name();
             for (output_index, conclusion) in conclusions.into_iter().enumerate() {
-                let fact_id = conclusion.retained_fact_id.ok_or_else(|| {
-                    format!(
-                        "local release-thm conclusion `{}` has no retained FactId",
-                        conclusion.fact
-                    )
-                })?;
+                let Some(fact_id) = conclusion.retained_fact_id else {
+                    continue;
+                };
                 let name = if multiple_outputs {
                     format!("{step_name}_{}", output_index + 1)
                 } else {
@@ -113,7 +110,7 @@ impl StmtResultToLeanCompiler {
                     &mut lines,
                     &format!(
                         "local real-analysis builtin theorem `{}` outer inference",
-                        result.statement.name
+                        result.statement.name()
                     ),
                 )?;
             }
@@ -126,6 +123,16 @@ impl StmtResultToLeanCompiler {
                 else {
                     return Ok(None);
                 };
+                if let Some(visible) = self
+                    .environment_stack
+                    .fact_propositions
+                    .get(&body.retained_fact_id)
+                {
+                    if visible.to_string() != body.fact.to_string() {
+                        return Err("local by-thm reused FactId changed its proposition".into());
+                    }
+                    return Ok(Some(Vec::new()));
+                }
                 let name = self.next_local_proof_step_base_name();
                 self.environment_stack
                     .fact_names

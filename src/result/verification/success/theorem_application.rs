@@ -125,9 +125,17 @@ impl BuiltinTheoremProvenance {
 pub struct SuccessVerifyLitexTheoremApplicationResult {
     /// Exact stored identity of the source theorem/axiom being instantiated.
     pub source_fact_id: Option<FactId>,
-    pub argument_verification: Option<Box<SuccessVerifyArgsSatisfyParamDefResult>>,
-    pub domain_facts: Vec<Fact>,
-    pub domain_checks: Vec<StmtResult>,
+    pub mode: SuccessVerifyLitexTheoremApplicationMode,
+}
+
+#[derive(Debug)]
+pub enum SuccessVerifyLitexTheoremApplicationMode {
+    ForallInstantiation {
+        argument_verification: Option<Box<SuccessVerifyArgsSatisfyParamDefResult>>,
+        domain_facts: Vec<Fact>,
+        domain_checks: Vec<StmtResult>,
+    },
+    DirectFactCitation,
 }
 
 #[derive(Debug)]
@@ -199,7 +207,7 @@ impl fmt::Debug for SuccessVerifyByTheoremSelectionResult {
 }
 
 impl SuccessVerifyTheoremApplicationResult {
-    pub fn new(
+    pub fn new_forall_instantiation(
         theorem: String,
         source_fact_id: Option<FactId>,
         arguments: Vec<Obj>,
@@ -215,9 +223,29 @@ impl SuccessVerifyTheoremApplicationResult {
             source: SuccessVerifyTheoremApplicationSourceResult::Litex(
                 SuccessVerifyLitexTheoremApplicationResult {
                     source_fact_id,
-                    argument_verification: argument_verification.map(Box::new),
-                    domain_facts,
-                    domain_checks,
+                    mode: SuccessVerifyLitexTheoremApplicationMode::ForallInstantiation {
+                        argument_verification: argument_verification.map(Box::new),
+                        domain_facts,
+                        domain_checks,
+                    },
+                },
+            ),
+        }
+    }
+
+    pub fn new_direct_fact_citation(
+        theorem: String,
+        source_fact_id: FactId,
+        direct_conclusion: Fact,
+    ) -> Self {
+        SuccessVerifyTheoremApplicationResult {
+            theorem,
+            arguments: Vec::new(),
+            direct_conclusions: vec![direct_conclusion],
+            source: SuccessVerifyTheoremApplicationSourceResult::Litex(
+                SuccessVerifyLitexTheoremApplicationResult {
+                    source_fact_id: Some(source_fact_id),
+                    mode: SuccessVerifyLitexTheoremApplicationMode::DirectFactCitation,
                 },
             ),
         }

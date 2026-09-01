@@ -142,7 +142,7 @@ impl ResultGraph {
                     self.add_attached_fact_well_definedness(
                         parent,
                         &verification.well_definedness,
-                        verification.forall_fact.to_string(),
+                        verification.fact.to_string(),
                         "well_definedness",
                         0,
                     );

@@ -39,7 +39,7 @@ impl StmtResultToLeanCompiler {
             &[(conclusion_fact_id, conclusion.fact)],
             &format!(
                 "real-analysis builtin theorem `{}` outer inference",
-                result.statement.name
+                result.statement.name()
             ),
         )?;
         Ok(true)
@@ -84,12 +84,12 @@ impl StmtResultToLeanCompiler {
             return Ok(None);
         }
         if verification.theorem != source.theorem_id.as_str()
-            || verification.theorem != result.statement.name.to_string()
-            || verification.arguments.len() != result.statement.args.len()
+            || verification.theorem != result.statement.name().to_string()
+            || verification.arguments.len() != result.statement.args().len()
             || verification
                 .arguments
                 .iter()
-                .zip(result.statement.args.iter())
+                .zip(result.statement.args().iter())
                 .any(|(retained, statement)| !same_compiler_object(retained, statement))
         {
             return Err(

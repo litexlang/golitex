@@ -390,7 +390,7 @@ impl RunSummary {
             SuccessByStmtResult::ByThmStmt(result) => {
                 self.bump_by_method("theorem selection");
                 if result.verification.is_some() {
-                    let theorem_name = result.statement.name.to_string();
+                    let theorem_name = result.statement.name().to_string();
                     bump_count(&mut self.by_theorem_counts, theorem_name.as_str());
                 }
             }

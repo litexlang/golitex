@@ -187,7 +187,7 @@ impl FactGraphBuilder {
     }
 
     pub(super) fn add_theorem_nodes(&mut self, stmt: &DefThmStmt, full_stmt: &Stmt) {
-        let interface_fact: Fact = stmt.forall_fact.clone().into();
+        let interface_fact = stmt.fact.clone();
         let interface_line = line_key(&interface_fact.line_file());
         let theorem_id = theorem_id(&stmt.name);
         self.ensure_node(

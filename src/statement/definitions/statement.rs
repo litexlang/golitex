@@ -250,8 +250,7 @@ pub struct ObtainObjFromAtomicFact {
 #[derive(Clone)]
 pub struct ObtainObjFromThm {
     pub equal_tos: Vec<SymbolBinding>,
-    pub thm_name: AtomicName,
-    pub args: Vec<Obj>,
+    pub call: TheoremCall,
     pub line_file: LineFile,
 }
 
@@ -883,12 +882,31 @@ impl ObtainObjFromThm {
         args: Vec<Obj>,
         line_file: LineFile,
     ) -> Self {
+        Self::new_with_call(
+            equal_tos,
+            TheoremCall::parenthesized(thm_name, args),
+            line_file,
+        )
+    }
+
+    pub fn new_with_call(
+        equal_tos: Vec<SymbolBinding>,
+        call: TheoremCall,
+        line_file: LineFile,
+    ) -> Self {
         Self {
             equal_tos,
-            thm_name,
-            args,
+            call,
             line_file,
         }
+    }
+
+    pub fn thm_name(&self) -> &AtomicName {
+        &self.call.name
+    }
+
+    pub fn args(&self) -> &[Obj] {
+        self.call.args()
     }
 
     pub fn store_reason() -> &'static str {
@@ -900,7 +918,7 @@ impl fmt::Display for ObtainObjFromThm {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
-            "{} {} {} {} {}{}",
+            "{} {} {} {} {}",
             OBTAIN,
             vec_to_string_join_by_comma(
                 &self
@@ -911,8 +929,7 @@ impl fmt::Display for ObtainObjFromThm {
             ),
             FROM,
             THM,
-            self.thm_name,
-            braced_vec_to_string(&self.args),
+            self.call,
         )
     }
 }

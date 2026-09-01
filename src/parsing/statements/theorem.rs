@@ -1,5 +1,6 @@
 //! Theorem definitions and their proof blocks.
 
+use crate::parsing::helper::collect_forall_param_bindings_from_facts;
 use crate::prelude::*;
 
 impl Runtime {
@@ -20,7 +21,7 @@ impl Runtime {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
                     format!(
-                        "{}: expects a `? forall ...` goal block and optional proof body",
+                        "{}: expects a `? <fact>` goal block and optional proof body",
                         keyword
                     ),
                     tb.line_file.clone(),
@@ -28,19 +29,29 @@ impl Runtime {
             )));
         }
 
-        let (forall_fact, inline_proof_start) = {
+        let (fact, inline_proof_start) = {
             let goal_block = tb.body.get_mut(0).ok_or_else(|| {
                 RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
-                        format!("{}: expected a `? forall ...` goal block", keyword),
+                        format!("{}: expected a `? <fact>` goal block", keyword),
                         tb.line_file.clone(),
                     ),
                 ))
             })?;
-            self.parse_goal_forall_fact_block_with_inline_proof(goal_block, keyword)?
+            let (fact, inline_proof_start) =
+                self.parse_goal_fact_block_with_inline_proof(goal_block, keyword)?;
+            if matches!(fact, Fact::ForallFactWithIff(_)) {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "thm fact cannot be `forall ... <=>:`".to_string(),
+                        goal_block.line_file.clone(),
+                    ),
+                )));
+            }
+            (fact, inline_proof_start)
         };
 
-        let bindings = forall_fact.typed_parameters.collect_param_bindings();
+        let bindings = collect_forall_param_bindings_from_facts(std::slice::from_ref(&fact));
         let lf = tb.line_file.clone();
         let prove_process: Vec<Stmt> = self.parse_stmts_with_existing_free_param_bindings(
             BindingScope::LocalBinder,
@@ -62,7 +73,7 @@ impl Runtime {
             },
         )?;
 
-        let stmt = DefThmStmt::new(thm_name, forall_fact, prove_process, tb.line_file.clone());
+        let stmt = DefThmStmt::new(thm_name, fact, prove_process, tb.line_file.clone());
         Ok(stmt.into())
     }
 

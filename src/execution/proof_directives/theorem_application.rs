@@ -5,20 +5,70 @@ impl Runtime {
         &mut self,
         stmt: &ReleaseThmStmt,
     ) -> Result<StmtResult, RuntimeError> {
+        if is_builtin_theorem_name(&stmt.name().to_string()) && stmt.call.is_bare() {
+            return Err(short_exec_error(
+                stmt.clone().into(),
+                format!(
+                    "release thm `{}`: builtin theorem calls require parentheses",
+                    stmt.name()
+                ),
+                None,
+                vec![],
+            ));
+        }
         if let Some(result) = self.exec_builtin_thm_stmt(stmt)? {
             return Ok(result);
         }
-        let thm_name = stmt.name.to_string();
-        let forall_fact = self
-            .get_thm_or_axiom_forall_fact_by_name(&thm_name)
+        let thm_name = stmt.name().to_string();
+        let theorem_fact = self
+            .get_thm_or_axiom_fact_by_name(&thm_name)
             .ok_or_else(|| {
                 short_exec_error(
                     stmt.clone().into(),
-                    format!("release thm: theorem `{}` is not defined", stmt.name),
+                    format!("release thm: theorem `{}` is not defined", stmt.name()),
                     None,
                     vec![],
                 )
             })?;
+        let Fact::ForallFact(forall_fact) = theorem_fact else {
+            if !stmt.call.is_bare() {
+                return Err(short_exec_error(
+                    stmt.clone().into(),
+                    format!(
+                        "release thm `{}`: a non-forall theorem must be called without parentheses",
+                        stmt.name()
+                    ),
+                    None,
+                    vec![],
+                ));
+            }
+            let source_fact_id = self.require_known_fact_id_for_success_result(&theorem_fact)?;
+            let theorem_verification =
+                SuccessVerifyTheoremApplicationResult::new_direct_fact_citation(
+                    thm_name,
+                    source_fact_id,
+                    theorem_fact,
+                );
+            return Ok(
+                SuccessStmtResult::ReleaseThmStmt(Box::new(SuccessReleaseThmStmtResult {
+                    statement: stmt.clone(),
+                    common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
+                    verification: Some(theorem_verification),
+                }))
+                .into(),
+            );
+        };
+        if stmt.call.is_bare() {
+            return Err(short_exec_error(
+                stmt.clone().into(),
+                format!(
+                    "release thm `{}`: a forall theorem call requires parentheses",
+                    stmt.name()
+                ),
+                None,
+                vec![],
+            ));
+        }
         let source_fact_id = self.known_fact_id_for_fact(&forall_fact.clone().into())?;
 
         let verify_state = VerifyState::initial();
@@ -26,7 +76,7 @@ impl Runtime {
         let arg_type_result = self
             .verify_args_satisfy_param_def_flat_types(
                 &forall_fact.typed_parameters,
-                &stmt.args,
+                stmt.args(),
                 &verify_state,
                 SubstitutionMode::Exact,
             )
@@ -35,7 +85,7 @@ impl Runtime {
                     stmt.clone().into(),
                     format!(
                         "release thm `{}`: arguments do not match theorem parameters",
-                        stmt.name
+                        stmt.name()
                     ),
                     Some(e),
                     vec![],
@@ -48,7 +98,7 @@ impl Runtime {
                     stmt.clone().into(),
                     format!(
                         "release thm `{}`: could not verify argument parameter types",
-                        stmt.name
+                        stmt.name()
                     ),
                     None,
                     vec![*result.cause],
@@ -58,7 +108,7 @@ impl Runtime {
 
         let param_to_arg_map = forall_fact
             .typed_parameters
-            .param_defs_and_args_to_param_to_arg_map(&stmt.args);
+            .param_defs_and_args_to_param_to_arg_map(stmt.args());
 
         let mut infer_result = SuccessInferResult::new();
         infer_result.new_infer_result_inside(argument_verification.infers.clone());
@@ -77,7 +127,8 @@ impl Runtime {
                         stmt.clone().into(),
                         format!(
                             "release thm `{}`: failed to instantiate domain fact `{}`",
-                            stmt.name, dom_fact
+                            stmt.name(),
+                            dom_fact
                         ),
                         Some(e),
                         vec![],
@@ -90,7 +141,8 @@ impl Runtime {
                         stmt.clone().into(),
                         format!(
                             "release thm `{}`: failed to verify domain fact `{}`",
-                            stmt.name, instantiated_dom
+                            stmt.name(),
+                            instantiated_dom
                         ),
                         Some(e),
                         vec![],
@@ -101,7 +153,8 @@ impl Runtime {
                     stmt.clone().into(),
                     format!(
                         "release thm `{}`: domain fact `{}` is not verified",
-                        stmt.name, instantiated_dom
+                        stmt.name(),
+                        instantiated_dom
                     ),
                     None,
                     vec![dom_result],
@@ -126,7 +179,8 @@ impl Runtime {
                         stmt.clone().into(),
                         format!(
                             "release thm `{}`: failed to instantiate then fact `{}`",
-                            stmt.name, then_fact
+                            stmt.name(),
+                            then_fact
                         ),
                         Some(e),
                         vec![],
@@ -144,7 +198,7 @@ impl Runtime {
                         stmt.clone().into(),
                         format!(
                             "release thm `{}`: failed to store instantiated then fact `{}`",
-                            stmt.name, instantiated_then
+                            stmt.name(), instantiated_then
                         ),
                         Some(e),
                         vec![],
@@ -153,10 +207,10 @@ impl Runtime {
             );
         }
 
-        let theorem_verification = SuccessVerifyTheoremApplicationResult::new(
+        let theorem_verification = SuccessVerifyTheoremApplicationResult::new_forall_instantiation(
             thm_name,
             source_fact_id,
-            stmt.args.clone(),
+            stmt.args().to_vec(),
             domain_facts,
             direct_conclusions,
             Some(argument_verification),
@@ -176,25 +230,75 @@ impl Runtime {
         &mut self,
         stmt: &ReleaseThmStmt,
     ) -> Result<StmtResult, RuntimeError> {
+        if is_builtin_theorem_name(&stmt.name().to_string()) && stmt.call.is_bare() {
+            return Err(short_exec_error(
+                stmt.clone().into(),
+                format!(
+                    "release thm `{}`: builtin theorem calls require parentheses",
+                    stmt.name()
+                ),
+                None,
+                vec![],
+            ));
+        }
         if let Some(result) = self.exec_builtin_thm_stmt_affect_environment_only(stmt)? {
             return Ok(result);
         }
-        let thm_name = stmt.name.to_string();
-        let forall_fact = self
-            .get_thm_or_axiom_forall_fact_by_name(&thm_name)
+        let thm_name = stmt.name().to_string();
+        let theorem_fact = self
+            .get_thm_or_axiom_fact_by_name(&thm_name)
             .ok_or_else(|| {
                 short_exec_error(
                     stmt.clone().into(),
-                    format!("release thm: theorem `{}` is not defined", stmt.name),
+                    format!("release thm: theorem `{}` is not defined", stmt.name()),
                     None,
                     vec![],
                 )
             })?;
+        let Fact::ForallFact(forall_fact) = theorem_fact else {
+            if !stmt.call.is_bare() {
+                return Err(short_exec_error(
+                    stmt.clone().into(),
+                    format!(
+                        "release thm `{}`: a non-forall theorem must be called without parentheses",
+                        stmt.name()
+                    ),
+                    None,
+                    vec![],
+                ));
+            }
+            let source_fact_id = self.require_known_fact_id_for_success_result(&theorem_fact)?;
+            let theorem_verification =
+                SuccessVerifyTheoremApplicationResult::new_direct_fact_citation(
+                    thm_name,
+                    source_fact_id,
+                    theorem_fact,
+                );
+            return Ok(
+                SuccessStmtResult::ReleaseThmStmt(Box::new(SuccessReleaseThmStmtResult {
+                    statement: stmt.clone(),
+                    common: SuccessStmtCommonResult::new(SuccessInferResult::new()),
+                    verification: Some(theorem_verification),
+                }))
+                .into(),
+            );
+        };
+        if stmt.call.is_bare() {
+            return Err(short_exec_error(
+                stmt.clone().into(),
+                format!(
+                    "release thm `{}`: a forall theorem call requires parentheses",
+                    stmt.name()
+                ),
+                None,
+                vec![],
+            ));
+        }
         let source_fact_id = self.known_fact_id_for_fact(&forall_fact.clone().into())?;
 
         let param_to_arg_map = forall_fact
             .typed_parameters
-            .param_defs_and_args_to_param_to_arg_map(&stmt.args);
+            .param_defs_and_args_to_param_to_arg_map(stmt.args());
 
         let mut infer_result = SuccessInferResult::new();
         let mut direct_conclusions = Vec::new();
@@ -211,7 +315,8 @@ impl Runtime {
                         stmt.clone().into(),
                         format!(
                             "release thm `{}`: failed to instantiate then fact `{}`",
-                            stmt.name, then_fact
+                            stmt.name(),
+                            then_fact
                         ),
                         Some(e),
                         vec![],
@@ -228,7 +333,8 @@ impl Runtime {
                         stmt.clone().into(),
                         format!(
                             "release thm `{}`: failed to store instantiated then fact `{}`",
-                            stmt.name, instantiated_then
+                            stmt.name(),
+                            instantiated_then
                         ),
                         Some(e),
                         vec![],
@@ -237,10 +343,10 @@ impl Runtime {
             );
         }
 
-        let theorem_verification = SuccessVerifyTheoremApplicationResult::new(
+        let theorem_verification = SuccessVerifyTheoremApplicationResult::new_forall_instantiation(
             thm_name,
             source_fact_id,
-            stmt.args.clone(),
+            stmt.args().to_vec(),
             vec![],
             direct_conclusions,
             None,
@@ -279,7 +385,7 @@ impl Runtime {
                     stmt.clone().into(),
                     format!(
                         "by thm `{}`: selected fact `{}` is not well-defined in the parent environment",
-                        stmt.name, selected_fact
+                        stmt.name(), selected_fact
                     ),
                     Some(error),
                     vec![],
@@ -287,14 +393,14 @@ impl Runtime {
             })?;
 
         let expanded_stmt =
-            ReleaseThmStmt::new(stmt.name.clone(), stmt.args.clone(), stmt.line_file.clone());
+            ReleaseThmStmt::new_with_call(stmt.call.clone(), stmt.line_file.clone());
         let (expanded_result, target_result) = self.run_in_local_env(|rt| {
             let mut expanded_result = rt.exec_release_thm_stmt(&expanded_stmt).map_err(|error| {
                 short_exec_error(
                     stmt.clone().into(),
                     format!(
                         "by thm `{}`: temporary theorem application failed",
-                        stmt.name
+                        stmt.name()
                     ),
                     Some(error),
                     vec![],
@@ -311,7 +417,7 @@ impl Runtime {
                         stmt.clone().into(),
                         format!(
                             "by thm `{}`: failed to verify selected fact `{}` after theorem application",
-                            stmt.name, selected_fact
+                            stmt.name(), selected_fact
                         ),
                         Some(error),
                         vec![],
@@ -322,7 +428,7 @@ impl Runtime {
                     stmt.clone().into(),
                     format!(
                         "by thm `{}`: selected fact `{}` is not verified after theorem application",
-                        stmt.name, selected_fact
+                        stmt.name(), selected_fact
                     ),
                     None,
                     vec![target_result],
@@ -357,7 +463,8 @@ impl Runtime {
                     stmt.clone().into(),
                     format!(
                         "by thm `{}`: failed to store selected fact `{}`",
-                        stmt.name, selected_fact
+                        stmt.name(),
+                        selected_fact
                     ),
                     Some(error),
                     vec![],
@@ -384,7 +491,7 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         let selected_fact = stmt.selected_fact.clone();
         let expanded_stmt =
-            ReleaseThmStmt::new(stmt.name.clone(), stmt.args.clone(), stmt.line_file.clone());
+            ReleaseThmStmt::new_with_call(stmt.call.clone(), stmt.line_file.clone());
         self.run_in_local_env(|rt| {
             rt.exec_release_thm_stmt_affect_environment_only(&expanded_stmt)
                 .map_err(|error| {
@@ -392,7 +499,7 @@ impl Runtime {
                         stmt.clone().into(),
                         format!(
                             "by thm `{}`: temporary theorem application failed",
-                            stmt.name
+                            stmt.name()
                         ),
                         Some(error),
                         vec![],
@@ -413,7 +520,8 @@ impl Runtime {
                     stmt.clone().into(),
                     format!(
                         "by thm `{}`: failed to store selected fact `{}`",
-                        stmt.name, selected_fact
+                        stmt.name(),
+                        selected_fact
                     ),
                     Some(error),
                     vec![],
@@ -453,7 +561,7 @@ impl Runtime {
         stmt: &ReleaseThmStmt,
         verify_requirements: bool,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        let name = match &stmt.name {
+        let name = match stmt.name() {
             AtomicName::WithoutMod(name) if is_builtin_theorem_name(name) => name.as_str(),
             AtomicName::WithMod(_, local_name) if is_builtin_theorem_name(local_name) => {
                 return Err(builtin_thm_exec_error(
@@ -472,14 +580,14 @@ impl Runtime {
 
         macro_rules! require_arity {
             ($expected:expr) => {
-                if stmt.args.len() != $expected {
+                if stmt.args().len() != $expected {
                     return Err(builtin_thm_exec_error(
                         stmt,
                         format!(
                             "builtin theorem `{}` expects {} argument(s), but got {}",
                             name,
                             $expected,
-                            stmt.args.len()
+                            stmt.args().len()
                         ),
                         vec![],
                     ));
@@ -507,14 +615,14 @@ impl Runtime {
             require_arity!(2);
 
             let conclusion: AtomicFact =
-                IsFiniteSetFact::new(stmt.args[0].clone(), stmt.line_file.clone()).into();
+                IsFiniteSetFact::new(stmt.args()[0].clone(), stmt.line_file.clone()).into();
             let first_is_set: AtomicFact =
-                IsSetFact::new(stmt.args[0].clone(), stmt.line_file.clone()).into();
+                IsSetFact::new(stmt.args()[0].clone(), stmt.line_file.clone()).into();
             let second_is_finite: AtomicFact =
-                IsFiniteSetFact::new(stmt.args[1].clone(), stmt.line_file.clone()).into();
+                IsFiniteSetFact::new(stmt.args()[1].clone(), stmt.line_file.clone()).into();
             let subset: AtomicFact = SubsetFact::new(
-                stmt.args[0].clone(),
-                stmt.args[1].clone(),
+                stmt.args()[0].clone(),
+                stmt.args()[1].clone(),
                 stmt.line_file.clone(),
             )
             .into();
@@ -570,7 +678,7 @@ impl Runtime {
             };
             let verification = SuccessVerifyTheoremApplicationResult::new_builtin(
                 theorem_id,
-                stmt.args.clone(),
+                stmt.args().to_vec(),
                 requirement_facts,
                 requirement_roles,
                 vec![conclusion.clone().into()],
@@ -590,7 +698,7 @@ impl Runtime {
         if name == "finite_set_has_bijective_index" {
             require_arity!(1);
 
-            let finite_set = stmt.args[0].clone();
+            let finite_set = stmt.args()[0].clone();
             let size: Obj = FiniteSetSize::new(finite_set.clone()).into();
             let sequence_set: Obj = FiniteSeqSet::new(finite_set.clone(), size.clone()).into();
             let index_group = self.fresh_param_group_with_type(
@@ -651,7 +759,7 @@ impl Runtime {
             };
             let verification = SuccessVerifyTheoremApplicationResult::new_builtin(
                 theorem_id,
-                stmt.args.clone(),
+                stmt.args().to_vec(),
                 requirement_facts,
                 requirement_roles,
                 vec![conclusion.clone().to_fact()],
@@ -684,7 +792,7 @@ impl Runtime {
             let ratio: Obj = Div::new(numerator.clone(), denominator.clone()).into();
             let gcd: Obj = Gcd::new(numerator, denominator).into();
             let ratio_fact: AtomicFact =
-                EqualFact::new(stmt.args[0].clone(), ratio, stmt.line_file.clone()).into();
+                EqualFact::new(stmt.args()[0].clone(), ratio, stmt.line_file.clone()).into();
             let coprime_fact: AtomicFact = EqualFact::new(
                 gcd,
                 Number::new("1".to_string()).into(),
@@ -699,7 +807,7 @@ impl Runtime {
             let conclusion: ExistOrAndChainAtomicFact = ExistFactEnum::ExistUniqueFact(body).into();
 
             let rational_requirement: AtomicFact = InFact::new(
-                stmt.args[0].clone(),
+                stmt.args()[0].clone(),
                 StandardSet::Q.into(),
                 stmt.line_file.clone(),
             )
@@ -748,7 +856,7 @@ impl Runtime {
             };
             let verification = SuccessVerifyTheoremApplicationResult::new_builtin(
                 theorem_id,
-                stmt.args.clone(),
+                stmt.args().to_vec(),
                 requirement_facts,
                 requirement_roles,
                 vec![conclusion.clone().to_fact()],
@@ -773,7 +881,7 @@ impl Runtime {
         ) = match name {
             "fn_set_member" => {
                 require_arity!(2);
-                let fn_set = match &stmt.args[1] {
+                let fn_set = match &stmt.args()[1] {
                     Obj::FnSet(fn_set) => fn_set.clone(),
                     Obj::FiniteSeqSet(set) => {
                         self.finite_seq_set_to_fn_set(set, stmt.line_file.clone())
@@ -789,8 +897,8 @@ impl Runtime {
                     }
                 };
                 let conclusion: AtomicFact = InFact::new(
-                    stmt.args[0].clone(),
-                    stmt.args[1].clone(),
+                    stmt.args()[0].clone(),
+                    stmt.args()[1].clone(),
                     stmt.line_file.clone(),
                 )
                 .into();
@@ -804,7 +912,7 @@ impl Runtime {
                     if automatic_result.is_success() {
                         Some(automatic_result)
                     } else if matches!(
-                        (&stmt.args[0], &stmt.args[1]),
+                        (&stmt.args()[0], &stmt.args()[1]),
                         (
                             Obj::MatrixAdd(_)
                                 | Obj::MatrixSub(_)
@@ -814,8 +922,8 @@ impl Runtime {
                             Obj::MatrixSet(_)
                         )
                     ) {
-                        let element = &stmt.args[0];
-                        let Obj::MatrixSet(expected) = &stmt.args[1] else {
+                        let element = &stmt.args()[0];
+                        let Obj::MatrixSet(expected) = &stmt.args()[1] else {
                             unreachable!("matrix target was checked above")
                         };
                         let actual = self.real_matrix_type(element, &verify_state, "operator")?;
@@ -858,11 +966,11 @@ impl Runtime {
                         }
                     } else {
                         let expanded_in_fact = InFact::new(
-                            stmt.args[0].clone(),
+                            stmt.args()[0].clone(),
                             fn_set.clone().into(),
                             stmt.line_file.clone(),
                         );
-                        let mut result = match &stmt.args[0] {
+                        let mut result = match &stmt.args()[0] {
                             Obj::AnonymousFn(anonymous_fn) => self
                                 .verify_anonymous_fn_in_fn_set_explicit(
                                     anonymous_fn,
@@ -879,7 +987,7 @@ impl Runtime {
                         if !result.is_success() {
                             if let Some(pointwise_result) = self
                                 .verify_in_fact_element_in_fn_set_by_pointwise_values(
-                                    &stmt.args[0],
+                                    &stmt.args()[0],
                                     &fn_set,
                                     &expanded_in_fact,
                                     &verify_state,
@@ -902,7 +1010,7 @@ impl Runtime {
             }
             "set_builder_member" => {
                 require_arity!(2);
-                let Obj::SetBuilder(set_builder) = &stmt.args[1] else {
+                let Obj::SetBuilder(set_builder) = &stmt.args()[1] else {
                     return Err(builtin_thm_shape_error(
                         stmt,
                         name,
@@ -910,8 +1018,8 @@ impl Runtime {
                     ));
                 };
                 let conclusion: AtomicFact = InFact::new(
-                    stmt.args[0].clone(),
-                    stmt.args[1].clone(),
+                    stmt.args()[0].clone(),
+                    stmt.args()[1].clone(),
                     stmt.line_file.clone(),
                 )
                 .into();
@@ -938,8 +1046,8 @@ impl Runtime {
             "defined_set_member" => {
                 require_arity!(2);
                 let conclusion: AtomicFact = InFact::new(
-                    stmt.args[0].clone(),
-                    stmt.args[1].clone(),
+                    stmt.args()[0].clone(),
+                    stmt.args()[1].clone(),
                     stmt.line_file.clone(),
                 )
                 .into();
@@ -967,7 +1075,7 @@ impl Runtime {
             }
             "struct_member" => {
                 require_arity!(2);
-                let Obj::StructObj(struct_obj) = &stmt.args[1] else {
+                let Obj::StructObj(struct_obj) = &stmt.args()[1] else {
                     return Err(builtin_thm_shape_error(
                         stmt,
                         name,
@@ -975,8 +1083,8 @@ impl Runtime {
                     ));
                 };
                 let conclusion: AtomicFact = InFact::new(
-                    stmt.args[0].clone(),
-                    stmt.args[1].clone(),
+                    stmt.args()[0].clone(),
+                    stmt.args()[1].clone(),
                     stmt.line_file.clone(),
                 )
                 .into();
@@ -999,8 +1107,8 @@ impl Runtime {
             "cart_member_from_coordinates" => {
                 require_arity!(2);
                 let conclusion: AtomicFact = InFact::new(
-                    stmt.args[0].clone(),
-                    stmt.args[1].clone(),
+                    stmt.args()[0].clone(),
+                    stmt.args()[1].clone(),
                     stmt.line_file.clone(),
                 )
                 .into();
@@ -1034,7 +1142,7 @@ impl Runtime {
             }
             "general_cart_member" => {
                 require_arity!(2);
-                let Obj::GeneralCart(general_cart) = &stmt.args[1] else {
+                let Obj::GeneralCart(general_cart) = &stmt.args()[1] else {
                     return Err(builtin_thm_shape_error(
                         stmt,
                         name,
@@ -1042,8 +1150,8 @@ impl Runtime {
                     ));
                 };
                 let conclusion: AtomicFact = InFact::new(
-                    stmt.args[0].clone(),
-                    stmt.args[1].clone(),
+                    stmt.args()[0].clone(),
+                    stmt.args()[1].clone(),
                     stmt.line_file.clone(),
                 )
                 .into();
@@ -1070,7 +1178,7 @@ impl Runtime {
             "general_cart_nonempty_by_choice_from_family"
             | "general_cart_nonempty_by_choice_from_pointwise" => {
                 require_arity!(1);
-                if !matches!(&stmt.args[0], Obj::GeneralCart(_)) {
+                if !matches!(&stmt.args()[0], Obj::GeneralCart(_)) {
                     return Err(builtin_thm_shape_error(
                         stmt,
                         name,
@@ -1078,7 +1186,7 @@ impl Runtime {
                     ));
                 }
                 let conclusion: AtomicFact =
-                    IsNonemptySetFact::new(stmt.args[0].clone(), stmt.line_file.clone()).into();
+                    IsNonemptySetFact::new(stmt.args()[0].clone(), stmt.line_file.clone()).into();
                 let pointwise = name.ends_with("_from_pointwise");
                 let verification = if verify_requirements {
                     self.verify_atomic_fact_well_defined(&conclusion, &verify_state)?;
@@ -1106,7 +1214,10 @@ impl Runtime {
             }
             "sum_le_sum_from_pointwise" => {
                 require_arity!(2);
-                if !matches!((&stmt.args[0], &stmt.args[1]), (Obj::Sum(_), Obj::Sum(_))) {
+                if !matches!(
+                    (&stmt.args()[0], &stmt.args()[1]),
+                    (Obj::Sum(_), Obj::Sum(_))
+                ) {
                     return Err(builtin_thm_shape_error(
                         stmt,
                         name,
@@ -1114,8 +1225,8 @@ impl Runtime {
                     ));
                 }
                 let conclusion: AtomicFact = LessEqualFact::new(
-                    stmt.args[0].clone(),
-                    stmt.args[1].clone(),
+                    stmt.args()[0].clone(),
+                    stmt.args()[1].clone(),
                     stmt.line_file.clone(),
                 )
                 .into();
@@ -1145,7 +1256,7 @@ impl Runtime {
             "finite_set_sum_le_from_pointwise" => {
                 require_arity!(2);
                 if !matches!(
-                    (&stmt.args[0], &stmt.args[1]),
+                    (&stmt.args()[0], &stmt.args()[1]),
                     (Obj::SumOfFiniteSet(_), Obj::SumOfFiniteSet(_))
                 ) {
                     return Err(builtin_thm_shape_error(
@@ -1155,8 +1266,8 @@ impl Runtime {
                     ));
                 }
                 let conclusion: AtomicFact = LessEqualFact::new(
-                    stmt.args[0].clone(),
-                    stmt.args[1].clone(),
+                    stmt.args()[0].clone(),
+                    stmt.args()[1].clone(),
                     stmt.line_file.clone(),
                 )
                 .into();
@@ -1185,7 +1296,7 @@ impl Runtime {
             }
             "finite_set_summand_le_sum" => {
                 require_arity!(2);
-                if !matches!(&stmt.args[1], Obj::SumOfFiniteSet(_)) {
+                if !matches!(&stmt.args()[1], Obj::SumOfFiniteSet(_)) {
                     return Err(builtin_thm_shape_error(
                         stmt,
                         name,
@@ -1193,8 +1304,8 @@ impl Runtime {
                     ));
                 }
                 let conclusion: AtomicFact = LessEqualFact::new(
-                    stmt.args[0].clone(),
-                    stmt.args[1].clone(),
+                    stmt.args()[0].clone(),
+                    stmt.args()[1].clone(),
                     stmt.line_file.clone(),
                 )
                 .into();
@@ -1224,8 +1335,8 @@ impl Runtime {
             "tuple_equal_from_coordinates" => {
                 require_arity!(2);
                 let conclusion: AtomicFact = EqualFact::new(
-                    stmt.args[0].clone(),
-                    stmt.args[1].clone(),
+                    stmt.args()[0].clone(),
+                    stmt.args()[1].clone(),
                     stmt.line_file.clone(),
                 )
                 .into();
@@ -1233,8 +1344,8 @@ impl Runtime {
                     self.verify_atomic_fact_well_defined(&conclusion, &verify_state)?;
                     let literal = self.try_verify_tuple_equality_from_dim_and_projections(
                         &EqualFact::new_from_refs(
-                            &stmt.args[0],
-                            &stmt.args[1],
+                            &stmt.args()[0],
+                            &stmt.args()[1],
                             stmt.line_file.clone(),
                         ),
                         &verify_state,
@@ -1244,8 +1355,8 @@ impl Runtime {
                     } else {
                         self.try_verify_symbolic_tuple_equality_from_coordinates(
                             &EqualFact::new_from_refs(
-                                &stmt.args[0],
-                                &stmt.args[1],
+                                &stmt.args()[0],
+                                &stmt.args()[1],
                                 stmt.line_file.clone(),
                             ),
                             &verify_state,
@@ -1265,7 +1376,7 @@ impl Runtime {
             "finite_set_sum_substitution" => {
                 require_arity!(2);
                 if !matches!(
-                    (&stmt.args[0], &stmt.args[1]),
+                    (&stmt.args()[0], &stmt.args()[1]),
                     (Obj::SumOfFiniteSet(_), Obj::SumOfFiniteSet(_))
                 ) {
                     return Err(builtin_thm_shape_error(
@@ -1275,8 +1386,8 @@ impl Runtime {
                     ));
                 }
                 let conclusion: AtomicFact = EqualFact::new(
-                    stmt.args[0].clone(),
-                    stmt.args[1].clone(),
+                    stmt.args()[0].clone(),
+                    stmt.args()[1].clone(),
                     stmt.line_file.clone(),
                 )
                 .into();
@@ -1285,8 +1396,8 @@ impl Runtime {
                     let builtin_state = BuiltinRuleSearchState::initial();
                     let pointwise = self.try_verify_finite_set_sum_pointwise_equality(
                         &EqualFact::new_from_refs(
-                            &stmt.args[0],
-                            &stmt.args[1],
+                            &stmt.args()[0],
+                            &stmt.args()[1],
                             stmt.line_file.clone(),
                         ),
                         &builtin_state,
@@ -1296,8 +1407,8 @@ impl Runtime {
                     } else {
                         self.try_verify_finite_set_sum_substitution(
                             &EqualFact::new_from_refs(
-                                &stmt.args[0],
-                                &stmt.args[1],
+                                &stmt.args()[0],
+                                &stmt.args()[1],
                                 stmt.line_file.clone(),
                             ),
                             &builtin_state,
@@ -1316,7 +1427,10 @@ impl Runtime {
             }
             "sum_over_bijective_finite_set_enumerations" => {
                 require_arity!(2);
-                if !matches!((&stmt.args[0], &stmt.args[1]), (Obj::Sum(_), Obj::Sum(_))) {
+                if !matches!(
+                    (&stmt.args()[0], &stmt.args()[1]),
+                    (Obj::Sum(_), Obj::Sum(_))
+                ) {
                     return Err(builtin_thm_shape_error(
                         stmt,
                         name,
@@ -1324,8 +1438,8 @@ impl Runtime {
                     ));
                 }
                 let conclusion: AtomicFact = EqualFact::new(
-                    stmt.args[0].clone(),
-                    stmt.args[1].clone(),
+                    stmt.args()[0].clone(),
+                    stmt.args()[1].clone(),
                     stmt.line_file.clone(),
                 )
                 .into();
@@ -1335,8 +1449,8 @@ impl Runtime {
                     Some(
                         self.try_verify_sum_over_bijective_finite_set_enumerations(
                             &EqualFact::new_from_refs(
-                                &stmt.args[0],
-                                &stmt.args[1],
+                                &stmt.args()[0],
+                                &stmt.args()[1],
                                 stmt.line_file.clone(),
                             ),
                             &builtin_state,
@@ -1408,7 +1522,7 @@ impl Runtime {
         };
         let verification = SuccessVerifyTheoremApplicationResult::new_builtin(
             theorem_id,
-            stmt.args.clone(),
+            stmt.args().to_vec(),
             requirement_facts,
             requirement_roles,
             vec![conclusion.clone().into()],
@@ -1443,14 +1557,14 @@ impl Runtime {
             | BuiltinTheoremId::RealLowerBoundLeGreatestLowerBound => 3,
             _ => unreachable!("only real-analysis builtin theorems use this executor"),
         };
-        if stmt.args.len() != expected_arity {
+        if stmt.args().len() != expected_arity {
             return Err(builtin_thm_exec_error(
                 stmt,
                 format!(
                     "builtin theorem `{}` expects {} argument(s), but got {}",
                     name,
                     expected_arity,
-                    stmt.args.len()
+                    stmt.args().len()
                 ),
                 vec![],
             ));
@@ -1461,8 +1575,8 @@ impl Runtime {
         let (requirements, conclusion): (Vec<(Fact, BuiltinTheoremRequirementRole)>, Fact) =
             match theorem_id {
                 BuiltinTheoremId::RealLeastUpperBoundExists => {
-                    let set = stmt.args[0].clone();
-                    let upper_bound = stmt.args[1].clone();
+                    let set = stmt.args()[0].clone();
+                    let upper_bound = stmt.args()[1].clone();
                     let upper_bound_requirement =
                         self.real_upper_bound_requirement(&set, &upper_bound, line_file.clone())?;
 
@@ -1509,9 +1623,9 @@ impl Runtime {
                     )
                 }
                 BuiltinTheoremId::RealMemberLeLeastUpperBound => {
-                    let set = stmt.args[0].clone();
-                    let lub = stmt.args[1].clone();
-                    let member = stmt.args[2].clone();
+                    let set = stmt.args()[0].clone();
+                    let lub = stmt.args()[1].clone();
+                    let member = stmt.args()[2].clone();
                     (
                         vec![
                             (
@@ -1536,9 +1650,9 @@ impl Runtime {
                     )
                 }
                 BuiltinTheoremId::RealLeastUpperBoundLeUpperBound => {
-                    let set = stmt.args[0].clone();
-                    let lub = stmt.args[1].clone();
-                    let upper_bound = stmt.args[2].clone();
+                    let set = stmt.args()[0].clone();
+                    let lub = stmt.args()[1].clone();
+                    let upper_bound = stmt.args()[2].clone();
                     let upper_bound_requirement =
                         self.real_upper_bound_requirement(&set, &upper_bound, line_file.clone())?;
                     (
@@ -1565,12 +1679,12 @@ impl Runtime {
                                 BuiltinTheoremRequirementRole::SuppliedValueBoundsEverySetMember,
                             ),
                         ],
-                        LessEqualFact::new(lub, stmt.args[2].clone(), line_file.clone()).into(),
+                        LessEqualFact::new(lub, stmt.args()[2].clone(), line_file.clone()).into(),
                     )
                 }
                 BuiltinTheoremId::RealGreatestLowerBoundExists => {
-                    let set = stmt.args[0].clone();
-                    let lower_bound = stmt.args[1].clone();
+                    let set = stmt.args()[0].clone();
+                    let lower_bound = stmt.args()[1].clone();
                     let lower_bound_requirement =
                         self.real_lower_bound_requirement(&set, &lower_bound, line_file.clone())?;
 
@@ -1611,9 +1725,9 @@ impl Runtime {
                 )
                 }
                 BuiltinTheoremId::RealGreatestLowerBoundLeMember => {
-                    let set = stmt.args[0].clone();
-                    let glb = stmt.args[1].clone();
-                    let member = stmt.args[2].clone();
+                    let set = stmt.args()[0].clone();
+                    let glb = stmt.args()[1].clone();
+                    let member = stmt.args()[2].clone();
                     (
                         vec![
                             (
@@ -1638,9 +1752,9 @@ impl Runtime {
                     )
                 }
                 BuiltinTheoremId::RealLowerBoundLeGreatestLowerBound => {
-                    let set = stmt.args[0].clone();
-                    let glb = stmt.args[1].clone();
-                    let lower_bound = stmt.args[2].clone();
+                    let set = stmt.args()[0].clone();
+                    let glb = stmt.args()[1].clone();
+                    let lower_bound = stmt.args()[2].clone();
                     let lower_bound_requirement =
                         self.real_lower_bound_requirement(&set, &lower_bound, line_file.clone())?;
                     (
@@ -1670,7 +1784,7 @@ impl Runtime {
                 )
                 }
                 BuiltinTheoremId::RealArchimedeanNaturalUpperBound => {
-                    let value = stmt.args[0].clone();
+                    let value = stmt.args()[0].clone();
                     let natural_group = self.fresh_param_group_with_type(
                         vec!["natural".to_string()],
                         ParamType::Obj(StandardSet::NPos.into()),
@@ -1694,8 +1808,8 @@ impl Runtime {
                     )
                 }
                 BuiltinTheoremId::RationalBetweenReals => {
-                    let left = stmt.args[0].clone();
-                    let right = stmt.args[1].clone();
+                    let left = stmt.args()[0].clone();
+                    let right = stmt.args()[1].clone();
                     let rational_group = self.fresh_param_group_with_type(
                         vec!["rational".to_string()],
                         ParamType::Obj(StandardSet::Q.into()),
@@ -1777,7 +1891,7 @@ impl Runtime {
         let verification = if let Some(well_definedness) = conclusion_well_definedness {
             SuccessVerifyTheoremApplicationResult::new_builtin_with_conclusion_well_definedness(
                 theorem_id,
-                stmt.args.clone(),
+                stmt.args().to_vec(),
                 requirement_facts,
                 requirement_roles,
                 vec![conclusion],
@@ -1788,7 +1902,7 @@ impl Runtime {
         } else {
             SuccessVerifyTheoremApplicationResult::new_builtin(
                 theorem_id,
-                stmt.args.clone(),
+                stmt.args().to_vec(),
                 requirement_facts,
                 requirement_roles,
                 vec![conclusion],

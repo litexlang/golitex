@@ -84,7 +84,7 @@ impl Runtime {
     pub fn verify_args_satisfy_param_def_known_or_builtin_only(
         &mut self,
         param_defs: &TypedParameterList,
-        args: &Vec<Obj>,
+        args: &[Obj],
         verify_state: &VerifyState,
         substitution_mode: SubstitutionMode,
     ) -> Result<VerifyArgsSatisfyParamDefResult, RuntimeError> {
@@ -183,7 +183,7 @@ impl Runtime {
     pub fn verify_args_satisfy_param_def_flat_types(
         &mut self,
         param_defs: &TypedParameterList,
-        args: &Vec<Obj>,
+        args: &[Obj],
         verify_state: &VerifyState,
         substitution_mode: SubstitutionMode,
     ) -> Result<VerifyArgsSatisfyParamDefResult, RuntimeError> {

@@ -1,0 +1,46 @@
+# Tracer: named non-forall theorem facts
+#
+# Before (did not work):
+# thm one_is_one:
+#     ? 1 = 1
+# release thm one_is_one
+# by thm one_is_one => 1 = 1
+# Former behavior: line 2 was rejected with
+# `thm: goal must be a single forall fact`.
+#
+# Now (verified):
+thm one_is_one:
+    ? 1 = 1
+
+release thm one_is_one
+by thm one_is_one => 1 = 1
+
+thm conjunction:
+    ? 1 = 1 and 2 = 2
+
+release thm conjunction
+
+thm disjunction:
+    ? 1 = 1 or 2 = 3
+
+release thm disjunction
+
+thm relation_chain:
+    ? 1 <= 1 = 1
+
+release thm relation_chain
+
+thm zero_exists:
+    ? exist x R st {x = 0}
+    witness exist x R st {x = 0} from 0:
+        0 = 0
+
+obtain zero from thm zero_exists
+# Current behavior: atomic, conjunction, disjunction, chain, and existential
+# theorem facts are cited without parentheses; a direct positive existential
+# theorem can be eliminated by `obtain`.
+#
+# Boundary: `one_is_one()` remains invalid, root forall calls still require
+# parentheses, and `forall ... <=>:` remains invalid as a theorem goal.
+# Evidence: target/release/litex -isolated -f
+# examples/01_proof_patterns/named_non_forall_theorem.lit

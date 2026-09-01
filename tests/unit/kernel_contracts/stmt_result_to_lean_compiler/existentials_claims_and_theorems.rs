@@ -619,6 +619,133 @@ fn zero_binder_named_theorem_compiler_rejects_missing_outer_fact_id() {
     );
 }
 
+fn execute_named_atomic_theorem_and_direct_citation() -> Vec<StmtResult> {
+    crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
+        "thm one_is_one:\n    ? 1 = 1\n\nrelease thm one_is_one\n",
+        "direct_atomic_theorem.lit",
+    )
+    .expect("execute named atomic theorem and direct citation")
+}
+
+fn direct_theorem_citation_result_mut(
+    results: &mut [StmtResult],
+) -> &mut SuccessReleaseThmStmtResult {
+    let [_, StmtResult::Success(SuccessStmtResult::ReleaseThmStmt(result))] = results else {
+        panic!("expected an ordinary named theorem followed by its direct citation")
+    };
+    result
+}
+
+#[test]
+fn ordinary_named_theorem_and_direct_citation_compile_once_by_exact_fact_id() {
+    let results = execute_named_atomic_theorem_and_direct_citation();
+    let [StmtResult::Success(SuccessStmtResult::Definition(
+        SuccessDefinitionStmtResult::DefThmStmt(theorem),
+    )), StmtResult::Success(SuccessStmtResult::ReleaseThmStmt(citation))] = results.as_slice()
+    else {
+        panic!("expected an ordinary named theorem followed by its direct citation")
+    };
+    let verification = citation
+        .verification
+        .as_ref()
+        .expect("direct citation retains verification");
+    let SuccessVerifyTheoremApplicationSourceResult::Litex(source) = &verification.source else {
+        panic!("direct citation retains a Litex source")
+    };
+    assert_eq!(source.source_fact_id, Some(theorem.source_fact_id));
+    assert!(matches!(
+        source.mode,
+        SuccessVerifyLitexTheoremApplicationMode::DirectFactCitation
+    ));
+    assert!(citation.statement.call.is_bare());
+    assert!(citation.common.infers.is_empty());
+
+    let lean = StmtResultToLeanCompiler::new("direct_atomic_theorem.lit")
+        .compile_stmt_results_to_lean_source(&results)
+        .expect("compile ordinary theorem and exact direct citation");
+    assert_eq!(lean.matches("theorem one_is_one :").count(), 1, "{lean}");
+    assert!(!lean.contains("theorem __fact"), "{lean}");
+}
+
+#[test]
+fn ordinary_compound_named_theorems_compile_with_their_typed_inferences() {
+    let source = "thm conjunction:\n    ? 1 = 1 and 2 = 2\nrelease thm conjunction\n\nthm disjunction:\n    ? 1 = 1 or 2 = 3\nrelease thm disjunction\n\nthm relation_chain:\n    ? 1 <= 1 = 1\nrelease thm relation_chain\n";
+    let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
+        source,
+        "direct_compound_theorems.lit",
+    )
+    .expect("execute compound ordinary theorem facts");
+    let lean = StmtResultToLeanCompiler::new("direct_compound_theorems.lit")
+        .compile_stmt_results_to_lean_source(&results)
+        .expect("compile compound ordinary theorem facts and typed inferences");
+
+    assert!(lean.contains("theorem conjunction :"), "{lean}");
+    assert!(lean.contains("theorem disjunction :"), "{lean}");
+    assert!(lean.contains("theorem relation_chain :"), "{lean}");
+    assert!(
+        lean.contains("theorem __fact"),
+        "conjunction-component inference should retain its exact FactId:\n{lean}"
+    );
+}
+
+#[test]
+fn direct_theorem_citation_rejects_parentheses_and_changed_application_mode() {
+    let mut parenthesized = execute_named_atomic_theorem_and_direct_citation();
+    let citation = direct_theorem_citation_result_mut(&mut parenthesized);
+    citation.statement.call = TheoremCall::parenthesized(citation.statement.name().clone(), vec![]);
+    let error = StmtResultToLeanCompiler::new("direct_atomic_theorem.lit")
+        .compile_stmt_results_to_lean_source(&parenthesized)
+        .expect_err("parenthesized ordinary theorem citation must fail closed");
+    assert!(
+        error.contains("direct theorem citation Result changed"),
+        "{error}"
+    );
+
+    let mut changed_mode = execute_named_atomic_theorem_and_direct_citation();
+    let citation = direct_theorem_citation_result_mut(&mut changed_mode);
+    citation.statement.call = TheoremCall::parenthesized(citation.statement.name().clone(), vec![]);
+    let verification = citation
+        .verification
+        .as_mut()
+        .expect("direct citation retains verification");
+    let SuccessVerifyTheoremApplicationSourceResult::Litex(source) = &mut verification.source
+    else {
+        panic!("direct citation retains a Litex source")
+    };
+    source.mode = SuccessVerifyLitexTheoremApplicationMode::ForallInstantiation {
+        argument_verification: None,
+        domain_facts: vec![],
+        domain_checks: vec![],
+    };
+    let error = StmtResultToLeanCompiler::new("direct_atomic_theorem.lit")
+        .compile_stmt_results_to_lean_source(&changed_mode)
+        .expect_err("changed direct-citation application mode must fail closed");
+    assert!(
+        error.contains("source FactId does not identify a forall fact"),
+        "{error}"
+    );
+}
+
+#[test]
+fn ordinary_named_theorem_rejects_a_changed_source_fact_id() {
+    let mut results = execute_named_atomic_theorem_and_direct_citation();
+    let theorem = match &mut results[0] {
+        StmtResult::Success(SuccessStmtResult::Definition(
+            SuccessDefinitionStmtResult::DefThmStmt(theorem),
+        )) => theorem,
+        _ => panic!("expected ordinary named theorem"),
+    };
+    theorem.source_fact_id = FactId::new(theorem.source_fact_id.value() + 1000);
+
+    let error = StmtResultToLeanCompiler::new("direct_atomic_theorem.lit")
+        .compile_stmt_results_to_lean_source(&results)
+        .expect_err("changed ordinary theorem source FactId must fail closed");
+    assert!(
+        error.contains("ordinary named theorem outer store changed its fact or exact FactId"),
+        "{error}"
+    );
+}
+
 #[test]
 fn standard_set_binder_named_theorem_compiles_in_a_child_environment() {
     let mut results =
@@ -1005,7 +1132,11 @@ fn by_thm_rejects_a_temporary_application_with_changed_arguments() {
     else {
         panic!("by-thm retains a temporary release-thm Result")
     };
-    application.statement.args.clear();
+    application
+        .statement
+        .parenthesized_args_mut()
+        .expect("corrupted forall application retains parentheses")
+        .clear();
 
     let error = StmtResultToLeanCompiler::new("direct_by_theorem_selection.lit")
         .compile_stmt_results_to_lean_source(&results)

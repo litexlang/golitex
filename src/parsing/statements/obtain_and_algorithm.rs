@@ -51,9 +51,9 @@ impl Runtime {
             Some(self.parse_exist_fact(tb)?)
         } else if tb.current_token_is_equal_to(THM) {
             tb.skip_token(THM)?;
-            let (thm_name, args) = self.parse_theorem_call(tb)?;
-            let preview = self.preview_obtain_obj_from_thm(&thm_name, &args, &source_line_file)?;
-            source_thm_call = Some((thm_name, args));
+            let call = self.parse_theorem_call(tb)?;
+            let preview = self.preview_obtain_obj_from_thm(&call, &source_line_file)?;
+            source_thm_call = Some(call);
             preview
         } else {
             let source_atomic = self.parse_atomic_fact(tb, true)?;
@@ -162,8 +162,8 @@ impl Runtime {
         )?;
 
         let stmt = match (source_thm_call, source_atomic_fact, true_fact) {
-            (Some((thm_name, args)), None, _) => {
-                ObtainObjFromThm::new(equal_to_bindings, thm_name, args, tb.line_file.clone())
+            (Some(call), None, _) => {
+                ObtainObjFromThm::new_with_call(equal_to_bindings, call, tb.line_file.clone())
                     .into()
             }
             (None, Some(fact), _) => {
@@ -183,23 +183,36 @@ impl Runtime {
     /// is cached in the statement.
     fn preview_obtain_obj_from_thm(
         &self,
-        thm_name: &AtomicName,
-        args: &[Obj],
+        call: &TheoremCall,
         line_file: &LineFile,
     ) -> Result<Option<ExistFactEnum>, RuntimeError> {
-        let Some(forall_fact) = self.get_thm_or_axiom_forall_fact_by_name(&thm_name.to_string())
-        else {
+        let Some(fact) = self.get_thm_or_axiom_fact_by_name(&call.name.to_string()) else {
             // Reserved builtin theorem interfaces are execution-owned. An
             // unresolved user/imported theorem likewise receives its normal
             // authoritative diagnostic during execution.
             return Ok(None);
+        };
+        let forall_fact = match fact {
+            Fact::ForallFact(forall_fact) => {
+                if call.is_bare() {
+                    return Ok(None);
+                }
+                forall_fact
+            }
+            Fact::ExistFact(exist_fact) => {
+                if !call.is_bare() || exist_fact.is_not_exist() {
+                    return Ok(None);
+                }
+                return Ok(Some(exist_fact));
+            }
+            _ => return Ok(None),
         };
         if forall_fact.then_facts.len() != 1 {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
                     format!(
                         "obtain from thm `{}` requires exactly one direct theorem conclusion, got {}",
-                        thm_name,
+                        call.name,
                         forall_fact.then_facts.len()
                     ),
                     line_file.clone(),
@@ -211,7 +224,7 @@ impl Runtime {
                 RuntimeErrorStruct::new_with_msg_and_line_file(
                     format!(
                         "obtain from thm `{}` requires its sole direct conclusion to be `exist` or `exist!`",
-                        thm_name
+                        call.name
                     ),
                     line_file.clone(),
                 ),
@@ -222,13 +235,14 @@ impl Runtime {
                 RuntimeErrorStruct::new_with_msg_and_line_file(
                     format!(
                         "obtain from thm `{}` cannot eliminate a `not exist` conclusion",
-                        thm_name
+                        call.name
                     ),
                     line_file.clone(),
                 ),
             )));
         }
-        let Ok(param_to_arg_map) = self.params_to_arg_map(&forall_fact.typed_parameters, args)
+        let Ok(param_to_arg_map) =
+            self.params_to_arg_map(&forall_fact.typed_parameters, call.args())
         else {
             // Preview data is optional. The executor owns theorem arity and
             // argument diagnostics through the ordinary `release thm` path.

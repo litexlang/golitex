@@ -3954,6 +3954,27 @@ release thm add_zero_right(2)
 2 + 0 = 2
 ```
 
+`thm` may also name an ordinary claim-style fact. Such a fact is cited by its
+bare name; parentheses are reserved for root-`forall` instantiation:
+
+```litex
+thm one_is_one:
+    ? 1 = 1
+
+release thm one_is_one
+by thm one_is_one => 1 = 1
+
+thm zero_exists:
+    ? exist x R st {x = 0}
+    witness exist x R st {x = 0} from 0:
+        0 = 0
+
+obtain zero from thm zero_exists
+```
+
+A root `forall ... <=>:` remains outside `thm`, and `axiom` remains
+root-`forall` only.
+
 #### 17a. Explicit Definition Checks With `by def` (Preview)
 
 Purpose: instantiate a concrete prop definition and verify all of its clauses.

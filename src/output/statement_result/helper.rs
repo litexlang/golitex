@@ -678,22 +678,44 @@ pub(super) fn theorem_application_verification_value(
         domain_checks,
         conclusion_well_definedness,
         provenance,
+        application_mode,
+        parent_stored_facts,
     ) = match &result.source {
-        SuccessVerifyTheoremApplicationSourceResult::Litex(source) => (
-            "litex",
-            source.source_fact_id,
-            source
-                .domain_facts
-                .iter()
-                .map(ToString::to_string)
-                .collect::<Vec<_>>(),
-            Vec::new(),
-            source.argument_verification.as_deref(),
-            &[][..],
-            source.domain_checks.as_slice(),
-            JsonValue::Null,
-            None,
-        ),
+        SuccessVerifyTheoremApplicationSourceResult::Litex(source) => match &source.mode {
+            SuccessVerifyLitexTheoremApplicationMode::ForallInstantiation {
+                argument_verification,
+                domain_facts,
+                domain_checks,
+            } => (
+                "litex",
+                source.source_fact_id,
+                domain_facts
+                    .iter()
+                    .map(ToString::to_string)
+                    .collect::<Vec<_>>(),
+                Vec::new(),
+                argument_verification.as_deref(),
+                &[][..],
+                domain_checks.as_slice(),
+                JsonValue::Null,
+                None,
+                "instantiate_forall",
+                direct_conclusions.clone(),
+            ),
+            SuccessVerifyLitexTheoremApplicationMode::DirectFactCitation => (
+                "litex",
+                source.source_fact_id,
+                Vec::new(),
+                Vec::new(),
+                None,
+                &[][..],
+                &[][..],
+                JsonValue::Null,
+                None,
+                "cite_fact",
+                Vec::new(),
+            ),
+        },
         SuccessVerifyTheoremApplicationSourceResult::Builtin(source) => (
             "builtin_rule",
             None,
@@ -716,6 +738,8 @@ pub(super) fn theorem_application_verification_value(
                 .map(|well_definedness| renderer.fact_well_definedness(well_definedness))
                 .unwrap_or(JsonValue::Null),
             source.provenance.map(BuiltinTheoremProvenance::as_str),
+            "builtin",
+            direct_conclusions.clone(),
         ),
     };
     object(vec![
@@ -724,6 +748,7 @@ pub(super) fn theorem_application_verification_value(
         string_field("theorem_source", theorem_source),
         optional_fact_id_field("source_fact_id", source_fact_id),
         string_field("mode", "release_all"),
+        string_field("application_mode", application_mode),
         ("arguments".to_string(), strings(&arguments)),
         ("domain_facts".to_string(), strings(&domain_facts)),
         ("requirement_roles".to_string(), strings(&requirement_roles)),
@@ -737,13 +762,13 @@ pub(super) fn theorem_application_verification_value(
         ),
         (
             "stored_then_facts".to_string(),
-            strings(&direct_conclusions),
+            strings(&parent_stored_facts),
         ),
         ("temporary_then_facts".to_string(), strings(&[])),
         optional_string_field("selected_fact", None),
         (
             "parent_stored_facts".to_string(),
-            strings(&direct_conclusions),
+            strings(&parent_stored_facts),
         ),
         optional_string_field("provenance", provenance),
         (

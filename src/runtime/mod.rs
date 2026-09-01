@@ -7,7 +7,7 @@ mod name_resolution;
 pub mod output_detail;
 mod parse_context;
 mod run_options;
-mod state;
+mod runtime;
 
 pub use execution_frame::{ExecutionFrame, ExecutionMode};
 pub use execution_module_file_info::ExecutionModuleFileInfo;
@@ -18,4 +18,4 @@ pub use name_resolution::{
 pub use output_detail::{OutputDetail, OutputStyle};
 pub use parse_context::{ParseContext, ScopeFrame};
 pub use run_options::{ExecutionOption, RunOption, RunOptions, SummaryOption};
-pub use state::Runtime;
+pub use runtime::Runtime;

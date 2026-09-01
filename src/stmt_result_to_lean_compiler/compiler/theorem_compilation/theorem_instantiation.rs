@@ -17,12 +17,9 @@ impl StmtResultToLeanCompiler {
             return Ok(false);
         };
         for conclusion in conclusions {
-            let fact_id = conclusion.retained_fact_id.ok_or_else(|| {
-                format!(
-                    "top-level release-thm conclusion `{}` has no retained FactId",
-                    conclusion.fact
-                )
-            })?;
+            let Some(fact_id) = conclusion.retained_fact_id else {
+                continue;
+            };
             let conclusion_name = format!("__fact{}", self.next_fact_name_index);
             self.declarations.push(format!(
                 "theorem {conclusion_name} : {} := by\n  exact {}",
@@ -54,12 +51,12 @@ impl StmtResultToLeanCompiler {
         else {
             return Ok(None);
         };
-        if verification.theorem != result.statement.name.to_string()
-            || verification.arguments.len() != result.statement.args.len()
+        if verification.theorem != result.statement.name().to_string()
+            || verification.arguments.len() != result.statement.args().len()
             || verification
                 .arguments
                 .iter()
-                .zip(result.statement.args.iter())
+                .zip(result.statement.args().iter())
                 .any(|(retained, source)| obj_equality_key(retained) != obj_equality_key(source))
         {
             return Err("release-thm Result changed its theorem name or argument order".into());
@@ -75,8 +72,52 @@ impl StmtResultToLeanCompiler {
             .ok_or_else(|| {
                 format!("release-thm cited unavailable source FactId `{source_fact_id}`")
             })?;
+        match &source.mode {
+            SuccessVerifyLitexTheoremApplicationMode::DirectFactCitation => {
+                if !result.statement.call.is_bare()
+                    || !verification.arguments.is_empty()
+                    || verification.direct_conclusions.len() != 1
+                    || verification.direct_conclusions[0].to_string() != source_fact.to_string()
+                    || !result.common.infers.is_empty()
+                {
+                    return Err(
+                        "direct theorem citation Result changed its source fact or effects".into(),
+                    );
+                }
+                let theorem_name = self
+                    .environment_stack
+                    .fact_names
+                    .get(&source_fact_id)
+                    .cloned()
+                    .ok_or_else(|| {
+                        format!(
+                            "direct theorem citation FactId `{source_fact_id}` has no Lean name"
+                        )
+                    })?;
+                let proposition = render_fact(&source_fact, &self.environment_stack)?;
+                return Ok(Some(vec![CompiledTheoremApplicationConclusionProofBody {
+                    retained_fact_id: None,
+                    fact: source_fact,
+                    proposition,
+                    proof_expression: theorem_name,
+                }]));
+            }
+            SuccessVerifyLitexTheoremApplicationMode::ForallInstantiation { .. } => {
+                if result.statement.call.is_bare() {
+                    return Err("forall theorem instantiation lost its parenthesized call".into());
+                }
+            }
+        }
         let Fact::ForallFact(source_forall) = &source_fact else {
             return Err("release-thm source FactId does not identify a forall fact".into());
+        };
+        let SuccessVerifyLitexTheoremApplicationMode::ForallInstantiation {
+            argument_verification,
+            domain_facts,
+            domain_checks,
+        } = &source.mode
+        else {
+            unreachable!("direct theorem citation returned above")
         };
         let source_parameters = source_forall
             .typed_parameters
@@ -86,9 +127,9 @@ impl StmtResultToLeanCompiler {
         }) {
             return Ok(None);
         }
-        if source_parameters.len() != result.statement.args.len()
-            || source_forall.dom_facts.len() != source.domain_facts.len()
-            || source.domain_facts.len() != source.domain_checks.len()
+        if source_parameters.len() != result.statement.args().len()
+            || source_forall.dom_facts.len() != domain_facts.len()
+            || domain_facts.len() != domain_checks.len()
             || source_forall.then_facts.len() != verification.direct_conclusions.len()
             || verification.direct_conclusions.is_empty()
         {
@@ -96,10 +137,10 @@ impl StmtResultToLeanCompiler {
         }
         let source_substitutions = source_parameters
             .iter()
-            .zip(result.statement.args.iter())
+            .zip(result.statement.args().iter())
             .map(|((binding, _), argument)| (binding.id().substitution_key(), argument.clone()))
             .collect::<HashMap<_, _>>();
-        let Some(argument_verification) = &source.argument_verification else {
+        let Some(argument_verification) = argument_verification else {
             return Err("release-thm Result has no argument verification children".into());
         };
         if !argument_verification.infers.is_empty()
@@ -149,7 +190,7 @@ impl StmtResultToLeanCompiler {
         let mut source_parameter_rendering_aliases = Vec::with_capacity(source_parameters.len());
         for (parameter_index, (((_, parameter_type), argument), check)) in source_parameters
             .iter()
-            .zip(result.statement.args.iter())
+            .zip(result.statement.args().iter())
             .zip(argument_verification.checks.iter())
             .enumerate()
         {
@@ -208,8 +249,8 @@ impl StmtResultToLeanCompiler {
         for (domain_index, ((source_domain, retained_domain), check)) in source_forall
             .dom_facts
             .iter()
-            .zip(source.domain_facts.iter())
-            .zip(source.domain_checks.iter())
+            .zip(domain_facts.iter())
+            .zip(domain_checks.iter())
             .enumerate()
         {
             let expected_domain = instantiator

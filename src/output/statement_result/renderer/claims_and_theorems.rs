@@ -33,7 +33,14 @@ impl StatementResultRenderer {
         object(vec![
             string_field("kind", "SuccessVerifyTheoremResult"),
             string_field("name", result.name.clone()),
-            string_field("forall_fact", result.forall_fact.to_string()),
+            string_field("fact", result.fact.to_string()),
+            (
+                "forall_fact".to_string(),
+                match &result.fact {
+                    Fact::ForallFact(fact) => JsonValue::JsonString(fact.to_string()),
+                    _ => JsonValue::Null,
+                },
+            ),
             (
                 "well_definedness".to_string(),
                 self.fact_well_definedness(&result.well_definedness),

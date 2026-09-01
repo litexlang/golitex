@@ -438,14 +438,13 @@ impl Runtime {
                 .into())
             }
             TemplateDefEnum::ObtainObjFromThm(s) => {
-                let mut args = Vec::with_capacity(s.args.len());
-                for arg in s.args.iter() {
+                let mut args = Vec::with_capacity(s.args().len());
+                for arg in s.args().iter() {
                     args.push(self.inst_obj(arg, param_to_arg_map, SubstitutionMode::Exact)?);
                 }
-                Ok(ObtainObjFromThm::new(
+                Ok(ObtainObjFromThm::new_with_call(
                     vec![instance_binding.clone()],
-                    s.thm_name.clone(),
-                    args,
+                    s.call.with_instantiated_args(args),
                     line_file.clone(),
                 )
                 .into())
@@ -761,14 +760,13 @@ impl Runtime {
                 )
             }
             Stmt::Definition(DefinitionStmt::ObtainObjFromThm(s)) => {
-                let mut args = Vec::with_capacity(s.args.len());
-                for arg in s.args.iter() {
+                let mut args = Vec::with_capacity(s.args().len());
+                for arg in s.args().iter() {
                     args.push(self.inst_obj(arg, param_to_arg_map, SubstitutionMode::Exact)?);
                 }
-                Ok(ObtainObjFromThm::new(
+                Ok(ObtainObjFromThm::new_with_call(
                     s.equal_tos.clone(),
-                    s.thm_name.clone(),
-                    args,
+                    s.call.with_instantiated_args(args),
                     line_file.clone(),
                 )
                 .into())
@@ -931,8 +929,8 @@ impl Runtime {
                 Ok(TryStmt::new(proof, line_file.clone()).into())
             }
             Stmt::By(ByStmt::ByThmStmt(s)) => {
-                let mut args = Vec::with_capacity(s.args.len());
-                for arg in s.args.iter() {
+                let mut args = Vec::with_capacity(s.args().len());
+                for arg in s.args().iter() {
                     args.push(self.inst_obj(arg, param_to_arg_map, SubstitutionMode::Exact)?);
                 }
                 let selected_fact = self.inst_atomic_fact(
@@ -941,14 +939,23 @@ impl Runtime {
                     SubstitutionMode::Exact,
                     Some(line_file),
                 )?;
-                Ok(ByThmStmt::new(s.name.clone(), args, selected_fact, line_file.clone()).into())
+                Ok(ByThmStmt::new_with_call(
+                    s.call.with_instantiated_args(args),
+                    selected_fact,
+                    line_file.clone(),
+                )
+                .into())
             }
             Stmt::ReleaseThmStmt(s) => {
-                let mut args = Vec::with_capacity(s.args.len());
-                for arg in s.args.iter() {
+                let mut args = Vec::with_capacity(s.args().len());
+                for arg in s.args().iter() {
                     args.push(self.inst_obj(arg, param_to_arg_map, SubstitutionMode::Exact)?);
                 }
-                Ok(ReleaseThmStmt::new(s.name.clone(), args, line_file.clone()).into())
+                Ok(ReleaseThmStmt::new_with_call(
+                    s.call.with_instantiated_args(args),
+                    line_file.clone(),
+                )
+                .into())
             }
             Stmt::By(ByStmt::ByDefStmt(s)) => {
                 let fact = self.inst_atomic_fact(
