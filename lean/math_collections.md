@@ -41,6 +41,15 @@ representation edges. Native Lean equality implies `Same` through
 `Litex.Same.ofEq`; public numeric/subtype theorems expose the reviewed
 cross-carrier cases without exposing the registry.
 
+The global relation is therefore `Lean Eq ⊆ Litex.Same`. The reverse is not a
+consequence of the endpoints merely having the same Lean type. In particular,
+two values of type `Litex.Set` can be extensionally `Same` even when their
+exact carrier structures are not Lean-equal. Native equality may be recovered
+only from a reviewed faithful/injective observation, as the numeric
+`Same.natEq`, `intEq`, `ratEq`, `realEq`, and `complexNativeEq` theorems do.
+For sets, the appropriate elimination is extensional membership equivalence,
+not structure equality.
+
 The closed derived layer currently contains native real-to-complex
 congruence for `+`, `-`, `*`, and `/`. These are the exact operations used
 by the named-function compiler adapter.
@@ -106,6 +115,48 @@ Litex statement form; the examples ledger contains no hand-written substitute.
 
 Nearest rejected form: using the same carrier for a base set and a proper
 subset. That would collapse their memberships.
+
+## `set` is a parameter kind, not a domain
+
+Litex assigns different source facts to these syntactically similar binders:
+
+```text
+forall x S    -> InFact(x, S)
+forall A set  -> IsSetFact(A)
+```
+
+Thus `forall A set` says only that `A` is a set object. It does not state
+`A $in Litex.Set`, because no source-level set of all sets is being introduced,
+and it does not permit compiler to erase the sethood fact merely because it
+selected `Litex.Set` as a Lean host type.
+
+The target set-kind ABI is representation-polymorphic. It binds an arbitrary
+host representation `A`, retains `hA : Litex.IsSet A`, and uses
+`Litex.IsSet.rep A hA : Litex.Set` only when an exact carrier is required:
+
+```lean
+∀ {αA : Type 1} (A : αA) (hA : Litex.IsSet A)
+  {αx : Type} (x : αx)
+  (hx : Litex.In x (Litex.IsSet.rep A hA)), ...
+```
+
+The public set-view contract must provide `same_rep`, `own`, and a coherence
+theorem transporting membership between the selected representatives of two
+`Same` set objects. Defining `IsSet A` as a bare existential representative
+without that coherence theorem would not yet support source equality rewrite.
+`nonempty_set` and `finite_set` extend this same contract with properties of
+the selected exact representative.
+
+For construction, `have A set = E` may select the compiler-owned exact
+representation `E` and retain `IsSet.own A`; bare `have A set` stays
+fail-closed until a checked fresh-set constructor can expose only the source
+sethood fact. It must not be implemented by a transparent empty-set choice or
+an axiom.
+
+This is the next ABI design. The implemented v2 compiler still emits
+`A : Litex.Set` and replaces the retained `IsSetFact(A)` proof by `True.intro`;
+that path must migrate as one incompatible Core/compiler change rather than be
+treated as the settled semantics.
 
 ## Heterogeneous membership
 

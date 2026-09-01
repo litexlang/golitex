@@ -576,7 +576,10 @@ instance : DerivedRule ℂ ℂ complexComplexObserver complexComplexObserver whe
 
 namespace Same
 
-/-- Native Lean equality is always a valid proof of Litex semantic equality. -/
+/-- The global identity inclusion is `Lean Eq ⊆ Litex.Same`: native Lean
+equality is always a valid proof of Litex semantic equality.  The converse is
+not global, even when both endpoints have the same Lean type; it requires a
+separate faithful/injective observation theorem such as `complexNativeEq`. -/
 theorem ofEq
     {α : Litex.u.{u}}
     [observer : ComplexObserver α]

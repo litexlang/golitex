@@ -91,12 +91,20 @@ This resembles taking an equivalence class of host representations. The
 actual Lean wrapper does not construct a quotient; it preserves concrete
 representatives and proof evidence so the kernel can check every bridge.
 
-The boundary is deliberately asymmetric. Lean equality always yields
-`Same` through `Same.ofEq`. Recovering native Lean equality requires both
-endpoints to reach the same canonical carrier through a reviewed injective
-observation. Thus `Same.complexNativeEq` may turn `Same x y` into `x = y` for
-`x y : ℂ`, while no global conversion from heterogeneous `Same` to Lean
-`Eq` exists.
+The global relation is deliberately asymmetric:
+
+```text
+Lean Eq ⊆ Litex.Same
+```
+
+Lean equality always yields `Same` through `Same.ofEq`. The inclusion is
+strict in general: even when both endpoints have the same Lean type, `Same`
+does not automatically yield `Eq`. Two `Litex.Set` values, for example, can
+represent the same extension while packaging different exact carriers.
+Recovering native Lean equality therefore requires both endpoints to reach a
+canonical carrier through a reviewed faithful/injective observation. Thus
+`Same.complexNativeEq` may turn `Same x y` into `x = y` for `x y : ℂ`, while
+no global conversion from heterogeneous `Same` to Lean `Eq` exists.
 
 This is a difference in default semantic interface, not a claim that Lean
 cannot express set-oriented mathematics or heterogeneous relations. The
@@ -479,6 +487,28 @@ equality, and discharges the false modular fact.
 ---
 
 ## 5. Set-Theoretic Objects at the Surface
+
+Before comparing surface proofs, one Litex distinction is essential:
+
+```text
+forall x S    means  x $in S
+forall A set  means  $is_set(A)
+```
+
+Here `set` is a parameter kind, not a universal set object. The second form
+does not mean `A $in Litex.Set`; `Litex.Set` is the Lean compiler's
+exact-carrier representation type. The target To-Lean interface therefore
+keeps the set object representation-polymorphic and retains its source proof:
+
+```lean
+∀ {αA : Type 1} (A : αA) (hA : Litex.IsSet A), ...
+```
+
+Whenever the theorem later uses `A` as a domain, generated Lean obtains the
+exact set through `Litex.IsSet.rep A hA` and states membership against that
+representative. This target differs intentionally from the current v2 emitter,
+which narrows `A` to `Litex.Set` and erases its `IsSetFact` as `True`; the
+compiler migration is still pending.
 
 Nested sets, power-set membership, and subset transport can all be written as
 ordinary mathematical facts in Litex:

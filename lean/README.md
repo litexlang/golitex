@@ -47,18 +47,77 @@ viewed as an equivalence class of host representations under `Same`, although
 the implementation keeps representatives and evidence explicit rather than
 constructing that quotient.
 
-The conversion boundary is intentionally one-way by default:
+The global identity relation is:
 
 ```text
-Lean Eq  --Same.ofEq-->  Litex.Same
+Lean Eq ⊆ Litex.Same  via Same.ofEq
 Litex.Same --reviewed same-carrier, injective observation--> Lean Eq
 ```
 
-For example, `Same.complexNativeEq` recovers `x = y` from `Same x y` when
-`x y : ℂ`. No global `Same → Eq` rule exists, so heterogeneous semantic
-equality cannot silently become a native Lean rewrite. See the
+The inclusion is strict in general. Having the same Lean host type makes
+native equality well-formed, but does not make it follow from `Same`. For
+example, two `Litex.Set` structures may be extensionally `Same` while their
+exact `Carrier` fields differ, so they need not be equal Lean structures. By
+contrast, `Same.complexNativeEq` recovers `x = y` from `Same x y` when
+`x y : ℂ` because the native complex observation is faithful. No global
+`Same → Eq` rule exists, so heterogeneous semantic equality cannot silently
+become a native Lean rewrite. See the
 [compiler semantic contract](../src/stmt_result_to_lean_compiler/README.md#membership-oriented-semantics-and-domain-directed-host-carriers)
 for the complete binder and evidence policy.
+
+## Set-Kind Parameters (Target ABI)
+
+Litex distinguishes an ordinary set domain from the special `set` parameter
+kind:
+
+```text
+forall x S    means  x $in S
+forall A set  means  $is_set(A)
+```
+
+The second line does not mean `A $in Litex.Set`. `Litex.Set` is the Lean
+structure that packages one exact carrier; it is not a source-level universal
+set of all sets. The source runtime already retains `InFact(x, S)` for the
+first form and `IsSetFact(A)` for the second.
+
+The next incompatible compiler ABI must preserve that evidence explicitly:
+
+```lean
+Litex.IsSet A
+Litex.IsSet.rep A hA : Litex.Set
+```
+
+For the current universe-zero set slice, the intended binder translation is:
+
+```litex
+forall A set, x A:
+    x = x
+```
+
+```lean
+∀ {αA : Type 1} (A : αA) (hA : Litex.IsSet A)
+  {αx : Type} (x : αx)
+  (hx : Litex.In x (Litex.IsSet.rep A hA)),
+  Litex.Same x x
+```
+
+Set operations consume the exact representative selected by `hA`; source
+identity remains `Litex.Same A B`. Core must additionally prove that `Same`
+set objects have extensionally equivalent selected representatives. A bare
+existential representative is not an adequate interface without this
+coherence law.
+
+The same property governs `have A set`, but construction differs from
+quantification. A checked definition such as `have A set = R` may use the
+compiler-owned exact representation `A : Litex.Set := Litex.R` and then retain
+`IsSet.own A`. A bare `have A set` remains fail-closed until compiler has a
+kernel-checked fresh-set construction that exposes only `IsSet A`; it must not
+silently make `A` the empty set or introduce an axiom.
+
+This section specifies the target, not current implementation. The v2 emitter
+still narrows `forall A set` to `(A : Litex.Set)` and erases its retained
+`IsSetFact` to `True`. Migrating Core, every set-kind compiler path, generated
+examples, and the Lean gates together will require an `abiVersion` bump.
 
 The wrapper library itself is axiom-free. Example 25 is the only intentional
 generated trust boundary: source `abstract_prop` creates its exact opaque
@@ -221,10 +280,12 @@ forall s, S set, x s, f fn(y s) S:
     f(x) = f(x)
 ```
 
-The set parameters become `s S : Litex.Set`. The values `x` and `f` keep
-independent Lean carriers rather than being retyped to those sets. Their
-source parameter facts become `hx : Litex.In x s` and
-`hf : Litex.In f (Litex.fnSet s S)`. Each application is emitted as
+The current v2 emitter makes the set parameters `s S : Litex.Set`; this is the
+legacy lowering identified in the target-ABI section above, not the final
+source-semantic contract. The values `x` and `f` keep independent Lean
+carriers rather than being retyped to those sets. Their source parameter facts
+become `hx : Litex.In x s` and `hf : Litex.In f (Litex.fnSet s S)`. Each
+application is emitted as
 `Litex.fnApply f hf x hx`, using the exact function-membership FactId and the
 exact argument-membership WD edge selected by the verifier. The result already
 has carrier `S.Carrier`; no transport back to a native predicate is added.
@@ -400,7 +461,8 @@ not represented by hand-written code under `examples/`.
 
 The compiler currently constructs Lean source only for the reviewed Result routes exercised by the
 twenty-two numbered examples. Checked named aliases of `R` and `C`, top-level atomic
-equality, nonnegative integer numerals, addition, arbitrary set parameters,
+equality, nonnegative integer numerals, addition, legacy-v2 arbitrary set
+parameters,
 unary function sets, named unary application, basic proof scopes,
 case/contradiction proofs, one-witness positive existentials, minimal native
 object definitions, unary real named functions with `+`, `-`, `*`, `/`

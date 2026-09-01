@@ -542,6 +542,13 @@ names and record facts such as `$is_set(A)`, `$is_nonempty_set(B)`, and
 containing all sets. They are surface forms for introducing mathematical
 objects with the corresponding set-theoretic properties.
 
+The To-Lean target preserves this distinction as proof evidence: a quantified
+`A set` receives an explicit `hA : Litex.IsSet A`, while an ordinary `x A`
+receives membership in the exact set representative selected from `hA`.
+`Litex.Set` is the Lean exact-carrier representation type, not a source-level
+set of all sets, so neither `A $in Litex.Set` nor erasing `$is_set(A)` to
+`True` is a faithful translation.
+
 Function "types" are also set-theoretic function spaces. A definition such as
 `fn(x S) T` means a function object whose inputs come from `S` and whose values
 come from `T`. Later parameter domains may cite earlier parameters, and the
