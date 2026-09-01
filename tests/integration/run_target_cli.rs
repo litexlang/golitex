@@ -1,4 +1,10 @@
+use std::fs;
+use std::path::PathBuf;
 use std::process::Command;
+
+fn cli_fixture_dir(name: &str) -> PathBuf {
+    std::env::temp_dir().join(format!("litex-cli-{}-{}", name, std::process::id()))
+}
 
 #[test]
 fn unsupported_combinations_are_rejected_before_dispatch() {
@@ -83,6 +89,108 @@ fn batch_execute_handler_preserves_target_specific_output() {
         }
         assert!(output.stderr.is_empty());
     }
+}
+
+#[test]
+fn plain_file_auto_selects_isolated_or_project_context_and_exits() {
+    let standalone = cli_fixture_dir("auto-standalone-file");
+    let _ = fs::remove_dir_all(&standalone);
+    let standalone_parent = standalone.join("nested");
+    fs::create_dir_all(&standalone_parent).expect("create standalone fixture");
+    fs::write(
+        standalone.join("litex.config"),
+        "ancestor configuration must not be discovered\n",
+    )
+    .expect("write ignored ancestor config");
+    let standalone_file = standalone_parent.join("scratch.lit");
+    fs::write(&standalone_file, "have standalone_value R = 1\n").expect("write standalone file");
+
+    let standalone_output = Command::new(env!("CARGO_BIN_EXE_litex"))
+        .args(["-f", standalone_file.to_string_lossy().as_ref()])
+        .output()
+        .expect("run auto-isolated file");
+    assert!(standalone_output.status.success());
+    let standalone_stdout =
+        String::from_utf8(standalone_output.stdout).expect("standalone stdout is UTF-8");
+    assert!(standalone_stdout.contains("\"kind\": \"run\""));
+    assert!(standalone_stdout.contains("\"ok\": true"));
+    assert!(standalone_stdout.contains("standalone_value"));
+    assert!(
+        !standalone_stdout.contains("\"kind\":\"stream\"")
+            && !standalone_stdout.contains("\"kind\": \"stream\""),
+        "plain -f must exit after its run document: {standalone_stdout}"
+    );
+    assert!(standalone_output.stderr.is_empty());
+
+    let project = cli_fixture_dir("auto-project-file");
+    let _ = fs::remove_dir_all(&project);
+    fs::create_dir_all(&project).expect("create project fixture");
+    fs::write(
+        project.join("litex.config"),
+        "[hierarchy]\nmodule\n\n[export]\nbefore = \"./before.lit\"\ntarget = \"./target.lit\"\n",
+    )
+    .expect("write project config");
+    fs::write(project.join("before.lit"), "have configured_value R = 2\n")
+        .expect("write project prefix");
+    let project_file = project.join("target.lit");
+    fs::write(&project_file, "before::configured_value = 2\n").expect("write project target");
+
+    let project_output = Command::new(env!("CARGO_BIN_EXE_litex"))
+        .args(["-f", project_file.to_string_lossy().as_ref()])
+        .output()
+        .expect("run configured file");
+    assert!(project_output.status.success());
+    let project_stdout = String::from_utf8(project_output.stdout).expect("project stdout is UTF-8");
+    assert!(project_stdout.contains("\"kind\": \"run\""));
+    assert!(project_stdout.contains("\"ok\": true"));
+    assert!(project_stdout.contains("before::configured_value = 2"));
+    assert!(!project_stdout.contains("\"kind\": \"stream\""));
+    assert!(project_output.stderr.is_empty());
+
+    let _ = fs::remove_dir_all(&standalone);
+    let _ = fs::remove_dir_all(&project);
+}
+
+#[test]
+fn present_invalid_config_is_an_error_but_explicit_isolation_bypasses_it() {
+    let directory = cli_fixture_dir("invalid-config-boundary");
+    let _ = fs::remove_dir_all(&directory);
+    fs::create_dir_all(&directory).expect("create invalid-config fixture");
+    fs::write(
+        directory.join("litex.config"),
+        "not a valid project config\n",
+    )
+    .expect("write invalid config");
+    let file = directory.join("scratch.lit");
+    fs::write(&file, "have isolated_value R = 3\n").expect("write standalone source");
+
+    let project_output = Command::new(env!("CARGO_BIN_EXE_litex"))
+        .args(["-f", file.to_string_lossy().as_ref()])
+        .output()
+        .expect("run file beside invalid config");
+    assert_eq!(project_output.status.code(), Some(1));
+    let project_stdout = String::from_utf8(project_output.stdout).expect("project stdout is UTF-8");
+    assert!(project_stdout.contains("\"ok\": false"), "{project_stdout}");
+    assert!(project_stdout.contains("litex.config"), "{project_stdout}");
+
+    let isolated_output = Command::new(env!("CARGO_BIN_EXE_litex"))
+        .args(["-isolated", "-f", file.to_string_lossy().as_ref()])
+        .output()
+        .expect("force isolated file run");
+    assert!(isolated_output.status.success());
+    let isolated_stdout =
+        String::from_utf8(isolated_output.stdout).expect("isolated stdout is UTF-8");
+    assert!(isolated_stdout.contains("\"kind\": \"run\""));
+    assert!(isolated_stdout.contains("\"ok\": true"));
+    assert!(isolated_stdout.contains("isolated_value"));
+    assert!(
+        !isolated_stdout.contains("\"kind\":\"stream\"")
+            && !isolated_stdout.contains("\"kind\": \"stream\""),
+        "explicit isolated -f must be batch-only: {isolated_stdout}"
+    );
+    assert!(isolated_output.stderr.is_empty());
+
+    let _ = fs::remove_dir_all(&directory);
 }
 
 #[test]

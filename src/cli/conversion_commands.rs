@@ -10,6 +10,7 @@ use crate::extract_code_of_other_languages_from_litex::python::{
 use crate::latex_renderer::{to_latex_from_file, to_latex_from_repository, to_latex_from_source};
 use crate::output::language::OutputLanguage;
 use crate::output::render_runtime_error_json;
+use crate::pipeline::file_execution::file_execution_option;
 use crate::prelude::{render_json_value, JsonValue};
 use crate::runtime::{ExecutionOption, RunOptions, Runtime};
 use crate::syntax::source_formatting::remove_windows_carriage_from_str;
@@ -17,7 +18,13 @@ use std::fs;
 
 pub(super) fn run_latex_command(target: &str, options: RunOptions) -> bool {
     let result = match options.execution() {
-        ExecutionOption::File => compile_file_to_latex(target, options.output_language()),
+        ExecutionOption::File => match file_execution_option(target) {
+            ExecutionOption::File => compile_file_to_latex(target, options.output_language()),
+            ExecutionOption::IsolatedFile => {
+                compile_isolated_file_to_latex(target, options.output_language())
+            }
+            _ => unreachable!("file context resolved to a non-file execution option"),
+        },
         ExecutionOption::IsolatedFile => {
             compile_isolated_file_to_latex(target, options.output_language())
         }
@@ -37,9 +44,15 @@ pub(super) fn run_code_extraction_command(
 ) -> bool {
     let command_flag = extraction_command_flag(target);
     let result = match options.execution() {
-        ExecutionOption::File => {
-            compile_file_to_extracted_code(source, options.output_language(), target)
-        }
+        ExecutionOption::File => match file_execution_option(source) {
+            ExecutionOption::File => {
+                compile_file_to_extracted_code(source, options.output_language(), target)
+            }
+            ExecutionOption::IsolatedFile => {
+                compile_isolated_file_to_extracted_code(source, options.output_language(), target)
+            }
+            _ => unreachable!("file context resolved to a non-file execution option"),
+        },
         ExecutionOption::IsolatedFile => {
             compile_isolated_file_to_extracted_code(source, options.output_language(), target)
         }

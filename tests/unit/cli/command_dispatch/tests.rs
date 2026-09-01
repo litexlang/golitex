@@ -360,7 +360,9 @@ fn help_explains_project_file_and_run_plan_modes() {
     let message = help_message();
     assert!(message.contains("\"kind\": \"help\""));
     assert!(message.contains("\"entries\": ["));
-    assert!(message.contains("Run a registered Litex file."));
+    assert!(message.contains(
+        "Run a file using project context when directly configured, otherwise in isolation."
+    ));
     assert!(message.contains("litex -isolated -f <file>"));
     assert!(message.contains("litex -r <directory>"));
 }

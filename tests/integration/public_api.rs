@@ -35,14 +35,17 @@ fn curated_api_exposes_one_owned_entry_for_every_batch_input() {
     assert!(code.target.path().is_none());
     assert_eq!(code.runtime.run_options, options);
 
-    let project_file = run_file(
+    let automatic_file = run_file(
         "missing-project-file.lit",
         RunOptions::execute(ExecutionOption::IsolatedFile),
     );
-    assert!(matches!(project_file.target, RunTarget::File { .. }));
+    assert!(matches!(
+        automatic_file.target,
+        RunTarget::IsolatedFile { .. }
+    ));
     assert_eq!(
-        project_file.runtime.run_options.run(),
-        RunOption::Execute(ExecutionOption::File)
+        automatic_file.runtime.run_options.run(),
+        RunOption::Execute(ExecutionOption::IsolatedFile)
     );
     let isolated_file = run_isolated_file(
         "missing-isolated-file.lit",

@@ -42,14 +42,17 @@ and a `prompt` event:
 Use Ctrl+D to exit. On Windows PowerShell, press Ctrl+Z and then Enter. The
 REPL emits a final `closed` event before exiting.
 
-Run a standalone `.lit` file:
+Run a `.lit` file:
 
 ```bash
-litex -isolated -f "your_file.lit"
+litex -f "your_file.lit"
 ```
 
-For a file registered in a module's direct-parent `litex.config`, use
-`litex -f "your_file.lit"` to load its configured source prefix first.
+If the file's direct parent contains `litex.config`, Litex loads its configured
+source prefix through that file. Otherwise it runs the file in isolation. Both
+forms are batch runs and exit after emitting one `run` document. Use
+`litex -isolated -f "your_file.lit"` to force isolation even when a direct-parent
+configuration exists.
 
 Run Litex source directly:
 
@@ -141,7 +144,9 @@ execution paths.
 returns a `cli_error`. `-lang` affects command families that render verifier
 output. `-strict` applies only to execution, graph, and session variants.
 `-isolated` applies only to file, file-graph, file-session, file-conversion, and
-Lean variants. An option is rejected when its selected command has no
+Lean variants. Plain file selectors choose project context when their direct
+parent contains `litex.config` and isolated context otherwise; `-isolated`
+forces the latter. An option is rejected when its selected command has no
 corresponding typed run variant.
 
 ## JSON Output Contract
@@ -216,10 +221,10 @@ language-code token in the prefix.
 |---------|----------|
 | `litex` | Start an isolated interactive verifier REPL. |
 | `litex -e <code>` | Run a Litex source string. |
-| `litex -f <file>` | Require `litex.config` in the direct parent, trace to the module root, and run the recursive `[export]` prefix through this file. It fails if that direct configuration is absent. |
-| `litex -isolated -f <file>` | Run one Litex file as an isolated script, without project discovery; a successful ordinary CLI run then continues in an isolated REPL. |
+| `litex -f <file>` | If the direct parent contains `litex.config`, trace to the module root and run the recursive `[export]` prefix through this registered file; otherwise run it as an isolated script. Exit after the batch result. |
+| `litex -isolated -f <file>` | Ignore any direct-parent project configuration, run one isolated batch file, and exit. |
 | `litex -r <project>` | Run a module's complete recursive `[export]` tree, or trace to the module and run the prefix through a selected submodule's complete subtree. |
-| `litex -session -f <file>` | Run the registered project prefix through one file, then keep that same Runtime alive as a framed persistent session. |
+| `litex -session -f <file>` | Select project or isolated context by the same direct-parent rule as `-f`, run the file, then keep that Runtime alive as a framed persistent session. |
 | `litex -isolated -session -f <file>` | Run one standalone file, then keep that same Runtime alive as a framed persistent session. |
 
 ## Lean Compiler Commands
@@ -248,10 +253,10 @@ Declare local project files and child submodules in recursive ordered
 in `[import]` or installed packages in `[import std]`. Files cite canonical
 names such as `Part2::chap3::theorem` or
 `basics::theorem`. No `.lit` source file can write imports; this includes
-standalone files run with `-isolated -f`.
+standalone files selected automatically by `-f` or forced with `-isolated -f`.
 
-The ordinary REPL, and the continued terminal after a successful isolated
-`-f`, may load further interfaces dynamically with terminal commands:
+The ordinary REPL may load further interfaces dynamically with terminal
+commands:
 
 <!-- litex:skip-test -->
 ```text
@@ -331,10 +336,9 @@ usually `kind`, `message`, `line`, `statement`, and `previous_error`:
 }
 ```
 
-A successfully verified `litex -isolated -f <file>` continues into a REPL. For
-that transitioning command, the initial `run` object is emitted as one compact
-JSON line and is followed by `stream` JSON lines. A failed isolated file emits
-one ordinary `run` object and does not start the REPL.
+Every `-f` file command is batch-only: success or failure emits one ordinary
+`run` object and then exits. Use bare `litex` for the ordinary REPL, or add
+`-session` when a verified file Runtime must accept later framed requests.
 
 ## Session Command
 
@@ -343,13 +347,14 @@ no target, it uses the current directory's `litex.config` with the same
 no-plan project startup as the ordinary REPL; `litex -isolated -session`
 disables that project context.
 
-`litex -session -f <file>` first runs the same ordered project prefix as an
-ordinary registered-file `-f` command. If the prefix verifies, the process
-emits `ready` and accepts later blocks in the same Runtime, so definitions and
-facts from the prefix are already available. If the prefix fails, the process
-emits `startup_error` with `statement_results` and an `error` object, then does
-not enter the session loop. `litex -isolated -session -f <file>` provides the
-analogous behavior for an intentionally standalone file.
+`litex -session -f <file>` uses the same direct-parent context selection as an
+ordinary `-f` command. With a configuration it runs the ordered registered
+prefix; without one it runs the file in isolation. If that startup run
+verifies, the process emits `ready` and accepts later blocks in the same
+Runtime, so its definitions and facts are already available. If startup fails,
+the process emits `startup_error` with `statement_results` and an `error`
+object, then does not enter the session loop. `litex -isolated -session -f
+<file>` forces the standalone branch even when configuration exists.
 
 The session writes one JSON object per event and accepts these stdin frames:
 
@@ -389,11 +394,10 @@ not make a parse failure in that outer statement recoverable.
 
 ### Iterating after a verified file
 
-Use `target/release/litex -session -f chap4.lit` when the registered
-prefix through `chap4.lit` already verifies and later framed experiments should
-reuse that environment. A committed outermost `try:` publishes its definitions
-and facts to the persistent Runtime; a rolled-back `try:` discards only that
-candidate.
+Use `target/release/litex -session -f chap4.lit` when the selected file run
+already verifies and later framed experiments should reuse that environment. A
+committed outermost `try:` publishes its definitions and facts to the
+persistent Runtime; a rolled-back `try:` discards only that candidate.
 
 Session file preload always executes the selected file. It does not provide a
 hidden “prefix before a failing target” mode. When repairing a failing
@@ -545,8 +549,11 @@ files, submodules, or descendants of the importing module.
 module runs the whole tree. Running a submodule traces back to its module,
 executes every preceding entry, then executes the selected submodule in full.
 Running a registered file follows the same prefix and stops after that file.
-`litex -f` requires the file's direct parent to have `litex.config`; use
-`litex -isolated -f` for a standalone file.
+When the direct parent has no `litex.config`, `litex -f` instead performs one
+isolated batch run. It does not search ancestor folders. A present but invalid
+configuration, or a target that is not exported exactly once, remains a
+project error and never falls back. Use `litex -isolated -f` to force isolation
+when configuration is present.
 
 Dependency order is the recursive `[export]` order. A `module` with exactly
 one `.lit` export may write `[module]` then `flatten = true`; its public
@@ -593,7 +600,7 @@ litex -e "1 = 1"
 Run a standalone file:
 
 ```bash
-litex -isolated -f examples/tmp.lit
+litex -f examples/tmp.lit
 ```
 
 Run a project plan:
@@ -605,7 +612,7 @@ litex -r examples/08_module_repository
 Run a strict CI-style check:
 
 ```bash
-litex -strict -isolated -f examples/tmp.lit
+litex -strict -f examples/tmp.lit
 ```
 
 Generate a recursive result graph:

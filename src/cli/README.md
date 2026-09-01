@@ -19,7 +19,8 @@ invalid combination -> print one cli_error JSON object and exit 2
 | Command | Behavior |
 | --- | --- |
 | `litex -e '1 = 1'` | Executes inline Litex. |
-| `litex -f example.lit` | Runs one registered file with canonical detailed JSON output. |
+| `litex -f example.lit` | Uses direct-parent project context when configured, otherwise runs one isolated batch file, with canonical detailed JSON output. |
+| `litex -isolated -f example.lit` | Forces an isolated batch file run; it never enters a REPL. |
 | `litex -lang zh-Hans -e '1 = 2'` | Selects Simplified Chinese diagnostics such as `验证错误`; `zh-Hant` selects Traditional Chinese. |
 | `litex -compact -e '1 = 1'` | Rejected because `-compact` is not a CLI option. |
 | `litex -strict -f example.lit` | Verifies configured dependencies and rejects source-level trust or axioms. |

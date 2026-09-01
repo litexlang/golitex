@@ -1395,6 +1395,7 @@ fn cli_dispatch_delegates_execution_and_path_resolution_to_their_owners() {
         handlers.contains("ExecutionOption::IsolatedFile => run_isolated_file(target, options)")
     );
     assert!(handlers.contains("pub(super) fn run_command("));
+    assert!(!handlers.contains("run_isolated_repl_with_runtime("));
     assert!(!handlers.contains("fn run_code_command("));
     assert!(!handlers.contains("fn run_file_command("));
     assert!(!handlers.contains("fn run_repository_command("));
@@ -1459,7 +1460,8 @@ fn cli_dispatch_delegates_execution_and_path_resolution_to_their_owners() {
     assert!(run.contains("pub fn run_isolated_file(path: &str, options: RunOptions)"));
     assert!(!run.contains("run_file_with_mode"));
     assert!(!run.contains("options.is_isolated()"));
-    assert!(run.contains("options.with_execution(ExecutionOption::File)"));
+    assert!(run.contains("file_execution_option(path.as_str())"));
+    assert!(run.contains("options.with_execution(execution)"));
     assert!(run.contains("options.with_execution(ExecutionOption::IsolatedFile)"));
     assert!(run.contains("pub fn run_repository(path: &str, options: RunOptions)"));
     assert!(target.contains("pub enum RunTargetKind"));
@@ -1478,6 +1480,7 @@ fn cli_dispatch_delegates_execution_and_path_resolution_to_their_owners() {
     assert!(file_execution.contains("pub fn resolve_source_file_path("));
     assert!(file_execution.contains("pub fn execute_file_in_runtime("));
     assert!(file_execution.contains("pub fn execute_isolated_file_in_runtime("));
+    assert!(file_execution.contains("pub fn file_execution_option("));
     assert!(!file_execution.contains("mode: FileRunMode"));
     assert!(output_rendering.contains("pub fn render_run_output("));
     assert!(!source_execution.contains("pub fn run_source_code_in_file"));

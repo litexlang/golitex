@@ -59,7 +59,7 @@ fn c_extraction_emits_a_c99_function_shape() {
 }
 
 #[test]
-fn isolated_file_conversions_read_the_standalone_source() {
+fn plain_file_conversions_auto_select_the_standalone_source() {
     let directory = std::env::temp_dir().join(format!(
         "litex-isolated-file-conversions-{}",
         std::process::id()
@@ -71,9 +71,9 @@ fn isolated_file_conversions_read_the_standalone_source() {
     let path = file.to_str().expect("fixture path is UTF-8");
 
     let python = Command::new(env!("CARGO_BIN_EXE_litex"))
-        .args(["-isolated", "-extractpython", "-f", path])
+        .args(["-extractpython", "-f", path])
         .output()
-        .expect("extract Python from isolated file");
+        .expect("extract Python from auto-isolated file");
     assert!(python.status.success(), "{python:?}");
     let python_stdout = String::from_utf8(python.stdout).expect("Python stdout is UTF-8");
     assert!(python_stdout.contains("\"format\": \"python\""));
@@ -81,9 +81,9 @@ fn isolated_file_conversions_read_the_standalone_source() {
     assert!(python_stdout.contains("\"error\": null"));
 
     let latex = Command::new(env!("CARGO_BIN_EXE_litex"))
-        .args(["-isolated", "-latex", "-f", path])
+        .args(["-latex", "-f", path])
         .output()
-        .expect("render LaTeX from isolated file");
+        .expect("render LaTeX from auto-isolated file");
     assert!(latex.status.success(), "{latex:?}");
     let latex_stdout = String::from_utf8(latex.stdout).expect("LaTeX stdout is UTF-8");
     assert!(latex_stdout.contains("\"format\": \"latex\""));

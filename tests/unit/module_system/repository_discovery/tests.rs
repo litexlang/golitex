@@ -490,7 +490,7 @@ after = "./after.lit"
 }
 
 #[test]
-fn file_without_a_direct_parent_config_requires_isolated_flag() {
+fn file_without_a_direct_parent_config_runs_in_isolated_context() {
     run_repository_test_with_large_stack("isolated-direct-parent", || {
         let fixture = Fixture::new("isolated-direct-parent");
         let root = fixture.path("root");
@@ -511,11 +511,9 @@ main = "./main.lit"
 
         let file = path_string_for_test(&root.join("unconfigured/deep.lit"));
         let (ok, output) = run_file_for_test(file.as_str());
-        assert!(!ok, "{output}");
-        assert!(
-            output.contains("requires a litex.config in the same folder"),
-            "{output}"
-        );
+        assert!(ok, "{output}");
+        assert!(output.contains("isolated_value"), "{output}");
+        assert!(!output.contains("configured"), "{output}");
     });
 }
 

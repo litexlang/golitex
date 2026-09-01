@@ -6,7 +6,7 @@ use std::path::Path;
 pub(super) const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 pub(super) fn run_command(target: &str, options: RunOptions) -> bool {
-    let mut outcome = match options.execution() {
+    let outcome = match options.execution() {
         ExecutionOption::Eval => run_code(target, options),
         ExecutionOption::File => run_file(target, options),
         ExecutionOption::IsolatedFile => run_isolated_file(target, options),
@@ -17,12 +17,7 @@ pub(super) fn run_command(target: &str, options: RunOptions) -> bool {
     };
     let (_, has_path) = execution_target(options);
     let output = render_run(&outcome, has_path.then_some(target));
-    if outcome.ok && options.execution() == ExecutionOption::IsolatedFile {
-        println!("{}", render_json_value_compact(&JsonValue::RawJson(output)));
-        run_isolated_repl_with_runtime(VERSION, &mut outcome.runtime);
-    } else {
-        println!("{}", output);
-    }
+    println!("{}", output);
     outcome.ok
 }
 
