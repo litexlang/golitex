@@ -6,6 +6,7 @@ mod metadata;
 mod proof_blocks;
 pub mod proof_directives;
 mod statement;
+mod theorem_call;
 mod type_names;
 
 // Compatibility alias retained for one version while embedders migrate.
@@ -34,3 +35,4 @@ pub use proof_directives::{
 pub use statement::{
     ByStmt, CommandStmt, DefinitionStmt, ProofBlockStmt, Stmt, UnsafeStmt, WitnessStmt,
 };
+pub use theorem_call::{TheoremCall, TheoremCallArguments};

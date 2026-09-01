@@ -40,12 +40,12 @@ impl StmtResultToLeanCompiler {
             );
         }
         if verification.theorem != source.theorem_id.as_str()
-            || verification.theorem != result.statement.name.to_string()
-            || verification.arguments.len() != result.statement.args.len()
+            || verification.theorem != result.statement.name().to_string()
+            || verification.arguments.len() != result.statement.args().len()
             || verification
                 .arguments
                 .iter()
-                .zip(result.statement.args.iter())
+                .zip(result.statement.args().iter())
                 .any(|(retained, source)| obj_equality_key(retained) != obj_equality_key(source))
         {
             return Err("builtin theorem Result changed its identity or argument order".into());

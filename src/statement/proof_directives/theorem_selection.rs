@@ -3,8 +3,7 @@ use std::fmt;
 
 #[derive(Clone)]
 pub struct ByThmStmt {
-    pub name: AtomicName,
-    pub args: Vec<Obj>,
+    pub call: TheoremCall,
     pub selected_fact: AtomicFact,
     pub line_file: LineFile,
 }
@@ -16,12 +15,31 @@ impl ByThmStmt {
         selected_fact: AtomicFact,
         line_file: LineFile,
     ) -> Self {
+        Self::new_with_call(
+            TheoremCall::parenthesized(name, args),
+            selected_fact,
+            line_file,
+        )
+    }
+
+    pub fn new_with_call(
+        call: TheoremCall,
+        selected_fact: AtomicFact,
+        line_file: LineFile,
+    ) -> Self {
         ByThmStmt {
-            name,
-            args,
+            call,
             selected_fact,
             line_file,
         }
+    }
+
+    pub fn name(&self) -> &AtomicName {
+        &self.call.name
+    }
+
+    pub fn args(&self) -> &[Obj] {
+        self.call.args()
     }
 
     pub fn selected_fact_store_reason() -> &'static str {
@@ -33,13 +51,8 @@ impl fmt::Display for ByThmStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
             f,
-            "{} {} {}{} {} {}",
-            BY,
-            THM,
-            self.name,
-            braced_vec_to_string(&self.args),
-            RIGHT_ARROW,
-            self.selected_fact
+            "{} {} {} {} {}",
+            BY, THM, self.call, RIGHT_ARROW, self.selected_fact
         )
     }
 }

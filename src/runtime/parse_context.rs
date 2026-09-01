@@ -38,10 +38,10 @@ impl ParseContext {
         }
     }
 
-    pub fn restore_scoped_state(&mut self, saved: ParseContext) {
-        self.free_params = saved.free_params;
-        self.local_binding_scope_depth = saved.local_binding_scope_depth;
-        self.scope_frames = saved.scope_frames;
+    pub(crate) fn is_at_root_scope(&self) -> bool {
+        self.free_params.params.is_empty()
+            && self.local_binding_scope_depth == 0
+            && self.scope_frames.is_empty()
     }
 
     pub fn active_binding(&self, name: &str) -> Option<&SymbolBinding> {

@@ -35,6 +35,7 @@ Litex 定位四层检查（写作时逐层核对；面向不同受众可以调�
 - [4. Lean-Compatible: Independent Rechecking for Covered Paths](#compatibility)
 - [From Four Design Principles to Mathematical Practice: Definition and Verification](#mathematics-practice)
   - [Full Example: Define Convergence and Verify Preservation under Scalar Multiplication](#convergence-example)
+- [From Formal Language to AI for Math—and toward Safe, Efficient Reasoning](#reasoning-direction)
 - [From Language to Ecosystem: The Role Litex Aims to Play](#ecosystem-role)
 - [Conclusion](#conclusions)
 
@@ -747,6 +748,20 @@ thm converges_to_mul_const:
 The first two `prop` declarations establish the domain language: what it means to be eventually close and to converge. Then `obtain N0` extracts a position from the original convergence statement, while `witness` supplies it for the new sequence. Choosing `epsilon / (abs(c) + 1)` avoids a separate `c = 0` case, and the inequality chain compresses the error below `epsilon`. The example combines both kinds of mathematical work: define a reusable interface, then verify a new fact through it. Fact orientation changes the interface; it does not remove the mathematics.
 
 </details>
+
+<a id="reasoning-direction"></a>
+
+## From Formal Language to AI for Math—and toward Safe, Efficient Reasoning
+
+These are not three capabilities at the same level of maturity. They form a research direction that moves from the near term to the long term:
+
+| Layer | What Litex studies at this layer | Current boundary |
+| --- | --- | --- |
+| **Formal language** | How facts represent checkable knowledge, how that knowledge is constructed step by step, and whether immediate checking, growing context, and transactional repair form an effective language interface | This is the scientific core that Litex directly builds and tests today |
+| **AI for Math** | Whether AI can use local verification feedback, stopping points, repair trajectories, and reusable facts to produce and review formal mathematics more reliably | Mathematics is a rigorous testbed; Litex has not solved autoformalization or automated mathematical discovery |
+| **Safe, efficient reasoning** | Whether explicit facts, local grounds, fail-closed behavior, rollback, and provenance mechanisms that survive mathematical pressure tests can eventually inform AI reasoning that is easier to audit, repair, and recheck independently | This is a long-term research direction, not a general AI capability Litex currently possesses |
+
+The formal language is the foundation, AI for Math is its first rigorous application and pressure test, and safe, efficient general reasoning is a possible wider impact. The latter two cannot replace measurement of the language hypothesis itself, and local mathematical evidence cannot be projected directly into a general safety result.
 
 <a id="ecosystem-role"></a>
 

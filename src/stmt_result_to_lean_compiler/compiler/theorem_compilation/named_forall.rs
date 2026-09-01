@@ -138,30 +138,38 @@ impl StmtResultToLeanCompiler {
         }
 
         let theorem_fact: Fact = (*verification.forall_fact).clone().into();
-        let theorem_fact_id =
+        let retained_store_fact_id =
             if let Some(environment_effects) = verification.outer_environment_effects {
                 if !environment_effects.rule_applications.is_empty()
                     || environment_effects.store_fact_outputs.len() > 1
                 {
                     return Ok(false);
                 }
-                let [stored] = environment_effects.store_fact_outputs.as_slice() else {
-                    return Err("named forall Result has no outer store effect".into());
-                };
-                if stored.itself_and_why_itself_is_stored.0.to_string() != theorem_fact.to_string()
-                    || !stored.inferred_facts.is_empty()
-                    || !stored.inferred_fact_ids.is_empty()
-                {
-                    return Ok(false);
+                match environment_effects.store_fact_outputs.first() {
+                    Some(stored) => {
+                        if stored.itself_and_why_itself_is_stored.0.to_string()
+                            != theorem_fact.to_string()
+                            || !stored.inferred_facts.is_empty()
+                            || !stored.inferred_fact_ids.is_empty()
+                        {
+                            return Ok(false);
+                        }
+                        stored.fact_id
+                    }
+                    None if verification.source_fact_id.is_some() => None,
+                    None => return Err("named forall Result has no outer store effect".into()),
                 }
-                Some(
-                    stored
-                        .fact_id
-                        .ok_or_else(|| "named forall outer store has no FactId".to_string())?,
-                )
             } else {
                 None
             };
+        if let (Some(expected), Some(stored)) =
+            (verification.source_fact_id, retained_store_fact_id)
+        {
+            if expected != stored {
+                return Err("named forall Result changed its source FactId".into());
+            }
+        }
+        let theorem_fact_id = verification.source_fact_id.or(retained_store_fact_id);
 
         let proof_scope_has_defined_predicate_inference = verification
             .proof_scope_assumption_infers

@@ -325,6 +325,7 @@ pub use crate::result::SuccessVerifyHaveObjEqualResult;
 pub use crate::result::SuccessVerifyIndexedFunctionDefinitionResult;
 pub use crate::result::SuccessVerifyIndexedFunctionDefinitionWellDefinedResult;
 pub use crate::result::SuccessVerifyKnownForallRequirementResult;
+pub use crate::result::SuccessVerifyLitexTheoremApplicationMode;
 pub use crate::result::SuccessVerifyLitexTheoremApplicationResult;
 pub use crate::result::SuccessVerifyLocalProofScopeResult;
 pub use crate::result::SuccessVerifyObjectChoiceGroupResult;
@@ -568,7 +569,7 @@ pub use crate::statement::Stmt;
 pub use crate::statement::StructFieldDef;
 pub use crate::statement::UnsafeStmt;
 pub use crate::statement::WitnessStmt;
-pub use crate::statement::{ByThmStmt, ReleaseThmStmt};
+pub use crate::statement::{ByThmStmt, ReleaseThmStmt, TheoremCall, TheoremCallArguments};
 pub use crate::symbol::{
     builtin_symbol_ref, insert_symbol_substitution, IntoSymbolRef, SymbolBinding, SymbolDefinition,
     SymbolId, SymbolIdAllocator, SymbolRef, SymbolRole, SymbolTable, TransparentObjectDefinition,

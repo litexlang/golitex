@@ -19,10 +19,10 @@ stops after rendering the Result.
 | Boundary | Main Rust interface | Responsibility |
 | --- | --- | --- |
 | Process | [`main()`](main.rs) | Starts the CLI thread. |
-| CLI | [`cli::run_cli()`](cli/command_dispatch.rs) | Parses flags and selects code, file, repository, runner, graph, or compiler execution. |
+| CLI | [`cli::run_cli()`](cli/command_dispatch.rs) | Parses flags and selects code, file, repository, session, graph, or compiler execution. |
 | CLI command | [`cli::run_command()`](cli/command_handlers.rs) | Adapts every typed batch target to its explicit pipeline entry, then renders one CLI result. |
 | Batch pipeline | [`pipeline::run_code`, `run_file`, `run_isolated_file`, `run_repository`](pipeline/run.rs) | Each explicit entry owns its input-specific setup and creates the `Runtime`. |
-| Runtime state | [`Runtime::new(options: RunOptions)`](runtime/state.rs) | Creates the environment, module state, identifiers, and one run-options value together; `Runtime::default()` is the explicit default/test configuration. |
+| Runtime state | [`Runtime::new(options: RunOptions)`](runtime/runtime.rs) | Creates the environment, module state, identifiers, parser context, and one run-options value together; `Runtime::default()` is the explicit default/test configuration. |
 | Source pipeline | [`Runtime::execute_source`](pipeline/source_execution.rs) | Tokenizes and executes statement blocks in order on the Runtime that owns their state. |
 | Parsing | [`Tokenizer::parse_blocks`](parsing/tokenizer.rs) and [`Runtime::parse_statement`](parsing/statement_parsing.rs) | Turn source text into `TokenBlock` values and then typed `Stmt` values. |
 | Execution | [`Runtime::execute_statement`](execution/statement_execution.rs) | Dispatches to the verification-required statement lifecycle or the configured statement lifecycle with trust. Interactive imports take a separate terminal-command path before parsing and never become statements. |

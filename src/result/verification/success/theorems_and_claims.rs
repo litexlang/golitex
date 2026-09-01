@@ -5,7 +5,7 @@ use std::fmt;
 
 pub struct SuccessVerifyTheoremResult {
     pub name: String,
-    pub forall_fact: ForallFact,
+    pub fact: Fact,
     pub well_definedness: SuccessVerifyFactWellDefinedResult,
     pub proof_scope: SuccessVerifyLocalProofScopeResult,
     pub proof_steps: Vec<StmtResult>,
@@ -23,7 +23,7 @@ pub struct SuccessCheckedGoalBlockResult {
 impl SuccessVerifyTheoremResult {
     pub fn new(
         name: String,
-        forall_fact: ForallFact,
+        fact: Fact,
         well_definedness: SuccessVerifyFactWellDefinedResult,
         proof_scope: SuccessVerifyLocalProofScopeResult,
         proof_steps: Vec<StmtResult>,
@@ -31,7 +31,7 @@ impl SuccessVerifyTheoremResult {
     ) -> Self {
         SuccessVerifyTheoremResult {
             name,
-            forall_fact,
+            fact,
             well_definedness,
             proof_scope,
             proof_steps,
@@ -74,7 +74,7 @@ impl fmt::Debug for SuccessVerifyTheoremResult {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         f.debug_struct("SuccessVerifyTheoremResult")
             .field("name", &self.name)
-            .field("forall_fact", &self.forall_fact.to_string())
+            .field("fact", &self.fact.to_string())
             .field("well_definedness", &self.well_definedness)
             .field("proof_scope", &self.proof_scope)
             .field("proof_steps", &self.proof_steps)

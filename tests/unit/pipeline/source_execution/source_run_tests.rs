@@ -23,6 +23,36 @@ fn structured_source_run_reports_success() {
 
     assert_eq!(stmt_results.len(), 1);
     assert!(runtime_error.is_none(), "{runtime_error:?}");
+    assert!(runtime.current_parse_context().is_at_root_scope());
+}
+
+#[test]
+fn nested_proof_parse_bindings_are_runtime_owned_and_unwind_after_execution() {
+    let mut runtime = runtime_with_source_context("runtime-owned-parse-context.lit");
+
+    let outcome = runtime.execute_source(
+        "claim:\n    ? 1 = 1\n    have local_value R = 1\n    local_value = local_value",
+    );
+
+    assert!(
+        outcome.runtime_error.is_none(),
+        "{:?}",
+        outcome.runtime_error
+    );
+    assert_eq!(outcome.stmt_results.len(), 1);
+    assert!(runtime.current_parse_context().is_at_root_scope());
+}
+
+#[test]
+fn failed_nested_parse_restores_the_runtime_owned_parse_context() {
+    let mut runtime = runtime_with_source_context("runtime-owned-parse-rollback.lit");
+
+    let outcome = runtime.execute_source(
+        "claim:\n    ? 1 = 1\n    have local_value R = 1\n    have local_value R = 2",
+    );
+
+    assert!(outcome.runtime_error.is_some());
+    assert!(runtime.current_parse_context().is_at_root_scope());
 }
 
 #[test]

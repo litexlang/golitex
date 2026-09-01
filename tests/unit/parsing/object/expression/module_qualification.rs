@@ -297,7 +297,7 @@ fn module_qualification_qualifies_bare_thm_strategy_template_and_struct_refs() {
     let Stmt::ReleaseThmStmt(thm_stmt) = thm_stmt else {
         panic!("expected release thm stmt");
     };
-    assert_with_mod(&thm_stmt.name, "Nat", "T");
+    assert_with_mod(thm_stmt.name(), "Nat", "T");
 
     let def_stmt = parse_one_stmt_line_with_runtime(&mut rt, "by def $P(a)");
     let Stmt::By(ByStmt::ByDefStmt(def_stmt)) = def_stmt else {
@@ -330,7 +330,7 @@ fn module_qualification_preserves_explicit_reference_module_names() {
     let Stmt::ReleaseThmStmt(thm_stmt) = thm_stmt else {
         panic!("expected release thm stmt");
     };
-    assert_with_mod(&thm_stmt.name, "Other", "T");
+    assert_with_mod(thm_stmt.name(), "Other", "T");
 
     let def_stmt = parse_one_stmt_line_with_runtime(&mut rt, "by def $Other::P(a)");
     let Stmt::By(ByStmt::ByDefStmt(def_stmt)) = def_stmt else {
@@ -362,7 +362,7 @@ fn standard_library_namespace_is_valid_only_as_a_qualified_module_root() {
     let Stmt::ReleaseThmStmt(thm_stmt) = thm_stmt else {
         panic!("expected release thm stmt");
     };
-    assert_with_mod(&thm_stmt.name, "basics", "T");
+    assert_with_mod(thm_stmt.name(), "basics", "T");
 
     let template_obj = parse_one_obj_line_with_runtime(&mut rt, "\\basics::Template<2>");
     let Obj::InstantiatedTemplateObj(template_obj) = template_obj else {
@@ -446,7 +446,7 @@ fn module_qualification_keeps_names_bare_without_module_context() {
     let Stmt::ReleaseThmStmt(thm_stmt) = thm_stmt else {
         panic!("expected release thm stmt");
     };
-    assert_without_mod(&thm_stmt.name, "T");
+    assert_without_mod(thm_stmt.name(), "T");
 
     let template_obj = parse_one_obj_line_with_runtime(&mut rt, "\\Template<2>");
     let Obj::InstantiatedTemplateObj(template_obj) = template_obj else {

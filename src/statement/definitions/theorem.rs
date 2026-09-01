@@ -6,21 +6,16 @@ use std::fmt;
 #[derive(Clone)]
 pub struct DefThmStmt {
     pub name: String,
-    pub forall_fact: ForallFact,
+    pub fact: Fact,
     pub prove_process: Vec<Stmt>,
     pub line_file: LineFile,
 }
 
 impl DefThmStmt {
-    pub fn new(
-        name: String,
-        forall_fact: ForallFact,
-        prove_process: Vec<Stmt>,
-        line_file: LineFile,
-    ) -> Self {
+    pub fn new(name: String, fact: Fact, prove_process: Vec<Stmt>, line_file: LineFile) -> Self {
         DefThmStmt {
             name,
-            forall_fact,
+            fact,
             prove_process,
             line_file,
         }
@@ -40,7 +35,7 @@ impl fmt::Display for DefThmStmt {
             self.name,
             COLON,
             to_string_and_add_four_spaces_at_beginning_of_each_line(
-                &format!("{} {}", QUESTION_GOAL, self.forall_fact),
+                &format!("{} {}", QUESTION_GOAL, self.fact),
                 1
             )
         )?;

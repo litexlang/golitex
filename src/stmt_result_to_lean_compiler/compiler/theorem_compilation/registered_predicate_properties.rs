@@ -139,6 +139,7 @@ impl StmtResultToLeanCompiler {
                 proof_steps: &verification.proof_steps,
                 conclusion_checks,
                 outer_environment_effects: None,
+                source_fact_id: None,
             },
         )?;
         if !compiled {

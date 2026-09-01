@@ -1558,7 +1558,7 @@ impl Runtime {
     pub fn inst_param_def_with_set_one_by_one(
         &self,
         param_defs: &SetBoundParameterList,
-        args: &Vec<Obj>,
+        args: &[Obj],
         param_obj_type: SubstitutionMode,
     ) -> Result<Vec<Obj>, RuntimeError> {
         let total_param_count = param_defs.number_of_params();
@@ -1599,7 +1599,7 @@ impl Runtime {
     pub fn inst_param_def_with_type_one_by_one(
         &self,
         param_defs: &TypedParameterList,
-        args: &Vec<Obj>,
+        args: &[Obj],
         param_obj_type: SubstitutionMode,
     ) -> Result<Vec<ParamType>, RuntimeError> {
         let total_param_count = param_defs.number_of_params();

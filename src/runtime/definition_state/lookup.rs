@@ -320,12 +320,12 @@ impl Runtime {
         None
     }
 
-    pub fn get_thm_or_axiom_forall_fact_by_name(&self, name: &str) -> Option<ForallFact> {
+    pub fn get_thm_or_axiom_fact_by_name(&self, name: &str) -> Option<Fact> {
         if let Some(theorem) = self.get_thm_definition_by_name(name) {
-            return Some(theorem.forall_fact);
+            return Some(theorem.fact);
         }
         self.get_axiom_definition_by_name(name)
-            .map(|axiom| axiom.forall_fact)
+            .map(|axiom| axiom.forall_fact.into())
     }
 
     pub fn get_strategy_definition_by_name(&self, strategy_name: &str) -> Option<DefStrategyStmt> {

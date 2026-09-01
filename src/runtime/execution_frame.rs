@@ -11,7 +11,6 @@ pub struct ExecutionFrame {
     pub module_file_info: ExecutionModuleFileInfo,
     pub execution_mode: ExecutionMode,
     pub local_environment_stack: Vec<Box<Environment>>,
-    pub parse_context: ParseContext,
 }
 
 impl ExecutionFrame {
@@ -27,7 +26,6 @@ impl ExecutionFrame {
             module_file_info,
             execution_mode,
             local_environment_stack: vec![],
-            parse_context: ParseContext::new(),
         }
     }
 }

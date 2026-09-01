@@ -101,8 +101,9 @@ agents must insert these parentheses rather than infer an unstated intention.
 | A direct carrier, arithmetic, equality, membership, or inferred consequence | State the target directly | Do not wrap a fact Litex already knows |
 | A positive concrete predicate whose body is proved | `by def $P(args)` | Folds only the matching positive definition target |
 | Properties of a definition-owned struct expression | `by struct def expression` | Verifies membership, then opens exactly one layer; direct `x &Struct` symbols are the only automatic case |
-| Every conclusion of a named theorem | `release thm name(args)` | Bare-only: no `=>` selection and no indented goal/proof body |
-| One atomic consequence of a named theorem | `by thm name(args) => fact` | This selection form commits only the requested atomic fact |
+| Every conclusion of a root-`forall` theorem | `release thm name(args)` | Parentheses are mandatory, including `name()` for zero parameters |
+| A named ordinary theorem fact | `release thm name` | No parentheses; this cites the theorem's existing exact FactId |
+| One atomic consequence of a named theorem | `by thm name(args) => fact` / `by thm name => fact` | Match the same parenthesized-`forall` versus bare-ordinary call rule |
 | A semantic constructor with compound requirements | Its reserved `release thm` interface | One-layer automation does not invent quantified premises |
 | An existential target | `witness ... from ...` | Match the target's witnesses and carriers exactly |
 | A known existential whose witnesses are needed | `obtain ... from ...` | The source existential must already be known |
@@ -181,8 +182,13 @@ results. See [CLI](cli.md) for precise loading, output, and session contracts.
 ## Hard Boundaries
 
 - `by def` folds a definition; it is not general proof automation.
-- `release thm` introduces every instantiated conclusion; use selected
-  `by thm ... => fact` when only one atomic consequence should enter context.
+- `thm` accepts claim-style facts except root `forall ... <=>:`; `axiom`
+  remains root-`forall` only.
+- Root-`forall` theorem calls require parentheses. Other theorem facts use a
+  bare name and retain their exact stored FactId.
+- `release thm` introduces every instantiated `forall` conclusion; use
+  selected `by thm ... => fact` when only one atomic consequence should enter
+  context.
 - `by struct def e` needs an existing definition-owned view; later membership alone cannot select one.
 - `claim` proves a fact; it does not introduce a callable object.
 - `prop` names a property; it does not replace `have` or `have fn`.

@@ -46,6 +46,7 @@ pub struct SuccessVerifyDefAlgoCoverageResult {
 pub struct SuccessDefThmStmtResult {
     pub statement: DefThmStmt,
     pub common: SuccessStmtCommonResult,
+    pub source_fact_id: FactId,
     pub verification: Option<SuccessVerifyTheoremResult>,
 }
 

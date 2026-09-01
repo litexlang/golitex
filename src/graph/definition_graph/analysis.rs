@@ -231,7 +231,7 @@ pub(super) fn collect_template_definition_dependencies(
             collector.collect_atomic_fact(&fact);
         }
         TemplateDefEnum::ObtainObjFromThm(statement) => {
-            for argument in &statement.args {
+            for argument in statement.args() {
                 collector.collect_obj(argument);
             }
         }

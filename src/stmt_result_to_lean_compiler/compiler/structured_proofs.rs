@@ -459,14 +459,34 @@ impl StmtResultToLeanCompiler {
             } else if exact_numeric_carrier && witness_already_uses_exact_carrier {
                 (rendered_witness, parameter_proof, body_proof)
             } else if exact_numeric_carrier {
-                let selected_witness =
-                    format!("(Litex.In.rep {rendered_witness} ({parameter_proof}))");
+                let closed_numeric_witness = matches!(
+                    LeanTargetObjectRepresentation::lower(witness_object)?,
+                    LeanTargetObjectRepresentation::Number { .. }
+                        | LeanTargetObjectRepresentation::Constant(_)
+                );
+                let selected_witness = if closed_numeric_witness {
+                    render_exact_predicate_argument(
+                        witness_object,
+                        source_set,
+                        &self.environment_stack,
+                    )?
+                } else {
+                    format!("(Litex.In.rep {rendered_witness} ({parameter_proof}))")
+                };
                 let selected_membership = format!(
                     "Litex.In.own {} {selected_witness}",
                     render_obj(source_set, &self.environment_stack)?
                 );
-                let source_to_selected =
-                    format!("Litex.In.same_rep {rendered_witness} ({parameter_proof})");
+                let source_to_selected = if closed_numeric_witness {
+                    let selected_to_source = render_exact_predicate_argument_same_to_source(
+                        witness_object,
+                        source_set,
+                        &self.environment_stack,
+                    )?;
+                    format!("Litex.Same.symm ({selected_to_source})")
+                } else {
+                    format!("Litex.In.same_rep {rendered_witness} ({parameter_proof})")
+                };
                 let body = existential.facts()[0].from_ref_to_cloned_fact();
                 let source_context = self.environment_stack.clone();
                 let mut selected_context = source_context.clone();
@@ -1347,16 +1367,17 @@ impl StmtResultToLeanCompiler {
                 "theorem-backed existential elimination retained another source statement".into(),
             );
         };
-        if theorem_application.statement.name.to_string() != result.statement.thm_name.to_string()
+        if theorem_application.statement.name().to_string()
+            != result.statement.thm_name().to_string()
             || theorem_application
                 .statement
-                .args
+                .args()
                 .iter()
                 .map(ToString::to_string)
                 .collect::<Vec<_>>()
                 != result
                     .statement
-                    .args
+                    .args()
                     .iter()
                     .map(ToString::to_string)
                     .collect::<Vec<_>>()

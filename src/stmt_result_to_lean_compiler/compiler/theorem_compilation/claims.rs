@@ -30,6 +30,7 @@ impl StmtResultToLeanCompiler {
                     proof_steps: &result.proof_steps,
                     conclusion_checks: result.conclusion_checks.iter().collect(),
                     outer_environment_effects: Some(&result.environment_effects),
+                    source_fact_id: None,
                 },
             );
         }
@@ -109,6 +110,7 @@ impl StmtResultToLeanCompiler {
                 proof_steps: &result.proof_steps,
                 conclusion_checks: result.conclusion_checks.iter().collect(),
                 outer_environment_effects: Some(&result.environment_effects),
+                source_fact_id: None,
             },
         )?;
         if !compiled {

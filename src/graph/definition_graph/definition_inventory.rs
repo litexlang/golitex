@@ -265,17 +265,25 @@ impl DefinitionGraphBuilder {
                 Some(&definition.to_string()),
             );
             let mut signature = DepCollector::new();
-            signature.collect_param_def_with_type_deps(&definition.forall_fact.typed_parameters);
-            signature.add_param_def_with_type(&definition.forall_fact.typed_parameters);
-            for fact in definition.forall_fact.then_facts.iter() {
-                signature.collect_exist_or_and_chain_atomic_fact(fact);
+            if let Fact::ForallFact(forall_fact) = &definition.fact {
+                signature.collect_param_def_with_type_deps(&forall_fact.typed_parameters);
+                signature.add_param_def_with_type(&forall_fact.typed_parameters);
+                for fact in forall_fact.then_facts.iter() {
+                    signature.collect_exist_or_and_chain_atomic_fact(fact);
+                }
+            } else {
+                signature.collect_fact(&definition.fact);
             }
             self.add_dependency_edges(&node_id, signature, "signature");
 
             let mut well_definedness = DepCollector::new();
-            well_definedness.add_param_def_with_type(&definition.forall_fact.typed_parameters);
-            for fact in definition.forall_fact.dom_facts.iter() {
-                well_definedness.collect_fact(fact);
+            if let Fact::ForallFact(forall_fact) = &definition.fact {
+                well_definedness.add_param_def_with_type(&forall_fact.typed_parameters);
+                for fact in forall_fact.dom_facts.iter() {
+                    well_definedness.collect_fact(fact);
+                }
+            } else {
+                well_definedness.collect_fact(&definition.fact);
             }
             self.add_dependency_edges(&node_id, well_definedness, "well_definedness");
         }

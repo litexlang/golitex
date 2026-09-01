@@ -41,6 +41,7 @@ pub(super) struct NamedForallStatementResultCompilationInput<'a> {
     /// carries references and therefore is not a second semantic IR.
     pub(super) conclusion_checks: Vec<&'a StmtResult>,
     pub(super) outer_environment_effects: Option<&'a SuccessInferResult>,
+    pub(super) source_fact_id: Option<FactId>,
 }
 
 #[derive(Clone, Copy)]

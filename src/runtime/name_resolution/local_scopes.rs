@@ -1,4 +1,4 @@
-//! Temporary parser and proof scopes owned by the active execution frame.
+//! Runtime-owned parser scopes and frame-owned local environments.
 
 use crate::prelude::*;
 
@@ -87,8 +87,6 @@ impl Runtime {
     where
         F: FnOnce(&mut Self) -> Result<T, RuntimeError>,
     {
-        let parse_context_before = self.current_parse_context().clone();
-
         self.push_env();
         let result = f(self);
         let child = self
@@ -96,12 +94,6 @@ impl Runtime {
             .last_mut()
             .and_then(|frame| frame.local_environment_stack.pop())
             .expect("local environment should exist after push_env");
-        if result.is_ok() {
-            self.current_parse_context_mut()
-                .restore_scoped_state(parse_context_before);
-        } else {
-            *self.current_parse_context_mut() = parse_context_before;
-        }
 
         let value = result?;
         self.top_level_env().merge_committed_child(*child)?;
@@ -118,12 +110,7 @@ impl Runtime {
     {
         let saved_parse_context = self.current_parse_context().clone();
         let result = f(self);
-        if result.is_ok() {
-            self.current_parse_context_mut()
-                .restore_scoped_state(saved_parse_context);
-        } else {
-            *self.current_parse_context_mut() = saved_parse_context;
-        }
+        *self.current_parse_context_mut() = saved_parse_context;
         result
     }
 

@@ -2363,8 +2363,8 @@ copy = 2
     };
     let elimination = result.verification.as_ref().unwrap();
     assert_eq!(result.statement.equal_tos[0].name(), "copy");
-    assert_eq!(result.statement.thm_name.to_string(), "self_exists");
-    assert_eq!(result.statement.args[0].to_string(), "2");
+    assert_eq!(result.statement.thm_name().to_string(), "self_exists");
+    assert_eq!(result.statement.args()[0].to_string(), "2");
     assert!(run_output.contains("\"kind\": \"ReleaseThmStmt\""));
     assert!(run_output.contains("\"kind\": \"SuccessVerifyByTheoremResult\""));
     assert!(run_output.contains("\"statement\": \"release thm self_exists(2)\""));
@@ -2381,6 +2381,118 @@ copy = 2
         .known_fact_id_for_fact(&source_exist.into())
         .unwrap()
         .is_none());
+}
+
+#[test]
+fn named_non_forall_theorems_use_direct_fact_citations() {
+    let source_code = r#"
+thm one_is_one:
+    ? 1 = 1
+
+release thm one_is_one
+by thm one_is_one => 1 = 1
+
+thm conjunction:
+    ? 1 = 1 and 2 = 2
+release thm conjunction
+
+thm disjunction:
+    ? 1 = 1 or 2 = 3
+release thm disjunction
+
+thm relation_chain:
+    ? 1 <= 1 = 1
+release thm relation_chain
+
+thm zero_parameter_forall:
+    ? forall:
+        3 = 3
+release thm zero_parameter_forall()
+
+thm zero_exists:
+    ? exist x R st {x = 0}
+    witness exist x R st {x = 0} from 0:
+        0 = 0
+
+obtain zero from thm zero_exists
+zero $in R
+zero = 0
+"#;
+
+    let mut runtime = Runtime::default();
+    runtime.start_isolated_source("named_non_forall_theorems_use_direct_fact_citations");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
+
+    assert!(
+        run_succeeded,
+        "direct theorem facts should be callable:\n{run_output}"
+    );
+    assert!(run_output.contains("\"fact\": \"1 = 1\""));
+    assert!(run_output.contains("\"forall_fact\": null"));
+    assert!(run_output.contains("\"source_fact_id\": \"f"));
+    assert!(run_output.contains("\"application_mode\": \"cite_fact\""));
+    assert!(run_output.contains("\"stored_then_facts\": []"));
+    assert!(run_output.contains("\"statement\": \"release thm one_is_one\""));
+    assert!(run_output.contains("\"fact\": \"1 = 1 and 2 = 2\""));
+    assert!(run_output.contains("\"fact\": \"1 = 1 or 2 = 3\""));
+    assert!(run_output.contains("\"fact\": \"1 <= 1 = 1\""));
+    assert!(run_output.contains("\"statement\": \"release thm zero_parameter_forall()\""));
+    assert!(run_output.contains("\"statement\": \"obtain zero from thm zero_exists\""));
+}
+
+#[test]
+fn theorem_call_shape_and_iff_boundaries_remain_strict() {
+    let cases = [
+        (
+            "ordinary theorem with parentheses",
+            "thm direct:\n    ? 1 = 1\nrelease thm direct()",
+            "a non-forall theorem must be called without parentheses",
+        ),
+        (
+            "forall theorem without parentheses",
+            "thm universal:\n    ? forall x R:\n        x = x\nrelease thm universal",
+            "a forall theorem call requires parentheses",
+        ),
+        (
+            "zero-parameter forall without parentheses",
+            "thm universal:\n    ? forall:\n        1 = 1\nrelease thm universal",
+            "a forall theorem call requires parentheses",
+        ),
+        (
+            "builtin theorem without parentheses",
+            "release thm subset_of_finite_set_is_finite",
+            "builtin theorem calls require parentheses",
+        ),
+        (
+            "unknown bare theorem",
+            "release thm missing_theorem",
+            "theorem `missing_theorem` is not defined",
+        ),
+        (
+            "forall iff theorem declaration",
+            "thm invalid:\n    ? forall x R:\n        =>:\n            x = x\n        <=>:\n            x = x",
+            "thm fact cannot be `forall ... <=>:`",
+        ),
+        (
+            "ordinary axiom remains rejected",
+            "axiom direct:\n    ? 1 = 1",
+            "goal must be a single `forall` fact",
+        ),
+    ];
+
+    for (label, source_code, expected_message) in cases {
+        let mut runtime = Runtime::default();
+        runtime.start_isolated_source(label);
+        let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_output(&runtime, &stmt_results, &runtime_error);
+        assert!(!run_succeeded, "{label} should fail:\n{run_output}");
+        assert!(
+            run_output.contains(expected_message),
+            "{label} should report `{expected_message}`:\n{run_output}"
+        );
+    }
 }
 
 #[test]

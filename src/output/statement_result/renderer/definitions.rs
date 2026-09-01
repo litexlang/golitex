@@ -306,7 +306,10 @@ impl StatementResultRenderer {
                     "DefThmStmt",
                     result.statement.to_string(),
                     &result.common,
-                    vec![("verification".to_string(), verification)],
+                    vec![
+                        string_field("source_fact_id", fact_id(result.source_fact_id)),
+                        ("verification".to_string(), verification),
+                    ],
                 )
             }
             SuccessDefinitionStmtResult::AxiomStmt(result) => {

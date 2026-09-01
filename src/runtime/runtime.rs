@@ -10,6 +10,9 @@ pub struct Runtime {
     /// this Runtime and are selected by `execution_stack` frames.
     pub module_manager: Box<ModuleManager>,
     pub execution_stack: Vec<ExecutionFrame>,
+    /// Transient binder and scope state shared by one nested parser traversal.
+    /// Execution frames neither consume nor reset it.
+    pub(crate) parse_context: ParseContext,
     /// Monotone runtime-wide allocator. Local environments may disappear, but
     /// a fact ID is never reused during the run.
     pub next_fact_id: u64,
@@ -27,6 +30,7 @@ impl Runtime {
         Runtime {
             module_manager: Box::new(ModuleManager::new()),
             execution_stack: vec![],
+            parse_context: ParseContext::new(),
             next_fact_id: 1,
             symbol_id_allocator: Rc::new(SymbolIdAllocator::new()),
             template_instance_interner: RefCell::new(HashMap::new()),
@@ -94,6 +98,10 @@ impl Runtime {
         if !self.execution_stack.is_empty() {
             return;
         }
+        debug_assert!(
+            self.parse_context.is_at_root_scope(),
+            "an execution frame cannot be created inside an active parser scope"
+        );
         let source_path = self
             .module_manager
             .module(ModuleId::ROOT)
@@ -125,19 +133,11 @@ impl Runtime {
     }
 
     pub fn current_parse_context(&self) -> &ParseContext {
-        &self
-            .execution_stack
-            .last()
-            .expect("an execution frame should exist while parsing")
-            .parse_context
+        &self.parse_context
     }
 
     pub fn current_parse_context_mut(&mut self) -> &mut ParseContext {
-        &mut self
-            .execution_stack
-            .last_mut()
-            .expect("an execution frame should exist while parsing")
-            .parse_context
+        &mut self.parse_context
     }
 
     pub fn current_module_id(&self) -> ModuleId {
@@ -174,6 +174,10 @@ impl Runtime {
         file_id: FileId,
         execution_mode: ExecutionMode,
     ) {
+        debug_assert!(
+            self.parse_context.is_at_root_scope(),
+            "a file execution frame cannot be pushed inside an active parser scope"
+        );
         let module_file_info = self
             .module_manager
             .execution_module_file_info(module_id, file_id)
@@ -194,6 +198,10 @@ impl Runtime {
     }
 
     pub fn pop_execution_frame(&mut self) {
+        debug_assert!(
+            self.parse_context.is_at_root_scope(),
+            "a file execution frame cannot be popped inside an active parser scope"
+        );
         self.execution_stack
             .pop()
             .expect("an execution frame should exist before it is popped");
@@ -334,6 +342,10 @@ impl Runtime {
     }
 
     fn start_isolated_source_with_kind(&mut self, source_path: &str, is_virtual_source: bool) {
+        debug_assert!(
+            self.parse_context.is_at_root_scope(),
+            "an isolated source cannot start inside an active parser scope"
+        );
         let module_file_info = self
             .module_manager
             .create_root_module(source_path, is_virtual_source);
@@ -392,6 +404,10 @@ impl Runtime {
         &mut self,
         source_path: &str,
     ) -> Result<(), RuntimeError> {
+        debug_assert!(
+            self.parse_context.is_at_root_scope(),
+            "a repository REPL cannot start inside an active parser scope"
+        );
         let module_id = self
             .module_manager
             .module(ModuleId::ROOT)

@@ -2160,11 +2160,20 @@ This is a parse `error`. Put the target under `claim`, `example`, `thm`,
 
 ### Named interfaces: `thm`, `axiom`, `release thm`, and `by thm ... => fact`
 
-`thm` proves and names a reusable fact. A universal theorem is available both
-for explicit theorem calls and ordinary known-`forall` matching. `axiom` gives
-the same named interface to a trusted fact without proving it. Use bare
-`release thm name(args)` when every instantiated conclusion should enter the
-current context:
+`thm` proves and names one reusable `Fact`, using the same goal shapes as
+`claim` except that a root `forall ... <=>:` fact is not accepted. A universal
+theorem is available both for explicit theorem calls and ordinary
+known-`forall` matching. `axiom` remains universal-only and gives the same
+parenthesized call interface to a trusted fact without proving it.
+
+The call spelling records whether instantiation is taking place:
+
+- call a root `forall` theorem, including a zero-parameter `forall`, with
+  parentheses: `name(args)` or `name()`;
+- cite every other theorem fact without parentheses: `name`.
+
+For a universal theorem, use `release thm name(args)` when every instantiated
+conclusion should enter the current context:
 
 ```litex
 thm positive_is_nonzero:
@@ -2176,6 +2185,21 @@ thm positive_is_nonzero:
 
 release thm positive_is_nonzero(1)
 ```
+
+An ordinary theorem fact is already stored when the theorem is defined. Its
+bare call is therefore an exact citation, not a second store operation:
+
+```litex
+thm one_is_one:
+    ? 1 = 1
+
+release thm one_is_one
+by thm one_is_one => 1 = 1
+```
+
+`one_is_one()` is rejected, just as a bare call to a root `forall` theorem is
+rejected. Reserved builtin theorem calls and `axiom` calls also keep their
+parentheses.
 
 `release thm` checks argument types and theorem premises, instantiates every
 conclusion, and stores all of them with the existing theorem-instantiation
@@ -2209,9 +2233,10 @@ and need not be a direct theorem conclusion, but compound, quantified,
 existential, disjunctive, conjunctive, and chain targets are not accepted. A
 missing `=>`, indented goal, or proof body is rejected.
 
-A bare `release thm name(args)` stores all instantiated conclusions. A
-selected `by thm ... => fact` call stores only the requested atomic fact and its ordinary
-inferred consequences.
+For a root `forall`, `release thm name(args)` stores all instantiated
+conclusions. For an ordinary theorem fact, `release thm name` cites the
+already-stored theorem FactId. A selected `by thm ... => fact` call stores only
+the requested atomic fact and its ordinary inferred consequences.
 
 There is no separate `lemma` keyword:
 
@@ -2382,7 +2407,7 @@ introductions.
 | `trust fact`, `trust have ...` | Parsing, binding, well-definedness, and transactional staging still run; proof truth is assumed. | One trusted transaction. Failure commits nothing. |
 | `obtain ... from exist ...` | The source existential is known; names, count, and dependent parameter types match. | Opaque witness names plus their type and direct body facts. |
 | `obtain ... from $P(args)` | `$P(args)` is known and its concrete definition has exactly one positive `exist`/`exist!` clause. | The same witness facts after checked definition projection. |
-| `obtain ... from thm name(args)` | The named user, imported, or reserved builtin theorem passes the ordinary `release thm` argument/premise checks and has exactly one direct positive `exist`/`exist!` conclusion. | The theorem application remains scoped; only the eliminated witnesses, types, body facts, and `exist!` uniqueness interface escape. |
+| `obtain ... from thm name(args)` / `obtain ... from thm name` | The named user, imported, or reserved builtin theorem passes the ordinary call checks and has exactly one direct positive `exist`/`exist!` conclusion. Parentheses are required for a root `forall`; a direct existential theorem uses the bare form. | The theorem application remains scoped; only the eliminated witnesses, types, body facts, and `exist!` uniqueness interface escape. |
 | `have by preimage ...` | Known membership in `fn_range(f)` or `replacement(P,A)` and matching source shape. | Opaque preimage names and the application/relation witness facts. |
 | `have fn ... = ...` | Ordered parameter domains, return carrier, body membership, and side conditions. | A callable function, its signature, and checked defining equation. |
 | `have fn ... by cases` | Cases are exhaustive, pairwise disjoint, and every result belongs to the return set. | A callable piecewise function and guarded case equations. |
