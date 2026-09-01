@@ -7,20 +7,21 @@ impl Runtime {
         obj: &Obj,
         verify_state: &VerifyState,
     ) -> Result<Option<Obj>, RuntimeError> {
-        if self.set_builder_forall_transport_is_active() {
+        if verify_state.set_builder_forall_transport_is_active() {
             return Ok(None);
         }
-        self.set_set_builder_forall_transport_active(true);
+        verify_state.set_set_builder_forall_transport_active(true);
         let result = self
             .unfold_known_fn_application_to_set_builder(obj, verify_state)
             .map(|set_builder| set_builder.map(Obj::from));
-        self.set_set_builder_forall_transport_active(false);
+        verify_state.set_set_builder_forall_transport_active(false);
         result
     }
 
     pub fn try_verify_set_builder_membership_definition_transport(
         &mut self,
         goal: &InFact,
+        verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Obj::SetBuilder(goal_builder) = &goal.set else {
             return Ok(None);
@@ -32,7 +33,7 @@ impl Runtime {
             .filter(|membership| objs_match_for_pattern(&membership.element, &goal.element))
             .cloned()
             .collect();
-        let final_state = VerifyState::final_round_after_well_definedness();
+        let final_state = verify_state.with_final_round_after_well_definedness();
 
         for membership in memberships {
             let unfolded = match &membership.set {
@@ -71,7 +72,7 @@ impl Runtime {
             ));
         }
 
-        if self.set_builder_forall_transport_is_active() {
+        if verify_state.set_builder_forall_transport_is_active() {
             return Ok(None);
         }
         let forall_memberships: Vec<(InFact, Rc<StoredForallConclusionReference>)> = self
@@ -145,8 +146,8 @@ impl Runtime {
             ) {
                 continue;
             }
-            let requirement_state = VerifyState::final_round_after_well_definedness();
-            self.set_set_builder_forall_transport_active(true);
+            let requirement_state = verify_state.with_final_round_after_well_definedness();
+            verify_state.set_set_builder_forall_transport_active(true);
             let membership_result = self.verify_args_satisfy_forall_requirements(
                 &membership_pattern_atomic,
                 &forall_context,
@@ -154,7 +155,7 @@ impl Runtime {
                 &instantiated,
                 &requirement_state,
             );
-            self.set_set_builder_forall_transport_active(false);
+            verify_state.set_set_builder_forall_transport_active(false);
             let Some(membership_success) = membership_result? else {
                 continue;
             };
@@ -178,8 +179,10 @@ impl Runtime {
     pub fn try_verify_atomic_fact_from_known_set_builder_membership(
         &mut self,
         goal: &AtomicFact,
+        verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        if !matches!(goal, AtomicFact::InFact(_)) && !self.set_builder_forall_transport_is_active()
+        if !matches!(goal, AtomicFact::InFact(_))
+            && !verify_state.set_builder_forall_transport_is_active()
         {
             let forall_memberships: Vec<(InFact, Rc<StoredForallConclusionReference>)> = self
                 .iter_environments_from_top()
@@ -210,7 +213,7 @@ impl Runtime {
                     Obj::SetBuilder(set_builder) => Some(set_builder.clone()),
                     _ => match self.unfold_set_builder_definition_without_transport_reentry(
                         &membership_pattern.set,
-                        &VerifyState::final_round_after_well_definedness(),
+                        &verify_state.with_final_round_after_well_definedness(),
                     )? {
                         Some(Obj::SetBuilder(set_builder)) => Some(set_builder),
                         _ => None,
@@ -252,8 +255,8 @@ impl Runtime {
                         SubstitutionMode::Exact,
                         Some(&goal.line_file()),
                     )?;
-                    let requirement_state = VerifyState::final_round_after_well_definedness();
-                    self.set_set_builder_forall_transport_active(true);
+                    let requirement_state = verify_state.with_final_round_after_well_definedness();
+                    verify_state.set_set_builder_forall_transport_active(true);
                     let membership_result = self.verify_args_satisfy_forall_requirements(
                         &membership_pattern_atomic,
                         &forall_context,
@@ -261,7 +264,7 @@ impl Runtime {
                         &instantiated_membership,
                         &requirement_state,
                     );
-                    self.set_set_builder_forall_transport_active(false);
+                    verify_state.set_set_builder_forall_transport_active(false);
                     let Some(membership_success) = membership_result? else {
                         continue;
                     };
@@ -306,7 +309,7 @@ impl Runtime {
                 }
             }
         }
-        let final_state = VerifyState::final_round();
+        let final_state = verify_state.with_final_round();
 
         for membership in memberships {
             let set_builder = match &membership.set {
@@ -1451,12 +1454,12 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let goal_key = in_fact.to_string();
-        if !self.begin_set_builder_membership_unfold(&goal_key) {
+        if !verify_state.begin_set_builder_membership_unfold(&goal_key) {
             return Ok(None);
         }
         let result =
             self.maybe_verify_in_fact_in_unfolded_user_defined_set_once(in_fact, verify_state);
-        self.end_set_builder_membership_unfold(&goal_key);
+        verify_state.end_set_builder_membership_unfold(&goal_key);
         result
     }
 

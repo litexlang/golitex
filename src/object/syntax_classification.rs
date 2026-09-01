@@ -62,12 +62,7 @@ impl Obj {
                             || index.index.contains_native_complex_syntax()
                     }
                     FnObjHead::ObjAsStructInstanceWithFieldAccess(access) => {
-                        access
-                            .struct_obj
-                            .params
-                            .iter()
-                            .any(|obj| obj.contains_native_complex_syntax())
-                            || access.obj.contains_native_complex_syntax()
+                        access.obj.contains_native_complex_syntax()
                     }
                     FnObjHead::InstantiatedTemplateObj(template) => template
                         .args
@@ -303,12 +298,7 @@ impl Obj {
                 .iter()
                 .any(|obj| obj.contains_native_complex_syntax()),
             Obj::ObjAsStructInstanceWithFieldAccess(access) => {
-                access
-                    .struct_obj
-                    .params
-                    .iter()
-                    .any(|obj| obj.contains_native_complex_syntax())
-                    || access.obj.contains_native_complex_syntax()
+                access.obj.contains_native_complex_syntax()
             }
             Obj::InstantiatedTemplateObj(template) => template
                 .args
@@ -345,12 +335,7 @@ impl Obj {
                             || index.index.contains_native_transcendental_syntax()
                     }
                     FnObjHead::ObjAsStructInstanceWithFieldAccess(access) => {
-                        access
-                            .struct_obj
-                            .params
-                            .iter()
-                            .any(|obj| obj.contains_native_transcendental_syntax())
-                            || access.obj.contains_native_transcendental_syntax()
+                        access.obj.contains_native_transcendental_syntax()
                     }
                     FnObjHead::InstantiatedTemplateObj(template) => template
                         .args
@@ -598,12 +583,7 @@ impl Obj {
                 .iter()
                 .any(|obj| obj.contains_native_transcendental_syntax()),
             Obj::ObjAsStructInstanceWithFieldAccess(access) => {
-                access
-                    .struct_obj
-                    .params
-                    .iter()
-                    .any(|obj| obj.contains_native_transcendental_syntax())
-                    || access.obj.contains_native_transcendental_syntax()
+                access.obj.contains_native_transcendental_syntax()
             }
             Obj::InstantiatedTemplateObj(template) => template
                 .args

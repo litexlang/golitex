@@ -1649,6 +1649,7 @@ impl Runtime {
         &mut self,
         objs: &[&Obj],
         line_file: &LineFile,
+        verify_state: &VerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         let mut seen = Vec::new();
         let mut steps = Vec::new();
@@ -1661,8 +1662,13 @@ impl Runtime {
 
             let in_z: AtomicFact =
                 InFact::new((*obj).clone(), StandardSet::Z.into(), line_file.clone()).into();
-            let direct_result =
-                self.verify_non_equational_atomic_fact_with_zero_premise_verification(&in_z)?;
+            let direct_result = if let Some(result) =
+                self.verification_result_from_proof_search_memo(&in_z, verify_state)
+            {
+                result
+            } else {
+                self.verify_non_equational_atomic_fact_with_zero_premise_verification(&in_z)?
+            };
             if direct_result.is_success() {
                 steps.push(direct_result);
                 continue;
@@ -1693,6 +1699,7 @@ impl Runtime {
                     .verify_objects_are_known_integers_in_builtin_leaf(
                         &integer_operands,
                         line_file,
+                        verify_state,
                     )?
                 {
                     steps.push(
@@ -1717,8 +1724,13 @@ impl Runtime {
                 let finite_fact: AtomicFact =
                     IsFiniteSetFact::new(finite_set_size.set.as_ref().clone(), line_file.clone())
                         .into();
-                let finite_result =
-                    self.verify_non_equational_atomic_fact_with_known_atomic_facts(&finite_fact)?;
+                let finite_result = if let Some(result) =
+                    self.verification_result_from_proof_search_memo(&finite_fact, verify_state)
+                {
+                    result
+                } else {
+                    self.verify_non_equational_atomic_fact_with_known_atomic_facts(&finite_fact)?
+                };
                 if finite_result.is_success() {
                     steps.push(
                         number_in_set_verified_by_builtin_rules_result_with_subgoals(

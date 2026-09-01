@@ -424,20 +424,23 @@ impl Obj {
             )
             .into(),
             Obj::ObjAsStructInstanceWithFieldAccess(s) => {
-                let struct_obj = StructObj::new(
-                    s.struct_obj.name.clone(),
-                    s.struct_obj
-                        .params
-                        .into_iter()
-                        .map(|o| Obj::replace_bound_identifier(o, from, to))
-                        .collect(),
-                );
-                ObjAsStructInstanceWithFieldAccess::new(
-                    struct_obj,
-                    Obj::replace_bound_identifier(*s.obj, from, to),
-                    s.field_name,
-                )
-                .into()
+                let obj = Obj::replace_bound_identifier(*s.obj, from, to);
+                match s.resolved_struct_carrier {
+                    Some(struct_obj) => {
+                        let replaced =
+                            Obj::replace_bound_identifier(Obj::StructObj(*struct_obj), from, to);
+                        let Obj::StructObj(struct_obj) = replaced else {
+                            unreachable!("substituting a struct carrier preserves its object kind")
+                        };
+                        ObjAsStructInstanceWithFieldAccess::new_resolved(
+                            obj,
+                            s.field_name,
+                            struct_obj,
+                        )
+                        .into()
+                    }
+                    None => ObjAsStructInstanceWithFieldAccess::new(obj, s.field_name).into(),
+                }
             }
             Obj::InstantiatedTemplateObj(t) => InstantiatedTemplateObj::new(
                 t.template_name,

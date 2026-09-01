@@ -31,7 +31,6 @@ impl Runtime {
                 ),
             )));
         }
-        let struct_obj = self.struct_view_for_field_access_receiver(&obj, tb.line_file.clone())?;
-        Ok(ByStructDefStmt::new(obj, struct_obj, tb.line_file.clone()).into())
+        Ok(ByStructDefStmt::new(obj, tb.line_file.clone()).into())
     }
 }

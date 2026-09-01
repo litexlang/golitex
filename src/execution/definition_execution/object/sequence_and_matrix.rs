@@ -51,7 +51,7 @@ impl Runtime {
         let anonymous_fn = build_have_seq_anonymous_fn(self, stmt)
             .map_err(|e| short_exec_error(stmt.clone().into(), String::new(), Some(e), vec![]))?;
         let shape =
-            self.have_indexed_fn_definition_shape_trusted(stmt.clone().into(), anonymous_fn)?;
+            self.build_indexed_fn_definition_shape_with_trust(stmt.clone().into(), anonymous_fn)?;
         let infer_result = self.exec_have_indexed_fn_definition_affect_environment(
             stmt.clone().into(),
             stmt.name(),
@@ -127,7 +127,7 @@ impl Runtime {
         let anonymous_fn = build_have_finite_seq_anonymous_fn(self, stmt)
             .map_err(|e| short_exec_error(stmt.clone().into(), String::new(), Some(e), vec![]))?;
         let shape =
-            self.have_indexed_fn_definition_shape_trusted(stmt.clone().into(), anonymous_fn)?;
+            self.build_indexed_fn_definition_shape_with_trust(stmt.clone().into(), anonymous_fn)?;
         let infer_result = self.exec_have_indexed_fn_definition_affect_environment(
             stmt.clone().into(),
             stmt.name(),
@@ -210,7 +210,7 @@ impl Runtime {
         let anonymous_fn = build_have_matrix_anonymous_fn(self, stmt)
             .map_err(|e| short_exec_error(stmt.clone().into(), String::new(), Some(e), vec![]))?;
         let shape =
-            self.have_indexed_fn_definition_shape_trusted(stmt.clone().into(), anonymous_fn)?;
+            self.build_indexed_fn_definition_shape_with_trust(stmt.clone().into(), anonymous_fn)?;
         let infer_result = self.exec_have_indexed_fn_definition_affect_environment(
             stmt.clone().into(),
             stmt.name(),
@@ -267,7 +267,7 @@ impl Runtime {
         ))
     }
 
-    fn have_indexed_fn_definition_shape_trusted(
+    fn build_indexed_fn_definition_shape_with_trust(
         &mut self,
         stmt: Stmt,
         anonymous_fn: AnonymousFn,

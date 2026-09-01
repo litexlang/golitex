@@ -207,9 +207,13 @@ impl Runtime {
         }
         steps.push_fact_check(super::success_obj_fact_check(positive_result)?);
 
-        self.store_fn_obj_cart_return_facts_if_available(&value.obj, default_line_file())?;
-        let default_struct_view = self.known_struct_carrier_for_obj(&value.obj);
-        if let Some(struct_obj) = default_struct_view {
+        self.store_fn_obj_cart_return_facts_if_available(
+            &value.obj,
+            default_line_file(),
+            verify_state,
+        )?;
+        let known_struct_carrier = self.known_struct_carrier_for_obj(&value.obj);
+        if let Some(struct_obj) = known_struct_carrier {
             let struct_membership: AtomicFact = InFact::new(
                 (*value.obj).clone(),
                 struct_obj.clone().into(),
@@ -228,8 +232,10 @@ impl Runtime {
                         default_line_file(),
                     )
                     .into();
-                    self.store_atomic_fact_without_well_defined_verified_and_infer(
+                    self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
                         cart_membership,
+                        InferReason::StoredFact.store_reason(),
+                        verify_state.inference_state(),
                     )?;
                 }
             }
@@ -478,13 +484,17 @@ impl Runtime {
             )));
         }
 
-        self.store_fn_obj_cart_return_facts_if_available(&x.obj, default_line_file())?;
+        self.store_fn_obj_cart_return_facts_if_available(
+            &x.obj,
+            default_line_file(),
+            verify_state,
+        )?;
 
-        // A struct binding keeps its tuple view lazy until a projection is
+        // A struct binding keeps its tuple representation lazy until a projection is
         // actually used. Example: `q &Point` stores no `q $in cart(...)`,
         // while `q[1]` materializes that cart membership on demand.
-        let default_struct_view = self.known_struct_carrier_for_obj(&x.obj);
-        if let Some(struct_obj) = default_struct_view {
+        let known_struct_carrier = self.known_struct_carrier_for_obj(&x.obj);
+        if let Some(struct_obj) = known_struct_carrier {
             let struct_membership: AtomicFact = InFact::new(
                 (*x.obj).clone(),
                 struct_obj.clone().into(),
@@ -502,8 +512,10 @@ impl Runtime {
                         default_line_file(),
                     )
                     .into();
-                    self.store_atomic_fact_without_well_defined_verified_and_infer(
+                    self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
                         cart_membership,
+                        InferReason::StoredFact.store_reason(),
+                        verify_state.inference_state(),
                     )?;
                 }
             }
@@ -547,6 +559,7 @@ impl Runtime {
         &mut self,
         obj: &Obj,
         line_file: LineFile,
+        verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
         let Obj::FnObj(fn_obj) = obj else {
             return Ok(());
@@ -570,13 +583,21 @@ impl Runtime {
         self.store_tuple_obj_and_cart(&obj_key, None, Some(cart.clone()), line_file.clone());
 
         let is_tuple_fact: AtomicFact = IsTupleFact::new(obj.clone(), line_file.clone()).into();
-        self.store_atomic_fact_without_well_defined_verified_and_infer(is_tuple_fact)?;
+        self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
+            is_tuple_fact,
+            InferReason::StoredFact.store_reason(),
+            verify_state.inference_state(),
+        )?;
 
         let tuple_dim_obj: Obj = TupleDim::new(obj.clone()).into();
         let cart_arg_count_obj: Obj = Number::new(cart.args.len().to_string()).into();
         let tuple_dim_fact: AtomicFact =
             EqualFact::new(tuple_dim_obj, cart_arg_count_obj, line_file.clone()).into();
-        self.store_atomic_fact_without_well_defined_verified_and_infer(tuple_dim_fact)?;
+        self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
+            tuple_dim_fact,
+            InferReason::StoredFact.store_reason(),
+            verify_state.inference_state(),
+        )?;
 
         for (factor_index, factor) in cart.args.iter().enumerate() {
             let index = factor_index + 1;
@@ -587,13 +608,19 @@ impl Runtime {
                 line_file.clone(),
             )
             .into();
-            self.store_atomic_fact_without_well_defined_verified_and_infer(index_bound_fact)?;
+            self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
+                index_bound_fact,
+                InferReason::StoredFact.store_reason(),
+                verify_state.inference_state(),
+            )?;
 
             let projected_obj: Obj = ObjAtIndex::new(obj.clone(), index_obj).into();
             let projected_in_factor_fact: AtomicFact =
                 InFact::new(projected_obj, (**factor).clone(), line_file.clone()).into();
-            self.store_atomic_fact_without_well_defined_verified_and_infer(
+            self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
                 projected_in_factor_fact,
+                InferReason::StoredFact.store_reason(),
+                verify_state.inference_state(),
             )?;
         }
 

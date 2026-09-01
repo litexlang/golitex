@@ -3,9 +3,10 @@ use crate::prelude::*;
 impl Runtime {
     // Subset: `A $subset B` => `forall` fresh `x`: `x $in A` => `x $in B`.
     // Example: knowing `S $subset T`, any member of `S` is a member of `T`.
-    pub fn infer_subset_fact(
+    pub(in crate::inference) fn infer_subset_fact(
         &mut self,
         subset_fact: &SubsetFact,
+        inference_state: &InferenceState,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let left_set = subset_fact.left.clone();
         let left_is_set_builder = matches!(&left_set, Obj::SetBuilder(_))
@@ -63,8 +64,9 @@ impl Runtime {
 
         let mut result = SuccessInferResult::new();
         let conclusion_infers = self
-            .store_with_well_defined_verification_and_infer_with_default_verify_state(
+            .store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
                 inferred_forall_fact.clone(),
+                inference_state,
             )
             .map_err(|previous_error| {
                 RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
@@ -93,9 +95,10 @@ impl Runtime {
 
     // Superset: `A $superset B` => `forall` fresh `x`: `x $in B` => `x $in A`.
     // Example: knowing `T $superset S`, every `x $in S` satisfies `x $in T`.
-    pub fn infer_superset_fact(
+    pub(in crate::inference) fn infer_superset_fact(
         &mut self,
         superset_fact: &SupersetFact,
+        inference_state: &InferenceState,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let generated_param_name = self.generate_random_unused_name();
         let parameter_definition = self.fresh_param_group_with_type(
@@ -119,8 +122,9 @@ impl Runtime {
 
         let mut result = SuccessInferResult::new();
         let conclusion_infers = self
-            .store_with_well_defined_verification_and_infer_with_default_verify_state(
+            .store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
                 inferred_forall_fact.clone(),
+                inference_state,
             )
             .map_err(|previous_error| {
                 RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(

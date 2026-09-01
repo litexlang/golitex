@@ -139,13 +139,13 @@ impl StmtResultToLeanCompiler {
 
         let theorem_fact: Fact = (*verification.forall_fact).clone().into();
         let theorem_fact_id =
-            if let Some(outer_statement_common) = verification.outer_statement_common {
-                if !outer_statement_common.infers.rule_applications.is_empty()
-                    || outer_statement_common.infers.store_fact_outputs.len() > 1
+            if let Some(environment_effects) = verification.outer_environment_effects {
+                if !environment_effects.rule_applications.is_empty()
+                    || environment_effects.store_fact_outputs.len() > 1
                 {
                     return Ok(false);
                 }
-                let [stored] = outer_statement_common.infers.store_fact_outputs.as_slice() else {
+                let [stored] = environment_effects.store_fact_outputs.as_slice() else {
                     return Err("named forall Result has no outer store effect".into());
                 };
                 if stored.itself_and_why_itself_is_stored.0.to_string() != theorem_fact.to_string()

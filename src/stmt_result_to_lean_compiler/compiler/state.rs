@@ -40,7 +40,7 @@ pub(super) struct NamedForallStatementResultCompilationInput<'a> {
     /// Borrowed leaves selected from the recursive Result. This Vec only
     /// carries references and therefore is not a second semantic IR.
     pub(super) conclusion_checks: Vec<&'a StmtResult>,
-    pub(super) outer_statement_common: Option<&'a SuccessStmtCommonResult>,
+    pub(super) outer_environment_effects: Option<&'a SuccessInferResult>,
 }
 
 #[derive(Clone, Copy)]

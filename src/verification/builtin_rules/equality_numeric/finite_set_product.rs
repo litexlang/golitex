@@ -855,26 +855,31 @@ impl Runtime {
         then_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<StmtResult, RuntimeError> {
-        self.run_in_local_env(|rt| {
-            let params_def = TypedParameterList::new(vec![TypedParameterGroup::new(
-                vec![param_binding],
-                ParamType::Obj(set),
-            )]);
-            rt.define_params_with_type(&params_def, false, BindingScope::LocalBinder)?;
-            let direct = rt.verify_atomic_fact_as_builtin_rule_premise(then_fact, builtin_state)?;
-            if direct.is_success() {
-                return Ok(direct);
-            }
+        self.run_in_local_verification_env(
+            builtin_state.verify_state(),
+            |rt, local_verify_state| {
+                let local_builtin_state = builtin_state.with_verify_state(local_verify_state);
+                let params_def = TypedParameterList::new(vec![TypedParameterGroup::new(
+                    vec![param_binding],
+                    ParamType::Obj(set),
+                )]);
+                rt.define_params_with_type(&params_def, false, BindingScope::LocalBinder)?;
+                let direct =
+                    rt.verify_atomic_fact_as_builtin_rule_premise(then_fact, &local_builtin_state)?;
+                if direct.is_success() {
+                    return Ok(direct);
+                }
 
-            // A stored pointwise theorem can mention a function obtained from
-            // an existential and then restricted to the current finite set.
-            // Try only bounded known-forall instantiation here; do not reopen
-            // the full equality dispatcher or its finite-set-sum rule.
-            rt.verify_atomic_fact_with_known_forall(
-                then_fact,
-                &VerifyState::after_well_definedness(),
-            )
-        })
+                // A stored pointwise theorem can mention a function obtained from
+                // an existential and then restricted to the current finite set.
+                // Try only bounded known-forall instantiation here; do not reopen
+                // the full equality dispatcher or its finite-set-sum rule.
+                rt.verify_atomic_fact_with_known_forall(
+                    then_fact,
+                    &local_verify_state.with_well_definedness_verified(),
+                )
+            },
+        )
     }
 
     pub(super) fn finite_set_enumeration_summand_shape(

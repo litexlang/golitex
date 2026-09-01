@@ -148,18 +148,24 @@ impl Runtime {
         } else {
             self.alpha_rename_exist_fact(exist_fact, &rename_map)?
         };
-        let (binder, body) = self.run_in_local_env(|runtime| -> Result<_, RuntimeError> {
-            let binder = runtime.verify_fact_binder_result(
-                working.typed_parameters(),
-                BindingScope::LocalBinder,
-                verify_state,
-            )?;
-            let mut body = Vec::with_capacity(working.facts().len());
-            for fact in working.facts() {
-                body.push(runtime.verify_and_store_quantifier_free_wd_result(fact, verify_state)?);
-            }
-            Ok((binder, body))
-        })?;
+        let (binder, body) = self.run_in_local_verification_env(
+            verify_state,
+            |runtime, local_verify_state| -> Result<_, RuntimeError> {
+                let binder = runtime.verify_fact_binder_result(
+                    working.typed_parameters(),
+                    BindingScope::LocalBinder,
+                    local_verify_state,
+                )?;
+                let mut body = Vec::with_capacity(working.facts().len());
+                for fact in working.facts() {
+                    body.push(
+                        runtime
+                            .verify_and_store_quantifier_free_wd_result(fact, local_verify_state)?,
+                    );
+                }
+                Ok((binder, body))
+            },
+        )?;
         Ok(SuccessVerifyFactWellDefinedProofResult::ExistFact(
             Box::new(SuccessVerifyExistFactWellDefinedResult {
                 statement: exist_fact.clone(),
@@ -201,7 +207,7 @@ impl Runtime {
             };
             let mut parameters = Vec::with_capacity(group.params.len());
             for (parameter_index, binding) in group.params.iter().enumerate() {
-                self.store_parameter_binding(binding, binding_scope)?;
+                self.store_typed_parameter_binding(binding, binding_scope, &group.param_type)?;
                 let proposition = self.parameter_type_fact_for_binding(
                     binding,
                     &group.param_type,
@@ -213,9 +219,10 @@ impl Runtime {
                     unreachable!("parameter type proposition is atomic")
                 };
                 let mut infers = self
-                    .store_atomic_fact_without_well_defined_verified_and_infer_with_reason(
+                    .store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
                         atomic,
                         InferReason::ParameterDefinition.store_reason(),
+                        verify_state.inference_state(),
                     )?;
                 self.attach_known_fact_ids_to_infer_result(&mut infers)?;
                 parameters.push(SuccessVerifyBinderPremiseResult::new(
@@ -246,8 +253,12 @@ impl Runtime {
     ) -> Result<SuccessVerifyLocalFactWellDefinedResult, RuntimeError> {
         let proposition: Fact = fact.clone().into();
         let well_definedness = self.verify_fact_well_defined_result(&proposition, verify_state)?;
-        let mut infers =
-            self.store_quantifier_free_fact_without_well_defined_verified_and_infer(fact.clone())?;
+        let mut infers = self
+            .store_quantifier_free_fact_without_well_defined_verified_and_infer_with_reason_and_state(
+                fact.clone(),
+                InferReason::StoredFact.store_reason(),
+                verify_state.inference_state(),
+            )?;
         self.attach_known_fact_ids_to_infer_result(&mut infers)?;
         let fact_id = self.known_fact_id_for_fact(&proposition)?;
         Ok(SuccessVerifyLocalFactWellDefinedResult {
@@ -269,8 +280,12 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<SuccessVerifyLocalFactWellDefinedResult, RuntimeError> {
         let well_definedness = self.verify_fact_well_defined_result(proposition, verify_state)?;
-        let mut infers =
-            self.store_without_well_defined_verification_and_infer(proposition.clone())?;
+        let mut infers = self
+            .store_without_well_defined_verification_and_infer_with_reason_and_state(
+                proposition.clone(),
+                InferReason::StatementWithVerification,
+                verify_state.inference_state(),
+            )?;
         self.attach_known_fact_ids_to_infer_result(&mut infers)?;
         let fact_id = self.known_fact_id_for_fact(proposition)?;
         Ok(SuccessVerifyLocalFactWellDefinedResult {
@@ -624,24 +639,33 @@ impl Runtime {
             renamed
         };
 
-        self.run_in_local_env(|rt| {
+        self.run_in_local_verification_env(verify_state, |rt, local_verify_state| {
             let binder = rt.verify_fact_binder_result(
                 &working.typed_parameters,
                 BindingScope::LocalBinder,
-                verify_state,
+                local_verify_state,
             )?;
             let mut premises = Vec::with_capacity(working.dom_facts.len());
             for premise in &working.dom_facts {
-                premises.push(rt.verify_and_store_fact_wd_result(premise, verify_state)?);
+                premises.push(rt.verify_and_store_fact_wd_result(
+                    premise,
+                    local_verify_state,
+                )?);
             }
 
             let mut certificate = WellDefinednessEnvironmentDelta::new();
             let mut conclusions = Vec::with_capacity(working.then_facts.len());
             for fact in working.then_facts.iter() {
                 let proposition = fact.clone().to_fact();
-                let checked = rt.run_in_local_env_and_take(|checking_rt| {
-                    checking_rt.verify_fact_well_defined_result(&proposition, verify_state)
-                });
+                let checked = rt.run_in_local_verification_env_and_take(
+                    local_verify_state,
+                    |checking_rt, checking_verify_state| {
+                        checking_rt.verify_fact_well_defined_result(
+                            &proposition,
+                            checking_verify_state,
+                        )
+                    },
+                );
                 let (well_definedness, checked_side_effects) =
                     checked.map_err(|exec_stmt_error| {
                         RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
@@ -665,8 +689,10 @@ impl Runtime {
                     .merge_committed_child(checked_side_effects)?;
 
                 let mut infers = rt
-                    .store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
+                    .store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
                         fact.clone(),
+                        InferReason::StoredFact.store_reason(),
+                        local_verify_state.inference_state(),
                     )
                     .map_err(|exec_stmt_error| {
                         RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
@@ -714,8 +740,8 @@ impl Runtime {
         forall_fact: &ForallFact,
         verify_state: &VerifyState,
     ) -> Result<(), RuntimeError> {
-        self.run_in_local_env(|rt| {
-            rt.verify_forall_fact_params_and_dom_well_defined_inner(forall_fact, verify_state)
+        self.run_in_local_verification_env(verify_state, |rt, local_verify_state| {
+            rt.verify_forall_fact_params_and_dom_well_defined_inner(forall_fact, local_verify_state)
         })
     }
 

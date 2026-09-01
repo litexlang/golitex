@@ -56,6 +56,7 @@ impl Runtime {
     pub fn verify_equal_fact_with_bounded_builtin_routes(
         &mut self,
         equal_fact: &EqualFact,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let zero_premise_result =
             self.verify_equal_fact_with_zero_premise_verification(equal_fact)?;
@@ -63,13 +64,12 @@ impl Runtime {
             return Ok(zero_premise_result);
         }
 
-        let builtin_state = BuiltinRuleSearchState::initial();
+        let builtin_state = BuiltinRuleSearchState::in_proof_search(verify_state);
         self.verify_equal_fact_with_one_premise_producing_builtin_rule(equal_fact, &builtin_state)
     }
 
     pub fn verify_equal_fact_with_known_fact(&mut self, equal_fact: &EqualFact) -> StmtResult {
-        let result = self.verify_equal_fact_by_known_equality_without_direct_evaluation(equal_fact);
-        self.cache_successful_atomic_fact_for_statement(&equal_fact.clone().into(), result)
+        self.verify_equal_fact_by_known_equality_without_direct_evaluation(equal_fact)
     }
 
     // A premise is a child fact that a rule must verify before concluding its parent fact.
@@ -90,19 +90,13 @@ impl Runtime {
 
         let direct_evaluation_result = self.verify_equal_fact_by_direct_evaluation(equal_fact);
         if direct_evaluation_result.is_success() {
-            return Ok(self.cache_successful_atomic_fact_for_statement(
-                &equal_fact.clone().into(),
-                direct_evaluation_result,
-            ));
+            return Ok(direct_evaluation_result);
         }
 
         let known_equality_evaluation_result =
             self.verify_equal_fact_by_known_equality_then_direct_evaluation(equal_fact);
         if known_equality_evaluation_result.is_success() {
-            return Ok(self.cache_successful_atomic_fact_for_statement(
-                &equal_fact.clone().into(),
-                known_equality_evaluation_result,
-            ));
+            return Ok(known_equality_evaluation_result);
         }
 
         // A generated builtin premise can compare the very same checked
@@ -124,10 +118,7 @@ impl Runtime {
                 definition_side,
                 &after_parent_well_definedness,
             )? {
-                return Ok(self.cache_successful_atomic_fact_for_statement(
-                    &equal_fact.clone().into(),
-                    result,
-                ));
+                return Ok(result);
             }
         }
 
@@ -169,9 +160,7 @@ impl Runtime {
                     congruence_subgoals,
                 )
                 .into();
-            return Ok(
-                self.cache_successful_atomic_fact_for_statement(&equal_fact.clone().into(), result)
-            );
+            return Ok(result);
         }
 
         let mut nested_reductions = Vec::new();
@@ -195,9 +184,7 @@ impl Runtime {
                     Vec::new(),
                 )
                 .into();
-            return Ok(
-                self.cache_successful_atomic_fact_for_statement(&equal_fact.clone().into(), result)
-            );
+            return Ok(result);
         }
 
         if !self.equal_fact_sides_are_equal_by_terminating_reduction_and_congruence(equal_fact)? {
@@ -222,9 +209,7 @@ impl Runtime {
                     Vec::new(),
                 )
                 .into();
-            return Ok(
-                self.cache_successful_atomic_fact_for_statement(&equal_fact.clone().into(), result)
-            );
+            return Ok(result);
         }
 
         let result: StmtResult =
@@ -237,7 +222,7 @@ impl Runtime {
                 Vec::new(),
             )
             .into();
-        Ok(self.cache_successful_atomic_fact_for_statement(&equal_fact.clone().into(), result))
+        Ok(result)
     }
 
     // Direct evaluation is the computation arm of zero-premise verification. It may normalize
@@ -502,6 +487,7 @@ impl Runtime {
         if !builtin_state.can_apply_rule() {
             return Ok(UnknownGenericStmtResult::new().into());
         }
+        let verify_state = builtin_state.verify_state();
         let child_state = builtin_state.after_applying_rule();
         let goal: AtomicFact = equal_fact.clone().into();
         if let Some(result) = self
@@ -510,7 +496,7 @@ impl Runtime {
                 &child_state,
             )?
         {
-            return Ok(self.cache_successful_atomic_fact_for_statement(&goal, result));
+            return Ok(result);
         }
         if let Some(result) = self
             .try_verify_equal_fact_by_complex_algebraic_normalization_with_nonzero_premises(
@@ -518,15 +504,14 @@ impl Runtime {
                 &child_state,
             )?
         {
-            return Ok(self.cache_successful_atomic_fact_for_statement(&goal, result));
+            return Ok(result);
         }
         if let Some(result) =
-            self.try_verify_atomic_fact_from_known_set_builder_membership(&goal)?
+            self.try_verify_atomic_fact_from_known_set_builder_membership(&goal, verify_state)?
         {
-            return Ok(self.cache_successful_atomic_fact_for_statement(&goal, result));
+            return Ok(result);
         }
-        let result = self.verify_equal_fact_by_builtin_rules(equal_fact, &child_state)?;
-        Ok(self.cache_successful_atomic_fact_for_statement(&goal, result))
+        self.verify_equal_fact_by_builtin_rules(equal_fact, &child_state)
     }
 
     fn try_verify_equal_fact_by_rational_algebraic_normalization_with_nonzero_premises(
@@ -650,12 +635,13 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let builtin_goal: AtomicFact = equal_fact.clone().into();
-        let mut result = self.verify_equal_fact_with_bounded_builtin_routes(equal_fact)?;
+        let mut result =
+            self.verify_equal_fact_with_bounded_builtin_routes(equal_fact, verify_state)?;
         if result.is_success() {
             return Ok(result);
         }
 
-        result = self.verify_atomic_fact_with_builtin_strategy(&builtin_goal)?;
+        result = self.verify_atomic_fact_with_builtin_strategy(&builtin_goal, verify_state)?;
         if result.is_success() {
             return Ok(result);
         }
@@ -1135,7 +1121,8 @@ impl Runtime {
         equal_fact: &EqualFact,
         verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
-        let result = self.verify_equal_fact_with_bounded_builtin_routes(equal_fact)?;
+        let result =
+            self.verify_equal_fact_with_bounded_builtin_routes(equal_fact, verify_state)?;
         if result.is_success() {
             return Ok(
                 (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(

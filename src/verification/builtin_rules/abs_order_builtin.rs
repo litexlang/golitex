@@ -328,16 +328,20 @@ impl Runtime {
         .into();
         let dom_hi: Fact =
             LessEqualFact::new(x_obj, (*left_sum.end).clone(), f.line_file.clone()).into();
-        let pointwise_result = self.run_in_local_env(|rt| {
-            let params_def = TypedParameterList::new(vec![TypedParameterGroup::new(
-                vec![x_binding],
-                ParamType::Obj(StandardSet::Z.into()),
-            )]);
-            rt.define_params_with_type(&params_def, false, BindingScope::LocalBinder)?;
-            rt.store_fact_without_forall_coverage_check_and_infer(dom_lo)?;
-            rt.store_fact_without_forall_coverage_check_and_infer(dom_hi)?;
-            rt.verify_atomic_fact_as_builtin_rule_premise(&pointwise_fact, builtin_state)
-        })?;
+        let pointwise_result = self.run_in_local_verification_env(
+            builtin_state.verify_state(),
+            |rt, local_verify_state| {
+                let local_builtin_state = builtin_state.with_verify_state(local_verify_state);
+                let params_def = TypedParameterList::new(vec![TypedParameterGroup::new(
+                    vec![x_binding],
+                    ParamType::Obj(StandardSet::Z.into()),
+                )]);
+                rt.define_params_with_type(&params_def, false, BindingScope::LocalBinder)?;
+                rt.store_fact_without_forall_coverage_check_and_infer(dom_lo)?;
+                rt.store_fact_without_forall_coverage_check_and_infer(dom_hi)?;
+                rt.verify_atomic_fact_as_builtin_rule_premise(&pointwise_fact, &local_builtin_state)
+            },
+        )?;
         if !pointwise_result.is_success() {
             return Ok(None);
         }
@@ -397,14 +401,18 @@ impl Runtime {
         };
         let pointwise_fact: AtomicFact =
             EqualFact::new(right_inst, abs_obj(left_inst), f.line_file.clone()).into();
-        let pointwise_result = self.run_in_local_env(|rt| {
-            let params_def = TypedParameterList::new(vec![TypedParameterGroup::new(
-                vec![x_binding],
-                ParamType::Obj(left_sum.set.as_ref().clone()),
-            )]);
-            rt.define_params_with_type(&params_def, false, BindingScope::LocalBinder)?;
-            rt.verify_atomic_fact_as_builtin_rule_premise(&pointwise_fact, builtin_state)
-        })?;
+        let pointwise_result = self.run_in_local_verification_env(
+            builtin_state.verify_state(),
+            |rt, local_verify_state| {
+                let local_builtin_state = builtin_state.with_verify_state(local_verify_state);
+                let params_def = TypedParameterList::new(vec![TypedParameterGroup::new(
+                    vec![x_binding],
+                    ParamType::Obj(left_sum.set.as_ref().clone()),
+                )]);
+                rt.define_params_with_type(&params_def, false, BindingScope::LocalBinder)?;
+                rt.verify_atomic_fact_as_builtin_rule_premise(&pointwise_fact, &local_builtin_state)
+            },
+        )?;
         if !pointwise_result.is_success() {
             return Ok(None);
         }

@@ -9,7 +9,6 @@ use crate::output::{
 };
 use crate::prelude::{LineFile, OutputDetail, Runtime, RuntimeError, RuntimeErrorOutput, Stmt};
 
-use super::execution_phases::error_execution_phases_value;
 use super::fields::{
     JSON_KEY_FAILED_GOAL, JSON_KEY_FAILED_STEP, JSON_KEY_INSIDE_RESULTS, JSON_KEY_MESSAGE,
     JSON_KEY_PREVIOUS_ERROR, JSON_KEY_UNKNOWN_RESULT,
@@ -456,18 +455,6 @@ fn build_display_error_json_object(
         error_output(error),
         output_detail,
     );
-
-    if output_detail.is_detailed() {
-        if let Some(trace) = error.execution_trace() {
-            push_json_value_field_line(
-                runtime,
-                &mut field_lines,
-                indent_inner.as_str(),
-                "phases",
-                error_execution_phases_value(trace),
-            );
-        }
-    }
 
     let context_for_child = error_own_statement(error).or(statement_context);
     let previous_error_line = build_previous_error_field_line(

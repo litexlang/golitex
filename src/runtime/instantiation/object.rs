@@ -264,18 +264,39 @@ impl Runtime {
                 Ok(StructObj::new(struct_obj.name.clone(), params).into())
             }
             Obj::ObjAsStructInstanceWithFieldAccess(field_access) => {
-                let mut params = Vec::with_capacity(field_access.struct_obj.params.len());
-                for p in field_access.struct_obj.params.iter() {
-                    params.push(self.inst_obj(p, param_to_arg_map, param_obj_type)?);
-                }
-                let struct_obj = StructObj::new(field_access.struct_obj.name.clone(), params);
                 let obj = self.inst_obj(&field_access.obj, param_to_arg_map, param_obj_type)?;
-                Ok(ObjAsStructInstanceWithFieldAccess::new(
-                    struct_obj,
-                    obj,
-                    field_access.field_name.clone(),
-                )
-                .into())
+                let resolved_struct_carrier = field_access
+                    .resolved_struct_carrier
+                    .as_deref()
+                    .cloned()
+                    .or_else(|| {
+                        self.direct_struct_carrier_for_obj(&field_access.obj, default_line_file())
+                            .ok()
+                    });
+                match resolved_struct_carrier {
+                    Some(struct_obj) => {
+                        let instantiated_struct_obj = self.inst_obj(
+                            &Obj::StructObj(struct_obj),
+                            param_to_arg_map,
+                            param_obj_type,
+                        )?;
+                        let Obj::StructObj(instantiated_struct_obj) = instantiated_struct_obj
+                        else {
+                            unreachable!("instantiating a struct carrier preserves its object kind")
+                        };
+                        Ok(ObjAsStructInstanceWithFieldAccess::new_resolved(
+                            obj,
+                            field_access.field_name.clone(),
+                            instantiated_struct_obj,
+                        )
+                        .into())
+                    }
+                    None => Ok(ObjAsStructInstanceWithFieldAccess::new(
+                        obj,
+                        field_access.field_name.clone(),
+                    )
+                    .into()),
+                }
             }
             Obj::InstantiatedTemplateObj(template_obj) => {
                 let mut args = Vec::with_capacity(template_obj.args.len());

@@ -198,13 +198,16 @@ impl Runtime {
         let mut last_error = None;
         for space in &candidate_spaces {
             let trial = self
-                .run_in_local_env_and_take(|runtime| {
-                    runtime.verify_fn_obj_well_defined_against_space_result(
-                        fn_obj,
-                        space.clone(),
-                        verify_state,
-                    )
-                })
+                .run_in_local_verification_env_and_take(
+                    verify_state,
+                    |runtime, local_verify_state| {
+                        runtime.verify_fn_obj_well_defined_against_space_result(
+                            fn_obj,
+                            space.clone(),
+                            local_verify_state,
+                        )
+                    },
+                )
                 .map(|(steps, _)| steps);
             match trial {
                 Ok(_) => {
@@ -299,7 +302,11 @@ impl Runtime {
             InFact::new(source_application, return_set, default_line_file()).into();
         let proposition: Fact = membership.clone().into();
         let mut infers = self
-            .store_atomic_fact_without_well_defined_verified_and_infer(membership)
+            .store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
+                membership,
+                InferReason::StoredFact.store_reason(),
+                verify_state.inference_state(),
+            )
             .map_err(|error| {
                 RuntimeError::from(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_cause(

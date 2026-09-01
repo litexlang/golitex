@@ -42,7 +42,7 @@ impl Runtime {
         trust_have_stmt: &TrustHaveStmt,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let mut infer_result = if self.current_execution_is_trusted_file() {
-            self.define_params_with_type_trusted(
+            self.define_typed_params_with_trust(
                 &trust_have_stmt.param_def,
                 BindingScope::DefinitionBinding,
             )
@@ -56,7 +56,10 @@ impl Runtime {
         .map_err(|e| exec_stmt_error_with_stmt_and_cause(trust_have_stmt.clone().into(), e))?;
         for fact in trust_have_stmt.facts.iter() {
             let fact_infer_result = if self.current_execution_is_trusted_file() {
-                self.store_trusted_fact_and_infer_with_reason(fact.clone(), InferReason::TrustHave)
+                self.store_fact_with_trust_and_infer_with_reason(
+                    fact.clone(),
+                    InferReason::TrustHave,
+                )
             } else {
                 self.store_fact_with_well_defined_verification_and_infer_with_reason(
                     fact.clone(),

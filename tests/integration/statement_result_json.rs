@@ -219,7 +219,7 @@ fn claim_statement_result_json_serializes_named_verification_fields_and_children
     let tokenizer = Tokenizer::new();
     let mut blocks = tokenizer
         .parse_blocks(
-            "claim:\n    ? 1 = 1\n    1 = 1",
+            "claim:\n    ? forall x R:\n        x = 1\n        =>:\n            x = 1\n    x = x",
             Rc::from("claim_statement_result_json.lit"),
         )
         .expect("claim tokenizes");
@@ -234,26 +234,108 @@ fn claim_statement_result_json_serializes_named_verification_fields_and_children
     else {
         panic!("claim returns its matching successful statement result");
     };
-    let Some(SuccessVerifyClaimResult::Fact(verification)) = &claim.verification else {
-        panic!("ordinary claim owns its fact verification result");
+    assert!(claim.well_definedness.is_some());
+    let Fact::ForallFact(forall_fact) = &claim.statement.fact else {
+        panic!("pipeline tracer must remain a forall claim");
     };
-    assert_eq!(verification.proof_steps.len(), 1);
+    let parameter_group = &forall_fact.typed_parameters.groups[0];
+    let parameter_fact = runtime
+        .parameter_type_fact_for_binding(
+            &parameter_group.params[0],
+            &parameter_group.param_type,
+            BindingScope::LocalBinder,
+        )
+        .expect("forall parameter type fact can be reconstructed");
+    let domain_facts = claim
+        .domain
+        .assumption_infers
+        .inferred_facts()
+        .into_iter()
+        .map(|fact| fact.to_string())
+        .collect::<Vec<_>>();
+    assert!(
+        domain_facts
+            .iter()
+            .any(|fact| fact == &parameter_fact.to_string()),
+        "forall domain must retain the typed parameter fact: {domain_facts:#?}"
+    );
+    assert!(
+        domain_facts
+            .iter()
+            .any(|fact| fact == &forall_fact.dom_facts[0].to_string()),
+        "forall domain must retain the source premise: {domain_facts:#?}"
+    );
+    assert_eq!(claim.proof_steps.len(), 1);
     assert_eq!(
-        verification
-            .conclusion_check
+        claim.proof_steps[0]
+            .factual_success()
+            .expect("claim proof step is factual")
+            .fact()
+            .to_string(),
+        claim.statement.proof[0].to_string()
+    );
+    assert_eq!(claim.conclusion_checks.len(), 1);
+    assert_eq!(
+        claim.conclusion_checks[0]
             .factual_success()
             .expect("claim conclusion is factual")
             .fact()
             .to_string(),
-        "1 = 1"
+        forall_fact.then_facts[0].clone().to_fact().to_string()
     );
-
+    assert!(claim
+        .environment_effects
+        .inferred_facts()
+        .iter()
+        .any(|fact| fact.to_string() == claim.statement.fact.to_string()));
     let json = render_statement_result_json(&result);
-    assert!(json.contains("\"kind\": \"ClaimStmt\""));
-    assert!(json.contains("\"kind\": \"SuccessVerifyClaimFactResult\""));
+    assert!(json.contains("\"kind\": \"SuccessClaimStmtResult\""));
+    assert!(json.contains("\"well_definedness\":"));
+    assert!(json.contains("\"domain\":"));
     assert!(json.contains("\"proof_steps\":"));
-    assert!(json.contains("\"conclusion_check\":"));
+    assert!(json.contains("\"conclusion_checks\":"));
+    assert!(json.contains("\"environment_effects\":"));
+    assert!(!json.contains(&["execution", "trace"].join("_")));
     assert!(json.contains("\"kind\": \"AtomicFact\""));
+}
+
+#[test]
+fn trusted_claim_result_contains_only_environment_effects() {
+    let mut runtime = Runtime::default();
+    runtime.start_isolated_source("trusted_claim_statement_result_json");
+    runtime.replace_current_execution_mode(ExecutionMode::Trusted);
+    let tokenizer = Tokenizer::new();
+    let mut blocks = tokenizer
+        .parse_blocks(
+            "claim:\n    ? forall x R:\n        x = 1\n        =>:\n            x = 2",
+            Rc::from("trusted_claim_statement_result_json.lit"),
+        )
+        .expect("trusted claim tokenizes");
+    let stmt = runtime
+        .parse_statement(&mut blocks[0])
+        .expect("trusted claim parses");
+    let result = runtime
+        .execute_statement(&stmt)
+        .expect("trusted claim affects only the environment");
+
+    let StmtResult::Success(SuccessStmtResult::ProofBlock(SuccessProofBlockStmtResult::ClaimStmt(
+        claim,
+    ))) = &result
+    else {
+        panic!("trusted claim returns its matching successful statement result");
+    };
+    assert!(claim.well_definedness.is_none());
+    assert!(claim.domain.assumption_infers.is_empty());
+    assert!(claim.domain.assumption_components.is_empty());
+    assert!(claim.proof_steps.is_empty());
+    assert!(claim.conclusion_checks.is_empty());
+    assert!(claim
+        .environment_effects
+        .inferred_facts()
+        .iter()
+        .any(|fact| fact.to_string() == claim.statement.fact.to_string()));
+    let json = render_statement_result_json(&result);
+    assert!(!json.contains(&["execution", "trace"].join("_")));
 }
 
 #[test]

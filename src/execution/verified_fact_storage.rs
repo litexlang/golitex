@@ -12,7 +12,7 @@ impl Runtime {
         self.store_exist_or_and_chain_atomic_fact_with_well_defined_verification_and_infer_with_reason(
             fact,
             verify_state,
-            InferReason::VerifiedStatement,
+            InferReason::StatementWithVerification,
         )
     }
 
@@ -32,9 +32,10 @@ impl Runtime {
                     well_defined_error,
                 )
             })?;
-        self.store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer_with_reason(
-                fact.clone(),
-                reason.store_reason(),
+        self.store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
+            fact.clone(),
+            reason.store_reason(),
+            verify_state.inference_state(),
         )
         .map_err(|store_fact_error| {
             exec_stmt_error_with_stmt_and_cause(stmt_for_fact_errors, store_fact_error)
@@ -52,7 +53,7 @@ impl Runtime {
         self.store_quantifier_free_fact_with_well_defined_verification_and_infer_with_reason(
             fact,
             verify_state,
-            InferReason::VerifiedStatement,
+            InferReason::StatementWithVerification,
         )
     }
 
@@ -72,9 +73,10 @@ impl Runtime {
                     well_defined_error,
                 )
             })?;
-        self.store_quantifier_free_fact_without_well_defined_verified_and_infer_with_reason(
+        self.store_quantifier_free_fact_without_well_defined_verified_and_infer_with_reason_and_state(
             fact.clone(),
             reason.store_reason(),
+            verify_state.inference_state(),
         )
         .map_err(|store_fact_error| {
             exec_stmt_error_with_stmt_and_cause(stmt_for_fact_errors, store_fact_error)
@@ -91,7 +93,7 @@ impl Runtime {
         self.store_fact_with_well_defined_verification_and_infer_with_reason(
             fact,
             verify_state,
-            InferReason::VerifiedStatement,
+            InferReason::StatementWithVerification,
         )
     }
 

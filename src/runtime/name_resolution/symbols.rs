@@ -101,102 +101,60 @@ impl Runtime {
         self.current_parse_context().active_binding(name).cloned()
     }
 
-    pub fn register_default_struct_view(
+    pub fn direct_struct_carrier_for_symbol(&self, symbol: &SymbolRef) -> Option<StructObj> {
+        self.iter_environments_from_top()
+            .find_map(|environment| {
+                environment
+                    .definitions
+                    .symbols
+                    .get_by_id(symbol.id())
+                    .and_then(SymbolDefinition::direct_struct_carrier)
+                    .cloned()
+            })
+            .or_else(|| {
+                self.executed_direct_struct_carriers
+                    .get(&symbol.id())
+                    .cloned()
+            })
+            .or_else(|| {
+                self.module_manager.modules.values().find_map(|module| {
+                    module
+                        .main_environment
+                        .definitions
+                        .symbols
+                        .get_by_id(symbol.id())
+                        .and_then(SymbolDefinition::direct_struct_carrier)
+                        .cloned()
+                        .or_else(|| {
+                            module.files.iter().find_map(|file| {
+                                file.environment
+                                    .definitions
+                                    .symbols
+                                    .get_by_id(symbol.id())
+                                    .and_then(SymbolDefinition::direct_struct_carrier)
+                                    .cloned()
+                            })
+                        })
+                })
+            })
+    }
+
+    pub fn remember_direct_struct_carrier_for_binding(
         &mut self,
-        bindings: &[SymbolBinding],
+        binding: &SymbolBinding,
         struct_obj: &StructObj,
     ) {
-        for binding in bindings {
-            self.current_parse_context_mut()
-                .default_struct_views
-                .entry(binding.id())
-                .or_insert_with(|| struct_obj.clone());
+        self.executed_direct_struct_carriers
+            .entry(binding.id())
+            .or_insert_with(|| struct_obj.clone());
+        if let Some(definition) = self
+            .top_level_env()
+            .definitions
+            .symbols
+            .get_by_id_mut(binding.id())
+        {
+            definition.remember_direct_struct_carrier_if_absent(struct_obj.clone());
         }
-    }
-
-    pub fn default_struct_view_for_symbol(&self, symbol: &SymbolRef) -> Option<StructObj> {
-        self.current_parse_context()
-            .default_struct_views
-            .get(&symbol.id())
-            .cloned()
-            .or_else(|| {
-                self.iter_environments_from_top().find_map(|environment| {
-                    environment
-                        .definitions
-                        .symbols
-                        .get_by_id(symbol.id())
-                        .and_then(SymbolDefinition::default_struct_view)
-                        .cloned()
-                })
-            })
-            .or_else(|| {
-                self.module_manager.modules.values().find_map(|module| {
-                    module
-                        .main_environment
-                        .definitions
-                        .symbols
-                        .get_by_id(symbol.id())
-                        .and_then(SymbolDefinition::default_struct_view)
-                        .cloned()
-                        .or_else(|| {
-                            module.files.iter().find_map(|file| {
-                                file.environment
-                                    .definitions
-                                    .symbols
-                                    .get_by_id(symbol.id())
-                                    .and_then(SymbolDefinition::default_struct_view)
-                                    .cloned()
-                            })
-                        })
-                })
-            })
-    }
-
-    pub fn register_default_tuple_view(&mut self, bindings: &[SymbolBinding], cart: &Cart) {
-        for binding in bindings {
-            self.current_parse_context_mut()
-                .default_tuple_views
-                .entry(binding.id())
-                .or_insert_with(|| cart.clone());
-        }
-    }
-
-    pub fn default_tuple_view_for_symbol(&self, symbol: &SymbolRef) -> Option<Cart> {
-        self.current_parse_context()
-            .default_tuple_views
-            .get(&symbol.id())
-            .cloned()
-            .or_else(|| {
-                self.iter_environments_from_top().find_map(|environment| {
-                    environment
-                        .definitions
-                        .symbols
-                        .get_by_id(symbol.id())
-                        .and_then(SymbolDefinition::default_tuple_view)
-                        .cloned()
-                })
-            })
-            .or_else(|| {
-                self.module_manager.modules.values().find_map(|module| {
-                    module
-                        .main_environment
-                        .definitions
-                        .symbols
-                        .get_by_id(symbol.id())
-                        .and_then(SymbolDefinition::default_tuple_view)
-                        .cloned()
-                        .or_else(|| {
-                            module.files.iter().find_map(|file| {
-                                file.environment
-                                    .definitions
-                                    .symbols
-                                    .get_by_id(symbol.id())
-                                    .and_then(SymbolDefinition::default_tuple_view)
-                                    .cloned()
-                            })
-                        })
-                })
-            })
     }
 
     pub fn register_parsed_struct_definition(&mut self, def: &DefStructStmt) {
@@ -280,16 +238,6 @@ impl Runtime {
         binding: SymbolBinding,
         role: SymbolRole,
     ) -> Result<(), RuntimeError> {
-        let default_struct_view = self
-            .current_parse_context()
-            .default_struct_views
-            .get(&binding.id())
-            .cloned();
-        let default_tuple_view = self
-            .current_parse_context()
-            .default_tuple_views
-            .get(&binding.id())
-            .cloned();
         let binding = if role == SymbolRole::Object
             && !binding.name().starts_with(TEMPLATE_INSTANCE_PREFIX)
         {
@@ -317,17 +265,10 @@ impl Runtime {
         if is_keyword(name) || is_builtin_identifier_name(name) || is_builtin_predicate(name) {
             return Err(symbol_name_already_used_error(name, "builtin"));
         }
-        let mut definition = SymbolDefinition::new(binding, role);
-        if let Some(struct_obj) = default_struct_view {
-            definition.remember_default_struct_view_if_absent(struct_obj);
-        }
-        if let Some(cart) = default_tuple_view {
-            definition.remember_default_tuple_view_if_absent(cart);
-        }
         self.top_level_env()
             .definitions
             .symbols
-            .insert(definition)
+            .insert(SymbolDefinition::new(binding, role))
             .expect("symbol was checked absent before registration");
         Ok(())
     }

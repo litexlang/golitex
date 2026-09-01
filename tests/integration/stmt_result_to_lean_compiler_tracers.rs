@@ -158,7 +158,7 @@ fn convergence_under_constant_scaling_generates_without_name_specialization() {
         .expect("verify the convergence-under-scaling showcase");
     assert!(results.contains("is_eventually_close"));
     assert!(results.contains("converges_to_mul_const"));
-    assert!(results.contains("SuccessVerifyClaimForallResult"));
+    assert!(results.contains("SuccessClaimStmtResult"));
     assert!(results.contains("ObtainObjFromExistFact"));
     assert!(results.contains("WitnessExistFact"));
     assert!(results.contains("KnownForallInstantiation"));
@@ -681,7 +681,7 @@ fn inference_compilation_does_not_parse_rendered_lean_statements() {
             include_str!("../../src/stmt_result_to_lean_compiler/compiler/object_definitions/proposition_definitions.rs"),
             include_str!("../../src/stmt_result_to_lean_compiler/compiler/object_definitions/sequences.rs"),
             include_str!("../../src/stmt_result_to_lean_compiler/compiler/object_definitions/speculative_execution.rs"),
-            include_str!("../../src/stmt_result_to_lean_compiler/compiler/object_definitions/trusted_statements.rs"),
+            include_str!("../../src/stmt_result_to_lean_compiler/compiler/object_definitions/trust_statements.rs"),
             include_str!("../../src/stmt_result_to_lean_compiler/compiler/object_definitions/tuples.rs"),
         ),
         concat!(

@@ -106,6 +106,7 @@ pub struct SuccessByDefStmtResult {
 
 pub struct SuccessByStructDefStmtResult {
     pub statement: ByStructDefStmt,
+    pub struct_obj: StructObj,
     pub common: SuccessStmtCommonResult,
     pub membership_check: Option<Box<StmtResult>>,
 }

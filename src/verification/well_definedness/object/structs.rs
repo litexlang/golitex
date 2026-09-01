@@ -114,7 +114,9 @@ impl Runtime {
             HashMap::new()
         };
 
-        let structure = self.run_in_local_env(|runtime| {
+        let structure = self.run_in_local_verification_env(
+            verify_state,
+            |runtime, local_verify_state| {
             let field_bindings = def
                 .fields
                 .iter()
@@ -152,12 +154,16 @@ impl Runtime {
                 )?;
                 let carrier = runtime.verify_child_obj_well_defined_result(
                     &instantiated_field_type,
-                    verify_state,
+                    local_verify_state,
                     WellDefinedObjChildRole::BinderParameterCarrier {
                         parameter_group_index: field_index,
                     },
                 )?;
-                runtime.store_parameter_binding(field_binding, BindingScope::StructureField)?;
+                runtime.store_set_bound_parameter_binding(
+                    field_binding,
+                    BindingScope::StructureField,
+                    &instantiated_field_type,
+                )?;
                 let proposition: Fact = InFact::new(
                     obj_for_bound_param_in_scope(field_binding),
                     instantiated_field_type,
@@ -165,14 +171,15 @@ impl Runtime {
                 )
                 .into();
                 let well_definedness =
-                    runtime.verify_fact_well_defined_result(&proposition, verify_state)?;
+                    runtime.verify_fact_well_defined_result(&proposition, local_verify_state)?;
                 let Fact::AtomicFact(atomic) = proposition.clone() else {
                     unreachable!("structure-field membership is atomic")
                 };
                 let mut infers = runtime
-                    .store_atomic_fact_without_well_defined_verified_and_infer_with_reason(
+                    .store_atomic_fact_without_well_defined_verified_and_infer_with_reason_and_state(
                         atomic,
                         InferReason::ParameterDefinition.store_reason(),
+                        local_verify_state.inference_state(),
                     )?;
                 runtime.attach_known_fact_ids_to_infer_result(&mut infers)?;
                 let premise = SuccessVerifyBinderPremiseResult::new(
@@ -204,7 +211,7 @@ impl Runtime {
                     None,
                 )?;
                 let well_definedness =
-                    runtime.verify_fact_well_defined_result(&proposition, verify_state)?;
+                    runtime.verify_fact_well_defined_result(&proposition, local_verify_state)?;
                 let mut infers = runtime
                     .store_fact_without_well_defined_verified_and_without_infer_with_reason(
                         proposition.clone(),
@@ -224,7 +231,8 @@ impl Runtime {
                 });
             }
             Ok::<_, RuntimeError>((fields, equivalent_facts))
-        })?;
+        },
+        )?;
         steps.binder = Some(Box::new(
             SuccessVerifyBinderObjectWellDefinedResult::Structure(Box::new(
                 SuccessVerifyStructureWellDefinedResult {
@@ -245,22 +253,20 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<SuccessVerifyObjWellDefinedStepsResult, RuntimeError> {
         let mut steps = SuccessVerifyObjWellDefinedStepsResult::new();
-        let structure_carrier: Obj = field_access.struct_obj.as_ref().clone().into();
+        let struct_obj =
+            self.direct_struct_owner_carrier_for_field_access(field_access, default_line_file())?;
+        let structure_carrier: Obj = struct_obj.clone().into();
         steps.push_child(self.verify_child_obj_well_defined_result(
             &structure_carrier,
             verify_state,
             WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
         )?);
-        self.struct_field_index(&field_access.struct_obj, &field_access.field_name)?;
+        self.struct_field_index(&struct_obj, &field_access.field_name)?;
         steps.push_child(self.verify_child_obj_well_defined_result(
             &field_access.obj,
             verify_state,
             WellDefinedObjChildRole::ConstructorArgument { argument_index: 1 },
         )?);
-        // The parser records the definition-owned struct view in the field
-        // access node. Runtime instantiation may alpha-rename dependent header
-        // parameters, so WD validates that recorded struct and field directly
-        // instead of rediscovering the view from membership or equality facts.
         Ok(steps)
     }
 
@@ -421,17 +427,17 @@ impl Runtime {
         field_access: &ObjAsStructInstanceWithFieldAccess,
         verify_state: &VerifyState,
     ) -> Result<Obj, RuntimeError> {
-        let (def, header_map) =
-            self.struct_header_param_to_arg_map(&field_access.struct_obj, verify_state)?;
-        let field_index =
-            self.struct_field_index(&field_access.struct_obj, &field_access.field_name)? - 1;
+        let struct_obj =
+            self.direct_struct_owner_carrier_for_field_access(field_access, default_line_file())?;
+        let (def, header_map) = self.struct_header_param_to_arg_map(&struct_obj, verify_state)?;
+        let field_index = self.struct_field_index(&struct_obj, &field_access.field_name)? - 1;
 
         let mut field_map = HashMap::new();
         for field in def.fields.iter() {
-            let field_value: Obj = ObjAsStructInstanceWithFieldAccess::new(
-                (*field_access.struct_obj).clone(),
+            let field_value: Obj = ObjAsStructInstanceWithFieldAccess::new_resolved(
                 (*field_access.obj).clone(),
                 field.name().to_string(),
+                struct_obj.clone(),
             )
             .into();
             insert_symbol_substitution(&mut field_map, &field.binding, field_value);
@@ -503,11 +509,13 @@ impl Runtime {
     /// one-field struct and the corresponding one-based tuple projection for a
     /// multi-field struct.
     pub fn struct_field_access_projection(
-        &self,
+        &mut self,
         field_access: &ObjAsStructInstanceWithFieldAccess,
     ) -> Result<Obj, RuntimeError> {
-        let index = self.struct_field_index(&field_access.struct_obj, &field_access.field_name)?;
-        let struct_name = field_access.struct_obj.name.to_string();
+        let struct_obj =
+            self.direct_struct_owner_carrier_for_field_access(field_access, default_line_file())?;
+        let index = self.struct_field_index(&struct_obj, &field_access.field_name)?;
+        let struct_name = struct_obj.name.to_string();
         let def = self
             .get_struct_definition_by_name(&struct_name)
             .ok_or_else(|| {

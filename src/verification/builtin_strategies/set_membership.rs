@@ -4,15 +4,16 @@ impl Runtime {
     pub fn verify_set_membership_with_builtin_strategy(
         &mut self,
         fact: &InFact,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let literal_struct =
-            self.verify_literal_tuple_struct_membership_with_builtin_strategy(fact)?;
+            self.verify_literal_tuple_struct_membership_with_builtin_strategy(fact, verify_state)?;
         if literal_struct.is_success() {
             return Ok(literal_struct);
         }
 
         let defined_set =
-            self.verify_one_layer_set_builder_membership_with_builtin_strategy(fact)?;
+            self.verify_one_layer_set_builder_membership_with_builtin_strategy(fact, verify_state)?;
         if defined_set.is_success() {
             return Ok(defined_set);
         }
@@ -102,7 +103,8 @@ impl Runtime {
             _ => return Ok(UnknownGenericStmtResult::new().into()),
         };
 
-        let Some(children) = self.verify_set_strategy_alternatives(alternatives)? else {
+        let Some(children) = self.verify_set_strategy_alternatives(alternatives, verify_state)?
+        else {
             return Ok(UnknownGenericStmtResult::new().into());
         };
         Ok(
@@ -124,11 +126,12 @@ impl Runtime {
     fn verify_literal_tuple_struct_membership_with_builtin_strategy(
         &mut self,
         fact: &InFact,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let (Obj::Tuple(_), Obj::StructObj(struct_obj)) = (&fact.element, &fact.set) else {
             return Ok(UnknownGenericStmtResult::new().into());
         };
-        let final_state = VerifyState::final_round();
+        let final_state = verify_state.with_final_round();
         self.verify_in_fact_by_struct_obj(fact, struct_obj, &final_state)
     }
 
@@ -139,22 +142,27 @@ impl Runtime {
     fn verify_one_layer_set_builder_membership_with_builtin_strategy(
         &mut self,
         fact: &InFact,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let goal_key = fact.to_string();
-        if self.has_active_set_builder_membership_unfold() {
+        if verify_state.has_active_set_builder_membership_unfold() {
             return Ok(UnknownGenericStmtResult::new().into());
         }
-        self.begin_set_builder_membership_unfold(&goal_key);
-        let result = self.verify_one_layer_set_builder_membership_with_builtin_strategy_once(fact);
-        self.end_set_builder_membership_unfold(&goal_key);
+        verify_state.begin_set_builder_membership_unfold(&goal_key);
+        let result = self
+            .verify_one_layer_set_builder_membership_with_builtin_strategy_once(fact, verify_state);
+        verify_state.end_set_builder_membership_unfold(&goal_key);
         result
     }
 
     fn verify_one_layer_set_builder_membership_with_builtin_strategy_once(
         &mut self,
         fact: &InFact,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
-        if let Some(result) = self.try_verify_set_builder_membership_definition_transport(fact)? {
+        if let Some(result) =
+            self.try_verify_set_builder_membership_definition_transport(fact, verify_state)?
+        {
             return Ok(result);
         }
         // Most membership goals target a carrier parameter or a native set
@@ -168,7 +176,7 @@ impl Runtime {
         {
             return Ok(UnknownGenericStmtResult::new().into());
         }
-        let final_state = VerifyState::final_round();
+        let final_state = verify_state.with_final_round();
         if let Obj::InstantiatedTemplateObj(template_obj) = &fact.set {
             self.instantiate_template_obj(template_obj, &final_state)?;
         }
@@ -190,7 +198,7 @@ impl Runtime {
             fact.line_file.clone(),
         )
         .into();
-        let base_result = self.verify_builtin_strategy_child(&base)?;
+        let base_result = self.verify_builtin_strategy_child(&base, verify_state)?;
         if !base_result.is_success() {
             return Ok(UnknownGenericStmtResult::new().into());
         }
@@ -270,6 +278,7 @@ impl Runtime {
     pub fn verify_subset_with_builtin_strategy(
         &mut self,
         fact: &SubsetFact,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let lf = fact.line_file.clone();
         let mut alternatives: Vec<Vec<AtomicFact>> = Vec::new();
@@ -314,7 +323,8 @@ impl Runtime {
                 SubsetFact::new(fact.left.clone(), set.right.as_ref().clone(), lf.clone()).into(),
             ]);
         }
-        let Some(children) = self.verify_set_strategy_alternatives(alternatives)? else {
+        let Some(children) = self.verify_set_strategy_alternatives(alternatives, verify_state)?
+        else {
             return Ok(UnknownGenericStmtResult::new().into());
         };
         Ok(
@@ -333,12 +343,13 @@ impl Runtime {
     fn verify_set_strategy_alternatives(
         &mut self,
         alternatives: Vec<Vec<AtomicFact>>,
+        verify_state: &VerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         for required in alternatives {
             let mut results = Vec::with_capacity(required.len());
             let mut complete = true;
             for child in required {
-                let result = self.verify_builtin_strategy_child(&child)?;
+                let result = self.verify_builtin_strategy_child(&child, verify_state)?;
                 if !result.is_success() {
                     complete = false;
                     break;

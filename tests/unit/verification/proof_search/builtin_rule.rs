@@ -136,7 +136,11 @@ fn integer_leaf_reuses_known_finiteness_without_opening_a_direct_rule() {
     let line_file = default_line_file();
 
     let cold = runtime
-        .verify_objects_are_known_integers_in_builtin_leaf(&[&size], &line_file)
+        .verify_objects_are_known_integers_in_builtin_leaf(
+            &[&size],
+            &line_file,
+            &VerifyState::initial(),
+        )
         .expect("integer leaf verification should not error");
     assert!(
         cold.is_none(),
@@ -144,13 +148,17 @@ fn integer_leaf_reuses_known_finiteness_without_opening_a_direct_rule() {
     );
 
     let finite_fact: AtomicFact = IsFiniteSetFact::new(set, line_file.clone()).into();
+    // This unit isolates proof-search reuse. The symbolic endpoints deliberately
+    // have no surrounding environment, so mark the synthetic fact as already
+    // well-defined before exercising the owning atomic-verification entrypoint.
+    let verify_state = VerifyState::initial().with_well_definedness_verified();
     let finite_result = runtime
-        .verify_non_equational_atomic_fact_with_bounded_builtin_routes(&finite_fact)
+        .verify_atomic_fact(&finite_fact, &verify_state)
         .expect("direct finiteness verification should not error");
     assert!(finite_result.is_success());
 
     let mut warm = runtime
-        .verify_objects_are_known_integers_in_builtin_leaf(&[&size], &line_file)
+        .verify_objects_are_known_integers_in_builtin_leaf(&[&size], &line_file, &verify_state)
         .expect("integer leaf verification should not error")
         .expect("known finiteness should type finite_set_size as an integer");
     let size_result = warm

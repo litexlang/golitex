@@ -23,7 +23,7 @@ impl SuccessInferResult {
 
     pub fn from_fact(fact: &Fact) -> Self {
         let mut r = Self::new();
-        r.add_verified_statement(fact);
+        r.add_statement_with_verification(fact);
         r
     }
 
@@ -71,7 +71,7 @@ impl SuccessInferResult {
         })
     }
 
-    pub fn remove_first_verified_statement_for_fact(&mut self, fact: &Fact) {
+    pub fn remove_first_statement_with_verification_for_fact(&mut self, fact: &Fact) {
         let target = fact.to_string();
         let mut removed = false;
         self.store_fact_outputs.retain(|output| {
@@ -157,7 +157,7 @@ impl SuccessInferResult {
         self.add_rule_application_with_premises(rule, premises, conclusions);
     }
 
-    pub fn add_verified_statement(&mut self, fact: &Fact) {
+    pub fn add_statement_with_verification(&mut self, fact: &Fact) {
         self.add_store_fact_output(fact, Fact::store_reason(), Vec::new());
     }
 

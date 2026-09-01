@@ -94,7 +94,7 @@ impl Runtime {
 
             for binding in param_def.params.iter() {
                 let name = binding.name();
-                self.store_parameter_binding(binding, binding_scope)
+                self.store_typed_parameter_binding(binding, binding_scope, &param_def.param_type)
                     .map_err(|runtime_error| {
                         RuntimeError::from(DefineParamsRuntimeError(
                             RuntimeErrorStruct::new_with_msg_and_cause(
@@ -124,7 +124,7 @@ impl Runtime {
         Ok(infer_result)
     }
 
-    pub fn define_params_with_type_trusted(
+    pub fn define_typed_params_with_trust(
         &mut self,
         param_defs: &TypedParameterList,
         binding_scope: BindingScope,
@@ -132,7 +132,7 @@ impl Runtime {
         let mut infer_result = SuccessInferResult::new();
         for param_def in param_defs.groups.iter() {
             for binding in param_def.params.iter() {
-                self.store_parameter_binding(binding, binding_scope)?;
+                self.store_typed_parameter_binding(binding, binding_scope, &param_def.param_type)?;
                 let param_obj = param_binding_element_obj_for_store(binding, binding_scope);
                 let fact: Fact = match &param_def.param_type {
                     ParamType::Obj(obj) => InFact::new(
@@ -161,7 +161,7 @@ impl Runtime {
                     }
                 };
                 infer_result.new_infer_result_inside(
-                    self.store_trusted_fact_and_infer_with_reason(
+                    self.store_fact_with_trust_and_infer_with_reason(
                         fact,
                         InferReason::ParameterDefinition,
                     )?,

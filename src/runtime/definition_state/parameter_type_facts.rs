@@ -15,7 +15,7 @@ impl Runtime {
             args,
             _line_file,
             substitution_mode,
-            InferReason::VerifiedStatement,
+            InferReason::StatementWithVerification,
         )
     }
 

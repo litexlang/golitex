@@ -59,7 +59,7 @@ impl Runtime {
         stmt: &HaveObjInNonemptySetOrParamTypeStmt,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let mut infer_result = if self.current_execution_is_trusted_file() {
-            self.define_params_with_type_trusted(&stmt.param_def, BindingScope::DefinitionBinding)
+            self.define_typed_params_with_trust(&stmt.param_def, BindingScope::DefinitionBinding)
         } else {
             self.define_params_with_type(&stmt.param_def, false, BindingScope::DefinitionBinding)
         }

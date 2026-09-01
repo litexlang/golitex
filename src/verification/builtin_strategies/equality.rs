@@ -4,17 +4,21 @@ impl Runtime {
     pub fn verify_equality_with_builtin_strategy(
         &mut self,
         fact: &EqualFact,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
-        let extrema = self.verify_extremum_equality_with_builtin_strategy(fact)?;
+        let extrema = self.verify_extremum_equality_with_builtin_strategy(fact, verify_state)?;
         if extrema.is_success() {
             return Ok(extrema);
         }
-        let finite_product =
-            self.verify_finite_set_product_pointwise_equality_with_builtin_strategy(fact)?;
+        let finite_product = self
+            .verify_finite_set_product_pointwise_equality_with_builtin_strategy(
+                fact,
+                verify_state,
+            )?;
         if finite_product.is_success() {
             return Ok(finite_product);
         }
-        self.verify_mod_congruence_with_builtin_strategy(fact)
+        self.verify_mod_congruence_with_builtin_strategy(fact, verify_state)
     }
 
     // Pointwise finite-product congruence is structural: reduce the product equality to one
@@ -23,6 +27,7 @@ impl Runtime {
     fn verify_finite_set_product_pointwise_equality_with_builtin_strategy(
         &mut self,
         fact: &EqualFact,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let (Obj::ProductOfFiniteSet(left), Obj::ProductOfFiniteSet(right)) =
             (&fact.left, &fact.right)
@@ -35,7 +40,7 @@ impl Runtime {
             fact.line_file.clone(),
         )
         .into();
-        let set_result = self.verify_builtin_strategy_child(&set_goal)?;
+        let set_result = self.verify_builtin_strategy_child(&set_goal, verify_state)?;
         if !set_result.is_success() {
             return Ok(UnknownGenericStmtResult::new().into());
         }
@@ -52,14 +57,15 @@ impl Runtime {
         };
         let pointwise_goal: AtomicFact =
             EqualFact::new(left_at_x, right_at_x, fact.line_file.clone()).into();
-        let pointwise_result = self.run_in_local_env(|rt| {
-            let params_def = TypedParameterList::new(vec![TypedParameterGroup::new(
-                vec![x_binding],
-                ParamType::Obj(left.set.as_ref().clone()),
-            )]);
-            rt.define_params_with_type(&params_def, false, BindingScope::LocalBinder)?;
-            rt.verify_builtin_strategy_child(&pointwise_goal)
-        })?;
+        let pointwise_result =
+            self.run_in_local_verification_env(verify_state, |rt, local_verify_state| {
+                let params_def = TypedParameterList::new(vec![TypedParameterGroup::new(
+                    vec![x_binding],
+                    ParamType::Obj(left.set.as_ref().clone()),
+                )]);
+                rt.define_params_with_type(&params_def, false, BindingScope::LocalBinder)?;
+                rt.verify_builtin_strategy_child(&pointwise_goal, local_verify_state)
+            })?;
         if !pointwise_result.is_success() {
             return Ok(UnknownGenericStmtResult::new().into());
         }
@@ -83,6 +89,7 @@ impl Runtime {
     fn verify_extremum_equality_with_builtin_strategy(
         &mut self,
         fact: &EqualFact,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let has_extremum = matches!(
             (&fact.left, &fact.right),
@@ -109,7 +116,7 @@ impl Runtime {
         ];
         let mut steps = Vec::with_capacity(required.len());
         for child in &required {
-            let result = self.verify_builtin_strategy_child(child)?;
+            let result = self.verify_builtin_strategy_child(child, verify_state)?;
             if !result.is_success() {
                 return Ok(UnknownGenericStmtResult::new().into());
             }
@@ -136,6 +143,7 @@ impl Runtime {
     fn verify_mod_congruence_with_builtin_strategy(
         &mut self,
         fact: &EqualFact,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let (Obj::Mod(left_mod), Obj::Mod(right_mod)) = (&fact.left, &fact.right) else {
             return Ok(UnknownGenericStmtResult::new().into());
@@ -146,7 +154,8 @@ impl Runtime {
             right_mod.right.as_ref().clone(),
             fact.line_file.clone(),
         );
-        let modulus_result = self.verify_equal_fact_with_bounded_builtin_routes(&modulus_goal)?;
+        let modulus_result =
+            self.verify_equal_fact_with_bounded_builtin_routes(&modulus_goal, verify_state)?;
         if !modulus_result.is_success() {
             return Ok(UnknownGenericStmtResult::new().into());
         }
@@ -182,11 +191,12 @@ impl Runtime {
                 residue(right, right_mod.right.as_ref()),
                 fact.line_file.clone(),
             );
-            let direct = self.verify_equal_fact_with_bounded_builtin_routes(&child)?;
+            let direct =
+                self.verify_equal_fact_with_bounded_builtin_routes(&child, verify_state)?;
             let result = if direct.is_success() {
                 direct
             } else {
-                self.verify_mod_congruence_with_builtin_strategy(&child)?
+                self.verify_mod_congruence_with_builtin_strategy(&child, verify_state)?
             };
             if !result.is_success() {
                 return Ok(UnknownGenericStmtResult::new().into());

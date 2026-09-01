@@ -26,18 +26,31 @@ impl Runtime {
     pub fn verify_non_equational_atomic_fact_with_bounded_builtin_routes(
         &mut self,
         atomic_fact: &AtomicFact,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         debug_assert!(!matches!(atomic_fact, AtomicFact::EqualFact(_)));
         let zero_premise_result =
             self.verify_non_equational_atomic_fact_with_zero_premise_verification(atomic_fact)?;
         if zero_premise_result.is_success() {
-            return Ok(zero_premise_result);
+            return Ok(self.remember_successful_atomic_fact_for_proof_search(
+                atomic_fact,
+                zero_premise_result,
+                verify_state,
+            ));
         }
 
-        let builtin_state = BuiltinRuleSearchState::initial();
-        self.verify_non_equational_atomic_fact_with_one_premise_producing_builtin_rule(
-            atomic_fact,
-            &builtin_state,
+        let builtin_state = BuiltinRuleSearchState::in_proof_search(verify_state);
+        let result = self
+            .verify_non_equational_atomic_fact_with_one_premise_producing_builtin_rule(
+                atomic_fact,
+                &builtin_state,
+            )?;
+        Ok(
+            self.remember_successful_atomic_fact_for_proof_search(
+                atomic_fact,
+                result,
+                verify_state,
+            ),
         )
     }
 
@@ -58,7 +71,7 @@ impl Runtime {
         }
 
         let result = self.verify_non_equational_atomic_fact_by_direct_evaluation(atomic_fact);
-        Ok(self.cache_successful_atomic_fact_for_statement(atomic_fact, result))
+        Ok(result)
     }
 
     // Direct evaluation is the computation arm of zero-premise verification: it may inspect
@@ -141,17 +154,19 @@ impl Runtime {
         if !builtin_state.can_apply_rule() {
             return Ok(UnknownGenericStmtResult::new().into());
         }
+        let verify_state = builtin_state.verify_state();
         let child_state = builtin_state.after_applying_rule();
-        if let Some(result) =
-            self.try_verify_atomic_fact_from_known_set_builder_membership(atomic_fact)?
+        if let Some(result) = self
+            .try_verify_atomic_fact_from_known_set_builder_membership(atomic_fact, verify_state)?
         {
-            return Ok(self.cache_successful_atomic_fact_for_statement(atomic_fact, result));
+            return Ok(result);
         }
         let result = self.verify_non_equational_atomic_fact_with_builtin_rules_inner(
             atomic_fact,
             &child_state,
+            verify_state,
         )?;
-        Ok(self.cache_successful_atomic_fact_for_statement(atomic_fact, result))
+        Ok(result)
     }
 
     pub fn verify_non_equational_atomic_fact(
@@ -160,13 +175,15 @@ impl Runtime {
         verify_state: &VerifyState,
         alternate_fact_search: AlternateFactSearch,
     ) -> Result<StmtResult, RuntimeError> {
-        let mut result =
-            self.verify_non_equational_atomic_fact_with_bounded_builtin_routes(atomic_fact)?;
+        let mut result = self.verify_non_equational_atomic_fact_with_bounded_builtin_routes(
+            atomic_fact,
+            verify_state,
+        )?;
         if result.is_success() {
             return Ok(result);
         }
 
-        result = self.verify_atomic_fact_with_builtin_strategy(atomic_fact)?;
+        result = self.verify_atomic_fact_with_builtin_strategy(atomic_fact, verify_state)?;
         if result.is_success() {
             return Ok(result);
         }
@@ -380,7 +397,7 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         match alternate_result {
             StmtResult::Success(SuccessStmtResult::Fact(inner_success)) => {
-                Ok(SuccessFactStmtResult::new_with_statement_proof_cache(
+                Ok(SuccessFactStmtResult::new_with_reused_verification(
                     original.clone().into(),
                     SuccessInferResult::new(),
                     inner_success.verification,

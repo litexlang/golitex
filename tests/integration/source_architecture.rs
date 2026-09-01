@@ -144,7 +144,10 @@ fn compiler_and_test_directories_follow_the_repository_layout() {
     ] {
         assert!(pipeline.join(responsibility).is_file());
     }
-    assert!(!pipeline.join("execution_trace.rs").exists());
+    let retired_phase_summary = ["execution", "trace"].join("_");
+    assert!(!pipeline
+        .join(format!("{retired_phase_summary}.rs"))
+        .exists());
     let compiler = root.join("src/stmt_result_to_lean_compiler");
     let retired_short_name = ["lean", "compiler"].join("_");
     assert!(!root.join("src").join(&retired_short_name).exists());
@@ -284,7 +287,7 @@ fn compiler_and_test_directories_follow_the_repository_layout() {
         "proposition_definitions.rs",
         "sequences.rs",
         "speculative_execution.rs",
-        "trusted_statements.rs",
+        "trust_statements.rs",
         "tuples.rs",
     ] {
         assert!(object_definitions.join(responsibility).is_file());
@@ -404,7 +407,7 @@ fn compiler_and_test_directories_follow_the_repository_layout() {
     for (directory, file_responsibilities, directory_responsibilities) in [
         (
             "statement",
-            &["execution_trace.rs", "traversal.rs", "unknown.rs"][..],
+            &["traversal.rs", "unknown.rs"][..],
             &["result", "success"][..],
         ),
         (
@@ -428,7 +431,6 @@ fn compiler_and_test_directories_follow_the_repository_layout() {
     assert!(result.join("object_evaluation.rs").is_file());
     for retired_root_file in [
         "builtin_rule_evidence.rs",
-        "execution_trace.rs",
         "runtime_success.rs",
         "runtime_success_access.rs",
         "stmt_result.rs",
@@ -442,12 +444,11 @@ fn compiler_and_test_directories_follow_the_repository_layout() {
     ] {
         assert!(!result.join(retired_root_file).exists());
     }
+    assert!(!result
+        .join(format!("{}.rs", ["execution", "trace"].join("_")))
+        .exists());
     let result_tests = root.join("tests/unit/result");
-    for test_file in [
-        "statement/execution_trace.rs",
-        "statement/result.rs",
-        "verification/success_access.rs",
-    ] {
+    for test_file in ["statement/result.rs", "verification/success_access.rs"] {
         assert!(result_tests.join(test_file).is_file());
     }
     let fact = root.join("src/fact");
@@ -577,7 +578,9 @@ fn compiler_and_test_directories_follow_the_repository_layout() {
             assert!(group.join(responsibility).is_file());
         }
     }
-    assert!(runtime.join("statement_proof_state.rs").is_file());
+    let proof_search = root.join("src/verification/proof_search");
+    assert!(proof_search.join("state.rs").is_file());
+    assert!(proof_search.join("memo.rs").is_file());
     assert!(runtime.join("fact_storage.rs").is_file());
     let repeated_runtime_source_names: Vec<_> = rust_files_below(&runtime)
         .into_iter()
@@ -596,7 +599,6 @@ fn compiler_and_test_directories_follow_the_repository_layout() {
         "instantiation/object",
         "name_resolution/name_generation",
         "state",
-        "statement_proof_state",
         "fact_storage",
     ] {
         assert!(runtime_tests.join(directory).is_dir());
@@ -1228,7 +1230,6 @@ fn output_graph_and_repository_concepts_do_not_collapse_back_into_monoliths() {
         (
             "src/output/runtime_error",
             &[
-                "execution_phases.rs",
                 "fields.rs",
                 "rendering.rs",
                 "source_references.rs",
@@ -1531,8 +1532,8 @@ fn main_execution_spine_names_its_dependencies_explicitly() {
         root.join("src/pipeline/output_rendering.rs"),
         root.join("src/parsing/statement_parsing.rs"),
         root.join("src/execution/statement_execution.rs"),
-        root.join("src/execution/verified_statement_execution.rs"),
-        root.join("src/execution/trusted_statement_execution.rs"),
+        root.join("src/execution/statement_with_verification_execution.rs"),
+        root.join("src/execution/statement_with_trust_execution.rs"),
         root.join("src/execution/submitted_fact_execution.rs"),
         root.join("src/verification/dispatch.rs"),
         root.join("src/verification/atomic/core.rs"),
@@ -1631,8 +1632,8 @@ fn source_execution_is_owned_by_runtime_without_a_secondary_context() {
     let statement_execution = fs::read_to_string(root.join("src/execution/statement_execution.rs"))
         .expect("statement execution source should be readable");
     let trusted_execution =
-        fs::read_to_string(root.join("src/execution/trusted_statement_execution.rs"))
-            .expect("trusted statement execution source should be readable");
+        fs::read_to_string(root.join("src/execution/statement_with_trust_execution.rs"))
+            .expect("statement-with-trust execution source should be readable");
     let source_execution = fs::read_to_string(root.join("src/pipeline/source_execution.rs"))
         .expect("source execution source should be readable");
 
@@ -1691,6 +1692,133 @@ fn verify_state_vocabulary_is_semantic() {
 }
 
 #[test]
+fn claim_result_is_one_flat_execution_pipeline() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let result = fs::read_to_string(root.join("src/result/statement/success/proof_blocks.rs"))
+        .expect("claim result source should be readable");
+    let claim_start = result
+        .find("pub struct SuccessClaimStmtResult {")
+        .expect("flat claim result should exist");
+    let claim_body = &result[claim_start..];
+    let claim_end = claim_body
+        .find("\n}")
+        .expect("flat claim result should have a closing brace");
+    let claim_body = &claim_body[..claim_end];
+    let mut previous = 0;
+    for field in [
+        "pub statement: ClaimStmt",
+        "pub well_definedness:",
+        "pub domain:",
+        "pub proof_steps:",
+        "pub conclusion_checks:",
+        "pub environment_effects:",
+    ] {
+        let position = claim_body
+            .find(field)
+            .unwrap_or_else(|| panic!("flat claim result is missing `{field}`"));
+        assert!(
+            position >= previous,
+            "claim fields must follow execution order"
+        );
+        previous = position;
+    }
+    assert!(!claim_body.contains("pub common:"));
+    assert!(!claim_body.contains("pub verification:"));
+    assert!(!claim_body.contains(&["execution", "trace"].join("_")));
+
+    let goal_proof =
+        fs::read_to_string(root.join("src/execution/proof_block_execution/goal_proof.rs"))
+            .expect("goal proof source should be readable");
+    assert!(goal_proof.contains("pub fn verify_checked_goal_block("));
+    assert!(goal_proof.contains("Result<SuccessCheckedGoalBlockResult, RuntimeError>"));
+    assert!(!goal_proof.contains("SuccessClaimStmtResult"));
+    assert!(!goal_proof.contains("ProofBlockStmt::ClaimStmt"));
+
+    let claim = fs::read_to_string(root.join("src/execution/proof_block_execution/claim.rs"))
+        .expect("claim execution source should be readable");
+    let verification = claim
+        .find("self.verify_checked_goal_block(")
+        .expect("claim must execute the checked goal pipeline");
+    let environment = claim
+        .find("self.exec_claim_stmt_affect_environment(stmt)?")
+        .expect("claim must publish its completed fact");
+    let construction = claim
+        .find("SuccessClaimStmtResult::checked(")
+        .expect("claim must construct its flat result");
+    assert!(verification < environment && environment < construction);
+    assert!(!claim.contains(".with_infers("));
+
+    let statement_execution = fs::read_to_string(root.join("src/execution/statement_execution.rs"))
+        .expect("statement execution source should be readable");
+    assert!(!statement_execution.contains("finish_statement_execution"));
+    assert!(!statement_execution.contains("clear_statement_proof_state"));
+}
+
+#[test]
+fn statement_results_expose_only_real_execution_artifacts() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let src = root.join("src");
+    let retired_field = ["execution", "trace"].join("_");
+    let retired_types = [
+        ["Statement", "Execution", "Trace"].concat(),
+        ["Execution", "Phase", "Trace"].concat(),
+        ["Statement", "Phase", "Status"].concat(),
+        ["Statement", "Execution", "Phase"].concat(),
+    ];
+    let offenders: Vec<_> = rust_files_below(&src)
+        .into_iter()
+        .filter(|path| {
+            let source = fs::read_to_string(path).expect("Rust source should be readable");
+            source.contains(&retired_field)
+                || retired_types.iter().any(|name| source.contains(name))
+        })
+        .collect();
+    assert!(
+        offenders.is_empty(),
+        "statement results must expose execution artifacts directly, without a synthetic wrapper: {offenders:#?}"
+    );
+
+    let output = src.join("output");
+    let retired_output_key = ["pha", "ses"].concat();
+    let output_offenders: Vec<_> = rust_files_below(&output)
+        .into_iter()
+        .filter(|path| {
+            let source = fs::read_to_string(path).expect("output source should be readable");
+            source.contains(&format!("\"{retired_output_key}\""))
+        })
+        .collect();
+    assert!(
+        output_offenders.is_empty(),
+        "rendered statement and error output must not reconstruct lifecycle phases: {output_offenders:#?}"
+    );
+}
+
+#[test]
+fn verification_local_environments_always_open_child_proof_scopes() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let verification_root = root.join("src/verification");
+    let local_environment = verification_root.join("well_definedness/local_environment.rs");
+    let offenders: Vec<_> = rust_files_below(&verification_root)
+        .into_iter()
+        .filter(|path| path != &local_environment)
+        .filter(|path| {
+            let source = fs::read_to_string(path).expect("verification source should be readable");
+            source.contains(".run_in_local_env(") || source.contains(".run_in_local_env_and_take(")
+        })
+        .collect();
+    assert!(
+        offenders.is_empty(),
+        "verification-local environments must use the proof-scope-aware adapter: {offenders:#?}"
+    );
+
+    let adapter = fs::read_to_string(&local_environment)
+        .expect("local verification environment adapter should be readable");
+    assert!(adapter.contains("verify_state.with_child_proof_scope()"));
+    assert!(adapter.contains("run_in_local_verification_env"));
+    assert!(adapter.contains("run_in_local_verification_env_and_take"));
+}
+
+#[test]
 fn result_outcomes_and_atomic_polarity_use_distinct_vocabulary() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let result = fs::read_to_string(root.join("src/result/statement/result/inspection.rs"))
@@ -1719,8 +1847,8 @@ fn result_outcomes_and_atomic_polarity_use_distinct_vocabulary() {
 #[test]
 fn verification_cache_vocabulary_names_scope_and_operation() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
-    let statement_cache = fs::read_to_string(root.join("src/runtime/statement_proof_state.rs"))
-        .expect("statement proof cache source should be readable");
+    let proof_search_memo = fs::read_to_string(root.join("src/verification/proof_search/memo.rs"))
+        .expect("proof-search memo source should be readable");
     let persistent_cache = fs::read_to_string(root.join("src/verification/support/helper.rs"))
         .expect("persistent verification cache source should be readable");
     let old_names = [
@@ -1728,10 +1856,11 @@ fn verification_cache_vocabulary_names_scope_and_operation() {
         ["verify_atomic_fact_from_", "statement_memo"].concat(),
         ["remember_successful_atomic_fact_", "for_statement"].concat(),
         ["new_with_", "statement_memo"].concat(),
+        ["statement_", "proof_cache"].concat(),
     ];
 
-    assert!(statement_cache.contains("verification_result_from_statement_proof_cache"));
-    assert!(statement_cache.contains("cache_successful_atomic_fact_for_statement"));
+    assert!(proof_search_memo.contains("verification_result_from_proof_search_memo"));
+    assert!(proof_search_memo.contains("remember_successful_atomic_fact_for_proof_search"));
     assert!(persistent_cache.contains("verification_result_from_known_fact_cache"));
     let offenders: Vec<_> = [root.join("src"), root.join("tests")]
         .into_iter()

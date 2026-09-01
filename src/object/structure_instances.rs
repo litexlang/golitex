@@ -10,9 +10,11 @@ pub struct StructObj {
 
 #[derive(Clone)]
 pub struct ObjAsStructInstanceWithFieldAccess {
-    pub struct_obj: Box<StructObj>,
     pub obj: Box<Obj>,
     pub field_name: String,
+    /// Filled by execution/instantiation, never by parsing. It preserves the
+    /// field owner when substituting a typed receiver with an arbitrary value.
+    pub resolved_struct_carrier: Option<Box<StructObj>>,
 }
 
 #[derive(Clone)]
@@ -29,11 +31,19 @@ impl StructObj {
 }
 
 impl ObjAsStructInstanceWithFieldAccess {
-    pub fn new(struct_obj: StructObj, obj: Obj, field_name: String) -> Self {
+    pub fn new(obj: Obj, field_name: String) -> Self {
         ObjAsStructInstanceWithFieldAccess {
-            struct_obj: Box::new(struct_obj),
             obj: Box::new(obj),
             field_name,
+            resolved_struct_carrier: None,
+        }
+    }
+
+    pub fn new_resolved(obj: Obj, field_name: String, struct_obj: StructObj) -> Self {
+        ObjAsStructInstanceWithFieldAccess {
+            obj: Box::new(obj),
+            field_name,
+            resolved_struct_carrier: Some(Box::new(struct_obj)),
         }
     }
 }

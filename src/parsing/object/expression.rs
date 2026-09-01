@@ -315,19 +315,12 @@ impl Runtime {
                     current_params.push(parse_synthetically_correct_identifier_string(tb)?);
                 }
 
-                let (param_set, default_struct_view) =
-                    this.parse_obj_with_default_struct_view(tb)?;
+                let param_set = this.parse_obj(tb)?;
                 let bindings = this.begin_parsing_scope(
                     BindingScope::LocalBinder,
                     &current_params,
                     tb.line_file.clone(),
                 )?;
-                if let Some(struct_obj) = default_struct_view {
-                    this.register_default_struct_view(&bindings, &struct_obj);
-                }
-                if let Obj::Cart(cart) = &param_set {
-                    this.register_default_tuple_view(&bindings, cart);
-                }
                 set_bound_parameters.push(SetBoundParameterGroup::new(bindings, param_set));
 
                 if tb.current_token_is_equal_to(COMMA) {
@@ -394,19 +387,12 @@ impl Runtime {
                     current_params.push(parse_synthetically_correct_identifier_string(tb)?);
                 }
 
-                let (param_set, default_struct_view) =
-                    this.parse_obj_with_default_struct_view(tb)?;
+                let param_set = this.parse_obj(tb)?;
                 let bindings = this.begin_parsing_scope(
                     BindingScope::LocalBinder,
                     &current_params,
                     tb.line_file.clone(),
                 )?;
-                if let Some(struct_obj) = default_struct_view {
-                    this.register_default_struct_view(&bindings, &struct_obj);
-                }
-                if let Obj::Cart(cart) = &param_set {
-                    this.register_default_tuple_view(&bindings, cart);
-                }
                 set_bound_parameters.push(SetBoundParameterGroup::new(bindings, param_set));
 
                 if tb.current_token_is_equal_to(COMMA) {
@@ -551,12 +537,9 @@ impl Runtime {
     ) -> Result<Obj, RuntimeError> {
         loop {
             if !tb.exceed_end_of_head() && tb.current_token_is_equal_to(DOT_AKA_FIELD_ACCESS_SIGN) {
-                let struct_obj =
-                    self.struct_view_for_field_access_receiver(&result, tb.line_file.clone())?;
                 tb.skip_token(DOT_AKA_FIELD_ACCESS_SIGN)?;
                 let field_name = parse_struct_field_name(tb)?;
-                result =
-                    ObjAsStructInstanceWithFieldAccess::new(struct_obj, result, field_name).into();
+                result = ObjAsStructInstanceWithFieldAccess::new(result, field_name).into();
                 continue;
             }
 

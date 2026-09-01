@@ -8,9 +8,6 @@ pub use object_evaluation::{
     SuccessEvaluateBinaryObjResult, SuccessEvaluateLiteralResult, SuccessEvaluateObjByShapeResult,
     SuccessEvaluateObjResult, SuccessEvaluateObjStepResult, SuccessEvaluateUnaryObjResult,
 };
-pub use statement::execution_trace::{
-    ExecutionPhaseTrace, StatementExecutionPhase, StatementExecutionTrace, StatementPhaseStatus,
-};
 pub use statement::result::{StmtResult, UnknownStmtResult};
 pub use statement::success::{
     CaseDisjointnessOrientation, SuccessAxiomStmtResult, SuccessByAntisymmetricPropStmtResult,
@@ -95,9 +92,10 @@ pub use verification::success::{
     FactTransformationRule, FactTransformationStep, KnownForallInstantiationItem,
     KnownForallRequirementKind, ObjectDefinitionItem, SuccessBuiltinFactProofEvidenceResult,
     SuccessBuiltinFactProofResult, SuccessCheckedFunctionDefinitionReductionFactProofResult,
-    SuccessCombinedFactProofResult, SuccessDefinitionReductionFactProofResult,
-    SuccessDiagnosticFactProofResult, SuccessFactProofResult, SuccessForallAssumptionFactResult,
-    SuccessForallProofResult, SuccessForallProvedFactResult, SuccessInstantiateKnownForallResult,
+    SuccessCheckedGoalBlockResult, SuccessCombinedFactProofResult,
+    SuccessDefinitionReductionFactProofResult, SuccessDiagnosticFactProofResult,
+    SuccessFactProofResult, SuccessForallAssumptionFactResult, SuccessForallProofResult,
+    SuccessForallProvedFactResult, SuccessInstantiateKnownForallResult,
     SuccessReuseFactProofResult, SuccessStoredFactCitationProofResult, SuccessTransformFactResult,
     SuccessVerifyArgsSatisfyParamDefResult, SuccessVerifyBuiltinTheoremApplicationResult,
     SuccessVerifyByAssignmentAssumptionResult, SuccessVerifyByAssignmentDomainResult,
@@ -118,7 +116,6 @@ pub use verification::success::{
     SuccessVerifyByPropRegistrationResult, SuccessVerifyByStructuredIntegerInducCaseResult,
     SuccessVerifyByStructuredIntegerInducResult, SuccessVerifyByTheoremSelectionResult,
     SuccessVerifyByUnstructuredIntegerInducResult, SuccessVerifyCaseFunctionDefinitionResult,
-    SuccessVerifyClaimFactResult, SuccessVerifyClaimForallResult, SuccessVerifyClaimResult,
     SuccessVerifyContradictionResult, SuccessVerifyExistentialEliminationResult,
     SuccessVerifyFunctionDefinitionResult, SuccessVerifyFunctionFromUniqueExistenceResult,
     SuccessVerifyHaveObjEqualResult, SuccessVerifyIndexedFunctionDefinitionResult,

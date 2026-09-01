@@ -537,10 +537,6 @@ impl DepCollector {
                 }
             }
             Obj::ObjAsStructInstanceWithFieldAccess(x) => {
-                self.deps.push_struct(x.struct_obj.name.to_string());
-                for param in x.struct_obj.params.iter() {
-                    self.collect_obj(param);
-                }
                 self.collect_obj(&x.obj);
             }
             Obj::InstantiatedTemplateObj(x) => {
@@ -578,11 +574,6 @@ impl DepCollector {
                 self.collect_obj(&obj_at_index.index);
             }
             FnObjHead::ObjAsStructInstanceWithFieldAccess(field_access) => {
-                self.deps
-                    .push_struct(field_access.struct_obj.name.to_string());
-                for param in field_access.struct_obj.params.iter() {
-                    self.collect_obj(param);
-                }
                 self.collect_obj(&field_access.obj);
             }
             FnObjHead::InstantiatedTemplateObj(template_obj) => {

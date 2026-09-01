@@ -156,46 +156,6 @@ impl Runtime {
         self.register_collected_param_names_for_def_parse(&equal_tos, tb.line_file.clone())?;
         let equal_to_bindings = self.allocate_local_symbol_bindings(&equal_tos)?;
 
-        if let Some(true_fact) = true_fact.as_ref() {
-            let exist_param_defs = true_fact.typed_parameters();
-            if exist_param_defs.number_of_params() == equal_to_bindings.len() {
-                let equal_to_objs = equal_to_bindings
-                    .iter()
-                    .map(|binding| {
-                        param_binding_element_obj_for_store(
-                            binding,
-                            BindingScope::DefinitionBinding,
-                        )
-                    })
-                    .collect::<Vec<_>>();
-                let param_to_arg_map =
-                    exist_param_defs.param_defs_and_args_to_param_to_arg_map(&equal_to_objs);
-                let mut default_struct_views = Vec::new();
-                let mut equal_to_index = 0;
-
-                for param_group in exist_param_defs.groups.iter() {
-                    for _ in param_group.params.iter() {
-                        if let ParamType::Obj(Obj::StructObj(_)) = &param_group.param_type {
-                            let instantiated_type = self.inst_param_type(
-                                &param_group.param_type,
-                                &param_to_arg_map,
-                                SubstitutionMode::Exact,
-                            )?;
-                            if let ParamType::Obj(Obj::StructObj(struct_obj)) = instantiated_type {
-                                default_struct_views
-                                    .push((equal_to_bindings[equal_to_index].clone(), struct_obj));
-                            }
-                        }
-                        equal_to_index += 1;
-                    }
-                }
-
-                for (binding, struct_obj) in default_struct_views {
-                    self.register_default_struct_view(std::slice::from_ref(&binding), &struct_obj);
-                }
-            }
-        }
-
         self.register_local_existing_identifier_bindings_for_parse(
             &equal_to_bindings,
             tb.line_file.clone(),

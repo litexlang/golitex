@@ -8,7 +8,7 @@ impl Runtime {
         let tok = tb.current()?;
 
         if tok == STRUCT_VIEW_PREFIX {
-            return self.parse_struct_view_obj(tb);
+            return self.parse_struct_carrier_obj(tb);
         }
         if tok == TEMPLATE_INSTANCE_PREFIX {
             return self.parse_instantiated_template_obj(tb);

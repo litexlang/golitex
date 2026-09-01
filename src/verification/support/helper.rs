@@ -159,7 +159,7 @@ impl Runtime {
     pub fn verify_atomic_fact_restricted_known_builtin(
         &mut self,
         atomic_fact: &AtomicFact,
-        _verify_state: &VerifyState,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(cached_result) =
             self.verification_result_from_known_fact_cache(&atomic_fact.clone().into())
@@ -168,9 +168,12 @@ impl Runtime {
         }
         match atomic_fact {
             AtomicFact::EqualFact(equal_fact) => {
-                self.verify_equal_fact_with_bounded_builtin_routes(equal_fact)
+                self.verify_equal_fact_with_bounded_builtin_routes(equal_fact, verify_state)
             }
-            _ => self.verify_non_equational_atomic_fact_with_bounded_builtin_routes(atomic_fact),
+            _ => self.verify_non_equational_atomic_fact_with_bounded_builtin_routes(
+                atomic_fact,
+                verify_state,
+            ),
         }
     }
 
@@ -452,7 +455,7 @@ impl Runtime {
         &mut self,
         objs: &[&Obj],
         line_file: &LineFile,
-        _verify_state: &VerifyState,
+        verify_state: &VerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         let mut seen = Vec::new();
         let mut steps = Vec::new();
@@ -464,10 +467,12 @@ impl Runtime {
             seen.push(key);
             let in_r: AtomicFact =
                 InFact::new((*obj).clone(), StandardSet::R.into(), line_file.clone()).into();
-            let mut result =
-                self.verify_non_equational_atomic_fact_with_bounded_builtin_routes(&in_r)?;
+            let mut result = self.verify_non_equational_atomic_fact_with_bounded_builtin_routes(
+                &in_r,
+                verify_state,
+            )?;
             if !result.is_success() {
-                result = self.verify_atomic_fact_with_builtin_strategy(&in_r)?;
+                result = self.verify_atomic_fact_with_builtin_strategy(&in_r, verify_state)?;
             }
             if result.is_success() {
                 steps.push(result);
@@ -558,10 +563,12 @@ impl Runtime {
 
             let in_c: AtomicFact =
                 InFact::new((*obj).clone(), StandardSet::C.into(), line_file.clone()).into();
-            let mut result =
-                self.verify_non_equational_atomic_fact_with_bounded_builtin_routes(&in_c)?;
+            let mut result = self.verify_non_equational_atomic_fact_with_bounded_builtin_routes(
+                &in_c,
+                verify_state,
+            )?;
             if !result.is_success() {
-                result = self.verify_atomic_fact_with_builtin_strategy(&in_c)?;
+                result = self.verify_atomic_fact_with_builtin_strategy(&in_c, verify_state)?;
             }
             if !result.is_success() {
                 return Ok(None);

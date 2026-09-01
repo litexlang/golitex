@@ -180,6 +180,32 @@ impl Runtime {
         self.register_existing_symbol_binding(binding.clone(), role)?;
         Ok(())
     }
+
+    pub fn store_typed_parameter_binding(
+        &mut self,
+        binding: &SymbolBinding,
+        scope: BindingScope,
+        param_type: &ParamType,
+    ) -> Result<(), RuntimeError> {
+        self.store_parameter_binding(binding, scope)?;
+        if let ParamType::Obj(Obj::StructObj(struct_obj)) = param_type {
+            self.remember_direct_struct_carrier_for_binding(binding, struct_obj);
+        }
+        Ok(())
+    }
+
+    pub fn store_set_bound_parameter_binding(
+        &mut self,
+        binding: &SymbolBinding,
+        scope: BindingScope,
+        param_set: &Obj,
+    ) -> Result<(), RuntimeError> {
+        self.store_parameter_binding(binding, scope)?;
+        if let Obj::StructObj(struct_obj) = param_set {
+            self.remember_direct_struct_carrier_for_binding(binding, struct_obj);
+        }
+        Ok(())
+    }
 }
 
 fn name_already_used_error(name: &str, existing_namespace: &str) -> RuntimeError {

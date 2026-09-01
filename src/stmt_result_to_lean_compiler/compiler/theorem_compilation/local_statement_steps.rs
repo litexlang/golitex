@@ -12,15 +12,15 @@ impl StmtResultToLeanCompiler {
             SuccessProofBlockStmtResult::ClaimStmt(result),
         )) = result
         {
-            return match &result.verification {
-                Some(SuccessVerifyClaimResult::Forall(_)) => self
+            return match (&result.well_definedness, &result.statement.fact) {
+                (Some(_), Fact::ForallFact(_)) => self
                     .compile_forall_claim_stmt_result_as_local_proof_steps(
                         result,
                         proof_step_index,
                     ),
-                Some(SuccessVerifyClaimResult::Fact(_)) => self
+                (Some(_), _) => self
                     .compile_fact_claim_stmt_result_as_local_proof_steps(result, proof_step_index),
-                None => Ok(None),
+                (None, _) => Ok(None),
             };
         }
         if let StmtResult::Success(SuccessStmtResult::Definition(

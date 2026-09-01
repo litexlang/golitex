@@ -4,14 +4,46 @@ use crate::prelude::*;
 
 pub struct SuccessClaimStmtResult {
     pub statement: ClaimStmt,
-    pub common: SuccessStmtCommonResult,
-    pub verification: Option<SuccessVerifyClaimResult>,
+    pub well_definedness: Option<SuccessVerifyFactWellDefinedResult>,
+    pub domain: SuccessVerifyLocalProofScopeResult,
+    pub proof_steps: Vec<StmtResult>,
+    pub conclusion_checks: Vec<StmtResult>,
+    pub environment_effects: SuccessInferResult,
+}
+
+impl SuccessClaimStmtResult {
+    pub fn checked(
+        statement: ClaimStmt,
+        verification: SuccessCheckedGoalBlockResult,
+        environment_effects: SuccessInferResult,
+    ) -> Self {
+        debug_assert_eq!(statement.fact.to_string(), verification.fact.to_string());
+        Self {
+            statement,
+            well_definedness: Some(verification.well_definedness),
+            domain: verification.domain,
+            proof_steps: verification.proof_steps,
+            conclusion_checks: verification.conclusion_checks,
+            environment_effects,
+        }
+    }
+
+    pub fn with_trust(statement: ClaimStmt, environment_effects: SuccessInferResult) -> Self {
+        Self {
+            statement,
+            well_definedness: None,
+            domain: SuccessVerifyLocalProofScopeResult::new(SuccessInferResult::new(), Vec::new()),
+            proof_steps: Vec::new(),
+            conclusion_checks: Vec::new(),
+            environment_effects,
+        }
+    }
 }
 
 pub struct SuccessExampleStmtResult {
     pub statement: ExampleStmt,
     pub common: SuccessStmtCommonResult,
-    pub verification: Option<SuccessVerifyClaimResult>,
+    pub verification: Option<SuccessCheckedGoalBlockResult>,
 }
 
 pub struct SuccessSketchProofResult {

@@ -215,9 +215,6 @@ fn collect_obj_binder_bindings(
             }
         }
         Obj::ObjAsStructInstanceWithFieldAccess(x) => {
-            for param in &x.struct_obj.params {
-                collect_obj_binder_bindings(param, bindings, seen, depth);
-            }
             collect_obj_binder_bindings(&x.obj, bindings, seen, depth);
         }
         Obj::InstantiatedTemplateObj(x) => {
@@ -292,9 +289,6 @@ fn collect_fn_obj_head_binder_bindings(
             collect_obj_binder_bindings(&x.index, bindings, seen, depth);
         }
         FnObjHead::ObjAsStructInstanceWithFieldAccess(x) => {
-            for param in &x.struct_obj.params {
-                collect_obj_binder_bindings(param, bindings, seen, depth);
-            }
             collect_obj_binder_bindings(&x.obj, bindings, seen, depth);
         }
         FnObjHead::InstantiatedTemplateObj(x) => {

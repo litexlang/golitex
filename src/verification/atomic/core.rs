@@ -32,6 +32,11 @@ impl Runtime {
         {
             return Ok(cached_result);
         }
+        if let Some(cached_result) =
+            self.verification_result_from_proof_search_memo(fact, verify_state)
+        {
+            return Ok(cached_result);
+        }
 
         if !verify_state.well_definedness_verified {
             if let Err(error) = self.verify_atomic_fact_well_defined(fact, verify_state) {
@@ -63,7 +68,11 @@ impl Runtime {
                     reduced_result,
                     evidence,
                 );
-                return Ok(self.cache_successful_atomic_fact_for_statement(fact, result));
+                return Ok(self.remember_successful_atomic_fact_for_proof_search(
+                    fact,
+                    result,
+                    verify_state,
+                ));
             }
         }
 
@@ -71,6 +80,6 @@ impl Runtime {
             fact,
             &state_after_well_definedness,
         )?;
-        Ok(self.cache_successful_atomic_fact_for_statement(fact, result))
+        Ok(self.remember_successful_atomic_fact_for_proof_search(fact, result, verify_state))
     }
 }

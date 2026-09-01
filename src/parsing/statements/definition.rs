@@ -248,16 +248,6 @@ impl Runtime {
                             .map(|(field_name, _)| field_name.clone())
                             .collect::<Vec<_>>();
                         field_bindings = this.allocate_local_symbol_bindings(&field_names)?;
-                        for ((_, field_type), field_binding) in
-                            parsed_fields.iter().zip(field_bindings.iter())
-                        {
-                            if let Obj::StructObj(struct_obj) = field_type {
-                                this.register_default_struct_view(
-                                    std::slice::from_ref(field_binding),
-                                    struct_obj,
-                                );
-                            }
-                        }
                         equivalent_facts
                             .extend(this.parse_struct_equivalent_facts(block, &field_bindings)?);
                     } else {

@@ -22,12 +22,12 @@ stops after rendering the Result.
 | CLI | [`cli::run_cli()`](cli/command_dispatch.rs) | Parses flags and selects code, file, repository, runner, graph, or compiler execution. |
 | CLI command | [`cli::run_command()`](cli/command_handlers.rs) | Adapts every typed batch target to its explicit pipeline entry, then renders one CLI result. |
 | Batch pipeline | [`pipeline::run_code`, `run_file`, `run_isolated_file`, `run_repository`](pipeline/run.rs) | Each explicit entry owns its input-specific setup and creates the `Runtime`. |
-| Runtime state | [`Runtime::new(options: RunOptions)`](runtime/state.rs) | Creates the environment, module state, proof state, identifiers, and one run-options value together; `Runtime::default()` is the explicit default/test configuration. |
+| Runtime state | [`Runtime::new(options: RunOptions)`](runtime/state.rs) | Creates the environment, module state, identifiers, and one run-options value together; `Runtime::default()` is the explicit default/test configuration. |
 | Source pipeline | [`Runtime::execute_source`](pipeline/source_execution.rs) | Tokenizes and executes statement blocks in order on the Runtime that owns their state. |
 | Parsing | [`Tokenizer::parse_blocks`](parsing/tokenizer.rs) and [`Runtime::parse_statement`](parsing/statement_parsing.rs) | Turn source text into `TokenBlock` values and then typed `Stmt` values. |
-| Execution | [`Runtime::execute_statement`](execution/statement_execution.rs) | Clears statement-local proof state and dispatches verified or configured trusted execution. Interactive imports take a separate terminal-command path before parsing and never become statements. |
+| Execution | [`Runtime::execute_statement`](execution/statement_execution.rs) | Dispatches to the verification-required statement lifecycle or the configured statement lifecycle with trust. Interactive imports take a separate terminal-command path before parsing and never become statements. |
 | Verification | [`Runtime::verify_fact_or_error`](verification/dispatch.rs) | Dispatches fact verification; equality reaches [`Runtime::verify_equal_fact`](verification/equality/core.rs). |
-| Result | [`Runtime::finish_statement_execution`](execution/statement_execution.rs) | Attaches FactIds and execution provenance, then returns the completed [`StmtResult`](result/statement/result.rs). |
+| Result | [`Runtime::execute_statement_with_verification`](execution/statement_with_verification_execution.rs) or [`Runtime::execute_statement_with_trust`](execution/statement_with_trust_execution.rs) | Each lifecycle owner attaches FactIds, then returns the completed [`StmtResult`](result/statement/result.rs). |
 | Lean compiler | [`compile_litex_source_to_lean_source`](stmt_result_to_lean_compiler/source_compilation.rs) and [`StmtResultToLeanCompiler::compile_stmt_results_to_lean_source`](stmt_result_to_lean_compiler/compiler/result_dispatch.rs) | Optionally replay verified Results as Lean declarations and proof terms. |
 
 ### Follow one statement through the source

@@ -182,9 +182,9 @@ impl Runtime {
         } else {
             OrFact::new(branches, stmt.line_file.clone()).into()
         };
-        let infer_result = self.store_trusted_fact_and_infer_with_reason(
+        let infer_result = self.store_fact_with_trust_and_infer_with_reason(
             generated_fact,
-            InferReason::VerifiedStatement,
+            InferReason::StatementWithVerification,
         )?;
         Ok(SuccessByStmtResult::ByClosedRangeAsCasesStmt(Box::new(
             SuccessByClosedRangeAsCasesStmtResult {

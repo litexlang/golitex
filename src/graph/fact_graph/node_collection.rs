@@ -49,7 +49,13 @@ impl FactGraphBuilder {
                 self.add_axiom_nodes(stmt, &source_stmt)
             }
             Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(stmt)) => {
-                self.add_claim_nodes(stmt, &source_stmt)
+                self.add_claim_nodes(stmt, &source_stmt);
+                if let SuccessStmtResult::ProofBlock(SuccessProofBlockStmtResult::ClaimStmt(
+                    result,
+                )) = success
+                {
+                    self.add_infer_nodes(&result.environment_effects);
+                }
             }
             Stmt::UnsafeStmt(UnsafeStmt::TrustStmt(_))
             | Stmt::UnsafeStmt(UnsafeStmt::TrustHaveStmt(_)) => {
@@ -71,17 +77,18 @@ impl FactGraphBuilder {
                 self.add_assumption_nodes(&verification.proof_scope.assumption_infers);
             }
         }
-        let claim_verification = match success {
+        let checked_goal_block = match success {
             SuccessStmtResult::ProofBlock(SuccessProofBlockStmtResult::ClaimStmt(result)) => {
-                result.verification.as_ref()
+                self.add_assumption_nodes(&result.domain.assumption_infers);
+                None
             }
             SuccessStmtResult::ProofBlock(SuccessProofBlockStmtResult::ExampleStmt(result)) => {
                 result.verification.as_ref()
             }
             _ => None,
         };
-        if let Some(SuccessVerifyClaimResult::Forall(verification)) = claim_verification {
-            self.add_assumption_nodes(&verification.proof_scope.assumption_infers);
+        if let Some(verification) = checked_goal_block {
+            self.add_assumption_nodes(&verification.domain.assumption_infers);
         }
         success.visit_child_results(&mut |child| self.collect_result_nodes(child));
         success.visit_success_child_results(&mut |child| self.collect_success_nodes(child));

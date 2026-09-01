@@ -4,41 +4,63 @@ impl Runtime {
     /// Dispatch infer by fact kind.
     /// Example: `a $subset b` enters atomic infer branch.
     pub fn infer(&mut self, fact: &Fact) -> Result<SuccessInferResult, RuntimeError> {
+        self.infer_with_state(fact, &InferenceState::new())
+    }
+
+    pub fn infer_with_state(
+        &mut self,
+        fact: &Fact,
+        inference_state: &InferenceState,
+    ) -> Result<SuccessInferResult, RuntimeError> {
         match fact {
-            Fact::AtomicFact(atomic_fact) => self.atomic_fact(atomic_fact),
-            Fact::ExistFact(exist_fact) => self.infer_exist_fact(exist_fact),
+            Fact::AtomicFact(atomic_fact) => self.atomic_fact(atomic_fact, inference_state),
+            Fact::ExistFact(exist_fact) => self.infer_exist_fact(exist_fact, inference_state),
             Fact::OrFact(or_fact) => self.infer_or_fact(or_fact),
-            Fact::AndFact(and_fact) => self.infer_and_fact(and_fact),
-            Fact::ChainFact(chain_fact) => self.infer_chain_fact(chain_fact),
+            Fact::AndFact(and_fact) => self.infer_and_fact(and_fact, inference_state),
+            Fact::ChainFact(chain_fact) => self.infer_chain_fact(chain_fact, inference_state),
             Fact::ForallFact(forall_fact) => self.infer_forall_fact(forall_fact),
             Fact::ForallFactWithIff(forall_fact_with_iff) => {
                 self.infer_forall_fact_with_iff(forall_fact_with_iff)
             }
-            Fact::NotForall(not_forall) => self.infer_not_forall_fact(not_forall),
+            Fact::NotForall(not_forall) => self.infer_not_forall_fact(not_forall, inference_state),
         }
     }
 
     pub fn infer_exist_or_and_chain_atomic_fact(
         &mut self,
         fact: &ExistOrAndChainAtomicFact,
+        inference_state: &InferenceState,
     ) -> Result<SuccessInferResult, RuntimeError> {
         match fact {
-            ExistOrAndChainAtomicFact::AtomicFact(atomic_fact) => self.atomic_fact(atomic_fact),
-            ExistOrAndChainAtomicFact::AndFact(and_fact) => self.infer_and_fact(and_fact),
-            ExistOrAndChainAtomicFact::ChainFact(chain_fact) => self.infer_chain_fact(chain_fact),
+            ExistOrAndChainAtomicFact::AtomicFact(atomic_fact) => {
+                self.atomic_fact(atomic_fact, inference_state)
+            }
+            ExistOrAndChainAtomicFact::AndFact(and_fact) => {
+                self.infer_and_fact(and_fact, inference_state)
+            }
+            ExistOrAndChainAtomicFact::ChainFact(chain_fact) => {
+                self.infer_chain_fact(chain_fact, inference_state)
+            }
             ExistOrAndChainAtomicFact::OrFact(or_fact) => self.infer_or_fact(or_fact),
-            ExistOrAndChainAtomicFact::ExistFact(exist_fact) => self.infer_exist_fact(exist_fact),
+            ExistOrAndChainAtomicFact::ExistFact(exist_fact) => {
+                self.infer_exist_fact(exist_fact, inference_state)
+            }
         }
     }
 
     pub fn infer_quantifier_free_fact(
         &mut self,
         fact: &QuantifierFreeFact,
+        inference_state: &InferenceState,
     ) -> Result<SuccessInferResult, RuntimeError> {
         match fact {
-            QuantifierFreeFact::AtomicFact(atomic_fact) => self.atomic_fact(atomic_fact),
-            QuantifierFreeFact::AndFact(and_fact) => self.infer_and_fact(and_fact),
-            QuantifierFreeFact::ChainFact(chain_fact) => self.infer_chain_fact(chain_fact),
+            QuantifierFreeFact::AtomicFact(atomic_fact) => {
+                self.atomic_fact(atomic_fact, inference_state)
+            }
+            QuantifierFreeFact::AndFact(and_fact) => self.infer_and_fact(and_fact, inference_state),
+            QuantifierFreeFact::ChainFact(chain_fact) => {
+                self.infer_chain_fact(chain_fact, inference_state)
+            }
             QuantifierFreeFact::OrFact(or_fact) => self.infer_or_fact(or_fact),
         }
     }
@@ -46,6 +68,7 @@ impl Runtime {
     fn infer_exist_fact(
         &mut self,
         exist_fact: &ExistFactEnum,
+        inference_state: &InferenceState,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let mut out = SuccessInferResult::new();
         if exist_fact.is_exist_unique() && exist_fact.typed_parameters().number_of_params() > 0 {
@@ -60,7 +83,10 @@ impl Runtime {
                 out.new_fact(&uniq.clone().into());
             }
             out.new_infer_result_inside(
-                self.store_forall_fact_without_well_defined_verified_and_infer(uniq)?,
+                self.store_forall_fact_without_well_defined_verified_and_infer_with_state(
+                    uniq,
+                    inference_state,
+                )?,
             );
         } else if exist_fact.is_not_exist() && exist_fact.typed_parameters().number_of_params() > 0
         {
@@ -72,7 +98,10 @@ impl Runtime {
                 out.new_fact(&forall.clone().into());
             }
             out.new_infer_result_inside(
-                self.store_forall_fact_without_well_defined_verified_and_infer(forall)?,
+                self.store_forall_fact_without_well_defined_verified_and_infer_with_state(
+                    forall,
+                    inference_state,
+                )?,
             );
         }
         Ok(out)
@@ -82,16 +111,21 @@ impl Runtime {
         Ok(SuccessInferResult::new())
     }
 
-    fn infer_and_fact(&mut self, and_fact: &AndFact) -> Result<SuccessInferResult, RuntimeError> {
+    fn infer_and_fact(
+        &mut self,
+        and_fact: &AndFact,
+        inference_state: &InferenceState,
+    ) -> Result<SuccessInferResult, RuntimeError> {
         let source_fact: Fact = and_fact.clone().into();
         let component_count = and_fact.facts.len();
         let mut result = SuccessInferResult::new();
         for (component_index, component) in and_fact.facts.iter().enumerate() {
             let component_fact: Fact = component.clone().into();
             let component_infers = self
-                .store_without_well_defined_verification_and_infer_with_reason(
+                .store_without_well_defined_verification_and_infer_with_reason_and_state(
                     component_fact.clone(),
                     InferReason::InferredFact,
+                    inference_state,
                 )?;
             result.add_rule_application_preserving_conclusion_result_structure(
                 InferRule::ConjunctionImpliesComponent(ConjunctionImpliesComponentInferRule {
@@ -111,6 +145,7 @@ impl Runtime {
     fn infer_chain_fact(
         &mut self,
         chain_fact: &ChainFact,
+        inference_state: &InferenceState,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let atomic_facts = match chain_fact.facts_with_order_transitive_closure() {
             Ok(v) => v,
@@ -118,7 +153,7 @@ impl Runtime {
         };
         let mut result = SuccessInferResult::new();
         for atomic_fact in atomic_facts {
-            result.new_infer_result_inside(self.atomic_fact(&atomic_fact)?);
+            result.new_infer_result_inside(self.atomic_fact(&atomic_fact, inference_state)?);
         }
         Ok(result)
     }

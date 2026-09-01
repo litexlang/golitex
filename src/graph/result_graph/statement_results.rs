@@ -28,6 +28,44 @@ impl ResultGraph {
             return;
         }
 
+        if let SuccessStmtResult::ProofBlock(SuccessProofBlockStmtResult::ClaimStmt(result)) =
+            success
+        {
+            self.add_non_fact_well_definedness(success, &id);
+
+            let domain_id = format!("{id}/domain");
+            self.ensure_node(
+                domain_id.clone(),
+                "verification_scope",
+                "SuccessVerifyLocalProofScopeResult",
+                "claim domain",
+                None,
+            );
+            self.add_edge(&id, &domain_id, "domain", 0);
+            self.add_infers(
+                &domain_id,
+                &result.domain.assumption_infers,
+                format!("{domain_id}/assumption"),
+            );
+
+            for (index, step) in result.proof_steps.iter().enumerate() {
+                let step_id = format!("{id}/proof-step:{index}");
+                self.add_stmt_result(step, step_id.clone());
+                self.add_edge(&id, &step_id, "proof_step", index);
+            }
+            for (index, check) in result.conclusion_checks.iter().enumerate() {
+                let check_id = format!("{id}/conclusion-check:{index}");
+                self.add_stmt_result(check, check_id.clone());
+                self.add_edge(&id, &check_id, "conclusion_check", index);
+            }
+            self.add_infers(
+                &id,
+                &result.environment_effects,
+                format!("{id}/environment-effect"),
+            );
+            return;
+        }
+
         let child_parent = if let Some(common) = success.common() {
             let execution_id = format!("{id}/execution");
             self.ensure_node(
@@ -122,8 +160,14 @@ impl ResultGraph {
                 }
             }
             SuccessStmtResult::ProofBlock(SuccessProofBlockStmtResult::ClaimStmt(result)) => {
-                if let Some(verification) = result.verification.as_ref() {
-                    self.add_claim_well_definedness(parent, verification);
+                if let Some(well_definedness) = result.well_definedness.as_ref() {
+                    self.add_attached_fact_well_definedness(
+                        parent,
+                        well_definedness,
+                        result.statement.fact.to_string(),
+                        "well_definedness",
+                        0,
+                    );
                 }
             }
             SuccessStmtResult::ProofBlock(SuccessProofBlockStmtResult::ExampleStmt(result)) => {
@@ -474,24 +518,15 @@ impl ResultGraph {
     pub(super) fn add_claim_well_definedness(
         &mut self,
         parent: &str,
-        verification: &SuccessVerifyClaimResult,
+        verification: &SuccessCheckedGoalBlockResult,
     ) {
-        match verification {
-            SuccessVerifyClaimResult::Forall(result) => self.add_attached_fact_well_definedness(
-                parent,
-                &result.well_definedness,
-                result.forall_fact.to_string(),
-                "well_definedness",
-                0,
-            ),
-            SuccessVerifyClaimResult::Fact(result) => self.add_attached_fact_well_definedness(
-                parent,
-                &result.well_definedness,
-                result.fact.to_string(),
-                "well_definedness",
-                0,
-            ),
-        }
+        self.add_attached_fact_well_definedness(
+            parent,
+            &verification.well_definedness,
+            verification.fact.to_string(),
+            "well_definedness",
+            0,
+        );
     }
 
     pub(super) fn add_attached_fact_well_definedness(

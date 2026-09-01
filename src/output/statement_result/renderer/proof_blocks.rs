@@ -9,23 +9,35 @@ impl StatementResultRenderer {
     ) -> JsonValue {
         match result {
             SuccessProofBlockStmtResult::ClaimStmt(result) => {
-                let verification = result
-                    .verification
+                let well_definedness = result
+                    .well_definedness
                     .as_ref()
-                    .map(|result| self.claim_verification(result))
+                    .map(|result| self.fact_well_definedness(result))
                     .unwrap_or(JsonValue::Null);
-                self.non_fact_stmt(
-                    "ClaimStmt",
-                    result.statement.to_string(),
-                    &result.common,
-                    vec![("verification".to_string(), verification)],
-                )
+                object(vec![
+                    string_field("kind", "SuccessClaimStmtResult"),
+                    string_field("statement", result.statement.to_string()),
+                    ("well_definedness".to_string(), well_definedness),
+                    ("domain".to_string(), self.local_proof_scope(&result.domain)),
+                    (
+                        "proof_steps".to_string(),
+                        self.stmt_results(&result.proof_steps),
+                    ),
+                    (
+                        "conclusion_checks".to_string(),
+                        self.stmt_results(&result.conclusion_checks),
+                    ),
+                    (
+                        "environment_effects".to_string(),
+                        infer_result_value(&result.environment_effects),
+                    ),
+                ])
             }
             SuccessProofBlockStmtResult::ExampleStmt(result) => {
                 let verification = result
                     .verification
                     .as_ref()
-                    .map(|result| self.claim_verification(result))
+                    .map(|result| self.checked_goal_block(result))
                     .unwrap_or(JsonValue::Null);
                 self.non_fact_stmt(
                     "ExampleStmt",
@@ -132,10 +144,6 @@ impl StatementResultRenderer {
                     .unwrap_or(JsonValue::Null),
             ),
             ("unknown_result".to_string(), unknown_result),
-            (
-                "phases".to_string(),
-                optional_trace(details.execution_trace.as_ref()),
-            ),
             (
                 "previous_error".to_string(),
                 details

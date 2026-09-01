@@ -2,7 +2,7 @@ use crate::prelude::*;
 
 #[derive(Clone, Debug)]
 pub enum InferReason {
-    VerifiedStatement,
+    StatementWithVerification,
     ProvedClaim,
     UnsafeAssumption,
     TrustHave,
@@ -25,7 +25,7 @@ pub enum InferReason {
 impl InferReason {
     pub fn store_reason(&self) -> String {
         match self {
-            InferReason::VerifiedStatement => Fact::store_reason().to_string(),
+            InferReason::StatementWithVerification => Fact::store_reason().to_string(),
             InferReason::ProvedClaim => ClaimStmt::store_reason().to_string(),
             InferReason::UnsafeAssumption => TrustStmt::store_reason().to_string(),
             InferReason::TrustHave => TrustHaveStmt::store_reason().to_string(),

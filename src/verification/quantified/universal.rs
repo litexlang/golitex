@@ -195,7 +195,7 @@ impl Runtime {
             then_verification_results.push(result);
         }
 
-        infer_result.add_verified_statement(&forall_fact.clone().into());
+        infer_result.add_statement_with_verification(&forall_fact.clone().into());
         let infer_for_success = std::mem::replace(infer_result, SuccessInferResult::new());
         Ok((SuccessFactStmtResult::new_with_verified_by_builtin_rules(
             forall_fact.clone().into(),
@@ -289,14 +289,14 @@ impl Runtime {
             );
         }
 
-        self.run_in_local_env(|rt| {
+        self.run_in_local_verification_env(verify_state, |rt, local_verify_state| {
             let mut assumption_infer_result =
-                rt.forall_assume_params_and_dom_in_current_env(forall_fact, verify_state)?;
+                rt.forall_assume_params_and_dom_in_current_env(forall_fact, local_verify_state)?;
             rt.attach_known_fact_ids_to_infer_result(&mut assumption_infer_result)?;
             let mut infer_result = SuccessInferResult::new();
             rt.forall_verify_then_facts_in_current_env(
                 forall_fact,
-                verify_state,
+                local_verify_state,
                 &mut infer_result,
                 assumption_infer_result,
                 None,

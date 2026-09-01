@@ -9,7 +9,16 @@ use crate::statement::{
 };
 
 impl Runtime {
-    pub(super) fn execute_verified_statement(
+    pub(super) fn execute_statement_with_verification(
+        &mut self,
+        stmt: &Stmt,
+    ) -> Result<StmtResult, RuntimeError> {
+        let mut result = self.execute_statement_with_verification_body(stmt)?;
+        self.attach_known_fact_ids_to_stmt_result(&mut result)?;
+        Ok(result)
+    }
+
+    fn execute_statement_with_verification_body(
         &mut self,
         stmt: &Stmt,
     ) -> Result<StmtResult, RuntimeError> {

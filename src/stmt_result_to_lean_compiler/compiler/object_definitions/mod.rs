@@ -9,5 +9,5 @@ mod object_equalities;
 mod proposition_definitions;
 mod sequences;
 mod speculative_execution;
-mod trusted_statements;
+mod trust_statements;
 mod tuples;

@@ -6,6 +6,7 @@ impl Runtime {
     pub fn verify_is_finite_set_with_builtin_strategy(
         &mut self,
         fact: &IsFiniteSetFact,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let mut child_results = Vec::new();
         let reason = match &fact.set {
@@ -20,7 +21,7 @@ impl Runtime {
                     return Ok(UnknownGenericStmtResult::new().into());
                 };
                 let child = IsFiniteSetFact::new(domain.set_obj().clone(), fact.line_file.clone());
-                let result = self.verify_is_finite_set_strategy_child(&child)?;
+                let result = self.verify_is_finite_set_strategy_child(&child, verify_state)?;
                 if !result.is_success() {
                     return Ok(UnknownGenericStmtResult::new().into());
                 }
@@ -30,7 +31,7 @@ impl Runtime {
             Obj::PowerSet(power_set) => {
                 let child =
                     IsFiniteSetFact::new(power_set.set.as_ref().clone(), fact.line_file.clone());
-                let result = self.verify_is_finite_set_strategy_child(&child)?;
+                let result = self.verify_is_finite_set_strategy_child(&child, verify_state)?;
                 if !result.is_success() {
                     return Ok(UnknownGenericStmtResult::new().into());
                 }
@@ -42,7 +43,7 @@ impl Runtime {
                     set_builder.param_set.as_ref().clone(),
                     fact.line_file.clone(),
                 );
-                let result = self.verify_is_finite_set_strategy_child(&child)?;
+                let result = self.verify_is_finite_set_strategy_child(&child, verify_state)?;
                 if !result.is_success() {
                     return Ok(UnknownGenericStmtResult::new().into());
                 }
@@ -52,7 +53,7 @@ impl Runtime {
             Obj::Union(union) => {
                 for set in [union.left.as_ref(), union.right.as_ref()] {
                     let child = IsFiniteSetFact::new(set.clone(), fact.line_file.clone());
-                    let result = self.verify_is_finite_set_strategy_child(&child)?;
+                    let result = self.verify_is_finite_set_strategy_child(&child, verify_state)?;
                     if !result.is_success() {
                         return Ok(UnknownGenericStmtResult::new().into());
                     }
@@ -63,7 +64,7 @@ impl Runtime {
             Obj::Intersect(intersect) => {
                 for set in [intersect.left.as_ref(), intersect.right.as_ref()] {
                     let child = IsFiniteSetFact::new(set.clone(), fact.line_file.clone());
-                    let result = self.verify_is_finite_set_strategy_child(&child)?;
+                    let result = self.verify_is_finite_set_strategy_child(&child, verify_state)?;
                     if !result.is_success() {
                         return Ok(UnknownGenericStmtResult::new().into());
                     }
@@ -74,7 +75,7 @@ impl Runtime {
             Obj::SetMinus(set_minus) => {
                 let child =
                     IsFiniteSetFact::new(set_minus.left.as_ref().clone(), fact.line_file.clone());
-                let result = self.verify_is_finite_set_strategy_child(&child)?;
+                let result = self.verify_is_finite_set_strategy_child(&child, verify_state)?;
                 if !result.is_success() {
                     return Ok(UnknownGenericStmtResult::new().into());
                 }
@@ -84,7 +85,7 @@ impl Runtime {
             Obj::Cart(cart) => {
                 for set in &cart.args {
                     let child = IsFiniteSetFact::new(set.as_ref().clone(), fact.line_file.clone());
-                    let result = self.verify_is_finite_set_strategy_child(&child)?;
+                    let result = self.verify_is_finite_set_strategy_child(&child, verify_state)?;
                     if !result.is_success() {
                         return Ok(UnknownGenericStmtResult::new().into());
                     }
@@ -111,14 +112,17 @@ impl Runtime {
     fn verify_is_finite_set_strategy_child(
         &mut self,
         fact: &IsFiniteSetFact,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let atomic_fact: AtomicFact = fact.clone().into();
-        let direct =
-            self.verify_non_equational_atomic_fact_with_bounded_builtin_routes(&atomic_fact)?;
+        let direct = self.verify_non_equational_atomic_fact_with_bounded_builtin_routes(
+            &atomic_fact,
+            verify_state,
+        )?;
         if direct.is_success() {
             return Ok(direct);
         }
-        self.verify_is_finite_set_with_builtin_strategy(fact)
+        self.verify_is_finite_set_with_builtin_strategy(fact, verify_state)
     }
 
     // Nonemptiness is structural only for constructors whose witnesses come from their
@@ -126,6 +130,7 @@ impl Runtime {
     pub fn verify_is_nonempty_set_with_builtin_strategy(
         &mut self,
         fact: &IsNonemptySetFact,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         match &fact.set {
             // An integer closed range is nonempty exactly when its endpoints are ordered.
@@ -137,7 +142,7 @@ impl Runtime {
                     fact.line_file.clone(),
                 )
                 .into();
-                let result = self.verify_builtin_strategy_child(&endpoint_order)?;
+                let result = self.verify_builtin_strategy_child(&endpoint_order, verify_state)?;
                 if !result.is_success() {
                     return Ok(UnknownGenericStmtResult::new().into());
                 }
@@ -161,7 +166,7 @@ impl Runtime {
                     fact.line_file.clone(),
                 )
                 .into();
-                let result = self.verify_builtin_strategy_child(&endpoint_order)?;
+                let result = self.verify_builtin_strategy_child(&endpoint_order, verify_state)?;
                 if !result.is_success() {
                     return Ok(UnknownGenericStmtResult::new().into());
                 }
@@ -196,7 +201,7 @@ impl Runtime {
                     )
                     .into()
                 };
-                let result = self.verify_builtin_strategy_child(&endpoint_order)?;
+                let result = self.verify_builtin_strategy_child(&endpoint_order, verify_state)?;
                 if !result.is_success() {
                     return Ok(UnknownGenericStmtResult::new().into());
                 }
@@ -218,7 +223,8 @@ impl Runtime {
             Obj::Union(union) => {
                 for set in [union.left.as_ref(), union.right.as_ref()] {
                     let child = IsNonemptySetFact::new(set.clone(), fact.line_file.clone());
-                    let result = self.verify_is_nonempty_set_strategy_child(&child)?;
+                    let result =
+                        self.verify_is_nonempty_set_strategy_child(&child, verify_state)?;
                     if result.is_success() {
                         return Ok(
                             SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
@@ -238,7 +244,8 @@ impl Runtime {
                 for set in &cart.args {
                     let child =
                         IsNonemptySetFact::new(set.as_ref().clone(), fact.line_file.clone());
-                    let result = self.verify_is_nonempty_set_strategy_child(&child)?;
+                    let result =
+                        self.verify_is_nonempty_set_strategy_child(&child, verify_state)?;
                     if !result.is_success() {
                         return Ok(UnknownGenericStmtResult::new().into());
                     }
@@ -258,26 +265,31 @@ impl Runtime {
                 fact,
                 fn_set.body.ret_set.as_ref(),
                 "nonempty-set strategy: function codomain is nonempty",
+                verify_state,
             ),
             Obj::AnonymousFn(function) => self.verify_nonempty_constructor_strategy(
                 fact,
                 function.body.ret_set.as_ref(),
                 "nonempty-set strategy: anonymous-function codomain is nonempty",
+                verify_state,
             ),
             Obj::FiniteSeqSet(sequence) => self.verify_nonempty_constructor_strategy(
                 fact,
                 sequence.set.as_ref(),
                 "nonempty-set strategy: finite-sequence codomain is nonempty",
+                verify_state,
             ),
             Obj::SeqSet(sequence) => self.verify_nonempty_constructor_strategy(
                 fact,
                 sequence.set.as_ref(),
                 "nonempty-set strategy: sequence codomain is nonempty",
+                verify_state,
             ),
             Obj::MatrixSet(matrix) => self.verify_nonempty_constructor_strategy(
                 fact,
                 matrix.set.as_ref(),
                 "nonempty-set strategy: matrix entry set is nonempty",
+                verify_state,
             ),
             _ => Ok(UnknownGenericStmtResult::new().into()),
         }
@@ -288,9 +300,10 @@ impl Runtime {
         fact: &IsNonemptySetFact,
         child_set: &Obj,
         reason: &str,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let child = IsNonemptySetFact::new(child_set.clone(), fact.line_file.clone());
-        let result = self.verify_is_nonempty_set_strategy_child(&child)?;
+        let result = self.verify_is_nonempty_set_strategy_child(&child, verify_state)?;
         if !result.is_success() {
             return Ok(UnknownGenericStmtResult::new().into());
         }
@@ -310,13 +323,16 @@ impl Runtime {
     fn verify_is_nonempty_set_strategy_child(
         &mut self,
         fact: &IsNonemptySetFact,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let atomic_fact: AtomicFact = fact.clone().into();
-        let direct =
-            self.verify_non_equational_atomic_fact_with_bounded_builtin_routes(&atomic_fact)?;
+        let direct = self.verify_non_equational_atomic_fact_with_bounded_builtin_routes(
+            &atomic_fact,
+            verify_state,
+        )?;
         if direct.is_success() {
             return Ok(direct);
         }
-        self.verify_is_nonempty_set_with_builtin_strategy(fact)
+        self.verify_is_nonempty_set_with_builtin_strategy(fact, verify_state)
     }
 }

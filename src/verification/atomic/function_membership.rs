@@ -418,9 +418,9 @@ impl Runtime {
             Vec::new(),
             flow.in_fact.line_file.clone(),
         )?;
-        self.run_in_local_env(|rt| {
-            rt.forall_assume_params_and_dom_in_current_env(&stub, verify_state)?;
-            rt.verify_obj_well_defined_and_store_cache(&flow.applied_fn_obj, verify_state)
+        self.run_in_local_verification_env(verify_state, |rt, local_verify_state| {
+            rt.forall_assume_params_and_dom_in_current_env(&stub, local_verify_state)?;
+            rt.verify_obj_well_defined_and_store_cache(&flow.applied_fn_obj, local_verify_state)
         })
     }
 

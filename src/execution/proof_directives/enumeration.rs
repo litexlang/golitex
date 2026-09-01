@@ -137,9 +137,9 @@ impl Runtime {
         let corresponding_forall_fact = stmt
             .to_corresponding_forall_fact()
             .map_err(|msg| short_exec_error(stmt.clone().into(), msg, None, vec![]))?;
-        let infer_result = self.store_trusted_fact_and_infer_with_reason(
+        let infer_result = self.store_fact_with_trust_and_infer_with_reason(
             corresponding_forall_fact,
-            InferReason::VerifiedStatement,
+            InferReason::StatementWithVerification,
         )?;
         Ok(SuccessByStmtResult::ByEnumerateFiniteSetStmt(Box::new(
             SuccessByEnumerateFiniteSetStmtResult {
@@ -213,14 +213,21 @@ impl Runtime {
     ) -> Result<SuccessVerifyByAssignmentResult, RuntimeError> {
         let mut assignment = Vec::new();
         let mut assumptions = Vec::new();
-        let param_bindings = stmt.forall_fact.typed_parameters.collect_param_bindings();
+        let parameters = stmt
+            .forall_fact
+            .typed_parameters
+            .collect_param_bindings_with_types();
         for (parameter_position, parameter_name) in params.iter().enumerate() {
-            let parameter_binding = &param_bindings[parameter_position];
+            let (parameter_binding, parameter_type) = &parameters[parameter_position];
             let assigned_obj = (*param_sets[parameter_position].list
                 [parameter_index_assignment[parameter_position]])
                 .clone();
             assignment.push((parameter_name.clone(), assigned_obj.to_string()));
-            self.store_parameter_binding(parameter_binding, BindingScope::LocalBinder)?;
+            self.store_typed_parameter_binding(
+                parameter_binding,
+                BindingScope::LocalBinder,
+                parameter_type,
+            )?;
             let parameter_equal_to_assigned_obj_atomic_fact: AtomicFact = EqualFact::new(
                 obj_for_bound_param_in_scope(parameter_binding),
                 assigned_obj,

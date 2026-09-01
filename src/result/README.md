@@ -1,6 +1,6 @@
 # Statement results and proof evidence
 
-For `1 + 1 = 2`, the result is not only `true`; it retains the statement, calculation evidence, well-definedness result, FactId, inference output, and execution phases.
+For `1 + 1 = 2`, the result is not only `true`; it retains the statement, calculation evidence, well-definedness result, FactId, and inference output.
 
 ```text
 StmtResult::Success(
@@ -9,8 +9,7 @@ StmtResult::Success(
     proof: BuiltinRule(RationalNormalization(...)),
     well_definedness: Success(...),
     fact_id: f1,
-    infers: ...,
-    execution_trace: Success
+    infers: ...
   }
 )
 ```
@@ -22,7 +21,7 @@ StmtResult::Success(
 | `1 + 1 = 2` | `StmtResult::Success(SuccessStmtResult::Fact(...))`. |
 | An unsupported fact such as a missing symbolic-power rule | `StmtResult::Unknown(...)`, not a fabricated proof. |
 | `trust 1 = 2` | A distinct trusted/unsafe success result, not ordinary checked evidence. |
-| `1 / 0 = 0` | A `RuntimeError` with failed well-definedness phases, not `StmtResult::Success`. |
+| `1 / 0 = 0` | A well-definedness `RuntimeError`, not `StmtResult::Success`. |
 | Reusing an earlier fact | A citation result retains the exact source `FactId`, for example `f3`. |
 
 `StmtResult::is_success()` answers whether execution produced the `Success`

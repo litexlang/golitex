@@ -14,7 +14,7 @@ impl Runtime {
         let reusable_cache_key = self.well_defined_cache_key_for_obj(obj);
         if let Some(source) = reusable_cache_key
             .as_ref()
-            .and_then(|key| self.statement_well_defined_object_proof(key))
+            .and_then(|key| verify_state.well_defined_object_proof(key))
         {
             return Ok(Rc::new(SuccessVerifyObjWellDefinedResult::Reuse(Box::new(
                 SuccessReuseObjWellDefinedResult::new(obj.clone(), source),
@@ -24,7 +24,7 @@ impl Runtime {
             .clone()
             .unwrap_or_else(|| WellDefinedCacheKey::without_function_contract(obj.to_string()));
         let active_key = obj_equality_key(obj);
-        if !self.begin_well_defined_object(&active_key) {
+        if !verify_state.begin_well_defined_object(&active_key) {
             return Ok(Rc::new(
                 SuccessVerifyObjWellDefinedResult::RecursiveReference(Box::new(
                     SuccessRecursiveObjWellDefinedResult::new(obj.clone(), active_key),
@@ -278,7 +278,7 @@ impl Runtime {
                 .map(Some),
         };
 
-        self.end_well_defined_object(&active_key);
+        verify_state.end_well_defined_object(&active_key);
         let steps = steps?.expect("every Obj variant returns compositional WD steps");
         let intrinsic_result_set = intrinsic_well_definedness_result_set(obj, &steps);
         let result = Rc::new(SuccessVerifyObjWellDefinedResult::Direct(Box::new(
@@ -290,7 +290,7 @@ impl Runtime {
             ),
         )));
         if let Some(reusable_cache_key) = reusable_cache_key {
-            self.remember_statement_well_defined_object_proof(reusable_cache_key, result.clone());
+            verify_state.remember_well_defined_object_proof(reusable_cache_key, result.clone());
         }
         Ok(result)
     }

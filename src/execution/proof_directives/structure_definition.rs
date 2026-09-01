@@ -6,9 +6,10 @@ impl Runtime {
         &mut self,
         stmt: &ByStructDefStmt,
     ) -> Result<StmtResult, RuntimeError> {
+        let struct_obj = self.direct_struct_carrier_for_obj(&stmt.obj, stmt.line_file.clone())?;
         let membership: AtomicFact = InFact::new(
             stmt.obj.clone(),
-            stmt.struct_obj.clone().into(),
+            struct_obj.clone().into(),
             stmt.line_file.clone(),
         )
         .into();
@@ -29,7 +30,7 @@ impl Runtime {
         let infer_result = self.run_in_local_env_and_commit(|runtime| {
             runtime.release_one_struct_definition_layer(
                 &stmt.obj,
-                &stmt.struct_obj,
+                &struct_obj,
                 stmt.line_file.clone(),
                 ByStructDefStmt::store_reason(),
             )
@@ -37,6 +38,7 @@ impl Runtime {
         Ok(
             SuccessByStmtResult::ByStructDefStmt(Box::new(SuccessByStructDefStmtResult {
                 statement: stmt.clone(),
+                struct_obj,
                 common: SuccessStmtCommonResult::new(infer_result),
                 membership_check: Some(Box::new(membership_check)),
             }))
@@ -48,15 +50,17 @@ impl Runtime {
         &mut self,
         stmt: &ByStructDefStmt,
     ) -> Result<StmtResult, RuntimeError> {
+        let struct_obj = self.direct_struct_carrier_for_obj(&stmt.obj, stmt.line_file.clone())?;
         let infer_result = self.release_one_struct_definition_layer(
             &stmt.obj,
-            &stmt.struct_obj,
+            &struct_obj,
             stmt.line_file.clone(),
             ByStructDefStmt::store_reason(),
         )?;
         Ok(
             SuccessByStmtResult::ByStructDefStmt(Box::new(SuccessByStructDefStmtResult {
                 statement: stmt.clone(),
+                struct_obj,
                 common: SuccessStmtCommonResult::new(infer_result),
                 membership_check: None,
             }))
@@ -78,10 +82,10 @@ impl Runtime {
             self.struct_header_param_to_arg_map(struct_obj, &VerifyState::initial())?;
         let mut named_field_map = HashMap::new();
         for field in def.fields.iter() {
-            let field_value: Obj = ObjAsStructInstanceWithFieldAccess::new(
-                struct_obj.clone(),
+            let field_value: Obj = ObjAsStructInstanceWithFieldAccess::new_resolved(
                 obj.clone(),
                 field.name().to_string(),
+                struct_obj.clone(),
             )
             .into();
             insert_symbol_substitution(&mut named_field_map, &field.binding, field_value);
@@ -137,10 +141,10 @@ impl Runtime {
         }
 
         for field in def.fields.iter() {
-            let field_value: Obj = ObjAsStructInstanceWithFieldAccess::new(
-                struct_obj.clone(),
+            let field_value: Obj = ObjAsStructInstanceWithFieldAccess::new_resolved(
                 obj.clone(),
                 field.name().to_string(),
+                struct_obj.clone(),
             )
             .into();
             let projection = self.struct_field_access_projection(match &field_value {
@@ -158,10 +162,10 @@ impl Runtime {
         }
 
         for (field, named_field_type) in def.fields.iter().zip(field_types.iter()) {
-            let field_value: Obj = ObjAsStructInstanceWithFieldAccess::new(
-                struct_obj.clone(),
+            let field_value: Obj = ObjAsStructInstanceWithFieldAccess::new_resolved(
                 obj.clone(),
                 field.name().to_string(),
+                struct_obj.clone(),
             )
             .into();
             let field_membership: AtomicFact =

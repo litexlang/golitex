@@ -344,12 +344,30 @@ impl SymbolRole {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct SymbolDefinition {
     binding: SymbolBinding,
     role: SymbolRole,
-    definition_type_views: SymbolDefinitionTypeViews,
+    direct_struct_carrier: Option<StructObj>,
     transparent_object_definition: Option<TransparentObjectDefinition>,
+}
+
+impl fmt::Debug for SymbolDefinition {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("SymbolDefinition")
+            .field("binding", &self.binding)
+            .field("role", &self.role)
+            .field(
+                "direct_struct_carrier",
+                &self.direct_struct_carrier.as_ref().map(ToString::to_string),
+            )
+            .field(
+                "transparent_object_definition",
+                &self.transparent_object_definition,
+            )
+            .finish()
+    }
 }
 
 /// Executed `let` metadata for one exact object symbol.
@@ -411,40 +429,12 @@ impl TransparentObjectDefinition {
     }
 }
 
-/// Type information that belongs to the definition of one exact symbol.
-///
-/// Parsing scopes keep a temporary copy while a statement has not executed
-/// yet. Once the symbol is stored, these views travel with its definition so
-/// exported files and imported modules can resolve definition-owned field and
-/// tuple access by `SymbolId`, without reconstructing a type from later facts.
-#[derive(Clone, Default)]
-struct SymbolDefinitionTypeViews {
-    default_struct_view: Option<StructObj>,
-    default_tuple_view: Option<Cart>,
-}
-
-impl fmt::Debug for SymbolDefinitionTypeViews {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter
-            .debug_struct("SymbolDefinitionTypeViews")
-            .field(
-                "default_struct_view",
-                &self.default_struct_view.as_ref().map(ToString::to_string),
-            )
-            .field(
-                "default_tuple_view",
-                &self.default_tuple_view.as_ref().map(ToString::to_string),
-            )
-            .finish()
-    }
-}
-
 impl SymbolDefinition {
     pub fn new(binding: SymbolBinding, role: SymbolRole) -> Self {
         SymbolDefinition {
             binding,
             role,
-            definition_type_views: SymbolDefinitionTypeViews::default(),
+            direct_struct_carrier: None,
             transparent_object_definition: None,
         }
     }
@@ -457,12 +447,8 @@ impl SymbolDefinition {
         self.role
     }
 
-    pub fn default_struct_view(&self) -> Option<&StructObj> {
-        self.definition_type_views.default_struct_view.as_ref()
-    }
-
-    pub fn default_tuple_view(&self) -> Option<&Cart> {
-        self.definition_type_views.default_tuple_view.as_ref()
+    pub fn direct_struct_carrier(&self) -> Option<&StructObj> {
+        self.direct_struct_carrier.as_ref()
     }
 
     pub fn transparent_object_definition(&self) -> Option<&TransparentObjectDefinition> {
@@ -483,24 +469,13 @@ impl SymbolDefinition {
         }
     }
 
-    pub fn remember_default_struct_view_if_absent(&mut self, struct_obj: StructObj) {
-        self.definition_type_views
-            .default_struct_view
-            .get_or_insert(struct_obj);
+    pub fn remember_direct_struct_carrier_if_absent(&mut self, struct_obj: StructObj) {
+        self.direct_struct_carrier.get_or_insert(struct_obj);
     }
 
-    pub fn remember_default_tuple_view_if_absent(&mut self, cart: Cart) {
-        self.definition_type_views
-            .default_tuple_view
-            .get_or_insert(cart);
-    }
-
-    pub fn merge_missing_definition_type_views_from(&mut self, other: &SymbolDefinition) {
-        if let Some(struct_obj) = other.default_struct_view() {
-            self.remember_default_struct_view_if_absent(struct_obj.clone());
-        }
-        if let Some(cart) = other.default_tuple_view() {
-            self.remember_default_tuple_view_if_absent(cart.clone());
+    pub fn merge_missing_direct_struct_carrier_from(&mut self, other: &SymbolDefinition) {
+        if let Some(struct_obj) = other.direct_struct_carrier() {
+            self.remember_direct_struct_carrier_if_absent(struct_obj.clone());
         }
     }
 

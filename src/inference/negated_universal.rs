@@ -2,9 +2,10 @@ use crate::prelude::*;
 use std::collections::HashMap;
 
 impl Runtime {
-    pub fn infer_not_forall_fact(
+    pub(in crate::inference) fn infer_not_forall_fact(
         &mut self,
         not_forall: &NotForallFact,
+        inference_state: &InferenceState,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let Some(exist_fact) = self.build_not_forall_counterexample_exist_fact(not_forall)? else {
             return Ok(SuccessInferResult::new());
@@ -14,7 +15,10 @@ impl Runtime {
         let mut out = SuccessInferResult::new();
         out.new_fact(&inferred_fact);
         out.new_infer_result_inside(
-            self.store_fact_without_forall_coverage_check_and_infer(inferred_fact)?,
+            self.store_fact_without_forall_coverage_check_and_infer_with_state(
+                inferred_fact,
+                inference_state,
+            )?,
         );
         Ok(out)
     }

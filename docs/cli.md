@@ -126,8 +126,8 @@ Current mappings:
 | `id` | Indonesian |
 
 Successful statement results and every `RuntimeError` use one canonical
-detailed JSON projection. Detailed errors preserve available `phases`, causal
-`previous_error` data, `failed_step`,
+detailed JSON projection. Detailed errors preserve causal `previous_error`
+data, `failed_step`,
 `failed_goal`, nested `unknown_result` data, step indexes, and internal
 execution results. This includes parse, well-definedness, verification,
 unknown, execution, instantiation, and inference failures. Fields for

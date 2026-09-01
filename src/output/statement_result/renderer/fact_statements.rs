@@ -19,10 +19,6 @@ impl StatementResultRenderer {
                 self.fact_well_definedness(&result.well_definedness),
             ),
             ("store".to_string(), self.store_fact(&result.store)),
-            (
-                "execution_trace".to_string(),
-                optional_trace(result.execution_trace.as_ref()),
-            ),
         ])
     }
 }

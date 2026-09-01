@@ -6,7 +6,7 @@ use std::collections::{BTreeMap, HashSet};
 pub struct RunSummary {
     pub statements: usize,
     pub top_level_statements: usize,
-    pub verified_statements: usize,
+    pub statements_with_verification: usize,
     pub fact_statements: usize,
     pub prop_definitions: usize,
     pub abstract_prop_definitions: usize,
@@ -95,7 +95,7 @@ impl RunSummary {
 
     fn visit_result(&mut self, result: &StmtResult, depth: usize) {
         if result.is_success() {
-            self.verified_statements += 1;
+            self.statements_with_verification += 1;
         }
         if let Some(success) = result.factual_success() {
             self.visit_fact_stmt(&success.fact(), depth);
@@ -104,8 +104,8 @@ impl RunSummary {
         }
         if let Some(success) = result.non_factual_success() {
             self.visit_stmt(&success.statement(), depth);
-            if let Some(common) = success.common() {
-                self.visit_infer_result(&common.infers);
+            if let Some(environment_effects) = success.environment_effects() {
+                self.visit_infer_result(environment_effects);
             }
             self.visit_non_factual_verification(success);
             success.visit_child_results(&mut |child| self.visit_result(child, depth + 1));
@@ -122,8 +122,8 @@ impl RunSummary {
             self.visit_verified_by(fact.proof(), depth);
         } else {
             self.visit_stmt(&success.statement(), depth);
-            if let Some(common) = success.common() {
-                self.visit_infer_result(&common.infers);
+            if let Some(environment_effects) = success.environment_effects() {
+                self.visit_infer_result(environment_effects);
             }
             self.visit_non_factual_verification(success);
             success.visit_child_results(&mut |child| self.visit_result(child, depth + 1));
@@ -329,22 +329,17 @@ impl RunSummary {
                 self.visit_infer_result(&theorem.proof_scope.assumption_infers);
             }
             SuccessStmtResult::ProofBlock(SuccessProofBlockStmtResult::ClaimStmt(result))
-                if result.verification.is_some() =>
+                if result.well_definedness.is_some() =>
             {
-                let claim = result.verification.as_ref().unwrap();
                 bump_count(&mut self.proof_method_counts, "claim");
-                if let SuccessVerifyClaimResult::Forall(result) = claim {
-                    self.visit_infer_result(&result.proof_scope.assumption_infers);
-                }
+                self.visit_infer_result(&result.domain.assumption_infers);
             }
             SuccessStmtResult::ProofBlock(SuccessProofBlockStmtResult::ExampleStmt(result))
                 if result.verification.is_some() =>
             {
                 let claim = result.verification.as_ref().unwrap();
                 bump_count(&mut self.proof_method_counts, "claim");
-                if let SuccessVerifyClaimResult::Forall(result) = claim {
-                    self.visit_infer_result(&result.proof_scope.assumption_infers);
-                }
+                self.visit_infer_result(&claim.domain.assumption_infers);
             }
             SuccessStmtResult::ReleaseThmStmt(result) => {
                 bump_count(&mut self.proof_method_counts, "theorem release");

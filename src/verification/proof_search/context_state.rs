@@ -1,5 +1,10 @@
 //! Verification options threaded through recursive proof search.
 
+use super::state::ProofSearchState;
+use crate::prelude::*;
+use std::cell::RefCell;
+use std::rc::Rc;
+
 /// Control flags for one recursive verification attempt.
 ///
 /// `proof_search_round` bounds how aggressively recursive verification may retry a goal.
@@ -10,10 +15,13 @@
 /// `well_definedness_verified` means the current caller has already checked
 /// the well-definedness obligations for the fact or object being verified, so
 /// child checks should not repeat that gate.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug)]
 pub struct VerifyState {
     pub proof_search_round: u8,
     pub well_definedness_verified: bool,
+    proof_search: Rc<RefCell<ProofSearchState>>,
+    proof_scope: usize,
+    inference: InferenceState,
 }
 
 impl VerifyState {
@@ -39,25 +47,148 @@ impl VerifyState {
         Self {
             proof_search_round,
             well_definedness_verified,
+            proof_search: Rc::new(RefCell::new(ProofSearchState::new())),
+            proof_scope: 0,
+            inference: InferenceState::new(),
         }
     }
 
     pub fn with_next_round(&self) -> Self {
         Self {
             proof_search_round: self.proof_search_round + 1,
-            ..*self
+            ..self.clone()
         }
     }
 
     pub fn with_well_definedness_verified(&self) -> Self {
         Self {
             well_definedness_verified: true,
-            ..*self
+            ..self.clone()
         }
+    }
+
+    pub fn with_final_round(&self) -> Self {
+        Self {
+            proof_search_round: Self::FINAL_ROUND,
+            ..self.clone()
+        }
+    }
+
+    pub fn with_final_round_after_well_definedness(&self) -> Self {
+        Self {
+            proof_search_round: Self::FINAL_ROUND,
+            well_definedness_verified: true,
+            ..self.clone()
+        }
+    }
+
+    pub fn with_child_proof_scope(&self) -> Self {
+        let proof_scope = self
+            .proof_search
+            .borrow_mut()
+            .push_child_scope(self.proof_scope);
+        Self {
+            proof_scope,
+            ..self.clone()
+        }
+    }
+
+    pub fn with_inference_state(&self, inference: &InferenceState) -> Self {
+        Self {
+            inference: inference.clone(),
+            ..self.clone()
+        }
+    }
+
+    pub fn inference_state(&self) -> &InferenceState {
+        &self.inference
     }
 
     pub fn is_initial_round(&self) -> bool {
         self.proof_search_round == 0
+    }
+
+    pub(in crate::verification) fn begin_well_defined_object(&self, key: &ObjString) -> bool {
+        self.proof_search
+            .borrow_mut()
+            .begin_well_defined_object(self.proof_scope, key)
+    }
+
+    pub(in crate::verification) fn end_well_defined_object(&self, key: &ObjString) {
+        self.proof_search
+            .borrow_mut()
+            .end_well_defined_object(self.proof_scope, key);
+    }
+
+    pub(in crate::verification) fn has_active_set_builder_membership_unfold(&self) -> bool {
+        self.proof_search
+            .borrow()
+            .has_active_set_builder_membership_unfold(self.proof_scope)
+    }
+
+    pub(in crate::verification) fn begin_set_builder_membership_unfold(
+        &self,
+        key: &FactString,
+    ) -> bool {
+        self.proof_search
+            .borrow_mut()
+            .begin_set_builder_membership_unfold(self.proof_scope, key)
+    }
+
+    pub(in crate::verification) fn end_set_builder_membership_unfold(&self, key: &FactString) {
+        self.proof_search
+            .borrow_mut()
+            .end_set_builder_membership_unfold(self.proof_scope, key);
+    }
+
+    pub(in crate::verification) fn set_builder_forall_transport_is_active(&self) -> bool {
+        self.proof_search
+            .borrow()
+            .set_builder_forall_transport_is_active(self.proof_scope)
+    }
+
+    pub(in crate::verification) fn set_set_builder_forall_transport_active(&self, active: bool) {
+        self.proof_search
+            .borrow_mut()
+            .set_set_builder_forall_transport_active(self.proof_scope, active);
+    }
+
+    pub(in crate::verification) fn atomic_fact_proof(
+        &self,
+        key: &FactString,
+    ) -> Option<Rc<SuccessVerifyFactResult>> {
+        self.proof_search
+            .borrow()
+            .atomic_fact_proof(self.proof_scope, key)
+    }
+
+    pub(in crate::verification) fn remember_atomic_fact_proof(
+        &self,
+        key: FactString,
+        result: Rc<SuccessVerifyFactResult>,
+    ) {
+        self.proof_search
+            .borrow_mut()
+            .remember_atomic_fact_proof(self.proof_scope, key, result);
+    }
+
+    pub(in crate::verification) fn well_defined_object_proof(
+        &self,
+        key: &WellDefinedCacheKey,
+    ) -> Option<Rc<SuccessVerifyObjWellDefinedResult>> {
+        self.proof_search
+            .borrow()
+            .well_defined_object_proof(self.proof_scope, key)
+    }
+
+    pub(in crate::verification) fn remember_well_defined_object_proof(
+        &self,
+        key: WellDefinedCacheKey,
+        result: Rc<SuccessVerifyObjWellDefinedResult>,
+    ) {
+        self.proof_search
+            .borrow_mut()
+            .remember_well_defined_object_proof(self.proof_scope, key, result);
     }
 }
 

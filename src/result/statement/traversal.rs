@@ -111,8 +111,20 @@ impl SuccessStmtResult {
             Self::ReleaseThmStmt(statement) => Some(&statement.common),
             Self::By(statement) => Some(statement.common()),
             Self::Witness(statement) => Some(statement.common()),
-            Self::ProofBlock(statement) => Some(statement.common()),
+            Self::ProofBlock(statement) => statement.common(),
             Self::Command(statement) => Some(statement.common()),
+        }
+    }
+
+    /// Environment mutations produced by this statement, independent of the
+    /// concrete Result layout used by that statement kind.
+    pub fn environment_effects(&self) -> Option<&SuccessInferResult> {
+        match self {
+            Self::Fact(statement) => Some(&statement.infers),
+            Self::ProofBlock(SuccessProofBlockStmtResult::ClaimStmt(statement)) => {
+                Some(&statement.environment_effects)
+            }
+            _ => self.common().map(|common| &common.infers),
         }
     }
 
@@ -124,7 +136,7 @@ impl SuccessStmtResult {
             Self::ReleaseThmStmt(statement) => Some(&mut statement.common),
             Self::By(statement) => Some(statement.common_mut()),
             Self::Witness(statement) => Some(statement.common_mut()),
-            Self::ProofBlock(statement) => Some(statement.common_mut()),
+            Self::ProofBlock(statement) => statement.common_mut(),
             Self::Command(statement) => Some(statement.common_mut()),
         }
     }
@@ -137,7 +149,7 @@ impl SuccessStmtResult {
             Self::ReleaseThmStmt(statement) => Some(statement.common),
             Self::By(statement) => Some(statement.into_common()),
             Self::Witness(statement) => Some(statement.into_common()),
-            Self::ProofBlock(statement) => Some(statement.into_common()),
+            Self::ProofBlock(statement) => statement.into_common(),
             Self::Command(statement) => Some(statement.into_common()),
         }
     }
@@ -1056,7 +1068,11 @@ fn into_witness_exist_children(verification: SuccessVerifyWitnessExistResult) ->
 impl SuccessProofBlockStmtResult {
     fn into_child_results(self) -> Vec<StmtResult> {
         match self {
-            Self::ClaimStmt(result) => claim_child_results(result.verification),
+            Self::ClaimStmt(result) => {
+                let mut children = result.proof_steps;
+                children.extend(result.conclusion_checks);
+                children
+            }
             Self::ExampleStmt(result) => claim_child_results(result.verification),
             Self::SketchStmt(result) => result
                 .proof
@@ -1073,8 +1089,11 @@ impl SuccessProofBlockStmtResult {
     fn visit_named_child_results(&self, visitor: &mut impl FnMut(&StmtResult)) {
         match self {
             Self::ClaimStmt(result) => {
-                if let Some(verification) = &result.verification {
-                    verification.visit_child_results(visitor);
+                for step in &result.proof_steps {
+                    visitor(step);
+                }
+                for check in &result.conclusion_checks {
+                    visitor(check);
                 }
             }
             Self::ExampleStmt(result) => {
@@ -1105,8 +1124,11 @@ impl SuccessProofBlockStmtResult {
     ) -> Result<(), E> {
         match self {
             Self::ClaimStmt(result) => {
-                if let Some(verification) = &mut result.verification {
-                    verification.try_visit_child_results_mut(visitor)?;
+                for step in &mut result.proof_steps {
+                    visitor(step)?;
+                }
+                for check in &mut result.conclusion_checks {
+                    visitor(check)?;
                 }
             }
             Self::ExampleStmt(result) => {
@@ -1133,39 +1155,22 @@ impl SuccessProofBlockStmtResult {
     }
 }
 
-fn claim_child_results(verification: Option<SuccessVerifyClaimResult>) -> Vec<StmtResult> {
-    match verification {
-        Some(SuccessVerifyClaimResult::Forall(result)) => {
-            let mut children = result.proof_steps;
-            children.extend(result.conclusion_checks);
-            children
-        }
-        Some(SuccessVerifyClaimResult::Fact(result)) => {
-            let mut children = result.proof_steps;
-            children.push(*result.conclusion_check);
-            children
-        }
-        None => Vec::new(),
-    }
+fn claim_child_results(verification: Option<SuccessCheckedGoalBlockResult>) -> Vec<StmtResult> {
+    let Some(result) = verification else {
+        return Vec::new();
+    };
+    let mut children = result.proof_steps;
+    children.extend(result.conclusion_checks);
+    children
 }
 
-impl SuccessVerifyClaimResult {
+impl SuccessCheckedGoalBlockResult {
     fn visit_child_results(&self, visitor: &mut impl FnMut(&StmtResult)) {
-        match self {
-            Self::Forall(result) => {
-                for step in &result.proof_steps {
-                    visitor(step);
-                }
-                for check in &result.conclusion_checks {
-                    visitor(check);
-                }
-            }
-            Self::Fact(result) => {
-                for step in &result.proof_steps {
-                    visitor(step);
-                }
-                visitor(&result.conclusion_check);
-            }
+        for step in &self.proof_steps {
+            visitor(step);
+        }
+        for check in &self.conclusion_checks {
+            visitor(check);
         }
     }
 
@@ -1173,21 +1178,11 @@ impl SuccessVerifyClaimResult {
         &mut self,
         visitor: &mut impl FnMut(&mut StmtResult) -> Result<(), E>,
     ) -> Result<(), E> {
-        match self {
-            Self::Forall(result) => {
-                for step in &mut result.proof_steps {
-                    visitor(step)?;
-                }
-                for check in &mut result.conclusion_checks {
-                    visitor(check)?;
-                }
-            }
-            Self::Fact(result) => {
-                for step in &mut result.proof_steps {
-                    visitor(step)?;
-                }
-                visitor(&mut result.conclusion_check)?;
-            }
+        for step in &mut self.proof_steps {
+            visitor(step)?;
+        }
+        for check in &mut self.conclusion_checks {
+            visitor(check)?;
         }
         Ok(())
     }
@@ -2070,12 +2065,12 @@ impl SuccessWitnessStmtResult {
 }
 
 impl SuccessProofBlockStmtResult {
-    fn into_common(self) -> SuccessStmtCommonResult {
+    fn into_common(self) -> Option<SuccessStmtCommonResult> {
         match self {
-            Self::ClaimStmt(result) => result.common,
-            Self::ExampleStmt(result) => result.common,
-            Self::SketchStmt(result) => result.common,
-            Self::TryStmt(result) => result.common,
+            Self::ClaimStmt(_) => None,
+            Self::ExampleStmt(result) => Some(result.common),
+            Self::SketchStmt(result) => Some(result.common),
+            Self::TryStmt(result) => Some(result.common),
         }
     }
 
@@ -2088,21 +2083,21 @@ impl SuccessProofBlockStmtResult {
         }
     }
 
-    fn common(&self) -> &SuccessStmtCommonResult {
+    fn common(&self) -> Option<&SuccessStmtCommonResult> {
         match self {
-            Self::ClaimStmt(result) => &result.common,
-            Self::ExampleStmt(result) => &result.common,
-            Self::SketchStmt(result) => &result.common,
-            Self::TryStmt(result) => &result.common,
+            Self::ClaimStmt(_) => None,
+            Self::ExampleStmt(result) => Some(&result.common),
+            Self::SketchStmt(result) => Some(&result.common),
+            Self::TryStmt(result) => Some(&result.common),
         }
     }
 
-    fn common_mut(&mut self) -> &mut SuccessStmtCommonResult {
+    fn common_mut(&mut self) -> Option<&mut SuccessStmtCommonResult> {
         match self {
-            Self::ClaimStmt(result) => &mut result.common,
-            Self::ExampleStmt(result) => &mut result.common,
-            Self::SketchStmt(result) => &mut result.common,
-            Self::TryStmt(result) => &mut result.common,
+            Self::ClaimStmt(_) => None,
+            Self::ExampleStmt(result) => Some(&mut result.common),
+            Self::SketchStmt(result) => Some(&mut result.common),
+            Self::TryStmt(result) => Some(&mut result.common),
         }
     }
 }

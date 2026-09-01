@@ -2,11 +2,18 @@ use crate::prelude::*;
 
 impl Runtime {
     pub fn exec_claim_stmt(&mut self, stmt: &ClaimStmt) -> Result<StmtResult, RuntimeError> {
-        let result =
-            self.exec_checked_goal_block(stmt.clone().into(), &stmt.fact, &stmt.proof, CLAIM)?;
-        let infer_result_after_store = self.exec_claim_stmt_affect_environment(stmt)?;
+        let verification =
+            self.verify_checked_goal_block(stmt.clone().into(), &stmt.fact, &stmt.proof, CLAIM)?;
+        let environment_effects = self.exec_claim_stmt_affect_environment(stmt)?;
 
-        Ok(result.with_infers(infer_result_after_store))
+        Ok(
+            SuccessProofBlockStmtResult::ClaimStmt(Box::new(SuccessClaimStmtResult::checked(
+                stmt.clone(),
+                verification,
+                environment_effects,
+            )))
+            .into(),
+        )
     }
 
     pub fn exec_claim_stmt_affect_environment(
@@ -14,7 +21,7 @@ impl Runtime {
         stmt: &ClaimStmt,
     ) -> Result<SuccessInferResult, RuntimeError> {
         if self.current_execution_is_trusted_file() {
-            return self.store_trusted_fact_and_infer_with_reason(
+            return self.store_fact_with_trust_and_infer_with_reason(
                 stmt.fact.clone(),
                 InferReason::ProvedClaim,
             );
@@ -32,11 +39,10 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         let infer_result = self.exec_claim_stmt_affect_environment(stmt)?;
         Ok(
-            SuccessProofBlockStmtResult::ClaimStmt(Box::new(SuccessClaimStmtResult {
-                statement: stmt.clone(),
-                common: SuccessStmtCommonResult::new(infer_result),
-                verification: None,
-            }))
+            SuccessProofBlockStmtResult::ClaimStmt(Box::new(SuccessClaimStmtResult::with_trust(
+                stmt.clone(),
+                infer_result,
+            )))
             .into(),
         )
     }

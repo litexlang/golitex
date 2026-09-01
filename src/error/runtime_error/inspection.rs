@@ -1,6 +1,6 @@
 //! Runtime error trace, source-location, and display-label inspection.
 
-use super::{RuntimeError, RuntimeErrorStruct};
+use super::RuntimeError;
 use crate::prelude::*;
 
 impl RuntimeError {
@@ -28,44 +28,6 @@ impl RuntimeError {
         self.display_label().to_string()
     }
 
-    pub fn with_execution_trace(mut self, trace: StatementExecutionTrace) -> Self {
-        self.execution_trace_mut().execution_trace = Some(trace);
-        self
-    }
-
-    pub fn execution_trace(&self) -> Option<&StatementExecutionTrace> {
-        match self {
-            RuntimeError::ArithmeticError(e) => e.execution_trace.as_ref(),
-            RuntimeError::NewFactError(e) => e.execution_trace.as_ref(),
-            RuntimeError::StoreFactError(e) => e.execution_trace.as_ref(),
-            RuntimeError::ParseError(e) => e.execution_trace.as_ref(),
-            RuntimeError::ExecStmtError(e) => e.execution_trace.as_ref(),
-            RuntimeError::WellDefinedError(e) => e.execution_trace.as_ref(),
-            RuntimeError::VerifyError(e) => e.execution_trace.as_ref(),
-            RuntimeError::UnknownError(e) => e.execution_trace.as_ref(),
-            RuntimeError::InferError(e) => e.execution_trace.as_ref(),
-            RuntimeError::NameAlreadyUsedError(e) => e.execution_trace.as_ref(),
-            RuntimeError::DefineParamsError(e) => e.execution_trace.as_ref(),
-            RuntimeError::InstantiateError(e) => e.execution_trace.as_ref(),
-        }
-    }
-
-    fn execution_trace_mut(&mut self) -> &mut RuntimeErrorStruct {
-        match self {
-            RuntimeError::ArithmeticError(e) => e,
-            RuntimeError::NewFactError(e) => e,
-            RuntimeError::StoreFactError(e) => e,
-            RuntimeError::ParseError(e) => e,
-            RuntimeError::ExecStmtError(e) => e,
-            RuntimeError::WellDefinedError(e) => e,
-            RuntimeError::VerifyError(e) => e,
-            RuntimeError::UnknownError(e) => e,
-            RuntimeError::InferError(e) => e,
-            RuntimeError::NameAlreadyUsedError(e) => e,
-            RuntimeError::DefineParamsError(e) => e,
-            RuntimeError::InstantiateError(e) => e,
-        }
-    }
     pub fn line_file(&self) -> LineFile {
         match self {
             RuntimeError::ArithmeticError(e) => e.line_file.clone(),

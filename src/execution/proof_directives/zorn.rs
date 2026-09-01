@@ -169,9 +169,9 @@ impl Runtime {
             stmt.maximal_prop_name.clone(),
             stmt.line_file.clone(),
         )?;
-        let infer_result = self.store_trusted_fact_and_infer_with_reason(
+        let infer_result = self.store_fact_with_trust_and_infer_with_reason(
             maximal_fact,
-            InferReason::VerifiedStatement,
+            InferReason::StatementWithVerification,
         )?;
         Ok(
             SuccessByStmtResult::ByZornLemmaStmt(Box::new(SuccessByZornLemmaStmtResult {

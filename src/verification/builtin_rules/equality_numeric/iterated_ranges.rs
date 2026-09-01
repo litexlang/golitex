@@ -140,24 +140,28 @@ impl Runtime {
         let upper_bound: Fact =
             LessEqualFact::new(x_obj, (*left_sum.end).clone(), line_file.clone()).into();
 
-        let pointwise_result = self.run_in_local_env(|rt| {
-            let params_def = TypedParameterList::new(vec![TypedParameterGroup::new(
-                vec![x_binding],
-                ParamType::Obj(index_param_set),
-            )]);
-            rt.define_params_with_type(&params_def, false, BindingScope::LocalBinder)?;
-            rt.store_fact_without_forall_coverage_check_and_infer(lower_bound)?;
-            rt.store_fact_without_forall_coverage_check_and_infer(upper_bound)?;
+        let pointwise_result = self.run_in_local_verification_env(
+            builtin_state.verify_state(),
+            |rt, local_verify_state| {
+                let local_builtin_state = builtin_state.with_verify_state(local_verify_state);
+                let params_def = TypedParameterList::new(vec![TypedParameterGroup::new(
+                    vec![x_binding],
+                    ParamType::Obj(index_param_set),
+                )]);
+                rt.define_params_with_type(&params_def, false, BindingScope::LocalBinder)?;
+                rt.store_fact_without_forall_coverage_check_and_infer(lower_bound)?;
+                rt.store_fact_without_forall_coverage_check_and_infer(upper_bound)?;
 
-            let known_forall_result = rt.verify_atomic_fact_with_known_forall(
-                &pointwise_fact,
-                &VerifyState::after_well_definedness(),
-            )?;
-            if known_forall_result.is_success() {
-                return Ok(known_forall_result);
-            }
-            rt.verify_atomic_fact_as_builtin_rule_premise(&pointwise_fact, builtin_state)
-        })?;
+                let known_forall_result = rt.verify_atomic_fact_with_known_forall(
+                    &pointwise_fact,
+                    &local_verify_state.with_well_definedness_verified(),
+                )?;
+                if known_forall_result.is_success() {
+                    return Ok(known_forall_result);
+                }
+                rt.verify_atomic_fact_as_builtin_rule_premise(&pointwise_fact, &local_builtin_state)
+            },
+        )?;
         if !pointwise_result.is_success() {
             return Ok(None);
         }
@@ -400,24 +404,28 @@ impl Runtime {
         then_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<StmtResult, RuntimeError> {
-        self.run_in_local_env(|rt| {
-            let params_def = TypedParameterList::new(vec![TypedParameterGroup::new(
-                vec![param_binding],
-                ParamType::Obj(StandardSet::Z.into()),
-            )]);
-            rt.define_params_with_type(&params_def, false, BindingScope::LocalBinder)?;
-            for dom_fact in dom_facts {
-                rt.store_fact_without_forall_coverage_check_and_infer(dom_fact)?;
-            }
-            let known_forall_result = rt.verify_atomic_fact_with_known_forall(
-                then_fact,
-                &VerifyState::after_well_definedness(),
-            )?;
-            if known_forall_result.is_success() {
-                return Ok(known_forall_result);
-            }
-            rt.verify_atomic_fact_as_builtin_rule_premise(then_fact, builtin_state)
-        })
+        self.run_in_local_verification_env(
+            builtin_state.verify_state(),
+            |rt, local_verify_state| {
+                let local_builtin_state = builtin_state.with_verify_state(local_verify_state);
+                let params_def = TypedParameterList::new(vec![TypedParameterGroup::new(
+                    vec![param_binding],
+                    ParamType::Obj(StandardSet::Z.into()),
+                )]);
+                rt.define_params_with_type(&params_def, false, BindingScope::LocalBinder)?;
+                for dom_fact in dom_facts {
+                    rt.store_fact_without_forall_coverage_check_and_infer(dom_fact)?;
+                }
+                let known_forall_result = rt.verify_atomic_fact_with_known_forall(
+                    then_fact,
+                    &local_verify_state.with_well_definedness_verified(),
+                )?;
+                if known_forall_result.is_success() {
+                    return Ok(known_forall_result);
+                }
+                rt.verify_atomic_fact_as_builtin_rule_premise(then_fact, &local_builtin_state)
+            },
+        )
     }
 
     /// `sum(a..b) + sum((b+1)..c) = sum(a..c)` with the same unary anonymous summand on each side.

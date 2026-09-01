@@ -230,7 +230,7 @@ impl Runtime {
         // template was defined. Header validation above plus capture-avoiding
         // substitution preserves that result, so only commit the instantiated
         // statement's environment effects here.
-        let body_result = self.execute_preverified_statement(&stmt)?;
+        let body_result = self.execute_statement_with_prior_verification(&stmt)?;
         let StmtResult::Success(body_statement_result) = body_result else {
             return Err(short_exec_error(
                 stmt,

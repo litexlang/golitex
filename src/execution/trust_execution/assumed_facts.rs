@@ -41,7 +41,7 @@ impl Runtime {
         let mut infer_result = SuccessInferResult::new();
         for fact in trust_stmt.facts.iter() {
             let fact_infer_result = if self.current_execution_is_trusted_file() {
-                self.store_trusted_fact_and_infer_with_reason(
+                self.store_fact_with_trust_and_infer_with_reason(
                     fact.clone(),
                     InferReason::UnsafeAssumption,
                 )

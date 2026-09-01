@@ -5,6 +5,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
+        verify_state: &VerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         match atomic_fact {
             AtomicFact::EqualFact(_) => unreachable!(),
@@ -13,15 +14,15 @@ impl Runtime {
             }
             AtomicFact::FnEqualFact(fn_equal_fact) => self.verify_fn_equal_fact_with_builtin_rules(
                 fn_equal_fact,
-                &VerifyState::final_round(),
+                &verify_state.with_final_round(),
             ),
             AtomicFact::FnEqualInFact(fn_equal_in_fact) => self
                 .verify_fn_equal_in_fact_with_builtin_rules(
                     fn_equal_in_fact,
-                    &VerifyState::final_round(),
+                    &verify_state.with_final_round(),
                 ),
             AtomicFact::InFact(in_fact) => {
-                self.verify_in_fact_with_builtin_rules(in_fact, builtin_state)
+                self.verify_in_fact_with_builtin_rules(in_fact, builtin_state, verify_state)
             }
             AtomicFact::NotInFact(not_in_fact) => {
                 self.verify_not_in_fact_with_builtin_rules(not_in_fact, builtin_state)

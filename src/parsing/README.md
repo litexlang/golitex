@@ -43,8 +43,8 @@ value as the power base. Public authoring still uses the explicit forms.
 | [`fact/parameter_definition.rs`](fact/parameter_definition.rs) | Parses typed and carrier-bound parameters shared by facts and definitions. |
 | [`object/expression.rs`](object/expression.rs) | Owns object-expression precedence, numeric literals, call/field postfixes, and function-set syntax, such as `x + 1` and `f(x)`. |
 | [`object/primary.rs`](object/primary.rs) | Dispatches primary keyword and atom forms, including scalar, set, sequence/matrix, Cartesian, and iterated operators such as `sin(x)` and `sum(1, n, f)`. |
-| [`object/collections.rs`](object/collections.rs) | Parses argument groups, `unfold`, intervals, replacements, set builders, and set literals such as `{1, 2}`. |
-| [`object/reference.rs`](object/reference.rs) | Resolves bare and module-qualified names, struct views, field carriers, and template-backed reference types. |
+| [`object/collections.rs`](object/collections.rs) | Parses argument groups, intervals, replacements, set builders, and set literals such as `{1, 2}`. |
+| [`object/reference.rs`](object/reference.rs) | Parses bare and module-qualified names plus struct-carrier syntax. Field postfixes retain only their receiver and field name; runtime definition state resolves the carrier later. |
 | [`statements/definition.rs`](statements/definition.rs) | Parses definition settings, templates, structs, propositions, trust definitions, and shared definition-header rules. |
 | [`statements/have_object.rs`](statements/have_object.rs) | Parses object, tuple, Cartesian, sequence, finite-sequence, and matrix `have` definitions. |
 | [`statements/have_function.rs`](statements/have_function.rs) | Parses equality, case-based, induction, and unique-existence function definitions. |
