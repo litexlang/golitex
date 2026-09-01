@@ -2,7 +2,7 @@ use super::execute_repository_target;
 use crate::error::{ParseRuntimeError, RuntimeError, RuntimeErrorStruct};
 use crate::module_system::discover_repository_for_file;
 use crate::result::StmtResult;
-use crate::runtime::Runtime;
+use crate::runtime::{ExecutionOption, Runtime};
 use crate::syntax::source_formatting::remove_windows_carriage_from_str;
 use std::env;
 use std::fs;
@@ -30,6 +30,18 @@ pub fn resolve_source_file_path(file_path: &str) -> Result<String, String> {
         .ok_or_else(|| "file path is not valid UTF-8".to_string())
 }
 
+pub fn file_execution_option(file_path: &str) -> ExecutionOption {
+    let path = fs::canonicalize(file_path).unwrap_or_else(|_| PathBuf::from(file_path));
+    let has_direct_project_config = path
+        .parent()
+        .is_some_and(|parent| parent.join("litex.config").is_file());
+    if has_direct_project_config {
+        ExecutionOption::File
+    } else {
+        ExecutionOption::IsolatedFile
+    }
+}
+
 pub fn execute_file_in_runtime(
     target_file_path: &str,
     runtime: &mut Runtime,
@@ -51,7 +63,7 @@ pub fn execute_file_in_runtime(
             vec![],
             Some(file_target_error(
                 target_file_path,
-                "litex -f requires a litex.config in the same folder; use `litex -isolated -f <file>` for an isolated file",
+                "project file execution requires a litex.config in the same folder",
             )),
         ),
         Err(error) => (vec![], Some(error)),

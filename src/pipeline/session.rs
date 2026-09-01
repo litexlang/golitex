@@ -1,3 +1,4 @@
+use super::file_execution::file_execution_option;
 use super::source_execution::SourceRunOutcome;
 use crate::prelude::*;
 use std::env;
@@ -340,9 +341,22 @@ fn initialize_session_runtime(
             directory.join(path)
         };
         let path_string = path.to_string_lossy().into_owned();
-        let (stmt_results, runtime_error) = execute_file_in_runtime(path_string.as_str(), runtime);
+        let execution = file_execution_option(path_string.as_str());
+        let (stmt_results, runtime_error) = match execution {
+            ExecutionOption::File => execute_file_in_runtime(path_string.as_str(), runtime),
+            ExecutionOption::IsolatedFile => {
+                runtime.run_options = runtime
+                    .run_options
+                    .with_execution(ExecutionOption::IsolatedSession);
+                execute_isolated_file_in_runtime(path_string.as_str(), runtime)
+            }
+            _ => unreachable!("file context resolved to a non-file execution option"),
+        };
         if let Some(error) = runtime_error {
             return Err((stmt_results, error));
+        }
+        if execution == ExecutionOption::IsolatedFile {
+            return Ok(("isolated", stmt_results));
         }
         if let Err(error) = runtime.prepare_current_repository_for_repl(source_label.as_str()) {
             return Err((stmt_results, error));

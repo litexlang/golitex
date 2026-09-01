@@ -1,3 +1,4 @@
+use super::file_execution::file_execution_option;
 use super::{
     execute_file_in_runtime, execute_isolated_file_in_runtime, execute_repository_target,
     render_run_output, render_run_summary, resolve_source_file_path, ExecutionTarget,
@@ -39,12 +40,25 @@ pub fn run_code(source: &str, options: RunOptions) -> RunOutcome {
 }
 
 pub fn run_file(path: &str, options: RunOptions) -> RunOutcome {
-    let options = options.with_execution(ExecutionOption::File);
+    let resolved_path = resolve_source_file_path(path);
+    let execution = resolved_path
+        .as_ref()
+        .map(|path| file_execution_option(path.as_str()))
+        .unwrap_or(ExecutionOption::File);
+    let options = options.with_execution(execution);
     let mut runtime = Runtime::new(options);
     let mut target_error = None;
-    let (target_path, stmt_results, runtime_error) = match resolve_source_file_path(path) {
+    let (target_path, stmt_results, runtime_error) = match resolved_path {
         Ok(resolved_path) => {
-            let (results, error) = execute_file_in_runtime(resolved_path.as_str(), &mut runtime);
+            let (results, error) = match execution {
+                ExecutionOption::File => {
+                    execute_file_in_runtime(resolved_path.as_str(), &mut runtime)
+                }
+                ExecutionOption::IsolatedFile => {
+                    execute_isolated_file_in_runtime(resolved_path.as_str(), &mut runtime)
+                }
+                _ => unreachable!("file context resolved to a non-file execution option"),
+            };
             (resolved_path, results, error)
         }
         Err(message) => {
@@ -53,8 +67,13 @@ pub fn run_file(path: &str, options: RunOptions) -> RunOutcome {
         }
     };
 
+    let target = match execution {
+        ExecutionOption::File => RunTarget::File { path: target_path },
+        ExecutionOption::IsolatedFile => RunTarget::IsolatedFile { path: target_path },
+        _ => unreachable!("file context resolved to a non-file execution option"),
+    };
     finish_run(
-        RunTarget::File { path: target_path },
+        target,
         runtime,
         stmt_results,
         runtime_error,

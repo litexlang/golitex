@@ -1,4 +1,4 @@
-mod file_execution;
+pub(super) mod file_execution;
 mod output_rendering;
 pub mod repl;
 mod repository_execution;

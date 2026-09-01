@@ -240,6 +240,37 @@ fn isolated_file_session_preloads_the_standalone_file() {
 }
 
 #[test]
+fn plain_file_session_auto_selects_isolated_context_without_config() {
+    let root = session_test_dir("auto-isolated-file");
+    let _ = fs::remove_dir_all(&root);
+    fs::create_dir_all(&root).expect("create standalone fixture");
+    let preload = root.join("scratch.lit");
+    fs::write(&preload, "have from_file R = 7\n").expect("write standalone file");
+
+    let input = format!("{}close\n", run_frame("use_file", "from_file = 7\n"));
+    let mut stdin_reader = Cursor::new(input.into_bytes());
+    let mut stdout_writer = Vec::new();
+    run_session_loop_with_readers_and_target(
+        &mut stdin_reader,
+        &mut stdout_writer,
+        &root,
+        RunOptions::execute(ExecutionOption::Session),
+        SessionTarget::File {
+            path: preload.to_string_lossy().into_owned(),
+        },
+    )
+    .expect("auto-isolated file session must run");
+
+    let output = String::from_utf8(stdout_writer).expect("UTF-8 output");
+    assert!(output.contains("\"event\":\"ready\""));
+    assert!(output.contains("\"content\":{\"mode\":\"isolated\"}"));
+    assert!(output.contains("\"event\":\"result\",\"id\":\"use_file\""));
+    assert!(output.contains("from_file = 7"));
+
+    let _ = fs::remove_dir_all(&root);
+}
+
+#[test]
 fn session_accepts_a_multiline_code_block() {
     let root = session_test_dir("multiline");
     let _ = fs::remove_dir_all(&root);

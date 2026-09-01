@@ -59,7 +59,7 @@ Both commands return JSON. The second command should contain `"ok": true`.
 ```bash
 litex                              # start the interactive REPL
 litex -e '1 + 1 = 2'               # run source directly
-litex -isolated -f example.lit     # run a standalone file
+litex -f example.lit               # run a project file or standalone file automatically
 ```
 
 For every command, option, JSON output shape, session protocol, graph command,

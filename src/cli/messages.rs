@@ -10,16 +10,19 @@ pub(super) fn help_message() -> String {
         ("litex -help", "Show this help."),
         ("litex -version", "Show the Litex version."),
         ("litex -e <code>", "Run inline Litex source."),
-        ("litex -f <file>", "Run a registered Litex file."),
+        (
+            "litex -f <file>",
+            "Run a file using project context when directly configured, otherwise in isolation.",
+        ),
         (
             "litex -isolated -f <file>",
-            "Run a standalone Litex file and continue in a REPL.",
+            "Run a file in forced isolation.",
         ),
         ("litex -r <directory>", "Run a Litex module."),
         ("litex -session", "Start a framed machine session."),
         (
             "litex -session -f <file>",
-            "Load a registered file and continue in a framed session.",
+            "Load a file with automatic context and continue in a framed session.",
         ),
         (
             "litex -isolated -session -f <file>",
