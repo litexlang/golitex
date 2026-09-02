@@ -28,7 +28,7 @@ Litex 定位四层检查（写作时逐层核对；面向不同受众可以调�
 - [Litex 蓝图总览](#overview)
 - [1. Litex 的数学基础：从最广为人熟悉的集合论出发](#set-theory)
   - [小例子：同一数学对象在不同的公理体系下的定义](#group-comparison)
-- [2. 事实导向：源码保存“什么成立”](#fact-oriented)
+- [2. 事实导向：把“什么成立”写进源码](#fact-oriented)
 - [3. 自下而上：让已验证事实继续生长](#bottom-up)
   - [小例子：同一条代数等式的两种写法](#two-directions)
 - [4. Lean 兼容：为已覆盖路径提供独立复核](#compatibility)
@@ -267,23 +267,15 @@ Lean 当然也能脱离 Mathlib 自行定义群；这里比较的是默认体验
 
 <a id="fact-oriented"></a>
 
-## 2. 事实导向：源码保存“什么成立”
+## 2. 事实导向：把“什么成立”写进源码
 
-“事实导向”不是说证明过程不重要，而是重新分工：源码保存对象、条件和应当成立的事实；内核寻找并记录局部依据。用户仍提供有数学内容的中间步骤，只是不必把每一步都写成操作证明状态的命令。
+任何数学证明都由“证明什么”和“怎么证”组成。阅读数学时，我们的心流通常是：看到书里的一句话，脑海里反应一下这句话为什么对，如果这句话被确认是正确的了，我们就在脑海里记忆下来这句话用于后续的推理。
 
-前面的集合包含和群结构已给出两个小版本：用户直接写下希望成立的对象关系或结构事实，内核再寻找局部依据。这里先把这种分工本身讲清楚；定义、量词、见证和连续估计如何组合，将在四项设计之后用一个完整收敛例子展示。
-
-### 为什么普通事实不需要名字，也不需要证明指令？
-
-像 `a + b >= 0` 这样的普通事实不必逐一命名，也不必逐行指定证明指令、库定理或改写方向。用户直接写当前需要的数学事实，让内核从上下文和受支持规则中找依据。
+Litex做的相当于就是把我们脑海的心流在机器中实现了。*用户写“证明什么”，内核寻找“怎么证”。*即内核帮我们思考了每句话为什么成立。同时，Litex把已经证明好的事实存储下来。当用户输入下一个数学语句后，Litex会从上下文中寻找依据，检查良定义性，并返回验证结果或停止位置。
 
 > **事实导向最核心的人机分工是：用户写“我要证明什么”，Litex 寻找“这条事实可以怎样被验证”。**
 
-关键选择、见证和估计仍由作者写；具体规则与等式对齐由内核寻找、记录。Lean 由用户指导细化，Litex 由事实触发局部搜索；结果都须可检查。
-
-经典定理、库接口和长期依赖仍可命名为 `thm`，再用 `release thm` 或 `by thm ... => fact` 取结论；临时判断不必都命名。
-
-内核按关系、参数结构和上下文寻找内置规则、全称事实、具体事实或等式；搜索受支持范围限制，并非自由猜测。
+关键选择、见证和估计仍由作者写；具体规则与等式对齐由内核寻找、记录。Litex 由事实触发局部搜索；结果都须可检查：Litex按关系、参数结构和上下文寻找内置规则、全称事实、具体事实或等式；搜索受支持范围限制，并非自由猜测。
 
 <details>
 <summary><strong>展开：内核如何按事实形状寻找验证路径</strong></summary>
@@ -317,46 +309,157 @@ forall x, y R:
         x + y >= 0
 ```
 
-匹配得到 `x := a`、`y := b`；内核仍检查二者属于实数且非负。形状只筛选候选，不跳过前提。
+匹配得到 `x := a`、`y := b`；内核仍检查二者属于实数且非负。形状只筛选候选，不跳过前提。Litex在验证完后会输出验证过程：
+
+```text
+{
+  "result": "success",
+  "type": "universal fact",
+  "line": 1,
+  "statement": "forall x, y R:\n    x >= 0\n    y >= 0\n    =>:\n        x + y >= 0",
+  "parameters": [
+    "x",
+    "y"
+  ],
+  "assumptions": [
+    {
+      "fact": "x $in R",
+      "reason": "parameter definition"
+    },
+    {
+      "fact": "y $in R",
+      "reason": "parameter definition"
+    },
+    {
+      "fact": "x >= 0",
+      "reason": "forall premise",
+      "inferred_facts": [
+        "-1 * x <= 0"
+      ]
+    },
+    {
+      "fact": "y >= 0",
+      "reason": "forall premise",
+      "inferred_facts": [
+        "-1 * y <= 0"
+      ]
+    }
+  ],
+  "conclusions": [
+    {
+      "statement": "x + y >= 0",
+      "why_verified": {
+        "type": "builtin rule",
+        "rule": "0 <= a + b from known atomic facts 0 <= a and 0 <= b"
+      }
+    }
+  ]
+}
+```
 
 #### 2. 用用户提供的全称事实匹配
 
 候选也可来自用户证明或假设的全称事实：
 
 ```litex
-abstract_prop p(x)
+prop is_positive(n R):
+    exist a R+ st {n > a}
 
-trust forall a R:
-    $p(a)
+claim:
+    ? forall x R:
+        x > 10
+        =>:
+            $is_positive(x)
+    witness exist a R+ st {x > a} from 10
 
-$p(1)
+have a R:
+    a > 10
+
+$is_positive(a)
 ```
 
-面对 `$p(1)`，内核找到 `$p(a)`，把 `a` 匹配为 `1`，再检查 `1 $in R`，从而验证目标。
+这里 `prop` 给出“为正”的可复用数学接口；`forall` 建立一条可实例化的全称事实：任意大于 `10` 的实数都为正。后面的 `have a R: a > 10` 提供了具体前提，验证器便可以把这条全称事实实例化为 `a`，并接受 `$is_positive(a)`。Litex把它是如何验证上述源代码的过程会打印出来：
 
-`abstract_prop` 声明无定义谓词。`trust` 接受未经验证的事实并警告；含它的成果不完全可检查。此处仅用来展示匹配机制。
+```text
+{
+  "result": "success",
+  "type": "prop fact",
+  "line": 14,
+  "statement": "$is_positive(a)",
+  "why_verified": {
+    "type": "cite forall fact",
+    "cite_source": {
+      "line": 5
+    },
+    "cited_statement": "forall x R:\n    x > 10\n    =>:\n        $is_positive(x)"
+  }
+}
+```
 
 #### 3. 用具体事实（concrete fact）和已知等式匹配
 
 第三类来源是已有具体事实；等式可帮助匹配写法不同但相同的参数：
 
 ```litex
-abstract_prop q(x)
+prop is_positive(x R):
+    x > 0
 
-forall a R:
-    $q(a)
-    a = 1
+forall a, b R:
+    $is_positive(a)
+    a = b
     =>:
-        $q(1)
+        $is_positive(b)
 ```
 
-验证 `$q(1)` 时，上下文的 `a = 1` 使 `$q(a)` 可沿等式运输为目标。
+我们让Litex输出它是如何验证上述源代码的过程。可以看到，`$is_positive(b)` 的验证过程是通过引用 `$is_positive(a)` 来完成的。这里用到了`a = b` 的等式来匹配参数。验证器会输出如下信息：
+
+```text
+{
+  "result": "success",
+  "type": "universal fact",
+  "line": 4,
+  "statement": "forall a, b R:\n    $is_positive(a)\n    a = b\n    =>:\n        $is_positive(b)",
+  "parameters": [
+    "a",
+    "b"
+  ],
+  "assumptions": [
+    {
+      "fact": "a $in R",
+      "reason": "parameter definition"
+    },
+    {
+      "fact": "b $in R",
+      "reason": "parameter definition"
+    },
+    {
+      "fact": "$is_positive(a)",
+      "reason": "forall premise",
+      "inferred_facts": [
+        "a > 0"
+      ]
+    },
+    {
+      "fact": "a = b",
+      "reason": "forall premise"
+    }
+  ],
+  "conclusions": [
+    {
+      "statement": "$is_positive(b)",
+      "why_verified": {
+        "type": "cite prop fact",
+        "cite_source": {
+          "line": 5
+        },
+        "cited_statement": "$is_positive(a)"
+      }
+    }
+  ]
+}
+```
 
 </details>
-
-### 小结：把“证明什么”写进源码，把“怎么证明”交给内核
-
-用户写结论，内核从规则、事实和等式中找依据。来源被记录，搜索受限；源码保留推理主线，轨迹补充机器依据。
 
 <details>
 <summary><strong>个人观察：命令式与声明式的类比</strong></summary>
