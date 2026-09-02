@@ -69,7 +69,7 @@ Terence Tao's [2026 ICM public lecture](https://teorth.github.io/tao-web/slides/
 
 Education, science, engineering, and AI review all need formalization. Turning AI's creativity into trustworthy knowledge requires wider participation.
 
-> **The next step for formal languages is not only to give existing experts stronger tools. It is also to help more people become experts.**
+> **Litex is not only a tool for formalization experts. Its goal is also to help more people become formalization experts, so that every field can incorporate the rigor of formalization.**
 
 People who understand a domain should be able to express, check, and repair its formal reasoning—and review AI-generated work directly.
 
