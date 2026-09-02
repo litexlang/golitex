@@ -6,7 +6,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -56,7 +56,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -93,7 +93,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -133,7 +133,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -174,7 +174,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -212,7 +212,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         if let Some(done) = self.try_verify_log_base_power_rule(equal_fact, builtin_state)? {
             return Ok(Some(done));
         }
@@ -234,7 +234,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -299,7 +299,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -370,7 +370,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -385,10 +385,19 @@ impl Runtime {
         // rule, even though the remaining checks are only literal/shape
         // matching.
         if Self::obj_is_builtin_literal_one(other) {
-            let same_base_and_arg = self.verify_equal_fact_by_known_equality(
-                &EqualFact::new_from_refs(log.base.as_ref(), log.arg.as_ref(), line_file.clone()),
+            let same_base_and_arg_fact = EqualFact::new_from_refs(
+                log.base.as_ref(),
+                log.arg.as_ref(),
+                line_file.clone(),
             );
+            let same_base_and_arg =
+                self.verify_equal_fact_by_known_equality(&same_base_and_arg_fact);
             if same_base_and_arg.is_success() {
+                let same_base_and_arg = self.complete_fact_proof_result(
+                    &same_base_and_arg_fact.clone().into(),
+                    same_base_and_arg,
+                    builtin_state.verify_state(),
+                )?;
                 let subgoals = equality_builtin_match_subgoals(
                     &EqualFact::new_from_refs(
                         log.base.as_ref(),
@@ -433,8 +442,8 @@ impl Runtime {
     pub fn try_verify_pow_equals_by_known_log_inverse(
         &mut self,
         equal_fact: &EqualFact,
-        _builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+        builtin_state: &BuiltinRuleSearchState,
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -452,9 +461,19 @@ impl Runtime {
         if !exponent_ok.is_success() {
             return Ok(None);
         }
+        let exponent_fact = EqualFact::new_from_refs(
+            pow.exponent.as_ref(),
+            &expected_log,
+            line_file.clone(),
+        );
+        let exponent_ok = self.complete_fact_proof_result(
+            &exponent_fact.into(),
+            exponent_ok,
+            builtin_state.verify_state(),
+        )?;
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "equality: a^c = b from c = log(a, b)".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(

@@ -13,7 +13,7 @@ impl StmtResultToLeanCompiler {
         &mut self,
         target: &Fact,
         evidence: &RegisteredSymmetricPredicateBuiltinRuleEvidence,
-        subgoals: &[StmtResult],
+        subgoals: &[VerifyFactResult],
     ) -> Result<Option<String>, String> {
         if evidence.expected_target.to_string() != target.to_string() {
             return Err("registered symmetric-predicate evidence changed its target".into());
@@ -50,14 +50,11 @@ impl StmtResultToLeanCompiler {
             );
         };
         let alternate_result = alternate_result
-            .factual_success()
+            .verified()
             .ok_or_else(|| "registered symmetric-predicate child is not factual".to_string())?;
-        if alternate_result.fact().to_string() != evidence.expected_alternate.to_string()
-            || alternate_result.store.fact.to_string() != evidence.expected_alternate.to_string()
-            || !alternate_result.store.infers.is_empty()
-        {
+        if alternate_result.fact().to_string() != evidence.expected_alternate.to_string() {
             return Err(
-                "registered symmetric-predicate child changed its fact or published effects".into(),
+                "registered symmetric-predicate child changed its fact".into(),
             );
         }
 
@@ -132,7 +129,7 @@ impl StmtResultToLeanCompiler {
         &mut self,
         target: &Fact,
         evidence: &RegisteredAntisymmetricPredicateBuiltinRuleEvidence,
-        subgoals: &[StmtResult],
+        subgoals: &[VerifyFactResult],
     ) -> Result<Option<String>, String> {
         if evidence.expected_target.to_string() != target.to_string() {
             return Err("registered antisymmetric-predicate evidence changed its target".into());
@@ -163,15 +160,12 @@ impl StmtResultToLeanCompiler {
         for (index, (subgoal, expected)) in
             subgoals.iter().zip(expected_premises.iter()).enumerate()
         {
-            let subgoal = subgoal.factual_success().ok_or_else(|| {
+            let subgoal = subgoal.verified().ok_or_else(|| {
                 format!("registered antisymmetric-predicate child {index} is not factual")
             })?;
-            if subgoal.fact().to_string() != expected.to_string()
-                || subgoal.store.fact.to_string() != expected.to_string()
-                || !subgoal.store.infers.is_empty()
-            {
+            if subgoal.fact().to_string() != expected.to_string() {
                 return Err(format!(
-                    "registered antisymmetric-predicate child {index} changed its fact or published effects"
+                    "registered antisymmetric-predicate child {index} changed its fact"
                 ));
             }
             let Some(proof) = self.construct_lean_proof_from_direct_fact_result(subgoal)? else {

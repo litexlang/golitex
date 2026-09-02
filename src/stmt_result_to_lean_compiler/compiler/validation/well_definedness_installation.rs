@@ -70,9 +70,6 @@ pub(in super::super) fn install_object_well_definedness_store_results(
     let source_object = match result {
         SuccessVerifyObjWellDefinedResult::Direct(direct) => direct.object.clone(),
         SuccessVerifyObjWellDefinedResult::Reuse(reuse) => reuse.object.clone(),
-        SuccessVerifyObjWellDefinedResult::RecursiveReference(recursive) => {
-            recursive.object.clone()
-        }
     };
     install_object_well_definedness_store_results_for_source(
         &source_object,
@@ -88,34 +85,33 @@ pub(in super::super) fn install_object_well_definedness_store_results_for_source
     environment_stack: &mut StmtResultToLeanCompilerEnvironmentStack,
     visited: &mut HashSet<usize>,
 ) -> Result<(), String> {
-    let result_address = result as *const SuccessVerifyObjWellDefinedResult as usize;
+    let direct = direct_object_well_definedness_result(result)?;
+    let result_address = direct as *const SuccessVerifyDirectObjWellDefinedResult as usize;
     if !visited.insert(result_address) {
         return Ok(());
     }
-    match result {
-        SuccessVerifyObjWellDefinedResult::Direct(direct) => {
-            if obj_equality_key(source_object) != obj_equality_key(&direct.object) {
-                return Err(format!(
-                    "object WD store source changed `{source_object}` to `{}`",
-                    direct.object
-                ));
-            }
-            for child in &direct.steps.children {
-                install_object_well_definedness_store_results_for_source(
-                    &child.source_object,
-                    child.result.as_ref(),
-                    environment_stack,
-                    visited,
-                )?;
-            }
-            if let Some(binder) = direct.steps.binder.as_deref() {
-                install_object_binder_well_definedness_store_results(
-                    binder,
-                    environment_stack,
-                    visited,
-                )?;
-            }
-            for store in &direct.steps.stores {
+    if obj_equality_key(source_object) != obj_equality_key(&direct.object) {
+        return Err(format!(
+            "object WD store source changed `{source_object}` to `{}`",
+            direct.object
+        ));
+    }
+    for child in &direct.steps.children {
+        install_object_well_definedness_store_results_for_source(
+            &child.source_object,
+            child.result.as_ref(),
+            environment_stack,
+            visited,
+        )?;
+    }
+    if let Some(binder) = direct.steps.binder.as_deref() {
+        install_object_binder_well_definedness_store_results(
+            binder,
+            environment_stack,
+            visited,
+        )?;
+    }
+    for store in &direct.steps.stores {
                 let result_set = direct.intrinsic_result_set.as_ref().ok_or_else(|| {
                     format!(
                         "object WD stored `{}` without an intrinsic result set",
@@ -183,38 +179,25 @@ pub(in super::super) fn install_object_well_definedness_store_results_for_source
                 environment_stack
                     .fact_propositions
                     .insert(fact_id, expected);
-            }
-            if let Some(instantiation) = direct.steps.template_instantiation.as_deref() {
-                install_template_instantiation_result(
-                    &direct.object,
-                    instantiation,
-                    environment_stack,
-                )?;
-            }
-            Ok(())
-        }
-        SuccessVerifyObjWellDefinedResult::Reuse(reuse) => {
-            install_object_well_definedness_store_results_for_source(
-                source_object,
-                reuse.source.as_ref(),
-                environment_stack,
-                visited,
-            )
-        }
-        SuccessVerifyObjWellDefinedResult::RecursiveReference(_) => Ok(()),
     }
+    if let Some(instantiation) = direct.steps.template_instantiation.as_deref() {
+        install_template_instantiation_result(
+            &direct.object,
+            instantiation,
+            environment_stack,
+        )?;
+    }
+    Ok(())
 }
 
 pub(in super::super) fn install_binder_premise_well_definedness_store_results(
     premise: &SuccessVerifyBinderPremiseResult,
     environment_stack: &mut StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<(), String> {
-    if let Some(recursive) = premise.well_definedness.recursive.as_deref() {
-        install_fact_well_definedness_proof_store_results_in_active_environment(
-            recursive,
-            environment_stack,
-        )?;
-    }
+    install_fact_well_definedness_proof_store_results_in_active_environment(
+        premise.well_definedness.proof.as_ref(),
+        environment_stack,
+    )?;
     Ok(())
 }
 
@@ -290,12 +273,10 @@ pub(in super::super) fn install_object_binder_well_definedness_store_results(
                 environment_stack,
             )?;
             for condition in &result.conditions {
-                if let Some(recursive) = condition.well_definedness.recursive.as_deref() {
-                    install_fact_well_definedness_proof_store_results_in_active_environment(
-                        recursive,
-                        environment_stack,
-                    )?;
-                }
+                install_fact_well_definedness_proof_store_results_in_active_environment(
+                    condition.well_definedness.proof.as_ref(),
+                    environment_stack,
+                )?;
             }
         }
         SuccessVerifyBinderObjectWellDefinedResult::FunctionSet(result) => {
@@ -428,12 +409,10 @@ pub(in super::super) fn install_object_binder_well_definedness_store_results(
                 )?;
             }
             for equivalent in &result.equivalent_facts {
-                if let Some(recursive) = equivalent.well_definedness.recursive.as_deref() {
-                    install_fact_well_definedness_proof_store_results_in_active_environment(
-                        recursive,
-                        environment_stack,
-                    )?;
-                }
+                install_fact_well_definedness_proof_store_results_in_active_environment(
+                    equivalent.well_definedness.proof.as_ref(),
+                    environment_stack,
+                )?;
             }
         }
     }
@@ -452,9 +431,12 @@ pub(in super::super) fn object_well_definedness_result_contains_intrinsic_store(
                 })
         }
         SuccessVerifyObjWellDefinedResult::Reuse(reuse) => {
-            object_well_definedness_result_contains_intrinsic_store(reuse.source.as_ref())
+            reuse.source.steps.template_instantiation.is_some()
+                || !reuse.source.steps.stores.is_empty()
+                || reuse.source.steps.children.iter().any(|child| {
+                    object_well_definedness_result_contains_intrinsic_store(child.result.as_ref())
+                })
         }
-        SuccessVerifyObjWellDefinedResult::RecursiveReference(_) => false,
     }
 }
 

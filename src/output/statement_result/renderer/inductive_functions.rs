@@ -77,15 +77,15 @@ impl StatementResultRenderer {
                             ),
                             (
                                 "measure_integer_check".to_string(),
-                                self.stmt_result(&verification.measure.measure_integer_check),
+                                self.verify_fact_result(&verification.measure.measure_integer_check),
                             ),
                             (
                                 "lower_bound_integer_check".to_string(),
-                                self.stmt_result(&verification.measure.lower_bound_integer_check),
+                                self.verify_fact_result(&verification.measure.lower_bound_integer_check),
                             ),
                             (
                                 "lower_bound_check".to_string(),
-                                self.stmt_result(&verification.measure.lower_bound_check),
+                                self.verify_fact_result(&verification.measure.lower_bound_check),
                             ),
                         ]),
                     ),
@@ -158,7 +158,7 @@ impl StatementResultRenderer {
             string_field("coverage_fact", result.coverage_fact.to_string()),
             (
                 "coverage_check".to_string(),
-                self.stmt_result(&result.coverage_check),
+                self.verify_fact_result(&result.coverage_check),
             ),
             (
                 "mutual_exclusions".to_string(),
@@ -193,7 +193,7 @@ impl StatementResultRenderer {
                                 string_field("negated_atom", proof.negated_atom.to_string()),
                                 (
                                     "negated_atom_check".to_string(),
-                                    self.stmt_result(&proof.negated_atom_check),
+                                    self.verify_fact_result(&proof.negated_atom_check),
                                 ),
                             ])
                         })
@@ -222,7 +222,7 @@ impl StatementResultRenderer {
                                         ),
                                         (
                                             "return_membership_check".to_string(),
-                                            self.stmt_result(&body.return_membership_check),
+                                            self.verify_fact_result(&body.return_membership_check),
                                         ),
                                     ])
                                 }

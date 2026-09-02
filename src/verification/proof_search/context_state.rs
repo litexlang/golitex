@@ -12,13 +12,9 @@ use std::rc::Rc;
 /// more restricted retry to avoid repeatedly re-entering the same known-forall,
 /// strategy, or well-definedness search. Round 2 is the final retry.
 ///
-/// `well_definedness_verified` means the current caller has already checked
-/// the well-definedness obligations for the fact or object being verified, so
-/// child checks should not repeat that gate.
 #[derive(Clone, Debug)]
 pub struct VerifyState {
     pub proof_search_round: u8,
-    pub well_definedness_verified: bool,
     proof_search: Rc<RefCell<ProofSearchState>>,
     proof_scope: usize,
     inference: InferenceState,
@@ -28,25 +24,16 @@ impl VerifyState {
     const FINAL_ROUND: u8 = 2;
 
     pub fn initial() -> Self {
-        Self::standard(0, false)
-    }
-
-    pub fn after_well_definedness() -> Self {
-        Self::standard(0, true)
+        Self::standard(0)
     }
 
     pub fn final_round() -> Self {
-        Self::standard(Self::FINAL_ROUND, false)
+        Self::standard(Self::FINAL_ROUND)
     }
 
-    pub fn final_round_after_well_definedness() -> Self {
-        Self::standard(Self::FINAL_ROUND, true)
-    }
-
-    fn standard(proof_search_round: u8, well_definedness_verified: bool) -> Self {
+    fn standard(proof_search_round: u8) -> Self {
         Self {
             proof_search_round,
-            well_definedness_verified,
             proof_search: Rc::new(RefCell::new(ProofSearchState::new())),
             proof_scope: 0,
             inference: InferenceState::new(),
@@ -60,24 +47,9 @@ impl VerifyState {
         }
     }
 
-    pub fn with_well_definedness_verified(&self) -> Self {
-        Self {
-            well_definedness_verified: true,
-            ..self.clone()
-        }
-    }
-
     pub fn with_final_round(&self) -> Self {
         Self {
             proof_search_round: Self::FINAL_ROUND,
-            ..self.clone()
-        }
-    }
-
-    pub fn with_final_round_after_well_definedness(&self) -> Self {
-        Self {
-            proof_search_round: Self::FINAL_ROUND,
-            well_definedness_verified: true,
             ..self.clone()
         }
     }
@@ -120,6 +92,25 @@ impl VerifyState {
             .end_well_defined_object(self.proof_scope, key);
     }
 
+    pub(in crate::verification) fn well_defined_object_proof(
+        &self,
+        key: &ObjString,
+    ) -> Option<Rc<SuccessVerifyDirectObjWellDefinedResult>> {
+        self.proof_search
+            .borrow()
+            .well_defined_object_proof(self.proof_scope, key)
+    }
+
+    pub(in crate::verification) fn remember_well_defined_object_proof(
+        &self,
+        key: ObjString,
+        result: Rc<SuccessVerifyDirectObjWellDefinedResult>,
+    ) {
+        self.proof_search
+            .borrow_mut()
+            .remember_well_defined_object_proof(self.proof_scope, key, result);
+    }
+
     pub(in crate::verification) fn has_active_set_builder_membership_unfold(&self) -> bool {
         self.proof_search
             .borrow()
@@ -156,7 +147,7 @@ impl VerifyState {
     pub(in crate::verification) fn atomic_fact_proof(
         &self,
         key: &FactString,
-    ) -> Option<Rc<SuccessVerifyFactResult>> {
+    ) -> Option<Rc<SuccessFactProofNode>> {
         self.proof_search
             .borrow()
             .atomic_fact_proof(self.proof_scope, key)
@@ -165,31 +156,13 @@ impl VerifyState {
     pub(in crate::verification) fn remember_atomic_fact_proof(
         &self,
         key: FactString,
-        result: Rc<SuccessVerifyFactResult>,
+        result: Rc<SuccessFactProofNode>,
     ) {
         self.proof_search
             .borrow_mut()
             .remember_atomic_fact_proof(self.proof_scope, key, result);
     }
 
-    pub(in crate::verification) fn well_defined_object_proof(
-        &self,
-        key: &WellDefinedCacheKey,
-    ) -> Option<Rc<SuccessVerifyObjWellDefinedResult>> {
-        self.proof_search
-            .borrow()
-            .well_defined_object_proof(self.proof_scope, key)
-    }
-
-    pub(in crate::verification) fn remember_well_defined_object_proof(
-        &self,
-        key: WellDefinedCacheKey,
-        result: Rc<SuccessVerifyObjWellDefinedResult>,
-    ) {
-        self.proof_search
-            .borrow_mut()
-            .remember_well_defined_object_proof(self.proof_scope, key, result);
-    }
 }
 
 #[cfg(test)]

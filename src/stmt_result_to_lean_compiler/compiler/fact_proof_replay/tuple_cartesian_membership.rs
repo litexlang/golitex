@@ -10,7 +10,7 @@ impl StmtResultToLeanCompiler {
         &mut self,
         target: &Fact,
         evidence: &TupleCartesianMembershipBuiltinRuleEvidence,
-        subgoals: &[StmtResult],
+        subgoals: &[VerifyFactResult],
     ) -> Result<Option<String>, String> {
         if evidence.expected_target.to_string() != target.to_string() {
             return Err("tuple/cart membership evidence changed its target".into());

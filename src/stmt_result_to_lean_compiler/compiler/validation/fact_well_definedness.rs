@@ -3,30 +3,12 @@
 use super::super::*;
 
 pub(in super::super) fn validate_scoped_fact_check_result(
-    result: &SuccessFactStmtResult,
+    result: &VerifiedFactResult,
     expected_fact: &Fact,
     result_layer: &str,
 ) -> Result<(), String> {
-    if result.store.fact.to_string() != expected_fact.to_string() {
+    if result.fact().to_string() != expected_fact.to_string() {
         return Err(format!("{result_layer} changed its checked fact"));
-    }
-    if result.store.infers.is_empty() {
-        return Ok(());
-    }
-    let [output] = result.store.infers.store_fact_outputs.as_slice() else {
-        return Err(format!(
-            "{result_layer} retained an invalid number of direct store outputs"
-        ));
-    };
-    if output.itself_and_why_itself_is_stored.0.to_string() != expected_fact.to_string() {
-        return Err(format!("{result_layer} changed its direct store output"));
-    }
-    if let (Some(result_fact_id), Some(output_fact_id)) = (result.store.fact_id, output.fact_id) {
-        if result_fact_id != output_fact_id {
-            return Err(format!(
-                "{result_layer} store Result and direct output disagree on FactId"
-            ));
-        }
     }
     Ok(())
 }
@@ -275,22 +257,18 @@ fn validate_nested_forall_fact_well_definedness(
 }
 
 pub(in super::super) fn validate_atomic_fact_well_definedness_result(
-    result: &SuccessVerifyFactWellDefinedResult,
+    result: &WellDefinedFactResult,
     source_fact: &Fact,
 ) -> Result<(), String> {
-    let Some(recursive) = result.recursive.as_deref() else {
-        return Err("atomic fact has no atomic well-definedness result".into());
-    };
-    validate_atomic_fact_well_definedness_proof_result(recursive, source_fact)
+    validate_atomic_fact_well_definedness_proof_result(result.proof.as_ref(), source_fact)
 }
 
 pub(in super::super) fn validate_chain_fact_well_definedness_result(
-    result: &SuccessVerifyFactWellDefinedResult,
+    result: &WellDefinedFactResult,
     source_chain: &ChainFact,
     adjacent_facts: &[Fact],
 ) -> Result<(), String> {
-    let Some(SuccessVerifyFactWellDefinedProofResult::ChainFact(chain_result)) =
-        result.recursive.as_deref()
+    let SuccessVerifyFactWellDefinedProofResult::ChainFact(chain_result) = result.proof.as_ref()
     else {
         return Err("registered transitive chain has no chain well-definedness Result".into());
     };
@@ -393,14 +371,17 @@ pub(in super::super) fn direct_forall_result_publication_selections(
     let source_parameters = source_forall
         .typed_parameters
         .collect_param_bindings_with_types();
-    let SuccessFactProofResult::ForallProof(proof) = result.proof() else {
+    let verified = result.verification().ok_or_else(|| {
+        "direct forall publication cannot consume trusted statement evidence".to_string()
+    })?;
+    let SuccessFactProofResult::ForallProof(proof) = verified.proof() else {
         return Err("direct forall publication retained another proof family".into());
     };
     if proof.proves.len() != source_forall.then_facts.len() {
         return Err("direct forall publication changed its conclusion Result arity".into());
     }
-    let Some(SuccessVerifyFactWellDefinedProofResult::ForallFact(forall_wd)) =
-        result.well_definedness.recursive.as_deref()
+    let SuccessVerifyFactWellDefinedProofResult::ForallFact(forall_wd) =
+        verified.checked.proof.as_ref()
     else {
         return Err("direct forall publication retained no forall WD Result".into());
     };
@@ -487,25 +468,6 @@ pub(in super::super) fn direct_forall_result_publication_selections(
         Ok(())
     }
 
-    fn collect_child_fact_candidates(
-        child: &SuccessFactStmtResult,
-        owner: usize,
-        available: &mut Vec<(usize, FactId, Fact, u8)>,
-    ) -> Result<(), String> {
-        if let Some(fact_id) = child.store.fact_id {
-            push_available_conclusion(available, owner, fact_id, child.fact(), 1);
-        }
-        collect_infer_candidates(&child.store.infers, owner, 1, available)?;
-        if let SuccessFactProofResult::CombinedProofs(combined) = child.proof() {
-            for step in &combined.steps {
-                if let Some(factual) = step.factual_success() {
-                    collect_child_fact_candidates(factual, owner, available)?;
-                }
-            }
-        }
-        Ok(())
-    }
-
     let mut available_conclusions = Vec::new();
     let mut source_primary_fact_ids = Vec::with_capacity(source_forall.then_facts.len());
     for (source_index, (source_conclusion, proved)) in source_forall
@@ -516,20 +478,18 @@ pub(in super::super) fn direct_forall_result_publication_selections(
     {
         let child = proved
             .result
-            .factual_success()
+            .verified()
             .ok_or_else(|| format!("ForallProof conclusion {source_index} is not factual"))?;
         let source_fact = source_conclusion.clone().to_fact();
-        if child.fact().to_string() != source_fact.to_string()
-            || child.store.fact.to_string() != source_fact.to_string()
-        {
+        if child.fact().to_string() != source_fact.to_string() {
             return Err(format!(
                 "ForallProof conclusion {source_index} changed its target before publication"
             ));
         }
-        let primary_fact_id = child
-            .store
-            .fact_id
-            .ok_or_else(|| format!("ForallProof conclusion {source_index} has no frozen FactId"))?;
+        let wd_store = &forall_wd.conclusions[source_index].store;
+        let primary_fact_id = wd_store.fact_id.ok_or_else(|| {
+            format!("ForallProof WD conclusion {source_index} has no local FactId")
+        })?;
         source_primary_fact_ids.push(primary_fact_id);
         push_available_conclusion(
             &mut available_conclusions,
@@ -538,8 +498,6 @@ pub(in super::super) fn direct_forall_result_publication_selections(
             source_fact,
             0,
         );
-        collect_child_fact_candidates(child, source_index, &mut available_conclusions)?;
-        let wd_store = &forall_wd.conclusions[source_index].store;
         if let Some(fact_id) = wd_store.fact_id {
             push_available_conclusion(
                 &mut available_conclusions,

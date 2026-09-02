@@ -3,9 +3,9 @@ use super::*;
 pub(super) fn number_in_set_verified_by_builtin_rules_result(
     in_fact: &InFact,
     reason: &str,
-) -> StmtResult {
-    StmtResult::from(
-        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+) -> ProveFactResult {
+    ProveFactResult::from(
+        SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
             in_fact.clone().into(),
             reason.to_string(),
             BuiltinRuleEvidence::Uncatalogued(
@@ -21,8 +21,8 @@ pub(super) fn number_in_set_verified_by_evaluation_result(
     reason: &str,
     target_set: &StandardSet,
     evaluation: &SuccessEvaluateObjResult,
-) -> StmtResult {
-    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+) -> ProveFactResult {
+    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
         in_fact.clone().into(),
         reason.to_string(),
         BuiltinRuleEvidence::ClosedNumericMembership(
@@ -40,10 +40,10 @@ pub(super) fn number_in_set_verified_by_evaluation_result(
 pub(super) fn number_in_set_verified_by_builtin_rules_result_with_subgoals(
     in_fact: &InFact,
     reason: &str,
-    subgoals: Vec<StmtResult>,
-) -> StmtResult {
-    StmtResult::from(
-        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+    subgoals: Vec<VerifyFactResult>,
+) -> ProveFactResult {
+    ProveFactResult::from(
+        SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
             in_fact.clone().into(),
             reason.to_string(),
             BuiltinRuleEvidence::Uncatalogued(
@@ -57,9 +57,9 @@ pub(super) fn number_in_set_verified_by_builtin_rules_result_with_subgoals(
 pub(super) fn not_in_fact_verified_by_builtin_rules_result(
     not_in_fact: &NotInFact,
     reason: &str,
-) -> StmtResult {
-    StmtResult::from(
-        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+) -> ProveFactResult {
+    ProveFactResult::from(
+        SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
             not_in_fact.clone().into(),
             reason.to_string(),
             BuiltinRuleEvidence::Uncatalogued(
@@ -75,8 +75,8 @@ pub(super) fn number_not_in_set_verified_by_evaluation_result(
     reason: &str,
     target_set: &StandardSet,
     evaluation: &SuccessEvaluateObjResult,
-) -> StmtResult {
-    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+) -> ProveFactResult {
+    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
         not_in_fact.clone().into(),
         reason.to_string(),
         BuiltinRuleEvidence::ClosedNumericNonmembership(
@@ -95,7 +95,7 @@ pub fn builtin_in_fact_result_for_evaluation_in_standard_set(
     in_fact: &InFact,
     evaluation: &SuccessEvaluateObjResult,
     standard_set: &StandardSet,
-) -> StmtResult {
+) -> ProveFactResult {
     let evaluated_number = &evaluation.value;
     match standard_set {
         StandardSet::C => number_in_set_verified_by_evaluation_result(
@@ -220,7 +220,7 @@ pub fn builtin_not_in_fact_result_for_evaluation_in_standard_set(
     not_in_fact: &NotInFact,
     evaluation: &SuccessEvaluateObjResult,
     standard_set: &StandardSet,
-) -> StmtResult {
+) -> ProveFactResult {
     let evaluated_number = &evaluation.value;
     let reason = match standard_set {
         StandardSet::C | StandardSet::R | StandardSet::Q => None,
@@ -253,7 +253,7 @@ pub fn builtin_in_fact_result_for_evaluated_number_in_standard_set(
     in_fact: &InFact,
     evaluated_number: &Number,
     standard_set: &StandardSet,
-) -> StmtResult {
+) -> ProveFactResult {
     match standard_set {
         StandardSet::C => number_in_set_verified_by_builtin_rules_result(in_fact, "number in C"),
         StandardSet::CStar => {
@@ -349,7 +349,7 @@ pub fn builtin_not_in_fact_result_for_evaluated_number_in_standard_set(
     not_in_fact: &NotInFact,
     evaluated_number: &Number,
     standard_set: &StandardSet,
-) -> StmtResult {
+) -> ProveFactResult {
     match standard_set {
         StandardSet::C | StandardSet::R | StandardSet::Q => UnknownGenericStmtResult::new().into(),
         StandardSet::CStar => {

@@ -11,6 +11,9 @@ impl StmtResultToLeanCompiler {
         &mut self,
         result: &SuccessFactStmtResult,
     ) -> Result<bool, String> {
+        let Some(verified) = result.verification() else {
+            return Ok(false);
+        };
         let has_registered_transitive_application = result
             .store
             .infers
@@ -48,7 +51,7 @@ impl StmtResultToLeanCompiler {
             );
         }
         validate_chain_fact_well_definedness_result(
-            &result.well_definedness,
+            &verified.checked,
             chain,
             &adjacent_facts,
         )?;
@@ -58,7 +61,7 @@ impl StmtResultToLeanCompiler {
             .fact_id
             .ok_or_else(|| "registered transitive chain store has no FactId".to_string())?;
         let Some(source_proof) =
-            self.construct_lean_proof_from_direct_fact_result_using_its_well_definedness(result)?
+            self.construct_lean_proof_from_direct_fact_result_using_its_well_definedness(verified)?
         else {
             return Ok(false);
         };

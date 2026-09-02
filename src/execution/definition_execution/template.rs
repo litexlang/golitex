@@ -1134,9 +1134,9 @@ impl Runtime {
 }
 
 fn success_template_fact_check(
-    result: StmtResult,
+    result: VerifyFactResult,
 ) -> Result<SuccessVerifyFactForObjWellDefinedResult, RuntimeError> {
-    let success = result.into_factual_success().ok_or_else(|| {
+    let success = result.into_verified().ok_or_else(|| {
         RuntimeError::from(WellDefinedRuntimeError(
             RuntimeErrorStruct::new_with_just_msg(
                 "template contract check has no successful factual result".to_string(),
@@ -1145,6 +1145,6 @@ fn success_template_fact_check(
     })?;
     Ok(SuccessVerifyFactForObjWellDefinedResult::new(
         success.fact(),
-        success.verification,
+        success.verification.clone(),
     ))
 }

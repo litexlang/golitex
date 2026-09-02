@@ -8,19 +8,24 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let Some(normalized) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(UnknownGenericStmtResult::new().into());
         };
         if normalized.to_string() != atomic_fact.to_string() {
-            let normalized_result = self
+            let normalized_proof = self
                 .verify_non_equational_atomic_fact_with_bounded_builtin_routes(
                     &normalized,
                     verify_state,
                 )?;
+            let normalized_result = self.complete_atomic_fact_proof_result(
+                &normalized,
+                normalized_proof,
+                verify_state,
+            )?;
             if normalized_result.is_success() {
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                         atomic_fact.clone().into(),
                         "additive sign strategy: normalized order goal".to_string(),
                         BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyAdditiveSignWithBuiltinStrategy01),
@@ -34,14 +39,14 @@ impl Runtime {
             let strategy_label =
                 "numeric-order strategy: structurally smaller order goals".to_string();
             let success = match structural_order_strategy_rule_evidence(&normalized, &children) {
-                Some(evidence) => SuccessFactStmtResult::
+                Some(evidence) => SuccessProveFactResult::
                     new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                         atomic_fact.clone().into(),
                         strategy_label,
                         evidence,
                         children,
                     ),
-                None => SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
+                None => SuccessProveFactResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                     atomic_fact.clone().into(),
                     strategy_label,
                     BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyAdditiveSignWithBuiltinStrategy02),
@@ -74,7 +79,7 @@ impl Runtime {
                     return Ok(UnknownGenericStmtResult::new().into());
                 }
                 Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                         atomic_fact.clone().into(),
                         "additive sign strategy: nonnegative summands".to_string(),
                         BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyAdditiveSignWithBuiltinStrategy03),
@@ -94,7 +99,7 @@ impl Runtime {
                     verify_state,
                 )? {
                     return Ok(
-                        SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
+                        SuccessProveFactResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                             atomic_fact.clone().into(),
                             "additive sign strategy: one positive and one nonnegative summand"
                                 .to_string(),
@@ -116,7 +121,7 @@ impl Runtime {
         right: &Obj,
         line_file: &LineFile,
         verify_state: &VerifyState,
-    ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
+    ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
         let left_strict =
             self.verify_additive_sign_strategy_child(left, false, line_file, verify_state)?;
         if left_strict.is_success() {
@@ -147,7 +152,7 @@ impl Runtime {
         weak: bool,
         line_file: &LineFile,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<VerifyFactResult, RuntimeError> {
         let zero: Obj = Number::new("0".to_string()).into();
         let child: AtomicFact = if weak {
             LessEqualFact::new(zero, obj.clone(), line_file.clone()).into()
@@ -161,7 +166,7 @@ impl Runtime {
         &mut self,
         normalized: &AtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
+    ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
         match normalized {
             AtomicFact::LessEqualFact(fact) => {
                 self.verify_weak_structural_order_strategy(fact, verify_state)
@@ -177,7 +182,7 @@ impl Runtime {
         &mut self,
         fact: &LessEqualFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
+    ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
         let zero: Obj = Number::new("0".to_string()).into();
         let one: Obj = Number::new("1".to_string()).into();
         let lf = fact.line_file.clone();
@@ -510,7 +515,7 @@ impl Runtime {
         &mut self,
         fact: &LessFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
+    ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
         let zero: Obj = Number::new("0".to_string()).into();
         let lf = fact.line_file.clone();
         let mut alternatives: Vec<Vec<AtomicFact>> = Vec::new();
@@ -764,7 +769,7 @@ impl Runtime {
         &mut self,
         alternatives: Vec<Vec<AtomicFact>>,
         verify_state: &VerifyState,
-    ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
+    ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
         for required in alternatives {
             let mut results = Vec::with_capacity(required.len());
             let mut complete = true;
@@ -790,7 +795,7 @@ impl Runtime {
 // multiplication at the root and for both recursively decomposed children.
 fn structural_order_strategy_rule_evidence(
     target: &AtomicFact,
-    children: &[StmtResult],
+    children: &[VerifyFactResult],
 ) -> Option<BuiltinRuleEvidence> {
     if let AtomicFact::LessEqualFact(fact) = target {
         if let (Obj::Mul(lower), Obj::Mul(upper)) = (&fact.left, &fact.right) {
@@ -973,12 +978,12 @@ fn structural_order_strategy_rule_evidence(
 }
 
 fn structural_order_strategy_binary_child_matches(
-    result: &StmtResult,
+    result: &VerifyFactResult,
     expected_left: &Obj,
     expected_right: &Obj,
     strict: bool,
 ) -> bool {
-    let Some(success) = result.factual_success() else {
+    let Some(success) = result.verified() else {
         return false;
     };
     let Fact::AtomicFact(child) = success.fact() else {
@@ -993,8 +998,8 @@ fn structural_order_strategy_binary_child_matches(
         && obj_equality_key(right) == obj_equality_key(expected_right)
 }
 
-fn structural_order_strategy_child_matches(result: &StmtResult, operand: &Obj, weak: bool) -> bool {
-    let Some(success) = result.factual_success() else {
+fn structural_order_strategy_child_matches(result: &VerifyFactResult, operand: &Obj, weak: bool) -> bool {
+    let Some(success) = result.verified() else {
         return false;
     };
     let Fact::AtomicFact(child) = success.fact() else {

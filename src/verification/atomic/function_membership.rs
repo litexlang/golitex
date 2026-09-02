@@ -20,7 +20,7 @@ impl Runtime {
         definition_return_set: Obj,
         line_file: LineFile,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<VerifyFactResult, RuntimeError> {
         let direct_result = self.verify_obj_satisfies_param_type(
             value.clone(),
             &ParamType::Obj(definition_return_set.clone()),
@@ -63,8 +63,9 @@ impl Runtime {
             }
             let membership_fact: Fact =
                 InFact::new(value_fn.clone().into(), definition_return_set, line_file).into();
-            return Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            let checked = self.verify_fact_well_defined_result(&membership_fact, verify_state)?;
+            let proof =
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     membership_fact,
                     format!(
                         "anonymous fn satisfies a definition return set through an equal {}",
@@ -75,8 +76,8 @@ impl Runtime {
                     ),
                     vec![representative_result],
                 )
-                .into(),
-            );
+                .into();
+            return Ok(Runtime::finish_fact_verification(checked, proof));
         }
 
         Ok(direct_result)
@@ -92,7 +93,7 @@ impl Runtime {
         definition_return_set: &Obj,
         line_file: &LineFile,
         verify_state: &VerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<VerifyFactResult>, RuntimeError> {
         let Obj::ObjAtIndex(indexed) = value else {
             return Ok(None);
         };
@@ -129,7 +130,7 @@ impl Runtime {
                 // objects were just verified above, so allow its one forall
                 // lookup explicitly.
                 equal_set_result = self
-                    .verify_atomic_fact(&equal_set_fact, &VerifyState::after_well_definedness())?;
+                    .verify_atomic_fact(&equal_set_fact, &VerifyState::initial())?;
             }
             let carrier_result = if equal_set_result.is_success() {
                 equal_set_result
@@ -143,7 +144,7 @@ impl Runtime {
                 let mut subset_result = self.verify_atomic_fact(&subset_fact, verify_state)?;
                 if !subset_result.is_success() {
                     subset_result = self
-                        .verify_atomic_fact(&subset_fact, &VerifyState::after_well_definedness())?;
+                        .verify_atomic_fact(&subset_fact, &VerifyState::initial())?;
                 }
                 if !subset_result.is_success() {
                     continue;
@@ -157,16 +158,17 @@ impl Runtime {
                 line_file.clone(),
             )
             .into();
-            return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            let checked = self.verify_fact_well_defined_result(&membership_fact, verify_state)?;
+            let proof =
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     membership_fact,
                     "indexed result inherits its carrier from a symbolic Cartesian projection"
                         .to_string(),
                     BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIndexedValueInDefinitionReturnSetViaCartProjection),
                     vec![is_cart_result, coordinate_result, carrier_result],
                 )
-                .into(),
-            ));
+                .into();
+            return Ok(Some(Runtime::finish_fact_verification(checked, proof)));
         }
 
         Ok(None)
@@ -181,7 +183,7 @@ impl Runtime {
         expected_fn_set: &FnSet,
         in_fact: &InFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let stored_membership = self.get_object_in_fn_set_with_membership_fact_id(element);
         if let Some((known_body, source_line_file, source_fact_id)) = stored_membership {
             let expected_names = Self::collect_fn_param_names(&expected_fn_set.body);
@@ -199,7 +201,7 @@ impl Runtime {
                 if known_normalized.to_string() == expected_normalized.to_string() {
                     let target: Fact = in_fact.clone().into();
                     return Ok(Some(
-                        SuccessFactStmtResult::new_with_verified_by_known_fact(
+                        SuccessProveFactResult::new_with_verified_by_known_fact(
                             target.clone(),
                             SuccessFactProofResult::cached_fact(
                                 target,
@@ -242,7 +244,7 @@ impl Runtime {
         let pointwise: Fact = forall.into();
 
         Ok(Some(
-            (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            (SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 target.clone(),
                 "fn membership: same input domain and pointwise values lie in the target return set"
                     .to_string(),

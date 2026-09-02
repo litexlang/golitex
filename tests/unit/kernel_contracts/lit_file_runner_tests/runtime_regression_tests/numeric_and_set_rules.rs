@@ -93,14 +93,14 @@ forall a Z:
         };
         let conclusion = forall_proof.proves[conclusion_index]
             .result
-            .factual_success()
+            .verified()
             .expect("each complex-membership conclusion should have a factual result");
         let SuccessFactProofResult::BuiltinRule(rule) = conclusion.underlying_verified_by() else {
             panic!("each complex-membership conclusion should use a builtin rule: {conclusion:?}");
         };
         assert_eq!(rule.subgoals.len(), 1);
         let source_membership = rule.subgoals[0]
-            .factual_success()
+            .verified()
             .expect("each projection should retain its source membership");
         let Fact::AtomicFact(AtomicFact::InFact(source_in_fact)) = source_membership.fact() else {
             panic!("each projection subgoal should be a membership fact: {source_membership:?}");
@@ -121,14 +121,14 @@ forall a Z:
     };
     let conclusion = forall_proof.proves[0]
         .result
-        .factual_success()
+        .verified()
         .expect("the real-membership conclusion should have a factual result");
     let SuccessFactProofResult::BuiltinRule(rule) = conclusion.underlying_verified_by() else {
         panic!("the membership conclusion should use a builtin rule: {conclusion:?}");
     };
     assert_eq!(rule.subgoals.len(), 1);
     let source_membership = rule.subgoals[0]
-        .factual_success()
+        .verified()
         .expect("the builtin should retain its known source membership");
     let Fact::AtomicFact(AtomicFact::InFact(source_in_fact)) = source_membership.fact() else {
         panic!("the builtin subgoal should be a membership fact: {source_membership:?}");

@@ -55,7 +55,7 @@ impl ResultGraph {
             }
             for (index, check) in result.conclusion_checks.iter().enumerate() {
                 let check_id = format!("{id}/conclusion-check:{index}");
-                self.add_stmt_result(check, check_id.clone());
+                self.add_verify_fact_outcome(check, check_id.clone());
                 self.add_edge(&id, &check_id, "conclusion_check", index);
             }
             self.add_infers(
@@ -94,6 +94,12 @@ impl ResultGraph {
             self.add_edge(&child_parent, &child_id, "child", index);
             index += 1;
         });
+        success.visit_fact_verification_children(&mut |child| {
+            let child_id = format!("{child_parent}/verification-child:{index}");
+            self.add_verify_fact_outcome(child, child_id.clone());
+            self.add_edge(&child_parent, &child_id, "verification_child", index);
+            index += 1;
+        });
         success.visit_success_child_results(&mut |child| {
             let child_id = format!("{child_parent}/success_child:{index}");
             self.add_success_stmt(child, child_id.clone());
@@ -115,16 +121,25 @@ impl ResultGraph {
         result: &SuccessFactStmtResult,
         statement_id: String,
     ) {
-        let well_definedness_id = format!("{statement_id}/well-definedness");
-        self.add_fact_well_definedness(
-            &result.well_definedness,
-            well_definedness_id.clone(),
-            result.fact().to_string(),
-        );
-        self.add_edge(&statement_id, &well_definedness_id, "well_definedness", 0);
-        let verification_id = format!("{statement_id}/verification");
-        self.add_verify_fact_result(&result.verification, verification_id.clone());
-        self.add_edge(&statement_id, &verification_id, "verification", 0);
+        match &result.evidence {
+            FactStatementEvidence::Verified(verified) => {
+                let verification_id = format!("{statement_id}/verification");
+                let verification = VerifyFactResult::Verified(verified.clone());
+                self.add_verify_fact_outcome(&verification, verification_id.clone());
+                self.add_edge(&statement_id, &verification_id, "verification", 0);
+            }
+            FactStatementEvidence::Trusted(_) => {
+                let trust_id = format!("{statement_id}/trusted");
+                self.ensure_node(
+                    trust_id.clone(),
+                    "trust",
+                    "TrustedFact",
+                    result.fact().to_string(),
+                    None,
+                );
+                self.add_edge(&statement_id, &trust_id, "trusted", 0);
+            }
+        }
 
         let store_id = format!("{statement_id}/store");
         self.add_store_fact_result(&result.store, store_id.clone());
@@ -532,7 +547,7 @@ impl ResultGraph {
     pub(super) fn add_attached_fact_well_definedness(
         &mut self,
         parent: &str,
-        result: &SuccessVerifyFactWellDefinedResult,
+        result: &WellDefinedFactResult,
         label: String,
         edge_kind: &str,
         order: usize,

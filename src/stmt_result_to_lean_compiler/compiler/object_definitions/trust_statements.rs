@@ -254,8 +254,8 @@ impl StmtResultToLeanCompiler {
             .well_definedness
             .as_ref()
             .ok_or_else(|| "source axiom retained no well-definedness Result".to_string())?;
-        let Some(SuccessVerifyFactWellDefinedProofResult::ForallFact(recursive)) =
-            well_definedness.recursive.as_deref()
+        let SuccessVerifyFactWellDefinedProofResult::ForallFact(recursive) =
+            well_definedness.proof.as_ref()
         else {
             return Err("source axiom retained no recursive forall well-definedness".into());
         };

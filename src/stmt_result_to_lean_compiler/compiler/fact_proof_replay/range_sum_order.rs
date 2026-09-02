@@ -13,7 +13,7 @@ impl StmtResultToLeanCompiler {
         &mut self,
         target: &Fact,
         evidence: &IntegerRangeSumPointwiseOrderBuiltinRuleEvidence,
-        subgoals: &[StmtResult],
+        subgoals: &[VerifyFactResult],
     ) -> Result<Option<String>, String> {
         if evidence.expected_target.to_string() != target.to_string() {
             return Err("integer-range sum order evidence changed its target".into());
@@ -48,12 +48,10 @@ impl StmtResultToLeanCompiler {
             .zip(expected)
             .enumerate()
             .map(|(index, (result, expected))| {
-                let child = result.factual_success().ok_or_else(|| {
+                let child = result.verified().ok_or_else(|| {
                     format!("integer-range sum order child {index} is not factual")
                 })?;
-                if child.fact().to_string() != expected.to_string()
-                    || child.store.fact.to_string() != expected.to_string()
-                {
+                if child.fact().to_string() != expected.to_string() {
                     return Err(format!(
                         "integer-range sum order child {index} changed its proposition"
                     ));
@@ -94,7 +92,7 @@ impl StmtResultToLeanCompiler {
             );
         }
         let pointwise_declaration_index = self.next_fact_name_index;
-        if !self.compile_direct_forall_fact_result(factual_children[2])? {
+        if !self.compile_direct_forall_verify_result(factual_children[2])? {
             return Err(
                 "integer-range sum pointwise ForallProof has no direct compiler consumer".into(),
             );

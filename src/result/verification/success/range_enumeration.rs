@@ -13,7 +13,7 @@ pub struct SuccessVerifyByEnumerateRangeEndpointResult {
     pub position: SuccessVerifyByEnumerateRangeEndpointPosition,
     pub endpoint: Obj,
     pub integer_membership_fact: Fact,
-    pub verification: Box<StmtResult>,
+    pub verification: Box<VerifyFactResult>,
 }
 
 pub struct SuccessVerifyByEnumerateRangeResult {
@@ -21,7 +21,7 @@ pub struct SuccessVerifyByEnumerateRangeResult {
     pub range: ClosedRangeOrRange,
     pub membership_fact: Fact,
     pub generated_cases: Fact,
-    pub membership_check: Box<StmtResult>,
+    pub membership_check: Box<VerifyFactResult>,
     pub endpoint_checks: Vec<SuccessVerifyByEnumerateRangeEndpointResult>,
 }
 
@@ -58,7 +58,7 @@ impl SuccessVerifyByEnumerateRangeResult {
         range: ClosedRangeOrRange,
         membership_fact: Fact,
         generated_cases: Fact,
-        membership_check: StmtResult,
+        membership_check: VerifyFactResult,
         endpoint_checks: Vec<SuccessVerifyByEnumerateRangeEndpointResult>,
     ) -> Self {
         SuccessVerifyByEnumerateRangeResult {
@@ -77,7 +77,7 @@ impl SuccessVerifyByEnumerateRangeEndpointResult {
         position: SuccessVerifyByEnumerateRangeEndpointPosition,
         endpoint: Obj,
         integer_membership_fact: Fact,
-        verification: StmtResult,
+        verification: VerifyFactResult,
     ) -> Self {
         Self {
             position,

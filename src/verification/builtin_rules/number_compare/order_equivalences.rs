@@ -9,11 +9,11 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let z: Obj = Number::new("0".to_string()).into();
-        let success = |msg: &'static str, premise: StmtResult| {
-            Ok(Some(StmtResult::from(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+        let success = |msg: &'static str, premise: VerifyFactResult| {
+            Ok(Some(ProveFactResult::from(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     atomic_fact.clone().into(),
                     msg.to_string(),
                     BuiltinRuleEvidence::Arithmetic(ArithmeticBuiltinRule::NegateOrder),
@@ -202,7 +202,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let (neg, left, right, line_file) = match atomic_fact {
             AtomicFact::GreaterFact(f) => (
                 NotLessEqualFact::new(f.left.clone(), f.right.clone(), f.line_file.clone()).into(),
@@ -239,11 +239,11 @@ impl Runtime {
         else {
             return Ok(None);
         };
-        let sub = self.verify_non_equational_atomic_fact_with_known_atomic_facts(&neg)?;
+        let sub = self.verify_atomic_fact_as_builtin_rule_premise(&neg, builtin_state)?;
         if sub.is_success() {
             steps.push(sub);
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                     atomic_fact.clone().into(),
                     SuccessInferResult::new(),
                     "order_from_known_negated_complement".to_string(),
@@ -263,7 +263,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let (left, right, line_file) = match atomic_fact {
             AtomicFact::NotLessFact(f) => (f.left.clone(), f.right.clone(), f.line_file.clone()),
             AtomicFact::NotGreaterFact(f) => (f.left.clone(), f.right.clone(), f.line_file.clone()),
@@ -315,11 +315,11 @@ impl Runtime {
             _ => return Ok(None),
         };
         for candidate in &candidates {
-            let sub = self.verify_non_equational_atomic_fact_with_known_atomic_facts(candidate)?;
+            let sub = self.verify_atomic_fact_as_builtin_rule_premise(candidate, builtin_state)?;
             if sub.is_success() {
                 steps.push(sub);
                 return Ok(Some(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                         atomic_fact.clone().into(),
                         SuccessInferResult::new(),
                         "negated_order_from_known_equivalent_order".to_string(),
@@ -344,7 +344,7 @@ impl Runtime {
         if premise_result.is_success() {
             steps.push(premise_result);
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                     atomic_fact.clone().into(),
                     SuccessInferResult::new(),
                     "negated_order_from_complete_equivalent_order_disjunction".to_string(),

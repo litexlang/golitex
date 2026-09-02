@@ -7,7 +7,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -49,7 +49,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -97,7 +97,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -147,7 +147,7 @@ impl Runtime {
                 {
                     continue;
                 }
-                if !self
+                let Some(pointwise) = self
                     .verify_finite_set_sum_functions_pointwise_premise(
                         &EqualFact::new_from_refs(
                             union_product.func.as_ref(),
@@ -157,8 +157,10 @@ impl Runtime {
                         smaller_set.clone(),
                         builtin_state,
                     )?
-                    .is_success()
-                {
+                else {
+                    continue;
+                };
+                if !pointwise.is_success() {
                     continue;
                 }
                 let Some(inserted_factor) =
@@ -195,7 +197,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -244,7 +246,7 @@ impl Runtime {
             {
                 continue;
             }
-            if !self
+            let Some(pointwise) = self
                 .verify_finite_set_sum_functions_pointwise_premise(
                     &EqualFact::new_from_refs(
                         full_product.func.as_ref(),
@@ -254,8 +256,10 @@ impl Runtime {
                     remaining_product.set.as_ref().clone(),
                     builtin_state,
                 )?
-                .is_success()
-            {
+            else {
+                continue;
+            };
+            if !pointwise.is_success() {
                 continue;
             }
             let Some(removed_factor) =
@@ -290,7 +294,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -357,7 +361,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -410,7 +414,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -454,16 +458,21 @@ impl Runtime {
                         line_file.clone(),
                     )
                     .into();
-                    let fn_eq_result = self
+                    let fn_eq_proof = self
                         .verification_result_from_known_fact_cache(&fn_eq_in.clone().into())
                         .unwrap_or(
                             self.verify_non_equational_atomic_fact_with_known_atomic_facts(
                                 &fn_eq_in,
                             )?,
                         );
+                    let fn_eq_result = self.complete_atomic_fact_proof_result(
+                        &fn_eq_in,
+                        fn_eq_proof,
+                        builtin_state.verify_state(),
+                    )?;
                     if fn_eq_result.is_success() {
                         return Ok(Some(
-                            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                                 equal_fact.clone().into(),
                                 "equality: finite-set products from known fn_eq_in".to_string(),
                                 BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyFiniteSetProductPointwiseEquality),
@@ -511,7 +520,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -595,7 +604,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -709,16 +718,16 @@ impl Runtime {
         equal_fact: &EqualFact,
         set: Obj,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<Option<VerifyFactResult>, RuntimeError> {
         let left_func = &equal_fact.left;
         let right_func = &equal_fact.right;
         let x_name = self.generate_random_unused_name();
         let (x_binding, x_obj) = self.fresh_bound_param(x_name)?;
         let Some(left_inst) = self.instantiate_unary_function_at(left_func, &x_obj)? else {
-            return Ok(UnknownGenericStmtResult::new().into());
+            return Ok(None);
         };
         let Some(right_inst) = self.instantiate_unary_function_at(right_func, &x_obj)? else {
-            return Ok(UnknownGenericStmtResult::new().into());
+            return Ok(None);
         };
         let pointwise_fact: AtomicFact =
             EqualFact::new(left_inst, right_inst, equal_fact.line_file.clone()).into();
@@ -728,6 +737,7 @@ impl Runtime {
             &pointwise_fact,
             builtin_state,
         )
+        .map(Some)
     }
 
     pub(super) fn nested_finite_set_sum_cartesian_shape(
@@ -854,7 +864,7 @@ impl Runtime {
         set: Obj,
         then_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<VerifyFactResult, RuntimeError> {
         self.run_in_local_verification_env(
             builtin_state.verify_state(),
             |rt, local_verify_state| {
@@ -874,10 +884,11 @@ impl Runtime {
                 // an existential and then restricted to the current finite set.
                 // Try only bounded known-forall instantiation here; do not reopen
                 // the full equality dispatcher or its finite-set-sum rule.
-                rt.verify_atomic_fact_with_known_forall(
+                let proof = rt.verify_atomic_fact_with_known_forall(
                     then_fact,
-                    &local_verify_state.with_well_definedness_verified(),
-                )
+                    &local_verify_state.clone(),
+                )?;
+                rt.complete_atomic_fact_proof_result(then_fact, proof, local_verify_state)
             },
         )
     }
@@ -1060,7 +1071,7 @@ impl Runtime {
         )?;
         let fact: Fact = forall_fact.into();
         let result =
-            self.verify_fact_allow_unknown(&fact, &VerifyState::after_well_definedness())?;
+            self.verify_fact_allow_unknown(&fact, &VerifyState::initial())?;
         let _ = builtin_state;
         Ok(result.is_success())
     }

@@ -7,7 +7,10 @@ impl StmtResultToLeanCompiler {
         &mut self,
         result: &SuccessFactStmtResult,
     ) -> Result<bool, String> {
-        let SuccessFactProofResult::BuiltinRule(builtin) = result.proof() else {
+        let Some(verified) = result.verification() else {
+            return Ok(false);
+        };
+        let SuccessFactProofResult::BuiltinRule(builtin) = verified.proof() else {
             return Ok(false);
         };
         let Some(BuiltinRuleEvidence::ObjectReflexivity(evidence)) = builtin.evidence.typed()
@@ -27,10 +30,10 @@ impl StmtResultToLeanCompiler {
         if obj_equality_key(&equality.left) != obj_equality_key(&equality.right) {
             return Err("object-reflexivity evidence changed its equality endpoints".into());
         }
-        validate_atomic_fact_well_definedness_result(&result.well_definedness, &source_fact)?;
+        validate_atomic_fact_well_definedness_result(&verified.checked, &source_fact)?;
         let proof = format!(
             "Litex.Same.refl {}",
-            self.render_object_using_well_definedness_from_fact_result(result, &equality.left)?
+            self.render_object_using_well_definedness_from_fact_result(verified, &equality.left)?
         );
         if !fact_result_contains_inferred_facts(result) {
             self.compile_stored_fact_without_inference(result, proof)?;

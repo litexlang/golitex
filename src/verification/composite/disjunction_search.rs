@@ -12,7 +12,7 @@ impl Runtime {
         &mut self,
         or_fact: &OrFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         if let Some(fact_verified) =
             self.try_verify_or_fact_with_known_forall_facts_in_envs(or_fact, verify_state)?
         {
@@ -99,7 +99,7 @@ impl Runtime {
         &mut self,
         or_fact: &OrFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<SuccessFactStmtResult>, RuntimeError> {
+    ) -> Result<Option<SuccessProveFactResult>, RuntimeError> {
         let mut iterate_from_env_index = 0;
         let mut iterate_from_known_forall_fact_index = 0;
 
@@ -138,7 +138,7 @@ impl Runtime {
         arg_map: HashMap<String, Obj>,
         given_or_fact: &OrFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<SuccessFactStmtResult>, RuntimeError> {
+    ) -> Result<Option<SuccessProveFactResult>, RuntimeError> {
         let Some((instantiation, requirements)) = self
             .verify_known_forall_requirements_and_build_evidence(
                 known_forall.as_ref(),
@@ -152,7 +152,7 @@ impl Runtime {
 
         let source_fact = known_forall.source_fact();
         let source_fact_id = known_forall.source_fact_id;
-        let fact_verified = SuccessFactStmtResult::new_with_verified_by_known_fact(
+        let fact_verified = SuccessProveFactResult::new_with_verified_by_known_fact(
             given_or_fact.clone().into(),
             SuccessFactProofResult::known_forall_instantiation(
                 source_fact,

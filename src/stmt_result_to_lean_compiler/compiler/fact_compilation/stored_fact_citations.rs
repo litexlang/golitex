@@ -8,6 +8,12 @@ impl StmtResultToLeanCompiler {
         result: &SuccessFactStmtResult,
         proof: String,
     ) -> Result<(), String> {
+        let verified = result.verification().ok_or_else(|| {
+            format!(
+                "trusted fact `{}` has no Lean verification evidence",
+                result.fact()
+            )
+        })?;
         let source_fact = result.fact();
         // A reviewed equality rule can own both the heterogeneous Litex.Same
         // theorem published below and an exact native `=` certificate used by
@@ -18,7 +24,7 @@ impl StmtResultToLeanCompiler {
         // before publication, then bind it to the statement's exact FactId.
         let native_equality = self
             .construct_lean_native_equality_proof_from_direct_fact_result_using_its_well_definedness(
-                result,
+                verified,
             )?;
         // Most facts render solely from the compiler environment. Function
         // applications are the remaining target-side exception: their exact
@@ -31,7 +37,7 @@ impl StmtResultToLeanCompiler {
                 if matches!(source_fact, Fact::AtomicFact(_) | Fact::ForallFact(_)) =>
             {
                 self.render_fact_using_well_definedness_result(
-                    &result.well_definedness,
+                    &verified.checked,
                     &source_fact,
                 )
                 .map_err(|wd_render_error| {
@@ -134,7 +140,10 @@ impl StmtResultToLeanCompiler {
         &mut self,
         result: &SuccessFactStmtResult,
     ) -> Result<bool, String> {
-        let SuccessFactProofResult::StoredFactCitation(citation) = result.proof() else {
+        let Some(verified) = result.verification() else {
+            return Ok(false);
+        };
+        let SuccessFactProofResult::StoredFactCitation(citation) = verified.proof() else {
             return Ok(false);
         };
         let source_fact_id = citation.source_fact_id;
@@ -151,7 +160,7 @@ impl StmtResultToLeanCompiler {
             &self.environment_stack,
         )?;
         if matches!(source_fact, Fact::AtomicFact(_)) {
-            validate_atomic_fact_well_definedness_result(&result.well_definedness, &source_fact)?;
+            validate_atomic_fact_well_definedness_result(&verified.checked, &source_fact)?;
         }
         self.compile_stored_fact_without_inference(result, proof)?;
         Ok(true)

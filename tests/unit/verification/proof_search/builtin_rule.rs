@@ -151,7 +151,7 @@ fn integer_leaf_reuses_known_finiteness_without_opening_a_direct_rule() {
     // This unit isolates proof-search reuse. The symbolic endpoints deliberately
     // have no surrounding environment, so mark the synthetic fact as already
     // well-defined before exercising the owning atomic-verification entrypoint.
-    let verify_state = VerifyState::initial().with_well_definedness_verified();
+    let verify_state = VerifyState::initial();
     let finite_result = runtime
         .verify_atomic_fact(&finite_fact, &verify_state)
         .expect("direct finiteness verification should not error");
@@ -164,7 +164,7 @@ fn integer_leaf_reuses_known_finiteness_without_opening_a_direct_rule() {
     let size_result = warm
         .pop()
         .expect("finite_set_size integer evidence should be retained")
-        .into_factual_success()
+        .into_verified()
         .expect("finite_set_size integer evidence should be factual");
     let SuccessFactProofResult::BuiltinRule(rule) = size_result.underlying_verified_by() else {
         panic!("finite_set_size membership should keep its builtin rule evidence");

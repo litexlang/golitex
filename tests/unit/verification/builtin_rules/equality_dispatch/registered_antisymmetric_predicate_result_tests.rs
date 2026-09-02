@@ -13,9 +13,9 @@ fn parse_fact(runtime: &mut Runtime, source: &str) -> Fact {
         .expect("test fact should parse")
 }
 
-fn fixture_child(fact: Fact) -> StmtResult {
-    SuccessFactStmtResult::new(
-        fact,
+fn fixture_child(runtime: &mut Runtime, fact: Fact) -> VerifyFactResult {
+    let proof = SuccessProveFactResult::new(
+        fact.clone(),
         SuccessInferResult::new(),
         SuccessFactProofResult::builtin_rule_with_evidence(
             "fixture child",
@@ -23,7 +23,10 @@ fn fixture_child(fact: Fact) -> StmtResult {
             Vec::new(),
         ),
     )
-    .into()
+    .into();
+    runtime
+        .complete_fact_proof_result(&fact, proof, &VerifyState::initial())
+        .expect("fixture child WD verifies")
 }
 
 #[test]
@@ -34,8 +37,10 @@ fn registered_antisymmetric_predicate_verifier_combines_two_ordered_child_result
     else {
         panic!("fixture target should be an equality")
     };
-    let left_to_right = fixture_child(parse_fact(&mut runtime, "$rel(R, C)"));
-    let right_to_left = fixture_child(parse_fact(&mut runtime, "$rel(C, R)"));
+    let left_to_right_fact = parse_fact(&mut runtime, "$rel(R, C)");
+    let right_to_left_fact = parse_fact(&mut runtime, "$rel(C, R)");
+    let left_to_right = fixture_child(&mut runtime, left_to_right_fact);
+    let right_to_left = fixture_child(&mut runtime, right_to_left_fact);
 
     let result = Runtime::wrap_registered_antisymmetric_predicate_result(
         &equal_fact,
@@ -43,9 +48,13 @@ fn registered_antisymmetric_predicate_verifier_combines_two_ordered_child_result
         left_to_right,
         right_to_left,
     );
-    let success = result
-        .factual_success()
-        .expect("registered antisymmetry proves its equality target");
+    let target_fact: Fact = equal_fact.clone().into();
+    let success = runtime
+        .complete_fact_proof_result(&target_fact, result, &VerifyState::initial())
+        .expect("registered antisymmetry target WD verifies");
+    let VerifyFactResult::Verified(success) = success else {
+        panic!("registered antisymmetry proves its equality target")
+    };
     let SuccessFactProofResult::BuiltinRule(builtin) = success.proof() else {
         panic!("registered antisymmetry should be an explicit builtin combine")
     };
@@ -61,7 +70,7 @@ fn registered_antisymmetric_predicate_verifier_combines_two_ordered_child_result
     };
     assert_eq!(
         left_to_right
-            .factual_success()
+            .verified()
             .expect("first antisymmetry child is factual")
             .fact()
             .to_string(),
@@ -69,7 +78,7 @@ fn registered_antisymmetric_predicate_verifier_combines_two_ordered_child_result
     );
     assert_eq!(
         right_to_left
-            .factual_success()
+            .verified()
             .expect("second antisymmetry child is factual")
             .fact()
             .to_string(),

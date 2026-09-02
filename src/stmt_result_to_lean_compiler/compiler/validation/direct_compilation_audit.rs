@@ -5,7 +5,14 @@ use super::super::*;
 pub(in super::super) fn describe_success_fact_result_for_direct_compilation_audit(
     result: &SuccessFactStmtResult,
 ) -> String {
-    let proof = match result.proof() {
+    let Some(proof) = result.proof() else {
+        return format!(
+            "Trusted; infer_rules={}, stores={}",
+            result.store.infers.rule_applications.len(),
+            result.store.infers.store_fact_outputs.len()
+        );
+    };
+    let proof = match proof {
         SuccessFactProofResult::BuiltinRule(proof) => format!(
             "BuiltinRule evidence={:?}, subgoals={}",
             proof.evidence,
@@ -45,7 +52,7 @@ pub(in super::super) fn describe_success_fact_result_for_direct_compilation_audi
                 .map(|proved| {
                     proved
                         .result
-                        .factual_success()
+                        .verified()
                         .map(|result| match result.proof() {
                             SuccessFactProofResult::BuiltinRule(proof) => format!(
                                 "BuiltinRule({:?}, subgoals={})",
@@ -173,6 +180,7 @@ pub(in super::super) fn direct_builtin_rule_compiler_limitation(
         | BuiltinRuleEvidence::ComplexArithmeticMembershipClosure(_)
         | BuiltinRuleEvidence::RealArithmeticMembershipClosure(_)
         | BuiltinRuleEvidence::NativeConstantMembership(_)
+        | BuiltinRuleEvidence::EqualitySymmetry
         | BuiltinRuleEvidence::NotEqualSymmetry
         | BuiltinRuleEvidence::SetRelationDuality(_)
         | BuiltinRuleEvidence::Set(_)

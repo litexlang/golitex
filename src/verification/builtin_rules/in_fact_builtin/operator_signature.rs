@@ -7,7 +7,7 @@ impl Runtime {
     pub(super) fn maybe_verify_in_fact_builtin_operator_signature(
         &mut self,
         in_fact: &InFact,
-    ) -> Option<StmtResult> {
+    ) -> Option<ProveFactResult> {
         let (Obj::Atom(AtomObj::Identifier(identifier)), Obj::FnSet(fn_set)) =
             (&in_fact.element, &in_fact.set)
         else {

@@ -7,7 +7,7 @@ impl Runtime {
     pub fn verify_forall_fact_from_known_cache_only(
         &mut self,
         forall_fact: &ForallFact,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         if let Some(cached_result) =
             self.verification_result_from_known_fact_cache(&forall_fact.clone().into())
         {
@@ -26,7 +26,7 @@ impl Runtime {
                 cached_fact.equivalent_proposition_lookup_key.clone(),
             )?;
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_known_fact(
+            SuccessProveFactResult::new_with_verified_by_known_fact(
                 fact.clone(),
                 SuccessFactProofResult::cached_fact(
                     fact,
@@ -100,10 +100,10 @@ impl Runtime {
         infer_result: &mut SuccessInferResult,
         assumption_infers: SuccessInferResult,
         by_cases_case_label: Option<&str>,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let (parameter_assumptions, domain_assumptions) =
             self.capture_forall_proof_scope_assumption_fact_results(forall_fact)?;
-        let mut then_verification_results: Vec<StmtResult> = Vec::new();
+        let mut then_verification_results: Vec<VerifyFactResult> = Vec::new();
 
         let then_count = forall_fact.then_facts.len();
         let combined_atomic_then_fact = if then_count > 1 {
@@ -146,12 +146,6 @@ impl Runtime {
             if result.is_unknown() {
                 let then_one_based = then_index + 1;
                 let then_fact_as_fact = then_fact.clone().to_fact();
-                let result = self.structured_unknown_result_for_failed_fact(
-                    &then_fact_as_fact,
-                    verify_state,
-                    result,
-                )?;
-                let result = result.wrap_unknown_for_fact(then_fact_as_fact.clone());
                 let child_unknown = result.as_fact_unknown().cloned();
                 let detail_lines = by_cases_case_label
                     .map(|case_s| format!("by cases: under case `{}`", case_s))
@@ -168,36 +162,16 @@ impl Runtime {
                 .into());
             }
 
-            let then_store_infers = self
+            self
                 .store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
                     then_fact.clone(),
                 )?;
-            // The store operation is part of this exact conclusion Result.
-            // Retain its typed inference applications (for example, a
-            // non-adjacent consequence of a relation chain) on the child that
-            // owns the source fact. Later conclusions may cite those exact
-            // FactIds; dropping this Result used to leave the environment
-            // effect visible to verification but impossible to replay.
-            result = result.with_infers(then_store_infers);
-            self.attach_known_fact_ids_to_stmt_result(&mut result)?;
-
-            if let Some(non_factual_success) = result.non_factual_success() {
-                if let Some(common) = non_factual_success.common() {
-                    infer_result.new_infer_result_inside(common.infers.clone());
-                }
-            } else if result.factual_success().is_some() {
-                // Do not merge then-fact verification `infers` into `infer_result` (e.g. instantiated
-                // `finite_set_min(S) <= a` from a known forall). Each then proof is attached as Steps under
-                // `verified_by` for JSON/CLI.
-            } else {
-                unreachable!("stmt unknown is handled above before this match")
-            }
             then_verification_results.push(result);
         }
 
         infer_result.add_statement_with_verification(&forall_fact.clone().into());
         let infer_for_success = std::mem::replace(infer_result, SuccessInferResult::new());
-        Ok((SuccessFactStmtResult::new_with_verified_by_builtin_rules(
+        Ok((SuccessProveFactResult::new_with_verified_by_builtin_rules(
             forall_fact.clone().into(),
             infer_for_success,
             SuccessFactProofResult::forall_proof(
@@ -264,11 +238,11 @@ impl Runtime {
     }
 
     /// Declare params, assume dom facts hold, then verify each then_fact.
-    pub fn verify_forall_fact(
+    pub(crate) fn prove_forall_fact(
         &mut self,
         forall_fact: &ForallFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         if let Some(cached_result) = self.verify_forall_fact_from_known_cache_only(forall_fact)? {
             return Ok(cached_result);
         }
@@ -279,7 +253,7 @@ impl Runtime {
 
         if Self::forall_has_literal_empty_obj_parameter_domain(forall_fact) {
             return Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     forall_fact.clone().into(),
                     "forall over empty parameter set".to_string(),
                     BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyForallFact),

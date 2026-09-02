@@ -380,7 +380,7 @@ pub(super) struct StmtResultFunctionApplicationLayerWellDefinednessToLeanCompila
 pub(super) struct StmtResultFunctionApplicationRequirementToLeanCompilationContext {
     pub(super) role: WellDefinednessRequirementRole,
     pub(super) expected_proposition: Fact,
-    pub(super) verification: Rc<SuccessVerifyFactResult>,
+    pub(super) verification: Rc<SuccessFactProofNode>,
     pub(super) proof_expression: Option<String>,
 }
 
@@ -410,7 +410,7 @@ pub(super) struct StmtResultWellDefinednessBinderPremiseToLeanCompilationContext
 pub(super) struct StmtResultAnonymousFunctionClosureToLeanCompilationContext {
     pub(super) role: WellDefinednessRequirementRole,
     pub(super) expected_proposition: Fact,
-    pub(super) verification: Rc<SuccessVerifyFactResult>,
+    pub(super) verification: Rc<SuccessFactProofNode>,
     pub(super) proof_expression: Option<String>,
 }
 

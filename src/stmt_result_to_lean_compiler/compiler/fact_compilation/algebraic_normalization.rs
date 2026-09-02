@@ -21,7 +21,10 @@ impl StmtResultToLeanCompiler {
         &mut self,
         result: &SuccessFactStmtResult,
     ) -> Result<bool, String> {
-        let SuccessFactProofResult::BuiltinRule(builtin) = result.proof() else {
+        let Some(verified) = result.verification() else {
+            return Ok(false);
+        };
+        let SuccessFactProofResult::BuiltinRule(builtin) = verified.proof() else {
             return Ok(false);
         };
         let Some(BuiltinRuleEvidence::RationalNormalization(evidence)) = builtin.evidence.typed()
@@ -55,9 +58,9 @@ impl StmtResultToLeanCompiler {
         {
             return Err("rational-normalization evidence retained unequal normal forms".into());
         }
-        validate_atomic_fact_well_definedness_result(&result.well_definedness, &source_fact)?;
-        self.render_object_using_well_definedness_from_fact_result(result, &equality.left)?;
-        self.render_object_using_well_definedness_from_fact_result(result, &equality.right)?;
+        validate_atomic_fact_well_definedness_result(&verified.checked, &source_fact)?;
+        self.render_object_using_well_definedness_from_fact_result(verified, &equality.left)?;
+        self.render_object_using_well_definedness_from_fact_result(verified, &equality.right)?;
         self.compile_stored_fact_without_inference(
             result,
             "Litex.Same.ofEq (by norm_num [Litex.abs, Litex.min, Litex.max, Litex.tupleDim, Litex.TupleShape.dimension])"
@@ -70,7 +73,10 @@ impl StmtResultToLeanCompiler {
         &mut self,
         result: &SuccessFactStmtResult,
     ) -> Result<bool, String> {
-        let SuccessFactProofResult::BuiltinRule(builtin) = result.proof() else {
+        let Some(verified) = result.verification() else {
+            return Ok(false);
+        };
+        let SuccessFactProofResult::BuiltinRule(builtin) = verified.proof() else {
             return Ok(false);
         };
         let Some(BuiltinRuleEvidence::ComplexAlgebraicNormalization(evidence)) =
@@ -93,9 +99,9 @@ impl StmtResultToLeanCompiler {
         let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = &source_fact else {
             unreachable!();
         };
-        validate_atomic_fact_well_definedness_result(&result.well_definedness, &source_fact)?;
-        self.render_object_using_well_definedness_from_fact_result(result, &equality.left)?;
-        self.render_object_using_well_definedness_from_fact_result(result, &equality.right)?;
+        validate_atomic_fact_well_definedness_result(&verified.checked, &source_fact)?;
+        self.render_object_using_well_definedness_from_fact_result(verified, &equality.left)?;
+        self.render_object_using_well_definedness_from_fact_result(verified, &equality.right)?;
         self.compile_stored_fact_without_inference(result, proof)?;
         Ok(true)
     }
@@ -104,7 +110,10 @@ impl StmtResultToLeanCompiler {
         &mut self,
         result: &SuccessFactStmtResult,
     ) -> Result<bool, String> {
-        let SuccessFactProofResult::BuiltinRule(builtin) = result.proof() else {
+        let Some(verified) = result.verification() else {
+            return Ok(false);
+        };
+        let SuccessFactProofResult::BuiltinRule(builtin) = verified.proof() else {
             return Ok(false);
         };
         let Some(BuiltinRuleEvidence::RationalAlgebraicNormalization(evidence)) =
@@ -127,9 +136,9 @@ impl StmtResultToLeanCompiler {
         let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = &source_fact else {
             unreachable!();
         };
-        validate_atomic_fact_well_definedness_result(&result.well_definedness, &source_fact)?;
-        self.render_object_using_well_definedness_from_fact_result(result, &equality.left)?;
-        self.render_object_using_well_definedness_from_fact_result(result, &equality.right)?;
+        validate_atomic_fact_well_definedness_result(&verified.checked, &source_fact)?;
+        self.render_object_using_well_definedness_from_fact_result(verified, &equality.left)?;
+        self.render_object_using_well_definedness_from_fact_result(verified, &equality.right)?;
         self.compile_stored_fact_without_inference(result, proof)?;
         Ok(true)
     }
@@ -141,7 +150,7 @@ impl StmtResultToLeanCompiler {
         &mut self,
         target: &Fact,
         evidence: &ComplexAlgebraicNormalizationBuiltinRuleEvidence,
-        subgoals: &[StmtResult],
+        subgoals: &[VerifyFactResult],
     ) -> Result<Option<String>, String> {
         validate_complex_algebraic_normalization_builtin_rule_evidence(target, evidence)?;
         self.construct_lean_algebraic_normalization_from_result(
@@ -155,7 +164,7 @@ impl StmtResultToLeanCompiler {
         &mut self,
         target: &Fact,
         evidence: &RationalAlgebraicNormalizationBuiltinRuleEvidence,
-        subgoals: &[StmtResult],
+        subgoals: &[VerifyFactResult],
     ) -> Result<Option<String>, String> {
         validate_rational_algebraic_normalization_builtin_rule_evidence(target, evidence)?;
         self.construct_lean_algebraic_normalization_from_result(
@@ -169,7 +178,7 @@ impl StmtResultToLeanCompiler {
         &mut self,
         target: &Fact,
         expected_nonzero_premises: &[Fact],
-        subgoals: &[StmtResult],
+        subgoals: &[VerifyFactResult],
     ) -> Result<Option<String>, String> {
         let native = self.construct_lean_native_algebraic_normalization_from_result(
             target,
@@ -220,7 +229,7 @@ impl StmtResultToLeanCompiler {
         &mut self,
         target: &Fact,
         expected_nonzero_premises: &[Fact],
-        subgoals: &[StmtResult],
+        subgoals: &[VerifyFactResult],
     ) -> Result<String, String> {
         let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = target else {
             unreachable!("complex normalization validator requires an equality")
@@ -241,11 +250,9 @@ impl StmtResultToLeanCompiler {
             .enumerate()
         {
             let subgoal = subgoal
-                .factual_success()
+                .verified()
                 .ok_or_else(|| format!("complex nonzero child {index} is not a factual Result"))?;
-            if subgoal.fact().to_string() != expected.to_string()
-                || subgoal.store.fact.to_string() != expected.to_string()
-            {
+            if subgoal.fact().to_string() != expected.to_string() {
                 return Err(format!(
                     "complex nonzero child {index} changed its exact premise"
                 ));
@@ -327,7 +334,7 @@ impl StmtResultToLeanCompiler {
     /// rendered native proposition.
     pub(in super::super) fn construct_native_nonzero_from_closed_numeric_disequality_result(
         &mut self,
-        result: &SuccessFactStmtResult,
+        result: &VerifiedFactResult,
         expected: &Fact,
     ) -> Result<Option<String>, String> {
         let mut proof = result.proof();
@@ -348,9 +355,7 @@ impl StmtResultToLeanCompiler {
                 "closed numeric nonzero Result unexpectedly retained proof children".into(),
             );
         }
-        if result.fact().to_string() != expected.to_string()
-            || result.store.fact.to_string() != expected.to_string()
-        {
+        if result.fact().to_string() != expected.to_string() {
             return Err("closed numeric nonzero Result changed its exact premise".into());
         }
         validate_closed_numeric_comparison_builtin_rule_evidence(expected, evidence)?;
@@ -369,7 +374,7 @@ impl StmtResultToLeanCompiler {
 
     pub(in super::super) fn construct_native_nonzero_from_strict_order_result(
         &mut self,
-        result: &SuccessFactStmtResult,
+        result: &VerifiedFactResult,
         expected_object: &Obj,
     ) -> Result<String, String> {
         let mut proof = result.proof();
@@ -387,7 +392,7 @@ impl StmtResultToLeanCompiler {
         }
         let mut selected = None;
         for child in &builtin.subgoals {
-            let Some(child) = child.factual_success() else {
+            let Some(child) = child.verified() else {
                 return Err("strict-order nonzero evidence retained a non-factual child".into());
             };
             if let Ok((left, right, true)) = order_relation_parts(&child.fact()) {

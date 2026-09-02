@@ -580,7 +580,7 @@ impl Runtime {
         (
             Vec<SuccessVerifyByAssignmentDomainResult>,
             Vec<StmtResult>,
-            Vec<StmtResult>,
+            Vec<VerifyFactResult>,
         ),
         RuntimeError,
     > {
@@ -635,7 +635,7 @@ impl Runtime {
         let mut conclusion_checks = Vec::with_capacity(stmt.forall_fact.then_facts.len());
         for fact_to_prove in stmt.forall_fact.then_facts.iter() {
             let verified_result =
-                self.verify_exist_or_and_chain_atomic_fact(fact_to_prove, &verify_state)?;
+                self.verify_fact_allow_unknown(&fact_to_prove.clone().to_fact(), &verify_state)?;
             if verified_result.is_unknown() {
                 return Err(short_exec_error(
                     stmt.clone().into(),

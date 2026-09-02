@@ -93,7 +93,7 @@ impl Runtime {
             })?;
         let argument_verification = match arg_type_result {
             VerifyArgsSatisfyParamDefResult::Success(result) => *result,
-            VerifyArgsSatisfyParamDefResult::Unknown(result) => {
+            VerifyArgsSatisfyParamDefResult::Unknown(_) => {
                 return Err(short_exec_error(
                     stmt.clone().into(),
                     format!(
@@ -101,7 +101,7 @@ impl Runtime {
                         stmt.name()
                     ),
                     None,
-                    vec![*result.cause],
+                    vec![],
                 ));
             }
         };
@@ -157,10 +157,9 @@ impl Runtime {
                         instantiated_dom
                     ),
                     None,
-                    vec![dom_result],
+                    vec![],
                 ));
             }
-            Self::merge_stmt_result_infers(&mut infer_result, &dom_result);
             domain_facts.push(instantiated_dom);
             domain_checks.push(dom_result);
         }
@@ -410,7 +409,7 @@ impl Runtime {
             let mut target_result = rt
                 .verify_atomic_fact(
                     &selected_fact,
-                    &verify_state.with_well_definedness_verified(),
+                    &verify_state.clone(),
                 )
                 .map_err(|error| {
                     short_exec_error(
@@ -431,10 +430,10 @@ impl Runtime {
                         stmt.name(), selected_fact
                     ),
                     None,
-                    vec![target_result],
+                    vec![],
                 ));
             }
-            rt.attach_known_fact_ids_to_stmt_result(&mut target_result)?;
+            rt.attach_known_fact_ids_to_verify_fact_result(&mut target_result)?;
             Ok((expanded_result, target_result))
         })?;
 
@@ -536,10 +535,6 @@ impl Runtime {
             }))
             .into(),
         )
-    }
-
-    fn merge_stmt_result_infers(infer_result: &mut SuccessInferResult, stmt_result: &StmtResult) {
-        infer_result.new_infer_result_inside(stmt_result.infer_result());
     }
 
     fn exec_builtin_thm_stmt(
@@ -654,7 +649,7 @@ impl Runtime {
                                 "builtin theorem `subset_of_finite_set_is_finite` requires that {}",
                                 role.as_str()
                             ),
-                            vec![result],
+                            vec![],
                         ));
                     }
                     requirement_facts.push(requirement.into());
@@ -733,7 +728,7 @@ impl Runtime {
                         stmt,
                         "builtin theorem `finite_set_has_bijective_index` requires a finite-set argument"
                             .to_string(),
-                        vec![result],
+                        vec![],
                     ));
                 }
                 requirement_facts.push(finite_requirement.into());
@@ -830,7 +825,7 @@ impl Runtime {
                         stmt,
                         "builtin theorem `rational_has_unique_reduced_fraction` requires its argument to belong to `Q`"
                             .to_string(),
-                        vec![result],
+                        vec![],
                     ));
                 }
                 requirement_facts.push(rational_requirement.into());
@@ -876,7 +871,7 @@ impl Runtime {
         let (conclusion, requirement_role, verification, provenance): (
             AtomicFact,
             BuiltinTheoremRequirementRole,
-            Option<StmtResult>,
+            Option<ProveFactResult>,
             Option<BuiltinTheoremProvenance>,
         ) = match name {
             "fn_set_member" => {
@@ -928,41 +923,57 @@ impl Runtime {
                         };
                         let actual = self.real_matrix_type(element, &verify_state, "operator")?;
                         let real: Obj = StandardSet::R.into();
-                        let steps = vec![
-                            self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
+                        let equality_steps = vec![
+                            EqualFact::new_from_refs(
                                 &actual.set,
                                 &expected.set,
                                 stmt.line_file.clone(),
-                            )),
-                            self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
+                            ),
+                            EqualFact::new_from_refs(
                                 &expected.set,
                                 &real,
                                 stmt.line_file.clone(),
-                            )),
-                            self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
+                            ),
+                            EqualFact::new_from_refs(
                                 &actual.row_len,
                                 &expected.row_len,
                                 stmt.line_file.clone(),
-                            )),
-                            self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
+                            ),
+                            EqualFact::new_from_refs(
                                 &actual.col_len,
                                 &expected.col_len,
                                 stmt.line_file.clone(),
-                            )),
+                            ),
                         ];
-                        if steps.iter().all(StmtResult::is_success) {
-                            Some(
-                                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
-                                        conclusion.clone().into(),
-                                        "real matrix operator has the requested matrix type"
-                                            .to_string(),
-                                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::ExecBuiltinThmStmtImpl),
-                                        steps,
-                                    )
-                                    .into(),
-                                )
-                        } else {
+                        let mut steps = Vec::with_capacity(equality_steps.len());
+                        let mut all_verified = true;
+                        for equality in equality_steps {
+                            let atomic: AtomicFact = equality.clone().into();
+                            let proof = self.verify_equal_fact_by_known_equality(&equality);
+                            if !proof.is_success() {
+                                all_verified = false;
+                                break;
+                            }
+                            steps.push(self.complete_atomic_fact_proof_result(
+                                &atomic,
+                                proof,
+                                &verify_state,
+                            )?);
+                        }
+                        if !all_verified {
                             Some(UnknownGenericStmtResult::new().into())
+                        } else {
+                            Some(
+                                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                                    conclusion.clone().into(),
+                                    "real matrix operator has the requested matrix type".to_string(),
+                                    BuiltinRuleEvidence::Uncatalogued(
+                                        UncataloguedBuiltinRule::ExecBuiltinThmStmtImpl,
+                                    ),
+                                    steps,
+                                )
+                                .into(),
+                            )
                         }
                     } else {
                         let expanded_in_fact = InFact::new(
@@ -1473,7 +1484,7 @@ impl Runtime {
         let mut inside_results = Vec::new();
         let mut requirement_facts = Vec::new();
         let mut requirement_roles = Vec::new();
-        if let Some(mut result) = verification {
+        if let Some(result) = verification {
             if !result.is_success() {
                 return Err(builtin_thm_exec_error(
                     stmt,
@@ -1482,28 +1493,15 @@ impl Runtime {
                         name,
                         requirement_role.as_str()
                     ),
-                    vec![result],
+                    vec![],
                 ));
             }
-            let conclusion_well_definedness =
-                self.verify_fact_well_defined_result(&conclusion.clone().into(), &verify_state)?;
-            let StmtResult::Success(SuccessStmtResult::Fact(requirement_result)) = &mut result
-            else {
-                return Err(builtin_thm_exec_error(
-                    stmt,
-                    format!(
-                        "builtin theorem `{}` retained a non-factual requirement Result",
-                        name
-                    ),
-                    vec![result],
-                ));
-            };
-            requirement_result.well_definedness = conclusion_well_definedness;
-            let verified_requirement = result
-                .factual_success()
-                .map(|success| success.fact())
-                .unwrap_or_else(|| conclusion.clone().into());
-            requirement_facts.push(verified_requirement);
+            let result = self.complete_atomic_fact_proof_result(
+                &conclusion,
+                result,
+                &verify_state,
+            )?;
+            requirement_facts.push(result.fact());
             requirement_roles.push(requirement_role.clone());
             inside_results.push(result);
         }
@@ -1856,16 +1854,12 @@ impl Runtime {
         let mut requirement_checks = Vec::new();
         if verify_requirements {
             for (requirement, role) in requirements {
-                let well_definedness =
-                    self.verify_fact_well_defined_result(&requirement, &verify_state)?;
-                let result = self
-                    .verify_fact_allow_unknown(&requirement, &verify_state)?
-                    .with_fact_well_definedness(well_definedness);
+                let result = self.verify_fact_allow_unknown(&requirement, &verify_state)?;
                 if !result.is_success() {
                     return Err(builtin_thm_exec_error(
                         stmt,
                         format!("builtin theorem `{}` requires that {}", name, role.as_str()),
-                        vec![result],
+                        vec![],
                     ));
                 }
                 requirement_facts.push(requirement);

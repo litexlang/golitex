@@ -2,6 +2,36 @@ use crate::prelude::*;
 use std::rc::Rc;
 
 impl Runtime {
+    /// Freeze citations used by a process-local fact verification without
+    /// assigning the verification node itself a persistent `FactId`.
+    pub fn attach_known_fact_ids_to_verify_fact_result(
+        &self,
+        result: &mut VerifyFactResult,
+    ) -> Result<(), RuntimeError> {
+        if let VerifyFactResult::Verified(verification) = result {
+            if let Some(verification) = Rc::get_mut(verification) {
+                if let Some(proof) = verification.try_proof_mut() {
+                    self.attach_known_fact_ids_to_verified_by(proof)?;
+                }
+            }
+        }
+        Ok(())
+    }
+
+    /// Freeze stored-fact citations in an internal truth-proof node. This
+    /// does not store the proposition or attach a statement identity.
+    pub fn attach_known_fact_ids_to_prove_fact_result(
+        &self,
+        result: &mut ProveFactResult,
+    ) -> Result<(), RuntimeError> {
+        if let Some(success) = result.factual_success_mut() {
+            if let Some(verification) = Rc::get_mut(&mut success.verification) {
+                self.attach_known_fact_ids_to_verified_by(verification.proof_mut())?;
+            }
+        }
+        Ok(())
+    }
+
     pub fn attach_known_fact_ids_to_stmt_result(
         &self,
         result: &mut StmtResult,
@@ -26,8 +56,15 @@ impl Runtime {
                 }
             }
             self.attach_known_fact_ids_to_infer_result(&mut success.infers)?;
-            if let Some(verification) = Rc::get_mut(&mut success.verification) {
-                self.attach_known_fact_ids_to_verified_by(verification.proof_mut())?;
+            if let FactStatementEvidence::Verified(verification) = &mut success.evidence {
+                if let Some(verification) = Rc::get_mut(verification) {
+                    // A shared node was already frozen before entering the
+                    // process-local proof memo/DAG. Do not clone the proof just
+                    // to repeat an identity-attachment pass.
+                    if let Some(proof) = verification.try_proof_mut() {
+                        self.attach_known_fact_ids_to_verified_by(proof)?;
+                    }
+                }
             }
         } else {
             if let SuccessStmtResult::ProofBlock(SuccessProofBlockStmtResult::ClaimStmt(claim)) =
@@ -138,9 +175,7 @@ impl Runtime {
         match verified_by {
             SuccessFactProofResult::BuiltinRule(result)
             | SuccessFactProofResult::BuiltinStrategy(result) => {
-                for subgoal in result.subgoals.iter_mut() {
-                    self.attach_known_fact_ids_to_stmt_result(subgoal)?;
-                }
+                debug_assert!(result.subgoals.iter().all(|subgoal| subgoal.fact_id().is_none()));
             }
             SuccessFactProofResult::StoredFactCitation(_)
             | SuccessFactProofResult::DefinitionReduction(_)
@@ -155,15 +190,13 @@ impl Runtime {
                         self.attach_known_fact_ids_to_verified_by(primary.proof_mut())?;
                     }
                 }
-                for step in result.steps.iter_mut() {
-                    self.attach_known_fact_ids_to_stmt_result(step)?;
-                }
+                debug_assert!(result.steps.iter().all(|step| step.fact_id().is_none()));
             }
             SuccessFactProofResult::ForallProof(result) => {
-                self.attach_known_fact_ids_to_infer_result(&mut result.assumption_infers)?;
-                for proved in result.proves.iter_mut() {
-                    self.attach_known_fact_ids_to_stmt_result(proved.result.as_mut())?;
-                }
+                debug_assert!(result
+                    .proves
+                    .iter()
+                    .all(|proved| proved.result.fact_id().is_none()));
             }
             SuccessFactProofResult::Transform(_result) => {
                 // The transform child is shared proof evidence. Its producer
@@ -179,9 +212,10 @@ impl Runtime {
         &self,
         result: &mut SuccessInstantiateKnownForallResult,
     ) -> Result<(), RuntimeError> {
-        for requirement in result.requirements.iter_mut() {
-            self.attach_known_fact_ids_to_stmt_result(requirement.result.as_mut())?;
-        }
+        debug_assert!(result
+            .requirements
+            .iter()
+            .all(|requirement| requirement.result.fact_id().is_none()));
         Ok(())
     }
 }

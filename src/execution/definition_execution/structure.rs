@@ -148,9 +148,7 @@ impl Runtime {
                 let fact_id = rt.known_fact_id_for_fact(fact)?;
                 equivalent_facts.push(SuccessVerifyLocalFactWellDefinedResult {
                     proposition: fact.clone(),
-                    well_definedness: well_definedness
-                        .recursive
-                        .expect("recursive equivalent-fact WD result"),
+                    well_definedness: well_definedness.proof,
                     store: SuccessStoreFactResult {
                         fact: fact.clone(),
                         fact_id,

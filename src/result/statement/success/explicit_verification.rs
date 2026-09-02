@@ -108,7 +108,7 @@ pub struct SuccessByStructDefStmtResult {
     pub statement: ByStructDefStmt,
     pub struct_obj: StructObj,
     pub common: SuccessStmtCommonResult,
-    pub membership_check: Option<Box<StmtResult>>,
+    pub membership_check: Option<Box<VerifyFactResult>>,
 }
 
 pub struct SuccessByThmStmtResult {

@@ -51,14 +51,11 @@ impl StmtResultToLeanCompiler {
             .enumerate()
         {
             let checked_fact = checked_result
-                .factual_success()
+                .verified()
                 .ok_or_else(|| format!("matrix bound check {check_index} is not factual"))?;
-            if checked_fact.fact().to_string() != expected_fact.to_string()
-                || checked_fact.store.fact.to_string() != expected_fact.to_string()
-                || !checked_fact.store.infers.is_empty()
-            {
+            if checked_fact.fact().to_string() != expected_fact.to_string() {
                 return Err(format!(
-                    "matrix bound check {check_index} changed its target or published effects"
+                    "matrix bound check {check_index} changed its target"
                 ));
             }
             if self
@@ -338,13 +335,10 @@ impl StmtResultToLeanCompiler {
 
             let return_check = verification
                 .return_check
-                .factual_success()
+                .verified()
                 .ok_or_else(|| "matrix return check is not factual".to_string())?;
-            if return_check.fact().to_string() != expected_return_check.to_string()
-                || return_check.store.fact.to_string() != expected_return_check.to_string()
-                || !return_check.store.infers.is_empty()
-            {
-                return Err("matrix return check changed its target or published effects".into());
+            if return_check.fact().to_string() != expected_return_check.to_string() {
+                return Err("matrix return check changed its target".into());
             }
             if self
                 .construct_lean_proof_from_direct_fact_result(return_check)?

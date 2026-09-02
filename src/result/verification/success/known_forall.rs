@@ -23,7 +23,7 @@ impl fmt::Debug for KnownForallInstantiationItem {
 #[derive(Debug)]
 pub struct SuccessVerifyKnownForallRequirementResult {
     pub stmt: Fact,
-    pub result: Box<StmtResult>,
+    pub result: Box<VerifyFactResult>,
     pub kind: KnownForallRequirementKind,
 }
 
@@ -53,7 +53,7 @@ impl KnownForallInstantiationItem {
 }
 
 impl SuccessVerifyKnownForallRequirementResult {
-    pub fn new(stmt: Fact, result: StmtResult, kind: KnownForallRequirementKind) -> Self {
+    pub fn new(stmt: Fact, result: VerifyFactResult, kind: KnownForallRequirementKind) -> Self {
         SuccessVerifyKnownForallRequirementResult {
             stmt,
             result: Box::new(result),

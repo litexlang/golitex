@@ -287,7 +287,7 @@ impl Runtime {
         well_definedness: SuccessVerifyIndexedFunctionDefinitionWellDefinedResult,
         store_reason: &'static str,
         line_file: LineFile,
-        bound_checks: Vec<StmtResult>,
+        bound_checks: Vec<VerifyFactResult>,
     ) -> Result<SuccessVerifyIndexedFunctionDefinitionResult, RuntimeError> {
         let (return_check, assumption_infers) = self
             .verify_have_indexed_fn_definition_return_value(
@@ -422,7 +422,7 @@ impl Runtime {
         anonymous_fn: &AnonymousFn,
         store_reason: &'static str,
         line_file: LineFile,
-    ) -> Result<(StmtResult, SuccessInferResult), RuntimeError> {
+    ) -> Result<(VerifyFactResult, SuccessInferResult), RuntimeError> {
         let (verify_result, assumption_infers) = self
             .run_in_local_env(|rt| {
                 let mut assumption_infers = SuccessInferResult::new();
@@ -449,7 +449,7 @@ impl Runtime {
                 let mut return_check =
                     rt.verify_atomic_fact(&value_membership, &VerifyState::initial())?;
                 rt.attach_known_fact_ids_to_infer_result(&mut assumption_infers)?;
-                rt.attach_known_fact_ids_to_stmt_result(&mut return_check)?;
+                rt.attach_known_fact_ids_to_verify_fact_result(&mut return_check)?;
                 Ok((return_check, assumption_infers))
             })
             .map_err(|e| short_exec_error(stmt.clone(), String::new(), Some(e), vec![]))?;
@@ -461,7 +461,7 @@ impl Runtime {
                     store_reason, anonymous_fn.equal_to, anonymous_fn.body.ret_set,
                 ),
                 None,
-                vec![verify_result],
+                vec![],
             ));
         }
         Ok((verify_result, assumption_infers))
@@ -474,7 +474,7 @@ impl Runtime {
         expected: &Obj,
         mismatch_msg: &str,
         line_file: LineFile,
-    ) -> Result<Vec<StmtResult>, RuntimeError> {
+    ) -> Result<Vec<VerifyFactResult>, RuntimeError> {
         let mut check_results = Vec::new();
         let in_n_pos: AtomicFact =
             InFact::new(bound.clone(), StandardSet::NPos.into(), line_file.clone()).into();
@@ -486,7 +486,7 @@ impl Runtime {
                 stmt,
                 format!("{} needs {} $in N+", mismatch_msg, bound),
                 None,
-                vec![in_n_pos_result],
+                vec![],
             ));
         }
         check_results.push(in_n_pos_result);
@@ -501,7 +501,7 @@ impl Runtime {
                 stmt,
                 mismatch_msg.to_string(),
                 None,
-                vec![equal_result],
+                vec![],
             ));
         }
         check_results.push(equal_result);

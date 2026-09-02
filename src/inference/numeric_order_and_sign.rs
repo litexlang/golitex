@@ -23,12 +23,9 @@ impl Runtime {
             AtomicFact::LessFact(f) => (f.left.clone(), f.right.clone(), f.line_file.clone()),
             _ => return Ok(SuccessInferResult::new()),
         };
+        let verify_state = VerifyState::initial().with_inference_state(inference_state);
         if self
-            .verify_objects_are_known_reals(
-                &[&left, &right],
-                &line_file,
-                &VerifyState::after_well_definedness(),
-            )?
+            .verify_objects_are_known_reals(&[&left, &right], &line_file, &verify_state)?
             .is_none()
         {
             return Ok(SuccessInferResult::new());
@@ -147,7 +144,7 @@ impl Runtime {
             atomic_fact.line_file(),
         )
         .into();
-        let verify_state = VerifyState::initial();
+        let verify_state = VerifyState::initial().with_inference_state(inference_state);
         let source_in_r_result = self
             .verify_non_equational_atomic_fact_with_bounded_builtin_routes(
                 &source_in_r,

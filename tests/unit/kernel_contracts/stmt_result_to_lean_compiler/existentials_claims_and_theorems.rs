@@ -34,11 +34,9 @@ fn rename_object_choice_nonempty_diagnostic_label(results: &mut [StmtResult]) {
         .as_deref_mut()
         .expect("standard carrier retains nonempty check");
     let factual = nonempty
-        .factual_success_mut()
+        .verified_mut()
         .expect("nonempty check is factual");
-    let verification = std::rc::Rc::get_mut(&mut factual.verification)
-        .expect("test nonempty result has one proof owner");
-    let SuccessFactProofResult::BuiltinRule(proof) = verification.proof_mut() else {
+    let SuccessFactProofResult::BuiltinRule(proof) = factual.proof_mut() else {
         panic!("expected standard-set builtin proof")
     };
     proof.msg = "diagnostic label is not semantic input".into();
@@ -184,7 +182,8 @@ fn existential_elimination_uses_source_and_projection_fact_ids_directly() {
         .as_ref()
         .expect("elimination retains verification")
         .source_result
-        .factual_success()
+        .fact()
+        .and_then(VerifyFactResult::verified)
         .expect("elimination source is factual");
     let SuccessFactProofResult::StoredFactCitation(source_citation) = source_citation.proof()
     else {
@@ -342,7 +341,7 @@ fn cases_and_contradiction_compile_directly_in_nested_environments() {
         .as_ref()
         .expect("cases retains verification")
         .coverage_check
-        .factual_success()
+        .verified()
         .expect("coverage is factual");
     assert!(
         compiler
@@ -481,7 +480,7 @@ fn local_claim_proof_step_store_keeps_its_local_fact_id_after_outer_store() {
         Some(local_fact_id)
     );
     let SuccessFactProofResult::StoredFactCitation(citation) = claim.conclusion_checks[0]
-        .factual_success()
+        .verified()
         .expect("claim conclusion is factual")
         .proof()
     else {
@@ -589,11 +588,9 @@ fn zero_binder_named_theorem_compiler_ignores_conclusion_diagnostic_label() {
         .as_mut()
         .expect("named theorem retains verification")
         .conclusion_checks[0]
-        .factual_success_mut()
+        .verified_mut()
         .expect("named theorem conclusion is factual");
-    let verification = std::rc::Rc::get_mut(&mut conclusion.verification)
-        .expect("test conclusion has one proof owner");
-    let SuccessFactProofResult::BuiltinRule(proof) = verification.proof_mut() else {
+    let SuccessFactProofResult::BuiltinRule(proof) = conclusion.proof_mut() else {
         panic!("expected builtin conclusion proof")
     };
     proof.msg = "diagnostic-only theorem conclusion label".into();
@@ -1167,7 +1164,8 @@ fn theorem_backed_obtain_consumes_but_does_not_publish_its_local_conclusion() {
         .as_ref()
         .expect("obtain retains elimination verification")
         .source_result
-        .non_factual_success()
+        .theorem_application()
+        .and_then(StmtResult::non_factual_success)
         .expect("obtain source is a statement Result");
     let SuccessStmtResult::ReleaseThmStmt(application) = source else {
         panic!("obtain source is a release-thm Result")

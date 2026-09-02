@@ -9,7 +9,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -60,10 +60,10 @@ impl Runtime {
     pub(super) fn wrap_registered_antisymmetric_predicate_result(
         equal_fact: &EqualFact,
         prop_name: String,
-        left_to_right: StmtResult,
-        right_to_left: StmtResult,
-    ) -> StmtResult {
-        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+        left_to_right: VerifyFactResult,
+        right_to_left: VerifyFactResult,
+    ) -> ProveFactResult {
+        SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
             equal_fact.clone().into(),
             format!(
                 "equality from registered antisymmetric prop `{}`",

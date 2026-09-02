@@ -44,12 +44,12 @@ impl StmtResultToLeanCompiler {
         let positive_dimension = verification
             .dimension
             .positive_check
-            .factual_success()
+            .verified()
             .ok_or_else(|| "indexed tuple positive-dimension check is not factual".to_string())?;
         let at_least_two = verification
             .dimension
             .at_least_two_check
-            .factual_success()
+            .verified()
             .ok_or_else(|| "indexed tuple at-least-two check is not factual".to_string())?;
         for (check, expected, role) in [
             (
@@ -59,12 +59,9 @@ impl StmtResultToLeanCompiler {
             ),
             (at_least_two, &expected_at_least_two, "at-least-two"),
         ] {
-            if check.fact().to_string() != expected.to_string()
-                || check.store.fact.to_string() != expected.to_string()
-                || !check.store.infers.is_empty()
-            {
+            if check.fact().to_string() != expected.to_string() {
                 return Err(format!(
-                    "indexed tuple {role} Result changed its target or published effects"
+                    "indexed tuple {role} Result changed its target"
                 ));
             }
         }

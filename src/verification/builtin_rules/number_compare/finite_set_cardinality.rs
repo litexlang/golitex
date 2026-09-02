@@ -9,7 +9,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let (finite_set_size_obj, line_file) = match atomic_fact {
             AtomicFact::GreaterEqualFact(f) => {
                 let Some(right) = self.resolve_obj_to_number(&f.right) else {
@@ -57,7 +57,7 @@ impl Runtime {
         }
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                 atomic_fact.clone().into(),
                 SuccessInferResult::new(),
                 "finite_nonempty_set_size_at_least_one".to_string(),
@@ -78,7 +78,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let is_zero =
             |obj: &Obj| matches!(obj, Obj::Number(number) if number.normalized_value == "0");
         let (size, line_file) = match atomic_fact {
@@ -95,7 +95,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "finite set cardinality is nonnegative".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -114,7 +114,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let (left_size, right_size, line_file) = match atomic_fact {
             AtomicFact::LessEqualFact(fact) => (&fact.left, &fact.right, fact.line_file.clone()),
             AtomicFact::GreaterEqualFact(fact) => (&fact.right, &fact.left, fact.line_file.clone()),
@@ -145,7 +145,7 @@ impl Runtime {
                     self.verify_atomic_fact_as_builtin_rule_premise(&right_input, builtin_state)?;
                 if left_result.is_success() && right_result.is_success() {
                     return Ok(Some(
-                        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
+                        SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                             atomic_fact.clone().into(),
                             SuccessInferResult::new(),
                             "finite_set_size_subset_le".to_string(),
@@ -173,8 +173,13 @@ impl Runtime {
                 line_file.clone(),
             )
             .into();
-            subset_result =
+            let proof =
                 self.verify_non_equational_atomic_fact_with_known_atomic_facts(&superset)?;
+            subset_result = self.complete_atomic_fact_proof_result(
+                &superset,
+                proof,
+                builtin_state.verify_state(),
+            )?;
         }
         if !subset_result.is_success() {
             return Ok(None);
@@ -197,7 +202,7 @@ impl Runtime {
         }
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                 atomic_fact.clone().into(),
                 SuccessInferResult::new(),
                 "finite_set_size_subset_le".to_string(),
@@ -216,7 +221,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let (smaller, larger, line_file) = match atomic_fact {
             AtomicFact::LessEqualFact(fact) => (&fact.left, &fact.right, fact.line_file.clone()),
             AtomicFact::GreaterEqualFact(fact) => (&fact.right, &fact.left, fact.line_file.clone()),
@@ -259,7 +264,7 @@ impl Runtime {
         }
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                 atomic_fact.clone().into(),
                 SuccessInferResult::new(),
                 "finite_set_size_union_le_sum".to_string(),

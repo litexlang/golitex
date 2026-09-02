@@ -665,7 +665,7 @@ impl Runtime {
     ) -> Result<SuccessExecByInducBodyResult, RuntimeError> {
         self.run_in_local_env(|rt| {
             let mut start_in_z_check = rt.verify_induc_from_in_z(stmt)?;
-            rt.attach_known_fact_ids_to_stmt_result(&mut start_in_z_check)?;
+            rt.attach_known_fact_ids_to_verify_fact_result(&mut start_in_z_check)?;
             let base = rt.exec_structured_induc_base_proof(stmt)?;
             let step = rt.exec_structured_induc_step_proof(stmt)?;
 
@@ -711,18 +711,10 @@ impl Runtime {
                                 base_fact
                             ),
                             Some(verify_error),
-                            {
-                                let mut completed = std::mem::take(&mut proof_steps);
-                                completed.extend(
-                                    std::mem::take(&mut conclusions)
-                                        .into_iter()
-                                        .map(|conclusion| *conclusion.check),
-                                );
-                                completed
-                            },
+                            std::mem::take(&mut proof_steps),
                         )
                     })?;
-                rt.attach_known_fact_ids_to_stmt_result(&mut result)?;
+                rt.attach_known_fact_ids_to_verify_fact_result(&mut result)?;
                 conclusions.push(SuccessVerifyByInducConclusionResult {
                     goal: base_fact,
                     check: Box::new(result),
@@ -770,18 +762,10 @@ impl Runtime {
                                 next_fact
                             ),
                             Some(verify_error),
-                            {
-                                let mut completed = std::mem::take(&mut proof_steps);
-                                completed.extend(
-                                    std::mem::take(&mut conclusions)
-                                        .into_iter()
-                                        .map(|conclusion| *conclusion.check),
-                                );
-                                completed
-                            },
+                            std::mem::take(&mut proof_steps),
                         )
                     })?;
-                rt.attach_known_fact_ids_to_stmt_result(&mut result)?;
+                rt.attach_known_fact_ids_to_verify_fact_result(&mut result)?;
                 conclusions.push(SuccessVerifyByInducConclusionResult {
                     goal: next_fact,
                     check: Box::new(result),
@@ -979,7 +963,10 @@ impl Runtime {
         Ok(inside_results)
     }
 
-    fn verify_induc_from_in_z(&mut self, stmt: &ByInducStmt) -> Result<StmtResult, RuntimeError> {
+    fn verify_induc_from_in_z(
+        &mut self,
+        stmt: &ByInducStmt,
+    ) -> Result<VerifyFactResult, RuntimeError> {
         let induc_from_in_z_fact = InFact::new(
             stmt.induc_from.clone(),
             StandardSet::Z.into(),

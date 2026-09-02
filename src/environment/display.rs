@@ -125,11 +125,6 @@ impl fmt::Display for Environment {
         )?;
         write!(
             f,
-            "    cache_known_valid_obj: {:?}\n",
-            self.caches.well_defined_objects.len()
-        )?;
-        write!(
-            f,
             "    stored_fact_lookup_keys: {:?}\n",
             self.facts.stored_facts.lookup_key_count()
         )?;

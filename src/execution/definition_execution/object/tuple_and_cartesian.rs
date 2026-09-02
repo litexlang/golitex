@@ -226,7 +226,7 @@ impl Runtime {
                 stmt,
                 format!("have tuple/cart needs {} $in N+", dimension),
                 None,
-                vec![in_n_pos_result],
+                vec![],
             ));
         }
 
@@ -240,7 +240,7 @@ impl Runtime {
                 stmt,
                 format!("have tuple/cart needs 2 <= {}", dimension),
                 None,
-                vec![at_least_two_result],
+                vec![],
             ));
         }
         Ok(SuccessVerifyTupleOrCartDimensionResult {

@@ -8,6 +8,12 @@ impl StmtResultToLeanCompiler {
         result: &SuccessFactStmtResult,
         _proof_step_index: usize,
     ) -> Result<Option<String>, String> {
+        let verified = result.verification().ok_or_else(|| {
+            format!(
+                "trusted local fact `{}` has no Lean verification evidence",
+                result.fact()
+            )
+        })?;
         let source_fact = result.fact();
         if result.store.fact.to_string() != source_fact.to_string() {
             return Err("local fact changed between verification and store".into());
@@ -48,26 +54,16 @@ impl StmtResultToLeanCompiler {
         // child-owned WD occurrence map. Restoring the enclosing theorem map
         // between those two operations can select a semantically identical
         // application occurrence belonging to a different proof step.
-        let child_certificate = result
-            .well_definedness
-            .recursive
-            .as_ref()
-            .map(|_| {
-                self.construct_well_definedness_to_lean_compilation_context(
-                    &result.well_definedness,
-                )
-            })
-            .transpose()?;
-        let parent_certificate = child_certificate
-            .map(|certificate| self.environment_stack.well_definedness.replace(certificate));
+        let child_certificate =
+            self.construct_well_definedness_to_lean_compilation_context(&verified.checked)?;
+        let parent_certificate =
+            Some(self.environment_stack.well_definedness.replace(child_certificate));
         let compiled = (|| {
-            if let Some(recursive) = result.well_definedness.recursive.as_deref() {
-                install_fact_well_definedness_proof_store_results_in_active_environment(
-                    recursive,
-                    &mut self.environment_stack,
-                )?;
-            }
-            let proof = self.construct_lean_proof_from_direct_fact_result(result)?;
+            install_fact_well_definedness_proof_store_results_in_active_environment(
+                verified.checked.proof.as_ref(),
+                &mut self.environment_stack,
+            )?;
+            let proof = self.construct_lean_proof_from_direct_fact_result(verified)?;
             let proposition = render_fact(&source_fact, &self.environment_stack)?;
             // Local proof steps are the theorem-body counterpart of ordinary
             // stored facts.  A reviewed equality Result must therefore retain
@@ -78,7 +74,7 @@ impl StmtResultToLeanCompiler {
             // exact numeric representatives render in the source occurrence
             // that the verifier actually checked.
             if let Some(native_equality) =
-                self.construct_lean_native_equality_proof_from_direct_fact_result(result)?
+                self.construct_lean_native_equality_proof_from_direct_fact_result(verified)?
             {
                 self.retain_native_equality_proof_in_current_environment(
                     fact_id,
@@ -113,18 +109,13 @@ impl StmtResultToLeanCompiler {
             // rendering them under the enclosing theorem frame could select
             // no occurrence, or a semantically equal occurrence from another
             // proof step.
-            let inference_certificate = result
-                .well_definedness
-                .recursive
-                .as_ref()
-                .map(|_| {
-                    self.construct_well_definedness_to_lean_compilation_context(
-                        &result.well_definedness,
-                    )
-                })
-                .transpose()?;
-            let inference_parent_certificate = inference_certificate
-                .map(|certificate| self.environment_stack.well_definedness.replace(certificate));
+            let inference_certificate =
+                self.construct_well_definedness_to_lean_compilation_context(&verified.checked)?;
+            let inference_parent_certificate = Some(
+                self.environment_stack
+                    .well_definedness
+                    .replace(inference_certificate),
+            );
             let inference_compilation = (|| {
                 let mut allowed_sources = self
                     .install_equality_chain_adjacent_projections_for_typed_inference(

@@ -40,7 +40,7 @@ impl Runtime {
         label: &str,
     ) -> Result<
         (
-            SuccessVerifyFactWellDefinedResult,
+            WellDefinedFactResult,
             WellDefinednessEnvironmentDelta,
         ),
         RuntimeError,
@@ -71,11 +71,11 @@ impl Runtime {
 
     fn verify_checked_goal_block_after_well_definedness(
         &mut self,
-        source_stmt: Stmt,
+        _source_stmt: Stmt,
         fact: &Fact,
         proof: &[Stmt],
         label: &str,
-        well_definedness: SuccessVerifyFactWellDefinedResult,
+        well_definedness: WellDefinedFactResult,
         prechecked_well_definedness: &WellDefinednessEnvironmentDelta,
     ) -> Result<SuccessCheckedGoalBlockResult, RuntimeError> {
         match fact {
@@ -83,7 +83,10 @@ impl Runtime {
                 unreachable!("checked goal block forall with iff is not supported")
             }
             Fact::ForallFact(forall_fact) => self.run_in_local_env(|rt| {
-                let body_result: Result<(SuccessInferResult, Vec<StmtResult>), RuntimeError> =
+                let body_result: Result<
+                    (SuccessInferResult, Vec<StmtResult>, Vec<VerifyFactResult>),
+                    RuntimeError,
+                > =
                     (|| {
                         let mut assumption_infers = rt
                             .forall_assume_params_and_dom_in_current_env(
@@ -118,19 +121,13 @@ impl Runtime {
                             prechecked_well_definedness,
                         )?;
                         let then_count = forall_fact.then_facts.len();
-                        let then_verify_state = VerifyState::after_well_definedness();
+                        let then_verify_state = VerifyState::initial();
+                        let mut conclusion_checks = Vec::new();
                         for (then_index, then_fact) in forall_fact.then_facts.iter().enumerate() {
-                            let mut result = rt.verify_exist_or_and_chain_atomic_fact(
-                                then_fact,
-                                &then_verify_state,
-                            )?;
+                            let then_goal = then_fact.clone().to_fact();
+                            let result =
+                                rt.verify_fact_allow_unknown(&then_goal, &then_verify_state)?;
                             if result.is_unknown() {
-                                let then_goal = then_fact.clone().to_fact();
-                                result = rt.structured_unknown_result_for_failed_fact(
-                                    &then_goal,
-                                    &then_verify_state,
-                                    result,
-                                )?;
                                 return Err(UnknownRuntimeError(
                                     RuntimeErrorStruct::new_with_output(
                                         Some(then_goal.clone().into()),
@@ -138,29 +135,33 @@ impl Runtime {
                                         then_fact.line_file(),
                                         None,
                                         vec![],
-                                        RuntimeErrorOutput::then_clause_unknown(
+                                        RuntimeErrorOutput::then_clause_unknown_fact(
                                             then_goal,
                                             then_index + 1,
                                             then_count,
-                                            &result,
+                                            result.as_fact_unknown().expect(
+                                                "unknown fact verification carries an unknown result",
+                                            ),
                                         ),
                                     ),
                                 )
                                 .into());
                             }
-                            inside_results.push(result);
+                            conclusion_checks.push(result);
                         }
 
                         rt.attach_known_fact_ids_to_infer_result(&mut assumption_infers)?;
                         for result in inside_results.iter_mut() {
                             rt.attach_known_fact_ids_to_stmt_result(result)?;
                         }
-                        Ok((assumption_infers, inside_results))
+                        for result in conclusion_checks.iter_mut() {
+                            rt.attach_known_fact_ids_to_verify_fact_result(result)?;
+                        }
+                        Ok((assumption_infers, inside_results, conclusion_checks))
                     })();
 
                 match body_result {
-                    Ok((assumption_infers, mut inside_results)) => {
-                        let conclusion_checks = inside_results.split_off(proof.len());
+                    Ok((assumption_infers, inside_results, conclusion_checks)) => {
                         let domain =
                             SuccessVerifyLocalProofScopeResult::new(assumption_infers, Vec::new());
                         Ok(SuccessCheckedGoalBlockResult::new(
@@ -175,31 +176,22 @@ impl Runtime {
                 }
             }),
             _ => self.run_in_local_env(|rt| {
-                let body_result: Result<Vec<StmtResult>, RuntimeError> = (|| {
-                    let mut inside_results = Vec::new();
+                let body_result: Result<(Vec<StmtResult>, VerifyFactResult), RuntimeError> = (|| {
+                    let mut proof_steps = Vec::new();
                     for proof_stmt in proof.iter() {
-                        inside_results.push(rt.execute_statement(proof_stmt)?);
+                        proof_steps.push(rt.execute_statement(proof_stmt)?);
                     }
-                    inside_results.push(
-                        rt.verify_fact_or_error(fact, &VerifyState::after_well_definedness())?,
-                    );
-                    for result in inside_results.iter_mut() {
+                    let mut conclusion_check =
+                        rt.verify_fact_or_error(fact, &VerifyState::initial())?;
+                    for result in proof_steps.iter_mut() {
                         rt.attach_known_fact_ids_to_stmt_result(result)?;
                     }
-                    Ok(inside_results)
+                    rt.attach_known_fact_ids_to_verify_fact_result(&mut conclusion_check)?;
+                    Ok((proof_steps, conclusion_check))
                 })();
 
                 match body_result {
-                    Ok(mut inside_results) => {
-                        let conclusion_check = inside_results.pop().ok_or_else(|| {
-                            UnknownRuntimeError(RuntimeErrorStruct::new(
-                                Some(source_stmt.clone()),
-                                format!("{label} failed: missing goal check result"),
-                                fact.line_file(),
-                                None,
-                                Vec::new(),
-                            ))
-                        })?;
+                    Ok((proof_steps, conclusion_check)) => {
                         let domain = SuccessVerifyLocalProofScopeResult::new(
                             SuccessInferResult::new(),
                             Vec::new(),
@@ -208,7 +200,7 @@ impl Runtime {
                             fact.clone(),
                             well_definedness,
                             domain,
-                            inside_results,
+                            proof_steps,
                             vec![conclusion_check],
                         ))
                     }

@@ -13,46 +13,18 @@ impl StmtResultToLeanCompiler {
                 return Err("combined primary proof changed its target".into());
             }
             for (index, step) in combined.steps.iter().enumerate() {
-                let Some(factual) = step.factual_success() else {
+                let Some(factual) = step.verified() else {
                     return Err(format!("combined proof step {index} is not factual"));
                 };
-                if factual.store.fact.to_string() != factual.fact().to_string() {
-                    return Err(format!(
-                        "combined proof step {index} changed between verification and store"
-                    ));
-                }
                 let Some(proof) = self.construct_lean_proof_from_direct_fact_result(factual)?
                 else {
                     return Ok(None);
                 };
-                let fact_id = factual
-                    .store
-                    .fact_id
-                    .ok_or_else(|| format!("combined proof step {index} has no frozen FactId"))?;
-                let fact = factual.fact();
-                if let Some(native_equality) =
-                    self.construct_lean_native_equality_proof_from_direct_fact_result(factual)?
-                {
-                    self.retain_native_equality_proof_in_current_environment(
-                        fact_id,
-                        &fact,
-                        native_equality,
-                    )?;
-                }
-                if let Some(existing) = self.environment_stack.fact_propositions.get(&fact_id) {
-                    if existing.to_string() != fact.to_string() {
-                        return Err(format!(
-                            "combined proof step {index} reused `{fact_id}` for another proposition"
-                        ));
-                    }
-                } else {
-                    self.environment_stack
-                        .fact_names
-                        .insert(fact_id, format!("({proof})"));
-                    self.environment_stack
-                        .fact_propositions
-                        .insert(fact_id, fact);
-                }
+                // Verification children are process-local proof nodes. They
+                // deliberately have no FactId or statement-store effect; the
+                // primary proof reaches shared children through typed `Reuse`
+                // edges in the returned proof DAG.
+                let _ = proof;
             }
             return self.construct_lean_proof_from_shared_verify_fact_result(primary);
         }
@@ -64,7 +36,7 @@ impl StmtResultToLeanCompiler {
         let mut proofs = Vec::with_capacity(components.len());
         for (component, step) in components.iter().zip(combined.steps.iter()) {
             let factual = step
-                .factual_success()
+                .verified()
                 .ok_or_else(|| "combined proof child is not factual".to_string())?;
             if factual.fact().to_string() != component.to_string() {
                 return Err("combined proof child changed its component".into());
@@ -73,34 +45,6 @@ impl StmtResultToLeanCompiler {
             let Some(proof) = proof else {
                 return Ok(None);
             };
-            if factual.store.fact.to_string() != component.to_string() {
-                return Err("combined proof component changed in its store Result".into());
-            }
-            if let Some(fact_id) = factual.store.fact_id {
-                if let Some(native_equality) =
-                    self.construct_lean_native_equality_proof_from_direct_fact_result(factual)?
-                {
-                    self.retain_native_equality_proof_in_current_environment(
-                        fact_id,
-                        component,
-                        native_equality,
-                    )?;
-                }
-                if let Some(existing) = self.environment_stack.fact_propositions.get(&fact_id) {
-                    if existing.to_string() != component.to_string() {
-                        return Err(format!(
-                            "combined proof component reused `{fact_id}` for another proposition"
-                        ));
-                    }
-                } else {
-                    self.environment_stack
-                        .fact_names
-                        .insert(fact_id, format!("({proof})"));
-                    self.environment_stack
-                        .fact_propositions
-                        .insert(fact_id, component.clone());
-                }
-            }
             proofs.push(proof);
         }
         Ok(Some(right_associated_conjunction_proof(&proofs)?))
@@ -108,7 +52,7 @@ impl StmtResultToLeanCompiler {
 
     pub(in super::super) fn construct_lean_proof_from_shared_verify_fact_result(
         &mut self,
-        verification: &SuccessVerifyFactResult,
+        verification: &SuccessFactProofNode,
     ) -> Result<Option<String>, String> {
         let source_fact = verification.fact();
         match verification.proof() {
@@ -177,6 +121,15 @@ impl StmtResultToLeanCompiler {
                     return self.construct_lean_refined_numeric_membership_from_result(
                         &source_fact,
                         evidence,
+                        &builtin.subgoals,
+                    );
+                }
+                if matches!(
+                    builtin.evidence.typed(),
+                    Some(BuiltinRuleEvidence::EqualitySymmetry)
+                ) {
+                    return self.construct_lean_equality_symmetry_from_result(
+                        &source_fact,
                         &builtin.subgoals,
                     );
                 }
@@ -501,7 +454,7 @@ impl StmtResultToLeanCompiler {
                         let children = builtin
                             .subgoals
                             .iter()
-                            .filter_map(StmtResult::factual_success)
+                            .filter_map(VerifyFactResult::verified)
                             .map(|child| child.fact().to_string())
                             .collect::<Vec<_>>()
                             .join("; ");

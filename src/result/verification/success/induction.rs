@@ -31,16 +31,16 @@ pub struct SuccessVerifyByUnstructuredIntegerInducResult {
 #[derive(Debug)]
 pub struct SuccessVerifyByInducGoalResult {
     pub source_goal: Fact,
-    pub base_check: Box<StmtResult>,
-    pub start_in_z_check: Box<StmtResult>,
-    pub step_check: Box<StmtResult>,
+    pub base_check: Box<VerifyFactResult>,
+    pub start_in_z_check: Box<VerifyFactResult>,
+    pub step_check: Box<VerifyFactResult>,
     pub infers: SuccessInferResult,
 }
 
 pub struct SuccessVerifyByStructuredIntegerInducResult {
     pub strong: bool,
     pub start: Obj,
-    pub start_in_z_check: Box<StmtResult>,
+    pub start_in_z_check: Box<VerifyFactResult>,
     pub base: SuccessVerifyByStructuredIntegerInducCaseResult,
     pub step: SuccessVerifyByStructuredIntegerInducCaseResult,
 }
@@ -106,7 +106,7 @@ pub struct SuccessVerifyByInducAssumptionResult {
 #[derive(Debug)]
 pub struct SuccessVerifyByInducConclusionResult {
     pub goal: Fact,
-    pub check: Box<StmtResult>,
+    pub check: Box<VerifyFactResult>,
 }
 
 #[derive(Debug)]

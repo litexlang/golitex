@@ -9,7 +9,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -33,7 +33,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 format!("{name} fixes integer inputs"),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -52,13 +52,13 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
         if rounding_negation_shape(left, right) || rounding_negation_shape(right, left) {
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     equal_fact.clone().into(),
                     "native floor/ceil negation duality".to_string(),
                     BuiltinRuleEvidence::Uncatalogued(
@@ -83,7 +83,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "native floor/ceil integer translation".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -101,7 +101,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -143,7 +143,7 @@ impl Runtime {
             (false, false) => ExtremaBuiltinRule::MaxEqRightOfLessEqual,
         };
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 format!("{name} selects the ordered argument: {premise_left} <= {premise_right}"),
                 BuiltinRuleEvidence::Extrema(rule),
@@ -160,7 +160,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         if let Some(result) =
             self.try_verify_native_lcm_le_common_positive_multiple(atomic_fact, builtin_state)?
         {
@@ -179,7 +179,7 @@ impl Runtime {
         if !is_strict {
             if let Some(rule) = extrema_bound_rule(left, right) {
                 return Ok(Some(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         atomic_fact.clone().into(),
                         "native extremum characteristic order bound".to_string(),
                         BuiltinRuleEvidence::Extrema(rule),
@@ -195,7 +195,7 @@ impl Runtime {
             floor_lower_shape(left, right) || ceil_upper_shape(left, right)
         };
         Ok(verified.then(|| {
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "native rounding/extremum characteristic order bound".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -211,7 +211,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         // A positive common multiple bounds the least common multiple.
         // The modulo premises intentionally use abs(input), matching the
         // Euclidean remainder interface for signed integers.
@@ -247,7 +247,7 @@ impl Runtime {
             return Ok(None);
         };
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "native lcm is bounded by every positive common multiple".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -263,7 +263,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         // Floor, ceiling, min, and max preserve weak componentwise order.
         // Examples: `a <= b => floor(a) <= floor(b)` and
         // `a <= c, b <= d => min(a,b) <= min(c,d)`.
@@ -351,13 +351,13 @@ impl Runtime {
         Ok(Some(
             match typed_rule {
                 Some(rule) =>
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         atomic_fact.clone().into(),
                         reason.to_string(),
                         BuiltinRuleEvidence::Extrema(rule),
                         results,
                     ),
-                None => SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                None => SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     atomic_fact.clone().into(),
                     reason.to_string(),
                     BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNativeRoundingExtremaMonotonicity),
@@ -374,13 +374,13 @@ impl Runtime {
     pub(super) fn try_verify_native_min_max_lattice_equality(
         &self,
         equal_fact: &EqualFact,
-    ) -> Option<StmtResult> {
+    ) -> Option<ProveFactResult> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let rule =
             min_max_lattice_rule(left, right).or_else(|| min_max_lattice_rule(right, left))?;
         Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "native min/max lattice identity".to_string(),
                 BuiltinRuleEvidence::Extrema(rule),
@@ -396,14 +396,14 @@ impl Runtime {
     pub(super) fn try_verify_native_lcm_gcd_product_equality(
         &self,
         equal_fact: &EqualFact,
-    ) -> Option<StmtResult> {
+    ) -> Option<ProveFactResult> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         if !lcm_gcd_product_shape(left, right) && !lcm_gcd_product_shape(right, left) {
             return None;
         }
         Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "lcm times gcd is the absolute product".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -421,14 +421,14 @@ impl Runtime {
     pub(super) fn try_verify_native_lcm_basic_equality(
         &self,
         equal_fact: &EqualFact,
-    ) -> Option<StmtResult> {
+    ) -> Option<ProveFactResult> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         if !lcm_basic_shape(left, right) && !lcm_basic_shape(right, left) {
             return None;
         }
         Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "native lcm symmetry, zero law, or divisibility".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(

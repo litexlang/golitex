@@ -223,7 +223,7 @@ impl Runtime {
                 RuntimeErrorStruct::new_with_just_msg(error_message),
             )));
         }
-        steps.push_fact_check(super::success_obj_fact_check(result)?);
+        steps.push_fact_check(super::success_obj_fact_check_after_structural_wd(result)?);
         Ok(())
     }
 

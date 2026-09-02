@@ -39,24 +39,24 @@ impl TransparentDefinitionReductionEvidence {
 }
 
 /// One target-directed fact transformation. The enclosing
-/// `SuccessVerifyFactResult` owns the target proposition; this node owns the
+/// `SuccessFactProofNode` owns the target proposition; this node owns the
 /// immediately preceding successful fact result and the exact rule used for
 /// the single transformation layer.
 #[derive(Debug)]
 pub struct SuccessTransformFactResult {
     pub rule: FactTransformationRule,
-    pub source: Rc<SuccessVerifyFactResult>,
+    pub source: Rc<SuccessFactProofNode>,
 }
 
 impl SuccessTransformFactResult {
-    pub fn new(rule: FactTransformationRule, source: SuccessVerifyFactResult) -> Self {
+    pub fn new(rule: FactTransformationRule, source: SuccessFactProofNode) -> Self {
         Self {
             rule,
             source: Rc::new(source),
         }
     }
 
-    pub fn from_shared(rule: FactTransformationRule, source: Rc<SuccessVerifyFactResult>) -> Self {
+    pub fn from_shared(rule: FactTransformationRule, source: Rc<SuccessFactProofNode>) -> Self {
         Self { rule, source }
     }
 }
@@ -100,7 +100,7 @@ pub struct SuccessDiagnosticFactProofResult {
 pub struct DefinitionReductionVerificationEvidence {
     pub argument_verification: SuccessVerifyArgsSatisfyParamDefResult,
     pub clause_facts: Vec<Fact>,
-    pub clause_checks: Vec<StmtResult>,
+    pub clause_checks: Vec<VerifyFactResult>,
 }
 
 #[derive(Clone)]

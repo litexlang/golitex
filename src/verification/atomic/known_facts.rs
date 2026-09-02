@@ -22,7 +22,7 @@ impl Runtime {
     pub fn verify_non_equational_atomic_fact_with_known_atomic_facts(
         &mut self,
         atomic_fact: &AtomicFact,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let result = if atomic_fact.number_of_args() == 1 {
             self.verify_atomic_fact_not_equality_with_known_atomic_fact_with_1_param(atomic_fact)?
         } else if atomic_fact.number_of_args() == 2 {
@@ -39,7 +39,7 @@ impl Runtime {
     fn verify_atomic_fact_not_equality_with_known_atomic_fact_with_1_param(
         &mut self,
         atomic_fact: &AtomicFact,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let module_names = self.atomic_fact_referenced_module_names(atomic_fact);
         let args = atomic_fact.args_ref();
         let all_objs_equal_to_arg =
@@ -95,7 +95,7 @@ impl Runtime {
     fn verify_atomic_fact_not_equality_with_known_atomic_fact_with_2_params(
         &mut self,
         atomic_fact: &AtomicFact,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let module_names = self.atomic_fact_referenced_module_names(atomic_fact);
         let args = atomic_fact.args_ref();
         let all_objs_equal_to_arg0 =
@@ -156,7 +156,7 @@ impl Runtime {
     fn verify_atomic_fact_not_equality_with_known_atomic_fact_with_0_or_more_than_2_params(
         &mut self,
         atomic_fact: &AtomicFact,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let module_names = self.atomic_fact_referenced_module_names(atomic_fact);
         let mut all_objs_equal_to_each_arg: Vec<Vec<String>> = Vec::new();
         let args = atomic_fact.args_ref();
@@ -746,9 +746,9 @@ impl Runtime {
     fn retarget_resolved_known_atomic_fact_result(
         &self,
         goal: &AtomicFact,
-        result: StmtResult,
+        result: ProveFactResult,
         fact_transformation: Option<FactTransformationEvidence>,
-    ) -> StmtResult {
+    ) -> ProveFactResult {
         let Some(fact_transformation) = fact_transformation else {
             return result;
         };
@@ -760,7 +760,7 @@ impl Runtime {
         }
         let mut source = success.verification.clone();
         for step in fact_transformation.steps {
-            source = Rc::new(SuccessVerifyFactResult::new(
+            source = Rc::new(SuccessFactProofNode::new(
                 step.result,
                 SuccessFactProofResult::Transform(Box::new(
                     SuccessTransformFactResult::from_shared(step.rule, source),
@@ -770,7 +770,7 @@ impl Runtime {
         if source.fact().to_string() != goal.to_string() {
             return result;
         }
-        SuccessFactStmtResult::new_with_verified_by_known_fact(
+        SuccessProveFactResult::new_with_verified_by_known_fact(
             goal.clone().into(),
             SuccessFactProofResult::Reuse(Box::new(SuccessReuseFactProofResult { source })),
             Vec::new(),
@@ -801,7 +801,7 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         all_objs_equal_to_arg: &Vec<String>,
         module_names: &[String],
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         if let Some(known_facts_map) = environment
             .facts
             .atomic
@@ -810,7 +810,7 @@ impl Runtime {
         {
             for obj in all_objs_equal_to_arg.iter() {
                 if let Some(known_atomic_fact) = known_facts_map.get(obj) {
-                    return Ok((SuccessFactStmtResult::new_with_verified_by_known_fact(
+                    return Ok((SuccessProveFactResult::new_with_verified_by_known_fact(
                         atomic_fact.clone().into(),
                         self.cited_known_atomic_fact(
                             atomic_fact,
@@ -835,7 +835,7 @@ impl Runtime {
         all_objs_equal_to_arg0: &Vec<String>,
         all_objs_equal_to_arg1: &Vec<String>,
         module_names: &[String],
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         if let Some(known_facts_map) = environment
             .facts
             .atomic
@@ -847,7 +847,7 @@ impl Runtime {
                     if let Some(known_atomic_fact) =
                         known_facts_map.get(&(obj0.clone(), obj1.clone()))
                     {
-                        return Ok((SuccessFactStmtResult::new_with_verified_by_known_fact(
+                        return Ok((SuccessProveFactResult::new_with_verified_by_known_fact(
                             atomic_fact.clone().into(),
                             self.cited_known_atomic_fact(
                                 atomic_fact,
@@ -877,7 +877,7 @@ impl Runtime {
                             )
                         });
                 if args_match {
-                    return Ok((SuccessFactStmtResult::new_with_verified_by_known_fact(
+                    return Ok((SuccessProveFactResult::new_with_verified_by_known_fact(
                         atomic_fact.clone().into(),
                         self.cited_known_atomic_fact(
                             atomic_fact,
@@ -908,7 +908,7 @@ impl Runtime {
                             let source_fact: Fact = known_atomic_fact.clone().into();
                             let source_fact_id =
                                 self.require_known_fact_id_for_success_result(&source_fact)?;
-                            return Ok((SuccessFactStmtResult::new_with_verified_by_known_fact(
+                            return Ok((SuccessProveFactResult::new_with_verified_by_known_fact(
                                 atomic_fact.clone().into(),
                                 SuccessFactProofResult::stored_fact_citation(
                                     source_fact,
@@ -965,7 +965,7 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         all_objs_equal_to_each_arg: &Vec<Vec<String>>,
         module_names: &[String],
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         if let Some(known_facts) = environment
             .facts
             .atomic
@@ -1010,7 +1010,7 @@ impl Runtime {
                     }
                 }
                 if all_args_match {
-                    return Ok((SuccessFactStmtResult::new_with_verified_by_known_fact(
+                    return Ok((SuccessProveFactResult::new_with_verified_by_known_fact(
                         atomic_fact.clone().into(),
                         self.cited_known_atomic_fact(atomic_fact, known_fact, module_names, None)?,
                         Vec::new(),
@@ -1027,7 +1027,7 @@ impl Runtime {
         &self,
         atomic_fact: &AtomicFact,
         module_names: &[String],
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         if !atomic_fact
             .args_ref()
             .iter()
@@ -1069,7 +1069,7 @@ impl Runtime {
         environment: &Environment,
         atomic_fact: &AtomicFact,
         module_names: &[String],
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let lookup_key = (atomic_fact.key(), atomic_fact.has_positive_polarity());
         let mut known_facts = Vec::new();
         match atomic_fact.number_of_args() {
@@ -1105,7 +1105,7 @@ impl Runtime {
             }
             if all_args_match {
                 return Ok(Some(
-                    SuccessFactStmtResult::new_with_verified_by_known_fact(
+                    SuccessProveFactResult::new_with_verified_by_known_fact(
                         atomic_fact.clone().into(),
                         self.cited_known_atomic_fact(atomic_fact, known_fact, module_names, None)?,
                         Vec::new(),

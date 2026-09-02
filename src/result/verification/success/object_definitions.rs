@@ -17,7 +17,7 @@ pub struct SuccessVerifyObjectChoiceResult {
 #[derive(Debug)]
 pub struct SuccessVerifyObjectChoiceGroupResult {
     pub selected_type_facts: Vec<Fact>,
-    pub nonempty_check: Option<Box<StmtResult>>,
+    pub nonempty_check: Option<Box<VerifyFactResult>>,
 }
 
 impl SuccessVerifyObjectChoiceResult {
@@ -27,16 +27,16 @@ impl SuccessVerifyObjectChoiceResult {
 }
 
 pub struct SuccessVerifyHaveObjEqualResult {
-    pub type_checks: Vec<StmtResult>,
+    pub type_checks: Vec<VerifyFactResult>,
 }
 
 pub struct SuccessVerifyPreimageResult {
-    pub source_membership_check: Box<StmtResult>,
+    pub source_membership_check: Box<VerifyFactResult>,
 }
 
 pub struct SuccessVerifyTupleOrCartDimensionResult {
-    pub positive_check: Box<StmtResult>,
-    pub at_least_two_check: Box<StmtResult>,
+    pub positive_check: Box<VerifyFactResult>,
+    pub at_least_two_check: Box<VerifyFactResult>,
 }
 
 /// Successful verification output shared by `have tuple` and `have cart`.
@@ -50,12 +50,12 @@ pub struct SuccessVerifyTupleOrCartDefinitionResult {
 
 pub struct SuccessVerifyIndexedFunctionDefinitionResult {
     pub well_definedness: SuccessVerifyIndexedFunctionDefinitionWellDefinedResult,
-    pub bound_checks: Vec<StmtResult>,
+    pub bound_checks: Vec<VerifyFactResult>,
     /// Parameter-membership and domain facts installed while checking the
     /// indexed body, with their temporary FactIds frozen before that local
     /// Runtime environment closes.
     pub assumption_infers: SuccessInferResult,
-    pub return_check: Box<StmtResult>,
+    pub return_check: Box<VerifyFactResult>,
 }
 
 impl ObjectDefinitionItem {

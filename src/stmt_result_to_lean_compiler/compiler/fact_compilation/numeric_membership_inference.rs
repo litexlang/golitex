@@ -11,7 +11,10 @@ impl StmtResultToLeanCompiler {
         &mut self,
         result: &SuccessFactStmtResult,
     ) -> Result<bool, String> {
-        let SuccessFactProofResult::BuiltinRule(builtin) = result.proof() else {
+        let Some(verified) = result.verification() else {
+            return Ok(false);
+        };
+        let SuccessFactProofResult::BuiltinRule(builtin) = verified.proof() else {
             return Ok(false);
         };
         let Some(BuiltinRuleEvidence::ClosedNumericMembership(evidence)) = builtin.evidence.typed()
@@ -46,7 +49,7 @@ impl StmtResultToLeanCompiler {
             );
         }
 
-        validate_atomic_fact_well_definedness_result(&result.well_definedness, &source_fact)?;
+        validate_atomic_fact_well_definedness_result(&verified.checked, &source_fact)?;
         validate_success_evaluate_obj_result(&evidence.evaluation)?;
 
         let source_fact_id = result

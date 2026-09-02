@@ -1144,7 +1144,9 @@ $target_strategy_prop(1)
     else {
         panic!("expected the final strategy-derived fact:\n{run_output}");
     };
-    let SuccessFactProofResult::KnownForallInstantiation(instantiation) = final_result.proof()
+    let SuccessFactProofResult::KnownForallInstantiation(instantiation) = final_result
+        .proof()
+        .expect("verified strategy result owns a proof")
     else {
         panic!("strategy use should be ordinary known-forall matching:\n{run_output}");
     };
@@ -1666,12 +1668,12 @@ $second(2)
                 panic!("expected the second instantiated fact:\n{run_output}");
             };
             let SuccessFactProofResult::KnownForallInstantiation(first_instantiation) =
-                first_result.proof()
+                first_result.proof().expect("verified fact owns a proof")
             else {
                 panic!("expected the first known-forall proof:\n{run_output}");
             };
             let SuccessFactProofResult::KnownForallInstantiation(second_instantiation) =
-                second_result.proof()
+                second_result.proof().expect("verified fact owns a proof")
             else {
                 panic!("expected the second known-forall proof:\n{run_output}");
             };

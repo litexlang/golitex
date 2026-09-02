@@ -262,6 +262,7 @@ pub use crate::result::FactTransformationStep;
 pub use crate::result::NonzeroExpressionOrientation;
 pub use crate::result::ObjectDefinitionItem;
 pub use crate::result::StmtResult;
+pub use crate::result::ProveFactResult;
 pub use crate::result::SuccessCheckedFunctionDefinitionReductionFactProofResult;
 pub use crate::result::SuccessCheckedGoalBlockResult;
 pub use crate::result::SuccessCombinedFactProofResult;
@@ -319,6 +320,7 @@ pub use crate::result::SuccessVerifyByUnstructuredIntegerInducResult;
 pub use crate::result::SuccessVerifyCaseFunctionDefinitionResult;
 pub use crate::result::SuccessVerifyContradictionResult;
 pub use crate::result::SuccessVerifyExistentialEliminationResult;
+pub use crate::result::ExistentialEliminationSourceResult;
 pub use crate::result::SuccessVerifyFunctionDefinitionResult;
 pub use crate::result::SuccessVerifyFunctionFromUniqueExistenceResult;
 pub use crate::result::SuccessVerifyHaveObjEqualResult;
@@ -386,7 +388,8 @@ pub use crate::result::{
     WellDefinednessRequirementRole,
 };
 pub use crate::result::{
-    AtomicPredicateDomainCheckRole, CaseDisjointnessOrientation, SuccessAxiomStmtResult,
+    AtomicPredicateDomainCheckRole, CaseDisjointnessOrientation, FactStatementEvidence,
+    SuccessAxiomStmtResult,
     SuccessByAntisymmetricPropStmtResult, SuccessByAxiomOfChoiceStmtResult,
     SuccessByCasesStmtResult, SuccessByClosedRangeAsCasesStmtResult, SuccessByContraStmtResult,
     SuccessByDefStmtResult, SuccessByEnumerateFiniteSetStmtResult,
@@ -408,7 +411,7 @@ pub use crate::result::{
     SuccessHaveObjInNonemptySetStmtResult, SuccessHaveSeqStmtResult, SuccessHaveTupleStmtResult,
     SuccessLetObjStmtResult, SuccessObtainObjFromAtomicFactResult,
     SuccessObtainObjFromExistFactResult, SuccessObtainObjFromThmResult,
-    SuccessProofBlockStmtResult, SuccessRecursiveObjWellDefinedResult, SuccessReleaseThmStmtResult,
+    SuccessProofBlockStmtResult, SuccessProveFactResult, SuccessReleaseThmStmtResult,
     SuccessReuseObjWellDefinedResult, SuccessReusedTemplateInstanceResult,
     SuccessSketchProofResult, SuccessSketchStmtResult, SuccessStmtCommonResult,
     SuccessStoreFactResult, SuccessTemplateInstantiationResult, SuccessTrustHaveStmtResult,
@@ -431,8 +434,9 @@ pub use crate::result::{
     SuccessVerifyExactFiniteReduceDomainResult, SuccessVerifyExistFactResult,
     SuccessVerifyExistFactWellDefinedResult, SuccessVerifyFactBinderResult,
     SuccessVerifyFactForObjWellDefinedResult, SuccessVerifyFactObjectWellDefinedResult,
-    SuccessVerifyFactParameterGroupResult, SuccessVerifyFactResult,
-    SuccessVerifyFactWellDefinedProofResult, SuccessVerifyFactWellDefinedResult,
+    SuccessVerifyFactParameterGroupResult, SuccessFactProofNode, UnknownVerifyFactResult,
+    VerifiedFactResult, VerifyFactResult,
+    SuccessVerifyFactWellDefinedProofResult, WellDefinedFactResult,
     SuccessVerifyFiniteAggregateClosedRangeResult, SuccessVerifyFiniteAggregateElementsResult,
     SuccessVerifyFiniteAggregateModeResult, SuccessVerifyFiniteAggregateWellDefinedResult,
     SuccessVerifyFiniteReduceDomainCoverageResult, SuccessVerifyFiniteReduceOperationLawsResult,
@@ -462,7 +466,7 @@ pub use crate::result::{
     SuccessVerifyTemplateHeaderArgumentResult, SuccessVerifyUniversalIntegerCarrierCoverageResult,
     SuccessVerifyWitnessNonemptySetResult, SuccessWitnessAtomicFactResult,
     SuccessWitnessExistFactResult, SuccessWitnessNonemptySetResult, SuccessWitnessStmtResult,
-    TryStmtExecutionResult,
+    TrustedFactResult, TryStmtExecutionResult,
 };
 pub use crate::result::{
     CachedWellDefinedObj, WellDefinedBinderPremiseProof, WellDefinedBinderPremiseRole,

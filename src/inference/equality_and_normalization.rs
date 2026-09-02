@@ -517,7 +517,7 @@ impl Runtime {
             equal_fact.line_file.clone(),
         )
         .into();
-        let verify_state = VerifyState::initial();
+        let verify_state = VerifyState::initial().with_inference_state(inference_state);
         let power_result = self.verify_non_equational_atomic_fact_with_bounded_builtin_routes(
             &power_in_r_pos,
             &verify_state,

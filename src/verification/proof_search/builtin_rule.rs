@@ -19,19 +19,40 @@ impl Runtime {
         &mut self,
         premise: &QuantifierFreeFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<VerifyFactResult, RuntimeError> {
+        let fact = premise.clone().to_fact();
+        let checked = self.verify_fact_well_defined_result(&fact, builtin_state.verify_state())?;
+        let proof = self.prove_builtin_rule_premise(premise, builtin_state)?;
+        Ok(Runtime::finish_fact_verification(checked, proof))
+    }
+
+    pub fn try_verify_builtin_rule_premise(
+        &mut self,
+        premise: &QuantifierFreeFact,
+        builtin_state: &BuiltinRuleSearchState,
+    ) -> Result<Option<VerifyFactResult>, RuntimeError> {
+        let fact = premise.clone().to_fact();
+        let proof = self.prove_builtin_rule_premise(premise, builtin_state)?;
+        self.complete_proven_builtin_candidate(fact, proof, builtin_state.verify_state())
+    }
+
+    fn prove_builtin_rule_premise(
+        &mut self,
+        premise: &QuantifierFreeFact,
+        builtin_state: &BuiltinRuleSearchState,
+    ) -> Result<ProveFactResult, RuntimeError> {
         match premise {
             QuantifierFreeFact::AtomicFact(atomic_fact) => {
-                self.verify_atomic_fact_as_builtin_rule_premise(atomic_fact, builtin_state)
+                self.prove_atomic_fact_as_builtin_rule_premise(atomic_fact, builtin_state)
             }
             QuantifierFreeFact::AndFact(and_fact) => {
-                self.verify_and_fact_as_builtin_rule_premise(and_fact, builtin_state)
+                self.prove_and_fact_as_builtin_rule_premise(and_fact, builtin_state)
             }
             QuantifierFreeFact::ChainFact(chain_fact) => {
-                self.verify_chain_fact_as_builtin_rule_premise(chain_fact, builtin_state)
+                self.prove_chain_fact_as_builtin_rule_premise(chain_fact, builtin_state)
             }
             QuantifierFreeFact::OrFact(or_fact) => {
-                self.verify_or_fact_as_builtin_rule_premise(or_fact, builtin_state)
+                self.prove_or_fact_as_builtin_rule_premise(or_fact, builtin_state)
             }
         }
     }
@@ -44,11 +65,12 @@ impl Runtime {
         alternatives: Vec<Vec<AtomicFact>>,
         line_file: LineFile,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<VerifyFactResult, RuntimeError> {
         let mut branches = Vec::with_capacity(alternatives.len());
         for mut alternative in alternatives {
             if alternative.is_empty() {
-                return Ok(UnknownGenericStmtResult::new().into());
+                let empty: Fact = OrFact::new(Vec::new(), line_file.clone()).into();
+                return self.verify_fact_allow_unknown(&empty, builtin_state.verify_state());
             }
             if alternative.len() == 1 {
                 branches.push(alternative.remove(0).into());
@@ -65,11 +87,40 @@ impl Runtime {
         )
     }
 
-    fn verify_and_fact_as_builtin_rule_premise(
+    pub fn try_verify_builtin_rule_premise_alternatives(
+        &mut self,
+        alternatives: Vec<Vec<AtomicFact>>,
+        line_file: LineFile,
+        builtin_state: &BuiltinRuleSearchState,
+    ) -> Result<Option<VerifyFactResult>, RuntimeError> {
+        let mut branches = Vec::with_capacity(alternatives.len());
+        for mut alternative in alternatives {
+            if alternative.is_empty() {
+                return self.try_verify_builtin_rule_premise(
+                    &QuantifierFreeFact::OrFact(OrFact::new(Vec::new(), line_file)),
+                    builtin_state,
+                );
+            }
+            if alternative.len() == 1 {
+                branches.push(alternative.remove(0).into());
+            } else {
+                branches.push(AndChainAtomicFact::AndFact(AndFact::new(
+                    alternative,
+                    line_file.clone(),
+                )));
+            }
+        }
+        self.try_verify_builtin_rule_premise(
+            &QuantifierFreeFact::OrFact(OrFact::new(branches, line_file)),
+            builtin_state,
+        )
+    }
+
+    fn prove_and_fact_as_builtin_rule_premise(
         &mut self,
         and_fact: &AndFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         if let Some(cached_result) =
             self.verification_result_from_known_fact_cache(&and_fact.clone().into())
         {
@@ -78,14 +129,14 @@ impl Runtime {
 
         let mut child_results = Vec::with_capacity(and_fact.facts.len());
         for atomic_fact in &and_fact.facts {
-            let result =
-                self.verify_atomic_fact_as_builtin_rule_premise(atomic_fact, builtin_state)?;
-            if !result.is_success() {
+            let Some(result) =
+                self.try_verify_atomic_fact_as_builtin_rule_premise(atomic_fact, builtin_state)?
+            else {
                 return Ok(UnknownGenericStmtResult::new().into());
-            }
+            };
             child_results.push(result);
         }
-        Ok(SuccessFactStmtResult::new_with_verified_by_known_fact(
+        Ok(SuccessProveFactResult::new_with_verified_by_known_fact(
             and_fact.clone().into(),
             SuccessFactProofResult::combined_steps(Vec::new()),
             child_results,
@@ -93,11 +144,11 @@ impl Runtime {
         .into())
     }
 
-    fn verify_chain_fact_as_builtin_rule_premise(
+    fn prove_chain_fact_as_builtin_rule_premise(
         &mut self,
         chain_fact: &ChainFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         if let Some(cached_result) =
             self.verification_result_from_known_fact_cache(&chain_fact.clone().into())
         {
@@ -107,14 +158,14 @@ impl Runtime {
         let atomic_facts = chain_fact.facts()?;
         let mut child_results = Vec::with_capacity(atomic_facts.len());
         for atomic_fact in &atomic_facts {
-            let result =
-                self.verify_atomic_fact_as_builtin_rule_premise(atomic_fact, builtin_state)?;
-            if !result.is_success() {
+            let Some(result) =
+                self.try_verify_atomic_fact_as_builtin_rule_premise(atomic_fact, builtin_state)?
+            else {
                 return Ok(UnknownGenericStmtResult::new().into());
-            }
+            };
             child_results.push(result);
         }
-        Ok(SuccessFactStmtResult::new_with_verified_by_known_fact(
+        Ok(SuccessProveFactResult::new_with_verified_by_known_fact(
             chain_fact.clone().into(),
             SuccessFactProofResult::combined_steps(Vec::new()),
             child_results,
@@ -122,47 +173,48 @@ impl Runtime {
         .into())
     }
 
-    fn verify_and_chain_fact_as_builtin_rule_premise(
+    fn prove_and_chain_fact_as_builtin_rule_premise(
         &mut self,
         premise: &AndChainAtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         match premise {
             AndChainAtomicFact::AtomicFact(atomic_fact) => {
-                self.verify_atomic_fact_as_builtin_rule_premise(atomic_fact, builtin_state)
+                self.prove_atomic_fact_as_builtin_rule_premise(atomic_fact, builtin_state)
             }
             AndChainAtomicFact::AndFact(and_fact) => {
-                self.verify_and_fact_as_builtin_rule_premise(and_fact, builtin_state)
+                self.prove_and_fact_as_builtin_rule_premise(and_fact, builtin_state)
             }
             AndChainAtomicFact::ChainFact(chain_fact) => {
-                self.verify_chain_fact_as_builtin_rule_premise(chain_fact, builtin_state)
+                self.prove_chain_fact_as_builtin_rule_premise(chain_fact, builtin_state)
             }
         }
     }
 
-    fn verify_or_fact_as_builtin_rule_premise(
+    fn prove_or_fact_as_builtin_rule_premise(
         &mut self,
         or_fact: &OrFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         if let Some(cached_result) =
             self.verification_result_from_known_fact_cache(&or_fact.clone().into())
         {
             return Ok(cached_result);
         }
-        let known_result = self.verify_or_fact_with_known_or_facts(or_fact)?;
+        let known_result =
+            self.verify_or_fact_with_known_or_facts(or_fact, builtin_state.verify_state())?;
         if known_result.is_success() {
             return Ok(known_result);
         }
 
         for (selected_index, branch) in or_fact.facts.iter().enumerate() {
-            let branch_result =
-                self.verify_and_chain_fact_as_builtin_rule_premise(branch, builtin_state)?;
-            if !branch_result.is_success() {
+            let Some(branch_result) = self
+                .try_verify_and_chain_fact_as_builtin_rule_premise(branch, builtin_state)?
+            else {
                 continue;
-            }
+            };
             return Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     or_fact.clone().into(),
                     "builtin premise: one disjunct verified".to_string(),
                     BuiltinRuleEvidence::DisjunctionIntroduction(
@@ -188,7 +240,64 @@ impl Runtime {
         &mut self,
         child: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<VerifyFactResult, RuntimeError> {
+        let fact: Fact = child.clone().into();
+        let checked =
+            self.verify_fact_well_defined_result(&fact, builtin_state.verify_state())?;
+        let proof = self.prove_atomic_fact_as_builtin_rule_premise(child, builtin_state)?;
+        Ok(Runtime::finish_fact_verification(checked, proof))
+    }
+
+    /// Probe a generated premise without pretending that an unsuccessful
+    /// candidate was a completed fact verification. Truth search runs first
+    /// under the caller's already-consumed builtin-rule budget. Only a proven
+    /// candidate crosses the completion boundary and receives its own full WD
+    /// derivation for inclusion in the returned proof DAG.
+    pub fn try_verify_atomic_fact_as_builtin_rule_premise(
+        &mut self,
+        child: &AtomicFact,
+        builtin_state: &BuiltinRuleSearchState,
+    ) -> Result<Option<VerifyFactResult>, RuntimeError> {
+        let proof = self.prove_atomic_fact_as_builtin_rule_premise(child, builtin_state)?;
+        let fact: Fact = child.clone().into();
+        self.complete_proven_builtin_candidate(fact, proof, builtin_state.verify_state())
+    }
+
+    fn try_verify_and_chain_fact_as_builtin_rule_premise(
+        &mut self,
+        premise: &AndChainAtomicFact,
+        builtin_state: &BuiltinRuleSearchState,
+    ) -> Result<Option<VerifyFactResult>, RuntimeError> {
+        let proof = self.prove_and_chain_fact_as_builtin_rule_premise(premise, builtin_state)?;
+        self.complete_proven_builtin_candidate(
+            premise.clone().into(),
+            proof,
+            builtin_state.verify_state(),
+        )
+    }
+
+    pub(in crate::verification) fn complete_proven_builtin_candidate(
+        &mut self,
+        fact: Fact,
+        proof: ProveFactResult,
+        verify_state: &VerifyState,
+    ) -> Result<Option<VerifyFactResult>, RuntimeError> {
+        if !proof.is_success() {
+            return Ok(None);
+        }
+        let checked = match self.verify_fact_well_defined_result(&fact, verify_state) {
+            Ok(checked) => checked,
+            Err(RuntimeError::WellDefinedError(_)) => return Ok(None),
+            Err(error) => return Err(error),
+        };
+        Ok(Some(Runtime::finish_fact_verification(checked, proof)))
+    }
+
+    fn prove_atomic_fact_as_builtin_rule_premise(
+        &mut self,
+        child: &AtomicFact,
+        builtin_state: &BuiltinRuleSearchState,
+    ) -> Result<ProveFactResult, RuntimeError> {
         if let Some(result) =
             self.verification_result_from_proof_search_memo(child, builtin_state.verify_state())
         {
@@ -198,7 +307,10 @@ impl Runtime {
         match child {
             AtomicFact::EqualFact(equal_fact) => {
                 let zero_premise_result =
-                    self.verify_equal_fact_with_zero_premise_verification(equal_fact)?;
+                    self.verify_equal_fact_with_zero_premise_verification(
+                        equal_fact,
+                        builtin_state.verify_state(),
+                    )?;
                 if zero_premise_result.is_success() || !builtin_state.can_apply_rule() {
                     return Ok(zero_premise_result);
                 }
@@ -225,13 +337,16 @@ impl Runtime {
         &mut self,
         children: &[AtomicFact],
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
+    ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
         match children {
             [] => Ok(Some(Vec::new())),
             [child] => {
-                let result =
-                    self.verify_atomic_fact_as_builtin_rule_premise(child, builtin_state)?;
-                Ok(result.is_success().then_some(vec![result]))
+                let Some(result) =
+                    self.try_verify_atomic_fact_as_builtin_rule_premise(child, builtin_state)?
+                else {
+                    return Ok(None);
+                };
+                Ok(Some(vec![result]))
             }
             _ => {
                 // Jointly required atomic premises form one conjunction. Trying the complete
@@ -241,8 +356,12 @@ impl Runtime {
                     children.to_vec(),
                     children[0].line_file(),
                 ));
-                let result = self.verify_builtin_rule_premise(&conjunction, builtin_state)?;
-                Ok(result.is_success().then_some(vec![result]))
+                let Some(result) =
+                    self.try_verify_builtin_rule_premise(&conjunction, builtin_state)?
+                else {
+                    return Ok(None);
+                };
+                Ok(Some(vec![result]))
             }
         }
     }

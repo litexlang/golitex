@@ -11,7 +11,8 @@ impl Runtime {
     pub(super) fn try_verify_tuple_reconstruction_from_known_cart_membership(
         &mut self,
         equal_fact: &EqualFact,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+        builtin_state: &BuiltinRuleSearchState,
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -43,8 +44,13 @@ impl Runtime {
             if !membership_result.is_success() {
                 continue;
             }
+            let membership_result = self.complete_atomic_fact_proof_result(
+                &membership,
+                membership_result,
+                builtin_state.verify_state(),
+            )?;
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     equal_fact.clone().into(),
                     "tuple reconstruction from known Cartesian-product membership".to_string(),
                     BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyTupleReconstructionFromKnownCartMembership),

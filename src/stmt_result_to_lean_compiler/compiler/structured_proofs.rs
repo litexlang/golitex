@@ -86,7 +86,7 @@ impl StmtResultToLeanCompiler {
             let membership_check =
                 verification
                     .nonempty_check
-                    .factual_success()
+                    .verified()
                     .ok_or_else(|| {
                         "nonempty-set witness retained a non-factual final check".to_string()
                     })?;
@@ -97,8 +97,6 @@ impl StmtResultToLeanCompiler {
             )
             .into();
             if membership_check.fact().to_string() != expected_membership.to_string()
-                || membership_check.store.fact.to_string() != expected_membership.to_string()
-                || !membership_check.store.infers.is_empty()
             {
                 // Function-set witnesses use a different retained check: the
                 // return set's nonemptiness. That route remains an explicit
@@ -107,7 +105,7 @@ impl StmtResultToLeanCompiler {
                     return Ok(None);
                 }
                 return Err(
-                    "nonempty-set witness changed its final membership check or published effects"
+                    "nonempty-set witness changed its final membership check"
                         .into(),
                 );
             }
@@ -324,15 +322,9 @@ impl StmtResultToLeanCompiler {
             }
 
             if let Some(uniqueness_check) = verification.uniqueness_check.as_deref() {
-                let uniqueness_check = uniqueness_check.factual_success().ok_or_else(|| {
+                let uniqueness_check = uniqueness_check.verified().ok_or_else(|| {
                     "unique existential retained a non-factual uniqueness Result".to_string()
                 })?;
-                if !uniqueness_check.store.infers.is_empty() {
-                    return Err(
-                        "unique existential uniqueness check unexpectedly published inference effects"
-                            .into(),
-                    );
-                }
                 let uniqueness_compilation = self
                     .construct_direct_fact_proof_with_result_owned_well_definedness(
                         uniqueness_check,
@@ -352,7 +344,7 @@ impl StmtResultToLeanCompiler {
                     "existential membership witness has no parameter-check child Result".into(),
                 );
             };
-            let parameter_check = parameter_check.factual_success().ok_or_else(|| {
+            let parameter_check = parameter_check.verified().ok_or_else(|| {
                 "existential witness parameter check is not a successful fact Result".to_string()
             })?;
             let expected_parameter_fact: Fact = InFact::new(
@@ -361,9 +353,7 @@ impl StmtResultToLeanCompiler {
                 line_file.clone(),
             )
             .into();
-            if parameter_check.fact().to_string() != expected_parameter_fact.to_string()
-                || !parameter_check.store.infers.is_empty()
-            {
+            if parameter_check.fact().to_string() != expected_parameter_fact.to_string() {
                 return Err(
                     "existential witness parameter check changed its instantiated requirement"
                         .into(),
@@ -380,16 +370,10 @@ impl StmtResultToLeanCompiler {
             let parameter_proof = parameter_compilation.proof_expression;
 
             let body_check = verification.body_checks[0]
-                .factual_success()
+                .verified()
                 .ok_or_else(|| {
                     "existential witness body check is not a successful fact Result".to_string()
                 })?;
-            if !body_check.store.infers.is_empty() {
-                return Err(
-                    "existential witness body check unexpectedly published inference effects"
-                        .into(),
-                );
-            }
             let substitutions = existential
                 .typed_parameters()
                 .param_defs_and_args_to_param_to_arg_map(witness_objects);
@@ -673,14 +657,14 @@ impl StmtResultToLeanCompiler {
         let mut context = StmtResultWellDefinednessToLeanCompilationContext::default();
         let mut roots = Vec::new();
         for check in &verification.definition_parameter_verification.checks {
-            let Some(check) = check.factual_success() else {
+            let Some(check) = check.verified() else {
                 continue;
             };
-            let Some(recursive) = check.well_definedness.recursive.as_deref() else {
-                continue;
-            };
-            collect_well_definedness_to_lean_context_from_fact_result(recursive, &mut context)?;
-            roots.push(recursive);
+            collect_well_definedness_to_lean_context_from_fact_result(
+                check.checked.proof.as_ref(),
+                &mut context,
+            )?;
+            roots.push(check.checked.proof.as_ref());
         }
         if roots.is_empty() {
             return self
@@ -788,12 +772,9 @@ impl StmtResultToLeanCompiler {
             .enumerate()
         {
             let check = check_result
-                .factual_success()
+                .verified()
                 .ok_or_else(|| format!("atomic witness parameter check {index} is not factual"))?;
-            if check.fact().to_string() != expected_fact.to_string()
-                || check.store.fact.to_string() != expected_fact.to_string()
-                || !check.store.infers.is_empty()
-            {
+            if check.fact().to_string() != expected_fact.to_string() {
                 return Err(format!(
                     "atomic witness parameter check {index} changed its expected fact"
                 ));
@@ -1025,11 +1006,10 @@ impl StmtResultToLeanCompiler {
 
         let source_result = verification
             .source_result
-            .factual_success()
+            .fact()
+            .ok_or_else(|| "local existential elimination source is not a fact check".to_string())?
+            .verified()
             .ok_or_else(|| "local existential elimination source is not factual".to_string())?;
-        if !source_result.store.infers.is_empty() {
-            return Err("local existential elimination source Result gained effects".into());
-        }
         let Some(source_proof) = self
             .construct_lean_proof_from_direct_fact_result(source_result)
             .map_err(|error| format!("local existential source proof: {error}"))?
@@ -1250,7 +1230,12 @@ impl StmtResultToLeanCompiler {
         };
         let source_result = verification
             .source_result
-            .factual_success()
+            .fact()
+            .ok_or_else(|| {
+                "local predicate-backed existential elimination source is not a fact check"
+                    .to_string()
+            })?
+            .verified()
             .ok_or_else(|| {
                 "local predicate-backed existential elimination source is not factual".to_string()
             })?;
@@ -1322,7 +1307,11 @@ impl StmtResultToLeanCompiler {
         };
         let source_result = verification
             .source_result
-            .factual_success()
+            .fact()
+            .ok_or_else(|| {
+                "predicate-backed existential elimination source is not a fact check".to_string()
+            })?
+            .verified()
             .ok_or_else(|| {
                 "predicate-backed existential elimination source is not factual".to_string()
             })?;
@@ -1357,6 +1346,11 @@ impl StmtResultToLeanCompiler {
         };
         let source_result = verification
             .source_result
+            .theorem_application()
+            .ok_or_else(|| {
+                "theorem-backed existential elimination source is not a theorem application"
+                    .to_string()
+            })?
             .non_factual_success()
             .ok_or_else(|| {
                 "theorem-backed existential elimination source is not a statement Result"
@@ -1461,13 +1455,14 @@ impl StmtResultToLeanCompiler {
         } else {
             let source_result = verification
                 .source_result
-                .factual_success()
+                .fact()
+                .ok_or_else(|| {
+                    "existential elimination source is not a fact check".to_string()
+                })?
+                .verified()
                 .ok_or_else(|| {
                     "existential elimination source is not a successful fact Result".to_string()
                 })?;
-            if !source_result.store.infers.is_empty() {
-                return Err("existential elimination source Result gained effects".into());
-            }
             let Some(source_proof) =
                 self.construct_lean_proof_from_direct_fact_result(source_result)?
             else {
@@ -1893,12 +1888,12 @@ impl StmtResultToLeanCompiler {
 
     pub(super) fn construct_lean_direct_subset_child_for_by_extension(
         &mut self,
-        child: &StmtResult,
+        child: &VerifyFactResult,
         expected: &Fact,
         direction: &str,
     ) -> Result<Option<String>, String> {
         let child = child
-            .factual_success()
+            .verified()
             .ok_or_else(|| format!("by-extension {direction} child is not factual"))?;
         if child.fact().to_string() != expected.to_string() {
             return self
@@ -1921,15 +1916,10 @@ impl StmtResultToLeanCompiler {
     /// structures are independently checked against the expected subset.
     pub(super) fn construct_lean_subset_proof_from_alpha_equivalent_forall_citation(
         &self,
-        child: &SuccessFactStmtResult,
+        child: &VerifiedFactResult,
         expected_subset: &Fact,
         direction: &str,
     ) -> Result<String, String> {
-        if !child.store.infers.is_empty() || child.store.fact_id.is_some() {
-            return Err(format!(
-                "by-extension {direction} forall check unexpectedly published effects"
-            ));
-        }
         validate_forall_fact_as_subset(&child.fact(), expected_subset)
             .map_err(|error| format!("by-extension {direction} requested forall: {error}"))?;
         let SuccessFactProofResult::StoredFactCitation(citation) = child.proof() else {
@@ -2062,14 +2052,12 @@ impl StmtResultToLeanCompiler {
             result.statement.line_file.clone(),
         )
         .into();
-        let start_membership_check = proof.start_in_z_check.factual_success().ok_or_else(|| {
+        let start_membership_check = proof.start_in_z_check.verified().ok_or_else(|| {
             "structured induction start membership child is not factual".to_string()
         })?;
-        if start_membership_check.fact().to_string() != expected_start_membership.to_string()
-            || !start_membership_check.store.infers.is_empty()
-        {
+        if start_membership_check.fact().to_string() != expected_start_membership.to_string() {
             return Err(
-                "structured induction start membership child changed its target or published effects"
+                "structured induction start membership child changed its target"
                     .into(),
             );
         }
@@ -2645,13 +2633,11 @@ impl StmtResultToLeanCompiler {
         {
             let retained = conclusion
                 .check
-                .factual_success()
+                .verified()
                 .ok_or_else(|| format!("structured induction conclusion {index} is not factual"))?;
-            if retained.fact().to_string() != conclusion.goal.to_string()
-                || !retained.store.infers.is_empty()
-            {
+            if retained.fact().to_string() != conclusion.goal.to_string() {
                 return Err(format!(
-                    "structured induction conclusion {index} changed its checked goal or published effects"
+                    "structured induction conclusion {index} changed its checked goal"
                 ));
             }
             if !fact_matches_structured_induction_goal_substitution(
@@ -2969,7 +2955,7 @@ impl StmtResultToLeanCompiler {
                         "skipped {procedure_name} domain retained store effects"
                     ));
                 }
-                let negated = negated.factual_success().ok_or_else(|| {
+                let negated = negated.verified().ok_or_else(|| {
                     format!("{procedure_name} negated domain child is not factual")
                 })?;
                 let Some(negated_proof) =
@@ -2994,7 +2980,7 @@ impl StmtResultToLeanCompiler {
             }
             let checked = domain
                 .check
-                .factual_success()
+                .verified()
                 .ok_or_else(|| format!("satisfied {procedure_name} domain is not factual"))?;
             validate_scoped_fact_check_result(
                 checked,
@@ -3067,7 +3053,7 @@ impl StmtResultToLeanCompiler {
             .enumerate()
         {
             let expected = expected.clone().to_fact();
-            let check = check.factual_success().ok_or_else(|| {
+            let check = check.verified().ok_or_else(|| {
                 format!(
                     "{procedure_name} assignment {assignment_index} conclusion {conclusion_index} is not factual"
                 )
@@ -3528,7 +3514,7 @@ impl StmtResultToLeanCompiler {
         }
         let membership_check = verification
             .membership_check
-            .factual_success()
+            .verified()
             .ok_or_else(|| format!("{result_layer} membership child is not factual"))?;
         validate_scoped_fact_check_result(
             membership_check,
@@ -3569,7 +3555,7 @@ impl StmtResultToLeanCompiler {
                     "{result_layer} Result changed endpoint {endpoint_index}"
                 ));
             }
-            let checked = retained.verification.factual_success().ok_or_else(|| {
+            let checked = retained.verification.verified().ok_or_else(|| {
                 format!("{result_layer} endpoint {endpoint_index} child is not factual")
             })?;
             validate_scoped_fact_check_result(
@@ -3832,7 +3818,7 @@ impl StmtResultToLeanCompiler {
 
         let coverage = verification
             .coverage_check
-            .factual_success()
+            .verified()
             .ok_or_else(|| "by-cases coverage child is not factual".to_string())?;
         let expected_coverage: Fact = OrFact::new(
             verification
@@ -3843,9 +3829,7 @@ impl StmtResultToLeanCompiler {
             result.statement.line_file.clone(),
         )
         .into();
-        if coverage.fact().to_string() != expected_coverage.to_string()
-            || !coverage.store.infers.is_empty()
-        {
+        if coverage.fact().to_string() != expected_coverage.to_string() {
             return Err("by-cases coverage child changed the ordered cases".into());
         }
         let Some(coverage_proof) = self.construct_lean_proof_from_direct_fact_result(coverage)?
@@ -3997,7 +3981,7 @@ impl StmtResultToLeanCompiler {
                                 ));
                             }
                             let conclusion =
-                                exit.checks[goal_index].factual_success().ok_or_else(|| {
+                                exit.checks[goal_index].verified().ok_or_else(|| {
                                     format!(
                                         "by-cases branch {branch_index} conclusion is not factual"
                                     )
@@ -4210,11 +4194,11 @@ impl StmtResultToLeanCompiler {
     ) -> Result<Option<String>, String> {
         let impossible = contradiction
             .impossible_check
-            .factual_success()
+            .verified()
             .ok_or_else(|| "contradiction positive child is not factual".to_string())?;
         let negated = contradiction
             .negated_impossible_check
-            .factual_success()
+            .verified()
             .ok_or_else(|| "contradiction negated child is not factual".to_string())?;
         let impossible_target: Fact = impossible_fact.clone().into();
         let expected_negated: Fact = impossible_fact
@@ -4223,8 +4207,6 @@ impl StmtResultToLeanCompiler {
             .into();
         if impossible.fact().to_string() != impossible_target.to_string()
             || negated.fact().to_string() != expected_negated.to_string()
-            || !impossible.store.infers.is_empty()
-            || !negated.store.infers.is_empty()
         {
             return Err("contradiction Result changed one of its complementary facts".into());
         }

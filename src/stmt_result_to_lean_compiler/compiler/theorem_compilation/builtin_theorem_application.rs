@@ -103,7 +103,7 @@ impl StmtResultToLeanCompiler {
             return Err("builtin theorem direct adapter requirement changed its conclusion".into());
         }
         let requirement_check = requirement_check
-            .factual_success()
+            .verified()
             .ok_or_else(|| "builtin theorem requirement child is not factual".to_string())?;
         validate_scoped_fact_check_result(
             requirement_check,
@@ -113,12 +113,10 @@ impl StmtResultToLeanCompiler {
         let [outer_store] = result.common.infers.store_fact_outputs.as_slice() else {
             return Err("builtin theorem must retain exactly one outer conclusion store".into());
         };
-        let checked_fact_id = requirement_check
-            .store
+        let checked_fact_id = outer_store
             .fact_id
-            .ok_or_else(|| "builtin theorem checked conclusion has no frozen FactId".to_string())?;
+            .ok_or_else(|| "builtin theorem conclusion store has no FactId".to_string())?;
         if outer_store.itself_and_why_itself_is_stored.0.to_string() != conclusion.to_string()
-            || outer_store.fact_id != Some(checked_fact_id)
             || outer_store.inferred_facts.len() != outer_store.inferred_fact_ids.len()
         {
             return Err(
@@ -126,13 +124,6 @@ impl StmtResultToLeanCompiler {
                     .into(),
             );
         }
-        self.install_atomic_fact_well_definedness_store_results(requirement_check)
-            .map_err(|error| {
-                format!(
-                    "builtin theorem `{}` checked-conclusion WD installation: {error}",
-                    source.theorem_id
-                )
-            })?;
         let Some(proof) = self
             .construct_lean_proof_from_direct_fact_result_using_its_well_definedness(
                 requirement_check,
@@ -143,14 +134,8 @@ impl StmtResultToLeanCompiler {
                 source.theorem_id
             ));
         };
-        let proposition = if requirement_check.well_definedness.recursive.is_some() {
-            self.render_fact_using_well_definedness_result(
-                &requirement_check.well_definedness,
-                conclusion,
-            )?
-        } else {
-            render_fact(conclusion, &self.environment_stack)?
-        };
+        let proposition =
+            self.render_fact_using_well_definedness_result(&requirement_check.checked, conclusion)?;
         let source_name = format!("__fact{}", self.next_fact_name_index);
         self.declarations.push(format!(
             "theorem {source_name} : {proposition} := by\n  exact {proof}"

@@ -19,8 +19,9 @@ impl Runtime {
                 )
             })?;
 
-        let (mut inside_results, obligations_for_output) = self.run_in_local_env(|rt| {
-            let mut inside_results: Vec<StmtResult> = Vec::new();
+        let (proof_steps, checked_results, obligations_for_output) = self.run_in_local_env(|rt| {
+            let mut proof_steps: Vec<StmtResult> = Vec::new();
+            let mut checked_results: Vec<VerifyFactResult> = Vec::new();
             for proof_stmt in stmt.proof.iter() {
                 let mut result = rt
                     .execute_statement(proof_stmt)
@@ -32,18 +33,18 @@ impl Runtime {
                                 proof_stmt
                             ),
                             Some(statement_error),
-                            std::mem::take(&mut inside_results),
+                            std::mem::take(&mut proof_steps),
                         )
                     })?;
                 rt.attach_known_fact_ids_to_stmt_result(&mut result)?;
-                inside_results.push(result);
+                proof_steps.push(result);
             }
 
             let obligations =
                 axiom_of_choice_obligations(rt, stmt.family.clone(), stmt.line_file.clone())?;
             let mut obligations_for_output = Vec::new();
             for (role, fact) in obligations {
-                if let Some(fact_id) = section_inferred_fact_id(&inside_results, &fact) {
+                if let Some(fact_id) = section_inferred_fact_id(&proof_steps, &fact) {
                     obligations_for_output.push((role, fact, fact_id, false));
                     continue;
                 }
@@ -58,10 +59,10 @@ impl Runtime {
                                 fact
                             ),
                             Some(verify_error),
-                            std::mem::take(&mut inside_results),
+                            std::mem::take(&mut proof_steps),
                         )
                     })?;
-                let store = rt
+                rt
                     .store_with_well_defined_verification_and_infer_with_default_verify_state(
                         fact.clone(),
                     )
@@ -74,22 +75,17 @@ impl Runtime {
                                 fact
                             ),
                             Some(store_error),
-                            std::mem::take(&mut inside_results),
+                            std::mem::take(&mut proof_steps),
                         )
                     })?;
-                result = result.with_infers(store);
-                rt.attach_known_fact_ids_to_stmt_result(&mut result)?;
-                let fact_id = result
-                    .fact_id()
-                    .map(Ok)
-                    .unwrap_or_else(|| rt.require_known_fact_id_for_success_result(&fact))?;
+                rt.attach_known_fact_ids_to_verify_fact_result(&mut result)?;
+                let fact_id = rt.require_known_fact_id_for_success_result(&fact)?;
                 obligations_for_output.push((role, fact, fact_id, true));
-                inside_results.push(result);
+                checked_results.push(result);
             }
-            Ok::<_, RuntimeError>((inside_results, obligations_for_output))
+            Ok::<_, RuntimeError>((proof_steps, checked_results, obligations_for_output))
         })?;
-        let proof_steps = inside_results.drain(..stmt.proof.len()).collect::<Vec<_>>();
-        let mut checked_obligations = inside_results.into_iter();
+        let mut checked_obligations = checked_results.into_iter();
         let obligations = obligations_for_output
             .into_iter()
             .map(

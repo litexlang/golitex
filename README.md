@@ -9,9 +9,13 @@ Created and maintained by Jiachen Shen.
 
 [Try Litex](https://litexlang.com) · [Website](https://litexlang.com) · [Blueprint](docs/Litex_Blueprint.md) · [中文蓝图](docs/Litex中文蓝图.md) · [Manual](docs/Manual.md) · [Install](docs/setup.md) · [Examples](examples/README.md) · [GitHub](https://github.com/litexlang/golitex) · [Zulip](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/)
 
-Litex is a set-theoretic, fact-oriented formal language that lets humans and
-AI write mathematical facts directly, see why they hold, and see where
-verification stops.
+Litex is a set-theoretic, fact-oriented formal language that builds proof flows
+from the bottom up. It puts humans, AI, and the verifier in the same loop:
+humans provide mathematical intent, AI proposes or repairs the next fact, and
+Litex checks it and returns either its supporting evidence or the point where
+verification stops. Through this cycle, checkable mathematical knowledge
+accumulates. In principle, any Litex code can be compiled to Lean and connected
+to the Lean/Mathlib ecosystem. 
 
 > **Litex is an experimental hobby project in beta; expect rough edges.**
 

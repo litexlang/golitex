@@ -15,10 +15,10 @@ pub struct SuccessVerifyByDefinitionResult {
     /// Exact target well-definedness checked before definition expansion.
     /// This owns application occurrences that may appear inside substituted
     /// predicate arguments and are absent from the definition's own WD tree.
-    pub target_well_definedness: Option<SuccessVerifyFactWellDefinedResult>,
+    pub target_well_definedness: Option<WellDefinedFactResult>,
     pub definition_clause_facts: Vec<Fact>,
     pub argument_verification: Option<Box<SuccessVerifyArgsSatisfyParamDefResult>>,
-    pub clause_checks: Vec<StmtResult>,
+    pub clause_checks: Vec<VerifyFactResult>,
 }
 
 impl fmt::Debug for SuccessVerifyByDefinitionResult {
@@ -49,10 +49,10 @@ impl SuccessVerifyByDefinitionResult {
         definition_clauses: Vec<String>,
         stored_fact: String,
         concrete_user_prop: bool,
-        target_well_definedness: Option<SuccessVerifyFactWellDefinedResult>,
+        target_well_definedness: Option<WellDefinedFactResult>,
         definition_clause_facts: Vec<Fact>,
         argument_verification: Option<SuccessVerifyArgsSatisfyParamDefResult>,
-        clause_checks: Vec<StmtResult>,
+        clause_checks: Vec<VerifyFactResult>,
     ) -> Self {
         SuccessVerifyByDefinitionResult {
             prop,

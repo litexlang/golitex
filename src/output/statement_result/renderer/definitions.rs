@@ -36,7 +36,7 @@ impl StatementResultRenderer {
                             string_field("kind", "SuccessVerifyHaveObjEqualResult"),
                             (
                                 "type_checks".to_string(),
-                                self.stmt_results(&verification.type_checks),
+                                self.verify_fact_results(&verification.type_checks),
                             ),
                         ])
                     })
@@ -97,7 +97,7 @@ impl StatementResultRenderer {
                             string_field("kind", "SuccessVerifyPreimageResult"),
                             (
                                 "source_membership_check".to_string(),
-                                self.stmt_result(&verification.source_membership_check),
+                                self.verify_fact_result(&verification.source_membership_check),
                             ),
                         ])
                     })
@@ -131,11 +131,11 @@ impl StatementResultRenderer {
                             string_field("kind", "SuccessVerifyCaseFunctionDefinitionResult"),
                             (
                                 "coverage_check".to_string(),
-                                self.stmt_result(&verification.coverage_check),
+                                self.verify_fact_result(&verification.coverage_check),
                             ),
                             (
                                 "return_checks".to_string(),
-                                self.stmt_results(&verification.return_checks),
+                                self.verify_fact_results(&verification.return_checks),
                             ),
                         ])
                     })
@@ -170,7 +170,7 @@ impl StatementResultRenderer {
                                 verification
                                     .source_forall_check
                                     .as_ref()
-                                    .map(|check| self.stmt_result(check))
+                                    .map(|check| self.verify_fact_result(check))
                                     .unwrap_or(JsonValue::Null),
                             ),
                             (
@@ -179,7 +179,7 @@ impl StatementResultRenderer {
                             ),
                             (
                                 "conclusion_checks".to_string(),
-                                self.stmt_results(&verification.conclusion_checks),
+                                self.verify_fact_results(&verification.conclusion_checks),
                             ),
                         ])
                     })
@@ -348,7 +348,7 @@ impl StatementResultRenderer {
                             ),
                             (
                                 "conclusion_checks".to_string(),
-                                self.stmt_results(&verification.conclusion_checks),
+                                self.verify_fact_results(&verification.conclusion_checks),
                             ),
                         ])
                     })

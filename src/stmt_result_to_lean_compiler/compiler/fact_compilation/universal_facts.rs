@@ -14,10 +14,77 @@ impl StmtResultToLeanCompiler {
         &mut self,
         result: &SuccessFactStmtResult,
     ) -> Result<bool, String> {
-        let SuccessFactProofResult::ForallProof(proof) = result.proof() else {
+        let Some(verified) = result.verification() else {
             return Ok(false);
         };
-        let Fact::ForallFact(source_forall) = result.fact() else {
+        let Fact::ForallFact(source_forall) = verified.fact() else {
+            return Ok(false);
+        };
+        let publication_selections =
+            direct_forall_result_publication_selections(result, &source_forall)?;
+        self.compile_verified_forall_fact_result(verified, publication_selections)
+    }
+
+    /// Compile a verifier-owned forall process without assigning the process
+    /// node a statement FactId. Its conclusion identities come from the
+    /// process-local WD scope and are used only while constructing this Lean
+    /// proof.
+    pub(in super::super) fn compile_direct_forall_verify_result(
+        &mut self,
+        verified: &VerifiedFactResult,
+    ) -> Result<bool, String> {
+        let Fact::ForallFact(source_forall) = verified.fact() else {
+            return Ok(false);
+        };
+        let SuccessVerifyFactWellDefinedProofResult::ForallFact(well_definedness) =
+            verified.checked.proof.as_ref()
+        else {
+            return Err("ForallProof Result retained no forall well-definedness".into());
+        };
+        if well_definedness.conclusions.len() != source_forall.then_facts.len() {
+            return Err("ForallProof process changed its WD conclusion arity".into());
+        }
+        let mut published_conclusions = Vec::with_capacity(source_forall.then_facts.len());
+        for (index, (conclusion, checked)) in source_forall
+            .then_facts
+            .iter()
+            .zip(well_definedness.conclusions.iter())
+            .enumerate()
+        {
+            let fact = conclusion.clone().to_fact();
+            if checked.proposition.to_string() != fact.to_string() {
+                return Err(format!(
+                    "ForallProof process WD conclusion {index} changed its proposition"
+                ));
+            }
+            let fact_id = checked.store.fact_id.ok_or_else(|| {
+                format!("ForallProof process WD conclusion {index} has no local FactId")
+            })?;
+            published_conclusions.push((index, fact_id, fact));
+        }
+        let selection = DirectForallResultPublicationSelection {
+            forall_fact: source_forall.clone(),
+            stored_fact_id: None,
+            source_parameter_indices: (0..source_forall
+                .typed_parameters
+                .collect_param_bindings_with_types()
+                .len())
+                .collect(),
+            source_conclusion_indices: (0..source_forall.then_facts.len()).collect(),
+            published_conclusions,
+        };
+        self.compile_verified_forall_fact_result(verified, vec![selection])
+    }
+
+    fn compile_verified_forall_fact_result(
+        &mut self,
+        verified: &VerifiedFactResult,
+        publication_selections: Vec<DirectForallResultPublicationSelection>,
+    ) -> Result<bool, String> {
+        let SuccessFactProofResult::ForallProof(proof) = verified.proof() else {
+            return Ok(false);
+        };
+        let Fact::ForallFact(source_forall) = verified.fact() else {
             return Err("ForallProof Result retained a non-forall target".into());
         };
         if source_forall.to_string() != proof.forall_fact.to_string() {
@@ -42,10 +109,8 @@ impl StmtResultToLeanCompiler {
                 proof.assumption_infers.store_fact_outputs
             ));
         }
-        let publication_selections =
-            direct_forall_result_publication_selections(result, &source_forall)?;
-        let Some(SuccessVerifyFactWellDefinedProofResult::ForallFact(well_definedness)) =
-            result.well_definedness.recursive.as_deref()
+        let SuccessVerifyFactWellDefinedProofResult::ForallFact(well_definedness) =
+            verified.checked.proof.as_ref()
         else {
             return Err("ForallProof Result retained no recursive forall well-definedness".into());
         };
@@ -61,7 +126,7 @@ impl StmtResultToLeanCompiler {
         // proof is rendered; projecting a conclusion in isolation would lose
         // the parent-owned function-prefix and binder context.
         let mut forall_well_definedness =
-            self.construct_well_definedness_to_lean_compilation_context(&result.well_definedness)?;
+            self.construct_well_definedness_to_lean_compilation_context(&verified.checked)?;
         if let Some(enclosing_well_definedness) = self.environment_stack.well_definedness.as_ref() {
             forall_well_definedness.merge_from(enclosing_well_definedness)?;
         }
@@ -582,53 +647,38 @@ impl StmtResultToLeanCompiler {
                         "ForallProof conclusion {source_conclusion_index} changed its retained statement"
                     ));
                     }
-                    let child = proved.result.factual_success().ok_or_else(|| {
+                    let child = proved.result.verified().ok_or_else(|| {
                         format!("ForallProof conclusion {source_conclusion_index} is not factual")
                     })?;
-                    if child.fact().to_string() != expected.to_string()
-                        || child.store.fact.to_string() != expected.to_string()
-                    {
+                    if child.fact().to_string() != expected.to_string() {
                         return Err(format!(
                             "ForallProof conclusion {source_conclusion_index} changed its target"
                         ));
                     }
-                    if child
-                        .store
-                        .infers
-                        .rule_applications
-                        .iter()
-                        .any(|application| {
-                            !infer_rule_has_direct_compiler_environment_consumer(&application.rule)
-                        })
-                    {
-                        return Err(format!(
-                            "ForallProof conclusion {source_conclusion_index} contains a typed inference rule that the binder compiler does not support"
-                        ));
-                    }
-                    let conclusion_fact_id = child.store.fact_id.ok_or_else(|| {
-                        format!(
-                            "ForallProof conclusion {source_conclusion_index} has no frozen FactId"
-                        )
-                    })?;
+                    let conclusion_well_definedness =
+                        &well_definedness.conclusions[source_conclusion_index];
+                    let conclusion_fact_id =
+                        conclusion_well_definedness.store.fact_id.ok_or_else(|| {
+                            format!(
+                                "ForallProof WD conclusion {source_conclusion_index} has no local FactId"
+                            )
+                        })?;
                     // The conclusion is a real child Result layer. Its proof may
                     // render objects (notably function applications) whose exact
                     // verifier-selected contracts live in the corresponding
                     // named WD child. The complete parent-owned WD tree is active
                     // for this binder frame; install only this child's intrinsic
                     // stores before constructing the child proof.
-                    let conclusion_well_definedness =
-                        &well_definedness.conclusions[source_conclusion_index];
                     install_fact_well_definedness_proof_store_results_in_active_environment(
                     conclusion_well_definedness.well_definedness.as_ref(),
                     &mut self.environment_stack,
                 )
                 .map_err(|error| {
-                    let preceding_fact_ids = proof
-                        .proves
+                    let preceding_fact_ids = well_definedness
+                        .conclusions
                         .iter()
                         .take(source_conclusion_index)
-                        .filter_map(|proved| proved.result.factual_success())
-                        .filter_map(|proved| proved.store.fact_id)
+                        .filter_map(|conclusion| conclusion.store.fact_id)
                         .map(|fact_id| fact_id.to_string())
                         .collect::<Vec<_>>()
                         .join(", ");
@@ -759,37 +809,6 @@ impl StmtResultToLeanCompiler {
                             &layer,
                         )?;
                     }
-                    let child_inference_layer =
-                        format!("ForallProof conclusion {source_conclusion_index} inference");
-                    let mut child_allowed_sources = self
-                        .install_equality_chain_adjacent_projections_for_typed_inference(
-                            &expected,
-                            conclusion_fact_id,
-                            &conclusion_name,
-                            &child.store.infers,
-                            &child_inference_layer,
-                        )?;
-                    for source in self
-                        .install_numeric_order_chain_adjacent_projections_for_typed_inference(
-                            &expected,
-                            conclusion_fact_id,
-                            &conclusion_name,
-                            &child.store.infers,
-                            &child_inference_layer,
-                        )?
-                    {
-                        if !child_allowed_sources.iter().any(|existing| {
-                            existing.0 == source.0 && existing.1.to_string() == source.1.to_string()
-                        }) {
-                            child_allowed_sources.push(source);
-                        }
-                    }
-                    self.compile_typed_inference_results_as_local_have_statements(
-                        &child.store.infers,
-                        &child_allowed_sources,
-                        &mut proof_lines,
-                        &child_inference_layer,
-                    )?;
                 }
                 let mut conclusion_names =
                     Vec::with_capacity(publication_selection.published_conclusions.len());

@@ -9,10 +9,10 @@ impl Runtime {
         &self,
         fact: &AtomicFact,
         verify_state: &VerifyState,
-    ) -> Option<StmtResult> {
+    ) -> Option<ProveFactResult> {
         let key = fact.to_string();
         verify_state.atomic_fact_proof(&key).map(|source| {
-            SuccessFactStmtResult::new_with_reused_verification(
+            SuccessProveFactResult::new_with_reused_verification(
                 fact.clone().into(),
                 SuccessInferResult::new(),
                 source,
@@ -25,9 +25,9 @@ impl Runtime {
     pub fn remember_successful_atomic_fact_for_proof_search(
         &mut self,
         fact: &AtomicFact,
-        mut result: StmtResult,
+        mut result: ProveFactResult,
         verify_state: &VerifyState,
-    ) -> StmtResult {
+    ) -> ProveFactResult {
         if result.is_unknown() {
             return result;
         }

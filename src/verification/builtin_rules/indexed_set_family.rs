@@ -55,7 +55,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         for (indexed_side, other_side) in [
             (&equal_fact.left, &equal_fact.right),
             (&equal_fact.right, &equal_fact.left),
@@ -99,6 +99,7 @@ impl Runtime {
                     other_indexed.family_fn(),
                     PointwiseRelation::Equal,
                     &equal_fact.line_file,
+                    builtin_state,
                 )? {
                     return Ok(Some(Self::indexed_family_equality_success(
                         equal_fact,
@@ -212,7 +213,7 @@ impl Runtime {
         &mut self,
         subset_fact: &SubsetFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         if let Obj::IndexUnion(index_union) = &subset_fact.right {
             if let Some(index) = self.family_application_index_matching(
                 index_union.family_fn.as_ref(),
@@ -272,6 +273,7 @@ impl Runtime {
                     right.family_fn(),
                     PointwiseRelation::Subset,
                     &subset_fact.line_file,
+                    builtin_state,
                 )? {
                     return Ok(Some(Self::indexed_family_subset_success(
                         subset_fact,
@@ -289,6 +291,7 @@ impl Runtime {
                 &subset_fact.right,
                 PointwiseBoundDirection::FamilySubsetSet,
                 &subset_fact.line_file,
+                builtin_state,
             )? {
                 return Ok(Some(Self::indexed_family_subset_success(
                     subset_fact,
@@ -304,6 +307,7 @@ impl Runtime {
                 &subset_fact.left,
                 PointwiseBoundDirection::SetSubsetFamily,
                 &subset_fact.line_file,
+                builtin_state,
             )? {
                 let ambient_premise: AtomicFact = SubsetFact::new(
                     subset_fact.left.clone(),
@@ -383,17 +387,17 @@ impl Runtime {
     fn indexed_family_equality_success(
         equal_fact: &EqualFact,
         reason: &str,
-        steps: Vec<StmtResult>,
-    ) -> StmtResult {
+        steps: Vec<VerifyFactResult>,
+    ) -> ProveFactResult {
         factual_equal_success_by_builtin_reason_with_subgoals(equal_fact, reason, steps)
     }
 
     fn indexed_family_subset_success(
         subset_fact: &SubsetFact,
         reason: &str,
-        steps: Vec<StmtResult>,
-    ) -> StmtResult {
-        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+        steps: Vec<VerifyFactResult>,
+    ) -> ProveFactResult {
+        SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
             subset_fact.clone().into(),
             reason.to_string(),
             BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::IndexedFamilySubsetSuccess),
@@ -463,21 +467,27 @@ impl Runtime {
         index_set: &Obj,
         line_file: &LineFile,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<VerifyFactResult>, RuntimeError> {
         let nonempty: AtomicFact =
             IsNonemptySetFact::new(index_set.clone(), line_file.clone()).into();
         if matches!(index_set, Obj::ListSet(list) if !list.list.is_empty()) {
-            return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
-                    nonempty.into(),
+            let proof =
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    nonempty.clone().into(),
                     "nonempty literal index set".to_string(),
                     BuiltinRuleEvidence::Uncatalogued(
                         UncataloguedBuiltinRule::VerifyIndexSetNonemptyPremise,
                     ),
                     Vec::new(),
                 )
-                .into(),
-            ));
+                .into();
+            return self
+                .complete_atomic_fact_proof_result(
+                    &nonempty,
+                    proof,
+                    builtin_state.verify_state(),
+                )
+                .map(Some);
         }
         let result = self.verify_atomic_fact_as_builtin_rule_premise(&nonempty, builtin_state)?;
         Ok(result.is_success().then_some(result))
@@ -538,7 +548,8 @@ impl Runtime {
         right_family: &Obj,
         relation: PointwiseRelation,
         line_file: &LineFile,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+        builtin_state: &BuiltinRuleSearchState,
+    ) -> Result<Option<VerifyFactResult>, RuntimeError> {
         let Some(forall_fact) = self.pointwise_family_relation_fact(
             index_set,
             left_family,
@@ -549,7 +560,15 @@ impl Runtime {
         else {
             return Ok(None);
         };
-        self.verify_forall_fact_from_known_cache_only(&forall_fact)
+        let Some(proof) = self.verify_forall_fact_from_known_cache_only(&forall_fact)? else {
+            return Ok(None);
+        };
+        self.complete_fact_proof_result(
+            &forall_fact.clone().into(),
+            proof,
+            builtin_state.verify_state(),
+        )
+        .map(Some)
     }
 
     fn verify_cached_pointwise_family_relation_to_set(
@@ -559,7 +578,8 @@ impl Runtime {
         bound: &Obj,
         direction: PointwiseBoundDirection,
         line_file: &LineFile,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+        builtin_state: &BuiltinRuleSearchState,
+    ) -> Result<Option<VerifyFactResult>, RuntimeError> {
         let param_name = self.generate_internal_binder_name();
         let param_group =
             self.fresh_param_group_with_type(vec![param_name], ParamType::Obj(index_set.clone()))?;
@@ -581,7 +601,15 @@ impl Runtime {
             vec![pointwise.into()],
             line_file.clone(),
         )?;
-        self.verify_forall_fact_from_known_cache_only(&forall_fact)
+        let Some(proof) = self.verify_forall_fact_from_known_cache_only(&forall_fact)? else {
+            return Ok(None);
+        };
+        self.complete_fact_proof_result(
+            &forall_fact.clone().into(),
+            proof,
+            builtin_state.verify_state(),
+        )
+        .map(Some)
     }
 
     fn pointwise_family_relation_fact(

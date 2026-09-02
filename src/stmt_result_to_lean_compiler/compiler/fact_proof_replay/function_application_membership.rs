@@ -11,7 +11,7 @@ impl StmtResultToLeanCompiler {
         &mut self,
         target: &Fact,
         evidence: &FunctionApplicationReturnMembershipBuiltinRuleEvidence,
-        subgoals: &[StmtResult],
+        subgoals: &[VerifyFactResult],
     ) -> Result<Option<String>, String> {
         if evidence.expected_target.to_string() != target.to_string() {
             return Err("function-application return evidence changed its target".into());
@@ -22,14 +22,13 @@ impl StmtResultToLeanCompiler {
             );
         };
         let head_membership_result = head_membership_result
-            .factual_success()
+            .verified()
             .ok_or_else(|| "function head-membership child is not factual".to_string())?;
         if head_membership_result.fact().to_string()
             != evidence.expected_head_membership.to_string()
-            || !head_membership_result.store.infers.is_empty()
         {
             return Err(
-                "function head-membership child changed its proposition or published effects"
+                "function head-membership child changed its proposition"
                     .into(),
             );
         }

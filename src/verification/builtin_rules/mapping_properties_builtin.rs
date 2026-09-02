@@ -7,14 +7,15 @@ impl Runtime {
         &mut self,
         target: &IsFiniteSetFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         for property in self.known_function_property_facts(&[SURJECTIVE, BIJECTIVE]) {
             let Some((domain, codomain, _)) = function_property_parts(&property) else {
                 continue;
             };
-            let codomain_match = self.verify_equal_fact_by_known_equality(
+            let codomain_match = self.verify_known_equality_fact(
                 &EqualFact::new_from_refs(&codomain, &target.set, target.line_file.clone()),
-            );
+                builtin_state.verify_state(),
+            )?;
             if !codomain_match.is_success() {
                 continue;
             }
@@ -26,15 +27,13 @@ impl Runtime {
             if !domain_result.is_success() {
                 continue;
             }
-            let property_result = self.verify_non_equational_atomic_fact_with_known_atomic_facts(
-                &property.clone().into(),
-            )?;
+            let property_result = self.verify_atomic_fact_as_builtin_rule_premise(&property.clone().into(), builtin_state)?;
             if !property_result.is_success() {
                 continue;
             }
 
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     target.clone().into(),
                     "finite codomain of a surjection from a finite set".to_string(),
                     BuiltinRuleEvidence::Uncatalogued(
@@ -54,8 +53,8 @@ impl Runtime {
     pub(super) fn try_verify_finite_set_size_fn_range_from_known_injection(
         &mut self,
         equal_fact: &EqualFact,
-        _builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+        builtin_state: &BuiltinRuleSearchState,
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let Some((function, source)) = finite_fn_range_size_equality_shape(equal_fact) else {
             return Ok(None);
         };
@@ -65,32 +64,33 @@ impl Runtime {
             let Some((domain, _, candidate_function)) = function_property_parts(&property) else {
                 continue;
             };
-            let domain_match = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
-                &domain,
-                &source,
-                line_file.clone(),
-            ));
-            let function_match = self.verify_equal_fact_by_known_equality(
+            let domain_match = self.verify_known_equality_fact(
+                &EqualFact::new_from_refs(&domain, &source, line_file.clone()),
+                builtin_state.verify_state(),
+            )?;
+            let function_match = self.verify_known_equality_fact(
                 &EqualFact::new_from_refs(&candidate_function, &function, line_file.clone()),
-            );
+                builtin_state.verify_state(),
+            )?;
             if !domain_match.is_success() || !function_match.is_success() {
                 continue;
             }
 
             let domain_finite: AtomicFact = IsFiniteSetFact::new(domain, line_file.clone()).into();
-            let finite_result = self.verify_known_or_structurally_finite_set(&domain_finite)?;
+            let finite_result = self.verify_known_or_structurally_finite_set(
+                &domain_finite,
+                builtin_state.verify_state(),
+            )?;
             if !finite_result.is_success() {
                 continue;
             }
-            let property_result = self.verify_non_equational_atomic_fact_with_known_atomic_facts(
-                &property.clone().into(),
-            )?;
+            let property_result = self.verify_atomic_fact_as_builtin_rule_premise(&property.clone().into(), builtin_state)?;
             if !property_result.is_success() {
                 continue;
             }
 
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     equal_fact.clone().into(),
                     "finite injection has range cardinality equal to its source".to_string(),
                     BuiltinRuleEvidence::Uncatalogued(
@@ -110,8 +110,8 @@ impl Runtime {
     pub(super) fn try_verify_finite_set_size_from_known_bijection(
         &mut self,
         equal_fact: &EqualFact,
-        _builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+        builtin_state: &BuiltinRuleSearchState,
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let (Obj::FiniteSetSize(left_size), Obj::FiniteSetSize(right_size)) =
             (&equal_fact.left, &equal_fact.right)
         else {
@@ -123,18 +123,22 @@ impl Runtime {
             let Some((domain, codomain, _)) = function_property_parts(&property) else {
                 continue;
             };
-            let direct_domain = self.verify_equal_fact_by_known_equality(
+            let direct_domain = self.verify_known_equality_fact(
                 &EqualFact::new_from_refs(&domain, left_size.set.as_ref(), line_file.clone()),
-            );
-            let direct_codomain = self.verify_equal_fact_by_known_equality(
+                builtin_state.verify_state(),
+            )?;
+            let direct_codomain = self.verify_known_equality_fact(
                 &EqualFact::new_from_refs(&codomain, right_size.set.as_ref(), line_file.clone()),
-            );
-            let reverse_domain = self.verify_equal_fact_by_known_equality(
+                builtin_state.verify_state(),
+            )?;
+            let reverse_domain = self.verify_known_equality_fact(
                 &EqualFact::new_from_refs(&domain, right_size.set.as_ref(), line_file.clone()),
-            );
-            let reverse_codomain = self.verify_equal_fact_by_known_equality(
+                builtin_state.verify_state(),
+            )?;
+            let reverse_codomain = self.verify_known_equality_fact(
                 &EqualFact::new_from_refs(&codomain, left_size.set.as_ref(), line_file.clone()),
-            );
+                builtin_state.verify_state(),
+            )?;
             let (domain_match, codomain_match) =
                 if direct_domain.is_success() && direct_codomain.is_success() {
                     (direct_domain, direct_codomain)
@@ -145,19 +149,20 @@ impl Runtime {
                 };
 
             let domain_finite: AtomicFact = IsFiniteSetFact::new(domain, line_file.clone()).into();
-            let finite_result = self.verify_known_or_structurally_finite_set(&domain_finite)?;
+            let finite_result = self.verify_known_or_structurally_finite_set(
+                &domain_finite,
+                builtin_state.verify_state(),
+            )?;
             if !finite_result.is_success() {
                 continue;
             }
-            let property_result = self.verify_non_equational_atomic_fact_with_known_atomic_facts(
-                &property.clone().into(),
-            )?;
+            let property_result = self.verify_atomic_fact_as_builtin_rule_premise(&property.clone().into(), builtin_state)?;
             if !property_result.is_success() {
                 continue;
             }
 
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     equal_fact.clone().into(),
                     "finite bijection preserves cardinality".to_string(),
                     BuiltinRuleEvidence::Uncatalogued(
@@ -177,8 +182,8 @@ impl Runtime {
     pub(super) fn try_verify_finite_set_size_codomain_le_domain_from_known_surjection(
         &mut self,
         target: &AtomicFact,
-        _builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+        builtin_state: &BuiltinRuleSearchState,
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let Some((smaller, larger, line_file)) = ordered_finite_set_sizes(target) else {
             return Ok(None);
         };
@@ -187,32 +192,33 @@ impl Runtime {
             let Some((domain, codomain, _)) = function_property_parts(&property) else {
                 continue;
             };
-            let codomain_match = self.verify_equal_fact_by_known_equality(
+            let codomain_match = self.verify_known_equality_fact(
                 &EqualFact::new_from_refs(&codomain, &smaller, line_file.clone()),
-            );
-            let domain_match = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
-                &domain,
-                &larger,
-                line_file.clone(),
-            ));
+                builtin_state.verify_state(),
+            )?;
+            let domain_match = self.verify_known_equality_fact(
+                &EqualFact::new_from_refs(&domain, &larger, line_file.clone()),
+                builtin_state.verify_state(),
+            )?;
             if !codomain_match.is_success() || !domain_match.is_success() {
                 continue;
             }
 
             let domain_finite: AtomicFact = IsFiniteSetFact::new(domain, line_file.clone()).into();
-            let finite_result = self.verify_known_or_structurally_finite_set(&domain_finite)?;
+            let finite_result = self.verify_known_or_structurally_finite_set(
+                &domain_finite,
+                builtin_state.verify_state(),
+            )?;
             if !finite_result.is_success() {
                 continue;
             }
-            let property_result = self.verify_non_equational_atomic_fact_with_known_atomic_facts(
-                &property.clone().into(),
-            )?;
+            let property_result = self.verify_atomic_fact_as_builtin_rule_premise(&property.clone().into(), builtin_state)?;
             if !property_result.is_success() {
                 continue;
             }
 
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     target.clone().into(),
                     "finite surjection bounds codomain cardinality by source cardinality"
                         .to_string(),
@@ -251,7 +257,7 @@ impl Runtime {
         function: &Obj,
         line_file: LineFile,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
+    ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
         for property in self.known_function_property_facts(&[BIJECTIVE]) {
             let Some((candidate_domain, candidate_codomain, candidate_function)) =
                 function_property_parts(&property)
@@ -279,10 +285,7 @@ impl Runtime {
                 && codomain_match.is_success()
                 && function_match.is_success()
             {
-                let property_result = self
-                    .verify_non_equational_atomic_fact_with_known_atomic_facts(
-                        &property.clone().into(),
-                    )?;
+                let property_result = self.verify_atomic_fact_as_builtin_rule_premise(&property.clone().into(), builtin_state)?;
                 if property_result.is_success() {
                     return Ok(Some(vec![
                         property_result,
@@ -299,19 +302,27 @@ impl Runtime {
     fn verify_known_or_structurally_finite_set(
         &mut self,
         fact: &AtomicFact,
-    ) -> Result<StmtResult, RuntimeError> {
+        verify_state: &VerifyState,
+    ) -> Result<VerifyFactResult, RuntimeError> {
         let known = self.verify_non_equational_atomic_fact_with_known_atomic_facts(fact)?;
         if known.is_success() {
-            return Ok(known);
+            return self.complete_atomic_fact_proof_result(fact, known, verify_state);
         }
         let AtomicFact::IsFiniteSetFact(finite) = fact else {
-            return Ok(UnknownGenericStmtResult::new().into());
+            return self.complete_atomic_fact_proof_result(
+                fact,
+                UnknownGenericStmtResult::new().into(),
+                verify_state,
+            );
         };
         if !set_is_structurally_finite(&finite.set) {
-            return Ok(UnknownGenericStmtResult::new().into());
+            return self.complete_atomic_fact_proof_result(
+                fact,
+                UnknownGenericStmtResult::new().into(),
+                verify_state,
+            );
         }
-        Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+        let proof = SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 fact.clone().into(),
                 "literal/range finite-set structure".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -319,8 +330,8 @@ impl Runtime {
                 ),
                 Vec::new(),
             )
-            .into(),
-        )
+            .into();
+        self.complete_atomic_fact_proof_result(fact, proof, verify_state)
     }
 
     fn known_function_property_facts(&self, predicates: &[&str]) -> Vec<NormalAtomicFact> {

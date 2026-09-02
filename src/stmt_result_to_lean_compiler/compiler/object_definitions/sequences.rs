@@ -170,14 +170,11 @@ impl StmtResultToLeanCompiler {
 
             let return_check = verification
                 .return_check
-                .factual_success()
+                .verified()
                 .ok_or_else(|| "sequence return check is not factual".to_string())?;
-            if return_check.fact().to_string() != expected_return_check.to_string()
-                || return_check.store.fact.to_string() != expected_return_check.to_string()
-                || !return_check.store.infers.is_empty()
-            {
+            if return_check.fact().to_string() != expected_return_check.to_string() {
                 return Err(
-                    "sequence return check changed its target or published local effects".into(),
+                    "sequence return check changed its target".into(),
                 );
             }
             if self
@@ -443,14 +440,11 @@ impl StmtResultToLeanCompiler {
             ),
         ] {
             let checked_fact = checked_result
-                .factual_success()
+                .verified()
                 .ok_or_else(|| format!("finite-sequence {label} check is not factual"))?;
-            if checked_fact.fact().to_string() != expected_fact.to_string()
-                || checked_fact.store.fact.to_string() != expected_fact.to_string()
-                || !checked_fact.store.infers.is_empty()
-            {
+            if checked_fact.fact().to_string() != expected_fact.to_string() {
                 return Err(format!(
-                    "finite-sequence {label} check changed its target or published effects"
+                    "finite-sequence {label} check changed its target"
                 ));
             }
             if self
@@ -658,14 +652,11 @@ impl StmtResultToLeanCompiler {
 
             let return_check = verification
                 .return_check
-                .factual_success()
+                .verified()
                 .ok_or_else(|| "finite-sequence return check is not factual".to_string())?;
-            if return_check.fact().to_string() != expected_return_check.to_string()
-                || return_check.store.fact.to_string() != expected_return_check.to_string()
-                || !return_check.store.infers.is_empty()
-            {
+            if return_check.fact().to_string() != expected_return_check.to_string() {
                 return Err(
-                    "finite-sequence return check changed its target or published local effects"
+                    "finite-sequence return check changed its target"
                         .into(),
                 );
             }

@@ -203,17 +203,17 @@ pub fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
     }
 }
 
-pub fn factual_equal_success_by_builtin_reason(equal_fact: &EqualFact, reason: &str) -> StmtResult {
+pub fn factual_equal_success_by_builtin_reason(equal_fact: &EqualFact, reason: &str) -> ProveFactResult {
     factual_equal_success_by_builtin_reason_with_subgoals(equal_fact, reason, Vec::new())
 }
 
 pub fn factual_equal_success_by_builtin_reason_with_subgoals(
     equal_fact: &EqualFact,
     reason: &str,
-    subgoals: Vec<StmtResult>,
-) -> StmtResult {
-    StmtResult::from(
-        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+    subgoals: Vec<VerifyFactResult>,
+) -> ProveFactResult {
+    ProveFactResult::from(
+        SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
             equal_fact.clone().into(),
             reason.to_string(),
             BuiltinRuleEvidence::Uncatalogued(
@@ -226,8 +226,8 @@ pub fn factual_equal_success_by_builtin_reason_with_subgoals(
 
 pub fn equality_builtin_match_subgoals(
     equal_fact: &EqualFact,
-    result: StmtResult,
-) -> Vec<StmtResult> {
+    result: VerifyFactResult,
+) -> Vec<VerifyFactResult> {
     if objs_match_for_pattern(&equal_fact.left, &equal_fact.right) {
         Vec::new()
     } else {

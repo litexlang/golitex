@@ -8,7 +8,7 @@ impl Runtime {
         &mut self,
         fact: &InFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let Obj::StandardSet(target) = &fact.set else {
             return Ok(UnknownGenericStmtResult::new().into());
         };
@@ -33,7 +33,7 @@ impl Runtime {
                     return Ok(UnknownGenericStmtResult::new().into());
                 };
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                         fact.clone().into(),
                         "numeric-carrier strategy: cardinality of a structurally finite set"
                             .to_string(),
@@ -54,7 +54,7 @@ impl Runtime {
                     return Ok(UnknownGenericStmtResult::new().into());
                 };
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                         fact.clone().into(),
                         "numeric-carrier strategy: finite extremum source is real-valued"
                             .to_string(),
@@ -72,7 +72,7 @@ impl Runtime {
                 return Ok(UnknownGenericStmtResult::new().into());
             };
             return Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                     fact.clone().into(),
                     format!(
                         "numeric-carrier strategy: base carrier and sign conditions for {target}"
@@ -120,13 +120,18 @@ impl Runtime {
         };
         if let Some(rule) = real_rule {
             let conjunction: Fact = AndFact::new(required, lf).into();
-            let conjunction_result = SuccessFactStmtResult::new(
-                conjunction,
+            let conjunction_result = SuccessProveFactResult::new(
+                conjunction.clone(),
                 SuccessInferResult::new(),
                 SuccessFactProofResult::combined_steps(children),
             );
+            let conjunction_result = self.complete_fact_proof_result(
+                &conjunction,
+                conjunction_result.into(),
+                verify_state,
+            )?;
             return Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                     fact.clone().into(),
                     "numeric-carrier strategy: typed structural closure in R".to_string(),
                     BuiltinRuleEvidence::RealArithmeticMembershipClosure(rule),
@@ -149,23 +154,28 @@ impl Runtime {
         };
         if let Some(rule) = integer_rule {
             let conjunction: Fact = AndFact::new(required, lf).into();
-            let conjunction_result = SuccessFactStmtResult::new(
-                conjunction,
+            let conjunction_result = SuccessProveFactResult::new(
+                conjunction.clone(),
                 SuccessInferResult::new(),
                 SuccessFactProofResult::combined_steps(children),
             );
+            let conjunction_result = self.complete_fact_proof_result(
+                &conjunction,
+                conjunction_result.into(),
+                verify_state,
+            )?;
             return Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                     fact.clone().into(),
                     "numeric-carrier strategy: typed structural closure in Z".to_string(),
                     BuiltinRuleEvidence::IntegerMembershipClosure(rule),
-                    vec![conjunction_result.into()],
+                    vec![conjunction_result],
                 )
                 .into(),
             );
         }
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                 fact.clone().into(),
                 format!("numeric-carrier strategy: structural closure in {target}"),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -371,7 +381,7 @@ impl Runtime {
         &mut self,
         fact: &InFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let lf = fact.line_file.clone();
         let n: Obj = StandardSet::N.into();
         let n_pos: Obj = StandardSet::NPos.into();
@@ -425,7 +435,7 @@ impl Runtime {
                 self.verify_numeric_carrier_strategy_children(&required, verify_state)?
             {
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                         fact.clone().into(),
                         "numeric-carrier strategy: structural closure in N+".to_string(),
                         BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyPositiveNaturalCarrierStrategy),
@@ -442,7 +452,7 @@ impl Runtime {
         &mut self,
         required: &[AtomicFact],
         verify_state: &VerifyState,
-    ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
+    ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
         let mut results = Vec::with_capacity(required.len());
         for child in required {
             let result = self.verify_builtin_strategy_child(child, verify_state)?;
@@ -460,12 +470,14 @@ impl Runtime {
         target: &StandardSet,
         lf: &LineFile,
         verify_state: &VerifyState,
-    ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
+    ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
         let target_obj: Obj = target.clone().into();
         let subset: AtomicFact =
             SubsetFact::new(set.clone(), target_obj.clone(), lf.clone()).into();
-        let direct = self
-            .verify_non_equational_atomic_fact_with_bounded_builtin_routes(&subset, verify_state)?;
+            let direct_proof = self
+                .verify_non_equational_atomic_fact_with_bounded_builtin_routes(&subset, verify_state)?;
+            let direct =
+                self.complete_atomic_fact_proof_result(&subset, direct_proof, verify_state)?;
         if direct.is_success() {
             return Ok(Some(vec![direct]));
         }
@@ -477,21 +489,27 @@ impl Runtime {
                     let child: AtomicFact =
                         InFact::new(element.as_ref().clone(), target_obj.clone(), lf.clone())
                             .into();
-                    let direct = self
+                    let direct_proof = self
                         .verify_non_equational_atomic_fact_with_bounded_builtin_routes(
                             &child,
                             verify_state,
                         )?;
+                    let direct = self.complete_atomic_fact_proof_result(
+                        &child,
+                        direct_proof,
+                        verify_state,
+                    )?;
                     let result = if direct.is_success() {
                         direct
                     } else {
-                        let AtomicFact::InFact(child_fact) = child else {
+                        let AtomicFact::InFact(child_fact) = &child else {
                             unreachable!("constructed a membership fact")
                         };
-                        self.verify_numeric_carrier_with_builtin_strategy(
-                            &child_fact,
+                        let proof = self.verify_numeric_carrier_with_builtin_strategy(
+                            child_fact,
                             verify_state,
-                        )?
+                        )?;
+                        self.complete_atomic_fact_proof_result(&child, proof, verify_state)?
                     };
                     if !result.is_success() {
                         return Ok(None);

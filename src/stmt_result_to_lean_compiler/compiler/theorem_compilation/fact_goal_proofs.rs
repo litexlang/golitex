@@ -8,10 +8,10 @@ impl StmtResultToLeanCompiler {
         source_fact: &Fact,
         source_proof_step_count: usize,
         fact: &Fact,
-        well_definedness: &SuccessVerifyFactWellDefinedResult,
+        well_definedness: &WellDefinedFactResult,
         domain: &SuccessVerifyLocalProofScopeResult,
         proof_steps: &[StmtResult],
-        conclusion_checks: &[StmtResult],
+        conclusion_checks: &[VerifyFactResult],
     ) -> Result<Option<CompiledOrdinaryFactGoalProofBody>, String> {
         if fact.to_string() != source_fact.to_string()
             || proof_steps.len() != source_proof_step_count
@@ -30,12 +30,10 @@ impl StmtResultToLeanCompiler {
         self.environment_stack.push_inherited_environment();
         self.environment_stack.well_definedness = Some(goal_well_definedness);
         let compilation = (|| {
-            if let Some(recursive) = well_definedness.recursive.as_deref() {
-                install_fact_well_definedness_proof_store_results_in_active_environment(
-                    recursive,
-                    &mut self.environment_stack,
-                )?;
-            }
+            install_fact_well_definedness_proof_store_results_in_active_environment(
+                well_definedness.proof.as_ref(),
+                &mut self.environment_stack,
+            )?;
             let mut local_proof_lines = Vec::with_capacity(proof_steps.len());
             for (proof_step_index, proof_step) in proof_steps.iter().enumerate() {
                 let Some(lines) = self
@@ -60,17 +58,10 @@ impl StmtResultToLeanCompiler {
                 return Err("ordinary fact goal must retain exactly one conclusion check".into());
             };
             let conclusion = conclusion_check
-                .factual_success()
+                .verified()
                 .ok_or_else(|| "ordinary fact goal conclusion is not factual".to_string())?;
             if conclusion.fact().to_string() != source_fact.to_string() {
                 return Err("ordinary fact goal conclusion changed its target".into());
-            }
-            if !conclusion.store.infers.is_empty() {
-                validate_flattened_inferred_fact_ids_are_visible(
-                    &conclusion.store.infers,
-                    &self.environment_stack,
-                    "ordinary fact goal conclusion",
-                )?;
             }
             let Some(conclusion_proof) =
                 self.construct_lean_proof_from_direct_fact_result(conclusion)?

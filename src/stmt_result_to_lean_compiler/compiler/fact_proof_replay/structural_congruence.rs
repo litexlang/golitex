@@ -7,7 +7,7 @@ impl StmtResultToLeanCompiler {
         &mut self,
         target: &Fact,
         evidence: &StructuralKnownEqualityCongruenceBuiltinRuleEvidence,
-        subgoals: &[StmtResult],
+        subgoals: &[VerifyFactResult],
     ) -> Result<Option<String>, String> {
         if evidence.expected_target.to_string() != target.to_string() {
             return Err("structural-known-equality evidence changed its target".into());
@@ -24,7 +24,7 @@ impl StmtResultToLeanCompiler {
             left: &Obj,
             right: &Obj,
             line_file: &LineFile,
-            subgoals: &[StmtResult],
+            subgoals: &[VerifyFactResult],
             next_subgoal: &mut usize,
             integer_identity_to_complex: bool,
         ) -> Result<String, String> {
@@ -129,7 +129,7 @@ impl StmtResultToLeanCompiler {
         &self,
         target: &Fact,
         evidence: &StructuralDefinitionCongruenceBuiltinRuleEvidence,
-        subgoals: &[StmtResult],
+        subgoals: &[VerifyFactResult],
     ) -> Result<Option<String>, String> {
         if evidence.expected_target.to_string() != target.to_string() {
             return Err("structural-definition evidence changed its target".into());

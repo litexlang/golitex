@@ -58,7 +58,7 @@ impl StmtResultToLeanCompiler {
             result.statement.line_file.clone(),
         );
         let type_check = verification.type_checks[0]
-            .factual_success()
+            .verified()
             .ok_or_else(|| "local have-object value has no factual type-check child".to_string())?;
         if type_check.fact().to_string() != expected_value_type.to_string() {
             return Err(format!(
@@ -226,11 +226,6 @@ impl StmtResultToLeanCompiler {
                     output.inferred_facts.is_empty() && output.inferred_fact_ids.is_empty()
                 })
         {
-            if !type_check.store.infers.is_empty() {
-                return Err(
-                    "local have-object type check unexpectedly published inference effects".into(),
-                );
-            }
             return Ok(Some(lines));
         }
         if matches!(param_type, ParamType::Obj(Obj::PowerSet(_))) {
@@ -268,7 +263,7 @@ impl StmtResultToLeanCompiler {
         param_type: &ParamType,
         value: &Obj,
         defined_object: &Obj,
-        type_check: &SuccessFactStmtResult,
+        type_check: &VerifiedFactResult,
         step_name: &str,
         lines: &mut Vec<String>,
         infers: &SuccessInferResult,
@@ -292,36 +287,14 @@ impl StmtResultToLeanCompiler {
                 "local power-set definition type-check changed its typed rule identity".into(),
             );
         }
-        let [type_check_store] = type_check.store.infers.store_fact_outputs.as_slice() else {
-            return Err(
-                "local power-set definition type-check changed its single transient store".into(),
-            );
-        };
-        if type_check_store.fact_id.is_some()
-            || type_check_store
-                .itself_and_why_itself_is_stored
-                .0
-                .to_string()
-                != type_check.fact().to_string()
-            || !type_check_store.inferred_facts.is_empty()
-            || !type_check_store.inferred_fact_ids.is_empty()
-            || !type_check.store.infers.rule_applications.is_empty()
-        {
-            return Err(
-                "local power-set definition type-check changed its transient effects".into(),
-            );
-        }
         let [child] = builtin.subgoals.as_slice() else {
             return Err(
                 "local power-set definition type-check must retain one subset child".into(),
             );
         };
         let child = child
-            .factual_success()
+            .verified()
             .ok_or_else(|| "local power-set definition subset child is not factual".to_string())?;
-        if !child.store.infers.is_empty() {
-            return Err("local power-set definition subset child published effects".into());
-        }
         let child_fact = child.fact();
         let (child_left, child_right) = subset_parts(&child_fact)?;
         if !objs_equal_with_nested_binder_alpha_equivalence(builder.param_set.as_ref(), child_left)
@@ -503,89 +476,6 @@ impl StmtResultToLeanCompiler {
         _proof_step_index: usize,
     ) -> Result<Option<Vec<String>>, String> {
         let mut prerequisite_lines = Vec::new();
-        if let Some(verification) = &result.verification {
-            for (clause_index, check) in verification.clause_checks.iter().enumerate() {
-                let check = check.factual_success().ok_or_else(|| {
-                    format!("by-definition clause check {clause_index} is not factual")
-                })?;
-                if matches!(check.proof(), SuccessFactProofResult::ForallProof(_)) {
-                    self.install_fact_anonymous_function_occurrence_aliases(
-                        &check.fact(),
-                        &format!("by-definition forall clause {clause_index} prerequisite"),
-                    )?;
-                    let clause_environment =
-                        self.by_definition_clause_application_environment(result)?;
-                    let parent_environment =
-                        std::mem::replace(&mut self.environment_stack, clause_environment);
-                    let compilation: Result<Option<(Vec<String>, FactId, String, Fact)>, String> =
-                        (|| {
-                            let Some(lines) =
-                            self.compile_direct_forall_fact_result_as_local_proof_steps(check)
-                                .map_err(|error| {
-                                    let occurrences = self
-                                        .environment_stack
-                                        .well_definedness
-                                        .as_ref()
-                                        .map(|context| {
-                                            let mut occurrences = context
-                                                .function_applications
-                                                .keys()
-                                                .map(|occurrence| occurrence.value())
-                                                .collect::<Vec<_>>();
-                                            occurrences.sort_unstable();
-                                            occurrences
-                                        })
-                                        .unwrap_or_default();
-                                    format!(
-                                        "by-definition forall clause {clause_index} prerequisite failed with application WD occurrences {occurrences:?}: {error}"
-                                    )
-                                })?
-                        else {
-                                return Ok(None);
-                            };
-                            let fact_id = check.store.fact_id.ok_or_else(|| {
-                                format!(
-                                "by-definition forall clause {clause_index} has no frozen FactId"
-                            )
-                            })?;
-                            let proof_name = self
-                            .environment_stack
-                            .fact_names
-                            .get(&fact_id)
-                            .cloned()
-                            .ok_or_else(|| {
-                                format!(
-                                    "by-definition forall clause {clause_index} did not publish FactId `{fact_id}`"
-                                )
-                            })?;
-                            let proposition = self
-                            .environment_stack
-                            .fact_propositions
-                            .get(&fact_id)
-                            .cloned()
-                            .ok_or_else(|| {
-                                format!(
-                                    "by-definition forall clause {clause_index} lost the proposition for FactId `{fact_id}`"
-                                )
-                            })?;
-                            Ok(Some((lines, fact_id, proof_name, proposition)))
-                        })();
-                    self.environment_stack = parent_environment;
-                    let Some((lines, fact_id, proof_name, proposition)) = compilation? else {
-                        return Err(format!(
-                            "by-definition forall clause {clause_index} has no local binder compiler"
-                        ));
-                    };
-                    self.environment_stack
-                        .fact_names
-                        .insert(fact_id, proof_name);
-                    self.environment_stack
-                        .fact_propositions
-                        .insert(fact_id, proposition);
-                    prerequisite_lines.extend(lines);
-                }
-            }
-        }
         let Some(proof) = self
             .construct_lean_proof_from_by_definition_stmt_result(result)
             .map_err(|error| format!("by-definition proof assembly failed: {error}"))?

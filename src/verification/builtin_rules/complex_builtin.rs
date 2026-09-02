@@ -10,7 +10,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -37,11 +37,10 @@ impl Runtime {
         };
         if let Some(z) = candidate {
             let complex_abs: Obj = ComplexAbs::new(z.clone()).into();
-            let known_zero = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
-                &complex_abs,
-                &zero,
-                line_file.clone(),
-            ));
+            let known_zero = self.verify_known_equality_fact(
+                &EqualFact::new_from_refs(&complex_abs, &zero, line_file.clone()),
+                builtin_state.verify_state(),
+            )?;
             if known_zero.is_success() {
                 let Some(mut steps) =
                     self.verify_objects_are_known_complex(&[z], &line_file, builtin_state)?
@@ -96,19 +95,17 @@ impl Runtime {
         let right_re: Obj = RealPart::new(right.clone()).into();
         let left_img: Obj = ImaginaryPart::new(left.clone()).into();
         let right_img: Obj = ImaginaryPart::new(right.clone()).into();
-        let re_result = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
-            &left_re,
-            &right_re,
-            line_file.clone(),
-        ));
+        let re_result = self.verify_known_equality_fact(
+            &EqualFact::new_from_refs(&left_re, &right_re, line_file.clone()),
+            builtin_state.verify_state(),
+        )?;
         if !re_result.is_success() {
             return Ok(None);
         }
-        let img_result = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
-            &left_img,
-            &right_img,
-            line_file.clone(),
-        ));
+        let img_result = self.verify_known_equality_fact(
+            &EqualFact::new_from_refs(&left_img, &right_img, line_file.clone()),
+            builtin_state.verify_state(),
+        )?;
         if !img_result.is_success() {
             return Ok(None);
         }
@@ -124,12 +121,12 @@ impl Runtime {
     pub(super) fn try_verify_native_i_nonzero(
         &self,
         not_equal_fact: &NotEqualFact,
-    ) -> Option<StmtResult> {
+    ) -> Option<ProveFactResult> {
         if (obj_is_native_i(&not_equal_fact.left) && obj_is_literal_zero(&not_equal_fact.right))
             || (obj_is_native_i(&not_equal_fact.right) && obj_is_literal_zero(&not_equal_fact.left))
         {
             return Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     not_equal_fact.clone().into(),
                     "native imaginary unit is nonzero".to_string(),
                     BuiltinRuleEvidence::Uncatalogued(
@@ -147,7 +144,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let Some(normalized) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
         };
@@ -206,7 +203,7 @@ impl Runtime {
         &mut self,
         not_equal_fact: &NotEqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let complex_abs = match (&not_equal_fact.left, &not_equal_fact.right) {
             (Obj::ComplexAbs(complex_abs), right) if obj_is_literal_zero(right) => complex_abs,
             (left, Obj::ComplexAbs(complex_abs)) if obj_is_literal_zero(left) => complex_abs,
@@ -223,7 +220,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 not_equal_fact.clone().into(),
                 "complex modulus is nonzero for a nonzero argument".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -239,7 +236,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<(String, Vec<StmtResult>)>, RuntimeError> {
+    ) -> Result<Option<(String, Vec<VerifyFactResult>)>, RuntimeError> {
         if let Some(result) = self.try_collect_native_coordinate_equality_steps_in_direction(
             equal_fact,
             true,
@@ -259,7 +256,7 @@ impl Runtime {
         equal_fact: &EqualFact,
         application_is_left: bool,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<(String, Vec<StmtResult>)>, RuntimeError> {
+    ) -> Result<Option<(String, Vec<VerifyFactResult>)>, RuntimeError> {
         let (application, expected) = if application_is_left {
             (&equal_fact.left, &equal_fact.right)
         } else {
@@ -506,7 +503,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         for application_is_left in [true, false] {
             if let Some((reason, steps)) = self
                 .native_complex_abs_equality_reason_and_steps_in_direction(
@@ -528,7 +525,7 @@ impl Runtime {
         equal_fact: &EqualFact,
         application_is_left: bool,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<(String, Vec<StmtResult>)>, RuntimeError> {
+    ) -> Result<Option<(String, Vec<VerifyFactResult>)>, RuntimeError> {
         let (application, expected) = if application_is_left {
             (&equal_fact.left, &equal_fact.right)
         } else {
@@ -566,11 +563,10 @@ impl Runtime {
 
         if obj_is_literal_zero(expected) {
             let zero: Obj = Number::new("0".to_string()).into();
-            let arg_zero = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
-                arg,
-                &zero,
-                line_file.clone(),
-            ));
+            let arg_zero = self.verify_known_equality_fact(
+                &EqualFact::new_from_refs(arg, &zero, line_file.clone()),
+                builtin_state.verify_state(),
+            )?;
             if arg_zero.is_success() {
                 return Ok(Some((
                     "complex modulus is zero when its argument is zero".to_string(),
@@ -605,7 +601,7 @@ impl Runtime {
         objs: &[&Obj],
         line_file: &LineFile,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
+    ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
         let premises = objs
             .iter()
             .map(|obj| {
@@ -653,9 +649,9 @@ fn complex_successor_power_base_and_exponent(obj: &Obj) -> Option<(&Obj, &Obj)> 
 fn complex_equality_result_with_steps(
     equal_fact: &EqualFact,
     reason: &str,
-    steps: Vec<StmtResult>,
-) -> StmtResult {
-    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+    steps: Vec<VerifyFactResult>,
+) -> ProveFactResult {
+    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
         equal_fact.clone().into(),
         reason.to_string(),
         BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::ComplexEqualityResultWithSteps),
@@ -667,9 +663,9 @@ fn complex_equality_result_with_steps(
 fn complex_order_result(
     atomic_fact: &AtomicFact,
     reason: &str,
-    steps: Vec<StmtResult>,
-) -> StmtResult {
-    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+    steps: Vec<VerifyFactResult>,
+) -> ProveFactResult {
+    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
         atomic_fact.clone().into(),
         reason.to_string(),
         BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::ComplexOrderResult),

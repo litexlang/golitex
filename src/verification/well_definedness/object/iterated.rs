@@ -1776,7 +1776,7 @@ impl Runtime {
             )?));
         }
         let application = self.reduce_callable_application_obj(function, args, "reduce")?;
-        let already_checked_state = VerifyState::after_well_definedness();
+        let already_checked_state = VerifyState::initial();
         if let Some(unfolded) =
             self.unfold_known_fn_application_once(&application, &already_checked_state)?
         {

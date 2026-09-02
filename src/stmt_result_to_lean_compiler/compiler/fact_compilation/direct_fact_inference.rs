@@ -12,6 +12,9 @@ impl StmtResultToLeanCompiler {
         &mut self,
         result: &SuccessFactStmtResult,
     ) -> Result<bool, String> {
+        let Some(verified) = result.verification() else {
+            return Ok(false);
+        };
         if result.store.infers.rule_applications.is_empty() {
             return Ok(false);
         }
@@ -41,19 +44,19 @@ impl StmtResultToLeanCompiler {
             return Err("typed-inference fact changed its inferred FactId arity".into());
         }
         let Some(proof) =
-            self.construct_lean_proof_from_direct_fact_result_using_its_well_definedness(result)?
+            self.construct_lean_proof_from_direct_fact_result_using_its_well_definedness(verified)?
         else {
             return Ok(false);
         };
         let native_equality = self
             .construct_lean_native_equality_proof_from_direct_fact_result_using_its_well_definedness(
-                result,
+                verified,
             )?;
         if matches!(source_fact, Fact::AtomicFact(_)) {
-            validate_atomic_fact_well_definedness_result(&result.well_definedness, &source_fact)?;
+            validate_atomic_fact_well_definedness_result(&verified.checked, &source_fact)?;
         }
         let proposition =
-            self.render_fact_using_well_definedness_result(&result.well_definedness, &source_fact)?;
+            self.render_fact_using_well_definedness_result(&verified.checked, &source_fact)?;
         let theorem_name = format!("__fact{}", self.next_fact_name_index);
         self.declarations.push(format!(
             "theorem {theorem_name} : {proposition} := by\n  exact {proof}"
@@ -97,22 +100,17 @@ impl StmtResultToLeanCompiler {
         // applications) whose only recursive certificate lives in the parent
         // fact's WD Result. Keep that exact context active for the complete
         // typed-inference replay, then restore the enclosing scope.
-        let installed_parent_well_definedness = if result.well_definedness.recursive.is_some() {
-            let certificate = self
-                .construct_well_definedness_to_lean_compilation_context(&result.well_definedness)?;
-            Some(self.environment_stack.well_definedness.replace(certificate))
-        } else {
-            None
-        };
+        let certificate =
+            self.construct_well_definedness_to_lean_compilation_context(&verified.checked)?;
+        let parent_well_definedness =
+            self.environment_stack.well_definedness.replace(certificate);
         let inference_compilation = self
             .compile_typed_infer_result_as_top_level_declarations_with_allowed_sources(
                 &result.store.infers,
                 &allowed_sources,
                 "typed-inference fact Result",
             );
-        if let Some(parent_well_definedness) = installed_parent_well_definedness {
-            self.environment_stack.well_definedness = parent_well_definedness;
-        }
+        self.environment_stack.well_definedness = parent_well_definedness;
         inference_compilation?;
         Ok(true)
     }
@@ -124,6 +122,9 @@ impl StmtResultToLeanCompiler {
         &mut self,
         result: &SuccessFactStmtResult,
     ) -> Result<bool, String> {
+        let Some(verified) = result.verification() else {
+            return Ok(false);
+        };
         let source_fact = result.fact();
         let Fact::AndFact(source_conjunction) = &source_fact else {
             return Ok(false);
@@ -157,7 +158,7 @@ impl StmtResultToLeanCompiler {
                 "conjunction fact store",
             )?;
         let Some(source_proof) =
-            self.construct_lean_proof_from_direct_fact_result_using_its_well_definedness(result)?
+            self.construct_lean_proof_from_direct_fact_result_using_its_well_definedness(verified)?
         else {
             return Ok(false);
         };
@@ -221,11 +222,14 @@ impl StmtResultToLeanCompiler {
         &mut self,
         result: &SuccessFactStmtResult,
     ) -> Result<bool, String> {
+        let Some(verified) = result.verification() else {
+            return Ok(false);
+        };
         // Binder-owning forall Results have a dedicated compiler layer.
         // In particular, Runtime may publish reduced-binder projections when
         // a conclusion omits source parameters; the generic stored-fact path
         // must not consume that structured store shape first.
-        if matches!(result.proof(), SuccessFactProofResult::ForallProof(_)) {
+        if matches!(verified.proof(), SuccessFactProofResult::ForallProof(_)) {
             return Ok(false);
         }
         if fact_result_contains_inferred_facts(result)
@@ -234,13 +238,13 @@ impl StmtResultToLeanCompiler {
             return Ok(false);
         }
         let Some(proof) = self
-            .construct_lean_proof_from_direct_fact_result_using_its_well_definedness(result)
+            .construct_lean_proof_from_direct_fact_result_using_its_well_definedness(verified)
             .map_err(|error| format!("direct fact proof construction: {error}"))?
         else {
             return Ok(false);
         };
         if matches!(result.fact(), Fact::AtomicFact(_)) {
-            validate_atomic_fact_well_definedness_result(&result.well_definedness, &result.fact())
+            validate_atomic_fact_well_definedness_result(&verified.checked, &result.fact())
                 .map_err(|error| format!("direct fact WD validation: {error}"))?;
         }
         self.compile_stored_fact_without_inference(result, proof)

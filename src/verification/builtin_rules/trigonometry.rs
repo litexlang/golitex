@@ -93,7 +93,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         if let Some(result) = self.try_verify_arcsin_inverse_equality(equal_fact, builtin_state)? {
             return Ok(Some(result));
         }
@@ -150,9 +150,13 @@ impl Runtime {
         }
         left_expansion.extend_lemmas(right_expansion.lemmas);
         let reason = trig_reason(&left_expansion.lemmas);
-        let dependencies = trig_core_dependency_results(equal_fact, &left_expansion.lemmas);
+        let dependencies = self.trig_core_dependency_results(
+            equal_fact,
+            &left_expansion.lemmas,
+            builtin_state.verify_state(),
+        )?;
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 reason,
                 BuiltinRuleEvidence::Uncatalogued(
@@ -170,7 +174,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         if let Some(result) = self.try_verify_arcsin_principal_range(atomic_fact, builtin_state)? {
             return Ok(Some(result));
         }
@@ -185,7 +189,15 @@ impl Runtime {
         };
 
         if let Some((trig, other)) = square_trig_upper_bound_target(&f.left, &f.right) {
-            let pythagorean = pythagorean_core_result(&trig, &other, &f.line_file);
+            let pythagorean_proof = pythagorean_core_result(&trig, &other, &f.line_file);
+            let pythagorean_fact = pythagorean_proof
+                .fact()
+                .expect("the trigonometric core dependency is factual");
+            let pythagorean = self.complete_fact_proof_result(
+                &pythagorean_fact,
+                pythagorean_proof,
+                builtin_state.verify_state(),
+            )?;
             let other_square: Obj =
                 Pow::new(other.clone(), Number::new("2".to_string()).into()).into();
             let nonnegative: AtomicFact = LessEqualFact::new(
@@ -194,13 +206,18 @@ impl Runtime {
                 f.line_file.clone(),
             )
             .into();
-            let Some(nonnegative_result) =
+            let Some(nonnegative_proof) =
                 self.verify_zero_le_even_integer_pow_builtin_rule(&nonnegative, builtin_state)?
             else {
                 return Ok(None);
             };
+            let nonnegative_result = self.complete_atomic_fact_proof_result(
+                &nonnegative,
+                nonnegative_proof,
+                builtin_state.verify_state(),
+            )?;
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     atomic_fact.clone().into(),
                     format!(
                         "trigonometry layer {}: {} derived from the unit-circle identity",
@@ -225,13 +242,18 @@ impl Runtime {
             f.line_file.clone(),
         )
         .into();
-        let Some(square_bound_result) =
+        let Some(square_bound_proof) =
             self.try_verify_trigonometric_order_bound(&square_bound, builtin_state)?
         else {
             return Ok(None);
         };
+        let square_bound_result = self.complete_atomic_fact_proof_result(
+            &square_bound,
+            square_bound_proof,
+            builtin_state.verify_state(),
+        )?;
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "trigonometry: -1 <= sin/cos <= 1 from the unit-circle square bound".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -247,7 +269,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         for (left, right) in [
             (&equal_fact.left, &equal_fact.right),
             (&equal_fact.right, &equal_fact.left),
@@ -263,7 +285,7 @@ impl Runtime {
                             continue;
                         };
                         return Ok(Some(
-                            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                                 equal_fact.clone().into(),
                                 "arcsin principal inverse: sin(arcsin(x)) = x on [-1, 1]"
                                     .to_string(),
@@ -279,7 +301,7 @@ impl Runtime {
             if let Obj::Arcsin(arcsin) = left {
                 if arcsin_supported_exact_value(arcsin.arg.as_ref(), right) {
                     return Ok(Some(
-                        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                        SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             equal_fact.clone().into(),
                             "arcsin principal branch: exact endpoint or zero value".to_string(),
                             BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyArcsinInverseEquality02),
@@ -300,7 +322,7 @@ impl Runtime {
                             continue;
                         };
                         return Ok(Some(
-                            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                                 equal_fact.clone().into(),
                                 "arcsin principal branch: arcsin(sin(y)) = y on [-pi/2, pi/2]"
                                     .to_string(),
@@ -327,7 +349,7 @@ impl Runtime {
                 );
                 if let Some(steps) = self.verify_builtin_rule_premises(&premises, builtin_state)? {
                     return Ok(Some(
-                        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                        SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             equal_fact.clone().into(),
                             "arcsin principal branch from a supported exact sine value".to_string(),
                             BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyArcsinInverseEquality04),
@@ -345,7 +367,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let Some(AtomicFact::LessEqualFact(f)) = normalize_positive_order_atomic_fact(atomic_fact)
         else {
             return Ok(None);
@@ -369,7 +391,7 @@ impl Runtime {
             return Ok(None);
         };
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "arcsin principal value lies in [-pi/2, pi/2]".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -385,7 +407,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         // Canonical interval facts connect trigonometric objects to real order.
         // Examples: `0 < x < pi => 0 < sin(x)`, sine is increasing on
         // `[-pi/2, pi/2]`, and cosine is decreasing on `[0, pi]`.
@@ -703,7 +725,7 @@ impl Runtime {
             return Ok(None);
         };
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 format!("trigonometry: {reason}"),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -721,7 +743,7 @@ impl Runtime {
         &mut self,
         not_equal_fact: &NotEqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         if first_trig_arg(&not_equal_fact.left).is_none()
             && first_trig_arg(&not_equal_fact.right).is_none()
         {
@@ -771,7 +793,7 @@ impl Runtime {
         if let Some(premises) = quotient_nonzero_premises {
             if let Some(results) = self.verify_builtin_rule_premises(&premises, builtin_state)? {
                 return Ok(Some(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         not_equal_fact.clone().into(),
                         "trigonometry: non-zero transfer through canonical expansion".to_string(),
                         BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyTrigonometricNotEqual01),
@@ -857,7 +879,7 @@ impl Runtime {
             )?;
             if interval_result.is_success() {
                 return Ok(Some(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         not_equal_fact.clone().into(),
                         "trigonometry: sine/cosine is nonzero on a canonical sign interval"
                             .to_string(),
@@ -879,7 +901,7 @@ impl Runtime {
                 self.verify_atomic_fact_as_builtin_rule_premise(&reduced, builtin_state)?;
             if reduced_result.is_success() {
                 return Ok(Some(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         not_equal_fact.clone().into(),
                         "trigonometry: pi shift changes only sign, preserving non-zero".to_string(),
                         BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyTrigonometricNotEqual03),
@@ -904,7 +926,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 not_equal_fact.clone().into(),
                 "trigonometry: non-zero transfer through canonical expansion".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -1245,7 +1267,7 @@ fn rewrite_pythagorean_binary(
     (result, left_changed || right_changed)
 }
 
-fn try_trig_quotient_definition(equal_fact: &EqualFact) -> Option<StmtResult> {
+fn try_trig_quotient_definition(equal_fact: &EqualFact) -> Option<ProveFactResult> {
     for (trig_side, quotient_side) in [
         (&equal_fact.left, &equal_fact.right),
         (&equal_fact.right, &equal_fact.left),
@@ -1265,7 +1287,7 @@ fn try_trig_quotient_definition(equal_fact: &EqualFact) -> Option<StmtResult> {
         };
         if objs_equal_by_rational_expression_evaluation(&expected, quotient_side) {
             return Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     equal_fact.clone().into(),
                     "trigonometry core: tan/cot quotient definition".to_string(),
                     BuiltinRuleEvidence::Uncatalogued(
@@ -1280,7 +1302,7 @@ fn try_trig_quotient_definition(equal_fact: &EqualFact) -> Option<StmtResult> {
     None
 }
 
-fn pythagorean_core_result(sin_or_cos: &Obj, other: &Obj, line_file: &LineFile) -> StmtResult {
+fn pythagorean_core_result(sin_or_cos: &Obj, other: &Obj, line_file: &LineFile) -> ProveFactResult {
     let (sin, cos) = match sin_or_cos {
         Obj::Sin(_) => (sin_or_cos.clone(), other.clone()),
         Obj::Cos(_) => (other.clone(), sin_or_cos.clone()),
@@ -1291,7 +1313,7 @@ fn pythagorean_core_result(sin_or_cos: &Obj, other: &Obj, line_file: &LineFile) 
         Pow::new(cos, Number::new("2".to_string()).into()).into(),
     )
     .into();
-    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
         EqualFact::new(left, Number::new("1".to_string()).into(), line_file.clone()).into(),
         "trigonometry core: sin(x)^2 + cos(x)^2 = 1".to_string(),
         BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::PythagoreanCoreResult),
@@ -1360,48 +1382,70 @@ fn trig_reason(lemmas: &[TrigLemma]) -> String {
     )
 }
 
-fn trig_core_dependency_results(equal_fact: &EqualFact, lemmas: &[TrigLemma]) -> Vec<StmtResult> {
-    if !lemmas.iter().any(|lemma| lemma.level() > 0) {
-        return Vec::new();
-    }
-    let Some(arg) = first_trig_arg(&equal_fact.left).or_else(|| first_trig_arg(&equal_fact.right))
-    else {
-        return Vec::new();
-    };
-    let sin: Obj = Sin::new(arg.clone()).into();
-    let cos: Obj = Cos::new(arg.clone()).into();
-    let mut results = vec![pythagorean_core_result(&sin, &cos, &equal_fact.line_file)];
-    if lemmas.iter().any(|lemma| {
-        matches!(
-            lemma,
-            TrigLemma::Parity
-                | TrigLemma::Difference
-                | TrigLemma::DoubleAngle
-                | TrigLemma::Cofunction
-                | TrigLemma::ShiftAndPeriod
-                | TrigLemma::TanCotRelations
-        )
-    }) {
-        let zero: Obj = Number::new("0".to_string()).into();
-        let source: Obj = Sin::new(Add::new(arg.clone(), zero.clone()).into()).into();
-        let expanded: Obj = Add::new(
-            Mul::new(Sin::new(arg.clone()).into(), Cos::new(zero.clone()).into()).into(),
-            Mul::new(Cos::new(arg).into(), Sin::new(zero).into()).into(),
-        )
-        .into();
-        results.push(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
-                EqualFact::new(source, expanded, equal_fact.line_file.clone()).into(),
-                "trigonometry core: sine addition formula".to_string(),
-                BuiltinRuleEvidence::Uncatalogued(
-                    UncataloguedBuiltinRule::TrigCoreDependencyResults,
-                ),
-                Vec::new(),
+impl Runtime {
+    fn trig_core_dependency_results(
+        &mut self,
+        equal_fact: &EqualFact,
+        lemmas: &[TrigLemma],
+        verify_state: &VerifyState,
+    ) -> Result<Vec<VerifyFactResult>, RuntimeError> {
+        if !lemmas.iter().any(|lemma| lemma.level() > 0) {
+            return Ok(Vec::new());
+        }
+        let Some(arg) =
+            first_trig_arg(&equal_fact.left).or_else(|| first_trig_arg(&equal_fact.right))
+        else {
+            return Ok(Vec::new());
+        };
+        let sin: Obj = Sin::new(arg.clone()).into();
+        let cos: Obj = Cos::new(arg.clone()).into();
+        let pythagorean_proof = pythagorean_core_result(&sin, &cos, &equal_fact.line_file);
+        let pythagorean_fact = pythagorean_proof
+            .fact()
+            .expect("the trigonometric core dependency is factual");
+        let mut results = vec![self.complete_fact_proof_result(
+            &pythagorean_fact,
+            pythagorean_proof,
+            verify_state,
+        )?];
+        if lemmas.iter().any(|lemma| {
+            matches!(
+                lemma,
+                TrigLemma::Parity
+                    | TrigLemma::Difference
+                    | TrigLemma::DoubleAngle
+                    | TrigLemma::Cofunction
+                    | TrigLemma::ShiftAndPeriod
+                    | TrigLemma::TanCotRelations
             )
-            .into(),
-        );
+        }) {
+            let zero: Obj = Number::new("0".to_string()).into();
+            let source: Obj = Sin::new(Add::new(arg.clone(), zero.clone()).into()).into();
+            let expanded: Obj = Add::new(
+                Mul::new(Sin::new(arg.clone()).into(), Cos::new(zero.clone()).into()).into(),
+                Mul::new(Cos::new(arg).into(), Sin::new(zero).into()).into(),
+            )
+            .into();
+            let dependency: AtomicFact =
+                EqualFact::new(source, expanded, equal_fact.line_file.clone()).into();
+            let proof =
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    dependency.clone().into(),
+                    "trigonometry core: sine addition formula".to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(
+                        UncataloguedBuiltinRule::TrigCoreDependencyResults,
+                    ),
+                    Vec::new(),
+                )
+                .into();
+            results.push(self.complete_atomic_fact_proof_result(
+                &dependency,
+                proof,
+                verify_state,
+            )?);
+        }
+        Ok(results)
     }
-    results
 }
 
 fn add_shift_kind_lemma(result: &mut TrigExpansion, left: &Obj, right: &Obj) {

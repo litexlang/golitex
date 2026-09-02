@@ -17,15 +17,17 @@ pub struct SuccessStoreFactResult {
     pub infers: SuccessInferResult,
 }
 
-#[derive(Debug, Default)]
-pub struct SuccessVerifyFactWellDefinedResult {
-    pub recursive: Option<Box<SuccessVerifyFactWellDefinedProofResult>>,
+#[derive(Debug)]
+pub struct WellDefinedFactResult {
+    pub fact: Fact,
+    pub proof: Box<SuccessVerifyFactWellDefinedProofResult>,
 }
 
-impl SuccessVerifyFactWellDefinedResult {
-    pub fn new_recursive(recursive: SuccessVerifyFactWellDefinedProofResult) -> Self {
+impl WellDefinedFactResult {
+    pub fn new(fact: Fact, proof: SuccessVerifyFactWellDefinedProofResult) -> Self {
         Self {
-            recursive: Some(Box::new(recursive)),
+            fact,
+            proof: Box::new(proof),
         }
     }
 }

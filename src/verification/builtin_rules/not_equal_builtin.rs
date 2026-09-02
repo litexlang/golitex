@@ -7,7 +7,7 @@ impl Runtime {
         &mut self,
         not_equal_fact: &NotEqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let left_obj = &not_equal_fact.left;
         let right_obj = &not_equal_fact.right;
 
@@ -20,7 +20,7 @@ impl Runtime {
             return Ok(result);
         }
         if let Some(result) =
-            self.try_verify_native_sign_nonzero_characterization(not_equal_fact)?
+            self.try_verify_native_sign_nonzero_characterization(not_equal_fact, builtin_state)?
         {
             return Ok(result);
         }
@@ -49,7 +49,7 @@ impl Runtime {
             self.verify_atomic_fact_as_builtin_rule_premise(&reversed, builtin_state)?;
         if reversed_result.is_success() {
             return Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     not_equal_fact.clone().into(),
                     "not-equality symmetry".to_string(),
                     BuiltinRuleEvidence::NotEqualSymmetry,
@@ -62,7 +62,7 @@ impl Runtime {
         if let (Obj::ListSet(left_ls), Obj::ListSet(right_ls)) = (left_obj, right_obj) {
             if left_ls.list.len() != right_ls.list.len() {
                 return Ok(
-                    (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    (SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         not_equal_fact.clone().into(),
                         "list_set_different_length".to_string(),
                         BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyNotEqualFactWithBuiltinRules),
@@ -86,13 +86,13 @@ impl Runtime {
         }
 
         if let Some(verified_result) =
-            self.try_verify_not_equal_from_known_positive_lower_bound(not_equal_fact)?
+            self.try_verify_not_equal_from_known_positive_lower_bound(not_equal_fact, builtin_state)?
         {
             return Ok(verified_result);
         }
 
         if let Some(verified_result) =
-            self.try_verify_not_equal_from_membership_contradiction(not_equal_fact)?
+            self.try_verify_not_equal_from_membership_contradiction(not_equal_fact, builtin_state)?
         {
             return Ok(verified_result);
         }
@@ -190,7 +190,7 @@ impl Runtime {
 
 // Primitive positive real constants are nonzero, and Euler's number is not one.
 // Example: `e != 0`, `pi != 0`, and `e != 1`.
-fn try_verify_native_real_constant_nonzero(not_equal_fact: &NotEqualFact) -> Option<StmtResult> {
+fn try_verify_native_real_constant_nonzero(not_equal_fact: &NotEqualFact) -> Option<ProveFactResult> {
     let is_zero = |obj: &Obj| {
         matches!(
             obj,
@@ -213,7 +213,7 @@ fn try_verify_native_real_constant_nonzero(not_equal_fact: &NotEqualFact) -> Opt
         return None;
     }
     Some(
-        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+        SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
             not_equal_fact.clone().into(),
             "native real constant distinctness".to_string(),
             BuiltinRuleEvidence::Uncatalogued(
@@ -230,7 +230,7 @@ fn try_verify_native_real_constant_nonzero(not_equal_fact: &NotEqualFact) -> Opt
 // enclosing fact's well-definedness phase.
 fn try_verify_intrinsically_positive_native_value_nonzero(
     not_equal_fact: &NotEqualFact,
-) -> Option<StmtResult> {
+) -> Option<ProveFactResult> {
     let is_zero = |obj: &Obj| matches!(obj, Obj::Number(number) if number.normalized_value == "0");
     let is_positive_native = |obj: &Obj| matches!(obj, Obj::Exp(_) | Obj::Factorial(_));
     if !((is_zero(&not_equal_fact.left) && is_positive_native(&not_equal_fact.right))
@@ -239,7 +239,7 @@ fn try_verify_intrinsically_positive_native_value_nonzero(
         return None;
     }
     Some(
-        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+        SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
             not_equal_fact.clone().into(),
             "well-defined exp/factorial values are strictly positive".to_string(),
             BuiltinRuleEvidence::Uncatalogued(
@@ -255,7 +255,7 @@ impl Runtime {
     pub(in crate::verification) fn verify_resolved_numeric_not_equal_without_builtin_recursion(
         &self,
         not_equal_fact: &NotEqualFact,
-    ) -> Option<StmtResult> {
+    ) -> Option<ProveFactResult> {
         let left_number =
             self.resolve_obj_to_number_for_not_equal_builtin_rule(&not_equal_fact.left)?;
         let right_number =
@@ -290,7 +290,7 @@ impl Runtime {
             ),
         };
         Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 target,
                 "not_equal_numeric_resolved_or_equal_class_calculation".to_string(),
                 evidence,
@@ -344,7 +344,7 @@ impl Runtime {
         &mut self,
         not_equal_fact: &NotEqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let line_file = not_equal_fact.line_file.clone();
         let set = match (&not_equal_fact.left, &not_equal_fact.right) {
             (Obj::ListSet(list), set) if list.list.is_empty() => set.clone(),
@@ -359,7 +359,7 @@ impl Runtime {
         }
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                 not_equal_fact.clone().into(),
                 SuccessInferResult::new(),
                 "not_equal_empty_set_from_nonempty".to_string(),
@@ -377,7 +377,7 @@ impl Runtime {
         &mut self,
         not_equal_fact: &NotEqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let line_file = not_equal_fact.line_file.clone();
         let x = not_equal_fact.left.clone();
         let y = not_equal_fact.right.clone();
@@ -393,20 +393,21 @@ impl Runtime {
             GreaterFact::new(y.clone(), x.clone(), line_file.clone()).into(),
         ];
         for order_atomic in &candidates {
-            let sub =
-                self.verify_non_equational_atomic_fact_with_known_atomic_facts(order_atomic)?;
-            if sub.is_success() {
-                steps.push(sub);
-                let success =
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
-                        not_equal_fact.clone().into(),
-                        SuccessInferResult::new(),
-                        "not_equal_from_known_strict_order".to_string(),
-                        BuiltinRuleEvidence::NotEqualFromStrictOrder,
-                        steps,
-                    );
-                return Ok(Some(success.into()));
-            }
+            let Some(sub) = self
+                .try_verify_atomic_fact_as_builtin_rule_premise(order_atomic, builtin_state)?
+            else {
+                continue;
+            };
+            steps.push(sub);
+            let success =
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_and_steps(
+                    not_equal_fact.clone().into(),
+                    SuccessInferResult::new(),
+                    "not_equal_from_known_strict_order".to_string(),
+                    BuiltinRuleEvidence::NotEqualFromStrictOrder,
+                    steps,
+                );
+            return Ok(Some(success.into()));
         }
 
         for alternatives in [
@@ -421,7 +422,7 @@ impl Runtime {
             if premise_result.is_success() {
                 steps.push(premise_result);
                 return Ok(Some(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                         not_equal_fact.clone().into(),
                         SuccessInferResult::new(),
                         "not_equal_from_complete_strict_order_disjunction".to_string(),
@@ -445,7 +446,8 @@ impl Runtime {
     fn try_verify_not_equal_from_known_positive_lower_bound(
         &mut self,
         not_equal_fact: &NotEqualFact,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+        builtin_state: &BuiltinRuleSearchState,
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let target = match (&not_equal_fact.left, &not_equal_fact.right) {
             (target, zero) if self.obj_represents_zero_for_not_equal_builtin_rules(zero) => {
                 target.clone()
@@ -486,20 +488,21 @@ impl Runtime {
                     not_equal_fact.line_file.clone(),
                 )
                 .into();
-                let positive_result = self
-                    .verify_non_equational_atomic_fact_with_known_atomic_facts(
+                let Some(positive_result) = self
+                    .try_verify_atomic_fact_as_builtin_rule_premise(
                         &positive_membership,
-                    )?;
-                if !positive_result.is_success() {
+                        builtin_state,
+                    )?
+                else {
                     continue;
-                }
-                let order_result =
-                    self.verify_non_equational_atomic_fact_with_known_atomic_facts(&order)?;
-                if !order_result.is_success() {
+                };
+                let Some(order_result) = self
+                    .try_verify_atomic_fact_as_builtin_rule_premise(&order, builtin_state)?
+                else {
                     continue;
-                }
+                };
                 return Ok(Some(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                         not_equal_fact.clone().into(),
                         SuccessInferResult::new(),
                         "not_equal_from_known_positive_lower_bound".to_string(),
@@ -520,7 +523,8 @@ impl Runtime {
     fn try_verify_not_equal_from_membership_contradiction(
         &mut self,
         not_equal_fact: &NotEqualFact,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+        builtin_state: &BuiltinRuleSearchState,
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let line_file = not_equal_fact.line_file.clone();
         let candidates = [
             (not_equal_fact.left.clone(), not_equal_fact.right.clone()),
@@ -531,19 +535,22 @@ impl Runtime {
             for set in self.known_sets_containing_obj(&member_obj) {
                 let not_in_set: AtomicFact =
                     NotInFact::new(non_member_obj.clone(), set.clone(), line_file.clone()).into();
-                let not_in_result =
-                    self.verify_non_equational_atomic_fact_with_known_atomic_facts(&not_in_set)?;
-                if !not_in_result.is_success() {
+                let Some(not_in_result) = self
+                    .try_verify_atomic_fact_as_builtin_rule_premise(&not_in_set, builtin_state)?
+                else {
                     continue;
-                }
+                };
 
                 let in_set: AtomicFact =
                     InFact::new(member_obj.clone(), set, line_file.clone()).into();
-                let in_result =
-                    self.verify_non_equational_atomic_fact_with_known_atomic_facts(&in_set)?;
+                let Some(in_result) = self
+                    .try_verify_atomic_fact_as_builtin_rule_premise(&in_set, builtin_state)?
+                else {
+                    continue;
+                };
 
                 return Ok(Some(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                         not_equal_fact.clone().into(),
                         SuccessInferResult::new(),
                         "not_equal_from_membership_contradiction".to_string(),
@@ -566,7 +573,7 @@ impl Runtime {
         &mut self,
         not_equal_fact: &NotEqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let line_file = not_equal_fact.line_file.clone();
         let abs = match (&not_equal_fact.left, &not_equal_fact.right) {
             (Obj::Abs(abs), right)
@@ -590,7 +597,7 @@ impl Runtime {
         }
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                 not_equal_fact.clone().into(),
                 SuccessInferResult::new(),
                 "abs_not_equal_zero_from_arg_nonzero".to_string(),
@@ -610,7 +617,7 @@ impl Runtime {
         &mut self,
         not_equal_fact: &NotEqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let line_file = not_equal_fact.line_file.clone();
         let sqrt = match (&not_equal_fact.left, &not_equal_fact.right) {
             (Obj::Sqrt(sqrt), right)
@@ -636,7 +643,7 @@ impl Runtime {
         }
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 not_equal_fact.clone().into(),
                 "sqrt(x) != 0 from x > 0".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -654,7 +661,7 @@ impl Runtime {
         &mut self,
         not_equal_fact: &NotEqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let line_file = not_equal_fact.line_file.clone();
         let sub = match (&not_equal_fact.left, &not_equal_fact.right) {
             (Obj::Sub(sub), right)
@@ -684,22 +691,23 @@ impl Runtime {
         ];
 
         for candidate in &candidates {
-            let sub_result =
-                self.verify_non_equational_atomic_fact_with_known_atomic_facts(candidate)?;
-            if sub_result.is_success() {
-                return Ok(Some(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
-                        not_equal_fact.clone().into(),
-                        SuccessInferResult::new(),
-                        "sub_not_equal_zero_from_operand_not_equal".to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(
-                            UncataloguedBuiltinRule::TryVerifySubNotEqualZeroFromOperandNotEqual01,
-                        ),
-                        vec![sub_result],
-                    )
-                    .into(),
-                ));
-            }
+            let Some(sub_result) = self
+                .try_verify_atomic_fact_as_builtin_rule_premise(candidate, builtin_state)?
+            else {
+                continue;
+            };
+            return Ok(Some(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_and_steps(
+                    not_equal_fact.clone().into(),
+                    SuccessInferResult::new(),
+                    "sub_not_equal_zero_from_operand_not_equal".to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(
+                        UncataloguedBuiltinRule::TryVerifySubNotEqualZeroFromOperandNotEqual01,
+                    ),
+                    vec![sub_result],
+                )
+                .into(),
+            ));
         }
 
         let premise_result = self.verify_builtin_rule_premise_alternatives(
@@ -712,7 +720,7 @@ impl Runtime {
         )?;
         if premise_result.is_success() {
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                     not_equal_fact.clone().into(),
                     SuccessInferResult::new(),
                     "sub_not_equal_zero_from_complete_operand_disjunction".to_string(),
@@ -734,7 +742,7 @@ impl Runtime {
         &mut self,
         not_equal_fact: &NotEqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let line_file = not_equal_fact.line_file.clone();
         let add = match (&not_equal_fact.left, &not_equal_fact.right) {
             (Obj::Add(add), right)
@@ -772,20 +780,21 @@ impl Runtime {
         ];
 
         for candidate in &candidates {
-            let sub_result =
-                self.verify_non_equational_atomic_fact_with_known_atomic_facts(candidate)?;
-            if sub_result.is_success() {
-                return Ok(Some(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
-                        not_equal_fact.clone().into(),
-                        SuccessInferResult::new(),
-                        "add_not_equal_zero_from_operand_not_equal_negation".to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyAddNotEqualZeroFromOperandNotEqualNegation01),
-                        vec![sub_result],
-                    )
-                    .into(),
-                ));
-            }
+            let Some(sub_result) = self
+                .try_verify_atomic_fact_as_builtin_rule_premise(candidate, builtin_state)?
+            else {
+                continue;
+            };
+            return Ok(Some(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_and_steps(
+                    not_equal_fact.clone().into(),
+                    SuccessInferResult::new(),
+                    "add_not_equal_zero_from_operand_not_equal_negation".to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyAddNotEqualZeroFromOperandNotEqualNegation01),
+                    vec![sub_result],
+                )
+                .into(),
+            ));
         }
 
         let premise_result = self.verify_builtin_rule_premise_alternatives(
@@ -798,7 +807,7 @@ impl Runtime {
         )?;
         if premise_result.is_success() {
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                     not_equal_fact.clone().into(),
                     SuccessInferResult::new(),
                     "add_not_equal_zero_from_complete_negation_disjunction".to_string(),
@@ -818,7 +827,7 @@ impl Runtime {
         &mut self,
         not_equal_fact: &NotEqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let line_file = not_equal_fact.line_file.clone();
         let zero_obj: Obj = Number::new("0".to_string()).into();
         let candidates: [AtomicFact; 2] = [
@@ -837,22 +846,23 @@ impl Runtime {
         ];
 
         for candidate in &candidates {
-            let sub_result =
-                self.verify_non_equational_atomic_fact_with_known_atomic_facts(candidate)?;
-            if sub_result.is_success() {
-                return Ok(Some(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
-                        not_equal_fact.clone().into(),
-                        SuccessInferResult::new(),
-                        "operand_not_equal_from_sub_not_equal_zero".to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(
-                            UncataloguedBuiltinRule::TryVerifyOperandNotEqualFromSubNotEqualZero01,
-                        ),
-                        vec![sub_result],
-                    )
-                    .into(),
-                ));
-            }
+            let Some(sub_result) = self
+                .try_verify_atomic_fact_as_builtin_rule_premise(candidate, builtin_state)?
+            else {
+                continue;
+            };
+            return Ok(Some(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_and_steps(
+                    not_equal_fact.clone().into(),
+                    SuccessInferResult::new(),
+                    "operand_not_equal_from_sub_not_equal_zero".to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(
+                        UncataloguedBuiltinRule::TryVerifyOperandNotEqualFromSubNotEqualZero01,
+                    ),
+                    vec![sub_result],
+                )
+                .into(),
+            ));
         }
 
         let premise_result = self.verify_builtin_rule_premise_alternatives(
@@ -865,7 +875,7 @@ impl Runtime {
         )?;
         if premise_result.is_success() {
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                     not_equal_fact.clone().into(),
                     SuccessInferResult::new(),
                     "operand_not_equal_from_complete_difference_disjunction".to_string(),
@@ -887,7 +897,7 @@ impl Runtime {
         &mut self,
         not_equal_fact: &NotEqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let line_file = not_equal_fact.line_file.clone();
         let zero_obj: Obj = Number::new("0".to_string()).into();
         let mut candidates: Vec<AtomicFact> = Vec::new();
@@ -932,20 +942,21 @@ impl Runtime {
         }
 
         for candidate in &candidates {
-            let sub_result =
-                self.verify_non_equational_atomic_fact_with_known_atomic_facts(candidate)?;
-            if sub_result.is_success() {
-                return Ok(Some(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
-                        not_equal_fact.clone().into(),
-                        SuccessInferResult::new(),
-                        "operand_not_equal_negation_from_add_not_equal_zero".to_string(),
-                        BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyOperandNotEqualNegationFromAddNotEqualZero01),
-                        vec![sub_result],
-                    )
-                    .into(),
-                ));
-            }
+            let Some(sub_result) = self
+                .try_verify_atomic_fact_as_builtin_rule_premise(candidate, builtin_state)?
+            else {
+                continue;
+            };
+            return Ok(Some(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_and_steps(
+                    not_equal_fact.clone().into(),
+                    SuccessInferResult::new(),
+                    "operand_not_equal_negation_from_add_not_equal_zero".to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyOperandNotEqualNegationFromAddNotEqualZero01),
+                    vec![sub_result],
+                )
+                .into(),
+            ));
         }
 
         if !candidates.is_empty() {
@@ -959,7 +970,7 @@ impl Runtime {
             )?;
             if premise_result.is_success() {
                 return Ok(Some(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                         not_equal_fact.clone().into(),
                         SuccessInferResult::new(),
                         "operand_not_equal_negation_from_complete_sum_disjunction".to_string(),
@@ -979,7 +990,7 @@ impl Runtime {
         &mut self,
         not_equal_fact: &NotEqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let line_file = not_equal_fact.line_file.clone();
         let one_obj: Obj = Number::new("1".to_string()).into();
         let x = match (&not_equal_fact.left, &not_equal_fact.right) {
@@ -1001,7 +1012,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 not_equal_fact.clone().into(),
                 "n != 0 from n $in N and 1 <= n".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -1057,7 +1068,7 @@ impl Runtime {
         &mut self,
         not_equal_fact: &NotEqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let line_file = not_equal_fact.line_file.clone();
         let zero_obj: Obj = Number::new("0".to_string()).into();
         let pow = match (&not_equal_fact.left, &not_equal_fact.right) {
@@ -1080,7 +1091,7 @@ impl Runtime {
             self.verify_atomic_fact_as_builtin_rule_premise(&base_neq_zero, builtin_state)?;
         if result.is_success() {
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                     not_equal_fact.clone().into(),
                     SuccessInferResult::new(),
                     "not_equal_pow_from_base_nonzero".to_string(),
@@ -1100,11 +1111,14 @@ impl Runtime {
         for positive_set in [StandardSet::NPos, StandardSet::QPos, StandardSet::RPos] {
             let positive_membership: AtomicFact =
                 InFact::new(base.clone(), positive_set.into(), line_file.clone()).into();
-            let positive_result = self
-                .verify_non_equational_atomic_fact_with_known_atomic_facts(&positive_membership)?;
-            if positive_result.is_success() {
+            if let Some(positive_result) = self
+                .try_verify_atomic_fact_as_builtin_rule_premise(
+                    &positive_membership,
+                    builtin_state,
+                )?
+            {
                 return Ok(Some(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                         not_equal_fact.clone().into(),
                         SuccessInferResult::new(),
                         "not_equal_pow_from_positive_base_carrier".to_string(),
@@ -1126,7 +1140,7 @@ impl Runtime {
         &mut self,
         not_equal_fact: &NotEqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let line_file = not_equal_fact.line_file.clone();
         let (div, orientation, matched_zero) = match (&not_equal_fact.left, &not_equal_fact.right) {
             (Obj::Div(div), right)
@@ -1168,7 +1182,7 @@ impl Runtime {
                     div.right.as_ref().clone(),
                     orientation,
                 ));
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                 not_equal_fact.clone().into(),
                 SuccessInferResult::new(),
                 "div_not_equal_zero_from_numerator_nonzero".to_string(),
@@ -1178,7 +1192,7 @@ impl Runtime {
         } else {
             // Resolved aliases of zero still verify in Litex, but this rule
             // cannot yet return the equality evidence a compiler would need.
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                 not_equal_fact.clone().into(),
                 SuccessInferResult::new(),
                 "div_not_equal_zero_from_numerator_nonzero".to_string(),
@@ -1197,7 +1211,7 @@ impl Runtime {
         &mut self,
         not_equal_fact: &NotEqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let target = match (&not_equal_fact.left, &not_equal_fact.right) {
             (target, zero) if self.obj_represents_zero_for_not_equal_builtin_rules(zero) => {
                 target.clone()
@@ -1265,12 +1279,13 @@ impl Runtime {
             else {
                 continue;
             };
-            let known_result = self.verify_non_equational_atomic_fact_with_known_atomic_facts(
+            let Some(known_result) = self.try_verify_atomic_fact_as_builtin_rule_premise(
                 &AtomicFact::NotEqualFact(known_not_equal.clone()),
-            )?;
-            if !known_result.is_success() {
+                builtin_state,
+            )?
+            else {
                 continue;
-            }
+            };
             steps.push(known_result);
             if target_matches_left.is_success() {
                 steps.push(target_matches_left);
@@ -1279,7 +1294,7 @@ impl Runtime {
             }
 
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     not_equal_fact.clone().into(),
                     "product_nonzero_component: a * b != 0 gives a != 0 and b != 0".to_string(),
                     BuiltinRuleEvidence::Uncatalogued(
@@ -1302,7 +1317,7 @@ impl Runtime {
         &mut self,
         not_equal_fact: &NotEqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let line_file = not_equal_fact.line_file.clone();
         let expression_obj =
             if self.obj_represents_zero_for_not_equal_builtin_rules(&not_equal_fact.right) {
@@ -1340,7 +1355,7 @@ impl Runtime {
         if premise_result.is_success() {
             steps.push(premise_result);
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                     not_equal_fact.clone().into(),
                     SuccessInferResult::new(),
                     "square_sum_not_equal_zero_from_nonzero_component_or".to_string(),
@@ -1417,7 +1432,7 @@ impl Runtime {
         right_operand: &Obj,
         line_file: LineFile,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
+    ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
         let zero_obj: Obj = Number::new("0".to_string()).into();
         let premises = [
             NotEqualFact::new(left_operand.clone(), zero_obj.clone(), line_file.clone()).into(),
@@ -1441,7 +1456,7 @@ impl Runtime {
         right_operand: &Obj,
         line_file: LineFile,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
+    ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
         let zero_obj: Obj = Number::new("0".to_string()).into();
         let premises = [
             LessFact::new(zero_obj.clone(), left_operand.clone(), line_file.clone()).into(),
@@ -1456,7 +1471,7 @@ impl Runtime {
         right_operand: &Obj,
         line_file: LineFile,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
+    ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
         let zero_obj: Obj = Number::new("0".to_string()).into();
         let premises = [
             LessFact::new(left_operand.clone(), zero_obj.clone(), line_file.clone()).into(),
@@ -1471,7 +1486,7 @@ impl Runtime {
         right_factor: &Obj,
         line_file: LineFile,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
+    ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
         let zero_obj: Obj = Number::new("0".to_string()).into();
         let alternatives = vec![
             vec![
@@ -1494,7 +1509,7 @@ impl Runtime {
         subtrahend: &Obj,
         line_file: LineFile,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
+    ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
         let zero_obj: Obj = Number::new("0".to_string()).into();
         let alternatives = vec![
             vec![
@@ -1515,7 +1530,7 @@ impl Runtime {
         &mut self,
         not_equal_fact: &NotEqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let line_file = not_equal_fact.line_file.clone();
         let expression_obj =
             if self.obj_represents_zero_for_not_equal_builtin_rules(&not_equal_fact.right) {
@@ -1618,14 +1633,14 @@ impl Runtime {
                 let success = if rule_label
                     == "mul_not_equal_zero_both_factors_nonzero_by_known_facts"
                 {
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         not_equal_fact.clone().into(),
                         rule_label.to_string(),
                         BuiltinRuleEvidence::Nonzero(NonzeroBuiltinRule::Mul),
                         subgoals,
                     )
                 } else {
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         not_equal_fact.clone().into(),
                         rule_label.to_string(),
                         BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNotEqualFactWhenZeroAndBinaryArithmeticReducesByOperandFacts),

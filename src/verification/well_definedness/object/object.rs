@@ -3,6 +3,34 @@
 use crate::prelude::*;
 use std::rc::Rc;
 
+struct ActiveWellDefinedObjectGuard<'a> {
+    verify_state: &'a VerifyState,
+    key: ObjString,
+}
+
+impl<'a> ActiveWellDefinedObjectGuard<'a> {
+    fn begin(
+        verify_state: &'a VerifyState,
+        object: &Obj,
+        key: ObjString,
+    ) -> Result<Self, RuntimeError> {
+        if !verify_state.begin_well_defined_object(&key) {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_just_msg(format!(
+                    "cyclic object well-definedness dependency while checking `{object}`"
+                )),
+            )));
+        }
+        Ok(Self { verify_state, key })
+    }
+}
+
+impl Drop for ActiveWellDefinedObjectGuard<'_> {
+    fn drop(&mut self) {
+        self.verify_state.end_well_defined_object(&self.key);
+    }
+}
+
 impl Runtime {
     /// Compositional WD entry point. Every object family returns its exact
     /// recursive children, fact checks, binder body, or Template instantiation.
@@ -11,26 +39,21 @@ impl Runtime {
         obj: &Obj,
         verify_state: &VerifyState,
     ) -> Result<Rc<SuccessVerifyObjWellDefinedResult>, RuntimeError> {
-        let reusable_cache_key = self.well_defined_cache_key_for_obj(obj);
-        if let Some(source) = reusable_cache_key
+        let reusable_cache_metadata = self.well_defined_cache_metadata_for_obj(obj);
+        if let Some(source) = reusable_cache_metadata
             .as_ref()
-            .and_then(|key| verify_state.well_defined_object_proof(key))
+            .and_then(|(object_key, _)| verify_state.well_defined_object_proof(object_key))
         {
             return Ok(Rc::new(SuccessVerifyObjWellDefinedResult::Reuse(Box::new(
                 SuccessReuseObjWellDefinedResult::new(obj.clone(), source),
             ))));
         }
-        let cache_key = reusable_cache_key
-            .clone()
-            .unwrap_or_else(|| WellDefinedCacheKey::without_function_contract(obj.to_string()));
         let active_key = obj_equality_key(obj);
-        if !verify_state.begin_well_defined_object(&active_key) {
-            return Ok(Rc::new(
-                SuccessVerifyObjWellDefinedResult::RecursiveReference(Box::new(
-                    SuccessRecursiveObjWellDefinedResult::new(obj.clone(), active_key),
-                )),
-            ));
-        }
+        let _active_guard = ActiveWellDefinedObjectGuard::begin(
+            verify_state,
+            obj,
+            active_key,
+        )?;
 
         let steps = match obj {
             Obj::Atom(AtomObj::Identifier(identifier)) => self
@@ -278,21 +301,22 @@ impl Runtime {
                 .map(Some),
         };
 
-        verify_state.end_well_defined_object(&active_key);
         let steps = steps?.expect("every Obj variant returns compositional WD steps");
         let intrinsic_result_set = intrinsic_well_definedness_result_set(obj, &steps);
-        let result = Rc::new(SuccessVerifyObjWellDefinedResult::Direct(Box::new(
-            SuccessVerifyDirectObjWellDefinedResult::new(
-                obj.clone(),
-                cache_key.clone(),
-                steps,
-                intrinsic_result_set,
-            ),
-        )));
-        if let Some(reusable_cache_key) = reusable_cache_key {
-            verify_state.remember_well_defined_object_proof(reusable_cache_key, result.clone());
+        let (object_key, function_contracts) = reusable_cache_metadata
+            .clone()
+            .unwrap_or_else(|| (obj.to_string(), Vec::new()));
+        let direct = Rc::new(SuccessVerifyDirectObjWellDefinedResult::new(
+            obj.clone(),
+            object_key.clone(),
+            function_contracts,
+            steps,
+            intrinsic_result_set,
+        ));
+        if reusable_cache_metadata.is_some() {
+            verify_state.remember_well_defined_object_proof(object_key, direct.clone());
         }
-        Ok(result)
+        Ok(Rc::new(SuccessVerifyObjWellDefinedResult::Direct(direct)))
     }
 
     pub fn verify_child_obj_well_defined_result(
@@ -351,9 +375,9 @@ impl Runtime {
 pub(super) fn success_obj_target_requirement(
     source_object: Obj,
     role: WellDefinednessRequirementRole,
-    result: StmtResult,
+    result: VerifyFactResult,
 ) -> Result<SuccessVerifyObjTargetRequirementResult, RuntimeError> {
-    let success = result.into_factual_success().ok_or_else(|| {
+    let success = result.into_verified().ok_or_else(|| {
         RuntimeError::from(WellDefinedRuntimeError(
             RuntimeErrorStruct::new_with_just_msg(format!(
                 "well-definedness requirement {role:?} for `{source_object}` has no successful factual result"
@@ -364,17 +388,36 @@ pub(super) fn success_obj_target_requirement(
         source_object,
         role,
         success.fact(),
-        success.verification,
+        success.verification.clone(),
     ))
 }
 
 pub(super) fn success_obj_fact_check(
-    result: StmtResult,
+    result: VerifyFactResult,
+) -> Result<SuccessVerifyFactForObjWellDefinedResult, RuntimeError> {
+    let success = result.into_verified().ok_or_else(|| {
+        RuntimeError::from(WellDefinedRuntimeError(
+            RuntimeErrorStruct::new_with_just_msg(
+                "well-definedness fact check has no successful factual result".to_string(),
+            ),
+        ))
+    })?;
+    Ok(SuccessVerifyFactForObjWellDefinedResult::new(
+        success.fact(),
+        success.verification.clone(),
+    ))
+}
+
+/// Records a truth proof whose WD is supplied by the surrounding object
+/// constructor derivation itself. This is not a standalone fact-verification
+/// result and therefore deliberately does not masquerade as `VerifyFactResult`.
+pub(super) fn success_obj_fact_check_after_structural_wd(
+    result: ProveFactResult,
 ) -> Result<SuccessVerifyFactForObjWellDefinedResult, RuntimeError> {
     let success = result.into_factual_success().ok_or_else(|| {
         RuntimeError::from(WellDefinedRuntimeError(
             RuntimeErrorStruct::new_with_just_msg(
-                "well-definedness fact check has no successful factual result".to_string(),
+                "object-WD structural fact check has no successful truth proof".to_string(),
             ),
         ))
     })?;

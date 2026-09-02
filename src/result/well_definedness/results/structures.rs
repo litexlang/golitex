@@ -30,7 +30,7 @@ pub struct SuccessVerifyStructureFieldResult {
 pub struct SuccessVerifyStructureEquivalentFactResult {
     pub fact_index: usize,
     pub proposition: Fact,
-    pub well_definedness: Box<SuccessVerifyFactWellDefinedResult>,
+    pub well_definedness: Box<WellDefinedFactResult>,
     pub store: SuccessStoreFactResult,
 }
 

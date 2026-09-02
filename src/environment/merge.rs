@@ -179,7 +179,6 @@ impl Environment {
             properties_by_predicate,
         } = predicate_algebraic_properties;
         let EnvironmentVerificationCache {
-            well_defined_objects: cache_well_defined_obj,
             infer_rule_firings: cache_infer_rule_firing,
         } = caches;
 
@@ -206,9 +205,6 @@ impl Environment {
             }
         }
 
-        for (key, cached) in cache_well_defined_obj {
-            self.caches.well_defined_objects.insert(key, cached);
-        }
         for (key, _) in cache_infer_rule_firing {
             self.caches.infer_rule_firings.insert(key, ());
         }

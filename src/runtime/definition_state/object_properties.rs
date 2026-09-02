@@ -217,7 +217,7 @@ impl Runtime {
     ) -> Result<Option<Obj>, RuntimeError> {
         self.reduce_direct_known_fn_application_once(
             application,
-            &VerifyState::after_well_definedness(),
+            &VerifyState::initial(),
         )
     }
 
@@ -370,15 +370,14 @@ impl Runtime {
         let param_to_arg_map =
             SetBoundParameterGroup::param_defs_and_args_to_param_to_arg_map(param_defs, &args);
 
-        if !verify_state.well_definedness_verified {
-            let param_membership_facts =
+        let param_membership_facts =
                 SetBoundParameterGroup::facts_for_args_satisfy_param_def_with_set_vec(
                     self,
                     param_defs,
                     &args,
                     SubstitutionMode::Exact,
                 )?;
-            for param_membership_fact in param_membership_facts.iter() {
+        for param_membership_fact in param_membership_facts.iter() {
                 let result = self.verify_atomic_fact_restricted_known_builtin(
                     param_membership_fact,
                     verify_state,
@@ -386,8 +385,8 @@ impl Runtime {
                 if !result.is_success() {
                     return Ok(None);
                 }
-            }
-            for dom_fact in fn_set_body.dom_facts.iter() {
+        }
+        for dom_fact in fn_set_body.dom_facts.iter() {
                 let instantiated_dom_fact = self.inst_quantifier_free_fact(
                     dom_fact,
                     &param_to_arg_map,
@@ -401,7 +400,6 @@ impl Runtime {
                 if !result.is_success() {
                     return Ok(None);
                 }
-            }
         }
 
         let reduced = self.inst_obj(&equal_to_expr, &param_to_arg_map, SubstitutionMode::Exact)?;
@@ -552,17 +550,15 @@ impl Runtime {
             })
     }
 
-    pub fn cache_well_defined_obj_contains(&self, key: &str) -> bool {
-        let key = WellDefinedCacheKey::without_function_contract(key.to_string());
-        self.well_defined_cache_entry(&key).is_some()
-    }
-
-    pub fn well_defined_cache_key_for_obj(&self, obj: &Obj) -> Option<WellDefinedCacheKey> {
+    pub fn well_defined_cache_metadata_for_obj(
+        &self,
+        obj: &Obj,
+    ) -> Option<(ObjString, Vec<WellDefinedFunctionContract>)> {
         let mut contracts = Vec::new();
         if !self.collect_well_defined_function_contracts(obj, &mut contracts) {
             return None;
         }
-        Some(WellDefinedCacheKey::new(obj.to_string(), contracts))
+        Some((obj.to_string(), contracts))
     }
 
     fn known_function_contract_for_obj(&self, obj: &Obj) -> Option<WellDefinedFunctionContract> {
@@ -724,14 +720,6 @@ impl Runtime {
             // boolean/object cache entry for these binder-owning objects.
             Obj::SetBuilder(_) | Obj::FnSet(_) | Obj::AnonymousFn(_) => false,
         }
-    }
-
-    pub fn well_defined_cache_entry(
-        &self,
-        key: &WellDefinedCacheKey,
-    ) -> Option<&CachedWellDefinedObj> {
-        self.iter_environments_from_top()
-            .find_map(|env| env.caches.well_defined_objects.get(key))
     }
 
     pub fn cache_known_facts_contains(&self, key: &str) -> (bool, LineFile) {

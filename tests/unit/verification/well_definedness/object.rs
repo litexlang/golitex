@@ -23,19 +23,23 @@ fn compositional_well_definedness_cache_returns_exact_reuse_source() {
     let SuccessVerifyObjWellDefinedResult::Reuse(reuse) = second.as_ref() else {
         panic!("second object check must be an explicit Reuse node");
     };
-    assert!(Rc::ptr_eq(&reuse.source, &first));
+    let SuccessVerifyObjWellDefinedResult::Direct(first_direct) = first.as_ref() else {
+        unreachable!("validated above")
+    };
+    assert!(Rc::ptr_eq(&reuse.source, first_direct));
     assert_eq!(reuse.object.to_string(), object.to_string());
 }
 
 #[test]
-fn ordinary_well_definedness_keeps_historical_active_reentry_suppression() {
+fn active_well_definedness_reentry_is_an_error() {
     let mut runtime = Runtime::default();
     runtime.start_isolated_source("ordinary-active-wd-reentry.lit");
     let object: Obj = Number::new("1".to_string()).into();
     let verify_state = VerifyState::initial();
     verify_state.begin_well_defined_object(&obj_equality_key(&object));
 
-    runtime
+    let error = runtime
         .verify_obj_well_defined_and_store_cache(&object, &verify_state)
-        .expect("ordinary Litex verification should retain active-object suppression");
+        .expect_err("active object WD re-entry must not fabricate successful evidence");
+    assert!(error.to_string().contains("recursive"), "{error:?}");
 }

@@ -4,7 +4,7 @@ use crate::prelude::*;
 
 #[derive(Debug)]
 pub struct SuccessVerifyFunctionDefinitionResult {
-    pub return_check: Box<StmtResult>,
+    pub return_check: Box<VerifyFactResult>,
     /// Membership/domain facts installed while checking the return value,
     /// with their temporary FactIds frozen before that local scope closes.
     pub assumption_infers: SuccessInferResult,
@@ -14,7 +14,7 @@ pub struct SuccessVerifyFunctionDefinitionResult {
 
 impl SuccessVerifyFunctionDefinitionResult {
     pub fn new(
-        return_check: StmtResult,
+        return_check: VerifyFactResult,
         assumption_infers: SuccessInferResult,
         function_membership: Fact,
         defining_equality: Fact,

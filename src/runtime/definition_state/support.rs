@@ -185,13 +185,6 @@ impl Runtime {
         self.new_fn_set(params, dom_facts, (*fs.set).clone())
     }
 
-    pub fn store_well_defined_obj_cache(&mut self, obj: &Obj) {
-        self.top_level_env().caches.well_defined_objects.insert(
-            WellDefinedCacheKey::without_function_contract(obj.to_string()),
-            CachedWellDefinedObj::ordinary(),
-        );
-    }
-
     /// Replays only the sound side effects produced while checking a theorem
     /// or claim conclusion for well-definedness. The certificate excludes the
     /// conclusion itself and every temporary assumption used by the preflight.

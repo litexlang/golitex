@@ -28,7 +28,7 @@ pub struct SuccessVerifyDefStructLocalEnvResult {
 pub struct SuccessVerifyDefStructDomainResult {
     pub domain_index: usize,
     pub proposition: Fact,
-    pub well_definedness: SuccessVerifyFactWellDefinedResult,
+    pub well_definedness: WellDefinedFactResult,
 }
 
 pub struct SuccessVerifyDefStructFieldTypeResult {

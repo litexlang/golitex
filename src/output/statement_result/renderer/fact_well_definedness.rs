@@ -5,17 +5,14 @@ use super::*;
 impl StatementResultRenderer {
     pub(in super::super) fn fact_well_definedness(
         &mut self,
-        result: &SuccessVerifyFactWellDefinedResult,
+        result: &WellDefinedFactResult,
     ) -> JsonValue {
         object(vec![
-            string_field("kind", "SuccessVerifyFactWellDefinedResult"),
+            string_field("kind", "WellDefinedFactResult"),
+            string_field("fact", result.fact.to_string()),
             (
-                "recursive".to_string(),
-                result
-                    .recursive
-                    .as_ref()
-                    .map(|proof| self.fact_well_definedness_proof(proof))
-                    .unwrap_or(JsonValue::Null),
+                "proof".to_string(),
+                self.fact_well_definedness_proof(&result.proof),
             ),
         ])
     }
@@ -63,7 +60,10 @@ impl StatementResultRenderer {
                                                 "role",
                                                 atomic_predicate_domain_check_role(check.role),
                                             ),
-                                            ("result".to_string(), self.stmt_result(&check.result)),
+                                            (
+                                                "result".to_string(),
+                                                self.verify_fact_result(&check.result),
+                                            ),
                                         ])
                                     })
                                     .collect(),

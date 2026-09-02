@@ -100,7 +100,9 @@ impl RunSummary {
         if let Some(success) = result.factual_success() {
             self.visit_fact_stmt(&success.fact(), depth);
             self.visit_infer_result(&success.infers);
-            self.visit_verified_by(success.proof(), depth);
+            if let Some(proof) = success.proof() {
+                self.visit_verified_by(proof, depth);
+            }
         }
         if let Some(success) = result.non_factual_success() {
             self.visit_stmt(&success.statement(), depth);
@@ -109,6 +111,9 @@ impl RunSummary {
             }
             self.visit_non_factual_verification(success);
             success.visit_child_results(&mut |child| self.visit_result(child, depth + 1));
+            success.visit_fact_verification_children(&mut |child| {
+                self.visit_verify_result(child, depth + 1)
+            });
             success.visit_success_child_results(&mut |child| {
                 self.visit_success_result(child, depth + 1)
             });
@@ -119,7 +124,9 @@ impl RunSummary {
         if let Some(fact) = success.fact() {
             self.visit_fact_stmt(&fact.fact(), depth);
             self.visit_infer_result(&fact.infers);
-            self.visit_verified_by(fact.proof(), depth);
+            if let Some(proof) = fact.proof() {
+                self.visit_verified_by(proof, depth);
+            }
         } else {
             self.visit_stmt(&success.statement(), depth);
             if let Some(environment_effects) = success.environment_effects() {
@@ -127,9 +134,18 @@ impl RunSummary {
             }
             self.visit_non_factual_verification(success);
             success.visit_child_results(&mut |child| self.visit_result(child, depth + 1));
+            success.visit_fact_verification_children(&mut |child| {
+                self.visit_verify_result(child, depth + 1)
+            });
             success.visit_success_child_results(&mut |child| {
                 self.visit_success_result(child, depth + 1)
             });
+        }
+    }
+
+    fn visit_verify_result(&mut self, result: &VerifyFactResult, depth: usize) {
+        if let Some(verified) = result.verified() {
+            self.visit_verified_by(verified.proof(), depth);
         }
     }
 
@@ -255,13 +271,13 @@ impl RunSummary {
                 bump_count(&mut self.proof_method_counts, "builtin rule");
                 bump_count(&mut self.builtin_rule_counts, result.msg.as_str());
                 for subgoal in result.subgoals.iter() {
-                    self.visit_result(subgoal, depth + 1);
+                    self.visit_verify_result(subgoal, depth + 1);
                 }
             }
             SuccessFactProofResult::BuiltinStrategy(result) => {
                 bump_count(&mut self.proof_method_counts, "builtin strategy");
                 for subgoal in result.subgoals.iter() {
-                    self.visit_result(subgoal, depth + 1);
+                    self.visit_verify_result(subgoal, depth + 1);
                 }
             }
             SuccessFactProofResult::KnownForallInstantiation(result) => {
@@ -274,14 +290,14 @@ impl RunSummary {
                     self.visit_verified_by(primary.proof(), depth + 1);
                 }
                 for step in result.steps.iter() {
-                    self.visit_result(step, depth + 1);
+                    self.visit_verify_result(step, depth + 1);
                 }
             }
             SuccessFactProofResult::ForallProof(result) => {
                 bump_count(&mut self.proof_method_counts, "forall proof");
                 self.visit_infer_result(&result.assumption_infers);
                 for proved in result.proves.iter() {
-                    self.visit_result(&proved.result, depth + 1);
+                    self.visit_verify_result(&proved.result, depth + 1);
                 }
             }
             SuccessFactProofResult::StoredFactCitation(_) => {
@@ -315,7 +331,7 @@ impl RunSummary {
         depth: usize,
     ) {
         for requirement in result.requirements.iter() {
-            self.visit_result(&requirement.result, depth + 1);
+            self.visit_verify_result(&requirement.result, depth + 1);
         }
     }
 
@@ -748,11 +764,6 @@ impl EnvironmentSummary {
                 .antisymmetric_predicate_count(),
         );
         summary.add_field_counts(
-            "cache_well_defined_obj",
-            environment.caches.well_defined_objects.len(),
-            environment.caches.well_defined_objects.len(),
-        );
-        summary.add_field_counts(
             "stored_fact_lookup_keys",
             environment.facts.stored_facts.lookup_key_count(),
             environment.facts.stored_facts.lookup_key_count(),
@@ -815,8 +826,7 @@ impl EnvironmentSummary {
         );
         self.category_counts.insert(
             "object_cache_entries".to_string(),
-            environment.objects.old_summary_object_knowledge_count()
-                + environment.caches.well_defined_objects.len(),
+            environment.objects.old_summary_object_knowledge_count(),
         );
         self.category_counts.insert(
             "property_registrations".to_string(),

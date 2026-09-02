@@ -10,7 +10,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         for (indexed_side, other_side) in [
             (&equal_fact.left, &equal_fact.right),
             (&equal_fact.right, &equal_fact.left),
@@ -83,13 +83,18 @@ impl Runtime {
                             .into();
                             let nonempty_result = match index_intersect.index_set.as_ref() {
                                 Obj::ListSet(list) if !list.list.is_empty() => {
-                                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                                    let proof: ProveFactResult = SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                                         nonempty_index.clone().into(),
                                         "nonempty literal index set".to_string(),
                                         BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyIndexedSetFamilyEqualities),
                                         Vec::new(),
                                     )
-                                    .into()
+                                    .into();
+                                    self.complete_atomic_fact_proof_result(
+                                        &nonempty_index,
+                                        proof,
+                                        builtin_state.verify_state(),
+                                    )?
                                 }
                                 _ => self.verify_atomic_fact_as_builtin_rule_premise(
                                     &nonempty_index,

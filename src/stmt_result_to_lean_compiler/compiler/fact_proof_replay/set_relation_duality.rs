@@ -10,17 +10,14 @@ impl StmtResultToLeanCompiler {
         &mut self,
         target: &Fact,
         rule: SetRelationDualityBuiltinRule,
-        subgoals: &[StmtResult],
+        subgoals: &[VerifyFactResult],
     ) -> Result<Option<String>, String> {
         let [child] = subgoals else {
             return Err("set-relation duality requires one child Result".into());
         };
         let child = child
-            .factual_success()
+            .verified()
             .ok_or_else(|| "set-relation duality child is not factual".to_string())?;
-        if !child.store.infers.is_empty() {
-            return Err("set-relation duality child published effects".into());
-        }
         let (target_left, target_right, target_negated, target_is_subset_spelling) =
             normalized_set_relation_parts(target)?;
         let child_fact = child.fact();

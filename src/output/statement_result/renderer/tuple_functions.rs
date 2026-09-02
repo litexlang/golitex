@@ -24,11 +24,11 @@ impl StatementResultRenderer {
                             string_field("kind", "SuccessVerifyTupleOrCartDimensionResult"),
                             (
                                 "positive_check".to_string(),
-                                self.stmt_result(&verification.dimension.positive_check),
+                                self.verify_fact_result(&verification.dimension.positive_check),
                             ),
                             (
                                 "at_least_two_check".to_string(),
-                                self.stmt_result(&verification.dimension.at_least_two_check),
+                                self.verify_fact_result(&verification.dimension.at_least_two_check),
                             ),
                         ]),
                     ),
@@ -79,7 +79,7 @@ impl StatementResultRenderer {
                     ),
                     (
                         "bound_checks".to_string(),
-                        self.stmt_results(&verification.bound_checks),
+                        self.verify_fact_results(&verification.bound_checks),
                     ),
                     (
                         "assumption_infers".to_string(),
@@ -87,7 +87,7 @@ impl StatementResultRenderer {
                     ),
                     (
                         "return_check".to_string(),
-                        self.stmt_result(&verification.return_check),
+                        self.verify_fact_result(&verification.return_check),
                     ),
                 ])
             })

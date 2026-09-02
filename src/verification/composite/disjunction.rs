@@ -416,33 +416,18 @@ fn square_mul_sum_not_equal_zero_fact_for_or_builtin(
 }
 
 impl Runtime {
-    pub fn verify_or_fact(
+    pub(crate) fn prove_or_fact(
         &mut self,
         or_fact: &OrFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         if let Some(cached_result) =
             self.verification_result_from_known_fact_cache(&or_fact.clone().into())
         {
             return Ok(cached_result);
         }
 
-        if !verify_state.well_definedness_verified {
-            if let Err(e) = self.verify_or_fact_well_defined(or_fact, verify_state) {
-                return Err({
-                    VerifyRuntimeError(RuntimeErrorStruct::new(
-                        Some(Fact::from(or_fact.clone()).into_stmt()),
-                        String::new(),
-                        or_fact.line_file.clone(),
-                        Some(e),
-                        vec![],
-                    ))
-                    .into()
-                });
-            }
-        }
-
-        let verify_state_for_children = verify_state.with_well_definedness_verified();
+        let verify_state_for_children = verify_state.clone();
 
         if let Some((reason, left, right)) = real_line_order_or_builtin_match(or_fact) {
             if let Some(steps) = self.verify_objects_are_known_reals(
@@ -451,7 +436,7 @@ impl Runtime {
                 &verify_state_for_children,
             )? {
                 return Ok(
-                    (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    (SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         or_fact.clone().into(),
                         reason.to_string(),
                         BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyOrFact01),
@@ -471,7 +456,7 @@ impl Runtime {
                 if let Ok(negated_first) = first_atomic.logical_negation() {
                     if negated_first.to_string() == second_atomic.to_string() {
                         return Ok(
-                            (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                            (SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                                 or_fact.clone().into(),
                                 "or: complementary atomic facts".to_string(),
                                 BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyOrFact02),
@@ -491,7 +476,7 @@ impl Runtime {
                         &verify_state_for_children,
                     )? {
                         return Ok(
-                            (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                            (SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                                 or_fact.clone().into(),
                                 "or: complementary order relations (strict vs non-strict) on the same real terms"
                                     .to_string(),
@@ -511,7 +496,7 @@ impl Runtime {
                         .verify_atomic_fact_restricted_known_builtin(&weak_bound, verify_state)?;
                     if weak_result.is_success() {
                         return Ok(
-                            (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
+                            (SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                                 or_fact.clone().into(),
                                 SuccessInferResult::new(),
                                 "or: equality plus strict order covers a known weak order".to_string(),
@@ -526,7 +511,7 @@ impl Runtime {
                     || abs_sign_split_or_is_exhaustive_pair(second_atomic, first_atomic)
                 {
                     return Ok(
-                        (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                        (SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             or_fact.clone().into(),
                             "or: abs(x) is x or -x".to_string(),
                             BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyOrFact05),
@@ -540,7 +525,7 @@ impl Runtime {
 
         if mod_positive_integer_residue_or_is_exhaustive(or_fact) {
             return Ok(
-                (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                (SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     or_fact.clone().into(),
                     "or: complete residue classes modulo a positive integer".to_string(),
                     BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyOrFact06),
@@ -569,7 +554,10 @@ impl Runtime {
         }
 
         if let Some(result) =
-            self.try_verify_component_nonzero_or_from_known_square_sum_not_equal_zero(or_fact)?
+            self.try_verify_component_nonzero_or_from_known_square_sum_not_equal_zero(
+                or_fact,
+                verify_state,
+            )?
         {
             return Ok(result);
         }
@@ -578,7 +566,7 @@ impl Runtime {
             let result = self.verify_and_chain_atomic_fact(fact, &verify_state_for_children)?;
             if result.is_success() {
                 return Ok(
-                    (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    (SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             or_fact.clone().into(),
                             "or: selected verified disjunct".to_string(),
                             BuiltinRuleEvidence::DisjunctionIntroduction(
@@ -595,7 +583,7 @@ impl Runtime {
             }
         }
 
-        let result = self.verify_or_fact_with_known_or_facts(or_fact)?;
+        let result = self.verify_or_fact_with_known_or_facts(or_fact, verify_state)?;
         if result.is_success() {
             return Ok(result);
         }
@@ -621,7 +609,7 @@ impl Runtime {
         &mut self,
         or_fact: &OrFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         if or_fact.facts.len() != 2 {
             return Ok(None);
         }
@@ -648,7 +636,7 @@ impl Runtime {
                 })?;
             if conclusion_result.is_success() {
                 return Ok(Some(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                         or_fact.clone().into(),
                         SuccessInferResult::new(),
                         format!(
@@ -675,7 +663,7 @@ impl Runtime {
         &mut self,
         or_fact: &OrFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let Some((subject, base)) = integer_successor_tail_or_pattern(or_fact) else {
             return Ok(None);
         };
@@ -698,7 +686,7 @@ impl Runtime {
         }
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                 or_fact.clone().into(),
                 SuccessInferResult::new(),
                 "or: integer lower bound split into finite successors and strict tail".to_string(),
@@ -717,7 +705,7 @@ impl Runtime {
         &mut self,
         or_fact: &OrFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         if or_fact.facts.len() != 2 {
             return Ok(None);
         }
@@ -755,13 +743,14 @@ impl Runtime {
             Mul::new(first_factor.clone(), second_factor.clone()).into(),
             Mul::new(second_factor.clone(), first_factor.clone()).into(),
         ] {
-            let product_zero_result = self.verify_equal_fact_by_known_equality(
+            let product_zero_result = self.verify_known_equality_fact(
                 &EqualFact::new_from_refs(&product, &zero, line_file.clone()),
-            );
+                verify_state,
+            )?;
             if product_zero_result.is_success() {
                 steps.push(product_zero_result);
                 return Ok(Some(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                         or_fact.clone().into(),
                         SuccessInferResult::new(),
                         "zero_product_split: a * b = 0 gives a = 0 or b = 0".to_string(),
@@ -781,7 +770,8 @@ impl Runtime {
     fn try_verify_component_nonzero_or_from_known_square_sum_not_equal_zero(
         &mut self,
         or_fact: &OrFact,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+        verify_state: &VerifyState,
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         if or_fact.facts.len() != 2 {
             return Ok(None);
         }
@@ -825,10 +815,10 @@ impl Runtime {
 
         for candidate in candidates {
             let result =
-                self.verify_non_equational_atomic_fact_with_known_atomic_facts(&candidate)?;
+                self.verify_atomic_fact_restricted_known_builtin(&candidate, verify_state)?;
             if result.is_success() {
                 return Ok(Some(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                         or_fact.clone().into(),
                         SuccessInferResult::new(),
                         "or: square sum nonzero implies one component nonzero".to_string(),
@@ -845,7 +835,8 @@ impl Runtime {
     pub fn verify_or_fact_with_known_or_facts(
         &mut self,
         or_fact: &OrFact,
-    ) -> Result<StmtResult, RuntimeError> {
+        verify_state: &VerifyState,
+    ) -> Result<ProveFactResult, RuntimeError> {
         let args_in_or_fact = or_fact.get_args_from_fact_ref();
         let mut all_objs_equal_to_each_arg: Vec<Vec<String>> = Vec::new();
         for arg in args_in_or_fact.iter() {
@@ -857,11 +848,13 @@ impl Runtime {
             all_objs_equal_to_each_arg.push(all_objs_equal_to_current_arg);
         }
 
-        for environment in self.iter_environments_from_top() {
-            let result = Self::verify_or_fact_with_known_or_facts_with_facts_in_environment(
+        let environments: Vec<Environment> = self.iter_environments_from_top().cloned().collect();
+        for environment in &environments {
+            let result = self.verify_or_fact_with_known_or_facts_with_facts_in_environment(
                 environment,
                 or_fact,
                 &all_objs_equal_to_each_arg,
+                verify_state,
             )?;
             if result.is_success() {
                 return Ok(result);
@@ -872,10 +865,12 @@ impl Runtime {
     }
 
     pub fn verify_or_fact_with_known_or_facts_with_facts_in_environment(
+        &mut self,
         environment: &Environment,
         or_fact: &OrFact,
         all_objs_equal_to_each_arg: &Vec<Vec<String>>,
-    ) -> Result<StmtResult, RuntimeError> {
+        verify_state: &VerifyState,
+    ) -> Result<ProveFactResult, RuntimeError> {
         if let Some(known_or_facts) = environment
             .facts
             .quantified
@@ -926,18 +921,23 @@ impl Runtime {
                                 vec![],
                             ))
                         })?;
-                    let source_result: StmtResult =
-                        SuccessFactStmtResult::new_with_verified_by_known_fact(
+                    let source_proof: ProveFactResult =
+                        SuccessProveFactResult::new_with_verified_by_known_fact(
                             source_fact.clone(),
                             SuccessFactProofResult::stored_fact_citation(
-                                source_fact,
+                                source_fact.clone(),
                                 source_fact_id,
                                 None,
                             ),
                             Vec::new(),
                         )
                         .into();
-                    return Ok((SuccessFactStmtResult::new_with_verified_by_known_fact(
+                    let source_result = self.complete_fact_proof_result(
+                        &source_fact,
+                        source_proof,
+                        verify_state,
+                    )?;
+                    return Ok((SuccessProveFactResult::new_with_verified_by_known_fact(
                         or_fact.clone().into(),
                         SuccessFactProofResult::combined_steps(vec![source_result]),
                         Vec::new(),

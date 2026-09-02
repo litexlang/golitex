@@ -45,7 +45,7 @@ impl Runtime {
                     .or_else(|| {
                         self.unfold_known_fn_application_once(
                             &prefix,
-                            &VerifyState::after_well_definedness(),
+                            &VerifyState::initial(),
                         )
                         .ok()
                         .flatten()
@@ -71,7 +71,7 @@ impl Runtime {
     }
 
     /// Return verification evidence when the persistent known-fact cache contains this fact.
-    pub fn verification_result_from_known_fact_cache(&self, fact: &Fact) -> Option<StmtResult> {
+    pub fn verification_result_from_known_fact_cache(&self, fact: &Fact) -> Option<ProveFactResult> {
         let key = fact.to_string();
         let normalized_key = nested_obj_binder_normalized_fact_key(fact);
         let cached_fact = self.cached_known_fact(&key);
@@ -81,7 +81,7 @@ impl Runtime {
             self.cached_known_fact(&normalized_key)
         };
         cached_fact.map(|cached_fact| {
-            SuccessFactStmtResult::new_with_verified_by_known_fact(
+            SuccessProveFactResult::new_with_verified_by_known_fact(
                 fact.clone(),
                 SuccessFactProofResult::cached_fact(
                     fact.clone(),
@@ -160,7 +160,18 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<VerifyFactResult, RuntimeError> {
+        let fact: Fact = atomic_fact.clone().into();
+        let checked = self.verify_fact_well_defined_result(&fact, verify_state)?;
+        let proof = self.prove_atomic_fact_restricted_known_builtin(atomic_fact, verify_state)?;
+        Ok(Runtime::finish_fact_verification(checked, proof))
+    }
+
+    fn prove_atomic_fact_restricted_known_builtin(
+        &mut self,
+        atomic_fact: &AtomicFact,
+        verify_state: &VerifyState,
+    ) -> Result<ProveFactResult, RuntimeError> {
         if let Some(cached_result) =
             self.verification_result_from_known_fact_cache(&atomic_fact.clone().into())
         {
@@ -181,7 +192,7 @@ impl Runtime {
         &mut self,
         fact: &QuantifierFreeFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<VerifyFactResult, RuntimeError> {
         match fact {
             QuantifierFreeFact::AtomicFact(atomic_fact) => {
                 self.verify_atomic_fact_restricted_known_builtin(atomic_fact, verify_state)
@@ -202,7 +213,7 @@ impl Runtime {
         &mut self,
         fact: &AndChainAtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<VerifyFactResult, RuntimeError> {
         match fact {
             AndChainAtomicFact::AtomicFact(atomic_fact) => {
                 self.verify_atomic_fact_restricted_known_builtin(atomic_fact, verify_state)
@@ -220,18 +231,29 @@ impl Runtime {
         &mut self,
         and_fact: &AndFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<VerifyFactResult, RuntimeError> {
+        let fact: Fact = and_fact.clone().into();
+        let checked = self.verify_fact_well_defined_result(&fact, verify_state)?;
+        let proof = self.prove_and_fact_restricted_known_builtin(and_fact, verify_state)?;
+        Ok(Runtime::finish_fact_verification(checked, proof))
+    }
+
+    fn prove_and_fact_restricted_known_builtin(
+        &mut self,
+        and_fact: &AndFact,
+        verify_state: &VerifyState,
+    ) -> Result<ProveFactResult, RuntimeError> {
         let mut steps = Vec::with_capacity(and_fact.facts.len());
         for atomic_fact in and_fact.facts.iter() {
             let result =
                 self.verify_atomic_fact_restricted_known_builtin(atomic_fact, verify_state)?;
             if result.is_unknown() {
-                return Ok(result);
+                return Ok(UnknownGenericStmtResult::new().into());
             }
             steps.push(result);
         }
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 and_fact.clone().into(),
                 "restricted builtin premise: each conjunct verified".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -247,23 +269,58 @@ impl Runtime {
         &mut self,
         chain_fact: &ChainFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
-        let facts = chain_fact.facts()?;
-        let and_fact = AndFact::new(facts, chain_fact.line_file.clone());
-        self.verify_and_fact_restricted_known_builtin(&and_fact, verify_state)
+    ) -> Result<VerifyFactResult, RuntimeError> {
+        let fact: Fact = chain_fact.clone().into();
+        let checked = self.verify_fact_well_defined_result(&fact, verify_state)?;
+        let mut steps = Vec::new();
+        for atomic_fact in chain_fact.facts()? {
+            let result =
+                self.verify_atomic_fact_restricted_known_builtin(&atomic_fact, verify_state)?;
+            if result.is_unknown() {
+                return Ok(VerifyFactResult::Unknown(Box::new(UnknownVerifyFactResult {
+                    checked,
+                    unknown: UnknownFactResult::from_stmt_unknown(
+                        fact,
+                        UnknownGenericStmtResult::new(),
+                    ),
+                })));
+            }
+            steps.push(result);
+        }
+        let proof = SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            chain_fact.clone().into(),
+            "restricted builtin premise: each chain comparison verified".to_string(),
+            BuiltinRuleEvidence::Uncatalogued(
+                UncataloguedBuiltinRule::VerifyAndFactRestrictedKnownBuiltin,
+            ),
+            steps,
+        )
+        .into();
+        Ok(Runtime::finish_fact_verification(checked, proof))
     }
 
     pub fn verify_or_fact_restricted_known_builtin(
         &mut self,
         or_fact: &OrFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<VerifyFactResult, RuntimeError> {
+        let fact: Fact = or_fact.clone().into();
+        let checked = self.verify_fact_well_defined_result(&fact, verify_state)?;
+        let proof = self.prove_or_fact_restricted_known_builtin(or_fact, verify_state)?;
+        Ok(Runtime::finish_fact_verification(checked, proof))
+    }
+
+    fn prove_or_fact_restricted_known_builtin(
+        &mut self,
+        or_fact: &OrFact,
+        verify_state: &VerifyState,
+    ) -> Result<ProveFactResult, RuntimeError> {
         if let Some(cached_result) =
             self.verification_result_from_known_fact_cache(&or_fact.clone().into())
         {
             return Ok(cached_result);
         }
-        let known_or_result = self.verify_or_fact_with_known_or_facts(or_fact)?;
+        let known_or_result = self.verify_or_fact_with_known_or_facts(or_fact, verify_state)?;
         if known_or_result.is_success() {
             return Ok(known_or_result);
         }
@@ -272,7 +329,7 @@ impl Runtime {
                 self.verify_and_chain_atomic_fact_restricted_known_builtin(fact, verify_state)?;
             if result.is_success() {
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         or_fact.clone().into(),
                         "restricted builtin premise: one branch verified".to_string(),
                         BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyOrFactRestrictedKnownBuiltin),
@@ -456,7 +513,7 @@ impl Runtime {
         objs: &[&Obj],
         line_file: &LineFile,
         verify_state: &VerifyState,
-    ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
+    ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
         let mut seen = Vec::new();
         let mut steps = Vec::new();
         for obj in objs {
@@ -467,12 +524,10 @@ impl Runtime {
             seen.push(key);
             let in_r: AtomicFact =
                 InFact::new((*obj).clone(), StandardSet::R.into(), line_file.clone()).into();
-            let mut result = self.verify_non_equational_atomic_fact_with_bounded_builtin_routes(
-                &in_r,
-                verify_state,
-            )?;
+            let mut result =
+                self.verify_atomic_fact_restricted_known_builtin(&in_r, verify_state)?;
             if !result.is_success() {
-                result = self.verify_atomic_fact_with_builtin_strategy(&in_r, verify_state)?;
+                result = self.verify_atomic_fact(&in_r, verify_state)?;
             }
             if result.is_success() {
                 steps.push(result);
@@ -488,8 +543,9 @@ impl Runtime {
                 let source_membership: AtomicFact =
                     InFact::new((*obj).clone(), source_set.clone(), line_file.clone()).into();
                 let source_membership_result = self
-                    .verify_non_equational_atomic_fact_with_known_atomic_facts(
+                    .verify_atomic_fact_restricted_known_builtin(
                         &source_membership,
+                        verify_state,
                     )?;
                 if !source_membership_result.is_success() {
                     continue;
@@ -513,8 +569,8 @@ impl Runtime {
                     let subset: AtomicFact =
                         SubsetFact::new(source_set.clone(), carrier.into(), line_file.clone())
                             .into();
-                    let subset_result =
-                        self.verify_non_equational_atomic_fact_with_known_atomic_facts(&subset)?;
+                    let subset_result = self
+                        .verify_atomic_fact_restricted_known_builtin(&subset, verify_state)?;
                     if !subset_result.is_success() {
                         continue;
                     }
@@ -544,7 +600,7 @@ impl Runtime {
         objs: &[&Obj],
         line_file: &LineFile,
         verify_state: &VerifyState,
-    ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
+    ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
         let mut seen = Vec::new();
         let mut steps = Vec::new();
         for obj in objs {
@@ -563,12 +619,10 @@ impl Runtime {
 
             let in_c: AtomicFact =
                 InFact::new((*obj).clone(), StandardSet::C.into(), line_file.clone()).into();
-            let mut result = self.verify_non_equational_atomic_fact_with_bounded_builtin_routes(
-                &in_c,
-                verify_state,
-            )?;
+            let mut result =
+                self.verify_atomic_fact_restricted_known_builtin(&in_c, verify_state)?;
             if !result.is_success() {
-                result = self.verify_atomic_fact_with_builtin_strategy(&in_c, verify_state)?;
+                result = self.verify_atomic_fact(&in_c, verify_state)?;
             }
             if !result.is_success() {
                 return Ok(None);

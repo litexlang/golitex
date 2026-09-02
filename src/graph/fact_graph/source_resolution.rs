@@ -3,6 +3,13 @@
 use super::*;
 
 impl FactGraphBuilder {
+    pub(super) fn primary_verify_result_node_id(
+        &mut self,
+        result: &VerifyFactResult,
+    ) -> String {
+        self.add_fact_node(&result.fact(), "verification", None)
+    }
+
     pub(super) fn add_infer_edges(&mut self, infers: &SuccessInferResult) {
         for output in infers.store_fact_outputs() {
             let primary = &output.itself_and_why_itself_is_stored.0;

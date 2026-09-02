@@ -120,7 +120,7 @@ impl StmtResultToLeanCompiler {
                 defined_type,
                 body.statement.line_file.clone(),
             );
-            let factual_type_check = type_check.factual_success().ok_or_else(|| {
+            let factual_type_check = type_check.verified().ok_or_else(|| {
                 "Template set-alias body type check is not a successful fact Result".to_string()
             })?;
             if factual_type_check.fact().to_string() != expected_type.to_string() {
@@ -139,11 +139,9 @@ impl StmtResultToLeanCompiler {
                     UncataloguedBuiltinRule::VerifyNonEquationalAtomicFactWithBuiltinRulesInner
                 ))
             ) || !type_check_proof.subgoals.is_empty()
-                || factual_type_check.fact_id.is_some()
-                || !factual_type_check.infers.is_empty()
             {
                 return Err(
-                    "Template set-alias body type check changed its typed rule, children, or stores"
+                    "Template set-alias body type check changed its typed rule or children"
                         .into(),
                 );
             }

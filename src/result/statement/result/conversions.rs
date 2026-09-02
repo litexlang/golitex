@@ -61,3 +61,21 @@ impl From<UnknownFactResult> for StmtResult {
         StmtResult::Unknown(UnknownStmtResult::Fact(Box::new(unknown)))
     }
 }
+
+impl From<SuccessProveFactResult> for ProveFactResult {
+    fn from(success: SuccessProveFactResult) -> Self {
+        Self::Proven(Box::new(success))
+    }
+}
+
+impl From<UnknownGenericStmtResult> for ProveFactResult {
+    fn from(unknown: UnknownGenericStmtResult) -> Self {
+        Self::Unknown(UnknownStmtResult::Generic(Box::new(unknown)))
+    }
+}
+
+impl From<UnknownFactResult> for ProveFactResult {
+    fn from(unknown: UnknownFactResult) -> Self {
+        Self::Unknown(UnknownStmtResult::Fact(Box::new(unknown)))
+    }
+}

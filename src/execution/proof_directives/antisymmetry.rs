@@ -77,7 +77,7 @@ impl Runtime {
             for proof_step in proof_steps.iter_mut() {
                 rt.attach_known_fact_ids_to_stmt_result(proof_step)?;
             }
-            rt.attach_known_fact_ids_to_stmt_result(&mut result)?;
+            rt.attach_known_fact_ids_to_prove_fact_result(&mut result)?;
             Ok((proof_steps, result, verification_assumption_infer_result))
         })?;
 
@@ -86,11 +86,11 @@ impl Runtime {
 
         let mut infer_result = SuccessInferResult::new();
         infer_result.new_with_msg(format!("registered `{}` as antisymmetric", prop_name));
+        let forall_check = Runtime::finish_fact_verification(well_definedness, forall_check);
         let by_verification = SuccessVerifyByPropRegistrationResult::new(
             "antisymmetric".to_string(),
             prop_name,
             stmt.forall_fact.clone(),
-            well_definedness,
             assumption_infer_result,
             proof_steps,
             forall_check,

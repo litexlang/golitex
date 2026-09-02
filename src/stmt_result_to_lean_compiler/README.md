@@ -673,7 +673,7 @@ fn exec_fact(runtime, fact) -> StmtResult {
     // [child.well_definedness]
 
     let result = verify_fact_or_error(runtime, fact)?;
-    // [constructs child.verification: Rc<SuccessVerifyFactResult>]
+    // [constructs child.verification: Rc<SuccessFactProofNode>]
     // For 2 = 2, its proof is BuiltinRule(ObjectReflexivity(...)).
 
     let infers = store_without_well_defined_verification_and_infer(runtime, fact)?;
@@ -710,7 +710,7 @@ The relevant named structure is defined in
 ```rust
 pub struct SuccessClaimStmtResult {
     pub statement: ClaimStmt,
-    pub well_definedness: Option<SuccessVerifyFactWellDefinedResult>,
+    pub well_definedness: Option<WellDefinedFactResult>,
     pub domain: SuccessVerifyLocalProofScopeResult,
     pub proof_steps: Vec<StmtResult>,
     pub conclusion_checks: Vec<StmtResult>,
@@ -1919,8 +1919,8 @@ The final fact result owns all three:
 
 ```rust
 pub struct SuccessFactStmtResult {
-    pub verification: Rc<SuccessVerifyFactResult>,
-    pub well_definedness: SuccessVerifyFactWellDefinedResult,
+    pub verification: Rc<SuccessFactProofNode>,
+    pub well_definedness: WellDefinedFactResult,
     pub store: SuccessStoreFactResult,
 }
 
@@ -1931,7 +1931,7 @@ pub struct SuccessStoreFactResult {
 }
 ```
 
-`SuccessVerifyFactResult` recursively mirrors the semantic split of `Fact`:
+`SuccessFactProofNode` recursively mirrors the semantic split of `Fact`:
 atomic, existential, disjunction, conjunction, chain, universal, universal
 iff, and negated universal. `SuccessFactProofResult` then names the semantic
 proof operation instead of hiding several unrelated operations in one struct:
@@ -2368,7 +2368,7 @@ is explicit:
 pub struct SuccessVerifyStrategyDefinitionResult {
     pub name: String,
     pub forall_fact: ForallFact,
-    pub well_definedness: SuccessVerifyFactWellDefinedResult,
+    pub well_definedness: WellDefinedFactResult,
     pub proof_scope: SuccessVerifyLocalProofScopeResult,
     pub proof_steps: Vec<StmtResult>,
     pub conclusion_checks: Vec<StmtResult>,

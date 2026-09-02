@@ -7,7 +7,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let Some(normalized_fact) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
         };
@@ -46,8 +46,8 @@ impl Runtime {
             return Ok(None);
         }
 
-        Ok(Some(StmtResult::from(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+        Ok(Some(ProveFactResult::from(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "0 <= a * b from 0 <= a and 0 <= b".to_string(),
                 BuiltinRuleEvidence::Arithmetic(ArithmeticBuiltinRule::MulNonnegative),
@@ -60,7 +60,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let Some(normalized_fact) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
         };
@@ -99,8 +99,8 @@ impl Runtime {
             return Ok(None);
         }
 
-        Ok(Some(StmtResult::from(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+        Ok(Some(ProveFactResult::from(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "0 < a * b from 0 < a and 0 < b".to_string(),
                 BuiltinRuleEvidence::Arithmetic(ArithmeticBuiltinRule::MulPositive),
@@ -113,7 +113,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let Some(normalized_fact) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
         };
@@ -152,8 +152,8 @@ impl Runtime {
             return Ok(None);
         }
 
-        Ok(Some(StmtResult::from(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+        Ok(Some(ProveFactResult::from(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "0 <= a / b from 0 <= a and 0 < b".to_string(),
                 BuiltinRuleEvidence::Arithmetic(ArithmeticBuiltinRule::DivNonnegative),
@@ -166,7 +166,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let Some(normalized_fact) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
         };
@@ -205,8 +205,8 @@ impl Runtime {
             return Ok(None);
         }
 
-        Ok(Some(StmtResult::from(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+        Ok(Some(ProveFactResult::from(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "0 < a / b from 0 < a and 0 < b".to_string(),
                 BuiltinRuleEvidence::Arithmetic(ArithmeticBuiltinRule::DivPositive),

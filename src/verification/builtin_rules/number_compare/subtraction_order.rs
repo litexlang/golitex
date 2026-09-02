@@ -11,7 +11,7 @@ impl Runtime {
         parent_weak: bool,
         line_file: &LineFile,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<VerifyFactResult, RuntimeError> {
         let fact: AtomicFact = if weak {
             LessEqualFact::new(zero.clone(), sub_expr.clone(), line_file.clone()).into()
         } else {
@@ -30,7 +30,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let Some(normalized_fact) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
         };
@@ -47,8 +47,7 @@ impl Runtime {
         } else {
             LessFact::new(direct_difference, zero.clone(), line_file.clone()).into()
         };
-        let direct_difference_result = self
-            .verify_non_equational_atomic_fact_with_known_atomic_facts(&direct_difference_order)?;
+        let direct_difference_result = self.verify_atomic_fact_as_builtin_rule_premise(&direct_difference_order, builtin_state)?;
         if direct_difference_result.is_success() {
             let reason = if is_weak {
                 "a <= b from a - b <= 0"
@@ -56,7 +55,7 @@ impl Runtime {
                 "a < b from a - b < 0"
             };
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     atomic_fact.clone().into(),
                     reason.to_string(),
                     BuiltinRuleEvidence::Uncatalogued(
@@ -74,8 +73,7 @@ impl Runtime {
         } else {
             LessFact::new(zero, difference, line_file.clone()).into()
         };
-        let difference_result =
-            self.verify_non_equational_atomic_fact_with_known_atomic_facts(&difference_order)?;
+        let difference_result = self.verify_atomic_fact_as_builtin_rule_premise(&difference_order, builtin_state)?;
         if difference_result.is_success() {
             let reason = if is_weak {
                 "a <= b from 0 <= b - a"
@@ -83,7 +81,7 @@ impl Runtime {
                 "a < b from 0 < b - a"
             };
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     atomic_fact.clone().into(),
                     reason.to_string(),
                     BuiltinRuleEvidence::Uncatalogued(
@@ -102,7 +100,7 @@ impl Runtime {
         )?;
         if premise_result.is_success() {
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     atomic_fact.clone().into(),
                     "order from complete zero-difference-bound disjunction".to_string(),
                     BuiltinRuleEvidence::Uncatalogued(
@@ -122,7 +120,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
         };
@@ -140,8 +138,8 @@ impl Runtime {
                 let result =
                     self.verify_atomic_fact_as_builtin_rule_premise(&derived, builtin_state)?;
                 if result.is_success() {
-                    Ok(Some(StmtResult::from(
-                        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    Ok(Some(ProveFactResult::from(
+                        SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             atomic_fact.clone().into(),
                             "0 <= u - v from v <= u".to_string(),
                             BuiltinRuleEvidence::Arithmetic(
@@ -167,8 +165,8 @@ impl Runtime {
                 let result =
                     self.verify_atomic_fact_as_builtin_rule_premise(&derived, builtin_state)?;
                 if result.is_success() {
-                    Ok(Some(StmtResult::from(
-                        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    Ok(Some(ProveFactResult::from(
+                        SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             atomic_fact.clone().into(),
                             "0 < u - v from v < u".to_string(),
                             BuiltinRuleEvidence::Arithmetic(

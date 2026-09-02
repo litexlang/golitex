@@ -4,13 +4,13 @@ use crate::prelude::*;
 
 #[derive(Debug)]
 pub struct SuccessVerifyArgsSatisfyParamDefResult {
-    pub checks: Vec<StmtResult>,
+    pub checks: Vec<VerifyFactResult>,
     pub infers: SuccessInferResult,
 }
 
 #[derive(Debug)]
 pub struct UnknownVerifyArgsSatisfyParamDefResult {
-    pub cause: Box<StmtResult>,
+    pub cause: Box<VerifyFactResult>,
 }
 
 #[derive(Debug)]
@@ -20,14 +20,14 @@ pub enum VerifyArgsSatisfyParamDefResult {
 }
 
 impl VerifyArgsSatisfyParamDefResult {
-    pub fn success(checks: Vec<StmtResult>, infers: SuccessInferResult) -> Self {
+    pub fn success(checks: Vec<VerifyFactResult>, infers: SuccessInferResult) -> Self {
         Self::Success(Box::new(SuccessVerifyArgsSatisfyParamDefResult {
             checks,
             infers,
         }))
     }
 
-    pub fn unknown(cause: StmtResult) -> Self {
+    pub fn unknown(cause: VerifyFactResult) -> Self {
         Self::Unknown(Box::new(UnknownVerifyArgsSatisfyParamDefResult {
             cause: Box::new(cause),
         }))
@@ -51,7 +51,7 @@ impl VerifyArgsSatisfyParamDefResult {
         }
     }
 
-    pub fn into_unknown_cause(self) -> Option<StmtResult> {
+    pub fn into_unknown_cause(self) -> Option<VerifyFactResult> {
         match self {
             Self::Success(_) => None,
             Self::Unknown(result) => Some(*result.cause),

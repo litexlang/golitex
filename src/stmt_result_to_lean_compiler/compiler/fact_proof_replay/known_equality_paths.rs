@@ -10,7 +10,7 @@ impl StmtResultToLeanCompiler {
         &self,
         target: &Fact,
         evidence: &KnownEqualityBuiltinRuleEvidence,
-        subgoals: &[StmtResult],
+        subgoals: &[VerifyFactResult],
     ) -> Result<String, String> {
         if evidence.expected_target.to_string() != target.to_string() || !subgoals.is_empty() {
             return Err("known-equality path changed its target or gained child Results".into());

@@ -4,11 +4,11 @@ use crate::prelude::*;
 use std::result::Result;
 
 impl Runtime {
-    pub fn verify_forall_fact_with_iff(
+    pub(crate) fn prove_forall_fact_with_iff(
         &mut self,
         forall_iff: &ForallFactWithIff,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         if let Some(cached_result) =
             self.verification_result_from_known_fact_cache(&forall_iff.clone().into())
         {
@@ -25,7 +25,6 @@ impl Runtime {
         for (forall_step, direction) in verification_steps {
             let result = self.verify_forall_fact(forall_step, verify_state)?;
             if result.is_unknown() {
-                let result = result.wrap_unknown_for_fact(forall_step.clone().into());
                 return Ok(UnknownFactResult::forall_iff_with_failed_direction(
                     forall_iff.clone(),
                     direction.to_string(),
@@ -37,7 +36,7 @@ impl Runtime {
         }
 
         Ok(
-            (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            (SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 forall_iff.clone().into(),
                 "forall iff: then=>iff and iff=>then verified".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyForallFactWithIff),

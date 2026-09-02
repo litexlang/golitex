@@ -417,30 +417,15 @@ fn nonempty_set_exist_fact_set(exist_fact: &ExistFactEnum) -> Option<Obj> {
 }
 
 impl Runtime {
-    pub fn verify_exist_fact(
+    pub(crate) fn prove_exist_fact(
         &mut self,
         exist_fact: &ExistFactEnum,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         if let Some(cached_result) =
             self.verification_result_from_known_fact_cache(&exist_fact.clone().into())
         {
             return Ok(cached_result);
-        }
-
-        if !verify_state.well_definedness_verified {
-            if let Err(e) = self.verify_exist_fact_well_defined(exist_fact, verify_state) {
-                return Err({
-                    VerifyRuntimeError(RuntimeErrorStruct::new(
-                        Some(Fact::from(exist_fact.clone()).into_stmt()),
-                        String::new(),
-                        exist_fact.line_file(),
-                        Some(e),
-                        vec![],
-                    ))
-                    .into()
-                });
-            }
         }
 
         let result = self.verify_exist_fact_with_known_exist_fact(exist_fact, exist_fact)?;
@@ -459,7 +444,7 @@ impl Runtime {
                 verify_state,
             )? {
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         exist_fact.clone().into(),
                         "exist: real-line comparison witness".to_string(),
                         BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyExistFact01),
@@ -479,7 +464,7 @@ impl Runtime {
                 self.verify_atomic_fact_restricted_known_builtin(&nonempty, verify_state)?;
             if nonempty_result.is_success() {
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         exist_fact.clone().into(),
                         "exist: member of a nonempty set".to_string(),
                         BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyExistFact02),
@@ -505,7 +490,7 @@ impl Runtime {
                 self.verify_atomic_fact_restricted_known_builtin(&in_q, verify_state)?;
             if rational_membership.is_success() {
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         exist_fact.clone().into(),
                         "exist: rational representation with positive integer denominator"
                             .to_string(),
@@ -531,7 +516,7 @@ impl Runtime {
                 self.verify_atomic_fact_restricted_known_builtin(&in_q, verify_state)?;
             if rational_membership.is_success() {
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         exist_fact.clone().into(),
                         "exist: rational integer ratio representation".to_string(),
                         BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyExistFact04),
@@ -555,7 +540,7 @@ impl Runtime {
                 self.verify_atomic_fact_restricted_known_builtin(&divisor_in_n_pos, verify_state)?;
             if dividend_result.is_success() && divisor_result.is_success() {
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         exist_fact.clone().into(),
                         "exist!: unique Euclidean quotient for an integer and positive divisor"
                             .to_string(),
@@ -608,7 +593,7 @@ impl Runtime {
                 && remainder_result.is_success()
             {
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         exist_fact.clone().into(),
                         "exist: zero remainder gives an integer multiple of a nonzero modulus"
                             .to_string(),
@@ -638,7 +623,7 @@ impl Runtime {
                 self.verify_atomic_fact_restricted_known_builtin(&positive_bound, verify_state)?;
             if positive_bound_result.is_success() {
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         exist_fact.clone().into(),
                         "exist: Archimedean reciprocal bound".to_string(),
                         BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyExistFact07),
@@ -666,7 +651,7 @@ impl Runtime {
                 if interval_result.is_success() {
                     steps.push(interval_result);
                     return Ok(
-                        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                        SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             exist_fact.clone().into(),
                             "exist: rational density in the real line".to_string(),
                             BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyExistFact08),
@@ -695,7 +680,7 @@ impl Runtime {
                 if interval_result.is_success() {
                     steps.push(interval_result);
                     return Ok(
-                        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                        SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             exist_fact.clone().into(),
                             "exist: real density by the midpoint principle".to_string(),
                             BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyExistFact09),
@@ -735,7 +720,7 @@ impl Runtime {
                         "exist: integer inside a real interval of length at least 1"
                     };
                     return Ok(
-                        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                        SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             exist_fact.clone().into(),
                             rule.to_string(),
                             BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyExistFact10),
@@ -761,7 +746,7 @@ impl Runtime {
         // strictly different fact shape; reset only those child verifications
         // to their ordinary root state.
         if exist_fact.is_exist_unique() && verify_state.proof_search_round <= 1 {
-            let decomposition_state = VerifyState::after_well_definedness();
+            let decomposition_state = VerifyState::initial();
             if let Some(proved) = self.try_verify_exist_unique_by_exist_and_uniqueness_forall(
                 exist_fact,
                 &decomposition_state,
@@ -787,7 +772,7 @@ impl Runtime {
         &mut self,
         exist_fact: &ExistFactEnum,
         verify_state: &VerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let ExistFactEnum::ExistFact(body) = exist_fact else {
             return Ok(None);
         };
@@ -893,7 +878,7 @@ impl Runtime {
         }
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 exist_fact.clone().into(),
                 "finite nonempty natural set has a greatest member".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -1065,7 +1050,7 @@ impl Runtime {
         &mut self,
         exist_fact: &ExistFactEnum,
         verify_state: &VerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         if exist_fact.typed_parameters().number_of_params() == 0 {
             return Ok(None);
         }
@@ -1074,7 +1059,7 @@ impl Runtime {
             exist_fact.facts().clone(),
             exist_fact.line_file(),
         )?);
-        let state_after_well_definedness = verify_state.with_well_definedness_verified();
+        let state_after_well_definedness = verify_state.clone();
         let plain_result = self.verify_exist_fact(&plain, &state_after_well_definedness)?;
         if !plain_result.is_success() {
             return Ok(None);
@@ -1091,11 +1076,9 @@ impl Runtime {
 
         let mut infers = SuccessInferResult::new();
         infers.new_fact(&exist_fact.clone().into());
-        infers.new_infer_result_inside(stmt_result_infers(&plain_result));
-        infers.new_infer_result_inside(stmt_result_infers(&uniqueness_result));
         infers.new_fact(&uniqueness_fact);
 
-        let out = SuccessFactStmtResult::new_with_verified_by_known_fact_and_infer(
+        let out = SuccessProveFactResult::new_with_verified_by_known_fact_and_infer(
             exist_fact.clone().into(),
             infers,
             SuccessFactProofResult::diagnostic(
@@ -1110,7 +1093,7 @@ impl Runtime {
         &mut self,
         exist_fact: &ExistFactEnum,
         known_exist_fact: &ExistFactEnum,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         for environment in self.iter_environments_from_top() {
             let result = Self::verify_exist_fact_with_known_exist_fact_with_facts_in_environment(
                 self,
@@ -1131,7 +1114,7 @@ impl Runtime {
         environment: &Environment,
         exist_fact: &ExistFactEnum,
         known_exist_fact: &ExistFactEnum,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let goal_keys = Self::known_exist_lookup_keys(known_exist_fact);
         let target_body_string = Self::exist_fact_normalized_body_string(runtime, exist_fact)
             .map_err(|e| {
@@ -1165,7 +1148,7 @@ impl Runtime {
                     let source_fact: Fact = known_fact.clone().into();
                     let source_fact_id =
                         runtime.require_known_fact_id_for_success_result(&source_fact)?;
-                    return Ok((SuccessFactStmtResult::new_with_verified_by_known_fact(
+                    return Ok((SuccessProveFactResult::new_with_verified_by_known_fact(
                         exist_fact.clone().into(),
                         SuccessFactProofResult::stored_fact_citation(
                             source_fact,
@@ -1241,8 +1224,4 @@ impl Runtime {
         let facts_string = fact_strings.join("; ");
         Ok(format!("{} || {}", params_string, facts_string))
     }
-}
-
-fn stmt_result_infers(result: &StmtResult) -> SuccessInferResult {
-    result.infer_result()
 }

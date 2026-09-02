@@ -26,9 +26,9 @@ fn fn_set_equality_verify_error(
     }
 }
 
-fn fn_set_equality_verified_by_builtin_rules_result(equal_fact: &EqualFact) -> StmtResult {
-    StmtResult::from(
-        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+fn fn_set_equality_verified_by_builtin_rules_result(equal_fact: &EqualFact) -> ProveFactResult {
+    ProveFactResult::from(
+        SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
             equal_fact.clone().into(),
             "fnset equality: mutual implication of param sets, dom facts, and ret set".to_string(),
             BuiltinRuleEvidence::Uncatalogued(
@@ -44,7 +44,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let (Obj::FnSet(left), Obj::FnSet(right)) = (&equal_fact.left, &equal_fact.right) else {
             return Ok(UnknownGenericStmtResult::new().into());
         };

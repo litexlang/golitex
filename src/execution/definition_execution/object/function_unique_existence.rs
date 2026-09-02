@@ -46,7 +46,7 @@ impl Runtime {
     ) -> Result<
         (
             HaveFnByForallExistUniqueShape,
-            SuccessVerifyFactWellDefinedResult,
+            WellDefinedFactResult,
         ),
         RuntimeError,
     > {
@@ -70,14 +70,14 @@ impl Runtime {
     fn exec_have_fn_by_forall_exist_unique_verify_process(
         &mut self,
         stmt: &HaveFnByForallExistUniqueStmt,
-        well_definedness: SuccessVerifyFactWellDefinedResult,
+        well_definedness: WellDefinedFactResult,
     ) -> Result<SuccessVerifyFunctionFromUniqueExistenceResult, RuntimeError> {
         if stmt.prove_process.is_empty() {
             let forall_fact: Fact = stmt.forall.clone().into();
             let mut result = self
                 .verify_fact_or_error(&forall_fact, &VerifyState::initial())
                 .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
-            self.attach_known_fact_ids_to_stmt_result(&mut result)?;
+            self.attach_known_fact_ids_to_verify_fact_result(&mut result)?;
             Ok(SuccessVerifyFunctionFromUniqueExistenceResult::new(
                 well_definedness,
                 SuccessVerifyLocalProofScopeResult::new(SuccessInferResult::new(), Vec::new()),
@@ -93,7 +93,7 @@ impl Runtime {
     fn exec_have_fn_by_forall_exist_unique_prove_process(
         &mut self,
         stmt: &HaveFnByForallExistUniqueStmt,
-        well_definedness: SuccessVerifyFactWellDefinedResult,
+        well_definedness: WellDefinedFactResult,
     ) -> Result<SuccessVerifyFunctionFromUniqueExistenceResult, RuntimeError> {
         self.run_in_local_env(|rt| {
             let mut assumption_infers = rt
@@ -147,15 +147,9 @@ impl Runtime {
             let then_count = stmt.forall.then_facts.len();
             let then_verify_state = VerifyState::initial();
             for (then_index, then_fact) in stmt.forall.then_facts.iter().enumerate() {
-                let mut result =
-                    rt.verify_exist_or_and_chain_atomic_fact(then_fact, &then_verify_state)?;
+                let then_goal = then_fact.clone().to_fact();
+                let result = rt.verify_fact_allow_unknown(&then_goal, &then_verify_state)?;
                 if result.is_unknown() {
-                    let then_goal = then_fact.clone().to_fact();
-                    result = rt.structured_unknown_result_for_failed_fact(
-                        &then_goal,
-                        &then_verify_state,
-                        result,
-                    )?;
                     return Err(RuntimeError::from(UnknownRuntimeError(
                         RuntimeErrorStruct::new_with_output(
                             Some(then_goal.clone().into()),
@@ -166,11 +160,13 @@ impl Runtime {
                             then_fact.line_file(),
                             None,
                             vec![],
-                            RuntimeErrorOutput::then_clause_unknown(
+                            RuntimeErrorOutput::then_clause_unknown_fact(
                                 then_goal,
                                 then_index + 1,
                                 then_count,
-                                &result,
+                                result
+                                    .as_fact_unknown()
+                                    .expect("unknown fact verification carries an unknown result"),
                             ),
                         ),
                     )));
@@ -183,7 +179,7 @@ impl Runtime {
                 rt.attach_known_fact_ids_to_stmt_result(result)?;
             }
             for result in conclusion_checks.iter_mut() {
-                rt.attach_known_fact_ids_to_stmt_result(result)?;
+                rt.attach_known_fact_ids_to_verify_fact_result(result)?;
             }
 
             Ok(SuccessVerifyFunctionFromUniqueExistenceResult::new(
@@ -200,7 +196,7 @@ impl Runtime {
         &mut self,
         stmt: &HaveFnByForallExistUniqueStmt,
         shape: HaveFnByForallExistUniqueShape,
-    ) -> Result<(SuccessInferResult, SuccessVerifyFactWellDefinedResult), RuntimeError> {
+    ) -> Result<(SuccessInferResult, WellDefinedFactResult), RuntimeError> {
         let mut infer_result = SuccessInferResult::new();
         let fn_set = self
             .fn_set_from_fn_set_clause(&shape.fn_set_clause)

@@ -3,7 +3,56 @@
 use super::*;
 
 impl ResultGraph {
-    pub(super) fn add_verify_fact_result(&mut self, result: &SuccessVerifyFactResult, id: String) {
+    pub(super) fn add_verify_fact_outcome(&mut self, result: &VerifyFactResult, id: String) {
+        match result {
+            VerifyFactResult::Verified(verified) => {
+                self.ensure_node(
+                    id.clone(),
+                    "fact_verification",
+                    "Verified",
+                    verified.fact().to_string(),
+                    None,
+                );
+                if !self.expanded_nodes.insert(id.clone()) {
+                    return;
+                }
+                let wd_id = format!("{id}/well-definedness");
+                self.add_fact_well_definedness(
+                    &verified.checked,
+                    wd_id.clone(),
+                    verified.fact().to_string(),
+                );
+                self.add_edge(&id, &wd_id, "well_definedness", 0);
+                let proof_id = format!("{id}/truth");
+                self.add_verify_fact_result(
+                    verified.verification.as_ref(),
+                    proof_id.clone(),
+                );
+                self.add_edge(&id, &proof_id, "truth", 0);
+            }
+            VerifyFactResult::Unknown(unknown) => {
+                self.ensure_node(
+                    id.clone(),
+                    "fact_verification",
+                    "UnknownAfterWellDefinedness",
+                    unknown.checked.fact.to_string(),
+                    None,
+                );
+                if !self.expanded_nodes.insert(id.clone()) {
+                    return;
+                }
+                let wd_id = format!("{id}/well-definedness");
+                self.add_fact_well_definedness(
+                    &unknown.checked,
+                    wd_id.clone(),
+                    unknown.checked.fact.to_string(),
+                );
+                self.add_edge(&id, &wd_id, "well_definedness", 0);
+            }
+        }
+    }
+
+    pub(super) fn add_verify_fact_result(&mut self, result: &SuccessFactProofNode, id: String) {
         self.ensure_node(
             id.clone(),
             "verification",
@@ -59,12 +108,12 @@ impl ResultGraph {
                     .enumerate()
                 {
                     let child_id = format!("{id}/parameter:{index}");
-                    self.add_stmt_result(child, child_id.clone());
+                    self.add_verify_fact_outcome(child, child_id.clone());
                     self.add_edge(&id, &child_id, "parameter_check", index);
                 }
                 for (index, child) in result.verification.clause_checks.iter().enumerate() {
                     let child_id = format!("{id}/clause:{index}");
-                    self.add_stmt_result(child, child_id.clone());
+                    self.add_verify_fact_outcome(child, child_id.clone());
                     self.add_edge(&id, &child_id, "clause_check", index);
                 }
             }
@@ -105,7 +154,7 @@ impl ResultGraph {
                 }
                 for (index, step) in result.steps.iter().enumerate() {
                     let step_id = format!("{id}/step:{index}");
-                    self.add_stmt_result(step, step_id.clone());
+                    self.add_verify_fact_outcome(step, step_id.clone());
                     self.add_edge(&id, &step_id, "step", index);
                 }
             }
@@ -130,7 +179,7 @@ impl ResultGraph {
                 self.add_infers(&id, &result.assumption_infers, format!("{id}/assumption"));
                 for (index, proved) in result.proves.iter().enumerate() {
                     let child_id = format!("{id}/prove:{index}");
-                    self.add_stmt_result(&proved.result, child_id.clone());
+                    self.add_verify_fact_outcome(&proved.result, child_id.clone());
                     self.add_edge(&id, &child_id, "proves", index);
                 }
             }
@@ -187,7 +236,7 @@ impl ResultGraph {
         self.ensure_node(id.clone(), "proof", role, result.msg.clone(), None);
         for (index, subgoal) in result.subgoals.iter().enumerate() {
             let child_id = format!("{id}/subgoal:{index}");
-            self.add_stmt_result(subgoal, child_id.clone());
+            self.add_verify_fact_outcome(subgoal, child_id.clone());
             self.add_edge(&id, &child_id, "subgoal", index);
         }
     }
@@ -218,14 +267,14 @@ impl ResultGraph {
         );
         for (index, requirement) in result.requirements.iter().enumerate() {
             let child_id = format!("{id}/requirement:{index}");
-            self.add_stmt_result(&requirement.result, child_id.clone());
+            self.add_verify_fact_outcome(&requirement.result, child_id.clone());
             self.add_edge(&id, &child_id, "requirement", index);
         }
     }
 
     pub(super) fn add_shared_fact_result(
         &mut self,
-        source: &Rc<SuccessVerifyFactResult>,
+        source: &Rc<SuccessFactProofNode>,
     ) -> String {
         let key = Rc::as_ptr(source) as usize;
         if let Some(id) = self.shared_fact_nodes.get(&key) {

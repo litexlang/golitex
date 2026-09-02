@@ -7,7 +7,7 @@ impl StmtResultToLeanCompiler {
         &mut self,
         target: &Fact,
         rule: SetBuiltinRule,
-        subgoals: &[StmtResult],
+        subgoals: &[VerifyFactResult],
     ) -> Result<Option<String>, String> {
         if matches!(
             rule,
@@ -143,11 +143,8 @@ impl StmtResultToLeanCompiler {
         let mut children = Vec::with_capacity(subgoals.len());
         for (index, child) in subgoals.iter().enumerate() {
             let child = child
-                .factual_success()
+                .verified()
                 .ok_or_else(|| format!("set builtin child {index} is not factual"))?;
-            if !child.store.infers.is_empty() {
-                return Err(format!("set builtin child {index} published effects"));
-            }
             let Some(proof) = self.construct_lean_proof_from_direct_fact_result(child)? else {
                 return Ok(None);
             };

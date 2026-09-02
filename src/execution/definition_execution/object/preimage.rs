@@ -125,7 +125,7 @@ impl Runtime {
     fn verify_preimage_source_membership(
         &mut self,
         stmt: &HaveByPreimageStmt,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<VerifyFactResult, RuntimeError> {
         let source_atomic: AtomicFact = stmt.range_membership.clone().into();
         let verify_state = VerifyState::initial();
         let source_result = self

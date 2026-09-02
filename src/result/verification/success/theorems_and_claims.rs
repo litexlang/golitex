@@ -6,28 +6,28 @@ use std::fmt;
 pub struct SuccessVerifyTheoremResult {
     pub name: String,
     pub fact: Fact,
-    pub well_definedness: SuccessVerifyFactWellDefinedResult,
+    pub well_definedness: WellDefinedFactResult,
     pub proof_scope: SuccessVerifyLocalProofScopeResult,
     pub proof_steps: Vec<StmtResult>,
-    pub conclusion_checks: Vec<StmtResult>,
+    pub conclusion_checks: Vec<VerifyFactResult>,
 }
 
 pub struct SuccessCheckedGoalBlockResult {
     pub fact: Fact,
-    pub well_definedness: SuccessVerifyFactWellDefinedResult,
+    pub well_definedness: WellDefinedFactResult,
     pub domain: SuccessVerifyLocalProofScopeResult,
     pub proof_steps: Vec<StmtResult>,
-    pub conclusion_checks: Vec<StmtResult>,
+    pub conclusion_checks: Vec<VerifyFactResult>,
 }
 
 impl SuccessVerifyTheoremResult {
     pub fn new(
         name: String,
         fact: Fact,
-        well_definedness: SuccessVerifyFactWellDefinedResult,
+        well_definedness: WellDefinedFactResult,
         proof_scope: SuccessVerifyLocalProofScopeResult,
         proof_steps: Vec<StmtResult>,
-        conclusion_checks: Vec<StmtResult>,
+        conclusion_checks: Vec<VerifyFactResult>,
     ) -> Self {
         SuccessVerifyTheoremResult {
             name,
@@ -43,10 +43,10 @@ impl SuccessVerifyTheoremResult {
 impl SuccessCheckedGoalBlockResult {
     pub fn new(
         fact: Fact,
-        well_definedness: SuccessVerifyFactWellDefinedResult,
+        well_definedness: WellDefinedFactResult,
         domain: SuccessVerifyLocalProofScopeResult,
         proof_steps: Vec<StmtResult>,
-        conclusion_checks: Vec<StmtResult>,
+        conclusion_checks: Vec<VerifyFactResult>,
     ) -> Self {
         SuccessCheckedGoalBlockResult {
             fact,

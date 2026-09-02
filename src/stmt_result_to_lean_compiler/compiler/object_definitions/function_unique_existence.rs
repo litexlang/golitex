@@ -190,17 +190,9 @@ impl StmtResultToLeanCompiler {
                 &mut self.environment_stack,
             )?;
 
-            let recursive_well_definedness = verification
-                .well_definedness
-                .recursive
-                .as_deref()
-                .ok_or_else(|| {
-                    "have-fn unique-existence Result has no recursive well-definedness root"
-                        .to_string()
-                })?;
             let compiled_well_definedness = self.compile_precollected_well_definedness_context(
                 theorem_well_definedness,
-                &[recursive_well_definedness],
+                &[verification.well_definedness.proof.as_ref()],
             )?;
             self.environment_stack.well_definedness = Some(compiled_well_definedness);
 
@@ -303,8 +295,8 @@ impl StmtResultToLeanCompiler {
                 "have-fn unique-existence Result lost its published-property WD evidence"
                     .to_string()
             })?;
-        let Some(SuccessVerifyFactWellDefinedProofResult::ForallFact(property_wd_forall)) =
-            property_well_definedness.recursive.as_deref()
+        let SuccessVerifyFactWellDefinedProofResult::ForallFact(property_wd_forall) =
+            property_well_definedness.proof.as_ref()
         else {
             return Err("have-fn unique-existence property WD has no recursive forall root".into());
         };

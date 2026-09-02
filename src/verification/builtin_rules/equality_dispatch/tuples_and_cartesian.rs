@@ -11,7 +11,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -55,7 +55,7 @@ impl Runtime {
         }
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "tuple equality from dimension and projections".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -75,7 +75,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -140,14 +140,22 @@ impl Runtime {
         let coordinate_result =
             self.run_in_local_verification_env(verify_state, |rt, local_verify_state| {
                 rt.define_params_with_type(&coordinate_params, false, BindingScope::LocalBinder)?;
-                rt.verify_atomic_fact_with_known_forall(&coordinate_equality, local_verify_state)
+                let proof = rt.verify_atomic_fact_with_known_forall(
+                    &coordinate_equality,
+                    local_verify_state,
+                )?;
+                rt.complete_atomic_fact_proof_result(
+                    &coordinate_equality,
+                    proof,
+                    local_verify_state,
+                )
             })?;
         if !coordinate_result.is_success() {
             return Ok(None);
         }
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "tuple equality from symbolic dimension and coordinates".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -174,7 +182,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -208,7 +216,7 @@ impl Runtime {
         }
         if let Some(steps) = self.verify_builtin_rule_premises(&complete_premises, builtin_state)? {
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     equal_fact.clone().into(),
                     "cart equality from dimension and projections".to_string(),
                     BuiltinRuleEvidence::Uncatalogued(
@@ -242,7 +250,10 @@ impl Runtime {
                 self.verify_atomic_fact_as_builtin_rule_premise(&projection_fact, builtin_state)?;
             if !projection_result.is_success() {
                 if let Some(known_forall_result) =
-                    self.verify_exact_cart_projection_from_known_forall(&projection_fact)?
+                    self.verify_exact_cart_projection_from_known_forall(
+                        &projection_fact,
+                        builtin_state,
+                    )?
                 {
                     projection_result = known_forall_result;
                 }
@@ -254,7 +265,7 @@ impl Runtime {
         }
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "cart equality from dimension and projections".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -269,7 +280,8 @@ impl Runtime {
     pub(super) fn verify_exact_cart_projection_from_known_forall(
         &mut self,
         goal: &AtomicFact,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+        builtin_state: &BuiltinRuleSearchState,
+    ) -> Result<Option<VerifyFactResult>, RuntimeError> {
         let lookup_key = (goal.key(), goal.has_positive_polarity());
         let candidates: Vec<(AtomicFact, Rc<StoredForallConclusionReference>)> = self
             .iter_environments_from_top()
@@ -298,7 +310,7 @@ impl Runtime {
         // projection. Its domain requirements may use known facts and builtin
         // computation, but must not start another equality/forall search and
         // recursively re-enter cart extensionality.
-        let verify_state = VerifyState::after_well_definedness().with_next_round();
+        let verify_state = builtin_state.verify_state().with_next_round();
         for (pattern, forall_context) in candidates {
             let Some(arg_map) = self.match_atomic_fact_args_against_known_forall_ordered_args(
                 &pattern,
@@ -315,7 +327,12 @@ impl Runtime {
                 goal,
                 &verify_state,
             )? {
-                return Ok(Some(success.into()));
+                let proof: ProveFactResult = success.into();
+                return Ok(Some(self.complete_atomic_fact_proof_result(
+                    goal,
+                    proof,
+                    &verify_state,
+                )?));
             }
         }
         Ok(None)

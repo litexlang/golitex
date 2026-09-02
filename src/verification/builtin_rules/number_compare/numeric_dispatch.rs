@@ -20,7 +20,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         // Most rules in this dispatcher are facts about the real-number order.
         // The direct order-semantics rules above additionally handle integer
         // discreteness and numeric transitivity after their own type checks.
@@ -64,7 +64,7 @@ impl Runtime {
                 builtin_state,
             )? {
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         atomic_fact.clone().into(),
                         "every positive common divisor is at most the gcd".to_string(),
                         BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyOrderAtomicFactNumericBuiltinOnly01),
@@ -302,8 +302,8 @@ impl Runtime {
 
         if let AtomicFact::LessEqualFact(less_equal_fact) = atomic_fact {
             if less_equal_fact.left.to_string() == less_equal_fact.right.to_string() {
-                return Ok(StmtResult::from(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                return Ok(ProveFactResult::from(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         less_equal_fact.clone().into(),
                         "less_equal_fact_equal".to_string(),
                         BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyOrderAtomicFactNumericBuiltinOnly02),
@@ -311,14 +311,17 @@ impl Runtime {
                     ),
                 ));
             }
-            let equal_result = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
-                &less_equal_fact.left,
-                &less_equal_fact.right,
-                less_equal_fact.line_file.clone(),
-            ));
+            let equal_result = self.verify_known_equality_fact(
+                &EqualFact::new_from_refs(
+                    &less_equal_fact.left,
+                    &less_equal_fact.right,
+                    less_equal_fact.line_file.clone(),
+                ),
+                builtin_state.verify_state(),
+            )?;
             if equal_result.is_success() {
-                return Ok(StmtResult::from(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                return Ok(ProveFactResult::from(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         less_equal_fact.clone().into(),
                         "less_equal_fact_from_known_equality".to_string(),
                         BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyOrderAtomicFactNumericBuiltinOnly03),
@@ -332,11 +335,10 @@ impl Runtime {
                 less_equal_fact.line_file.clone(),
             )
             .into();
-            let strict_result =
-                self.verify_non_equational_atomic_fact_with_known_atomic_facts(&strict_atomic)?;
+            let strict_result = self.verify_atomic_fact_as_builtin_rule_premise(&strict_atomic, builtin_state)?;
             if strict_result.is_success() {
-                return Ok(StmtResult::from(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                return Ok(ProveFactResult::from(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         less_equal_fact.clone().into(),
                         "less_equal_fact_from_known_strict_order".to_string(),
                         BuiltinRuleEvidence::Arithmetic(
@@ -349,8 +351,8 @@ impl Runtime {
         }
         if let AtomicFact::GreaterEqualFact(greater_equal_fact) = atomic_fact {
             if greater_equal_fact.left.to_string() == greater_equal_fact.right.to_string() {
-                return Ok(StmtResult::from(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                return Ok(ProveFactResult::from(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         greater_equal_fact.clone().into(),
                         "greater_equal_fact_equal".to_string(),
                         BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyOrderAtomicFactNumericBuiltinOnly04),
@@ -358,14 +360,17 @@ impl Runtime {
                     ),
                 ));
             }
-            let equal_result = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
-                &greater_equal_fact.left,
-                &greater_equal_fact.right,
-                greater_equal_fact.line_file.clone(),
-            ));
+            let equal_result = self.verify_known_equality_fact(
+                &EqualFact::new_from_refs(
+                    &greater_equal_fact.left,
+                    &greater_equal_fact.right,
+                    greater_equal_fact.line_file.clone(),
+                ),
+                builtin_state.verify_state(),
+            )?;
             if equal_result.is_success() {
-                return Ok(StmtResult::from(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                return Ok(ProveFactResult::from(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         greater_equal_fact.clone().into(),
                         "greater_equal_fact_from_known_equality".to_string(),
                         BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyOrderAtomicFactNumericBuiltinOnly05),
@@ -381,11 +386,10 @@ impl Runtime {
                 greater_equal_fact.line_file.clone(),
             )
             .into();
-            let strict_result =
-                self.verify_non_equational_atomic_fact_with_known_atomic_facts(&strict_atomic)?;
+            let strict_result = self.verify_atomic_fact_as_builtin_rule_premise(&strict_atomic, builtin_state)?;
             if strict_result.is_success() {
-                return Ok(StmtResult::from(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                return Ok(ProveFactResult::from(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         greater_equal_fact.clone().into(),
                         "greater_equal_fact_from_known_strict_order".to_string(),
                         BuiltinRuleEvidence::Arithmetic(
@@ -475,7 +479,7 @@ impl Runtime {
 // Euler's number and pi are primitive positive real constants. The canonical
 // rational bounds expose `e > 1` and `3 < pi < 4` without decimal approximation.
 // Example: `0 < e`, `e > 1`, `3 < pi`, and `pi < 4`.
-fn try_verify_native_real_constant_positive(atomic_fact: &AtomicFact) -> Option<StmtResult> {
+fn try_verify_native_real_constant_positive(atomic_fact: &AtomicFact) -> Option<ProveFactResult> {
     let is_zero = |obj: &Obj| {
         matches!(
             obj,
@@ -511,7 +515,7 @@ fn try_verify_native_real_constant_positive(atomic_fact: &AtomicFact) -> Option<
         return None;
     }
     Some(
-        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+        SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
             atomic_fact.clone().into(),
             "native mathematical constant positivity bound".to_string(),
             BuiltinRuleEvidence::Uncatalogued(

@@ -31,7 +31,7 @@ pub struct SuccessVerifyAtomicPredicateWellDefinedResult {
 
 pub struct SuccessVerifyAtomicPredicateDomainCheckResult {
     pub role: AtomicPredicateDomainCheckRole,
-    pub result: Box<StmtResult>,
+    pub result: Box<VerifyFactResult>,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]

@@ -63,3 +63,43 @@ impl StmtResult {
         }
     }
 }
+
+impl ProveFactResult {
+    pub fn factual_success(&self) -> Option<&SuccessProveFactResult> {
+        match self {
+            Self::Proven(success) => Some(success),
+            Self::Unknown(_) => None,
+        }
+    }
+
+    pub fn factual_success_mut(&mut self) -> Option<&mut SuccessProveFactResult> {
+        match self {
+            Self::Proven(success) => Some(success),
+            Self::Unknown(_) => None,
+        }
+    }
+
+    pub fn into_factual_success(self) -> Option<SuccessProveFactResult> {
+        match self {
+            Self::Proven(success) => Some(*success),
+            Self::Unknown(_) => None,
+        }
+    }
+
+    pub fn infer_result(&self) -> SuccessInferResult {
+        self.factual_success()
+            .map(|success| success.infers.clone())
+            .unwrap_or_else(SuccessInferResult::new)
+    }
+
+    pub fn fact_id(&self) -> Option<FactId> {
+        self.factual_success().and_then(|success| success.fact_id)
+    }
+
+    pub fn with_infers(mut self, infer_result: SuccessInferResult) -> Self {
+        if let Some(success) = self.factual_success_mut() {
+            success.infers.new_infer_result_inside(infer_result);
+        }
+        self
+    }
+}

@@ -10,7 +10,7 @@ impl StmtResultToLeanCompiler {
         &mut self,
         target: &Fact,
         rule: RealArithmeticMembershipClosureBuiltinRule,
-        subgoals: &[StmtResult],
+        subgoals: &[VerifyFactResult],
     ) -> Result<Option<String>, String> {
         let (target_element, target_set) = membership_parts(target)?;
         if !matches!(target_set, Obj::StandardSet(StandardSet::R)) {
@@ -64,14 +64,8 @@ impl StmtResultToLeanCompiler {
             );
         };
         let components = components
-            .factual_success()
+            .verified()
             .ok_or_else(|| "real arithmetic membership child is not factual".to_string())?;
-        if !components.store.infers.is_empty() || components.store.fact_id.is_some() {
-            return Err(
-                "real arithmetic membership conjunction child unexpectedly published effects"
-                    .into(),
-            );
-        }
         let retained_components = conjunction_components(&components.fact())?;
         if retained_components.len() != 2 {
             return Err("real arithmetic membership child is not a binary conjunction".into());

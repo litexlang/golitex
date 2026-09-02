@@ -3,7 +3,7 @@
 use super::*;
 
 impl StatementResultRenderer {
-    pub(in super::super) fn verify_fact(&mut self, result: &SuccessVerifyFactResult) -> JsonValue {
+    pub(in super::super) fn verify_fact(&mut self, result: &SuccessFactProofNode) -> JsonValue {
         object(vec![
             string_field("kind", verify_fact_kind(result)),
             string_field("statement", result.fact().to_string()),
@@ -47,7 +47,7 @@ impl StatementResultRenderer {
                             .map(|(fact, check)| {
                                 object(vec![
                                     string_field("fact", fact.to_string()),
-                                    ("result".to_string(), self.stmt_result(check)),
+                                    ("result".to_string(), self.verify_fact_result(check)),
                                 ])
                             })
                             .collect(),
@@ -105,7 +105,7 @@ impl StatementResultRenderer {
                         result
                             .steps
                             .iter()
-                            .map(|step| self.stmt_result(step))
+                            .map(|step| self.verify_fact_result(step))
                             .collect(),
                     ),
                 ),
@@ -156,7 +156,10 @@ impl StatementResultRenderer {
                             .map(|proved| {
                                 object(vec![
                                     string_field("statement", proved.stmt.to_string()),
-                                    ("result".to_string(), self.stmt_result(&proved.result)),
+                                    (
+                                        "result".to_string(),
+                                        self.verify_fact_result(&proved.result),
+                                    ),
                                 ])
                             })
                             .collect(),

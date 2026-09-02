@@ -132,6 +132,16 @@ impl DefinitionGraphBuilder {
         source_ids
     }
 
+    pub(super) fn collect_proof_source_ids_from_verify_result(
+        &mut self,
+        result: &VerifyFactResult,
+        source_ids: &mut Vec<String>,
+    ) {
+        if let Some(verified) = result.verified() {
+            self.collect_verified_by_source_ids(verified.proof(), source_ids);
+        }
+    }
+
     pub(super) fn collect_proof_source_ids_from_result(
         &mut self,
         result: &StmtResult,
@@ -149,7 +159,9 @@ impl DefinitionGraphBuilder {
         source_ids: &mut Vec<String>,
     ) {
         if let Some(success) = success.fact() {
-            self.collect_verified_by_source_ids(success.proof(), source_ids);
+            if let Some(proof) = success.proof() {
+                self.collect_verified_by_source_ids(proof, source_ids);
+            }
             return;
         }
         if let SuccessStmtResult::By(SuccessByStmtResult::ByThmStmt(result)) = success {
@@ -227,6 +239,9 @@ impl DefinitionGraphBuilder {
         success.visit_child_results(&mut |child| {
             self.collect_proof_source_ids_from_result(child, source_ids)
         });
+        success.visit_fact_verification_children(&mut |child| {
+            self.collect_proof_source_ids_from_verify_result(child, source_ids)
+        });
         success.visit_success_child_results(&mut |child| {
             self.collect_proof_source_ids_from_success(child, source_ids)
         });
@@ -241,7 +256,7 @@ impl DefinitionGraphBuilder {
             SuccessFactProofResult::BuiltinRule(result)
             | SuccessFactProofResult::BuiltinStrategy(result) => {
                 for subgoal in result.subgoals.iter() {
-                    self.collect_proof_source_ids_from_result(subgoal, source_ids);
+                    self.collect_proof_source_ids_from_verify_result(subgoal, source_ids);
                 }
             }
             SuccessFactProofResult::StoredFactCitation(result) => self
@@ -252,7 +267,7 @@ impl DefinitionGraphBuilder {
                     source_ids,
                 );
                 for requirement in result.requirements.iter() {
-                    self.collect_proof_source_ids_from_result(
+                    self.collect_proof_source_ids_from_verify_result(
                         requirement.result.as_ref(),
                         source_ids,
                     );
@@ -261,7 +276,7 @@ impl DefinitionGraphBuilder {
             SuccessFactProofResult::DefinitionReduction(result) => {
                 self.collect_cited_stmt_source_ids(&result.definition.clone().into(), source_ids);
                 for check in result.verification.clause_checks.iter() {
-                    self.collect_proof_source_ids_from_result(check, source_ids);
+                    self.collect_proof_source_ids_from_verify_result(check, source_ids);
                 }
             }
             SuccessFactProofResult::CheckedFunctionDefinitionReduction(result) => self
@@ -275,12 +290,15 @@ impl DefinitionGraphBuilder {
                     self.collect_verified_by_source_ids(primary.proof(), source_ids);
                 }
                 for step in result.steps.iter() {
-                    self.collect_proof_source_ids_from_result(step, source_ids);
+                    self.collect_proof_source_ids_from_verify_result(step, source_ids);
                 }
             }
             SuccessFactProofResult::ForallProof(result) => {
                 for proved in result.proves.iter() {
-                    self.collect_proof_source_ids_from_result(proved.result.as_ref(), source_ids);
+                    self.collect_proof_source_ids_from_verify_result(
+                        proved.result.as_ref(),
+                        source_ids,
+                    );
                 }
             }
             SuccessFactProofResult::Transform(result) => {

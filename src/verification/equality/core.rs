@@ -23,9 +23,9 @@ use crate::result::{
     IntegralPolynomialNormalizationBuiltinRuleEvidence,
     NestedCheckedFunctionDefinitionReductionEvidence,
     RationalAlgebraicNormalizationBuiltinRuleEvidence, RationalNormalizationBuiltinRuleEvidence,
-    StmtResult, StructuralDefinitionCongruenceBuiltinRuleEvidence,
+    ProveFactResult, StructuralDefinitionCongruenceBuiltinRuleEvidence,
     StructuralKnownEqualityCongruenceBuiltinRuleEvidence, SuccessFactProofResult,
-    SuccessFactStmtResult, SuccessTransformFactResult, UncataloguedBuiltinRule,
+    SuccessProveFactResult, SuccessTransformFactResult, UncataloguedBuiltinRule,
     UnknownGenericStmtResult,
 };
 use crate::runtime::Runtime;
@@ -57,9 +57,9 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let zero_premise_result =
-            self.verify_equal_fact_with_zero_premise_verification(equal_fact)?;
+            self.verify_equal_fact_with_zero_premise_verification(equal_fact, verify_state)?;
         if zero_premise_result.is_success() {
             return Ok(zero_premise_result);
         }
@@ -68,7 +68,7 @@ impl Runtime {
         self.verify_equal_fact_with_one_premise_producing_builtin_rule(equal_fact, &builtin_state)
     }
 
-    pub fn verify_equal_fact_with_known_fact(&mut self, equal_fact: &EqualFact) -> StmtResult {
+    pub fn verify_equal_fact_with_known_fact(&mut self, equal_fact: &EqualFact) -> ProveFactResult {
         self.verify_equal_fact_by_known_equality_without_direct_evaluation(equal_fact)
     }
 
@@ -82,7 +82,8 @@ impl Runtime {
     pub fn verify_equal_fact_with_zero_premise_verification(
         &mut self,
         equal_fact: &EqualFact,
-    ) -> Result<StmtResult, RuntimeError> {
+        verify_state: &VerifyState,
+    ) -> Result<ProveFactResult, RuntimeError> {
         let known_result = self.verify_equal_fact_with_known_fact(equal_fact);
         if known_result.is_success() {
             return Ok(known_result);
@@ -94,7 +95,10 @@ impl Runtime {
         }
 
         let known_equality_evaluation_result =
-            self.verify_equal_fact_by_known_equality_then_direct_evaluation(equal_fact);
+            self.verify_equal_fact_by_known_equality_then_direct_evaluation(
+                equal_fact,
+                verify_state,
+            )?;
         if known_equality_evaluation_result.is_success() {
             return Ok(known_equality_evaluation_result);
         }
@@ -104,7 +108,7 @@ impl Runtime {
         // `f(y) $in {0}` generates `f(y) = 0`).  Preserve the checked
         // definition reduction as a real proof node here instead of letting
         // the terminating boolean comparator erase that evidence.
-        let after_parent_well_definedness = VerifyState::after_well_definedness();
+        let after_parent_well_definedness = VerifyState::initial();
         for definition_side in EqualitySide::BOTH {
             let (application, _) = definition_side.select(equal_fact);
             if self
@@ -145,11 +149,12 @@ impl Runtime {
             &equal_fact.right,
             equal_fact.line_file.clone(),
             &mut congruence_subgoals,
-        ) && !congruence_subgoals.is_empty()
+            verify_state,
+        )? && !congruence_subgoals.is_empty()
         {
             let target: Fact = equal_fact.clone().into();
             let result =
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     target.clone(),
                     "known equalities under reviewed addition congruence".to_string(),
                     BuiltinRuleEvidence::StructuralKnownEqualityCongruence(
@@ -172,7 +177,7 @@ impl Runtime {
         {
             let target: Fact = equal_fact.clone().into();
             let result =
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     target.clone(),
                     "checked definition reductions under structural congruence".to_string(),
                     BuiltinRuleEvidence::StructuralDefinitionCongruence(
@@ -197,7 +202,7 @@ impl Runtime {
         ) {
             let target: Fact = equal_fact.clone().into();
             let result =
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     target.clone(),
                     "exact integral polynomial normalization under structural congruence"
                         .to_string(),
@@ -212,8 +217,8 @@ impl Runtime {
             return Ok(result);
         }
 
-        let result: StmtResult =
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+        let result: ProveFactResult =
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "structural equality with terminating reductions".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -227,7 +232,7 @@ impl Runtime {
 
     // Direct evaluation is the computation arm of zero-premise verification. It may normalize
     // the two objects, but it cannot generate premises or apply another mathematical rule.
-    pub fn verify_equal_fact_by_direct_evaluation(&self, equal_fact: &EqualFact) -> StmtResult {
+    pub fn verify_equal_fact_by_direct_evaluation(&self, equal_fact: &EqualFact) -> ProveFactResult {
         if let (Some(left_evaluation), Some(right_evaluation)) = (
             equal_fact
                 .left
@@ -238,7 +243,7 @@ impl Runtime {
         ) {
             if left_evaluation.value.normalized_value == right_evaluation.value.normalized_value {
                 let target: Fact = equal_fact.clone().into();
-                return SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                return SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     target.clone(),
                     "calculation".to_string(),
                     BuiltinRuleEvidence::RationalNormalization(
@@ -278,7 +283,7 @@ impl Runtime {
                 return UnknownGenericStmtResult::new().into();
             }
             let target: Fact = equal_fact.clone().into();
-            return SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            return SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 target.clone(),
                 "exact complex algebraic normalization".to_string(),
                 BuiltinRuleEvidence::ComplexAlgebraicNormalization(
@@ -290,7 +295,7 @@ impl Runtime {
         }
         if objs_form_verified_integral_polynomial_identity(&equal_fact.left, &equal_fact.right) {
             let target: Fact = equal_fact.clone().into();
-            return SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            return SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 target.clone(),
                 "exact integral polynomial normalization".to_string(),
                 BuiltinRuleEvidence::IntegralPolynomialNormalization(
@@ -334,7 +339,7 @@ impl Runtime {
         } else {
             return UnknownGenericStmtResult::new().into();
         };
-        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+        SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
             equal_fact.clone().into(),
             reason.to_string(),
             BuiltinRuleEvidence::Uncatalogued(
@@ -361,7 +366,7 @@ impl Runtime {
         {
             if let Some(reduced) = self.reduce_direct_known_fn_application_once(
                 left,
-                &VerifyState::after_well_definedness(),
+                &VerifyState::initial(),
             )? {
                 reductions.push(NestedCheckedFunctionDefinitionReductionEvidence {
                     definition_object,
@@ -384,7 +389,7 @@ impl Runtime {
         {
             if let Some(reduced) = self.reduce_direct_known_fn_application_once(
                 right,
-                &VerifyState::after_well_definedness(),
+                &VerifyState::initial(),
             )? {
                 reductions.push(NestedCheckedFunctionDefinitionReductionEvidence {
                     definition_object,
@@ -426,7 +431,8 @@ impl Runtime {
     pub fn verify_equal_fact_by_known_equality_then_direct_evaluation(
         &mut self,
         equal_fact: &EqualFact,
-    ) -> StmtResult {
+        verify_state: &VerifyState,
+    ) -> Result<ProveFactResult, RuntimeError> {
         let left_representatives =
             self.get_all_obj_representatives_equal_to_given(&equal_fact.left);
         let left_match = left_representatives.into_iter().find(|representative| {
@@ -446,7 +452,7 @@ impl Runtime {
                     objs_equal_by_rational_expression_evaluation(&equal_fact.left, representative)
                 })
             else {
-                return UnknownGenericStmtResult::new().into();
+                return Ok(UnknownGenericStmtResult::new().into());
             };
             EqualFact::new(
                 equal_fact.right.clone(),
@@ -456,7 +462,7 @@ impl Runtime {
         };
         let known_result = self.verify_equal_fact_with_known_fact(&known_fact);
         if !known_result.is_success() {
-            return UnknownGenericStmtResult::new().into();
+            return Ok(UnknownGenericStmtResult::new().into());
         }
         // Resolution may rediscover the submitted equality itself (for
         // example `0 <= x` stores the exact inferred fact `abs(x) = x`). In
@@ -464,9 +470,14 @@ impl Runtime {
         // wrap it in a diagnostic-only "normalization" node and erase its
         // FactId provenance.
         if known_fact.to_string() == equal_fact.to_string() {
-            return known_result;
+            return Ok(known_result);
         }
-        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+        let known_result = self.complete_fact_proof_result(
+            &known_fact.clone().into(),
+            known_result,
+            verify_state,
+        )?;
+        Ok(SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
             equal_fact.clone().into(),
             "calculation and rational expression simplification".to_string(),
             BuiltinRuleEvidence::Uncatalogued(
@@ -474,7 +485,7 @@ impl Runtime {
             ),
             vec![known_result],
         )
-        .into()
+        .into())
     }
 
     // This bounded phase may generate premises, so entering it consumes the available
@@ -483,7 +494,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         if !builtin_state.can_apply_rule() {
             return Ok(UnknownGenericStmtResult::new().into());
         }
@@ -518,7 +529,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         if !objs_equal_by_rational_expression_evaluation(&equal_fact.left, &equal_fact.right) {
             return Ok(None);
         }
@@ -554,7 +565,7 @@ impl Runtime {
             .map(Fact::from)
             .collect::<Vec<_>>();
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 target.clone(),
                 "exact rational algebraic normalization with nonzero premises".to_string(),
                 BuiltinRuleEvidence::RationalAlgebraicNormalization(
@@ -573,7 +584,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         if !objs_equal_by_complex_rational_expression_evaluation(
             &equal_fact.left,
             &equal_fact.right,
@@ -614,7 +625,7 @@ impl Runtime {
             .map(Fact::from)
             .collect::<Vec<_>>();
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 target.clone(),
                 "exact complex algebraic normalization with nonzero premises".to_string(),
                 BuiltinRuleEvidence::ComplexAlgebraicNormalization(
@@ -633,7 +644,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let builtin_goal: AtomicFact = equal_fact.clone().into();
         let mut result =
             self.verify_equal_fact_with_bounded_builtin_routes(equal_fact, verify_state)?;
@@ -660,7 +671,7 @@ impl Runtime {
                 )?;
             if verified_by_arg_to_arg {
                 return Ok(
-                    (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    (SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         equal_fact.clone().into(),
                         same_shape_and_equal_args_reason(equal_fact),
                         BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyEqualFact),
@@ -702,7 +713,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let mut left_candidates = vec![equal_fact.left.clone()];
         left_candidates.extend(self.get_all_obj_representatives_equal_to_given(&equal_fact.left));
         let mut right_candidates = vec![equal_fact.right.clone()];
@@ -774,7 +785,7 @@ impl Runtime {
                     ),
                 ));
                 return Ok(Some(
-                    SuccessFactStmtResult::new(
+                    SuccessProveFactResult::new(
                         equal_fact.clone().into(),
                         SuccessInferResult::new(),
                         proof,
@@ -790,12 +801,12 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         // The goal's well-definedness check already discharged the selected
         // function application's carrier and domain obligations. Definition
         // reduction therefore performs substitution only and never opens a
         // second proof-search root.
-        if !verify_state.is_initial_round() || !verify_state.well_definedness_verified {
+        if !verify_state.is_initial_round() {
             return Ok((UnknownGenericStmtResult::new()).into());
         }
 
@@ -821,7 +832,7 @@ impl Runtime {
         equal_fact: &EqualFact,
         definition_side: EqualitySide,
         verify_state: &VerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let (application_side, other_side) = definition_side.select(equal_fact);
         let line_file = equal_fact.line_file.clone();
         // Reduce exactly one checked definition already present in the goal.
@@ -887,7 +898,7 @@ impl Runtime {
         reduced_matches_other_by_alpha: bool,
         checked_definition_source: Option<(Obj, Fact, FactId)>,
         reason: &str,
-    ) -> StmtResult {
+    ) -> ProveFactResult {
         let fact: Fact = equal_fact.clone().into();
         let msg = format!(
             "{}; reduced goal side `{}` is compared with `{}` using stored equalities, terminating computation, anonymous-function beta reduction, or constructor descent",
@@ -912,7 +923,7 @@ impl Runtime {
             }
             None => SuccessFactProofResult::diagnostic(msg),
         };
-        SuccessFactStmtResult::new_with_verified_by_known_fact(fact, verified_by, Vec::new()).into()
+        SuccessProveFactResult::new_with_verified_by_known_fact(fact, verified_by, Vec::new()).into()
     }
 
     fn checked_function_definition_reduction_source(
@@ -1120,12 +1131,12 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let result =
             self.verify_equal_fact_with_bounded_builtin_routes(equal_fact, verify_state)?;
         if result.is_success() {
             return Ok(
-                (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                (SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     equal_fact.clone().into(),
                     "builtin rules".to_string(),
                     BuiltinRuleEvidence::Uncatalogued(
@@ -1144,7 +1155,7 @@ impl Runtime {
             )?;
         if verified_by_arg_to_arg {
             return Ok(
-                (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                (SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     equal_fact.clone().into(),
                     same_shape_and_equal_args_reason(equal_fact),
                     BuiltinRuleEvidence::Uncatalogued(

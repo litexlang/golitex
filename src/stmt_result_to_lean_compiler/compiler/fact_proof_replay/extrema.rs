@@ -7,17 +7,14 @@ impl StmtResultToLeanCompiler {
         &mut self,
         target: &Fact,
         rule: ExtremaBuiltinRule,
-        subgoals: &[StmtResult],
+        subgoals: &[VerifyFactResult],
     ) -> Result<Option<String>, String> {
         let mut child_proofs = Vec::with_capacity(subgoals.len());
         let mut child_facts = Vec::with_capacity(subgoals.len());
         for (index, child) in subgoals.iter().enumerate() {
             let child = child
-                .factual_success()
+                .verified()
                 .ok_or_else(|| format!("extrema child {index} is not factual"))?;
-            if !child.store.infers.is_empty() {
-                return Err(format!("extrema child {index} published effects"));
-            }
             child_facts.push(child.fact());
             child_proofs.push(
                 self.construct_lean_proof_from_direct_fact_result(child)?

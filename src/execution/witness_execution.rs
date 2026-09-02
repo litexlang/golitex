@@ -163,14 +163,14 @@ impl Runtime {
             )?;
             match result {
                 VerifyArgsSatisfyParamDefResult::Success(result) => Ok(*result),
-                VerifyArgsSatisfyParamDefResult::Unknown(result) => Err(short_exec_error(
+                VerifyArgsSatisfyParamDefResult::Unknown(_) => Err(short_exec_error(
                     witness_stmt,
                     format!(
                         "atomic fact witness arguments do not satisfy the parameter types of `{}`",
                         definition.name
                     ),
                     None,
-                    vec![*result.cause],
+                    vec![],
                 )),
             }
         })
@@ -345,7 +345,6 @@ impl Runtime {
                 }
             }
 
-            let proof_step_count = inside_results.len();
             let parameter_checks = retained_parameter_checks
                 .into_iter()
                 .map(|result| result.map(Box::new))
@@ -363,6 +362,7 @@ impl Runtime {
             )?;
 
             let verify_state_for_proof_check = VerifyState::initial();
+            let mut body_checks = Vec::with_capacity(instantiated_exist_fact.facts().len());
             for internal_fact_template in instantiated_exist_fact.facts().iter() {
                 let internal_fact = internal_fact_template.clone().to_fact();
                 let verification_result = rt
@@ -381,10 +381,10 @@ impl Runtime {
                             std::mem::take(&mut inside_results),
                         )
                     })?;
-                inside_results.push(verification_result);
+                body_checks.push(verification_result);
             }
 
-            if stmt.exist_fact_in_witness.is_exist_unique() {
+            let uniqueness_check = if stmt.exist_fact_in_witness.is_exist_unique() {
                 let uniqueness_forall = rt
                     .build_exist_unique_uniqueness_forall_fact(&stmt.exist_fact_in_witness)
                     .map_err(|build_error| {
@@ -412,12 +412,7 @@ impl Runtime {
                             std::mem::take(&mut inside_results),
                         )
                     })?;
-                inside_results.push(uniqueness_result);
-            }
-
-            let mut body_checks = inside_results.split_off(proof_step_count);
-            let uniqueness_check = if stmt.exist_fact_in_witness.is_exist_unique() {
-                body_checks.pop()
+                Some(uniqueness_result)
             } else {
                 None
             };
@@ -516,16 +511,8 @@ impl Runtime {
         stmt: &WitnessNonemptySet,
     ) -> Result<StmtResult, RuntimeError> {
         self.exec_witness_nonempty_set_stmt_verify_well_definedness(stmt)?;
-        let mut inside_results = self.exec_witness_nonempty_set_stmt_verify_process(stmt)?;
-        let nonempty_check = inside_results.pop().ok_or_else(|| {
-            UnknownRuntimeError(RuntimeErrorStruct::new(
-                Some(stmt.clone().into()),
-                "witness nonempty set: missing final nonemptiness check".to_string(),
-                stmt.line_file.clone(),
-                None,
-                Vec::new(),
-            ))
-        })?;
+        let (inside_results, nonempty_check) =
+            self.exec_witness_nonempty_set_stmt_verify_process(stmt)?;
         let infer_result = self.exec_witness_nonempty_set_stmt_affect_environment(stmt)?;
 
         Ok(SuccessWitnessStmtResult::WitnessNonemptySet(Box::new(
@@ -581,7 +568,7 @@ impl Runtime {
     fn exec_witness_nonempty_set_stmt_verify_process(
         &mut self,
         stmt: &WitnessNonemptySet,
-    ) -> Result<Vec<StmtResult>, RuntimeError> {
+    ) -> Result<(Vec<StmtResult>, VerifyFactResult), RuntimeError> {
         self.run_in_local_env(|rt| {
             let witness_stmt: Stmt = stmt.clone().into();
             let mut inside_results: Vec<StmtResult> = Vec::new();
@@ -612,8 +599,12 @@ impl Runtime {
                     &verify_state_for_proof_check,
                 )?;
                 if ret_check.is_success() {
-                    inside_results.push(ret_check);
-                    return Ok(inside_results);
+                    let ret_check = rt.complete_atomic_fact_proof_result(
+                        &ret_nonempty_fact,
+                        ret_check,
+                        &verify_state_for_proof_check,
+                    )?;
+                    return Ok((inside_results, ret_check));
                 }
             }
 
@@ -632,9 +623,7 @@ impl Runtime {
                         std::mem::take(&mut inside_results),
                     )
                 })?;
-            inside_results.push(membership_result);
-
-            Ok(inside_results)
+            Ok((inside_results, membership_result))
         })
     }
 

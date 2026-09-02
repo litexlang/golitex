@@ -33,13 +33,13 @@ pub(super) struct CompiledNamedForallStatementProofBody {
 pub(super) struct NamedForallStatementResultCompilationInput<'a> {
     pub(super) name: &'a str,
     pub(super) forall_fact: &'a ForallFact,
-    pub(super) well_definedness: &'a SuccessVerifyFactWellDefinedResult,
+    pub(super) well_definedness: &'a WellDefinedFactResult,
     pub(super) proof_scope_assumption_infers: &'a SuccessInferResult,
     pub(super) proof_scope_assumption_components: &'a [(FactId, Fact)],
     pub(super) proof_steps: &'a [StmtResult],
     /// Borrowed leaves selected from the recursive Result. This Vec only
     /// carries references and therefore is not a second semantic IR.
-    pub(super) conclusion_checks: Vec<&'a StmtResult>,
+    pub(super) conclusion_checks: Vec<&'a VerifyFactResult>,
     pub(super) outer_environment_effects: Option<&'a SuccessInferResult>,
     pub(super) source_fact_id: Option<FactId>,
 }
@@ -219,26 +219,21 @@ impl StmtResultToLeanCompiler {
     /// through the ordinary direct fact-result compiler.
     pub(super) fn construct_well_definedness_to_lean_compilation_context(
         &mut self,
-        result: &SuccessVerifyFactWellDefinedResult,
+        result: &WellDefinedFactResult,
     ) -> Result<StmtResultWellDefinednessToLeanCompilationContext, String> {
         let context = self.collect_well_definedness_to_lean_compilation_context(result)?;
-        let recursive = result
-            .recursive
-            .as_deref()
-            .ok_or_else(|| "successful fact WD result has no recursive proof".to_string())?;
-        self.compile_precollected_well_definedness_context(context, &[recursive])
+        self.compile_precollected_well_definedness_context(context, &[result.proof.as_ref()])
     }
 
     pub(super) fn collect_well_definedness_to_lean_compilation_context(
         &self,
-        result: &SuccessVerifyFactWellDefinedResult,
+        result: &WellDefinedFactResult,
     ) -> Result<StmtResultWellDefinednessToLeanCompilationContext, String> {
         let mut context = StmtResultWellDefinednessToLeanCompilationContext::default();
-        let recursive = result
-            .recursive
-            .as_deref()
-            .ok_or_else(|| "successful fact WD result has no recursive proof".to_string())?;
-        collect_well_definedness_to_lean_context_from_fact_result(recursive, &mut context)?;
+        collect_well_definedness_to_lean_context_from_fact_result(
+            result.proof.as_ref(),
+            &mut context,
+        )?;
         Ok(context)
     }
 

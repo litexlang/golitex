@@ -7,8 +7,12 @@ impl StmtResultToLeanCompiler {
         &mut self,
         result: &SuccessFactStmtResult,
     ) -> Result<(), String> {
-        self.install_atomic_fact_well_definedness_store_results(result)
-            .map_err(|error| format!("fact WD installation: {error}"))?;
+        if result.is_trusted() {
+            return Err(format!(
+                "trusted fact `{}` has no reviewed Lean trust adapter",
+                result.fact()
+            ));
+        }
         if self
             .compile_object_reflexivity_fact_result(result)
             .map_err(|error| format!("object-reflexivity route: {error}"))?

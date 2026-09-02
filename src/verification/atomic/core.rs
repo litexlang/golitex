@@ -1,8 +1,8 @@
 //! Atomic-fact verification dispatch.
 
-use crate::error::{RuntimeError, RuntimeErrorStruct, VerifyRuntimeError};
+use crate::error::RuntimeError;
 use crate::fact::{AtomicFact, Fact};
-use crate::result::StmtResult;
+use crate::result::{ProveFactResult, VerifyFactResult};
 use crate::runtime::Runtime;
 use crate::verification::{AlternateFactSearch, VerifyState};
 
@@ -11,7 +11,7 @@ impl Runtime {
         &mut self,
         fact: &AtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         match fact {
             AtomicFact::EqualFact(equal_fact) => self.verify_equal_fact(equal_fact, verify_state),
             _ => self.verify_non_equational_atomic_fact(
@@ -22,11 +22,11 @@ impl Runtime {
         }
     }
 
-    pub fn verify_atomic_fact(
+    pub(crate) fn prove_atomic_fact(
         &mut self,
         fact: &AtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         if let Some(cached_result) =
             self.verification_result_from_known_fact_cache(&fact.clone().into())
         {
@@ -38,22 +38,7 @@ impl Runtime {
             return Ok(cached_result);
         }
 
-        if !verify_state.well_definedness_verified {
-            if let Err(error) = self.verify_atomic_fact_well_defined(fact, verify_state) {
-                return Err({
-                    VerifyRuntimeError(RuntimeErrorStruct::new(
-                        Some(Fact::from(fact.clone()).into_stmt()),
-                        String::new(),
-                        fact.line_file(),
-                        Some(error),
-                        vec![],
-                    ))
-                    .into()
-                });
-            }
-        }
-
-        let state_after_well_definedness = verify_state.with_well_definedness_verified();
+        let state_after_well_definedness = verify_state.clone();
 
         if let Some((reduced_fact, evidence)) =
             self.transparent_definition_reduction_for_atomic_fact(fact)?
@@ -81,5 +66,13 @@ impl Runtime {
             &state_after_well_definedness,
         )?;
         Ok(self.remember_successful_atomic_fact_for_proof_search(fact, result, verify_state))
+    }
+
+    pub fn verify_atomic_fact(
+        &mut self,
+        fact: &AtomicFact,
+        verify_state: &VerifyState,
+    ) -> Result<VerifyFactResult, RuntimeError> {
+        self.verify_fact_allow_unknown(&Fact::from(fact.clone()), verify_state)
     }
 }

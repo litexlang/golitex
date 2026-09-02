@@ -6,7 +6,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
         };
@@ -59,7 +59,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
         };
@@ -213,7 +213,7 @@ impl Runtime {
         &mut self,
         fact: AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<VerifyFactResult, RuntimeError> {
         match fact {
             AtomicFact::LessFact(_) | AtomicFact::LessEqualFact(_) => {
                 self.verify_atomic_fact_as_builtin_rule_premise(&fact, builtin_state)
@@ -228,7 +228,7 @@ impl Runtime {
         &mut self,
         f: &LessEqualFact,
         atomic_fact: &AtomicFact,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         if let Obj::Abs(abs) = &f.right {
             let rule = if objs_have_same_display(&f.left, abs.arg.as_ref()) {
                 Some(AbsoluteValueBuiltinRule::SelfLessEqual)
@@ -238,8 +238,8 @@ impl Runtime {
                 None
             };
             if let Some(rule) = rule {
-                return Ok(Some(StmtResult::from(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                return Ok(Some(ProveFactResult::from(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         atomic_fact.clone().into(),
                         "abs: x <= abs(x) and -x <= abs(x)".to_string(),
                         BuiltinRuleEvidence::AbsoluteValue(rule),
@@ -253,8 +253,8 @@ impl Runtime {
         if !obj_is_negation_of(&f.left, &abs_right) {
             return Ok(None);
         }
-        Ok(Some(StmtResult::from(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+        Ok(Some(ProveFactResult::from(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "abs: -abs(x) <= x".to_string(),
                 BuiltinRuleEvidence::AbsoluteValue(
@@ -272,7 +272,7 @@ impl Runtime {
         f: &LessEqualFact,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let Obj::Abs(abs) = &f.left else {
             return Ok(None);
         };
@@ -346,8 +346,8 @@ impl Runtime {
             return Ok(None);
         }
 
-        Ok(Some(StmtResult::from(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+        Ok(Some(ProveFactResult::from(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "abs: finite sum triangle inequality".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -365,7 +365,7 @@ impl Runtime {
         f: &LessEqualFact,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let Obj::Abs(abs) = &f.left else {
             return Ok(None);
         };
@@ -417,8 +417,8 @@ impl Runtime {
             return Ok(None);
         }
 
-        Ok(Some(StmtResult::from(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+        Ok(Some(ProveFactResult::from(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "abs: finite-set sum triangle inequality".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -436,7 +436,7 @@ impl Runtime {
         f: &LessFact,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         if !obj_is_literal_zero(&f.left) {
             return Ok(None);
         }
@@ -453,8 +453,8 @@ impl Runtime {
         if !nonzero_result.is_success() {
             return Ok(None);
         }
-        Ok(Some(StmtResult::from(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+        Ok(Some(ProveFactResult::from(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "abs: 0 < abs(x) from x != 0".to_string(),
                 BuiltinRuleEvidence::AbsoluteValue(AbsoluteValueBuiltinRule::PositiveFromNonzero),
@@ -474,7 +474,7 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         strict: bool,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let Obj::Abs(abs) = left else {
             return Ok(None);
         };
@@ -505,8 +505,8 @@ impl Runtime {
         } else {
             "abs: abs(x) <= b from -b <= x <= b"
         };
-        Ok(Some(StmtResult::from(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+        Ok(Some(ProveFactResult::from(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 rule.to_string(),
                 BuiltinRuleEvidence::AbsoluteValue(AbsoluteValueBuiltinRule::UpperBound),
@@ -528,7 +528,7 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         strict: bool,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let rule_suffix = if strict { " (strict)" } else { "" };
         let zero: Obj = Number::new("0".to_string()).into();
 
@@ -536,7 +536,13 @@ impl Runtime {
         if let Some(inner) = peel_negation(left) {
             if let Some(y) = peel_abs(inner) {
                 if let Some(r) =
-                    self.verify_known_abs_compare(right, &abs_obj(y.clone()), line_file, strict)?
+                    self.verify_known_abs_compare(
+                        right,
+                        &abs_obj(y.clone()),
+                        line_file,
+                        strict,
+                        builtin_state.verify_state(),
+                    )?
                 {
                     let rule = format!(
                         "abs: -abs(y) {} x from abs(x) {} abs(y){}",
@@ -544,8 +550,8 @@ impl Runtime {
                         if strict { "<" } else { "<=" },
                         rule_suffix
                     );
-                    return Ok(Some(StmtResult::from(
-                        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    return Ok(Some(ProveFactResult::from(
+                        SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             atomic_fact.clone().into(),
                             rule,
                             BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyAbsLowerBoundFromAbsCompare01),
@@ -556,7 +562,13 @@ impl Runtime {
             } else {
                 let y = inner;
                 if let Some(r) =
-                    self.verify_known_abs_compare(right, &abs_obj(y.clone()), line_file, strict)?
+                    self.verify_known_abs_compare(
+                        right,
+                        &abs_obj(y.clone()),
+                        line_file,
+                        strict,
+                        builtin_state.verify_state(),
+                    )?
                 {
                     let ge_y: AtomicFact =
                         GreaterEqualFact::new(y.clone(), zero.clone(), line_file.clone()).into();
@@ -568,8 +580,8 @@ impl Runtime {
                             if strict { "<" } else { "<=" },
                             rule_suffix
                         );
-                        return Ok(Some(StmtResult::from(
-                            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                        return Ok(Some(ProveFactResult::from(
+                            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                                 atomic_fact.clone().into(),
                                 rule,
                                 BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyAbsLowerBoundFromAbsCompare02),
@@ -582,15 +594,21 @@ impl Runtime {
         }
 
         // x <= bound or x < bound from abs(x) <= bound (or strict).
-        if let Some(r) = self.verify_known_abs_compare(left, right, line_file, strict)? {
+        if let Some(r) = self.verify_known_abs_compare(
+            left,
+            right,
+            line_file,
+            strict,
+            builtin_state.verify_state(),
+        )? {
             let rule = format!(
                 "abs: x {} b from abs(x) {} b{}",
                 if strict { "<" } else { "<=" },
                 if strict { "<" } else { "<=" },
                 rule_suffix
             );
-            return Ok(Some(StmtResult::from(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            return Ok(Some(ProveFactResult::from(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     atomic_fact.clone().into(),
                     rule,
                     BuiltinRuleEvidence::Uncatalogued(
@@ -603,15 +621,21 @@ impl Runtime {
 
         // -x <= bound or -x < bound from abs(x) <= bound (or strict).
         if let Some(arg) = peel_negation(left) {
-            if let Some(r) = self.verify_known_abs_compare(arg, right, line_file, strict)? {
+            if let Some(r) = self.verify_known_abs_compare(
+                arg,
+                right,
+                line_file,
+                strict,
+                builtin_state.verify_state(),
+            )? {
                 let rule = format!(
                     "abs: -x {} b from abs(x) {} b{}",
                     if strict { "<" } else { "<=" },
                     if strict { "<" } else { "<=" },
                     rule_suffix
                 );
-                return Ok(Some(StmtResult::from(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                return Ok(Some(ProveFactResult::from(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         atomic_fact.clone().into(),
                         rule,
                         BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyAbsLowerBoundFromAbsCompare04),
@@ -623,7 +647,13 @@ impl Runtime {
 
         // y <= x from abs(x) <= abs(y) and y <= 0.
         if let Some(r) =
-            self.verify_known_abs_compare(right, &abs_obj(left.clone()), line_file, strict)?
+            self.verify_known_abs_compare(
+                right,
+                &abs_obj(left.clone()),
+                line_file,
+                strict,
+                builtin_state.verify_state(),
+            )?
         {
             let le_y: AtomicFact =
                 LessEqualFact::new(left.clone(), zero.clone(), line_file.clone()).into();
@@ -639,8 +669,8 @@ impl Runtime {
                     if strict { "<" } else { "<=" },
                     rule_suffix
                 );
-                return Ok(Some(StmtResult::from(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                return Ok(Some(ProveFactResult::from(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         atomic_fact.clone().into(),
                         rule,
                         BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyAbsLowerBoundFromAbsCompare05),
@@ -653,7 +683,13 @@ impl Runtime {
         // x <= -y from abs(x) <= abs(y) and y <= 0.
         if let Some(y) = peel_negation(right) {
             if let Some(r) =
-                self.verify_known_abs_compare(left, &abs_obj(y.clone()), line_file, strict)?
+                self.verify_known_abs_compare(
+                    left,
+                    &abs_obj(y.clone()),
+                    line_file,
+                    strict,
+                    builtin_state.verify_state(),
+                )?
             {
                 let le_y: AtomicFact =
                     LessEqualFact::new(y.clone(), zero.clone(), line_file.clone()).into();
@@ -669,8 +705,8 @@ impl Runtime {
                         if strict { "<" } else { "<=" },
                         rule_suffix
                     );
-                    return Ok(Some(StmtResult::from(
-                        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    return Ok(Some(ProveFactResult::from(
+                        SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             atomic_fact.clone().into(),
                             rule,
                             BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyAbsLowerBoundFromAbsCompare06),
@@ -683,7 +719,13 @@ impl Runtime {
 
         // x <= y from abs(x) <= abs(y) and 0 <= y.
         if let Some(r) =
-            self.verify_known_abs_compare(left, &abs_obj(right.clone()), line_file, strict)?
+            self.verify_known_abs_compare(
+                left,
+                &abs_obj(right.clone()),
+                line_file,
+                strict,
+                builtin_state.verify_state(),
+            )?
         {
             let ge_y: AtomicFact =
                 GreaterEqualFact::new(right.clone(), zero.clone(), line_file.clone()).into();
@@ -695,8 +737,8 @@ impl Runtime {
                     if strict { "<" } else { "<=" },
                     rule_suffix
                 );
-                return Ok(Some(StmtResult::from(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                return Ok(Some(ProveFactResult::from(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         atomic_fact.clone().into(),
                         rule,
                         BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyAbsLowerBoundFromAbsCompare07),
@@ -715,39 +757,18 @@ impl Runtime {
         bound: &Obj,
         line_file: &LineFile,
         strict: bool,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+        verify_state: &VerifyState,
+    ) -> Result<Option<VerifyFactResult>, RuntimeError> {
         let fact = abs_order_subgoal(
             abs_obj(arg.clone()),
             bound.clone(),
             line_file.clone(),
             strict,
         );
-        for environment in self.iter_environments_from_top() {
-            if let Some(known_facts_map) = environment
-                .facts
-                .atomic
-                .by_two_args
-                .get(&(fact.key(), fact.has_positive_polarity()))
-            {
-                let args = fact.args_ref();
-                let key = (args[0].to_string(), args[1].to_string());
-                if let Some(known_fact) = known_facts_map.get(&key) {
-                    let source_fact: Fact = known_fact.clone().into();
-                    let source_fact_id =
-                        self.require_known_fact_id_for_success_result(&source_fact)?;
-                    return Ok(Some(StmtResult::from(
-                        SuccessFactStmtResult::new_with_verified_by_known_fact(
-                            fact.clone().into(),
-                            SuccessFactProofResult::stored_fact_citation(
-                                source_fact,
-                                source_fact_id,
-                                None,
-                            ),
-                            Vec::new(),
-                        ),
-                    )));
-                }
-            }
+        let target: Fact = fact.clone().into();
+        if let Some(proof) = self.verification_result_from_known_fact_cache(&target) {
+            let checked = self.verify_fact_well_defined_result(&target, verify_state)?;
+            return Ok(Some(Runtime::finish_fact_verification(checked, proof)));
         }
         Ok(None)
     }
@@ -758,7 +779,7 @@ impl Runtime {
         &mut self,
         f: &LessEqualFact,
         atomic_fact: &AtomicFact,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let Obj::Abs(abs) = &f.left else {
             return Ok(None);
         };
@@ -776,8 +797,8 @@ impl Runtime {
         let Some(rule) = rule else {
             return Ok(None);
         };
-        Ok(Some(StmtResult::from(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+        Ok(Some(ProveFactResult::from(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "abs: triangle inequality".to_string(),
                 BuiltinRuleEvidence::AbsoluteValue(rule),
@@ -792,7 +813,7 @@ impl Runtime {
         &mut self,
         f: &LessEqualFact,
         atomic_fact: &AtomicFact,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let Obj::Sub(sub) = &f.left else {
             return Ok(None);
         };
@@ -812,8 +833,8 @@ impl Runtime {
         let Some(rule) = rule else {
             return Ok(None);
         };
-        Ok(Some(StmtResult::from(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+        Ok(Some(ProveFactResult::from(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "abs: weak reverse triangle inequality".to_string(),
                 BuiltinRuleEvidence::AbsoluteValue(rule),

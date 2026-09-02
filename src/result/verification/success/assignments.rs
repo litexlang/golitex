@@ -8,7 +8,7 @@ pub struct SuccessVerifyByAssignmentResult {
     pub assumptions: Vec<SuccessVerifyByAssignmentAssumptionResult>,
     pub domain_checks: Vec<SuccessVerifyByAssignmentDomainResult>,
     pub proof_steps: Vec<StmtResult>,
-    pub conclusion_checks: Vec<StmtResult>,
+    pub conclusion_checks: Vec<VerifyFactResult>,
 }
 
 /// One exact fact introduced by a finite assignment branch. The complete
@@ -25,8 +25,8 @@ pub struct SuccessVerifyByAssignmentAssumptionResult {
 #[derive(Debug)]
 pub struct SuccessVerifyByAssignmentDomainResult {
     pub fact: Fact,
-    pub check: Box<StmtResult>,
-    pub negated_check: Option<Box<StmtResult>>,
+    pub check: Box<VerifyFactResult>,
+    pub negated_check: Option<Box<VerifyFactResult>>,
     pub satisfied: bool,
     /// Exact store/inference effects published only by a satisfied branch.
     /// A skipped assignment retains `None` and its checked negation instead.
@@ -39,7 +39,7 @@ impl SuccessVerifyByAssignmentResult {
         assumptions: Vec<SuccessVerifyByAssignmentAssumptionResult>,
         domain_checks: Vec<SuccessVerifyByAssignmentDomainResult>,
         proof_steps: Vec<StmtResult>,
-        conclusion_checks: Vec<StmtResult>,
+        conclusion_checks: Vec<VerifyFactResult>,
     ) -> Self {
         SuccessVerifyByAssignmentResult {
             assignment,

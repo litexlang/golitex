@@ -4,7 +4,7 @@ use super::proof_composition::merge_verified_by_with_steps;
 use crate::prelude::*;
 use std::rc::Rc;
 
-impl SuccessFactStmtResult {
+impl SuccessProveFactResult {
     pub fn new_with_verified_by_builtin_rules(
         stmt: Fact,
         infers: SuccessInferResult,
@@ -17,7 +17,7 @@ impl SuccessFactStmtResult {
         stmt: Fact,
         strategy_label: String,
         evidence: BuiltinRuleEvidence,
-        step_results: Vec<StmtResult>,
+        step_results: Vec<VerifyFactResult>,
     ) -> Self {
         let verified_by = SuccessFactProofResult::BuiltinStrategy(SuccessBuiltinFactProofResult {
             msg: strategy_label,
@@ -32,7 +32,7 @@ impl SuccessFactStmtResult {
         infers: SuccessInferResult,
         builtin_rule_label: String,
         evidence: BuiltinRuleEvidence,
-        step_results: Vec<StmtResult>,
+        step_results: Vec<VerifyFactResult>,
     ) -> Self {
         let verified_by = SuccessFactProofResult::builtin_rule_with_evidence(
             builtin_rule_label,
@@ -46,7 +46,7 @@ impl SuccessFactStmtResult {
         stmt: Fact,
         builtin_rule_label: String,
         evidence: BuiltinRuleEvidence,
-        step_results: Vec<StmtResult>,
+        step_results: Vec<VerifyFactResult>,
     ) -> Self {
         Self::new_with_verified_by_builtin_rule_evidence_and_steps(
             stmt,
@@ -61,7 +61,7 @@ impl SuccessFactStmtResult {
         stmt: Fact,
         infers: SuccessInferResult,
         verified_by: SuccessFactProofResult,
-        step_results: Vec<StmtResult>,
+        step_results: Vec<VerifyFactResult>,
     ) -> Self {
         let verified_by = merge_verified_by_with_steps(stmt.clone(), verified_by, step_results);
         Self::new(stmt, infers, verified_by)
@@ -70,7 +70,7 @@ impl SuccessFactStmtResult {
     pub fn new_with_verified_by_known_fact(
         stmt: Fact,
         verified_by: SuccessFactProofResult,
-        step_results: Vec<StmtResult>,
+        step_results: Vec<VerifyFactResult>,
     ) -> Self {
         Self::new_with_verified_by_known_fact_and_infer(
             stmt,
@@ -83,7 +83,7 @@ impl SuccessFactStmtResult {
     pub fn new_with_reused_verification(
         stmt: Fact,
         infers: SuccessInferResult,
-        source: Rc<SuccessVerifyFactResult>,
+        source: Rc<SuccessFactProofNode>,
     ) -> Self {
         Self::new_with_verified_by_builtin_rules(
             stmt,

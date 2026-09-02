@@ -10,7 +10,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         // A gcd divides each input.
@@ -104,7 +104,10 @@ impl Runtime {
             return Ok(result);
         }
         if let Some(result) =
-            self.try_verify_tuple_reconstruction_from_known_cart_membership(equal_fact)?
+            self.try_verify_tuple_reconstruction_from_known_cart_membership(
+                equal_fact,
+                builtin_state,
+            )?
         {
             return Ok(result);
         }
@@ -656,7 +659,10 @@ impl Runtime {
         }
 
         // A finite set with zero cardinality is empty.
-        if let Some(done) = self.try_verify_empty_finite_set_from_size_zero(equal_fact)? {
+        if let Some(done) = self.try_verify_empty_finite_set_from_size_zero(
+            equal_fact,
+            builtin_state.verify_state(),
+        )? {
             return Ok(done);
         }
 

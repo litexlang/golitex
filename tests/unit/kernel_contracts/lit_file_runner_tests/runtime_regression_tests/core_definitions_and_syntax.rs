@@ -2368,11 +2368,12 @@ copy = 2
     assert!(run_output.contains("\"kind\": \"ReleaseThmStmt\""));
     assert!(run_output.contains("\"kind\": \"SuccessVerifyByTheoremResult\""));
     assert!(run_output.contains("\"statement\": \"release thm self_exists(2)\""));
-    assert!(matches!(
-        elimination.source_result.as_ref(),
-        StmtResult::Success(SuccessStmtResult::ReleaseThmStmt(theorem_result))
-            if theorem_result.verification.is_some()
-    ));
+    let Some(StmtResult::Success(SuccessStmtResult::ReleaseThmStmt(theorem_result))) =
+        elimination.source_result.theorem_application()
+    else {
+        panic!("theorem-backed obtain must retain its theorem application source")
+    };
+    assert!(theorem_result.verification.is_some());
 
     // The application runs in a child environment: its instantiated
     // existential itself does not enter the parent, while the witness facts do.
