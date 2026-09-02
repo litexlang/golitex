@@ -22,7 +22,7 @@ impl Runtime {
         &mut self,
         goal: &InFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let Obj::SetBuilder(goal_builder) = &goal.set else {
             return Ok(None);
         };
@@ -33,7 +33,7 @@ impl Runtime {
             .filter(|membership| objs_match_for_pattern(&membership.element, &goal.element))
             .cloned()
             .collect();
-        let final_state = verify_state.with_final_round_after_well_definedness();
+        let final_state = verify_state.with_final_round();
 
         for membership in memberships {
             let unfolded = match &membership.set {
@@ -58,9 +58,10 @@ impl Runtime {
             let membership_result = self.stmt_result_for_indexed_fact(
                 membership.clone().into(),
                 "known membership in an equal one-layer set-builder definition",
+                verify_state,
             )?;
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     goal.clone().into(),
                     "set-builder membership transport through one unfolded definition".to_string(),
                     BuiltinRuleEvidence::Uncatalogued(
@@ -146,7 +147,7 @@ impl Runtime {
             ) {
                 continue;
             }
-            let requirement_state = verify_state.with_final_round_after_well_definedness();
+            let requirement_state = verify_state.with_final_round();
             verify_state.set_set_builder_forall_transport_active(true);
             let membership_result = self.verify_args_satisfy_forall_requirements(
                 &membership_pattern_atomic,
@@ -159,9 +160,13 @@ impl Runtime {
             let Some(membership_success) = membership_result? else {
                 continue;
             };
-            let membership_result: StmtResult = membership_success.into();
+            let membership_result = self.complete_atomic_fact_proof_result(
+                &instantiated,
+                membership_success.into(),
+                verify_state,
+            )?;
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     goal.clone().into(),
                     "set-builder membership transport from a known universal named-set membership"
                         .to_string(),
@@ -180,7 +185,7 @@ impl Runtime {
         &mut self,
         goal: &AtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         if !matches!(goal, AtomicFact::InFact(_))
             && !verify_state.set_builder_forall_transport_is_active()
         {
@@ -213,7 +218,7 @@ impl Runtime {
                     Obj::SetBuilder(set_builder) => Some(set_builder.clone()),
                     _ => match self.unfold_set_builder_definition_without_transport_reentry(
                         &membership_pattern.set,
-                        &verify_state.with_final_round_after_well_definedness(),
+                        &verify_state.with_final_round(),
                     )? {
                         Some(Obj::SetBuilder(set_builder)) => Some(set_builder),
                         _ => None,
@@ -255,7 +260,7 @@ impl Runtime {
                         SubstitutionMode::Exact,
                         Some(&goal.line_file()),
                     )?;
-                    let requirement_state = verify_state.with_final_round_after_well_definedness();
+                    let requirement_state = verify_state.with_final_round();
                     verify_state.set_set_builder_forall_transport_active(true);
                     let membership_result = self.verify_args_satisfy_forall_requirements(
                         &membership_pattern_atomic,
@@ -268,9 +273,13 @@ impl Runtime {
                     let Some(membership_success) = membership_result? else {
                         continue;
                     };
-                    let membership_result: StmtResult = membership_success.into();
+                    let membership_result = self.complete_atomic_fact_proof_result(
+                        &instantiated_membership,
+                        membership_success.into(),
+                        verify_state,
+                    )?;
                     return Ok(Some(
-                        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                        SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             goal.clone().into(),
                             "universal set-builder membership eliminates to its defining fact"
                                 .to_string(),
@@ -350,9 +359,10 @@ impl Runtime {
                 let membership_result = self.stmt_result_for_indexed_fact(
                     membership_atomic,
                     "known membership in a set-builder or its one-layer named definition",
+                    verify_state,
                 )?;
                 return Ok(Some(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         goal.clone().into(),
                         "set-builder membership eliminates to its instantiated defining fact"
                             .to_string(),
@@ -373,7 +383,7 @@ impl Runtime {
         in_fact: &InFact,
         union: &Union,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let mut alternatives = Vec::with_capacity(2);
         for (side, side_name) in [
             (union.left.as_ref(), "left"),
@@ -390,7 +400,7 @@ impl Runtime {
                 self.verify_atomic_fact_as_builtin_rule_premise(&member_fact, builtin_state)?;
             if member_result.is_success() {
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         in_fact.clone().into(),
                         format!("union membership: member of the {side_name} side"),
                         BuiltinRuleEvidence::Set(if side_name == "left" {
@@ -412,7 +422,7 @@ impl Runtime {
         )?;
         if premise_result.is_success() {
             return Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "union membership from complete left-or-right membership premise".to_string(),
                     BuiltinRuleEvidence::Uncatalogued(
@@ -434,7 +444,7 @@ impl Runtime {
         in_fact: &InFact,
         intersect: &Intersect,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let left_member_fact: AtomicFact = InFact::new(
             in_fact.element.clone(),
             intersect.left.as_ref().clone(),
@@ -453,7 +463,7 @@ impl Runtime {
             self.verify_atomic_fact_as_builtin_rule_premise(&right_member_fact, builtin_state)?;
         if left_member_result.is_success() && right_member_result.is_success() {
             return Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "intersection membership: member of both sides".to_string(),
                     BuiltinRuleEvidence::Set(SetBuiltinRule::IntersectMembershipBoth),
@@ -470,7 +480,7 @@ impl Runtime {
         let premise_result = self.verify_builtin_rule_premise(&premise, builtin_state)?;
         if premise_result.is_success() {
             return Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "intersection membership from complete conjunction premise".to_string(),
                     BuiltinRuleEvidence::Uncatalogued(
@@ -492,7 +502,7 @@ impl Runtime {
         not_in_fact: &NotInFact,
         intersect: &Intersect,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let mut alternatives = Vec::with_capacity(2);
         for (side, side_name) in [
             (intersect.left.as_ref(), "left"),
@@ -509,7 +519,7 @@ impl Runtime {
                 self.verify_atomic_fact_as_builtin_rule_premise(&non_member_fact, builtin_state)?;
             if non_member_result.is_success() {
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         not_in_fact.clone().into(),
                         format!("intersection non-membership: non-member of the {side_name} side"),
                         BuiltinRuleEvidence::Set(if side_name == "left" {
@@ -531,7 +541,7 @@ impl Runtime {
         )?;
         if premise_result.is_success() {
             return Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     not_in_fact.clone().into(),
                     "intersection non-membership from complete side-disjunction premise"
                         .to_string(),
@@ -552,7 +562,7 @@ impl Runtime {
         in_fact: &InFact,
         set_minus: &SetMinus,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let left_member_fact: AtomicFact = InFact::new(
             in_fact.element.clone(),
             set_minus.left.as_ref().clone(),
@@ -571,7 +581,7 @@ impl Runtime {
             self.verify_atomic_fact_as_builtin_rule_premise(&right_non_member_fact, builtin_state)?;
         if left_member_result.is_success() && right_non_member_result.is_success() {
             return Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "set-minus membership: member of left side and non-member of right side"
                         .to_string(),
@@ -589,7 +599,7 @@ impl Runtime {
         let premise_result = self.verify_builtin_rule_premise(&premise, builtin_state)?;
         if premise_result.is_success() {
             return Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "set-minus membership from complete conjunction premise".to_string(),
                     BuiltinRuleEvidence::Uncatalogued(
@@ -612,13 +622,18 @@ impl Runtime {
         in_fact: &InFact,
         big_union: &BigUnion,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let exist_fact = self.big_union_membership_exist_fact(in_fact, big_union)?;
-        let exist_result =
+        let exist_proof =
             self.verify_exist_fact_with_known_exist_fact(&exist_fact, &exist_fact)?;
+        let exist_result = self.complete_fact_proof_result(
+            &exist_fact.clone().into(),
+            exist_proof,
+            builtin_state.verify_state(),
+        )?;
         if exist_result.is_success() {
             return Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "big_union membership: an element of a member set is in the family union"
                         .to_string(),
@@ -658,7 +673,7 @@ impl Runtime {
             )?;
             if element_result.is_success() {
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         in_fact.clone().into(),
                         "big_union membership: an element of a member set is in the family union"
                             .to_string(),
@@ -767,13 +782,18 @@ impl Runtime {
         in_fact: &InFact,
         index_union: &IndexUnion,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         if let Some(exist_fact) = self.index_union_membership_exist_fact(in_fact, index_union)? {
-            let exist_result =
+            let exist_proof =
                 self.verify_exist_fact_with_known_exist_fact(&exist_fact, &exist_fact)?;
+            let exist_result = self.complete_fact_proof_result(
+                &exist_fact.clone().into(),
+                exist_proof,
+                builtin_state.verify_state(),
+            )?;
             if exist_result.is_success() {
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         in_fact.clone().into(),
                         "index_union membership from an indexed fiber witness".to_string(),
                         BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactInIndexUnionByIndexWitness01),
@@ -800,7 +820,7 @@ impl Runtime {
                     })
             );
             let index_result = if index_is_literal_member {
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                let proof = SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     index_member.clone().into(),
                     "index is listed in the literal index set".to_string(),
                     BuiltinRuleEvidence::Uncatalogued(
@@ -808,7 +828,12 @@ impl Runtime {
                     ),
                     Vec::new(),
                 )
-                .into()
+                .into();
+                self.complete_atomic_fact_proof_result(
+                    &index_member,
+                    proof,
+                    builtin_state.verify_state(),
+                )?
             } else {
                 self.verify_atomic_fact_as_builtin_rule_premise(&index_member, builtin_state)?
             };
@@ -826,7 +851,7 @@ impl Runtime {
                 self.verify_atomic_fact_as_builtin_rule_premise(&fiber_member, builtin_state)?;
             if fiber_result.is_success() {
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         in_fact.clone().into(),
                         "index_union membership from an indexed fiber witness".to_string(),
                         BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactInIndexUnionByIndexWitness03),
@@ -874,7 +899,7 @@ impl Runtime {
         in_fact: &InFact,
         index_intersect: &IndexIntersect,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let ambient_member: AtomicFact = InFact::new(
             in_fact.element.clone(),
             index_intersect.ambient_set.as_ref().clone(),
@@ -907,7 +932,7 @@ impl Runtime {
                 evidence.push(fiber_result);
             }
             return Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "index_intersect membership in the ambient set and every indexed fiber"
                         .to_string(),
@@ -925,15 +950,20 @@ impl Runtime {
         else {
             return Ok(UnknownGenericStmtResult::new().into());
         };
-        let Some(forall_result) = self.verify_forall_fact_from_known_cache_only(&forall_fact)?
+        let Some(forall_proof) = self.verify_forall_fact_from_known_cache_only(&forall_fact)?
         else {
             return Ok(UnknownGenericStmtResult::new().into());
         };
+        let forall_result = self.complete_fact_proof_result(
+            &forall_fact.clone().into(),
+            forall_proof,
+            builtin_state.verify_state(),
+        )?;
         if !forall_result.is_success() {
             return Ok(UnknownGenericStmtResult::new().into());
         }
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 "index_intersect membership in the ambient set and every indexed fiber".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -953,13 +983,18 @@ impl Runtime {
         in_fact: &InFact,
         replacement: &Replacement,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let exist_fact = self.replacement_membership_exist_fact(in_fact, replacement)?;
-        let exist_result =
+        let exist_proof =
             self.verify_exist_fact_with_known_exist_fact(&exist_fact, &exist_fact)?;
+        let exist_result = self.complete_fact_proof_result(
+            &exist_fact.clone().into(),
+            exist_proof,
+            builtin_state.verify_state(),
+        )?;
         if exist_result.is_success() {
             return Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "replacement membership: a relation witness is in the replacement set"
                         .to_string(),
@@ -989,10 +1024,15 @@ impl Runtime {
                 if let (AtomicFact::InFact(preimage_in_fact), Obj::ListSet(source_elements)) =
                     (&preimage_in_source, replacement.source_set.as_ref())
                 {
-                    preimage_result = self.verify_in_fact_by_equal_to_one_element_in_list_set(
+                    let proof = self.verify_in_fact_by_equal_to_one_element_in_list_set(
                         preimage_in_fact,
                         source_elements,
                         builtin_state,
+                    )?;
+                    preimage_result = self.complete_atomic_fact_proof_result(
+                        &preimage_in_source,
+                        proof,
+                        builtin_state.verify_state(),
                     )?;
                 }
             }
@@ -1010,7 +1050,7 @@ impl Runtime {
                 self.verify_atomic_fact_as_builtin_rule_premise(&relation_fact, builtin_state)?;
             if relation_result.is_success() {
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         in_fact.clone().into(),
                         "replacement membership: a relation witness is in the replacement set"
                             .to_string(),
@@ -1182,7 +1222,7 @@ impl Runtime {
         in_fact: &InFact,
         fn_obj: &FnObj,
         fn_range: &FnRange,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let head_obj: Obj = fn_obj.head.as_ref().clone().into();
         if !objs_equal_with_nested_binder_alpha_equivalence(&head_obj, &fn_range.function) {
             return Ok((UnknownGenericStmtResult::new()).into());
@@ -1197,7 +1237,7 @@ impl Runtime {
         }
         let expected_target: Fact = in_fact.clone().into();
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 expected_target.clone(),
                 "fn_range membership: a well-defined function application is in the function range"
                     .to_string(),
@@ -1218,7 +1258,7 @@ impl Runtime {
         fn_range: &FnRange,
         power_set: &PowerSet,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let Some(body) = self.get_fn_range_function_body(&fn_range.function) else {
             return Ok((UnknownGenericStmtResult::new()).into());
         };
@@ -1240,8 +1280,8 @@ impl Runtime {
                     if left.is_subset_eq(right)
             ))
         {
-            subset_result =
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            let proof =
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     subset_fact.clone().into(),
                     "structural subset".to_string(),
                     BuiltinRuleEvidence::Uncatalogued(
@@ -1250,13 +1290,18 @@ impl Runtime {
                     Vec::new(),
                 )
                 .into();
+            subset_result = self.complete_atomic_fact_proof_result(
+                &subset_fact,
+                proof,
+                builtin_state.verify_state(),
+            )?;
         }
         if !subset_result.is_success() {
             return Ok((UnknownGenericStmtResult::new()).into());
         }
 
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 "fn_range power_set membership: function range is contained in the codomain"
                     .to_string(),
@@ -1276,7 +1321,7 @@ impl Runtime {
         in_fact: &InFact,
         power_set: &PowerSet,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let subset_fact: AtomicFact = SubsetFact::new(
             in_fact.element.clone(),
             power_set.set.as_ref().clone(),
@@ -1295,8 +1340,8 @@ impl Runtime {
                     if left.is_subset_eq(right)
             ))
         {
-            subset_result =
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            let proof =
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     subset_fact.clone().into(),
                     "structural subset".to_string(),
                     BuiltinRuleEvidence::Uncatalogued(
@@ -1305,13 +1350,18 @@ impl Runtime {
                     Vec::new(),
                 )
                 .into();
+            subset_result = self.complete_atomic_fact_proof_result(
+                &subset_fact,
+                proof,
+                builtin_state.verify_state(),
+            )?;
         }
         if !subset_result.is_success() {
             return Ok((UnknownGenericStmtResult::new()).into());
         }
 
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 "power_set membership: a subset of the base set is an element of the power set"
                     .to_string(),
@@ -1331,7 +1381,7 @@ impl Runtime {
         in_fact: &InFact,
         general_cart: &GeneralCart,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let fn_set_fact: AtomicFact = InFact::new(
             in_fact.element.clone(),
             general_cart_member_fn_set(self, general_cart)?,
@@ -1354,7 +1404,7 @@ impl Runtime {
         }
 
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 "general_cart membership: function carrier and named pointwise choice property"
                     .to_string(),
@@ -1372,7 +1422,7 @@ impl Runtime {
         in_fact: &InFact,
         set_builder: &SetBuilder,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let mut step_results = Vec::with_capacity(set_builder.facts.len() + 1);
         let mut expected_premises = Vec::with_capacity(set_builder.facts.len() + 1);
 
@@ -1431,7 +1481,7 @@ impl Runtime {
 
         let target: Fact = in_fact.clone().into();
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 target.clone(),
                 "set builder membership: element is in the base set and satisfies all defining facts"
                     .to_string(),
@@ -1452,7 +1502,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let goal_key = in_fact.to_string();
         if !verify_state.begin_set_builder_membership_unfold(&goal_key) {
             return Ok(None);
@@ -1467,7 +1517,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         if let Obj::InstantiatedTemplateObj(template_obj) = &in_fact.set {
             self.instantiate_template_obj(template_obj, verify_state)?;
         }
@@ -1483,9 +1533,15 @@ impl Runtime {
             set_builder.clone().into(),
             in_fact.line_file.clone(),
         );
-        let unfolded_result = self.verify_in_fact_in_set_builder_by_defining_facts(
+        let unfolded_proof = self.verify_in_fact_in_set_builder_by_defining_facts(
             &unfolded_fact,
             &set_builder,
+            verify_state,
+        )?;
+        let unfolded_atomic: AtomicFact = unfolded_fact.into();
+        let unfolded_result = self.complete_atomic_fact_proof_result(
+            &unfolded_atomic,
+            unfolded_proof,
             verify_state,
         )?;
         if !unfolded_result.is_success() {
@@ -1493,7 +1549,7 @@ impl Runtime {
         }
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 "membership in a set-valued definition: unfold one function or template definition to a set builder".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::MaybeVerifyInFactInUnfoldedUserDefinedSetOnce),
@@ -1508,7 +1564,7 @@ impl Runtime {
         in_fact: &InFact,
         struct_obj: &StructObj,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(
             &Obj::StructObj(struct_obj.clone()),
             verify_state,
@@ -1540,14 +1596,15 @@ impl Runtime {
                 }
                 field_results.push(field_result);
             }
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
-                carrier_membership.into(),
+            let proof = SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                carrier_membership.clone().into(),
                 "dependent struct constructor: each literal tuple field has its instantiated carrier"
                     .to_string(),
                 BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactByStructObj01),
                 field_results,
             )
-            .into()
+            .into();
+            self.complete_atomic_fact_proof_result(&carrier_membership, proof, verify_state)?
         } else {
             self.verify_atomic_fact(&carrier_membership, verify_state)?
         };
@@ -1596,7 +1653,7 @@ impl Runtime {
             step_results.push(fact_result);
         }
 
-        Ok(SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+        Ok(SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
             in_fact.clone().into(),
             "struct membership: element is in the named structure carrier and satisfies struct equivalent facts".to_string(),
             BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactByStructObj02),
@@ -1612,7 +1669,7 @@ impl Runtime {
         in_fact: &InFact,
         finite_set_size: &FiniteSetSize,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let finite_fact =
             IsFiniteSetFact::new((*finite_set_size.set).clone(), in_fact.line_file.clone());
         let finite_result =
@@ -1636,7 +1693,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let source_set = match &in_fact.element {
             Obj::FiniteSetMax(extremum) => extremum.set.as_ref(),
             Obj::FiniteSetMin(extremum) => extremum.set.as_ref(),
@@ -1650,7 +1707,7 @@ impl Runtime {
                 _ => unreachable!(),
             };
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     rule_name.to_string(),
                     BuiltinRuleEvidence::Uncatalogued(
@@ -1681,7 +1738,7 @@ impl Runtime {
         };
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 "finite-set extremum: member of a standard numeric superset".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -1699,7 +1756,7 @@ impl Runtime {
         standard_set: &Obj,
         line_file: &LineFile,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
+    ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
         match source_set {
             Obj::ListSet(list_set) => {
                 let premises = list_set
@@ -1763,7 +1820,7 @@ impl Runtime {
         standard_set: &Obj,
         line_file: &LineFile,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
+    ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
         let Some(mut left_results) = self.verify_finite_set_extremum_source_in_standard_set(
             left,
             standard_set,
@@ -1790,9 +1847,10 @@ impl Runtime {
     // Example: `x $in A` plus `A $subset B`, `B $superset A`, or
     // `A $in power_set(B)` proves `x $in B`.
     pub(super) fn verify_in_fact_by_known_direct_superset(
-        &self,
+        &mut self,
         in_fact: &InFact,
-    ) -> Result<StmtResult, RuntimeError> {
+        verify_state: &VerifyState,
+    ) -> Result<ProveFactResult, RuntimeError> {
         let goal: AtomicFact = in_fact.clone().into();
         let goal_module_names = self.atomic_fact_referenced_module_names(&goal);
         let element_keys =
@@ -1855,11 +1913,11 @@ impl Runtime {
                 continue;
             };
             let membership_result =
-                self.stmt_result_for_indexed_fact(owner_atomic_fact, "known owner membership")?;
+                self.stmt_result_for_indexed_fact(owner_atomic_fact, "known owner membership", verify_state)?;
             let inclusion_result =
-                self.stmt_result_for_indexed_fact(inclusion_fact, "known direct set inclusion")?;
+                self.stmt_result_for_indexed_fact(inclusion_fact, "known direct set inclusion", verify_state)?;
             return Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "membership through a known direct set inclusion".to_string(),
                     BuiltinRuleEvidence::Uncatalogued(
@@ -1925,10 +1983,11 @@ impl Runtime {
     }
 
     fn stmt_result_for_indexed_fact(
-        &self,
+        &mut self,
         indexed_fact: AtomicFact,
         detail: &str,
-    ) -> Result<StmtResult, RuntimeError> {
+        verify_state: &VerifyState,
+    ) -> Result<VerifyFactResult, RuntimeError> {
         let module_names = self.atomic_fact_referenced_module_names(&indexed_fact);
         let fact: Fact = indexed_fact.into();
         let source_fact_id = self
@@ -1942,15 +2001,16 @@ impl Runtime {
                     vec![],
                 ))
             })?;
-        Ok(SuccessFactStmtResult::new_with_verified_by_known_fact(
+        let proof = SuccessProveFactResult::new_with_verified_by_known_fact(
             fact.clone(),
             SuccessFactProofResult::stored_fact_citation(
-                fact,
+                fact.clone(),
                 source_fact_id,
                 Some(detail.to_string()),
             ),
             Vec::new(),
         )
-        .into())
+        .into();
+        self.complete_fact_proof_result(&fact, proof, verify_state)
     }
 }

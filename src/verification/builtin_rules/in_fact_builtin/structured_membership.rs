@@ -10,14 +10,22 @@ impl Runtime {
         in_fact: &InFact,
         field_access: &ObjAsStructInstanceWithFieldAccess,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let definition_carrier =
             self.instantiated_struct_field_type_after_well_defined(field_access)?;
-        let carrier_equality = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
+        let carrier_equality_fact = EqualFact::new_from_refs(
             &definition_carrier,
             &in_fact.set,
             in_fact.line_file.clone(),
-        ));
+        );
+        let carrier_equality_proof =
+            self.verify_equal_fact_by_known_equality(&carrier_equality_fact);
+        let carrier_equality_atomic: AtomicFact = carrier_equality_fact.into();
+        let carrier_equality = self.complete_atomic_fact_proof_result(
+            &carrier_equality_atomic,
+            carrier_equality_proof,
+            builtin_state.verify_state(),
+        )?;
         let standard_widening = matches!(
             (&definition_carrier, &in_fact.set),
             (Obj::StandardSet(defined), Obj::StandardSet(target)) if defined.is_subset_eq(target)
@@ -47,7 +55,7 @@ impl Runtime {
             steps.push(carrier_equality);
         }
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 "definition-owned struct field has its instantiated defined carrier".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -64,7 +72,7 @@ impl Runtime {
         in_fact: &InFact,
         target_set_obj: &Obj,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let (tuple, index) = match &in_fact.element {
             Obj::Proj(projection) => {
                 let Obj::Tuple(tuple) = projection.set.as_ref() else {
@@ -107,14 +115,19 @@ impl Runtime {
                 &in_fact.line_file,
                 builtin_state,
             )? {
-                selected_result =
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                let proof =
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         selected_membership.clone().into(),
                         "selected literal tuple component has a real carrier".to_string(),
                         BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactLiteralTupleProjectionInSet01),
                         real_steps,
                     )
                     .into();
+                selected_result = self.complete_atomic_fact_proof_result(
+                    &selected_membership,
+                    proof,
+                    builtin_state.verify_state(),
+                )?;
             }
         }
         if !selected_result.is_success() {
@@ -122,7 +135,7 @@ impl Runtime {
         }
 
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 "literal tuple projection inherits the selected component carrier".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -142,7 +155,7 @@ impl Runtime {
         set_builder: &SetBuilder,
         power_set: &PowerSet,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let base_set = power_set.set.as_ref();
         let subset_fact: AtomicFact = SubsetFact::new(
             (*set_builder.param_set).clone(),
@@ -152,16 +165,21 @@ impl Runtime {
         .into();
         let verify_subset_result = match (&*set_builder.param_set, base_set) {
             (Obj::StandardSet(left), Obj::StandardSet(right)) if left.is_subset_eq(right) => {
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                let proof = SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     subset_fact.clone().into(),
                     "standard_set_subset".to_string(),
                     BuiltinRuleEvidence::StandardSetSubset,
                     Vec::new(),
                 )
-                .into()
+                .into();
+                self.complete_atomic_fact_proof_result(
+                    &subset_fact,
+                    proof,
+                    builtin_state.verify_state(),
+                )?
             }
             (left, right) if objs_equal_with_nested_binder_alpha_equivalence(left, right) => {
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                let proof = SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     subset_fact.clone().into(),
                     "subset reflexivity".to_string(),
                     BuiltinRuleEvidence::Uncatalogued(
@@ -169,7 +187,12 @@ impl Runtime {
                     ),
                     Vec::new(),
                 )
-                .into()
+                .into();
+                self.complete_atomic_fact_proof_result(
+                    &subset_fact,
+                    proof,
+                    builtin_state.verify_state(),
+                )?
             }
             _ => self.verify_atomic_fact_as_builtin_rule_premise(&subset_fact, builtin_state)?,
         };
@@ -177,10 +200,9 @@ impl Runtime {
             return Ok((UnknownGenericStmtResult::new()).into());
         }
         let mut infer_result = SuccessInferResult::new();
-        infer_result.new_infer_result_inside(verify_subset_result.infer_result());
         let stmt = in_fact.clone().into();
         infer_result.new_fact(&stmt);
-        Ok((SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
+        Ok((SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_and_steps(
             stmt,
             infer_result,
             "set_builder in power_set: param_set subset of base implies builder defines a subset of base"
@@ -197,7 +219,7 @@ impl Runtime {
         list_set: &ListSet,
         power_set: &PowerSet,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let base_set = power_set.set.as_ref();
         let mut infer_result = SuccessInferResult::new();
         let premises = list_set
@@ -215,13 +237,10 @@ impl Runtime {
         let Some(subgoals) = self.verify_builtin_rule_premises(&premises, builtin_state)? else {
             return Ok((UnknownGenericStmtResult::new()).into());
         };
-        for subgoal in &subgoals {
-            infer_result.new_infer_result_inside(subgoal.infer_result());
-        }
         let stmt = in_fact.clone().into();
         infer_result.new_fact(&stmt);
         Ok(
-            (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
+            (SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                 stmt,
                 infer_result,
                 "list_set in power_set: each element is in the base set".to_string(),
@@ -239,19 +258,25 @@ impl Runtime {
         in_fact: &InFact,
         list_set: &ListSet,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         // Check reflexive and already-known element equalities before invoking
         // the broader equality builtin search for list-set membership.
         for (selected_index, current_element_in_list_set) in list_set.list.iter().enumerate() {
-            let equal_fact_verify_result =
-                self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
-                    &in_fact.element,
-                    current_element_in_list_set.as_ref(),
-                    in_fact.line_file.clone(),
-                ));
+            let equality = EqualFact::new_from_refs(
+                &in_fact.element,
+                current_element_in_list_set.as_ref(),
+                in_fact.line_file.clone(),
+            );
+            let equality_proof = self.verify_equal_fact_by_known_equality(&equality);
+            let equality_atomic: AtomicFact = equality.into();
+            let equal_fact_verify_result = self.complete_atomic_fact_proof_result(
+                &equality_atomic,
+                equality_proof,
+                builtin_state.verify_state(),
+            )?;
             if equal_fact_verify_result.is_success() {
                 return Ok(
-                    (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    (SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         in_fact.clone().into(),
                         format!(
                             "{} equals one element in list_set {}",
@@ -298,7 +323,7 @@ impl Runtime {
             let premise_result = self.verify_builtin_rule_premise(&premise, builtin_state)?;
             if premise_result.is_success() {
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         in_fact.clone().into(),
                         "list-set membership from equality with one listed element".to_string(),
                         BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactByEqualToOneElementInListSet),
@@ -317,7 +342,7 @@ impl Runtime {
         not_in_fact: &NotInFact,
         list_set: &ListSet,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let premises = list_set
             .list
             .iter()
@@ -335,7 +360,7 @@ impl Runtime {
         };
 
         Ok(
-            (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            (SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 not_in_fact.clone().into(),
                 format!(
                     "{} is not equal to every element in list_set {}",
@@ -356,13 +381,13 @@ impl Runtime {
         element: &Obj,
         expected_fn_set: &FnSet,
         in_fact: &InFact,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let Some(stored_fn_set) = self.get_cloned_object_in_fn_set(element) else {
             return Ok((UnknownGenericStmtResult::new()).into());
         };
         if stored_fn_set.to_string() == expected_fn_set.to_string() {
             return Ok(
-                (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                (SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "fn membership: stored fn signature matches RHS".to_string(),
                     BuiltinRuleEvidence::Uncatalogued(
@@ -387,7 +412,7 @@ impl Runtime {
             self.fn_set_alpha_renamed_for_display_compare(&expected_fn_set.body, &shared_names)?;
         if stored_norm.to_string() == expected_norm.to_string() {
             return Ok(
-                (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                (SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "fn membership: stored fn signature matches RHS (alpha-renamed parameters)"
                         .to_string(),
@@ -412,7 +437,7 @@ impl Runtime {
         anon: &AnonymousFn,
         expected_fn_set: &FnSet,
         in_fact: &InFact,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let signature_from_anon = FnSet::new(
             anon.body.set_bound_parameters.clone(),
             anon.body.dom_facts.clone(),
@@ -420,7 +445,7 @@ impl Runtime {
         )?;
         if signature_from_anon.to_string() == expected_fn_set.to_string() {
             return Ok(
-                (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                (SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "anonymous function: signature (params, dom, co-domain) matches `fn` set"
                         .to_string(),
@@ -447,7 +472,7 @@ impl Runtime {
             self.fn_set_alpha_renamed_for_display_compare(&expected_fn_set.body, &shared_names)?;
         if a_norm.to_string() == e_norm.to_string() {
             return Ok(
-                (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                (SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "anonymous function: signature matches `fn` set (alpha-renamed parameters)"
                         .to_string(),
@@ -471,7 +496,7 @@ impl Runtime {
         expected_fn_set: &FnSet,
         in_fact: &InFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let signature_from_anon = FnSet::new(
             anon.body.set_bound_parameters.clone(),
             anon.body.dom_facts.clone(),
@@ -487,7 +512,7 @@ impl Runtime {
         )?;
         if signature_equality.is_success() {
             return Ok(
-                (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                (SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "anonymous function: signature matches `fn` set through propositionally equal parameter sets"
                         .to_string(),
@@ -506,7 +531,7 @@ impl Runtime {
         expected_fn_set: &FnSet,
         in_fact: &InFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         if let Some(result) = self.verify_in_fact_element_in_fn_set_by_pointwise_values(
             &anon.clone().into(),
             expected_fn_set,
@@ -542,7 +567,7 @@ impl Runtime {
         in_fact: &InFact,
         target_set_obj: &Obj,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let Obj::FnObj(fn_obj) = &in_fact.element else {
             return Ok((UnknownGenericStmtResult::new()).into());
         };
@@ -580,7 +605,7 @@ impl Runtime {
         };
 
         Ok(
-            (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            (SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 format!(
                     "finite sequence literal application is in {}",
@@ -602,7 +627,7 @@ impl Runtime {
         in_fact: &InFact,
         target_set_obj: &Obj,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let Obj::StandardSet(_) = target_set_obj else {
             return Ok((UnknownGenericStmtResult::new()).into());
         };
@@ -645,7 +670,7 @@ impl Runtime {
         };
 
         Ok(
-            (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            (SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 format!(
                     "cart projection list_set elements are all in {}",
@@ -664,7 +689,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let Obj::StandardSet(target_set) = &in_fact.set else {
             return Ok(UnknownGenericStmtResult::new().into());
         };
@@ -685,7 +710,7 @@ impl Runtime {
                 self.verify_atomic_fact_as_builtin_rule_premise(&source_membership, builtin_state)?;
             if source_result.is_success() {
                 return Ok(
-                    (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    (SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         in_fact.clone().into(),
                         format!(
                             "{} in {} implies in {} (standard subset relation)",
@@ -706,8 +731,8 @@ impl Runtime {
     pub(super) fn verify_in_fact_by_known_list_set_carrier(
         &mut self,
         in_fact: &InFact,
-        _builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+        builtin_state: &BuiltinRuleSearchState,
+    ) -> Result<ProveFactResult, RuntimeError> {
         let Obj::StandardSet(target_set) = &in_fact.set else {
             return Ok((UnknownGenericStmtResult::new()).into());
         };
@@ -721,8 +746,7 @@ impl Runtime {
                 in_fact.line_file.clone(),
             )
             .into();
-            let source_result =
-                self.verify_non_equational_atomic_fact_with_known_atomic_facts(&source_membership)?;
+            let source_result = self.verify_atomic_fact_as_builtin_rule_premise(&source_membership, builtin_state)?;
             if !source_result.is_success() {
                 continue;
             }
@@ -752,11 +776,15 @@ impl Runtime {
                     all_elements_match = false;
                     break;
                 }
-                steps.push(result);
+                steps.push(self.complete_atomic_fact_proof_result(
+                    &element_membership,
+                    result,
+                    builtin_state.verify_state(),
+                )?);
             }
             if all_elements_match {
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         in_fact.clone().into(),
                         "listed-set member inherits a carrier shared by every listed element"
                             .to_string(),
@@ -773,7 +801,7 @@ impl Runtime {
     pub(super) fn verify_not_in_z_for_resolved_numeric_div(
         &self,
         not_in_fact: &NotInFact,
-    ) -> Option<StmtResult> {
+    ) -> Option<ProveFactResult> {
         let (numerator, denominator) = self.resolved_numeric_div_operands(&not_in_fact.element)?;
         if !number_is_in_z(&numerator) || !number_is_in_z_star(&denominator) {
             return None;

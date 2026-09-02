@@ -8,7 +8,7 @@ pub use object_evaluation::{
     SuccessEvaluateBinaryObjResult, SuccessEvaluateLiteralResult, SuccessEvaluateObjByShapeResult,
     SuccessEvaluateObjResult, SuccessEvaluateObjStepResult, SuccessEvaluateUnaryObjResult,
 };
-pub use statement::result::{StmtResult, UnknownStmtResult};
+pub use statement::result::{ProveFactResult, StmtResult, UnknownStmtResult};
 pub use statement::success::{
     CaseDisjointnessOrientation, SuccessAxiomStmtResult, SuccessByAntisymmetricPropStmtResult,
     SuccessByAxiomOfChoiceStmtResult, SuccessByCasesStmtResult,
@@ -23,7 +23,8 @@ pub use statement::success::{
     SuccessDefStrategyStmtResult, SuccessDefStructStmtResult, SuccessDefTemplateStmtResult,
     SuccessDefThmStmtResult, SuccessDefinitionStmtResult, SuccessEvalStmtExecutionResult,
     SuccessEvalStmtResult, SuccessEvaluatedEvalStmtResult, SuccessExampleStmtResult,
-    SuccessFactStmtResult, SuccessHaveByPreimageStmtResult, SuccessHaveCartStmtResult,
+    FactStatementEvidence, SuccessFactStmtResult, SuccessHaveByPreimageStmtResult,
+    SuccessHaveCartStmtResult,
     SuccessHaveFiniteSeqStmtResult, SuccessHaveFnByForallExistUniqueStmtResult,
     SuccessHaveFnByInducStmtResult, SuccessHaveFnEqualCaseByCaseStmtResult,
     SuccessHaveFnEqualStmtResult, SuccessHaveMatrixStmtResult,
@@ -31,7 +32,8 @@ pub use statement::success::{
     SuccessHaveObjInNonemptySetStmtResult, SuccessHaveSeqStmtResult, SuccessHaveTupleStmtResult,
     SuccessLetObjStmtResult, SuccessObtainObjFromAtomicFactResult,
     SuccessObtainObjFromExistFactResult, SuccessObtainObjFromThmResult,
-    SuccessProofBlockStmtResult, SuccessReleaseThmStmtResult, SuccessSketchProofResult,
+    SuccessProofBlockStmtResult, SuccessProveFactResult, SuccessReleaseThmStmtResult,
+    SuccessSketchProofResult,
     SuccessSketchStmtResult, SuccessStmtCommonResult, SuccessStmtResult, SuccessStoreFactResult,
     SuccessTrustHaveStmtResult, SuccessTrustStmtResult, SuccessTryProofResult,
     SuccessTryStmtResult, SuccessUnsafeStmtResult, SuccessVerifyAndFactResult,
@@ -42,7 +44,8 @@ pub use statement::success::{
     SuccessVerifyDefPropLocalEnvResult, SuccessVerifyDefStructDomainResult,
     SuccessVerifyDefStructFieldDefinitionResult, SuccessVerifyDefStructFieldScopeResult,
     SuccessVerifyDefStructFieldTypeResult, SuccessVerifyDefStructLocalEnvResult,
-    SuccessVerifyExistFactResult, SuccessVerifyFactResult, SuccessVerifyFactWellDefinedResult,
+    SuccessVerifyExistFactResult, SuccessFactProofNode, UnknownVerifyFactResult,
+    VerifiedFactResult, VerifyFactResult, WellDefinedFactResult,
     SuccessVerifyForallFactResult, SuccessVerifyForallFactWithIffResult,
     SuccessVerifyHaveFnByInducCaseBodyResult, SuccessVerifyHaveFnByInducCaseListResult,
     SuccessVerifyHaveFnByInducCaseResult, SuccessVerifyHaveFnByInducDomainFactResult,
@@ -51,7 +54,7 @@ pub use statement::success::{
     SuccessVerifyHaveFnByInducParametersAndDomainResult,
     SuccessVerifyHaveFnByInducRecursiveFunctionResult, SuccessVerifyHaveFnByInducResult,
     SuccessVerifyHaveFnByInducWellDefinednessLocalEnvResult, SuccessVerifyNotForallFactResult,
-    SuccessVerifyOrFactResult, SuccessVerifyWitnessNonemptySetResult,
+    SuccessVerifyOrFactResult, SuccessVerifyWitnessNonemptySetResult, TrustedFactResult,
     SuccessWitnessAtomicFactResult, SuccessWitnessExistFactResult, SuccessWitnessNonemptySetResult,
     SuccessWitnessStmtResult, TryStmtExecutionResult,
 };
@@ -88,7 +91,8 @@ pub use verification::builtin_evidence::{
 pub use verification::success::{
     BuiltinTheoremProvenance, BuiltinTheoremRequirementRole,
     CheckedFunctionDefinitionReductionEvidence, DefinitionReductionVerificationEvidence,
-    EqualityTransportEvidence, EqualityTransportStep, FactTransformationEvidence,
+    EqualityTransportEvidence, EqualityTransportStep, ExistentialEliminationSourceResult,
+    FactTransformationEvidence,
     FactTransformationRule, FactTransformationStep, KnownForallInstantiationItem,
     KnownForallRequirementKind, ObjectDefinitionItem, SuccessBuiltinFactProofEvidenceResult,
     SuccessBuiltinFactProofResult, SuccessCheckedFunctionDefinitionReductionFactProofResult,

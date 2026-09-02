@@ -5,13 +5,8 @@ fn completed_finite_set_induc_case_results(
     proof_steps: &mut Vec<StmtResult>,
     conclusions: &mut Vec<SuccessVerifyByInducConclusionResult>,
 ) -> Vec<StmtResult> {
-    let mut completed = std::mem::take(proof_steps);
-    completed.extend(
-        std::mem::take(conclusions)
-            .into_iter()
-            .map(|conclusion| *conclusion.check),
-    );
-    completed
+    let _ = std::mem::take(conclusions);
+    std::mem::take(proof_steps)
 }
 
 struct SuccessExecFiniteSetInducCaseContextResult {
@@ -133,7 +128,7 @@ impl Runtime {
                             ),
                         )
                     })?;
-                rt.attach_known_fact_ids_to_stmt_result(&mut result)?;
+                rt.attach_known_fact_ids_to_verify_fact_result(&mut result)?;
                 conclusions.push(SuccessVerifyByInducConclusionResult {
                     goal: base_fact,
                     check: Box::new(result),
@@ -183,7 +178,7 @@ impl Runtime {
                             ),
                         )
                     })?;
-                rt.attach_known_fact_ids_to_stmt_result(&mut result)?;
+                rt.attach_known_fact_ids_to_verify_fact_result(&mut result)?;
                 conclusions.push(SuccessVerifyByInducConclusionResult {
                     goal: extension_fact,
                     check: Box::new(result),

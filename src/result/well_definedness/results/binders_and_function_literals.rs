@@ -5,14 +5,14 @@ use crate::prelude::*;
 #[derive(Debug)]
 pub struct SuccessVerifySetBuilderConditionResult {
     pub condition_index: usize,
-    pub well_definedness: Box<SuccessVerifyFactWellDefinedResult>,
+    pub well_definedness: Box<WellDefinedFactResult>,
     pub store: SuccessStoreFactResult,
 }
 
 impl SuccessVerifySetBuilderConditionResult {
     pub fn new(
         condition_index: usize,
-        well_definedness: SuccessVerifyFactWellDefinedResult,
+        well_definedness: WellDefinedFactResult,
         store: SuccessStoreFactResult,
     ) -> Self {
         Self {

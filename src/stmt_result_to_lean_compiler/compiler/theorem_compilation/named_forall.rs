@@ -32,8 +32,8 @@ impl StmtResultToLeanCompiler {
         if !verification.proof_scope_assumption_components.is_empty() {
             return Ok(false);
         }
-        let Some(SuccessVerifyFactWellDefinedProofResult::ForallFact(well_definedness)) =
-            verification.well_definedness.recursive.as_deref()
+        let SuccessVerifyFactWellDefinedProofResult::ForallFact(well_definedness) =
+            verification.well_definedness.proof.as_ref()
         else {
             return Err("named forall Result has no recursive forall well-definedness".into());
         };
@@ -420,16 +420,9 @@ impl StmtResultToLeanCompiler {
                 }
             }
 
-            let recursive_well_definedness = verification
-                .well_definedness
-                .recursive
-                .as_deref()
-                .ok_or_else(|| {
-                    "named forall Result has no recursive well-definedness root".to_string()
-                })?;
             let compiled_well_definedness = self.compile_precollected_well_definedness_context(
                 theorem_well_definedness.clone(),
-                &[recursive_well_definedness],
+                &[verification.well_definedness.proof.as_ref()],
             )?;
             self.environment_stack.well_definedness = Some(compiled_well_definedness);
 
@@ -596,18 +589,11 @@ impl StmtResultToLeanCompiler {
                 .enumerate()
             {
                 let conclusion = conclusion
-                    .factual_success()
+                    .verified()
                     .ok_or_else(|| "named forall conclusion is not factual".to_string())?;
                 let expected_conclusion = expected_conclusion.clone().to_fact();
                 if conclusion.fact().to_string() != expected_conclusion.to_string() {
                     return Err("named forall conclusion changed its target".into());
-                }
-                if !conclusion.store.infers.is_empty() {
-                    validate_flattened_inferred_fact_ids_are_visible(
-                        &conclusion.store.infers,
-                        &self.environment_stack,
-                        &format!("named forall conclusion {conclusion_index}"),
-                    )?;
                 }
                 let Some(conclusion_proof) =
                     self.construct_lean_proof_from_direct_fact_result(conclusion)?

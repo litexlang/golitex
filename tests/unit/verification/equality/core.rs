@@ -24,7 +24,7 @@ fn zero_premise_structural_equality_still_requires_known_equal_leaves() {
     let equal_fact = EqualFact::new(left, right, default_line_file());
 
     assert!(runtime
-        .verify_equal_fact_with_zero_premise_verification(&equal_fact)
+        .verify_equal_fact_with_zero_premise_verification(&equal_fact, &VerifyState::initial())
         .expect("zero-premise equality boundary must not error")
         .is_unknown());
 }
@@ -49,12 +49,12 @@ fn structural_equality_runs_only_from_the_outer_round() {
     assert!(runtime
         .verify_equal_fact(
             &equal_fact,
-            &VerifyState::after_well_definedness().with_next_round()
+            &VerifyState::initial().with_next_round()
         )
         .expect("later-round equality verification")
         .is_unknown());
     assert!(runtime
-        .verify_equal_fact(&equal_fact, &VerifyState::after_well_definedness())
+        .verify_equal_fact(&equal_fact, &VerifyState::initial())
         .expect("outer-round equality verification")
         .is_success());
 }
@@ -75,7 +75,7 @@ fn checked_definition_reduction_has_no_candidate_graph_or_ambient_mode() {
 
     assert!(reduction_impl
         .contains("equal_fact_sides_are_equal_by_terminating_reduction_and_congruence"));
-    assert!(source.contains("!verify_state.well_definedness_verified"));
+    assert!(!source.contains("well_definedness_verified"));
     let obsolete_depth = ["known_equality_candidate_", "replay_depth"].concat();
     let obsolete_collector = ["collect_known_equality_", "pairs_from_envs"].concat();
     let obsolete_pair_attempt = ["try_verify_one_equality_", "representative_pair"].concat();

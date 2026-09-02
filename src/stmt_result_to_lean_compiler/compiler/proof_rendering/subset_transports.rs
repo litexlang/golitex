@@ -7,13 +7,10 @@ impl StmtResultToLeanCompiler {
     /// transport. Non-subset facts intentionally have no effect.
     pub(in super::super) fn install_result_owned_subset_transport(
         &mut self,
-        result: &SuccessFactStmtResult,
+        result: &VerifiedFactResult,
         proof_expression: &str,
     ) -> Result<(), String> {
         let fact = result.fact();
-        if result.store.fact.to_string() != fact.to_string() {
-            return Err("subset transport changed between verification and store".into());
-        }
         install_subset_transport_from_fact(&fact, proof_expression, &mut self.environment_stack)
     }
 }

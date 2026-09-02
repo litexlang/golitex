@@ -36,7 +36,9 @@ impl FactGraphBuilder {
         if let Some(success) = success.fact() {
             self.add_fact_node(&success.fact(), "fact", None);
             self.add_infer_nodes(&success.infers);
-            self.collect_verified_by_nodes(success.proof());
+            if let Some(proof) = success.proof() {
+                self.collect_verified_by_nodes(proof);
+            }
             return;
         }
 
@@ -91,7 +93,18 @@ impl FactGraphBuilder {
             self.add_assumption_nodes(&verification.domain.assumption_infers);
         }
         success.visit_child_results(&mut |child| self.collect_result_nodes(child));
+        success.visit_fact_verification_children(&mut |child| {
+            self.collect_verify_result_nodes(child)
+        });
         success.visit_success_child_results(&mut |child| self.collect_success_nodes(child));
+    }
+
+    pub(super) fn collect_verify_result_nodes(&mut self, result: &VerifyFactResult) {
+        let fact = result.fact();
+        self.add_fact_node(&fact, "verification", None);
+        if let Some(verified) = result.verified() {
+            self.collect_verified_by_nodes(verified.proof());
+        }
     }
 
     pub(super) fn collect_verified_by_nodes(&mut self, verified_by: &SuccessFactProofResult) {
@@ -99,7 +112,7 @@ impl FactGraphBuilder {
             SuccessFactProofResult::BuiltinRule(result)
             | SuccessFactProofResult::BuiltinStrategy(result) => {
                 for subgoal in &result.subgoals {
-                    self.collect_result_nodes(subgoal);
+                    self.collect_verify_result_nodes(subgoal);
                 }
             }
             SuccessFactProofResult::StoredFactCitation(result) => {
@@ -114,7 +127,7 @@ impl FactGraphBuilder {
             SuccessFactProofResult::DefinitionReduction(result) => {
                 self.add_cited_stmt_node(&result.definition.clone().into());
                 for check in result.verification.clause_checks.iter() {
-                    self.collect_result_nodes(check);
+                    self.collect_verify_result_nodes(check);
                 }
             }
             SuccessFactProofResult::CheckedFunctionDefinitionReduction(result) => {
@@ -128,13 +141,13 @@ impl FactGraphBuilder {
                     self.collect_verified_by_nodes(primary.proof());
                 }
                 for step in result.steps.iter() {
-                    self.collect_result_nodes(step);
+                    self.collect_verify_result_nodes(step);
                 }
             }
             SuccessFactProofResult::ForallProof(result) => {
                 self.add_assumption_nodes(&result.assumption_infers);
                 for proved in &result.proves {
-                    self.collect_result_nodes(proved.result.as_ref());
+                    self.collect_verify_result_nodes(proved.result.as_ref());
                 }
             }
             SuccessFactProofResult::Transform(result) => {
@@ -182,8 +195,8 @@ impl FactGraphBuilder {
         }
     }
 
-    pub(super) fn add_requirement_source_nodes(&mut self, result: &StmtResult) {
-        let _ = self.dependency_source_ids_from_result(result);
+    pub(super) fn add_requirement_source_nodes(&mut self, result: &VerifyFactResult) {
+        let _ = self.dependency_source_ids_from_verify_result(result);
     }
 
     pub(super) fn add_theorem_nodes(&mut self, stmt: &DefThmStmt, full_stmt: &Stmt) {

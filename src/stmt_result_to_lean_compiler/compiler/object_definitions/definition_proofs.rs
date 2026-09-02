@@ -51,28 +51,23 @@ impl StmtResultToLeanCompiler {
                 })?;
         let mut combined_well_definedness = context.well_definedness.clone().unwrap_or_default();
         if let Some(target_well_definedness) = &verification.target_well_definedness {
-            if let Some(recursive) = target_well_definedness.recursive.as_deref() {
-                let mut target_context =
-                    StmtResultWellDefinednessToLeanCompilationContext::default();
-                collect_well_definedness_to_lean_context_from_fact_result(
-                    recursive,
-                    &mut target_context,
-                )?;
-                combined_well_definedness.merge_from(&target_context)?;
-            }
+            let mut target_context =
+                StmtResultWellDefinednessToLeanCompilationContext::default();
+            collect_well_definedness_to_lean_context_from_fact_result(
+                target_well_definedness.proof.as_ref(),
+                &mut target_context,
+            )?;
+            combined_well_definedness.merge_from(&target_context)?;
         }
         if let Some(argument_verification) = verification.argument_verification.as_deref() {
             let mut argument_well_definedness =
                 StmtResultWellDefinednessToLeanCompilationContext::default();
             for check in &argument_verification.checks {
-                let Some(check) = check.factual_success() else {
-                    continue;
-                };
-                let Some(recursive) = check.well_definedness.recursive.as_deref() else {
+                let Some(check) = check.verified() else {
                     continue;
                 };
                 collect_well_definedness_to_lean_context_from_fact_result(
-                    recursive,
+                    check.checked.proof.as_ref(),
                     &mut argument_well_definedness,
                 )?;
             }
@@ -133,24 +128,6 @@ impl StmtResultToLeanCompiler {
         &mut self,
         result: &SuccessByDefStmtResult,
     ) -> Result<bool, String> {
-        if let Some(verification) = &result.verification {
-            for (clause_index, check) in verification.clause_checks.iter().enumerate() {
-                let check = check.factual_success().ok_or_else(|| {
-                    format!("by-definition clause check {clause_index} is not factual")
-                })?;
-                if matches!(check.proof(), SuccessFactProofResult::ForallProof(_)) {
-                    self.install_fact_anonymous_function_occurrence_aliases(
-                        &check.fact(),
-                        &format!("by-definition forall clause {clause_index} prerequisite"),
-                    )?;
-                    if !self.compile_direct_forall_fact_result(check)? {
-                        return Err(format!(
-                            "by-definition forall clause {clause_index} has no binder compiler"
-                        ));
-                    }
-                }
-            }
-        }
         let Some(proof) = self.construct_lean_proof_from_by_definition_stmt_result(result)? else {
             return Ok(false);
         };
@@ -297,21 +274,22 @@ impl StmtResultToLeanCompiler {
         let mut context = StmtResultWellDefinednessToLeanCompilationContext::default();
         let mut roots = Vec::new();
         if let Some(target_well_definedness) = &verification.target_well_definedness {
-            if let Some(recursive) = target_well_definedness.recursive.as_deref() {
-                collect_well_definedness_to_lean_context_from_fact_result(recursive, &mut context)?;
-                roots.push(recursive);
-            }
+            collect_well_definedness_to_lean_context_from_fact_result(
+                target_well_definedness.proof.as_ref(),
+                &mut context,
+            )?;
+            roots.push(target_well_definedness.proof.as_ref());
         }
         if let Some(arguments) = verification.argument_verification.as_deref() {
             for check in &arguments.checks {
-                let Some(check) = check.factual_success() else {
+                let Some(check) = check.verified() else {
                     continue;
                 };
-                let Some(recursive) = check.well_definedness.recursive.as_deref() else {
-                    continue;
-                };
-                collect_well_definedness_to_lean_context_from_fact_result(recursive, &mut context)?;
-                roots.push(recursive);
+                collect_well_definedness_to_lean_context_from_fact_result(
+                    check.checked.proof.as_ref(),
+                    &mut context,
+                )?;
+                roots.push(check.checked.proof.as_ref());
             }
         }
         if roots.is_empty() {
@@ -403,7 +381,7 @@ impl StmtResultToLeanCompiler {
         self.install_fact_anonymous_function_occurrence_aliases(&target, "by-definition target")?;
         for (component_index, check) in argument_verification.checks.iter().enumerate() {
             let check = check
-                .factual_success()
+                .verified()
                 .ok_or_else(|| "by-definition parameter child is not factual".to_string())?;
             self.install_fact_anonymous_function_occurrence_aliases(
                 &check.fact(),
@@ -470,47 +448,6 @@ impl StmtResultToLeanCompiler {
             }
         }
 
-        // Definition instantiation renders every clause with the exact
-        // numeric representatives selected by its parameter-check Results.
-        // Make those frozen FactIds visible before constructing the
-        // instantiated component types; otherwise a compound argument such
-        // as `c * a` has no certificate from which to select its real
-        // representative.
-        for (component_index, check) in argument_verification.checks.iter().enumerate() {
-            let check = check
-                .factual_success()
-                .ok_or_else(|| "by-definition parameter child is not factual".to_string())?;
-            let fact_id = check.store.fact_id.ok_or_else(|| {
-                format!("by-definition parameter check {component_index} has no FactId")
-            })?;
-            if self
-                .environment_stack
-                .fact_propositions
-                .contains_key(&fact_id)
-            {
-                continue;
-            }
-            let compiled = self
-                .construct_direct_fact_proof_with_result_owned_well_definedness(check)
-                .map_err(|error| {
-                    format!(
-                        "by-definition parameter check {component_index} proof replay failed (recursive WD: {}): {error}",
-                        check.well_definedness.recursive.is_some()
-                    )
-                })?
-                .ok_or_else(|| {
-                    format!(
-                        "by-definition parameter check {component_index} has no direct proof consumer"
-                    )
-                })?;
-            self.environment_stack
-                .fact_names
-                .insert(fact_id, compiled.proof_expression);
-            self.environment_stack
-                .fact_propositions
-                .insert(fact_id, compiled.fact);
-        }
-
         let expected_components =
             instantiated_predicate_components(&target, &binding, &self.environment_stack)?;
         if expected_components.len() != binding.requirement_count + binding.clause_count {
@@ -522,7 +459,7 @@ impl StmtResultToLeanCompiler {
             .collect_param_bindings_with_types();
         for (component_index, check) in argument_verification.checks.iter().enumerate() {
             let check = check
-                .factual_success()
+                .verified()
                 .ok_or_else(|| "by-definition parameter child is not factual".to_string())?;
             validate_scoped_fact_check_result(
                 check,
@@ -616,7 +553,7 @@ impl StmtResultToLeanCompiler {
             };
             components.push(CompiledByDefinitionComponentProofBody {
                 fact: check.fact(),
-                retained_fact_id: check.store.fact_id,
+                retained_fact_id: None,
                 proposition: expected_components[component_index].clone(),
                 proof_expression: proof,
             });
@@ -628,7 +565,7 @@ impl StmtResultToLeanCompiler {
             .enumerate()
         {
             let check = check
-                .factual_success()
+                .verified()
                 .ok_or_else(|| "by-definition clause child is not factual".to_string())?;
             if check.fact().to_string() != retained_clause.to_string() {
                 return Err(format!(
@@ -698,12 +635,7 @@ impl StmtResultToLeanCompiler {
                     &mut clause_proof_environment,
                 )?;
             }
-            let proof = if matches!(check.proof(), SuccessFactProofResult::ForallProof(_)) {
-                let fact_id = check.store.fact_id.ok_or_else(|| {
-                    format!("by-definition forall clause {clause_index} has no frozen FactId")
-                })?;
-                resolve_fact_citation(&fact_id, retained_clause, &clause_proof_environment)?
-            } else {
+            let proof = {
                 let mut nested_compiler =
                     StmtResultToLeanCompiler::new("nested by-definition clause proof");
                 nested_compiler.environment_stack = clause_proof_environment;
@@ -894,7 +826,7 @@ impl StmtResultToLeanCompiler {
             };
             components.push(CompiledByDefinitionComponentProofBody {
                 fact: retained_clause.clone(),
-                retained_fact_id: check.store.fact_id,
+                retained_fact_id: None,
                 proposition: expected_components[component_index].clone(),
                 proof_expression: proof,
             });

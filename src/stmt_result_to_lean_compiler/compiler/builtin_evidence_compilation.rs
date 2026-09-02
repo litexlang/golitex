@@ -23,7 +23,7 @@ impl StmtResultToLeanCompiler {
     pub(super) fn construct_lean_direct_superset_membership_from_result(
         &mut self,
         target: &Fact,
-        subgoals: &[StmtResult],
+        subgoals: &[VerifyFactResult],
     ) -> Result<Option<String>, String> {
         let [membership_result, inclusion_result] = subgoals else {
             return Err(
@@ -32,24 +32,11 @@ impl StmtResultToLeanCompiler {
             );
         };
         let membership_result = membership_result
-            .factual_success()
+            .verified()
             .ok_or_else(|| "direct-superset membership child is not factual".to_string())?;
         let inclusion_result = inclusion_result
-            .factual_success()
+            .verified()
             .ok_or_else(|| "direct-superset inclusion child is not factual".to_string())?;
-        for (name, result) in [
-            ("membership", membership_result),
-            ("inclusion", inclusion_result),
-        ] {
-            if result.store.fact.to_string() != result.fact().to_string()
-                || !result.store.infers.is_empty()
-            {
-                return Err(format!(
-                    "direct-superset {name} child changed its stored fact or published effects"
-                ));
-            }
-        }
-
         let (target_element, target_set) = membership_parts(target)?;
         let membership_fact = membership_result.fact();
         let inclusion_fact = inclusion_result.fact();
@@ -91,7 +78,7 @@ impl StmtResultToLeanCompiler {
         &self,
         target: &Fact,
         evidence: &RealIntervalSubsetRealBuiltinRuleEvidence,
-        subgoals: &[StmtResult],
+        subgoals: &[VerifyFactResult],
     ) -> Result<String, String> {
         if evidence.expected_target.to_string() != target.to_string() {
             return Err("real-interval subset evidence changed its target".into());
@@ -123,7 +110,7 @@ impl StmtResultToLeanCompiler {
         &self,
         target: &Fact,
         evidence: &FunctionApplicationInRangeBuiltinRuleEvidence,
-        subgoals: &[StmtResult],
+        subgoals: &[VerifyFactResult],
     ) -> Result<String, String> {
         if evidence.expected_target.to_string() != target.to_string() {
             return Err("function-range membership evidence changed its target".into());
@@ -169,7 +156,7 @@ impl StmtResultToLeanCompiler {
         &mut self,
         target: &Fact,
         evidence: &FunctionRangeSubsetBuiltinRuleEvidence,
-        subgoals: &[StmtResult],
+        subgoals: &[VerifyFactResult],
     ) -> Result<Option<String>, String> {
         if evidence.expected_target.to_string() != target.to_string() {
             return Err("function-range subset evidence changed its target".into());
@@ -178,13 +165,10 @@ impl StmtResultToLeanCompiler {
             return Err("function-range subset requires one codomain-subset child Result".into());
         };
         let codomain_subset_result = codomain_subset_result
-            .factual_success()
+            .verified()
             .ok_or_else(|| "function-range subset child is not factual".to_string())?;
         if codomain_subset_result.fact().to_string()
             != evidence.expected_codomain_subset.to_string()
-            || codomain_subset_result.store.fact.to_string()
-                != evidence.expected_codomain_subset.to_string()
-            || !codomain_subset_result.store.infers.is_empty()
         {
             return Err(
                 "function-range subset child changed its retained codomain inclusion".into(),
@@ -228,18 +212,14 @@ impl StmtResultToLeanCompiler {
         &mut self,
         target: &Fact,
         evidence: &ListSetMembershipBuiltinRuleEvidence,
-        subgoals: &[StmtResult],
+        subgoals: &[VerifyFactResult],
     ) -> Result<Option<String>, String> {
         let [equality_result] = subgoals else {
             return Err("list-set membership requires exactly one equality child Result".into());
         };
         let equality_result = equality_result
-            .factual_success()
+            .verified()
             .ok_or_else(|| "list-set membership child Result is not factual".to_string())?;
-        if !equality_result.store.infers.is_empty() {
-            return Err("list-set membership equality child published effects".into());
-        }
-
         let (element, set) = membership_parts(target)?;
         let Obj::ListSet(list_set) = set else {
             return Err("list-set membership evidence targets another set constructor".into());
@@ -249,9 +229,6 @@ impl StmtResultToLeanCompiler {
             .get(evidence.selected_index)
             .ok_or_else(|| "list-set membership evidence has an out-of-range index".to_string())?;
         let equality_fact = equality_result.fact();
-        if equality_result.store.fact.to_string() != equality_fact.to_string() {
-            return Err("list-set membership equality child changed its stored fact".into());
-        }
         let (equality_left, equality_right) = equality_parts(&equality_fact)?;
         if obj_equality_key(equality_left) != obj_equality_key(element)
             || obj_equality_key(equality_right) != obj_equality_key(selected.as_ref())
@@ -278,7 +255,7 @@ impl StmtResultToLeanCompiler {
         &mut self,
         target: &Fact,
         evidence: &RefinedNumericMembershipBuiltinRuleEvidence,
-        subgoals: &[StmtResult],
+        subgoals: &[VerifyFactResult],
     ) -> Result<Option<String>, String> {
         if evidence.expected_target.to_string() != target.to_string() {
             return Err("refined numeric membership evidence changed its target".into());
@@ -293,21 +270,18 @@ impl StmtResultToLeanCompiler {
             return Err("refined numeric membership evidence changed its premise arity".into());
         };
         let base_result = base_result
-            .factual_success()
+            .verified()
             .ok_or_else(|| "refined numeric base child is not factual".to_string())?;
         let nonzero_result = nonzero_result
-            .factual_success()
+            .verified()
             .ok_or_else(|| "refined numeric nonzero child is not factual".to_string())?;
         for (name, result, expected) in [
             ("base", base_result, expected_base),
             ("nonzero", nonzero_result, expected_nonzero),
         ] {
-            if result.fact().to_string() != expected.to_string()
-                || result.store.fact.to_string() != expected.to_string()
-                || !result.store.infers.is_empty()
-            {
+            if result.fact().to_string() != expected.to_string() {
                 return Err(format!(
-                    "refined numeric {name} child changed its fact or published effects"
+                    "refined numeric {name} child changed its fact"
                 ));
             }
         }
@@ -493,21 +467,46 @@ impl StmtResultToLeanCompiler {
         Ok(format!("Litex.Rules.{theorem}"))
     }
 
+    /// `Wrap`: compile the sole reversed equality child and apply symmetry.
+    pub(super) fn construct_lean_equality_symmetry_from_result(
+        &mut self,
+        target: &Fact,
+        subgoals: &[VerifyFactResult],
+    ) -> Result<Option<String>, String> {
+        let [source_result] = subgoals else {
+            return Err("equality symmetry requires exactly one child Result".into());
+        };
+        let source_result = source_result
+            .verified()
+            .ok_or_else(|| "equality symmetry child is not factual".to_string())?;
+        let source = source_result.fact();
+        let (target_left, target_right) = equality_parts(target)?;
+        let (source_left, source_right) = equality_parts(&source)?;
+        if obj_equality_key(source_left) != obj_equality_key(target_right)
+            || obj_equality_key(source_right) != obj_equality_key(target_left)
+        {
+            return Err("equality symmetry child does not reverse the target objects".into());
+        }
+        let Some(source_proof) =
+            self.construct_lean_proof_from_direct_fact_result(source_result)?
+        else {
+            return Ok(None);
+        };
+        Ok(Some(format!("Litex.Same.symm ({source_proof})")))
+    }
+
     /// `Wrap`: compile the sole reversed disequality child and apply symmetry.
     pub(super) fn construct_lean_not_equal_symmetry_from_result(
         &mut self,
         target: &Fact,
-        subgoals: &[StmtResult],
+        subgoals: &[VerifyFactResult],
     ) -> Result<Option<String>, String> {
         let [source_result] = subgoals else {
             return Err("not-equality symmetry requires exactly one child Result".into());
         };
         let source_result = source_result
-            .factual_success()
+            .verified()
             .ok_or_else(|| "not-equality symmetry child is not factual".to_string())?;
-        if !source_result.store.infers.is_empty() {
-            return Err("not-equality symmetry child published effects".into());
-        }
         let source = source_result.fact();
         let (target_left, target_right) = not_equal_parts(target)?;
         let (source_left, source_right) = not_equal_parts(&source)?;
@@ -722,7 +721,7 @@ impl StmtResultToLeanCompiler {
         &mut self,
         target: &Fact,
         rule: IntegerMembershipClosureBuiltinRule,
-        subgoals: &[StmtResult],
+        subgoals: &[VerifyFactResult],
     ) -> Result<Option<String>, String> {
         let (target_element, target_set) = membership_parts(target)?;
         if !matches!(target_set, Obj::StandardSet(StandardSet::Z)) {
@@ -765,7 +764,7 @@ impl StmtResultToLeanCompiler {
     pub(super) fn construct_lean_integer_natural_power_membership_from_result(
         &mut self,
         target: &Fact,
-        subgoals: &[StmtResult],
+        subgoals: &[VerifyFactResult],
     ) -> Result<Option<String>, String> {
         let (target_element, target_set) = membership_parts(target)?;
         if !matches!(target_set, Obj::StandardSet(StandardSet::Z)) {
@@ -778,12 +777,8 @@ impl StmtResultToLeanCompiler {
             return Err("integer natural-power requires one conjunction child Result".into());
         };
         let premise_result = conjunction_result
-            .factual_success()
+            .verified()
             .ok_or_else(|| "integer natural-power conjunction child is not factual".to_string())?;
-        if !premise_result.store.infers.is_empty() {
-            return Err("integer natural-power premise child published effects".into());
-        }
-
         let validate_branch = |branch: &Fact,
                                expected_base_set: StandardSet,
                                branch_index: usize|
@@ -862,7 +857,7 @@ impl StmtResultToLeanCompiler {
     pub(super) fn construct_lean_integer_range_sum_membership_from_result(
         &self,
         target: &Fact,
-        subgoals: &[StmtResult],
+        subgoals: &[VerifyFactResult],
     ) -> Result<Option<String>, String> {
         if !subgoals.is_empty() {
             return Err("integer-range sum membership retained child Results".into());
@@ -914,7 +909,7 @@ impl StmtResultToLeanCompiler {
     pub(super) fn construct_lean_integer_remainder_membership_from_result(
         &mut self,
         target: &Fact,
-        subgoals: &[StmtResult],
+        subgoals: &[VerifyFactResult],
     ) -> Result<Option<String>, String> {
         let (target_element, target_set) = membership_parts(target)?;
         if !matches!(target_set, Obj::StandardSet(StandardSet::Z)) {
@@ -927,11 +922,8 @@ impl StmtResultToLeanCompiler {
             return Err("integer remainder requires one conjunction child Result".into());
         };
         let conjunction_result = conjunction_result
-            .factual_success()
+            .verified()
             .ok_or_else(|| "integer remainder conjunction child is not factual".to_string())?;
-        if !conjunction_result.store.infers.is_empty() {
-            return Err("integer remainder conjunction child published effects".into());
-        }
         let components = conjunction_components(&conjunction_result.fact())?;
         let [left_component, right_component] = components.as_slice() else {
             return Err("integer remainder conjunction changed its component arity".into());
@@ -976,7 +968,7 @@ impl StmtResultToLeanCompiler {
         &mut self,
         target: &Fact,
         rule: NaturalMembershipClosureBuiltinRule,
-        subgoals: &[StmtResult],
+        subgoals: &[VerifyFactResult],
     ) -> Result<Option<String>, String> {
         let (target_element, target_set) = membership_parts(target)?;
         if !matches!(target_set, Obj::StandardSet(StandardSet::N)) {
@@ -1005,11 +997,8 @@ impl StmtResultToLeanCompiler {
             .enumerate()
         {
             let child = child
-                .factual_success()
+                .verified()
                 .ok_or_else(|| format!("natural closure child {index} is not factual"))?;
-            if !child.store.infers.is_empty() {
-                return Err(format!("natural closure child {index} published effects"));
-            }
             let child_fact = child.fact();
             let (element, set) = membership_parts(&child_fact)?;
             if !matches!(set, Obj::StandardSet(StandardSet::N))
@@ -1041,7 +1030,7 @@ impl StmtResultToLeanCompiler {
         &mut self,
         target: &Fact,
         rule: PositiveNaturalMembershipClosureBuiltinRule,
-        subgoals: &[StmtResult],
+        subgoals: &[VerifyFactResult],
     ) -> Result<Option<String>, String> {
         let (target_element, target_set) = membership_parts(target)?;
         if !matches!(target_set, Obj::StandardSet(StandardSet::NPos)) {
@@ -1098,13 +1087,8 @@ impl StmtResultToLeanCompiler {
             .enumerate()
         {
             let child = child
-                .factual_success()
+                .verified()
                 .ok_or_else(|| format!("positive-natural closure child {index} is not factual"))?;
-            if !child.store.infers.is_empty() {
-                return Err(format!(
-                    "positive-natural closure child {index} published effects"
-                ));
-            }
             let child_fact = child.fact();
             let (element, set) = membership_parts(&child_fact)?;
             if !matches!(set, Obj::StandardSet(actual) if *actual == expected_set)
@@ -1136,7 +1120,7 @@ impl StmtResultToLeanCompiler {
         &mut self,
         target: &Fact,
         rule: RationalMembershipClosureBuiltinRule,
-        subgoals: &[StmtResult],
+        subgoals: &[VerifyFactResult],
     ) -> Result<Option<String>, String> {
         let (target_element, _) = membership_parts(target)?;
         let theorem = match rule {
@@ -1172,7 +1156,7 @@ impl StmtResultToLeanCompiler {
     pub(super) fn construct_lean_rational_power_membership_from_result(
         &mut self,
         target: &Fact,
-        subgoals: &[StmtResult],
+        subgoals: &[VerifyFactResult],
     ) -> Result<Option<String>, String> {
         let (target_element, target_set) = membership_parts(target)?;
         if !matches!(target_set, Obj::StandardSet(StandardSet::Q)) {
@@ -1185,11 +1169,8 @@ impl StmtResultToLeanCompiler {
             return Err("rational power requires one conjunction child Result".into());
         };
         let conjunction_result = conjunction_result
-            .factual_success()
+            .verified()
             .ok_or_else(|| "rational power conjunction child is not factual".to_string())?;
-        if !conjunction_result.store.infers.is_empty() {
-            return Err("rational power conjunction child published effects".into());
-        }
         let components = conjunction_components(&conjunction_result.fact())?;
         let [base_component, exponent_component] = components.as_slice() else {
             return Err("rational power conjunction changed its component arity".into());
@@ -1238,7 +1219,7 @@ impl StmtResultToLeanCompiler {
         target: &Fact,
         expected_set: StandardSet,
         theorem: &str,
-        subgoals: &[StmtResult],
+        subgoals: &[VerifyFactResult],
     ) -> Result<Option<String>, String> {
         let (target_element, target_set) = membership_parts(target)?;
         if !matches!(target_set, Obj::StandardSet(set) if *set == expected_set) {
@@ -1259,11 +1240,8 @@ impl StmtResultToLeanCompiler {
             );
         };
         let conjunction_result = conjunction_result
-            .factual_success()
+            .verified()
             .ok_or_else(|| "binary arithmetic conjunction child is not factual".to_string())?;
-        if !conjunction_result.store.infers.is_empty() {
-            return Err("binary arithmetic conjunction child published effects".into());
-        }
         let components = conjunction_components(&conjunction_result.fact())?;
         let [left_component, right_component] = components.as_slice() else {
             return Err("binary arithmetic conjunction changed its component arity".into());
@@ -1305,7 +1283,7 @@ impl StmtResultToLeanCompiler {
         &mut self,
         target: &Fact,
         rule: ArithmeticBuiltinRule,
-        subgoals: &[StmtResult],
+        subgoals: &[VerifyFactResult],
     ) -> Result<Option<String>, String> {
         if rule == ArithmeticBuiltinRule::OrderTransitivity {
             return self.construct_lean_order_transitivity_from_result(target, subgoals);
@@ -1385,11 +1363,8 @@ impl StmtResultToLeanCompiler {
         let mut children = Vec::with_capacity(subgoals.len());
         for (index, child) in subgoals.iter().enumerate() {
             let child = child
-                .factual_success()
+                .verified()
                 .ok_or_else(|| format!("arithmetic child {index} is not factual"))?;
-            if !child.store.infers.is_empty() {
-                return Err(format!("arithmetic child {index} published effects"));
-            }
             let Some(proof_expression) =
                 self.construct_lean_proof_from_direct_fact_result(child)?
             else {
@@ -2064,21 +2039,16 @@ impl StmtResultToLeanCompiler {
     fn construct_lean_order_transitivity_from_result(
         &mut self,
         target: &Fact,
-        subgoals: &[StmtResult],
+        subgoals: &[VerifyFactResult],
     ) -> Result<Option<String>, String> {
         if subgoals.len() < 2 {
             return Err("order transitivity lost its two ordered child Results".into());
         }
         let (carrier_checks, order_children) = subgoals.split_at(subgoals.len() - 2);
         for (index, check) in carrier_checks.iter().enumerate() {
-            let check = check.factual_success().ok_or_else(|| {
+            let check = check.verified().ok_or_else(|| {
                 format!("order transitivity carrier child {index} is not factual")
             })?;
-            if !check.store.infers.is_empty() {
-                return Err(format!(
-                    "order transitivity carrier child {index} published effects"
-                ));
-            }
             let check_fact = check.fact();
             if let Ok((_, set)) = membership_parts(&check_fact) {
                 let Obj::StandardSet(actual_set) = set else {
@@ -2145,14 +2115,11 @@ impl StmtResultToLeanCompiler {
             unreachable!("order transitivity split retained two ordered children")
         };
         let first_result = first_result
-            .factual_success()
+            .verified()
             .ok_or_else(|| "order transitivity first edge is not factual".to_string())?;
         let second_result = second_result
-            .factual_success()
+            .verified()
             .ok_or_else(|| "order transitivity second edge is not factual".to_string())?;
-        if !first_result.store.infers.is_empty() || !second_result.store.infers.is_empty() {
-            return Err("order transitivity ordered child published effects".into());
-        }
         let first_proof = self
             .construct_lean_proof_from_direct_fact_result(first_result)?
             .ok_or_else(|| {

@@ -2,7 +2,7 @@
 
 use crate::fact::{AtomicFact, Fact};
 use crate::parsing::Tokenizer;
-use crate::result::{StmtResult, SuccessFactProofResult, SuccessVerifyFactResult};
+use crate::result::{SuccessFactProofResult, SuccessFactProofNode, VerifyFactResult};
 use crate::runtime::Runtime;
 use crate::statement::Stmt;
 use crate::verification::VerifyState;
@@ -12,32 +12,18 @@ use std::rc::Rc;
 fn verify_state_constructors_select_the_expected_semantics() {
     let initial = VerifyState::initial();
     assert_eq!(initial.proof_search_round, 0);
-    assert!(!initial.well_definedness_verified);
     assert!(initial.is_initial_round());
-
-    let after_well_definedness = VerifyState::after_well_definedness();
-    assert_eq!(after_well_definedness.proof_search_round, 0);
-    assert!(after_well_definedness.well_definedness_verified);
 
     let final_round = VerifyState::final_round();
     assert_eq!(final_round.proof_search_round, 2);
-    assert!(!final_round.well_definedness_verified);
     assert!(!final_round.is_initial_round());
-
-    let final_after_well_definedness = VerifyState::final_round_after_well_definedness();
-    assert_eq!(final_after_well_definedness.proof_search_round, 2);
-    assert!(final_after_well_definedness.well_definedness_verified);
 }
 
 #[test]
 fn verify_state_transitions_change_only_the_named_dimension() {
     let next_round = VerifyState::initial().with_next_round();
     assert_eq!(next_round.proof_search_round, 1);
-    assert!(!next_round.well_definedness_verified);
-
-    let after_well_definedness = next_round.with_well_definedness_verified();
-    assert_eq!(after_well_definedness.proof_search_round, 1);
-    assert!(after_well_definedness.well_definedness_verified);
+    assert!(!next_round.is_initial_round());
 }
 
 #[test]
@@ -55,7 +41,7 @@ fn one_proof_search_reuses_the_exact_successful_atomic_proof() {
         .expect("second verification should reuse the search-local proof");
 
     assert!(Rc::ptr_eq(&first_source, reused_verification(&second)));
-    assert!(second.infer_result().is_empty());
+    assert_eq!(second.fact_id(), None);
 }
 
 #[test]
@@ -133,17 +119,17 @@ fn parse_atomic_fact(runtime: &mut Runtime, source: &str) -> AtomicFact {
     fact
 }
 
-fn direct_verification(result: &StmtResult) -> Rc<SuccessVerifyFactResult> {
+fn direct_verification(result: &VerifyFactResult) -> Rc<SuccessFactProofNode> {
     let success = result
-        .factual_success()
+        .verified()
         .expect("atomic fact should be factual");
     assert!(!matches!(success.proof(), SuccessFactProofResult::Reuse(_)));
     success.verification.clone()
 }
 
-fn reused_verification(result: &StmtResult) -> &Rc<SuccessVerifyFactResult> {
+fn reused_verification(result: &VerifyFactResult) -> &Rc<SuccessFactProofNode> {
     let success = result
-        .factual_success()
+        .verified()
         .expect("cached atomic fact should be factual");
     let SuccessFactProofResult::Reuse(result) = success.proof() else {
         panic!("atomic success should point to its search-local source");

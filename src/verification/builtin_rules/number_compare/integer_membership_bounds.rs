@@ -8,7 +8,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let (n, line_file) = match atomic_fact {
             AtomicFact::GreaterEqualFact(f) => {
                 let Some(z) = self.resolve_obj_to_number(&f.right) else {
@@ -39,8 +39,8 @@ impl Runtime {
         let in_n: AtomicFact = InFact::new(n, StandardSet::N.into(), line_file.clone()).into();
         let in_n_result = self.verify_atomic_fact_as_builtin_rule_premise(&in_n, builtin_state)?;
         if in_n_result.is_success() {
-            return Ok(Some(StmtResult::from(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            return Ok(Some(ProveFactResult::from(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     atomic_fact.clone().into(),
                     "n >= 0 from n $in N".to_string(),
                     BuiltinRuleEvidence::Uncatalogued(
@@ -58,7 +58,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let (n, line_file) = match atomic_fact {
             AtomicFact::GreaterEqualFact(f) => {
                 let Some(one) = self.resolve_obj_to_number(&f.right) else {
@@ -91,8 +91,8 @@ impl Runtime {
         let in_n_pos_result =
             self.verify_atomic_fact_as_builtin_rule_premise(&in_n_pos, builtin_state)?;
         if in_n_pos_result.is_success() {
-            return Ok(Some(StmtResult::from(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            return Ok(Some(ProveFactResult::from(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     atomic_fact.clone().into(),
                     "n >= 1 from n $in N+".to_string(),
                     BuiltinRuleEvidence::Uncatalogued(
@@ -111,7 +111,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let (n, line_file) = match atomic_fact {
             AtomicFact::GreaterEqualFact(f) => {
                 let Some(one) = self.resolve_obj_to_number(&f.right) else {
@@ -148,10 +148,15 @@ impl Runtime {
         if !in_n_result.is_success() {
             if let Obj::FiniteSetSize(finite_set_size) = &n {
                 let in_n_fact = InFact::new(n.clone(), StandardSet::N.into(), line_file.clone());
-                in_n_result = self.verify_finite_set_size_in_standard_number_set(
+                let proof = self.verify_finite_set_size_in_standard_number_set(
                     &in_n_fact,
                     finite_set_size,
                     builtin_state,
+                )?;
+                in_n_result = self.complete_atomic_fact_proof_result(
+                    &in_n,
+                    proof,
+                    builtin_state.verify_state(),
                 )?;
             }
         }
@@ -163,8 +168,13 @@ impl Runtime {
         if !nonzero_result.is_success() {
             return Ok(None);
         }
-        Ok(Some(StmtResult::from(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+        let nonzero_result = self.complete_atomic_fact_proof_result(
+            &nonzero,
+            nonzero_result,
+            builtin_state.verify_state(),
+        )?;
+        Ok(Some(ProveFactResult::from(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "1 <= n from n $in N and n != 0".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -180,7 +190,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let (n, line_file) = match atomic_fact {
             AtomicFact::GreaterEqualFact(f) => {
                 let Some(one) = self.resolve_obj_to_number(&f.right) else {
@@ -221,8 +231,8 @@ impl Runtime {
         if !positive_result.is_success() {
             return Ok(None);
         }
-        Ok(Some(StmtResult::from(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+        Ok(Some(ProveFactResult::from(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "1 <= n from n $in Z and 0 < n".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(

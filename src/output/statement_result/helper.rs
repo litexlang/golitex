@@ -1,16 +1,16 @@
 use super::renderer::*;
 use crate::prelude::*;
 
-pub(super) fn verify_fact_kind(result: &SuccessVerifyFactResult) -> &'static str {
+pub(super) fn verify_fact_kind(result: &SuccessFactProofNode) -> &'static str {
     match result {
-        SuccessVerifyFactResult::AtomicFact(_) => "AtomicFact",
-        SuccessVerifyFactResult::ExistFact(_) => "ExistFact",
-        SuccessVerifyFactResult::OrFact(_) => "OrFact",
-        SuccessVerifyFactResult::AndFact(_) => "AndFact",
-        SuccessVerifyFactResult::ChainFact(_) => "ChainFact",
-        SuccessVerifyFactResult::ForallFact(_) => "ForallFact",
-        SuccessVerifyFactResult::ForallFactWithIff(_) => "ForallFactWithIff",
-        SuccessVerifyFactResult::NotForallFact(_) => "NotForallFact",
+        SuccessFactProofNode::AtomicFact(_) => "AtomicFact",
+        SuccessFactProofNode::ExistFact(_) => "ExistFact",
+        SuccessFactProofNode::OrFact(_) => "OrFact",
+        SuccessFactProofNode::AndFact(_) => "AndFact",
+        SuccessFactProofNode::ChainFact(_) => "ChainFact",
+        SuccessFactProofNode::ForallFact(_) => "ForallFact",
+        SuccessFactProofNode::ForallFactWithIff(_) => "ForallFactWithIff",
+        SuccessFactProofNode::NotForallFact(_) => "NotForallFact",
     }
 }
 
@@ -35,7 +35,7 @@ pub(super) fn function_definition_verification_value(
         string_field("kind", "SuccessVerifyFunctionDefinitionResult"),
         (
             "return_check".to_string(),
-            renderer.stmt_result(&result.return_check),
+            renderer.verify_fact_result(&result.return_check),
         ),
         (
             "assumption_infers".to_string(),
@@ -81,13 +81,13 @@ pub(super) fn by_assignment_verification_value(
                     .map(|domain| {
                         object(vec![
                             string_field("fact", domain.fact.to_string()),
-                            ("check".to_string(), renderer.stmt_result(&domain.check)),
+                            ("check".to_string(), renderer.verify_fact_result(&domain.check)),
                             (
                                 "negated_check".to_string(),
                                 domain
                                     .negated_check
                                     .as_ref()
-                                    .map(|check| renderer.stmt_result(check))
+                                    .map(|check| renderer.verify_fact_result(check))
                                     .unwrap_or(JsonValue::Null),
                             ),
                             ("satisfied".to_string(), JsonValue::Bool(domain.satisfied)),
@@ -110,7 +110,7 @@ pub(super) fn by_assignment_verification_value(
         ),
         (
             "conclusion_checks".to_string(),
-            renderer.stmt_results(&result.conclusion_checks),
+            renderer.verify_fact_results(&result.conclusion_checks),
         ),
     ])
 }
@@ -230,7 +230,7 @@ pub(super) fn by_enumerate_range_verification_value(
         string_field("generated_cases", result.generated_cases.to_string()),
         (
             "membership_check".to_string(),
-            renderer.stmt_result(&result.membership_check),
+            renderer.verify_fact_result(&result.membership_check),
         ),
         (
             "endpoint_checks".to_string(),
@@ -255,7 +255,7 @@ pub(super) fn by_enumerate_range_verification_value(
                             ),
                             (
                                 "verification".to_string(),
-                                renderer.stmt_result(&check.verification),
+                                renderer.verify_fact_result(&check.verification),
                             ),
                         ])
                     })
@@ -303,7 +303,7 @@ pub(super) fn by_induc_verification_value(
             string_field("start", proof.start.to_string()),
             (
                 "start_in_z_check".to_string(),
-                renderer.stmt_result(&proof.start_in_z_check),
+                renderer.verify_fact_result(&proof.start_in_z_check),
             ),
             (
                 "base".to_string(),
@@ -354,15 +354,15 @@ pub(super) fn by_induc_goal_value(
         string_field("source_goal", result.source_goal.to_string()),
         (
             "base_check".to_string(),
-            renderer.stmt_result(&result.base_check),
+            renderer.verify_fact_result(&result.base_check),
         ),
         (
             "start_in_z_check".to_string(),
-            renderer.stmt_result(&result.start_in_z_check),
+            renderer.verify_fact_result(&result.start_in_z_check),
         ),
         (
             "step_check".to_string(),
-            renderer.stmt_result(&result.step_check),
+            renderer.verify_fact_result(&result.step_check),
         ),
         ("infers".to_string(), infer_result_value(&result.infers)),
     ])
@@ -402,7 +402,10 @@ pub(super) fn by_induc_case_value(
                         object(vec![
                             string_field("kind", "SuccessVerifyByInducConclusionResult"),
                             string_field("goal", conclusion.goal.to_string()),
-                            ("check".to_string(), renderer.stmt_result(&conclusion.check)),
+                            (
+                                "check".to_string(),
+                                renderer.verify_fact_result(&conclusion.check),
+                            ),
                         ])
                     })
                     .collect(),
@@ -476,7 +479,10 @@ pub(super) fn structured_integer_induc_case_value(
                         object(vec![
                             string_field("kind", "SuccessVerifyByInducConclusionResult"),
                             string_field("goal", conclusion.goal.to_string()),
-                            ("check".to_string(), renderer.stmt_result(&conclusion.check)),
+                            (
+                                "check".to_string(),
+                                renderer.verify_fact_result(&conclusion.check),
+                            ),
                         ])
                     })
                     .collect(),
@@ -502,11 +508,11 @@ pub(super) fn by_extension_verification_value(
         ),
         (
             "left_to_right_check".to_string(),
-            renderer.stmt_result(&result.left_to_right_check),
+            renderer.verify_fact_result(&result.left_to_right_check),
         ),
         (
             "right_to_left_check".to_string(),
-            renderer.stmt_result(&result.right_to_left_check),
+            renderer.verify_fact_result(&result.right_to_left_check),
         ),
     ])
 }
@@ -521,10 +527,6 @@ pub(super) fn prop_registration_verification_value(
         string_field("prop_name", result.prop_name.clone()),
         string_field("forall_fact", result.forall_fact.to_string()),
         (
-            "well_definedness".to_string(),
-            renderer.fact_well_definedness(&result.well_definedness),
-        ),
-        (
             "assumption_infers".to_string(),
             infer_result_value(&result.assumption_infers),
         ),
@@ -534,7 +536,7 @@ pub(super) fn prop_registration_verification_value(
         ),
         (
             "forall_check".to_string(),
-            renderer.stmt_result(&result.forall_check),
+            renderer.verify_fact_result(&result.forall_check),
         ),
     ])
 }
@@ -629,7 +631,7 @@ pub(super) fn by_choice_verification_value(
                                 obligation
                                     .check
                                     .as_ref()
-                                    .map(|check| renderer.stmt_result(check))
+                                    .map(|check| renderer.verify_fact_result(check))
                                     .unwrap_or(JsonValue::Null),
                             ),
                         ])
@@ -781,11 +783,11 @@ pub(super) fn theorem_application_verification_value(
         ),
         (
             "requirement_checks".to_string(),
-            renderer.stmt_results(requirement_checks),
+            renderer.verify_fact_results(requirement_checks),
         ),
         (
             "domain_checks".to_string(),
-            renderer.stmt_results(domain_checks),
+            renderer.verify_fact_results(domain_checks),
         ),
         ("selected_fact_check".to_string(), JsonValue::Null),
     ])
@@ -804,7 +806,7 @@ pub(super) fn theorem_selection_verification_value(
         string_field("selected_fact", result.selected_fact.to_string()),
         (
             "selected_fact_check".to_string(),
-            renderer.stmt_result(&result.selected_fact_check),
+            renderer.verify_fact_result(&result.selected_fact_check),
         ),
     ])
 }
@@ -858,7 +860,7 @@ pub(super) fn by_definition_verification_value(
         ),
         (
             "clause_checks".to_string(),
-            renderer.stmt_results(&result.clause_checks),
+            renderer.verify_fact_results(&result.clause_checks),
         ),
     ])
 }
@@ -869,7 +871,10 @@ pub(super) fn args_satisfy_param_def_verification_value(
 ) -> JsonValue {
     object(vec![
         string_field("kind", "SuccessVerifyArgsSatisfyParamDefResult"),
-        ("checks".to_string(), renderer.stmt_results(&result.checks)),
+        (
+            "checks".to_string(),
+            renderer.verify_fact_results(&result.checks),
+        ),
         ("infers".to_string(), infer_result_value(&result.infers)),
     ])
 }
@@ -897,7 +902,7 @@ pub(super) fn object_choice_verification_value(
                                 group
                                     .nonempty_check
                                     .as_ref()
-                                    .map(|check| renderer.stmt_result(check))
+                                    .map(|check| renderer.verify_fact_result(check))
                                     .unwrap_or(JsonValue::Null),
                             ),
                         ])
@@ -916,7 +921,14 @@ pub(super) fn existential_elimination_value(
         string_field("kind", "SuccessVerifyExistentialEliminationResult"),
         (
             "source_result".to_string(),
-            renderer.stmt_result(&result.source_result),
+            match &result.source_result {
+                ExistentialEliminationSourceResult::Fact(source) => {
+                    renderer.verify_fact_result(source)
+                }
+                ExistentialEliminationSourceResult::TheoremApplication(source) => {
+                    renderer.stmt_result(source)
+                }
+            },
         ),
         string_field("source_exist_fact", result.source_exist_fact.to_string()),
         (

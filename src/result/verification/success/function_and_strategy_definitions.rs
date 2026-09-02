@@ -13,31 +13,31 @@ pub struct SuccessVerifyIndexedFunctionDefinitionWellDefinedResult {
 }
 
 pub struct SuccessVerifyCaseFunctionDefinitionResult {
-    pub coverage_check: Box<StmtResult>,
-    pub return_checks: Vec<StmtResult>,
+    pub coverage_check: Box<VerifyFactResult>,
+    pub return_checks: Vec<VerifyFactResult>,
 }
 
 pub struct SuccessVerifyFunctionFromUniqueExistenceResult {
     /// Recursive well-definedness for the exact source `forall ... exist!`
     /// contract.  The Lean compiler needs the binder-owned object and fact
     /// certificates while replaying the chosen function under its arguments.
-    pub well_definedness: SuccessVerifyFactWellDefinedResult,
+    pub well_definedness: WellDefinedFactResult,
     /// Parameter-membership and domain-premise facts created only inside the
     /// source forall scope.  Their FactIds must be frozen before that scope is
     /// removed; proof children cite these identities directly.
     pub proof_scope: SuccessVerifyLocalProofScopeResult,
-    pub source_forall_check: Option<Box<StmtResult>>,
+    pub source_forall_check: Option<Box<VerifyFactResult>>,
     pub proof_steps: Vec<StmtResult>,
-    pub conclusion_checks: Vec<StmtResult>,
+    pub conclusion_checks: Vec<VerifyFactResult>,
 }
 
 impl SuccessVerifyFunctionFromUniqueExistenceResult {
     pub fn new(
-        well_definedness: SuccessVerifyFactWellDefinedResult,
+        well_definedness: WellDefinedFactResult,
         proof_scope: SuccessVerifyLocalProofScopeResult,
-        source_forall_check: Option<StmtResult>,
+        source_forall_check: Option<VerifyFactResult>,
         proof_steps: Vec<StmtResult>,
-        conclusion_checks: Vec<StmtResult>,
+        conclusion_checks: Vec<VerifyFactResult>,
     ) -> Self {
         Self {
             well_definedness,
@@ -52,20 +52,20 @@ impl SuccessVerifyFunctionFromUniqueExistenceResult {
 pub struct SuccessVerifyStrategyDefinitionResult {
     pub name: String,
     pub forall_fact: ForallFact,
-    pub well_definedness: SuccessVerifyFactWellDefinedResult,
+    pub well_definedness: WellDefinedFactResult,
     pub proof_scope: SuccessVerifyLocalProofScopeResult,
     pub proof_steps: Vec<StmtResult>,
-    pub conclusion_checks: Vec<StmtResult>,
+    pub conclusion_checks: Vec<VerifyFactResult>,
 }
 
 impl SuccessVerifyStrategyDefinitionResult {
     pub fn new(
         name: String,
         forall_fact: ForallFact,
-        well_definedness: SuccessVerifyFactWellDefinedResult,
+        well_definedness: WellDefinedFactResult,
         proof_scope: SuccessVerifyLocalProofScopeResult,
         proof_steps: Vec<StmtResult>,
-        conclusion_checks: Vec<StmtResult>,
+        conclusion_checks: Vec<VerifyFactResult>,
     ) -> Self {
         Self {
             name,

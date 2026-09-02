@@ -1,8 +1,8 @@
 use crate::error::RuntimeError;
 use crate::fact::Fact;
-use crate::inference::{InferReason, SuccessInferResult};
+use crate::inference::InferReason;
 use crate::result::{
-    StmtResult, SuccessFactProofResult, SuccessFactStmtResult, SuccessVerifyFactWellDefinedResult,
+    StmtResult, SuccessFactStmtResult, SuccessStoreFactResult, VerifyFactResult,
 };
 use crate::runtime::Runtime;
 use crate::verification::VerifyState;
@@ -10,42 +10,14 @@ use std::result::Result;
 
 impl Runtime {
     pub fn execute_submitted_fact(&mut self, fact: &Fact) -> Result<StmtResult, RuntimeError> {
-        let well_definedness = self.verify_fact_well_defined_for_execution(fact)?;
-        let result = self.verify_fact_for_execution(fact)?;
-        let infer_result = self.store_executed_fact_and_infer(fact, &result)?;
-
-        Ok(result
-            .with_fact_well_definedness(well_definedness)
-            .with_infers(infer_result))
-    }
-
-    /// Mathematical contract: a standalone fact is meaningful exactly when
-    /// the central fact checker validates its predicate, arguments, binders,
-    /// premises, and conclusions.
-    fn verify_fact_well_defined_for_execution(
-        &mut self,
-        fact: &Fact,
-    ) -> Result<SuccessVerifyFactWellDefinedResult, RuntimeError> {
-        self.verify_fact_well_defined_result(fact, &VerifyState::initial())
-    }
-
-    fn verify_fact_for_execution(&mut self, fact: &Fact) -> Result<StmtResult, RuntimeError> {
-        self.verify_fact_or_error(fact, &VerifyState::initial())
-    }
-
-    fn store_executed_fact_and_infer(
-        &mut self,
-        fact: &Fact,
-        result: &StmtResult,
-    ) -> Result<SuccessInferResult, RuntimeError> {
-        let verification_store_facts = result.infer_result();
-        let mut infer_result =
-            self.store_without_well_defined_verification_and_infer(fact.clone())?;
-        if verification_store_facts.contains_added_fact(fact) {
-            infer_result.remove_first_statement_with_verification_for_fact(fact);
-        }
-
-        Ok(infer_result)
+        let verification = self.verify_fact_or_error(fact, &VerifyState::initial())?;
+        let VerifyFactResult::Verified(verification) = verification else {
+            unreachable!("verify_fact_or_error cannot return an unknown fact")
+        };
+        let infer_result = self.store_without_well_defined_verification_and_infer(fact.clone())?;
+        let mut store = SuccessStoreFactResult::new(fact.clone(), infer_result);
+        store.fact_id = self.known_fact_id_for_fact(fact)?;
+        Ok(SuccessFactStmtResult::verified(verification, store).into())
     }
 
     pub fn execute_fact_with_trust(&mut self, fact: &Fact) -> Result<StmtResult, RuntimeError> {
@@ -54,11 +26,6 @@ impl Runtime {
             InferReason::StatementWithVerification,
         )?;
 
-        Ok(SuccessFactStmtResult::new(
-            fact.clone(),
-            infer_result,
-            SuccessFactProofResult::diagnostic("trusted file load"),
-        )
-        .into())
+        Ok(SuccessFactStmtResult::trusted(fact.clone(), infer_result).into())
     }
 }

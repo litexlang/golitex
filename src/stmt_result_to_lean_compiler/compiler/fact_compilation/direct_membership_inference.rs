@@ -11,6 +11,9 @@ impl StmtResultToLeanCompiler {
         &mut self,
         result: &SuccessFactStmtResult,
     ) -> Result<bool, String> {
+        let Some(verified) = result.verification() else {
+            return Ok(false);
+        };
         let source_fact = result.fact();
         let Ok((_, set)) = membership_parts(&source_fact) else {
             return Ok(false);
@@ -18,10 +21,10 @@ impl StmtResultToLeanCompiler {
         if !matches!(set, Obj::StandardSet(_)) || result.store.infers.rule_applications.is_empty() {
             return Ok(false);
         }
-        let Some(proof) = self.construct_lean_proof_from_direct_fact_result(result)? else {
+        let Some(proof) = self.construct_lean_proof_from_direct_fact_result(verified)? else {
             return Ok(false);
         };
-        validate_atomic_fact_well_definedness_result(&result.well_definedness, &source_fact)?;
+        validate_atomic_fact_well_definedness_result(&verified.checked, &source_fact)?;
         let source_fact_id = result
             .store
             .fact_id
@@ -56,6 +59,9 @@ impl StmtResultToLeanCompiler {
         &mut self,
         result: &SuccessFactStmtResult,
     ) -> Result<bool, String> {
+        let Some(verified) = result.verification() else {
+            return Ok(false);
+        };
         let source_fact = result.fact();
         let Ok((_, source_set)) = membership_parts(&source_fact) else {
             return Ok(false);
@@ -66,10 +72,10 @@ impl StmtResultToLeanCompiler {
         if result.store.infers.rule_applications.is_empty() {
             return Ok(false);
         }
-        let Some(source_proof) = self.construct_lean_proof_from_direct_fact_result(result)? else {
+        let Some(source_proof) = self.construct_lean_proof_from_direct_fact_result(verified)? else {
             return Ok(false);
         };
-        validate_atomic_fact_well_definedness_result(&result.well_definedness, &source_fact)?;
+        validate_atomic_fact_well_definedness_result(&verified.checked, &source_fact)?;
         let source_fact_id = result
             .store
             .fact_id
@@ -198,6 +204,9 @@ impl StmtResultToLeanCompiler {
         &mut self,
         result: &SuccessFactStmtResult,
     ) -> Result<bool, String> {
+        let Some(verified) = result.verification() else {
+            return Ok(false);
+        };
         let source_fact = result.fact();
         let Ok((_, source_set)) = membership_parts(&source_fact) else {
             return Ok(false);
@@ -271,10 +280,10 @@ impl StmtResultToLeanCompiler {
             );
         }
 
-        let Some(source_proof) = self.construct_lean_proof_from_direct_fact_result(result)? else {
+        let Some(source_proof) = self.construct_lean_proof_from_direct_fact_result(verified)? else {
             return Ok(false);
         };
-        validate_atomic_fact_well_definedness_result(&result.well_definedness, &source_fact)?;
+        validate_atomic_fact_well_definedness_result(&verified.checked, &source_fact)?;
         let source_proposition = render_fact(&source_fact, &self.environment_stack)?;
         let source_name = format!("__fact{}", self.next_fact_name_index);
         self.declarations.push(format!(

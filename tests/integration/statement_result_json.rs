@@ -25,10 +25,10 @@ fn numeric_fact_statement_result_json_retains_normalization_store_and_infer() {
         .expect("numeric membership returns a factual success");
 
     let SuccessVerifyFactWellDefinedProofResult::AtomicFact(fact_wd) = success
-        .well_definedness
-        .recursive
-        .as_deref()
-        .expect("fact execution owns its recursive WD result")
+        .checked()
+        .expect("verified fact execution owns its WD result")
+        .proof
+        .as_ref()
     else {
         panic!("numeric membership must use the atomic-fact WD layer");
     };
@@ -45,7 +45,7 @@ fn numeric_fact_statement_result_json_retains_normalization_store_and_infer() {
     assert!(add_wd.steps.target_requirements.iter().all(|requirement| {
         matches!(
             requirement.verification.as_ref(),
-            SuccessVerifyFactResult::AtomicFact(_)
+            SuccessFactProofNode::AtomicFact(_)
         )
     }));
     assert!(matches!(
@@ -53,7 +53,10 @@ fn numeric_fact_statement_result_json_retains_normalization_store_and_infer() {
         SuccessVerifyObjWellDefinedResult::Direct(_)
     ));
 
-    let SuccessFactProofResult::BuiltinRule(proof) = success.proof() else {
+    let SuccessFactProofResult::BuiltinRule(proof) = success
+        .proof()
+        .expect("verified statement owns a truth proof")
+    else {
         panic!("closed numeric membership must retain its builtin proof");
     };
     let Some(BuiltinRuleEvidence::ClosedNumericMembership(evidence)) = proof.evidence.typed()
@@ -195,7 +198,7 @@ fn object_choice_statement_result_json_retains_typed_standard_set_nonempty_child
         .nonempty_check
         .as_deref()
         .expect("standard carrier retains nonempty child")
-        .factual_success()
+        .verified()
         .expect("nonempty child is factual");
     let SuccessFactProofResult::BuiltinRule(proof) = nonempty.proof() else {
         panic!("standard carrier nonempty child is builtin")
@@ -277,7 +280,7 @@ fn claim_statement_result_json_serializes_named_verification_fields_and_children
     assert_eq!(claim.conclusion_checks.len(), 1);
     assert_eq!(
         claim.conclusion_checks[0]
-            .factual_success()
+            .verified()
             .expect("claim conclusion is factual")
             .fact()
             .to_string(),
@@ -360,10 +363,10 @@ fn set_builder_wd_scope_is_owned_by_recursive_binder_fields() {
         .factual_success()
         .expect("set-builder equality returns a fact result");
     let SuccessVerifyFactWellDefinedProofResult::AtomicFact(wd) = fact
-        .well_definedness
-        .recursive
-        .as_deref()
-        .expect("fact owns recursive WD")
+        .checked()
+        .expect("verified fact owns WD")
+        .proof
+        .as_ref()
     else {
         panic!("set-builder equality uses atomic-fact WD");
     };
@@ -421,10 +424,10 @@ fn anonymous_function_wd_keeps_each_body_inside_its_own_binder_result() {
         .expect("alpha-equivalent anonymous functions verify");
     let fact = result.factual_success().expect("result is factual");
     let SuccessVerifyFactWellDefinedProofResult::AtomicFact(wd) = fact
-        .well_definedness
-        .recursive
-        .as_deref()
-        .expect("fact owns recursive WD")
+        .checked()
+        .expect("verified fact owns WD")
+        .proof
+        .as_ref()
     else {
         panic!("function equality uses atomic-fact WD");
     };
@@ -491,10 +494,10 @@ fn forall_wd_returns_binder_premise_and_conclusion_layers() {
     let result = runtime.execute_statement(&stmt).expect("forall verifies");
     let fact = result.factual_success().expect("result is factual");
     let SuccessVerifyFactWellDefinedProofResult::ForallFact(wd) = fact
-        .well_definedness
-        .recursive
-        .as_deref()
-        .expect("forall owns recursive WD")
+        .checked()
+        .expect("verified forall owns WD")
+        .proof
+        .as_ref()
     else {
         panic!("forall statement owns a forall WD result");
     };
@@ -527,10 +530,10 @@ fn partial_predicate_wd_retains_its_domain_proof_result() {
         .expect("prime fact verifies");
     let fact = result.factual_success().expect("result is factual");
     let SuccessVerifyFactWellDefinedProofResult::AtomicFact(wd) = fact
-        .well_definedness
-        .recursive
-        .as_deref()
-        .expect("prime fact owns recursive WD")
+        .checked()
+        .expect("verified prime fact owns WD")
+        .proof
+        .as_ref()
     else {
         panic!("prime statement owns atomic WD");
     };
@@ -544,7 +547,7 @@ fn partial_predicate_wd_retains_its_domain_proof_result() {
     assert_eq!(
         wd.predicate.domain_checks[0]
             .result
-            .factual_success()
+            .verified()
             .expect("prime domain check is factual")
             .fact()
             .to_string(),

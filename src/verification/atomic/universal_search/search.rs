@@ -7,7 +7,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         match atomic_fact {
             AtomicFact::EqualFact(equal_fact) => {
                 self.verify_equal_fact_with_known_forall(equal_fact, verify_state)
@@ -22,7 +22,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         debug_assert!(!matches!(atomic_fact, AtomicFact::EqualFact(_)));
         known_forall_profile::record_entry();
         if let Some(fact_verified) =
@@ -41,7 +41,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let atomic_fact: AtomicFact = equal_fact.clone().into();
         known_forall_profile::record_entry();
         if let Some(fact_verified) =
@@ -73,8 +73,21 @@ impl Runtime {
             self.try_verify_with_known_forall_facts_in_envs(&fact_with_reversed_args, verify_state)?
         {
             known_forall_profile::record_success();
-            let result = fact_verified.into();
-            return Ok(result);
+            let reversed_result = self.complete_atomic_fact_proof_result(
+                &fact_with_reversed_args,
+                fact_verified.into(),
+                verify_state,
+            )?;
+            let target: Fact = equal_fact.clone().into();
+            return Ok(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    target,
+                    "equality symmetry".to_string(),
+                    BuiltinRuleEvidence::EqualitySymmetry,
+                    vec![reversed_result],
+                )
+                .into(),
+            );
         }
 
         known_forall_profile::record_unknown();
@@ -95,7 +108,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<SuccessFactStmtResult>, RuntimeError> {
+    ) -> Result<Option<SuccessProveFactResult>, RuntimeError> {
         let target_atomic: AtomicFact = equal_fact.clone().into();
         let lookup_key = (target_atomic.key(), target_atomic.has_positive_polarity());
         let candidates: Vec<(AtomicFact, Rc<StoredForallConclusionReference>)> = self
@@ -194,7 +207,7 @@ impl Runtime {
         matching_target: &AtomicFact,
         given_target: &AtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<SuccessFactStmtResult>, RuntimeError> {
+    ) -> Result<Option<SuccessProveFactResult>, RuntimeError> {
         let (AtomicFact::EqualFact(candidate_equality), AtomicFact::EqualFact(matching_equality)) =
             (&candidate, matching_target)
         else {
@@ -253,7 +266,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<SuccessFactStmtResult>, RuntimeError> {
+    ) -> Result<Option<SuccessProveFactResult>, RuntimeError> {
         if let Some(fact_verified) =
             self.try_verify_with_known_forall_facts_in_envs(atomic_fact, verify_state)?
         {
@@ -351,7 +364,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<SuccessFactStmtResult>, RuntimeError> {
+    ) -> Result<Option<SuccessProveFactResult>, RuntimeError> {
         let mut iterate_from_env_index = 0;
         let mut iterate_from_known_forall_fact_index = 0;
 
@@ -394,7 +407,7 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
         module_names: &[String],
-    ) -> Result<Option<SuccessFactStmtResult>, RuntimeError> {
+    ) -> Result<Option<SuccessProveFactResult>, RuntimeError> {
         let lookup_key = (atomic_fact.key(), atomic_fact.has_positive_polarity());
         for module_name in module_names.iter() {
             let module_local_identifiers =
@@ -439,7 +452,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<SuccessFactStmtResult>, RuntimeError> {
+    ) -> Result<Option<SuccessProveFactResult>, RuntimeError> {
         let arg_shape_lookup_keys = atomic_fact_in_forall_lookup_arg_shape_keys(atomic_fact);
         if let Some(fact_verified) = self.try_verify_with_arg_shape_known_forall_facts_in_envs(
             atomic_fact,
@@ -469,7 +482,7 @@ impl Runtime {
         forall_rc: Rc<StoredForallConclusionReference>,
         given_atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<SuccessFactStmtResult>, RuntimeError> {
+    ) -> Result<Option<SuccessProveFactResult>, RuntimeError> {
         self.try_verify_known_forall_candidate_with_matching_fact(
             phase,
             atomic_fact_in_known_forall_fact,
@@ -488,7 +501,7 @@ impl Runtime {
         matching_atomic_fact: &AtomicFact,
         given_atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<SuccessFactStmtResult>, RuntimeError> {
+    ) -> Result<Option<SuccessProveFactResult>, RuntimeError> {
         known_forall_profile::record_candidate_attempt(phase);
         let match_result = self.match_atomic_fact_args_against_known_forall_ordered_args(
             &atomic_fact_in_known_forall_fact,
@@ -517,7 +530,7 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         arg_shape_lookup_keys: &[ForallArgumentShape],
         verify_state: &VerifyState,
-    ) -> Result<Option<SuccessFactStmtResult>, RuntimeError> {
+    ) -> Result<Option<SuccessProveFactResult>, RuntimeError> {
         let lookup_key = (atomic_fact.key(), atomic_fact.has_positive_polarity());
         let envs_count = self.environment_count();
         for stack_idx in 0..envs_count {
@@ -559,7 +572,7 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         arg_shape_lookup_keys: &[ForallArgumentShape],
         verify_state: &VerifyState,
-    ) -> Result<Option<SuccessFactStmtResult>, RuntimeError> {
+    ) -> Result<Option<SuccessProveFactResult>, RuntimeError> {
         let lookup_key = (atomic_fact.key(), atomic_fact.has_positive_polarity());
         let envs_count = self.environment_count();
         for stack_idx in 0..envs_count {
@@ -643,7 +656,7 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
         phase: KnownForallSearchPhase,
-    ) -> Result<Option<SuccessFactStmtResult>, RuntimeError> {
+    ) -> Result<Option<SuccessProveFactResult>, RuntimeError> {
         let Some(bucket_count) = ({
             let env = self
                 .environment_by_top_index(stack_idx)
@@ -696,7 +709,7 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
         phase: KnownForallSearchPhase,
-    ) -> Result<Option<SuccessFactStmtResult>, RuntimeError> {
+    ) -> Result<Option<SuccessProveFactResult>, RuntimeError> {
         let module_local_identifiers =
             self.imported_module_identifier_to_local_obj_map(module_name);
         let matching_atomic_fact = self.inst_atomic_fact(
@@ -762,7 +775,7 @@ impl Runtime {
         mut arg_map: HashMap<String, Obj>,
         given_atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<SuccessFactStmtResult>, RuntimeError> {
+    ) -> Result<Option<SuccessProveFactResult>, RuntimeError> {
         self.complete_known_forall_arg_map_from_known_dom_facts(
             known_forall.as_ref(),
             &mut arg_map,
@@ -780,7 +793,7 @@ impl Runtime {
 
         let source_fact = known_forall.source_fact();
         let source_fact_id = known_forall.source_fact_id;
-        let fact_verified = SuccessFactStmtResult::new_with_verified_by_known_fact(
+        let fact_verified = SuccessProveFactResult::new_with_verified_by_known_fact(
             given_atomic_fact.clone().into(),
             SuccessFactProofResult::known_forall_instantiation(
                 source_fact,

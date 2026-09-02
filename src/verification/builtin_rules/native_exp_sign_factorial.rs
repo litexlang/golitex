@@ -9,7 +9,7 @@ impl Runtime {
     pub(super) fn try_verify_native_exp_ln_identity(
         &self,
         equal_fact: &EqualFact,
-    ) -> Option<StmtResult> {
+    ) -> Option<ProveFactResult> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         if exp_ln_identity_shape(left, right) || exp_ln_identity_shape(right, left) {
@@ -28,18 +28,24 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
         let exp_left: Obj = Exp::new(left.clone()).into();
         let exp_right: Obj = Exp::new(right.clone()).into();
-        let exp_result = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
+        let exp_fact = EqualFact::new_from_refs(
             &exp_left,
             &exp_right,
             line_file.clone(),
-        ));
-        if exp_result.is_success() {
+        );
+        let exp_proof = self.verify_equal_fact_by_known_equality(&exp_fact);
+        let exp_atomic: AtomicFact = exp_fact.into();
+        if let Some(exp_result) = self.complete_proven_builtin_candidate(
+            exp_atomic.clone().into(),
+            exp_proof,
+            builtin_state.verify_state(),
+        )? {
             return Ok(Some(native_equal_success(
                 equal_fact,
                 "injectivity of native exp",
@@ -48,14 +54,20 @@ impl Runtime {
         }
         let ln_left: Obj = Ln::new(left.clone()).into();
         let ln_right: Obj = Ln::new(right.clone()).into();
-        let ln_result = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
+        let ln_fact = EqualFact::new_from_refs(
             &ln_left,
             &ln_right,
             line_file.clone(),
-        ));
-        if !ln_result.is_success() {
+        );
+        let ln_proof = self.verify_equal_fact_by_known_equality(&ln_fact);
+        let ln_atomic: AtomicFact = ln_fact.into();
+        let Some(ln_result) = self.complete_proven_builtin_candidate(
+            ln_atomic.clone().into(),
+            ln_proof,
+            builtin_state.verify_state(),
+        )? else {
             return Ok(None);
-        }
+        };
         let zero: Obj = Number::new("0".to_string()).into();
         let positivity = [
             LessFact::new(zero.clone(), left.clone(), line_file.clone()).into(),
@@ -79,8 +91,8 @@ impl Runtime {
     pub(super) fn try_verify_native_sign_zero_reflection(
         &mut self,
         equal_fact: &EqualFact,
-        _builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+        builtin_state: &BuiltinRuleSearchState,
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -93,14 +105,20 @@ impl Runtime {
         };
         let sign: Obj = Sign::new(arg.clone()).into();
         let zero: Obj = Number::new("0".to_string()).into();
-        let result = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
+        let premise = EqualFact::new_from_refs(
             &sign,
             &zero,
             line_file.clone(),
-        ));
-        if !result.is_success() {
+        );
+        let proof = self.verify_equal_fact_by_known_equality(&premise);
+        let premise_atomic: AtomicFact = premise.into();
+        let Some(result) = self.complete_proven_builtin_candidate(
+            premise_atomic.clone().into(),
+            proof,
+            builtin_state.verify_state(),
+        )? else {
             return Ok(None);
-        }
+        };
         Ok(Some(native_equal_success(
             equal_fact,
             "sign is zero only at zero",
@@ -113,7 +131,8 @@ impl Runtime {
     pub(super) fn try_verify_native_sign_nonzero_characterization(
         &mut self,
         goal: &NotEqualFact,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+        builtin_state: &BuiltinRuleSearchState,
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let zero: Obj = Number::new("0".to_string()).into();
         let (nonzero_obj, zero_on_right) = if normalized_number_is(&goal.right, "0") {
             (&goal.left, true)
@@ -137,12 +156,13 @@ impl Runtime {
                 NotEqualFact::new(zero.clone(), sign, goal.line_file.clone()).into()
             }
         };
-        let result = self.verify_non_equational_atomic_fact_with_known_atomic_facts(&premise)?;
-        if !result.is_success() {
+        let Some(result) =
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?
+        else {
             return Ok(None);
-        }
+        };
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 goal.clone().into(),
                 "sign is nonzero exactly for nonzero arguments".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -160,7 +180,7 @@ impl Runtime {
     pub(super) fn try_verify_native_exp_ln_algebra(
         &self,
         equal_fact: &EqualFact,
-    ) -> Option<StmtResult> {
+    ) -> Option<ProveFactResult> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         if exp_ln_algebra_shape(left, right) || exp_ln_algebra_shape(right, left) {
@@ -179,7 +199,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -214,7 +234,7 @@ impl Runtime {
     pub(super) fn try_verify_native_sign_abs_identity(
         &self,
         equal_fact: &EqualFact,
-    ) -> Option<StmtResult> {
+    ) -> Option<ProveFactResult> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         if sign_abs_identity_shape(left, right) || sign_abs_identity_shape(right, left) {
@@ -233,7 +253,7 @@ impl Runtime {
     pub(super) fn try_verify_native_sign_algebra(
         &self,
         equal_fact: &EqualFact,
-    ) -> Option<StmtResult> {
+    ) -> Option<ProveFactResult> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         if !sign_algebra_shape(left, right) && !sign_algebra_shape(right, left) {
@@ -251,7 +271,7 @@ impl Runtime {
     pub(super) fn try_verify_native_factorial_recurrence(
         &self,
         equal_fact: &EqualFact,
-    ) -> Option<StmtResult> {
+    ) -> Option<ProveFactResult> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         if factorial_recurrence_shape(left, right) || factorial_recurrence_shape(right, left) {
@@ -270,7 +290,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -309,7 +329,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         if let Some(result) =
             self.try_verify_native_factorial_monotonicity(atomic_fact, builtin_state)?
         {
@@ -334,7 +354,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "native exp/sign/factorial characteristic order bound".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -350,7 +370,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         // Factorial preserves weak order on N and strict order from a positive
         // smaller argument. Examples: `m <= n => m! <= n!` and
         // `m in N+, m < n => m! < n!`.
@@ -397,7 +417,7 @@ impl Runtime {
             return Ok(None);
         };
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "native factorial monotonicity".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -413,7 +433,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         // The real sign function preserves weak order but not strict order.
         // Example: `a <= b => sign(a) <= sign(b)`.
         let Some(AtomicFact::LessEqualFact(f)) = normalize_positive_order_atomic_fact(atomic_fact)
@@ -434,7 +454,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "native sign preserves weak order".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -450,7 +470,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<(bool, Vec<StmtResult>)>, RuntimeError> {
+    ) -> Result<Option<(bool, Vec<VerifyFactResult>)>, RuntimeError> {
         let (left, right, strict) = match atomic_fact {
             AtomicFact::LessFact(f) => (&f.left, &f.right, true),
             AtomicFact::GreaterFact(f) => (&f.right, &f.left, true),
@@ -514,7 +534,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         // Natural exp is strictly increasing on R, and natural ln is strictly
         // increasing on R+. Examples: `a < b => exp(a) < exp(b)` and
         // `0 < a < b => ln(a) < ln(b)`; weak order is preserved as well.
@@ -561,11 +581,11 @@ impl Runtime {
             ]
         };
         for (index, premise) in reflected_premises.iter().enumerate() {
-            let result =
-                self.verify_non_equational_atomic_fact_with_known_atomic_facts(&premise)?;
-            if !result.is_success() {
+            let Some(result) =
+                self.try_verify_atomic_fact_as_builtin_rule_premise(premise, builtin_state)?
+            else {
                 continue;
-            }
+            };
             let mut subgoals = Vec::new();
             if index == 1 {
                 let zero: Obj = Number::new("0".to_string()).into();
@@ -583,7 +603,7 @@ impl Runtime {
             subgoals.push(result);
             let order_kind = if strict { "strict" } else { "weak" };
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     atomic_fact.clone().into(),
                     format!("native exp/ln reflects {order_kind} order"),
                     BuiltinRuleEvidence::Uncatalogued(
@@ -596,7 +616,7 @@ impl Runtime {
         }
 
         let zero: Obj = Number::new("0".to_string()).into();
-        let reflected_result = self.verify_builtin_rule_premise_alternatives(
+        let reflected_result = self.try_verify_builtin_rule_premise_alternatives(
             vec![
                 vec![reflected_premises[0].clone()],
                 vec![
@@ -608,10 +628,10 @@ impl Runtime {
             line_file.clone(),
             builtin_state,
         )?;
-        if reflected_result.is_success() {
+        if let Some(reflected_result) = reflected_result {
             let order_kind = if strict { "strict" } else { "weak" };
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     atomic_fact.clone().into(),
                     format!("native exp/ln reflects {order_kind} order"),
                     BuiltinRuleEvidence::Uncatalogued(
@@ -651,7 +671,7 @@ impl Runtime {
         };
         let order_kind = if strict { "strict" } else { "weak" };
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 format!("native {function_name} preserves {order_kind} order"),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -667,9 +687,9 @@ impl Runtime {
 fn native_equal_success(
     equal_fact: &EqualFact,
     reason: &str,
-    subgoals: Vec<StmtResult>,
-) -> StmtResult {
-    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+    subgoals: Vec<VerifyFactResult>,
+) -> ProveFactResult {
+    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
         equal_fact.clone().into(),
         reason.to_string(),
         BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::NativeEqualSuccess),

@@ -7,7 +7,7 @@ impl Runtime {
         &mut self,
         fact: &Fact,
         verify_state: &VerifyState,
-    ) -> Result<SuccessVerifyFactWellDefinedResult, RuntimeError> {
+    ) -> Result<WellDefinedFactResult, RuntimeError> {
         let recursive =
             match fact {
                 Fact::AtomicFact(atomic_fact) => {
@@ -90,7 +90,7 @@ impl Runtime {
                     ))
                 }
             };
-        Ok(SuccessVerifyFactWellDefinedResult::new_recursive(recursive))
+        Ok(WellDefinedFactResult::new(fact.clone(), recursive))
     }
 
     fn verify_atomic_fact_well_defined_result(
@@ -129,10 +129,10 @@ impl Runtime {
             }
             AndChainAtomicFact::AndFact(and_fact) => self
                 .verify_fact_well_defined_result(&and_fact.clone().into(), verify_state)
-                .map(|result| *result.recursive.expect("new recursive WD result")),
+                .map(|result| *result.proof),
             AndChainAtomicFact::ChainFact(chain_fact) => self
                 .verify_fact_well_defined_result(&chain_fact.clone().into(), verify_state)
-                .map(|result| *result.recursive.expect("new recursive WD result")),
+                .map(|result| *result.proof),
         }
     }
 
@@ -182,9 +182,7 @@ impl Runtime {
     ) -> Result<SuccessVerifyFactWellDefinedProofResult, RuntimeError> {
         let (well_definedness, _) = self
             .verify_forall_fact_well_defined_and_collect_certificate(forall_fact, verify_state)?;
-        Ok(*well_definedness
-            .recursive
-            .expect("forall precheck returns recursive WD evidence"))
+        Ok(*well_definedness.proof)
     }
 
     pub fn verify_fact_binder_result(
@@ -263,9 +261,7 @@ impl Runtime {
         let fact_id = self.known_fact_id_for_fact(&proposition)?;
         Ok(SuccessVerifyLocalFactWellDefinedResult {
             proposition: proposition.clone(),
-            well_definedness: well_definedness
-                .recursive
-                .expect("recursive quantifier-free WD result"),
+            well_definedness: well_definedness.proof,
             store: SuccessStoreFactResult {
                 fact: proposition,
                 fact_id,
@@ -290,9 +286,7 @@ impl Runtime {
         let fact_id = self.known_fact_id_for_fact(proposition)?;
         Ok(SuccessVerifyLocalFactWellDefinedResult {
             proposition: proposition.clone(),
-            well_definedness: well_definedness
-                .recursive
-                .expect("recursive local fact WD result"),
+            well_definedness: well_definedness.proof,
             store: SuccessStoreFactResult {
                 fact: proposition.clone(),
                 fact_id,
@@ -508,6 +502,12 @@ impl Runtime {
                 verify_state,
             )?
             else {
+                if atomic_fact.to_string() == "0 < i" {
+                    eprintln!(
+                        "0 < i WD requested from:\n{}",
+                        std::backtrace::Backtrace::force_capture()
+                    );
+                }
                 return Err(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
                         format!(
@@ -530,7 +530,7 @@ impl Runtime {
         if let Some(type_results) =
             self.verify_builtin_function_property_arg_types(atomic_fact, verify_state)?
         {
-            if type_results.iter().any(StmtResult::is_unknown) {
+            if type_results.iter().any(VerifyFactResult::is_unknown) {
                 return Err(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
                         format!(
@@ -625,7 +625,7 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<
         (
-            SuccessVerifyFactWellDefinedResult,
+            WellDefinedFactResult,
             WellDefinednessEnvironmentDelta,
         ),
         RuntimeError,
@@ -707,9 +707,7 @@ impl Runtime {
                 let fact_id = rt.known_fact_id_for_fact(&proposition)?;
                 conclusions.push(SuccessVerifyLocalFactWellDefinedResult {
                     proposition: proposition.clone(),
-                    well_definedness: well_definedness
-                        .recursive
-                        .expect("recursive quantified conclusion WD result"),
+                    well_definedness: well_definedness.proof,
                     store: SuccessStoreFactResult {
                         fact: proposition,
                         fact_id,
@@ -726,7 +724,7 @@ impl Runtime {
                 },
             ));
             Ok((
-                SuccessVerifyFactWellDefinedResult::new_recursive(recursive),
+                WellDefinedFactResult::new(forall_fact.clone().into(), recursive),
                 certificate,
             ))
         })

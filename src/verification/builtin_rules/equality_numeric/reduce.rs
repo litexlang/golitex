@@ -8,7 +8,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -51,7 +51,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -125,7 +125,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -190,7 +190,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -232,7 +232,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -297,7 +297,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -335,7 +335,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -411,7 +411,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -471,7 +471,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -525,7 +525,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -555,7 +555,7 @@ impl Runtime {
                     left_reduce.end.as_ref().clone(),
                 )
                 .into();
-                let pointwise = self.verify_reduce_functions_pointwise_on_set(
+                let Some(pointwise) = self.verify_reduce_functions_pointwise_on_set(
                     &EqualFact::new_from_refs(
                         left_reduce.func.as_ref(),
                         right_reduce.func.as_ref(),
@@ -563,7 +563,9 @@ impl Runtime {
                     ),
                     &index_set,
                     builtin_state,
-                )?;
+                )? else {
+                    return Ok(None);
+                };
                 if !pointwise.is_success() {
                     return Ok(None);
                 }
@@ -593,7 +595,7 @@ impl Runtime {
                         result,
                     ));
                 }
-                let pointwise = self.verify_reduce_functions_pointwise_on_set(
+                let Some(pointwise) = self.verify_reduce_functions_pointwise_on_set(
                     &EqualFact::new_from_refs(
                         left_reduce.func.as_ref(),
                         right_reduce.func.as_ref(),
@@ -601,7 +603,9 @@ impl Runtime {
                     ),
                     left_reduce.set.as_ref(),
                     builtin_state,
-                )?;
+                )? else {
+                    return Ok(None);
+                };
                 if !pointwise.is_success() {
                     return Ok(None);
                 }
@@ -624,7 +628,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -731,25 +735,35 @@ impl Runtime {
                     let Some(source_value) =
                         rt.instantiate_reduce_function_at(&source_func, &[source_index])?
                     else {
-                        return Ok(UnknownGenericStmtResult::new().into());
+                        return Ok(None);
                     };
                     let Some(translated_value) =
                         rt.instantiate_reduce_function_at(&translated_func, &[index])?
                     else {
-                        return Ok(UnknownGenericStmtResult::new().into());
+                        return Ok(None);
                     };
                     let equality: AtomicFact =
                         EqualFact::new(source_value, translated_value, line_file.clone()).into();
                     let known_forall = rt.verify_atomic_fact_with_known_forall(
                         &equality,
-                        &local_verify_state.with_well_definedness_verified(),
+                        &local_verify_state.clone(),
                     )?;
                     if known_forall.is_success() {
-                        return Ok(known_forall);
+                        return rt
+                            .complete_atomic_fact_proof_result(
+                            &equality,
+                            known_forall,
+                            local_verify_state,
+                        )
+                            .map(Some);
                     }
                     rt.verify_atomic_fact_as_builtin_rule_premise(&equality, &local_builtin_state)
+                        .map(Some)
                 },
             )?;
+            let Some(pointwise_result) = pointwise_result else {
+                continue;
+            };
             if !pointwise_result.is_success() {
                 continue;
             }
@@ -771,7 +785,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -862,7 +876,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -938,7 +952,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -997,7 +1011,7 @@ impl Runtime {
             if !structural_match {
                 continue;
             }
-            let outer_pointwise = self.verify_reduce_functions_pointwise_on_set(
+            let Some(outer_pointwise) = self.verify_reduce_functions_pointwise_on_set(
                 &EqualFact::new_from_refs(
                     full.func.as_ref(),
                     outer.func.as_ref(),
@@ -1005,11 +1019,13 @@ impl Runtime {
                 ),
                 outer.set.as_ref(),
                 builtin_state,
-            )?;
+            )? else {
+                continue;
+            };
             if !outer_pointwise.is_success() {
                 continue;
             }
-            let inner_pointwise = self.verify_reduce_functions_pointwise_on_set(
+            let Some(inner_pointwise) = self.verify_reduce_functions_pointwise_on_set(
                 &EqualFact::new_from_refs(
                     full.func.as_ref(),
                     inner.func.as_ref(),
@@ -1017,7 +1033,9 @@ impl Runtime {
                 ),
                 inner.set.as_ref(),
                 builtin_state,
-            )?;
+            )? else {
+                continue;
+            };
             if !inner_pointwise.is_success() {
                 continue;
             }
@@ -1039,7 +1057,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -1102,10 +1120,14 @@ impl Runtime {
                     rt.define_params_with_type(&params_def, false, BindingScope::LocalBinder)?;
                     let known_forall = rt.verify_atomic_fact_with_known_forall(
                         &pointwise_fact,
-                        &local_verify_state.with_well_definedness_verified(),
+                        &local_verify_state.clone(),
                     )?;
                     if known_forall.is_success() {
-                        return Ok(known_forall);
+                        return rt.complete_atomic_fact_proof_result(
+                            &pointwise_fact,
+                            known_forall,
+                            local_verify_state,
+                        );
                     }
                     rt.verify_atomic_fact_as_builtin_rule_premise(
                         &pointwise_fact,
@@ -1165,7 +1187,7 @@ impl Runtime {
         specialization: NativeReduceSpecialization,
         line_file: LineFile,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
+    ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
         let mut subgoals = Vec::new();
         for (actual, expected) in [
             (reduce.start.as_ref(), aggregate_start),
@@ -1185,11 +1207,13 @@ impl Runtime {
         }
         let index_set: Obj =
             ClosedRange::new(aggregate_start.clone(), aggregate_end.clone()).into();
-        let function_result = self.verify_reduce_functions_pointwise_on_set(
+        let Some(function_result) = self.verify_reduce_functions_pointwise_on_set(
             &EqualFact::new_from_refs(reduce.func.as_ref(), aggregate_func, line_file.clone()),
             &index_set,
             builtin_state,
-        )?;
+        )? else {
+            return Ok(None);
+        };
         if !function_result.is_success() {
             return Ok(None);
         }
@@ -1209,13 +1233,15 @@ impl Runtime {
         let Some(carrier) = self.reduce_carrier_from_operation(reduce.op.as_ref()) else {
             return Ok(None);
         };
-        let operation_result = self.verify_reduce_operation_matches_native(
+        let Some(operation_result) = self.verify_reduce_operation_matches_native(
             reduce.op.as_ref(),
             &carrier,
             specialization,
             line_file,
             builtin_state,
-        )?;
+        )? else {
+            return Ok(None);
+        };
         if !operation_result.is_success() {
             return Ok(None);
         }
@@ -1231,7 +1257,7 @@ impl Runtime {
         specialization: NativeReduceSpecialization,
         line_file: LineFile,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
+    ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
         let set_result = self.verify_equal_fact_as_builtin_premise(
             &EqualFact::new_from_refs(reduce.set.as_ref(), aggregate_set, line_file.clone()),
             builtin_state,
@@ -1243,11 +1269,13 @@ impl Runtime {
             &EqualFact::new_from_refs(reduce.set.as_ref(), aggregate_set, line_file.clone()),
             set_result,
         );
-        let function_result = self.verify_reduce_functions_pointwise_on_set(
+        let Some(function_result) = self.verify_reduce_functions_pointwise_on_set(
             &EqualFact::new_from_refs(reduce.func.as_ref(), aggregate_func, line_file.clone()),
             reduce.set.as_ref(),
             builtin_state,
-        )?;
+        )? else {
+            return Ok(None);
+        };
         if !function_result.is_success() {
             return Ok(None);
         }
@@ -1267,13 +1295,15 @@ impl Runtime {
         let Some(carrier) = self.reduce_carrier_from_operation(reduce.op.as_ref()) else {
             return Ok(None);
         };
-        let operation_result = self.verify_reduce_operation_matches_native(
+        let Some(operation_result) = self.verify_reduce_operation_matches_native(
             reduce.op.as_ref(),
             &carrier,
             specialization,
             line_file,
             builtin_state,
-        )?;
+        )? else {
+            return Ok(None);
+        };
         if !operation_result.is_success() {
             return Ok(None);
         }
@@ -1288,7 +1318,7 @@ impl Runtime {
         specialization: NativeReduceSpecialization,
         line_file: LineFile,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<Option<VerifyFactResult>, RuntimeError> {
         let operation = operation.clone();
         let carrier = carrier.clone();
         self.run_in_local_verification_env(
@@ -1307,19 +1337,26 @@ impl Runtime {
                 let Some(actual) =
                     rt.instantiate_reduce_function_at(&operation, &[x.clone(), y.clone()])?
                 else {
-                    return Ok(UnknownGenericStmtResult::new().into());
+                    return Ok(None);
                 };
                 let expected = specialization.apply(x, y);
                 let equality: AtomicFact =
                     EqualFact::new(actual, expected, line_file.clone()).into();
                 let known_forall = rt.verify_atomic_fact_with_known_forall(
                     &equality,
-                    &local_verify_state.with_well_definedness_verified(),
+                    &local_verify_state.clone(),
                 )?;
                 if known_forall.is_success() {
-                    return Ok(known_forall);
+                    return rt
+                        .complete_atomic_fact_proof_result(
+                        &equality,
+                        known_forall,
+                        local_verify_state,
+                    )
+                        .map(Some);
                 }
                 rt.verify_atomic_fact_as_builtin_rule_premise(&equality, &local_builtin_state)
+                    .map(Some)
             },
         )
     }
@@ -1329,13 +1366,13 @@ impl Runtime {
         equal_fact: &EqualFact,
         set: &Obj,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<Option<VerifyFactResult>, RuntimeError> {
         let left_func = &equal_fact.left;
         let right_func = &equal_fact.right;
         let line_file = &equal_fact.line_file;
         let direct = self.verify_equal_fact_as_builtin_premise(equal_fact, builtin_state)?;
         if direct.is_success() {
-            return Ok(direct);
+            return Ok(Some(direct));
         }
         for (first, second) in [
             (left_func.clone(), right_func.clone()),
@@ -1343,15 +1380,20 @@ impl Runtime {
         ] {
             let fn_eq_in: AtomicFact =
                 FnEqualInFact::new(first, second, set.clone(), line_file.clone()).into();
-            let known = if let Some(result) =
+            let known_proof = if let Some(result) =
                 self.verification_result_from_known_fact_cache(&fn_eq_in.clone().into())
             {
                 result
             } else {
                 self.verify_non_equational_atomic_fact_with_known_atomic_facts(&fn_eq_in)?
             };
+            let known = self.complete_atomic_fact_proof_result(
+                &fn_eq_in,
+                known_proof,
+                builtin_state.verify_state(),
+            )?;
             if known.is_success() {
-                return Ok(known);
+                return Ok(Some(known));
             }
         }
 
@@ -1372,22 +1414,29 @@ impl Runtime {
                 let Some(left_value) =
                     rt.instantiate_reduce_function_at(&left_func, &[x.clone()])?
                 else {
-                    return Ok(UnknownGenericStmtResult::new().into());
+                    return Ok(None);
                 };
                 let Some(right_value) = rt.instantiate_reduce_function_at(&right_func, &[x])?
                 else {
-                    return Ok(UnknownGenericStmtResult::new().into());
+                    return Ok(None);
                 };
                 let equality: AtomicFact =
                     EqualFact::new(left_value, right_value, line_file.clone()).into();
                 let known_forall = rt.verify_atomic_fact_with_known_forall(
                     &equality,
-                    &local_verify_state.with_well_definedness_verified(),
+                    &local_verify_state.clone(),
                 )?;
                 if known_forall.is_success() {
-                    return Ok(known_forall);
+                    return rt
+                        .complete_atomic_fact_proof_result(
+                        &equality,
+                        known_forall,
+                        local_verify_state,
+                    )
+                        .map(Some);
                 }
                 rt.verify_atomic_fact_as_builtin_rule_premise(&equality, &local_builtin_state)
+                    .map(Some)
             },
         )
     }

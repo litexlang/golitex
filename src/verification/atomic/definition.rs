@@ -6,7 +6,7 @@ impl Runtime {
     fn verify_definition_clause_from_known_cache(
         &mut self,
         clause: &Fact,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         if let Some(result) = self.verification_result_from_known_fact_cache(clause) {
             return Ok(Some(result));
         }
@@ -17,7 +17,7 @@ impl Runtime {
                     return Ok(None);
                 };
                 Ok(Some(
-                    SuccessFactStmtResult::new_with_verified_by_known_fact(
+                    SuccessProveFactResult::new_with_verified_by_known_fact(
                         clause.clone(),
                         SuccessFactProofResult::cached_fact(
                             clause.clone(),
@@ -42,7 +42,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let AtomicFact::NormalAtomicFact(normal_fact) = atomic_fact else {
             return Ok(None);
         };
@@ -58,7 +58,7 @@ impl Runtime {
             subgoals.push(result);
         }
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "prime by trial-division definition".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -74,7 +74,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let AtomicFact::NormalAtomicFact(normal_fact) = atomic_fact else {
             return Ok(None);
         };
@@ -90,7 +90,7 @@ impl Runtime {
             subgoals.push(result);
         }
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "coprime by natural gcd-one definition".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -106,7 +106,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let AtomicFact::NormalAtomicFact(normal_fact) = atomic_fact else {
             return Ok(None);
         };
@@ -122,7 +122,7 @@ impl Runtime {
             subgoals.push(result);
         }
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "dvd by zero-remainder and integer-multiple definition".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -138,7 +138,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let AtomicFact::NormalAtomicFact(normal_fact) = atomic_fact else {
             return Ok(None);
         };
@@ -156,7 +156,7 @@ impl Runtime {
             subgoals.push(result);
         }
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "choice function by pointwise membership definition".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -173,7 +173,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         if let Some(result) = self.verify_prime_fact_by_definition(atomic_fact, verify_state)? {
             return Ok(Some(result));
         }
@@ -217,7 +217,7 @@ impl Runtime {
         &mut self,
         subset_fact: &SubsetFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let bound_param_name = self.generate_random_unused_name();
         let bound_param = self.fresh_param_group_with_type(
             vec![bound_param_name],
@@ -241,7 +241,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(
-            (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            (SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 subset_fact.clone().into(),
                 "subset by definition (forall x in left: x in right)".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -257,7 +257,7 @@ impl Runtime {
         &mut self,
         superset_fact: &SupersetFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let bound_param_name = self.generate_random_unused_name();
         let bound_param = self.fresh_param_group_with_type(
             vec![bound_param_name],
@@ -281,7 +281,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(
-            (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            (SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 superset_fact.clone().into(),
                 "superset by definition (forall x in right: x in left)".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -297,7 +297,7 @@ impl Runtime {
         &mut self,
         normal_atomic_fact: &NormalAtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         if let Some(result) =
             self.verify_builtin_function_property_by_definition(normal_atomic_fact, verify_state)?
         {
@@ -353,7 +353,6 @@ impl Runtime {
             if clause_result.is_unknown() {
                 return Ok(None);
             }
-            infer_result.new_infer_result_inside(clause_result.infer_result());
         }
 
         let verified_by_text = format!(
@@ -363,7 +362,7 @@ impl Runtime {
         let fact_by_definition: Fact = normal_atomic_fact.clone().into();
         infer_result.add_fact_by_definition(&fact_by_definition);
         Ok(Some(
-            (SuccessFactStmtResult::new_with_verified_by_known_fact_and_infer(
+            (SuccessProveFactResult::new_with_verified_by_known_fact_and_infer(
                 normal_atomic_fact.clone().into(),
                 infer_result,
                 SuccessFactProofResult::cited_definition(
@@ -384,7 +383,7 @@ impl Runtime {
         normal_atomic_fact: &NormalAtomicFact,
         definition: &DefPropStmt,
         verify_state: &VerifyState,
-    ) -> Result<(VerifyArgsSatisfyParamDefResult, Vec<(Fact, StmtResult)>), RuntimeError> {
+    ) -> Result<(VerifyArgsSatisfyParamDefResult, Vec<(Fact, VerifyFactResult)>), RuntimeError> {
         let predicate_name = normal_atomic_fact.predicate.to_string();
         let full_param_type_result = self.verify_args_satisfy_param_def_flat_types(
             &definition.typed_parameters,
@@ -427,11 +426,8 @@ impl Runtime {
                             vec![],
                         )))
                     })?;
-                let clause_well_definedness =
-                    self.verify_fact_well_defined_result(&instantiated_iff_fact, verify_state)?;
-                let clause_result = self
-                    .verify_fact_allow_unknown(&instantiated_iff_fact, verify_state)?
-                    .with_fact_well_definedness(clause_well_definedness);
+                let clause_result =
+                    self.verify_fact_allow_unknown(&instantiated_iff_fact, verify_state)?;
                 let clause_is_unknown = clause_result.is_unknown();
                 clause_checks.push((instantiated_iff_fact, clause_result));
                 if clause_is_unknown {
@@ -492,12 +488,13 @@ impl Runtime {
         }
         let clause_well_definedness =
             self.verify_fact_well_defined_result(&instantiated_clause, verify_state)?;
+        let cached_clause_result = Runtime::finish_fact_verification(
+            clause_well_definedness,
+            cached_clause_result,
+        );
         Ok((
             args_param_types,
-            vec![(
-                instantiated_clause,
-                cached_clause_result.with_fact_well_definedness(clause_well_definedness),
-            )],
+            vec![(instantiated_clause, cached_clause_result)],
         ))
     }
 
@@ -505,7 +502,7 @@ impl Runtime {
         &mut self,
         fact: &AtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         match fact {
             AtomicFact::SubsetFact(subset_fact) => {
                 if let Some(verified_by_subset_definition) = self

@@ -4,15 +4,11 @@ use crate::prelude::*;
 use std::result::Result;
 
 impl Runtime {
-    pub fn verify_not_forall_fact(
+    pub(crate) fn prove_not_forall_fact(
         &mut self,
         not_forall: &NotForallFact,
-        verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
-        if !verify_state.well_definedness_verified {
-            self.verify_not_forall_fact_well_defined(not_forall, verify_state)?;
-        }
-
+        _verify_state: &VerifyState,
+    ) -> Result<ProveFactResult, RuntimeError> {
         if let Some(cached_result) =
             self.verification_result_from_known_fact_cache(&not_forall.clone().into())
         {

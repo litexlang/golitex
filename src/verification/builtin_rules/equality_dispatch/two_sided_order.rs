@@ -9,23 +9,24 @@ impl Runtime {
         less_or_equal: &Obj,
         line_file: LineFile,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<VerifyFactResult>, RuntimeError> {
         let greater_equal: AtomicFact = GreaterEqualFact::new(
             greater_or_equal.clone(),
             less_or_equal.clone(),
             line_file.clone(),
         )
         .into();
-        let result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&greater_equal, builtin_state)?;
-        if result.is_success() {
+        if let Some(result) =
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&greater_equal, builtin_state)?
+        {
             return Ok(Some(result));
         }
 
         let less_equal: AtomicFact =
             LessEqualFact::new(less_or_equal.clone(), greater_or_equal.clone(), line_file).into();
-        let result = self.verify_atomic_fact_as_builtin_rule_premise(&less_equal, builtin_state)?;
-        if result.is_success() {
+        if let Some(result) =
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&less_equal, builtin_state)?
+        {
             return Ok(Some(result));
         }
 
@@ -40,7 +41,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -56,7 +57,7 @@ impl Runtime {
             GreaterEqualFact::new(right.clone(), left.clone(), line_file.clone()).into();
         let left_le_right: AtomicFact =
             LessEqualFact::new(left.clone(), right.clone(), line_file.clone()).into();
-        let complete_result = self.verify_builtin_rule_premise_alternatives(
+        let complete_result = self.try_verify_builtin_rule_premise_alternatives(
             vec![
                 vec![
                     left_in_r.clone(),
@@ -81,9 +82,9 @@ impl Runtime {
             line_file.clone(),
             builtin_state,
         )?;
-        if complete_result.is_success() {
+        if let Some(complete_result) = complete_result {
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     equal_fact.clone().into(),
                     "equality from a >= b and b >= a".to_string(),
                     BuiltinRuleEvidence::Uncatalogued(
@@ -117,7 +118,7 @@ impl Runtime {
         steps.push(right_ge_left);
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "equality from a >= b and b >= a".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(

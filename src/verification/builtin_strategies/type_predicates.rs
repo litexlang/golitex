@@ -7,7 +7,7 @@ impl Runtime {
         &mut self,
         fact: &IsFiniteSetFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let mut child_results = Vec::new();
         let reason = match &fact.set {
             Obj::FnRange(fn_range) => {
@@ -97,7 +97,7 @@ impl Runtime {
         };
 
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                 fact.clone().into(),
                 reason.to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -113,16 +113,17 @@ impl Runtime {
         &mut self,
         fact: &IsFiniteSetFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<VerifyFactResult, RuntimeError> {
         let atomic_fact: AtomicFact = fact.clone().into();
         let direct = self.verify_non_equational_atomic_fact_with_bounded_builtin_routes(
             &atomic_fact,
             verify_state,
         )?;
         if direct.is_success() {
-            return Ok(direct);
+            return self.complete_atomic_fact_proof_result(&atomic_fact, direct, verify_state);
         }
-        self.verify_is_finite_set_with_builtin_strategy(fact, verify_state)
+        let proof = self.verify_is_finite_set_with_builtin_strategy(fact, verify_state)?;
+        self.complete_atomic_fact_proof_result(&atomic_fact, proof, verify_state)
     }
 
     // Nonemptiness is structural only for constructors whose witnesses come from their
@@ -131,7 +132,7 @@ impl Runtime {
         &mut self,
         fact: &IsNonemptySetFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         match &fact.set {
             // An integer closed range is nonempty exactly when its endpoints are ordered.
             // Example: `2 <= n` proves `$is_nonempty_set(closed_range(1, n))`.
@@ -147,7 +148,7 @@ impl Runtime {
                     return Ok(UnknownGenericStmtResult::new().into());
                 }
                 Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                         fact.clone().into(),
                         "nonempty-set strategy: closed integer range has ordered endpoints"
                             .to_string(),
@@ -171,7 +172,7 @@ impl Runtime {
                     return Ok(UnknownGenericStmtResult::new().into());
                 }
                 Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                         fact.clone().into(),
                         "nonempty-set strategy: half-open integer range has strictly ordered endpoints"
                             .to_string(),
@@ -211,7 +212,7 @@ impl Runtime {
                     "nonempty-set strategy: real interval with an open endpoint has strictly ordered endpoints"
                 };
                 Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                         fact.clone().into(),
                         reason.to_string(),
                         BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsNonemptySetWithBuiltinStrategy03),
@@ -227,7 +228,7 @@ impl Runtime {
                         self.verify_is_nonempty_set_strategy_child(&child, verify_state)?;
                     if result.is_success() {
                         return Ok(
-                            SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
+                            SuccessProveFactResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                                 fact.clone().into(),
                                 "nonempty-set strategy: a union has a nonempty side".to_string(),
                                 BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsNonemptySetWithBuiltinStrategy04),
@@ -252,7 +253,7 @@ impl Runtime {
                     results.push(result);
                 }
                 Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                         fact.clone().into(),
                         "nonempty-set strategy: all Cartesian factors are nonempty".to_string(),
                         BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyIsNonemptySetWithBuiltinStrategy05),
@@ -301,14 +302,14 @@ impl Runtime {
         child_set: &Obj,
         reason: &str,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let child = IsNonemptySetFact::new(child_set.clone(), fact.line_file.clone());
         let result = self.verify_is_nonempty_set_strategy_child(&child, verify_state)?;
         if !result.is_success() {
             return Ok(UnknownGenericStmtResult::new().into());
         }
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                 fact.clone().into(),
                 reason.to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -324,15 +325,16 @@ impl Runtime {
         &mut self,
         fact: &IsNonemptySetFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<VerifyFactResult, RuntimeError> {
         let atomic_fact: AtomicFact = fact.clone().into();
         let direct = self.verify_non_equational_atomic_fact_with_bounded_builtin_routes(
             &atomic_fact,
             verify_state,
         )?;
         if direct.is_success() {
-            return Ok(direct);
+            return self.complete_atomic_fact_proof_result(&atomic_fact, direct, verify_state);
         }
-        self.verify_is_nonempty_set_with_builtin_strategy(fact, verify_state)
+        let proof = self.verify_is_nonempty_set_with_builtin_strategy(fact, verify_state)?;
+        self.complete_atomic_fact_proof_result(&atomic_fact, proof, verify_state)
     }
 }

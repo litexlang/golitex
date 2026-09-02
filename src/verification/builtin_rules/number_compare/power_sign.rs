@@ -7,7 +7,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let Some(normalized_fact) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
         };
@@ -49,8 +49,8 @@ impl Runtime {
         } else {
             "0 <= a^n for even integer n (forall a R)".to_string()
         };
-        Ok(Some(StmtResult::from(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+        Ok(Some(ProveFactResult::from(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 msg,
                 BuiltinRuleEvidence::Uncatalogued(
@@ -67,7 +67,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let Some(normalized_fact) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
         };
@@ -111,8 +111,8 @@ impl Runtime {
         }
         steps.push(neq_result);
 
-        Ok(Some(StmtResult::from(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+        Ok(Some(ProveFactResult::from(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 reason.to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -128,7 +128,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let Some(normalized_fact) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
         };
@@ -159,8 +159,8 @@ impl Runtime {
         };
         let mut steps = vec![base_result];
         steps.append(&mut exponent_steps);
-        Ok(Some(StmtResult::from(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+        Ok(Some(ProveFactResult::from(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "0 < a^b from 0 < a and b in R".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -177,7 +177,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let Some(normalized_fact) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
         };
@@ -208,8 +208,8 @@ impl Runtime {
         };
         let mut steps = vec![base_result];
         steps.append(&mut exponent_steps);
-        Ok(Some(StmtResult::from(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+        Ok(Some(ProveFactResult::from(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "0 <= a^b from 0 < a and b in R".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -227,7 +227,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let Some(normalized_fact) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
         };
@@ -259,8 +259,8 @@ impl Runtime {
         if !in_n_pos_result.is_success() {
             return Ok(None);
         }
-        Ok(Some(StmtResult::from(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+        Ok(Some(ProveFactResult::from(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "0 <= a^n from 0 <= a and n in N+".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyZeroLePowFromNonnegativeBasePositiveIntegerExpBuiltinRule),
@@ -273,7 +273,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let Some(normalized_fact) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
         };
@@ -319,8 +319,8 @@ impl Runtime {
             _ => "0 <= a^n from 0 <= a and integer n".to_string(),
         };
 
-        Ok(Some(StmtResult::from(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+        Ok(Some(ProveFactResult::from(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 msg,
                 BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyZeroLePowIntegerExponentFromNonnegBaseBuiltinRule),

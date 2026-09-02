@@ -16,7 +16,7 @@ impl Runtime {
         &mut self,
         fact: &NotEqualFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let expression = if self.obj_represents_zero_for_not_equal_builtin_rules(&fact.right) {
             &fact.left
         } else if self.obj_represents_zero_for_not_equal_builtin_rules(&fact.left) {
@@ -48,7 +48,7 @@ impl Runtime {
         }
 
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                 fact.clone().into(),
                 "nonzero-product strategy: all immediate factors are nonzero".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(

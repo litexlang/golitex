@@ -69,7 +69,7 @@ impl StmtResultToLeanCompiler {
                 result.statement.line_file.clone(),
             );
             let type_check = verification.type_checks[index]
-                .factual_success()
+                .verified()
                 .ok_or_else(|| {
                     format!(
                         "have-object value `{}` has no successful type-check child Result",

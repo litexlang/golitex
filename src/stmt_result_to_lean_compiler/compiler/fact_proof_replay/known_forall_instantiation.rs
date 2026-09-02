@@ -73,7 +73,7 @@ impl StmtResultToLeanCompiler {
                     "known-forall parameter requirement {parameter_index} changed its kind"
                 ));
             }
-            let requirement_result = requirement.result.factual_success().ok_or_else(|| {
+            let requirement_result = requirement.result.verified().ok_or_else(|| {
                 format!("known-forall parameter requirement {parameter_index} is not factual")
             })?;
             if requirement_result.fact().to_string() != requirement.stmt.to_string() {
@@ -179,44 +179,11 @@ impl StmtResultToLeanCompiler {
                 }
             };
             if requirement_needs_proof {
-                let Some(mut proof) =
+                let Some(proof) =
                     self.construct_lean_proof_from_direct_fact_result(requirement_result)?
                 else {
                     return Ok(None);
                 };
-                if let (Some(fact_id), ParamType::Obj(set)) =
-                    (requirement_result.store.fact_id, parameter_type)
-                {
-                    let expected_proposition =
-                        render_fact(&requirement.stmt, &self.environment_stack)?;
-                    if let Some(actual_proposition) = self
-                        .environment_stack
-                        .fact_lean_propositions
-                        .get(&fact_id)
-                        .filter(|actual| *actual != &expected_proposition)
-                    {
-                        let exact_argument = render_exact_predicate_argument(
-                            argument,
-                            set,
-                            &self.environment_stack,
-                        )?;
-                        let rendered_set = render_obj(set, &self.environment_stack)?;
-                        let exact_proposition = format!("Litex.In {exact_argument} {rendered_set}");
-                        if actual_proposition != &exact_proposition {
-                            return Err(format!(
-                                "known-forall parameter proof `{fact_id}` has unrelated Lean proposition `{actual_proposition}`; expected `{expected_proposition}` or `{exact_proposition}`"
-                            ));
-                        }
-                        let exact_to_source = render_exact_predicate_argument_same_to_source(
-                            argument,
-                            set,
-                            &self.environment_stack,
-                        )?;
-                        proof = format!(
-                            "(Litex.In.congr ({exact_to_source}) {rendered_set}).mp ({proof})"
-                        );
-                    }
-                }
                 if exact_real_parameter {
                     let ParamType::Obj(set) = parameter_type else {
                         unreachable!("exact refined numeric parameter is an object")
@@ -484,7 +451,7 @@ impl StmtResultToLeanCompiler {
             let expected_domain = substitution_runtime
                 .inst_fact(source_domain, &substitutions, SubstitutionMode::Exact, None)
                 .map_err(|error| format!("known-forall domain substitution failed: {error:?}"))?;
-            let requirement_result = requirement.result.factual_success().ok_or_else(|| {
+            let requirement_result = requirement.result.verified().ok_or_else(|| {
                 format!("known-forall domain requirement {domain_index} is not factual")
             })?;
             if requirement.stmt.to_string() != expected_domain.to_string()

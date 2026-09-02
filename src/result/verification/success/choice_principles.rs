@@ -79,7 +79,7 @@ pub struct SuccessVerifyByChoiceObligationResult {
     pub role: SuccessVerifyByChoiceObligationRole,
     pub fact: Fact,
     pub fact_id: FactId,
-    pub check: Option<Box<StmtResult>>,
+    pub check: Option<Box<VerifyFactResult>>,
 }
 
 impl SuccessVerifyByChoiceResult {

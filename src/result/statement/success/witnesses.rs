@@ -22,7 +22,7 @@ pub struct SuccessWitnessNonemptySetResult {
 
 pub struct SuccessVerifyWitnessNonemptySetResult {
     pub proof_steps: Vec<StmtResult>,
-    pub nonempty_check: Box<StmtResult>,
+    pub nonempty_check: Box<VerifyFactResult>,
 }
 
 pub enum SuccessWitnessStmtResult {

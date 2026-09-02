@@ -25,7 +25,7 @@ impl StatementResultRenderer {
                     ),
                     (
                         "conclusion_checks".to_string(),
-                        self.stmt_results(&result.conclusion_checks),
+                        self.verify_fact_results(&result.conclusion_checks),
                     ),
                     (
                         "environment_effects".to_string(),

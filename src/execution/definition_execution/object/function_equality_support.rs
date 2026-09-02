@@ -301,7 +301,7 @@ fn case_condition_implies_not_other_result(
             };
             let mut result = rt.verify_atomic_fact(&negated, &VerifyState::initial())?;
             if result.is_success() {
-                rt.attach_known_fact_ids_to_stmt_result(&mut result)?;
+                rt.attach_known_fact_ids_to_verify_fact_result(&mut result)?;
                 return Ok(Some(SuccessVerifyCaseDisjointnessResult {
                     left_case_index,
                     right_case_index,

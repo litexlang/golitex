@@ -8,8 +8,8 @@ pub struct SuccessVerifyByCasesResult {
     /// assumptions are installed. This is intentionally separate from the
     /// branch conclusion checks below: it is the evidence needed to form the
     /// statement's result outside every branch scope.
-    pub goal_well_definedness: Vec<SuccessVerifyFactWellDefinedResult>,
-    pub coverage_check: Box<StmtResult>,
+    pub goal_well_definedness: Vec<WellDefinedFactResult>,
+    pub coverage_check: Box<VerifyFactResult>,
     pub then_facts: Vec<Fact>,
     pub branches: Vec<SuccessVerifyByCaseBranchResult>,
 }
@@ -28,7 +28,7 @@ pub enum SuccessVerifyByCaseBranchExitResult {
 }
 
 pub struct SuccessVerifyByCaseConclusionsResult {
-    pub checks: Vec<StmtResult>,
+    pub checks: Vec<VerifyFactResult>,
 }
 
 pub struct SuccessVerifyByCaseContradictionResult {
@@ -50,8 +50,8 @@ pub struct SuccessVerifyByContraResult {
 
 #[derive(Debug)]
 pub struct SuccessVerifyContradictionResult {
-    pub impossible_check: Box<StmtResult>,
-    pub negated_impossible_check: Box<StmtResult>,
+    pub impossible_check: Box<VerifyFactResult>,
+    pub negated_impossible_check: Box<VerifyFactResult>,
 }
 
 #[derive(Clone, Debug)]
@@ -74,8 +74,8 @@ impl SuccessVerifyLocalProofScopeResult {
 
 impl SuccessVerifyByCasesResult {
     pub fn new(
-        goal_well_definedness: Vec<SuccessVerifyFactWellDefinedResult>,
-        coverage_check: StmtResult,
+        goal_well_definedness: Vec<WellDefinedFactResult>,
+        coverage_check: VerifyFactResult,
         then_facts: Vec<Fact>,
         branches: Vec<SuccessVerifyByCaseBranchResult>,
     ) -> Self {

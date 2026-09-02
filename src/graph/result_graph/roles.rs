@@ -42,16 +42,16 @@ pub(super) fn success_stmt_role(success: &SuccessStmtResult) -> &'static str {
     }
 }
 
-pub(super) fn verify_fact_role(result: &SuccessVerifyFactResult) -> &'static str {
+pub(super) fn verify_fact_role(result: &SuccessFactProofNode) -> &'static str {
     match result {
-        SuccessVerifyFactResult::AtomicFact(_) => "AtomicFact",
-        SuccessVerifyFactResult::ExistFact(_) => "ExistFact",
-        SuccessVerifyFactResult::OrFact(_) => "OrFact",
-        SuccessVerifyFactResult::AndFact(_) => "AndFact",
-        SuccessVerifyFactResult::ChainFact(_) => "ChainFact",
-        SuccessVerifyFactResult::ForallFact(_) => "ForallFact",
-        SuccessVerifyFactResult::ForallFactWithIff(_) => "ForallFactWithIff",
-        SuccessVerifyFactResult::NotForallFact(_) => "NotForallFact",
+        SuccessFactProofNode::AtomicFact(_) => "AtomicFact",
+        SuccessFactProofNode::ExistFact(_) => "ExistFact",
+        SuccessFactProofNode::OrFact(_) => "OrFact",
+        SuccessFactProofNode::AndFact(_) => "AndFact",
+        SuccessFactProofNode::ChainFact(_) => "ChainFact",
+        SuccessFactProofNode::ForallFact(_) => "ForallFact",
+        SuccessFactProofNode::ForallFactWithIff(_) => "ForallFactWithIff",
+        SuccessFactProofNode::NotForallFact(_) => "NotForallFact",
     }
 }
 

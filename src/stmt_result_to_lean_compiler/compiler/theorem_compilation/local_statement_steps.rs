@@ -55,7 +55,13 @@ impl StmtResultToLeanCompiler {
             return self.compile_let_obj_stmt_result_as_local_proof_steps(result, proof_step_index);
         }
         if let Some(factual) = result.factual_success() {
-            if matches!(factual.proof(), SuccessFactProofResult::ForallProof(_)) {
+            let verified = factual.verification().ok_or_else(|| {
+                format!(
+                    "trusted local fact `{}` has no reviewed Lean trust adapter",
+                    factual.fact()
+                )
+            })?;
+            if matches!(verified.proof(), SuccessFactProofResult::ForallProof(_)) {
                 return self.compile_direct_forall_fact_result_as_local_proof_steps(factual);
             }
             return self

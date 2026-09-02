@@ -8,7 +8,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         // Union commutativity for sets.
@@ -94,7 +94,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         // Intersection commutativity for sets.
@@ -181,7 +181,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -291,11 +291,11 @@ impl Runtime {
         equal_fact: &EqualFact,
         reason: &str,
         evidence: Option<SetBuiltinRule>,
-    ) -> StmtResult {
+    ) -> ProveFactResult {
         let fact = equal_fact.clone().into();
         match evidence {
             Some(rule) => {
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     fact,
                     reason.to_string(),
                     BuiltinRuleEvidence::Set(rule),
@@ -303,7 +303,7 @@ impl Runtime {
                 )
             }
             None => {
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     fact,
                     reason.to_string(),
                     BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::SetEqualitySuccess),
@@ -318,9 +318,9 @@ impl Runtime {
         equal_fact: &EqualFact,
         reason: &str,
         rule: SetBuiltinRule,
-        subgoals: Vec<StmtResult>,
-    ) -> StmtResult {
-        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+        subgoals: Vec<VerifyFactResult>,
+    ) -> ProveFactResult {
+        SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
             equal_fact.clone().into(),
             reason.to_string(),
             BuiltinRuleEvidence::Set(rule),

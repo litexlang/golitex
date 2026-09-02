@@ -7,7 +7,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -31,16 +31,14 @@ impl Runtime {
         };
 
         let zero = Self::literal_zero_obj_for_abs_builtin();
-        let first_zero = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
-            &first_base,
-            &zero,
-            line_file.clone(),
-        ));
-        let second_zero = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
-            &second_base,
-            &zero,
-            line_file.clone(),
-        ));
+        let first_zero = self.verify_known_equality_fact(
+            &EqualFact::new_from_refs(&first_base, &zero, line_file.clone()),
+            builtin_state.verify_state(),
+        )?;
+        let second_zero = self.verify_known_equality_fact(
+            &EqualFact::new_from_refs(&second_base, &zero, line_file.clone()),
+            builtin_state.verify_state(),
+        )?;
         if !first_zero.is_success() || !second_zero.is_success() {
             return Ok(None);
         }
@@ -48,7 +46,7 @@ impl Runtime {
         steps.push(second_zero);
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "equality: a^2 + b^2 = 0 from a = 0 and b = 0 over R".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -66,7 +64,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -103,11 +101,10 @@ impl Runtime {
                 else {
                     continue;
                 };
-                let sum_zero = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
-                    &square_sum,
-                    &zero,
-                    line_file.clone(),
-                ));
+                let sum_zero = self.verify_known_equality_fact(
+                    &EqualFact::new_from_refs(&square_sum, &zero, line_file.clone()),
+                    builtin_state.verify_state(),
+                )?;
                 if !sum_zero.is_success() {
                     continue;
                 }
@@ -129,7 +126,7 @@ impl Runtime {
                     steps.push(second_matches);
                 }
                 return Ok(Some(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         equal_fact.clone().into(),
                         "equality: a = 0 from a^2 + b^2 = 0 over R".to_string(),
                         BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifySquareSumComponentZeroFromKnownSumZero),

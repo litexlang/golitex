@@ -50,3 +50,52 @@ impl StmtResult {
         }
     }
 }
+
+impl ProveFactResult {
+    pub fn fact(&self) -> Option<Fact> {
+        match self {
+            Self::Proven(result) => Some(result.fact()),
+            Self::Unknown(UnknownStmtResult::Fact(result)) => Some(result.goal().clone()),
+            Self::Unknown(UnknownStmtResult::Generic(_)) => None,
+        }
+    }
+
+    pub fn line_file(&self) -> LineFile {
+        match self {
+            Self::Proven(result) => result.fact().line_file(),
+            Self::Unknown(UnknownStmtResult::Fact(unknown)) => unknown.goal().line_file(),
+            Self::Unknown(UnknownStmtResult::Generic(_)) => default_line_file(),
+        }
+    }
+
+    pub fn is_success(&self) -> bool {
+        matches!(self, Self::Proven(_))
+    }
+
+    pub fn is_unknown(&self) -> bool {
+        matches!(self, Self::Unknown(_))
+    }
+
+    pub fn as_unknown(&self) -> Option<&UnknownGenericStmtResult> {
+        match self {
+            Self::Unknown(UnknownStmtResult::Generic(unknown)) => Some(unknown),
+            _ => None,
+        }
+    }
+
+    pub fn as_fact_unknown(&self) -> Option<&UnknownFactResult> {
+        match self {
+            Self::Unknown(UnknownStmtResult::Fact(unknown)) => Some(unknown),
+            _ => None,
+        }
+    }
+
+    pub fn wrap_unknown_for_fact(self, fact: Fact) -> Self {
+        match self {
+            Self::Unknown(UnknownStmtResult::Generic(unknown)) => {
+                UnknownFactResult::from_stmt_unknown(fact, *unknown).into()
+            }
+            other => other,
+        }
+    }
+}

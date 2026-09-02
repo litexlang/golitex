@@ -10,7 +10,7 @@ impl StmtResultToLeanCompiler {
         &mut self,
         target: &Fact,
         evidence: &DefinitionProjectionBuiltinRuleEvidence,
-        subgoals: &[StmtResult],
+        subgoals: &[VerifyFactResult],
     ) -> Result<Option<String>, String> {
         let Fact::ExistFact(target_existential) = target else {
             return Err("definition projection requires an existential target".into());
@@ -24,12 +24,10 @@ impl StmtResultToLeanCompiler {
             );
         };
         let source_result = source_result
-            .factual_success()
+            .verified()
             .ok_or_else(|| "definition projection source child is not factual".to_string())?;
         let source_fact: Fact = evidence.fact.clone().into();
-        if source_result.fact().to_string() != source_fact.to_string()
-            || !source_result.store.infers.is_empty()
-        {
+        if source_result.fact().to_string() != source_fact.to_string() {
             return Err("definition projection changed its predicate source child".into());
         }
 

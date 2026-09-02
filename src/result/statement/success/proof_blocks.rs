@@ -4,10 +4,10 @@ use crate::prelude::*;
 
 pub struct SuccessClaimStmtResult {
     pub statement: ClaimStmt,
-    pub well_definedness: Option<SuccessVerifyFactWellDefinedResult>,
+    pub well_definedness: Option<WellDefinedFactResult>,
     pub domain: SuccessVerifyLocalProofScopeResult,
     pub proof_steps: Vec<StmtResult>,
-    pub conclusion_checks: Vec<StmtResult>,
+    pub conclusion_checks: Vec<VerifyFactResult>,
     pub environment_effects: SuccessInferResult,
 }
 

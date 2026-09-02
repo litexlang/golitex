@@ -9,7 +9,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
         };
@@ -26,16 +26,15 @@ impl Runtime {
                     else {
                         continue;
                     };
-                    let candidate_result =
-                        self.verify_non_equational_atomic_fact_with_known_atomic_facts(&candidate)?;
+                    let candidate_result = self.verify_atomic_fact_as_builtin_rule_premise(&candidate, builtin_state)?;
                     if !candidate_result.is_success() {
                         continue;
                     }
                     // Strict order implies weak order at the same bound.
                     // Example: from `0 < c`, prove `0 <= c`.
                     if target_bound == known_bound && known_strict {
-                        return Ok(Some(StmtResult::from(
-                            SuccessFactStmtResult::
+                        return Ok(Some(ProveFactResult::from(
+                            SuccessProveFactResult::
                                 new_with_verified_by_builtin_rule_evidence_recording_stmt(
                                     atomic_fact.clone().into(),
                                     "less_equal_fact_from_known_strict_order".to_string(),
@@ -47,8 +46,8 @@ impl Runtime {
                         )));
                     }
                     if target_bound <= known_bound {
-                        return Ok(Some(StmtResult::from(
-                            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                        return Ok(Some(ProveFactResult::from(
+                            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                                 atomic_fact.clone().into(),
                                 "weaken numeric lower bound from known lower bound".to_string(),
                                 BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyNumericLowerBoundFromKnownLowerBound01),
@@ -68,8 +67,8 @@ impl Runtime {
                         if !in_z_result.is_success() {
                             continue;
                         }
-                        return Ok(Some(StmtResult::from(
-                            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                        return Ok(Some(ProveFactResult::from(
+                            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                                 atomic_fact.clone().into(),
                                 "integer weak lower bound from strict predecessor lower bound"
                                     .to_string(),
@@ -100,11 +99,10 @@ impl Runtime {
                     if !stronger_bound_is_enough {
                         continue;
                     }
-                    let candidate_result =
-                        self.verify_non_equational_atomic_fact_with_known_atomic_facts(&candidate)?;
+                    let candidate_result = self.verify_atomic_fact_as_builtin_rule_premise(&candidate, builtin_state)?;
                     if candidate_result.is_success() {
-                        return Ok(Some(StmtResult::from(
-                            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                        return Ok(Some(ProveFactResult::from(
+                            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                                 atomic_fact.clone().into(),
                                 "weaken numeric strict lower bound from known lower bound"
                                     .to_string(),
@@ -162,8 +160,8 @@ impl Runtime {
     pub(in crate::verification) fn try_verify_numeric_upper_bound_from_known_upper_bound(
         &mut self,
         atomic_fact: &AtomicFact,
-        _builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+        builtin_state: &BuiltinRuleSearchState,
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
         };
@@ -199,13 +197,12 @@ impl Runtime {
                 continue;
             }
 
-            let candidate_result =
-                self.verify_non_equational_atomic_fact_with_known_atomic_facts(&candidate)?;
+            let candidate_result = self.verify_atomic_fact_as_builtin_rule_premise(&candidate, builtin_state)?;
             if !candidate_result.is_success() {
                 continue;
             }
-            return Ok(Some(StmtResult::from(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            return Ok(Some(ProveFactResult::from(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     atomic_fact.clone().into(),
                     "weaken numeric upper bound from known upper bound".to_string(),
                     BuiltinRuleEvidence::Uncatalogued(

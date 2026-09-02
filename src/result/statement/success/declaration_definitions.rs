@@ -30,17 +30,17 @@ pub struct SuccessVerifyDefAlgoParameterRetagResult {
 pub struct SuccessVerifyDefAlgoCaseResult {
     pub case_index: usize,
     pub verification_fact: Fact,
-    pub verification: Box<StmtResult>,
+    pub verification: Box<VerifyFactResult>,
 }
 
 pub struct SuccessVerifyDefAlgoDefaultResult {
     pub verification_fact: Fact,
-    pub verification: Box<StmtResult>,
+    pub verification: Box<VerifyFactResult>,
 }
 
 pub struct SuccessVerifyDefAlgoCoverageResult {
     pub verification_fact: Fact,
-    pub verification: Box<StmtResult>,
+    pub verification: Box<VerifyFactResult>,
 }
 
 pub struct SuccessDefThmStmtResult {
@@ -53,7 +53,7 @@ pub struct SuccessDefThmStmtResult {
 pub struct SuccessAxiomStmtResult {
     pub statement: AxiomStmt,
     pub common: SuccessStmtCommonResult,
-    pub well_definedness: Option<SuccessVerifyFactWellDefinedResult>,
+    pub well_definedness: Option<WellDefinedFactResult>,
 }
 
 pub struct SuccessDefStrategyStmtResult {

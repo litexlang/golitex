@@ -27,7 +27,10 @@ impl Runtime {
                 )
             })?;
 
-        let local_proof_result: Result<(Vec<StmtResult>, StmtResult, StmtResult), RuntimeError> =
+        let local_proof_result: Result<
+            (Vec<StmtResult>, VerifyFactResult, VerifyFactResult),
+            RuntimeError,
+        > =
             self.run_in_local_env(|rt| {
                 let mut proof_steps: Vec<StmtResult> = Vec::new();
                 for proof_stmt in stmt.proof.iter() {

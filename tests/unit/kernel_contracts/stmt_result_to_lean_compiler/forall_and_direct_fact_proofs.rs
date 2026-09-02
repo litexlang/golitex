@@ -18,16 +18,24 @@ fn forall_proof_compiles_its_binder_owned_results_in_one_child_environment() {
     let [StmtResult::Success(SuccessStmtResult::Fact(result))] = results.as_slice() else {
         panic!("expected one forall fact Result")
     };
-    let SuccessFactProofResult::ForallProof(proof) = result.proof() else {
+    let SuccessFactProofResult::ForallProof(proof) = result
+        .proof()
+        .expect("verified forall owns a proof")
+    else {
         panic!("expected ForallProof Result")
     };
     let parameter_fact_id = proof.assumption_infers.store_fact_outputs[0]
         .fact_id
         .expect("forall parameter retains its local FactId");
-    let conclusion_fact_id = proof.proves[0]
-        .result
-        .factual_success()
-        .expect("forall conclusion is factual")
+    let SuccessVerifyFactWellDefinedProofResult::ForallFact(checked) = result
+        .checked()
+        .expect("verified forall owns WD")
+        .proof
+        .as_ref()
+    else {
+        panic!("expected forall WD Result")
+    };
+    let conclusion_fact_id = checked.conclusions[0]
         .store
         .fact_id
         .expect("forall conclusion retains its FactId");
@@ -60,8 +68,9 @@ fn forall_proof_rejects_a_parameter_assumption_with_the_wrong_fact_id() {
     let [StmtResult::Success(SuccessStmtResult::Fact(result))] = results.as_mut_slice() else {
         panic!("expected one forall fact Result")
     };
-    let verification =
-        std::rc::Rc::get_mut(&mut result.verification).expect("test result has one proof owner");
+    let verification = result
+        .verification_mut()
+        .expect("test result has one verification owner");
     let SuccessFactProofResult::ForallProof(proof) = verification.proof_mut() else {
         panic!("expected ForallProof Result")
     };
@@ -84,7 +93,10 @@ fn forall_proof_compiles_natural_parameter_inference_inside_its_binder_environme
     let [StmtResult::Success(SuccessStmtResult::Fact(result))] = results.as_slice() else {
         panic!("expected one natural forall Result")
     };
-    let SuccessFactProofResult::ForallProof(proof) = result.proof() else {
+    let SuccessFactProofResult::ForallProof(proof) = result
+        .proof()
+        .expect("verified forall owns a proof")
+    else {
         panic!("expected ForallProof Result")
     };
     let inferred_fact_ids = proof
@@ -127,7 +139,8 @@ fn forall_proof_rejects_natural_inference_citing_the_wrong_parameter_fact_id() {
     let [StmtResult::Success(SuccessStmtResult::Fact(result))] = results.as_mut_slice() else {
         panic!("expected one natural forall Result")
     };
-    let verification = std::rc::Rc::get_mut(&mut result.verification)
+    let verification = result
+        .verification_mut()
         .expect("corruption test uniquely owns its verification");
     let SuccessFactProofResult::ForallProof(proof) = verification.proof_mut() else {
         panic!("expected ForallProof Result")
@@ -158,7 +171,10 @@ fn forall_proof_compiles_positive_real_inference_only_inside_its_binder_environm
         let [StmtResult::Success(SuccessStmtResult::Fact(result))] = results.as_slice() else {
             panic!("expected one positive-real forall Result")
         };
-        let SuccessFactProofResult::ForallProof(proof) = result.proof() else {
+        let SuccessFactProofResult::ForallProof(proof) = result
+            .proof()
+            .expect("verified forall owns a proof")
+        else {
             panic!("expected ForallProof Result")
         };
         let inferred_fact_id = proof.assumption_infers.rule_applications[0].conclusions[0]
@@ -195,7 +211,8 @@ fn forall_proof_rejects_positive_inference_with_a_corrupted_source_set() {
         let [StmtResult::Success(SuccessStmtResult::Fact(result))] = results.as_mut_slice() else {
             panic!("expected one positive-real forall Result")
         };
-        let verification = std::rc::Rc::get_mut(&mut result.verification)
+        let verification = result
+            .verification_mut()
             .expect("corruption test uniquely owns its verification");
         let SuccessFactProofResult::ForallProof(proof) = verification.proof_mut() else {
             panic!("expected ForallProof Result")
@@ -290,7 +307,8 @@ fn forall_proof_rejects_an_explicit_domain_with_the_wrong_fact_id() {
         let [StmtResult::Success(SuccessStmtResult::Fact(result))] = results.as_mut_slice() else {
             panic!("expected one forall fact Result")
         };
-        let verification = std::rc::Rc::get_mut(&mut result.verification)
+        let verification = result
+            .verification_mut()
             .expect("test result has one proof owner");
         let SuccessFactProofResult::ForallProof(proof) = verification.proof_mut() else {
             panic!("expected ForallProof Result")
@@ -313,8 +331,9 @@ fn direct_closed_membership_compiler_ignores_diagnostic_label_text() {
 
     let mut renamed = execute_closed_natural_membership();
     let result = closed_natural_membership_result_mut(&mut renamed);
-    let verification =
-        std::rc::Rc::get_mut(&mut result.verification).expect("test result has one proof owner");
+    let verification = result
+        .verification_mut()
+        .expect("test result has one proof owner");
     let SuccessFactProofResult::BuiltinRule(proof) = verification.proof_mut() else {
         panic!("expected builtin proof")
     };
@@ -355,11 +374,9 @@ fn direct_nonempty_set_witness_rejects_an_out_of_range_list_selection() {
         .as_mut()
         .expect("witness retains verification")
         .nonempty_check
-        .factual_success_mut()
+        .verified_mut()
         .expect("final check is factual");
-    let verification = std::rc::Rc::get_mut(&mut membership.verification)
-        .expect("test membership has one proof owner");
-    let SuccessFactProofResult::BuiltinRule(proof) = verification.proof_mut() else {
+    let SuccessFactProofResult::BuiltinRule(proof) = membership.proof_mut() else {
         panic!("expected builtin membership proof")
     };
     let Some(BuiltinRuleEvidence::ListSetMembership(evidence)) = proof.evidence.typed_mut() else {
@@ -387,11 +404,9 @@ fn direct_nonempty_set_witness_ignores_membership_diagnostic_text() {
         .as_mut()
         .expect("witness retains verification")
         .nonempty_check
-        .factual_success_mut()
+        .verified_mut()
         .expect("final check is factual");
-    let verification = std::rc::Rc::get_mut(&mut membership.verification)
-        .expect("test membership has one proof owner");
-    let SuccessFactProofResult::BuiltinRule(proof) = verification.proof_mut() else {
+    let SuccessFactProofResult::BuiltinRule(proof) = membership.proof_mut() else {
         panic!("expected builtin membership proof")
     };
     proof.msg = "display-only text must not select a compiler rule".into();
@@ -427,7 +442,9 @@ fn common_zero_premise_builtin_families_compile_directly_from_results() {
             .factual_success()
             .unwrap_or_else(|| panic!("{label} must return a fact Result"));
         let proof = StmtResultToLeanCompiler::new("direct_common_builtin.lit")
-            .construct_lean_proof_from_direct_fact_result(factual)
+            .construct_lean_proof_from_direct_fact_result(
+                factual.verification().expect("verified statement owns evidence"),
+            )
             .unwrap_or_else(|error| panic!("construct {label}: {error}"));
         assert!(proof.is_some(), "{label} still requires compatibility IR");
     }
@@ -448,14 +465,31 @@ fn not_equal_symmetry_wraps_the_exact_cited_child_result() {
     compiler
         .compile_stmt_result(objects)
         .expect("compile object bindings");
+    let StmtResult::Success(SuccessStmtResult::UnsafeStmt(
+        SuccessUnsafeStmtResult::TrustStmt(trusted),
+    )) = trusted
+    else {
+        panic!("expected trusted source premise")
+    };
+    let [trusted_store] = trusted.common.infers.store_fact_outputs.as_slice() else {
+        panic!("trusted source premise owns one store")
+    };
+    let trusted_fact_id = trusted_store.fact_id.expect("trusted source owns a FactId");
     compiler
-        .compile_stmt_result(trusted)
-        .expect("compile source trust boundary");
+        .environment_stack
+        .fact_names
+        .insert(trusted_fact_id, "__trusted_adapter".into());
+    compiler.environment_stack.fact_propositions.insert(
+        trusted_fact_id,
+        trusted_store.itself_and_why_itself_is_stored.0.clone(),
+    );
     let factual = symmetric
         .factual_success()
         .expect("symmetry statement is factual");
     let proof = compiler
-        .construct_lean_proof_from_direct_fact_result(factual)
+        .construct_lean_proof_from_direct_fact_result(
+            factual.verification().expect("verified statement owns evidence"),
+        )
         .expect("construct symmetry directly")
         .expect("symmetry must not use compatibility IR");
     assert!(proof.contains("Litex.Rules.notSameSymm"), "{proof}");
@@ -477,7 +511,9 @@ fn set_builder_membership_combines_its_ordered_child_results_directly() {
         .factual_success()
         .expect("set-builder membership must be factual");
     let proof = StmtResultToLeanCompiler::new("direct_set_builder_membership.lit")
-        .construct_lean_proof_from_direct_fact_result(result)
+        .construct_lean_proof_from_direct_fact_result(
+            result.verification().expect("verified statement owns evidence"),
+        )
         .expect("compile direct set-builder proof")
         .expect("set-builder membership must not use compatibility IR");
     assert!(proof.contains("Litex.Rules.inSetBuilder"), "{proof}");
@@ -604,7 +640,10 @@ fn set_relation_duality_passes_through_the_exact_child_result() {
     let dual = dual_result
         .factual_success()
         .expect("duality result is factual");
-    let SuccessFactProofResult::Reuse(reuse) = dual.proof() else {
+    let SuccessFactProofResult::Reuse(reuse) = dual
+        .proof()
+        .expect("verified duality statement owns a proof")
+    else {
         panic!("transparent set aliases must retain the outer proof reuse")
     };
     let SuccessFactProofResult::Transform(transparent) = reuse.source.proof() else {
@@ -655,7 +694,9 @@ fn set_relation_duality_passes_through_the_exact_child_result() {
         .fact_propositions
         .insert(trusted_fact_id, trusted_fact);
     let proof = compiler
-        .construct_lean_proof_from_direct_fact_result(dual)
+        .construct_lean_proof_from_direct_fact_result(
+            dual.verification().expect("verified statement owns evidence"),
+        )
         .expect("compile typed duality")
         .expect("duality must not use compatibility IR");
     assert!(proof.contains("__fact"), "{proof}");

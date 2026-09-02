@@ -7,7 +7,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -30,7 +30,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "sqrt: (sqrt(x))^2 = x".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -48,7 +48,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -76,7 +76,7 @@ impl Runtime {
                 continue;
             }
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     equal_fact.clone().into(),
                     "sqrt: sqrt(0) = 0 and sqrt(1) = 1".to_string(),
                     BuiltinRuleEvidence::Uncatalogued(
@@ -96,7 +96,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -123,7 +123,7 @@ impl Runtime {
         };
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "sqrt: sqrt(a^2) = a for a >= 0".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -142,7 +142,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -200,7 +200,7 @@ impl Runtime {
         };
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "sqrt: sqrt(a * b) = sqrt(a) * sqrt(b)".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -219,7 +219,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -281,7 +281,7 @@ impl Runtime {
         };
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "sqrt: sqrt(a / b) = sqrt(a) / sqrt(b)".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -297,7 +297,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         if let Some(done) = self.try_verify_sqrt_square_identity(equal_fact, builtin_state)? {
             return Ok(Some(done));
         }

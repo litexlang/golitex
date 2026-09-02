@@ -16,7 +16,7 @@ impl Runtime {
     fn exec_by_cases_stmt_verify_well_definedness(
         &mut self,
         stmt: &ByCasesStmt,
-    ) -> Result<Vec<SuccessVerifyFactWellDefinedResult>, RuntimeError> {
+    ) -> Result<Vec<WellDefinedFactResult>, RuntimeError> {
         let mut goal_well_definedness = Vec::with_capacity(stmt.then_facts.len());
         for fact in stmt.then_facts.iter() {
             goal_well_definedness.push(
@@ -97,7 +97,7 @@ impl Runtime {
     fn exec_by_cases_stmt_verify_process(
         &mut self,
         stmt: &ByCasesStmt,
-        goal_well_definedness: Vec<SuccessVerifyFactWellDefinedResult>,
+        goal_well_definedness: Vec<WellDefinedFactResult>,
     ) -> Result<StmtResult, RuntimeError> {
         let coverage_check = self.exec_by_cases_stmt_verify_cases_cover_all_situations(stmt)?;
         let mut branches = Vec::with_capacity(stmt.cases.len());
@@ -172,7 +172,7 @@ impl Runtime {
     fn exec_by_cases_stmt_verify_cases_cover_all_situations(
         &mut self,
         stmt: &ByCasesStmt,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<VerifyFactResult, RuntimeError> {
         let all_cases_or_fact: Fact =
             OrFact::new(stmt.cases.clone(), stmt.line_file.clone()).into();
         let vs = VerifyState::initial();
@@ -208,14 +208,13 @@ impl Runtime {
         stmt: &ByCasesStmt,
         case_index: usize,
         proof_steps: &mut Vec<StmtResult>,
-    ) -> Result<Vec<StmtResult>, RuntimeError> {
+    ) -> Result<Vec<VerifyFactResult>, RuntimeError> {
         let mut conclusion_checks = Vec::with_capacity(stmt.then_facts.len());
         for then_fact in stmt.then_facts.iter() {
             let exec_fact_result =
-                self.execute_submitted_fact(then_fact)
+                self.verify_fact_or_error(then_fact, &VerifyState::initial())
                     .map_err(|statement_error| {
                         let mut diagnostics = std::mem::take(proof_steps);
-                        diagnostics.append(&mut conclusion_checks);
                         short_exec_error(
                             stmt.clone().into(),
                             format!(
@@ -226,6 +225,7 @@ impl Runtime {
                             diagnostics,
                         )
                     })?;
+            self.store_without_well_defined_verification_and_infer(then_fact.clone())?;
             conclusion_checks.push(exec_fact_result);
         }
         Ok(conclusion_checks)
@@ -309,7 +309,6 @@ impl Runtime {
                 Some(&case_label),
             )?;
             if !forall_then_result.is_success() {
-                proof_steps.push(forall_then_result);
                 return Err(short_exec_error(
                     stmt.clone().into(),
                     format!(
@@ -320,11 +319,16 @@ impl Runtime {
                     proof_steps,
                 ));
             }
+            let forall_then_result = self.complete_fact_proof_result(
+                &Fact::ForallFact(ff.clone()),
+                forall_then_result,
+                &vs,
+            )?;
             let mut conclusion_checks = vec![forall_then_result];
 
             for then_fact in stmt.then_facts.iter().skip(1) {
                 let exec_fact_result =
-                    self.execute_submitted_fact(then_fact)
+                    self.verify_fact_or_error(then_fact, &VerifyState::initial())
                         .map_err(|statement_error| {
                             short_exec_error(
                                 stmt.clone().into(),
@@ -333,13 +337,10 @@ impl Runtime {
                                     then_fact, case_fact
                                 ),
                                 Some(statement_error),
-                                {
-                                    let mut diagnostics = std::mem::take(&mut proof_steps);
-                                    diagnostics.append(&mut conclusion_checks);
-                                    diagnostics
-                                },
+                                std::mem::take(&mut proof_steps),
                             )
                         })?;
+                self.store_without_well_defined_verification_and_infer(then_fact.clone())?;
                 conclusion_checks.push(exec_fact_result);
             }
 

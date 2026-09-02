@@ -7,7 +7,7 @@ impl Runtime {
         tuple: &Tuple,
         cart: &Cart,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         if tuple.args.len() < 2 {
             return Ok((UnknownGenericStmtResult::new()).into());
         }
@@ -36,7 +36,7 @@ impl Runtime {
 
         let target: Fact = in_fact.clone().into();
         Ok(
-            (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            (SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 target.clone(),
                 "tuple in cart: each component is in the corresponding cart factor".to_string(),
                 BuiltinRuleEvidence::TupleCartesianMembership(
@@ -59,7 +59,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let is_cart_fact: AtomicFact =
             IsCartFact::new(in_fact.set.clone(), in_fact.line_file.clone()).into();
         let is_cart_result = self.verify_atomic_fact(&is_cart_fact, verify_state)?;
@@ -113,7 +113,7 @@ impl Runtime {
         }
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 "cart membership from symbolic dimension and projections".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(

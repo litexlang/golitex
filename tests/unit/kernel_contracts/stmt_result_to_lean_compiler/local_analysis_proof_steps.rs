@@ -261,7 +261,8 @@ fn local_transparent_set_membership_rejects_a_changed_definition_fact_id() {
         let membership = membership_steps[0]
             .factual_success_mut()
             .expect("proof step two is a membership fact");
-        let verification = Rc::get_mut(&mut membership.verification)
+        let verification = membership
+            .verification_mut()
             .expect("membership verification is not shared in this Result");
         let SuccessFactProofResult::Reuse(reuse) = verification.proof_mut() else {
             panic!("expected outer membership proof reuse")

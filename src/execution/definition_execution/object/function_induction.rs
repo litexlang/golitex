@@ -197,7 +197,7 @@ impl Runtime {
                 vec![],
             ));
         }
-        self.attach_known_fact_ids_to_stmt_result(&mut lower_bound_check)?;
+        self.attach_known_fact_ids_to_verify_fact_result(&mut lower_bound_check)?;
         Ok(SuccessVerifyHaveFnByInducMeasureResult {
             measure_well_definedness,
             lower_bound_well_definedness,
@@ -212,7 +212,7 @@ impl Runtime {
         stmt: &HaveFnByInducStmt,
         label: &str,
         object: &Obj,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<VerifyFactResult, RuntimeError> {
         let integer_fact: AtomicFact = InFact::new(
             object.clone(),
             StandardSet::Z.into(),
@@ -243,7 +243,7 @@ impl Runtime {
                 vec![],
             ));
         }
-        self.attach_known_fact_ids_to_stmt_result(&mut result)?;
+        self.attach_known_fact_ids_to_verify_fact_result(&mut result)?;
         Ok(result)
     }
 
@@ -354,7 +354,7 @@ impl Runtime {
                     vec![],
                 )
             })?;
-        self.attach_known_fact_ids_to_stmt_result(&mut coverage_check)?;
+        self.attach_known_fact_ids_to_verify_fact_result(&mut coverage_check)?;
 
         let mutual_exclusions =
             self.verify_have_fn_by_induc_cases_mutually_exclusive(stmt, cases)?;
@@ -438,7 +438,7 @@ impl Runtime {
                 vec![],
             ));
         }
-        self.attach_known_fact_ids_to_stmt_result(&mut return_membership_check)?;
+        self.attach_known_fact_ids_to_verify_fact_result(&mut return_membership_check)?;
         Ok(SuccessVerifyHaveFnByInducEqualToResult {
             value: equal_to.clone(),
             well_definedness,

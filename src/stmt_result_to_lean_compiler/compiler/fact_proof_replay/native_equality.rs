@@ -9,18 +9,11 @@ impl StmtResultToLeanCompiler {
     /// ordinary semantic proof.
     pub(in super::super) fn construct_lean_native_equality_proof_from_direct_fact_result_using_its_well_definedness(
         &mut self,
-        result: &SuccessFactStmtResult,
+        result: &VerifiedFactResult,
     ) -> Result<Option<String>, String> {
-        if result.well_definedness.recursive.is_none() {
-            return self.construct_lean_native_equality_proof_from_direct_fact_result(result);
-        }
-        let certificate =
-            self.construct_well_definedness_to_lean_compilation_context(&result.well_definedness)?;
-        let parent = self.environment_stack.well_definedness.replace(certificate);
-        let construction =
-            self.construct_lean_native_equality_proof_from_direct_fact_result(result);
-        self.environment_stack.well_definedness = parent;
-        construction
+        self.with_verified_fact_well_definedness_context(result, |compiler| {
+            compiler.construct_lean_native_equality_proof_from_direct_fact_result(result)
+        })
     }
 
     /// Construct native Lean equality only for Result rules whose reviewed
@@ -30,7 +23,7 @@ impl StmtResultToLeanCompiler {
     /// admissible rewrite certificate for native order propositions.
     pub(in super::super) fn construct_lean_native_equality_proof_from_direct_fact_result(
         &mut self,
-        result: &SuccessFactStmtResult,
+        result: &VerifiedFactResult,
     ) -> Result<Option<String>, String> {
         let target = result.fact();
         let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = &target else {

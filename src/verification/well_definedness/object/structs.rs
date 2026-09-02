@@ -459,7 +459,7 @@ impl Runtime {
     ) -> Result<Obj, RuntimeError> {
         self.instantiated_struct_field_type_for_access(
             field_access,
-            &VerifyState::after_well_definedness(),
+            &VerifyState::initial(),
         )
     }
 

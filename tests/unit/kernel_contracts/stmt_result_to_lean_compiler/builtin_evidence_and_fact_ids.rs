@@ -248,7 +248,8 @@ fn integer_remainder_builtin_mut(results: &mut [StmtResult]) -> &mut SuccessBuil
     let [StmtResult::Success(SuccessStmtResult::Fact(forall_result))] = results else {
         panic!("expected one forall Result")
     };
-    let verification = std::rc::Rc::get_mut(&mut forall_result.verification)
+    let verification = forall_result
+        .verification_mut()
         .expect("test owns the forall verification Result");
     let SuccessFactProofResult::ForallProof(forall) = verification.proof_mut() else {
         panic!("expected forall proof Result")
@@ -256,13 +257,10 @@ fn integer_remainder_builtin_mut(results: &mut [StmtResult]) -> &mut SuccessBuil
     let [conclusion] = forall.proves.as_mut_slice() else {
         panic!("expected one forall conclusion")
     };
-    let StmtResult::Success(SuccessStmtResult::Fact(conclusion)) = conclusion.result.as_mut()
-    else {
+    let Some(conclusion) = conclusion.result.verified_mut() else {
         panic!("expected factual remainder conclusion")
     };
-    let verification = std::rc::Rc::get_mut(&mut conclusion.verification)
-        .expect("test owns the remainder verification Result");
-    let SuccessFactProofResult::BuiltinRule(builtin) = verification.proof_mut() else {
+    let SuccessFactProofResult::BuiltinRule(builtin) = conclusion.proof_mut() else {
         panic!("expected builtin remainder proof")
     };
     builtin
@@ -323,7 +321,8 @@ fn rational_power_builtin_mut(results: &mut [StmtResult]) -> &mut SuccessBuiltin
     let [StmtResult::Success(SuccessStmtResult::Fact(forall_result))] = results else {
         panic!("expected one forall Result")
     };
-    let verification = std::rc::Rc::get_mut(&mut forall_result.verification)
+    let verification = forall_result
+        .verification_mut()
         .expect("test owns the forall verification Result");
     let SuccessFactProofResult::ForallProof(forall) = verification.proof_mut() else {
         panic!("expected forall proof Result")
@@ -331,13 +330,10 @@ fn rational_power_builtin_mut(results: &mut [StmtResult]) -> &mut SuccessBuiltin
     let [conclusion] = forall.proves.as_mut_slice() else {
         panic!("expected one forall conclusion")
     };
-    let StmtResult::Success(SuccessStmtResult::Fact(conclusion)) = conclusion.result.as_mut()
-    else {
+    let Some(conclusion) = conclusion.result.verified_mut() else {
         panic!("expected factual rational-power conclusion")
     };
-    let verification = std::rc::Rc::get_mut(&mut conclusion.verification)
-        .expect("test owns the rational-power verification Result");
-    let SuccessFactProofResult::BuiltinRule(builtin) = verification.proof_mut() else {
+    let SuccessFactProofResult::BuiltinRule(builtin) = conclusion.proof_mut() else {
         panic!("expected builtin rational-power proof")
     };
     builtin
@@ -392,8 +388,9 @@ fn rational_power_rejects_a_certificate_retargeted_to_division() {
 fn direct_closed_membership_compiler_rejects_corrupted_evaluation_tree() {
     let mut results = execute_closed_natural_membership();
     let result = closed_natural_membership_result_mut(&mut results);
-    let verification =
-        std::rc::Rc::get_mut(&mut result.verification).expect("test result has one proof owner");
+    let verification = result
+        .verification_mut()
+        .expect("test result has one proof owner");
     let SuccessFactProofResult::BuiltinRule(proof) = verification.proof_mut() else {
         panic!("expected builtin proof")
     };

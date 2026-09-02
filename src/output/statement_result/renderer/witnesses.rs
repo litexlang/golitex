@@ -47,7 +47,7 @@ impl StatementResultRenderer {
                             ),
                             (
                                 "nonempty_check".to_string(),
-                                self.stmt_result(&verification.nonempty_check),
+                                self.verify_fact_result(&verification.nonempty_check),
                             ),
                         ])
                     })
@@ -81,7 +81,7 @@ impl StatementResultRenderer {
                         .map(|result| {
                             result
                                 .as_ref()
-                                .map(|result| self.stmt_result(result))
+                                .map(|result| self.verify_fact_result(result))
                                 .unwrap_or(JsonValue::Null)
                         })
                         .collect(),
@@ -89,14 +89,14 @@ impl StatementResultRenderer {
             ),
             (
                 "body_checks".to_string(),
-                self.stmt_results(&result.body_checks),
+                self.verify_fact_results(&result.body_checks),
             ),
             (
                 "uniqueness_check".to_string(),
                 result
                     .uniqueness_check
                     .as_ref()
-                    .map(|result| self.stmt_result(result))
+                    .map(|result| self.verify_fact_result(result))
                     .unwrap_or(JsonValue::Null),
             ),
         ])

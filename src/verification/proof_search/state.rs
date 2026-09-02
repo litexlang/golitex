@@ -7,8 +7,9 @@ use std::rc::Rc;
 #[derive(Debug, Default)]
 struct ProofSearchScopeState {
     parent: Option<usize>,
-    atomic_fact_proofs: HashMap<FactString, Rc<SuccessVerifyFactResult>>,
-    well_defined_object_proofs: HashMap<WellDefinedCacheKey, Rc<SuccessVerifyObjWellDefinedResult>>,
+    atomic_fact_proofs: HashMap<FactString, Rc<SuccessFactProofNode>>,
+    well_defined_object_proofs:
+        HashMap<ObjString, Rc<SuccessVerifyDirectObjWellDefinedResult>>,
     active_well_defined_objects: HashSet<ObjString>,
     active_set_builder_membership_unfolds: HashSet<FactString>,
     active_set_builder_forall_transport: bool,
@@ -45,6 +46,29 @@ impl ProofSearchState {
             .active_well_defined_objects
             .insert(key.clone());
         true
+    }
+
+    pub(super) fn well_defined_object_proof(
+        &self,
+        scope: usize,
+        key: &ObjString,
+    ) -> Option<Rc<SuccessVerifyDirectObjWellDefinedResult>> {
+        self.find_in_scope_chain(scope, |state| {
+            state.well_defined_object_proofs.get(key).cloned()
+        })
+    }
+
+    pub(super) fn remember_well_defined_object_proof(
+        &mut self,
+        scope: usize,
+        key: ObjString,
+        result: Rc<SuccessVerifyDirectObjWellDefinedResult>,
+    ) {
+        if self.well_defined_object_proof(scope, &key).is_none() {
+            self.scopes[scope]
+                .well_defined_object_proofs
+                .insert(key, result);
+        }
     }
 
     pub(super) fn end_well_defined_object(&mut self, scope: usize, key: &ObjString) {
@@ -99,7 +123,7 @@ impl ProofSearchState {
         &self,
         scope: usize,
         key: &FactString,
-    ) -> Option<Rc<SuccessVerifyFactResult>> {
+    ) -> Option<Rc<SuccessFactProofNode>> {
         self.find_in_scope_chain(scope, |state| state.atomic_fact_proofs.get(key).cloned())
     }
 
@@ -107,33 +131,10 @@ impl ProofSearchState {
         &mut self,
         scope: usize,
         key: FactString,
-        result: Rc<SuccessVerifyFactResult>,
+        result: Rc<SuccessFactProofNode>,
     ) {
         if self.atomic_fact_proof(scope, &key).is_none() {
             self.scopes[scope].atomic_fact_proofs.insert(key, result);
-        }
-    }
-
-    pub(super) fn well_defined_object_proof(
-        &self,
-        scope: usize,
-        key: &WellDefinedCacheKey,
-    ) -> Option<Rc<SuccessVerifyObjWellDefinedResult>> {
-        self.find_in_scope_chain(scope, |state| {
-            state.well_defined_object_proofs.get(key).cloned()
-        })
-    }
-
-    pub(super) fn remember_well_defined_object_proof(
-        &mut self,
-        scope: usize,
-        key: WellDefinedCacheKey,
-        result: Rc<SuccessVerifyObjWellDefinedResult>,
-    ) {
-        if self.well_defined_object_proof(scope, &key).is_none() {
-            self.scopes[scope]
-                .well_defined_object_proofs
-                .insert(key, result);
         }
     }
 

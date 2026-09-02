@@ -14,7 +14,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
         };
@@ -24,15 +24,20 @@ impl Runtime {
         if let AtomicFact::LessFact(f) = &norm {
             match (&f.left, &f.right) {
                 (Obj::Log(left_log), Obj::Log(right_log)) => {
-                    let same_base =
-                        self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
-                            left_log.base.as_ref(),
-                            right_log.base.as_ref(),
-                            f.line_file.clone(),
-                        ));
+                    let same_base_fact = EqualFact::new_from_refs(
+                        left_log.base.as_ref(),
+                        right_log.base.as_ref(),
+                        f.line_file.clone(),
+                    );
+                    let same_base = self.verify_equal_fact_by_known_equality(&same_base_fact);
                     if !same_base.is_success() {
                         return Ok(None);
                     }
+                    let same_base = self.complete_fact_proof_result(
+                        &same_base_fact.into(),
+                        same_base,
+                        builtin_state.verify_state(),
+                    )?;
 
                     let base_gt_one: AtomicFact = LessFact::new(
                         one.clone(),
@@ -67,8 +72,8 @@ impl Runtime {
                             builtin_state,
                         )?;
                         if args_result.is_success() {
-                            return Ok(Some(StmtResult::from(
-                                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                            return Ok(Some(ProveFactResult::from(
+                                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                                     atomic_fact.clone().into(),
                                     "log order: base > 1 preserves strict order".to_string(),
                                     BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyLogOrderBuiltinRule01),
@@ -86,8 +91,8 @@ impl Runtime {
                             builtin_state,
                         )?;
                         if args_result.is_success() {
-                            return Ok(Some(StmtResult::from(
-                                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                            return Ok(Some(ProveFactResult::from(
+                                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                                     atomic_fact.clone().into(),
                                     "log order: 0 < base < 1 reverses strict order".to_string(),
                                     BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyLogOrderBuiltinRule02),
@@ -116,8 +121,8 @@ impl Runtime {
                     if !arg_gt_one_result.is_success() {
                         return Ok(None);
                     }
-                    return Ok(Some(StmtResult::from(
-                        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    return Ok(Some(ProveFactResult::from(
+                        SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             atomic_fact.clone().into(),
                             "log sign: 0 < log(a, x) from 1 < a and 1 < x".to_string(),
                             BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyLogOrderBuiltinRule03),
@@ -153,8 +158,8 @@ impl Runtime {
                     if !arg_positive_result.is_success() {
                         return Ok(None);
                     }
-                    return Ok(Some(StmtResult::from(
-                        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    return Ok(Some(ProveFactResult::from(
+                        SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             atomic_fact.clone().into(),
                             "log sign: log(a, x) < 0 from 1 < a and 0 < x < 1".to_string(),
                             BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyLogOrderBuiltinRule04),

@@ -12,15 +12,10 @@ impl Runtime {
                         stmt.fact.key()
                     ),
                     None,
-                    vec![result],
+                    vec![],
                 ));
             }
-            let checked_definition = result
-                .factual_success()
-                .map(|success| success.fact().to_string())
-                .unwrap_or_else(|| stmt.fact.to_string());
-            let target_well_definedness =
-                self.verify_fact_well_defined_result(&stmt.fact.clone().into(), &verify_state)?;
+            let checked_definition = result.fact().to_string();
             return self.finish_by_def_stmt(
                 stmt,
                 stmt.fact.key(),
@@ -28,7 +23,7 @@ impl Runtime {
                 false,
                 Vec::new(),
                 vec![checked_definition],
-                Some(target_well_definedness),
+                None,
                 None,
                 vec![result],
             );
@@ -123,8 +118,7 @@ impl Runtime {
 
         let argument_verification = match parameter_type_check {
             VerifyArgsSatisfyParamDefResult::Success(result) => *result,
-            VerifyArgsSatisfyParamDefResult::Unknown(result) => {
-                let cause = *result.cause;
+            VerifyArgsSatisfyParamDefResult::Unknown(_) => {
                 return Err(short_exec_error(
                     stmt.clone().into(),
                     format!(
@@ -132,7 +126,7 @@ impl Runtime {
                         predicate_name
                     ),
                     None,
-                    vec![cause],
+                    vec![],
                 ));
             }
         };
@@ -153,7 +147,7 @@ impl Runtime {
                         instantiated_clause
                     ),
                     None,
-                    vec![clause_result],
+                    vec![],
                 ));
             }
             instantiated_clauses.push(instantiated_clause.to_string());
@@ -195,21 +189,18 @@ impl Runtime {
         &mut self,
         fact: &AtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
-        match fact {
+    ) -> Result<Option<VerifyFactResult>, RuntimeError> {
+        let proof = match fact {
             AtomicFact::SubsetFact(_) | AtomicFact::SupersetFact(_) => {
-                self.verify_atomic_fact_well_defined(fact, verify_state)?;
                 self.verify_atomic_fact_using_builtin_or_prop_definition(fact, verify_state)
             }
             AtomicFact::FnEqualInFact(fn_equal_in) => {
-                self.verify_atomic_fact_well_defined(fact, verify_state)?;
                 Ok(Some(self.verify_fn_equal_in_fact_with_builtin_rules(
                     fn_equal_in,
                     verify_state,
                 )?))
             }
             AtomicFact::FnEqualFact(fn_equal) => {
-                self.verify_atomic_fact_well_defined(fact, verify_state)?;
                 Ok(Some(self.verify_fn_equal_fact_with_builtin_rules(
                     fn_equal,
                     verify_state,
@@ -218,32 +209,30 @@ impl Runtime {
             AtomicFact::NormalAtomicFact(fact) => match fact.predicate.to_string().as_str() {
                 PRIME => {
                     let atomic: AtomicFact = fact.clone().into();
-                    self.verify_atomic_fact_well_defined(&atomic, verify_state)?;
                     self.verify_prime_fact_by_definition(&atomic, verify_state)
                 }
                 COPRIME => {
                     let atomic: AtomicFact = fact.clone().into();
-                    self.verify_atomic_fact_well_defined(&atomic, verify_state)?;
                     self.verify_coprime_fact_by_definition(&atomic, verify_state)
                 }
                 DVD => {
                     let atomic: AtomicFact = fact.clone().into();
-                    self.verify_atomic_fact_well_defined(&atomic, verify_state)?;
                     self.verify_dvd_fact_by_definition(&atomic, verify_state)
                 }
                 INJECTIVE | SURJECTIVE | BIJECTIVE => {
-                    self.verify_atomic_fact_well_defined(&fact.clone().into(), verify_state)?;
                     self.verify_builtin_function_property_by_definition(fact, verify_state)
                 }
                 PROPER_SUBSET | PROPER_SUPERSET => {
                     let atomic: AtomicFact = fact.clone().into();
-                    self.verify_atomic_fact_well_defined(&atomic, verify_state)?;
                     self.verify_builtin_proper_set_relation_by_definition(&atomic, verify_state)
                 }
                 _ => Ok(None),
             },
             _ => Ok(None),
-        }
+        }?;
+        proof
+            .map(|proof| self.complete_atomic_fact_proof_result(fact, proof, verify_state))
+            .transpose()
     }
 
     fn finish_by_def_stmt(
@@ -254,9 +243,9 @@ impl Runtime {
         concrete_user_prop: bool,
         definition_clause_facts: Vec<Fact>,
         definition_clauses: Vec<String>,
-        target_well_definedness: Option<SuccessVerifyFactWellDefinedResult>,
+        target_well_definedness: Option<WellDefinedFactResult>,
         argument_verification: Option<SuccessVerifyArgsSatisfyParamDefResult>,
-        clause_checks: Vec<StmtResult>,
+        clause_checks: Vec<VerifyFactResult>,
     ) -> Result<StmtResult, RuntimeError> {
         let target_fact: Fact = stmt.fact.clone().into();
         let infer_result = self.run_in_local_env_and_commit(|rt| {

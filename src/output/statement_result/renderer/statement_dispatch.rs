@@ -86,6 +86,57 @@ impl StatementResultRenderer {
         )
     }
 
+    pub(in super::super) fn verify_fact_result(
+        &mut self,
+        result: &VerifyFactResult,
+    ) -> JsonValue {
+        match result {
+            VerifyFactResult::Verified(verified) => object(vec![
+                string_field("outcome", "verified"),
+                string_field("fact", verified.fact().to_string()),
+                (
+                    "well_definedness".to_string(),
+                    self.fact_well_definedness(&verified.checked),
+                ),
+                (
+                    "proof".to_string(),
+                    self.verify_fact(verified.verification.as_ref()),
+                ),
+            ]),
+            VerifyFactResult::Unknown(unknown) => object(vec![
+                string_field("outcome", "unknown_after_well_definedness"),
+                string_field("fact", unknown.checked.fact.to_string()),
+                (
+                    "well_definedness".to_string(),
+                    self.fact_well_definedness(&unknown.checked),
+                ),
+                (
+                    "unknown".to_string(),
+                    object(vec![
+                        string_field("kind", unknown_fact_kind(&unknown.unknown)),
+                        string_field("goal", unknown.unknown.goal().to_string()),
+                        (
+                            "detail".to_string(),
+                            optional_strings(unknown.unknown.detail()),
+                        ),
+                    ]),
+                ),
+            ]),
+        }
+    }
+
+    pub(in super::super) fn verify_fact_results(
+        &mut self,
+        results: &[VerifyFactResult],
+    ) -> JsonValue {
+        array(
+            results
+                .iter()
+                .map(|result| self.verify_fact_result(result))
+                .collect(),
+        )
+    }
+
     pub(in super::super) fn unknown_stmt(&mut self, unknown: &UnknownStmtResult) -> JsonValue {
         match unknown {
             UnknownStmtResult::Generic(result) => object(vec![

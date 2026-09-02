@@ -7,7 +7,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         if let Some(done) =
             self.try_verify_one_subtraction_from_known_addition(equal_fact, true, builtin_state)?
         {
@@ -23,7 +23,7 @@ impl Runtime {
         equal_fact: &EqualFact,
         target_is_left: bool,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let (target_a, subtraction_side) = if target_is_left {
             (&equal_fact.left, &equal_fact.right)
         } else {
@@ -43,8 +43,13 @@ impl Runtime {
         );
         let known_sum_1 = self.verify_equal_fact_by_known_equality(&sum_fact_1);
         if known_sum_1.is_success() {
+            let known_sum_1 = self.complete_fact_proof_result(
+                &sum_fact_1.clone().into(),
+                known_sum_1,
+                builtin_state.verify_state(),
+            )?;
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     equal_fact.clone().into(),
                     "equality: a = c - b from known a + b = c".to_string(),
                     BuiltinRuleEvidence::Uncatalogued(
@@ -65,8 +70,13 @@ impl Runtime {
         );
         let known_sum_2 = self.verify_equal_fact_by_known_equality(&sum_fact_2);
         if known_sum_2.is_success() {
+            let known_sum_2 = self.complete_fact_proof_result(
+                &sum_fact_2.clone().into(),
+                known_sum_2,
+                builtin_state.verify_state(),
+            )?;
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     equal_fact.clone().into(),
                     "equality: a = c - b from known b + a = c".to_string(),
                     BuiltinRuleEvidence::Uncatalogued(
@@ -85,7 +95,7 @@ impl Runtime {
         )?;
         if premise_result.is_success() {
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     equal_fact.clone().into(),
                     "equality: subtraction from complete addition-order disjunction".to_string(),
                     BuiltinRuleEvidence::Uncatalogued(

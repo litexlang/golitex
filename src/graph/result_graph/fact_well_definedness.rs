@@ -5,25 +5,23 @@ use super::*;
 impl ResultGraph {
     pub(super) fn add_fact_well_definedness(
         &mut self,
-        result: &SuccessVerifyFactWellDefinedResult,
+        result: &WellDefinedFactResult,
         id: String,
         label: String,
     ) {
         self.ensure_node(
             id.clone(),
             "well_definedness",
-            "SuccessVerifyFactWellDefinedResult",
+            "WellDefinedFactResult",
             label,
             None,
         );
         if !self.expanded_nodes.insert(id.clone()) {
             return;
         }
-        if let Some(recursive) = result.recursive.as_ref() {
-            let proof_id = format!("{id}/recursive");
-            self.add_fact_well_definedness_proof(recursive, proof_id.clone());
-            self.add_edge(&id, &proof_id, "recursive", 0);
-        }
+        let proof_id = format!("{id}/proof");
+        self.add_fact_well_definedness_proof(&result.proof, proof_id.clone());
+        self.add_edge(&id, &proof_id, "proof", 0);
     }
 
     pub(super) fn add_fact_well_definedness_proof(
@@ -58,7 +56,7 @@ impl ResultGraph {
                 self.add_edge(&id, &predicate_id, "predicate", 0);
                 for (index, check) in result.predicate.domain_checks.iter().enumerate() {
                     let child_id = format!("{predicate_id}/domain_check:{index}");
-                    self.add_stmt_result(&check.result, child_id.clone());
+                    self.add_verify_fact_outcome(&check.result, child_id.clone());
                     self.add_edge(
                         &predicate_id,
                         &child_id,

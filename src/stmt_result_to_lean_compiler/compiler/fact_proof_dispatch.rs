@@ -7,7 +7,7 @@ impl StmtResultToLeanCompiler {
     /// fallback selected from its label.
     pub(super) fn construct_lean_proof_from_direct_fact_result(
         &mut self,
-        result: &SuccessFactStmtResult,
+        result: &VerifiedFactResult,
     ) -> Result<Option<String>, String> {
         let source_fact = result.fact();
         match result.proof() {
@@ -76,6 +76,15 @@ impl StmtResultToLeanCompiler {
                     return self.construct_lean_refined_numeric_membership_from_result(
                         &source_fact,
                         evidence,
+                        &builtin.subgoals,
+                    );
+                }
+                if matches!(
+                    builtin.evidence.typed(),
+                    Some(BuiltinRuleEvidence::EqualitySymmetry)
+                ) {
+                    return self.construct_lean_equality_symmetry_from_result(
+                        &source_fact,
                         &builtin.subgoals,
                     );
                 }
@@ -399,7 +408,6 @@ impl StmtResultToLeanCompiler {
                         let children = builtin
                             .subgoals
                             .iter()
-                            .filter_map(StmtResult::factual_success)
                             .map(|child| child.fact().to_string())
                             .collect::<Vec<_>>()
                             .join("; ");
@@ -426,20 +434,15 @@ impl StmtResultToLeanCompiler {
                                 "object-reflexivity evidence changed its equality endpoints".into(),
                             );
                         }
-                        if result.well_definedness.recursive.is_some() {
-                            validate_atomic_fact_well_definedness_result(
-                                &result.well_definedness,
-                                &source_fact,
-                            )?;
-                        }
-                        let rendered_object = if result.well_definedness.recursive.is_some() {
-                            self.render_object_using_well_definedness_from_fact_result(
+                        validate_atomic_fact_well_definedness_result(
+                            &result.checked,
+                            &source_fact,
+                        )?;
+                        let rendered_object = self
+                            .render_object_using_well_definedness_from_fact_result(
                                 result,
                                 &equality.left,
-                            )?
-                        } else {
-                            render_obj(&equality.left, &self.environment_stack)?
-                        };
+                            )?;
                         Ok(Some(format!("Litex.Same.refl {rendered_object}")))
                     }
                     Some(BuiltinRuleEvidence::RationalNormalization(evidence)) => {
@@ -472,25 +475,18 @@ impl StmtResultToLeanCompiler {
                                     .into(),
                             );
                         }
-                        if result.well_definedness.recursive.is_some() {
-                            validate_atomic_fact_well_definedness_result(
-                                &result.well_definedness,
-                                &source_fact,
-                            )?;
-                        }
-                        if result.well_definedness.recursive.is_some() {
-                            self.render_object_using_well_definedness_from_fact_result(
-                                result,
-                                &equality.left,
-                            )?;
-                            self.render_object_using_well_definedness_from_fact_result(
-                                result,
-                                &equality.right,
-                            )?;
-                        } else {
-                            render_obj(&equality.left, &self.environment_stack)?;
-                            render_obj(&equality.right, &self.environment_stack)?;
-                        }
+                        validate_atomic_fact_well_definedness_result(
+                            &result.checked,
+                            &source_fact,
+                        )?;
+                        self.render_object_using_well_definedness_from_fact_result(
+                            result,
+                            &equality.left,
+                        )?;
+                        self.render_object_using_well_definedness_from_fact_result(
+                            result,
+                            &equality.right,
+                        )?;
                         Ok(Some(
                             "Litex.Same.ofEq (by norm_num [Litex.abs, Litex.min, Litex.max, Litex.tupleDim, Litex.TupleShape.dimension])"
                                 .into(),
@@ -510,12 +506,10 @@ impl StmtResultToLeanCompiler {
                             );
                         }
                         validate_success_evaluate_obj_result(&evidence.evaluation)?;
-                        if result.well_definedness.recursive.is_some() {
-                            validate_atomic_fact_well_definedness_result(
-                                &result.well_definedness,
-                                &source_fact,
-                            )?;
-                        }
+                        validate_atomic_fact_well_definedness_result(
+                            &result.checked,
+                            &source_fact,
+                        )?;
                         Ok(Some(render_closed_numeric_membership_from_result(
                             &source_fact,
                             evidence.target_set,
@@ -524,12 +518,10 @@ impl StmtResultToLeanCompiler {
                         )?))
                     }
                     Some(BuiltinRuleEvidence::ClosedNumericNonmembership(evidence)) => {
-                        if result.well_definedness.recursive.is_some() {
-                            validate_atomic_fact_well_definedness_result(
-                                &result.well_definedness,
-                                &source_fact,
-                            )?;
-                        }
+                        validate_atomic_fact_well_definedness_result(
+                            &result.checked,
+                            &source_fact,
+                        )?;
                         self.construct_lean_closed_numeric_nonmembership_from_result(
                             &source_fact,
                             evidence,
@@ -627,7 +619,7 @@ impl StmtResultToLeanCompiler {
     pub(super) fn construct_lean_literal_set_nonempty_from_result(
         &self,
         source_fact: &Fact,
-        subgoals: &[StmtResult],
+        subgoals: &[VerifyFactResult],
     ) -> Result<Option<String>, String> {
         if !subgoals.is_empty() {
             return Err("literal-set nonempty evidence unexpectedly retained subgoals".into());
@@ -650,7 +642,7 @@ impl StmtResultToLeanCompiler {
     pub(super) fn construct_lean_set_builder_subset_base_from_result(
         &self,
         source_fact: &Fact,
-        subgoals: &[StmtResult],
+        subgoals: &[VerifyFactResult],
     ) -> Result<Option<String>, String> {
         if !subgoals.is_empty() {
             return Err("set-builder base-subset evidence unexpectedly retained subgoals".into());
@@ -674,7 +666,7 @@ impl StmtResultToLeanCompiler {
     pub(super) fn construct_lean_set_builder_in_power_set_via_param_subset_from_result(
         &mut self,
         source_fact: &Fact,
-        subgoals: &[StmtResult],
+        subgoals: &[VerifyFactResult],
     ) -> Result<Option<String>, String> {
         let (element, target) = membership_parts(source_fact)?;
         let Obj::SetBuilder(builder) = element else {
@@ -691,11 +683,8 @@ impl StmtResultToLeanCompiler {
             );
         };
         let child = child
-            .factual_success()
+            .verified()
             .ok_or_else(|| "set-builder power-set child is not factual".to_string())?;
-        if !child.store.infers.is_empty() {
-            return Err("set-builder power-set child published effects".into());
-        }
         let child_fact = child.fact();
         let (child_left, child_right) = subset_parts(&child_fact)?;
         if !objs_equal_with_nested_binder_alpha_equivalence(builder.param_set.as_ref(), child_left)
@@ -712,29 +701,35 @@ impl StmtResultToLeanCompiler {
         )))
     }
 
-    /// Temporarily exposes this exact statement Result's retained WD tree
-    /// while its proof renders objects. The parent Result's WD certificate is
-    /// restored afterwards; bindings and FactIds remain inherited separately.
+    /// Compile against this exact Result's WD tree and process-local stores.
+    /// Neither the occurrence context nor its temporary FactIds escape into a
+    /// sibling or later source statement.
     pub(super) fn construct_lean_proof_from_direct_fact_result_using_its_well_definedness(
+        &mut self,
+        result: &VerifiedFactResult,
+    ) -> Result<Option<String>, String> {
+        self.with_verified_fact_well_definedness_context(result, |compiler| {
+            compiler.construct_lean_proof_from_direct_fact_result(result)
+        })
+    }
+
+    pub(super) fn construct_lean_proof_from_fact_statement_using_its_well_definedness(
         &mut self,
         result: &SuccessFactStmtResult,
     ) -> Result<Option<String>, String> {
-        if result.well_definedness.recursive.is_none() {
-            return self.construct_lean_proof_from_direct_fact_result(result);
-        }
-
-        let certificate =
-            self.construct_well_definedness_to_lean_compilation_context(&result.well_definedness)?;
-        let parent = self.environment_stack.well_definedness.replace(certificate);
-        let construction = self.construct_lean_proof_from_direct_fact_result(result);
-        self.environment_stack.well_definedness = parent;
-        construction
+        let verified = result.verification().ok_or_else(|| {
+            format!(
+                "trusted fact `{}` has no Lean proof-evidence adapter",
+                result.fact()
+            )
+        })?;
+        self.construct_lean_proof_from_direct_fact_result_using_its_well_definedness(verified)
     }
 
     pub(super) fn construct_lean_literal_set_subset_from_result(
         &mut self,
         source_fact: &Fact,
-        subgoals: &[StmtResult],
+        subgoals: &[VerifyFactResult],
     ) -> Result<Option<String>, String> {
         let Fact::AtomicFact(AtomicFact::SubsetFact(subset)) = source_fact else {
             return Err("literal-set-subset evidence targets a non-subset fact".into());
@@ -753,7 +748,7 @@ impl StmtResultToLeanCompiler {
             let expected: Fact =
                 InFact::new(item.clone(), subset.right.clone(), subset.line_file.clone()).into();
             let subgoal = subgoal
-                .factual_success()
+                .verified()
                 .ok_or_else(|| "literal-set-subset member subgoal is not factual".to_string())?;
             validate_scoped_fact_check_result(
                 subgoal,

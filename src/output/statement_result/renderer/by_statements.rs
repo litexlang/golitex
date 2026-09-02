@@ -204,7 +204,7 @@ impl StatementResultRenderer {
                 let membership_check = result
                     .membership_check
                     .as_ref()
-                    .map(|check| self.stmt_result(check))
+                    .map(|check| self.verify_fact_result(check))
                     .unwrap_or(JsonValue::Null);
                 self.non_fact_stmt(
                     "ByStructDefStmt",

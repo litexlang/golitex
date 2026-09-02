@@ -7,50 +7,38 @@ pub(in super::super) fn validate_success_obj_well_defined_result(
     expected_object: &Obj,
     visited: &mut HashSet<usize>,
 ) -> Result<(), String> {
-    let result_address = result as *const SuccessVerifyObjWellDefinedResult as usize;
+    if let SuccessVerifyObjWellDefinedResult::Reuse(reuse) = result {
+        if obj_equality_key(&reuse.object) != obj_equality_key(expected_object) {
+            return Err("reused object WD result changed its checked object".into());
+        }
+    }
+    let direct = direct_object_well_definedness_result(result)?;
+    let result_address = direct as *const SuccessVerifyDirectObjWellDefinedResult as usize;
     if !visited.insert(result_address) {
         return Ok(());
     }
-    match result {
-        SuccessVerifyObjWellDefinedResult::Direct(direct) => {
-            if obj_equality_key(&direct.object) != obj_equality_key(expected_object) {
-                return Err("object WD result changed its checked object".into());
-            }
-            if let Some(binder) = &direct.steps.binder {
-                validate_success_obj_binder_well_defined_result(binder, expected_object, visited)?;
-            }
-            for child in &direct.steps.children {
-                validate_success_obj_well_defined_result(
-                    child.result.as_ref(),
-                    &child.source_object,
-                    visited,
-                )?;
-            }
-            for check in &direct.steps.fact_checks {
-                if check.expected_proposition.to_string() != check.verification.fact().to_string() {
-                    return Err("object WD fact check changed its verified proposition".into());
-                }
-            }
-            for requirement in &direct.steps.target_requirements {
-                if requirement.expected_proposition.to_string()
-                    != requirement.verification.fact().to_string()
-                {
-                    return Err("object WD target requirement changed its proposition".into());
-                }
-            }
+    if obj_equality_key(&direct.object) != obj_equality_key(expected_object) {
+        return Err("object WD result changed its checked object".into());
+    }
+    if let Some(binder) = &direct.steps.binder {
+        validate_success_obj_binder_well_defined_result(binder, expected_object, visited)?;
+    }
+    for child in &direct.steps.children {
+        validate_success_obj_well_defined_result(
+            child.result.as_ref(),
+            &child.source_object,
+            visited,
+        )?;
+    }
+    for check in &direct.steps.fact_checks {
+        if check.expected_proposition.to_string() != check.verification.fact().to_string() {
+            return Err("object WD fact check changed its verified proposition".into());
         }
-        SuccessVerifyObjWellDefinedResult::Reuse(reuse) => {
-            if obj_equality_key(&reuse.object) != obj_equality_key(expected_object) {
-                return Err("reused object WD result changed its checked object".into());
-            }
-            validate_success_obj_well_defined_result(
-                reuse.source.as_ref(),
-                expected_object,
-                visited,
-            )?;
-        }
-        SuccessVerifyObjWellDefinedResult::RecursiveReference(_) => {
-            return Err("object WD result retained an unresolved recursive reference".into());
+    }
+    for requirement in &direct.steps.target_requirements {
+        if requirement.expected_proposition.to_string() != requirement.verification.fact().to_string()
+        {
+            return Err("object WD target requirement changed its proposition".into());
         }
     }
     Ok(())
@@ -117,7 +105,7 @@ pub(in super::super) fn collect_well_definedness_to_lean_context_from_fact_resul
 }
 
 pub(in super::super) fn success_verify_fact_result_is_deferred_plain_citation(
-    verification: &SuccessVerifyFactResult,
+    verification: &SuccessFactProofNode,
 ) -> bool {
     match verification.proof() {
         SuccessFactProofResult::StoredFactCitation(_) => true,
@@ -129,7 +117,7 @@ pub(in super::super) fn success_verify_fact_result_is_deferred_plain_citation(
 }
 
 pub(in super::super) fn render_deferred_plain_fact_result_citation(
-    verification: &SuccessVerifyFactResult,
+    verification: &SuccessFactProofNode,
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
     match verification.proof() {
@@ -202,9 +190,10 @@ pub(in super::super) fn collect_well_definedness_to_lean_context_from_fact_binde
         }
         for premise in &group.parameters {
             collect_well_definedness_parameter_fact_alias(premise, context)?;
-            if let Some(recursive) = premise.well_definedness.recursive.as_deref() {
-                collect_well_definedness_to_lean_context_from_fact_result(recursive, context)?;
-            }
+            collect_well_definedness_to_lean_context_from_fact_result(
+                premise.well_definedness.proof.as_ref(),
+                context,
+            )?;
         }
     }
     Ok(())

@@ -7,7 +7,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let Some(normalized_fact) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
         };
@@ -46,8 +46,8 @@ impl Runtime {
             return Ok(None);
         }
 
-        Ok(Some(StmtResult::from(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+        Ok(Some(ProveFactResult::from(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "0 <= a + b from known atomic facts 0 <= a and 0 <= b".to_string(),
                 BuiltinRuleEvidence::Arithmetic(ArithmeticBuiltinRule::AddNonnegative),
@@ -60,7 +60,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let Some(normalized_fact) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
         };
@@ -95,8 +95,8 @@ impl Runtime {
                 builtin_state,
             )?;
             if right_strict.is_success() {
-                return Ok(Some(StmtResult::from(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                return Ok(Some(ProveFactResult::from(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         atomic_fact.clone().into(),
                         "0 < a + b from 0 < a and 0 < b".to_string(),
                         BuiltinRuleEvidence::Arithmetic(ArithmeticBuiltinRule::AddPositive),
@@ -108,7 +108,7 @@ impl Runtime {
 
         let strict_then_weak = |this: &mut Self,
                                 builtin_state: &BuiltinRuleSearchState|
-         -> Result<Option<StmtResult>, RuntimeError> {
+         -> Result<Option<ProveFactResult>, RuntimeError> {
             let left_result = this.verify_zero_order_on_sub_expr(
                 zero,
                 add_obj.left.as_ref(),
@@ -131,8 +131,8 @@ impl Runtime {
             if !right_result.is_success() {
                 return Ok(None);
             }
-            Ok(Some(StmtResult::from(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            Ok(Some(ProveFactResult::from(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     atomic_fact.clone().into(),
                     "0 < a + b from (0 < a and 0 <= b)".to_string(),
                     BuiltinRuleEvidence::Arithmetic(ArithmeticBuiltinRule::AddPositiveLeftStrict),
@@ -142,7 +142,7 @@ impl Runtime {
         };
         let weak_then_strict = |this: &mut Self,
                                 builtin_state: &BuiltinRuleSearchState|
-         -> Result<Option<StmtResult>, RuntimeError> {
+         -> Result<Option<ProveFactResult>, RuntimeError> {
             let left_result = this.verify_zero_order_on_sub_expr(
                 zero,
                 add_obj.left.as_ref(),
@@ -165,8 +165,8 @@ impl Runtime {
             if !right_result.is_success() {
                 return Ok(None);
             }
-            Ok(Some(StmtResult::from(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            Ok(Some(ProveFactResult::from(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     atomic_fact.clone().into(),
                     "0 < a + b from (0 <= a and 0 < b)".to_string(),
                     BuiltinRuleEvidence::Arithmetic(ArithmeticBuiltinRule::AddPositiveRightStrict),

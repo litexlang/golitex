@@ -7,7 +7,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let Some(premise) = proper_set_relation_definition_premise(atomic_fact) else {
             return Ok(UnknownGenericStmtResult::new().into());
         };
@@ -17,7 +17,7 @@ impl Runtime {
         }
 
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 format!(
                     "{} from its complete quantifier-free definition premise",
@@ -36,7 +36,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let Some(definition_facts) = proper_set_relation_definition_facts(atomic_fact) else {
             return Ok(None);
         };
@@ -51,7 +51,7 @@ impl Runtime {
         }
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 format!(
                     "{} by its builtin proper-set-relation definition",

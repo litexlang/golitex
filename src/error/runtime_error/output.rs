@@ -60,10 +60,31 @@ impl RuntimeErrorOutput {
         output
     }
 
+    pub fn then_clause_unknown_fact(
+        failed_goal: Fact,
+        then_clause_index: usize,
+        then_clause_count: usize,
+        result: &UnknownFactResult,
+    ) -> Self {
+        let mut output = Self::new();
+        output.failed_goal = Some(Box::new(failed_goal));
+        output.then_clause_index = Some(then_clause_index);
+        output.then_clause_count = Some(then_clause_count);
+        output.unknown_result = Some(RuntimeErrorUnknownResult::Fact(Box::new(result.clone())));
+        output
+    }
+
     pub fn goal_unknown(failed_goal: Fact, result: &StmtResult) -> Self {
         let mut output = Self::new();
         output.failed_goal = Some(Box::new(failed_goal));
         output.unknown_result = RuntimeErrorUnknownResult::from_stmt_result(result);
+        output
+    }
+
+    pub fn goal_unknown_fact(failed_goal: Fact, result: &UnknownFactResult) -> Self {
+        let mut output = Self::new();
+        output.failed_goal = Some(Box::new(failed_goal));
+        output.unknown_result = Some(RuntimeErrorUnknownResult::Fact(Box::new(result.clone())));
         output
     }
 }

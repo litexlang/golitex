@@ -26,7 +26,7 @@ impl WellDefinedFactId {
 pub struct WellDefinedFactProof {
     pub id: WellDefinedFactId,
     pub proposition: Fact,
-    pub proof: Rc<SuccessVerifyFactResult>,
+    pub proof: Rc<SuccessFactProofNode>,
     pub ambient_binder_scope_ids: Vec<WellDefinedBinderScopeId>,
 }
 
@@ -34,7 +34,7 @@ impl WellDefinedFactProof {
     pub fn new(
         id: WellDefinedFactId,
         proposition: Fact,
-        proof: Rc<SuccessVerifyFactResult>,
+        proof: Rc<SuccessFactProofNode>,
         ambient_binder_scope_ids: Vec<WellDefinedBinderScopeId>,
     ) -> Self {
         Self {

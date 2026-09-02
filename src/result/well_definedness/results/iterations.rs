@@ -50,7 +50,7 @@ pub struct SuccessVerifyIntervalSubsetCoverageResult {
 #[derive(Debug)]
 pub struct SuccessVerifyIterationDomainResult {
     pub proposition: Fact,
-    pub verification: Rc<SuccessVerifyFactResult>,
+    pub verification: Rc<SuccessFactProofNode>,
     pub store: SuccessStoreFactResult,
 }
 

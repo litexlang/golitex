@@ -58,6 +58,8 @@ pub enum BuiltinRuleEvidence {
     ComplexArithmeticMembershipClosure(ComplexArithmeticMembershipClosureBuiltinRule),
     RealArithmeticMembershipClosure(RealArithmeticMembershipClosureBuiltinRule),
     NativeConstantMembership(NativeConstantMembershipBuiltinRule),
+    /// One checked equality with reversed operands proves the target equality.
+    EqualitySymmetry,
     NotEqualSymmetry,
     /// Two checked real-carrier premises followed by one strict comparison
     /// between the target operands prove their inequality.
@@ -143,6 +145,7 @@ impl BuiltinRuleEvidence {
             Self::ComplexArithmeticMembershipClosure(rule) => rule.rule_id(),
             Self::RealArithmeticMembershipClosure(rule) => rule.rule_id(),
             Self::NativeConstantMembership(rule) => rule.rule_id(),
+            Self::EqualitySymmetry => "equality.symmetry",
             Self::NotEqualSymmetry => "not_equal.symmetry",
             Self::NotEqualFromStrictOrder => "not_equal.from_strict_order",
             Self::SetRelationDuality(rule) => rule.rule_id(),
@@ -324,6 +327,7 @@ impl fmt::Debug for BuiltinRuleEvidence {
                 .debug_tuple("NativeConstantMembership")
                 .field(rule)
                 .finish(),
+            BuiltinRuleEvidence::EqualitySymmetry => f.write_str("EqualitySymmetry"),
             BuiltinRuleEvidence::NotEqualSymmetry => f.write_str("NotEqualSymmetry"),
             BuiltinRuleEvidence::NotEqualFromStrictOrder => f.write_str("NotEqualFromStrictOrder"),
             BuiltinRuleEvidence::SetRelationDuality(rule) => {

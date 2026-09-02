@@ -3,7 +3,7 @@ use crate::prelude::*;
 impl Runtime {
     // Decides natural-number coprimality by the gcd-one criterion.
     // Example: `$coprime(14, 25)` and `not $coprime(14, 21)`.
-    pub fn verify_coprime_fact_by_computation(&self, atomic_fact: &AtomicFact) -> StmtResult {
+    pub fn verify_coprime_fact_by_computation(&self, atomic_fact: &AtomicFact) -> ProveFactResult {
         let (fact_is_positive, predicate, args) = match atomic_fact {
             AtomicFact::NormalAtomicFact(f) => (true, &f.predicate, &f.body),
             AtomicFact::NotNormalAtomicFact(f) => (false, &f.predicate, &f.body),
@@ -36,7 +36,7 @@ impl Runtime {
         if values_are_coprime != fact_is_positive {
             return UnknownGenericStmtResult::new().into();
         }
-        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+        SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
             atomic_fact.clone().into(),
             "deterministic natural coprimality computation".to_string(),
             BuiltinRuleEvidence::CoprimeNaturalReflection,

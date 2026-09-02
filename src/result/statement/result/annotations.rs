@@ -3,16 +3,6 @@
 use crate::prelude::*;
 
 impl StmtResult {
-    pub fn with_fact_well_definedness(
-        mut self,
-        well_definedness: SuccessVerifyFactWellDefinedResult,
-    ) -> Self {
-        if let Some(success) = self.factual_success_mut() {
-            success.well_definedness = well_definedness;
-        }
-        self
-    }
-
     pub fn fact_id(&self) -> Option<FactId> {
         self.factual_success().and_then(|success| success.fact_id)
     }

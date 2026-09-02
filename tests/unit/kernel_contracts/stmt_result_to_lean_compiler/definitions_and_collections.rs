@@ -336,7 +336,9 @@ fn checked_named_function_reduction_uses_its_exact_definition_fact_id() {
         .factual_success()
         .expect("second statement is a factual reduction");
     let SuccessFactProofResult::CheckedFunctionDefinitionReduction(reduction) =
-        reduction_result.proof()
+        reduction_result
+            .proof()
+            .expect("verified reduction statement owns a proof")
     else {
         panic!("checked definition reduction must retain typed evidence")
     };
@@ -367,7 +369,8 @@ fn checked_named_function_reduction_rejects_a_wrong_definition_fact_id() {
         .store
         .fact_id
         .expect("outer reduction result retains a FactId");
-    let verification = std::rc::Rc::get_mut(&mut reduction_result.verification)
+    let verification = reduction_result
+        .verification_mut()
         .expect("executed Result uniquely owns its verification in this corruption test");
     let SuccessFactProofResult::CheckedFunctionDefinitionReduction(reduction) =
         verification.proof_mut()

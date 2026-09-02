@@ -85,13 +85,11 @@ impl StmtResultToLeanCompiler {
             };
             let selected_check = verification
                 .selected_fact_check
-                .factual_success()
+                .verified()
                 .ok_or_else(|| "by-thm selected-fact check is not factual".to_string())?;
             let selected_fact: Fact = verification.selected_fact.clone().into();
-            if selected_check.fact().to_string() != selected_fact.to_string()
-                || !selected_check.store.infers.is_empty()
-            {
-                return Err("by-thm selected-fact check changed its target or effects".into());
+            if selected_check.fact().to_string() != selected_fact.to_string() {
+                return Err("by-thm selected-fact check changed its target".into());
             }
             let Some(selected_proof) =
                 self.construct_lean_proof_from_direct_fact_result(selected_check)?
@@ -101,9 +99,13 @@ impl StmtResultToLeanCompiler {
             proof_lines.push(format!("exact {selected_proof}"));
             let proposition = render_fact(&selected_fact, &self.environment_stack)?;
             let retained_fact_id = if result.common.infers.is_empty() {
-                let fact_id = selected_check
-                    .fact_id
-                    .ok_or_else(|| "by-thm reused selected fact has no exact FactId".to_string())?;
+                let SuccessFactProofResult::StoredFactCitation(citation) = selected_check.proof()
+                else {
+                    return Err(
+                        "by-thm reused selected fact has no exact citation evidence".into(),
+                    );
+                };
+                let fact_id = citation.source_fact_id;
                 let visible = self
                     .environment_stack
                     .fact_propositions

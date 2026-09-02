@@ -12,6 +12,9 @@ impl StmtResultToLeanCompiler {
         &mut self,
         result: &SuccessFactStmtResult,
     ) -> Result<bool, String> {
+        let Some(verified) = result.verification() else {
+            return Ok(false);
+        };
         let source_fact = result.fact();
         let Fact::AtomicFact(AtomicFact::NormalAtomicFact(_)) = &source_fact else {
             return Ok(false);
@@ -29,9 +32,9 @@ impl StmtResultToLeanCompiler {
         if result.store.fact.to_string() != source_fact.to_string() {
             return Err("defined-predicate fact changed between verification and store".into());
         }
-        validate_atomic_fact_well_definedness_result(&result.well_definedness, &source_fact)?;
+        validate_atomic_fact_well_definedness_result(&verified.checked, &source_fact)?;
         let Some(source_proof) =
-            self.construct_lean_proof_from_direct_fact_result_using_its_well_definedness(result)?
+            self.construct_lean_proof_from_direct_fact_result_using_its_well_definedness(verified)?
         else {
             return Ok(false);
         };

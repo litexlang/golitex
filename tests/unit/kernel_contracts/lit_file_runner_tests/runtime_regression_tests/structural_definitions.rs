@@ -508,7 +508,7 @@ template<S set>:
         .factual_success()
         .expect("first application statement must be a successful fact");
     let Some(SuccessVerifyFactWellDefinedProofResult::AtomicFact(created_wd)) =
-        created_fact.well_definedness.recursive.as_deref()
+        created_fact.checked().map(|checked| checked.proof.as_ref())
     else {
         panic!("first application fact must retain atomic WD Results");
     };
@@ -550,7 +550,7 @@ template<S set>:
         .factual_success()
         .expect("second application statement must be a successful fact");
     let Some(SuccessVerifyFactWellDefinedProofResult::AtomicFact(reused_wd)) =
-        reused_fact.well_definedness.recursive.as_deref()
+        reused_fact.checked().map(|checked| checked.proof.as_ref())
     else {
         panic!("second application fact must retain atomic WD Results");
     };

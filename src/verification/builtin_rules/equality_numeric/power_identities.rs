@@ -6,7 +6,7 @@ impl Runtime {
         obj: &Obj,
         line_file: &LineFile,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<VerifyFactResult>, RuntimeError> {
         let positive: AtomicFact = GreaterFact::new(
             obj.clone(),
             Self::literal_zero_obj_for_abs_builtin(),
@@ -37,7 +37,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -90,7 +90,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "equality: (-1)^(2*m+1) = -1 for m in N".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -108,7 +108,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -141,7 +141,7 @@ impl Runtime {
     pub fn try_verify_pow_zero_identity(
         &mut self,
         equal_fact: &EqualFact,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let pow = if Self::obj_is_builtin_literal_one(left) {
@@ -172,7 +172,7 @@ impl Runtime {
     pub fn try_verify_one_pow_identity(
         &mut self,
         equal_fact: &EqualFact,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let pow = if Self::obj_is_builtin_literal_one(left) {
@@ -204,7 +204,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -264,7 +264,7 @@ impl Runtime {
         }
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "equality: 0^x = 0 for x > 0".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(

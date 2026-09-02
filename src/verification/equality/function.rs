@@ -29,7 +29,7 @@ impl Runtime {
         &mut self,
         f: &FnEqualInFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let x_name = self.generate_random_unused_names(1)[0].clone();
         let x_group =
             self.fresh_param_group_with_type(vec![x_name], ParamType::Obj(f.set.clone()))?;
@@ -52,11 +52,15 @@ impl Runtime {
         )?;
         let forall_res = self.verify_forall_fact(&forall_f, verify_state)?;
         if !forall_res.is_success() {
-            return Ok(forall_res);
+            return Ok(forall_res
+                .as_fact_unknown()
+                .cloned()
+                .expect("unknown forall verification carries a fact unknown")
+                .into());
         }
         let recorded: Fact = f.clone().into();
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 recorded,
                 "fn_eq_in: pointwise equality on the given set (forall x in S, f(x)=g(x))"
                     .to_string(),
@@ -75,7 +79,7 @@ impl Runtime {
         &mut self,
         f: &FnEqualFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let left_t = match fn_set_type_of_function_value(self, &f.left) {
             Some(fs) => fs,
             None => return Ok(UnknownGenericStmtResult::new().into()),
@@ -111,7 +115,7 @@ impl Runtime {
             let pointwise_result = self.verify_forall_fact(&pointwise, verify_state)?;
             if pointwise_result.is_success() {
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         f.clone().into(),
                         "fn_eq: exact known pointwise forall over alpha-equivalent function carriers"
                             .to_string(),
@@ -167,11 +171,15 @@ impl Runtime {
         )?;
         let forall_res = self.verify_forall_fact(&forall_f, verify_state)?;
         if !forall_res.is_success() {
-            return Ok(forall_res);
+            return Ok(forall_res
+                .as_fact_unknown()
+                .cloned()
+                .expect("unknown forall verification carries a fact unknown")
+                .into());
         }
         let recorded: Fact = f.clone().into();
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 recorded,
                 "fn_eq: mutual function-space membership and pointwise equality (forall+dom)"
                     .to_string(),
@@ -190,7 +198,7 @@ impl Runtime {
         expected: &FnSet,
         membership: &AtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let AtomicFact::InFact(in_fact) = membership else {
             return Ok(UnknownGenericStmtResult::new().into());
         };

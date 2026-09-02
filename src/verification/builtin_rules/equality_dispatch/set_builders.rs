@@ -12,7 +12,7 @@ impl Runtime {
         prop_name: &str,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<VerifyFactResult, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -32,7 +32,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -67,7 +67,7 @@ impl Runtime {
         set_builder: &SetBuilder,
         line_file: LineFile,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
+    ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
         let Obj::FnSet(fn_set) = set_builder.param_set.as_ref() else {
             return Ok(None);
         };
@@ -148,7 +148,7 @@ impl Runtime {
     pub(super) fn try_verify_integer_range_set_builder_equality(
         &mut self,
         equal_fact: &EqualFact,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         for (range_side, set_builder_side) in [(left, right), (right, left)] {
@@ -212,7 +212,7 @@ impl Runtime {
     pub(super) fn try_verify_indexed_fn_set_definition_equality(
         &mut self,
         equal_fact: &EqualFact,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();

@@ -21,7 +21,7 @@ impl StatementResultRenderer {
             ),
             (
                 "coverage_check".to_string(),
-                self.stmt_result(&result.coverage_check),
+                self.verify_fact_result(&result.coverage_check),
             ),
             ("then_facts".to_string(), display_values(&result.then_facts)),
             (
@@ -44,7 +44,10 @@ impl StatementResultRenderer {
         let exit = match &result.exit {
             SuccessVerifyByCaseBranchExitResult::Conclusions(conclusions) => object(vec![
                 string_field("kind", "SuccessVerifyByCaseConclusionsResult"),
-                ("checks".to_string(), self.stmt_results(&conclusions.checks)),
+                (
+                    "checks".to_string(),
+                    self.verify_fact_results(&conclusions.checks),
+                ),
             ]),
             SuccessVerifyByCaseBranchExitResult::Contradiction(contradiction) => object(vec![
                 string_field("kind", "SuccessVerifyByCaseContradictionResult"),
@@ -107,11 +110,11 @@ impl StatementResultRenderer {
             string_field("kind", "SuccessVerifyContradictionResult"),
             (
                 "impossible_check".to_string(),
-                self.stmt_result(&result.impossible_check),
+                self.verify_fact_result(&result.impossible_check),
             ),
             (
                 "negated_impossible_check".to_string(),
-                self.stmt_result(&result.negated_impossible_check),
+                self.verify_fact_result(&result.negated_impossible_check),
             ),
         ])
     }

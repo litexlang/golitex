@@ -18,7 +18,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         for (intersection_side, target_side) in [
             (&equal_fact.left, &equal_fact.right),
             (&equal_fact.right, &equal_fact.left),
@@ -74,7 +74,7 @@ impl Runtime {
         equal_fact: &EqualFact,
         intersection_is_left: bool,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let (intersection_side, target_side) = if intersection_is_left {
             (&equal_fact.left, &equal_fact.right)
         } else {
@@ -123,7 +123,7 @@ impl Runtime {
         }
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "intersect_literal_set_filter".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(

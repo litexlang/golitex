@@ -5,7 +5,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -103,7 +103,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -142,12 +142,18 @@ impl Runtime {
 
             let left_power: Obj = Pow::new(left.clone(), exponent.clone()).into();
             let right_power: Obj = Pow::new(right.clone(), exponent).into();
-            let power_equal_result = self.verify_equal_fact_by_known_equality(
-                &EqualFact::new_from_refs(&left_power, &right_power, line_file.clone()),
-            );
+            let power_equal_fact =
+                EqualFact::new_from_refs(&left_power, &right_power, line_file.clone());
+            let power_equal_result =
+                self.verify_equal_fact_by_known_equality(&power_equal_fact);
             if !power_equal_result.is_success() {
                 continue;
             }
+            let power_equal_result = self.complete_fact_proof_result(
+                &power_equal_fact.into(),
+                power_equal_result,
+                builtin_state.verify_state(),
+            )?;
 
             return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
                 equal_fact,
@@ -168,7 +174,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -287,7 +293,7 @@ impl Runtime {
         quotient: &Div,
         line_file: LineFile,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
+    ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
         if !Self::obj_is_builtin_literal_one(quotient.left.as_ref()) {
             return Ok(None);
         }
@@ -354,7 +360,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -404,7 +410,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();

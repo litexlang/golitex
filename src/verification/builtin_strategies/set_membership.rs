@@ -5,7 +5,7 @@ impl Runtime {
         &mut self,
         fact: &InFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let literal_struct =
             self.verify_literal_tuple_struct_membership_with_builtin_strategy(fact, verify_state)?;
         if literal_struct.is_success() {
@@ -108,7 +108,7 @@ impl Runtime {
             return Ok(UnknownGenericStmtResult::new().into());
         };
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                 fact.clone().into(),
                 "set-membership strategy: constructor membership decomposition".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -127,7 +127,7 @@ impl Runtime {
         &mut self,
         fact: &InFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let (Obj::Tuple(_), Obj::StructObj(struct_obj)) = (&fact.element, &fact.set) else {
             return Ok(UnknownGenericStmtResult::new().into());
         };
@@ -143,7 +143,7 @@ impl Runtime {
         &mut self,
         fact: &InFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let goal_key = fact.to_string();
         if verify_state.has_active_set_builder_membership_unfold() {
             return Ok(UnknownGenericStmtResult::new().into());
@@ -159,7 +159,7 @@ impl Runtime {
         &mut self,
         fact: &InFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         if let Some(result) =
             self.try_verify_set_builder_membership_definition_transport(fact, verify_state)?
         {
@@ -233,7 +233,11 @@ impl Runtime {
                                 &final_state,
                             )?
                         {
-                            result = definition_result;
+                            result = self.complete_atomic_fact_proof_result(
+                                atomic_fact,
+                                definition_result,
+                                &final_state,
+                            )?;
                         }
                     }
                 }
@@ -248,7 +252,7 @@ impl Runtime {
         let target: Fact = fact.clone().into();
         if matches!(fact.set, Obj::SetBuilder(_)) {
             return Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                     target.clone(),
                     "set-builder membership strategy: unfold one set definition and verify its atomic obligations"
                         .to_string(),
@@ -264,7 +268,7 @@ impl Runtime {
             );
         }
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                 target,
                 "set-builder membership strategy: unfold one set definition and verify its atomic obligations"
                     .to_string(),
@@ -279,7 +283,7 @@ impl Runtime {
         &mut self,
         fact: &SubsetFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let lf = fact.line_file.clone();
         let mut alternatives: Vec<Vec<AtomicFact>> = Vec::new();
         match &fact.left {
@@ -328,7 +332,7 @@ impl Runtime {
             return Ok(UnknownGenericStmtResult::new().into());
         };
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                 fact.clone().into(),
                 "set-containment strategy: constructor containment decomposition".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -344,7 +348,7 @@ impl Runtime {
         &mut self,
         alternatives: Vec<Vec<AtomicFact>>,
         verify_state: &VerifyState,
-    ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
+    ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
         for required in alternatives {
             let mut results = Vec::with_capacity(required.len());
             let mut complete = true;

@@ -5,7 +5,7 @@ impl Runtime {
         &mut self,
         not_in_fact: &NotInFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         if let Obj::StandardSet(standard_set) = &not_in_fact.set {
             if matches!(standard_set, StandardSet::Z) {
                 if let Some(result) = self.verify_not_in_z_for_resolved_numeric_div(not_in_fact) {
@@ -80,7 +80,7 @@ impl Runtime {
                 }
                 if evidence.is_some() {
                     Ok(
-                        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                        SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             not_in_fact.clone().into(),
                             "set-minus membership excludes the right operand".to_string(),
                             BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyNotInFactWithBuiltinRules),
@@ -100,7 +100,7 @@ impl Runtime {
         in_fact: &InFact,
         builtin_state: &BuiltinRuleSearchState,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         if let Obj::MatrixSet(expected_matrix_set) = &in_fact.set {
             if matches!(
                 &in_fact.element,
@@ -112,7 +112,7 @@ impl Runtime {
             ) {
                 if let Ok(inferred_matrix_set) = self.real_matrix_type(
                     &in_fact.element,
-                    &verify_state.with_final_round_after_well_definedness(),
+                    &verify_state.with_final_round(),
                     "membership",
                 ) {
                     let inferred_obj: Obj = inferred_matrix_set.clone().into();
@@ -121,7 +121,7 @@ impl Runtime {
                     {
                         let target: Fact = in_fact.clone().into();
                         return Ok(
-                            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                                 target.clone(),
                                 "native matrix expression has its checked result carrier"
                                     .to_string(),
@@ -144,7 +144,7 @@ impl Runtime {
                 &in_fact.element,
                 fn_set,
                 in_fact,
-                &verify_state.with_well_definedness_verified(),
+                &verify_state.clone(),
             )? {
                 return Ok(result);
             }
@@ -169,7 +169,7 @@ impl Runtime {
                         anonymous_fn,
                         fn_set,
                         in_fact,
-                        &verify_state.with_well_definedness_verified(),
+                        &verify_state.clone(),
                     )?;
                 if transported_result.is_success() {
                     return Ok(transported_result);
@@ -180,7 +180,7 @@ impl Runtime {
             let result = self.verify_in_fact_in_general_cart_by_defining_facts(
                 in_fact,
                 general_cart,
-                &verify_state.with_well_definedness_verified(),
+                &verify_state.clone(),
             )?;
             if result.is_success() {
                 return Ok(result);
@@ -254,7 +254,10 @@ impl Runtime {
         if standard_projection.is_success() {
             return Ok(standard_projection);
         }
-        let direct_superset_result = self.verify_in_fact_by_known_direct_superset(in_fact)?;
+        let direct_superset_result = self.verify_in_fact_by_known_direct_superset(
+            in_fact,
+            builtin_state.verify_state(),
+        )?;
         if direct_superset_result.is_success() {
             return Ok(direct_superset_result);
         }
@@ -279,7 +282,7 @@ impl Runtime {
             (Obj::ImaginaryUnit(_), Obj::StandardSet(StandardSet::C))
         ) {
             return Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "native imaginary unit is in C".to_string(),
                     BuiltinRuleEvidence::NativeConstantMembership(
@@ -332,7 +335,7 @@ impl Runtime {
                 _ => unreachable!(),
             };
             return Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     reason.to_string(),
                     BuiltinRuleEvidence::NativeConstantMembership(rule),
@@ -552,7 +555,7 @@ impl Runtime {
                 }
                 if let Some(evidence) = evidence {
                     Ok(
-                        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                        SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             in_fact.clone().into(),
                             "absolute value of a known nonzero integer is a positive natural"
                                 .to_string(),
@@ -595,7 +598,7 @@ impl Runtime {
                     | StandardSet::RPos,
                 ),
             ) => Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "gcd of a non-all-zero integer pair is a positive integer".to_string(),
                     BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactWithBuiltinRules02),
@@ -613,7 +616,7 @@ impl Runtime {
                     | StandardSet::C,
                 ),
             ) => Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "lcm of two integers is a nonnegative integer".to_string(),
                     BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactWithBuiltinRules03),
@@ -625,7 +628,7 @@ impl Runtime {
                 Obj::Floor(_) | Obj::Ceil(_),
                 Obj::StandardSet(StandardSet::Z | StandardSet::Q | StandardSet::R | StandardSet::C),
             ) => Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "floor and ceil return integers".to_string(),
                     BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactWithBuiltinRules04),
@@ -634,7 +637,7 @@ impl Runtime {
                 .into(),
             ),
             (Obj::Min(_) | Obj::Max(_), Obj::StandardSet(StandardSet::R | StandardSet::C)) => Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "minimum and maximum of real arguments are real".to_string(),
                     BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactWithBuiltinRules05),
@@ -646,7 +649,7 @@ impl Runtime {
                 Obj::Exp(_),
                 Obj::StandardSet(StandardSet::RPos | StandardSet::R | StandardSet::C),
             ) => Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "real exponential values are positive reals".to_string(),
                     BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactWithBuiltinRules06),
@@ -655,7 +658,7 @@ impl Runtime {
                 .into(),
             ),
             (Obj::Ln(_), Obj::StandardSet(StandardSet::R | StandardSet::C)) => Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "natural logarithm of a positive real is real".to_string(),
                     BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactWithBuiltinRules07),
@@ -667,7 +670,7 @@ impl Runtime {
                 Obj::Sign(_),
                 Obj::StandardSet(StandardSet::Z | StandardSet::Q | StandardSet::R | StandardSet::C),
             ) => Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "the real sign function returns an integer".to_string(),
                     BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactWithBuiltinRules08),
@@ -688,7 +691,7 @@ impl Runtime {
                     | StandardSet::RPos,
                 ),
             ) => Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "factorial of a natural number is a positive integer".to_string(),
                     BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactWithBuiltinRules09),
@@ -960,7 +963,7 @@ impl Runtime {
                 ) =>
             {
                 Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         in_fact.clone().into(),
                         "index_union is contained in its explicit ambient set".to_string(),
                         BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactWithBuiltinRules10),
@@ -976,7 +979,7 @@ impl Runtime {
                 ) =>
             {
                 Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         in_fact.clone().into(),
                         "index_intersect is contained in its explicit ambient set".to_string(),
                         BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactWithBuiltinRules11),
@@ -1051,7 +1054,17 @@ impl Runtime {
                     fn_set.into(),
                     in_fact.line_file.clone(),
                 );
-                self.verify_atomic_fact_as_builtin_rule_premise(&expanded.into(), builtin_state)
+                let expanded_result =
+                    self.verify_atomic_fact_as_builtin_rule_premise(&expanded.into(), builtin_state)?;
+                Ok(SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    in_fact.clone().into(),
+                    "finite-sequence carrier expands to its function-set representation".to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(
+                        UncataloguedBuiltinRule::VerifyInFactWithBuiltinRules12,
+                    ),
+                    vec![expanded_result],
+                )
+                .into())
             }
             (_, Obj::SeqSet(ss)) => {
                 let fn_set = self.seq_set_to_fn_set(ss, in_fact.line_file.clone());
@@ -1060,7 +1073,17 @@ impl Runtime {
                     fn_set.into(),
                     in_fact.line_file.clone(),
                 );
-                self.verify_atomic_fact_as_builtin_rule_premise(&expanded.into(), builtin_state)
+                let expanded_result =
+                    self.verify_atomic_fact_as_builtin_rule_premise(&expanded.into(), builtin_state)?;
+                Ok(SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    in_fact.clone().into(),
+                    "sequence carrier expands to its function-set representation".to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(
+                        UncataloguedBuiltinRule::VerifyInFactWithBuiltinRules12,
+                    ),
+                    vec![expanded_result],
+                )
+                .into())
             }
             (_, Obj::MatrixSet(ms)) => {
                 let fn_set = self.matrix_set_to_fn_set(ms, in_fact.line_file.clone());
@@ -1069,7 +1092,17 @@ impl Runtime {
                     fn_set.into(),
                     in_fact.line_file.clone(),
                 );
-                self.verify_atomic_fact_as_builtin_rule_premise(&expanded.into(), builtin_state)
+                let expanded_result =
+                    self.verify_atomic_fact_as_builtin_rule_premise(&expanded.into(), builtin_state)?;
+                Ok(SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    in_fact.clone().into(),
+                    "matrix carrier expands to its function-set representation".to_string(),
+                    BuiltinRuleEvidence::Uncatalogued(
+                        UncataloguedBuiltinRule::VerifyInFactWithBuiltinRules12,
+                    ),
+                    vec![expanded_result],
+                )
+                .into())
             }
             (_, target_set_obj) => {
                 let literal_tuple_projection_result = self

@@ -65,10 +65,10 @@ impl Runtime {
     fn exec_have_obj_equal_stmt_verify_process(
         &mut self,
         have_obj_equal_stmt: &HaveObjEqualStmt,
-    ) -> Result<Vec<StmtResult>, RuntimeError> {
+    ) -> Result<Vec<VerifyFactResult>, RuntimeError> {
         let mut current_index = 0;
         let mut param_to_obj_map: HashMap<String, Obj> = HashMap::new();
-        let mut check_results: Vec<StmtResult> = Vec::new();
+        let mut check_results: Vec<VerifyFactResult> = Vec::new();
         for param_def in have_obj_equal_stmt.param_def.groups.iter() {
             let current_type_holder = self
                 .inst_param_type(
@@ -115,12 +115,19 @@ impl Runtime {
                     if let ParamType::Obj(target_set) = current_type {
                         known_source_sets = self.known_sets_containing_obj(current_param_equal_to);
                         for source_set in known_source_sets.iter() {
-                            let set_equality = self.verify_equal_fact_with_bounded_builtin_routes(
-                                &EqualFact::new(
-                                    source_set.clone(),
-                                    target_set.clone(),
-                                    have_obj_equal_stmt.line_file.clone(),
-                                ),
+                            let set_equality_fact = EqualFact::new(
+                                source_set.clone(),
+                                target_set.clone(),
+                                have_obj_equal_stmt.line_file.clone(),
+                            );
+                            let set_equality_proof = self
+                                .verify_equal_fact_with_bounded_builtin_routes(
+                                    &set_equality_fact,
+                                    &verify_state,
+                                )?;
+                            let set_equality = self.complete_fact_proof_result(
+                                &set_equality_fact.into(),
+                                set_equality_proof,
                                 &verify_state,
                             )?;
                             if !set_equality.is_unknown() {

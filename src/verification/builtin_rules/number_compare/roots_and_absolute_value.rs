@@ -6,7 +6,7 @@ impl Runtime {
     pub(in crate::verification) fn verify_zero_le_abs_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
         };
@@ -19,8 +19,8 @@ impl Runtime {
         if !matches!(&f.right, Obj::Abs(_)) {
             return Ok(None);
         }
-        Ok(Some(StmtResult::from(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+        Ok(Some(ProveFactResult::from(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "0 <= abs(x) for x in R".to_string(),
                 BuiltinRuleEvidence::AbsoluteValue(AbsoluteValueBuiltinRule::Nonnegative),
@@ -35,7 +35,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
         };
@@ -59,8 +59,8 @@ impl Runtime {
         if !nonnegative_result.is_success() {
             return Ok(None);
         }
-        Ok(Some(StmtResult::from(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+        Ok(Some(ProveFactResult::from(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "sqrt: 0 <= sqrt(x) from 0 <= x".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -77,7 +77,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
         };
@@ -101,8 +101,8 @@ impl Runtime {
         if !positive_result.is_success() {
             return Ok(None);
         }
-        Ok(Some(StmtResult::from(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+        Ok(Some(ProveFactResult::from(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "sqrt: 0 < sqrt(x) from 0 < x".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -119,7 +119,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let Some(norm) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
         };
@@ -152,7 +152,7 @@ impl Runtime {
         strict: bool,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let (Obj::Sqrt(left_sqrt), Obj::Sqrt(right_sqrt)) = (&left, &right) else {
             return Ok(None);
         };
@@ -179,8 +179,8 @@ impl Runtime {
         } else {
             "sqrt: sqrt(a) <= sqrt(b) from 0 <= a, 0 <= b, and a <= b"
         };
-        Ok(Some(StmtResult::from(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+        Ok(Some(ProveFactResult::from(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 reason.to_string(),
                 BuiltinRuleEvidence::Uncatalogued(

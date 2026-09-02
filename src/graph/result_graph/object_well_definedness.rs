@@ -7,7 +7,10 @@ impl ResultGraph {
         &mut self,
         result: &Rc<SuccessVerifyObjWellDefinedResult>,
     ) -> String {
-        let key = Rc::as_ptr(result) as usize;
+        let key = match result.as_ref() {
+            SuccessVerifyObjWellDefinedResult::Direct(direct) => Rc::as_ptr(direct) as usize,
+            SuccessVerifyObjWellDefinedResult::Reuse(_) => Rc::as_ptr(result) as usize,
+        };
         if let Some(id) = self.shared_wd_obj_nodes.get(&key) {
             return id.clone();
         }
@@ -40,19 +43,33 @@ impl ResultGraph {
                     result.object.to_string(),
                     None,
                 );
-                let source_id = self.add_shared_wd_obj(&result.source);
+                let source_id = self.add_shared_wd_direct(&result.source);
                 self.add_edge(&id, &source_id, "reuses", 0);
             }
-            SuccessVerifyObjWellDefinedResult::RecursiveReference(result) => {
-                self.ensure_node(
-                    id,
-                    "well_definedness",
-                    "RecursiveObjectReference",
-                    result.object.to_string(),
-                    None,
-                );
-            }
         }
+    }
+
+    fn add_shared_wd_direct(
+        &mut self,
+        result: &Rc<SuccessVerifyDirectObjWellDefinedResult>,
+    ) -> String {
+        let key = Rc::as_ptr(result) as usize;
+        if let Some(id) = self.shared_wd_obj_nodes.get(&key) {
+            return id.clone();
+        }
+        let id = format!("shared-wd-object:{}", self.shared_wd_obj_nodes.len());
+        self.shared_wd_obj_nodes.insert(key, id.clone());
+        self.ensure_node(
+            id.clone(),
+            "well_definedness",
+            "DirectObject",
+            result.object.to_string(),
+            None,
+        );
+        if self.expanded_nodes.insert(id.clone()) {
+            self.add_wd_obj_steps(&id, &result.steps);
+        }
+        id
     }
 
     pub(super) fn add_wd_obj_steps(

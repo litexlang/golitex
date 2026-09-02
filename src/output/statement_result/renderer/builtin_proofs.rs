@@ -27,7 +27,7 @@ impl StatementResultRenderer {
                     result
                         .subgoals
                         .iter()
-                        .map(|result| self.stmt_result(result))
+                        .map(|result| self.verify_fact_result(result))
                         .collect(),
                 ),
             ),
@@ -355,6 +355,9 @@ impl StatementResultRenderer {
                 "NativeConstantMembership",
                 native_constant_membership_rule_name(*rule),
             ),
+            BuiltinRuleEvidence::EqualitySymmetry => {
+                object(vec![string_field("kind", "EqualitySymmetry")])
+            }
             BuiltinRuleEvidence::NotEqualSymmetry => {
                 object(vec![string_field("kind", "NotEqualSymmetry")])
             }

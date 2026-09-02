@@ -204,7 +204,7 @@ impl Runtime {
     fn exec_have_fn_equal_stmt_verify_process(
         &mut self,
         have_fn_equal_stmt: &HaveFnEqualStmt,
-    ) -> Result<(StmtResult, SuccessInferResult), RuntimeError> {
+    ) -> Result<(VerifyFactResult, SuccessInferResult), RuntimeError> {
         let (verify_result, assumption_infers) =
             self.have_fn_equal_stmt_verify_return_value_in_ret_set(have_fn_equal_stmt)?;
         if verify_result.is_unknown() {
@@ -234,7 +234,7 @@ impl Runtime {
     fn have_fn_equal_stmt_verify_return_value_in_ret_set(
         &mut self,
         have_fn_equal_stmt: &HaveFnEqualStmt,
-    ) -> Result<(StmtResult, SuccessInferResult), RuntimeError> {
+    ) -> Result<(VerifyFactResult, SuccessInferResult), RuntimeError> {
         self.run_in_local_env(|rt| {
             let mut assumption_infers = SuccessInferResult::new();
             for param_def_with_set in have_fn_equal_stmt
@@ -267,7 +267,7 @@ impl Runtime {
                 &VerifyState::initial(),
             )?;
             rt.attach_known_fact_ids_to_infer_result(&mut assumption_infers)?;
-            rt.attach_known_fact_ids_to_stmt_result(&mut return_check)?;
+            rt.attach_known_fact_ids_to_verify_fact_result(&mut return_check)?;
             Ok((return_check, assumption_infers))
         })
         .map_err(|verify_error| {

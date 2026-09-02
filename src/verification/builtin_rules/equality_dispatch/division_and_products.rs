@@ -21,7 +21,7 @@ impl Runtime {
         denominator: &Obj,
         line_file: LineFile,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<VerifyFactResult>, RuntimeError> {
         let not_zero: AtomicFact = NotEqualFact::new(
             denominator.clone(),
             Self::literal_zero_obj_for_division_builtin(),
@@ -42,7 +42,7 @@ impl Runtime {
         quotient: &Obj,
         denominator: &Obj,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let line_file = &equal_fact.line_file;
         let division_obj: Obj = Div::new(dividend.clone(), denominator.clone()).into();
         if !self.equal_fact_sides_are_the_same_or_known_equal(&EqualFact::new_from_refs(
@@ -62,7 +62,7 @@ impl Runtime {
         };
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "division elimination: from a / b = c and b != 0, prove a = c * b".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -78,7 +78,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let (dividend, product) = match (left, right) {
@@ -110,7 +110,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -144,7 +144,7 @@ impl Runtime {
         };
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "division introduction: from a = b * c and b != 0, prove a / b = c".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -163,7 +163,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         if let Some(done) =
             self.try_verify_product_from_known_division(equal_fact, builtin_state)?
         {

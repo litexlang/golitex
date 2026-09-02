@@ -3,24 +3,20 @@
 use super::super::*;
 
 pub(in super::super) fn compile_standard_set_nonempty_fact_proof_from_result(
-    result: &StmtResult,
+    result: &VerifyFactResult,
     expected_carrier: &Obj,
     environment_stack: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
     let success = result
-        .factual_success()
+        .verified()
         .ok_or_else(|| "object choice nonemptiness child is not a successful fact".to_string())?;
     let target = success.fact();
     let Fact::AtomicFact(AtomicFact::IsNonemptySetFact(nonempty)) = &target else {
         return Err("object choice nonemptiness child changed fact family".into());
     };
-    if obj_equality_key(&nonempty.set) != obj_equality_key(expected_carrier)
-        || success.store.fact.to_string() != target.to_string()
-        || success.store.fact_id.is_some()
-        || !success.store.infers.is_empty()
-    {
+    if obj_equality_key(&nonempty.set) != obj_equality_key(expected_carrier) {
         return Err(
-            "object choice nonemptiness child changed its target or verify-only store".into(),
+            "object choice nonemptiness child changed its target".into(),
         );
     }
     let SuccessFactProofResult::BuiltinRule(builtin) = success.proof() else {

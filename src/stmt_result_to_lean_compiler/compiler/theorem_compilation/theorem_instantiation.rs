@@ -203,12 +203,11 @@ impl StmtResultToLeanCompiler {
                 "Litex.In {rendered_argument} {}",
                 render_obj(parameter_set, &self.environment_stack)?
             );
-            let factual_check = check.factual_success().ok_or_else(|| {
+            let factual_check = check.verified().ok_or_else(|| {
                 format!("release-thm argument check {parameter_index} is not factual")
             })?;
             if render_fact(&factual_check.fact(), &self.environment_stack)?
                 != expected_parameter_fact
-                || !factual_check.store.infers.is_empty()
             {
                 return Err(format!(
                     "release-thm argument check {parameter_index} changed its parameter obligation"
@@ -272,10 +271,9 @@ impl StmtResultToLeanCompiler {
                 ));
             }
             let factual_check = check
-                .factual_success()
+                .verified()
                 .ok_or_else(|| format!("release-thm domain check {domain_index} is not factual"))?;
             if factual_check.fact().to_string() != retained_domain.to_string()
-                || !factual_check.store.infers.is_empty()
             {
                 return Err(format!(
                     "release-thm domain check {domain_index} changed its retained obligation"

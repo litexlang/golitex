@@ -1340,7 +1340,7 @@ have a, b, c, d R+
     ));
 
     let right_branch = root_rule.subgoals[1]
-        .factual_success()
+        .verified()
         .expect("the right recursive branch should remain factual");
     let SuccessFactProofResult::BuiltinStrategy(right_rule) = right_branch.underlying_verified_by()
     else {
@@ -1355,7 +1355,7 @@ have a, b, c, d R+
 
     for branch in &root_rule.subgoals {
         let branch = branch
-            .factual_success()
+            .verified()
             .expect("each recursive branch should remain a factual result");
         let branch_rule = match branch.underlying_verified_by() {
             SuccessFactProofResult::BuiltinRule(rule)

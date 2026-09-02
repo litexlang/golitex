@@ -1,7 +1,7 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn verify_prime_fact_by_computation(&self, atomic_fact: &AtomicFact) -> StmtResult {
+    pub fn verify_prime_fact_by_computation(&self, atomic_fact: &AtomicFact) -> ProveFactResult {
         let (fact_is_positive, predicate, args) = match atomic_fact {
             AtomicFact::NormalAtomicFact(f) => (true, &f.predicate, &f.body),
             AtomicFact::NotNormalAtomicFact(f) => (false, &f.predicate, &f.body),
@@ -20,7 +20,7 @@ impl Runtime {
         if is_prime_u64(value) != fact_is_positive {
             return UnknownGenericStmtResult::new().into();
         }
-        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+        SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
             atomic_fact.clone().into(),
             "deterministic primality computation for u64".to_string(),
             BuiltinRuleEvidence::PrimeU64Reflection,

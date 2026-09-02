@@ -6,8 +6,8 @@ use crate::inference::SuccessInferResult;
 use crate::object::Obj;
 use crate::result::{
     BuiltinRuleEvidence, RegisteredReflexivePredicateBuiltinRuleEvidence,
-    RegisteredSymmetricPredicateBuiltinRuleEvidence, StmtResult, SuccessFactStmtResult,
-    SuccessStmtResult, UnknownGenericStmtResult,
+    RegisteredSymmetricPredicateBuiltinRuleEvidence, ProveFactResult, SuccessProveFactResult,
+    UnknownGenericStmtResult, VerifyFactResult,
 };
 use crate::runtime::Runtime;
 use crate::verification::builtin_rules::{
@@ -27,7 +27,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         debug_assert!(!matches!(atomic_fact, AtomicFact::EqualFact(_)));
         let zero_premise_result =
             self.verify_non_equational_atomic_fact_with_zero_premise_verification(atomic_fact)?;
@@ -63,7 +63,7 @@ impl Runtime {
     pub fn verify_non_equational_atomic_fact_with_zero_premise_verification(
         &mut self,
         atomic_fact: &AtomicFact,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let known_result =
             self.verify_non_equational_atomic_fact_with_known_atomic_facts(atomic_fact)?;
         if known_result.is_success() {
@@ -79,7 +79,7 @@ impl Runtime {
     pub fn verify_non_equational_atomic_fact_by_direct_evaluation(
         &self,
         atomic_fact: &AtomicFact,
-    ) -> StmtResult {
+    ) -> ProveFactResult {
         debug_assert!(!matches!(atomic_fact, AtomicFact::EqualFact(_)));
         match atomic_fact {
             AtomicFact::InFact(fact) => {
@@ -117,7 +117,7 @@ impl Runtime {
                 let Some(evidence) = self.verify_number_comparison_builtin_rule(atomic_fact) else {
                     return UnknownGenericStmtResult::new().into();
                 };
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     atomic_fact.clone().into(),
                     "number comparison".to_string(),
                     evidence,
@@ -149,7 +149,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         debug_assert!(!matches!(atomic_fact, AtomicFact::EqualFact(_)));
         if !builtin_state.can_apply_rule() {
             return Ok(UnknownGenericStmtResult::new().into());
@@ -174,7 +174,7 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
         alternate_fact_search: AlternateFactSearch,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let mut result = self.verify_non_equational_atomic_fact_with_bounded_builtin_routes(
             atomic_fact,
             verify_state,
@@ -225,8 +225,8 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
-        result: StmtResult,
-    ) -> Result<StmtResult, RuntimeError> {
+        result: ProveFactResult,
+    ) -> Result<ProveFactResult, RuntimeError> {
         let result = self.builtin_post_process_non_equational_atomic_fact(
             atomic_fact,
             verify_state,
@@ -246,8 +246,8 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
-        result: StmtResult,
-    ) -> Result<StmtResult, RuntimeError> {
+        result: ProveFactResult,
+    ) -> Result<ProveFactResult, RuntimeError> {
         let transposed_fact = match atomic_fact {
             // Direct known not-equality symmetry is owned by the builtin rule.
             // Keep this full-verifier fallback so a reversed known `forall`
@@ -276,8 +276,8 @@ impl Runtime {
     fn use_known_reflexive_prop(
         &mut self,
         atomic_fact: &AtomicFact,
-        result: StmtResult,
-    ) -> Result<StmtResult, RuntimeError> {
+        result: ProveFactResult,
+    ) -> Result<ProveFactResult, RuntimeError> {
         let AtomicFact::NormalAtomicFact(f) = atomic_fact else {
             return Ok(result);
         };
@@ -292,7 +292,7 @@ impl Runtime {
             if env.predicate_algebraic_properties.is_reflexive(&prop_name) {
                 let target: Fact = atomic_fact.clone().into();
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         target.clone(),
                         "registered reflexive prop".to_string(),
                         BuiltinRuleEvidence::RegisteredReflexivePredicate(
@@ -314,8 +314,8 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
-        result: StmtResult,
-    ) -> Result<StmtResult, RuntimeError> {
+        result: ProveFactResult,
+    ) -> Result<ProveFactResult, RuntimeError> {
         let AtomicFact::NormalAtomicFact(f) = atomic_fact else {
             return Ok(result);
         };
@@ -348,6 +348,11 @@ impl Runtime {
                 AlternateFactSearch::Disabled,
             )?;
             if alt_result.is_success() {
+                let alt_result = self.complete_atomic_fact_proof_result(
+                    &alt,
+                    alt_result,
+                    verify_state,
+                )?;
                 return Ok(Self::wrap_registered_symmetric_prop_result(
                     atomic_fact,
                     prop_name,
@@ -369,12 +374,12 @@ impl Runtime {
         predicate_name: String,
         gather: Vec<usize>,
         alternate: AtomicFact,
-        alternate_result: StmtResult,
-    ) -> StmtResult {
+        alternate_result: VerifyFactResult,
+    ) -> ProveFactResult {
         debug_assert!(alternate_result.is_success());
         let target: Fact = target.clone().into();
         let alternate: Fact = alternate.into();
-        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+        SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
             target.clone(),
             "registered symmetric prop".to_string(),
             BuiltinRuleEvidence::RegisteredSymmetricPredicate(
@@ -392,12 +397,12 @@ impl Runtime {
 
     fn wrap_post_process_alternate_fact_result(
         original: &AtomicFact,
-        alternate_result: StmtResult,
-        fallback: StmtResult,
-    ) -> Result<StmtResult, RuntimeError> {
+        alternate_result: ProveFactResult,
+        fallback: ProveFactResult,
+    ) -> Result<ProveFactResult, RuntimeError> {
         match alternate_result {
-            StmtResult::Success(SuccessStmtResult::Fact(inner_success)) => {
-                Ok(SuccessFactStmtResult::new_with_reused_verification(
+            ProveFactResult::Proven(inner_success) => {
+                Ok(SuccessProveFactResult::new_with_reused_verification(
                     original.clone().into(),
                     SuccessInferResult::new(),
                     inner_success.verification,

@@ -7,7 +7,7 @@ impl StmtResultToLeanCompiler {
         &mut self,
         target: &Fact,
         evidence: &DisjunctionIntroductionBuiltinRuleEvidence,
-        subgoals: &[StmtResult],
+        subgoals: &[VerifyFactResult],
     ) -> Result<Option<String>, String> {
         if evidence.expected_target.to_string() != target.to_string() {
             return Err("disjunction-introduction evidence changed its target".into());
@@ -25,12 +25,10 @@ impl StmtResultToLeanCompiler {
             );
         };
         let selected_result = selected_result
-            .factual_success()
+            .verified()
             .ok_or_else(|| "disjunction selected child is not factual".to_string())?;
-        if selected_result.fact().to_string() != selected.to_string()
-            || !selected_result.store.infers.is_empty()
-        {
-            return Err("disjunction selected child changed its proposition or effects".into());
+        if selected_result.fact().to_string() != selected.to_string() {
+            return Err("disjunction selected child changed its proposition".into());
         }
         let Some(selected_proof) =
             self.construct_lean_proof_from_direct_fact_result(selected_result)?

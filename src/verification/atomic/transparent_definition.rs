@@ -37,20 +37,20 @@ impl Runtime {
     pub(in crate::verification) fn retarget_transparent_definition_reduction_result(
         &self,
         goal: &AtomicFact,
-        reduced_result: StmtResult,
+        reduced_result: ProveFactResult,
         evidence: TransparentDefinitionReductionEvidence,
-    ) -> StmtResult {
+    ) -> ProveFactResult {
         let Some(success) = reduced_result.factual_success() else {
             return reduced_result;
         };
-        let transformed = Rc::new(SuccessVerifyFactResult::new(
+        let transformed = Rc::new(SuccessFactProofNode::new(
             goal.clone().into(),
             SuccessFactProofResult::Transform(Box::new(SuccessTransformFactResult::from_shared(
                 FactTransformationRule::TransparentDefinitionReduction(evidence),
                 success.verification.clone(),
             ))),
         ));
-        SuccessFactStmtResult::new_with_verified_by_known_fact(
+        SuccessProveFactResult::new_with_verified_by_known_fact(
             goal.clone().into(),
             SuccessFactProofResult::Reuse(Box::new(SuccessReuseFactProofResult {
                 source: transformed,

@@ -133,7 +133,7 @@ pub enum SuccessVerifyLitexTheoremApplicationMode {
     ForallInstantiation {
         argument_verification: Option<Box<SuccessVerifyArgsSatisfyParamDefResult>>,
         domain_facts: Vec<Fact>,
-        domain_checks: Vec<StmtResult>,
+        domain_checks: Vec<VerifyFactResult>,
     },
     DirectFactCitation,
 }
@@ -143,10 +143,10 @@ pub struct SuccessVerifyBuiltinTheoremApplicationResult {
     pub theorem_id: BuiltinTheoremId,
     pub requirement_facts: Vec<Fact>,
     pub requirement_roles: Vec<BuiltinTheoremRequirementRole>,
-    pub requirement_checks: Vec<StmtResult>,
+    pub requirement_checks: Vec<VerifyFactResult>,
     /// Dedicated builtin theorems whose conclusion differs from every
     /// requirement retain the exact conclusion WD tree here.
-    pub conclusion_well_definedness: Option<SuccessVerifyFactWellDefinedResult>,
+    pub conclusion_well_definedness: Option<WellDefinedFactResult>,
     pub provenance: Option<BuiltinTheoremProvenance>,
 }
 
@@ -192,7 +192,7 @@ impl fmt::Debug for SuccessVerifyTheoremApplicationResult {
 pub struct SuccessVerifyByTheoremSelectionResult {
     pub temporary_application: Box<StmtResult>,
     pub selected_fact: AtomicFact,
-    pub selected_fact_check: Box<StmtResult>,
+    pub selected_fact_check: Box<VerifyFactResult>,
 }
 
 impl fmt::Debug for SuccessVerifyByTheoremSelectionResult {
@@ -214,7 +214,7 @@ impl SuccessVerifyTheoremApplicationResult {
         domain_facts: Vec<Fact>,
         direct_conclusions: Vec<Fact>,
         argument_verification: Option<SuccessVerifyArgsSatisfyParamDefResult>,
-        domain_checks: Vec<StmtResult>,
+        domain_checks: Vec<VerifyFactResult>,
     ) -> Self {
         SuccessVerifyTheoremApplicationResult {
             theorem,
@@ -257,7 +257,7 @@ impl SuccessVerifyTheoremApplicationResult {
         requirement_facts: Vec<Fact>,
         requirement_roles: Vec<BuiltinTheoremRequirementRole>,
         direct_conclusions: Vec<Fact>,
-        requirement_checks: Vec<StmtResult>,
+        requirement_checks: Vec<VerifyFactResult>,
         provenance: Option<BuiltinTheoremProvenance>,
     ) -> Self {
         SuccessVerifyTheoremApplicationResult {
@@ -283,8 +283,8 @@ impl SuccessVerifyTheoremApplicationResult {
         requirement_facts: Vec<Fact>,
         requirement_roles: Vec<BuiltinTheoremRequirementRole>,
         direct_conclusions: Vec<Fact>,
-        requirement_checks: Vec<StmtResult>,
-        conclusion_well_definedness: SuccessVerifyFactWellDefinedResult,
+        requirement_checks: Vec<VerifyFactResult>,
+        conclusion_well_definedness: WellDefinedFactResult,
         provenance: Option<BuiltinTheoremProvenance>,
     ) -> Self {
         let mut result = Self::new_builtin(
@@ -309,7 +309,7 @@ impl SuccessVerifyByTheoremSelectionResult {
     pub fn new(
         temporary_application: StmtResult,
         selected_fact: AtomicFact,
-        selected_fact_check: StmtResult,
+        selected_fact_check: VerifyFactResult,
     ) -> Self {
         Self {
             temporary_application: Box::new(temporary_application),

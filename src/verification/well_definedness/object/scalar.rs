@@ -72,7 +72,19 @@ impl Runtime {
             ],
             default_line_file(),
         ));
-        let result = self.verify_and_chain_atomic_fact(&complex_natural, verify_state)?;
+        let result = self
+            .verify_and_chain_atomic_fact(&complex_natural, verify_state)
+            .map_err(|error| {
+                eprintln!(
+                    "complex-natural pow candidate failed for `{}`: {:?}",
+                    Obj::Pow(value.clone()),
+                    error
+                );
+                error
+            })?;
+        if value.base.to_string() == "i" && value.exponent.to_string() == "2" {
+            eprintln!("i^2 complex-natural result: {:?}", result);
+        }
         if result.is_success() {
             steps.push_fact_check(super::success_obj_fact_check(result)?);
             return Ok(steps);
@@ -97,15 +109,20 @@ impl Runtime {
             default_line_file(),
         ));
         let result = self.verify_and_chain_atomic_fact(&nonzero_complex_integer, verify_state)?;
+        if value.base.to_string() == "i" && value.exponent.to_string() == "2" {
+            eprintln!("i^2 complex-integer result: {:?}", result);
+        }
         if result.is_success() {
             steps.push_fact_check(super::success_obj_fact_check(result)?);
             return Ok(steps);
         }
 
-        if self
-            .push_required_real_object_wd_result(&mut steps, &value.base, verify_state)
-            .is_err()
-        {
+        let real_base_result =
+            self.push_required_real_object_wd_result(&mut steps, &value.base, verify_state);
+        if value.base.to_string() == "i" && value.exponent.to_string() == "2" {
+            eprintln!("i^2 real-base result: {:?}", real_base_result);
+        }
+        if real_base_result.is_err() {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new_with_just_msg(format!(
                     "base and exponent do not satisfy the pow domain: {}",
@@ -193,7 +210,7 @@ impl Runtime {
         &mut self,
         obj: &Obj,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<VerifyFactResult, RuntimeError> {
         let c_obj = StandardSet::C.into();
         let in_fact = InFact::new(obj.clone(), c_obj, default_line_file());
         let result = self.verify_atomic_fact(&in_fact.into(), verify_state)?;

@@ -15,8 +15,9 @@ fn known_forall_instantiation_result_mut(
     let [_, _, StmtResult::Success(SuccessStmtResult::Fact(result))] = results else {
         panic!("expected abstract predicate, source axiom, and instantiated fact")
     };
-    let verification =
-        std::rc::Rc::get_mut(&mut result.verification).expect("test result has one proof owner");
+    let verification = result
+        .verification_mut()
+        .expect("test result has one proof owner");
     let SuccessFactProofResult::KnownForallInstantiation(instantiation) = verification.proof_mut()
     else {
         panic!("expected known-forall proof Result")
@@ -56,8 +57,9 @@ fn multi_conclusion_known_forall_instantiation_result_mut(
         .last_mut()
         .and_then(StmtResult::factual_success_mut)
         .expect("final result should be the instantiated second conclusion");
-    let verification =
-        std::rc::Rc::get_mut(&mut result.verification).expect("test result has one proof owner");
+    let verification = result
+        .verification_mut()
+        .expect("test result has one proof owner");
     let SuccessFactProofResult::KnownForallInstantiation(instantiation) = verification.proof_mut()
     else {
         panic!("expected known-forall proof Result")
@@ -142,7 +144,7 @@ fn function_application_return_membership_resolves_its_exact_well_definedness_fa
             .last()
             .and_then(StmtResult::factual_success)
             .expect("function-return membership is factual");
-        assert!(result.well_definedness.recursive.is_some());
+        assert!(result.checked().is_some());
 
         let generated =
             StmtResultToLeanCompiler::new("direct_function_application_return_membership.lit")
@@ -193,7 +195,10 @@ fn known_fact_rational_transformation_replays_its_ordered_result_steps() {
             .last()
             .and_then(StmtResult::factual_success)
             .expect("normalized citation is factual");
-        let SuccessFactProofResult::Transform(transformation) = result.proof() else {
+        let SuccessFactProofResult::Transform(transformation) = result
+            .proof()
+            .expect("verified transformation owns a proof")
+        else {
             panic!(
                 "expected recursive fact transformation, got {:#?}",
                 result.proof()
@@ -248,7 +253,8 @@ fn known_fact_transformation_rejects_a_removed_result_step() {
             .last_mut()
             .and_then(StmtResult::factual_success_mut)
             .expect("normalized citation is factual");
-        let verification = std::rc::Rc::get_mut(&mut result.verification)
+        let verification = result
+            .verification_mut()
             .expect("test citation has one verification owner");
         let SuccessFactProofResult::Transform(transformation) = verification.proof_mut() else {
             panic!("expected recursive fact transformation")
@@ -285,7 +291,8 @@ fn transparent_let_reduction_evidence_mut(
         .last_mut()
         .and_then(StmtResult::factual_success_mut)
         .expect("the final transparent equality should be factual");
-    let verification = std::rc::Rc::get_mut(&mut result.verification)
+    let verification = result
+        .verification_mut()
         .expect("the corruption fixture owns its verification");
     let SuccessFactProofResult::Reuse(reuse) = verification.proof_mut() else {
         panic!("expected outer proof reuse")

@@ -10,7 +10,7 @@ impl StmtResultToLeanCompiler {
     pub(in super::super) fn construct_lean_standard_set_membership_projection_from_result(
         &mut self,
         target: &Fact,
-        subgoals: &[StmtResult],
+        subgoals: &[VerifyFactResult],
     ) -> Result<Option<String>, String> {
         let [source_result] = subgoals else {
             return Err(
@@ -18,17 +18,9 @@ impl StmtResultToLeanCompiler {
             );
         };
         let source_result = source_result
-            .factual_success()
+            .verified()
             .ok_or_else(|| "standard-set membership projection child is not factual".to_string())?;
         let source = source_result.fact();
-        if source_result.store.fact.to_string() != source.to_string()
-            || !source_result.store.infers.is_empty()
-        {
-            return Err(
-                "standard-set membership projection child changed its fact or published effects"
-                    .into(),
-            );
-        }
         let (target_element, target_set) = membership_parts(target)?;
         let (source_element, source_set) = membership_parts(&source)?;
         if obj_equality_key(target_element) != obj_equality_key(source_element) {

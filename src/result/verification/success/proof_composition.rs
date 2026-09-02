@@ -6,8 +6,8 @@ use std::rc::Rc;
 
 #[derive(Debug)]
 pub struct SuccessCombinedFactProofResult {
-    pub primary: Option<Rc<SuccessVerifyFactResult>>,
-    pub steps: Vec<StmtResult>,
+    pub primary: Option<Rc<SuccessFactProofNode>>,
+    pub steps: Vec<VerifyFactResult>,
 }
 
 pub struct SuccessForallProofResult {
@@ -30,12 +30,12 @@ pub struct SuccessForallAssumptionFactResult {
 
 pub struct SuccessForallProvedFactResult {
     pub stmt: ExistOrAndChainAtomicFact,
-    pub result: Box<StmtResult>,
+    pub result: Box<VerifyFactResult>,
 }
 
 #[derive(Debug)]
 pub struct SuccessReuseFactProofResult {
-    pub source: Rc<SuccessVerifyFactResult>,
+    pub source: Rc<SuccessFactProofNode>,
 }
 
 #[derive(Debug)]
@@ -62,7 +62,7 @@ impl SuccessFactProofResult {
     pub fn builtin_rule_with_evidence(
         msg: impl Into<String>,
         evidence: BuiltinRuleEvidence,
-        subgoals: Vec<StmtResult>,
+        subgoals: Vec<VerifyFactResult>,
     ) -> Self {
         Self::BuiltinRule(SuccessBuiltinFactProofResult {
             msg: msg.into(),
@@ -87,7 +87,7 @@ impl SuccessFactProofResult {
         _goal: Fact,
         definition: DefPropStmt,
         argument_verification: SuccessVerifyArgsSatisfyParamDefResult,
-        clause_checks: Vec<(Fact, StmtResult)>,
+        clause_checks: Vec<(Fact, VerifyFactResult)>,
         detail: Option<String>,
     ) -> Self {
         let (clause_facts, clause_checks) = clause_checks.into_iter().unzip();
@@ -126,13 +126,13 @@ impl SuccessFactProofResult {
             .as_ref()
             .map(|result| result.source.clone())
             .unwrap_or_else(|| goal.clone());
-        let mut current = SuccessVerifyFactResult::new(
+        let mut current = SuccessFactProofNode::new(
             source_fact.clone(),
             Self::stored_fact_citation(source_fact, source_fact_id, detail),
         );
         if let Some(transport) = equality_transport {
             if !transport.steps.is_empty() {
-                current = SuccessVerifyFactResult::new(
+                current = SuccessFactProofNode::new(
                     transformation_source.clone(),
                     Self::Transform(Box::new(SuccessTransformFactResult::new(
                         FactTransformationRule::EqualityRewrite(transport),
@@ -143,7 +143,7 @@ impl SuccessFactProofResult {
         }
         if let Some(transformation) = fact_transformation {
             for step in transformation.steps {
-                current = SuccessVerifyFactResult::new(
+                current = SuccessFactProofNode::new(
                     step.result,
                     Self::Transform(Box::new(SuccessTransformFactResult::new(
                         step.rule, current,
@@ -201,7 +201,7 @@ impl SuccessFactProofResult {
         Self::stored_fact_citation(fact.with_line_file(cite_fact_source), source_fact_id, None)
     }
 
-    pub fn combined_steps(steps: Vec<StmtResult>) -> Self {
+    pub fn combined_steps(steps: Vec<VerifyFactResult>) -> Self {
         Self::CombinedProofs(SuccessCombinedFactProofResult {
             primary: None,
             steps,
@@ -210,7 +210,7 @@ impl SuccessFactProofResult {
 
     pub fn forall_proof(
         forall_fact: ForallFact,
-        then_results: Vec<StmtResult>,
+        then_results: Vec<VerifyFactResult>,
         parameter_assumptions: Vec<SuccessForallAssumptionFactResult>,
         domain_assumptions: Vec<SuccessForallAssumptionFactResult>,
         assumption_infers: SuccessInferResult,
@@ -252,8 +252,8 @@ impl SuccessFactProofResult {
                 primary_is_builtin
                     && !w.steps.is_empty()
                     && w.steps.iter().all(|step| {
-                        step.factual_success()
-                            .map(SuccessFactStmtResult::is_verified_by_builtin_rules_only)
+                        step.verified()
+                            .map(|result| result.is_verified_by_builtin_rules_only())
                             .unwrap_or(false)
                     })
             }
@@ -287,7 +287,7 @@ impl SuccessForallProofResult {
 }
 
 impl SuccessForallProvedFactResult {
-    pub fn new(stmt: ExistOrAndChainAtomicFact, result: StmtResult) -> Self {
+    pub fn new(stmt: ExistOrAndChainAtomicFact, result: VerifyFactResult) -> Self {
         SuccessForallProvedFactResult {
             stmt,
             result: Box::new(result),
@@ -319,7 +319,7 @@ impl fmt::Debug for SuccessForallProvedFactResult {
 pub(super) fn merge_verified_by_with_steps(
     goal: Fact,
     verified_by: SuccessFactProofResult,
-    step_results: Vec<StmtResult>,
+    step_results: Vec<VerifyFactResult>,
 ) -> SuccessFactProofResult {
     if step_results.is_empty() {
         return verified_by;
@@ -332,7 +332,7 @@ pub(super) fn merge_verified_by_with_steps(
         return SuccessFactProofResult::combined_steps(step_results);
     }
     SuccessFactProofResult::CombinedProofs(SuccessCombinedFactProofResult {
-        primary: Some(Rc::new(SuccessVerifyFactResult::new(goal, verified_by))),
+        primary: Some(Rc::new(SuccessFactProofNode::new(goal, verified_by))),
         steps: step_results,
     })
 }

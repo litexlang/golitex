@@ -7,7 +7,10 @@ impl StatementResultRenderer {
         &mut self,
         result: &Rc<SuccessVerifyObjWellDefinedResult>,
     ) -> JsonValue {
-        let pointer = Rc::as_ptr(result) as usize;
+        let pointer = match result.as_ref() {
+            SuccessVerifyObjWellDefinedResult::Direct(direct) => Rc::as_ptr(direct) as usize,
+            SuccessVerifyObjWellDefinedResult::Reuse(_) => Rc::as_ptr(result) as usize,
+        };
         if let Some(id) = self.shared_wd_obj_ids.get(&pointer) {
             return object(vec![string_field("$ref", id.clone())]);
         }
@@ -131,14 +134,29 @@ impl StatementResultRenderer {
             SuccessVerifyObjWellDefinedResult::Reuse(result) => object(vec![
                 string_field("kind", "Reuse"),
                 string_field("object", result.object.to_string()),
-                ("source".to_string(), self.shared_wd_obj(&result.source)),
-            ]),
-            SuccessVerifyObjWellDefinedResult::RecursiveReference(result) => object(vec![
-                string_field("kind", "RecursiveReference"),
-                string_field("object", result.object.to_string()),
-                string_field("ancestor_key", result.ancestor_key.clone()),
+                ("source".to_string(), self.shared_wd_direct(&result.source)),
             ]),
         }
+    }
+
+    fn shared_wd_direct(
+        &mut self,
+        result: &Rc<SuccessVerifyDirectObjWellDefinedResult>,
+    ) -> JsonValue {
+        let pointer = Rc::as_ptr(result) as usize;
+        if let Some(id) = self.shared_wd_obj_ids.get(&pointer) {
+            return object(vec![string_field("$ref", id.clone())]);
+        }
+        let id = format!("wd-node-{}", self.next_shared_wd_obj_id);
+        self.next_shared_wd_obj_id += 1;
+        self.shared_wd_obj_ids.insert(pointer, id.clone());
+        object(vec![
+            string_field("$id", id),
+            (
+                "value".to_string(),
+                self.wd_obj_result(&SuccessVerifyObjWellDefinedResult::Direct(result.clone())),
+            ),
+        ])
     }
 
     pub(in super::super) fn wd_fact_check(

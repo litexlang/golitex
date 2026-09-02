@@ -48,7 +48,10 @@ impl StatementResultRenderer {
                                     },
                                 ),
                                 string_field("statement", requirement.stmt.to_string()),
-                                ("result".to_string(), self.stmt_result(&requirement.result)),
+                                (
+                                    "result".to_string(),
+                                    self.verify_fact_result(&requirement.result),
+                                ),
                             ])
                         })
                         .collect(),

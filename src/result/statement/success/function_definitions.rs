@@ -61,9 +61,9 @@ pub struct SuccessVerifyHaveFnByInducLocalEnvResult {
 pub struct SuccessVerifyHaveFnByInducMeasureResult {
     pub measure_well_definedness: Rc<SuccessVerifyObjWellDefinedResult>,
     pub lower_bound_well_definedness: Rc<SuccessVerifyObjWellDefinedResult>,
-    pub measure_integer_check: Box<StmtResult>,
-    pub lower_bound_integer_check: Box<StmtResult>,
-    pub lower_bound_check: Box<StmtResult>,
+    pub measure_integer_check: Box<VerifyFactResult>,
+    pub lower_bound_integer_check: Box<VerifyFactResult>,
+    pub lower_bound_check: Box<VerifyFactResult>,
 }
 
 pub struct SuccessVerifyHaveFnByInducRecursiveFunctionResult {
@@ -73,7 +73,7 @@ pub struct SuccessVerifyHaveFnByInducRecursiveFunctionResult {
 
 pub struct SuccessVerifyHaveFnByInducCaseListResult {
     pub coverage_fact: Fact,
-    pub coverage_check: Box<StmtResult>,
+    pub coverage_check: Box<VerifyFactResult>,
     pub mutual_exclusions: Vec<SuccessVerifyCaseDisjointnessResult>,
     pub cases: Vec<SuccessVerifyHaveFnByInducCaseResult>,
 }
@@ -94,7 +94,7 @@ pub struct SuccessVerifyHaveFnByInducEqualToResult {
     pub value: Obj,
     pub well_definedness: Rc<SuccessVerifyObjWellDefinedResult>,
     pub return_membership_fact: AtomicFact,
-    pub return_membership_check: Box<StmtResult>,
+    pub return_membership_check: Box<VerifyFactResult>,
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -114,5 +114,5 @@ pub struct SuccessVerifyCaseDisjointnessResult {
     pub assumption_store: SuccessStoreFactResult,
     pub contradicted_atom: AtomicFact,
     pub negated_atom: AtomicFact,
-    pub negated_atom_check: Box<StmtResult>,
+    pub negated_atom_check: Box<VerifyFactResult>,
 }

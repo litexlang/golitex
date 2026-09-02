@@ -259,7 +259,7 @@ impl Runtime {
     fn have_fn_equal_case_by_case_stmt_verify_case_partition(
         &mut self,
         stmt: &HaveFnEqualCaseByCaseStmt,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<VerifyFactResult, RuntimeError> {
         if stmt.cases.is_empty() {
             return Err(short_exec_error(
                 stmt.clone().into(),
@@ -338,7 +338,7 @@ impl Runtime {
         have_fn_equal_case_by_case_stmt: &HaveFnEqualCaseByCaseStmt,
         case_fact: &AndChainAtomicFact,
         equal_to: &Obj,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<VerifyFactResult, RuntimeError> {
         let verify_state = VerifyState::initial();
         let case_fact_as_fact: Fact = case_fact.clone().into();
 

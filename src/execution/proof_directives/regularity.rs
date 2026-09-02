@@ -33,7 +33,7 @@ impl Runtime {
                     vec![],
                 )
             })?;
-        self.attach_known_fact_ids_to_stmt_result(&mut nonempty_result)?;
+        self.attach_known_fact_ids_to_verify_fact_result(&mut nonempty_result)?;
         let nonempty_fact_id = self.require_known_fact_id_for_success_result(&nonempty_fact)?;
 
         // Trusted regularity/foundation step: every nonempty set A has a member

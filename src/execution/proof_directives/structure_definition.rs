@@ -23,7 +23,7 @@ impl Runtime {
                     stmt.obj, membership
                 ),
                 None,
-                vec![membership_check],
+                vec![],
             ));
         }
 

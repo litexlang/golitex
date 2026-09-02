@@ -47,7 +47,7 @@ impl StmtResultToLeanCompiler {
             lean_identifier(&verification.prop_name),
             self.next_fact_name_index
         );
-        let forall_check = verification.forall_check.factual_success().ok_or_else(|| {
+        let forall_check = verification.forall_check.verified().ok_or_else(|| {
             format!(
                 "{} predicate-property registration retained a non-factual forall check",
                 compilation_kind.result_name()
@@ -133,7 +133,7 @@ impl StmtResultToLeanCompiler {
             NamedForallStatementResultCompilationInput {
                 name: &theorem_name,
                 forall_fact: &verification.forall_fact,
-                well_definedness: &verification.well_definedness,
+                well_definedness: &forall_check.checked,
                 proof_scope_assumption_infers: &verification.assumption_infers,
                 proof_scope_assumption_components: &[],
                 proof_steps: &verification.proof_steps,

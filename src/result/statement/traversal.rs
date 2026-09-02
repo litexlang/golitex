@@ -3,6 +3,108 @@
 use crate::prelude::*;
 use std::fmt;
 
+trait ResultTraversalChild {
+    fn visit_with(&self, visitor: &mut ResultChildVisitor<'_>);
+}
+
+impl ResultTraversalChild for StmtResult {
+    fn visit_with(&self, visitor: &mut ResultChildVisitor<'_>) {
+        (visitor.statement)(self);
+    }
+}
+
+impl ResultTraversalChild for VerifyFactResult {
+    fn visit_with(&self, visitor: &mut ResultChildVisitor<'_>) {
+        (visitor.verification)(self);
+    }
+}
+
+impl ResultTraversalChild for ExistentialEliminationSourceResult {
+    fn visit_with(&self, visitor: &mut ResultChildVisitor<'_>) {
+        match self {
+            Self::Fact(result) => visitor.visit(result),
+            Self::TheoremApplication(result) => visitor.visit(result),
+        }
+    }
+}
+
+impl<T: ResultTraversalChild + ?Sized> ResultTraversalChild for Box<T> {
+    fn visit_with(&self, visitor: &mut ResultChildVisitor<'_>) {
+        self.as_ref().visit_with(visitor);
+    }
+}
+
+struct ResultChildVisitor<'a> {
+    statement: &'a mut dyn FnMut(&StmtResult),
+    verification: &'a mut dyn FnMut(&VerifyFactResult),
+}
+
+impl ResultChildVisitor<'_> {
+    fn visit<T: ResultTraversalChild + ?Sized>(&mut self, child: &T) {
+        child.visit_with(self);
+    }
+}
+
+trait ResultTraversalChildMut {
+    fn try_visit_with<E>(
+        &mut self,
+        visitor: &mut ResultChildMutVisitor<'_, E>,
+    ) -> Result<(), E>;
+}
+
+impl ResultTraversalChildMut for StmtResult {
+    fn try_visit_with<E>(
+        &mut self,
+        visitor: &mut ResultChildMutVisitor<'_, E>,
+    ) -> Result<(), E> {
+        (visitor.statement)(self)
+    }
+}
+
+impl ResultTraversalChildMut for VerifyFactResult {
+    fn try_visit_with<E>(
+        &mut self,
+        visitor: &mut ResultChildMutVisitor<'_, E>,
+    ) -> Result<(), E> {
+        (visitor.verification)(self)
+    }
+}
+
+impl ResultTraversalChildMut for ExistentialEliminationSourceResult {
+    fn try_visit_with<E>(
+        &mut self,
+        visitor: &mut ResultChildMutVisitor<'_, E>,
+    ) -> Result<(), E> {
+        match self {
+            Self::Fact(result) => visitor.visit(result),
+            Self::TheoremApplication(result) => visitor.visit(result),
+        }
+    }
+}
+
+impl<T: ResultTraversalChildMut + ?Sized> ResultTraversalChildMut for Box<T> {
+    fn try_visit_with<E>(
+        &mut self,
+        visitor: &mut ResultChildMutVisitor<'_, E>,
+    ) -> Result<(), E> {
+        self.as_mut().try_visit_with(visitor)
+    }
+}
+
+struct ResultChildMutVisitor<'a, E> {
+    statement: &'a mut dyn FnMut(&mut StmtResult) -> Result<(), E>,
+    verification: &'a mut dyn FnMut(&mut VerifyFactResult) -> Result<(), E>,
+}
+
+impl<E> ResultChildMutVisitor<'_, E> {
+    fn visit<T: ResultTraversalChildMut + ?Sized>(
+        &mut self,
+        child: &mut T,
+    ) -> Result<(), E> {
+        child.try_visit_with(self)
+    }
+}
+
 impl fmt::Debug for SuccessStmtResult {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if let Self::Fact(result) = self {
@@ -21,20 +123,53 @@ impl SuccessStmtResult {
     /// families still expose their ordered children through `common`; migrated
     /// families expose named recursive fields here.
     pub fn visit_child_results(&self, visitor: &mut impl FnMut(&StmtResult)) {
+        let mut ignore_verification = |_: &VerifyFactResult| {};
+        let mut visitor = ResultChildVisitor {
+            statement: visitor,
+            verification: &mut ignore_verification,
+        };
         if let Self::ProofBlock(proof_block) = self {
-            proof_block.visit_named_child_results(visitor);
+            proof_block.visit_named_child_results(&mut visitor);
         }
         if let Self::Definition(definition) = self {
-            definition.visit_named_child_results(visitor);
+            definition.visit_named_child_results(&mut visitor);
         }
         if let Self::Witness(witness) = self {
-            witness.visit_named_child_results(visitor);
+            witness.visit_named_child_results(&mut visitor);
         }
         if let Self::By(by) = self {
-            by.visit_named_child_results(visitor);
+            by.visit_named_child_results(&mut visitor);
         }
         if let Self::ReleaseThmStmt(result) = self {
-            result.visit_named_child_results(visitor);
+            result.visit_named_child_results(&mut visitor);
+        }
+    }
+
+    /// Visits verifier-generated fact-process children without treating them
+    /// as executed statements.
+    pub fn visit_fact_verification_children(
+        &self,
+        visitor: &mut impl FnMut(&VerifyFactResult),
+    ) {
+        let mut ignore_statement = |_: &StmtResult| {};
+        let mut visitor = ResultChildVisitor {
+            statement: &mut ignore_statement,
+            verification: visitor,
+        };
+        if let Self::ProofBlock(proof_block) = self {
+            proof_block.visit_named_child_results(&mut visitor);
+        }
+        if let Self::Definition(definition) = self {
+            definition.visit_named_child_results(&mut visitor);
+        }
+        if let Self::Witness(witness) = self {
+            witness.visit_named_child_results(&mut visitor);
+        }
+        if let Self::By(by) = self {
+            by.visit_named_child_results(&mut visitor);
+        }
+        if let Self::ReleaseThmStmt(result) = self {
+            result.visit_named_child_results(&mut visitor);
         }
     }
 
@@ -42,20 +177,25 @@ impl SuccessStmtResult {
         &mut self,
         visitor: &mut impl FnMut(&mut StmtResult) -> Result<(), E>,
     ) -> Result<(), E> {
+        let mut ignore_verification = |_: &mut VerifyFactResult| Ok(());
+        let mut visitor = ResultChildMutVisitor {
+            statement: visitor,
+            verification: &mut ignore_verification,
+        };
         if let Self::ProofBlock(proof_block) = self {
-            proof_block.try_visit_named_child_results_mut(visitor)?;
+            proof_block.try_visit_named_child_results_mut(&mut visitor)?;
         }
         if let Self::Definition(definition) = self {
-            definition.try_visit_named_child_results_mut(visitor)?;
+            definition.try_visit_named_child_results_mut(&mut visitor)?;
         }
         if let Self::Witness(witness) = self {
-            witness.try_visit_named_child_results_mut(visitor)?;
+            witness.try_visit_named_child_results_mut(&mut visitor)?;
         }
         if let Self::By(by) = self {
-            by.try_visit_named_child_results_mut(visitor)?;
+            by.try_visit_named_child_results_mut(&mut visitor)?;
         }
         if let Self::ReleaseThmStmt(result) = self {
-            result.try_visit_named_child_results_mut(visitor)?;
+            result.try_visit_named_child_results_mut(&mut visitor)?;
         }
         Ok(())
     }
@@ -168,7 +308,7 @@ impl SuccessStmtResult {
 }
 
 impl SuccessReleaseThmStmtResult {
-    fn visit_named_child_results(&self, visitor: &mut impl FnMut(&StmtResult)) {
+    fn visit_named_child_results(&self, visitor: &mut ResultChildVisitor<'_>) {
         if let Some(verification) = &self.verification {
             match &verification.source {
                 SuccessVerifyTheoremApplicationSourceResult::Litex(source) => {
@@ -180,17 +320,17 @@ impl SuccessReleaseThmStmtResult {
                     {
                         if let Some(arguments) = argument_verification {
                             for check in &arguments.checks {
-                                visitor(check);
+                                visitor.visit(check);
                             }
                         }
                         for check in domain_checks {
-                            visitor(check);
+                            visitor.visit(check);
                         }
                     }
                 }
                 SuccessVerifyTheoremApplicationSourceResult::Builtin(source) => {
                     for check in &source.requirement_checks {
-                        visitor(check);
+                        visitor.visit(check);
                     }
                 }
             }
@@ -199,7 +339,7 @@ impl SuccessReleaseThmStmtResult {
 
     fn try_visit_named_child_results_mut<E>(
         &mut self,
-        visitor: &mut impl FnMut(&mut StmtResult) -> Result<(), E>,
+        visitor: &mut ResultChildMutVisitor<'_, E>,
     ) -> Result<(), E> {
         if let Some(verification) = &mut self.verification {
             match &mut verification.source {
@@ -212,17 +352,17 @@ impl SuccessReleaseThmStmtResult {
                     {
                         if let Some(arguments) = argument_verification {
                             for check in &mut arguments.checks {
-                                visitor(check)?;
+                                visitor.visit(check)?;
                             }
                         }
                         for check in domain_checks {
-                            visitor(check)?;
+                            visitor.visit(check)?;
                         }
                     }
                 }
                 SuccessVerifyTheoremApplicationSourceResult::Builtin(source) => {
                     for check in &mut source.requirement_checks {
-                        visitor(check)?;
+                        visitor.visit(check)?;
                     }
                 }
             }
@@ -231,50 +371,29 @@ impl SuccessReleaseThmStmtResult {
     }
 
     fn into_child_results(self) -> Vec<StmtResult> {
-        let mut children = Vec::new();
-        if let Some(verification) = self.verification {
-            match verification.source {
-                SuccessVerifyTheoremApplicationSourceResult::Litex(source) => {
-                    if let SuccessVerifyLitexTheoremApplicationMode::ForallInstantiation {
-                        argument_verification,
-                        domain_checks,
-                        ..
-                    } = source.mode
-                    {
-                        if let Some(arguments) = argument_verification {
-                            children.extend(arguments.checks);
-                        }
-                        children.extend(domain_checks);
-                    }
-                }
-                SuccessVerifyTheoremApplicationSourceResult::Builtin(source) => {
-                    children.extend(source.requirement_checks);
-                }
-            }
-        }
-        children
+        Vec::new()
     }
 }
 
 impl SuccessByStmtResult {
-    fn visit_named_child_results(&self, visitor: &mut impl FnMut(&StmtResult)) {
+    fn visit_named_child_results(&self, visitor: &mut ResultChildVisitor<'_>) {
         match self {
             Self::ByCasesStmt(result) => {
                 if let Some(verification) = &result.verification {
-                    visitor(&verification.coverage_check);
+                    visitor.visit(&verification.coverage_check);
                     for branch in &verification.branches {
                         for step in &branch.proof_steps {
-                            visitor(step);
+                            visitor.visit(step);
                         }
                         match &branch.exit {
                             SuccessVerifyByCaseBranchExitResult::Conclusions(result) => {
                                 for check in &result.checks {
-                                    visitor(check);
+                                    visitor.visit(check);
                                 }
                             }
                             SuccessVerifyByCaseBranchExitResult::Contradiction(result) => {
-                                visitor(&result.contradiction.impossible_check);
-                                visitor(&result.contradiction.negated_impossible_check);
+                                visitor.visit(&result.contradiction.impossible_check);
+                                visitor.visit(&result.contradiction.negated_impossible_check);
                             }
                         }
                     }
@@ -283,10 +402,10 @@ impl SuccessByStmtResult {
             Self::ByContraStmt(result) => {
                 if let Some(verification) = &result.verification {
                     for step in &verification.proof_steps {
-                        visitor(step);
+                        visitor.visit(step);
                     }
-                    visitor(&verification.contradiction.impossible_check);
-                    visitor(&verification.contradiction.negated_impossible_check);
+                    visitor.visit(&verification.contradiction.impossible_check);
+                    visitor.visit(&verification.contradiction.negated_impossible_check);
                 }
             }
             Self::ByEnumerateFiniteSetStmt(result) => {
@@ -311,27 +430,27 @@ impl SuccessByStmtResult {
             }
             Self::ByEnumerateRangeStmt(result) => {
                 if let Some(verification) = &result.verification {
-                    visitor(&verification.membership_check);
+                    visitor.visit(&verification.membership_check);
                     for check in &verification.endpoint_checks {
-                        visitor(&check.verification);
+                        visitor.visit(&check.verification);
                     }
                 }
             }
             Self::ByClosedRangeAsCasesStmt(result) => {
                 if let Some(verification) = &result.verification {
-                    visitor(&verification.membership_check);
+                    visitor.visit(&verification.membership_check);
                     for check in &verification.endpoint_checks {
-                        visitor(&check.verification);
+                        visitor.visit(&check.verification);
                     }
                 }
             }
             Self::ByExtensionStmt(result) => {
                 if let Some(verification) = &result.verification {
                     for step in &verification.proof_steps {
-                        visitor(step);
+                        visitor.visit(step);
                     }
-                    visitor(&verification.left_to_right_check);
-                    visitor(&verification.right_to_left_check);
+                    visitor.visit(&verification.left_to_right_check);
+                    visitor.visit(&verification.right_to_left_check);
                 }
             }
             Self::ByTransitivePropStmt(result) => {
@@ -359,23 +478,23 @@ impl SuccessByStmtResult {
                 if let Some(verification) = &result.verification {
                     if let Some(arguments) = &verification.argument_verification {
                         for check in &arguments.checks {
-                            visitor(check);
+                            visitor.visit(check);
                         }
                     }
                     for check in &verification.clause_checks {
-                        visitor(check);
+                        visitor.visit(check);
                     }
                 }
             }
             Self::ByStructDefStmt(result) => {
                 if let Some(check) = &result.membership_check {
-                    visitor(check);
+                    visitor.visit(check);
                 }
             }
             Self::ByThmStmt(result) => {
                 if let Some(verification) = &result.verification {
-                    visitor(&verification.temporary_application);
-                    visitor(&verification.selected_fact_check);
+                    visitor.visit(&verification.temporary_application);
+                    visitor.visit(&verification.selected_fact_check);
                 }
             }
         }
@@ -383,25 +502,25 @@ impl SuccessByStmtResult {
 
     fn try_visit_named_child_results_mut<E>(
         &mut self,
-        visitor: &mut impl FnMut(&mut StmtResult) -> Result<(), E>,
+        visitor: &mut ResultChildMutVisitor<'_, E>,
     ) -> Result<(), E> {
         match self {
             Self::ByCasesStmt(result) => {
                 if let Some(verification) = &mut result.verification {
-                    visitor(&mut verification.coverage_check)?;
+                    visitor.visit(&mut verification.coverage_check)?;
                     for branch in &mut verification.branches {
                         for step in &mut branch.proof_steps {
-                            visitor(step)?;
+                            visitor.visit(step)?;
                         }
                         match &mut branch.exit {
                             SuccessVerifyByCaseBranchExitResult::Conclusions(result) => {
                                 for check in &mut result.checks {
-                                    visitor(check)?;
+                                    visitor.visit(check)?;
                                 }
                             }
                             SuccessVerifyByCaseBranchExitResult::Contradiction(result) => {
-                                visitor(&mut result.contradiction.impossible_check)?;
-                                visitor(&mut result.contradiction.negated_impossible_check)?;
+                                visitor.visit(&mut result.contradiction.impossible_check)?;
+                                visitor.visit(&mut result.contradiction.negated_impossible_check)?;
                             }
                         }
                     }
@@ -410,10 +529,10 @@ impl SuccessByStmtResult {
             Self::ByContraStmt(result) => {
                 if let Some(verification) = &mut result.verification {
                     for step in &mut verification.proof_steps {
-                        visitor(step)?;
+                        visitor.visit(step)?;
                     }
-                    visitor(&mut verification.contradiction.impossible_check)?;
-                    visitor(&mut verification.contradiction.negated_impossible_check)?;
+                    visitor.visit(&mut verification.contradiction.impossible_check)?;
+                    visitor.visit(&mut verification.contradiction.negated_impossible_check)?;
                 }
             }
             Self::ByEnumerateFiniteSetStmt(result) => {
@@ -438,27 +557,27 @@ impl SuccessByStmtResult {
             }
             Self::ByEnumerateRangeStmt(result) => {
                 if let Some(verification) = &mut result.verification {
-                    visitor(&mut verification.membership_check)?;
+                    visitor.visit(&mut verification.membership_check)?;
                     for check in &mut verification.endpoint_checks {
-                        visitor(&mut check.verification)?;
+                        visitor.visit(&mut check.verification)?;
                     }
                 }
             }
             Self::ByClosedRangeAsCasesStmt(result) => {
                 if let Some(verification) = &mut result.verification {
-                    visitor(&mut verification.membership_check)?;
+                    visitor.visit(&mut verification.membership_check)?;
                     for check in &mut verification.endpoint_checks {
-                        visitor(&mut check.verification)?;
+                        visitor.visit(&mut check.verification)?;
                     }
                 }
             }
             Self::ByExtensionStmt(result) => {
                 if let Some(verification) = &mut result.verification {
                     for step in &mut verification.proof_steps {
-                        visitor(step)?;
+                        visitor.visit(step)?;
                     }
-                    visitor(&mut verification.left_to_right_check)?;
-                    visitor(&mut verification.right_to_left_check)?;
+                    visitor.visit(&mut verification.left_to_right_check)?;
+                    visitor.visit(&mut verification.right_to_left_check)?;
                 }
             }
             Self::ByTransitivePropStmt(result) => {
@@ -486,23 +605,23 @@ impl SuccessByStmtResult {
                 if let Some(verification) = &mut result.verification {
                     if let Some(arguments) = &mut verification.argument_verification {
                         for check in &mut arguments.checks {
-                            visitor(check)?;
+                            visitor.visit(check)?;
                         }
                     }
                     for check in &mut verification.clause_checks {
-                        visitor(check)?;
+                        visitor.visit(check)?;
                     }
                 }
             }
             Self::ByStructDefStmt(result) => {
                 if let Some(check) = &mut result.membership_check {
-                    visitor(check)?;
+                    visitor.visit(check)?;
                 }
             }
             Self::ByThmStmt(result) => {
                 if let Some(verification) = &mut result.verification {
-                    visitor(&mut verification.temporary_application)?;
-                    visitor(&mut verification.selected_fact_check)?;
+                    visitor.visit(&mut verification.temporary_application)?;
+                    visitor.visit(&mut verification.selected_fact_check)?;
                 }
             }
         }
@@ -512,32 +631,17 @@ impl SuccessByStmtResult {
     fn into_child_results(self) -> Vec<StmtResult> {
         match self {
             Self::ByCasesStmt(result) => {
-                let mut children = Vec::new();
+                let mut children: Vec<StmtResult> = Vec::new();
                 if let Some(verification) = result.verification {
-                    children.push(*verification.coverage_check);
                     for branch in verification.branches {
                         children.extend(branch.proof_steps);
-                        match branch.exit {
-                            SuccessVerifyByCaseBranchExitResult::Conclusions(result) => {
-                                children.extend(result.checks);
-                            }
-                            SuccessVerifyByCaseBranchExitResult::Contradiction(result) => {
-                                children.push(*result.contradiction.impossible_check);
-                                children.push(*result.contradiction.negated_impossible_check);
-                            }
-                        }
                     }
                 }
                 children
             }
             Self::ByContraStmt(result) => result
                 .verification
-                .map(|verification| {
-                    let mut children = verification.proof_steps;
-                    children.push(*verification.contradiction.impossible_check);
-                    children.push(*verification.contradiction.negated_impossible_check);
-                    children
-                })
+                .map(|verification| verification.proof_steps)
                 .unwrap_or_default(),
             Self::ByEnumerateFiniteSetStmt(result) => {
                 let mut children = Vec::new();
@@ -562,37 +666,17 @@ impl SuccessByStmtResult {
                 children
             }
             Self::ByEnumerateRangeStmt(result) => {
-                let mut children = Vec::new();
-                if let Some(verification) = result.verification {
-                    children.push(*verification.membership_check);
-                    children.extend(
-                        verification
-                            .endpoint_checks
-                            .into_iter()
-                            .map(|check| *check.verification),
-                    );
-                }
-                children
+                let _ = result;
+                Vec::new()
             }
             Self::ByClosedRangeAsCasesStmt(result) => {
-                let mut children = Vec::new();
-                if let Some(verification) = result.verification {
-                    children.push(*verification.membership_check);
-                    children.extend(
-                        verification
-                            .endpoint_checks
-                            .into_iter()
-                            .map(|check| *check.verification),
-                    );
-                }
-                children
+                let _ = result;
+                Vec::new()
             }
             Self::ByExtensionStmt(result) => {
                 let mut children = Vec::new();
                 if let Some(verification) = result.verification {
                     children.extend(verification.proof_steps);
-                    children.push(*verification.left_to_right_check);
-                    children.push(*verification.right_to_left_check);
                 }
                 children
             }
@@ -618,27 +702,16 @@ impl SuccessByStmtResult {
                 into_choice_children(result.common, result.verification)
             }
             Self::ByDefStmt(result) => {
-                let mut children = Vec::new();
-                if let Some(verification) = result.verification {
-                    if let Some(arguments) = verification.argument_verification {
-                        children.extend(arguments.checks);
-                    }
-                    children.extend(verification.clause_checks);
-                }
-                children
+                let _ = result;
+                Vec::new()
             }
-            Self::ByStructDefStmt(result) => result
-                .membership_check
-                .into_iter()
-                .map(|check| *check)
-                .collect(),
+            Self::ByStructDefStmt(result) => {
+                let _ = result;
+                Vec::new()
+            }
             Self::ByThmStmt(result) => {
-                let mut children = Vec::new();
-                if let Some(verification) = result.verification {
-                    children.push(*verification.temporary_application);
-                    children.push(*verification.selected_fact_check);
-                }
-                children
+                let _ = result;
+                Vec::new()
             }
         }
     }
@@ -646,75 +719,66 @@ impl SuccessByStmtResult {
 
 fn visit_assignment_children(
     assignment: &SuccessVerifyByAssignmentResult,
-    visitor: &mut impl FnMut(&StmtResult),
+    visitor: &mut ResultChildVisitor<'_>,
 ) {
     for domain in &assignment.domain_checks {
-        visitor(&domain.check);
+        visitor.visit(&domain.check);
         if let Some(check) = &domain.negated_check {
-            visitor(check);
+            visitor.visit(check);
         }
     }
     for step in &assignment.proof_steps {
-        visitor(step);
+        visitor.visit(step);
     }
     for check in &assignment.conclusion_checks {
-        visitor(check);
+        visitor.visit(check);
     }
 }
 
 fn try_visit_assignment_children_mut<E>(
     assignment: &mut SuccessVerifyByAssignmentResult,
-    visitor: &mut impl FnMut(&mut StmtResult) -> Result<(), E>,
+    visitor: &mut ResultChildMutVisitor<'_, E>,
 ) -> Result<(), E> {
     for domain in &mut assignment.domain_checks {
-        visitor(&mut domain.check)?;
+        visitor.visit(&mut domain.check)?;
         if let Some(check) = &mut domain.negated_check {
-            visitor(check)?;
+            visitor.visit(check)?;
         }
     }
     for step in &mut assignment.proof_steps {
-        visitor(step)?;
+        visitor.visit(step)?;
     }
     for check in &mut assignment.conclusion_checks {
-        visitor(check)?;
+        visitor.visit(check)?;
     }
     Ok(())
 }
 
 fn into_assignment_children(assignment: SuccessVerifyByAssignmentResult) -> Vec<StmtResult> {
-    let mut children = Vec::new();
-    for domain in assignment.domain_checks {
-        children.push(*domain.check);
-        if let Some(check) = domain.negated_check {
-            children.push(*check);
-        }
-    }
-    children.extend(assignment.proof_steps);
-    children.extend(assignment.conclusion_checks);
-    children
+    assignment.proof_steps
 }
 
 fn visit_prop_registration_children(
     verification: Option<&SuccessVerifyByPropRegistrationResult>,
-    visitor: &mut impl FnMut(&StmtResult),
+    visitor: &mut ResultChildVisitor<'_>,
 ) {
     if let Some(verification) = verification {
         for step in &verification.proof_steps {
-            visitor(step);
+            visitor.visit(step);
         }
-        visitor(&verification.forall_check);
+        visitor.visit(&verification.forall_check);
     }
 }
 
 fn try_visit_prop_registration_children_mut<E>(
     verification: Option<&mut SuccessVerifyByPropRegistrationResult>,
-    visitor: &mut impl FnMut(&mut StmtResult) -> Result<(), E>,
+    visitor: &mut ResultChildMutVisitor<'_, E>,
 ) -> Result<(), E> {
     if let Some(verification) = verification {
         for step in &mut verification.proof_steps {
-            visitor(step)?;
+            visitor.visit(step)?;
         }
-        visitor(&mut verification.forall_check)?;
+        visitor.visit(&mut verification.forall_check)?;
     }
     Ok(())
 }
@@ -723,25 +787,22 @@ fn into_prop_registration_children(
     _common: SuccessStmtCommonResult,
     verification: Option<SuccessVerifyByPropRegistrationResult>,
 ) -> Vec<StmtResult> {
-    let mut children = Vec::new();
-    if let Some(verification) = verification {
-        children.extend(verification.proof_steps);
-        children.push(*verification.forall_check);
-    }
-    children
+    verification
+        .map(|verification| verification.proof_steps)
+        .unwrap_or_default()
 }
 
 fn visit_choice_children(
     verification: Option<&SuccessVerifyByChoiceResult>,
-    visitor: &mut impl FnMut(&StmtResult),
+    visitor: &mut ResultChildVisitor<'_>,
 ) {
     if let Some(verification) = verification {
         for step in &verification.proof_steps {
-            visitor(step);
+            visitor.visit(step);
         }
         for obligation in &verification.obligations {
             if let Some(check) = &obligation.check {
-                visitor(check);
+                visitor.visit(check);
             }
         }
     }
@@ -749,15 +810,15 @@ fn visit_choice_children(
 
 fn try_visit_choice_children_mut<E>(
     verification: Option<&mut SuccessVerifyByChoiceResult>,
-    visitor: &mut impl FnMut(&mut StmtResult) -> Result<(), E>,
+    visitor: &mut ResultChildMutVisitor<'_, E>,
 ) -> Result<(), E> {
     if let Some(verification) = verification {
         for step in &mut verification.proof_steps {
-            visitor(step)?;
+            visitor.visit(step)?;
         }
         for obligation in &mut verification.obligations {
             if let Some(check) = &mut obligation.check {
-                visitor(check)?;
+                visitor.visit(check)?;
             }
         }
     }
@@ -768,22 +829,14 @@ fn into_choice_children(
     _common: SuccessStmtCommonResult,
     verification: Option<SuccessVerifyByChoiceResult>,
 ) -> Vec<StmtResult> {
-    let mut children = Vec::new();
-    if let Some(verification) = verification {
-        children.extend(verification.proof_steps);
-        children.extend(
-            verification
-                .obligations
-                .into_iter()
-                .filter_map(|obligation| obligation.check.map(|check| *check)),
-        );
-    }
-    children
+    verification
+        .map(|verification| verification.proof_steps)
+        .unwrap_or_default()
 }
 
 fn visit_induc_children(
     verification: Option<&SuccessVerifyByInducResult>,
-    visitor: &mut impl FnMut(&StmtResult),
+    visitor: &mut ResultChildVisitor<'_>,
 ) {
     let Some(verification) = verification else {
         return;
@@ -791,16 +844,16 @@ fn visit_induc_children(
     match &verification.proof {
         SuccessVerifyByInducProofResult::IntegerUnstructured(proof) => {
             for step in &proof.proof_steps {
-                visitor(step);
+                visitor.visit(step);
             }
             for goal in &proof.goals {
-                visitor(&goal.base_check);
-                visitor(&goal.start_in_z_check);
-                visitor(&goal.step_check);
+                visitor.visit(&goal.base_check);
+                visitor.visit(&goal.start_in_z_check);
+                visitor.visit(&goal.step_check);
             }
         }
         SuccessVerifyByInducProofResult::IntegerStructured(proof) => {
-            visitor(&proof.start_in_z_check);
+            visitor.visit(&proof.start_in_z_check);
             visit_structured_integer_induc_case_children(&proof.base, visitor);
             visit_structured_integer_induc_case_children(&proof.step, visitor);
         }
@@ -813,31 +866,31 @@ fn visit_induc_children(
 
 fn visit_structured_integer_induc_case_children(
     result: &SuccessVerifyByStructuredIntegerInducCaseResult,
-    visitor: &mut impl FnMut(&StmtResult),
+    visitor: &mut ResultChildVisitor<'_>,
 ) {
     for step in &result.proof_steps {
-        visitor(step);
+        visitor.visit(step);
     }
     for conclusion in &result.conclusions {
-        visitor(&conclusion.check);
+        visitor.visit(&conclusion.check);
     }
 }
 
 fn visit_induc_case_children(
     result: &SuccessVerifyByInducCaseResult,
-    visitor: &mut impl FnMut(&StmtResult),
+    visitor: &mut ResultChildVisitor<'_>,
 ) {
     for step in &result.proof_steps {
-        visitor(step);
+        visitor.visit(step);
     }
     for conclusion in &result.conclusions {
-        visitor(&conclusion.check);
+        visitor.visit(&conclusion.check);
     }
 }
 
 fn try_visit_induc_children_mut<E>(
     verification: Option<&mut SuccessVerifyByInducResult>,
-    visitor: &mut impl FnMut(&mut StmtResult) -> Result<(), E>,
+    visitor: &mut ResultChildMutVisitor<'_, E>,
 ) -> Result<(), E> {
     let Some(verification) = verification else {
         return Ok(());
@@ -845,16 +898,16 @@ fn try_visit_induc_children_mut<E>(
     match &mut verification.proof {
         SuccessVerifyByInducProofResult::IntegerUnstructured(proof) => {
             for step in &mut proof.proof_steps {
-                visitor(step)?;
+                visitor.visit(step)?;
             }
             for goal in &mut proof.goals {
-                visitor(&mut goal.base_check)?;
-                visitor(&mut goal.start_in_z_check)?;
-                visitor(&mut goal.step_check)?;
+                visitor.visit(&mut goal.base_check)?;
+                visitor.visit(&mut goal.start_in_z_check)?;
+                visitor.visit(&mut goal.step_check)?;
             }
         }
         SuccessVerifyByInducProofResult::IntegerStructured(proof) => {
-            visitor(&mut proof.start_in_z_check)?;
+            visitor.visit(&mut proof.start_in_z_check)?;
             try_visit_structured_integer_induc_case_children_mut(&mut proof.base, visitor)?;
             try_visit_structured_integer_induc_case_children_mut(&mut proof.step, visitor)?;
         }
@@ -868,26 +921,26 @@ fn try_visit_induc_children_mut<E>(
 
 fn try_visit_structured_integer_induc_case_children_mut<E>(
     result: &mut SuccessVerifyByStructuredIntegerInducCaseResult,
-    visitor: &mut impl FnMut(&mut StmtResult) -> Result<(), E>,
+    visitor: &mut ResultChildMutVisitor<'_, E>,
 ) -> Result<(), E> {
     for step in &mut result.proof_steps {
-        visitor(step)?;
+        visitor.visit(step)?;
     }
     for conclusion in &mut result.conclusions {
-        visitor(&mut conclusion.check)?;
+        visitor.visit(&mut conclusion.check)?;
     }
     Ok(())
 }
 
 fn try_visit_induc_case_children_mut<E>(
     result: &mut SuccessVerifyByInducCaseResult,
-    visitor: &mut impl FnMut(&mut StmtResult) -> Result<(), E>,
+    visitor: &mut ResultChildMutVisitor<'_, E>,
 ) -> Result<(), E> {
     for step in &mut result.proof_steps {
-        visitor(step)?;
+        visitor.visit(step)?;
     }
     for conclusion in &mut result.conclusions {
-        visitor(&mut conclusion.check)?;
+        visitor.visit(&mut conclusion.check)?;
     }
     Ok(())
 }
@@ -903,16 +956,10 @@ fn into_induc_children(
     match verification.proof {
         SuccessVerifyByInducProofResult::IntegerUnstructured(proof) => {
             children.extend(proof.proof_steps);
-            for goal in proof.goals {
-                children.push(*goal.base_check);
-                children.push(*goal.start_in_z_check);
-                children.push(*goal.step_check);
-            }
         }
         SuccessVerifyByInducProofResult::IntegerStructured(proof) => {
-            children.push(*proof.start_in_z_check);
-            children.extend(into_structured_integer_induc_case_children(proof.base));
-            children.extend(into_structured_integer_induc_case_children(proof.step));
+            children.extend(proof.base.proof_steps);
+            children.extend(proof.step.proof_steps);
         }
         SuccessVerifyByInducProofResult::FiniteSet(proof) => {
             children.extend(into_induc_case_children(proof.base));
@@ -925,29 +972,15 @@ fn into_induc_children(
 fn into_structured_integer_induc_case_children(
     result: SuccessVerifyByStructuredIntegerInducCaseResult,
 ) -> Vec<StmtResult> {
-    let mut children = result.proof_steps;
-    children.extend(
-        result
-            .conclusions
-            .into_iter()
-            .map(|conclusion| *conclusion.check),
-    );
-    children
+    result.proof_steps
 }
 
 fn into_induc_case_children(result: SuccessVerifyByInducCaseResult) -> Vec<StmtResult> {
-    let mut children = result.proof_steps;
-    children.extend(
-        result
-            .conclusions
-            .into_iter()
-            .map(|conclusion| *conclusion.check),
-    );
-    children
+    result.proof_steps
 }
 
 impl SuccessWitnessStmtResult {
-    fn visit_named_child_results(&self, visitor: &mut impl FnMut(&StmtResult)) {
+    fn visit_named_child_results(&self, visitor: &mut ResultChildVisitor<'_>) {
         match self {
             Self::WitnessExistFact(result) => {
                 if let Some(verification) = &result.verification {
@@ -957,7 +990,7 @@ impl SuccessWitnessStmtResult {
             Self::WitnessAtomicFact(result) => {
                 if let Some(verification) = &result.verification {
                     for check in &verification.definition_parameter_verification.checks {
-                        visitor(check);
+                        visitor.visit(check);
                     }
                     visit_witness_exist_children(&verification.witness_verification, visitor);
                 }
@@ -965,9 +998,9 @@ impl SuccessWitnessStmtResult {
             Self::WitnessNonemptySet(result) => {
                 if let Some(verification) = &result.verification {
                     for step in &verification.proof_steps {
-                        visitor(step);
+                        visitor.visit(step);
                     }
-                    visitor(&verification.nonempty_check);
+                    visitor.visit(&verification.nonempty_check);
                 }
             }
         }
@@ -975,7 +1008,7 @@ impl SuccessWitnessStmtResult {
 
     fn try_visit_named_child_results_mut<E>(
         &mut self,
-        visitor: &mut impl FnMut(&mut StmtResult) -> Result<(), E>,
+        visitor: &mut ResultChildMutVisitor<'_, E>,
     ) -> Result<(), E> {
         match self {
             Self::WitnessExistFact(result) => {
@@ -986,7 +1019,7 @@ impl SuccessWitnessStmtResult {
             Self::WitnessAtomicFact(result) => {
                 if let Some(verification) = &mut result.verification {
                     for check in &mut verification.definition_parameter_verification.checks {
-                        visitor(check)?;
+                        visitor.visit(check)?;
                     }
                     try_visit_witness_exist_children_mut(
                         &mut verification.witness_verification,
@@ -997,9 +1030,9 @@ impl SuccessWitnessStmtResult {
             Self::WitnessNonemptySet(result) => {
                 if let Some(verification) = &mut result.verification {
                     for step in &mut verification.proof_steps {
-                        visitor(step)?;
+                        visitor.visit(step)?;
                     }
-                    visitor(&mut verification.nonempty_check)?;
+                    visitor.visit(&mut verification.nonempty_check)?;
                 }
             }
         }
@@ -1015,20 +1048,12 @@ impl SuccessWitnessStmtResult {
             Self::WitnessAtomicFact(result) => result
                 .verification
                 .map(|verification| {
-                    let mut children = verification.definition_parameter_verification.checks;
-                    children.extend(into_witness_exist_children(
-                        verification.witness_verification,
-                    ));
-                    children
+                    into_witness_exist_children(verification.witness_verification)
                 })
                 .unwrap_or_default(),
             Self::WitnessNonemptySet(result) => result
                 .verification
-                .map(|verification| {
-                    let mut children = verification.proof_steps;
-                    children.push(*verification.nonempty_check);
-                    children
-                })
+                .map(|verification| verification.proof_steps)
                 .unwrap_or_default(),
         }
     }
@@ -1036,63 +1061,50 @@ impl SuccessWitnessStmtResult {
 
 fn visit_witness_exist_children(
     verification: &SuccessVerifyWitnessExistResult,
-    visitor: &mut impl FnMut(&StmtResult),
+    visitor: &mut ResultChildVisitor<'_>,
 ) {
     for check in verification.parameter_checks.iter().flatten() {
-        visitor(check);
+        visitor.visit(check);
     }
     for step in &verification.proof_steps {
-        visitor(step);
+        visitor.visit(step);
     }
     for check in &verification.body_checks {
-        visitor(check);
+        visitor.visit(check);
     }
     if let Some(check) = &verification.uniqueness_check {
-        visitor(check);
+        visitor.visit(check);
     }
 }
 
 fn try_visit_witness_exist_children_mut<E>(
     verification: &mut SuccessVerifyWitnessExistResult,
-    visitor: &mut impl FnMut(&mut StmtResult) -> Result<(), E>,
+    visitor: &mut ResultChildMutVisitor<'_, E>,
 ) -> Result<(), E> {
     for check in verification.parameter_checks.iter_mut().flatten() {
-        visitor(check)?;
+        visitor.visit(check)?;
     }
     for step in &mut verification.proof_steps {
-        visitor(step)?;
+        visitor.visit(step)?;
     }
     for check in &mut verification.body_checks {
-        visitor(check)?;
+        visitor.visit(check)?;
     }
     if let Some(check) = &mut verification.uniqueness_check {
-        visitor(check)?;
+        visitor.visit(check)?;
     }
     Ok(())
 }
 
 fn into_witness_exist_children(verification: SuccessVerifyWitnessExistResult) -> Vec<StmtResult> {
-    let mut children = verification
-        .parameter_checks
-        .into_iter()
-        .flatten()
-        .map(|check| *check)
-        .collect::<Vec<_>>();
-    children.extend(verification.proof_steps);
-    children.extend(verification.body_checks);
-    if let Some(check) = verification.uniqueness_check {
-        children.push(*check);
-    }
-    children
+    verification.proof_steps
 }
 
 impl SuccessProofBlockStmtResult {
     fn into_child_results(self) -> Vec<StmtResult> {
         match self {
             Self::ClaimStmt(result) => {
-                let mut children = result.proof_steps;
-                children.extend(result.conclusion_checks);
-                children
+                result.proof_steps
             }
             Self::ExampleStmt(result) => claim_child_results(result.verification),
             Self::SketchStmt(result) => result
@@ -1107,14 +1119,14 @@ impl SuccessProofBlockStmtResult {
         }
     }
 
-    fn visit_named_child_results(&self, visitor: &mut impl FnMut(&StmtResult)) {
+    fn visit_named_child_results(&self, visitor: &mut ResultChildVisitor<'_>) {
         match self {
             Self::ClaimStmt(result) => {
                 for step in &result.proof_steps {
-                    visitor(step);
+                    visitor.visit(step);
                 }
                 for check in &result.conclusion_checks {
-                    visitor(check);
+                    visitor.visit(check);
                 }
             }
             Self::ExampleStmt(result) => {
@@ -1125,14 +1137,14 @@ impl SuccessProofBlockStmtResult {
             Self::SketchStmt(result) => {
                 if let Some(proof) = &result.proof {
                     for step in &proof.proof_steps {
-                        visitor(step);
+                        visitor.visit(step);
                     }
                 }
             }
             Self::TryStmt(result) => {
                 if let TryStmtExecutionResult::Committed(proof) = &result.execution {
                     for step in &proof.proof_steps {
-                        visitor(step);
+                        visitor.visit(step);
                     }
                 }
             }
@@ -1141,15 +1153,15 @@ impl SuccessProofBlockStmtResult {
 
     fn try_visit_named_child_results_mut<E>(
         &mut self,
-        visitor: &mut impl FnMut(&mut StmtResult) -> Result<(), E>,
+        visitor: &mut ResultChildMutVisitor<'_, E>,
     ) -> Result<(), E> {
         match self {
             Self::ClaimStmt(result) => {
                 for step in &mut result.proof_steps {
-                    visitor(step)?;
+                    visitor.visit(step)?;
                 }
                 for check in &mut result.conclusion_checks {
-                    visitor(check)?;
+                    visitor.visit(check)?;
                 }
             }
             Self::ExampleStmt(result) => {
@@ -1160,14 +1172,14 @@ impl SuccessProofBlockStmtResult {
             Self::SketchStmt(result) => {
                 if let Some(proof) = &mut result.proof {
                     for step in &mut proof.proof_steps {
-                        visitor(step)?;
+                        visitor.visit(step)?;
                     }
                 }
             }
             Self::TryStmt(result) => {
                 if let TryStmtExecutionResult::Committed(proof) = &mut result.execution {
                     for step in &mut proof.proof_steps {
-                        visitor(step)?;
+                        visitor.visit(step)?;
                     }
                 }
             }
@@ -1180,63 +1192,61 @@ fn claim_child_results(verification: Option<SuccessCheckedGoalBlockResult>) -> V
     let Some(result) = verification else {
         return Vec::new();
     };
-    let mut children = result.proof_steps;
-    children.extend(result.conclusion_checks);
-    children
+    result.proof_steps
 }
 
 impl SuccessCheckedGoalBlockResult {
-    fn visit_child_results(&self, visitor: &mut impl FnMut(&StmtResult)) {
+    fn visit_child_results(&self, visitor: &mut ResultChildVisitor<'_>) {
         for step in &self.proof_steps {
-            visitor(step);
+            visitor.visit(step);
         }
         for check in &self.conclusion_checks {
-            visitor(check);
+            visitor.visit(check);
         }
     }
 
     fn try_visit_child_results_mut<E>(
         &mut self,
-        visitor: &mut impl FnMut(&mut StmtResult) -> Result<(), E>,
+        visitor: &mut ResultChildMutVisitor<'_, E>,
     ) -> Result<(), E> {
         for step in &mut self.proof_steps {
-            visitor(step)?;
+            visitor.visit(step)?;
         }
         for check in &mut self.conclusion_checks {
-            visitor(check)?;
+            visitor.visit(check)?;
         }
         Ok(())
     }
 }
 
 impl SuccessDefinitionStmtResult {
-    fn visit_named_child_results(&self, visitor: &mut impl FnMut(&StmtResult)) {
+    fn visit_named_child_results(&self, visitor: &mut ResultChildVisitor<'_>) {
         match self {
             Self::HaveObjByExistFactsStmt(result) => {
                 if let Some(verification) = &result.verification {
-                    visitor(&verification.source_result);
+                    visitor.visit(&verification.source_result);
                 }
             }
             Self::ObtainObjFromExistFact(result) => {
                 if let Some(verification) = &result.verification {
-                    visitor(&verification.source_result);
+                    visitor.visit(&verification.source_result);
                 }
             }
             Self::ObtainObjFromAtomicFact(result) => {
                 if let Some(verification) = &result.verification {
-                    visitor(&verification.source_result);
+                    visitor.visit(&verification.source_result);
                 }
             }
             Self::ObtainObjFromThm(result) => {
                 if let Some(verification) = &result.verification {
-                    visitor(&verification.source_result);
+                    visitor.visit(&verification.source_result);
                 }
             }
             Self::HaveObjInNonemptySetStmt(result) => {
                 if let Some(verification) = &result.verification {
                     for group in &verification.groups {
                         if let Some(check) = &group.nonempty_check {
-                            visitor(check);
+                            visitor.visit(check);
                         }
                     }
                 }
@@ -1244,25 +1254,25 @@ impl SuccessDefinitionStmtResult {
             Self::HaveObjEqualStmt(result) => {
                 if let Some(verification) = &result.verification {
                     for check in &verification.type_checks {
-                        visitor(check);
+                        visitor.visit(check);
                     }
                 }
             }
             Self::HaveByPreimageStmt(result) => {
                 if let Some(verification) = &result.verification {
-                    visitor(&verification.source_membership_check);
+                    visitor.visit(&verification.source_membership_check);
                 }
             }
             Self::HaveFnEqualStmt(result) => {
                 if let Some(verification) = &result.verification {
-                    visitor(&verification.return_check);
+                    visitor.visit(&verification.return_check);
                 }
             }
             Self::HaveFnEqualCaseByCaseStmt(result) => {
                 if let Some(verification) = &result.verification {
-                    visitor(&verification.coverage_check);
+                    visitor.visit(&verification.coverage_check);
                     for check in &verification.return_checks {
-                        visitor(check);
+                        visitor.visit(check);
                     }
                 }
             }
@@ -1274,13 +1284,13 @@ impl SuccessDefinitionStmtResult {
             Self::HaveFnByForallExistUniqueStmt(result) => {
                 if let Some(verification) = &result.verification {
                     if let Some(check) = &verification.source_forall_check {
-                        visitor(check);
+                        visitor.visit(check);
                     }
                     for step in &verification.proof_steps {
-                        visitor(step);
+                        visitor.visit(step);
                     }
                     for check in &verification.conclusion_checks {
-                        visitor(check);
+                        visitor.visit(check);
                     }
                 }
             }
@@ -1302,33 +1312,33 @@ impl SuccessDefinitionStmtResult {
             Self::DefThmStmt(result) => {
                 if let Some(verification) = &result.verification {
                     for step in &verification.proof_steps {
-                        visitor(step);
+                        visitor.visit(step);
                     }
                     for check in &verification.conclusion_checks {
-                        visitor(check);
+                        visitor.visit(check);
                     }
                 }
             }
             Self::DefStrategyStmt(result) => {
                 if let Some(verification) = &result.verification {
                     for step in &verification.proof_steps {
-                        visitor(step);
+                        visitor.visit(step);
                     }
                     for check in &verification.conclusion_checks {
-                        visitor(check);
+                        visitor.visit(check);
                     }
                 }
             }
             Self::DefAlgoStmt(result) => {
                 if let Some(verification) = &result.run_in_local_env {
                     for case in &verification.cases {
-                        visitor(&case.verification);
+                        visitor.visit(&case.verification);
                     }
                     if let Some(default_return) = &verification.default_return {
-                        visitor(&default_return.verification);
+                        visitor.visit(&default_return.verification);
                     }
                     if let Some(coverage) = &verification.coverage {
-                        visitor(&coverage.verification);
+                        visitor.visit(&coverage.verification);
                     }
                 }
             }
@@ -1338,34 +1348,34 @@ impl SuccessDefinitionStmtResult {
 
     fn try_visit_named_child_results_mut<E>(
         &mut self,
-        visitor: &mut impl FnMut(&mut StmtResult) -> Result<(), E>,
+        visitor: &mut ResultChildMutVisitor<'_, E>,
     ) -> Result<(), E> {
         match self {
             Self::HaveObjByExistFactsStmt(result) => {
                 if let Some(verification) = &mut result.verification {
-                    visitor(&mut verification.source_result)?;
+                    visitor.visit(&mut verification.source_result)?;
                 }
             }
             Self::ObtainObjFromExistFact(result) => {
                 if let Some(verification) = &mut result.verification {
-                    visitor(&mut verification.source_result)?;
+                    visitor.visit(&mut verification.source_result)?;
                 }
             }
             Self::ObtainObjFromAtomicFact(result) => {
                 if let Some(verification) = &mut result.verification {
-                    visitor(&mut verification.source_result)?;
+                    visitor.visit(&mut verification.source_result)?;
                 }
             }
             Self::ObtainObjFromThm(result) => {
                 if let Some(verification) = &mut result.verification {
-                    visitor(&mut verification.source_result)?;
+                    visitor.visit(&mut verification.source_result)?;
                 }
             }
             Self::HaveObjInNonemptySetStmt(result) => {
                 if let Some(verification) = &mut result.verification {
                     for group in &mut verification.groups {
                         if let Some(check) = &mut group.nonempty_check {
-                            visitor(check)?;
+                            visitor.visit(check)?;
                         }
                     }
                 }
@@ -1373,25 +1383,25 @@ impl SuccessDefinitionStmtResult {
             Self::HaveObjEqualStmt(result) => {
                 if let Some(verification) = &mut result.verification {
                     for check in &mut verification.type_checks {
-                        visitor(check)?;
+                        visitor.visit(check)?;
                     }
                 }
             }
             Self::HaveByPreimageStmt(result) => {
                 if let Some(verification) = &mut result.verification {
-                    visitor(&mut verification.source_membership_check)?;
+                    visitor.visit(&mut verification.source_membership_check)?;
                 }
             }
             Self::HaveFnEqualStmt(result) => {
                 if let Some(verification) = &mut result.verification {
-                    visitor(&mut verification.return_check)?;
+                    visitor.visit(&mut verification.return_check)?;
                 }
             }
             Self::HaveFnEqualCaseByCaseStmt(result) => {
                 if let Some(verification) = &mut result.verification {
-                    visitor(&mut verification.coverage_check)?;
+                    visitor.visit(&mut verification.coverage_check)?;
                     for check in &mut verification.return_checks {
-                        visitor(check)?;
+                        visitor.visit(check)?;
                     }
                 }
             }
@@ -1403,13 +1413,13 @@ impl SuccessDefinitionStmtResult {
             Self::HaveFnByForallExistUniqueStmt(result) => {
                 if let Some(verification) = &mut result.verification {
                     if let Some(check) = &mut verification.source_forall_check {
-                        visitor(check)?;
+                        visitor.visit(check)?;
                     }
                     for step in &mut verification.proof_steps {
-                        visitor(step)?;
+                        visitor.visit(step)?;
                     }
                     for check in &mut verification.conclusion_checks {
-                        visitor(check)?;
+                        visitor.visit(check)?;
                     }
                 }
             }
@@ -1431,33 +1441,33 @@ impl SuccessDefinitionStmtResult {
             Self::DefThmStmt(result) => {
                 if let Some(verification) = &mut result.verification {
                     for step in &mut verification.proof_steps {
-                        visitor(step)?;
+                        visitor.visit(step)?;
                     }
                     for check in &mut verification.conclusion_checks {
-                        visitor(check)?;
+                        visitor.visit(check)?;
                     }
                 }
             }
             Self::DefStrategyStmt(result) => {
                 if let Some(verification) = &mut result.verification {
                     for step in &mut verification.proof_steps {
-                        visitor(step)?;
+                        visitor.visit(step)?;
                     }
                     for check in &mut verification.conclusion_checks {
-                        visitor(check)?;
+                        visitor.visit(check)?;
                     }
                 }
             }
             Self::DefAlgoStmt(result) => {
                 if let Some(verification) = &mut result.run_in_local_env {
                     for case in &mut verification.cases {
-                        visitor(&mut case.verification)?;
+                        visitor.visit(&mut case.verification)?;
                     }
                     if let Some(default_return) = &mut verification.default_return {
-                        visitor(&mut default_return.verification)?;
+                        visitor.visit(&mut default_return.verification)?;
                     }
                     if let Some(coverage) = &mut verification.coverage {
-                        visitor(&mut coverage.verification)?;
+                        visitor.visit(&mut coverage.verification)?;
                     }
                 }
             }
@@ -1468,75 +1478,53 @@ impl SuccessDefinitionStmtResult {
 
     fn into_child_results(self) -> Vec<StmtResult> {
         match self {
-            Self::HaveObjByExistFactsStmt(result) => result
-                .verification
-                .map(|verification| vec![*verification.source_result])
-                .unwrap_or_default(),
-            Self::ObtainObjFromExistFact(result) => result
-                .verification
-                .map(|verification| vec![*verification.source_result])
-                .unwrap_or_default(),
-            Self::ObtainObjFromAtomicFact(result) => result
-                .verification
-                .map(|verification| vec![*verification.source_result])
-                .unwrap_or_default(),
-            Self::ObtainObjFromThm(result) => result
-                .verification
-                .map(|verification| vec![*verification.source_result])
-                .unwrap_or_default(),
+            Self::HaveObjByExistFactsStmt(result) => {
+                let _ = result;
+                Vec::new()
+            }
+            Self::ObtainObjFromExistFact(result) => {
+                let _ = result;
+                Vec::new()
+            }
+            Self::ObtainObjFromAtomicFact(result) => {
+                let _ = result;
+                Vec::new()
+            }
+            Self::ObtainObjFromThm(result) => {
+                let _ = result;
+                Vec::new()
+            }
             Self::HaveObjInNonemptySetStmt(result) => {
-                let mut children = Vec::new();
-                if let Some(verification) = result.verification {
-                    children.extend(
-                        verification
-                            .groups
-                            .into_iter()
-                            .filter_map(|group| group.nonempty_check.map(|check| *check)),
-                    );
-                }
-                children
+                let _ = result;
+                Vec::new()
             }
             Self::HaveObjEqualStmt(result) => {
-                let mut children = Vec::new();
-                if let Some(verification) = result.verification {
-                    children.extend(verification.type_checks);
-                }
-                children
+                let _ = result;
+                Vec::new()
             }
             Self::HaveByPreimageStmt(result) => {
-                let mut children = Vec::new();
-                if let Some(verification) = result.verification {
-                    children.push(*verification.source_membership_check);
-                }
-                children
+                let _ = result;
+                Vec::new()
             }
             Self::HaveFnEqualStmt(result) => {
-                let mut children = Vec::new();
-                if let Some(verification) = result.verification {
-                    children.push(*verification.return_check);
-                }
-                children
+                let _ = result;
+                Vec::new()
             }
             Self::HaveFnEqualCaseByCaseStmt(result) => {
-                let mut children = Vec::new();
-                if let Some(verification) = result.verification {
-                    children.push(*verification.coverage_check);
-                    children.extend(verification.return_checks);
-                }
-                children
+                let _ = result;
+                Vec::new()
             }
-            Self::HaveFnByInducStmt(result) => result
-                .verification
-                .map(into_have_fn_by_induc_children)
-                .unwrap_or_default(),
+            Self::HaveFnByInducStmt(result) => {
+                let _ = result;
+                Vec::new()
+            }
             Self::HaveFnByForallExistUniqueStmt(result) => {
                 let mut children = Vec::new();
                 if let Some(verification) = result.verification {
                     if let Some(check) = verification.source_forall_check {
-                        children.push(*check);
+                        let _ = check;
                     }
                     children.extend(verification.proof_steps);
-                    children.extend(verification.conclusion_checks);
                 }
                 children
             }
@@ -1559,36 +1547,19 @@ impl SuccessDefinitionStmtResult {
             Self::DefThmStmt(result) => result
                 .verification
                 .map(|verification| {
-                    let mut children = verification.proof_steps;
-                    children.extend(verification.conclusion_checks);
-                    children
+                    verification.proof_steps
                 })
                 .unwrap_or_default(),
             Self::DefStrategyStmt(result) => result
                 .verification
                 .map(|verification| {
-                    let mut children = verification.proof_steps;
-                    children.extend(verification.conclusion_checks);
-                    children
+                    verification.proof_steps
                 })
                 .unwrap_or_default(),
-            Self::DefAlgoStmt(result) => result
-                .run_in_local_env
-                .map(|verification| {
-                    let mut children = verification
-                        .cases
-                        .into_iter()
-                        .map(|case| *case.verification)
-                        .collect::<Vec<_>>();
-                    if let Some(default_return) = verification.default_return {
-                        children.push(*default_return.verification);
-                    }
-                    if let Some(coverage) = verification.coverage {
-                        children.push(*coverage.verification);
-                    }
-                    children
-                })
-                .unwrap_or_default(),
+            Self::DefAlgoStmt(result) => {
+                let _ = result;
+                Vec::new()
+            }
             _other => Vec::new(),
         }
     }
@@ -1596,21 +1567,21 @@ impl SuccessDefinitionStmtResult {
 
 fn visit_have_fn_by_induc_children(
     verification: &SuccessVerifyHaveFnByInducResult,
-    visitor: &mut impl FnMut(&StmtResult),
+    visitor: &mut ResultChildVisitor<'_>,
 ) {
-    visitor(
+    visitor.visit(
         &verification
             .verification_run_in_local_env
             .measure
             .measure_integer_check,
     );
-    visitor(
+    visitor.visit(
         &verification
             .verification_run_in_local_env
             .measure
             .lower_bound_integer_check,
     );
-    visitor(
+    visitor.visit(
         &verification
             .verification_run_in_local_env
             .measure
@@ -1624,16 +1595,16 @@ fn visit_have_fn_by_induc_children(
 
 fn visit_have_fn_by_induc_case_list_children(
     cases: &SuccessVerifyHaveFnByInducCaseListResult,
-    visitor: &mut impl FnMut(&StmtResult),
+    visitor: &mut ResultChildVisitor<'_>,
 ) {
-    visitor(&cases.coverage_check);
+    visitor.visit(&cases.coverage_check);
     for disjointness in &cases.mutual_exclusions {
-        visitor(&disjointness.negated_atom_check);
+        visitor.visit(&disjointness.negated_atom_check);
     }
     for case in &cases.cases {
         match &case.body {
             SuccessVerifyHaveFnByInducCaseBodyResult::EqualTo(body) => {
-                visitor(&body.return_membership_check)
+                visitor.visit(&body.return_membership_check)
             }
             SuccessVerifyHaveFnByInducCaseBodyResult::NestedCases(nested) => {
                 visit_have_fn_by_induc_case_list_children(nested, visitor)
@@ -1644,21 +1615,21 @@ fn visit_have_fn_by_induc_case_list_children(
 
 fn try_visit_have_fn_by_induc_children_mut<E>(
     verification: &mut SuccessVerifyHaveFnByInducResult,
-    visitor: &mut impl FnMut(&mut StmtResult) -> Result<(), E>,
+    visitor: &mut ResultChildMutVisitor<'_, E>,
 ) -> Result<(), E> {
-    visitor(
+    visitor.visit(
         &mut verification
             .verification_run_in_local_env
             .measure
             .measure_integer_check,
     )?;
-    visitor(
+    visitor.visit(
         &mut verification
             .verification_run_in_local_env
             .measure
             .lower_bound_integer_check,
     )?;
-    visitor(
+    visitor.visit(
         &mut verification
             .verification_run_in_local_env
             .measure
@@ -1672,16 +1643,16 @@ fn try_visit_have_fn_by_induc_children_mut<E>(
 
 fn try_visit_have_fn_by_induc_case_list_children_mut<E>(
     cases: &mut SuccessVerifyHaveFnByInducCaseListResult,
-    visitor: &mut impl FnMut(&mut StmtResult) -> Result<(), E>,
+    visitor: &mut ResultChildMutVisitor<'_, E>,
 ) -> Result<(), E> {
-    visitor(&mut cases.coverage_check)?;
+    visitor.visit(&mut cases.coverage_check)?;
     for disjointness in &mut cases.mutual_exclusions {
-        visitor(&mut disjointness.negated_atom_check)?;
+        visitor.visit(&mut disjointness.negated_atom_check)?;
     }
     for case in &mut cases.cases {
         match &mut case.body {
             SuccessVerifyHaveFnByInducCaseBodyResult::EqualTo(body) => {
-                visitor(&mut body.return_membership_check)?
+                visitor.visit(&mut body.return_membership_check)?
             }
             SuccessVerifyHaveFnByInducCaseBodyResult::NestedCases(nested) => {
                 try_visit_have_fn_by_induc_case_list_children_mut(nested, visitor)?
@@ -1694,56 +1665,35 @@ fn try_visit_have_fn_by_induc_case_list_children_mut<E>(
 fn into_have_fn_by_induc_children(
     verification: SuccessVerifyHaveFnByInducResult,
 ) -> Vec<StmtResult> {
-    let local = verification.verification_run_in_local_env;
-    let mut children = vec![
-        *local.measure.measure_integer_check,
-        *local.measure.lower_bound_integer_check,
-        *local.measure.lower_bound_check,
-    ];
-    into_have_fn_by_induc_case_list_children(local.cases, &mut children);
-    children
+    let _ = verification;
+    Vec::new()
 }
 
 fn into_have_fn_by_induc_case_list_children(
     cases: SuccessVerifyHaveFnByInducCaseListResult,
     children: &mut Vec<StmtResult>,
 ) {
-    children.push(*cases.coverage_check);
-    children.extend(
-        cases
-            .mutual_exclusions
-            .into_iter()
-            .map(|proof| *proof.negated_atom_check),
-    );
-    for case in cases.cases {
-        match case.body {
-            SuccessVerifyHaveFnByInducCaseBodyResult::EqualTo(body) => {
-                children.push(*body.return_membership_check)
-            }
-            SuccessVerifyHaveFnByInducCaseBodyResult::NestedCases(nested) => {
-                into_have_fn_by_induc_case_list_children(*nested, children)
-            }
-        }
-    }
+    let _ = cases;
+    let _ = children;
 }
 
 fn visit_tuple_or_cart_children(
     verification: Option<&SuccessVerifyTupleOrCartDefinitionResult>,
-    visitor: &mut impl FnMut(&StmtResult),
+    visitor: &mut ResultChildVisitor<'_>,
 ) {
     if let Some(verification) = verification {
-        visitor(&verification.dimension.positive_check);
-        visitor(&verification.dimension.at_least_two_check);
+        visitor.visit(&verification.dimension.positive_check);
+        visitor.visit(&verification.dimension.at_least_two_check);
     }
 }
 
 fn try_visit_tuple_or_cart_children_mut<E>(
     verification: Option<&mut SuccessVerifyTupleOrCartDefinitionResult>,
-    visitor: &mut impl FnMut(&mut StmtResult) -> Result<(), E>,
+    visitor: &mut ResultChildMutVisitor<'_, E>,
 ) -> Result<(), E> {
     if let Some(verification) = verification {
-        visitor(&mut verification.dimension.positive_check)?;
-        visitor(&mut verification.dimension.at_least_two_check)?;
+        visitor.visit(&mut verification.dimension.positive_check)?;
+        visitor.visit(&mut verification.dimension.at_least_two_check)?;
     }
     Ok(())
 }
@@ -1752,35 +1702,31 @@ fn into_tuple_or_cart_children(
     _common: SuccessStmtCommonResult,
     verification: Option<SuccessVerifyTupleOrCartDefinitionResult>,
 ) -> Vec<StmtResult> {
-    let mut children = Vec::new();
-    if let Some(verification) = verification {
-        children.push(*verification.dimension.positive_check);
-        children.push(*verification.dimension.at_least_two_check);
-    }
-    children
+    let _ = verification;
+    Vec::new()
 }
 
 fn visit_indexed_function_children(
     verification: Option<&SuccessVerifyIndexedFunctionDefinitionResult>,
-    visitor: &mut impl FnMut(&StmtResult),
+    visitor: &mut ResultChildVisitor<'_>,
 ) {
     if let Some(verification) = verification {
         for check in &verification.bound_checks {
-            visitor(check);
+            visitor.visit(check);
         }
-        visitor(&verification.return_check);
+        visitor.visit(&verification.return_check);
     }
 }
 
 fn try_visit_indexed_function_children_mut<E>(
     verification: Option<&mut SuccessVerifyIndexedFunctionDefinitionResult>,
-    visitor: &mut impl FnMut(&mut StmtResult) -> Result<(), E>,
+    visitor: &mut ResultChildMutVisitor<'_, E>,
 ) -> Result<(), E> {
     if let Some(verification) = verification {
         for check in &mut verification.bound_checks {
-            visitor(check)?;
+            visitor.visit(check)?;
         }
-        visitor(&mut verification.return_check)?;
+        visitor.visit(&mut verification.return_check)?;
     }
     Ok(())
 }
@@ -1789,12 +1735,8 @@ fn into_indexed_function_children(
     _common: SuccessStmtCommonResult,
     verification: Option<SuccessVerifyIndexedFunctionDefinitionResult>,
 ) -> Vec<StmtResult> {
-    let mut children = Vec::new();
-    if let Some(verification) = verification {
-        children.extend(verification.bound_checks);
-        children.push(*verification.return_check);
-    }
-    children
+    let _ = verification;
+    Vec::new()
 }
 
 impl SuccessUnsafeStmtResult {

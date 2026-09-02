@@ -10,7 +10,7 @@ impl Runtime {
         &mut self,
         fact: &NormalAtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let Some(definition_facts) = self.builtin_function_property_definition_facts(fact)? else {
             return Ok(None);
         };
@@ -19,13 +19,13 @@ impl Runtime {
         for definition_fact in definition_facts {
             let result = self.verify_fact_allow_unknown(&definition_fact, verify_state)?;
             if result.is_unknown() {
-                return Ok(Some(result));
+                return Ok(None);
             }
             inside_results.push(result);
         }
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 fact.clone().into(),
                 format!(
                     "{} by its builtin function-property definition",
@@ -89,7 +89,7 @@ impl Runtime {
         &mut self,
         fact: &AtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
+    ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
         let Some((predicate, args)) = builtin_function_property_name_and_args(fact) else {
             return Ok(None);
         };
@@ -111,19 +111,28 @@ impl Runtime {
         }
 
         let Some(function_body) = self.get_fn_range_function_body(&function) else {
-            return Ok(Some(vec![UnknownGenericStmtResult::new().into()]));
+            let param = self.generate_internal_binder_name();
+            let function_set: Obj = FnSet::new(
+                vec![self.fresh_param_group_with_set(vec![param], domain.clone())?],
+                vec![],
+                codomain.clone(),
+            )?
+            .into();
+            let signature: AtomicFact =
+                InFact::new(function, function_set, fact.line_file()).into();
+            return Ok(Some(vec![self.verify_atomic_fact(&signature, verify_state)?]));
         };
         if SetBoundParameterGroup::number_of_params(&function_body.set_bound_parameters) != 1 {
-            return Ok(Some(vec![UnknownGenericStmtResult::new().into()]));
+            return Ok(None);
         }
         let Some(param_group) = function_body.set_bound_parameters.first() else {
-            return Ok(Some(vec![UnknownGenericStmtResult::new().into()]));
+            return Ok(None);
         };
 
         if function_body.dom_facts.is_empty() {
-            let domain_result = self.verify_equal_fact_by_known_equality(
-                &EqualFact::new_from_refs(param_group.set_obj(), &domain, fact.line_file()),
-            );
+            let domain_fact: AtomicFact =
+                EqualFact::new_from_refs(param_group.set_obj(), &domain, fact.line_file()).into();
+            let domain_result = self.verify_atomic_fact(&domain_fact, verify_state)?;
             if domain_result.is_unknown() {
                 return Ok(Some(vec![domain_result]));
             }
@@ -134,50 +143,56 @@ impl Runtime {
             // injective/surjective/bijective predicates without accepting other
             // restricted function domains.
             let Obj::ClosedRange(closed_range) = &domain else {
-                return Ok(Some(vec![UnknownGenericStmtResult::new().into()]));
+                return Ok(None);
             };
             if param_group.params.len() != 1
                 || !matches!(param_group.set_obj(), Obj::StandardSet(StandardSet::NPos))
             {
-                return Ok(Some(vec![UnknownGenericStmtResult::new().into()]));
+                return Ok(None);
             }
             let [QuantifierFreeFact::AtomicFact(AtomicFact::LessEqualFact(bound))] =
                 function_body.dom_facts.as_slice()
             else {
-                return Ok(Some(vec![UnknownGenericStmtResult::new().into()]));
+                return Ok(None);
             };
             let bound_param = obj_for_bound_param_in_scope(&param_group.params[0]);
             if !objs_equal_with_nested_binder_alpha_equivalence(&bound.left, &bound_param) {
-                return Ok(Some(vec![UnknownGenericStmtResult::new().into()]));
+                return Ok(None);
             }
 
             let one: Obj = Number::new("1".to_string()).into();
-            let start_result = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
+            let start_fact: AtomicFact = EqualFact::new_from_refs(
                 closed_range.start.as_ref(),
                 &one,
                 fact.line_file(),
-            ));
+            )
+            .into();
+            let start_result = self.verify_atomic_fact(&start_fact, verify_state)?;
             if start_result.is_unknown() {
                 return Ok(Some(vec![start_result]));
             }
             type_results.push(start_result);
 
-            let end_result = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
+            let end_fact: AtomicFact = EqualFact::new_from_refs(
                 closed_range.end.as_ref(),
                 &bound.right,
                 fact.line_file(),
-            ));
+            )
+            .into();
+            let end_result = self.verify_atomic_fact(&end_fact, verify_state)?;
             if end_result.is_unknown() {
                 return Ok(Some(vec![end_result]));
             }
             type_results.push(end_result);
         }
 
-        let codomain_result = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
+        let codomain_fact: AtomicFact = EqualFact::new_from_refs(
             function_body.ret_set.as_ref(),
             &codomain,
             fact.line_file(),
-        ));
+        )
+        .into();
+        let codomain_result = self.verify_atomic_fact(&codomain_fact, verify_state)?;
         if codomain_result.is_unknown() {
             return Ok(Some(vec![codomain_result]));
         }

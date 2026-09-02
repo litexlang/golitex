@@ -4,31 +4,44 @@ use crate::verification::verify_equality_by_builtin_rules::{
 };
 
 impl Runtime {
+    pub fn verify_known_equality_fact(
+        &mut self,
+        equal_fact: &EqualFact,
+        verify_state: &VerifyState,
+    ) -> Result<VerifyFactResult, RuntimeError> {
+        let proof = self.verify_equal_fact_by_known_equality(equal_fact);
+        let atomic: AtomicFact = equal_fact.clone().into();
+        self.complete_atomic_fact_proof_result(&atomic, proof, verify_state)
+    }
+
     /// Collect the exact non-reflexive leaves needed to replay addition
     /// congruence. This deliberately accepts only `Add` nodes: widening the
     /// structural language requires a matching reviewed Lean adapter.
     pub fn collect_known_addition_congruence_results(
-        &self,
+        &mut self,
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        subgoals: &mut Vec<StmtResult>,
-    ) -> bool {
+        subgoals: &mut Vec<VerifyFactResult>,
+        verify_state: &VerifyState,
+    ) -> Result<bool, RuntimeError> {
         if objs_equal_with_nested_binder_alpha_equivalence(left, right) {
-            return true;
+            return Ok(true);
         }
         if let (Obj::Add(left_add), Obj::Add(right_add)) = (left, right) {
-            return self.collect_known_addition_congruence_results(
+            return Ok(self.collect_known_addition_congruence_results(
                 left_add.left.as_ref(),
                 right_add.left.as_ref(),
                 line_file.clone(),
                 subgoals,
-            ) && self.collect_known_addition_congruence_results(
+                verify_state,
+            )? && self.collect_known_addition_congruence_results(
                 left_add.right.as_ref(),
                 right_add.right.as_ref(),
                 line_file,
                 subgoals,
-            );
+                verify_state,
+            )?);
         }
 
         let leaf_equality = EqualFact::new_from_refs(left, right, line_file);
@@ -36,7 +49,7 @@ impl Runtime {
         let result =
             self.verify_equal_fact_by_known_equality_without_direct_evaluation(&leaf_equality);
         let Some(factual) = result.factual_success() else {
-            return false;
+            return Ok(false);
         };
         if factual.fact().to_string() != leaf.to_string()
             || !factual.store.infers.is_empty()
@@ -46,10 +59,11 @@ impl Runtime {
                     | SuccessFactProofResult::DiagnosticOnly(_)
             )
         {
-            return false;
+            return Ok(false);
         }
+        let result = self.complete_fact_proof_result(&leaf, result, verify_state)?;
         subgoals.push(result);
-        true
+        Ok(true)
     }
 
     pub fn equal_fact_sides_have_same_known_equality_in_some_env(
@@ -96,7 +110,7 @@ impl Runtime {
             .collect()
     }
 
-    pub fn verify_equal_fact_by_known_equality(&self, equal_fact: &EqualFact) -> StmtResult {
+    pub fn verify_equal_fact_by_known_equality(&self, equal_fact: &EqualFact) -> ProveFactResult {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let known_result =
@@ -134,7 +148,7 @@ impl Runtime {
     pub fn verify_equal_fact_by_known_equality_without_direct_evaluation(
         &self,
         equal_fact: &EqualFact,
-    ) -> StmtResult {
+    ) -> ProveFactResult {
         let direct_result = self.verify_equal_fact_directly_known_only(equal_fact);
         if direct_result.is_success() {
             return direct_result;
@@ -143,12 +157,12 @@ impl Runtime {
         UnknownGenericStmtResult::new().into()
     }
 
-    fn verify_equal_fact_directly_known_only(&self, equal_fact: &EqualFact) -> StmtResult {
+    fn verify_equal_fact_directly_known_only(&self, equal_fact: &EqualFact) -> ProveFactResult {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         if objs_match_for_pattern(left, right) {
             let target: Fact = equal_fact.clone().into();
-            return SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            return SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 target.clone(),
                 "known-only equality: they are the same".to_string(),
                 BuiltinRuleEvidence::ObjectReflexivity(
@@ -163,7 +177,7 @@ impl Runtime {
             if let Some(path) = self.compiler_known_equality_path(equal_fact) {
                 if !path.is_empty() {
                     let target: Fact = equal_fact.clone().into();
-                    return SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    return SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             target.clone(),
                             "known-only equality: same known equality class".to_string(),
                             BuiltinRuleEvidence::KnownEqualityPath(
@@ -663,7 +677,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<VerifyFactResult, RuntimeError> {
         let fact: AtomicFact = equal_fact.clone().into();
         self.verify_atomic_fact_as_builtin_rule_premise(&fact, builtin_state)
     }

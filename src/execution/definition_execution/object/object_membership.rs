@@ -41,7 +41,7 @@ impl Runtime {
     fn exec_have_obj_in_nonempty_set_or_param_type_stmt_verify_process(
         &mut self,
         stmt: &HaveObjInNonemptySetOrParamTypeStmt,
-    ) -> Result<Vec<StmtResult>, RuntimeError> {
+    ) -> Result<Vec<VerifyFactResult>, RuntimeError> {
         self.run_in_local_env(|rt| {
             rt.define_params_with_type(&stmt.param_def, false, BindingScope::DefinitionBinding)
                 .map_err(|define_params_error| {
@@ -93,7 +93,7 @@ impl Runtime {
     fn object_choice_verification_result(
         &self,
         stmt: &HaveObjInNonemptySetOrParamTypeStmt,
-        checks: Vec<StmtResult>,
+        checks: Vec<VerifyFactResult>,
     ) -> Result<SuccessVerifyObjectChoiceResult, RuntimeError> {
         let items = self.object_definition_items_for_defined_params(
             &stmt.param_def,

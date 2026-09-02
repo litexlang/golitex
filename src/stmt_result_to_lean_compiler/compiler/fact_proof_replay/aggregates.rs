@@ -7,7 +7,7 @@ impl StmtResultToLeanCompiler {
         &mut self,
         target: &Fact,
         rule: AggregateBuiltinRule,
-        subgoals: &[StmtResult],
+        subgoals: &[VerifyFactResult],
     ) -> Result<Option<String>, String> {
         let (equality_left, equality_right) = equality_parts(target)?;
         let same = |left: &Obj, right: &Obj| obj_equality_key(left) == obj_equality_key(right);
@@ -79,11 +79,8 @@ impl StmtResultToLeanCompiler {
                     return Err("aggregate.sum_split_last requires one ordered premise".into());
                 };
                 let order_child = order_child
-                    .factual_success()
+                    .verified()
                     .ok_or_else(|| "aggregate.sum_split_last child is not factual".to_string())?;
-                if !order_child.store.infers.is_empty() {
-                    return Err("aggregate.sum_split_last child published effects".into());
-                }
                 let order_fact = order_child.fact();
                 let order_proof = self
                     .construct_lean_proof_from_direct_fact_result(order_child)?

@@ -5,7 +5,7 @@ use super::super::*;
 impl StmtResultToLeanCompiler {
     pub(in super::super) fn compile_literal_cartesian_membership_infer_result_as_top_level_declarations(
         &mut self,
-        requirement_check: &SuccessFactStmtResult,
+        requirement_check: &VerifiedFactResult,
         source_fact: &Fact,
         source_fact_id: FactId,
         infers: &SuccessInferResult,

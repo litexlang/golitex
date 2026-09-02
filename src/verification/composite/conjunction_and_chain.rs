@@ -6,29 +6,15 @@ use std::rc::Rc;
 use std::result::Result;
 
 impl Runtime {
-    pub fn verify_and_fact(
+    pub(crate) fn prove_and_fact(
         &mut self,
         and_fact: &AndFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         if let Some(cached_result) =
             self.verification_result_from_known_fact_cache(&and_fact.clone().into())
         {
             return Ok(cached_result);
-        }
-
-        if !verify_state.well_definedness_verified {
-            if let Err(e) = self.verify_and_fact_well_defined(and_fact, verify_state) {
-                return Err(RuntimeError::from(VerifyRuntimeError(
-                    RuntimeErrorStruct::new(
-                        Some(Fact::from(and_fact.clone()).into_stmt()),
-                        String::new(),
-                        and_fact.line_file(),
-                        Some(e),
-                        vec![],
-                    ),
-                )));
-            }
         }
 
         if let Some(fact_verified) =
@@ -37,17 +23,21 @@ impl Runtime {
             return Ok(fact_verified.into());
         }
 
-        let verify_state_for_children = verify_state.with_well_definedness_verified();
+        let verify_state_for_children = verify_state.clone();
 
-        let mut child_results: Vec<StmtResult> = Vec::with_capacity(and_fact.facts.len());
+        let mut child_results: Vec<VerifyFactResult> = Vec::with_capacity(and_fact.facts.len());
         for fact in and_fact.facts.iter() {
             let result = self.verify_atomic_fact(fact, &verify_state_for_children)?;
             if result.is_unknown() {
-                return Ok(result);
+                return Ok(result
+                    .as_fact_unknown()
+                    .cloned()
+                    .expect("unknown atomic verification carries an atomic unknown")
+                    .into());
             }
             child_results.push(result);
         }
-        Ok((SuccessFactStmtResult::new_with_verified_by_known_fact(
+        Ok((SuccessProveFactResult::new_with_verified_by_known_fact(
             and_fact.clone().into(),
             SuccessFactProofResult::combined_steps(Vec::new()),
             child_results,
@@ -59,7 +49,7 @@ impl Runtime {
         &mut self,
         and_fact: &AndFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<SuccessFactStmtResult>, RuntimeError> {
+    ) -> Result<Option<SuccessProveFactResult>, RuntimeError> {
         let key = and_fact.key();
         let envs_count = self.environment_count();
         for stack_idx in 0..envs_count {
@@ -120,7 +110,7 @@ impl Runtime {
         arg_map: HashMap<String, Obj>,
         given_and_fact: &AndFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<SuccessFactStmtResult>, RuntimeError> {
+    ) -> Result<Option<SuccessProveFactResult>, RuntimeError> {
         let Some((instantiation, requirements)) = self
             .verify_known_forall_requirements_and_build_evidence(
                 known_forall.as_ref(),
@@ -134,7 +124,7 @@ impl Runtime {
 
         let source_fact = known_forall.source_fact();
         let source_fact_id = known_forall.source_fact_id;
-        let fact_verified = SuccessFactStmtResult::new_with_verified_by_known_fact(
+        let fact_verified = SuccessProveFactResult::new_with_verified_by_known_fact(
             given_and_fact.clone().into(),
             SuccessFactProofResult::known_forall_instantiation(
                 source_fact,
@@ -148,32 +138,18 @@ impl Runtime {
         Ok(Some(fact_verified))
     }
 
-    pub fn verify_chain_fact(
+    pub(crate) fn prove_chain_fact(
         &mut self,
         chain_fact: &ChainFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         if let Some(cached_result) =
             self.verification_result_from_known_fact_cache(&chain_fact.clone().into())
         {
             return Ok(cached_result);
         }
 
-        if !verify_state.well_definedness_verified {
-            if let Err(e) = self.verify_chain_fact_well_defined(chain_fact, verify_state) {
-                return Err(RuntimeError::from(VerifyRuntimeError(
-                    RuntimeErrorStruct::new(
-                        Some(Fact::from(chain_fact.clone()).into_stmt()),
-                        String::new(),
-                        chain_fact.line_file(),
-                        Some(e),
-                        vec![],
-                    ),
-                )));
-            }
-        }
-
-        let verify_state_for_children = verify_state.with_well_definedness_verified();
+        let verify_state_for_children = verify_state.clone();
 
         let facts = chain_fact.facts().map_err(|e| {
             RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(
@@ -184,7 +160,7 @@ impl Runtime {
                 vec![],
             )))
         })?;
-        let mut child_results: Vec<StmtResult> = Vec::with_capacity(facts.len());
+        let mut child_results: Vec<VerifyFactResult> = Vec::with_capacity(facts.len());
         for fact in facts.iter() {
             let result = self.verify_atomic_fact(fact, &verify_state_for_children)?;
             if result.is_unknown() {
@@ -197,7 +173,7 @@ impl Runtime {
 
             child_results.push(result);
         }
-        Ok((SuccessFactStmtResult::new_with_verified_by_known_fact(
+        Ok((SuccessProveFactResult::new_with_verified_by_known_fact(
             chain_fact.clone().into(),
             SuccessFactProofResult::combined_steps(Vec::new()),
             child_results,

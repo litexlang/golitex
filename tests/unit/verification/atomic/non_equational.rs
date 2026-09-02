@@ -5,13 +5,14 @@ use crate::inference::SuccessInferResult;
 use crate::object::{Add, Number, Obj, StandardSet};
 use crate::parsing::Tokenizer;
 use crate::result::{
-    BuiltinRuleEvidence, EvaluateBinaryObjOperator, StmtResult, SuccessEvaluateObjStepResult,
-    SuccessFactProofResult, SuccessFactStmtResult, SuccessStmtResult, UncataloguedBuiltinRule,
+    BuiltinRuleEvidence, EvaluateBinaryObjOperator, SuccessEvaluateObjStepResult,
+    SuccessFactProofResult, SuccessProveFactResult, UncataloguedBuiltinRule, VerifyFactResult,
 };
 use crate::runtime::Runtime;
 use crate::statement::Stmt;
 use crate::syntax::source_conventions::default_line_file;
 use crate::test_support::execute_source;
+use crate::verification::VerifyState;
 use std::rc::Rc;
 
 #[test]
@@ -25,9 +26,9 @@ fn direct_numeric_membership_retains_recursive_evaluation_evidence() {
         InFact::new(expression, StandardSet::N.into(), default_line_file()).into();
 
     let result = Runtime::default().verify_non_equational_atomic_fact_by_direct_evaluation(&fact);
-    let StmtResult::Success(SuccessStmtResult::Fact(success)) = result else {
-        panic!("2 + 3 in N should be a successful fact result");
-    };
+    let success = result
+        .factual_success()
+        .expect("2 + 3 in N should have a successful truth proof");
     let SuccessFactProofResult::BuiltinRule(builtin) = success.proof() else {
         panic!("direct membership should select one builtin proof");
     };
@@ -86,8 +87,9 @@ fn registered_symmetric_predicate_verifier_wraps_the_exact_reordered_child_resul
     };
     let target = parse_atomic("$any_set(C, R)");
     let alternate = parse_atomic("$any_set(R, C)");
-    let alternate_result: StmtResult = SuccessFactStmtResult::new(
-        alternate.clone().into(),
+    let alternate_fact: Fact = alternate.clone().into();
+    let alternate_proof = SuccessProveFactResult::new(
+        alternate_fact.clone(),
         SuccessInferResult::new(),
         SuccessFactProofResult::builtin_rule_with_evidence(
             "fixture child",
@@ -96,6 +98,9 @@ fn registered_symmetric_predicate_verifier_wraps_the_exact_reordered_child_resul
         ),
     )
     .into();
+    let alternate_result = runtime
+        .complete_fact_proof_result(&alternate_fact, alternate_proof, &VerifyState::initial())
+        .expect("fixture child WD verifies");
     let result = Runtime::wrap_registered_symmetric_prop_result(
         &target,
         "any_set".to_string(),
@@ -103,9 +108,13 @@ fn registered_symmetric_predicate_verifier_wraps_the_exact_reordered_child_resul
         alternate,
         alternate_result,
     );
-    let success = result
-        .factual_success()
-        .expect("registered symmetry proves its target");
+    let target_fact: Fact = target.into();
+    let success = runtime
+        .complete_fact_proof_result(&target_fact, result, &VerifyState::initial())
+        .expect("registered symmetry target WD verifies");
+    let VerifyFactResult::Verified(success) = success else {
+        panic!("registered symmetry proves its target")
+    };
     let SuccessFactProofResult::BuiltinRule(builtin) = success.proof() else {
         panic!("registered symmetry should be an explicit builtin wrapper")
     };
@@ -122,7 +131,7 @@ fn registered_symmetric_predicate_verifier_wraps_the_exact_reordered_child_resul
     };
     assert_eq!(
         child
-            .factual_success()
+            .verified()
             .expect("symmetry child is factual")
             .fact()
             .to_string(),

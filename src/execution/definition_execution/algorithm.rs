@@ -395,7 +395,7 @@ impl Runtime {
                         Some(runtime_error),
                     )
                 })?;
-            self.attach_known_fact_ids_to_stmt_result(&mut verification)?;
+            self.attach_known_fact_ids_to_verify_fact_result(&mut verification)?;
             results.push(SuccessVerifyDefAlgoCaseResult {
                 case_index,
                 verification_fact: case_forall_fact,
@@ -468,7 +468,7 @@ impl Runtime {
                     Some(runtime_error),
                 )
             })?;
-        self.attach_known_fact_ids_to_stmt_result(&mut verification)?;
+        self.attach_known_fact_ids_to_verify_fact_result(&mut verification)?;
         Ok(Some(SuccessVerifyDefAlgoDefaultResult {
             verification_fact,
             verification: Box::new(verification),
@@ -530,7 +530,7 @@ impl Runtime {
                     Some(runtime_error),
                 )
             })?;
-        self.attach_known_fact_ids_to_stmt_result(&mut verification)?;
+        self.attach_known_fact_ids_to_verify_fact_result(&mut verification)?;
 
         Ok(Some(SuccessVerifyDefAlgoCoverageResult {
             verification_fact: coverage_forall_fact,

@@ -30,7 +30,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -66,28 +66,34 @@ impl Runtime {
     pub fn verify_zero_product_factor_matches_target(
         &mut self,
         equal_fact: &EqualFact,
-        _builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+        builtin_state: &BuiltinRuleSearchState,
+    ) -> Result<VerifyFactResult, RuntimeError> {
         // Do not call the full equality builtin here; that would re-enter zero-product
         // cancellation while this rule is already trying to match a factor.
         let known_result = self.verify_equal_fact_by_known_equality(equal_fact);
         if known_result.is_success() {
-            return Ok(known_result);
+            let atomic: AtomicFact = equal_fact.clone().into();
+            return self.complete_atomic_fact_proof_result(
+                &atomic,
+                known_result,
+                builtin_state.verify_state(),
+            );
         }
 
         let calculation_result = self.verify_equal_fact_by_direct_evaluation(equal_fact);
-        if calculation_result.is_success() {
-            return Ok(calculation_result);
-        }
-
-        Ok(UnknownGenericStmtResult::new().into())
+        let atomic: AtomicFact = equal_fact.clone().into();
+        self.complete_atomic_fact_proof_result(
+            &atomic,
+            calculation_result,
+            builtin_state.verify_state(),
+        )
     }
 
     pub fn try_verify_zero_equals_product_implies_other_factor_zero(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -142,7 +148,7 @@ impl Runtime {
                         self.verify_builtin_rule_premises(&premises, builtin_state)?
                     {
                         return Ok(Some(
-                            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                                 equal_fact.clone().into(),
                                 reason.to_string(),
                                 BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyZeroEqualsProductImpliesOtherFactorZero01),
@@ -170,7 +176,7 @@ impl Runtime {
                     )?;
                     if right_nonzero_result.is_success() {
                         return Ok(Some(
-                            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                                 equal_fact.clone().into(),
                                 "equality: b = 0 from a * b = 0 and a != 0".to_string(),
                                 BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyZeroEqualsProductImpliesOtherFactorZero02),
@@ -196,7 +202,7 @@ impl Runtime {
                         .verify_atomic_fact_as_builtin_rule_premise(&left_nonzero, builtin_state)?;
                     if left_nonzero_result.is_success() {
                         return Ok(Some(
-                            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                                 equal_fact.clone().into(),
                                 "equality: a = 0 from a * b = 0 and b != 0".to_string(),
                                 BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyZeroEqualsProductImpliesOtherFactorZero03),
@@ -217,7 +223,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -271,7 +277,7 @@ impl Runtime {
     pub fn try_verify_zero_mod_equals_zero(
         &mut self,
         equal_fact: &EqualFact,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let mod_obj = if Self::obj_is_builtin_literal_zero(left) {
@@ -302,7 +308,7 @@ impl Runtime {
     pub fn try_verify_mod_one_equals_zero(
         &mut self,
         equal_fact: &EqualFact,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let mod_obj = if Self::obj_is_builtin_literal_zero(left) {
@@ -333,7 +339,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -370,7 +376,7 @@ impl Runtime {
         }
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "equality: 1 % k = 1 for k >= 2".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -388,7 +394,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -434,7 +440,7 @@ impl Runtime {
         };
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "equality: (a - a % b) % b = 0 for a in Z and b in N+".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -452,7 +458,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -503,7 +509,7 @@ impl Runtime {
         };
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "equality: Euclidean quotient decomposition a = d * quot(a, d) + a % d".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::DecompositionParts),
@@ -519,7 +525,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -568,7 +574,7 @@ impl Runtime {
                 self.verify_builtin_rule_premises(&complete_premises, builtin_state)?
             {
                 return Ok(Some(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         equal_fact.clone().into(),
                         "equality: Euclidean remainder uniqueness from a = m * q + r and 0 <= r < m"
                             .to_string(),
@@ -593,9 +599,15 @@ impl Runtime {
                 self.verify_atomic_fact_as_builtin_rule_premise(&remainder_in_n, builtin_state)?;
             let bound_result = self
                 .verify_atomic_fact_as_builtin_rule_premise(&remainder_lt_modulus, builtin_state)?;
-            let decomposition_result = self.verify_equal_fact_by_known_equality(
-                &EqualFact::new_from_refs(dividend, &candidate, line_file.clone()),
-            );
+            let decomposition_fact =
+                EqualFact::new_from_refs(dividend, &candidate, line_file.clone());
+            let decomposition_proof = self.verify_equal_fact_by_known_equality(&decomposition_fact);
+            let decomposition_atomic: AtomicFact = decomposition_fact.into();
+            let decomposition_result = self.complete_atomic_fact_proof_result(
+                &decomposition_atomic,
+                decomposition_proof,
+                builtin_state.verify_state(),
+            )?;
             if !divisor_result.is_success()
                 || !remainder_result.is_success()
                 || !bound_result.is_success()
@@ -612,7 +624,7 @@ impl Runtime {
                 decomposition_result,
             ]);
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     equal_fact.clone().into(),
                     "equality: Euclidean remainder uniqueness from a = m * q + r and 0 <= r < m"
                         .to_string(),

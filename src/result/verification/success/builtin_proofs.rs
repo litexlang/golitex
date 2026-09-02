@@ -6,7 +6,7 @@ use crate::prelude::*;
 pub struct SuccessBuiltinFactProofResult {
     pub msg: String,
     pub evidence: SuccessBuiltinFactProofEvidenceResult,
-    pub subgoals: Vec<StmtResult>,
+    pub subgoals: Vec<VerifyFactResult>,
 }
 
 #[derive(Debug)]

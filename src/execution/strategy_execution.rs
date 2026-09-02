@@ -69,15 +69,9 @@ impl Runtime {
             let then_count = stmt.forall_fact.then_facts.len();
             let then_verify_state = VerifyState::initial();
             for (then_index, then_fact) in stmt.forall_fact.then_facts.iter().enumerate() {
-                let mut result =
-                    rt.verify_exist_or_and_chain_atomic_fact(then_fact, &then_verify_state)?;
+                let then_goal = then_fact.clone().to_fact();
+                let result = rt.verify_fact_allow_unknown(&then_goal, &then_verify_state)?;
                 if result.is_unknown() {
-                    let then_goal = then_fact.clone().to_fact();
-                    result = rt.structured_unknown_result_for_failed_fact(
-                        &then_goal,
-                        &then_verify_state,
-                        result,
-                    )?;
                     return Err(RuntimeError::from(UnknownRuntimeError(
                         RuntimeErrorStruct::new_with_output(
                             Some(then_goal.clone().into()),
@@ -88,11 +82,13 @@ impl Runtime {
                             then_fact.line_file(),
                             None,
                             vec![],
-                            RuntimeErrorOutput::then_clause_unknown(
+                            RuntimeErrorOutput::then_clause_unknown_fact(
                                 then_goal,
                                 then_index + 1,
                                 then_count,
-                                &result,
+                                result
+                                    .as_fact_unknown()
+                                    .expect("unknown fact verification carries an unknown result"),
                             ),
                         ),
                     )));
@@ -108,7 +104,7 @@ impl Runtime {
                 rt.attach_known_fact_ids_to_stmt_result(result)?;
             }
             for result in conclusion_checks.iter_mut() {
-                rt.attach_known_fact_ids_to_stmt_result(result)?;
+                rt.attach_known_fact_ids_to_verify_fact_result(result)?;
             }
 
             Ok(

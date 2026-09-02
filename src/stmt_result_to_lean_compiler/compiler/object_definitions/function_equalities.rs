@@ -219,14 +219,11 @@ impl StmtResultToLeanCompiler {
 
             let return_check = verification
                 .return_check
-                .factual_success()
+                .verified()
                 .ok_or_else(|| "named real function return check is not factual".to_string())?;
-            if return_check.fact().to_string() != expected_return_check.to_string()
-                || return_check.store.fact.to_string() != expected_return_check.to_string()
-                || !return_check.store.infers.is_empty()
-            {
+            if return_check.fact().to_string() != expected_return_check.to_string() {
                 return Err(
-                    "named real function changed or published effects from its local return check"
+                    "named real function changed its local return check"
                         .into(),
                 );
             }

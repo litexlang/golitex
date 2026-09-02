@@ -109,7 +109,7 @@ impl Runtime {
             )?;
         }
 
-        let next_verify_state = verify_state.with_well_definedness_verified();
+        let next_verify_state = verify_state.clone();
         let len = x.list.len();
         let mut i = 0;
         while i < len {
@@ -1457,7 +1457,7 @@ impl Runtime {
             .collect::<Vec<_>>();
         let mut steps = self.verify_set_constructor_children_result(&arguments, verify_state)?;
         let parent: Obj = value.clone().into();
-        let next_verify_state = verify_state.with_well_definedness_verified();
+        let next_verify_state = verify_state.clone();
         for left_index in 0..arguments.len() {
             for right_index in left_index + 1..arguments.len() {
                 let fact: AtomicFact = NotEqualFact::new(

@@ -10,12 +10,12 @@ pub struct SuccessVerifyWitnessExistResult {
     /// a target-side existential requirement.  Plain `set` binders need no
     /// separate target proposition because every value already has type
     /// `LitexSet`.
-    pub parameter_checks: Vec<Option<Box<StmtResult>>>,
+    pub parameter_checks: Vec<Option<Box<VerifyFactResult>>>,
     /// One factual result for every direct existential body fact.
-    pub body_checks: Vec<StmtResult>,
+    pub body_checks: Vec<VerifyFactResult>,
     /// The final result for the uniqueness obligation, when the source form
     /// is `exist!`.
-    pub uniqueness_check: Option<Box<StmtResult>>,
+    pub uniqueness_check: Option<Box<VerifyFactResult>>,
 }
 
 pub struct SuccessVerifyWitnessAtomicFactResult {
@@ -61,9 +61,9 @@ impl fmt::Debug for SuccessVerifyWitnessAtomicFactResult {
 impl SuccessVerifyWitnessExistResult {
     pub fn new(
         proof_steps: Vec<StmtResult>,
-        parameter_checks: Vec<Option<Box<StmtResult>>>,
-        body_checks: Vec<StmtResult>,
-        uniqueness_check: Option<StmtResult>,
+        parameter_checks: Vec<Option<Box<VerifyFactResult>>>,
+        body_checks: Vec<VerifyFactResult>,
+        uniqueness_check: Option<VerifyFactResult>,
     ) -> Self {
         Self {
             proof_steps,
@@ -77,7 +77,7 @@ impl SuccessVerifyWitnessExistResult {
 pub struct SuccessVerifyExistentialEliminationResult {
     /// Checked existential/projection or scoped theorem application whose
     /// exact direct conclusion is retained recursively.
-    pub source_result: Box<StmtResult>,
+    pub source_result: ExistentialEliminationSourceResult,
     /// Exact existential eliminated after any definition projection.
     pub source_exist_fact: ExistFactEnum,
     /// Exact instantiated type fact stored for every introduced witness.
@@ -87,6 +87,28 @@ pub struct SuccessVerifyExistentialEliminationResult {
     /// `exist!` additionally stores a generated uniqueness theorem.  The
     /// current compiler tranche rejects that extra projection explicitly.
     pub includes_uniqueness: bool,
+}
+
+#[derive(Debug)]
+pub enum ExistentialEliminationSourceResult {
+    Fact(Box<VerifyFactResult>),
+    TheoremApplication(Box<StmtResult>),
+}
+
+impl ExistentialEliminationSourceResult {
+    pub fn fact(&self) -> Option<&VerifyFactResult> {
+        match self {
+            Self::Fact(result) => Some(result.as_ref()),
+            Self::TheoremApplication(_) => None,
+        }
+    }
+
+    pub fn theorem_application(&self) -> Option<&StmtResult> {
+        match self {
+            Self::Fact(_) => None,
+            Self::TheoremApplication(result) => Some(result.as_ref()),
+        }
+    }
 }
 
 impl fmt::Debug for SuccessVerifyExistentialEliminationResult {
@@ -103,14 +125,14 @@ impl fmt::Debug for SuccessVerifyExistentialEliminationResult {
 
 impl SuccessVerifyExistentialEliminationResult {
     pub fn new(
-        source_result: StmtResult,
+        source_result: ExistentialEliminationSourceResult,
         source_exist_fact: ExistFactEnum,
         witness_type_facts: Vec<Fact>,
         instantiated_body_facts: Vec<Fact>,
         includes_uniqueness: bool,
     ) -> Self {
         Self {
-            source_result: Box::new(source_result),
+            source_result,
             source_exist_fact,
             witness_type_facts,
             instantiated_body_facts,

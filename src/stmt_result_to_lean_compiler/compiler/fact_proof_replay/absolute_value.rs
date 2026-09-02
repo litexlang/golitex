@@ -11,7 +11,7 @@ impl StmtResultToLeanCompiler {
         &mut self,
         target: &Fact,
         rule: AbsoluteValueBuiltinRule,
-        subgoals: &[StmtResult],
+        subgoals: &[VerifyFactResult],
     ) -> Result<Option<String>, String> {
         if rule == AbsoluteValueBuiltinRule::UpperBound {
             let (target_left, bound, target_strict) = order_relation_parts(target)?;
@@ -24,15 +24,10 @@ impl StmtResultToLeanCompiler {
                     "absolute-value upper bound requires two retained order premises".into(),
                 );
             };
-            let mut compile_child = |child: &StmtResult, role: &str| {
+            let mut compile_child = |child: &VerifyFactResult, role: &str| {
                 let child = child
-                    .factual_success()
+                    .verified()
                     .ok_or_else(|| format!("absolute-value {role} premise is not factual"))?;
-                if !child.store.infers.is_empty() {
-                    return Err(format!(
-                        "absolute-value {role} premise unexpectedly published effects"
-                    ));
-                }
                 let proof = self
                     .construct_lean_proof_from_direct_fact_result(child)?
                     .ok_or_else(|| {
@@ -287,11 +282,8 @@ impl StmtResultToLeanCompiler {
                 return Err("absolute-value sign evidence requires one retained premise".into());
             };
             let child = child
-                .factual_success()
+                .verified()
                 .ok_or_else(|| "absolute-value sign premise is not factual".to_string())?;
-            if !child.store.infers.is_empty() {
-                return Err("absolute-value sign premise unexpectedly published effects".into());
-            }
             let child_fact = child.fact();
             let child_proof = self
                 .construct_lean_proof_from_direct_fact_result(child)?

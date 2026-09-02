@@ -130,29 +130,23 @@ impl StmtResultToLeanCompiler {
             StmtResultWellDefinednessToLeanCompilationContext::default();
         let mut application_well_definedness_roots = Vec::new();
         for (index, check) in source.requirement_checks.iter().enumerate() {
-            let check = check.factual_success().ok_or_else(|| {
+            let check = check.verified().ok_or_else(|| {
                 format!(
                     "real-analysis builtin requirement {} is not factual",
                     index + 1
                 )
             })?;
-            if let Some(recursive) = check.well_definedness.recursive.as_deref() {
-                application_well_definedness.merge_from(
-                    &self.collect_well_definedness_to_lean_compilation_context(
-                        &check.well_definedness,
-                    )?,
-                )?;
-                application_well_definedness_roots.push(recursive);
-            }
-        }
-        if let Some(recursive) = conclusion_well_definedness.recursive.as_deref() {
             application_well_definedness.merge_from(
-                &self.collect_well_definedness_to_lean_compilation_context(
-                    conclusion_well_definedness,
-                )?,
+                &self.collect_well_definedness_to_lean_compilation_context(&check.checked)?,
             )?;
-            application_well_definedness_roots.push(recursive);
+            application_well_definedness_roots.push(check.checked.proof.as_ref());
         }
+        application_well_definedness.merge_from(
+            &self.collect_well_definedness_to_lean_compilation_context(
+                conclusion_well_definedness,
+            )?,
+        )?;
+        application_well_definedness_roots.push(conclusion_well_definedness.proof.as_ref());
         let application_well_definedness = self.compile_precollected_well_definedness_context(
             application_well_definedness,
             &application_well_definedness_roots,
@@ -196,7 +190,7 @@ impl StmtResultToLeanCompiler {
                 .zip(source.requirement_checks.iter())
                 .enumerate()
             {
-                let check = check.factual_success().ok_or_else(|| {
+                let check = check.verified().ok_or_else(|| {
                     format!(
                         "real-analysis builtin requirement {} is not factual",
                         index + 1
@@ -207,19 +201,12 @@ impl StmtResultToLeanCompiler {
                     requirement,
                     "real-analysis builtin requirement child",
                 )?;
-                self.install_atomic_fact_well_definedness_store_results(check)
-                    .map_err(|error| {
-                        format!(
-                            "real-analysis builtin requirement {} WD installation: {error}",
-                            index + 1
-                        )
-                    })?;
                 let proof = if matches!(check.proof(), SuccessFactProofResult::ForallProof(_)) {
                     let theorem_name = format!("__fact{}", self.next_fact_name_index);
                     let fact_index = self.next_fact_name_index;
                     if requirements_are_local {
                         let lines =
-                            self.compile_direct_forall_fact_result_as_local_proof_steps(check)?;
+                            self.compile_direct_forall_verify_result_as_local_proof_steps(check)?;
                         let Some(lines) = lines else {
                             return Err(format!(
                             "real-analysis builtin requirement {} retained an unsupported ForallProof",
@@ -235,7 +222,7 @@ impl StmtResultToLeanCompiler {
                         local_prerequisite_lines.extend(lines);
                     } else {
                         let declaration_count = self.declarations.len();
-                        let compiled = self.compile_direct_forall_fact_result(check)?;
+                        let compiled = self.compile_direct_forall_verify_result(check)?;
                         if !compiled {
                             return Err(format!(
                             "real-analysis builtin requirement {} retained an unsupported ForallProof",

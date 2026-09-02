@@ -7,7 +7,7 @@ impl Runtime {
     pub(super) fn try_verify_cart_finite_set_size_product_equality(
         &self,
         equal_fact: &EqualFact,
-    ) -> Option<StmtResult> {
+    ) -> Option<ProveFactResult> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         // Cardinality of a finite Cartesian product is the product of factor cardinalities.
@@ -29,7 +29,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -56,7 +56,7 @@ impl Runtime {
         }
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "finite_set_size_set_minus".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -74,7 +74,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -94,7 +94,7 @@ impl Runtime {
         };
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "finite_set_size_union_inclusion_exclusion".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -112,7 +112,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -132,7 +132,7 @@ impl Runtime {
         };
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "finite_set_size_partition_by_intersection_and_difference".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -150,7 +150,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -183,7 +183,7 @@ impl Runtime {
         }
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "finite_set_size_set_minus_finite_subset".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -202,7 +202,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -242,7 +242,7 @@ impl Runtime {
             "finite_set_size_range"
         };
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 rule.to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -258,7 +258,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -278,7 +278,7 @@ impl Runtime {
         }
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
                 "power_set_finite_set_size_two_pow_finite_set_size_base".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -464,8 +464,8 @@ impl Runtime {
         second_set: Obj,
         line_file: LineFile,
         _builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
-        let type_state = VerifyState::after_well_definedness();
+    ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
+        let type_state = VerifyState::initial();
         let first_finite: AtomicFact = IsFiniteSetFact::new(first_set, line_file.clone()).into();
         let first_result = self.verify_atomic_fact(&first_finite, &type_state)?;
         if !first_result.is_success() {

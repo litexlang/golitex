@@ -7,7 +7,16 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<VerifyFactResult, RuntimeError> {
+        let proof = self.prove_builtin_strategy_child(atomic_fact, verify_state)?;
+        self.complete_atomic_fact_proof_result(atomic_fact, proof, verify_state)
+    }
+
+    fn prove_builtin_strategy_child(
+        &mut self,
+        atomic_fact: &AtomicFact,
+        verify_state: &VerifyState,
+    ) -> Result<ProveFactResult, RuntimeError> {
         match atomic_fact {
             AtomicFact::EqualFact(equal_fact) => {
                 let direct =
@@ -37,7 +46,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         match atomic_fact {
             AtomicFact::EqualFact(equal_fact) => {
                 self.verify_equal_fact_with_builtin_strategy_routes(equal_fact, verify_state)
@@ -51,7 +60,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         self.verify_equality_with_builtin_strategy(equal_fact, verify_state)
     }
 
@@ -59,7 +68,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         debug_assert!(!matches!(atomic_fact, AtomicFact::EqualFact(_)));
         let result = match atomic_fact {
             AtomicFact::InFact(fact) => {

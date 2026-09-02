@@ -7,13 +7,7 @@ pub(in super::super) fn direct_object_well_definedness_result(
 ) -> Result<&SuccessVerifyDirectObjWellDefinedResult, String> {
     match result {
         SuccessVerifyObjWellDefinedResult::Direct(result) => Ok(result),
-        SuccessVerifyObjWellDefinedResult::Reuse(result) => {
-            direct_object_well_definedness_result(result.source.as_ref())
-        }
-        SuccessVerifyObjWellDefinedResult::RecursiveReference(result) => Err(format!(
-            "object WD recursive reference `{}` has no concrete compiler node",
-            result.object
-        )),
+        SuccessVerifyObjWellDefinedResult::Reuse(result) => Ok(result.source.as_ref()),
     }
 }
 
@@ -100,9 +94,10 @@ pub(in super::super) fn collect_well_definedness_to_lean_context_from_object_bin
                 context,
             )?;
             for condition in &result.conditions {
-                if let Some(recursive) = condition.well_definedness.recursive.as_deref() {
-                    collect_well_definedness_to_lean_context_from_fact_result(recursive, context)?;
-                }
+                collect_well_definedness_to_lean_context_from_fact_result(
+                    condition.well_definedness.proof.as_ref(),
+                    context,
+                )?;
             }
         }
         SuccessVerifyBinderObjectWellDefinedResult::FunctionSet(result) => {
@@ -243,9 +238,10 @@ pub(in super::super) fn collect_well_definedness_to_lean_context_from_binder_pre
 ) -> Result<(), String> {
     for premise in premises {
         collect_well_definedness_parameter_fact_alias(premise, context)?;
-        if let Some(recursive) = premise.well_definedness.recursive.as_deref() {
-            collect_well_definedness_to_lean_context_from_fact_result(recursive, context)?;
-        }
+        collect_well_definedness_to_lean_context_from_fact_result(
+            premise.well_definedness.proof.as_ref(),
+            context,
+        )?;
     }
     Ok(())
 }
@@ -372,7 +368,7 @@ pub(in super::super) fn collect_function_application_well_definedness_to_lean_co
             let layer = layer.expect("every application layer was retained");
             StmtResultFunctionApplicationLayerWellDefinednessToLeanCompilationContext {
                 source_prefix: layer.object.clone(),
-                function_contracts: layer.cache_key.function_contracts.clone(),
+                function_contracts: layer.function_contracts.clone(),
                 intrinsic_result_set: layer.intrinsic_result_set.clone(),
                 requirements: layer
                     .steps
@@ -393,7 +389,7 @@ pub(in super::super) fn collect_function_application_well_definedness_to_lean_co
     let application_context =
         StmtResultFunctionApplicationWellDefinednessToLeanCompilationContext {
             source_application: source_object.clone(),
-            function_contracts: root.cache_key.function_contracts.clone(),
+            function_contracts: root.function_contracts.clone(),
             anonymous_function_head,
             layers,
         };

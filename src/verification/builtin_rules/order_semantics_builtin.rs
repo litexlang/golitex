@@ -110,7 +110,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         if let Some(result) =
             self.try_verify_positive_even_integer_greater_than_one(atomic_fact, builtin_state)?
         {
@@ -121,7 +121,9 @@ impl Runtime {
         {
             return Ok(Some(result));
         }
-        if let Some(result) = self.try_verify_finite_set_extrema_order_builtin_rule(atomic_fact)? {
+        if let Some(result) =
+            self.try_verify_finite_set_extrema_order_builtin_rule(atomic_fact, builtin_state)?
+        {
             return Ok(Some(result));
         }
         self.try_verify_integer_successor_predecessor_builtin_rule(atomic_fact, builtin_state)
@@ -133,7 +135,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let Some((left, integer, true)) = direct_positive_order_shape(atomic_fact) else {
             return Ok(None);
         };
@@ -161,7 +163,7 @@ impl Runtime {
         }
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "positive even integer is greater than one".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -179,7 +181,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let Some((target_left, target_right, target_is_strict)) =
             direct_positive_order_shape(atomic_fact)
         else {
@@ -237,17 +239,15 @@ impl Runtime {
                 let Some(mut steps) = type_steps else {
                     continue;
                 };
-                let first_result =
-                    self.verify_non_equational_atomic_fact_with_known_atomic_facts(first)?;
-                let second_result =
-                    self.verify_non_equational_atomic_fact_with_known_atomic_facts(second)?;
+                let first_result = self.verify_atomic_fact_as_builtin_rule_premise(first, builtin_state)?;
+                let second_result = self.verify_atomic_fact_as_builtin_rule_premise(second, builtin_state)?;
                 if !first_result.is_success() || !second_result.is_success() {
                     continue;
                 }
                 steps.push(first_result);
                 steps.push(second_result);
                 return Ok(Some(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         atomic_fact.clone().into(),
                         "order: transitivity through a shared ordered numeric middle term"
                             .to_string(),
@@ -268,7 +268,8 @@ impl Runtime {
     fn try_verify_finite_set_extrema_order_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+        builtin_state: &BuiltinRuleSearchState,
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let Some(AtomicFact::LessEqualFact(fact)) =
             normalize_positive_order_atomic_fact(atomic_fact)
         else {
@@ -282,10 +283,13 @@ impl Runtime {
             )
             .into();
             let member_result =
-                self.verify_known_or_concrete_finite_set_membership(&member_fact)?;
+                self.verify_known_or_concrete_finite_set_membership(
+                    &member_fact,
+                    builtin_state.verify_state(),
+                )?;
             if member_result.is_success() {
                 return Ok(Some(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         atomic_fact.clone().into(),
                         "finite_set_max: every member is at most the maximum".to_string(),
                         BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyFiniteSetExtremaOrderBuiltinRule01),
@@ -297,9 +301,15 @@ impl Runtime {
         }
         for maximum in self.known_equal_finite_set_max_candidates(&fact.right) {
             let maximum_obj: Obj = maximum.clone().into();
-            let equality_result = self.verify_equal_fact_by_known_equality(
-                &EqualFact::new_from_refs(&fact.right, &maximum_obj, fact.line_file.clone()),
-            );
+            let equality =
+                EqualFact::new_from_refs(&fact.right, &maximum_obj, fact.line_file.clone());
+            let equality_proof = self.verify_equal_fact_by_known_equality(&equality);
+            let equality_atomic: AtomicFact = equality.into();
+            let equality_result = self.complete_atomic_fact_proof_result(
+                &equality_atomic,
+                equality_proof,
+                builtin_state.verify_state(),
+            )?;
             if !equality_result.is_success() {
                 continue;
             }
@@ -310,10 +320,13 @@ impl Runtime {
             )
             .into();
             let member_result =
-                self.verify_known_or_concrete_finite_set_membership(&member_fact)?;
+                self.verify_known_or_concrete_finite_set_membership(
+                    &member_fact,
+                    builtin_state.verify_state(),
+                )?;
             if member_result.is_success() {
                 return Ok(Some(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         atomic_fact.clone().into(),
                         "finite_set_max: every member is at most a known-equal maximum".to_string(),
                         BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyFiniteSetExtremaOrderBuiltinRule02),
@@ -332,10 +345,13 @@ impl Runtime {
             )
             .into();
             let member_result =
-                self.verify_known_or_concrete_finite_set_membership(&member_fact)?;
+                self.verify_known_or_concrete_finite_set_membership(
+                    &member_fact,
+                    builtin_state.verify_state(),
+                )?;
             if member_result.is_success() {
                 return Ok(Some(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         atomic_fact.clone().into(),
                         "finite_set_min: the minimum is at most every member".to_string(),
                         BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyFiniteSetExtremaOrderBuiltinRule03),
@@ -347,9 +363,15 @@ impl Runtime {
         }
         for minimum in self.known_equal_finite_set_min_candidates(&fact.left) {
             let minimum_obj: Obj = minimum.clone().into();
-            let equality_result = self.verify_equal_fact_by_known_equality(
-                &EqualFact::new_from_refs(&fact.left, &minimum_obj, fact.line_file.clone()),
-            );
+            let equality =
+                EqualFact::new_from_refs(&fact.left, &minimum_obj, fact.line_file.clone());
+            let equality_proof = self.verify_equal_fact_by_known_equality(&equality);
+            let equality_atomic: AtomicFact = equality.into();
+            let equality_result = self.complete_atomic_fact_proof_result(
+                &equality_atomic,
+                equality_proof,
+                builtin_state.verify_state(),
+            )?;
             if !equality_result.is_success() {
                 continue;
             }
@@ -360,10 +382,13 @@ impl Runtime {
             )
             .into();
             let member_result =
-                self.verify_known_or_concrete_finite_set_membership(&member_fact)?;
+                self.verify_known_or_concrete_finite_set_membership(
+                    &member_fact,
+                    builtin_state.verify_state(),
+                )?;
             if member_result.is_success() {
                 return Ok(Some(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         atomic_fact.clone().into(),
                         "finite_set_min: a known-equal minimum is at most every member".to_string(),
                         BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyFiniteSetExtremaOrderBuiltinRule04),
@@ -380,19 +405,27 @@ impl Runtime {
     fn verify_known_or_concrete_finite_set_membership(
         &mut self,
         member_fact: &AtomicFact,
-    ) -> Result<StmtResult, RuntimeError> {
+        verify_state: &VerifyState,
+    ) -> Result<VerifyFactResult, RuntimeError> {
         let known = self.verify_non_equational_atomic_fact_with_known_atomic_facts(member_fact)?;
         if known.is_success() {
-            return Ok(known);
+            return self.complete_atomic_fact_proof_result(member_fact, known, verify_state);
         }
         let AtomicFact::InFact(in_fact) = member_fact else {
-            return Ok(UnknownGenericStmtResult::new().into());
+            return self.complete_atomic_fact_proof_result(
+                member_fact,
+                UnknownGenericStmtResult::new().into(),
+                verify_state,
+            );
         };
         if !object_is_explicit_member_of_finite_set_expression(&in_fact.element, &in_fact.set) {
-            return Ok(UnknownGenericStmtResult::new().into());
+            return self.complete_atomic_fact_proof_result(
+                member_fact,
+                UnknownGenericStmtResult::new().into(),
+                verify_state,
+            );
         }
-        Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+        let proof = SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 member_fact.clone().into(),
                 "membership by concrete finite-set structure".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -400,8 +433,8 @@ impl Runtime {
                 ),
                 Vec::new(),
             )
-            .into(),
-        )
+            .into();
+        self.complete_atomic_fact_proof_result(member_fact, proof, verify_state)
     }
 
     fn known_equal_finite_set_max_candidates(&self, obj: &Obj) -> Vec<FiniteSetMax> {
@@ -454,7 +487,7 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let Some(AtomicFact::LessEqualFact(fact)) =
             normalize_positive_order_atomic_fact(atomic_fact)
         else {
@@ -481,7 +514,7 @@ impl Runtime {
                     if strict_result.is_success() {
                         steps.push(strict_result);
                         return Ok(Some(
-                            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                                 atomic_fact.clone().into(),
                                 "integer difference: a < b gives b - a >= 1".to_string(),
                                 BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyIntegerSuccessorPredecessorBuiltinRule01),
@@ -512,7 +545,7 @@ impl Runtime {
             if strict_result.is_success() {
                 steps.push(strict_result);
                 return Ok(Some(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         atomic_fact.clone().into(),
                         "integer adjacency: a < b + 1 gives a <= b".to_string(),
                         BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyIntegerSuccessorPredecessorBuiltinRule02),
@@ -539,7 +572,7 @@ impl Runtime {
             if strict_result.is_success() {
                 steps.push(strict_result);
                 return Ok(Some(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         atomic_fact.clone().into(),
                         "integer successor: a < b gives a + 1 <= b".to_string(),
                         BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyIntegerSuccessorPredecessorBuiltinRule03),
@@ -566,7 +599,7 @@ impl Runtime {
             if strict_result.is_success() {
                 steps.push(strict_result);
                 return Ok(Some(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         atomic_fact.clone().into(),
                         "integer predecessor: a < b gives a <= b - 1".to_string(),
                         BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyIntegerSuccessorPredecessorBuiltinRule04),
@@ -586,7 +619,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -616,7 +649,7 @@ impl Runtime {
             steps.push(lower_result);
             steps.push(upper_result);
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     equal_fact.clone().into(),
                     "integer singleton interval: n <= x < n + 1 gives x = n".to_string(),
                     BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyIntegerSingletonIntervalEqualityBuiltinRule01),
@@ -656,7 +689,7 @@ impl Runtime {
             steps.push(lower_result);
             steps.push(upper_result);
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     equal_fact.clone().into(),
                     "integer successor singleton interval: n < x <= n + 1 gives x = n + 1"
                         .to_string(),
@@ -675,7 +708,7 @@ impl Runtime {
         &mut self,
         or_fact: &OrFact,
         verify_state: &VerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         if or_fact.facts.len() != 2 {
             return Ok(None);
         }
@@ -714,7 +747,7 @@ impl Runtime {
             return Ok(None);
         };
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 or_fact.clone().into(),
                 reason.to_string(),
                 BuiltinRuleEvidence::Uncatalogued(

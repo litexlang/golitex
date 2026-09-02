@@ -28,21 +28,18 @@ impl StmtResultToLeanCompiler {
     /// Direct Result evidence is the only accepted proof source.
     pub(super) fn construct_lean_proof_from_fact_result_without_storing(
         &mut self,
-        result: &StmtResult,
+        result: &VerifyFactResult,
         expected_fact: &Fact,
         role: &str,
     ) -> Result<String, String> {
         let factual = result
-            .factual_success()
+            .verified()
             .ok_or_else(|| format!("{role} is not a successful fact Result"))?;
         if factual.fact().to_string() != expected_fact.to_string() {
             return Err(format!(
                 "{role} changed `{expected_fact}` to `{}`",
                 factual.fact()
             ));
-        }
-        if !factual.store.infers.is_empty() {
-            return Err(format!("{role} unexpectedly published inference effects"));
         }
         if let Some(proof) =
             self.construct_lean_proof_from_direct_fact_result_using_its_well_definedness(factual)?

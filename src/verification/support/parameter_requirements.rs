@@ -12,26 +12,16 @@ impl Runtime {
         &mut self,
         fact: &AtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
-        let well_definedness =
-            self.verify_fact_well_defined_result(&fact.clone().into(), verify_state)?;
-        let result =
-            self.verify_atomic_fact(fact, &verify_state.with_well_definedness_verified())?;
-        Ok(result.with_fact_well_definedness(well_definedness))
+    ) -> Result<VerifyFactResult, RuntimeError> {
+        self.verify_fact_allow_unknown(&fact.clone().into(), verify_state)
     }
 
     fn verify_atomic_parameter_fact_known_or_builtin_only(
         &mut self,
         fact: &AtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
-        let well_definedness =
-            self.verify_fact_well_defined_result(&fact.clone().into(), verify_state)?;
-        let result = self.verify_atomic_fact_restricted_known_builtin(
-            fact,
-            &verify_state.with_well_definedness_verified(),
-        )?;
-        Ok(result.with_fact_well_definedness(well_definedness))
+    ) -> Result<VerifyFactResult, RuntimeError> {
+        self.verify_atomic_fact_restricted_known_builtin(fact, verify_state)
     }
 
     fn verify_obj_satisfies_param_type_known_or_builtin_only(
@@ -39,7 +29,7 @@ impl Runtime {
         obj: Obj,
         param_type: &ParamType,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<VerifyFactResult, RuntimeError> {
         let fact: AtomicFact = match param_type {
             ParamType::Obj(set_obj) => {
                 if let Obj::AnonymousFn(anonymous_fn) = &obj {
@@ -60,12 +50,15 @@ impl Runtime {
                             expected_fn_set.clone().into(),
                             default_line_file(),
                         );
-                        return self.verify_anonymous_fn_in_fn_set_explicit(
+                        let result = self.verify_anonymous_fn_in_fn_set_explicit(
                             anonymous_fn,
                             &expected_fn_set,
                             &in_fact,
                             verify_state,
-                        );
+                        )?;
+                        let checked = self
+                            .verify_fact_well_defined_result(&in_fact.clone().into(), verify_state)?;
+                        return Ok(Runtime::finish_fact_verification(checked, result));
                     }
                 }
                 InFact::new(obj, set_obj.clone(), default_line_file()).into()
@@ -102,7 +95,6 @@ impl Runtime {
             if result.is_unknown() {
                 return Ok(VerifyArgsSatisfyParamDefResult::unknown(result));
             }
-            infer_result.new_infer_result_inside(result.infer_result());
             check_results.push(result);
         }
         Ok(VerifyArgsSatisfyParamDefResult::success(
@@ -116,7 +108,7 @@ impl Runtime {
         obj: Obj,
         param_type: &ParamType,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<VerifyFactResult, RuntimeError> {
         match param_type {
             ParamType::Obj(set_obj) => {
                 let fact: AtomicFact =
@@ -134,18 +126,20 @@ impl Runtime {
                         _ => None,
                     };
                     if let Some(expected_fn_set) = expected_fn_set {
-                        self.verify_atomic_fact_well_defined(&fact, verify_state)?;
                         let in_fact = InFact::new(
                             obj.clone(),
                             expected_fn_set.clone().into(),
                             default_line_file(),
                         );
-                        return self.verify_anonymous_fn_in_fn_set_explicit(
+                        let result = self.verify_anonymous_fn_in_fn_set_explicit(
                             anonymous_fn,
                             &expected_fn_set,
                             &in_fact,
                             verify_state,
-                        );
+                        )?;
+                        let checked = self
+                            .verify_fact_well_defined_result(&in_fact.clone().into(), verify_state)?;
+                        return Ok(Runtime::finish_fact_verification(checked, result));
                     }
                 }
                 let direct_result = self.verify_atomic_parameter_fact(&fact, verify_state)?;
@@ -160,7 +154,11 @@ impl Runtime {
                 // admission; named members still use their stored membership.
                 if let Obj::StructObj(struct_obj) = set_obj {
                     let in_fact = InFact::new(obj, set_obj.clone(), default_line_file());
-                    return self.verify_in_fact_by_struct_obj(&in_fact, struct_obj, verify_state);
+                    let result =
+                        self.verify_in_fact_by_struct_obj(&in_fact, struct_obj, verify_state)?;
+                    let checked = self
+                        .verify_fact_well_defined_result(&in_fact.clone().into(), verify_state)?;
+                    return Ok(Runtime::finish_fact_verification(checked, result));
                 }
 
                 Ok(direct_result)
@@ -198,7 +196,6 @@ impl Runtime {
             if verify_result.is_unknown() {
                 return Ok(VerifyArgsSatisfyParamDefResult::unknown(verify_result));
             }
-            infer_result.new_infer_result_inside(verify_result.infer_result());
             check_results.push(verify_result);
         }
         Ok(VerifyArgsSatisfyParamDefResult::success(

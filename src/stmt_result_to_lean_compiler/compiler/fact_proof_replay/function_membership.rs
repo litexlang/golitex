@@ -11,7 +11,7 @@ impl StmtResultToLeanCompiler {
     /// happens to match.
     pub(in super::super) fn construct_lean_exact_set_builder_value_from_fact_result(
         &mut self,
-        result: &SuccessVerifyFactResult,
+        result: &SuccessFactProofNode,
     ) -> Result<Option<(String, String)>, String> {
         match result.proof() {
             SuccessFactProofResult::BuiltinRule(builtin)
@@ -75,7 +75,7 @@ impl StmtResultToLeanCompiler {
         &mut self,
         target: &Fact,
         evidence: &SetBuilderMembershipBuiltinRuleEvidence,
-        subgoals: &[StmtResult],
+        subgoals: &[VerifyFactResult],
     ) -> Result<Option<(String, String)>, String> {
         if evidence.expected_target.to_string() != target.to_string() {
             return Err("set-builder membership evidence changed its target".into());
@@ -90,14 +90,11 @@ impl StmtResultToLeanCompiler {
             .enumerate()
         {
             let child = child
-                .factual_success()
+                .verified()
                 .ok_or_else(|| format!("set-builder child {index} is not factual"))?;
-            if child.fact().to_string() != expected.to_string()
-                || child.store.fact.to_string() != expected.to_string()
-                || !child.store.infers.is_empty()
-            {
+            if child.fact().to_string() != expected.to_string() {
                 return Err(format!(
-                    "set-builder child {index} changed its proposition or published effects"
+                    "set-builder child {index} changed its proposition"
                 ));
             }
             let Some(proof) = self.construct_lean_proof_from_direct_fact_result(child)? else {
@@ -120,7 +117,7 @@ impl StmtResultToLeanCompiler {
         &mut self,
         target: &Fact,
         evidence: &SetBuilderMembershipBuiltinRuleEvidence,
-        subgoals: &[StmtResult],
+        subgoals: &[VerifyFactResult],
     ) -> Result<Option<String>, String> {
         if evidence.expected_target.to_string() != target.to_string() {
             return Err("set-builder membership evidence changed its target".into());
@@ -135,14 +132,11 @@ impl StmtResultToLeanCompiler {
             .enumerate()
         {
             let child = child
-                .factual_success()
+                .verified()
                 .ok_or_else(|| format!("set-builder child {index} is not factual"))?;
-            if child.fact().to_string() != expected.to_string()
-                || child.store.fact.to_string() != expected.to_string()
-                || !child.store.infers.is_empty()
-            {
+            if child.fact().to_string() != expected.to_string() {
                 return Err(format!(
-                    "set-builder child {index} changed its proposition or published effects"
+                    "set-builder child {index} changed its proposition"
                 ));
             }
             let Some(proof) = self.construct_lean_proof_from_direct_fact_result(child)? else {
@@ -168,7 +162,7 @@ impl StmtResultToLeanCompiler {
         &mut self,
         target: &Fact,
         evidence: &FunctionSetMembershipBuiltinRuleEvidence,
-        subgoals: &[StmtResult],
+        subgoals: &[VerifyFactResult],
     ) -> Result<Option<String>, String> {
         if evidence.expected_target.to_string() != target.to_string() {
             return Err("function-set membership evidence changed its target".into());
@@ -186,11 +180,9 @@ impl StmtResultToLeanCompiler {
             );
         };
         let pointwise_result = pointwise_result
-            .factual_success()
+            .verified()
             .ok_or_else(|| "function-set membership pointwise child is not factual".to_string())?;
-        if pointwise_result.fact().to_string() != evidence.expected_pointwise.to_string()
-            || pointwise_result.store.fact.to_string() != evidence.expected_pointwise.to_string()
-        {
+        if pointwise_result.fact().to_string() != evidence.expected_pointwise.to_string() {
             return Err("function-set membership changed its pointwise proposition".into());
         }
         let Fact::ForallFact(expected_pointwise) = &evidence.expected_pointwise else {

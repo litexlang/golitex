@@ -7,7 +7,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -42,18 +42,28 @@ impl Runtime {
                 _ => None,
             };
             if let Some(empty_order) = empty_order {
-                let comparison = self
+                let comparison_proof = self
                     .verify_non_equational_atomic_fact_with_zero_premise_verification(
                         &empty_order,
                     )?;
+                let comparison = self.complete_atomic_fact_proof_result(
+                    &empty_order,
+                    comparison_proof,
+                    builtin_state.verify_state(),
+                )?;
                 if comparison.is_success() {
-                    sub = SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    let proof = SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         not_nonempty.clone().into(),
                         "integer interval emptiness by number comparison".to_string(),
                         BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyEmptySetEqualityFromNotNonempty01),
                         vec![comparison],
                     )
                     .into();
+                    sub = self.complete_atomic_fact_proof_result(
+                        &not_nonempty,
+                        proof,
+                        builtin_state.verify_state(),
+                    )?;
                 }
             }
         }
@@ -62,7 +72,7 @@ impl Runtime {
         }
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                 equal_fact.clone().into(),
                 SuccessInferResult::new(),
                 "empty_set_equality_from_not_nonempty".to_string(),
@@ -78,7 +88,8 @@ impl Runtime {
     pub(super) fn try_verify_empty_finite_set_from_size_zero(
         &mut self,
         equal_fact: &EqualFact,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+        verify_state: &VerifyState,
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -89,17 +100,16 @@ impl Runtime {
         };
         let size: Obj = FiniteSetSize::new(set).into();
         let zero: Obj = Number::new("0".to_string()).into();
-        let size_zero = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
-            &size,
-            &zero,
-            line_file.clone(),
-        ));
+        let size_zero = self.verify_known_equality_fact(
+            &EqualFact::new_from_refs(&size, &zero, line_file.clone()),
+            verify_state,
+        )?;
         if !size_zero.is_success() {
             return Ok(None);
         }
 
         Ok(Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_and_steps(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                 equal_fact.clone().into(),
                 SuccessInferResult::new(),
                 "finite_set_size_zero_implies_empty_set".to_string(),

@@ -13,7 +13,9 @@ impl FactGraphBuilder {
         if let Some(success) = success.fact() {
             let target_id = self.add_fact_node(&success.fact(), "fact", None);
             self.add_infer_edges(&success.infers);
-            self.collect_verified_by_edges(&target_id, success.proof());
+            if let Some(proof) = success.proof() {
+                self.collect_verified_by_edges(&target_id, proof);
+            }
             return;
         }
 
@@ -34,7 +36,7 @@ impl FactGraphBuilder {
             let target_id = self.add_fact_node(&target_fact, "fact", None);
             if let Some(verification) = &result.verification {
                 for clause_result in &verification.clause_checks {
-                    for source_id in self.dependency_source_ids_from_result(clause_result) {
+                    for source_id in self.dependency_source_ids_from_verify_result(clause_result) {
                         for source_id in self.main_chain_source_ids(&source_id) {
                             self.add_edge(&source_id, &target_id, "unfolds");
                         }
@@ -71,6 +73,10 @@ impl FactGraphBuilder {
                 last_fact_id = Some(node_id);
             }
         });
+        success.visit_fact_verification_children(&mut |child| {
+            self.collect_verify_result_edges(child);
+            last_fact_id = Some(self.primary_verify_result_node_id(child));
+        });
         success.visit_success_child_results(&mut |child| {
             if let Some(node_id) = self.last_factual_success_node_id(child) {
                 last_fact_id = Some(node_id);
@@ -87,6 +93,13 @@ impl FactGraphBuilder {
                 self.add_edge(&last_fact_id, &claim_id(&stmt.line_file), "proves");
             }
             _ => {}
+        }
+    }
+
+    pub(super) fn collect_verify_result_edges(&mut self, result: &VerifyFactResult) {
+        let target_id = self.add_fact_node(&result.fact(), "verification", None);
+        if let Some(verified) = result.verified() {
+            self.collect_verified_by_edges(&target_id, verified.proof());
         }
     }
 
@@ -109,7 +122,7 @@ impl FactGraphBuilder {
             SuccessFactProofResult::DefinitionReduction(result) => {
                 self.add_cited_stmt_edges(target_id, &result.definition.clone().into());
                 for check in result.verification.clause_checks.iter() {
-                    self.collect_result_edges(check);
+                    self.collect_verify_result_edges(check);
                 }
             }
             SuccessFactProofResult::CheckedFunctionDefinitionReduction(result) => self
@@ -123,18 +136,16 @@ impl FactGraphBuilder {
                     self.collect_verified_by_edges(target_id, primary.proof());
                 }
                 for step in result.steps.iter() {
-                    self.collect_result_edges(step);
-                    if let Some(source_id) = self.primary_result_node_id(step) {
-                        self.add_edge(&source_id, target_id, "proves");
-                    }
+                    self.collect_verify_result_edges(step);
+                    let source_id = self.primary_verify_result_node_id(step);
+                    self.add_edge(&source_id, target_id, "proves");
                 }
             }
             SuccessFactProofResult::ForallProof(result) => {
                 for proved in &result.proves {
-                    self.collect_result_edges(proved.result.as_ref());
-                    if let Some(source_id) = self.primary_result_node_id(proved.result.as_ref()) {
-                        self.add_edge(&source_id, target_id, "proves");
-                    }
+                    self.collect_verify_result_edges(proved.result.as_ref());
+                    let source_id = self.primary_verify_result_node_id(proved.result.as_ref());
+                    self.add_edge(&source_id, target_id, "proves");
                 }
             }
             SuccessFactProofResult::Transform(result) => {
@@ -203,7 +214,9 @@ impl FactGraphBuilder {
             self.add_edge(&source_id, target_id, "instantiates");
         }
         for requirement in &result.requirements {
-            for source_id in self.dependency_source_ids_from_result(requirement.result.as_ref()) {
+            for source_id in
+                self.dependency_source_ids_from_verify_result(requirement.result.as_ref())
+            {
                 for source_id in self.main_chain_source_ids(&source_id) {
                     self.add_edge(&source_id, target_id, "requires");
                 }
@@ -211,15 +224,32 @@ impl FactGraphBuilder {
         }
     }
 
-    pub(super) fn add_subgoal_edges(&mut self, target_id: &str, subgoals: &[StmtResult]) {
+    pub(super) fn add_subgoal_edges(
+        &mut self,
+        target_id: &str,
+        subgoals: &[VerifyFactResult],
+    ) {
         for subgoal in subgoals {
-            self.collect_result_edges(subgoal);
-            if let Some(source_id) = self.primary_result_node_id(subgoal) {
-                for source_id in self.main_chain_source_ids(&source_id) {
-                    self.add_edge(&source_id, target_id, "subgoal");
-                }
+            self.collect_verify_result_edges(subgoal);
+            let source_id = self.primary_verify_result_node_id(subgoal);
+            for source_id in self.main_chain_source_ids(&source_id) {
+                self.add_edge(&source_id, target_id, "subgoal");
             }
         }
+    }
+
+    pub(super) fn dependency_source_ids_from_verify_result(
+        &mut self,
+        result: &VerifyFactResult,
+    ) -> Vec<String> {
+        let direct_id = fact_node_id(&result.fact());
+        if self.node_index.contains_key(&direct_id) {
+            return vec![direct_id];
+        }
+        result
+            .verified()
+            .map(|verified| self.dependency_source_ids_from_verified_by(verified.proof()))
+            .unwrap_or_default()
     }
 
     pub(super) fn dependency_source_ids_from_result(&mut self, result: &StmtResult) -> Vec<String> {
@@ -228,7 +258,10 @@ impl FactGraphBuilder {
             if self.node_index.contains_key(&direct_id) {
                 return vec![direct_id];
             }
-            return self.dependency_source_ids_from_verified_by(success.proof());
+            return success
+                .proof()
+                .map(|proof| self.dependency_source_ids_from_verified_by(proof))
+                .unwrap_or_default();
         }
         let Some(success) = result.non_factual_success() else {
             return vec![];
@@ -254,7 +287,7 @@ impl FactGraphBuilder {
         match verified_by {
             SuccessFactProofResult::BuiltinRule(result)
             | SuccessFactProofResult::BuiltinStrategy(result) => {
-                self.dependency_source_ids_from_results(&result.subgoals)
+                self.dependency_source_ids_from_verify_results(&result.subgoals)
             }
             SuccessFactProofResult::StoredFactCitation(result) => self
                 .add_cited_stmt_node(&result.source_fact.clone().into_stmt())
@@ -270,7 +303,7 @@ impl FactGraphBuilder {
                     .into_iter()
                     .collect::<Vec<_>>();
                 for check in result.verification.clause_checks.iter() {
-                    ids.extend(self.dependency_source_ids_from_result(check));
+                    ids.extend(self.dependency_source_ids_from_verify_result(check));
                 }
                 ids
             }
@@ -285,7 +318,7 @@ impl FactGraphBuilder {
                     ids.extend(self.dependency_source_ids_from_verified_by(primary.proof()));
                 }
                 for step in result.steps.iter() {
-                    ids.extend(self.dependency_source_ids_from_result(step));
+                    ids.extend(self.dependency_source_ids_from_verify_result(step));
                 }
                 ids.sort();
                 ids.dedup();
@@ -294,7 +327,9 @@ impl FactGraphBuilder {
             SuccessFactProofResult::ForallProof(result) => result
                 .proves
                 .iter()
-                .flat_map(|proved| self.dependency_source_ids_from_result(proved.result.as_ref()))
+                .flat_map(|proved| {
+                    self.dependency_source_ids_from_verify_result(proved.result.as_ref())
+                })
                 .collect(),
             SuccessFactProofResult::Transform(result) => {
                 self.dependency_source_ids_from_verified_by(result.source.proof())
@@ -305,13 +340,13 @@ impl FactGraphBuilder {
         }
     }
 
-    pub(super) fn dependency_source_ids_from_results(
+    pub(super) fn dependency_source_ids_from_verify_results(
         &mut self,
-        results: &[StmtResult],
+        results: &[VerifyFactResult],
     ) -> Vec<String> {
         let mut ids = vec![];
         for result in results {
-            ids.extend(self.dependency_source_ids_from_result(result));
+            ids.extend(self.dependency_source_ids_from_verify_result(result));
         }
         ids.sort();
         ids.dedup();

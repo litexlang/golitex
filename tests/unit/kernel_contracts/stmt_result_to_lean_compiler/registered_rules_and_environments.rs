@@ -54,7 +54,9 @@ fn typed_set_rule_compiles_directly_from_its_recursive_certificate() {
         let result = result
             .factual_success()
             .expect("typed set rule result is factual");
-        let builtin = typed_set_builtin_below_transparent_definitions(result.proof());
+        let builtin = typed_set_builtin_below_transparent_definitions(
+            result.proof().expect("verified statement owns a proof"),
+        );
         let Some(BuiltinRuleEvidence::Set(rule)) = builtin.evidence.typed() else {
             panic!("expected typed set-rule evidence")
         };
@@ -69,7 +71,7 @@ fn typed_set_rule_compiles_directly_from_its_recursive_certificate() {
             .compile_stmt_result(set_b)
             .expect("compile second set definition");
         for (index, child) in builtin.subgoals.iter().enumerate() {
-            let child = child.factual_success().expect("typed set child is factual");
+            let child = child.verified().expect("typed set child is factual");
             let citation = stored_citation_below_set_child_transforms(child.proof());
             let source_fact_id = citation.source_fact_id;
             compiler
@@ -82,7 +84,9 @@ fn typed_set_rule_compiles_directly_from_its_recursive_certificate() {
                 .insert(source_fact_id, citation.source_fact.clone());
         }
         let generated = compiler
-            .construct_lean_proof_from_direct_fact_result(result)
+            .construct_lean_proof_from_direct_fact_result(
+                result.verification().expect("verified statement owns evidence"),
+            )
             .expect("compile typed set rule directly")
             .expect("typed set rule must have a direct consumer");
         assert!(
@@ -134,7 +138,9 @@ fn common_arithmetic_sign_rule_combines_its_child_results_directly() {
         };
         let result = result.factual_success().expect("sign result is factual");
         let (SuccessFactProofResult::BuiltinRule(builtin)
-        | SuccessFactProofResult::BuiltinStrategy(builtin)) = result.proof()
+        | SuccessFactProofResult::BuiltinStrategy(builtin)) = result
+            .proof()
+            .expect("verified sign statement owns a proof")
         else {
             panic!("expected builtin sign proof")
         };
@@ -150,7 +156,7 @@ fn common_arithmetic_sign_rule_combines_its_child_results_directly() {
             .expect("compile real object choice");
         for (index, child) in builtin.subgoals.iter().enumerate() {
             let child = child
-                .factual_success()
+                .verified()
                 .expect("arithmetic premise is factual");
             let SuccessFactProofResult::StoredFactCitation(citation) = child.proof() else {
                 panic!("arithmetic premise must cite an exact source fact")
@@ -166,7 +172,9 @@ fn common_arithmetic_sign_rule_combines_its_child_results_directly() {
                 .insert(fact_id, citation.source_fact.clone());
         }
         let proof = compiler
-            .construct_lean_proof_from_direct_fact_result(result)
+            .construct_lean_proof_from_direct_fact_result(
+                result.verification().expect("verified statement owns evidence"),
+            )
             .expect("compile arithmetic sign proof")
             .expect("arithmetic sign proof must not use compatibility IR");
         assert!(
@@ -190,7 +198,8 @@ fn registered_componentwise_order_addition_builtin_mut(
     let [StmtResult::Success(SuccessStmtResult::Fact(forall_result))] = results else {
         panic!("expected one forall statement Result")
     };
-    let forall_verification = std::rc::Rc::get_mut(&mut forall_result.verification)
+    let forall_verification = forall_result
+        .verification_mut()
         .expect("test owns the forall verification Result");
     let SuccessFactProofResult::ForallProof(forall_proof) = forall_verification.proof_mut() else {
         panic!("expected forall proof Result")
@@ -198,14 +207,10 @@ fn registered_componentwise_order_addition_builtin_mut(
     let [conclusion] = forall_proof.proves.as_mut_slice() else {
         panic!("expected one forall conclusion Result")
     };
-    let StmtResult::Success(SuccessStmtResult::Fact(conclusion_result)) =
-        conclusion.result.as_mut()
-    else {
+    let Some(conclusion_result) = conclusion.result.verified_mut() else {
         panic!("expected factual forall conclusion Result")
     };
-    let conclusion_verification = std::rc::Rc::get_mut(&mut conclusion_result.verification)
-        .expect("test owns the conclusion verification Result");
-    let SuccessFactProofResult::BuiltinRule(builtin) = conclusion_verification.proof_mut() else {
+    let SuccessFactProofResult::BuiltinRule(builtin) = conclusion_result.proof_mut() else {
         panic!("expected registered builtin conclusion proof")
     };
     builtin
@@ -217,7 +222,8 @@ fn registered_single_forall_conclusion_builtin_mut(
     let StmtResult::Success(SuccessStmtResult::Fact(forall_result)) = result else {
         panic!("expected one forall statement Result")
     };
-    let forall_verification = std::rc::Rc::get_mut(&mut forall_result.verification)
+    let forall_verification = forall_result
+        .verification_mut()
         .expect("test owns the forall verification Result");
     let SuccessFactProofResult::ForallProof(forall_proof) = forall_verification.proof_mut() else {
         panic!("expected forall proof Result")
@@ -225,14 +231,10 @@ fn registered_single_forall_conclusion_builtin_mut(
     let [conclusion] = forall_proof.proves.as_mut_slice() else {
         panic!("expected one forall conclusion Result")
     };
-    let StmtResult::Success(SuccessStmtResult::Fact(conclusion_result)) =
-        conclusion.result.as_mut()
-    else {
+    let Some(conclusion_result) = conclusion.result.verified_mut() else {
         panic!("expected factual forall conclusion Result")
     };
-    let conclusion_verification = std::rc::Rc::get_mut(&mut conclusion_result.verification)
-        .expect("test owns the conclusion verification Result");
-    let SuccessFactProofResult::BuiltinRule(builtin) = conclusion_verification.proof_mut() else {
+    let SuccessFactProofResult::BuiltinRule(builtin) = conclusion_result.proof_mut() else {
         panic!("expected registered builtin conclusion proof")
     };
     builtin
@@ -547,7 +549,8 @@ fn order_transitivity_builtin_mut(
     let [StmtResult::Success(SuccessStmtResult::Fact(forall_result))] = results else {
         panic!("expected one forall Result")
     };
-    let verification = std::rc::Rc::get_mut(&mut forall_result.verification)
+    let verification = forall_result
+        .verification_mut()
         .expect("test owns forall verification");
     let SuccessFactProofResult::ForallProof(forall) = verification.proof_mut() else {
         panic!("expected forall proof")
@@ -555,13 +558,10 @@ fn order_transitivity_builtin_mut(
     let [conclusion] = forall.proves.as_mut_slice() else {
         panic!("expected one conclusion")
     };
-    let StmtResult::Success(SuccessStmtResult::Fact(conclusion)) = conclusion.result.as_mut()
-    else {
+    let Some(conclusion) = conclusion.result.verified_mut() else {
         panic!("expected factual conclusion")
     };
-    let verification = std::rc::Rc::get_mut(&mut conclusion.verification)
-        .expect("test owns conclusion verification");
-    let SuccessFactProofResult::BuiltinRule(builtin) = verification.proof_mut() else {
+    let SuccessFactProofResult::BuiltinRule(builtin) = conclusion.proof_mut() else {
         panic!("expected builtin transitivity proof")
     };
     assert!(matches!(
@@ -612,11 +612,11 @@ fn order_transitivity_retains_two_ordered_semantic_children() {
         assert!(child_count >= 2);
         let semantic = &builtin.subgoals[child_count - 2..];
         assert_eq!(
-            semantic[0].factual_success().unwrap().fact().to_string(),
+            semantic[0].verified().unwrap().fact().to_string(),
             "#0#a <= #1#b"
         );
         assert_eq!(
-            semantic[1].factual_success().unwrap().fact().to_string(),
+            semantic[1].verified().unwrap().fact().to_string(),
             "#1#b < #2#c"
         );
     });
@@ -645,8 +645,8 @@ fn strategy_definition_compiles_from_recursive_well_definedness_and_local_proof_
             .as_ref()
             .expect("verified strategy must retain its verification Result");
         assert!(matches!(
-            verification.well_definedness.recursive.as_deref(),
-            Some(SuccessVerifyFactWellDefinedProofResult::ForallFact(_))
+            verification.well_definedness.proof.as_ref(),
+            SuccessVerifyFactWellDefinedProofResult::ForallFact(_)
         ));
         assert_eq!(
             verification
@@ -725,11 +725,9 @@ fn order_reflexivity_evidence_mut(
         .conclusion_checks
         .first_mut()
         .expect("named theorem retains one conclusion")
-        .factual_success_mut()
+        .verified_mut()
         .expect("named theorem conclusion is factual");
-    let verification = std::rc::Rc::get_mut(&mut conclusion.verification)
-        .expect("test owns the conclusion verification Result");
-    let SuccessFactProofResult::BuiltinRule(builtin) = verification.proof_mut() else {
+    let SuccessFactProofResult::BuiltinRule(builtin) = conclusion.proof_mut() else {
         panic!("expected builtin order-reflexivity proof")
     };
     let Some(BuiltinRuleEvidence::OrderReflexivity(evidence)) = builtin.evidence.typed_mut() else {
@@ -783,7 +781,8 @@ fn closed_numeric_comparison_evidence_mut(
     let [StmtResult::Success(SuccessStmtResult::Fact(result))] = results else {
         panic!("expected one successful factual Result")
     };
-    let verification = std::rc::Rc::get_mut(&mut result.verification)
+    let verification = result
+        .verification_mut()
         .expect("test owns the factual verification Result");
     let SuccessFactProofResult::BuiltinRule(builtin) = verification.proof_mut() else {
         panic!("expected builtin closed-comparison proof")
@@ -860,7 +859,8 @@ fn registered_reflexive_predicate_evidence_mut(
         output.inferred_facts.clear();
         output.inferred_fact_ids.clear();
     }
-    let verification = std::rc::Rc::get_mut(&mut result.verification)
+    let verification = result
+        .verification_mut()
         .expect("test owns the final verification Result");
     *verification.proof_mut() =
         SuccessFactProofResult::BuiltinRule(SuccessBuiltinFactProofResult {
@@ -1073,11 +1073,9 @@ fn predicate_property_registration_rejects_a_missing_local_domain_fact_id() {
         verification.assumption_infers.store_fact_outputs[2].fact_id = None;
         let forall_check = verification
             .forall_check
-            .factual_success_mut()
+            .verified_mut()
             .expect("registration forall check is factual");
-        let forall_verification = std::rc::Rc::get_mut(&mut forall_check.verification)
-            .expect("test owns the nested forall verification Result");
-        let SuccessFactProofResult::ForallProof(forall_proof) = forall_verification.proof_mut()
+        let SuccessFactProofResult::ForallProof(forall_proof) = forall_check.proof_mut()
         else {
             panic!("registration retains its verify_forall_fact layer")
         };
@@ -1155,10 +1153,23 @@ fn replace_embedded_property_rule_child_with_exact_fact_citation(
         .factual_success_mut()
         .expect("embedded property-rule child is factual");
     let fact = result.fact();
-    let verification = std::rc::Rc::get_mut(&mut result.verification)
+    let verification = result
+        .verification_mut()
         .expect("test owns the embedded child verification Result");
     *verification.proof_mut() =
         SuccessFactProofResult::stored_fact_citation(fact, source_fact_id, None);
+}
+
+fn into_verified_fact_check(result: StmtResult) -> VerifyFactResult {
+    let StmtResult::Success(SuccessStmtResult::Fact(result)) = result else {
+        panic!("embedded proof child must be a fact statement")
+    };
+    match result.evidence {
+        FactStatementEvidence::Verified(verified) => VerifyFactResult::Verified(verified),
+        FactStatementEvidence::Trusted(_) => {
+            panic!("trusted statements cannot become verified proof children")
+        }
+    }
 }
 
 fn exact_visible_stored_fact_id(results: &[StmtResult], fact: &Fact) -> Option<FactId> {
@@ -1211,7 +1222,6 @@ fn install_registered_symmetric_predicate_proof(
         .checked_sub(2)
         .expect("symmetric fixture retains a child and target");
     let mut alternate_result = results.remove(child_index);
-    clear_embedded_property_rule_child_effects(&mut alternate_result);
     let alternate = alternate_result
         .factual_success()
         .expect("symmetric fixture alternate is factual")
@@ -1233,7 +1243,8 @@ fn install_registered_symmetric_predicate_proof(
         output.inferred_facts.clear();
         output.inferred_fact_ids.clear();
     }
-    let verification = std::rc::Rc::get_mut(&mut target_result.verification)
+    let verification = target_result
+        .verification_mut()
         .expect("test owns the symmetric target verification Result");
     *verification.proof_mut() =
         SuccessFactProofResult::BuiltinRule(SuccessBuiltinFactProofResult {
@@ -1248,7 +1259,7 @@ fn install_registered_symmetric_predicate_proof(
                     ),
                 ),
             ),
-            subgoals: vec![alternate_result],
+            subgoals: vec![into_verified_fact_check(alternate_result)],
         });
     let SuccessFactProofResult::BuiltinRule(builtin) = verification.proof_mut() else {
         unreachable!("test just installed a builtin proof")
@@ -1288,7 +1299,9 @@ fn registered_symmetric_predicate_use_compiles_its_exact_child_in_the_visible_en
             .expect("symmetric fixture target is factual");
         assert!(
             focused_compiler
-                .construct_lean_proof_from_direct_fact_result(target)
+                .construct_lean_proof_from_direct_fact_result(
+                    target.verification().expect("verified statement owns evidence"),
+                )
                 .expect("construct the focused registered-symmetry proof")
                 .is_some(),
             "registered symmetry should be a direct proof route"
@@ -1358,8 +1371,6 @@ fn install_registered_antisymmetric_predicate_proof(
         &mut second_premise,
         source_fact_id,
     );
-    clear_embedded_property_rule_child_effects(&mut first_premise);
-    clear_embedded_property_rule_child_effects(&mut second_premise);
     let Some(StmtResult::Success(SuccessStmtResult::Fact(target_result))) = results.last_mut()
     else {
         panic!("antisymmetric fixture target is factual")
@@ -1370,7 +1381,8 @@ fn install_registered_antisymmetric_predicate_proof(
         output.inferred_facts.clear();
         output.inferred_fact_ids.clear();
     }
-    let verification = std::rc::Rc::get_mut(&mut target_result.verification)
+    let verification = target_result
+        .verification_mut()
         .expect("test owns the antisymmetric target verification Result");
     *verification.proof_mut() =
         SuccessFactProofResult::BuiltinRule(SuccessBuiltinFactProofResult {
@@ -1383,7 +1395,10 @@ fn install_registered_antisymmetric_predicate_proof(
                     ),
                 ),
             ),
-            subgoals: vec![first_premise, second_premise],
+            subgoals: vec![
+                into_verified_fact_check(first_premise),
+                into_verified_fact_check(second_premise),
+            ],
         });
     let SuccessFactProofResult::BuiltinRule(builtin) = verification.proof_mut() else {
         unreachable!("test just installed a builtin proof")

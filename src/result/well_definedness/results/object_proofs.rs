@@ -36,14 +36,14 @@ pub enum WellDefinednessRequirementRole {
 /// the current source occurrence and cite the exact earlier proof node.
 #[derive(Debug)]
 pub enum SuccessVerifyObjWellDefinedResult {
-    Direct(Box<SuccessVerifyDirectObjWellDefinedResult>),
+    Direct(Rc<SuccessVerifyDirectObjWellDefinedResult>),
     Reuse(Box<SuccessReuseObjWellDefinedResult>),
-    RecursiveReference(Box<SuccessRecursiveObjWellDefinedResult>),
 }
 
 pub struct SuccessVerifyDirectObjWellDefinedResult {
     pub object: Obj,
-    pub cache_key: WellDefinedCacheKey,
+    pub object_key: ObjString,
+    pub function_contracts: Vec<WellDefinedFunctionContract>,
     pub steps: SuccessVerifyObjWellDefinedStepsResult,
     pub intrinsic_result_set: Option<Obj>,
 }
@@ -51,13 +51,15 @@ pub struct SuccessVerifyDirectObjWellDefinedResult {
 impl SuccessVerifyDirectObjWellDefinedResult {
     pub fn new(
         object: Obj,
-        cache_key: WellDefinedCacheKey,
+        object_key: ObjString,
+        function_contracts: Vec<WellDefinedFunctionContract>,
         steps: SuccessVerifyObjWellDefinedStepsResult,
         intrinsic_result_set: Option<Obj>,
     ) -> Self {
         Self {
             object,
-            cache_key,
+            object_key,
+            function_contracts,
             steps,
             intrinsic_result_set,
         }
@@ -66,28 +68,12 @@ impl SuccessVerifyDirectObjWellDefinedResult {
 
 pub struct SuccessReuseObjWellDefinedResult {
     pub object: Obj,
-    pub source: Rc<SuccessVerifyObjWellDefinedResult>,
+    pub source: Rc<SuccessVerifyDirectObjWellDefinedResult>,
 }
 
 impl SuccessReuseObjWellDefinedResult {
-    pub fn new(object: Obj, source: Rc<SuccessVerifyObjWellDefinedResult>) -> Self {
+    pub fn new(object: Obj, source: Rc<SuccessVerifyDirectObjWellDefinedResult>) -> Self {
         Self { object, source }
-    }
-}
-
-/// Historical recursive re-entry suppression made explicit in the result.
-/// A validator accepts it only below an ancestor with the same object key.
-pub struct SuccessRecursiveObjWellDefinedResult {
-    pub object: Obj,
-    pub ancestor_key: ObjString,
-}
-
-impl SuccessRecursiveObjWellDefinedResult {
-    pub fn new(object: Obj, ancestor_key: ObjString) -> Self {
-        Self {
-            object,
-            ancestor_key,
-        }
     }
 }
 
@@ -164,11 +150,11 @@ impl SuccessVerifyChildObjWellDefinedResult {
 #[derive(Debug)]
 pub struct SuccessVerifyFactForObjWellDefinedResult {
     pub expected_proposition: Fact,
-    pub verification: Rc<SuccessVerifyFactResult>,
+    pub verification: Rc<SuccessFactProofNode>,
 }
 
 impl SuccessVerifyFactForObjWellDefinedResult {
-    pub fn new(expected_proposition: Fact, verification: Rc<SuccessVerifyFactResult>) -> Self {
+    pub fn new(expected_proposition: Fact, verification: Rc<SuccessFactProofNode>) -> Self {
         Self {
             expected_proposition,
             verification,
@@ -180,7 +166,7 @@ pub struct SuccessVerifyObjTargetRequirementResult {
     pub source_object: Obj,
     pub role: WellDefinednessRequirementRole,
     pub expected_proposition: Fact,
-    pub verification: Rc<SuccessVerifyFactResult>,
+    pub verification: Rc<SuccessFactProofNode>,
 }
 
 impl SuccessVerifyObjTargetRequirementResult {
@@ -188,7 +174,7 @@ impl SuccessVerifyObjTargetRequirementResult {
         source_object: Obj,
         role: WellDefinednessRequirementRole,
         expected_proposition: Fact,
-        verification: Rc<SuccessVerifyFactResult>,
+        verification: Rc<SuccessFactProofNode>,
     ) -> Self {
         Self {
             source_object,
@@ -215,7 +201,7 @@ pub struct SuccessVerifyBinderPremiseResult {
     pub role: WellDefinedBinderPremiseRole,
     pub symbol_id: Option<SymbolId>,
     pub proposition: Fact,
-    pub well_definedness: Box<SuccessVerifyFactWellDefinedResult>,
+    pub well_definedness: Box<WellDefinedFactResult>,
     pub infers: SuccessInferResult,
 }
 
@@ -224,7 +210,7 @@ impl SuccessVerifyBinderPremiseResult {
         role: WellDefinedBinderPremiseRole,
         symbol_id: Option<SymbolId>,
         proposition: Fact,
-        well_definedness: SuccessVerifyFactWellDefinedResult,
+        well_definedness: WellDefinedFactResult,
         infers: SuccessInferResult,
     ) -> Self {
         Self {
@@ -242,7 +228,6 @@ impl SuccessVerifyObjWellDefinedResult {
         match self {
             Self::Direct(result) => &result.object,
             Self::Reuse(result) => &result.object,
-            Self::RecursiveReference(result) => &result.object,
         }
     }
 }
@@ -252,7 +237,8 @@ impl fmt::Debug for SuccessVerifyDirectObjWellDefinedResult {
         formatter
             .debug_struct("SuccessVerifyDirectObjWellDefinedResult")
             .field("object", &self.object.to_string())
-            .field("cache_key", &self.cache_key)
+            .field("object_key", &self.object_key)
+            .field("function_contracts", &self.function_contracts)
             .field("steps", &self.steps)
             .field(
                 "intrinsic_result_set",
@@ -268,16 +254,6 @@ impl fmt::Debug for SuccessReuseObjWellDefinedResult {
             .debug_struct("SuccessReuseObjWellDefinedResult")
             .field("object", &self.object.to_string())
             .field("source", &self.source)
-            .finish()
-    }
-}
-
-impl fmt::Debug for SuccessRecursiveObjWellDefinedResult {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter
-            .debug_struct("SuccessRecursiveObjWellDefinedResult")
-            .field("object", &self.object.to_string())
-            .field("ancestor_key", &self.ancestor_key)
             .finish()
     }
 }

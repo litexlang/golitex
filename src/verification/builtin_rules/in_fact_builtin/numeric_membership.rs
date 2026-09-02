@@ -7,7 +7,7 @@ impl Runtime {
     pub(super) fn verify_reduce_membership_from_operation_carrier(
         &self,
         in_fact: &InFact,
-    ) -> Option<StmtResult> {
+    ) -> Option<ProveFactResult> {
         let (operation, name) = match &in_fact.element {
             Obj::Reduce(reduce) => (reduce.op.as_ref(), "reduce"),
             Obj::FiniteSetReduce(reduce) => (reduce.op.as_ref(), "finite_set_reduce"),
@@ -24,7 +24,7 @@ impl Runtime {
             return None;
         }
         Some(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 format!(
                     "{name}: operation carrier {carrier} is contained in {}",
@@ -43,7 +43,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
+    ) -> Result<Option<ProveFactResult>, RuntimeError> {
         let Obj::StandardSet(target) = &in_fact.set else {
             return Ok(None);
         };
@@ -76,13 +76,12 @@ impl Runtime {
                 in_fact.line_file.clone(),
             )
             .into();
-            let source_result =
-                self.verify_non_equational_atomic_fact_with_known_atomic_facts(&source_membership)?;
+            let source_result = self.verify_atomic_fact_as_builtin_rule_premise(&source_membership, builtin_state)?;
             if !source_result.is_success() {
                 continue;
             }
             return Ok(Some(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "refined integer carrier from known integer membership and strict sign"
                         .to_string(),
@@ -108,7 +107,7 @@ impl Runtime {
         target_set: StandardSet,
         _builtin_state: &BuiltinRuleSearchState,
         op: &str,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let Some(Obj::StandardSet(ret_set)) = self.iterated_op_func_ret_set(func) else {
             return Ok(UnknownGenericStmtResult::new().into());
         };
@@ -119,7 +118,7 @@ impl Runtime {
         if op == "sum" && matches!(ret_set, StandardSet::Z) && matches!(target_set, StandardSet::Z)
         {
             return Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     reason,
                     BuiltinRuleEvidence::IntegerRangeSumMembership,
@@ -158,7 +157,7 @@ impl Runtime {
         sum: &SumOfFiniteSet,
         target_set: StandardSet,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let Some(ret_set) = self.iterated_op_func_ret_set(sum.func.as_ref()) else {
             return Ok((UnknownGenericStmtResult::new()).into());
         };
@@ -207,7 +206,7 @@ impl Runtime {
         product: &ProductOfFiniteSet,
         target_set: StandardSet,
         _builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let Some(ret_set) = self.iterated_op_func_ret_set(product.func.as_ref()) else {
             return Ok((UnknownGenericStmtResult::new()).into());
         };
@@ -245,7 +244,7 @@ impl Runtime {
         func: &Obj,
         _builtin_state: &BuiltinRuleSearchState,
         op: &str,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let Some(ret_set) = self.iterated_op_func_ret_set(func) else {
             return Ok((UnknownGenericStmtResult::new()).into());
         };
@@ -269,7 +268,7 @@ impl Runtime {
         fn_obj: &FnObj,
         in_fact: &InFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let (head_obj, initial_function_set) = match fn_obj.head.as_ref() {
             FnObjHead::AnonymousFnLiteral(function) => (
                 Obj::AnonymousFn((**function).clone()),
@@ -343,7 +342,7 @@ impl Runtime {
             let target_fact: Fact = in_fact.clone().into();
             let head_membership_fact: Fact = head_membership.into();
             return Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     target_fact.clone(),
                     "fn application in its exact instantiated defined return set".to_string(),
                     BuiltinRuleEvidence::FunctionApplicationReturnMembership(
@@ -359,7 +358,7 @@ impl Runtime {
             );
         }
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 "fn application in defined return set or standard numeric superset (well-defined under typing)".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactFnApplicationInTypedReturnSet),
@@ -376,7 +375,7 @@ impl Runtime {
         in_fact: &InFact,
         add: &Add,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         if let Some(evaluated_number) = in_fact.element.evaluate_to_normalized_decimal_number() {
             return Ok(builtin_in_fact_result_for_evaluated_number_in_standard_set(
                 in_fact,
@@ -398,7 +397,7 @@ impl Runtime {
             return Ok((UnknownGenericStmtResult::new()).into());
         }
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 "N: a + b from a in N and b in N".to_string(),
                 BuiltinRuleEvidence::NaturalMembershipClosure(
@@ -417,7 +416,7 @@ impl Runtime {
         in_fact: &InFact,
         sub: &Sub,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         if let Some(evaluated_number) = in_fact.element.evaluate_to_normalized_decimal_number() {
             return Ok(builtin_in_fact_result_for_evaluated_number_in_standard_set(
                 in_fact,
@@ -438,7 +437,7 @@ impl Runtime {
                 self.verify_atomic_fact_as_builtin_rule_premise(&left_in_n_pos, builtin_state)?;
             if positive_natural_result.is_success() {
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         in_fact.clone().into(),
                         "N: n - 1 from n in N+".to_string(),
                         BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactSubInNFromIntegerTermsAndBound01),
@@ -457,7 +456,7 @@ impl Runtime {
                 self.verify_atomic_fact_as_builtin_rule_premise(&left_positive, builtin_state)?;
             if membership_result.is_success() && positive_result.is_success() {
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         in_fact.clone().into(),
                         "N: n - 1 from n in N and n > 0".to_string(),
                         BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactSubInNFromIntegerTermsAndBound02),
@@ -494,7 +493,7 @@ impl Runtime {
             self.verify_atomic_fact_as_builtin_rule_premise(&right_le_left, builtin_state)?;
         if bound_result.is_success() {
             return Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "N: a - b from a,b in Z and b <= a".to_string(),
                     BuiltinRuleEvidence::Uncatalogued(
@@ -515,11 +514,10 @@ impl Runtime {
             LessFact::new(zero, elem, lf).into(),
         ];
         for order_fact in order_facts.iter() {
-            let order_result =
-                self.verify_non_equational_atomic_fact_with_known_atomic_facts(order_fact)?;
+            let order_result = self.verify_atomic_fact_as_builtin_rule_premise(order_fact, builtin_state)?;
             if order_result.is_success() {
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         in_fact.clone().into(),
                         "N: a - b from a,b in Z and known nonnegative difference".to_string(),
                         BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactSubInNFromIntegerTermsAndBound04),
@@ -540,7 +538,7 @@ impl Runtime {
         in_fact: &InFact,
         mul: &Mul,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         if let Some(evaluated_number) = in_fact.element.evaluate_to_normalized_decimal_number() {
             return Ok(builtin_in_fact_result_for_evaluated_number_in_standard_set(
                 in_fact,
@@ -562,7 +560,7 @@ impl Runtime {
             return Ok((UnknownGenericStmtResult::new()).into());
         }
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 "N: a * b from a in N and b in N".to_string(),
                 BuiltinRuleEvidence::NaturalMembershipClosure(
@@ -583,7 +581,7 @@ impl Runtime {
         builtin_state: &BuiltinRuleSearchState,
         base_set: StandardSet,
         reason: &str,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         if let Some(evaluated_number) = in_fact.element.evaluate_to_normalized_decimal_number() {
             return Ok(builtin_in_fact_result_for_evaluated_number_in_standard_set(
                 in_fact,
@@ -613,7 +611,7 @@ impl Runtime {
         }
 
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 reason.to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -632,7 +630,7 @@ impl Runtime {
         in_fact: &InFact,
         pow: &Pow,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let lf = in_fact.line_file.clone();
         let zero: Obj = Number::new("0".to_string()).into();
         let base_positive: AtomicFact =
@@ -652,7 +650,7 @@ impl Runtime {
         }
 
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 "R+: a^x from 0 < a and x in R".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -671,7 +669,7 @@ impl Runtime {
         in_fact: &InFact,
         sub: &Sub,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         if !matches!(sub.right.as_ref(), Obj::Number(number) if number.normalized_value == "1") {
             return Ok((UnknownGenericStmtResult::new()).into());
         }
@@ -704,7 +702,7 @@ impl Runtime {
         }
 
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 "N+: n - 1 from n in N+ and n > 1".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -724,7 +722,7 @@ impl Runtime {
         in_fact: &InFact,
         add: &Add,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         if let Some(evaluated_number) = in_fact.element.evaluate_to_normalized_decimal_number() {
             return Ok(builtin_in_fact_result_for_evaluated_number_in_standard_set(
                 in_fact,
@@ -753,7 +751,7 @@ impl Runtime {
                 .verify_atomic_fact_as_builtin_rule_premise(&right_n_pos_for_pair, builtin_state)?;
             if r_right_n_pos_for_pair.is_success() {
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         in_fact.clone().into(),
                         "N+: a + b from a in N+ and b in N+".to_string(),
                         BuiltinRuleEvidence::PositiveNaturalMembershipClosure(
@@ -773,7 +771,7 @@ impl Runtime {
                 self.verify_atomic_fact_as_builtin_rule_premise(&right_n, builtin_state)?;
             if r_right_n.is_success() {
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         in_fact.clone().into(),
                         "N+: a + b from a in N+ and b in N".to_string(),
                         BuiltinRuleEvidence::PositiveNaturalMembershipClosure(
@@ -791,7 +789,7 @@ impl Runtime {
             self.verify_atomic_fact_as_builtin_rule_premise(&right_n_pos, builtin_state)?;
         if r_left_n.is_success() && r_right_n_pos.is_success() {
             return Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "N+: a + b from a in N and b in N+".to_string(),
                     BuiltinRuleEvidence::PositiveNaturalMembershipClosure(
@@ -822,7 +820,7 @@ impl Runtime {
         )?;
         if premise_result.is_success() {
             return Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "N+: a + b from complete positive-natural carrier alternatives".to_string(),
                     BuiltinRuleEvidence::Uncatalogued(
@@ -844,7 +842,7 @@ impl Runtime {
         in_fact: &InFact,
         mul: &Mul,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         if let Some(evaluated_number) = in_fact.element.evaluate_to_normalized_decimal_number() {
             return Ok(builtin_in_fact_result_for_evaluated_number_in_standard_set(
                 in_fact,
@@ -866,7 +864,7 @@ impl Runtime {
             return Ok((UnknownGenericStmtResult::new()).into());
         }
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 "N+: a * b from a in N+ and b in N+".to_string(),
                 BuiltinRuleEvidence::PositiveNaturalMembershipClosure(
@@ -885,7 +883,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let elem = &in_fact.element;
         let lf = in_fact.line_file.clone();
         let in_n: AtomicFact = InFact::new(elem.clone(), StandardSet::N.into(), lf.clone()).into();
@@ -965,7 +963,7 @@ impl Runtime {
         builtin_state: &BuiltinRuleSearchState,
         base_set: StandardSet,
         rule_name: &str,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let elem = &in_fact.element;
         let lf = in_fact.line_file.clone();
         let zero: Obj = Number::new("0".to_string()).into();
@@ -999,14 +997,13 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let elem = &in_fact.element;
         let lf = in_fact.line_file.clone();
 
         let in_n_pos: AtomicFact =
             InFact::new(elem.clone(), StandardSet::NPos.into(), lf.clone()).into();
-        let in_n_pos_result =
-            self.verify_non_equational_atomic_fact_with_known_atomic_facts(&in_n_pos)?;
+        let in_n_pos_result = self.verify_atomic_fact_as_builtin_rule_premise(&in_n_pos, builtin_state)?;
         if in_n_pos_result.is_success() {
             return Ok(
                 number_in_set_verified_by_builtin_rules_result_with_subgoals(
@@ -1068,7 +1065,7 @@ impl Runtime {
         in_fact: &InFact,
         closed_range: &ClosedRange,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let elem = &in_fact.element;
         let lf = in_fact.line_file.clone();
         let chain_premise = QuantifierFreeFact::ChainFact(ChainFact::new(
@@ -1127,7 +1124,7 @@ impl Runtime {
         in_fact: &InFact,
         range: &Range,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let elem = &in_fact.element;
         let lf = in_fact.line_file.clone();
         let chain_premise = QuantifierFreeFact::ChainFact(ChainFact::new(
@@ -1182,7 +1179,7 @@ impl Runtime {
         in_fact: &InFact,
         interval: &IntervalObj,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let elem = &in_fact.element;
         let lf = in_fact.line_file.clone();
         // Real interval membership requires a real element and the endpoint inequalities.
@@ -1205,7 +1202,7 @@ impl Runtime {
         let conjunction_result = self.verify_builtin_rule_premise(&conjunction, builtin_state)?;
         if conjunction_result.is_success() {
             return Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "in real interval from complete carrier-and-bounds conjunction".to_string(),
                     BuiltinRuleEvidence::Uncatalogued(
@@ -1223,19 +1220,21 @@ impl Runtime {
             return Ok((UnknownGenericStmtResult::new()).into());
         }
         step_results.push(in_r_result);
-        let lower_result = self.verify_known_interval_order_bound(&lower)?;
+        let lower_result =
+            self.verify_known_interval_order_bound(&lower, builtin_state.verify_state())?;
         if !lower_result.is_success() {
             return Ok((UnknownGenericStmtResult::new()).into());
         }
         step_results.push(lower_result);
-        let upper_result = self.verify_known_interval_order_bound(&upper)?;
+        let upper_result =
+            self.verify_known_interval_order_bound(&upper, builtin_state.verify_state())?;
         if !upper_result.is_success() {
             return Ok((UnknownGenericStmtResult::new()).into());
         }
         step_results.push(upper_result);
 
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 "in real interval: x in R and endpoint bounds".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -1252,7 +1251,7 @@ impl Runtime {
         in_fact: &InFact,
         interval: &OneSideInfinityIntervalObj,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let elem = &in_fact.element;
         let lf = in_fact.line_file.clone();
         // Half-infinite real interval membership requires a real element and the finite endpoint bound.
@@ -1277,7 +1276,7 @@ impl Runtime {
         let conjunction_result = self.verify_builtin_rule_premise(&conjunction, builtin_state)?;
         if conjunction_result.is_success() {
             return Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "in half-infinite real interval from complete carrier-and-bound conjunction"
                         .to_string(),
@@ -1294,14 +1293,15 @@ impl Runtime {
             return Ok((UnknownGenericStmtResult::new()).into());
         }
         step_results.push(in_r_result);
-        let bound_result = self.verify_known_interval_order_bound(&bound)?;
+        let bound_result =
+            self.verify_known_interval_order_bound(&bound, builtin_state.verify_state())?;
         if !bound_result.is_success() {
             return Ok((UnknownGenericStmtResult::new()).into());
         }
         step_results.push(bound_result);
 
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 "in half-infinite real interval: x in R and endpoint bound".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -1316,15 +1316,16 @@ impl Runtime {
     fn verify_known_interval_order_bound(
         &mut self,
         bound: &AtomicFact,
-    ) -> Result<StmtResult, RuntimeError> {
+        verify_state: &VerifyState,
+    ) -> Result<VerifyFactResult, RuntimeError> {
         let exact = self.verify_non_equational_atomic_fact_with_known_atomic_facts(bound)?;
         if exact.is_success() {
-            return Ok(exact);
+            return self.complete_atomic_fact_proof_result(bound, exact, verify_state);
         }
         let computed =
             self.verify_non_equational_atomic_fact_with_zero_premise_verification(bound)?;
         if computed.is_success() {
-            return Ok(computed);
+            return self.complete_atomic_fact_proof_result(bound, computed, verify_state);
         }
 
         let stronger: Option<AtomicFact> = match bound {
@@ -1346,12 +1347,13 @@ impl Runtime {
             ),
             _ => None,
         };
-        match stronger {
+        let proof = match stronger {
             Some(stronger) => {
-                self.verify_non_equational_atomic_fact_with_known_atomic_facts(&stronger)
+                self.verify_non_equational_atomic_fact_with_known_atomic_facts(&stronger)?
             }
-            None => Ok(UnknownGenericStmtResult::new().into()),
-        }
+            None => UnknownGenericStmtResult::new().into(),
+        };
+        self.complete_atomic_fact_proof_result(bound, proof, verify_state)
     }
 
     // When `x $in Z` and endpoints are integer literals: `lo <= x` iff `lo - 1 < x` (discrete lower).
@@ -1362,9 +1364,9 @@ impl Runtime {
         lower: &Obj,
         lf: &LineFile,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
+    ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
         let weak: AtomicFact = LessEqualFact::new(lower.clone(), elem.clone(), lf.clone()).into();
-        let weak_result = self.verify_known_interval_order_bound(&weak)?;
+        let weak_result = self.verify_known_interval_order_bound(&weak, builtin_state.verify_state())?;
         if weak_result.is_success() {
             return Ok(Some(vec![weak_result]));
         }
@@ -1384,7 +1386,8 @@ impl Runtime {
             return Ok(None);
         };
         let strict: AtomicFact = LessFact::new(pred_n.into(), elem.clone(), lf.clone()).into();
-        let strict_result = self.verify_known_interval_order_bound(&strict)?;
+        let strict_result =
+            self.verify_known_interval_order_bound(&strict, builtin_state.verify_state())?;
         if strict_result.is_success() {
             Ok(Some(vec![in_z_result, strict_result]))
         } else {
@@ -1400,9 +1403,10 @@ impl Runtime {
         upper: &Obj,
         lf: &LineFile,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
+    ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
         let strict: AtomicFact = LessFact::new(elem.clone(), upper.clone(), lf.clone()).into();
-        let strict_result = self.verify_known_interval_order_bound(&strict)?;
+        let strict_result =
+            self.verify_known_interval_order_bound(&strict, builtin_state.verify_state())?;
         if strict_result.is_success() {
             return Ok(Some(vec![strict_result]));
         }
@@ -1423,7 +1427,7 @@ impl Runtime {
             return Ok(None);
         };
         let weak: AtomicFact = LessEqualFact::new(elem.clone(), um.into(), lf.clone()).into();
-        let weak_result = self.verify_known_interval_order_bound(&weak)?;
+        let weak_result = self.verify_known_interval_order_bound(&weak, builtin_state.verify_state())?;
         if weak_result.is_success() {
             Ok(Some(vec![in_z_result, weak_result]))
         } else {
@@ -1438,9 +1442,9 @@ impl Runtime {
         upper: &Obj,
         lf: &LineFile,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
+    ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
         let weak: AtomicFact = LessEqualFact::new(elem.clone(), upper.clone(), lf.clone()).into();
-        let weak_result = self.verify_known_interval_order_bound(&weak)?;
+        let weak_result = self.verify_known_interval_order_bound(&weak, builtin_state.verify_state())?;
         if weak_result.is_success() {
             return Ok(Some(vec![weak_result]));
         }
@@ -1460,7 +1464,8 @@ impl Runtime {
             return Ok(None);
         };
         let strict: AtomicFact = LessFact::new(elem.clone(), hp.into(), lf.clone()).into();
-        let strict_result = self.verify_known_interval_order_bound(&strict)?;
+        let strict_result =
+            self.verify_known_interval_order_bound(&strict, builtin_state.verify_state())?;
         if strict_result.is_success() {
             Ok(Some(vec![in_z_result, strict_result]))
         } else {
@@ -1475,7 +1480,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         _builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let rule = match &in_fact.element {
             Obj::Add(_) => Some(ComplexArithmeticMembershipClosureBuiltinRule::Add),
             Obj::Sub(_) => Some(ComplexArithmeticMembershipClosureBuiltinRule::Sub),
@@ -1490,7 +1495,7 @@ impl Runtime {
             ));
         };
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 "complex scalar arithmetic is closed in C".to_string(),
                 BuiltinRuleEvidence::ComplexArithmeticMembershipClosure(rule),
@@ -1507,7 +1512,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let real: Obj = StandardSet::R.into();
         let lf = in_fact.line_file.clone();
         let (required, evidence) = match &in_fact.element {
@@ -1563,7 +1568,7 @@ impl Runtime {
         };
         Ok(match evidence {
             Some(rule) => {
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "real arithmetic has real operands and result".to_string(),
                     BuiltinRuleEvidence::RealArithmeticMembershipClosure(rule),
@@ -1584,7 +1589,7 @@ impl Runtime {
         objs: &[&Obj],
         line_file: &LineFile,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
+    ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
         let mut direct_premises = Vec::new();
         let mut direct_seen = Vec::new();
         for obj in objs {
@@ -1630,7 +1635,7 @@ impl Runtime {
         objs: &[&Obj],
         line_file: &LineFile,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
+    ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
         let mut premises = Vec::new();
         let mut seen = Vec::new();
         for obj in objs {
@@ -1650,7 +1655,7 @@ impl Runtime {
         objs: &[&Obj],
         line_file: &LineFile,
         verify_state: &VerifyState,
-    ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
+    ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
         let mut seen = Vec::new();
         let mut steps = Vec::new();
         for obj in objs {
@@ -1662,13 +1667,15 @@ impl Runtime {
 
             let in_z: AtomicFact =
                 InFact::new((*obj).clone(), StandardSet::Z.into(), line_file.clone()).into();
-            let direct_result = if let Some(result) =
+            let direct_proof = if let Some(result) =
                 self.verification_result_from_proof_search_memo(&in_z, verify_state)
             {
                 result
             } else {
                 self.verify_non_equational_atomic_fact_with_zero_premise_verification(&in_z)?
             };
+            let direct_result =
+                self.complete_atomic_fact_proof_result(&in_z, direct_proof, verify_state)?;
             if direct_result.is_success() {
                 steps.push(direct_result);
                 continue;
@@ -1702,14 +1709,16 @@ impl Runtime {
                         verify_state,
                     )?
                 {
-                    steps.push(
-                        SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    let proof =
+                        SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             in_z.clone().into(),
                             "integer expression closure under +, -, and *".to_string(),
                             BuiltinRuleEvidence::IntegerMembershipClosure(rule),
                             operator_steps,
                         )
-                        .into(),
+                        .into();
+                    steps.push(
+                        self.complete_atomic_fact_proof_result(&in_z, proof, verify_state)?,
                     );
                     continue;
                 }
@@ -1724,21 +1733,31 @@ impl Runtime {
                 let finite_fact: AtomicFact =
                     IsFiniteSetFact::new(finite_set_size.set.as_ref().clone(), line_file.clone())
                         .into();
-                let finite_result = if let Some(result) =
+                let finite_proof = if let Some(result) =
                     self.verification_result_from_proof_search_memo(&finite_fact, verify_state)
                 {
                     result
                 } else {
                     self.verify_non_equational_atomic_fact_with_known_atomic_facts(&finite_fact)?
                 };
+                let finite_result = self.complete_atomic_fact_proof_result(
+                    &finite_fact,
+                    finite_proof,
+                    verify_state,
+                )?;
                 if finite_result.is_success() {
-                    steps.push(
+                    let proof =
                         number_in_set_verified_by_builtin_rules_result_with_subgoals(
                             &in_n,
                             "finite_set_size of a known finite set is a natural number",
                             vec![finite_result],
-                        ),
-                    );
+                        );
+                    let in_n_atomic: AtomicFact = in_n.into();
+                    steps.push(self.complete_atomic_fact_proof_result(
+                        &in_n_atomic,
+                        proof,
+                        verify_state,
+                    )?);
                     continue;
                 }
             }
@@ -1753,23 +1772,31 @@ impl Runtime {
                 }
                 let source_membership: AtomicFact =
                     InFact::new((*obj).clone(), source_set.clone(), line_file.clone()).into();
-                let source_result = self
-                    .verify_non_equational_atomic_fact_with_known_atomic_facts(
-                        &source_membership,
-                    )?;
+                let source_proof = self
+                    .verify_non_equational_atomic_fact_with_known_atomic_facts(&source_membership)?;
+                let source_result = self.complete_atomic_fact_proof_result(
+                    &source_membership,
+                    source_proof,
+                    verify_state,
+                )?;
                 if !source_result.is_success() {
                     continue;
                 }
-                let subset_fact =
-                    SubsetFact::new(source_set, StandardSet::Z.into(), line_file.clone());
-                let subset_result =
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
-                        subset_fact.into(),
+                let subset_fact: AtomicFact =
+                    SubsetFact::new(source_set, StandardSet::Z.into(), line_file.clone()).into();
+                let subset_proof =
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                        subset_fact.clone().into(),
                         "standard_set_subset".to_string(),
                         BuiltinRuleEvidence::StandardSetSubset,
                         Vec::new(),
                     )
                     .into();
+                let subset_result = self.complete_atomic_fact_proof_result(
+                    &subset_fact,
+                    subset_proof,
+                    verify_state,
+                )?;
                 carrier_steps = Some(vec![source_result, subset_result]);
                 break;
             }
@@ -1786,7 +1813,7 @@ impl Runtime {
         obj: &Obj,
         line_file: &LineFile,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
+    ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
         let in_r: AtomicFact =
             InFact::new(obj.clone(), StandardSet::R.into(), line_file.clone()).into();
         let direct_result =
@@ -1805,8 +1832,13 @@ impl Runtime {
         for source_set in self.known_sets_containing_obj(obj) {
             let source_membership: AtomicFact =
                 InFact::new(obj.clone(), source_set.clone(), line_file.clone()).into();
-            let source_result =
+            let source_proof =
                 self.verify_non_equational_atomic_fact_with_known_atomic_facts(&source_membership)?;
+            let source_result = self.complete_atomic_fact_proof_result(
+                &source_membership,
+                source_proof,
+                builtin_state.verify_state(),
+            )?;
             if !source_result.is_success() {
                 continue;
             }
@@ -1835,19 +1867,29 @@ impl Runtime {
                     (&source_set, &subset)
                 {
                     if source.is_subset_eq(&carrier) {
-                        let subset_result =
-                            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                        let subset_proof =
+                            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                                 subset_fact.clone().into(),
                                 "standard_set_subset".to_string(),
                                 BuiltinRuleEvidence::StandardSetSubset,
                                 Vec::new(),
                             )
                             .into();
+                        let subset_result = self.complete_atomic_fact_proof_result(
+                            &subset,
+                            subset_proof,
+                            builtin_state.verify_state(),
+                        )?;
                         return Ok(Some(vec![source_result, subset_result]));
                     }
                 }
-                let subset_result =
+                let subset_proof =
                     self.verify_non_equational_atomic_fact_with_known_atomic_facts(&subset)?;
+                let subset_result = self.complete_atomic_fact_proof_result(
+                    &subset,
+                    subset_proof,
+                    builtin_state.verify_state(),
+                )?;
                 if subset_result.is_success() {
                     return Ok(Some(vec![source_result, subset_result]));
                 }
@@ -1931,7 +1973,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         if let Some(evaluated_number) = in_fact.element.evaluate_to_normalized_decimal_number() {
             return Ok(builtin_in_fact_result_for_evaluated_number_in_standard_set(
                 in_fact,
@@ -2022,7 +2064,7 @@ impl Runtime {
         };
         if let Some(rule) = closure_rule {
             return Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "Z closure: binary integer arithmetic".to_string(),
                     BuiltinRuleEvidence::IntegerMembershipClosure(rule),
@@ -2033,7 +2075,7 @@ impl Runtime {
         }
 
         Ok(
-            (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            (SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 "Z closure: integer arithmetic; quot dividend in Z and divisor in N+; pow base in Z or N+ and exponent in N"
                     .to_string(),
@@ -2050,7 +2092,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         if let Some(evaluated_number) = in_fact.element.evaluate_to_normalized_decimal_number() {
             return Ok(builtin_in_fact_result_for_evaluated_number_in_standard_set(
                 in_fact,
@@ -2102,7 +2144,7 @@ impl Runtime {
         };
         if let Some(rule) = closure_rule {
             return Ok(
-                SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "Q closure: binary rational arithmetic".to_string(),
                     BuiltinRuleEvidence::RationalMembershipClosure(rule),
@@ -2113,7 +2155,7 @@ impl Runtime {
         }
 
         Ok(
-            (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            (SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 "Q closure: +-*/ operands in Q; pow base in Q and exponent in Z".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -2130,7 +2172,7 @@ impl Runtime {
         in_fact: &InFact,
         builtin_state: &BuiltinRuleSearchState,
         target_negative_standard_set: StandardSet,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         if let Some(evaluated_number) = in_fact.element.evaluate_to_normalized_decimal_number() {
             return Ok(builtin_in_fact_result_for_evaluated_number_in_standard_set(
                 in_fact,
@@ -2168,7 +2210,7 @@ impl Runtime {
                 .verify_atomic_fact_as_builtin_rule_premise(&positive_membership, builtin_state)?;
             if positive_result.is_success() {
                 return Ok(
-                    SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         in_fact.clone().into(),
                         "negation maps a positive scalar into the matching negative carrier"
                             .to_string(),
@@ -2204,7 +2246,7 @@ impl Runtime {
         base_subgoals.append(&mut sign_subgoals);
         match target_negative_standard_set {
             StandardSet::RNeg => Ok(
-                (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                (SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "mul_opposite_signs_product_in_negative_reals".to_string(),
                     BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactArithmeticExpressionInStandardNegativeSet02),
@@ -2226,7 +2268,7 @@ impl Runtime {
                 if product_in_q_result.is_success() {
                     base_subgoals.push(product_in_q_result);
                     Ok(
-                        (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                        (SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             in_fact.clone().into(),
                             "mul_opposite_signs_product_in_negative_rationals".to_string(),
                             BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactArithmeticExpressionInStandardNegativeSet03),
@@ -2252,7 +2294,7 @@ impl Runtime {
                 if product_in_z_result.is_success() {
                     base_subgoals.push(product_in_z_result);
                     Ok(
-                        (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                        (SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             in_fact.clone().into(),
                             "mul_opposite_signs_product_in_negative_integers".to_string(),
                             BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyInFactArithmeticExpressionInStandardNegativeSet04),

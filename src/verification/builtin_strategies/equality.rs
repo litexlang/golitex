@@ -5,7 +5,7 @@ impl Runtime {
         &mut self,
         fact: &EqualFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let extrema = self.verify_extremum_equality_with_builtin_strategy(fact, verify_state)?;
         if extrema.is_success() {
             return Ok(extrema);
@@ -28,7 +28,7 @@ impl Runtime {
         &mut self,
         fact: &EqualFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let (Obj::ProductOfFiniteSet(left), Obj::ProductOfFiniteSet(right)) =
             (&fact.left, &fact.right)
         else {
@@ -71,7 +71,7 @@ impl Runtime {
         }
 
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                 fact.clone().into(),
                 "finite-set product congruence strategy: prove pointwise factor equality"
                     .to_string(),
@@ -90,7 +90,7 @@ impl Runtime {
         &mut self,
         fact: &EqualFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let has_extremum = matches!(
             (&fact.left, &fact.right),
             (Obj::FiniteSetMax(_) | Obj::FiniteSetMin(_), _)
@@ -124,7 +124,7 @@ impl Runtime {
         }
 
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                 fact.clone().into(),
                 "finite-extremum equality strategy: prove both weak-order directions".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -144,7 +144,7 @@ impl Runtime {
         &mut self,
         fact: &EqualFact,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         let (Obj::Mod(left_mod), Obj::Mod(right_mod)) = (&fact.left, &fact.right) else {
             return Ok(UnknownGenericStmtResult::new().into());
         };
@@ -159,6 +159,11 @@ impl Runtime {
         if !modulus_result.is_success() {
             return Ok(UnknownGenericStmtResult::new().into());
         }
+        let modulus_result = self.complete_fact_proof_result(
+            &modulus_goal.clone().into(),
+            modulus_result,
+            verify_state,
+        )?;
 
         let pairs = match (left_mod.left.as_ref(), right_mod.left.as_ref()) {
             (Obj::Add(left), Obj::Add(right)) => [
@@ -201,11 +206,16 @@ impl Runtime {
             if !result.is_success() {
                 return Ok(UnknownGenericStmtResult::new().into());
             }
+            let result = self.complete_fact_proof_result(
+                &child.into(),
+                result,
+                verify_state,
+            )?;
             subgoals.push(result);
         }
 
         Ok(
-            SuccessFactStmtResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
+            SuccessProveFactResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                 fact.clone().into(),
                 "mod-congruence strategy: reduce immediate binary operands modulo m".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(

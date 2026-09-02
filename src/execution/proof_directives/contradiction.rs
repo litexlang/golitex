@@ -34,15 +34,22 @@ impl Runtime {
         stmt: &ByContraStmt,
     ) -> Result<StmtResult, RuntimeError> {
         let to_prove_fact = stmt.to_prove.clone();
-        let (exec_proof_inside_results, last_error, reverse_assumption_fact_id, proof_scope) = self
+        let (
+            proof_steps,
+            last_error,
+            reverse_assumption_fact_id,
+            proof_scope,
+            contradiction,
+        ) = self
             .run_in_local_env(|rt| {
-                let (inside_results, last_error, fact_id, assumption_infers) =
+                let (proof_steps, last_error, fact_id, assumption_infers, contradiction) =
                     rt.exec_by_contra_stmt_in_local_proof_scope(stmt, &to_prove_fact)?;
                 Ok::<_, RuntimeError>((
-                    inside_results,
+                    proof_steps,
                     last_error,
                     fact_id,
                     SuccessVerifyLocalProofScopeResult::new(assumption_infers, Vec::new()),
+                    contradiction,
                 ))
             })?;
 
@@ -51,15 +58,12 @@ impl Runtime {
                 stmt.clone().into(),
                 "by contra: failed to execute proof".to_string(),
                 Some(last_error),
-                exec_proof_inside_results,
+                proof_steps,
             ));
         }
 
         let negated_assumption = logical_negation_for_by_contra(&stmt.to_prove)?;
-        let mut proof_steps = exec_proof_inside_results;
-        let contradiction_checks = proof_steps.split_off(stmt.proof.len());
-        let [impossible_check, negated_impossible_check]: [StmtResult; 2] =
-            contradiction_checks.try_into().map_err(|_| {
+        let contradiction = contradiction.ok_or_else(|| {
                 short_exec_error(
                     stmt.clone().into(),
                     "by contra: expected exactly two contradiction checks".to_string(),
@@ -74,10 +78,7 @@ impl Runtime {
             proof_scope,
             proof_steps,
             stmt.impossible_fact.clone(),
-            SuccessVerifyContradictionResult {
-                impossible_check: Box::new(impossible_check),
-                negated_impossible_check: Box::new(negated_impossible_check),
-            },
+            contradiction,
         );
 
         Ok(
@@ -100,10 +101,11 @@ impl Runtime {
             Option<RuntimeError>,
             FactId,
             SuccessInferResult,
+            Option<SuccessVerifyContradictionResult>,
         ),
         RuntimeError,
     > {
-        let mut inside_results: Vec<StmtResult> = Vec::new();
+        let mut proof_steps: Vec<StmtResult> = Vec::new();
         let negated_to_prove_fact = logical_negation_for_by_contra(to_prove_fact)?;
         let mut assumption_infers = self
             .store_with_well_defined_verification_and_infer_with_default_verify_state(
@@ -138,7 +140,7 @@ impl Runtime {
         let mut last_error: Option<RuntimeError> = None;
         for proof_stmt in stmt.proof.iter() {
             match self.execute_statement(proof_stmt) {
-                Ok(result) => inside_results.push(result),
+                Ok(result) => proof_steps.push(result),
                 Err(statement_error) => {
                     last_error = Some(statement_error);
                     break;
@@ -147,10 +149,11 @@ impl Runtime {
         }
         if last_error.is_some() {
             return Ok((
-                inside_results,
+                proof_steps,
                 last_error,
                 reverse_assumption_fact_id,
                 assumption_infers,
+                None,
             ));
         }
 
@@ -161,7 +164,7 @@ impl Runtime {
                 stmt.clone().into(),
                 impossible_proof_error_message(&stmt.impossible_fact, None),
                 None,
-                inside_results,
+                proof_steps,
             ));
         }
 
@@ -176,14 +179,15 @@ impl Runtime {
                 vec![],
             ));
         }
-        inside_results.push(verify_impossible_fact_result);
-        inside_results.push(verify_negated_impossible_fact_result);
-
         Ok((
-            inside_results,
+            proof_steps,
             last_error,
             reverse_assumption_fact_id,
             assumption_infers,
+            Some(SuccessVerifyContradictionResult {
+                impossible_check: Box::new(verify_impossible_fact_result),
+                negated_impossible_check: Box::new(verify_negated_impossible_fact_result),
+            }),
         ))
     }
 

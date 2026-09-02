@@ -4,7 +4,7 @@ impl Runtime {
     pub fn object_definition_nonempty_checks_for_param_def(
         &mut self,
         param_defs: &TypedParameterList,
-    ) -> Result<Vec<StmtResult>, RuntimeError> {
+    ) -> Result<Vec<VerifyFactResult>, RuntimeError> {
         let mut checks = Vec::new();
         for param_def in param_defs.groups.iter() {
             if let Some(fact) = nonempty_check_fact_for_param_type(&param_def.param_type) {

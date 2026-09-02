@@ -63,7 +63,7 @@ impl StatementResultRenderer {
                                         ),
                                         (
                                             "verification".to_string(),
-                                            self.stmt_result(&case.verification),
+                                            self.verify_fact_result(&case.verification),
                                         ),
                                     ])
                                 })
@@ -83,7 +83,7 @@ impl StatementResultRenderer {
                                     ),
                                     (
                                         "verification".to_string(),
-                                        self.stmt_result(&default.verification),
+                                        self.verify_fact_result(&default.verification),
                                     ),
                                 ])
                             })
@@ -102,7 +102,7 @@ impl StatementResultRenderer {
                                     ),
                                     (
                                         "verification".to_string(),
-                                        self.stmt_result(&coverage.verification),
+                                        self.verify_fact_result(&coverage.verification),
                                     ),
                                 ])
                             })

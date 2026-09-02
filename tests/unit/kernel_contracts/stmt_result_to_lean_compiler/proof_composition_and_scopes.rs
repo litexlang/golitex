@@ -13,7 +13,10 @@ fn combined_builtin_items_retain_and_compile_their_typed_component_evidence() {
         panic!("expected one successful conjunction Result")
     };
     let target = result.fact();
-    let SuccessFactProofResult::CombinedProofs(combined) = result.proof() else {
+    let SuccessFactProofResult::CombinedProofs(combined) = result
+        .proof()
+        .expect("verified conjunction owns a proof")
+    else {
         panic!("expected recursive combined proof Result")
     };
 
@@ -124,7 +127,7 @@ fn structured_integer_induction_retains_named_recursive_results_and_exact_fact_i
         proof.base.conclusions[0].goal.to_string(),
         proof.base.conclusions[0]
             .check
-            .factual_success()
+            .verified()
             .expect("base conclusion check is factual")
             .fact()
             .to_string()
@@ -133,7 +136,7 @@ fn structured_integer_induction_retains_named_recursive_results_and_exact_fact_i
         proof.step.conclusions[0].goal.to_string(),
         proof.step.conclusions[0]
             .check
-            .factual_success()
+            .verified()
             .expect("step conclusion check is factual")
             .fact()
             .to_string()
@@ -228,7 +231,10 @@ fn forall_result_retains_exact_parameter_and_domain_fact_ids_for_compiler_scope(
     let [StmtResult::Success(SuccessStmtResult::Fact(result))] = results.as_slice() else {
         panic!("expected one successful forall Result")
     };
-    let SuccessFactProofResult::ForallProof(proof) = result.proof() else {
+    let SuccessFactProofResult::ForallProof(proof) = result
+        .proof()
+        .expect("verified forall owns a proof")
+    else {
         panic!("expected recursive ForallProof Result")
     };
     assert_eq!(proof.parameter_assumptions.len(), 2);

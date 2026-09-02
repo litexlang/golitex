@@ -6,7 +6,7 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
         verify_state: &VerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<ProveFactResult, RuntimeError> {
         match atomic_fact {
             AtomicFact::EqualFact(_) => unreachable!(),
             AtomicFact::NotEqualFact(not_equal_fact) => {
@@ -50,7 +50,7 @@ impl Runtime {
                 self.verify_order_atomic_fact_numeric_builtin_only(atomic_fact, builtin_state)
             }
             AtomicFact::IsSetFact(is_set_fact) => Ok(
-                (SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                (SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     is_set_fact.clone().into(),
                     "Every object is a set.".to_string(),
                     BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyNonEquationalAtomicFactWithBuiltinRulesInner),

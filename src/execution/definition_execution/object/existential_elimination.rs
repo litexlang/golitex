@@ -34,7 +34,7 @@ impl Runtime {
             stmt,
             &obtain.equal_tos,
             &source_exist_fact,
-            source_result,
+            ExistentialEliminationSourceResult::Fact(Box::new(source_result)),
             obtain.line_file.clone(),
         )
     }
@@ -61,7 +61,9 @@ impl Runtime {
             stmt,
             &obtain.equal_tos,
             &source_exist_fact,
-            application_result,
+            ExistentialEliminationSourceResult::TheoremApplication(Box::new(
+                application_result,
+            )),
             obtain.line_file.clone(),
         )
     }
@@ -267,7 +269,7 @@ impl Runtime {
             stmt,
             defined_bindings,
             source_exist_fact,
-            source_result,
+            ExistentialEliminationSourceResult::Fact(Box::new(source_result)),
             line_file,
         )
     }
@@ -277,7 +279,7 @@ impl Runtime {
         stmt: Stmt,
         defined_bindings: &[SymbolBinding],
         source_exist_fact: &ExistFactEnum,
-        source_result: StmtResult,
+        source_result: ExistentialEliminationSourceResult,
         line_file: LineFile,
     ) -> Result<StmtResult, RuntimeError> {
         let infer_result = self.apply_obj_from_exist_fact_to_environment(
@@ -373,7 +375,7 @@ impl Runtime {
         &mut self,
         stmt: Stmt,
         source_exist_fact: &ExistFactEnum,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<VerifyFactResult, RuntimeError> {
         let verify_state = VerifyState::initial();
         let result = self
             .verify_exist_fact(source_exist_fact, &verify_state)
@@ -398,7 +400,7 @@ impl Runtime {
         obtain: &ObtainObjFromAtomicFact,
         definition: &DefPropStmt,
         source_exist_fact: &ExistFactEnum,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<VerifyFactResult, RuntimeError> {
         let source_atomic: AtomicFact = obtain.fact.clone().into();
         let source_result = self
             .verify_atomic_fact(&source_atomic, &VerifyState::initial())
@@ -414,8 +416,8 @@ impl Runtime {
             ));
         }
 
-        let projection_result =
-            SuccessFactStmtResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+        let projection_proof =
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 source_exist_fact.clone().into(),
                 format!(
                     "existential projection from prop definition `{}`",
@@ -429,7 +431,11 @@ impl Runtime {
                 ),
                 vec![source_result],
             );
-        Ok(projection_result.into())
+        self.complete_fact_proof_result(
+            &source_exist_fact.clone().into(),
+            projection_proof.into(),
+            &VerifyState::initial(),
+        )
     }
 
     /// Resolve the concrete definition at execution time; the statement keeps
@@ -559,7 +565,7 @@ impl Runtime {
         _stmt: &Stmt,
         equal_tos: &[SymbolBinding],
         exist_fact: &ExistFactEnum,
-        source_result: StmtResult,
+        source_result: ExistentialEliminationSourceResult,
         line_file: LineFile,
     ) -> Result<SuccessVerifyExistentialEliminationResult, RuntimeError> {
         let witnesses = equal_tos
