@@ -40,16 +40,40 @@ impl StmtResultToLeanCompiler {
             else {
                 return Ok(proof);
             };
-            let Some(source_to_selected) = self
+            let source_to_selected = if self
                 .environment_stack
-                .numeric_representation_equalities
+                .exact_carrier_source_equalities
                 .get(&symbol_id)
-            else {
-                return Ok(proof);
+                .is_some()
+            {
+                // `proof` ends at the selected native real representative.
+                // An exact `R.Carrier` source is definitionally the same
+                // real value (`In.rep_exact`), so first move from complex to
+                // real and then close that homogeneous endpoint equality.
+                let real = self
+                    .environment_stack
+                    .numeric_real_values
+                    .get(&symbol_id)
+                    .cloned()
+                    .ok_or_else(|| {
+                        format!(
+                            "extrema exact-carrier symbol {symbol_id:?} has no retained real value"
+                        )
+                    })?;
+                format!(
+                    "Litex.Same.trans (Litex.Same.symm (Litex.Same.realComplex ({real}))) (Litex.Same.ofEq (by simp [Litex.In.rep]))"
+                )
+            } else {
+                let Some(source_to_selected) = self
+                    .environment_stack
+                    .numeric_representation_equalities
+                    .get(&symbol_id)
+                else {
+                    return Ok(proof);
+                };
+                format!("Litex.Same.symm ({source_to_selected})")
             };
-            Ok(format!(
-                "Litex.Same.trans ({proof}) (Litex.Same.symm ({source_to_selected}))"
-            ))
+            Ok(format!("Litex.Same.trans ({proof}) ({source_to_selected})"))
         };
         let one_weak_premise = |expected_left: &Obj, expected_right: &Obj| -> Result<(), String> {
             let [premise] = child_facts.as_slice() else {

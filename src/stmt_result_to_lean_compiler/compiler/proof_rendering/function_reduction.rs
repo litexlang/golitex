@@ -244,18 +244,30 @@ pub(in super::super) fn render_checked_identity_function_reduction_from_fact(
     let other_object = target_right;
     let rendered_other = render_obj(other_object, context)?;
     if binding.native_body_carrier != NativeFunctionBodyCarrier::None {
+        // Native carrier functions use their concrete numeric observer.  The
+        // no-observation ABI is reserved for dependent telescope functions;
+        // ordinary `FnWhere`/`Fn` applications remain observable even when a
+        // surrounding proof later transports an endpoint through a generic
+        // carrier.
+        let observation_free = function_uses_telescope(&binding.function);
         let body_same = match binding.native_body_carrier {
-            NativeFunctionBodyCarrier::Real => render_real_function_body_same_with_parameters(
+            NativeFunctionBodyCarrier::Real => render_real_function_body_same_with_parameters_mode(
                 &binding.body,
                 &argument_evidence,
                 context,
+                observation_free,
             )?,
             NativeFunctionBodyCarrier::Integer => {
-                render_integer_function_body_same_with_parameters(
+                let proof = render_integer_function_body_same_with_parameters(
                     &binding.body,
                     &argument_evidence,
                     context,
-                )?
+                )?;
+                if observation_free {
+                    format!("Litex.Same.withoutObservation ({proof})")
+                } else {
+                    proof
+                }
             }
             NativeFunctionBodyCarrier::None => unreachable!("guarded native body carrier"),
         };
@@ -306,7 +318,7 @@ pub(in super::super) fn render_checked_identity_function_reduction_from_fact(
         ));
     }
     Ok(format!(
-        "(by\n  unfold {apply} {}\n  apply Litex.Same.symm\n  apply Litex.In.same_rep)",
+        "(by\n  unfold {apply} {}\n  exact Litex.Same.transNoObservation (Litex.Same.symmNoObservation (Litex.In.same_rep _ _)) (Litex.Same.reflNoObservation _))",
         binding.name,
     ))
 }
@@ -400,10 +412,11 @@ pub(in super::super) fn render_integer_function_body_same_with_parameters(
     }
 }
 
-pub(in super::super) fn render_real_function_body_same_with_parameters(
+fn render_real_function_body_same_with_parameters_mode(
     body: &LeanTargetObjectRepresentation,
     argument_evidence: &HashMap<SymbolId, CheckedNamedFunctionReductionArgumentEvidence>,
     context: &StmtResultToLeanCompilerEnvironmentStack,
+    observation_free: bool,
 ) -> Result<String, String> {
     match body {
         LeanTargetObjectRepresentation::Symbol { symbol_id, .. }
@@ -440,17 +453,26 @@ pub(in super::super) fn render_real_function_body_same_with_parameters(
             match &evidence.parameter_set {
                 LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Real) => {
                     if let Some(native_real_argument) = &evidence.native_real_argument {
-                        if matches!(&evidence.source_argument, Obj::Number(_)) {
-                            Ok(format!(
+                        let proof = if matches!(&evidence.source_argument, Obj::Number(_)) {
+                            format!(
                                 "(by\n  convert (Litex.Same.realComplex ({native_real_argument})) using 1\n  · exact Litex.In.rep_exact ({native_real_argument}) (Litex.In.own Litex.R ({native_real_argument}))\n  · norm_num)"
-                            ))
+                            )
                         } else {
-                            Ok(format!(
-                                "(by\n  convert (Litex.Same.realComplex ({native_real_argument})) using 1\n  · exact Litex.In.rep_exact ({native_real_argument}) (Litex.In.own Litex.R ({native_real_argument})))"
-                            ))
+                            format!("Litex.Same.realComplex ({native_real_argument})")
+                        };
+                        if observation_free {
+                            Ok(format!("Litex.Same.withoutObservation ({proof})"))
+                        } else {
+                            Ok(proof)
                         }
                     } else if target_uses_exact_source_representation {
-                        Ok(format!("Litex.Same.refl ({rendered_target_argument})"))
+                        if observation_free {
+                            Ok(format!(
+                                "Litex.Same.reflNoObservation ({rendered_target_argument})"
+                            ))
+                        } else {
+                            Ok(format!("Litex.Same.refl ({rendered_target_argument})"))
+                        }
                     } else if target_uses_selected_representation {
                         let selected_real = membership_real_value(
                             &evidence.parameter_set,
@@ -461,11 +483,22 @@ pub(in super::super) fn render_real_function_body_same_with_parameters(
                             "checked real function reduction lost its selected real representative"
                                 .to_string()
                         })?;
-                        Ok(format!("Litex.Same.realComplex ({selected_real})"))
+                        let proof = format!("Litex.Same.realComplex ({selected_real})");
+                        if observation_free {
+                            Ok(format!("Litex.Same.withoutObservation ({proof})"))
+                        } else {
+                            Ok(proof)
+                        }
                     } else {
-                        Ok(format!(
-                            "Litex.Same.symm (Litex.In.same_rep {argument} ({argument_membership}))"
-                        ))
+                        if observation_free {
+                            Ok(format!(
+                                "Litex.Same.symmWithoutObservation (Litex.In.same_rep {argument} ({argument_membership}))"
+                            ))
+                        } else {
+                            Ok(format!(
+                                "Litex.Same.symm (Litex.In.same_rep {argument} ({argument_membership}))"
+                            ))
+                        }
                     }
                 }
                 LeanTargetObjectRepresentation::StandardSet(
@@ -474,9 +507,14 @@ pub(in super::super) fn render_real_function_body_same_with_parameters(
                     if let Some(value) = &evidence.closed_positive_natural_argument {
                         let carrier =
                             format!("(⟨{value}, by norm_num⟩ : Litex.NPos.Carrier)");
-                        Ok(format!(
+                        let proof = format!(
                             "(by\n  have __selected := Litex.In.rep_exact {carrier} (Litex.In.own Litex.NPos {carrier})\n  convert (Litex.Same.realComplex ({value} : ℝ)) using 1\n  · exact congrArg (fun value : Litex.NPos.Carrier => (((value.val : ℕ) : ℝ))) __selected\n  · norm_num)"
-                        ))
+                        );
+                        if observation_free {
+                            Ok(format!("Litex.Same.withoutObservation ({proof})"))
+                        } else {
+                            Ok(proof)
+                        }
                     } else if target_uses_selected_representation {
                         let selected_real = membership_real_value(
                             &evidence.parameter_set,
@@ -487,7 +525,12 @@ pub(in super::super) fn render_real_function_body_same_with_parameters(
                             "checked positive-natural reduction lost its selected real representative"
                                 .to_string()
                         })?;
-                        Ok(format!("Litex.Same.realComplex ({selected_real})"))
+                        let proof = format!("Litex.Same.realComplex ({selected_real})");
+                        if observation_free {
+                            Ok(format!("Litex.Same.withoutObservation ({proof})"))
+                        } else {
+                            Ok(proof)
+                        }
                     } else {
                         Err("checked positive-natural reduction cannot recover an observed numeric equality from generic membership".into())
                     }
@@ -503,7 +546,12 @@ pub(in super::super) fn render_real_function_body_same_with_parameters(
                     .chars()
                     .all(|character| character.is_ascii_digit()) =>
         {
-            Ok(format!("Litex.Same.realComplex ({normalized_value} : ℝ)"))
+            let proof = format!("Litex.Same.realComplex ({normalized_value} : ℝ)");
+            if observation_free {
+                Ok(format!("Litex.Same.withoutObservation ({proof})"))
+            } else {
+                Ok(proof)
+            }
         }
         LeanTargetObjectRepresentation::BuiltinApp {
             operator,
@@ -518,21 +566,35 @@ pub(in super::super) fn render_real_function_body_same_with_parameters(
                     | LeanTargetBuiltinObjectOperator::Div
             ) =>
         {
-            let left = render_real_function_body_same_with_parameters(
+            let left = render_real_function_body_same_with_parameters_mode(
                 &arguments[0],
                 argument_evidence,
                 context,
+                observation_free,
             )?;
-            let right = render_real_function_body_same_with_parameters(
+            let right = render_real_function_body_same_with_parameters_mode(
                 &arguments[1],
                 argument_evidence,
                 context,
+                observation_free,
             )?;
-            let theorem = match operator {
-                LeanTargetBuiltinObjectOperator::Add => "Litex.Same.realAddComplex",
-                LeanTargetBuiltinObjectOperator::Sub => "Litex.Same.realSubComplex",
-                LeanTargetBuiltinObjectOperator::Mul => "Litex.Same.realMulComplex",
-                LeanTargetBuiltinObjectOperator::Div => "Litex.Same.realDivComplex",
+            let theorem = match (operator, observation_free) {
+                (LeanTargetBuiltinObjectOperator::Add, false) => "Litex.Same.realAddComplex",
+                (LeanTargetBuiltinObjectOperator::Sub, false) => "Litex.Same.realSubComplex",
+                (LeanTargetBuiltinObjectOperator::Mul, false) => "Litex.Same.realMulComplex",
+                (LeanTargetBuiltinObjectOperator::Div, false) => "Litex.Same.realDivComplex",
+                (LeanTargetBuiltinObjectOperator::Add, true) => {
+                    "Litex.Same.realAddComplexNoObservation"
+                }
+                (LeanTargetBuiltinObjectOperator::Sub, true) => {
+                    "Litex.Same.realSubComplexNoObservation"
+                }
+                (LeanTargetBuiltinObjectOperator::Mul, true) => {
+                    "Litex.Same.realMulComplexNoObservation"
+                }
+                (LeanTargetBuiltinObjectOperator::Div, true) => {
+                    "Litex.Same.realDivComplexNoObservation"
+                }
                 _ => unreachable!("guarded real binary operator"),
             };
             Ok(format!("{theorem} ({left}) ({right})"))

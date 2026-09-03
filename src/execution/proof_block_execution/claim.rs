@@ -20,7 +20,7 @@ impl Runtime {
         &mut self,
         stmt: &ClaimStmt,
     ) -> Result<SuccessInferResult, RuntimeError> {
-        if self.current_execution_is_trusted_file() {
+        if self.current_execution_is_trusted_source() {
             return self.store_fact_with_trust_and_infer_with_reason(
                 stmt.fact.clone(),
                 InferReason::ProvedClaim,

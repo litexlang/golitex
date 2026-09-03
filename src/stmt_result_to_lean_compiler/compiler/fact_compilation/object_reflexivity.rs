@@ -31,11 +31,24 @@ impl StmtResultToLeanCompiler {
             return Err("object-reflexivity evidence changed its equality endpoints".into());
         }
         validate_atomic_fact_well_definedness_result(&verified.checked, &source_fact)?;
-        let proof = format!(
-            "Litex.Same.refl {}",
-            self.render_object_using_well_definedness_from_fact_result(verified, &equality.left)
-                .map_err(|error| format!("rendering reflexive object: {error}"))?
-        );
+        let rendered_object = self
+            .render_object_using_well_definedness_from_fact_result(verified, &equality.left)
+            .map_err(|error| format!("rendering reflexive object: {error}"))?;
+        let proposition = self
+            .render_fact_using_well_definedness_result(&verified.checked, &source_fact)
+            .map_err(|error| format!("rendering reflexive proposition: {error}"))?;
+        let reflexive_term = if matches!(&equality.left, Obj::Atom(_))
+            && proposition.contains("FnTelescope.Carrier")
+        {
+            format!("(fun {{α}} => {rendered_object})")
+        } else {
+            rendered_object.clone()
+        };
+        let proof = if proposition.contains("ComplexObserver.none") {
+            format!("Litex.Same.reflNoObservation {reflexive_term}")
+        } else {
+            format!("Litex.Same.refl {reflexive_term}")
+        };
         if !fact_result_contains_inferred_facts(result) {
             self.compile_stored_fact_without_inference(result, proof)
                 .map_err(|error| format!("publishing zero-inference reflexivity: {error}"))?;
@@ -62,7 +75,8 @@ impl StmtResultToLeanCompiler {
         if source_output.inferred_facts.len() != source_output.inferred_fact_ids.len() {
             return Err("object-reflexivity source store changed its inferred FactId arity".into());
         }
-        let proposition = render_fact(&source_fact, &self.environment_stack)
+        let proposition = self
+            .render_fact_using_well_definedness_result(&verified.checked, &source_fact)
             .map_err(|error| format!("rendering inferred reflexivity proposition: {error}"))?;
         let theorem_name = format!("__fact{}", self.next_fact_name_index);
         self.declarations.push(format!(

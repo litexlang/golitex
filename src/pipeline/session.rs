@@ -158,7 +158,7 @@ fn run_session_loop_with_readers_and_target(
                         JsonValue::Null,
                         session_error(
                             "frame_read_error",
-                            format!("could not read source frame: {}", error).as_str(),
+                            format!("could not read source bytes: {}", error).as_str(),
                         ),
                     )?;
                     return Ok(());
@@ -175,7 +175,7 @@ fn run_session_loop_with_readers_and_target(
                             JsonValue::Null,
                             session_error(
                                 "invalid_utf8",
-                                format!("source frame must be UTF-8: {}", error).as_str(),
+                                format!("source bytes must be UTF-8: {}", error).as_str(),
                             ),
                         )?;
                         continue;
@@ -328,10 +328,6 @@ fn initialize_session_runtime(
     directory: &Path,
     target: SessionTarget,
 ) -> Result<(&'static str, Vec<StmtResult>), (Vec<StmtResult>, RuntimeError)> {
-    let source_label = ExecutionTarget::Session(target.clone())
-        .source_label()
-        .to_string();
-
     if let SessionTarget::File { path: preload_file } = &target {
         let clean_path = preload_file.replace('\r', "");
         let path = Path::new(clean_path.as_str());
@@ -345,9 +341,6 @@ fn initialize_session_runtime(
         let (stmt_results, runtime_error) = match execution {
             ExecutionOption::File => execute_file_in_runtime(path_string.as_str(), runtime),
             ExecutionOption::IsolatedFile => {
-                runtime.run_options = runtime
-                    .run_options
-                    .with_execution(ExecutionOption::IsolatedSession);
                 execute_isolated_file_in_runtime(path_string.as_str(), runtime)
             }
             _ => unreachable!("file context resolved to a non-file execution option"),
@@ -356,9 +349,16 @@ fn initialize_session_runtime(
             return Err((stmt_results, error));
         }
         if execution == ExecutionOption::IsolatedFile {
+            if let Err(error) =
+                runtime.prepare_current_module_for_virtual_source(VirtualSource::Session)
+            {
+                return Err((stmt_results, error));
+            }
             return Ok(("isolated", stmt_results));
         }
-        if let Err(error) = runtime.prepare_current_repository_for_repl(source_label.as_str()) {
+        if let Err(error) =
+            runtime.prepare_current_module_for_virtual_source(VirtualSource::Session)
+        {
             return Err((stmt_results, error));
         }
         return Ok(("project", stmt_results));
@@ -378,11 +378,16 @@ fn initialize_session_runtime(
         if let Some(error) = runtime_error {
             return Err((stmt_results, error));
         }
+        if let Err(error) =
+            runtime.prepare_current_module_for_virtual_source(VirtualSource::Session)
+        {
+            return Err((stmt_results, error));
+        }
         return Ok(("isolated", stmt_results));
     }
 
     if target == SessionTarget::Isolated || !directory.join("litex.config").is_file() {
-        runtime.start_isolated_source(source_label.as_str());
+        runtime.start_virtual_source(VirtualSource::Session);
         return Ok(("isolated", vec![]));
     }
 
@@ -390,7 +395,7 @@ fn initialize_session_runtime(
     if let Err(error) = discover_repository(runtime, root.as_str()) {
         return Err((vec![], error));
     }
-    if let Err(error) = runtime.prepare_current_repository_for_repl(source_label.as_str()) {
+    if let Err(error) = runtime.prepare_current_module_for_virtual_source(VirtualSource::Session) {
         return Err((vec![], error));
     }
     Ok(("project", vec![]))

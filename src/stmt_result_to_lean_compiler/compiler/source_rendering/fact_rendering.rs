@@ -161,8 +161,19 @@ pub(in super::super) fn render_fact(
             AtomicFact::EqualFact(fact) => {
                 let left = render_obj(&fact.left, context)?;
                 let right = render_obj(&fact.right, context)?;
+                if let Some(opaque_type) = opaque_object_type_annotation(&fact.left, context)
+                    .or_else(|| opaque_object_type_annotation(&fact.right, context))
+                {
+                    return Ok(format!(
+                        "@Litex.Same ({opaque_type}) ({opaque_type}) (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) {left} {right}"
+                    ));
+                }
                 if object_has_only_default_observer(&fact.left, context)
                     || object_has_only_default_observer(&fact.right, context)
+                    || left.contains("fnTelescope")
+                    || right.contains("fnTelescope")
+                    || left.contains("setBuilder")
+                    || right.contains("setBuilder")
                 {
                     // Opaque exact carriers (notably a set-builder or a
                     // telescope result) deliberately carry no native
@@ -181,15 +192,14 @@ pub(in super::super) fn render_fact(
             AtomicFact::NotEqualFact(fact) => {
                 let left = render_obj(&fact.left, context)?;
                 let right = render_obj(&fact.right, context)?;
-                if object_has_only_default_observer(&fact.left, context)
-                    || object_has_only_default_observer(&fact.right, context)
-                {
-                    Ok(format!(
-                        "¬ @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) {left} {right}"
-                    ))
-                } else {
-                    Ok(format!("¬ Litex.Same {left} {right}"))
-                }
+                // Non-equality is a semantic fact, not a numeric
+                // observation. Keep its `Same` index observation-free for
+                // every carrier so generic nonzero/refined-set rules can
+                // consume the same proposition for native and heterogeneous
+                // objects alike.
+                Ok(format!(
+                    "¬ @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) {left} {right}"
+                ))
             }
             AtomicFact::LessFact(fact) => render_order_fact(&fact.left, &fact.right, true, context),
             AtomicFact::GreaterFact(fact) => {
@@ -258,6 +268,39 @@ pub(in super::super) fn render_fact(
         Fact::ForallFact(forall) => render_forall_fact_type(forall, context),
         _ => Err(format!("unsupported compiler fact `{fact}`")),
     }
+}
+
+/// Return an explicit Lean type for an opaque function value when inference
+/// cannot recover the dependent telescope carrier from the term alone.  This
+/// occurs for a quantified parameter whose type is a `fnTelescopeSet`: the
+/// source binder fixes the type, but `@Same _ _ ...` is elaborated before the
+/// proof body and leaves the telescope's dependent universe metavariables
+/// unresolved.
+fn opaque_object_type_annotation(
+    object: &Obj,
+    context: &StmtResultToLeanCompilerEnvironmentStack,
+) -> Option<String> {
+    let Obj::Atom(atom) = object else {
+        return None;
+    };
+    let symbol_id = atom.symbol_ref().map(SymbolRef::id)?;
+    let binding = context
+        .function_bindings
+        .values()
+        .find(|binding| binding.symbol_id == symbol_id)?;
+    if !(function_uses_telescope(&binding.function)
+        || matches!(
+            binding.function.return_set.as_ref(),
+            LeanTargetObjectRepresentation::SetBuilder(_)
+                | LeanTargetObjectRepresentation::FunctionSet { .. }
+                | LeanTargetObjectRepresentation::FunctionRange { .. }
+                | LeanTargetObjectRepresentation::RealInterval { .. }
+                | LeanTargetObjectRepresentation::RealRay { .. }
+        ))
+    {
+        return None;
+    }
+    render_function_type(&binding.function, context).ok()
 }
 
 pub(in super::super) fn render_order_fact(
@@ -367,6 +410,24 @@ fn object_has_only_default_observer(
     object: &Obj,
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> bool {
+    if let Obj::Atom(atom) = object {
+        if let Some(symbol_id) = atom.symbol_ref().map(SymbolRef::id) {
+            if context.function_bindings.values().any(|binding| {
+                binding.symbol_id == symbol_id
+                    && (function_uses_telescope(&binding.function)
+                        || matches!(
+                            binding.function.return_set.as_ref(),
+                            LeanTargetObjectRepresentation::SetBuilder(_)
+                                | LeanTargetObjectRepresentation::FunctionSet { .. }
+                                | LeanTargetObjectRepresentation::FunctionRange { .. }
+                                | LeanTargetObjectRepresentation::RealInterval { .. }
+                                | LeanTargetObjectRepresentation::RealRay { .. }
+                        ))
+            }) {
+                return true;
+            }
+        }
+    }
     if let Obj::FnObj(application) = object {
         let symbol_id = match application.head.as_ref() {
             FnObjHead::Identifier(identifier) => identifier.symbol.as_ref().map(SymbolRef::id),

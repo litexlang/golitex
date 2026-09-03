@@ -282,7 +282,7 @@ impl StmtResultToLeanCompiler {
             } else {
                 match self.construct_lean_proof_from_direct_fact_result(subgoal) {
                     Ok(Some(semantic_proof)) => format!(
-                        "by\n    intro __native_eq\n    exact (show {semantic_proposition} from {semantic_proof}) (Litex.Same.ofEq __native_eq)"
+                        "by\n    intro __native_eq\n    exact (show {semantic_proposition} from {semantic_proof}) (Litex.Same.ofEqNoObservation __native_eq)"
                     ),
                     Ok(None) => {
                         // A few closed native constants still have legacy

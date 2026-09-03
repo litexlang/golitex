@@ -14,7 +14,7 @@ theorem = "./theorem.lit"
 ```text
 discover litex.config
   -> parse hierarchy/import/export tables
-  -> assign ModuleId and module-local FileId values
+  -> assign ModuleId and module-local SourceId values
   -> resolve imports and recursive child modules
   -> run [export] entries in source order
   -> mark each file/module Loading, Loaded, or Stopped
@@ -23,10 +23,10 @@ discover litex.config
 
 ## Examples and boundaries
 
-The root module is always `ModuleId::ROOT` (`ModuleId(0)`). Every execution
-frame points to a registered `(ModuleId, FileId)` pair; module discovery and
-ordered export traversal use module loading state rather than a synthetic
-module-only execution frame.
+The root module is always `ModuleId::ROOT` (`ModuleId(0)`). Every active
+runtime source is a registered `(ModuleId, SourceId)` pair; module discovery
+and ordered export traversal use module loading state rather than a synthetic
+module-only source.
 
 | Configuration | Behavior |
 | --- | --- |

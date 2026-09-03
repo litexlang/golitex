@@ -396,7 +396,17 @@ pub(in super::super) fn render_function_application(
                     );
                 }
             }
-            if binding.direct {
+            // A verifier-owned forall parameter over an exact object carrier
+            // is already the owning Lean value, even though its membership
+            // alias was installed through the generic Result path.  Select
+            // the exact-carrier application ABI in that case as well; using
+            // heterogeneous `fnTelescopeApply` leaves Lean unable to infer
+            // the telescope's carrier universe from the retained proposition.
+            if binding.direct
+                || context
+                    .exact_carrier_values
+                    .contains_key(&binding.symbol_id)
+            {
                 let exact_head = context
                     .exact_carrier_values
                     .get(&binding.symbol_id)
@@ -676,7 +686,7 @@ pub(in super::super) fn render_function_application(
             .map(|(parameter, argument)| (parameter.symbol_id.substitution_key(), argument.clone()))
             .collect::<HashMap<_, _>>();
         let mut domain_substitution_runtime = Runtime::default();
-        domain_substitution_runtime.ensure_execution_frame_for_parse();
+        domain_substitution_runtime.ensure_current_source_for_parse();
         let mut domain_proofs = Vec::with_capacity(domain_requirements.len());
         for (_domain_index, (source_fact, requirement)) in function
             .domain_facts
@@ -785,7 +795,9 @@ pub(in super::super) fn render_function_application(
             } else {
                 "Litex.fnTelescopeApply"
             };
-            let mut term = format!("({apply} {head} ({membership_proof}))");
+            let signature = render_telescope_signature(&function, context)?;
+            let mut term =
+                format!("({apply} (signature := {signature}) {head} ({membership_proof}))");
             for (argument, argument_membership) in arguments.iter().zip(argument_memberships.iter())
             {
                 term = format!("({term} {argument} ({argument_membership}))");

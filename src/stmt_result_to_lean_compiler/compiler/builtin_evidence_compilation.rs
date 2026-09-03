@@ -376,7 +376,7 @@ impl StmtResultToLeanCompiler {
         };
         let source = render_obj(element, &self.environment_stack)?;
         Ok(Some(format!(
-            "(fun __membership => (Litex.Rules.{theorem} (__membership)) (Litex.Same.refl {source}))"
+            "(fun __membership => (Litex.Rules.{theorem} (__membership)) (Litex.Same.reflNoObservation {source}))"
         )))
     }
 
@@ -689,7 +689,7 @@ impl StmtResultToLeanCompiler {
             return Err("complex arithmetic rendering changed its verified target".into());
         }
         Ok(format!(
-            "Litex.Rules.{theorem} {rendered_left} {rendered_right}"
+            "Litex.Rules.{theorem} ({rendered_left}) ({rendered_right})"
         ))
     }
 
@@ -2246,7 +2246,7 @@ impl StmtResultToLeanCompiler {
                 ));
             };
             render_fact(target, &self.environment_stack)?;
-            let common = render_obj(common, &self.environment_stack)?;
+            let common = render_numeric_obj(common, &self.environment_stack)?;
             let proof = format!(
                 "Litex.Rules.{theorem} (u := {common}) ({})",
                 children[0].proof_expression

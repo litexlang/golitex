@@ -668,8 +668,12 @@ fn source_execution_requires_an_active_context() {
 #[test]
 fn zh_output_localizes_unproved_trust_labels() {
     let source_code = "abstract_prop tmp_rel(m, n)\ntrust exist! m, n R st {$tmp_rel(m, n)}\n";
-    let mut runtime =
-        Runtime::new(RunOptions::default().with_output_language(OutputLanguage::SimplifiedChinese));
+    let mut runtime = Runtime::new(RunOptions::new(
+        RunOption::Execute(ExecutionOption::Eval),
+        OutputDetail::Normal,
+        OutputLanguage::SimplifiedChinese,
+        SummaryOption::None,
+    ));
     runtime.start_isolated_source("zh_output_localizes_unproved_trust_labels");
 
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
@@ -685,8 +689,12 @@ fn zh_output_localizes_unproved_trust_labels() {
 #[test]
 fn zh_output_localizes_citation_evidence_but_keeps_litex_statement() {
     let source_code = "prop is_one_tmp(t R):\n    t = 1\n\n$is_one_tmp(1)\n";
-    let mut runtime =
-        Runtime::new(RunOptions::default().with_output_language(OutputLanguage::SimplifiedChinese));
+    let mut runtime = Runtime::new(RunOptions::new(
+        RunOption::Execute(ExecutionOption::Eval),
+        OutputDetail::Normal,
+        OutputLanguage::SimplifiedChinese,
+        SummaryOption::None,
+    ));
     runtime
         .start_isolated_source("zh_output_localizes_citation_evidence_but_keeps_litex_statement");
 
@@ -733,8 +741,12 @@ $can_be_divided_by_8(x)
 $can_be_divided_by_2(x)
 "#;
 
-    let mut runtime =
-        Runtime::new(RunOptions::default().with_output_language(OutputLanguage::SimplifiedChinese));
+    let mut runtime = Runtime::new(RunOptions::new(
+        RunOption::Execute(ExecutionOption::Eval),
+        OutputDetail::Normal,
+        OutputLanguage::SimplifiedChinese,
+        SummaryOption::None,
+    ));
     runtime.start_isolated_source("zh_forall_output_uses_short_conclusions_and_compact_citation");
 
     let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
@@ -942,7 +954,12 @@ fn non_english_languages_localize_unproved_trust_labels() {
         _reason_text,
     ) in cases
     {
-        let mut runtime = Runtime::new(RunOptions::default().with_output_language(language));
+        let mut runtime = Runtime::new(RunOptions::new(
+            RunOption::Execute(ExecutionOption::Eval),
+            OutputDetail::Normal,
+            language,
+            SummaryOption::None,
+        ));
         runtime.start_isolated_source("non_english_languages_localize_unproved_trust_labels");
 
         let (stmt_results, runtime_error) = execute_source("trust 1 = 1", &mut runtime);

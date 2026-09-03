@@ -443,7 +443,24 @@ impl StmtResultToLeanCompiler {
                                 result,
                                 &equality.left,
                             )?;
-                        Ok(Some(format!("Litex.Same.refl {rendered_object}")))
+                        let proposition = self
+                            .render_fact_using_well_definedness_result(
+                                &result.checked,
+                                &source_fact,
+                            )?;
+                        let reflexive_term = if matches!(&equality.left, Obj::Atom(_))
+                            && proposition.contains("FnTelescope.Carrier")
+                        {
+                            format!("(fun {{α}} => {rendered_object})")
+                        } else {
+                            rendered_object.clone()
+                        };
+                        let proof = if proposition.contains("ComplexObserver.none") {
+                            format!("Litex.Same.reflNoObservation {reflexive_term}")
+                        } else {
+                            format!("Litex.Same.refl {reflexive_term}")
+                        };
+                        Ok(Some(proof))
                     }
                     Some(BuiltinRuleEvidence::RationalNormalization(evidence)) => {
                         if evidence.expected_target.to_string() != source_fact.to_string() {

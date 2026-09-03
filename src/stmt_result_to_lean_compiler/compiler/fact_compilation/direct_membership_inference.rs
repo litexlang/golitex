@@ -181,7 +181,20 @@ impl StmtResultToLeanCompiler {
                     ));
                 }
             };
-            let proposition = render_fact(&conclusion.fact, &self.environment_stack)?;
+            let proposition =
+                if matches!(conclusion.fact, Fact::AtomicFact(AtomicFact::EqualFact(_))) {
+                    // A set-builder predicate projection exposes only the
+                    // observation-free `Same` edge returned by
+                    // `inSetBuilder_iff`; do not strengthen it to a native
+                    // numeric observer merely because the projected endpoint is
+                    // a literal.
+                    render_no_observation_equality_alternatives_fact(
+                        &conclusion.fact,
+                        &self.environment_stack,
+                    )?
+                } else {
+                    render_fact(&conclusion.fact, &self.environment_stack)?
+                };
             let theorem_name = format!("__fact{}", self.next_fact_name_index);
             self.declarations.push(format!(
                 "theorem {theorem_name} : {proposition} := by\n  exact {proof}"

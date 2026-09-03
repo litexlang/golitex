@@ -43,7 +43,7 @@ or `module_manager` without first expanding the crate-wide prelude.
 | [`source_execution.rs`](source_execution.rs) | Tokenizes, parses, and executes source inside an already initialized Runtime. |
 | [`file_execution.rs`](file_execution.rs) | Selects file context from the direct-parent `litex.config` and owns distinct project-file and isolated-file execution functions. |
 | [`output_rendering.rs`](output_rendering.rs) | Renders statement results, errors, and JSONL stream envelopes. |
-| [`terminal_import.rs`](terminal_import.rs) | Parses REPL-only `import` commands before source parsing and mutates the terminal's ephemeral module manifest. |
+| [`terminal_import.rs`](terminal_import.rs) | Parses REPL-only `import` commands before source parsing and mutates the terminal's interactive module manifest. |
 | [`repository_execution.rs`](repository_execution.rs) | Runs ordered project imports, module trees, file targets, and registered prefixes. |
 | [`session.rs`](session.rs) | Keeps one runtime alive for `-session`. |
 | [`summary.rs`](summary.rs) | Builds summaries requested by embedding APIs and internal artifacts; the CLI has no summary flag. |

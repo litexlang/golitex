@@ -27,11 +27,10 @@ impl StmtResultToLeanCompiler {
                 verified,
             )
             .map_err(|error| format!("stored-fact native equality: {error}"))?;
-        // Most facts render solely from the compiler environment. Function
-        // applications are the remaining target-side exception: their exact
-        // application term still reads the temporary WD rendering view. Only
-        // construct that view if ordinary Result-driven rendering says it is
-        // needed, then restore the surrounding compiler layer on every path.
+        // Render from the ordinary environment first.  If a function
+        // application needs its Result-owned WD context, retry in that
+        // context; the fact renderer itself decides whether the endpoint is
+        // an opaque no-observation carrier or a native numeric value.
         let proposition = match render_fact(&source_fact, &self.environment_stack) {
             Ok(proposition) => proposition,
             Err(initial_render_error)
@@ -47,7 +46,7 @@ impl StmtResultToLeanCompiler {
                     )
                 })?
             }
-            Err(error) => return Err(error),
+                Err(error) => return Err(error),
         };
         self.compile_stored_fact_without_inference_with_pre_rendered_proposition(
             result,
@@ -156,24 +155,59 @@ impl StmtResultToLeanCompiler {
         // FactId is the citation identity. `resolve_fact_citation` additionally
         // checks that the retained proposition is unchanged, including
         // alpha-equivalent forall binders, before exposing its Lean name.
-        let (proof, citation_is_from_current_wd) = match resolve_fact_citation(
-            &source_fact_id,
-            &citation.source_fact,
-            &self.environment_stack,
-        ) {
-            Ok(proof) => (proof, false),
-            Err(error) if error.contains("unavailable cited fact") => (
-                self.with_verified_fact_well_definedness_context(verified, |compiler| {
-                    resolve_fact_citation(
+        let (proof, citation_is_from_current_wd) =
+            if let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = &source_fact {
+                if obj_equality_key(&equality.left) == obj_equality_key(&equality.right) {
+                    (
+                        format!(
+                            "Litex.Same.refl ({})",
+                            render_obj(&equality.left, &self.environment_stack)?
+                        ),
+                        false,
+                    )
+                } else {
+                    match resolve_fact_citation(
                         &source_fact_id,
                         &citation.source_fact,
-                        &compiler.environment_stack,
-                    )
-                })?,
-                true,
-            ),
-            Err(error) => return Err(error),
-        };
+                        &self.environment_stack,
+                    ) {
+                        Ok(proof) => (proof, false),
+                        Err(error) if error.contains("unavailable cited fact") => (
+                            self.with_verified_fact_well_definedness_context(
+                                verified,
+                                |compiler| {
+                                    resolve_fact_citation(
+                                        &source_fact_id,
+                                        &citation.source_fact,
+                                        &compiler.environment_stack,
+                                    )
+                                },
+                            )?,
+                            true,
+                        ),
+                        Err(error) => return Err(error),
+                    }
+                }
+            } else {
+                match resolve_fact_citation(
+                    &source_fact_id,
+                    &citation.source_fact,
+                    &self.environment_stack,
+                ) {
+                    Ok(proof) => (proof, false),
+                    Err(error) if error.contains("unavailable cited fact") => (
+                        self.with_verified_fact_well_definedness_context(verified, |compiler| {
+                            resolve_fact_citation(
+                                &source_fact_id,
+                                &citation.source_fact,
+                                &compiler.environment_stack,
+                            )
+                        })?,
+                        true,
+                    ),
+                    Err(error) => return Err(error),
+                }
+            };
         if citation_is_from_current_wd {
             // Current-WD citations are rendered as closed proof expressions
             // (for example an intrinsic membership constructor or a

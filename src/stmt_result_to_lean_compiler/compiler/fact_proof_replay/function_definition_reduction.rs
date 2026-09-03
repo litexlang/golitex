@@ -90,11 +90,19 @@ impl StmtResultToLeanCompiler {
             reduction.defining_equality_fact_id,
             &self.environment_stack,
         )?;
-        let no_observation = unfolding_proof.contains("NoObservation");
+        let no_observation = unfolding_proof.contains("NoObservation")
+            || unfolding_proof.contains("withoutObservation")
+            || unfolding_proof.contains("WithoutObservation");
+        let reduced_no_observation =
+            if let Some(value) = reduced_proof.strip_prefix("Litex.Same.refl ") {
+                format!("Litex.Same.reflNoObservation {value}")
+            } else {
+                format!("Litex.Same.withoutObservation ({reduced_proof})")
+            };
         if reduction.application_is_left {
             if no_observation {
                 Ok(format!(
-                    "Litex.Same.transNoObservation ({unfolding_proof}) (Litex.Same.withoutObservation ({reduced_proof}))"
+                    "Litex.Same.transNoObservation ({unfolding_proof}) ({reduced_no_observation})"
                 ))
             } else {
                 Ok(format!(
@@ -104,7 +112,7 @@ impl StmtResultToLeanCompiler {
         } else {
             if no_observation {
                 Ok(format!(
-                    "Litex.Same.transNoObservation (Litex.Same.symmNoObservation (Litex.Same.withoutObservation ({reduced_proof}))) (Litex.Same.symmNoObservation ({unfolding_proof}))"
+                    "Litex.Same.transNoObservation (Litex.Same.symmNoObservation ({reduced_no_observation})) (Litex.Same.symmNoObservation ({unfolding_proof}))"
                 ))
             } else {
                 Ok(format!(

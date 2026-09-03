@@ -39,6 +39,61 @@ fn render_real_to_complex_same_across_contexts(
     Ok(format!("{theorem} ({left}) ({right})"))
 }
 
+/// Return a direct native real/complex bridge when an instantiated definition
+/// clause asks for exactly that endpoint pair.  This is important for a
+/// set-builder projection such as `is_one (1 : ℝ)`: the source representative
+/// proof is not needed to establish the concrete target clause, and trying to
+/// transport an observed `Same` through the builder's no-observation edge
+/// would lose the observer index required by the target.
+fn render_direct_real_complex_equality(
+    equality: &EqualFact,
+    context: &StmtResultToLeanCompilerEnvironmentStack,
+) -> Result<Option<String>, String> {
+    let target_left = render_obj(&equality.left, context)?;
+    let target_right = render_obj(&equality.right, context)?;
+    // The changed endpoint may be a bound symbol whose numeric rendering
+    // carries redundant `In.rep`/real ascriptions. The opposite, closed
+    // literal endpoint is canonical, so use it to identify the same native
+    // real/complex pair without relying on spelling normalization.
+    if let (Ok(real), Ok(complex)) = (
+        render_real_obj(&equality.right, context),
+        render_numeric_obj(&equality.right, context),
+    ) {
+        if target_left == real && target_right == complex {
+            return Ok(Some(format!("Litex.Same.realComplex ({real})")));
+        }
+        if target_left == complex && target_right == real {
+            return Ok(Some(format!(
+                "Litex.Same.symm (Litex.Same.realComplex ({real}))"
+            )));
+        }
+    }
+    if let (Ok(real), Ok(complex)) = (
+        render_real_source_object(&equality.left, context),
+        render_numeric_obj(&equality.left, context),
+    ) {
+        if target_left == real && target_right == complex {
+            return Ok(Some(render_real_to_complex_same_across_contexts(
+                &equality.left,
+                context,
+                context,
+            )?));
+        }
+    }
+    if let (Ok(real), Ok(complex)) = (
+        render_real_source_object(&equality.right, context),
+        render_numeric_obj(&equality.right, context),
+    ) {
+        if target_left == complex && target_right == real {
+            return Ok(Some(format!(
+                "Litex.Same.symm ({})",
+                render_real_to_complex_same_across_contexts(&equality.right, context, context,)?
+            )));
+        }
+    }
+    Ok(None)
+}
+
 fn render_object_same_across_exact_parameter_contexts(
     object: &Obj,
     source_context: &StmtResultToLeanCompilerEnvironmentStack,
@@ -650,16 +705,21 @@ pub(in super::super) fn render_fact_proof_across_exact_predicate_arguments_with_
             )?)
             && matches!(set, Obj::StandardSet(StandardSet::R))
         {
-            render_numeric_obj(source_argument, source_context)?;
-            render_real_source_object(target_argument, target_context)?;
-            format!(
-                "Litex.Same.symm ({})",
-                render_real_to_complex_same_across_contexts(
-                    target_argument,
-                    target_context,
-                    source_context,
-                )?
-            )
+            // Both clause endpoints denote the same original Litex object;
+            // only the exact-carrier contexts differ.  Keep that bridge at
+            // the semantic endpoint instead of manufacturing a real-to-
+            // complex observation whose left term is already `In.rep` and
+            // therefore cannot prove `Same source target`.
+            if source_original == target_original {
+                format!("Litex.Same.refl ({source_original})")
+            } else {
+                // The source definition clause itself is the verifier-owned
+                // bridge between the selected representative and the target
+                // semantic endpoint.  It is only available after the
+                // conjunction selector is known, so defer installing it
+                // until the clause transport loop below.
+                "__SOURCE_CLAUSE_BRIDGE__".to_string()
+            }
         } else {
             let LeanTargetObjectRepresentation::Symbol { symbol_id, .. } =
                 LeanTargetObjectRepresentation::lower(source_argument)?
@@ -751,19 +811,28 @@ pub(in super::super) fn render_fact_proof_across_exact_predicate_arguments_with_
                 "exact predicate transport does not yet support definition clause `{source_clause}` changing to `{target_clause}`",
             ));
         };
+        if let Some(direct) = render_direct_real_complex_equality(equality, &final_context)? {
+            component_proofs.push(direct);
+            continue;
+        }
         let mut proof = format!("__source{selector}");
         let mut clause_context = current.clone();
         for (symbol_id, set, source_value, target_value, bridge) in &transports {
             let mut next = clause_context.clone();
             next.symbol_names.insert(*symbol_id, target_value.clone());
             install_exact_predicate_carrier_value(*symbol_id, set, target_value, &mut next)?;
+            let bridge = if bridge == "__SOURCE_CLAUSE_BRIDGE__" {
+                format!("__source{selector}")
+            } else {
+                bridge.clone()
+            };
             proof = render_equality_across_representative(
                 equality,
                 &clause_context,
                 &next,
                 source_value,
                 target_value,
-                bridge,
+                &bridge,
                 &proof,
             )?;
             clause_context = next;

@@ -9,7 +9,6 @@ enum ReplOutputMode {
 }
 
 pub fn run_repl(version: &str, options: RunOptions) {
-    let options = options.with_execution(ExecutionOption::Repl);
     let stdin_handle = io::stdin();
     let stdout_handle = io::stdout();
     let mut stdin_locked = stdin_handle.lock();
@@ -349,7 +348,7 @@ fn repl_io_error(stream: &str, event: &str, message: &str) -> String {
 }
 
 fn initialize_isolated_repl_runtime(runtime: &mut Runtime) {
-    runtime.start_isolated_source(ExecutionTarget::Repl.source_label());
+    runtime.start_virtual_source(VirtualSource::Repl);
 }
 
 fn repl_line_starts_block(line: &str) -> bool {

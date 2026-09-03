@@ -5,7 +5,7 @@ impl Runtime {
         &mut self,
         def_struct_stmt: &DefStructStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        let is_trusted = self.current_execution_is_trusted_file();
+        let is_trusted = self.current_execution_is_trusted_source();
         let run_in_local_env = self
             .run_in_local_env(|rt| {
                 if is_trusted {

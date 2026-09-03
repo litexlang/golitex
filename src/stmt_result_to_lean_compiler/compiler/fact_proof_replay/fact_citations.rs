@@ -86,6 +86,17 @@ impl StmtResultToLeanCompiler {
         target: &Fact,
         citation: &SuccessStoredFactCitationProofResult,
     ) -> Result<Option<String>, String> {
+        // A previously published set-builder projection may intentionally
+        // expose an observation-free `Same` proposition.  A later standalone
+        // reflexive equality has its own (possibly numeric) observer contract
+        // and must not strengthen that citation by reusing the weaker proof;
+        // reflexivity is the complete proof for the target fact itself.
+        if let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = target {
+            if obj_equality_key(&equality.left) == obj_equality_key(&equality.right) {
+                let rendered = render_obj(&equality.left, &self.environment_stack)?;
+                return Ok(Some(format!("Litex.Same.refl ({rendered})")));
+            }
+        }
         self.construct_lean_fact_citation_with_equality_transport_from_result(
             target,
             &citation.source_fact.clone().into_stmt(),

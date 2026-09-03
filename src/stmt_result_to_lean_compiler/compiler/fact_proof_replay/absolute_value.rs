@@ -385,14 +385,48 @@ impl StmtResultToLeanCompiler {
                         if let LeanTargetObjectRepresentation::Symbol { symbol_id, .. } =
                             LeanTargetObjectRepresentation::lower(argument)?
                         {
-                            if let Some(source_to_selected) = self
+                            if let Some(binding) = self
+                                .environment_stack
+                                .exact_carrier_source_equalities
+                                .get(&symbol_id)
+                            {
+                                let real = self
+                                    .environment_stack
+                                    .numeric_real_values
+                                    .get(&symbol_id)
+                                    .cloned()
+                                    .ok_or_else(|| {
+                                        "absolute-value exact carrier has no retained real value"
+                                            .to_string()
+                                    })?;
+                                // `In.same_rep` deliberately uses the
+                                // default observer for a heterogeneous
+                                // source.  Here the source is already the
+                                // exact `R.Carrier`, so close the final
+                                // homogeneous endpoint with proof-irrelevant
+                                // `In.rep_exact` and let `Same.ofEq` infer the
+                                // real observer.
+                                let _ = binding;
+                                proof = format!(
+                                    "Litex.Same.trans ({proof}) (Litex.Same.trans (Litex.Same.symm (Litex.Same.realComplex ({real}))) (Litex.Same.ofEq (by simp [Litex.In.rep])))"
+                                );
+                            } else if let Some(source_to_selected) = self
                                 .environment_stack
                                 .numeric_representation_equalities
                                 .get(&symbol_id)
                             {
-                                proof = format!(
-                                    "Litex.Same.trans ({proof}) (Litex.Same.symm ({source_to_selected}))"
-                                );
+                                let source_bridge = if self
+                                    .environment_stack
+                                    .exact_carrier_values
+                                    .contains_key(&symbol_id)
+                                {
+                                    format!(
+                                        "Litex.Same.trans (Litex.Same.symm ({source_to_selected})) (Litex.Same.ofEq (by simp [Litex.In.rep]))"
+                                    )
+                                } else {
+                                    format!("Litex.Same.symm ({source_to_selected})")
+                                };
+                                proof = format!("Litex.Same.trans ({proof}) ({source_bridge})");
                             }
                         }
                     }
@@ -432,16 +466,40 @@ impl StmtResultToLeanCompiler {
                         &LeanTargetObjectRepresentation::lower(argument)?,
                         &self.environment_stack,
                     )?;
-                    let source_to_selected = self
+                    let (theorem, source_to_selected) = if let Some(binding) = self
                         .environment_stack
-                        .numeric_representation_equalities
+                        .exact_carrier_source_equalities
                         .get(&symbol_id)
+                    {
+                        let membership = cached_exact_membership_selection_proof(
+                            &binding.exact_value,
+                            &source,
+                        )
                         .ok_or_else(|| {
-                            "absolute-value positivity has no source-to-real representation bridge"
+                            "absolute-value positivity exact carrier lost its membership proof"
                                 .to_string()
                         })?;
+                        (
+                            "absPositiveOfNotSameNoObservation",
+                            format!(
+                                "Litex.Same.transNoObservation (Litex.Same.withoutObservation (Litex.In.same_rep {source} ({membership}))) (Litex.Same.realComplexNoObservation ({native_real}))"
+                            ),
+                        )
+                    } else {
+                        (
+                            "absPositiveOfNotSame",
+                            self.environment_stack
+                            .numeric_representation_equalities
+                            .get(&symbol_id)
+                            .cloned()
+                            .ok_or_else(|| {
+                                "absolute-value positivity has no source-to-real representation bridge"
+                                    .to_string()
+                            })?,
+                        )
+                    };
                     Ok(Some(format!(
-                        "Litex.Rules.absPositiveOfNotSame {source} {native_real} ({source_to_selected}) ({child_proof})"
+                        "Litex.Rules.{theorem} {source} {native_real} ({source_to_selected}) ({child_proof})"
                     )))
                 }
                 AbsoluteValueBuiltinRule::UpperBound => {

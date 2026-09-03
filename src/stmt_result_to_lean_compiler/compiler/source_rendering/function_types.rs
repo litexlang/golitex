@@ -133,10 +133,13 @@ pub(in super::super) fn render_function_requirement(
     let mut nested = context.clone();
     let domain =
         render_lean_source_for_target_set_representation(&function.parameters[0].set, &nested)?;
-    nested.symbol_names.insert(
-        function.parameters[0].symbol_id,
-        "(Litex.In.rep __arg __arg_in)".into(),
-    );
+    // The source-domain contract is a proposition about the original
+    // heterogeneous argument.  The function body may use `In.rep` to enter
+    // a native carrier, but the caller already owns the source-domain proof
+    // and must be able to pass it directly to `FnWhere`.
+    nested
+        .symbol_names
+        .insert(function.parameters[0].symbol_id, "__arg".into());
     let requirements = function
         .domain_facts
         .iter()

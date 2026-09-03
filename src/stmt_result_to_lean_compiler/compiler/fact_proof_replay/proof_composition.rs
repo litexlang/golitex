@@ -45,6 +45,20 @@ impl StmtResultToLeanCompiler {
             let Some(proof) = proof else {
                 return Ok(None);
             };
+            // A composed Result may publish an equality with an opaque
+            // function/set-builder endpoint using the observer-free Same
+            // ABI, while its direct child proof was produced by an ordinary
+            // observed arithmetic rule.  Erase only that outer observer here;
+            // already observer-free proofs are left untouched.
+            let proof = if render_fact(component, &self.environment_stack)?
+                .contains("ComplexObserver.none")
+                && !proof.contains("NoObservation")
+                && !proof.contains("withoutObservation")
+            {
+                format!("Litex.Same.withoutObservation ({proof})")
+            } else {
+                proof
+            };
             proofs.push(proof);
         }
         Ok(Some(right_associated_conjunction_proof(&proofs)?))

@@ -1457,22 +1457,25 @@ fn run_repository_for_test(
     output_language: OutputLanguage,
     summarize: bool,
 ) -> (bool, String) {
-    let options = if strict_mode {
-        RunOptions::strict_execute(ExecutionOption::Repo)
+    let run = if strict_mode {
+        RunOption::StrictExecute(ExecutionOption::Repo)
     } else {
-        RunOptions::execute(ExecutionOption::Repo)
-    }
-    .with_output_detail(if detailed_output {
-        OutputDetail::Detailed
-    } else {
-        OutputDetail::Normal
-    })
-    .with_output_language(output_language)
-    .with_summary(if summarize {
-        SummaryOption::Summarize
-    } else {
-        SummaryOption::None
-    });
+        RunOption::Execute(ExecutionOption::Repo)
+    };
+    let options = RunOptions::new(
+        run,
+        if detailed_output {
+            OutputDetail::Detailed
+        } else {
+            OutputDetail::Normal
+        },
+        output_language,
+        if summarize {
+            SummaryOption::Summarize
+        } else {
+            SummaryOption::None
+        },
+    );
     let outcome = crate::pipeline::run_repository(repository_path, options);
     (outcome.ok, outcome.output)
 }

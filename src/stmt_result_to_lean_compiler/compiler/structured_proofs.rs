@@ -367,7 +367,7 @@ impl StmtResultToLeanCompiler {
                 .typed_parameters()
                 .param_defs_and_args_to_param_to_arg_map(witness_objects);
             let mut substitution_runtime = Runtime::default();
-            substitution_runtime.ensure_execution_frame_for_parse();
+            substitution_runtime.ensure_current_source_for_parse();
             let expected_body = substitution_runtime
                 .inst_fact(
                     &existential.facts()[0].from_ref_to_cloned_fact(),
@@ -3575,7 +3575,7 @@ impl StmtResultToLeanCompiler {
             .environment_stack
             .runtime_resolved_numeric_substitutions;
         let mut substitution_runtime = Runtime::default();
-        substitution_runtime.ensure_execution_frame_for_parse();
+        substitution_runtime.ensure_current_source_for_parse();
         let evaluate_substituted = |source: &Obj| -> Result<String, String> {
             let substituted = substitution_runtime
                 .inst_obj(source, substitutions, SubstitutionMode::Exact)

@@ -190,6 +190,30 @@ impl Runtime {
             return Ok(UnknownGenericStmtResult::new().into());
         };
 
+        let source_membership: AtomicFact = InFact::new(
+            fact.element.clone(),
+            Obj::SetBuilder(set_builder.clone()),
+            fact.line_file.clone(),
+        )
+        .into();
+        let target_atomic: AtomicFact = fact.clone().into();
+        let target_transport = if source_membership.to_string() == target_atomic.to_string() {
+            None
+        } else {
+            let module_names = self.atomic_fact_referenced_module_names(&target_atomic);
+            let Some(transport) = self.equality_transport_for_known_atomic_fact(
+                &source_membership,
+                &target_atomic,
+                &module_names,
+            ) else {
+                return Ok(UnknownGenericStmtResult::new().into());
+            };
+            if transport.steps.is_empty() {
+                return Ok(UnknownGenericStmtResult::new().into());
+            }
+            Some(transport)
+        };
+
         let mut children = Vec::with_capacity(set_builder.facts.len() + 1);
         let mut expected_premises = Vec::with_capacity(set_builder.facts.len() + 1);
         let base: AtomicFact = InFact::new(
@@ -249,34 +273,32 @@ impl Runtime {
             children.push(result);
         }
 
-        let target: Fact = fact.clone().into();
-        if matches!(fact.set, Obj::SetBuilder(_)) {
-            return Ok(
-                SuccessProveFactResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
-                    target.clone(),
-                    "set-builder membership strategy: unfold one set definition and verify its atomic obligations"
-                        .to_string(),
-                    BuiltinRuleEvidence::SetBuilderMembership(
-                        SetBuilderMembershipBuiltinRuleEvidence::new(
-                            target,
-                            expected_premises,
-                        ),
-                    ),
-                    children,
-                )
-                .into(),
-            );
-        }
-        Ok(
+        let source_target: Fact = source_membership.clone().into();
+        let source_result =
             SuccessProveFactResult::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
-                target,
+                source_target.clone(),
                 "set-builder membership strategy: unfold one set definition and verify its atomic obligations"
                     .to_string(),
-                BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::VerifyOneLayerSetBuilderMembershipWithBuiltinStrategyOnce),
+                BuiltinRuleEvidence::SetBuilderMembership(
+                    SetBuilderMembershipBuiltinRuleEvidence::new(
+                        source_target,
+                        expected_premises,
+                    ),
+                ),
                 children,
-            )
-            .into(),
+            );
+        let Some(transport) = target_transport else {
+            return Ok(source_result.into());
+        };
+        Ok(SuccessProveFactResult::new(
+            target_atomic.into(),
+            SuccessInferResult::new(),
+            SuccessFactProofResult::Transform(Box::new(SuccessTransformFactResult::from_shared(
+                FactTransformationRule::EqualityRewrite(transport),
+                source_result.verification,
+            ))),
         )
+        .into())
     }
 
     pub fn verify_subset_with_builtin_strategy(

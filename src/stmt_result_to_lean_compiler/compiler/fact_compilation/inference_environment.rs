@@ -265,8 +265,23 @@ impl StmtResultToLeanCompiler {
                         proof = format!("{theorem} ({proof}) ({next})");
                         proof_is_strict |= *next_is_strict;
                     }
-                    let conclusion_proposition =
-                        render_fact(&conclusion.fact, &self.environment_stack)?;
+                    let conclusion_proposition = if matches!(
+                        conclusion.fact,
+                        Fact::AtomicFact(AtomicFact::EqualFact(_))
+                    ) {
+                        // Predicate projections from opaque set builders only
+                        // retain an observation-free `Same` edge.  Keep the
+                        // published proposition at that strength so the
+                        // generated declaration cannot demand a numeric
+                        // observer that the membership certificate never
+                        // supplied.
+                        render_no_observation_equality_alternatives_fact(
+                            &conclusion.fact,
+                            &self.environment_stack,
+                        )?
+                    } else {
+                        render_fact(&conclusion.fact, &self.environment_stack)?
+                    };
                     let conclusion_name = self.next_local_inference_fact_proof_name();
                     self.retain_compiled_inference_fact_proof_step_in_current_environment(
                         &mut compiled_inference_fact_proof_steps,
@@ -356,9 +371,26 @@ impl StmtResultToLeanCompiler {
                     ));
                 }
                 if !conclusion_already_visible {
+                    let conclusion_proposition = render_fact(&conclusion.fact, &self.environment_stack)?;
+                    let observation_free = conclusion_proposition.contains("ComplexObserver.none");
+                    let mut proof_parts = proof_parts;
+                    if observation_free {
+                        for proof in &mut proof_parts {
+                            if !proof.contains("NoObservation")
+                                && !proof.contains("withoutObservation")
+                            {
+                                *proof = format!("Litex.Same.withoutObservation ({proof})");
+                            }
+                        }
+                    }
+                    let trans = if observation_free {
+                        "Litex.Same.transNoObservation"
+                    } else {
+                        "Litex.Same.trans"
+                    };
                     let mut proof = proof_parts[0].clone();
                     for next in proof_parts.iter().skip(1) {
-                        proof = format!("Litex.Same.trans ({proof}) ({next})");
+                        proof = format!("{trans} ({proof}) ({next})");
                     }
                     if let Some(native_parts) = native_proof_parts {
                         let mut native_proof = native_parts[0].clone();
@@ -371,8 +403,6 @@ impl StmtResultToLeanCompiler {
                             native_proof,
                         )?;
                     }
-                    let conclusion_proposition =
-                        render_fact(&conclusion.fact, &self.environment_stack)?;
                     let conclusion_name = self.next_local_inference_fact_proof_name();
                     self.retain_compiled_inference_fact_proof_step_in_current_environment(
                         &mut compiled_inference_fact_proof_steps,

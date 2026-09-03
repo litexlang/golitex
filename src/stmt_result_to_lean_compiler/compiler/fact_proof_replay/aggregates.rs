@@ -97,7 +97,8 @@ impl StmtResultToLeanCompiler {
                 if value_child_reversed {
                     value_proof = format!("Litex.Same.symm ({value_proof})");
                 }
-                render_fact(target, &self.environment_stack)?;
+                let target_is_observation_free =
+                    render_fact(target, &self.environment_stack)?.contains("ComplexObserver.none");
                 let start = render_integer_obj(sum.start.as_ref(), &self.environment_stack)?;
                 let lowered_function = LeanTargetObjectRepresentation::lower(sum.func.as_ref())?;
                 let (exact_function, heterogeneous) = render_exact_unary_integer_function(
@@ -106,15 +107,38 @@ impl StmtResultToLeanCompiler {
                 )?;
                 let base_proof = match heterogeneous {
                     None => {
-                        format!("Litex.Rules.integerRangeSumSingleOwn {start} {exact_function}")
+                        let rule = format!(
+                            "Litex.Rules.integerRangeSumSingleOwn {start} {exact_function}"
+                        );
+                        if target_is_observation_free {
+                            format!("Litex.Same.withoutObservation ({rule})")
+                        } else {
+                            rule
+                        }
                     }
                     Some((source, membership)) => {
-                        format!("Litex.Rules.integerRangeSumSingle {start} {source} ({membership})")
+                        let rule = format!(
+                            "Litex.Rules.integerRangeSumSingle {start} {source} ({membership})"
+                        );
+                        if target_is_observation_free {
+                            format!("Litex.Same.withoutObservation ({rule})")
+                        } else {
+                            rule
+                        }
                     }
                 };
-                let mut proof = format!("Litex.Same.trans ({base_proof}) ({value_proof})");
+                let trans = if target_is_observation_free {
+                    "Litex.Same.transNoObservation"
+                } else {
+                    "Litex.Same.trans"
+                };
+                let mut proof = format!("{trans} ({base_proof}) ({value_proof})");
                 if reverse {
-                    proof = format!("Litex.Same.symm ({proof})");
+                    proof = if target_is_observation_free {
+                        format!("Litex.Same.symmNoObservation ({proof})")
+                    } else {
+                        format!("Litex.Same.symm ({proof})")
+                    };
                 }
                 Ok(Some(proof))
             }
@@ -215,7 +239,8 @@ impl StmtResultToLeanCompiler {
                                 .to_string()
                         })?;
                 }
-                render_fact(target, &self.environment_stack)?;
+                let target_is_observation_free =
+                    render_fact(target, &self.environment_stack)?.contains("ComplexObserver.none");
                 let start = render_integer_obj(extended.start.as_ref(), &self.environment_stack)?;
                 let finish = render_integer_obj(previous.end.as_ref(), &self.environment_stack)?;
                 let lowered_function =
@@ -227,15 +252,33 @@ impl StmtResultToLeanCompiler {
                 let native_order =
                     format!("(by simpa [Litex.Le, Litex.OrderValue] using ({order_proof}))");
                 let mut proof = match heterogeneous {
-                    None => format!(
-                        "Litex.Rules.integerRangeSumSplitLastOwn {start} {finish} {exact_function} ({native_order})"
-                    ),
-                    Some((source, membership)) => format!(
-                        "Litex.Rules.integerRangeSumSplitLast {start} {finish} {source} ({membership}) ({native_order})"
-                    ),
+                    None => {
+                        let rule = format!(
+                            "Litex.Rules.integerRangeSumSplitLastOwn {start} {finish} {exact_function} ({native_order})"
+                        );
+                        if target_is_observation_free {
+                            format!("Litex.Same.withoutObservation ({rule})")
+                        } else {
+                            rule
+                        }
+                    }
+                    Some((source, membership)) => {
+                        let rule = format!(
+                            "Litex.Rules.integerRangeSumSplitLast {start} {finish} {source} ({membership}) ({native_order})"
+                        );
+                        if target_is_observation_free {
+                            format!("Litex.Same.withoutObservation ({rule})")
+                        } else {
+                            rule
+                        }
+                    }
                 };
                 if reverse {
-                    proof = format!("Litex.Same.symm ({proof})");
+                    proof = if target_is_observation_free {
+                        format!("Litex.Same.symmNoObservation ({proof})")
+                    } else {
+                        format!("Litex.Same.symm ({proof})")
+                    };
                 }
                 Ok(Some(proof))
             }

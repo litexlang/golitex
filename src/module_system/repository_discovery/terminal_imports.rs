@@ -39,7 +39,10 @@ pub fn discover_terminal_module_import(
         &config_path,
         line_file.0,
     )?;
-    if let Some(existing_module_id) = runtime.module_manager.module_id_by_path(&root_string) {
+    if let Some(existing_module_id) = runtime
+        .module_manager
+        .module_id_by_root_path(&RealDirectoryPath::new(root_string.clone()))
+    {
         let existing_name = runtime
             .module_manager
             .module(existing_module_id)
@@ -58,8 +61,8 @@ pub fn discover_terminal_module_import(
         .module_manager
         .create_discovered_module(
             alias.to_string(),
-            root_string,
-            config_string,
+            RealDirectoryPath::new(root_string),
+            RealFilePath::new(config_string),
             ProjectHierarchy::Module,
             None,
         )

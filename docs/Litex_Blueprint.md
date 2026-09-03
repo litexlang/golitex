@@ -8,7 +8,10 @@ Website: https://litexlang.com/doc/Litex_Blueprint
 
 Chinese version: https://litexlang.com/doc/Litex中文蓝图
 
-Litex is a set-theoretic, fact-oriented formal language that builds proof flows
+**Litex is a small, readable, fact-oriented formal language for turning**
+**mathematical reasoning into checkable, traceable data for the human–AI–Litex loop.**
+
+It is a set-theoretic, fact-oriented formal language that builds proof flows
 from the bottom up. It puts humans, AI, and the verifier in the same loop:
 humans provide mathematical intent, AI proposes or repairs the next fact, and
 Litex checks it and returns either its supporting evidence or the point where

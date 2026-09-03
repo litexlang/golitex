@@ -344,11 +344,6 @@ pub(in super::super) fn validate_standard_numeric_membership_inference_target(
             let semantic_target =
                 format!("Litex.Positive {}", render_obj(target_element, context)?);
             let semantic = render_fact(target, context)? == semantic_target;
-            let exact_positive_real_carrier = matches!(
-                LeanTargetObjectRepresentation::lower(source_element),
-                Ok(LeanTargetObjectRepresentation::Symbol { symbol_id, .. })
-                    if context.exact_positive_real_carriers.contains_key(&symbol_id)
-            );
             let lean_theorem_name = match (rule.source_set, semantic) {
                 (StandardSet::NPos, true) => "positiveOfInNPos",
                 (StandardSet::QPos, true) => "positiveOfInQPos",
@@ -359,9 +354,6 @@ pub(in super::super) fn validate_standard_numeric_membership_inference_target(
                 // simplifies it back to the carrier value when appropriate.
                 (StandardSet::NPos, false) => "positiveNaturalRepPositive",
                 (StandardSet::QPos, false) => "positiveRationalRepPositive",
-                (StandardSet::RPos, false) if exact_positive_real_carrier => {
-                    "positiveRealCarrierPositive"
-                }
                 (StandardSet::RPos, false) => "positiveRealRepPositive",
                 _ => {
                     return Err(format!(

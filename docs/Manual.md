@@ -71,8 +71,10 @@ Read [Objects](#objects), [Well-Defined Objects](#well-defined-objects),
 [Statements](#statements) first. Read [Proof Process](#proof-process) when a
 fact does not close. The rule and inference catalogues are lookup sections.
 
-Long worked developments belong in [Litex Examples](Examples.md). Design
-rationale belongs in the [FAQ](FAQ.md) and [Litex
+The learner path and compact worked developments belong in
+[Litex Learner Cheatsheet](Litex_Learner_Cheatsheet.md); longer runnable source
+files live in the [examples directory](../examples/README.md). Design rationale
+belongs in the [FAQ](FAQ.md) and [Litex
 Blueprint](Litex_Blueprint.md). Focused interface comparisons belong in
 [Representative Lean–Litex Example
 Comparisons](Representative_Lean_Litex_Example_Comparisons.md).
@@ -2743,7 +2745,7 @@ The last fact is `unknown`; no known equality makes the second arguments match.
 
 ### Goal-shape routing
 
-Use the [Cheat Sheet's proof-action table](cheatsheet.md#choose-the-proof-action)
+Use the [Learner Cheatsheet's proof-action table](Litex_Learner_Cheatsheet.md#6-small-proofs-write-the-route-only-when-needed)
 before expanding a proof manually. It owns the compact goal-to-action index;
 this Manual owns the exact syntax, generated obligations, directional
 boundaries, and executable examples for each proof surface.
@@ -3482,9 +3484,10 @@ The boundary is semantic: replacing `finite_set` by arbitrary `set` makes
 `finite_set_size(...)` ill-defined. The rule does not attempt to prove an
 unknown set finite merely because it appears in a cardinality expression.
 
-Runnable examples for these families are indexed in [Litex
-Examples](Examples.md). Keeping that evidence map there avoids duplicating a
-second, quickly stale list of implementation files in the language reference.
+Runnable examples for these families are indexed in the
+[examples directory](../examples/README.md). Keeping that evidence map there
+avoids duplicating a second, quickly stale list of implementation files in the
+language reference.
 
 ```litex
 2 + 3 * 4 = 14

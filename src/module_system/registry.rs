@@ -1,6 +1,5 @@
 use crate::prelude::*;
 use std::collections::HashMap;
-use std::rc::Rc;
 
 #[derive(Clone, Debug)]
 pub struct UnverifiedImport {
@@ -18,7 +17,7 @@ pub struct UnverifiedImport {
 pub struct ModuleManager {
     pub modules: HashMap<ModuleId, ModuleRunner>,
     pub module_by_name: HashMap<String, ModuleId>,
-    pub module_by_path: HashMap<String, ModuleId>,
+    pub module_by_root: HashMap<RealDirectoryPath, ModuleId>,
     pub exported_files_by_name: HashMap<String, ImportTarget>,
     pub loading_module_stack: Vec<ModuleId>,
     pub next_module_id: usize,
@@ -31,7 +30,7 @@ impl ModuleManager {
         ModuleManager {
             modules: HashMap::new(),
             module_by_name: HashMap::new(),
-            module_by_path: HashMap::new(),
+            module_by_root: HashMap::new(),
             exported_files_by_name: HashMap::new(),
             loading_module_stack: vec![],
             next_module_id: 0,
@@ -40,11 +39,36 @@ impl ModuleManager {
         }
     }
 
+    #[deprecated(note = "use create_virtual_root_module or create_file_root_module")]
     pub fn create_root_module(
         &mut self,
         main_file_path: &str,
-        is_virtual_source: bool,
-    ) -> ExecutionModuleFileInfo {
+        legacy_virtual_source: bool,
+    ) -> SourceId {
+        if legacy_virtual_source {
+            let kind = match main_file_path.to_ascii_lowercase().as_str() {
+                "eval" => VirtualSource::Eval,
+                "repl" => VirtualSource::Repl,
+                "session" => VirtualSource::Session,
+                "to-lean" | "to_lean" => VirtualSource::ToLean,
+                "to-latex" | "to_latex" => VirtualSource::ToLatex,
+                _ => VirtualSource::Named(main_file_path.to_string()),
+            };
+            self.create_virtual_root_module(kind)
+        } else {
+            self.create_file_root_module(RealFilePath::new(main_file_path))
+        }
+    }
+
+    pub fn create_virtual_root_module(&mut self, kind: VirtualSource) -> SourceId {
+        self.create_root_source(SourcePath::VirtualSource(kind))
+    }
+
+    pub fn create_file_root_module(&mut self, path: RealFilePath) -> SourceId {
+        self.create_root_source(SourcePath::RealFilePath(path))
+    }
+
+    fn create_root_source(&mut self, origin: SourcePath) -> SourceId {
         assert!(
             self.module(ModuleId::ROOT).is_none(),
             "root module has already been created"
@@ -55,36 +79,37 @@ impl ModuleManager {
             ModuleId::ROOT,
             "the root module must be allocated as ModuleId::ROOT"
         );
-        let module_root_path = module_root_path_for_main_file(main_file_path);
         let mut runner = ModuleRunner::new(
             id,
             String::new(),
-            module_root_path,
-            main_file_path.to_string(),
+            ModuleLocation::Virtual,
             ProjectHierarchy::Module,
             None,
             ModuleStatus::Loaded,
         );
-        let file_id = if is_virtual_source {
-            let file_id = runner.create_virtual_file(main_file_path.to_string(), String::new());
-            runner.module_source_file = Some(file_id);
-            file_id
-        } else {
-            runner.create_module_source_file(main_file_path.to_string(), String::new())
+        let source_id = match origin {
+            SourcePath::VirtualSource(kind) => runner.create_virtual_source(kind),
+            SourcePath::RealFilePath(path) => runner.create_real_source(path.0, None),
         };
+        runner.module_source_id = Some(source_id);
+        if matches!(
+            runner.source(source_id).map(|source| &source.origin),
+            Some(SourcePath::RealFilePath(_))
+        ) {
+            runner.location = ModuleLocation::SingleFile;
+        }
         runner
-            .file_mut(file_id)
+            .source_mut(source_id)
             .expect("root source file should exist")
-            .status = FileStatus::Loaded;
+            .load_status = SourceLoadStatus::Loaded;
         self.modules.insert(id, runner);
-        self.execution_module_file_info(id, file_id)
-            .expect("root source file should be registered")
+        source_id
     }
 
     pub fn create_repository_root_module(
         &mut self,
-        module_root_path: String,
-        main_file_path: String,
+        module_root_path: RealDirectoryPath,
+        main_file_path: RealFilePath,
     ) -> Result<ModuleId, String> {
         if self.module(ModuleId::ROOT).is_some() {
             return Err("root module has already been created".to_string());
@@ -96,22 +121,24 @@ impl ModuleManager {
         let runner = ModuleRunner::new(
             id,
             String::new(),
-            module_root_path.clone(),
-            main_file_path.clone(),
+            ModuleLocation::Repository {
+                root: module_root_path.clone(),
+                manifest: main_file_path.clone(),
+            },
             ProjectHierarchy::Module,
             None,
             ModuleStatus::Loaded,
         );
         self.modules.insert(id, runner);
-        self.module_by_path.insert(module_root_path, id);
+        self.module_by_root.insert(module_root_path, id);
         Ok(id)
     }
 
     pub fn create_discovered_module(
         &mut self,
         module_name: String,
-        module_root_path: String,
-        main_file_path: String,
+        module_root_path: RealDirectoryPath,
+        main_file_path: RealFilePath,
         hierarchy: ProjectHierarchy,
         parent_module_id: Option<ModuleId>,
     ) -> Result<ModuleId, String> {
@@ -125,26 +152,32 @@ impl ModuleManager {
         let mut runner = ModuleRunner::new(
             id,
             module_name.clone(),
-            module_root_path.clone(),
-            main_file_path.clone(),
+            ModuleLocation::Repository {
+                root: module_root_path.clone(),
+                manifest: main_file_path.clone(),
+            },
             hierarchy,
             parent_module_id,
             ModuleStatus::Discovered,
         );
-        if main_file_path.ends_with(".lit") {
-            runner.create_module_source_file(main_file_path, module_name.clone());
+        if main_file_path
+            .as_path()
+            .extension()
+            .is_some_and(|ext| ext == "lit")
+        {
+            runner.create_module_source(main_file_path.to_string(), module_name.clone());
         }
         self.modules.insert(id, runner);
         self.module_by_name.insert(module_name, id);
-        self.module_by_path.entry(module_root_path).or_insert(id);
+        self.module_by_root.entry(module_root_path).or_insert(id);
         Ok(id)
     }
 
     pub fn create_discovered_standard_module(
         &mut self,
         module_name: String,
-        module_root_path: String,
-        main_file_path: String,
+        module_root_path: RealDirectoryPath,
+        main_file_path: RealFilePath,
         hierarchy: ProjectHierarchy,
         parent_module_id: Option<ModuleId>,
     ) -> Result<ModuleId, String> {
@@ -191,12 +224,14 @@ impl ModuleManager {
             ImportTarget::Module(module_id) => self
                 .module(module_id)
                 .map(|module| module.module_name.as_str()),
-            ImportTarget::File { module_id, file_id } => self
+            ImportTarget::File {
+                module_id,
+                source_id,
+            } => self
                 .module(module_id)?
-                .file(file_id)?
+                .source(source_id)?
                 .canonical_name
-                .as_str()
-                .into(),
+                .as_deref(),
         }
     }
 
@@ -248,34 +283,38 @@ impl ModuleManager {
         self.modules.get_mut(&id)
     }
 
-    pub fn execution_module_file_info(
-        &self,
-        module_id: ModuleId,
-        file_id: FileId,
-    ) -> Option<ExecutionModuleFileInfo> {
-        let source_path = self.module(module_id)?.file(file_id)?.source_path.as_str();
-        Some(ExecutionModuleFileInfo::new(
-            module_id,
-            file_id,
-            Rc::from(source_path),
-        ))
-    }
-
+    #[deprecated(note = "use create_virtual_source")]
     pub fn create_execution_file(
         &mut self,
         module_id: ModuleId,
-        source_path: &str,
-    ) -> Result<ExecutionModuleFileInfo, String> {
-        let file_id = self
+        legacy_label: &str,
+    ) -> Result<SourceId, String> {
+        let kind = match legacy_label.to_ascii_lowercase().as_str() {
+            "eval" => VirtualSource::Eval,
+            "repl" => VirtualSource::Repl,
+            "session" => VirtualSource::Session,
+            "to-lean" | "to_lean" => VirtualSource::ToLean,
+            "to-latex" | "to_latex" => VirtualSource::ToLatex,
+            _ => VirtualSource::Named(legacy_label.to_string()),
+        };
+        let source_id = self.create_virtual_source(module_id, kind)?;
+        Ok(source_id)
+    }
+
+    pub fn create_virtual_source(
+        &mut self,
+        module_id: ModuleId,
+        kind: VirtualSource,
+    ) -> Result<SourceId, String> {
+        let source_id = self
             .module_mut(module_id)
             .ok_or_else(|| "execution module is missing".to_string())?
-            .create_virtual_file(source_path.to_string(), String::new());
+            .create_virtual_source(kind);
         self.module_mut(module_id)
-            .and_then(|module| module.file_mut(file_id))
-            .expect("new execution file should exist")
-            .status = FileStatus::Loaded;
-        self.execution_module_file_info(module_id, file_id)
-            .ok_or_else(|| "new execution file is missing".to_string())
+            .and_then(|module| module.source_mut(source_id))
+            .expect("new virtual source should exist")
+            .load_status = SourceLoadStatus::Loaded;
+        Ok(source_id)
     }
 
     pub fn module_is_descendant_of(
@@ -299,8 +338,14 @@ impl ModuleManager {
         self.module_by_name.get(module_name).copied()
     }
 
+    pub fn module_id_by_root_path(&self, module_root_path: &RealDirectoryPath) -> Option<ModuleId> {
+        self.module_by_root.get(module_root_path).copied()
+    }
+
+    /// Compatibility adapter for callers that still receive a root path as a
+    /// string at an external boundary.
     pub fn module_id_by_path(&self, module_root_path: &str) -> Option<ModuleId> {
-        self.module_by_path.get(module_root_path).copied()
+        self.module_id_by_root_path(&RealDirectoryPath::new(module_root_path))
     }
 
     pub fn finish_loading_module(&mut self, module_id: ModuleId) {
@@ -356,14 +401,6 @@ impl ModuleManager {
         self.next_module_id += 1;
         id
     }
-}
-
-fn module_root_path_for_main_file(main_file_path: &str) -> String {
-    let path = std::path::Path::new(main_file_path);
-    path.parent()
-        .unwrap_or_else(|| std::path::Path::new(""))
-        .to_string_lossy()
-        .into_owned()
 }
 
 fn local_reference_suffix(name: &str, local_root: &str) -> Option<String> {

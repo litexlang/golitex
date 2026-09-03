@@ -13,28 +13,21 @@ impl Runtime {
     }
 
     pub fn environment_count(&self) -> usize {
-        let frame = self
-            .execution_stack
-            .last()
-            .expect("an execution frame should always exist");
-        let local_count = frame.local_environment_stack.len();
+        let local_count = self.local_scopes.len();
         local_count + 2
     }
 
     pub fn environment_by_top_index(&self, index: usize) -> Option<&Environment> {
-        let frame = self.execution_stack.last()?;
-        let local_count = frame.local_environment_stack.len();
+        let local_count = self.local_scopes.len();
         if index < local_count {
-            return frame
-                .local_environment_stack
+            return self
+                .local_scopes
                 .get(local_count - 1 - index)
                 .map(|environment| environment.as_ref());
         }
         let layer_index = index - local_count;
-        let module = self
-            .module_manager
-            .module(frame.module_file_info.module_id)?;
-        let current_file = module.file(frame.module_file_info.file_id)?;
+        let module = self.module_manager.module(self.current_module_id?)?;
+        let current_file = module.source(self.current_source_id?)?;
         if layer_index == 0 {
             return Some(current_file.environment.as_ref());
         }
@@ -1107,29 +1100,32 @@ impl Runtime {
                 let Some(module) = self.module_manager.module(module_id) else {
                     return vec![];
                 };
-                if let Some(file_id) = module.flattened_export_file {
+                if let Some(source_id) = module.flattened_export_source {
                     return module
-                        .file(file_id)
-                        .filter(|file| file.status == FileStatus::Loaded)
+                        .source(source_id)
+                        .filter(|file| file.load_status == SourceLoadStatus::Loaded)
                         .map(|file| vec![file.environment.as_ref()])
                         .unwrap_or_default();
                 }
-                if let Some(file_id) = module.module_source_file {
+                if let Some(source_id) = module.module_source_id {
                     return module
-                        .file(file_id)
-                        .filter(|file| file.status == FileStatus::Loaded)
+                        .source(source_id)
+                        .filter(|file| file.load_status == SourceLoadStatus::Loaded)
                         .map(|file| vec![file.environment.as_ref()])
                         .unwrap_or_default();
                 }
                 vec![module.main_environment.as_ref()]
             }
-            Some(ImportTarget::File { module_id, file_id }) => {
+            Some(ImportTarget::File {
+                module_id,
+                source_id,
+            }) => {
                 let Some(module) = self.module_manager.module(module_id) else {
                     return vec![];
                 };
                 module
-                    .file(file_id)
-                    .filter(|file| file.status == FileStatus::Loaded)
+                    .source(source_id)
+                    .filter(|file| file.load_status == SourceLoadStatus::Loaded)
                     .map(|file| vec![file.environment.as_ref()])
                     .unwrap_or_default()
             }
@@ -1143,16 +1139,15 @@ impl Runtime {
     }
 
     pub fn current_parse_namespace(&self) -> Option<&str> {
-        let frame = self.execution_stack.last()?;
-        let module_id = frame.module_file_info.module_id;
-        let file_id = frame.module_file_info.file_id;
+        let module_id = self.current_module_id?;
+        let source_id = self.current_source_id?;
         let module = self.module_manager.module(module_id)?;
-        if module.flattened_export_file == Some(file_id) && !module.module_name.is_empty() {
+        if module.flattened_export_source == Some(source_id) && !module.module_name.is_empty() {
             return Some(module.module_name.as_str());
         }
         module
-            .file(file_id)
-            .map(|file| file.canonical_name.as_str())
+            .source(source_id)
+            .and_then(|file| file.canonical_name.as_deref())
             .filter(|name| !name.is_empty())
             .or_else(|| (!module.module_name.is_empty()).then_some(module.module_name.as_str()))
     }

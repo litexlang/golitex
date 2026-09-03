@@ -124,9 +124,9 @@ fn algebraic_nonzero_child_proof_is_anchored_to_its_semantic_proposition() {
         .expect("compile algebraic normalization");
 
     assert!(
-        generated.contains("exact (show ¬ Litex.Same")
+        generated.contains("exact (show ¬ @Litex.Same")
             && generated.contains("from (by")
-            && generated.contains("Litex.Same.ofEq __native_eq"),
+            && generated.contains("Litex.Same.ofEqNoObservation __native_eq"),
         "{generated}"
     );
 }

@@ -51,7 +51,7 @@ impl StmtResultToLeanCompiler {
             .typed_parameters
             .param_defs_and_args_to_param_to_arg_map(&arguments);
         let mut substitution_runtime = Runtime::default();
-        substitution_runtime.ensure_execution_frame_for_parse();
+        substitution_runtime.ensure_current_source_for_parse();
 
         let mut application_terms = vec![source_theorem];
         let mut source_application_context = self.environment_stack.clone();
@@ -63,11 +63,12 @@ impl StmtResultToLeanCompiler {
         // that parameter can be transported before theorem application.
         // This is local application evidence, not ambient fact discovery.
         let mut exact_parameter_application_bridges = Vec::new();
-        for (parameter_index, (((_, parameter_type), argument), requirement)) in source_parameters
-            .iter()
-            .zip(arguments.iter())
-            .zip(result.requirements.iter().take(source_parameters.len()))
-            .enumerate()
+        for (parameter_index, (((binding, parameter_type), argument), requirement)) in
+            source_parameters
+                .iter()
+                .zip(arguments.iter())
+                .zip(result.requirements.iter().take(source_parameters.len()))
+                .enumerate()
         {
             if requirement.kind != KnownForallRequirementKind::ParameterType {
                 return Err(format!(
@@ -98,7 +99,12 @@ impl StmtResultToLeanCompiler {
             );
             let exact_real_parameter = matches!(
                 parameter_type,
-                ParamType::Obj(set) if forall_parameter_uses_exact_real_carrier(set)
+                ParamType::Obj(set)
+                    if forall_parameter_uses_exact_real_carrier(set)
+                        && !forall_parameter_has_direct_membership_domain(
+                            binding.id(),
+                            &source_forall.dom_facts,
+                        )
             );
             let exact_complex_parameter = matches!(
                 parameter_type,

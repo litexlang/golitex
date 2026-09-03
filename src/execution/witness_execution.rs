@@ -431,7 +431,7 @@ impl Runtime {
     ) -> Result<SuccessInferResult, RuntimeError> {
         let witness_stmt = stmt.clone().into();
         let fact = stmt.exist_fact_in_witness.clone().into();
-        let store_result = if self.current_execution_is_trusted_file() {
+        let store_result = if self.current_execution_is_trusted_source() {
             self.store_fact_with_trust_and_infer_with_reason(
                 fact,
                 InferReason::StatementWithVerification,
@@ -472,7 +472,7 @@ impl Runtime {
         let witness_stmt: Stmt = stmt.clone().into();
         let atomic_fact: AtomicFact = stmt.atomic_fact.clone().into();
         let fact: Fact = atomic_fact.into();
-        let store_result = if self.current_execution_is_trusted_file() {
+        let store_result = if self.current_execution_is_trusted_source() {
             self.store_fact_with_trust_and_infer_with_reason(
                 fact,
                 InferReason::StatementWithVerification,
@@ -633,7 +633,7 @@ impl Runtime {
     ) -> Result<SuccessInferResult, RuntimeError> {
         let witness_stmt = stmt.clone().into();
         let fact = IsNonemptySetFact::new(stmt.set.clone(), stmt.line_file.clone()).into();
-        let store_result = if self.current_execution_is_trusted_file() {
+        let store_result = if self.current_execution_is_trusted_source() {
             self.store_fact_with_trust_and_infer_with_reason(
                 fact,
                 InferReason::StatementWithVerification,

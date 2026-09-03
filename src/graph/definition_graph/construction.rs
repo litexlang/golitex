@@ -21,22 +21,26 @@ impl DefinitionGraphBuilder {
     ) -> Self {
         let mut builder = Self::new();
         match selected_target {
-            Some(RepositoryFileTarget::File { module_id, file_id }) => {
-                if let Some(file) = runtime
+            Some(RepositoryFileTarget::File {
+                module_id,
+                source_id,
+            }) => {
+                if let Some(source) = runtime
                     .module_manager
                     .module(module_id)
-                    .and_then(|module| module.file(file_id))
+                    .and_then(|module| module.source(source_id))
                 {
+                    let source_label = source.display_label();
                     let node_ids = builder.add_environment(
-                        file.environment.as_ref(),
-                        Some(file.canonical_name.as_str()),
-                        Some(file.source_path.as_str()),
+                        source.environment.as_ref(),
+                        source.canonical_name.as_deref(),
+                        Some(source_label.as_str()),
                     );
                     builder.add_execution_source_for_nodes(
                         runtime,
-                        file.execution_mode,
-                        file.canonical_name.as_str(),
-                        file.source_path.as_str(),
+                        source.load_mode,
+                        source.canonical_name.as_deref().unwrap_or_default(),
+                        source_label.as_str(),
                         node_ids.as_slice(),
                     );
                 }
@@ -74,32 +78,43 @@ impl DefinitionGraphBuilder {
             let Some(module) = runtime.module_manager.module(module_id) else {
                 continue;
             };
+            let main_source_label = module.main_source_label();
             let main_node_ids = self.add_environment(
                 module.main_environment.as_ref(),
                 Some(module.module_name.as_str()),
-                Some(module.main_file_path.as_str()),
+                Some(main_source_label.as_str()),
             );
             self.add_execution_source_for_nodes(
                 runtime,
-                module.execution_mode,
+                module.load_mode,
                 module.module_name.as_str(),
-                module.main_file_path.as_str(),
+                main_source_label.as_str(),
                 main_node_ids.as_slice(),
             );
-            for file in module.files.iter() {
-                if file.status != FileStatus::Loaded {
+            for source in module.sources.iter() {
+                if source.load_status != SourceLoadStatus::Loaded {
                     continue;
                 }
+                // Repository/file graph projection includes physical sources;
+                // a standalone or session graph may additionally include only
+                // the one virtual source that is currently active. Historical
+                // REPL/session sources must not leak into later projections.
+                let is_current_source = runtime.current_module_id == Some(module.id)
+                    && runtime.current_source_id == Some(source.id);
+                if source.real_file_path().is_none() && !is_current_source {
+                    continue;
+                }
+                let source_label = source.display_label();
                 let node_ids = self.add_environment(
-                    file.environment.as_ref(),
-                    Some(file.canonical_name.as_str()),
-                    Some(file.source_path.as_str()),
+                    source.environment.as_ref(),
+                    source.canonical_name.as_deref(),
+                    Some(source_label.as_str()),
                 );
                 self.add_execution_source_for_nodes(
                     runtime,
-                    file.execution_mode,
-                    file.canonical_name.as_str(),
-                    file.source_path.as_str(),
+                    source.load_mode,
+                    source.canonical_name.as_deref().unwrap_or_default(),
+                    source_label.as_str(),
                     node_ids.as_slice(),
                 );
             }

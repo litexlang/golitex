@@ -14,7 +14,10 @@ pub(super) fn discover_config_import(
             .module_manager
             .module(owner_module_id)
             .expect("manifest owner module should exist");
-        PathBuf::from(&owner.module_root_path)
+        owner
+            .root_directory_path()
+            .map(|path| path.as_path().to_path_buf())
+            .unwrap_or_default()
     };
     let target_path = owner_root.join(&import.path);
     let canonical_root = canonical_directory(
@@ -65,7 +68,7 @@ pub(super) fn discover_config_import(
     )?;
     if let Some(existing_module_id) = runtime
         .module_manager
-        .module_id_by_path(child_root_string.as_str())
+        .module_id_by_root_path(&RealDirectoryPath::new(child_root_string.clone()))
     {
         let duplicate_in_owner =
             runtime
@@ -106,8 +109,8 @@ pub(super) fn discover_config_import(
         .module_manager
         .create_discovered_module(
             child_name,
-            child_root_string,
-            child_config_string,
+            RealDirectoryPath::new(child_root_string),
+            RealFilePath::new(child_config_string),
             ProjectHierarchy::Module,
             None,
         )
