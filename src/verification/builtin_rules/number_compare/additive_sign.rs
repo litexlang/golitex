@@ -27,24 +27,22 @@ impl Runtime {
             zero,
             add_obj.left.as_ref(),
             true,
-            true,
             line_file,
             builtin_state,
         )?;
-        if !left_verify_result.is_success() {
+        let Some(left_verify_result) = left_verify_result else {
             return Ok(None);
-        }
+        };
         let right_verify_result = self.verify_zero_order_on_sub_expr(
             zero,
             add_obj.right.as_ref(),
             true,
-            true,
             line_file,
             builtin_state,
         )?;
-        if !right_verify_result.is_success() {
+        let Some(right_verify_result) = right_verify_result else {
             return Ok(None);
-        }
+        };
 
         Ok(Some(ProveFactResult::from(
             SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
@@ -81,20 +79,18 @@ impl Runtime {
             zero,
             add_obj.left.as_ref(),
             false,
-            false,
             line_file,
             builtin_state,
         )?;
-        if left_strict.is_success() {
+        if let Some(left_strict) = left_strict {
             let right_strict = self.verify_zero_order_on_sub_expr(
                 zero,
                 add_obj.right.as_ref(),
                 false,
-                false,
                 line_file,
                 builtin_state,
             )?;
-            if right_strict.is_success() {
+            if let Some(right_strict) = right_strict {
                 return Ok(Some(ProveFactResult::from(
                     SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         atomic_fact.clone().into(),
@@ -113,24 +109,22 @@ impl Runtime {
                 zero,
                 add_obj.left.as_ref(),
                 false,
-                false,
                 line_file,
                 builtin_state,
             )?;
-            if !left_result.is_success() {
+            let Some(left_result) = left_result else {
                 return Ok(None);
-            }
+            };
             let right_result = this.verify_zero_order_on_sub_expr(
                 zero,
                 add_obj.right.as_ref(),
                 true,
-                false,
                 line_file,
                 builtin_state,
             )?;
-            if !right_result.is_success() {
+            let Some(right_result) = right_result else {
                 return Ok(None);
-            }
+            };
             Ok(Some(ProveFactResult::from(
                 SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     atomic_fact.clone().into(),
@@ -147,24 +141,22 @@ impl Runtime {
                 zero,
                 add_obj.left.as_ref(),
                 true,
-                false,
                 line_file,
                 builtin_state,
             )?;
-            if !left_result.is_success() {
+            let Some(left_result) = left_result else {
                 return Ok(None);
-            }
+            };
             let right_result = this.verify_zero_order_on_sub_expr(
                 zero,
                 add_obj.right.as_ref(),
                 false,
-                false,
                 line_file,
                 builtin_state,
             )?;
-            if !right_result.is_success() {
+            let Some(right_result) = right_result else {
                 return Ok(None);
-            }
+            };
             Ok(Some(ProveFactResult::from(
                 SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     atomic_fact.clone().into(),

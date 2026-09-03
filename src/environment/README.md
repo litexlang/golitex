@@ -12,7 +12,7 @@ pub struct Environment {
     pub facts: EnvironmentFactStore,
     pub objects: EnvironmentObjectKnowledgeStore,
     pub predicate_algebraic_properties: EnvironmentPredicateAlgebraicPropertyStore,
-    pub caches: EnvironmentVerificationCache,
+    pub inference_cache: EnvironmentInferenceCache,
 }
 ```
 
@@ -29,7 +29,7 @@ object/object.rs                                                 canonical objec
 object/                                                          reusable facets known about one object
 predicate_algebraic_properties/predicate_algebraic_properties.rs predicate-name property owner
 predicate_algebraic_properties/                                  property profile and registration operations
-caches/caches.rs                                                 reusable environment-scoped verification results
+caches/caches.rs                                                 environment-scoped inference firing deduplication
 display.rs                                                       Environment formatting
 merge.rs                                                         committed-child transaction
 ```
@@ -57,7 +57,7 @@ There is now no `EnvironmentPersistentRepositories` and no compatibility
 | `facts` | Stored `FactId` records plus equality, membership, quantified-fact, and argument-shape indexes used to find them. Search indexes remain here because they are maintained with the fact store. |
 | `objects` | One `ObjString -> EnvironmentObjectKnowledge` entry per object key. Tuple/cart shape, sequence or matrix shape, simplified value, set-builder equality, and function-set knowledge are optional facets of that one entry. |
 | `predicate_algebraic_properties` | One predicate-name entry whose profile independently records transitivity, symmetry permutations, reflexivity, and antisymmetry. |
-| `caches` | Environment-scoped verification results reusable by later statements: well-defined object results and infer-rule firing guards. |
+| `inference_cache` | Environment-scoped infer-rule firing keys that prevent the same persistent consequence from being emitted repeatedly. No WD or truth proof nodes live here. |
 
 Definitions retain symbol identity, not the syntactic construct that first
 introduced a name. `EnvironmentDefinitionRegistry` owns a `SymbolTable`; each
@@ -93,7 +93,7 @@ store checked fact `a = 1`
   definitions: resolve the SymbolId of `a`
   facts:        allocate/store FactId f3 and equality/search indexes
   objects:      remember the simplified value of `a` in a's knowledge profile
-  caches:       remember only environment-valid reusable checks
+  inference_cache: remember which persistent inference firings already ran
 
 later goal `a + 1 = 2`
   facts + objects provide the exact stored equality/value evidence

@@ -86,10 +86,7 @@ impl StatementResultRenderer {
         )
     }
 
-    pub(in super::super) fn verify_fact_result(
-        &mut self,
-        result: &VerifyFactResult,
-    ) -> JsonValue {
+    pub(in super::super) fn verify_fact_result(&mut self, result: &VerifyFactResult) -> JsonValue {
         match result {
             VerifyFactResult::Verified(verified) => object(vec![
                 string_field("outcome", "verified"),

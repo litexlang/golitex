@@ -42,21 +42,83 @@ fn lake_build_directory_is_not_a_module_child() {
 }
 
 #[test]
-fn ordinary_unexported_directory_is_still_rejected() {
-    let fixture = Fixture::new("rejected");
+fn ordinary_unexported_paths_are_ignored() {
+    let fixture = Fixture::new("ignored");
     write_module(&fixture.root);
-    write_file(
-        &fixture.root.join("notes/scratch.lit"),
-        "have scratch R = 1\n",
-    );
+    write_file(&fixture.root.join("notes/scratch.lit"), "1 = 0\n");
+    write_file(&fixture.root.join("sidecar.lit"), "1 = 0\n");
+    write_file(&fixture.root.join("todo.lit"), "1 = 0\n");
 
     let output = run_module(&fixture.root);
+    assert!(
+        output.status.success(),
+        "module with an unexported directory failed:\nstdout:\n{}\nstderr:\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr),
+    );
+    assert!(String::from_utf8_lossy(&output.stdout).contains("\"ok\": true"));
+}
+
+#[test]
+fn explicitly_selected_unexported_file_is_rejected_by_project_mode() {
+    let fixture = Fixture::new("unexported-file-target");
+    write_module(&fixture.root);
+    let sidecar = fixture.root.join("sidecar.lit");
+    write_file(&sidecar, "have sidecar R = 1\n");
+
+    let output = run_file(&sidecar);
     assert!(!output.status.success());
     assert!(
-        String::from_utf8_lossy(&output.stdout).contains("unexported Litex module path `notes`"),
+        String::from_utf8_lossy(&output.stdout)
+            .contains("must be exported exactly once by its containing litex.config"),
         "unexpected output:\nstdout:\n{}\nstderr:\n{}",
         String::from_utf8_lossy(&output.stdout),
         String::from_utf8_lossy(&output.stderr),
+    );
+}
+
+#[test]
+fn declared_exports_remain_strictly_validated() {
+    let missing = Fixture::new("missing-export");
+    write_file(
+        &missing.root.join("litex.config"),
+        "[hierarchy]\nmodule\n\n[export]\nmissing = \"./missing.lit\"\n",
+    );
+    let missing_output = run_module(&missing.root);
+    assert!(!missing_output.status.success());
+    assert!(
+        String::from_utf8_lossy(&missing_output.stdout).contains("[export] target"),
+        "unexpected missing-export output:\n{}",
+        String::from_utf8_lossy(&missing_output.stdout),
+    );
+
+    let duplicate = Fixture::new("duplicate-export-path");
+    write_file(
+        &duplicate.root.join("litex.config"),
+        "[hierarchy]\nmodule\n\n[export]\nfirst = \"./main.lit\"\nsecond = \"./main.lit\"\n",
+    );
+    write_file(&duplicate.root.join("main.lit"), "have value R = 1\n");
+    let duplicate_output = run_module(&duplicate.root);
+    assert!(!duplicate_output.status.success());
+    assert!(
+        String::from_utf8_lossy(&duplicate_output.stdout).contains("declared more than once"),
+        "unexpected duplicate-export output:\n{}",
+        String::from_utf8_lossy(&duplicate_output.stdout),
+    );
+
+    let wrong_extension = Fixture::new("wrong-export-extension");
+    write_file(
+        &wrong_extension.root.join("litex.config"),
+        "[hierarchy]\nmodule\n\n[export]\nnotes = \"./notes.md\"\n",
+    );
+    write_file(&wrong_extension.root.join("notes.md"), "sidecar\n");
+    let wrong_extension_output = run_module(&wrong_extension.root);
+    assert!(!wrong_extension_output.status.success());
+    assert!(
+        String::from_utf8_lossy(&wrong_extension_output.stdout)
+            .contains("file targets must point to a .lit file"),
+        "unexpected wrong-extension output:\n{}",
+        String::from_utf8_lossy(&wrong_extension_output.stdout),
     );
 }
 
@@ -82,6 +144,13 @@ fn run_module(root: &Path) -> Output {
         ])
         .output()
         .expect("run Litex module")
+}
+
+fn run_file(path: &Path) -> Output {
+    Command::new(litex_binary())
+        .args(["-f", path.to_str().expect("fixture path must be UTF-8")])
+        .output()
+        .expect("run Litex file")
 }
 
 fn litex_binary() -> PathBuf {

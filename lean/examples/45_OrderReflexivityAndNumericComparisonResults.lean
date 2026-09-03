@@ -6,10 +6,10 @@ set_option linter.style.nameCheck false
 namespace __Compiler_45_OrderReflexivityAndNumericComparisonResults
 
 theorem weak_order_is_reflexive :
-    ∀ {__carrier0_1 : Type} (x : __carrier0_1) (__h3 : Litex.In x Litex.R),
-      Litex.Le (((Litex.In.rep x __h3 : ℝ)) : ℂ) (((Litex.In.rep x __h3 : ℝ)) : ℂ) := by
-  intro __carrier0_1 x __h3
-  have __c0_0 : Litex.Le (((Litex.In.rep x __h3 : ℝ)) : ℂ) (((Litex.In.rep x __h3 : ℝ)) : ℂ) := Litex.Le.refl (((Litex.In.rep x __h3 : ℝ)) : ℂ)
+    ∀ (x : (Litex.R).Carrier) (__h3 : Litex.In x Litex.R),
+      Litex.Le (((x : ℝ)) : ℂ) (((x : ℝ)) : ℂ) := by
+  intro x __h3
+  have __c0_0 : Litex.Le (((x : ℝ)) : ℂ) (((x : ℝ)) : ℂ) := Litex.Le.refl (((x : ℝ)) : ℂ)
   exact __c0_0
 
 theorem __fact1 : Litex.Lt ((2 : ℂ) + (3 : ℂ)) (6 : ℂ) := by

@@ -15,9 +15,12 @@ theorem __fact1 : Litex.Same inc ({ call := fun {__alpha} (__arg : __alpha) __ar
   unfold inc
   exact Litex.Same.refl ({ call := fun {__alpha} (__arg : __alpha) __arg_in => (Litex.In.rep __arg __arg_in + (1 : ℝ)) } : Litex.Fn Litex.R Litex.R)
 
-theorem __fact2 : Litex.Same (Litex.fnApplyOwn inc (Litex.In.own (Litex.fnSet Litex.R Litex.R) inc) (2 : ℂ) (Litex.Rules.complexRealInR (2 : ℝ))) ((2 : ℂ) + (1 : ℂ)) := by
-  exact (by
-  unfold Litex.fnApplyOwn inc
-  exact Litex.Same.realAddComplex (Litex.Same.symm (Litex.In.same_rep (2 : ℂ) (Litex.Rules.complexRealInR (2 : ℝ)))) (Litex.Same.realComplex (1 : ℝ)))
+theorem __fact2 : Litex.Same (Litex.fnApplyCarrier (domain := Litex.R) (codomain := Litex.R) inc ((Litex.In.own (Litex.fnSet Litex.R Litex.R) inc)) (2 : ℝ)) ((2 : ℂ) + (1 : ℂ)) := by
+  exact Litex.Same.trans ((by
+  unfold Litex.fnApplyCarrier inc
+  exact Litex.Same.realAddComplex ((by
+  convert (Litex.Same.realComplex ((2 : ℝ))) using 1
+  · exact Litex.In.rep_exact ((2 : ℝ)) (Litex.In.own Litex.R ((2 : ℝ)))
+  · norm_num)) (Litex.Same.realComplex (1 : ℝ)))) (Litex.Same.refl ((2 : ℂ) + (1 : ℂ)))
 
 end __Compiler_39_CheckedNamedFunctionReductionResultComposition

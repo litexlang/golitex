@@ -27,11 +27,11 @@ impl Runtime {
         }
         let integer_fact: AtomicFact =
             InFact::new(arg.clone(), StandardSet::Z.into(), line_file.clone()).into();
-        let premise_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&integer_fact, builtin_state)?;
-        if premise_result.is_unknown() {
+        let Some(premise_result) =
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&integer_fact, builtin_state)?
+        else {
             return Ok(None);
-        }
+        };
         Ok(Some(
             SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
@@ -77,11 +77,11 @@ impl Runtime {
         };
         let premise: AtomicFact =
             InFact::new(shift, StandardSet::Z.into(), line_file.clone()).into();
-        let premise_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
-        if !premise_result.is_success() {
+        let Some(premise_result) =
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?
+        else {
             return Ok(None);
-        }
+        };
         Ok(Some(
             SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
@@ -130,11 +130,11 @@ impl Runtime {
             premise_right.clone(),
             line_file.clone(),
         );
-        let premise_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&premise.into(), builtin_state)?;
-        if premise_result.is_unknown() {
+        let Some(premise_result) =
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&premise.into(), builtin_state)?
+        else {
             return Ok(None);
-        }
+        };
         let name = if is_min { "min" } else { "max" };
         let rule = match (is_min, selected_is_first) {
             (true, true) => ExtremaBuiltinRule::MinEqLeftOfLessEqual,
@@ -334,11 +334,11 @@ impl Runtime {
         let results = if typed_rule.is_some() {
             let mut results = Vec::with_capacity(premises.len());
             for premise in &premises {
-                let result =
-                    self.verify_atomic_fact_as_builtin_rule_premise(premise, builtin_state)?;
-                if !result.is_success() {
+                let Some(result) =
+                    self.try_verify_atomic_fact_as_builtin_rule_premise(premise, builtin_state)?
+                else {
                     return Ok(None);
-                }
+                };
                 results.push(result);
             }
             results

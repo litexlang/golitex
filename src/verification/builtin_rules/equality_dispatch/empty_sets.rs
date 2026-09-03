@@ -20,8 +20,8 @@ impl Runtime {
         let not_nonempty: AtomicFact =
             NotIsNonemptySetFact::new(set.clone(), line_file.clone()).into();
         let mut sub =
-            self.verify_atomic_fact_as_builtin_rule_premise(&not_nonempty, builtin_state)?;
-        if !sub.is_success() {
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&not_nonempty, builtin_state)?;
+        if sub.is_none() {
             let empty_order: Option<AtomicFact> = match &set {
                 Obj::Range(range) => Some(
                     LessEqualFact::new(
@@ -59,17 +59,17 @@ impl Runtime {
                         vec![comparison],
                     )
                     .into();
-                    sub = self.complete_atomic_fact_proof_result(
+                    sub = Some(self.complete_atomic_fact_proof_result(
                         &not_nonempty,
                         proof,
                         builtin_state.verify_state(),
-                    )?;
+                    )?);
                 }
             }
         }
-        if !sub.is_success() {
+        let Some(sub) = sub else {
             return Ok(None);
-        }
+        };
 
         Ok(Some(
             SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_and_steps(
@@ -100,13 +100,13 @@ impl Runtime {
         };
         let size: Obj = FiniteSetSize::new(set).into();
         let zero: Obj = Number::new("0".to_string()).into();
-        let size_zero = self.verify_known_equality_fact(
+        let Some(size_zero) = self.try_verify_known_equality_fact_candidate(
             &EqualFact::new_from_refs(&size, &zero, line_file.clone()),
             verify_state,
-        )?;
-        if !size_zero.is_success() {
+        )?
+        else {
             return Ok(None);
-        }
+        };
 
         Ok(Some(
             SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_and_steps(

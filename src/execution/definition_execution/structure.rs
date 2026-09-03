@@ -40,12 +40,12 @@ impl Runtime {
         if let Some((param_def_with_type, dom_facts)) = &def_struct_stmt.param_def_with_dom {
             self.define_params_with_type(param_def_with_type, false, BindingScope::LocalBinder)?;
             for dom_fact in dom_facts.iter() {
-                self.verify_quantifier_free_fact_well_defined(dom_fact, &verify_state)?;
+                self.verify_quantifier_free_fact_well_defined_result(dom_fact, &verify_state)?;
             }
         }
 
         for field in def_struct_stmt.fields.iter() {
-            self.verify_obj_well_defined_and_store_cache(&field.field_type, &verify_state)?;
+            self.verify_obj_well_defined_result(&field.field_type, &verify_state)?;
         }
 
         self.run_in_local_env(|rt| {

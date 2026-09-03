@@ -283,45 +283,47 @@ witness exist z R st {z = 1} from 1:
 }
 
 #[test]
-fn failed_atomic_trust_is_absent_from_audit_artifacts() {
-    let failed_trust = r#"
+fn unchecked_atomic_trust_remains_visible_in_audit_artifacts() {
+    let unchecked_trust = r#"
 trust:
     777 = 778
     1 / 0 = 0
 "#;
     let mut runtime = Runtime::default();
-    runtime.start_isolated_source("failed_atomic_trust_audit");
-    let (stmt_results, runtime_error) = execute_source(failed_trust, &mut runtime);
+    runtime.start_isolated_source("unchecked_atomic_trust_audit");
+    let (stmt_results, runtime_error) = execute_source(unchecked_trust, &mut runtime);
     let summary_output = render_run_summary(RunSummaryRequest {
         runtime: &runtime,
         stmt_results: &stmt_results,
         runtime_error: &runtime_error,
     });
 
-    assert!(runtime_error.is_some());
-    assert!(summary_output.contains("\"direct_trust\": 0"));
-    assert!(summary_output.contains("\"known_facts\": 0"));
+    assert!(runtime_error.is_none());
+    assert!(summary_output.contains("\"direct_trust\":"));
+    assert!(!summary_output.contains("\"direct_trust\": 0"));
 
     let (fact_graph_ok, fact_graph_output) = render_graph(
         GraphKind::Fact,
-        run_code(failed_trust, RunOptions::default()),
+        run_code(unchecked_trust, RunOptions::default()),
         true,
     );
-    assert!(!fact_graph_ok);
-    assert!(fact_graph_output.contains("\"nodes\": []"));
+    assert!(fact_graph_ok);
+    assert!(!fact_graph_output.contains("\"nodes\": []"));
+    assert!(fact_graph_output.contains("777 = 778"));
 
-    let failed_trust_have = r#"
+    let unchecked_trust_have = r#"
 trust have audit_probe R:
     audit_probe = audit_probe
     1 / 0 = 0
 "#;
     let (definition_graph_ok, definition_graph_output) = render_graph(
         GraphKind::Definition,
-        run_code(failed_trust_have, RunOptions::default()),
+        run_code(unchecked_trust_have, RunOptions::default()),
         true,
     );
-    assert!(!definition_graph_ok);
-    assert!(definition_graph_output.contains("\"nodes\": []"));
+    assert!(definition_graph_ok);
+    assert!(!definition_graph_output.contains("\"nodes\": []"));
+    assert!(definition_graph_output.contains("audit_probe"));
 }
 
 #[test]
@@ -389,7 +391,7 @@ sketch:
     let (_, normal_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     assert!(normal_output.contains("\"children\": ["));
     assert!(normal_output.contains("Every object is a set."));
-    assert!(normal_output.contains("\"verification\": {"));
+    assert!(normal_output.contains("\"evidence\": {"));
     assert!(normal_output.contains("\"infers\": {"));
     assert!(!normal_output.contains(&["execution", "trace"].join("_")));
 
@@ -696,7 +698,7 @@ fn zh_output_localizes_citation_evidence_but_keeps_litex_statement() {
         "Chinese citation run failed:\n{}",
         run_output
     );
-    assert!(run_output.contains("\"verification\""));
+    assert!(run_output.contains("\"evidence\""));
     assert!(run_output.contains("\"kind\": \"DefinitionReduction\""));
     assert!(run_output.contains("\"definition\": \"prop is_one_tmp(t R):\\n"));
     assert!(run_output.contains("\"argument_verification\""));
@@ -1187,8 +1189,10 @@ forall x R:
         run_output
     );
     assert!(
-        run_output.contains("\"verification\": {"),
-        "forall proof conclusions should carry their own verification objects:\n{}",
+        run_output.contains("\"evidence\": {")
+            && run_output.contains("\"well_definedness\": {")
+            && run_output.contains("\"proof\": {"),
+        "verified facts should carry explicit WD and truth evidence:\n{}",
         run_output
     );
 }
@@ -2180,7 +2184,7 @@ fn and_fact_unknown_reports_original_goal_without_second_pass_projection() {
         run_output
     );
     assert!(
-        run_output.contains("\"type\": \"unknown\""),
+        run_output.contains("\"type\": \"atomic fact unknown\""),
         "and fact failure should retain the original unresolved result:\n{}",
         run_output
     );
@@ -2213,7 +2217,7 @@ fn chain_fact_unknown_reports_original_goal_without_second_pass_projection() {
         run_output
     );
     assert!(
-        run_output.contains("\"type\": \"unknown\""),
+        run_output.contains("\"type\": \"chain fact unknown\""),
         "chain fact failure should retain the original unresolved result:\n{}",
         run_output
     );
@@ -2261,7 +2265,7 @@ forall x R:
 }
 
 #[test]
-fn forall_chain_unknown_nests_failed_chain_step() {
+fn forall_chain_unknown_retains_the_first_search_detail() {
     let source_code = r#"
 forall x R:
     x = 0 = 1
@@ -2280,11 +2284,10 @@ forall x R:
     assert!(run_output.contains("\"type\": \"forall unknown\""));
     assert!(run_output.contains("\"failed_prove\": {"));
     assert!(run_output.contains("\"type\": \"chain fact unknown\""));
-    assert!(run_output.contains("\"failed_chain_step\": {"));
-    assert!(run_output.contains("\"statement\": \"x = 0\""));
+    assert!(run_output.contains("\"detail\": ["));
+    assert!(run_output.contains("unverified chain step: x = 0"));
     assert!(run_output.contains("\"index\": 1"));
-    assert!(run_output.contains("\"count\": 2"));
-    assert!(!run_output.contains("unverified chain step"));
+    assert!(!run_output.contains("\"failed_chain_step\":"));
     assert!(!run_output.contains("\"previous_error\": null"));
 }
 
@@ -2309,9 +2312,9 @@ forall x R:
     assert!(run_output.contains("\"failed_prove\": {"));
     assert!(run_output.contains("\"index\": 1"));
     assert!(run_output.contains("\"count\": 1"));
-    assert!(run_output.contains("\"failed_chain_step\": {"));
-    assert!(run_output.contains("\"count\": 2"));
-    assert!(run_output.contains("\"type\": \"atomic fact unknown\""));
+    assert!(run_output.contains("\"detail\": ["));
+    assert!(run_output.contains("unverified chain step: x = 0"));
+    assert!(run_output.contains("\"type\": \"chain fact unknown\""));
 }
 
 #[test]
@@ -2518,7 +2521,7 @@ fn error_output_compound_failure_keeps_detailed_inside_results_in_all_styles() {
     assert!(detailed.contains("\"kind\": \"exec_stmt_error\""));
     assert!(detailed.contains("\"inside_results\": ["));
     assert!(detailed.contains("\"statement\": \"1 = 1\""));
-    assert!(detailed.contains("\"verification\": {"));
+    assert!(detailed.contains("\"evidence\": {"));
     assert!(!detailed.contains(&["execution", "trace"].join("_")));
     assert!(!detailed.contains("\"phases\":"));
     assert!(detailed.contains("\"failed_goal\": \"1 = 0\""));
@@ -2542,7 +2545,7 @@ fn error_output_does_not_change_the_style_of_earlier_successes() {
 
         let success_output = render_statement_result_json(&stmt_results[0]);
         assert!(!success_output.contains("\"schema\":"));
-        assert!(success_output.contains("\"verification\": {"));
+        assert!(success_output.contains("\"evidence\": {"));
         assert!(!success_output.contains(&["execution", "trace"].join("_")));
 
         let (_, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);

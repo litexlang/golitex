@@ -9,24 +9,24 @@ theorem __fact0 : Litex.In (1 : ℂ) Litex.RPos := by
   exact Litex.Rules.complexEqRealInRPos (1 : ℂ) (1 : ℝ) (by norm_num) (by norm_num)
 
 theorem __fact1 : Litex.Positive (1 : ℂ) := by
-  exact Litex.Rules.positiveOfInRPos (__fact0)
+  exact (by simpa using (Litex.Rules.positiveOfInRPos (__fact0)))
 
 theorem __fact2 : Litex.In ((Real.exp 1 : ℝ) : ℂ) Litex.RPos := by
   exact Litex.Rules.eInRPos
 
 theorem __fact3 : Litex.Positive ((Real.exp 1 : ℝ) : ℂ) := by
-  exact Litex.Rules.positiveOfInRPos (__fact2)
+  exact (by simpa using (Litex.Rules.positiveOfInRPos (__fact2)))
 
 theorem __fact4 : Litex.In ((Real.pi : ℝ) : ℂ) Litex.RPos := by
   exact Litex.Rules.piInRPos
 
 theorem __fact5 : Litex.Positive ((Real.pi : ℝ) : ℂ) := by
-  exact Litex.Rules.positiveOfInRPos (__fact4)
+  exact (by simpa using (Litex.Rules.positiveOfInRPos (__fact4)))
 
 theorem __fact6 :
     ∀ (__p1 : (Litex.RPos).Carrier) (__type1 : Litex.In __p1 Litex.RPos), (Litex.In __p1 Litex.R) ∧ (Litex.In __p1 Litex.C) ∧ (Litex.Lt (0 : ℂ) ((((__p1).val : ℝ)) : ℂ)) := by
   intro r __h14
-  have __infer6_3 : Litex.Lt (0 : ℂ) ((((r).val : ℝ)) : ℂ) := Litex.Rules.positiveRealCarrierPositive (__h14)
+  have __infer6_3 : Litex.Lt (0 : ℂ) ((((r).val : ℝ)) : ℂ) := (by simpa using (Litex.Rules.positiveRealCarrierPositive (__h14)))
   have __prior6_0 : Litex.In r Litex.R := Litex.Rules.inROfInRPos (__h14)
   have __prior6_1 : Litex.In r Litex.C := Litex.Rules.inCOfInR (Litex.Rules.inROfInRPos (__h14))
   have __prior6_2 : Litex.Lt (0 : ℂ) ((((r).val : ℝ)) : ℂ) := __infer6_3

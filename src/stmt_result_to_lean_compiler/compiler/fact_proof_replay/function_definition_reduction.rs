@@ -7,7 +7,7 @@ impl StmtResultToLeanCompiler {
     /// named function. The defining equality is resolved by exact `FactId`;
     /// the application orientation and reduced body come from the Result.
     pub(in super::super) fn construct_lean_checked_function_definition_reduction_from_result(
-        &self,
+        &mut self,
         target: &Fact,
         reduction: &CheckedFunctionDefinitionReductionEvidence,
     ) -> Result<String, String> {
@@ -24,13 +24,21 @@ impl StmtResultToLeanCompiler {
                 "checked function-definition reduction changed its goal orientation".into(),
             );
         }
-        if !reduction.reduced_matches_other_by_alpha
-            || !objs_equal_with_nested_binder_alpha_equivalence(
-                &reduction.reduced,
-                &reduction.other_side,
-            )
+        let reduced_equality = reduction.reduced_equality.verified().ok_or_else(|| {
+            "checked function-definition reduction retained an unproved reduced equality"
+                .to_string()
+        })?;
+        let Fact::AtomicFact(AtomicFact::EqualFact(reduced_comparison)) = reduced_equality.fact()
+        else {
+            return Err("checked function-definition reduction child is not an equality".into());
+        };
+        if obj_equality_key(&reduced_comparison.left) != obj_equality_key(&reduction.reduced)
+            || obj_equality_key(&reduced_comparison.right)
+                != obj_equality_key(&reduction.other_side)
         {
-            return Err("checked function-definition reduction changed its reduced result".into());
+            return Err(
+                "checked function-definition reduction changed its reduced-equality child".into(),
+            );
         }
         let Fact::AtomicFact(AtomicFact::EqualFact(defining_equality)) =
             &reduction.defining_equality
@@ -65,16 +73,44 @@ impl StmtResultToLeanCompiler {
                 "checked function-definition reduction changed its named function symbol".into(),
             );
         }
-        let application_side = if reduction.application_is_left {
-            LeanEqualityApplicationSide::Left
-        } else {
-            LeanEqualityApplicationSide::Right
-        };
-        render_checked_identity_function_reduction_from_fact(
-            target,
-            reduction.defining_equality_fact_id,
-            application_side,
-            &self.environment_stack,
+        let reduced_proof = self
+            .construct_lean_proof_from_direct_fact_result(reduced_equality)?
+            .ok_or_else(|| {
+                "checked function-definition reduction child has no direct Lean proof constructor"
+                    .to_string()
+            })?;
+        let unfolding_target: Fact = EqualFact::new(
+            reduction.application_side.clone(),
+            reduction.reduced.clone(),
+            target.line_file(),
         )
+        .into();
+        let unfolding_proof = render_checked_identity_function_reduction_from_fact(
+            &unfolding_target,
+            reduction.defining_equality_fact_id,
+            &self.environment_stack,
+        )?;
+        let no_observation = unfolding_proof.contains("NoObservation");
+        if reduction.application_is_left {
+            if no_observation {
+                Ok(format!(
+                    "Litex.Same.transNoObservation ({unfolding_proof}) (Litex.Same.withoutObservation ({reduced_proof}))"
+                ))
+            } else {
+                Ok(format!(
+                    "Litex.Same.trans ({unfolding_proof}) ({reduced_proof})"
+                ))
+            }
+        } else {
+            if no_observation {
+                Ok(format!(
+                    "Litex.Same.transNoObservation (Litex.Same.symmNoObservation (Litex.Same.withoutObservation ({reduced_proof}))) (Litex.Same.symmNoObservation ({unfolding_proof}))"
+                ))
+            } else {
+                Ok(format!(
+                    "Litex.Same.trans (Litex.Same.symm ({reduced_proof})) (Litex.Same.symm ({unfolding_proof}))"
+                ))
+            }
+        }
     }
 }

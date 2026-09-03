@@ -700,6 +700,30 @@ main = "./main.lit"
 }
 
 #[test]
+fn configured_folder_ignores_unexported_litex_files_and_directories() {
+    let fixture = Fixture::new("ignored-unexported-children");
+    let root = fixture.path("root");
+    write_file(
+        &root.join("litex.config"),
+        r#"[hierarchy]
+module
+
+[export]
+main = "./main.lit"
+"#,
+    );
+    write_file(&root.join("main.lit"), "have value R = 1\n");
+    write_file(&root.join("sidecar.lit"), "1 = 0\n");
+    write_file(&root.join("notes/scratch.lit"), "1 = 0\n");
+
+    let (ok, output) = run_repository(&root);
+    assert!(
+        ok,
+        "only children selected by [export] should enter the module:\n{output}"
+    );
+}
+
+#[test]
 fn configured_folder_allows_comment_only_todo_sidecar() {
     let fixture = Fixture::new("todo-sidecar");
     let root = fixture.path("root");
@@ -743,7 +767,7 @@ main = "./main.lit"
 }
 
 #[test]
-fn configured_folder_rejects_executable_todo_sidecar() {
+fn configured_folder_ignores_unexported_executable_todo_sidecar() {
     let fixture = Fixture::new("executable-todo-sidecar");
     let root = fixture.path("root");
     write_file(
@@ -762,8 +786,10 @@ main = "./main.lit"
     );
 
     let (ok, output) = run_repository(&root);
-    assert!(!ok, "{output}");
-    assert!(output.contains("todo.lit must be comment-only"), "{output}");
+    assert!(
+        ok,
+        "an unexported todo.lit is outside the module:\n{output}"
+    );
 }
 
 #[test]
@@ -942,7 +968,7 @@ main = "./main.lit"
     let (ok, output) = run_file_for_test(extra.as_str());
     assert!(!ok);
     assert!(
-        output.contains("unexported Litex module path `extra.lit`"),
+        output.contains("must be exported exactly once by its containing litex.config"),
         "{output}"
     );
 }

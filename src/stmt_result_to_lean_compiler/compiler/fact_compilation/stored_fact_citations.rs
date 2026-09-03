@@ -25,7 +25,8 @@ impl StmtResultToLeanCompiler {
         let native_equality = self
             .construct_lean_native_equality_proof_from_direct_fact_result_using_its_well_definedness(
                 verified,
-            )?;
+            )
+            .map_err(|error| format!("stored-fact native equality: {error}"))?;
         // Most facts render solely from the compiler environment. Function
         // applications are the remaining target-side exception: their exact
         // application term still reads the temporary WD rendering view. Only
@@ -58,7 +59,8 @@ impl StmtResultToLeanCompiler {
                 .store
                 .fact_id
                 .ok_or_else(|| "stored equality fact has no FactId".to_string())?;
-            self.retain_native_equality_proof_in_current_environment(
+            self.retain_native_equality_proof_using_result_well_definedness(
+                verified,
                 fact_id,
                 &source_fact,
                 native_equality,
@@ -154,11 +156,34 @@ impl StmtResultToLeanCompiler {
         // FactId is the citation identity. `resolve_fact_citation` additionally
         // checks that the retained proposition is unchanged, including
         // alpha-equivalent forall binders, before exposing its Lean name.
-        let proof = resolve_fact_citation(
+        let (proof, citation_is_from_current_wd) = match resolve_fact_citation(
             &source_fact_id,
             &citation.source_fact,
             &self.environment_stack,
-        )?;
+        ) {
+            Ok(proof) => (proof, false),
+            Err(error) if error.contains("unavailable cited fact") => (
+                self.with_verified_fact_well_definedness_context(verified, |compiler| {
+                    resolve_fact_citation(
+                        &source_fact_id,
+                        &citation.source_fact,
+                        &compiler.environment_stack,
+                    )
+                })?,
+                true,
+            ),
+            Err(error) => return Err(error),
+        };
+        if citation_is_from_current_wd {
+            // Current-WD citations are rendered as closed proof expressions
+            // (for example an intrinsic membership constructor or a
+            // template-owned public equality). They are intentionally not
+            // published as persistent FactId bindings, so the submitted
+            // statement's FactId need not equal the local source FactId.
+            self.environment_stack
+                .fact_propositions
+                .insert(source_fact_id, source_fact.clone());
+        }
         if matches!(source_fact, Fact::AtomicFact(_)) {
             validate_atomic_fact_well_definedness_result(&verified.checked, &source_fact)?;
         }

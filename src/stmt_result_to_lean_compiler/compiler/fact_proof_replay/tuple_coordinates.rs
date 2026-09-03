@@ -24,9 +24,7 @@ impl StmtResultToLeanCompiler {
                 .zip(evidence.expected_coordinate_memberships.iter())
                 .any(|(retained, expected)| retained.to_string() != expected.to_string())
         {
-            return Err(
-                "tuple/cart coordinate child changed its ordered conjunction".into(),
-            );
+            return Err("tuple/cart coordinate child changed its ordered conjunction".into());
         }
         let Some(conjunction_proof) =
             self.construct_lean_proof_from_direct_fact_result_using_its_well_definedness(child)?

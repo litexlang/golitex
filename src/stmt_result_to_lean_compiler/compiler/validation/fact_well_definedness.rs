@@ -355,19 +355,39 @@ pub(in super::super) fn direct_forall_result_publication_selections(
             "ForallProof store mixed theorem publication with typed inference rules".into(),
         );
     }
-    if result
-        .store
-        .infers
-        .store_fact_outputs
-        .iter()
-        .any(|output| !output.inferred_facts.is_empty() || !output.inferred_fact_ids.is_empty())
-    {
-        return Err(
-            "ForallProof projection publication must use exact top-level store outputs".into(),
-        );
-    }
-
     let source_fact: Fact = source_forall.clone().into();
+    for output in &result.store.infers.store_fact_outputs {
+        if output.inferred_facts.len() != output.inferred_fact_ids.len() {
+            return Err("ForallProof publication changed its flattened inference arity".into());
+        }
+        for (inferred_fact, inferred_fact_id) in output
+            .inferred_facts
+            .iter()
+            .zip(output.inferred_fact_ids.iter())
+        {
+            let inferred_fact_id = inferred_fact_id.ok_or_else(|| {
+                format!(
+                    "ForallProof publication inferred `{inferred_fact}` without a frozen FactId"
+                )
+            })?;
+            let matching_outputs = result
+                .store
+                .infers
+                .store_fact_outputs
+                .iter()
+                .filter(|candidate| {
+                    candidate.fact_id == Some(inferred_fact_id)
+                        && candidate.itself_and_why_itself_is_stored.0.to_string()
+                            == inferred_fact.to_string()
+                })
+                .count();
+            if matching_outputs != 1 {
+                return Err(format!(
+                    "ForallProof publication inferred `{inferred_fact}` with FactId `{inferred_fact_id}` but retained {matching_outputs} exact store outputs"
+                ));
+            }
+        }
+    }
     let source_parameters = source_forall
         .typed_parameters
         .collect_param_bindings_with_types();
@@ -487,8 +507,13 @@ pub(in super::super) fn direct_forall_result_publication_selections(
             ));
         }
         let wd_store = &forall_wd.conclusions[source_index].store;
-        let primary_fact_id = wd_store.fact_id.ok_or_else(|| {
-            format!("ForallProof WD conclusion {source_index} has no local FactId")
+        if proved.store.fact.to_string() != source_fact.to_string() {
+            return Err(format!(
+                "ForallProof truth store {source_index} changed its conclusion"
+            ));
+        }
+        let primary_fact_id = proved.store.fact_id.ok_or_else(|| {
+            format!("ForallProof truth conclusion {source_index} has no local FactId")
         })?;
         source_primary_fact_ids.push(primary_fact_id);
         push_available_conclusion(
@@ -508,6 +533,12 @@ pub(in super::super) fn direct_forall_result_publication_selections(
             );
         }
         collect_infer_candidates(
+            &proved.store.infers,
+            source_index,
+            1,
+            &mut available_conclusions,
+        )?;
+        collect_infer_candidates(
             &wd_store.infers,
             source_index,
             2,
@@ -517,43 +548,42 @@ pub(in super::super) fn direct_forall_result_publication_selections(
 
     let select_published_conclusions = |projected: &ForallFact| {
         let mut selected = Vec::with_capacity(projected.then_facts.len());
-        let mut used_fact_ids = HashSet::new();
         for projected_conclusion in &projected.then_facts {
             let projected_fact = projected_conclusion.clone().to_fact();
             let matching_rank = available_conclusions
                 .iter()
-                .filter(|(_, fact_id, fact, _)| {
-                    !used_fact_ids.contains(fact_id)
-                        && fact.to_string() == projected_fact.to_string()
-                })
+                .filter(|(_, _, fact, _)| fact.to_string() == projected_fact.to_string())
                 .map(|(_, _, _, rank)| *rank)
                 .min();
             let matching_owner = available_conclusions
                 .iter()
-                .filter(|(_, fact_id, fact, rank)| {
-                    Some(*rank) == matching_rank
-                        && !used_fact_ids.contains(fact_id)
-                        && fact.to_string() == projected_fact.to_string()
+                .filter(|(_, _, fact, rank)| {
+                    Some(*rank) == matching_rank && fact.to_string() == projected_fact.to_string()
                 })
                 .map(|(owner, _, _, _)| *owner)
                 .min();
             let matches = available_conclusions
                 .iter()
-                .filter(|(owner, fact_id, fact, rank)| {
+                .filter(|(owner, _, fact, rank)| {
                     Some(*rank) == matching_rank
                         && Some(*owner) == matching_owner
-                        && !used_fact_ids.contains(fact_id)
                         && fact.to_string() == projected_fact.to_string()
                 })
                 .cloned()
                 .collect::<Vec<_>>();
             let [selected_conclusion] = matches.as_slice() else {
+                let available = available_conclusions
+                    .iter()
+                    .map(|(owner, fact_id, fact, rank)| {
+                        format!("owner={owner}, id={fact_id}, rank={rank}: {fact}")
+                    })
+                    .collect::<Vec<_>>()
+                    .join("; ");
                 return Err(format!(
-                    "stored ForallProof conclusion `{projected_fact}` has {} exact child-Result owners",
-                    matches.len()
+                    "stored ForallProof conclusion `{projected_fact}` has {} exact child-Result owners; available conclusions: [{available}]",
+                    matches.len(),
                 ));
             };
-            used_fact_ids.insert(selected_conclusion.1);
             selected.push((
                 selected_conclusion.0,
                 selected_conclusion.1,
@@ -656,10 +686,14 @@ pub(in super::super) fn direct_forall_result_publication_selections(
             .collect::<Vec<_>>();
         source_conclusion_indices.sort_unstable();
         source_conclusion_indices.dedup();
-        for (source_index, fact_id, _) in &published_conclusions {
-            if *fact_id == source_primary_fact_ids[*source_index]
-                && !selected_source_primary_conclusions.insert(*source_index)
-            {
+        let selected_primary_indices = published_conclusions
+            .iter()
+            .filter_map(|(source_index, fact_id, _)| {
+                (*fact_id == source_primary_fact_ids[*source_index]).then_some(*source_index)
+            })
+            .collect::<HashSet<_>>();
+        for source_index in selected_primary_indices {
+            if !selected_source_primary_conclusions.insert(source_index) {
                 return Err("stored ForallProof projections duplicated a source conclusion".into());
             }
         }

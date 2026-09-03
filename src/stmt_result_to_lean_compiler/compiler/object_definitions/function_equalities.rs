@@ -222,10 +222,7 @@ impl StmtResultToLeanCompiler {
                 .verified()
                 .ok_or_else(|| "named real function return check is not factual".to_string())?;
             if return_check.fact().to_string() != expected_return_check.to_string() {
-                return Err(
-                    "named real function changed its local return check"
-                        .into(),
-                );
+                return Err("named real function changed its local return check".into());
             }
             let return_proof = self
                 .construct_lean_proof_from_direct_fact_result(return_check)?

@@ -2651,11 +2651,11 @@ obtain copy from thm self_exists(2)
     )
     .expect("theorem-backed obtain consumes its nested by-thm conclusion proof");
     assert!(
-        generated.contains("noncomputable def copy : ℂ := Classical.choose"),
+        generated.contains("noncomputable def copy : (Litex.R).Carrier := Classical.choose"),
         "the selected witness should be defined from the theorem application:\n{}",
         generated
     );
-    assert!(generated.contains("self_exists (2 : ℂ)"), "{generated}");
+    assert!(generated.contains("self_exists (2 : ℝ)"), "{generated}");
     assert!(generated.contains("Classical.choose_spec"), "{generated}");
     assert!(!generated.contains("sorry"), "{generated}");
 }
@@ -2975,6 +2975,7 @@ abstract_prop marked(x)
 template<T set>:
     have selected power_set(T) = {x T: $marked(x)}
 
+\selected<R> = \selected<R>
 trust 1 $in \selected<R>
 
 $marked(1)

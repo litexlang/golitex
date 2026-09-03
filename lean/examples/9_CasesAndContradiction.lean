@@ -7,10 +7,10 @@ namespace __Compiler_9_CasesAndContradiction
 
 theorem cases_and_contra :
     Litex.Same (2 : ℂ) (2 : ℂ) := by
-  have __step1 : Litex.Same (1 : ℂ) (1 : ℂ) := by
+  have __step0_1 : Litex.Same (1 : ℂ) (1 : ℂ) := by
     exact (by
     have __case1 : Litex.Same (1 : ℂ) (1 : ℂ) := Litex.Same.refl (1 : ℂ)
-    have __step1 : Litex.Same (2 : ℂ) (2 : ℂ) := by
+    have __step0_0 : Litex.Same (2 : ℂ) (2 : ℂ) := by
       exact (by
       classical
       by_contra __reverse
@@ -26,7 +26,7 @@ theorem __fact1 : Litex.Same (2 : ℂ) (2 : ℂ) := by
     exact (__case1).1
   have __case1_component2 : Litex.Same (2 : ℂ) (2 : ℂ) := by
     exact (__case1).2
-  have __step1 : Litex.Same (1 : ℂ) (1 : ℂ) := by
+  have __step1_2 : Litex.Same (1 : ℂ) (1 : ℂ) := by
     exact __case1_component1
   exact __case1_component2)
 
@@ -48,26 +48,26 @@ theorem __fact4 : Litex.Same branch_identity ({ call := fun {__alpha} (__arg : _
   unfold branch_identity
   exact Litex.Same.refl ({ call := fun {__alpha} (__arg : __alpha) __arg_in => Litex.In.rep __arg __arg_in } : Litex.Fn Litex.R Litex.R)
 
-theorem __fact5 : Litex.Same (Litex.fnApplyOwn branch_identity (Litex.In.own (Litex.fnSet Litex.R Litex.R) branch_identity) (1 : ℂ) (Litex.Rules.complexRealInR (1 : ℝ))) (Litex.fnApplyOwn branch_identity (Litex.In.own (Litex.fnSet Litex.R Litex.R) branch_identity) (1 : ℂ) (Litex.Rules.complexRealInR (1 : ℝ))) := by
+theorem __fact5 : Litex.Same (Litex.fnApplyCarrier (domain := Litex.R) (codomain := Litex.R) branch_identity ((Litex.In.own (Litex.fnSet Litex.R Litex.R) branch_identity)) (1 : ℝ)) (Litex.fnApplyCarrier (domain := Litex.R) (codomain := Litex.R) branch_identity ((Litex.In.own (Litex.fnSet Litex.R Litex.R) branch_identity)) (1 : ℝ)) := by
   exact (by
   have __case1 : Litex.Same (1 : ℂ) (1 : ℂ) := Litex.Same.refl (1 : ℂ)
-  have __step1 : Litex.Same (2 : ℂ) (2 : ℂ) := by
+  have __step5_3 : Litex.Same (2 : ℂ) (2 : ℂ) := by
     exact (by
     classical
     by_contra __reverse
     exact ((__reverse : ¬ Litex.Same (2 : ℂ) (2 : ℂ)) (__fact1)))
-  have __step2 : Litex.In (1 : ℂ) Litex.R := by
+  have __step5_4 : Litex.In (1 : ℂ) Litex.R := by
     exact Litex.Rules.complexRealInR (1 : ℝ)
-  exact Litex.Same.refl (Litex.fnApplyOwn branch_identity (Litex.In.own (Litex.fnSet Litex.R Litex.R) branch_identity) (1 : ℂ) (__step2)))
+  exact Litex.Same.refl (Litex.fnApplyCarrier (domain := Litex.R) (codomain := Litex.R) branch_identity ((Litex.In.own (Litex.fnSet Litex.R Litex.R) branch_identity)) (1 : ℝ)))
 
 theorem __fact6 : Litex.Same (3 : ℂ) (3 : ℂ) := by
   exact (by
   classical
   by_contra __reverse
-  have __step1 : Litex.Same (4 : ℂ) (4 : ℂ) := by
+  have __step6_6 : Litex.Same (4 : ℂ) (4 : ℂ) := by
     exact (by
     have __case1 : Litex.Same (4 : ℂ) (4 : ℂ) := Litex.Same.refl (4 : ℂ)
-    have __step1 : Litex.Same (5 : ℂ) (5 : ℂ) := by
+    have __step6_5 : Litex.Same (5 : ℂ) (5 : ℂ) := by
       exact Litex.Same.refl (5 : ℂ)
     exact __case1)
   exact ((__reverse : ¬ Litex.Same (3 : ℂ) (3 : ℂ)) (Litex.Same.refl (3 : ℂ))))

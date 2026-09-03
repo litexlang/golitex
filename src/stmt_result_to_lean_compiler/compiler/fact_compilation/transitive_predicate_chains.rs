@@ -50,11 +50,7 @@ impl StmtResultToLeanCompiler {
                 "registered transitive inference retained a chain with fewer than two edges".into(),
             );
         }
-        validate_chain_fact_well_definedness_result(
-            &verified.checked,
-            chain,
-            &adjacent_facts,
-        )?;
+        validate_chain_fact_well_definedness_result(&verified.checked, chain, &adjacent_facts)?;
 
         let source_fact_id = result
             .store
@@ -81,19 +77,85 @@ impl StmtResultToLeanCompiler {
         let expected_application_count = (1..adjacent_facts.len())
             .map(|distance| distance)
             .sum::<usize>();
-        if result.store.infers.rule_applications.len() != expected_application_count {
+        let mut closure_applications = Vec::with_capacity(expected_application_count);
+        let mut component_applications = Vec::with_capacity(adjacent_facts.len());
+        for application in &result.store.infers.rule_applications {
+            match &application.rule {
+                InferRule::RegisteredTransitivePredicateChainClosure(_) => {
+                    closure_applications.push(application)
+                }
+                InferRule::ChainImpliesComponent(_) => component_applications.push(application),
+                _ => {
+                    return Err(
+                        "registered transitive chain retained an unrelated inference application"
+                            .into(),
+                    );
+                }
+            }
+        }
+        if closure_applications.len() != expected_application_count {
             return Err(format!(
                 "registered transitive chain expected {expected_application_count} closure applications, retained {}",
-                result.store.infers.rule_applications.len()
+                closure_applications.len()
             ));
         }
         let mut adjacent_fact_ids = vec![None; adjacent_facts.len()];
+        if component_applications.len() != adjacent_facts.len() {
+            return Err(format!(
+                "registered transitive chain expected {} component projections, retained {}",
+                adjacent_facts.len(),
+                component_applications.len()
+            ));
+        }
+        for (component_index, (application, expected_fact)) in component_applications
+            .iter()
+            .zip(adjacent_facts.iter())
+            .enumerate()
+        {
+            let InferRule::ChainImpliesComponent(rule) = &application.rule else {
+                unreachable!("component applications were filtered by rule kind")
+            };
+            if rule.component_index != component_index
+                || rule.component_count != adjacent_facts.len()
+            {
+                return Err(format!(
+                    "registered transitive chain component projection {component_index} changed its position"
+                ));
+            }
+            let [premise] = application.premises.as_slice() else {
+                return Err(format!(
+                    "registered transitive chain component projection {component_index} must retain one premise"
+                ));
+            };
+            if premise.fact.to_string() != source_fact.to_string()
+                || premise.fact_id != Some(source_fact_id)
+            {
+                return Err(format!(
+                    "registered transitive chain component projection {component_index} changed its source"
+                ));
+            }
+            let [conclusion] = application.conclusions.as_slice() else {
+                return Err(format!(
+                    "registered transitive chain component projection {component_index} must retain one conclusion"
+                ));
+            };
+            validate_chain_component_inference_target(rule, &source_fact, &conclusion.fact)?;
+            if conclusion.fact.to_string() != expected_fact.to_string() {
+                return Err(format!(
+                    "registered transitive chain component projection {component_index} changed its fact"
+                ));
+            }
+            adjacent_fact_ids[component_index] = Some(conclusion.fact_id.ok_or_else(|| {
+                format!(
+                    "registered transitive chain component projection {component_index} has no FactId"
+                )
+            })?);
+        }
         let mut expected_conclusions = Vec::with_capacity(expected_application_count);
         let mut expected_application_index = 0;
         for start_object_index in 0..chain.objs.len() {
             for end_object_index in start_object_index + 2..chain.objs.len() {
-                let application =
-                    &result.store.infers.rule_applications[expected_application_index];
+                let application = closure_applications[expected_application_index];
                 expected_application_index += 1;
                 let InferRule::RegisteredTransitivePredicateChainClosure(rule) = &application.rule
                 else {
@@ -139,12 +201,13 @@ impl StmtResultToLeanCompiler {
                     })?;
                     let adjacent_index = start_object_index + offset;
                     match adjacent_fact_ids[adjacent_index] {
-                        Some(existing) if existing != fact_id => {
+                        Some(existing) if existing == fact_id => {}
+                        Some(_) => {
                             return Err(format!(
-                                "registered transitive chain assigned two FactIds to adjacent edge {adjacent_index}"
+                                "registered transitive chain closure changed component FactId {adjacent_index}"
                             ));
                         }
-                        _ => adjacent_fact_ids[adjacent_index] = Some(fact_id),
+                        None => unreachable!("all component applications were validated"),
                     }
                 }
                 let [conclusion] = application.conclusions.as_slice() else {
@@ -239,11 +302,8 @@ impl StmtResultToLeanCompiler {
                 ));
             }
         }
-        for (application, (expected_fact, expected_fact_id)) in result
-            .store
-            .infers
-            .rule_applications
-            .iter()
+        for (application, (expected_fact, expected_fact_id)) in closure_applications
+            .into_iter()
             .zip(expected_conclusions.iter())
         {
             self.compile_registered_transitive_predicate_chain_inference_application(

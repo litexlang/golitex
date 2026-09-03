@@ -383,7 +383,13 @@ impl Runtime {
         normal_atomic_fact: &NormalAtomicFact,
         definition: &DefPropStmt,
         verify_state: &VerifyState,
-    ) -> Result<(VerifyArgsSatisfyParamDefResult, Vec<(Fact, VerifyFactResult)>), RuntimeError> {
+    ) -> Result<
+        (
+            VerifyArgsSatisfyParamDefResult,
+            Vec<(Fact, VerifyFactResult)>,
+        ),
+        RuntimeError,
+    > {
         let predicate_name = normal_atomic_fact.predicate.to_string();
         let full_param_type_result = self.verify_args_satisfy_param_def_flat_types(
             &definition.typed_parameters,
@@ -488,10 +494,8 @@ impl Runtime {
         }
         let clause_well_definedness =
             self.verify_fact_well_defined_result(&instantiated_clause, verify_state)?;
-        let cached_clause_result = Runtime::finish_fact_verification(
-            clause_well_definedness,
-            cached_clause_result,
-        );
+        let cached_clause_result =
+            Runtime::finish_fact_verification(clause_well_definedness, cached_clause_result);
         Ok((
             args_param_types,
             vec![(instantiated_clause, cached_clause_result)],

@@ -68,4 +68,4 @@ item.point.x = 1
 #
 # Boundary: `unfold` is no longer a Litex keyword or argument-list operation.
 # The executable Rust regression rejects the former call syntax.
-# Evidence: target/release/litex -isolated -f examples/03_language_features/direct_struct_field_access.lit
+# Evidence: the published-examples gate checks this file in isolation.

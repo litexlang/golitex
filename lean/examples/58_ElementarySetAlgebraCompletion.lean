@@ -28,17 +28,17 @@ theorem __fact1 :
 
 theorem __fact2 :
     ∀ (__p1 : Litex.Set) (__p2 : Litex.Set) (__domain1 : Litex.Subset __p1 __p2), (Litex.Same (Litex.union __p1 __p2) __p2) ∧ (Litex.Same (Litex.union __p2 __p1) __p2) ∧ (Litex.Same __p2 (Litex.union __p1 __p2)) := by
-  intro A B __domain1
-  have __prior2_0 : Litex.Same (Litex.union A B) B := Litex.SetRules.unionEqRightOfSubset (__domain1)
-  have __prior2_1 : Litex.Same (Litex.union B A) B := Litex.SetRules.unionEqLeftOfSubset (__domain1)
+  intro A B __domain_f40
+  have __prior2_0 : Litex.Same (Litex.union A B) B := Litex.SetRules.unionEqRightOfSubset (__domain_f40)
+  have __prior2_1 : Litex.Same (Litex.union B A) B := Litex.SetRules.unionEqLeftOfSubset (__domain_f40)
   have __prior2_2 : Litex.Same B (Litex.union A B) := Litex.Same.symm (__prior2_0)
   exact ⟨__prior2_0, __prior2_1, __prior2_2⟩
 
 theorem __fact3 :
     ∀ (__p1 : Litex.Set) (__p2 : Litex.Set) (__p3 : Litex.Set) (__domain1 : Litex.Subset __p1 __p3), (Litex.Same (Litex.intersect __p1 (Litex.setMinus __p2 __p3)) Litex.Set.empty) ∧ (Litex.Same (Litex.intersect (Litex.setMinus __p2 __p3) __p1) Litex.Set.empty) := by
-  intro A B D __domain1
-  have __prior3_0 : Litex.Same (Litex.intersect A (Litex.setMinus B D)) Litex.Set.empty := Litex.SetRules.intersectSetMinusOfSubsetEmpty B (__domain1)
-  have __prior3_1 : Litex.Same (Litex.intersect (Litex.setMinus B D) A) Litex.Set.empty := Litex.Same.trans (Litex.SetRules.intersectCommutative (Litex.setMinus B D) A) (Litex.SetRules.intersectSetMinusOfSubsetEmpty B (__domain1))
+  intro A B D __domain_f56
+  have __prior3_0 : Litex.Same (Litex.intersect A (Litex.setMinus B D)) Litex.Set.empty := Litex.SetRules.intersectSetMinusOfSubsetEmpty B (__domain_f56)
+  have __prior3_1 : Litex.Same (Litex.intersect (Litex.setMinus B D) A) Litex.Set.empty := Litex.Same.trans (Litex.SetRules.intersectCommutative (Litex.setMinus B D) A) (Litex.SetRules.intersectSetMinusOfSubsetEmpty B (__domain_f56))
   exact ⟨__prior3_0, __prior3_1⟩
 
 end __Compiler_58_ElementarySetAlgebraCompletion

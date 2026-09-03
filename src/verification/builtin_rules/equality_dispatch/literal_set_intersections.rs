@@ -50,11 +50,11 @@ impl Runtime {
                 equal_fact.line_file.clone(),
             )
             .into();
-            let subset_result =
-                self.verify_atomic_fact_as_builtin_rule_premise(&subset_fact, builtin_state)?;
-            if !subset_result.is_success() {
+            let Some(subset_result) =
+                self.try_verify_atomic_fact_as_builtin_rule_premise(&subset_fact, builtin_state)?
+            else {
                 continue;
-            }
+            };
 
             return Ok(Some(Self::set_equality_success_with_subgoals(
                 equal_fact,
@@ -98,8 +98,8 @@ impl Runtime {
             let in_set: AtomicFact =
                 InFact::new(element_obj.clone(), set.clone(), line_file.clone()).into();
             let in_result =
-                self.verify_atomic_fact_as_builtin_rule_premise(&in_set, builtin_state)?;
-            if in_result.is_success() {
+                self.try_verify_atomic_fact_as_builtin_rule_premise(&in_set, builtin_state)?;
+            if let Some(in_result) = in_result {
                 kept.push(element_obj);
                 steps.push(in_result);
                 continue;
@@ -108,8 +108,8 @@ impl Runtime {
             let not_in_set: AtomicFact =
                 NotInFact::new(element_obj, set.clone(), line_file.clone()).into();
             let not_in_result =
-                self.verify_atomic_fact_as_builtin_rule_premise(&not_in_set, builtin_state)?;
-            if not_in_result.is_success() {
+                self.try_verify_atomic_fact_as_builtin_rule_premise(&not_in_set, builtin_state)?;
+            if let Some(not_in_result) = not_in_result {
                 steps.push(not_in_result);
                 continue;
             }

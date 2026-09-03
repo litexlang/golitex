@@ -15,9 +15,24 @@ fn equality_chain_store_returns_typed_exact_interval_closure() {
     let success = result
         .factual_success()
         .expect("verified equality chain should be stored");
-    let [application] = success.store.infers.rule_applications.as_slice() else {
-        panic!("three-object equality chain should retain exactly one closure application")
-    };
+    let application = success
+        .store
+        .infers
+        .rule_applications
+        .iter()
+        .find(|application| matches!(application.rule, InferRule::EqualityChainClosure(_)))
+        .expect("three-object equality chain should retain one typed closure application");
+    assert_eq!(
+        success
+            .store
+            .infers
+            .rule_applications
+            .iter()
+            .filter(|application| matches!(application.rule, InferRule::ChainImpliesComponent(_)))
+            .count(),
+        2,
+        "the source chain should also retain its two ordered component projections"
+    );
     let InferRule::EqualityChainClosure(rule) = &application.rule else {
         panic!("equality closure should retain its typed rule")
     };

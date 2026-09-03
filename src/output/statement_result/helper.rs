@@ -81,7 +81,10 @@ pub(super) fn by_assignment_verification_value(
                     .map(|domain| {
                         object(vec![
                             string_field("fact", domain.fact.to_string()),
-                            ("check".to_string(), renderer.verify_fact_result(&domain.check)),
+                            (
+                                "check".to_string(),
+                                renderer.verify_fact_result(&domain.check),
+                            ),
                             (
                                 "negated_check".to_string(),
                                 domain
@@ -526,10 +529,6 @@ pub(super) fn prop_registration_verification_value(
         string_field("registration_type", result.registration_type.clone()),
         string_field("prop_name", result.prop_name.clone()),
         string_field("forall_fact", result.forall_fact.to_string()),
-        (
-            "assumption_infers".to_string(),
-            infer_result_value(&result.assumption_infers),
-        ),
         (
             "proof_steps".to_string(),
             renderer.stmt_results(&result.proof_steps),
@@ -1047,6 +1046,7 @@ pub(super) fn infer_rule_application_value(
                     "SupersetImpliesElementwiseMembershipForall"
                 }
                 InferRule::ConjunctionImpliesComponent(_) => "ConjunctionImpliesComponent",
+                InferRule::ChainImpliesComponent(_) => "ChainImpliesComponent",
             },
         ),
         (
@@ -1199,6 +1199,10 @@ pub(super) fn infer_rule_application_value(
         );
     }
     if let InferRule::ConjunctionImpliesComponent(rule) = &result.rule {
+        fields.insert(1, number_field("component_index", rule.component_index));
+        fields.insert(2, number_field("component_count", rule.component_count));
+    }
+    if let InferRule::ChainImpliesComponent(rule) = &result.rule {
         fields.insert(1, number_field("component_index", rule.component_index));
         fields.insert(2, number_field("component_count", rule.component_count));
     }

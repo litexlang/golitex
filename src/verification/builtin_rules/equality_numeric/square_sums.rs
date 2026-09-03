@@ -31,17 +31,20 @@ impl Runtime {
         };
 
         let zero = Self::literal_zero_obj_for_abs_builtin();
-        let first_zero = self.verify_known_equality_fact(
+        let Some(first_zero) = self.try_verify_known_equality_fact_candidate(
             &EqualFact::new_from_refs(&first_base, &zero, line_file.clone()),
             builtin_state.verify_state(),
-        )?;
-        let second_zero = self.verify_known_equality_fact(
+        )?
+        else {
+            return Ok(None);
+        };
+        let Some(second_zero) = self.try_verify_known_equality_fact_candidate(
             &EqualFact::new_from_refs(&second_base, &zero, line_file.clone()),
             builtin_state.verify_state(),
-        )?;
-        if !first_zero.is_success() || !second_zero.is_success() {
+        )?
+        else {
             return Ok(None);
-        }
+        };
         steps.push(first_zero);
         steps.push(second_zero);
 
@@ -101,13 +104,13 @@ impl Runtime {
                 else {
                     continue;
                 };
-                let sum_zero = self.verify_known_equality_fact(
+                let Some(sum_zero) = self.try_verify_known_equality_fact_candidate(
                     &EqualFact::new_from_refs(&square_sum, &zero, line_file.clone()),
                     builtin_state.verify_state(),
-                )?;
-                if !sum_zero.is_success() {
+                )?
+                else {
                     continue;
-                }
+                };
                 let first_matches = self.verify_zero_product_factor_matches_target(
                     &EqualFact::new_from_refs(target, &first_base, line_file.clone()),
                     builtin_state,

@@ -22,7 +22,7 @@ impl Runtime {
         }
     }
 
-    pub(crate) fn prove_atomic_fact(
+    pub(in crate::verification) fn prove_atomic_fact(
         &mut self,
         fact: &AtomicFact,
         verify_state: &VerifyState,

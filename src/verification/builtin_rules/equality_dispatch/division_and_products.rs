@@ -28,11 +28,7 @@ impl Runtime {
             line_file,
         )
         .into();
-        let result = self.verify_atomic_fact_as_builtin_rule_premise(&not_zero, builtin_state)?;
-        if result.is_success() {
-            return Ok(Some(result));
-        }
-        Ok(None)
+        self.try_verify_atomic_fact_as_builtin_rule_premise(&not_zero, builtin_state)
     }
 
     pub(super) fn try_verify_product_from_known_division_candidate(

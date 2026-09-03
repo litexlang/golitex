@@ -1,22 +1,31 @@
-# Tracer: verified executable-code extraction backends
+# Tracer: select verified executable code from a mathematical file
 #
-# Before (retired CLI shape):
-# litex -python -e 'have a R = 1'
-# Former behavior: Python extraction required the generic `-e` selector and no
-# C extraction command existed.
+# Before (whole-file extraction):
+# have a R = 1
+# a + 1 = 2
+# Former behavior: `-extractpython -f` and `-extractc -f` sent every statement
+# in the file to the extractor, so proofs and executable definitions could not
+# be selected independently.
 #
-# Now (verified source shared by both backends):
+# Now (two selected blocks with an ordinary proof between them):
+# [-extract]
 have a R = 1
+# [end of -extract]
 
+a + 1 = 2
+
+# [-extract]
 have fn increment(x R) R = x + 1
 have algo for increment(x):
     x + 1
+# [end of -extract]
 
 # Current behavior:
 # litex -extractpython -f examples/03_language_features/extract_code_backends.lit
 # litex -extractc -f examples/03_language_features/extract_code_backends.lit
-# emit Python and C99 from the same verified executable subset.
+# concatenate the two selected blocks and emit Python or C99. The proof between
+# them remains part of ordinary full-file verification but is not extracted.
 #
-# Boundary: `have z C = i` remains unsupported by both computation extractors;
-# neither backend attempts whole-system Litex proof compilation.
-# Evidence: target/release/litex -isolated -graph -f examples/03_language_features/extract_code_backends.lit
+# Boundary: file extraction without a complete marker pair is rejected. Inline
+# and repository extraction retain their existing whole-input behavior.
+# Evidence: litex -extractpython -f examples/03_language_features/extract_code_backends.lit

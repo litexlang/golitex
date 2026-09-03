@@ -15,17 +15,8 @@ impl Runtime {
     /// `a = 1 or a = 2 or a = 3` to prove `a $in {1, 2, 3}`.
     /// This compound entry is necessary because a known disjunction proves the complete `or`,
     /// not any selected equality; an atomic-only entry would discard exactly that evidence.
-    pub fn verify_builtin_rule_premise(
-        &mut self,
-        premise: &QuantifierFreeFact,
-        builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<VerifyFactResult, RuntimeError> {
-        let fact = premise.clone().to_fact();
-        let checked = self.verify_fact_well_defined_result(&fact, builtin_state.verify_state())?;
-        let proof = self.prove_builtin_rule_premise(premise, builtin_state)?;
-        Ok(Runtime::finish_fact_verification(checked, proof))
-    }
-
+    /// Searches a generated quantifier-free premise. Only a successful truth
+    /// candidate is completed with WD and retained in the proof DAG.
     pub fn try_verify_builtin_rule_premise(
         &mut self,
         premise: &QuantifierFreeFact,
@@ -33,7 +24,7 @@ impl Runtime {
     ) -> Result<Option<VerifyFactResult>, RuntimeError> {
         let fact = premise.clone().to_fact();
         let proof = self.prove_builtin_rule_premise(premise, builtin_state)?;
-        self.complete_proven_builtin_candidate(fact, proof, builtin_state.verify_state())
+        self.complete_proven_fact_candidate(fact, proof, builtin_state.verify_state())
     }
 
     fn prove_builtin_rule_premise(
@@ -57,36 +48,10 @@ impl Runtime {
         }
     }
 
-    /// Verifies a disjunction whose branches are atomic facts or flat conjunctions.
-    /// Each inner vector is one sufficient alternative; it is not a list of independently
-    /// known facts. This keeps rule implementations aligned with the `OrFact` AST shape.
-    pub fn verify_builtin_rule_premise_alternatives(
-        &mut self,
-        alternatives: Vec<Vec<AtomicFact>>,
-        line_file: LineFile,
-        builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<VerifyFactResult, RuntimeError> {
-        let mut branches = Vec::with_capacity(alternatives.len());
-        for mut alternative in alternatives {
-            if alternative.is_empty() {
-                let empty: Fact = OrFact::new(Vec::new(), line_file.clone()).into();
-                return self.verify_fact_allow_unknown(&empty, builtin_state.verify_state());
-            }
-            if alternative.len() == 1 {
-                branches.push(alternative.remove(0).into());
-            } else {
-                branches.push(AndChainAtomicFact::AndFact(AndFact::new(
-                    alternative,
-                    line_file.clone(),
-                )));
-            }
-        }
-        self.verify_builtin_rule_premise(
-            &QuantifierFreeFact::OrFact(OrFact::new(branches, line_file)),
-            builtin_state,
-        )
-    }
-
+    /// Searches a generated disjunction whose branches are atomic facts or flat
+    /// conjunctions. Each inner vector is one sufficient alternative. An
+    /// unsuccessful or ill-defined generated disjunction is not a completed
+    /// fact verification and therefore returns `None`.
     pub fn try_verify_builtin_rule_premise_alternatives(
         &mut self,
         alternatives: Vec<Vec<AtomicFact>>,
@@ -208,8 +173,8 @@ impl Runtime {
         }
 
         for (selected_index, branch) in or_fact.facts.iter().enumerate() {
-            let Some(branch_result) = self
-                .try_verify_and_chain_fact_as_builtin_rule_premise(branch, builtin_state)?
+            let Some(branch_result) =
+                self.try_verify_and_chain_fact_as_builtin_rule_premise(branch, builtin_state)?
             else {
                 continue;
             };
@@ -232,22 +197,6 @@ impl Runtime {
         Ok(UnknownGenericStmtResult::new().into())
     }
 
-    /// Atomic leaf fast path for rules whose premises are already atomic. Keeping this borrowed
-    /// form avoids cloning every existing atomic premise merely to wrap it in
-    /// [`QuantifierFreeFact::AtomicFact`]. Compound premises must use
-    /// [`Runtime::verify_builtin_rule_premise`].
-    pub fn verify_atomic_fact_as_builtin_rule_premise(
-        &mut self,
-        child: &AtomicFact,
-        builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<VerifyFactResult, RuntimeError> {
-        let fact: Fact = child.clone().into();
-        let checked =
-            self.verify_fact_well_defined_result(&fact, builtin_state.verify_state())?;
-        let proof = self.prove_atomic_fact_as_builtin_rule_premise(child, builtin_state)?;
-        Ok(Runtime::finish_fact_verification(checked, proof))
-    }
-
     /// Probe a generated premise without pretending that an unsuccessful
     /// candidate was a completed fact verification. Truth search runs first
     /// under the caller's already-consumed builtin-rule budget. Only a proven
@@ -260,7 +209,7 @@ impl Runtime {
     ) -> Result<Option<VerifyFactResult>, RuntimeError> {
         let proof = self.prove_atomic_fact_as_builtin_rule_premise(child, builtin_state)?;
         let fact: Fact = child.clone().into();
-        self.complete_proven_builtin_candidate(fact, proof, builtin_state.verify_state())
+        self.complete_proven_fact_candidate(fact, proof, builtin_state.verify_state())
     }
 
     fn try_verify_and_chain_fact_as_builtin_rule_premise(
@@ -269,14 +218,18 @@ impl Runtime {
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<Option<VerifyFactResult>, RuntimeError> {
         let proof = self.prove_and_chain_fact_as_builtin_rule_premise(premise, builtin_state)?;
-        self.complete_proven_builtin_candidate(
+        self.complete_proven_fact_candidate(
             premise.clone().into(),
             proof,
             builtin_state.verify_state(),
         )
     }
 
-    pub(in crate::verification) fn complete_proven_builtin_candidate(
+    /// Complete an internally generated fact candidate for retention in a
+    /// proof DAG. A candidate that is unknown or not well-defined is simply
+    /// inapplicable; only the caller's submitted fact uses the strict WD
+    /// boundary that reports a `WellDefinedError`.
+    pub(in crate::verification) fn complete_proven_fact_candidate(
         &mut self,
         fact: Fact,
         proof: ProveFactResult,
@@ -306,11 +259,10 @@ impl Runtime {
 
         match child {
             AtomicFact::EqualFact(equal_fact) => {
-                let zero_premise_result =
-                    self.verify_equal_fact_with_zero_premise_verification(
-                        equal_fact,
-                        builtin_state.verify_state(),
-                    )?;
+                let zero_premise_result = self.verify_equal_fact_with_zero_premise_verification(
+                    equal_fact,
+                    builtin_state.verify_state(),
+                )?;
                 if zero_premise_result.is_success() || !builtin_state.can_apply_rule() {
                     return Ok(zero_premise_result);
                 }

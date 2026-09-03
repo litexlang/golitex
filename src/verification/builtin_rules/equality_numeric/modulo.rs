@@ -23,48 +23,43 @@ impl Runtime {
             let Obj::Mod(simple) = side_simple else {
                 continue;
             };
-            if !self
-                .verify_equal_fact_as_builtin_premise(
-                    &EqualFact::new_from_refs(
-                        outer.right.as_ref(),
-                        inner.right.as_ref(),
-                        line_file.clone(),
-                    ),
-                    builtin_state,
-                )?
-                .is_success()
-            {
+            let Some(outer_inner_modulus) = self.try_verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(
+                    outer.right.as_ref(),
+                    inner.right.as_ref(),
+                    line_file.clone(),
+                ),
+                builtin_state,
+            )?
+            else {
                 continue;
-            }
-            if !self
-                .verify_equal_fact_as_builtin_premise(
-                    &EqualFact::new_from_refs(
-                        outer.right.as_ref(),
-                        simple.right.as_ref(),
-                        line_file.clone(),
-                    ),
-                    builtin_state,
-                )?
-                .is_success()
-            {
+            };
+            let Some(outer_simple_modulus) = self.try_verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(
+                    outer.right.as_ref(),
+                    simple.right.as_ref(),
+                    line_file.clone(),
+                ),
+                builtin_state,
+            )?
+            else {
                 continue;
-            }
-            if !self
-                .verify_equal_fact_as_builtin_premise(
-                    &EqualFact::new_from_refs(
-                        inner.left.as_ref(),
-                        simple.left.as_ref(),
-                        line_file.clone(),
-                    ),
-                    builtin_state,
-                )?
-                .is_success()
-            {
+            };
+            let Some(dividend_match) = self.try_verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(
+                    inner.left.as_ref(),
+                    simple.left.as_ref(),
+                    line_file.clone(),
+                ),
+                builtin_state,
+            )?
+            else {
                 continue;
-            }
-            return Ok(Some(factual_equal_success_by_builtin_reason(
+            };
+            return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
                 equal_fact,
                 "equality: nested mod with same modulus absorbs inner mod",
+                vec![outer_inner_modulus, outer_simple_modulus, dividend_match],
             )));
         }
         Ok(None)
@@ -91,7 +86,7 @@ impl Runtime {
                 continue;
             };
 
-            let outer_modulus_matches = self.verify_equal_fact_as_builtin_premise(
+            let outer_modulus_matches = self.try_verify_equal_fact_as_builtin_premise(
                 &EqualFact::new_from_refs(
                     outer.right.as_ref(),
                     simple.right.as_ref(),
@@ -99,10 +94,10 @@ impl Runtime {
                 ),
                 builtin_state,
             )?;
-            if !outer_modulus_matches.is_success() {
+            let Some(outer_modulus_matches) = outer_modulus_matches else {
                 continue;
-            }
-            let dividend_matches = self.verify_equal_fact_as_builtin_premise(
+            };
+            let dividend_matches = self.try_verify_equal_fact_as_builtin_premise(
                 &EqualFact::new_from_refs(
                     inner.left.as_ref(),
                     simple.left.as_ref(),
@@ -110,9 +105,9 @@ impl Runtime {
                 ),
                 builtin_state,
             )?;
-            if !dividend_matches.is_success() {
+            let Some(dividend_matches) = dividend_matches else {
                 continue;
-            }
+            };
 
             let dividend_in_z: AtomicFact = InFact::new(
                 inner.left.as_ref().clone(),
@@ -176,62 +171,50 @@ impl Runtime {
         let (Obj::Mod(lm), Obj::Mod(rm)) = (left, right) else {
             return Ok(None);
         };
-        if !self
-            .verify_equal_fact_as_builtin_premise(
-                &EqualFact::new_from_refs(lm.right.as_ref(), rm.right.as_ref(), line_file.clone()),
-                builtin_state,
-            )?
-            .is_success()
-        {
+        let Some(modulus_result) = self.try_verify_equal_fact_as_builtin_premise(
+            &EqualFact::new_from_refs(lm.right.as_ref(), rm.right.as_ref(), line_file.clone()),
+            builtin_state,
+        )?
+        else {
             return Ok(None);
-        }
+        };
         let modulus = lm.right.as_ref();
 
         if let Obj::Mod(r_inner) = rm.left.as_ref() {
-            if self
-                .verify_equal_fact_as_builtin_premise(
-                    &EqualFact::new_from_refs(r_inner.right.as_ref(), modulus, line_file.clone()),
-                    builtin_state,
-                )?
-                .is_success()
-            {
+            if let Some(inner_modulus_result) = self.try_verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(r_inner.right.as_ref(), modulus, line_file.clone()),
+                builtin_state,
+            )? {
                 let lhs: Obj = Mod::new((*lm.left).clone(), (*lm.right).clone()).into();
                 let rhs: Obj = Mod::new((*r_inner.left).clone(), (*lm.right).clone()).into();
-                if self
-                    .verify_equal_fact_as_builtin_premise(
-                        &EqualFact::new_from_refs(&lhs, &rhs, line_file.clone()),
-                        builtin_state,
-                    )?
-                    .is_success()
-                {
-                    return Ok(Some(factual_equal_success_by_builtin_reason(
+                if let Some(residue_result) = self.try_verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(&lhs, &rhs, line_file.clone()),
+                    builtin_state,
+                )? {
+                    return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
                         equal_fact,
                         "equality: mod — peel outer nested % m to reuse known residue equality",
+                        vec![modulus_result, inner_modulus_result, residue_result],
                     )));
                 }
             }
         }
 
         if let Obj::Mod(l_inner) = lm.left.as_ref() {
-            if self
-                .verify_equal_fact_as_builtin_premise(
-                    &EqualFact::new_from_refs(l_inner.right.as_ref(), modulus, line_file.clone()),
-                    builtin_state,
-                )?
-                .is_success()
-            {
+            if let Some(inner_modulus_result) = self.try_verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(l_inner.right.as_ref(), modulus, line_file.clone()),
+                builtin_state,
+            )? {
                 let lhs: Obj = Mod::new((*l_inner.left).clone(), (*lm.right).clone()).into();
                 let rhs: Obj = Mod::new((*rm.left).clone(), (*lm.right).clone()).into();
-                if self
-                    .verify_equal_fact_as_builtin_premise(
-                        &EqualFact::new_from_refs(&lhs, &rhs, line_file.clone()),
-                        builtin_state,
-                    )?
-                    .is_success()
-                {
-                    return Ok(Some(factual_equal_success_by_builtin_reason(
+                if let Some(residue_result) = self.try_verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(&lhs, &rhs, line_file.clone()),
+                    builtin_state,
+                )? {
+                    return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
                         equal_fact,
                         "equality: mod — peel outer nested % m to reuse known residue equality",
+                        vec![modulus_result, inner_modulus_result, residue_result],
                     )));
                 }
             }
@@ -255,13 +238,13 @@ impl Runtime {
         let (Obj::Mod(lm), Obj::Mod(rm)) = (left, right) else {
             return Ok(None);
         };
-        let modulus_result = self.verify_equal_fact_as_builtin_premise(
+        let modulus_result = self.try_verify_equal_fact_as_builtin_premise(
             &EqualFact::new_from_refs(lm.right.as_ref(), rm.right.as_ref(), line_file.clone()),
             builtin_state,
         )?;
-        if !modulus_result.is_success() {
+        let Some(modulus_result) = modulus_result else {
             return Ok(None);
-        }
+        };
 
         let is_reduced_operand = |original: &Obj, reduced: &Obj, modulus: &Obj| {
             let Obj::Mod(remainder) = reduced else {
@@ -303,37 +286,43 @@ impl Runtime {
             )));
         }
 
-        let mut pair_ok = |a: &Obj, b: &Obj| -> Result<bool, RuntimeError> {
+        let mut pair_ok = |a: &Obj, b: &Obj| -> Result<Option<VerifyFactResult>, RuntimeError> {
             let l: Obj = Mod::new(a.clone(), (*lm.right).clone()).into();
             let r: Obj = Mod::new(b.clone(), (*rm.right).clone()).into();
-            Ok(self
-                .verify_equal_fact_as_builtin_premise(
-                    &EqualFact::new_from_refs(&l, &r, line_file.clone()),
-                    builtin_state,
-                )?
-                .is_success())
+            self.try_verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(&l, &r, line_file.clone()),
+                builtin_state,
+            )
         };
-        let ok = match (lm.left.as_ref(), rm.left.as_ref()) {
-            (Obj::Add(la), Obj::Add(ra)) => {
-                pair_ok(la.left.as_ref(), ra.left.as_ref())?
-                    && pair_ok(la.right.as_ref(), ra.right.as_ref())?
-            }
-            (Obj::Sub(ls), Obj::Sub(rs)) => {
-                pair_ok(ls.left.as_ref(), rs.left.as_ref())?
-                    && pair_ok(ls.right.as_ref(), rs.right.as_ref())?
-            }
-            (Obj::Mul(lx), Obj::Mul(rx)) => {
-                pair_ok(lx.left.as_ref(), rx.left.as_ref())?
-                    && pair_ok(lx.right.as_ref(), rx.right.as_ref())?
-            }
+        let pairs = match (lm.left.as_ref(), rm.left.as_ref()) {
+            (Obj::Add(left), Obj::Add(right)) => [
+                (left.left.as_ref(), right.left.as_ref()),
+                (left.right.as_ref(), right.right.as_ref()),
+            ],
+            (Obj::Sub(left), Obj::Sub(right)) => [
+                (left.left.as_ref(), right.left.as_ref()),
+                (left.right.as_ref(), right.right.as_ref()),
+            ],
+            (Obj::Mul(left), Obj::Mul(right)) => [
+                (left.left.as_ref(), right.left.as_ref()),
+                (left.right.as_ref(), right.right.as_ref()),
+            ],
             _ => return Ok(None),
         };
-        if !ok {
-            return Ok(None);
+        let mut subgoals = equality_builtin_match_subgoals(
+            &EqualFact::new_from_refs(lm.right.as_ref(), rm.right.as_ref(), line_file.clone()),
+            modulus_result,
+        );
+        for (left, right) in pairs {
+            let Some(pair_result) = pair_ok(left, right)? else {
+                return Ok(None);
+            };
+            subgoals.push(pair_result);
         }
-        Ok(Some(factual_equal_success_by_builtin_reason(
+        Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
             equal_fact,
             "equality: integer congruence — same modulus, residues for matching + / - / *",
+            subgoals,
         )))
     }
 
@@ -364,7 +353,7 @@ impl Runtime {
                 continue;
             };
 
-            let modulus_matches = self.verify_equal_fact_as_builtin_premise(
+            let modulus_matches = self.try_verify_equal_fact_as_builtin_premise(
                 &EqualFact::new_from_refs(
                     negative_mod.right.as_ref(),
                     complementary_mod.right.as_ref(),
@@ -372,10 +361,10 @@ impl Runtime {
                 ),
                 builtin_state,
             )?;
-            if !modulus_matches.is_success() {
+            let Some(modulus_matches) = modulus_matches else {
                 continue;
-            }
-            let complement_starts_at_modulus = self.verify_equal_fact_as_builtin_premise(
+            };
+            let complement_starts_at_modulus = self.try_verify_equal_fact_as_builtin_premise(
                 &EqualFact::new_from_refs(
                     complementary_sub.left.as_ref(),
                     negative_mod.right.as_ref(),
@@ -383,10 +372,10 @@ impl Runtime {
                 ),
                 builtin_state,
             )?;
-            if !complement_starts_at_modulus.is_success() {
+            let Some(complement_starts_at_modulus) = complement_starts_at_modulus else {
                 continue;
-            }
-            let inner_modulus_matches = self.verify_equal_fact_as_builtin_premise(
+            };
+            let inner_modulus_matches = self.try_verify_equal_fact_as_builtin_premise(
                 &EqualFact::new_from_refs(
                     inner_remainder.right.as_ref(),
                     negative_mod.right.as_ref(),
@@ -394,10 +383,10 @@ impl Runtime {
                 ),
                 builtin_state,
             )?;
-            if !inner_modulus_matches.is_success() {
+            let Some(inner_modulus_matches) = inner_modulus_matches else {
                 continue;
-            }
-            let dividend_matches = self.verify_equal_fact_as_builtin_premise(
+            };
+            let dividend_matches = self.try_verify_equal_fact_as_builtin_premise(
                 &EqualFact::new_from_refs(
                     dividend,
                     inner_remainder.left.as_ref(),
@@ -405,9 +394,9 @@ impl Runtime {
                 ),
                 builtin_state,
             )?;
-            if !dividend_matches.is_success() {
+            let Some(dividend_matches) = dividend_matches else {
                 continue;
-            }
+            };
 
             let dividend_in_z: AtomicFact =
                 InFact::new(dividend.clone(), StandardSet::Z.into(), line_file.clone()).into();
@@ -468,7 +457,7 @@ impl Runtime {
                 continue;
             };
 
-            let outer_modulus_matches = self.verify_equal_fact_as_builtin_premise(
+            let outer_modulus_matches = self.try_verify_equal_fact_as_builtin_premise(
                 &EqualFact::new_from_refs(
                     unreduced_mod.right.as_ref(),
                     reduced_mod.right.as_ref(),
@@ -476,10 +465,10 @@ impl Runtime {
                 ),
                 builtin_state,
             )?;
-            if !outer_modulus_matches.is_success() {
+            let Some(outer_modulus_matches) = outer_modulus_matches else {
                 continue;
-            }
-            let inner_modulus_matches = self.verify_equal_fact_as_builtin_premise(
+            };
+            let inner_modulus_matches = self.try_verify_equal_fact_as_builtin_premise(
                 &EqualFact::new_from_refs(
                     unreduced_mod.right.as_ref(),
                     inner_remainder.right.as_ref(),
@@ -487,10 +476,10 @@ impl Runtime {
                 ),
                 builtin_state,
             )?;
-            if !inner_modulus_matches.is_success() {
+            let Some(inner_modulus_matches) = inner_modulus_matches else {
                 continue;
-            }
-            let base_matches = self.verify_equal_fact_as_builtin_premise(
+            };
+            let base_matches = self.try_verify_equal_fact_as_builtin_premise(
                 &EqualFact::new_from_refs(
                     unreduced_power.base.as_ref(),
                     inner_remainder.left.as_ref(),
@@ -498,10 +487,10 @@ impl Runtime {
                 ),
                 builtin_state,
             )?;
-            if !base_matches.is_success() {
+            let Some(base_matches) = base_matches else {
                 continue;
-            }
-            let exponent_matches = self.verify_equal_fact_as_builtin_premise(
+            };
+            let exponent_matches = self.try_verify_equal_fact_as_builtin_premise(
                 &EqualFact::new_from_refs(
                     unreduced_power.exponent.as_ref(),
                     reduced_power.exponent.as_ref(),
@@ -509,9 +498,9 @@ impl Runtime {
                 ),
                 builtin_state,
             )?;
-            if !exponent_matches.is_success() {
+            let Some(exponent_matches) = exponent_matches else {
                 continue;
-            }
+            };
 
             let base_in_z: AtomicFact = InFact::new(
                 unreduced_power.base.as_ref().clone(),
@@ -537,17 +526,17 @@ impl Runtime {
                 line_file.clone(),
             )
             .into();
-            let carrier_result = self.verify_builtin_rule_premise_alternatives(
+            let Some(carrier_result) = self.try_verify_builtin_rule_premise_alternatives(
                 vec![
                     vec![base_in_z.clone(), exponent_in_n, modulus_in_n_pos.clone()],
                     vec![base_in_z, exponent_in_n_pos, modulus_in_n_pos],
                 ],
                 line_file.clone(),
                 builtin_state,
-            )?;
-            if !carrier_result.is_success() {
+            )?
+            else {
                 continue;
-            }
+            };
 
             return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
                 equal_fact,

@@ -11,30 +11,30 @@ theorem one_eq_one :
   exact __c0_0
 
 theorem local_reflexivity :
-    ∀ {__carrier1_1 : Type} (x : __carrier1_1) (__h5 : Litex.In x Litex.R),
+    ∀ (x : (Litex.R).Carrier) (__h5 : Litex.In x Litex.R),
       Litex.Same x x := by
-  intro __carrier1_1 x __h5
-  have __step1 : Litex.Same x x := by
+  intro x __h5
+  have __step1_0 : Litex.Same x x := by
     exact Litex.Same.refl x
-  have __c1_0 : Litex.Same x x := __step1
+  have __c1_0 : Litex.Same x x := __step1_0
   exact __c1_0
 
 theorem __fact2 : Litex.Same (1 : ℂ) (1 : ℂ) := by
-  have __step1 : Litex.Same (1 : ℂ) (1 : ℂ) := by
-    exact (by
-    have __projected_conclusion := (local_reflexivity (1 : ℂ) (Litex.Rules.complexRealInR (1 : ℝ)))
+  have __step2_1 : Litex.Same (1 : ℂ) (1 : ℂ) := by
+    exact Litex.Same.trans (Litex.Same.symm (Litex.Same.realComplex ((1 : ℝ)))) (Litex.Same.trans ((by
+    have __projected_conclusion := (local_reflexivity (1 : ℝ) (Litex.In.own Litex.R (1 : ℝ)))
     try rw [Litex.In.rep_exact] at __projected_conclusion
-    exact __projected_conclusion)
-  exact __step1
+    exact __projected_conclusion)) (Litex.Same.realComplex ((1 : ℝ))))
+  exact __step2_1
 
 theorem __fact3 : Litex.Same (2 : ℂ) (2 : ℂ) := by
-  have __step1 : Litex.Same (2 : ℂ) (2 : ℂ) := by
+  have __step3_2 : Litex.Same (2 : ℂ) (2 : ℂ) := by
     exact Litex.Same.refl (2 : ℂ)
-  exact __step1
+  exact __step3_2
 
 example : Litex.Same (3 : ℂ) (3 : ℂ) := by
-  have __step1 : Litex.Same (3 : ℂ) (3 : ℂ) := by
+  have __step4_3 : Litex.Same (3 : ℂ) (3 : ℂ) := by
     exact Litex.Same.refl (3 : ℂ)
-  exact __step1
+  exact __step4_3
 
 end __Compiler_8_ProofScopes

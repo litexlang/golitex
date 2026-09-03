@@ -253,6 +253,7 @@ impl StmtResultToLeanCompiler {
             definition.name.clone(),
             PredicateBinding {
                 lean_name,
+                same_congruence_name: None,
                 parameter_count,
                 exact_parameters,
                 requirement_count: parameter_count,

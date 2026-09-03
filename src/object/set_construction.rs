@@ -10,7 +10,6 @@ pub struct PowerSet {
 #[derive(Clone)]
 pub struct ListSet {
     pub list: Vec<Box<Obj>>,
-    pub source_occurrence_id: Option<SourceObjectOccurrenceId>,
 }
 
 #[derive(Clone)]
@@ -22,16 +21,8 @@ pub struct SetBuilder {
 
 impl ListSet {
     pub fn new(list: Vec<Obj>) -> Self {
-        Self::new_with_source_occurrence_id(list, None)
-    }
-
-    pub fn new_with_source_occurrence_id(
-        list: Vec<Obj>,
-        source_occurrence_id: Option<SourceObjectOccurrenceId>,
-    ) -> Self {
         ListSet {
             list: list.into_iter().map(Box::new).collect(),
-            source_occurrence_id,
         }
     }
 }

@@ -103,10 +103,7 @@ fn theorem_declarations_accept_claim_fact_shapes_except_forall_iff() {
             "thm negated_universal:\n    ? not forall x R:\n        x != x",
             "not forall",
         ),
-        (
-            "thm universal:\n    ? forall x R:\n        x = x",
-            "forall",
-        ),
+        ("thm universal:\n    ? forall x R:\n        x = x", "forall"),
     ];
     for (source, expected_shape) in cases {
         let parsed = parse_one(source).unwrap_or_else(|error| {

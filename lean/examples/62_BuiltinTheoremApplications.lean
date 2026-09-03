@@ -5,8 +5,8 @@ set_option linter.style.nameCheck false
 
 namespace __Compiler_62_BuiltinTheoremApplications
 
-theorem __fact0 : Litex.In (1 : ℂ) (Litex.setBuilder Litex.R (fun (x : Litex.R.Carrier) => Litex.Positive x)) := by
-  exact Litex.Rules.inSetBuilder (Litex.In.same_rep (1 : ℂ) (Litex.Rules.complexRealInR (1 : ℝ))) ((Litex.Positive.congr (Litex.In.same_rep (1 : ℂ) (Litex.Rules.complexRealInR (1 : ℝ)))).mp (Litex.OrderBridge.positiveOfComplexReal (show (0 : ℝ) < (1 : ℝ) by norm_num)))
+theorem __fact0 : Litex.In (1 : ℂ) (Litex.setBuilder Litex.R (fun (x : Litex.R.Carrier) => Litex.Lt (0 : ℂ) (((x : ℝ)) : ℂ))) := by
+  exact ⟨⟨(1 : ℝ), (show Litex.Lt (0 : ℂ) ((((1 : ℝ) : ℝ)) : ℂ) by norm_num [Litex.Le, Litex.Lt, Litex.OrderValue])⟩, Litex.Same.transNoObservation (Litex.Same.symmNoObservation (Litex.Same.withoutObservation (Litex.Same.realComplex ((1 : ℝ))))) (Litex.Same.symmNoObservation (Litex.Same.subtypeNoObservation ⟨(1 : ℝ), (show Litex.Lt (0 : ℂ) ((((1 : ℝ) : ℝ)) : ℂ) by norm_num [Litex.Le, Litex.Lt, Litex.OrderValue])⟩))⟩
 
 theorem __fact1 : Litex.In (1 : ℂ) Litex.R := by
   exact Litex.Rules.inBaseOfInSetBuilder (__fact0)
@@ -15,7 +15,7 @@ theorem __fact2 : Litex.Positive (1 : ℂ) := by
   exact (by
   rcases Litex.Rules.inSetBuilder_iff.mp (__fact0) with ⟨__rep, __predicate, __same⟩
   have __selected := __predicate
-  exact (Litex.Positive.congr (Litex.Same.symm __same)).mp (__selected))
+  exact Litex.Positive.intro __same (by simpa [Litex.Lt, Litex.Le, Litex.OrderValue] using __selected))
 
 theorem __fact3 : Litex.In ({ call := fun {__alpha} (__arg : __alpha) __arg_in => (Litex.In.rep __arg __arg_in : ℝ) } : Litex.Fn Litex.R Litex.R) (Litex.fnSet Litex.R Litex.R) := by
   exact Litex.In.own (Litex.fnSet Litex.R Litex.R) ({ call := fun {__alpha} (__arg : __alpha) __arg_in => (Litex.In.rep __arg __arg_in : ℝ) } : Litex.Fn Litex.R Litex.R)
@@ -34,9 +34,9 @@ theorem __fact7 : Litex.In (2 : ℂ) Litex.R := by
 
 theorem __fact8 :
     ∀ (__p1 : ℤ) (__domain1 : Litex.Le (1 : ℂ) (((__p1) : ℂ))) (__domain2 : Litex.Le (((__p1) : ℂ)) (2 : ℂ)), Litex.Le (((__p1) : ℂ)) (((__p1) : ℂ)) := by
-  intro ____binder_12 __domain1 __domain2
-  have __infer8_0 : Litex.Lt (0 : ℂ) (((____binder_12) : ℂ)) := Litex.Lt.transLe (Litex.OrderBridge.ltOfComplexReals (show (0 : ℝ) < (1 : ℝ) by norm_num)) (__domain1)
-  have __prior8_0 : Litex.Le (((____binder_12) : ℂ)) (((____binder_12) : ℂ)) := Litex.Le.refl (((____binder_12) : ℂ))
+  intro ____binder_7 __domain_f31 __domain_f33
+  have __infer8_0 : Litex.Lt (0 : ℂ) (((____binder_7) : ℂ)) := Litex.Lt.transLe (Litex.OrderBridge.ltOfComplexReals (show (0 : ℝ) < (1 : ℝ) by norm_num)) (__domain_f31)
+  have __prior8_0 : Litex.Le (((____binder_7) : ℂ)) (((____binder_7) : ℂ)) := Litex.Le.refl (((____binder_7) : ℂ))
   exact __prior8_0
 
 theorem __fact9 : Litex.Le (((Litex.sum (1 : ℤ) (2 : ℤ) ({ call := fun {__alpha} (__arg : __alpha) __arg_in => (Litex.In.rep __arg __arg_in : ℤ), callOwn := fun (__arg : ℤ) => __arg } : Litex.Fn Litex.Z Litex.Z)) : ℤ) : ℂ) (((Litex.sum (1 : ℤ) (2 : ℤ) ({ call := fun {__alpha} (__arg : __alpha) __arg_in => (Litex.In.rep __arg __arg_in : ℤ), callOwn := fun (__arg : ℤ) => __arg } : Litex.Fn Litex.Z Litex.Z)) : ℤ) : ℂ) := by

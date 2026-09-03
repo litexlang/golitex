@@ -61,9 +61,7 @@ impl Runtime {
             stmt,
             &obtain.equal_tos,
             &source_exist_fact,
-            ExistentialEliminationSourceResult::TheoremApplication(Box::new(
-                application_result,
-            )),
+            ExistentialEliminationSourceResult::TheoremApplication(Box::new(application_result)),
             obtain.line_file.clone(),
         )
     }
@@ -359,7 +357,7 @@ impl Runtime {
         }
 
         self.run_in_local_env(|rt| {
-            rt.verify_exist_fact_well_defined(source_exist_fact, &VerifyState::initial())
+            rt.verify_exist_fact_well_defined_result(source_exist_fact, &VerifyState::initial())
                 .map_err(|well_defined_error| {
                     exec_stmt_error_with_stmt_and_cause(stmt.clone(), well_defined_error)
                 })?;

@@ -39,21 +39,14 @@ impl Runtime {
         obj: &Obj,
         verify_state: &VerifyState,
     ) -> Result<Rc<SuccessVerifyObjWellDefinedResult>, RuntimeError> {
-        let reusable_cache_metadata = self.well_defined_cache_metadata_for_obj(obj);
-        if let Some(source) = reusable_cache_metadata
-            .as_ref()
-            .and_then(|(object_key, _)| verify_state.well_defined_object_proof(object_key))
-        {
+        let (object_key, function_contracts) = self.well_defined_memo_entry_for_obj(obj);
+        if let Some(source) = verify_state.well_defined_object_proof(&object_key) {
             return Ok(Rc::new(SuccessVerifyObjWellDefinedResult::Reuse(Box::new(
                 SuccessReuseObjWellDefinedResult::new(obj.clone(), source),
             ))));
         }
-        let active_key = obj_equality_key(obj);
-        let _active_guard = ActiveWellDefinedObjectGuard::begin(
-            verify_state,
-            obj,
-            active_key,
-        )?;
+        let _active_guard =
+            ActiveWellDefinedObjectGuard::begin(verify_state, obj, object_key.clone())?;
 
         let steps = match obj {
             Obj::Atom(AtomObj::Identifier(identifier)) => self
@@ -303,9 +296,6 @@ impl Runtime {
 
         let steps = steps?.expect("every Obj variant returns compositional WD steps");
         let intrinsic_result_set = intrinsic_well_definedness_result_set(obj, &steps);
-        let (object_key, function_contracts) = reusable_cache_metadata
-            .clone()
-            .unwrap_or_else(|| (obj.to_string(), Vec::new()));
         let direct = Rc::new(SuccessVerifyDirectObjWellDefinedResult::new(
             obj.clone(),
             object_key.clone(),
@@ -313,9 +303,7 @@ impl Runtime {
             steps,
             intrinsic_result_set,
         ));
-        if reusable_cache_metadata.is_some() {
-            verify_state.remember_well_defined_object_proof(object_key, direct.clone());
-        }
+        verify_state.remember_well_defined_object_proof(object_key, direct.clone());
         Ok(Rc::new(SuccessVerifyObjWellDefinedResult::Direct(direct)))
     }
 
@@ -331,44 +319,6 @@ impl Runtime {
             obj.clone(),
             result,
         ))
-    }
-
-    /// Mathematical contract support: reuse a successful
-    /// check of the same rendered object; absence from the cache proves
-    /// nothing and falls through to the constructor-specific obligations.
-    /// Mathematical contract: an object is well-defined exactly when all of
-    /// its subobjects are meaningful and its constructor-specific domain
-    /// conditions hold (for example, a divisor is nonzero and a function
-    /// application satisfies its defined parameter domain).
-    pub fn verify_obj_well_defined_and_store_cache(
-        &mut self,
-        obj: &Obj,
-        verify_state: &VerifyState,
-    ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_result(obj, verify_state)
-            .map(|_| ())
-    }
-
-    pub fn verify_child_obj_well_defined_and_store_cache(
-        &mut self,
-        obj: &Obj,
-        verify_state: &VerifyState,
-        role: WellDefinedObjChildRole,
-    ) -> Result<Option<WellDefinedObjId>, RuntimeError> {
-        self.verify_child_obj_well_defined_result(obj, verify_state, role)
-            .map(|_| None)
-    }
-
-    /// Verify an object visited only while discharging another object's
-    /// contract. When compiler evidence is active this becomes an ordered
-    /// `VerificationDependency`, never a target-constructor value slot.
-    pub fn verify_obj_well_defined_as_verification_dependency(
-        &mut self,
-        obj: &Obj,
-        verify_state: &VerifyState,
-    ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_result(obj, verify_state)
-            .map(|_| ())
     }
 }
 
@@ -465,7 +415,9 @@ impl Runtime {
             ParamType::Set(_) => Ok(()),
             ParamType::NonemptySet(_) => Ok(()),
             ParamType::FiniteSet(_) => Ok(()),
-            ParamType::Obj(obj) => self.verify_obj_well_defined_and_store_cache(obj, verify_state),
+            ParamType::Obj(obj) => self
+                .verify_obj_well_defined_result(obj, verify_state)
+                .map(|_| ()),
         }
     }
 }

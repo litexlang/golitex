@@ -33,9 +33,7 @@ fn rename_object_choice_nonempty_diagnostic_label(results: &mut [StmtResult]) {
         .nonempty_check
         .as_deref_mut()
         .expect("standard carrier retains nonempty check");
-    let factual = nonempty
-        .verified_mut()
-        .expect("nonempty check is factual");
+    let factual = nonempty.verified_mut().expect("nonempty check is factual");
     let SuccessFactProofResult::BuiltinRule(proof) = factual.proof_mut() else {
         panic!("expected standard-set builtin proof")
     };
@@ -125,9 +123,10 @@ fn existential_witness_compiles_directly_from_named_recursive_children() {
     assert!(compiler.declarations[0]
         .contains("∃ (x : (Litex.R).Carrier), ∃ (__type_x : Litex.In x Litex.R)"));
     assert!(compiler.declarations[0].contains("Litex.Same x (1 : ℂ)"));
-    assert!(compiler.declarations[0].contains("have __step1"));
-    assert!(compiler.declarations[0].contains("Litex.In.rep (1 : ℂ)"));
-    assert!(compiler.declarations[0].contains("Litex.In.same_rep (1 : ℂ)"));
+    assert!(compiler.declarations[0].contains("have __step"));
+    assert!(compiler.declarations[0].contains("Litex.In.own Litex.R (1 : ℝ)"));
+    assert!(compiler.declarations[0].contains("Litex.Same.realComplex"));
+    assert!(!compiler.declarations[0].contains("Litex.In.rep (1 : ℂ)"));
 }
 
 #[test]
@@ -229,7 +228,10 @@ fn existential_elimination_rejects_a_projection_without_fact_id() {
     let error = StmtResultToLeanCompiler::new("direct_existential_elimination.lit")
         .compile_stmt_results_to_lean_source(&results)
         .expect_err("projection without FactId must fail closed");
-    assert!(error.contains("existential elimination projections store 1"));
+    assert!(
+        error.contains("existential elimination store 1 has incomplete frozen fact identities"),
+        "{error}"
+    );
 }
 
 fn execute_predicate_backed_existential_elimination() -> Vec<StmtResult> {
@@ -758,12 +760,10 @@ fn standard_set_binder_named_theorem_compiles_in_a_child_environment() {
         .compile_named_theorem_stmt_result_to_lean_source(theorem)
         .expect("direct binder theorem compilation succeeds"));
     assert_eq!(compiler.environment_stack.environments.len(), 1);
-    assert!(compiler.declarations[0].contains("∀ {__carrier"));
-    assert!(compiler.declarations[0].contains(": Type} (x : __carrier"));
+    assert!(compiler.declarations[0].contains("∀ (x : (Litex.R).Carrier)"));
     assert!(compiler.declarations[0].contains(": Litex.In x Litex.R)"));
-    assert!(compiler.declarations[0].contains("intro __carrier"));
-    assert!(compiler.declarations[0].contains(" x __h"));
-    assert!(compiler.declarations[0].contains("have __step1"));
+    assert!(compiler.declarations[0].contains("intro x __h"));
+    assert!(compiler.declarations[0].contains("have __step"));
     assert!(compiler.declarations[0].contains("exact __c0_0"));
 }
 
@@ -786,14 +786,14 @@ fn existential_theorem_compiles_nested_witness_in_two_child_environments() {
     assert!(compiler.declarations[0].contains("{__carrier"));
     assert!(compiler.declarations[0].contains(": Type"));
     assert!(compiler.declarations[0].contains("(a : __carrier"));
-    assert!(compiler.declarations[0].contains("have __step1 : ∃"));
-    assert!(compiler.declarations[0].contains("have __step1 : Litex.Same a a"));
+    assert!(compiler.declarations[0].contains(": ∃ (__carrier_x : Type)"));
+    assert!(compiler.declarations[0].contains(": Litex.Same a a := by"));
     assert!(
         compiler.declarations[0].contains("⟨_, a, (__h"),
         "{}",
         compiler.declarations[0]
     );
-    assert!(compiler.declarations[0].contains(", (__step1)⟩"));
+    assert!(compiler.declarations[0].contains(", (__step"));
     assert!(compiler.declarations[0].contains("exact __c0_0"));
 }
 
@@ -841,8 +841,9 @@ fn release_thm_uses_the_exact_source_fact_id_and_argument_check_result() {
 
     assert!(lean.contains("theorem local_reflexivity :"));
     assert!(lean.contains("theorem __fact1 : Litex.Same (1 : ℂ) (1 : ℂ)"));
-    assert!(lean.contains("local_reflexivity (1 : ℂ)"));
-    assert!(lean.contains("Litex.Rules.complexRealInR (1 : ℝ)"));
+    assert!(lean.contains("local_reflexivity (1 : ℝ)"));
+    assert!(lean.contains("Litex.In.own Litex.R (1 : ℝ)"));
+    assert!(lean.contains("Litex.Same.realComplex ((1 : ℝ))"));
 }
 
 #[test]
@@ -1075,12 +1076,16 @@ fn by_thm_replays_temporary_conclusions_in_a_child_scope_and_publishes_only_sele
         compiler.environment_stack.fact_names.get(&selected_fact_id),
         Some(&"__fact1".to_string())
     );
-    assert!(
-        compiler.declarations[0].contains("Litex.In.same_rep"),
-        "the source theorem must bridge its numeric representative back to the source value"
+    assert!(compiler.declarations[0].contains("(Litex.C).Carrier"));
+    assert!(!compiler.declarations[0].contains("Litex.In.rep x"));
+    assert_eq!(
+        compiler.declarations[1]
+            .matches("have __projected_conclusion")
+            .count(),
+        2
     );
-    assert!(compiler.declarations[1].contains("have __step1_1"));
-    assert!(compiler.declarations[1].contains("have __step1_2"));
+    assert!(compiler.declarations[1].contains(".1"));
+    assert!(compiler.declarations[1].contains(".2"));
     assert!(
         compiler.declarations[1].contains("try rw [Litex.In.rep_exact]"),
         "exact-carrier theorem arguments must unwrap their projected representatives"
@@ -1206,7 +1211,7 @@ fn theorem_backed_obtain_consumes_but_does_not_publish_its_local_conclusion() {
 
 fn execute_odd_sum_to_square_flagship() -> Vec<StmtResult> {
     crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
-        include_str!("../../../../showcases/litex_to_lean_mathlib_pipeline/showcase1/main.lit"),
+        include_str!("../../../../showcases/Litex_to_Lean_Mathlib_Pipeline/main.lit"),
         "main.lit",
     )
     .expect("execute the odd-sum flagship")
@@ -1215,7 +1220,7 @@ fn execute_odd_sum_to_square_flagship() -> Vec<StmtResult> {
 #[test]
 fn odd_sum_flagship_exports_only_source_owned_declarations() {
     let litex_source =
-        include_str!("../../../../showcases/litex_to_lean_mathlib_pipeline/showcase1/main.lit");
+        include_str!("../../../../showcases/Litex_to_Lean_Mathlib_Pipeline/main.lit");
     assert!(litex_source.contains("have fn kth_odd"));
     assert!(!litex_source.contains("thm odd_sum_single"));
     assert!(!litex_source.contains("thm odd_sum_step"));
@@ -1238,9 +1243,8 @@ fn odd_sum_flagship_exports_only_source_owned_declarations() {
     let lean = StmtResultToLeanCompiler::new("main.lit")
         .compile_stmt_results_to_lean_source(&results)
         .expect("compile the complete odd-sum Result DAG");
-    let checked_in = include_str!(
-        "../../../../showcases/litex_to_lean_mathlib_pipeline/showcase1/Generated.lean"
-    );
+    let checked_in =
+        include_str!("../../../../showcases/Litex_to_Lean_Mathlib_Pipeline/Generated.lean");
 
     assert_eq!(lean, checked_in);
     assert!(lean.contains("theorem sum_first_odds :"));

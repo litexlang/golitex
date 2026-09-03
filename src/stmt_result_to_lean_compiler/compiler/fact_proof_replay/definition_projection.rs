@@ -67,18 +67,9 @@ impl StmtResultToLeanCompiler {
             .position(|component| component == &rendered_target)
         {
             let selector = conjunction_selector(clause_index, components.len())?;
-            let selected_component = if matches!(target, Fact::ForallFact(_)) {
-                format!("@(__definition{selector})")
-            } else {
-                format!("__definition{selector}")
-            };
-            let finish = if matches!(target, Fact::ForallFact(_)) {
-                // `components[clause_index] == rendered_target` was checked
-                // above.  Preserve the forall's implicit carrier binders with
-                // `exact`; asking `simpa using` to elaborate the local
-                // polymorphic theorem first can freeze one implicit carrier
-                // as a metavariable and lose the outer generalization.
-                format!("exact {selected_component}")
+            let selected_component = format!("__definition{selector}");
+            let finish = if let Fact::ForallFact(forall) = target {
+                render_eta_expanded_forall_projection(forall, &selected_component)?
             } else {
                 format!(
                     "simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using {selected_component}"

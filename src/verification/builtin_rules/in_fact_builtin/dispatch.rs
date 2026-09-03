@@ -110,11 +110,9 @@ impl Runtime {
                     | Obj::MatrixScalarMul(_)
                     | Obj::MatrixPow(_)
             ) {
-                if let Ok(inferred_matrix_set) = self.real_matrix_type(
-                    &in_fact.element,
-                    &verify_state.with_final_round(),
-                    "membership",
-                ) {
+                if let Ok(inferred_matrix_set) =
+                    self.real_matrix_type_after_well_defined(&in_fact.element, "membership")
+                {
                     let inferred_obj: Obj = inferred_matrix_set.clone().into();
                     let expected_obj: Obj = expected_matrix_set.clone().into();
                     if objs_equal_with_nested_binder_alpha_equivalence(&inferred_obj, &expected_obj)
@@ -254,10 +252,8 @@ impl Runtime {
         if standard_projection.is_success() {
             return Ok(standard_projection);
         }
-        let direct_superset_result = self.verify_in_fact_by_known_direct_superset(
-            in_fact,
-            builtin_state.verify_state(),
-        )?;
+        let direct_superset_result =
+            self.verify_in_fact_by_known_direct_superset(in_fact, builtin_state.verify_state())?;
         if direct_superset_result.is_success() {
             return Ok(direct_superset_result);
         }
@@ -379,6 +375,19 @@ impl Runtime {
             return Ok(number_in_set_verified_by_builtin_rules_result(
                 in_fact, reason,
             ));
+        }
+        // Membership in a power set is definitionally subset membership.
+        // Prefer an exact known subset certificate before representation-
+        // specific constructions such as enumerating a literal set. This is
+        // especially important when the membership is itself a checked
+        // function-domain premise: the parent rule has already consumed the
+        // builtin-rule budget, but a known subset is still a zero-search child.
+        if let Obj::PowerSet(power_set) = &in_fact.set {
+            let via_subset =
+                self.verify_in_fact_in_power_set_via_subset(in_fact, power_set, builtin_state)?;
+            if via_subset.is_success() {
+                return Ok(via_subset);
+            }
         }
         match (&in_fact.element, &in_fact.set) {
             (_, Obj::Union(union)) => {
@@ -544,11 +553,11 @@ impl Runtime {
                         in_fact.line_file.clone(),
                     )
                     .into();
-                    let result = self.verify_atomic_fact_as_builtin_rule_premise(
+                    let result = self.try_verify_atomic_fact_as_builtin_rule_premise(
                         &source_membership,
                         builtin_state,
                     )?;
-                    if result.is_success() {
+                    if let Some(result) = result {
                         evidence = Some(result);
                         break;
                     }
@@ -1054,8 +1063,11 @@ impl Runtime {
                     fn_set.into(),
                     in_fact.line_file.clone(),
                 );
-                let expanded_result =
-                    self.verify_atomic_fact_as_builtin_rule_premise(&expanded.into(), builtin_state)?;
+                let Some(expanded_result) = self
+                    .try_verify_atomic_fact_as_builtin_rule_premise(&expanded.into(), builtin_state)?
+                else {
+                    return Ok(UnknownGenericStmtResult::new().into());
+                };
                 Ok(SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "finite-sequence carrier expands to its function-set representation".to_string(),
@@ -1073,8 +1085,11 @@ impl Runtime {
                     fn_set.into(),
                     in_fact.line_file.clone(),
                 );
-                let expanded_result =
-                    self.verify_atomic_fact_as_builtin_rule_premise(&expanded.into(), builtin_state)?;
+                let Some(expanded_result) = self
+                    .try_verify_atomic_fact_as_builtin_rule_premise(&expanded.into(), builtin_state)?
+                else {
+                    return Ok(UnknownGenericStmtResult::new().into());
+                };
                 Ok(SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "sequence carrier expands to its function-set representation".to_string(),
@@ -1092,8 +1107,11 @@ impl Runtime {
                     fn_set.into(),
                     in_fact.line_file.clone(),
                 );
-                let expanded_result =
-                    self.verify_atomic_fact_as_builtin_rule_premise(&expanded.into(), builtin_state)?;
+                let Some(expanded_result) = self
+                    .try_verify_atomic_fact_as_builtin_rule_premise(&expanded.into(), builtin_state)?
+                else {
+                    return Ok(UnknownGenericStmtResult::new().into());
+                };
                 Ok(SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
                     "matrix carrier expands to its function-set representation".to_string(),

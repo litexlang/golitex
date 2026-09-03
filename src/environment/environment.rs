@@ -14,14 +14,15 @@ use crate::prelude::*;
 ///   matching against later goals;
 /// - derived object-shape caches for tuples, carts, finite sequences,
 ///   matrices, object values, set builders, and function-set information;
-/// - verification caches for well-defined objects and already-known facts.
+/// - persistent infer-rule firing deduplication. Returned WD and truth proofs
+///   belong to `VerifyState` and `VerifyFactResult`, never this environment.
 #[derive(Clone)]
 pub struct Environment {
     pub definitions: EnvironmentDefinitionRegistry,
     pub facts: EnvironmentFactStore,
     pub objects: EnvironmentObjectKnowledgeStore,
     pub predicate_algebraic_properties: EnvironmentPredicateAlgebraicPropertyStore,
-    pub caches: EnvironmentVerificationCache,
+    pub inference_cache: EnvironmentInferenceCache,
 }
 
 impl Environment {
@@ -31,7 +32,7 @@ impl Environment {
             facts: EnvironmentFactStore::new(),
             objects: EnvironmentObjectKnowledgeStore::new(),
             predicate_algebraic_properties: EnvironmentPredicateAlgebraicPropertyStore::new(),
-            caches: EnvironmentVerificationCache::new(),
+            inference_cache: EnvironmentInferenceCache::new(),
         }
     }
 }

@@ -59,12 +59,6 @@ pub(super) enum LeanSetBuiltinCompilationKind {
     UnionSubset,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum LeanEqualityApplicationSide {
-    Left,
-    Right,
-}
-
 /// Exact local FactId/proposition pair visible in one compiler environment.
 #[derive(Clone, Debug)]
 pub(super) struct LeanLocalFactPremise {
@@ -227,7 +221,7 @@ pub(super) fn fact_is_closed_numeric_relation(goal: &Fact) -> bool {
     }
 }
 
-fn object_is_closed_rational_expression(object: &Obj) -> bool {
+pub(super) fn object_is_closed_rational_expression(object: &Obj) -> bool {
     match object {
         Obj::Number(_) => true,
         Obj::Add(value) => {

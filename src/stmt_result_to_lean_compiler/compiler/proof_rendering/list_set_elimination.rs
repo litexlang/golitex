@@ -2,6 +2,38 @@
 
 use super::super::*;
 
+/// Literal-set membership carries only an observation-free representation
+/// equality. The equality alternatives inferred from that membership must
+/// state the same proposition explicitly; Lean's default observer for a
+/// numeric literal would otherwise make `x = 1` stronger than the source
+/// membership can justify.
+pub(in super::super) fn render_no_observation_equality_alternatives_fact(
+    target: &Fact,
+    context: &StmtResultToLeanCompilerEnvironmentStack,
+) -> Result<String, String> {
+    match target {
+        Fact::AtomicFact(AtomicFact::EqualFact(equality)) => Ok(format!(
+            "@Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) {} {}",
+            render_obj(&equality.left, context)?,
+            render_obj(&equality.right, context)?
+        )),
+        Fact::OrFact(_) => {
+            let branches = disjunction_components(target)?;
+            if branches.is_empty() {
+                return Err("literal-set equality alternatives retained no branches".into());
+            }
+            Ok(branches
+                .iter()
+                .map(|branch| render_no_observation_equality_alternatives_fact(branch, context))
+                .collect::<Result<Vec<_>, _>>()?
+                .join(" ∨ "))
+        }
+        _ => Err(format!(
+            "literal-set membership inference retained non-equality alternatives `{target}`"
+        )),
+    }
+}
+
 pub(in super::super) fn render_list_set_membership_elimination_from_fact_and_proof(
     target: &Fact,
     source_membership: &Fact,
@@ -33,7 +65,7 @@ pub(in super::super) fn render_list_set_membership_elimination_from_fact_and_pro
             );
         }
     }
-    render_fact(target, context)?;
+    render_no_observation_equality_alternatives_fact(target, context)?;
     let item_terms = list_set
         .list
         .iter()
@@ -61,7 +93,9 @@ pub(in super::super) fn render_list_set_elimination_cases(
     lines.push(format!("{indent}| inl {head} =>"));
     lines.push(format!("{indent}  cases {head}"));
     let (_, representation) = render_list_set_representation_bridge(&item_terms[index], index);
-    let equality = format!("Litex.Same.trans __same (Litex.Same.symm ({representation}))");
+    let equality = format!(
+        "Litex.Same.transNoObservation __same (Litex.Same.symmNoObservation ({representation}))"
+    );
     lines.push(format!(
         "{indent}  exact {}",
         inject_disjunction_branch(equality, index, item_terms.len())
@@ -102,13 +136,15 @@ pub(in super::super) fn render_list_set_representation_bridge(
     selected_index: usize,
 ) -> (String, String) {
     let mut witness = "Litex.SingletonCarrier.element".to_string();
-    let mut representation = format!("Litex.Same.singleton {selected_term}");
-    representation =
-        format!("Litex.Same.trans ({representation}) (Litex.Same.sumLeft ({witness}))");
+    let mut representation = format!("Litex.Same.singletonNoObservation {selected_term}");
+    representation = format!(
+        "Litex.Same.transNoObservation ({representation}) (Litex.Same.sumLeftNoObservation ({witness}))"
+    );
     witness = format!("Sum.inl ({witness})");
     for _ in 0..selected_index {
-        representation =
-            format!("Litex.Same.trans ({representation}) (Litex.Same.sumRight ({witness}))");
+        representation = format!(
+            "Litex.Same.transNoObservation ({representation}) (Litex.Same.sumRightNoObservation ({witness}))"
+        );
         witness = format!("Sum.inr ({witness})");
     }
     (witness, representation)

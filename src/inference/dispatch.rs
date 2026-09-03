@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use std::collections::HashSet;
 
 impl Runtime {
     /// Dispatch infer by fact kind.
@@ -147,12 +148,44 @@ impl Runtime {
         chain_fact: &ChainFact,
         inference_state: &InferenceState,
     ) -> Result<SuccessInferResult, RuntimeError> {
+        let source_fact: Fact = chain_fact.clone().into();
+        let adjacent_facts = chain_fact
+            .facts()
+            .map_err(RuntimeError::wrap_new_fact_as_store_conflict)?;
+        let adjacent_keys = adjacent_facts
+            .iter()
+            .map(|fact| Fact::from(fact.clone()).to_string())
+            .collect::<HashSet<_>>();
+        let component_count = adjacent_facts.len();
+        let mut result = SuccessInferResult::new();
+        for (component_index, component) in adjacent_facts.into_iter().enumerate() {
+            let component_fact: Fact = component.into();
+            let component_infers = self
+                .store_without_well_defined_verification_and_infer_with_reason_and_state(
+                    component_fact.clone(),
+                    InferReason::InferredFact,
+                    inference_state,
+                )?;
+            result.add_rule_application_preserving_conclusion_result_structure(
+                InferRule::ChainImpliesComponent(ChainImpliesComponentInferRule {
+                    component_index,
+                    component_count,
+                }),
+                vec![source_fact.clone()],
+                vec![SuccessStoreFactResult::new(
+                    component_fact,
+                    component_infers,
+                )],
+            );
+        }
         let atomic_facts = match chain_fact.facts_with_order_transitive_closure() {
             Ok(v) => v,
-            Err(_) => return Ok(SuccessInferResult::new()),
+            Err(_) => return Ok(result),
         };
-        let mut result = SuccessInferResult::new();
         for atomic_fact in atomic_facts {
+            if adjacent_keys.contains(&Fact::from(atomic_fact.clone()).to_string()) {
+                continue;
+            }
             result.new_infer_result_inside(self.atomic_fact(&atomic_fact, inference_state)?);
         }
         Ok(result)

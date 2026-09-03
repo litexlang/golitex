@@ -6,11 +6,22 @@ set_option linter.style.nameCheck false
 namespace __Compiler_36_KnownForallResultComposition
 
 universe u__known_forall_target_1
-axiom known_forall_target {__abstract_carrier1 : Type u__known_forall_target_1} (x : __abstract_carrier1) : Prop
+structure __LitexAbstractPredicate_known_forall_target where
+  holds : {__abstract_carrier1 : Type u__known_forall_target_1} → (x : __abstract_carrier1) → Prop
+  respectsSame :
+    {__source_carrier1 : Type u__known_forall_target_1} →
+    {__target_carrier1 : Type u__known_forall_target_1} →
+    [Litex.ComplexObserver __source_carrier1] → [Litex.ComplexObserver __target_carrier1] →
+    (__source1 : __source_carrier1) →
+    (__target1 : __target_carrier1) →
+    Litex.Same __source1 __target1 →
+    (holds __source1 ↔ holds __target1)
 
-axiom known_forall_real_source : ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.R), known_forall_target __p1
+axiom known_forall_target : __LitexAbstractPredicate_known_forall_target
 
-theorem __fact0 : known_forall_target (2 : ℂ) := by
-  exact (known_forall_real_source (2 : ℂ) (Litex.Rules.complexRealInR (2 : ℝ)))
+axiom known_forall_real_source : ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In __p1 Litex.R), known_forall_target.holds __p1
+
+theorem __fact0 : known_forall_target.holds (2 : ℂ) := by
+  exact ((known_forall_target.respectsSame (2 : ℝ) (2 : ℂ) (Litex.Same.realComplex ((2 : ℝ)))).mp ((known_forall_real_source (2 : ℝ) (Litex.In.own Litex.R (2 : ℝ)))))
 
 end __Compiler_36_KnownForallResultComposition

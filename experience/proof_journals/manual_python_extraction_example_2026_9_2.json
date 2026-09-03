@@ -1,0 +1,202 @@
+{
+  "schema_version": 1,
+  "target": "docs/Manual.md#extracting-a-proved-numerical-step-to-python-experimental",
+  "session_command": "standalone documentation snippet; current CLI verified with -isolated -f and -extractpython",
+  "proof_spine": [
+    "keep Newton's positive-real mathematical update and exact residual-convergence proof unchanged",
+    "totalize the single executable step on R with an explicit zero restart and prove agreement on R+",
+    "verify the complete convergence module before extracting and running the supported Python step"
+  ],
+  "blocks": [
+    {
+      "id": "B000",
+      "source_order": 0,
+      "intent": "establish the current standalone verification command",
+      "dependencies": ["current-source release binary"],
+      "attempts": [
+        {
+          "candidate": "target/release/litex -compact -isolated -runner -f <draft>.lit",
+          "result": "failed",
+          "verifier_evidence": "cli_error: unsupported CLI command combination",
+          "diagnosis": "the current help and dispatch surface has -isolated -f but no -runner option; the proof was not evaluated",
+          "next_change": "use -isolated -f, whose current run envelope contains top-level ok"
+        },
+        {
+          "candidate": "target/release/litex -compact -session -before <registered-file>.lit, then the same command without -compact",
+          "result": "failed",
+          "verifier_evidence": "both commands returned cli_error: unsupported CLI command combination",
+          "diagnosis": "the current CLI also lacks the documented persistent session surface",
+          "next_change": "record attempts in the source-owned journal, use the allocated isolated draft area, and require a clean registered module replay"
+        }
+      ],
+      "accepted_litex": "",
+      "reusable_lesson": "separate a command-surface failure from a proof failure",
+      "status": "command_boundary_recorded"
+    },
+    {
+      "id": "B001",
+      "source_order": 1,
+      "intent": "define positive_part, attach its executable cases, and prove its output is nonnegative",
+      "dependencies": ["real-order trichotomy", "piecewise function equations"],
+      "attempts": [
+        {
+          "candidate": "bodyless x >= 0 and x < 0 proof cases",
+          "result": "failed",
+          "verifier_evidence": "by cases failed to prove 0 <= positive_part(x) under case x >= 0",
+          "diagnosis": "the case assumption alone does not rewrite the selected function equation inside the comparison goal",
+          "next_change": "state the selected value and close with a comparison/equality chain"
+        },
+        {
+          "candidate": "state positive_part(x) = x or 0, then give the comparison/equality chain",
+          "result": "passed",
+          "verifier_evidence": "-isolated -f exited 0 with top-level ok true; -extractpython returned artifact ok true",
+          "diagnosis": "the explicit value seeds the rewrite",
+          "next_change": "deletion-probe the separate value statement"
+        },
+        {
+          "candidate": "retain only 0 <= x = positive_part(x) and 0 <= 0 = positive_part(x) in the two branches",
+          "result": "passed",
+          "verifier_evidence": "liveness draft -isolated -f exited 0 with top-level ok true",
+          "diagnosis": "each chain verifies the selected equation directly, so the separate value statement is redundant",
+          "next_change": "use the shorter proof in the Manual"
+        }
+      ],
+      "accepted_litex": "have fn positive_part(x R) R by cases:\n    case x >= 0: x\n    case x < 0: 0\n\nhave algo for positive_part(x):\n    case x >= 0: x\n    case x < 0: 0\n\nclaim:\n    ? forall x R:\n        0 <= positive_part(x)\n    by cases:\n        ? 0 <= positive_part(x)\n        case x >= 0:\n            0 <= x = positive_part(x)\n        case x < 0:\n            0 <= 0 = positive_part(x)",
+      "reusable_lesson": "one comparison/equality chain per branch is both the mathematical proof and the smallest verified rewrite bridge",
+      "status": "materialized"
+    },
+    {
+      "id": "B002",
+      "source_order": 2,
+      "intent": "probe a standard trust-free Fibonacci definition as the Manual's definition/implementation-agreement tracer",
+      "dependencies": ["natural-number recursion", "recursive algorithm agreement", "current-source release binary"],
+      "attempts": [
+        {
+          "candidate": "trust-free fibonacci : N -> N by induction, matching have algo cases, eval fibonacci(10), then assert fibonacci(10) = 55",
+          "result": "passed",
+          "verifier_evidence": "target/release/litex -isolated -f exited 0 with top-level ok true; the eval statement stored fibonacci(10) = 55",
+          "diagnosis": "the natural recursive specification and matching executable algorithm are accepted without trust",
+          "next_change": "replace the algorithm's second recursive call with fibonacci(n - 1) and require rejection"
+        },
+        {
+          "candidate": "keep the verified definition, but use fibonacci(n - 1) + fibonacci(n - 1) in the n > 1 algorithm case",
+          "result": "failed_as_expected",
+          "verifier_evidence": "target/release/litex -isolated -f exited 1 with top-level ok false: algo verify says the case does not imply the expected return",
+          "diagnosis": "have algo is checked against the recursive function equations rather than accepted as an unchecked implementation",
+          "next_change": "attempt Python extraction of the accepted natural N -> N version"
+        },
+        {
+          "candidate": "target/release/litex -extractpython -f <accepted-fibonacci>.lit",
+          "result": "failed_at_documented_extractor_boundary",
+          "verifier_evidence": "artifact ok false: code extractor v1 supports only R function parameters; fibonacci has parameter set N",
+          "diagnosis": "the verifier and evaluator support the natural definition, but Python extractor v1 cannot yet represent its N -> N signature",
+          "next_change": "ask whether to present Fibonacci as a separate verification tracer or widen the extractor's numeric contract"
+        }
+      ],
+      "accepted_litex": "have fn fibonacci(n N) N by induc n from 0:\n    case n = 0: 0\n    case n = 1: 1\n    case n > 1: fibonacci(n - 1) + fibonacci(n - 2)\n\nhave algo for fibonacci(n):\n    case n = 0: 0\n    case n = 1: 1\n    case n > 1: fibonacci(n - 1) + fibonacci(n - 2)\n\neval fibonacci(10)\nfibonacci(10) = 55",
+      "reusable_lesson": "Fibonacci is a strong agreement-check tracer, but it exposes an honest verifier/extractor capability split: N recursion verifies and evaluates while extractor v1 remains R-only",
+      "status": "decision_boundary"
+    },
+    {
+      "id": "B003",
+      "source_order": 3,
+      "intent": "probe the proved Newton sqrt(2) update as a scientific-computing extraction tracer",
+      "dependencies": ["showcase quadratic residual bound", "extractor v1 R -> R contract", "current-source release binary"],
+      "attempts": [
+        {
+          "candidate": "target/release/litex -r showcases/math_concepts_in_litex/13_numerical_analysis_in_nutshell",
+          "result": "failed",
+          "verifier_evidence": "top-level ok false at main.lit:34: newton_sqrt_two(3 / 2) = 17 / 12 returned unknown",
+          "diagnosis": "the clean showcase is conceptually suitable but its historical no-trust claim is not a current-binary verification result",
+          "next_change": "test the extractable single-step wrapper separately and inspect another convergence showcase before recommending Manual copy"
+        },
+        {
+          "candidate": "positive-real Newton update plus a total R -> R wrapper with x = 0 restart and matching have algo; prove wrapper(x) = typed_update(x) for all x in R+",
+          "result": "passed",
+          "verifier_evidence": "target/release/litex -isolated -f exited 0 with top-level ok true",
+          "diagnosis": "the wrapper's nonzero branch is definitionally the showcased update on positive inputs, so the extracted single step can be connected to the exact-real proof domain",
+          "next_change": "run Python extraction, execute representative inputs, then deletion-probe the equality bridge"
+        },
+        {
+          "candidate": "extract and execute the accepted total Newton-step wrapper",
+          "result": "passed",
+          "verifier_evidence": "-extractpython returned artifact ok true; Python produced x1=1.5, x2=1.4166666666666665, residual 0.006944444444444198 below 1/64, and zero restarted at 1.0",
+          "diagnosis": "extractor v1 can emit the guarded R -> R single step, while the host Python loop supplies repeated iteration",
+          "next_change": "deletion-probe whether the explicit middle formula is needed in the positive-domain equality proof"
+        },
+        {
+          "candidate": "replace the bridge chain with the endpoint newton_sqrt_two_step(x) = newton_sqrt_two(x)",
+          "result": "failed",
+          "verifier_evidence": "target/release/litex -isolated -f exited 1 with top-level ok false: endpoint equality returned unknown",
+          "diagnosis": "the common formula (x + 2 / x) / 2 is the smallest demonstrated bridge between the case-defined wrapper and the typed function",
+          "next_change": "retain the three-node equality chain and run a wrong-algorithm negative control"
+        },
+        {
+          "candidate": "target/release/litex -isolated -f scripts/showcase2/main.lit",
+          "result": "passed",
+          "verifier_evidence": "exit 0 with top-level ok true for convergence under multiplication by a constant",
+          "diagnosis": "this is a current green convergence showcase, but it proves a closure property rather than convergence of a numerical iteration",
+          "next_change": "keep it as a fallback, not the primary scientific-computing tracer"
+        },
+        {
+          "candidate": "keep the verified Newton definition but change the executable nonzero branch denominator from 2 to 3",
+          "result": "failed_as_expected",
+          "verifier_evidence": "target/release/litex -isolated -f exited 1 with top-level ok false: algo verify says the x != 0 case does not imply the expected return",
+          "diagnosis": "the executable Newton step is checked against its mathematical case equation, so this formula typo cannot be extracted",
+          "next_change": "repair and re-gate the existing Newton convergence showcase before using it as the Manual's end-to-end scientific tracer"
+        },
+        {
+          "candidate": "replace the two stale endpoint-only concrete evaluations with continuous chains through their checked definition bodies",
+          "result": "passed",
+          "verifier_evidence": "isolated probes exited 0 with top-level ok true; the full current-source module gate then exited 0 with top-level ok true and reached sqrt_two_newton_gap(2) <= 1/64",
+          "diagnosis": "the preview needed explicit composition of definition reduction and exact rational normalization; no convergence theorem statement or proof changed",
+          "next_change": "extract the executable wrapper from the verified maintained module"
+        },
+        {
+          "candidate": "target/release/litex -extractpython -r showcases/math_concepts_in_litex/13_numerical_analysis_in_nutshell, then execute two generated steps from 1.0",
+          "result": "passed",
+          "verifier_evidence": "artifact ok true; generated Python produced 1.5 then 1.4166666666666665, residual 0.006944444444444198 below 0.015625, and zero_restart 1.0",
+          "diagnosis": "the repository gate verifies the exact-real proof before emitting the supported total single step; iteration remains a host loop",
+          "next_change": "materialize the same interface and limitations in the Manual and module README"
+        },
+        {
+          "candidate": "verify and extract the exact self-contained Newton Litex fence used by the Manual",
+          "result": "passed",
+          "verifier_evidence": "target/release/litex -isolated -f and -extractpython -f on the exact draft both exited 0; extraction returned artifact ok true",
+          "diagnosis": "the published snippet is self-contained and matches the maintained executable interface",
+          "next_change": "run the Markdown harness and finish trust/API/draft audits"
+        }
+      ],
+      "accepted_litex": "have fn newton_sqrt_two(x R+) R+ = (x + 2 / x) / 2\n\nhave fn newton_sqrt_two_step(x R) R by cases:\n    case x = 0: 1\n    case x != 0: (x + 2 / x) / 2\n\nhave algo for newton_sqrt_two_step(x):\n    case x = 0: 1\n    case x != 0: (x + 2 / x) / 2\n\nclaim:\n    ? forall x R+:\n        newton_sqrt_two_step(x) = newton_sqrt_two(x)\n    newton_sqrt_two_step(x) = (x + 2 / x) / 2 = newton_sqrt_two(x)",
+      "reusable_lesson": "a proved positive-real numerical update can be connected to extractor v1 through an explicit total R -> R wrapper, but the zero policy and single-step boundary must be disclosed and the convergence source must pass the current verifier",
+      "status": "materialized"
+    },
+    {
+      "id": "B004",
+      "source_order": 4,
+      "intent": "show the recursive Newton iterate that the residual-convergence proof actually quantifies over, while retaining single-step Python extraction",
+      "dependencies": [
+        "B003",
+        "showcase sqrt_two_newton_iterate : N -> R+"
+      ],
+      "attempts": [
+        {
+          "candidate": "insert the maintained sqrt_two_newton_iterate definition after newton_sqrt_two in the self-contained Manual fence; keep have algo only on newton_sqrt_two_step",
+          "result": "passed",
+          "verifier_evidence": "target/release/litex -isolated -f exited 0 with top-level ok true; -extractpython -f exited 0 with artifact ok true and emitted only newton_sqrt_two_step",
+          "diagnosis": "the N-indexed iterate can remain visible as the proved mathematical sequence without being mistaken for a currently extractable definition",
+          "next_change": "materialize the exact fence and state that the host Python loop mirrors this recurrence"
+        }
+      ],
+      "accepted_litex": "have fn newton_sqrt_two(x R+) R+ = (x + 2 / x) / 2\n\n# This is the exact sequence whose residual bound is proved.\nhave fn sqrt_two_newton_iterate(n N) R+ by induc n from 0:\n    case n = 0: 1\n    case n > 0: newton_sqrt_two(sqrt_two_newton_iterate(n - 1))\n\n# The proved iteration stays positive and never uses this zero restart.\nhave fn newton_sqrt_two_step(x R) R by cases:\n    case x = 0: 1\n    case x != 0: (x + 2 / x) / 2\n\nhave algo for newton_sqrt_two_step(x):\n    case x = 0: 1\n    case x != 0: (x + 2 / x) / 2\n\nclaim:\n    ? forall x R+:\n        newton_sqrt_two_step(x) = newton_sqrt_two(x)\n    newton_sqrt_two_step(x) = (x + 2 / x) / 2 = newton_sqrt_two(x)",
+      "reusable_lesson": "keep the proved recursive mathematical object visible even when the current backend extracts only its single-step implementation",
+      "status": "materialized"
+    }
+  ],
+  "materialization": {
+    "block_ids": ["B003", "B004"],
+    "file_gate_command": "target/release/litex -r showcases/math_concepts_in_litex/13_numerical_analysis_in_nutshell; target/release/litex -extractpython -r showcases/math_concepts_in_litex/13_numerical_analysis_in_nutshell; verify and extract the exact Manual fence, including sqrt_two_newton_iterate",
+    "file_gate_result": "passed: current-source module exit 0/top-level ok true; revised exact Manual fence exited 0/top-level ok true; extraction artifact ok true and emitted only newton_sqrt_two_step; generated Python runtime matched the documented two steps and residual checkpoint",
+    "broad_docs_gate": "cargo test --release --lib run_docs_markdown_files -- --nocapture compiled successfully, then failed at the pre-existing docs/Examples.md litex fence #121 (Markdown line 3287) because \\self_finite_set_sum<X, f, h> was already used in the parent; the exact new Manual fence independently passed verification and extraction"
+  }
+}

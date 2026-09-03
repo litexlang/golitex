@@ -129,8 +129,8 @@ impl Runtime {
                 // projection check is a fresh, bounded proof obligation whose
                 // objects were just verified above, so allow its one forall
                 // lookup explicitly.
-                equal_set_result = self
-                    .verify_atomic_fact(&equal_set_fact, &VerifyState::initial())?;
+                equal_set_result =
+                    self.verify_atomic_fact(&equal_set_fact, &VerifyState::initial())?;
             }
             let carrier_result = if equal_set_result.is_success() {
                 equal_set_result
@@ -143,8 +143,8 @@ impl Runtime {
                 .into();
                 let mut subset_result = self.verify_atomic_fact(&subset_fact, verify_state)?;
                 if !subset_result.is_success() {
-                    subset_result = self
-                        .verify_atomic_fact(&subset_fact, &VerifyState::initial())?;
+                    subset_result =
+                        self.verify_atomic_fact(&subset_fact, &VerifyState::initial())?;
                 }
                 if !subset_result.is_success() {
                     continue;
@@ -422,7 +422,8 @@ impl Runtime {
         )?;
         self.run_in_local_verification_env(verify_state, |rt, local_verify_state| {
             rt.forall_assume_params_and_dom_in_current_env(&stub, local_verify_state)?;
-            rt.verify_obj_well_defined_and_store_cache(&flow.applied_fn_obj, local_verify_state)
+            rt.verify_obj_well_defined_result(&flow.applied_fn_obj, local_verify_state)
+                .map(|_| ())
         })
     }
 

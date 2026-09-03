@@ -29,7 +29,7 @@ pub(super) fn discover_module_config(
             config.hierarchy_line,
         ));
     }
-    validate_config_directory_contents(config_path, &config)?;
+    validate_config_export_paths(config_path, &config)?;
     for import in config.imports.iter().cloned() {
         let config_import =
             discover_config_import(runtime, module_id, config_path, import, mount_stack)?;

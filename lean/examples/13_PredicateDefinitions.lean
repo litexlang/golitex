@@ -16,4 +16,10 @@ theorem __fact1 : is_unit_pair (1 : ℝ) (1 : ℝ) := by
   unfold is_unit_pair
   exact ⟨Litex.In.own Litex.R (1 : ℝ), Litex.In.own Litex.R (1 : ℝ), Litex.Same.trans (Litex.Same.symm (Litex.Same.symm (Litex.Same.realComplex ((1 : ℝ))))) ((by simpa [Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (__fact0))), Litex.Same.trans (Litex.Same.symm (Litex.Same.symm (Litex.Same.realComplex ((1 : ℝ))))) ((by simpa [Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (__fact0)))⟩)
 
+theorem __fact2 : Litex.In (1 : ℝ) Litex.R := by
+  exact (by
+  have __definition := __fact1
+  unfold is_unit_pair at __definition
+  simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using __definition.1)
+
 end __Compiler_13_PredicateDefinitions

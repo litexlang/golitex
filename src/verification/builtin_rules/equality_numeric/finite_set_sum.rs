@@ -18,27 +18,25 @@ impl Runtime {
             let Obj::SumOfFiniteSet(s) = sum_side else {
                 continue;
             };
-            if !self
-                .verify_equal_fact_as_builtin_premise(
-                    &EqualFact::new_from_refs(s.set.as_ref(), &empty_set, line_file.clone()),
-                    builtin_state,
-                )?
-                .is_success()
-            {
+            let Some(empty_set_result) = self.try_verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(s.set.as_ref(), &empty_set, line_file.clone()),
+                builtin_state,
+            )?
+            else {
                 continue;
-            }
-            if self
-                .verify_equal_fact_as_builtin_premise(
-                    &EqualFact::new_from_refs(other, &zero, line_file.clone()),
-                    builtin_state,
-                )?
-                .is_success()
-            {
-                return Ok(Some(factual_equal_success_by_builtin_reason(
-                    equal_fact,
-                    "equality: finite-set sum over empty set is zero",
-                )));
-            }
+            };
+            let Some(zero_result) = self.try_verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(other, &zero, line_file.clone()),
+                builtin_state,
+            )?
+            else {
+                continue;
+            };
+            return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
+                equal_fact,
+                "equality: finite-set sum over empty set is zero",
+                vec![empty_set_result, zero_result],
+            )));
         }
         Ok(None)
     }
@@ -60,17 +58,29 @@ impl Runtime {
             };
             let mut list_sets = Vec::new();
             match s.set.as_ref() {
-                Obj::ListSet(list_set) => list_sets.push(list_set.clone()),
+                Obj::ListSet(list_set) => list_sets.push((list_set.clone(), None)),
                 set => {
                     for representative in self.get_all_obj_representatives_equal_to_given(set) {
                         if let Obj::ListSet(list_set) = representative {
-                            list_sets.push(list_set);
+                            let list_set_obj: Obj = list_set.clone().into();
+                            if let Some(set_result) = self
+                                .try_verify_equal_fact_as_builtin_premise(
+                                    &EqualFact::new_from_refs(
+                                        set,
+                                        &list_set_obj,
+                                        line_file.clone(),
+                                    ),
+                                    builtin_state,
+                                )?
+                            {
+                                list_sets.push((list_set, Some(set_result)));
+                            }
                         }
                     }
                 }
             }
 
-            for list_set in list_sets {
+            for (list_set, set_result) in list_sets {
                 let mut terms = Vec::with_capacity(list_set.list.len());
                 for element in list_set.list.iter() {
                     let Some(term) =
@@ -85,18 +95,23 @@ impl Runtime {
                     continue;
                 }
                 let expected = Self::left_assoc_add_from_terms(terms);
-                if self
-                    .verify_equal_fact_as_builtin_premise(
-                        &EqualFact::new_from_refs(other, &expected, line_file.clone()),
-                        builtin_state,
-                    )?
-                    .is_success()
-                {
-                    return Ok(Some(factual_equal_success_by_builtin_reason(
-                        equal_fact,
-                        "equality: finite-set sum over displayed set expands elementwise",
-                    )));
+                let Some(expansion_result) = self.try_verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(other, &expected, line_file.clone()),
+                    builtin_state,
+                )?
+                else {
+                    continue;
+                };
+                let mut subgoals = Vec::with_capacity(2);
+                if let Some(set_result) = set_result {
+                    subgoals.push(set_result);
                 }
+                subgoals.push(expansion_result);
+                return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
+                    equal_fact,
+                    "equality: finite-set sum over displayed set expands elementwise",
+                    subgoals,
+                )));
             }
         }
         Ok(None)
@@ -122,33 +137,29 @@ impl Runtime {
             let Obj::Sum(range_sum) = range_side else {
                 continue;
             };
-            if !self
-                .verify_equal_fact_as_builtin_premise(
-                    &EqualFact::new_from_refs(
-                        range.start.as_ref(),
-                        range_sum.start.as_ref(),
-                        line_file.clone(),
-                    ),
-                    builtin_state,
-                )?
-                .is_success()
-            {
+            let Some(start_result) = self.try_verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(
+                    range.start.as_ref(),
+                    range_sum.start.as_ref(),
+                    line_file.clone(),
+                ),
+                builtin_state,
+            )?
+            else {
                 continue;
-            }
-            if !self
-                .verify_equal_fact_as_builtin_premise(
-                    &EqualFact::new_from_refs(
-                        range.end.as_ref(),
-                        range_sum.end.as_ref(),
-                        line_file.clone(),
-                    ),
-                    builtin_state,
-                )?
-                .is_success()
-            {
+            };
+            let Some(end_result) = self.try_verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(
+                    range.end.as_ref(),
+                    range_sum.end.as_ref(),
+                    line_file.clone(),
+                ),
+                builtin_state,
+            )?
+            else {
                 continue;
-            }
-            let exact_func_result = self.verify_equal_fact_as_builtin_premise(
+            };
+            let exact_func_result = self.try_verify_equal_fact_as_builtin_premise(
                 &EqualFact::new_from_refs(
                     finite_sum.func.as_ref(),
                     range_sum.func.as_ref(),
@@ -156,7 +167,9 @@ impl Runtime {
                 ),
                 builtin_state,
             )?;
-            if !exact_func_result.is_success() {
+            let function_result = if let Some(exact_func_result) = exact_func_result {
+                exact_func_result
+            } else {
                 let x_name = self.generate_random_unused_name();
                 let (x_binding, x_obj) = self.fresh_bound_param(x_name)?;
                 let Some(finite_inst) =
@@ -186,13 +199,15 @@ impl Runtime {
                         &pointwise_fact,
                         builtin_state,
                     )?;
-                if !pointwise_result.is_success() {
+                let Some(pointwise_result) = pointwise_result else {
                     continue;
-                }
-            }
-            return Ok(Some(factual_equal_success_by_builtin_reason(
+                };
+                pointwise_result
+            };
+            return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
                 equal_fact,
                 "equality: finite-set sum over closed integer range equals range sum",
+                vec![start_result, end_result, function_result],
             )));
         }
         Ok(None)
@@ -241,24 +256,26 @@ impl Runtime {
             let finite_set_size: Obj = FiniteSetSize::new((*s.set).clone()).into();
             let m1: Obj = Mul::new(finite_set_size.clone(), c.clone()).into();
             let m2: Obj = Mul::new(c, finite_set_size).into();
-            if self
-                .verify_equal_fact_as_builtin_premise(
+            let constant_result = if let Some(result) = self
+                .try_verify_equal_fact_as_builtin_premise(
                     &EqualFact::new_from_refs(other, &m1, line_file.clone()),
                     builtin_state,
+                )? {
+                Some(result)
+            } else {
+                self.try_verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(other, &m2, line_file.clone()),
+                    builtin_state,
                 )?
-                .is_success()
-                || self
-                    .verify_equal_fact_as_builtin_premise(
-                        &EqualFact::new_from_refs(other, &m2, line_file.clone()),
-                        builtin_state,
-                    )?
-                    .is_success()
-            {
-                return Ok(Some(factual_equal_success_by_builtin_reason(
-                    equal_fact,
-                    "equality: finite-set sum of a constant summand",
-                )));
-            }
+            };
+            let Some(constant_result) = constant_result else {
+                continue;
+            };
+            return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
+                equal_fact,
+                "equality: finite-set sum of a constant summand",
+                vec![constant_result],
+            )));
         }
         Ok(None)
     }
@@ -278,19 +295,17 @@ impl Runtime {
             (Obj::SumOfFiniteSet(l), Obj::SumOfFiniteSet(r)) => (l, r),
             _ => return Ok(None),
         };
-        if !self
-            .verify_equal_fact_as_builtin_premise(
-                &EqualFact::new_from_refs(
-                    left_sum.set.as_ref(),
-                    right_sum.set.as_ref(),
-                    line_file.clone(),
-                ),
-                builtin_state,
-            )?
-            .is_success()
-        {
+        let Some(set_result) = self.try_verify_equal_fact_as_builtin_premise(
+            &EqualFact::new_from_refs(
+                left_sum.set.as_ref(),
+                right_sum.set.as_ref(),
+                line_file.clone(),
+            ),
+            builtin_state,
+        )?
+        else {
             return Ok(None);
-        }
+        };
         let x_name = self.generate_random_unused_name();
         let (x_binding, x_obj) = self.fresh_bound_param(x_name)?;
         let Some(left_inst) = self.instantiate_unary_function_at(left_sum.func.as_ref(), &x_obj)?
@@ -310,9 +325,10 @@ impl Runtime {
             builtin_state,
         )?;
         if r.is_success() {
-            return Ok(Some(factual_equal_success_by_builtin_reason(
+            return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
                 equal_fact,
                 "equality: finite-set sums from pointwise equality on the finite set",
+                vec![set_result, r],
             )));
         }
         Ok(None)
@@ -384,19 +400,13 @@ impl Runtime {
                             enumerator_head: map_call.head.as_ref().clone(),
                             index_set: pullback_sum.set.as_ref().clone(),
                             target_set: source_sum.set.as_ref().clone(),
+                            premises: Vec::new(),
                         };
-                        if self.verify_unique_preimage_enumerator_fact(
+                        self.try_verify_unique_preimage_enumerator_fact(
                             &shape,
                             line_file.clone(),
                             builtin_state,
-                        )? {
-                            // This legacy existential route still exposes only
-                            // a boolean. Keep it available for execution
-                            // compatibility, but do not claim a child citation.
-                            Some(Vec::new())
-                        } else {
-                            None
-                        }
+                        )?
                     }
                 }
                 _ => None,
@@ -455,61 +465,65 @@ impl Runtime {
                     second_sum.set.as_ref().clone(),
                 )
                 .into();
-                let union_result = self.verify_equal_fact_as_builtin_premise(
+                let Some(union_result) = self.try_verify_equal_fact_as_builtin_premise(
                     &EqualFact::new_from_refs(
                         union_sum.set.as_ref(),
                         &expected_union,
                         line_file.clone(),
                     ),
                     builtin_state,
-                )?;
-                if !union_result.is_success() {
+                )?
+                else {
                     continue;
-                }
+                };
                 let empty_set: Obj = ListSet::new(vec![]).into();
                 let intersection: Obj = Intersect::new(
                     first_sum.set.as_ref().clone(),
                     second_sum.set.as_ref().clone(),
                 )
                 .into();
-                let disjoint_result = self.verify_equal_fact_as_builtin_premise(
+                let Some(disjoint_result) = self.try_verify_equal_fact_as_builtin_premise(
                     &EqualFact::new_from_refs(&intersection, &empty_set, line_file.clone()),
                     builtin_state,
-                )?;
-                if !disjoint_result.is_success() {
-                    continue;
-                }
-                let Some(first_pointwise) = self.verify_finite_set_sum_functions_pointwise_premise(
-                    &EqualFact::new_from_refs(
-                        union_sum.func.as_ref(),
-                        first_sum.func.as_ref(),
-                        line_file.clone(),
-                    ),
-                    first_sum.set.as_ref().clone(),
-                    builtin_state,
-                )? else {
+                )?
+                else {
                     continue;
                 };
-                if !first_pointwise.is_success() {
-                    continue;
-                }
-                let Some(second_pointwise) = self.verify_finite_set_sum_functions_pointwise_premise(
-                    &EqualFact::new_from_refs(
-                        union_sum.func.as_ref(),
-                        second_sum.func.as_ref(),
-                        line_file.clone(),
-                    ),
-                    second_sum.set.as_ref().clone(),
-                    builtin_state,
-                )? else {
+                let Some(first_pointwise) = self
+                    .verify_finite_set_sum_functions_pointwise_premise(
+                        &EqualFact::new_from_refs(
+                            union_sum.func.as_ref(),
+                            first_sum.func.as_ref(),
+                            line_file.clone(),
+                        ),
+                        first_sum.set.as_ref().clone(),
+                        builtin_state,
+                    )?
+                else {
                     continue;
                 };
-                if !second_pointwise.is_success() {
+                let Some(second_pointwise) = self
+                    .verify_finite_set_sum_functions_pointwise_premise(
+                        &EqualFact::new_from_refs(
+                            union_sum.func.as_ref(),
+                            second_sum.func.as_ref(),
+                            line_file.clone(),
+                        ),
+                        second_sum.set.as_ref().clone(),
+                        builtin_state,
+                    )?
+                else {
                     continue;
-                }
-                return Ok(Some(factual_equal_success_by_builtin_reason(
+                };
+                return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
                     equal_fact,
                     "equality: finite-set sum over a disjoint union",
+                    vec![
+                        union_result,
+                        disjoint_result,
+                        first_pointwise,
+                        second_pointwise,
+                    ],
                 )));
             }
         }
@@ -539,28 +553,28 @@ impl Runtime {
             else {
                 continue;
             };
-            let first_set_result = self.verify_equal_fact_as_builtin_premise(
+            let Some(first_set_result) = self.try_verify_equal_fact_as_builtin_premise(
                 &EqualFact::new_from_refs(
                     sum.set.as_ref(),
                     first_sum.set.as_ref(),
                     line_file.clone(),
                 ),
                 builtin_state,
-            )?;
-            if !first_set_result.is_success() {
+            )?
+            else {
                 continue;
-            }
-            let second_set_result = self.verify_equal_fact_as_builtin_premise(
+            };
+            let Some(second_set_result) = self.try_verify_equal_fact_as_builtin_premise(
                 &EqualFact::new_from_refs(
                     sum.set.as_ref(),
                     second_sum.set.as_ref(),
                     line_file.clone(),
                 ),
                 builtin_state,
-            )?;
-            if !second_set_result.is_success() {
+            )?
+            else {
                 continue;
-            }
+            };
 
             let x_name = self.generate_random_unused_name();
             let (x_binding, x_obj) = self.fresh_bound_param(x_name)?;
@@ -591,9 +605,10 @@ impl Runtime {
             if !pointwise_result.is_success() {
                 continue;
             }
-            return Ok(Some(factual_equal_success_by_builtin_reason(
+            return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
                 equal_fact,
                 "equality: finite-set sum distributes over pointwise addition",
+                vec![first_set_result, second_set_result, pointwise_result],
             )));
         }
         Ok(None)
@@ -623,17 +638,17 @@ impl Runtime {
                 let Obj::SumOfFiniteSet(base_sum) = base_side else {
                     continue;
                 };
-                let set_result = self.verify_equal_fact_as_builtin_premise(
+                let Some(set_result) = self.try_verify_equal_fact_as_builtin_premise(
                     &EqualFact::new_from_refs(
                         sum.set.as_ref(),
                         base_sum.set.as_ref(),
                         line_file.clone(),
                     ),
                     builtin_state,
-                )?;
-                if !set_result.is_success() {
+                )?
+                else {
                     continue;
-                }
+                };
 
                 let x_name = self.generate_random_unused_name();
                 let (x_binding, x_obj) = self.fresh_bound_param(x_name)?;
@@ -660,9 +675,10 @@ impl Runtime {
                 if !pointwise_result.is_success() {
                     continue;
                 }
-                return Ok(Some(factual_equal_success_by_builtin_reason(
+                return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
                     equal_fact,
                     "equality: finite-set sum scalar multiplication",
+                    vec![set_result, pointwise_result],
                 )));
             }
         }
@@ -693,31 +709,32 @@ impl Runtime {
             let Obj::SumOfFiniteSet(flat_sum) = flat_side else {
                 continue;
             };
-            let set_result = self.verify_equal_fact_as_builtin_premise(
+            let Some(set_result) = self.try_verify_equal_fact_as_builtin_premise(
                 &EqualFact::new_from_refs(
                     flat_sum.set.as_ref(),
                     &nested_shape.product_set,
                     line_file.clone(),
                 ),
                 builtin_state,
-            )?;
-            if !set_result.is_success() {
+            )?
+            else {
                 continue;
-            }
-            let func_result = self.verify_equal_fact_as_builtin_premise(
+            };
+            let Some(func_result) = self.try_verify_equal_fact_as_builtin_premise(
                 &EqualFact::new_from_refs(
                     flat_sum.func.as_ref(),
                     &nested_shape.function,
                     line_file.clone(),
                 ),
                 builtin_state,
-            )?;
-            if !func_result.is_success() {
+            )?
+            else {
                 continue;
-            }
-            return Ok(Some(factual_equal_success_by_builtin_reason(
+            };
+            return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
                 equal_fact,
                 "equality: double finite-set sum over Cartesian product",
+                vec![set_result, func_result],
             )));
         }
         Ok(None)
@@ -744,31 +761,32 @@ impl Runtime {
         else {
             return Ok(None);
         };
-        let set_result = self.verify_equal_fact_as_builtin_premise(
+        let Some(set_result) = self.try_verify_equal_fact_as_builtin_premise(
             &EqualFact::new_from_refs(
                 &left_shape.product_set,
                 &right_shape.product_set,
                 line_file.clone(),
             ),
             builtin_state,
-        )?;
-        if !set_result.is_success() {
+        )?
+        else {
             return Ok(None);
-        }
-        let func_result = self.verify_equal_fact_as_builtin_premise(
+        };
+        let Some(func_result) = self.try_verify_equal_fact_as_builtin_premise(
             &EqualFact::new_from_refs(
                 &left_shape.function,
                 &right_shape.function,
                 line_file.clone(),
             ),
             builtin_state,
-        )?;
-        if !func_result.is_success() {
+        )?
+        else {
             return Ok(None);
-        }
-        Ok(Some(factual_equal_success_by_builtin_reason(
+        };
+        Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
             equal_fact,
             "equality: finite-set Fubini over Cartesian product",
+            vec![set_result, func_result],
         )))
     }
 
@@ -788,110 +806,114 @@ impl Runtime {
             (Obj::Sum(l), Obj::Sum(r)) => (l, r),
             _ => return Ok(None),
         };
-        if !self
-            .verify_equal_fact_as_builtin_premise(
-                &EqualFact::new_from_refs(
-                    left_sum.start.as_ref(),
-                    right_sum.start.as_ref(),
-                    line_file.clone(),
-                ),
-                builtin_state,
-            )?
-            .is_success()
-        {
+        let Some(start_result) = self.try_verify_equal_fact_as_builtin_premise(
+            &EqualFact::new_from_refs(
+                left_sum.start.as_ref(),
+                right_sum.start.as_ref(),
+                line_file.clone(),
+            ),
+            builtin_state,
+        )?
+        else {
             return Ok(None);
-        }
-        if !self
-            .verify_equal_fact_as_builtin_premise(
-                &EqualFact::new_from_refs(
-                    left_sum.end.as_ref(),
-                    right_sum.end.as_ref(),
-                    line_file.clone(),
-                ),
-                builtin_state,
-            )?
-            .is_success()
-        {
+        };
+        let Some(end_result) = self.try_verify_equal_fact_as_builtin_premise(
+            &EqualFact::new_from_refs(
+                left_sum.end.as_ref(),
+                right_sum.end.as_ref(),
+                line_file.clone(),
+            ),
+            builtin_state,
+        )?
+        else {
             return Ok(None);
-        }
+        };
 
-        let Some(left_shape) =
+        let Some(mut left_shape) =
             self.finite_set_enumeration_summand_shape(left_sum, line_file.clone(), builtin_state)?
         else {
             return Ok(None);
         };
-        let Some(right_shape) =
+        let Some(mut right_shape) =
             self.finite_set_enumeration_summand_shape(right_sum, line_file.clone(), builtin_state)?
         else {
             return Ok(None);
         };
 
-        if !self
-            .verify_equal_fact_as_builtin_premise(
-                &EqualFact::new_from_refs(
-                    &left_shape.outer_function,
-                    &right_shape.outer_function,
-                    line_file.clone(),
-                ),
-                builtin_state,
-            )?
-            .is_success()
-        {
+        let Some(outer_function_result) = self.try_verify_equal_fact_as_builtin_premise(
+            &EqualFact::new_from_refs(
+                &left_shape.outer_function,
+                &right_shape.outer_function,
+                line_file.clone(),
+            ),
+            builtin_state,
+        )?
+        else {
             return Ok(None);
-        }
-        if !self
-            .verify_equal_fact_as_builtin_premise(
-                &EqualFact::new_from_refs(
-                    &left_shape.index_set,
-                    &right_shape.index_set,
-                    line_file.clone(),
-                ),
-                builtin_state,
-            )?
-            .is_success()
-        {
+        };
+        let Some(index_set_result) = self.try_verify_equal_fact_as_builtin_premise(
+            &EqualFact::new_from_refs(
+                &left_shape.index_set,
+                &right_shape.index_set,
+                line_file.clone(),
+            ),
+            builtin_state,
+        )?
+        else {
             return Ok(None);
-        }
-        if !self
-            .verify_equal_fact_as_builtin_premise(
-                &EqualFact::new_from_refs(
-                    &left_shape.target_set,
-                    &right_shape.target_set,
-                    line_file.clone(),
-                ),
-                builtin_state,
-            )?
-            .is_success()
-        {
+        };
+        let Some(target_set_result) = self.try_verify_equal_fact_as_builtin_premise(
+            &EqualFact::new_from_refs(
+                &left_shape.target_set,
+                &right_shape.target_set,
+                line_file.clone(),
+            ),
+            builtin_state,
+        )?
+        else {
             return Ok(None);
-        }
+        };
 
         let finite_target: AtomicFact =
             IsFiniteSetFact::new(left_shape.target_set.clone(), line_file.clone()).into();
-        if !self
-            .verify_atomic_fact_as_builtin_rule_premise(&finite_target, builtin_state)?
-            .is_success()
-        {
+        let Some(finite_target_result) =
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&finite_target, builtin_state)?
+        else {
             return Ok(None);
-        }
-        if !self.verify_unique_preimage_enumerator_fact(
+        };
+        let Some(mut left_unique_results) = self.try_verify_unique_preimage_enumerator_fact(
             &left_shape,
             line_file.clone(),
             builtin_state,
-        )? {
+        )?
+        else {
             return Ok(None);
-        }
-        if !self.verify_unique_preimage_enumerator_fact(
+        };
+        let Some(mut right_unique_results) = self.try_verify_unique_preimage_enumerator_fact(
             &right_shape,
             line_file.clone(),
             builtin_state,
-        )? {
+        )?
+        else {
             return Ok(None);
-        }
+        };
 
-        Ok(Some(factual_equal_success_by_builtin_reason(
+        let mut subgoals = vec![
+            start_result,
+            end_result,
+            outer_function_result,
+            index_set_result,
+            target_set_result,
+            finite_target_result,
+        ];
+        subgoals.append(&mut left_shape.premises);
+        subgoals.append(&mut right_shape.premises);
+        subgoals.append(&mut left_unique_results);
+        subgoals.append(&mut right_unique_results);
+        Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
             equal_fact,
             "equality: sums over bijective enumerations of the same finite set",
+            subgoals,
         )))
     }
 }

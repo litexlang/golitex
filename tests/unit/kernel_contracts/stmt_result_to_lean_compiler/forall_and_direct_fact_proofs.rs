@@ -18,27 +18,18 @@ fn forall_proof_compiles_its_binder_owned_results_in_one_child_environment() {
     let [StmtResult::Success(SuccessStmtResult::Fact(result))] = results.as_slice() else {
         panic!("expected one forall fact Result")
     };
-    let SuccessFactProofResult::ForallProof(proof) = result
-        .proof()
-        .expect("verified forall owns a proof")
+    let SuccessFactProofResult::ForallProof(proof) =
+        result.proof().expect("verified forall owns a proof")
     else {
         panic!("expected ForallProof Result")
     };
     let parameter_fact_id = proof.assumption_infers.store_fact_outputs[0]
         .fact_id
         .expect("forall parameter retains its local FactId");
-    let SuccessVerifyFactWellDefinedProofResult::ForallFact(checked) = result
-        .checked()
-        .expect("verified forall owns WD")
-        .proof
-        .as_ref()
-    else {
-        panic!("expected forall WD Result")
-    };
-    let conclusion_fact_id = checked.conclusions[0]
+    let conclusion_fact_id = proof.proves[0]
         .store
         .fact_id
-        .expect("forall conclusion retains its FactId");
+        .expect("forall truth conclusion retains its FactId");
     let mut compiler = StmtResultToLeanCompiler::new("direct_forall_proof.lit");
 
     assert!(compiler
@@ -53,8 +44,8 @@ fn forall_proof_compiles_its_binder_owned_results_in_one_child_environment() {
         .environment_stack
         .forall_conclusion_bindings
         .contains_key(&conclusion_fact_id));
-    assert!(compiler.declarations[0].contains("∀ {__carrier1 : Type} (__p1 : __carrier1)"));
-    assert!(compiler.declarations[0].contains("intro __carrier1 x __h"));
+    assert!(compiler.declarations[0].contains("∀ (__p1 : (Litex.R).Carrier)"));
+    assert!(compiler.declarations[0].contains("intro x __h"));
     assert!(
         compiler.declarations[0].contains("have __prior0_0"),
         "{}",
@@ -93,9 +84,8 @@ fn forall_proof_compiles_natural_parameter_inference_inside_its_binder_environme
     let [StmtResult::Success(SuccessStmtResult::Fact(result))] = results.as_slice() else {
         panic!("expected one natural forall Result")
     };
-    let SuccessFactProofResult::ForallProof(proof) = result
-        .proof()
-        .expect("verified forall owns a proof")
+    let SuccessFactProofResult::ForallProof(proof) =
+        result.proof().expect("verified forall owns a proof")
     else {
         panic!("expected ForallProof Result")
     };
@@ -119,7 +109,7 @@ fn forall_proof_compiles_natural_parameter_inference_inside_its_binder_environme
         .last()
         .expect("natural forall emits one theorem");
     assert!(declaration.matches("have __infer0_").count() >= 4);
-    assert!(declaration.contains("Litex.Rules.naturalRepNonnegative (__h"));
+    assert!(declaration.contains("Litex.Rules.nonnegativeOfInN (__h"));
     assert!(declaration.contains("Litex.Rules.complexEqNatInN"));
     assert!(!declaration.contains("complexAddInN (__h0_1)"));
     assert_eq!(compiler.environment_stack.environments.len(), 1);
@@ -171,9 +161,8 @@ fn forall_proof_compiles_positive_real_inference_only_inside_its_binder_environm
         let [StmtResult::Success(SuccessStmtResult::Fact(result))] = results.as_slice() else {
             panic!("expected one positive-real forall Result")
         };
-        let SuccessFactProofResult::ForallProof(proof) = result
-            .proof()
-            .expect("verified forall owns a proof")
+        let SuccessFactProofResult::ForallProof(proof) =
+            result.proof().expect("verified forall owns a proof")
         else {
             panic!("expected ForallProof Result")
         };
@@ -248,7 +237,9 @@ fn forall_proof_keeps_a_function_parameter_contract_inside_its_binder_environmen
             .expect("compile function-parameter forall directly");
 
         assert!(
-            generated.contains("intro __carrier1 f __h") && generated.contains("Litex.Same.refl f"),
+            generated.contains("((Litex.fnSet Litex.R Litex.R)).Carrier")
+                && generated.contains("intro f __h")
+                && generated.contains("Litex.Same.refl f"),
             "function parameter lost its carrier or membership contract: {generated}"
         );
     });
@@ -292,9 +283,9 @@ fn forall_proof_installs_explicit_domain_fact_ids_in_the_same_binder_environment
             .expect("compile domain-bearing forall directly");
 
         assert!(
-            generated.contains("intro __carrier1 a __h")
-                && generated.contains("__domain1")
-                && generated.contains(":= __domain1"),
+            generated.contains("intro a __h")
+                && generated.contains("__domain_f")
+                && generated.contains(":= __domain_f"),
             "domain premise was not installed in the forall child environment: {generated}"
         );
     });
@@ -443,7 +434,9 @@ fn common_zero_premise_builtin_families_compile_directly_from_results() {
             .unwrap_or_else(|| panic!("{label} must return a fact Result"));
         let proof = StmtResultToLeanCompiler::new("direct_common_builtin.lit")
             .construct_lean_proof_from_direct_fact_result(
-                factual.verification().expect("verified statement owns evidence"),
+                factual
+                    .verification()
+                    .expect("verified statement owns evidence"),
             )
             .unwrap_or_else(|error| panic!("construct {label}: {error}"));
         assert!(proof.is_some(), "{label} still requires compatibility IR");
@@ -465,9 +458,9 @@ fn not_equal_symmetry_wraps_the_exact_cited_child_result() {
     compiler
         .compile_stmt_result(objects)
         .expect("compile object bindings");
-    let StmtResult::Success(SuccessStmtResult::UnsafeStmt(
-        SuccessUnsafeStmtResult::TrustStmt(trusted),
-    )) = trusted
+    let StmtResult::Success(SuccessStmtResult::UnsafeStmt(SuccessUnsafeStmtResult::TrustStmt(
+        trusted,
+    ))) = trusted
     else {
         panic!("expected trusted source premise")
     };
@@ -488,12 +481,14 @@ fn not_equal_symmetry_wraps_the_exact_cited_child_result() {
         .expect("symmetry statement is factual");
     let proof = compiler
         .construct_lean_proof_from_direct_fact_result(
-            factual.verification().expect("verified statement owns evidence"),
+            factual
+                .verification()
+                .expect("verified statement owns evidence"),
         )
         .expect("construct symmetry directly")
         .expect("symmetry must not use compatibility IR");
     assert!(proof.contains("Litex.Rules.notSameSymm"), "{proof}");
-    assert!(proof.contains("__fact"), "{proof}");
+    assert!(proof.contains("__trusted_adapter"), "{proof}");
 }
 
 #[test]
@@ -512,11 +507,14 @@ fn set_builder_membership_combines_its_ordered_child_results_directly() {
         .expect("set-builder membership must be factual");
     let proof = StmtResultToLeanCompiler::new("direct_set_builder_membership.lit")
         .construct_lean_proof_from_direct_fact_result(
-            result.verification().expect("verified statement owns evidence"),
+            result
+                .verification()
+                .expect("verified statement owns evidence"),
         )
         .expect("compile direct set-builder proof")
         .expect("set-builder membership must not use compatibility IR");
-    assert!(proof.contains("Litex.Rules.inSetBuilder"), "{proof}");
+    assert!(proof.contains("Litex.Same.subtype"), "{proof}");
+    assert!(proof.contains("Litex.Same.realComplex"), "{proof}");
     let generated = StmtResultToLeanCompiler::new("direct_set_builder_membership.lit")
         .compile_stmt_results_to_lean_source(&results)
         .expect("compile set-builder statement and typed infer Results");
@@ -586,7 +584,7 @@ fn predicate_backed_witness_rejects_a_missing_inferred_existential_fact_id() {
         .compile_stmt_results_to_lean_source(&results)
         .expect_err("missing existential FactId must fail closed");
     assert!(
-        error.contains("inferred existential has no FactId"),
+        error.contains("atomic witness Result store 0 inferred fact 1 has no frozen FactId"),
         "{error}"
     );
 }
@@ -695,7 +693,8 @@ fn set_relation_duality_passes_through_the_exact_child_result() {
         .insert(trusted_fact_id, trusted_fact);
     let proof = compiler
         .construct_lean_proof_from_direct_fact_result(
-            dual.verification().expect("verified statement owns evidence"),
+            dual.verification()
+                .expect("verified statement owns evidence"),
         )
         .expect("compile typed duality")
         .expect("duality must not use compatibility IR");

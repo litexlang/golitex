@@ -129,6 +129,6 @@ x $in closed_range(a, b)
             !succeeded,
             "a complete disjunction must not leak either branch into known atomic facts:\n{output}"
         );
-        assert!(output.contains("UnknownError"), "{output}");
+        assert!(output.contains("unknown_error"), "{output}");
     }
 }

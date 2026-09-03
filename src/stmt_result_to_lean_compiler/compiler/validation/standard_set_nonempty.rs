@@ -15,9 +15,7 @@ pub(in super::super) fn compile_standard_set_nonempty_fact_proof_from_result(
         return Err("object choice nonemptiness child changed fact family".into());
     };
     if obj_equality_key(&nonempty.set) != obj_equality_key(expected_carrier) {
-        return Err(
-            "object choice nonemptiness child changed its target".into(),
-        );
+        return Err("object choice nonemptiness child changed its target".into());
     }
     let SuccessFactProofResult::BuiltinRule(builtin) = success.proof() else {
         return Err("object choice nonemptiness child is not a builtin leaf".into());

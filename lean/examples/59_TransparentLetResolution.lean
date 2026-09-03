@@ -21,11 +21,14 @@ theorem __fact2 : Litex.Same g f := by
   unfold g
   exact Litex.Same.refl f
 
-theorem __fact3 : Litex.Same (Litex.fnApplyOwn g (Litex.In.own (Litex.fnSet Litex.R Litex.R) g) (1 : ℂ) (Litex.Rules.complexRealInR (1 : ℝ))) (1 : ℂ) := by
+theorem __fact3 : Litex.Same (Litex.fnApplyCarrier (domain := Litex.R) (codomain := Litex.R) g ((Litex.In.own (Litex.fnSet Litex.R Litex.R) g)) (1 : ℝ)) (1 : ℂ) := by
   exact (by
   unfold g
-  exact ((by
-  unfold Litex.fnApplyOwn f
-  exact Litex.Same.symm (Litex.In.same_rep (1 : ℂ) (Litex.Rules.complexRealInR (1 : ℝ))))))
+  exact (Litex.Same.trans ((by
+  unfold Litex.fnApplyCarrier f
+  exact (by
+  convert (Litex.Same.realComplex ((1 : ℝ))) using 1
+  · exact Litex.In.rep_exact ((1 : ℝ)) (Litex.In.own Litex.R ((1 : ℝ)))
+  · norm_num))) (Litex.Same.refl (1 : ℂ))))
 
 end __Compiler_59_TransparentLetResolution

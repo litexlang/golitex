@@ -12,66 +12,66 @@ theorem __litex_registered_reflexive_same_set_0 :
     ∀ (x : Litex.Set),
       same_set x x := by
   intro x
-  have __step1 : Litex.Same x x := by
+  have __step0_0 : Litex.Same x x := by
     exact Litex.Same.refl x
-  have __step2 : same_set x x := by
+  have __step0_1 : same_set x x := by
     exact (by
     unfold same_set
-    exact ⟨True.intro, True.intro, (by simpa [Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (__step1))⟩)
-  have __c0_0 : same_set x x := __step2
+    exact ⟨True.intro, True.intro, (by simpa [Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (__step0_0))⟩)
+  have __c0_0 : same_set x x := __step0_1
   exact __c0_0
 
 theorem __litex_registered_symmetric_same_set_1 :
-    ∀ (x : Litex.Set) (y : Litex.Set) (__domain1 : same_set x y),
+    ∀ (x : Litex.Set) (y : Litex.Set) (__domain_f18 : same_set x y),
       same_set y x := by
-  intro x y __domain1
-  have __step1 : Litex.Same x y := by
+  intro x y __domain_f18
+  have __step1_2 : Litex.Same x y := by
     exact (show Litex.Same x y from (by
-    have __definition := __domain1
+    have __definition := __domain_f18
     unfold same_set at __definition
-    exact __definition.2.2))
-  have __step2 : Litex.Same y x := by
-    exact Litex.Same.symm (__step1)
-  have __step3 : same_set y x := by
+    simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using __definition.2.2))
+  have __step1_3 : Litex.Same y x := by
+    exact Litex.Same.symm (__step1_2)
+  have __step1_4 : same_set y x := by
     exact (by
     unfold same_set
-    exact ⟨True.intro, True.intro, (by simpa [Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (__step2))⟩)
-  have __c1_0 : same_set y x := __step3
+    exact ⟨True.intro, True.intro, (by simpa [Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (__step1_3))⟩)
+  have __c1_0 : same_set y x := __step1_4
   exact __c1_0
 
 theorem __litex_registered_transitive_same_set_2 :
-    ∀ (x : Litex.Set) (y : Litex.Set) (z : Litex.Set) (__domain1 : same_set x y) (__domain2 : same_set y z),
+    ∀ (x : Litex.Set) (y : Litex.Set) (z : Litex.Set) (__domain_f34 : same_set x y) (__domain_f36 : same_set y z),
       same_set x z := by
-  intro x y z __domain1 __domain2
-  have __step1 : Litex.Same x y := by
+  intro x y z __domain_f34 __domain_f36
+  have __step2_5 : Litex.Same x y := by
     exact (show Litex.Same x y from (by
-    have __definition := __domain1
+    have __definition := __domain_f34
     unfold same_set at __definition
-    exact __definition.2.2))
-  have __step2 : Litex.Same y z := by
+    simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using __definition.2.2))
+  have __step2_6 : Litex.Same y z := by
     exact (show Litex.Same y z from (by
-    have __definition := __domain2
+    have __definition := __domain_f36
     unfold same_set at __definition
-    exact __definition.2.2))
-  have __step3 : Litex.Same x z := by
-    exact Litex.Same.trans (__step1) (__step2)
-  have __step4 : same_set x z := by
+    simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using __definition.2.2))
+  have __step2_7 : Litex.Same x z := by
+    exact Litex.Same.trans (__step2_5) (__step2_6)
+  have __step2_8 : same_set x z := by
     exact (by
     unfold same_set
-    exact ⟨True.intro, True.intro, (by simpa [Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (__step3))⟩)
-  have __c2_0 : same_set x z := __step4
+    exact ⟨True.intro, True.intro, (by simpa [Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (__step2_7))⟩)
+  have __c2_0 : same_set x z := __step2_8
   exact __c2_0
 
 theorem __litex_registered_antisymmetric_same_set_3 :
-    ∀ (x : Litex.Set) (y : Litex.Set) (__domain1 : same_set x y) (__domain2 : same_set y x),
+    ∀ (x : Litex.Set) (y : Litex.Set) (__domain_f48 : same_set x y) (__domain_f50 : same_set y x),
       Litex.Same x y := by
-  intro x y __domain1 __domain2
-  have __step1 : Litex.Same x y := by
+  intro x y __domain_f48 __domain_f50
+  have __step3_9 : Litex.Same x y := by
     exact (show Litex.Same x y from (by
-    have __definition := __domain1
+    have __definition := __domain_f48
     unfold same_set at __definition
-    exact __definition.2.2))
-  have __c3_0 : Litex.Same x y := __step1
+    simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using __definition.2.2))
+  have __c3_0 : Litex.Same x y := __step3_9
   exact __c3_0
 
 end __Compiler_46_RegisteredPredicateCompilerEnvironment

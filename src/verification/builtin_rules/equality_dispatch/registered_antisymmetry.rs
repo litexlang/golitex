@@ -30,19 +30,19 @@ impl Runtime {
         }
 
         for prop_name in prop_names {
-            let left_to_right =
-                self.verify_user_prop_subgoal(&prop_name, equal_fact, builtin_state)?;
-            if !left_to_right.is_success() {
+            let Some(left_to_right) =
+                self.verify_user_prop_subgoal(&prop_name, equal_fact, builtin_state)?
+            else {
                 continue;
-            }
-            let right_to_left = self.verify_user_prop_subgoal(
+            };
+            let Some(right_to_left) = self.verify_user_prop_subgoal(
                 &prop_name,
                 &EqualFact::new_from_refs(right, left, line_file.clone()),
                 builtin_state,
-            )?;
-            if !right_to_left.is_success() {
+            )?
+            else {
                 continue;
-            }
+            };
             return Ok(Some(Self::wrap_registered_antisymmetric_predicate_result(
                 equal_fact,
                 prop_name,

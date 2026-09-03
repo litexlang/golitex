@@ -24,10 +24,7 @@ impl ResultGraph {
                 );
                 self.add_edge(&id, &wd_id, "well_definedness", 0);
                 let proof_id = format!("{id}/truth");
-                self.add_verify_fact_result(
-                    verified.verification.as_ref(),
-                    proof_id.clone(),
-                );
+                self.add_verify_fact_result(verified.verification.as_ref(), proof_id.clone());
                 self.add_edge(&id, &proof_id, "truth", 0);
             }
             VerifyFactResult::Unknown(unknown) => {
@@ -132,6 +129,12 @@ impl ResultGraph {
                     "definition",
                     0,
                 );
+                let child_id = format!("{id}/reduced-equality");
+                self.add_verify_fact_outcome(
+                    &result.verification.reduced_equality,
+                    child_id.clone(),
+                );
+                self.add_edge(&id, &child_id, "reduced_equality", 0);
             }
             SuccessFactProofResult::DiagnosticOnly(result) => {
                 self.ensure_node(id, "proof", "DiagnosticOnly", result.detail.clone(), None);
@@ -181,6 +184,7 @@ impl ResultGraph {
                     let child_id = format!("{id}/prove:{index}");
                     self.add_verify_fact_outcome(&proved.result, child_id.clone());
                     self.add_edge(&id, &child_id, "proves", index);
+                    self.add_infers(&child_id, &proved.store.infers, format!("{child_id}/store"));
                 }
             }
             SuccessFactProofResult::Transform(result) => {
@@ -272,10 +276,7 @@ impl ResultGraph {
         }
     }
 
-    pub(super) fn add_shared_fact_result(
-        &mut self,
-        source: &Rc<SuccessFactProofNode>,
-    ) -> String {
+    pub(super) fn add_shared_fact_result(&mut self, source: &Rc<SuccessFactProofNode>) -> String {
         let key = Rc::as_ptr(source) as usize;
         if let Some(id) = self.shared_fact_nodes.get(&key) {
             return id.clone();

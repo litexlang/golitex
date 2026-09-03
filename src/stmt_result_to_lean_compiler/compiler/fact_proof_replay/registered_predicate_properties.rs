@@ -53,9 +53,7 @@ impl StmtResultToLeanCompiler {
             .verified()
             .ok_or_else(|| "registered symmetric-predicate child is not factual".to_string())?;
         if alternate_result.fact().to_string() != evidence.expected_alternate.to_string() {
-            return Err(
-                "registered symmetric-predicate child changed its fact".into(),
-            );
+            return Err("registered symmetric-predicate child changed its fact".into());
         }
 
         let bindings = self

@@ -51,15 +51,14 @@ theorem __fact6 :
 
 theorem __fact7 :
     ∀ (__p1 : Litex.Set) (__p2 : Litex.Set) {__carrier3 : Type} (__p3 : __carrier3) (__type3 : Litex.In __p3 __p1) (__domain1 : Litex.In __p3 __p2), Litex.In __p3 (Litex.intersect __p1 __p2) := by
-  intro A B __carrier3 x __h71 __domain1
-  have __prior7_0 : Litex.In x (Litex.intersect A B) := Litex.SetRules.inIntersect (__h71) (__domain1)
+  intro A B __carrier3 x __h71 __domain_f72
+  have __prior7_0 : Litex.In x (Litex.intersect A B) := Litex.SetRules.inIntersect (__h71) (__domain_f72)
   exact __prior7_0
 
 theorem __fact8 :
     ∀ (__p1 : Litex.Set) (__p2 : Litex.Set) {__carrier3 : Type} (__p3 : __carrier3) (__type3 : Litex.In __p3 __p1) (__domain1 : ¬ Litex.In __p3 __p2), Litex.In __p3 (Litex.setMinus __p1 __p2) := by
-  intro A B __carrier3 x __h82 __domain1
-  have __prior8_0 : Litex.In x (Litex.setMinus A B) := Litex.SetRules.inSetMinus (__h82) ((by
-    convert __domain1 using 1 <;> norm_num))
+  intro A B __carrier3 x __h82 __domain_f83
+  have __prior8_0 : Litex.In x (Litex.setMinus A B) := Litex.SetRules.inSetMinus (__h82) (__domain_f83)
   exact __prior8_0
 
 end __Compiler_27_SetOperators

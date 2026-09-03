@@ -4,6 +4,7 @@ use crate::fact::EqualFact;
 use crate::object::{Abs, Add, AtomicName, Identifier, Mul, Number, Obj, StructObj, Sub, Union};
 use crate::runtime::Runtime;
 use crate::syntax::source_conventions::default_line_file;
+use crate::test_support::execute_source;
 use crate::verification::VerifyState;
 
 #[test]
@@ -34,8 +35,23 @@ fn structural_equality_runs_only_from_the_outer_round() {
     let mut runtime = Runtime::default();
     runtime.start_isolated_source("structural_equality_outer_round");
 
-    let a: Obj = Identifier::new("A".to_string()).into();
-    let b: Obj = Identifier::new("B".to_string()).into();
+    let (_, setup_error) = execute_source(
+        "struct Box<s set>:\n    value s\nhave A, B set\n",
+        &mut runtime,
+    );
+    assert!(
+        setup_error.is_none(),
+        "fixture definitions: {setup_error:?}"
+    );
+
+    let a_binding = runtime
+        .resolved_identifier_symbol("A")
+        .expect("fixture A binding");
+    let b_binding = runtime
+        .resolved_identifier_symbol("B")
+        .expect("fixture B binding");
+    let a: Obj = Identifier::new_bound("A".to_string(), a_binding).into();
+    let b: Obj = Identifier::new_bound("B".to_string(), b_binding).into();
     let union_ab: Obj = Union::new(a.clone(), b.clone()).into();
     let union_ba: Obj = Union::new(b, a).into();
     let left: Obj =
@@ -47,10 +63,7 @@ fn structural_equality_runs_only_from_the_outer_round() {
         .verify_equal_fact_by_known_equality(&equal_fact)
         .is_unknown());
     assert!(runtime
-        .verify_equal_fact(
-            &equal_fact,
-            &VerifyState::initial().with_next_round()
-        )
+        .verify_equal_fact(&equal_fact, &VerifyState::initial().with_next_round())
         .expect("later-round equality verification")
         .is_unknown());
     assert!(runtime
@@ -73,8 +86,11 @@ fn checked_definition_reduction_has_no_candidate_graph_or_ambient_mode() {
         .next()
         .expect("definition source lookup must follow direct reduction");
 
-    assert!(reduction_impl
-        .contains("equal_fact_sides_are_equal_by_terminating_reduction_and_congruence"));
+    assert!(reduction_impl.contains("verify_equal_fact_with_bounded_builtin_routes"));
+    assert!(reduction_impl.contains("complete_proven_fact_candidate"));
+    assert!(reduction_impl.contains("reduced_equality_result"));
+    assert!(reduction_impl.contains(", verify_state)?"));
+    assert!(!reduction_impl.contains("VerifyState::initial()"));
     assert!(!source.contains("well_definedness_verified"));
     let obsolete_depth = ["known_equality_candidate_", "replay_depth"].concat();
     let obsolete_collector = ["collect_known_equality_", "pairs_from_envs"].concat();
@@ -83,7 +99,6 @@ fn checked_definition_reduction_has_no_candidate_graph_or_ambient_mode() {
     assert!(!source.contains(&obsolete_collector));
     assert!(!source.contains(&obsolete_pair_attempt));
     assert!(!reduction_impl.contains("verify_atomic_fact_with_known_forall"));
-    assert!(!reduction_impl.contains("verify_equal_fact_with_bounded_builtin_routes"));
     assert!(!reduction_impl.contains("verify_equal_fact("));
 
     let structural_source = include_str!(concat!(

@@ -2116,6 +2116,127 @@ have algo for f(x):
 This is an `error`; the implementation does not agree with the defined
 function.
 
+### Extracting a proved numerical step to Python or C (experimental)
+
+File extraction uses explicit marker pairs. A whole trimmed line containing
+`# [-extract]` starts a block at the following line; a whole trimmed line
+containing `# [end of -extract]` ends it. Multiple blocks are concatenated in
+source order and only that self-contained virtual source is verified and sent
+to the Python or C backend. The surrounding file and any configured project
+prefix are not loaded by extraction. Missing, nested, unmatched, or unclosed
+markers are errors rather than a request to process the whole file. Use an
+ordinary `litex -f` command separately to check all surrounding mathematics.
+
+This lets a checked mathematical update and a small executable artifact live
+in the same source. The numerical-analysis showcase applies Newton's method to
+`x^2 - 2 = 0`, starting from `x_0 = 1`. With
+`g_n = |x_n^2 - 2|`, the full checked source proves
+
+```text
+g_(n + 1) <= g_n^2 / 4
+g_n <= 4 * (1 / 4)^(2^n)
+g_2 <= 1 / 64
+```
+
+The convergence statements are about the recursive sequence
+`sqrt_two_newton_iterate` itself. Its mathematical update has the precise
+positive-real interface needed by the proof. A separate total wrapper gives
+the experimental extractor its currently supported `R -> R` interface, and
+the final claim connects that wrapper back to the proved update.
+
+```litex
+have fn newton_sqrt_two(x R+) R+ = (x + 2 / x) / 2
+
+# This is the exact sequence whose residual bound is proved.
+have fn sqrt_two_newton_iterate(n N) R+ by induc n from 0:
+    case n = 0: 1
+    case n > 0: newton_sqrt_two(sqrt_two_newton_iterate(n - 1))
+
+# The proved iteration stays positive and never uses this zero restart.
+# [-extract]
+have fn newton_sqrt_two_step(x R) R by cases:
+    case x = 0: 1
+    case x != 0: (x + 2 / x) / 2
+# [end of -extract]
+
+claim:
+    ? forall x R+:
+        newton_sqrt_two_step(x) = newton_sqrt_two(x)
+    newton_sqrt_two_step(x) = (x + 2 / x) / 2 = newton_sqrt_two(x)
+
+# [-extract]
+have algo for newton_sqrt_two_step(x):
+    case x = 0: 1
+    case x != 0: (x + 2 / x) / 2
+# [end of -extract]
+```
+
+The complete proof and the same executable definition live in
+`showcases/math_concepts_in_litex/13_numerical_analysis_in_nutshell/main.lit`.
+Verify the full file, then extract the two selected blocks with:
+
+```sh
+litex -f showcases/math_concepts_in_litex/13_numerical_analysis_in_nutshell/main.lit
+litex -extractpython -f showcases/math_concepts_in_litex/13_numerical_analysis_in_nutshell/main.lit
+litex -extractc -f showcases/math_concepts_in_litex/13_numerical_analysis_in_nutshell/main.lit
+```
+
+The command returns an `extracted_code` artifact whose `content` is:
+
+```python
+def newton_sqrt_two_step(x):
+    if x == 0.0:
+        return 1.0
+    elif x != 0.0:
+        return ((x + (2.0 / x)) / 2.0)
+    raise AssertionError("unreachable verified Litex cases")
+```
+
+The C artifact contains the corresponding C99 fragment:
+
+```c
+#include <stdlib.h>
+
+double newton_sqrt_two_step(double x) {
+    if (x == 0.0) {
+        return 1.0;
+    }
+    else if (x != 0.0) {
+        return ((x + (2.0 / x)) / 2.0);
+    }
+    abort();
+}
+```
+
+The host loop repeats the verified single step in the same pattern as the
+recursive `sqrt_two_newton_iterate` definition:
+
+```python
+x = 1.0
+for _ in range(2):
+    x = newton_sqrt_two_step(x)
+
+# x == 1.4166666666666665
+# abs(x * x - 2.0) == 0.006944444444444198 < 1.0 / 64.0
+```
+
+The agreement check matters: changing the nonzero implementation branch, for
+example by dividing by `3` instead of `2`, is rejected because it no longer
+matches the checked function. The positive-real convergence development also
+continues to constrain the mathematical formula rather than merely its Python
+spelling.
+
+This path is experimental and deliberately narrower than the Litex language.
+Although the exact recursive iterate is visible above, the current extractor
+emits only the supported `R -> R` step, not the `N`-indexed recursion or any
+proof. The `x = 0` restart is an explicit totalization policy for extraction,
+not Newton's ordinary formula; the proved trajectory starts positive and stays
+positive, so it does not take that branch. Finally, the Litex inequalities are
+exact-real facts, while generated Python and C use IEEE-754 floating point.
+They do not prove target behavior for rounding, overflow, compiler choices, or
+special values such as NaN; Python NaN reaches the defensive assertion because
+it satisfies neither generated branch.
+
 ### Local proof blocks: `claim`, `example`, `sketch`, and `try`
 
 `claim` proves one target and commits that target to the surrounding context.
@@ -2268,12 +2389,12 @@ trust have a R:
 $background(a)
 ```
 
-Each `trust` or `trust have` statement commits atomically. Litex stages its
-bindings, assumed facts, and inferred consequences in a temporary child
-environment. Facts later in the same statement may use facts staged earlier
-in that child, but the parent environment receives the complete child only
-after every fact succeeds. If any binding, well-definedness check, storage
-step, or inference fails, none of that statement's effects escape.
+Each `trust` or `trust have` statement deliberately skips both
+well-definedness and truth verification. Its result has a dedicated trusted
+kind and cannot be mistaken for a verified fact with missing evidence. Litex
+still stages bindings, assumed facts, and inferred consequences in a temporary
+child environment and commits them atomically. If name binding, storage, or
+inference fails, none of that statement's effects escape.
 
 This is a statement boundary, not a process boundary. A persistent REPL may
 continue after the error with its parent environment unchanged, while an
@@ -2341,10 +2462,12 @@ Important rules:
 
 1. `[export]` is ordered and each entry names one direct `.lit` file or one
    configured child directory.
-2. Direct child `.lit` files and configured submodule directories appear once;
-   Markdown and other non-Litex sidecars are not exports. The reserved local
-   `.drafts/` and Lake's generated `.lake/` directory are excluded from module
-   discovery; every other direct child directory must still be exported.
+2. `[export]` is an explicit selection list, not a complete directory
+   inventory. Each participating direct child `.lit` file or configured
+   submodule directory appears once. Unlisted files and folders are sidecars:
+   discovery does not parse, execute, or expose them in the module namespace.
+   Every declared path must still exist and have the required file or submodule
+   shape.
 3. Only a `module` imports. `[import]` mounts another module; `[import std]`
    mounts an installed standard package.
 4. An optional module-only `[module] flatten = true` removes one file namespace
@@ -2404,7 +2527,7 @@ introductions.
 | Bare fact | Well-definedness, then known facts/builtin rules/definitions/universals/strategies. | The fact and its ordinary inferred consequences. |
 | `let x = value` | `value` is well-defined and `x` is fresh. | One untyped name and `x = value`. |
 | `have x S`, `have x S = value`, `have x S: ...` | Nonemptiness or concrete membership, defined carrier, and any witness body. | A fresh object, its carrier facts, equality/body facts, and inference. |
-| `trust fact`, `trust have ...` | Parsing, binding, well-definedness, and transactional staging still run; proof truth is assumed. | One trusted transaction. Failure commits nothing. |
+| `trust fact`, `trust have ...` | Parsing, binding, and transactional staging run; well-definedness and proof truth are both skipped. | One explicit trusted transaction. Failure commits nothing. |
 | `obtain ... from exist ...` | The source existential is known; names, count, and dependent parameter types match. | Opaque witness names plus their type and direct body facts. |
 | `obtain ... from $P(args)` | `$P(args)` is known and its concrete definition has exactly one positive `exist`/`exist!` clause. | The same witness facts after checked definition projection. |
 | `obtain ... from thm name(args)` / `obtain ... from thm name` | The named user, imported, or reserved builtin theorem passes the ordinary call checks and has exactly one direct positive `exist`/`exist!` conclusion. Parentheses are required for a root `forall`; a direct existential theorem uses the bare form. | The theorem application remains scoped; only the eliminated witnesses, types, body facts, and `exist!` uniqueness interface escape. |

@@ -12,7 +12,7 @@ impl Runtime {
         prop_name: &str,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<VerifyFactResult, RuntimeError> {
+    ) -> Result<Option<VerifyFactResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
@@ -22,7 +22,7 @@ impl Runtime {
             line_file,
         )
         .into();
-        self.verify_atomic_fact_as_builtin_rule_premise(&fact, builtin_state)
+        self.try_verify_atomic_fact_as_builtin_rule_premise(&fact, builtin_state)
     }
 
     // General Cartesian product definition with a named quantified condition.
@@ -78,19 +78,19 @@ impl Runtime {
             return Ok(None);
         }
 
-        let domain_result = self.verify_equal_fact_as_builtin_premise(
+        let Some(domain_result) = self.try_verify_equal_fact_as_builtin_premise(
             &EqualFact::new_from_refs(
                 fn_set.body.set_bound_parameters[0].set_obj(),
                 general_cart.index_set.as_ref(),
                 line_file.clone(),
             ),
             builtin_state,
-        )?;
-        if !domain_result.is_success() {
+        )?
+        else {
             return Ok(None);
-        }
+        };
         let expected_ret_set: Obj = BigUnion::new(general_cart.family_set.as_ref().clone()).into();
-        let ret_result = self.verify_equal_fact_as_builtin_premise(
+        let ret_result = self.try_verify_equal_fact_as_builtin_premise(
             &EqualFact::new_from_refs(
                 fn_set.body.ret_set.as_ref(),
                 &expected_ret_set,
@@ -98,9 +98,9 @@ impl Runtime {
             ),
             builtin_state,
         )?;
-        if !ret_result.is_success() {
+        let Some(ret_result) = ret_result else {
             return Ok(None);
-        }
+        };
 
         let QuantifierFreeFact::AtomicFact(AtomicFact::NormalAtomicFact(choice_fact)) =
             &set_builder.facts[0]
@@ -130,13 +130,13 @@ impl Runtime {
             (choice_family_set, general_cart.family_set.as_ref()),
             (choice_family_fn, general_cart.family_fn.as_ref()),
         ] {
-            let result = self.verify_equal_fact_as_builtin_premise(
+            let Some(result) = self.try_verify_equal_fact_as_builtin_premise(
                 &EqualFact::new_from_refs(actual, expected, line_file.clone()),
                 builtin_state,
-            )?;
-            if !result.is_success() {
+            )?
+            else {
                 return Ok(None);
-            }
+            };
             steps.push(result);
         }
         Ok(Some(steps))

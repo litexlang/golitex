@@ -125,11 +125,16 @@ impl FactGraphBuilder {
                     self.collect_verify_result_edges(check);
                 }
             }
-            SuccessFactProofResult::CheckedFunctionDefinitionReduction(result) => self
-                .add_cited_stmt_edges(
+            SuccessFactProofResult::CheckedFunctionDefinitionReduction(result) => {
+                self.add_cited_stmt_edges(
                     target_id,
                     &result.verification.defining_equality.clone().into_stmt(),
-                ),
+                );
+                self.collect_verify_result_edges(&result.verification.reduced_equality);
+                let source_id =
+                    self.primary_verify_result_node_id(&result.verification.reduced_equality);
+                self.add_edge(&source_id, target_id, "proves");
+            }
             SuccessFactProofResult::DiagnosticOnly(_) => {}
             SuccessFactProofResult::CombinedProofs(result) => {
                 if let Some(primary) = result.primary.as_ref() {
@@ -144,6 +149,7 @@ impl FactGraphBuilder {
             SuccessFactProofResult::ForallProof(result) => {
                 for proved in &result.proves {
                     self.collect_verify_result_edges(proved.result.as_ref());
+                    self.add_infer_edges(&proved.store.infers);
                     let source_id = self.primary_verify_result_node_id(proved.result.as_ref());
                     self.add_edge(&source_id, target_id, "proves");
                 }
@@ -224,11 +230,7 @@ impl FactGraphBuilder {
         }
     }
 
-    pub(super) fn add_subgoal_edges(
-        &mut self,
-        target_id: &str,
-        subgoals: &[VerifyFactResult],
-    ) {
+    pub(super) fn add_subgoal_edges(&mut self, target_id: &str, subgoals: &[VerifyFactResult]) {
         for subgoal in subgoals {
             self.collect_verify_result_edges(subgoal);
             let source_id = self.primary_verify_result_node_id(subgoal);
@@ -250,34 +252,6 @@ impl FactGraphBuilder {
             .verified()
             .map(|verified| self.dependency_source_ids_from_verified_by(verified.proof()))
             .unwrap_or_default()
-    }
-
-    pub(super) fn dependency_source_ids_from_result(&mut self, result: &StmtResult) -> Vec<String> {
-        if let Some(success) = result.factual_success() {
-            let direct_id = fact_node_id(&success.fact());
-            if self.node_index.contains_key(&direct_id) {
-                return vec![direct_id];
-            }
-            return success
-                .proof()
-                .map(|proof| self.dependency_source_ids_from_verified_by(proof))
-                .unwrap_or_default();
-        }
-        let Some(success) = result.non_factual_success() else {
-            return vec![];
-        };
-        match &success.statement() {
-            Stmt::Definition(DefinitionStmt::DefThmStmt(stmt)) => vec![theorem_id(&stmt.name)],
-            Stmt::Definition(DefinitionStmt::AxiomStmt(stmt)) => vec![theorem_id(&stmt.name)],
-            Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(stmt)) => {
-                vec![claim_id(&stmt.line_file)]
-            }
-            Stmt::By(ByStmt::ByDefStmt(stmt)) => {
-                let fact: Fact = stmt.fact.clone().into();
-                vec![fact_node_id(&fact)]
-            }
-            _ => vec![],
-        }
     }
 
     pub(super) fn dependency_source_ids_from_verified_by(
@@ -307,10 +281,18 @@ impl FactGraphBuilder {
                 }
                 ids
             }
-            SuccessFactProofResult::CheckedFunctionDefinitionReduction(result) => self
-                .add_cited_stmt_node(&result.verification.defining_equality.clone().into_stmt())
-                .into_iter()
-                .collect(),
+            SuccessFactProofResult::CheckedFunctionDefinitionReduction(result) => {
+                let mut ids = self
+                    .add_cited_stmt_node(&result.verification.defining_equality.clone().into_stmt())
+                    .into_iter()
+                    .collect::<Vec<_>>();
+                ids.extend(self.dependency_source_ids_from_verify_result(
+                    &result.verification.reduced_equality,
+                ));
+                ids.sort();
+                ids.dedup();
+                ids
+            }
             SuccessFactProofResult::DiagnosticOnly(_) => Vec::new(),
             SuccessFactProofResult::CombinedProofs(result) => {
                 let mut ids = vec![];

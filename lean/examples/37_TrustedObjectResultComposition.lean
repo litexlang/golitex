@@ -17,7 +17,7 @@ theorem __fact1 : Litex.In a Litex.R := by
 
 axiom __fact2 : Litex.Same a a
 
-theorem __fact3 : Litex.In (Litex.fnApplyOwn (@f) (Litex.In.own (Litex.fnSet Litex.R Litex.R) (@f)) a (__fact1)) Litex.R := by
-  exact Litex.In.own Litex.R (Litex.fnApplyOwn (@f) (Litex.In.own (Litex.fnSet Litex.R Litex.R) (@f)) a (__fact1))
+theorem __fact3 : Litex.In (Litex.fnApplyOwn (domain := Litex.R) (codomain := Litex.R) (@f) ((Litex.In.own (Litex.fnSet Litex.R Litex.R) (@f))) a (__fact1)) Litex.R := by
+  exact Litex.In.own Litex.R (Litex.fnApplyOwn (domain := Litex.R) (codomain := Litex.R) (@f) ((Litex.In.own (Litex.fnSet Litex.R Litex.R) (@f))) a (__fact1))
 
 end __Compiler_37_TrustedObjectResultComposition

@@ -6,7 +6,7 @@ impl Runtime {
         &mut self,
         stmt: &ByAxiomOfChoiceStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&stmt.family, &VerifyState::initial())
+        self.verify_obj_well_defined_result(&stmt.family, &VerifyState::initial())
             .map_err(|well_defined_error| {
                 short_exec_error(
                     stmt.clone().into(),
@@ -19,51 +19,51 @@ impl Runtime {
                 )
             })?;
 
-        let (proof_steps, checked_results, obligations_for_output) = self.run_in_local_env(|rt| {
-            let mut proof_steps: Vec<StmtResult> = Vec::new();
-            let mut checked_results: Vec<VerifyFactResult> = Vec::new();
-            for proof_stmt in stmt.proof.iter() {
-                let mut result = rt
-                    .execute_statement(proof_stmt)
-                    .map_err(|statement_error| {
-                        short_exec_error(
-                            stmt.clone().into(),
-                            format!(
-                                "by axiom_of_choice: failed to execute proof stmt `{}`",
-                                proof_stmt
-                            ),
-                            Some(statement_error),
-                            std::mem::take(&mut proof_steps),
-                        )
-                    })?;
-                rt.attach_known_fact_ids_to_stmt_result(&mut result)?;
-                proof_steps.push(result);
-            }
-
-            let obligations =
-                axiom_of_choice_obligations(rt, stmt.family.clone(), stmt.line_file.clone())?;
-            let mut obligations_for_output = Vec::new();
-            for (role, fact) in obligations {
-                if let Some(fact_id) = section_inferred_fact_id(&proof_steps, &fact) {
-                    obligations_for_output.push((role, fact, fact_id, false));
-                    continue;
+        let (proof_steps, checked_results, obligations_for_output) =
+            self.run_in_local_env(|rt| {
+                let mut proof_steps: Vec<StmtResult> = Vec::new();
+                let mut checked_results: Vec<VerifyFactResult> = Vec::new();
+                for proof_stmt in stmt.proof.iter() {
+                    let mut result =
+                        rt.execute_statement(proof_stmt)
+                            .map_err(|statement_error| {
+                                short_exec_error(
+                                    stmt.clone().into(),
+                                    format!(
+                                        "by axiom_of_choice: failed to execute proof stmt `{}`",
+                                        proof_stmt
+                                    ),
+                                    Some(statement_error),
+                                    std::mem::take(&mut proof_steps),
+                                )
+                            })?;
+                    rt.attach_known_fact_ids_to_stmt_result(&mut result)?;
+                    proof_steps.push(result);
                 }
-                let mut result = rt
-                    .verify_fact_or_error(&fact, &VerifyState::initial())
-                    .map_err(|verify_error| {
-                        short_exec_error(
-                            stmt.clone().into(),
-                            format!(
-                                "by axiom_of_choice: failed to prove {} obligation `{}`",
-                                choice_obligation_label(role),
-                                fact
-                            ),
-                            Some(verify_error),
-                            std::mem::take(&mut proof_steps),
-                        )
-                    })?;
-                rt
-                    .store_with_well_defined_verification_and_infer_with_default_verify_state(
+
+                let obligations =
+                    axiom_of_choice_obligations(rt, stmt.family.clone(), stmt.line_file.clone())?;
+                let mut obligations_for_output = Vec::new();
+                for (role, fact) in obligations {
+                    if let Some(fact_id) = section_inferred_fact_id(&proof_steps, &fact) {
+                        obligations_for_output.push((role, fact, fact_id, false));
+                        continue;
+                    }
+                    let mut result = rt
+                        .verify_fact_or_error(&fact, &VerifyState::initial())
+                        .map_err(|verify_error| {
+                            short_exec_error(
+                                stmt.clone().into(),
+                                format!(
+                                    "by axiom_of_choice: failed to prove {} obligation `{}`",
+                                    choice_obligation_label(role),
+                                    fact
+                                ),
+                                Some(verify_error),
+                                std::mem::take(&mut proof_steps),
+                            )
+                        })?;
+                    rt.store_with_well_defined_verification_and_infer_with_default_verify_state(
                         fact.clone(),
                     )
                     .map_err(|store_error| {
@@ -78,13 +78,13 @@ impl Runtime {
                             std::mem::take(&mut proof_steps),
                         )
                     })?;
-                rt.attach_known_fact_ids_to_verify_fact_result(&mut result)?;
-                let fact_id = rt.require_known_fact_id_for_success_result(&fact)?;
-                obligations_for_output.push((role, fact, fact_id, true));
-                checked_results.push(result);
-            }
-            Ok::<_, RuntimeError>((proof_steps, checked_results, obligations_for_output))
-        })?;
+                    rt.attach_known_fact_ids_to_verify_fact_result(&mut result)?;
+                    let fact_id = rt.require_known_fact_id_for_success_result(&fact)?;
+                    obligations_for_output.push((role, fact, fact_id, true));
+                    checked_results.push(result);
+                }
+                Ok::<_, RuntimeError>((proof_steps, checked_results, obligations_for_output))
+            })?;
         let mut checked_obligations = checked_results.into_iter();
         let obligations = obligations_for_output
             .into_iter()

@@ -10,7 +10,6 @@ impl Obj {
         match self {
             Obj::Atom(a) => Obj::Atom(a.replace_bound_identifier(from, to)),
             Obj::FnObj(inner) => {
-                let source_occurrence_id = inner.source_occurrence_id;
                 let head = replace_bound_identifier_in_fn_obj_head(*inner.head, from, to);
                 let body = inner
                     .body
@@ -22,34 +21,30 @@ impl Obj {
                             .collect()
                     })
                     .collect();
-                FnObj::new_with_source_occurrence_id(head, body, source_occurrence_id).into()
+                FnObj::new(head, body).into()
             }
             Obj::Number(n) => n.into(),
             Obj::ImaginaryUnit(i) => i.into(),
             Obj::EulerNumber(e) => e.into(),
             Obj::Pi(pi) => pi.into(),
-            Obj::Add(x) => Add::new_with_source_occurrence_id(
+            Obj::Add(x) => Add::new(
                 Obj::replace_bound_identifier(*x.left, from, to),
                 Obj::replace_bound_identifier(*x.right, from, to),
-                x.source_occurrence_id,
             )
             .into(),
-            Obj::Sub(x) => Sub::new_with_source_occurrence_id(
+            Obj::Sub(x) => Sub::new(
                 Obj::replace_bound_identifier(*x.left, from, to),
                 Obj::replace_bound_identifier(*x.right, from, to),
-                x.source_occurrence_id,
             )
             .into(),
-            Obj::Mul(x) => Mul::new_with_source_occurrence_id(
+            Obj::Mul(x) => Mul::new(
                 Obj::replace_bound_identifier(*x.left, from, to),
                 Obj::replace_bound_identifier(*x.right, from, to),
-                x.source_occurrence_id,
             )
             .into(),
-            Obj::Div(x) => Div::new_with_source_occurrence_id(
+            Obj::Div(x) => Div::new(
                 Obj::replace_bound_identifier(*x.left, from, to),
                 Obj::replace_bound_identifier(*x.right, from, to),
-                x.source_occurrence_id,
             )
             .into(),
             Obj::Mod(x) => Mod::new(
@@ -158,12 +153,11 @@ impl Obj {
                 Obj::replace_bound_identifier(*x.family_fn, from, to),
             )
             .into(),
-            Obj::ListSet(x) => ListSet::new_with_source_occurrence_id(
+            Obj::ListSet(x) => ListSet::new(
                 x.list
                     .into_iter()
                     .map(|b| Obj::replace_bound_identifier(*b, from, to))
                     .collect(),
-                x.source_occurrence_id,
             )
             .into(),
             Obj::SetBuilder(sb) => {
@@ -220,11 +214,7 @@ impl Obj {
                     .into()
             }
             Obj::AnonymousFn(af) => {
-                let AnonymousFn {
-                    body,
-                    equal_to,
-                    source_occurrence_id,
-                } = af;
+                let AnonymousFn { body, equal_to } = af;
                 let FnSetBody {
                     set_bound_parameters,
                     dom_facts,
@@ -256,15 +246,9 @@ impl Obj {
                     .collect();
                 let ret_set = Obj::replace_bound_identifier(*ret_set, from, to);
                 let equal_to = Obj::replace_bound_identifier(*equal_to, from, to);
-                AnonymousFn::new_with_source_occurrence_id(
-                    set_bound_parameters,
-                    dom_facts,
-                    ret_set,
-                    equal_to,
-                    source_occurrence_id,
-                )
-                .expect("renaming a valid anonymous fn preserves object scope validity")
-                .into()
+                AnonymousFn::new(set_bound_parameters, dom_facts, ret_set, equal_to)
+                    .expect("renaming a valid anonymous fn preserves object scope validity")
+                    .into()
             }
             Obj::Cart(c) => Cart::new(
                 c.args
@@ -306,11 +290,10 @@ impl Obj {
                 Obj::replace_bound_identifier(*x.source_set, from, to),
             )
             .into(),
-            Obj::Sum(x) => Sum::new_with_source_occurrence_id(
+            Obj::Sum(x) => Sum::new(
                 Obj::replace_bound_identifier(*x.start, from, to),
                 Obj::replace_bound_identifier(*x.end, from, to),
                 Obj::replace_bound_identifier(*x.func, from, to),
-                x.source_occurrence_id,
             )
             .into(),
             Obj::SumOfFiniteSet(x) => SumOfFiniteSet::new(

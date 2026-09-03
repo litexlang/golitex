@@ -1,3 +1,3 @@
 mod caches;
 
-pub use caches::EnvironmentVerificationCache;
+pub use caches::EnvironmentInferenceCache;

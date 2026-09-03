@@ -72,7 +72,8 @@ impl StmtResultToLeanCompiler {
         if result.store.infers.rule_applications.is_empty() {
             return Ok(false);
         }
-        let Some(source_proof) = self.construct_lean_proof_from_direct_fact_result(verified)? else {
+        let Some(source_proof) = self.construct_lean_proof_from_direct_fact_result(verified)?
+        else {
             return Ok(false);
         };
         validate_atomic_fact_well_definedness_result(&verified.checked, &source_fact)?;
@@ -280,7 +281,8 @@ impl StmtResultToLeanCompiler {
             );
         }
 
-        let Some(source_proof) = self.construct_lean_proof_from_direct_fact_result(verified)? else {
+        let Some(source_proof) = self.construct_lean_proof_from_direct_fact_result(verified)?
+        else {
             return Ok(false);
         };
         validate_atomic_fact_well_definedness_result(&verified.checked, &source_fact)?;
@@ -303,7 +305,10 @@ impl StmtResultToLeanCompiler {
             &source_name,
             &self.environment_stack,
         )?;
-        let conclusion_proposition = render_fact(&conclusion.fact, &self.environment_stack)?;
+        let conclusion_proposition = render_no_observation_equality_alternatives_fact(
+            &conclusion.fact,
+            &self.environment_stack,
+        )?;
         let conclusion_name = format!("__fact{}", self.next_fact_name_index);
         self.declarations.push(format!(
             "theorem {conclusion_name} : {conclusion_proposition} := by\n  exact {conclusion_proof}"
@@ -314,6 +319,9 @@ impl StmtResultToLeanCompiler {
         self.environment_stack
             .fact_propositions
             .insert(conclusion_fact_id, conclusion.fact.clone());
+        self.environment_stack
+            .fact_lean_propositions
+            .insert(conclusion_fact_id, conclusion_proposition);
         self.next_fact_name_index += 1;
         validate_flattened_inferred_fact_ids_are_visible(
             &result.store.infers,

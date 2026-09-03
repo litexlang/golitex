@@ -11,10 +11,10 @@ impl Runtime {
         let Some(premise) = proper_set_relation_definition_premise(atomic_fact) else {
             return Ok(UnknownGenericStmtResult::new().into());
         };
-        let premise_result = self.verify_builtin_rule_premise(&premise, builtin_state)?;
-        if !premise_result.is_success() {
+        let Some(premise_result) = self.try_verify_builtin_rule_premise(&premise, builtin_state)?
+        else {
             return Ok(UnknownGenericStmtResult::new().into());
-        }
+        };
 
         Ok(
             SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(

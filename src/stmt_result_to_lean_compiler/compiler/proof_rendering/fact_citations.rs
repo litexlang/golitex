@@ -57,16 +57,7 @@ pub(in super::super) fn resolve_fact_citation(
                     error.trace_message()
                 )
             })?;
-        let normalized_keys_match = retained_key == expected_key
-            // Runtime-derived facts can retag a definition binding while
-            // preserving the same cited FactId and alpha-normalized source
-            // contract.  Compare the already-alpha-normalized texts without
-            // debug SymbolIds before attempting target rendering; the latter
-            // is intentionally unavailable for synthesized applications that
-            // have no parser occurrence id.
-            || source_display_without_symbol_ids(&retained_key)
-                == source_display_without_symbol_ids(&expected_key);
-        if normalized_keys_match {
+        if retained_key == expected_key {
             true
         } else {
             let retained_rendered = render_forall_fact_type(retained, context).map_err(|error| {

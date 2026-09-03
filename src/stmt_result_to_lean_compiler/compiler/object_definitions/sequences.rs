@@ -173,9 +173,7 @@ impl StmtResultToLeanCompiler {
                 .verified()
                 .ok_or_else(|| "sequence return check is not factual".to_string())?;
             if return_check.fact().to_string() != expected_return_check.to_string() {
-                return Err(
-                    "sequence return check changed its target".into(),
-                );
+                return Err("sequence return check changed its target".into());
             }
             if self
                 .construct_lean_proof_from_direct_fact_result(return_check)?
@@ -443,9 +441,7 @@ impl StmtResultToLeanCompiler {
                 .verified()
                 .ok_or_else(|| format!("finite-sequence {label} check is not factual"))?;
             if checked_fact.fact().to_string() != expected_fact.to_string() {
-                return Err(format!(
-                    "finite-sequence {label} check changed its target"
-                ));
+                return Err(format!("finite-sequence {label} check changed its target"));
             }
             if self
                 .construct_lean_proof_from_direct_fact_result(checked_fact)?
@@ -655,10 +651,7 @@ impl StmtResultToLeanCompiler {
                 .verified()
                 .ok_or_else(|| "finite-sequence return check is not factual".to_string())?;
             if return_check.fact().to_string() != expected_return_check.to_string() {
-                return Err(
-                    "finite-sequence return check changed its target"
-                        .into(),
-                );
+                return Err("finite-sequence return check changed its target".into());
             }
             if self
                 .construct_lean_proof_from_direct_fact_result(return_check)?

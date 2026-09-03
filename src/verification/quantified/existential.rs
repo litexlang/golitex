@@ -417,7 +417,7 @@ fn nonempty_set_exist_fact_set(exist_fact: &ExistFactEnum) -> Option<Obj> {
 }
 
 impl Runtime {
-    pub(crate) fn prove_exist_fact(
+    pub(in crate::verification) fn prove_exist_fact(
         &mut self,
         exist_fact: &ExistFactEnum,
         verify_state: &VerifyState,

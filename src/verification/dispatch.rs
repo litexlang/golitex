@@ -92,7 +92,7 @@ impl Runtime {
         Ok(Self::finish_fact_verification(checked, proof_result))
     }
 
-    pub(crate) fn finish_fact_verification(
+    pub fn finish_fact_verification(
         checked: crate::result::WellDefinedFactResult,
         proof_result: ProveFactResult,
     ) -> VerifyFactResult {
@@ -115,10 +115,7 @@ impl Runtime {
                         UnknownFactResult::from_stmt_unknown(fact.clone(), *unknown)
                     }
                 };
-                VerifyFactResult::Unknown(Box::new(UnknownVerifyFactResult {
-                    checked,
-                    unknown,
-                }))
+                VerifyFactResult::Unknown(Box::new(UnknownVerifyFactResult { checked, unknown }))
             }
         }
     }
@@ -128,7 +125,7 @@ impl Runtime {
     /// Internal proof algorithms may build `ProveFactResult` values, but every
     /// fact-shaped node that escapes into the returned verification DAG passes
     /// through this boundary first.
-    pub(crate) fn complete_fact_proof_result(
+    pub fn complete_fact_proof_result(
         &mut self,
         fact: &Fact,
         proof_result: ProveFactResult,
@@ -138,7 +135,7 @@ impl Runtime {
         Ok(Self::finish_fact_verification(checked, proof_result))
     }
 
-    pub(crate) fn complete_atomic_fact_proof_result(
+    pub fn complete_atomic_fact_proof_result(
         &mut self,
         fact: &crate::fact::AtomicFact,
         proof_result: ProveFactResult,
@@ -270,7 +267,10 @@ impl Runtime {
         exist_or_and_chain_atomic_fact: &ExistOrAndChainAtomicFact,
         verify_state: &VerifyState,
     ) -> Result<VerifyFactResult, RuntimeError> {
-        self.verify_fact_allow_unknown(&exist_or_and_chain_atomic_fact.clone().to_fact(), verify_state)
+        self.verify_fact_allow_unknown(
+            &exist_or_and_chain_atomic_fact.clone().to_fact(),
+            verify_state,
+        )
     }
 
     pub fn verify_quantifier_free_fact(

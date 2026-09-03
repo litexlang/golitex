@@ -122,10 +122,13 @@ theorem absEqNegOfLe (r : ℝ) (h : Litex.Le (r : ℂ) (0 : ℂ)) :
 
 theorem absPositiveOfNotSame
     {alpha : Type}
+    {sourceObserver : Litex.ComplexObserver alpha}
     (source : alpha)
     (r : ℝ)
-    (sourceToReal : Litex.Same source (r : ℂ))
-    (nonzero : ¬ Litex.Same source (0 : ℂ)) :
+    (sourceToReal : @Litex.Same alpha ℂ sourceObserver
+      Litex.complexComplexObserver source (r : ℂ))
+    (nonzero : ¬ @Litex.Same alpha ℂ sourceObserver
+      Litex.complexComplexObserver source (0 : ℂ)) :
     Litex.Positive (Litex.abs (r : ℂ)) := by
   have hr : r ≠ 0 := by
     intro equality

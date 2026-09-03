@@ -47,15 +47,11 @@ pub(super) fn extract_code_from_file(
     target: CodeExtractionTarget,
 ) -> Result<String, RuntimeError> {
     let resolved_path = resolve_file_path(file_path)?;
+    let source = read_source(resolved_path.as_str())?;
+    let selected_source = select_marked_source(source.as_str(), resolved_path.as_str())?;
     let mut runtime = Runtime::default();
-    match discover_repository_for_file(&mut runtime, resolved_path.as_str())? {
-        Some(selected_target) => extract_project_run(&mut runtime, selected_target, target),
-        None => {
-            let source = read_source(resolved_path.as_str())?;
-            runtime.start_isolated_file(resolved_path.as_str());
-            extract_code(source.as_str(), &mut runtime, target)
-        }
-    }
+    runtime.start_isolated_file(resolved_path.as_str());
+    extract_code(selected_source.as_str(), &mut runtime, target)
 }
 
 pub(super) fn extract_code_from_repository(
@@ -325,6 +321,81 @@ fn read_source(path: &str) -> Result<String, RuntimeError> {
     fs::read_to_string(path)
         .map(|source| source.replace('\r', ""))
         .map_err(|error| file_error(path, format!("could not read file: {}", error)))
+}
+
+fn select_marked_source(source: &str, path: &str) -> Result<String, RuntimeError> {
+    const START_MARKER: &str = "# [-extract]";
+    const END_MARKER: &str = "# [end of -extract]";
+
+    let mut selected = String::with_capacity(source.len());
+    let mut open_marker_line = None;
+    let mut found_block = false;
+
+    for (line_index, line_with_ending) in source.split_inclusive('\n').enumerate() {
+        let line = line_with_ending
+            .strip_suffix('\n')
+            .unwrap_or(line_with_ending);
+        let trimmed = line.trim();
+        let has_line_ending = line_with_ending.ends_with('\n');
+
+        if trimmed == START_MARKER {
+            if open_marker_line.is_some() {
+                return Err(marker_error(
+                    path,
+                    line_index,
+                    format!(
+                        "nested `{}` marker; close the current block with `{}` first",
+                        START_MARKER, END_MARKER
+                    ),
+                ));
+            }
+            open_marker_line = Some(line_index);
+            found_block = true;
+        } else if trimmed == END_MARKER {
+            if open_marker_line.is_none() {
+                return Err(marker_error(
+                    path,
+                    line_index,
+                    format!("`{}` has no matching `{}` marker", END_MARKER, START_MARKER),
+                ));
+            }
+            open_marker_line = None;
+        } else if open_marker_line.is_some() {
+            selected.push_str(line);
+        }
+
+        if has_line_ending {
+            selected.push('\n');
+        }
+    }
+
+    if let Some(line_index) = open_marker_line {
+        return Err(marker_error(
+            path,
+            line_index,
+            format!("`{}` has no matching `{}` marker", START_MARKER, END_MARKER),
+        ));
+    }
+    if !found_block {
+        return Err(marker_error(
+            path,
+            0,
+            format!(
+                "file extraction requires at least one `{}` block closed by `{}`",
+                START_MARKER, END_MARKER
+            ),
+        ));
+    }
+
+    Ok(selected)
+}
+
+fn marker_error(path: &str, line: usize, message: String) -> RuntimeError {
+    ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(
+        message,
+        (line, Rc::from(path)),
+    ))
+    .into()
 }
 
 fn file_error(path: &str, message: String) -> RuntimeError {

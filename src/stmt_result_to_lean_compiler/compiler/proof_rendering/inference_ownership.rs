@@ -30,6 +30,7 @@ pub(in super::super) fn infer_rule_has_direct_compiler_environment_consumer(
         InferRule::SubsetImpliesElementwiseMembershipForall(_)
         | InferRule::SupersetImpliesElementwiseMembershipForall(_)
         | InferRule::ConjunctionImpliesComponent(_)
+        | InferRule::ChainImpliesComponent(_)
         | InferRule::EqualityChainClosure(_)
         | InferRule::NumericOrderChainClosure(_)
         | InferRule::ClosedPositivePowerEqualityImpliesEqualSideMembership(_)

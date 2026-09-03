@@ -230,10 +230,13 @@ exact `FunctionHead` WD child. The paired boundary is `fn(x R) N {x}`: without
 verified body membership in `N`, compilation remains fail-closed.
 
 `25_ExplicitSourceAxioms.lit` is the intentional trust boundary. One
-`abstract_prop` declaration emits one visible, source-scoped polymorphic Lean
-predicate axiom, and one explicit `trust` proposition emits one visible axiom
-under its exact source FactId. The following ordinary fact is a theorem citing
-that FactId, so the generated file contains exactly two `axiom` declarations.
+`abstract_prop` declaration emits one visible, source-scoped semantic
+predicate specification: its `holds` field is polymorphic and its
+`respectsSame` field makes representation invariance explicit. The source
+declaration assumes one value of that specification. One explicit `trust`
+proposition emits the other visible axiom under its exact source FactId. The
+following ordinary fact is a theorem citing that FactId, so the generated file
+contains exactly two `axiom` declarations.
 An untrusted application of an abstract predicate remains unprovable. Litex
 `-strict` deliberately rejects this unsafe source tracer; its release gate is
 the ordinary runner plus the compiler's exact axiom-count audit and real Lean.

@@ -49,11 +49,10 @@ impl Runtime {
             &VerifyState::initial(),
         )?;
 
-        let (proof_steps, forall_check, assumption_infer_result) = self.run_in_local_env(|rt| {
+        let (proof_steps, forall_check) = self.run_in_local_env(|rt| {
             let verify_state = VerifyState::initial();
             let assumption_infer_result =
                 rt.forall_assume_params_and_dom_in_current_env(&stmt.forall_fact, &verify_state)?;
-            let verification_assumption_infer_result = assumption_infer_result.clone();
             let mut infer_result = SuccessInferResult::new();
             let mut proof_steps: Vec<StmtResult> = Vec::new();
             for proof_stmt in stmt.proof.iter() {
@@ -74,13 +73,11 @@ impl Runtime {
                     proof_steps,
                 ));
             }
-            let mut verification_assumption_infer_result = verification_assumption_infer_result;
-            rt.attach_known_fact_ids_to_infer_result(&mut verification_assumption_infer_result)?;
             for proof_step in proof_steps.iter_mut() {
                 rt.attach_known_fact_ids_to_stmt_result(proof_step)?;
             }
             rt.attach_known_fact_ids_to_prove_fact_result(&mut result)?;
-            Ok((proof_steps, result, verification_assumption_infer_result))
+            Ok((proof_steps, result))
         })?;
 
         self.top_level_env().store_symmetric_prop_permutation(
@@ -99,7 +96,6 @@ impl Runtime {
             "symmetric".to_string(),
             prop_name,
             stmt.forall_fact.clone(),
-            assumption_infer_result,
             proof_steps,
             forall_check,
         );

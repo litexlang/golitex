@@ -43,18 +43,18 @@ impl Runtime {
         let set = (*finite_set_size.set).clone();
 
         let finite: AtomicFact = IsFiniteSetFact::new(set.clone(), line_file.clone()).into();
-        let finite_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&finite, builtin_state)?;
-        if !finite_result.is_success() {
+        let Some(finite_result) =
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&finite, builtin_state)?
+        else {
             return Ok(None);
-        }
+        };
 
         let nonempty: AtomicFact = IsNonemptySetFact::new(set, line_file).into();
-        let nonempty_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&nonempty, builtin_state)?;
-        if !nonempty_result.is_success() {
+        let Some(nonempty_result) =
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&nonempty, builtin_state)?
+        else {
             return Ok(None);
-        }
+        };
 
         Ok(Some(
             SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_and_steps(
@@ -90,10 +90,11 @@ impl Runtime {
             return Ok(None);
         };
         let finite: AtomicFact = IsFiniteSetFact::new(size.set.as_ref().clone(), line_file).into();
-        let result = self.verify_atomic_fact_as_builtin_rule_premise(&finite, builtin_state)?;
-        if !result.is_success() {
+        let Some(result) =
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&finite, builtin_state)?
+        else {
             return Ok(None);
-        }
+        };
         Ok(Some(
             SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
@@ -139,11 +140,11 @@ impl Runtime {
                 let right_input: AtomicFact =
                     IsFiniteSetFact::new(intersection.right.as_ref().clone(), line_file.clone())
                         .into();
-                let left_result =
-                    self.verify_atomic_fact_as_builtin_rule_premise(&left_input, builtin_state)?;
-                let right_result =
-                    self.verify_atomic_fact_as_builtin_rule_premise(&right_input, builtin_state)?;
-                if left_result.is_success() && right_result.is_success() {
+                let left_result = self
+                    .try_verify_atomic_fact_as_builtin_rule_premise(&left_input, builtin_state)?;
+                let right_result = self
+                    .try_verify_atomic_fact_as_builtin_rule_premise(&right_input, builtin_state)?;
+                if let (Some(left_result), Some(right_result)) = (left_result, right_result) {
                     return Ok(Some(
                         SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_and_steps(
                             atomic_fact.clone().into(),
@@ -165,8 +166,8 @@ impl Runtime {
         )
         .into();
         let mut subset_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&subset, builtin_state)?;
-        if !subset_result.is_success() {
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&subset, builtin_state)?;
+        if subset_result.is_none() {
             let superset: AtomicFact = SupersetFact::new(
                 right_size.set.as_ref().clone(),
                 left_size.set.as_ref().clone(),
@@ -175,31 +176,33 @@ impl Runtime {
             .into();
             let proof =
                 self.verify_non_equational_atomic_fact_with_known_atomic_facts(&superset)?;
-            subset_result = self.complete_atomic_fact_proof_result(
-                &superset,
-                proof,
-                builtin_state.verify_state(),
-            )?;
+            if proof.is_success() {
+                subset_result = Some(self.complete_atomic_fact_proof_result(
+                    &superset,
+                    proof,
+                    builtin_state.verify_state(),
+                )?);
+            }
         }
-        if !subset_result.is_success() {
+        let Some(subset_result) = subset_result else {
             return Ok(None);
-        }
+        };
 
         let left_finite: AtomicFact =
             IsFiniteSetFact::new(left_size.set.as_ref().clone(), line_file.clone()).into();
-        let left_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&left_finite, builtin_state)?;
-        if !left_result.is_success() {
+        let Some(left_result) =
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&left_finite, builtin_state)?
+        else {
             return Ok(None);
-        }
+        };
 
         let right_finite: AtomicFact =
             IsFiniteSetFact::new(right_size.set.as_ref().clone(), line_file).into();
-        let right_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&right_finite, builtin_state)?;
-        if !right_result.is_success() {
+        let Some(right_result) =
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&right_finite, builtin_state)?
+        else {
             return Ok(None);
-        }
+        };
 
         Ok(Some(
             SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_and_steps(
@@ -251,17 +254,17 @@ impl Runtime {
         }
 
         let left_finite: AtomicFact = IsFiniteSetFact::new(left_set, line_file.clone()).into();
-        let left_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&left_finite, builtin_state)?;
-        if !left_result.is_success() {
+        let Some(left_result) =
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&left_finite, builtin_state)?
+        else {
             return Ok(None);
-        }
+        };
         let right_finite: AtomicFact = IsFiniteSetFact::new(right_set, line_file).into();
-        let right_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&right_finite, builtin_state)?;
-        if !right_result.is_success() {
+        let Some(right_result) =
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&right_finite, builtin_state)?
+        else {
             return Ok(None);
-        }
+        };
 
         Ok(Some(
             SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_and_steps(

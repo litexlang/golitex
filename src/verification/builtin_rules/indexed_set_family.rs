@@ -133,9 +133,9 @@ impl Runtime {
                     equal_fact.line_file.clone(),
                 )
                 .into();
-                let result =
-                    self.verify_atomic_fact_as_builtin_rule_premise(&membership, builtin_state)?;
-                if result.is_success() {
+                let result = self
+                    .try_verify_atomic_fact_as_builtin_rule_premise(&membership, builtin_state)?;
+                if let Some(result) = result {
                     return Ok(Some(Self::indexed_family_equality_success(
                         equal_fact,
                         "indexed family peels a selected singleton from its domain",
@@ -177,11 +177,13 @@ impl Runtime {
                     IndexedEqualityPremise::Subset(left, right) => {
                         let premise: AtomicFact =
                             SubsetFact::new(left, right, equal_fact.line_file.clone()).into();
-                        let result = self
-                            .verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
-                        if !result.is_success() {
+                        let Some(result) = self.try_verify_atomic_fact_as_builtin_rule_premise(
+                            &premise,
+                            builtin_state,
+                        )?
+                        else {
                             return Ok(None);
-                        }
+                        };
                         steps.push(result);
                     }
                 }
@@ -315,9 +317,11 @@ impl Runtime {
                     subset_fact.line_file.clone(),
                 )
                 .into();
-                let ambient_result = self
-                    .verify_atomic_fact_as_builtin_rule_premise(&ambient_premise, builtin_state)?;
-                if ambient_result.is_success() {
+                let ambient_result = self.try_verify_atomic_fact_as_builtin_rule_premise(
+                    &ambient_premise,
+                    builtin_state,
+                )?;
+                if let Some(ambient_result) = ambient_result {
                     return Ok(Some(Self::indexed_family_subset_success(
                         subset_fact,
                         "common lower bound is contained in indexed intersection",
@@ -482,15 +486,10 @@ impl Runtime {
                 )
                 .into();
             return self
-                .complete_atomic_fact_proof_result(
-                    &nonempty,
-                    proof,
-                    builtin_state.verify_state(),
-                )
+                .complete_atomic_fact_proof_result(&nonempty, proof, builtin_state.verify_state())
                 .map(Some);
         }
-        let result = self.verify_atomic_fact_as_builtin_rule_premise(&nonempty, builtin_state)?;
-        Ok(result.is_success().then_some(result))
+        self.try_verify_atomic_fact_as_builtin_rule_premise(&nonempty, builtin_state)
     }
 
     pub(super) fn indexed_family_pointwise_finite_fact(

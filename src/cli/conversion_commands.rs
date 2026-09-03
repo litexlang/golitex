@@ -163,26 +163,7 @@ fn compile_isolated_file_to_extracted_code(
     output_language: OutputLanguage,
     target: ExtractionKind,
 ) -> Result<String, String> {
-    let source = match fs::read_to_string(file_path) {
-        Ok(content) => remove_windows_carriage_from_str(&content),
-        Err(error) => {
-            return Err(render_json_value(
-                &simple_error(
-                    "file_read_error",
-                    format!("Could not read file {:?}: {}", file_path, error).as_str(),
-                ),
-                0,
-            ));
-        }
-    };
-    let result = match target {
-        ExtractionKind::Python => to_python_from_source(source.as_str(), file_path),
-        ExtractionKind::C => to_c_from_source(source.as_str(), file_path),
-    };
-    match result {
-        Ok(output) => Ok(output),
-        Err(error) => Err(render_conversion_error(output_language, &error)),
-    }
+    compile_file_to_extracted_code(file_path, output_language, target)
 }
 
 fn compile_repository_to_extracted_code(

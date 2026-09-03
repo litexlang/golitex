@@ -311,10 +311,10 @@ impl StmtResultToLeanCompiler {
         }
 
         // The runtime-derived property application is synthesized after the
-        // source proof has finished, so it has no parser occurrence id.  Build
-        // its Lean type from the same source existential body and the exact
-        // compiler-owned function application instead of pretending that a
-        // parser-owned application certificate exists.
+        // source proof has finished, so it owns no source WD node. Build its
+        // Lean type from the same source existential body and the exact
+        // compiler-owned function application instead of inventing a
+        // certificate.
         self.environment_stack.push_inherited_environment();
         let property_body: Result<String, String> = (|| {
             let source_binding = &parameters[0].0;

@@ -124,6 +124,7 @@ pub(in super::super) fn infer_rule_name(rule: &InferRule) -> &'static str {
             "SupersetImpliesElementwiseMembershipForall"
         }
         InferRule::ConjunctionImpliesComponent(_) => "ConjunctionImpliesComponent",
+        InferRule::ChainImpliesComponent(_) => "ChainImpliesComponent",
     }
 }
 
@@ -161,71 +162,6 @@ pub(in super::super) fn validate_flattened_inferred_fact_ids_are_visible(
         }
     }
     Ok(())
-}
-
-pub(in super::super) fn success_infer_results_have_same_semantic_structure(
-    left: &SuccessInferResult,
-    right: &SuccessInferResult,
-) -> bool {
-    success_infer_results_have_same_structure(left, right, true)
-}
-
-pub(in super::super) fn success_infer_results_have_same_structure(
-    left: &SuccessInferResult,
-    right: &SuccessInferResult,
-    compare_store_reasons: bool,
-) -> bool {
-    left.store_fact_outputs.len() == right.store_fact_outputs.len()
-        && left
-            .store_fact_outputs
-            .iter()
-            .zip(right.store_fact_outputs.iter())
-            .all(|(left, right)| {
-                left.fact_id == right.fact_id
-                    && left.itself_and_why_itself_is_stored.0.to_string()
-                        == right.itself_and_why_itself_is_stored.0.to_string()
-                    && (!compare_store_reasons
-                        || left.itself_and_why_itself_is_stored.1
-                            == right.itself_and_why_itself_is_stored.1)
-                    && left.inferred_fact_ids == right.inferred_fact_ids
-                    && left.inferred_facts.len() == right.inferred_facts.len()
-                    && left
-                        .inferred_facts
-                        .iter()
-                        .zip(right.inferred_facts.iter())
-                        .all(|(left, right)| left.to_string() == right.to_string())
-            })
-        && left.rule_applications.len() == right.rule_applications.len()
-        && left
-            .rule_applications
-            .iter()
-            .zip(right.rule_applications.iter())
-            .all(|(left, right)| {
-                left.rule == right.rule
-                    && left.premises.len() == right.premises.len()
-                    && left
-                        .premises
-                        .iter()
-                        .zip(right.premises.iter())
-                        .all(|(left, right)| {
-                            left.fact_id == right.fact_id
-                                && left.fact.to_string() == right.fact.to_string()
-                        })
-                    && left.conclusions.len() == right.conclusions.len()
-                    && left
-                        .conclusions
-                        .iter()
-                        .zip(right.conclusions.iter())
-                        .all(|(left, right)| {
-                            left.fact_id == right.fact_id
-                                && left.fact.to_string() == right.fact.to_string()
-                                && success_infer_results_have_same_structure(
-                                    &left.infers,
-                                    &right.infers,
-                                    compare_store_reasons,
-                                )
-                        })
-            })
 }
 
 pub(in super::super) fn equality_transport_has_no_steps(

@@ -7,7 +7,7 @@ namespace __Compiler_55_TemplateSequenceInstantiationResult
 
 abbrev sequence (S : Litex.Set) := (Litex.fnSet Litex.NPos (S : Litex.Set.{0}))
 
-theorem __fact0 : Litex.Same (sequence Litex.R) (Litex.fnSet Litex.NPos Litex.R) := by
+theorem __fact0 : @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) (sequence Litex.R) (Litex.fnSet Litex.NPos Litex.R) := by
   exact Litex.Same.refl (Litex.fnSet Litex.NPos Litex.R)
 
 theorem __fact1 : Litex.Same (sequence Litex.R) (sequence Litex.R) := by

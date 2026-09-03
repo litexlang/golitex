@@ -103,7 +103,7 @@ impl Runtime {
     ) -> Result<ProveFactResult, RuntimeError> {
         let (parameter_assumptions, domain_assumptions) =
             self.capture_forall_proof_scope_assumption_fact_results(forall_fact)?;
-        let mut then_verification_results: Vec<VerifyFactResult> = Vec::new();
+        let mut proved_conclusions: Vec<SuccessForallProvedFactResult> = Vec::new();
 
         let then_count = forall_fact.then_facts.len();
         let combined_atomic_then_fact = if then_count > 1 {
@@ -162,11 +162,22 @@ impl Runtime {
                 .into());
             }
 
-            self
+            let proposition = then_fact.clone().to_fact();
+            let mut store_infers = self
                 .store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
                     then_fact.clone(),
                 )?;
-            then_verification_results.push(result);
+            self.attach_known_fact_ids_to_infer_result(&mut store_infers)?;
+            let fact_id = self.known_fact_id_for_fact(&proposition)?;
+            proved_conclusions.push(SuccessForallProvedFactResult::new(
+                then_fact.clone(),
+                result,
+                SuccessStoreFactResult {
+                    fact: proposition,
+                    fact_id,
+                    infers: store_infers,
+                },
+            ));
         }
 
         infer_result.add_statement_with_verification(&forall_fact.clone().into());
@@ -176,10 +187,10 @@ impl Runtime {
             infer_for_success,
             SuccessFactProofResult::forall_proof(
                 forall_fact.clone(),
-                then_verification_results,
                 parameter_assumptions,
                 domain_assumptions,
                 assumption_infers,
+                proved_conclusions,
             ),
         ))
         .into())
@@ -238,7 +249,7 @@ impl Runtime {
     }
 
     /// Declare params, assume dom facts hold, then verify each then_fact.
-    pub(crate) fn prove_forall_fact(
+    pub(in crate::verification) fn prove_forall_fact(
         &mut self,
         forall_fact: &ForallFact,
         verify_state: &VerifyState,

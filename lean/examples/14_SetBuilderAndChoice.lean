@@ -14,12 +14,10 @@ theorem __fact1 : Litex.Same S (Litex.setBuilder Litex.R (fun (x : Litex.R.Carri
   exact Litex.Same.refl (Litex.setBuilder Litex.R (fun (x : Litex.R.Carrier) => Litex.Same x x))
 
 theorem __fact2 : Litex.Same S S := by
-  exact (by
-  unfold S
-  exact (Litex.Same.refl (Litex.setBuilder Litex.R (fun (x : Litex.R.Carrier) => Litex.Same x x))))
+  exact Litex.Same.refl S
 
 theorem __fact3 : Litex.In (1 : ℂ) (Litex.setBuilder Litex.R (fun (x : Litex.R.Carrier) => Litex.Same x (1 : ℂ))) := by
-  exact Litex.Rules.inSetBuilder (Litex.In.same_rep (1 : ℂ) (Litex.Rules.complexRealInR (1 : ℝ))) (Litex.Same.trans (Litex.Same.symm (Litex.In.same_rep (1 : ℂ) (Litex.Rules.complexRealInR (1 : ℝ)))) (Litex.Same.refl (1 : ℂ)))
+  exact ⟨⟨(1 : ℝ), Litex.Same.trans (Litex.Same.realComplex ((1 : ℝ))) (Litex.Same.refl (1 : ℂ))⟩, Litex.Same.transNoObservation (Litex.Same.symmNoObservation (Litex.Same.withoutObservation (Litex.Same.realComplex ((1 : ℝ))))) (Litex.Same.symmNoObservation (Litex.Same.subtypeNoObservation ⟨(1 : ℝ), Litex.Same.trans (Litex.Same.realComplex ((1 : ℝ))) (Litex.Same.refl (1 : ℂ))⟩))⟩
 
 theorem __fact4 : Litex.In (1 : ℂ) Litex.R := by
   exact Litex.Rules.inBaseOfInSetBuilder (__fact3)
@@ -41,21 +39,21 @@ theorem __fact7 : is_one (1 : ℝ) := by
   unfold is_one
   exact ⟨Litex.In.own Litex.R (1 : ℝ), Litex.Same.trans (Litex.Same.symm (Litex.Same.symm (Litex.Same.realComplex ((1 : ℝ))))) ((by simpa [Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (__fact6)))⟩)
 
-theorem __fact8 : Litex.In (1 : ℂ) (Litex.setBuilder Litex.R (fun (x : Litex.R.Carrier) => is_one x)) := by
-  exact Litex.Rules.inSetBuilder (Litex.In.same_rep (1 : ℂ) (__fact4)) ((by
-  have __source := __fact7
-  unfold is_one at __source ⊢
-  exact ⟨(Litex.In.congr (Litex.Same.trans (Litex.Same.realComplex ((1 : ℝ))) (Litex.In.same_rep (1 : ℂ) (__fact4))) Litex.R).mp (__source.1), Litex.Same.trans (Litex.Same.symm (Litex.Same.trans (Litex.Same.realComplex ((1 : ℝ))) (Litex.In.same_rep (1 : ℂ) (__fact4)))) (__source.2)⟩))
+theorem __fact8 : Litex.In (1 : ℂ) (Litex.setBuilder Litex.R (fun (x : Litex.R.Carrier) => is_one (x : ℝ))) := by
+  exact ⟨⟨(1 : ℝ), (by simpa using (__fact7))⟩, Litex.Same.transNoObservation (Litex.Same.symmNoObservation (Litex.Same.withoutObservation (Litex.Same.realComplex ((1 : ℝ))))) (Litex.Same.symmNoObservation (Litex.Same.subtypeNoObservation ⟨(1 : ℝ), (by simpa using (__fact7))⟩))⟩
 
 theorem __fact9 : Litex.In (1 : ℂ) Litex.R := by
   exact Litex.Rules.inBaseOfInSetBuilder (__fact8)
 
 theorem __fact10 : is_one (1 : ℝ) := by
-  exact (by
+  exact (show is_one (1 : ℝ) from (by
   rcases Litex.Rules.inSetBuilder_iff.mp (__fact8) with ⟨__rep, __predicate, __same⟩
   have __selected := __predicate
-  unfold is_one at __selected ⊢
-  exact ⟨(Litex.In.congr (Litex.Same.symm (Litex.Same.symm (Litex.Same.trans (Litex.Same.realComplex ((1 : ℝ))) (__same)))) Litex.R).mpr (__selected.1), Litex.Same.trans (Litex.Same.symm (Litex.Same.symm (Litex.Same.trans (Litex.Same.realComplex ((1 : ℝ))) (__same)))) (__selected.2)⟩)
+  have __transported : is_one ((1 : ℝ) : ℝ) := (by
+  have __source := __selected
+  unfold is_one at __source ⊢
+  exact ⟨Litex.In.own Litex.R ((1 : ℝ) : ℝ), Litex.Same.trans (Litex.Same.symm (Litex.Same.trans (Litex.Same.ofEq (by rfl)) (Litex.Same.trans (Litex.Same.symm (Litex.Same.realComplex (((1 : ℝ) : ℝ)))) (Litex.Same.symm (Litex.Same.realComplex ((1 : ℝ))))))) (__source.2)⟩)
+  simpa [Litex.In.rep, Litex.Rules.complexRealInR, Litex.Rules.complexAddInR, Litex.Rules.complexSubInR, Litex.Rules.complexMulInR, Litex.Rules.complexDivInR, Litex.Rules.inROfInRPos] using __transported))
 
 noncomputable def chosen : Litex.R.Carrier :=
   Classical.choice (Litex.Rules.realNonempty)

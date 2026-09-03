@@ -287,11 +287,10 @@ impl Runtime {
 
         let mut result = SuccessInferResult::new();
         result.new_fact(&element_in_param_set_fact);
-        let element_in_param_set_infers = self
-            .store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
-                element_in_param_set_fact.clone(),
-                inference_state,
-            )?;
+        let element_in_param_set_infers = self.store_typed_inference_conclusion_and_infer(
+            element_in_param_set_fact.clone(),
+            inference_state,
+        )?;
         result.add_rule_application(
             InferRule::SetBuilderBaseMembershipProjection,
             unfolded_membership.clone(),
@@ -324,11 +323,10 @@ impl Runtime {
             let fact_to_store = instantiated_fact_in_set_builder.to_fact();
 
             result.new_fact(&fact_to_store);
-            let conclusion_infers = self
-                .store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
-                    fact_to_store.clone(),
-                    inference_state,
-                )?;
+            let conclusion_infers = self.store_typed_inference_conclusion_and_infer(
+                fact_to_store.clone(),
+                inference_state,
+            )?;
             result.add_rule_application(
                 InferRule::SetBuilderPredicateProjection { clause_index },
                 unfolded_membership.clone(),
@@ -356,10 +354,7 @@ impl Runtime {
 
         let mut result = SuccessInferResult::new();
         result.new_fact(&fn_set_fact);
-        self.store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
-            fn_set_fact,
-            inference_state,
-        )?;
+        self.store_typed_inference_conclusion_and_infer(fn_set_fact, inference_state)?;
 
         let choice_fact: Fact = crate::verification::general_cart_member_choice_fact(
             general_cart,
@@ -368,10 +363,7 @@ impl Runtime {
         )
         .into();
         result.new_fact(&choice_fact);
-        self.store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
-            choice_fact,
-            inference_state,
-        )?;
+        self.store_typed_inference_conclusion_and_infer(choice_fact, inference_state)?;
 
         Ok(result)
     }
@@ -450,7 +442,7 @@ impl Runtime {
         .into();
         result.new_fact(&coordinate_forall_fact);
         result.new_infer_result_inside(
-            self.store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
+            self.store_typed_inference_conclusion_and_infer(
                 coordinate_forall_fact,
                 inference_state,
             )?,
@@ -537,10 +529,7 @@ impl Runtime {
                 let mut result = SuccessInferResult::new();
                 result.new_fact(&or_fact);
                 let conclusion_infers = self
-                    .store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
-                        or_fact.clone(),
-                        inference_state,
-                    )?;
+                    .store_typed_inference_conclusion_and_infer(or_fact.clone(), inference_state)?;
                 result.add_rule_application_preserving_conclusion_result_structure(
                     InferRule::ListSetMembershipImpliesEqualityAlternatives(
                         ListSetMembershipImpliesEqualityAlternativesInferRule {
@@ -598,11 +587,10 @@ impl Runtime {
                     IsTupleFact::new(in_fact.element.clone(), in_fact.line_file.clone()).into();
 
                 result.new_fact(&is_cart_fact);
-                let tuple_shape_infers = self
-                    .store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
-                        is_cart_fact.clone(),
-                        inference_state,
-                    )?;
+                let tuple_shape_infers = self.store_typed_inference_conclusion_and_infer(
+                    is_cart_fact.clone(),
+                    inference_state,
+                )?;
                 result.add_rule_application(
                     InferRule::CartesianMembershipProjection(
                         CartesianMembershipProjectionInferRule {
@@ -628,11 +616,10 @@ impl Runtime {
                 .into();
 
                 result.new_fact(&tuple_dim_fact);
-                let tuple_dimension_infers = self
-                    .store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
-                        tuple_dim_fact.clone(),
-                        inference_state,
-                    )?;
+                let tuple_dimension_infers = self.store_typed_inference_conclusion_and_infer(
+                    tuple_dim_fact.clone(),
+                    inference_state,
+                )?;
                 result.add_rule_application(
                     InferRule::CartesianMembershipProjection(
                         CartesianMembershipProjectionInferRule {
@@ -672,11 +659,10 @@ impl Runtime {
                         InFact::new(projected, (**factor).clone(), in_fact.line_file.clone())
                             .into();
                     result.new_fact(&projected_in_factor);
-                    let coordinate_infers = self
-                        .store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
-                            projected_in_factor.clone(),
-                            inference_state,
-                        )?;
+                    let coordinate_infers = self.store_typed_inference_conclusion_and_infer(
+                        projected_in_factor.clone(),
+                        inference_state,
+                    )?;
                     result.add_rule_application(
                         InferRule::CartesianMembershipProjection(
                             CartesianMembershipProjectionInferRule {
@@ -945,12 +931,10 @@ impl Runtime {
                 .into();
                 let mut result = SuccessInferResult::new();
                 result.new_fact(&union_membership_cases);
-                result.new_infer_result_inside(
-                    self.store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
-                        union_membership_cases,
-                        inference_state,
-                    )?,
-                );
+                result.new_infer_result_inside(self.store_typed_inference_conclusion_and_infer(
+                    union_membership_cases,
+                    inference_state,
+                )?);
                 Ok(result)
             }
             // Binary intersection: storing `x $in intersect(A, B)` yields `x $in A` and `x $in B`.
@@ -971,19 +955,15 @@ impl Runtime {
                 .into();
                 let mut result = SuccessInferResult::new();
                 result.new_fact(&element_in_left);
-                result.new_infer_result_inside(
-                    self.store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
-                        element_in_left,
-                        inference_state,
-                    )?,
-                );
+                result.new_infer_result_inside(self.store_typed_inference_conclusion_and_infer(
+                    element_in_left,
+                    inference_state,
+                )?);
                 result.new_fact(&element_in_right);
-                result.new_infer_result_inside(
-                    self.store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
-                        element_in_right,
-                        inference_state,
-                    )?,
-                );
+                result.new_infer_result_inside(self.store_typed_inference_conclusion_and_infer(
+                    element_in_right,
+                    inference_state,
+                )?);
                 Ok(result)
             }
             // Set difference: storing `x $in set_minus(A, B)` yields `x $in A` and `not x $in B`.
@@ -996,19 +976,15 @@ impl Runtime {
                     NotInFact::new(in_fact.element.clone(), (*sm.right).clone(), lf.clone()).into();
                 let mut result = SuccessInferResult::new();
                 result.new_fact(&element_in_left);
-                result.new_infer_result_inside(
-                    self.store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
-                        element_in_left,
-                        inference_state,
-                    )?,
-                );
+                result.new_infer_result_inside(self.store_typed_inference_conclusion_and_infer(
+                    element_in_left,
+                    inference_state,
+                )?);
                 result.new_fact(&element_not_in_right);
-                result.new_infer_result_inside(
-                    self.store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
-                        element_not_in_right,
-                        inference_state,
-                    )?,
-                );
+                result.new_infer_result_inside(self.store_typed_inference_conclusion_and_infer(
+                    element_not_in_right,
+                    inference_state,
+                )?);
                 // Singleton exclusion: `x $in set_minus(A, {a})` implies `x != a`.
                 // Example: a quotient over `set_minus(X, {x0})` may use `x - x0` as a divisor.
                 if let Obj::ListSet(list_set) = sm.right.as_ref() {
@@ -1021,7 +997,7 @@ impl Runtime {
                         .into();
                         result.new_fact(&element_not_equal);
                         result.new_infer_result_inside(
-                            self.store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
+                            self.store_typed_inference_conclusion_and_infer(
                                 element_not_equal,
                                 inference_state,
                             )?,
@@ -1134,10 +1110,7 @@ impl Runtime {
             {
                 result.new_fact(&exist_fact);
                 result.new_infer_result_inside(
-                    self.store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
-                        exist_fact,
-                        inference_state,
-                    )?,
+                    self.store_typed_inference_conclusion_and_infer(exist_fact, inference_state)?,
                 );
             }
         }
@@ -1247,10 +1220,7 @@ impl Runtime {
         let mut result = SuccessInferResult::new();
         result.new_fact(&exist_fact);
         result.new_infer_result_inside(
-            self.store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
-                exist_fact,
-                inference_state,
-            )?,
+            self.store_typed_inference_conclusion_and_infer(exist_fact, inference_state)?,
         );
         Ok(result)
     }
@@ -1285,10 +1255,7 @@ impl Runtime {
         .into();
         result.new_fact(&ambient_membership);
         result.new_infer_result_inside(
-            self.store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
-                ambient_membership,
-                inference_state,
-            )?,
+            self.store_typed_inference_conclusion_and_infer(ambient_membership, inference_state)?,
         );
 
         let index_name = self.generate_internal_binder_name();
@@ -1312,10 +1279,7 @@ impl Runtime {
         .into();
         result.new_fact(&exist_fact);
         result.new_infer_result_inside(
-            self.store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
-                exist_fact,
-                inference_state,
-            )?,
+            self.store_typed_inference_conclusion_and_infer(exist_fact, inference_state)?,
         );
         Ok(result)
     }
@@ -1335,10 +1299,7 @@ impl Runtime {
         .into();
         result.new_fact(&ambient_membership);
         result.new_infer_result_inside(
-            self.store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
-                ambient_membership,
-                inference_state,
-            )?,
+            self.store_typed_inference_conclusion_and_infer(ambient_membership, inference_state)?,
         );
 
         let index_name = self.generate_internal_binder_name();
@@ -1363,10 +1324,7 @@ impl Runtime {
         .into();
         result.new_fact(&forall_fact);
         result.new_infer_result_inside(
-            self.store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
-                forall_fact,
-                inference_state,
-            )?,
+            self.store_typed_inference_conclusion_and_infer(forall_fact, inference_state)?,
         );
         Ok(result)
     }
@@ -1398,10 +1356,7 @@ impl Runtime {
         let mut result = SuccessInferResult::new();
         result.new_fact(&exist_fact);
         result.new_infer_result_inside(
-            self.store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
-                exist_fact,
-                inference_state,
-            )?,
+            self.store_typed_inference_conclusion_and_infer(exist_fact, inference_state)?,
         );
         Ok(result)
     }

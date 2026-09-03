@@ -11,7 +11,7 @@ changes mid-snapshot.
 Every inventory row has a nonempty positive-tracer obligation and negative
 boundary. `tracer_evidence_state=required` is deliberately not described as
 an existing test; only `existing` rows have a current source tracer.
-`required_tracer_queue.tsv` is the focused 1,376-row execution backlog.
+`required_tracer_queue.tsv` is the focused 1,365-row execution backlog.
 
 Generate the inventory from the repository root:
 

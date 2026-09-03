@@ -166,7 +166,7 @@ impl Runtime {
         }
 
         let function_set_obj = fn_set_stored.clone().into();
-        self.verify_obj_well_defined_and_store_cache(&function_set_obj, &VerifyState::initial())
+        self.verify_obj_well_defined_result(&function_set_obj, &VerifyState::initial())
             .map_err(|well_defined_error| {
                 short_exec_error(
                     have_fn_equal_case_by_case_stmt.clone().into(),
@@ -358,7 +358,7 @@ impl Runtime {
                     vec![],
                 )
             })?;
-        self.verify_obj_well_defined_and_store_cache(equal_to, &verify_state)
+        self.verify_obj_well_defined_result(equal_to, &verify_state)
             .map_err(|well_defined_error| {
                 short_exec_error(
                     have_fn_equal_case_by_case_stmt.clone().into(),

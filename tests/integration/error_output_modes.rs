@@ -33,7 +33,8 @@ fn successful_runs_use_the_canonical_detailed_run_json_without_summary() {
     assert!(!normal_stdout.contains("\"schema\":"));
     assert!(!normal_stdout.contains("\"summary\":"));
     assert!(normal_stdout.contains("\"outcome\": \"success\""));
-    assert!(normal_stdout.contains("\"verification\": {"));
+    assert!(normal_stdout.contains("\"evidence\": {"));
+    assert!(normal_stdout.contains("\"kind\": \"Verified\""));
     assert!(normal_stdout.contains("\"well_definedness\": {"));
     assert!(normal_stdout.contains("\"store\": {"));
     assert!(!normal_stdout.contains(&["execution", "trace"].join("_")));

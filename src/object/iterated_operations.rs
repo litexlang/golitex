@@ -7,7 +7,6 @@ pub struct Sum {
     pub start: Box<Obj>,
     pub end: Box<Obj>,
     pub func: Box<Obj>,
-    pub source_occurrence_id: Option<SourceObjectOccurrenceId>,
 }
 
 #[derive(Clone)]
@@ -52,20 +51,10 @@ pub struct FiniteSetReduce {
 
 impl Sum {
     pub fn new(start: Obj, end: Obj, func: Obj) -> Self {
-        Self::new_with_source_occurrence_id(start, end, func, None)
-    }
-
-    pub fn new_with_source_occurrence_id(
-        start: Obj,
-        end: Obj,
-        func: Obj,
-        source_occurrence_id: Option<SourceObjectOccurrenceId>,
-    ) -> Self {
         Sum {
             start: Box::new(start),
             end: Box::new(end),
             func: Box::new(func),
-            source_occurrence_id,
         }
     }
 }

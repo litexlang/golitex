@@ -228,17 +228,17 @@ impl Runtime {
             ));
         }
 
-        let is_cart_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&is_cart_fact, builtin_state)?;
-        if !is_cart_result.is_success() {
+        let Some(is_cart_result) =
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&is_cart_fact, builtin_state)?
+        else {
             return Ok(None);
-        }
+        };
 
-        let cart_dim_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&cart_dim_fact, builtin_state)?;
-        if !cart_dim_result.is_success() {
+        let Some(cart_dim_result) =
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&cart_dim_fact, builtin_state)?
+        else {
             return Ok(None);
-        }
+        };
 
         let mut steps = vec![is_cart_result, cart_dim_result];
         for (index, arg) in cart_obj.args.iter().enumerate() {
@@ -246,21 +246,21 @@ impl Runtime {
             let projected_target: Obj = Proj::new(target_obj.clone(), index_obj).into();
             let projection_fact: AtomicFact =
                 EqualFact::new(projected_target, arg.as_ref().clone(), line_file.clone()).into();
-            let mut projection_result =
-                self.verify_atomic_fact_as_builtin_rule_premise(&projection_fact, builtin_state)?;
-            if !projection_result.is_success() {
-                if let Some(known_forall_result) =
-                    self.verify_exact_cart_projection_from_known_forall(
+            let mut projection_result = self
+                .try_verify_atomic_fact_as_builtin_rule_premise(&projection_fact, builtin_state)?;
+            if projection_result.is_none() {
+                if let Some(known_forall_result) = self
+                    .verify_exact_cart_projection_from_known_forall(
                         &projection_fact,
                         builtin_state,
                     )?
                 {
-                    projection_result = known_forall_result;
+                    projection_result = Some(known_forall_result);
                 }
             }
-            if !projection_result.is_success() {
+            let Some(projection_result) = projection_result else {
                 return Ok(None);
-            }
+            };
             steps.push(projection_result);
         }
 

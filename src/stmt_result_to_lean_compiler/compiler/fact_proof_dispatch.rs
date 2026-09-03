@@ -713,19 +713,6 @@ impl StmtResultToLeanCompiler {
         })
     }
 
-    pub(super) fn construct_lean_proof_from_fact_statement_using_its_well_definedness(
-        &mut self,
-        result: &SuccessFactStmtResult,
-    ) -> Result<Option<String>, String> {
-        let verified = result.verification().ok_or_else(|| {
-            format!(
-                "trusted fact `{}` has no Lean proof-evidence adapter",
-                result.fact()
-            )
-        })?;
-        self.construct_lean_proof_from_direct_fact_result_using_its_well_definedness(verified)
-    }
-
     pub(super) fn construct_lean_literal_set_subset_from_result(
         &mut self,
         source_fact: &Fact,

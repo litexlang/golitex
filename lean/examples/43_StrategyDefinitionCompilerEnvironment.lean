@@ -9,16 +9,16 @@ def reflexive (x : (Litex.R).Carrier) : Prop :=
   (Litex.In x Litex.R) ∧ (Litex.Same x x)
 
 theorem prove_reflexive :
-    ∀ {__carrier0_1 : Type} (x : __carrier0_1) (__h6 : Litex.In x Litex.R),
-      reflexive (Litex.In.rep x __h6) := by
-  intro __carrier0_1 x __h6
-  have __step1 : Litex.Same x x := by
+    ∀ (x : (Litex.R).Carrier) (__h6 : Litex.In x Litex.R),
+      reflexive (x : ℝ) := by
+  intro x __h6
+  have __step0_0 : Litex.Same x x := by
     exact Litex.Same.refl x
-  have __step2 : reflexive (Litex.In.rep x __h6) := by
+  have __step0_1 : reflexive (x : ℝ) := by
     exact (by
     unfold reflexive
-    exact ⟨Litex.In.own Litex.R (Litex.In.rep x __h6), Litex.Same.refl ((Litex.In.rep x __h6))⟩)
-  have __c0_0 : reflexive (Litex.In.rep x __h6) := __step2
+    exact ⟨Litex.In.own Litex.R (x : ℝ), Litex.Same.refl ((x : ℝ))⟩)
+  have __c0_0 : reflexive (x : ℝ) := __step0_1
   exact __c0_0
 
 end __Compiler_43_StrategyDefinitionCompilerEnvironment

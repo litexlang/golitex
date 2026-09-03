@@ -25,7 +25,7 @@ impl Runtime {
         reason: InferReason,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let stmt_for_fact_errors: Stmt = fact.clone().to_fact().into();
-        self.verify_exist_or_and_chain_atomic_fact_well_defined(fact, verify_state)
+        self.verify_exist_or_and_chain_atomic_fact_well_defined_result(fact, verify_state)
             .map_err(|well_defined_error| {
                 exec_stmt_error_with_stmt_and_cause(
                     stmt_for_fact_errors.clone(),
@@ -66,7 +66,7 @@ impl Runtime {
         reason: InferReason,
     ) -> Result<SuccessInferResult, RuntimeError> {
         let stmt_for_fact_errors: Stmt = fact.clone().to_fact().into();
-        self.verify_quantifier_free_fact_well_defined(fact, verify_state)
+        self.verify_quantifier_free_fact_well_defined_result(fact, verify_state)
             .map_err(|well_defined_error| {
                 exec_stmt_error_with_stmt_and_cause(
                     stmt_for_fact_errors.clone(),

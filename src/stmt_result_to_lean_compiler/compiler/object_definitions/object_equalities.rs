@@ -68,14 +68,12 @@ impl StmtResultToLeanCompiler {
                 param_type,
                 result.statement.line_file.clone(),
             );
-            let type_check = verification.type_checks[index]
-                .verified()
-                .ok_or_else(|| {
-                    format!(
-                        "have-object value `{}` has no successful type-check child Result",
-                        binding.name()
-                    )
-                })?;
+            let type_check = verification.type_checks[index].verified().ok_or_else(|| {
+                format!(
+                    "have-object value `{}` has no successful type-check child Result",
+                    binding.name()
+                )
+            })?;
             if type_check.fact().to_string() != expected_value_type.to_string() {
                 return Err(format!(
                     "have-object value type-check changed `{expected_value_type}` to `{}`",

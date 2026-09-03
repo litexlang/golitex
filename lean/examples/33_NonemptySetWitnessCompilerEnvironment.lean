@@ -7,7 +7,7 @@ namespace __Compiler_33_NonemptySetWitnessCompilerEnvironment
 
 theorem __fact0 : Litex.Set.Nonempty (Litex.Set.coproduct (Litex.Set.singleton (1 : ℂ)) (Litex.Set.coproduct (Litex.Set.singleton (2 : ℂ)) Litex.Set.empty)) := by
   have __nonempty_membership : Litex.In (1 : ℂ) (Litex.Set.coproduct (Litex.Set.singleton (1 : ℂ)) (Litex.Set.coproduct (Litex.Set.singleton (2 : ℂ)) Litex.Set.empty)) := by
-    exact ⟨Sum.inl (Litex.SingletonCarrier.element), Litex.Same.trans (Litex.Same.refl (1 : ℂ)) (Litex.Same.trans (Litex.Same.singleton (1 : ℂ)) (Litex.Same.sumLeft (Litex.SingletonCarrier.element)))⟩
+    exact ⟨Sum.inl (Litex.SingletonCarrier.element), Litex.Same.transNoObservation (Litex.Same.withoutObservation (Litex.Same.refl (1 : ℂ))) (Litex.Same.transNoObservation (Litex.Same.singletonNoObservation (1 : ℂ)) (Litex.Same.sumLeftNoObservation (Litex.SingletonCarrier.element)))⟩
   rcases __nonempty_membership with ⟨__nonempty_witness, __nonempty_same⟩
   exact ⟨__nonempty_witness⟩
 

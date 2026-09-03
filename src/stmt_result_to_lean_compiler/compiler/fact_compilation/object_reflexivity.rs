@@ -33,10 +33,12 @@ impl StmtResultToLeanCompiler {
         validate_atomic_fact_well_definedness_result(&verified.checked, &source_fact)?;
         let proof = format!(
             "Litex.Same.refl {}",
-            self.render_object_using_well_definedness_from_fact_result(verified, &equality.left)?
+            self.render_object_using_well_definedness_from_fact_result(verified, &equality.left)
+                .map_err(|error| format!("rendering reflexive object: {error}"))?
         );
         if !fact_result_contains_inferred_facts(result) {
-            self.compile_stored_fact_without_inference(result, proof)?;
+            self.compile_stored_fact_without_inference(result, proof)
+                .map_err(|error| format!("publishing zero-inference reflexivity: {error}"))?;
             return Ok(true);
         }
 
@@ -60,7 +62,8 @@ impl StmtResultToLeanCompiler {
         if source_output.inferred_facts.len() != source_output.inferred_fact_ids.len() {
             return Err("object-reflexivity source store changed its inferred FactId arity".into());
         }
-        let proposition = render_fact(&source_fact, &self.environment_stack)?;
+        let proposition = render_fact(&source_fact, &self.environment_stack)
+            .map_err(|error| format!("rendering inferred reflexivity proposition: {error}"))?;
         let theorem_name = format!("__fact{}", self.next_fact_name_index);
         self.declarations.push(format!(
             "theorem {theorem_name} : {proposition} := by\n  exact {proof}"

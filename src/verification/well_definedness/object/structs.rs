@@ -289,13 +289,14 @@ impl Runtime {
         Ok(steps)
     }
 
-    /// Mathematical contract: a struct instantiation names a defined struct,
-    /// supplies exactly its header arity, and gives well-defined arguments
-    /// satisfying every defined parameter type and domain condition.
-    pub fn struct_header_param_to_arg_map(
-        &mut self,
+    /// Read the header substitution of a struct object whose complete WD
+    /// derivation has already been established by the surrounding fact or
+    /// object verification. This is a representation query: it deliberately
+    /// performs no hidden verification and therefore cannot discard proof
+    /// evidence.
+    pub fn struct_header_param_to_arg_map_after_well_defined(
+        &self,
         struct_obj: &StructObj,
-        verify_state: &VerifyState,
     ) -> Result<(DefStructStmt, HashMap<String, Obj>), RuntimeError> {
         let struct_name = struct_obj.name.to_string();
         let def = self
@@ -325,73 +326,8 @@ impl Runtime {
             )));
         }
 
-        for arg in struct_obj.params.iter() {
-            self.verify_obj_well_defined_as_verification_dependency(arg, verify_state)?;
-        }
-
-        let param_to_arg_map = if let Some((param_def, dom_facts)) = &def.param_def_with_dom {
-            let verify_args_result = self
-                .verify_args_satisfy_param_def_flat_types(
-                    param_def,
-                    &struct_obj.params,
-                    verify_state,
-                    SubstitutionMode::Exact,
-                )
-                .map_err(|runtime_error| {
-                    RuntimeError::from(WellDefinedRuntimeError(
-                        RuntimeErrorStruct::new_with_msg_and_cause(
-                            format!(
-                                "failed to verify struct `{}` arguments satisfy parameter types",
-                                struct_name
-                            ),
-                            runtime_error,
-                        ),
-                    ))
-                })?;
-            if verify_args_result.is_unknown() {
-                return Err(RuntimeError::from(WellDefinedRuntimeError(
-                    RuntimeErrorStruct::new_with_just_msg(format!(
-                        "failed to verify struct `{}` arguments satisfy parameter types",
-                        struct_name
-                    )),
-                )));
-            }
-
-            let param_to_arg_map =
-                param_def.param_defs_and_args_to_param_to_arg_map(&struct_obj.params);
-
-            for dom_fact in dom_facts.iter() {
-                let instantiated_dom_fact = self
-                    .inst_quantifier_free_fact(
-                        dom_fact,
-                        &param_to_arg_map,
-                        SubstitutionMode::Exact,
-                        None,
-                    )
-                    .map_err(|e| {
-                        RuntimeError::from(WellDefinedRuntimeError(
-                            RuntimeErrorStruct::new_with_msg_and_cause(
-                                format!(
-                                    "failed to instantiate struct `{}` domain fact",
-                                    struct_name
-                                ),
-                                e,
-                            ),
-                        ))
-                    })?;
-                let verify_result =
-                    self.verify_quantifier_free_fact(&instantiated_dom_fact, verify_state)?;
-                if verify_result.is_unknown() {
-                    return Err(RuntimeError::from(WellDefinedRuntimeError(
-                        RuntimeErrorStruct::new_with_just_msg(format!(
-                            "failed to verify struct `{}` domain fact:\n{}",
-                            struct_name, instantiated_dom_fact
-                        )),
-                    )));
-                }
-            }
-
-            param_to_arg_map
+        let param_to_arg_map = if let Some((param_def, _)) = &def.param_def_with_dom {
+            param_def.param_defs_and_args_to_param_to_arg_map(&struct_obj.params)
         } else {
             HashMap::new()
         };
@@ -401,13 +337,12 @@ impl Runtime {
 
     /// Mathematical contract: field carriers of a struct instance are the
     /// defined field expressions after sound header-parameter substitution.
-    pub fn instantiated_struct_field_types(
+    pub fn instantiated_struct_field_types_after_well_defined(
         &mut self,
         struct_obj: &StructObj,
-        verify_state: &VerifyState,
     ) -> Result<Vec<Obj>, RuntimeError> {
         let (def, param_to_arg_map) =
-            self.struct_header_param_to_arg_map(struct_obj, verify_state)?;
+            self.struct_header_param_to_arg_map_after_well_defined(struct_obj)?;
         let mut fields = Vec::with_capacity(def.fields.len());
         for field in def.fields.iter() {
             fields.push(self.inst_obj(
@@ -422,14 +357,14 @@ impl Runtime {
     /// Mathematical contract: the carrier of `value.field` is the field's
     /// defined carrier after substituting both struct header arguments and
     /// definition-owned field projections of `value`.
-    pub fn instantiated_struct_field_type_for_access(
+    pub fn instantiated_struct_field_type_after_well_defined(
         &mut self,
         field_access: &ObjAsStructInstanceWithFieldAccess,
-        verify_state: &VerifyState,
     ) -> Result<Obj, RuntimeError> {
         let struct_obj =
             self.direct_struct_owner_carrier_for_field_access(field_access, default_line_file())?;
-        let (def, header_map) = self.struct_header_param_to_arg_map(&struct_obj, verify_state)?;
+        let (def, header_map) =
+            self.struct_header_param_to_arg_map_after_well_defined(&struct_obj)?;
         let field_index = self.struct_field_index(&struct_obj, &field_access.field_name)? - 1;
 
         let mut field_map = HashMap::new();
@@ -449,18 +384,6 @@ impl Runtime {
             SubstitutionMode::Exact,
         )?;
         self.inst_obj(&after_header, &field_map, SubstitutionMode::Exact)
-    }
-
-    /// Field membership dispatch reaches this only after the field expression
-    /// itself has passed ordinary well-definedness.
-    pub fn instantiated_struct_field_type_after_well_defined(
-        &mut self,
-        field_access: &ObjAsStructInstanceWithFieldAccess,
-    ) -> Result<Obj, RuntimeError> {
-        self.instantiated_struct_field_type_for_access(
-            field_access,
-            &VerifyState::initial(),
-        )
     }
 
     /// Mathematical contract: a one-field structure is a named view of its

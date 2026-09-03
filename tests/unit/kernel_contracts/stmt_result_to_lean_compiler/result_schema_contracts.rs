@@ -144,15 +144,15 @@ fn def_algo_result_retains_retagged_parameters_and_the_exact_default_check() {
         .expect("default check")
         .verification
         .is_success());
-    let mut child_results = Vec::new();
+    let mut fact_verifications = Vec::new();
     let StmtResult::Success(success) = &results[1] else {
         unreachable!("the statement was already matched as successful")
     };
-    success.visit_child_results(&mut |child| child_results.push(child.statement()));
+    success.visit_fact_verification_children(&mut |child| fact_verifications.push(child.fact()));
     assert_eq!(
-        child_results.len(),
+        fact_verifications.len(),
         1,
-        "the generic Result visitor must expose the exact default-return check"
+        "the fact-verification visitor must expose the exact default-return check"
     );
     let json = render_statement_result_json(&results[1]);
     assert!(json.contains("\"parameter_retagging\""), "{json}");
@@ -214,14 +214,14 @@ have fn iterate(n N) R+ by induc n from 0:
         };
         assert!(body.return_membership_check.is_success());
     }
-    let mut visited_children = 0;
+    let mut visited_fact_verifications = 0;
     let StmtResult::Success(success) = &results[1] else {
         unreachable!("the statement was already matched as successful")
     };
-    success.visit_child_results(&mut |_| visited_children += 1);
+    success.visit_fact_verification_children(&mut |_| visited_fact_verifications += 1);
     assert_eq!(
-        visited_children, 7,
-        "the generic Result visitor must expose three measure checks, coverage, one disjointness check, and two return checks"
+        visited_fact_verifications, 7,
+        "the fact-verification visitor must expose three measure checks, coverage, one disjointness check, and two return checks"
     );
     let json = render_statement_result_json(&results[1]);
     assert!(

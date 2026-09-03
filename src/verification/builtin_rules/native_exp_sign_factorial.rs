@@ -34,14 +34,10 @@ impl Runtime {
         let line_file = equal_fact.line_file.clone();
         let exp_left: Obj = Exp::new(left.clone()).into();
         let exp_right: Obj = Exp::new(right.clone()).into();
-        let exp_fact = EqualFact::new_from_refs(
-            &exp_left,
-            &exp_right,
-            line_file.clone(),
-        );
+        let exp_fact = EqualFact::new_from_refs(&exp_left, &exp_right, line_file.clone());
         let exp_proof = self.verify_equal_fact_by_known_equality(&exp_fact);
         let exp_atomic: AtomicFact = exp_fact.into();
-        if let Some(exp_result) = self.complete_proven_builtin_candidate(
+        if let Some(exp_result) = self.complete_proven_fact_candidate(
             exp_atomic.clone().into(),
             exp_proof,
             builtin_state.verify_state(),
@@ -54,18 +50,15 @@ impl Runtime {
         }
         let ln_left: Obj = Ln::new(left.clone()).into();
         let ln_right: Obj = Ln::new(right.clone()).into();
-        let ln_fact = EqualFact::new_from_refs(
-            &ln_left,
-            &ln_right,
-            line_file.clone(),
-        );
+        let ln_fact = EqualFact::new_from_refs(&ln_left, &ln_right, line_file.clone());
         let ln_proof = self.verify_equal_fact_by_known_equality(&ln_fact);
         let ln_atomic: AtomicFact = ln_fact.into();
-        let Some(ln_result) = self.complete_proven_builtin_candidate(
+        let Some(ln_result) = self.complete_proven_fact_candidate(
             ln_atomic.clone().into(),
             ln_proof,
             builtin_state.verify_state(),
-        )? else {
+        )?
+        else {
             return Ok(None);
         };
         let zero: Obj = Number::new("0".to_string()).into();
@@ -105,18 +98,15 @@ impl Runtime {
         };
         let sign: Obj = Sign::new(arg.clone()).into();
         let zero: Obj = Number::new("0".to_string()).into();
-        let premise = EqualFact::new_from_refs(
-            &sign,
-            &zero,
-            line_file.clone(),
-        );
+        let premise = EqualFact::new_from_refs(&sign, &zero, line_file.clone());
         let proof = self.verify_equal_fact_by_known_equality(&premise);
         let premise_atomic: AtomicFact = premise.into();
-        let Some(result) = self.complete_proven_builtin_candidate(
+        let Some(result) = self.complete_proven_fact_candidate(
             premise_atomic.clone().into(),
             proof,
             builtin_state.verify_state(),
-        )? else {
+        )?
+        else {
             return Ok(None);
         };
         Ok(Some(native_equal_success(
@@ -217,11 +207,11 @@ impl Runtime {
             "-1" => LessFact::new((*sign.arg).clone(), zero, line_file.clone()).into(),
             _ => return Ok(None),
         };
-        let premise_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
-        if premise_result.is_unknown() {
+        let Some(premise_result) =
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?
+        else {
             return Ok(None);
-        }
+        };
         Ok(Some(native_equal_success(
             equal_fact,
             "sign value selected from the argument order at zero",
@@ -312,10 +302,11 @@ impl Runtime {
             line_file.clone(),
         )
         .into();
-        let result = self.verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
-        if !result.is_success() {
+        let Some(result) =
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?
+        else {
             return Ok(None);
-        }
+        };
         Ok(Some(native_equal_success(
             equal_fact,
             "earlier factorial divides later factorial",
@@ -449,10 +440,11 @@ impl Runtime {
             f.line_file.clone(),
         )
         .into();
-        let result = self.verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
-        if !result.is_success() {
+        let Some(result) =
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?
+        else {
             return Ok(None);
-        }
+        };
         Ok(Some(
             SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
@@ -522,11 +514,11 @@ impl Runtime {
             return Ok(None);
         };
         let _ = ln;
-        let premise_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
-        if premise_result.is_unknown() {
+        let Some(premise_result) =
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?
+        else {
             return Ok(None);
-        }
+        };
         Ok(Some((true, vec![premise_result])))
     }
 

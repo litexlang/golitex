@@ -1,0 +1,219 @@
+# Problem 217 / zhongkao_13
+# ================================================================
+# 原题：已知：等腰Rt△ABC和等腰Rt△ADE中，AB=AC，AE=AD，
+# ∠BAC=∠EAD=90°。连接EC、BD，延长EA交BD于点M，
+# 若∠AEC=90°，求证：点M为BD中点。
+#
+# 语义映射：
+# - AB=AC                    ↔ $geo::are_segments_congruent(a,b,a,c)
+# - ∠BAC=90°                ↔ $geo::is_right_angle(b,a,c)
+# - AE=AD                    ↔ $geo::are_segments_congruent(a,e,a,d)
+# - ∠EAD=90°                ↔ $geo::is_right_angle(e,a,d)
+# - “延长EA到M”             ↔ $geo::is_on_extension(m,e,a)
+# - “M在BD上”               ↔ $geo::is_on_line(m,b,d)
+# - ∠AEC=90°                ↔ $geo::is_right_angle(a,e,c)
+# - 结论“M为BD中点”         ↔ $geo::is_midpoint(m,b,d)
+#
+# 证明思路：令 x=AB, y=AC, p=AE, q=AD。
+# 等长且正交的二维向量组给出交叉投影平方恒等式；∠AEC=90° 给出
+# p·y=p·p，故 det(p,x)^2=det(p,q)^2。再把 M 写成 BD 的仿射参数点，
+# 由 M 在 EA 上得到相应行列式为零，从而参数 u=1/2。
+
+# 局部二维恒等式：|x|²(y·p)=(x·y)(x·p)+det(x,y)det(x,p)。
+thm lagrange_dot_det_product_217:
+    ? forall x, y, p cart(R, R):
+        geo::dot(x, x) * geo::dot(y, p) = geo::dot(x, y) * geo::dot(x, p) + geo::det(x, y) * geo::det(x, p)
+
+    by thm geo::dot_coordinate_formula(x, x)
+    by thm geo::dot_coordinate_formula(y, p)
+    by thm geo::dot_coordinate_formula(x, y)
+    by thm geo::dot_coordinate_formula(x, p)
+    by thm geo::det_coordinate_formula(x, y)
+    by thm geo::det_coordinate_formula(x, p)
+    geo::dot(x, x) = x[1] * x[1] + x[2] * x[2]
+    geo::dot(y, p) = y[1] * p[1] + y[2] * p[2]
+    geo::dot(x, y) = x[1] * y[1] + x[2] * y[2]
+    geo::dot(x, p) = x[1] * p[1] + x[2] * p[2]
+    geo::det(x, y) = x[1] * y[2] - x[2] * y[1]
+    geo::det(x, p) = x[1] * p[2] - x[2] * p[1]
+    geo::dot(x, x) * geo::dot(y, p) = (x[1] * x[1] + x[2] * x[2]) * (y[1] * p[1] + y[2] * p[2])
+    geo::dot(x, y) * geo::dot(x, p) + geo::det(x, y) * geo::det(x, p) = (x[1] * y[1] + x[2] * y[2]) * (x[1] * p[1] + x[2] * p[2]) + (x[1] * y[2] - x[2] * y[1]) * (x[1] * p[2] - x[2] * p[1])
+    (x[1] * x[1] + x[2] * x[2]) * (y[1] * p[1] + y[2] * p[2]) = (x[1] * y[1] + x[2] * y[2]) * (x[1] * p[1] + x[2] * p[2]) + (x[1] * y[2] - x[2] * y[1]) * (x[1] * p[2] - x[2] * p[1])
+
+# 等长正交基中的交叉投影平方桥。
+thm equal_orthogonal_cross_projection_217:
+    ? forall x, y, p cart(R, R):
+        geo::dot(x, y) = 0,
+        geo::dot(x, x) = geo::dot(y, y),
+        geo::dot(x, x) != 0
+        =>:
+            geo::det(p, x)^2 = geo::dot(p, y)^2
+
+    by thm lagrange_dot_det_product_217(x, y, p)
+    geo::dot(x, x) * geo::dot(y, p) = geo::dot(x, y) * geo::dot(x, p) + geo::det(x, y) * geo::det(x, p) = 0 * geo::dot(x, p) + geo::det(x, y) * geo::det(x, p) = geo::det(x, y) * geo::det(x, p)
+    (geo::dot(x, x) * geo::dot(y, p))^2 = (geo::det(x, y) * geo::det(x, p))^2
+    (geo::dot(x, x) * geo::dot(y, p))^2 = geo::dot(x, x)^2 * geo::dot(y, p)^2
+    (geo::det(x, y) * geo::det(x, p))^2 = geo::det(x, y)^2 * geo::det(x, p)^2
+
+    by thm geo::dot_squared_plus_det_squared(x, y)
+    geo::dot(x, y)^2 + geo::det(x, y)^2 = geo::dot(x, x) * geo::dot(y, y)
+    geo::dot(x, y)^2 + geo::det(x, y)^2 = 0^2 + geo::det(x, y)^2 = geo::det(x, y)^2
+    geo::det(x, y)^2 = geo::dot(x, x) * geo::dot(y, y)
+    geo::det(x, y)^2 = geo::dot(x, x) * geo::dot(y, y) = geo::dot(x, x) * geo::dot(x, x) = geo::dot(x, x)^2
+    geo::dot(x, x)^2 * geo::dot(y, p)^2 = (geo::dot(x, x) * geo::dot(y, p))^2 = (geo::det(x, y) * geo::det(x, p))^2 = geo::det(x, y)^2 * geo::det(x, p)^2 = geo::dot(x, x)^2 * geo::det(x, p)^2
+    geo::dot(x, x)^2 != 0
+    geo::dot(y, p)^2 * geo::dot(x, x)^2 = geo::dot(x, x)^2 * geo::dot(y, p)^2 = geo::dot(x, x)^2 * geo::det(x, p)^2 = geo::det(x, p)^2 * geo::dot(x, x)^2
+    by thm geo::divide_both_sides(geo::dot(y, p)^2, geo::det(x, p)^2, geo::dot(x, x)^2)
+    geo::dot(y, p)^2 = geo::det(x, p)^2
+
+    by thm geo::dot_symmetric(y, p)
+    by thm geo::det_antisymmetric(x, p)
+    geo::dot(y, p) = geo::dot(p, y)
+    geo::det(x, p) = -(geo::det(p, x))
+    geo::dot(p, y)^2 = geo::dot(y, p)^2 = geo::det(x, p)^2 = (-(geo::det(p, x)))^2 = geo::det(p, x)^2
+
+# 若 M 是 BD 的仿射点、AM 与向量 p 共线，且 p 对 AB、AD 的行列式
+# 绝对值相等且非零，则 M 的 BD 参数为 1/2。
+thm affine_cross_square_midpoint_217:
+    ? forall a, b, d, m, p cart(R, R):
+        $geo::is_on_line(m, b, d),
+        geo::det(p, geo::vec(a, m)) = 0,
+        geo::det(p, geo::vec(a, b))^2 = geo::det(p, geo::vec(a, d))^2,
+        geo::det(p, geo::vec(a, b)) != 0
+        =>:
+            $geo::is_midpoint(m, b, d)
+
+    by thm geo::on_line_implies_affine_parameter(b, d, m)
+    obtain u from exist u0 R st {m[1] = (1 - u0) * b[1] + u0 * d[1], m[2] = (1 - u0) * b[2] + u0 * d[2]}
+
+    by thm geo::vec_coordinate_formula(a, m)
+    by thm geo::vec_coordinate_formula(a, b)
+    by thm geo::vec_coordinate_formula(a, d)
+    geo::vec(a, m)[1] = m[1] - a[1]
+    geo::vec(a, m)[2] = m[2] - a[2]
+    geo::vec(a, b)[1] = b[1] - a[1]
+    geo::vec(a, b)[2] = b[2] - a[2]
+    geo::vec(a, d)[1] = d[1] - a[1]
+    geo::vec(a, d)[2] = d[2] - a[2]
+    geo::vec(a, m)[1] = m[1] - a[1] = ((1 - u) * b[1] + u * d[1]) - a[1] = (1 - u) * (b[1] - a[1]) + u * (d[1] - a[1]) = (1 - u) * geo::vec(a, b)[1] + u * geo::vec(a, d)[1]
+    geo::vec(a, m)[2] = m[2] - a[2] = ((1 - u) * b[2] + u * d[2]) - a[2] = (1 - u) * (b[2] - a[2]) + u * (d[2] - a[2]) = (1 - u) * geo::vec(a, b)[2] + u * geo::vec(a, d)[2]
+
+    by thm geo::det_coordinate_formula(p, geo::vec(a, m))
+    by thm geo::det_coordinate_formula(p, geo::vec(a, b))
+    by thm geo::det_coordinate_formula(p, geo::vec(a, d))
+    geo::det(p, geo::vec(a, m)) = p[1] * geo::vec(a, m)[2] - p[2] * geo::vec(a, m)[1] = p[1] * ((1 - u) * geo::vec(a, b)[2] + u * geo::vec(a, d)[2]) - p[2] * ((1 - u) * geo::vec(a, b)[1] + u * geo::vec(a, d)[1]) = (1 - u) * (p[1] * geo::vec(a, b)[2] - p[2] * geo::vec(a, b)[1]) + u * (p[1] * geo::vec(a, d)[2] - p[2] * geo::vec(a, d)[1]) = (1 - u) * geo::det(p, geo::vec(a, b)) + u * geo::det(p, geo::vec(a, d))
+    (1 - u) * geo::det(p, geo::vec(a, b)) = -(u * geo::det(p, geo::vec(a, d)))
+    ((1 - u) * geo::det(p, geo::vec(a, b)))^2 = (-(u * geo::det(p, geo::vec(a, d))))^2
+    (1 - u)^2 * geo::det(p, geo::vec(a, b))^2 = ((1 - u) * geo::det(p, geo::vec(a, b)))^2 = (-(u * geo::det(p, geo::vec(a, d))))^2 = u^2 * geo::det(p, geo::vec(a, d))^2
+    (1 - u)^2 * geo::det(p, geo::vec(a, b))^2 = u^2 * geo::det(p, geo::vec(a, d))^2 = u^2 * geo::det(p, geo::vec(a, b))^2
+    geo::det(p, geo::vec(a, b))^2 != 0
+    by thm geo::divide_both_sides((1 - u)^2, u^2, geo::det(p, geo::vec(a, b))^2)
+    (1 - u)^2 = u^2
+    (u - 0)^2 = (1 - u)^2
+    by thm geo::one_dimensional_midpoint(0, 1, u)
+    u = (0 + 1) / 2 = 1 / 2
+
+    m[1] = (1 - u) * b[1] + u * d[1] = (b[1] + d[1]) / 2
+    m[2] = (1 - u) * b[2] + u * d[2] = (b[2] + d[2]) / 2
+    by thm tuple_equal_from_coordinates(m, (m[1], m[2]))
+    m = (m[1], m[2]) = ((b[1] + d[1]) / 2, (b[2] + d[2]) / 2)
+    by def $geo::is_midpoint(m, b, d)
+
+thm problem_217_midpoint:
+    ? forall a, b, c, d, pe, m cart(R, R):
+        # 【条件1】AB=AC。
+        $geo::are_segments_congruent(a, b, a, c),
+        # 【条件2】∠BAC=90°。
+        $geo::is_right_angle(b, a, c),
+        # 【条件3】AE=AD。
+        $geo::are_segments_congruent(a, pe, a, d),
+        # 【条件4】∠EAD=90°。
+        $geo::is_right_angle(pe, a, d),
+        # 【条件5】延长EA到M。
+        $geo::is_on_extension(m, pe, a),
+        # 【条件6】M在直线BD上。
+        $geo::is_on_line(m, b, d),
+        # 【条件7】∠AEC=90°。
+        $geo::is_right_angle(a, pe, c)
+        =>:
+            # 【结论】M为BD中点。
+            $geo::is_midpoint(m, b, d)
+
+    have x cart(R, R) = geo::vec(a, b)
+    have y cart(R, R) = geo::vec(a, c)
+    have p cart(R, R) = geo::vec(a, pe)
+    have q cart(R, R) = geo::vec(a, d)
+
+    by def $geo::are_segments_congruent(a, b, a, c)
+    by def $geo::are_segments_congruent(a, pe, a, d)
+    by def $geo::is_right_angle(b, a, c)
+    by def $geo::is_right_angle(pe, a, d)
+    by def $geo::is_right_angle(a, pe, c)
+
+    geo::dot(x, y) = geo::dot(geo::vec(a, b), geo::vec(a, c)) = 0
+    geo::dot(p, q) = geo::dot(geo::vec(a, pe), geo::vec(a, d)) = 0
+    by thm geo::distance_sq_coordinate_formula(a, b)
+    by thm geo::distance_sq_coordinate_formula(a, c)
+    by thm geo::distance_sq_coordinate_formula(a, pe)
+    by thm geo::distance_sq_coordinate_formula(a, d)
+    geo::dot(x, x) = geo::dot(geo::vec(a, b), geo::vec(a, b)) = geo::distance_sq(a, b) = geo::distance_sq(a, c) = geo::dot(geo::vec(a, c), geo::vec(a, c)) = geo::dot(y, y)
+    geo::dot(p, p) = geo::dot(geo::vec(a, pe), geo::vec(a, pe)) = geo::distance_sq(a, pe) = geo::distance_sq(a, d) = geo::dot(geo::vec(a, d), geo::vec(a, d)) = geo::dot(q, q)
+
+    by thm geo::distance_sq_positive_of_ne(a, b)
+    by thm geo::distance_sq_positive_of_ne(a, pe)
+    geo::dot(x, x) > 0
+    geo::dot(p, p) > 0
+    geo::dot(x, x) != 0
+    geo::dot(p, p) != 0
+
+    # ∠AEC=90°：(-p)·(y-p)=0，所以 p·y=p·p。
+    by thm geo::vec_neg(pe, a)
+    geo::vec(pe, a) = (-(geo::vec(a, pe)[1]), -(geo::vec(a, pe)[2])) = (-(p[1]), -(p[2]))
+    by thm geo::vec_coordinate_formula(a, c)
+    y = geo::vec(a, c) = (c[1] - a[1], c[2] - a[2])
+    by thm geo::vec_coordinate_formula(a, pe)
+    p = geo::vec(a, pe) = (pe[1] - a[1], pe[2] - a[2])
+    by thm geo::vec_coordinate_formula(pe, c)
+    geo::vec(pe, c) = (c[1] - pe[1], c[2] - pe[2]) = (y[1] - p[1], y[2] - p[2])
+    0 = geo::dot(geo::vec(pe, a), geo::vec(pe, c)) = (-(p[1])) * (y[1] - p[1]) + (-(p[2])) * (y[2] - p[2]) = -(p[1] * y[1] + p[2] * y[2]) + (p[1] * p[1] + p[2] * p[2])
+    geo::dot(p, y) = p[1] * y[1] + p[2] * y[2]
+    geo::dot(p, p) = p[1] * p[1] + p[2] * p[2]
+    by thm geo::zero_sum_rearrange(-(p[1] * y[1] + p[2] * y[2]), p[1] * p[1] + p[2] * p[2])
+    -(-(p[1] * y[1] + p[2] * y[2])) = p[1] * p[1] + p[2] * p[2]
+    p[1] * y[1] + p[2] * y[2] = -(-(p[1] * y[1] + p[2] * y[2])) = p[1] * p[1] + p[2] * p[2]
+    geo::dot(p, y) = p[1] * y[1] + p[2] * y[2] = p[1] * p[1] + p[2] * p[2] = geo::dot(p, p)
+
+    by thm equal_orthogonal_cross_projection_217(x, y, p)
+    geo::det(p, x)^2 = geo::dot(p, y)^2 = geo::dot(p, p)^2
+    by thm geo::dot_symmetric(q, p)
+    geo::dot(q, p) = 0
+    by thm equal_orthogonal_cross_projection_217(q, p, p)
+    geo::det(p, q)^2 = geo::dot(p, p)^2
+    geo::det(p, x)^2 = geo::det(p, q)^2
+    geo::det(p, x)^2 > 0
+    by contra:
+        ? geo::det(p, x) != 0
+        geo::det(p, x) = 0
+        geo::det(p, x)^2 = 0
+        impossible geo::det(p, x)^2 > 0
+
+    # M 在 EA 的延长线上，因此 AM 与 AE 共线。
+    by def $geo::is_on_extension(m, pe, a)
+    obtain t from exist t0 R st {t0 > 1, m = (pe[1] + t0 * (a[1] - pe[1]), pe[2] + t0 * (a[2] - pe[2]))}
+    by thm geo::vec_coordinate_formula(a, m)
+    geo::vec(a, m) = (m[1] - a[1], m[2] - a[2])
+    geo::vec(a, m)[1] = m[1] - a[1] = pe[1] + t * (a[1] - pe[1]) - a[1] = (1 - t) * (pe[1] - a[1]) = (1 - t) * p[1]
+    geo::vec(a, m)[2] = m[2] - a[2] = pe[2] + t * (a[2] - pe[2]) - a[2] = (1 - t) * (pe[2] - a[2]) = (1 - t) * p[2]
+    by thm geo::det_coordinate_formula(p, geo::vec(a, m))
+    geo::det(p, geo::vec(a, m)) = p[1] * geo::vec(a, m)[2] - p[2] * geo::vec(a, m)[1]
+    p[1] * geo::vec(a, m)[2] - p[2] * geo::vec(a, m)[1] = p[1] * ((1 - t) * p[2]) - p[2] * ((1 - t) * p[1])
+    p[1] * ((1 - t) * p[2]) - p[2] * ((1 - t) * p[1]) = (1 - t) * p[1] * p[2] - (1 - t) * p[2] * p[1] = 0
+    geo::det(p, geo::vec(a, m)) = 0
+
+    # 将局部向量别名上的结论显式翻译回引理所需的几何向量形式。
+    geo::det(p, geo::vec(a, b)) = geo::det(p, x)
+    geo::det(p, geo::vec(a, d)) = geo::det(p, q)
+    geo::det(p, geo::vec(a, b))^2 = geo::det(p, x)^2 = geo::det(p, q)^2 = geo::det(p, geo::vec(a, d))^2
+    geo::det(p, geo::vec(a, b)) != 0
+
+    by thm affine_cross_square_midpoint_217(a, b, d, m, p)

@@ -14,18 +14,18 @@ impl Runtime {
         )
         .into();
         let positive_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&positive, builtin_state)?;
-        if positive_result.is_success() {
-            return Ok(Some(positive_result));
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&positive, builtin_state)?;
+        if positive_result.is_some() {
+            return Ok(positive_result);
         }
 
         for carrier in [StandardSet::NPos, StandardSet::QPos, StandardSet::RPos] {
             let membership: AtomicFact =
                 InFact::new(obj.clone(), carrier.into(), line_file.clone()).into();
             let membership_result =
-                self.verify_atomic_fact_as_builtin_rule_premise(&membership, builtin_state)?;
-            if membership_result.is_success() {
-                return Ok(Some(membership_result));
+                self.try_verify_atomic_fact_as_builtin_rule_premise(&membership, builtin_state)?;
+            if membership_result.is_some() {
+                return Ok(membership_result);
             }
         }
         Ok(None)
@@ -85,10 +85,11 @@ impl Runtime {
         };
         let m_in_n: AtomicFact =
             InFact::new(m.clone(), StandardSet::N.into(), line_file.clone()).into();
-        let m_result = self.verify_atomic_fact_as_builtin_rule_premise(&m_in_n, builtin_state)?;
-        if !m_result.is_success() {
+        let Some(m_result) =
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&m_in_n, builtin_state)?
+        else {
             return Ok(None);
-        }
+        };
         Ok(Some(
             SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
@@ -120,18 +121,17 @@ impl Runtime {
         if !Self::obj_is_builtin_literal_one(pow.exponent.as_ref()) {
             return Ok(None);
         }
-        if !self
-            .verify_equal_fact_as_builtin_premise(
-                &EqualFact::new_from_refs(pow.base.as_ref(), other, line_file.clone()),
-                builtin_state,
-            )?
-            .is_success()
-        {
+        let Some(base_result) = self.try_verify_equal_fact_as_builtin_premise(
+            &EqualFact::new_from_refs(pow.base.as_ref(), other, line_file.clone()),
+            builtin_state,
+        )?
+        else {
             return Ok(None);
-        }
-        Ok(Some(factual_equal_success_by_builtin_reason(
+        };
+        Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
             equal_fact,
             "equality: a^1 = a",
+            vec![base_result],
         )))
     }
 
@@ -232,9 +232,9 @@ impl Runtime {
         )
         .into();
         let positive_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&positive_exponent, builtin_state)?;
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&positive_exponent, builtin_state)?;
         let mut positive_steps = Vec::new();
-        if positive_result.is_success() {
+        if let Some(positive_result) = positive_result {
             positive_steps.push(positive_result);
         } else {
             // Keep reciprocal positivity inside this one power identity rule:

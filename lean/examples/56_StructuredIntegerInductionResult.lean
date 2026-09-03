@@ -9,10 +9,10 @@ theorem __fact0 : Litex.In ((2 : ℂ) + (3 : ℂ)) Litex.N := by
   exact Litex.Rules.complexEqNatInN ((2 : ℂ) + (3 : ℂ)) 5 (by norm_num)
 
 theorem __fact1 : Litex.Nonnegative ((2 : ℂ) + (3 : ℂ)) := by
-  exact Litex.Rules.nonnegativeOfInN (__fact0)
+  exact (by simpa using (Litex.Rules.nonnegativeOfInN (__fact0)))
 
 theorem __fact2 : Litex.Nonpositive ((-1 : ℂ) * ((2 : ℂ) + (3 : ℂ))) := by
-  have __infer1_0 : Litex.Nonnegative ((2 : ℂ) + (3 : ℂ)) := Litex.Rules.nonnegativeOfInN (__fact0)
+  have __infer1_0 : Litex.Nonnegative ((2 : ℂ) + (3 : ℂ)) := (by simpa using (Litex.Rules.nonnegativeOfInN (__fact0)))
   exact Litex.Rules.complexNegativeOneMulNonpositive (__infer1_0)
 
 theorem __fact3 :
@@ -23,11 +23,11 @@ theorem __fact3 :
   have __target_ge_start : ((-1 : ℤ) * (1 : ℤ)) ≤ __target_value := by
     exact_mod_cast __target_ge_start_real
   exact Litex.Rules.integerInductionFrom (motive := fun __induction_value : ℤ => Litex.Same ((((__induction_value) : ℂ)) + (1 : ℂ)) ((((__induction_value) : ℂ)) + (1 : ℂ))) (by
-  have __step1 : Litex.Same (((-1 : ℂ) * (1 : ℂ)) + (1 : ℂ)) (((-1 : ℂ) * (1 : ℂ)) + (1 : ℂ)) := by
+  have __step3_2 : Litex.Same (((-1 : ℂ) * (1 : ℂ)) + (1 : ℂ)) (((-1 : ℂ) * (1 : ℂ)) + (1 : ℂ)) := by
     exact Litex.Same.refl (((-1 : ℂ) * (1 : ℂ)) + (1 : ℂ))
-  exact (by simpa using (__step1))) (fun (__induction_value : ℤ) (__induction_ge_start : ((-1 : ℤ) * (1 : ℤ)) ≤ __induction_value) (__induction_hypotheses : Litex.Same ((((__induction_value) : ℂ)) + (1 : ℂ)) ((((__induction_value) : ℂ)) + (1 : ℂ))) => by
-  have __step1 : Litex.Same (((((__induction_value) : ℂ)) + (1 : ℂ)) + (1 : ℂ)) (((((__induction_value) : ℂ)) + (1 : ℂ)) + (1 : ℂ)) := by
+  exact (by simpa using (__step3_2))) (fun (__induction_value : ℤ) (__induction_ge_start : ((-1 : ℤ) * (1 : ℤ)) ≤ __induction_value) (__induction_hypotheses : Litex.Same ((((__induction_value) : ℂ)) + (1 : ℂ)) ((((__induction_value) : ℂ)) + (1 : ℂ))) => by
+  have __step3_3 : Litex.Same (((((__induction_value) : ℂ)) + (1 : ℂ)) + (1 : ℂ)) (((((__induction_value) : ℂ)) + (1 : ℂ)) + (1 : ℂ)) := by
     exact Litex.Same.refl (((((__induction_value) : ℂ)) + (1 : ℂ)) + (1 : ℂ))
-  exact (by simpa using (__step1))) __target_value __target_ge_start
+  exact (by simpa using (__step3_3))) __target_value __target_ge_start
 
 end __Compiler_56_StructuredIntegerInductionResult

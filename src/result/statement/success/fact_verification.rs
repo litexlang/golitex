@@ -168,11 +168,8 @@ pub struct VerifiedFactResult {
 }
 
 impl VerifiedFactResult {
-    pub fn new(
-        checked: WellDefinedFactResult,
-        verification: Rc<SuccessFactProofNode>,
-    ) -> Self {
-        debug_assert_eq!(
+    pub fn new(checked: WellDefinedFactResult, verification: Rc<SuccessFactProofNode>) -> Self {
+        assert_eq!(
             checked.fact.to_string(),
             verification.fact().to_string(),
             "fact WD and truth proof must describe the same resolved proposition"
@@ -197,8 +194,7 @@ impl VerifiedFactResult {
     }
 
     pub fn try_proof_mut(&mut self) -> Option<&mut SuccessFactProofResult> {
-        Rc::get_mut(&mut self.verification)
-            .map(SuccessFactProofNode::proof_mut)
+        Rc::get_mut(&mut self.verification).map(SuccessFactProofNode::proof_mut)
     }
 
     pub fn is_verified_by_builtin_rules_only(&self) -> bool {
@@ -284,7 +280,6 @@ impl VerifyFactResult {
             Self::Unknown(result) => &result.checked,
         }
     }
-
 
     pub fn proof(&self) -> Option<&SuccessFactProofResult> {
         self.verified().map(|result| result.proof())

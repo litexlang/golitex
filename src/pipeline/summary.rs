@@ -298,6 +298,7 @@ impl RunSummary {
                 self.visit_infer_result(&result.assumption_infers);
                 for proved in result.proves.iter() {
                     self.visit_verify_result(&proved.result, depth + 1);
+                    self.visit_infer_result(&proved.store.infers);
                 }
             }
             SuccessFactProofResult::StoredFactCitation(_) => {
@@ -419,7 +420,6 @@ impl RunSummary {
     ) {
         if let Some(result) = result {
             self.bump_by_method(result.registration_type.as_str());
-            self.visit_infer_result(&result.assumption_infers);
         }
     }
 

@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "target": "showcases/Write_Mathematically_Correct_Code_With_Litex/main.lit",
+  "session_command": "current release CLI rejects -compact -session -before; use tmp/2026-09-03/newton-convergence-showcase/main.lit with isolated result-graph gates",
+  "proof_spine": [
+    "define the recursive trajectory using the exact extractable Newton step",
+    "prove the trajectory stays at least one and never reaches the totalized zero branch",
+    "derive the exact one-step residual-square identity",
+    "deduce quadratic residual contraction",
+    "solve the comparison recurrence to obtain a double-exponential residual bound"
+  ],
+  "blocks": [
+    {
+      "id": "B001",
+      "source_order": 1,
+      "intent": "replace the wrapper-equivalence claim with a complete quadratic residual convergence development for the exact extractable step",
+      "dependencies": [
+        "real arithmetic",
+        "recursive function induction",
+        "absolute-value and order builtin rules",
+        "the checked newton_sqrt_two_step algorithm"
+      ],
+      "attempts": [
+        {
+          "candidate": "tmp/2026-09-03/newton-convergence-showcase/main.lit with explicit positivity and R+ carrier bridge lines at both theorem calls",
+          "result": "success",
+          "verifier_evidence": "isolated result graph returned ok=true, result=success, statements=99, unknowns=0",
+          "diagnosis": "the total R -> R extracted function supports the recursive trajectory and the full residual-rate proof",
+          "next_change": "deletion-probe the four explicit positivity/carrier bridge lines"
+        },
+        {
+          "candidate": "same draft with the four explicit positivity and R+ carrier bridge lines removed",
+          "result": "success",
+          "verifier_evidence": "isolated result graph returned ok=true, result=success, statements=95, unknowns=0",
+          "diagnosis": "the theorem applications derive their positive-real argument requirements from the established x_n >= 1 invariant",
+          "next_change": "materialize the shorter accepted draft"
+        }
+      ],
+      "accepted_litex": "exact full accepted source is materialized at showcases/Write_Mathematically_Correct_Code_With_Litex/main.lit with sha256 dad09cd81b2d95de7a4b1c9c0088b7eab4603e6ca7a28341c498f9a1c2e1d93e; central results are sqrt_two_newton_gap(n + 1) <= sqrt_two_newton_gap(n)^2 / 4 and sqrt_two_newton_gap(n) <= 4 * (1 / 4)^(2^n)",
+      "reusable_lesson": "A total executable Newton step can be the exact recursive update when a checked invariant keeps the intended trajectory inside the positive branch; this removes the need for a separate same-formula wrapper-equivalence theorem.",
+      "status": "materialized"
+    }
+  ],
+  "materialization": {
+    "block_ids": ["B001"],
+    "file_gate_command": "target/release/litex -graph -f showcases/Write_Mathematically_Correct_Code_With_Litex/main.lit",
+    "file_gate_result": "success: process exit 0, artifact ok=true, result=success, statements=95, unknowns=0; runner/session command combinations are unsupported by the current release CLI"
+  }
+}

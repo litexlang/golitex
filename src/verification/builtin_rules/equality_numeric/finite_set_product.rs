@@ -17,27 +17,25 @@ impl Runtime {
             let Obj::ProductOfFiniteSet(p) = product_side else {
                 continue;
             };
-            if !self
-                .verify_equal_fact_as_builtin_premise(
-                    &EqualFact::new_from_refs(p.set.as_ref(), &empty_set, line_file.clone()),
-                    builtin_state,
-                )?
-                .is_success()
-            {
+            let Some(empty_set_result) = self.try_verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(p.set.as_ref(), &empty_set, line_file.clone()),
+                builtin_state,
+            )?
+            else {
                 continue;
-            }
-            if self
-                .verify_equal_fact_as_builtin_premise(
-                    &EqualFact::new_from_refs(other, &one, line_file.clone()),
-                    builtin_state,
-                )?
-                .is_success()
-            {
-                return Ok(Some(factual_equal_success_by_builtin_reason(
-                    equal_fact,
-                    "equality: finite-set product over empty set is one",
-                )));
-            }
+            };
+            let Some(one_result) = self.try_verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(other, &one, line_file.clone()),
+                builtin_state,
+            )?
+            else {
+                continue;
+            };
+            return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
+                equal_fact,
+                "equality: finite-set product over empty set is one",
+                vec![empty_set_result, one_result],
+            )));
         }
         Ok(None)
     }
@@ -74,18 +72,18 @@ impl Runtime {
                 continue;
             }
             let expected = Self::left_assoc_mul_from_terms(terms);
-            if self
-                .verify_equal_fact_as_builtin_premise(
-                    &EqualFact::new_from_refs(other, &expected, line_file.clone()),
-                    builtin_state,
-                )?
-                .is_success()
-            {
-                return Ok(Some(factual_equal_success_by_builtin_reason(
-                    equal_fact,
-                    "equality: finite-set product over displayed set expands elementwise",
-                )));
-            }
+            let Some(expansion_result) = self.try_verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(other, &expected, line_file.clone()),
+                builtin_state,
+            )?
+            else {
+                continue;
+            };
+            return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
+                equal_fact,
+                "equality: finite-set product over displayed set expands elementwise",
+                vec![expansion_result],
+            )));
         }
         Ok(None)
     }
@@ -128,62 +126,59 @@ impl Runtime {
                 let inserted = singleton.list[0].as_ref().clone();
                 let freshness: AtomicFact =
                     NotInFact::new(inserted.clone(), smaller_set.clone(), line_file.clone()).into();
-                if !self
-                    .verify_atomic_fact_as_builtin_rule_premise(&freshness, builtin_state)?
-                    .is_success()
-                {
-                    continue;
-                }
-                if !self
-                    .verify_equal_fact_as_builtin_premise(
-                        &EqualFact::new_from_refs(
-                            smaller_product.set.as_ref(),
-                            smaller_set,
-                            line_file.clone(),
-                        ),
-                        builtin_state,
-                    )?
-                    .is_success()
-                {
-                    continue;
-                }
-                let Some(pointwise) = self
-                    .verify_finite_set_sum_functions_pointwise_premise(
-                        &EqualFact::new_from_refs(
-                            union_product.func.as_ref(),
-                            smaller_product.func.as_ref(),
-                            line_file.clone(),
-                        ),
-                        smaller_set.clone(),
-                        builtin_state,
-                    )?
+                let Some(freshness_result) =
+                    self.try_verify_atomic_fact_as_builtin_rule_premise(&freshness, builtin_state)?
                 else {
                     continue;
                 };
-                if !pointwise.is_success() {
+                let Some(smaller_set_result) = self.try_verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(
+                        smaller_product.set.as_ref(),
+                        smaller_set,
+                        line_file.clone(),
+                    ),
+                    builtin_state,
+                )?
+                else {
                     continue;
-                }
+                };
+                let Some(pointwise) = self.verify_finite_set_sum_functions_pointwise_premise(
+                    &EqualFact::new_from_refs(
+                        union_product.func.as_ref(),
+                        smaller_product.func.as_ref(),
+                        line_file.clone(),
+                    ),
+                    smaller_set.clone(),
+                    builtin_state,
+                )?
+                else {
+                    continue;
+                };
                 let Some(inserted_factor) =
                     self.instantiate_unary_function_at(union_product.func.as_ref(), &inserted)?
                 else {
                     continue;
                 };
-                if !self
-                    .verify_equal_fact_as_builtin_premise(
-                        &EqualFact::new_from_refs(
-                            mul.right.as_ref(),
-                            &inserted_factor,
-                            line_file.clone(),
-                        ),
-                        builtin_state,
-                    )?
-                    .is_success()
-                {
+                let Some(inserted_factor_result) = self.try_verify_equal_fact_as_builtin_premise(
+                    &EqualFact::new_from_refs(
+                        mul.right.as_ref(),
+                        &inserted_factor,
+                        line_file.clone(),
+                    ),
+                    builtin_state,
+                )?
+                else {
                     continue;
-                }
-                return Ok(Some(factual_equal_success_by_builtin_reason(
+                };
+                return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
                     equal_fact,
                     "equality: finite-set product after inserting a fresh element",
+                    vec![
+                        freshness_result,
+                        smaller_set_result,
+                        pointwise,
+                        inserted_factor_result,
+                    ],
                 )));
             }
         }
@@ -221,68 +216,61 @@ impl Runtime {
                 continue;
             }
             let removed = singleton.list[0].as_ref().clone();
-            if !self
-                .verify_equal_fact_as_builtin_premise(
-                    &EqualFact::new_from_refs(
-                        full_product.set.as_ref(),
-                        remaining_set.left.as_ref(),
-                        line_file.clone(),
-                    ),
-                    builtin_state,
-                )?
-                .is_success()
-            {
+            let Some(full_set_result) = self.try_verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(
+                    full_product.set.as_ref(),
+                    remaining_set.left.as_ref(),
+                    line_file.clone(),
+                ),
+                builtin_state,
+            )?
+            else {
                 continue;
-            }
+            };
             let membership: AtomicFact = InFact::new(
                 removed.clone(),
                 full_product.set.as_ref().clone(),
                 line_file.clone(),
             )
             .into();
-            if !self
-                .verify_atomic_fact_as_builtin_rule_premise(&membership, builtin_state)?
-                .is_success()
-            {
-                continue;
-            }
-            let Some(pointwise) = self
-                .verify_finite_set_sum_functions_pointwise_premise(
-                    &EqualFact::new_from_refs(
-                        full_product.func.as_ref(),
-                        remaining_product.func.as_ref(),
-                        line_file.clone(),
-                    ),
-                    remaining_product.set.as_ref().clone(),
-                    builtin_state,
-                )?
+            let Some(membership_result) =
+                self.try_verify_atomic_fact_as_builtin_rule_premise(&membership, builtin_state)?
             else {
                 continue;
             };
-            if !pointwise.is_success() {
+            let Some(pointwise) = self.verify_finite_set_sum_functions_pointwise_premise(
+                &EqualFact::new_from_refs(
+                    full_product.func.as_ref(),
+                    remaining_product.func.as_ref(),
+                    line_file.clone(),
+                ),
+                remaining_product.set.as_ref().clone(),
+                builtin_state,
+            )?
+            else {
                 continue;
-            }
+            };
             let Some(removed_factor) =
                 self.instantiate_unary_function_at(full_product.func.as_ref(), &removed)?
             else {
                 continue;
             };
-            if !self
-                .verify_equal_fact_as_builtin_premise(
-                    &EqualFact::new_from_refs(
-                        mul.right.as_ref(),
-                        &removed_factor,
-                        line_file.clone(),
-                    ),
-                    builtin_state,
-                )?
-                .is_success()
-            {
+            let Some(removed_factor_result) = self.try_verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(mul.right.as_ref(), &removed_factor, line_file.clone()),
+                builtin_state,
+            )?
+            else {
                 continue;
-            }
-            return Ok(Some(factual_equal_success_by_builtin_reason(
+            };
+            return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
                 equal_fact,
                 "equality: finite-set product after removing a member",
+                vec![
+                    full_set_result,
+                    membership_result,
+                    pointwise,
+                    removed_factor_result,
+                ],
             )));
         }
         Ok(None)
@@ -308,48 +296,43 @@ impl Runtime {
             let Obj::Product(range_product) = range_side else {
                 continue;
             };
-            if !self
-                .verify_equal_fact_as_builtin_premise(
-                    &EqualFact::new_from_refs(
-                        range.start.as_ref(),
-                        range_product.start.as_ref(),
-                        line_file.clone(),
-                    ),
-                    builtin_state,
-                )?
-                .is_success()
-            {
+            let Some(start_result) = self.try_verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(
+                    range.start.as_ref(),
+                    range_product.start.as_ref(),
+                    line_file.clone(),
+                ),
+                builtin_state,
+            )?
+            else {
                 continue;
-            }
-            if !self
-                .verify_equal_fact_as_builtin_premise(
-                    &EqualFact::new_from_refs(
-                        range.end.as_ref(),
-                        range_product.end.as_ref(),
-                        line_file.clone(),
-                    ),
-                    builtin_state,
-                )?
-                .is_success()
-            {
+            };
+            let Some(end_result) = self.try_verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(
+                    range.end.as_ref(),
+                    range_product.end.as_ref(),
+                    line_file.clone(),
+                ),
+                builtin_state,
+            )?
+            else {
                 continue;
-            }
-            if !self
-                .verify_equal_fact_as_builtin_premise(
-                    &EqualFact::new_from_refs(
-                        finite_product.func.as_ref(),
-                        range_product.func.as_ref(),
-                        line_file.clone(),
-                    ),
-                    builtin_state,
-                )?
-                .is_success()
-            {
+            };
+            let Some(function_result) = self.try_verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(
+                    finite_product.func.as_ref(),
+                    range_product.func.as_ref(),
+                    line_file.clone(),
+                ),
+                builtin_state,
+            )?
+            else {
                 continue;
-            }
-            return Ok(Some(factual_equal_success_by_builtin_reason(
+            };
+            return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
                 equal_fact,
                 "equality: finite-set product over closed integer range equals range product",
+                vec![start_result, end_result, function_result],
             )));
         }
         Ok(None)
@@ -391,18 +374,18 @@ impl Runtime {
             let c = (*af.equal_to).clone();
             let finite_set_size: Obj = FiniteSetSize::new((*p.set).clone()).into();
             let expected: Obj = Pow::new(c, finite_set_size).into();
-            if self
-                .verify_equal_fact_as_builtin_premise(
-                    &EqualFact::new_from_refs(other, &expected, line_file.clone()),
-                    builtin_state,
-                )?
-                .is_success()
-            {
-                return Ok(Some(factual_equal_success_by_builtin_reason(
-                    equal_fact,
-                    "equality: finite-set product of a constant factor",
-                )));
-            }
+            let Some(constant_result) = self.try_verify_equal_fact_as_builtin_premise(
+                &EqualFact::new_from_refs(other, &expected, line_file.clone()),
+                builtin_state,
+            )?
+            else {
+                continue;
+            };
+            return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
+                equal_fact,
+                "equality: finite-set product of a constant factor",
+                vec![constant_result],
+            )));
         }
         Ok(None)
     }
@@ -422,9 +405,11 @@ impl Runtime {
             (Obj::ProductOfFiniteSet(l), Obj::ProductOfFiniteSet(r)) => (l, r),
             _ => return Ok(None),
         };
-        if !objs_match_for_pattern(left_product.set.as_ref(), right_product.set.as_ref())
-            && !self
-                .verify_equal_fact_as_builtin_premise(
+        let mut set_result =
+            if objs_match_for_pattern(left_product.set.as_ref(), right_product.set.as_ref()) {
+                None
+            } else {
+                let Some(set_result) = self.try_verify_equal_fact_as_builtin_premise(
                     &EqualFact::new_from_refs(
                         left_product.set.as_ref(),
                         right_product.set.as_ref(),
@@ -432,10 +417,11 @@ impl Runtime {
                     ),
                     builtin_state,
                 )?
-                .is_success()
-        {
-            return Ok(None);
-        }
+                else {
+                    return Ok(None);
+                };
+                Some(set_result)
+            };
 
         // A stored pointwise function equality is already the exact premise of product
         // congruence. Equal representatives cover named functions and their defining lambdas.
@@ -471,12 +457,17 @@ impl Runtime {
                         builtin_state.verify_state(),
                     )?;
                     if fn_eq_result.is_success() {
+                        let mut subgoals = Vec::with_capacity(2);
+                        if let Some(set_result) = set_result.take() {
+                            subgoals.push(set_result);
+                        }
+                        subgoals.push(fn_eq_result);
                         return Ok(Some(
                             SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                                 equal_fact.clone().into(),
                                 "equality: finite-set products from known fn_eq_in".to_string(),
                                 BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyFiniteSetProductPointwiseEquality),
-                                vec![fn_eq_result],
+                                subgoals,
                             )
                             .into(),
                         ));
@@ -505,9 +496,15 @@ impl Runtime {
             builtin_state,
         )?;
         if r.is_success() {
-            return Ok(Some(factual_equal_success_by_builtin_reason(
+            let mut subgoals = Vec::with_capacity(2);
+            if let Some(set_result) = set_result {
+                subgoals.push(set_result);
+            }
+            subgoals.push(r);
+            return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
                 equal_fact,
                 "equality: finite-set products from pointwise equality on the finite set",
+                subgoals,
             )));
         }
         Ok(None)
@@ -536,28 +533,28 @@ impl Runtime {
             else {
                 continue;
             };
-            let first_set_result = self.verify_equal_fact_as_builtin_premise(
+            let Some(first_set_result) = self.try_verify_equal_fact_as_builtin_premise(
                 &EqualFact::new_from_refs(
                     product.set.as_ref(),
                     first.set.as_ref(),
                     line_file.clone(),
                 ),
                 builtin_state,
-            )?;
-            if !first_set_result.is_success() {
+            )?
+            else {
                 continue;
-            }
-            let second_set_result = self.verify_equal_fact_as_builtin_premise(
+            };
+            let Some(second_set_result) = self.try_verify_equal_fact_as_builtin_premise(
                 &EqualFact::new_from_refs(
                     product.set.as_ref(),
                     second.set.as_ref(),
                     line_file.clone(),
                 ),
                 builtin_state,
-            )?;
-            if !second_set_result.is_success() {
+            )?
+            else {
                 continue;
-            }
+            };
 
             let x_name = self.generate_random_unused_name();
             let (x_binding, x_obj) = self.fresh_bound_param(x_name)?;
@@ -589,9 +586,10 @@ impl Runtime {
             if !pointwise_result.is_success() {
                 continue;
             }
-            return Ok(Some(factual_equal_success_by_builtin_reason(
+            return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
                 equal_fact,
                 "equality: finite-set product distributes over pointwise multiplication",
+                vec![first_set_result, second_set_result, pointwise_result],
             )));
         }
         Ok(None)
@@ -645,10 +643,10 @@ impl Runtime {
                 continue;
             }
 
-            let known_bijection = match &map_y {
+            let known_bijection_results = match &map_y {
                 Obj::FnObj(map_call) => {
                     let map: Obj = map_call.head.as_ref().clone().into();
-                    self.has_known_builtin_bijection(
+                    self.known_builtin_bijection_results(
                         pullback.set.as_ref(),
                         source.set.as_ref(),
                         &map,
@@ -656,15 +654,18 @@ impl Runtime {
                         builtin_state,
                     )?
                 }
-                _ => false,
+                _ => None,
             };
-            if !known_bijection {
+            let Some(mut known_bijection_results) = known_bijection_results else {
                 continue;
-            }
+            };
 
-            return Ok(Some(factual_equal_success_by_builtin_reason(
+            let mut subgoals = vec![pointwise_result];
+            subgoals.append(&mut known_bijection_results);
+            return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
                 equal_fact,
                 "equality: finite-set product substitution along a bijection",
+                subgoals,
             )));
         }
         Ok(None)
@@ -731,13 +732,13 @@ impl Runtime {
         };
         let pointwise_fact: AtomicFact =
             EqualFact::new(left_inst, right_inst, equal_fact.line_file.clone()).into();
-        self.verify_set_pointwise_atomic_fact_by_known_atomic_or_builtin_only(
+        let result = self.verify_set_pointwise_atomic_fact_by_known_atomic_or_builtin_only(
             x_binding,
             set,
             &pointwise_fact,
             builtin_state,
-        )
-        .map(Some)
+        )?;
+        Ok(result.is_success().then_some(result))
     }
 
     pub(super) fn nested_finite_set_sum_cartesian_shape(
@@ -874,9 +875,11 @@ impl Runtime {
                     ParamType::Obj(set),
                 )]);
                 rt.define_params_with_type(&params_def, false, BindingScope::LocalBinder)?;
-                let direct =
-                    rt.verify_atomic_fact_as_builtin_rule_premise(then_fact, &local_builtin_state)?;
-                if direct.is_success() {
+                let direct = rt.try_verify_atomic_fact_as_builtin_rule_premise(
+                    then_fact,
+                    &local_builtin_state,
+                )?;
+                if let Some(direct) = direct {
                     return Ok(direct);
                 }
 
@@ -884,10 +887,8 @@ impl Runtime {
                 // an existential and then restricted to the current finite set.
                 // Try only bounded known-forall instantiation here; do not reopen
                 // the full equality dispatcher or its finite-set-sum rule.
-                let proof = rt.verify_atomic_fact_with_known_forall(
-                    then_fact,
-                    &local_verify_state.clone(),
-                )?;
+                let proof = rt
+                    .verify_atomic_fact_with_known_forall(then_fact, &local_verify_state.clone())?;
                 rt.complete_atomic_fact_proof_result(then_fact, proof, local_verify_state)
             },
         )
@@ -921,15 +922,13 @@ impl Runtime {
         };
         let sum_index_set: Obj =
             ClosedRange::new(sum.start.as_ref().clone(), sum.end.as_ref().clone()).into();
-        if !self
-            .verify_equal_fact_as_builtin_premise(
-                &EqualFact::new_from_refs(&index_set, &sum_index_set, line_file.clone()),
-                builtin_state,
-            )?
-            .is_success()
-        {
+        let Some(index_set_result) = self.try_verify_equal_fact_as_builtin_premise(
+            &EqualFact::new_from_refs(&index_set, &sum_index_set, line_file.clone()),
+            builtin_state,
+        )?
+        else {
             return Ok(None);
-        }
+        };
 
         let Obj::FnObj(outer_call) = af.equal_to.as_ref() else {
             return Ok(None);
@@ -984,41 +983,42 @@ impl Runtime {
         ) else {
             return Ok(None);
         };
-        let return_set_matches = self
-            .verify_equal_fact_as_builtin_premise(
-                &EqualFact::new_from_refs(
-                    enumerator_body.ret_set.as_ref(),
-                    &target_set,
-                    line_file.clone(),
-                ),
-                builtin_state,
-            )?
-            .is_success();
-        if !return_set_matches {
+        let Some(return_set_result) = self.try_verify_equal_fact_as_builtin_premise(
+            &EqualFact::new_from_refs(
+                enumerator_body.ret_set.as_ref(),
+                &target_set,
+                line_file.clone(),
+            ),
+            builtin_state,
+        )?
+        else {
             return Ok(None);
-        }
+        };
 
-        let definition_domain_matches = self
-            .verify_equal_fact_as_builtin_premise(
-                &EqualFact::new_from_refs(&enumerator_index_set, &index_set, line_file.clone()),
-                builtin_state,
-            )?
-            .is_success();
+        let definition_domain_result = self.try_verify_equal_fact_as_builtin_premise(
+            &EqualFact::new_from_refs(&enumerator_index_set, &index_set, line_file.clone()),
+            builtin_state,
+        )?;
         // `finite_seq(X, n)` records its callable carrier as
         // `fn(i N+: i <= n) X`, while enumeration syntax uses
         // `closed_range(1, n)`.  An explicit bijection over that exact range
         // is the public certificate that these are the same usable domain.
         // Accept it here instead of requiring the internal carrier spelling.
-        if !definition_domain_matches
-            && !self.has_known_builtin_bijection(
+        let mut premises = vec![index_set_result, return_set_result];
+        if let Some(definition_domain_result) = definition_domain_result {
+            premises.push(definition_domain_result);
+        } else {
+            let Some(mut bijection_results) = self.known_builtin_bijection_results(
                 &index_set,
                 &target_set,
                 &enumerator,
-                line_file,
+                line_file.clone(),
                 builtin_state,
             )?
-        {
-            return Ok(None);
+            else {
+                return Ok(None);
+            };
+            premises.append(&mut bijection_results);
         }
 
         Ok(Some(FiniteSetEnumerationSummand {
@@ -1026,24 +1026,25 @@ impl Runtime {
             enumerator_head: enumerator_call.head.as_ref().clone(),
             index_set,
             target_set,
+            premises,
         }))
     }
 
-    pub(super) fn verify_unique_preimage_enumerator_fact(
+    pub(super) fn try_verify_unique_preimage_enumerator_fact(
         &mut self,
         shape: &FiniteSetEnumerationSummand,
         line_file: LineFile,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<bool, RuntimeError> {
+    ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
         let enumerator: Obj = shape.enumerator_head.clone().into();
-        if self.has_known_builtin_bijection(
+        if let Some(results) = self.known_builtin_bijection_results(
             &shape.index_set,
             &shape.target_set,
             &enumerator,
             line_file.clone(),
             builtin_state,
         )? {
-            return Ok(true);
+            return Ok(Some(results));
         }
 
         let x_name = self.generate_random_unused_name();
@@ -1070,10 +1071,8 @@ impl Runtime {
             line_file,
         )?;
         let fact: Fact = forall_fact.into();
-        let result =
-            self.verify_fact_allow_unknown(&fact, &VerifyState::initial())?;
-        let _ = builtin_state;
-        Ok(result.is_success())
+        let result = self.verify_fact_allow_unknown(&fact, builtin_state.verify_state())?;
+        Ok(result.is_success().then_some(vec![result]))
     }
 
     pub(super) fn set_for_unary_param(
@@ -1094,6 +1093,7 @@ pub(super) struct FiniteSetEnumerationSummand {
     pub(super) enumerator_head: FnObjHead,
     pub(super) index_set: Obj,
     pub(super) target_set: Obj,
+    pub(super) premises: Vec<VerifyFactResult>,
 }
 
 pub(super) struct NestedFiniteSetSumCartesianShape {

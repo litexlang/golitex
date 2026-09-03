@@ -25,21 +25,17 @@ theorem __fact3 : Litex.Same B Litex.C := by
 
 theorem __fact4 :
     ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 A) {__carrier2 : Type} (__p2 : __carrier2) (__type2 : Litex.In __p2 B) (__domain1 : Litex.Same __p1 __p2), (Litex.In __p2 A) ∧ (Litex.In __p1 B) := by
-  intro __carrier1 a __h16 __carrier2 b __h18 __domain1
+  intro __carrier1 a __h16 __carrier2 b __h18 __domain_f20
   have __infer4_0 : Litex.In a Litex.R := by
     simpa [A] using (__h16)
   have __infer4_1 : Litex.In b Litex.C := by
     simpa [B] using (__h18)
-  have __prior4_0 : Litex.In b A := (by
-    unfold A
-    exact ((Litex.In.congr (__domain1) Litex.R).mp (__infer4_0)))
+  have __prior4_0 : Litex.In b A := (Litex.In.congr (__domain_f20) A).mp (__h16)
   have __infer4_2 : Litex.In b Litex.R := by
     simpa [A] using (__prior4_0)
   have __infer4_3 : Litex.In b Litex.R := by
     simpa [A] using (__prior4_0)
-  have __prior4_1 : Litex.In a B := (by
-    unfold B
-    exact ((Litex.In.congr (__domain1) Litex.C).mpr (__infer4_1)))
+  have __prior4_1 : Litex.In a B := (Litex.In.congr (__domain_f20) B).mpr (__h18)
   have __infer4_4 : Litex.In a Litex.C := by
     simpa [B] using (__prior4_1)
   have __infer4_5 : Litex.In a Litex.C := by

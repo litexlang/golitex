@@ -55,6 +55,7 @@ impl StmtResultToLeanCompiler {
 
         let mut application_terms = vec![source_theorem];
         let mut source_application_context = self.environment_stack.clone();
+        let mut target_application_context = self.environment_stack.clone();
         let mut uses_exact_object_parameter = false;
         // A checked heterogeneous argument can be selected into the exact
         // carrier expected by the cited theorem.  Retain the corresponding
@@ -99,18 +100,28 @@ impl StmtResultToLeanCompiler {
                 parameter_type,
                 ParamType::Obj(set) if forall_parameter_uses_exact_real_carrier(set)
             );
+            let exact_complex_parameter = matches!(
+                parameter_type,
+                ParamType::Obj(set) if forall_parameter_uses_exact_complex_carrier(set)
+            );
             let exact_structured_set_parameter = matches!(
                 parameter_type,
                 ParamType::Obj(set)
                     if forall_parameter_uses_exact_structured_set_carrier(set)
             );
-            let exact_object_parameter = exact_real_parameter || exact_structured_set_parameter;
+            let exact_selected_carrier_parameter =
+                exact_complex_parameter || exact_structured_set_parameter;
+            let exact_object_parameter = exact_real_parameter || exact_selected_carrier_parameter;
             uses_exact_object_parameter |= exact_object_parameter;
             let rendered_application_argument = if native_integer_parameter {
                 render_integer_obj(argument, &self.environment_stack)?
             } else {
                 render_obj(argument, &self.environment_stack)?
             };
+            target_application_context.symbol_names.insert(
+                source_parameters[parameter_index].0.id(),
+                render_obj(argument, &self.environment_stack)?,
+            );
             source_application_context.symbol_names.insert(
                 source_parameters[parameter_index].0.id(),
                 rendered_application_argument.clone(),
@@ -179,11 +190,15 @@ impl StmtResultToLeanCompiler {
                 }
             };
             if requirement_needs_proof {
-                let Some(proof) =
-                    self.construct_lean_proof_from_direct_fact_result(requirement_result)?
+                let Some(compiled_requirement) = self
+                    .construct_direct_fact_proof_with_result_owned_well_definedness(
+                        requirement_result,
+                    )?
                 else {
                     return Ok(None);
                 };
+                let proof = compiled_requirement.proof_expression;
+                let retained_requirement_proposition = compiled_requirement.proposition;
                 if exact_real_parameter {
                     let ParamType::Obj(set) = parameter_type else {
                         unreachable!("exact refined numeric parameter is an object")
@@ -212,7 +227,7 @@ impl StmtResultToLeanCompiler {
                     let exact_argument = if exact_refined_numeric_parameter
                         && ambient_exact_real.is_none()
                     {
-                        selected_exact_carrier
+                        selected_exact_carrier.clone()
                     } else if exact_refined_numeric_parameter {
                         let mut positive_carriers = self
                             .environment_stack
@@ -281,12 +296,36 @@ impl StmtResultToLeanCompiler {
                             }
                         }
                     } else {
-                        exact_real
+                        // Closed numeric syntax owns a canonical native value
+                        // independently of this requirement. Every symbolic
+                        // argument instead uses the exact witness selected by
+                        // the retained membership Result. For an already-exact
+                        // binder, `In.rep_exact` makes that witness
+                        // definitionally the binder itself.
+                        if matches!(
+                            lowered_argument,
+                            LeanTargetObjectRepresentation::Number { .. }
+                                | LeanTargetObjectRepresentation::Constant(_)
+                        ) || object_is_closed_rational_expression(argument)
+                        {
+                            exact_real
+                        } else {
+                            selected_exact_carrier.clone()
+                        }
                     };
-                    let source_to_exact = match LeanTargetObjectRepresentation::lower(argument)? {
-                        LeanTargetObjectRepresentation::Symbol { symbol_id, .. } => {
-                            let lowered_set = LeanTargetObjectRepresentation::lower(set)?;
-                            let source_to_numeric = self
+                    let source_to_exact = if exact_argument == selected_exact_carrier {
+                        // `In.rep` is the exact carrier argument selected by
+                        // this very membership Result.  Its retained bridge is
+                        // already the complete source-to-argument proof and is
+                        // intentionally observation-free; routing through a
+                        // Complex observation would both add no information
+                        // and mix incompatible observer indices.
+                        format!("Litex.In.same_rep {rendered_application_argument} ({proof})")
+                    } else {
+                        match LeanTargetObjectRepresentation::lower(argument)? {
+                            LeanTargetObjectRepresentation::Symbol { symbol_id, .. } => {
+                                let lowered_set = LeanTargetObjectRepresentation::lower(set)?;
+                                let source_to_numeric = self
                                 .environment_stack
                                 .numeric_representation_equalities
                                 .get(&symbol_id)
@@ -310,36 +349,47 @@ impl StmtResultToLeanCompiler {
                                         "exact real forall argument `{argument}` has no retained source-to-numeric equality"
                                     )
                                 })?;
-                            let exact_to_numeric =
+                                let exact_to_numeric =
                                 exact_set_numeric_equality(&lowered_set, &exact_argument)
                                     .ok_or_else(|| {
                                         format!(
                                             "exact real forall argument `{argument}` has no selected-carrier numeric equality"
                                         )
                                     })?;
-                            format!(
+                                format!(
                                 "Litex.Same.trans ({source_to_numeric}) (Litex.Same.symm ({exact_to_numeric}))"
                             )
-                        }
-                        _ => {
-                            let exact_to_source = render_exact_predicate_argument_same_to_source(
-                                argument,
-                                set,
-                                &self.environment_stack,
-                            )?;
-                            format!("Litex.Same.symm ({exact_to_source})")
+                            }
+                            _ => {
+                                let exact_to_source =
+                                    render_exact_predicate_argument_same_to_source(
+                                        argument,
+                                        set,
+                                        &self.environment_stack,
+                                    )?;
+                                format!("Litex.Same.symm ({exact_to_source})")
+                            }
                         }
                     };
                     if let LeanTargetObjectRepresentation::Symbol { symbol_id, .. } =
                         LeanTargetObjectRepresentation::lower(argument)?
                     {
-                        exact_parameter_application_bridges.push((symbol_id, source_to_exact));
+                        exact_parameter_application_bridges
+                            .push((symbol_id, source_to_exact.clone()));
                     }
                     application_terms.push(exact_argument.clone());
-                    application_terms.push(format!(
-                        "(Litex.In.own {} {exact_argument})",
-                        render_obj(set, &self.environment_stack)?
-                    ));
+                    let rendered_set = render_obj(set, &self.environment_stack)?;
+                    let exact_membership_proposition =
+                        format!("Litex.In {exact_argument} {rendered_set}");
+                    let exact_membership =
+                        if retained_requirement_proposition == exact_membership_proposition {
+                            format!("({proof})")
+                        } else {
+                            format!(
+                            "((Litex.In.congr ({source_to_exact}) {rendered_set}).mp ({proof}))"
+                        )
+                        };
+                    application_terms.push(exact_membership);
                     source_application_context.symbol_names.insert(
                         source_parameters[parameter_index].0.id(),
                         exact_argument.clone(),
@@ -350,7 +400,7 @@ impl StmtResultToLeanCompiler {
                         &exact_argument,
                         &mut source_application_context,
                     )?;
-                } else if exact_structured_set_parameter {
+                } else if exact_selected_carrier_parameter {
                     let ParamType::Obj(set) = parameter_type else {
                         unreachable!("exact structured parameter is an object")
                     };
@@ -362,15 +412,25 @@ impl StmtResultToLeanCompiler {
                         set,
                         &self.environment_stack,
                     )?;
+                    let source_to_exact = format!("Litex.Same.symm ({exact_to_source})");
                     if let LeanTargetObjectRepresentation::Symbol { symbol_id, .. } =
                         LeanTargetObjectRepresentation::lower(argument)?
                     {
                         exact_parameter_application_bridges
-                            .push((symbol_id, format!("Litex.Same.symm ({exact_to_source})")));
+                            .push((symbol_id, source_to_exact.clone()));
                     }
                     application_terms.push(exact_argument.clone());
-                    application_terms
-                        .push(format!("(Litex.In.own {rendered_set} {exact_argument})"));
+                    let exact_membership_proposition =
+                        format!("Litex.In {exact_argument} {rendered_set}");
+                    let exact_membership =
+                        if retained_requirement_proposition == exact_membership_proposition {
+                            format!("({proof})")
+                        } else {
+                            format!(
+                            "((Litex.In.congr ({source_to_exact}) {rendered_set}).mp ({proof}))"
+                        )
+                        };
+                    application_terms.push(exact_membership);
                     source_application_context.symbol_names.insert(
                         source_parameters[parameter_index].0.id(),
                         exact_argument.clone(),
@@ -578,7 +638,78 @@ impl StmtResultToLeanCompiler {
             application.push_str(&conjunction_selector(component_index, component_count)?);
         }
         if instantiated_conclusion.to_string() == target.to_string() {
-            let transported = if facts_require_exact_predicate_argument_transport(
+            let transported = if facts_require_abstract_predicate_argument_transport(
+                &source_conclusion,
+                &source_conclusion,
+                &self.environment_stack,
+            ) && render_fact(&source_conclusion, &source_application_context)?
+                != render_fact(target, &self.environment_stack)?
+            {
+                if render_fact(&source_conclusion, &target_application_context)?
+                    != render_fact(target, &self.environment_stack)?
+                {
+                    return Err(
+                        "known-forall abstract-predicate target changed its retained substitution"
+                            .into(),
+                    );
+                }
+                let mut source_to_target_bridges = Vec::new();
+                for ((parameter, parameter_type), argument) in
+                    source_parameters.iter().zip(arguments.iter())
+                {
+                    let source_value = source_application_context
+                        .symbol_names
+                        .get(&parameter.id())
+                        .ok_or_else(|| {
+                            format!(
+                                "known-forall abstract-predicate parameter `{}` has no application value",
+                                parameter.name()
+                            )
+                        })?;
+                    let target_value = target_application_context
+                        .symbol_names
+                        .get(&parameter.id())
+                        .ok_or_else(|| {
+                            format!(
+                                "known-forall abstract-predicate parameter `{}` has no target value",
+                                parameter.name()
+                            )
+                        })?;
+                    if source_value == target_value {
+                        continue;
+                    }
+                    let ParamType::Obj(set) = parameter_type else {
+                        return Err(format!(
+                            "known-forall abstract-predicate parameter `{}` changed representation without an object carrier",
+                            parameter.name()
+                        ));
+                    };
+                    let exact_value =
+                        render_exact_predicate_argument(argument, set, &self.environment_stack)?;
+                    if &exact_value != source_value {
+                        return Err(format!(
+                            "known-forall abstract-predicate parameter `{}` application value `{source_value}` is not its checked exact carrier `{exact_value}`",
+                            parameter.name()
+                        ));
+                    }
+                    source_to_target_bridges.push((
+                        parameter.id(),
+                        render_exact_predicate_argument_same_to_source(
+                            argument,
+                            set,
+                            &self.environment_stack,
+                        )?,
+                    ));
+                }
+                render_fact_proof_across_exact_predicate_arguments_with_source_bridges(
+                    &source_conclusion,
+                    &source_conclusion,
+                    &source_application_context,
+                    &target_application_context,
+                    &application,
+                    &source_to_target_bridges,
+                )?
+            } else if facts_require_exact_predicate_argument_transport(
                 &source_conclusion,
                 target,
                 &self.environment_stack,

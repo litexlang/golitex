@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "target": "showcases/Write_Mathematically_Correct_Code_With_Litex/main.lit",
+  "session_command": "current CLI has no session-before surface; use the allocated isolated draft gate",
+  "proof_spine": [
+    "define Newton's mathematical update on positive reals",
+    "totalize the executable step at zero without changing positive inputs",
+    "prove the executable step agrees with the mathematical update on positive reals",
+    "verify the algorithm body against the executable function"
+  ],
+  "blocks": [
+    {
+      "id": "B001",
+      "source_order": 1,
+      "intent": "model the mathematical update, total executable wrapper, agreement proof, and implementation",
+      "dependencies": ["positive-real arithmetic", "function definitions by cases", "have algo"],
+      "attempts": [
+        {
+          "candidate": "tmp/2026-09-02/file-extraction-markers/main.lit",
+          "result": "success",
+          "verifier_evidence": "isolated result graph returned ok=true, result=success, unknowns=0; marked Python and C extraction both returned ok=true",
+          "diagnosis": "the mathematical specification, total wrapper, agreement claim, and separated algorithm block verify together; the two selected blocks are self-contained when concatenated",
+          "next_change": "materialize the accepted draft as the new showcase module"
+        }
+      ],
+      "accepted_litex": "have fn newton_sqrt_two(x R+) R+ = (x + 2 / x) / 2\n\n# [-extract]\nhave fn newton_sqrt_two_step(x R) R by cases:\n    case x = 0: 1\n    case x != 0: (x + 2 / x) / 2\n# [end of -extract]\n\nclaim:\n    ? forall x R+:\n        newton_sqrt_two_step(x) = newton_sqrt_two(x)\n    newton_sqrt_two_step(x) = (x + 2 / x) / 2 = newton_sqrt_two(x)\n\n# [-extract]\nhave algo for newton_sqrt_two_step(x):\n    case x = 0: 1\n    case x != 0: (x + 2 / x) / 2\n# [end of -extract]\n\nnewton_sqrt_two_step(1) = newton_sqrt_two(1) = 3 / 2",
+      "reusable_lesson": "A precise positive-domain specification can stay in the proof file while two marked blocks carry a self-contained total function and its checked implementation to code extraction.",
+      "status": "materialized"
+    }
+  ],
+  "materialization": {
+    "block_ids": ["B001"],
+    "file_gate_command": "target/release/litex -graph -f showcases/Write_Mathematically_Correct_Code_With_Litex/main.lit",
+    "file_gate_result": "success: ok=true, result=success, unknowns=0; both marked -extractpython -f and -extractc -f gates returned ok=true"
+  }
+}

@@ -6,114 +6,106 @@ set_option linter.style.nameCheck false
 namespace __Compiler_15_BuiltinStrategy
 
 theorem __fact0 :
-    ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.R) {__carrier2 : Type} (__p2 : __carrier2) (__type2 : Litex.In __p2 Litex.R), Litex.In ((((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) + (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)) Litex.R := by
-  intro __carrier1 a __h4 __carrier2 b __h5
-  have __prior0_0 : Litex.In ((((Litex.In.rep a __h4 : ℝ)) : ℂ) + (((Litex.In.rep b __h5 : ℝ)) : ℂ)) Litex.R := (by
+    ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In __p1 Litex.R) (__p2 : (Litex.R).Carrier) (__type2 : Litex.In __p2 Litex.R), Litex.In ((((__p1 : ℝ)) : ℂ) + (((__p2 : ℝ)) : ℂ)) Litex.R := by
+  intro a __h4 b __h5
+  have __prior0_0 : Litex.In ((((a : ℝ)) : ℂ) + (((b : ℝ)) : ℂ)) Litex.R := (by
     have __components : (Litex.In a Litex.R) ∧ (Litex.In b Litex.R) := ⟨__h4, __h5⟩
-    exact Litex.Rules.complexAddInR ((by simpa [Litex.abs, ← Complex.ofReal_add, ← Complex.ofReal_sub, ← Complex.ofReal_mul, ← Complex.ofReal_div, Complex.norm_real, Real.norm_eq_abs] using (Litex.Rules.complexRealInR ((Litex.In.rep a __h4 : ℝ))))) ((by simpa [Litex.abs, ← Complex.ofReal_add, ← Complex.ofReal_sub, ← Complex.ofReal_mul, ← Complex.ofReal_div, Complex.norm_real, Real.norm_eq_abs] using (Litex.Rules.complexRealInR ((Litex.In.rep b __h5 : ℝ))))))
+    exact Litex.Rules.complexAddInR ((by simpa [Litex.abs, ← Complex.ofReal_add, ← Complex.ofReal_sub, ← Complex.ofReal_mul, ← Complex.ofReal_div, Complex.norm_real, Real.norm_eq_abs] using (Litex.Rules.complexRealInR ((a : ℝ))))) ((by simpa [Litex.abs, ← Complex.ofReal_add, ← Complex.ofReal_sub, ← Complex.ofReal_mul, ← Complex.ofReal_div, Complex.norm_real, Real.norm_eq_abs] using (Litex.Rules.complexRealInR ((b : ℝ))))))
   exact __prior0_0
 
 theorem __fact1 :
-    ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.R) {__carrier2 : Type} (__p2 : __carrier2) (__type2 : Litex.In __p2 Litex.R), Litex.In ((((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) - (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)) Litex.R := by
-  intro __carrier1 a __h11 __carrier2 b __h12
-  have __prior1_0 : Litex.In ((((Litex.In.rep a __h11 : ℝ)) : ℂ) - (((Litex.In.rep b __h12 : ℝ)) : ℂ)) Litex.R := (by
+    ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In __p1 Litex.R) (__p2 : (Litex.R).Carrier) (__type2 : Litex.In __p2 Litex.R), Litex.In ((((__p1 : ℝ)) : ℂ) - (((__p2 : ℝ)) : ℂ)) Litex.R := by
+  intro a __h11 b __h12
+  have __prior1_0 : Litex.In ((((a : ℝ)) : ℂ) - (((b : ℝ)) : ℂ)) Litex.R := (by
     have __components : (Litex.In a Litex.R) ∧ (Litex.In b Litex.R) := ⟨__h11, __h12⟩
-    exact Litex.Rules.complexSubInR ((by simpa [Litex.abs, ← Complex.ofReal_add, ← Complex.ofReal_sub, ← Complex.ofReal_mul, ← Complex.ofReal_div, Complex.norm_real, Real.norm_eq_abs] using (Litex.Rules.complexRealInR ((Litex.In.rep a __h11 : ℝ))))) ((by simpa [Litex.abs, ← Complex.ofReal_add, ← Complex.ofReal_sub, ← Complex.ofReal_mul, ← Complex.ofReal_div, Complex.norm_real, Real.norm_eq_abs] using (Litex.Rules.complexRealInR ((Litex.In.rep b __h12 : ℝ))))))
+    exact Litex.Rules.complexSubInR ((by simpa [Litex.abs, ← Complex.ofReal_add, ← Complex.ofReal_sub, ← Complex.ofReal_mul, ← Complex.ofReal_div, Complex.norm_real, Real.norm_eq_abs] using (Litex.Rules.complexRealInR ((a : ℝ))))) ((by simpa [Litex.abs, ← Complex.ofReal_add, ← Complex.ofReal_sub, ← Complex.ofReal_mul, ← Complex.ofReal_div, Complex.norm_real, Real.norm_eq_abs] using (Litex.Rules.complexRealInR ((b : ℝ))))))
   exact __prior1_0
 
 theorem __fact2 :
-    ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.R) {__carrier2 : Type} (__p2 : __carrier2) (__type2 : Litex.In __p2 Litex.R), Litex.In ((((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) * (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)) Litex.R := by
-  intro __carrier1 a __h18 __carrier2 b __h19
-  have __prior2_0 : Litex.In ((((Litex.In.rep a __h18 : ℝ)) : ℂ) * (((Litex.In.rep b __h19 : ℝ)) : ℂ)) Litex.R := (by
+    ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In __p1 Litex.R) (__p2 : (Litex.R).Carrier) (__type2 : Litex.In __p2 Litex.R), Litex.In ((((__p1 : ℝ)) : ℂ) * (((__p2 : ℝ)) : ℂ)) Litex.R := by
+  intro a __h18 b __h19
+  have __prior2_0 : Litex.In ((((a : ℝ)) : ℂ) * (((b : ℝ)) : ℂ)) Litex.R := (by
     have __components : (Litex.In a Litex.R) ∧ (Litex.In b Litex.R) := ⟨__h18, __h19⟩
-    exact Litex.Rules.complexMulInR ((by simpa [Litex.abs, ← Complex.ofReal_add, ← Complex.ofReal_sub, ← Complex.ofReal_mul, ← Complex.ofReal_div, Complex.norm_real, Real.norm_eq_abs] using (Litex.Rules.complexRealInR ((Litex.In.rep a __h18 : ℝ))))) ((by simpa [Litex.abs, ← Complex.ofReal_add, ← Complex.ofReal_sub, ← Complex.ofReal_mul, ← Complex.ofReal_div, Complex.norm_real, Real.norm_eq_abs] using (Litex.Rules.complexRealInR ((Litex.In.rep b __h19 : ℝ))))))
+    exact Litex.Rules.complexMulInR ((by simpa [Litex.abs, ← Complex.ofReal_add, ← Complex.ofReal_sub, ← Complex.ofReal_mul, ← Complex.ofReal_div, Complex.norm_real, Real.norm_eq_abs] using (Litex.Rules.complexRealInR ((a : ℝ))))) ((by simpa [Litex.abs, ← Complex.ofReal_add, ← Complex.ofReal_sub, ← Complex.ofReal_mul, ← Complex.ofReal_div, Complex.norm_real, Real.norm_eq_abs] using (Litex.Rules.complexRealInR ((b : ℝ))))))
   exact __prior2_0
 
 theorem __fact3 :
-    ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.R) {__carrier2 : Type} (__p2 : __carrier2) (__type2 : Litex.In __p2 Litex.R) (__domain1 : ¬ Litex.Same __p2 (0 : ℂ)), Litex.In ((((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) / (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)) Litex.R := by
-  intro __carrier1 a __h26 __carrier2 b __h27 __domain1
-  have __prior3_0 : Litex.In ((((Litex.In.rep a __h26 : ℝ)) : ℂ) / (((Litex.In.rep b __h27 : ℝ)) : ℂ)) Litex.R := (by
+    ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In __p1 Litex.R) (__p2 : (Litex.R).Carrier) (__type2 : Litex.In __p2 Litex.R) (__domain1 : ¬ Litex.Same __p2 (0 : ℂ)), Litex.In ((((__p1 : ℝ)) : ℂ) / (((__p2 : ℝ)) : ℂ)) Litex.R := by
+  intro a __h26 b __h27 __domain_f28
+  have __prior3_0 : Litex.In ((((a : ℝ)) : ℂ) / (((b : ℝ)) : ℂ)) Litex.R := (by
     have __components : (Litex.In a Litex.R) ∧ (Litex.In b Litex.R) := ⟨__h26, __h27⟩
-    exact Litex.Rules.complexDivInR ((by simpa [Litex.abs, ← Complex.ofReal_add, ← Complex.ofReal_sub, ← Complex.ofReal_mul, ← Complex.ofReal_div, Complex.norm_real, Real.norm_eq_abs] using (Litex.Rules.complexRealInR ((Litex.In.rep a __h26 : ℝ))))) ((by simpa [Litex.abs, ← Complex.ofReal_add, ← Complex.ofReal_sub, ← Complex.ofReal_mul, ← Complex.ofReal_div, Complex.norm_real, Real.norm_eq_abs] using (Litex.Rules.complexRealInR ((Litex.In.rep b __h27 : ℝ))))))
+    exact Litex.Rules.complexDivInR ((by simpa [Litex.abs, ← Complex.ofReal_add, ← Complex.ofReal_sub, ← Complex.ofReal_mul, ← Complex.ofReal_div, Complex.norm_real, Real.norm_eq_abs] using (Litex.Rules.complexRealInR ((a : ℝ))))) ((by simpa [Litex.abs, ← Complex.ofReal_add, ← Complex.ofReal_sub, ← Complex.ofReal_mul, ← Complex.ofReal_div, Complex.norm_real, Real.norm_eq_abs] using (Litex.Rules.complexRealInR ((b : ℝ))))))
   exact __prior3_0
 
 theorem __fact4 :
-    ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.R) {__carrier2 : Type} (__p2 : __carrier2) (__type2 : Litex.In __p2 Litex.R) {__carrier3 : Type} (__p3 : __carrier3) (__type3 : Litex.In __p3 Litex.R) {__carrier4 : Type} (__p4 : __carrier4) (__type4 : Litex.In __p4 Litex.R) (__domain1 : Litex.Lt (0 : ℂ) (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ)) (__domain2 : Litex.Le (0 : ℂ) (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)) (__domain3 : Litex.Le (0 : ℂ) (((Litex.In.rep __p3 __type3 : ℝ)) : ℂ)) (__domain4 : Litex.Le (0 : ℂ) (((Litex.In.rep __p4 __type4 : ℝ)) : ℂ)), Litex.Positive (((((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) + (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)) + ((((Litex.In.rep __p3 __type3 : ℝ)) : ℂ) + (((Litex.In.rep __p4 __type4 : ℝ)) : ℂ))) := by
-  intro __carrier1 a __h47 __carrier2 b __h48 __carrier3 c __h49 __carrier4 d __h50 __domain1 __domain2 __domain3 __domain4
-  have __infer4_0 : Litex.Negative ((-1 : ℂ) * (((Litex.In.rep a __h47 : ℝ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNegative (Litex.Rules.realCastPositive (Litex.In.rep a __h47 : ℝ) (__domain1))
-  have __infer4_1 : Litex.Nonpositive ((-1 : ℂ) * (((Litex.In.rep a __h47 : ℝ)) : ℂ)) := Litex.Negative.toNonpositive (__infer4_0)
-  have __infer4_2 : Litex.Nonpositive ((-1 : ℂ) * (((Litex.In.rep b __h48 : ℝ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNonpositive (Litex.Rules.realCastNonnegative (Litex.In.rep b __h48 : ℝ) (__domain2))
-  have __infer4_3 : Litex.Nonpositive ((-1 : ℂ) * (((Litex.In.rep c __h49 : ℝ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNonpositive (Litex.Rules.realCastNonnegative (Litex.In.rep c __h49 : ℝ) (__domain3))
-  have __infer4_4 : Litex.Nonpositive ((-1 : ℂ) * (((Litex.In.rep d __h50 : ℝ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNonpositive (Litex.Rules.realCastNonnegative (Litex.In.rep d __h50 : ℝ) (__domain4))
-  have __prior4_0 : Litex.Positive (((((Litex.In.rep a __h47 : ℝ)) : ℂ) + (((Litex.In.rep b __h48 : ℝ)) : ℂ)) + ((((Litex.In.rep c __h49 : ℝ)) : ℂ) + (((Litex.In.rep d __h50 : ℝ)) : ℂ))) := Litex.Rules.complexAddPositiveLeftStrict (Litex.Rules.complexAddPositiveLeftStrict (Litex.Rules.realCastPositive (Litex.In.rep a __h47 : ℝ) (__domain1)) (Litex.Rules.realCastNonnegative (Litex.In.rep b __h48 : ℝ) (__domain2))) (Litex.Rules.complexAddNonnegative (Litex.Rules.realCastNonnegative (Litex.In.rep c __h49 : ℝ) (__domain3)) (Litex.Rules.realCastNonnegative (Litex.In.rep d __h50 : ℝ) (__domain4)))
-  have __infer4_5 : Litex.Negative ((-1 : ℂ) * (((((Litex.In.rep a __h47 : ℝ)) : ℂ) + (((Litex.In.rep b __h48 : ℝ)) : ℂ)) + ((((Litex.In.rep c __h49 : ℝ)) : ℂ) + (((Litex.In.rep d __h50 : ℝ)) : ℂ)))) := Litex.Rules.complexNegativeOneMulNegative (__prior4_0)
-  have __infer4_6 : Litex.Nonpositive ((-1 : ℂ) * (((((Litex.In.rep a __h47 : ℝ)) : ℂ) + (((Litex.In.rep b __h48 : ℝ)) : ℂ)) + ((((Litex.In.rep c __h49 : ℝ)) : ℂ) + (((Litex.In.rep d __h50 : ℝ)) : ℂ)))) := Litex.Negative.toNonpositive (__infer4_5)
-  have __infer4_7 : Litex.Negative ((-1 : ℂ) * (((((Litex.In.rep a __h47 : ℝ)) : ℂ) + (((Litex.In.rep b __h48 : ℝ)) : ℂ)) + ((((Litex.In.rep c __h49 : ℝ)) : ℂ) + (((Litex.In.rep d __h50 : ℝ)) : ℂ)))) := Litex.Rules.complexNegativeOneMulNegative (__prior4_0)
-  have __infer4_8 : Litex.Nonpositive ((-1 : ℂ) * (((((Litex.In.rep a __h47 : ℝ)) : ℂ) + (((Litex.In.rep b __h48 : ℝ)) : ℂ)) + ((((Litex.In.rep c __h49 : ℝ)) : ℂ) + (((Litex.In.rep d __h50 : ℝ)) : ℂ)))) := Litex.Negative.toNonpositive (__infer4_7)
+    ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In __p1 Litex.R) (__p2 : (Litex.R).Carrier) (__type2 : Litex.In __p2 Litex.R) (__p3 : (Litex.R).Carrier) (__type3 : Litex.In __p3 Litex.R) (__p4 : (Litex.R).Carrier) (__type4 : Litex.In __p4 Litex.R) (__domain1 : Litex.Lt (0 : ℂ) (((__p1 : ℝ)) : ℂ)) (__domain2 : Litex.Le (0 : ℂ) (((__p2 : ℝ)) : ℂ)) (__domain3 : Litex.Le (0 : ℂ) (((__p3 : ℝ)) : ℂ)) (__domain4 : Litex.Le (0 : ℂ) (((__p4 : ℝ)) : ℂ)), Litex.Positive (((((__p1 : ℝ)) : ℂ) + (((__p2 : ℝ)) : ℂ)) + ((((__p3 : ℝ)) : ℂ) + (((__p4 : ℝ)) : ℂ))) := by
+  intro a __h45 b __h46 c __h47 d __h48 __domain_f49 __domain_f52 __domain_f54 __domain_f56
+  have __infer4_0 : Litex.Negative ((-1 : ℂ) * (((a : ℝ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNegative (Litex.Rules.realCastPositive (a : ℝ) (__domain_f49))
+  have __infer4_1 : Litex.Nonpositive ((-1 : ℂ) * (((a : ℝ)) : ℂ)) := Litex.Negative.toNonpositive (__infer4_0)
+  have __infer4_2 : Litex.Nonpositive ((-1 : ℂ) * (((b : ℝ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNonpositive (Litex.Rules.realCastNonnegative (b : ℝ) (__domain_f52))
+  have __infer4_3 : Litex.Nonpositive ((-1 : ℂ) * (((c : ℝ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNonpositive (Litex.Rules.realCastNonnegative (c : ℝ) (__domain_f54))
+  have __infer4_4 : Litex.Nonpositive ((-1 : ℂ) * (((d : ℝ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNonpositive (Litex.Rules.realCastNonnegative (d : ℝ) (__domain_f56))
+  have __prior4_0 : Litex.Positive (((((a : ℝ)) : ℂ) + (((b : ℝ)) : ℂ)) + ((((c : ℝ)) : ℂ) + (((d : ℝ)) : ℂ))) := Litex.Rules.complexAddPositiveLeftStrict (Litex.Rules.complexAddPositiveLeftStrict (Litex.Rules.realCastPositive (a : ℝ) (__domain_f49)) (Litex.Rules.realCastNonnegative (b : ℝ) (__domain_f52))) (Litex.Rules.complexAddNonnegative (Litex.Rules.realCastNonnegative (c : ℝ) (__domain_f54)) (Litex.Rules.realCastNonnegative (d : ℝ) (__domain_f56)))
   exact __prior4_0
 
 theorem __fact5 :
-    ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.R) {__carrier2 : Type} (__p2 : __carrier2) (__type2 : Litex.In __p2 Litex.R) {__carrier3 : Type} (__p3 : __carrier3) (__type3 : Litex.In __p3 Litex.R) {__carrier4 : Type} (__p4 : __carrier4) (__type4 : Litex.In __p4 Litex.R) (__domain1 : Litex.Le (0 : ℂ) (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ)) (__domain2 : Litex.Le (0 : ℂ) (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)) (__domain3 : Litex.Le (0 : ℂ) (((Litex.In.rep __p3 __type3 : ℝ)) : ℂ)) (__domain4 : Litex.Lt (0 : ℂ) (((Litex.In.rep __p4 __type4 : ℝ)) : ℂ)), Litex.Positive (((((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) + (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)) + ((((Litex.In.rep __p3 __type3 : ℝ)) : ℂ) + (((Litex.In.rep __p4 __type4 : ℝ)) : ℂ))) := by
-  intro __carrier1 a __h80 __carrier2 b __h81 __carrier3 c __h82 __carrier4 d __h83 __domain1 __domain2 __domain3 __domain4
-  have __infer5_9 : Litex.Nonpositive ((-1 : ℂ) * (((Litex.In.rep a __h80 : ℝ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNonpositive (Litex.Rules.realCastNonnegative (Litex.In.rep a __h80 : ℝ) (__domain1))
-  have __infer5_10 : Litex.Nonpositive ((-1 : ℂ) * (((Litex.In.rep b __h81 : ℝ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNonpositive (Litex.Rules.realCastNonnegative (Litex.In.rep b __h81 : ℝ) (__domain2))
-  have __infer5_11 : Litex.Nonpositive ((-1 : ℂ) * (((Litex.In.rep c __h82 : ℝ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNonpositive (Litex.Rules.realCastNonnegative (Litex.In.rep c __h82 : ℝ) (__domain3))
-  have __infer5_12 : Litex.Negative ((-1 : ℂ) * (((Litex.In.rep d __h83 : ℝ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNegative (Litex.Rules.realCastPositive (Litex.In.rep d __h83 : ℝ) (__domain4))
-  have __infer5_13 : Litex.Nonpositive ((-1 : ℂ) * (((Litex.In.rep d __h83 : ℝ)) : ℂ)) := Litex.Negative.toNonpositive (__infer5_12)
-  have __prior5_0 : Litex.Positive (((((Litex.In.rep a __h80 : ℝ)) : ℂ) + (((Litex.In.rep b __h81 : ℝ)) : ℂ)) + ((((Litex.In.rep c __h82 : ℝ)) : ℂ) + (((Litex.In.rep d __h83 : ℝ)) : ℂ))) := Litex.Rules.complexAddPositiveRightStrict (Litex.Rules.complexAddNonnegative (Litex.Rules.realCastNonnegative (Litex.In.rep a __h80 : ℝ) (__domain1)) (Litex.Rules.realCastNonnegative (Litex.In.rep b __h81 : ℝ) (__domain2))) (Litex.Rules.complexAddPositiveRightStrict (Litex.Rules.realCastNonnegative (Litex.In.rep c __h82 : ℝ) (__domain3)) (Litex.Rules.realCastPositive (Litex.In.rep d __h83 : ℝ) (__domain4)))
-  have __infer5_14 : Litex.Negative ((-1 : ℂ) * (((((Litex.In.rep a __h80 : ℝ)) : ℂ) + (((Litex.In.rep b __h81 : ℝ)) : ℂ)) + ((((Litex.In.rep c __h82 : ℝ)) : ℂ) + (((Litex.In.rep d __h83 : ℝ)) : ℂ)))) := Litex.Rules.complexNegativeOneMulNegative (__prior5_0)
-  have __infer5_15 : Litex.Nonpositive ((-1 : ℂ) * (((((Litex.In.rep a __h80 : ℝ)) : ℂ) + (((Litex.In.rep b __h81 : ℝ)) : ℂ)) + ((((Litex.In.rep c __h82 : ℝ)) : ℂ) + (((Litex.In.rep d __h83 : ℝ)) : ℂ)))) := Litex.Negative.toNonpositive (__infer5_14)
-  have __infer5_16 : Litex.Negative ((-1 : ℂ) * (((((Litex.In.rep a __h80 : ℝ)) : ℂ) + (((Litex.In.rep b __h81 : ℝ)) : ℂ)) + ((((Litex.In.rep c __h82 : ℝ)) : ℂ) + (((Litex.In.rep d __h83 : ℝ)) : ℂ)))) := Litex.Rules.complexNegativeOneMulNegative (__prior5_0)
-  have __infer5_17 : Litex.Nonpositive ((-1 : ℂ) * (((((Litex.In.rep a __h80 : ℝ)) : ℂ) + (((Litex.In.rep b __h81 : ℝ)) : ℂ)) + ((((Litex.In.rep c __h82 : ℝ)) : ℂ) + (((Litex.In.rep d __h83 : ℝ)) : ℂ)))) := Litex.Negative.toNonpositive (__infer5_16)
+    ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In __p1 Litex.R) (__p2 : (Litex.R).Carrier) (__type2 : Litex.In __p2 Litex.R) (__p3 : (Litex.R).Carrier) (__type3 : Litex.In __p3 Litex.R) (__p4 : (Litex.R).Carrier) (__type4 : Litex.In __p4 Litex.R) (__domain1 : Litex.Le (0 : ℂ) (((__p1 : ℝ)) : ℂ)) (__domain2 : Litex.Le (0 : ℂ) (((__p2 : ℝ)) : ℂ)) (__domain3 : Litex.Le (0 : ℂ) (((__p3 : ℝ)) : ℂ)) (__domain4 : Litex.Lt (0 : ℂ) (((__p4 : ℝ)) : ℂ)), Litex.Positive (((((__p1 : ℝ)) : ℂ) + (((__p2 : ℝ)) : ℂ)) + ((((__p3 : ℝ)) : ℂ) + (((__p4 : ℝ)) : ℂ))) := by
+  intro a __h74 b __h75 c __h76 d __h77 __domain_f78 __domain_f80 __domain_f82 __domain_f84
+  have __infer5_5 : Litex.Nonpositive ((-1 : ℂ) * (((a : ℝ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNonpositive (Litex.Rules.realCastNonnegative (a : ℝ) (__domain_f78))
+  have __infer5_6 : Litex.Nonpositive ((-1 : ℂ) * (((b : ℝ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNonpositive (Litex.Rules.realCastNonnegative (b : ℝ) (__domain_f80))
+  have __infer5_7 : Litex.Nonpositive ((-1 : ℂ) * (((c : ℝ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNonpositive (Litex.Rules.realCastNonnegative (c : ℝ) (__domain_f82))
+  have __infer5_8 : Litex.Negative ((-1 : ℂ) * (((d : ℝ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNegative (Litex.Rules.realCastPositive (d : ℝ) (__domain_f84))
+  have __infer5_9 : Litex.Nonpositive ((-1 : ℂ) * (((d : ℝ)) : ℂ)) := Litex.Negative.toNonpositive (__infer5_8)
+  have __prior5_0 : Litex.Positive (((((a : ℝ)) : ℂ) + (((b : ℝ)) : ℂ)) + ((((c : ℝ)) : ℂ) + (((d : ℝ)) : ℂ))) := Litex.Rules.complexAddPositiveRightStrict (Litex.Rules.complexAddNonnegative (Litex.Rules.realCastNonnegative (a : ℝ) (__domain_f78)) (Litex.Rules.realCastNonnegative (b : ℝ) (__domain_f80))) (Litex.Rules.complexAddPositiveRightStrict (Litex.Rules.realCastNonnegative (c : ℝ) (__domain_f82)) (Litex.Rules.realCastPositive (d : ℝ) (__domain_f84)))
   exact __prior5_0
 
 theorem __fact6 :
-    ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.R) {__carrier2 : Type} (__p2 : __carrier2) (__type2 : Litex.In __p2 Litex.R) (__domain1 : Litex.Le (0 : ℂ) (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ)) (__domain2 : Litex.Le (0 : ℂ) (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)), Litex.Nonnegative ((((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) * (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)) := by
-  intro __carrier1 a __h105 __carrier2 b __h106 __domain1 __domain2
-  have __infer6_18 : Litex.Nonpositive ((-1 : ℂ) * (((Litex.In.rep a __h105 : ℝ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNonpositive (Litex.Rules.realCastNonnegative (Litex.In.rep a __h105 : ℝ) (__domain1))
-  have __infer6_19 : Litex.Nonpositive ((-1 : ℂ) * (((Litex.In.rep b __h106 : ℝ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNonpositive (Litex.Rules.realCastNonnegative (Litex.In.rep b __h106 : ℝ) (__domain2))
-  have __prior6_0 : Litex.Nonnegative ((((Litex.In.rep a __h105 : ℝ)) : ℂ) * (((Litex.In.rep b __h106 : ℝ)) : ℂ)) := Litex.Rules.complexMulNonnegative (Litex.Rules.realCastNonnegative (Litex.In.rep a __h105 : ℝ) (__domain1)) (Litex.Rules.realCastNonnegative (Litex.In.rep b __h106 : ℝ) (__domain2))
-  have __infer6_20 : Litex.Nonpositive ((-1 : ℂ) * ((((Litex.In.rep a __h105 : ℝ)) : ℂ) * (((Litex.In.rep b __h106 : ℝ)) : ℂ))) := Litex.Rules.complexNegativeOneMulNonpositive (__prior6_0)
-  have __infer6_21 : Litex.Nonpositive ((-1 : ℂ) * ((((Litex.In.rep a __h105 : ℝ)) : ℂ) * (((Litex.In.rep b __h106 : ℝ)) : ℂ))) := Litex.Rules.complexNegativeOneMulNonpositive (__prior6_0)
+    ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In __p1 Litex.R) (__p2 : (Litex.R).Carrier) (__type2 : Litex.In __p2 Litex.R) (__domain1 : Litex.Le (0 : ℂ) (((__p1 : ℝ)) : ℂ)) (__domain2 : Litex.Le (0 : ℂ) (((__p2 : ℝ)) : ℂ)), Litex.Nonnegative ((((__p1 : ℝ)) : ℂ) * (((__p2 : ℝ)) : ℂ)) := by
+  intro a __h97 b __h98 __domain_f99 __domain_f101
+  have __infer6_10 : Litex.Nonpositive ((-1 : ℂ) * (((a : ℝ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNonpositive (Litex.Rules.realCastNonnegative (a : ℝ) (__domain_f99))
+  have __infer6_11 : Litex.Nonpositive ((-1 : ℂ) * (((b : ℝ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNonpositive (Litex.Rules.realCastNonnegative (b : ℝ) (__domain_f101))
+  have __prior6_0 : Litex.Nonnegative ((((a : ℝ)) : ℂ) * (((b : ℝ)) : ℂ)) := Litex.Rules.complexMulNonnegative (Litex.Rules.realCastNonnegative (a : ℝ) (__domain_f99)) (Litex.Rules.realCastNonnegative (b : ℝ) (__domain_f101))
+  have __infer6_12 : Litex.Nonpositive ((-1 : ℂ) * ((((a : ℝ)) : ℂ) * (((b : ℝ)) : ℂ))) := Litex.Rules.complexNegativeOneMulNonpositive (__prior6_0)
+  have __infer6_13 : Litex.Nonpositive ((-1 : ℂ) * ((((a : ℝ)) : ℂ) * (((b : ℝ)) : ℂ))) := Litex.Rules.complexNegativeOneMulNonpositive (__prior6_0)
   exact __prior6_0
 
 theorem __fact7 :
-    ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.R) {__carrier2 : Type} (__p2 : __carrier2) (__type2 : Litex.In __p2 Litex.R) (__domain1 : Litex.Lt (0 : ℂ) (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ)) (__domain2 : Litex.Lt (0 : ℂ) (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)), Litex.Positive ((((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) * (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)) := by
-  intro __carrier1 a __h125 __carrier2 b __h126 __domain1 __domain2
-  have __infer7_22 : Litex.Negative ((-1 : ℂ) * (((Litex.In.rep a __h125 : ℝ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNegative (Litex.Rules.realCastPositive (Litex.In.rep a __h125 : ℝ) (__domain1))
-  have __infer7_23 : Litex.Nonpositive ((-1 : ℂ) * (((Litex.In.rep a __h125 : ℝ)) : ℂ)) := Litex.Negative.toNonpositive (__infer7_22)
-  have __infer7_24 : Litex.Negative ((-1 : ℂ) * (((Litex.In.rep b __h126 : ℝ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNegative (Litex.Rules.realCastPositive (Litex.In.rep b __h126 : ℝ) (__domain2))
-  have __infer7_25 : Litex.Nonpositive ((-1 : ℂ) * (((Litex.In.rep b __h126 : ℝ)) : ℂ)) := Litex.Negative.toNonpositive (__infer7_24)
-  have __prior7_0 : Litex.Positive ((((Litex.In.rep a __h125 : ℝ)) : ℂ) * (((Litex.In.rep b __h126 : ℝ)) : ℂ)) := Litex.Rules.complexMulPositive (Litex.Rules.realCastPositive (Litex.In.rep a __h125 : ℝ) (__domain1)) (Litex.Rules.realCastPositive (Litex.In.rep b __h126 : ℝ) (__domain2))
-  have __infer7_26 : Litex.Negative ((-1 : ℂ) * ((((Litex.In.rep a __h125 : ℝ)) : ℂ) * (((Litex.In.rep b __h126 : ℝ)) : ℂ))) := Litex.Rules.complexNegativeOneMulNegative (__prior7_0)
-  have __infer7_27 : Litex.Nonpositive ((-1 : ℂ) * ((((Litex.In.rep a __h125 : ℝ)) : ℂ) * (((Litex.In.rep b __h126 : ℝ)) : ℂ))) := Litex.Negative.toNonpositive (__infer7_26)
-  have __infer7_28 : Litex.Negative ((-1 : ℂ) * ((((Litex.In.rep a __h125 : ℝ)) : ℂ) * (((Litex.In.rep b __h126 : ℝ)) : ℂ))) := Litex.Rules.complexNegativeOneMulNegative (__prior7_0)
-  have __infer7_29 : Litex.Nonpositive ((-1 : ℂ) * ((((Litex.In.rep a __h125 : ℝ)) : ℂ) * (((Litex.In.rep b __h126 : ℝ)) : ℂ))) := Litex.Negative.toNonpositive (__infer7_28)
+    ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In __p1 Litex.R) (__p2 : (Litex.R).Carrier) (__type2 : Litex.In __p2 Litex.R) (__domain1 : Litex.Lt (0 : ℂ) (((__p1 : ℝ)) : ℂ)) (__domain2 : Litex.Lt (0 : ℂ) (((__p2 : ℝ)) : ℂ)), Litex.Positive ((((__p1 : ℝ)) : ℂ) * (((__p2 : ℝ)) : ℂ)) := by
+  intro a __h117 b __h118 __domain_f119 __domain_f122
+  have __infer7_14 : Litex.Negative ((-1 : ℂ) * (((a : ℝ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNegative (Litex.Rules.realCastPositive (a : ℝ) (__domain_f119))
+  have __infer7_15 : Litex.Nonpositive ((-1 : ℂ) * (((a : ℝ)) : ℂ)) := Litex.Negative.toNonpositive (__infer7_14)
+  have __infer7_16 : Litex.Negative ((-1 : ℂ) * (((b : ℝ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNegative (Litex.Rules.realCastPositive (b : ℝ) (__domain_f122))
+  have __infer7_17 : Litex.Nonpositive ((-1 : ℂ) * (((b : ℝ)) : ℂ)) := Litex.Negative.toNonpositive (__infer7_16)
+  have __prior7_0 : Litex.Positive ((((a : ℝ)) : ℂ) * (((b : ℝ)) : ℂ)) := Litex.Rules.complexMulPositive (Litex.Rules.realCastPositive (a : ℝ) (__domain_f119)) (Litex.Rules.realCastPositive (b : ℝ) (__domain_f122))
+  have __infer7_18 : Litex.Negative ((-1 : ℂ) * ((((a : ℝ)) : ℂ) * (((b : ℝ)) : ℂ))) := Litex.Rules.complexNegativeOneMulNegative (__prior7_0)
+  have __infer7_19 : Litex.Nonpositive ((-1 : ℂ) * ((((a : ℝ)) : ℂ) * (((b : ℝ)) : ℂ))) := Litex.Negative.toNonpositive (__infer7_18)
+  have __infer7_20 : Litex.Negative ((-1 : ℂ) * ((((a : ℝ)) : ℂ) * (((b : ℝ)) : ℂ))) := Litex.Rules.complexNegativeOneMulNegative (__prior7_0)
+  have __infer7_21 : Litex.Nonpositive ((-1 : ℂ) * ((((a : ℝ)) : ℂ) * (((b : ℝ)) : ℂ))) := Litex.Negative.toNonpositive (__infer7_20)
   exact __prior7_0
 
 theorem __fact8 :
-    ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.R) {__carrier2 : Type} (__p2 : __carrier2) (__type2 : Litex.In __p2 Litex.R) (__domain1 : Litex.Le (0 : ℂ) (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ)) (__domain2 : Litex.Lt (0 : ℂ) (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)), Litex.Nonnegative ((((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) / (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)) := by
-  intro __carrier1 a __h146 __carrier2 b __h147 __domain1 __domain2
-  have __infer8_30 : Litex.Nonpositive ((-1 : ℂ) * (((Litex.In.rep a __h146 : ℝ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNonpositive (Litex.Rules.realCastNonnegative (Litex.In.rep a __h146 : ℝ) (__domain1))
-  have __infer8_31 : Litex.Negative ((-1 : ℂ) * (((Litex.In.rep b __h147 : ℝ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNegative (Litex.Rules.realCastPositive (Litex.In.rep b __h147 : ℝ) (__domain2))
-  have __infer8_32 : Litex.Nonpositive ((-1 : ℂ) * (((Litex.In.rep b __h147 : ℝ)) : ℂ)) := Litex.Negative.toNonpositive (__infer8_31)
-  have __prior8_0 : Litex.Nonnegative ((((Litex.In.rep a __h146 : ℝ)) : ℂ) / (((Litex.In.rep b __h147 : ℝ)) : ℂ)) := Litex.Rules.complexDivNonnegative (Litex.Rules.realCastNonnegative (Litex.In.rep a __h146 : ℝ) (__domain1)) (Litex.Rules.realCastPositive (Litex.In.rep b __h147 : ℝ) (__domain2))
-  have __infer8_33 : Litex.Nonpositive ((-1 : ℂ) * ((((Litex.In.rep a __h146 : ℝ)) : ℂ) / (((Litex.In.rep b __h147 : ℝ)) : ℂ))) := Litex.Rules.complexNegativeOneMulNonpositive (__prior8_0)
-  have __infer8_34 : Litex.Nonpositive ((-1 : ℂ) * ((((Litex.In.rep a __h146 : ℝ)) : ℂ) / (((Litex.In.rep b __h147 : ℝ)) : ℂ))) := Litex.Rules.complexNegativeOneMulNonpositive (__prior8_0)
+    ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In __p1 Litex.R) (__p2 : (Litex.R).Carrier) (__type2 : Litex.In __p2 Litex.R) (__domain1 : Litex.Le (0 : ℂ) (((__p1 : ℝ)) : ℂ)) (__domain2 : Litex.Lt (0 : ℂ) (((__p2 : ℝ)) : ℂ)), Litex.Nonnegative ((((__p1 : ℝ)) : ℂ) / (((__p2 : ℝ)) : ℂ)) := by
+  intro a __h138 b __h139 __domain_f140 __domain_f142
+  have __infer8_22 : Litex.Nonpositive ((-1 : ℂ) * (((a : ℝ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNonpositive (Litex.Rules.realCastNonnegative (a : ℝ) (__domain_f140))
+  have __infer8_23 : Litex.Negative ((-1 : ℂ) * (((b : ℝ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNegative (Litex.Rules.realCastPositive (b : ℝ) (__domain_f142))
+  have __infer8_24 : Litex.Nonpositive ((-1 : ℂ) * (((b : ℝ)) : ℂ)) := Litex.Negative.toNonpositive (__infer8_23)
+  have __prior8_0 : Litex.Nonnegative ((((a : ℝ)) : ℂ) / (((b : ℝ)) : ℂ)) := Litex.Rules.complexDivNonnegative (Litex.Rules.realCastNonnegative (a : ℝ) (__domain_f140)) (Litex.Rules.realCastPositive (b : ℝ) (__domain_f142))
+  have __infer8_25 : Litex.Nonpositive ((-1 : ℂ) * ((((a : ℝ)) : ℂ) / (((b : ℝ)) : ℂ))) := Litex.Rules.complexNegativeOneMulNonpositive (__prior8_0)
+  have __infer8_26 : Litex.Nonpositive ((-1 : ℂ) * ((((a : ℝ)) : ℂ) / (((b : ℝ)) : ℂ))) := Litex.Rules.complexNegativeOneMulNonpositive (__prior8_0)
   exact __prior8_0
 
 theorem __fact9 :
-    ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.R) {__carrier2 : Type} (__p2 : __carrier2) (__type2 : Litex.In __p2 Litex.R) (__domain1 : Litex.Lt (0 : ℂ) (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ)) (__domain2 : Litex.Lt (0 : ℂ) (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)), Litex.Positive ((((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) / (((Litex.In.rep __p2 __type2 : ℝ)) : ℂ)) := by
-  intro __carrier1 a __h167 __carrier2 b __h168 __domain1 __domain2
-  have __infer9_35 : Litex.Negative ((-1 : ℂ) * (((Litex.In.rep a __h167 : ℝ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNegative (Litex.Rules.realCastPositive (Litex.In.rep a __h167 : ℝ) (__domain1))
-  have __infer9_36 : Litex.Nonpositive ((-1 : ℂ) * (((Litex.In.rep a __h167 : ℝ)) : ℂ)) := Litex.Negative.toNonpositive (__infer9_35)
-  have __infer9_37 : Litex.Negative ((-1 : ℂ) * (((Litex.In.rep b __h168 : ℝ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNegative (Litex.Rules.realCastPositive (Litex.In.rep b __h168 : ℝ) (__domain2))
-  have __infer9_38 : Litex.Nonpositive ((-1 : ℂ) * (((Litex.In.rep b __h168 : ℝ)) : ℂ)) := Litex.Negative.toNonpositive (__infer9_37)
-  have __prior9_0 : Litex.Positive ((((Litex.In.rep a __h167 : ℝ)) : ℂ) / (((Litex.In.rep b __h168 : ℝ)) : ℂ)) := Litex.Rules.complexDivPositive (Litex.Rules.realCastPositive (Litex.In.rep a __h167 : ℝ) (__domain1)) (Litex.Rules.realCastPositive (Litex.In.rep b __h168 : ℝ) (__domain2))
-  have __infer9_39 : Litex.Negative ((-1 : ℂ) * ((((Litex.In.rep a __h167 : ℝ)) : ℂ) / (((Litex.In.rep b __h168 : ℝ)) : ℂ))) := Litex.Rules.complexNegativeOneMulNegative (__prior9_0)
-  have __infer9_40 : Litex.Nonpositive ((-1 : ℂ) * ((((Litex.In.rep a __h167 : ℝ)) : ℂ) / (((Litex.In.rep b __h168 : ℝ)) : ℂ))) := Litex.Negative.toNonpositive (__infer9_39)
-  have __infer9_41 : Litex.Negative ((-1 : ℂ) * ((((Litex.In.rep a __h167 : ℝ)) : ℂ) / (((Litex.In.rep b __h168 : ℝ)) : ℂ))) := Litex.Rules.complexNegativeOneMulNegative (__prior9_0)
-  have __infer9_42 : Litex.Nonpositive ((-1 : ℂ) * ((((Litex.In.rep a __h167 : ℝ)) : ℂ) / (((Litex.In.rep b __h168 : ℝ)) : ℂ))) := Litex.Negative.toNonpositive (__infer9_41)
+    ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In __p1 Litex.R) (__p2 : (Litex.R).Carrier) (__type2 : Litex.In __p2 Litex.R) (__domain1 : Litex.Lt (0 : ℂ) (((__p1 : ℝ)) : ℂ)) (__domain2 : Litex.Lt (0 : ℂ) (((__p2 : ℝ)) : ℂ)), Litex.Positive ((((__p1 : ℝ)) : ℂ) / (((__p2 : ℝ)) : ℂ)) := by
+  intro a __h159 b __h160 __domain_f161 __domain_f164
+  have __infer9_27 : Litex.Negative ((-1 : ℂ) * (((a : ℝ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNegative (Litex.Rules.realCastPositive (a : ℝ) (__domain_f161))
+  have __infer9_28 : Litex.Nonpositive ((-1 : ℂ) * (((a : ℝ)) : ℂ)) := Litex.Negative.toNonpositive (__infer9_27)
+  have __infer9_29 : Litex.Negative ((-1 : ℂ) * (((b : ℝ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNegative (Litex.Rules.realCastPositive (b : ℝ) (__domain_f164))
+  have __infer9_30 : Litex.Nonpositive ((-1 : ℂ) * (((b : ℝ)) : ℂ)) := Litex.Negative.toNonpositive (__infer9_29)
+  have __prior9_0 : Litex.Positive ((((a : ℝ)) : ℂ) / (((b : ℝ)) : ℂ)) := Litex.Rules.complexDivPositive (Litex.Rules.realCastPositive (a : ℝ) (__domain_f161)) (Litex.Rules.realCastPositive (b : ℝ) (__domain_f164))
+  have __infer9_31 : Litex.Negative ((-1 : ℂ) * ((((a : ℝ)) : ℂ) / (((b : ℝ)) : ℂ))) := Litex.Rules.complexNegativeOneMulNegative (__prior9_0)
+  have __infer9_32 : Litex.Nonpositive ((-1 : ℂ) * ((((a : ℝ)) : ℂ) / (((b : ℝ)) : ℂ))) := Litex.Negative.toNonpositive (__infer9_31)
+  have __infer9_33 : Litex.Negative ((-1 : ℂ) * ((((a : ℝ)) : ℂ) / (((b : ℝ)) : ℂ))) := Litex.Rules.complexNegativeOneMulNegative (__prior9_0)
+  have __infer9_34 : Litex.Nonpositive ((-1 : ℂ) * ((((a : ℝ)) : ℂ) / (((b : ℝ)) : ℂ))) := Litex.Negative.toNonpositive (__infer9_33)
   exact __prior9_0
 
 end __Compiler_15_BuiltinStrategy

@@ -63,7 +63,9 @@ impl StmtResultToLeanCompiler {
                 );
             }
         } else if !result.common.infers.rule_applications.is_empty() {
-            return Err("ordinary named theorem retained inference without its source store".into());
+            return Err(
+                "ordinary named theorem retained inference without its source store".into(),
+            );
         }
 
         body.local_proof_lines

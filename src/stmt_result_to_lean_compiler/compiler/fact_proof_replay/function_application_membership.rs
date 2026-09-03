@@ -27,10 +27,7 @@ impl StmtResultToLeanCompiler {
         if head_membership_result.fact().to_string()
             != evidence.expected_head_membership.to_string()
         {
-            return Err(
-                "function head-membership child changed its proposition"
-                    .into(),
-            );
+            return Err("function head-membership child changed its proposition".into());
         }
         let Some(_head_membership_proof) =
             self.construct_lean_proof_from_direct_fact_result(head_membership_result)?

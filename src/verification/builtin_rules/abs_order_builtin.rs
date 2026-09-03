@@ -213,13 +213,8 @@ impl Runtime {
         &mut self,
         fact: AtomicFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<VerifyFactResult, RuntimeError> {
-        match fact {
-            AtomicFact::LessFact(_) | AtomicFact::LessEqualFact(_) => {
-                self.verify_atomic_fact_as_builtin_rule_premise(&fact, builtin_state)
-            }
-            _ => self.verify_atomic_fact_as_builtin_rule_premise(&fact, builtin_state),
-        }
+    ) -> Result<Option<VerifyFactResult>, RuntimeError> {
+        self.try_verify_atomic_fact_as_builtin_rule_premise(&fact, builtin_state)
     }
 
     // Absolute value bounds: -abs(x) <= x <= abs(x), and -x <= abs(x).
@@ -289,22 +284,22 @@ impl Runtime {
             f.line_file.clone(),
         )
         .into();
-        let start_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&start_fact, builtin_state)?;
-        if !start_result.is_success() {
+        let Some(start_result) =
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&start_fact, builtin_state)?
+        else {
             return Ok(None);
-        }
+        };
         let end_fact: AtomicFact = EqualFact::new(
             left_sum.end.as_ref().clone(),
             right_sum.end.as_ref().clone(),
             f.line_file.clone(),
         )
         .into();
-        let end_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&end_fact, builtin_state)?;
-        if !end_result.is_success() {
+        let Some(end_result) =
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&end_fact, builtin_state)?
+        else {
             return Ok(None);
-        }
+        };
 
         let x_name = self.generate_random_unused_name();
         let (x_binding, x_obj) = self.fresh_bound_param(x_name)?;
@@ -339,12 +334,15 @@ impl Runtime {
                 rt.define_params_with_type(&params_def, false, BindingScope::LocalBinder)?;
                 rt.store_fact_without_forall_coverage_check_and_infer(dom_lo)?;
                 rt.store_fact_without_forall_coverage_check_and_infer(dom_hi)?;
-                rt.verify_atomic_fact_as_builtin_rule_premise(&pointwise_fact, &local_builtin_state)
+                rt.try_verify_atomic_fact_as_builtin_rule_premise(
+                    &pointwise_fact,
+                    &local_builtin_state,
+                )
             },
         )?;
-        if !pointwise_result.is_success() {
+        let Some(pointwise_result) = pointwise_result else {
             return Ok(None);
-        }
+        };
 
         Ok(Some(ProveFactResult::from(
             SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
@@ -382,11 +380,11 @@ impl Runtime {
             f.line_file.clone(),
         )
         .into();
-        let set_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&set_fact, builtin_state)?;
-        if !set_result.is_success() {
+        let Some(set_result) =
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&set_fact, builtin_state)?
+        else {
             return Ok(None);
-        }
+        };
 
         let x_name = self.generate_random_unused_name();
         let (x_binding, x_obj) = self.fresh_bound_param(x_name)?;
@@ -410,12 +408,15 @@ impl Runtime {
                     ParamType::Obj(left_sum.set.as_ref().clone()),
                 )]);
                 rt.define_params_with_type(&params_def, false, BindingScope::LocalBinder)?;
-                rt.verify_atomic_fact_as_builtin_rule_premise(&pointwise_fact, &local_builtin_state)
+                rt.try_verify_atomic_fact_as_builtin_rule_premise(
+                    &pointwise_fact,
+                    &local_builtin_state,
+                )
             },
         )?;
-        if !pointwise_result.is_success() {
+        let Some(pointwise_result) = pointwise_result else {
             return Ok(None);
-        }
+        };
 
         Ok(Some(ProveFactResult::from(
             SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
@@ -449,10 +450,10 @@ impl Runtime {
             f.line_file.clone(),
         )
         .into();
-        let nonzero_result = self.verify_abs_order_subgoal(arg_nonzero, builtin_state)?;
-        if !nonzero_result.is_success() {
+        let Some(nonzero_result) = self.verify_abs_order_subgoal(arg_nonzero, builtin_state)?
+        else {
             return Ok(None);
-        }
+        };
         Ok(Some(ProveFactResult::from(
             SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
@@ -484,22 +485,20 @@ impl Runtime {
             abs_order_subgoal(neg_obj(arg), right.clone(), line_file.clone(), strict);
         let neg_bound_le_arg =
             abs_order_subgoal(neg_obj(right), arg.clone(), line_file.clone(), strict);
-        let r1 = self.verify_abs_order_subgoal(arg_le_bound, builtin_state)?;
-        if !r1.is_success() {
+        let Some(r1) = self.verify_abs_order_subgoal(arg_le_bound, builtin_state)? else {
             return Ok(None);
-        }
+        };
         // Accept either common spelling of the lower side of the sandwich:
         // `-x < b` or, equivalently, `-b < x`. Checking the latter directly
         // avoids requiring a second order-algebra builtin hop.
         let direct_lower = self.verify_abs_order_subgoal(neg_bound_le_arg, builtin_state)?;
-        let r2 = if direct_lower.is_success() {
-            direct_lower
-        } else {
-            self.verify_abs_order_subgoal(neg_arg_le_bound, builtin_state)?
+        let r2 = match direct_lower {
+            Some(direct_lower) => Some(direct_lower),
+            None => self.verify_abs_order_subgoal(neg_arg_le_bound, builtin_state)?,
         };
-        if !r2.is_success() {
+        let Some(r2) = r2 else {
             return Ok(None);
-        }
+        };
         let rule = if strict {
             "abs: abs(x) < b from -b < x < b"
         } else {
@@ -535,15 +534,13 @@ impl Runtime {
         // -abs(y) <= x from abs(x) <= abs(y); or -y <= x when 0 <= y.
         if let Some(inner) = peel_negation(left) {
             if let Some(y) = peel_abs(inner) {
-                if let Some(r) =
-                    self.verify_known_abs_compare(
-                        right,
-                        &abs_obj(y.clone()),
-                        line_file,
-                        strict,
-                        builtin_state.verify_state(),
-                    )?
-                {
+                if let Some(r) = self.verify_known_abs_compare(
+                    right,
+                    &abs_obj(y.clone()),
+                    line_file,
+                    strict,
+                    builtin_state.verify_state(),
+                )? {
                     let rule = format!(
                         "abs: -abs(y) {} x from abs(x) {} abs(y){}",
                         if strict { "<" } else { "<=" },
@@ -561,19 +558,16 @@ impl Runtime {
                 }
             } else {
                 let y = inner;
-                if let Some(r) =
-                    self.verify_known_abs_compare(
-                        right,
-                        &abs_obj(y.clone()),
-                        line_file,
-                        strict,
-                        builtin_state.verify_state(),
-                    )?
-                {
+                if let Some(r) = self.verify_known_abs_compare(
+                    right,
+                    &abs_obj(y.clone()),
+                    line_file,
+                    strict,
+                    builtin_state.verify_state(),
+                )? {
                     let ge_y: AtomicFact =
                         GreaterEqualFact::new(y.clone(), zero.clone(), line_file.clone()).into();
-                    let r_sign = self.verify_abs_order_subgoal(ge_y, builtin_state)?;
-                    if r_sign.is_success() {
+                    if let Some(r_sign) = self.verify_abs_order_subgoal(ge_y, builtin_state)? {
                         let rule = format!(
                             "abs: -y {} x from abs(x) {} abs(y) and 0 <= y{}",
                             if strict { "<" } else { "<=" },
@@ -646,23 +640,21 @@ impl Runtime {
         }
 
         // y <= x from abs(x) <= abs(y) and y <= 0.
-        if let Some(r) =
-            self.verify_known_abs_compare(
-                right,
-                &abs_obj(left.clone()),
-                line_file,
-                strict,
-                builtin_state.verify_state(),
-            )?
-        {
+        if let Some(r) = self.verify_known_abs_compare(
+            right,
+            &abs_obj(left.clone()),
+            line_file,
+            strict,
+            builtin_state.verify_state(),
+        )? {
             let le_y: AtomicFact =
                 LessEqualFact::new(left.clone(), zero.clone(), line_file.clone()).into();
             let r_sign = if strict {
-                self.verify_atomic_fact_as_builtin_rule_premise(&le_y, builtin_state)?
+                self.try_verify_atomic_fact_as_builtin_rule_premise(&le_y, builtin_state)?
             } else {
                 self.verify_abs_order_subgoal(le_y, builtin_state)?
             };
-            if r_sign.is_success() {
+            if let Some(r_sign) = r_sign {
                 let rule = format!(
                     "abs: y {} x from abs(x) {} abs(y) and y <= 0{}",
                     if strict { "<" } else { "<=" },
@@ -682,23 +674,21 @@ impl Runtime {
 
         // x <= -y from abs(x) <= abs(y) and y <= 0.
         if let Some(y) = peel_negation(right) {
-            if let Some(r) =
-                self.verify_known_abs_compare(
-                    left,
-                    &abs_obj(y.clone()),
-                    line_file,
-                    strict,
-                    builtin_state.verify_state(),
-                )?
-            {
+            if let Some(r) = self.verify_known_abs_compare(
+                left,
+                &abs_obj(y.clone()),
+                line_file,
+                strict,
+                builtin_state.verify_state(),
+            )? {
                 let le_y: AtomicFact =
                     LessEqualFact::new(y.clone(), zero.clone(), line_file.clone()).into();
                 let r_sign = if strict {
-                    self.verify_atomic_fact_as_builtin_rule_premise(&le_y, builtin_state)?
+                    self.try_verify_atomic_fact_as_builtin_rule_premise(&le_y, builtin_state)?
                 } else {
                     self.verify_abs_order_subgoal(le_y, builtin_state)?
                 };
-                if r_sign.is_success() {
+                if let Some(r_sign) = r_sign {
                     let rule = format!(
                         "abs: x {} -y from abs(x) {} abs(y) and y <= 0{}",
                         if strict { "<" } else { "<=" },
@@ -718,19 +708,16 @@ impl Runtime {
         }
 
         // x <= y from abs(x) <= abs(y) and 0 <= y.
-        if let Some(r) =
-            self.verify_known_abs_compare(
-                left,
-                &abs_obj(right.clone()),
-                line_file,
-                strict,
-                builtin_state.verify_state(),
-            )?
-        {
+        if let Some(r) = self.verify_known_abs_compare(
+            left,
+            &abs_obj(right.clone()),
+            line_file,
+            strict,
+            builtin_state.verify_state(),
+        )? {
             let ge_y: AtomicFact =
                 GreaterEqualFact::new(right.clone(), zero.clone(), line_file.clone()).into();
-            let r_sign = self.verify_abs_order_subgoal(ge_y, builtin_state)?;
-            if r_sign.is_success() {
+            if let Some(r_sign) = self.verify_abs_order_subgoal(ge_y, builtin_state)? {
                 let rule = format!(
                     "abs: x {} y from abs(x) {} abs(y) and 0 <= y{}",
                     if strict { "<" } else { "<=" },

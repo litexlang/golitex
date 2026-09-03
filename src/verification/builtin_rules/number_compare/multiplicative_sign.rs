@@ -27,24 +27,22 @@ impl Runtime {
             zero,
             mul_obj.left.as_ref(),
             true,
-            true,
             line_file,
             builtin_state,
         )?;
-        if !left_verify_result.is_success() {
+        let Some(left_verify_result) = left_verify_result else {
             return Ok(None);
-        }
+        };
         let right_verify_result = self.verify_zero_order_on_sub_expr(
             zero,
             mul_obj.right.as_ref(),
             true,
-            true,
             line_file,
             builtin_state,
         )?;
-        if !right_verify_result.is_success() {
+        let Some(right_verify_result) = right_verify_result else {
             return Ok(None);
-        }
+        };
 
         Ok(Some(ProveFactResult::from(
             SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
@@ -80,24 +78,22 @@ impl Runtime {
             zero,
             mul_obj.left.as_ref(),
             false,
-            false,
             line_file,
             builtin_state,
         )?;
-        if !left_verify_result.is_success() {
+        let Some(left_verify_result) = left_verify_result else {
             return Ok(None);
-        }
+        };
         let right_verify_result = self.verify_zero_order_on_sub_expr(
             zero,
             mul_obj.right.as_ref(),
             false,
-            false,
             line_file,
             builtin_state,
         )?;
-        if !right_verify_result.is_success() {
+        let Some(right_verify_result) = right_verify_result else {
             return Ok(None);
-        }
+        };
 
         Ok(Some(ProveFactResult::from(
             SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
@@ -133,24 +129,22 @@ impl Runtime {
             zero,
             div_obj.left.as_ref(),
             true,
-            true,
             line_file,
             builtin_state,
         )?;
-        if !numer_result.is_success() {
+        let Some(numer_result) = numer_result else {
             return Ok(None);
-        }
+        };
         let denom_result = self.verify_zero_order_on_sub_expr(
             zero,
             div_obj.right.as_ref(),
             false,
-            true,
             line_file,
             builtin_state,
         )?;
-        if !denom_result.is_success() {
+        let Some(denom_result) = denom_result else {
             return Ok(None);
-        }
+        };
 
         Ok(Some(ProveFactResult::from(
             SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
@@ -186,24 +180,22 @@ impl Runtime {
             zero,
             div_obj.left.as_ref(),
             false,
-            false,
             line_file,
             builtin_state,
         )?;
-        if !numer_result.is_success() {
+        let Some(numer_result) = numer_result else {
             return Ok(None);
-        }
+        };
         let denom_result = self.verify_zero_order_on_sub_expr(
             zero,
             div_obj.right.as_ref(),
             false,
-            false,
             line_file,
             builtin_state,
         )?;
-        if !denom_result.is_success() {
+        let Some(denom_result) = denom_result else {
             return Ok(None);
-        }
+        };
 
         Ok(Some(ProveFactResult::from(
             SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(

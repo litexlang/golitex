@@ -301,17 +301,16 @@ impl StmtResultToLeanCompiler {
             let component_names = (0..components.len())
                 .map(|index| format!("__component{index}"))
                 .collect::<Vec<_>>();
-            let selected_component = if preserve_implicit_host_carrier {
-                format!("@{}", component_names[component_index])
-            } else {
-                component_names[component_index].clone()
-            };
+            let selected_component = component_names[component_index].clone();
             if preserve_implicit_host_carrier {
+                let Fact::ForallFact(forall) = &conclusion.fact else {
+                    unreachable!("polymorphic projection was checked as a forall")
+                };
+                let finish = render_eta_expanded_forall_projection(forall, &selected_component)?;
                 format!(
-                    "(by\n  have __definition := {source_proof}\n  unfold {} at __definition\n  rcases __definition with \u{27e8}{}\u{27e9}\n  exact {})",
+                    "(by\n  have __definition := {source_proof}\n  unfold {} at __definition\n  rcases __definition with \u{27e8}{}\u{27e9}\n  {finish})",
                     binding.lean_name,
                     component_names.join(", "),
-                    selected_component,
                 )
             } else {
                 format!(
@@ -323,14 +322,14 @@ impl StmtResultToLeanCompiler {
             }
         } else {
             let selector = conjunction_selector(component_index, components.len())?;
-            let selected_component = if preserve_implicit_host_carrier {
-                format!("@(__definition{selector})")
-            } else {
-                format!("__definition{selector}")
-            };
+            let selected_component = format!("__definition{selector}");
             if preserve_implicit_host_carrier {
+                let Fact::ForallFact(forall) = &conclusion.fact else {
+                    unreachable!("polymorphic projection was checked as a forall")
+                };
+                let finish = render_eta_expanded_forall_projection(forall, &selected_component)?;
                 format!(
-                    "(by\n  have __definition := {source_proof}\n  unfold {} at __definition\n  exact {selected_component})",
+                    "(by\n  have __definition := {source_proof}\n  unfold {} at __definition\n  {finish})",
                     binding.lean_name,
                 )
             } else {

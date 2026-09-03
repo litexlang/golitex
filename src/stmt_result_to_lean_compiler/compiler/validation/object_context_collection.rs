@@ -174,12 +174,10 @@ pub(in super::super) fn collect_iteration_well_definedness_to_lean_context(
     result: &SuccessVerifyIterationWellDefinedResult,
     context: &mut StmtResultWellDefinednessToLeanCompilationContext,
 ) -> Result<(), String> {
-    let Obj::Sum(sum) = owner_object else {
+    let Obj::Sum(_) = owner_object else {
         return Ok(());
     };
-    let occurrence_id = sum
-        .source_occurrence_id
-        .ok_or_else(|| "sum WD Result has no parser-owned source occurrence id".to_string())?;
+    let object_key = obj_equality_key(owner_object);
     if !matches!(&owner_result.object, Obj::Sum(_)) {
         return Err("sum Iteration WD Result changed its owner object".into());
     }
@@ -203,13 +201,14 @@ pub(in super::super) fn collect_iteration_well_definedness_to_lean_context(
                 | SuccessVerifyIterationCoverageResult::Enumerated(_)
         ),
     };
-    if let Some(previous) = context.iterations.insert(occurrence_id, retained) {
-        if obj_equality_key(&previous.source_aggregate) != obj_equality_key(owner_object) {
+    if let Some(previous) = context.iterations.get(&object_key) {
+        if previous.certificate_key() != retained.certificate_key() {
             return Err(format!(
-                "sum occurrence {} selected two different Iteration WD Results",
-                occurrence_id.value()
+                "sum `{object_key}` selected incompatible Iteration WD certificates"
             ));
         }
+    } else {
+        context.iterations.insert(object_key, retained);
     }
     Ok(())
 }
@@ -264,12 +263,10 @@ pub(in super::super) fn collect_anonymous_function_well_definedness_to_lean_cont
     result: &SuccessVerifyAnonymousFunctionWellDefinedResult,
     context: &mut StmtResultWellDefinednessToLeanCompilationContext,
 ) -> Result<(), String> {
-    let Obj::AnonymousFn(source_function) = owner_object else {
+    let Obj::AnonymousFn(_) = owner_object else {
         return Err("anonymous-function WD binder changed its owner object".into());
     };
-    let occurrence_id = source_function.source_occurrence_id.ok_or_else(|| {
-        "anonymous function WD Result has no parser-owned occurrence id".to_string()
-    })?;
+    let object_key = obj_equality_key(owner_object);
     let parameters = result
         .parameters
         .iter()
@@ -284,24 +281,30 @@ pub(in super::super) fn collect_anonymous_function_well_definedness_to_lean_cont
     for premise in result.parameters.iter().chain(result.domains.iter()) {
         assumption_infers.new_infer_result_inside(premise.infers.clone());
     }
-    context.anonymous_functions.insert(
-        occurrence_id,
-        StmtResultAnonymousFunctionWellDefinednessToLeanCompilationContext {
-            source_function: owner_object.clone(),
-            body_source_object: result.body.source_object.clone(),
-            body_well_definedness: result.body.result.clone(),
-            parameters,
-            domains,
-            assumption_infers,
-            compiled_inference_fact_proof_steps: Vec::new(),
-            closure: StmtResultAnonymousFunctionClosureToLeanCompilationContext {
-                role: result.body_membership.role,
-                expected_proposition: result.body_membership.expected_proposition.clone(),
-                verification: result.body_membership.verification.clone(),
-                proof_expression: None,
-            },
+    let retained = StmtResultAnonymousFunctionWellDefinednessToLeanCompilationContext {
+        source_function: owner_object.clone(),
+        body_source_object: result.body.source_object.clone(),
+        body_well_definedness: result.body.result.clone(),
+        parameters,
+        domains,
+        assumption_infers,
+        compiled_inference_fact_proof_steps: Vec::new(),
+        closure: StmtResultAnonymousFunctionClosureToLeanCompilationContext {
+            role: result.body_membership.role,
+            expected_proposition: result.body_membership.expected_proposition.clone(),
+            verification: result.body_membership.verification.clone(),
+            proof_expression: None,
         },
-    );
+    };
+    if let Some(previous) = context.anonymous_functions.get(&object_key) {
+        if previous.certificate_key() != retained.certificate_key() {
+            return Err(format!(
+                "anonymous function `{object_key}` selected incompatible WD certificates"
+            ));
+        }
+    } else {
+        context.anonymous_functions.insert(object_key, retained);
+    }
     Ok(())
 }
 
@@ -313,13 +316,7 @@ pub(in super::super) fn collect_function_application_well_definedness_to_lean_co
     let Obj::FnObj(source_application) = source_object else {
         return Ok(());
     };
-    let Some(occurrence_id) = source_application.source_occurrence_id else {
-        // Multi-layer WD Results contain synthetic prefix nodes such as
-        // `g(a)` underneath the one parser-owned `g(a)(b)` occurrence. The
-        // outer Result collects every layer from its FunctionPrefix edges;
-        // the synthetic child therefore has no independent context key.
-        return Ok(());
-    };
+    let object_key = obj_equality_key(source_object);
     let layer_count = source_application.body.len();
     if layer_count == 0 {
         return Err("function application retained no argument layers".into());
@@ -393,16 +390,18 @@ pub(in super::super) fn collect_function_application_well_definedness_to_lean_co
             anonymous_function_head,
             layers,
         };
-    if let Some(previous) = context
-        .function_applications
-        .insert(occurrence_id, application_context)
-    {
-        if obj_equality_key(&previous.source_application) != obj_equality_key(source_object) {
+    if let Some(previous) = context.function_applications.get(&object_key) {
+        if function_application_result_certificate_key(previous)
+            != function_application_result_certificate_key(&application_context)
+        {
             return Err(format!(
-                "function application occurrence {} was reused for another source object",
-                occurrence_id.value()
+                "function application `{object_key}` selected incompatible WD certificates"
             ));
         }
+    } else {
+        context
+            .function_applications
+            .insert(object_key, application_context);
     }
     Ok(())
 }

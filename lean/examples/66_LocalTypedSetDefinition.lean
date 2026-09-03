@@ -6,24 +6,23 @@ set_option linter.style.nameCheck false
 namespace __Compiler_66_LocalTypedSetDefinition
 
 theorem local_typed_set_definition :
-    ∀ {__carrier0_1 : Type} (marker : __carrier0_1) (__h3 : Litex.In marker Litex.R) (__domain1 : Litex.Same marker marker),
+    ∀ (marker : (Litex.R).Carrier) (__h3 : Litex.In marker Litex.R) (__domain_f4 : Litex.Same marker marker),
       Litex.Same marker marker := by
-  intro __carrier0_1 marker __h3 __domain1
+  intro marker __h3 __domain_f4
   let E : Litex.Set := (Litex.setBuilder Litex.R (fun (x : Litex.R.Carrier) => Litex.Same x (0 : ℂ)))
-  have __step1_type : Litex.In E (Litex.powerSet Litex.R) := by
-    unfold E
+  have __step0_0_type : Litex.In E (Litex.powerSet Litex.R) := by
     exact Litex.Rules.setBuilderInPowerSetViaParamSubset ((fun _x hx => hx))
-  have __step1_equality : Litex.Same E (Litex.setBuilder Litex.R (fun (x : Litex.R.Carrier) => Litex.Same x (0 : ℂ))) := by
+  have __step0_0_equality : Litex.Same E (Litex.setBuilder Litex.R (fun (x : Litex.R.Carrier) => Litex.Same x (0 : ℂ))) := by
     unfold E
     exact Litex.Same.refl (Litex.setBuilder Litex.R (fun (x : Litex.R.Carrier) => Litex.Same x (0 : ℂ)))
-  have __step1_subset : Litex.Subset E Litex.R := by
+  have __step0_0_subset : Litex.Subset E Litex.R := by
     unfold E
     exact Litex.Rules.setBuilderSubsetViaParamSubset ((fun _x hx => hx))
-  have __step1_elements : ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 E), Litex.In __p1 Litex.R := by
-    exact __step1_subset
-  have __step2 : Litex.Same marker marker := by
-    exact __domain1
-  have __c0_0 : Litex.Same marker marker := __step2
+  have __step0_0_elements : ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 E), Litex.In __p1 Litex.R := by
+    exact __step0_0_subset
+  have __step0_1 : Litex.Same marker marker := by
+    exact __domain_f4
+  have __c0_0 : Litex.Same marker marker := __step0_1
   exact __c0_0
 
 end __Compiler_66_LocalTypedSetDefinition

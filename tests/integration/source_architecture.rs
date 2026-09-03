@@ -221,7 +221,6 @@ fn compiler_and_test_directories_follow_the_repository_layout() {
     assert!(fact_compilation.join("mod.rs").is_file());
     for responsibility in [
         "algebraic_normalization.rs",
-        "anonymous_function_aliases.rs",
         "chain_inference_projections.rs",
         "defined_predicate_inference.rs",
         "direct_fact_inference.rs",
@@ -1683,11 +1682,10 @@ fn verify_state_vocabulary_is_semantic() {
     assert!(!state.contains(&removed_list_membership_switch));
     for constructor in [
         "pub fn initial()",
-        "pub fn after_well_definedness()",
         "pub fn final_round()",
-        "pub fn final_round_after_well_definedness()",
         "pub fn with_next_round(&self)",
-        "pub fn with_well_definedness_verified(&self)",
+        "pub fn with_final_round(&self)",
+        "pub fn with_child_proof_scope(&self)",
         "pub fn is_initial_round(&self)",
     ] {
         assert!(state.contains(constructor), "missing `{constructor}`");
@@ -2062,7 +2060,7 @@ fn environment_repeated_parent_filenames_are_exactly_the_owner_entrypoints() {
         (
             "src/environment/caches/mod.rs",
             "mod caches;",
-            "pub use caches::EnvironmentVerificationCache;",
+            "pub use caches::EnvironmentInferenceCache;",
         ),
     ] {
         let module = fs::read_to_string(root.join(module_path))
@@ -2112,7 +2110,7 @@ fn environment_exposes_five_direct_owners_without_flat_compatibility_storage() {
         "pub facts: EnvironmentFactStore",
         "pub objects: EnvironmentObjectKnowledgeStore",
         "pub predicate_algebraic_properties: EnvironmentPredicateAlgebraicPropertyStore",
-        "pub caches: EnvironmentVerificationCache",
+        "pub inference_cache: EnvironmentInferenceCache",
     ] {
         assert!(environment.contains(direct_owner));
     }

@@ -43,13 +43,7 @@ impl Runtime {
     fn exec_have_fn_by_forall_exist_unique_verify_well_definedness(
         &mut self,
         stmt: &HaveFnByForallExistUniqueStmt,
-    ) -> Result<
-        (
-            HaveFnByForallExistUniqueShape,
-            WellDefinedFactResult,
-        ),
-        RuntimeError,
-    > {
+    ) -> Result<(HaveFnByForallExistUniqueShape, WellDefinedFactResult), RuntimeError> {
         let shape = self.have_fn_by_forall_exist_unique_shape(stmt)?;
         let well_definedness = self
             .verify_fact_well_defined_result(

@@ -6,11 +6,22 @@ set_option linter.style.nameCheck false
 namespace __Compiler_25_ExplicitSourceAxioms
 
 universe u__marked_1
-axiom marked {__abstract_carrier1 : Type u__marked_1} (x : __abstract_carrier1) : Prop
+structure __LitexAbstractPredicate_marked where
+  holds : {__abstract_carrier1 : Type u__marked_1} → (x : __abstract_carrier1) → Prop
+  respectsSame :
+    {__source_carrier1 : Type u__marked_1} →
+    {__target_carrier1 : Type u__marked_1} →
+    [Litex.ComplexObserver __source_carrier1] → [Litex.ComplexObserver __target_carrier1] →
+    (__source1 : __source_carrier1) →
+    (__target1 : __target_carrier1) →
+    Litex.Same __source1 __target1 →
+    (holds __source1 ↔ holds __target1)
 
-axiom __fact0 : marked (1 : ℂ)
+axiom marked : __LitexAbstractPredicate_marked
 
-theorem __fact1 : marked (1 : ℂ) := by
+axiom __fact0 : marked.holds (1 : ℂ)
+
+theorem __fact1 : marked.holds (1 : ℂ) := by
   exact __fact0
 
 end __Compiler_25_ExplicitSourceAxioms

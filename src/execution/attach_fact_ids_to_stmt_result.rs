@@ -175,7 +175,10 @@ impl Runtime {
         match verified_by {
             SuccessFactProofResult::BuiltinRule(result)
             | SuccessFactProofResult::BuiltinStrategy(result) => {
-                debug_assert!(result.subgoals.iter().all(|subgoal| subgoal.fact_id().is_none()));
+                debug_assert!(result
+                    .subgoals
+                    .iter()
+                    .all(|subgoal| subgoal.fact_id().is_none()));
             }
             SuccessFactProofResult::StoredFactCitation(_)
             | SuccessFactProofResult::DefinitionReduction(_)
@@ -193,10 +196,14 @@ impl Runtime {
                 debug_assert!(result.steps.iter().all(|step| step.fact_id().is_none()));
             }
             SuccessFactProofResult::ForallProof(result) => {
+                self.attach_known_fact_ids_to_infer_result(&mut result.assumption_infers)?;
                 debug_assert!(result
                     .proves
                     .iter()
                     .all(|proved| proved.result.fact_id().is_none()));
+                for proved in &mut result.proves {
+                    self.attach_known_fact_ids_to_infer_result(&mut proved.store.infers)?;
+                }
             }
             SuccessFactProofResult::Transform(_result) => {
                 // The transform child is shared proof evidence. Its producer

@@ -1,5 +1,7 @@
 use super::*;
+use crate::parsing::Tokenizer;
 use crate::test_support::execute_source;
+use std::rc::Rc;
 
 fn run_sequence_source(source: &str, label: &str) -> (bool, String) {
     let mut runtime = Runtime::default();
@@ -7,6 +9,32 @@ fn run_sequence_source(source: &str, label: &str) -> (bool, String) {
     let (stmt_results, runtime_error) = execute_source(source, &mut runtime);
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
     (run_succeeded, run_output)
+}
+
+fn run_sequence_property_wd(source: &str, label: &str) -> (bool, String) {
+    let (setup, property) = source
+        .rsplit_once('\n')
+        .expect("fixture has a declaration followed by one property fact");
+    let mut runtime = Runtime::default();
+    runtime.start_isolated_source(label);
+    let (setup_results, setup_error) = execute_source(setup, &mut runtime);
+    if setup_error.is_some() {
+        return render_run_output(&runtime, &setup_results, &setup_error);
+    }
+
+    let property = property.strip_prefix("trust ").unwrap_or(property);
+    let tokenizer = Tokenizer::new();
+    let mut blocks = tokenizer
+        .parse_blocks(property, Rc::from(label))
+        .expect("property fixture should tokenize");
+    assert_eq!(blocks.len(), 1);
+    let fact = runtime
+        .parse_fact(&mut blocks[0])
+        .expect("property fixture should parse");
+    match runtime.verify_fact_well_defined_result(&fact, &VerifyState::initial()) {
+        Ok(_) => (true, String::new()),
+        Err(error) => (false, error.trace_message()),
+    }
 }
 
 #[test]
@@ -61,7 +89,7 @@ fn finite_sequence_function_properties_use_exact_one_based_domain_bridge() {
             "have f finite_seq({}, 0)\ntrust $bijective(closed_range(1, 0), {}, f)",
         ),
     ] {
-        let (succeeded, output) = run_sequence_source(source, label);
+        let (succeeded, output) = run_sequence_property_wd(source, label);
         assert!(
             succeeded,
             "the exact finite-sequence domain bridge should be well-defined:\n{output}"
@@ -90,7 +118,7 @@ fn finite_sequence_function_properties_use_exact_one_based_domain_bridge() {
             "have f fn(k N+: k <= 1, k > 0) {1}\ntrust $bijective(closed_range(1, 1), {1}, f)",
         ),
     ] {
-        let (succeeded, output) = run_sequence_source(source, label);
+        let (succeeded, output) = run_sequence_property_wd(source, label);
         assert!(
             !succeeded,
             "a near-miss domain must not match the finite-sequence bridge:\n{output}"
@@ -111,6 +139,9 @@ $bijective(closed_range(1, 1), {1}, f)
         !succeeded,
         "an arbitrary finite sequence must not be treated as a bijection:\n{output}"
     );
-    assert!(output.contains("verification failed"));
+    assert!(
+        output.contains("prop definition not found for bijective"),
+        "{output}"
+    );
     assert!(!output.contains("builtin theorem `finite_set_has_bijective_index`"));
 }

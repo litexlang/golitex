@@ -547,14 +547,14 @@ forall a, b R+, c R:
 fn forall_iff_well_definedness_checks_both_directions_independently() {
     let invalid_sources = [
         r#"
-trust forall x R:
+forall x R:
     =>:
         x != 0
     <=>:
         1 / x = 1 / x
 "#,
         r#"
-trust forall x R:
+forall x R:
     =>:
         1 / x = 1 / x
     <=>:
@@ -567,16 +567,21 @@ trust forall x R:
         runtime.start_isolated_source(
             format!("forall_iff_independent_well_definedness_{}", index).as_str(),
         );
-        let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
-        let (run_succeeded, run_output) =
-            render_run_output(&runtime, &stmt_results, &runtime_error);
-
+        let tokenizer = crate::parsing::Tokenizer::new();
+        let mut blocks = tokenizer
+            .parse_blocks(source_code, std::rc::Rc::from("forall_iff_wd"))
+            .expect("forall-iff WD fixture should tokenize");
+        let fact = runtime
+            .parse_fact(&mut blocks[0])
+            .expect("forall-iff WD fixture should parse as a fact");
+        let error = runtime
+            .verify_fact_well_defined_result(&fact, &VerifyState::initial())
+            .expect_err("each iff direction must establish its own WD assumptions");
+        let trace = error.trace_message();
         assert!(
-            !run_succeeded,
-            "an iff direction must not borrow its opposite side's assumptions:\n{}",
-            run_output
+            trace.contains("must be non-zero"),
+            "direction {index} reported an unexpected WD error:\n{trace}"
         );
-        assert!(run_output.contains("divisor `x` must be non-zero"));
     }
 }
 
@@ -606,7 +611,7 @@ prop SharedName(x R)
         "same spelling across definition kinds should fail:\n{}",
         run_output
     );
-    assert!(run_output.contains("NameAlreadyUsedError"));
+    assert!(run_output.contains("name_already_used_error"));
     assert!(run_output.contains("name `SharedName` is already used"));
 }
 
@@ -1581,7 +1586,7 @@ thm proof_local_typing_does_not_repair_the_header:
         f(0) = f(0)
     trust f $in fn(n N) R
 "#,
-            "thm: forall fact is not well defined",
+            "fact is not well defined",
         ),
         (
             "claim",

@@ -31,6 +31,9 @@ pub struct SuccessForallAssumptionFactResult {
 pub struct SuccessForallProvedFactResult {
     pub stmt: ExistOrAndChainAtomicFact,
     pub result: Box<VerifyFactResult>,
+    /// Exact local store performed after this conclusion was proved. Later
+    /// conclusions may cite this truth-stage FactId and any typed consequences.
+    pub store: SuccessStoreFactResult,
 }
 
 #[derive(Debug)]
@@ -210,20 +213,11 @@ impl SuccessFactProofResult {
 
     pub fn forall_proof(
         forall_fact: ForallFact,
-        then_results: Vec<VerifyFactResult>,
         parameter_assumptions: Vec<SuccessForallAssumptionFactResult>,
         domain_assumptions: Vec<SuccessForallAssumptionFactResult>,
         assumption_infers: SuccessInferResult,
+        proves: Vec<SuccessForallProvedFactResult>,
     ) -> Self {
-        let mut proves = Vec::new();
-        for (stmt, result) in forall_fact
-            .then_facts
-            .iter()
-            .cloned()
-            .zip(then_results.into_iter())
-        {
-            proves.push(SuccessForallProvedFactResult::new(stmt, result));
-        }
         Self::ForallProof(SuccessForallProofResult::new(
             forall_fact,
             parameter_assumptions,
@@ -287,10 +281,15 @@ impl SuccessForallProofResult {
 }
 
 impl SuccessForallProvedFactResult {
-    pub fn new(stmt: ExistOrAndChainAtomicFact, result: VerifyFactResult) -> Self {
+    pub fn new(
+        stmt: ExistOrAndChainAtomicFact,
+        result: VerifyFactResult,
+        store: SuccessStoreFactResult,
+    ) -> Self {
         SuccessForallProvedFactResult {
             stmt,
             result: Box::new(result),
+            store,
         }
     }
 }
@@ -312,6 +311,7 @@ impl fmt::Debug for SuccessForallProvedFactResult {
         f.debug_struct("SuccessForallProvedFactResult")
             .field("stmt", &self.stmt.to_string())
             .field("result", &self.result)
+            .field("store", &self.store)
             .finish()
     }
 }

@@ -156,7 +156,7 @@ impl Runtime {
         let fact_to_store: Fact = inferred_atomic.clone().into();
         let mut result = SuccessInferResult::new();
         result.new_fact(&fact_to_store);
-        // Do not run full `verify_fact_well_defined` here: well-defined for the flipped atom can re-enter
+        // Do not run full `verify_fact_well_defined_result` here: WD for the flipped atom can re-enter
         // `verify_fn_obj_well_defined` (e.g. intermediate `… $in N`) and this infer path again,
         // causing mutual recursion / stack overflow (see `examples/_internal/regression/opaque_euler_phi_interface.lit`).
         let conclusion_infers = self
@@ -381,10 +381,7 @@ impl Runtime {
         let mut result = SuccessInferResult::new();
         result.new_fact(&conclusion_fact);
         let conclusion_infers = self
-            .store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
-                conclusion_fact.clone(),
-                inference_state,
-            )?;
+            .store_typed_inference_conclusion_and_infer(conclusion_fact.clone(), inference_state)?;
         result.add_rule_application_preserving_conclusion_result_structure(
             InferRule::StrictOrderComparedToZeroImpliesWeakOrder,
             vec![source.clone().into()],
@@ -408,10 +405,7 @@ impl Runtime {
         let fact_to_store: Fact = conclusion_atomic.clone().into();
         let mut result = SuccessInferResult::new();
         let conclusion_infers = self
-            .store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
-                fact_to_store.clone(),
-                inference_state,
-            )
+            .store_typed_inference_conclusion_and_infer(fact_to_store.clone(), inference_state)
             .map_err(|previous_error| {
                 RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
                     None,
@@ -444,10 +438,7 @@ impl Runtime {
         let fact_to_store: Fact = conclusion_atomic.clone().into();
         let mut result = SuccessInferResult::new();
         let conclusion_infers = self
-            .store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
-                fact_to_store.clone(),
-                inference_state,
-            )
+            .store_typed_inference_conclusion_and_infer(fact_to_store.clone(), inference_state)
             .map_err(|previous_error| {
                 RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
                     None,

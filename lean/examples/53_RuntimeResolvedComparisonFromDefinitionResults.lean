@@ -27,8 +27,7 @@ theorem __fact3 : Litex.Same b (2 : ℂ) := by
 
 theorem __fact4 : Litex.Nonnegative (a + b) := by
   exact (by
-  unfold a b
-  exact (Litex.Rules.complexEqRealNonnegative (((1 : ℂ) + (2 : ℂ))) (3 : ℝ) (by norm_num) (by norm_num)))
+  exact (Litex.Nonnegative.congr (Litex.Same.ofEqNoObservation (by norm_num [a, b] : (a + b) = (((3 : ℝ)) : ℂ)))).mpr (Litex.OrderBridge.nonnegativeOfComplexReal (r := (3 : ℝ)) (by norm_num)))
 
 theorem __fact5 : Litex.Nonpositive ((-1 : ℂ) * (a + b)) := by
   exact Litex.Rules.complexNegativeOneMulNonpositive (__fact4)

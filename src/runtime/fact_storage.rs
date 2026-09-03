@@ -83,7 +83,7 @@ impl Runtime {
                 );
         }
         let verify_state = verify_state.with_inference_state(inference_state);
-        if let Err(wd_err) = self.verify_fact_well_defined(&fact, &verify_state) {
+        if let Err(wd_err) = self.verify_fact_well_defined_result(&fact, &verify_state) {
             return Err(StoreFactRuntimeError(RuntimeErrorStruct::new(
                 Some(fact.clone().into_stmt()),
                 "cannot store fact: not well-defined".to_string(),
@@ -127,33 +127,34 @@ impl Runtime {
         self.store_with_well_defined_verification_and_infer_with_reason(fact, &verify_state, reason)
     }
 
-    pub fn store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
+    /// Mathematical contract: a typed inference rule owns the justification
+    /// for both the truth and well-definedness of its exact conclusion. Store
+    /// that conclusion and continue closure inference without submitting it as
+    /// a new, independent fact-verification process. Any later statement that
+    /// uses the stored conclusion still constructs its own complete WD DAG.
+    pub fn store_typed_inference_conclusion_and_infer(
         &mut self,
         fact: Fact,
         inference_state: &InferenceState,
     ) -> Result<SuccessInferResult, RuntimeError> {
-        self.store_with_well_defined_verification_and_infer_with_default_verify_state_and_reason_and_state(
+        self.store_typed_inference_conclusion_and_infer_with_reason(
             fact,
-            InferReason::StatementWithVerification,
+            InferReason::StoredFact,
             inference_state,
         )
     }
 
-    pub fn store_with_well_defined_verification_and_infer_with_default_verify_state_and_reason_and_state(
+    /// The provenance label changes how the typed inference is explained, not
+    /// whether its conclusion is redundantly submitted to fact verification.
+    pub fn store_typed_inference_conclusion_and_infer_with_reason(
         &mut self,
         fact: Fact,
         reason: InferReason,
         inference_state: &InferenceState,
     ) -> Result<SuccessInferResult, RuntimeError> {
-        let verify_state = match &fact {
-            Fact::ForallFact(_) | Fact::ForallFactWithIff(_) => VerifyState::initial(),
-            _ => VerifyState::final_round(),
-        }
-        .with_inference_state(inference_state);
-        self.store_with_well_defined_verification_and_infer_with_reason_text_and_state(
+        self.store_without_well_defined_verification_and_infer_with_reason_and_state(
             fact,
-            &verify_state,
-            reason.store_reason(),
+            reason,
             inference_state,
         )
     }
@@ -516,7 +517,6 @@ impl Runtime {
                 fact_id,
                 equivalent_proposition_lookup_key,
             )?;
-        self.store_chain_atomic_facts_to_cache(chain_atomic_facts)?;
         let mut transitive_chain_infers =
             self.store_equality_chain_atomic_facts(equality_chain_facts)?;
         transitive_chain_infers.new_infer_result_inside(
@@ -540,6 +540,7 @@ impl Runtime {
 
         transitive_chain_infers
             .new_infer_result_inside(self.infer_with_state(&fact_for_infer, inference_state)?);
+        self.store_chain_atomic_facts_to_cache(chain_atomic_facts)?;
         Ok(transitive_chain_infers)
     }
 
@@ -598,7 +599,6 @@ impl Runtime {
             _ => Vec::new(),
         };
         self.top_level_env().store_and_chain_atomic_fact(fact)?;
-        self.store_chain_atomic_facts_to_cache(chain_atomic_facts)?;
         let mut transitive_chain_infers =
             self.store_equality_chain_atomic_facts(equality_chain_facts)?;
         transitive_chain_infers.new_infer_result_inside(
@@ -612,6 +612,7 @@ impl Runtime {
 
         transitive_chain_infers
             .new_infer_result_inside(self.infer_with_state(&fact_for_infer, inference_state)?);
+        self.store_chain_atomic_facts_to_cache(chain_atomic_facts)?;
         let mut nested_infer_result = transitive_chain_infers;
         let mut infer_result = SuccessInferResult::new();
         infer_result.add_store_fact_output_from_nested(
@@ -740,7 +741,6 @@ impl Runtime {
         };
         self.top_level_env()
             .store_exist_or_and_chain_atomic_fact(fact)?;
-        self.store_chain_atomic_facts_to_cache(chain_atomic_facts)?;
         let mut transitive_chain_infers =
             self.store_equality_chain_atomic_facts(equality_chain_facts)?;
         transitive_chain_infers.new_infer_result_inside(
@@ -754,6 +754,7 @@ impl Runtime {
         transitive_chain_infers.new_infer_result_inside(
             self.infer_exist_or_and_chain_atomic_fact(&fact_for_infer, inference_state)?,
         );
+        self.store_chain_atomic_facts_to_cache(chain_atomic_facts)?;
         let mut nested_infer_result = transitive_chain_infers;
         let mut infer_result = SuccessInferResult::new();
         infer_result.add_store_fact_output_from_nested(
@@ -820,7 +821,6 @@ impl Runtime {
             _ => Vec::new(),
         };
         self.top_level_env().store_quantifier_free_fact(fact)?;
-        self.store_chain_atomic_facts_to_cache(chain_atomic_facts)?;
         let mut transitive_chain_infers =
             self.store_equality_chain_atomic_facts(equality_chain_facts)?;
         transitive_chain_infers.new_infer_result_inside(
@@ -834,6 +834,7 @@ impl Runtime {
         transitive_chain_infers.new_infer_result_inside(
             self.infer_quantifier_free_fact(&fact_for_infer, inference_state)?,
         );
+        self.store_chain_atomic_facts_to_cache(chain_atomic_facts)?;
         let mut nested_infer_result = transitive_chain_infers;
         let mut infer_result = SuccessInferResult::new();
         infer_result.add_store_fact_output_from_nested(
@@ -1060,7 +1061,7 @@ impl Runtime {
         reason: InferReason,
     ) -> Result<SuccessInferResult, RuntimeError> {
         if !self.current_execution_is_trusted_file() {
-            self.verify_fact_well_defined(&fact, verify_state)?;
+            self.verify_fact_well_defined_result(&fact, verify_state)?;
         }
 
         self.store_fact_without_well_defined_verified_and_without_infer_with_reason(fact, reason)

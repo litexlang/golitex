@@ -10,21 +10,21 @@ theorem __fact0 : (Litex.Same (1 : ℂ) (1 : ℂ)) ∧ (Litex.Same (2 : ℂ) (2 
 
 theorem __fact1 :
     ∀ (__p1 : Litex.Set) (__p2 : Litex.Set) (__domain1 : Litex.Same __p1 __p1) (__domain2 : Litex.Same __p2 __p2), (Litex.Same __p1 __p1) ∧ (Litex.Same __p2 __p2) := by
-  intro a b __domain1 __domain2
-  have __prior1_0 : (Litex.Same a a) ∧ (Litex.Same b b) := ⟨__domain1, __domain2⟩
+  intro a b __domain_f11 __domain_f12
+  have __prior1_0 : (Litex.Same a a) ∧ (Litex.Same b b) := ⟨__domain_f11, __domain_f12⟩
   exact __prior1_0
 
 theorem __fact2 :
     ∀ (__p1 : Litex.Set) (__p2 : Litex.Set) (__domain1 : Litex.Same __p1 __p1), Litex.Same __p1 __p1 ∨ Litex.Same __p2 __p2 := by
-  intro a b __domain1
-  have __prior2_0 : Litex.Same a a ∨ Litex.Same b b := Or.inl (__domain1)
+  intro a b __domain_f21
+  have __prior2_0 : Litex.Same a a ∨ Litex.Same b b := Or.inl (__domain_f21)
   exact __prior2_0
 
 theorem __fact3 :
     ∀ (__p1 : Litex.Set) (__p2 : Litex.Set) (__p3 : Litex.Set) (__p4 : Litex.Set) (__domain1 : (¬ Litex.Same __p1 __p2) ∧ (¬ Litex.Same __p3 __p4)), ¬ Litex.Same __p3 __p4 := by
-  intro a b c d __domain1
-  have __infer3_0 : ¬ Litex.Same a b := (__domain1).1
-  have __infer3_1 : ¬ Litex.Same c d := (__domain1).2
+  intro a b c d __domain_f35
+  have __infer3_0 : ¬ Litex.Same a b := (__domain_f35).1
+  have __infer3_1 : ¬ Litex.Same c d := (__domain_f35).2
   have __prior3_0 : ¬ Litex.Same c d := __infer3_1
   exact __prior3_0
 

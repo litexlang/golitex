@@ -19,7 +19,6 @@ pub struct SuccessVerifyByPropRegistrationResult {
     pub registration_type: String,
     pub prop_name: String,
     pub forall_fact: ForallFact,
-    pub assumption_infers: SuccessInferResult,
     pub proof_steps: Vec<StmtResult>,
     /// The complete recursive result returned by `verify_forall_fact`, not a
     /// flattened copy of its individual conclusions.
@@ -55,7 +54,6 @@ impl SuccessVerifyByPropRegistrationResult {
         registration_type: String,
         prop_name: String,
         forall_fact: ForallFact,
-        assumption_infers: SuccessInferResult,
         proof_steps: Vec<StmtResult>,
         forall_check: VerifyFactResult,
     ) -> Self {
@@ -63,7 +61,6 @@ impl SuccessVerifyByPropRegistrationResult {
             registration_type,
             prop_name,
             forall_fact,
-            assumption_infers,
             proof_steps,
             forall_check: Box::new(forall_check),
         }
@@ -76,7 +73,6 @@ impl fmt::Debug for SuccessVerifyByPropRegistrationResult {
             .field("registration_type", &self.registration_type)
             .field("prop_name", &self.prop_name)
             .field("forall_fact", &self.forall_fact.to_string())
-            .field("assumption_infers", &self.assumption_infers)
             .field("proof_steps", &self.proof_steps)
             .field("forall_check", &self.forall_check)
             .finish()

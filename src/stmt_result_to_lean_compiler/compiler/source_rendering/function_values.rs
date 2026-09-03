@@ -254,67 +254,33 @@ pub(in super::super) fn render_anonymous_function(
         .well_definedness
         .as_ref()
         .ok_or_else(|| "anonymous function has no active Result-owned WD context".to_string())?;
-    let synthetic_occurrence = function.source_occurrence_id.is_none();
-    let occurrence = if let Some(occurrence) = function.source_occurrence_id {
-        occurrence
+    let anonymous_context = if let Some(exact) = result_context
+        .anonymous_functions
+        .get(&function.semantic_key)
+    {
+        exact
     } else {
-        let mut owners = result_context
-            .anonymous_functions
-            .iter()
-            .filter_map(|(owner, certificate)| {
-                (obj_equality_key(&certificate.source_function) == function.semantic_key)
-                    .then_some(*owner)
-            })
-            .collect::<Vec<_>>();
-        owners.sort_by_key(|owner| owner.value());
-        let [owner] = owners.as_slice() else {
+        let mut matching = Vec::new();
+        for candidate in result_context.anonymous_functions.values() {
+            if matches_directly_or_after_one_transparent_definition_pass(
+                &candidate.source_function,
+                &function.source_function,
+                context,
+            )? {
+                matching.push(candidate);
+            }
+        }
+        let [matching] = matching.as_slice() else {
             return Err(format!(
-                "synthetic anonymous function has {} alpha-equivalent Result owners",
-                owners.len()
+                "anonymous function `{}` has {} matching recursive Result contexts",
+                function.source_function,
+                matching.len()
             ));
         };
-        *owner
+        *matching
     };
-    let owner_occurrence = result_context
-        .anonymous_function_occurrence_aliases
-        .get(&occurrence)
-        .copied()
-        .unwrap_or(occurrence);
-    let anonymous_context = result_context
-        .anonymous_functions
-        .get(&owner_occurrence)
-        .ok_or_else(|| {
-            let equivalent_owners = result_context
-                .anonymous_functions
-                .iter()
-                .filter_map(|(candidate, certificate)| {
-                    (obj_equality_key(&certificate.source_function) == function.semantic_key)
-                        .then_some(candidate.value().to_string())
-                })
-                .collect::<Vec<_>>()
-                .join(", ");
-            let aliases = result_context
-                .anonymous_function_occurrence_aliases
-                .iter()
-                .map(|(source, owner)| format!("{}->{}", source.value(), owner.value()))
-                .collect::<Vec<_>>()
-                .join(", ");
-            format!(
-                "anonymous function occurrence {} has no exact recursive Result context; alpha-equivalent Result owners [{}]; installed aliases [{}]",
-                occurrence.value(), equivalent_owners, aliases
-            )
-        })?;
-    if obj_equality_key(&anonymous_context.source_function) != function.semantic_key {
-        return Err(
-            "anonymous function Result context changed its source body or signature".into(),
-        );
-    }
-    // Keep the current source occurrence.  An alpha-equivalent Result owner
-    // supplies the binder/closure certificate, but its stored source object
-    // may have been produced by substitution and therefore lack parser-owned
-    // occurrence identities on nested applications.  Replacing the current
-    // object with that synthetic owner would discard exactly the identities
-    // needed to select nested WD certificates.
+    // Keep the current semantic source. An alpha-aligned Result owner supplies
+    // the binder/closure certificate without replacing current binder symbols.
     let function = function.clone();
     validate_function_type(&function.function)?;
 
@@ -346,14 +312,6 @@ pub(in super::super) fn render_anonymous_function(
                     "anonymous function has no ordered membership premise for parameter {parameter_index}"
                 )
             })?;
-        if !synthetic_occurrence
-            && owner_occurrence == occurrence
-            && parameter_premise.symbol_id != Some(parameter.symbol_id)
-        {
-            return Err(format!(
-                "anonymous function parameter {parameter_index} changed its exact SymbolId"
-            ));
-        }
         let suffix = if uses_telescope {
             (parameter_index + 1).to_string()
         } else {
@@ -372,10 +330,10 @@ pub(in super::super) fn render_anonymous_function(
         nested
             .symbol_names
             .insert(parameter.symbol_id, argument.clone());
-        if synthetic_occurrence || owner_occurrence != occurrence {
-            let owner_symbol_id = parameter_premise.symbol_id.ok_or_else(|| {
-                format!("anonymous function owner has no SymbolId for parameter {parameter_index}")
-            })?;
+        let owner_symbol_id = parameter_premise.symbol_id.ok_or_else(|| {
+            format!("anonymous function owner has no SymbolId for parameter {parameter_index}")
+        })?;
+        if owner_symbol_id != parameter.symbol_id {
             nested
                 .symbol_names
                 .insert(owner_symbol_id, argument.clone());
@@ -467,11 +425,11 @@ pub(in super::super) fn render_anonymous_function(
     let selected_return = match closure.role {
         WellDefinednessRequirementRole::AnonymousFunctionBodyMembership => {
             let (body, return_set) = membership_parts(&closure.expected_proposition)?;
-            let owner_body_changed = if !synthetic_occurrence && owner_occurrence == occurrence {
-                obj_equality_key(body) != obj_equality_key(&function.source_body)
-            } else {
-                false
-            };
+            let owner_body_changed = !matches_directly_or_after_one_transparent_definition_pass(
+                body,
+                &function.source_body,
+                &nested,
+            )?;
             if owner_body_changed
                 || LeanTargetObjectRepresentation::lower(return_set).map_err(|error| {
                     format!("anonymous function return carrier failed to lower: {error}")

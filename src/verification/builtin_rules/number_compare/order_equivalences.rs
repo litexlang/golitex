@@ -28,9 +28,9 @@ impl Runtime {
                         Mul::new(Number::new("-1".to_string()).into(), f.right.clone()).into();
                     let reverse: AtomicFact =
                         LessFact::new(x, negative_right, f.line_file.clone()).into();
-                    let premise =
-                        self.verify_atomic_fact_as_builtin_rule_premise(&reverse, builtin_state)?;
-                    if premise.is_success() {
+                    if let Some(premise) = self
+                        .try_verify_atomic_fact_as_builtin_rule_premise(&reverse, builtin_state)?
+                    {
                         return success("order: -x > y from x < -y", premise);
                     }
                 }
@@ -41,9 +41,9 @@ impl Runtime {
                         Mul::new(Number::new("-1".to_string()).into(), f.right.clone()).into();
                     let reverse: AtomicFact =
                         LessEqualFact::new(x, negative_right, f.line_file.clone()).into();
-                    let premise =
-                        self.verify_atomic_fact_as_builtin_rule_premise(&reverse, builtin_state)?;
-                    if premise.is_success() {
+                    if let Some(premise) = self
+                        .try_verify_atomic_fact_as_builtin_rule_premise(&reverse, builtin_state)?
+                    {
                         return success("order: -x >= y from x <= -y", premise);
                     }
                 }
@@ -54,9 +54,9 @@ impl Runtime {
                         Mul::new(Number::new("-1".to_string()).into(), f.right.clone()).into();
                     let reverse: AtomicFact =
                         GreaterFact::new(x, negative_right, f.line_file.clone()).into();
-                    let premise =
-                        self.verify_atomic_fact_as_builtin_rule_premise(&reverse, builtin_state)?;
-                    if premise.is_success() {
+                    if let Some(premise) = self
+                        .try_verify_atomic_fact_as_builtin_rule_premise(&reverse, builtin_state)?
+                    {
                         return success("order: -x < y from x > -y", premise);
                     }
                 }
@@ -67,9 +67,9 @@ impl Runtime {
                         Mul::new(Number::new("-1".to_string()).into(), f.right.clone()).into();
                     let reverse: AtomicFact =
                         GreaterEqualFact::new(x, negative_right, f.line_file.clone()).into();
-                    let premise =
-                        self.verify_atomic_fact_as_builtin_rule_premise(&reverse, builtin_state)?;
-                    if premise.is_success() {
+                    if let Some(premise) = self
+                        .try_verify_atomic_fact_as_builtin_rule_premise(&reverse, builtin_state)?
+                    {
                         return success("order: -x <= y from x >= -y", premise);
                     }
                 }
@@ -81,15 +81,15 @@ impl Runtime {
                 if let Some(x) = self.peel_mul_by_literal_neg_one(&f.left) {
                     let le: AtomicFact =
                         LessEqualFact::new(x.clone(), z.clone(), f.line_file.clone()).into();
-                    let premise =
-                        self.verify_atomic_fact_as_builtin_rule_premise(&le, builtin_state)?;
-                    if premise.is_success() {
+                    if let Some(premise) =
+                        self.try_verify_atomic_fact_as_builtin_rule_premise(&le, builtin_state)?
+                    {
                         return success("order: (-1)*x >= 0 from x <= 0", premise);
                     }
                     let lt: AtomicFact = LessFact::new(x, z.clone(), f.line_file.clone()).into();
-                    let premise =
-                        self.verify_atomic_fact_as_builtin_rule_premise(&lt, builtin_state)?;
-                    if premise.is_success() {
+                    if let Some(premise) =
+                        self.try_verify_atomic_fact_as_builtin_rule_premise(&lt, builtin_state)?
+                    {
                         return success("order: (-1)*x >= 0 from x < 0", premise);
                     }
                 }
@@ -98,9 +98,9 @@ impl Runtime {
             AtomicFact::GreaterFact(f) if self.obj_is_resolved_zero(&f.right) => {
                 if let Some(x) = self.peel_mul_by_literal_neg_one(&f.left) {
                     let lt: AtomicFact = LessFact::new(x, z.clone(), f.line_file.clone()).into();
-                    let premise =
-                        self.verify_atomic_fact_as_builtin_rule_premise(&lt, builtin_state)?;
-                    if premise.is_success() {
+                    if let Some(premise) =
+                        self.try_verify_atomic_fact_as_builtin_rule_premise(&lt, builtin_state)?
+                    {
                         return success("order: (-1)*x > 0 from x < 0", premise);
                     }
                 }
@@ -110,15 +110,15 @@ impl Runtime {
                 if let Some(x) = self.peel_mul_by_literal_neg_one(&f.left) {
                     let ge: AtomicFact =
                         GreaterEqualFact::new(x.clone(), z.clone(), f.line_file.clone()).into();
-                    let premise =
-                        self.verify_atomic_fact_as_builtin_rule_premise(&ge, builtin_state)?;
-                    if premise.is_success() {
+                    if let Some(premise) =
+                        self.try_verify_atomic_fact_as_builtin_rule_premise(&ge, builtin_state)?
+                    {
                         return success("order: (-1)*x <= 0 from x >= 0", premise);
                     }
                     let gt: AtomicFact = GreaterFact::new(x, z.clone(), f.line_file.clone()).into();
-                    let premise =
-                        self.verify_atomic_fact_as_builtin_rule_premise(&gt, builtin_state)?;
-                    if premise.is_success() {
+                    if let Some(premise) =
+                        self.try_verify_atomic_fact_as_builtin_rule_premise(&gt, builtin_state)?
+                    {
                         return success("order: (-1)*x <= 0 from x > 0", premise);
                     }
                 }
@@ -127,9 +127,9 @@ impl Runtime {
             AtomicFact::LessFact(f) if self.obj_is_resolved_zero(&f.right) => {
                 if let Some(x) = self.peel_mul_by_literal_neg_one(&f.left) {
                     let gt: AtomicFact = GreaterFact::new(x, z.clone(), f.line_file.clone()).into();
-                    let premise =
-                        self.verify_atomic_fact_as_builtin_rule_premise(&gt, builtin_state)?;
-                    if premise.is_success() {
+                    if let Some(premise) =
+                        self.try_verify_atomic_fact_as_builtin_rule_premise(&gt, builtin_state)?
+                    {
                         return success("order: (-1)*x < 0 from x > 0", premise);
                     }
                 }
@@ -139,15 +139,15 @@ impl Runtime {
                 if let Some(x) = self.peel_mul_by_literal_neg_one(&f.right) {
                     let le: AtomicFact =
                         LessEqualFact::new(x.clone(), z.clone(), f.line_file.clone()).into();
-                    let premise =
-                        self.verify_atomic_fact_as_builtin_rule_premise(&le, builtin_state)?;
-                    if premise.is_success() {
+                    if let Some(premise) =
+                        self.try_verify_atomic_fact_as_builtin_rule_premise(&le, builtin_state)?
+                    {
                         return success("order: 0 <= (-1)*x from x <= 0", premise);
                     }
                     let lt: AtomicFact = LessFact::new(x, z.clone(), f.line_file.clone()).into();
-                    let premise =
-                        self.verify_atomic_fact_as_builtin_rule_premise(&lt, builtin_state)?;
-                    if premise.is_success() {
+                    if let Some(premise) =
+                        self.try_verify_atomic_fact_as_builtin_rule_premise(&lt, builtin_state)?
+                    {
                         return success("order: 0 <= (-1)*x from x < 0", premise);
                     }
                 }
@@ -156,9 +156,9 @@ impl Runtime {
             AtomicFact::LessFact(f) if self.obj_is_resolved_zero(&f.left) => {
                 if let Some(x) = self.peel_mul_by_literal_neg_one(&f.right) {
                     let lt: AtomicFact = LessFact::new(x, z.clone(), f.line_file.clone()).into();
-                    let premise =
-                        self.verify_atomic_fact_as_builtin_rule_premise(&lt, builtin_state)?;
-                    if premise.is_success() {
+                    if let Some(premise) =
+                        self.try_verify_atomic_fact_as_builtin_rule_premise(&lt, builtin_state)?
+                    {
                         return success("order: 0 < (-1)*x from x < 0", premise);
                     }
                 }
@@ -168,15 +168,15 @@ impl Runtime {
                 if let Some(x) = self.peel_mul_by_literal_neg_one(&f.right) {
                     let ge: AtomicFact =
                         GreaterEqualFact::new(x.clone(), z.clone(), f.line_file.clone()).into();
-                    let premise =
-                        self.verify_atomic_fact_as_builtin_rule_premise(&ge, builtin_state)?;
-                    if premise.is_success() {
+                    if let Some(premise) =
+                        self.try_verify_atomic_fact_as_builtin_rule_premise(&ge, builtin_state)?
+                    {
                         return success("order: 0 >= (-1)*x from x >= 0", premise);
                     }
                     let gt: AtomicFact = GreaterFact::new(x, z.clone(), f.line_file.clone()).into();
-                    let premise =
-                        self.verify_atomic_fact_as_builtin_rule_premise(&gt, builtin_state)?;
-                    if premise.is_success() {
+                    if let Some(premise) =
+                        self.try_verify_atomic_fact_as_builtin_rule_premise(&gt, builtin_state)?
+                    {
                         return success("order: 0 >= (-1)*x from x > 0", premise);
                     }
                 }
@@ -185,9 +185,9 @@ impl Runtime {
             AtomicFact::GreaterFact(f) if self.obj_is_resolved_zero(&f.left) => {
                 if let Some(x) = self.peel_mul_by_literal_neg_one(&f.right) {
                     let gt: AtomicFact = GreaterFact::new(x, z.clone(), f.line_file.clone()).into();
-                    let premise =
-                        self.verify_atomic_fact_as_builtin_rule_premise(&gt, builtin_state)?;
-                    if premise.is_success() {
+                    if let Some(premise) =
+                        self.try_verify_atomic_fact_as_builtin_rule_premise(&gt, builtin_state)?
+                    {
                         return success("order: 0 > (-1)*x from x > 0", premise);
                     }
                 }
@@ -239,8 +239,9 @@ impl Runtime {
         else {
             return Ok(None);
         };
-        let sub = self.verify_atomic_fact_as_builtin_rule_premise(&neg, builtin_state)?;
-        if sub.is_success() {
+        if let Some(sub) =
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&neg, builtin_state)?
+        {
             steps.push(sub);
             return Ok(Some(
                 SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_and_steps(
@@ -315,8 +316,9 @@ impl Runtime {
             _ => return Ok(None),
         };
         for candidate in &candidates {
-            let sub = self.verify_atomic_fact_as_builtin_rule_premise(candidate, builtin_state)?;
-            if sub.is_success() {
+            if let Some(sub) =
+                self.try_verify_atomic_fact_as_builtin_rule_premise(candidate, builtin_state)?
+            {
                 steps.push(sub);
                 return Ok(Some(
                     SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_and_steps(
@@ -333,7 +335,7 @@ impl Runtime {
             }
         }
 
-        let premise_result = self.verify_builtin_rule_premise_alternatives(
+        let premise_result = self.try_verify_builtin_rule_premise_alternatives(
             candidates
                 .into_iter()
                 .map(|candidate| vec![candidate])
@@ -341,7 +343,7 @@ impl Runtime {
             line_file,
             builtin_state,
         )?;
-        if premise_result.is_success() {
+        if let Some(premise_result) = premise_result {
             steps.push(premise_result);
             return Ok(Some(
                 SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_and_steps(

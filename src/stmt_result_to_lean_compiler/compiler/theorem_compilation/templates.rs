@@ -141,8 +141,7 @@ impl StmtResultToLeanCompiler {
             ) || !type_check_proof.subgoals.is_empty()
             {
                 return Err(
-                    "Template set-alias body type check changed its typed rule or children"
-                        .into(),
+                    "Template set-alias body type check changed its typed rule or children".into(),
                 );
             }
 

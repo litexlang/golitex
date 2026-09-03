@@ -12,7 +12,7 @@ Litex 是一门基于集合论、事实导向、自下而上构建证明流的�
 
 > **Litex 是测试版（beta）的实验性爱好项目，可能存在边缘问题。**
 
-<!-- 蓝图主线：AI 带来的推理过剩 → 科学对象 → 设计假设 → 可测成本 → 潜在能力影响 → 验证与理解的双重瓶颈 → 两种参与门槛 → 四项语言设计 → 数学实践中的定义与验证 → ToLean/adapter 接续 → 人类、AI 与 Litex 的端到端验证闭环 → 生态角色 → 从 AI for Math 走向 AI 时代的可信高效推理 → 成功标准 -->
+<!-- 蓝图主线：AI 带来的推理过剩 → 科学对象 → 设计假设 → 可测成本 → 潜在能力影响 → 验证与理解的双重瓶颈 → 两种参与门槛 → 四项语言设计 → 数学实践中的定义与验证 → ToLean/adapter 接续 → 人类、AI 与 Litex 的端到端知识生产闭环 → 生态角色 → 从 AI for Math 走向 AI 时代的可信高效推理 → 成功标准 -->
 
 <!--
 Litex 定位四层检查（写作时逐层核对；面向不同受众可以调整强调重点，但不能混淆层级）：
@@ -25,26 +25,23 @@ Litex 定位四层检查（写作时逐层核对；面向不同受众可以调�
 
 ## 目录
 
-- [Litex 蓝图总览](#overview)
+- [0. Litex 蓝图总览](#overview)
 - [1. Litex 的数学基础：从最广为人熟悉的集合论出发](#set-theory)
-  - [小例子：同一数学对象在不同的公理体系下的定义](#group-comparison)
 - [2. 事实导向：把“什么成立”写进源码](#fact-oriented)
 - [3. 自下而上：让已证明的事实推动后续证明](#bottom-up)
-  - [小例子：同一条代数等式的两种写法](#two-directions)
 - [4. Lean 兼容：为已覆盖路径提供独立复核](#compatibility)
-- [Litex的数学实践：定义与验证](#mathematics-practice)
-  - [完整例子：定义收敛并验证常数倍保持收敛](#convergence-example)
-- [人类、AI 与 Litex 的端到端验证闭环](#interaction-loop)
-- [从语言到生态：Litex 想扮演什么角色](#ecosystem-role)
-- [总结](#conclusions)
+- [5. Litex的数学实践：定义与验证](#mathematics-practice)
+- [6. 人类、AI 与 Litex 的端到端知识生产闭环](#interaction-loop)
+- [7. 从语言到生态：Litex 想扮演什么角色](#ecosystem-role)
+- [8. 总结](#conclusions)
 
 <a id="overview"></a>
 
-## Litex 蓝图总览
+## 0. Litex 蓝图总览
 
-AI 正在迅速降低推理和科研探索的成本。但“看起来正确”的输出不等于可靠。从繁杂的AI推理中挖掘出真正有价值的、可信的结论，成为了科学家们和工程师们面临的挑战。这就是 **推理过剩、验证危机**。
+AI 正在把我们从“推理稀缺”带入“推理充裕”的时代。过去，难点是提出足够好的猜想、推导和解法；现在，候选推理可以被大规模生成，但人类注意力、专家审核和可靠验证无法以同样的速度扩张。瓶颈正在从“能否产生一个看似合理的答案”，转向“能否把大量候选变成可检查、可理解、可复用的知识”。**推理过剩、验证稀缺，不是一时的失衡，而是 AI 时代知识生产正在形成的结构性条件。**
 
-**Litex 正在检验这条路线：一门基于集合论、事实导向、自下而上，并尝试与 Lean 兼容的形式化语言。** 用户写对象和事实，系统检查并返回依据或停止位置，并形成人类-AI-Litex的验证闭环。原理上，任何 Litex 代码都能编译成 Lean，并接入 Lean/Mathlib 生态。
+Litex 正是面向这种新条件的一项接口实验：一门基于集合论、事实导向、自下而上构建证明流的形式化语言。它检验这种表示与交互范式能否降低人类和 AI 构造、理解、审核、修复与复用可检查知识的成本。人类给出数学意图与验收边界，AI 提出或修复下一条事实，Litex 检查并返回依据或停止位置，由此形成持续生长的验证闭环。Litex 同时以 Lean 兼容为设计目标：当前编译器已能把部分受支持路径交给 Lean/Mathlib 独立复核，完整覆盖仍在推进中。
 
 正确性只是危机的一半。形式化代码确实是正确的，却仍然难以理解。如何才能让信息的充盈转化为洞见的丰盈？AI For Math的社区总是在谈复杂性：证明长、表示繁、工具难、成果难消化。但我们很少追问这些理解成本为何产生，更少研究如何降低。这是 **理解所承担的复杂度税（the complexity tax on understanding）**。
 
@@ -251,18 +248,22 @@ Lean 当然也能脱离 Mathlib 自行定义群；这里比较的是默认体验
 
 </details>
 
-> **设计空间中的位置。** 集合论式的表述并非 Litex 首创：
-> [Mizar 的数学库](https://wiki.mizar.org/library/) 基于塔斯基–格罗滕迪克（Tarski–Grothendieck）集合论；
-> [Lean](https://lean-lang.org/doc/reference/latest/The-Type-System/) 和
-> [Rocq](https://rocq-prover.org/doc/V9.2.0/refman/language/core/index.html) 向用户展示依赖类型论内核；
-> [Isabelle/HOL](https://isabelle.in.tum.de/website-Isabelle2024/dist/library/Doc/Isar_Ref/HOL_Specific.html)
-> 使用多态高阶逻辑。
->
-> Litex 面向用户的命题语言大体具有一阶逻辑风格：原子关系或具名谓词通过受限的经典逻辑形式和量词组织。它偏好规范事实形态，命题和证明不能作为普通一等值任意组合。这只描述命题接口；验证器还会检查良定义性，并从定义、上下文和受支持规则中寻找依据。
->
-> 在这个背景下，Litex 的问题更具体地落在面向用户的对象接口上：
-> 一套小型、以成员关系为中心的集合论式表层，能否在不要求用户先管理类型
-> 宇宙（universe）的前提下，覆盖有实质内容的数学？
+<details>
+<summary><strong>设计空间中的位置：集合论式的表述并非 Litex 首创</strong></summary>
+
+[Mizar 的数学库](https://wiki.mizar.org/library/) 基于塔斯基–格罗滕迪克（Tarski–Grothendieck）集合论；
+[Lean](https://lean-lang.org/doc/reference/latest/The-Type-System/) 和
+[Rocq](https://rocq-prover.org/doc/V9.2.0/refman/language/core/index.html) 向用户展示依赖类型论内核；
+[Isabelle/HOL](https://isabelle.in.tum.de/website-Isabelle2024/dist/library/Doc/Isar_Ref/HOL_Specific.html)
+使用多态高阶逻辑。
+
+Litex 面向用户的命题语言大体具有一阶逻辑风格：原子关系或具名谓词通过受限的经典逻辑形式和量词组织。它偏好规范事实形态，命题和证明不能作为普通一等值任意组合。这只描述命题接口；验证器还会检查良定义性，并从定义、上下文和受支持规则中寻找依据。
+
+在这个背景下，Litex 的问题更具体地落在面向用户的对象接口上：
+一套小型、以成员关系为中心的集合论式表层，能否在不要求用户先管理类型
+宇宙（universe）的前提下，覆盖有实质内容的数学？
+
+</details>
 
 <a id="fact-oriented"></a>
 
@@ -276,31 +277,49 @@ Litex做的相当于就是把我们脑海的心流在机器中实现了。*用�
 
 关键选择、见证和估计仍由作者写；具体规则与等式对齐由内核寻找、记录。Litex 由事实触发局部搜索；结果都须可检查：Litex按关系、参数结构和上下文寻找内置规则、全称事实、具体事实或等式；搜索受支持范围限制，并非自由猜测。
 
+### 内核如何按事实形状寻找验证路径
+
+这里用三组相同的数学事实对照两种典型界面。Lean 源码当然也包含陈述目标的 theorem statement，Litex 也允许显式指定定理和证明结构；差异在默认的注意力中心：
+
+| 典型界面 | 源码主要呈现 | 交互输出主要呈现 |
+| --- | --- | --- |
+| Lean tactic proof | theorem statement 给出目标，tactic proof body 主要写 **how**：怎样改写、应用定理或关闭目标 | Infoview 显示 **what**：当前还需要证明什么 |
+| Litex 事实导向证明 | 源码主要写 **what**：哪些对象、条件和事实应当成立 | 验证输出解释 **how**：事实因何被接受，或验证停在哪里 |
+
+> **默认界面的镜像关系：Lean 的 tactic 源码主要写 how，Infoview 显示尚未完成的 what；Litex 源码主要写 what，Litex 输出解释验证器找到的 how。** 这是典型工作流的对比，不是对两种语言全部书写方式的绝对概括。
+
+下面的 Litex JSON 是解释性输出的节选。它展示当前版本怎样记录验证路径；字段名称、嵌套结构和消息文字可能随 Litex 版本变化。
+
 <details>
-<summary><strong>展开：内核如何按事实形状寻找验证路径</strong></summary>
+<summary><strong>例子 1：Lean 与 Litex 如何验证“两个非负实数之和仍然非负”</strong></summary>
 
-#### 1. 用内置规则匹配事实形状
+**内置规则。** Litex 把目标拆成谓词与参数形状，据此筛选候选规则，再检查类型、前提和条件是否全部成立。
 
-简单判断可拆成“谓词 + 参数”。例如：
+要证明的数学事实是：两个非负实数之和仍然非负。
 
-```text
-a + b >= 0
+**Lean 源码｜proof body 写 how**
+
+```lean
+import Mathlib
+
+example (x y : ℝ) (hx : x ≥ 0) (hy : y ≥ 0) : x + y ≥ 0 := by
+  exact add_nonneg hx hy
 ```
 
-其谓词是 `>=`，参数是 `a + b` 和 `0`；左侧外形为加法，右侧为零。内核可据此筛选规则，无须知道事实名称。
+最后一行明确告诉 Lean 使用 `add_nonneg hx hy` 关闭目标。执行这一行之前，Infoview 显示的是尚待证明的 **what**：
 
-例如：
+**Lean Infoview｜显示 what**
+
+```text
+x y : ℝ
+hx : x ≥ 0
+hy : y ≥ 0
+⊢ x + y ≥ 0
+```
+
+**Litex 源码｜直接写 what**
 
 ```litex
-have a R = 1
-have b R = 2
-
-a + b >= 0
-```
-
-目标形状使内核尝试以下非负性规则：
-
-```text
 forall x, y R:
     x >= 0
     y >= 0
@@ -308,9 +327,11 @@ forall x, y R:
         x + y >= 0
 ```
 
-匹配得到 `x := a`、`y := b`；内核仍检查二者属于实数且非负。形状只筛选候选，不跳过前提。Litex在验证完后会输出验证过程：
+这条源码没有指定规则名称。目标 `x + y >= 0` 可拆成谓词 `>=` 与参数 `x + y`、`0`；内核据此筛选候选，匹配出两个非负前提，并继续检查类型和条件。
 
-```text
+**Litex 输出｜解释 how**
+
+```json
 {
   "result": "success",
   "type": "universal fact",
@@ -356,9 +377,43 @@ forall x, y R:
 }
 ```
 
-#### 2. 用用户提供的全称事实匹配
+</details>
 
-候选也可来自用户证明或假设的全称事实：
+<details>
+<summary><strong>例子 2：Lean 与 Litex 如何复用一条全称事实</strong></summary>
+
+**用户提供的全称事实。** 已证明的 `forall` 事实会进入上下文；遇到同形目标时，Litex 匹配参数并检查实例化后的前提。
+
+第二个数学事实是：若实数 `a > 10`，则存在一个正实数严格小于 `a`。前面建立的全称事实随后可直接用于具体的 `a`。
+
+**Lean 源码｜proof body 写 how**
+
+```lean
+import Mathlib
+
+def HasPositiveWitness (n : ℝ) : Prop :=
+  ∃ a : ℝ, 0 < a ∧ n > a
+
+theorem hasPositiveWitness_of_gt_ten (x : ℝ) (hx : x > 10) :
+    HasPositiveWitness x := by
+  refine ⟨10, by norm_num, ?_⟩
+  exact hx
+
+example (a : ℝ) (ha : a > 10) : HasPositiveWitness a := by
+  exact hasPositiveWitness_of_gt_ten a ha
+```
+
+最后一行执行前，Infoview 给出当前 **what**；源码中的 `exact` 指定完成它的 **how**：
+
+**Lean Infoview｜显示 what**
+
+```text
+a : ℝ
+ha : a > 10
+⊢ HasPositiveWitness a
+```
+
+**Litex 源码｜直接写 what**
 
 ```litex
 prop is_positive(n R):
@@ -377,9 +432,11 @@ have a R:
 $is_positive(a)
 ```
 
-这里 `prop` 给出“为正”的可复用数学接口；`forall` 建立一条可实例化的全称事实：任意大于 `10` 的实数都为正。后面的 `have a R: a > 10` 提供了具体前提，验证器便可以把这条全称事实实例化为 `a`，并接受 `$is_positive(a)`。Litex把它是如何验证上述源代码的过程会打印出来：
+这里 `prop` 给出可复用接口；`claim` 建立一条可实例化的全称事实。后面的 `have` 提供具体前提，最终源码只写 `$is_positive(a)`，没有再次写出怎样调用全称事实。
 
-```text
+**Litex 输出｜解释 how**
+
+```json
 {
   "result": "success",
   "type": "prop fact",
@@ -395,9 +452,39 @@ $is_positive(a)
 }
 ```
 
-#### 3. 用具体事实（concrete fact）和已知等式匹配
+</details>
 
-第三类来源是已有具体事实；等式可帮助匹配写法不同但相同的参数：
+<details>
+<summary><strong>例子 3：Lean 与 Litex 如何沿等式运输一个具体事实</strong></summary>
+
+**具体事实与已知等式。** Litex 也能从上下文中的具体事实出发，利用已知等式对齐写法不同但相等的参数。
+
+第三个数学事实是：已知 `a` 为正且 `a = b`，推出 `b` 为正。这里需要借助等式把一个具体事实运输到另一个写法。
+
+**Lean 源码｜proof body 写 how**
+
+```lean
+import Mathlib
+
+def IsPositive (x : ℝ) : Prop :=
+  x > 0
+
+example (a b : ℝ) (ha : IsPositive a) (hab : a = b) : IsPositive b := by
+  simpa [hab] using ha
+```
+
+执行 `simpa [hab] using ha` 之前，Infoview 只呈现当前 **what**：
+
+**Lean Infoview｜显示 what**
+
+```text
+a b : ℝ
+ha : IsPositive a
+hab : a = b
+⊢ IsPositive b
+```
+
+**Litex 源码｜直接写 what**
 
 ```litex
 prop is_positive(x R):
@@ -410,9 +497,11 @@ forall a, b R:
         $is_positive(b)
 ```
 
-我们让Litex输出它是如何验证上述源代码的过程。可以看到，`$is_positive(b)` 的验证过程是通过引用 `$is_positive(a)` 来完成的。这里用到了`a = b` 的等式来匹配参数。验证器会输出如下信息：
+Litex 源码保存前提和结论，没有写 `simpa` 或指定等式改写方向。验证器从上下文找到 `$is_positive(a)`，再利用 `a = b` 对齐参数。
 
-```text
+**Litex 输出｜解释 how**
+
+```json
 {
   "result": "success",
   "type": "universal fact",
@@ -469,15 +558,19 @@ forall a, b R:
 
 </details>
 
-> **设计空间中的位置。** 寻找局部证明依据并非 Litex 独有：
-> [Lean `grind`](https://lean-lang.org/doc/reference/latest/The--grind--tactic/)、
-> [Rocq `auto`](https://rocq-prover.org/doc/master/refman/proofs/automatic-tactics/auto.html)
-> 和 [Isabelle/Isar](https://isabelle.in.tum.de/doc/isar-ref.pdf) 通过显式证明指令（tactic）或
-> 证明方法（proof method）提供局部自动化；[Mizar](https://mizar.uwb.edu.pl/project/mizman.pdf)
-> 有空验证（empty justification）；
-> [ACL2](https://acl2.org/doc/index-seo.php?xkey=ACL2____DEFTHM) 可以在没有提示（hints）时
-> 尝试证明定理事件（theorem event）；[Naproche](https://naproche.github.io/) 则用自动定理证明器
-> 检查受控自然语言中的步骤。Litex 更具体地检验：普通数学陈述能否触发受当前上下文和规则限制的局部验证，并在通过后写回上下文、显示验证来源。
+<details>
+<summary><strong>设计空间中的位置：寻找局部证明依据并非 Litex 独有</strong></summary>
+
+[Lean `grind`](https://lean-lang.org/doc/reference/latest/The--grind--tactic/)、
+[Rocq `auto`](https://rocq-prover.org/doc/master/refman/proofs/automatic-tactics/auto.html)
+和 [Isabelle/Isar](https://isabelle.in.tum.de/doc/isar-ref.pdf) 通过显式证明指令（tactic）或
+证明方法（proof method）提供局部自动化；[Mizar](https://mizar.uwb.edu.pl/project/mizman.pdf)
+有空验证（empty justification）；
+[ACL2](https://acl2.org/doc/index-seo.php?xkey=ACL2____DEFTHM) 可以在没有提示（hints）时
+尝试证明定理事件（theorem event）；[Naproche](https://naproche.github.io/) 则用自动定理证明器
+检查受控自然语言中的步骤。Litex 更具体地检验：普通数学陈述能否触发受当前上下文和规则限制的局部验证，并在通过后写回上下文、显示验证来源。
+
+</details>
 
 <a id="bottom-up"></a>
 
@@ -543,11 +636,133 @@ Litex 可独立工作，拥有语法、运行时和验证内核；不编译成 L
 
 *编译器还为 Litex 提供独立保障。* 当前 `src/` 下 Rust 源码接近 20 万行，含数百条规则；其可信实现面远大于 Lean 小内核，也更难完整审核。_目前Litex到Lean的编译器的覆盖尚未完全完成，但原理上这样的覆盖是可行的。我们预计2027年前会完成这一工作。_
 
-**Litex 源码 ✓ → 生成 Lean ✓ → Lean 内核 ✓ → Mathlib adapter ✓**
+<details>
+<summary><strong>完整例子：证明“收敛数列乘常数后仍然收敛”，并将证明交给 Lean/Mathlib</strong></summary>
 
-[在仓库中查看完整例子](https://github.com/litexlang/golitex/tree/main/showcases/litex_to_lean_mathlib_pipeline)。
+先说明我们要证明什么。设实数数列 `s` 收敛到 `a`，`c` 是任意实数。我们要证明新数列 `n ↦ c * s(n)` 收敛到 `c * a`：
 
-这证明一条已覆盖路径完整走通，不代表所有 Litex 源码都能编译。
+`s(n) → a  ⟹  c * s(n) → c * a`
+
+证明的核心是误差控制。给定任意 `epsilon > 0`，从 `s` 的收敛性中取误差 `epsilon / (abs(c) + 1)` 所对应的位置 `N0`。当 `n >= N0` 时，利用
+
+`abs(c * s(n) - c * a) = abs(c) * abs(s(n) - a) <= (abs(c) + 1) * abs(s(n) - a) < epsilon`
+
+即可得到新数列也收敛。因为 `abs(c) + 1` 始终为正，这种写法不需要另外讨论 `c = 0`。
+
+这个例子不只展示最终定理，还展示同一份证明证据怎样从 Litex 交给 Lean/Mathlib。在当前已支持的编译路径上，Litex 首先检查源码中的定义、事实与证明证据；ToLean 再将已接受的定理编译为 Lean 代码，由 Lean 内核独立复核；最后，一层简短的手写 adapter 将生成定理导出为 Mathlib 的原生接口，例如 `Filter.Tendsto`。
+
+`Litex 源码 → Litex 验证 → ToLean 编译 → Lean 内核复核 → 手写 adapter → Mathlib 定理`
+
+下面沿着这条证据链，依次看每一层实际写什么。完整的 Litex 证明会在下文再次逐步解释。
+
+#### 1. Litex 源码：定义收敛并证明常数倍仍然收敛
+
+人类或 AI 在 Litex 中写下数学定义、条件和事实链。Litex 验证通过后，`converges_to_mul_const` 才会进入可供编译的已接受上下文。
+
+<!-- litex:skip-test -->
+
+```litex
+# main.lit
+prop is_eventually_close(s fn(n N) R, a R, epsilon R+, N0 N):
+    forall n N:
+        n >= N0
+        =>:
+            abs(s(n) - a) < epsilon
+
+prop converges_to(s fn(n N) R, a R):
+    forall epsilon R+:
+        exist N0 N st {$is_eventually_close(s, a, epsilon, N0)}
+
+thm converges_to_mul_const:
+    ? forall s fn(n N) R, a, c R:
+        $converges_to(s, a)
+        =>:
+            $converges_to(fn(n N) R {c * s(n)}, c * a)
+    claim:
+        ? forall epsilon R+:
+            exist N0 N st {$is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, N0)}
+        abs(c) + 1 > 0
+        epsilon / (abs(c) + 1) $in R+
+        obtain N0 from exist K N st {$is_eventually_close(s, a, epsilon / (abs(c) + 1), K)}
+        witness exist K N st {$is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, K)} from N0:
+            forall n N:
+                n >= N0
+                =>:
+                    abs(s(n) - a) < epsilon / (abs(c) + 1)
+                    abs(c * s(n) - c * a) = abs(c * (s(n) - a)) = abs(c) * abs(s(n) - a)
+                    abs(c) * abs(s(n) - a) <= (abs(c) + 1) * abs(s(n) - a) < (abs(c) + 1) * (epsilon / (abs(c) + 1)) = epsilon
+                    abs(fn(k N) R {c * s(k)}(n) - c * a) < epsilon
+            by def $is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, N0)
+    by def $converges_to(fn(n N) R {c * s(n)}, c * a)
+```
+
+#### 2. ToLean 生成代码：把已接受定理变成 Lean 证明对象
+
+ToLean 根据 Litex 保存的验证依据生成定义、定理和证明项。下面是生成文件的结构化节选；包装参数和较长的证明体已省略，生成文件不由用户手改。
+
+```lean
+-- LitexGenerate.lean（由 ToLean 生成，节选）
+namespace __Compiler_main
+
+def is_eventually_close (...) : Prop := ...
+def converges_to (...) : Prop := ...
+
+theorem converges_to_mul_const :
+    ∀ (s : (Litex.fnSet Litex.N Litex.R).Carrier) ...,
+      converges_to (...) (...) := by
+  -- 较长的生成证明体在此节选中省略。
+  ...
+
+end __Compiler_main
+```
+
+这段生成代码交给 Lean 时，Lean 内核检查最终证明对象，而不是信任 Litex 验证器给出的“成功”标签。
+
+#### 3. 手写 adapter：调用生成定理并转换表示
+
+adapter 不修改生成文件。它调用生成定理，再把 Litex 的数列、成员证据与收敛定义转换为 Mathlib 使用的表示。关键调用可以保持很短：
+
+```lean
+-- LitexToMathlib.lean（手写 adapter，节选）
+import LitexGenerate
+
+have generated :=
+  __Compiler_main.converges_to_mul_const s sIn a aIn c cIn h
+```
+
+实际的表示桥接集中在一个可单独审核的定理中：
+
+```lean
+-- LitexToMathlib.lean（表示桥接，节选）
+theorem tendsto_of_generated_convergesTo
+    (s : LitexRealSequence)
+    (a : ℝ)
+    (h : __Compiler_main.converges_to s a) :
+    Filter.Tendsto (toMathlibSequence s) Filter.atTop (nhds a) := by
+  rw [Metric.tendsto_nhds]
+  -- 从生成的收敛证据中取出 N，并转换成 Mathlib 的 eventually_atTop 证明。
+  ...
+```
+
+#### 4. Mathlib 接口：结论成为 `Filter.Tendsto` 定理
+
+完成桥接后，定理的结论已经使用 Mathlib 的数列极限接口；后续 Lean 代码可以按普通 `Filter.Tendsto` 定理复用它。
+
+```lean
+-- LitexToMathlib.lean（Mathlib-facing 定理，节选）
+theorem tendsto_mul_const_from_generated (...) :
+    Filter.Tendsto
+      (toMathlibSequence (scaleSequence c s))
+      Filter.atTop
+      (nhds (c * a)) := by
+  have generated :=
+    __Compiler_main.converges_to_mul_const s sIn a aIn c cIn h
+  exact tendsto_of_generated_convergesTo _ _ generated
+```
+
+这证明一条已覆盖路径完整走通，不代表所有 Litex 源码都能编译。折叠示例中的生成代码和 adapter 均为关键结构节选，省略号表示未展示的包装细节或证明体。
+
+</details>
 
 <details>
 <summary><strong>Litex 到 Lean 的编译器如何工作</strong></summary>
@@ -566,7 +781,7 @@ Litex 不取代 Lean：前者提供数学写作接口，后者提供小内核复
 
 <a id="mathematics-practice"></a>
 
-## Litex的数学实践：定义与验证
+## 5. Litex的数学实践：定义与验证
 
 从形式化实践看，数学工作常在两个动作之间反复往返：一是**定义**对象、关系和可复用接口，建立一个领域的语言；二是**验证**这些定义与条件能够推出哪些事实。下面用一个完整例子把定义、量词、见证和估计放进同一条证明流。我们还是用Lean和Litex做对比。
 
@@ -670,47 +885,74 @@ thm converges_to_mul_const:
 
 从这个例子可以看到，不同的形式化语言的源码风格是很不一样的。选择合适的语言用在合适的场景上，是非常重要的。
 
-## 人类、AI 与 Litex 的端到端验证闭环
+<a id="interaction-loop"></a>
 
-我们在这里端到端地创建一个人类、AI 与 Litex 的端到端验证闭环。这样的验证闭环适用于定义、定理、证明修复、可复用的数学接口、一章教材或一个多文件理论。它产出不只是 Litex 代码。一个成功的闭环会产生：
+## 6. 人类、AI 与 Litex 的端到端知识生产闭环
 
-1. 由人类拥有的数学契约；
-2. 按依赖顺序组织的数学发展；
-3. 一份记录有验证器依据的尝试与决定的 JSON 记录；
-4. 只包含已接受数学内容的物化 `.lit` 源码；
-5. 诚实的验证与信任边界报告；以及
-6. 在明确纳入范围且路径受支持时，一个经 Lean 内核检查的 Lean 产物。
+闭环的关键不只是让 AI 生成代码，而是让验证结果决定 AI 的下一步。人类给出数学意图、约束和验收边界；AI 提出下一条 Litex 事实；Litex 检查它是否良定义、是否具有足够的证明依据，并返回机器可读的结果。
 
-```text
-人类固定数学意图、约束与验收边界
-                  ↓
-AI 提出下一条 Litex 事实或证明块
-                  ↓
-Litex 检查良定义性与证明依据
-       ├─ Committed（对读者：Accepted）
-       │      ↓
-       │  已接受上下文增长 → AI 提出下一块 ─────↗
-       │
-       └─ RolledBack（对读者：Stopped）
-              ↓
-          上下文保持不变
-              ↓
-      JSON 记录失败阶段与目标
-              ↓
-        AI 修复同一块 ─────────────────────────↗
+`数学意图 → AI 候选 → Litex 检查 → Committed / RolledBack → 继续 / 修复`
 
-连续 Committed 前缀
-        ↓
-物化为 .lit → 干净 Litex gate → trust / 边界审计
-        ↓ 仅当路径受支持且实际生成
-Generated.lean → Adapter.lean → Final.lean → Lean 内核
+`Committed` 的候选进入已接受上下文，AI 可以继续下一条事实；`RolledBack` 的候选不会改变上下文，AI 根据失败阶段、失败目标和验证依据修复当前候选。JSON 可以保存这些尝试与决定，但 JSON 记录本身不是证明。
+
+<details>
+<summary><strong>示例：Litex 怎样指导 AI 修复子群乘法</strong></summary>
+
+**Human｜给出数学目标**
+
+> 已知 `H` 是群 `G` 的一个子群。定义 `H` 上的乘法，使 `x, y ∈ H` 时，`group.mul(x, y)` 仍被看作 `H` 中的元素。
+
+**AI｜提交第一份接口候选**
+
+AI 最初通过此前定义的 `subgroup_carrier` 别名声明返回集合。现有 proof journal 没有保存这次候选的完整源码，因此这里不把它还原成逐字记录；journal 保存了决定性的验证结果：
+
+> **输出边界：**下面的 JSON 是现有 proof journal 从当时 Litex 输出中保留的可读字段节选，不是稳定的输出 API。随着 Litex 演进，字段名称、嵌套结构和文字消息都可能变化；闭环真正依赖的是是否提交、最早失败位置和验证依据这些语义。
+
+```json
+{
+  "attempt_id": "SS003A1",
+  "result": "rejected_rolled_back",
+  "failed_phase": "verify_well_definedness",
+  "verifier_evidence": "Return value group.mul(x,y) was not inferred to belong to the cross-file subgroup_carrier."
+}
 ```
+
+上下文保持不变。AI 根据停止位置判断：数学定义不需要改变，需要调整的是返回集合的表达方式。
+
+**AI｜只修复已经定位的接口问题**
+
+第四次候选保持同一个函数值，直接把返回集合写成与 `subgroup_carrier` 定义相等的 `H`：
+
+<!-- litex:skip-test -->
+```litex
+template<G nonempty_set, group &group::Group<G>, H power_set(G):
+    $subgroup::is_subgroup(G, group, H)>:
+    have fn subgroup_mul(
+        x, y \subgroup_carrier<G, group, H>
+    ) H = group.mul(x, y)
+```
+
+**Litex｜接受修复**
+
+```json
+{
+  "attempt_id": "SS003A4",
+  "result": "accepted",
+  "verifier_evidence": "Outer try committed after declaring the return carrier as the definitionally equal H."
+}
+```
+
+这条事实随后进入已接受上下文，AI 可以继续定义子群的单位元和逆元。这里展示的是一次真实交互，不意味着所有失败都能由 AI 自动修复。
+
+</details>
+
+同一个循环可以从一条事实扩展到一条定理、一个可复用接口、教材章节或多文件理论。连续提交的证明块可以物化为只含已接受数学的 `.lit` 源码；在明确纳入范围且编译路径受支持时，还可以继续生成由 Lean 内核检查的证明产物。
 
 详细的闭环设计与实现见 [Litex 端到端验证闭环](https://litexlang.com/showcases)。
 
 <a id="ecosystem-role"></a>
 
-## 从语言到生态：Litex 想扮演什么角色
+## 7. 从语言到生态：Litex 想扮演什么角色
 
 所有的设计合在一起，使 Litex 不只是一种语法，也希望成为人和 AI 共同生产、使用可检查推理的基础设施。
 
@@ -743,7 +985,7 @@ Generated.lean → Adapter.lean → Final.lean → Lean 内核
 
 <a id="conclusions"></a>
 
-## 总结
+## 8. 总结
 
 Litex 以接近日常数学的语法和交互降低书写与审查门槛：用户写对象、条件和事实，系统返回依据或停止位置。
 

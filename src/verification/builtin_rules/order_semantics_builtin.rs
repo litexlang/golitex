@@ -146,21 +146,21 @@ impl Runtime {
         let line_file = atomic_fact.line_file();
         let in_n_pos: AtomicFact =
             InFact::new(integer.clone(), StandardSet::NPos.into(), line_file.clone()).into();
-        let membership_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&in_n_pos, builtin_state)?;
-        if !membership_result.is_success() {
+        let Some(membership_result) =
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&in_n_pos, builtin_state)?
+        else {
             return Ok(None);
-        }
+        };
 
         let two: Obj = Number::new("2".to_string()).into();
         let zero: Obj = Number::new("0".to_string()).into();
         let remainder: Obj = Mod::new(integer, two).into();
         let even_fact: AtomicFact = EqualFact::new(remainder, zero, line_file).into();
-        let even_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&even_fact, builtin_state)?;
-        if !even_result.is_success() {
+        let Some(even_result) =
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&even_fact, builtin_state)?
+        else {
             return Ok(None);
-        }
+        };
 
         Ok(Some(
             SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
@@ -239,11 +239,16 @@ impl Runtime {
                 let Some(mut steps) = type_steps else {
                     continue;
                 };
-                let first_result = self.verify_atomic_fact_as_builtin_rule_premise(first, builtin_state)?;
-                let second_result = self.verify_atomic_fact_as_builtin_rule_premise(second, builtin_state)?;
-                if !first_result.is_success() || !second_result.is_success() {
+                let Some(first_result) =
+                    self.try_verify_atomic_fact_as_builtin_rule_premise(first, builtin_state)?
+                else {
                     continue;
-                }
+                };
+                let Some(second_result) =
+                    self.try_verify_atomic_fact_as_builtin_rule_premise(second, builtin_state)?
+                else {
+                    continue;
+                };
                 steps.push(first_result);
                 steps.push(second_result);
                 return Ok(Some(
@@ -282,11 +287,10 @@ impl Runtime {
                 fact.line_file.clone(),
             )
             .into();
-            let member_result =
-                self.verify_known_or_concrete_finite_set_membership(
-                    &member_fact,
-                    builtin_state.verify_state(),
-                )?;
+            let member_result = self.verify_known_or_concrete_finite_set_membership(
+                &member_fact,
+                builtin_state.verify_state(),
+            )?;
             if member_result.is_success() {
                 return Ok(Some(
                     SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
@@ -319,11 +323,10 @@ impl Runtime {
                 fact.line_file.clone(),
             )
             .into();
-            let member_result =
-                self.verify_known_or_concrete_finite_set_membership(
-                    &member_fact,
-                    builtin_state.verify_state(),
-                )?;
+            let member_result = self.verify_known_or_concrete_finite_set_membership(
+                &member_fact,
+                builtin_state.verify_state(),
+            )?;
             if member_result.is_success() {
                 return Ok(Some(
                     SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
@@ -344,11 +347,10 @@ impl Runtime {
                 fact.line_file.clone(),
             )
             .into();
-            let member_result =
-                self.verify_known_or_concrete_finite_set_membership(
-                    &member_fact,
-                    builtin_state.verify_state(),
-                )?;
+            let member_result = self.verify_known_or_concrete_finite_set_membership(
+                &member_fact,
+                builtin_state.verify_state(),
+            )?;
             if member_result.is_success() {
                 return Ok(Some(
                     SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
@@ -381,11 +383,10 @@ impl Runtime {
                 fact.line_file.clone(),
             )
             .into();
-            let member_result =
-                self.verify_known_or_concrete_finite_set_membership(
-                    &member_fact,
-                    builtin_state.verify_state(),
-                )?;
+            let member_result = self.verify_known_or_concrete_finite_set_membership(
+                &member_fact,
+                builtin_state.verify_state(),
+            )?;
             if member_result.is_success() {
                 return Ok(Some(
                     SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
@@ -425,7 +426,8 @@ impl Runtime {
                 verify_state,
             );
         }
-        let proof = SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+        let proof =
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 member_fact.clone().into(),
                 "membership by concrete finite-set structure".to_string(),
                 BuiltinRuleEvidence::Uncatalogued(
@@ -509,9 +511,9 @@ impl Runtime {
                         fact.line_file.clone(),
                     )
                     .into();
-                    let strict_result =
-                        self.verify_atomic_fact_as_builtin_rule_premise(&strict, builtin_state)?;
-                    if strict_result.is_success() {
+                    if let Some(strict_result) =
+                        self.try_verify_atomic_fact_as_builtin_rule_premise(&strict, builtin_state)?
+                    {
                         steps.push(strict_result);
                         return Ok(Some(
                             SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
@@ -540,9 +542,9 @@ impl Runtime {
                 fact.line_file.clone(),
             )
             .into();
-            let strict_result =
-                self.verify_atomic_fact_as_builtin_rule_premise(&strict, builtin_state)?;
-            if strict_result.is_success() {
+            if let Some(strict_result) =
+                self.try_verify_atomic_fact_as_builtin_rule_premise(&strict, builtin_state)?
+            {
                 steps.push(strict_result);
                 return Ok(Some(
                     SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
@@ -567,9 +569,9 @@ impl Runtime {
             };
             let strict: AtomicFact =
                 LessFact::new(predecessor, fact.right.clone(), fact.line_file.clone()).into();
-            let strict_result =
-                self.verify_atomic_fact_as_builtin_rule_premise(&strict, builtin_state)?;
-            if strict_result.is_success() {
+            if let Some(strict_result) =
+                self.try_verify_atomic_fact_as_builtin_rule_premise(&strict, builtin_state)?
+            {
                 steps.push(strict_result);
                 return Ok(Some(
                     SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
@@ -594,9 +596,9 @@ impl Runtime {
             };
             let strict: AtomicFact =
                 LessFact::new(fact.left.clone(), successor, fact.line_file.clone()).into();
-            let strict_result =
-                self.verify_atomic_fact_as_builtin_rule_premise(&strict, builtin_state)?;
-            if strict_result.is_success() {
+            if let Some(strict_result) =
+                self.try_verify_atomic_fact_as_builtin_rule_premise(&strict, builtin_state)?
+            {
                 steps.push(strict_result);
                 return Ok(Some(
                     SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
@@ -636,16 +638,16 @@ impl Runtime {
                 LessEqualFact::new(base.clone(), subject.clone(), line_file.clone()).into();
             let upper: AtomicFact =
                 LessFact::new(subject.clone(), obj_plus_one(base), line_file.clone()).into();
-            let lower_result =
-                self.verify_atomic_fact_as_builtin_rule_premise(&lower, builtin_state)?;
-            if lower_result.is_unknown() {
+            let Some(lower_result) =
+                self.try_verify_atomic_fact_as_builtin_rule_premise(&lower, builtin_state)?
+            else {
                 continue;
-            }
-            let upper_result =
-                self.verify_atomic_fact_as_builtin_rule_premise(&upper, builtin_state)?;
-            if upper_result.is_unknown() {
+            };
+            let Some(upper_result) =
+                self.try_verify_atomic_fact_as_builtin_rule_premise(&upper, builtin_state)?
+            else {
                 continue;
-            }
+            };
             steps.push(lower_result);
             steps.push(upper_result);
             return Ok(Some(
@@ -676,16 +678,16 @@ impl Runtime {
             let lower: AtomicFact = LessFact::new(base, subject.clone(), line_file.clone()).into();
             let upper: AtomicFact =
                 LessEqualFact::new(subject.clone(), successor.clone(), line_file.clone()).into();
-            let lower_result =
-                self.verify_atomic_fact_as_builtin_rule_premise(&lower, builtin_state)?;
-            if lower_result.is_unknown() {
+            let Some(lower_result) =
+                self.try_verify_atomic_fact_as_builtin_rule_premise(&lower, builtin_state)?
+            else {
                 continue;
-            }
-            let upper_result =
-                self.verify_atomic_fact_as_builtin_rule_premise(&upper, builtin_state)?;
-            if upper_result.is_unknown() {
+            };
+            let Some(upper_result) =
+                self.try_verify_atomic_fact_as_builtin_rule_premise(&upper, builtin_state)?
+            else {
                 continue;
-            }
+            };
             steps.push(lower_result);
             steps.push(upper_result);
             return Ok(Some(

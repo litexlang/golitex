@@ -2,7 +2,7 @@
 
 use crate::fact::{AtomicFact, Fact};
 use crate::parsing::Tokenizer;
-use crate::result::{SuccessFactProofResult, SuccessFactProofNode, VerifyFactResult};
+use crate::result::{SuccessFactProofNode, SuccessFactProofResult, VerifyFactResult};
 use crate::runtime::Runtime;
 use crate::statement::Stmt;
 use crate::verification::VerifyState;
@@ -86,6 +86,29 @@ fn child_scope_sees_parent_memos_but_parent_does_not_see_child_memos() {
 }
 
 #[test]
+fn child_guard_cleanup_never_clears_an_ancestor_guard() {
+    let parent = VerifyState::initial();
+    let child = parent.with_child_proof_scope();
+    let object_key = "guarded-object".to_string();
+    assert!(parent.begin_well_defined_object(&object_key));
+
+    child.end_well_defined_object(&object_key);
+    assert!(
+        !parent.begin_well_defined_object(&object_key),
+        "child cleanup must leave the active parent guard intact"
+    );
+    parent.end_well_defined_object(&object_key);
+    assert!(parent.begin_well_defined_object(&object_key));
+    parent.end_well_defined_object(&object_key);
+
+    parent.set_set_builder_forall_transport_active(true);
+    child.set_set_builder_forall_transport_active(false);
+    assert!(child.set_builder_forall_transport_is_active());
+    parent.set_set_builder_forall_transport_active(false);
+    assert!(!child.set_builder_forall_transport_is_active());
+}
+
+#[test]
 fn unknown_atomic_facts_are_not_memoized() {
     let mut runtime = new_test_runtime();
     let fact = parse_atomic_fact(&mut runtime, "1 = 2");
@@ -120,9 +143,7 @@ fn parse_atomic_fact(runtime: &mut Runtime, source: &str) -> AtomicFact {
 }
 
 fn direct_verification(result: &VerifyFactResult) -> Rc<SuccessFactProofNode> {
-    let success = result
-        .verified()
-        .expect("atomic fact should be factual");
+    let success = result.verified().expect("atomic fact should be factual");
     assert!(!matches!(success.proof(), SuccessFactProofResult::Reuse(_)));
     success.verification.clone()
 }

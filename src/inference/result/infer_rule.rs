@@ -44,4 +44,5 @@ pub enum InferRule {
     SubsetImpliesElementwiseMembershipForall(SubsetImpliesElementwiseMembershipForallInferRule),
     SupersetImpliesElementwiseMembershipForall(SupersetImpliesElementwiseMembershipForallInferRule),
     ConjunctionImpliesComponent(ConjunctionImpliesComponentInferRule),
+    ChainImpliesComponent(ChainImpliesComponentInferRule),
 }

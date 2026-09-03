@@ -19,25 +19,6 @@ fn remove_param_bindings_from_param_to_arg_map(
     filtered_param_to_arg_map
 }
 
-/// Parser occurrence IDs identify the original syntax tree. Ordinary
-/// substitution or alpha-renaming produces verifier-owned synthetic objects.
-/// Transparent definition reduction is the exception: its typed transformation
-/// owns the source-to-reduced mapping, so rebuilt nodes retain the original
-/// occurrence and may reuse that Result-owned WD provenance.
-fn source_occurrence_after_instantiation(
-    source_occurrence_id: Option<SourceObjectOccurrenceId>,
-    param_to_arg_map: &HashMap<String, Obj>,
-    substitution_mode: SubstitutionMode,
-) -> Option<SourceObjectOccurrenceId> {
-    (param_to_arg_map.is_empty()
-        || matches!(
-            substitution_mode,
-            SubstitutionMode::TransparentDefinition | SubstitutionMode::ResultProjection
-        ))
-    .then_some(source_occurrence_id)
-    .flatten()
-}
-
 impl Runtime {
     pub fn inst_obj(
         &self,
@@ -425,16 +406,7 @@ impl Runtime {
             }
         }
 
-        Ok(FnObj::new_with_source_occurrence_id(
-            final_head,
-            merged_body,
-            source_occurrence_after_instantiation(
-                fn_obj.source_occurrence_id,
-                param_to_arg_map,
-                param_obj_type,
-            ),
-        )
-        .into())
+        Ok(FnObj::new(final_head, merged_body).into())
     }
 
     pub fn inst_number(
@@ -456,16 +428,7 @@ impl Runtime {
     ) -> Result<Obj, RuntimeError> {
         let instantiated_left_obj = self.inst_obj(&add.left, param_to_arg_map, param_obj_type)?;
         let instantiated_right_obj = self.inst_obj(&add.right, param_to_arg_map, param_obj_type)?;
-        Ok(Add::new_with_source_occurrence_id(
-            instantiated_left_obj,
-            instantiated_right_obj,
-            source_occurrence_after_instantiation(
-                add.source_occurrence_id,
-                param_to_arg_map,
-                param_obj_type,
-            ),
-        )
-        .into())
+        Ok(Add::new(instantiated_left_obj, instantiated_right_obj).into())
     }
 
     pub fn inst_matrix_add(
@@ -531,16 +494,7 @@ impl Runtime {
     ) -> Result<Obj, RuntimeError> {
         let instantiated_left_obj = self.inst_obj(&sub.left, param_to_arg_map, param_obj_type)?;
         let instantiated_right_obj = self.inst_obj(&sub.right, param_to_arg_map, param_obj_type)?;
-        Ok(Sub::new_with_source_occurrence_id(
-            instantiated_left_obj,
-            instantiated_right_obj,
-            source_occurrence_after_instantiation(
-                sub.source_occurrence_id,
-                param_to_arg_map,
-                param_obj_type,
-            ),
-        )
-        .into())
+        Ok(Sub::new(instantiated_left_obj, instantiated_right_obj).into())
     }
 
     pub fn inst_mul(
@@ -551,16 +505,7 @@ impl Runtime {
     ) -> Result<Obj, RuntimeError> {
         let instantiated_left_obj = self.inst_obj(&mul.left, param_to_arg_map, param_obj_type)?;
         let instantiated_right_obj = self.inst_obj(&mul.right, param_to_arg_map, param_obj_type)?;
-        Ok(Mul::new_with_source_occurrence_id(
-            instantiated_left_obj,
-            instantiated_right_obj,
-            source_occurrence_after_instantiation(
-                mul.source_occurrence_id,
-                param_to_arg_map,
-                param_obj_type,
-            ),
-        )
-        .into())
+        Ok(Mul::new(instantiated_left_obj, instantiated_right_obj).into())
     }
 
     pub fn inst_div(
@@ -569,14 +514,9 @@ impl Runtime {
         param_to_arg_map: &HashMap<String, Obj>,
         param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
-        Ok(Div::new_with_source_occurrence_id(
+        Ok(Div::new(
             self.inst_obj(&div.left, param_to_arg_map, param_obj_type)?,
             self.inst_obj(&div.right, param_to_arg_map, param_obj_type)?,
-            source_occurrence_after_instantiation(
-                div.source_occurrence_id,
-                param_to_arg_map,
-                param_obj_type,
-            ),
         )
         .into())
     }
@@ -750,15 +690,7 @@ impl Runtime {
         for obj in list_set.list.iter() {
             list.push(self.inst_obj(obj, param_to_arg_map, param_obj_type)?);
         }
-        Ok(ListSet::new_with_source_occurrence_id(
-            list,
-            source_occurrence_after_instantiation(
-                list_set.source_occurrence_id,
-                param_to_arg_map,
-                param_obj_type,
-            ),
-        )
-        .into())
+        Ok(ListSet::new(list).into())
     }
 
     pub fn inst_set_builder(
@@ -976,7 +908,7 @@ impl Runtime {
                 None,
             )?);
         }
-        Ok(AnonymousFn::new_with_source_occurrence_id(
+        Ok(AnonymousFn::new(
             set_bound_parameters,
             dom_facts,
             self.inst_obj(
@@ -989,11 +921,6 @@ impl Runtime {
                 &filtered_param_to_arg_map,
                 param_obj_type,
             )?,
-            source_occurrence_after_instantiation(
-                af.source_occurrence_id,
-                &filtered_param_to_arg_map,
-                param_obj_type,
-            ),
         )?
         .into())
     }
@@ -1079,7 +1006,7 @@ impl Runtime {
             return Ok(anonymous_fn.clone());
         }
         let body = self.alpha_rename_fn_set_body(&anonymous_fn.body, rename_map)?;
-        AnonymousFn::new_with_source_occurrence_id(
+        AnonymousFn::new(
             body.set_bound_parameters,
             body.dom_facts,
             *body.ret_set,
@@ -1088,7 +1015,6 @@ impl Runtime {
                 rename_map,
                 SubstitutionMode::Exact,
             )?,
-            anonymous_fn.source_occurrence_id,
         )
     }
 
@@ -1286,17 +1212,10 @@ impl Runtime {
         param_to_arg_map: &HashMap<String, Obj>,
         param_obj_type: SubstitutionMode,
     ) -> Result<Obj, RuntimeError> {
-        Ok(Sum::new_with_source_occurrence_id(
+        Ok(Sum::new(
             self.inst_obj(&sum.start, param_to_arg_map, param_obj_type)?,
             self.inst_obj(&sum.end, param_to_arg_map, param_obj_type)?,
             self.inst_obj(&sum.func, param_to_arg_map, param_obj_type)?,
-            // A range aggregate's occurrence names the source constructor,
-            // not the current binder values in its arguments. Instantiating a
-            // theorem or induction motive must therefore keep this identity;
-            // the Result-owned Iteration certificate separately freezes the
-            // instantiated start/end/function and the compiler checks their
-            // full semantic key before reuse.
-            sum.source_occurrence_id,
         )
         .into())
     }

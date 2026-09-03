@@ -1,5 +1,17 @@
 use super::*;
+use crate::parsing::Tokenizer;
 use crate::test_support::execute_source;
+use std::rc::Rc;
+
+fn parse_fact_for_wd(runtime: &mut Runtime, source: &str, label: &str) -> Fact {
+    let tokenizer = Tokenizer::new();
+    let mut blocks = tokenizer
+        .parse_blocks(source, Rc::from(label))
+        .expect("WD fact fixture should tokenize");
+    runtime
+        .parse_fact(&mut blocks[0])
+        .expect("WD fact fixture should parse")
+}
 
 fn try_execution(stmt_results: &[StmtResult]) -> &TryStmtExecutionResult {
     let [StmtResult::Success(SuccessStmtResult::ProofBlock(SuccessProofBlockStmtResult::TryStmt(
@@ -225,7 +237,7 @@ try:
         ));
         assert!(
             run_output.contains("\"kind\": \"RolledBack\"")
-                && (run_output.contains("UnknownError") || run_output.contains("try failed")),
+                && (run_output.contains("unknown_error") || run_output.contains("try failed")),
             "try should report the unknown inner step:\n{}",
             run_output
         );
@@ -266,7 +278,7 @@ try:
             TryStmtExecutionResult::RolledBack(_)
         ));
         assert!(
-            run_output.contains("ArithmeticError")
+            run_output.contains("arithmetic_error")
                 || run_output.contains("1 / 0 = 0")
                 || run_output.contains("division"),
             "try should report the failing inner statement:\n{}",
@@ -1089,89 +1101,83 @@ fn failed_statement_parse_rolls_back_all_new_bindings() {
 }
 
 #[test]
-fn trust_statements_are_atomic() {
+fn trust_statements_skip_well_definedness_and_remain_atomic() {
     let mut runtime = Runtime::default();
-    runtime.start_isolated_source("trust_statements_are_atomic");
+    runtime.start_isolated_source("trust_statements_skip_well_definedness");
 
-    let failed_source = r#"
+    let unchecked_source = r#"
 trust:
     777 = 778
     1 / 0 = 0
 "#;
-    let (failed_results, failed_error) = execute_source(failed_source, &mut runtime);
-    assert!(failed_results.is_empty());
-    assert!(failed_error.is_some(), "the ill-defined fact must fail");
-    assert!(
-        !runtime.cache_known_facts_contains("777 = 778").0,
-        "a failed trust statement must not retain its valid prefix"
-    );
-
-    let failed_summary = render_run_summary(RunSummaryRequest {
-        runtime: &runtime,
-        stmt_results: &failed_results,
-        runtime_error: &failed_error,
-    });
-    assert!(failed_summary.contains("\"direct_trust\": 0"));
-    assert!(failed_summary.contains("\"known_facts\": 0"));
-
-    let successful_source = r#"
-trust:
-    777 = 778
-    888 = 889
-"#;
-    let (successful_results, successful_error) = execute_source(successful_source, &mut runtime);
-    assert!(successful_error.is_none());
-    assert_eq!(successful_results.len(), 1);
+    let (unchecked_results, unchecked_error) = execute_source(unchecked_source, &mut runtime);
+    assert!(unchecked_error.is_none());
+    assert_eq!(unchecked_results.len(), 1);
     assert!(runtime.cache_known_facts_contains("777 = 778").0);
-    assert!(runtime.cache_known_facts_contains("888 = 889").0);
+    assert!(runtime.cache_known_facts_contains("1 / 0 = 0").0);
 
-    let later_failure = r#"
+    let unchecked_summary = render_run_summary(RunSummaryRequest {
+        runtime: &runtime,
+        stmt_results: &unchecked_results,
+        runtime_error: &unchecked_error,
+    });
+    assert!(!unchecked_summary.contains("\"direct_trust\": 0"));
+
+    let strict_source = r#"
 trust:
     999 = 1000
     1 / 0 = 0
 "#;
-    let (_, later_error) = execute_source(later_failure, &mut runtime);
-    assert!(later_error.is_some());
+    let mut strict_runtime = Runtime::new(RunOptions::strict_execute(ExecutionOption::Eval));
+    strict_runtime.start_isolated_source("strict_trust_is_atomic");
+    let (failed_results, failed_error) = execute_source(strict_source, &mut strict_runtime);
+    assert!(failed_results.is_empty());
+    assert!(failed_error.is_some());
+    assert!(!strict_runtime.cache_known_facts_contains("999 = 1000").0);
     assert!(
         runtime.cache_known_facts_contains("777 = 778").0,
-        "a later failed statement must not roll back an earlier successful statement"
+        "a separately rejected trust statement cannot affect an earlier committed runtime"
     );
-    assert!(!runtime.cache_known_facts_contains("999 = 1000").0);
 }
 
 #[test]
-fn trust_have_statements_are_atomic() {
+fn trust_have_skips_well_definedness_and_commits_atomically() {
     let mut runtime = Runtime::default();
-    runtime.start_isolated_source("trust_have_statements_are_atomic");
+    runtime.start_isolated_source("trust_have_skips_well_definedness");
 
-    let failed_source = r#"
+    let unchecked_source = r#"
 trust have rollback_probe R:
     rollback_probe = rollback_probe
     1 / 0 = 0
 "#;
-    let (failed_results, failed_error) = execute_source(failed_source, &mut runtime);
-    assert!(failed_results.is_empty());
+    let (unchecked_results, unchecked_error) = execute_source(unchecked_source, &mut runtime);
+    assert!(unchecked_error.is_none());
+    assert_eq!(unchecked_results.len(), 1);
     assert!(
-        failed_error.is_some(),
-        "the ill-defined attached fact must fail"
+        runtime.is_name_used_for_identifier("rollback_probe"),
+        "the trusted binding and all attached unchecked facts commit together"
     );
-    assert!(
-        !runtime.is_name_used_for_identifier("rollback_probe"),
-        "a failed trust have statement must not retain its object binding"
-    );
-    assert!(
-        !runtime
-            .cache_known_facts_contains("rollback_probe = rollback_probe")
-            .0
-    );
+    let [StmtResult::Success(SuccessStmtResult::UnsafeStmt(SuccessUnsafeStmtResult::TrustHaveStmt(
+        unchecked,
+    )))] = unchecked_results.as_slice()
+    else {
+        panic!("expected one dedicated trust-have Result")
+    };
+    for store in &unchecked.common.infers.store_fact_outputs {
+        let fact_id = store.fact_id.expect("trusted store must retain its FactId");
+        assert_eq!(
+            runtime
+                .known_fact_id_for_fact(&store.itself_and_why_itself_is_stored.0)
+                .expect("trusted fact lookup should succeed"),
+            Some(fact_id)
+        );
+    }
 
-    let (retry_results, retry_error) = execute_source("trust have rollback_probe R", &mut runtime);
-    let (retry_succeeded, retry_output) = render_run_output(&runtime, &retry_results, &retry_error);
-    assert!(
-        retry_succeeded,
-        "the rolled-back name must be reusable immediately:\n{}",
-        retry_output
-    );
+    let (duplicate_results, duplicate_error) =
+        execute_source("trust have rollback_probe R", &mut runtime);
+    assert!(duplicate_results.is_empty());
+    assert!(duplicate_error.is_some());
+    assert!(runtime.is_name_used_for_identifier("rollback_probe"));
 
     let mut dependent_runtime = Runtime::default();
     dependent_runtime.start_isolated_source("trust_have_keeps_local_prefix_visible");
@@ -1418,39 +1424,43 @@ thm nested_existential_quotient_is_well_defined:
 
 #[test]
 fn existential_well_definedness_uses_preceding_predicate_definition() {
-    let source_code = r#"
+    let setup = r#"
 prop nonzero(value R):
     value != 0
-
-trust exist denominator R st {$nonzero(denominator), 1 / denominator = 1 / denominator}
 "#;
 
     let mut runtime = Runtime::default();
     runtime
         .start_isolated_source("existential_well_definedness_uses_preceding_predicate_definition");
-    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
-    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
+    let (setup_results, setup_error) = execute_source(setup, &mut runtime);
     assert!(
-        run_succeeded,
-        "a checked existential body should expose definition consequences to later facts:\n{}",
-        run_output
+        setup_error.is_none(),
+        "{}",
+        render_run_output(&runtime, &setup_results, &setup_error).1
     );
+    let fact = parse_fact_for_wd(
+        &mut runtime,
+        "exist denominator R st {$nonzero(denominator), 1 / denominator = 1 / denominator}",
+        "existential_wd_uses_preceding_predicate",
+    );
+    runtime
+        .verify_fact_well_defined_result(&fact, &VerifyState::initial())
+        .expect("a preceding predicate condition should establish the later divisor obligation");
 }
 
 #[test]
 fn existential_well_definedness_still_requires_a_nonzero_premise() {
-    let source_code = r#"
-trust exist denominator R st {1 / denominator = 1 / denominator}
-"#;
-
     let mut runtime = Runtime::default();
     runtime.start_isolated_source("existential_well_definedness_still_requires_a_nonzero_premise");
-    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
-    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
-    assert!(
-        !run_succeeded,
-        "division without a preceding nonzero premise must remain ill-defined"
+    let fact = parse_fact_for_wd(
+        &mut runtime,
+        "exist denominator R st {1 / denominator = 1 / denominator}",
+        "existential_wd_requires_nonzero",
     );
+    let error = runtime
+        .verify_fact_well_defined_result(&fact, &VerifyState::initial())
+        .expect_err("division without a preceding nonzero premise must remain ill-defined");
+    let run_output = error.trace_message();
     assert!(
         run_output.contains("must be non-zero"),
         "the rejection should identify the missing divisor obligation:\n{}",

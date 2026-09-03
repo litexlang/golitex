@@ -13,7 +13,7 @@ impl Runtime {
             stmt.line_file.clone(),
         )
         .into();
-        self.verify_atomic_fact_well_defined(&membership, &VerifyState::initial())?;
+        self.verify_atomic_fact_well_defined_result(&membership, &VerifyState::initial())?;
         let membership_check = self.verify_atomic_fact(&membership, &VerifyState::initial())?;
         if membership_check.is_unknown() {
             return Err(short_exec_error(
@@ -79,7 +79,7 @@ impl Runtime {
     ) -> Result<SuccessInferResult, RuntimeError> {
         let store_reason = store_reason.into();
         let (def, header_map) =
-            self.struct_header_param_to_arg_map(struct_obj, &VerifyState::initial())?;
+            self.struct_header_param_to_arg_map_after_well_defined(struct_obj)?;
         let mut named_field_map = HashMap::new();
         for field in def.fields.iter() {
             let field_value: Obj = ObjAsStructInstanceWithFieldAccess::new_resolved(

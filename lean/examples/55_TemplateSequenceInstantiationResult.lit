@@ -12,8 +12,9 @@ template<S set>:
 
 \sequence<R> = fn(n N+) R
 \sequence<R> = \sequence<R>
-# Current behavior: the Template definition, first Created instance, Reused instance, and
-# exact public equality all verify; the generated Lean family is Litex.fnSet Litex.NPos S.
+# Current behavior: the Template definition, first Created instance, explicit object-WD
+# Reuse node, and exact public equality all verify; the generated Lean family is
+# Litex.fnSet Litex.NPos S.
 # The runtime-only boundary probe `0 ∉ N+` is recorded in the adjacent proof journal.
 #
 # Boundary: this compiler slice rejects template domains, non-set parameters, and non-set-alias bodies.

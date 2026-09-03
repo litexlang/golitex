@@ -1,0 +1,8 @@
+[read]
+README.md
+
+[code]
+main.lit
+Generated.lean
+Adapter.lean
+Final.lean

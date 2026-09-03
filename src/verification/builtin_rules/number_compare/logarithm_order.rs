@@ -64,14 +64,16 @@ impl Runtime {
                     )
                     .into();
 
-                    let base_gt_one_result = self
-                        .verify_atomic_fact_as_builtin_rule_premise(&base_gt_one, builtin_state)?;
-                    if base_gt_one_result.is_success() {
-                        let args_result = self.verify_atomic_fact_as_builtin_rule_premise(
+                    let base_gt_one_result = self.try_verify_atomic_fact_as_builtin_rule_premise(
+                        &base_gt_one,
+                        builtin_state,
+                    )?;
+                    if let Some(base_gt_one_result) = base_gt_one_result {
+                        let args_result = self.try_verify_atomic_fact_as_builtin_rule_premise(
                             &forward_args,
                             builtin_state,
                         )?;
-                        if args_result.is_success() {
+                        if let Some(args_result) = args_result {
                             return Ok(Some(ProveFactResult::from(
                                 SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                                     atomic_fact.clone().into(),
@@ -83,14 +85,16 @@ impl Runtime {
                         }
                     }
 
-                    let base_lt_one_result = self
-                        .verify_atomic_fact_as_builtin_rule_premise(&base_lt_one, builtin_state)?;
-                    if base_lt_one_result.is_success() {
-                        let args_result = self.verify_atomic_fact_as_builtin_rule_premise(
+                    let base_lt_one_result = self.try_verify_atomic_fact_as_builtin_rule_premise(
+                        &base_lt_one,
+                        builtin_state,
+                    )?;
+                    if let Some(base_lt_one_result) = base_lt_one_result {
+                        let args_result = self.try_verify_atomic_fact_as_builtin_rule_premise(
                             &reversed_args,
                             builtin_state,
                         )?;
-                        if args_result.is_success() {
+                        if let Some(args_result) = args_result {
                             return Ok(Some(ProveFactResult::from(
                                 SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                                     atomic_fact.clone().into(),
@@ -111,16 +115,21 @@ impl Runtime {
                     let arg_gt_one: AtomicFact =
                         LessFact::new(one.clone(), log.arg.as_ref().clone(), f.line_file.clone())
                             .into();
-                    let base_gt_one_result = self
-                        .verify_atomic_fact_as_builtin_rule_premise(&base_gt_one, builtin_state)?;
-                    if !base_gt_one_result.is_success() {
+                    let Some(base_gt_one_result) = self
+                        .try_verify_atomic_fact_as_builtin_rule_premise(
+                            &base_gt_one,
+                            builtin_state,
+                        )?
+                    else {
                         return Ok(None);
-                    }
-                    let arg_gt_one_result = self
-                        .verify_atomic_fact_as_builtin_rule_premise(&arg_gt_one, builtin_state)?;
-                    if !arg_gt_one_result.is_success() {
+                    };
+                    let arg_gt_one_result = self.try_verify_atomic_fact_as_builtin_rule_premise(
+                        &arg_gt_one,
+                        builtin_state,
+                    )?;
+                    let Some(arg_gt_one_result) = arg_gt_one_result else {
                         return Ok(None);
-                    }
+                    };
                     return Ok(Some(ProveFactResult::from(
                         SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             atomic_fact.clone().into(),
@@ -143,21 +152,28 @@ impl Runtime {
                     .into();
                     let arg_positive: AtomicFact =
                         LessFact::new(zero, log.arg.as_ref().clone(), f.line_file.clone()).into();
-                    let base_gt_one_result = self
-                        .verify_atomic_fact_as_builtin_rule_premise(&base_gt_one, builtin_state)?;
-                    if !base_gt_one_result.is_success() {
+                    let Some(base_gt_one_result) = self
+                        .try_verify_atomic_fact_as_builtin_rule_premise(
+                            &base_gt_one,
+                            builtin_state,
+                        )?
+                    else {
                         return Ok(None);
-                    }
-                    let arg_lt_one_result = self
-                        .verify_atomic_fact_as_builtin_rule_premise(&arg_lt_one, builtin_state)?;
-                    if !arg_lt_one_result.is_success() {
+                    };
+                    let arg_lt_one_result = self.try_verify_atomic_fact_as_builtin_rule_premise(
+                        &arg_lt_one,
+                        builtin_state,
+                    )?;
+                    let Some(arg_lt_one_result) = arg_lt_one_result else {
                         return Ok(None);
-                    }
-                    let arg_positive_result = self
-                        .verify_atomic_fact_as_builtin_rule_premise(&arg_positive, builtin_state)?;
-                    if !arg_positive_result.is_success() {
+                    };
+                    let arg_positive_result = self.try_verify_atomic_fact_as_builtin_rule_premise(
+                        &arg_positive,
+                        builtin_state,
+                    )?;
+                    let Some(arg_positive_result) = arg_positive_result else {
                         return Ok(None);
-                    }
+                    };
                     return Ok(Some(ProveFactResult::from(
                         SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             atomic_fact.clone().into(),

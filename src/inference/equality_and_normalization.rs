@@ -23,10 +23,7 @@ impl Runtime {
         result.new_fact(&inferred_fact);
         let conclusion_fact = inferred_fact.clone();
         let conclusion_infers = self
-            .store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
-                inferred_fact,
-                inference_state,
-            )
+            .store_typed_inference_conclusion_and_infer(inferred_fact, inference_state)
             .map_err(|previous_error| {
                 RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
                     None,
@@ -655,7 +652,7 @@ impl Runtime {
             for fact in definition_facts {
                 result.add_fact_by_definition(&fact);
                 result.new_infer_result_inside(
-                    self.store_with_well_defined_verification_and_infer_with_default_verify_state_and_reason_and_state(
+                    self.store_typed_inference_conclusion_and_infer_with_reason(
                         fact,
                         reason.clone(),
                         inference_state,
@@ -671,7 +668,7 @@ impl Runtime {
                 let rule = "bijective functions have unique preimages";
                 result.add_builtin_inference(rule, &unique_preimage);
                 result.new_infer_result_inside(
-                    self.store_with_well_defined_verification_and_infer_with_default_verify_state_and_reason_and_state(
+                    self.store_typed_inference_conclusion_and_infer_with_reason(
                         unique_preimage,
                         InferReason::BuiltinInference(rule.to_string()),
                         inference_state,
@@ -712,7 +709,7 @@ impl Runtime {
             parameter_requirement_facts.into_iter().enumerate()
         {
             let stored_parameter_requirement = self
-                .store_with_well_defined_verification_and_infer_with_default_verify_state_and_reason_and_state(
+                .store_typed_inference_conclusion_and_infer_with_reason(
                     parameter_requirement_fact.clone(),
                     by_definition_reason.clone(),
                     inference_state,
@@ -721,7 +718,7 @@ impl Runtime {
                     RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
                         None,
                         format!(
-                            "failed to verify parameter type {} for `{}`",
+                            "failed to store inferred parameter type {} for `{}`",
                             parameter_index, normal_atomic_fact
                         ),
                         normal_atomic_fact.line_file.clone(),
@@ -729,6 +726,17 @@ impl Runtime {
                         vec![],
                     )))
                 })?;
+            if let Fact::AtomicFact(AtomicFact::InFact(requirement)) = &parameter_requirement_fact {
+                if let (Obj::Atom(argument), Obj::StructObj(struct_obj)) =
+                    (&requirement.element, &requirement.set)
+                {
+                    if let Some(symbol) = argument.symbol_ref() {
+                        self.remember_inferred_direct_struct_carrier_for_symbol(
+                            symbol, struct_obj,
+                        )?;
+                    }
+                }
+            }
             result.add_rule_application_preserving_conclusion_result_structure(
                 InferRule::DefinedPredicateParameterRequirementProjection(
                     DefinedPredicateParameterRequirementProjectionInferRule {

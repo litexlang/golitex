@@ -6,41 +6,41 @@ set_option linter.style.nameCheck false
 namespace __Compiler_70_LocalRealGreatestLowerBound
 
 theorem local_real_greatest_lower_bound_exists :
-    ∀ (S : Litex.Set) (lower : (Litex.R).Carrier) (__h16 : Litex.In lower Litex.R) (__domain_f17 : Litex.Subset S Litex.R) (__domain_f21 : Litex.Set.Nonempty S) (__domain_f25 : ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In __p1 Litex.R) (__domain1 : Litex.In __p1 S), Litex.Le (((lower : ℝ)) : ℂ) (((__p1 : ℝ)) : ℂ)),
+    ∀ (S : Litex.Set) (lower : (Litex.R).Carrier) (__h14 : Litex.In lower Litex.R) (__domain_f15 : Litex.Subset S Litex.R) (__domain_f17 : Litex.Set.Nonempty S) (__domain_f21 : ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In __p1 Litex.R) (__domain1 : Litex.In __p1 S), Litex.Le (((lower : ℝ)) : ℂ) (((__p1 : ℝ)) : ℂ)),
       ∃ (G : (Litex.R).Carrier), ∃ (__type_G : Litex.In G Litex.R), Litex.RealGreatestLowerBound S G := by
-  intro S lower __h16 __domain_f17 __domain_f21 __domain_f25
+  intro S lower __h14 __domain_f15 __domain_f17 __domain_f21
   have __fact0 :
-      ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 S), Litex.Le (((lower : ℝ)) : ℂ) (((Litex.In.rep __p1 ((__domain_f17) __p1 (__type1)) : ℝ)) : ℂ) := by
-    intro __carrier1 member __h28
-    have __prior0_0 : Litex.Le (((lower : ℝ)) : ℂ) (((Litex.In.rep member ((__domain_f17) member (__h28)) : ℝ)) : ℂ) := (by
-      simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (__domain_f25 (Litex.In.rep member ((__domain_f17) member (__h28)) : ℝ) (Litex.In.own Litex.R (Litex.In.rep member ((__domain_f17) member (__h28)) : ℝ)) ((Litex.In.congr (Litex.Same.trans (Litex.Same.trans (Litex.In.same_rep member (((__domain_f17) member (__h28)))) (Litex.Same.realComplex (Litex.In.rep member ((__domain_f17) member (__h28))))) (Litex.Same.symm (Litex.Same.realComplex ((Litex.In.rep member ((__domain_f17) member (__h28)) : ℝ))))) S).mp (__h28))))
+      ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 S), Litex.Le (((lower : ℝ)) : ℂ) (((Litex.In.rep __p1 ((__domain_f15) __p1 (__type1)) : ℝ)) : ℂ) := by
+    intro __carrier1 member __h24
+    have __prior0_0 : Litex.Le (((lower : ℝ)) : ℂ) (((Litex.In.rep member ((__domain_f15) member (__h24)) : ℝ)) : ℂ) := (by
+      simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (__domain_f21 (Litex.In.rep member ((__domain_f15) _ (__h24))) (Litex.In.own Litex.R (Litex.In.rep member ((__domain_f15) _ (__h24)))) ((Litex.In.congr (Litex.In.same_rep member ((__domain_f15) _ (__h24))) S).mp (__h24))))
     exact __prior0_0
   have __step1_0 : ∃ (glb : (Litex.R).Carrier), ∃ (__type_glb : Litex.In glb Litex.R), Litex.RealGreatestLowerBound S glb := by
-    exact Litex.Rules.realGreatestLowerBoundExists S (lower : ℝ)  (__domain_f17) (__domain_f21) (Litex.In.own Litex.R (lower : ℝ)) (__fact0)
+    exact Litex.Rules.realGreatestLowerBoundExists S (lower : ℝ)  (__domain_f15) (__domain_f17) (Litex.In.own Litex.R (lower : ℝ)) (__fact0)
   have __c1_0 : ∃ (G : (Litex.R).Carrier), ∃ (__type_G : Litex.In G Litex.R), Litex.RealGreatestLowerBound S G := __step1_0
   exact __c1_0
 
 theorem local_real_greatest_lower_bound_le_member :
-    ∀ (S : Litex.Set) (G : (Litex.R).Carrier) (__h45 : Litex.In G Litex.R) (member : (Litex.R).Carrier) (__h46 : Litex.In member Litex.R) (__domain_f47 : Litex.Subset S Litex.R) (__domain_f51 : Litex.RealGreatestLowerBound S G) (__domain_f52 : Litex.In member S),
+    ∀ (S : Litex.Set) (G : (Litex.R).Carrier) (__h41 : Litex.In G Litex.R) (member : (Litex.R).Carrier) (__h42 : Litex.In member Litex.R) (__domain_f43 : Litex.Subset S Litex.R) (__domain_f45 : Litex.RealGreatestLowerBound S G) (__domain_f46 : Litex.In member S),
       Litex.Le (((G : ℝ)) : ℂ) (((member : ℝ)) : ℂ) := by
-  intro S G __h45 member __h46 __domain_f47 __domain_f51 __domain_f52
+  intro S G __h41 member __h42 __domain_f43 __domain_f45 __domain_f46
   have __step2_1 : Litex.Le (((G : ℝ)) : ℂ) (((member : ℝ)) : ℂ) := by
-    exact (by simpa using (Litex.Rules.realGreatestLowerBoundLeMember S (((G : ℝ)) : ℂ) (member : ℝ)  (__domain_f47) (Litex.Rules.complexRealInR (G : ℝ)) (__domain_f51) (__domain_f52)))
+    exact (by simpa using (Litex.Rules.realGreatestLowerBoundLeMember S (((G : ℝ)) : ℂ) (member : ℝ)  (__domain_f43) (Litex.Rules.complexRealInR (G : ℝ)) (__domain_f45) (__domain_f46)))
   have __c2_0 : Litex.Le (((G : ℝ)) : ℂ) (((member : ℝ)) : ℂ) := __step2_1
   exact __c2_0
 
 theorem local_real_lower_bound_le_greatest_lower_bound :
-    ∀ (S : Litex.Set) (G : (Litex.R).Carrier) (__h69 : Litex.In G Litex.R) (lower : (Litex.R).Carrier) (__h70 : Litex.In lower Litex.R) (__domain_f71 : Litex.Subset S Litex.R) (__domain_f75 : Litex.RealGreatestLowerBound S G) (__domain_f79 : ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In __p1 Litex.R) (__domain1 : Litex.In __p1 S), Litex.Le (((lower : ℝ)) : ℂ) (((__p1 : ℝ)) : ℂ)),
+    ∀ (S : Litex.Set) (G : (Litex.R).Carrier) (__h61 : Litex.In G Litex.R) (lower : (Litex.R).Carrier) (__h62 : Litex.In lower Litex.R) (__domain_f63 : Litex.Subset S Litex.R) (__domain_f65 : Litex.RealGreatestLowerBound S G) (__domain_f69 : ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In __p1 Litex.R) (__domain1 : Litex.In __p1 S), Litex.Le (((lower : ℝ)) : ℂ) (((__p1 : ℝ)) : ℂ)),
       Litex.Le (((lower : ℝ)) : ℂ) (((G : ℝ)) : ℂ) := by
-  intro S G __h69 lower __h70 __domain_f71 __domain_f75 __domain_f79
+  intro S G __h61 lower __h62 __domain_f63 __domain_f65 __domain_f69
   have __fact3 :
-      ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 S), Litex.Le (((lower : ℝ)) : ℂ) (((Litex.In.rep __p1 ((__domain_f71) __p1 (__type1)) : ℝ)) : ℂ) := by
-    intro __carrier1 member __h82
-    have __prior3_0 : Litex.Le (((lower : ℝ)) : ℂ) (((Litex.In.rep member ((__domain_f71) member (__h82)) : ℝ)) : ℂ) := (by
-      simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (__domain_f79 (Litex.In.rep member ((__domain_f71) member (__h82)) : ℝ) (Litex.In.own Litex.R (Litex.In.rep member ((__domain_f71) member (__h82)) : ℝ)) ((Litex.In.congr (Litex.Same.trans (Litex.Same.trans (Litex.In.same_rep member (((__domain_f71) member (__h82)))) (Litex.Same.realComplex (Litex.In.rep member ((__domain_f71) member (__h82))))) (Litex.Same.symm (Litex.Same.realComplex ((Litex.In.rep member ((__domain_f71) member (__h82)) : ℝ))))) S).mp (__h82))))
+      ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 S), Litex.Le (((lower : ℝ)) : ℂ) (((Litex.In.rep __p1 ((__domain_f63) __p1 (__type1)) : ℝ)) : ℂ) := by
+    intro __carrier1 member __h72
+    have __prior3_0 : Litex.Le (((lower : ℝ)) : ℂ) (((Litex.In.rep member ((__domain_f63) member (__h72)) : ℝ)) : ℂ) := (by
+      simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (__domain_f69 (Litex.In.rep member ((__domain_f63) _ (__h72))) (Litex.In.own Litex.R (Litex.In.rep member ((__domain_f63) _ (__h72)))) ((Litex.In.congr (Litex.In.same_rep member ((__domain_f63) _ (__h72))) S).mp (__h72))))
     exact __prior3_0
   have __step4_2 : Litex.Le (((lower : ℝ)) : ℂ) (((G : ℝ)) : ℂ) := by
-    exact (by convert (Litex.Rules.realLowerBoundLeGreatestLowerBound S (((G : ℝ)) : ℂ) (lower : ℝ)  (__domain_f71) (Litex.Rules.complexRealInR (G : ℝ)) (__domain_f75) (Litex.In.own Litex.R (lower : ℝ)) (__fact3)) using 1 <;> norm_num <;> norm_cast)
+    exact (by convert (Litex.Rules.realLowerBoundLeGreatestLowerBound S (((G : ℝ)) : ℂ) (lower : ℝ)  (__domain_f63) (Litex.Rules.complexRealInR (G : ℝ)) (__domain_f65) (Litex.In.own Litex.R (lower : ℝ)) (__fact3)) using 1 <;> norm_num <;> norm_cast)
   have __c4_0 : Litex.Le (((lower : ℝ)) : ℂ) (((G : ℝ)) : ℂ) := __step4_2
   exact __c4_0
 

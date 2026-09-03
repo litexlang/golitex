@@ -1763,7 +1763,7 @@ impl Runtime {
     }
 
     fn evaluate_obj_for_eval_stmt(&mut self, stmt: &EvalStmt) -> Result<Obj, RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&stmt.obj_to_eval, &VerifyState::initial())?;
+        self.verify_obj_well_defined_result(&stmt.obj_to_eval, &VerifyState::initial())?;
         if stmt.obj_to_eval.contains_native_complex_syntax() {
             return Err(short_exec_error(
                 stmt.clone().into(),

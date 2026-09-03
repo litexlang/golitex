@@ -126,6 +126,7 @@ pub(super) fn infer_rule_role(rule: &InferRule) -> &'static str {
             "SupersetImpliesElementwiseMembershipForall"
         }
         InferRule::ConjunctionImpliesComponent(_) => "ConjunctionImpliesComponent",
+        InferRule::ChainImpliesComponent(_) => "ChainImpliesComponent",
     }
 }
 

@@ -6,9 +6,9 @@ set_option linter.style.nameCheck false
 namespace __Compiler_4_FunctionSet
 
 theorem __fact0 :
-    ∀ (__p1 : Litex.Set) (__p2 : Litex.Set) {__carrier3 : Type} (__p3 : __carrier3) (__type3 : Litex.In __p3 __p1) {__carrier4 : Type 1} (__p4 : __carrier4) (__type4 : Litex.In __p4 (Litex.fnSet (__p1 : Litex.Set.{0}) (__p2 : Litex.Set.{0}))), Litex.Same (Litex.fnApply __p4 __type4 __p3 (__type3)) (Litex.fnApply __p4 __type4 __p3 (__type3)) := by
-  intro s S __carrier3 x __h11 __carrier4 f __h14
-  have __prior0_0 : Litex.Same (Litex.fnApply f __h14 x (__h11)) (Litex.fnApply f __h14 x (__h11)) := Litex.Same.refl (Litex.fnApply f __h14 x (__h11))
+    ∀ (__p1 : Litex.Set) (__p2 : Litex.Set) {__carrier3 : Type} (__p3 : __carrier3) (__type3 : Litex.In __p3 __p1) (__p4 : ((Litex.fnSet (__p1 : Litex.Set.{0}) (__p2 : Litex.Set.{0}))).Carrier) (__type4 : Litex.In __p4 (Litex.fnSet (__p1 : Litex.Set.{0}) (__p2 : Litex.Set.{0}))), Litex.Same (Litex.fnApply (domain := __p1) (codomain := __p2) __p4 (__type4) __p3 (__type3)) (Litex.fnApply (domain := __p1) (codomain := __p2) __p4 (__type4) __p3 (__type3)) := by
+  intro s S __carrier3 x __h10 f __h13
+  have __prior0_0 : Litex.Same (Litex.fnApply (domain := s) (codomain := S) f (__h13) x (__h10)) (Litex.fnApply (domain := s) (codomain := S) f (__h13) x (__h10)) := Litex.Same.refl (Litex.fnApply (domain := s) (codomain := S) f (__h13) x (__h10))
   exact __prior0_0
 
 end __Compiler_4_FunctionSet

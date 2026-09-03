@@ -311,7 +311,7 @@ impl Runtime {
                     ),
                 ));
             }
-            let equal_result = self.verify_known_equality_fact(
+            let equal_result = self.try_verify_known_equality_fact_candidate(
                 &EqualFact::new_from_refs(
                     &less_equal_fact.left,
                     &less_equal_fact.right,
@@ -319,7 +319,7 @@ impl Runtime {
                 ),
                 builtin_state.verify_state(),
             )?;
-            if equal_result.is_success() {
+            if let Some(equal_result) = equal_result {
                 return Ok(ProveFactResult::from(
                     SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         less_equal_fact.clone().into(),
@@ -335,8 +335,9 @@ impl Runtime {
                 less_equal_fact.line_file.clone(),
             )
             .into();
-            let strict_result = self.verify_atomic_fact_as_builtin_rule_premise(&strict_atomic, builtin_state)?;
-            if strict_result.is_success() {
+            let strict_result =
+                self.try_verify_atomic_fact_as_builtin_rule_premise(&strict_atomic, builtin_state)?;
+            if let Some(strict_result) = strict_result {
                 return Ok(ProveFactResult::from(
                     SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         less_equal_fact.clone().into(),
@@ -360,7 +361,7 @@ impl Runtime {
                     ),
                 ));
             }
-            let equal_result = self.verify_known_equality_fact(
+            let equal_result = self.try_verify_known_equality_fact_candidate(
                 &EqualFact::new_from_refs(
                     &greater_equal_fact.left,
                     &greater_equal_fact.right,
@@ -368,7 +369,7 @@ impl Runtime {
                 ),
                 builtin_state.verify_state(),
             )?;
-            if equal_result.is_success() {
+            if let Some(equal_result) = equal_result {
                 return Ok(ProveFactResult::from(
                     SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         greater_equal_fact.clone().into(),
@@ -386,8 +387,9 @@ impl Runtime {
                 greater_equal_fact.line_file.clone(),
             )
             .into();
-            let strict_result = self.verify_atomic_fact_as_builtin_rule_premise(&strict_atomic, builtin_state)?;
-            if strict_result.is_success() {
+            let strict_result =
+                self.try_verify_atomic_fact_as_builtin_rule_premise(&strict_atomic, builtin_state)?;
+            if let Some(strict_result) = strict_result {
                 return Ok(ProveFactResult::from(
                     SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         greater_equal_fact.clone().into(),

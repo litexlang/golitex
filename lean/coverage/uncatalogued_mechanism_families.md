@@ -8,7 +8,7 @@ rules have interchangeable semantics.
 
 - Rows: **127**; direct producers: **120**; exact compiler consumers: **1**.
 - Representative: `builtin.verify.atomic.function_membership.verify_value_in_definition_return_set` (`UncataloguedBuiltinRule::VerifyValueInDefinitionReturnSet`).
-- Representative producer: `src/verification/atomic/function_membership.rs:74`.
+- Representative producer: `src/verification/atomic/function_membership.rs:75`.
 - Result migration: Promote the producer to a typed certificate that fixes the exact target and required premises.
 - Lean migration: Call one named proved Lean theorem adapter after certificate validation; keep one explicit route per stable ID.
 - Classification basis: default leaf candidate pending exact target/premise review.
@@ -17,7 +17,7 @@ rules have interchangeable semantics.
 
 - Rows: **22**; direct producers: **22**; exact compiler consumers: **0**.
 - Representative: `builtin.verify.equality.core.verify_equal_fact_by_direct_evaluation` (`UncataloguedBuiltinRule::VerifyEqualFactByDirectEvaluation`).
-- Representative producer: `src/verification/equality/core.rs:356`.
+- Representative producer: `src/verification/equality/core.rs:345`.
 - Result migration: Retain the checked input, normalized output, and reflection witness instead of a display result.
 - Lean migration: Use a fixed kernel-checked reflection theorem; never ask a target tactic to rediscover the computation.
 - Classification basis: producer is evaluation/reflection-shaped.
@@ -26,16 +26,16 @@ rules have interchangeable semantics.
 
 - Rows: **28**; direct producers: **28**; exact compiler consumers: **0**.
 - Representative: `builtin.execute.explicit_verify.theorem_application.exec_builtin_thm_stmt_impl` (`UncataloguedBuiltinRule::ExecBuiltinThmStmtImpl`).
-- Representative producer: `src/execution/proof_directives/theorem_application.rs:850`.
+- Representative producer: `src/execution/proof_directives/theorem_application.rs:968`.
 - Result migration: Retain ordered child Results and the composition constructor selected by the verifier.
 - Lean migration: Compile children first and assemble their proofs with one structural Lean combinator.
 - Classification basis: identity names an intermediate Result/composition boundary.
 
 ## `dispatcher_or_search_helper`
 
-- Rows: **86**; direct producers: **83**; exact compiler consumers: **1**.
-- Representative: `builtin.verify.equality.function.verify_fn_equal_fact_with_builtin_rules.01` (`UncataloguedBuiltinRule::VerifyFnEqualFactWithBuiltinRules01`).
-- Representative producer: `src/verification/equality/function.rs:118`.
+- Rows: **87**; direct producers: **84**; exact compiler consumers: **1**.
+- Representative: `builtin.verify.verify_builtin_rules.in_fact_builtin.dispatch.verify_in_fact_with_builtin_rules.12` (`UncataloguedBuiltinRule::VerifyInFactWithBuiltinRules12`).
+- Representative producer: `src/verification/builtin_rules/in_fact_builtin/dispatch.rs:1075`.
 - Result migration: Return the selected terminal certificate/child Result; retire a helper identity that proves no proposition.
 - Lean migration: Do not create a theorem for search control flow; compile only the selected semantic certificate.
 - Classification basis: producer is an explicit builtin strategy/dispatcher boundary.
@@ -44,7 +44,7 @@ rules have interchangeable semantics.
 
 - Rows: **128**; direct producers: **121**; exact compiler consumers: **0**.
 - Representative: `builtin.verify.equality.core.verify_equal_fact_by_builtin_rules_and_known_equalities.01` (`UncataloguedBuiltinRule::VerifyEqualFactByBuiltinRulesAndKnownEqualities01`).
-- Representative producer: `src/verification/equality/core.rs:1145`.
+- Representative producer: `src/verification/equality/core.rs:1150`.
 - Result migration: Compare exact targets, premise order, orientation, and retained evidence before merging schemas.
 - Lean migration: Share a proved theorem only after validation, while preserving an explicit route for every stable rule ID.
 - Classification basis: numbered sibling identities require schema comparison before separate theorems.
@@ -62,7 +62,7 @@ rules have interchangeable semantics.
 
 - Rows: **8**; direct producers: **8**; exact compiler consumers: **0**.
 - Representative: `builtin.verify.atomic.function_membership.verify_indexed_value_in_definition_return_set_via_cart_projection` (`UncataloguedBuiltinRule::VerifyIndexedValueInDefinitionReturnSetViaCartProjection`).
-- Representative producer: `src/verification/atomic/function_membership.rs:165`.
+- Representative producer: `src/verification/atomic/function_membership.rs:167`.
 - Result migration: Freeze the exact native carrier/wrapper and required eliminators before changing the certificate.
 - Lean migration: Block emission until the user-owned semantic decision has a proved Core/Rules contract.
 - Classification basis: producer targets a constructor family with an explicit object/fact compiler gap.

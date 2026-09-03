@@ -68,7 +68,8 @@ impl StmtResultToLeanCompiler {
             .fact_propositions
             .insert(source_fact_id, source_fact.clone());
         if let Some(native_equality) = native_equality {
-            self.retain_native_equality_proof_in_current_environment(
+            self.retain_native_equality_proof_using_result_well_definedness(
+                verified,
                 source_fact_id,
                 &source_fact,
                 native_equality,
@@ -102,8 +103,7 @@ impl StmtResultToLeanCompiler {
         // typed-inference replay, then restore the enclosing scope.
         let certificate =
             self.construct_well_definedness_to_lean_compilation_context(&verified.checked)?;
-        let parent_well_definedness =
-            self.environment_stack.well_definedness.replace(certificate);
+        let parent_well_definedness = self.environment_stack.well_definedness.replace(certificate);
         let inference_compilation = self
             .compile_typed_infer_result_as_top_level_declarations_with_allowed_sources(
                 &result.store.infers,

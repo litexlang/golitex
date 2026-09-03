@@ -21,12 +21,12 @@ pub use crate::algebraic_normalization::{
 };
 pub use crate::environment::{
     forall_argument_shape, AtomicFactIndex, CachedKnownFact, Environment,
-    EnvironmentDefinitionRegistry, EnvironmentFactStore, EnvironmentObjectKnowledge,
-    EnvironmentObjectKnowledgeStore, EnvironmentPredicateAlgebraicPropertyStore,
-    EnvironmentPredicateProperties, EnvironmentStoredFactStore, EnvironmentVerificationCache,
-    ForallArgumentShape, ForallConclusionIndex, KnownEquality, KnownEqualityProofStep, KnownFnInfo,
-    KnownObjValue, QuantifiedFactIndex, SetRelationIndex, StoredFactRecord,
-    StoredForallConclusionReference, WellDefinednessEnvironmentDelta,
+    EnvironmentDefinitionRegistry, EnvironmentFactStore, EnvironmentInferenceCache,
+    EnvironmentObjectKnowledge, EnvironmentObjectKnowledgeStore,
+    EnvironmentPredicateAlgebraicPropertyStore, EnvironmentPredicateProperties,
+    EnvironmentStoredFactStore, ForallArgumentShape, ForallConclusionIndex, KnownEquality,
+    KnownEqualityProofStep, KnownFnInfo, KnownObjValue, QuantifiedFactIndex, SetRelationIndex,
+    StoredFactRecord, StoredForallConclusionReference, WellDefinednessEnvironmentDelta,
 };
 pub use crate::error::exec_stmt_error_with_stmt_and_cause;
 pub use crate::error::short_exec_error;
@@ -106,7 +106,7 @@ pub use crate::graph::{
 pub use crate::inference::InferenceState;
 pub use crate::inference::{
     CartesianMembershipProjectionInferRule, CartesianMembershipProjectionKind,
-    ClosedPositivePowerEqualityImpliesEqualSideMembershipInferRule,
+    ChainImpliesComponentInferRule, ClosedPositivePowerEqualityImpliesEqualSideMembershipInferRule,
     ConjunctionImpliesComponentInferRule, DefinedPredicateDefinitionClauseProjectionInferRule,
     DefinedPredicateParameterRequirementProjectionInferRule, EqualityChainClosureInferRule,
     InferReason, InferRule, KnownSetEqualityOrientation, KnownTupleEqualitySide,
@@ -217,7 +217,6 @@ pub use crate::object::SetBuilder;
 pub use crate::object::SetMinus;
 pub use crate::object::Sign;
 pub use crate::object::Sin;
-pub use crate::object::SourceObjectOccurrenceId;
 pub use crate::object::Sqrt;
 pub use crate::object::StandardSet;
 pub use crate::object::StructObj;
@@ -256,13 +255,14 @@ pub use crate::result::DefinitionReductionVerificationEvidence;
 pub use crate::result::DivNotEqualZeroBuiltinRuleEvidence;
 pub use crate::result::EqualityTransportEvidence;
 pub use crate::result::EqualityTransportStep;
+pub use crate::result::ExistentialEliminationSourceResult;
 pub use crate::result::FactTransformationEvidence;
 pub use crate::result::FactTransformationRule;
 pub use crate::result::FactTransformationStep;
 pub use crate::result::NonzeroExpressionOrientation;
 pub use crate::result::ObjectDefinitionItem;
-pub use crate::result::StmtResult;
 pub use crate::result::ProveFactResult;
+pub use crate::result::StmtResult;
 pub use crate::result::SuccessCheckedFunctionDefinitionReductionFactProofResult;
 pub use crate::result::SuccessCheckedGoalBlockResult;
 pub use crate::result::SuccessCombinedFactProofResult;
@@ -320,7 +320,6 @@ pub use crate::result::SuccessVerifyByUnstructuredIntegerInducResult;
 pub use crate::result::SuccessVerifyCaseFunctionDefinitionResult;
 pub use crate::result::SuccessVerifyContradictionResult;
 pub use crate::result::SuccessVerifyExistentialEliminationResult;
-pub use crate::result::ExistentialEliminationSourceResult;
 pub use crate::result::SuccessVerifyFunctionDefinitionResult;
 pub use crate::result::SuccessVerifyFunctionFromUniqueExistenceResult;
 pub use crate::result::SuccessVerifyHaveObjEqualResult;
@@ -389,8 +388,7 @@ pub use crate::result::{
 };
 pub use crate::result::{
     AtomicPredicateDomainCheckRole, CaseDisjointnessOrientation, FactStatementEvidence,
-    SuccessAxiomStmtResult,
-    SuccessByAntisymmetricPropStmtResult, SuccessByAxiomOfChoiceStmtResult,
+    SuccessAxiomStmtResult, SuccessByAntisymmetricPropStmtResult, SuccessByAxiomOfChoiceStmtResult,
     SuccessByCasesStmtResult, SuccessByClosedRangeAsCasesStmtResult, SuccessByContraStmtResult,
     SuccessByDefStmtResult, SuccessByEnumerateFiniteSetStmtResult,
     SuccessByEnumerateRangeStmtResult, SuccessByExtensionStmtResult,
@@ -403,13 +401,13 @@ pub use crate::result::{
     SuccessDefSettingStmtResult, SuccessDefStrategyStmtResult, SuccessDefStructStmtResult,
     SuccessDefTemplateStmtResult, SuccessDefThmStmtResult, SuccessDefinitionStmtResult,
     SuccessEvalStmtExecutionResult, SuccessEvalStmtResult, SuccessEvaluatedEvalStmtResult,
-    SuccessExampleStmtResult, SuccessHaveByPreimageStmtResult, SuccessHaveCartStmtResult,
-    SuccessHaveFiniteSeqStmtResult, SuccessHaveFnByForallExistUniqueStmtResult,
-    SuccessHaveFnByInducStmtResult, SuccessHaveFnEqualCaseByCaseStmtResult,
-    SuccessHaveFnEqualStmtResult, SuccessHaveMatrixStmtResult,
-    SuccessHaveObjByExistFactsStmtResult, SuccessHaveObjEqualStmtResult,
-    SuccessHaveObjInNonemptySetStmtResult, SuccessHaveSeqStmtResult, SuccessHaveTupleStmtResult,
-    SuccessLetObjStmtResult, SuccessObtainObjFromAtomicFactResult,
+    SuccessExampleStmtResult, SuccessFactProofNode, SuccessHaveByPreimageStmtResult,
+    SuccessHaveCartStmtResult, SuccessHaveFiniteSeqStmtResult,
+    SuccessHaveFnByForallExistUniqueStmtResult, SuccessHaveFnByInducStmtResult,
+    SuccessHaveFnEqualCaseByCaseStmtResult, SuccessHaveFnEqualStmtResult,
+    SuccessHaveMatrixStmtResult, SuccessHaveObjByExistFactsStmtResult,
+    SuccessHaveObjEqualStmtResult, SuccessHaveObjInNonemptySetStmtResult, SuccessHaveSeqStmtResult,
+    SuccessHaveTupleStmtResult, SuccessLetObjStmtResult, SuccessObtainObjFromAtomicFactResult,
     SuccessObtainObjFromExistFactResult, SuccessObtainObjFromThmResult,
     SuccessProofBlockStmtResult, SuccessProveFactResult, SuccessReleaseThmStmtResult,
     SuccessReuseObjWellDefinedResult, SuccessReusedTemplateInstanceResult,
@@ -434,9 +432,7 @@ pub use crate::result::{
     SuccessVerifyExactFiniteReduceDomainResult, SuccessVerifyExistFactResult,
     SuccessVerifyExistFactWellDefinedResult, SuccessVerifyFactBinderResult,
     SuccessVerifyFactForObjWellDefinedResult, SuccessVerifyFactObjectWellDefinedResult,
-    SuccessVerifyFactParameterGroupResult, SuccessFactProofNode, UnknownVerifyFactResult,
-    VerifiedFactResult, VerifyFactResult,
-    SuccessVerifyFactWellDefinedProofResult, WellDefinedFactResult,
+    SuccessVerifyFactParameterGroupResult, SuccessVerifyFactWellDefinedProofResult,
     SuccessVerifyFiniteAggregateClosedRangeResult, SuccessVerifyFiniteAggregateElementsResult,
     SuccessVerifyFiniteAggregateModeResult, SuccessVerifyFiniteAggregateWellDefinedResult,
     SuccessVerifyFiniteReduceDomainCoverageResult, SuccessVerifyFiniteReduceOperationLawsResult,
@@ -466,15 +462,8 @@ pub use crate::result::{
     SuccessVerifyTemplateHeaderArgumentResult, SuccessVerifyUniversalIntegerCarrierCoverageResult,
     SuccessVerifyWitnessNonemptySetResult, SuccessWitnessAtomicFactResult,
     SuccessWitnessExistFactResult, SuccessWitnessNonemptySetResult, SuccessWitnessStmtResult,
-    TrustedFactResult, TryStmtExecutionResult,
-};
-pub use crate::result::{
-    CachedWellDefinedObj, WellDefinedBinderPremiseProof, WellDefinedBinderPremiseRole,
-    WellDefinedBinderScopeId, WellDefinedBinderScopeProof, WellDefinedCacheKey, WellDefinedFactId,
-    WellDefinedFactProof, WellDefinedFunctionContract, WellDefinedObjChildRole,
-    WellDefinedObjChildUse, WellDefinedObjId, WellDefinedObjProof,
-    WellDefinedTargetRequirementProof, WellDefinedTargetRequirementUse,
-    WellDefinednessTargetRequirementPhase,
+    TrustedFactResult, TryStmtExecutionResult, UnknownVerifyFactResult, VerifiedFactResult,
+    VerifyFactResult, WellDefinedFactResult,
 };
 pub use crate::result::{
     EvaluateBinaryObjOperator, EvaluateObjShapeOperator, EvaluateUnaryObjOperator,
@@ -483,6 +472,9 @@ pub use crate::result::{
 };
 pub use crate::result::{KnownForallInstantiationItem, KnownForallRequirementKind};
 pub use crate::result::{SuccessBuiltinFactProofEvidenceResult, SuccessBuiltinFactProofResult};
+pub use crate::result::{
+    WellDefinedBinderPremiseRole, WellDefinedFunctionContract, WellDefinedObjChildRole,
+};
 pub use crate::runner::render_runner;
 pub use crate::runtime::ExecutionMode;
 pub use crate::runtime::FreeParamCollection;

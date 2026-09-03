@@ -8,36 +8,49 @@ namespace __Compiler_65_ImplicitNumericBinder
 def nested_natural_reflexivity (anchor : (Litex.R).Carrier) : Prop :=
   (Litex.In anchor Litex.R) ∧ (∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.N), Litex.Same __p1 __p1)
 
-theorem __fact0 :
-    ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.N), Litex.Same __p1 __p1 := by
-  intro __carrier1 n __h11
-  have __infer0_0 : Litex.Le (0 : ℂ) (((Litex.In.rep n __h11 : ℕ)) : ℂ) := Litex.Rules.naturalRepNonnegative (__h11)
-  have __infer0_1 : Litex.Nonpositive ((-1 : ℂ) * (((Litex.In.rep n __h11 : ℕ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNonpositive (Litex.Rules.realCastNonnegative ((Litex.In.rep n __h11 : ℕ) : ℝ) (__infer0_0))
-  have __prior0_0 : Litex.Same n n := Litex.Same.refl n
-  exact __prior0_0
-
-theorem __fact1 : nested_natural_reflexivity (0 : ℝ) := by
+theorem __fact0 : nested_natural_reflexivity (0 : ℝ) := by
   exact (by
   unfold nested_natural_reflexivity
-  exact ⟨Litex.In.own Litex.R (0 : ℝ), (by simpa [Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (@__fact0))⟩)
+  exact ⟨Litex.In.own Litex.R (0 : ℝ), (by simpa [Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (by
+  have __fact0 :
+      ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.N), Litex.Same __p1 __p1 := by
+    intro __carrier1 n __h11
+    have __infer0_0 : Litex.Nonnegative n := (by simpa using (Litex.Rules.nonnegativeOfInN (__h11)))
+    have __infer0_1 : Litex.Nonpositive ((-1 : ℂ) * (((Litex.In.rep n __h11 : ℕ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNonpositive ((Litex.Nonnegative.congr (Litex.Same.transNoObservation (Litex.In.same_rep n (__h11)) (Litex.Same.natComplexNoObservation (Litex.In.rep n __h11)))).mp (__infer0_0))
+    have __prior0_0 : Litex.Same n n := Litex.Same.refl n
+    exact __prior0_0
+  exact @__fact0))⟩)
 
-theorem __fact2 :
-    ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.R), Litex.Same __p1 __p1 := by
-  intro __carrier1 r __h20
-  have __prior2_0 : Litex.Same r r := Litex.Same.refl r
-  exact __prior2_0
+theorem __fact1 : Litex.In (0 : ℝ) Litex.R := by
+  exact (by
+  have __definition := __fact0
+  unfold nested_natural_reflexivity at __definition
+  simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using __definition.1)
+
+theorem __fact2 : ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.N), Litex.Same __p1 __p1 := by
+  exact (by
+  have __definition := __fact0
+  unfold nested_natural_reflexivity at __definition
+  intro __projection_carrier1 __projection_parameter1 __projection_type1
+  exact (__definition.2) __projection_parameter1 __projection_type1)
 
 theorem __fact3 :
-    ∀ (__p1 : ℤ), Litex.Same __p1 __p1 := by
-  intro z
-  have __prior3_0 : Litex.Same z z := Litex.Same.refl z
+    ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In __p1 Litex.R), Litex.Same __p1 __p1 := by
+  intro r __h20
+  have __prior3_0 : Litex.Same r r := Litex.Same.refl r
   exact __prior3_0
 
 theorem __fact4 :
+    ∀ (__p1 : ℤ), Litex.Same __p1 __p1 := by
+  intro z
+  have __prior4_0 : Litex.Same z z := Litex.Same.refl z
+  exact __prior4_0
+
+theorem __fact5 :
     ∀ (__p1 : (Litex.RPos).Carrier) (__type1 : Litex.In __p1 Litex.RPos), Litex.Same __p1 __p1 := by
   intro epsilon __h31
-  have __infer4_2 : Litex.Lt (0 : ℂ) ((((epsilon).val : ℝ)) : ℂ) := Litex.Rules.positiveRealCarrierPositive (__h31)
-  have __prior4_0 : Litex.Same epsilon epsilon := Litex.Same.refl epsilon
-  exact __prior4_0
+  have __infer5_0 : Litex.Lt (0 : ℂ) ((((epsilon).val : ℝ)) : ℂ) := (by simpa using (Litex.Rules.positiveRealCarrierPositive (__h31)))
+  have __prior5_0 : Litex.Same epsilon epsilon := Litex.Same.refl epsilon
+  exact __prior5_0
 
 end __Compiler_65_ImplicitNumericBinder

@@ -1,5 +1,4 @@
 mod algebraic_normalization;
-mod anonymous_function_aliases;
 mod chain_inference_projections;
 mod defined_predicate_inference;
 mod direct_fact_inference;

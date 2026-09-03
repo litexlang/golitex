@@ -7,50 +7,50 @@ namespace __Compiler_50_SetExtensionResultComposition
 
 theorem __fact0 : Litex.Same (Litex.Set.coproduct (Litex.Set.singleton (1 : ℂ)) (Litex.Set.coproduct (Litex.Set.singleton (2 : ℂ)) Litex.Set.empty)) (Litex.Set.coproduct (Litex.Set.singleton (2 : ℂ)) (Litex.Set.coproduct (Litex.Set.singleton (1 : ℂ)) Litex.Set.empty)) := by
   exact (by
-  have __step1 : ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 (Litex.Set.coproduct (Litex.Set.singleton (1 : ℂ)) (Litex.Set.coproduct (Litex.Set.singleton (2 : ℂ)) Litex.Set.empty))), Litex.In __p1 (Litex.Set.coproduct (Litex.Set.singleton (2 : ℂ)) (Litex.Set.coproduct (Litex.Set.singleton (1 : ℂ)) Litex.Set.empty)) := by
+  have __step0_0 : ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 (Litex.Set.coproduct (Litex.Set.singleton (1 : ℂ)) (Litex.Set.coproduct (Litex.Set.singleton (2 : ℂ)) Litex.Set.empty))), Litex.In __p1 (Litex.Set.coproduct (Litex.Set.singleton (2 : ℂ)) (Litex.Set.coproduct (Litex.Set.singleton (1 : ℂ)) Litex.Set.empty)) := by
     intro __carrier1 x __type1
-    have __assignment_cases : Litex.Same x (1 : ℂ) ∨ Litex.Same x (2 : ℂ) := (by
+    have __assignment_cases : @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) x (1 : ℂ) ∨ @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) x (2 : ℂ) := (by
     rcases (__type1) with ⟨__member, __same⟩
     cases __member with
     | inl __head0 =>
       cases __head0
-      exact Or.inl (Litex.Same.trans __same (Litex.Same.symm (Litex.Same.trans (Litex.Same.singleton (1 : ℂ)) (Litex.Same.sumLeft (Litex.SingletonCarrier.element)))))
+      exact Or.inl (Litex.Same.transNoObservation __same (Litex.Same.symmNoObservation (Litex.Same.transNoObservation (Litex.Same.singletonNoObservation (1 : ℂ)) (Litex.Same.sumLeftNoObservation (Litex.SingletonCarrier.element)))))
     | inr __tail0 =>
       cases __tail0 with
       | inl __head1 =>
         cases __head1
-        exact Or.inr (Litex.Same.trans __same (Litex.Same.symm (Litex.Same.trans (Litex.Same.trans (Litex.Same.singleton (2 : ℂ)) (Litex.Same.sumLeft (Litex.SingletonCarrier.element))) (Litex.Same.sumRight (Sum.inl (Litex.SingletonCarrier.element))))))
+        exact Or.inr (Litex.Same.transNoObservation __same (Litex.Same.symmNoObservation (Litex.Same.transNoObservation (Litex.Same.transNoObservation (Litex.Same.singletonNoObservation (2 : ℂ)) (Litex.Same.sumLeftNoObservation (Litex.SingletonCarrier.element))) (Litex.Same.sumRightNoObservation (Sum.inl (Litex.SingletonCarrier.element))))))
       | inr __tail1 =>
         exact PEmpty.elim __tail1
   )
     rcases __assignment_cases with __assignment1 | __assignment2
     ·
-      exact ⟨Sum.inr (Sum.inl (Litex.SingletonCarrier.element)), Litex.Same.trans (__assignment1) (Litex.Same.trans (Litex.Same.trans (Litex.Same.singleton (1 : ℂ)) (Litex.Same.sumLeft (Litex.SingletonCarrier.element))) (Litex.Same.sumRight (Sum.inl (Litex.SingletonCarrier.element))))⟩
+      exact ⟨Sum.inr (Sum.inl (Litex.SingletonCarrier.element)), Litex.Same.transNoObservation (Litex.Same.withoutObservation (__assignment1)) (Litex.Same.transNoObservation (Litex.Same.transNoObservation (Litex.Same.singletonNoObservation (1 : ℂ)) (Litex.Same.sumLeftNoObservation (Litex.SingletonCarrier.element))) (Litex.Same.sumRightNoObservation (Sum.inl (Litex.SingletonCarrier.element))))⟩
     ·
-      exact ⟨Sum.inl (Litex.SingletonCarrier.element), Litex.Same.trans (__assignment2) (Litex.Same.trans (Litex.Same.singleton (2 : ℂ)) (Litex.Same.sumLeft (Litex.SingletonCarrier.element)))⟩
-  have __step2 : ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 (Litex.Set.coproduct (Litex.Set.singleton (2 : ℂ)) (Litex.Set.coproduct (Litex.Set.singleton (1 : ℂ)) Litex.Set.empty))), Litex.In __p1 (Litex.Set.coproduct (Litex.Set.singleton (1 : ℂ)) (Litex.Set.coproduct (Litex.Set.singleton (2 : ℂ)) Litex.Set.empty)) := by
+      exact ⟨Sum.inl (Litex.SingletonCarrier.element), Litex.Same.transNoObservation (Litex.Same.withoutObservation (__assignment2)) (Litex.Same.transNoObservation (Litex.Same.singletonNoObservation (2 : ℂ)) (Litex.Same.sumLeftNoObservation (Litex.SingletonCarrier.element)))⟩
+  have __step0_1 : ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 (Litex.Set.coproduct (Litex.Set.singleton (2 : ℂ)) (Litex.Set.coproduct (Litex.Set.singleton (1 : ℂ)) Litex.Set.empty))), Litex.In __p1 (Litex.Set.coproduct (Litex.Set.singleton (1 : ℂ)) (Litex.Set.coproduct (Litex.Set.singleton (2 : ℂ)) Litex.Set.empty)) := by
     intro __carrier1 y __type1
-    have __assignment_cases : Litex.Same y (2 : ℂ) ∨ Litex.Same y (1 : ℂ) := (by
+    have __assignment_cases : @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) y (2 : ℂ) ∨ @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) y (1 : ℂ) := (by
     rcases (__type1) with ⟨__member, __same⟩
     cases __member with
     | inl __head0 =>
       cases __head0
-      exact Or.inl (Litex.Same.trans __same (Litex.Same.symm (Litex.Same.trans (Litex.Same.singleton (2 : ℂ)) (Litex.Same.sumLeft (Litex.SingletonCarrier.element)))))
+      exact Or.inl (Litex.Same.transNoObservation __same (Litex.Same.symmNoObservation (Litex.Same.transNoObservation (Litex.Same.singletonNoObservation (2 : ℂ)) (Litex.Same.sumLeftNoObservation (Litex.SingletonCarrier.element)))))
     | inr __tail0 =>
       cases __tail0 with
       | inl __head1 =>
         cases __head1
-        exact Or.inr (Litex.Same.trans __same (Litex.Same.symm (Litex.Same.trans (Litex.Same.trans (Litex.Same.singleton (1 : ℂ)) (Litex.Same.sumLeft (Litex.SingletonCarrier.element))) (Litex.Same.sumRight (Sum.inl (Litex.SingletonCarrier.element))))))
+        exact Or.inr (Litex.Same.transNoObservation __same (Litex.Same.symmNoObservation (Litex.Same.transNoObservation (Litex.Same.transNoObservation (Litex.Same.singletonNoObservation (1 : ℂ)) (Litex.Same.sumLeftNoObservation (Litex.SingletonCarrier.element))) (Litex.Same.sumRightNoObservation (Sum.inl (Litex.SingletonCarrier.element))))))
       | inr __tail1 =>
         exact PEmpty.elim __tail1
   )
     rcases __assignment_cases with __assignment1 | __assignment2
     ·
-      exact ⟨Sum.inr (Sum.inl (Litex.SingletonCarrier.element)), Litex.Same.trans (__assignment1) (Litex.Same.trans (Litex.Same.trans (Litex.Same.singleton (2 : ℂ)) (Litex.Same.sumLeft (Litex.SingletonCarrier.element))) (Litex.Same.sumRight (Sum.inl (Litex.SingletonCarrier.element))))⟩
+      exact ⟨Sum.inr (Sum.inl (Litex.SingletonCarrier.element)), Litex.Same.transNoObservation (Litex.Same.withoutObservation (__assignment1)) (Litex.Same.transNoObservation (Litex.Same.transNoObservation (Litex.Same.singletonNoObservation (2 : ℂ)) (Litex.Same.sumLeftNoObservation (Litex.SingletonCarrier.element))) (Litex.Same.sumRightNoObservation (Sum.inl (Litex.SingletonCarrier.element))))⟩
     ·
-      exact ⟨Sum.inl (Litex.SingletonCarrier.element), Litex.Same.trans (__assignment2) (Litex.Same.trans (Litex.Same.singleton (1 : ℂ)) (Litex.Same.sumLeft (Litex.SingletonCarrier.element)))⟩
+      exact ⟨Sum.inl (Litex.SingletonCarrier.element), Litex.Same.transNoObservation (Litex.Same.withoutObservation (__assignment2)) (Litex.Same.transNoObservation (Litex.Same.singletonNoObservation (1 : ℂ)) (Litex.Same.sumLeftNoObservation (Litex.SingletonCarrier.element)))⟩
   exact Litex.Same.setExt
-    (Litex.Set.subsetFromComplexMembershipImplication (Litex.Set.coproductEveryCarrierValueHasComplexRepresentative (Litex.Set.singletonEveryCarrierValueHasComplexRepresentative (1 : ℂ)) (Litex.Set.coproductEveryCarrierValueHasComplexRepresentative (Litex.Set.singletonEveryCarrierValueHasComplexRepresentative (2 : ℂ)) (Litex.Set.emptyEveryCarrierValueHasComplexRepresentative))) (__step1))
-    (Litex.Set.subsetFromComplexMembershipImplication (Litex.Set.coproductEveryCarrierValueHasComplexRepresentative (Litex.Set.singletonEveryCarrierValueHasComplexRepresentative (2 : ℂ)) (Litex.Set.coproductEveryCarrierValueHasComplexRepresentative (Litex.Set.singletonEveryCarrierValueHasComplexRepresentative (1 : ℂ)) (Litex.Set.emptyEveryCarrierValueHasComplexRepresentative))) (__step2)))
+    (Litex.Set.subsetFromComplexMembershipImplication (Litex.Set.coproductEveryCarrierValueHasComplexRepresentative (Litex.Set.singletonEveryCarrierValueHasComplexRepresentative (1 : ℂ)) (Litex.Set.coproductEveryCarrierValueHasComplexRepresentative (Litex.Set.singletonEveryCarrierValueHasComplexRepresentative (2 : ℂ)) (Litex.Set.emptyEveryCarrierValueHasComplexRepresentative))) (__step0_0))
+    (Litex.Set.subsetFromComplexMembershipImplication (Litex.Set.coproductEveryCarrierValueHasComplexRepresentative (Litex.Set.singletonEveryCarrierValueHasComplexRepresentative (2 : ℂ)) (Litex.Set.coproductEveryCarrierValueHasComplexRepresentative (Litex.Set.singletonEveryCarrierValueHasComplexRepresentative (1 : ℂ)) (Litex.Set.emptyEveryCarrierValueHasComplexRepresentative))) (__step0_1)))
 
 end __Compiler_50_SetExtensionResultComposition
