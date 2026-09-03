@@ -418,6 +418,34 @@ impl StmtResultToLeanCompiler {
                         availability,
                     );
                 }
+            } else if let InferRule::ChainImpliesComponent(rule) = &application.rule {
+                validate_chain_component_inference_target(rule, &premise.fact, &conclusion.fact)?;
+                if !conclusion_already_visible {
+                    let premise_name = resolve_fact_citation(
+                        &premise_fact_id,
+                        &premise.fact,
+                        &self.environment_stack,
+                    )?;
+                    let conclusion_proposition =
+                        render_fact(&conclusion.fact, &self.environment_stack)?;
+                    let conclusion_name = self.next_local_inference_fact_proof_name();
+                    let projection = conjunction_projection(
+                        &format!("({premise_name})"),
+                        rule.component_index,
+                        rule.component_count,
+                    )?;
+                    self.retain_compiled_inference_fact_proof_step_in_current_environment(
+                        &mut compiled_inference_fact_proof_steps,
+                        CompiledInferenceFactProofStep::new(
+                            conclusion_fact_id,
+                            conclusion.fact.clone(),
+                            conclusion_name,
+                            conclusion_proposition,
+                            projection,
+                        ),
+                        availability,
+                    );
+                }
             } else if let InferRule::ClosedPositivePowerEqualityImpliesEqualSideMembership(rule) =
                 &application.rule
             {
@@ -777,8 +805,10 @@ impl StmtResultToLeanCompiler {
                         &premise_name,
                         &self.environment_stack,
                     )?;
-                    let conclusion_proposition =
-                        render_fact(&conclusion.fact, &self.environment_stack)?;
+                    let conclusion_proposition = render_no_observation_equality_alternatives_fact(
+                        &conclusion.fact,
+                        &self.environment_stack,
+                    )?;
                     let conclusion_name = self.next_local_inference_fact_proof_name();
                     self.retain_compiled_inference_fact_proof_step_in_current_environment(
                         &mut compiled_inference_fact_proof_steps,

@@ -21,12 +21,12 @@ use crate::result::{
     ComplexAlgebraicNormalizationBuiltinRuleEvidence, EqualityTransportEvidence,
     EqualityTransportStep, FactTransformationRule,
     IntegralPolynomialNormalizationBuiltinRuleEvidence,
-    NestedCheckedFunctionDefinitionReductionEvidence,
+    NestedCheckedFunctionDefinitionReductionEvidence, ProveFactResult,
     RationalAlgebraicNormalizationBuiltinRuleEvidence, RationalNormalizationBuiltinRuleEvidence,
-    ProveFactResult, StructuralDefinitionCongruenceBuiltinRuleEvidence,
+    StructuralDefinitionCongruenceBuiltinRuleEvidence,
     StructuralKnownEqualityCongruenceBuiltinRuleEvidence, SuccessFactProofResult,
     SuccessProveFactResult, SuccessTransformFactResult, UncataloguedBuiltinRule,
-    UnknownGenericStmtResult,
+    UnknownGenericStmtResult, VerifyFactResult,
 };
 use crate::runtime::Runtime;
 use crate::verification::{BuiltinRuleSearchState, VerifyState};
@@ -94,11 +94,8 @@ impl Runtime {
             return Ok(direct_evaluation_result);
         }
 
-        let known_equality_evaluation_result =
-            self.verify_equal_fact_by_known_equality_then_direct_evaluation(
-                equal_fact,
-                verify_state,
-            )?;
+        let known_equality_evaluation_result = self
+            .verify_equal_fact_by_known_equality_then_direct_evaluation(equal_fact, verify_state)?;
         if known_equality_evaluation_result.is_success() {
             return Ok(known_equality_evaluation_result);
         }
@@ -108,7 +105,6 @@ impl Runtime {
         // `f(y) $in {0}` generates `f(y) = 0`).  Preserve the checked
         // definition reduction as a real proof node here instead of letting
         // the terminating boolean comparator erase that evidence.
-        let after_parent_well_definedness = VerifyState::initial();
         for definition_side in EqualitySide::BOTH {
             let (application, _) = definition_side.select(equal_fact);
             if self
@@ -120,7 +116,7 @@ impl Runtime {
             if let Some(result) = self.try_reduce_one_checked_definition_side(
                 equal_fact,
                 definition_side,
-                &after_parent_well_definedness,
+                verify_state,
             )? {
                 return Ok(result);
             }
@@ -232,7 +228,10 @@ impl Runtime {
 
     // Direct evaluation is the computation arm of zero-premise verification. It may normalize
     // the two objects, but it cannot generate premises or apply another mathematical rule.
-    pub fn verify_equal_fact_by_direct_evaluation(&self, equal_fact: &EqualFact) -> ProveFactResult {
+    pub fn verify_equal_fact_by_direct_evaluation(
+        &self,
+        equal_fact: &EqualFact,
+    ) -> ProveFactResult {
         if let (Some(left_evaluation), Some(right_evaluation)) = (
             equal_fact
                 .left
@@ -364,10 +363,9 @@ impl Runtime {
         if let Some((definition_object, defining_equality, defining_equality_fact_id)) =
             self.checked_function_definition_reduction_source(left)?
         {
-            if let Some(reduced) = self.reduce_direct_known_fn_application_once(
-                left,
-                &VerifyState::initial(),
-            )? {
+            if let Some(reduced) =
+                self.reduce_direct_known_fn_application_once(left, &VerifyState::initial())?
+            {
                 reductions.push(NestedCheckedFunctionDefinitionReductionEvidence {
                     definition_object,
                     defining_equality,
@@ -387,10 +385,9 @@ impl Runtime {
         if let Some((definition_object, defining_equality, defining_equality_fact_id)) =
             self.checked_function_definition_reduction_source(right)?
         {
-            if let Some(reduced) = self.reduce_direct_known_fn_application_once(
-                right,
-                &VerifyState::initial(),
-            )? {
+            if let Some(reduced) =
+                self.reduce_direct_known_fn_application_once(right, &VerifyState::initial())?
+            {
                 reductions.push(NestedCheckedFunctionDefinitionReductionEvidence {
                     definition_object,
                     defining_equality,
@@ -472,20 +469,25 @@ impl Runtime {
         if known_fact.to_string() == equal_fact.to_string() {
             return Ok(known_result);
         }
-        let known_result = self.complete_fact_proof_result(
-            &known_fact.clone().into(),
+        let Some(known_result) = self.complete_proven_fact_candidate(
+            known_fact.clone().into(),
             known_result,
             verify_state,
-        )?;
-        Ok(SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
-            equal_fact.clone().into(),
-            "calculation and rational expression simplification".to_string(),
-            BuiltinRuleEvidence::Uncatalogued(
-                UncataloguedBuiltinRule::VerifyEqualFactByKnownEqualityThenDirectEvaluation,
-            ),
-            vec![known_result],
+        )?
+        else {
+            return Ok(UnknownGenericStmtResult::new().into());
+        };
+        Ok(
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                equal_fact.clone().into(),
+                "calculation and rational expression simplification".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::VerifyEqualFactByKnownEqualityThenDirectEvaluation,
+                ),
+                vec![known_result],
+            )
+            .into(),
         )
-        .into())
     }
 
     // This bounded phase may generate premises, so entering it consumes the available
@@ -552,10 +554,11 @@ impl Runtime {
             .collect::<Vec<_>>();
         let mut subgoals = Vec::with_capacity(required_facts.len());
         for premise in &required_facts {
-            let result = self.verify_atomic_fact_as_builtin_rule_premise(premise, builtin_state)?;
-            if !result.is_success() {
+            let Some(result) =
+                self.try_verify_atomic_fact_as_builtin_rule_premise(premise, builtin_state)?
+            else {
                 return Ok(None);
-            }
+            };
             subgoals.push(result);
         }
 
@@ -612,10 +615,11 @@ impl Runtime {
             .collect::<Vec<_>>();
         let mut subgoals = Vec::with_capacity(required_facts.len());
         for premise in &required_facts {
-            let result = self.verify_atomic_fact_as_builtin_rule_premise(premise, builtin_state)?;
-            if !result.is_success() {
+            let Some(result) =
+                self.try_verify_atomic_fact_as_builtin_rule_premise(premise, builtin_state)?
+            else {
                 return Ok(None);
-            }
+            };
             subgoals.push(result);
         }
 
@@ -803,9 +807,9 @@ impl Runtime {
         verify_state: &VerifyState,
     ) -> Result<ProveFactResult, RuntimeError> {
         // The goal's well-definedness check already discharged the selected
-        // function application's carrier and domain obligations. Definition
-        // reduction therefore performs substitution only and never opens a
-        // second proof-search root.
+        // function application's carrier and domain obligations. The reduced
+        // comparison is a child fact in the same proof process, not a fresh
+        // statement-level verification attempt.
         if !verify_state.is_initial_round() {
             return Ok((UnknownGenericStmtResult::new()).into());
         }
@@ -859,15 +863,18 @@ impl Runtime {
         }
 
         for comparison_candidate in comparison_candidates {
-            let alpha_equal =
-                objs_equal_with_nested_binder_alpha_equivalence(&comparison_candidate, other_side);
-            let compared_equal = alpha_equal
-                || self.equal_fact_sides_are_equal_by_terminating_reduction_and_congruence(
-                    &EqualFact::new_from_refs(&comparison_candidate, other_side, line_file.clone()),
-                )?;
-            if !compared_equal {
+            let reduced_equality =
+                EqualFact::new_from_refs(&comparison_candidate, other_side, line_file.clone());
+            let comparison_proof = self
+                .verify_equal_fact_with_bounded_builtin_routes(&reduced_equality, verify_state)?;
+            let Some(reduced_equality_result) = self.complete_proven_fact_candidate(
+                reduced_equality.clone().into(),
+                comparison_proof,
+                verify_state,
+            )?
+            else {
                 continue;
-            }
+            };
 
             let reason = format!(
                 "one checked definition reduction `{}` = `{}`",
@@ -881,7 +888,7 @@ impl Runtime {
                 &comparison_candidate,
                 other_side,
                 definition_side,
-                alpha_equal,
+                reduced_equality_result,
                 checked_definition_source,
                 &reason,
             )));
@@ -895,14 +902,14 @@ impl Runtime {
         reduced_side: &Obj,
         other_side: &Obj,
         definition_side: EqualitySide,
-        reduced_matches_other_by_alpha: bool,
+        reduced_equality: VerifyFactResult,
         checked_definition_source: Option<(Obj, Fact, FactId)>,
         reason: &str,
     ) -> ProveFactResult {
         let fact: Fact = equal_fact.clone().into();
         let msg = format!(
-            "{}; reduced goal side `{}` is compared with `{}` using stored equalities, terminating computation, anonymous-function beta reduction, or constructor descent",
-            reason, application_side, reduced_side
+            "{}; reduced goal side `{}` is proved equal to `{}` by its retained child Result",
+            reason, reduced_side, other_side
         );
         let verified_by = match checked_definition_source {
             Some((definition_object, defining_equality, defining_equality_fact_id)) => {
@@ -916,14 +923,15 @@ impl Runtime {
                         reduced: reduced_side.clone(),
                         other_side: other_side.clone(),
                         application_is_left: definition_side.is_left(),
-                        reduced_matches_other_by_alpha,
+                        reduced_equality,
                     },
                     Some(msg),
                 )
             }
             None => SuccessFactProofResult::diagnostic(msg),
         };
-        SuccessProveFactResult::new_with_verified_by_known_fact(fact, verified_by, Vec::new()).into()
+        SuccessProveFactResult::new_with_verified_by_known_fact(fact, verified_by, Vec::new())
+            .into()
     }
 
     fn checked_function_definition_reduction_source(
@@ -950,7 +958,6 @@ impl Runtime {
         let anonymous_function = AnonymousFn {
             body,
             equal_to: Box::new(equal_to),
-            source_occurrence_id: None,
         };
         let defining_equality: Fact = EqualFact::new(
             definition_object.clone(),

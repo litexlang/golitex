@@ -60,9 +60,7 @@ impl StmtResultToLeanCompiler {
             (at_least_two, &expected_at_least_two, "at-least-two"),
         ] {
             if check.fact().to_string() != expected.to_string() {
-                return Err(format!(
-                    "indexed tuple {role} Result changed its target"
-                ));
+                return Err(format!("indexed tuple {role} Result changed its target"));
             }
         }
         let Some(positive_dimension_proof) =

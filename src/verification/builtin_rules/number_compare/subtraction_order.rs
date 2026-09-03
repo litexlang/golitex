@@ -8,20 +8,15 @@ impl Runtime {
         zero: &Obj,
         sub_expr: &Obj,
         weak: bool,
-        parent_weak: bool,
         line_file: &LineFile,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<VerifyFactResult, RuntimeError> {
+    ) -> Result<Option<VerifyFactResult>, RuntimeError> {
         let fact: AtomicFact = if weak {
             LessEqualFact::new(zero.clone(), sub_expr.clone(), line_file.clone()).into()
         } else {
             LessFact::new(zero.clone(), sub_expr.clone(), line_file.clone()).into()
         };
-        if weak == parent_weak {
-            self.verify_atomic_fact_as_builtin_rule_premise(&fact, builtin_state)
-        } else {
-            self.verify_atomic_fact_as_builtin_rule_premise(&fact, builtin_state)
-        }
+        self.try_verify_atomic_fact_as_builtin_rule_premise(&fact, builtin_state)
     }
 
     // Moves a known difference bound back to the corresponding order fact.
@@ -47,8 +42,11 @@ impl Runtime {
         } else {
             LessFact::new(direct_difference, zero.clone(), line_file.clone()).into()
         };
-        let direct_difference_result = self.verify_atomic_fact_as_builtin_rule_premise(&direct_difference_order, builtin_state)?;
-        if direct_difference_result.is_success() {
+        let direct_difference_result = self.try_verify_atomic_fact_as_builtin_rule_premise(
+            &direct_difference_order,
+            builtin_state,
+        )?;
+        if let Some(direct_difference_result) = direct_difference_result {
             let reason = if is_weak {
                 "a <= b from a - b <= 0"
             } else {
@@ -73,8 +71,9 @@ impl Runtime {
         } else {
             LessFact::new(zero, difference, line_file.clone()).into()
         };
-        let difference_result = self.verify_atomic_fact_as_builtin_rule_premise(&difference_order, builtin_state)?;
-        if difference_result.is_success() {
+        let difference_result =
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&difference_order, builtin_state)?;
+        if let Some(difference_result) = difference_result {
             let reason = if is_weak {
                 "a <= b from 0 <= b - a"
             } else {
@@ -93,12 +92,12 @@ impl Runtime {
             ));
         }
 
-        let premise_result = self.verify_builtin_rule_premise_alternatives(
+        let premise_result = self.try_verify_builtin_rule_premise_alternatives(
             vec![vec![direct_difference_order], vec![difference_order]],
             line_file,
             builtin_state,
         )?;
-        if premise_result.is_success() {
+        if let Some(premise_result) = premise_result {
             return Ok(Some(
                 SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     atomic_fact.clone().into(),
@@ -136,8 +135,8 @@ impl Runtime {
                 )
                 .into();
                 let result =
-                    self.verify_atomic_fact_as_builtin_rule_premise(&derived, builtin_state)?;
-                if result.is_success() {
+                    self.try_verify_atomic_fact_as_builtin_rule_premise(&derived, builtin_state)?;
+                if let Some(result) = result {
                     Ok(Some(ProveFactResult::from(
                         SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             atomic_fact.clone().into(),
@@ -163,8 +162,8 @@ impl Runtime {
                 )
                 .into();
                 let result =
-                    self.verify_atomic_fact_as_builtin_rule_premise(&derived, builtin_state)?;
-                if result.is_success() {
+                    self.try_verify_atomic_fact_as_builtin_rule_premise(&derived, builtin_state)?;
+                if let Some(result) = result {
                     Ok(Some(ProveFactResult::from(
                         SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             atomic_fact.clone().into(),

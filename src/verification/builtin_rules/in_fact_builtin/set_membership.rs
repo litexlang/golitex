@@ -323,10 +323,17 @@ impl Runtime {
         for membership in memberships {
             let set_builder = match &membership.set {
                 Obj::SetBuilder(set_builder) => Some(set_builder.clone()),
-                _ => match self.unfold_set_builder_definition_without_transport_reentry(
-                    &membership.set,
-                    &final_state,
-                )? {
+                // These memberships come from a global candidate enumeration.
+                // Failure to validate one candidate application only makes that
+                // candidate unusable; it cannot make the unrelated goal ill-defined.
+                _ => match self
+                    .unfold_set_builder_definition_without_transport_reentry(
+                        &membership.set,
+                        &final_state,
+                    )
+                    .ok()
+                    .flatten()
+                {
                     Some(Obj::SetBuilder(set_builder)) => Some(set_builder),
                     _ => self.get_obj_equal_to_set_builder(&membership.set),
                 },
@@ -396,9 +403,9 @@ impl Runtime {
             )
             .into();
             alternatives.push(vec![member_fact.clone()]);
-            let member_result =
-                self.verify_atomic_fact_as_builtin_rule_premise(&member_fact, builtin_state)?;
-            if member_result.is_success() {
+            if let Some(member_result) =
+                self.try_verify_atomic_fact_as_builtin_rule_premise(&member_fact, builtin_state)?
+            {
                 return Ok(
                     SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         in_fact.clone().into(),
@@ -415,12 +422,12 @@ impl Runtime {
             }
         }
 
-        let premise_result = self.verify_builtin_rule_premise_alternatives(
+        let premise_result = self.try_verify_builtin_rule_premise_alternatives(
             alternatives,
             in_fact.line_file.clone(),
             builtin_state,
         )?;
-        if premise_result.is_success() {
+        if let Some(premise_result) = premise_result {
             return Ok(
                 SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
@@ -458,10 +465,12 @@ impl Runtime {
         )
         .into();
         let left_member_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&left_member_fact, builtin_state)?;
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&left_member_fact, builtin_state)?;
         let right_member_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&right_member_fact, builtin_state)?;
-        if left_member_result.is_success() && right_member_result.is_success() {
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&right_member_fact, builtin_state)?;
+        if let (Some(left_member_result), Some(right_member_result)) =
+            (left_member_result, right_member_result)
+        {
             return Ok(
                 SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
@@ -477,8 +486,8 @@ impl Runtime {
             vec![left_member_fact, right_member_fact],
             in_fact.line_file.clone(),
         ));
-        let premise_result = self.verify_builtin_rule_premise(&premise, builtin_state)?;
-        if premise_result.is_success() {
+        let premise_result = self.try_verify_builtin_rule_premise(&premise, builtin_state)?;
+        if let Some(premise_result) = premise_result {
             return Ok(
                 SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
@@ -515,9 +524,9 @@ impl Runtime {
             )
             .into();
             alternatives.push(vec![non_member_fact.clone()]);
-            let non_member_result =
-                self.verify_atomic_fact_as_builtin_rule_premise(&non_member_fact, builtin_state)?;
-            if non_member_result.is_success() {
+            if let Some(non_member_result) = self
+                .try_verify_atomic_fact_as_builtin_rule_premise(&non_member_fact, builtin_state)?
+            {
                 return Ok(
                     SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         not_in_fact.clone().into(),
@@ -534,12 +543,12 @@ impl Runtime {
             }
         }
 
-        let premise_result = self.verify_builtin_rule_premise_alternatives(
+        let premise_result = self.try_verify_builtin_rule_premise_alternatives(
             alternatives,
             not_in_fact.line_file.clone(),
             builtin_state,
         )?;
-        if premise_result.is_success() {
+        if let Some(premise_result) = premise_result {
             return Ok(
                 SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     not_in_fact.clone().into(),
@@ -576,10 +585,14 @@ impl Runtime {
         )
         .into();
         let left_member_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&left_member_fact, builtin_state)?;
-        let right_non_member_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&right_non_member_fact, builtin_state)?;
-        if left_member_result.is_success() && right_non_member_result.is_success() {
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&left_member_fact, builtin_state)?;
+        let right_non_member_result = self.try_verify_atomic_fact_as_builtin_rule_premise(
+            &right_non_member_fact,
+            builtin_state,
+        )?;
+        if let (Some(left_member_result), Some(right_non_member_result)) =
+            (left_member_result, right_non_member_result)
+        {
             return Ok(
                 SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
@@ -596,8 +609,8 @@ impl Runtime {
             vec![left_member_fact, right_non_member_fact],
             in_fact.line_file.clone(),
         ));
-        let premise_result = self.verify_builtin_rule_premise(&premise, builtin_state)?;
-        if premise_result.is_success() {
+        let premise_result = self.try_verify_builtin_rule_premise(&premise, builtin_state)?;
+        if let Some(premise_result) = premise_result {
             return Ok(
                 SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),
@@ -624,8 +637,7 @@ impl Runtime {
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<ProveFactResult, RuntimeError> {
         let exist_fact = self.big_union_membership_exist_fact(in_fact, big_union)?;
-        let exist_proof =
-            self.verify_exist_fact_with_known_exist_fact(&exist_fact, &exist_fact)?;
+        let exist_proof = self.verify_exist_fact_with_known_exist_fact(&exist_fact, &exist_fact)?;
         let exist_result = self.complete_fact_proof_result(
             &exist_fact.clone().into(),
             exist_proof,
@@ -655,11 +667,13 @@ impl Runtime {
                 in_fact.line_file.clone(),
             )
             .into();
-            let member_set_result = self
-                .verify_atomic_fact_as_builtin_rule_premise(&member_set_in_family, builtin_state)?;
-            if !member_set_result.is_success() {
+            let Some(member_set_result) = self.try_verify_atomic_fact_as_builtin_rule_premise(
+                &member_set_in_family,
+                builtin_state,
+            )?
+            else {
                 continue;
-            }
+            };
 
             let element_in_member_set: AtomicFact = InFact::new(
                 in_fact.element.clone(),
@@ -667,11 +681,11 @@ impl Runtime {
                 in_fact.line_file.clone(),
             )
             .into();
-            let element_result = self.verify_atomic_fact_as_builtin_rule_premise(
+            let element_result = self.try_verify_atomic_fact_as_builtin_rule_premise(
                 &element_in_member_set,
                 builtin_state,
             )?;
-            if element_result.is_success() {
+            if let Some(element_result) = element_result {
                 return Ok(
                     SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         in_fact.clone().into(),
@@ -829,17 +843,17 @@ impl Runtime {
                     Vec::new(),
                 )
                 .into();
-                self.complete_atomic_fact_proof_result(
+                Some(self.complete_atomic_fact_proof_result(
                     &index_member,
                     proof,
                     builtin_state.verify_state(),
-                )?
+                )?)
             } else {
-                self.verify_atomic_fact_as_builtin_rule_premise(&index_member, builtin_state)?
+                self.try_verify_atomic_fact_as_builtin_rule_premise(&index_member, builtin_state)?
             };
-            if !index_result.is_success() {
+            let Some(index_result) = index_result else {
                 continue;
-            }
+            };
             let Some(fiber) =
                 self.indexed_family_application(index_union.family_fn.as_ref(), index)?
             else {
@@ -847,9 +861,9 @@ impl Runtime {
             };
             let fiber_member: AtomicFact =
                 InFact::new(in_fact.element.clone(), fiber, in_fact.line_file.clone()).into();
-            let fiber_result =
-                self.verify_atomic_fact_as_builtin_rule_premise(&fiber_member, builtin_state)?;
-            if fiber_result.is_success() {
+            if let Some(fiber_result) =
+                self.try_verify_atomic_fact_as_builtin_rule_premise(&fiber_member, builtin_state)?
+            {
                 return Ok(
                     SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         in_fact.clone().into(),
@@ -906,11 +920,11 @@ impl Runtime {
             in_fact.line_file.clone(),
         )
         .into();
-        let ambient_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&ambient_member, builtin_state)?;
-        if !ambient_result.is_success() {
+        let Some(ambient_result) =
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&ambient_member, builtin_state)?
+        else {
             return Ok(UnknownGenericStmtResult::new().into());
-        }
+        };
 
         if let Obj::ListSet(indices) = index_intersect.index_set.as_ref() {
             let mut evidence = vec![ambient_result];
@@ -924,11 +938,11 @@ impl Runtime {
                 };
                 let fiber_member: AtomicFact =
                     InFact::new(in_fact.element.clone(), fiber, in_fact.line_file.clone()).into();
-                let fiber_result =
-                    self.verify_atomic_fact_as_builtin_rule_premise(&fiber_member, builtin_state)?;
-                if !fiber_result.is_success() {
+                let Some(fiber_result) = self
+                    .try_verify_atomic_fact_as_builtin_rule_premise(&fiber_member, builtin_state)?
+                else {
                     return Ok(UnknownGenericStmtResult::new().into());
-                }
+                };
                 evidence.push(fiber_result);
             }
             return Ok(
@@ -985,8 +999,7 @@ impl Runtime {
         builtin_state: &BuiltinRuleSearchState,
     ) -> Result<ProveFactResult, RuntimeError> {
         let exist_fact = self.replacement_membership_exist_fact(in_fact, replacement)?;
-        let exist_proof =
-            self.verify_exist_fact_with_known_exist_fact(&exist_fact, &exist_fact)?;
+        let exist_proof = self.verify_exist_fact_with_known_exist_fact(&exist_fact, &exist_fact)?;
         let exist_result = self.complete_fact_proof_result(
             &exist_fact.clone().into(),
             exist_proof,
@@ -1014,13 +1027,15 @@ impl Runtime {
                 in_fact.line_file.clone(),
             )
             .into();
-            let mut preimage_result = self
-                .verify_atomic_fact_as_builtin_rule_premise(&preimage_in_source, builtin_state)?;
+            let mut preimage_result = self.try_verify_atomic_fact_as_builtin_rule_premise(
+                &preimage_in_source,
+                builtin_state,
+            )?;
             // Literal source membership is a bounded structural leaf, so it
             // may discharge the witness carrier without consuming a second
             // recursive builtin-rule layer. Example: `$P(1,z)` introduces
             // `z $in replacement(P,{1,2})`.
-            if !preimage_result.is_success() {
+            if preimage_result.is_none() {
                 if let (AtomicFact::InFact(preimage_in_fact), Obj::ListSet(source_elements)) =
                     (&preimage_in_source, replacement.source_set.as_ref())
                 {
@@ -1029,16 +1044,18 @@ impl Runtime {
                         source_elements,
                         builtin_state,
                     )?;
-                    preimage_result = self.complete_atomic_fact_proof_result(
-                        &preimage_in_source,
-                        proof,
-                        builtin_state.verify_state(),
-                    )?;
+                    if proof.is_success() {
+                        preimage_result = Some(self.complete_atomic_fact_proof_result(
+                            &preimage_in_source,
+                            proof,
+                            builtin_state.verify_state(),
+                        )?);
+                    }
                 }
             }
-            if !preimage_result.is_success() {
+            let Some(preimage_result) = preimage_result else {
                 continue;
-            }
+            };
 
             let relation_fact: AtomicFact = NormalAtomicFact::new(
                 replacement.prop_name.clone(),
@@ -1046,9 +1063,9 @@ impl Runtime {
                 in_fact.line_file.clone(),
             )
             .into();
-            let relation_result =
-                self.verify_atomic_fact_as_builtin_rule_premise(&relation_fact, builtin_state)?;
-            if relation_result.is_success() {
+            if let Some(relation_result) =
+                self.try_verify_atomic_fact_as_builtin_rule_premise(&relation_fact, builtin_state)?
+            {
                 return Ok(
                     SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         in_fact.clone().into(),
@@ -1269,8 +1286,8 @@ impl Runtime {
         )
         .into();
         let mut subset_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&subset_fact, builtin_state)?;
-        if !subset_result.is_success()
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&subset_fact, builtin_state)?;
+        if subset_result.is_none()
             && (objs_equal_with_nested_binder_alpha_equivalence(
                 body.ret_set.as_ref(),
                 power_set.set.as_ref(),
@@ -1290,15 +1307,15 @@ impl Runtime {
                     Vec::new(),
                 )
                 .into();
-            subset_result = self.complete_atomic_fact_proof_result(
+            subset_result = Some(self.complete_atomic_fact_proof_result(
                 &subset_fact,
                 proof,
                 builtin_state.verify_state(),
-            )?;
+            )?);
         }
-        if !subset_result.is_success() {
+        let Some(subset_result) = subset_result else {
             return Ok((UnknownGenericStmtResult::new()).into());
-        }
+        };
 
         Ok(
             SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
@@ -1329,8 +1346,8 @@ impl Runtime {
         )
         .into();
         let mut subset_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&subset_fact, builtin_state)?;
-        if !subset_result.is_success()
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&subset_fact, builtin_state)?;
+        if subset_result.is_none()
             && (objs_equal_with_nested_binder_alpha_equivalence(
                 &in_fact.element,
                 power_set.set.as_ref(),
@@ -1350,15 +1367,15 @@ impl Runtime {
                     Vec::new(),
                 )
                 .into();
-            subset_result = self.complete_atomic_fact_proof_result(
+            subset_result = Some(self.complete_atomic_fact_proof_result(
                 &subset_fact,
                 proof,
                 builtin_state.verify_state(),
-            )?;
+            )?);
         }
-        if !subset_result.is_success() {
+        let Some(subset_result) = subset_result else {
             return Ok((UnknownGenericStmtResult::new()).into());
-        }
+        };
 
         Ok(
             SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
@@ -1539,11 +1556,8 @@ impl Runtime {
             verify_state,
         )?;
         let unfolded_atomic: AtomicFact = unfolded_fact.into();
-        let unfolded_result = self.complete_atomic_fact_proof_result(
-            &unfolded_atomic,
-            unfolded_proof,
-            verify_state,
-        )?;
+        let unfolded_result =
+            self.complete_atomic_fact_proof_result(&unfolded_atomic, unfolded_proof, verify_state)?;
         if !unfolded_result.is_success() {
             return Ok(None);
         }
@@ -1565,12 +1579,9 @@ impl Runtime {
         struct_obj: &StructObj,
         verify_state: &VerifyState,
     ) -> Result<ProveFactResult, RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(
-            &Obj::StructObj(struct_obj.clone()),
-            verify_state,
-        )?;
-        let (def, header_map) = self.struct_header_param_to_arg_map(struct_obj, verify_state)?;
-        let field_types = self.instantiated_struct_field_types(struct_obj, verify_state)?;
+        let (def, header_map) =
+            self.struct_header_param_to_arg_map_after_well_defined(struct_obj)?;
+        let field_types = self.instantiated_struct_field_types_after_well_defined(struct_obj)?;
         let carrier_obj = self.struct_carrier_from_field_types(field_types.clone());
         let carrier_membership: AtomicFact = InFact::new(
             in_fact.element.clone(),
@@ -1672,9 +1683,9 @@ impl Runtime {
     ) -> Result<ProveFactResult, RuntimeError> {
         let finite_fact =
             IsFiniteSetFact::new((*finite_set_size.set).clone(), in_fact.line_file.clone());
-        let finite_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&finite_fact.into(), builtin_state)?;
-        if finite_result.is_success() {
+        if let Some(finite_result) =
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&finite_fact.into(), builtin_state)?
+        {
             return Ok(
                 number_in_set_verified_by_builtin_rules_result_with_subgoals(
                     in_fact,
@@ -1802,13 +1813,9 @@ impl Runtime {
                 let subset_fact: AtomicFact =
                     SubsetFact::new(source_set.clone(), standard_set.clone(), line_file.clone())
                         .into();
-                let result =
-                    self.verify_atomic_fact_as_builtin_rule_premise(&subset_fact, builtin_state)?;
-                if result.is_success() {
-                    Ok(Some(vec![result]))
-                } else {
-                    Ok(None)
-                }
+                Ok(self
+                    .try_verify_atomic_fact_as_builtin_rule_premise(&subset_fact, builtin_state)?
+                    .map(|result| vec![result]))
             }
         }
     }
@@ -1912,10 +1919,16 @@ impl Runtime {
             let Some(inclusion_fact) = inclusion_evidence.into_iter().next() else {
                 continue;
             };
-            let membership_result =
-                self.stmt_result_for_indexed_fact(owner_atomic_fact, "known owner membership", verify_state)?;
-            let inclusion_result =
-                self.stmt_result_for_indexed_fact(inclusion_fact, "known direct set inclusion", verify_state)?;
+            let membership_result = self.stmt_result_for_indexed_fact(
+                owner_atomic_fact,
+                "known owner membership",
+                verify_state,
+            )?;
+            let inclusion_result = self.stmt_result_for_indexed_fact(
+                inclusion_fact,
+                "known direct set inclusion",
+                verify_state,
+            )?;
             return Ok(
                 SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     in_fact.clone().into(),

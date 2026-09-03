@@ -43,6 +43,7 @@ chapters is optional rather than necessary cleanup.
 | calculus / real analysis | grow at most through Rolle/MVT and elementary consequences; integration/FTC are a later independent slice |
 | multivariable / differential geometry | Euclidean total derivatives, Jacobians, gradients, and elementary curves only; no manifold machinery |
 | ODE | explicit checked IVPs; Picard--Lindelof optional, with systems/stability/BVPs outside the first version |
+| numerical analysis | one exact iterative method, a quantitative residual bound, and a checked executable step; no floating-point roundoff proof |
 | category theory | categories, functors, natural transformations, identity/composition, terminal consumer; no limits, adjunctions, Yoneda, monads, or general functor categories |
 | functional analysis (future) | normed and Banach spaces, bounded linear maps, Banach fixed point |
 | PDE (future) | a few explicit classical solutions only; no weak/Sobolev/general existence theory |

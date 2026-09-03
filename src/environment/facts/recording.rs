@@ -51,6 +51,8 @@ impl Environment {
     }
 
     pub fn store_infer_rule_firing(&mut self, firing_key: String) {
-        self.caches.infer_rule_firings.insert(firing_key, ());
+        self.inference_cache
+            .infer_rule_firings
+            .insert(firing_key, ());
     }
 }

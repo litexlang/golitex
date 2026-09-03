@@ -56,49 +56,38 @@ pub(in super::super) fn install_structured_induction_native_integer_symbol(
     );
 }
 
-pub(in super::super) fn render_integer_target_object_representation(
-    object: &LeanTargetObjectRepresentation,
-    context: &StmtResultToLeanCompilerEnvironmentStack,
-) -> Result<String, String> {
-    match object {
-        LeanTargetObjectRepresentation::Symbol { symbol_id, name } => context
-            .numeric_integer_values
-            .get(symbol_id)
-            .cloned()
-            .ok_or_else(|| format!("integer target symbol `{name}` has no exact ℤ representation")),
-        LeanTargetObjectRepresentation::Number { normalized_value }
-            if normalized_value.parse::<i128>().is_ok() =>
-        {
-            Ok(format!("({normalized_value} : ℤ)"))
-        }
-        LeanTargetObjectRepresentation::BuiltinApp {
-            operator,
-            arguments,
-            ..
-        } if arguments.len() == 2
-            && matches!(
-                operator,
-                LeanTargetBuiltinObjectOperator::Add
-                    | LeanTargetBuiltinObjectOperator::Sub
-                    | LeanTargetBuiltinObjectOperator::Mul
-            ) =>
-        {
-            let symbol = match operator {
-                LeanTargetBuiltinObjectOperator::Add => "+",
-                LeanTargetBuiltinObjectOperator::Sub => "-",
-                LeanTargetBuiltinObjectOperator::Mul => "*",
-                _ => unreachable!("guarded integer operator"),
-            };
-            Ok(format!(
-                "({} {symbol} {})",
-                render_integer_target_object_representation(&arguments[0], context)?,
-                render_integer_target_object_representation(&arguments[1], context)?,
-            ))
-        }
-        _ => Err(format!(
-            "target object `{object:?}` has no reviewed exact ℤ representation"
-        )),
+/// A structured induction Result owns two binder identities for one logical
+/// value: the parameter named by the source `by induc` statement and the fresh
+/// parameter owned by the generated forall fact.  Result validation proves
+/// that the generated forall is exactly the source goal under that rebinding;
+/// Lean replay must therefore install both verified identities as aliases for
+/// the same native integer.
+pub(in super::super) fn install_verified_structured_induction_binder_aliases(
+    verification: &SuccessVerifyByInducResult,
+    native_integer: &str,
+    context: &mut StmtResultToLeanCompilerEnvironmentStack,
+) -> Result<(), String> {
+    let generated_parameters = verification
+        .generated_forall
+        .typed_parameters
+        .collect_param_bindings_with_types();
+    let [(generated_binding, generated_type)] = generated_parameters.as_slice() else {
+        return Err("structured induction generated forall must own one parameter".into());
+    };
+    if generated_type.to_string() != ParamType::Obj(StandardSet::Z.into()).to_string() {
+        return Err("structured induction generated forall changed its integer binder".into());
     }
+    install_structured_induction_native_integer_symbol(
+        verification.parameter_binding.id(),
+        native_integer,
+        context,
+    );
+    install_structured_induction_native_integer_symbol(
+        generated_binding.id(),
+        native_integer,
+        context,
+    );
+    Ok(())
 }
 
 /// Render the exact native real selected by verifier-owned membership
@@ -180,10 +169,10 @@ pub(in super::super) fn render_real_target_object_representation(
 }
 
 /// Render a checked source object at the exact native real carrier.  Most
-/// objects lower directly to the target IR.  Definition replay may clone a
-/// function application without its parser occurrence, so the source-shaped
-/// fallback recovers that occurrence from the active Result and then recurses
-/// compositionally through ordinary real arithmetic.
+/// objects lower directly to the target IR. Definition replay may synthesize
+/// an equivalent application shape, so the source-shaped fallback resolves
+/// its semantic object key against the active Result certificate and then
+/// recurses compositionally through ordinary real arithmetic.
 pub(in super::super) fn render_real_source_object(
     object: &Obj,
     context: &StmtResultToLeanCompilerEnvironmentStack,

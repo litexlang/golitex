@@ -484,10 +484,10 @@ The interactive LaTeX REPL emits `stream` JSON lines.
 | Command | Behavior |
 |---------|----------|
 | `litex -extractpython <code>` | Verify inline source and emit Python for the supported executable definitions. |
-| `litex -extractpython -f <file>` | Verify a file and emit Python for the supported executable definitions. |
+| `litex -extractpython -f <file>` | Verify the file's ordered `# [-extract]` blocks and emit Python for the supported definitions. |
 | `litex -extractpython -r <repo>` | Verify a repository's ordered `[export]` table and emit Python. |
 | `litex -extractc <code>` | Verify inline source and emit a C99 translation-unit fragment for the supported executable definitions. |
-| `litex -extractc -f <file>` | Verify a file and emit the supported executable definitions as C99. |
+| `litex -extractc -f <file>` | Verify the file's ordered `# [-extract]` blocks and emit the supported definitions as C99. |
 | `litex -extractc -r <repo>` | Verify a repository's ordered `[export]` table and emit C99. |
 
 The extraction subsystem is deliberately not a whole-Litex compiler. It emits
@@ -500,6 +500,32 @@ translation unit remains valid C. Neither target proves IEEE-754 behavior.
 
 Inline source follows the extraction flag directly; `-e` is not accepted.
 The retired `-python` command is not a compatibility alias.
+
+File extraction is explicitly selected inside the source:
+
+```litex
+# [-extract]
+have fn increment(x R) R = x + 1
+# [end of -extract]
+
+# This proof is checked by an ordinary full-file run, not by extraction.
+increment(1) = 2
+
+# [-extract]
+have algo for increment(x):
+    x + 1
+# [end of -extract]
+```
+
+Each marker must occupy a whole trimmed line. The marker lines are excluded;
+the enclosed blocks are concatenated in source order and then passed to the
+existing verifier and Python/C backend. The selected source must therefore be
+self-contained. `-f` does not load a configured project prefix or verify the
+unselected statements. It preserves blank lines internally so diagnostics
+still point to the original file locations. Missing, nested, unmatched, or
+unclosed markers are errors; there is no whole-file fallback. Use ordinary
+`litex -f <file>` to verify the complete mathematical development. Inline and
+`-r` extraction retain their whole-input behavior.
 
 Extraction returns an `artifact` object with `artifact: "extracted_code"`,
 `format: "python"` or `"c"`, and the generated source in `content`. The Lean
@@ -530,20 +556,20 @@ Use `litex.config` to organize a folder tree:
 
 - put `module` under `[hierarchy]` at an independently runnable/importable root;
 - put `submodule` under `[hierarchy]` in every exported child folder;
-- list every direct child `.lit` file and module folder exactly once, in
-  mathematical order, under `[export]`; the reserved local `.drafts/` and
-  Lake-generated `.lake/` directories are ignored by module discovery;
+- select each participating direct child `.lit` file and module folder exactly
+  once, in mathematical order, under `[export]`;
 - declare external module folders under `[import]` and installed packages under
   `[import std]`, only in the top-level module;
 - cite earlier entries with their canonical export path, such as
   `Part2::chap7::name` or `basics::name`.
 
-A configured folder may contain `litex.config`, non-Litex sidecar files, the
-direct module children listed in `[export]`, an optional local `.drafts/`
-directory, and Lake's generated `.lake/` directory. Exported folders must be
-submodules. Every other direct child directory and `.lit` file remains an
-error. Imported targets must be external module folders; imports cannot target
-files, submodules, or descendants of the importing module.
+`[export]` is an explicit selection list, not an inventory of the directory.
+Unlisted files and folders are sidecars: module discovery does not parse them,
+execute them, or add them to the module namespace. Declared export paths still
+must exist, name distinct direct children, and point to a `.lit` file or a
+configured `submodule` folder. Imported targets must be external module
+folders; imports cannot target files, submodules, or descendants of the
+importing module.
 
 `-r` and `-f` share one recursive left-to-right order. Running a top-level
 module runs the whole tree. Running a submodule traces back to its module,

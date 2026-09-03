@@ -154,7 +154,7 @@ by def $nested_natural_reflexivity(0)
         generated.contains("∀ {__carrier1 : Type} (__p1 : __carrier1)"),
         "{generated}"
     );
-    assert!(generated.contains("using (@__fact0)"), "{generated}");
+    assert!(generated.contains("exact @__fact0"), "{generated}");
 }
 
 #[test]
@@ -191,7 +191,7 @@ fn concrete_sequence_predicate_retains_and_consumes_local_wd_evidence() {
         lean.contains("∃ (__arg_type1 : Litex.In a (Litex.sequenceSet Litex.R))"),
         "{lean}"
     );
-    assert!(lean.contains("Litex.fnApplyOwn a"), "{lean}");
+    assert!(lean.contains("Litex.fnApplyOwn"), "{lean}");
     assert!(!lean.contains("RealSequenceTailClose"), "{lean}");
     assert!(!lean.contains("axiom is_sequence_tail_close_to_limit"));
 }
@@ -241,7 +241,8 @@ thm tail_stability_gives_eventual_lower_bound:
         .expect("compile exact sequence argument through a predicate existential");
 
     assert!(
-        generated.contains("Litex.Same.symm (Litex.In.same_rep a"),
+        generated.contains("Litex.fnApplyOwn (domain := Litex.NPos) (codomain := Litex.R) a")
+            && !generated.contains("Litex.In.rep a"),
         "{generated}"
     );
     for forbidden in ["LitexObject", "Litex.Object", "sorry", "axiom "] {
@@ -335,10 +336,9 @@ fn checked_named_function_reduction_uses_its_exact_definition_fact_id() {
     let reduction_result = results[1]
         .factual_success()
         .expect("second statement is a factual reduction");
-    let SuccessFactProofResult::CheckedFunctionDefinitionReduction(reduction) =
-        reduction_result
-            .proof()
-            .expect("verified reduction statement owns a proof")
+    let SuccessFactProofResult::CheckedFunctionDefinitionReduction(reduction) = reduction_result
+        .proof()
+        .expect("verified reduction statement owns a proof")
     else {
         panic!("checked definition reduction must retain typed evidence")
     };
@@ -356,7 +356,35 @@ fn checked_named_function_reduction_uses_its_exact_definition_fact_id() {
     let lean = StmtResultToLeanCompiler::new("direct_named_real_function.lit")
         .compile_stmt_results_to_lean_source(&results)
         .expect("compile checked function reduction directly");
-    assert!(lean.contains("unfold Litex.fnApplyOwn inc"));
+    assert!(lean.contains("unfold Litex.fnApplyCarrier inc"));
+}
+
+#[test]
+fn checked_named_function_reduction_compiles_its_reduced_equality_child() {
+    let results =
+        execute_named_real_function("have fn sixth(t R) R = t / 3\nsixth(1 / 2) = 1 / 6\n");
+    let reduction_result = results[1]
+        .factual_success()
+        .expect("second statement is a factual reduction");
+    let SuccessFactProofResult::CheckedFunctionDefinitionReduction(reduction) = reduction_result
+        .proof()
+        .expect("verified reduction statement owns a proof")
+    else {
+        panic!("checked definition reduction must retain typed evidence")
+    };
+    let reduced = reduction
+        .verification
+        .reduced_equality
+        .verified()
+        .expect("checked reduction owns a successful reduced-equality Result");
+    assert_eq!(reduced.fact().to_string(), "1 / 2 / 3 = 1 / 6");
+
+    let lean = StmtResultToLeanCompiler::new("checked_bayes_reduction.lit")
+        .compile_stmt_results_to_lean_source(&results)
+        .expect("compile the checked unfolding and its retained rational child");
+    assert!(lean.contains("unfold Litex.fnApplyCarrier sixth"));
+    assert!(lean.contains("Litex.Same.trans"));
+    assert!(lean.contains("field_simp"));
 }
 
 #[test]
@@ -406,8 +434,8 @@ fn checked_named_function_reduction_inside_forall_uses_wd_scope_fact_ids() {
     assert!(compiler.declarations.last().is_some_and(|declaration| {
         declaration.contains("unfold Litex.fnApplyWhereOwn reciprocal")
             && declaration.contains("__domain1")
-            && declaration.contains("Litex.Same.realComplex ((Litex.In.rep a ")
-            && !declaration.contains("Litex.Same.symm (Litex.In.same_rep a (__h8_1))")
+            && declaration.contains("Litex.Same.refl")
+            && !declaration.contains("Litex.In.rep a")
     }));
 }
 

@@ -4,7 +4,10 @@ use crate::verification::verify_equality_by_builtin_rules::factual_equal_success
 impl Runtime {
     /// The positive-power recursion for square real matrices.
     /// Example: `A '^ 1 = A` and `A '^ (k + 1) = (A '^ k) '* A`.
-    pub fn try_verify_matrix_power_definition(&self, equal_fact: &EqualFact) -> Option<ProveFactResult> {
+    pub fn try_verify_matrix_power_definition(
+        &self,
+        equal_fact: &EqualFact,
+    ) -> Option<ProveFactResult> {
         self.try_verify_matrix_power_definition_in_direction(equal_fact, true)
             .or_else(|| self.try_verify_matrix_power_definition_in_direction(equal_fact, false))
     }

@@ -12,7 +12,7 @@ pub struct WellDefinednessEnvironmentDelta {
     facts: EnvironmentFactStore,
     objects: EnvironmentObjectKnowledgeStore,
     predicate_algebraic_properties: EnvironmentPredicateAlgebraicPropertyStore,
-    caches: EnvironmentVerificationCache,
+    inference_cache: EnvironmentInferenceCache,
 }
 
 impl WellDefinednessEnvironmentDelta {
@@ -40,14 +40,14 @@ impl WellDefinednessEnvironmentDelta {
             facts,
             objects,
             predicate_algebraic_properties,
-            caches,
+            inference_cache,
         } = environment;
         Self {
             definitions,
             facts,
             objects,
             predicate_algebraic_properties,
-            caches,
+            inference_cache,
         }
     }
 
@@ -57,14 +57,14 @@ impl WellDefinednessEnvironmentDelta {
             facts,
             objects,
             predicate_algebraic_properties,
-            caches,
+            inference_cache,
         } = self;
         Environment {
             definitions,
             facts,
             objects,
             predicate_algebraic_properties,
-            caches,
+            inference_cache,
         }
     }
 }

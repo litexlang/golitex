@@ -249,6 +249,27 @@ finite_set_product({1, 2}, fn(k N) N {k}) $in N
 }
 
 #[test]
+fn speculative_power_routes_do_not_impose_irrelevant_real_wd() {
+    let source = r#"
+i ^ 2 = -1
+
+forall z, w C, k Z:
+    z != 0
+    w != 0
+    =>:
+        (z * w) ^ k = z ^ k * w ^ k
+"#;
+    let (run_succeeded, run_output) = run_complex_source(
+        source,
+        "speculative_power_routes_do_not_impose_irrelevant_real_wd",
+    );
+    assert!(
+        run_succeeded,
+        "irrelevant positive-real and natural candidates must not fail WD:\n{run_output}"
+    );
+}
+
+#[test]
 fn exact_complex_algebraic_normalization_is_bounded_and_sound() {
     let accepted = r#"
 2 * i + 1 = i * i + 2 + 2 * i

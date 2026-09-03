@@ -18,7 +18,7 @@ impl Runtime {
         }
 
         let param_set = param_def.set_obj();
-        self.verify_obj_well_defined_and_store_cache(param_set, &VerifyState::initial())
+        self.verify_obj_well_defined_result(param_set, &VerifyState::initial())
             .map_err(|well_defined_error| {
                 let param_names_text = vec_to_string_join_by_comma(&param_def.params);
                 let error_line_file = well_defined_error.line_file().clone();

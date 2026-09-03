@@ -111,7 +111,8 @@ impl Runtime {
                     verify_state,
                     WellDefinedObjChildRole::FunctionHead,
                 )?);
-                let matrix_set = self.real_matrix_type(matrix, verify_state, "entry access")?;
+                let matrix_set =
+                    self.real_matrix_type_after_well_defined(matrix, "entry access")?;
                 vec![FnSetSpace::Set(
                     self.matrix_set_to_fn_set(&matrix_set, default_line_file()),
                 )]
@@ -124,7 +125,7 @@ impl Runtime {
                     WellDefinedObjChildRole::FunctionHead,
                 )?);
                 let field_type =
-                    self.instantiated_struct_field_type_for_access(field_access, verify_state)?;
+                    self.instantiated_struct_field_type_after_well_defined(field_access)?;
                 vec![self
                     .fn_set_space_from_return_set_obj(field_type.clone())
                     .map_err(|_| {
@@ -252,10 +253,9 @@ impl Runtime {
         })?;
 
         if last_layer_index > 0 {
-            let prefix: Obj = FnObj::new_with_source_occurrence_id(
+            let prefix: Obj = FnObj::new(
                 *fn_obj.head.clone(),
                 fn_obj.body[..last_layer_index].to_vec(),
-                None,
             )
             .into();
             steps.push_child(self.verify_child_obj_well_defined_result(

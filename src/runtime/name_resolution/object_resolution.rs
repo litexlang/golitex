@@ -85,28 +85,25 @@ impl Runtime {
                 self.resolve_obj_after_transparent_once(&local_obj)
             }
             Obj::Add(add) => {
-                let result: Obj = Add::new_with_source_occurrence_id(
+                let result: Obj = Add::new(
                     self.resolve_obj_after_transparent_once(&add.left),
                     self.resolve_obj_after_transparent_once(&add.right),
-                    add.source_occurrence_id,
                 )
                 .into();
                 self.resolve_obj_try_fold_arithmetic(result)
             }
             Obj::Sub(sub) => {
-                let result: Obj = Sub::new_with_source_occurrence_id(
+                let result: Obj = Sub::new(
                     self.resolve_obj_after_transparent_once(&sub.left),
                     self.resolve_obj_after_transparent_once(&sub.right),
-                    sub.source_occurrence_id,
                 )
                 .into();
                 self.resolve_obj_try_fold_arithmetic(result)
             }
             Obj::Mul(mul) => {
-                let result: Obj = Mul::new_with_source_occurrence_id(
+                let result: Obj = Mul::new(
                     self.resolve_obj_after_transparent_once(&mul.left),
                     self.resolve_obj_after_transparent_once(&mul.right),
-                    mul.source_occurrence_id,
                 )
                 .into();
                 self.resolve_obj_try_fold_arithmetic(result)
@@ -200,12 +197,7 @@ impl Runtime {
                 {
                     return cancelled;
                 }
-                let result: Obj = Div::new_with_source_occurrence_id(
-                    resolved_left,
-                    resolved_right,
-                    div.source_occurrence_id,
-                )
-                .into();
+                let result: Obj = Div::new(resolved_left, resolved_right).into();
                 self.resolve_obj_try_fold_arithmetic(result)
             }
             Obj::Abs(a) => {
@@ -438,12 +430,7 @@ impl Runtime {
                                 .collect()
                         })
                         .collect();
-                    FnObj::new_with_source_occurrence_id(
-                        *fn_obj.head.clone(),
-                        resolved_body,
-                        fn_obj.source_occurrence_id,
-                    )
-                    .into()
+                    FnObj::new(*fn_obj.head.clone(), resolved_body).into()
                 }
             }
             Obj::Atom(AtomObj::Identifier(_))

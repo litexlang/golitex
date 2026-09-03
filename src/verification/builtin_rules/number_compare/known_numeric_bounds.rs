@@ -26,10 +26,14 @@ impl Runtime {
                     else {
                         continue;
                     };
-                    let candidate_result = self.verify_atomic_fact_as_builtin_rule_premise(&candidate, builtin_state)?;
-                    if !candidate_result.is_success() {
+                    let Some(candidate_result) = self
+                        .try_verify_atomic_fact_as_builtin_rule_premise(
+                            &candidate,
+                            builtin_state,
+                        )?
+                    else {
                         continue;
-                    }
+                    };
                     // Strict order implies weak order at the same bound.
                     // Example: from `0 < c`, prove `0 <= c`.
                     if target_bound == known_bound && known_strict {
@@ -62,11 +66,11 @@ impl Runtime {
                             f.line_file.clone(),
                         )
                         .into();
-                        let in_z_result =
-                            self.verify_atomic_fact_as_builtin_rule_premise(&in_z, builtin_state)?;
-                        if !in_z_result.is_success() {
+                        let Some(in_z_result) = self
+                            .try_verify_atomic_fact_as_builtin_rule_premise(&in_z, builtin_state)?
+                        else {
                             continue;
-                        }
+                        };
                         return Ok(Some(ProveFactResult::from(
                             SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                                 atomic_fact.clone().into(),
@@ -99,8 +103,9 @@ impl Runtime {
                     if !stronger_bound_is_enough {
                         continue;
                     }
-                    let candidate_result = self.verify_atomic_fact_as_builtin_rule_premise(&candidate, builtin_state)?;
-                    if candidate_result.is_success() {
+                    if let Some(candidate_result) = self
+                        .try_verify_atomic_fact_as_builtin_rule_premise(&candidate, builtin_state)?
+                    {
                         return Ok(Some(ProveFactResult::from(
                             SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                                 atomic_fact.clone().into(),
@@ -197,10 +202,11 @@ impl Runtime {
                 continue;
             }
 
-            let candidate_result = self.verify_atomic_fact_as_builtin_rule_premise(&candidate, builtin_state)?;
-            if !candidate_result.is_success() {
+            let Some(candidate_result) =
+                self.try_verify_atomic_fact_as_builtin_rule_premise(&candidate, builtin_state)?
+            else {
                 continue;
-            }
+            };
             return Ok(Some(ProveFactResult::from(
                 SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     atomic_fact.clone().into(),

@@ -23,12 +23,10 @@ pub enum SubstitutionMode {
     Named,
     Theorem,
     /// Replace an executed `let` symbol by its stored transparent object
-    /// definition while retaining parser occurrence provenance on the
-    /// surrounding syntax tree.
+    /// definition while preserving the checked transformation boundary.
     TransparentDefinition,
-    /// Project a parser-owned source theorem/WD tree through an exact checked
-    /// substitution while retaining occurrence identity for target replay.
-    /// This mode is compiler provenance projection, never Runtime proof search.
+    /// Project a source theorem/WD tree through an exact checked substitution.
+    /// This mode is compiler proof projection, never Runtime proof search.
     ResultProjection,
 }
 

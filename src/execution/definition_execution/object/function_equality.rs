@@ -175,7 +175,7 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         let verify_state = VerifyState::initial();
 
-        self.verify_obj_well_defined_and_store_cache(
+        self.verify_obj_well_defined_result(
             &have_fn_equal_stmt.equal_to_anonymous_fn.clone().into(),
             &verify_state,
         )
@@ -189,7 +189,7 @@ impl Runtime {
         })?;
 
         let function_set_obj = fn_set_stored.clone().into();
-        self.verify_obj_well_defined_and_store_cache(&function_set_obj, &verify_state)
+        self.verify_obj_well_defined_result(&function_set_obj, &verify_state)
             .map_err(|well_defined_error| {
                 short_exec_error(
                     have_fn_equal_stmt.clone().into(),

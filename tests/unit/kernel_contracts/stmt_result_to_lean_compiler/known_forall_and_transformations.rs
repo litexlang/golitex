@@ -35,10 +35,40 @@ fn known_forall_instantiation_combines_exact_fact_id_and_requirement_result_dire
 
         assert!(generated.contains("axiom p_real"), "{generated}");
         assert!(
-                generated.contains("exact (p_real (2 : ℂ) (Litex.Rules.complexRealInR")
-                    && generated.contains("complexRealInR (2 : ℝ)"),
+            generated.contains("structure __LitexAbstractPredicate_p")
+                && generated.contains("p.respectsSame")
+                && generated.contains("Litex.Same.realComplex"),
+            "known-forall application did not explicitly transport its abstract predicate across representations: {generated}"
+        );
+        assert!(
+                generated.contains("p_real (2 : ℝ) ((Litex.In.congr"),
                 "known-forall application did not combine its source theorem and parameter requirement: {generated}"
             );
+    });
+}
+
+#[test]
+fn abstract_predicate_same_contract_handles_multiple_arguments_and_negation() {
+    run_registered_rule_test(|| {
+        let results = crate::stmt_result_to_lean_compiler::source_compilation::execute_litex_source_for_lean_compilation(
+            "abstract_prop p(x)\nabstract_prop pair(x, y)\naxiom p_not_real:\n    ? forall x R:\n        not $p(x)\naxiom pair_real:\n    ? forall x, y R:\n        $pair(x, y)\nnot $p(2)\n$pair(2, 3)\n",
+            "direct_abstract_predicate_transport.lit",
+        )
+        .expect("execute abstract-predicate representation transports");
+        let generated = StmtResultToLeanCompiler::new("direct_abstract_predicate_transport.lit")
+            .compile_stmt_results_to_lean_source(&results)
+            .expect("compile explicit abstract-predicate Same transports");
+
+        assert!(
+            generated.contains("p.respectsSame")
+                && generated.contains("pair.respectsSame")
+                && generated.matches("Litex.Same.realComplex").count() >= 3,
+            "{generated}"
+        );
+        assert!(
+            generated.contains("fun __target") && !generated.contains("simpa") ,
+            "negated abstract predicate should transport through the reverse direction of its equivalence: {generated}"
+        );
     });
 }
 
@@ -236,7 +266,8 @@ fn known_fact_equality_transport_is_not_composed_with_a_redundant_normalization_
         )
         .compile_stmt_results_to_lean_source(&results)
         .expect("compile the verifier-selected equality transport route");
-        assert!(generated.contains("rw [__native_rewrite1]"), "{generated}");
+        assert!(generated.contains("rw [__order_equality1]"), "{generated}");
+        assert!(generated.contains("(__domain_f8).complexEq"), "{generated}");
     });
 }
 

@@ -85,7 +85,7 @@ impl fmt::Debug for SuccessDefinitionReductionFactProofResult {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct SuccessCheckedFunctionDefinitionReductionFactProofResult {
     pub detail: Option<String>,
     pub verification: CheckedFunctionDefinitionReductionEvidence,
@@ -103,7 +103,6 @@ pub struct DefinitionReductionVerificationEvidence {
     pub clause_checks: Vec<VerifyFactResult>,
 }
 
-#[derive(Clone)]
 pub struct CheckedFunctionDefinitionReductionEvidence {
     pub definition_object: Obj,
     pub defining_equality: Fact,
@@ -112,7 +111,9 @@ pub struct CheckedFunctionDefinitionReductionEvidence {
     pub reduced: Obj,
     pub other_side: Obj,
     pub application_is_left: bool,
-    pub reduced_matches_other_by_alpha: bool,
+    /// Complete proof of `reduced = other_side`. The outer node composes this
+    /// child with the exact checked unfolding identified above.
+    pub reduced_equality: VerifyFactResult,
 }
 
 impl fmt::Debug for CheckedFunctionDefinitionReductionEvidence {
@@ -126,10 +127,7 @@ impl fmt::Debug for CheckedFunctionDefinitionReductionEvidence {
             .field("reduced", &self.reduced.to_string())
             .field("other_side", &self.other_side.to_string())
             .field("application_is_left", &self.application_is_left)
-            .field(
-                "reduced_matches_other_by_alpha",
-                &self.reduced_matches_other_by_alpha,
-            )
+            .field("reduced_equality", &self.reduced_equality)
             .finish()
     }
 }

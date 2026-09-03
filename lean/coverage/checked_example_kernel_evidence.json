@@ -1,15 +1,13 @@
 {
   "command": "python3 lean/coverage/run_checked_examples_gate.py --jobs 4",
-  "current_valid": false,
-  "invalidated_at": "2026-08-31 11:17:11 CST",
-  "invalidation": "Lean dependencies changed from ca5b1de5... to 75991dea... after the stable 67/2/69 checked-example run; Rules.olean is now stale.",
-  "example_input_fingerprint_after": "058adb0e975ccfe84f9a97faecc267399c6d365b4c62b7fcb4ca97fef850df86",
-  "example_input_fingerprint_before": "058adb0e975ccfe84f9a97faecc267399c6d365b4c62b7fcb4ca97fef850df86",
-  "lean_dependency_fingerprint_after": "ca5b1de5832bcb1b643a9a09af59a05136387a262a525b31ea5bd7b695112fe2",
-  "lean_dependency_fingerprint_before": "ca5b1de5832bcb1b643a9a09af59a05136387a262a525b31ea5bd7b695112fe2",
+  "current_valid": true,
+  "example_input_fingerprint_after": "c3483ddb3d96c308727db57a0e23a0a91adcb705c4af69d7c6b312f876634683",
+  "example_input_fingerprint_before": "c3483ddb3d96c308727db57a0e23a0a91adcb705c4af69d7c6b312f876634683",
+  "lean_dependency_fingerprint_after": "133d8667377b29e95f20a4b442f0ca5eb591aa4d3f5628fb4fedb41611fde680",
+  "lean_dependency_fingerprint_before": "133d8667377b29e95f20a4b442f0ca5eb591aa4d3f5628fb4fedb41611fde680",
   "olean_precondition_errors_after": [],
   "olean_precondition_errors_before": [],
-  "recorded_at": "2026-08-31 11:15:14 CST",
+  "recorded_at": "2026-09-03 09:54:34 CST",
   "rows": [
     {
       "checked_in_path": "lean/examples/10_ExistentialWitness.lean",
@@ -18,8 +16,8 @@
       "forbidden_hits": [],
       "kernel_class": "kernel_reject",
       "kernel_exit": 1,
-      "kernel_first_error": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/lean/examples/10_ExistentialWitness.lean:97:46: error: Application type mismatch: The argument",
-      "source_sha256": "4dcbe829d67b764e66c1f771779d5d16434aaafb98874f7fddfb76689b889e37"
+      "kernel_first_error": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/lean/examples/10_ExistentialWitness.lean:24:189: error: Application type mismatch: The argument",
+      "source_sha256": "a74662a42784c7d7974011e6600d8df6070be502190a420e8093daf0a994184b"
     },
     {
       "checked_in_path": "lean/examples/11_ObjectDefinitions.lean",
@@ -29,17 +27,17 @@
       "kernel_class": "pass",
       "kernel_exit": 0,
       "kernel_first_error": null,
-      "source_sha256": "56e5c7c529947aa292ccedadb4a2e3da6dafb1627bf46c0bbeb76bf8d28ecde4"
+      "source_sha256": "a5aa862451c720f25eb9f864f392dc8de0af99d544d8b4242a2621aca4f7b4b0"
     },
     {
       "checked_in_path": "lean/examples/12_NamedFunction.lean",
       "checked_in_sha256": "01caaf61049520328dd0dcaef61c0ef1606e4bf8a5fc949e4513b783556b67c4",
       "example": "12_NamedFunction.lit",
       "forbidden_hits": [],
-      "kernel_class": "pass",
-      "kernel_exit": 0,
-      "kernel_first_error": null,
-      "source_sha256": "812dd25cb9270689981acab9c96cdae6737f6b4748afc02752cb8e34314cda36"
+      "kernel_class": "kernel_reject",
+      "kernel_exit": 1,
+      "kernel_first_error": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/lean/examples/12_NamedFunction.lean:21:24: error: Application type mismatch: The argument",
+      "source_sha256": "ad0592c242113d7ea51009f45055cfb60fa1ba9dc44da123595c6ccb20b45c14"
     },
     {
       "checked_in_path": "lean/examples/13_PredicateDefinitions.lean",
@@ -56,10 +54,10 @@
       "checked_in_sha256": "eb28870c58535e8a26ecf577691dd88af6094a5412b811eae19d5306a7463308",
       "example": "14_SetBuilderAndChoice.lit",
       "forbidden_hits": [],
-      "kernel_class": "pass",
-      "kernel_exit": 0,
-      "kernel_first_error": null,
-      "source_sha256": "b849f3f5c92c3c9c54b7ad4cc9a33300027f7a45061f201f24eab353a5bbebd7"
+      "kernel_class": "kernel_reject",
+      "kernel_exit": 1,
+      "kernel_first_error": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/lean/examples/14_SetBuilderAndChoice.lean:22:133: error: Application type mismatch: The argument",
+      "source_sha256": "f371aafd8e420ede1b5be18b0a368801af98ebc58a7ca66cd4658471fe445eef"
     },
     {
       "checked_in_path": "lean/examples/15_BuiltinStrategy.lean",
@@ -69,7 +67,7 @@
       "kernel_class": "pass",
       "kernel_exit": 0,
       "kernel_first_error": null,
-      "source_sha256": "fefac98b861b3231592c2aee1e8f1b7c977fcb17c2ff11bd238aad47de9129df"
+      "source_sha256": "c1c26f796342b5441d82c8b0a56da1d55964e1dd28e718f003f9063f3308af7c"
     },
     {
       "checked_in_path": "lean/examples/16_StandardSetHierarchy.lean",
@@ -79,7 +77,7 @@
       "kernel_class": "pass",
       "kernel_exit": 0,
       "kernel_first_error": null,
-      "source_sha256": "a6115dafbc6e13047b39415689c28b46e1b2c9efe18d7a5855c09a361cf3bca6"
+      "source_sha256": "54a00692c7cdb00b422bcbc104528e007a3ac3d05e8086c9ec06714a475b54d3"
     },
     {
       "checked_in_path": "lean/examples/17_NumericCarrierClosures.lean",
@@ -109,17 +107,17 @@
       "kernel_class": "pass",
       "kernel_exit": 0,
       "kernel_first_error": null,
-      "source_sha256": "c9e997ee89ced7c45be7f102748e34535154c373fa9c40aa01d1e3cd8a2d8933"
+      "source_sha256": "242e1959901389a2fee5885e4fcf62b241419e7aecbe6f959562049918f8769a"
     },
     {
       "checked_in_path": "lean/examples/1_SetSystem.lean",
-      "checked_in_sha256": "f3b097c551b3fd1a83b6ce5d8e12d2c59ce8dfee8127220688c1d650665a5d0c",
+      "checked_in_sha256": "390cf76397754d0d13a01c1121a1df1a1f9a3b9f46b387cc19b84a0feba38c7c",
       "example": "1_SetSystem.lit",
       "forbidden_hits": [],
       "kernel_class": "pass",
       "kernel_exit": 0,
       "kernel_first_error": null,
-      "source_sha256": "bd5c8d95d5de9d942c190b82b1687072a6fd027ae2c719b4f4633dbb06a80c34"
+      "source_sha256": "73c826fb9e0e2fe85f9eeae08c4695b1d6f205ecc9f03f1a7f7a6612fcba697f"
     },
     {
       "checked_in_path": "lean/examples/20_PositiveNaturalCarrier.lean",
@@ -129,7 +127,7 @@
       "kernel_class": "pass",
       "kernel_exit": 0,
       "kernel_first_error": null,
-      "source_sha256": "34ffa89558eb6bd05c2e35d90b917213a671159bcedd371b8a9a6667185254cc"
+      "source_sha256": "16cc6830174cbbda2776b61600d93d70929a2181304a1e0ca7d8fce14a9811e9"
     },
     {
       "checked_in_path": "lean/examples/21_PositiveRealCarrier.lean",
@@ -139,27 +137,27 @@
       "kernel_class": "pass",
       "kernel_exit": 0,
       "kernel_first_error": null,
-      "source_sha256": "0cacc72591bed22ed8091a72fcdcfafd0ecc2613f051937caec3237aed438a53"
+      "source_sha256": "b26de9267ccaaab5ecef51fe22fc216ad319096b2f11cab3b4c47a378c3c8eed"
     },
     {
       "checked_in_path": "lean/examples/22_NonzeroNumericCarriers.lean",
       "checked_in_sha256": "a9d755bea2906318f81c2511d19721017b6a540306550aa2826d1e4b39057803",
       "example": "22_NonzeroNumericCarriers.lit",
       "forbidden_hits": [],
-      "kernel_class": "pass",
-      "kernel_exit": 0,
-      "kernel_first_error": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/lean/examples/22_NonzeroNumericCarriers.lean:15:34: warning: this tactic is never executed",
-      "source_sha256": "b841492f2d63e121534210629f31cf92afdcafe1a78494a37756ad665f06d567"
+      "kernel_class": "kernel_reject",
+      "kernel_exit": 1,
+      "kernel_first_error": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/lean/examples/22_NonzeroNumericCarriers.lean:9:79: error: Application type mismatch: The argument",
+      "source_sha256": "26bb719cb4a9095037ad0b40d2737d45d151f8d9ea69a91870e29899e1081a07"
     },
     {
       "checked_in_path": "lean/examples/23_MultilayerApplication.lean",
       "checked_in_sha256": "4040333b328418ea91be87fe11b575e5308de8fe55530f74f94e2a407297b2a9",
       "example": "23_MultilayerApplication.lit",
       "forbidden_hits": [],
-      "kernel_class": "pass",
-      "kernel_exit": 0,
-      "kernel_first_error": null,
-      "source_sha256": "4d0192c1229954774549b18ed91d2365166f65bc0e65d2fce19f0a3c0352dc54"
+      "kernel_class": "kernel_reject",
+      "kernel_exit": 1,
+      "kernel_first_error": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/lean/examples/23_MultilayerApplication.lean:49:24: error: Application type mismatch: The argument",
+      "source_sha256": "86a1638513720f30f75e9176b535e2a0d51b0abd59a0d5968e21271351f3d20e"
     },
     {
       "checked_in_path": "lean/examples/24_DependentAnonymousFunction.lean",
@@ -169,26 +167,26 @@
       "kernel_class": "pass",
       "kernel_exit": 0,
       "kernel_first_error": null,
-      "source_sha256": "283fdbc2240847d396a43dd1ac0d93b381b7511d43a2d429f79e8557be4b8c70"
+      "source_sha256": "a41926a06679674abcc3162f14f57b16b66cc60fefc69f348c306a564a1cabb1"
     },
     {
       "checked_in_path": "lean/examples/25_ExplicitSourceAxioms.lean",
-      "checked_in_sha256": "b0f6d7f5eb80374d25f42bf6aef91ac89911ae9a9b2e52096dd88a879ad33771",
+      "checked_in_sha256": "afb5d2f22b451318d086f48798132e0d6a8802ac45217d43601ad97c632ed105",
       "example": "25_ExplicitSourceAxioms.lit",
       "forbidden_hits": [],
       "kernel_class": "pass",
       "kernel_exit": 0,
       "kernel_first_error": null,
-      "source_sha256": "f00b86b788897e38a9d6213c2914a3e26bf97f3991bf8e315b3c55973b7cbbfa"
+      "source_sha256": "41352ce911a4af28b1d795cc96751765af5e10c03882c9463d8e710111414dd6"
     },
     {
       "checked_in_path": "lean/examples/26_CollectionsAndAggregates.lean",
       "checked_in_sha256": "d7177190bfdc01a24234c92f0c694965a0e2aae233b725739097bfe3e36990ed",
       "example": "26_CollectionsAndAggregates.lit",
       "forbidden_hits": [],
-      "kernel_class": "pass",
-      "kernel_exit": 0,
-      "kernel_first_error": null,
+      "kernel_class": "kernel_reject",
+      "kernel_exit": 1,
+      "kernel_first_error": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/lean/examples/26_CollectionsAndAggregates.lean:78:51: error: synthesized type class instance is not definitionally equal to expression inferred by typing rules, synthesized",
       "source_sha256": "1269f8a68c1daba1b0572edcb0c177c07cd10207997f17f01cf12a2f1258613d"
     },
     {
@@ -209,7 +207,7 @@
       "kernel_class": "pass",
       "kernel_exit": 0,
       "kernel_first_error": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/lean/examples/28_ExtendedSetRules.lean:38:34: warning: this tactic is never executed",
-      "source_sha256": "014eed95d6776f5b5a54e099b710b2b0d6f69a8bc33e78b44333af89c14a714f"
+      "source_sha256": "18780f2d39b408ab027a26285acfeb02e4b5c7031586f750c797ced48c4f0199"
     },
     {
       "checked_in_path": "lean/examples/29_IndexedTupleCompilerEnvironment.lean",
@@ -229,16 +227,16 @@
       "kernel_class": "pass",
       "kernel_exit": 0,
       "kernel_first_error": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/lean/examples/2_OrderSystem.lean:14:34: warning: this tactic is never executed",
-      "source_sha256": "f4d8ae703059755926dfbda0d8e01a7d5d801c4bf57179dda188512675747805"
+      "source_sha256": "233c4ba932af2cc59969545540b28f43037fde81c861fa6769fbb86733516539"
     },
     {
       "checked_in_path": "lean/examples/30_IndexedSequenceCompilerEnvironment.lean",
       "checked_in_sha256": "f0b93bbcafad4305f65c1263798c2888fdc59aa3902e51151cd9199fe371673d",
       "example": "30_IndexedSequenceCompilerEnvironment.lit",
       "forbidden_hits": [],
-      "kernel_class": "pass",
-      "kernel_exit": 0,
-      "kernel_first_error": null,
+      "kernel_class": "kernel_reject",
+      "kernel_exit": 1,
+      "kernel_first_error": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/lean/examples/30_IndexedSequenceCompilerEnvironment.lean:24:301: error: Application type mismatch: The argument",
       "source_sha256": "d020e5f2d66c298efe56c0a46b5c716a4a490f68947d3f95e77cf3e80cad53c3"
     },
     {
@@ -246,9 +244,9 @@
       "checked_in_sha256": "c812a23b3cc9bb4289d4ca8acbe930527f74d46314f27515657776aca319349b",
       "example": "31_FiniteSequenceCompilerEnvironment.lit",
       "forbidden_hits": [],
-      "kernel_class": "pass",
-      "kernel_exit": 0,
-      "kernel_first_error": null,
+      "kernel_class": "kernel_reject",
+      "kernel_exit": 1,
+      "kernel_first_error": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/lean/examples/31_FiniteSequenceCompilerEnvironment.lean:24:301: error: Application type mismatch: The argument",
       "source_sha256": "2187342574eed306f32ebb9136612aae2e3e982299cc01dd589b37fd98f0c43d"
     },
     {
@@ -256,9 +254,9 @@
       "checked_in_sha256": "d6a78f1bc368130d7bceb674b2a8963e808538a950dffe6ca6c96308d1685acd",
       "example": "32_MatrixCompilerEnvironment.lit",
       "forbidden_hits": [],
-      "kernel_class": "pass",
-      "kernel_exit": 0,
-      "kernel_first_error": null,
+      "kernel_class": "kernel_reject",
+      "kernel_exit": 1,
+      "kernel_first_error": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/lean/examples/32_MatrixCompilerEnvironment.lean:24:301: error: Application type mismatch: The argument",
       "source_sha256": "bd780c688129052b8652db3df2771ee12a67bad2d7366e6ca2af60aeb5796399"
     },
     {
@@ -266,9 +264,9 @@
       "checked_in_sha256": "49da274e6f3ff79d1b6fe85419f7d744f4cf5ed6cbf49fca1100974a6d234a69",
       "example": "33_NonemptySetWitnessCompilerEnvironment.lit",
       "forbidden_hits": [],
-      "kernel_class": "pass",
-      "kernel_exit": 0,
-      "kernel_first_error": null,
+      "kernel_class": "kernel_reject",
+      "kernel_exit": 1,
+      "kernel_first_error": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/lean/examples/33_NonemptySetWitnessCompilerEnvironment.lean:10:53: error: synthesized type class instance is not definitionally equal to expression inferred by typing rules, synthesized",
       "source_sha256": "a4c1a6066976c86db06c089c76359e6cf245110fe4c07bd5b9cc7c0cc1fbcc43"
     },
     {
@@ -276,9 +274,9 @@
       "checked_in_sha256": "51fd817db000af185b12a006649bb515c8a0c5e603b8064071c8bb2f60d962b7",
       "example": "34_PredicateBackedWitnessResultComposition.lit",
       "forbidden_hits": [],
-      "kernel_class": "pass",
-      "kernel_exit": 0,
-      "kernel_first_error": null,
+      "kernel_class": "kernel_reject",
+      "kernel_exit": 1,
+      "kernel_first_error": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/lean/examples/34_PredicateBackedWitnessResultComposition.lean:17:296: error: Application type mismatch: The argument",
       "source_sha256": "22d6e1d1a4c88830d47d7a5025a8c6042eb0032e948d66fdc029000880e4198b"
     },
     {
@@ -293,7 +291,7 @@
     },
     {
       "checked_in_path": "lean/examples/36_KnownForallResultComposition.lean",
-      "checked_in_sha256": "c923c46bc9f285affc3e85151843cfda3d2dd86ec32f5f71fa6eecf5bed9938d",
+      "checked_in_sha256": "fca3d26405011b11341026bd703992fe87c24a738a8e737481a4e531b274e26b",
       "example": "36_KnownForallResultComposition.lit",
       "forbidden_hits": [],
       "kernel_class": "pass",
@@ -326,9 +324,9 @@
       "checked_in_sha256": "62c52300a19af25499f64ed00643b74eb1469f6027518bb5c600e93615ab3aad",
       "example": "39_CheckedNamedFunctionReductionResultComposition.lit",
       "forbidden_hits": [],
-      "kernel_class": "pass",
-      "kernel_exit": 0,
-      "kernel_first_error": null,
+      "kernel_class": "kernel_reject",
+      "kernel_exit": 1,
+      "kernel_first_error": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/lean/examples/39_CheckedNamedFunctionReductionResultComposition.lean:21:51: error: Application type mismatch: The argument",
       "source_sha256": "a95404134ccbca68c457a2cdf266bcb7a00da4005297e8d9ed81cc7e77cbadb4"
     },
     {
@@ -339,7 +337,7 @@
       "kernel_class": "pass",
       "kernel_exit": 0,
       "kernel_first_error": null,
-      "source_sha256": "4709f79aec4e1ac442373625cc1d055eea394dc77763e4a4461444c8b53cf562"
+      "source_sha256": "75f49c236d22d5350d0e530b4180ab6c8783be5e7cc5a513c37ad7323efd368b"
     },
     {
       "checked_in_path": "lean/examples/40_RegisteredOrderResultComposition.lean",
@@ -439,16 +437,16 @@
       "kernel_class": "pass",
       "kernel_exit": 0,
       "kernel_first_error": null,
-      "source_sha256": "34475b7d41029d6d4a64549cb30f33bd042fb30a439362d09860865878c0d1fa"
+      "source_sha256": "f5559dd300f8ea2fdc6e5a451033bdcb55e073a2943c295954739fd125f61da8"
     },
     {
       "checked_in_path": "lean/examples/50_SetExtensionResultComposition.lean",
       "checked_in_sha256": "5fd186ba881dd1512a00ad449defb90fe2788b7d4f95ca6dcdb63568a2d4cc49",
       "example": "50_SetExtensionResultComposition.lit",
       "forbidden_hits": [],
-      "kernel_class": "pass",
-      "kernel_exit": 0,
-      "kernel_first_error": null,
+      "kernel_class": "kernel_reject",
+      "kernel_exit": 1,
+      "kernel_first_error": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/lean/examples/50_SetExtensionResultComposition.lean:17:110: error: Application type mismatch: The argument",
       "source_sha256": "f20ae8dbbf63b47921252b904dc3673b6207c391c91f06c06b20323dc8d8406e"
     },
     {
@@ -456,9 +454,9 @@
       "checked_in_sha256": "16426b0d77ed8563b9a7d09956b1ecb69a9e2558d1472b6a4489e682b6b9e36e",
       "example": "51_FiniteEnumerationResultComposition.lit",
       "forbidden_hits": [],
-      "kernel_class": "pass",
-      "kernel_exit": 0,
-      "kernel_first_error": null,
+      "kernel_class": "kernel_reject",
+      "kernel_exit": 1,
+      "kernel_first_error": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/lean/examples/51_FiniteEnumerationResultComposition.lean:16:108: error: Application type mismatch: The argument",
       "source_sha256": "37b4c996d05a0d47452784dfae24f70405423e4a9f1669a4c592341bc605f149"
     },
     {
@@ -466,9 +464,9 @@
       "checked_in_sha256": "634e0f4635994cbd39f45dbba6fe96576488e8e1c581e60e5a403efae4958950",
       "example": "52_IntegerRangeIterationResultComposition.lit",
       "forbidden_hits": [],
-      "kernel_class": "pass",
-      "kernel_exit": 0,
-      "kernel_first_error": null,
+      "kernel_class": "kernel_reject",
+      "kernel_exit": 1,
+      "kernel_first_error": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/lean/examples/52_IntegerRangeIterationResultComposition.lean:17:127: error: Application type mismatch: The argument",
       "source_sha256": "d26c2431c2ff7cd1b3aac9c880934717dd386e58414546600057e5212282a4c0"
     },
     {
@@ -489,7 +487,7 @@
       "kernel_class": "pass",
       "kernel_exit": 0,
       "kernel_first_error": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/lean/examples/54_ComplexAlgebraicCalculation.lean:10:10: warning: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice",
-      "source_sha256": "3d2d49561798c25dfd5ca2296ab1d42db16a15970ae770815ac543b1a115578d"
+      "source_sha256": "988bad3de12eb52d7ef176d4b5556d5363235cf7555c6e551329e35e12bea410"
     },
     {
       "checked_in_path": "lean/examples/55_TemplateSequenceInstantiationResult.lean",
@@ -499,7 +497,7 @@
       "kernel_class": "pass",
       "kernel_exit": 0,
       "kernel_first_error": null,
-      "source_sha256": "1e9b928a985248869f86a5d2636448edc156baa0725a7eb5711c1167f701be7c"
+      "source_sha256": "04c9b330ca27e9b9a88cbf97a64f0f46a63dc2df45cf8432c230658aa1bc5570"
     },
     {
       "checked_in_path": "lean/examples/56_StructuredIntegerInductionResult.lean",
@@ -519,7 +517,7 @@
       "kernel_class": "pass",
       "kernel_exit": 0,
       "kernel_first_error": null,
-      "source_sha256": "7cd1e08482ad953e8e2edf7c144078179cf524ce08639c273ec63c3401fb9835"
+      "source_sha256": "3a8dcd81e03f6d68b6ddd24f8a1bf1a179e603f753efb2d6b958c10b6f96eb0b"
     },
     {
       "checked_in_path": "lean/examples/58_ElementarySetAlgebraCompletion.lean",
@@ -536,10 +534,10 @@
       "checked_in_sha256": "4b66cadee6c37dab37f6f14b2261295ddb1e41efd86a5d54f6a8850942c4ce36",
       "example": "59_TransparentLetResolution.lit",
       "forbidden_hits": [],
-      "kernel_class": "pass",
-      "kernel_exit": 0,
-      "kernel_first_error": null,
-      "source_sha256": "f7bb9dad23f6b3bc44234f8007da6452c242f2ee4dd54fb8572504708aeb51cf"
+      "kernel_class": "kernel_reject",
+      "kernel_exit": 1,
+      "kernel_first_error": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/lean/examples/59_TransparentLetResolution.lean:29:24: error: Application type mismatch: The argument",
+      "source_sha256": "ffe1c1373cad2129506570167be5556c6f935e06f198a3fbeb2cbafd824ebbc0"
     },
     {
       "checked_in_path": "lean/examples/5_AtomicMembership.lean",
@@ -549,7 +547,7 @@
       "kernel_class": "pass",
       "kernel_exit": 0,
       "kernel_first_error": null,
-      "source_sha256": "a841c56e362c66f2405d3e15d77c02224c6e38b932a640979691c732f201f4e5"
+      "source_sha256": "470410a5cf3df3f581e12c26abfdff860aa58cd2374a3bfcba9b1f0856784ad6"
     },
     {
       "checked_in_path": "lean/examples/60_OddSumToSquare.lean",
@@ -566,19 +564,19 @@
       "checked_in_sha256": "c8f3427484c0a9e4816ca96fac322889e4aa3b8aa5be4c23a600a88c0e8fedc0",
       "example": "61_TheoremApplicationScope.lit",
       "forbidden_hits": [],
-      "kernel_class": "pass",
-      "kernel_exit": 0,
-      "kernel_first_error": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/lean/examples/61_TheoremApplicationScope.lean:13:212: warning: Used `tac1 <;> tac2` where `(tac1; tac2)` would suffice",
-      "source_sha256": "d6438961cba7a8b1148744deeabccca0b4fe2a04fa9d06f16dc2b8977f20c318"
+      "kernel_class": "kernel_reject",
+      "kernel_exit": 1,
+      "kernel_first_error": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/lean/examples/61_TheoremApplicationScope.lean:13:292: error: Application type mismatch: The argument",
+      "source_sha256": "0ef3b48893cbe7004477a3ad267b93e3b4cf32306a092b34d8ed347f22d7465f"
     },
     {
       "checked_in_path": "lean/examples/62_BuiltinTheoremApplications.lean",
       "checked_in_sha256": "fc80a963aee8e18b0f4137507d8199d0ee9d59555b9e4c5a17d145cfa9637344",
       "example": "62_BuiltinTheoremApplications.lit",
       "forbidden_hits": [],
-      "kernel_class": "pass",
-      "kernel_exit": 0,
-      "kernel_first_error": null,
+      "kernel_class": "kernel_reject",
+      "kernel_exit": 1,
+      "kernel_first_error": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/lean/examples/62_BuiltinTheoremApplications.lean:18:31: error: synthesized type class instance is not definitionally equal to expression inferred by typing rules, synthesized",
       "source_sha256": "4792c38a9e6a28fa368280449ebc9c3c388fbc9a9fd98e2b6bbbf36be0b677ea"
     },
     {
@@ -586,14 +584,14 @@
       "checked_in_sha256": "730e53b6f77152fa94bd5ef37ce88aa7b2cc8db0c855ac59aff761f29300677a",
       "example": "63_ScalarOperatorBuiltins.lit",
       "forbidden_hits": [],
-      "kernel_class": "pass",
-      "kernel_exit": 0,
-      "kernel_first_error": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/lean/examples/63_ScalarOperatorBuiltins.lean:58:34: warning: this tactic is never executed",
+      "kernel_class": "kernel_reject",
+      "kernel_exit": 1,
+      "kernel_first_error": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/lean/examples/63_ScalarOperatorBuiltins.lean:36:332: error: Application type mismatch: The argument",
       "source_sha256": "046eb89f9087198f2c5d77553467acbbba499a1a120fefe62d7945303cf7a7bf"
     },
     {
       "checked_in_path": "lean/examples/64_RealSequenceCompleteness.lean",
-      "checked_in_sha256": "5085a61400b1a755f2750b99950e8f382eca153cb8b0601989611f7592a6813c",
+      "checked_in_sha256": "7d37b65731ea63af5cabad4de983de4333eaa6e8af634060c83cd15fe6cc5319",
       "example": "64_RealSequenceCompleteness.lit",
       "forbidden_hits": [],
       "kernel_class": "pass",
@@ -609,7 +607,7 @@
       "kernel_class": "pass",
       "kernel_exit": 0,
       "kernel_first_error": null,
-      "source_sha256": "9d4d707e630376d118cb4a7c10654c9eebee9d0f5df3d770425b1b5e4d789cd3"
+      "source_sha256": "2c75376e13981dfe54158a0f8b970b4c6585793e02a86dfb1fabb3de18f83da7"
     },
     {
       "checked_in_path": "lean/examples/66_LocalTypedSetDefinition.lean",
@@ -619,16 +617,16 @@
       "kernel_class": "pass",
       "kernel_exit": 0,
       "kernel_first_error": null,
-      "source_sha256": "8ea920cc4526ed7200792a906f2fb6d061b391a3109f55455a1c2f44cf8ad9ec"
+      "source_sha256": "88db0701086723f1e8c16544270a4536dc588c013d5eb17ad2a7997dd8fa94b0"
     },
     {
       "checked_in_path": "lean/examples/67_LocalRealCompleteness.lean",
-      "checked_in_sha256": "bd1b373973dbe5cd2fcf799684c59a237082cbec495f16bd466b0936679dbb69",
+      "checked_in_sha256": "ddc3d03c8f309b9b90c91e569a766da496f19077b83878ef388901c12656057b",
       "example": "67_LocalRealCompleteness.lit",
       "forbidden_hits": [],
-      "kernel_class": "pass",
-      "kernel_exit": 0,
-      "kernel_first_error": null,
+      "kernel_class": "kernel_reject",
+      "kernel_exit": 1,
+      "kernel_first_error": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/lean/examples/67_LocalRealCompleteness.lean:16:287: error: synthesized type class instance is not definitionally equal to expression inferred by typing rules, synthesized",
       "source_sha256": "fefdd2e3424caf6053b7448e5bef4b3e1f1a63a4632269f879539754139670e2"
     },
     {
@@ -636,20 +634,20 @@
       "checked_in_sha256": "939ad2aa8695b729cd56e2abfd8aabc37b39b7c0a1711a16692b44f7964ca377",
       "example": "68_LocalTransparentSetMembership.lit",
       "forbidden_hits": [],
-      "kernel_class": "pass",
-      "kernel_exit": 0,
-      "kernel_first_error": null,
+      "kernel_class": "kernel_reject",
+      "kernel_exit": 1,
+      "kernel_first_error": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/lean/examples/68_LocalTransparentSetMembership.lean:27:136: error: Application type mismatch: The argument",
       "source_sha256": "31c7fa3baf3182bd9a8caf25f3dfa2a1d35fd1991c2e6dbe4ce3757fbeb711ad"
     },
     {
       "checked_in_path": "lean/examples/69_RealCauchyFromCompleteness.lean",
-      "checked_in_sha256": "8009e777ce273a60e409c6956080bf63c8f84289e760257e4aaef84a31b5bb03",
+      "checked_in_sha256": "2704aaaf8df2a62c1801b1992b3b5cf59a9a66b072debdbf77563610605421b6",
       "example": "69_RealCauchyFromCompleteness.lit",
       "forbidden_hits": [],
       "kernel_class": "kernel_reject",
       "kernel_exit": 1,
-      "kernel_first_error": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/lean/examples/69_RealCauchyFromCompleteness.lean:24:329: error: Application type mismatch: The argument",
-      "source_sha256": "40ec083f681f7a7671ce68b839239c07b3ebe272f1eb1561891434084429b395"
+      "kernel_first_error": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/lean/examples/69_RealCauchyFromCompleteness.lean:106:234: error: synthesized type class instance is not definitionally equal to expression inferred by typing rules, synthesized",
+      "source_sha256": "816a221a21bea180863bc2a7758cbbd8264941b820986f45181d68953307561a"
     },
     {
       "checked_in_path": "lean/examples/6_FactReplay.lean",
@@ -659,16 +657,16 @@
       "kernel_class": "pass",
       "kernel_exit": 0,
       "kernel_first_error": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/lean/examples/6_FactReplay.lean:24:34: warning: this tactic is never executed",
-      "source_sha256": "a76b7c88cc2f0dfe7a9d78914ad964088330f15a5babeeb5a1db20fdced799c2"
+      "source_sha256": "199c270c7ff596ff85f6b334fb3377827081ecc7e64fd5904e5a4a1b7857ff20"
     },
     {
       "checked_in_path": "lean/examples/70_LocalRealGreatestLowerBound.lean",
-      "checked_in_sha256": "39947f2be7a95d61a5edb9d3555ea3e3eb8c2b891016685e0763b596e7b9bc3e",
+      "checked_in_sha256": "dfca5b9f0e778da90e33f8c1e1e474045cf5e4a182c0673234212c28784c1219",
       "example": "70_LocalRealGreatestLowerBound.lit",
       "forbidden_hits": [],
-      "kernel_class": "pass",
-      "kernel_exit": 0,
-      "kernel_first_error": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/lean/examples/70_LocalRealGreatestLowerBound.lean:49:82: warning: this tactic is never executed",
+      "kernel_class": "kernel_reject",
+      "kernel_exit": 1,
+      "kernel_first_error": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/lean/examples/70_LocalRealGreatestLowerBound.lean:16:287: error: synthesized type class instance is not definitionally equal to expression inferred by typing rules, synthesized",
       "source_sha256": "412c28b7ea377fd84a4c1d5d1d3f1b416a6d17eec47e0d801a711ca6ada64cc7"
     },
     {
@@ -679,17 +677,17 @@
       "kernel_class": "pass",
       "kernel_exit": 0,
       "kernel_first_error": null,
-      "source_sha256": "376fb13a120499ce27c6632f38d446f8a658651665ff843dc6d5b59b01a8318c"
+      "source_sha256": "52a34bbccf12f018e9b94f528e790209eb06623b0de79a287d74925dd62e78ad"
     },
     {
       "checked_in_path": "lean/examples/8_ProofScopes.lean",
       "checked_in_sha256": "6ca97171337ac7fab01e125f3f90492039d9f4c4986eacc2131b3cec185f4b83",
       "example": "8_ProofScopes.lit",
       "forbidden_hits": [],
-      "kernel_class": "pass",
-      "kernel_exit": 0,
-      "kernel_first_error": null,
-      "source_sha256": "cae23d1d9e5363498cf50d540b0f28d5ddf65f5fb3f0707494dfdd82a2661452"
+      "kernel_class": "kernel_reject",
+      "kernel_exit": 1,
+      "kernel_first_error": "/Users/shenjiachen/主要文件夹/GeekGems/litex/golitex/lean/examples/8_ProofScopes.lean:27:4: error: Type mismatch",
+      "source_sha256": "1e00a80734c764cea0a8ee803038c250489451530480ef2d9103cb5fd65fc3cb"
     },
     {
       "checked_in_path": "lean/examples/9_CasesAndContradiction.lean",
@@ -699,15 +697,15 @@
       "kernel_class": "pass",
       "kernel_exit": 0,
       "kernel_first_error": null,
-      "source_sha256": "bc5bc7d87df2da63d2a3a4042db187460825b6d480e02c3eab1d8798ea918873"
+      "source_sha256": "5df141786ae6dff8496dad46558fe01ab621d603ebf5689417a918dee2a7b5ef"
     }
   ],
   "schema_version": 1,
   "totals": {
     "forbidden_rows": 0,
     "infrastructure_failure": 0,
-    "kernel_reject": 2,
-    "pass": 67,
+    "kernel_reject": 24,
+    "pass": 45,
     "registered": 69
   }
 }

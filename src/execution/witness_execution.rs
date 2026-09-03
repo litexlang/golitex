@@ -151,7 +151,7 @@ impl Runtime {
             let witness_stmt: Stmt = stmt.clone().into();
             let verify_state = VerifyState::initial();
             let atomic_fact: AtomicFact = stmt.atomic_fact.clone().into();
-            rt.verify_atomic_fact_well_defined(&atomic_fact, &verify_state)
+            rt.verify_atomic_fact_well_defined_result(&atomic_fact, &verify_state)
                 .map_err(|cause| {
                     exec_stmt_error_with_stmt_and_cause(witness_stmt.clone(), cause)
                 })?;
@@ -201,7 +201,7 @@ impl Runtime {
                 ));
             }
 
-            if let Err(well_defined_error) = rt.verify_exist_fact_well_defined(
+            if let Err(well_defined_error) = rt.verify_exist_fact_well_defined_result(
                 &stmt.exist_fact_in_witness,
                 &verify_state_for_well_defined,
             ) {
@@ -214,7 +214,7 @@ impl Runtime {
             }
 
             for equal_to_obj in stmt.equal_tos.iter() {
-                if let Err(well_defined_error) = rt.verify_obj_well_defined_and_store_cache(
+                if let Err(well_defined_error) = rt.verify_obj_well_defined_result(
                     equal_to_obj,
                     &verify_state_for_well_defined,
                 ) {
@@ -539,8 +539,8 @@ impl Runtime {
             let witness_stmt: Stmt = stmt.clone().into();
             let verify_state_for_well_defined = VerifyState::initial();
 
-            if let Err(well_defined_error) = rt
-                .verify_obj_well_defined_and_store_cache(&stmt.obj, &verify_state_for_well_defined)
+            if let Err(well_defined_error) =
+                rt.verify_obj_well_defined_result(&stmt.obj, &verify_state_for_well_defined)
             {
                 return Err(short_exec_error(
                     witness_stmt,
@@ -550,8 +550,8 @@ impl Runtime {
                 ));
             }
 
-            if let Err(well_defined_error) = rt
-                .verify_obj_well_defined_and_store_cache(&stmt.set, &verify_state_for_well_defined)
+            if let Err(well_defined_error) =
+                rt.verify_obj_well_defined_result(&stmt.set, &verify_state_for_well_defined)
             {
                 return Err(short_exec_error(
                     witness_stmt.clone(),

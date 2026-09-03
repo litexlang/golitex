@@ -872,12 +872,12 @@ impl Runtime {
             _ => Vec::new(),
         };
         if !interval_candidates.is_empty() {
-            let interval_result = self.verify_builtin_rule_premise_alternatives(
+            let interval_result = self.try_verify_builtin_rule_premise_alternatives(
                 interval_candidates,
                 not_equal_fact.line_file.clone(),
                 builtin_state,
             )?;
-            if interval_result.is_success() {
+            if let Some(interval_result) = interval_result {
                 return Ok(Some(
                     SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         not_equal_fact.clone().into(),
@@ -898,8 +898,8 @@ impl Runtime {
             )
             .into();
             let reduced_result =
-                self.verify_atomic_fact_as_builtin_rule_premise(&reduced, builtin_state)?;
-            if reduced_result.is_success() {
+                self.try_verify_atomic_fact_as_builtin_rule_premise(&reduced, builtin_state)?;
+            if let Some(reduced_result) = reduced_result {
                 return Ok(Some(
                     SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         not_equal_fact.clone().into(),
@@ -920,11 +920,11 @@ impl Runtime {
         }
         let expanded: AtomicFact =
             NotEqualFact::new(left.obj, right.obj, not_equal_fact.line_file.clone()).into();
-        let expanded_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&expanded, builtin_state)?;
-        if !expanded_result.is_success() {
+        let Some(expanded_result) =
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&expanded, builtin_state)?
+        else {
             return Ok(None);
-        }
+        };
         Ok(Some(
             SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 not_equal_fact.clone().into(),

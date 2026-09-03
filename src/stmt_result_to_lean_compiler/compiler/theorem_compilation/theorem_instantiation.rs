@@ -2,6 +2,18 @@
 
 use super::super::*;
 
+struct TheoremApplicationParameterRendering {
+    source_symbol_id: SymbolId,
+    parameter_set: Obj,
+    source_argument: Obj,
+    target_value: String,
+    target_membership_proof: String,
+    native_integer_argument: Option<String>,
+    application_value: String,
+    application_membership_proof: Option<String>,
+    application_to_target_same: Option<String>,
+}
+
 impl StmtResultToLeanCompiler {
     /// `Combine`: instantiate one previously compiled Litex theorem by its
     /// exact source FactId, combine the ordered argument-membership proofs,
@@ -223,21 +235,56 @@ impl StmtResultToLeanCompiler {
             } else {
                 None
             };
-            application_parts.push(
-                native_integer_argument
-                    .clone()
-                    .unwrap_or_else(|| rendered_argument.clone()),
-            );
-            if !native_integer_parameter {
-                application_parts.push(format!("({parameter_proof})"));
+            let exact_object_parameter = forall_parameter_uses_exact_object_carrier(parameter_set);
+            let (application_value, application_membership_proof, application_to_target_same) =
+                if native_integer_parameter {
+                    (
+                        native_integer_argument
+                            .clone()
+                            .expect("native integer argument was constructed above"),
+                        None,
+                        None,
+                    )
+                } else if exact_object_parameter {
+                    let exact_argument = render_exact_predicate_argument(
+                        argument,
+                        parameter_set,
+                        &self.environment_stack,
+                    )?;
+                    let rendered_set = render_obj(parameter_set, &self.environment_stack)?;
+                    let exact_membership = format!("Litex.In.own {rendered_set} {exact_argument}");
+                    let exact_to_source = render_exact_predicate_argument_same_to_source(
+                        argument,
+                        parameter_set,
+                        &self.environment_stack,
+                    )?;
+                    (
+                        exact_argument,
+                        Some(exact_membership),
+                        Some(exact_to_source),
+                    )
+                } else {
+                    (
+                        rendered_argument.clone(),
+                        Some(parameter_proof.clone()),
+                        None,
+                    )
+                };
+            application_parts.push(application_value.clone());
+            if let Some(application_membership_proof) = &application_membership_proof {
+                application_parts.push(format!("({application_membership_proof})"));
             }
-            source_parameter_rendering_aliases.push((
-                source_parameters[parameter_index].0.id(),
-                parameter_set.clone(),
-                render_obj(argument, &self.environment_stack)?,
-                parameter_proof,
+            source_parameter_rendering_aliases.push(TheoremApplicationParameterRendering {
+                source_symbol_id: source_parameters[parameter_index].0.id(),
+                parameter_set: parameter_set.clone(),
+                source_argument: argument.clone(),
+                target_value: rendered_argument,
+                target_membership_proof: parameter_proof,
                 native_integer_argument,
-            ));
+                application_value,
+                application_membership_proof,
+                application_to_target_same,
+            });
         }
         let mut instantiator = Runtime::default();
         // Capture-avoiding substitution for existential conclusions consults
@@ -273,8 +320,7 @@ impl StmtResultToLeanCompiler {
             let factual_check = check
                 .verified()
                 .ok_or_else(|| format!("release-thm domain check {domain_index} is not factual"))?;
-            if factual_check.fact().to_string() != retained_domain.to_string()
-            {
+            if factual_check.fact().to_string() != retained_domain.to_string() {
                 return Err(format!(
                     "release-thm domain check {domain_index} changed its retained obligation"
                 ));
@@ -289,28 +335,41 @@ impl StmtResultToLeanCompiler {
         let theorem_application = format!("({})", application_parts.join(" "));
 
         let mut conclusion_rendering_context = self.environment_stack.clone();
-        for (
-            source_symbol_id,
-            parameter_set,
-            rendered_argument,
-            parameter_proof,
-            native_integer_argument,
-        ) in &source_parameter_rendering_aliases
-        {
+        for parameter in &source_parameter_rendering_aliases {
             conclusion_rendering_context
                 .symbol_names
-                .insert(*source_symbol_id, rendered_argument.clone());
-            let lowered_set = LeanTargetObjectRepresentation::lower(parameter_set)?;
-            install_numeric_representations_from_membership(
-                *source_symbol_id,
-                &lowered_set,
-                rendered_argument,
-                parameter_proof,
-                &mut conclusion_rendering_context,
-            );
-            if let Some(native_integer_argument) = native_integer_argument {
+                .insert(parameter.source_symbol_id, parameter.target_value.clone());
+            if let Ok(real) =
+                render_real_source_object(&parameter.source_argument, &self.environment_stack)
+            {
+                conclusion_rendering_context
+                    .numeric_real_values
+                    .insert(parameter.source_symbol_id, real);
+            }
+            if let Ok(integer) =
+                render_integer_obj(&parameter.source_argument, &self.environment_stack)
+            {
+                conclusion_rendering_context
+                    .numeric_integer_values
+                    .insert(parameter.source_symbol_id, integer);
+            }
+            if let Ok(rational) =
+                render_rational_obj(&parameter.source_argument, &self.environment_stack)
+            {
+                conclusion_rendering_context
+                    .numeric_rational_values
+                    .insert(parameter.source_symbol_id, rational);
+            }
+            if let Ok(numeric) =
+                render_numeric_obj(&parameter.source_argument, &self.environment_stack)
+            {
+                conclusion_rendering_context
+                    .numeric_representations
+                    .insert(parameter.source_symbol_id, numeric);
+            }
+            if let Some(native_integer_argument) = &parameter.native_integer_argument {
                 install_structured_induction_native_integer_symbol(
-                    *source_symbol_id,
+                    parameter.source_symbol_id,
                     native_integer_argument,
                     &mut conclusion_rendering_context,
                 );
@@ -323,9 +382,9 @@ impl StmtResultToLeanCompiler {
             .cloned()
         {
             for alias in &theorem_well_definedness.parameter_fact_aliases {
-                let Some((_, _, _, parameter_proof, _)) = source_parameter_rendering_aliases
+                let Some(parameter) = source_parameter_rendering_aliases
                     .iter()
-                    .find(|(source_symbol_id, _, _, _, _)| *source_symbol_id == alias.symbol_id)
+                    .find(|parameter| parameter.source_symbol_id == alias.symbol_id)
                 else {
                     // The theorem WD tree also owns aliases for binders local
                     // to a projected conclusion (for example an existential
@@ -336,12 +395,14 @@ impl StmtResultToLeanCompiler {
                 };
                 conclusion_rendering_context
                     .fact_names
-                    .insert(alias.fact_id, parameter_proof.clone());
+                    .insert(alias.fact_id, parameter.target_membership_proof.clone());
                 conclusion_rendering_context
                     .fact_propositions
                     .insert(alias.fact_id, alias.proposition.clone());
             }
-            for application in theorem_well_definedness.function_applications.values_mut() {
+            let projected_applications =
+                std::mem::take(&mut theorem_well_definedness.function_applications);
+            for (_, mut application) in projected_applications {
                 application.source_application = instantiator
                     .inst_obj(
                         &application.source_application,
@@ -415,8 +476,19 @@ impl StmtResultToLeanCompiler {
                             })?;
                     }
                 }
+                let object_key = obj_equality_key(&application.source_application);
+                if theorem_well_definedness
+                    .function_applications
+                    .insert(object_key.clone(), application)
+                    .is_some()
+                {
+                    return Err(format!(
+                        "release-thm projected two WD applications to `{object_key}`"
+                    ));
+                }
             }
-            for iteration in theorem_well_definedness.iterations.values_mut() {
+            let projected_iterations = std::mem::take(&mut theorem_well_definedness.iterations);
+            for (_, mut iteration) in projected_iterations {
                 iteration.source_aggregate = instantiator
                     .inst_obj(
                         &iteration.source_aggregate,
@@ -443,8 +515,88 @@ impl StmtResultToLeanCompiler {
                         SubstitutionMode::ResultProjection,
                     )
                     .map_err(|error| error.trace_message())?;
+                let object_key = obj_equality_key(&iteration.source_aggregate);
+                if theorem_well_definedness
+                    .iterations
+                    .insert(object_key.clone(), iteration)
+                    .is_some()
+                {
+                    return Err(format!(
+                        "release-thm projected two Iteration WD owners to `{object_key}`"
+                    ));
+                }
             }
             conclusion_rendering_context.well_definedness = Some(theorem_well_definedness);
+        }
+
+        let mut theorem_conclusion_context = conclusion_rendering_context.clone();
+        let mut application_to_target_bridges = Vec::new();
+        for parameter in &source_parameter_rendering_aliases {
+            theorem_conclusion_context.symbol_names.insert(
+                parameter.source_symbol_id,
+                parameter.application_value.clone(),
+            );
+            theorem_conclusion_context
+                .exact_carrier_values
+                .remove(&parameter.source_symbol_id);
+            theorem_conclusion_context
+                .numeric_real_values
+                .remove(&parameter.source_symbol_id);
+            theorem_conclusion_context
+                .numeric_integer_values
+                .remove(&parameter.source_symbol_id);
+            theorem_conclusion_context
+                .numeric_rational_values
+                .remove(&parameter.source_symbol_id);
+            theorem_conclusion_context
+                .numeric_representations
+                .remove(&parameter.source_symbol_id);
+            theorem_conclusion_context
+                .numeric_representation_equalities
+                .remove(&parameter.source_symbol_id);
+            theorem_conclusion_context
+                .numeric_representation_memberships
+                .remove(&parameter.source_symbol_id);
+            if let Some(application_membership_proof) = &parameter.application_membership_proof {
+                if parameter.application_to_target_same.is_some() {
+                    install_exact_predicate_carrier_value(
+                        parameter.source_symbol_id,
+                        &parameter.parameter_set,
+                        &parameter.application_value,
+                        &mut theorem_conclusion_context,
+                    )?;
+                } else {
+                    let lowered_set =
+                        LeanTargetObjectRepresentation::lower(&parameter.parameter_set)?;
+                    install_numeric_representations_from_membership(
+                        parameter.source_symbol_id,
+                        &lowered_set,
+                        &parameter.application_value,
+                        application_membership_proof,
+                        &mut theorem_conclusion_context,
+                    );
+                }
+            }
+            if let Some(bridge) = &parameter.application_to_target_same {
+                application_to_target_bridges.push((parameter.source_symbol_id, bridge.clone()));
+            }
+            if let Some(well_definedness) = &theorem_conclusion_context.well_definedness {
+                let aliases = well_definedness
+                    .parameter_fact_aliases
+                    .iter()
+                    .filter(|alias| alias.symbol_id == parameter.source_symbol_id)
+                    .map(|alias| alias.fact_id)
+                    .collect::<Vec<_>>();
+                for fact_id in aliases {
+                    if let Some(application_membership_proof) =
+                        &parameter.application_membership_proof
+                    {
+                        theorem_conclusion_context
+                            .fact_names
+                            .insert(fact_id, application_membership_proof.clone());
+                    }
+                }
+            }
         }
 
         let mut conclusions = Vec::with_capacity(verification.direct_conclusions.len());
@@ -459,12 +611,7 @@ impl StmtResultToLeanCompiler {
                 conclusion_index,
                 verification.direct_conclusions.len(),
             )?;
-            // Instantiating an implicit-host theorem with an argument that
-            // already inhabits the exact set carrier leaves `In.rep` in the
-            // theorem's result.  The projected Litex conclusion renders the
-            // same closed argument directly, so discharge only that proved
-            // exact-carrier bridge at this consumer boundary.
-            let proof = format!(
+            let direct_proof = format!(
                 "(by\n  have __projected_conclusion := {projected_proof}\n  try rw [Litex.In.rep_exact] at __projected_conclusion\n  exact __projected_conclusion)"
             );
             let source_conclusion = source_forall.then_facts[conclusion_index].clone().to_fact();
@@ -487,6 +634,26 @@ impl StmtResultToLeanCompiler {
                 ));
             }
             let proposition = render_fact(&projected_conclusion, &conclusion_rendering_context)?;
+            let theorem_target = render_fact(&source_conclusion, &theorem_conclusion_context)?;
+            let projected_through_source_parameters =
+                render_fact(&source_conclusion, &conclusion_rendering_context)?;
+            if projected_through_source_parameters != proposition {
+                return Err(format!(
+                    "release-thm conclusion {conclusion_index} target aliases changed `{proposition}` to `{projected_through_source_parameters}`"
+                ));
+            }
+            let proof = if theorem_target == proposition {
+                direct_proof
+            } else {
+                render_fact_proof_across_exact_predicate_arguments_with_source_bridges(
+                    &source_conclusion,
+                    &source_conclusion,
+                    &theorem_conclusion_context,
+                    &conclusion_rendering_context,
+                    &direct_proof,
+                    &application_to_target_bridges,
+                )?
+            };
             conclusions.push(CompiledTheoremApplicationConclusionProofBody {
                 retained_fact_id: *fact_id,
                 fact: conclusion.clone(),

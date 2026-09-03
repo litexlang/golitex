@@ -64,8 +64,9 @@ impl Runtime {
 
         let mut result = SuccessInferResult::new();
         let conclusion_infers = self
-            .store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
+            .store_without_well_defined_verification_and_infer_with_reason_and_state(
                 inferred_forall_fact.clone(),
+                InferReason::StoredFact,
                 inference_state,
             )
             .map_err(|previous_error| {
@@ -122,8 +123,9 @@ impl Runtime {
 
         let mut result = SuccessInferResult::new();
         let conclusion_infers = self
-            .store_with_well_defined_verification_and_infer_with_default_verify_state_and_state(
+            .store_without_well_defined_verification_and_infer_with_reason_and_state(
                 inferred_forall_fact.clone(),
+                InferReason::StoredFact,
                 inference_state,
             )
             .map_err(|previous_error| {

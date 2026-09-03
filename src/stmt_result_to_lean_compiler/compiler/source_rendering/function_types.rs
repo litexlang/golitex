@@ -131,16 +131,19 @@ pub(in super::super) fn render_function_requirement(
         return Err("total function has no source-domain requirement".into());
     }
     let mut nested = context.clone();
-    nested
-        .symbol_names
-        .insert(function.parameters[0].symbol_id, "__arg".into());
+    let domain =
+        render_lean_source_for_target_set_representation(&function.parameters[0].set, &nested)?;
+    nested.symbol_names.insert(
+        function.parameters[0].symbol_id,
+        "(Litex.In.rep __arg __arg_in)".into(),
+    );
     let requirements = function
         .domain_facts
         .iter()
         .map(|fact| render_fact(fact, &nested))
         .collect::<Result<Vec<_>, _>>()?;
     Ok(format!(
-        "(fun {{__alpha}} (__arg : __alpha) => {})",
+        "(fun {{__alpha}} (__arg : __alpha) (__arg_in : Litex.In __arg {domain}) => {})",
         conjunction(&requirements)
     ))
 }

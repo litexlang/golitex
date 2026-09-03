@@ -18,7 +18,7 @@ impl Runtime {
         stmt: &ByContraStmt,
     ) -> Result<(), RuntimeError> {
         let to_prove_fact = stmt.to_prove.clone();
-        self.verify_fact_well_defined(&to_prove_fact, &VerifyState::initial())
+        self.verify_fact_well_defined_result(&to_prove_fact, &VerifyState::initial())
             .map_err(|verify_error| {
                 short_exec_error(
                     stmt.clone().into(),
@@ -27,6 +27,7 @@ impl Runtime {
                     vec![],
                 )
             })
+            .map(|_| ())
     }
 
     fn exec_by_contra_stmt_verify_process(
@@ -34,14 +35,8 @@ impl Runtime {
         stmt: &ByContraStmt,
     ) -> Result<StmtResult, RuntimeError> {
         let to_prove_fact = stmt.to_prove.clone();
-        let (
-            proof_steps,
-            last_error,
-            reverse_assumption_fact_id,
-            proof_scope,
-            contradiction,
-        ) = self
-            .run_in_local_env(|rt| {
+        let (proof_steps, last_error, reverse_assumption_fact_id, proof_scope, contradiction) =
+            self.run_in_local_env(|rt| {
                 let (proof_steps, last_error, fact_id, assumption_infers, contradiction) =
                     rt.exec_by_contra_stmt_in_local_proof_scope(stmt, &to_prove_fact)?;
                 Ok::<_, RuntimeError>((
@@ -64,13 +59,13 @@ impl Runtime {
 
         let negated_assumption = logical_negation_for_by_contra(&stmt.to_prove)?;
         let contradiction = contradiction.ok_or_else(|| {
-                short_exec_error(
-                    stmt.clone().into(),
-                    "by contra: expected exactly two contradiction checks".to_string(),
-                    None,
-                    Vec::new(),
-                )
-            })?;
+            short_exec_error(
+                stmt.clone().into(),
+                "by contra: expected exactly two contradiction checks".to_string(),
+                None,
+                Vec::new(),
+            )
+        })?;
         let by_verification = SuccessVerifyByContraResult::new(
             stmt.to_prove.clone(),
             negated_assumption,

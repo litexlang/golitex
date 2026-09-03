@@ -1,0 +1,16 @@
+# Tracer: litex.config is an explicit, ordered module-selection list.
+#
+# Before: an unlisted direct .lit file or directory made discovery fail before
+# any exported source could run.
+#
+# Now: only entries declared under [export] enter discovery and execution.
+have explicit_export_selection_witness R = 1
+
+try:
+    unlisted_sidecar::unlisted_sidecar_value = 2
+
+# Boundary: selecting an unexported file with project-aware -f remains an
+# error; explicit isolated execution is a separate contract.
+#
+# Evidence: this configured example retains unlisted_sidecar.lit and probes its
+# absent namespace inside try; it also retains an unlisted notes/ directory.

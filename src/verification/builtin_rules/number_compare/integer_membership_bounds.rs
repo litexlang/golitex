@@ -37,8 +37,9 @@ impl Runtime {
             _ => return Ok(None),
         };
         let in_n: AtomicFact = InFact::new(n, StandardSet::N.into(), line_file.clone()).into();
-        let in_n_result = self.verify_atomic_fact_as_builtin_rule_premise(&in_n, builtin_state)?;
-        if in_n_result.is_success() {
+        let in_n_result =
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&in_n, builtin_state)?;
+        if let Some(in_n_result) = in_n_result {
             return Ok(Some(ProveFactResult::from(
                 SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     atomic_fact.clone().into(),
@@ -89,8 +90,8 @@ impl Runtime {
         let in_n_pos: AtomicFact =
             InFact::new(n, StandardSet::NPos.into(), line_file.clone()).into();
         let in_n_pos_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&in_n_pos, builtin_state)?;
-        if in_n_pos_result.is_success() {
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&in_n_pos, builtin_state)?;
+        if let Some(in_n_pos_result) = in_n_pos_result {
             return Ok(Some(ProveFactResult::from(
                 SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     atomic_fact.clone().into(),
@@ -144,8 +145,8 @@ impl Runtime {
             InFact::new(n.clone(), StandardSet::N.into(), line_file.clone()).into();
         let nonzero: AtomicFact = NotEqualFact::new(n.clone(), zero_obj, line_file.clone()).into();
         let mut in_n_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&in_n, builtin_state)?;
-        if !in_n_result.is_success() {
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&in_n, builtin_state)?;
+        if in_n_result.is_none() {
             if let Obj::FiniteSetSize(finite_set_size) = &n {
                 let in_n_fact = InFact::new(n.clone(), StandardSet::N.into(), line_file.clone());
                 let proof = self.verify_finite_set_size_in_standard_number_set(
@@ -153,16 +154,16 @@ impl Runtime {
                     finite_set_size,
                     builtin_state,
                 )?;
-                in_n_result = self.complete_atomic_fact_proof_result(
+                in_n_result = Some(self.complete_atomic_fact_proof_result(
                     &in_n,
                     proof,
                     builtin_state.verify_state(),
-                )?;
+                )?);
             }
         }
-        if !in_n_result.is_success() {
+        let Some(in_n_result) = in_n_result else {
             return Ok(None);
-        }
+        };
         let nonzero_result =
             self.verify_non_equational_atomic_fact_with_known_atomic_facts(&nonzero)?;
         if !nonzero_result.is_success() {
@@ -222,15 +223,16 @@ impl Runtime {
         let in_z: AtomicFact =
             InFact::new(n.clone(), StandardSet::Z.into(), line_file.clone()).into();
         let positive: AtomicFact = LessFact::new(zero_obj, n, line_file.clone()).into();
-        let in_z_result = self.verify_atomic_fact_as_builtin_rule_premise(&in_z, builtin_state)?;
-        if !in_z_result.is_success() {
+        let Some(in_z_result) =
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&in_z, builtin_state)?
+        else {
             return Ok(None);
-        }
-        let positive_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&positive, builtin_state)?;
-        if !positive_result.is_success() {
+        };
+        let Some(positive_result) =
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&positive, builtin_state)?
+        else {
             return Ok(None);
-        }
+        };
         Ok(Some(ProveFactResult::from(
             SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),

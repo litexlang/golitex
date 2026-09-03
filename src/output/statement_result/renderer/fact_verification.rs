@@ -80,8 +80,8 @@ impl StatementResultRenderer {
                     JsonValue::Bool(result.verification.application_is_left),
                 ),
                 (
-                    "reduced_matches_other_by_alpha".to_string(),
-                    JsonValue::Bool(result.verification.reduced_matches_other_by_alpha),
+                    "reduced_equality".to_string(),
+                    self.verify_fact_result(&result.verification.reduced_equality),
                 ),
             ]),
             SuccessFactProofResult::DiagnosticOnly(result) => object(vec![
@@ -160,6 +160,7 @@ impl StatementResultRenderer {
                                         "result".to_string(),
                                         self.verify_fact_result(&proved.result),
                                     ),
+                                    ("store".to_string(), success_store_fact_value(&proved.store)),
                                 ])
                             })
                             .collect(),

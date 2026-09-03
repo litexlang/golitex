@@ -37,11 +37,11 @@ impl Runtime {
         };
         if let Some(z) = candidate {
             let complex_abs: Obj = ComplexAbs::new(z.clone()).into();
-            let known_zero = self.verify_known_equality_fact(
+            let known_zero = self.try_verify_known_equality_fact_candidate(
                 &EqualFact::new_from_refs(&complex_abs, &zero, line_file.clone()),
                 builtin_state.verify_state(),
             )?;
-            if known_zero.is_success() {
+            if let Some(known_zero) = known_zero {
                 let Some(mut steps) =
                     self.verify_objects_are_known_complex(&[z], &line_file, builtin_state)?
                 else {
@@ -95,20 +95,20 @@ impl Runtime {
         let right_re: Obj = RealPart::new(right.clone()).into();
         let left_img: Obj = ImaginaryPart::new(left.clone()).into();
         let right_img: Obj = ImaginaryPart::new(right.clone()).into();
-        let re_result = self.verify_known_equality_fact(
+        let Some(re_result) = self.try_verify_known_equality_fact_candidate(
             &EqualFact::new_from_refs(&left_re, &right_re, line_file.clone()),
             builtin_state.verify_state(),
-        )?;
-        if !re_result.is_success() {
+        )?
+        else {
             return Ok(None);
-        }
-        let img_result = self.verify_known_equality_fact(
+        };
+        let Some(img_result) = self.try_verify_known_equality_fact_candidate(
             &EqualFact::new_from_refs(&left_img, &right_img, line_file.clone()),
             builtin_state.verify_state(),
-        )?;
-        if !img_result.is_success() {
+        )?
+        else {
             return Ok(None);
-        }
+        };
         steps.push(re_result);
         steps.push(img_result);
         Ok(Some(complex_equality_result_with_steps(
@@ -183,8 +183,8 @@ impl Runtime {
                 )
                 .into();
                 let result =
-                    self.verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
-                if result.is_success() {
+                    self.try_verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
+                if let Some(result) = result {
                     return Ok(Some(complex_order_result(
                         atomic_fact,
                         "complex modulus is positive for a nonzero argument",
@@ -215,10 +215,11 @@ impl Runtime {
             not_equal_fact.line_file.clone(),
         )
         .into();
-        let result = self.verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
-        if !result.is_success() {
+        let Some(result) =
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?
+        else {
             return Ok(None);
-        }
+        };
         Ok(Some(
             SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 not_equal_fact.clone().into(),
@@ -427,11 +428,13 @@ impl Runtime {
                     line_file.clone(),
                 )
                 .into();
-                let exponent_result =
-                    self.verify_atomic_fact_as_builtin_rule_premise(&exponent_in_n, builtin_state)?;
-                if !exponent_result.is_success() {
+                let Some(exponent_result) = self.try_verify_atomic_fact_as_builtin_rule_premise(
+                    &exponent_in_n,
+                    builtin_state,
+                )?
+                else {
                     return Ok(None);
-                }
+                };
                 steps.push(exponent_result);
                 return Ok(Some((
                     format!("{coordinate}: coordinate recurrence for complex natural powers"),
@@ -481,13 +484,13 @@ impl Runtime {
                     line_file.clone(),
                 )
                 .into();
-                let nonzero_result = self.verify_atomic_fact_as_builtin_rule_premise(
+                let Some(nonzero_result) = self.try_verify_atomic_fact_as_builtin_rule_premise(
                     &denominator_nonzero,
                     builtin_state,
-                )?;
-                if !nonzero_result.is_success() {
+                )?
+                else {
                     return Ok(None);
-                }
+                };
                 steps.push(nonzero_result);
                 return Ok(Some((
                     format!("{coordinate}: coordinate of complex quotient"),
@@ -563,11 +566,11 @@ impl Runtime {
 
         if obj_is_literal_zero(expected) {
             let zero: Obj = Number::new("0".to_string()).into();
-            let arg_zero = self.verify_known_equality_fact(
+            let arg_zero = self.try_verify_known_equality_fact_candidate(
                 &EqualFact::new_from_refs(arg, &zero, line_file.clone()),
                 builtin_state.verify_state(),
             )?;
-            if arg_zero.is_success() {
+            if let Some(arg_zero) = arg_zero {
                 return Ok(Some((
                     "complex modulus is zero when its argument is zero".to_string(),
                     vec![arg_zero],

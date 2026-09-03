@@ -78,11 +78,30 @@ impl StmtResultToLeanCompiler {
         result: &VerifiedFactResult,
         object: &Obj,
     ) -> Result<String, String> {
-        let certificate =
-            self.construct_well_definedness_to_lean_compilation_context(&result.checked)?;
+        let certificate = self
+            .construct_well_definedness_to_lean_compilation_context(&result.checked)
+            .map_err(|error| {
+                format!("constructing fact-WD context before rendering `{object}`: {error}")
+            })?;
         let previous_well_definedness =
             self.environment_stack.well_definedness.replace(certificate);
-        let rendered = render_obj(object, &self.environment_stack);
+        let (anonymous_count, iteration_count, application_count) = self
+            .environment_stack
+            .well_definedness
+            .as_ref()
+            .map(|context| {
+                (
+                    context.anonymous_functions.len(),
+                    context.iterations.len(),
+                    context.function_applications.len(),
+                )
+            })
+            .expect("fact WD certificate was just installed");
+        let rendered = render_obj(object, &self.environment_stack).map_err(|error| {
+            format!(
+                "rendering `{object}` under fact-WD context (anonymous={anonymous_count}, iterations={iteration_count}, applications={application_count}): {error}"
+            )
+        });
         self.environment_stack.well_definedness = previous_well_definedness;
         rendered
     }

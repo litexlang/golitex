@@ -104,11 +104,11 @@ impl Runtime {
         };
         let base_neq_zero: AtomicFact = NotEqualFact::new(base, zero_obj, line_file.clone()).into();
 
-        let neq_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&base_neq_zero, builtin_state)?;
-        if !neq_result.is_success() {
+        let Some(neq_result) =
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&base_neq_zero, builtin_state)?
+        else {
             return Ok(None);
-        }
+        };
         steps.push(neq_result);
 
         Ok(Some(ProveFactResult::from(
@@ -144,11 +144,11 @@ impl Runtime {
         let zero = &less_fact.left;
         let line_file = &less_fact.line_file;
         let base = pow_obj.base.as_ref();
-        let base_result =
-            self.verify_zero_order_on_sub_expr(zero, base, false, false, line_file, builtin_state)?;
-        if !base_result.is_success() {
+        let Some(base_result) =
+            self.verify_zero_order_on_sub_expr(zero, base, false, line_file, builtin_state)?
+        else {
             return Ok(None);
-        }
+        };
         let Some(mut exponent_steps) = self.verify_objects_are_known_reals_in_builtin(
             &[pow_obj.exponent.as_ref()],
             line_file,
@@ -193,11 +193,11 @@ impl Runtime {
         let zero = &less_equal_fact.left;
         let line_file = &less_equal_fact.line_file;
         let base = pow_obj.base.as_ref();
-        let base_result =
-            self.verify_zero_order_on_sub_expr(zero, base, false, true, line_file, builtin_state)?;
-        if !base_result.is_success() {
+        let Some(base_result) =
+            self.verify_zero_order_on_sub_expr(zero, base, false, line_file, builtin_state)?
+        else {
             return Ok(None);
-        }
+        };
         let Some(mut exponent_steps) = self.verify_objects_are_known_reals_in_builtin(
             &[pow_obj.exponent.as_ref()],
             line_file,
@@ -243,22 +243,22 @@ impl Runtime {
         let zero = &less_equal_fact.left;
         let line_file = &less_equal_fact.line_file;
         let base = pow_obj.base.as_ref();
-        let base_result =
-            self.verify_zero_order_on_sub_expr(zero, base, true, true, line_file, builtin_state)?;
-        if !base_result.is_success() {
+        let Some(base_result) =
+            self.verify_zero_order_on_sub_expr(zero, base, true, line_file, builtin_state)?
+        else {
             return Ok(None);
-        }
+        };
         let in_n_pos: AtomicFact = InFact::new(
             (*pow_obj.exponent).clone(),
             StandardSet::NPos.into(),
             line_file.clone(),
         )
         .into();
-        let in_n_pos_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&in_n_pos, builtin_state)?;
-        if !in_n_pos_result.is_success() {
+        let Some(in_n_pos_result) =
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&in_n_pos, builtin_state)?
+        else {
             return Ok(None);
-        }
+        };
         Ok(Some(ProveFactResult::from(
             SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
@@ -299,20 +299,16 @@ impl Runtime {
 
         let exponent_vs_zero = compare_normalized_number_str_to_zero(&exp_num.normalized_value);
         let base_result = match exponent_vs_zero {
-            NumberCompareResult::Less => self.verify_zero_order_on_sub_expr(
-                zero,
-                base,
-                false,
-                true,
-                line_file,
-                builtin_state,
-            )?,
-            NumberCompareResult::Equal | NumberCompareResult::Greater => self
-                .verify_zero_order_on_sub_expr(zero, base, true, true, line_file, builtin_state)?,
+            NumberCompareResult::Less => {
+                self.verify_zero_order_on_sub_expr(zero, base, false, line_file, builtin_state)?
+            }
+            NumberCompareResult::Equal | NumberCompareResult::Greater => {
+                self.verify_zero_order_on_sub_expr(zero, base, true, line_file, builtin_state)?
+            }
         };
-        if !base_result.is_success() {
+        let Some(base_result) = base_result else {
             return Ok(None);
-        }
+        };
 
         let msg = match exponent_vs_zero {
             NumberCompareResult::Less => "0 <= a^n from 0 < a and integer n < 0".to_string(),

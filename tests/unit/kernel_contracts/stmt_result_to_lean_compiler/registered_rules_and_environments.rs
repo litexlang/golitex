@@ -85,7 +85,9 @@ fn typed_set_rule_compiles_directly_from_its_recursive_certificate() {
         }
         let generated = compiler
             .construct_lean_proof_from_direct_fact_result(
-                result.verification().expect("verified statement owns evidence"),
+                result
+                    .verification()
+                    .expect("verified statement owns evidence"),
             )
             .expect("compile typed set rule directly")
             .expect("typed set rule must have a direct consumer");
@@ -155,9 +157,7 @@ fn common_arithmetic_sign_rule_combines_its_child_results_directly() {
             .compile_stmt_result(objects)
             .expect("compile real object choice");
         for (index, child) in builtin.subgoals.iter().enumerate() {
-            let child = child
-                .verified()
-                .expect("arithmetic premise is factual");
+            let child = child.verified().expect("arithmetic premise is factual");
             let SuccessFactProofResult::StoredFactCitation(citation) = child.proof() else {
                 panic!("arithmetic premise must cite an exact source fact")
             };
@@ -173,7 +173,9 @@ fn common_arithmetic_sign_rule_combines_its_child_results_directly() {
         }
         let proof = compiler
             .construct_lean_proof_from_direct_fact_result(
-                result.verification().expect("verified statement owns evidence"),
+                result
+                    .verification()
+                    .expect("verified statement owns evidence"),
             )
             .expect("compile arithmetic sign proof")
             .expect("arithmetic sign proof must not use compatibility IR");
@@ -250,8 +252,8 @@ fn registered_componentwise_order_addition_compiles_directly_from_result_childre
                 .expect("compile registered componentwise order addition directly");
         assert!(
             generated.contains("Litex.Rules.complexAddPreservesLessEqualComponentwise")
-                && generated.contains("convert __domain1 using 1")
-                && generated.contains("convert __domain2 using 1"),
+                && generated.contains("(__domain_f")
+                && !generated.contains("convert __domain"),
             "{generated}"
         );
     });
@@ -392,8 +394,8 @@ fn typed_componentwise_order_subtraction_replays_exact_ordered_children() {
                 .expect("compile registered componentwise order subtraction directly");
         assert!(
             generated.contains("Litex.Rules.complexSubPreservesLessOfLessEqualAndLess")
-                && generated.contains("convert __domain1 using 1")
-                && generated.contains("convert __domain2 using 1"),
+                && generated.contains("(__domain_f")
+                && !generated.contains("convert __domain"),
             "{generated}"
         );
     });
@@ -445,10 +447,7 @@ fn registered_subtraction_sign_and_greater_to_greater_equal_compile_directly() {
             "{generated}"
         );
         assert!(generated.contains("Litex.Lt.toLe"), "{generated}");
-        assert!(
-            generated.contains("convert __domain1 using 1"),
-            "{generated}"
-        );
+        assert!(!generated.contains("convert __domain"), "{generated}");
     });
 }
 
@@ -664,12 +663,9 @@ fn strategy_definition_compiles_from_recursive_well_definedness_and_local_proof_
                 .compile_stmt_results_to_lean_source(&results)
                 .expect("compile strategy Result through a child compiler environment");
         assert!(generated.contains("theorem prove_reflexive"), "{generated}");
+        assert!(generated.contains("intro x __h"), "{generated}");
         assert!(
-            generated.contains("intro __carrier0_1 x __h"),
-            "{generated}"
-        );
-        assert!(
-            generated.contains("have __step2 : reflexive (Litex.In.rep x __h"),
+            generated.contains("have __step") && generated.contains(": reflexive (x : ℝ)"),
             "{generated}"
         );
         assert!(generated.contains("Litex.In.own Litex.R"), "{generated}");
@@ -746,12 +742,9 @@ fn symbolic_order_reflexivity_compiles_inside_the_result_owned_binder_environmen
             StmtResultToLeanCompiler::new("direct_order_reflexivity_compiler_environment.lit")
                 .compile_stmt_results_to_lean_source(&results)
                 .expect("compile symbolic reflexivity from its typed Result evidence");
+        assert!(generated.contains("intro x __h"), "{generated}");
         assert!(
-            generated.contains("intro __carrier0_1 x __h"),
-            "{generated}"
-        );
-        assert!(
-            generated.contains("Litex.Le.refl (((Litex.In.rep x __h"),
+            generated.contains("Litex.Le.refl (((x : ℝ)) : ℂ)"),
             "{generated}"
         );
     });
@@ -918,16 +911,10 @@ fn all_predicate_property_registrations_compile_in_result_owned_forall_environme
             generated.contains("theorem __litex_registered_antisymmetric_same_set_"),
             "{generated}"
         );
+        assert!(generated.contains(": same_set x y)"), "{generated}");
+        assert!(generated.contains(": same_set y z)"), "{generated}");
         assert!(
-            generated.contains("(__domain1 : same_set x y)"),
-            "{generated}"
-        );
-        assert!(
-            generated.contains("(__domain2 : same_set y z)"),
-            "{generated}"
-        );
-        assert!(
-            generated.contains("have __definition := __domain1"),
+            generated.contains("have __definition := __domain_f"),
             "{generated}"
         );
     });
@@ -1070,13 +1057,11 @@ fn predicate_property_registration_rejects_a_missing_local_domain_fact_id() {
             .verification
             .as_mut()
             .expect("symmetric registration retains verification");
-        verification.assumption_infers.store_fact_outputs[2].fact_id = None;
         let forall_check = verification
             .forall_check
             .verified_mut()
             .expect("registration forall check is factual");
-        let SuccessFactProofResult::ForallProof(forall_proof) = forall_check.proof_mut()
-        else {
+        let SuccessFactProofResult::ForallProof(forall_proof) = forall_check.proof_mut() else {
             panic!("registration retains its verify_forall_fact layer")
         };
         forall_proof.assumption_infers.store_fact_outputs[2].fact_id = None;
@@ -1135,14 +1120,6 @@ fn registered_reflexive_predicate_use_rejects_a_changed_predicate_name() {
             "{error}"
         );
     });
-}
-
-fn clear_embedded_property_rule_child_effects(result: &mut StmtResult) {
-    let result = result
-        .factual_success_mut()
-        .expect("embedded property-rule child is factual");
-    result.store.fact_id = None;
-    result.store.infers = SuccessInferResult::new();
 }
 
 fn replace_embedded_property_rule_child_with_exact_fact_citation(
@@ -1300,7 +1277,9 @@ fn registered_symmetric_predicate_use_compiles_its_exact_child_in_the_visible_en
         assert!(
             focused_compiler
                 .construct_lean_proof_from_direct_fact_result(
-                    target.verification().expect("verified statement owns evidence"),
+                    target
+                        .verification()
+                        .expect("verified statement owns evidence"),
                 )
                 .expect("construct the focused registered-symmetry proof")
                 .is_some(),

@@ -245,7 +245,7 @@ impl StmtResultToLeanCompiler {
         let (witness, representation) =
             render_list_set_representation_bridge(&selected_term, evidence.selected_index);
         Ok(Some(format!(
-            "⟨{witness}, Litex.Same.trans ({equality_proof}) ({representation})⟩"
+            "⟨{witness}, Litex.Same.transNoObservation (Litex.Same.withoutObservation ({equality_proof})) ({representation})⟩"
         )))
     }
 
@@ -280,9 +280,7 @@ impl StmtResultToLeanCompiler {
             ("nonzero", nonzero_result, expected_nonzero),
         ] {
             if result.fact().to_string() != expected.to_string() {
-                return Err(format!(
-                    "refined numeric {name} child changed its fact"
-                ));
+                return Err(format!("refined numeric {name} child changed its fact"));
             }
         }
 
@@ -852,7 +850,7 @@ impl StmtResultToLeanCompiler {
         )))
     }
 
-    /// `Leaf`: the verifier has checked that this exact source occurrence is
+    /// `Leaf`: the verifier has checked that this exact semantic source is
     /// an inclusive unary `Z`-indexed sum with exact return carrier `Z`.
     pub(super) fn construct_lean_integer_range_sum_membership_from_result(
         &self,
@@ -866,17 +864,15 @@ impl StmtResultToLeanCompiler {
         if !matches!(target_set, Obj::StandardSet(StandardSet::Z)) {
             return Err("integer-range sum membership target is not Z".into());
         }
-        let Obj::Sum(sum) = target_element else {
+        let Obj::Sum(_) = target_element else {
             return Err("integer-range sum membership changed its target aggregate".into());
         };
-        let occurrence_id = sum.source_occurrence_id.ok_or_else(|| {
-            "integer-range sum membership has no parser-owned occurrence id".to_string()
-        })?;
+        let object_key = obj_equality_key(target_element);
         let iteration = self
             .environment_stack
             .well_definedness
             .as_ref()
-            .and_then(|context| context.iterations.get(&occurrence_id))
+            .and_then(|context| context.iterations.get(&object_key))
             .ok_or_else(|| {
                 "integer-range sum membership has no exact Iteration WD Result".to_string()
             })?;

@@ -83,31 +83,23 @@ impl StmtResultToLeanCompiler {
                 proof_lines.extend(lines);
             }
 
-            let membership_check =
-                verification
-                    .nonempty_check
-                    .verified()
-                    .ok_or_else(|| {
-                        "nonempty-set witness retained a non-factual final check".to_string()
-                    })?;
+            let membership_check = verification.nonempty_check.verified().ok_or_else(|| {
+                "nonempty-set witness retained a non-factual final check".to_string()
+            })?;
             let expected_membership: Fact = InFact::new(
                 result.statement.obj.clone(),
                 result.statement.set.clone(),
                 result.statement.line_file.clone(),
             )
             .into();
-            if membership_check.fact().to_string() != expected_membership.to_string()
-            {
+            if membership_check.fact().to_string() != expected_membership.to_string() {
                 // Function-set witnesses use a different retained check: the
                 // return set's nonemptiness. That route remains an explicit
                 // later compiler family rather than being guessed here.
                 if matches!(result.statement.set, Obj::FnSet(_)) {
                     return Ok(None);
                 }
-                return Err(
-                    "nonempty-set witness changed its final membership check"
-                        .into(),
-                );
+                return Err("nonempty-set witness changed its final membership check".into());
             }
             let Some(membership_compilation) = self
                 .construct_direct_fact_proof_with_result_owned_well_definedness(membership_check)?
@@ -279,7 +271,6 @@ impl StmtResultToLeanCompiler {
 
         let source_set = parameter_set(&group.param_type)?;
         let witness_object = &witness_objects[0];
-        self.install_existential_witness_anonymous_function_occurrence_aliases(existential)?;
         let rendered_witness = render_obj(witness_object, &self.environment_stack)?;
         let proposition = if project_unique_to_existence {
             render_unique_existential_as_plain_existence(existential, &self.environment_stack)?
@@ -369,11 +360,9 @@ impl StmtResultToLeanCompiler {
             };
             let parameter_proof = parameter_compilation.proof_expression;
 
-            let body_check = verification.body_checks[0]
-                .verified()
-                .ok_or_else(|| {
-                    "existential witness body check is not a successful fact Result".to_string()
-                })?;
+            let body_check = verification.body_checks[0].verified().ok_or_else(|| {
+                "existential witness body check is not a successful fact Result".to_string()
+            })?;
             let substitutions = existential
                 .typed_parameters()
                 .param_defs_and_args_to_param_to_arg_map(witness_objects);
@@ -558,89 +547,6 @@ impl StmtResultToLeanCompiler {
         })();
         self.environment_stack.pop_local_environment();
         compilation
-    }
-
-    /// A witness target can repeat an anonymous function from its enclosing
-    /// theorem goal under a fresh parser occurrence. Reuse is permitted only
-    /// when the complete alpha-normalized function object selects exactly one
-    /// Result-owned WD certificate; rendering then uses that certificate's
-    /// original binder identities.
-    fn install_existential_witness_anonymous_function_occurrence_aliases(
-        &mut self,
-        existential: &ExistFactEnum,
-    ) -> Result<(), String> {
-        fn collect_from_object(
-            object: &Obj,
-            functions: &mut Vec<(SourceObjectOccurrenceId, String)>,
-        ) {
-            if let Obj::AnonymousFn(function) = object {
-                if let Some(occurrence_id) = function.source_occurrence_id {
-                    functions.push((occurrence_id, obj_equality_key(object)));
-                }
-            }
-            if let Obj::FnObj(application) = object {
-                let head: Obj = application.head.as_ref().clone().into();
-                collect_from_object(&head, functions);
-            }
-            let _: Result<bool, ()> = Runtime::same_shape_and_corresponding_args_match(
-                object,
-                object,
-                &mut |child, _| {
-                    collect_from_object(child, functions);
-                    Ok(true)
-                },
-            );
-        }
-
-        let mut functions = Vec::new();
-        for argument in existential.get_args_from_fact_ref() {
-            collect_from_object(argument, &mut functions);
-        }
-        functions.sort_by_key(|(occurrence_id, _)| occurrence_id.value());
-        functions.dedup_by_key(|(occurrence_id, _)| occurrence_id.value());
-        if functions.is_empty() {
-            return Ok(());
-        }
-
-        let context = self
-            .environment_stack
-            .well_definedness
-            .as_mut()
-            .ok_or_else(|| {
-                "existential witness anonymous function has no active theorem WD Result".to_string()
-            })?;
-        for (source_occurrence, semantic_key) in functions {
-            if context.anonymous_functions.contains_key(&source_occurrence) {
-                continue;
-            }
-            let owners = context
-                .anonymous_functions
-                .iter()
-                .filter_map(|(owner_occurrence, certificate)| {
-                    (obj_equality_key(&certificate.source_function) == semantic_key)
-                        .then_some(*owner_occurrence)
-                })
-                .collect::<Vec<_>>();
-            let [owner_occurrence] = owners.as_slice() else {
-                return Err(format!(
-                    "existential witness anonymous function occurrence {} has {} alpha-equivalent theorem-WD owners",
-                    source_occurrence.value(),
-                    owners.len()
-                ));
-            };
-            if let Some(previous) = context
-                .anonymous_function_occurrence_aliases
-                .insert(source_occurrence, *owner_occurrence)
-            {
-                if previous != *owner_occurrence {
-                    return Err(format!(
-                        "existential witness anonymous function occurrence {} changed its WD owner",
-                        source_occurrence.value()
-                    ));
-                }
-            }
-        }
-        Ok(())
     }
 
     /// `Combine`: prove the instantiated existential from its ordinary child
@@ -1456,9 +1362,7 @@ impl StmtResultToLeanCompiler {
             let source_result = verification
                 .source_result
                 .fact()
-                .ok_or_else(|| {
-                    "existential elimination source is not a fact check".to_string()
-                })?
+                .ok_or_else(|| "existential elimination source is not a fact check".to_string())?
                 .verified()
                 .ok_or_else(|| {
                     "existential elimination source is not a successful fact Result".to_string()
@@ -2043,7 +1947,6 @@ impl StmtResultToLeanCompiler {
             );
         }
 
-        self.install_structured_integer_induction_iteration_occurrence_aliases(verification)?;
         self.validate_structured_integer_induction_generated_forall(verification)?;
         let target: Fact = verification.generated_forall.clone().into();
         let expected_start_membership: Fact = InFact::new(
@@ -2056,10 +1959,7 @@ impl StmtResultToLeanCompiler {
             "structured induction start membership child is not factual".to_string()
         })?;
         if start_membership_check.fact().to_string() != expected_start_membership.to_string() {
-            return Err(
-                "structured induction start membership child changed its target"
-                    .into(),
-            );
+            return Err("structured induction start membership child changed its target".into());
         }
         let Some(_start_membership_proof) = self
             .construct_lean_proof_from_direct_fact_result_using_its_well_definedness(
@@ -2097,8 +1997,14 @@ impl StmtResultToLeanCompiler {
             return Ok(None);
         };
 
+        let mut generated_forall_context = self.environment_stack.clone();
+        install_verified_structured_induction_binder_aliases(
+            verification,
+            "__p1",
+            &mut generated_forall_context,
+        )?;
         let proposition =
-            render_forall_fact_type(&verification.generated_forall, &self.environment_stack)?;
+            render_forall_fact_type(&verification.generated_forall, &generated_forall_context)?;
         let proof_expression = format!(
             "by\n  intro __target_value __domain1\n  have __target_ge_start_real : (({start_integer}) : ℝ) ≤ (__target_value : ℝ) := by\n    simpa [Litex.Le, Litex.OrderValue] using __domain1\n  have __target_ge_start : {start_integer} ≤ __target_value := by\n    exact_mod_cast __target_ge_start_real\n  exact Litex.Rules.integerInductionFrom (motive := fun __induction_value : ℤ => {motive}) ({base}) ({step}) __target_value __target_ge_start"
         );
@@ -2135,9 +2041,19 @@ impl StmtResultToLeanCompiler {
             "__induction_shape",
             &mut retained_context,
         );
+        install_structured_induction_shape_symbol(
+            verification.parameter_binding.id(),
+            "__induction_shape",
+            &mut retained_context,
+        );
         let mut source_context = self.environment_stack.clone();
         install_structured_induction_shape_symbol(
             verification.parameter_binding.id(),
+            "__induction_shape",
+            &mut source_context,
+        );
+        install_structured_induction_shape_symbol(
+            generated_binding.id(),
             "__induction_shape",
             &mut source_context,
         );
@@ -2175,114 +2091,17 @@ impl StmtResultToLeanCompiler {
         Ok(())
     }
 
-    fn install_structured_integer_induction_iteration_occurrence_aliases(
-        &mut self,
-        verification: &SuccessVerifyByInducResult,
-    ) -> Result<(), String> {
-        fn collect_from_object(
-            object: &Obj,
-            aggregates: &mut Vec<(SourceObjectOccurrenceId, String)>,
-        ) {
-            if let Obj::Sum(sum) = object {
-                if let Some(occurrence_id) = sum.source_occurrence_id {
-                    aggregates.push((occurrence_id, obj_equality_key(object)));
-                }
-            }
-            let _: Result<bool, ()> = Runtime::same_shape_and_corresponding_args_match(
-                object,
-                object,
-                &mut |child, _| {
-                    collect_from_object(child, aggregates);
-                    Ok(true)
-                },
-            );
-        }
-
-        fn collect_from_fact(
-            fact: &Fact,
-            aggregates: &mut Vec<(SourceObjectOccurrenceId, String)>,
-        ) -> Result<(), String> {
-            let arguments = match fact {
-                Fact::AtomicFact(fact) => fact.get_args_from_fact_ref(),
-                Fact::ExistFact(fact) => fact.get_args_from_fact_ref(),
-                Fact::OrFact(fact) => fact.get_args_from_fact_ref(),
-                Fact::AndFact(fact) => fact.get_args_from_fact_ref(),
-                Fact::ChainFact(fact) => fact.get_args_from_fact_ref(),
-                Fact::ForallFact(_) | Fact::ForallFactWithIff(_) | Fact::NotForall(_) => {
-                    return Err(
-                        "structured induction iteration aliasing does not accept a quantified goal"
-                            .into(),
-                    );
-                }
-            };
-            for argument in arguments {
-                collect_from_object(argument, aggregates);
-            }
-            Ok(())
-        }
-
-        let mut aggregates = Vec::new();
-        for goal in &verification.prove_goals {
-            collect_from_fact(goal, &mut aggregates)?;
-        }
-        aggregates.sort_by_key(|(occurrence_id, _)| occurrence_id.value());
-        aggregates.dedup_by_key(|(occurrence_id, _)| occurrence_id.value());
-        if aggregates.is_empty() {
-            return Ok(());
-        }
-
-        let context = self
-            .environment_stack
-            .well_definedness
-            .as_mut()
-            .ok_or_else(|| {
-                "structured induction aggregate goal has no active theorem WD Result".to_string()
-            })?;
-        for (source_occurrence_id, semantic_key) in aggregates {
-            if context.iterations.contains_key(&source_occurrence_id) {
-                continue;
-            }
-            let matching_owners = context
-                .iterations
-                .iter()
-                .filter_map(|(owner_id, iteration)| {
-                    (obj_equality_key(&iteration.source_aggregate) == semantic_key)
-                        .then_some(*owner_id)
-                })
-                .collect::<Vec<_>>();
-            let [owner_occurrence_id] = matching_owners.as_slice() else {
-                return Err(format!(
-                    "structured induction sum occurrence {} has {} exact theorem-WD owners",
-                    source_occurrence_id.value(),
-                    matching_owners.len()
-                ));
-            };
-            if let Some(previous) = context
-                .iteration_occurrence_aliases
-                .insert(source_occurrence_id, *owner_occurrence_id)
-            {
-                if previous != *owner_occurrence_id {
-                    return Err(format!(
-                        "structured induction sum occurrence {} changed its WD owner",
-                        source_occurrence_id.value()
-                    ));
-                }
-            }
-        }
-        Ok(())
-    }
-
     pub(super) fn render_structured_integer_induction_motive(
         &self,
         verification: &SuccessVerifyByInducResult,
         native_integer_name: &str,
     ) -> Result<String, String> {
         let mut context = self.environment_stack.clone();
-        install_structured_induction_native_integer_symbol(
-            verification.parameter_binding.id(),
+        install_verified_structured_induction_binder_aliases(
+            verification,
             native_integer_name,
             &mut context,
-        );
+        )?;
         let goals = verification
             .prove_goals
             .iter()
@@ -2363,11 +2182,11 @@ impl StmtResultToLeanCompiler {
 
         self.environment_stack.push_inherited_environment();
         let compilation = (|| {
-            install_structured_induction_native_integer_symbol(
-                verification.parameter_binding.id(),
+            install_verified_structured_induction_binder_aliases(
+                verification,
                 start_integer,
                 &mut self.environment_stack,
-            );
+            )?;
             let parameter_proof = format!("Litex.In.own Litex.Z ({start_integer})");
             self.environment_stack
                 .fact_names
@@ -2480,11 +2299,11 @@ impl StmtResultToLeanCompiler {
 
         self.environment_stack.push_inherited_environment();
         let compilation = (|| {
-            install_structured_induction_native_integer_symbol(
-                verification.parameter_binding.id(),
+            install_verified_structured_induction_binder_aliases(
+                verification,
                 "__induction_value",
                 &mut self.environment_stack,
-            );
+            )?;
             self.environment_stack.fact_names.insert(
                 parameter_assumption.fact_id,
                 "Litex.In.own Litex.Z __induction_value".into(),
@@ -2756,7 +2575,6 @@ impl StmtResultToLeanCompiler {
                 statement.line_file.clone(),
             )
             .into();
-            let proposition = render_fact(&target, &self.environment_stack)?;
             let carrier_intro = if forall_parameter_uses_implicit_host_carrier(parameter_type) {
                 "__carrier1 "
             } else {
@@ -2773,6 +2591,7 @@ impl StmtResultToLeanCompiler {
             if resolved_list_set.list.is_empty() {
                 proof_lines.push("  rcases __type1 with ⟨__member, _⟩".into());
                 proof_lines.push("  exact PEmpty.elim __member".into());
+                let proposition = render_fact(&target, &self.environment_stack)?;
                 return Ok(Some(CompiledFactProofBody {
                     fact: target,
                     proposition,
@@ -2806,6 +2625,17 @@ impl StmtResultToLeanCompiler {
                 )
                 .into()
             };
+            let target_is_exactly_the_generated_alternatives = source_forall.then_facts.len() == 1
+                && source_forall.then_facts[0].clone().to_fact().to_string()
+                    == assignment_alternatives.to_string();
+            let proposition = if target_is_exactly_the_generated_alternatives {
+                render_forall_fact_type_with_no_observation_equality_conclusions(
+                    source_forall,
+                    &self.environment_stack,
+                )?
+            } else {
+                render_fact(&target, &self.environment_stack)?
+            };
             let alternatives_proof = render_list_set_membership_elimination_from_fact_and_proof(
                 &assignment_alternatives,
                 &parameter_membership,
@@ -2814,7 +2644,10 @@ impl StmtResultToLeanCompiler {
             )?;
             proof_lines.push(format!(
                 "  have __assignment_cases : {} := {alternatives_proof}",
-                render_fact(&assignment_alternatives, &self.environment_stack)?
+                render_no_observation_equality_alternatives_fact(
+                    &assignment_alternatives,
+                    &self.environment_stack,
+                )?
             ));
             if assignment_equalities.len() == 1 {
                 proof_lines.push("  have __assignment1 := __assignment_cases".into());
@@ -2900,6 +2733,13 @@ impl StmtResultToLeanCompiler {
             retained_assumption.fact_id,
             retained_assumption.fact.clone(),
         );
+        let retained_assumption_proposition = render_no_observation_equality_alternatives_fact(
+            &retained_assumption.fact,
+            &self.environment_stack,
+        )?;
+        self.environment_stack
+            .fact_lean_propositions
+            .insert(retained_assumption.fact_id, retained_assumption_proposition);
         let mut local_lines = Vec::new();
         self.compile_typed_inference_results_as_local_have_statements(
             &retained_assumption.infers,
@@ -3231,7 +3071,12 @@ impl StmtResultToLeanCompiler {
             ));
             let rendered_assignment_equalities = assignment_equalities
                 .iter()
-                .map(|equality| render_fact(equality, &self.environment_stack))
+                .map(|equality| {
+                    render_no_observation_equality_alternatives_fact(
+                        equality,
+                        &self.environment_stack,
+                    )
+                })
                 .collect::<Result<Vec<_>, _>>()?;
             proof_lines.push(format!(
                 "  have __assignment_cases : {} := by",
@@ -3270,7 +3115,7 @@ impl StmtResultToLeanCompiler {
                     format!("__range_value_case{}", value_index + 1)
                 };
                 let equality_proof = format!(
-                    "Litex.Same.trans ({range_numeric_same}) (Litex.Same.ofEq (by exact_mod_cast {case_name}))"
+                    "Litex.Same.transNoObservation ({range_numeric_same}) (Litex.Same.ofEqNoObservation (by exact_mod_cast {case_name}))"
                 );
                 let case_with_assignment = format!("⟨{case_name}, {equality_proof}⟩");
                 let injected = right_associated_disjunction_injection(
@@ -3410,6 +3255,17 @@ impl StmtResultToLeanCompiler {
             self.environment_stack
                 .fact_propositions
                 .insert(assumption.fact_id, assumption.fact.clone());
+            let assumption_lean_proposition = if assumption_index == 1 {
+                render_no_observation_equality_alternatives_fact(
+                    &assumption.fact,
+                    &self.environment_stack,
+                )?
+            } else {
+                render_fact(&assumption.fact, &self.environment_stack)?
+            };
+            self.environment_stack
+                .fact_lean_propositions
+                .insert(assumption.fact_id, assumption_lean_proposition);
             if assumption_index == 0 {
                 let numeric_equality = self
                     .environment_stack
@@ -3770,7 +3626,7 @@ impl StmtResultToLeanCompiler {
             let rendered_operand = render_obj(source_right, &self.environment_stack)?;
             let normalized_value = &right.value.normalized_value;
             return Ok(format!(
-                "(by\n  exact (Litex.{predicate}.congr (Litex.Same.ofEq (by norm_num [{rewrites}] : {rendered_operand} = ((({normalized_value} : ℝ)) : ℂ)))).mpr (Litex.OrderBridge.{theorem} (r := ({normalized_value} : ℝ)) (by norm_num)))"
+                "(by\n  exact (Litex.{predicate}.congr (Litex.Same.ofEqNoObservation (by norm_num [{rewrites}] : {rendered_operand} = ((({normalized_value} : ℝ)) : ℂ)))).mpr (Litex.OrderBridge.{theorem} (r := ({normalized_value} : ℝ)) (by norm_num)))"
             ));
         }
         Ok(format!(

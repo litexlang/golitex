@@ -3,48 +3,63 @@
 use super::super::*;
 
 pub(in super::super) fn render_aggregate_object(
-    source_occurrence_id: Option<SourceObjectOccurrenceId>,
-    semantic_key: &str,
+    source: &LeanTargetSourceObject,
     kind: LeanTargetAggregateObjectConstructor,
     arguments: &[LeanTargetObjectRepresentation],
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
     if kind == LeanTargetAggregateObjectConstructor::Sum {
-        let occurrence_id = source_occurrence_id.ok_or_else(|| {
-            "integer range sum has no parser-owned source occurrence id".to_string()
-        })?;
         let well_definedness = context
             .well_definedness
             .as_ref()
             .ok_or_else(|| "integer range sum has no active Result-owned WD context".to_string())?;
-        let owner_occurrence_id = well_definedness
-            .iteration_occurrence_aliases
-            .get(&occurrence_id)
-            .copied()
-            .unwrap_or(occurrence_id);
-        let iteration = well_definedness
-            .iterations
-            .get(&owner_occurrence_id)
-            .ok_or_else(|| {
+        let iteration = if let Some(exact) = well_definedness.iterations.get(&source.semantic_key) {
+            exact
+        } else {
+            let mut matching = Vec::new();
+            for candidate in well_definedness.iterations.values() {
+                if matches_directly_or_after_one_transparent_definition_pass(
+                    &candidate.source_aggregate,
+                    &source.object,
+                    context,
+                )? {
+                    matching.push(candidate);
+                }
+            }
+            let [matching] = matching.as_slice() else {
                 let available = well_definedness
                     .iterations
-                    .iter()
-                    .map(|(id, iteration)| {
-                        format!("{}:{}", id.value(), obj_equality_key(&iteration.source_aggregate))
-                    })
+                    .values()
+                    .map(|candidate| candidate.source_aggregate.to_string())
                     .collect::<Vec<_>>()
                     .join(", ");
-                format!(
-                    "sum occurrence {} has no exact Iteration WD Result; available Iteration owners: [{}]",
-                    occurrence_id.value(),
-                    available,
-                )
-            })?;
-        let Obj::Sum(source_sum) = &iteration.source_aggregate else {
+                let mut visible_symbol_aliases = context
+                    .symbol_names
+                    .iter()
+                    .map(|(symbol_id, name)| format!("{symbol_id:?} -> {name}"))
+                    .collect::<Vec<_>>();
+                visible_symbol_aliases.sort();
+                return Err(format!(
+                    "sum `{}` has {} matching Iteration WD Results; available owners: [{available}]; visible symbol aliases: [{}]",
+                    source.object,
+                    matching.len(),
+                    visible_symbol_aliases.join(", ")
+                ));
+            };
+            *matching
+        };
+        let Obj::Sum(_) = &iteration.source_aggregate else {
             return Err("sum occurrence selected a non-sum Iteration WD owner".into());
         };
-        if owner_occurrence_id == occurrence_id
-            && obj_equality_key(&iteration.source_aggregate) != semantic_key
+        let Obj::Sum(current_sum) = &source.object else {
+            return Err("sum representation retained a non-sum semantic source".into());
+        };
+        if obj_equality_key(&iteration.source_aggregate) != source.semantic_key
+            && !matches_directly_or_after_one_transparent_definition_pass(
+                &iteration.source_aggregate,
+                &source.object,
+                context,
+            )?
         {
             return Err("sum occurrence changed its semantic key after WD selection".into());
         }
@@ -64,26 +79,15 @@ pub(in super::super) fn render_aggregate_object(
         let [start, end, function] = arguments else {
             return Err("sum aggregate changed its exact source arity".into());
         };
-        let is_explicit_occurrence_alias = owner_occurrence_id != occurrence_id;
-        if !is_explicit_occurrence_alias
-            && (LeanTargetObjectRepresentation::lower(source_sum.start.as_ref())? != *start
-                || LeanTargetObjectRepresentation::lower(source_sum.end.as_ref())? != *end
-                || LeanTargetObjectRepresentation::lower(source_sum.func.as_ref())? != *function)
+        if LeanTargetObjectRepresentation::lower(current_sum.start.as_ref())? != *start
+            || LeanTargetObjectRepresentation::lower(current_sum.end.as_ref())? != *end
+            || LeanTargetObjectRepresentation::lower(current_sum.func.as_ref())? != *function
         {
             return Err("sum Iteration WD Result changed its ordered source arguments".into());
         }
         let (rendered_function, _) = render_exact_unary_integer_function(function, context)?;
-        let (rendered_start, rendered_end) = if is_explicit_occurrence_alias {
-            (
-                render_integer_target_object_representation(start, context)?,
-                render_integer_target_object_representation(end, context)?,
-            )
-        } else {
-            (
-                render_integer_obj(source_sum.start.as_ref(), context)?,
-                render_integer_obj(source_sum.end.as_ref(), context)?,
-            )
-        };
+        let rendered_start = render_integer_obj(current_sum.start.as_ref(), context)?;
+        let rendered_end = render_integer_obj(current_sum.end.as_ref(), context)?;
         return Ok(format!(
             "(Litex.sum {} {} {})",
             rendered_start, rendered_end, rendered_function,

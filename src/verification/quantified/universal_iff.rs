@@ -4,7 +4,7 @@ use crate::prelude::*;
 use std::result::Result;
 
 impl Runtime {
-    pub(crate) fn prove_forall_fact_with_iff(
+    pub(in crate::verification) fn prove_forall_fact_with_iff(
         &mut self,
         forall_iff: &ForallFactWithIff,
         verify_state: &VerifyState,

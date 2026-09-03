@@ -8,8 +8,7 @@ use std::rc::Rc;
 struct ProofSearchScopeState {
     parent: Option<usize>,
     atomic_fact_proofs: HashMap<FactString, Rc<SuccessFactProofNode>>,
-    well_defined_object_proofs:
-        HashMap<ObjString, Rc<SuccessVerifyDirectObjWellDefinedResult>>,
+    well_defined_object_proofs: HashMap<ObjString, Rc<SuccessVerifyDirectObjWellDefinedResult>>,
     active_well_defined_objects: HashSet<ObjString>,
     active_set_builder_membership_unfolds: HashSet<FactString>,
     active_set_builder_forall_transport: bool,
@@ -72,9 +71,7 @@ impl ProofSearchState {
     }
 
     pub(super) fn end_well_defined_object(&mut self, scope: usize, key: &ObjString) {
-        self.for_each_scope_in_chain_mut(scope, |state| {
-            state.active_well_defined_objects.remove(key);
-        });
+        self.scopes[scope].active_well_defined_objects.remove(key);
     }
 
     pub(super) fn has_active_set_builder_membership_unfold(&self, scope: usize) -> bool {
@@ -100,9 +97,9 @@ impl ProofSearchState {
     }
 
     pub(super) fn end_set_builder_membership_unfold(&mut self, scope: usize, key: &FactString) {
-        self.for_each_scope_in_chain_mut(scope, |state| {
-            state.active_set_builder_membership_unfolds.remove(key);
-        });
+        self.scopes[scope]
+            .active_set_builder_membership_unfolds
+            .remove(key);
     }
 
     pub(super) fn set_builder_forall_transport_is_active(&self, scope: usize) -> bool {
@@ -114,9 +111,7 @@ impl ProofSearchState {
             self.scopes[scope].active_set_builder_forall_transport = true;
             return;
         }
-        self.for_each_scope_in_chain_mut(scope, |state| {
-            state.active_set_builder_forall_transport = false;
-        });
+        self.scopes[scope].active_set_builder_forall_transport = false;
     }
 
     pub(super) fn atomic_fact_proof(
@@ -168,18 +163,5 @@ impl ProofSearchState {
             current = state.parent;
         }
         None
-    }
-
-    fn for_each_scope_in_chain_mut(
-        &mut self,
-        scope: usize,
-        mut visit: impl FnMut(&mut ProofSearchScopeState),
-    ) {
-        let mut current = Some(scope);
-        while let Some(index) = current {
-            let parent = self.scopes[index].parent;
-            visit(&mut self.scopes[index]);
-            current = parent;
-        }
     }
 }

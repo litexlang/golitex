@@ -265,6 +265,27 @@ pub(in super::super) fn validate_conjunction_component_inference_target(
     Ok(())
 }
 
+pub(in super::super) fn validate_chain_component_inference_target(
+    rule: &ChainImpliesComponentInferRule,
+    source: &Fact,
+    target: &Fact,
+) -> Result<(), String> {
+    let Fact::ChainFact(source) = source else {
+        return Err("chain-component inference retained a non-chain premise".into());
+    };
+    let components = source.facts().map_err(|error| {
+        format!("chain-component inference retained an invalid chain: {error:?}")
+    })?;
+    if rule.component_count != components.len() || rule.component_index >= rule.component_count {
+        return Err("chain-component inference changed its component bounds".into());
+    }
+    let expected: Fact = components[rule.component_index].clone().into();
+    if expected.to_string() != target.to_string() {
+        return Err("chain-component inference changed its selected component".into());
+    }
+    Ok(())
+}
+
 pub(in super::super) fn validate_standard_numeric_membership_inference_target(
     rule: &InferRule,
     source: &Fact,

@@ -56,8 +56,11 @@ impl StmtResultToLeanCompiler {
         // application occurrence belonging to a different proof step.
         let child_certificate =
             self.construct_well_definedness_to_lean_compilation_context(&verified.checked)?;
-        let parent_certificate =
-            Some(self.environment_stack.well_definedness.replace(child_certificate));
+        let parent_certificate = Some(
+            self.environment_stack
+                .well_definedness
+                .replace(child_certificate),
+        );
         let compiled = (|| {
             install_fact_well_definedness_proof_store_results_in_active_environment(
                 verified.checked.proof.as_ref(),
@@ -70,8 +73,8 @@ impl StmtResultToLeanCompiler {
             // the same native `=` certificate here as it does at top level;
             // later sibling steps may cite this exact FactId for an order
             // rewrite.  Construct and retain it while the child-owned WD
-            // occurrence map is still active, so function applications and
-            // exact numeric representatives render in the source occurrence
+            // certificate is still active, so function applications and
+            // exact numeric representatives render from the semantic objects
             // that the verifier actually checked.
             if let Some(native_equality) =
                 self.construct_lean_native_equality_proof_from_direct_fact_result(verified)?
@@ -104,10 +107,10 @@ impl StmtResultToLeanCompiler {
             "have {name} : {proposition} := by\n  exact {proof}"
         )];
         if !result.store.infers.is_empty() {
-            // Inferred conclusions belong to the same source occurrence tree
-            // as the proved chain. Re-enter that exact child-owned WD frame;
-            // rendering them under the enclosing theorem frame could select
-            // no occurrence, or a semantically equal occurrence from another
+            // Inferred conclusions belong to the same source WD tree as the
+            // proved chain. Re-enter that exact child-owned WD frame;
+            // rendering them under the enclosing theorem frame could lack the
+            // required certificate or select a certificate from another
             // proof step.
             let inference_certificate =
                 self.construct_well_definedness_to_lean_compilation_context(&verified.checked)?;

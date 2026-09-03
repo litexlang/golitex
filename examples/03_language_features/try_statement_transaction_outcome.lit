@@ -18,4 +18,4 @@ candidate = 2
 
 # Boundary: malformed source that cannot be parsed into a TryStmt remains a
 # source error. Ordinary non-try execution errors also remain source errors.
-# Evidence: target/release/litex -isolated -graph -f examples/03_language_features/try_statement_transaction_outcome.lit
+# Evidence: the result-graph integration gate checks this published example.

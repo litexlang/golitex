@@ -4,6 +4,62 @@ use crate::prelude::*;
 use std::fmt;
 use std::rc::Rc;
 
+/// The callable contract selected while checking a function application.
+/// Stored membership facts are the canonical contract identity. A structural
+/// fallback is retained for kernel-owned callables that have no ordinary
+/// membership fact, such as an anonymous function literal.
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+pub enum WellDefinedFunctionContract {
+    StoredMembershipFact(FactId),
+    Structural(ObjString),
+}
+
+/// Exact construction position at which a parent object consumes one direct
+/// child object. Roles are ordered and may repeat the same semantic object.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum WellDefinedObjChildRole {
+    FunctionPrefix {
+        through_layer_index: usize,
+    },
+    FunctionHead,
+    FunctionArgument {
+        layer_index: usize,
+        argument_index: usize,
+    },
+    BuiltinArgument {
+        argument_index: usize,
+    },
+    ConstructorArgument {
+        argument_index: usize,
+    },
+    BinderParameterCarrier {
+        parameter_group_index: usize,
+    },
+    BinderReturnCarrier,
+    BinderBody,
+    /// A nested object check performed while proving the parent well-defined,
+    /// but not consumed as a value slot by the parent's target constructor.
+    VerificationDependency {
+        dependency_index: usize,
+    },
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum WellDefinedBinderPremiseRole {
+    ParameterMembership {
+        parameter_group_index: usize,
+        parameter_index: usize,
+    },
+    Domain {
+        domain_index: usize,
+    },
+    /// One source-ordered predicate in a set builder. Later predicates may
+    /// rely on this fact while their own well-definedness is checked.
+    LocalCondition {
+        condition_index: usize,
+    },
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum WellDefinednessRequirementRole {
     BuiltinArgumentMembership {
@@ -32,8 +88,8 @@ pub enum WellDefinednessRequirementRole {
 }
 
 /// Successful output of checking one object for well-definedness.
-/// Direct checks own their recursively returned children; cache hits retain
-/// the current source occurrence and cite the exact earlier proof node.
+/// Direct checks own their recursively returned children; reuse edges retain
+/// the current semantic object and cite the exact earlier proof node.
 #[derive(Debug)]
 pub enum SuccessVerifyObjWellDefinedResult {
     Direct(Rc<SuccessVerifyDirectObjWellDefinedResult>),

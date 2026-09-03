@@ -427,15 +427,16 @@ spelling, but the reviewed v1-supported sources must still reach Lean and pass
 the Lean kernel.
 
 A subsequent state-ownership cleanup did refine the physical Runtime boundary
-without changing those execution semantics. `Environment` now exposes six
+without changing those execution semantics. `Environment` now exposes five
 direct owners for declarations, facts, object knowledge, predicate properties,
-verification caches, and strategies; it no longer hides its world behind a
+and persistent inference-firing deduplication; it no longer hides its world behind a
 one-field repository wrapper. Its Fact database is FactId-first: complete facts
 are stored by `FactId`, while display, nested-binder, and alpha-normalized
 strings are lookup aliases. Memo proofs and recursive proof-search guards live
 instead in the explicit `VerifyState` passed through verification. Its child
 scope reads parent memos but never publishes child memos back to the parent;
-none of that transient state is merged into the mathematical world.
+none of that transient state is merged into the mathematical world. Returned
+WD and truth proof nodes are never stored in `Environment`.
 
 The canonical execution boundary is:
 
@@ -520,7 +521,7 @@ diagnostic text.
 [`source_compilation.rs`](source_compilation.rs) intentionally executes the whole source, keeps the
 ordered `Vec<StmtResult>`, drops the execution `Runtime`, and only then creates
 `StmtResultToLeanCompiler`. Consequently the compiler cannot read facts,
-definitions, WD caches, or names back out of the execution environment. If a
+definitions, the process-local WD memo, or names back out of execution state. If a
 piece of evidence is absent from Result, compilation fails closed.
 
 The public entry point has the same explicit input/output name:
@@ -1372,8 +1373,6 @@ SuccessByReflexivePropStmtResult
   verification: SuccessVerifyByPropRegistrationResult
     well_definedness
       recursive forall binder, premises, and conclusions
-    assumption_infers
-      parameter/domain stores with frozen local FactIds
     proof_steps
       ordered statement Results executed in that binder
     forall_check
@@ -1385,9 +1384,10 @@ SuccessByReflexivePropStmtResult
 ```
 
 The field is called `forall_check`, not `conclusion_check`, because it owns the
-whole recursive `verify_forall_fact` output. The compiler validates that its
-nested assumptions and conclusions agree with the registration wrapper,
-pushes an inherited environment, compiles those children, and pops it. It then
+whole recursive `verify_forall_fact` output, including its parameter/domain
+stores. The compiler validates the assumptions and conclusions owned by that
+single recursive Result, pushes an inherited environment, compiles those
+children, and pops it. It then
 publishes a `RegisteredPredicatePropertyTheoremBinding` only in the current
 outer compiler environment. Later typed builtin evidence cites the predicate
 name and resolves this target-side binding; it does not search Runtime facts
@@ -1860,7 +1860,7 @@ instead has one of five composition responsibilities:
 | `Wrap` | Retain one exact child and add one semantic transformation layer. | `SuccessTransformFactResult` wraps the previously proved source fact and the selected rewrite rule. |
 | `Combine` | Retain several named or ordered child results. | `exec_fact` combines well-definedness, proof verification, store, and inference. |
 | `PassThrough` | Return the exact child unchanged. | A dispatcher that only selects a fact family does not invent a proof layer. |
-| `Reuse` | Cite an earlier shared proof node. | Statement memoization and object-WD caches return an `Rc` source instead of cloning or flattening it. |
+| `Reuse` | Cite an earlier shared proof node. | Fact-proof and object-WD process memos return an `Rc` source instead of cloning or flattening it. |
 
 This classification follows semantic work, not function names or call-stack
 depth. A helper that only dispatches is `PassThrough`; a helper that proves a
@@ -1896,8 +1896,9 @@ defining equality, and `FactId` used by the pass.
 The compiler validates that evidence against its visible `let` declarations,
 replays the same one-pass substitution, unfolds exactly those recorded names,
 and applies the recursively compiled source proof with `exact`. It also
-permits the reduced application to reuse the original parser occurrence's
-Result-owned WD context; this is occurrence provenance, not a second WD proof.
+permits the reduced application to use the active Result-owned certificate
+for the same semantic object when the recorded one-pass definition reduction
+validates that relationship; this is proof-DAG reuse, not a second WD proof.
 Arbitrary `have a = b` facts never enter the compiler's
 transparent-definition map, and replacement objects are not recursively
 unfolded during the pass.
@@ -1984,8 +1985,7 @@ compiler lookup. The structures are defined in
 An object WD result is either:
 
 - `Direct`, which owns the constructor-specific child checks;
-- `Reuse`, which cites the exact earlier `Rc` proof node; or
-- `RecursiveReference`, which records reviewed recursive re-entry.
+- `Reuse`, which cites the exact earlier `Rc` proof node.
 
 A direct result owns named collections such as child objects, fact checks,
 target requirements, stores, and an optional binder result. Binder scope is
@@ -2338,8 +2338,8 @@ hypothesis.
 Each ordered conclusion proof reads the matching
 `SuccessVerifyForallFactWellDefinedResult::conclusions[index]` child while the
 same binder environment is active. Multi-layer function calls can therefore
-follow parent-owned `FunctionPrefix` edges such as `g(a)(b) -> g(a)` without
-inventing a parser occurrence ID for the verifier-generated prefix. The local
+follow parent-owned `FunctionPrefix` edges such as `g(a)(b) -> g(a)` using the
+prefix object's semantic key and exact certificate. The local
 conclusion FactIds disappear when the environment is popped, but the compiler
 retains their typed projection bindings to the emitted outer Lean theorem. A
 forall statement may intentionally have no outer `FactId`; in that case the

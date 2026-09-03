@@ -77,11 +77,15 @@ impl StatementResultRenderer {
                             ),
                             (
                                 "measure_integer_check".to_string(),
-                                self.verify_fact_result(&verification.measure.measure_integer_check),
+                                self.verify_fact_result(
+                                    &verification.measure.measure_integer_check,
+                                ),
                             ),
                             (
                                 "lower_bound_integer_check".to_string(),
-                                self.verify_fact_result(&verification.measure.lower_bound_integer_check),
+                                self.verify_fact_result(
+                                    &verification.measure.lower_bound_integer_check,
+                                ),
                             ),
                             (
                                 "lower_bound_check".to_string(),

@@ -22,13 +22,13 @@ impl Runtime {
         let Obj::Sqrt(sqrt) = pow.base.as_ref() else {
             return Ok(None);
         };
-        let arg_result = self.verify_equal_fact_as_builtin_premise(
+        let Some(arg_result) = self.try_verify_equal_fact_as_builtin_premise(
             &EqualFact::new_from_refs(sqrt.arg.as_ref(), other, line_file.clone()),
             builtin_state,
-        )?;
-        if !arg_result.is_success() {
+        )?
+        else {
             return Ok(None);
-        }
+        };
         Ok(Some(
             SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
@@ -61,20 +61,20 @@ impl Runtime {
             Number::new("0".to_string()).into(),
             Number::new("1".to_string()).into(),
         ] {
-            let arg_result = self.verify_equal_fact_as_builtin_premise(
+            let Some(arg_result) = self.try_verify_equal_fact_as_builtin_premise(
                 &EqualFact::new_from_refs(sqrt.arg.as_ref(), &literal, line_file.clone()),
                 builtin_state,
-            )?;
-            if !arg_result.is_success() {
+            )?
+            else {
                 continue;
-            }
-            let other_result = self.verify_equal_fact_as_builtin_premise(
+            };
+            let Some(other_result) = self.try_verify_equal_fact_as_builtin_premise(
                 &EqualFact::new_from_refs(other, &literal, line_file.clone()),
                 builtin_state,
-            )?;
-            if !other_result.is_success() {
+            )?
+            else {
                 continue;
-            }
+            };
             return Ok(Some(
                 SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     equal_fact.clone().into(),
@@ -177,8 +177,8 @@ impl Runtime {
         let arg_product_fact: AtomicFact =
             EqualFact::new_from_refs(sqrt.arg.as_ref(), &arg_product, line_file.clone()).into();
         let arg_product_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&arg_product_fact, builtin_state)?;
-        let results = if arg_product_result.is_success() {
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&arg_product_fact, builtin_state)?;
+        let results = if let Some(arg_product_result) = arg_product_result {
             let Some(mut results) = self.verify_builtin_rule_premises(
                 &[left_nonnegative, right_nonnegative],
                 builtin_state,
@@ -254,8 +254,8 @@ impl Runtime {
         let arg_quotient_fact: AtomicFact =
             EqualFact::new_from_refs(sqrt.arg.as_ref(), &arg_quotient, line_file.clone()).into();
         let arg_quotient_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&arg_quotient_fact, builtin_state)?;
-        let results = if arg_quotient_result.is_success() {
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&arg_quotient_fact, builtin_state)?;
+        let results = if let Some(arg_quotient_result) = arg_quotient_result {
             let Some(mut results) = self.verify_builtin_rule_premises(
                 &[numerator_nonnegative, denominator_positive],
                 builtin_state,

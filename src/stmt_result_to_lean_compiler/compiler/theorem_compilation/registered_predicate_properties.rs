@@ -77,42 +77,15 @@ impl StmtResultToLeanCompiler {
             .assumption_infers
             .rule_applications
             .iter()
-            .chain(verification.assumption_infers.rule_applications.iter())
-            .any(|application| !defined_predicate_infer_rule(&application.rule))
-            || !success_infer_results_have_same_semantic_structure(
-                &forall_proof.assumption_infers,
-                &verification.assumption_infers,
-            )
+            .any(|application| {
+                !defined_predicate_infer_rule(&application.rule)
+                    && !infer_rule_has_direct_compiler_environment_consumer(&application.rule)
+            })
         {
             return Err(format!(
-                "{} predicate-property registration changed its local assumption effects",
+                "{} predicate-property registration retained an unsupported local assumption effect",
                 compilation_kind.result_name()
             ));
-        }
-        for (nested, registration) in forall_proof
-            .assumption_infers
-            .store_fact_outputs
-            .iter()
-            .zip(verification.assumption_infers.store_fact_outputs.iter())
-        {
-            if nested.fact_id != registration.fact_id
-                || nested.itself_and_why_itself_is_stored.0.to_string()
-                    != registration.itself_and_why_itself_is_stored.0.to_string()
-                || nested.itself_and_why_itself_is_stored.1
-                    != registration.itself_and_why_itself_is_stored.1
-                || nested.inferred_facts.len() != registration.inferred_facts.len()
-                || nested.inferred_fact_ids != registration.inferred_fact_ids
-                || nested
-                    .inferred_facts
-                    .iter()
-                    .zip(registration.inferred_facts.iter())
-                    .any(|(left, right)| left.to_string() != right.to_string())
-            {
-                return Err(format!(
-                    "{} predicate-property registration changed a local assumption effect",
-                    compilation_kind.result_name()
-                ));
-            }
         }
         let mut conclusion_checks = Vec::with_capacity(forall_proof.proves.len());
         for (conclusion_index, (proved, expected)) in forall_proof
@@ -134,7 +107,7 @@ impl StmtResultToLeanCompiler {
                 name: &theorem_name,
                 forall_fact: &verification.forall_fact,
                 well_definedness: &forall_check.checked,
-                proof_scope_assumption_infers: &verification.assumption_infers,
+                proof_scope_assumption_infers: &forall_proof.assumption_infers,
                 proof_scope_assumption_components: &[],
                 proof_steps: &verification.proof_steps,
                 conclusion_checks,

@@ -206,11 +206,7 @@ impl Runtime {
             if !result.is_success() {
                 return Ok(UnknownGenericStmtResult::new().into());
             }
-            let result = self.complete_fact_proof_result(
-                &child.into(),
-                result,
-                verify_state,
-            )?;
+            let result = self.complete_fact_proof_result(&child.into(), result, verify_state)?;
             subgoals.push(result);
         }
 

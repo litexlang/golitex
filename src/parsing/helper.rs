@@ -138,55 +138,27 @@ impl Runtime {
         head: FnObjHead,
         body: Vec<Vec<Box<Obj>>>,
     ) -> Result<Obj, RuntimeError> {
-        Ok(FnObj::new_with_source_occurrence_id(
-            head,
-            body,
-            Some(self.allocate_source_object_occurrence_id()?),
-        )
-        .into())
+        Ok(FnObj::new(head, body).into())
     }
 
     pub(super) fn new_parsed_add(&self, left: Obj, right: Obj) -> Result<Obj, RuntimeError> {
-        Ok(Add::new_with_source_occurrence_id(
-            left,
-            right,
-            Some(self.allocate_source_object_occurrence_id()?),
-        )
-        .into())
+        Ok(Add::new(left, right).into())
     }
 
     pub(super) fn new_parsed_sub(&self, left: Obj, right: Obj) -> Result<Obj, RuntimeError> {
-        Ok(Sub::new_with_source_occurrence_id(
-            left,
-            right,
-            Some(self.allocate_source_object_occurrence_id()?),
-        )
-        .into())
+        Ok(Sub::new(left, right).into())
     }
 
     pub(super) fn new_parsed_mul(&self, left: Obj, right: Obj) -> Result<Obj, RuntimeError> {
-        Ok(Mul::new_with_source_occurrence_id(
-            left,
-            right,
-            Some(self.allocate_source_object_occurrence_id()?),
-        )
-        .into())
+        Ok(Mul::new(left, right).into())
     }
 
     pub(super) fn new_parsed_div(&self, left: Obj, right: Obj) -> Result<Obj, RuntimeError> {
-        Ok(Div::new_with_source_occurrence_id(
-            left,
-            right,
-            Some(self.allocate_source_object_occurrence_id()?),
-        )
-        .into())
+        Ok(Div::new(left, right).into())
     }
 
     pub(super) fn new_parsed_list_set(&self, list: Vec<Obj>) -> Result<ListSet, RuntimeError> {
-        Ok(ListSet::new_with_source_occurrence_id(
-            list,
-            Some(self.allocate_source_object_occurrence_id()?),
-        ))
+        Ok(ListSet::new(list))
     }
 
     pub(super) fn new_parsed_sum(
@@ -195,13 +167,7 @@ impl Runtime {
         end: Obj,
         function: Obj,
     ) -> Result<Obj, RuntimeError> {
-        Ok(Sum::new_with_source_occurrence_id(
-            start,
-            end,
-            function,
-            Some(self.allocate_source_object_occurrence_id()?),
-        )
-        .into())
+        Ok(Sum::new(start, end, function).into())
     }
 }
 

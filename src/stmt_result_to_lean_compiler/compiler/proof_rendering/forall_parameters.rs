@@ -16,6 +16,10 @@ pub(in super::super) fn forall_parameter_uses_exact_real_carrier(set: &Obj) -> b
     matches!(set, Obj::StandardSet(StandardSet::R | StandardSet::RPos))
 }
 
+pub(in super::super) fn forall_parameter_uses_exact_complex_carrier(set: &Obj) -> bool {
+    matches!(set, Obj::StandardSet(StandardSet::C))
+}
+
 pub(in super::super) fn forall_parameter_uses_exact_structured_set_carrier(set: &Obj) -> bool {
     matches!(
         set,
@@ -28,6 +32,7 @@ pub(in super::super) fn forall_parameter_uses_exact_structured_set_carrier(set: 
 
 pub(in super::super) fn forall_parameter_uses_exact_object_carrier(set: &Obj) -> bool {
     forall_parameter_uses_exact_real_carrier(set)
+        || forall_parameter_uses_exact_complex_carrier(set)
         || forall_parameter_uses_exact_structured_set_carrier(set)
         || matches!(set, Obj::FnSet(_) | Obj::FiniteSeqSet(_) | Obj::SeqSet(_))
 }
@@ -43,19 +48,123 @@ pub(in super::super) fn forall_parameter_uses_implicit_host_carrier(
     )
 }
 
+/// Projecting a polymorphic forall clause through a conjunction must delay
+/// field selection until after the complete telescope has been introduced.
+/// Otherwise Lean may instantiate an implicit host carrier while evaluating
+/// `definition.right`, freezing it as a metavariable before the caller's
+/// carrier is in scope.
+pub(in super::super) fn render_eta_expanded_forall_projection(
+    forall: &ForallFact,
+    selected_component: &str,
+) -> Result<String, String> {
+    let mut intro_names = Vec::new();
+    let mut arguments = Vec::new();
+    for (index, (_, parameter_type)) in forall
+        .typed_parameters
+        .collect_param_bindings_with_types()
+        .iter()
+        .enumerate()
+    {
+        let suffix = index + 1;
+        let parameter = format!("__projection_parameter{suffix}");
+        match parameter_type {
+            ParamType::Set(_) => {
+                intro_names.push(parameter.clone());
+                arguments.push(parameter);
+            }
+            ParamType::NonemptySet(_) | ParamType::FiniteSet(_) => {
+                let requirement = format!("__projection_type{suffix}");
+                intro_names.extend([parameter.clone(), requirement.clone()]);
+                arguments.extend([parameter, requirement]);
+            }
+            ParamType::Obj(set) if matches!(set, Obj::StandardSet(StandardSet::Z)) => {
+                intro_names.push(parameter.clone());
+                arguments.push(parameter);
+            }
+            ParamType::Obj(_) => {
+                if forall_parameter_uses_implicit_host_carrier(parameter_type) {
+                    intro_names.push(format!("__projection_carrier{suffix}"));
+                }
+                let requirement = format!("__projection_type{suffix}");
+                intro_names.extend([parameter.clone(), requirement.clone()]);
+                arguments.extend([parameter, requirement]);
+            }
+        }
+    }
+    for index in 0..forall.dom_facts.len() {
+        let domain = format!("__projection_domain{}", index + 1);
+        intro_names.push(domain.clone());
+        arguments.push(domain);
+    }
+    if intro_names.is_empty() {
+        return Err("definition projection retained a forall without binders".into());
+    }
+    Ok(format!(
+        "intro {}\n  exact ({selected_component}) {}",
+        intro_names.join(" "),
+        arguments.join(" ")
+    ))
+}
+
 pub(in super::super) fn render_forall_fact_type(
     forall: &ForallFact,
     outer_context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
+    render_forall_fact_type_with_conclusion_renderer(forall, outer_context, render_fact)
+}
+
+pub(in super::super) fn render_forall_fact_type_with_no_observation_equality_conclusions(
+    forall: &ForallFact,
+    outer_context: &StmtResultToLeanCompilerEnvironmentStack,
+) -> Result<String, String> {
+    render_forall_fact_type_with_conclusion_renderer(
+        forall,
+        outer_context,
+        render_no_observation_equality_alternatives_fact,
+    )
+}
+
+fn render_forall_fact_type_with_conclusion_renderer(
+    forall: &ForallFact,
+    outer_context: &StmtResultToLeanCompilerEnvironmentStack,
+    render_conclusion: fn(
+        &Fact,
+        &StmtResultToLeanCompilerEnvironmentStack,
+    ) -> Result<String, String>,
+) -> Result<String, String> {
     let mut context = outer_context.clone();
     let mut binders = Vec::new();
+    let mut exact_parameter_representations = HashMap::new();
     for (index, (binding, param_type)) in forall
         .typed_parameters
         .collect_param_bindings_with_types()
         .iter()
         .enumerate()
     {
-        let name = format!("__p{}", index + 1);
+        let ordinal = index + 1;
+        let base_name = format!("__p{ordinal}");
+        // A caller may have already installed this exact SymbolId as one side
+        // of a verifier-certified alpha alias (structured induction is the
+        // current example).  Preserve that explicit lexical choice.  In the
+        // ordinary nested-forall case the new SymbolId has no such binding,
+        // so an outer `__pN` still forces a collision-free local name.
+        let explicitly_prebound_to_base = context
+            .symbol_names
+            .get(&binding.id())
+            .is_some_and(|visible| visible == &base_name);
+        let collides_with_outer_binder =
+            !explicitly_prebound_to_base && context.reserved_lean_names.contains(&base_name);
+        let local_suffix = if collides_with_outer_binder {
+            format!("{ordinal}_s{}", binding.id().value())
+        } else {
+            ordinal.to_string()
+        };
+        let name = format!("__p{local_suffix}");
+        let type_name = format!("__type{local_suffix}");
+        let carrier_name = format!("__carrier{local_suffix}");
+        context.reserved_lean_names.insert(name.clone());
+        context.reserved_lean_names.insert(type_name.clone());
+        context.reserved_lean_names.insert(carrier_name.clone());
         context.symbol_names.insert(binding.id(), name.clone());
         // The outer Result environment may already contain callable evidence
         // for this source SymbolId under proof-layer names such as `g` and
@@ -92,7 +201,7 @@ pub(in super::super) fn render_forall_fact_type(
                 ParamType::FiniteSet(_) => "Litex.Set.Finite",
                 _ => unreachable!("refined-set branch checked above"),
             };
-            binders.push(format!("(__type{} : {property} {name})", index + 1));
+            binders.push(format!("({type_name} : {property} {name})"));
             let expected = match param_type {
                 ParamType::NonemptySet(_) => {
                     format!("Litex.Set.Nonempty {name}")
@@ -103,14 +212,14 @@ pub(in super::super) fn render_forall_fact_type(
             install_rendered_parameter_aliases(
                 binding.id(),
                 &expected,
-                &format!("__type{}", index + 1),
+                &type_name,
                 None,
                 &mut context,
             )?;
             install_result_owned_forall_parameter_fact_alias(
                 binding.id(),
                 &expected,
-                &format!("__type{}", index + 1),
+                &type_name,
                 &mut context,
             )?;
             continue;
@@ -140,10 +249,9 @@ pub(in super::super) fn render_forall_fact_type(
         if forall_parameter_uses_exact_object_carrier(set) {
             let rendered_set = render_obj(set, &context)?;
             binders.push(format!("({name} : ({rendered_set}).Carrier)"));
-            binders.push(format!(
-                "(__type{} : Litex.In {name} {rendered_set})",
-                index + 1
-            ));
+            binders.push(format!("({type_name} : Litex.In {name} {rendered_set})"));
+            exact_parameter_representations
+                .insert(binding.id(), format!("(Litex.In.rep {name} {type_name})"));
             let expected = format!("Litex.In {name} {rendered_set}");
             let function = match set {
                 Obj::FnSet(function) => {
@@ -164,14 +272,14 @@ pub(in super::super) fn render_forall_fact_type(
             install_rendered_parameter_aliases(
                 binding.id(),
                 &expected,
-                &format!("__type{}", index + 1),
+                &type_name,
                 function,
                 &mut context,
             )?;
             install_result_owned_forall_parameter_fact_alias(
                 binding.id(),
                 &expected,
-                &format!("__type{}", index + 1),
+                &type_name,
                 &mut context,
             )?;
             let lowered_set = LeanTargetObjectRepresentation::lower(set)?;
@@ -212,33 +320,31 @@ pub(in super::super) fn render_forall_fact_type(
             install_visible_subset_transports_for_parameter(
                 binding.id(),
                 &name,
-                &format!("__type{}", index + 1),
+                &type_name,
                 set,
                 &mut context,
             )?;
             continue;
         }
-        let carrier = format!("__carrier{}", index + 1);
         match set {
             Obj::FnSet(_) | Obj::FiniteSeqSet(_) | Obj::SeqSet(_) => {
-                binders.push(format!("{{{carrier} : Type 1}}"));
-                binders.push(format!("({name} : {carrier})"));
+                binders.push(format!("{{{carrier_name} : Type 1}}"));
+                binders.push(format!("({name} : {carrier_name})"));
             }
             _ => {
-                binders.push(format!("{{{carrier} : Type}}"));
-                binders.push(format!("({name} : {carrier})"));
+                binders.push(format!("{{{carrier_name} : Type}}"));
+                binders.push(format!("({name} : {carrier_name})"));
             }
         }
         binders.push(format!(
-            "(__type{} : Litex.In {name} {})",
-            index + 1,
+            "({type_name} : Litex.In {name} {})",
             render_obj(set, &context)?
         ));
         let expected = format!("Litex.In {name} {}", render_obj(set, &context)?);
         install_rendered_parameter_aliases(
             binding.id(),
             &expected,
-            &format!("__type{}", index + 1),
+            &type_name,
             match set {
                 Obj::FnSet(function) => {
                     Some(LeanTargetFunctionTypeRepresentation::lower(function)?)
@@ -250,44 +356,32 @@ pub(in super::super) fn render_forall_fact_type(
         install_result_owned_forall_parameter_fact_alias(
             binding.id(),
             &expected,
-            &format!("__type{}", index + 1),
+            &type_name,
             &mut context,
         )?;
         let lowered_set = LeanTargetObjectRepresentation::lower(set)?;
-        if let Some(real) =
-            membership_real_value(&lowered_set, &name, &format!("__type{}", index + 1))
-        {
+        if let Some(real) = membership_real_value(&lowered_set, &name, &type_name) {
             context.numeric_real_values.insert(binding.id(), real);
         }
-        if let Some(integer) =
-            membership_integer_value(&lowered_set, &name, &format!("__type{}", index + 1))
-        {
+        if let Some(integer) = membership_integer_value(&lowered_set, &name, &type_name) {
             context.numeric_integer_values.insert(binding.id(), integer);
         }
-        if let Some(rational) =
-            membership_rational_value(&lowered_set, &name, &format!("__type{}", index + 1))
-        {
+        if let Some(rational) = membership_rational_value(&lowered_set, &name, &type_name) {
             context
                 .numeric_rational_values
                 .insert(binding.id(), rational);
         }
-        if let Some(representation) =
-            membership_numeric_value(&lowered_set, &name, &format!("__type{}", index + 1))
-        {
+        if let Some(representation) = membership_numeric_value(&lowered_set, &name, &type_name) {
             context
                 .numeric_representations
                 .insert(binding.id(), representation);
         }
-        if let Some(equality) =
-            membership_numeric_equality(&lowered_set, &name, &format!("__type{}", index + 1))
-        {
+        if let Some(equality) = membership_numeric_equality(&lowered_set, &name, &type_name) {
             context
                 .numeric_representation_equalities
                 .insert(binding.id(), equality);
         }
-        if let Some(proof) =
-            membership_numeric_proof(&lowered_set, &name, &format!("__type{}", index + 1))
-        {
+        if let Some(proof) = membership_numeric_proof(&lowered_set, &name, &type_name) {
             context
                 .numeric_representation_memberships
                 .insert(binding.id(), proof);
@@ -295,23 +389,29 @@ pub(in super::super) fn render_forall_fact_type(
         install_visible_subset_transports_for_parameter(
             binding.id(),
             &name,
-            &format!("__type{}", index + 1),
+            &type_name,
             set,
             &mut context,
         )?;
+    }
+    let mut domain_context = context.clone();
+    for (symbol_id, representation) in exact_parameter_representations {
+        domain_context
+            .symbol_names
+            .insert(symbol_id, representation);
     }
     for (index, premise) in forall.dom_facts.iter().enumerate() {
         let proof_name = format!("__domain{}", index + 1);
         binders.push(format!(
             "({proof_name} : {})",
-            render_fact(premise, &context)?
+            render_fact(premise, &domain_context)?
         ));
         install_subset_transport_from_fact(premise, &proof_name, &mut context)?;
     }
     let conclusions = forall
         .then_facts
         .iter()
-        .map(|conclusion| render_fact(&conclusion.clone().to_fact(), &context))
+        .map(|conclusion| render_conclusion(&conclusion.clone().to_fact(), &context))
         .collect::<Result<Vec<_>, _>>()?;
     if conclusions.is_empty() {
         return Err("forall citation retained no conclusions".into());

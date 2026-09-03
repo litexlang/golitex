@@ -158,16 +158,39 @@ pub(in super::super) fn render_fact(
                 render_obj(&fact.right, context)?,
                 render_obj(&fact.left, context)?
             )),
-            AtomicFact::EqualFact(fact) => Ok(format!(
-                "Litex.Same {} {}",
-                render_obj(&fact.left, context)?,
-                render_obj(&fact.right, context)?
-            )),
-            AtomicFact::NotEqualFact(fact) => Ok(format!(
-                "¬ Litex.Same {} {}",
-                render_obj(&fact.left, context)?,
-                render_obj(&fact.right, context)?
-            )),
+            AtomicFact::EqualFact(fact) => {
+                let left = render_obj(&fact.left, context)?;
+                let right = render_obj(&fact.right, context)?;
+                if object_has_only_default_observer(&fact.left, context)
+                    || object_has_only_default_observer(&fact.right, context)
+                {
+                    // Opaque exact carriers (notably a set-builder or a
+                    // telescope result) deliberately carry no native
+                    // observation.  Keep both equality endpoints in that
+                    // no-observation mode; asking Lean to compare such a
+                    // value directly with an observed `ℂ` would be
+                    // unprovable even when the source-level equality is
+                    // valid.
+                    Ok(format!(
+                        "@Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) {left} {right}"
+                    ))
+                } else {
+                    Ok(format!("Litex.Same {left} {right}"))
+                }
+            }
+            AtomicFact::NotEqualFact(fact) => {
+                let left = render_obj(&fact.left, context)?;
+                let right = render_obj(&fact.right, context)?;
+                if object_has_only_default_observer(&fact.left, context)
+                    || object_has_only_default_observer(&fact.right, context)
+                {
+                    Ok(format!(
+                        "¬ @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) {left} {right}"
+                    ))
+                } else {
+                    Ok(format!("¬ Litex.Same {left} {right}"))
+                }
+            }
             AtomicFact::LessFact(fact) => render_order_fact(&fact.left, &fact.right, true, context),
             AtomicFact::GreaterFact(fact) => {
                 render_order_fact(&fact.right, &fact.left, true, context)
@@ -334,4 +357,68 @@ pub(in super::super) fn render_order_fact(
         render_numeric_obj(left, context)?,
         render_numeric_obj(right, context)?
     ))
+}
+
+/// Whether an object is carried by a target type for which the compiler has
+/// no reviewed native observation.  `Litex.Set.Carrier` is intentionally
+/// opaque, so a set-builder/telescope result must be compared under the
+/// explicit no-observation `Same` ABI.
+fn object_has_only_default_observer(
+    object: &Obj,
+    context: &StmtResultToLeanCompilerEnvironmentStack,
+) -> bool {
+    if let Obj::FnObj(application) = object {
+        let symbol_id = match application.head.as_ref() {
+            FnObjHead::Identifier(identifier) => identifier.symbol.as_ref().map(SymbolRef::id),
+            FnObjHead::IdentifierWithMod(identifier) => {
+                identifier.symbol.as_ref().map(SymbolRef::id)
+            }
+            FnObjHead::Bound(parameter) => Some(parameter.symbol.id()),
+            _ => None,
+        };
+        if let Some(symbol_id) = symbol_id {
+            if context
+                .function_bindings
+                .values()
+                .find(|binding| binding.symbol_id == symbol_id)
+                .is_some_and(|binding| {
+                    matches!(
+                        binding.function.return_set.as_ref(),
+                        LeanTargetObjectRepresentation::SetBuilder(_)
+                            | LeanTargetObjectRepresentation::FunctionSet { .. }
+                            | LeanTargetObjectRepresentation::FunctionRange { .. }
+                            | LeanTargetObjectRepresentation::RealInterval { .. }
+                            | LeanTargetObjectRepresentation::RealRay { .. }
+                    )
+                })
+            {
+                return true;
+            }
+        }
+    }
+    let Ok(lowered) = LeanTargetObjectRepresentation::lower(object) else {
+        return false;
+    };
+    match lowered {
+        LeanTargetObjectRepresentation::SetBuilder(_)
+        | LeanTargetObjectRepresentation::FunctionSet { .. }
+        | LeanTargetObjectRepresentation::FunctionRange { .. }
+        | LeanTargetObjectRepresentation::RealInterval { .. }
+        | LeanTargetObjectRepresentation::RealRay { .. } => true,
+        LeanTargetObjectRepresentation::FunctionApplication(application) => {
+            function_application_return_set_from_result(&application, context)
+                .map(|set| {
+                    matches!(
+                        set,
+                        LeanTargetObjectRepresentation::SetBuilder(_)
+                            | LeanTargetObjectRepresentation::FunctionSet { .. }
+                            | LeanTargetObjectRepresentation::FunctionRange { .. }
+                            | LeanTargetObjectRepresentation::RealInterval { .. }
+                            | LeanTargetObjectRepresentation::RealRay { .. }
+                    )
+                })
+                .unwrap_or(false)
+        }
+        _ => false,
+    }
 }

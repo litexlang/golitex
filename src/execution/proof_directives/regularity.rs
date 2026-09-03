@@ -5,7 +5,7 @@ impl Runtime {
         &mut self,
         stmt: &ByRegularityAxiomStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&stmt.set, &VerifyState::initial())
+        self.verify_obj_well_defined_result(&stmt.set, &VerifyState::initial())
             .map_err(|well_defined_error| {
                 short_exec_error(
                     stmt.clone().into(),

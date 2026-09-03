@@ -56,8 +56,10 @@ impl Runtime {
                             &in_fact,
                             verify_state,
                         )?;
-                        let checked = self
-                            .verify_fact_well_defined_result(&in_fact.clone().into(), verify_state)?;
+                        let checked = self.verify_fact_well_defined_result(
+                            &in_fact.clone().into(),
+                            verify_state,
+                        )?;
                         return Ok(Runtime::finish_fact_verification(checked, result));
                     }
                 }
@@ -84,7 +86,7 @@ impl Runtime {
         let instantiated_types =
             self.inst_param_def_with_type_one_by_one(param_defs, args, substitution_mode)?;
         let flat_types = param_defs.flat_instantiated_types_for_args(&instantiated_types);
-        let mut infer_result = SuccessInferResult::new();
+        let infer_result = SuccessInferResult::new();
         let mut check_results = Vec::with_capacity(args.len());
         for (arg, param_type) in args.iter().zip(flat_types.iter()) {
             let result = self.verify_obj_satisfies_param_type_known_or_builtin_only(
@@ -137,8 +139,10 @@ impl Runtime {
                             &in_fact,
                             verify_state,
                         )?;
-                        let checked = self
-                            .verify_fact_well_defined_result(&in_fact.clone().into(), verify_state)?;
+                        let checked = self.verify_fact_well_defined_result(
+                            &in_fact.clone().into(),
+                            verify_state,
+                        )?;
                         return Ok(Runtime::finish_fact_verification(checked, result));
                     }
                 }
@@ -188,7 +192,7 @@ impl Runtime {
         let instantiated_types =
             self.inst_param_def_with_type_one_by_one(param_defs, args, substitution_mode)?;
         let flat_types = param_defs.flat_instantiated_types_for_args(&instantiated_types);
-        let mut infer_result = SuccessInferResult::new();
+        let infer_result = SuccessInferResult::new();
         let mut check_results = Vec::with_capacity(args.len());
         for (arg, param_type) in args.iter().zip(flat_types.iter()) {
             let verify_result =

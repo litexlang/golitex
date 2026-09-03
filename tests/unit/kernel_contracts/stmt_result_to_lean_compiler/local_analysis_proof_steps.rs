@@ -20,7 +20,7 @@ thm local_transparent_set_membership:
         marker = marker
         =>:
             marker = marker
-    have E power_set(R) = {x R: x = 0}
+    let E = {x R: x = 0}
     0 $in E
     marker = marker
 "#;
@@ -250,17 +250,21 @@ fn local_transparent_set_membership_rejects_a_changed_definition_fact_id() {
         let proof_steps = theorem_proof_steps_mut(&mut results);
         let (definition_steps, membership_steps) = proof_steps.split_at_mut(1);
         let StmtResult::Success(SuccessStmtResult::Definition(
-            SuccessDefinitionStmtResult::HaveObjEqualStmt(definition),
+            SuccessDefinitionStmtResult::LetObjStmt(definition),
         )) = &definition_steps[0]
         else {
             panic!("expected local set definition as proof step one")
         };
-        let wrong_fact_id = definition.common.infers.store_fact_outputs[0]
+        let defining_fact_id = definition.common.infers.store_fact_outputs[0]
             .fact_id
-            .expect("local definition type fact retains a FactId");
+            .expect("local definition equality retains a FactId");
         let membership = membership_steps[0]
             .factual_success_mut()
             .expect("proof step two is a membership fact");
+        let wrong_fact_id = membership
+            .fact_id
+            .expect("local membership fact retains a distinct FactId");
+        assert_ne!(wrong_fact_id, defining_fact_id);
         let verification = membership
             .verification_mut()
             .expect("membership verification is not shared in this Result");

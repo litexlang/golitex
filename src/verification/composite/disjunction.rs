@@ -416,7 +416,7 @@ fn square_mul_sum_not_equal_zero_fact_for_or_builtin(
 }
 
 impl Runtime {
-    pub(crate) fn prove_or_fact(
+    pub(in crate::verification) fn prove_or_fact(
         &mut self,
         or_fact: &OrFact,
         verify_state: &VerifyState,
@@ -553,8 +553,8 @@ impl Runtime {
             return Ok(result);
         }
 
-        if let Some(result) =
-            self.try_verify_component_nonzero_or_from_known_square_sum_not_equal_zero(
+        if let Some(result) = self
+            .try_verify_component_nonzero_or_from_known_square_sum_not_equal_zero(
                 or_fact,
                 verify_state,
             )?
@@ -743,11 +743,11 @@ impl Runtime {
             Mul::new(first_factor.clone(), second_factor.clone()).into(),
             Mul::new(second_factor.clone(), first_factor.clone()).into(),
         ] {
-            let product_zero_result = self.verify_known_equality_fact(
+            let product_zero_result = self.try_verify_known_equality_fact_candidate(
                 &EqualFact::new_from_refs(&product, &zero, line_file.clone()),
                 verify_state,
             )?;
-            if product_zero_result.is_success() {
+            if let Some(product_zero_result) = product_zero_result {
                 steps.push(product_zero_result);
                 return Ok(Some(
                     SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_and_steps(
@@ -932,11 +932,8 @@ impl Runtime {
                             Vec::new(),
                         )
                         .into();
-                    let source_result = self.complete_fact_proof_result(
-                        &source_fact,
-                        source_proof,
-                        verify_state,
-                    )?;
+                    let source_result =
+                        self.complete_fact_proof_result(&source_fact, source_proof, verify_state)?;
                     return Ok((SuccessProveFactResult::new_with_verified_by_known_fact(
                         or_fact.clone().into(),
                         SuccessFactProofResult::combined_steps(vec![source_result]),

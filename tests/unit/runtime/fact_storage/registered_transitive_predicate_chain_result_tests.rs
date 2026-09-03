@@ -23,9 +23,29 @@ fn registered_transitive_predicate_chain_store_returns_typed_closure_inference()
     let success = result
         .factual_success()
         .expect("registered transitive chain should succeed");
-    let [application] = success.store.infers.rule_applications.as_slice() else {
-        panic!("three-object chain should retain exactly one transitive application")
-    };
+    let application = success
+        .store
+        .infers
+        .rule_applications
+        .iter()
+        .find(|application| {
+            matches!(
+                application.rule,
+                InferRule::RegisteredTransitivePredicateChainClosure(_)
+            )
+        })
+        .expect("three-object chain should retain one typed transitive application");
+    assert_eq!(
+        success
+            .store
+            .infers
+            .rule_applications
+            .iter()
+            .filter(|application| matches!(application.rule, InferRule::ChainImpliesComponent(_)))
+            .count(),
+        2,
+        "the source chain should also retain its two ordered component projections"
+    );
     let InferRule::RegisteredTransitivePredicateChainClosure(rule) = &application.rule else {
         panic!("chain closure should retain its typed transitive rule")
     };

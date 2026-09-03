@@ -7,12 +7,6 @@ impl Runtime {
         self.symbol_id_allocator.allocate()
     }
 
-    pub fn allocate_source_object_occurrence_id(
-        &self,
-    ) -> Result<SourceObjectOccurrenceId, RuntimeError> {
-        Ok(SourceObjectOccurrenceId::new(self.allocate_symbol_id()?))
-    }
-
     pub fn allocate_local_symbol_binding(
         &self,
         name: String,
@@ -155,6 +149,43 @@ impl Runtime {
         {
             definition.remember_direct_struct_carrier_if_absent(struct_obj.clone());
         }
+    }
+
+    /// A concrete predicate application semantically projects its declared
+    /// parameter type onto the supplied argument. For a symbol argument and a
+    /// struct parameter, retain that definition-owned consequence so later
+    /// field syntax can resolve without treating arbitrary membership facts as
+    /// field-owner declarations.
+    pub fn remember_inferred_direct_struct_carrier_for_symbol(
+        &mut self,
+        symbol: &SymbolRef,
+        struct_obj: &StructObj,
+    ) -> Result<(), RuntimeError> {
+        if let Some(existing) = self.direct_struct_carrier_for_symbol(symbol) {
+            let existing_obj: Obj = existing.clone().into();
+            let inferred_obj: Obj = struct_obj.clone().into();
+            if obj_equality_key(&existing_obj) != obj_equality_key(&inferred_obj) {
+                return Err(RuntimeError::from(InferRuntimeError(
+                    RuntimeErrorStruct::new_with_just_msg(format!(
+                        "predicate parameter inference gives `{}` conflicting direct struct carriers `{existing}` and `{struct_obj}`",
+                        symbol.display_name()
+                    )),
+                )));
+            }
+            return Ok(());
+        }
+
+        self.executed_direct_struct_carriers
+            .insert(symbol.id(), struct_obj.clone());
+        if let Some(definition) = self
+            .top_level_env()
+            .definitions
+            .symbols
+            .get_by_id_mut(symbol.id())
+        {
+            definition.remember_direct_struct_carrier_if_absent(struct_obj.clone());
+        }
+        Ok(())
     }
 
     pub fn register_parsed_struct_definition(&mut self, def: &DefStructStmt) {

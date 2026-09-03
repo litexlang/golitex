@@ -3,6 +3,67 @@
 use super::super::*;
 
 impl StmtResultToLeanCompiler {
+    fn render_exact_as_complex_evidence(&self, object: &Obj) -> Result<Option<String>, String> {
+        let rendered = render_obj(object, &self.environment_stack)?;
+        let numeric = render_numeric_obj(object, &self.environment_stack)?;
+        if rendered == numeric {
+            return Ok(Some(format!("Litex.AsComplex.complex ({numeric})")));
+        }
+        let LeanTargetObjectRepresentation::Symbol { symbol_id, .. } =
+            LeanTargetObjectRepresentation::lower(object)?
+        else {
+            return Ok(None);
+        };
+        if !self
+            .environment_stack
+            .exact_carrier_values
+            .contains_key(&symbol_id)
+        {
+            return Ok(None);
+        }
+        if let Some(real) = self.environment_stack.numeric_real_values.get(&symbol_id) {
+            return Ok(Some(format!("Litex.AsComplex.real ({real})")));
+        }
+        if let Some(integer) = self
+            .environment_stack
+            .numeric_integer_values
+            .get(&symbol_id)
+        {
+            return Ok(Some(format!("Litex.AsComplex.int ({integer})")));
+        }
+        if let Some(rational) = self
+            .environment_stack
+            .numeric_rational_values
+            .get(&symbol_id)
+        {
+            return Ok(Some(format!("Litex.AsComplex.rat ({rational})")));
+        }
+        Ok(None)
+    }
+
+    /// A local `Same` assumption can be used as native rewrite evidence only
+    /// when both of its exact endpoint observations are already fixed by the
+    /// current compiler binder. This is an elimination of the retained
+    /// semantic proof, not an equality search or an observer upgrade.
+    pub(in super::super) fn construct_native_equality_from_visible_exact_same(
+        &self,
+        fact: &Fact,
+        semantic_proof: &str,
+    ) -> Result<Option<String>, String> {
+        let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = fact else {
+            return Ok(None);
+        };
+        let Some(left_evidence) = self.render_exact_as_complex_evidence(&equality.left)? else {
+            return Ok(None);
+        };
+        let Some(right_evidence) = self.render_exact_as_complex_evidence(&equality.right)? else {
+            return Ok(None);
+        };
+        Ok(Some(format!(
+            "({semantic_proof}).complexEq ({left_evidence}) ({right_evidence})"
+        )))
+    }
+
     /// Construct a native equality under the exact object WD view owned by
     /// the statement Result. Function applications inside arithmetic
     /// equalities need the same occurrence/codomain certificates as their
@@ -164,5 +225,29 @@ impl StmtResultToLeanCompiler {
             },
         );
         Ok(())
+    }
+
+    /// Persist a native-equality binding while rendering its exact endpoints
+    /// under the WD certificate owned by the same verified fact.  The binding
+    /// itself belongs to the surrounding compiler scope; only the temporary
+    /// object/application certificate is restored after endpoint rendering.
+    pub(in super::super) fn retain_native_equality_proof_using_result_well_definedness(
+        &mut self,
+        result: &VerifiedFactResult,
+        fact_id: FactId,
+        fact: &Fact,
+        proof_expression: String,
+    ) -> Result<(), String> {
+        let certificate =
+            self.construct_well_definedness_to_lean_compilation_context(&result.checked)?;
+        let previous_well_definedness =
+            self.environment_stack.well_definedness.replace(certificate);
+        let retained = self.retain_native_equality_proof_in_current_environment(
+            fact_id,
+            fact,
+            proof_expression,
+        );
+        self.environment_stack.well_definedness = previous_well_definedness;
+        retained
     }
 }

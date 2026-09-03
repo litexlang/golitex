@@ -236,13 +236,7 @@ impl Runtime {
         }
         let ret_stored = self.inst_obj(&ret_set, &empty, SubstitutionMode::Exact)?;
         let eq_stored = self.inst_obj(&equal_to, &empty, SubstitutionMode::Exact)?;
-        Ok(AnonymousFn::new_with_source_occurrence_id(
-            params_and_their_sets,
-            dom_stored,
-            ret_stored,
-            eq_stored,
-            Some(self.allocate_source_object_occurrence_id()?),
-        )?)
+        AnonymousFn::new(params_and_their_sets, dom_stored, ret_stored, eq_stored)
     }
 
     pub fn fn_set_from_fn_set_clause(&self, clause: &FnSetClause) -> Result<FnSet, RuntimeError> {

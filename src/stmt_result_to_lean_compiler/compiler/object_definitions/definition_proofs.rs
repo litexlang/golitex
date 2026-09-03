@@ -5,8 +5,8 @@ use super::super::*;
 impl StmtResultToLeanCompiler {
     /// Recreate the lexical environment in which a concrete predicate's
     /// retained definition clauses are meaningful for one exact application.
-    /// Definition-owned occurrence IDs and parameter FactIds are stable, but
-    /// their values and proofs must be rebound for every invocation.
+    /// Definition-owned symbol identities and parameter FactIds are stable,
+    /// but their values and proofs must be rebound for every invocation.
     pub(in super::super) fn by_definition_clause_application_environment(
         &self,
         result: &SuccessByDefStmtResult,
@@ -51,8 +51,7 @@ impl StmtResultToLeanCompiler {
                 })?;
         let mut combined_well_definedness = context.well_definedness.clone().unwrap_or_default();
         if let Some(target_well_definedness) = &verification.target_well_definedness {
-            let mut target_context =
-                StmtResultWellDefinednessToLeanCompilationContext::default();
+            let mut target_context = StmtResultWellDefinednessToLeanCompilationContext::default();
             collect_well_definedness_to_lean_context_from_fact_result(
                 target_well_definedness.proof.as_ref(),
                 &mut target_context,
@@ -378,23 +377,10 @@ impl StmtResultToLeanCompiler {
             return Err("by-definition Result changed its component arity".into());
         }
 
-        self.install_fact_anonymous_function_occurrence_aliases(&target, "by-definition target")?;
-        for (component_index, check) in argument_verification.checks.iter().enumerate() {
-            let check = check
+        for check in &argument_verification.checks {
+            check
                 .verified()
                 .ok_or_else(|| "by-definition parameter child is not factual".to_string())?;
-            self.install_fact_anonymous_function_occurrence_aliases(
-                &check.fact(),
-                &format!("by-definition parameter check {component_index}"),
-            )?;
-        }
-        for (clause_index, retained_clause) in
-            verification.definition_clause_facts.iter().enumerate()
-        {
-            self.install_fact_anonymous_function_occurrence_aliases(
-                retained_clause,
-                &format!("by-definition clause {clause_index}"),
-            )?;
         }
 
         let substitutions = definition
@@ -579,8 +565,8 @@ impl StmtResultToLeanCompiler {
             )?;
             let component_index = binding.requirement_count + clause_index;
 
-            // Clause proof Results retain the definition-time occurrence IDs
-            // and function-contract FactIds.  Render them in a lexical copy
+            // Clause proof Results retain the definition-time symbol IDs and
+            // function-contract FactIds. Render them in a lexical copy
             // of the current application environment, rebinding each
             // definition parameter to this invocation's actual argument.
             // The aliases must not escape: the same predicate can be invoked
@@ -639,30 +625,36 @@ impl StmtResultToLeanCompiler {
                 let mut nested_compiler =
                     StmtResultToLeanCompiler::new("nested by-definition clause proof");
                 nested_compiler.environment_stack = clause_proof_environment;
-                let Some(proof) = nested_compiler
-                    .construct_direct_fact_proof_with_result_owned_well_definedness(check)?
-                    .map(|proof| proof.proof_expression)
-                else {
-                    return Err(format!(
-                        "by-definition clause check {clause_index} has no direct proof consumer: {:?}",
-                        check.proof()
-                    ));
+                let proof = if matches!(check.proof(), SuccessFactProofResult::ForallProof(_)) {
+                    let theorem_name = format!("__fact{}", nested_compiler.next_fact_name_index);
+                    let Some(local_steps) = nested_compiler
+                        .compile_direct_forall_verify_result_as_local_proof_steps(check)?
+                    else {
+                        return Err(format!(
+                            "by-definition clause check {clause_index} has no direct forall proof consumer"
+                        ));
+                    };
+                    format!(
+                        "by\n{}\n  exact @{theorem_name}",
+                        indent_lines(&local_steps.join("\n"), 2)
+                    )
+                } else {
+                    let Some(proof) = nested_compiler
+                        .construct_direct_fact_proof_with_result_owned_well_definedness(check)?
+                        .map(|proof| proof.proof_expression)
+                    else {
+                        return Err(format!(
+                            "by-definition clause check {clause_index} has no direct proof consumer: {:?}",
+                            check.proof()
+                        ));
+                    };
+                    proof
                 };
                 if !nested_compiler.declarations.is_empty() {
                     return Err(format!(
                         "by-definition clause check {clause_index} attempted to emit a top-level declaration"
                     ));
                 }
-                proof
-            };
-            // A bare reference to a theorem with an implicit host-carrier
-            // binder is eagerly instantiated by Lean.  When a concrete
-            // predicate consumes the complete retained forall proposition,
-            // preserve that binder explicitly instead of collapsing it to a
-            // fresh metavariable.
-            let proof = if matches!(retained_clause, Fact::ForallFact(_)) {
-                format!("@{proof}")
-            } else {
                 proof
             };
             let definition_clause = &definition.iff_facts[clause_index];

@@ -156,7 +156,7 @@ class CoverageInventoryTests(unittest.TestCase):
 
     def test_typed_review_queue_has_one_row_per_typed_rule(self) -> None:
         rendered = BUILD_INVENTORY.render_typed_queue(self.inventory)
-        self.assertEqual(len(rendered.splitlines()), 200)
+        self.assertEqual(len(rendered.splitlines()), 201)
         self.assertIn("set.subset_transitivity", rendered)
         self.assertIn("matrix.expression_membership", rendered)
         self.assertIn("status\towner\t", rendered.splitlines()[0])
@@ -170,19 +170,19 @@ class CoverageInventoryTests(unittest.TestCase):
 
     def test_global_ownership_is_semantic_vs_mechanical(self) -> None:
         self.assertEqual(
-            self.inventory["summary"]["owners"], {"Codex": 1404, "user": 58}
+            self.inventory["summary"]["owners"], {"Codex": 1393, "user": 60}
         )
         for row in self.inventory["rows"]:
             if row["owner"] == "user":
-                self.assertEqual(row["status"], "abi_decision")
+                self.assertIn(row["status"], {"abi_decision", "unreachable"})
 
     def test_every_row_has_an_honest_tracer_and_negative_obligation(self) -> None:
         self.assertEqual(
             self.inventory["summary"]["tracer_evidence_states"],
             {
-                "existing": 69,
+                "existing": 71,
                 "not_applicable_until_reachable": 17,
-                "required": 1376,
+                "required": 1365,
             },
         )
         for row in self.inventory["rows"]:
@@ -191,7 +191,7 @@ class CoverageInventoryTests(unittest.TestCase):
             if row["tracer_evidence_state"] == "required":
                 self.assertTrue(str(row["positive_tracer"]).startswith("required:"))
         rendered = BUILD_INVENTORY.render_required_tracer_queue(self.inventory)
-        self.assertEqual(len(rendered.splitlines()), 1377)
+        self.assertEqual(len(rendered.splitlines()), 1366)
         self.assertNotIn("\texisting\t", rendered)
         self.assertIn("set.subset_transitivity", rendered)
         queue_rows = list(csv.DictReader(io.StringIO(rendered), delimiter="\t"))
@@ -200,9 +200,9 @@ class CoverageInventoryTests(unittest.TestCase):
             collections.Counter(
                 {
                     "P0_blocked_user_decision": 58,
-                    "P1_genuine_compiler_gap": 68,
-                    "P2_result_evidence_gap": 399,
-                    "P3_kernelize_mapped_route": 851,
+                    "P1_genuine_compiler_gap": 58,
+                    "P2_result_evidence_gap": 400,
+                    "P3_kernelize_mapped_route": 849,
                 }
             ),
         )
@@ -432,21 +432,21 @@ class CoverageInventoryTests(unittest.TestCase):
         self.assertGreater(sum(map(len, symbols.values())), 30)
         rendered = BUILD_INVENTORY.render_dynamic_lean_adapter_sites(files)
         self.assertIn("Result-driven generated .lean tracer", rendered)
-        self.assertEqual(len(rendered.splitlines()), 47)
+        self.assertEqual(len(rendered.splitlines()), 49)
         self.assertIn("\tenclosing_function\tselector_binding_reference\t", rendered.splitlines()[0])
         self.assertIn("\trender_closed_numeric_comparison_fact\t", rendered)
         self.assertNotIn("<unresolved>", rendered)
         self.assertIn("\tdirect_certificate_match\tCodex\t", rendered)
         self.assertIn("\tcaller_selected_helper\tCodex\t", rendered)
         route_counts = self.inventory["summary"]["lean_dynamic_route_classes"]
-        self.assertEqual(sum(route_counts.values()), 46)
+        self.assertEqual(sum(route_counts.values()), 48)
 
     def test_builtin_route_candidate_queue_has_every_stable_id(self) -> None:
         files = BUILD_INVENTORY.rust_files()
         rendered = BUILD_INVENTORY.render_builtin_route_candidates(
             self.inventory, files
         )
-        self.assertEqual(len(rendered.splitlines()), 622)
+        self.assertEqual(len(rendered.splitlines()), 624)
         self.assertIn("set.subset_transitivity", rendered)
         self.assertIn("candidate_needs_result_tracer", rendered)
         self.assertIn("callee_trace_required", rendered)
@@ -459,7 +459,7 @@ class CoverageInventoryTests(unittest.TestCase):
         resolutions = self.inventory["summary"][
             "builtin_route_candidate_resolutions"
         ]
-        self.assertEqual(sum(resolutions.values()), 621)
+        self.assertEqual(sum(resolutions.values()), 623)
         self.assertGreater(resolutions["candidate_needs_result_tracer"], 0)
         self.assertGreater(resolutions["callee_trace_required"], 0)
         self.assertEqual(
@@ -471,9 +471,9 @@ class CoverageInventoryTests(unittest.TestCase):
                 "leaf_theorem_adapter": 127,
                 "missing_typed_certificate_route": 1,
                 "recursive_result_composition": 28,
-                "selected_semantic_child": 86,
+                "selected_semantic_child": 87,
                 "shared_adapter_candidate": 128,
-                "typed_certificate_route": 193,
+                "typed_certificate_route": 194,
             },
         )
 
@@ -576,12 +576,12 @@ class CoverageInventoryTests(unittest.TestCase):
         for row in rows:
             self.assertIn(f"fn {row[0]}()", integration_source)
 
-    def test_integration_inventory_accounts_for_all_76_tests(self) -> None:
+    def test_integration_inventory_accounts_for_all_77_tests(self) -> None:
         rows = BUILD_INVENTORY.integration_test_rows()
-        self.assertEqual(len(rows), 76)
-        self.assertEqual(len({row["test"] for row in rows}), 76)
+        self.assertEqual(len(rows), 77)
+        self.assertEqual(len({row["test"] for row in rows}), 77)
         self.assertEqual(
-            sum(row["baseline_outcome"] == "passed" for row in rows), 56
+            sum(row["baseline_outcome"] == "passed" for row in rows), 57
         )
         self.assertEqual(
             sum(row["baseline_outcome"] == "failed" for row in rows), 20
@@ -651,7 +651,13 @@ class CoverageInventoryTests(unittest.TestCase):
         labels = {issue.split(":", 1)[0] for issue in issues}
         self.assertTrue(
             labels.issubset(
-                {"primary tracer", "Lean adapter", "compiler integration", "example matrix"}
+                {
+                    "primary tracer",
+                    "Lean adapter",
+                    "compiler integration",
+                    "checked examples",
+                    "example matrix",
+                }
             )
         )
         if issues:

@@ -137,17 +137,8 @@ forall a Z:
         &source_in_fact.set,
         Obj::StandardSet(StandardSet::Z)
     ));
-    let SuccessFactProofResult::Transform(transformation) =
-        source_membership.underlying_verified_by()
-    else {
-        panic!("integer membership should retain its exact normalization: {source_membership:?}");
-    };
     assert!(matches!(
-        transformation.rule,
-        FactTransformationRule::RationalNormalization
-    ));
-    assert!(matches!(
-        transformation.source.proof(),
+        source_membership.underlying_verified_by(),
         SuccessFactProofResult::StoredFactCitation(_)
     ));
 
@@ -1708,6 +1699,12 @@ trust:
     x <= 1
 x $in '(0, 1]
 
+have strict_upper R
+trust:
+    0 < strict_upper
+    strict_upper < 1
+strict_upper $in '(0, 1]
+
 have y R
 trust:
     0 <= y
@@ -1725,6 +1722,11 @@ phi(a) $in R
     assert!(
         run_succeeded,
         "real_interval_membership_rules failed:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("LessEqualFromStrictOrder"),
+        "a strict upper bound must remain a child of the weak closed-interval bound:\n{}",
         run_output
     );
 }
@@ -2194,7 +2196,7 @@ forall a, b R:
                 "{name} must remain unproved without a sufficient sign hypothesis:\n{run_output}"
             );
             assert!(
-                run_output.contains("UnknownError"),
+                run_output.contains("unknown_error"),
                 "{name} should remain an unknown comparison:\n{run_output}"
             );
         }
@@ -2715,7 +2717,7 @@ trust x $in union(A, B)
             "union elimination must infer only the disjunction, not {selected_side}:\n{run_output}"
         );
         assert!(
-            run_output.contains("UnknownError"),
+            run_output.contains("unknown_error"),
             "the unjustified selected side should remain unknown:\n{run_output}"
         );
     }
@@ -2768,7 +2770,7 @@ fn nonempty_half_open_integer_range_is_not_empty() {
             "a half-open range with an integer member must not equal the empty set:\n{run_output}"
         );
         assert!(
-            run_output.contains("UnknownError"),
+            run_output.contains("unknown_error"),
             "the false equality should remain unknown:\n{run_output}"
         );
     });
@@ -2919,7 +2921,7 @@ B = set_minus(A, set_minus(A, B))
         run_output
     );
     assert!(
-        run_output.contains("UnknownError"),
+        run_output.contains("unknown_error"),
         "the missing subset premise should leave the equality unknown:\n{}",
         run_output
     );
@@ -3011,7 +3013,7 @@ fn elementary_set_algebra_completion_preserves_premise_boundaries() {
             render_run_output(&runtime, &stmt_results, &runtime_error);
         assert!(!run_succeeded, "{label} must remain unknown:\n{run_output}");
         assert!(
-            run_output.contains("UnknownError"),
+            run_output.contains("unknown_error"),
             "{label} should fail at the exact unknown boundary:\n{run_output}"
         );
     }

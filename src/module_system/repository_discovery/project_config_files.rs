@@ -1,4 +1,4 @@
-//! Project config loading, enclosing roots, parent checks, and directory validation.
+//! Project config loading, enclosing roots, parent checks, and export-path validation.
 
 use super::*;
 
@@ -122,17 +122,12 @@ pub(super) fn reject_module_with_configured_parent(
     Ok(())
 }
 
-pub(super) fn validate_config_directory_contents(
+/// Validate the manifest's selected direct children without inventorying the
+/// containing directory. Unlisted files and folders are project sidecars.
+pub(super) fn validate_config_export_paths(
     config_path: &Path,
     config: &ProjectConfig,
 ) -> Result<(), RuntimeError> {
-    let root = config_path.parent().ok_or_else(|| {
-        repository_error(
-            "litex.config has no containing folder".to_string(),
-            &config_path.to_string_lossy(),
-            0,
-        )
-    })?;
     let mut exported_children = HashMap::new();
     for export in config.exports.iter() {
         let child_name = direct_child_name(
@@ -149,73 +144,6 @@ pub(super) fn validate_config_directory_contents(
                 ),
                 &config_path.to_string_lossy(),
                 export.line,
-            ));
-        }
-    }
-    let entries = fs::read_dir(root).map_err(|error| {
-        repository_error(
-            format!(
-                "failed to inspect configured folder `{}`: {}",
-                root.to_string_lossy(),
-                error
-            ),
-            &config_path.to_string_lossy(),
-            0,
-        )
-    })?;
-    for entry in entries {
-        let entry = entry.map_err(|error| {
-            repository_error(
-                format!("failed to inspect configured folder entry: {}", error),
-                &config_path.to_string_lossy(),
-                0,
-            )
-        })?;
-        let name = entry.file_name().to_string_lossy().into_owned();
-        let path = entry.path();
-        if name == LITEX_CONFIG {
-            continue;
-        }
-        // Local work records and Lake's generated build metadata are outside
-        // the ordered, publishable Litex module tree.
-        if name == LOCAL_DRAFTS || name == LAKE_BUILD_DIRECTORY {
-            continue;
-        }
-        if name == LITEX_TODO {
-            let source = fs::read_to_string(&path).map_err(|error| {
-                repository_error(
-                    format!("failed to read todo.lit: {}", error),
-                    &path.to_string_lossy(),
-                    0,
-                )
-            })?;
-            let source_without_documentation =
-                Tokenizer::new().strip_triple_quote_comment_blocks(&source);
-            if let Some(line) = source_without_documentation
-                .lines()
-                .position(|line| !line.trim().is_empty() && !line.trim().starts_with('#'))
-            {
-                return Err(repository_error(
-                    "todo.lit must be comment-only".to_string(),
-                    &path.to_string_lossy(),
-                    line + 1,
-                ));
-            }
-            continue;
-        }
-        let is_litex_source =
-            path.extension().and_then(|extension| extension.to_str()) == Some("lit");
-        if !path.is_dir() && !is_litex_source {
-            continue;
-        }
-        if !exported_children.contains_key(&name) {
-            return Err(repository_error(
-                format!(
-                    "configured folder contains unexported Litex module path `{}`; every direct child directory or .lit file must appear in [export]",
-                    name
-                ),
-                &config_path.to_string_lossy(),
-                0,
             ));
         }
     }

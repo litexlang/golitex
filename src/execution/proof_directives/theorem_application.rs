@@ -378,7 +378,7 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         let selected_fact = stmt.selected_fact.clone();
         let verify_state = VerifyState::initial();
-        self.verify_atomic_fact_well_defined(&selected_fact, &verify_state)
+        self.verify_atomic_fact_well_defined_result(&selected_fact, &verify_state)
             .map_err(|error| {
                 short_exec_error(
                     stmt.clone().into(),
@@ -640,7 +640,7 @@ impl Runtime {
                         BuiltinTheoremRequirementRole::FirstArgumentSubsetOfSecond,
                     ),
                 ] {
-                    self.verify_atomic_fact_well_defined(&requirement, &verify_state)?;
+                    self.verify_atomic_fact_well_defined_result(&requirement, &verify_state)?;
                     let result = self.verify_atomic_fact(&requirement, &verify_state)?;
                     if !result.is_success() {
                         return Err(builtin_thm_exec_error(
@@ -656,7 +656,7 @@ impl Runtime {
                     requirement_roles.push(role);
                     inside_results.push(result);
                 }
-                self.verify_atomic_fact_well_defined(&conclusion, &verify_state)?;
+                self.verify_atomic_fact_well_defined_result(&conclusion, &verify_state)?;
             }
 
             let store_reason = InferReason::Other(format!("builtin theorem `{}`", name));
@@ -721,7 +721,7 @@ impl Runtime {
             if verify_requirements {
                 let finite_requirement: AtomicFact =
                     IsFiniteSetFact::new(finite_set, stmt.line_file.clone()).into();
-                self.verify_atomic_fact_well_defined(&finite_requirement, &verify_state)?;
+                self.verify_atomic_fact_well_defined_result(&finite_requirement, &verify_state)?;
                 let result = self.verify_atomic_fact(&finite_requirement, &verify_state)?;
                 if !result.is_success() {
                     return Err(builtin_thm_exec_error(
@@ -734,7 +734,7 @@ impl Runtime {
                 requirement_facts.push(finite_requirement.into());
                 requirement_roles.push(BuiltinTheoremRequirementRole::ArgumentIsFiniteSet);
                 inside_results.push(result);
-                self.verify_exist_or_and_chain_atomic_fact_well_defined(
+                self.verify_exist_or_and_chain_atomic_fact_well_defined_result(
                     &conclusion,
                     &verify_state,
                 )?;
@@ -831,7 +831,7 @@ impl Runtime {
                 requirement_facts.push(rational_requirement.into());
                 requirement_roles.push(BuiltinTheoremRequirementRole::ArgumentBelongsToRationals);
                 inside_results.push(result);
-                self.verify_exist_or_and_chain_atomic_fact_well_defined(
+                self.verify_exist_or_and_chain_atomic_fact_well_defined_result(
                     &conclusion,
                     &verify_state,
                 )?;
@@ -898,7 +898,7 @@ impl Runtime {
                 )
                 .into();
                 let verification = if verify_requirements {
-                    self.verify_atomic_fact_well_defined(&conclusion, &verify_state)?;
+                    self.verify_atomic_fact_well_defined_result(&conclusion, &verify_state)?;
                     let automatic_result = self
                         .verify_non_equational_atomic_fact_with_bounded_builtin_routes(
                             &conclusion,
@@ -921,7 +921,8 @@ impl Runtime {
                         let Obj::MatrixSet(expected) = &stmt.args()[1] else {
                             unreachable!("matrix target was checked above")
                         };
-                        let actual = self.real_matrix_type(element, &verify_state, "operator")?;
+                        let actual =
+                            self.real_matrix_type_after_well_defined(element, "operator")?;
                         let real: Obj = StandardSet::R.into();
                         let equality_steps = vec![
                             EqualFact::new_from_refs(
@@ -929,11 +930,7 @@ impl Runtime {
                                 &expected.set,
                                 stmt.line_file.clone(),
                             ),
-                            EqualFact::new_from_refs(
-                                &expected.set,
-                                &real,
-                                stmt.line_file.clone(),
-                            ),
+                            EqualFact::new_from_refs(&expected.set, &real, stmt.line_file.clone()),
                             EqualFact::new_from_refs(
                                 &actual.row_len,
                                 &expected.row_len,
@@ -1035,7 +1032,7 @@ impl Runtime {
                 )
                 .into();
                 let verification = if verify_requirements {
-                    self.verify_atomic_fact_well_defined(&conclusion, &verify_state)?;
+                    self.verify_atomic_fact_well_defined_result(&conclusion, &verify_state)?;
                     let AtomicFact::InFact(in_fact) = &conclusion else {
                         unreachable!()
                     };
@@ -1063,7 +1060,7 @@ impl Runtime {
                 )
                 .into();
                 let verification = if verify_requirements {
-                    self.verify_atomic_fact_well_defined(&conclusion, &verify_state)?;
+                    self.verify_atomic_fact_well_defined_result(&conclusion, &verify_state)?;
                     let AtomicFact::InFact(in_fact) = &conclusion else {
                         unreachable!()
                     };
@@ -1100,7 +1097,7 @@ impl Runtime {
                 )
                 .into();
                 let verification = if verify_requirements {
-                    self.verify_atomic_fact_well_defined(&conclusion, &verify_state)?;
+                    self.verify_atomic_fact_well_defined_result(&conclusion, &verify_state)?;
                     let AtomicFact::InFact(in_fact) = &conclusion else {
                         unreachable!()
                     };
@@ -1124,7 +1121,7 @@ impl Runtime {
                 )
                 .into();
                 let verification = if verify_requirements {
-                    self.verify_atomic_fact_well_defined(&conclusion, &verify_state)?;
+                    self.verify_atomic_fact_well_defined_result(&conclusion, &verify_state)?;
                     let automatic = self
                         .verify_non_equational_atomic_fact_with_bounded_builtin_routes(
                             &conclusion,
@@ -1167,7 +1164,7 @@ impl Runtime {
                 )
                 .into();
                 let verification = if verify_requirements {
-                    self.verify_atomic_fact_well_defined(&conclusion, &verify_state)?;
+                    self.verify_atomic_fact_well_defined_result(&conclusion, &verify_state)?;
                     let AtomicFact::InFact(in_fact) = &conclusion else {
                         unreachable!()
                     };
@@ -1200,7 +1197,7 @@ impl Runtime {
                     IsNonemptySetFact::new(stmt.args()[0].clone(), stmt.line_file.clone()).into();
                 let pointwise = name.ends_with("_from_pointwise");
                 let verification = if verify_requirements {
-                    self.verify_atomic_fact_well_defined(&conclusion, &verify_state)?;
+                    self.verify_atomic_fact_well_defined_result(&conclusion, &verify_state)?;
                     let AtomicFact::IsNonemptySetFact(nonempty) = &conclusion else {
                         unreachable!()
                     };
@@ -1242,7 +1239,7 @@ impl Runtime {
                 )
                 .into();
                 let verification = if verify_requirements {
-                    self.verify_atomic_fact_well_defined(&conclusion, &verify_state)?;
+                    self.verify_atomic_fact_well_defined_result(&conclusion, &verify_state)?;
                     let AtomicFact::LessEqualFact(fact) = &conclusion else {
                         unreachable!()
                     };
@@ -1283,7 +1280,7 @@ impl Runtime {
                 )
                 .into();
                 let verification = if verify_requirements {
-                    self.verify_atomic_fact_well_defined(&conclusion, &verify_state)?;
+                    self.verify_atomic_fact_well_defined_result(&conclusion, &verify_state)?;
                     let AtomicFact::LessEqualFact(fact) = &conclusion else {
                         unreachable!()
                     };
@@ -1321,7 +1318,7 @@ impl Runtime {
                 )
                 .into();
                 let verification = if verify_requirements {
-                    self.verify_atomic_fact_well_defined(&conclusion, &verify_state)?;
+                    self.verify_atomic_fact_well_defined_result(&conclusion, &verify_state)?;
                     let AtomicFact::LessEqualFact(fact) = &conclusion else {
                         unreachable!()
                     };
@@ -1352,7 +1349,7 @@ impl Runtime {
                 )
                 .into();
                 let verification = if verify_requirements {
-                    self.verify_atomic_fact_well_defined(&conclusion, &verify_state)?;
+                    self.verify_atomic_fact_well_defined_result(&conclusion, &verify_state)?;
                     let literal = self.try_verify_tuple_equality_from_dim_and_projections(
                         &EqualFact::new_from_refs(
                             &stmt.args()[0],
@@ -1403,7 +1400,7 @@ impl Runtime {
                 )
                 .into();
                 let verification = if verify_requirements {
-                    self.verify_atomic_fact_well_defined(&conclusion, &verify_state)?;
+                    self.verify_atomic_fact_well_defined_result(&conclusion, &verify_state)?;
                     let builtin_state = BuiltinRuleSearchState::initial();
                     let pointwise = self.try_verify_finite_set_sum_pointwise_equality(
                         &EqualFact::new_from_refs(
@@ -1455,7 +1452,7 @@ impl Runtime {
                 )
                 .into();
                 let verification = if verify_requirements {
-                    self.verify_atomic_fact_well_defined(&conclusion, &verify_state)?;
+                    self.verify_atomic_fact_well_defined_result(&conclusion, &verify_state)?;
                     let builtin_state = BuiltinRuleSearchState::initial();
                     Some(
                         self.try_verify_sum_over_bijective_finite_set_enumerations(
@@ -1496,11 +1493,8 @@ impl Runtime {
                     vec![],
                 ));
             }
-            let result = self.complete_atomic_fact_proof_result(
-                &conclusion,
-                result,
-                &verify_state,
-            )?;
+            let result =
+                self.complete_atomic_fact_proof_result(&conclusion, result, &verify_state)?;
             requirement_facts.push(result.fact());
             requirement_roles.push(requirement_role.clone());
             inside_results.push(result);

@@ -342,7 +342,7 @@ fn trusted_claim_result_contains_only_environment_effects() {
 }
 
 #[test]
-fn set_builder_wd_scope_is_owned_by_recursive_binder_fields() {
+fn set_builder_wd_scope_is_reused_through_its_complete_binder_result() {
     let mut runtime = Runtime::default();
     runtime.start_isolated_source("set_builder_recursive_wd");
     let tokenizer = Tokenizer::new();
@@ -371,42 +371,45 @@ fn set_builder_wd_scope_is_owned_by_recursive_binder_fields() {
         panic!("set-builder equality uses atomic-fact WD");
     };
     assert_eq!(wd.arguments.len(), 2);
-    for argument in &wd.arguments {
-        let SuccessVerifyObjWellDefinedResult::Direct(object_wd) = argument.result.as_ref() else {
-            panic!("each set-builder occurrence owns a direct WD node");
-        };
-        let Some(binder) = object_wd.steps.binder.as_deref() else {
-            panic!("set-builder WD owns its binder result as a nested field");
-        };
-        let SuccessVerifyBinderObjectWellDefinedResult::SetBuilder(binder) = binder else {
-            panic!("set-builder object must own a set-builder binder result");
-        };
-        assert_eq!(binder.parameter_carrier.source_object.to_string(), "R");
-        assert_eq!(binder.conditions.len(), 1);
-        let Fact::AtomicFact(AtomicFact::InFact(parameter_membership)) =
-            &binder.parameter.proposition
-        else {
-            panic!("set-builder parameter premise is membership");
-        };
-        let Fact::AtomicFact(AtomicFact::GreaterFact(condition)) = &binder.conditions[0].store.fact
-        else {
-            panic!("set-builder condition retains its greater-than fact");
-        };
-        assert!(objs_equal_with_nested_binder_alpha_equivalence(
-            &parameter_membership.element,
-            &condition.left,
-        ));
-        assert!(binder.conditions[0].store.fact_id.is_some());
-    }
+    let SuccessVerifyObjWellDefinedResult::Direct(object_wd) = wd.arguments[0].result.as_ref()
+    else {
+        panic!("the first set-builder occurrence owns direct WD");
+    };
+    let SuccessVerifyObjWellDefinedResult::Reuse(reuse) = wd.arguments[1].result.as_ref() else {
+        panic!("the alpha-equivalent set-builder explicitly reuses its complete WD result");
+    };
+    assert!(Rc::ptr_eq(object_wd, &reuse.source));
+    let Some(binder) = object_wd.steps.binder.as_deref() else {
+        panic!("set-builder WD owns its binder result as a nested field");
+    };
+    let SuccessVerifyBinderObjectWellDefinedResult::SetBuilder(binder) = binder else {
+        panic!("set-builder object must own a set-builder binder result");
+    };
+    assert_eq!(binder.parameter_carrier.source_object.to_string(), "R");
+    assert_eq!(binder.conditions.len(), 1);
+    let Fact::AtomicFact(AtomicFact::InFact(parameter_membership)) = &binder.parameter.proposition
+    else {
+        panic!("set-builder parameter premise is membership");
+    };
+    let Fact::AtomicFact(AtomicFact::GreaterFact(condition)) = &binder.conditions[0].store.fact
+    else {
+        panic!("set-builder condition retains its greater-than fact");
+    };
+    assert!(objs_equal_with_nested_binder_alpha_equivalence(
+        &parameter_membership.element,
+        &condition.left,
+    ));
+    assert!(binder.conditions[0].store.fact_id.is_some());
 
     let json = render_statement_result_json(&result);
     assert!(json.contains("\"kind\": \"SetBuilder\""));
+    assert!(json.contains("\"kind\": \"Reuse\""));
     assert!(!json.contains("ambient_scope"));
     assert!(!json.contains("LegacyPassThrough"));
 }
 
 #[test]
-fn anonymous_function_wd_keeps_each_body_inside_its_own_binder_result() {
+fn anonymous_function_wd_reuses_alpha_equivalent_complete_binder_result() {
     let mut runtime = Runtime::default();
     runtime.start_isolated_source("anonymous_function_recursive_wd");
     let tokenizer = Tokenizer::new();
@@ -432,49 +435,108 @@ fn anonymous_function_wd_keeps_each_body_inside_its_own_binder_result() {
         panic!("function equality uses atomic-fact WD");
     };
     assert_eq!(wd.arguments.len(), 2);
-    let mut binder_addresses = Vec::new();
-    for argument in &wd.arguments {
-        let SuccessVerifyObjWellDefinedResult::Direct(object_wd) = argument.result.as_ref() else {
-            panic!("each anonymous-function occurrence owns direct WD");
-        };
-        let Some(binder) = object_wd.steps.binder.as_deref() else {
-            panic!("anonymous-function WD owns its binder subtree");
-        };
-        binder_addresses.push(binder as *const _ as usize);
-        let SuccessVerifyBinderObjectWellDefinedResult::AnonymousFunction(binder) = binder else {
-            panic!("anonymous function owns the matching binder result");
-        };
-        assert_eq!(binder.parameters.len(), 1);
-        assert_eq!(binder.parameter_carriers[0].source_object.to_string(), "R");
-        let Fact::AtomicFact(AtomicFact::InFact(parameter_membership)) =
-            &binder.parameters[0].proposition
-        else {
-            panic!("anonymous-function parameter premise is membership");
-        };
-        let Obj::Add(body) = &binder.body.source_object else {
-            panic!("anonymous-function body retains its addition object");
-        };
-        assert!(objs_equal_with_nested_binder_alpha_equivalence(
-            &parameter_membership.element,
-            &body.left,
-        ));
-        let Fact::AtomicFact(AtomicFact::InFact(body_membership)) =
-            &binder.body_membership.expected_proposition
-        else {
-            panic!("anonymous-function body obligation is membership");
-        };
-        assert!(objs_equal_with_nested_binder_alpha_equivalence(
-            &body_membership.element,
-            &binder.body.source_object,
-        ));
-        assert_eq!(body_membership.set.to_string(), "R");
-    }
-    assert_ne!(binder_addresses[0], binder_addresses[1]);
+    let SuccessVerifyObjWellDefinedResult::Direct(object_wd) = wd.arguments[0].result.as_ref()
+    else {
+        panic!("the first anonymous function owns the direct WD certificate");
+    };
+    let SuccessVerifyObjWellDefinedResult::Reuse(reuse) = wd.arguments[1].result.as_ref() else {
+        panic!("the alpha-equivalent function must explicitly reuse the completed certificate");
+    };
+    assert!(Rc::ptr_eq(&reuse.source, object_wd));
+    assert!(objs_equal_with_nested_binder_alpha_equivalence(
+        &reuse.object,
+        &object_wd.object,
+    ));
+    let Some(binder) = object_wd.steps.binder.as_deref() else {
+        panic!("anonymous-function WD owns its binder subtree");
+    };
+    let SuccessVerifyBinderObjectWellDefinedResult::AnonymousFunction(binder) = binder else {
+        panic!("anonymous function owns the matching binder result");
+    };
+    assert_eq!(binder.parameters.len(), 1);
+    assert_eq!(binder.parameter_carriers[0].source_object.to_string(), "R");
+    let Fact::AtomicFact(AtomicFact::InFact(parameter_membership)) =
+        &binder.parameters[0].proposition
+    else {
+        panic!("anonymous-function parameter premise is membership");
+    };
+    let Obj::Add(body) = &binder.body.source_object else {
+        panic!("anonymous-function body retains its addition object");
+    };
+    assert!(objs_equal_with_nested_binder_alpha_equivalence(
+        &parameter_membership.element,
+        &body.left,
+    ));
+    let Fact::AtomicFact(AtomicFact::InFact(body_membership)) =
+        &binder.body_membership.expected_proposition
+    else {
+        panic!("anonymous-function body obligation is membership");
+    };
+    assert!(objs_equal_with_nested_binder_alpha_equivalence(
+        &body_membership.element,
+        &binder.body.source_object,
+    ));
+    assert_eq!(body_membership.set.to_string(), "R");
 
     let json = render_statement_result_json(&result);
     assert!(json.contains("\"kind\": \"AnonymousFunction\""));
+    assert!(json.contains("\"kind\": \"Reuse\""));
+    assert!(json.contains("\"$ref\":"));
     assert!(!json.contains("ambient_scope"));
     assert!(!json.contains("LegacyPassThrough"));
+}
+
+#[test]
+fn object_wd_reuse_is_explicit_inside_one_statement_and_resets_for_the_next() {
+    let mut runtime = Runtime::default();
+    runtime.start_isolated_source("statement_local_object_wd_reuse");
+    let tokenizer = Tokenizer::new();
+    let blocks = tokenizer
+        .parse_blocks(
+            "have fn f(x R) R = x\nf(1) = f(1)\nf(1) = f(1)",
+            Rc::from("statement_local_object_wd_reuse.lit"),
+        )
+        .expect("repeated application source tokenizes");
+    let mut results = Vec::new();
+    for mut block in blocks {
+        let statement = runtime
+            .parse_statement(&mut block)
+            .expect("repeated application statement parses");
+        results.push(
+            runtime
+                .execute_statement(&statement)
+                .expect("repeated application statement verifies"),
+        );
+    }
+    assert_eq!(results.len(), 3);
+
+    let mut direct_roots = Vec::new();
+    for result in &results[1..] {
+        let fact = result.factual_success().expect("equality is factual");
+        let SuccessVerifyFactWellDefinedProofResult::AtomicFact(wd) = fact
+            .checked()
+            .expect("verified equality owns WD")
+            .proof
+            .as_ref()
+        else {
+            panic!("application equality uses atomic-fact WD");
+        };
+        let [left, right] = wd.arguments.as_slice() else {
+            panic!("equality WD retains two ordered object arguments");
+        };
+        let SuccessVerifyObjWellDefinedResult::Direct(left) = left.result.as_ref() else {
+            panic!("each statement starts with a direct application WD node");
+        };
+        let SuccessVerifyObjWellDefinedResult::Reuse(right) = right.result.as_ref() else {
+            panic!("the repeated application in one statement is an explicit Reuse");
+        };
+        assert!(Rc::ptr_eq(left, &right.source));
+        direct_roots.push(Rc::as_ptr(left));
+    }
+    assert_ne!(
+        direct_roots[0], direct_roots[1],
+        "a new source statement owns a new VerifyState and WD memo"
+    );
 }
 
 #[test]

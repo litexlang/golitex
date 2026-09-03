@@ -83,10 +83,7 @@ pub struct SuccessFactStmtResult {
 }
 
 impl SuccessFactStmtResult {
-    pub fn verified(
-        verification: Rc<VerifiedFactResult>,
-        store: SuccessStoreFactResult,
-    ) -> Self {
+    pub fn verified(verification: Rc<VerifiedFactResult>, store: SuccessStoreFactResult) -> Self {
         Self {
             evidence: FactStatementEvidence::Verified(verification),
             store,

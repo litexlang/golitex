@@ -93,9 +93,8 @@ impl FactGraphBuilder {
             self.add_assumption_nodes(&verification.domain.assumption_infers);
         }
         success.visit_child_results(&mut |child| self.collect_result_nodes(child));
-        success.visit_fact_verification_children(&mut |child| {
-            self.collect_verify_result_nodes(child)
-        });
+        success
+            .visit_fact_verification_children(&mut |child| self.collect_verify_result_nodes(child));
         success.visit_success_child_results(&mut |child| self.collect_success_nodes(child));
     }
 
@@ -134,6 +133,7 @@ impl FactGraphBuilder {
                 self.add_cited_stmt_node(
                     &result.verification.defining_equality.clone().into_stmt(),
                 );
+                self.collect_verify_result_nodes(&result.verification.reduced_equality);
             }
             SuccessFactProofResult::DiagnosticOnly(_) => {}
             SuccessFactProofResult::CombinedProofs(result) => {
@@ -148,6 +148,7 @@ impl FactGraphBuilder {
                 self.add_assumption_nodes(&result.assumption_infers);
                 for proved in &result.proves {
                     self.collect_verify_result_nodes(proved.result.as_ref());
+                    self.add_infer_nodes(&proved.store.infers);
                 }
             }
             SuccessFactProofResult::Transform(result) => {

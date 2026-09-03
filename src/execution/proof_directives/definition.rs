@@ -194,18 +194,12 @@ impl Runtime {
             AtomicFact::SubsetFact(_) | AtomicFact::SupersetFact(_) => {
                 self.verify_atomic_fact_using_builtin_or_prop_definition(fact, verify_state)
             }
-            AtomicFact::FnEqualInFact(fn_equal_in) => {
-                Ok(Some(self.verify_fn_equal_in_fact_with_builtin_rules(
-                    fn_equal_in,
-                    verify_state,
-                )?))
-            }
-            AtomicFact::FnEqualFact(fn_equal) => {
-                Ok(Some(self.verify_fn_equal_fact_with_builtin_rules(
-                    fn_equal,
-                    verify_state,
-                )?))
-            }
+            AtomicFact::FnEqualInFact(fn_equal_in) => Ok(Some(
+                self.verify_fn_equal_in_fact_with_builtin_rules(fn_equal_in, verify_state)?,
+            )),
+            AtomicFact::FnEqualFact(fn_equal) => Ok(Some(
+                self.verify_fn_equal_fact_with_builtin_rules(fn_equal, verify_state)?,
+            )),
             AtomicFact::NormalAtomicFact(fact) => match fact.predicate.to_string().as_str() {
                 PRIME => {
                     let atomic: AtomicFact = fact.clone().into();

@@ -103,11 +103,8 @@ impl Runtime {
         if let Some(result) = self.try_verify_indexed_fn_set_definition_equality(equal_fact)? {
             return Ok(result);
         }
-        if let Some(result) =
-            self.try_verify_tuple_reconstruction_from_known_cart_membership(
-                equal_fact,
-                builtin_state,
-            )?
+        if let Some(result) = self
+            .try_verify_tuple_reconstruction_from_known_cart_membership(equal_fact, builtin_state)?
         {
             return Ok(result);
         }
@@ -659,10 +656,9 @@ impl Runtime {
         }
 
         // A finite set with zero cardinality is empty.
-        if let Some(done) = self.try_verify_empty_finite_set_from_size_zero(
-            equal_fact,
-            builtin_state.verify_state(),
-        )? {
+        if let Some(done) = self
+            .try_verify_empty_finite_set_from_size_zero(equal_fact, builtin_state.verify_state())?
+        {
             return Ok(done);
         }
 

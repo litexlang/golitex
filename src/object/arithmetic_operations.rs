@@ -6,28 +6,24 @@ use crate::prelude::*;
 pub struct Add {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
-    pub source_occurrence_id: Option<SourceObjectOccurrenceId>,
 }
 
 #[derive(Clone)]
 pub struct Sub {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
-    pub source_occurrence_id: Option<SourceObjectOccurrenceId>,
 }
 
 #[derive(Clone)]
 pub struct Mul {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
-    pub source_occurrence_id: Option<SourceObjectOccurrenceId>,
 }
 
 #[derive(Clone)]
 pub struct Div {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
-    pub source_occurrence_id: Option<SourceObjectOccurrenceId>,
 }
 
 #[derive(Clone)]
@@ -62,72 +58,36 @@ pub struct Pow {
 
 impl Add {
     pub fn new(left: Obj, right: Obj) -> Self {
-        Self::new_with_source_occurrence_id(left, right, None)
-    }
-
-    pub fn new_with_source_occurrence_id(
-        left: Obj,
-        right: Obj,
-        source_occurrence_id: Option<SourceObjectOccurrenceId>,
-    ) -> Self {
         Add {
             left: Box::new(left),
             right: Box::new(right),
-            source_occurrence_id,
         }
     }
 }
 
 impl Sub {
     pub fn new(left: Obj, right: Obj) -> Self {
-        Self::new_with_source_occurrence_id(left, right, None)
-    }
-
-    pub fn new_with_source_occurrence_id(
-        left: Obj,
-        right: Obj,
-        source_occurrence_id: Option<SourceObjectOccurrenceId>,
-    ) -> Self {
         Sub {
             left: Box::new(left),
             right: Box::new(right),
-            source_occurrence_id,
         }
     }
 }
 
 impl Mul {
     pub fn new(left: Obj, right: Obj) -> Self {
-        Self::new_with_source_occurrence_id(left, right, None)
-    }
-
-    pub fn new_with_source_occurrence_id(
-        left: Obj,
-        right: Obj,
-        source_occurrence_id: Option<SourceObjectOccurrenceId>,
-    ) -> Self {
         Mul {
             left: Box::new(left),
             right: Box::new(right),
-            source_occurrence_id,
         }
     }
 }
 
 impl Div {
     pub fn new(left: Obj, right: Obj) -> Self {
-        Self::new_with_source_occurrence_id(left, right, None)
-    }
-
-    pub fn new_with_source_occurrence_id(
-        left: Obj,
-        right: Obj,
-        source_occurrence_id: Option<SourceObjectOccurrenceId>,
-    ) -> Self {
         Div {
             left: Box::new(left),
             right: Box::new(right),
-            source_occurrence_id,
         }
     }
 }

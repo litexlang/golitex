@@ -1914,12 +1914,12 @@ source predicate instantiated at the argument. -/
 structure FnWhere
     (domain : Litex.Set.{u})
     (codomain : Litex.Set.{v})
-    (requires : {α : Litex.u.{u}} → α → Prop) where
+    (requires : {α : Litex.u.{u}} → (x : α) → In x domain → Prop) where
   call :
     {α : Litex.u.{u}} →
     (x : α) →
-    In x domain →
-    requires x →
+    (hx : In x domain) →
+    requires x hx →
     codomain.Carrier
 
 /-- The Litex set of unary functions from `domain` to `codomain`.
@@ -1938,7 +1938,7 @@ abbrev fnSet
 abbrev fnSetWhere
     (domain : Litex.Set.{u})
     (codomain : Litex.Set.{v})
-    (requires : {α : Litex.u.{u}} → α → Prop) :
+    (requires : {α : Litex.u.{u}} → (x : α) → In x domain → Prop) :
     Litex.Set.{max (u + 1) v} :=
   Set.ofType (FnWhere domain codomain requires)
 
@@ -2000,14 +2000,14 @@ function set. -/
 noncomputable def fnApplyWhere
     {domain : Litex.Set.{u}}
     {codomain : Litex.Set.{v}}
-    {requires : {α : Litex.u.{u}} → α → Prop}
+    {requires : {α : Litex.u.{u}} → (x : α) → In x domain → Prop}
     {α : Litex.u.{u}}
     {β : Litex.u.{max (u + 1) v}}
     (f : β)
     (hf : In f (fnSetWhere domain codomain requires))
     (x : α)
     (hx : In x domain)
-    (hrequires : requires x) :
+    (hrequires : requires x hx) :
     codomain.Carrier :=
   (In.rep f hf).call x hx hrequires
 
@@ -2016,13 +2016,13 @@ source-domain clauses. -/
 def fnApplyWhereOwn
     {domain : Litex.Set.{u}}
     {codomain : Litex.Set.{v}}
-    {requires : {α : Litex.u.{u}} → α → Prop}
+    {requires : {α : Litex.u.{u}} → (x : α) → In x domain → Prop}
     (f : FnWhere domain codomain requires)
     (_hf : In f (fnSetWhere domain codomain requires))
     {α : Litex.u.{u}}
     (x : α)
     (hx : In x domain)
-    (hrequires : requires x) :
+    (hrequires : requires x hx) :
     codomain.Carrier :=
   f.call x hx hrequires
 
@@ -2042,12 +2042,12 @@ def fnRangeOwn
 def fnWhereRangeOwn
     {domain : Litex.Set.{u}}
     {codomain : Litex.Set.{v}}
-    {requires : {α : Type u} → α → Prop}
+    {requires : {α : Type u} → (x : α) → In x domain → Prop}
     (f : FnWhere domain codomain requires) :
     Litex.Set.{v} :=
   Set.ofType
     {value : codomain.Carrier //
-      ∃ (α : Type u) (x : α) (hx : In x domain) (hr : requires x),
+      ∃ (α : Type u) (x : α) (hx : In x domain) (hr : requires x hx),
         value = f.call x hx hr}
 
 /-- Every checked application of an exact total function belongs to its exact
@@ -2082,12 +2082,12 @@ its exact range. -/
 theorem fnApplyWhereOwnInRange
     {domain : Litex.Set.{u}}
     {codomain : Litex.Set.{v}}
-    {requires : {α : Type u} → α → Prop}
+    {requires : {α : Type u} → (x : α) → In x domain → Prop}
     (f : FnWhere domain codomain requires)
     {α : Type u}
     (x : α)
     (hx : In x domain)
-    (hr : requires x) :
+    (hr : requires x hx) :
     In (f.call x hx hr) (fnWhereRangeOwn f) := by
   let witness : (fnWhereRangeOwn f).Carrier :=
     ⟨f.call x hx hr, ⟨α, x, hx, hr, rfl⟩⟩
@@ -2097,13 +2097,13 @@ theorem fnApplyWhereOwnInRange
 theorem fnApplyWhereOwnInRangeFromRenderedApplication
     {domain : Litex.Set.{u}}
     {codomain : Litex.Set.{v}}
-    {requires : {alpha : Type u} → alpha → Prop}
+    {requires : {alpha : Type u} → (x : alpha) → In x domain → Prop}
     {f : FnWhere domain codomain requires}
     {hf : In f (fnSetWhere domain codomain requires)}
     {alpha : Type u}
     {x : alpha}
     {hx : In x domain}
-    {hr : requires x} :
+    {hr : requires x hx} :
     In (fnApplyWhereOwn f hf x hx hr) (fnWhereRangeOwn f) := by
   simpa [fnApplyWhereOwn] using fnApplyWhereOwnInRange f x hx hr
 
@@ -2121,7 +2121,7 @@ theorem fnRangeOwnSubsetCodomain
 theorem fnWhereRangeOwnSubsetCodomain
     {domain : Litex.Set.{u}}
     {codomain : Litex.Set.{v}}
-    {requires : {α : Type u} → α → Prop}
+    {requires : {α : Type u} → (x : α) → In x domain → Prop}
     (f : FnWhere domain codomain requires) :
     Subset (fnWhereRangeOwn f) codomain := by
   intro α value membership
@@ -2268,7 +2268,7 @@ theorem realRightRaySubsetRFromExpectedType
 /-- A predicate-defined Litex subset. Its exact carrier is the corresponding
 subtype, and the compiler-owned subtype edge relates each member to its base
 value. -/
-def setBuilder
+@[reducible] def setBuilder
     (base : Litex.Set.{u})
     (predicate : base.Carrier → Prop) :
     Litex.Set.{u} :=

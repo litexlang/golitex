@@ -41,24 +41,33 @@ impl StmtResultToLeanCompiler {
         else {
             return Err("ForallProof Result retained no forall well-definedness".into());
         };
-        if well_definedness.conclusions.len() != source_forall.then_facts.len() {
-            return Err("ForallProof process changed its WD conclusion arity".into());
+        let SuccessFactProofResult::ForallProof(proof) = verified.proof() else {
+            return Err("ForallProof Result retained another proof kind".into());
+        };
+        if well_definedness.conclusions.len() != source_forall.then_facts.len()
+            || proof.proves.len() != source_forall.then_facts.len()
+        {
+            return Err("ForallProof process changed its conclusion arity".into());
         }
         let mut published_conclusions = Vec::with_capacity(source_forall.then_facts.len());
-        for (index, (conclusion, checked)) in source_forall
+        for (index, ((conclusion, checked), proved)) in source_forall
             .then_facts
             .iter()
             .zip(well_definedness.conclusions.iter())
+            .zip(proof.proves.iter())
             .enumerate()
         {
             let fact = conclusion.clone().to_fact();
-            if checked.proposition.to_string() != fact.to_string() {
+            if checked.proposition.to_string() != fact.to_string()
+                || proved.stmt.clone().to_fact().to_string() != fact.to_string()
+                || proved.store.fact.to_string() != fact.to_string()
+            {
                 return Err(format!(
-                    "ForallProof process WD conclusion {index} changed its proposition"
+                    "ForallProof process conclusion {index} changed its proposition"
                 ));
             }
-            let fact_id = checked.store.fact_id.ok_or_else(|| {
-                format!("ForallProof process WD conclusion {index} has no local FactId")
+            let fact_id = proved.store.fact_id.ok_or_else(|| {
+                format!("ForallProof process truth conclusion {index} has no local FactId")
             })?;
             published_conclusions.push((index, fact_id, fact));
         }
@@ -572,6 +581,31 @@ impl StmtResultToLeanCompiler {
                         &premise_name,
                         &mut self.environment_stack,
                     )?;
+                    if let Some(native_equality) = self
+                        .construct_native_equality_from_visible_exact_same(
+                            &source_premise,
+                            &premise_name,
+                        )?
+                    {
+                        self.retain_native_equality_proof_in_current_environment(
+                            *fact_id,
+                            &source_premise,
+                            native_equality.clone(),
+                        )?;
+                        let well_definedness_fact_id = well_definedness.premises[premise_index]
+                            .store
+                            .fact_id
+                            .ok_or_else(|| {
+                                format!(
+                                    "ForallProof WD domain premise {premise_index} has no FactId"
+                                )
+                            })?;
+                        self.retain_native_equality_proof_in_current_environment(
+                            well_definedness_fact_id,
+                            &source_premise,
+                            native_equality,
+                        )?;
+                    }
                     premises.push(LeanLocalFactPremise::new(*fact_id, source_premise));
                 }
 
@@ -657,10 +691,14 @@ impl StmtResultToLeanCompiler {
                     }
                     let conclusion_well_definedness =
                         &well_definedness.conclusions[source_conclusion_index];
-                    let conclusion_fact_id =
-                        conclusion_well_definedness.store.fact_id.ok_or_else(|| {
+                    if proved.store.fact.to_string() != expected.to_string() {
+                        return Err(format!(
+                            "ForallProof truth store {source_conclusion_index} changed its conclusion"
+                        ));
+                    }
+                    let conclusion_fact_id = proved.store.fact_id.ok_or_else(|| {
                             format!(
-                                "ForallProof WD conclusion {source_conclusion_index} has no local FactId"
+                                "ForallProof truth conclusion {source_conclusion_index} has no local FactId"
                             )
                         })?;
                     // The conclusion is a real child Result layer. Its proof may
@@ -686,16 +724,6 @@ impl StmtResultToLeanCompiler {
                         "ForallProof conclusion {source_conclusion_index} WD stores failed to install after preceding FactIds [{preceding_fact_ids}]: {error}"
                     )
                 })?;
-                    self.install_fact_anonymous_function_occurrence_aliases(
-                        &expected,
-                        &format!("ForallProof conclusion {source_conclusion_index}"),
-                    )?;
-                    self.install_fact_anonymous_function_occurrence_aliases(
-                        &child.fact(),
-                        &format!(
-                            "ForallProof conclusion {source_conclusion_index} retained proof target"
-                        ),
-                    )?;
                     let Some(conclusion_proof) = self
                     .construct_lean_proof_from_direct_fact_result(child)
                     .map_err(|error| {
@@ -759,10 +787,79 @@ impl StmtResultToLeanCompiler {
                     self.environment_stack
                         .fact_propositions
                         .insert(well_definedness_conclusion_fact_id, expected.clone());
-                    if !conclusion_well_definedness.store.infers.is_empty() {
-                        if conclusion_well_definedness
-                            .store
-                            .infers
+                    if let (
+                        Fact::ChainFact(chain),
+                        SuccessFactProofResult::CombinedProofs(combined),
+                    ) = (&expected, child.proof())
+                    {
+                        let components = chain.facts().map_err(|error| {
+                            format!(
+                                "ForallProof conclusion {source_conclusion_index} retained an invalid chain: {error:?}"
+                            )
+                        })?;
+                        if combined.primary.is_some() || combined.steps.len() != components.len() {
+                            return Err(format!(
+                                "ForallProof conclusion {source_conclusion_index} changed its chain proof arity"
+                            ));
+                        }
+                        for application in &proved.store.infers.rule_applications {
+                            let InferRule::ChainImpliesComponent(rule) = &application.rule else {
+                                continue;
+                            };
+                            let [stored_component] = application.conclusions.as_slice() else {
+                                return Err(format!(
+                                    "ForallProof conclusion {source_conclusion_index} chain component {} changed its store arity",
+                                    rule.component_index
+                                ));
+                            };
+                            validate_chain_component_inference_target(
+                                rule,
+                                &expected,
+                                &stored_component.fact,
+                            )?;
+                            let component_result = combined.steps[rule.component_index]
+                                .verified()
+                                .ok_or_else(|| {
+                                    format!(
+                                        "ForallProof conclusion {source_conclusion_index} chain component {} is not factual",
+                                        rule.component_index
+                                    )
+                                })?;
+                            if component_result.fact().to_string()
+                                != Fact::from(components[rule.component_index].clone()).to_string()
+                            {
+                                return Err(format!(
+                                    "ForallProof conclusion {source_conclusion_index} chain component {} changed its proof target",
+                                    rule.component_index
+                                ));
+                            }
+                            let Some(component_fact_id) = stored_component.fact_id else {
+                                return Err(format!(
+                                    "ForallProof conclusion {source_conclusion_index} chain component {} has no frozen FactId",
+                                    rule.component_index
+                                ));
+                            };
+                            if let Some(native_equality) = self
+                                .construct_lean_native_equality_proof_from_direct_fact_result_using_its_well_definedness(
+                                    component_result,
+                                )?
+                            {
+                                self.retain_native_equality_proof_in_current_environment(
+                                    component_fact_id,
+                                    &stored_component.fact,
+                                    native_equality,
+                                )?;
+                            }
+                        }
+                    }
+                    for (phase, conclusion_infers) in [
+                        ("WD", &conclusion_well_definedness.store.infers),
+                        ("truth", &proved.store.infers),
+                    ] {
+                        if conclusion_infers.is_empty() {
+                            continue;
+                        }
+                        if conclusion_infers
                             .rule_applications
                             .iter()
                             .any(|application| {
@@ -772,26 +869,31 @@ impl StmtResultToLeanCompiler {
                             })
                         {
                             return Err(format!(
-                                "ForallProof WD conclusion {source_conclusion_index} contains an inference rule without a direct compiler consumer"
+                                "ForallProof {phase} conclusion {source_conclusion_index} contains an inference rule without a direct compiler consumer"
                             ));
                         }
                         let layer = format!(
-                            "ForallProof WD conclusion {source_conclusion_index} inference"
+                            "ForallProof {phase} conclusion {source_conclusion_index} inference"
                         );
+                        let phase_source_fact_id = if phase == "WD" {
+                            well_definedness_conclusion_fact_id
+                        } else {
+                            conclusion_fact_id
+                        };
                         let mut allowed_sources = self
                             .install_equality_chain_adjacent_projections_for_typed_inference(
                                 &expected,
-                                well_definedness_conclusion_fact_id,
+                                phase_source_fact_id,
                                 &conclusion_name,
-                                &conclusion_well_definedness.store.infers,
+                                conclusion_infers,
                                 &layer,
                             )?;
                         for source in self
                             .install_numeric_order_chain_adjacent_projections_for_typed_inference(
                                 &expected,
-                                well_definedness_conclusion_fact_id,
+                                phase_source_fact_id,
                                 &conclusion_name,
-                                &conclusion_well_definedness.store.infers,
+                                conclusion_infers,
                                 &layer,
                             )?
                         {
@@ -803,7 +905,7 @@ impl StmtResultToLeanCompiler {
                             }
                         }
                         self.compile_typed_inference_results_as_local_have_statements(
-                            &conclusion_well_definedness.store.infers,
+                            conclusion_infers,
                             &allowed_sources,
                             &mut proof_lines,
                             &layer,
@@ -851,8 +953,32 @@ impl StmtResultToLeanCompiler {
                     proof_lines.push(format!("exact ⟨{}⟩", conclusion_names.join(", ")));
                 }
                 let projected_fact: Fact = publication_selection.forall_fact.clone().into();
+                // The proof body names retained domain FactIds as
+                // `__domain_fN`, while a freshly rendered forall telescope
+                // owns canonical binders `__domain1`, `__domain2`, ... .
+                // Rebind those exact Result identities only for proposition
+                // rendering so function applications in the conclusion cite
+                // the binder that the generated type actually introduces.
+                let mut proposition_context = self.environment_stack.clone();
+                for (premise_index, (fact_id, well_defined_premise)) in premise_fact_ids
+                    .iter()
+                    .zip(well_definedness.premises.iter())
+                    .enumerate()
+                {
+                    let binder_name = format!("__domain{}", premise_index + 1);
+                    proposition_context
+                        .fact_names
+                        .insert(*fact_id, binder_name.clone());
+                    let well_definedness_fact_id =
+                        well_defined_premise.store.fact_id.ok_or_else(|| {
+                            format!("ForallProof WD domain premise {premise_index} has no FactId")
+                        })?;
+                    proposition_context
+                        .fact_names
+                        .insert(well_definedness_fact_id, binder_name);
+                }
                 let proposition =
-                    render_fact(&projected_fact, &self.environment_stack).map_err(|error| {
+                    render_fact(&projected_fact, &proposition_context).map_err(|error| {
                         format!("ForallProof target failed to render in its binder: {error}")
                     })?;
                 let mut lines = vec!["by".to_string()];

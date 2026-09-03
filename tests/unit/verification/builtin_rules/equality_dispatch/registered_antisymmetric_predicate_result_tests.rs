@@ -1,5 +1,6 @@
 use crate::parsing::Tokenizer;
 use crate::prelude::*;
+use crate::test_support::execute_source;
 use std::rc::Rc;
 
 fn parse_fact(runtime: &mut Runtime, source: &str) -> Fact {
@@ -33,6 +34,11 @@ fn fixture_child(runtime: &mut Runtime, fact: Fact) -> VerifyFactResult {
 fn registered_antisymmetric_predicate_verifier_combines_two_ordered_child_results() {
     let mut runtime = Runtime::default();
     runtime.start_isolated_source("registered_antisymmetric_result_test.lit");
+    let (_, setup_error) = execute_source("abstract_prop rel(x, y)\n", &mut runtime);
+    assert!(
+        setup_error.is_none(),
+        "fixture predicate setup: {setup_error:?}"
+    );
     let Fact::AtomicFact(AtomicFact::EqualFact(equal_fact)) = parse_fact(&mut runtime, "R = C")
     else {
         panic!("fixture target should be an equality")

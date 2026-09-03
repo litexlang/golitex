@@ -109,71 +109,13 @@ pub(in super::super) fn render_obj(
     }
 }
 
-/// Lower a source function application after recovering the parser-owned
-/// occurrence from the active Result certificate when definition replay has
-/// synthesized an alpha-equivalent copy.  Native-carrier renderers share this
-/// join with ordinary object rendering so one checked application cannot
-/// silently acquire two target representations.
+/// Lower a source function application. Certificate selection is performed
+/// later from the complete semantic source object under the active WD Result.
 pub(in super::super) fn lower_source_function_application_with_result_owned_occurrence(
     application: &FnObj,
-    context: &StmtResultToLeanCompilerEnvironmentStack,
+    _context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<LeanTargetFunctionApplicationRepresentation, String> {
-    let mut source: Obj = application.clone().into();
-    if application.source_occurrence_id.is_none() {
-        let alpha_display = source_display_without_symbol_ids(&source.to_string());
-        let result_context = context.well_definedness.as_ref().ok_or_else(|| {
-            format!("synthesized application `{source}` has no active Result-owned WD context")
-        })?;
-        let mut matching = result_context
-            .function_applications
-            .values()
-            .filter(|candidate| {
-                objs_equal_with_nested_binder_alpha_equivalence(
-                    &candidate.source_application,
-                    &source,
-                ) || source_display_without_symbol_ids(&candidate.source_application.to_string())
-                    == alpha_display
-            })
-            .collect::<Vec<_>>();
-        matching.sort_by_key(|candidate| match &candidate.source_application {
-            Obj::FnObj(application) => application
-                .source_occurrence_id
-                .map(|occurrence| occurrence.value())
-                .unwrap_or_default(),
-            _ => 0,
-        });
-        let Some(first) = matching.first().copied() else {
-            let available = result_context
-                .function_applications
-                .values()
-                .map(|candidate| candidate.source_application.to_string())
-                .collect::<Vec<_>>()
-                .join(", ");
-            return Err(format!(
-                "synthesized application `{source}` has no structurally matching Result-owned occurrence; active applications: [{available}]"
-            ));
-        };
-        let expected_certificate = function_application_result_certificate_key(first);
-        if matching.iter().any(|candidate| {
-            function_application_result_certificate_key(candidate) != expected_certificate
-        }) {
-            return Err(format!(
-                "synthesized application `{source}` has evidence-distinct matching Result-owned occurrences"
-            ));
-        }
-        let Obj::FnObj(source_application) = &mut source else {
-            unreachable!("FnObj branch retained a non-application object")
-        };
-        let Obj::FnObj(certified_application) = &first.source_application else {
-            return Err(
-                "Result-owned function application certificate retained a non-application".into(),
-            );
-        };
-        // Keep the synthesized application's current binder symbols. The
-        // certificate contributes identity/evidence only; copying its whole
-        // source would reintroduce alpha-refreshed symbols into this scope.
-        source_application.source_occurrence_id = certified_application.source_occurrence_id;
-    }
+    let source: Obj = application.clone().into();
     let LeanTargetObjectRepresentation::FunctionApplication(application) =
         LeanTargetObjectRepresentation::lower(&source)?
     else {
@@ -289,17 +231,10 @@ pub(in super::super) fn render_lean_source_for_target_object_representation(
             Ok(rendered)
         }
         LeanTargetObjectRepresentation::Aggregate {
-            source_occurrence_id,
-            semantic_key,
+            source,
             kind,
             arguments,
-        } => render_aggregate_object(
-            *source_occurrence_id,
-            semantic_key,
-            *kind,
-            arguments,
-            context,
-        ),
+        } => render_aggregate_object(source, *kind, arguments, context),
         LeanTargetObjectRepresentation::TupleDimension(tuple) => Ok(format!(
             "(Litex.tupleDim {})",
             render_lean_source_for_target_object_representation(tuple, context)?

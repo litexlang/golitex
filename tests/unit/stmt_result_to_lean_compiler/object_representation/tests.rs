@@ -13,7 +13,6 @@ fn simple_set_constructors_preserve_identity_and_order() {
     assert_eq!(
         LeanTargetObjectRepresentation::lower(&union).unwrap(),
         LeanTargetObjectRepresentation::BuiltinApp {
-            source_occurrence_id: None,
             semantic_key: obj_equality_key(&union),
             operator: LeanTargetBuiltinObjectOperator::Union,
             arguments: vec![
@@ -33,7 +32,6 @@ fn simple_set_constructors_preserve_identity_and_order() {
     assert_eq!(
         LeanTargetObjectRepresentation::lower(&list).unwrap(),
         LeanTargetObjectRepresentation::Collection {
-            source_occurrence_id: None,
             semantic_key: obj_equality_key(&list),
             constructor: LeanTargetCollectionObjectConstructor::ListSet,
             items: vec![
@@ -69,7 +67,6 @@ fn arcsin_has_an_explicit_lean_target_object_node() {
     assert_eq!(
         LeanTargetObjectRepresentation::lower(&arcsin).unwrap(),
         LeanTargetObjectRepresentation::BuiltinApp {
-            source_occurrence_id: None,
             semantic_key: obj_equality_key(&arcsin),
             operator: LeanTargetBuiltinObjectOperator::Arcsin,
             arguments: vec![LeanTargetObjectRepresentation::Symbol {

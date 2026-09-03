@@ -47,11 +47,11 @@ impl Runtime {
             line_file.clone(),
         )
         .into();
-        let dividend_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&dividend_in_z, builtin_state)?;
-        if !dividend_result.is_success() {
+        let Some(dividend_result) =
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&dividend_in_z, builtin_state)?
+        else {
             return Ok(None);
-        }
+        };
 
         let modulus_in_n_pos: AtomicFact = InFact::new(
             mod_obj.right.as_ref().clone(),
@@ -59,11 +59,11 @@ impl Runtime {
             line_file,
         )
         .into();
-        let modulus_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&modulus_in_n_pos, builtin_state)?;
-        if !modulus_result.is_success() {
+        let Some(modulus_result) =
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&modulus_in_n_pos, builtin_state)?
+        else {
             return Ok(None);
-        }
+        };
 
         let reason = if strict_upper_bound {
             "mod remainder upper bound: a % b < b for a in Z and b in N+"

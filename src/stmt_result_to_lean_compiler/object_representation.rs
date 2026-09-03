@@ -74,10 +74,7 @@ pub enum LeanTargetObjectRepresentation {
         column_count: Box<LeanTargetObjectRepresentation>,
     },
     Aggregate {
-        /// Parser-owned identity used to select the exact aggregate WD use.
-        source_occurrence_id: Option<SourceObjectOccurrenceId>,
-        /// Structural identity used only after occurrence selection.
-        semantic_key: String,
+        source: LeanTargetSourceObject,
         kind: LeanTargetAggregateObjectConstructor,
         arguments: Vec<LeanTargetObjectRepresentation>,
     },
@@ -87,24 +84,39 @@ pub enum LeanTargetObjectRepresentation {
         index: Box<LeanTargetObjectRepresentation>,
     },
     BuiltinApp {
-        /// Parser-owned identity used to join a proof-carrying syntax node to
-        /// its exact verifier-owned WD use. Non-proof-carrying or synthetic
-        /// builtin nodes may leave this absent.
-        source_occurrence_id: Option<SourceObjectOccurrenceId>,
-        /// Structural identity used only to validate that the cited WD node
-        /// still represents the same object; it is not used for selection.
         semantic_key: String,
         operator: LeanTargetBuiltinObjectOperator,
         arguments: Vec<LeanTargetObjectRepresentation>,
     },
     Collection {
-        /// Parser-owned identity used to select the exact constructor WD use.
-        source_occurrence_id: Option<SourceObjectOccurrenceId>,
-        /// Structural identity used only for post-selection validation.
         semantic_key: String,
         constructor: LeanTargetCollectionObjectConstructor,
         items: Vec<LeanTargetObjectRepresentation>,
     },
+}
+
+#[derive(Clone)]
+pub struct LeanTargetSourceObject {
+    pub object: Obj,
+    pub semantic_key: ObjString,
+}
+
+impl PartialEq for LeanTargetSourceObject {
+    fn eq(&self, other: &Self) -> bool {
+        self.semantic_key == other.semantic_key
+    }
+}
+
+impl Eq for LeanTargetSourceObject {}
+
+impl std::fmt::Debug for LeanTargetSourceObject {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter
+            .debug_struct("LeanTargetSourceObject")
+            .field("object", &self.object.to_string())
+            .field("semantic_key", &self.semantic_key)
+            .finish()
+    }
 }
 
 #[derive(Clone)]
@@ -146,9 +158,7 @@ impl std::fmt::Debug for LeanTargetSetBuilderRepresentation {
 
 #[derive(Clone)]
 pub struct LeanTargetAnonymousFunctionRepresentation {
-    pub source_occurrence_id: Option<SourceObjectOccurrenceId>,
-    /// Structural identity used only after occurrence selection to detect a
-    /// retargeted representation node; it is never a certificate-selection key.
+    pub source_function: Obj,
     pub semantic_key: String,
     pub function: LeanTargetFunctionTypeRepresentation,
     /// Keep the source body until a Result-owned binder context is active.
@@ -159,8 +169,7 @@ pub struct LeanTargetAnonymousFunctionRepresentation {
 
 impl PartialEq for LeanTargetAnonymousFunctionRepresentation {
     fn eq(&self, other: &Self) -> bool {
-        self.source_occurrence_id == other.source_occurrence_id
-            && self.semantic_key == other.semantic_key
+        self.semantic_key == other.semantic_key
             && self.function == other.function
             && obj_equality_key(&self.source_body) == obj_equality_key(&other.source_body)
     }
@@ -172,7 +181,7 @@ impl std::fmt::Debug for LeanTargetAnonymousFunctionRepresentation {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         formatter
             .debug_struct("LeanTargetAnonymousFunctionRepresentation")
-            .field("source_occurrence_id", &self.source_occurrence_id)
+            .field("source_function", &self.source_function.to_string())
             .field("semantic_key", &self.semantic_key)
             .field("function", &self.function)
             .field("source_body", &self.source_body.to_string())
@@ -298,7 +307,7 @@ impl LeanTargetObjectRepresentation {
             }
             Obj::AnonymousFn(function) => Ok(LeanTargetObjectRepresentation::AnonymousFunction(Box::new(
                 LeanTargetAnonymousFunctionRepresentation {
-                    source_occurrence_id: function.source_occurrence_id,
+                    source_function: obj.clone(),
                     semantic_key: obj_equality_key(obj),
                     function: LeanTargetFunctionTypeRepresentation::lower_anonymous(function)?,
                     source_body: function.equal_to.as_ref().clone(),
@@ -603,7 +612,6 @@ impl LeanTargetObjectRepresentation {
                 value.set.as_ref(),
             ),
             Obj::ListSet(value) => Ok(LeanTargetObjectRepresentation::Collection {
-                source_occurrence_id: value.source_occurrence_id,
                 semantic_key: obj_equality_key(obj),
                 constructor: LeanTargetCollectionObjectConstructor::ListSet,
                 items: value
@@ -613,7 +621,6 @@ impl LeanTargetObjectRepresentation {
                     .collect::<Result<Vec<_>, _>>()?,
             }),
             Obj::Tuple(value) => Ok(LeanTargetObjectRepresentation::Collection {
-                source_occurrence_id: None,
                 semantic_key: obj_equality_key(obj),
                 constructor: LeanTargetCollectionObjectConstructor::Tuple,
                 items: value
@@ -623,7 +630,6 @@ impl LeanTargetObjectRepresentation {
                     .collect::<Result<Vec<_>, _>>()?,
             }),
             Obj::FiniteSeqListObj(value) => Ok(LeanTargetObjectRepresentation::Collection {
-                source_occurrence_id: None,
                 semantic_key: obj_equality_key(obj),
                 constructor: LeanTargetCollectionObjectConstructor::SequenceLiteral,
                 items: value
@@ -644,12 +650,6 @@ impl LeanTargetObjectRepresentation {
 fn lower_function_application(
     application: &FnObj,
 ) -> Result<LeanTargetObjectRepresentation, String> {
-    let source_occurrence_id = application.source_occurrence_id.ok_or_else(|| {
-        format!(
-            "Litex-to-Lean requires parser-owned occurrence identity for application `{}`",
-            application
-        )
-    })?;
     let head_obj: Obj = (*application.head).clone().into();
     let head = LeanTargetObjectRepresentation::lower(&head_obj)?;
     let argument_layers = application
@@ -675,7 +675,6 @@ fn lower_function_application(
     Ok(LeanTargetObjectRepresentation::FunctionApplication(
         LeanTargetFunctionApplicationRepresentation {
             head: Box::new(head),
-            source_occurrence_id,
             source_application: application.clone().into(),
             argument_layers,
             source_argument_layers,
@@ -702,7 +701,6 @@ fn unary(
     argument: &Obj,
 ) -> Result<LeanTargetObjectRepresentation, String> {
     Ok(LeanTargetObjectRepresentation::BuiltinApp {
-        source_occurrence_id: source.source_occurrence_id(),
         semantic_key: obj_equality_key(source),
         operator,
         arguments: vec![LeanTargetObjectRepresentation::lower(argument)?],
@@ -716,7 +714,6 @@ fn binary(
     right: &Obj,
 ) -> Result<LeanTargetObjectRepresentation, String> {
     Ok(LeanTargetObjectRepresentation::BuiltinApp {
-        source_occurrence_id: source.source_occurrence_id(),
         semantic_key: obj_equality_key(source),
         operator,
         arguments: vec![
@@ -732,8 +729,10 @@ fn aggregate<'a, const N: usize>(
     arguments: [&'a Obj; N],
 ) -> Result<LeanTargetObjectRepresentation, String> {
     Ok(LeanTargetObjectRepresentation::Aggregate {
-        source_occurrence_id: source.source_occurrence_id(),
-        semantic_key: obj_equality_key(source),
+        source: LeanTargetSourceObject {
+            object: source.clone(),
+            semantic_key: obj_equality_key(source),
+        },
         kind,
         arguments: arguments
             .into_iter()

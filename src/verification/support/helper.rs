@@ -35,7 +35,6 @@ impl Runtime {
                 let prefix: Obj = FnObj {
                     head: application.head.clone(),
                     body: prefix_body,
-                    source_occurrence_id: application.source_occurrence_id,
                 }
                 .into();
                 let representative = self
@@ -43,12 +42,9 @@ impl Runtime {
                     .into_iter()
                     .next()
                     .or_else(|| {
-                        self.unfold_known_fn_application_once(
-                            &prefix,
-                            &VerifyState::initial(),
-                        )
-                        .ok()
-                        .flatten()
+                        self.unfold_known_fn_application_once(&prefix, &VerifyState::initial())
+                            .ok()
+                            .flatten()
                     });
                 let Some(representative) = representative else {
                     continue;
@@ -71,7 +67,10 @@ impl Runtime {
     }
 
     /// Return verification evidence when the persistent known-fact cache contains this fact.
-    pub fn verification_result_from_known_fact_cache(&self, fact: &Fact) -> Option<ProveFactResult> {
+    pub fn verification_result_from_known_fact_cache(
+        &self,
+        fact: &Fact,
+    ) -> Option<ProveFactResult> {
         let key = fact.to_string();
         let normalized_key = nested_obj_binder_normalized_fact_key(fact);
         let cached_fact = self.cached_known_fact(&key);
@@ -277,25 +276,28 @@ impl Runtime {
             let result =
                 self.verify_atomic_fact_restricted_known_builtin(&atomic_fact, verify_state)?;
             if result.is_unknown() {
-                return Ok(VerifyFactResult::Unknown(Box::new(UnknownVerifyFactResult {
-                    checked,
-                    unknown: UnknownFactResult::from_stmt_unknown(
-                        fact,
-                        UnknownGenericStmtResult::new(),
-                    ),
-                })));
+                return Ok(VerifyFactResult::Unknown(Box::new(
+                    UnknownVerifyFactResult {
+                        checked,
+                        unknown: UnknownFactResult::from_stmt_unknown(
+                            fact,
+                            UnknownGenericStmtResult::new(),
+                        ),
+                    },
+                )));
             }
             steps.push(result);
         }
-        let proof = SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
-            chain_fact.clone().into(),
-            "restricted builtin premise: each chain comparison verified".to_string(),
-            BuiltinRuleEvidence::Uncatalogued(
-                UncataloguedBuiltinRule::VerifyAndFactRestrictedKnownBuiltin,
-            ),
-            steps,
-        )
-        .into();
+        let proof =
+            SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                chain_fact.clone().into(),
+                "restricted builtin premise: each chain comparison verified".to_string(),
+                BuiltinRuleEvidence::Uncatalogued(
+                    UncataloguedBuiltinRule::VerifyAndFactRestrictedKnownBuiltin,
+                ),
+                steps,
+            )
+            .into();
         Ok(Runtime::finish_fact_verification(checked, proof))
     }
 
@@ -426,7 +428,7 @@ impl Runtime {
         // checking its parameter carrier and domain requirements.
         for arg in args_for_params.iter() {
             if self
-                .verify_obj_well_defined_and_store_cache(arg, verify_state)
+                .verify_obj_well_defined_result(arg, verify_state)
                 .is_err()
             {
                 return Ok(false);
@@ -542,11 +544,10 @@ impl Runtime {
             for source_set in self.known_sets_containing_obj(obj) {
                 let source_membership: AtomicFact =
                     InFact::new((*obj).clone(), source_set.clone(), line_file.clone()).into();
-                let source_membership_result = self
-                    .verify_atomic_fact_restricted_known_builtin(
-                        &source_membership,
-                        verify_state,
-                    )?;
+                let source_membership_result = self.verify_atomic_fact_restricted_known_builtin(
+                    &source_membership,
+                    verify_state,
+                )?;
                 if !source_membership_result.is_success() {
                     continue;
                 }
@@ -569,8 +570,8 @@ impl Runtime {
                     let subset: AtomicFact =
                         SubsetFact::new(source_set.clone(), carrier.into(), line_file.clone())
                             .into();
-                    let subset_result = self
-                        .verify_atomic_fact_restricted_known_builtin(&subset, verify_state)?;
+                    let subset_result =
+                        self.verify_atomic_fact_restricted_known_builtin(&subset, verify_state)?;
                     if !subset_result.is_success() {
                         continue;
                     }

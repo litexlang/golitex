@@ -15,7 +15,7 @@ example	classification	strict_positive_eligible	source_boundary_count	source_bou
 22_NonzeroNumericCarriers.lit	trust_free	true	0			0	
 23_MultilayerApplication.lit	trust_free	true	0			0	
 24_DependentAnonymousFunction.lit	trust_free	true	0			0	
-25_ExplicitSourceAxioms.lit	source_declared_trust_boundary	false	2	abstract_prop:1;trust:1	lean/examples/25_ExplicitSourceAxioms.lit:6;lean/examples/25_ExplicitSourceAxioms.lit:10	2	lean/examples/25_ExplicitSourceAxioms.lean:9;lean/examples/25_ExplicitSourceAxioms.lean:11
+25_ExplicitSourceAxioms.lit	source_declared_trust_boundary	false	2	abstract_prop:1;trust:1	lean/examples/25_ExplicitSourceAxioms.lit:6;lean/examples/25_ExplicitSourceAxioms.lit:10	2	lean/examples/25_ExplicitSourceAxioms.lean:20;lean/examples/25_ExplicitSourceAxioms.lean:22
 26_CollectionsAndAggregates.lit	trust_free	true	0			0	
 27_SetOperators.lit	trust_free	true	0			0	
 28_ExtendedSetRules.lit	trust_free	true	0			0	
@@ -27,7 +27,7 @@ example	classification	strict_positive_eligible	source_boundary_count	source_bou
 33_NonemptySetWitnessCompilerEnvironment.lit	trust_free	true	0			0	
 34_PredicateBackedWitnessResultComposition.lit	trust_free	true	0			0	
 35_SourceAxiomResultBoundary.lit	source_declared_trust_boundary	false	1	axiom:1	lean/examples/35_SourceAxiomResultBoundary.lit:10	1	lean/examples/35_SourceAxiomResultBoundary.lean:8
-36_KnownForallResultComposition.lit	source_declared_trust_boundary	false	2	abstract_prop:1;axiom:1	lean/examples/36_KnownForallResultComposition.lit:12;lean/examples/36_KnownForallResultComposition.lit:14	2	lean/examples/36_KnownForallResultComposition.lean:9;lean/examples/36_KnownForallResultComposition.lean:11
+36_KnownForallResultComposition.lit	source_declared_trust_boundary	false	2	abstract_prop:1;axiom:1	lean/examples/36_KnownForallResultComposition.lit:12;lean/examples/36_KnownForallResultComposition.lit:14	2	lean/examples/36_KnownForallResultComposition.lean:20;lean/examples/36_KnownForallResultComposition.lean:22
 37_TrustedObjectResultComposition.lit	source_declared_trust_boundary	false	2	trust:2	lean/examples/37_TrustedObjectResultComposition.lit:16;lean/examples/37_TrustedObjectResultComposition.lit:18	3	lean/examples/37_TrustedObjectResultComposition.lean:8;lean/examples/37_TrustedObjectResultComposition.lean:13;lean/examples/37_TrustedObjectResultComposition.lean:18
 38_FactTransformationResultComposition.lit	source_declared_trust_boundary	false	1	trust:1	lean/examples/38_FactTransformationResultComposition.lit:16	1	lean/examples/38_FactTransformationResultComposition.lean:8
 39_CheckedNamedFunctionReductionResultComposition.lit	trust_free	true	0			0	

@@ -96,24 +96,6 @@ impl Obj {
         }
     }
 
-    /// Parser-owned identity of this exact source occurrence when the object
-    /// currently participates in the recursive Result-to-Lean pipeline. Synthetic
-    /// kernel objects deliberately return `None`; they cannot be joined to a
-    /// source WD-use edge by rendered text.
-    pub fn source_occurrence_id(&self) -> Option<SourceObjectOccurrenceId> {
-        match self {
-            Obj::FnObj(value) => value.source_occurrence_id,
-            Obj::Add(value) => value.source_occurrence_id,
-            Obj::Sub(value) => value.source_occurrence_id,
-            Obj::Mul(value) => value.source_occurrence_id,
-            Obj::Div(value) => value.source_occurrence_id,
-            Obj::ListSet(value) => value.source_occurrence_id,
-            Obj::AnonymousFn(value) => value.source_occurrence_id,
-            Obj::Sum(value) => value.source_occurrence_id,
-            _ => None,
-        }
-    }
-
     pub fn kind_id(&self) -> u8 {
         self.kind().as_u8()
     }

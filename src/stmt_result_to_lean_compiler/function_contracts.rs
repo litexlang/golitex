@@ -54,11 +54,7 @@ impl fmt::Debug for LeanTargetFunctionParameterRepresentation {
 #[derive(Clone)]
 pub struct LeanTargetFunctionApplicationRepresentation {
     pub head: Box<LeanTargetObjectRepresentation>,
-    /// Parser-owned source identity. Repeated textually equal applications
-    /// remain different occurrences, while verifier cache reuse preserves the
-    /// same identity.
-    pub source_occurrence_id: SourceObjectOccurrenceId,
-    /// Complete source occurrence used to select exact WD certificate slots.
+    /// Complete semantic source used to select exact WD certificate slots.
     pub source_application: Obj,
     /// Exact source groups. A one-layer `f(x, y)` never becomes two Litex
     /// layers merely because Lean prints curried application.
@@ -69,7 +65,8 @@ pub struct LeanTargetFunctionApplicationRepresentation {
 impl PartialEq for LeanTargetFunctionApplicationRepresentation {
     fn eq(&self, other: &Self) -> bool {
         self.head == other.head
-            && self.source_occurrence_id == other.source_occurrence_id
+            && obj_equality_key(&self.source_application)
+                == obj_equality_key(&other.source_application)
             && self.argument_layers == other.argument_layers
     }
 }
@@ -81,7 +78,6 @@ impl fmt::Debug for LeanTargetFunctionApplicationRepresentation {
         formatter
             .debug_struct("LeanTargetFunctionApplicationRepresentation")
             .field("head", &self.head)
-            .field("source_occurrence_id", &self.source_occurrence_id)
             .field("source_application", &self.source_application.to_string())
             .field("argument_layers", &self.argument_layers)
             .field(

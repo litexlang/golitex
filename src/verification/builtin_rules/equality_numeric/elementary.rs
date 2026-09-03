@@ -48,14 +48,15 @@ impl Runtime {
             return Ok(None);
         };
 
-        let inner = self.verify_equal_fact_as_builtin_premise(
+        let inner = self.try_verify_equal_fact_as_builtin_premise(
             &EqualFact::new_from_refs(x, y, line_file.clone()),
             builtin_state,
         )?;
-        if inner.is_success() {
-            return Ok(Some(factual_equal_success_by_builtin_reason(
+        if let Some(inner) = inner {
+            return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
                 equal_fact,
                 "equality: 0 = x - y with x = y (known or builtin)",
+                vec![inner],
             )));
         }
         Ok(None)
@@ -147,12 +148,22 @@ impl Runtime {
                     if let Some(results) =
                         self.verify_builtin_rule_premises(&premises, builtin_state)?
                     {
+                        let Some(mut subgoals) = self
+                            .verify_objects_are_known_real_or_complex_scalars_in_builtin(
+                                &[mul.left.as_ref(), mul.right.as_ref()],
+                                &line_file,
+                                builtin_state,
+                            )?
+                        else {
+                            continue;
+                        };
+                        subgoals.extend(results);
                         return Ok(Some(
                             SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                                 equal_fact.clone().into(),
                                 reason.to_string(),
                                 BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyZeroEqualsProductImpliesOtherFactorZero01),
-                                results,
+                                subgoals,
                             )
                             .into(),
                         ));
@@ -170,17 +181,28 @@ impl Runtime {
                         line_file.clone(),
                     )
                     .into();
-                    let right_nonzero_result = self.verify_atomic_fact_as_builtin_rule_premise(
-                        &right_nonzero,
-                        builtin_state,
-                    )?;
-                    if right_nonzero_result.is_success() {
+                    let right_nonzero_result = self
+                        .try_verify_atomic_fact_as_builtin_rule_premise(
+                            &right_nonzero,
+                            builtin_state,
+                        )?;
+                    if let Some(right_nonzero_result) = right_nonzero_result {
+                        let Some(mut subgoals) = self
+                            .verify_objects_are_known_real_or_complex_scalars_in_builtin(
+                                &[mul.left.as_ref(), mul.right.as_ref()],
+                                &line_file,
+                                builtin_state,
+                            )?
+                        else {
+                            continue;
+                        };
+                        subgoals.extend([left_target_result, right_nonzero_result]);
                         return Ok(Some(
                             SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                                 equal_fact.clone().into(),
                                 "equality: b = 0 from a * b = 0 and a != 0".to_string(),
                                 BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyZeroEqualsProductImpliesOtherFactorZero02),
-                                vec![left_target_result, right_nonzero_result],
+                                subgoals,
                             )
                             .into(),
                         ));
@@ -198,15 +220,27 @@ impl Runtime {
                         line_file.clone(),
                     )
                     .into();
-                    let left_nonzero_result = self
-                        .verify_atomic_fact_as_builtin_rule_premise(&left_nonzero, builtin_state)?;
-                    if left_nonzero_result.is_success() {
+                    let left_nonzero_result = self.try_verify_atomic_fact_as_builtin_rule_premise(
+                        &left_nonzero,
+                        builtin_state,
+                    )?;
+                    if let Some(left_nonzero_result) = left_nonzero_result {
+                        let Some(mut subgoals) = self
+                            .verify_objects_are_known_real_or_complex_scalars_in_builtin(
+                                &[mul.left.as_ref(), mul.right.as_ref()],
+                                &line_file,
+                                builtin_state,
+                            )?
+                        else {
+                            continue;
+                        };
+                        subgoals.extend([right_target_result, left_nonzero_result]);
                         return Ok(Some(
                             SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                                 equal_fact.clone().into(),
                                 "equality: a = 0 from a * b = 0 and b != 0".to_string(),
                                 BuiltinRuleEvidence::Uncatalogued(UncataloguedBuiltinRule::TryVerifyZeroEqualsProductImpliesOtherFactorZero03),
-                                vec![right_target_result, left_nonzero_result],
+                                subgoals,
                             )
                             .into(),
                         ));
@@ -259,14 +293,15 @@ impl Runtime {
         } else {
             right
         };
-        let inner = self.verify_equal_fact_as_builtin_premise(
+        let inner = self.try_verify_equal_fact_as_builtin_premise(
             &EqualFact::new_from_refs(base, zero_side, line_file.clone()),
             builtin_state,
         )?;
-        if inner.is_success() {
-            return Ok(Some(factual_equal_success_by_builtin_reason(
+        if let Some(inner) = inner {
+            return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
                 equal_fact,
                 "equality: 0 = a^n from a = 0, n positive integer literal",
+                vec![inner],
             )));
         }
         Ok(None)
@@ -369,11 +404,11 @@ impl Runtime {
             line_file.clone(),
         )
         .into();
-        let modulus_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&modulus_at_least_two, builtin_state)?;
-        if !modulus_result.is_success() {
+        let Some(modulus_result) = self
+            .try_verify_atomic_fact_as_builtin_rule_premise(&modulus_at_least_two, builtin_state)?
+        else {
             return Ok(None);
-        }
+        };
 
         Ok(Some(
             SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
@@ -593,12 +628,23 @@ impl Runtime {
             else {
                 continue;
             };
-            let divisor_result =
-                self.verify_atomic_fact_as_builtin_rule_premise(&divisor_in_n_pos, builtin_state)?;
-            let remainder_result =
-                self.verify_atomic_fact_as_builtin_rule_premise(&remainder_in_n, builtin_state)?;
-            let bound_result = self
-                .verify_atomic_fact_as_builtin_rule_premise(&remainder_lt_modulus, builtin_state)?;
+            let Some(divisor_result) = self
+                .try_verify_atomic_fact_as_builtin_rule_premise(&divisor_in_n_pos, builtin_state)?
+            else {
+                continue;
+            };
+            let Some(remainder_result) = self
+                .try_verify_atomic_fact_as_builtin_rule_premise(&remainder_in_n, builtin_state)?
+            else {
+                continue;
+            };
+            let Some(bound_result) = self.try_verify_atomic_fact_as_builtin_rule_premise(
+                &remainder_lt_modulus,
+                builtin_state,
+            )?
+            else {
+                continue;
+            };
             let decomposition_fact =
                 EqualFact::new_from_refs(dividend, &candidate, line_file.clone());
             let decomposition_proof = self.verify_equal_fact_by_known_equality(&decomposition_fact);
@@ -608,11 +654,7 @@ impl Runtime {
                 decomposition_proof,
                 builtin_state.verify_state(),
             )?;
-            if !divisor_result.is_success()
-                || !remainder_result.is_success()
-                || !bound_result.is_success()
-                || !decomposition_result.is_success()
-            {
+            if !decomposition_result.is_success() {
                 continue;
             }
 

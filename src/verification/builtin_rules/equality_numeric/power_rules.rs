@@ -1,5 +1,15 @@
 use super::*;
 
+fn combine_power_premise_groups<const N: usize>(
+    groups: [Option<Vec<VerifyFactResult>>; N],
+) -> Option<Vec<VerifyFactResult>> {
+    let mut combined = Vec::new();
+    for group in groups {
+        combined.append(&mut group?);
+    }
+    Some(combined)
+}
+
 impl Runtime {
     pub(super) fn obj_is_builtin_literal_two(obj: &Obj) -> bool {
         match obj {
@@ -8,69 +18,68 @@ impl Runtime {
         }
     }
 
-    pub(super) fn power_factor_matches_base_and_exponent(
+    pub(super) fn try_verify_power_factor_matches_base_and_exponent(
         &mut self,
         factor: &Obj,
         base: &Obj,
         exponent: &Obj,
         line_file: LineFile,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<bool, RuntimeError> {
+    ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
         let Obj::Pow(pow) = factor else {
             if !Self::obj_is_builtin_literal_one(exponent) {
-                return Ok(false);
+                return Ok(None);
             }
             return Ok(self
-                .verify_equal_fact_as_builtin_premise(
+                .try_verify_equal_fact_as_builtin_premise(
                     &EqualFact::new_from_refs(base, factor, line_file.clone()),
                     builtin_state,
                 )?
-                .is_success());
+                .map(|result| vec![result]));
         };
-        if !self
-            .verify_equal_fact_as_builtin_premise(
-                &EqualFact::new_from_refs(base, pow.base.as_ref(), line_file.clone()),
-                builtin_state,
-            )?
-            .is_success()
-        {
-            return Ok(false);
-        }
-        Ok(self
-            .verify_equal_fact_as_builtin_premise(
-                &EqualFact::new_from_refs(exponent, pow.exponent.as_ref(), line_file.clone()),
-                builtin_state,
-            )?
-            .is_success())
+        let Some(base_result) = self.try_verify_equal_fact_as_builtin_premise(
+            &EqualFact::new_from_refs(base, pow.base.as_ref(), line_file.clone()),
+            builtin_state,
+        )?
+        else {
+            return Ok(None);
+        };
+        let Some(exponent_result) = self.try_verify_equal_fact_as_builtin_premise(
+            &EqualFact::new_from_refs(exponent, pow.exponent.as_ref(), line_file.clone()),
+            builtin_state,
+        )?
+        else {
+            return Ok(None);
+        };
+        Ok(Some(vec![base_result, exponent_result]))
     }
 
-    pub(super) fn obj_is_verified_in_n_pos(
+    pub(super) fn try_verify_obj_in_n_pos_for_power_builtin(
         &mut self,
         obj: &Obj,
         line_file: LineFile,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<bool, RuntimeError> {
+    ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
         let in_n_pos: AtomicFact =
             InFact::new(obj.clone(), StandardSet::NPos.into(), line_file).into();
         Ok(self
-            .verify_atomic_fact_as_builtin_rule_premise(&in_n_pos, builtin_state)?
-            .is_success())
+            .try_verify_atomic_fact_as_builtin_rule_premise(&in_n_pos, builtin_state)?
+            .map(|result| vec![result]))
     }
 
-    pub(super) fn obj_is_verified_in_standard_set_for_power_builtin(
+    pub(super) fn try_verify_obj_in_standard_set_for_power_builtin(
         &mut self,
         obj: &Obj,
         standard_set: StandardSet,
         line_file: LineFile,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<bool, RuntimeError> {
+    ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
         let in_set: AtomicFact =
             InFact::new(obj.clone(), standard_set.clone().into(), line_file.clone()).into();
-        if self
-            .verify_atomic_fact_as_builtin_rule_premise(&in_set, builtin_state)?
-            .is_success()
+        if let Some(result) =
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&in_set, builtin_state)?
         {
-            return Ok(true);
+            return Ok(Some(vec![result]));
         }
 
         for known_set in self.known_sets_containing_obj(obj) {
@@ -82,24 +91,23 @@ impl Runtime {
             }
             let known_membership: AtomicFact =
                 InFact::new(obj.clone(), known_set, line_file.clone()).into();
-            if self
-                .verify_non_equational_atomic_fact_with_known_atomic_facts(&known_membership)?
-                .is_success()
+            if let Some(result) = self
+                .try_verify_atomic_fact_as_builtin_rule_premise(&known_membership, builtin_state)?
             {
-                return Ok(true);
+                return Ok(Some(vec![result]));
             }
         }
-        Ok(false)
+        Ok(None)
     }
 
-    pub(super) fn obj_is_verified_integer_exponent_for_power_builtin(
+    pub(super) fn try_verify_integer_exponent_for_power_builtin(
         &mut self,
         obj: &Obj,
         line_file: LineFile,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<bool, RuntimeError> {
+    ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
         if let Obj::Number(number) = obj {
-            return Ok(is_integer_after_simplification(number));
+            return Ok(is_integer_after_simplification(number).then_some(Vec::new()));
         }
 
         // Integer arithmetic remains an integer exponent even when its carrier
@@ -113,26 +121,35 @@ impl Runtime {
             _ => None,
         };
         if let Some((left, right)) = integer_operands {
-            return Ok(self.obj_is_verified_integer_exponent_for_power_builtin(
+            let Some(mut left_results) = self.try_verify_integer_exponent_for_power_builtin(
                 left,
                 line_file.clone(),
                 builtin_state,
-            )? && self.obj_is_verified_integer_exponent_for_power_builtin(
+            )?
+            else {
+                return Ok(None);
+            };
+            let Some(mut right_results) = self.try_verify_integer_exponent_for_power_builtin(
                 right,
                 line_file,
                 builtin_state,
-            )?);
+            )?
+            else {
+                return Ok(None);
+            };
+            left_results.append(&mut right_results);
+            return Ok(Some(left_results));
         }
 
-        if self.obj_is_verified_in_standard_set_for_power_builtin(
+        if let Some(results) = self.try_verify_obj_in_standard_set_for_power_builtin(
             obj,
             StandardSet::Z,
             line_file.clone(),
             builtin_state,
         )? {
-            return Ok(true);
+            return Ok(Some(results));
         }
-        self.obj_is_verified_in_standard_set_for_power_builtin(
+        self.try_verify_obj_in_standard_set_for_power_builtin(
             obj,
             StandardSet::N,
             line_file,
@@ -140,28 +157,28 @@ impl Runtime {
         )
     }
 
-    fn obj_is_verified_real_exponent_for_power_of_power(
+    fn try_verify_real_exponent_for_power_of_power(
         &mut self,
         obj: &Obj,
         line_file: LineFile,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<bool, RuntimeError> {
-        if self.obj_is_verified_in_standard_set_for_power_builtin(
+    ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
+        if let Some(results) = self.try_verify_obj_in_standard_set_for_power_builtin(
             obj,
             StandardSet::R,
             line_file.clone(),
             builtin_state,
         )? {
-            return Ok(true);
+            return Ok(Some(results));
         }
 
         let Obj::Div(div) = obj else {
-            return Ok(false);
+            return Ok(None);
         };
         if !Self::obj_is_builtin_literal_one(div.left.as_ref()) {
-            return Ok(false);
+            return Ok(None);
         }
-        self.obj_is_verified_in_standard_set_for_power_builtin(
+        self.try_verify_obj_in_standard_set_for_power_builtin(
             div.right.as_ref(),
             StandardSet::RStar,
             line_file,
@@ -169,41 +186,43 @@ impl Runtime {
         )
     }
 
-    fn obj_is_verified_positive_real_base_for_power_builtin(
+    fn try_verify_positive_real_base_for_power_builtin(
         &mut self,
         obj: &Obj,
         line_file: LineFile,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<bool, RuntimeError> {
-        if self.obj_is_verified_in_standard_set_for_power_builtin(
+    ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
+        if let Some(results) = self.try_verify_obj_in_standard_set_for_power_builtin(
             obj,
             StandardSet::RPos,
             line_file.clone(),
             builtin_state,
         )? {
-            return Ok(true);
+            return Ok(Some(results));
         }
         let in_r: AtomicFact =
             InFact::new(obj.clone(), StandardSet::R.into(), line_file.clone()).into();
-        if !self
-            .verify_atomic_fact_as_builtin_rule_premise(&in_r, builtin_state)?
-            .is_success()
-        {
-            return Ok(false);
-        }
+        let Some(in_r_result) =
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&in_r, builtin_state)?
+        else {
+            return Ok(None);
+        };
         let positive: AtomicFact =
             LessFact::new(Number::new("0".to_string()).into(), obj.clone(), line_file).into();
-        Ok(self
-            .verify_non_equational_atomic_fact_with_known_atomic_facts(&positive)?
-            .is_success())
+        let Some(positive_result) =
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&positive, builtin_state)?
+        else {
+            return Ok(None);
+        };
+        Ok(Some(vec![in_r_result, positive_result]))
     }
 
-    pub(super) fn obj_is_verified_nonzero_for_power_builtin(
+    pub(super) fn try_verify_nonzero_for_power_builtin(
         &mut self,
         obj: &Obj,
         line_file: LineFile,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<bool, RuntimeError> {
+    ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
         let nonzero: AtomicFact = NotEqualFact::new(
             obj.clone(),
             Self::literal_zero_obj_for_abs_builtin(),
@@ -211,19 +230,19 @@ impl Runtime {
         )
         .into();
         Ok(self
-            .verify_atomic_fact_as_builtin_rule_premise(&nonzero, builtin_state)?
-            .is_success())
+            .try_verify_atomic_fact_as_builtin_rule_premise(&nonzero, builtin_state)?
+            .map(|result| vec![result]))
     }
 
-    pub(super) fn power_addition_exponent_rule_holds_one_direction(
+    pub(super) fn try_verify_power_addition_exponent_rule_one_direction(
         &mut self,
         combined_power: &Pow,
         product: &Mul,
         line_file: LineFile,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<bool, RuntimeError> {
+    ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
         let Obj::Add(add_exponent) = combined_power.exponent.as_ref() else {
-            return Ok(false);
+            return Ok(None);
         };
 
         // Power law for positive integer exponents:
@@ -244,107 +263,124 @@ impl Runtime {
         ];
 
         for (left_factor, right_factor, left_exp, right_exp) in candidates {
-            if !self.power_factor_matches_base_and_exponent(
+            let Some(mut subgoals) = self.try_verify_power_factor_matches_base_and_exponent(
                 left_factor,
                 combined_power.base.as_ref(),
                 left_exp,
                 line_file.clone(),
                 builtin_state,
-            )? {
+            )?
+            else {
                 continue;
-            }
-            if !self.power_factor_matches_base_and_exponent(
-                right_factor,
-                combined_power.base.as_ref(),
-                right_exp,
-                line_file.clone(),
-                builtin_state,
-            )? {
+            };
+            let Some(mut right_factor_results) = self
+                .try_verify_power_factor_matches_base_and_exponent(
+                    right_factor,
+                    combined_power.base.as_ref(),
+                    right_exp,
+                    line_file.clone(),
+                    builtin_state,
+                )?
+            else {
                 continue;
-            }
-            let exponents_are_positive =
-                self.obj_is_verified_in_n_pos(left_exp, line_file.clone(), builtin_state)?
-                    && self.obj_is_verified_in_n_pos(
-                        right_exp,
-                        line_file.clone(),
-                        builtin_state,
-                    )?;
-            if exponents_are_positive {
-                return Ok(true);
+            };
+            subgoals.append(&mut right_factor_results);
+
+            let exponents_are_positive = combine_power_premise_groups([
+                self.try_verify_obj_in_n_pos_for_power_builtin(
+                    left_exp,
+                    line_file.clone(),
+                    builtin_state,
+                )?,
+                self.try_verify_obj_in_n_pos_for_power_builtin(
+                    right_exp,
+                    line_file.clone(),
+                    builtin_state,
+                )?,
+            ]);
+            if let Some(mut results) = exponents_are_positive {
+                subgoals.append(&mut results);
+                return Ok(Some(subgoals));
             }
 
             // Natural-exponent power law for complex bases:
             // `a^(m+n) = a^m * a^n`, including the cases m=0 or n=0.
             // Example: `forall a C, m, n N: a^m * a^n = a^(m+n)`.
-            let exponents_are_natural = self.obj_is_verified_in_standard_set_for_power_builtin(
-                left_exp,
-                StandardSet::N,
-                line_file.clone(),
-                builtin_state,
-            )? && self
-                .obj_is_verified_in_standard_set_for_power_builtin(
+            let natural_complex_results = combine_power_premise_groups([
+                self.try_verify_obj_in_standard_set_for_power_builtin(
+                    left_exp,
+                    StandardSet::N,
+                    line_file.clone(),
+                    builtin_state,
+                )?,
+                self.try_verify_obj_in_standard_set_for_power_builtin(
                     right_exp,
                     StandardSet::N,
                     line_file.clone(),
                     builtin_state,
-                )?;
-            if exponents_are_natural {
-                let base_in_c = self.obj_is_verified_in_standard_set_for_power_builtin(
+                )?,
+                self.try_verify_obj_in_standard_set_for_power_builtin(
                     combined_power.base.as_ref(),
                     StandardSet::C,
                     line_file.clone(),
                     builtin_state,
-                )?;
-                if base_in_c {
-                    return Ok(true);
-                }
+                )?,
+            ]);
+            if let Some(mut results) = natural_complex_results {
+                subgoals.append(&mut results);
+                return Ok(Some(subgoals));
             }
 
             // Real-exponent addition law requires a positive real base.
             // Example: `forall a R+, m, n R: a^(m+n) = a^m * a^n`.
-            let exponents_are_real = self.obj_is_verified_in_standard_set_for_power_builtin(
-                left_exp,
-                StandardSet::R,
-                line_file.clone(),
-                builtin_state,
-            )? && self.obj_is_verified_in_standard_set_for_power_builtin(
-                right_exp,
-                StandardSet::R,
-                line_file.clone(),
-                builtin_state,
-            )?;
-            if exponents_are_real
-                && self.obj_is_verified_in_standard_set_for_power_builtin(
+            let real_positive_results = combine_power_premise_groups([
+                self.try_verify_obj_in_standard_set_for_power_builtin(
+                    left_exp,
+                    StandardSet::R,
+                    line_file.clone(),
+                    builtin_state,
+                )?,
+                self.try_verify_obj_in_standard_set_for_power_builtin(
+                    right_exp,
+                    StandardSet::R,
+                    line_file.clone(),
+                    builtin_state,
+                )?,
+                self.try_verify_obj_in_standard_set_for_power_builtin(
                     combined_power.base.as_ref(),
                     StandardSet::RPos,
                     line_file.clone(),
                     builtin_state,
-                )?
-            {
-                return Ok(true);
+                )?,
+            ]);
+            if let Some(mut results) = real_positive_results {
+                subgoals.append(&mut results);
+                return Ok(Some(subgoals));
             }
 
             // The remaining integer-exponent branch needs a nonzero base so negative
             // exponents do not accidentally justify undefined `0^(-n)`.
             // Example: `forall a R*, m, n Z: a^m * a^n = a^(m+n)`.
-            let exponents_are_integer = self.obj_is_verified_integer_exponent_for_power_builtin(
-                left_exp,
-                line_file.clone(),
-                builtin_state,
-            )? && self
-                .obj_is_verified_integer_exponent_for_power_builtin(
+            let integer_nonzero_results = combine_power_premise_groups([
+                self.try_verify_integer_exponent_for_power_builtin(
+                    left_exp,
+                    line_file.clone(),
+                    builtin_state,
+                )?,
+                self.try_verify_integer_exponent_for_power_builtin(
                     right_exp,
                     line_file.clone(),
                     builtin_state,
-                )?;
-            if exponents_are_integer
-                && self.obj_is_verified_nonzero_for_power_builtin(
+                )?,
+                self.try_verify_nonzero_for_power_builtin(
                     combined_power.base.as_ref(),
                     line_file.clone(),
                     builtin_state,
-                )?
-            {
-                return Ok(true);
+                )?,
+            ]);
+            if let Some(mut results) = integer_nonzero_results {
+                subgoals.append(&mut results);
+                return Ok(Some(subgoals));
             }
 
             // The carrier side condition is itself a disjunction of complete
@@ -358,7 +394,7 @@ impl Runtime {
                 line_file.clone(),
             )
             .into();
-            let carrier_result = self.verify_builtin_rule_premise_alternatives(
+            let carrier_result = self.try_verify_builtin_rule_premise_alternatives(
                 vec![
                     vec![
                         InFact::new(
@@ -400,10 +436,13 @@ impl Runtime {
                 line_file.clone(),
                 builtin_state,
             )?;
-            return Ok(carrier_result.is_success());
+            if let Some(carrier_result) = carrier_result {
+                subgoals.push(carrier_result);
+                return Ok(Some(subgoals));
+            }
         }
 
-        Ok(false)
+        Ok(None)
     }
 
     pub fn try_verify_power_addition_exponent_rule(
@@ -414,148 +453,163 @@ impl Runtime {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
-        let holds = match (left, right) {
+        let subgoals = match (left, right) {
             (Obj::Pow(pow), Obj::Mul(product)) => self
-                .power_addition_exponent_rule_holds_one_direction(
+                .try_verify_power_addition_exponent_rule_one_direction(
                     pow,
                     product,
                     line_file.clone(),
                     builtin_state,
                 )?,
             (Obj::Mul(product), Obj::Pow(pow)) => self
-                .power_addition_exponent_rule_holds_one_direction(
+                .try_verify_power_addition_exponent_rule_one_direction(
                     pow,
                     product,
                     line_file.clone(),
                     builtin_state,
                 )?,
-            _ => false,
+            _ => None,
         };
-        if holds {
-            return Ok(Some(factual_equal_success_by_builtin_reason(equal_fact, "equality: a^(m+n) = a^m * a^n for real exponents over positive real bases, natural exponents over complex bases, positive integer exponents, or integer exponents with nonzero base")));
+        if let Some(subgoals) = subgoals {
+            return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(equal_fact, "equality: a^(m+n) = a^m * a^n for real exponents over positive real bases, natural exponents over complex bases, positive integer exponents, or integer exponents with nonzero base", subgoals)));
         }
         Ok(None)
     }
 
-    pub(super) fn power_of_power_rule_holds_one_direction(
+    pub(super) fn try_verify_power_of_power_rule_one_direction(
         &mut self,
         nested_power: &Pow,
         combined_power: &Pow,
         line_file: LineFile,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<bool, RuntimeError> {
+    ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
         let Obj::Pow(inner_power) = nested_power.base.as_ref() else {
-            return Ok(false);
+            return Ok(None);
         };
-        if !self
-            .verify_equal_fact_as_builtin_premise(
-                &EqualFact::new_from_refs(
-                    inner_power.base.as_ref(),
-                    combined_power.base.as_ref(),
-                    line_file.clone(),
-                ),
-                builtin_state,
-            )?
-            .is_success()
-        {
-            return Ok(false);
-        }
+        let Some(base_match) = self.try_verify_equal_fact_as_builtin_premise(
+            &EqualFact::new_from_refs(
+                inner_power.base.as_ref(),
+                combined_power.base.as_ref(),
+                line_file.clone(),
+            ),
+            builtin_state,
+        )?
+        else {
+            return Ok(None);
+        };
+        let mut subgoals = vec![base_match];
 
         let multiplied_exponent: Obj = Mul::new(
             inner_power.exponent.as_ref().clone(),
             nested_power.exponent.as_ref().clone(),
         )
         .into();
-        if !self.power_exponent_product_matches(
+        let Some(mut exponent_match_results) = self.try_verify_power_exponent_product_matches(
             inner_power.exponent.as_ref(),
             nested_power.exponent.as_ref(),
             &multiplied_exponent,
             combined_power.exponent.as_ref(),
             line_file.clone(),
             builtin_state,
-        )? {
-            return Ok(false);
-        }
+        )?
+        else {
+            return Ok(None);
+        };
+        subgoals.append(&mut exponent_match_results);
 
         // Real-exponent power-of-power law requires a positive real base.
         // Example: `forall a R+, m, n R: (a^m)^n = a^(m*n)`.
-        let base_is_positive_real = self.obj_is_verified_positive_real_base_for_power_builtin(
-            combined_power.base.as_ref(),
-            line_file.clone(),
-            builtin_state,
-        )?;
-        let exponents_are_real = self.obj_is_verified_real_exponent_for_power_of_power(
-            inner_power.exponent.as_ref(),
-            line_file.clone(),
-            builtin_state,
-        )? && self.obj_is_verified_real_exponent_for_power_of_power(
-            nested_power.exponent.as_ref(),
-            line_file.clone(),
-            builtin_state,
-        )?;
-        if base_is_positive_real && exponents_are_real {
-            return Ok(true);
+        let positive_real_results = combine_power_premise_groups([
+            self.try_verify_positive_real_base_for_power_builtin(
+                combined_power.base.as_ref(),
+                line_file.clone(),
+                builtin_state,
+            )?,
+            self.try_verify_real_exponent_for_power_of_power(
+                inner_power.exponent.as_ref(),
+                line_file.clone(),
+                builtin_state,
+            )?,
+            self.try_verify_real_exponent_for_power_of_power(
+                nested_power.exponent.as_ref(),
+                line_file.clone(),
+                builtin_state,
+            )?,
+        ]);
+        if let Some(mut results) = positive_real_results {
+            subgoals.append(&mut results);
+            return Ok(Some(subgoals));
         }
 
         // Power-of-power law for positive integer exponents:
         // `(a^m)^n = a^(m*n)`. Example: `forall a R, m, n N+: (a^m)^n = a^(m*n)`.
-        let exponents_are_positive = self.obj_is_verified_in_n_pos(
-            inner_power.exponent.as_ref(),
-            line_file.clone(),
-            builtin_state,
-        )? && self.obj_is_verified_in_n_pos(
-            nested_power.exponent.as_ref(),
-            line_file.clone(),
-            builtin_state,
-        )?;
-        if exponents_are_positive {
-            return Ok(true);
+        let positive_exponent_results = combine_power_premise_groups([
+            self.try_verify_obj_in_n_pos_for_power_builtin(
+                inner_power.exponent.as_ref(),
+                line_file.clone(),
+                builtin_state,
+            )?,
+            self.try_verify_obj_in_n_pos_for_power_builtin(
+                nested_power.exponent.as_ref(),
+                line_file.clone(),
+                builtin_state,
+            )?,
+        ]);
+        if let Some(mut results) = positive_exponent_results {
+            subgoals.append(&mut results);
+            return Ok(Some(subgoals));
         }
 
         // Natural-exponent power-of-power law over complex bases, including zero exponents.
         // Example: `forall a C, m, n N: (a^m)^n = a^(m*n)`.
-        let exponents_are_natural = self.obj_is_verified_in_standard_set_for_power_builtin(
-            inner_power.exponent.as_ref(),
-            StandardSet::N,
-            line_file.clone(),
-            builtin_state,
-        )? && self.obj_is_verified_in_standard_set_for_power_builtin(
-            nested_power.exponent.as_ref(),
-            StandardSet::N,
-            line_file.clone(),
-            builtin_state,
-        )?;
-        if exponents_are_natural
-            && self.obj_is_verified_in_standard_set_for_power_builtin(
+        let natural_complex_results = combine_power_premise_groups([
+            self.try_verify_obj_in_standard_set_for_power_builtin(
+                inner_power.exponent.as_ref(),
+                StandardSet::N,
+                line_file.clone(),
+                builtin_state,
+            )?,
+            self.try_verify_obj_in_standard_set_for_power_builtin(
+                nested_power.exponent.as_ref(),
+                StandardSet::N,
+                line_file.clone(),
+                builtin_state,
+            )?,
+            self.try_verify_obj_in_standard_set_for_power_builtin(
                 combined_power.base.as_ref(),
                 StandardSet::C,
                 line_file.clone(),
                 builtin_state,
-            )?
-        {
-            return Ok(true);
+            )?,
+        ]);
+        if let Some(mut results) = natural_complex_results {
+            subgoals.append(&mut results);
+            return Ok(Some(subgoals));
         }
 
         // Integer-exponent power-of-power law needs a nonzero base so negative
         // exponents do not justify undefined powers of zero.
         // Example: `forall a R*, m, n Z: (a^m)^n = a^(m*n)`.
-        let exponents_are_integer = self.obj_is_verified_integer_exponent_for_power_builtin(
-            inner_power.exponent.as_ref(),
-            line_file.clone(),
-            builtin_state,
-        )? && self.obj_is_verified_integer_exponent_for_power_builtin(
-            nested_power.exponent.as_ref(),
-            line_file.clone(),
-            builtin_state,
-        )?;
-        if exponents_are_integer
-            && self.obj_is_verified_nonzero_for_power_builtin(
+        let integer_nonzero_results = combine_power_premise_groups([
+            self.try_verify_integer_exponent_for_power_builtin(
+                inner_power.exponent.as_ref(),
+                line_file.clone(),
+                builtin_state,
+            )?,
+            self.try_verify_integer_exponent_for_power_builtin(
+                nested_power.exponent.as_ref(),
+                line_file.clone(),
+                builtin_state,
+            )?,
+            self.try_verify_nonzero_for_power_builtin(
                 combined_power.base.as_ref(),
                 line_file.clone(),
                 builtin_state,
-            )?
-        {
-            return Ok(true);
+            )?,
+        ]);
+        if let Some(mut results) = integer_nonzero_results {
+            subgoals.append(&mut results);
+            return Ok(Some(subgoals));
         }
 
         let inner_exp = inner_power.exponent.as_ref();
@@ -567,7 +621,7 @@ impl Runtime {
             line_file.clone(),
         )
         .into();
-        let carrier_result = self.verify_builtin_rule_premise_alternatives(
+        let carrier_result = self.try_verify_builtin_rule_premise_alternatives(
             vec![
                 vec![
                     InFact::new(base.clone(), StandardSet::RPos.into(), line_file.clone()).into(),
@@ -602,10 +656,14 @@ impl Runtime {
             line_file,
             builtin_state,
         )?;
-        Ok(carrier_result.is_success())
+        if let Some(carrier_result) = carrier_result {
+            subgoals.push(carrier_result);
+            return Ok(Some(subgoals));
+        }
+        Ok(None)
     }
 
-    fn power_exponent_product_matches(
+    fn try_verify_power_exponent_product_matches(
         &mut self,
         left_factor: &Obj,
         right_factor: &Obj,
@@ -613,18 +671,15 @@ impl Runtime {
         expected: &Obj,
         line_file: LineFile,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<bool, RuntimeError> {
-        if self
-            .verify_equal_fact_as_builtin_premise(
-                &EqualFact::new_from_refs(product, expected, line_file.clone()),
-                builtin_state,
-            )?
-            .is_success()
-        {
-            return Ok(true);
+    ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
+        if let Some(result) = self.try_verify_equal_fact_as_builtin_premise(
+            &EqualFact::new_from_refs(product, expected, line_file.clone()),
+            builtin_state,
+        )? {
+            return Ok(Some(vec![result]));
         }
         if !Self::obj_is_builtin_literal_one(expected) {
-            return Ok(false);
+            return Ok(None);
         }
         fn reciprocal_base(factor: &Obj) -> Option<&Obj> {
             let Obj::Div(div) = factor else {
@@ -640,23 +695,23 @@ impl Runtime {
             None
         };
         let Some(base) = base else {
-            return Ok(false);
+            return Ok(None);
         };
-        self.obj_is_verified_nonzero_for_power_builtin(base, line_file, builtin_state)
+        self.try_verify_nonzero_for_power_builtin(base, line_file, builtin_state)
     }
 
     // A power of a power can equal the bare base when the exponents multiply to one.
     // Example: for `a R+` and `b R*`, `(a^b)^(1 / b) = a`.
-    fn power_of_power_equals_base_holds(
+    fn try_verify_power_of_power_equals_base(
         &mut self,
         nested_power: &Pow,
         base: &Obj,
         line_file: LineFile,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<bool, RuntimeError> {
+    ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
         let one: Obj = Number::new("1".to_string()).into();
         let combined_power = Pow::new(base.clone(), one);
-        self.power_of_power_rule_holds_one_direction(
+        self.try_verify_power_of_power_rule_one_direction(
             nested_power,
             &combined_power,
             line_file,
@@ -672,197 +727,167 @@ impl Runtime {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
-        let holds = match (left, right) {
+        let subgoals = match (left, right) {
             (Obj::Pow(left_power), Obj::Pow(right_power)) => {
-                self.power_of_power_rule_holds_one_direction(
+                if let Some(results) = self.try_verify_power_of_power_rule_one_direction(
                     left_power,
                     right_power,
                     line_file.clone(),
                     builtin_state,
-                )? || self.power_of_power_rule_holds_one_direction(
-                    right_power,
-                    left_power,
-                    line_file.clone(),
-                    builtin_state,
-                )?
+                )? {
+                    Some(results)
+                } else {
+                    self.try_verify_power_of_power_rule_one_direction(
+                        right_power,
+                        left_power,
+                        line_file.clone(),
+                        builtin_state,
+                    )?
+                }
             }
-            (Obj::Pow(nested_power), base) => self.power_of_power_equals_base_holds(
+            (Obj::Pow(nested_power), base) => self.try_verify_power_of_power_equals_base(
                 nested_power,
                 base,
                 line_file.clone(),
                 builtin_state,
             )?,
-            (base, Obj::Pow(nested_power)) => self.power_of_power_equals_base_holds(
+            (base, Obj::Pow(nested_power)) => self.try_verify_power_of_power_equals_base(
                 nested_power,
                 base,
                 line_file.clone(),
                 builtin_state,
             )?,
-            _ => false,
+            _ => None,
         };
-        if holds {
-            return Ok(Some(factual_equal_success_by_builtin_reason(equal_fact, "equality: (a^m)^n = a^(m*n) for real exponents over positive real bases, natural exponents over complex bases, positive integer exponents, or integer exponents with nonzero base")));
+        if let Some(subgoals) = subgoals {
+            return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(equal_fact, "equality: (a^m)^n = a^(m*n) for real exponents over positive real bases, natural exponents over complex bases, positive integer exponents, or integer exponents with nonzero base", subgoals)));
         }
         Ok(None)
     }
 
-    pub(super) fn power_product_rule_holds_one_direction(
+    pub(super) fn try_verify_power_product_rule_one_direction(
         &mut self,
         combined_power: &Pow,
         product: &Mul,
         line_file: LineFile,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<bool, RuntimeError> {
+    ) -> Result<Option<Vec<VerifyFactResult>>, RuntimeError> {
         let Obj::Mul(combined_base) = combined_power.base.as_ref() else {
-            return Ok(false);
+            return Ok(None);
         };
-        let exponent_in_n_pos = self.obj_is_verified_in_n_pos(
-            combined_power.exponent.as_ref(),
-            line_file.clone(),
-            builtin_state,
-        )?;
-        if !exponent_in_n_pos {
-            // Product power law for real exponents over positive real factors:
-            // `(a*b)^x = a^x*b^x`. Example: `forall a,b R+, x R: (a*b)^x = a^x*b^x`.
-            let exponent_is_real = self.obj_is_verified_in_standard_set_for_power_builtin(
-                combined_power.exponent.as_ref(),
+        let exponent = combined_power.exponent.as_ref();
+        let left_base = combined_base.left.as_ref();
+        let right_base = combined_base.right.as_ref();
+
+        // The first successful complete side-condition branch is retained.
+        let side_condition_results = if let Some(results) = self
+            .try_verify_obj_in_n_pos_for_power_builtin(exponent, line_file.clone(), builtin_state)?
+        {
+            Some(results)
+        } else if let Some(results) = combine_power_premise_groups([
+            self.try_verify_obj_in_standard_set_for_power_builtin(
+                exponent,
                 StandardSet::R,
                 line_file.clone(),
                 builtin_state,
-            )?;
-            let real_exponent_over_positive_real_bases = if exponent_is_real {
-                let left_base_is_positive_real = self
-                    .obj_is_verified_positive_real_base_for_power_builtin(
-                        combined_base.left.as_ref(),
-                        line_file.clone(),
-                        builtin_state,
-                    )?;
-                let right_base_is_positive_real = self
-                    .obj_is_verified_positive_real_base_for_power_builtin(
-                        combined_base.right.as_ref(),
-                        line_file.clone(),
-                        builtin_state,
-                    )?;
-                left_base_is_positive_real && right_base_is_positive_real
-            } else {
-                false
-            };
-
-            let exponent_in_n = self.obj_is_verified_in_standard_set_for_power_builtin(
-                combined_power.exponent.as_ref(),
+            )?,
+            self.try_verify_positive_real_base_for_power_builtin(
+                left_base,
+                line_file.clone(),
+                builtin_state,
+            )?,
+            self.try_verify_positive_real_base_for_power_builtin(
+                right_base,
+                line_file.clone(),
+                builtin_state,
+            )?,
+        ]) {
+            Some(results)
+        } else if let Some(results) = combine_power_premise_groups([
+            self.try_verify_obj_in_standard_set_for_power_builtin(
+                exponent,
                 StandardSet::N,
                 line_file.clone(),
                 builtin_state,
-            )?;
-            let natural_exponent_over_complex_bases = if exponent_in_n {
-                let left_base_in_c = self.obj_is_verified_in_standard_set_for_power_builtin(
-                    combined_base.left.as_ref(),
-                    StandardSet::C,
-                    line_file.clone(),
-                    builtin_state,
-                )?;
-                let right_base_in_c = self.obj_is_verified_in_standard_set_for_power_builtin(
-                    combined_base.right.as_ref(),
-                    StandardSet::C,
-                    line_file.clone(),
-                    builtin_state,
-                )?;
-                left_base_in_c && right_base_in_c
-            } else {
-                false
-            };
-
-            let integer_exponent_over_nonzero_bases = if natural_exponent_over_complex_bases {
-                false
-            } else {
-                let exponent_is_integer = self.obj_is_verified_integer_exponent_for_power_builtin(
-                    combined_power.exponent.as_ref(),
-                    line_file.clone(),
-                    builtin_state,
-                )?;
-                if !exponent_is_integer {
-                    false
-                } else {
-                    let left_base_nonzero = self.obj_is_verified_nonzero_for_power_builtin(
-                        combined_base.left.as_ref(),
+            )?,
+            self.try_verify_obj_in_standard_set_for_power_builtin(
+                left_base,
+                StandardSet::C,
+                line_file.clone(),
+                builtin_state,
+            )?,
+            self.try_verify_obj_in_standard_set_for_power_builtin(
+                right_base,
+                StandardSet::C,
+                line_file.clone(),
+                builtin_state,
+            )?,
+        ]) {
+            Some(results)
+        } else if let Some(results) = combine_power_premise_groups([
+            self.try_verify_integer_exponent_for_power_builtin(
+                exponent,
+                line_file.clone(),
+                builtin_state,
+            )?,
+            self.try_verify_nonzero_for_power_builtin(left_base, line_file.clone(), builtin_state)?,
+            self.try_verify_nonzero_for_power_builtin(
+                right_base,
+                line_file.clone(),
+                builtin_state,
+            )?,
+        ]) {
+            Some(results)
+        } else {
+            let zero = Self::literal_zero_obj_for_abs_builtin();
+            self.try_verify_builtin_rule_premise_alternatives(
+                vec![
+                    vec![InFact::new(
+                        exponent.clone(),
+                        StandardSet::NPos.into(),
                         line_file.clone(),
-                        builtin_state,
-                    )?;
-                    let right_base_nonzero = self.obj_is_verified_nonzero_for_power_builtin(
-                        combined_base.right.as_ref(),
-                        line_file.clone(),
-                        builtin_state,
-                    )?;
-                    // Nonzeroness of the product is a consequence of the two immediate
-                    // factor requirements, not a second builtin-rule premise.
-                    left_base_nonzero && right_base_nonzero
-                }
-            };
-
-            if !real_exponent_over_positive_real_bases
-                && !natural_exponent_over_complex_bases
-                && !integer_exponent_over_nonzero_bases
-            {
-                let exponent = combined_power.exponent.as_ref();
-                let left_base = combined_base.left.as_ref();
-                let right_base = combined_base.right.as_ref();
-                let zero = Self::literal_zero_obj_for_abs_builtin();
-                let carrier_result = self.verify_builtin_rule_premise_alternatives(
+                    )
+                    .into()],
                     vec![
-                        vec![InFact::new(
-                            exponent.clone(),
-                            StandardSet::NPos.into(),
+                        InFact::new(exponent.clone(), StandardSet::R.into(), line_file.clone())
+                            .into(),
+                        InFact::new(
+                            left_base.clone(),
+                            StandardSet::RPos.into(),
                             line_file.clone(),
                         )
-                        .into()],
-                        vec![
-                            InFact::new(exponent.clone(), StandardSet::R.into(), line_file.clone())
-                                .into(),
-                            InFact::new(
-                                left_base.clone(),
-                                StandardSet::RPos.into(),
-                                line_file.clone(),
-                            )
-                            .into(),
-                            InFact::new(
-                                right_base.clone(),
-                                StandardSet::RPos.into(),
-                                line_file.clone(),
-                            )
-                            .into(),
-                        ],
-                        vec![
-                            InFact::new(exponent.clone(), StandardSet::N.into(), line_file.clone())
-                                .into(),
-                            InFact::new(
-                                left_base.clone(),
-                                StandardSet::C.into(),
-                                line_file.clone(),
-                            )
-                            .into(),
-                            InFact::new(
-                                right_base.clone(),
-                                StandardSet::C.into(),
-                                line_file.clone(),
-                            )
-                            .into(),
-                        ],
-                        vec![
-                            InFact::new(exponent.clone(), StandardSet::Z.into(), line_file.clone())
-                                .into(),
-                            NotEqualFact::new(left_base.clone(), zero.clone(), line_file.clone())
-                                .into(),
-                            NotEqualFact::new(right_base.clone(), zero, line_file.clone()).into(),
-                        ],
+                        .into(),
+                        InFact::new(
+                            right_base.clone(),
+                            StandardSet::RPos.into(),
+                            line_file.clone(),
+                        )
+                        .into(),
                     ],
-                    line_file.clone(),
-                    builtin_state,
-                )?;
-                if !carrier_result.is_success() {
-                    return Ok(false);
-                }
-            }
-        }
+                    vec![
+                        InFact::new(exponent.clone(), StandardSet::N.into(), line_file.clone())
+                            .into(),
+                        InFact::new(left_base.clone(), StandardSet::C.into(), line_file.clone())
+                            .into(),
+                        InFact::new(right_base.clone(), StandardSet::C.into(), line_file.clone())
+                            .into(),
+                    ],
+                    vec![
+                        InFact::new(exponent.clone(), StandardSet::Z.into(), line_file.clone())
+                            .into(),
+                        NotEqualFact::new(left_base.clone(), zero.clone(), line_file.clone())
+                            .into(),
+                        NotEqualFact::new(right_base.clone(), zero, line_file.clone()).into(),
+                    ],
+                ],
+                line_file.clone(),
+                builtin_state,
+            )?
+            .map(|result| vec![result])
+        };
+        let Some(mut side_condition_results) = side_condition_results else {
+            return Ok(None);
+        };
 
         // Product power law for natural integer exponents over complex bases, and the
         // existing positive-integer exponent shape; integer exponents need nonzero
@@ -884,28 +909,32 @@ impl Runtime {
         ];
 
         for (left_factor, right_factor, left_base, right_base) in candidates {
-            if !self.power_factor_matches_base_and_exponent(
+            let Some(mut left_results) = self.try_verify_power_factor_matches_base_and_exponent(
                 left_factor,
                 left_base,
                 combined_power.exponent.as_ref(),
                 line_file.clone(),
                 builtin_state,
-            )? {
+            )?
+            else {
                 continue;
-            }
-            if !self.power_factor_matches_base_and_exponent(
+            };
+            let Some(mut right_results) = self.try_verify_power_factor_matches_base_and_exponent(
                 right_factor,
                 right_base,
                 combined_power.exponent.as_ref(),
                 line_file.clone(),
                 builtin_state,
-            )? {
+            )?
+            else {
                 continue;
-            }
-            return Ok(true);
+            };
+            side_condition_results.append(&mut left_results);
+            side_condition_results.append(&mut right_results);
+            return Ok(Some(side_condition_results));
         }
 
-        Ok(false)
+        Ok(None)
     }
 
     pub fn try_verify_power_product_rule(
@@ -916,23 +945,25 @@ impl Runtime {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let line_file = equal_fact.line_file.clone();
-        let holds = match (left, right) {
-            (Obj::Pow(pow), Obj::Mul(product)) => self.power_product_rule_holds_one_direction(
-                pow,
-                product,
-                line_file.clone(),
-                builtin_state,
-            )?,
-            (Obj::Mul(product), Obj::Pow(pow)) => self.power_product_rule_holds_one_direction(
-                pow,
-                product,
-                line_file.clone(),
-                builtin_state,
-            )?,
-            _ => false,
+        let subgoals = match (left, right) {
+            (Obj::Pow(pow), Obj::Mul(product)) => self
+                .try_verify_power_product_rule_one_direction(
+                    pow,
+                    product,
+                    line_file.clone(),
+                    builtin_state,
+                )?,
+            (Obj::Mul(product), Obj::Pow(pow)) => self
+                .try_verify_power_product_rule_one_direction(
+                    pow,
+                    product,
+                    line_file.clone(),
+                    builtin_state,
+                )?,
+            _ => None,
         };
-        if holds {
-            return Ok(Some(factual_equal_success_by_builtin_reason(equal_fact, "equality: (a*b)^x = a^x * b^x for real x over positive real factors, n in N over complex bases, n in N+, or n in Z with nonzero bases")));
+        if let Some(subgoals) = subgoals {
+            return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(equal_fact, "equality: (a*b)^x = a^x * b^x for real x over positive real factors, n in N over complex bases, n in N+, or n in Z with nonzero bases", subgoals)));
         }
         Ok(None)
     }

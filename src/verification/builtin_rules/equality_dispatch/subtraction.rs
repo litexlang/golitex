@@ -88,12 +88,12 @@ impl Runtime {
             ));
         }
 
-        let premise_result = self.verify_builtin_rule_premise_alternatives(
+        let premise_result = self.try_verify_builtin_rule_premise_alternatives(
             vec![vec![sum_fact_1.into()], vec![sum_fact_2.into()]],
             line_file.clone(),
             builtin_state,
         )?;
-        if premise_result.is_success() {
+        if let Some(premise_result) = premise_result {
             return Ok(Some(
                 SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     equal_fact.clone().into(),

@@ -1,0 +1,2 @@
+# This sidecar is deliberately outside the module's [export] selection.
+have unlisted_sidecar_value R = 2

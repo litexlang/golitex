@@ -68,8 +68,8 @@ impl Runtime {
         )
         .into();
         let mut nonnegative_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&nonnegative, builtin_state)?;
-        if !nonnegative_result.is_success() {
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&nonnegative, builtin_state)?;
+        if nonnegative_result.is_none() {
             let positive: AtomicFact = LessFact::new(
                 Self::literal_zero_obj_for_abs_builtin(),
                 arg.clone(),
@@ -77,11 +77,11 @@ impl Runtime {
             )
             .into();
             nonnegative_result =
-                self.verify_atomic_fact_as_builtin_rule_premise(&positive, builtin_state)?;
+                self.try_verify_atomic_fact_as_builtin_rule_premise(&positive, builtin_state)?;
         }
-        if !nonnegative_result.is_success() {
+        let Some(nonnegative_result) = nonnegative_result else {
             return Ok(None);
-        }
+        };
         Ok(Some(
             SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),
@@ -116,8 +116,8 @@ impl Runtime {
         )
         .into();
         let mut nonpositive_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&nonpositive, builtin_state)?;
-        if !nonpositive_result.is_success() {
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&nonpositive, builtin_state)?;
+        if nonpositive_result.is_none() {
             let negative: AtomicFact = LessFact::new(
                 arg.clone(),
                 Self::literal_zero_obj_for_abs_builtin(),
@@ -125,11 +125,11 @@ impl Runtime {
             )
             .into();
             nonpositive_result =
-                self.verify_atomic_fact_as_builtin_rule_premise(&negative, builtin_state)?;
+                self.try_verify_atomic_fact_as_builtin_rule_premise(&negative, builtin_state)?;
         }
-        if !nonpositive_result.is_success() {
+        let Some(nonpositive_result) = nonpositive_result else {
             return Ok(None);
-        }
+        };
         Ok(Some(
             SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 equal_fact.clone().into(),

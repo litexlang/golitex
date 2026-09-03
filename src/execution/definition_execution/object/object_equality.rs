@@ -258,7 +258,6 @@ impl Runtime {
                 have_obj_equal_stmt.line_file.clone(),
             );
             let equal_to_fact: AtomicFact = equality.clone().into();
-            let defining_fact: Fact = equal_to_fact.clone().into();
             let equal_to_fact_infer_result = self
                 .store_atomic_fact_without_well_defined_verified_and_infer_with_reason(
                     equal_to_fact,
@@ -269,30 +268,6 @@ impl Runtime {
                         have_obj_equal_stmt.clone().into(),
                         "",
                         Some(store_fact_error),
-                        vec![],
-                    )
-                })?;
-            let defining_equality_fact_id = self
-                .require_known_fact_id_for_success_result(&defining_fact)
-                .map_err(|error| {
-                    short_exec_error(have_obj_equal_stmt.clone().into(), "", Some(error), vec![])
-                })?;
-            let definition =
-                TransparentObjectDefinition::new(obj.clone(), equality, defining_equality_fact_id);
-            self.top_level_env()
-                .definitions
-                .symbols
-                .get_by_id_mut(binding.id())
-                .expect("the have-object symbol was registered before its defining equality")
-                .remember_transparent_object_definition(definition)
-                .map_err(|_| {
-                    short_exec_error(
-                        have_obj_equal_stmt.clone().into(),
-                        format!(
-                            "conflicting transparent definition for `{}`",
-                            binding.name()
-                        ),
-                        None,
                         vec![],
                     )
                 })?;

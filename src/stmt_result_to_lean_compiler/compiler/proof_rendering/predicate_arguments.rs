@@ -373,6 +373,33 @@ pub(in super::super) fn render_exact_predicate_argument_same_to_source(
             }
         }
     }
+    // An exact `R` carrier selected from the visible membership proof may be
+    // printed either bare (`In.rep x hx`) or with Lean's redundant `: ℝ`
+    // ascription.  These are the same selected value; importantly, the
+    // bridge must remain the heterogeneous `Same` proof from that membership,
+    // never a cast of the proof object itself.
+    if matches!(set, Obj::StandardSet(StandardSet::R)) {
+        if let Ok(membership) = resolve_visible_exact_membership_proof(object, set, context) {
+            let selected = format!("Litex.In.rep {source} ({membership})");
+            let exact_without_outer = exact
+                .strip_prefix('(')
+                .and_then(|value| value.strip_suffix(')'))
+                .unwrap_or(&exact);
+            let selected_without_outer = selected
+                .strip_prefix('(')
+                .and_then(|value| value.strip_suffix(')'))
+                .unwrap_or(&selected);
+            let exact_without_type = exact_without_outer
+                .strip_suffix(" : ℝ")
+                .unwrap_or(exact_without_outer)
+                .trim();
+            if exact_without_type == selected_without_outer {
+                return Ok(format!(
+                    "Litex.Same.symm (Litex.In.same_rep {source} ({membership}))"
+                ));
+            }
+        }
+    }
     if matches!(set, Obj::StandardSet(StandardSet::R))
         && (exact == format!("({source} : ℝ)") || exact == format!("(({source}) : ℝ)"))
     {

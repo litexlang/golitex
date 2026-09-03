@@ -45,6 +45,9 @@ impl StmtResultToLeanCompiler {
         self.environment_stack
             .fact_propositions
             .insert(step.fact_id, step.fact.clone());
+        self.environment_stack
+            .fact_lean_propositions
+            .insert(step.fact_id, step.proposition.clone());
         compiled_steps.push(step);
     }
 }

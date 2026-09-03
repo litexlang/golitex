@@ -6,7 +6,7 @@ use std::rc::Rc;
 use std::result::Result;
 
 impl Runtime {
-    pub(crate) fn prove_and_fact(
+    pub(in crate::verification) fn prove_and_fact(
         &mut self,
         and_fact: &AndFact,
         verify_state: &VerifyState,
@@ -138,7 +138,7 @@ impl Runtime {
         Ok(Some(fact_verified))
     }
 
-    pub(crate) fn prove_chain_fact(
+    pub(in crate::verification) fn prove_chain_fact(
         &mut self,
         chain_fact: &ChainFact,
         verify_state: &VerifyState,

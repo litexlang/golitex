@@ -3,10 +3,7 @@
 use super::*;
 
 impl StatementResultRenderer {
-    pub(in super::super) fn shared_fact(
-        &mut self,
-        result: &Rc<SuccessFactProofNode>,
-    ) -> JsonValue {
+    pub(in super::super) fn shared_fact(&mut self, result: &Rc<SuccessFactProofNode>) -> JsonValue {
         let pointer = Rc::as_ptr(result) as usize;
         if let Some(id) = self.shared_fact_ids.get(&pointer) {
             return object(vec![string_field("$ref", id.clone())]);

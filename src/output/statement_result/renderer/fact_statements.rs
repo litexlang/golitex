@@ -19,9 +19,7 @@ impl StatementResultRenderer {
                     self.verify_fact(verified.verification.as_ref()),
                 ),
             ]),
-            FactStatementEvidence::Trusted(_) => {
-                object(vec![string_field("kind", "Trusted")])
-            }
+            FactStatementEvidence::Trusted(_) => object(vec![string_field("kind", "Trusted")]),
         };
         object(vec![
             string_field("kind", "Fact"),

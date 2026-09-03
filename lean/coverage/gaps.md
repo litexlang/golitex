@@ -18,6 +18,8 @@ The 422 uncatalogued builtin identities are intentionally kept in
 | `builtin_typed` | `not_equal.from_strict_order` | `evidence_gap` | - | 1 | strict-order inequality replay lacks a reviewed numeric-observation elimination |
 | `builtin_typed` | `set.set_minus_infinite_of_infinite_finite` | `abi_decision` | - | 1 | the Lean target ABI does not yet represent infinite-set facts |
 | `builtin_typed` | `set.subset_transitivity` | `compiler_gap` | - | 1 | add one positive Result-driven tracer and direct compiler consumer for set.subset_transitivity |
+| `fact` | `Fact::ForallFactWithIff` | `compiler_gap` | - | 41 | add one positive Result-driven tracer and direct compiler consumer for Fact::ForallFactWithIff |
+| `fact` | `Fact::NotForall` | `compiler_gap` | - | 28 | add one positive Result-driven tracer and direct compiler consumer for Fact::NotForall |
 | `fact_proof` | `SuccessFactProofResult::DefinitionReduction` | `compiler_gap` | - | 3 | direct proof replay returns no proof for the legacy definition-reduction Result |
 | `fact_proof` | `SuccessFactProofResult::DiagnosticOnly` | `evidence_gap` | - | 3 | a diagnostic-only successful Result retains no replayable proof evidence |
 | `object` | `Obj::CartDim` | `compiler_gap` | `binder`, `definition_value`, `function_domain_or_codomain`, `target_set`, `term`, `well_definedness` | 25 | add one positive Result-driven tracer and direct compiler consumer for Obj::CartDim |
@@ -37,19 +39,9 @@ The 422 uncatalogued builtin identities are intentionally kept in
 | `object` | `Obj::Quot` | `compiler_gap` | `binder`, `definition_value`, `function_domain_or_codomain`, `target_set`, `term`, `well_definedness` | 36 | object lowering explicitly rejects the builtin quot object |
 | `object` | `Obj::Replacement` | `compiler_gap` | `binder`, `definition_value`, `function_domain_or_codomain`, `target_set`, `term`, `well_definedness` | 28 | add one positive Result-driven tracer and direct compiler consumer for Obj::Replacement |
 | `object_atom` | `AtomObj::IdentifierWithMod` | `compiler_gap` | - | 30 | add one positive Result-driven tracer and direct compiler consumer for AtomObj::IdentifierWithMod |
-| `well_definedness_result` | `CachedWellDefinedObj` | `compiler_gap` | - | 5 | add one positive Result-driven tracer and direct compiler consumer for CachedWellDefinedObj |
+| `tracer` | `71_CapturedPredicateSetBuilder.lit` | `unreachable` | - | 1 | decide whether to register 71_CapturedPredicateSetBuilder.lit or move it outside the configured examples module |
+| `tracer` | `72_NamedFactTheorem.lit` | `unreachable` | - | 1 | decide whether to register 72_NamedFactTheorem.lit or move it outside the configured examples module |
 | `well_definedness_result` | `SuccessVerifyTemplateDomainResult` | `compiler_gap` | - | 2 | add one positive Result-driven tracer and direct compiler consumer for SuccessVerifyTemplateDomainResult |
 | `well_definedness_result` | `SuccessVerifyTemplateHeaderArgumentResult` | `compiler_gap` | - | 2 | add one positive Result-driven tracer and direct compiler consumer for SuccessVerifyTemplateHeaderArgumentResult |
-| `well_definedness_result` | `WellDefinedBinderPremiseProof` | `compiler_gap` | - | 2 | add one positive Result-driven tracer and direct compiler consumer for WellDefinedBinderPremiseProof |
-| `well_definedness_result` | `WellDefinedBinderScopeId` | `compiler_gap` | - | 6 | add one positive Result-driven tracer and direct compiler consumer for WellDefinedBinderScopeId |
-| `well_definedness_result` | `WellDefinedBinderScopeProof` | `compiler_gap` | - | 4 | add one positive Result-driven tracer and direct compiler consumer for WellDefinedBinderScopeProof |
-| `well_definedness_result` | `WellDefinedFactId` | `compiler_gap` | - | 8 | add one positive Result-driven tracer and direct compiler consumer for WellDefinedFactId |
-| `well_definedness_result` | `WellDefinedFactProof` | `compiler_gap` | - | 2 | add one positive Result-driven tracer and direct compiler consumer for WellDefinedFactProof |
-| `well_definedness_result` | `WellDefinedObjChildUse` | `compiler_gap` | - | 4 | add one positive Result-driven tracer and direct compiler consumer for WellDefinedObjChildUse |
-| `well_definedness_result` | `WellDefinedObjId` | `compiler_gap` | - | 9 | add one positive Result-driven tracer and direct compiler consumer for WellDefinedObjId |
-| `well_definedness_result` | `WellDefinedObjProof` | `compiler_gap` | - | 2 | add one positive Result-driven tracer and direct compiler consumer for WellDefinedObjProof |
-| `well_definedness_result` | `WellDefinedTargetRequirementProof` | `compiler_gap` | - | 4 | add one positive Result-driven tracer and direct compiler consumer for WellDefinedTargetRequirementProof |
-| `well_definedness_result` | `WellDefinedTargetRequirementUse` | `compiler_gap` | - | 2 | add one positive Result-driven tracer and direct compiler consumer for WellDefinedTargetRequirementUse |
-| `well_definedness_result` | `WellDefinednessTargetRequirementPhase` | `compiler_gap` | - | 2 | add one positive Result-driven tracer and direct compiler consumer for WellDefinednessTargetRequirementPhase |
 
-Unique non-uncatalogued gap identities: **42**.
+Unique non-uncatalogued gap identities: **34**.

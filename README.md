@@ -129,6 +129,20 @@ and a body of laws that later mathematics can use. A small team can begin from
 sets, functions, and facts, then grow a domain interface without pretending
 that mature libraries no longer matter.
 
+For a larger, runnable example of this process, see
+[Example of Building a Math System With Litex](showcases/Example_of_Building_A_Math_System_With_Litex/README.md).
+Formal geometry itself is not new—projects such as
+[LeanGeo](https://github.com/project-numina/LeanGeo) already build substantial
+systems in Lean. This showcase asks a different question: can building a
+checked mathematical system become direct enough for learners to participate,
+so that formalization is part of learning mathematics rather than its final
+translation? It grows a coordinate model of the Euclidean plane into geometric
+predicates, bridge lemmas, and reusable theorems, then uses that system to
+solve a concrete geometry problem. It also points toward interactive
+textbooks in which explanation, experimentation, exercises, and verification
+share one environment, while stating the example's remaining axiom boundary
+explicitly.
+
 ## The human–AI verification loop
 
 Fact growth becomes especially useful when a human or AI is exploring a proof:
@@ -281,6 +295,6 @@ follow more closely the mental flow I use when solving mathematical problems.
 Litex is the result of that exploration.
 
 Special thanks to Wei Lin, Siqi Sun, Peng Sun, Yi Wang, Chenxuan Huang, Yan Lu,
-Sheng Xu, and Zhaoxuan Hong for their support and advice.
+Sheng Xu, Keyao Zhu, Xingjian Ma, and Zhaoxuan Hong for their support and advice.
 
 Litex is released under the [Apache License 2.0](LICENSE).

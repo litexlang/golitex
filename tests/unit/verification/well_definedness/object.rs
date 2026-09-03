@@ -3,7 +3,7 @@
 use super::*;
 
 #[test]
-fn compositional_well_definedness_cache_returns_exact_reuse_source() {
+fn compositional_well_definedness_memo_returns_exact_reuse_source() {
     let mut runtime = Runtime::default();
     runtime.start_isolated_source("compositional-wd-reuse.lit");
     let object: Obj = Number::new("1".to_string()).into();
@@ -39,7 +39,7 @@ fn active_well_definedness_reentry_is_an_error() {
     verify_state.begin_well_defined_object(&obj_equality_key(&object));
 
     let error = runtime
-        .verify_obj_well_defined_and_store_cache(&object, &verify_state)
+        .verify_obj_well_defined_result(&object, &verify_state)
         .expect_err("active object WD re-entry must not fabricate successful evidence");
-    assert!(error.to_string().contains("recursive"), "{error:?}");
+    assert!(format!("{error:?}").contains("cyclic"), "{error:?}");
 }

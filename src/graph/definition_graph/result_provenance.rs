@@ -279,11 +279,16 @@ impl DefinitionGraphBuilder {
                     self.collect_proof_source_ids_from_verify_result(check, source_ids);
                 }
             }
-            SuccessFactProofResult::CheckedFunctionDefinitionReduction(result) => self
-                .collect_cited_stmt_source_ids(
+            SuccessFactProofResult::CheckedFunctionDefinitionReduction(result) => {
+                self.collect_cited_stmt_source_ids(
                     &result.verification.defining_equality.clone().into_stmt(),
                     source_ids,
-                ),
+                );
+                self.collect_proof_source_ids_from_verify_result(
+                    &result.verification.reduced_equality,
+                    source_ids,
+                );
+            }
             SuccessFactProofResult::DiagnosticOnly(_) => {}
             SuccessFactProofResult::CombinedProofs(result) => {
                 if let Some(primary) = result.primary.as_ref() {

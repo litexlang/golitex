@@ -70,20 +70,20 @@ fn quantifier_free_premise_structure_does_not_reset_the_builtin_depth_budget() {
     let mut child_runtime = Runtime::default();
     child_runtime.start_isolated_source("qff_premise_child_depth.lit");
     let child_result = child_runtime
-        .verify_builtin_rule_premise(&premise, &child_state)
+        .try_verify_builtin_rule_premise(&premise, &child_state)
         .expect("bounded compound-premise verification should not error");
     assert!(
-        child_result.is_unknown(),
+        child_result.is_none(),
         "logical compound structure must not reopen a consumed builtin-rule step"
     );
 
     let mut root_runtime = Runtime::default();
     root_runtime.start_isolated_source("qff_premise_root_depth.lit");
     let root_result = root_runtime
-        .verify_builtin_rule_premise(&premise, &root_state)
+        .try_verify_builtin_rule_premise(&premise, &root_state)
         .expect("root compound-premise verification should not error");
     assert!(
-        root_result.is_success(),
+        root_result.is_some(),
         "the same atomic leaf should remain available when the root budget is unused"
     );
 }
@@ -115,22 +115,36 @@ fn quantifier_free_and_and_chain_premises_verify_every_atomic_leaf() {
     let mut runtime = Runtime::default();
     runtime.start_isolated_source("qff_and_chain_premises.lit");
     let and_result = runtime
-        .verify_builtin_rule_premise(&and_premise, &child_state)
+        .try_verify_builtin_rule_premise(&and_premise, &child_state)
         .expect("conjunction premise verification should not error");
-    assert!(and_result.is_success());
+    assert!(and_result.is_some());
     let chain_result = runtime
-        .verify_builtin_rule_premise(&chain_premise, &child_state)
+        .try_verify_builtin_rule_premise(&chain_premise, &child_state)
         .expect("chain premise verification should not error");
-    assert!(chain_result.is_success());
+    assert!(chain_result.is_some());
 }
 
 #[test]
 fn integer_leaf_reuses_known_finiteness_without_opening_a_direct_rule() {
     let mut runtime = Runtime::default();
     runtime.start_isolated_source("integer_leaf_finite_set_size_test.lit");
+    let (_, setup_error) = crate::test_support::execute_source("have a, b Z\n", &mut runtime);
+    assert!(setup_error.is_none(), "fixture endpoints: {setup_error:?}");
 
-    let start: Obj = Identifier::new("a".to_string()).into();
-    let end: Obj = Identifier::new("b".to_string()).into();
+    let start: Obj = Identifier::new_bound(
+        "a".to_string(),
+        runtime
+            .resolved_identifier_symbol("a")
+            .expect("fixture a binding"),
+    )
+    .into();
+    let end: Obj = Identifier::new_bound(
+        "b".to_string(),
+        runtime
+            .resolved_identifier_symbol("b")
+            .expect("fixture b binding"),
+    )
+    .into();
     let set: Obj = ClosedRange::new(start, end).into();
     let size: Obj = FiniteSetSize::new(set.clone()).into();
     let line_file = default_line_file();
@@ -148,9 +162,9 @@ fn integer_leaf_reuses_known_finiteness_without_opening_a_direct_rule() {
     );
 
     let finite_fact: AtomicFact = IsFiniteSetFact::new(set, line_file.clone()).into();
-    // This unit isolates proof-search reuse. The symbolic endpoints deliberately
-    // have no surrounding environment, so mark the synthetic fact as already
-    // well-defined before exercising the owning atomic-verification entrypoint.
+    // This unit isolates proof-search reuse. The symbolic endpoints have real
+    // integer declarations, so the generated finiteness fact can cross the
+    // ordinary full-WD completion boundary.
     let verify_state = VerifyState::initial();
     let finite_result = runtime
         .verify_atomic_fact(&finite_fact, &verify_state)
@@ -291,7 +305,7 @@ fn family_owned_bounded_builtin_routes_preserve_policy_order_and_boundaries() {
         .find("verify_equal_fact_by_direct_evaluation(equal_fact)")
         .expect("zero-premise equality must try direct evaluation second");
     let equality_known_evaluation = equality_zero_premise_impl
-        .find("verify_equal_fact_by_known_equality_then_direct_evaluation(equal_fact)")
+        .find("verify_equal_fact_by_known_equality_then_direct_evaluation(")
         .expect("zero-premise equality must retain known-equality-assisted evaluation");
     let equality_structural = equality_zero_premise_impl
         .find("equal_fact_sides_are_equal_by_terminating_reduction_and_congruence")
@@ -579,8 +593,9 @@ fn equality_proof_apis_receive_the_owned_equal_fact() {
         "/src/verification/builtin_rules/equality_structural.rs"
     ));
     assert!(structural.contains(
-            "pub fn verify_equal_fact_as_builtin_premise(\n        &mut self,\n        equal_fact: &EqualFact,"
+            "pub fn try_verify_equal_fact_as_builtin_premise(\n        &mut self,\n        equal_fact: &EqualFact,"
         ));
+    assert!(!structural.contains("pub fn verify_equal_fact_as_builtin_premise("));
     let dispatcher = crate::verification::equality_dispatch_source::SOURCE;
     assert!(dispatcher.contains(
             "pub fn verify_equal_fact_by_builtin_rules(\n        &mut self,\n        equal_fact: &EqualFact,"

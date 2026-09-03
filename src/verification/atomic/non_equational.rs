@@ -5,8 +5,8 @@ use crate::fact::{AtomicFact, Fact, NotEqualFact};
 use crate::inference::SuccessInferResult;
 use crate::object::Obj;
 use crate::result::{
-    BuiltinRuleEvidence, RegisteredReflexivePredicateBuiltinRuleEvidence,
-    RegisteredSymmetricPredicateBuiltinRuleEvidence, ProveFactResult, SuccessProveFactResult,
+    BuiltinRuleEvidence, ProveFactResult, RegisteredReflexivePredicateBuiltinRuleEvidence,
+    RegisteredSymmetricPredicateBuiltinRuleEvidence, SuccessProveFactResult,
     UnknownGenericStmtResult, VerifyFactResult,
 };
 use crate::runtime::Runtime;
@@ -348,11 +348,8 @@ impl Runtime {
                 AlternateFactSearch::Disabled,
             )?;
             if alt_result.is_success() {
-                let alt_result = self.complete_atomic_fact_proof_result(
-                    &alt,
-                    alt_result,
-                    verify_state,
-                )?;
+                let alt_result =
+                    self.complete_atomic_fact_proof_result(&alt, alt_result, verify_state)?;
                 return Ok(Self::wrap_registered_symmetric_prop_result(
                     atomic_fact,
                     prop_name,

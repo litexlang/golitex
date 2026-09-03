@@ -295,6 +295,78 @@ square(2) = 4
 }
 
 #[test]
+fn checked_definition_reduction_uses_known_subset_for_power_set_parameter() {
+    let source_code = r#"
+have fn uniform_probability(S power_set(R), A power_set(S): $is_finite_set(S), $is_finite_set(A), finite_set_size(S) > 0) R = finite_set_size(A) / finite_set_size(S)
+
+finite_set_size({1, 2, 3, 4, 5, 6}) = 6
+finite_set_size({2, 4, 6}) = 3
+{2, 4, 6} $subset {1, 2, 3, 4, 5, 6}
+uniform_probability({1, 2, 3, 4, 5, 6}, {2, 4, 6}) = 1 / 2
+"#;
+    let mut runtime = Runtime::default();
+    runtime.start_isolated_source(
+        "checked_definition_reduction_uses_known_subset_for_power_set_parameter",
+    );
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
+    assert!(
+        run_succeeded,
+        "a checked power-set argument should reuse the exact known subset certificate:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn checked_definition_reduction_retains_the_complete_reduced_equality_result() {
+    let source_code = r#"
+have fn bayes_posterior(prior, likelihood, evidence R: evidence > 0) R = likelihood * prior / evidence
+bayes_posterior(1 / 3, 3 / 4, 1 / 2) = 1 / 2
+"#;
+    let mut runtime = Runtime::default();
+    runtime.start_isolated_source(
+        "checked_definition_reduction_retains_the_complete_reduced_equality_result",
+    );
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
+    assert!(
+        run_succeeded,
+        "checked reduction should retain the rational proof of its reduced goal:\n{}",
+        run_output
+    );
+
+    let reduction = stmt_results[1]
+        .factual_success()
+        .and_then(|result| result.proof())
+        .and_then(|proof| match proof {
+            SuccessFactProofResult::CheckedFunctionDefinitionReduction(result) => Some(result),
+            _ => None,
+        })
+        .expect("second fact owns checked function-definition reduction evidence");
+    let reduced = reduction
+        .verification
+        .reduced_equality
+        .verified()
+        .expect("the reduced equality is a successful VerifyFactResult");
+    assert_eq!(
+        reduced.fact().to_string(),
+        "3 / 4 * 1 / 3 / (1 / 2) = 1 / 2"
+    );
+    let SuccessFactProofResult::BuiltinRule(normalization) = reduced.proof() else {
+        panic!("the reduced equality should retain its rational-normalization proof")
+    };
+    assert!(matches!(
+        normalization.evidence.typed(),
+        Some(BuiltinRuleEvidence::RationalAlgebraicNormalization(_))
+    ));
+    assert_eq!(normalization.subgoals.len(), 4);
+    assert!(normalization
+        .subgoals
+        .iter()
+        .all(VerifyFactResult::is_verified));
+}
+
+#[test]
 fn structural_known_congruence_compares_interval_endpoints() {
     let source_code = r#"
 have a, b, c, d R
@@ -1061,10 +1133,19 @@ try:
                     .sum::<usize>(),
             )
         };
-        let (_, runtime_error) = execute_source(failed_source, &mut failed_runtime);
+        let (failed_results, runtime_error) = execute_source(failed_source, &mut failed_runtime);
         assert!(
-            runtime_error.is_some(),
-            "the deliberately false final step should roll back the try block"
+            runtime_error.is_none(),
+            "a rolled-back try is a successful outer statement: {runtime_error:?}"
+        );
+        assert!(
+            matches!(
+                failed_results.as_slice(),
+                [StmtResult::Success(SuccessStmtResult::ProofBlock(
+                    SuccessProofBlockStmtResult::TryStmt(result)
+                ))] if matches!(result.execution, TryStmtExecutionResult::RolledBack(_))
+            ),
+            "the deliberately false final step should produce a rolled-back try result"
         );
         let after_counts = {
             let environment = failed_runtime.top_level_env();
@@ -3498,7 +3579,7 @@ f(1) = 1
     let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
 
     assert!(
-        !run_succeeded && run_output.contains("UnknownError"),
+        !run_succeeded && run_output.contains("unknown_error"),
         "a forall may not discharge its own equality requirement recursively:\n{}",
         run_output
     );

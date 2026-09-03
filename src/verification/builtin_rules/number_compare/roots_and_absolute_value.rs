@@ -54,11 +54,11 @@ impl Runtime {
             f.line_file.clone(),
         )
         .into();
-        let nonnegative_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&nonnegative_arg, builtin_state)?;
-        if !nonnegative_result.is_success() {
+        let Some(nonnegative_result) =
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&nonnegative_arg, builtin_state)?
+        else {
             return Ok(None);
-        }
+        };
         Ok(Some(ProveFactResult::from(
             SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
@@ -96,11 +96,11 @@ impl Runtime {
             f.line_file.clone(),
         )
         .into();
-        let positive_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&positive_arg, builtin_state)?;
-        if !positive_result.is_success() {
+        let Some(positive_result) =
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&positive_arg, builtin_state)?
+        else {
             return Ok(None);
-        }
+        };
         Ok(Some(ProveFactResult::from(
             SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),

@@ -6,7 +6,6 @@ use crate::prelude::*;
 pub struct FnObj {
     pub head: Box<FnObjHead>,
     pub body: Vec<Vec<Box<Obj>>>,
-    pub source_occurrence_id: Option<SourceObjectOccurrenceId>,
 }
 
 impl FnObj {
@@ -14,19 +13,6 @@ impl FnObj {
         FnObj {
             head: Box::new(head),
             body,
-            source_occurrence_id: None,
-        }
-    }
-
-    pub fn new_with_source_occurrence_id(
-        head: FnObjHead,
-        body: Vec<Vec<Box<Obj>>>,
-        source_occurrence_id: Option<SourceObjectOccurrenceId>,
-    ) -> Self {
-        FnObj {
-            head: Box::new(head),
-            body,
-            source_occurrence_id,
         }
     }
 
@@ -35,10 +21,9 @@ impl FnObj {
             return self.head.as_ref().clone().into();
         }
 
-        FnObj::new_with_source_occurrence_id(
+        FnObj::new(
             self.head.as_ref().clone(),
             self.body[..number_of_body_groups_to_keep].to_vec(),
-            self.source_occurrence_id,
         )
         .into()
     }

@@ -16,7 +16,7 @@ fn assert_unknown_at_target(
     boundary_description: &str,
 ) {
     assert!(
-        !succeeded && output.contains("UnknownError"),
+        !succeeded && output.contains("unknown_error"),
         "{boundary_description}:\n{output}"
     );
     assert!(
@@ -114,7 +114,7 @@ index_union(union({1}, {2}), N, family) = union(index_union({1}, N, fn(left_inde
                 "a branch that is not the literal family restriction must be rejected:\n{output}"
             );
             assert!(
-                output.contains("UnknownError"),
+                output.contains("unknown_error"),
                 "the well-defined equality should be rejected during verification:\n{output}"
             );
         },
@@ -216,7 +216,7 @@ index_union(D, N, fn(k D) power_set(N) {{1}}) = {1}
 "#;
             let (succeeded, output) = run(missing_nonempty, "indexed_constant_missing_nonempty");
             assert!(
-                !succeeded && output.contains("UnknownError"),
+                !succeeded && output.contains("unknown_error"),
                 "constant-family equality must require a nonempty index domain:\n{output}"
             );
 
@@ -228,7 +228,7 @@ index_union({1}, N, left_family) = index_union({1}, N, right_family)
             let (succeeded, output) =
                 run(missing_pointwise, "indexed_extensionality_missing_forall");
             assert!(
-                !succeeded && output.contains("UnknownError"),
+                !succeeded && output.contains("unknown_error"),
                 "extensionality must require the stored pointwise equality:\n{output}"
             );
 
@@ -243,7 +243,7 @@ index_union(set_minus(D, E), N, fn(k set_minus(D, E)) power_set(N) {common(k)}) 
                 "indexed_false_domain_subtraction_equality",
             );
             assert!(
-                !succeeded && output.contains("UnknownError"),
+                !succeeded && output.contains("unknown_error"),
                 "domain subtraction must not be strengthened to result subtraction:\n{output}"
             );
 
@@ -256,7 +256,7 @@ index_union({1, 2}, N, family) = union(index_union(set_minus({1, 2}, {2}), N, fn
                 "indexed_partition_wrong_restriction",
             );
             assert!(
-                !succeeded && output.contains("UnknownError"),
+                !succeeded && output.contains("unknown_error"),
                 "partition branches must remain literal restrictions:\n{output}"
             );
         },
@@ -462,7 +462,7 @@ union({1}, index_union(D, N, A)) = index_union(D, union({1}, N), fn(k D) power_s
             let (succeeded, output) =
                 run(missing_nonempty, "indexed_external_union_missing_nonempty");
             assert!(
-                !succeeded && output.contains("UnknownError"),
+                !succeeded && output.contains("unknown_error"),
                 "external union must retain its nonempty-domain premise:\n{output}"
             );
 
@@ -473,7 +473,7 @@ union({1}, index_union({}, N, empty_A)) = index_union({}, union({1}, N), fn(k {}
             let (succeeded, output) =
                 run(empty_external_union, "indexed_external_union_empty_domain");
             assert!(
-                !succeeded && output.contains("UnknownError"),
+                !succeeded && output.contains("unknown_error"),
                 "external union over an empty index set must remain rejected:\n{output}"
             );
 
@@ -484,7 +484,7 @@ set_minus(R, index_intersect({1}, N, A)) = index_union({1}, R, fn(k {1}) power_s
             let (succeeded, output) =
                 run(missing_correction, "indexed_set_minus_missing_correction");
             assert!(
-                !succeeded && output.contains("UnknownError"),
+                !succeeded && output.contains("unknown_error"),
                 "C set_minus M must retain C set_minus X unless C subset X is known:\n{output}"
             );
 
@@ -494,7 +494,7 @@ set_minus(N, index_union({1}, N, A)) = index_intersect({1}, N, fn(k {1}) power_s
 "#;
             let (succeeded, output) = run(wrong_body, "indexed_demorgan_wrong_body");
             assert!(
-                !succeeded && output.contains("UnknownError"),
+                !succeeded && output.contains("unknown_error"),
                 "a merely well-typed transformed body must not match De Morgan:\n{output}"
             );
 
@@ -508,7 +508,7 @@ index_union({1, 2}, N, fn(k {1, 2}) power_set(N) {intersect(A(k), B(k))}) = inte
                 "indexed_false_pointwise_intersection_equality",
             );
             assert!(
-                !succeeded && output.contains("UnknownError"),
+                !succeeded && output.contains("unknown_error"),
                 "pointwise intersection under indexed union is only an inclusion:\n{output}"
             );
         },
@@ -738,7 +738,7 @@ index_union({1}, N, fn(k {1}) power_set(N) {{2}}) = fn_range(f)
             let (succeeded, output) =
                 run(wrong_singleton_body, "indexed_range_wrong_singleton_body");
             assert!(
-                !succeeded && output.contains("UnknownError"),
+                !succeeded && output.contains("unknown_error"),
                 "range adapter must match the literal singleton f(i):\n{output}"
             );
 
@@ -750,7 +750,7 @@ cart(Z, set_minus(N, {1})) = set_minus(cart(Z, N), cart(Q, {1}))
                 "indexed_cart_difference_wrong_fixed_coordinate",
             );
             assert!(
-                !succeeded && output.contains("UnknownError"),
+                !succeeded && output.contains("unknown_error"),
                 "Cartesian set difference must keep the other coordinate exact:\n{output}"
             );
 
@@ -761,7 +761,7 @@ index_union({1, 2}, power_set(N), fn(k {1, 2}) power_set(power_set(N)) {power_se
             let (succeeded, output) =
                 run(false_powerset_equality, "indexed_powerset_false_equality");
             assert!(
-                !succeeded && output.contains("UnknownError"),
+                !succeeded && output.contains("unknown_error"),
                 "powerset over indexed union must remain an inclusion:\n{output}"
             );
 
@@ -775,7 +775,7 @@ union(general_cart({1, 2}, power_set(N), A), general_cart({1, 2}, power_set(N), 
                 "indexed_general_cart_false_union_equality",
             );
             assert!(
-                !succeeded && output.contains("UnknownError"),
+                !succeeded && output.contains("unknown_error"),
                 "general_cart of pointwise unions must remain an inclusion:\n{output}"
             );
         },

@@ -998,7 +998,11 @@ fn structural_order_strategy_binary_child_matches(
         && obj_equality_key(right) == obj_equality_key(expected_right)
 }
 
-fn structural_order_strategy_child_matches(result: &VerifyFactResult, operand: &Obj, weak: bool) -> bool {
+fn structural_order_strategy_child_matches(
+    result: &VerifyFactResult,
+    operand: &Obj,
+    weak: bool,
+) -> bool {
     let Some(success) = result.verified() else {
         return false;
     };

@@ -32,12 +32,13 @@ pub(in super::super) fn matches_directly_or_after_one_transparent_definition_pas
     Ok(obj_equality_key(&reduced) == obj_equality_key(target))
 }
 
-/// Compare two occurrence-distinct application sources only through symbol
+/// Compare two identity-distinct application sources only through symbol
 /// aliases already installed by an enclosing Result-owned binder replay.  A
-/// textual identifier-erased match is necessary but not sufficient: every
-/// differing atom must resolve to the same visible Lean binder.  This permits
-/// alpha-renamed anonymous-function bodies without turning semantic keys into
-/// a global certificate lookup.
+/// structural match is necessary but not sufficient: every differing atom
+/// must resolve to the same visible Lean binder.  Source names may differ
+/// because generated binders are intentionally fresh.  This permits verified
+/// alpha-renaming without turning semantic keys into a global certificate
+/// lookup.
 fn objects_match_under_installed_symbol_aliases(
     source: &Obj,
     target: &Obj,
@@ -45,11 +46,6 @@ fn objects_match_under_installed_symbol_aliases(
 ) -> Result<bool, String> {
     if obj_equality_key(source) == obj_equality_key(target) {
         return Ok(true);
-    }
-    if source_display_without_symbol_ids(&source.to_string())
-        != source_display_without_symbol_ids(&target.to_string())
-    {
-        return Ok(false);
     }
     if let (Obj::Atom(source_atom), Obj::Atom(target_atom)) = (source, target) {
         let (Some(source_symbol), Some(target_symbol)) =
@@ -78,18 +74,7 @@ pub(in super::super) fn matches_result_owned_application_source(
     replayed: &Obj,
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<bool, String> {
-    if matches_directly_or_after_one_transparent_definition_pass(certified, replayed, context)? {
-        return Ok(true);
-    }
-    // A quantified definition replay may alpha-rename its binder after the
-    // function-application Result was frozen.  Once both objects carry the
-    // same parser-owned occurrence, that occurrence is the evidence join key;
-    // permit only the corresponding identifier-erased source shape.  This
-    // does not perform a text-based certificate lookup.
-    Ok(certified.source_occurrence_id().is_some()
-        && certified.source_occurrence_id() == replayed.source_occurrence_id()
-        && source_display_without_symbol_ids(&certified.to_string())
-            == source_display_without_symbol_ids(&replayed.to_string()))
+    matches_directly_or_after_one_transparent_definition_pass(certified, replayed, context)
 }
 
 pub(in super::super) fn install_result_owned_application_alpha_aliases(
@@ -135,11 +120,6 @@ pub(in super::super) fn install_result_owned_application_alpha_aliases(
         else {
             return Ok(false);
         };
-        if source_display_without_symbol_ids(&certified.to_string())
-            != source_display_without_symbol_ids(&replayed.to_string())
-        {
-            return Ok(false);
-        }
         let replayed_name = render_obj(replayed, current_context)?;
         if let Some(previous) = result_context
             .symbol_names
@@ -170,48 +150,7 @@ pub(in super::super) fn install_result_owned_application_alpha_aliases(
 pub(in super::super) fn function_application_result_certificate_key(
     application: &StmtResultFunctionApplicationWellDefinednessToLeanCompilationContext,
 ) -> String {
-    let anonymous_head = application
-        .anonymous_function_head
-        .as_ref()
-        .map(obj_equality_key)
-        .unwrap_or_default();
-    let layers = application
-        .layers
-        .iter()
-        .map(|layer| {
-            let intrinsic_result_set = layer
-                .intrinsic_result_set
-                .as_ref()
-                .map(obj_equality_key)
-                .unwrap_or_default();
-            let requirements = layer
-                .requirements
-                .iter()
-                .map(|requirement| {
-                    format!(
-                        "{:?}:{}",
-                        requirement.role, requirement.expected_proposition
-                    )
-                })
-                .collect::<Vec<_>>()
-                .join(";");
-            format!(
-                "{}:{:?}:{}:[{}]",
-                obj_equality_key(&layer.source_prefix),
-                layer.function_contracts,
-                intrinsic_result_set,
-                requirements
-            )
-        })
-        .collect::<Vec<_>>()
-        .join("|");
-    format!(
-        "{}:{:?}:{}:[{}]",
-        obj_equality_key(&application.source_application),
-        application.function_contracts,
-        anonymous_head,
-        layers
-    )
+    application.certificate_key()
 }
 
 pub(in super::super) fn resolve_function_application_result_context<'a>(
@@ -222,56 +161,45 @@ pub(in super::super) fn resolve_function_application_result_context<'a>(
         .well_definedness
         .as_ref()
         .ok_or_else(|| "function application has no active Result-owned WD context".to_string())?;
-    if let Some(exact) = result_context
-        .function_applications
-        .get(&application.source_occurrence_id)
-    {
+    let object_key = obj_equality_key(&application.source_application);
+    if let Some(exact) = result_context.function_applications.get(&object_key) {
         return Ok(exact);
     }
 
-    // A proof chain can repeat the identical source application in several
-    // adjacent facts. Each parser occurrence is distinct, while a child
-    // Result may retain only the occurrence used by its own fact. Reuse is
-    // sound only when every matching active Result has the same complete
-    // verifier certificate.
+    // A proof transformation may expose an application only after one
+    // recorded transparent-definition pass. Reuse is sound only when every
+    // matching active Result has the same complete verifier certificate.
     let mut equivalent = Vec::new();
-    for (occurrence_id, candidate) in &result_context.function_applications {
+    for candidate in result_context.function_applications.values() {
         if matches_directly_or_after_one_transparent_definition_pass(
             &candidate.source_application,
             &application.source_application,
             context,
         )? {
-            equivalent.push((*occurrence_id, candidate));
+            equivalent.push(candidate);
         }
     }
-    equivalent.sort_by_key(|(occurrence_id, _)| occurrence_id.value());
-    let Some((_, first)) = equivalent.first().copied() else {
-        let available_occurrences = result_context
+    equivalent.sort_by_key(|candidate| obj_equality_key(&candidate.source_application));
+    let Some(first) = equivalent.first().copied() else {
+        let available_objects = result_context
             .function_applications
-            .iter()
-            .map(|(source_occurrence_id, application)| {
-                format!(
-                    "{}:{}",
-                    source_occurrence_id.value(),
-                    application.source_application
-                )
-            })
+            .values()
+            .map(|application| application.source_application.to_string())
             .collect::<Vec<_>>()
             .join(", ");
         return Err(format!(
-            "function application occurrence {} (`{}`) has no exact recursive Result context; active child occurrences are [{}]",
-            application.source_occurrence_id.value(),
+            "function application `{}` has no exact recursive Result context; active applications are [{}]",
             application.source_application,
-            available_occurrences,
+            available_objects,
         ));
     };
     let expected_certificate = function_application_result_certificate_key(first);
-    if equivalent.iter().any(|(_, candidate)| {
+    if equivalent.iter().any(|candidate| {
         function_application_result_certificate_key(candidate) != expected_certificate
     }) {
         return Err(format!(
-            "function application occurrence {} has multiple structurally matching but evidence-distinct Result contexts",
-            application.source_occurrence_id.value()
+            "function application `{}` has multiple structurally matching but evidence-distinct Result contexts",
+            application.source_application
         ));
     }
     Ok(first)
@@ -374,7 +302,7 @@ pub(in super::super) fn render_function_application(
         &application.source_application,
         context,
     )? {
-        return Err("function application Result context changed its source occurrence".into());
+        return Err("function application Result context changed its semantic source".into());
     }
     let mut result_owned_context = context.clone();
     if !install_result_owned_application_alpha_aliases(
@@ -600,6 +528,8 @@ pub(in super::super) fn render_function_application(
         let mut source_domain_nested = context.clone();
         let mut arguments = Vec::with_capacity(function.parameters.len());
         let mut argument_memberships = Vec::with_capacity(function.parameters.len());
+        let mut exact_positive_natural_arguments = HashMap::new();
+        let mut used_exact_single_argument_carrier = false;
         for (_parameter_index, ((parameter, source_argument), requirement)) in function
             .parameters
             .iter()
@@ -622,6 +552,8 @@ pub(in super::super) fn render_function_application(
             }
             let argument_membership =
                 render_function_application_requirement_proof(requirement, &result_owned_context)?;
+            let closed_positive_natural_argument =
+                closed_positive_natural_value_from_fact_proof(requirement.verification.as_ref())?;
             let (call_argument, call_membership) = if parameter.set
                 == LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Integer)
             {
@@ -631,15 +563,52 @@ pub(in super::super) fn render_function_application(
                             "integer function argument lost its exact representative".to_string()
                         })
                 })?;
+                used_exact_single_argument_carrier = function.parameters.len() == 1;
                 (integer.clone(), format!("Litex.In.own Litex.Z {integer}"))
+            } else if function.domain_facts.is_empty()
+                && function.parameters.len() == 1
+                && parameter.set
+                    == LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Real)
+            {
+                match render_real_obj(source_argument, context) {
+                    Ok(real) => {
+                        used_exact_single_argument_carrier = true;
+                        (real.clone(), format!("Litex.In.own Litex.R {real}"))
+                    }
+                    Err(_) => (argument.clone(), argument_membership.clone()),
+                }
+            } else if parameter.set
+                == LeanTargetObjectRepresentation::StandardSet(
+                    LeanTargetStandardSet::PositiveNatural,
+                )
+                && closed_positive_natural_argument.is_some()
+            {
+                let value = closed_positive_natural_argument
+                    .as_ref()
+                    .expect("guarded exact positive-natural argument");
+                let carrier = format!("(⟨{value}, by norm_num⟩ : Litex.NPos.Carrier)");
+                exact_positive_natural_arguments.insert(
+                    parameter.symbol_id,
+                    (carrier.clone(), format!("(({value} : ℕ) : ℂ)")),
+                );
+                used_exact_single_argument_carrier =
+                    function.domain_facts.is_empty() && function.parameters.len() == 1;
+                (
+                    carrier.clone(),
+                    format!("Litex.In.own Litex.NPos {carrier}"),
+                )
             } else {
                 (argument.clone(), argument_membership.clone())
             };
             arguments.push(call_argument);
             argument_memberships.push(call_membership);
-            nested
-                .symbol_names
-                .insert(parameter.symbol_id, argument.clone());
+            nested.symbol_names.insert(
+                parameter.symbol_id,
+                exact_positive_natural_arguments
+                    .get(&parameter.symbol_id)
+                    .map(|(carrier, _)| carrier.clone())
+                    .unwrap_or_else(|| argument.clone()),
+            );
             source_domain_nested
                 .symbol_names
                 .insert(parameter.symbol_id, argument.clone());
@@ -649,14 +618,18 @@ pub(in super::super) fn render_function_application(
             if let Some(real) = membership_real_value(
                 &parameter.set,
                 arguments.last().expect("argument was just retained"),
-                &argument_membership,
+                argument_memberships
+                    .last()
+                    .expect("argument membership was just retained"),
             ) {
                 nested.numeric_real_values.insert(parameter.symbol_id, real);
             }
             if let Some(integer) = membership_integer_value(
                 &parameter.set,
                 arguments.last().expect("argument was just retained"),
-                &argument_membership,
+                argument_memberships
+                    .last()
+                    .expect("argument membership was just retained"),
             ) {
                 nested
                     .numeric_integer_values
@@ -665,7 +638,9 @@ pub(in super::super) fn render_function_application(
             if let Some(rational) = membership_rational_value(
                 &parameter.set,
                 arguments.last().expect("argument was just retained"),
-                &argument_membership,
+                argument_memberships
+                    .last()
+                    .expect("argument membership was just retained"),
             ) {
                 nested
                     .numeric_rational_values
@@ -674,7 +649,9 @@ pub(in super::super) fn render_function_application(
             if let Some(representation) = membership_numeric_value(
                 &parameter.set,
                 arguments.last().expect("argument was just retained"),
-                &argument_membership,
+                argument_memberships
+                    .last()
+                    .expect("argument membership was just retained"),
             ) {
                 nested
                     .numeric_representations
@@ -683,13 +660,23 @@ pub(in super::super) fn render_function_application(
             if let Some(proof) = membership_numeric_proof(
                 &parameter.set,
                 arguments.last().expect("argument was just retained"),
-                &argument_membership,
+                argument_memberships
+                    .last()
+                    .expect("argument membership was just retained"),
             ) {
                 nested
                     .numeric_representation_memberships
                     .insert(parameter.symbol_id, proof);
             }
         }
+        let domain_substitutions = function
+            .parameters
+            .iter()
+            .zip(application.source_argument_layers[layer_index].iter())
+            .map(|(parameter, argument)| (parameter.symbol_id.substitution_key(), argument.clone()))
+            .collect::<HashMap<_, _>>();
+        let mut domain_substitution_runtime = Runtime::default();
+        domain_substitution_runtime.ensure_execution_frame_for_parse();
         let mut domain_proofs = Vec::with_capacity(domain_requirements.len());
         for (_domain_index, (source_fact, requirement)) in function
             .domain_facts
@@ -702,18 +689,48 @@ pub(in super::super) fn render_function_application(
             let expected_selected = render_fact(source_fact, &nested)?;
             let retained = render_fact(&requirement.expected_proposition, &result_owned_context)?;
             if expected_source != retained && expected_selected != retained {
-                return Err(format!(
-                    "application layer {layer_index} expected domain clause {expected_source} (or exact selected-carrier form {expected_selected}), retained {retained}"
-                ));
+                let instantiated_source = domain_substitution_runtime
+                    .inst_fact(
+                        source_fact,
+                        &domain_substitutions,
+                        SubstitutionMode::Exact,
+                        None,
+                    )
+                    .map_err(|error| {
+                        format!(
+                            "application layer {layer_index} could not replay its domain substitution: {}",
+                            error.trace_message()
+                        )
+                    })?;
+                if instantiated_source.to_string() != requirement.expected_proposition.to_string() {
+                    return Err(format!(
+                        "application layer {layer_index} expected domain clause {expected_source} (or exact selected-carrier form {expected_selected}), retained {retained}"
+                    ));
+                }
             }
             let retained_proof =
                 render_function_application_requirement_proof(requirement, &result_owned_context)?;
-            if positive_natural_parameter_less_equal_natural_bound(&function, source_fact)?
-                .is_some()
+            if let Some((parameter_symbol_id, _)) =
+                positive_natural_parameter_less_equal_natural_bound(&function, source_fact)?
             {
-                domain_proofs.push(format!(
-                    "Litex.positiveNaturalParameterLessEqualNaturalBoundOfComplex ({retained_proof})"
-                ));
+                if let Some((carrier, numeric)) =
+                    exact_positive_natural_arguments.get(&parameter_symbol_id)
+                {
+                    let carrier_to_numeric = exact_set_numeric_equality_no_observation(
+                        &LeanTargetObjectRepresentation::StandardSet(
+                            LeanTargetStandardSet::PositiveNatural,
+                        ),
+                        carrier,
+                    )
+                    .expect("positive-natural carrier has a representation bridge");
+                    domain_proofs.push(format!(
+                        "⟨{numeric}, ({carrier_to_numeric}), (by simpa using ({retained_proof}))⟩"
+                    ));
+                } else {
+                    domain_proofs.push(format!(
+                        "Litex.positiveNaturalParameterLessEqualNaturalBoundOfComplex ({retained_proof})"
+                    ));
+                }
             } else {
                 domain_proofs.push(retained_proof);
             }
@@ -728,11 +745,7 @@ pub(in super::super) fn render_function_application(
                 function.return_set.as_ref(),
                 context,
             )?;
-            let exact_integer_argument = function.domain_facts.is_empty()
-                && function.parameters.len() == 1
-                && function.parameters[0].set
-                    == LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Integer);
-            if exact_integer_argument {
+            if used_exact_single_argument_carrier {
                 let apply = if direct {
                     "Litex.fnApplyCarrier"
                 } else {

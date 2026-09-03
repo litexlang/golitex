@@ -104,6 +104,12 @@ impl DerefMut for StmtResultToLeanCompilerEnvironment {
 #[derive(Clone, Default)]
 pub(super) struct StmtResultToLeanCompilerBindings {
     pub(super) symbol_names: HashMap<SymbolId, String>,
+    /// Lean identifiers already allocated by an enclosing compiler scope.
+    /// This remains separate from `symbol_names`: a source symbol may be
+    /// rendered as an exact representative such as `In.rep __p1 __type1`
+    /// while its lexical binder `__p1` must still reserve that identifier for
+    /// alpha-fresh nested forall binders.
+    pub(super) reserved_lean_names: HashSet<String>,
     /// Executed `let` definitions only. This is separate from numeric
     /// substitutions because WD rendering may transport a callable contract
     /// across a transparent alias, while ordinary `have a = b` must not gain
@@ -254,38 +260,20 @@ pub(super) struct CompilerTransparentObjectDefinition {
 #[derive(Clone, Default)]
 pub(super) struct StmtResultWellDefinednessToLeanCompilationContext {
     pub(super) parameter_fact_aliases: Vec<StmtResultWellDefinednessParameterFactAlias>,
-    pub(super) function_applications: HashMap<
-        SourceObjectOccurrenceId,
-        StmtResultFunctionApplicationWellDefinednessToLeanCompilationContext,
-    >,
-    pub(super) anonymous_functions: HashMap<
-        SourceObjectOccurrenceId,
-        StmtResultAnonymousFunctionWellDefinednessToLeanCompilationContext,
-    >,
-    /// Explicit Result-validated rebindings for a proof-owned occurrence of
-    /// an alpha-equivalent anonymous function already certified by the
-    /// enclosing theorem WD Result.
-    pub(super) anonymous_function_occurrence_aliases:
-        HashMap<SourceObjectOccurrenceId, SourceObjectOccurrenceId>,
-    pub(super) iterations: HashMap<
-        SourceObjectOccurrenceId,
-        StmtResultIterationWellDefinednessToLeanCompilationContext,
-    >,
-    /// Explicit Result-validated rebindings used when a structured proof owns
-    /// a second parser occurrence of the exact theorem goal. This is never a
-    /// semantic-key fallback: the structured-proof compiler installs every
-    /// source/owner pair before rendering.
-    pub(super) iteration_occurrence_aliases:
-        HashMap<SourceObjectOccurrenceId, SourceObjectOccurrenceId>,
+    pub(super) function_applications:
+        HashMap<ObjString, StmtResultFunctionApplicationWellDefinednessToLeanCompilationContext>,
+    pub(super) anonymous_functions:
+        HashMap<ObjString, StmtResultAnonymousFunctionWellDefinednessToLeanCompilationContext>,
+    pub(super) iterations:
+        HashMap<ObjString, StmtResultIterationWellDefinednessToLeanCompilationContext>,
 }
 
 impl StmtResultWellDefinednessToLeanCompilationContext {
-    /// Overlay Result-owned occurrence indexes from nested semantic layers.
-    /// The receiver is the more specific child layer and keeps ownership of
-    /// duplicate occurrence IDs; an enclosing definition/template layer only
-    /// supplies entries the child does not retain. Parameter FactId aliases
-    /// remain strict because they identify proof assumptions rather than
-    /// substitution-sensitive source occurrences.
+    /// Overlay Result-owned semantic-object indexes from nested layers. The
+    /// receiver is the more specific child layer; an enclosing
+    /// definition/template layer supplies only keys the child does not retain.
+    /// Parameter FactId aliases remain strict because they identify proof
+    /// assumptions.
     pub(super) fn merge_from(&mut self, additional: &Self) -> Result<(), String> {
         for alias in &additional.parameter_fact_aliases {
             if let Some(existing) = self
@@ -305,35 +293,41 @@ impl StmtResultWellDefinednessToLeanCompilationContext {
             }
             self.parameter_fact_aliases.push(alias.clone());
         }
-        for (occurrence_id, application) in &additional.function_applications {
-            if self.function_applications.contains_key(occurrence_id) {
-                continue;
+        for (object_key, application) in &additional.function_applications {
+            if let Some(existing) = self.function_applications.get(object_key) {
+                if existing.merge_compatibility_key() != application.merge_compatibility_key() {
+                    return Err(format!(
+                        "combined WD contexts disagree on function application `{object_key}`"
+                    ));
+                }
+            } else {
+                self.function_applications
+                    .insert(object_key.clone(), application.clone());
             }
-            self.function_applications
-                .insert(*occurrence_id, application.clone());
         }
-        for (occurrence_id, function) in &additional.anonymous_functions {
-            if self.anonymous_functions.contains_key(occurrence_id) {
-                continue;
+        for (object_key, function) in &additional.anonymous_functions {
+            if let Some(existing) = self.anonymous_functions.get(object_key) {
+                if existing.certificate_key() != function.certificate_key() {
+                    return Err(format!(
+                        "combined WD contexts disagree on anonymous function `{object_key}`"
+                    ));
+                }
+            } else {
+                self.anonymous_functions
+                    .insert(object_key.clone(), function.clone());
             }
-            self.anonymous_functions
-                .insert(*occurrence_id, function.clone());
         }
-        for (source, owner) in &additional.anonymous_function_occurrence_aliases {
-            self.anonymous_function_occurrence_aliases
-                .entry(*source)
-                .or_insert(*owner);
-        }
-        for (occurrence_id, iteration) in &additional.iterations {
-            if self.iterations.contains_key(occurrence_id) {
-                continue;
+        for (object_key, iteration) in &additional.iterations {
+            if let Some(existing) = self.iterations.get(object_key) {
+                if existing.certificate_key() != iteration.certificate_key() {
+                    return Err(format!(
+                        "combined WD contexts disagree on iteration `{object_key}`"
+                    ));
+                }
+            } else {
+                self.iterations
+                    .insert(object_key.clone(), iteration.clone());
             }
-            self.iterations.insert(*occurrence_id, iteration.clone());
-        }
-        for (source, owner) in &additional.iteration_occurrence_aliases {
-            self.iteration_occurrence_aliases
-                .entry(*source)
-                .or_insert(*owner);
         }
         Ok(())
     }
@@ -352,6 +346,23 @@ pub(super) struct StmtResultIterationWellDefinednessToLeanCompilationContext {
     pub(super) has_exact_integer_coverage: bool,
 }
 
+impl StmtResultIterationWellDefinednessToLeanCompilationContext {
+    pub(super) fn certificate_key(&self) -> String {
+        format!(
+            "{}:{}:{}:{}:{}:{}:{}:{}:{}",
+            obj_equality_key(&self.source_aggregate),
+            self.operation,
+            obj_equality_key(&self.parameter_set),
+            obj_equality_key(&self.return_carrier),
+            self.parameter_count,
+            self.domain_count,
+            self.has_body,
+            self.has_body_membership,
+            self.has_exact_integer_coverage,
+        )
+    }
+}
+
 #[derive(Clone)]
 pub(super) struct StmtResultWellDefinednessParameterFactAlias {
     pub(super) symbol_id: SymbolId,
@@ -366,6 +377,118 @@ pub(super) struct StmtResultFunctionApplicationWellDefinednessToLeanCompilationC
     pub(super) anonymous_function_head: Option<Obj>,
     pub(super) layers:
         Vec<StmtResultFunctionApplicationLayerWellDefinednessToLeanCompilationContext>,
+}
+
+impl StmtResultFunctionApplicationWellDefinednessToLeanCompilationContext {
+    /// Compare certificates that come from different nested verification
+    /// scopes. Stored membership FactIds are lexical proof identities, so two
+    /// scopes may legitimately use different IDs for the same callable
+    /// contract. The application shape, structural contract kinds, selected
+    /// result carrier, and every required proposition must still agree.
+    pub(super) fn merge_compatibility_key(&self) -> String {
+        fn contracts(contracts: &[WellDefinedFunctionContract]) -> String {
+            contracts
+                .iter()
+                .map(|contract| match contract {
+                    WellDefinedFunctionContract::StoredMembershipFact(_) => {
+                        "stored-membership".to_string()
+                    }
+                    WellDefinedFunctionContract::Structural(key) => {
+                        format!("structural:{key}")
+                    }
+                })
+                .collect::<Vec<_>>()
+                .join(",")
+        }
+
+        let anonymous_head = self
+            .anonymous_function_head
+            .as_ref()
+            .map(obj_equality_key)
+            .unwrap_or_default();
+        let layers = self
+            .layers
+            .iter()
+            .map(|layer| {
+                let intrinsic_result_set = layer
+                    .intrinsic_result_set
+                    .as_ref()
+                    .map(obj_equality_key)
+                    .unwrap_or_default();
+                let requirements = layer
+                    .requirements
+                    .iter()
+                    .map(|requirement| {
+                        format!(
+                            "{:?}:{}",
+                            requirement.role, requirement.expected_proposition
+                        )
+                    })
+                    .collect::<Vec<_>>()
+                    .join(";");
+                format!(
+                    "{}:{}:{}:[{}]",
+                    obj_equality_key(&layer.source_prefix),
+                    contracts(&layer.function_contracts),
+                    intrinsic_result_set,
+                    requirements
+                )
+            })
+            .collect::<Vec<_>>()
+            .join("|");
+        format!(
+            "{}:{}:{}:[{}]",
+            obj_equality_key(&self.source_application),
+            contracts(&self.function_contracts),
+            anonymous_head,
+            layers
+        )
+    }
+
+    pub(super) fn certificate_key(&self) -> String {
+        let anonymous_head = self
+            .anonymous_function_head
+            .as_ref()
+            .map(obj_equality_key)
+            .unwrap_or_default();
+        let layers = self
+            .layers
+            .iter()
+            .map(|layer| {
+                let intrinsic_result_set = layer
+                    .intrinsic_result_set
+                    .as_ref()
+                    .map(obj_equality_key)
+                    .unwrap_or_default();
+                let requirements = layer
+                    .requirements
+                    .iter()
+                    .map(|requirement| {
+                        format!(
+                            "{:?}:{}",
+                            requirement.role, requirement.expected_proposition
+                        )
+                    })
+                    .collect::<Vec<_>>()
+                    .join(";");
+                format!(
+                    "{}:{:?}:{}:[{}]",
+                    obj_equality_key(&layer.source_prefix),
+                    layer.function_contracts,
+                    intrinsic_result_set,
+                    requirements
+                )
+            })
+            .collect::<Vec<_>>()
+            .join("|");
+        format!(
+            "{}:{:?}:{}:[{}]",
+            obj_equality_key(&self.source_application),
+            self.function_contracts,
+            anonymous_head,
+            layers
+        )
+    }
 }
 
 #[derive(Clone)]
@@ -396,6 +519,31 @@ pub(super) struct StmtResultAnonymousFunctionWellDefinednessToLeanCompilationCon
     pub(super) assumption_infers: SuccessInferResult,
     pub(super) compiled_inference_fact_proof_steps: Vec<CompiledInferenceFactProofStep>,
     pub(super) closure: StmtResultAnonymousFunctionClosureToLeanCompilationContext,
+}
+
+impl StmtResultAnonymousFunctionWellDefinednessToLeanCompilationContext {
+    pub(super) fn certificate_key(&self) -> String {
+        let parameter_roles = self
+            .parameters
+            .iter()
+            .map(|parameter| format!("{:?}", parameter.role))
+            .collect::<Vec<_>>()
+            .join(",");
+        let domain_roles = self
+            .domains
+            .iter()
+            .map(|domain| format!("{:?}", domain.role))
+            .collect::<Vec<_>>()
+            .join(",");
+        format!(
+            "{}:{}:[{}]:[{}]:{:?}",
+            obj_equality_key(&self.source_function),
+            obj_equality_key(&self.body_source_object),
+            parameter_roles,
+            domain_roles,
+            self.closure.role,
+        )
+    }
 }
 
 #[derive(Clone)]
@@ -432,6 +580,10 @@ pub(super) struct ForallConclusionBinding {
 #[derive(Clone)]
 pub(super) struct PredicateBinding {
     pub(super) lean_name: String,
+    /// Abstract predicates are semantic predicates on Litex objects, not
+    /// arbitrary unrelated propositions at each Lean representation. This
+    /// projection proves simultaneous argument replacement under `Same`.
+    pub(super) same_congruence_name: Option<String>,
     pub(super) parameter_count: usize,
     /// Object parameters of concrete predicates use the exact carrier of
     /// their declared `Litex.Set`. Heterogeneous source objects pass their

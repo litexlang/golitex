@@ -10,14 +10,6 @@ impl StmtResultToLeanCompiler {
         transformation: &SuccessTransformFactResult,
     ) -> Result<Option<String>, String> {
         let source = transformation.source.fact();
-        self.install_fact_anonymous_function_occurrence_aliases(
-            target,
-            "fact transformation target",
-        )?;
-        self.install_fact_anonymous_function_occurrence_aliases(
-            &source,
-            "fact transformation source",
-        )?;
         let Some(source_proof) = self
             .construct_lean_proof_from_shared_verify_fact_result(transformation.source.as_ref())
             .map_err(|error| format!("fact transformation source proof: {error}"))?
@@ -77,11 +69,10 @@ impl StmtResultToLeanCompiler {
                     ));
                 }
                 // Neither frozen transformation endpoint is required to own
-                // the parser occurrence selected for the enclosing statement
-                // Result. The structural replay above validates the exact
-                // beta step; the enclosing statement renderer supplies the
-                // target proposition, and Lean checks this returned proof
-                // against that definitionally reduced type.
+                // a separate WD certificate. The structural replay above
+                // validates the exact beta step; the enclosing statement
+                // renderer supplies the target proposition, and Lean checks
+                // this proof against that definitionally reduced type.
                 Ok(source_proof)
             }
             FactTransformationRule::EqualityRewrite(evidence) => self

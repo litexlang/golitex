@@ -23,7 +23,7 @@ using `double`, without a generated `main`. Litex verification establishes the
 source mathematics, not IEEE-754 rounding, overflow, or target compiler
 behavior.
 
-Example commands use direct source, file, or repository extraction:
+Example commands use direct source, marked file, or repository extraction:
 
 ```sh
 litex -extractpython 'have a R = 1'
@@ -34,5 +34,28 @@ litex -extractc 'have a R = 1'
 litex -extractc -f example.lit
 litex -extractc -r project
 ```
+
+The `-f` forms require explicit source regions:
+
+```litex
+# [-extract]
+have fn increment(x R) R = x + 1
+# [end of -extract]
+
+increment(1) = 2
+
+# [-extract]
+have algo for increment(x):
+    x + 1
+# [end of -extract]
+```
+
+Whole trimmed marker lines delimit each region. File extraction replaces every
+unselected line with a blank line, concatenates the selected statements in
+source order, and gives only that self-contained virtual source to the existing
+verifier and backend. Blank-line padding preserves original source locations.
+Missing or malformed markers fail instead of falling back to whole-file
+extraction. Inline and repository extraction keep their existing whole-input
+semantics.
 
 The retired `-python -e` command is not an alias for the new interface.

@@ -211,20 +211,20 @@ impl Runtime {
     ) -> Result<Vec<VerifyFactResult>, RuntimeError> {
         let mut conclusion_checks = Vec::with_capacity(stmt.then_facts.len());
         for then_fact in stmt.then_facts.iter() {
-            let exec_fact_result =
-                self.verify_fact_or_error(then_fact, &VerifyState::initial())
-                    .map_err(|statement_error| {
-                        let mut diagnostics = std::mem::take(proof_steps);
-                        short_exec_error(
-                            stmt.clone().into(),
-                            format!(
-                                "by cases: failed to prove `{}` under case `{}`",
-                                then_fact, stmt.cases[case_index]
-                            ),
-                            Some(statement_error),
-                            diagnostics,
-                        )
-                    })?;
+            let exec_fact_result = self
+                .verify_fact_or_error(then_fact, &VerifyState::initial())
+                .map_err(|statement_error| {
+                    let diagnostics = std::mem::take(proof_steps);
+                    short_exec_error(
+                        stmt.clone().into(),
+                        format!(
+                            "by cases: failed to prove `{}` under case `{}`",
+                            then_fact, stmt.cases[case_index]
+                        ),
+                        Some(statement_error),
+                        diagnostics,
+                    )
+                })?;
             self.store_without_well_defined_verification_and_infer(then_fact.clone())?;
             conclusion_checks.push(exec_fact_result);
         }
@@ -327,19 +327,19 @@ impl Runtime {
             let mut conclusion_checks = vec![forall_then_result];
 
             for then_fact in stmt.then_facts.iter().skip(1) {
-                let exec_fact_result =
-                    self.verify_fact_or_error(then_fact, &VerifyState::initial())
-                        .map_err(|statement_error| {
-                            short_exec_error(
-                                stmt.clone().into(),
-                                format!(
-                                    "by cases: failed to prove `{}` under case `{}`",
-                                    then_fact, case_fact
-                                ),
-                                Some(statement_error),
-                                std::mem::take(&mut proof_steps),
-                            )
-                        })?;
+                let exec_fact_result = self
+                    .verify_fact_or_error(then_fact, &VerifyState::initial())
+                    .map_err(|statement_error| {
+                        short_exec_error(
+                            stmt.clone().into(),
+                            format!(
+                                "by cases: failed to prove `{}` under case `{}`",
+                                then_fact, case_fact
+                            ),
+                            Some(statement_error),
+                            std::mem::take(&mut proof_steps),
+                        )
+                    })?;
                 self.store_without_well_defined_verification_and_infer(then_fact.clone())?;
                 conclusion_checks.push(exec_fact_result);
             }

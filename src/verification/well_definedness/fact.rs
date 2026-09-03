@@ -93,7 +93,7 @@ impl Runtime {
         Ok(WellDefinedFactResult::new(fact.clone(), recursive))
     }
 
-    fn verify_atomic_fact_well_defined_result(
+    pub fn verify_atomic_fact_well_defined_result(
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &VerifyState,
@@ -136,7 +136,7 @@ impl Runtime {
         }
     }
 
-    fn verify_exist_fact_well_defined_result(
+    pub fn verify_exist_fact_well_defined_result(
         &mut self,
         exist_fact: &ExistFactEnum,
         verify_state: &VerifyState,
@@ -293,51 +293,6 @@ impl Runtime {
                 infers,
             },
         })
-    }
-
-    /// Mathematical contract: a fact is well-defined when its predicate/fact
-    /// form exists and every object, binder type, premise, and conclusion is
-    /// meaningful in the scope introduced by that fact.
-    pub fn verify_fact_well_defined(
-        &mut self,
-        fact: &Fact,
-        verify_state: &VerifyState,
-    ) -> Result<(), RuntimeError> {
-        match fact {
-            Fact::AtomicFact(atomic_fact) => {
-                self.verify_atomic_fact_well_defined(atomic_fact, verify_state)
-            }
-            Fact::AndFact(and_fact) => self.verify_and_fact_well_defined(and_fact, verify_state),
-            Fact::ChainFact(chain_fact) => {
-                self.verify_chain_fact_well_defined(chain_fact, verify_state)
-            }
-            Fact::OrFact(or_fact) => self.verify_or_fact_well_defined(or_fact, verify_state),
-            Fact::ExistFact(exist_fact) => {
-                self.verify_exist_fact_well_defined(exist_fact, verify_state)
-            }
-            Fact::ForallFact(forall_fact) => {
-                self.verify_forall_fact_well_defined(forall_fact, verify_state)
-            }
-            Fact::ForallFactWithIff(forall_fact_with_iff) => {
-                self.verify_forall_fact_with_iff_well_defined(forall_fact_with_iff, verify_state)
-            }
-            Fact::NotForall(not_forall) => {
-                self.verify_not_forall_fact_well_defined(not_forall, verify_state)
-            }
-        }
-    }
-
-    /// Mathematical contract: an atomic fact is well-defined when its
-    /// predicate is defined at the supplied arity and every argument object is
-    /// well-defined. Concrete proposition parameter carriers are proof-time
-    /// requirements when the definition is unfolded, not part of this gate.
-    pub fn verify_atomic_fact_well_defined(
-        &mut self,
-        atomic_fact: &AtomicFact,
-        verify_state: &VerifyState,
-    ) -> Result<(), RuntimeError> {
-        self.verify_atomic_fact_well_defined_result(atomic_fact, verify_state)
-            .map(|_| ())
     }
 
     /// Records the predicate/arity gate and every proof obligation imposed by
@@ -502,12 +457,6 @@ impl Runtime {
                 verify_state,
             )?
             else {
-                if atomic_fact.to_string() == "0 < i" {
-                    eprintln!(
-                        "0 < i WD requested from:\n{}",
-                        std::backtrace::Backtrace::force_capture()
-                    );
-                }
                 return Err(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
                         format!(
@@ -530,18 +479,6 @@ impl Runtime {
         if let Some(type_results) =
             self.verify_builtin_function_property_arg_types(atomic_fact, verify_state)?
         {
-            if type_results.iter().any(VerifyFactResult::is_unknown) {
-                return Err(WellDefinedRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        format!(
-                            "{} requires sets A and B and a function with type fn(x A) B",
-                            atomic_fact
-                        ),
-                        atomic_fact.line_file(),
-                    ),
-                )
-                .into());
-            }
             domain_checks.extend(type_results.into_iter().map(|result| {
                 SuccessVerifyAtomicPredicateDomainCheckResult {
                     role: AtomicPredicateDomainCheckRole::FunctionPropertySignature,
@@ -557,64 +494,6 @@ impl Runtime {
         })
     }
 
-    /// Mathematical contract: a conjunction is well-defined when every
-    /// conjunct is well-defined in the same context.
-    pub fn verify_and_fact_well_defined(
-        &mut self,
-        and_fact: &AndFact,
-        verify_state: &VerifyState,
-    ) -> Result<(), RuntimeError> {
-        self.verify_fact_well_defined_result(&and_fact.clone().into(), verify_state)
-            .map(|_| ())
-    }
-
-    /// Mathematical contract: a comparison chain is well-defined when every
-    /// adjacent atomic comparison produced by the chain is well-defined.
-    pub fn verify_chain_fact_well_defined(
-        &mut self,
-        chain_fact: &ChainFact,
-        verify_state: &VerifyState,
-    ) -> Result<(), RuntimeError> {
-        self.verify_fact_well_defined_result(&chain_fact.clone().into(), verify_state)
-            .map(|_| ())
-    }
-
-    /// Mathematical contract: a disjunction is well-defined only when every
-    /// branch is meaningful, independently of which branch is true.
-    pub fn verify_or_fact_well_defined(
-        &mut self,
-        or_fact: &OrFact,
-        verify_state: &VerifyState,
-    ) -> Result<(), RuntimeError> {
-        self.verify_fact_well_defined_result(&or_fact.clone().into(), verify_state)
-            .map(|_| ())
-    }
-
-    /// Mathematical contract: `exist x T st {body}` is well-defined when each
-    /// binder type is meaningful in dependency order and every body fact is
-    /// meaningful under the bound-variable type facts, preceding body
-    /// assumptions, and their sound inferred consequences.
-    pub fn verify_exist_fact_well_defined(
-        &mut self,
-        exist_fact: &ExistFactEnum,
-        verify_state: &VerifyState,
-    ) -> Result<(), RuntimeError> {
-        self.verify_fact_well_defined_result(&exist_fact.clone().into(), verify_state)
-            .map(|_| ())
-    }
-
-    /// Mathematical contract: `forall x T: premises => conclusions` is
-    /// well-defined when the binder types and premises are meaningful in order
-    /// and every conclusion is meaningful under those local assumptions.
-    pub fn verify_forall_fact_well_defined(
-        &mut self,
-        forall_fact: &ForallFact,
-        verify_state: &VerifyState,
-    ) -> Result<(), RuntimeError> {
-        self.verify_forall_fact_well_defined_and_collect_certificate(forall_fact, verify_state)
-            .map(|_| ())
-    }
-
     /// Check a universal fact once and retain only sound side effects produced
     /// by conclusion well-definedness (for example, the return-carrier fact of
     /// a checked function application). Domain assumptions and conclusions are
@@ -623,13 +502,7 @@ impl Runtime {
         &mut self,
         forall_fact: &ForallFact,
         verify_state: &VerifyState,
-    ) -> Result<
-        (
-            WellDefinedFactResult,
-            WellDefinednessEnvironmentDelta,
-        ),
-        RuntimeError,
-    > {
+    ) -> Result<(WellDefinedFactResult, WellDefinednessEnvironmentDelta), RuntimeError> {
         let bindings = forall_fact.typed_parameters.collect_param_bindings();
         let rename_map = self.visible_binding_conflict_rename_map(&bindings)?;
         let working = if rename_map.is_empty() {
@@ -790,46 +663,21 @@ impl Runtime {
 
     /// Mathematical contract: this non-quantified compound fact is
     /// well-defined exactly when its selected atomic/and/chain/or form is.
-    pub fn verify_quantifier_free_fact_well_defined(
+    pub fn verify_quantifier_free_fact_well_defined_result(
         &mut self,
         fact: &QuantifierFreeFact,
         verify_state: &VerifyState,
-    ) -> Result<(), RuntimeError> {
+    ) -> Result<WellDefinedFactResult, RuntimeError> {
         self.verify_fact_well_defined_result(&fact.clone().into(), verify_state)
-            .map(|_| ())
     }
 
     /// Mathematical contract: this compound fact is well-defined exactly when
     /// its selected atomic/and/chain/or/exist form is.
-    pub fn verify_exist_or_and_chain_atomic_fact_well_defined(
+    pub fn verify_exist_or_and_chain_atomic_fact_well_defined_result(
         &mut self,
         fact: &ExistOrAndChainAtomicFact,
         verify_state: &VerifyState,
-    ) -> Result<(), RuntimeError> {
+    ) -> Result<WellDefinedFactResult, RuntimeError> {
         self.verify_fact_well_defined_result(&fact.clone().to_fact(), verify_state)
-            .map(|_| ())
-    }
-
-    /// Mathematical contract: a universal equivalence is well-defined only
-    /// when both generated implication directions are independently
-    /// well-defined.
-    pub fn verify_forall_fact_with_iff_well_defined(
-        &mut self,
-        forall_fact_with_iff: &ForallFactWithIff,
-        verify_state: &VerifyState,
-    ) -> Result<(), RuntimeError> {
-        self.verify_fact_well_defined_result(&forall_fact_with_iff.clone().into(), verify_state)
-            .map(|_| ())
-    }
-
-    /// Mathematical contract: negating a universal fact adds no new object
-    /// domain; it is well-defined exactly when the underlying universal is.
-    pub fn verify_not_forall_fact_well_defined(
-        &mut self,
-        not_forall: &NotForallFact,
-        verify_state: &VerifyState,
-    ) -> Result<(), RuntimeError> {
-        self.verify_fact_well_defined_result(&not_forall.clone().into(), verify_state)
-            .map(|_| ())
     }
 }

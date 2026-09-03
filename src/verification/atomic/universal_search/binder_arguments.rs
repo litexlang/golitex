@@ -59,7 +59,7 @@ impl ArgMatcher<'_> {
         let verify_state = VerifyState::final_round();
         for value in merged.values() {
             if self
-                .verify_obj_well_defined_and_store_cache(value, &verify_state)
+                .verify_obj_well_defined_result(value, &verify_state)
                 .is_err()
             {
                 return Ok(None);
@@ -169,7 +169,7 @@ impl ArgMatcher<'_> {
         let verify_state = VerifyState::final_round();
         for value in merged.values() {
             if self
-                .verify_obj_well_defined_and_store_cache(value, &verify_state)
+                .verify_obj_well_defined_result(value, &verify_state)
                 .is_err()
             {
                 return Ok(None);
@@ -271,7 +271,7 @@ impl ArgMatcher<'_> {
             let verify_state = VerifyState::final_round();
             for value in merged.values() {
                 if self
-                    .verify_obj_well_defined_and_store_cache(value, &verify_state)
+                    .verify_obj_well_defined_result(value, &verify_state)
                     .is_err()
                 {
                     return Ok(None);
@@ -285,7 +285,7 @@ impl ArgMatcher<'_> {
         let verify_state = VerifyState::final_round();
         for value in merged.values() {
             if self
-                .verify_obj_well_defined_and_store_cache(value, &verify_state)
+                .verify_obj_well_defined_result(value, &verify_state)
                 .is_err()
             {
                 return Ok(None);

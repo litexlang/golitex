@@ -650,6 +650,7 @@ template<S set>:
     have Filtered power_set(S) = {x S: $marked(x)}
 
 have x R
+\Filtered<R> = \Filtered<R>
 trust x $in \Filtered<R>
 $marked(x)
 "#;
@@ -730,7 +731,7 @@ have b &Box<R> = (0, 0)
             let environment = runtime.top_level_env();
             (
                 environment.facts.stored_facts.lookup_key_count(),
-                environment.caches.infer_rule_firings.len(),
+                environment.inference_cache.infer_rule_firings.len(),
             )
         };
 
@@ -746,7 +747,7 @@ have b &Box<R> = (0, 0)
             let environment = runtime.top_level_env();
             (
                 environment.facts.stored_facts.lookup_key_count(),
-                environment.caches.infer_rule_firings.len(),
+                environment.inference_cache.infer_rule_firings.len(),
             )
         };
 
@@ -1110,13 +1111,30 @@ try:
 
     let mut runtime = Runtime::default();
     runtime.start_isolated_source("failed_try_discards_infer_rule_firings");
-    let firings_before = runtime.top_level_env().caches.infer_rule_firings.len();
-    let (_, runtime_error) = execute_source(source_code, &mut runtime);
+    let firings_before = runtime
+        .top_level_env()
+        .inference_cache
+        .infer_rule_firings
+        .len();
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
     assert!(
-        runtime_error.is_some(),
-        "the deliberately false try body should fail"
+        runtime_error.is_none(),
+        "a rolled-back try is a successful outer statement: {runtime_error:?}"
     );
-    let firings_after = runtime.top_level_env().caches.infer_rule_firings.len();
+    assert!(
+        matches!(
+            stmt_results.as_slice(),
+            [StmtResult::Success(SuccessStmtResult::ProofBlock(
+                SuccessProofBlockStmtResult::TryStmt(result)
+            ))] if matches!(result.execution, TryStmtExecutionResult::RolledBack(_))
+        ),
+        "the deliberately false try body should roll back"
+    );
+    let firings_after = runtime
+        .top_level_env()
+        .inference_cache
+        .infer_rule_firings
+        .len();
 
     assert_eq!(
         firings_after, firings_before,

@@ -13,9 +13,8 @@ fn combined_builtin_items_retain_and_compile_their_typed_component_evidence() {
         panic!("expected one successful conjunction Result")
     };
     let target = result.fact();
-    let SuccessFactProofResult::CombinedProofs(combined) = result
-        .proof()
-        .expect("verified conjunction owns a proof")
+    let SuccessFactProofResult::CombinedProofs(combined) =
+        result.proof().expect("verified conjunction owns a proof")
     else {
         panic!("expected recursive combined proof Result")
     };
@@ -231,9 +230,8 @@ fn forall_result_retains_exact_parameter_and_domain_fact_ids_for_compiler_scope(
     let [StmtResult::Success(SuccessStmtResult::Fact(result))] = results.as_slice() else {
         panic!("expected one successful forall Result")
     };
-    let SuccessFactProofResult::ForallProof(proof) = result
-        .proof()
-        .expect("verified forall owns a proof")
+    let SuccessFactProofResult::ForallProof(proof) =
+        result.proof().expect("verified forall owns a proof")
     else {
         panic!("expected recursive ForallProof Result")
     };

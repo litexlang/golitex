@@ -42,7 +42,7 @@ pub(in super::super) fn render_set_builder_membership_from_fact_and_proofs(
         render_exact_set_builder_value_from_fact_and_proofs(target, premises, context)?
     {
         return Ok(format!(
-            "⟨{exact_value}, Litex.Same.trans (Litex.Same.symm ({exact_base_same_source})) (Litex.Same.symm (Litex.Same.subtype {exact_value}))⟩"
+            "⟨{exact_value}, Litex.Same.transNoObservation (Litex.Same.symmNoObservation (Litex.Same.withoutObservation ({exact_base_same_source}))) (Litex.Same.symmNoObservation (Litex.Same.subtypeNoObservation {exact_value}))⟩"
         ));
     }
     let base_proof = premises[0].1.clone();
@@ -237,11 +237,32 @@ pub(in super::super) fn render_exact_set_builder_value_from_fact_and_proofs(
         Ok(value) => value,
         Err(_) => return Ok(None),
     };
-    let exact_base_same_source =
+    let exact_base = if *builder.set
+        == LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Real)
+    {
+        strip_redundant_real_ascription(&exact_base)
+    } else {
+        exact_base
+    };
+    let rendered_element = render_obj(element, context)?;
+    let base_proof = premises[0].1.clone();
+    let selected_base = format!("Litex.In.rep {rendered_element} ({base_proof})");
+    let exact_base_same_source = if normalize_selected_carrier(&exact_base)
+        == normalize_selected_carrier(&selected_base)
+    {
+        // This is the exact membership Result we are already consuming. Do
+        // not rediscover it through numeric observers (which can accidentally
+        // cast the `Same` proof itself); retain the direct heterogeneous
+        // bridge from its recorded base-membership certificate.
+        format!(
+            "Litex.Same.symmNoObservation (Litex.Same.withoutObservation (Litex.In.same_rep {rendered_element} ({base_proof})))"
+        )
+    } else {
         match render_exact_predicate_argument_same_to_source(element, base_set, context) {
             Ok(proof) => proof,
             Err(_) => return Ok(None),
-        };
+        }
+    };
     let mut exact_context = context.clone();
     exact_context
         .symbol_names
@@ -252,7 +273,6 @@ pub(in super::super) fn render_exact_set_builder_value_from_fact_and_proofs(
         &exact_base,
         &mut exact_context,
     );
-
     let mut predicate_proofs = Vec::with_capacity(builder.facts.len());
     for (index, fact) in builder.facts.iter().enumerate() {
         let premise = &premises[index + 1];
@@ -270,6 +290,26 @@ pub(in super::super) fn render_exact_set_builder_value_from_fact_and_proofs(
         let retained_proposition = render_fact(&premise.0, context)?;
         predicate_proofs.push(if exact_proposition == retained_proposition {
             premise.1.clone()
+        } else if let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = fact {
+            let left_is_parameter = object_is_symbol(&equality.left, builder.symbol_id);
+            let right_is_parameter = object_is_symbol(&equality.right, builder.symbol_id);
+            match (left_is_parameter, right_is_parameter) {
+                (true, true) => format!("Litex.Same.refl ({exact_base})"),
+                (true, false) => format!(
+                    "Litex.Same.trans ({exact_base_same_source}) ({})",
+                    premise.1
+                ),
+                (false, true) => format!(
+                    "Litex.Same.trans ({}) (Litex.Same.symm ({exact_base_same_source}))",
+                    premise.1
+                ),
+                (false, false) => {
+                    return Err(
+                        "set-builder equality proposition changed without its parameter as a whole side"
+                            .into(),
+                    );
+                }
+            }
         } else if matches!(
             fact,
             Fact::AtomicFact(
@@ -293,8 +333,40 @@ pub(in super::super) fn render_exact_set_builder_value_from_fact_and_proofs(
         });
     }
     let predicate_proof = conjunction(&predicate_proofs);
-    let exact_value = format!("⟨{exact_base}, {predicate_proof}⟩");
+    let rendered_target_set = render_obj(target_set, context)?;
+    let exact_value =
+        format!("(⟨{exact_base}, {predicate_proof}⟩ : ({rendered_target_set}).Carrier)");
     Ok(Some((exact_value, exact_base_same_source)))
+}
+
+fn strip_outer_parentheses(value: &str) -> &str {
+    value
+        .strip_prefix('(')
+        .and_then(|inner| inner.strip_suffix(')'))
+        .unwrap_or(value)
+}
+
+fn normalize_selected_carrier(value: &str) -> String {
+    strip_outer_parentheses(value)
+        .replace('(', "")
+        .replace(')', "")
+        .replace(' ', "")
+}
+
+/// `R.Carrier` is definitionally `ℝ`; a redundant textual `: ℝ` around an
+/// exact representative can otherwise be mistaken for a cast of a `Same`
+/// proof while composing the enclosing set-builder membership certificate.
+fn strip_redundant_real_ascription(value: &str) -> String {
+    let trimmed = value.trim();
+    if let Some(inner) = trimmed
+        .strip_prefix('(')
+        .and_then(|inner| inner.strip_suffix(')'))
+    {
+        if let Some(base) = inner.strip_suffix(" : ℝ") {
+            return base.to_string();
+        }
+    }
+    trimmed.to_string()
 }
 
 /// Substituting the literal `0` for the binder in `x ≤ 0` or `0 ≤ x`
@@ -466,6 +538,42 @@ pub(in super::super) fn render_set_builder_predicate_projection_from_fact_and_pr
                 | AtomicFact::GreaterEqualFact(_)
         )
     ) {
+        let (left, right, strict) = order_relation_parts(clause)?;
+        let semantic_sign = if is_literal_zero(left) && object_is_symbol(right, builder.symbol_id) {
+            if strict {
+                "Positive"
+            } else {
+                "Nonnegative"
+            }
+        } else if object_is_symbol(left, builder.symbol_id) && is_literal_zero(right) {
+            if strict {
+                "Negative"
+            } else {
+                "Nonpositive"
+            }
+        } else {
+            ""
+        };
+        let semantic_target = if semantic_sign.is_empty() {
+            String::new()
+        } else {
+            format!("Litex.{semantic_sign} {rendered_element}")
+        };
+        if matches!(
+            builder.set.as_ref(),
+            LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Real)
+        ) && render_fact(target, context)? == semantic_target
+        {
+            // `__same` is the representation edge stored by `In`, from the
+            // source element to the set-builder subtype witness.  Dropping the
+            // subtype reaches the exact real selected by the predicate, so it
+            // is already the `AsReal` certificate required by the semantic
+            // sign wrapper. The retained order clause supplies only the
+            // ordinary inequality component.
+            return Ok(format!(
+                "(by\n  rcases Litex.Rules.inSetBuilder_iff.mp ({source_proof}) with ⟨__rep, __predicate, __same⟩\n  have __selected := __predicate{predicate_selector}\n  exact Litex.{semantic_sign}.intro __same (by simpa [Litex.Lt, Litex.Le, Litex.OrderValue] using __selected))"
+            ));
+        }
         let mut representative_context = context.clone();
         representative_context
             .symbol_names
@@ -492,7 +600,7 @@ pub(in super::super) fn render_set_builder_predicate_projection_from_fact_and_pr
             &element_context,
             "__rep",
             &rendered_element,
-            "Litex.Same.symm __same",
+            "Litex.Same.symmNoObservation __same",
             "__selected",
         )?;
         return Ok(format!(

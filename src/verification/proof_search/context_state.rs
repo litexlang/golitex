@@ -162,7 +162,6 @@ impl VerifyState {
             .borrow_mut()
             .remember_atomic_fact_proof(self.proof_scope, key, result);
     }
-
 }
 
 #[cfg(test)]

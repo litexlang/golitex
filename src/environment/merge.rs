@@ -9,6 +9,48 @@ impl Environment {
         self.merge_committed_child_in_place(child)
     }
 
+    /// Commit only reusable object-definition effects from a verification
+    /// child. Fact indexes and inference caches in that child are proof-local
+    /// and must not escape a submitted-fact WD process, while a materialized
+    /// template/object definition is a real mathematical object needed by
+    /// later statements.
+    pub fn merge_committed_object_effects(
+        &mut self,
+        child: Environment,
+    ) -> Result<(), RuntimeError> {
+        for (_, definition) in child
+            .definitions
+            .symbols
+            .iter()
+            .filter(|(_, definition)| definition.role() == SymbolRole::Object)
+        {
+            let name = definition.binding().name();
+            if let Some(existing) = self.definitions.symbols.get(name) {
+                if same_symbol_definition(existing, definition) {
+                    let existing_symbol_id = existing.binding().id();
+                    self.definitions
+                        .symbols
+                        .get_by_id_mut(existing_symbol_id)
+                        .expect("the matching parent symbol should remain present")
+                        .merge_missing_direct_struct_carrier_from(definition);
+                    self.definitions
+                        .symbols
+                        .get_by_id_mut(existing_symbol_id)
+                        .expect("the matching parent symbol should remain present")
+                        .merge_missing_transparent_object_definition_from(definition);
+                    continue;
+                }
+                return Err(merge_name_conflict_error(name, "object"));
+            }
+            self.definitions
+                .symbols
+                .insert(definition.clone())
+                .expect("object symbol was checked absent before merge");
+        }
+        self.objects.merge_from(child.objects);
+        Ok(())
+    }
+
     fn merge_committed_child_in_place(&mut self, child: Environment) -> Result<(), RuntimeError> {
         self.merge_defined_names(&child)?;
         self.merge_equalities_from_child(&child)?;
@@ -173,14 +215,14 @@ impl Environment {
             facts,
             objects,
             predicate_algebraic_properties,
-            caches,
+            inference_cache,
         } = child;
         let EnvironmentPredicateAlgebraicPropertyStore {
             properties_by_predicate,
         } = predicate_algebraic_properties;
-        let EnvironmentVerificationCache {
+        let EnvironmentInferenceCache {
             infer_rule_firings: cache_infer_rule_firing,
-        } = caches;
+        } = inference_cache;
 
         self.facts.merge_non_equality_from(facts)?;
 
@@ -206,7 +248,7 @@ impl Environment {
         }
 
         for (key, _) in cache_infer_rule_firing {
-            self.caches.infer_rule_firings.insert(key, ());
+            self.inference_cache.infer_rule_firings.insert(key, ());
         }
 
         Ok(())

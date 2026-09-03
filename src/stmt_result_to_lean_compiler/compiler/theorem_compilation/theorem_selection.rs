@@ -75,6 +75,19 @@ impl StmtResultToLeanCompiler {
         {
             return Err("by-thm temporary application changed its theorem or arguments".into());
         }
+        for (conclusion_index, stored) in application
+            .common
+            .infers
+            .store_fact_outputs
+            .iter()
+            .enumerate()
+        {
+            if stored.fact_id.is_none() {
+                return Err(format!(
+                    "by-thm local release-thm conclusion {conclusion_index} has no retained FactId"
+                ));
+            }
+        }
 
         self.environment_stack.push_inherited_environment();
         let compilation = (|| {
@@ -101,9 +114,7 @@ impl StmtResultToLeanCompiler {
             let retained_fact_id = if result.common.infers.is_empty() {
                 let SuccessFactProofResult::StoredFactCitation(citation) = selected_check.proof()
                 else {
-                    return Err(
-                        "by-thm reused selected fact has no exact citation evidence".into(),
-                    );
+                    return Err("by-thm reused selected fact has no exact citation evidence".into());
                 };
                 let fact_id = citation.source_fact_id;
                 let visible = self

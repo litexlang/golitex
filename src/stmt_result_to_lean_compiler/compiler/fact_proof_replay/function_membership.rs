@@ -93,9 +93,7 @@ impl StmtResultToLeanCompiler {
                 .verified()
                 .ok_or_else(|| format!("set-builder child {index} is not factual"))?;
             if child.fact().to_string() != expected.to_string() {
-                return Err(format!(
-                    "set-builder child {index} changed its proposition"
-                ));
+                return Err(format!("set-builder child {index} changed its proposition"));
             }
             let Some(proof) = self.construct_lean_proof_from_direct_fact_result(child)? else {
                 return Ok(None);
@@ -135,9 +133,7 @@ impl StmtResultToLeanCompiler {
                 .verified()
                 .ok_or_else(|| format!("set-builder child {index} is not factual"))?;
             if child.fact().to_string() != expected.to_string() {
-                return Err(format!(
-                    "set-builder child {index} changed its proposition"
-                ));
+                return Err(format!("set-builder child {index} changed its proposition"));
             }
             let Some(proof) = self.construct_lean_proof_from_direct_fact_result(child)? else {
                 return Ok(None);

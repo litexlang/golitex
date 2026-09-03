@@ -5,7 +5,6 @@ use super::super::*;
 pub(in super::super) fn render_checked_identity_function_reduction_from_fact(
     target: &Fact,
     defining_equality_fact_id: crate::fact::id::FactId,
-    application_side: LeanEqualityApplicationSide,
     context: &StmtResultToLeanCompilerEnvironmentStack,
 ) -> Result<String, String> {
     let binding = context
@@ -15,12 +14,9 @@ pub(in super::super) fn render_checked_identity_function_reduction_from_fact(
             format!(
                 "checked function reduction references unavailable defining FactId `{defining_equality_fact_id}`"
             )
-        })?;
+    })?;
     let (target_left, target_right) = equality_parts(target)?;
-    let application_object = match application_side {
-        LeanEqualityApplicationSide::Left => target_left,
-        LeanEqualityApplicationSide::Right => target_right,
-    };
+    let application_object = target_left;
     let LeanTargetObjectRepresentation::FunctionApplication(application) =
         LeanTargetObjectRepresentation::lower(application_object)?
     else {
@@ -44,16 +40,7 @@ pub(in super::super) fn render_checked_identity_function_reduction_from_fact(
         return Err("checked function reduction changed its checked substitution".into());
     }
 
-    let result_context = context.well_definedness.as_ref().ok_or_else(|| {
-        "checked function reduction has no active Result-owned WD context".to_string()
-    })?;
-    let application_context = result_context
-        .function_applications
-        .get(&application.source_occurrence_id)
-        .ok_or_else(|| {
-            "checked function reduction has no exact function-application Result context"
-                .to_string()
-        })?;
+    let application_context = resolve_function_application_result_context(&application, context)?;
     let [application_layer] = application_context.layers.as_slice() else {
         return Err(
             "checked function reduction requires one Result-owned application layer".into(),
@@ -161,6 +148,17 @@ pub(in super::super) fn render_checked_identity_function_reduction_from_fact(
                 } else {
                     None
                 },
+                native_real_argument: if binding.function.parameters.len() == 1
+                    && parameter.set
+                        == LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Real)
+                {
+                    Some(render_real_obj(source_argument, context)?)
+                } else {
+                    None
+                },
+                closed_positive_natural_argument: closed_positive_natural_value_from_fact_proof(
+                    argument_requirement.verification.as_ref(),
+                )?,
             },
         );
     }
@@ -212,9 +210,29 @@ pub(in super::super) fn render_checked_identity_function_reduction_from_fact(
     if expected_application != application_term {
         return Err("checked identity reduction changed its rendered equality sides".into());
     }
-    let apply = if binding.native_body_carrier == NativeFunctionBodyCarrier::Integer
-        && binding.function.domain_facts.is_empty()
-    {
+    let exact_single_carrier_application = binding.function.domain_facts.is_empty()
+        && binding.function.parameters.len() == 1
+        && match (
+            binding.native_body_carrier,
+            &binding.function.parameters[0].set,
+        ) {
+            (
+                NativeFunctionBodyCarrier::Integer,
+                LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Integer),
+            )
+            | (
+                NativeFunctionBodyCarrier::Real,
+                LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Real),
+            ) => true,
+            (
+                NativeFunctionBodyCarrier::Real,
+                LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::PositiveNatural),
+            ) => argument_evidence
+                .get(&binding.function.parameters[0].symbol_id)
+                .is_some_and(|evidence| evidence.closed_positive_natural_argument.is_some()),
+            _ => false,
+        };
+    let apply = if exact_single_carrier_application {
         "Litex.fnApplyCarrier"
     } else if function_uses_telescope(&binding.function) {
         "Litex.fnTelescopeApplyOwn"
@@ -223,6 +241,8 @@ pub(in super::super) fn render_checked_identity_function_reduction_from_fact(
     } else {
         "Litex.fnApplyWhereOwn"
     };
+    let other_object = target_right;
+    let rendered_other = render_obj(other_object, context)?;
     if binding.native_body_carrier != NativeFunctionBodyCarrier::None {
         let body_same = match binding.native_body_carrier {
             NativeFunctionBodyCarrier::Real => render_real_function_body_same_with_parameters(
@@ -239,38 +259,54 @@ pub(in super::super) fn render_checked_identity_function_reduction_from_fact(
             }
             NativeFunctionBodyCarrier::None => unreachable!("guarded native body carrier"),
         };
-        let proof = if application_side == LeanEqualityApplicationSide::Left {
-            body_same
-        } else {
-            format!("Litex.Same.symm ({body_same})")
-        };
         return Ok(format!(
-            "(by\n  unfold {apply} {}\n  exact {proof})",
+            "(by\n  unfold {apply} {}\n  exact {body_same})",
             binding.name,
         ));
+    }
+    // A telescope function returning a predicate-defined carrier is
+    // intentionally heterogeneous.  Its body is selected by `In.rep`, so
+    // the reduction proof must stay in the no-observation Same ABI and bridge
+    // the concrete real source body only at the final endpoint.  Asking Lean
+    // to infer an observed subtype observer through the opaque Set.Carrier
+    // projection is both brittle and, for a generic parameter, unsound.
+    if let LeanTargetObjectRepresentation::SetBuilder(builder) = &*binding.function.return_set {
+        if *builder.set == LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Real)
+        {
+            // The ordinary definition context renders a numeric application
+            // argument in its source/Complex view. A set-builder return,
+            // however, selects the function parameter's exact real carrier;
+            // install that native view before rendering the substituted body.
+            let mut real_body_context = definition_context.clone();
+            for (symbol_id, evidence) in &argument_evidence {
+                if let Some(real) = evidence.native_real_argument.as_ref() {
+                    real_body_context
+                        .symbol_names
+                        .insert(*symbol_id, real.clone());
+                    real_body_context
+                        .numeric_real_values
+                        .insert(*symbol_id, real.clone());
+                }
+            }
+            let real_body = render_real_obj(&binding.source_body, &real_body_context)?;
+            return Ok(format!(
+                "(by\n  unfold {apply} {}\n  exact Litex.Same.symmNoObservation (Litex.Same.transNoObservation (Litex.Same.complexRealNoObservation ({real_body})) (Litex.Same.withoutObservation (Litex.In.same_rep ({real_body}) _))))",
+                binding.name,
+            ));
+        }
     }
     // The defining Result already proved that this source body belongs to its
     // declared return carrier. Reduction only needs the body after exact
     // argument substitution; it must not reconstruct that proof from the old
     // compatibility statement IR.
     let source_body = render_obj(&binding.source_body, &definition_context)?;
-    let other_object = match application_side {
-        LeanEqualityApplicationSide::Left => target_right,
-        LeanEqualityApplicationSide::Right => target_left,
-    };
-    let rendered_other = render_obj(other_object, context)?;
     if rendered_other != source_body {
         return Err(format!(
             "checked function reduction changed the substituted source body: expected `{source_body}`, retained `{rendered_other}`"
         ));
     }
-    let proof = if application_side == LeanEqualityApplicationSide::Left {
-        "apply Litex.Same.symm\n  apply Litex.In.same_rep"
-    } else {
-        "apply Litex.In.same_rep"
-    };
     Ok(format!(
-        "(by\n  unfold {apply} {}\n  {proof})",
+        "(by\n  unfold {apply} {}\n  apply Litex.Same.symm\n  apply Litex.In.same_rep)",
         binding.name,
     ))
 }
@@ -385,14 +421,37 @@ pub(in super::super) fn render_real_function_body_same_with_parameters(
                     })?;
             let target_uses_selected_representation =
                 rendered_target_argument == selected_numeric_representation;
-            if !target_uses_selected_representation && rendered_target_argument != *argument {
+            let target_uses_exact_source_representation =
+                match LeanTargetObjectRepresentation::lower(&evidence.source_argument)? {
+                    LeanTargetObjectRepresentation::Symbol { symbol_id, .. } => context
+                        .numeric_representations
+                        .get(&symbol_id)
+                        .is_some_and(|representation| representation == &rendered_target_argument),
+                    _ => false,
+                };
+            if !target_uses_selected_representation
+                && !target_uses_exact_source_representation
+                && rendered_target_argument != *argument
+            {
                 return Err(format!(
                     "checked real function reduction target uses unrelated argument representation `{rendered_target_argument}`"
                 ));
             }
             match &evidence.parameter_set {
                 LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Real) => {
-                    if target_uses_selected_representation {
+                    if let Some(native_real_argument) = &evidence.native_real_argument {
+                        if matches!(&evidence.source_argument, Obj::Number(_)) {
+                            Ok(format!(
+                                "(by\n  convert (Litex.Same.realComplex ({native_real_argument})) using 1\n  · exact Litex.In.rep_exact ({native_real_argument}) (Litex.In.own Litex.R ({native_real_argument}))\n  · norm_num)"
+                            ))
+                        } else {
+                            Ok(format!(
+                                "(by\n  convert (Litex.Same.realComplex ({native_real_argument})) using 1\n  · exact Litex.In.rep_exact ({native_real_argument}) (Litex.In.own Litex.R ({native_real_argument})))"
+                            ))
+                        }
+                    } else if target_uses_exact_source_representation {
+                        Ok(format!("Litex.Same.refl ({rendered_target_argument})"))
+                    } else if target_uses_selected_representation {
                         let selected_real = membership_real_value(
                             &evidence.parameter_set,
                             argument,
@@ -412,16 +471,25 @@ pub(in super::super) fn render_real_function_body_same_with_parameters(
                 LeanTargetObjectRepresentation::StandardSet(
                     LeanTargetStandardSet::PositiveNatural,
                 ) => {
-                    let representative =
-                        format!("(Litex.In.rep {argument} ({argument_membership}))");
-                    if target_uses_selected_representation {
+                    if let Some(value) = &evidence.closed_positive_natural_argument {
+                        let carrier =
+                            format!("(⟨{value}, by norm_num⟩ : Litex.NPos.Carrier)");
                         Ok(format!(
-                            "Litex.Same.trans (Litex.Same.symm (Litex.AsReal.nat ({representative}).val)) (Litex.Same.natComplex ({representative}).val)"
+                            "(by\n  have __selected := Litex.In.rep_exact {carrier} (Litex.In.own Litex.NPos {carrier})\n  convert (Litex.Same.realComplex ({value} : ℝ)) using 1\n  · exact congrArg (fun value : Litex.NPos.Carrier => (((value.val : ℕ) : ℝ))) __selected\n  · norm_num)"
                         ))
+                    } else if target_uses_selected_representation {
+                        let selected_real = membership_real_value(
+                            &evidence.parameter_set,
+                            argument,
+                            argument_membership,
+                        )
+                        .ok_or_else(|| {
+                            "checked positive-natural reduction lost its selected real representative"
+                                .to_string()
+                        })?;
+                        Ok(format!("Litex.Same.realComplex ({selected_real})"))
                     } else {
-                        Ok(format!(
-                            "Litex.Same.symm (Litex.Same.trans (Litex.In.same_rep {argument} ({argument_membership})) (Litex.Same.trans (Litex.Same.subtype {representative}) (Litex.AsReal.nat ({representative}).val)))"
-                        ))
+                        Err("checked positive-natural reduction cannot recover an observed numeric equality from generic membership".into())
                     }
                 }
                 other => Err(format!(

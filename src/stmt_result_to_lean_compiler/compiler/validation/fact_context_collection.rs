@@ -36,7 +36,8 @@ pub(in super::super) fn validate_success_obj_well_defined_result(
         }
     }
     for requirement in &direct.steps.target_requirements {
-        if requirement.expected_proposition.to_string() != requirement.verification.fact().to_string()
+        if requirement.expected_proposition.to_string()
+            != requirement.verification.fact().to_string()
         {
             return Err("object WD target requirement changed its proposition".into());
         }

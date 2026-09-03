@@ -215,10 +215,7 @@ impl Runtime {
         &mut self,
         application: &Obj,
     ) -> Result<Option<Obj>, RuntimeError> {
-        self.reduce_direct_known_fn_application_once(
-            application,
-            &VerifyState::initial(),
-        )
+        self.reduce_direct_known_fn_application_once(application, &VerifyState::initial())
     }
 
     fn unfold_known_fn_application_once_impl(
@@ -371,35 +368,33 @@ impl Runtime {
             SetBoundParameterGroup::param_defs_and_args_to_param_to_arg_map(param_defs, &args);
 
         let param_membership_facts =
-                SetBoundParameterGroup::facts_for_args_satisfy_param_def_with_set_vec(
-                    self,
-                    param_defs,
-                    &args,
-                    SubstitutionMode::Exact,
-                )?;
+            SetBoundParameterGroup::facts_for_args_satisfy_param_def_with_set_vec(
+                self,
+                param_defs,
+                &args,
+                SubstitutionMode::Exact,
+            )?;
         for param_membership_fact in param_membership_facts.iter() {
-                let result = self.verify_atomic_fact_restricted_known_builtin(
-                    param_membership_fact,
-                    verify_state,
-                )?;
-                if !result.is_success() {
-                    return Ok(None);
-                }
+            let result = self
+                .verify_atomic_fact_restricted_known_builtin(param_membership_fact, verify_state)?;
+            if !result.is_success() {
+                return Ok(None);
+            }
         }
         for dom_fact in fn_set_body.dom_facts.iter() {
-                let instantiated_dom_fact = self.inst_quantifier_free_fact(
-                    dom_fact,
-                    &param_to_arg_map,
-                    SubstitutionMode::Exact,
-                    None,
-                )?;
-                let result = self.verify_quantifier_free_fact_restricted_known_builtin(
-                    &instantiated_dom_fact,
-                    verify_state,
-                )?;
-                if !result.is_success() {
-                    return Ok(None);
-                }
+            let instantiated_dom_fact = self.inst_quantifier_free_fact(
+                dom_fact,
+                &param_to_arg_map,
+                SubstitutionMode::Exact,
+                None,
+            )?;
+            let result = self.verify_quantifier_free_fact_restricted_known_builtin(
+                &instantiated_dom_fact,
+                verify_state,
+            )?;
+            if !result.is_success() {
+                return Ok(None);
+            }
         }
 
         let reduced = self.inst_obj(&equal_to_expr, &param_to_arg_map, SubstitutionMode::Exact)?;
@@ -550,15 +545,20 @@ impl Runtime {
             })
     }
 
-    pub fn well_defined_cache_metadata_for_obj(
+    /// Build the process-local WD memo entry for a resolved object. The key is
+    /// semantic (including resolved symbol identity and nested-binder alpha
+    /// normalization); the optional contract list strengthens callable
+    /// certificates but does not decide whether a completed WD proof can be
+    /// reused in the same lexical proof scope.
+    pub fn well_defined_memo_entry_for_obj(
         &self,
         obj: &Obj,
-    ) -> Option<(ObjString, Vec<WellDefinedFunctionContract>)> {
+    ) -> (ObjString, Vec<WellDefinedFunctionContract>) {
         let mut contracts = Vec::new();
         if !self.collect_well_defined_function_contracts(obj, &mut contracts) {
-            return None;
+            contracts.clear();
         }
-        Some((obj.to_string(), contracts))
+        (obj_equality_key(obj), contracts)
     }
 
     fn known_function_contract_for_obj(&self, obj: &Obj) -> Option<WellDefinedFunctionContract> {
@@ -714,10 +714,9 @@ impl Runtime {
             Obj::StructObj(x) => x.params.iter().all(|child| collect(child)),
             Obj::ObjAsStructInstanceWithFieldAccess(x) => collect(&x.obj),
             Obj::InstantiatedTemplateObj(x) => x.args.iter().all(|child| collect(child)),
-            // Their WD traversals open binder scopes and may contain facts
-            // whose callable contracts are not children in the object AST.
-            // Keep the environment proof, but deliberately do not reuse a
-            // boolean/object cache entry for these binder-owning objects.
+            // Binder-owning objects do not have a flat callable-contract list;
+            // their complete binder/body certificate lives in the returned WD
+            // Result and is reusable through that node instead.
             Obj::SetBuilder(_) | Obj::FnSet(_) | Obj::AnonymousFn(_) => false,
         }
     }
@@ -799,7 +798,7 @@ impl Runtime {
 
     pub fn infer_rule_firing_cached(&self, key: &str) -> bool {
         self.iter_environments_from_top()
-            .any(|env| env.caches.infer_rule_firings.contains_key(key))
+            .any(|env| env.inference_cache.infer_rule_firings.contains_key(key))
     }
 
     pub fn store_infer_rule_firing(&mut self, key: String) {

@@ -170,6 +170,8 @@ pub(super) struct CheckedNamedFunctionReductionArgumentEvidence {
     pub(super) membership_proof: String,
     pub(super) parameter_set: LeanTargetObjectRepresentation,
     pub(super) native_integer_argument: Option<String>,
+    pub(super) native_real_argument: Option<String>,
+    pub(super) closed_positive_natural_argument: Option<String>,
 }
 
 /// Target-language construction output returned from the tuple index scope.
@@ -290,7 +292,7 @@ impl StmtResultToLeanCompiler {
             .expect("WD compilation context was just installed")
             .function_applications
             .iter()
-            .flat_map(|(occurrence_id, application)| {
+            .flat_map(|(object_key, application)| {
                 application
                     .layers
                     .iter()
@@ -299,7 +301,7 @@ impl StmtResultToLeanCompiler {
                         layer.requirements.iter().enumerate().map(
                             move |(requirement_index, requirement)| {
                                 (
-                                    *occurrence_id,
+                                    object_key.clone(),
                                     layer_index,
                                     requirement_index,
                                     requirement.verification.clone(),
@@ -316,26 +318,29 @@ impl StmtResultToLeanCompiler {
             // requirements under the binder aliases. Compile those closures
             // first, then expose the exact sibling stores, then freeze the
             // remaining application requirement proofs.
-            let anonymous_function_occurrences = self
+            let anonymous_function_keys = self
                 .environment_stack
                 .well_definedness
                 .as_ref()
                 .expect("WD compilation context remains active")
                 .anonymous_functions
                 .keys()
-                .copied()
+                .cloned()
                 .collect::<Vec<_>>();
-            for occurrence_id in anonymous_function_occurrences {
-                self.compile_anonymous_function_well_definedness_context(occurrence_id)?;
+            for object_key in anonymous_function_keys {
+                self.compile_anonymous_function_well_definedness_context(&object_key)
+                    .map_err(|error| {
+                        format!("compiling anonymous-function WD context `{object_key}`: {error}")
+                    })?;
             }
             for recursive in roots {
                 install_fact_well_definedness_proof_store_results_in_active_environment(
                     recursive,
                     &mut self.environment_stack,
-                )?;
+                )
+                .map_err(|error| format!("installing fact-WD intrinsic stores: {error}"))?;
             }
-            for (occurrence_id, layer_index, requirement_index, verification) in
-                requirement_locations
+            for (object_key, layer_index, requirement_index, verification) in requirement_locations
             {
                 let proof_expression = match self
                     .construct_lean_proof_from_shared_verify_fact_result(verification.as_ref())
@@ -349,8 +354,8 @@ impl StmtResultToLeanCompiler {
                     Err(error) if error.contains("unavailable cited fact") => None,
                     Ok(None) => {
                         return Err(format!(
-                            "function application occurrence {} layer {} requirement {} has no direct fact-result proof compiler",
-                            occurrence_id.value(),
+                            "function application `{}` layer {} requirement {} has no direct fact-result proof compiler",
+                            object_key,
                             layer_index,
                             requirement_index,
                         ));
@@ -362,7 +367,7 @@ impl StmtResultToLeanCompiler {
                     .as_mut()
                     .expect("WD compilation context remains active")
                     .function_applications
-                    .get_mut(&occurrence_id)
+                    .get_mut(&object_key)
                     .expect("collected function application remains indexed")
                     .layers[layer_index]
                     .requirements[requirement_index]
@@ -382,19 +387,16 @@ impl StmtResultToLeanCompiler {
 
     pub(super) fn compile_anonymous_function_well_definedness_context(
         &mut self,
-        occurrence_id: SourceObjectOccurrenceId,
+        object_key: &str,
     ) -> Result<(), String> {
         let anonymous_context = self
             .environment_stack
             .well_definedness
             .as_ref()
-            .and_then(|context| context.anonymous_functions.get(&occurrence_id))
+            .and_then(|context| context.anonymous_functions.get(object_key))
             .cloned()
             .ok_or_else(|| {
-                format!(
-                    "anonymous function occurrence {} disappeared from its WD Result context",
-                    occurrence_id.value()
-                )
+                format!("anonymous function `{object_key}` disappeared from its WD Result context")
             })?;
         let Obj::AnonymousFn(source_function) = &anonymous_context.source_function else {
             return Err("anonymous-function compilation context retained another object".into());
@@ -518,7 +520,7 @@ impl StmtResultToLeanCompiler {
             .environment_stack
             .well_definedness
             .as_mut()
-            .and_then(|context| context.anonymous_functions.get_mut(&occurrence_id))
+            .and_then(|context| context.anonymous_functions.get_mut(object_key))
             .expect("anonymous function remains in active WD Result context");
         retained.compiled_inference_fact_proof_steps = compiled_inference_fact_proof_steps;
         retained.closure.proof_expression = closure_proof;

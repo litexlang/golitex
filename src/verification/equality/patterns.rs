@@ -203,7 +203,10 @@ pub fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
     }
 }
 
-pub fn factual_equal_success_by_builtin_reason(equal_fact: &EqualFact, reason: &str) -> ProveFactResult {
+pub fn factual_equal_success_by_builtin_reason(
+    equal_fact: &EqualFact,
+    reason: &str,
+) -> ProveFactResult {
     factual_equal_success_by_builtin_reason_with_subgoals(equal_fact, reason, Vec::new())
 }
 

@@ -107,9 +107,9 @@ impl Runtime {
                     subset_fact.line_file.clone(),
                 )
                 .into();
-                let result =
-                    self.verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
-                if result.is_success() {
+                if let Some(result) =
+                    self.try_verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?
+                {
                     return Ok(
                         SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             subset_fact.clone().into(),
@@ -130,9 +130,9 @@ impl Runtime {
                 subset_fact.line_file.clone(),
             )
             .into();
-            let result =
-                self.verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
-            if result.is_success() {
+            if let Some(result) =
+                self.try_verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?
+            {
                 return Ok(
                     SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         subset_fact.clone().into(),
@@ -156,9 +156,9 @@ impl Runtime {
                 subset_fact.line_file.clone(),
             )
             .into();
-            let result =
-                self.verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
-            if result.is_success() {
+            if let Some(result) =
+                self.try_verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?
+            {
                 return Ok(
                     SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         subset_fact.clone().into(),
@@ -185,9 +185,9 @@ impl Runtime {
                     subset_fact.line_file.clone(),
                 )
                 .into();
-                let result =
-                    self.verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
-                if result.is_success() {
+                if let Some(result) =
+                    self.try_verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?
+                {
                     return Ok(
                         SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             subset_fact.clone().into(),
@@ -220,12 +220,12 @@ impl Runtime {
             ];
             let mut steps = Vec::with_capacity(premises.len());
             for premise in &premises {
-                let result =
-                    self.verify_atomic_fact_as_builtin_rule_premise(premise, builtin_state)?;
-                if !result.is_success() {
+                let Some(result) =
+                    self.try_verify_atomic_fact_as_builtin_rule_premise(premise, builtin_state)?
+                else {
                     steps.clear();
                     break;
-                }
+                };
                 steps.push(result);
             }
             if steps.len() == premises.len() {
@@ -376,13 +376,13 @@ impl Runtime {
                         subset_fact.line_file.clone(),
                     )
                     .into();
-                    let result = self.verify_atomic_fact_as_builtin_rule_premise(
+                    let Some(result) = self.try_verify_atomic_fact_as_builtin_rule_premise(
                         &start_membership,
                         builtin_state,
-                    )?;
-                    if !result.is_success() {
+                    )?
+                    else {
                         return Ok((UnknownGenericStmtResult::new()).into());
-                    }
+                    };
                     dependencies.push(result);
                 }
                 return Ok(
@@ -451,11 +451,16 @@ impl Runtime {
                 ) {
                     continue;
                 }
-                let first_result = self.verify_atomic_fact_as_builtin_rule_premise(first, builtin_state)?;
-                let second_result = self.verify_atomic_fact_as_builtin_rule_premise(second, builtin_state)?;
-                if !first_result.is_success() || !second_result.is_success() {
+                let Some(first_result) =
+                    self.try_verify_atomic_fact_as_builtin_rule_premise(first, builtin_state)?
+                else {
                     continue;
-                }
+                };
+                let Some(second_result) =
+                    self.try_verify_atomic_fact_as_builtin_rule_premise(second, builtin_state)?
+                else {
+                    continue;
+                };
                 return Ok(
                     SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         subset_fact.clone().into(),
@@ -511,15 +516,15 @@ impl Runtime {
                         Vec::new(),
                     )
                     .into();
-                    self.complete_atomic_fact_proof_result(
+                    Some(self.complete_atomic_fact_proof_result(
                         &ret_subset,
                         proof,
                         builtin_state.verify_state(),
-                    )?
+                    )?)
                 } else {
-                    self.verify_atomic_fact_as_builtin_rule_premise(&ret_subset, builtin_state)?
+                    self.try_verify_atomic_fact_as_builtin_rule_premise(&ret_subset, builtin_state)?
                 };
-                if ret_subset_result.is_success() {
+                if let Some(ret_subset_result) = ret_subset_result {
                     let expected_target: Fact = subset_fact.clone().into();
                     return Ok(
                         (SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
@@ -545,9 +550,11 @@ impl Runtime {
             subset_fact.line_file.clone(),
         )
         .into();
-        let verify_result = self
-            .verify_atomic_fact_as_builtin_rule_premise(&converted_superset_fact, builtin_state)?;
-        if verify_result.is_success() {
+        let verify_result = self.try_verify_atomic_fact_as_builtin_rule_premise(
+            &converted_superset_fact,
+            builtin_state,
+        )?;
+        if let Some(verify_result) = verify_result {
             Ok(
                 (SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     subset_fact.clone().into(),
@@ -609,9 +616,11 @@ impl Runtime {
             superset_fact.line_file.clone(),
         )
         .into();
-        let verify_result = self
-            .verify_atomic_fact_as_builtin_rule_premise(&converted_subset_fact, builtin_state)?;
-        if verify_result.is_success() {
+        let verify_result = self.try_verify_atomic_fact_as_builtin_rule_premise(
+            &converted_subset_fact,
+            builtin_state,
+        )?;
+        if let Some(verify_result) = verify_result {
             Ok(
                 (SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     superset_fact.clone().into(),
@@ -640,11 +649,11 @@ impl Runtime {
             not_subset_fact.line_file.clone(),
         )
         .into();
-        let verify_result = self.verify_atomic_fact_as_builtin_rule_premise(
+        let verify_result = self.try_verify_atomic_fact_as_builtin_rule_premise(
             &converted_not_superset_fact,
             builtin_state,
         )?;
-        if verify_result.is_success() {
+        if let Some(verify_result) = verify_result {
             Ok(
                 (SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     not_subset_fact.clone().into(),
@@ -673,11 +682,11 @@ impl Runtime {
             not_superset_fact.line_file.clone(),
         )
         .into();
-        let verify_result = self.verify_atomic_fact_as_builtin_rule_premise(
+        let verify_result = self.try_verify_atomic_fact_as_builtin_rule_premise(
             &converted_not_subset_fact,
             builtin_state,
         )?;
-        if verify_result.is_success() {
+        if let Some(verify_result) = verify_result {
             Ok(
                 (SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     not_superset_fact.clone().into(),

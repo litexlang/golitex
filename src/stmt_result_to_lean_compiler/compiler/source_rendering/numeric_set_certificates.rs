@@ -2,6 +2,44 @@
 
 use super::super::*;
 
+/// Recover the exact positive-natural carrier selected by a closed membership
+/// certificate. This walks only explicit proof sharing; an arbitrary `In`
+/// proof deliberately exposes no observed numeric representative.
+pub(in super::super) fn closed_positive_natural_value_from_fact_proof(
+    proof: &SuccessFactProofNode,
+) -> Result<Option<String>, String> {
+    match proof.proof() {
+        SuccessFactProofResult::BuiltinRule(builtin)
+        | SuccessFactProofResult::BuiltinStrategy(builtin) => {
+            let Some(BuiltinRuleEvidence::ClosedNumericMembership(evidence)) =
+                builtin.evidence.typed()
+            else {
+                return Ok(None);
+            };
+            if evidence.target_set != StandardSet::NPos
+                || evidence.expected_target.to_string() != proof.fact().to_string()
+            {
+                return Ok(None);
+            }
+            validate_success_evaluate_obj_result(&evidence.evaluation)?;
+            let value = &evidence.evaluation.value.normalized_value;
+            if value.chars().all(|character| character.is_ascii_digit())
+                && value.chars().any(|character| character != '0')
+            {
+                Ok(Some(value.clone()))
+            } else {
+                Err(format!(
+                    "positive-natural membership retained invalid normalized value `{value}`"
+                ))
+            }
+        }
+        SuccessFactProofResult::Reuse(reuse) => {
+            closed_positive_natural_value_from_fact_proof(reuse.source.as_ref())
+        }
+        _ => Ok(None),
+    }
+}
+
 pub(in super::super) fn exact_set_real_value(
     set: &LeanTargetObjectRepresentation,
     value: &str,
@@ -117,7 +155,7 @@ pub(in super::super) fn exact_set_numeric_value(
             Some(format!("((({value} : ℝ)) : ℂ)"))
         }
         LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Complex) => {
-            Some(format!("({value} : ℂ)"))
+            Some(value.to_string())
         }
         LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::PositiveRational)
         | LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::NegativeRational) => {
@@ -187,10 +225,80 @@ pub(in super::super) fn membership_numeric_equality(
     membership: &str,
 ) -> Option<String> {
     let representative = format!("Litex.In.rep {value} {membership}");
-    let representative_to_numeric = exact_set_numeric_equality(set, &representative)?;
+    if matches!(
+        set,
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Complex)
+    ) {
+        // Generic `In` stores no-observation equality. It cannot be upgraded
+        // to the complex observer merely because its selected carrier reduces
+        // to `Complex`. Exact `C` binders use `exact_set_numeric_equality`;
+        // truly heterogeneous `C` values therefore stay without a numeric
+        // equality bridge and unsupported consumers fail closed.
+        return None;
+    }
+    let representative_to_numeric =
+        exact_set_numeric_equality_no_observation(set, &representative)?;
     Some(format!(
-        "Litex.Same.trans (Litex.In.same_rep {value} ({membership})) ({representative_to_numeric})"
+        "Litex.Same.transNoObservation (Litex.In.same_rep {value} ({membership})) ({representative_to_numeric})"
     ))
+}
+
+pub(in super::super) fn exact_set_numeric_equality_no_observation(
+    set: &LeanTargetObjectRepresentation,
+    value: &str,
+) -> Option<String> {
+    match set {
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::PositiveNatural) => {
+            Some(format!(
+                "Litex.Same.transNoObservation (Litex.Same.subtypeNoObservation ({value})) (Litex.Same.natComplexNoObservation (({value}).val))"
+            ))
+        }
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Natural) => {
+            Some(format!("Litex.Same.natComplexNoObservation ({value})"))
+        }
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Integer) => {
+            Some(format!("Litex.Same.intComplexNoObservation ({value})"))
+        }
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Rational) => {
+            Some(format!("Litex.Same.ratComplexNoObservation ({value})"))
+        }
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Real) => {
+            Some(format!("Litex.Same.realComplexNoObservation ({value})"))
+        }
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Complex) => {
+            Some(format!("Litex.Same.reflNoObservation ({value})"))
+        }
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::PositiveRational)
+        | LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::NegativeRational) => {
+            Some(format!(
+                "Litex.Same.transNoObservation (Litex.Same.subtypeNoObservation ({value})) (Litex.Same.ratComplexNoObservation (({value}).val))"
+            ))
+        }
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::NegativeInteger) => {
+            Some(format!(
+                "Litex.Same.transNoObservation (Litex.Same.subtypeNoObservation ({value})) (Litex.Same.intComplexNoObservation (({value}).val))"
+            ))
+        }
+        LeanTargetObjectRepresentation::Range { .. }
+        | LeanTargetObjectRepresentation::ClosedRange { .. } => Some(format!(
+            "Litex.Same.transNoObservation (Litex.Same.subtypeNoObservation ({value})) (Litex.Same.intComplexNoObservation (({value}).val))"
+        )),
+        LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::PositiveReal)
+        | LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::NegativeReal) => {
+            Some(format!(
+                "Litex.Same.transNoObservation (Litex.Same.subtypeNoObservation ({value})) (Litex.Same.realComplexNoObservation (({value}).val))"
+            ))
+        }
+        LeanTargetObjectRepresentation::SetBuilder(builder) => {
+            let base_value = format!("({value}).val");
+            let base_equality =
+                exact_set_numeric_equality_no_observation(builder.set.as_ref(), &base_value)?;
+            Some(format!(
+                "Litex.Same.transNoObservation (Litex.Same.subtypeNoObservation ({value})) ({base_equality})"
+            ))
+        }
+        _ => None,
+    }
 }
 
 pub(in super::super) fn exact_set_numeric_equality(

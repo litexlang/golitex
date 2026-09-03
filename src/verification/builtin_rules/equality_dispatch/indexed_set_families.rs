@@ -90,18 +90,18 @@ impl Runtime {
                                         Vec::new(),
                                     )
                                     .into();
-                                    self.complete_atomic_fact_proof_result(
+                                    Some(self.complete_atomic_fact_proof_result(
                                         &nonempty_index,
                                         proof,
                                         builtin_state.verify_state(),
-                                    )?
+                                    )?)
                                 }
-                                _ => self.verify_atomic_fact_as_builtin_rule_premise(
+                                _ => self.try_verify_atomic_fact_as_builtin_rule_premise(
                                     &nonempty_index,
                                     builtin_state,
                                 )?,
                             };
-                            if nonempty_result.is_success() {
+                            if let Some(nonempty_result) = nonempty_result {
                                 return Ok(Some(
                                     factual_equal_success_by_builtin_reason_with_subgoals(
                                         equal_fact,

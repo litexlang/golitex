@@ -59,7 +59,7 @@ fn c_extraction_emits_a_c99_function_shape() {
 }
 
 #[test]
-fn plain_file_conversions_auto_select_the_standalone_source() {
+fn plain_file_extraction_uses_markers_while_latex_still_uses_the_full_file() {
     let directory = std::env::temp_dir().join(format!(
         "litex-isolated-file-conversions-{}",
         std::process::id()
@@ -67,7 +67,8 @@ fn plain_file_conversions_auto_select_the_standalone_source() {
     let _ = fs::remove_dir_all(&directory);
     fs::create_dir_all(&directory).expect("create isolated conversion fixture");
     let file = directory.join("standalone.lit");
-    fs::write(&file, "have a R = 1\n").expect("write standalone Litex source");
+    fs::write(&file, "# [-extract]\nhave a R = 1\n# [end of -extract]\n")
+        .expect("write standalone Litex source");
     let path = file.to_str().expect("fixture path is UTF-8");
 
     let python = Command::new(env!("CARGO_BIN_EXE_litex"))
@@ -91,4 +92,181 @@ fn plain_file_conversions_auto_select_the_standalone_source() {
     assert!(latex_stdout.contains("\"error\": null"));
 
     let _ = fs::remove_dir_all(&directory);
+}
+
+#[test]
+fn file_extraction_concatenates_marked_blocks_and_ignores_other_statements() {
+    let directory = extraction_fixture_directory("multiple-blocks");
+    let file = directory.join("selected.lit");
+    fs::write(
+        &file,
+        "1 = 2\n\n  # [-extract]  \nhave first R = 1\n\t# [end of -extract]\t\n\n1 = 2\n\n# [-extract]\nhave second R = 2\n# [end of -extract]\n\n1 = 2\n",
+    )
+    .expect("write marked extraction fixture");
+    let path = file.to_str().expect("fixture path is UTF-8");
+
+    for (flag, first, second) in [
+        ("-extractpython", "first = 1.0", "second = 2.0"),
+        ("-extractc", "double first = 1.0;", "double second = 2.0;"),
+    ] {
+        let output = Command::new(env!("CARGO_BIN_EXE_litex"))
+            .args([flag, "-f", path])
+            .output()
+            .expect("extract marked file");
+        assert!(output.status.success(), "{output:?}");
+        let stdout = String::from_utf8(output.stdout).expect("extraction stdout is UTF-8");
+        let first_position = stdout.find(first).unwrap_or_else(|| panic!("{stdout}"));
+        let second_position = stdout.find(second).unwrap_or_else(|| panic!("{stdout}"));
+        assert!(first_position < second_position, "{stdout}");
+        assert!(stdout.contains("\"error\": null"), "{stdout}");
+    }
+
+    let _ = fs::remove_dir_all(&directory);
+}
+
+#[test]
+fn file_extraction_rejects_missing_and_malformed_markers() {
+    let directory = extraction_fixture_directory("marker-errors");
+    let cases = [
+        (
+            "missing.lit",
+            "have a R = 1\n",
+            "file extraction requires at least one `# [-extract]` block",
+        ),
+        (
+            "unmatched-end.lit",
+            "# [end of -extract]\n",
+            "has no matching `# [-extract]` marker",
+        ),
+        (
+            "nested.lit",
+            "# [-extract]\n# [-extract]\nhave a R = 1\n# [end of -extract]\n",
+            "nested `# [-extract]` marker",
+        ),
+        (
+            "unclosed.lit",
+            "# [-extract]\nhave a R = 1\n",
+            "has no matching `# [end of -extract]` marker",
+        ),
+    ];
+
+    for (name, source, expected_message) in cases {
+        let file = directory.join(name);
+        fs::write(&file, source).expect("write malformed marker fixture");
+        let path = file.to_str().expect("fixture path is UTF-8");
+        let output = Command::new(env!("CARGO_BIN_EXE_litex"))
+            .args(["-extractpython", "-f", path])
+            .output()
+            .expect("run malformed marker extraction");
+        assert!(!output.status.success(), "{output:?}");
+        let stdout = String::from_utf8(output.stdout).expect("error stdout is UTF-8");
+        assert!(stdout.contains(expected_message), "{stdout}");
+        assert!(stdout.contains("\"content\": null"), "{stdout}");
+    }
+
+    let no_marker = directory.join("missing.lit");
+    let c_output = Command::new(env!("CARGO_BIN_EXE_litex"))
+        .args([
+            "-extractc",
+            "-f",
+            no_marker.to_str().expect("fixture path is UTF-8"),
+        ])
+        .output()
+        .expect("run C extraction without markers");
+    assert!(!c_output.status.success(), "{c_output:?}");
+
+    let _ = fs::remove_dir_all(&directory);
+}
+
+#[test]
+fn selected_source_errors_keep_the_original_file_line() {
+    let directory = extraction_fixture_directory("source-lines");
+    let file = directory.join("line-number.lit");
+    fs::write(
+        &file,
+        "# ignored line\n# [-extract]\nhave broken R = missing_name\n# [end of -extract]\n",
+    )
+    .expect("write line-number fixture");
+    let output = Command::new(env!("CARGO_BIN_EXE_litex"))
+        .args([
+            "-extractpython",
+            "-f",
+            file.to_str().expect("fixture path is UTF-8"),
+        ])
+        .output()
+        .expect("run selected-source failure");
+    assert!(!output.status.success(), "{output:?}");
+    let stdout = String::from_utf8(output.stdout).expect("error stdout is UTF-8");
+    assert!(stdout.contains("\"line\": 3"), "{stdout}");
+
+    let _ = fs::remove_dir_all(&directory);
+}
+
+#[test]
+fn repository_extraction_does_not_require_file_markers() {
+    let directory = extraction_fixture_directory("repository-control");
+    fs::write(
+        directory.join("litex.config"),
+        "[hierarchy]\nmodule\n\n[export]\nmain = \"./main.lit\"\n",
+    )
+    .expect("write repository config");
+    fs::write(directory.join("main.lit"), "have repo_value R = 3\n")
+        .expect("write repository source");
+
+    let output = Command::new(env!("CARGO_BIN_EXE_litex"))
+        .args([
+            "-extractpython",
+            "-r",
+            directory.to_str().expect("fixture path is UTF-8"),
+        ])
+        .output()
+        .expect("run repository extraction control");
+    assert!(output.status.success(), "{output:?}");
+    let stdout = String::from_utf8(output.stdout).expect("repository stdout is UTF-8");
+    assert!(stdout.contains("repo_value = 3.0"), "{stdout}");
+
+    let _ = fs::remove_dir_all(&directory);
+}
+
+#[test]
+fn marked_file_extraction_does_not_load_a_registered_project_prefix() {
+    let directory = extraction_fixture_directory("no-project-prefix");
+    fs::write(
+        directory.join("litex.config"),
+        "[hierarchy]\nmodule\n\n[export]\nbefore = \"./before.lit\"\ntarget = \"./target.lit\"\n",
+    )
+    .expect("write repository config");
+    fs::write(directory.join("before.lit"), "have shared R = 1\n")
+        .expect("write repository prefix");
+    let target = directory.join("target.lit");
+    fs::write(
+        &target,
+        "# [-extract]\nhave result R = before::shared + 1\n# [end of -extract]\n",
+    )
+    .expect("write marked target");
+
+    let file_output = Command::new(env!("CARGO_BIN_EXE_litex"))
+        .args([
+            "-extractpython",
+            "-f",
+            target.to_str().expect("fixture path is UTF-8"),
+        ])
+        .output()
+        .expect("run marked target extraction");
+    assert!(!file_output.status.success(), "{file_output:?}");
+    let file_stdout = String::from_utf8(file_output.stdout).expect("file stdout is UTF-8");
+    assert!(file_stdout.contains("before::shared"), "{file_stdout}");
+    assert!(file_stdout.contains("not defined"), "{file_stdout}");
+
+    let _ = fs::remove_dir_all(&directory);
+}
+
+fn extraction_fixture_directory(label: &str) -> std::path::PathBuf {
+    let directory = std::env::temp_dir().join(format!(
+        "litex-code-extraction-{label}-{}",
+        std::process::id()
+    ));
+    let _ = fs::remove_dir_all(&directory);
+    fs::create_dir_all(&directory).expect("create extraction fixture directory");
+    directory
 }

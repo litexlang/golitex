@@ -3,10 +3,7 @@
 use super::*;
 
 impl FactGraphBuilder {
-    pub(super) fn primary_verify_result_node_id(
-        &mut self,
-        result: &VerifyFactResult,
-    ) -> String {
+    pub(super) fn primary_verify_result_node_id(&mut self, result: &VerifyFactResult) -> String {
         self.add_fact_node(&result.fact(), "verification", None)
     }
 
@@ -21,23 +18,6 @@ impl FactGraphBuilder {
                 let target_id = self.add_fact_node(inferred, "inferred", None);
                 self.add_edge(&source_id, &target_id, "infers");
             }
-        }
-    }
-
-    pub(super) fn primary_result_node_id(&mut self, result: &StmtResult) -> Option<String> {
-        if let Some(success) = result.factual_success() {
-            return Some(self.add_fact_node(&success.fact(), "fact", None));
-        }
-        let success = result.non_factual_success()?;
-        match &success.statement() {
-            Stmt::Definition(DefinitionStmt::DefThmStmt(stmt)) => Some(theorem_id(&stmt.name)),
-            Stmt::Definition(DefinitionStmt::AxiomStmt(stmt)) => Some(theorem_id(&stmt.name)),
-            Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(stmt)) => Some(claim_id(&stmt.line_file)),
-            Stmt::By(ByStmt::ByDefStmt(stmt)) => {
-                let fact: Fact = stmt.fact.clone().into();
-                Some(self.add_fact_node(&fact, "fact", None))
-            }
-            _ => None,
         }
     }
 

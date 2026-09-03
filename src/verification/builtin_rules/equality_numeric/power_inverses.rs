@@ -34,6 +34,15 @@ impl Runtime {
                 let Obj::Pow(pow) = equal_obj else {
                     continue;
                 };
+                let Some(mut scalar_results) = self
+                    .verify_objects_are_known_real_or_complex_scalars_in_builtin(
+                        &[pow.base.as_ref()],
+                        &line_file,
+                        builtin_state,
+                    )?
+                else {
+                    continue;
+                };
                 let base_result = self.verify_zero_product_factor_matches_target(
                     &EqualFact::new_from_refs(target_base, pow.base.as_ref(), line_file.clone()),
                     builtin_state,
@@ -41,17 +50,21 @@ impl Runtime {
                 if !base_result.is_success() {
                     continue;
                 }
-                let exponent_result = self.obj_is_verified_in_n_pos(
+                let Some(mut exponent_results) = self.try_verify_obj_in_n_pos_for_power_builtin(
                     pow.exponent.as_ref(),
                     line_file.clone(),
                     builtin_state,
-                )?;
-                if !exponent_result {
+                )?
+                else {
                     continue;
-                }
-                return Ok(Some(factual_equal_success_by_builtin_reason(
+                };
+                scalar_results.push(base_result);
+                let mut subgoals = scalar_results;
+                subgoals.append(&mut exponent_results);
+                return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
                     equal_fact,
                     "equality: a = 0 from a^n = 0 and n in N+",
+                    subgoals,
                 )));
             }
         }
@@ -119,33 +132,32 @@ impl Runtime {
             let exponent_nonzero: AtomicFact =
                 NotEqualFact::new(exponent.clone(), zero.clone(), line_file.clone()).into();
 
-            let left_positive_result =
-                self.verify_atomic_fact_as_builtin_rule_premise(&left_positive, builtin_state)?;
-            if !left_positive_result.is_success() {
+            let Some(left_positive_result) =
+                self.try_verify_atomic_fact_as_builtin_rule_premise(&left_positive, builtin_state)?
+            else {
                 continue;
-            }
-            let right_positive_result =
-                self.verify_atomic_fact_as_builtin_rule_premise(&right_positive, builtin_state)?;
-            if !right_positive_result.is_success() {
+            };
+            let Some(right_positive_result) = self
+                .try_verify_atomic_fact_as_builtin_rule_premise(&right_positive, builtin_state)?
+            else {
                 continue;
-            }
-            let exponent_in_z_result =
-                self.verify_atomic_fact_as_builtin_rule_premise(&exponent_in_z, builtin_state)?;
-            if !exponent_in_z_result.is_success() {
+            };
+            let Some(exponent_in_z_result) =
+                self.try_verify_atomic_fact_as_builtin_rule_premise(&exponent_in_z, builtin_state)?
+            else {
                 continue;
-            }
-            let exponent_nonzero_result =
-                self.verify_atomic_fact_as_builtin_rule_premise(&exponent_nonzero, builtin_state)?;
-            if !exponent_nonzero_result.is_success() {
+            };
+            let Some(exponent_nonzero_result) = self
+                .try_verify_atomic_fact_as_builtin_rule_premise(&exponent_nonzero, builtin_state)?
+            else {
                 continue;
-            }
+            };
 
             let left_power: Obj = Pow::new(left.clone(), exponent.clone()).into();
             let right_power: Obj = Pow::new(right.clone(), exponent).into();
             let power_equal_fact =
                 EqualFact::new_from_refs(&left_power, &right_power, line_file.clone());
-            let power_equal_result =
-                self.verify_equal_fact_by_known_equality(&power_equal_fact);
+            let power_equal_result = self.verify_equal_fact_by_known_equality(&power_equal_fact);
             if !power_equal_result.is_success() {
                 continue;
             }
@@ -189,86 +201,93 @@ impl Runtime {
         let Obj::Abs(abs_base) = pow.base.as_ref() else {
             return Ok(None);
         };
-        if !self
-            .verify_equal_fact_as_builtin_premise(
-                &EqualFact::new_from_refs(
-                    inner_pow.base.as_ref(),
-                    abs_base.arg.as_ref(),
-                    line_file.clone(),
-                ),
-                builtin_state,
-            )?
-            .is_success()
-        {
+        let Some(base_match) = self.try_verify_equal_fact_as_builtin_premise(
+            &EqualFact::new_from_refs(
+                inner_pow.base.as_ref(),
+                abs_base.arg.as_ref(),
+                line_file.clone(),
+            ),
+            builtin_state,
+        )?
+        else {
             return Ok(None);
-        }
-        if !self
-            .verify_equal_fact_as_builtin_premise(
-                &EqualFact::new_from_refs(
-                    inner_pow.exponent.as_ref(),
-                    pow.exponent.as_ref(),
-                    line_file.clone(),
-                ),
-                builtin_state,
-            )?
-            .is_success()
-        {
+        };
+        let Some(exponent_match) = self.try_verify_equal_fact_as_builtin_premise(
+            &EqualFact::new_from_refs(
+                inner_pow.exponent.as_ref(),
+                pow.exponent.as_ref(),
+                line_file.clone(),
+            ),
+            builtin_state,
+        )?
+        else {
             return Ok(None);
-        }
-        let base_in_r = self.obj_is_verified_in_standard_set_for_power_builtin(
+        };
+        let mut structural_steps = vec![base_match, exponent_match];
+        let Some(mut base_in_r_results) = self.try_verify_obj_in_standard_set_for_power_builtin(
             inner_pow.base.as_ref(),
             StandardSet::R,
             line_file.clone(),
             builtin_state,
-        )?;
-        if !base_in_r {
+        )?
+        else {
             return Ok(None);
-        }
-        if self.obj_is_verified_in_n_pos(
+        };
+        structural_steps.append(&mut base_in_r_results);
+        if let Some(mut exponent_results) = self.try_verify_obj_in_n_pos_for_power_builtin(
             inner_pow.exponent.as_ref(),
             line_file.clone(),
             builtin_state,
         )? {
-            return Ok(Some(factual_equal_success_by_builtin_reason(
+            structural_steps.append(&mut exponent_results);
+            return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
                 equal_fact,
                 "equality: abs(a^n) = abs(a)^n for n in N+",
+                structural_steps,
             )));
         }
 
         // Absolute value commutes with natural powers over real bases, including n = 0.
         // Example: `forall a R, n N: abs(a^n) = abs(a)^n`.
-        let exponent_in_n = self.obj_is_verified_in_standard_set_for_power_builtin(
+        let exponent_in_n = self.try_verify_obj_in_standard_set_for_power_builtin(
             inner_pow.exponent.as_ref(),
             StandardSet::N,
             line_file.clone(),
             builtin_state,
         )?;
-        if exponent_in_n {
-            return Ok(Some(factual_equal_success_by_builtin_reason(
+        if let Some(mut exponent_results) = exponent_in_n {
+            structural_steps.append(&mut exponent_results);
+            return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
                 equal_fact,
                 "equality: abs(a^n) = abs(a)^n for n in N over real bases",
+                structural_steps,
             )));
         }
 
         // Integer powers of a nonzero base preserve the absolute-value power law.
         // Example: `forall a R*, n Z: abs(a^n) = abs(a)^n`.
-        if !self.obj_is_verified_integer_exponent_for_power_builtin(
+        let Some(mut integer_results) = self.try_verify_integer_exponent_for_power_builtin(
             inner_pow.exponent.as_ref(),
             line_file.clone(),
             builtin_state,
-        )? {
+        )?
+        else {
             return Ok(None);
-        }
-        if !self.obj_is_verified_nonzero_for_power_builtin(
+        };
+        let Some(mut nonzero_results) = self.try_verify_nonzero_for_power_builtin(
             inner_pow.base.as_ref(),
             line_file.clone(),
             builtin_state,
-        )? {
+        )?
+        else {
             return Ok(None);
-        }
-        Ok(Some(factual_equal_success_by_builtin_reason(
+        };
+        structural_steps.append(&mut integer_results);
+        structural_steps.append(&mut nonzero_results);
+        Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
             equal_fact,
             "equality: abs(a^n) = abs(a)^n for n in Z and a != 0",
+            structural_steps,
         )))
     }
 
@@ -336,10 +355,12 @@ impl Runtime {
         )
         .into();
         let base_match_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&base_match, builtin_state)?;
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&base_match, builtin_state)?;
         let exponent_match_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&exponent_match, builtin_state)?;
-        if base_match_result.is_success() && exponent_match_result.is_success() {
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&exponent_match, builtin_state)?;
+        if let (Some(base_match_result), Some(exponent_match_result)) =
+            (base_match_result, exponent_match_result)
+        {
             let Some(mut results) = self
                 .verify_builtin_rule_premises(&[exponent_in_n_pos, base_nonzero], builtin_state)?
             else {
@@ -437,8 +458,8 @@ impl Runtime {
         let inverse: AtomicFact =
             EqualFact::new_from_refs(pow.base.as_ref(), &root_power, line_file.clone()).into();
         let inverse_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&inverse, builtin_state)?;
-        let results = if inverse_result.is_success() {
+            self.try_verify_atomic_fact_as_builtin_rule_premise(&inverse, builtin_state)?;
+        let results = if let Some(inverse_result) = inverse_result {
             let Some(mut results) = self.verify_builtin_rule_premises(
                 &[degree_in_n_pos, root_nonnegative],
                 builtin_state,

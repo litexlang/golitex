@@ -76,8 +76,8 @@ impl Runtime {
             let premise: AtomicFact =
                 SubsetFact::new(subset, container, equal_fact.line_file.clone()).into();
             let result =
-                self.verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
-            if result.is_success() {
+                self.try_verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
+            if let Some(result) = result {
                 return Ok(Some(Self::set_equality_success_with_subgoals(
                     equal_fact,
                     "union_absorption_from_subset",
@@ -163,8 +163,8 @@ impl Runtime {
             let premise: AtomicFact =
                 SubsetFact::new(subset, removed, equal_fact.line_file.clone()).into();
             let result =
-                self.verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
-            if result.is_success() {
+                self.try_verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
+            if let Some(result) = result {
                 return Ok(Some(Self::set_equality_success_with_subgoals(
                     equal_fact,
                     "intersect_set_minus_disjoint_from_subset",
@@ -273,8 +273,8 @@ impl Runtime {
             let subset_fact: AtomicFact =
                 SubsetFact::new(subset, container, line_file.clone()).into();
             let subset_result =
-                self.verify_atomic_fact_as_builtin_rule_premise(&subset_fact, builtin_state)?;
-            if subset_result.is_success() {
+                self.try_verify_atomic_fact_as_builtin_rule_premise(&subset_fact, builtin_state)?;
+            if let Some(subset_result) = subset_result {
                 return Ok(Some(Self::set_equality_success_with_subgoals(
                     equal_fact,
                     "set_minus_recovers_subset_from_relative_complement",

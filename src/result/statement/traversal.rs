@@ -46,35 +46,23 @@ impl ResultChildVisitor<'_> {
 }
 
 trait ResultTraversalChildMut {
-    fn try_visit_with<E>(
-        &mut self,
-        visitor: &mut ResultChildMutVisitor<'_, E>,
-    ) -> Result<(), E>;
+    fn try_visit_with<E>(&mut self, visitor: &mut ResultChildMutVisitor<'_, E>) -> Result<(), E>;
 }
 
 impl ResultTraversalChildMut for StmtResult {
-    fn try_visit_with<E>(
-        &mut self,
-        visitor: &mut ResultChildMutVisitor<'_, E>,
-    ) -> Result<(), E> {
+    fn try_visit_with<E>(&mut self, visitor: &mut ResultChildMutVisitor<'_, E>) -> Result<(), E> {
         (visitor.statement)(self)
     }
 }
 
 impl ResultTraversalChildMut for VerifyFactResult {
-    fn try_visit_with<E>(
-        &mut self,
-        visitor: &mut ResultChildMutVisitor<'_, E>,
-    ) -> Result<(), E> {
+    fn try_visit_with<E>(&mut self, visitor: &mut ResultChildMutVisitor<'_, E>) -> Result<(), E> {
         (visitor.verification)(self)
     }
 }
 
 impl ResultTraversalChildMut for ExistentialEliminationSourceResult {
-    fn try_visit_with<E>(
-        &mut self,
-        visitor: &mut ResultChildMutVisitor<'_, E>,
-    ) -> Result<(), E> {
+    fn try_visit_with<E>(&mut self, visitor: &mut ResultChildMutVisitor<'_, E>) -> Result<(), E> {
         match self {
             Self::Fact(result) => visitor.visit(result),
             Self::TheoremApplication(result) => visitor.visit(result),
@@ -83,10 +71,7 @@ impl ResultTraversalChildMut for ExistentialEliminationSourceResult {
 }
 
 impl<T: ResultTraversalChildMut + ?Sized> ResultTraversalChildMut for Box<T> {
-    fn try_visit_with<E>(
-        &mut self,
-        visitor: &mut ResultChildMutVisitor<'_, E>,
-    ) -> Result<(), E> {
+    fn try_visit_with<E>(&mut self, visitor: &mut ResultChildMutVisitor<'_, E>) -> Result<(), E> {
         self.as_mut().try_visit_with(visitor)
     }
 }
@@ -97,10 +82,7 @@ struct ResultChildMutVisitor<'a, E> {
 }
 
 impl<E> ResultChildMutVisitor<'_, E> {
-    fn visit<T: ResultTraversalChildMut + ?Sized>(
-        &mut self,
-        child: &mut T,
-    ) -> Result<(), E> {
+    fn visit<T: ResultTraversalChildMut + ?Sized>(&mut self, child: &mut T) -> Result<(), E> {
         child.try_visit_with(self)
     }
 }
@@ -147,10 +129,7 @@ impl SuccessStmtResult {
 
     /// Visits verifier-generated fact-process children without treating them
     /// as executed statements.
-    pub fn visit_fact_verification_children(
-        &self,
-        visitor: &mut impl FnMut(&VerifyFactResult),
-    ) {
+    pub fn visit_fact_verification_children(&self, visitor: &mut impl FnMut(&VerifyFactResult)) {
         let mut ignore_statement = |_: &StmtResult| {};
         let mut visitor = ResultChildVisitor {
             statement: &mut ignore_statement,
@@ -520,7 +499,8 @@ impl SuccessByStmtResult {
                             }
                             SuccessVerifyByCaseBranchExitResult::Contradiction(result) => {
                                 visitor.visit(&mut result.contradiction.impossible_check)?;
-                                visitor.visit(&mut result.contradiction.negated_impossible_check)?;
+                                visitor
+                                    .visit(&mut result.contradiction.negated_impossible_check)?;
                             }
                         }
                     }
@@ -969,12 +949,6 @@ fn into_induc_children(
     children
 }
 
-fn into_structured_integer_induc_case_children(
-    result: SuccessVerifyByStructuredIntegerInducCaseResult,
-) -> Vec<StmtResult> {
-    result.proof_steps
-}
-
 fn into_induc_case_children(result: SuccessVerifyByInducCaseResult) -> Vec<StmtResult> {
     result.proof_steps
 }
@@ -1047,9 +1021,7 @@ impl SuccessWitnessStmtResult {
                 .unwrap_or_default(),
             Self::WitnessAtomicFact(result) => result
                 .verification
-                .map(|verification| {
-                    into_witness_exist_children(verification.witness_verification)
-                })
+                .map(|verification| into_witness_exist_children(verification.witness_verification))
                 .unwrap_or_default(),
             Self::WitnessNonemptySet(result) => result
                 .verification
@@ -1103,9 +1075,7 @@ fn into_witness_exist_children(verification: SuccessVerifyWitnessExistResult) ->
 impl SuccessProofBlockStmtResult {
     fn into_child_results(self) -> Vec<StmtResult> {
         match self {
-            Self::ClaimStmt(result) => {
-                result.proof_steps
-            }
+            Self::ClaimStmt(result) => result.proof_steps,
             Self::ExampleStmt(result) => claim_child_results(result.verification),
             Self::SketchStmt(result) => result
                 .proof
@@ -1546,15 +1516,11 @@ impl SuccessDefinitionStmtResult {
             Self::DefTemplateStmt(result) => vec![(*result.body_statement_result).into()],
             Self::DefThmStmt(result) => result
                 .verification
-                .map(|verification| {
-                    verification.proof_steps
-                })
+                .map(|verification| verification.proof_steps)
                 .unwrap_or_default(),
             Self::DefStrategyStmt(result) => result
                 .verification
-                .map(|verification| {
-                    verification.proof_steps
-                })
+                .map(|verification| verification.proof_steps)
                 .unwrap_or_default(),
             Self::DefAlgoStmt(result) => {
                 let _ = result;
@@ -1660,21 +1626,6 @@ fn try_visit_have_fn_by_induc_case_list_children_mut<E>(
         }
     }
     Ok(())
-}
-
-fn into_have_fn_by_induc_children(
-    verification: SuccessVerifyHaveFnByInducResult,
-) -> Vec<StmtResult> {
-    let _ = verification;
-    Vec::new()
-}
-
-fn into_have_fn_by_induc_case_list_children(
-    cases: SuccessVerifyHaveFnByInducCaseListResult,
-    children: &mut Vec<StmtResult>,
-) {
-    let _ = cases;
-    let _ = children;
 }
 
 fn visit_tuple_or_cart_children(

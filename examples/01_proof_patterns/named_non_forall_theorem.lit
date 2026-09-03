@@ -51,5 +51,5 @@ obtain zero from thm zero_exists
 #
 # Boundary: `one_is_one()` remains invalid, root forall calls still require
 # parentheses, and `forall ... <=>:` remains invalid as a theorem goal.
-# Evidence: target/release/litex -isolated -f
+# Evidence: the published-examples gate checks this file in isolation.
 # examples/01_proof_patterns/named_non_forall_theorem.lit

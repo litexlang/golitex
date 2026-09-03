@@ -4,14 +4,14 @@ use crate::verification::verify_equality_by_builtin_rules::{
 };
 
 impl Runtime {
-    pub fn verify_known_equality_fact(
+    pub fn try_verify_known_equality_fact_candidate(
         &mut self,
         equal_fact: &EqualFact,
         verify_state: &VerifyState,
-    ) -> Result<VerifyFactResult, RuntimeError> {
+    ) -> Result<Option<VerifyFactResult>, RuntimeError> {
         let proof = self.verify_equal_fact_by_known_equality(equal_fact);
         let atomic: AtomicFact = equal_fact.clone().into();
-        self.complete_atomic_fact_proof_result(&atomic, proof, verify_state)
+        self.complete_proven_fact_candidate(atomic.into(), proof, verify_state)
     }
 
     /// Collect the exact non-reflexive leaves needed to replay addition
@@ -673,13 +673,13 @@ impl Runtime {
         }
     }
 
-    pub fn verify_equal_fact_as_builtin_premise(
+    pub fn try_verify_equal_fact_as_builtin_premise(
         &mut self,
         equal_fact: &EqualFact,
         builtin_state: &BuiltinRuleSearchState,
-    ) -> Result<VerifyFactResult, RuntimeError> {
+    ) -> Result<Option<VerifyFactResult>, RuntimeError> {
         let fact: AtomicFact = equal_fact.clone().into();
-        self.verify_atomic_fact_as_builtin_rule_premise(&fact, builtin_state)
+        self.try_verify_atomic_fact_as_builtin_rule_premise(&fact, builtin_state)
     }
 }
 

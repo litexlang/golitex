@@ -4,7 +4,7 @@ use crate::prelude::*;
 use std::result::Result;
 
 impl Runtime {
-    pub(crate) fn prove_not_forall_fact(
+    pub(in crate::verification) fn prove_not_forall_fact(
         &mut self,
         not_forall: &NotForallFact,
         _verify_state: &VerifyState,

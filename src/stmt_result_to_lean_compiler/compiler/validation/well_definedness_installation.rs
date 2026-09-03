@@ -105,87 +105,63 @@ pub(in super::super) fn install_object_well_definedness_store_results_for_source
         )?;
     }
     if let Some(binder) = direct.steps.binder.as_deref() {
-        install_object_binder_well_definedness_store_results(
-            binder,
-            environment_stack,
-            visited,
-        )?;
+        install_object_binder_well_definedness_store_results(binder, environment_stack, visited)?;
     }
     for store in &direct.steps.stores {
-                let result_set = direct.intrinsic_result_set.as_ref().ok_or_else(|| {
-                    format!(
-                        "object WD stored `{}` without an intrinsic result set",
-                        store.fact
-                    )
-                })?;
-                let expected: Fact = InFact::new(
-                    direct.object.clone(),
-                    result_set.clone(),
-                    store.fact.line_file(),
-                )
-                .into();
-                if store.fact.to_string() != expected.to_string() {
-                    return Err(format!(
-                        "object WD store changed intrinsic membership `{expected}` to `{}`",
-                        store.fact
-                    ));
-                }
-                let fact_id = store.fact_id.ok_or_else(|| {
-                    format!("object WD intrinsic-result store `{expected}` has no FactId")
-                })?;
-                let matching_source_outputs = store
-                    .infers
-                    .store_fact_outputs
-                    .iter()
-                    .filter(|output| {
-                        output.fact_id == Some(fact_id)
-                            && output.itself_and_why_itself_is_stored.0.to_string()
-                                == expected.to_string()
-                    })
-                    .count();
-                if matching_source_outputs != 1 {
-                    return Err(format!(
-                        "object WD intrinsic-result store `{expected}` lost its exact source store output"
-                    ));
-                }
-                // Multi-layer application checking synthesizes prefix nodes
-                // such as `g(a)` underneath the parser-owned occurrence
-                // `g(a)(b)`. Their store Results and FactIds remain validated
-                // above, but they are local construction evidence rather than
-                // independently citable source expressions. The enclosing
-                // application renderer consumes the exact FunctionPrefix edge
-                // and constructs this membership with `Litex.In.own`; do not
-                // invent a parser occurrence merely to publish a duplicate
-                // compiler binding for the synthetic prefix.
-                if matches!(source_object, Obj::FnObj(application) if application.source_occurrence_id.is_none())
-                {
-                    continue;
-                }
-                let rendered_object = render_obj(source_object, environment_stack)?;
-                let rendered_set = render_obj(result_set, environment_stack)?;
-                let proof = format!("Litex.In.own {rendered_set} {rendered_object}");
-                if let Some(existing) = environment_stack.fact_propositions.get(&fact_id) {
-                    if existing.to_string() != expected.to_string()
-                        && !membership_facts_are_equal_up_to_nested_binder_alpha(
-                            existing, &expected,
-                        )
-                    {
-                        return Err(format!(
-                            "object WD FactId `{fact_id}` changed from `{existing}` to `{expected}`"
-                        ));
-                    }
-                }
-                environment_stack.fact_names.insert(fact_id, proof);
-                environment_stack
-                    .fact_propositions
-                    .insert(fact_id, expected);
+        let result_set = direct.intrinsic_result_set.as_ref().ok_or_else(|| {
+            format!(
+                "object WD stored `{}` without an intrinsic result set",
+                store.fact
+            )
+        })?;
+        let expected: Fact = InFact::new(
+            direct.object.clone(),
+            result_set.clone(),
+            store.fact.line_file(),
+        )
+        .into();
+        if store.fact.to_string() != expected.to_string() {
+            return Err(format!(
+                "object WD store changed intrinsic membership `{expected}` to `{}`",
+                store.fact
+            ));
+        }
+        let fact_id = store.fact_id.ok_or_else(|| {
+            format!("object WD intrinsic-result store `{expected}` has no FactId")
+        })?;
+        let matching_source_outputs = store
+            .infers
+            .store_fact_outputs
+            .iter()
+            .filter(|output| {
+                output.fact_id == Some(fact_id)
+                    && output.itself_and_why_itself_is_stored.0.to_string() == expected.to_string()
+            })
+            .count();
+        if matching_source_outputs != 1 {
+            return Err(format!(
+                "object WD intrinsic-result store `{expected}` lost its exact source store output"
+            ));
+        }
+        let rendered_object = render_obj(source_object, environment_stack)?;
+        let rendered_set = render_obj(result_set, environment_stack)?;
+        let proof = format!("Litex.In.own {rendered_set} {rendered_object}");
+        if let Some(existing) = environment_stack.fact_propositions.get(&fact_id) {
+            if existing.to_string() != expected.to_string()
+                && !membership_facts_are_equal_up_to_nested_binder_alpha(existing, &expected)
+            {
+                return Err(format!(
+                    "object WD FactId `{fact_id}` changed from `{existing}` to `{expected}`"
+                ));
+            }
+        }
+        environment_stack.fact_names.insert(fact_id, proof);
+        environment_stack
+            .fact_propositions
+            .insert(fact_id, expected);
     }
     if let Some(instantiation) = direct.steps.template_instantiation.as_deref() {
-        install_template_instantiation_result(
-            &direct.object,
-            instantiation,
-            environment_stack,
-        )?;
+        install_template_instantiation_result(&direct.object, instantiation, environment_stack)?;
     }
     Ok(())
 }
@@ -417,60 +393,4 @@ pub(in super::super) fn install_object_binder_well_definedness_store_results(
         }
     }
     Ok(())
-}
-
-pub(in super::super) fn object_well_definedness_result_contains_intrinsic_store(
-    result: &SuccessVerifyObjWellDefinedResult,
-) -> bool {
-    match result {
-        SuccessVerifyObjWellDefinedResult::Direct(direct) => {
-            direct.steps.template_instantiation.is_some()
-                || !direct.steps.stores.is_empty()
-                || direct.steps.children.iter().any(|child| {
-                    object_well_definedness_result_contains_intrinsic_store(child.result.as_ref())
-                })
-        }
-        SuccessVerifyObjWellDefinedResult::Reuse(reuse) => {
-            reuse.source.steps.template_instantiation.is_some()
-                || !reuse.source.steps.stores.is_empty()
-                || reuse.source.steps.children.iter().any(|child| {
-                    object_well_definedness_result_contains_intrinsic_store(child.result.as_ref())
-                })
-        }
-    }
-}
-
-/// Whether this fact-WD layer owns an intrinsic object store in the current
-/// lexical environment. Binder bodies are deliberately excluded: their
-/// stores become visible only inside the corresponding forall/existential
-/// frame, whereas conjunction, disjunction, comparison-chain, and negation
-/// children share their parent's statement scope.
-pub(in super::super) fn fact_well_definedness_result_contains_outer_intrinsic_store(
-    result: &SuccessVerifyFactWellDefinedProofResult,
-) -> bool {
-    match result {
-        SuccessVerifyFactWellDefinedProofResult::AtomicFact(atomic) => {
-            atomic.arguments.iter().any(|argument| {
-                object_well_definedness_result_contains_intrinsic_store(argument.result.as_ref())
-            })
-        }
-        SuccessVerifyFactWellDefinedProofResult::AndFact(and) => and
-            .conjuncts
-            .iter()
-            .any(fact_well_definedness_result_contains_outer_intrinsic_store),
-        SuccessVerifyFactWellDefinedProofResult::ChainFact(chain) => chain
-            .comparisons
-            .iter()
-            .any(fact_well_definedness_result_contains_outer_intrinsic_store),
-        SuccessVerifyFactWellDefinedProofResult::OrFact(or) => or
-            .branches
-            .iter()
-            .any(fact_well_definedness_result_contains_outer_intrinsic_store),
-        SuccessVerifyFactWellDefinedProofResult::NotForallFact(not_forall) => {
-            fact_well_definedness_result_contains_outer_intrinsic_store(&not_forall.inner)
-        }
-        SuccessVerifyFactWellDefinedProofResult::ExistFact(_)
-        | SuccessVerifyFactWellDefinedProofResult::ForallFact(_)
-        | SuccessVerifyFactWellDefinedProofResult::ForallFactWithIff(_) => false,
-    }
 }

@@ -115,6 +115,56 @@ pub(in super::super) fn render_integer_obj(
     }
 }
 
+/// Render a source object in the exact real carrier selected by a checked
+/// `R` membership. This is used only where the target function can receive an
+/// exact carrier argument, so no heterogeneous `In.rep` choice is introduced.
+pub(in super::super) fn render_real_obj(
+    obj: &Obj,
+    context: &StmtResultToLeanCompilerEnvironmentStack,
+) -> Result<String, String> {
+    if let Ok(LeanTargetObjectRepresentation::Symbol { symbol_id, .. }) =
+        LeanTargetObjectRepresentation::lower(obj)
+    {
+        if let Some(real) = context.numeric_real_values.get(&symbol_id) {
+            return Ok(real.clone());
+        }
+    }
+    if let Obj::Atom(atom) = obj {
+        if let Some(real) = atom
+            .symbol_ref()
+            .and_then(|symbol| context.numeric_real_values.get(&symbol.id()))
+        {
+            return Ok(real.clone());
+        }
+    }
+    match obj {
+        Obj::Number(number) => Ok(format!("({} : ℝ)", number.normalized_value)),
+        Obj::Add(operation) => Ok(format!(
+            "({} + {})",
+            render_real_obj(operation.left.as_ref(), context)?,
+            render_real_obj(operation.right.as_ref(), context)?
+        )),
+        Obj::Sub(operation) => Ok(format!(
+            "({} - {})",
+            render_real_obj(operation.left.as_ref(), context)?,
+            render_real_obj(operation.right.as_ref(), context)?
+        )),
+        Obj::Mul(operation) => Ok(format!(
+            "({} * {})",
+            render_real_obj(operation.left.as_ref(), context)?,
+            render_real_obj(operation.right.as_ref(), context)?
+        )),
+        Obj::Div(operation) => Ok(format!(
+            "({} / {})",
+            render_real_obj(operation.left.as_ref(), context)?,
+            render_real_obj(operation.right.as_ref(), context)?
+        )),
+        _ => Err(format!(
+            "real-only compiler argument has no exact visible real representation for `{obj}`"
+        )),
+    }
+}
+
 /// Render a source object in the exact rational view selected by visible
 /// membership evidence. The rational-power verifier independently retains the
 /// integer exponent premise; this helper never guesses a coercion from the
