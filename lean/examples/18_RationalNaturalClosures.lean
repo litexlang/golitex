@@ -30,7 +30,7 @@ theorem __fact2 :
   exact __prior2_0
 
 theorem __fact3 :
-    ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.Q) {__carrier2 : Type} (__p2 : __carrier2) (__type2 : Litex.In __p2 Litex.Q) (__domain1 : ¬ Litex.Same __p2 (0 : ℂ)), Litex.In ((((Litex.In.rep __p1 __type1 : ℚ)) : ℂ) / (((Litex.In.rep __p2 __type2 : ℚ)) : ℂ)) Litex.Q := by
+    ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.Q) {__carrier2 : Type} (__p2 : __carrier2) (__type2 : Litex.In __p2 Litex.Q) (__domain1 : ¬ @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) __p2 (0 : ℂ)), Litex.In ((((Litex.In.rep __p1 __type1 : ℚ)) : ℂ) / (((Litex.In.rep __p2 __type2 : ℚ)) : ℂ)) Litex.Q := by
   intro __carrier1 a __h26 __carrier2 b __h27 __domain_f28
   have __prior3_0 : Litex.In ((((Litex.In.rep a __h26 : ℚ)) : ℂ) / (((Litex.In.rep b __h27 : ℚ)) : ℂ)) Litex.Q := (by
     have __components : (Litex.In a Litex.Q) ∧ (Litex.In b Litex.Q) := ⟨__h26, __h27⟩
@@ -66,7 +66,7 @@ theorem __fact5 :
   exact __prior5_0
 
 theorem __fact6 :
-    ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.Q) (__p2 : ℤ) (__domain1 : ¬ Litex.Same __p1 (0 : ℂ)), Litex.In (((Litex.In.rep __p1 __type1 : ℚ) ^ __p2 : ℚ) : ℂ) Litex.Q := by
+    ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.Q) (__p2 : ℤ) (__domain1 : ¬ @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) __p1 (0 : ℂ)), Litex.In (((Litex.In.rep __p1 __type1 : ℚ) ^ __p2 : ℚ) : ℂ) Litex.Q := by
   intro __carrier1 a __h73 z __domain_f75
   have __prior6_0 : Litex.In (((Litex.In.rep a __h73 : ℚ) ^ z : ℚ) : ℂ) Litex.Q := Litex.Rules.complexRatInQ ((Litex.In.rep a __h73 : ℚ) ^ z)
   exact __prior6_0

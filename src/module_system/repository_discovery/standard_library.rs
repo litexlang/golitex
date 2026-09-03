@@ -100,7 +100,7 @@ pub(super) fn discover_std_module_with_mount_stack(
     )?;
     if let Some(existing_module_id) = runtime
         .module_manager
-        .module_id_by_path(package_root_string.as_str())
+        .module_id_by_root_path(&RealDirectoryPath::new(package_root_string.clone()))
     {
         return Ok(existing_module_id);
     }
@@ -108,8 +108,8 @@ pub(super) fn discover_std_module_with_mount_stack(
         .module_manager
         .create_discovered_standard_module(
             module_name,
-            package_root_string,
-            config_path_string,
+            RealDirectoryPath::new(package_root_string),
+            RealFilePath::new(config_path_string),
             ProjectHierarchy::Module,
             None,
         )
@@ -150,7 +150,7 @@ pub(super) fn discover_std_single_file_module(
     )?;
     if let Some(existing_module_id) = runtime
         .module_manager
-        .module_id_by_path(source_path_string.as_str())
+        .module_id_by_root_path(&RealDirectoryPath::new(source_path_string.clone()))
     {
         return Ok(existing_module_id);
     }
@@ -158,8 +158,8 @@ pub(super) fn discover_std_single_file_module(
         .module_manager
         .create_discovered_standard_module(
             module_name,
-            source_path_string.clone(),
-            source_path_string,
+            RealDirectoryPath::new(source_path_string.clone()),
+            RealFilePath::new(source_path_string),
             ProjectHierarchy::Module,
             None,
         )

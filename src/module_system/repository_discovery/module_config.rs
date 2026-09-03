@@ -68,14 +68,14 @@ pub(super) fn discover_module_config(
             .module_manager
             .module_mut(module_id)
             .expect("manifest owner module should exist");
-        let Some(ImportTarget::File { file_id, .. }) = module.run_targets.first().copied() else {
+        let Some(ImportTarget::File { source_id, .. }) = module.run_targets.first().copied() else {
             return Err(repository_error(
                 "[module] flatten requires exactly one exported file".to_string(),
                 &config_path.to_string_lossy(),
                 module_flatten_line.unwrap_or(config.hierarchy_line),
             ));
         };
-        module.flattened_export_file = Some(file_id);
+        module.flattened_export_source = Some(source_id);
     }
     Ok(())
 }
@@ -93,7 +93,11 @@ pub(super) fn reject_active_mount_cycle(
         runtime
             .module_manager
             .module(*module_id)
-            .is_some_and(|module| module.module_root_path == child_root_path)
+            .is_some_and(|module| {
+                module
+                    .root_directory_path()
+                    .is_some_and(|path| path.to_string() == child_root_path)
+            })
     }) else {
         return Ok(());
     };

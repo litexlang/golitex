@@ -30,7 +30,7 @@ impl SourceRunOutcome {
 
 impl Runtime {
     pub fn execute_source(&mut self, source_code: &str) -> SourceRunOutcome {
-        if !self.has_active_execution_frame() {
+        if !self.has_current_source() {
             let error = ParseRuntimeError(RuntimeErrorStruct::new_with_just_msg(
                 "runtime has no active source context; initialize a file or repository before running source"
                     .to_string(),

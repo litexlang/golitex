@@ -7,9 +7,11 @@
 
 Created and maintained by Jiachen Shen.
 
-[Try Litex](https://litexlang.com) · [Website](https://litexlang.com) · [Blueprint](docs/Litex_Blueprint.md) · [中文蓝图](docs/Litex中文蓝图.md) · [Manual](docs/Manual.md) · [Install](docs/setup.md) · [Examples](examples/README.md) · [GitHub](https://github.com/litexlang/golitex) · [Zulip](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/)
 
-Litex is a set-theoretic, fact-oriented formal language that builds proof flows
+**Litex is a small, readable, fact-oriented formal language for turning**
+**mathematical reasoning into checkable, traceable data for the human–AI–Litex loop.**
+
+It is a set-theoretic, fact-oriented formal language that builds proof flows
 from the bottom up. It puts humans, AI, and the verifier in the same loop:
 humans provide mathematical intent, AI proposes or repairs the next fact, and
 Litex checks it and returns either its supporting evidence or the point where
@@ -245,7 +247,7 @@ Coverage is still partial. A statement accepted by the Litex verifier has not
 automatically passed the Lean kernel; only a route that is fully compiled and
 actually accepted by Lean gains that additional check. See the
 [ToLean implementation and coverage](lean/README.md) and the
-[Litex → Lean → Mathlib showcase](showcases/litex_to_lean_mathlib_pipeline/showcase1/README.md).
+[Litex → Lean → Mathlib showcase](showcases/Litex_to_Lean_Mathlib_Pipeline/README.md).
 
 ## Where Litex can be useful
 
@@ -271,6 +273,8 @@ language, library, verifier, diagnostic, kernel, or compiler gaps.
 [Try Litex](https://litexlang.com) ·
 [Website](https://litexlang.com) ·
 [Blueprint](docs/Litex_Blueprint.md) ·
+[Learner Cheatsheet](docs/Litex_Learner_Cheatsheet.md) ·
+[Manual](docs/Manual.md) ·
 [GitHub](https://github.com/litexlang/golitex)
 
 For a local installation, see the short [setup guide](docs/setup.md). On macOS
@@ -282,9 +286,9 @@ litex -version
 litex -e '1 = 1'
 ```
 
-Continue with the [examples](examples/README.md), the compact
-[cheat sheet](docs/cheatsheet.md), the full [manual](docs/Manual.md), or the
-[CLI reference](docs/cli.md).
+Continue with the [examples](examples/README.md), the
+[Litex Learner Cheatsheet](docs/Litex_Learner_Cheatsheet.md), the full
+[manual](docs/Manual.md), or the [CLI reference](docs/cli.md).
 
 ## About
 

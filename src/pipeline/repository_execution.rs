@@ -112,7 +112,7 @@ fn run_repository_module_with_mode(
     if module.status == ModuleStatus::Loaded {
         if matches!(module_run, RepositoryModuleRun::Complete)
             && execution_mode == ExecutionMode::RequireVerification
-            && module.execution_mode == ExecutionMode::Trusted
+            && module.load_mode == ExecutionMode::Trusted
         {
             return (
                 vec![],
@@ -143,7 +143,7 @@ fn run_repository_module_with_mode(
         .module_manager
         .module_mut(module_id)
         .expect("registered project module should exist")
-        .execution_mode = execution_mode;
+        .load_mode = execution_mode;
     let result = run_repository_module_plan(runtime, module_id, execution_mode, module_run);
     if result.1.is_some() {
         runtime.module_manager = module_manager_before;
@@ -171,21 +171,19 @@ fn run_repository_module_plan(
             )),
         );
     };
-    let source_path = module.main_file_path.clone();
-    let module_source_file = module.module_source_file;
-    if source_path.ends_with(".lit") {
-        let Some(file_id) = module_source_file else {
-            return (
-                results,
-                Some(repository_target_error(
-                    "single-file module source is not registered",
-                )),
-            );
-        };
+    let module_source = module
+        .module_source_id
+        .and_then(|source_id| module.source(source_id))
+        .and_then(|source| source.real_file_path())
+        .map(ToString::to_string);
+    if module_source.is_some() {
+        let source_id = module
+            .module_source_id
+            .expect("real module source should have an id");
         let (mut source_results, source_error) = run_repository_exported_file_target_with_mode(
             runtime,
             module_id,
-            file_id,
+            source_id,
             execution_mode,
         );
         results.append(&mut source_results);
@@ -263,10 +261,13 @@ fn run_repository_import_target(
     execution_mode: ExecutionMode,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
     match target {
-        ImportTarget::File { module_id, file_id } => run_repository_exported_file_target_with_mode(
+        ImportTarget::File {
+            module_id,
+            source_id,
+        } => run_repository_exported_file_target_with_mode(
             runtime,
             module_id,
-            file_id,
+            source_id,
             execution_mode,
         ),
         ImportTarget::Module(module_id) => {
@@ -286,10 +287,13 @@ fn repository_target_matches_import_target(
         (
             RepositoryFileTarget::File {
                 module_id: target_module,
-                file_id: target_file,
+                source_id: target_source,
             },
-            ImportTarget::File { module_id, file_id },
-        ) => target_module == module_id && target_file == file_id,
+            ImportTarget::File {
+                module_id,
+                source_id,
+            },
+        ) => target_module == module_id && target_source == source_id,
         _ => false,
     }
 }
@@ -383,13 +387,13 @@ fn project_target_execution_mode(
 fn run_repository_exported_file_target_with_mode(
     runtime: &mut Runtime,
     module_id: ModuleId,
-    file_id: FileId,
+    source_id: SourceId,
     execution_mode: ExecutionMode,
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
     let Some(file) = runtime
         .module_manager
         .module(module_id)
-        .and_then(|module| module.file(file_id))
+        .and_then(|module| module.source(source_id))
     else {
         return (
             vec![],
@@ -398,12 +402,15 @@ fn run_repository_exported_file_target_with_mode(
             )),
         );
     };
-    let source_path = file.source_path.clone();
-    let status = file.status;
-    if status == FileStatus::Loaded {
+    let source_path = file
+        .real_file_path()
+        .expect("a repository target must refer to a real file")
+        .to_string();
+    let status = file.load_status;
+    if status == SourceLoadStatus::Loaded {
         return (vec![], None);
     }
-    if status == FileStatus::Loading {
+    if status == SourceLoadStatus::Loading {
         return (
             vec![],
             Some(repository_target_error(
@@ -416,18 +423,19 @@ fn run_repository_exported_file_target_with_mode(
     runtime
         .module_manager
         .module_mut(module_id)
-        .and_then(|module| module.file_mut(file_id))
+        .and_then(|module| module.source_mut(source_id))
         .expect("registered project file should exist")
-        .status = FileStatus::Loading;
+        .load_status = SourceLoadStatus::Loading;
     runtime
         .module_manager
         .module_mut(module_id)
-        .and_then(|module| module.file_mut(file_id))
+        .and_then(|module| module.source_mut(source_id))
         .expect("registered project file should exist")
-        .execution_mode = execution_mode;
-    runtime.push_file_execution_frame_with_mode(module_id, file_id, execution_mode);
+        .load_mode = execution_mode;
+    let previous_source = runtime.source_activation();
+    runtime.activate_source_with_mode(module_id, source_id, execution_mode);
     let result = run_repository_source_file(runtime, source_path.as_str());
-    runtime.pop_execution_frame();
+    runtime.restore_source_activation(previous_source);
     if result.1.is_some() {
         runtime.module_manager = module_manager_before;
         return result;
@@ -435,9 +443,9 @@ fn run_repository_exported_file_target_with_mode(
     runtime
         .module_manager
         .module_mut(module_id)
-        .and_then(|module| module.file_mut(file_id))
+        .and_then(|module| module.source_mut(source_id))
         .expect("registered project file should exist")
-        .status = FileStatus::Loaded;
+        .load_status = SourceLoadStatus::Loaded;
     result
 }
 

@@ -35,7 +35,7 @@ theorem __fact2 : ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.I
   exact (__definition.2) __projection_parameter1 __projection_type1)
 
 theorem __fact3 :
-    ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In __p1 Litex.R), Litex.Same __p1 __p1 := by
+    ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In (α := (Litex.R).Carrier) __p1 Litex.R), Litex.Same __p1 __p1 := by
   intro r __h20
   have __prior3_0 : Litex.Same r r := Litex.Same.refl r
   exact __prior3_0
@@ -47,9 +47,9 @@ theorem __fact4 :
   exact __prior4_0
 
 theorem __fact5 :
-    ∀ (__p1 : (Litex.RPos).Carrier) (__type1 : Litex.In __p1 Litex.RPos), Litex.Same __p1 __p1 := by
+    ∀ (__p1 : (Litex.RPos).Carrier) (__type1 : Litex.In (α := (Litex.RPos).Carrier) __p1 Litex.RPos), Litex.Same __p1 __p1 := by
   intro epsilon __h31
-  have __infer5_0 : Litex.Lt (0 : ℂ) ((((epsilon).val : ℝ)) : ℂ) := (by simpa using (Litex.Rules.positiveRealCarrierPositive (__h31)))
+  have __infer5_0 : Litex.Lt (0 : ℂ) ((((Litex.In.rep epsilon __h31).val : ℝ)) : ℂ) := (by simpa using (Litex.Rules.positiveRealRepPositive (__h31)))
   have __prior5_0 : Litex.Same epsilon epsilon := Litex.Same.refl epsilon
   exact __prior5_0
 

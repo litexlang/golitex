@@ -68,7 +68,7 @@ theorem __fact8 :
   exact __prior8_0
 
 theorem __fact9 :
-    ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In __p1 Litex.R), Litex.In __p1 Litex.C := by
+    ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In (α := (Litex.R).Carrier) __p1 Litex.R), Litex.In __p1 Litex.C := by
   intro r __h64
   have __prior9_0 : Litex.In r Litex.C := Litex.Rules.inCOfInR (__h64)
   exact __prior9_0

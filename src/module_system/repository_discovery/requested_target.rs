@@ -24,10 +24,11 @@ pub fn discover_repository(
             config.hierarchy_line,
         ));
     }
-    let repository_root_string = path_string(&repository_root, repository_path, 0)?;
-    let config_path_string = path_string(&config_path, repository_path, 0)?;
     let root_module_id = runtime
-        .start_repository_run(repository_root_string, config_path_string.clone())
+        .start_repository_run_typed(
+            RealDirectoryPath::new(repository_root.clone()),
+            RealFilePath::new(config_path.clone()),
+        )
         .map_err(|message| repository_error(message, repository_path, 0))?;
 
     let mut mount_stack = vec![root_module_id];
@@ -50,7 +51,9 @@ pub fn discover_repository(
         .modules
         .values()
         .find(|module| {
-            module.module_root_path == requested_root_string
+            module
+                .root_directory_path()
+                .is_some_and(|path| path.to_string() == requested_root_string)
                 && runtime
                     .module_manager
                     .module_is_descendant_of(module.id, root_module_id)
@@ -116,11 +119,14 @@ pub(super) fn repository_targets_for_path(
 ) -> Vec<RepositoryFileTarget> {
     let mut targets = vec![];
     for module in runtime.module_manager.modules.values() {
-        for file in module.files.iter() {
-            if file.source_path == source_path {
+        for source in module.sources.iter() {
+            if source
+                .real_file_path()
+                .is_some_and(|path| path.to_string() == source_path)
+            {
                 targets.push(RepositoryFileTarget::File {
                     module_id: module.id,
-                    file_id: file.id,
+                    source_id: source.id,
                 });
             }
         }

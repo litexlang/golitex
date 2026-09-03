@@ -18,57 +18,47 @@ def second_right (x : (Litex.R).Carrier) : Prop :=
   (Litex.In x Litex.R) ∧ (Litex.Same x x)
 
 theorem paired_source :
-    ∀ {__carrier0_1 : Type} (x : __carrier0_1) (__h17 : Litex.In x Litex.R),
-      (((first_left (Litex.In.rep x __h17)) ∧ (first_right (Litex.In.rep x __h17)))) ∧ (((second_left (Litex.In.rep x __h17)) ∧ (second_right (Litex.In.rep x __h17)))) := by
-  intro __carrier0_1 x __h17
-  have __step1 : first_left (Litex.In.rep x __h17) := by
+    ∀ (x : (Litex.R).Carrier) (__h17 : Litex.In x Litex.R),
+      (((first_left (x : ℝ)) ∧ (first_right (x : ℝ)))) ∧ (((second_left (x : ℝ)) ∧ (second_right (x : ℝ)))) := by
+  intro x __h17
+  have __step0_0 : first_left (x : ℝ) := by
     exact (by
     unfold first_left
-    exact ⟨Litex.In.own Litex.R (Litex.In.rep x __h17), Litex.Same.refl ((Litex.In.rep x __h17))⟩)
-  have __step2 : first_right (Litex.In.rep x __h17) := by
+    exact ⟨Litex.In.own Litex.R (x : ℝ), Litex.Same.refl ((x : ℝ))⟩)
+  have __step0_1 : first_right (x : ℝ) := by
     exact (by
     unfold first_right
-    exact ⟨Litex.In.own Litex.R (Litex.In.rep x __h17), Litex.Same.refl ((Litex.In.rep x __h17))⟩)
-  have __step3 : second_left (Litex.In.rep x __h17) := by
+    exact ⟨Litex.In.own Litex.R (x : ℝ), Litex.Same.refl ((x : ℝ))⟩)
+  have __step0_2 : second_left (x : ℝ) := by
     exact (by
     unfold second_left
-    exact ⟨Litex.In.own Litex.R (Litex.In.rep x __h17), Litex.Same.refl ((Litex.In.rep x __h17))⟩)
-  have __step4 : second_right (Litex.In.rep x __h17) := by
+    exact ⟨Litex.In.own Litex.R (x : ℝ), Litex.Same.refl ((x : ℝ))⟩)
+  have __step0_3 : second_right (x : ℝ) := by
     exact (by
     unfold second_right
-    exact ⟨Litex.In.own Litex.R (Litex.In.rep x __h17), Litex.Same.refl ((Litex.In.rep x __h17))⟩)
-  have __c0_0 : (first_left (Litex.In.rep x __h17)) ∧ (first_right (Litex.In.rep x __h17)) := ⟨__step1, __step2⟩
-  have __c0_1 : (second_left (Litex.In.rep x __h17)) ∧ (second_right (Litex.In.rep x __h17)) := ⟨__step3, __step4⟩
+    exact ⟨Litex.In.own Litex.R (x : ℝ), Litex.Same.refl ((x : ℝ))⟩)
+  have __c0_0 : (first_left (x : ℝ)) ∧ (first_right (x : ℝ)) := ⟨__step0_0, __step0_1⟩
+  have __c0_1 : (second_left (x : ℝ)) ∧ (second_right (x : ℝ)) := ⟨__step0_2, __step0_3⟩
   exact ⟨__c0_0, __c0_1⟩
 
 theorem __fact1 : (first_left (2 : ℝ)) ∧ (first_right (2 : ℝ)) := by
-  exact ⟨(by
-  have __source := ((paired_source (2 : ℂ) (Litex.Rules.complexRealInR (2 : ℝ))).1).1
-  unfold first_left at __source ⊢
-  exact ⟨Litex.In.own Litex.R (2 : ℝ), Litex.Same.refl ((2 : ℝ))⟩), (by
-  have __source := ((paired_source (2 : ℂ) (Litex.Rules.complexRealInR (2 : ℝ))).1).2
-  unfold first_right at __source ⊢
-  exact ⟨Litex.In.own Litex.R (2 : ℝ), Litex.Same.refl ((2 : ℝ))⟩)⟩
+  exact (by
+  simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (paired_source (2 : ℝ) ((Litex.In.congr (Litex.Same.symm (Litex.Same.realComplex ((2 : ℝ)))) Litex.R).mp (Litex.Rules.complexRealInR (2 : ℝ)))).1)
 
 theorem __fact2 : Litex.In (2 : ℝ) Litex.R := by
   exact (by
   have __definition := (__fact1).1
   unfold first_left at __definition
-  exact __definition.1)
+  simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using __definition.1)
 
 theorem __fact3 : Litex.Same (2 : ℝ) (2 : ℝ) := by
   exact (by
   have __definition := (__fact1).1
   unfold first_left at __definition
-  exact __definition.2)
+  simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using __definition.2)
 
 theorem __fact4 : (second_left (2 : ℝ)) ∧ (second_right (2 : ℝ)) := by
-  exact ⟨(by
-  have __source := ((paired_source (2 : ℂ) ((Litex.In.congr (Litex.Same.realComplex ((2 : ℝ))) Litex.R).mp (__fact2))).2).1
-  unfold second_left at __source ⊢
-  exact ⟨Litex.In.own Litex.R (2 : ℝ), Litex.Same.refl ((2 : ℝ))⟩), (by
-  have __source := ((paired_source (2 : ℂ) ((Litex.In.congr (Litex.Same.realComplex ((2 : ℝ))) Litex.R).mp (__fact2))).2).2
-  unfold second_right at __source ⊢
-  exact ⟨Litex.In.own Litex.R (2 : ℝ), Litex.Same.refl ((2 : ℝ))⟩)⟩
+  exact (by
+  simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (paired_source (2 : ℝ) (__fact2)).2)
 
 end __Compiler_57_KnownForallFactIdProvenance

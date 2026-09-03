@@ -19,9 +19,9 @@ structure __LitexAbstractPredicate_known_forall_target where
 
 axiom known_forall_target : __LitexAbstractPredicate_known_forall_target
 
-axiom known_forall_real_source : ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In __p1 Litex.R), known_forall_target.holds __p1
+axiom known_forall_real_source : ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In (α := (Litex.R).Carrier) __p1 Litex.R), known_forall_target.holds __p1
 
 theorem __fact0 : known_forall_target.holds (2 : ℂ) := by
-  exact ((known_forall_target.respectsSame (2 : ℝ) (2 : ℂ) (Litex.Same.realComplex ((2 : ℝ)))).mp ((known_forall_real_source (2 : ℝ) (Litex.In.own Litex.R (2 : ℝ)))))
+  exact ((known_forall_target.respectsSame (2 : ℝ) (2 : ℂ) (Litex.Same.realComplex ((2 : ℝ)))).mp ((known_forall_real_source (2 : ℝ) ((Litex.In.congr (Litex.Same.symm (Litex.Same.realComplex ((2 : ℝ)))) Litex.R).mp (Litex.Rules.complexRealInR (2 : ℝ))))))
 
 end __Compiler_36_KnownForallResultComposition

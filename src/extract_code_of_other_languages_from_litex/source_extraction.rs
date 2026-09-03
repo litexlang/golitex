@@ -33,12 +33,12 @@ pub(super) fn extract_code(
 
 pub(super) fn extract_code_from_source(
     source_code: &str,
-    source_label: &str,
+    _source_label: &str,
     target: CodeExtractionTarget,
 ) -> Result<String, RuntimeError> {
     let normalized = source_code.replace('\r', "");
     let mut runtime = Runtime::default();
-    runtime.start_isolated_source(source_label);
+    runtime.start_virtual_source(VirtualSource::CodeExtraction);
     extract_code(normalized.as_str(), &mut runtime, target)
 }
 
@@ -50,7 +50,7 @@ pub(super) fn extract_code_from_file(
     let source = read_source(resolved_path.as_str())?;
     let selected_source = select_marked_source(source.as_str(), resolved_path.as_str())?;
     let mut runtime = Runtime::default();
-    runtime.start_isolated_file(resolved_path.as_str());
+    runtime.start_real_file(resolved_path.as_str());
     extract_code(selected_source.as_str(), &mut runtime, target)
 }
 
@@ -97,7 +97,7 @@ fn extract_project_prefix(
             .module(module_id)
             .expect("discovered module should exist");
         (
-            module.main_file_path.clone(),
+            module.main_source_label(),
             module.config_imports.clone(),
             module.run_targets.clone(),
         )
@@ -190,19 +190,26 @@ fn extract_project_target(
             }
             output
         }
-        RepositoryFileTarget::File { module_id, file_id } => {
+        RepositoryFileTarget::File {
+            module_id,
+            source_id,
+        } => {
             let (source_path, status) = {
-                let file = runtime
+                let source = runtime
                     .module_manager
                     .module(module_id)
-                    .and_then(|module| module.file(file_id))
+                    .and_then(|module| module.source(source_id))
                     .expect("registered project file should exist");
-                (file.source_path.clone(), file.status)
+                let source_path = source
+                    .real_file_path()
+                    .expect("a repository file target must have a real path")
+                    .to_string();
+                (source_path, source.load_status)
             };
-            if status == FileStatus::Loaded {
+            if status == SourceLoadStatus::Loaded {
                 return Ok(String::new());
             }
-            if status == FileStatus::Loading {
+            if status == SourceLoadStatus::Loading {
                 return Err(file_error(
                     source_path.as_str(),
                     format!("cyclic project entry while extracting {}", target.name()),
@@ -211,22 +218,23 @@ fn extract_project_target(
             runtime
                 .module_manager
                 .module_mut(module_id)
-                .and_then(|module| module.file_mut(file_id))
+                .and_then(|module| module.source_mut(source_id))
                 .expect("registered project file should exist")
-                .status = FileStatus::Loading;
-            runtime.push_file_execution_frame(module_id, file_id);
+                .load_status = SourceLoadStatus::Loading;
+            let previous_source = runtime.source_activation();
+            runtime.activate_source_for_execution(module_id, source_id);
             let output = read_source(source_path.as_str())
                 .and_then(|source| extract_code(source.as_str(), runtime, target));
-            runtime.pop_execution_frame();
+            runtime.restore_source_activation(previous_source);
             runtime
                 .module_manager
                 .module_mut(module_id)
-                .and_then(|module| module.file_mut(file_id))
+                .and_then(|module| module.source_mut(source_id))
                 .expect("registered project file should exist")
-                .status = if output.is_ok() {
-                FileStatus::Loaded
+                .load_status = if output.is_ok() {
+                SourceLoadStatus::Loaded
             } else {
-                FileStatus::Unloaded
+                SourceLoadStatus::Unloaded
             };
             output
         }
@@ -257,10 +265,13 @@ fn repository_target_matches(target: RepositoryFileTarget, import_target: Import
         (
             RepositoryFileTarget::File {
                 module_id: target_module,
-                file_id: target_file,
+                source_id: target_source,
             },
-            ImportTarget::File { module_id, file_id },
-        ) => target_module == module_id && target_file == file_id,
+            ImportTarget::File {
+                module_id,
+                source_id,
+            },
+        ) => target_module == module_id && target_source == source_id,
         _ => false,
     }
 }
@@ -268,9 +279,13 @@ fn repository_target_matches(target: RepositoryFileTarget, import_target: Import
 fn repository_file_target(target: ImportTarget) -> RepositoryFileTarget {
     match target {
         ImportTarget::Module(module_id) => RepositoryFileTarget::Module(module_id),
-        ImportTarget::File { module_id, file_id } => {
-            RepositoryFileTarget::File { module_id, file_id }
-        }
+        ImportTarget::File {
+            module_id,
+            source_id,
+        } => RepositoryFileTarget::File {
+            module_id,
+            source_id,
+        },
     }
 }
 

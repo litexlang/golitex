@@ -6,10 +6,10 @@
 //! `Runtime::execute_source` executes inside an explicit source context:
 //!
 //! ```
-//! use litex::api::Runtime;
+//! use litex::api::{Runtime, VirtualSource};
 //!
 //! let mut runtime = Runtime::default();
-//! runtime.start_isolated_source("embedded.lit");
+//! runtime.start_virtual_source(VirtualSource::Eval);
 //! let (results, error) = runtime.execute_source("1 = 1").into_parts();
 //! assert!(error.is_none());
 //! assert_eq!(results.len(), 1);
@@ -17,11 +17,15 @@
 
 // Core execution model and result types.
 pub use crate::error::RuntimeError;
+pub use crate::module_system::{
+    RealDirectoryPath, RealFilePath, Source, SourceId, SourceLoadStatus, SourcePath, VirtualSource,
+};
 pub use crate::output::language::OutputLanguage;
 pub use crate::result::StmtResult;
 #[allow(deprecated)]
 pub use crate::runtime::{
-    ExecutionOption, OutputDetail, OutputStyle, RunOption, RunOptions, Runtime, SummaryOption,
+    ExecutionOption, OutputDetail, OutputStyle, RunOption, RunOptions, Runtime, SourceActivation,
+    SummaryOption,
 };
 
 // Source, file, and repository execution entry points.

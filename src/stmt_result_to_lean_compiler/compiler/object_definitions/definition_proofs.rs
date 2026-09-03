@@ -387,7 +387,7 @@ impl StmtResultToLeanCompiler {
             .typed_parameters
             .param_defs_and_args_to_param_to_arg_map(target_predicate.body.as_slice());
         let mut substitution_runtime = Runtime::default();
-        substitution_runtime.ensure_execution_frame_for_parse();
+        substitution_runtime.ensure_current_source_for_parse();
         for (clause_index, (source_clause, retained_clause)) in definition
             .iff_facts
             .iter()

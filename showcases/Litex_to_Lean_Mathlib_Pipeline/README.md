@@ -5,29 +5,45 @@
 
 ## Why this showcase exists
 
-A new formal language can appear to face a choice: remain readable and easy to
-author, or adopt the representations and interfaces of a mature proof
-assistant. This repository tests a layered alternative. Litex owns the compact,
-fact-oriented mathematical construction; the compiler owns explicit proof
-replay; a shallow handwritten adapter owns the representation boundary; and
-Lean/Mathlib owns the native public theorem and final kernel check.
+A formalization workflow can now be organized around two different authorship
+choices:
 
-The distinctive Litex idea is **separation without isolation**. Litex can keep
-an authoring interface close to ordinary mathematical argument while exporting
-supported results into an ecosystem with a mature library and kernel. The
-boundary remains visible: generated code is not handwritten mathematics, the
-Adapter is not compiler output, and the final theorem contains no Litex
-vocabulary. Each layer has one owner, so interoperability does not require
-pretending that the two languages use the same representation.
+| Lean-first workflow | Litex-assisted workflow |
+| --- | --- |
+| Write the mathematical statement, definitions, proof, and representation plumbing in Lean. | Write the main mathematical construction in Litex, then add a thin semantic Adapter and consume the result as native Lean. |
 
+For Lean workers, this changes the default loop: Lean remains the final
+language and kernel, but the bulk of a supported mathematical construction can
+be authored first in Litex. The Adapter is not a second proof; it translates
+the checked representation at the boundary so the final theorem can use
+ordinary Lean/Mathlib objects.
+
+For non-Lean workers, the shift can be larger. They can work in a compact,
+fact-oriented language that stays close to mathematical argument, while a
+small, explicit Adapter handles the Lean-specific representation details. For
+supported proof shapes, this can make the mathematics easier to read, write,
+and reuse than authoring the entire development in Lean. The claim is a
+workflow hypothesis with a concrete supported example, not a promise that all
+Lean proofs or all Litex objects become easier.
+
+The Adapter is not necessary for the Litex proof itself; it is an
+interoperability layer for the Lean handoff. A checked Litex development can
+remain entirely in Litex, while a thin Adapter becomes valuable when its result
+needs to enter Lean/Mathlib as an ordinary theorem that can use their native
+library and kernel.
+
+That is the distinctive Litex idea here: **a readable authoring layer can
+cooperate with a mature checking ecosystem without becoming isolated from it**.
 The example proves in Litex that the first `n` positive odd integers sum to
 `n²`, compiles that proof, and then uses it to prove a native Lean theorem that
-the first 100 sum to 10000. It is one complete supported vertical slice—not a
-claim that every Litex object or proof already has a Lean/Mathlib translation.
+the first 100 sum to 10000.
 
 ```text
 main.lit  ->  Generated.lean  ->  Adapter.lean  ->  Final.lean
 ```
+
+This is one complete supported vertical slice—not a claim that every Litex
+object or proof already has a Lean/Mathlib translation.
 
 ## Why the Adapter is necessary
 

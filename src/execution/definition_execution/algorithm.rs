@@ -6,7 +6,7 @@ impl Runtime {
         &mut self,
         def_algo_stmt: &DefAlgoStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        if self.current_execution_is_trusted_file() {
+        if self.current_execution_is_trusted_source() {
             self.store_def_algo(def_algo_stmt)?;
             return Ok(
                 SuccessStmtResult::Definition(SuccessDefinitionStmtResult::DefAlgoStmt(Box::new(

@@ -100,8 +100,12 @@ fn runner_accepts_trust_have_as_normal_execution() {
 fn zh_runner_keeps_machine_wrapper_keys_and_localizes_trace() {
     let (ok, output) = run_runner_for_test(
         "trust 1 = 1",
-        RunOptions::execute(ExecutionOption::Eval)
-            .with_output_language(OutputLanguage::SimplifiedChinese),
+        RunOptions::new(
+            RunOption::Execute(ExecutionOption::Eval),
+            OutputDetail::Normal,
+            OutputLanguage::SimplifiedChinese,
+            SummaryOption::None,
+        ),
     );
 
     assert!(ok, "Chinese runner should succeed:\n{}", output);
@@ -130,7 +134,12 @@ fn non_english_runner_keeps_machine_wrapper_keys() {
     ] {
         let (ok, output) = run_runner_for_test(
             "trust 1 = 1",
-            RunOptions::execute(ExecutionOption::Eval).with_output_language(language),
+            RunOptions::new(
+                RunOption::Execute(ExecutionOption::Eval),
+                OutputDetail::Normal,
+                language,
+                SummaryOption::None,
+            ),
         );
 
         assert!(ok, "localized runner should succeed:\n{}", output);

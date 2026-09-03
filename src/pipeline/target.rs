@@ -43,11 +43,18 @@ impl RunTarget {
         }
     }
 
-    pub fn source_label(&self) -> &str {
+    /// Human-readable label for diagnostics. This is not a filesystem path.
+    pub fn display_label(&self) -> &str {
         match self {
             Self::Eval => "eval",
             Self::File { path } | Self::IsolatedFile { path } | Self::Repository { path } => path,
         }
+    }
+
+    /// Compatibility name for callers that still use the old label wording.
+    #[deprecated(note = "use display_label; this value is not necessarily a path")]
+    pub fn source_label(&self) -> &str {
+        self.display_label()
     }
 }
 
@@ -67,11 +74,30 @@ pub enum ExecutionTarget {
 }
 
 impl ExecutionTarget {
-    pub fn source_label(&self) -> &str {
+    pub fn virtual_source(&self) -> Option<VirtualSource> {
         match self {
-            Self::Run(target) => target.source_label(),
+            Self::Run(RunTarget::Eval) => Some(VirtualSource::Eval),
+            Self::Run(RunTarget::File { .. })
+            | Self::Run(RunTarget::IsolatedFile { .. })
+            | Self::Run(RunTarget::Repository { .. }) => None,
+            Self::Repl => Some(VirtualSource::Repl),
+            Self::Session(_) => Some(VirtualSource::Session),
+        }
+    }
+
+    /// Human-readable label for diagnostics. This is not a filesystem path.
+    pub fn display_label(&self) -> &str {
+        match self {
+            Self::Run(target) => target.display_label(),
             Self::Repl => "repl",
             Self::Session(_) => "session",
         }
     }
+
+    /// Compatibility name for callers that still use the old label wording.
+    #[deprecated(note = "use display_label; this value is not necessarily a path")]
+    pub fn source_label(&self) -> &str {
+        self.display_label()
+    }
 }
+use crate::module_system::VirtualSource;

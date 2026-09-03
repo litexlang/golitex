@@ -6,39 +6,39 @@ set_option linter.style.nameCheck false
 namespace __Compiler_40_RegisteredOrderResultComposition
 
 theorem __fact0 :
-    ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In __p1 Litex.R) (__p2 : (Litex.R).Carrier) (__type2 : Litex.In __p2 Litex.R) (__p3 : (Litex.R).Carrier) (__type3 : Litex.In __p3 Litex.R) (__p4 : (Litex.R).Carrier) (__type4 : Litex.In __p4 Litex.R) (__domain1 : Litex.Le (((__p1 : ℝ)) : ℂ) (((__p2 : ℝ)) : ℂ)) (__domain2 : Litex.Le (((__p3 : ℝ)) : ℂ) (((__p4 : ℝ)) : ℂ)), Litex.Le ((((__p1 : ℝ)) : ℂ) + (((__p3 : ℝ)) : ℂ)) ((((__p2 : ℝ)) : ℂ) + (((__p4 : ℝ)) : ℂ)) := by
+    ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In (α := (Litex.R).Carrier) __p1 Litex.R) (__p2 : (Litex.R).Carrier) (__type2 : Litex.In (α := (Litex.R).Carrier) __p2 Litex.R) (__p3 : (Litex.R).Carrier) (__type3 : Litex.In (α := (Litex.R).Carrier) __p3 Litex.R) (__p4 : (Litex.R).Carrier) (__type4 : Litex.In (α := (Litex.R).Carrier) __p4 Litex.R) (__domain1 : Litex.Le ((((Litex.In.rep __p1 __type1) : ℝ)) : ℂ) ((((Litex.In.rep __p2 __type2) : ℝ)) : ℂ)) (__domain2 : Litex.Le ((((Litex.In.rep __p3 __type3) : ℝ)) : ℂ) ((((Litex.In.rep __p4 __type4) : ℝ)) : ℂ)), Litex.Le (((((Litex.In.rep __p1 __type1) : ℝ)) : ℂ) + ((((Litex.In.rep __p3 __type3) : ℝ)) : ℂ)) (((((Litex.In.rep __p2 __type2) : ℝ)) : ℂ) + ((((Litex.In.rep __p4 __type4) : ℝ)) : ℂ)) := by
   intro a __h8 b __h9 c __h10 d __h11 __domain_f12 __domain_f13
-  have __prior0_0 : Litex.Le ((((a : ℝ)) : ℂ) + (((c : ℝ)) : ℂ)) ((((b : ℝ)) : ℂ) + (((d : ℝ)) : ℂ)) := Litex.Rules.complexAddPreservesLessEqualComponentwise (__domain_f12) (__domain_f13)
+  have __prior0_0 : Litex.Le ((((Litex.In.rep a __h8 : ℝ)) : ℂ) + (((Litex.In.rep c __h10 : ℝ)) : ℂ)) ((((Litex.In.rep b __h9 : ℝ)) : ℂ) + (((Litex.In.rep d __h11 : ℝ)) : ℂ)) := Litex.Rules.complexAddPreservesLessEqualComponentwise (__domain_f12) (__domain_f13)
   exact __prior0_0
 
 theorem __fact1 :
-    ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In __p1 Litex.R) (__p2 : (Litex.R).Carrier) (__type2 : Litex.In __p2 Litex.R) (__p3 : (Litex.R).Carrier) (__type3 : Litex.In __p3 Litex.R) (__domain1 : Litex.Le (((__p2 : ℝ)) : ℂ) (((__p3 : ℝ)) : ℂ)), Litex.Le ((((__p1 : ℝ)) : ℂ) + (((__p2 : ℝ)) : ℂ)) ((((__p1 : ℝ)) : ℂ) + (((__p3 : ℝ)) : ℂ)) := by
+    ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In (α := (Litex.R).Carrier) __p1 Litex.R) (__p2 : (Litex.R).Carrier) (__type2 : Litex.In (α := (Litex.R).Carrier) __p2 Litex.R) (__p3 : (Litex.R).Carrier) (__type3 : Litex.In (α := (Litex.R).Carrier) __p3 Litex.R) (__domain1 : Litex.Le ((((Litex.In.rep __p2 __type2) : ℝ)) : ℂ) ((((Litex.In.rep __p3 __type3) : ℝ)) : ℂ)), Litex.Le (((((Litex.In.rep __p1 __type1) : ℝ)) : ℂ) + ((((Litex.In.rep __p2 __type2) : ℝ)) : ℂ)) (((((Litex.In.rep __p1 __type1) : ℝ)) : ℂ) + ((((Litex.In.rep __p3 __type3) : ℝ)) : ℂ)) := by
   intro u __h21 a __h22 b __h23 __domain_f24
-  have __prior1_0 : Litex.Le ((((u : ℝ)) : ℂ) + (((a : ℝ)) : ℂ)) ((((u : ℝ)) : ℂ) + (((b : ℝ)) : ℂ)) := Litex.Rules.complexAddPreservesLessEqualWithCommonLeft (u := u) (__domain_f24)
+  have __prior1_0 : Litex.Le ((((Litex.In.rep u __h21 : ℝ)) : ℂ) + (((Litex.In.rep a __h22 : ℝ)) : ℂ)) ((((Litex.In.rep u __h21 : ℝ)) : ℂ) + (((Litex.In.rep b __h23 : ℝ)) : ℂ)) := Litex.Rules.complexAddPreservesLessEqualWithCommonLeft (u := (((Litex.In.rep u __h21 : ℝ)) : ℂ)) (__domain_f24)
   exact __prior1_0
 
 theorem __fact2 :
-    ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In __p1 Litex.R) (__p2 : (Litex.R).Carrier) (__type2 : Litex.In __p2 Litex.R) (__p3 : (Litex.R).Carrier) (__type3 : Litex.In __p3 Litex.R) (__p4 : (Litex.R).Carrier) (__type4 : Litex.In __p4 Litex.R) (__domain1 : Litex.Lt (((__p1 : ℝ)) : ℂ) (((__p2 : ℝ)) : ℂ)) (__domain2 : Litex.Lt (((__p3 : ℝ)) : ℂ) (((__p4 : ℝ)) : ℂ)), Litex.Lt ((((__p1 : ℝ)) : ℂ) + (((__p3 : ℝ)) : ℂ)) ((((__p2 : ℝ)) : ℂ) + (((__p4 : ℝ)) : ℂ)) := by
+    ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In (α := (Litex.R).Carrier) __p1 Litex.R) (__p2 : (Litex.R).Carrier) (__type2 : Litex.In (α := (Litex.R).Carrier) __p2 Litex.R) (__p3 : (Litex.R).Carrier) (__type3 : Litex.In (α := (Litex.R).Carrier) __p3 Litex.R) (__p4 : (Litex.R).Carrier) (__type4 : Litex.In (α := (Litex.R).Carrier) __p4 Litex.R) (__domain1 : Litex.Lt ((((Litex.In.rep __p1 __type1) : ℝ)) : ℂ) ((((Litex.In.rep __p2 __type2) : ℝ)) : ℂ)) (__domain2 : Litex.Lt ((((Litex.In.rep __p3 __type3) : ℝ)) : ℂ) ((((Litex.In.rep __p4 __type4) : ℝ)) : ℂ)), Litex.Lt (((((Litex.In.rep __p1 __type1) : ℝ)) : ℂ) + ((((Litex.In.rep __p3 __type3) : ℝ)) : ℂ)) (((((Litex.In.rep __p2 __type2) : ℝ)) : ℂ) + ((((Litex.In.rep __p4 __type4) : ℝ)) : ℂ)) := by
   intro a __h34 b __h35 c __h36 d __h37 __domain_f38 __domain_f39
-  have __prior2_0 : Litex.Lt ((((a : ℝ)) : ℂ) + (((c : ℝ)) : ℂ)) ((((b : ℝ)) : ℂ) + (((d : ℝ)) : ℂ)) := Litex.Rules.complexAddPreservesLessComponentwise (__domain_f38) (__domain_f39)
+  have __prior2_0 : Litex.Lt ((((Litex.In.rep a __h34 : ℝ)) : ℂ) + (((Litex.In.rep c __h36 : ℝ)) : ℂ)) ((((Litex.In.rep b __h35 : ℝ)) : ℂ) + (((Litex.In.rep d __h37 : ℝ)) : ℂ)) := Litex.Rules.complexAddPreservesLessComponentwise (__domain_f38) (__domain_f39)
   exact __prior2_0
 
 theorem __fact3 :
-    ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In __p1 Litex.R) (__p2 : (Litex.R).Carrier) (__type2 : Litex.In __p2 Litex.R) (__p3 : (Litex.R).Carrier) (__type3 : Litex.In __p3 Litex.R) (__domain1 : Litex.Lt (((__p2 : ℝ)) : ℂ) (((__p3 : ℝ)) : ℂ)), Litex.Lt ((((__p1 : ℝ)) : ℂ) + (((__p2 : ℝ)) : ℂ)) ((((__p1 : ℝ)) : ℂ) + (((__p3 : ℝ)) : ℂ)) := by
+    ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In (α := (Litex.R).Carrier) __p1 Litex.R) (__p2 : (Litex.R).Carrier) (__type2 : Litex.In (α := (Litex.R).Carrier) __p2 Litex.R) (__p3 : (Litex.R).Carrier) (__type3 : Litex.In (α := (Litex.R).Carrier) __p3 Litex.R) (__domain1 : Litex.Lt ((((Litex.In.rep __p2 __type2) : ℝ)) : ℂ) ((((Litex.In.rep __p3 __type3) : ℝ)) : ℂ)), Litex.Lt (((((Litex.In.rep __p1 __type1) : ℝ)) : ℂ) + ((((Litex.In.rep __p2 __type2) : ℝ)) : ℂ)) (((((Litex.In.rep __p1 __type1) : ℝ)) : ℂ) + ((((Litex.In.rep __p3 __type3) : ℝ)) : ℂ)) := by
   intro u __h47 a __h48 b __h49 __domain_f50
-  have __prior3_0 : Litex.Lt ((((u : ℝ)) : ℂ) + (((a : ℝ)) : ℂ)) ((((u : ℝ)) : ℂ) + (((b : ℝ)) : ℂ)) := Litex.Rules.complexAddPreservesLessWithCommonLeft (u := u) (__domain_f50)
+  have __prior3_0 : Litex.Lt ((((Litex.In.rep u __h47 : ℝ)) : ℂ) + (((Litex.In.rep a __h48 : ℝ)) : ℂ)) ((((Litex.In.rep u __h47 : ℝ)) : ℂ) + (((Litex.In.rep b __h49 : ℝ)) : ℂ)) := Litex.Rules.complexAddPreservesLessWithCommonLeft (u := (((Litex.In.rep u __h47 : ℝ)) : ℂ)) (__domain_f50)
   exact __prior3_0
 
 theorem __fact4 :
-    ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In __p1 Litex.R) (__p2 : (Litex.R).Carrier) (__type2 : Litex.In __p2 Litex.R) (__p3 : (Litex.R).Carrier) (__type3 : Litex.In __p3 Litex.R) (__p4 : (Litex.R).Carrier) (__type4 : Litex.In __p4 Litex.R) (__domain1 : Litex.Lt (((__p1 : ℝ)) : ℂ) (((__p2 : ℝ)) : ℂ)) (__domain2 : Litex.Le (((__p3 : ℝ)) : ℂ) (((__p4 : ℝ)) : ℂ)), Litex.Lt ((((__p1 : ℝ)) : ℂ) + (((__p3 : ℝ)) : ℂ)) ((((__p2 : ℝ)) : ℂ) + (((__p4 : ℝ)) : ℂ)) := by
+    ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In (α := (Litex.R).Carrier) __p1 Litex.R) (__p2 : (Litex.R).Carrier) (__type2 : Litex.In (α := (Litex.R).Carrier) __p2 Litex.R) (__p3 : (Litex.R).Carrier) (__type3 : Litex.In (α := (Litex.R).Carrier) __p3 Litex.R) (__p4 : (Litex.R).Carrier) (__type4 : Litex.In (α := (Litex.R).Carrier) __p4 Litex.R) (__domain1 : Litex.Lt ((((Litex.In.rep __p1 __type1) : ℝ)) : ℂ) ((((Litex.In.rep __p2 __type2) : ℝ)) : ℂ)) (__domain2 : Litex.Le ((((Litex.In.rep __p3 __type3) : ℝ)) : ℂ) ((((Litex.In.rep __p4 __type4) : ℝ)) : ℂ)), Litex.Lt (((((Litex.In.rep __p1 __type1) : ℝ)) : ℂ) + ((((Litex.In.rep __p3 __type3) : ℝ)) : ℂ)) (((((Litex.In.rep __p2 __type2) : ℝ)) : ℂ) + ((((Litex.In.rep __p4 __type4) : ℝ)) : ℂ)) := by
   intro a __h60 b __h61 c __h62 d __h63 __domain_f64 __domain_f65
-  have __prior4_0 : Litex.Lt ((((a : ℝ)) : ℂ) + (((c : ℝ)) : ℂ)) ((((b : ℝ)) : ℂ) + (((d : ℝ)) : ℂ)) := Litex.Rules.complexAddPreservesLessOfLessAndLessEqual (__domain_f64) (__domain_f65)
+  have __prior4_0 : Litex.Lt ((((Litex.In.rep a __h60 : ℝ)) : ℂ) + (((Litex.In.rep c __h62 : ℝ)) : ℂ)) ((((Litex.In.rep b __h61 : ℝ)) : ℂ) + (((Litex.In.rep d __h63 : ℝ)) : ℂ)) := Litex.Rules.complexAddPreservesLessOfLessAndLessEqual (__domain_f64) (__domain_f65)
   exact __prior4_0
 
 theorem __fact5 :
-    ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In __p1 Litex.R) (__p2 : (Litex.R).Carrier) (__type2 : Litex.In __p2 Litex.R) (__p3 : (Litex.R).Carrier) (__type3 : Litex.In __p3 Litex.R) (__p4 : (Litex.R).Carrier) (__type4 : Litex.In __p4 Litex.R) (__domain1 : Litex.Le (((__p1 : ℝ)) : ℂ) (((__p2 : ℝ)) : ℂ)) (__domain2 : Litex.Lt (((__p3 : ℝ)) : ℂ) (((__p4 : ℝ)) : ℂ)), Litex.Lt ((((__p1 : ℝ)) : ℂ) + (((__p3 : ℝ)) : ℂ)) ((((__p2 : ℝ)) : ℂ) + (((__p4 : ℝ)) : ℂ)) := by
+    ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In (α := (Litex.R).Carrier) __p1 Litex.R) (__p2 : (Litex.R).Carrier) (__type2 : Litex.In (α := (Litex.R).Carrier) __p2 Litex.R) (__p3 : (Litex.R).Carrier) (__type3 : Litex.In (α := (Litex.R).Carrier) __p3 Litex.R) (__p4 : (Litex.R).Carrier) (__type4 : Litex.In (α := (Litex.R).Carrier) __p4 Litex.R) (__domain1 : Litex.Le ((((Litex.In.rep __p1 __type1) : ℝ)) : ℂ) ((((Litex.In.rep __p2 __type2) : ℝ)) : ℂ)) (__domain2 : Litex.Lt ((((Litex.In.rep __p3 __type3) : ℝ)) : ℂ) ((((Litex.In.rep __p4 __type4) : ℝ)) : ℂ)), Litex.Lt (((((Litex.In.rep __p1 __type1) : ℝ)) : ℂ) + ((((Litex.In.rep __p3 __type3) : ℝ)) : ℂ)) (((((Litex.In.rep __p2 __type2) : ℝ)) : ℂ) + ((((Litex.In.rep __p4 __type4) : ℝ)) : ℂ)) := by
   intro a __h75 b __h76 c __h77 d __h78 __domain_f79 __domain_f80
-  have __prior5_0 : Litex.Lt ((((a : ℝ)) : ℂ) + (((c : ℝ)) : ℂ)) ((((b : ℝ)) : ℂ) + (((d : ℝ)) : ℂ)) := Litex.Rules.complexAddPreservesLessOfLessEqualAndLess (__domain_f79) (__domain_f80)
+  have __prior5_0 : Litex.Lt ((((Litex.In.rep a __h75 : ℝ)) : ℂ) + (((Litex.In.rep c __h77 : ℝ)) : ℂ)) ((((Litex.In.rep b __h76 : ℝ)) : ℂ) + (((Litex.In.rep d __h78 : ℝ)) : ℂ)) := Litex.Rules.complexAddPreservesLessOfLessEqualAndLess (__domain_f79) (__domain_f80)
   exact __prior5_0
 
 end __Compiler_40_RegisteredOrderResultComposition

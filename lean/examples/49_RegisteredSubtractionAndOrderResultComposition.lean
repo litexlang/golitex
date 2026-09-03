@@ -6,21 +6,21 @@ set_option linter.style.nameCheck false
 namespace __Compiler_49_RegisteredSubtractionAndOrderResultComposition
 
 theorem __fact0 :
-    ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In __p1 Litex.R) (__p2 : (Litex.R).Carrier) (__type2 : Litex.In __p2 Litex.R) (__domain1 : Litex.Le (((__p2 : ℝ)) : ℂ) (((__p1 : ℝ)) : ℂ)), Litex.Nonnegative ((((__p1 : ℝ)) : ℂ) - (((__p2 : ℝ)) : ℂ)) := by
+    ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In (α := (Litex.R).Carrier) __p1 Litex.R) (__p2 : (Litex.R).Carrier) (__type2 : Litex.In (α := (Litex.R).Carrier) __p2 Litex.R) (__domain1 : Litex.Le ((((Litex.In.rep __p2 __type2) : ℝ)) : ℂ) ((((Litex.In.rep __p1 __type1) : ℝ)) : ℂ)), Litex.Nonnegative (((((Litex.In.rep __p1 __type1) : ℝ)) : ℂ) - ((((Litex.In.rep __p2 __type2) : ℝ)) : ℂ)) := by
   intro u __h5 v __h6 __domain_f7
-  have __prior0_0 : Litex.Nonnegative ((((u : ℝ)) : ℂ) - (((v : ℝ)) : ℂ)) := Litex.Rules.complexSubNonnegativeOfLessEqual (u := (u : ℝ)) (v := (v : ℝ)) (__domain_f7)
+  have __prior0_0 : Litex.Nonnegative ((((Litex.In.rep u __h5 : ℝ)) : ℂ) - (((Litex.In.rep v __h6 : ℝ)) : ℂ)) := Litex.Rules.complexSubNonnegativeOfLessEqual (u := (Litex.In.rep u __h5 : ℝ)) (v := (Litex.In.rep v __h6 : ℝ)) (__domain_f7)
   exact __prior0_0
 
 theorem __fact1 :
-    ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In __p1 Litex.R) (__p2 : (Litex.R).Carrier) (__type2 : Litex.In __p2 Litex.R) (__domain1 : Litex.Lt (((__p2 : ℝ)) : ℂ) (((__p1 : ℝ)) : ℂ)), Litex.Positive ((((__p1 : ℝ)) : ℂ) - (((__p2 : ℝ)) : ℂ)) := by
+    ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In (α := (Litex.R).Carrier) __p1 Litex.R) (__p2 : (Litex.R).Carrier) (__type2 : Litex.In (α := (Litex.R).Carrier) __p2 Litex.R) (__domain1 : Litex.Lt ((((Litex.In.rep __p2 __type2) : ℝ)) : ℂ) ((((Litex.In.rep __p1 __type1) : ℝ)) : ℂ)), Litex.Positive (((((Litex.In.rep __p1 __type1) : ℝ)) : ℂ) - ((((Litex.In.rep __p2 __type2) : ℝ)) : ℂ)) := by
   intro u __h14 v __h15 __domain_f16
-  have __prior1_0 : Litex.Positive ((((u : ℝ)) : ℂ) - (((v : ℝ)) : ℂ)) := Litex.Rules.complexSubPositiveOfLess (u := (u : ℝ)) (v := (v : ℝ)) (__domain_f16)
+  have __prior1_0 : Litex.Positive ((((Litex.In.rep u __h14 : ℝ)) : ℂ) - (((Litex.In.rep v __h15 : ℝ)) : ℂ)) := Litex.Rules.complexSubPositiveOfLess (u := (Litex.In.rep u __h14 : ℝ)) (v := (Litex.In.rep v __h15 : ℝ)) (__domain_f16)
   exact __prior1_0
 
 theorem __fact2 :
-    ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In __p1 Litex.R) (__p2 : (Litex.R).Carrier) (__type2 : Litex.In __p2 Litex.R) (__domain1 : Litex.Lt (((__p2 : ℝ)) : ℂ) (((__p1 : ℝ)) : ℂ)), Litex.Le (((__p2 : ℝ)) : ℂ) (((__p1 : ℝ)) : ℂ) := by
+    ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In (α := (Litex.R).Carrier) __p1 Litex.R) (__p2 : (Litex.R).Carrier) (__type2 : Litex.In (α := (Litex.R).Carrier) __p2 Litex.R) (__domain1 : Litex.Lt ((((Litex.In.rep __p2 __type2) : ℝ)) : ℂ) ((((Litex.In.rep __p1 __type1) : ℝ)) : ℂ)), Litex.Le ((((Litex.In.rep __p2 __type2) : ℝ)) : ℂ) ((((Litex.In.rep __p1 __type1) : ℝ)) : ℂ) := by
   intro a __h23 b __h24 __domain_f25
-  have __prior2_0 : Litex.Le (((b : ℝ)) : ℂ) (((a : ℝ)) : ℂ) := Litex.Lt.toLe (__domain_f25)
+  have __prior2_0 : Litex.Le (((Litex.In.rep b __h24 : ℝ)) : ℂ) (((Litex.In.rep a __h23 : ℝ)) : ℂ) := Litex.Lt.toLe (__domain_f25)
   exact __prior2_0
 
 end __Compiler_49_RegisteredSubtractionAndOrderResultComposition

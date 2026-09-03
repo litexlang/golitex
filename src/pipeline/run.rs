@@ -1,13 +1,12 @@
 use super::file_execution::file_execution_option;
 use super::{
     execute_file_in_runtime, execute_isolated_file_in_runtime, execute_repository_target,
-    render_run_output, render_run_summary, resolve_source_file_path, ExecutionTarget,
-    RunSummaryRequest, RunTarget,
+    render_run_output, render_run_summary, resolve_source_file_path, RunSummaryRequest, RunTarget,
 };
 use crate::error::RuntimeError;
-use crate::module_system::discover_repository;
+use crate::module_system::{discover_repository, VirtualSource};
 use crate::result::StmtResult;
-use crate::runtime::{ExecutionOption, RunOptions, Runtime};
+use crate::runtime::{ExecutionOption, RunOption, RunOptions, Runtime};
 use crate::syntax::source_formatting::remove_windows_carriage_from_str;
 
 pub struct RunOutcome {
@@ -21,10 +20,9 @@ pub struct RunOutcome {
 }
 
 pub fn run_code(source: &str, options: RunOptions) -> RunOutcome {
-    let options = options.with_execution(ExecutionOption::Eval);
     let mut runtime = Runtime::new(options);
     let target = RunTarget::Eval;
-    runtime.start_isolated_source(ExecutionTarget::Run(target.clone()).source_label());
+    runtime.start_virtual_source(VirtualSource::Eval);
     let (stmt_results, runtime_error) = runtime
         .execute_source(remove_windows_carriage_from_str(source).as_str())
         .into_parts();
@@ -45,7 +43,7 @@ pub fn run_file(path: &str, options: RunOptions) -> RunOutcome {
         .as_ref()
         .map(|path| file_execution_option(path.as_str()))
         .unwrap_or(ExecutionOption::File);
-    let options = options.with_execution(execution);
+    let options = options_for_execution(options, execution);
     let mut runtime = Runtime::new(options);
     let mut target_error = None;
     let (target_path, stmt_results, runtime_error) = match resolved_path {
@@ -83,7 +81,7 @@ pub fn run_file(path: &str, options: RunOptions) -> RunOutcome {
 }
 
 pub fn run_isolated_file(path: &str, options: RunOptions) -> RunOutcome {
-    let options = options.with_execution(ExecutionOption::IsolatedFile);
+    let options = options_for_execution(options, ExecutionOption::IsolatedFile);
     let mut runtime = Runtime::new(options);
     let mut target_error = None;
     let (target_path, stmt_results, runtime_error) = match resolve_source_file_path(path) {
@@ -109,7 +107,7 @@ pub fn run_isolated_file(path: &str, options: RunOptions) -> RunOutcome {
 }
 
 pub fn run_repository(path: &str, options: RunOptions) -> RunOutcome {
-    let options = options.with_execution(ExecutionOption::Repo);
+    let options = options_for_execution(options, ExecutionOption::Repo);
     let mut runtime = Runtime::new(options);
     let normalized_path = remove_windows_carriage_from_str(path);
     let (stmt_results, runtime_error) =
@@ -127,6 +125,20 @@ pub fn run_repository(path: &str, options: RunOptions) -> RunOutcome {
         runtime_error,
         None,
         options.should_summarize(),
+    )
+}
+
+fn options_for_execution(options: RunOptions, execution: ExecutionOption) -> RunOptions {
+    let run = if options.is_strict() {
+        RunOption::StrictExecute(execution)
+    } else {
+        RunOption::Execute(execution)
+    };
+    RunOptions::new(
+        run,
+        options.output_detail(),
+        options.output_language(),
+        options.summary(),
     )
 }
 

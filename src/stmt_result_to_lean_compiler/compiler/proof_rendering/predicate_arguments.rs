@@ -364,13 +364,13 @@ pub(in super::super) fn render_exact_predicate_argument_same_to_source(
         LeanTargetObjectRepresentation::lower(object)
     {
         if let Some(binding) = context.exact_carrier_source_equalities.get(&symbol_id) {
-            if context
-                .exact_carrier_values
-                .get(&symbol_id)
-                .is_some_and(|retained| retained == &binding.exact_value)
-            {
-                return Ok(binding.proof_expression.clone());
-            }
+            // The binding is installed from the same checked membership FactId
+            // that produced `exact`.  The surrounding exact-carrier map may
+            // intentionally retain only the lexical source name, so using it
+            // as an additional string-equality gate would discard the valid
+            // heterogeneous bridge and fall back to a native `realComplex`
+            // theorem with the wrong left endpoint.
+            return Ok(binding.proof_expression.clone());
         }
     }
     // An exact `R` carrier selected from the visible membership proof may be
@@ -381,6 +381,11 @@ pub(in super::super) fn render_exact_predicate_argument_same_to_source(
     if matches!(set, Obj::StandardSet(StandardSet::R)) {
         if let Ok(membership) = resolve_visible_exact_membership_proof(object, set, context) {
             let selected = format!("Litex.In.rep {source} ({membership})");
+            if exact.contains(&format!("Litex.In.rep {source}")) {
+                return Ok(format!(
+                    "Litex.Same.symm (Litex.In.same_rep {source} ({membership}))"
+                ));
+            }
             let exact_without_outer = exact
                 .strip_prefix('(')
                 .and_then(|value| value.strip_suffix(')'))

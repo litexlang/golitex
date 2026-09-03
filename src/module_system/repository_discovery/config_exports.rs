@@ -15,7 +15,10 @@ pub(super) fn discover_config_export(
             .module(owner_module_id)
             .expect("manifest owner module should exist");
         (
-            PathBuf::from(&owner.module_root_path),
+            owner
+                .root_directory_path()
+                .map(|path| path.as_path().to_path_buf())
+                .unwrap_or_default(),
             owner.module_name.clone(),
         )
     };
@@ -64,14 +67,14 @@ pub(super) fn discover_config_export(
         let source_path =
             path_string(&canonical_path, &config_path.to_string_lossy(), export.line)?;
         let canonical_name = join_module_name(&owner_name, &export.name);
-        let file_id = runtime
+        let source_id = runtime
             .module_manager
             .module_mut(owner_module_id)
             .expect("manifest owner module should exist")
-            .create_exported_file(source_path.clone(), canonical_name.clone());
+            .create_exported_source(source_path.clone(), canonical_name.clone());
         let target = ImportTarget::File {
             module_id: owner_module_id,
-            file_id,
+            source_id,
         };
         runtime
             .module_manager
@@ -88,7 +91,7 @@ pub(super) fn discover_config_export(
                 export.name.clone(),
                 ExportEntry::File {
                     name: export.name.clone(),
-                    file_id,
+                    source_id,
                 },
             );
         return Ok(target);
@@ -136,8 +139,8 @@ pub(super) fn discover_config_export(
             .module_manager
             .create_discovered_module(
                 child_name,
-                child_root_string,
-                child_config_string,
+                RealDirectoryPath::new(child_root_string),
+                RealFilePath::new(child_config_string),
                 ProjectHierarchy::Submodule,
                 Some(owner_module_id),
             )

@@ -1,6 +1,5 @@
 mod definition_state;
-mod execution_frame;
-mod execution_module_file_info;
+mod execution_mode;
 mod fact_storage;
 mod instantiation;
 mod name_resolution;
@@ -9,8 +8,7 @@ mod parse_context;
 mod run_options;
 mod runtime;
 
-pub use execution_frame::{ExecutionFrame, ExecutionMode};
-pub use execution_module_file_info::ExecutionModuleFileInfo;
+pub use execution_mode::ExecutionMode;
 pub use name_resolution::{
     FreeParamCollection, FreeParamTypeAndLineFile, TransparentObjectDefinitionUse,
 };
@@ -18,4 +16,4 @@ pub use name_resolution::{
 pub use output_detail::{OutputDetail, OutputStyle};
 pub use parse_context::{ParseContext, ScopeFrame};
 pub use run_options::{ExecutionOption, RunOption, RunOptions, SummaryOption};
-pub use runtime::Runtime;
+pub use runtime::{Runtime, SourceActivation};

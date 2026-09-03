@@ -5,9 +5,9 @@ set_option linter.style.nameCheck false
 
 namespace __Compiler_35_SourceAxiomResultBoundary
 
-axiom source_real_reflexivity : ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In __p1 Litex.R), Litex.Same __p1 __p1
+axiom source_real_reflexivity : ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In (α := (Litex.R).Carrier) __p1 Litex.R), Litex.Same __p1 __p1
 
 theorem __fact0 :
-    ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In __p1 Litex.R), Litex.Same __p1 __p1 := source_real_reflexivity
+    ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In (α := (Litex.R).Carrier) __p1 Litex.R), Litex.Same __p1 __p1 := source_real_reflexivity
 
 end __Compiler_35_SourceAxiomResultBoundary

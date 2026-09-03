@@ -1,4 +1,4 @@
-//! Run-wide runtime state and execution-frame lifecycle.
+//! Run-wide runtime state and current-source lifecycle.
 
 use crate::prelude::*;
 use std::cell::RefCell;
@@ -6,12 +6,20 @@ use std::collections::HashMap;
 use std::rc::Rc;
 
 pub struct Runtime {
-    /// The module world for this top-level run. Imported modules execute in
-    /// this Runtime and are selected by `execution_stack` frames.
+    /// The module world for this top-level run.
     pub module_manager: Box<ModuleManager>,
-    pub execution_stack: Vec<ExecutionFrame>,
+    /// Module owning `current_source_id`. Source ids are module-local because
+    /// import targets already carry their owner module id.
+    pub current_module_id: Option<ModuleId>,
+    /// The one source currently being parsed or executed.
+    pub current_source_id: Option<SourceId>,
+    /// Mode for the current operation; this is transient runtime state, not
+    /// source metadata.
+    pub active_mode: ExecutionMode,
+    /// Temporary environments nested inside the current source.
+    pub local_scopes: Vec<Box<Environment>>,
     /// Transient binder and scope state shared by one nested parser traversal.
-    /// Execution frames neither consume nor reset it.
+    /// Changing the current source neither consumes nor resets it.
     pub(crate) parse_context: ParseContext,
     /// Monotone runtime-wide allocator. Local environments may disappear, but
     /// a fact ID is never reused during the run.
@@ -25,11 +33,24 @@ pub struct Runtime {
     pub run_options: RunOptions,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct SourceActivation {
+    /// Module that owns the checkpointed source id.
+    pub module_id: Option<ModuleId>,
+    /// Source that was active before a projection temporarily switched source.
+    pub source_id: Option<SourceId>,
+    /// Active verification mode restored with the source.
+    pub mode: ExecutionMode,
+}
+
 impl Runtime {
     pub fn new(run_options: RunOptions) -> Self {
         Runtime {
             module_manager: Box::new(ModuleManager::new()),
-            execution_stack: vec![],
+            current_module_id: None,
+            current_source_id: None,
+            active_mode: ExecutionMode::RequireVerification,
+            local_scopes: vec![],
             parse_context: ParseContext::new(),
             next_fact_id: 1,
             symbol_id_allocator: Rc::new(SymbolIdAllocator::new()),
@@ -37,6 +58,17 @@ impl Runtime {
             executed_direct_struct_carriers: HashMap::new(),
             run_options,
         }
+    }
+}
+
+fn virtual_source_from_legacy_label(label: &str) -> VirtualSource {
+    match label.to_ascii_lowercase().as_str() {
+        "eval" => VirtualSource::Eval,
+        "repl" => VirtualSource::Repl,
+        "session" => VirtualSource::Session,
+        "to-lean" | "to_lean" => VirtualSource::ToLean,
+        "to-latex" | "to_latex" => VirtualSource::ToLatex,
+        _ => VirtualSource::Named(label.to_string()),
     }
 }
 
@@ -58,7 +90,13 @@ impl Runtime {
     }
 
     pub fn set_output_detail(&mut self, output_detail: OutputDetail) {
-        self.run_options = self.run_options.with_output_detail(output_detail);
+        let options = self.run_options;
+        self.run_options = RunOptions::new(
+            options.run(),
+            output_detail,
+            options.output_language(),
+            options.summary(),
+        );
     }
 
     pub fn effective_output_detail(&self) -> OutputDetail {
@@ -88,48 +126,82 @@ impl Runtime {
     }
 
     pub fn current_file_path_rc(&self) -> Rc<str> {
-        self.execution_stack
-            .last()
-            .map(|frame| frame.module_file_info.source_path.clone())
+        self.current_source()
+            .map(|source| Rc::from(source.display_label()))
             .unwrap_or_else(|| Rc::from(""))
     }
 
-    pub fn ensure_execution_frame_for_parse(&mut self) {
-        if !self.execution_stack.is_empty() {
+    pub fn current_source(&self) -> Option<&Source> {
+        let module_id = self.current_module_id?;
+        let source_id = self.current_source_id?;
+        self.module_manager.module(module_id)?.source(source_id)
+    }
+
+    fn activate_source(&mut self, module_id: ModuleId, source_id: SourceId, mode: ExecutionMode) {
+        assert!(
+            self.local_scopes.is_empty(),
+            "a source cannot be selected with an active local environment"
+        );
+        self.current_module_id = Some(module_id);
+        self.current_source_id = Some(source_id);
+        self.active_mode = mode;
+    }
+
+    fn reset_current_source_state(&mut self) {
+        self.current_module_id = None;
+        self.current_source_id = None;
+        self.active_mode = ExecutionMode::RequireVerification;
+        self.local_scopes.clear();
+    }
+
+    pub fn source_activation(&self) -> SourceActivation {
+        SourceActivation {
+            module_id: self.current_module_id,
+            source_id: self.current_source_id,
+            mode: self.active_mode,
+        }
+    }
+
+    pub fn restore_source_activation(&mut self, activation: SourceActivation) {
+        match (activation.module_id, activation.source_id) {
+            (Some(module_id), Some(source_id)) => {
+                self.activate_source(module_id, source_id, activation.mode)
+            }
+            _ => self.reset_current_source_state(),
+        }
+    }
+
+    pub fn ensure_current_source_for_parse(&mut self) {
+        if self.current_source_id.is_some() {
             return;
         }
         debug_assert!(
             self.parse_context.is_at_root_scope(),
-            "an execution frame cannot be created inside an active parser scope"
+            "a current source cannot be selected inside an active parser scope"
         );
-        let source_path = self
-            .module_manager
-            .module(ModuleId::ROOT)
-            .map(|module| module.main_file_path.clone())
-            .unwrap_or_default();
-        let module_file_info = match self.module_manager.module(ModuleId::ROOT) {
+        let source_id = match self.module_manager.module(ModuleId::ROOT) {
             Some(_) => {
-                let existing_file_id = self
+                let existing_source_id = self
                     .module_manager
                     .module(ModuleId::ROOT)
-                    .and_then(|module| module.module_source_file);
-                match existing_file_id {
-                    Some(file_id) => self
-                        .module_manager
-                        .execution_module_file_info(ModuleId::ROOT, file_id)
-                        .expect("root source file should exist"),
+                    .and_then(|module| module.module_source_id);
+                match existing_source_id {
+                    Some(source_id) => source_id,
                     None => self
                         .module_manager
-                        .create_execution_file(ModuleId::ROOT, source_path.as_str())
-                        .expect("root execution file should be registered"),
+                        .create_virtual_source(ModuleId::ROOT, VirtualSource::Eval)
+                        .expect("root execution source should be registered"),
                 }
             }
             None => self
                 .module_manager
-                .create_root_module(source_path.as_str(), true),
+                .create_virtual_root_module(VirtualSource::Eval),
         };
-        self.execution_stack
-            .push(ExecutionFrame::new(module_file_info));
+        self.activate_source(
+            ModuleId::ROOT,
+            source_id,
+            ExecutionMode::RequireVerification,
+        );
     }
 
     pub fn current_parse_context(&self) -> &ParseContext {
@@ -141,10 +213,8 @@ impl Runtime {
     }
 
     pub fn current_module_id(&self) -> ModuleId {
-        self.execution_stack
-            .last()
-            .map(|frame| frame.module_file_info.module_id)
-            .expect("current execution frame should exist")
+        self.current_module_id
+            .expect("a current source should exist")
     }
 
     pub fn current_module(&self) -> &ModuleRunner {
@@ -160,78 +230,62 @@ impl Runtime {
             .expect("current module should exist")
     }
 
-    pub fn push_file_execution_frame(&mut self, module_id: ModuleId, file_id: FileId) {
-        self.push_file_execution_frame_with_mode(
-            module_id,
-            file_id,
-            ExecutionMode::RequireVerification,
-        );
+    pub fn activate_source_for_execution(&mut self, module_id: ModuleId, source_id: SourceId) {
+        self.activate_source_with_mode(module_id, source_id, ExecutionMode::RequireVerification);
     }
 
-    pub fn push_file_execution_frame_with_mode(
+    pub fn activate_source_with_mode(
         &mut self,
         module_id: ModuleId,
-        file_id: FileId,
+        source_id: SourceId,
         execution_mode: ExecutionMode,
     ) {
         debug_assert!(
             self.parse_context.is_at_root_scope(),
-            "a file execution frame cannot be pushed inside an active parser scope"
+            "a source cannot be selected inside an active parser scope"
         );
-        let module_file_info = self
-            .module_manager
-            .execution_module_file_info(module_id, file_id)
-            .expect("execution frame must point to a registered module file");
-        self.execution_stack.push(ExecutionFrame::new_with_mode(
-            module_file_info,
-            execution_mode,
-        ));
+        self.activate_source(module_id, source_id, execution_mode);
     }
 
     pub fn canonical_module_name_for_parse(&self, name: &str) -> String {
-        let Some(frame) = self.execution_stack.last() else {
+        let Some(module_id) = self.current_module_id else {
             return name.to_string();
         };
         self.module_manager
-            .canonical_name_for_reference(frame.module_file_info.module_id, name)
+            .canonical_name_for_reference(module_id, name)
             .unwrap_or_else(|| name.to_string())
     }
 
-    pub fn pop_execution_frame(&mut self) {
+    pub fn clear_current_source(&mut self) {
         debug_assert!(
             self.parse_context.is_at_root_scope(),
-            "a file execution frame cannot be popped inside an active parser scope"
+            "the current source cannot be cleared inside an active parser scope"
         );
-        self.execution_stack
-            .pop()
-            .expect("an execution frame should exist before it is popped");
+        self.reset_current_source_state();
     }
 
     pub fn strict_mode_applies_to_current_module(&self) -> bool {
         if !self.run_options.is_strict() {
             return false;
         }
-        let Some(frame) = self.execution_stack.last() else {
+        let Some(module_id) = self.current_module_id else {
             return false;
         };
         !self
             .module_manager
-            .module(frame.module_file_info.module_id)
+            .module(module_id)
             .is_some_and(|module| module.is_standard_library)
     }
 
-    pub fn has_active_execution_frame(&self) -> bool {
-        !self.execution_stack.is_empty()
+    pub fn has_current_source(&self) -> bool {
+        self.current_source_id.is_some()
     }
 
     pub fn current_execution_mode(&self) -> ExecutionMode {
-        self.execution_stack
-            .last()
-            .map(|frame| frame.execution_mode)
-            .unwrap_or(ExecutionMode::RequireVerification)
+        self.active_mode
     }
 
-    pub fn current_execution_is_trusted_file(&self) -> bool {
+    pub fn current_execution_is_trusted_source(&self) -> bool {
         self.current_execution_mode() == ExecutionMode::Trusted
     }
 
@@ -261,12 +315,8 @@ impl Runtime {
         &mut self,
         execution_mode: ExecutionMode,
     ) -> ExecutionMode {
-        let frame = self
-            .execution_stack
-            .last_mut()
-            .expect("an execution frame should exist while running a statement");
-        let previous = frame.execution_mode;
-        frame.execution_mode = execution_mode;
+        let previous = self.active_mode;
+        self.active_mode = execution_mode;
         previous
     }
 }
@@ -331,94 +381,130 @@ impl Runtime {
 }
 
 impl Runtime {
-    /// Start a standalone source run with its own root module and execution frame.
-    pub fn start_isolated_source(&mut self, source_path: &str) {
-        self.start_isolated_source_with_kind(source_path, true);
-    }
-
-    /// Start a standalone physical file run with its own root module and frame.
-    pub fn start_isolated_file(&mut self, source_path: &str) {
-        self.start_isolated_source_with_kind(source_path, false);
-    }
-
-    fn start_isolated_source_with_kind(&mut self, source_path: &str, is_virtual_source: bool) {
-        debug_assert!(
-            self.parse_context.is_at_root_scope(),
-            "an isolated source cannot start inside an active parser scope"
+    pub fn start_virtual_source(&mut self, kind: VirtualSource) {
+        debug_assert!(self.parse_context.is_at_root_scope());
+        let source_id = self.module_manager.create_virtual_root_module(kind);
+        self.activate_source(
+            ModuleId::ROOT,
+            source_id,
+            ExecutionMode::RequireVerification,
         );
-        let module_file_info = self
-            .module_manager
-            .create_root_module(source_path, is_virtual_source);
-        self.execution_stack
-            .push(ExecutionFrame::new(module_file_info));
     }
 
-    /// Start a repository run with its root module. File frames are pushed only
-    /// while registered Litex files execute.
+    pub fn start_real_file(&mut self, path: &str) {
+        self.start_real_file_path(RealFilePath::new(path));
+    }
+
+    pub fn start_real_file_path(&mut self, path: RealFilePath) {
+        debug_assert!(self.parse_context.is_at_root_scope());
+        let source_id = self.module_manager.create_file_root_module(path);
+        self.activate_source(
+            ModuleId::ROOT,
+            source_id,
+            ExecutionMode::RequireVerification,
+        );
+    }
+
+    /// Start a standalone virtual source with its own root module.
+    #[deprecated(note = "use start_virtual_source with a VirtualSource variant")]
+    pub fn start_isolated_source(&mut self, legacy_label: &str) {
+        self.start_virtual_source(virtual_source_from_legacy_label(legacy_label));
+    }
+
+    /// Start a standalone physical file run with its own root module and source.
+    #[deprecated(note = "use start_real_file")]
+    pub fn start_isolated_file(&mut self, source_path: &str) {
+        self.start_real_file(source_path);
+    }
+
+    /// Start a repository run with its root module. Registered sources are
+    /// activated by the repository execution pipeline as they execute.
     pub fn start_repository_run(
         &mut self,
         repository_root: String,
         main_file_path: String,
     ) -> Result<ModuleId, String> {
+        self.start_repository_run_typed(
+            RealDirectoryPath::new(repository_root),
+            RealFilePath::new(main_file_path),
+        )
+    }
+
+    pub fn start_repository_run_typed(
+        &mut self,
+        repository_root: RealDirectoryPath,
+        main_file_path: RealFilePath,
+    ) -> Result<ModuleId, String> {
         let module_id = self
             .module_manager
-            .create_repository_root_module(repository_root, main_file_path.clone())?;
+            .create_repository_root_module(repository_root, main_file_path)?;
         Ok(module_id)
     }
 
-    /// After `start_isolated_source`, point the current user source at another
-    /// path without pushing more layers.
+    /// After a standalone source has been created, point that current source at
+    /// a physical file path without creating another source.
     pub fn set_current_user_lit_file_path(&mut self, path: &str) {
-        let path_rc: Rc<str> = Rc::from(path);
-        let (module_id, file_id) = self
-            .execution_stack
-            .last()
-            .map(|frame| {
-                (
-                    frame.module_file_info.module_id,
-                    frame.module_file_info.file_id,
-                )
-            })
-            .expect("a user source frame should exist before changing its path");
+        let (module_id, source_id) = self
+            .current_module_id
+            .zip(self.current_source_id)
+            .expect("a user source should exist before changing its path");
         self.module_manager
             .module_mut(module_id)
-            .and_then(|module| module.file_mut(file_id))
-            .expect("current user source file should be registered")
-            .source_path = path.to_string();
-        self.execution_stack
-            .last_mut()
-            .expect("current user source frame should exist")
-            .module_file_info
-            .source_path = path_rc.clone();
+            .and_then(|module| module.source_mut(source_id))
+            .expect("current user source should be registered")
+            .origin = SourcePath::RealFilePath(RealFilePath::new(path));
         if module_id == ModuleId::ROOT {
             self.module_manager
                 .module_mut(module_id)
                 .expect("root module should exist")
-                .main_file_path = path.to_string();
+                .location = ModuleLocation::SingleFile;
         }
     }
 
     /// Make the discovered repository's root module the persistent environment for
     /// interactive input. This method does not itself execute the ordered `[export]` plan.
+    #[deprecated(note = "use prepare_current_module_for_virtual_source")]
     pub fn prepare_current_repository_for_repl(
         &mut self,
         source_path: &str,
+    ) -> Result<(), RuntimeError> {
+        self.prepare_current_module_for_virtual_source(virtual_source_from_legacy_label(
+            source_path,
+        ))
+    }
+
+    pub fn prepare_current_module_for_virtual_source(
+        &mut self,
+        kind: VirtualSource,
     ) -> Result<(), RuntimeError> {
         debug_assert!(
             self.parse_context.is_at_root_scope(),
             "a repository REPL cannot start inside an active parser scope"
         );
+        let inherited_environment = self
+            .current_source()
+            .map(|source| source.environment.clone());
         let module_id = self
             .module_manager
             .module(ModuleId::ROOT)
             .map(|module| module.id)
             .expect("repository root module should exist");
-        let module_file_info = self
+        let source_id = self
             .module_manager
-            .create_execution_file(module_id, source_path)
+            .create_virtual_source(module_id, kind)
             .expect("repository REPL source should be registered");
-        self.execution_stack
-            .push(ExecutionFrame::new(module_file_info));
+        if let Some(environment) = inherited_environment {
+            self.module_manager
+                .module_mut(module_id)
+                .and_then(|module| module.source_mut(source_id))
+                .expect("interactive source should be registered")
+                .environment = environment;
+        }
+        self.activate_source(
+            ModuleId::ROOT,
+            source_id,
+            ExecutionMode::RequireVerification,
+        );
         Ok(())
     }
 }

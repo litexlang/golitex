@@ -32,8 +32,8 @@ fn parse_one_stmt_line_with_runtime(rt: &mut Runtime, line: &str) -> Stmt {
 }
 
 fn set_test_module_name(rt: &mut Runtime, module_name: &str) {
-    if rt.execution_stack.is_empty() {
-        rt.start_isolated_source("test.lit");
+    if rt.current_source_id.is_none() {
+        rt.start_virtual_source(VirtualSource::Eval);
     }
     rt.current_module_mut().module_name = module_name.to_string();
 }

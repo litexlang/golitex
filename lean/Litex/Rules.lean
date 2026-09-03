@@ -136,6 +136,24 @@ theorem absPositiveOfNotSame
     exact Litex.Same.trans sourceToReal (Litex.Same.ofEq (by simp [equality]))
   exact ⟨|r|, by simpa [Litex.abs] using Litex.AsReal.complex |r|, abs_pos.mpr hr⟩
 
+theorem absPositiveOfNotSameNoObservation
+    {alpha : Type}
+    (source : alpha)
+    (r : ℝ)
+    (sourceToReal : @Litex.Same alpha ℂ
+      (Litex.ComplexObserver.none alpha)
+      (Litex.ComplexObserver.none ℂ) source (r : ℂ))
+    (nonzero : ¬ @Litex.Same alpha ℂ
+      (Litex.ComplexObserver.none alpha)
+      (Litex.ComplexObserver.none ℂ) source (0 : ℂ)) :
+    Litex.Positive (Litex.abs (r : ℂ)) := by
+  have hr : r ≠ 0 := by
+    intro equality
+    apply nonzero
+    exact Litex.Same.transNoObservation sourceToReal
+      (Litex.Same.ofEqNoObservation (by simp [equality]))
+  exact ⟨|r|, by simpa [Litex.abs] using Litex.AsReal.complex |r|, abs_pos.mpr hr⟩
+
 theorem absAddLe (a b : ℂ) :
     Litex.Le (Litex.abs (a + b)) (Litex.abs a + Litex.abs b) := by
   simpa [Litex.Le, Litex.OrderValue, Litex.abs] using norm_add_le a b

@@ -124,9 +124,10 @@ pub use crate::inference::{
 };
 pub use crate::module_system::{
     discover_repository, discover_repository_for_file, parse_project_config, resolve_std_root,
-    ConfigImport, ConfigImportKind, ExportEntry, FileId, FileRunner, FileStatus, ImportTarget,
-    ModuleId, ModuleManager, ModuleRunner, ModuleStatus, ProjectConfig, ProjectExport,
-    ProjectHierarchy, ProjectImport, ProjectStdImport, RepositoryFileTarget, UnverifiedImport,
+    ConfigImport, ConfigImportKind, ExportEntry, ImportTarget, ModuleId, ModuleLocation,
+    ModuleManager, ModuleRunner, ModuleStatus, ProjectConfig, ProjectExport, ProjectHierarchy,
+    ProjectImport, ProjectStdImport, RealDirectoryPath, RealFilePath, RepositoryFileTarget, Source,
+    SourceId, SourceLoadStatus, SourcePath, UnverifiedImport, VirtualSource,
 };
 pub use crate::object::nested_obj_binder_normalized_key;
 pub use crate::object::obj_equality_key;
@@ -483,8 +484,7 @@ pub use crate::runtime::OutputStyle;
 pub use crate::runtime::ParseContext;
 pub use crate::runtime::ScopeFrame;
 pub use crate::runtime::{
-    ExecutionFrame, ExecutionModuleFileInfo, ExecutionOption, OutputDetail, RunOption, RunOptions,
-    Runtime, SummaryOption,
+    ExecutionOption, OutputDetail, RunOption, RunOptions, Runtime, SourceActivation, SummaryOption,
 };
 pub use crate::statement::claim_stmt::ClaimStmt;
 pub use crate::statement::define_algorithm_stmt::AlgoCase;

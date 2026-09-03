@@ -25,9 +25,9 @@ theorem __fact3 :
   exact Litex.Rules.integerInductionFrom (motive := fun __induction_value : ℤ => Litex.Same ((((__induction_value) : ℂ)) + (1 : ℂ)) ((((__induction_value) : ℂ)) + (1 : ℂ))) (by
   have __step3_2 : Litex.Same (((-1 : ℂ) * (1 : ℂ)) + (1 : ℂ)) (((-1 : ℂ) * (1 : ℂ)) + (1 : ℂ)) := by
     exact Litex.Same.refl (((-1 : ℂ) * (1 : ℂ)) + (1 : ℂ))
-  exact (by simpa using (__step3_2))) (fun (__induction_value : ℤ) (__induction_ge_start : ((-1 : ℤ) * (1 : ℤ)) ≤ __induction_value) (__induction_hypotheses : Litex.Same ((((__induction_value) : ℂ)) + (1 : ℂ)) ((((__induction_value) : ℂ)) + (1 : ℂ))) => by
+  exact (by simpa using (Litex.Same.refl ((((-1 : ℂ) * (1 : ℂ)) + (1 : ℂ)))))) (fun (__induction_value : ℤ) (__induction_ge_start : ((-1 : ℤ) * (1 : ℤ)) ≤ __induction_value) (__induction_hypotheses : Litex.Same ((((__induction_value) : ℂ)) + (1 : ℂ)) ((((__induction_value) : ℂ)) + (1 : ℂ))) => by
   have __step3_3 : Litex.Same (((((__induction_value) : ℂ)) + (1 : ℂ)) + (1 : ℂ)) (((((__induction_value) : ℂ)) + (1 : ℂ)) + (1 : ℂ)) := by
     exact Litex.Same.refl (((((__induction_value) : ℂ)) + (1 : ℂ)) + (1 : ℂ))
-  exact (by simpa using (__step3_3))) __target_value __target_ge_start
+  exact (by simpa using (Litex.Same.refl ((((((__induction_value) : ℂ)) + (1 : ℂ)) + (1 : ℂ)))))) __target_value __target_ge_start
 
 end __Compiler_56_StructuredIntegerInductionResult

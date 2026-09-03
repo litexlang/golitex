@@ -120,7 +120,7 @@ impl StmtResultToLeanCompiler {
                 .typed_parameters
                 .param_defs_and_args_to_param_to_arg_map(evidence.fact.body.as_slice());
             let mut instantiator = Runtime::default();
-            instantiator.ensure_execution_frame_for_parse();
+            instantiator.ensure_current_source_for_parse();
             let instantiated_clause = instantiator
                 .inst_fact(
                     definition_clause,

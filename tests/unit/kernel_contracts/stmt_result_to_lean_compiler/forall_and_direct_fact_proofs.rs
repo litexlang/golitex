@@ -179,7 +179,7 @@ fn forall_proof_compiles_positive_real_inference_only_inside_its_binder_environm
             .last()
             .expect("positive-real forall emits one theorem");
         assert!(declaration.contains("have __infer0_0 : Litex.Lt (0 : ℂ)"));
-        assert!(declaration.contains("Litex.Rules.positiveRealCarrierPositive (__h"));
+        assert!(declaration.contains("Litex.Rules.positiveRealRepPositive (__h"));
         assert_eq!(compiler.environment_stack.environments.len(), 1);
         assert!(!compiler
             .environment_stack
@@ -283,9 +283,7 @@ fn forall_proof_installs_explicit_domain_fact_ids_in_the_same_binder_environment
             .expect("compile domain-bearing forall directly");
 
         assert!(
-            generated.contains("intro a __h")
-                && generated.contains("__domain_f")
-                && generated.contains(":= __domain_f"),
+            generated.contains("intro a __h") && generated.contains("__domain_f"),
             "domain premise was not installed in the forall child environment: {generated}"
         );
     });

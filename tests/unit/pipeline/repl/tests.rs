@@ -3,8 +3,8 @@ use super::{
     run_latex_repl_loop_with_readers, run_repl_loop_with_readers_and_mode, ReplOutputMode,
 };
 use crate::pipeline::execute_isolated_file_in_runtime;
-use crate::prelude::OutputDetail;
-use crate::runtime::{ExecutionOption, RunOptions, Runtime};
+use crate::prelude::{OutputDetail, OutputLanguage};
+use crate::runtime::{ExecutionOption, RunOption, RunOptions, Runtime, SummaryOption};
 use crate::test_support::execute_source;
 use std::fs;
 use std::io::{self, BufRead, Cursor, Write};
@@ -17,7 +17,12 @@ fn run_repl_loop_with_readers(
 ) -> io::Result<()> {
     run_repl_loop_with_readers_and_mode(
         version_banner,
-        RunOptions::execute(ExecutionOption::Repl).with_output_detail(output_detail),
+        RunOptions::new(
+            RunOption::Execute(ExecutionOption::Repl),
+            output_detail,
+            OutputLanguage::English,
+            SummaryOption::None,
+        ),
         stdin_reader,
         stdout_writer,
         ReplOutputMode::Json,
@@ -76,7 +81,7 @@ fn isolated_repl_uses_the_explicit_repl_source_label() {
 }
 
 #[test]
-fn repl_routes_import_to_its_ephemeral_module_manifest_before_source_parsing() {
+fn repl_routes_import_to_its_interactive_module_manifest_before_source_parsing() {
     let directory =
         std::env::temp_dir().join(format!("litex-terminal-import-repl-{}", std::process::id()));
     let _ = fs::remove_dir_all(&directory);

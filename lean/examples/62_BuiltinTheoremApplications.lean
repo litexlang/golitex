@@ -6,7 +6,7 @@ set_option linter.style.nameCheck false
 namespace __Compiler_62_BuiltinTheoremApplications
 
 theorem __fact0 : Litex.In (1 : ℂ) (Litex.setBuilder Litex.R (fun (x : Litex.R.Carrier) => Litex.Lt (0 : ℂ) (((x : ℝ)) : ℂ))) := by
-  exact ⟨⟨(1 : ℝ), (show Litex.Lt (0 : ℂ) ((((1 : ℝ) : ℝ)) : ℂ) by norm_num [Litex.Le, Litex.Lt, Litex.OrderValue])⟩, Litex.Same.transNoObservation (Litex.Same.symmNoObservation (Litex.Same.withoutObservation (Litex.Same.realComplex ((1 : ℝ))))) (Litex.Same.symmNoObservation (Litex.Same.subtypeNoObservation ⟨(1 : ℝ), (show Litex.Lt (0 : ℂ) ((((1 : ℝ) : ℝ)) : ℂ) by norm_num [Litex.Le, Litex.Lt, Litex.OrderValue])⟩))⟩
+  exact ⟨(⟨1, (show Litex.Lt (0 : ℂ) (((1 : ℝ)) : ℂ) by norm_num [Litex.Le, Litex.Lt, Litex.OrderValue])⟩ : ((Litex.setBuilder Litex.R (fun (x : Litex.R.Carrier) => Litex.Lt (0 : ℂ) (((x : ℝ)) : ℂ)))).Carrier), Litex.Same.transNoObservation (Litex.Same.symmNoObservation (Litex.Same.withoutObservation (Litex.Same.realComplex ((1 : ℝ))))) (Litex.Same.symmNoObservation (Litex.Same.subtypeNoObservation (⟨1, (show Litex.Lt (0 : ℂ) (((1 : ℝ)) : ℂ) by norm_num [Litex.Le, Litex.Lt, Litex.OrderValue])⟩ : ((Litex.setBuilder Litex.R (fun (x : Litex.R.Carrier) => Litex.Lt (0 : ℂ) (((x : ℝ)) : ℂ)))).Carrier)))⟩
 
 theorem __fact1 : Litex.In (1 : ℂ) Litex.R := by
   exact Litex.Rules.inBaseOfInSetBuilder (__fact0)

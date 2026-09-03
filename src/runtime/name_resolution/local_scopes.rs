@@ -1,50 +1,38 @@
-//! Runtime-owned parser scopes and frame-owned local environments.
+//! Runtime-owned parser scopes and current-source local environments.
 
 use crate::prelude::*;
 
 impl Runtime {
-    fn current_execution_target(&self) -> (ModuleId, FileId) {
-        let frame = self
-            .execution_stack
-            .last()
-            .expect("an execution frame should always exist");
+    fn current_source_target(&self) -> (ModuleId, SourceId) {
         (
-            frame.module_file_info.module_id,
-            frame.module_file_info.file_id,
+            self.current_module_id
+                .expect("a current source should always exist"),
+            self.current_source_id
+                .expect("a current source should always exist"),
         )
     }
 
     pub fn top_level_env(&mut self) -> &mut Environment {
-        if self
-            .execution_stack
-            .last()
-            .is_some_and(|frame| !frame.local_environment_stack.is_empty())
-        {
+        if !self.local_scopes.is_empty() {
             return self
-                .execution_stack
+                .local_scopes
                 .last_mut()
-                .and_then(|frame| frame.local_environment_stack.last_mut())
                 .map(|environment| environment.as_mut())
                 .expect("local environment should exist");
         }
 
-        let (module_id, file_id) = self.current_execution_target();
+        let (module_id, source_id) = self.current_source_target();
         self.module_manager
             .module_mut(module_id)
-            .and_then(|module| module.file_mut(file_id))
-            .map(|file| file.environment.as_mut())
-            .expect("current file environment should exist")
+            .and_then(|module| module.source_mut(source_id))
+            .map(|source| source.environment.as_mut())
+            .expect("current source environment should exist")
     }
 }
 
 impl Runtime {
     fn push_env(&mut self) {
-        let frame = self
-            .execution_stack
-            .last_mut()
-            .expect("an execution frame should always exist");
-        frame
-            .local_environment_stack
+        self.local_scopes
             .push(Box::new(Environment::new_empty_env()));
     }
 
@@ -57,9 +45,8 @@ impl Runtime {
         self.push_env();
         let result = f(self);
         let _child = self
-            .execution_stack
-            .last_mut()
-            .and_then(|frame| frame.local_environment_stack.pop())
+            .local_scopes
+            .pop()
             .expect("local environment should exist after push_env");
         result
     }
@@ -73,9 +60,8 @@ impl Runtime {
         self.push_env();
         let result = f(self);
         let child = self
-            .execution_stack
-            .last_mut()
-            .and_then(|frame| frame.local_environment_stack.pop())
+            .local_scopes
+            .pop()
             .expect("local environment should exist after push_env");
         result.map(|value| (value, *child))
     }
@@ -90,9 +76,8 @@ impl Runtime {
         self.push_env();
         let result = f(self);
         let child = self
-            .execution_stack
-            .last_mut()
-            .and_then(|frame| frame.local_environment_stack.pop())
+            .local_scopes
+            .pop()
             .expect("local environment should exist after push_env");
 
         let value = result?;
@@ -103,7 +88,7 @@ impl Runtime {
     /// Restores the current frame's scoped parsing state after `f` so parse-time bindings (e.g.
     /// `have x …` without `=`) do not leak across sibling `?` goal blocks or out of nested parses
     /// that use this wrapper (`forall`, `exist`, goal blocks, `prop` bodies, etc.). Successful
-    /// parses retain only non-scoped parser metadata owned by the source frame.
+    /// parses retain only non-scoped parser metadata owned by the current source.
     pub fn run_in_local_parsing_time_name_scope<T, E, F>(&mut self, f: F) -> Result<T, E>
     where
         F: FnOnce(&mut Self) -> Result<T, E>,

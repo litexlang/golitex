@@ -49,7 +49,7 @@ impl Runtime {
 
     /// Mathematical contract implementation: cached facts reuse their prior
     /// check, ordinary sources are centrally checked, and only the repository's
-    /// explicit trusted-file boundary may bypass this gate.
+    /// explicit trusted-source boundary may bypass this gate.
     fn store_with_well_defined_verification_and_infer_with_reason_text(
         &mut self,
         fact: Fact,
@@ -74,7 +74,7 @@ impl Runtime {
         if self.non_forall_fact_is_cached(&fact) {
             return self.infer_with_state(&fact, inference_state);
         }
-        if self.current_execution_is_trusted_file() {
+        if self.current_execution_is_trusted_source() {
             return self
                 .store_without_well_defined_verification_and_infer_with_reason_text_and_state(
                     fact,
@@ -1038,7 +1038,7 @@ impl Runtime {
 
     /// Mathematical contract: store a fact without deriving consequences only
     /// after central well-definedness succeeds, except at the explicit
-    /// trusted-file boundary.
+    /// trusted-source boundary.
     pub fn verify_well_defined_and_store_without_infer(
         &mut self,
         fact: Fact,
@@ -1060,7 +1060,7 @@ impl Runtime {
         verify_state: &VerifyState,
         reason: InferReason,
     ) -> Result<SuccessInferResult, RuntimeError> {
-        if !self.current_execution_is_trusted_file() {
+        if !self.current_execution_is_trusted_source() {
             self.verify_fact_well_defined_result(&fact, verify_state)?;
         }
 

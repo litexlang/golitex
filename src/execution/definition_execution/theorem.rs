@@ -40,7 +40,7 @@ impl Runtime {
         self.store_def_thm(stmt)
             .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
 
-        let mut infer_result = if self.current_execution_is_trusted_file() {
+        let mut infer_result = if self.current_execution_is_trusted_source() {
             self.store_fact_with_trust_and_infer_with_reason(
                 stmt.fact.clone(),
                 InferReason::Other(stmt.store_reason().to_string()),

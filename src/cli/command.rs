@@ -256,14 +256,17 @@ struct ParsedModifiers {
 }
 
 fn run_options(execution: ExecutionOption, modifiers: ParsedModifiers) -> RunOptions {
-    let options = if modifiers.strict {
-        RunOptions::strict_execute(execution)
+    let run = if modifiers.strict {
+        RunOption::StrictExecute(execution)
     } else {
-        RunOptions::execute(execution)
+        RunOption::Execute(execution)
     };
-    options
-        .with_output_detail(OutputDetail::Detailed)
-        .with_output_language(modifiers.output_language.unwrap_or(OutputLanguage::English))
+    RunOptions::new(
+        run,
+        OutputDetail::Detailed,
+        modifiers.output_language.unwrap_or(OutputLanguage::English),
+        SummaryOption::None,
+    )
 }
 
 fn execution_option(flag: &str, isolated: bool) -> ExecutionOption {

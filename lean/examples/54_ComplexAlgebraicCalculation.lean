@@ -16,22 +16,22 @@ theorem __fact1 : Litex.Same (((1 : ℂ) + Complex.I) * ((1 : ℂ) - Complex.I))
   ring_nf <;> norm_num [Complex.I_mul_I] <;> ring)))) (Litex.Same.symm (Litex.Same.refl ((2 : ℂ)))))
 
 theorem __fact2 :
-    ∀ (__p1 : (Litex.C).Carrier) (__type1 : Litex.In __p1 Litex.C), Litex.Same ((__p1 + Complex.I) * (__p1 - Complex.I)) ((__p1 * __p1) + (1 : ℂ)) := by
+    ∀ (__p1 : (Litex.C).Carrier) (__type1 : Litex.In (α := (Litex.C).Carrier) __p1 Litex.C), Litex.Same (((Litex.In.rep __p1 __type1) + Complex.I) * ((Litex.In.rep __p1 __type1) - Complex.I)) (((Litex.In.rep __p1 __type1) * (Litex.In.rep __p1 __type1)) + (1 : ℂ)) := by
   intro z __h5
-  have __prior2_0 : Litex.Same ((z + Complex.I) * (z - Complex.I)) ((z * z) + (1 : ℂ)) := Litex.Same.trans (Litex.Same.refl (((z + Complex.I) * (z - Complex.I)))) (Litex.Same.trans (Litex.Same.ofEq ((show ((z + Complex.I) * (z - Complex.I)) = ((z * z) + (1 : ℂ)) from (by
-    show ((z + Complex.I) * (z - Complex.I)) = ((z * z) + (1 : ℂ))
-    ring_nf <;> norm_num [Complex.I_mul_I] <;> ring)))) (Litex.Same.symm (Litex.Same.refl (((z * z) + (1 : ℂ))))))
+  have __prior2_0 : Litex.Same ((Litex.In.rep z __h5 + Complex.I) * (Litex.In.rep z __h5 - Complex.I)) ((Litex.In.rep z __h5 * Litex.In.rep z __h5) + (1 : ℂ)) := Litex.Same.trans (Litex.Same.refl (((Litex.In.rep z __h5 + Complex.I) * (Litex.In.rep z __h5 - Complex.I)))) (Litex.Same.trans (Litex.Same.ofEq ((show ((Litex.In.rep z __h5 + Complex.I) * (Litex.In.rep z __h5 - Complex.I)) = ((Litex.In.rep z __h5 * Litex.In.rep z __h5) + (1 : ℂ)) from (by
+    show ((Litex.In.rep z __h5 + Complex.I) * (Litex.In.rep z __h5 - Complex.I)) = ((Litex.In.rep z __h5 * Litex.In.rep z __h5) + (1 : ℂ))
+    ring_nf <;> norm_num [Complex.I_mul_I] <;> ring)))) (Litex.Same.symm (Litex.Same.refl (((Litex.In.rep z __h5 * Litex.In.rep z __h5) + (1 : ℂ))))))
   exact __prior2_0
 
 theorem __fact3 :
-    ∀ (__p1 : (Litex.C).Carrier) (__type1 : Litex.In __p1 Litex.C) (__domain1 : ¬ Litex.Same (__p1 + Complex.I) (0 : ℂ)), Litex.Same (((__p1 + Complex.I) ^ (2 : ℕ)) / (__p1 + Complex.I)) (__p1 + Complex.I) := by
+    ∀ (__p1 : (Litex.C).Carrier) (__type1 : Litex.In (α := (Litex.C).Carrier) __p1 Litex.C) (__domain1 : ¬ @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) ((Litex.In.rep __p1 __type1) + Complex.I) (0 : ℂ)), Litex.Same ((((Litex.In.rep __p1 __type1) + Complex.I) ^ (2 : ℕ)) / ((Litex.In.rep __p1 __type1) + Complex.I)) ((Litex.In.rep __p1 __type1) + Complex.I) := by
   intro z __h11 __domain_f12
-  have __prior3_0 : Litex.Same (((z + Complex.I) ^ (2 : ℕ)) / (z + Complex.I)) (z + Complex.I) := Litex.Same.trans (Litex.Same.refl ((((z + Complex.I) ^ (2 : ℕ)) / (z + Complex.I)))) (Litex.Same.trans (Litex.Same.ofEq ((show (((z + Complex.I) ^ (2 : ℕ)) / (z + Complex.I)) = (z + Complex.I) from (by
-    show (((z + Complex.I) ^ (2 : ℕ)) / (z + Complex.I)) = (z + Complex.I)
-    have __calculate_nonzero1 : (z + Complex.I) ≠ (0 : ℂ) := by
+  have __prior3_0 : Litex.Same (((Litex.In.rep z __h11 + Complex.I) ^ (2 : ℕ)) / (Litex.In.rep z __h11 + Complex.I)) (Litex.In.rep z __h11 + Complex.I) := Litex.Same.trans (Litex.Same.refl ((((Litex.In.rep z __h11 + Complex.I) ^ (2 : ℕ)) / (Litex.In.rep z __h11 + Complex.I)))) (Litex.Same.trans (Litex.Same.ofEq ((show (((Litex.In.rep z __h11 + Complex.I) ^ (2 : ℕ)) / (Litex.In.rep z __h11 + Complex.I)) = (Litex.In.rep z __h11 + Complex.I) from (by
+    show (((Litex.In.rep z __h11 + Complex.I) ^ (2 : ℕ)) / (Litex.In.rep z __h11 + Complex.I)) = (Litex.In.rep z __h11 + Complex.I)
+    have __calculate_nonzero1 : (Litex.In.rep z __h11 + Complex.I) ≠ (0 : ℂ) := by
       intro __native_eq
-      exact (show ¬ Litex.Same (z + Complex.I) (0 : ℂ) from __domain_f12) (Litex.Same.ofEq __native_eq)
-    field_simp [__calculate_nonzero1] <;> ring_nf <;> norm_num [Complex.I_mul_I] <;> ring)))) (Litex.Same.symm (Litex.Same.refl ((z + Complex.I)))))
+      exact (show ¬ @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) (Litex.In.rep z __h11 + Complex.I) (0 : ℂ) from __domain_f12) (Litex.Same.ofEqNoObservation __native_eq)
+    field_simp [__calculate_nonzero1] <;> ring_nf <;> norm_num [Complex.I_mul_I] <;> ring)))) (Litex.Same.symm (Litex.Same.refl ((Litex.In.rep z __h11 + Complex.I)))))
   exact __prior3_0
 
 end __Compiler_54_ComplexAlgebraicCalculation

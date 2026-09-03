@@ -131,7 +131,7 @@ impl Runtime {
     ) -> Result<SuccessInferResult, RuntimeError> {
         let mut infer_result = SuccessInferResult::new();
         for then_fact in stmt.then_facts.iter() {
-            let one_then_fact_infer_result = if self.current_execution_is_trusted_file() {
+            let one_then_fact_infer_result = if self.current_execution_is_trusted_source() {
                 self.store_fact_with_trust_and_infer_with_reason(
                     then_fact.clone(),
                     InferReason::StatementWithVerification,

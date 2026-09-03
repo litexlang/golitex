@@ -516,14 +516,14 @@ pub(in super::super) fn render_set_builder_predicate_projection_from_fact_and_pr
         element_context
             .semantic_zero_ended_order_symbols
             .insert(builder.symbol_id);
-        let transported = render_equality_across_representative(
+        let transported = render_no_observation_equality_across_representative(
             equality,
             &representative_context,
             &element_context,
             "__rep",
             &rendered_element,
-            "Litex.Same.symm __same",
-            "__selected",
+            "Litex.Same.symmNoObservation __same",
+            "Litex.Same.withoutObservation (__selected)",
         )?;
         return Ok(format!(
             "(by\n  rcases Litex.Rules.inSetBuilder_iff.mp ({source_proof}) with ⟨__rep, __predicate, __same⟩\n  have __selected := __predicate{predicate_selector}\n  exact {transported})"

@@ -32,21 +32,37 @@ pub struct RunOptions {
 }
 
 impl RunOptions {
+    /// Construct a complete run configuration in one immutable value.
+    pub fn new(
+        run: RunOption,
+        output_detail: OutputDetail,
+        output_language: OutputLanguage,
+        summary: SummaryOption,
+    ) -> Self {
+        Self {
+            run,
+            output_detail,
+            output_language,
+            summary,
+        }
+    }
+
     pub fn execute(execution: ExecutionOption) -> Self {
-        Self::new(RunOption::Execute(execution))
+        Self::new(
+            RunOption::Execute(execution),
+            OutputDetail::Normal,
+            OutputLanguage::English,
+            SummaryOption::None,
+        )
     }
 
     pub fn strict_execute(execution: ExecutionOption) -> Self {
-        Self::new(RunOption::StrictExecute(execution))
-    }
-
-    fn new(run: RunOption) -> Self {
-        Self {
-            run,
-            output_detail: OutputDetail::Normal,
-            output_language: OutputLanguage::English,
-            summary: SummaryOption::None,
-        }
+        Self::new(
+            RunOption::StrictExecute(execution),
+            OutputDetail::Normal,
+            OutputLanguage::English,
+            SummaryOption::None,
+        )
     }
 
     pub fn run(&self) -> RunOption {
@@ -74,6 +90,10 @@ impl RunOptions {
         self.summary == SummaryOption::Summarize
     }
 
+    pub(crate) fn summary(&self) -> SummaryOption {
+        self.summary
+    }
+
     pub fn output_detail(&self) -> OutputDetail {
         self.output_detail
     }
@@ -82,37 +102,9 @@ impl RunOptions {
         self.output_language
     }
 
-    pub fn with_output_detail(mut self, output_detail: OutputDetail) -> Self {
-        self.output_detail = output_detail;
-        self
-    }
-
     #[deprecated(note = "use `output_detail`")]
     pub fn output_style(&self) -> OutputDetail {
         self.output_detail()
-    }
-
-    #[deprecated(note = "use `with_output_detail`")]
-    pub fn with_output_style(self, output_detail: OutputDetail) -> Self {
-        self.with_output_detail(output_detail)
-    }
-
-    pub fn with_output_language(mut self, output_language: OutputLanguage) -> Self {
-        self.output_language = output_language;
-        self
-    }
-
-    pub fn with_summary(mut self, summary: SummaryOption) -> Self {
-        self.summary = summary;
-        self
-    }
-
-    pub fn with_execution(mut self, execution: ExecutionOption) -> Self {
-        self.run = match self.run {
-            RunOption::Execute(_) => RunOption::Execute(execution),
-            RunOption::StrictExecute(_) => RunOption::StrictExecute(execution),
-        };
-        self
     }
 }
 

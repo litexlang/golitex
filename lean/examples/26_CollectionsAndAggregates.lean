@@ -21,8 +21,8 @@ theorem __fact2 : Litex.Same (Litex.powerSet Litex.R) (Litex.powerSet Litex.R) :
   exact Litex.Same.refl (Litex.powerSet Litex.R)
 
 theorem __fact3 :
-    ∀ (__p1 : Litex.Set) (__p2 : Litex.Set) (__type2 : Litex.Set.Nonempty __p2) {__carrier3 : Type 1} (__p3 : __carrier3) (__type3 : Litex.In __p3 (Litex.fnSet (__p1 : Litex.Set.{0}) (__p2 : Litex.Set.{0}))), Litex.Same (Litex.generalCart __p1 __p2 __p3) (Litex.generalCart __p1 __p2 __p3) := by
-  intro I S __h19 __carrier3 g __h22
+    ∀ (__p1 : Litex.Set) (__p2 : Litex.Set) (__type2 : Litex.Set.Nonempty __p2) (__p3 : ((Litex.fnSet (__p1 : Litex.Set.{0}) (__p2 : Litex.Set.{0}))).Carrier) (__type3 : Litex.In (α := ((Litex.fnSet (__p1 : Litex.Set.{0}) (__p2 : Litex.Set.{0}))).Carrier) __p3 (Litex.fnSet (__p1 : Litex.Set.{0}) (__p2 : Litex.Set.{0}))), Litex.Same (Litex.generalCart __p1 __p2 __p3) (Litex.generalCart __p1 __p2 __p3) := by
+  intro I S __h18 g __h21
   have __prior3_0 : Litex.Same (Litex.generalCart I S g) (Litex.generalCart I S g) := Litex.Same.refl (Litex.generalCart I S g)
   exact __prior3_0
 
@@ -75,73 +75,73 @@ theorem __fact19 : Litex.Set.Finite (Litex.Set.coproduct (Litex.Set.singleton (1
   exact Litex.Set.coproduct_finite (Litex.Set.singleton (1 : ℂ)) (Litex.Set.coproduct (Litex.Set.singleton (2 : ℂ)) (Litex.Set.coproduct (Litex.Set.singleton (3 : ℂ)) Litex.Set.empty)) (Litex.Set.singleton_finite (1 : ℂ)) (Litex.Set.coproduct_finite (Litex.Set.singleton (2 : ℂ)) (Litex.Set.coproduct (Litex.Set.singleton (3 : ℂ)) Litex.Set.empty) (Litex.Set.singleton_finite (2 : ℂ)) (Litex.Set.coproduct_finite (Litex.Set.singleton (3 : ℂ)) Litex.Set.empty (Litex.Set.singleton_finite (3 : ℂ)) (Litex.Set.empty_finite)))
 
 theorem __fact20 : Litex.In (1 : ℂ) (Litex.Set.coproduct (Litex.Set.singleton (1 : ℂ)) (Litex.Set.coproduct (Litex.Set.singleton (2 : ℂ)) (Litex.Set.coproduct (Litex.Set.singleton (3 : ℂ)) Litex.Set.empty))) := by
-  exact ⟨Sum.inl (Litex.SingletonCarrier.element), Litex.Same.trans (Litex.Same.refl (1 : ℂ)) (Litex.Same.trans (Litex.Same.singleton (1 : ℂ)) (Litex.Same.sumLeft (Litex.SingletonCarrier.element)))⟩
+  exact ⟨Sum.inl (Litex.SingletonCarrier.element), Litex.Same.transNoObservation (Litex.Same.withoutObservation (Litex.Same.refl (1 : ℂ))) (Litex.Same.transNoObservation (Litex.Same.singletonNoObservation (1 : ℂ)) (Litex.Same.sumLeftNoObservation (Litex.SingletonCarrier.element)))⟩
 
-theorem __fact21 : Litex.Same (1 : ℂ) (1 : ℂ) ∨ Litex.Same (1 : ℂ) (2 : ℂ) ∨ Litex.Same (1 : ℂ) (3 : ℂ) := by
+theorem __fact21 : @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) (1 : ℂ) (1 : ℂ) ∨ @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) (1 : ℂ) (2 : ℂ) ∨ @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) (1 : ℂ) (3 : ℂ) := by
   exact (by
   rcases (__fact20) with ⟨__member, __same⟩
   cases __member with
   | inl __head0 =>
     cases __head0
-    exact Or.inl (Litex.Same.trans __same (Litex.Same.symm (Litex.Same.trans (Litex.Same.singleton (1 : ℂ)) (Litex.Same.sumLeft (Litex.SingletonCarrier.element)))))
+    exact Or.inl (Litex.Same.transNoObservation __same (Litex.Same.symmNoObservation (Litex.Same.transNoObservation (Litex.Same.singletonNoObservation (1 : ℂ)) (Litex.Same.sumLeftNoObservation (Litex.SingletonCarrier.element)))))
   | inr __tail0 =>
     cases __tail0 with
     | inl __head1 =>
       cases __head1
-      exact Or.inr (Or.inl (Litex.Same.trans __same (Litex.Same.symm (Litex.Same.trans (Litex.Same.trans (Litex.Same.singleton (2 : ℂ)) (Litex.Same.sumLeft (Litex.SingletonCarrier.element))) (Litex.Same.sumRight (Sum.inl (Litex.SingletonCarrier.element)))))))
+      exact Or.inr (Or.inl (Litex.Same.transNoObservation __same (Litex.Same.symmNoObservation (Litex.Same.transNoObservation (Litex.Same.transNoObservation (Litex.Same.singletonNoObservation (2 : ℂ)) (Litex.Same.sumLeftNoObservation (Litex.SingletonCarrier.element))) (Litex.Same.sumRightNoObservation (Sum.inl (Litex.SingletonCarrier.element)))))))
     | inr __tail1 =>
       cases __tail1 with
       | inl __head2 =>
         cases __head2
-        exact Or.inr (Or.inr (Litex.Same.trans __same (Litex.Same.symm (Litex.Same.trans (Litex.Same.trans (Litex.Same.trans (Litex.Same.singleton (3 : ℂ)) (Litex.Same.sumLeft (Litex.SingletonCarrier.element))) (Litex.Same.sumRight (Sum.inl (Litex.SingletonCarrier.element)))) (Litex.Same.sumRight (Sum.inr (Sum.inl (Litex.SingletonCarrier.element))))))))
+        exact Or.inr (Or.inr (Litex.Same.transNoObservation __same (Litex.Same.symmNoObservation (Litex.Same.transNoObservation (Litex.Same.transNoObservation (Litex.Same.transNoObservation (Litex.Same.singletonNoObservation (3 : ℂ)) (Litex.Same.sumLeftNoObservation (Litex.SingletonCarrier.element))) (Litex.Same.sumRightNoObservation (Sum.inl (Litex.SingletonCarrier.element)))) (Litex.Same.sumRightNoObservation (Sum.inr (Sum.inl (Litex.SingletonCarrier.element))))))))
       | inr __tail2 =>
         exact PEmpty.elim __tail2
 )
 
 theorem __fact22 : Litex.In (2 : ℂ) (Litex.Set.coproduct (Litex.Set.singleton (1 : ℂ)) (Litex.Set.coproduct (Litex.Set.singleton (2 : ℂ)) (Litex.Set.coproduct (Litex.Set.singleton (3 : ℂ)) Litex.Set.empty))) := by
-  exact ⟨Sum.inr (Sum.inl (Litex.SingletonCarrier.element)), Litex.Same.trans (Litex.Same.refl (2 : ℂ)) (Litex.Same.trans (Litex.Same.trans (Litex.Same.singleton (2 : ℂ)) (Litex.Same.sumLeft (Litex.SingletonCarrier.element))) (Litex.Same.sumRight (Sum.inl (Litex.SingletonCarrier.element))))⟩
+  exact ⟨Sum.inr (Sum.inl (Litex.SingletonCarrier.element)), Litex.Same.transNoObservation (Litex.Same.withoutObservation (Litex.Same.refl (2 : ℂ))) (Litex.Same.transNoObservation (Litex.Same.transNoObservation (Litex.Same.singletonNoObservation (2 : ℂ)) (Litex.Same.sumLeftNoObservation (Litex.SingletonCarrier.element))) (Litex.Same.sumRightNoObservation (Sum.inl (Litex.SingletonCarrier.element))))⟩
 
-theorem __fact23 : Litex.Same (2 : ℂ) (1 : ℂ) ∨ Litex.Same (2 : ℂ) (2 : ℂ) ∨ Litex.Same (2 : ℂ) (3 : ℂ) := by
+theorem __fact23 : @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) (2 : ℂ) (1 : ℂ) ∨ @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) (2 : ℂ) (2 : ℂ) ∨ @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) (2 : ℂ) (3 : ℂ) := by
   exact (by
   rcases (__fact22) with ⟨__member, __same⟩
   cases __member with
   | inl __head0 =>
     cases __head0
-    exact Or.inl (Litex.Same.trans __same (Litex.Same.symm (Litex.Same.trans (Litex.Same.singleton (1 : ℂ)) (Litex.Same.sumLeft (Litex.SingletonCarrier.element)))))
+    exact Or.inl (Litex.Same.transNoObservation __same (Litex.Same.symmNoObservation (Litex.Same.transNoObservation (Litex.Same.singletonNoObservation (1 : ℂ)) (Litex.Same.sumLeftNoObservation (Litex.SingletonCarrier.element)))))
   | inr __tail0 =>
     cases __tail0 with
     | inl __head1 =>
       cases __head1
-      exact Or.inr (Or.inl (Litex.Same.trans __same (Litex.Same.symm (Litex.Same.trans (Litex.Same.trans (Litex.Same.singleton (2 : ℂ)) (Litex.Same.sumLeft (Litex.SingletonCarrier.element))) (Litex.Same.sumRight (Sum.inl (Litex.SingletonCarrier.element)))))))
+      exact Or.inr (Or.inl (Litex.Same.transNoObservation __same (Litex.Same.symmNoObservation (Litex.Same.transNoObservation (Litex.Same.transNoObservation (Litex.Same.singletonNoObservation (2 : ℂ)) (Litex.Same.sumLeftNoObservation (Litex.SingletonCarrier.element))) (Litex.Same.sumRightNoObservation (Sum.inl (Litex.SingletonCarrier.element)))))))
     | inr __tail1 =>
       cases __tail1 with
       | inl __head2 =>
         cases __head2
-        exact Or.inr (Or.inr (Litex.Same.trans __same (Litex.Same.symm (Litex.Same.trans (Litex.Same.trans (Litex.Same.trans (Litex.Same.singleton (3 : ℂ)) (Litex.Same.sumLeft (Litex.SingletonCarrier.element))) (Litex.Same.sumRight (Sum.inl (Litex.SingletonCarrier.element)))) (Litex.Same.sumRight (Sum.inr (Sum.inl (Litex.SingletonCarrier.element))))))))
+        exact Or.inr (Or.inr (Litex.Same.transNoObservation __same (Litex.Same.symmNoObservation (Litex.Same.transNoObservation (Litex.Same.transNoObservation (Litex.Same.transNoObservation (Litex.Same.singletonNoObservation (3 : ℂ)) (Litex.Same.sumLeftNoObservation (Litex.SingletonCarrier.element))) (Litex.Same.sumRightNoObservation (Sum.inl (Litex.SingletonCarrier.element)))) (Litex.Same.sumRightNoObservation (Sum.inr (Sum.inl (Litex.SingletonCarrier.element))))))))
       | inr __tail2 =>
         exact PEmpty.elim __tail2
 )
 
 theorem __fact24 : Litex.In (3 : ℂ) (Litex.Set.coproduct (Litex.Set.singleton (1 : ℂ)) (Litex.Set.coproduct (Litex.Set.singleton (2 : ℂ)) (Litex.Set.coproduct (Litex.Set.singleton (3 : ℂ)) Litex.Set.empty))) := by
-  exact ⟨Sum.inr (Sum.inr (Sum.inl (Litex.SingletonCarrier.element))), Litex.Same.trans (Litex.Same.refl (3 : ℂ)) (Litex.Same.trans (Litex.Same.trans (Litex.Same.trans (Litex.Same.singleton (3 : ℂ)) (Litex.Same.sumLeft (Litex.SingletonCarrier.element))) (Litex.Same.sumRight (Sum.inl (Litex.SingletonCarrier.element)))) (Litex.Same.sumRight (Sum.inr (Sum.inl (Litex.SingletonCarrier.element)))))⟩
+  exact ⟨Sum.inr (Sum.inr (Sum.inl (Litex.SingletonCarrier.element))), Litex.Same.transNoObservation (Litex.Same.withoutObservation (Litex.Same.refl (3 : ℂ))) (Litex.Same.transNoObservation (Litex.Same.transNoObservation (Litex.Same.transNoObservation (Litex.Same.singletonNoObservation (3 : ℂ)) (Litex.Same.sumLeftNoObservation (Litex.SingletonCarrier.element))) (Litex.Same.sumRightNoObservation (Sum.inl (Litex.SingletonCarrier.element)))) (Litex.Same.sumRightNoObservation (Sum.inr (Sum.inl (Litex.SingletonCarrier.element)))))⟩
 
-theorem __fact25 : Litex.Same (3 : ℂ) (1 : ℂ) ∨ Litex.Same (3 : ℂ) (2 : ℂ) ∨ Litex.Same (3 : ℂ) (3 : ℂ) := by
+theorem __fact25 : @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) (3 : ℂ) (1 : ℂ) ∨ @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) (3 : ℂ) (2 : ℂ) ∨ @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) (3 : ℂ) (3 : ℂ) := by
   exact (by
   rcases (__fact24) with ⟨__member, __same⟩
   cases __member with
   | inl __head0 =>
     cases __head0
-    exact Or.inl (Litex.Same.trans __same (Litex.Same.symm (Litex.Same.trans (Litex.Same.singleton (1 : ℂ)) (Litex.Same.sumLeft (Litex.SingletonCarrier.element)))))
+    exact Or.inl (Litex.Same.transNoObservation __same (Litex.Same.symmNoObservation (Litex.Same.transNoObservation (Litex.Same.singletonNoObservation (1 : ℂ)) (Litex.Same.sumLeftNoObservation (Litex.SingletonCarrier.element)))))
   | inr __tail0 =>
     cases __tail0 with
     | inl __head1 =>
       cases __head1
-      exact Or.inr (Or.inl (Litex.Same.trans __same (Litex.Same.symm (Litex.Same.trans (Litex.Same.trans (Litex.Same.singleton (2 : ℂ)) (Litex.Same.sumLeft (Litex.SingletonCarrier.element))) (Litex.Same.sumRight (Sum.inl (Litex.SingletonCarrier.element)))))))
+      exact Or.inr (Or.inl (Litex.Same.transNoObservation __same (Litex.Same.symmNoObservation (Litex.Same.transNoObservation (Litex.Same.transNoObservation (Litex.Same.singletonNoObservation (2 : ℂ)) (Litex.Same.sumLeftNoObservation (Litex.SingletonCarrier.element))) (Litex.Same.sumRightNoObservation (Sum.inl (Litex.SingletonCarrier.element)))))))
     | inr __tail1 =>
       cases __tail1 with
       | inl __head2 =>
         cases __head2
-        exact Or.inr (Or.inr (Litex.Same.trans __same (Litex.Same.symm (Litex.Same.trans (Litex.Same.trans (Litex.Same.trans (Litex.Same.singleton (3 : ℂ)) (Litex.Same.sumLeft (Litex.SingletonCarrier.element))) (Litex.Same.sumRight (Sum.inl (Litex.SingletonCarrier.element)))) (Litex.Same.sumRight (Sum.inr (Sum.inl (Litex.SingletonCarrier.element))))))))
+        exact Or.inr (Or.inr (Litex.Same.transNoObservation __same (Litex.Same.symmNoObservation (Litex.Same.transNoObservation (Litex.Same.transNoObservation (Litex.Same.transNoObservation (Litex.Same.singletonNoObservation (3 : ℂ)) (Litex.Same.sumLeftNoObservation (Litex.SingletonCarrier.element))) (Litex.Same.sumRightNoObservation (Sum.inl (Litex.SingletonCarrier.element)))) (Litex.Same.sumRightNoObservation (Sum.inr (Sum.inl (Litex.SingletonCarrier.element))))))))
       | inr __tail2 =>
         exact PEmpty.elim __tail2
 )

@@ -10,7 +10,7 @@ use crate::syntax::keywords::{
 
 impl Runtime {
     pub fn parse_statement(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
-        self.ensure_execution_frame_for_parse();
+        self.ensure_current_source_for_parse();
         let saved_parse_context = self.current_parse_context().clone();
         let result = self.parse_statement_from_leading_token(tb);
         if result.is_err() {

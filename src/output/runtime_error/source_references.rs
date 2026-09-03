@@ -18,7 +18,7 @@ fn line_files_have_same_source(left: &LineFile, right: &LineFile) -> bool {
 
 fn line_file_is_root_source(line_file: &LineFile, mm: &ModuleManager) -> bool {
     mm.module(ModuleId::ROOT)
-        .is_some_and(|module| line_file.1.as_ref() == module.main_file_path)
+        .is_some_and(|module| line_file.1.as_ref() == module.main_source_label())
 }
 
 fn display_source_label_for_line_file(
@@ -32,15 +32,23 @@ fn display_source_label_for_line_file(
     let path = line_file.1.as_ref();
 
     for module in runtime.module_manager.modules.values() {
-        for file in module.files.iter() {
-            if file.source_path == path {
-                if file.is_virtual_source {
-                    return Some((None, file.source_path.clone()));
+        for registered_source in module.sources.iter() {
+            let label = registered_source.display_label();
+            let matches_source = match &registered_source.origin {
+                SourcePath::RealFilePath(real_path) => real_path.to_string() == path,
+                SourcePath::VirtualSource(_) => label == path,
+            };
+            if matches_source {
+                if matches!(&registered_source.origin, SourcePath::VirtualSource(_)) {
+                    return Some((None, label));
                 }
-                let source = if file.canonical_name.is_empty() {
+                let source = if registered_source.canonical_name.is_none() {
                     file_name_for_display(path)
                 } else {
-                    file.canonical_name.clone()
+                    registered_source
+                        .canonical_name
+                        .clone()
+                        .expect("checked canonical source name")
                 };
                 return Some((Some(SOURCE_KIND_FILE.to_string()), source));
             }
@@ -69,18 +77,21 @@ fn imported_module_source_label_for_path(
         if imported_module.id == ModuleId::ROOT {
             continue;
         }
-        let module_root = Path::new(imported_module.module_root_path.as_str());
+        let Some(module_root_path) = imported_module.root_directory_path() else {
+            continue;
+        };
+        let module_root = module_root_path.as_path();
         if !source_path.starts_with(module_root) {
             continue;
         }
 
         let source_kind = SOURCE_KIND_MODULE.to_string();
-        let root_path = module_manager
+        let root_label = module_manager
             .module(ModuleId::ROOT)
-            .map(|module| module.main_file_path.as_str())
+            .map(ModuleRunner::main_source_label)
             .unwrap_or_default();
-        let source = module_display_path(module_root, root_path);
-        let score = imported_module.module_root_path.len();
+        let source = module_display_path(module_root, root_label.as_str());
+        let score = module_root_path.to_string().len();
 
         if best_match
             .as_ref()

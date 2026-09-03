@@ -69,7 +69,7 @@ fn not_equal_symmetry_compiles_from_recursive_forall_results() {
             .expect("the recursive forall Result retains every proof-scope FactId");
     assert!(generated.contains("Litex.Rules.notSameSymm"), "{generated}");
     assert!(
-        generated.contains("__domain3 : ¬ Litex.Same"),
+        generated.contains("__domain3 : ¬ @Litex.Same"),
         "{generated}"
     );
 }

@@ -15,10 +15,13 @@ theorem __fact1 : Litex.Same id ({ call := fun {__alpha} (__arg : __alpha) __arg
   unfold id
   exact Litex.Same.refl ({ call := fun {__alpha} (__arg : __alpha) __arg_in => Litex.In.rep __arg __arg_in } : Litex.Fn Litex.R Litex.R)
 
-theorem __fact2 : Litex.Same (Litex.fnApplyOwn id (Litex.In.own (Litex.fnSet Litex.R Litex.R) id) (1 : ℂ) (Litex.Rules.complexRealInR (1 : ℝ))) (1 : ℂ) := by
+theorem __fact2 : Litex.Same (Litex.fnApplyCarrier (domain := Litex.R) (codomain := Litex.R) id ((Litex.In.own (Litex.fnSet Litex.R Litex.R) id)) (1 : ℝ)) (1 : ℂ) := by
+  exact Litex.Same.trans ((by
+  unfold Litex.fnApplyCarrier id
   exact (by
-  unfold Litex.fnApplyOwn id
-  exact Litex.Same.symm (Litex.In.same_rep (1 : ℂ) (Litex.Rules.complexRealInR (1 : ℝ))))
+  convert (Litex.Same.realComplex ((1 : ℝ))) using 1
+  · exact Litex.In.rep_exact ((1 : ℝ)) (Litex.In.own Litex.R ((1 : ℝ)))
+  · norm_num))) (Litex.Same.refl (1 : ℂ))
 
 noncomputable def inc : Litex.Fn Litex.R Litex.R :=
   { call := fun {__alpha} (__arg : __alpha) __arg_in => (Litex.In.rep __arg __arg_in + (1 : ℝ)) }
@@ -30,43 +33,45 @@ theorem __fact4 : Litex.Same inc ({ call := fun {__alpha} (__arg : __alpha) __ar
   unfold inc
   exact Litex.Same.refl ({ call := fun {__alpha} (__arg : __alpha) __arg_in => (Litex.In.rep __arg __arg_in + (1 : ℝ)) } : Litex.Fn Litex.R Litex.R)
 
-theorem __fact5 : Litex.Same (Litex.fnApplyOwn inc (Litex.In.own (Litex.fnSet Litex.R Litex.R) inc) (1 : ℂ) ((Litex.In.congr (__fact2) Litex.R).mp (Litex.In.own Litex.R (Litex.fnApplyOwn id (Litex.In.own (Litex.fnSet Litex.R Litex.R) id) (1 : ℂ) (Litex.Rules.complexRealInR (1 : ℝ)))))) ((1 : ℂ) + (1 : ℂ)) := by
-  exact (by
-  unfold Litex.fnApplyOwn inc
-  exact Litex.Same.realAddComplex (Litex.Same.symm (Litex.In.same_rep (1 : ℂ) ((Litex.In.congr (__fact2) Litex.R).mp (Litex.In.own Litex.R (Litex.fnApplyOwn id (Litex.In.own (Litex.fnSet Litex.R Litex.R) id) (1 : ℂ) (Litex.Rules.complexRealInR (1 : ℝ))))))) (Litex.Same.realComplex (1 : ℝ)))
+theorem __fact5 : Litex.Same (Litex.fnApplyCarrier (domain := Litex.R) (codomain := Litex.R) inc ((Litex.In.own (Litex.fnSet Litex.R Litex.R) inc)) (1 : ℝ)) ((1 : ℂ) + (1 : ℂ)) := by
+  exact Litex.Same.trans ((by
+  unfold Litex.fnApplyCarrier inc
+  exact Litex.Same.realAddComplex ((by
+  convert (Litex.Same.realComplex ((1 : ℝ))) using 1
+  · exact Litex.In.rep_exact ((1 : ℝ)) (Litex.In.own Litex.R ((1 : ℝ)))
+  · norm_num)) (Litex.Same.realComplex (1 : ℝ)))) (Litex.Same.refl ((1 : ℂ) + (1 : ℂ)))
 
-noncomputable def reciprocal : Litex.FnWhere Litex.R Litex.R (fun {__alpha} (__arg : __alpha) => ¬ Litex.Same __arg (0 : ℂ)) :=
+noncomputable def reciprocal : Litex.FnWhere Litex.R Litex.R (fun {__alpha} (__arg : __alpha) (__arg_in : Litex.In __arg Litex.R) => ¬ @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) __arg (0 : ℂ)) :=
   { call := fun {__alpha} (__arg : __alpha) __arg_in __arg_domain => ((1 : ℝ) / Litex.In.rep __arg __arg_in) }
 
-theorem __fact6 : Litex.In reciprocal (Litex.fnSetWhere Litex.R Litex.R (fun {__alpha} (__arg : __alpha) => ¬ Litex.Same __arg (0 : ℂ))) := by
-  exact Litex.In.own (Litex.fnSetWhere Litex.R Litex.R (fun {__alpha} (__arg : __alpha) => ¬ Litex.Same __arg (0 : ℂ))) reciprocal
+theorem __fact6 : Litex.In reciprocal (Litex.fnSetWhere Litex.R Litex.R (fun {__alpha} (__arg : __alpha) (__arg_in : Litex.In __arg Litex.R) => ¬ @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) __arg (0 : ℂ))) := by
+  exact Litex.In.own (Litex.fnSetWhere Litex.R Litex.R (fun {__alpha} (__arg : __alpha) (__arg_in : Litex.In __arg Litex.R) => ¬ @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) __arg (0 : ℂ))) reciprocal
 
-theorem __fact7 : Litex.Same reciprocal ({ call := fun {__alpha} (__arg : __alpha) __arg_in __arg_domain => ((1 : ℝ) / Litex.In.rep __arg __arg_in) } : Litex.FnWhere Litex.R Litex.R (fun {__alpha} (__arg : __alpha) => ¬ Litex.Same __arg (0 : ℂ))) := by
+theorem __fact7 : Litex.Same reciprocal ({ call := fun {__alpha} (__arg : __alpha) __arg_in __arg_domain => ((1 : ℝ) / Litex.In.rep __arg __arg_in) } : Litex.FnWhere Litex.R Litex.R (fun {__alpha} (__arg : __alpha) (__arg_in : Litex.In __arg Litex.R) => ¬ @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) __arg (0 : ℂ))) := by
   unfold reciprocal
-  exact Litex.Same.refl ({ call := fun {__alpha} (__arg : __alpha) __arg_in __arg_domain => ((1 : ℝ) / Litex.In.rep __arg __arg_in) } : Litex.FnWhere Litex.R Litex.R (fun {__alpha} (__arg : __alpha) => ¬ Litex.Same __arg (0 : ℂ)))
+  exact Litex.Same.refl ({ call := fun {__alpha} (__arg : __alpha) __arg_in __arg_domain => ((1 : ℝ) / Litex.In.rep __arg __arg_in) } : Litex.FnWhere Litex.R Litex.R (fun {__alpha} (__arg : __alpha) (__arg_in : Litex.In __arg Litex.R) => ¬ @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) __arg (0 : ℂ)))
 
 theorem __fact8 :
-    ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.R) (__domain1 : ¬ Litex.Same __p1 (0 : ℂ)), Litex.Same (Litex.fnApplyWhereOwn reciprocal (Litex.In.own (Litex.fnSetWhere Litex.R Litex.R (fun {__alpha} (__arg : __alpha) => ¬ Litex.Same __arg (0 : ℂ))) reciprocal) __p1 (__type1) (__domain1)) ((1 : ℂ) / (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ)) := by
-  intro __carrier1 a __h31 __domain1
-  have __prior8_0 : Litex.Same (Litex.fnApplyWhereOwn reciprocal (Litex.In.own (Litex.fnSetWhere Litex.R Litex.R (fun {__alpha} (__arg : __alpha) => ¬ Litex.Same __arg (0 : ℂ))) reciprocal) a (__h31) (__domain1)) ((1 : ℂ) / (((Litex.In.rep a __h31 : ℝ)) : ℂ)) := (by
+    ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In (α := (Litex.R).Carrier) __p1 Litex.R) (__domain1 : ¬ @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) __p1 (0 : ℂ)), Litex.Same (Litex.fnApplyWhereOwn (domain := Litex.R) (codomain := Litex.R) reciprocal ((Litex.In.own (Litex.fnSetWhere Litex.R Litex.R (fun {__alpha} (__arg : __alpha) (__arg_in : Litex.In __arg Litex.R) => ¬ @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) __arg (0 : ℂ))) reciprocal)) __p1 (__type1) (__domain1)) ((1 : ℂ) / ((((Litex.In.rep __p1 __type1) : ℝ)) : ℂ)) := by
+  intro a __h31 __domain_f32
+  have __prior8_0 : Litex.Same (Litex.fnApplyWhereOwn (domain := Litex.R) (codomain := Litex.R) reciprocal ((Litex.In.own (Litex.fnSetWhere Litex.R Litex.R (fun {__alpha} (__arg : __alpha) (__arg_in : Litex.In __arg Litex.R) => ¬ @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) __arg (0 : ℂ))) reciprocal)) a (__h31) (__domain_f32)) ((1 : ℂ) / (((Litex.In.rep a __h31 : ℝ)) : ℂ)) := Litex.Same.trans ((by
     unfold Litex.fnApplyWhereOwn reciprocal
-    exact Litex.Same.realDivComplex (Litex.Same.realComplex (1 : ℝ)) (Litex.Same.realComplex ((Litex.In.rep a __h31 : ℝ))))
+    exact Litex.Same.realDivComplex (Litex.Same.realComplex (1 : ℝ)) (Litex.Same.realComplex ((Litex.In.rep a __h31 : ℝ))))) (Litex.Same.refl ((1 : ℂ) / (((Litex.In.rep a __h31 : ℝ)) : ℂ)))
   exact __prior8_0
 
 noncomputable def into_builder : Litex.FnTelescope.Carrier ((Litex.FnTelescope.parameter Litex.R (fun {__alpha1 : Type} (__arg1 : __alpha1) (__arg1_in : Litex.In __arg1 Litex.R) => (Litex.FnTelescope.done (Litex.setBuilder Litex.R (fun (z : Litex.R.Carrier) => Litex.Same z z))))) : Litex.FnTelescope.{0}) :=
-  fun {__alpha1 : Type} (__arg1 : __alpha1) (__arg1_in : Litex.In __arg1 Litex.R) => ULift.up (Litex.In.rep __arg1 (Litex.Rules.inSetBuilder (Litex.In.same_rep __arg1 (__arg1_in)) (Litex.Same.refl (Litex.In.rep __arg1 (__arg1_in)))))
+  fun {__alpha1 : Type} (__arg1 : __alpha1) (__arg1_in : Litex.In __arg1 Litex.R) => ULift.up (Litex.In.rep __arg1 (⟨(⟨Litex.In.rep __arg1 __arg1_in, Litex.Same.refl (Litex.In.rep __arg1 __arg1_in)⟩ : ((Litex.setBuilder Litex.R (fun (z : Litex.R.Carrier) => Litex.Same z z))).Carrier), Litex.Same.transNoObservation (Litex.Same.symmNoObservation (Litex.Same.withoutObservation (Litex.Same.symmNoObservation (Litex.Same.withoutObservation (Litex.In.same_rep __arg1 (__arg1_in)))))) (Litex.Same.symmNoObservation (Litex.Same.subtypeNoObservation (⟨Litex.In.rep __arg1 __arg1_in, Litex.Same.refl (Litex.In.rep __arg1 __arg1_in)⟩ : ((Litex.setBuilder Litex.R (fun (z : Litex.R.Carrier) => Litex.Same z z))).Carrier)))⟩))
 
 theorem __fact9 : Litex.In (@into_builder) (Litex.fnTelescopeSet ((Litex.FnTelescope.parameter Litex.R (fun {__alpha1 : Type} (__arg1 : __alpha1) (__arg1_in : Litex.In __arg1 Litex.R) => (Litex.FnTelescope.done (Litex.setBuilder Litex.R (fun (z : Litex.R.Carrier) => Litex.Same z z))))) : Litex.FnTelescope.{0})) := by
   exact Litex.In.own (Litex.fnTelescopeSet ((Litex.FnTelescope.parameter Litex.R (fun {__alpha1 : Type} (__arg1 : __alpha1) (__arg1_in : Litex.In __arg1 Litex.R) => (Litex.FnTelescope.done (Litex.setBuilder Litex.R (fun (z : Litex.R.Carrier) => Litex.Same z z))))) : Litex.FnTelescope.{0})) (@into_builder)
 
-theorem __fact10 : Litex.Same (@into_builder) (fun {__alpha1 : Type} (__arg1 : __alpha1) (__arg1_in : Litex.In __arg1 Litex.R) => ULift.up (Litex.In.rep __arg1 (Litex.Rules.inSetBuilder (Litex.In.same_rep __arg1 (__arg1_in)) (Litex.Same.refl (Litex.In.rep __arg1 (__arg1_in))))) : Litex.FnTelescope.Carrier ((Litex.FnTelescope.parameter Litex.R (fun {__alpha1 : Type} (__arg1 : __alpha1) (__arg1_in : Litex.In __arg1 Litex.R) => (Litex.FnTelescope.done (Litex.setBuilder Litex.R (fun (z : Litex.R.Carrier) => Litex.Same z z))))) : Litex.FnTelescope.{0})) := by
+theorem __fact10 : Litex.Same (@into_builder) (fun {__alpha1 : Type} (__arg1 : __alpha1) (__arg1_in : Litex.In __arg1 Litex.R) => ULift.up (Litex.In.rep __arg1 (⟨(⟨Litex.In.rep __arg1 __arg1_in, Litex.Same.refl (Litex.In.rep __arg1 __arg1_in)⟩ : ((Litex.setBuilder Litex.R (fun (z : Litex.R.Carrier) => Litex.Same z z))).Carrier), Litex.Same.transNoObservation (Litex.Same.symmNoObservation (Litex.Same.withoutObservation (Litex.Same.symmNoObservation (Litex.Same.withoutObservation (Litex.In.same_rep __arg1 (__arg1_in)))))) (Litex.Same.symmNoObservation (Litex.Same.subtypeNoObservation (⟨Litex.In.rep __arg1 __arg1_in, Litex.Same.refl (Litex.In.rep __arg1 __arg1_in)⟩ : ((Litex.setBuilder Litex.R (fun (z : Litex.R.Carrier) => Litex.Same z z))).Carrier)))⟩)) : Litex.FnTelescope.Carrier ((Litex.FnTelescope.parameter Litex.R (fun {__alpha1 : Type} (__arg1 : __alpha1) (__arg1_in : Litex.In __arg1 Litex.R) => (Litex.FnTelescope.done (Litex.setBuilder Litex.R (fun (z : Litex.R.Carrier) => Litex.Same z z))))) : Litex.FnTelescope.{0})) := by
   unfold into_builder
-  exact Litex.Same.refl (fun {__alpha1 : Type} (__arg1 : __alpha1) (__arg1_in : Litex.In __arg1 Litex.R) => ULift.up (Litex.In.rep __arg1 (Litex.Rules.inSetBuilder (Litex.In.same_rep __arg1 (__arg1_in)) (Litex.Same.refl (Litex.In.rep __arg1 (__arg1_in))))) : Litex.FnTelescope.Carrier ((Litex.FnTelescope.parameter Litex.R (fun {__alpha1 : Type} (__arg1 : __alpha1) (__arg1_in : Litex.In __arg1 Litex.R) => (Litex.FnTelescope.done (Litex.setBuilder Litex.R (fun (z : Litex.R.Carrier) => Litex.Same z z))))) : Litex.FnTelescope.{0}))
+  exact Litex.Same.refl (fun {__alpha1 : Type} (__arg1 : __alpha1) (__arg1_in : Litex.In __arg1 Litex.R) => ULift.up (Litex.In.rep __arg1 (⟨(⟨Litex.In.rep __arg1 __arg1_in, Litex.Same.refl (Litex.In.rep __arg1 __arg1_in)⟩ : ((Litex.setBuilder Litex.R (fun (z : Litex.R.Carrier) => Litex.Same z z))).Carrier), Litex.Same.transNoObservation (Litex.Same.symmNoObservation (Litex.Same.withoutObservation (Litex.Same.symmNoObservation (Litex.Same.withoutObservation (Litex.In.same_rep __arg1 (__arg1_in)))))) (Litex.Same.symmNoObservation (Litex.Same.subtypeNoObservation (⟨Litex.In.rep __arg1 __arg1_in, Litex.Same.refl (Litex.In.rep __arg1 __arg1_in)⟩ : ((Litex.setBuilder Litex.R (fun (z : Litex.R.Carrier) => Litex.Same z z))).Carrier)))⟩)) : Litex.FnTelescope.Carrier ((Litex.FnTelescope.parameter Litex.R (fun {__alpha1 : Type} (__arg1 : __alpha1) (__arg1_in : Litex.In __arg1 Litex.R) => (Litex.FnTelescope.done (Litex.setBuilder Litex.R (fun (z : Litex.R.Carrier) => Litex.Same z z))))) : Litex.FnTelescope.{0}))
 
-theorem __fact11 : Litex.Same (((Litex.fnTelescopeApplyOwn (@into_builder) (Litex.In.own (Litex.fnTelescopeSet ((Litex.FnTelescope.parameter Litex.R (fun {__alpha1 : Type} (__arg1 : __alpha1) (__arg1_in : Litex.In __arg1 Litex.R) => (Litex.FnTelescope.done (Litex.setBuilder Litex.R (fun (z : Litex.R.Carrier) => Litex.Same z z))))) : Litex.FnTelescope.{0})) (@into_builder))) (1 : ℂ) ((Litex.In.congr (__fact2) Litex.R).mp (Litex.In.own Litex.R (Litex.fnApplyOwn id (Litex.In.own (Litex.fnSet Litex.R Litex.R) id) (1 : ℂ) (Litex.Rules.complexRealInR (1 : ℝ))))))).down (1 : ℂ) := by
-  exact (by
+theorem __fact11 : @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) (((Litex.fnTelescopeApplyOwn (signature := ((Litex.FnTelescope.parameter Litex.R (fun {__alpha1 : Type} (__arg1 : __alpha1) (__arg1_in : Litex.In __arg1 Litex.R) => (Litex.FnTelescope.done (Litex.setBuilder Litex.R (fun (z : Litex.R.Carrier) => Litex.Same z z))))) : Litex.FnTelescope.{0})) (@into_builder) ((Litex.In.own (Litex.fnTelescopeSet ((Litex.FnTelescope.parameter Litex.R (fun {__alpha1 : Type} (__arg1 : __alpha1) (__arg1_in : Litex.In __arg1 Litex.R) => (Litex.FnTelescope.done (Litex.setBuilder Litex.R (fun (z : Litex.R.Carrier) => Litex.Same z z))))) : Litex.FnTelescope.{0})) (@into_builder)))) (1 : ℝ) (Litex.In.own Litex.R (1 : ℝ)))).down (1 : ℂ) := by
+  exact Litex.Same.transNoObservation ((by
   unfold Litex.fnTelescopeApplyOwn into_builder
-  apply Litex.Same.symm
-  apply Litex.In.same_rep)
+  exact Litex.Same.symmNoObservation (Litex.Same.transNoObservation (Litex.Same.complexRealNoObservation ((1 : ℝ))) (Litex.Same.withoutObservation (Litex.In.same_rep ((1 : ℝ)) _))))) (Litex.Same.reflNoObservation (1 : ℂ))
 
 end __Compiler_12_NamedFunction

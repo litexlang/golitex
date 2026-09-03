@@ -1427,7 +1427,8 @@ fn cli_dispatch_delegates_execution_and_path_resolution_to_their_owners() {
     assert!(!root.join("src/cli/run_options.rs").exists());
     assert!(command.contains("pub(super) enum CliCommand"));
     assert!(command.contains("pub(super) fn parse_cli_command("));
-    assert!(command.contains("RunOptions::strict_execute(execution)"));
+    assert!(command.contains("RunOption::StrictExecute(execution)"));
+    assert!(command.contains("RunOption::Execute(execution)"));
     assert!(!command.contains("args.retain("));
     assert!(dispatch.contains("parse_cli_command(&raw_args)"));
     assert!(dispatch.contains("match command"));
@@ -1460,8 +1461,11 @@ fn cli_dispatch_delegates_execution_and_path_resolution_to_their_owners() {
     assert!(!run.contains("run_file_with_mode"));
     assert!(!run.contains("options.is_isolated()"));
     assert!(run.contains("file_execution_option(path.as_str())"));
-    assert!(run.contains("options.with_execution(execution)"));
-    assert!(run.contains("options.with_execution(ExecutionOption::IsolatedFile)"));
+    assert!(!run.contains("with_execution"));
+    assert!(!run_options.contains("with_output_detail"));
+    assert!(!run_options.contains("with_output_language"));
+    assert!(!run_options.contains("with_summary"));
+    assert!(!run_options.contains("with_output_style"));
     assert!(run.contains("pub fn run_repository(path: &str, options: RunOptions)"));
     assert!(target.contains("pub enum RunTargetKind"));
     assert!(run.contains("pub target: RunTarget"));
@@ -1563,7 +1567,7 @@ fn root_module_and_target_metadata_use_structured_state() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let registry = fs::read_to_string(root.join("src/module_system/registry.rs"))
         .expect("module registry should be readable");
-    let runtime = fs::read_to_string(root.join("src/runtime/state.rs"))
+    let runtime = fs::read_to_string(root.join("src/runtime/runtime.rs"))
         .expect("runtime state should be readable");
     let source_references =
         fs::read_to_string(root.join("src/output/runtime_error/source_references.rs"))
@@ -1587,8 +1591,9 @@ fn root_module_and_target_metadata_use_structured_state() {
     }
     assert!(registry.contains("pub fn create_root_module("));
     assert!(registry.contains("pub fn create_repository_root_module("));
+    assert!(!registry.contains("is_virtual_source"));
     assert!(!source_references.contains(&retired_source_kind));
-    assert!(source_references.contains("file.is_virtual_source"));
+    assert!(source_references.contains("SourcePath::VirtualSource"));
     assert!(target_json.contains("pub fn run_target_json_value("));
     assert!(target_json.contains("\"path\".to_string()"));
     for target_renderer in [&runner, &result_graph] {

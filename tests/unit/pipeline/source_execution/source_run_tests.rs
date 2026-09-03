@@ -1,5 +1,5 @@
 use super::SourceRunOutcome;
-use crate::module_system::{FileId, ModuleId};
+use crate::module_system::{ModuleId, SourceId, VirtualSource};
 use crate::pipeline::run_code;
 use crate::result::{
     StmtResult, SuccessProofBlockStmtResult, SuccessStmtResult, TryStmtExecutionResult,
@@ -8,7 +8,8 @@ use crate::runtime::{RunOptions, Runtime};
 
 fn runtime_with_source_context(name: &str) -> Runtime {
     let mut runtime = Runtime::default();
-    runtime.start_isolated_source(name);
+    runtime.start_virtual_source(VirtualSource::CodeExtraction);
+    runtime.set_current_user_lit_file_path(name);
     runtime
 }
 
@@ -109,12 +110,7 @@ fn source_import_is_rejected_even_in_an_isolated_source_context() {
 fn code_run_uses_the_explicit_e_source_label() {
     let outcome = run_code("1 = 1", RunOptions::default());
 
-    let frame = outcome
-        .runtime
-        .execution_stack
-        .last()
-        .expect("code run should retain its source frame");
-    assert_eq!(frame.module_file_info.module_id, ModuleId::ROOT);
-    assert_eq!(frame.module_file_info.file_id, FileId(0));
-    assert_eq!(frame.module_file_info.source_path.as_ref(), "eval");
+    assert_eq!(outcome.runtime.current_module_id, Some(ModuleId::ROOT));
+    assert_eq!(outcome.runtime.current_source_id, Some(SourceId(0)));
+    assert_eq!(outcome.runtime.current_file_path_rc().as_ref(), "eval");
 }

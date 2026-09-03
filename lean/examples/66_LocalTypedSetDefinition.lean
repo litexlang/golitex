@@ -12,7 +12,7 @@ theorem local_typed_set_definition :
   let E : Litex.Set := (Litex.setBuilder Litex.R (fun (x : Litex.R.Carrier) => Litex.Same x (0 : ℂ)))
   have __step0_0_type : Litex.In E (Litex.powerSet Litex.R) := by
     exact Litex.Rules.setBuilderInPowerSetViaParamSubset ((fun _x hx => hx))
-  have __step0_0_equality : Litex.Same E (Litex.setBuilder Litex.R (fun (x : Litex.R.Carrier) => Litex.Same x (0 : ℂ))) := by
+  have __step0_0_equality : @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) E (Litex.setBuilder Litex.R (fun (x : Litex.R.Carrier) => Litex.Same x (0 : ℂ))) := by
     unfold E
     exact Litex.Same.refl (Litex.setBuilder Litex.R (fun (x : Litex.R.Carrier) => Litex.Same x (0 : ℂ)))
   have __step0_0_subset : Litex.Subset E Litex.R := by
@@ -21,8 +21,8 @@ theorem local_typed_set_definition :
   have __step0_0_elements : ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 E), Litex.In __p1 Litex.R := by
     exact __step0_0_subset
   have __step0_1 : Litex.Same marker marker := by
-    exact __domain_f4
-  have __c0_0 : Litex.Same marker marker := __step0_1
+    exact Litex.Same.refl (marker)
+  have __c0_0 : Litex.Same marker marker := Litex.Same.refl (marker)
   exact __c0_0
 
 end __Compiler_66_LocalTypedSetDefinition

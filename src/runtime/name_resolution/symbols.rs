@@ -50,13 +50,13 @@ impl Runtime {
 
     fn canonical_display_name_for_definition(&self, name: &str) -> String {
         let canonical_owner = self
-            .execution_stack
-            .last()
-            .and_then(|frame| {
+            .current_module_id
+            .zip(self.current_source_id)
+            .and_then(|(module_id, source_id)| {
                 self.module_manager
                     .canonical_name_for_target(ImportTarget::File {
-                        module_id: frame.module_file_info.module_id,
-                        file_id: frame.module_file_info.file_id,
+                        module_id,
+                        source_id,
                     })
             })
             .unwrap_or("");
@@ -120,8 +120,15 @@ impl Runtime {
                         .and_then(SymbolDefinition::direct_struct_carrier)
                         .cloned()
                         .or_else(|| {
-                            module.files.iter().find_map(|file| {
-                                file.environment
+                            module.sources.iter().find_map(|source| {
+                                if source.real_file_path().is_none()
+                                    && !(self.current_module_id == Some(module.id)
+                                        && self.current_source_id == Some(source.id))
+                                {
+                                    return None;
+                                }
+                                source
+                                    .environment
                                     .definitions
                                     .symbols
                                     .get_by_id(symbol.id())

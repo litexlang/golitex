@@ -4,8 +4,9 @@ mod registry;
 mod repository_discovery;
 
 pub use module_records::{
-    ConfigImport, ConfigImportKind, ExportEntry, FileId, FileRunner, FileStatus, ImportTarget,
-    ModuleId, ModuleRunner, ModuleStatus,
+    ConfigImport, ConfigImportKind, ExportEntry, ImportTarget, ModuleId, ModuleLocation,
+    ModuleRunner, ModuleStatus, RealDirectoryPath, RealFilePath, Source, SourceId,
+    SourceLoadStatus, SourcePath, VirtualSource,
 };
 pub use project_config::{
     parse_project_config, ProjectConfig, ProjectExport, ProjectHierarchy, ProjectImport,

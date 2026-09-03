@@ -35,6 +35,45 @@ pub(in super::super) fn render_equality_across_representative(
     }
 }
 
+/// Observation-free counterpart of [`render_equality_across_representative`].
+/// Set-builder membership exposes only the semantic `Same` edge (there is no
+/// source-carrier observer to recover), so equality projection must remain in
+/// that ABI all the way through the representative transport.
+pub(in super::super) fn render_no_observation_equality_across_representative(
+    equality: &EqualFact,
+    source: &StmtResultToLeanCompilerEnvironmentStack,
+    target: &StmtResultToLeanCompilerEnvironmentStack,
+    source_value: &str,
+    target_value: &str,
+    source_same_target: &str,
+    source_proof: &str,
+) -> Result<String, String> {
+    let source_left = render_obj(&equality.left, source)?;
+    let source_right = render_obj(&equality.right, source)?;
+    let target_left = render_obj(&equality.left, target)?;
+    let target_right = render_obj(&equality.right, target)?;
+    let left_changed = source_left == source_value && target_left == target_value;
+    let right_changed = source_right == source_value && target_right == target_value;
+    match (left_changed, right_changed) {
+        (true, true) => Ok(format!(
+            "Litex.Same.reflNoObservation ({target_value})"
+        )),
+        (true, false) if source_right == target_right => Ok(format!(
+            "Litex.Same.transNoObservation (Litex.Same.symmNoObservation ({source_same_target})) ({source_proof})"
+        )),
+        (false, true) if source_left == target_left => Ok(format!(
+            "Litex.Same.transNoObservation ({source_proof}) ({source_same_target})"
+        )),
+        (false, false) if source_left == target_left && source_right == target_right => {
+            Ok(source_proof.into())
+        }
+        _ => Err(
+            "compiler equality transport requires the changing value as a whole equality side"
+                .into(),
+        ),
+    }
+}
+
 /// Transport the body of the compiler's supported one-witness existential
 /// while retaining the same witness and membership certificate. Equality
 /// bodies use the direct representative bridge; concrete predicate bodies use

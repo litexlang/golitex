@@ -7,9 +7,12 @@ use litex::api::{
 
 #[test]
 fn curated_api_executes_litex_inside_an_existing_runtime() {
-    let mut runtime = Runtime::new(
-        RunOptions::execute(ExecutionOption::Eval).with_output_detail(OutputDetail::Compact),
-    );
+    let mut runtime = Runtime::new(RunOptions::new(
+        RunOption::Execute(ExecutionOption::Eval),
+        OutputDetail::Compact,
+        OutputLanguage::English,
+        SummaryOption::None,
+    ));
     runtime.start_isolated_source("public-api.lit");
 
     let SourceRunOutcome {
@@ -24,10 +27,12 @@ fn curated_api_executes_litex_inside_an_existing_runtime() {
 
 #[test]
 fn curated_api_exposes_one_owned_entry_for_every_batch_input() {
-    let options = RunOptions::strict_execute(ExecutionOption::Eval)
-        .with_output_detail(OutputDetail::Compact)
-        .with_output_language(OutputLanguage::SimplifiedChinese)
-        .with_summary(SummaryOption::Summarize);
+    let options = RunOptions::new(
+        RunOption::StrictExecute(ExecutionOption::Eval),
+        OutputDetail::Compact,
+        OutputLanguage::SimplifiedChinese,
+        SummaryOption::Summarize,
+    );
     let code = run_code("1 = 1", options);
     assert!(code.ok, "{}", code.output);
     assert_eq!(code.target, RunTarget::Eval);

@@ -216,7 +216,7 @@ impl Runtime {
     ) -> Result<SuccessInferResult, RuntimeError> {
         let mut infer_result = SuccessInferResult::new();
 
-        let mut param_infer_result = if self.current_execution_is_trusted_file() {
+        let mut param_infer_result = if self.current_execution_is_trusted_source() {
             self.define_typed_params_with_trust(
                 &have_obj_equal_stmt.param_def,
                 BindingScope::DefinitionBinding,

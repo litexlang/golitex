@@ -36,10 +36,13 @@ pub(super) fn reject_unauthorized_project_references(
         .values()
         .flat_map(|module| {
             module
-                .files
+                .sources
                 .iter()
-                .filter(|file| !file.is_virtual_source)
-                .map(|file| (module.id, file.source_path.clone()))
+                .filter_map(|source| {
+                    source
+                        .real_file_path()
+                        .map(|path| (module.id, path.to_string()))
+                })
                 .collect::<Vec<(ModuleId, String)>>()
         })
         .collect::<Vec<(ModuleId, String)>>();

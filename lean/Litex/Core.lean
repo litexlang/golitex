@@ -403,6 +403,19 @@ theorem withoutObservation
       (ComplexObserver.none β) x y :=
   Same.forgetObservation same
 
+theorem symmWithoutObservation
+    {α β : Type u}
+    {leftObserver : ComplexObserver α}
+    {rightObserver : ComplexObserver β}
+    {x : α}
+    {y : β}
+    (same : @Same α β leftObserver rightObserver x y) :
+    @Same β α
+      (ComplexObserver.none β)
+      (ComplexObserver.none α) y x :=
+  @Same.withoutObservation β α rightObserver leftObserver y x
+    (@Same.symm α β leftObserver rightObserver x y same)
+
 end Same
 
 /-- The reviewed native real/complex operations whose representation

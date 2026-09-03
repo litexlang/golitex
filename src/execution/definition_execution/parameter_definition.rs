@@ -13,7 +13,7 @@ impl Runtime {
         param_def: &SetBoundParameterGroup,
         binding_scope: BindingScope,
     ) -> Result<SuccessInferResult, RuntimeError> {
-        if self.current_execution_is_trusted_file() {
+        if self.current_execution_is_trusted_source() {
             return self.define_set_bound_params_in_scope_with_trust(param_def, binding_scope);
         }
 

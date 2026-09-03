@@ -32,11 +32,11 @@ pub(super) fn reject_cyclic_module_imports(
             let source_path = runtime
                 .module_manager
                 .module(module_id)
-                .map(|module| module.main_file_path.as_str())
-                .unwrap_or("");
+                .map(ModuleRunner::main_source_label)
+                .unwrap_or_default();
             return Err(repository_error(
                 format!("cyclic module import: {}", names.join(" -> ")),
-                source_path,
+                source_path.as_str(),
                 0,
             ));
         }

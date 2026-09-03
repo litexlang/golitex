@@ -6,14 +6,15 @@ set_option linter.style.nameCheck false
 namespace __Compiler_67_LocalRealCompleteness
 
 theorem local_real_completeness :
-    ∀ (S : Litex.Set) (upper : (Litex.R).Carrier) (__h14 : Litex.In upper Litex.R) (__domain_f15 : Litex.Subset S Litex.R) (__domain_f17 : Litex.Set.Nonempty S) (__domain_f21 : ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In __p1 Litex.R) (__domain1 : Litex.In __p1 S), Litex.Le (((__p1 : ℝ)) : ℂ) (((upper : ℝ)) : ℂ)),
+    ∀ (S : Litex.Set) (upper : (Litex.R).Carrier) (__h14 : Litex.In upper Litex.R) (__domain_f15 : Litex.Subset S Litex.R) (__domain_f17 : Litex.Set.Nonempty S) (__domain_f21 : ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.R) (__domain1 : Litex.In __p1 S), Litex.Le (((Litex.In.rep __p1 __type1 : ℝ)) : ℂ) (((upper : ℝ)) : ℂ)),
       ∃ (L : (Litex.R).Carrier), ∃ (__type_L : Litex.In L Litex.R), Litex.RealLeastUpperBound S L := by
   intro S upper __h14 __domain_f15 __domain_f17 __domain_f21
   have __fact0 :
       ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 S), Litex.Le (((Litex.In.rep __p1 ((__domain_f15) __p1 (__type1)) : ℝ)) : ℂ) (((upper : ℝ)) : ℂ) := by
     intro __carrier1 member __h24
     have __prior0_0 : Litex.Le (((Litex.In.rep member ((__domain_f15) member (__h24)) : ℝ)) : ℂ) (((upper : ℝ)) : ℂ) := (by
-      simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (__domain_f21 (Litex.In.rep member ((__domain_f15) _ (__h24))) (Litex.In.own Litex.R (Litex.In.rep member ((__domain_f15) _ (__h24)))) ((Litex.In.congr (Litex.In.same_rep member ((__domain_f15) _ (__h24))) S).mp (__h24))))
+      simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (__domain_f21 member ((__domain_f15) _ (__h24)) (by
+      simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (__h24))))
     exact __prior0_0
   have __step1_0 : ∃ (lub : (Litex.R).Carrier), ∃ (__type_lub : Litex.In lub Litex.R), Litex.RealLeastUpperBound S lub := by
     exact Litex.Rules.realLeastUpperBoundExists S (upper : ℝ)  (__domain_f15) (__domain_f17) (Litex.In.own Litex.R (upper : ℝ)) (__fact0)

@@ -40,7 +40,7 @@ pub(in super::super) fn resolve_fact_citation(
         true
     } else if let (Fact::ForallFact(retained), Fact::ForallFact(expected)) = (retained, expected) {
         let mut runtime = Runtime::default();
-        runtime.ensure_execution_frame_for_parse();
+        runtime.ensure_current_source_for_parse();
         let retained_key = runtime
             .alpha_normalized_forall_cache_key(retained)
             .map_err(|error| {

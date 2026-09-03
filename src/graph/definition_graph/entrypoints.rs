@@ -149,13 +149,15 @@ pub fn definition_graph_file_target(
         .and_then(|path| path.to_str().map(str::to_string));
     let mut targets = vec![];
     for module in runtime.module_manager.modules.values() {
-        for file in module.files.iter() {
-            if file.source_path == resolved_path
-                || canonical_path.as_deref() == Some(file.source_path.as_str())
-            {
+        for source in module.sources.iter() {
+            let Some(real_path) = source.real_file_path() else {
+                continue;
+            };
+            let path = real_path.to_string();
+            if path == resolved_path || canonical_path.as_deref() == Some(path.as_str()) {
                 targets.push(RepositoryFileTarget::File {
                     module_id: module.id,
-                    file_id: file.id,
+                    source_id: source.id,
                 });
             }
         }
@@ -175,6 +177,6 @@ pub fn definition_graph_repository_target(
     let canonical_path = canonical_path.to_str()?;
     runtime
         .module_manager
-        .module_id_by_path(canonical_path)
+        .module_id_by_root_path(&RealDirectoryPath::new(canonical_path))
         .map(RepositoryFileTarget::Module)
 }

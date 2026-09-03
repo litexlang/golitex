@@ -1,6 +1,6 @@
 use super::run_session_loop_with_readers_and_target;
 use crate::prelude::{OutputDetail, OutputLanguage, SessionTarget};
-use crate::runtime::{ExecutionOption, RunOptions};
+use crate::runtime::{ExecutionOption, RunOption, RunOptions, SummaryOption};
 use std::fs;
 use std::io::{self, BufRead, Cursor, Write};
 use std::path::{Path, PathBuf};
@@ -14,25 +14,24 @@ fn run_session_loop_with_readers(
     output_language: OutputLanguage,
     isolated: bool,
 ) -> io::Result<()> {
+    let run = if strict_mode {
+        RunOption::StrictExecute(if isolated {
+            ExecutionOption::IsolatedSession
+        } else {
+            ExecutionOption::Session
+        })
+    } else {
+        RunOption::Execute(if isolated {
+            ExecutionOption::IsolatedSession
+        } else {
+            ExecutionOption::Session
+        })
+    };
     run_session_loop_with_readers_and_target(
         stdin_reader,
         stdout_writer,
         directory,
-        if strict_mode {
-            RunOptions::strict_execute(if isolated {
-                ExecutionOption::IsolatedSession
-            } else {
-                ExecutionOption::Session
-            })
-        } else {
-            RunOptions::execute(if isolated {
-                ExecutionOption::IsolatedSession
-            } else {
-                ExecutionOption::Session
-            })
-        }
-        .with_output_detail(output_detail)
-        .with_output_language(output_language),
+        RunOptions::new(run, output_detail, output_language, SummaryOption::None),
         if isolated {
             SessionTarget::Isolated
         } else {

@@ -517,7 +517,7 @@ fn ordinary_claim_and_example_compile_directly_from_recursive_results() {
         .expect("direct example compilation succeeds"));
     assert!(compiler.declarations[0].contains("theorem __fact0"));
     assert!(compiler.declarations[0].contains("have __step"));
-    assert!(compiler.declarations[0].contains("exact __step"));
+    assert!(compiler.declarations[0].contains("exact Litex.Same.refl"));
     assert!(compiler.declarations[1].starts_with("example :"));
     assert!(compiler.declarations[1].contains("have __step1"));
 }

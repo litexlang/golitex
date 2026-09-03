@@ -49,16 +49,19 @@ pub fn to_latex_from_file(file_path: &str) -> Result<String, RuntimeError> {
         Some(target) => to_latex_project_run(&mut runtime, target),
         None => {
             let source = read_source(resolved_path.as_str())?;
-            runtime.start_isolated_file(resolved_path.as_str());
+            runtime.start_real_file(resolved_path.as_str());
             to_latex(source.as_str(), &mut runtime)
         }
     }
 }
 
-pub fn to_latex_from_source(source_code: &str, source_label: &str) -> Result<String, RuntimeError> {
+pub fn to_latex_from_source(
+    source_code: &str,
+    _source_label: &str,
+) -> Result<String, RuntimeError> {
     let normalized = source_code.replace('\r', "");
     let mut runtime = Runtime::default();
-    runtime.start_isolated_source(source_label);
+    runtime.start_virtual_source(VirtualSource::ToLatex);
     to_latex(normalized.as_str(), &mut runtime)
 }
 
@@ -100,7 +103,7 @@ fn to_latex_project_prefix(
             .module(module_id)
             .expect("discovered module should exist");
         (
-            module.main_file_path.clone(),
+            module.main_source_label(),
             module.config_imports.clone(),
             module.run_targets.clone(),
         )
@@ -166,9 +169,15 @@ fn to_latex_project_target(
                 }
                 for run_target in run_targets {
                     let fragment = match run_target {
-                        ImportTarget::File { module_id, file_id } => to_latex_project_target(
+                        ImportTarget::File {
+                            module_id,
+                            source_id,
+                        } => to_latex_project_target(
                             runtime,
-                            RepositoryFileTarget::File { module_id, file_id },
+                            RepositoryFileTarget::File {
+                                module_id,
+                                source_id,
+                            },
                         ),
                         ImportTarget::Module(module_id) => to_latex_project_target(
                             runtime,
@@ -183,18 +192,23 @@ fn to_latex_project_target(
             })();
             output
         }
-        RepositoryFileTarget::File { module_id, file_id } => {
+        RepositoryFileTarget::File {
+            module_id,
+            source_id,
+        } => {
             let source_path = runtime
                 .module_manager
                 .module(module_id)
-                .and_then(|module| module.file(file_id))
+                .and_then(|module| module.source(source_id))
                 .expect("registered project file should exist")
-                .source_path
-                .clone();
-            runtime.push_file_execution_frame(module_id, file_id);
+                .real_file_path()
+                .expect("a repository file target must have a real path")
+                .to_string();
+            let previous_source = runtime.source_activation();
+            runtime.activate_source_for_execution(module_id, source_id);
             let output = read_source(source_path.as_str())
                 .and_then(|source| to_latex(source.as_str(), runtime));
-            runtime.pop_execution_frame();
+            runtime.restore_source_activation(previous_source);
             output
         }
     }
@@ -208,10 +222,13 @@ fn repository_target_matches(target: RepositoryFileTarget, import_target: Import
         (
             RepositoryFileTarget::File {
                 module_id: target_module,
-                file_id: target_file,
+                source_id: target_source,
             },
-            ImportTarget::File { module_id, file_id },
-        ) => target_module == module_id && target_file == file_id,
+            ImportTarget::File {
+                module_id,
+                source_id,
+            },
+        ) => target_module == module_id && target_source == source_id,
         _ => false,
     }
 }
@@ -219,9 +236,13 @@ fn repository_target_matches(target: RepositoryFileTarget, import_target: Import
 fn repository_file_target(target: ImportTarget) -> RepositoryFileTarget {
     match target {
         ImportTarget::Module(module_id) => RepositoryFileTarget::Module(module_id),
-        ImportTarget::File { module_id, file_id } => {
-            RepositoryFileTarget::File { module_id, file_id }
-        }
+        ImportTarget::File {
+            module_id,
+            source_id,
+        } => RepositoryFileTarget::File {
+            module_id,
+            source_id,
+        },
     }
 }
 
