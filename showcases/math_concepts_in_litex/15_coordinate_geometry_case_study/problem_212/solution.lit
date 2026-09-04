@@ -1,0 +1,192 @@
+# Problem 212 / zhongkao_8
+# ================================================================
+# 原题（完整自然语言）
+# 如图，O为四边形ABCD内一点，E为AB的中点，OA＝OD，OB＝OC，
+# ∠AOB+∠COD＝180°。求证：OE = 1/2 CD。
+#
+# 形式化语义对齐
+# - “O为四边形ABCD内一点”
+#     ↔ $translation::is_inside_quadrilateral(o, a, b, c, d)
+# - “E为AB的中点”
+#     ↔ $geo::is_midpoint(m, a, b)，其中 m 对应原题点 E。
+# - “OA＝OD”
+#     ↔ $geo::are_segments_congruent(o, a, o, d)
+# - “OB＝OC”
+#     ↔ $geo::are_segments_congruent(o, b, o, c)
+# - “∠AOB+∠COD＝180°”
+#     ↔ $translation::are_angles_supplementary(a, o, b, c, o, d)
+# - “OE = 1/2 CD”
+#     ↔ $translation::segment_is_half_of(m, o, c, d)
+#
+# 说明：m 是原题的 E，使用 m 避免 Litex 中名称 e 的全局冲突。
+# 结论用平方长度 4 OE²=CD²，避免引入平方根；题设的非退化角条件
+# 保证余弦分母为正。内部性是原题条件，代数推导不需要丢弃它。
+
+# The proof uses the shared KB distance and vector-dot operations directly.
+
+# Local algebra bridge: opposite signs plus equal squares force cancellation.
+# This is kept local because it is a proof implementation lemma, not a new KB fact.
+thm opposite_sign_equal_squares_sum_zero:
+    ? forall x, y R:
+        x^2 = y^2,
+        x * y <= 0
+        =>:
+            x + y = 0
+
+    x^2 - y^2 = 0
+    by thm geo::difference_of_squares(x, y)
+    x^2 - y^2 = (x + y) * (x - y)
+    (x + y) * (x - y) = 0
+
+    by contra:
+        ? x + y = 0
+        x + y != 0
+        by thm geo::zero_factor_law(x + y, x - y)
+        x - y = 0
+        x = y
+        x * y = x * x
+        x * x = x^2
+        x * y = x^2
+        0 <= x^2
+        0 <= x * y
+        x * y = 0
+        x^2 = 0
+        x = 0
+        y = 0
+        x + y = 0
+        impossible x + y != 0
+
+# Local metric bridge: two cosine-law expansions, paired equal radii,
+# and opposite dot products imply the required equality of squared lengths.
+# Kept local as a proof-engineering lemma over real scalars.
+thm final_metric_scalar_closure:
+    ? forall aa, bb, cc, dd, pp, qq, xx, yy R:
+        xx = aa + bb - 2 * pp,
+        yy = cc + dd - 2 * qq,
+        aa = dd,
+        bb = cc,
+        pp + qq = 0
+        =>:
+            2 * aa + 2 * bb - xx = yy
+
+    2 * aa + 2 * bb - xx = 2 * aa + 2 * bb - (aa + bb - 2 * pp)
+    2 * aa + 2 * bb - (aa + bb - 2 * pp) = aa + bb + 2 * pp
+    qq + pp = 0
+    by thm geo::zero_sum_rearrange(qq, pp)
+    -qq = pp
+    pp = -qq
+    by thm geo::add_equalities(aa, dd, bb, cc)
+    aa + bb = dd + cc
+    by thm geo::multiply_both_sides(pp, -qq, 2)
+    pp * 2 = (-qq) * 2
+    2 * pp = pp * 2 = (-qq) * 2 = -2 * qq
+    by thm geo::add_equalities(aa + bb, dd + cc, 2 * pp, -2 * qq)
+    aa + bb + 2 * pp = (dd + cc) + (-2 * qq)
+    (dd + cc) + (-2 * qq) = dd + cc - 2 * qq
+    aa + bb + 2 * pp = dd + cc - 2 * qq
+    dd + cc - 2 * qq = cc + dd - 2 * qq
+    cc + dd - 2 * qq = yy
+    2 * aa + 2 * bb - xx = yy
+
+thm problem_212_oe_half_cd:
+    ? forall a, b, c, d, o, m cart(R, R):
+        # 原题条件1：O 在四边形 ABCD 内部。
+        $translation::is_inside_quadrilateral(o, a, b, c, d),
+        # 原题条件2：E（形式化变量 m）是 AB 的中点。
+        $geo::is_midpoint(m, a, b),
+        # 原题条件3：OA = OD。
+        $geo::are_segments_congruent(o, a, o, d),
+        # 原题条件4：OB = OC。
+        $geo::are_segments_congruent(o, b, o, c),
+        # 原题条件5：∠AOB 与 ∠COD 互为补角。
+        $translation::are_angles_supplementary(a, o, b, c, o, d)
+        =>:
+            # 原题结论：OE = 1/2 CD。
+            $translation::segment_is_half_of(m, o, c, d)
+
+    # 展开所有几何谓词为坐标等式；内部性保留在上下文中。
+    by def $geo::is_midpoint(m, a, b)
+    m[1] = (a[1] + b[1]) / 2
+    m[2] = (a[2] + b[2]) / 2
+
+    by def $geo::are_segments_congruent(o, a, o, d)
+    geo::distance_sq(o, a) = geo::distance_sq(o, d)
+    by def $geo::are_segments_congruent(o, b, o, c)
+    geo::distance_sq(o, b) = geo::distance_sq(o, c)
+
+    # 原题条件5的精确定义展开：非退化、余弦分子异号，及归一化余弦平方相等。
+    by def $translation::are_angles_supplementary(a, o, b, c, o, d)
+    geo::angle_cos_num(a, o, b) * geo::angle_cos_num(c, o, d) <= 0
+    geo::angle_cos_num(a, o, b)^2 * geo::angle_cos_den(c, o, d) = geo::angle_cos_num(c, o, d)^2 * geo::angle_cos_den(a, o, b)
+
+    # 两组等长条件使两个余弦分母相等。
+    geo::angle_cos_den(a, o, b) = geo::distance_sq(o, a) * geo::distance_sq(o, b)
+    geo::angle_cos_den(c, o, d) = geo::distance_sq(o, c) * geo::distance_sq(o, d)
+    by thm geo::multiply_both_sides(geo::distance_sq(o, a), geo::distance_sq(o, d), geo::distance_sq(o, b))
+    geo::distance_sq(o, a) * geo::distance_sq(o, b) = geo::distance_sq(o, d) * geo::distance_sq(o, b)
+    by thm geo::multiply_both_sides(geo::distance_sq(o, b), geo::distance_sq(o, c), geo::distance_sq(o, d))
+    geo::distance_sq(o, b) * geo::distance_sq(o, d) = geo::distance_sq(o, c) * geo::distance_sq(o, d)
+    geo::distance_sq(o, d) * geo::distance_sq(o, b) = geo::distance_sq(o, b) * geo::distance_sq(o, d)
+    geo::distance_sq(o, a) * geo::distance_sq(o, b) = geo::distance_sq(o, c) * geo::distance_sq(o, d)
+    geo::angle_cos_den(a, o, b) = geo::angle_cos_den(c, o, d)
+
+    # 四条射线非零，故共同分母为正，可以合法消去。
+    by thm geo::distance_sq_positive_of_ne(o, a)
+    0 < geo::distance_sq(o, a)
+    by thm geo::distance_sq_positive_of_ne(o, b)
+    0 < geo::distance_sq(o, b)
+    0 < geo::distance_sq(o, a) * geo::distance_sq(o, b)
+    0 < geo::angle_cos_den(a, o, b)
+    geo::angle_cos_den(a, o, b) != 0
+    by thm geo::multiply_both_sides(geo::angle_cos_den(a, o, b), geo::angle_cos_den(c, o, d), geo::angle_cos_num(a, o, b)^2)
+    geo::angle_cos_den(a, o, b) * geo::angle_cos_num(a, o, b)^2 = geo::angle_cos_den(c, o, d) * geo::angle_cos_num(a, o, b)^2
+    geo::angle_cos_num(a, o, b)^2 * geo::angle_cos_den(a, o, b) = geo::angle_cos_den(a, o, b) * geo::angle_cos_num(a, o, b)^2
+    geo::angle_cos_den(c, o, d) * geo::angle_cos_num(a, o, b)^2 = geo::angle_cos_num(a, o, b)^2 * geo::angle_cos_den(c, o, d)
+    geo::angle_cos_num(a, o, b)^2 * geo::angle_cos_den(a, o, b) = geo::angle_cos_num(a, o, b)^2 * geo::angle_cos_den(c, o, d)
+    geo::angle_cos_num(a, o, b)^2 * geo::angle_cos_den(c, o, d) = geo::angle_cos_num(c, o, d)^2 * geo::angle_cos_den(a, o, b)
+    geo::angle_cos_num(a, o, b)^2 * geo::angle_cos_den(a, o, b) = geo::angle_cos_num(c, o, d)^2 * geo::angle_cos_den(a, o, b)
+    by thm geo::divide_both_sides(geo::angle_cos_num(a, o, b)^2, geo::angle_cos_num(c, o, d)^2, geo::angle_cos_den(a, o, b))
+    geo::angle_cos_num(a, o, b)^2 = geo::angle_cos_num(c, o, d)^2
+
+    # 实例化局部标量引理，得到两点积之和为零。
+    by thm opposite_sign_equal_squares_sum_zero(geo::angle_cos_num(a, o, b), geo::angle_cos_num(c, o, d))
+    geo::angle_cos_num(a, o, b) + geo::angle_cos_num(c, o, d) = 0
+
+    # 展开余弦分子，得到向量点积关系。
+    geo::angle_cos_num(a, o, b) = geo::dot(geo::vec(o, a), geo::vec(o, b))
+    geo::angle_cos_num(c, o, d) = geo::dot(geo::vec(o, c), geo::vec(o, d))
+    geo::dot(geo::vec(o, a), geo::vec(o, b)) = geo::angle_cos_num(a, o, b)
+    geo::dot(geo::vec(o, c), geo::vec(o, d)) = geo::angle_cos_num(c, o, d)
+    by thm geo::add_equalities(geo::dot(geo::vec(o, a), geo::vec(o, b)), geo::angle_cos_num(a, o, b), geo::dot(geo::vec(o, c), geo::vec(o, d)), geo::angle_cos_num(c, o, d))
+    geo::dot(geo::vec(o, a), geo::vec(o, b)) + geo::dot(geo::vec(o, c), geo::vec(o, d)) = geo::angle_cos_num(a, o, b) + geo::angle_cos_num(c, o, d)
+    geo::dot(geo::vec(o, a), geo::vec(o, b)) + geo::dot(geo::vec(o, c), geo::vec(o, d)) = geo::angle_cos_num(a, o, b) + geo::angle_cos_num(c, o, d) = 0
+
+    # 中点公式：2·OM = OA + OB（逐坐标展开）。
+    2 * (m[1] - o[1]) = (a[1] - o[1]) + (b[1] - o[1])
+    2 * (m[2] - o[2]) = (a[2] - o[2]) + (b[2] - o[2])
+
+    # 阿波罗尼斯公式将中点距离化为 OA、OB、AB 的平方距离。
+    by thm geo::apollonius_theorem(o, a, b, m)
+    4 * geo::distance_sq(o, m) = 2 * geo::distance_sq(o, a) + 2 * geo::distance_sq(o, b) - geo::distance_sq(a, b)
+
+    # 两个三角形的余弦定理，直接使用 O 点为夹角顶点的原生方向。
+    by thm geo::cosine_law(a, o, b)
+    geo::distance_sq(a, b) = geo::distance_sq(a, o) + geo::distance_sq(o, b) - 2 * geo::dot(geo::vec(o, a), geo::vec(o, b))
+    by thm geo::distance_sq_symmetric(o, a)
+    geo::distance_sq(o, a) = geo::distance_sq(a, o)
+    geo::distance_sq(a, o) + geo::distance_sq(o, b) - 2 * geo::dot(geo::vec(o, a), geo::vec(o, b)) = geo::distance_sq(o, a) + geo::distance_sq(o, b) - 2 * geo::dot(geo::vec(o, a), geo::vec(o, b))
+    geo::distance_sq(o, a) + geo::distance_sq(o, b) - 2 * geo::dot(geo::vec(o, a), geo::vec(o, b)) = geo::distance_sq(a, b)
+    by thm geo::cosine_law(c, o, d)
+    geo::distance_sq(c, d) = geo::distance_sq(c, o) + geo::distance_sq(o, d) - 2 * geo::dot(geo::vec(o, c), geo::vec(o, d))
+    by thm geo::distance_sq_symmetric(o, c)
+    geo::distance_sq(o, c) = geo::distance_sq(c, o)
+    geo::distance_sq(c, o) + geo::distance_sq(o, d) - 2 * geo::dot(geo::vec(o, c), geo::vec(o, d)) = geo::distance_sq(o, c) + geo::distance_sq(o, d) - 2 * geo::dot(geo::vec(o, c), geo::vec(o, d))
+    geo::distance_sq(o, c) + geo::distance_sq(o, d) - 2 * geo::dot(geo::vec(o, c), geo::vec(o, d)) = geo::distance_sq(c, d)
+
+    # 将两次余弦定理、两组等长及点积抵消交给已验证的局部标量引理。
+    by thm final_metric_scalar_closure(geo::distance_sq(o, a), geo::distance_sq(o, b), geo::distance_sq(o, c), geo::distance_sq(o, d), geo::dot(geo::vec(o, a), geo::vec(o, b)), geo::dot(geo::vec(o, c), geo::vec(o, d)), geo::distance_sq(a, b), geo::distance_sq(c, d))
+    2 * geo::distance_sq(o, a) + 2 * geo::distance_sq(o, b) - geo::distance_sq(a, b) = geo::distance_sq(c, d)
+    4 * geo::distance_sq(o, m) = geo::distance_sq(c, d)
+
+    by def $translation::segment_is_half_of(m, o, c, d)
+    4 * geo::distance_sq(o, m) = geo::distance_sq(c, d)

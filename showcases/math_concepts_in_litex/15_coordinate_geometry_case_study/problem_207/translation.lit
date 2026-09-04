@@ -1,0 +1,68 @@
+# Problem 207 / zhongkao_3 — geometry-first translation
+#
+# 原题：正方形 ABCD 中，E 为 BC 边上任意点，AF 平分 ∠EAD，交 CD 于 F。
+# (1) F 为 CD 中点时，证明 AE = BE + 2CE。
+# (2) 在 (1) 的条件下，证明 CE / BC = 1/4。
+# (3) 延长 AF、AE，分别与 BC、DC 的延长线交于 G、H；若 CG = DF，证明 HG ⟂ AG。
+#
+# This file contains only the geometric vocabulary and target statements.
+# Coordinates, normalization, and algebra belong to the later proof bridge.
+
+# Correct metric angle bisector.
+# is_metric_angle_bisector(P, Q, R, X) means QX bisects ∠PQR.
+# Equality of cosines is written after cancelling the common positive |QX|.
+prop is_metric_angle_bisector(p, q, r, x cart(R, R)):
+    p != q
+    r != q
+    x != q
+    exist qp, qr R+ st {qp^2 = geo::distance_sq(q, p), qr^2 = geo::distance_sq(q, r), geo::dot(geo::vec(q, p), geo::vec(q, x)) * qr = geo::dot(geo::vec(q, x), geo::vec(q, r)) * qp}
+
+# |AB| = |CD| + 2|UV|.
+prop segment_length_equals_sum_twice(a, b, c, d, u, v cart(R, R)):
+    exist ab, cd, uv R+ st {ab^2 = geo::distance_sq(a, b), cd^2 = geo::distance_sq(c, d), uv^2 = geo::distance_sq(u, v), ab = cd + 2 * uv}
+
+# |AB| / |CD| = 1/4, expressed without division.
+prop segment_ratio_one_fourth(a, b, c, d cart(R, R)):
+    exist ab, cd R+ st {ab^2 = geo::distance_sq(a, b), cd^2 = geo::distance_sq(c, d), 4 * ab = cd}
+
+# Part (1): all hypotheses and the conclusion are geometric predicates.
+# pa,pb,pc,pd,pe,pf correspond to the original points A,B,C,D,E,F.
+# `is_on_segment(pf,pc,pd)` records “AF meets side CD at F”; midpoint is stated separately.
+axiom problem_207_part1_statement:
+    ? forall pa, pb, pc, pd, pe, pf cart(R, R):
+        $geo::is_square(pa, pb, pc, pd),
+        $geo::is_on_segment(pe, pb, pc),
+        $geo::is_on_segment(pf, pc, pd),
+        $is_metric_angle_bisector(pe, pa, pd, pf),
+        $geo::is_midpoint(pf, pc, pd)
+        =>:
+            $segment_length_equals_sum_twice(pa, pe, pb, pe, pc, pe)
+
+# Part (2): CE : BC = 1 : 4.
+axiom problem_207_part2_statement:
+    ? forall pa, pb, pc, pd, pe, pf cart(R, R):
+        $geo::is_square(pa, pb, pc, pd),
+        $geo::is_on_segment(pe, pb, pc),
+        $geo::is_on_segment(pf, pc, pd),
+        $is_metric_angle_bisector(pe, pa, pd, pf),
+        $geo::is_midpoint(pf, pc, pd)
+        =>:
+            $segment_ratio_one_fourth(pc, pe, pb, pc)
+
+# Part (3):
+#   pg is beyond pf on ray pa-pf and beyond pc on ray pb-pc;
+#   ph is beyond pe on ray pa-pe and beyond pc on ray pd-pc.
+# These extension predicates also encode the required incidences/intersections.
+axiom problem_207_part3_statement:
+    ? forall pa, pb, pc, pd, pe, pf, pg, ph cart(R, R):
+        $geo::is_square(pa, pb, pc, pd),
+        $geo::is_on_segment(pe, pb, pc),
+        $geo::is_on_segment(pf, pc, pd),
+        $is_metric_angle_bisector(pe, pa, pd, pf),
+        $geo::is_on_extension(pg, pa, pf),
+        $geo::is_on_extension(pg, pb, pc),
+        $geo::is_on_extension(ph, pa, pe),
+        $geo::is_on_extension(ph, pd, pc),
+        $geo::are_segments_congruent(pc, pg, pd, pf)
+        =>:
+            $geo::is_perpendicular(ph, pg, pa, pg)
