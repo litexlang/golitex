@@ -40,6 +40,12 @@ impl Environment {
                         .merge_missing_transparent_object_definition_from(definition);
                     continue;
                 }
+                if is_materialized_template_name(self, name)
+                    && existing.role() == SymbolRole::Object
+                    && definition.role() == SymbolRole::Object
+                {
+                    continue;
+                }
                 return Err(merge_name_conflict_error(name, "object"));
             }
             self.definitions
@@ -73,6 +79,12 @@ impl Environment {
                         .get_by_id_mut(existing_symbol_id)
                         .expect("the matching parent symbol should remain present")
                         .merge_missing_transparent_object_definition_from(definition);
+                    continue;
+                }
+                if is_materialized_template_name(self, name)
+                    && existing.role() == SymbolRole::Object
+                    && definition.role() == SymbolRole::Object
+                {
                     continue;
                 }
                 return Err(merge_name_conflict_error(
@@ -260,6 +272,12 @@ impl Environment {
                 if same_symbol_definition(existing, child_definition) {
                     continue;
                 }
+                if is_materialized_template_name(self, name)
+                    && existing.role() == SymbolRole::Object
+                    && child_definition.role() == SymbolRole::Object
+                {
+                    continue;
+                }
                 return Err(merge_name_conflict_error(
                     name,
                     existing.role().description(),
@@ -363,21 +381,7 @@ impl Environment {
 }
 
 fn same_symbol_definition(left: &SymbolDefinition, right: &SymbolDefinition) -> bool {
-    if left.role() != right.role() {
-        return false;
-    }
-    // A materialized template target is an internal atom used while executing
-    // a composite template application. Independent proof-local children may
-    // allocate different transient IDs for that same surface name; the
-    // composite's structural key is the semantic identity, so merge the
-    // definition metadata without treating those IDs as a name conflict.
-    let same_materialized_template_name = left
-        .binding()
-        .name()
-        .starts_with(TEMPLATE_INSTANCE_PREFIX)
-        && left.binding().name().contains('<')
-        && left.binding().name() == right.binding().name();
-    if left.binding().id() != right.binding().id() && !same_materialized_template_name {
+    if left.binding().id() != right.binding().id() || left.role() != right.role() {
         return false;
     }
     match (
@@ -387,6 +391,28 @@ fn same_symbol_definition(left: &SymbolDefinition, right: &SymbolDefinition) -> 
         (Some(left), Some(right)) => left.is_same_definition_as(right),
         _ => true,
     }
+}
+
+fn is_materialized_template_name(environment: &Environment, name: &str) -> bool {
+    let Some(_) = name.find('<') else {
+        return false;
+    };
+    let Some(template_name) = name.strip_prefix(TEMPLATE_INSTANCE_PREFIX) else {
+        return false;
+    };
+    let template_name = &template_name[..template_name
+        .find('<')
+        .expect("the template instance name already contains `<`")];
+    let local_name = template_name.rsplit("::").next().unwrap_or(template_name);
+    !local_name.is_empty()
+        && (environment
+            .definitions
+            .template_definitions
+            .contains_key(template_name)
+            || environment
+                .definitions
+                .template_definitions
+                .contains_key(local_name))
 }
 
 fn merge_name_conflict_error(name: &str, existing_namespace: &str) -> RuntimeError {

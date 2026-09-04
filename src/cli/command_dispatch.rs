@@ -1,5 +1,5 @@
 use super::command::{parse_cli_command, CliCommand};
-use super::command_handlers::{run_command, run_graph_command, VERSION};
+use super::command_handlers::{run_execute_command, run_graph_command, VERSION};
 use super::conversion_commands::{run_code_extraction_command, run_latex_command};
 use super::json_output::{render_cli_error, render_version};
 use super::lean_commands::run_lean_file_command;
@@ -19,11 +19,11 @@ pub fn run_cli() {
     };
 
     match command {
-        CliCommand::Repl(options) => run_repl(VERSION, options),
+        CliCommand::Repl(options) => run_repl(VERSION, options.litex_execution_options()),
         CliCommand::Help => print_help_message(),
         CliCommand::Version => println!("{}", render_version(VERSION)),
         CliCommand::Execute { target, options } => {
-            if !run_command(target.as_str(), options) {
+            if !run_execute_command(target.as_str(), options) {
                 process::exit(1);
             }
         }
@@ -38,7 +38,7 @@ pub fn run_cli() {
             }
         }
         CliCommand::Session { file_path, options } => {
-            let target = match (options.execution(), file_path) {
+            let target = match (options.execution, file_path) {
                 (LitexExecution::Session, None) => SessionTarget::CurrentDirectory,
                 (LitexExecution::IsolatedSession, None) => SessionTarget::Isolated,
                 (LitexExecution::Session, Some(path)) => SessionTarget::File { path },
@@ -47,7 +47,10 @@ pub fn run_cli() {
                 }
                 _ => unreachable!("session command was resolved to a non-session target"),
             };
-            run_session(SessionRequest::new(options, target));
+            run_session(SessionRequest::new(
+                options.litex_execution_options(),
+                target,
+            ));
         }
         CliCommand::LatexRepl => run_latex_repl(VERSION),
         CliCommand::Latex { target, options } => {

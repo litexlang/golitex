@@ -1,16 +1,16 @@
 mod definition_state;
 mod execution_mode;
+mod execution_options;
 mod fact_storage;
 mod instantiation;
-mod invocation_options;
 mod name_resolution;
 pub mod output_detail;
 mod parse_context;
 mod runtime;
 
 pub use execution_mode::ExecutionMode;
-pub use invocation_options::{
-    InvocationOptions, LitexExecution, SummaryOption, VerifyStrictnessPolicy,
+pub use execution_options::{
+    LitexExecution, LitexExecutionOptions, SummaryOption, VerifyStrictnessPolicy,
 };
 pub use name_resolution::{
     FreeParamCollection, FreeParamTypeAndLineFile, TransparentObjectDefinitionUse,

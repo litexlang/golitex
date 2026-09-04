@@ -51,9 +51,8 @@ pub struct Runtime {
     /// environment ends, for example when a stored theorem is instantiated.
     pub(crate) executed_direct_struct_carriers: HashMap<SymbolId, StructObj>,
 
-    /// Litex source entry point, verification strictness, output, language,
-    /// summary, and isolation settings for the whole invocation.
-    pub invocation_options: InvocationOptions,
+    /// Verification, output, language, and summary settings for Litex execution.
+    pub execution_options: LitexExecutionOptions,
 }
 
 /// Checkpoint used when temporarily activating another registered source.
@@ -70,7 +69,7 @@ pub struct SourceActivation {
 }
 
 impl Runtime {
-    pub fn new(invocation_options: InvocationOptions) -> Self {
+    pub fn new(execution_options: LitexExecutionOptions) -> Self {
         Runtime {
             module_manager: Box::new(ModuleManager::new()),
             current_module_id: None,
@@ -81,7 +80,7 @@ impl Runtime {
             next_fact_id: 1,
             symbol_id_allocator: Rc::new(SymbolIdAllocator::new()),
             executed_direct_struct_carriers: HashMap::new(),
-            invocation_options,
+            execution_options,
         }
     }
 }
@@ -99,7 +98,7 @@ fn virtual_source_from_legacy_label(label: &str) -> VirtualSource {
 
 impl Default for Runtime {
     fn default() -> Self {
-        Self::new(InvocationOptions::default())
+        Self::new(LitexExecutionOptions::default())
     }
 }
 
@@ -115,18 +114,11 @@ impl Runtime {
     }
 
     pub fn set_output_detail(&mut self, output_detail: OutputDetail) {
-        let options = self.invocation_options;
-        self.invocation_options = InvocationOptions::new(
-            options.execution(),
-            options.verify_strictness(),
-            output_detail,
-            options.output_language(),
-            options.summary(),
-        );
+        self.execution_options.set_output_detail(output_detail);
     }
 
     pub fn effective_output_detail(&self) -> OutputDetail {
-        self.invocation_options.output_detail()
+        self.execution_options.output_detail()
     }
 
     #[deprecated(note = "use `set_output_detail`")]
@@ -291,7 +283,7 @@ impl Runtime {
     }
 
     pub fn strict_mode_applies_to_current_module(&self) -> bool {
-        if !self.invocation_options.is_strict() {
+        if !self.execution_options.is_strict() {
             return false;
         }
         let Some(module_id) = self.current_module_id else {

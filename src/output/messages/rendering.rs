@@ -4,7 +4,7 @@ use super::catalogs::*;
 use super::*;
 
 pub fn translate_json_messages(runtime: &Runtime, value: JsonValue) -> JsonValue {
-    translate_json_messages_for_language(runtime.invocation_options.output_language(), value)
+    translate_json_messages_for_language(runtime.execution_options.output_language(), value)
 }
 
 fn translate_json_messages_for_language(

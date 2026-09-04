@@ -484,7 +484,7 @@ pub use crate::runtime::OutputStyle;
 pub use crate::runtime::ParseContext;
 pub use crate::runtime::ScopeFrame;
 pub use crate::runtime::{
-    InvocationOptions, LitexExecution, OutputDetail, Runtime, SourceActivation, SummaryOption,
+    LitexExecution, LitexExecutionOptions, OutputDetail, Runtime, SourceActivation, SummaryOption,
     VerifyStrictnessPolicy,
 };
 pub use crate::statement::claim_stmt::ClaimStmt;

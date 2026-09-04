@@ -11,7 +11,7 @@ fn definition_graph_output(source: &'static str) -> String {
         .spawn(move || {
             render_graph(
                 GraphKind::Definition,
-                run_code(source, InvocationOptions::default()),
+                run_code(source, LitexExecutionOptions::default()),
                 true,
             )
             .1
@@ -112,7 +112,7 @@ fn definition_graph_file_uses_selected_export_environment() {
         .spawn(move || {
             render_graph(
                 GraphKind::Definition,
-                run_file(target_string.as_str(), InvocationOptions::default()),
+                run_file(target_string.as_str(), LitexExecutionOptions::default()),
                 true,
             )
             .1
@@ -211,7 +211,7 @@ fn definition_graph_repository_uses_the_selected_submodule_environment() {
         .spawn(move || {
             render_graph(
                 GraphKind::Definition,
-                run_repository(target.as_str(), InvocationOptions::default()),
+                run_repository(target.as_str(), LitexExecutionOptions::default()),
                 true,
             )
             .1
@@ -251,7 +251,11 @@ fn definition_graph_project_proof_sources_normalize_local_qualifier() {
                 GraphKind::Definition,
                 run_file(
                     target_string.as_str(),
-                    InvocationOptions::strict_execute(LitexExecution::File),
+                    LitexExecutionOptions::strict(
+                        OutputDetail::Normal,
+                        OutputLanguage::English,
+                        SummaryOption::None,
+                    ),
                 ),
                 true,
             )

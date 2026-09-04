@@ -23,7 +23,7 @@ pub(super) fn render_version(version: &str) -> String {
 }
 
 pub(super) fn render_run(outcome: &RunOutcome, input_path: Option<&str>) -> String {
-    let target = execution_target(outcome.runtime.invocation_options).0;
+    let target = run_target_kind(&outcome.target).0;
     let statement_results = outcome
         .stmt_results
         .iter()
@@ -88,9 +88,17 @@ pub(super) fn simple_error(kind: &str, message: &str) -> JsonValue {
     ])
 }
 
-pub(super) fn execution_target(options: InvocationOptions) -> (&'static str, bool) {
-    match options.execution() {
-        LitexExecution::Inline => ("eval", false),
+pub(super) fn run_target_kind(target: &RunTarget) -> (&'static str, bool) {
+    match target {
+        RunTarget::Eval => ("eval", false),
+        RunTarget::File { .. } | RunTarget::IsolatedFile { .. } => ("file", true),
+        RunTarget::Repository { .. } => ("repository", true),
+    }
+}
+
+pub(super) fn execution_target(execution: LitexExecution) -> (&'static str, bool) {
+    match execution {
+        LitexExecution::Eval => ("eval", false),
         LitexExecution::File | LitexExecution::IsolatedFile => ("file", true),
         LitexExecution::Repository => ("repository", true),
         LitexExecution::Repl => ("repl", false),

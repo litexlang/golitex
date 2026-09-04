@@ -482,7 +482,7 @@ after = "./after.lit"
         );
         assert!(project_output.contains("1 = 0"), "{project_output}");
 
-        let mut strict_runtime = Runtime::new(InvocationOptions::strict_execute(LitexExecution::File));
+        let mut strict_runtime = Runtime::new(LitexExecutionOptions::strict(OutputDetail::Normal, OutputLanguage::English, SummaryOption::None));
         let (_, strict_error) = execute_file_in_runtime(target.as_str(), &mut strict_runtime);
         let strict_error = strict_error.expect("strict -f must verify its export prefix");
         assert!(format!("{strict_error:?}").contains("1 = 0"));
@@ -589,7 +589,7 @@ have ProductSet set = cart(R, R)
         );
         let outcome = crate::pipeline::run_repository(
             path_string_for_test(&root).as_str(),
-            InvocationOptions::default(),
+            LitexExecutionOptions::default(),
         );
         assert!(outcome.ok, "{}", outcome.output);
         let runtime = outcome.runtime;
@@ -1462,8 +1462,7 @@ fn run_repository_for_test(
     } else {
         VerifyStrictnessPolicy::Ordinary
     };
-    let options = InvocationOptions::new(
-        LitexExecution::Repository,
+    let options = LitexExecutionOptions::new(
         verify_strictness,
         if detailed_output {
             OutputDetail::Detailed
@@ -1482,7 +1481,7 @@ fn run_repository_for_test(
 }
 
 fn run_file_for_test(file_path: &str) -> (bool, String) {
-    let outcome = run_file(file_path, InvocationOptions::default());
+    let outcome = run_file(file_path, LitexExecutionOptions::default());
     (outcome.ok, outcome.output)
 }
 
