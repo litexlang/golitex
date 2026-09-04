@@ -2,41 +2,202 @@ use crate::prelude::*;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub(super) enum ExtractionKind {
+    /// Extract Python source.
     Python,
+
+    /// Extract C source.
     C,
+}
+
+/// Options accepted by the interactive Litex REPL command.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(super) struct ReplCommandOptions {
+    /// Policy controlling dependency verification for REPL evaluations.
+    pub(super) verify_strictness: VerifyStrictnessPolicy,
+
+    /// Detail level used for REPL output.
+    pub(super) output_detail: OutputDetail,
+
+    /// Language used for REPL output.
+    pub(super) output_language: OutputLanguage,
+}
+
+impl ReplCommandOptions {
+    pub(super) fn litex_execution_options(self) -> LitexExecutionOptions {
+        LitexExecutionOptions::new(
+            self.verify_strictness,
+            self.output_detail,
+            self.output_language,
+            SummaryOption::None,
+        )
+    }
+}
+
+/// Options accepted by a batch Litex execution command.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(super) struct ExecuteCommandOptions {
+    /// Source entry point selected by `-e`, `-f`, or `-r`.
+    pub(super) execution: LitexExecution,
+
+    /// Policy controlling dependency verification.
+    pub(super) verify_strictness: VerifyStrictnessPolicy,
+
+    /// Detail level used for execution output.
+    pub(super) output_detail: OutputDetail,
+
+    /// Language used for execution output.
+    pub(super) output_language: OutputLanguage,
+}
+
+impl ExecuteCommandOptions {
+    pub(super) fn litex_execution_options(self) -> LitexExecutionOptions {
+        LitexExecutionOptions::new(
+            self.verify_strictness,
+            self.output_detail,
+            self.output_language,
+            SummaryOption::None,
+        )
+    }
+}
+
+/// Options accepted by a graph-producing Litex command.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(super) struct GraphCommandOptions {
+    /// Source entry point whose definitions or results are graphed.
+    pub(super) execution: LitexExecution,
+
+    /// Policy controlling dependency verification.
+    pub(super) verify_strictness: VerifyStrictnessPolicy,
+
+    /// Detail level used while rendering graph diagnostics.
+    pub(super) output_detail: OutputDetail,
+
+    /// Language used for graph diagnostics.
+    pub(super) output_language: OutputLanguage,
+}
+
+impl GraphCommandOptions {
+    pub(super) fn litex_execution_options(self) -> LitexExecutionOptions {
+        LitexExecutionOptions::new(
+            self.verify_strictness,
+            self.output_detail,
+            self.output_language,
+            SummaryOption::None,
+        )
+    }
+}
+
+/// Options accepted by a persistent Litex session command.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(super) struct SessionCommandOptions {
+    /// Session source mode, with or without configured project context.
+    pub(super) execution: LitexExecution,
+
+    /// Policy controlling dependency verification.
+    pub(super) verify_strictness: VerifyStrictnessPolicy,
+
+    /// Detail level used for session output.
+    pub(super) output_detail: OutputDetail,
+
+    /// Language used for session output.
+    pub(super) output_language: OutputLanguage,
+}
+
+impl SessionCommandOptions {
+    pub(super) fn litex_execution_options(self) -> LitexExecutionOptions {
+        LitexExecutionOptions::new(
+            self.verify_strictness,
+            self.output_detail,
+            self.output_language,
+            SummaryOption::None,
+        )
+    }
+}
+
+/// Options accepted by LaTeX and code-extraction conversion commands.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(super) struct ConversionCommandOptions {
+    /// Source entry point selected for conversion.
+    pub(super) execution: LitexExecution,
+
+    /// Language used for conversion diagnostics.
+    pub(super) output_language: OutputLanguage,
 }
 
 #[derive(Debug)]
 pub(super) enum CliCommand {
-    Repl(InvocationOptions),
+    /// Start the interactive REPL with its command-specific settings.
+    Repl(ReplCommandOptions),
+
+    /// Print the CLI help message.
     Help,
+
+    /// Print the CLI version.
     Version,
+
+    /// Execute one source target and render its run result.
     Execute {
+        /// Source text, file path, or repository target.
         target: String,
-        options: InvocationOptions,
+
+        /// Options accepted by the execution command.
+        options: ExecuteCommandOptions,
     },
+
+    /// Execute one target and render its graph artifact.
     Graph {
+        /// Graph flavor to render.
         kind: GraphKind,
+
+        /// Source text, file path, or repository target.
         target: String,
+
+        /// Optional path for the rendered graph JSON.
         save_path: Option<String>,
-        options: InvocationOptions,
+
+        /// Options accepted by the graph command.
+        options: GraphCommandOptions,
     },
+
+    /// Start a persistent session, optionally preloading a file.
     Session {
+        /// Optional project or isolated file to preload.
         file_path: Option<String>,
-        options: InvocationOptions,
+
+        /// Options accepted by the session command.
+        options: SessionCommandOptions,
     },
+
+    /// Start the LaTeX conversion REPL.
     LatexRepl,
+
+    /// Convert one source target to LaTeX.
     Latex {
+        /// Source text, file path, or repository target.
         target: String,
-        options: InvocationOptions,
+
+        /// Options accepted by the conversion command.
+        options: ConversionCommandOptions,
     },
+
+    /// Extract another programming language from one Litex target.
     Extract {
+        /// Requested extraction language.
         kind: ExtractionKind,
+
+        /// Source text, file path, or repository target.
         target: String,
-        options: InvocationOptions,
+
+        /// Options accepted by the conversion command.
+        options: ConversionCommandOptions,
     },
+
+    /// Compile one Litex file to a Lean file.
     Lean {
+        /// Litex input file path.
         input_path: String,
+
+        /// Lean output file path.
         output_path: String,
     },
 }
@@ -86,10 +247,7 @@ pub(super) fn parse_cli_command(args: &[String]) -> Result<CliCommand, String> {
         if modifiers.isolated {
             return unsupported();
         }
-        return Ok(CliCommand::Repl(invocation_options(
-            LitexExecution::Repl,
-            modifiers,
-        )));
+        return Ok(CliCommand::Repl(repl_command_options(modifiers)));
     }
 
     if command.len() == 1 && command[0] == "-help" {
@@ -112,7 +270,7 @@ pub(super) fn parse_cli_command(args: &[String]) -> Result<CliCommand, String> {
         }
         return Ok(CliCommand::Execute {
             target: command[1].clone(),
-            options: invocation_options(LitexExecution::Inline, modifiers),
+            options: execute_command_options(LitexExecution::Eval, modifiers),
         });
     }
 
@@ -124,7 +282,7 @@ pub(super) fn parse_cli_command(args: &[String]) -> Result<CliCommand, String> {
         };
         return Ok(CliCommand::Execute {
             target: command[1].clone(),
-            options: invocation_options(execution, modifiers),
+            options: execute_command_options(execution, modifiers),
         });
     }
 
@@ -134,7 +292,7 @@ pub(super) fn parse_cli_command(args: &[String]) -> Result<CliCommand, String> {
         }
         return Ok(CliCommand::Execute {
             target: command[1].clone(),
-            options: invocation_options(LitexExecution::Repository, modifiers),
+            options: execute_command_options(LitexExecution::Repository, modifiers),
         });
     }
 
@@ -175,7 +333,7 @@ pub(super) fn parse_cli_command(args: &[String]) -> Result<CliCommand, String> {
             kind,
             target: command[2].clone(),
             save_path: command.get(3).cloned(),
-            options: invocation_options(execution, modifiers),
+            options: graph_command_options(execution, modifiers),
         });
     }
 
@@ -189,7 +347,7 @@ pub(super) fn parse_cli_command(args: &[String]) -> Result<CliCommand, String> {
         };
         return Ok(CliCommand::Session {
             file_path: command.get(2).cloned(),
-            options: invocation_options(execution, modifiers),
+            options: session_command_options(execution, modifiers),
         });
     }
 
@@ -211,7 +369,7 @@ pub(super) fn parse_cli_command(args: &[String]) -> Result<CliCommand, String> {
         let execution = execution_option(command[1].as_str(), modifiers.isolated);
         return Ok(CliCommand::Latex {
             target: command[2].clone(),
-            options: invocation_options(execution, modifiers),
+            options: conversion_command_options(execution, modifiers),
         });
     }
 
@@ -225,7 +383,7 @@ pub(super) fn parse_cli_command(args: &[String]) -> Result<CliCommand, String> {
         return Ok(CliCommand::Extract {
             kind: extraction_kind(command[0].as_str()),
             target: command[1].clone(),
-            options: invocation_options(LitexExecution::Inline, modifiers),
+            options: conversion_command_options(LitexExecution::Eval, modifiers),
         });
     }
 
@@ -241,7 +399,7 @@ pub(super) fn parse_cli_command(args: &[String]) -> Result<CliCommand, String> {
         return Ok(CliCommand::Extract {
             kind: extraction_kind(command[0].as_str()),
             target: command[2].clone(),
-            options: invocation_options(execution, modifiers),
+            options: conversion_command_options(execution, modifiers),
         });
     }
 
@@ -250,29 +408,81 @@ pub(super) fn parse_cli_command(args: &[String]) -> Result<CliCommand, String> {
 
 #[derive(Clone, Copy)]
 struct ParsedModifiers {
+    /// Whether dependency verification is required.
     strict: bool,
+
+    /// Optional language for user-facing output.
     output_language: Option<OutputLanguage>,
+
+    /// Whether filesystem execution must avoid project context.
     isolated: bool,
 }
 
-fn invocation_options(execution: LitexExecution, modifiers: ParsedModifiers) -> InvocationOptions {
-    let verify_strictness = if modifiers.strict {
+fn strictness(modifiers: ParsedModifiers) -> VerifyStrictnessPolicy {
+    if modifiers.strict {
         VerifyStrictnessPolicy::Strict
     } else {
         VerifyStrictnessPolicy::Ordinary
-    };
-    InvocationOptions::new(
+    }
+}
+
+fn repl_command_options(modifiers: ParsedModifiers) -> ReplCommandOptions {
+    ReplCommandOptions {
+        verify_strictness: strictness(modifiers),
+        output_detail: OutputDetail::Detailed,
+        output_language: modifiers.output_language.unwrap_or(OutputLanguage::English),
+    }
+}
+
+fn execute_command_options(
+    execution: LitexExecution,
+    modifiers: ParsedModifiers,
+) -> ExecuteCommandOptions {
+    ExecuteCommandOptions {
         execution,
-        verify_strictness,
-        OutputDetail::Detailed,
-        modifiers.output_language.unwrap_or(OutputLanguage::English),
-        SummaryOption::None,
-    )
+        verify_strictness: strictness(modifiers),
+        output_detail: OutputDetail::Detailed,
+        output_language: modifiers.output_language.unwrap_or(OutputLanguage::English),
+    }
+}
+
+fn graph_command_options(
+    execution: LitexExecution,
+    modifiers: ParsedModifiers,
+) -> GraphCommandOptions {
+    GraphCommandOptions {
+        execution,
+        verify_strictness: strictness(modifiers),
+        output_detail: OutputDetail::Detailed,
+        output_language: modifiers.output_language.unwrap_or(OutputLanguage::English),
+    }
+}
+
+fn session_command_options(
+    execution: LitexExecution,
+    modifiers: ParsedModifiers,
+) -> SessionCommandOptions {
+    SessionCommandOptions {
+        execution,
+        verify_strictness: strictness(modifiers),
+        output_detail: OutputDetail::Detailed,
+        output_language: modifiers.output_language.unwrap_or(OutputLanguage::English),
+    }
+}
+
+fn conversion_command_options(
+    execution: LitexExecution,
+    modifiers: ParsedModifiers,
+) -> ConversionCommandOptions {
+    ConversionCommandOptions {
+        execution,
+        output_language: modifiers.output_language.unwrap_or(OutputLanguage::English),
+    }
 }
 
 fn execution_option(flag: &str, isolated: bool) -> LitexExecution {
     match flag {
-        "-e" => LitexExecution::Inline,
+        "-e" => LitexExecution::Eval,
         "-f" if isolated => LitexExecution::IsolatedFile,
         "-f" => LitexExecution::File,
         "-r" => LitexExecution::Repository,

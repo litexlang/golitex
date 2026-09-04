@@ -2,7 +2,9 @@ use super::super::command::{parse_cli_command, CliCommand};
 use super::super::messages::help_message;
 use crate::graph::GraphKind;
 use crate::output::{language::OutputLanguage, style::OutputDetail};
-use crate::pipeline::{InvocationOptions, LitexExecution, VerifyStrictnessPolicy};
+use crate::pipeline::{
+    LitexExecution, LitexExecutionOptions, SummaryOption, VerifyStrictnessPolicy,
+};
 
 #[test]
 fn canonical_cli_prefix_maps_to_one_typed_command() {
@@ -19,19 +21,22 @@ fn canonical_cli_prefix_maps_to_one_typed_command() {
         panic!("expected typed eval command");
     };
 
-    assert_eq!(options.execution(), LitexExecution::Inline);
-    assert_eq!(options.verify_strictness(), VerifyStrictnessPolicy::Strict);
-    assert_eq!(options.output_detail(), OutputDetail::Detailed);
-    assert!(options.is_strict());
-    assert!(!options.should_summarize());
-    assert!(!options.is_isolated());
-    assert_eq!(options.output_language(), OutputLanguage::SimplifiedChinese);
+    assert_eq!(options.execution, LitexExecution::Eval);
+    assert_eq!(options.verify_strictness, VerifyStrictnessPolicy::Strict);
+    assert_eq!(options.output_detail, OutputDetail::Detailed);
+    assert_eq!(options.verify_strictness, VerifyStrictnessPolicy::Strict);
+    assert!(!options.litex_execution_options().should_summarize());
+    assert!(!matches!(
+        options.execution,
+        LitexExecution::IsolatedFile | LitexExecution::IsolatedSession
+    ));
+    assert_eq!(options.output_language, OutputLanguage::SimplifiedChinese);
     assert_eq!(target, "1 = 1");
 }
 
 #[test]
 fn graph_tracer_resolves_every_argument_before_dispatch() {
-    // Before this migration, parsing stopped at InvocationOptions + command_index and run_cli
+    // Before this migration, parsing stopped at LitexExecutionOptions + command_index and run_cli
     // interpreted the graph, target, and save path from the same raw argv a second time.
     let args = [
         "-strict",
@@ -57,28 +62,30 @@ fn graph_tracer_resolves_every_argument_before_dispatch() {
     assert_eq!(kind, GraphKind::Result);
     assert_eq!(target, "main.lit");
     assert_eq!(save_path.as_deref(), Some("graph.json"));
-    assert_eq!(options.execution(), LitexExecution::IsolatedFile);
-    assert_eq!(options.verify_strictness(), VerifyStrictnessPolicy::Strict);
-    assert_eq!(options.output_detail(), OutputDetail::Detailed);
-    assert!(options.is_strict());
-    assert!(options.is_isolated());
+    assert_eq!(options.execution, LitexExecution::IsolatedFile);
+    assert_eq!(options.verify_strictness, VerifyStrictnessPolicy::Strict);
+    assert_eq!(options.output_detail, OutputDetail::Detailed);
+    assert!(matches!(
+        options.execution,
+        LitexExecution::IsolatedFile | LitexExecution::IsolatedSession
+    ));
 }
 
 #[test]
-fn strictness_is_derived_only_from_strict_run_variants() {
-    for options in [
-        InvocationOptions::execute(LitexExecution::Inline),
-        InvocationOptions::execute(LitexExecution::IsolatedFile),
-        InvocationOptions::execute(LitexExecution::Repository),
-    ] {
+fn strictness_is_carried_by_execution_options() {
+    for options in [LitexExecutionOptions::ordinary(
+        OutputDetail::Normal,
+        OutputLanguage::English,
+        SummaryOption::None,
+    )] {
         assert!(!options.is_strict(), "{:?}", options.verify_strictness());
     }
 
-    for options in [
-        InvocationOptions::strict_execute(LitexExecution::Inline),
-        InvocationOptions::strict_execute(LitexExecution::IsolatedFile),
-        InvocationOptions::strict_execute(LitexExecution::Repository),
-    ] {
+    for options in [LitexExecutionOptions::strict(
+        OutputDetail::Normal,
+        OutputLanguage::English,
+        SummaryOption::None,
+    )] {
         assert!(options.is_strict(), "{:?}", options.verify_strictness());
     }
 }
@@ -121,7 +128,7 @@ fn session_accepts_an_optional_file_preload() {
     };
 
     assert_eq!(file_path.as_deref(), Some("chap4.lit"));
-    assert_eq!(options.execution(), LitexExecution::Session);
+    assert_eq!(options.execution, LitexExecution::Session);
 }
 
 #[test]
@@ -134,8 +141,7 @@ fn isolated_session_file_has_an_explicit_isolated_mode() {
     };
 
     assert_eq!(file_path.as_deref(), Some("chap5.lit"));
-    assert_eq!(options.execution(), LitexExecution::IsolatedSession);
-    assert!(options.is_isolated());
+    assert_eq!(options.execution, LitexExecution::IsolatedSession);
 }
 
 #[test]
@@ -159,12 +165,9 @@ fn session_without_a_file_keeps_current_directory_and_isolated_modes_distinct() 
     };
 
     assert!(project_file.is_none());
-    assert_eq!(project_options.execution(), LitexExecution::Session);
+    assert_eq!(project_options.execution, LitexExecution::Session);
     assert!(isolated_file.is_none());
-    assert_eq!(
-        isolated_options.execution(),
-        LitexExecution::IsolatedSession
-    );
+    assert_eq!(isolated_options.execution, LitexExecution::IsolatedSession);
 }
 
 #[test]

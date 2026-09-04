@@ -1158,9 +1158,7 @@ impl Runtime {
             };
             let surface_name = &display[index..end];
             if self.visible_symbol_definition(surface_name).is_some() {
-                let materialized_key = self
-                    .definition_identifier_obj(surface_name)
-                    .to_string();
+                let materialized_key = self.definition_identifier_obj(surface_name).to_string();
                 if materialized_key != surface_name {
                     aliases.push((surface_name.to_string(), materialized_key));
                 }

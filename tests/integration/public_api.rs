@@ -1,14 +1,13 @@
 use litex::api::{
     compile_litex_source_to_lean_compilation_report, compile_litex_source_to_lean_source, run_code,
-    run_file, run_isolated_file, run_repository, InvocationOptions, LitexExecution, OutputDetail,
+    run_file, run_isolated_file, run_repository, LitexExecutionOptions, OutputDetail,
     OutputLanguage, RunOutcome, RunTarget, RunTargetKind, Runtime, SourceRunOutcome, StmtResult,
     StmtResultToLeanCompilationReport, SummaryOption, VerifyStrictnessPolicy,
 };
 
 #[test]
 fn curated_api_executes_litex_inside_an_existing_runtime() {
-    let mut runtime = Runtime::new(InvocationOptions::new(
-        LitexExecution::Inline,
+    let mut runtime = Runtime::new(LitexExecutionOptions::new(
         VerifyStrictnessPolicy::Ordinary,
         OutputDetail::Compact,
         OutputLanguage::English,
@@ -28,8 +27,7 @@ fn curated_api_executes_litex_inside_an_existing_runtime() {
 
 #[test]
 fn curated_api_exposes_one_owned_entry_for_every_batch_input() {
-    let options = InvocationOptions::new(
-        LitexExecution::Inline,
+    let options = LitexExecutionOptions::new(
         VerifyStrictnessPolicy::Strict,
         OutputDetail::Compact,
         OutputLanguage::SimplifiedChinese,
@@ -40,69 +38,61 @@ fn curated_api_exposes_one_owned_entry_for_every_batch_input() {
     assert_eq!(code.target, RunTarget::Eval);
     assert_eq!(code.target.kind(), RunTargetKind::Code);
     assert!(code.target.path().is_none());
-    assert_eq!(code.runtime.invocation_options, options);
+    assert_eq!(code.runtime.execution_options, options);
 
     let automatic_file = run_file(
         "missing-project-file.lit",
-        InvocationOptions::execute(LitexExecution::IsolatedFile),
+        LitexExecutionOptions::ordinary(
+            OutputDetail::Normal,
+            OutputLanguage::English,
+            SummaryOption::None,
+        ),
     );
     assert!(matches!(
         automatic_file.target,
         RunTarget::IsolatedFile { .. }
     ));
     assert_eq!(
-        automatic_file.runtime.invocation_options.execution(),
-        LitexExecution::IsolatedFile
-    );
-    assert_eq!(
-        automatic_file
-            .runtime
-            .invocation_options
-            .verify_strictness(),
+        automatic_file.runtime.execution_options.verify_strictness(),
         VerifyStrictnessPolicy::Ordinary
     );
     let isolated_file = run_isolated_file(
         "missing-isolated-file.lit",
-        InvocationOptions::execute(LitexExecution::File),
+        LitexExecutionOptions::ordinary(
+            OutputDetail::Normal,
+            OutputLanguage::English,
+            SummaryOption::None,
+        ),
     );
     assert!(matches!(
         isolated_file.target,
         RunTarget::IsolatedFile { .. }
     ));
-    assert!(isolated_file.runtime.invocation_options.is_isolated());
     assert_eq!(
-        isolated_file.runtime.invocation_options.execution(),
-        LitexExecution::IsolatedFile
-    );
-    assert_eq!(
-        isolated_file.runtime.invocation_options.verify_strictness(),
+        isolated_file.runtime.execution_options.verify_strictness(),
         VerifyStrictnessPolicy::Ordinary
     );
-    let repository = run_repository("missing-project", InvocationOptions::default());
+    let repository = run_repository("missing-project", LitexExecutionOptions::default());
     assert!(matches!(repository.target, RunTarget::Repository { .. }));
     assert_eq!(
-        repository.runtime.invocation_options.execution(),
-        LitexExecution::Repository
-    );
-    assert_eq!(
-        repository.runtime.invocation_options.verify_strictness(),
+        repository.runtime.execution_options.verify_strictness(),
         VerifyStrictnessPolicy::Ordinary
     );
 
-    let _: fn(&str, InvocationOptions) -> RunOutcome = run_code;
-    let _: fn(&str, InvocationOptions) -> RunOutcome = run_file;
-    let _: fn(&str, InvocationOptions) -> RunOutcome = run_isolated_file;
-    let _: fn(&str, InvocationOptions) -> RunOutcome = run_repository;
+    let _: fn(&str, LitexExecutionOptions) -> RunOutcome = run_code;
+    let _: fn(&str, LitexExecutionOptions) -> RunOutcome = run_file;
+    let _: fn(&str, LitexExecutionOptions) -> RunOutcome = run_isolated_file;
+    let _: fn(&str, LitexExecutionOptions) -> RunOutcome = run_repository;
 }
 
 #[test]
 fn curated_api_keeps_only_canonical_execution_paths_public() {
     let _: fn(&mut Runtime, &str) = Runtime::start_isolated_source;
     let _: fn(&mut Runtime, &str) -> SourceRunOutcome = Runtime::execute_source;
-    let _: fn(&str, InvocationOptions) -> RunOutcome = litex::pipeline::run_code;
-    let _: fn(&str, InvocationOptions) -> RunOutcome = litex::pipeline::run_file;
-    let _: fn(&str, InvocationOptions) -> RunOutcome = litex::pipeline::run_isolated_file;
-    let _: fn(&str, InvocationOptions) -> RunOutcome = litex::pipeline::run_repository;
+    let _: fn(&str, LitexExecutionOptions) -> RunOutcome = litex::pipeline::run_code;
+    let _: fn(&str, LitexExecutionOptions) -> RunOutcome = litex::pipeline::run_file;
+    let _: fn(&str, LitexExecutionOptions) -> RunOutcome = litex::pipeline::run_isolated_file;
+    let _: fn(&str, LitexExecutionOptions) -> RunOutcome = litex::pipeline::run_repository;
     let _: fn(&str) -> Result<String, String> = litex::pipeline::resolve_source_file_path;
     let _: fn(&str, &str) -> Result<String, String> = compile_litex_source_to_lean_source;
     let _: fn(&str, &str) -> Result<StmtResultToLeanCompilationReport, String> =

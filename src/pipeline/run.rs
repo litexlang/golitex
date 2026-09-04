@@ -6,7 +6,7 @@ use super::{
 use crate::error::RuntimeError;
 use crate::module_system::{discover_repository, VirtualSource};
 use crate::result::StmtResult;
-use crate::runtime::{InvocationOptions, LitexExecution, Runtime, VerifyStrictnessPolicy};
+use crate::runtime::{LitexExecution, LitexExecutionOptions, Runtime};
 use crate::syntax::source_formatting::remove_windows_carriage_from_str;
 
 pub struct RunOutcome {
@@ -19,7 +19,7 @@ pub struct RunOutcome {
     pub target_error: Option<String>,
 }
 
-pub fn run_code(source: &str, options: InvocationOptions) -> RunOutcome {
+pub fn run_code(source: &str, options: LitexExecutionOptions) -> RunOutcome {
     let mut runtime = Runtime::new(options);
     let target = RunTarget::Eval;
     runtime.start_virtual_source(VirtualSource::Eval);
@@ -37,13 +37,12 @@ pub fn run_code(source: &str, options: InvocationOptions) -> RunOutcome {
     )
 }
 
-pub fn run_file(path: &str, options: InvocationOptions) -> RunOutcome {
+pub fn run_file(path: &str, options: LitexExecutionOptions) -> RunOutcome {
     let resolved_path = resolve_source_file_path(path);
     let execution = resolved_path
         .as_ref()
         .map(|path| file_execution_option(path.as_str()))
         .unwrap_or(LitexExecution::File);
-    let options = options_for_execution(options, execution);
     let mut runtime = Runtime::new(options);
     let mut target_error = None;
     let (target_path, stmt_results, runtime_error) = match resolved_path {
@@ -80,8 +79,7 @@ pub fn run_file(path: &str, options: InvocationOptions) -> RunOutcome {
     )
 }
 
-pub fn run_isolated_file(path: &str, options: InvocationOptions) -> RunOutcome {
-    let options = options_for_execution(options, LitexExecution::IsolatedFile);
+pub fn run_isolated_file(path: &str, options: LitexExecutionOptions) -> RunOutcome {
     let mut runtime = Runtime::new(options);
     let mut target_error = None;
     let (target_path, stmt_results, runtime_error) = match resolve_source_file_path(path) {
@@ -106,8 +104,7 @@ pub fn run_isolated_file(path: &str, options: InvocationOptions) -> RunOutcome {
     )
 }
 
-pub fn run_repository(path: &str, options: InvocationOptions) -> RunOutcome {
-    let options = options_for_execution(options, LitexExecution::Repository);
+pub fn run_repository(path: &str, options: LitexExecutionOptions) -> RunOutcome {
     let mut runtime = Runtime::new(options);
     let normalized_path = remove_windows_carriage_from_str(path);
     let (stmt_results, runtime_error) =
@@ -125,24 +122,6 @@ pub fn run_repository(path: &str, options: InvocationOptions) -> RunOutcome {
         runtime_error,
         None,
         options.should_summarize(),
-    )
-}
-
-fn options_for_execution(
-    options: InvocationOptions,
-    execution: LitexExecution,
-) -> InvocationOptions {
-    let verify_strictness = if options.is_strict() {
-        VerifyStrictnessPolicy::Strict
-    } else {
-        VerifyStrictnessPolicy::Ordinary
-    };
-    InvocationOptions::new(
-        execution,
-        verify_strictness,
-        options.output_detail(),
-        options.output_language(),
-        options.summary(),
     )
 }
 

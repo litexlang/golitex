@@ -100,6 +100,11 @@ impl ArgMatcher<'_> {
         match known_arg {
             // Only exact bound symbols bind; plain identifiers are fixed names.
             Obj::Atom(AtomObj::Identifier(ref id_known)) => {
+                if id_known.symbol.is_some()
+                    && obj_equality_key(known_arg) == obj_equality_key(given_arg)
+                {
+                    return Ok(Some(HashMap::new()));
+                }
                 match given_arg {
                     Obj::Atom(AtomObj::Identifier(id_given)) if id_known.name == id_given.name => {}
                     Obj::Atom(AtomObj::IdentifierWithMod(id_given))
@@ -110,6 +115,11 @@ impl ArgMatcher<'_> {
                 Ok(Some(HashMap::new()))
             }
             Obj::Atom(AtomObj::IdentifierWithMod(ref id_known)) => {
+                if id_known.symbol.is_some()
+                    && obj_equality_key(known_arg) == obj_equality_key(given_arg)
+                {
+                    return Ok(Some(HashMap::new()));
+                }
                 self.match_arg_when_left_is_identifier_with_mod(id_known, given_arg)
             }
             Obj::Atom(AtomObj::Bound(ref bound)) => {
@@ -118,7 +128,7 @@ impl ArgMatcher<'_> {
                     .iter()
                     .any(|active_id| *active_id == bound.symbol.id())
                 {
-                    return if bound.to_string() == given_arg.to_string() {
+                    return if obj_equality_key(known_arg) == obj_equality_key(given_arg) {
                         Ok(Some(HashMap::new()))
                     } else {
                         Ok(None)

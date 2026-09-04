@@ -1,15 +1,15 @@
-//! Invocation configuration shared by the CLI, pipelines, and embedding callers.
+//! Configuration used when executing Litex source.
 
 use crate::prelude::*;
 
-/// Selects the Litex source entry point for one invocation.
+/// Selects the source entry point used by a Litex command.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum LitexExecution {
     /// Run an interactive read-eval-print loop.
     Repl,
 
-    /// Evaluate inline source code.
-    Inline,
+    /// Evaluate source supplied directly by the command.
+    Eval,
 
     /// Execute a file using configured project context when available.
     File,
@@ -47,12 +47,13 @@ pub enum SummaryOption {
     Summarize,
 }
 
-/// Immutable configuration for one Litex invocation.
+/// Configuration required to execute Litex source.
+///
+/// The source entry point is kept by the command or pipeline entry that owns
+/// it. This type contains only execution-wide verification, output, and
+/// summary settings, so conversion commands do not need to carry strictness.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct InvocationOptions {
-    /// Litex source execution entry point.
-    execution: LitexExecution,
-
+pub struct LitexExecutionOptions {
     /// Policy controlling whether configured dependencies must be verified.
     verify_strictness: VerifyStrictnessPolicy,
 
@@ -66,17 +67,15 @@ pub struct InvocationOptions {
     summary: SummaryOption,
 }
 
-impl InvocationOptions {
-    /// Construct a complete invocation configuration in one immutable value.
+impl LitexExecutionOptions {
+    /// Construct execution settings for one Litex source operation.
     pub fn new(
-        execution: LitexExecution,
         verify_strictness: VerifyStrictnessPolicy,
         output_detail: OutputDetail,
         output_language: OutputLanguage,
         summary: SummaryOption,
     ) -> Self {
         Self {
-            execution,
             verify_strictness,
             output_detail,
             output_language,
@@ -84,31 +83,32 @@ impl InvocationOptions {
         }
     }
 
-    /// Construct ordinary, non-strict options for a Litex entry point.
-    pub fn execute(execution: LitexExecution) -> Self {
+    /// Construct ordinary, non-strict Litex execution settings.
+    pub fn ordinary(
+        output_detail: OutputDetail,
+        output_language: OutputLanguage,
+        summary: SummaryOption,
+    ) -> Self {
         Self::new(
-            execution,
             VerifyStrictnessPolicy::Ordinary,
-            OutputDetail::Normal,
-            OutputLanguage::English,
-            SummaryOption::None,
+            output_detail,
+            output_language,
+            summary,
         )
     }
 
-    /// Construct strict invocation options for a Litex entry point.
-    pub fn strict_execute(execution: LitexExecution) -> Self {
+    /// Construct strict Litex execution settings.
+    pub fn strict(
+        output_detail: OutputDetail,
+        output_language: OutputLanguage,
+        summary: SummaryOption,
+    ) -> Self {
         Self::new(
-            execution,
             VerifyStrictnessPolicy::Strict,
-            OutputDetail::Normal,
-            OutputLanguage::English,
-            SummaryOption::None,
+            output_detail,
+            output_language,
+            summary,
         )
-    }
-
-    /// Return the selected Litex source execution entry point.
-    pub fn execution(&self) -> LitexExecution {
-        self.execution
     }
 
     /// Return the configured dependency-verification policy.
@@ -116,36 +116,29 @@ impl InvocationOptions {
         self.verify_strictness
     }
 
-    /// Return whether dependency verification is required for this invocation.
+    /// Return whether dependency verification is required for this execution.
     pub fn is_strict(&self) -> bool {
         self.verify_strictness == VerifyStrictnessPolicy::Strict
     }
 
-    /// Return whether this invocation must avoid configured project context.
-    pub fn is_isolated(&self) -> bool {
-        matches!(
-            self.execution(),
-            LitexExecution::IsolatedFile | LitexExecution::IsolatedSession
-        )
-    }
-
-    /// Return whether the final output includes a run summary.
+    /// Return whether the final execution output includes a run summary.
     pub fn should_summarize(&self) -> bool {
         self.summary == SummaryOption::Summarize
     }
 
-    pub(crate) fn summary(&self) -> SummaryOption {
-        self.summary
-    }
-
-    /// Return the output detail level selected for this invocation.
+    /// Return the output detail level selected for this execution.
     pub fn output_detail(&self) -> OutputDetail {
         self.output_detail
     }
 
-    /// Return the language selected for user-facing output.
+    /// Return the language selected for user-facing execution output.
     pub fn output_language(&self) -> OutputLanguage {
         self.output_language
+    }
+
+    /// Replace the output detail level for an already-created execution.
+    pub fn set_output_detail(&mut self, output_detail: OutputDetail) {
+        self.output_detail = output_detail;
     }
 
     #[deprecated(note = "use `output_detail`")]
@@ -154,8 +147,12 @@ impl InvocationOptions {
     }
 }
 
-impl Default for InvocationOptions {
+impl Default for LitexExecutionOptions {
     fn default() -> Self {
-        Self::execute(LitexExecution::Inline)
+        Self::ordinary(
+            OutputDetail::Normal,
+            OutputLanguage::English,
+            SummaryOption::None,
+        )
     }
 }

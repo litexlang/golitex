@@ -23,8 +23,7 @@ fn run_repository_for_test(
     } else {
         VerifyStrictnessPolicy::Ordinary
     };
-    let options = InvocationOptions::new(
-        LitexExecution::Repository,
+    let options = LitexExecutionOptions::new(
         verify_strictness,
         if detailed_output {
             OutputDetail::Detailed
@@ -71,8 +70,11 @@ pub(super) fn run_runtime_contract_suite_impl() {
 fn runtime_contract_builtin() {
     let source_code = "1 = 1";
 
-    let mut import_runtime =
-        Runtime::new(InvocationOptions::strict_execute(LitexExecution::Inline));
+    let mut import_runtime = Runtime::new(LitexExecutionOptions::strict(
+        OutputDetail::Normal,
+        OutputLanguage::English,
+        SummaryOption::None,
+    ));
     import_runtime.start_isolated_source("runtime_contract_import");
     let (import_stmt_results, import_runtime_error) =
         execute_source(source_code, &mut import_runtime);

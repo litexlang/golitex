@@ -304,7 +304,7 @@ trust:
 
     let (fact_graph_ok, fact_graph_output) = render_graph(
         GraphKind::Fact,
-        run_code(unchecked_trust, InvocationOptions::default()),
+        run_code(unchecked_trust, LitexExecutionOptions::default()),
         true,
     );
     assert!(fact_graph_ok);
@@ -318,7 +318,7 @@ trust have audit_probe R:
 "#;
     let (definition_graph_ok, definition_graph_output) = render_graph(
         GraphKind::Definition,
-        run_code(unchecked_trust_have, InvocationOptions::default()),
+        run_code(unchecked_trust_have, LitexExecutionOptions::default()),
         true,
     );
     assert!(definition_graph_ok);
@@ -668,8 +668,7 @@ fn source_execution_requires_an_active_context() {
 #[test]
 fn zh_output_localizes_unproved_trust_labels() {
     let source_code = "abstract_prop tmp_rel(m, n)\ntrust exist! m, n R st {$tmp_rel(m, n)}\n";
-    let mut runtime = Runtime::new(InvocationOptions::new(
-        LitexExecution::Inline,
+    let mut runtime = Runtime::new(LitexExecutionOptions::new(
         VerifyStrictnessPolicy::Ordinary,
         OutputDetail::Normal,
         OutputLanguage::SimplifiedChinese,
@@ -690,8 +689,7 @@ fn zh_output_localizes_unproved_trust_labels() {
 #[test]
 fn zh_output_localizes_citation_evidence_but_keeps_litex_statement() {
     let source_code = "prop is_one_tmp(t R):\n    t = 1\n\n$is_one_tmp(1)\n";
-    let mut runtime = Runtime::new(InvocationOptions::new(
-        LitexExecution::Inline,
+    let mut runtime = Runtime::new(LitexExecutionOptions::new(
         VerifyStrictnessPolicy::Ordinary,
         OutputDetail::Normal,
         OutputLanguage::SimplifiedChinese,
@@ -743,8 +741,7 @@ $can_be_divided_by_8(x)
 $can_be_divided_by_2(x)
 "#;
 
-    let mut runtime = Runtime::new(InvocationOptions::new(
-        LitexExecution::Inline,
+    let mut runtime = Runtime::new(LitexExecutionOptions::new(
         VerifyStrictnessPolicy::Ordinary,
         OutputDetail::Normal,
         OutputLanguage::SimplifiedChinese,
@@ -957,8 +954,7 @@ fn non_english_languages_localize_unproved_trust_labels() {
         _reason_text,
     ) in cases
     {
-        let mut runtime = Runtime::new(InvocationOptions::new(
-            LitexExecution::Inline,
+        let mut runtime = Runtime::new(LitexExecutionOptions::new(
             VerifyStrictnessPolicy::Ordinary,
             OutputDetail::Normal,
             language,
@@ -1065,7 +1061,11 @@ axiom bad_axiom:
 
 #[test]
 fn strict_mode_rejects_user_trust() {
-    let mut runtime = Runtime::new(InvocationOptions::strict_execute(LitexExecution::Inline));
+    let mut runtime = Runtime::new(LitexExecutionOptions::strict(
+        OutputDetail::Normal,
+        OutputLanguage::English,
+        SummaryOption::None,
+    ));
     runtime.start_isolated_source("strict_mode_rejects_user_trust");
 
     let (stmt_results, runtime_error) = execute_source("trust 1 = 0", &mut runtime);
@@ -1086,7 +1086,11 @@ fn strict_mode_rejects_user_trust() {
 #[test]
 fn strict_mode_rejects_user_trust_have() {
     run_with_large_stack("strict_mode_rejects_user_trust_have", || {
-        let mut runtime = Runtime::new(InvocationOptions::strict_execute(LitexExecution::Inline));
+        let mut runtime = Runtime::new(LitexExecutionOptions::strict(
+            OutputDetail::Normal,
+            OutputLanguage::English,
+            SummaryOption::None,
+        ));
         runtime.start_isolated_source("strict_mode_rejects_user_trust_have");
 
         let (stmt_results, runtime_error) = execute_source("trust have x R", &mut runtime);
@@ -1108,7 +1112,11 @@ fn strict_mode_rejects_user_trust_have() {
 
 #[test]
 fn strict_mode_rejects_user_axiom() {
-    let mut runtime = Runtime::new(InvocationOptions::strict_execute(LitexExecution::Inline));
+    let mut runtime = Runtime::new(LitexExecutionOptions::strict(
+        OutputDetail::Normal,
+        OutputLanguage::English,
+        SummaryOption::None,
+    ));
     runtime.start_isolated_source("strict_mode_rejects_user_axiom");
 
     let source_code = r#"

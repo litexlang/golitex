@@ -42,10 +42,11 @@ Litex 定位四层检查（写作时逐层核对；面向不同受众可以调�
       - [Lean: A Record over `Type` and Curried Functions](#lean-a-record-over-type-and-curried-functions)
       - [Litex: Operations on a Set and Structural Facts Written Directly](#litex-operations-on-a-set-and-structural-facts-written-directly)
   - [2. Fact-Oriented: Source Preserves *What Holds*](#2-fact-oriented-source-preserves-what-holds)
-    - [Why Do Ordinary Facts Need Neither Names nor Tactics?](#why-do-ordinary-facts-need-neither-names-nor-tactics)
+    - [What Fact-Oriented Means](#what-fact-oriented-means)
+    - [One Fact, Two Interfaces](#one-fact-two-interfaces)
     - [How `verify` Processes a Submitted Fact](#how-verify-processes-a-submitted-fact)
-    - [How the Kernel Searches for a Verification Path by Fact Shape](#how-the-kernel-searches-for-a-verification-path-by-fact-shape)
-    - [Summary: Put *What to Prove* in the Source and Leave the Search for *How* to the Kernel](#summary-put-what-to-prove-in-the-source-and-leave-the-search-for-how-to-the-kernel)
+    - [Pattern-Match Search: A Semantic `Ctrl+F`](#pattern-match-search-a-semantic-ctrlf)
+    - [Summary: How Fact Orientation Is Implemented](#summary-how-fact-orientation-is-implemented)
   - [3. Bottom-Up: Let Verified Facts Continue to Grow](#3-bottom-up-let-verified-facts-continue-to-grow)
   - [4. Lean-Compatible: Independent Rechecking for Covered Paths](#4-lean-compatible-independent-rechecking-for-covered-paths)
     - [One Complete Theorem Now Reaches Lean](#one-complete-theorem-now-reaches-lean)
@@ -319,72 +320,17 @@ can a small, membership-centered, set-theoretic surface cover substantive mathem
 
 ## 2. Fact-Oriented: Source Preserves *What Holds*
 
-Fact orientation reallocates work: source preserves the objects and facts that should hold, while the kernel finds, checks, and explains local justification.
+Fact-oriented means that the source begins with the mathematical fact itself, not with a tactic recipe. The author writes which objects, conditions, and relations should hold; Litex searches for a valid way to verify that statement in the current environment.
 
-The earlier set-inclusion and group examples gave two small versions of this division: the user states the desired relation or structural fact, and the kernel searches for local support. This section first isolates that interface. A full convergence example after the four principles will combine definitions, quantifiers, witnesses, and a continuous estimate.
+### What Fact-Oriented Means
 
-### Why Do Ordinary Facts Need Neither Names nor Tactics?
+A fact-oriented source keeps the proposition and its premises visible while leaving route selection to the verifier. A named theorem or definition may still be supplied when it is part of the intended interface, but an ordinary fact does not need a tactic name, rewrite direction, or search script.
 
-An ordinary fact such as `a + b >= 0` needs no dedicated name. The user does not specify a tactic, library theorem, or rewrite direction line by line; they state the desired fact, and the kernel searches rules and context for support.
+### One Fact, Two Interfaces
 
-> **The core human–machine division of labor in a fact-oriented system is: the user writes “what I want to prove”; Litex searches for “how this fact can be verified.”**
+Consider the same claim: the sum of two nonnegative real numbers is nonnegative.
 
-Litex matches proof support and explains the path. Lean follows tactics to elaborate a proof term, shows remaining Goals in the Infoview, and checks the term in the kernel.
-
-Litex does not forbid names. Classic theorems, library interfaces, and explicit dependencies may be `thm` definitions, invoked with `release thm` or selected with `by thm ... => fact`.
-
-Ordinary facts need neither names nor tactics because the kernel searches by predicate, argument shape, and context. Sources include builtin or user-provided universal facts, concrete facts, and equality information; other optimizations do not change this division.
-
-### How `verify` Processes a Submitted Fact
-
-Fact orientation is a verification lifecycle, not an unbounded global search. After a proposition has been parsed into a typed fact, Litex follows a bounded pipeline:
-
-```text
-submitted fact
-  → check well-definedness
-  → dispatch by fact shape
-  → search shape-appropriate support
-  → recursively verify premises and subgoals
-  → return structured evidence or `Unknown`
-  → on success, store the fact and run inference
-```
-
-| Verification stage | Main question | Result |
-| --- | --- | --- |
-| Well-definedness gate | Are the objects, parameters, carriers, and operations meaningful? | A well-definedness certificate, or an early stop without inventing a missing premise. |
-| Fact-shape dispatch | Is the target an equality, atomic predicate, conjunction, chain, `forall`, existential, or another supported fact form? | The verifier route that owns that fact shape. |
-| Support search | Which checked mathematical support can close this target? | Candidate evidence from the active context, imported context, builtin routes, definitions, theorems, or universal facts. |
-| Recursive checking | Do the candidate's premises and local obligations also hold? | Nested evidence, or the earliest failed phase and goal. |
-| Verification result | Did a bounded route close the target? | `Verified` with structured evidence, or `Unknown` with diagnostic context. |
-| Publication | Should the accepted result become reusable mathematics? | The execution layer stores the fact, assigns its `FactId`, and runs inference. |
-
-For the small fact `1 + 1 = 2`, this path is concrete: well-definedness succeeds, equality dispatch selects closed numeric evaluation, the verifier returns its calculation evidence, and only then does the execution layer store the fact and run inference. A symbolic or ill-defined target can stop at an earlier stage.
-
-The support search is not one flat list of interchangeable objects. Direct anonymous facts are looked up in the current or imported environment; anonymous or named `forall` facts are matched and instantiated against the target; `def` enters through a definition-expansion or reduction route; and a named `thm` may be selected as an explicit theorem interface. Builtin rules and strategies provide bounded routes for recurring fact shapes. Each selected route must still verify its own premises and well-definedness obligations. The resulting record identifies the facts, rules, definitions, instantiations, equalities, and subproofs that supported the conclusion.
-
-This also explains the boundary of the claim. Litex does not silently search every theorem and definition in every possible way. It selects routes available for the current fact shape and proof state; when no checked route closes the target, or when the target is ill-defined, it returns a localized stopping point instead of fabricating a proof.
-
-### How the Kernel Searches for a Verification Path by Fact Shape
-
-This section pairs the same three mathematical facts across two typical interfaces. Lean source also contains the theorem statement, and Litex can explicitly name theorems and proof structure; the difference is the default center of attention:
-
-| Typical interface | Source primarily presents | Interactive output primarily presents |
-| --- | --- | --- |
-| Lean tactic proof | The theorem statement gives the goal, while the tactic proof body primarily writes **how** to rewrite, apply a theorem, or close it | The Infoview shows **what** remains to be proved |
-| Litex fact-oriented proof | Source primarily writes **what** objects, conditions, and facts should hold | Verifier output explains **how** the fact was accepted, or where verification stopped |
-
-> **The default interfaces form a mirror: Lean tactic source primarily writes how, while the Infoview displays the unfinished what; Litex source primarily writes what, while Litex output explains the how found by the verifier.** This describes typical workflows, not every possible proof style in either language.
-
-The Litex JSON below is excerpted explanatory output. It illustrates how the current version records a verification route; field names, nesting, and message text may change across Litex versions.
-
-**Builtin rules.** Litex decomposes a target into its predicate and argument shape, uses that shape to select candidate rules, then checks every type, premise, and condition.
-
-<details>
-<summary><strong>Example 1: How Lean and Litex verify that the sum of two nonnegative reals is nonnegative</strong></summary>
-
-The mathematical fact is that the sum of two nonnegative real numbers is nonnegative.
-
-**Lean source | the proof body writes how**
+**Lean writes the goal and then writes how to close it**
 
 ```lean
 import Mathlib
@@ -393,18 +339,9 @@ example (x y : ℝ) (hx : x ≥ 0) (hy : y ≥ 0) : x + y ≥ 0 := by
   exact add_nonneg hx hy
 ```
 
-The final line tells Lean exactly how to close the goal. Before it runs, the Infoview displays the remaining **what**:
+The statement gives Lean the goal; `add_nonneg hx hy` gives the proof route. The source therefore contains both the *what* and the *how*.
 
-**Lean Infoview | displays what**
-
-```text
-x y : ℝ
-hx : x ≥ 0
-hy : y ≥ 0
-⊢ x + y ≥ 0
-```
-
-**Litex source | writes what directly**
+**Litex: the source states what should hold**
 
 ```litex
 forall x, y R:
@@ -414,254 +351,76 @@ forall x, y R:
         x + y >= 0
 ```
 
-The source does not name a rule. From the predicate `>=` and the argument shape `x + y`, `0`, the kernel selects a candidate, matches its two nonnegativity premises, and checks the types and conditions.
+Litex states the parameters, premises, and conclusion directly. It does not name `add_nonneg` or prescribe a rewrite direction; `verify` must find and check a route from the target's shape and available support.
 
-**Litex output | explains how**
+The two interfaces divide responsibility differently:
 
-```json
-{
-  "result": "success",
-  "type": "universal fact",
-  "line": 1,
-  "statement": "forall x, y R:\n    x >= 0\n    y >= 0\n    =>:\n        x + y >= 0",
-  "parameters": [
-    "x",
-    "y"
-  ],
-  "assumptions": [
-    {
-      "fact": "x $in R",
-      "reason": "parameter definition"
-    },
-    {
-      "fact": "y $in R",
-      "reason": "parameter definition"
-    },
-    {
-      "fact": "x >= 0",
-      "reason": "forall premise",
-      "inferred_facts": [
-        "-1 * x <= 0"
-      ]
-    },
-    {
-      "fact": "y >= 0",
-      "reason": "forall premise",
-      "inferred_facts": [
-        "-1 * y <= 0"
-      ]
-    }
-  ],
-  "conclusions": [
-    {
-      "statement": "x + y >= 0",
-      "why_verified": {
-        "type": "builtin rule",
-        "rule": "0 <= a + b from known atomic facts 0 <= a and 0 <= b"
-      }
-    }
-  ]
-}
+| Interface | Source primarily writes | Route selection |
+| --- | --- | --- |
+| Lean tactic proof | The goal and the tactic or term that proves it | Written explicitly in the proof body |
+| Litex fact-oriented proof | The objects, premises, and fact that should hold | Chosen and checked by `verify` |
+
+For mathematically oriented readers, Litex can therefore be easier to read and accept: the source remains close to the claim, while the verification route is still recorded and checkable.
+
+### How `verify` Processes a Submitted Fact
+
+Once Litex has parsed a proposition into a typed fact, `verify` follows a bounded lifecycle:
+
+```mermaid
+flowchart TD
+    A["Submitted fact"] --> B["Well-definedness"]
+    B -->|pass| C["Fact shape"]
+    B -->|stop| X["Unknown + diagnostic"]
+    C --> D["Pattern-match support"]
+    D --> E["Check premises"]
+    E -->|closed| F["Structured evidence"]
+    E -->|open| X
+    F --> G["Store FactId and infer"]
 ```
 
-</details>
+Plain-text reading: **submitted fact → well-definedness → fact shape → pattern-match support → premise checks → evidence → store and infer**. A failed check stops at the relevant stage and returns a diagnostic instead of an unsupported proof.
 
-**User-provided universal facts.** A proved `forall` fact enters the context. When a target has the same shape, Litex matches its parameters and checks the instantiated premises.
+| Stage | What happens |
+| --- | --- |
+| Well-definedness | Checks that objects, parameters, carriers, and operations are meaningful. |
+| Fact shape | Selects the route for an equality, atomic fact, conjunction, chain, `forall`, existential, or another supported form. |
+| Pattern-match support | Finds facts, definitions, theorems, or builtins whose predicate, object shape, arguments, and types fit the target. |
+| Premise checks | Verifies the selected route's premises and local obligations. |
+| Evidence and publication | Returns structured evidence or `Unknown`; on success, stores the fact with a `FactId` and runs applicable inference. |
 
-<details>
-<summary><strong>Example 2: How Lean and Litex reuse a universal fact</strong></summary>
+### Pattern-Match Search: A Semantic `Ctrl+F`
 
-The second fact says that if a real number `a > 10`, then some positive real number is strictly smaller than `a`. Once the universal fact has been established, it can be instantiated for a concrete `a`.
+Litex calls this process **pattern matching**. It is a particularly fancy semantic `Ctrl+F`: first use the target predicate to find relevant facts and builtin routes, then match the structure of the objects and their types. It is not a text search and not an unrestricted scan of every theorem.
 
-**Lean source | the proof body writes how**
+For `1 + 2 > 2`, the narrowing is read as follows:
 
-```lean
-import Mathlib
-
-def HasPositiveWitness (n : ℝ) : Prop :=
-  ∃ a : ℝ, 0 < a ∧ n > a
-
-theorem hasPositiveWitness_of_gt_ten (x : ℝ) (hx : x > 10) :
-    HasPositiveWitness x := by
-  refine ⟨10, by norm_num, ?_⟩
-  exact hx
-
-example (a : ℝ) (ha : a > 10) : HasPositiveWitness a := by
-  exact hasPositiveWitness_of_gt_ten a ha
+```mermaid
+flowchart TD
+    A["Predicate filter"] --> B["Object-shape filter"]
+    B --> C["Type and carrier filter"]
+    C --> D["Candidate route"]
 ```
 
-Before the last `exact`, the Infoview displays the current **what**; the source specifies the **how** that completes it:
+Plain-text reading: **predicate `>` → object head `+` → numeric arguments such as `2` → compatible number types and carriers → candidate route**.
 
-**Lean Infoview | displays what**
+The predicate narrows the candidate set; object shape, argument compatibility, and type refine it. Internal indexes may interleave these filters, but the public idea is stable: Litex searches mathematical structure, not matching text.
 
-```text
-a : ℝ
-ha : a > 10
-⊢ HasPositiveWitness a
-```
+### What Can Supply the Matching Route?
 
-**Litex source | writes what directly**
+| Support source | Matching role |
+| --- | --- |
+| Anonymous concrete fact | Direct predicate/object match in the active or imported environment |
+| Anonymous or named `forall` fact | Match the pattern, instantiate parameters, then check premises |
+| `def` | Definition expansion or reduction when the route permits it |
+| Named `thm` | Selected theorem interface whose conclusion matches the target |
+| Builtin rule or strategy | Registered route for a recurring predicate/object pattern |
+| Equality information | Aligns object forms known to be equal |
 
-```litex
-prop is_positive(n R):
-    exist a R+ st {n > a}
+These are shape-appropriate support routes, not interchangeable entries in one flat list. A selected route still has to discharge its own premises and well-definedness obligations. If no checked route closes the target, Litex returns a localized stopping point instead of fabricating a proof.
 
-claim:
-    ? forall x R:
-        x > 10
-        =>:
-            $is_positive(x)
-    witness exist a R+ st {x > a} from 10
+### Summary: How Fact Orientation Is Implemented
 
-have a R:
-    a > 10
-
-$is_positive(a)
-```
-
-The `prop` defines a reusable interface, and the `claim` establishes an instantiable universal fact. The later source states only `$is_positive(a)`; it does not repeat how to apply that universal fact.
-
-**Litex output | explains how**
-
-```json
-{
-  "result": "success",
-  "type": "prop fact",
-  "line": 14,
-  "statement": "$is_positive(a)",
-  "why_verified": {
-    "type": "cite forall fact",
-    "cite_source": {
-      "line": 5
-    },
-    "cited_statement": "forall x R:\n    x > 10\n    =>:\n        $is_positive(x)"
-  }
-}
-```
-
-</details>
-
-**Concrete facts and known equalities.** Litex can also start from a concrete fact in context and use a known equality to align arguments written in different but equal forms.
-
-<details>
-<summary><strong>Example 3: How Lean and Litex transport a concrete fact across equality</strong></summary>
-
-The third fact transports positivity across an equality: if `a` is positive and `a = b`, then `b` is positive.
-
-**Lean source | the proof body writes how**
-
-```lean
-import Mathlib
-
-def IsPositive (x : ℝ) : Prop :=
-  x > 0
-
-example (a b : ℝ) (ha : IsPositive a) (hab : a = b) : IsPositive b := by
-  simpa [hab] using ha
-```
-
-Before `simpa [hab] using ha`, the Infoview displays only the current **what**:
-
-**Lean Infoview | displays what**
-
-```text
-a b : ℝ
-ha : IsPositive a
-hab : a = b
-⊢ IsPositive b
-```
-
-**Litex source | writes what directly**
-
-```litex
-prop is_positive(x R):
-    x > 0
-
-forall a, b R:
-    $is_positive(a)
-    a = b
-    =>:
-        $is_positive(b)
-```
-
-The Litex source stores the premises and conclusion without naming `simpa` or choosing a rewrite direction. The verifier finds `$is_positive(a)` in context and uses `a = b` to align the arguments.
-
-**Litex output | explains how**
-
-```json
-{
-  "result": "success",
-  "type": "universal fact",
-  "line": 4,
-  "statement": "forall a, b R:\n    $is_positive(a)\n    a = b\n    =>:\n        $is_positive(b)",
-  "parameters": [
-    "a",
-    "b"
-  ],
-  "assumptions": [
-    {
-      "fact": "a $in R",
-      "reason": "parameter definition"
-    },
-    {
-      "fact": "b $in R",
-      "reason": "parameter definition"
-    },
-    {
-      "fact": "$is_positive(a)",
-      "reason": "forall premise",
-      "inferred_facts": [
-        "a > 0"
-      ]
-    },
-    {
-      "fact": "a = b",
-      "reason": "forall premise"
-    }
-  ],
-  "conclusions": [
-    {
-      "statement": "$is_positive(b)",
-      "why_verified": {
-        "type": "cite prop fact",
-        "cite_source": {
-          "line": 5
-        },
-        "cited_statement": "$is_positive(a)"
-      }
-    }
-  ]
-}
-```
-
-</details>
-
-### Summary: Put *What to Prove* in the Source and Leave the Search for *How* to the Kernel
-
-The preceding pipeline makes the division concrete: a fact first passes a well-definedness gate, is matched against support appropriate to its shape, and returns either a structured verification path or a localized unknown result. This resembles everyday mathematics: authors write the desired conclusion, and readers infer its support from context and known facts instead of seeing every theorem, equality, or definition named.
-
-<details>
-<summary><strong>A personal analogy: imperative and declarative styles</strong></summary>
-
-As a rough distinction, programming languages have imperative and declarative styles. Imperative code, common in C and Rust, emphasizes *how*. Functional languages such as Haskell emphasize *what*.
-
-Here is the interesting tension: Lean itself is functional and declarative, yet tactic proofs often read imperatively. Each command changes the current Goal. Litex shifts the default proof interface back toward *what*: the author states the next fact, and the verifier searches for *how* to justify it.
-
-</details>
-
-<details>
-<summary><strong>Position in the design space: searching for local proof support is not unique to Litex</strong></summary>
-
-[Lean `grind`](https://lean-lang.org/doc/reference/latest/The--grind--tactic/),
-[Rocq `auto`](https://rocq-prover.org/doc/master/refman/proofs/automatic-tactics/auto.html),
-and [Isabelle/Isar](https://isabelle.in.tum.de/doc/isar-ref.pdf) provide local automation through explicit tactics or
-proof methods; [Mizar](https://mizar.uwb.edu.pl/project/mizman.pdf)
-has empty justification;
-[ACL2](https://acl2.org/doc/index-seo.php?xkey=ACL2____DEFTHM) can attempt to prove a theorem event without hints; and
-[Naproche](https://naproche.github.io/) uses automated theorem provers
-to check controlled-natural-language steps. Litex asks more specifically whether ordinary mathematical statements can trigger local justification bounded by context and supported rules, then enter the context with their verification source displayed.
-
-</details>
+Litex's fact-oriented interface is a division of labor: the source states *what should hold*, and `verify` finds *how it can be verified*. The verifier performs a bounded semantic `Ctrl+F`—predicate first, then object shape, arguments, and compatible types—instantiates or expands the matching support, checks its obligations, and records the evidence. That is the mechanism behind Litex's concise source: route selection moves out of the proof text without making the result opaque or unchecked.
 
 <a id="bottom-up"></a>
 
