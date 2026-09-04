@@ -18,7 +18,6 @@ impl Runtime {
 
         let symbol = match obj {
             Obj::Atom(atom) => atom.symbol_ref(),
-            Obj::InstantiatedTemplateObj(template_obj) => Some(&template_obj.symbol),
             _ => None,
         };
         if let Some(symbol) = symbol {

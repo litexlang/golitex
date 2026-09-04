@@ -21,7 +21,6 @@ pub struct ObjAsStructInstanceWithFieldAccess {
 pub struct InstantiatedTemplateObj {
     pub template_name: AtomicName,
     pub args: Vec<Obj>,
-    pub symbol: SymbolRef,
 }
 
 impl StructObj {
@@ -49,11 +48,10 @@ impl ObjAsStructInstanceWithFieldAccess {
 }
 
 impl InstantiatedTemplateObj {
-    pub fn new(template_name: AtomicName, args: Vec<Obj>, symbol: SymbolRef) -> Self {
+    pub fn new(template_name: AtomicName, args: Vec<Obj>) -> Self {
         InstantiatedTemplateObj {
             template_name,
             args,
-            symbol,
         }
     }
 
@@ -68,11 +66,4 @@ impl InstantiatedTemplateObj {
         )
     }
 
-    pub fn definition_binding(&self) -> SymbolBinding {
-        SymbolBinding::new(
-            self.symbol.id(),
-            self.surface_name(),
-            self.symbol.display_name().to_string(),
-        )
-    }
 }

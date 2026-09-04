@@ -477,18 +477,19 @@ impl Runtime {
     }
 
     fn get_known_fn_info_for_obj(&self, obj: &Obj) -> Option<KnownFnInfo> {
-        let key = obj.to_string();
-        if let Some(info) = self.get_known_fn_info_for_key_from_current_envs(&key) {
-            return Some(info.clone());
-        }
-
-        for module_name in self.obj_referenced_module_names(obj) {
-            if self.is_current_parse_module(&module_name) {
-                continue;
+        for key in self.object_knowledge_keys(obj) {
+            if let Some(info) = self.get_known_fn_info_for_key_from_current_envs(&key) {
+                return Some(info.clone());
             }
-            for env in self.imported_module_environments(&module_name) {
-                if let Some(info) = env.objects.function_set(&key) {
-                    return Some(info.clone());
+
+            for module_name in self.obj_referenced_module_names(obj) {
+                if self.is_current_parse_module(&module_name) {
+                    continue;
+                }
+                for env in self.imported_module_environments(&module_name) {
+                    if let Some(info) = env.objects.function_set(&key) {
+                        return Some(info.clone());
+                    }
                 }
             }
         }
@@ -799,14 +800,15 @@ impl Runtime {
     }
 
     pub fn get_object_equal_to_cart(&self, obj: &Obj) -> Option<Cart> {
-        let key = obj.to_string();
-        for env in self.object_lookup_environments(obj) {
-            if let Some(knowledge) = env.objects.knowledge(&key) {
-                if let Some((known_cart_obj, _)) = &knowledge.cart_equality {
-                    return Some(known_cart_obj.clone());
-                }
-                if let Some((_, Some(known_cart_obj), _)) = &knowledge.tuple_equality {
-                    return Some(known_cart_obj.clone());
+        for key in self.object_knowledge_keys(obj) {
+            for env in self.object_lookup_environments(obj) {
+                if let Some(knowledge) = env.objects.knowledge(&key) {
+                    if let Some((known_cart_obj, _)) = &knowledge.cart_equality {
+                        return Some(known_cart_obj.clone());
+                    }
+                    if let Some((_, Some(known_cart_obj), _)) = &knowledge.tuple_equality {
+                        return Some(known_cart_obj.clone());
+                    }
                 }
             }
         }
@@ -814,157 +816,168 @@ impl Runtime {
     }
 
     pub fn get_obj_equal_to_set_builder(&self, obj: &Obj) -> Option<SetBuilder> {
-        let key = obj.to_string();
-        for env in self.object_lookup_environments(obj) {
-            if let Some((set_builder, _)) = env
-                .objects
-                .knowledge(&key)
-                .and_then(|knowledge| knowledge.set_builder_equality.as_ref())
-            {
-                return Some(set_builder.clone());
+        for key in self.object_knowledge_keys(obj) {
+            for env in self.object_lookup_environments(obj) {
+                if let Some((set_builder, _)) = env
+                    .objects
+                    .knowledge(&key)
+                    .and_then(|knowledge| knowledge.set_builder_equality.as_ref())
+                {
+                    return Some(set_builder.clone());
+                }
             }
         }
         None
     }
 
     pub fn get_obj_equal_to_tuple(&self, obj: &Obj) -> Option<Tuple> {
-        let key = obj.to_string();
-        for env in self.object_lookup_environments(obj) {
-            if let Some((Some(known_tuple_obj), _, _)) = env
-                .objects
-                .knowledge(&key)
-                .and_then(|knowledge| knowledge.tuple_equality.as_ref())
-            {
-                return Some(known_tuple_obj.clone());
+        for key in self.object_knowledge_keys(obj) {
+            for env in self.object_lookup_environments(obj) {
+                if let Some((Some(known_tuple_obj), _, _)) = env
+                    .objects
+                    .knowledge(&key)
+                    .and_then(|knowledge| knowledge.tuple_equality.as_ref())
+                {
+                    return Some(known_tuple_obj.clone());
+                }
             }
         }
         None
     }
 
     pub fn get_obj_tuple_cart(&self, obj: &Obj) -> Option<Cart> {
-        let key = obj.to_string();
-        for env in self.object_lookup_environments(obj) {
-            if let Some((_, Some(known_cart_obj), _)) = env
-                .objects
-                .knowledge(&key)
-                .and_then(|knowledge| knowledge.tuple_equality.as_ref())
-            {
-                return Some(known_cart_obj.clone());
+        for key in self.object_knowledge_keys(obj) {
+            for env in self.object_lookup_environments(obj) {
+                if let Some((_, Some(known_cart_obj), _)) = env
+                    .objects
+                    .knowledge(&key)
+                    .and_then(|knowledge| knowledge.tuple_equality.as_ref())
+                {
+                    return Some(known_cart_obj.clone());
+                }
             }
         }
         None
     }
 
     pub fn get_obj_equal_to_finite_seq_list(&self, obj: &Obj) -> Option<FiniteSeqListObj> {
-        let key = obj.to_string();
-        for env in self.object_lookup_environments(obj) {
-            if let Some((known_list, _, _)) = env
-                .objects
-                .knowledge(&key)
-                .and_then(|knowledge| knowledge.finite_sequence_list_equality.as_ref())
-            {
-                return Some(known_list.clone());
+        for key in self.object_knowledge_keys(obj) {
+            for env in self.object_lookup_environments(obj) {
+                if let Some((known_list, _, _)) = env
+                    .objects
+                    .knowledge(&key)
+                    .and_then(|knowledge| knowledge.finite_sequence_list_equality.as_ref())
+                {
+                    return Some(known_list.clone());
+                }
             }
         }
         None
     }
 
     pub fn get_finite_seq_set_for_obj_equal_to_seq_list(&self, obj: &Obj) -> Option<FiniteSeqSet> {
-        let key = obj.to_string();
-        for env in self.object_lookup_environments(obj) {
-            if let Some((_, member_of, _)) = env
-                .objects
-                .knowledge(&key)
-                .and_then(|knowledge| knowledge.finite_sequence_list_equality.as_ref())
-            {
-                return member_of.clone();
+        for key in self.object_knowledge_keys(obj) {
+            for env in self.object_lookup_environments(obj) {
+                if let Some((_, member_of, _)) = env
+                    .objects
+                    .knowledge(&key)
+                    .and_then(|knowledge| knowledge.finite_sequence_list_equality.as_ref())
+                {
+                    return member_of.clone();
+                }
             }
         }
         None
     }
 
     pub fn get_obj_equal_to_matrix_list(&self, obj: &Obj) -> Option<MatrixListObj> {
-        let key = obj.to_string();
-        for env in self.object_lookup_environments(obj) {
-            if let Some((known_matrix, _, _)) = env
-                .objects
-                .knowledge(&key)
-                .and_then(|knowledge| knowledge.matrix_list_equality.as_ref())
-            {
-                return Some(known_matrix.clone());
+        for key in self.object_knowledge_keys(obj) {
+            for env in self.object_lookup_environments(obj) {
+                if let Some((known_matrix, _, _)) = env
+                    .objects
+                    .knowledge(&key)
+                    .and_then(|knowledge| knowledge.matrix_list_equality.as_ref())
+                {
+                    return Some(known_matrix.clone());
+                }
             }
         }
         None
     }
 
     pub fn get_matrix_set_for_obj_equal_to_matrix_list(&self, obj: &Obj) -> Option<MatrixSet> {
-        let key = obj.to_string();
-        for env in self.object_lookup_environments(obj) {
-            if let Some((_, member_of, _)) = env
-                .objects
-                .knowledge(&key)
-                .and_then(|knowledge| knowledge.matrix_list_equality.as_ref())
-            {
-                return member_of.clone();
+        for key in self.object_knowledge_keys(obj) {
+            for env in self.object_lookup_environments(obj) {
+                if let Some((_, member_of, _)) = env
+                    .objects
+                    .knowledge(&key)
+                    .and_then(|knowledge| knowledge.matrix_list_equality.as_ref())
+                {
+                    return member_of.clone();
+                }
             }
         }
         None
     }
 
     pub fn get_matrix_set_for_obj(&self, obj: &Obj) -> Option<MatrixSet> {
-        let key = obj.to_string();
-        for env in self.object_lookup_environments(obj) {
-            if let Some((matrix_set, _)) = env
-                .objects
-                .knowledge(&key)
-                .and_then(|knowledge| knowledge.matrix_set_membership.as_ref())
-            {
-                return Some(matrix_set.clone());
+        for key in self.object_knowledge_keys(obj) {
+            for env in self.object_lookup_environments(obj) {
+                if let Some((matrix_set, _)) = env
+                    .objects
+                    .knowledge(&key)
+                    .and_then(|knowledge| knowledge.matrix_set_membership.as_ref())
+                {
+                    return Some(matrix_set.clone());
+                }
             }
         }
         None
     }
 
     pub fn get_object_equal_to_tuple(&self, obj: &Obj) -> Option<Cart> {
-        let key = obj.to_string();
-        for env in self.object_lookup_environments(obj) {
-            if let Some((_, cart, _)) = env
-                .objects
-                .knowledge(&key)
-                .and_then(|knowledge| knowledge.tuple_equality.as_ref())
-            {
-                return cart.clone();
+        for key in self.object_knowledge_keys(obj) {
+            for env in self.object_lookup_environments(obj) {
+                if let Some((_, cart, _)) = env
+                    .objects
+                    .knowledge(&key)
+                    .and_then(|knowledge| knowledge.tuple_equality.as_ref())
+                {
+                    return cart.clone();
+                }
             }
         }
         None
     }
 
     pub fn get_object_equal_to_normalized_decimal_number(&self, obj: &Obj) -> Option<Number> {
-        let key = obj.to_string();
-        for env in self.object_lookup_environments(obj) {
-            if let Some(KnownObjValue::SimplifiedNumber(number)) = env
-                .objects
-                .knowledge(&key)
-                .and_then(|knowledge| knowledge.simplified_value.as_ref())
-            {
-                return Some(number.clone());
+        for key in self.object_knowledge_keys(obj) {
+            for env in self.object_lookup_environments(obj) {
+                if let Some(KnownObjValue::SimplifiedNumber(number)) = env
+                    .objects
+                    .knowledge(&key)
+                    .and_then(|knowledge| knowledge.simplified_value.as_ref())
+                {
+                    return Some(number.clone());
+                }
             }
         }
         None
     }
 
     pub fn get_known_obj_value_as_obj(&self, obj: &Obj) -> Option<Obj> {
-        let key = obj.to_string();
-        for env in self.object_lookup_environments(obj) {
-            if let Some(known_value) = env
-                .objects
-                .knowledge(&key)
-                .and_then(|knowledge| knowledge.simplified_value.as_ref())
-            {
-                return match known_value {
-                    KnownObjValue::SimplifiedNumber(number) => Some(number.clone().into()),
-                    KnownObjValue::SimplifiedFraction(div) => Some(div.clone().into()),
-                };
+        for key in self.object_knowledge_keys(obj) {
+            for env in self.object_lookup_environments(obj) {
+                if let Some(known_value) = env
+                    .objects
+                    .knowledge(&key)
+                    .and_then(|knowledge| knowledge.simplified_value.as_ref())
+                {
+                    return match known_value {
+                        KnownObjValue::SimplifiedNumber(number) => Some(number.clone().into()),
+                        KnownObjValue::SimplifiedFraction(div) => Some(div.clone().into()),
+                    };
+                }
             }
         }
         None
@@ -1086,6 +1099,75 @@ impl Runtime {
             environments.extend(self.imported_module_environments(&module_name));
         }
         environments
+    }
+
+    /// A composite template application has no SymbolId of its own, but its
+    /// materialized definition may still have definition-owned object facts
+    /// stored under the resolved identifier binding. Probe both representations
+    /// without assigning an identity to the composite object.
+    fn object_knowledge_keys(&self, obj: &Obj) -> Vec<String> {
+        let surface_key = obj.to_string();
+        let normalized_key = obj_equality_key(obj);
+        let mut keys = vec![surface_key.clone()];
+        if normalized_key != surface_key {
+            keys.push(normalized_key);
+        }
+        for (surface_name, materialized_key) in self.materialized_template_aliases(&surface_key) {
+            let existing = keys.clone();
+            for key in existing {
+                let aliased = key.replace(&surface_name, &materialized_key);
+                if aliased != key && !keys.contains(&aliased) {
+                    keys.push(aliased);
+                }
+            }
+        }
+        keys
+    }
+
+    fn materialized_template_aliases(&self, display: &str) -> Vec<(String, String)> {
+        let bytes = display.as_bytes();
+        let mut aliases = Vec::new();
+        let mut index = 0;
+        while index < bytes.len() {
+            if bytes[index] != b'\\' {
+                index += 1;
+                continue;
+            }
+            let Some(open_offset) = display[index..].find('<') else {
+                index += 1;
+                continue;
+            };
+            let open = index + open_offset;
+            let mut depth = 0usize;
+            let mut end = None;
+            for (offset, byte) in bytes[open..].iter().enumerate() {
+                match byte {
+                    b'<' => depth += 1,
+                    b'>' => {
+                        depth = depth.saturating_sub(1);
+                        if depth == 0 {
+                            end = Some(open + offset + 1);
+                            break;
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            let Some(end) = end else {
+                break;
+            };
+            let surface_name = &display[index..end];
+            if self.visible_symbol_definition(surface_name).is_some() {
+                let materialized_key = self
+                    .definition_identifier_obj(surface_name)
+                    .to_string();
+                if materialized_key != surface_name {
+                    aliases.push((surface_name.to_string(), materialized_key));
+                }
+            }
+            index = end;
+        }
+        aliases
     }
 
     pub fn imported_module_environments(&self, module_name: &str) -> Vec<&Environment> {

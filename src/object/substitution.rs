@@ -431,7 +431,6 @@ impl Obj {
                     .into_iter()
                     .map(|o| Obj::replace_bound_identifier(o, from, to))
                     .collect(),
-                t.symbol,
             )
             .into(),
             Obj::IntervalObj(x) => match x {

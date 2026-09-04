@@ -43,9 +43,8 @@ Litex 定位四层检查（写作时逐层核对；面向不同受众可以调�
       - [Litex: Operations on a Set and Structural Facts Written Directly](#litex-operations-on-a-set-and-structural-facts-written-directly)
   - [2. Fact-Oriented: Source Preserves *What Holds*](#2-fact-oriented-source-preserves-what-holds)
     - [Why Do Ordinary Facts Need Neither Names nor Tactics?](#why-do-ordinary-facts-need-neither-names-nor-tactics)
-      - [1. Match Fact Shapes with Builtin Rules](#1-match-fact-shapes-with-builtin-rules)
-      - [2. Match with User-Provided Universal Facts](#2-match-with-user-provided-universal-facts)
-      - [3. Match with Concrete Facts and Known Equalities](#3-match-with-concrete-facts-and-known-equalities)
+    - [How `verify` Processes a Submitted Fact](#how-verify-processes-a-submitted-fact)
+    - [How the Kernel Searches for a Verification Path by Fact Shape](#how-the-kernel-searches-for-a-verification-path-by-fact-shape)
     - [Summary: Put *What to Prove* in the Source and Leave the Search for *How* to the Kernel](#summary-put-what-to-prove-in-the-source-and-leave-the-search-for-how-to-the-kernel)
   - [3. Bottom-Up: Let Verified Facts Continue to Grow](#3-bottom-up-let-verified-facts-continue-to-grow)
   - [4. Lean-Compatible: Independent Rechecking for Covered Paths](#4-lean-compatible-independent-rechecking-for-covered-paths)
@@ -336,6 +335,35 @@ Litex does not forbid names. Classic theorems, library interfaces, and explicit 
 
 Ordinary facts need neither names nor tactics because the kernel searches by predicate, argument shape, and context. Sources include builtin or user-provided universal facts, concrete facts, and equality information; other optimizations do not change this division.
 
+### How `verify` Processes a Submitted Fact
+
+Fact orientation is a verification lifecycle, not an unbounded global search. After a proposition has been parsed into a typed fact, Litex follows a bounded pipeline:
+
+```text
+submitted fact
+  → check well-definedness
+  → dispatch by fact shape
+  → search shape-appropriate support
+  → recursively verify premises and subgoals
+  → return structured evidence or `Unknown`
+  → on success, store the fact and run inference
+```
+
+| Verification stage | Main question | Result |
+| --- | --- | --- |
+| Well-definedness gate | Are the objects, parameters, carriers, and operations meaningful? | A well-definedness certificate, or an early stop without inventing a missing premise. |
+| Fact-shape dispatch | Is the target an equality, atomic predicate, conjunction, chain, `forall`, existential, or another supported fact form? | The verifier route that owns that fact shape. |
+| Support search | Which checked mathematical support can close this target? | Candidate evidence from the active context, imported context, builtin routes, definitions, theorems, or universal facts. |
+| Recursive checking | Do the candidate's premises and local obligations also hold? | Nested evidence, or the earliest failed phase and goal. |
+| Verification result | Did a bounded route close the target? | `Verified` with structured evidence, or `Unknown` with diagnostic context. |
+| Publication | Should the accepted result become reusable mathematics? | The execution layer stores the fact, assigns its `FactId`, and runs inference. |
+
+For the small fact `1 + 1 = 2`, this path is concrete: well-definedness succeeds, equality dispatch selects closed numeric evaluation, the verifier returns its calculation evidence, and only then does the execution layer store the fact and run inference. A symbolic or ill-defined target can stop at an earlier stage.
+
+The support search is not one flat list of interchangeable objects. Direct anonymous facts are looked up in the current or imported environment; anonymous or named `forall` facts are matched and instantiated against the target; `def` enters through a definition-expansion or reduction route; and a named `thm` may be selected as an explicit theorem interface. Builtin rules and strategies provide bounded routes for recurring fact shapes. Each selected route must still verify its own premises and well-definedness obligations. The resulting record identifies the facts, rules, definitions, instantiations, equalities, and subproofs that supported the conclusion.
+
+This also explains the boundary of the claim. Litex does not silently search every theorem and definition in every possible way. It selects routes available for the current fact shape and proof state; when no checked route closes the target, or when the target is ill-defined, it returns a localized stopping point instead of fabricating a proof.
+
 ### How the Kernel Searches for a Verification Path by Fact Shape
 
 This section pairs the same three mathematical facts across two typical interfaces. Lean source also contains the theorem statement, and Litex can explicitly name theorems and proof structure; the difference is the default center of attention:
@@ -610,7 +638,7 @@ The Litex source stores the premises and conclusion without naming `simpa` or ch
 
 ### Summary: Put *What to Prove* in the Source and Leave the Search for *How* to the Kernel
 
-This resembles everyday mathematics: authors write the desired conclusion, and readers infer its support from context and known facts instead of seeing every theorem, equality, or definition named.
+The preceding pipeline makes the division concrete: a fact first passes a well-definedness gate, is matched against support appropriate to its shape, and returns either a structured verification path or a localized unknown result. This resembles everyday mathematics: authors write the desired conclusion, and readers infer its support from context and known facts instead of seeing every theorem, equality, or definition named.
 
 <details>
 <summary><strong>A personal analogy: imperative and declarative styles</strong></summary>
@@ -1057,7 +1085,7 @@ The same loop can scale from one fact to a theorem, a reusable interface, a text
 | The reasoning trajectory can be saved and resumed | Commits, rollback points, and verification evidence form a continuous trajectory | Work can resume from an accepted prefix, and the trajectory can support review, evaluation, or future AI training | “Useful for AI training” is data potential, not a demonstrated performance gain |
 | Important paths can be independently rechecked | Covered paths continue to Lean/Mathlib for independent checking | Litex provides an easy-to-write, easy-to-repair front end while Lean adds kernel assurance | Only currently covered paths that compile successfully receive this extra check |
 
-Therefore, the human–AI–Litex loop produces more than a final proof: it produces a reasoning trajectory with proposition boundaries, commit states, failure locations, verification evidence, and reusable intermediate facts. Litex's fact-oriented, bottom-up design makes that trajectory available for continued use, targeted repair, review, and improvement.
+Therefore, the human–AI–Litex loop produces more than a final proof: it produces a reasoning trajectory with proposition boundaries, commit states, failure locations, verification evidence, and reusable intermediate facts. The `verify` pipeline above makes each candidate's next repair actionable by locating the missing well-definedness condition, fact match, definition or theorem route, universal instantiation, or later subgoal. Litex's fact-oriented, bottom-up design makes that trajectory available for continued use, targeted repair, review, and improvement.
 
 <a id="ecosystem-role"></a>
 

@@ -1,10 +1,14 @@
 //! Run-wide runtime state and current-source lifecycle.
 
 use crate::prelude::*;
-use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 
+/// Owns the mutable state for one top-level Litex invocation.
+///
+/// The runtime keeps module lookup, source activation, environments, IDs, and
+/// invocation configuration together so nested execution never needs a second
+/// runtime registry.
 pub struct Runtime {
     /// Module registry and persistent source environments for this top-level
     /// run.
@@ -41,20 +45,18 @@ pub struct Runtime {
     /// Runtime-wide allocator for globally unique symbol IDs.
     pub symbol_id_allocator: Rc<SymbolIdAllocator>,
 
-    /// Interns bindings for template-instance names not yet visible as
-    /// definitions.
-    pub template_instance_interner: RefCell<HashMap<String, SymbolBinding>>,
-
     /// Direct struct carriers learned when typed bindings execute.
     ///
     /// Exact transient binder identities remain usable after their local
     /// environment ends, for example when a stored theorem is instantiated.
     pub(crate) executed_direct_struct_carriers: HashMap<SymbolId, StructObj>,
 
-    /// Run-wide execution, output, language, summary, and isolation settings.
+    /// Litex source entry point, verification strictness, output, language,
+    /// summary, and isolation settings for the whole invocation.
     pub invocation_options: InvocationOptions,
 }
 
+/// Checkpoint used when temporarily activating another registered source.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct SourceActivation {
     /// Module that owns the checkpointed source id.
@@ -78,7 +80,6 @@ impl Runtime {
             parse_context: ParseContext::new(),
             next_fact_id: 1,
             symbol_id_allocator: Rc::new(SymbolIdAllocator::new()),
-            template_instance_interner: RefCell::new(HashMap::new()),
             executed_direct_struct_carriers: HashMap::new(),
             invocation_options,
         }

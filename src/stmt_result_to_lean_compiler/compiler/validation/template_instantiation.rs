@@ -15,7 +15,6 @@ pub(in super::super) fn install_template_instantiation_result(
         return Err("Template instantiation Result is attached to a non-Template object".into());
     };
     if expected_application.template_name.to_string() != application.template_name.to_string()
-        || expected_application.symbol.id() != application.symbol.id()
         || expected_application.args.len() != application.args.len()
         || expected_application
             .args
@@ -44,17 +43,6 @@ pub(in super::super) fn install_template_instantiation_result(
         .map(|argument| render_obj(argument, environment_stack))
         .collect::<Result<Vec<_>, _>>()?;
     let rendered_application = format!("({} {})", binding.lean_name, arguments.join(" "));
-    if let Some(previous) = environment_stack
-        .symbol_names
-        .insert(application.symbol.id(), rendered_application.clone())
-    {
-        if previous != rendered_application {
-            return Err(format!(
-                "Template application `{application}` changed its compiled binding"
-            ));
-        }
-    }
-
     let SuccessTemplateInstantiationResult::Created(created) = result else {
         return Ok(());
     };

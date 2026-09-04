@@ -196,13 +196,27 @@ impl Runtime {
             });
         }
 
+        // The template application is a composite object and therefore has no
+        // SymbolId of its own. Allocate the binding only for the materialized
+        // definition that the instantiated body is about to register.
+        let instance_binding = SymbolBinding::new(
+            self.allocate_symbol_id()?,
+            instance_name.clone(),
+            instance_name.clone(),
+        );
+
         let stmt = self.inst_template_body_stmt(
             &def.template_def_stmt,
             &param_to_arg_map,
             &instance_name,
-            &template_obj.definition_binding(),
+            &instance_binding,
             &def.line_file,
         )?;
+
+        // The composite application itself has no SymbolId. Register the
+        // materialized definition binding before executing its body so every
+        // definition-owned fact uses the same resolved symbol atom.
+        self.register_existing_symbol_binding(instance_binding.clone(), SymbolRole::Object)?;
         let instance_identifier = self.definition_identifier_obj(&instance_name);
         // Register the public template application as a named definition before the
         // instantiated body stores derived facts. For a selected function,

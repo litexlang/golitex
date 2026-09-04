@@ -195,34 +195,6 @@ impl Runtime {
         Ok(())
     }
 
-    pub fn template_instance_symbol_binding(
-        &mut self,
-        surface_name: &str,
-    ) -> Result<SymbolBinding, RuntimeError> {
-        self.intern_template_instance_symbol_binding(surface_name)
-    }
-
-    pub fn intern_template_instance_symbol_binding(
-        &self,
-        surface_name: &str,
-    ) -> Result<SymbolBinding, RuntimeError> {
-        if let Some(definition) = self.visible_symbol_definition(surface_name) {
-            return Ok(definition.binding().clone());
-        }
-        if let Some(binding) = self.template_instance_interner.borrow().get(surface_name) {
-            return Ok(binding.clone());
-        }
-        let binding = SymbolBinding::new(
-            self.allocate_symbol_id()?,
-            surface_name.to_string(),
-            surface_name.to_string(),
-        );
-        self.template_instance_interner
-            .borrow_mut()
-            .insert(surface_name.to_string(), binding.clone());
-        Ok(binding)
-    }
-
     pub fn fresh_bound_param(&self, name: String) -> Result<(SymbolBinding, Obj), RuntimeError> {
         let binding = self.allocate_local_symbol_binding(name)?;
         let obj = obj_for_bound_param_in_scope(&binding);

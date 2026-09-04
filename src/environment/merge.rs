@@ -363,7 +363,21 @@ impl Environment {
 }
 
 fn same_symbol_definition(left: &SymbolDefinition, right: &SymbolDefinition) -> bool {
-    if left.binding().id() != right.binding().id() || left.role() != right.role() {
+    if left.role() != right.role() {
+        return false;
+    }
+    // A materialized template target is an internal atom used while executing
+    // a composite template application. Independent proof-local children may
+    // allocate different transient IDs for that same surface name; the
+    // composite's structural key is the semantic identity, so merge the
+    // definition metadata without treating those IDs as a name conflict.
+    let same_materialized_template_name = left
+        .binding()
+        .name()
+        .starts_with(TEMPLATE_INSTANCE_PREFIX)
+        && left.binding().name().contains('<')
+        && left.binding().name() == right.binding().name();
+    if left.binding().id() != right.binding().id() && !same_materialized_template_name {
         return false;
     }
     match (

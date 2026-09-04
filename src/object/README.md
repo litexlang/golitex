@@ -11,8 +11,8 @@ The source objects `1`, `x + 1`, `sin(x)`, `{1, 2}`, and `fn(x R) R` become dist
   has no binding key until name resolution succeeds.
 - A compound `Obj` owns no separate `SymbolId`. Its canonical identity is a
   recursive structural key made from its constructor and the keys of its child
-  objects. A wrapper may still carry the identity of an underlying named or
-  interned symbol; that payload identity is not a new node ID for the wrapper.
+  objects. Wrappers may carry semantic metadata such as a resolved struct
+  carrier, but never a node ID.
 - `Obj::Number` is identified by its normalized numeric value, so equal numeric
   literals do not become distinct merely because they occur at different source
   positions.

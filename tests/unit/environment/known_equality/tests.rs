@@ -10,12 +10,10 @@ fn equality(left: &str, right: &str) -> EqualFact {
 
 fn selected_real_template_instance() -> (Obj, Obj) {
     let surface_name = "\\selected<R>".to_string();
-    let symbol = SymbolRef::new(SymbolId::new(700), surface_name.clone());
-    let surface_identifier: Obj = Identifier::new_bound(surface_name, symbol.clone()).into();
+    let surface_identifier: Obj = Identifier::new(surface_name).into();
     let instantiated_template: Obj = InstantiatedTemplateObj::new(
         AtomicName::WithoutMod("selected".to_string()),
         vec![StandardSet::R.into()],
-        symbol,
     )
     .into();
     assert_eq!(
