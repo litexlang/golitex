@@ -92,6 +92,7 @@ impl Runtime {
         Ok(Self::finish_fact_verification(checked, proof_result))
     }
 
+    #[track_caller]
     pub fn finish_fact_verification(
         checked: crate::result::WellDefinedFactResult,
         proof_result: ProveFactResult,

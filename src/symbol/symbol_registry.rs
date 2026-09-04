@@ -348,6 +348,7 @@ impl SymbolRole {
 pub struct SymbolDefinition {
     binding: SymbolBinding,
     role: SymbolRole,
+    materialized_template_instance: bool,
     direct_struct_carrier: Option<StructObj>,
     transparent_object_definition: Option<TransparentObjectDefinition>,
 }
@@ -358,6 +359,10 @@ impl fmt::Debug for SymbolDefinition {
             .debug_struct("SymbolDefinition")
             .field("binding", &self.binding)
             .field("role", &self.role)
+            .field(
+                "materialized_template_instance",
+                &self.materialized_template_instance,
+            )
             .field(
                 "direct_struct_carrier",
                 &self.direct_struct_carrier.as_ref().map(ToString::to_string),
@@ -434,6 +439,7 @@ impl SymbolDefinition {
         SymbolDefinition {
             binding,
             role,
+            materialized_template_instance: false,
             direct_struct_carrier: None,
             transparent_object_definition: None,
         }
@@ -445,6 +451,14 @@ impl SymbolDefinition {
 
     pub fn role(&self) -> SymbolRole {
         self.role
+    }
+
+    pub fn is_materialized_template_instance(&self) -> bool {
+        self.materialized_template_instance
+    }
+
+    pub fn mark_materialized_template_instance(&mut self) {
+        self.materialized_template_instance = true;
     }
 
     pub fn direct_struct_carrier(&self) -> Option<&StructObj> {

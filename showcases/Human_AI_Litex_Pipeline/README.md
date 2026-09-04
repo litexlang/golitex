@@ -1,4 +1,6 @@
-# From Group Axioms to Sylow: Inside Litex's AI Proof Pipeline
+# From Group Axioms to Sylow Theorem: Inside Litex's AI Proof Pipeline
+
+Created and maintained by Jiachen Shen
 
 > Reliable AI mathematics does not require trusting one enormous answer. It
 > requires a process in which every accepted fact becomes checked context and

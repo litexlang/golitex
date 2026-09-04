@@ -40,6 +40,20 @@ impl Environment {
                         .merge_missing_transparent_object_definition_from(definition);
                     continue;
                 }
+                // Materialized template instances are rebuilt while a child
+                // environment commits.  Their generated object symbols can
+                // carry fresh identities even though the parent already has
+                // the same reusable callable instance; keep the parent's
+                // canonical definition instead of rejecting the idempotent
+                // materialization.
+                if is_materialized_template_name(self, name)
+                    || is_materialized_template_symbol(definition)
+                    || child.objects.knowledge_by_object.contains_key(name)
+                    && existing.role() == SymbolRole::Object
+                    && definition.role() == SymbolRole::Object
+                {
+                    continue;
+                }
                 return Err(merge_name_conflict_error(name, "object"));
             }
             self.definitions
@@ -73,6 +87,14 @@ impl Environment {
                         .get_by_id_mut(existing_symbol_id)
                         .expect("the matching parent symbol should remain present")
                         .merge_missing_transparent_object_definition_from(definition);
+                    continue;
+                }
+                if is_materialized_template_name(self, name)
+                    || is_materialized_template_symbol(definition)
+                    || child.objects.knowledge_by_object.contains_key(name)
+                    && existing.role() == SymbolRole::Object
+                    && definition.role() == SymbolRole::Object
+                {
                     continue;
                 }
                 return Err(merge_name_conflict_error(
@@ -260,6 +282,14 @@ impl Environment {
                 if same_symbol_definition(existing, child_definition) {
                     continue;
                 }
+                if is_materialized_template_name(self, name)
+                    || is_materialized_template_symbol(child_definition)
+                    || child.objects.knowledge_by_object.contains_key(name)
+                    && existing.role() == SymbolRole::Object
+                    && child_definition.role() == SymbolRole::Object
+                {
+                    continue;
+                }
                 return Err(merge_name_conflict_error(
                     name,
                     existing.role().description(),
@@ -373,6 +403,47 @@ fn same_symbol_definition(left: &SymbolDefinition, right: &SymbolDefinition) -> 
         (Some(left), Some(right)) => left.is_same_definition_as(right),
         _ => true,
     }
+}
+
+fn is_materialized_template_name(environment: &Environment, name: &str) -> bool {
+    let Some(_) = name.find('<') else {
+        return false;
+    };
+    let Some(template_name) = name.strip_prefix(TEMPLATE_INSTANCE_PREFIX) else {
+        return false;
+    };
+    let template_name = &template_name[..template_name
+        .find('<')
+        .expect("the template instance name already contains `<`")];
+    let local_name = template_name.rsplit("::").next().unwrap_or(template_name);
+    !local_name.is_empty()
+        && (environment
+            .definitions
+            .template_definitions
+            .contains_key(template_name)
+            || environment
+                .definitions
+                .template_definitions
+                .contains_key(local_name)
+            || environment
+                .definitions
+                .symbols
+                .get(template_name)
+                .is_some_and(|definition| definition.role() == SymbolRole::Template)
+            || environment
+                .definitions
+                .symbols
+                .get(local_name)
+                .is_some_and(|definition| definition.role() == SymbolRole::Template)
+            || environment.objects.knowledge_by_object.contains_key(name))
+}
+
+fn is_materialized_template_symbol(definition: &SymbolDefinition) -> bool {
+    let name = definition.binding().name();
+    definition.is_materialized_template_instance()
+        || (name.starts_with(TEMPLATE_INSTANCE_PREFIX)
+            && name.contains('<')
+            && definition.binding().canonical_display_name() != name)
 }
 
 fn merge_name_conflict_error(name: &str, existing_namespace: &str) -> RuntimeError {

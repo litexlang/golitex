@@ -877,6 +877,13 @@ impl Runtime {
                             )
                         });
                 if args_match {
+                    if known_atomic_fact.to_string() != atomic_fact.to_string() {
+                        eprintln!(
+                            "known-fact args_match mismatch: goal=`{}`, known=`{}`",
+                            atomic_fact,
+                            known_atomic_fact
+                        );
+                    }
                     return Ok((SuccessProveFactResult::new_with_verified_by_known_fact(
                         atomic_fact.clone().into(),
                         self.cited_known_atomic_fact(

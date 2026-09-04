@@ -1,5 +1,7 @@
 # From readable Litex mathematics to a native Lean theorem
 
+Created and maintained by Jiachen Shen
+
 > Litex does not need to replace Lean—or look like Lean—to end in a native
 > theorem checked by Lean.
 

@@ -243,6 +243,13 @@ impl Runtime {
             Err(RuntimeError::WellDefinedError(_)) => return Ok(None),
             Err(error) => return Err(error),
         };
+        if let Some(proven_fact) = proof.fact() {
+            if proven_fact.to_string() != fact.to_string() {
+                eprintln!(
+                    "builtin candidate fact mismatch: requested=`{fact}`, proof=`{proven_fact}`, detail={proof:?}"
+                );
+            }
+        }
         Ok(Some(Runtime::finish_fact_verification(checked, proof)))
     }
 
