@@ -9,6 +9,25 @@ pub(in super::super) fn render_numeric_operand_membership(
 ) -> String {
     let proof = match LeanTargetObjectRepresentation::lower(object) {
         Ok(LeanTargetObjectRepresentation::Symbol { symbol_id, .. }) => {
+            if let (Some(source_name), Some(exact_value)) = (
+                context.symbol_names.get(&symbol_id),
+                context.exact_carrier_values.get(&symbol_id),
+            ) {
+                // A refined numeric binder already inhabits its exact
+                // carrier.  The verifier's generic membership rule may have
+                // produced a `*RepPositive` proof, but this consumer is
+                // asking for the binder itself.  Explicitly unfold the
+                // exact-carrier representative; relying on bare `simp` does
+                // not instantiate `In.rep_exact` through its dependent set
+                // argument reliably.
+                if source_name == exact_value
+                    && (fallback.contains("RepPositive")
+                        || fallback.contains("RepNegative")
+                        || fallback.contains("RepNonzero"))
+                {
+                    return format!("(by simpa [Litex.In.rep] using ({fallback}))");
+                }
+            }
             context.numeric_representation_memberships.get(&symbol_id)
         }
         _ => None,

@@ -8,9 +8,9 @@ namespace __Compiler_2_OrderSystem
 namespace __Sketch01
 
 theorem __fact0 :
-    ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In (α := (Litex.R).Carrier) __p1 Litex.R) (__p2 : (Litex.R).Carrier) (__type2 : Litex.In (α := (Litex.R).Carrier) __p2 Litex.R) (__domain1 : Litex.Lt ((((Litex.In.rep __p1 __type1) : ℝ)) : ℂ) ((((Litex.In.rep __p2 __type2) : ℝ)) : ℂ)), Litex.Le ((((Litex.In.rep __p1 __type1) : ℝ)) : ℂ) ((((Litex.In.rep __p2 __type2) : ℝ)) : ℂ) := by
+    ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In (α := (Litex.R).Carrier) __p1 Litex.R) (__p2 : (Litex.R).Carrier) (__type2 : Litex.In (α := (Litex.R).Carrier) __p2 Litex.R) (__domain1 : Litex.Lt (((__p1 : ℝ)) : ℂ) (((__p2 : ℝ)) : ℂ)), Litex.Le (((__p1 : ℝ)) : ℂ) (((__p2 : ℝ)) : ℂ) := by
   intro a __h5 b __h6 __domain_f7
-  have __prior0_0 : Litex.Le (((Litex.In.rep a __h5 : ℝ)) : ℂ) (((Litex.In.rep b __h6 : ℝ)) : ℂ) := Litex.Lt.toLe (__domain_f7)
+  have __prior0_0 : Litex.Le (((a : ℝ)) : ℂ) (((b : ℝ)) : ℂ) := Litex.Lt.toLe (__domain_f7)
   exact __prior0_0
 
 end __Sketch01

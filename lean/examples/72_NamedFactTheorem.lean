@@ -9,32 +9,35 @@ theorem one_is_one : Litex.Same (1 : ℂ) (1 : ℂ) := by
   exact Litex.Same.refl (1 : ℂ)
 
 theorem conjunction : (Litex.Same (1 : ℂ) (1 : ℂ)) ∧ (Litex.Same (2 : ℂ) (2 : ℂ)) := by
-  exact ⟨one_is_one, Litex.Same.refl (2 : ℂ)⟩
+  exact ⟨Litex.Same.refl ((1 : ℂ)), Litex.Same.refl (2 : ℂ)⟩
 
 theorem __fact2 : Litex.Same (2 : ℂ) (2 : ℂ) := by
   exact (conjunction).2
 
 theorem disjunction : Litex.Same (1 : ℂ) (1 : ℂ) ∨ Litex.Same (2 : ℂ) (3 : ℂ) := by
-  exact Or.inl (one_is_one)
+  exact Or.inl (Litex.Same.refl ((1 : ℂ)))
 
 theorem relation_chain : (Litex.Le (1 : ℂ) (1 : ℂ)) ∧ (Litex.Same (1 : ℂ) (1 : ℂ)) := by
-  exact ⟨Litex.Le.refl (1 : ℂ), one_is_one⟩
+  exact ⟨Litex.Le.refl (1 : ℂ), Litex.Same.refl ((1 : ℂ))⟩
+
+theorem __fact5 : Litex.Le (1 : ℂ) (1 : ℂ) := by
+  exact (relation_chain).1
 
 theorem zero_exists : ∃ (x : (Litex.R).Carrier), ∃ (__type_x : Litex.In x Litex.R), Litex.Same x (0 : ℂ) := by
-  have __step5_3 : ∃ (x : (Litex.R).Carrier), ∃ (__type_x : Litex.In x Litex.R), Litex.Same x (0 : ℂ) := by
+  have __step6_4 : ∃ (x : (Litex.R).Carrier), ∃ (__type_x : Litex.In x Litex.R), Litex.Same x (0 : ℂ) := by
     exact (by
-    have __step5_2 : Litex.Same (0 : ℂ) (0 : ℂ) := by
+    have __step6_3 : Litex.Same (0 : ℂ) (0 : ℂ) := by
       exact Litex.Same.refl (0 : ℂ)
-    exact ⟨(0 : ℝ), (Litex.In.own Litex.R (0 : ℝ)), (Litex.Same.trans (Litex.Same.symm (Litex.Same.symm (Litex.Same.realComplex ((0 : ℝ))))) (__step5_2))⟩)
-  exact __step5_3
+    exact ⟨(0 : ℝ), (Litex.In.own Litex.R (0 : ℝ)), (Litex.Same.trans (Litex.Same.symm (Litex.Same.symm (Litex.Same.realComplex ((0 : ℝ))))) (__step6_3))⟩)
+  exact __step6_4
 
 noncomputable def zero : (Litex.R).Carrier := Classical.choose ((show ∃ (x : (Litex.R).Carrier), ∃ (__type_x : Litex.In x Litex.R), Litex.Same x (0 : ℂ) from zero_exists))
 
-theorem __fact6 : Litex.In zero Litex.R := by
+theorem __fact7 : Litex.In zero Litex.R := by
   unfold zero
   exact (Classical.choose_spec ((show ∃ (x : (Litex.R).Carrier), ∃ (__type_x : Litex.In x Litex.R), Litex.Same x (0 : ℂ) from zero_exists))).1
 
-theorem __fact7 : Litex.Same zero (0 : ℂ) := by
+theorem __fact8 : Litex.Same zero (0 : ℂ) := by
   unfold zero
   exact (Classical.choose_spec ((show ∃ (x : (Litex.R).Carrier), ∃ (__type_x : Litex.In x Litex.R), Litex.Same x (0 : ℂ) from zero_exists))).2
 

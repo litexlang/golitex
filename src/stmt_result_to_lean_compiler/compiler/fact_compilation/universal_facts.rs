@@ -338,72 +338,21 @@ impl StmtResultToLeanCompiler {
                                 )
                             {
                                 let lowered_set = LeanTargetObjectRepresentation::lower(set)?;
-                                // The generated forall proposition renders
-                                // exact-carrier arithmetic through the
-                                // membership-selected representative.  The
-                                // proof frame must install the same native
-                                // expressions before compiling its recursive
-                                // domain/conclusion Results; otherwise a
-                                // retained `0 < In.rep x hx` proof is replayed
-                                // as `0 < x`.
-                                let selected_parameter =
-                                    format!("Litex.In.rep {parameter_name} __h{}", fact_id.value());
-                                let select_exact_parameter = |value: String| {
-                                    replace_lean_identifier_token(
-                                        &value,
-                                        &parameter_name,
-                                        &selected_parameter,
-                                    )
-                                };
-                                self.environment_stack
-                                    .exact_carrier_values
-                                    .insert(binding.id(), parameter_name.clone());
+                                // The proof binder already has the exact set
+                                // carrier selected by the forall proposition.
+                                // Its membership hypothesis remains evidence;
+                                // it must not replace the variable by a second
+                                // `In.rep` choice while replaying the body.
+                                install_exact_set_builder_parameter_representation(
+                                    binding.id(),
+                                    &lowered_set,
+                                    &parameter_name,
+                                    &mut self.environment_stack,
+                                );
                                 if forall_parameter_uses_exact_refined_numeric_carrier(set) {
                                     self.environment_stack
                                         .exact_positive_real_carriers
                                         .insert(binding.id(), parameter_name.clone());
-                                }
-                                if let Some(real) =
-                                    exact_set_real_value(&lowered_set, &parameter_name)
-                                {
-                                    self.environment_stack
-                                        .numeric_real_values
-                                        .insert(binding.id(), select_exact_parameter(real));
-                                }
-                                if let Some(integer) =
-                                    exact_set_integer_value(&lowered_set, &parameter_name)
-                                {
-                                    self.environment_stack
-                                        .numeric_integer_values
-                                        .insert(binding.id(), select_exact_parameter(integer));
-                                }
-                                if let Some(rational) =
-                                    exact_set_rational_value(&lowered_set, &parameter_name)
-                                {
-                                    self.environment_stack
-                                        .numeric_rational_values
-                                        .insert(binding.id(), select_exact_parameter(rational));
-                                }
-                                if let Some(numeric) =
-                                    exact_set_numeric_value(&lowered_set, &parameter_name)
-                                {
-                                    self.environment_stack
-                                        .numeric_representations
-                                        .insert(binding.id(), select_exact_parameter(numeric));
-                                }
-                                if let Some(equality) =
-                                    exact_set_numeric_equality(&lowered_set, &parameter_name)
-                                {
-                                    self.environment_stack
-                                        .numeric_representation_equalities
-                                        .insert(binding.id(), select_exact_parameter(equality));
-                                }
-                                if let Some(proof) =
-                                    exact_set_numeric_proof(&lowered_set, &parameter_name)
-                                {
-                                    self.environment_stack
-                                        .numeric_representation_memberships
-                                        .insert(binding.id(), select_exact_parameter(proof));
                                 }
                             }
                             let proposition = render_fact(fact, &self.environment_stack).map_err(
@@ -474,64 +423,16 @@ impl StmtResultToLeanCompiler {
                                 )
                             {
                                 let lowered_set = LeanTargetObjectRepresentation::lower(set)?;
-                                let selected_parameter =
-                                    format!("Litex.In.rep {parameter_name} __h{}", fact_id.value());
-                                let select_exact_parameter = |value: String| {
-                                    replace_lean_identifier_token(
-                                        &value,
-                                        &parameter_name,
-                                        &selected_parameter,
-                                    )
-                                };
-                                self.environment_stack
-                                    .exact_carrier_values
-                                    .insert(binding.id(), parameter_name.clone());
+                                install_exact_set_builder_parameter_representation(
+                                    binding.id(),
+                                    &lowered_set,
+                                    &parameter_name,
+                                    &mut self.environment_stack,
+                                );
                                 if forall_parameter_uses_exact_refined_numeric_carrier(set) {
                                     self.environment_stack
                                         .exact_positive_real_carriers
                                         .insert(binding.id(), parameter_name.clone());
-                                }
-                                if let Some(real) =
-                                    exact_set_real_value(&lowered_set, &parameter_name)
-                                {
-                                    self.environment_stack
-                                        .numeric_real_values
-                                        .insert(binding.id(), select_exact_parameter(real));
-                                }
-                                if let Some(integer) =
-                                    exact_set_integer_value(&lowered_set, &parameter_name)
-                                {
-                                    self.environment_stack
-                                        .numeric_integer_values
-                                        .insert(binding.id(), select_exact_parameter(integer));
-                                }
-                                if let Some(rational) =
-                                    exact_set_rational_value(&lowered_set, &parameter_name)
-                                {
-                                    self.environment_stack
-                                        .numeric_rational_values
-                                        .insert(binding.id(), select_exact_parameter(rational));
-                                }
-                                if let Some(numeric) =
-                                    exact_set_numeric_value(&lowered_set, &parameter_name)
-                                {
-                                    self.environment_stack
-                                        .numeric_representations
-                                        .insert(binding.id(), select_exact_parameter(numeric));
-                                }
-                                if let Some(equality) =
-                                    exact_set_numeric_equality(&lowered_set, &parameter_name)
-                                {
-                                    self.environment_stack
-                                        .numeric_representation_equalities
-                                        .insert(binding.id(), select_exact_parameter(equality));
-                                }
-                                if let Some(proof) =
-                                    exact_set_numeric_proof(&lowered_set, &parameter_name)
-                                {
-                                    self.environment_stack
-                                        .numeric_representation_memberships
-                                        .insert(binding.id(), select_exact_parameter(proof));
                                 }
                             }
                             install_visible_subset_transports_for_parameter(

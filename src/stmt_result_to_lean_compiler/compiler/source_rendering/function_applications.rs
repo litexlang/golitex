@@ -21,7 +21,9 @@ pub(in super::super) fn matches_directly_or_after_one_transparent_definition_pas
     if substitutions.is_empty() {
         return Ok(false);
     }
-    let reduced = Runtime::default()
+    let mut runtime = Runtime::default();
+    runtime.ensure_current_source_for_parse();
+    let reduced_source = runtime
         .inst_obj(source, &substitutions, SubstitutionMode::Exact)
         .map_err(|error| {
             format!(
@@ -29,7 +31,21 @@ pub(in super::super) fn matches_directly_or_after_one_transparent_definition_pas
                 error.trace_message()
             )
         })?;
-    Ok(obj_equality_key(&reduced) == obj_equality_key(target))
+    // Transparent definitions may occur on either side of a retained
+    // subset edge.  In particular, a local set-builder is stored as the
+    // source symbol in `forall x E`, while the subset Result retains the
+    // definition body.  Normalize both endpoints before comparing; reducing
+    // only `source` makes the lexical subset transport disappear exactly at
+    // the boundary where the dependent numeric representative is needed.
+    let reduced_target = runtime
+        .inst_obj(target, &substitutions, SubstitutionMode::Exact)
+        .map_err(|error| {
+            format!(
+                "compiler could not replay transparent definition target alignment: {}",
+                error.trace_message()
+            )
+        })?;
+    Ok(obj_equality_key(&reduced_source) == obj_equality_key(&reduced_target))
 }
 
 /// Compare two identity-distinct application sources only through symbol
@@ -698,6 +714,8 @@ pub(in super::super) fn render_function_application(
             let expected_source = render_fact(source_fact, &source_domain_nested)?;
             let expected_selected = render_fact(source_fact, &nested)?;
             let retained = render_fact(&requirement.expected_proposition, &result_owned_context)?;
+            let mut source_fact_matches_requirement =
+                source_fact.to_string() == requirement.expected_proposition.to_string();
             if expected_source != retained && expected_selected != retained {
                 let instantiated_source = domain_substitution_runtime
                     .inst_fact(
@@ -712,7 +730,9 @@ pub(in super::super) fn render_function_application(
                             error.trace_message()
                         )
                     })?;
-                if instantiated_source.to_string() != requirement.expected_proposition.to_string() {
+                source_fact_matches_requirement =
+                    instantiated_source.to_string() == requirement.expected_proposition.to_string();
+                if !source_fact_matches_requirement {
                     return Err(format!(
                         "application layer {layer_index} expected domain clause {expected_source} (or exact selected-carrier form {expected_selected}), retained {retained}"
                     ));
@@ -720,6 +740,27 @@ pub(in super::super) fn render_function_application(
             }
             let retained_proof =
                 render_function_application_requirement_proof(requirement, &result_owned_context)?;
+            // A function telescope states its domain in the exact
+            // representative selected by `In.rep`, while a source forall
+            // over an exact carrier (notably `R`) may bind the same domain
+            // fact against the original carrier value.  The verifier has
+            // already certified that these are the same value; transport the
+            // retained proof through the reviewed `rep_exact` theorem before
+            // supplying the telescope requirement.  Keep this adapter
+            // narrow: heterogeneous host-carrier arguments do not satisfy
+            // `rep_exact`, and therefore retain their Result-selected proof
+            // expression unchanged.
+            let retained_proof = if expected_selected != retained
+                && source_fact_matches_requirement
+                && function.parameters.iter().all(|parameter| {
+                    forall_parameter_uses_exact_object_carrier_from_target_set(&parameter.set)
+                }) {
+                format!(
+                    "(by\n  have __domain_transport := ({retained_proof})\n  rw [Litex.In.rep_exact]\n  exact __domain_transport)"
+                )
+            } else {
+                retained_proof
+            };
             if let Some((parameter_symbol_id, _)) =
                 positive_natural_parameter_less_equal_natural_bound(&function, source_fact)?
             {
@@ -847,4 +888,25 @@ pub(in super::super) fn render_function_application(
         head,
         ")".repeat(layer_lets.len())
     ))
+}
+
+fn forall_parameter_uses_exact_object_carrier_from_target_set(
+    set: &LeanTargetObjectRepresentation,
+) -> bool {
+    matches!(
+        set,
+        LeanTargetObjectRepresentation::StandardSet(
+            LeanTargetStandardSet::Real
+                | LeanTargetStandardSet::PositiveReal
+                | LeanTargetStandardSet::Complex
+        ) | LeanTargetObjectRepresentation::SetBuilder(_)
+            | LeanTargetObjectRepresentation::FunctionSet { .. }
+            | LeanTargetObjectRepresentation::FunctionRange { .. }
+            | LeanTargetObjectRepresentation::RealInterval { .. }
+            | LeanTargetObjectRepresentation::RealRay { .. }
+            | LeanTargetObjectRepresentation::SequenceSet { .. }
+            | LeanTargetObjectRepresentation::MatrixSet { .. }
+            | LeanTargetObjectRepresentation::CartesianProduct { .. }
+            | LeanTargetObjectRepresentation::GeneralCartesianProduct { .. }
+    )
 }

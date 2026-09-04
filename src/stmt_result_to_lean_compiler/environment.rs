@@ -105,10 +105,9 @@ impl DerefMut for StmtResultToLeanCompilerEnvironment {
 pub(super) struct StmtResultToLeanCompilerBindings {
     pub(super) symbol_names: HashMap<SymbolId, String>,
     /// Lean identifiers already allocated by an enclosing compiler scope.
-    /// This remains separate from `symbol_names`: a source symbol may be
-    /// rendered as an exact representative such as `In.rep __p1 __type1`
-    /// while its lexical binder `__p1` must still reserve that identifier for
-    /// alpha-fresh nested forall binders.
+    /// This remains separate from `symbol_names` so exact source SymbolIds can
+    /// keep their lexical binder while nested forall binders remain
+    /// alpha-fresh.
     pub(super) reserved_lean_names: HashSet<String>,
     /// Executed `let` definitions only. This is separate from numeric
     /// substitutions because WD rendering may transport a callable contract
@@ -156,6 +155,15 @@ pub(super) struct StmtResultToLeanCompilerBindings {
     /// directly instead of attempting to reconstruct it from rendered syntax.
     pub(super) exact_carrier_source_equalities:
         HashMap<SymbolId, ExactCarrierSourceEqualityBinding>,
+    /// Local exact-carrier symbols whose semantic observer is intentionally
+    /// opaque (for example a transparent alias to a set-builder). Equality
+    /// rendering consults this verifier-owned type fact rather than trying
+    /// to infer the carrier from the symbol's textual spelling.
+    pub(super) opaque_carrier_symbols: HashSet<SymbolId>,
+    /// Exact set-builder values materialized by a checked membership Result
+    /// retain the subtype's native observer even when the source set is
+    /// named through a transparent alias.
+    pub(super) observed_carrier_symbols: HashSet<SymbolId>,
     /// Exact `R+` carrier values whose subtype property is a native strict
     /// positivity certificate.  Arithmetic constructors use these proofs
     /// directly instead of selecting another representative through `In`.

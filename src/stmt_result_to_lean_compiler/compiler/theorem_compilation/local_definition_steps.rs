@@ -120,6 +120,42 @@ impl StmtResultToLeanCompiler {
                 )
             })
             .transpose()?;
+        // A local object may be typed by a transparent alias (`E`) whose
+        // value is a set-builder.  `render_fact` only sees the alias atom and
+        // therefore cannot infer that its carrier has no native observation.
+        // Resolve that one semantic definition here, where the verifier has
+        // already supplied the exact target-set type, so the defining
+        // equality uses the no-observation Same ABI consistently.
+        let opaque_exact_target = exact_target_set.as_ref().is_some_and(|target_set| {
+            fn is_opaque(target: &LeanTargetObjectRepresentation) -> bool {
+                matches!(
+                    target,
+                    LeanTargetObjectRepresentation::SetBuilder(_)
+                        | LeanTargetObjectRepresentation::FunctionSet { .. }
+                        | LeanTargetObjectRepresentation::FunctionRange { .. }
+                        | LeanTargetObjectRepresentation::RealInterval { .. }
+                        | LeanTargetObjectRepresentation::RealRay { .. }
+                )
+            }
+            if is_opaque(target_set) {
+                return true;
+            }
+            let LeanTargetObjectRepresentation::Symbol { symbol_id, .. } = target_set else {
+                return false;
+            };
+            self.environment_stack
+                .transparent_object_definitions
+                .get(symbol_id)
+                .and_then(|definition| {
+                    LeanTargetObjectRepresentation::lower(&definition.value).ok()
+                })
+                .is_some_and(|resolved| is_opaque(&resolved))
+        });
+        let rendered_real_value = if opaque_exact_target {
+            render_real_target_object_representation(&lowered_value, &self.environment_stack).ok()
+        } else {
+            None
+        };
         let lean_name = lean_identifier(binding.name());
         if self
             .environment_stack
@@ -147,8 +183,28 @@ impl StmtResultToLeanCompiler {
             );
         }
 
+        if opaque_exact_target {
+            if canonical_exact_value.is_some() {
+                self.environment_stack
+                    .observed_carrier_symbols
+                    .insert(binding.id());
+            } else {
+                self.environment_stack
+                    .opaque_carrier_symbols
+                    .insert(binding.id());
+            }
+        }
+
         let rendered_type_fact = render_fact(&stored_type_fact, &self.environment_stack)?;
-        let rendered_equality = render_fact(&stored_equality, &self.environment_stack)?;
+        let rendered_equality = if opaque_exact_target && canonical_exact_value.is_none() {
+            format!(
+                "@Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) {} {}",
+                render_obj(&defined_object, &self.environment_stack)?,
+                render_obj(value, &self.environment_stack)?
+            )
+        } else {
+            render_fact(&stored_equality, &self.environment_stack)?
+        };
         let step_name = self.next_local_proof_step_base_name();
         let type_name = format!("{step_name}_type");
         let equality_name = format!("{step_name}_equality");
@@ -173,11 +229,31 @@ impl StmtResultToLeanCompiler {
             type_check_proof.clone()
         };
         let equality_proof = if let Some((_, exact_base_same_source)) = &canonical_exact_value {
-            format!(
+            if opaque_exact_target {
+                let real_value = rendered_real_value.as_ref().ok_or_else(|| {
+                    "exact opaque object value has no native-real rendering".to_string()
+                })?;
+                format!(
+                    "Litex.Same.trans (Litex.Same.subtype {lean_name}) (Litex.Same.trans (Litex.Same.ofEq (show (({lean_name}).val : ℝ) = ({real_value} : ℝ) by rfl)) ({}))",
+                    render_real_to_complex_same_across_contexts(
+                        value,
+                        &self.environment_stack,
+                        &self.environment_stack,
+                    )?
+                )
+            } else {
+                format!(
                 "Litex.Same.trans (Litex.Same.subtype {lean_name}) (by\n  convert ({exact_base_same_source}) using 1 <;> norm_num <;> norm_cast)"
             )
+            }
         } else if rendered_exact_target_set.is_some() {
-            format!("Litex.Same.symm (Litex.In.same_rep {rendered_value} ({type_check_proof}))")
+            if opaque_exact_target {
+                format!(
+                    "Litex.Same.symmNoObservation (Litex.In.same_rep {rendered_value} ({type_check_proof}))"
+                )
+            } else {
+                format!("Litex.Same.symm (Litex.In.same_rep {rendered_value} ({type_check_proof}))")
+            }
         } else {
             format!("Litex.Same.refl {rendered_value}")
         };
@@ -215,7 +291,6 @@ impl StmtResultToLeanCompiler {
                     defining_equality_fact_id: stored_fact_ids[1],
                 },
             );
-
         if result.common.infers.rule_applications.is_empty()
             && result
                 .common
@@ -369,6 +444,11 @@ impl StmtResultToLeanCompiler {
             "have {subset_name} : {subset_proposition} := by\n  unfold {}\n  exact Litex.Rules.setBuilderSubsetViaParamSubset ({child_proof})",
             render_obj(defined_object, &self.environment_stack)?
         ));
+        install_subset_transport_from_fact(
+            &expected_subset,
+            &subset_name,
+            &mut self.environment_stack,
+        )?;
         self.environment_stack
             .fact_names
             .insert(subset_fact_id, subset_name.clone());

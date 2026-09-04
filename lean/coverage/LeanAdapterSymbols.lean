@@ -65,7 +65,6 @@ namespace LitexCoverage
 #check Litex.RealGreatestLowerBound
 #check Litex.RealLeastUpperBound
 #check Litex.Rules.absMul
-#check Litex.Rules.absPositiveOfNotSame
 #check Litex.Rules.complexAbsInR
 #check Litex.Rules.complexAddInR
 #check Litex.Rules.complexDivInR
@@ -142,6 +141,7 @@ namespace LitexCoverage
 #check Litex.Same
 #check Litex.Same.addCongr
 #check Litex.Same.addCongrRightInt
+#check Litex.Same.complexRealNoObservation
 #check Litex.Same.intAddComplex
 #check Litex.Same.intAddCongr
 #check Litex.Same.intCastAddComplex
@@ -157,11 +157,15 @@ namespace LitexCoverage
 #check Litex.Same.ratComplex
 #check Litex.Same.ratComplexNoObservation
 #check Litex.Same.realAddComplex
+#check Litex.Same.realAddComplexNoObservation
 #check Litex.Same.realComplex
 #check Litex.Same.realComplexNoObservation
 #check Litex.Same.realDivComplex
+#check Litex.Same.realDivComplexNoObservation
 #check Litex.Same.realMulComplex
+#check Litex.Same.realMulComplexNoObservation
 #check Litex.Same.realSubComplex
+#check Litex.Same.realSubComplexNoObservation
 #check Litex.Same.refl
 #check Litex.Same.reflNoObservation
 #check Litex.Same.setExt
@@ -172,11 +176,13 @@ namespace LitexCoverage
 #check Litex.Same.sumRightNoObservation
 #check Litex.Same.symm
 #check Litex.Same.symmNoObservation
+#check Litex.Same.symmWithoutObservation
 #check Litex.Same.trans
 #check Litex.Same.transNoObservation
 #check Litex.Same.withoutObservation
 #check Litex.SequenceLiteral.mk
 #check Litex.Set
+#check Litex.Set.Carrier
 #check Litex.Set.Finite
 #check Litex.Set.Nonempty
 #check Litex.Set.coproduct

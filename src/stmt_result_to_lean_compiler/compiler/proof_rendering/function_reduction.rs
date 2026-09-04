@@ -151,6 +151,7 @@ pub(in super::super) fn render_checked_identity_function_reduction_from_fact(
                 native_real_argument: if binding.function.parameters.len() == 1
                     && parameter.set
                         == LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Real)
+                    && matches!(source_argument, Obj::Number(_))
                 {
                     Some(render_real_obj(source_argument, context)?)
                 } else {
@@ -466,12 +467,19 @@ fn render_real_function_body_same_with_parameters_mode(
                             Ok(proof)
                         }
                     } else if target_uses_exact_source_representation {
+                        // The source argument already inhabits the exact R
+                        // carrier, but the function body is still defined
+                        // through `In.rep`.  Force `Same.ofEq` to the native
+                        // real observer and lift `rep_exact` through the
+                        // carrier-to-real coercion; leaving the type implicit
+                        // makes Lean choose the carrier's default observer.
+                        let proof = format!(
+                            "Litex.Same.trans (@Litex.Same.ofEq ℝ inferInstance (Litex.In.rep {argument} ({argument_membership}) : ℝ) ({argument} : ℝ) (congrArg (fun x : Litex.R.Carrier => (x : ℝ)) (Litex.In.rep_exact {argument} ({argument_membership})))) (Litex.Same.realComplex ({argument} : ℝ))"
+                        );
                         if observation_free {
-                            Ok(format!(
-                                "Litex.Same.reflNoObservation ({rendered_target_argument})"
-                            ))
+                            Ok(format!("Litex.Same.withoutObservation ({proof})"))
                         } else {
-                            Ok(format!("Litex.Same.refl ({rendered_target_argument})"))
+                            Ok(proof)
                         }
                     } else if target_uses_selected_representation {
                         let selected_real = membership_real_value(

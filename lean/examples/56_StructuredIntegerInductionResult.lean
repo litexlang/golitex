@@ -9,10 +9,10 @@ theorem __fact0 : Litex.In ((2 : ℂ) + (3 : ℂ)) Litex.N := by
   exact Litex.Rules.complexEqNatInN ((2 : ℂ) + (3 : ℂ)) 5 (by norm_num)
 
 theorem __fact1 : Litex.Nonnegative ((2 : ℂ) + (3 : ℂ)) := by
-  exact (by simpa using (Litex.Rules.nonnegativeOfInN (__fact0)))
+  exact (by simpa [Litex.In.rep] using (Litex.Rules.nonnegativeOfInN (__fact0)))
 
 theorem __fact2 : Litex.Nonpositive ((-1 : ℂ) * ((2 : ℂ) + (3 : ℂ))) := by
-  have __infer1_0 : Litex.Nonnegative ((2 : ℂ) + (3 : ℂ)) := (by simpa using (Litex.Rules.nonnegativeOfInN (__fact0)))
+  have __infer1_0 : Litex.Nonnegative ((2 : ℂ) + (3 : ℂ)) := (by simpa [Litex.In.rep] using (Litex.Rules.nonnegativeOfInN (__fact0)))
   exact Litex.Rules.complexNegativeOneMulNonpositive (__infer1_0)
 
 theorem __fact3 :

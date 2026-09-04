@@ -35,7 +35,7 @@ theorem __fact4 :
 theorem __fact5 :
     ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.ZStar), (¬ @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) __p1 (0 : ℂ)) ∧ (Litex.In __p1 Litex.Z) ∧ (Litex.In __p1 Litex.Q) ∧ (Litex.In __p1 Litex.R) ∧ (Litex.In __p1 Litex.C) ∧ (Litex.In __p1 Litex.QStar) ∧ (Litex.In __p1 Litex.RStar) ∧ (Litex.In __p1 Litex.CStar) := by
   intro __carrier1 z __h39
-  have __infer5_0 : ¬ @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) z (0 : ℂ) := (by simpa using (Litex.Rules.notSameZeroOfInZStar (__h39)))
+  have __infer5_0 : ¬ @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) z (0 : ℂ) := (by simpa [Litex.In.rep] using (Litex.Rules.notSameZeroOfInZStar (__h39)))
   have __prior5_0 : ¬ @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) z (0 : ℂ) := __infer5_0
   have __prior5_1 : Litex.In z Litex.Z := Litex.Rules.inZOfInZStar (__h39)
   have __prior5_2 : Litex.In z Litex.Q := Litex.Rules.inQOfInZ (Litex.Rules.inZOfInZStar (__h39))
@@ -49,7 +49,7 @@ theorem __fact5 :
 theorem __fact6 :
     ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.QStar), (¬ @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) __p1 (0 : ℂ)) ∧ (Litex.In __p1 Litex.Q) ∧ (Litex.In __p1 Litex.R) ∧ (Litex.In __p1 Litex.C) ∧ (Litex.In __p1 Litex.RStar) ∧ (Litex.In __p1 Litex.CStar) := by
   intro __carrier1 q __h56
-  have __infer6_1 : ¬ @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) q (0 : ℂ) := (by simpa using (Litex.Rules.notSameZeroOfInQStar (__h56)))
+  have __infer6_1 : ¬ @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) q (0 : ℂ) := (by simpa [Litex.In.rep] using (Litex.Rules.notSameZeroOfInQStar (__h56)))
   have __prior6_0 : ¬ @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) q (0 : ℂ) := __infer6_1
   have __prior6_1 : Litex.In q Litex.Q := Litex.Rules.inQOfInQStar (__h56)
   have __prior6_2 : Litex.In q Litex.R := Litex.Rules.inROfInQ (Litex.Rules.inQOfInQStar (__h56))
@@ -61,7 +61,7 @@ theorem __fact6 :
 theorem __fact7 :
     ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.RStar), (¬ @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) __p1 (0 : ℂ)) ∧ (Litex.In __p1 Litex.R) ∧ (Litex.In __p1 Litex.C) ∧ (Litex.In __p1 Litex.CStar) := by
   intro __carrier1 r __h69
-  have __infer7_2 : ¬ @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) r (0 : ℂ) := (by simpa using (Litex.Rules.notSameZeroOfInRStar (__h69)))
+  have __infer7_2 : ¬ @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) r (0 : ℂ) := (by simpa [Litex.In.rep] using (Litex.Rules.notSameZeroOfInRStar (__h69)))
   have __prior7_0 : ¬ @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) r (0 : ℂ) := __infer7_2
   have __prior7_1 : Litex.In r Litex.R := Litex.Rules.inROfInRStar (__h69)
   have __prior7_2 : Litex.In r Litex.C := Litex.Rules.inCOfInR (Litex.Rules.inROfInRStar (__h69))
@@ -71,7 +71,7 @@ theorem __fact7 :
 theorem __fact8 :
     ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.CStar), (¬ @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) __p1 (0 : ℂ)) ∧ (Litex.In __p1 Litex.C) := by
   intro __carrier1 c __h78
-  have __infer8_3 : ¬ @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) c (0 : ℂ) := (by simpa using (Litex.Rules.notSameZeroOfInCStar (__h78)))
+  have __infer8_3 : ¬ @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) c (0 : ℂ) := (by simpa [Litex.In.rep] using (Litex.Rules.notSameZeroOfInCStar (__h78)))
   have __prior8_0 : ¬ @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) c (0 : ℂ) := __infer8_3
   have __prior8_1 : Litex.In c Litex.C := Litex.Rules.inCOfInCStar (__h78)
   exact ⟨__prior8_0, __prior8_1⟩

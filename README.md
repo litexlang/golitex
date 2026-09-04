@@ -301,4 +301,9 @@ Litex is the result of that exploration.
 Special thanks to Wei Lin, Siqi Sun, Peng Sun, Yi Wang, Chenxuan Huang, Yan Lu,
 Sheng Xu, Keyao Zhu, Xingjian Ma, and Zhaoxuan Hong for their support and advice.
 
+Mathematics is the unseen skeleton deep within the edifice of science. We
+believe that any mathematics can be formalized, and that formalized mathematics
+will ultimately become the future of mathematics. Litex hopes to become one of
+the building blocks of that future.
+
 Litex is released under the [Apache License 2.0](LICENSE).

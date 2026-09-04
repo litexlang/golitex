@@ -18,9 +18,9 @@ theorem __fact1 :
   exact __prior1_0
 
 theorem __fact2 :
-    ∀ (__p1 : Litex.Set) (__p2 : Litex.Set) (__domain1 : ¬ Litex.Same __p1 __p2), ¬ Litex.Same __p2 __p1 := by
+    ∀ (__p1 : Litex.Set) (__p2 : Litex.Set) (__domain1 : ¬ @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) __p1 __p2), ¬ @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) __p2 __p1 := by
   intro a b __domain_f29
-  have __prior2_0 : ¬ Litex.Same b a := Litex.Rules.notSameSymm (__domain_f29)
+  have __prior2_0 : ¬ @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) b a := Litex.Rules.notSameSymm (__domain_f29)
   exact __prior2_0
 
 theorem __fact3 :

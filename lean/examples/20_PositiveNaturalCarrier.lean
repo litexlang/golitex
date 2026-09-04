@@ -9,16 +9,16 @@ theorem __fact0 : Litex.In (1 : ℂ) Litex.NPos := by
   exact Litex.Rules.complexEqNatInNPos (1 : ℂ) 1 (by norm_num) (by norm_num)
 
 theorem __fact1 : Litex.Positive (1 : ℂ) := by
-  exact (by simpa using (Litex.Rules.positiveOfInNPos (__fact0)))
+  exact (by simpa [Litex.In.rep] using (Litex.Rules.positiveOfInNPos (__fact0)))
 
 theorem __fact2 :
     ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.NPos), Litex.In __p1 Litex.N := by
   intro __carrier1 n __h8
-  have __infer2_1 : Litex.Lt (0 : ℂ) ((((Litex.In.rep n __h8).val : ℕ)) : ℂ) := (by simpa using (Litex.Rules.positiveNaturalRepPositive (__h8)))
+  have __infer2_1 : Litex.Lt (0 : ℂ) ((((Litex.In.rep n __h8).val : ℕ)) : ℂ) := (by simpa [Litex.In.rep] using (Litex.Rules.positiveNaturalRepPositive (__h8)))
   have __prior2_0 : Litex.In n Litex.N := Litex.Rules.inNOfInNPos (__h8)
-  have __infer2_2 : Litex.Nonnegative n := (by simpa using (Litex.Rules.nonnegativeOfInN (__prior2_0)))
+  have __infer2_2 : Litex.Nonnegative n := (by simpa [Litex.In.rep] using (Litex.Rules.nonnegativeOfInN (__prior2_0)))
   have __infer2_3 : Litex.Nonpositive ((-1 : ℂ) * (((Litex.In.rep n __prior2_0 : ℕ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNonpositive ((Litex.Nonnegative.congr (Litex.Same.transNoObservation (Litex.In.same_rep n (__prior2_0)) (Litex.Same.natComplexNoObservation (Litex.In.rep n __prior2_0)))).mp (__infer2_2))
-  have __infer2_4 : Litex.Nonnegative n := (by simpa using (Litex.Rules.nonnegativeOfInN (__prior2_0)))
+  have __infer2_4 : Litex.Nonnegative n := (by simpa [Litex.In.rep] using (Litex.Rules.nonnegativeOfInN (__prior2_0)))
   have __infer2_5 : Litex.Nonpositive ((-1 : ℂ) * (((Litex.In.rep n __prior2_0 : ℕ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNonpositive ((Litex.Nonnegative.congr (Litex.Same.transNoObservation (Litex.In.same_rep n (__prior2_0)) (Litex.Same.natComplexNoObservation (Litex.In.rep n __prior2_0)))).mp (__infer2_4))
   exact __prior2_0
 

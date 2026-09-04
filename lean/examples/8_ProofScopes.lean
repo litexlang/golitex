@@ -16,7 +16,7 @@ theorem local_reflexivity :
   intro x __h5
   have __step1_0 : Litex.Same x x := by
     exact Litex.Same.refl x
-  have __c1_0 : Litex.Same x x := __step1_0
+  have __c1_0 : Litex.Same x x := Litex.Same.refl (x)
   exact __c1_0
 
 theorem __fact2 : Litex.Same (1 : ℂ) (1 : ℂ) := by
@@ -25,16 +25,16 @@ theorem __fact2 : Litex.Same (1 : ℂ) (1 : ℂ) := by
     have __projected_conclusion := (local_reflexivity (1 : ℝ) (Litex.In.own Litex.R (1 : ℝ)))
     try rw [Litex.In.rep_exact] at __projected_conclusion
     exact __projected_conclusion)) (Litex.Same.realComplex ((1 : ℝ))))
-  exact __step2_1
+  exact Litex.Same.refl ((1 : ℂ))
 
 theorem __fact3 : Litex.Same (2 : ℂ) (2 : ℂ) := by
   have __step3_2 : Litex.Same (2 : ℂ) (2 : ℂ) := by
     exact Litex.Same.refl (2 : ℂ)
-  exact __step3_2
+  exact Litex.Same.refl ((2 : ℂ))
 
 example : Litex.Same (3 : ℂ) (3 : ℂ) := by
   have __step4_3 : Litex.Same (3 : ℂ) (3 : ℂ) := by
     exact Litex.Same.refl (3 : ℂ)
-  exact __step4_3
+  exact Litex.Same.refl ((3 : ℂ))
 
 end __Compiler_8_ProofScopes

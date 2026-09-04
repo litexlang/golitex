@@ -134,8 +134,11 @@ fn render_forall_fact_type_with_conclusion_renderer(
 ) -> Result<String, String> {
     let mut context = outer_context.clone();
     let mut binders = Vec::new();
-    let mut exact_parameter_representations = HashMap::new();
-    let mut lexical_parameter_names = HashMap::new();
+    // Domain facts are introduced after the parameter telescope, but a
+    // subset domain is exactly the evidence needed to select the target
+    // numeric representative of a parameter.  Keep the parameter metadata so
+    // we can replay that lexical transport once all domain proofs are visible.
+    let mut subset_transport_parameters = Vec::new();
     for (index, (binding, param_type)) in forall
         .typed_parameters
         .collect_param_bindings_with_types()
@@ -163,7 +166,6 @@ fn render_forall_fact_type_with_conclusion_renderer(
         let name = format!("__p{local_suffix}");
         let type_name = format!("__type{local_suffix}");
         let carrier_name = format!("__carrier{local_suffix}");
-        lexical_parameter_names.insert(binding.id(), name.clone());
         context.reserved_lean_names.insert(name.clone());
         context.reserved_lean_names.insert(type_name.clone());
         context.reserved_lean_names.insert(carrier_name.clone());
@@ -256,8 +258,6 @@ fn render_forall_fact_type_with_conclusion_renderer(
             binders.push(format!(
                 "({type_name} : Litex.In (α := ({rendered_set}).Carrier) {name} {rendered_set})"
             ));
-            exact_parameter_representations
-                .insert(binding.id(), format!("(Litex.In.rep {name} {type_name})"));
             let expected = format!("Litex.In {name} {rendered_set}");
             let function = match set {
                 Obj::FnSet(function) => {
@@ -289,39 +289,19 @@ fn render_forall_fact_type_with_conclusion_renderer(
                 &mut context,
             )?;
             let lowered_set = LeanTargetObjectRepresentation::lower(set)?;
-            context
-                .exact_carrier_values
-                .insert(binding.id(), name.clone());
+            // The binder already inhabits the exact source set carrier.  Its
+            // explicit membership argument is Result-owned evidence, not a
+            // second choice of the value represented by this variable.
+            install_exact_set_builder_parameter_representation(
+                binding.id(),
+                &lowered_set,
+                &name,
+                &mut context,
+            );
             if forall_parameter_uses_exact_refined_numeric_carrier(set) {
                 context
                     .exact_positive_real_carriers
                     .insert(binding.id(), name.clone());
-            }
-            if let Some(real) = exact_set_real_value(&lowered_set, &name) {
-                context.numeric_real_values.insert(binding.id(), real);
-            }
-            if let Some(integer) = exact_set_integer_value(&lowered_set, &name) {
-                context.numeric_integer_values.insert(binding.id(), integer);
-            }
-            if let Some(rational) = exact_set_rational_value(&lowered_set, &name) {
-                context
-                    .numeric_rational_values
-                    .insert(binding.id(), rational);
-            }
-            if let Some(numeric) = exact_set_numeric_value(&lowered_set, &name) {
-                context
-                    .numeric_representations
-                    .insert(binding.id(), numeric);
-            }
-            if let Some(equality) = exact_set_numeric_equality(&lowered_set, &name) {
-                context
-                    .numeric_representation_equalities
-                    .insert(binding.id(), equality);
-            }
-            if let Some(proof) = exact_set_numeric_proof(&lowered_set, &name) {
-                context
-                    .numeric_representation_memberships
-                    .insert(binding.id(), proof);
             }
             install_visible_subset_transports_for_parameter(
                 binding.id(),
@@ -330,6 +310,12 @@ fn render_forall_fact_type_with_conclusion_renderer(
                 set,
                 &mut context,
             )?;
+            subset_transport_parameters.push((
+                binding.id(),
+                name.clone(),
+                type_name.clone(),
+                set.clone(),
+            ));
             continue;
         }
         match set {
@@ -399,59 +385,30 @@ fn render_forall_fact_type_with_conclusion_renderer(
             set,
             &mut context,
         )?;
-    }
-    // Numeric rendering uses the selected representative consistently for
-    // exact carriers.  Keep `symbol_names` lexical in the ordinary body
-    // context, however: function application arguments still need their
-    // original membership proof (`x`, `hx`), while domain propositions are
-    // rendered in a dedicated representative context below.
-    for (&symbol_id, representation) in &exact_parameter_representations {
-        if let Some(source_name) = lexical_parameter_names.get(&symbol_id) {
-            if let Some(value) = context.numeric_real_values.get_mut(&symbol_id) {
-                *value = replace_lean_identifier_token(value, source_name, representation);
-            }
-            if let Some(value) = context.numeric_integer_values.get_mut(&symbol_id) {
-                *value = replace_lean_identifier_token(value, source_name, representation);
-            }
-            if let Some(value) = context.numeric_rational_values.get_mut(&symbol_id) {
-                *value = replace_lean_identifier_token(value, source_name, representation);
-            }
-            if let Some(value) = context.numeric_representations.get_mut(&symbol_id) {
-                *value = replace_lean_identifier_token(value, source_name, representation);
-            }
-        }
-    }
-    let mut domain_context = context.clone();
-    for (&symbol_id, representation) in &exact_parameter_representations {
-        domain_context
-            .symbol_names
-            .insert(symbol_id, representation.clone());
+        subset_transport_parameters.push((
+            binding.id(),
+            name.clone(),
+            type_name.clone(),
+            set.clone(),
+        ));
     }
     for (index, premise) in forall.dom_facts.iter().enumerate() {
         let proof_name = format!("__domain{}", index + 1);
-        // Exact-carrier parameters are represented by `In.rep` while rendering
-        // arithmetic/function-domain premises.  A direct membership premise,
-        // however, is itself the heterogeneous fact that establishes the
-        // parameter's membership in another set.  Rendering that subject via
-        // `In.rep` changes the source proposition (and can create a nested
-        // representative in a dependent telescope), so retain its lexical
-        // exact-carrier name for this one premise only.
-        let premise_context = if let Some(symbol_id) = direct_membership_subject_symbol_id(premise)
-            .filter(|symbol_id| exact_parameter_representations.contains_key(symbol_id))
-        {
-            let mut premise_context = domain_context.clone();
-            if let Some(name) = lexical_parameter_names.get(&symbol_id).cloned() {
-                premise_context.symbol_names.insert(symbol_id, name);
-            }
-            premise_context
-        } else {
-            domain_context.clone()
-        };
         binders.push(format!(
             "({proof_name} : {})",
-            render_fact(premise, &premise_context)?
+            render_fact(premise, &context)?
         ));
         install_subset_transport_from_fact(premise, &proof_name, &mut context)?;
+    }
+    for (symbol_id, parameter_name, parameter_membership, source_set) in subset_transport_parameters
+    {
+        install_visible_subset_transports_for_parameter(
+            symbol_id,
+            &parameter_name,
+            &parameter_membership,
+            &source_set,
+            &mut context,
+        )?;
     }
     let conclusions = forall
         .then_facts
@@ -466,44 +423,6 @@ fn render_forall_fact_type_with_conclusion_renderer(
         binders.join(" "),
         conjunction(&conclusions)
     ))
-}
-
-/// Replace a source binder only at Lean identifier boundaries.  A plain
-/// substring replacement corrupts proof constructors when a short binder
-/// name (for example `a`) occurs inside `Litex.Same.realComplex` or another
-/// namespace segment.
-pub(in super::super) fn replace_lean_identifier_token(
-    input: &str,
-    source: &str,
-    replacement: &str,
-) -> String {
-    if source.is_empty() || source == replacement {
-        return input.to_string();
-    }
-    let is_identifier = |character: char| character.is_alphanumeric() || character == '_';
-    let mut output = String::with_capacity(input.len());
-    let mut cursor = 0;
-    while cursor < input.len() {
-        let remainder = &input[cursor..];
-        if remainder.starts_with(source) {
-            let previous = input[..cursor].chars().next_back();
-            let next = input[cursor + source.len()..].chars().next();
-            if previous.is_none_or(|character| !is_identifier(character))
-                && next.is_none_or(|character| !is_identifier(character))
-            {
-                output.push_str(replacement);
-                cursor += source.len();
-                continue;
-            }
-        }
-        let character = remainder
-            .chars()
-            .next()
-            .expect("cursor remains within the input");
-        output.push(character);
-        cursor += character.len_utf8();
-    }
-    output
 }
 
 fn direct_membership_subject_symbol_id(fact: &Fact) -> Option<SymbolId> {

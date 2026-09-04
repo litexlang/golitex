@@ -16,20 +16,19 @@ theorem __fact1 : anchored_at (1 : ℝ) (1 : ℝ) := by
   unfold anchored_at
   exact ⟨Litex.In.own Litex.R (1 : ℝ), Litex.In.own Litex.R (1 : ℝ), Litex.Same.trans (Litex.Same.symm (Litex.Same.symm (Litex.Same.realComplex ((1 : ℝ))))) (Litex.Same.trans ((by simpa [Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (__fact0))) (Litex.Same.symm (Litex.Same.realComplex ((1 : ℝ)))))⟩)
 
-theorem __fact2 : Litex.In (1 : ℂ) (Litex.setBuilder Litex.R (fun (x : Litex.R.Carrier) => anchored_at (1 : ℝ) (x : ℝ))) := by
-  exact ⟨⟨(1 : ℝ), (by simpa using (__fact1))⟩, Litex.Same.trans (Litex.Same.symm (Litex.Same.realComplex ((1 : ℝ)))) (Litex.Same.symm (Litex.Same.subtype ⟨(1 : ℝ), (by simpa using (__fact1))⟩))⟩
+theorem __fact2 : Litex.In (1 : ℝ) Litex.R := by
+  exact (by
+  have __definition := __fact1
+  unfold anchored_at at __definition
+  simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using __definition.1)
 
-theorem __fact3 : Litex.In (1 : ℂ) Litex.R := by
-  exact Litex.Rules.inBaseOfInSetBuilder (__fact2)
+theorem __fact3 : Litex.In (1 : ℂ) (Litex.setBuilder Litex.R (fun (x : Litex.R.Carrier) => anchored_at (1 : ℝ) (x : ℝ))) := by
+  exact ⟨(⟨1, __fact1⟩ : ((Litex.setBuilder Litex.R (fun (x : Litex.R.Carrier) => anchored_at (1 : ℝ) (x : ℝ)))).Carrier), Litex.Same.transNoObservation (Litex.Same.symmNoObservation (Litex.Same.withoutObservation (Litex.Same.realComplex ((1 : ℝ))))) (Litex.Same.symmNoObservation (Litex.Same.subtypeNoObservation (⟨1, __fact1⟩ : ((Litex.setBuilder Litex.R (fun (x : Litex.R.Carrier) => anchored_at (1 : ℝ) (x : ℝ)))).Carrier)))⟩
 
-theorem __fact4 : anchored_at (1 : ℝ) (1 : ℝ) := by
-  exact (show anchored_at (1 : ℝ) (1 : ℝ) from (by
-  rcases Litex.Rules.inSetBuilder_iff.mp (__fact2) with ⟨__rep, __predicate, __same⟩
-  have __selected := __predicate
-  have __transported : anchored_at (1 : ℝ) ((1 : ℝ) : ℝ) := (by
-  have __source := __selected
-  unfold anchored_at at __source ⊢
-  exact ⟨__source.1, Litex.In.own Litex.R ((1 : ℝ) : ℝ), Litex.Same.trans (Litex.Same.symm (Litex.Same.trans (Litex.Same.ofEq (by rfl)) (Litex.Same.trans (Litex.Same.symm __same) (Litex.Same.symm (Litex.Same.realComplex ((1 : ℝ))))))) (__source.2.2)⟩)
-  simpa [Litex.In.rep, Litex.Rules.complexRealInR, Litex.Rules.complexAddInR, Litex.Rules.complexSubInR, Litex.Rules.complexMulInR, Litex.Rules.complexDivInR, Litex.Rules.inROfInRPos] using __transported))
+theorem __fact4 : Litex.In (1 : ℂ) Litex.R := by
+  exact Litex.Rules.inBaseOfInSetBuilder (__fact3)
+
+theorem __fact5 : anchored_at (1 : ℝ) (1 : ℝ) := by
+  exact __fact1
 
 end __Compiler_71_CapturedPredicateSetBuilder

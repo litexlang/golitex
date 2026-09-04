@@ -6,35 +6,33 @@ set_option linter.style.nameCheck false
 namespace __Compiler_68_LocalTransparentSetMembership
 
 theorem local_transparent_set_membership :
-    ∀ {__carrier0_1 : Type} (marker : __carrier0_1) (__h3 : Litex.In marker Litex.R) (__domain1 : Litex.Same marker marker),
+    ∀ (marker : (Litex.R).Carrier) (__h3 : Litex.In marker Litex.R) (__domain_f4 : Litex.Same marker marker),
       Litex.Same marker marker := by
-  intro __carrier0_1 marker __h3 __domain1
+  intro marker __h3 __domain_f4
   let E : Litex.Set := (Litex.setBuilder Litex.R (fun (x : Litex.R.Carrier) => Litex.Same x (0 : ℂ)))
-  have __step1_type : Litex.In E (Litex.powerSet Litex.R) := by
-    unfold E
+  have __step0_0_type : Litex.In E (Litex.powerSet Litex.R) := by
     exact Litex.Rules.setBuilderInPowerSetViaParamSubset ((fun _x hx => hx))
-  have __step1_equality : Litex.Same E (Litex.setBuilder Litex.R (fun (x : Litex.R.Carrier) => Litex.Same x (0 : ℂ))) := by
+  have __step0_0_equality : @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) E (Litex.setBuilder Litex.R (fun (x : Litex.R.Carrier) => Litex.Same x (0 : ℂ))) := by
     unfold E
     exact Litex.Same.refl (Litex.setBuilder Litex.R (fun (x : Litex.R.Carrier) => Litex.Same x (0 : ℂ)))
-  have __step1_subset : Litex.Subset E Litex.R := by
+  have __step0_0_subset : Litex.Subset E Litex.R := by
     unfold E
     exact Litex.Rules.setBuilderSubsetViaParamSubset ((fun _x hx => hx))
-  have __step1_elements : ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 E), Litex.In __p1 Litex.R := by
-    exact __step1_subset
-  have __step2 : Litex.In (0 : ℂ) E := by
+  have __step0_0_elements : ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 E), Litex.In __p1 Litex.R := by
+    exact __step0_0_subset
+  have __step0_1 : Litex.In (0 : ℂ) E := by
     exact (by
-    unfold E
-    exact (Litex.Rules.inSetBuilder (Litex.In.same_rep (0 : ℂ) (Litex.Rules.complexRealInR (0 : ℝ))) (Litex.Same.trans (Litex.Same.symm (Litex.In.same_rep (0 : ℂ) (Litex.Rules.complexRealInR (0 : ℝ)))) (Litex.Same.refl (0 : ℂ)))))
-  have __infer0_0 : Litex.In (0 : ℂ) (Litex.setBuilder Litex.R (fun (x : Litex.R.Carrier) => Litex.Same x (0 : ℂ))) := by
-    simpa [E] using (__step2)
-  have __infer0_1 : Litex.In (0 : ℂ) Litex.R := Litex.Rules.inBaseOfInSetBuilder (__infer0_0)
-  have __infer0_2 : Litex.Same (0 : ℂ) (0 : ℂ) := (by
-    rcases Litex.Rules.inSetBuilder_iff.mp (__infer0_0) with ⟨__rep, __predicate, __same⟩
+    simpa [E] using (⟨(⟨0, Litex.Same.trans (Litex.Same.realComplex ((0 : ℝ))) (Litex.Same.refl (0 : ℂ))⟩ : ((Litex.setBuilder Litex.R (fun (x : Litex.R.Carrier) => Litex.Same x (0 : ℂ)))).Carrier), Litex.Same.transNoObservation (Litex.Same.symmNoObservation (Litex.Same.withoutObservation (Litex.Same.realComplex ((0 : ℝ))))) (Litex.Same.symmNoObservation (Litex.Same.subtypeNoObservation (⟨0, Litex.Same.trans (Litex.Same.realComplex ((0 : ℝ))) (Litex.Same.refl (0 : ℂ))⟩ : ((Litex.setBuilder Litex.R (fun (x : Litex.R.Carrier) => Litex.Same x (0 : ℂ)))).Carrier)))⟩))
+  have __infer0_2 : Litex.In (0 : ℂ) (Litex.setBuilder Litex.R (fun (x : Litex.R.Carrier) => Litex.Same x (0 : ℂ))) := by
+    simpa [E] using (__step0_1)
+  have __infer0_3 : Litex.In (0 : ℂ) Litex.R := Litex.Rules.inBaseOfInSetBuilder (__infer0_2)
+  have __infer0_4 : Litex.Same (0 : ℂ) (0 : ℂ) := (by
+    rcases Litex.Rules.inSetBuilder_iff.mp (__infer0_2) with ⟨__rep, __predicate, __same⟩
     have __selected := __predicate
-    exact Litex.Same.trans (Litex.Same.symm (Litex.Same.symm __same)) (__selected))
-  have __step3 : Litex.Same marker marker := by
-    exact __domain1
-  have __c0_0 : Litex.Same marker marker := __step3
+    exact Litex.Same.refl ((0 : ℂ)))
+  have __step0_5 : Litex.Same marker marker := by
+    exact Litex.Same.refl (marker)
+  have __c0_0 : Litex.Same marker marker := Litex.Same.refl (marker)
   exact __c0_0
 
 end __Compiler_68_LocalTransparentSetMembership

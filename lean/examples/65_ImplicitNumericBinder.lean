@@ -15,7 +15,7 @@ theorem __fact0 : nested_natural_reflexivity (0 : ℝ) := by
   have __fact0 :
       ∀ {__carrier1 : Type} (__p1 : __carrier1) (__type1 : Litex.In __p1 Litex.N), Litex.Same __p1 __p1 := by
     intro __carrier1 n __h11
-    have __infer0_0 : Litex.Nonnegative n := (by simpa using (Litex.Rules.nonnegativeOfInN (__h11)))
+    have __infer0_0 : Litex.Nonnegative n := (by simpa [Litex.In.rep] using (Litex.Rules.nonnegativeOfInN (__h11)))
     have __infer0_1 : Litex.Nonpositive ((-1 : ℂ) * (((Litex.In.rep n __h11 : ℕ)) : ℂ)) := Litex.Rules.complexNegativeOneMulNonpositive ((Litex.Nonnegative.congr (Litex.Same.transNoObservation (Litex.In.same_rep n (__h11)) (Litex.Same.natComplexNoObservation (Litex.In.rep n __h11)))).mp (__infer0_0))
     have __prior0_0 : Litex.Same n n := Litex.Same.refl n
     exact __prior0_0
@@ -49,7 +49,7 @@ theorem __fact4 :
 theorem __fact5 :
     ∀ (__p1 : (Litex.RPos).Carrier) (__type1 : Litex.In (α := (Litex.RPos).Carrier) __p1 Litex.RPos), Litex.Same __p1 __p1 := by
   intro epsilon __h31
-  have __infer5_0 : Litex.Lt (0 : ℂ) ((((Litex.In.rep epsilon __h31).val : ℝ)) : ℂ) := (by simpa using (Litex.Rules.positiveRealRepPositive (__h31)))
+  have __infer5_0 : Litex.Lt (0 : ℂ) ((((epsilon).val : ℝ)) : ℂ) := (by simpa [Litex.In.rep] using (Litex.Rules.positiveRealRepPositive (__h31)))
   have __prior5_0 : Litex.Same epsilon epsilon := Litex.Same.refl epsilon
   exact __prior5_0
 

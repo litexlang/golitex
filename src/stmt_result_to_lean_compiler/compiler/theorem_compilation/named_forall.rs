@@ -251,6 +251,29 @@ impl StmtResultToLeanCompiler {
         self.environment_stack.push_inherited_environment();
         self.environment_stack.well_definedness = Some(theorem_well_definedness.clone());
         let compilation: Result<Option<CompiledNamedForallStatementProofBody>, String> = (|| {
+            // Rehydrate subset transports from the visible Result-owned fact
+            // bindings before rendering this forall's type. A preceding
+            // local proof step may have published `E ⊆ R` as a fact theorem;
+            // its compiler transport is lexical process state and must be
+            // available while the later `forall x E` body selects `R.rep`.
+            let visible_subset_bindings = self
+                .environment_stack
+                .fact_names
+                .iter()
+                .filter_map(|(fact_id, proof_name)| {
+                    let fact = self.environment_stack.fact_propositions.get(fact_id)?;
+                    subset_parts(fact)
+                        .ok()
+                        .map(|_| (fact.clone(), proof_name.clone()))
+                })
+                .collect::<Vec<_>>();
+            for (fact, proof_name) in visible_subset_bindings {
+                install_subset_transport_from_fact(
+                    &fact,
+                    &proof_name,
+                    &mut self.environment_stack,
+                )?;
+            }
             let mut binder_declarations = Vec::new();
             let mut binder_intro_names = Vec::new();
             for (parameter_index, (((binding, parameter_type), parameter), fact_id)) in parameters

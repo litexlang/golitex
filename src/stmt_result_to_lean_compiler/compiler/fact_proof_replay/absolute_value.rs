@@ -479,12 +479,16 @@ impl StmtResultToLeanCompiler {
                             "absolute-value positivity exact carrier lost its membership proof"
                                 .to_string()
                         })?;
-                        (
-                            "absPositiveOfNotSameNoObservation",
+                        let source_is_native_real =
+                            native_real == source || native_real == format!("({source} : ℝ)");
+                        let source_to_selected = if source_is_native_real {
+                            format!("Litex.Same.realComplexNoObservation ({native_real})")
+                        } else {
                             format!(
-                                "Litex.Same.transNoObservation (Litex.Same.withoutObservation (Litex.In.same_rep {source} ({membership}))) (Litex.Same.realComplexNoObservation ({native_real}))"
-                            ),
-                        )
+                                "Litex.Same.transNoObservation (Litex.Same.symmNoObservation (Litex.Same.withoutObservation (Litex.In.same_rep {source} ({membership})))) (Litex.Same.realComplexNoObservation ({native_real}))"
+                            )
+                        };
+                        ("absPositiveOfNotSameNoObservation", source_to_selected)
                     } else {
                         (
                             "absPositiveOfNotSame",

@@ -430,11 +430,42 @@ pub(in super::super) fn render_set_builder_predicate_projection_from_fact_and_pr
             "set-builder predicate projection changed its verified binder substitution (clause `{clause}`, target `{target}`, element `{element}`)"
         ));
     }
+    // A prior Result in the same proof process may already own the exact
+    // instantiated predicate.  Reuse that checked proof before attempting to
+    // eliminate the heterogeneous set-builder witness: this is ordinary
+    // lexical FactId reuse, not a new global WD cache, and it preserves any
+    // observed predicate contract (which a no-observation set-builder edge
+    // alone could not manufacture).
+    if let Some((_, proof_name)) = context
+        .fact_propositions
+        .iter()
+        .filter(|(_, fact)| fact.to_string() == target.to_string())
+        .find_map(|(fact_id, _)| context.fact_names.get(fact_id).map(|name| (*fact_id, name)))
+    {
+        return Ok(proof_name.clone());
+    }
     let predicate_selector = conjunction_selector(clause_index, builder.facts.len())?;
     if let Ok(LeanTargetObjectRepresentation::Symbol { symbol_id, .. }) =
         LeanTargetObjectRepresentation::lower(element)
     {
-        if let Some(exact_carrier) = context.exact_carrier_values.get(&symbol_id) {
+        // A local exact-carrier binding normally comes from the enclosing
+        // object Result.  A direct set-builder membership can also supply the
+        // same carrier itself; retain that fallback only for a named proof
+        // expression.  Inline `by simpa [...]` proofs may hide the carrier
+        // metavariable from Lean's dependent field elaborator, so they remain
+        // on the generic projection path.
+        let exact_carrier = context
+            .exact_carrier_values
+            .get(&symbol_id)
+            .cloned()
+            .or_else(|| {
+                (matches!(
+                    builder.set.as_ref(),
+                    LeanTargetObjectRepresentation::StandardSet(LeanTargetStandardSet::Real)
+                ) && !source_proof.contains("by"))
+                .then(|| format!("Litex.In.rep {rendered_element} ({source_proof})"))
+            });
+        if let Some(exact_carrier) = exact_carrier.as_deref() {
             let base_value = format!("({exact_carrier}).val");
             let mut exact_context = context.clone();
             exact_context
@@ -516,15 +547,24 @@ pub(in super::super) fn render_set_builder_predicate_projection_from_fact_and_pr
         element_context
             .semantic_zero_ended_order_symbols
             .insert(builder.symbol_id);
-        let transported = render_no_observation_equality_across_representative(
-            equality,
-            &representative_context,
-            &element_context,
-            "__rep",
-            &rendered_element,
-            "Litex.Same.symmNoObservation __same",
-            "Litex.Same.withoutObservation (__selected)",
-        )?;
+        let Fact::AtomicFact(AtomicFact::EqualFact(target_equality)) = target else {
+            return Err("set-builder equality clause projected to another fact family".into());
+        };
+        let target_left = render_obj(&target_equality.left, context)?;
+        let target_right = render_obj(&target_equality.right, context)?;
+        let transported = if target_left == target_right {
+            format!("Litex.Same.refl ({target_left})")
+        } else {
+            render_no_observation_equality_across_representative(
+                equality,
+                &representative_context,
+                &element_context,
+                "__rep",
+                &rendered_element,
+                "Litex.Same.symmNoObservation __same",
+                "Litex.Same.withoutObservation (__selected)",
+            )?
+        };
         return Ok(format!(
             "(by\n  rcases Litex.Rules.inSetBuilder_iff.mp ({source_proof}) with ⟨__rep, __predicate, __same⟩\n  have __selected := __predicate{predicate_selector}\n  exact {transported})"
         ));

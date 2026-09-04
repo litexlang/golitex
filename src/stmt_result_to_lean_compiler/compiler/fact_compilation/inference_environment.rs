@@ -428,8 +428,27 @@ impl StmtResultToLeanCompiler {
                         &premise.fact,
                         &self.environment_stack,
                     )?;
-                    let conclusion_proposition =
-                        render_fact(&conclusion.fact, &self.environment_stack)?;
+                    let conclusion_proposition = if matches!(
+                        application.rule,
+                        InferRule::SetBuilderPredicateProjection { .. }
+                    ) {
+                        if let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = &conclusion.fact {
+                            let left = render_obj(&equality.left, &self.environment_stack)?;
+                            let right = render_obj(&equality.right, &self.environment_stack)?;
+                            if left == right {
+                                render_fact(&conclusion.fact, &self.environment_stack)?
+                            } else {
+                                render_no_observation_equality_alternatives_fact(
+                                    &conclusion.fact,
+                                    &self.environment_stack,
+                                )?
+                            }
+                        } else {
+                            render_fact(&conclusion.fact, &self.environment_stack)?
+                        }
+                    } else {
+                        render_fact(&conclusion.fact, &self.environment_stack)?
+                    };
                     let conclusion_name = self.next_local_inference_fact_proof_name();
                     let projection = conjunction_projection(
                         &format!("({premise_name})"),
@@ -1033,7 +1052,7 @@ impl StmtResultToLeanCompiler {
                         render_fact(&conclusion.fact, &self.environment_stack)?;
                     let conclusion_name = self.next_local_inference_fact_proof_name();
                     let proof = format!(
-                        "(by simpa using (Litex.Rules.{lean_theorem_name} ({premise_name})))"
+                        "(by simpa [Litex.In.rep] using (Litex.Rules.{lean_theorem_name} ({premise_name})))"
                     );
                     self.retain_compiled_inference_fact_proof_step_in_current_environment(
                         &mut compiled_inference_fact_proof_steps,

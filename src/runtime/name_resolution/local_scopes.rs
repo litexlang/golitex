@@ -13,9 +13,9 @@ impl Runtime {
     }
 
     pub fn top_level_env(&mut self) -> &mut Environment {
-        if !self.local_scopes.is_empty() {
+        if !self.current_environment_stack.is_empty() {
             return self
-                .local_scopes
+                .current_environment_stack
                 .last_mut()
                 .map(|environment| environment.as_mut())
                 .expect("local environment should exist");
@@ -32,7 +32,7 @@ impl Runtime {
 
 impl Runtime {
     fn push_env(&mut self) {
-        self.local_scopes
+        self.current_environment_stack
             .push(Box::new(Environment::new_empty_env()));
     }
 
@@ -45,7 +45,7 @@ impl Runtime {
         self.push_env();
         let result = f(self);
         let _child = self
-            .local_scopes
+            .current_environment_stack
             .pop()
             .expect("local environment should exist after push_env");
         result
@@ -60,7 +60,7 @@ impl Runtime {
         self.push_env();
         let result = f(self);
         let child = self
-            .local_scopes
+            .current_environment_stack
             .pop()
             .expect("local environment should exist after push_env");
         result.map(|value| (value, *child))
@@ -76,7 +76,7 @@ impl Runtime {
         self.push_env();
         let result = f(self);
         let child = self
-            .local_scopes
+            .current_environment_stack
             .pop()
             .expect("local environment should exist after push_env");
 

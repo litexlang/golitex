@@ -2,6 +2,40 @@
 
 use super::super::*;
 
+fn render_same_fact(
+    left: &Obj,
+    right: &Obj,
+    context: &StmtResultToLeanCompilerEnvironmentStack,
+) -> Result<String, String> {
+    let rendered_left = render_obj(left, context)?;
+    let rendered_right = render_obj(right, context)?;
+    if let Some(opaque_type) = opaque_object_type_annotation(left, context)
+        .or_else(|| opaque_object_type_annotation(right, context))
+    {
+        return Ok(format!(
+            "@Litex.Same ({opaque_type}) ({opaque_type}) (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) {rendered_left} {rendered_right}"
+        ));
+    }
+    if object_has_only_default_observer(left, context)
+        || object_has_only_default_observer(right, context)
+        || rendered_left.contains("fnTelescope")
+        || rendered_right.contains("fnTelescope")
+        || rendered_left.contains("setBuilder")
+        || rendered_right.contains("setBuilder")
+    {
+        // Opaque exact carriers (notably a set-builder or a telescope result)
+        // deliberately carry no native observation.  Equality and
+        // non-equality must share this same observer choice: a contradiction
+        // proof negates the rendered equality proposition rather than
+        // changing its observer index.
+        Ok(format!(
+            "@Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) {rendered_left} {rendered_right}"
+        ))
+    } else {
+        Ok(format!("Litex.Same {rendered_left} {rendered_right}"))
+    }
+}
+
 pub(in super::super) fn render_fact(
     fact: &Fact,
     context: &StmtResultToLeanCompilerEnvironmentStack,
@@ -158,45 +192,15 @@ pub(in super::super) fn render_fact(
                 render_obj(&fact.right, context)?,
                 render_obj(&fact.left, context)?
             )),
-            AtomicFact::EqualFact(fact) => {
-                let left = render_obj(&fact.left, context)?;
-                let right = render_obj(&fact.right, context)?;
-                if let Some(opaque_type) = opaque_object_type_annotation(&fact.left, context)
-                    .or_else(|| opaque_object_type_annotation(&fact.right, context))
-                {
-                    return Ok(format!(
-                        "@Litex.Same ({opaque_type}) ({opaque_type}) (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) {left} {right}"
-                    ));
-                }
-                if object_has_only_default_observer(&fact.left, context)
-                    || object_has_only_default_observer(&fact.right, context)
-                    || left.contains("fnTelescope")
-                    || right.contains("fnTelescope")
-                    || left.contains("setBuilder")
-                    || right.contains("setBuilder")
-                {
-                    // Opaque exact carriers (notably a set-builder or a
-                    // telescope result) deliberately carry no native
-                    // observation.  Keep both equality endpoints in that
-                    // no-observation mode; asking Lean to compare such a
-                    // value directly with an observed `ℂ` would be
-                    // unprovable even when the source-level equality is
-                    // valid.
-                    Ok(format!(
-                        "@Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) {left} {right}"
-                    ))
-                } else {
-                    Ok(format!("Litex.Same {left} {right}"))
-                }
-            }
+            AtomicFact::EqualFact(fact) => render_same_fact(&fact.left, &fact.right, context),
             AtomicFact::NotEqualFact(fact) => {
                 let left = render_obj(&fact.left, context)?;
                 let right = render_obj(&fact.right, context)?;
-                // Non-equality is a semantic fact, not a numeric
-                // observation. Keep its `Same` index observation-free for
-                // every carrier so generic nonzero/refined-set rules can
-                // consume the same proposition for native and heterogeneous
-                // objects alike.
+                // Non-equality is consumed by the generic nonzero/refined-set
+                // rules through their representation-invariant, unobserved
+                // `Same` index.  A contradiction against an observed equality
+                // renders its local reverse type from that equality instead
+                // of changing this global NotEqual ABI.
                 Ok(format!(
                     "¬ @Litex.Same _ _ (Litex.ComplexObserver.none _) (Litex.ComplexObserver.none _) {left} {right}"
                 ))
@@ -412,6 +416,11 @@ fn object_has_only_default_observer(
 ) -> bool {
     if let Obj::Atom(atom) = object {
         if let Some(symbol_id) = atom.symbol_ref().map(SymbolRef::id) {
+            if context.opaque_carrier_symbols.contains(&symbol_id)
+                && !context.observed_carrier_symbols.contains(&symbol_id)
+            {
+                return true;
+            }
             if context.function_bindings.values().any(|binding| {
                 binding.symbol_id == symbol_id
                     && (function_uses_telescope(&binding.function)

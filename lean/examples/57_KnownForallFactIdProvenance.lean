@@ -43,7 +43,7 @@ theorem paired_source :
 
 theorem __fact1 : (first_left (2 : ℝ)) ∧ (first_right (2 : ℝ)) := by
   exact (by
-  simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (paired_source (2 : ℝ) ((Litex.In.congr (Litex.Same.symm (Litex.Same.realComplex ((2 : ℝ)))) Litex.R).mp (Litex.Rules.complexRealInR (2 : ℝ)))).1)
+  simpa [Litex.In.rep, Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (paired_source (2 : ℝ) ((Litex.In.congr (Litex.Same.symm (Litex.Same.realComplex ((2 : ℝ)))) Litex.R).mp (Litex.Rules.complexRealInR (2 : ℝ)))).1)
 
 theorem __fact2 : Litex.In (2 : ℝ) Litex.R := by
   exact (by
@@ -59,6 +59,6 @@ theorem __fact3 : Litex.Same (2 : ℝ) (2 : ℝ) := by
 
 theorem __fact4 : (second_left (2 : ℝ)) ∧ (second_right (2 : ℝ)) := by
   exact (by
-  simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (paired_source (2 : ℝ) (__fact2)).2)
+  simpa [Litex.In.rep, Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using (paired_source (2 : ℝ) (__fact2)).2)
 
 end __Compiler_57_KnownForallFactIdProvenance
