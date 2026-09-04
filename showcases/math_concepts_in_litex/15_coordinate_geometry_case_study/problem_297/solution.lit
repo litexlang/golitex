@@ -1,0 +1,131 @@
+# Problem 297：中点模型——证明 MN ⟂ CE
+#
+# 原题：在 △ABC 中，∠ACB=90°；D 为线段 BC 上任一点；DE⊥AB，垂足为 E；
+#       M、N 分别为 AD、CE 的中点。求证：MN⊥CE。
+#
+# 自然语言条件 ↔ forall 前提：
+# - ∠ACB=90°              ↔ $geo::is_right_angle(a, c, b)
+# - D 在线段 BC 上         ↔ $geo::is_on_segment(d, c, b)
+# - DE⊥AB 且 E 为垂足      ↔ $geo::is_foot(foot, d, a, b)
+# - M 为 AD 中点           ↔ $geo::is_midpoint(m, a, d)
+# - N 为 CE 中点           ↔ $geo::is_midpoint(n, c, foot)
+# 自然语言结论 ↔ => 结论：
+# - MN⊥CE                  ↔ $geo::is_perpendicular(m, n, c, foot)
+#
+# 记号说明：形式化变量 foot 对应原图中的点 E，避免与其他符号混淆。
+# 语义审计：条件和结论均与原题逐项对应；未将“在线段 BC 上”放宽为“在直线 BC 上”。
+
+thm problem_297_midpoint_perpendicular:
+    ? forall a, b, c, d, foot, m, n cart(R, R):
+        # 原题条件1：∠ACB=90°。
+        $geo::is_right_angle(a, c, b),
+        # 原题条件2：D 为线段 BC 上任一点（含端点）。
+        $geo::is_on_segment(d, c, b),
+        # 原题条件3：DE⊥AB，且 E（此处为 foot）是垂足。
+        $geo::is_foot(foot, d, a, b),
+        # 原题条件4：M 是 AD 的中点。
+        $geo::is_midpoint(m, a, d),
+        # 原题条件5：N 是 CE 的中点。
+        $geo::is_midpoint(n, c, foot)
+        =>:
+            # 原题结论：MN⊥CE。
+            $geo::is_perpendicular(m, n, c, foot)
+
+    by thm geo::right_angle_vertex_not_on_opposite_line(a, b, c, foot)
+    c != foot
+    by thm geo::right_triangle_foot_midpoints_distinct(a, b, c, d, foot, m, n)
+    m != n
+
+    # 由“D 在线段 BC 上”的定义直接取得区间内仿射参数 s。
+    # 后续垂直性计算只需仿射等式；0 <= s <= 1 则保留了“在线段上”的精确语义。
+    by def $geo::is_on_segment(d, c, b)
+    exist s R st {0 <= s, s <= 1, d = (c[1] + s * (b[1] - c[1]), c[2] + s * (b[2] - c[2]))}
+    obtain s from exist s0 R st {0 <= s0, s0 <= 1, d = (c[1] + s0 * (b[1] - c[1]), c[2] + s0 * (b[2] - c[2]))}
+    d[1] = c[1] + s * (b[1] - c[1]) = (1 - s) * c[1] + s * b[1]
+    d[2] = c[2] + s * (b[2] - c[2]) = (1 - s) * c[2] + s * b[2]
+
+    $geo::is_on_line(foot, a, b)
+    by thm geo::on_line_implies_affine_parameter(a, b, foot)
+    exist t R st {foot[1] = (1 - t) * a[1] + t * b[1], foot[2] = (1 - t) * a[2] + t * b[2]}
+    obtain t from exist t0 R st {foot[1] = (1 - t0) * a[1] + t0 * b[1], foot[2] = (1 - t0) * a[2] + t0 * b[2]}
+
+    have u cart(R, R) = (a[1] - c[1], a[2] - c[2])
+    have v cart(R, R) = (b[1] - c[1], b[2] - c[2])
+
+    geo::vec(c, a) = u
+    geo::vec(c, b) = v
+    geo::dot(geo::vec(c, a), geo::vec(c, b)) = 0
+    by thm geo::dot_coordinate_formula(geo::vec(c, a), geo::vec(c, b))
+    geo::dot(geo::vec(c, a), geo::vec(c, b)) = (a[1] - c[1]) * (b[1] - c[1]) + (a[2] - c[2]) * (b[2] - c[2])
+    (a[1] - c[1]) * (b[1] - c[1]) + (a[2] - c[2]) * (b[2] - c[2]) = 0
+    by thm geo::dot_coordinate_formula(u, v)
+    geo::dot(u, v) = u[1] * v[1] + u[2] * v[2]
+    u[1] * v[1] + u[2] * v[2] = (a[1] - c[1]) * (b[1] - c[1]) + (a[2] - c[2]) * (b[2] - c[2]) = 0
+    geo::dot(u, v) = 0
+
+    geo::dot(geo::vec(d, foot), geo::vec(a, b)) = 0
+    geo::vec(d, foot) = (foot[1] - d[1], foot[2] - d[2])
+    geo::vec(a, b) = (b[1] - a[1], b[2] - a[2])
+    by thm geo::dot_coordinate_formula(geo::vec(d, foot), geo::vec(a, b))
+    geo::dot(geo::vec(d, foot), geo::vec(a, b)) = (foot[1] - d[1]) * (b[1] - a[1]) + (foot[2] - d[2]) * (b[2] - a[2])
+    (foot[1] - d[1]) * (b[1] - a[1]) + (foot[2] - d[2]) * (b[2] - a[2]) = 0
+
+    foot[1] - d[1] = ((1 - t) * a[1] + t * b[1]) - ((1 - s) * c[1] + s * b[1])
+    ((1 - t) * a[1] + t * b[1]) - ((1 - s) * c[1] + s * b[1]) = (1 - t) * (a[1] - c[1]) + (t - s) * (b[1] - c[1])
+    (1 - t) * (a[1] - c[1]) + (t - s) * (b[1] - c[1]) = (1 - t) * u[1] + (t - s) * v[1]
+    foot[1] - d[1] = (1 - t) * u[1] + (t - s) * v[1]
+    foot[2] - d[2] = ((1 - t) * a[2] + t * b[2]) - ((1 - s) * c[2] + s * b[2])
+    ((1 - t) * a[2] + t * b[2]) - ((1 - s) * c[2] + s * b[2]) = (1 - t) * (a[2] - c[2]) + (t - s) * (b[2] - c[2])
+    (1 - t) * (a[2] - c[2]) + (t - s) * (b[2] - c[2]) = (1 - t) * u[2] + (t - s) * v[2]
+    foot[2] - d[2] = (1 - t) * u[2] + (t - s) * v[2]
+    b[1] - a[1] = (b[1] - c[1]) - (a[1] - c[1])
+    (b[1] - c[1]) - (a[1] - c[1]) = v[1] - u[1]
+    b[1] - a[1] = v[1] - u[1]
+    b[2] - a[2] = (b[2] - c[2]) - (a[2] - c[2])
+    (b[2] - c[2]) - (a[2] - c[2]) = v[2] - u[2]
+    b[2] - a[2] = v[2] - u[2]
+    ((1 - t) * u[1] + (t - s) * v[1]) * (v[1] - u[1]) + ((1 - t) * u[2] + (t - s) * v[2]) * (v[2] - u[2]) = (foot[1] - d[1]) * (b[1] - a[1]) + (foot[2] - d[2]) * (b[2] - a[2]) = 0
+    by thm geo::dot_coordinate_formula(((1 - t) * u[1] + (t - s) * v[1], (1 - t) * u[2] + (t - s) * v[2]), (v[1] - u[1], v[2] - u[2]))
+    geo::dot(((1 - t) * u[1] + (t - s) * v[1], (1 - t) * u[2] + (t - s) * v[2]), (v[1] - u[1], v[2] - u[2])) = ((1 - t) * u[1] + (t - s) * v[1]) * (v[1] - u[1]) + ((1 - t) * u[2] + (t - s) * v[2]) * (v[2] - u[2]) = 0
+
+    by thm geo::orthogonal_midpoint_vector_core(u, v, s, t)
+    geo::dot(((-t / 2) * u[1] + ((t - s) / 2) * v[1], (-t / 2) * u[2] + ((t - s) / 2) * v[2]), ((1 - t) * u[1] + t * v[1], (1 - t) * u[2] + t * v[2])) = 0
+
+    m = ((a[1] + d[1]) / 2, (a[2] + d[2]) / 2)
+    n = ((c[1] + foot[1]) / 2, (c[2] + foot[2]) / 2)
+    m[1] = (a[1] + d[1]) / 2
+    m[2] = (a[2] + d[2]) / 2
+    n[1] = (c[1] + foot[1]) / 2
+    n[2] = (c[2] + foot[2]) / 2
+
+    n[1] - m[1] = (c[1] + foot[1]) / 2 - (a[1] + d[1]) / 2
+    (c[1] + foot[1]) / 2 - (a[1] + d[1]) / 2 = (c[1] + ((1 - t) * a[1] + t * b[1])) / 2 - (a[1] + ((1 - s) * c[1] + s * b[1])) / 2
+    (c[1] + ((1 - t) * a[1] + t * b[1])) / 2 - (a[1] + ((1 - s) * c[1] + s * b[1])) / 2 = (-t / 2) * (a[1] - c[1]) + ((t - s) / 2) * (b[1] - c[1])
+    (-t / 2) * (a[1] - c[1]) + ((t - s) / 2) * (b[1] - c[1]) = (-t / 2) * u[1] + ((t - s) / 2) * v[1]
+    n[1] - m[1] = (-t / 2) * u[1] + ((t - s) / 2) * v[1]
+
+    n[2] - m[2] = (c[2] + foot[2]) / 2 - (a[2] + d[2]) / 2
+    (c[2] + foot[2]) / 2 - (a[2] + d[2]) / 2 = (c[2] + ((1 - t) * a[2] + t * b[2])) / 2 - (a[2] + ((1 - s) * c[2] + s * b[2])) / 2
+    (c[2] + ((1 - t) * a[2] + t * b[2])) / 2 - (a[2] + ((1 - s) * c[2] + s * b[2])) / 2 = (-t / 2) * (a[2] - c[2]) + ((t - s) / 2) * (b[2] - c[2])
+    (-t / 2) * (a[2] - c[2]) + ((t - s) / 2) * (b[2] - c[2]) = (-t / 2) * u[2] + ((t - s) / 2) * v[2]
+    n[2] - m[2] = (-t / 2) * u[2] + ((t - s) / 2) * v[2]
+
+    foot[1] - c[1] = ((1 - t) * a[1] + t * b[1]) - c[1]
+    ((1 - t) * a[1] + t * b[1]) - c[1] = (1 - t) * (a[1] - c[1]) + t * (b[1] - c[1])
+    (1 - t) * (a[1] - c[1]) + t * (b[1] - c[1]) = (1 - t) * u[1] + t * v[1]
+    foot[1] - c[1] = (1 - t) * u[1] + t * v[1]
+
+    foot[2] - c[2] = ((1 - t) * a[2] + t * b[2]) - c[2]
+    ((1 - t) * a[2] + t * b[2]) - c[2] = (1 - t) * (a[2] - c[2]) + t * (b[2] - c[2])
+    (1 - t) * (a[2] - c[2]) + t * (b[2] - c[2]) = (1 - t) * u[2] + t * v[2]
+    foot[2] - c[2] = (1 - t) * u[2] + t * v[2]
+
+    geo::vec(m, n) = (n[1] - m[1], n[2] - m[2])
+    geo::vec(c, foot) = (foot[1] - c[1], foot[2] - c[2])
+    by thm geo::dot_coordinate_formula(geo::vec(m, n), geo::vec(c, foot))
+    geo::dot(geo::vec(m, n), geo::vec(c, foot)) = (n[1] - m[1]) * (foot[1] - c[1]) + (n[2] - m[2]) * (foot[2] - c[2])
+    (n[1] - m[1]) * (foot[1] - c[1]) + (n[2] - m[2]) * (foot[2] - c[2]) = ((-t / 2) * u[1] + ((t - s) / 2) * v[1]) * ((1 - t) * u[1] + t * v[1]) + ((-t / 2) * u[2] + ((t - s) / 2) * v[2]) * ((1 - t) * u[2] + t * v[2])
+    by thm geo::dot_coordinate_formula(((-t / 2) * u[1] + ((t - s) / 2) * v[1], (-t / 2) * u[2] + ((t - s) / 2) * v[2]), ((1 - t) * u[1] + t * v[1], (1 - t) * u[2] + t * v[2]))
+    ((-t / 2) * u[1] + ((t - s) / 2) * v[1]) * ((1 - t) * u[1] + t * v[1]) + ((-t / 2) * u[2] + ((t - s) / 2) * v[2]) * ((1 - t) * u[2] + t * v[2]) = geo::dot(((-t / 2) * u[1] + ((t - s) / 2) * v[1], (-t / 2) * u[2] + ((t - s) / 2) * v[2]), ((1 - t) * u[1] + t * v[1], (1 - t) * u[2] + t * v[2])) = 0
+    geo::dot(geo::vec(m, n), geo::vec(c, foot)) = 0
+    $geo::is_perpendicular(m, n, c, foot)
