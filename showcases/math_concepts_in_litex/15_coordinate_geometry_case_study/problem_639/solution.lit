@@ -1,0 +1,36 @@
+# Problem 639：垂直平分线性质
+#
+# 原题：直线 l 垂直平分线段 AB，垂足为 O，点 P 在直线 l 上。求证：PA=PB。
+#
+# 形式化中的条件消元（等价表达，不是条件偷换）：
+# - 不显式量化直线对象 l；“l 垂直平分 AB 于 O 且 P∈l”由点关系表达为：
+#   ① O 是 AB 的中点；② PO⊥AB。
+# - a != b 明确排除退化线段，保证“AB 的垂直平分线”有通常几何意义。
+#
+# 自然语言条件 ↔ forall 前提：
+# - AB 为非退化线段           ↔ a != b
+# - O 是 AB 的中点            ↔ 两个坐标中点等式
+# - P 在过 O 且垂直 AB 的 l 上 ↔ vec(P,O)·vec(A,B)=0 的展开式
+# 自然语言结论 ↔ => 结论：
+# - PA=PB                     ↔ distance_sq(P,A)=distance_sq(P,B)
+#   二者在欧氏距离非负的语义下等价；平方距离写法避免引入平方根。
+
+thm problem_639_perpendicular_bisector:
+    ? forall a, b, o, p cart(R, R):
+        # 原题隐含的非退化条件：A、B 是不同点。
+        a != b,
+
+        # 原题条件1：O 是 AB 的中点（两个坐标等式共同表达）。
+        2 * o[1] = a[1] + b[1],
+        2 * o[2] = a[2] + b[2],
+
+        # 原题条件2：P 在直线 l 上；结合“l 过 O 且 l⊥AB”，消元为 PO⊥AB。
+        # 即 vec(P,O)·vec(A,B)=0 的坐标展开式。
+        (o[1] - p[1]) * (b[1] - a[1]) + (o[2] - p[2]) * (b[2] - a[2]) = 0
+        =>:
+            # 原题结论 PA=PB 的等价平方距离形式。
+            geo::distance_sq(p, a) = geo::distance_sq(p, b)
+
+    # 上述三个形式化前提逐项匹配 KB 定理 perpendicular_bisector_property。
+    by thm geo::perpendicular_bisector_property(a, b, o, p)
+    geo::distance_sq(p, a) = geo::distance_sq(p, b)
