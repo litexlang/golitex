@@ -125,6 +125,46 @@ impl Runtime {
                 )?);
             }
         }
+        // A refined real membership can be widened to `C` without resolving
+        // the selected object.  This is important for literal tuple
+        // projections whose component is a transparent object definition:
+        // the exact `x $in R` fact is replayable, while resolving `x` to a
+        // numeric literal may not have a transport certificate.
+        if selected_result.is_none() && matches!(target_set_obj, Obj::StandardSet(StandardSet::C)) {
+            let real_membership: AtomicFact = InFact::new(
+                selected.clone(),
+                StandardSet::R.into(),
+                in_fact.line_file.clone(),
+            )
+            .into();
+            let real_proof = match self
+                .verification_result_from_known_fact_cache(&real_membership.clone().into())
+            {
+                Some(proof) => proof,
+                None => self.verify_non_equational_atomic_fact_with_zero_premise_verification(
+                    &real_membership,
+                )?,
+            };
+
+            if let Some(real_result) = self.complete_proven_fact_candidate(
+                real_membership.into(),
+                real_proof,
+                builtin_state.verify_state(),
+            )? {
+                let widened_proof = SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    selected_membership.clone().into(),
+                    "real membership widens to complex membership".to_string(),
+                    BuiltinRuleEvidence::StandardSetMembershipProjection,
+                    vec![real_result],
+                )
+                .into();
+                selected_result = Some(self.complete_atomic_fact_proof_result(
+                    &selected_membership,
+                    widened_proof,
+                    builtin_state.verify_state(),
+                )?);
+            }
+        }
         let Some(selected_result) = selected_result else {
             return Ok(UnknownGenericStmtResult::new().into());
         };

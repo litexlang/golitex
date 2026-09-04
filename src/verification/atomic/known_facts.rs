@@ -750,7 +750,12 @@ impl Runtime {
         fact_transformation: Option<FactTransformationEvidence>,
     ) -> ProveFactResult {
         let Some(fact_transformation) = fact_transformation else {
-            return result;
+            // The recursive lookup proved the resolved proposition, not the
+            // original goal.  Without replayable transformation evidence it
+            // must not leak that proof across the result boundary: the WD and
+            // truth roots would then describe different facts.  Treat this
+            // candidate as unavailable and let the caller try another route.
+            return UnknownGenericStmtResult::new().into();
         };
         let Some(success) = result.factual_success() else {
             return result;

@@ -306,4 +306,10 @@ believe that any mathematics can be formalized, and that formalized mathematics
 will ultimately become the future of mathematics. Litex hopes to become one of
 the building blocks of that future.
 
+Natural language is easy to understand but often ambiguous; existing
+formalization tools such as Lean are rigorous and reliable, but typically have
+a high technical barrier. Litex starts from the premise that mathematical
+expression can be both understandable and rigorous. Between comprehensibility
+and verifiability, we do not have to choose.
+
 Litex is released under the [Apache License 2.0](LICENSE).
