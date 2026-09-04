@@ -168,10 +168,19 @@ pub struct VerifiedFactResult {
 }
 
 impl VerifiedFactResult {
+    #[track_caller]
     pub fn new(checked: WellDefinedFactResult, verification: Rc<SuccessFactProofNode>) -> Self {
+        let checked_fact = checked.fact.to_string();
+        let verification_fact = verification.fact().to_string();
+        if checked_fact != verification_fact {
+            eprintln!(
+                "mismatched verified fact at {}: checked=`{checked_fact}`, proof=`{verification_fact}`",
+                std::panic::Location::caller()
+            );
+        }
         assert_eq!(
-            checked.fact.to_string(),
-            verification.fact().to_string(),
+            checked_fact,
+            verification_fact,
             "fact WD and truth proof must describe the same resolved proposition"
         );
         Self {

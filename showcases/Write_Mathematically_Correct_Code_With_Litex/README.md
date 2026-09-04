@@ -1,5 +1,7 @@
 # Write Mathematically Correct Code With Litex
 
+Created and maintained by Jiachen Shen
+
 > Executable code can be an exported view of verified mathematics, rather
 > than a second implementation that must be kept synchronized with it.
 

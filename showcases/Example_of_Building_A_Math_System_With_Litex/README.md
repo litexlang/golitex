@@ -1,5 +1,7 @@
 # Building a Mathematical System With Litex
 
+Created and maintained by Jiachen shen, Keyao Zhu
+
 This showcase illustrates **checked vocabulary growth**: build a mathematical
 system by adding representations, domain concepts, and reusable facts in an
 order that lets later mathematics depend on earlier checked knowledge. The

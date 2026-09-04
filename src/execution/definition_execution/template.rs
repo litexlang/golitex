@@ -217,6 +217,12 @@ impl Runtime {
         // materialized definition binding before executing its body so every
         // definition-owned fact uses the same resolved symbol atom.
         self.register_existing_symbol_binding(instance_binding.clone(), SymbolRole::Object)?;
+        self.top_level_env()
+            .definitions
+            .symbols
+            .get_by_id_mut(instance_binding.id())
+            .expect("the materialized template binding should be registered")
+            .mark_materialized_template_instance();
         let instance_identifier = self.definition_identifier_obj(&instance_name);
         // Register the public template application as a named definition before the
         // instantiated body stores derived facts. For a selected function,
