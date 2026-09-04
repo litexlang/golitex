@@ -24,8 +24,8 @@ pub use crate::output::language::OutputLanguage;
 pub use crate::result::StmtResult;
 #[allow(deprecated)]
 pub use crate::runtime::{
-    ExecutionOption, OutputDetail, OutputStyle, RunOption, RunOptions, Runtime, SourceActivation,
-    SummaryOption,
+    InvocationOptions, LitexExecution, OutputDetail, OutputStyle, Runtime, SourceActivation,
+    SummaryOption, VerifyStrictnessPolicy,
 };
 
 // Source, file, and repository execution entry points.

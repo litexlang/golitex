@@ -6,12 +6,12 @@ use std::io::{self, BufRead, Write};
 use std::path::Path;
 
 pub struct SessionRequest {
-    pub options: RunOptions,
+    pub options: InvocationOptions,
     pub target: SessionTarget,
 }
 
 impl SessionRequest {
-    pub fn new(options: RunOptions, target: SessionTarget) -> Self {
+    pub fn new(options: InvocationOptions, target: SessionTarget) -> Self {
         Self { options, target }
     }
 }
@@ -71,7 +71,7 @@ fn run_session_loop_with_readers_and_target(
     stdin_reader: &mut dyn BufRead,
     stdout_writer: &mut dyn Write,
     directory: &Path,
-    options: RunOptions,
+    options: InvocationOptions,
     target: SessionTarget,
 ) -> io::Result<()> {
     let mut runtime = Runtime::new(options);
@@ -339,8 +339,8 @@ fn initialize_session_runtime(
         let path_string = path.to_string_lossy().into_owned();
         let execution = file_execution_option(path_string.as_str());
         let (stmt_results, runtime_error) = match execution {
-            ExecutionOption::File => execute_file_in_runtime(path_string.as_str(), runtime),
-            ExecutionOption::IsolatedFile => {
+            LitexExecution::File => execute_file_in_runtime(path_string.as_str(), runtime),
+            LitexExecution::IsolatedFile => {
                 execute_isolated_file_in_runtime(path_string.as_str(), runtime)
             }
             _ => unreachable!("file context resolved to a non-file execution option"),
@@ -348,7 +348,7 @@ fn initialize_session_runtime(
         if let Some(error) = runtime_error {
             return Err((stmt_results, error));
         }
-        if execution == ExecutionOption::IsolatedFile {
+        if execution == LitexExecution::IsolatedFile {
             if let Err(error) =
                 runtime.prepare_current_module_for_virtual_source(VirtualSource::Session)
             {

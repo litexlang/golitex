@@ -13,6 +13,25 @@ bind each body reference to its own SymbolId
 alpha-key both first parameter slots as binder #0
 ```
 
+## What `SymbolId` identifies
+
+`SymbolId` is a binding key for a resolved symbol atom, not a universal ID for
+every parsed or runtime object. The identity belongs to the resolved binding,
+so two binders with the same source spelling still receive different IDs, and
+an unresolved identifier receives no ID until resolution succeeds.
+
+Compound objects do not receive their own `SymbolId`; their identity is formed
+recursively from the object constructor and the identities of their children.
+Numeric literals use normalized value, operators use constructor/builtin
+identity, and facts use `FactId`. This keeps `SymbolId` focused on the one job
+that requires binding identity: distinguishing which declaration a symbol atom
+refers to.
+
+The following implementation cleanups are intentionally deferred: replacing
+alpha-canonical IDs with a separate alpha-slot type, moving builtins out of the
+current ID range, replacing `#symbol_id_N` string keys with a typed key, and
+renaming or encapsulating the ToLean `SymbolId -> Lean name` mapping.
+
 ## Examples and boundaries
 
 | Operation | Example |

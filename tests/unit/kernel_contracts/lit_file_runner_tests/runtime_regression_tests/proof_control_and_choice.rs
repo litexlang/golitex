@@ -1128,7 +1128,8 @@ trust:
     999 = 1000
     1 / 0 = 0
 "#;
-    let mut strict_runtime = Runtime::new(RunOptions::strict_execute(ExecutionOption::Eval));
+    let mut strict_runtime =
+        Runtime::new(InvocationOptions::strict_execute(LitexExecution::Inline));
     strict_runtime.start_isolated_source("strict_trust_is_atomic");
     let (failed_results, failed_error) = execute_source(strict_source, &mut strict_runtime);
     assert!(failed_results.is_empty());

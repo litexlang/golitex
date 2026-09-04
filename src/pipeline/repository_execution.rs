@@ -348,7 +348,7 @@ fn config_import_execution_mode(
     runtime: &mut Runtime,
     config_import: &ConfigImport,
 ) -> ExecutionMode {
-    if runtime.run_options.is_strict() {
+    if runtime.invocation_options.is_strict() {
         return ExecutionMode::RequireVerification;
     }
     let import_target = ImportTarget::Module(config_import.module_id);
@@ -357,7 +357,11 @@ fn config_import_execution_mode(
         .canonical_name_for_target(import_target)
         .unwrap_or("project import")
         .to_string();
-    runtime.record_unverified_import("project_import", name, config_import.line_file.clone());
+    runtime.record_unverified_import(
+        UnverifiedImportKind::ProjectImport,
+        name,
+        config_import.line_file.clone(),
+    );
     ExecutionMode::Trusted
 }
 
@@ -366,7 +370,7 @@ fn project_target_execution_mode(
     module_id: ModuleId,
     target: ImportTarget,
 ) -> ExecutionMode {
-    if runtime.run_options.is_strict() {
+    if runtime.invocation_options.is_strict() {
         return ExecutionMode::RequireVerification;
     }
     let line_file = runtime
@@ -380,7 +384,7 @@ fn project_target_execution_mode(
         .canonical_name_for_target(target)
         .unwrap_or("project export")
         .to_string();
-    runtime.record_unverified_import("project_export", name, line_file);
+    runtime.record_unverified_import(UnverifiedImportKind::ProjectExport, name, line_file);
     ExecutionMode::Trusted
 }
 

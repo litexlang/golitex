@@ -39,7 +39,7 @@ pub struct RunSummary {
 
 #[derive(Clone, Debug)]
 struct UnverifiedImportSummary {
-    kind: String,
+    kind: UnverifiedImportKind,
     name: String,
     line: usize,
     file: String,
@@ -79,7 +79,7 @@ impl RunSummary {
             .unverified_imports()
             .iter()
             .map(|entry| UnverifiedImportSummary {
-                kind: entry.kind.clone(),
+                kind: entry.kind,
                 name: entry.name.clone(),
                 line: entry.line_file.0,
                 file: entry.line_file.1.to_string(),
@@ -481,7 +481,10 @@ impl RunSummary {
 impl UnverifiedImportSummary {
     fn json_value(&self) -> JsonValue {
         JsonValue::Object(vec![
-            ("kind".to_string(), JsonValue::JsonString(self.kind.clone())),
+            (
+                "kind".to_string(),
+                JsonValue::JsonString(self.kind.as_str().to_string()),
+            ),
             ("name".to_string(), JsonValue::JsonString(self.name.clone())),
             ("line".to_string(), JsonValue::Number(self.line)),
             ("file".to_string(), JsonValue::JsonString(self.file.clone())),

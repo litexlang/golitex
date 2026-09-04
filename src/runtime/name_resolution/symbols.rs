@@ -195,24 +195,6 @@ impl Runtime {
         Ok(())
     }
 
-    pub fn register_parsed_struct_definition(&mut self, def: &DefStructStmt) {
-        let name = self
-            .current_parse_namespace()
-            .map(|owner| format!("{}{}{}", owner, MOD_SIGN, def.name))
-            .unwrap_or_else(|| def.name.clone());
-        self.module_manager
-            .parsed_struct_definitions
-            .entry(name)
-            .or_insert_with(|| def.clone());
-    }
-
-    pub fn parsed_struct_definition_by_name(&self, name: &str) -> Option<DefStructStmt> {
-        self.module_manager
-            .parsed_struct_definitions
-            .get(name)
-            .cloned()
-    }
-
     pub fn template_instance_symbol_binding(
         &mut self,
         surface_name: &str,

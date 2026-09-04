@@ -8,7 +8,7 @@ enum ReplOutputMode {
     Latex,
 }
 
-pub fn run_repl(version: &str, options: RunOptions) {
+pub fn run_repl(version: &str, options: InvocationOptions) {
     let stdin_handle = io::stdin();
     let stdout_handle = io::stdout();
     let mut stdin_locked = stdin_handle.lock();
@@ -58,7 +58,7 @@ fn run_latex_repl_loop_with_readers(
 ) -> io::Result<()> {
     run_repl_loop_with_readers_and_mode(
         version_banner,
-        RunOptions::default(),
+        InvocationOptions::default(),
         stdin_reader,
         stdout_writer,
         ReplOutputMode::Latex,
@@ -67,7 +67,7 @@ fn run_latex_repl_loop_with_readers(
 
 fn run_repl_loop_with_readers_and_mode(
     version_banner: &str,
-    options: RunOptions,
+    options: InvocationOptions,
     stdin_reader: &mut dyn BufRead,
     stdout_writer: &mut dyn Write,
     output_mode: ReplOutputMode,

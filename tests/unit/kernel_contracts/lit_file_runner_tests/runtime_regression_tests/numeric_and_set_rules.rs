@@ -1374,8 +1374,9 @@ fn direct_calculation_builtin_rule_output_localizes_to_zh() {
         || {
             let source_code = "(-1 * sqrt (2)) ^ 2 = 2";
 
-            let mut runtime = Runtime::new(RunOptions::new(
-                RunOption::Execute(ExecutionOption::Eval),
+            let mut runtime = Runtime::new(InvocationOptions::new(
+                LitexExecution::Inline,
+                VerifyStrictnessPolicy::Ordinary,
                 OutputDetail::Normal,
                 OutputLanguage::SimplifiedChinese,
                 SummaryOption::None,
@@ -1406,8 +1407,9 @@ forall a, b R:
         0 = 2 * a^2 + b
 "#;
 
-    let mut runtime = Runtime::new(RunOptions::new(
-        RunOption::Execute(ExecutionOption::Eval),
+    let mut runtime = Runtime::new(InvocationOptions::new(
+        LitexExecution::Inline,
+        VerifyStrictnessPolicy::Ordinary,
         OutputDetail::Normal,
         OutputLanguage::SimplifiedChinese,
         SummaryOption::None,

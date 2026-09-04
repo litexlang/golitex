@@ -18,7 +18,9 @@ pub use output_rendering::{render_run_output, render_stream_output};
 pub use crate::output::{
     display_runtime_error_json, display_stmt_exec_result_json, render_runtime_error_json,
 };
-pub use crate::runtime::{ExecutionOption, RunOption, RunOptions, SummaryOption};
+pub use crate::runtime::{
+    InvocationOptions, LitexExecution, SummaryOption, VerifyStrictnessPolicy,
+};
 pub use repl::{run_isolated_repl_with_runtime, run_latex_repl, run_repl};
 pub use repository_execution::execute_repository_target;
 pub use run::{run_code, run_file, run_isolated_file, run_repository, RunOutcome};
