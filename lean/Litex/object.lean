@@ -3,140 +3,68 @@ import Mathlib
 /-!
 # The Litex object universe
 
-This module is the identity layer of the new Litex representation.  A Litex
-object is a persistent term, rather than a dynamically typed box around a
-native Lean value.  Native values, membership, well-definedness, statements,
-and compiler evidence are deliberately defined in later modules.
-
-There are two kinds of operation heads:
-
-* `BuiltinHead.core` contains the operations known by the Litex kernel;
-* `BuiltinHead.extension` gives a namespaced escape hatch for a future module
-  without changing the shape of `Object`.
-
-Consequently, `Union`, `Sum`, matrices, structures, and user-facing numeric
-operations all have the same object identity discipline.  Their mathematical
-laws are not hidden in this syntax type: a later builtin-rule module must
-provide the corresponding proof before a compiler bridge can use Mathlib.
+`Object` is the syntax/identity layer of Litex.  Its constructors mirror the
+outer variants of the Rust `Obj` enum.  A bound occurrence is an `Atom.bound`
+with a stable `SymbolId`; it is not a Lean variable, lambda, or dynamically
+typed box.  Conditions stored inside set/function constructors are syntax
+(`Formula`) and acquire meaning only in `statement.lean`/`builtin_rules.lean`.
 -/
 
 namespace Litex
 
-/-! ## Stable names and builtin heads -/
+/-! ## Stable source names -/
 
-/** A stable identity for a source-level symbol.  Binding provenance is kept
-    out of the object term; bound variables use de Bruijn indices below. */
-structure SymbolId where
-  value : Nat
+inductive ReservedSymbol where
+  | N
+  | Z
+  | Q
+  | R
+  | C
+deriving DecidableEq, Inhabited, Repr
+
+inductive SymbolId where
+  | reserved : ReservedSymbol → SymbolId
+  | user : Nat → SymbolId
+deriving DecidableEq, Inhabited, Repr
+
+structure Symbol where
+  id : SymbolId
+  displayName : String
+deriving DecidableEq, Inhabited, Repr
+
+structure QualifiedSymbol where
+  moduleName : String
+  name : String
+  id : SymbolId
+deriving DecidableEq, Inhabited, Repr
+
+inductive Atom where
+  | identifier : Symbol → Atom
+  | identifierWithMod : QualifiedSymbol → Atom
+  | bound : Symbol → Atom
 deriving DecidableEq, Inhabited, Repr
 
 namespace SymbolId
 
 def ofNat (value : Nat) : SymbolId :=
-  ⟨value⟩
+  .user value
 
-@[simp] theorem ofNat_value (value : Nat) : (ofNat value).value = value :=
+@[simp] theorem ofNat_eq_user (value : Nat) : ofNat value = .user value :=
   rfl
+
+theorem user_ne_reserved (value : Nat) (name : ReservedSymbol) :
+    SymbolId.user value ≠ SymbolId.reserved name := by
+  intro h
+  cases h
 
 end SymbolId
 
-/** The core operation vocabulary.  The names follow the current Litex object
-    model, while the open `extension` branch in `BuiltinHead` keeps the term
-    universe extensible. */
-inductive CoreBuiltin where
-  | imaginaryUnit
-  | eulerNumber
-  | pi
-  | add
-  | sub
-  | mul
-  | div
-  | mod
-  | quot
-  | gcd
-  | lcm
-  | floor
-  | ceil
-  | min
-  | max
-  | exp
-  | ln
-  | sign
-  | factorial
-  | pow
-  | abs
-  | sin
-  | arcsin
-  | cos
-  | tan
-  | cot
-  | realPart
-  | imaginaryPart
-  | complexAbs
-  | sqrt
-  | log
-  | union
-  | intersect
-  | setMinus
-  | bigUnion
-  | bigIntersect
-  | indexUnion
-  | indexIntersect
-  | powerSet
-  | generalCart
-  | listSet
-  | setBuilder
-  | fnSet
-  | anonymousFn
-  | cart
-  | cartDim
-  | proj
-  | tupleDim
-  | tuple
-  | finiteSetSize
-  | finiteSetMax
-  | finiteSetMin
-  | fnRange
-  | replacement
-  | sum
-  | sumOfFiniteSet
-  | product
-  | productOfFiniteSet
-  | reduce
-  | finiteSetReduce
-  | range
-  | closedRange
-  | finiteSeqSet
-  | seqSet
-  | finiteSeqList
-  | objAtIndex
-  | standardSet
-  | matrixSet
-  | matrixList
-  | matrixAdd
-  | matrixSub
-  | matrixMul
-  | matrixScalarMul
-  | matrixPow
-  | structObject
-  | fieldAccess
-  | templateInstance
-  | oneSideInfinityInterval
-  | interval
+/-! ## Literal payloads and non-object syntax payloads -/
+
+structure Number where
+  normalizedValue : String
 deriving DecidableEq, Inhabited, Repr
 
-/** A builtin head is part of an object's identity.  Extensions are tagged by
-    an id in their own namespace; they do not silently acquire core semantics. */
-inductive BuiltinHead where
-  | core : CoreBuiltin → BuiltinHead
-  | extension : Nat → BuiltinHead
-deriving DecidableEq, Inhabited, Repr
-
-/-! ## Literal and object terms -/
-
-/** Literal payloads that are already part of the object syntax.  In particular,
-    `real` and `complex` are syntax-level literals, not an assertion that every
-    object can be observed as a native number. */
 inductive Literal where
   | boolean : Bool → Literal
   | natural : Nat → Literal
@@ -145,219 +73,245 @@ inductive Literal where
   | real : ℝ → Literal
   | complex : ℂ → Literal
   | text : String → Literal
+deriving Inhabited
 
-/**
-One identity space for all Litex expressions.
+inductive IntervalSide where
+  | leftOpen
+  | leftClosed
+  | rightOpen
+  | rightClosed
+deriving DecidableEq, Inhabited, Repr
 
-`variable` uses a de Bruijn index, so alpha-renamed binders have the same
-shape.  `builtin` is deliberately generic: the operation's head identifies
-the operation and its list preserves the source argument order.  `lambda`
-stores binder-domain objects and a body; a predicate or set-builder therefore
-remains inspectable syntax instead of a captured Lean closure.
-*/
-inductive Object where
-  | variable : Nat → Object
-  | symbol : SymbolId → Object
-  | literal : Literal → Object
-  | apply : Object → Object → Object
-  | builtin : BuiltinHead → List Object → Object
-  | lambda : List Object → Object → Object
+inductive IntervalBoundary where
+  | leftOpenRightOpen
+  | leftOpenRightClosed
+  | leftClosedRightOpen
+  | leftClosedRightClosed
+deriving DecidableEq, Inhabited, Repr
+
+/-! `Formula` is deliberately only a source formula.  It contains no proof,
+    WD cache, environment, or Lean closure. -/
+
+mutual
+
+  inductive Object where
+    | atom : Atom → Object
+    | fnObj : FnHead → List (List Object) → Object
+    | number : Number → Object
+    | literal : Literal → Object
+    | imaginaryUnit : Object
+    | eulerNumber : Object
+    | pi : Object
+    | add : Object → Object → Object
+    | sub : Object → Object → Object
+    | mul : Object → Object → Object
+    | div : Object → Object → Object
+    | mod : Object → Object → Object
+    | quot : Object → Object → Object
+    | gcd : Object → Object → Object
+    | lcm : Object → Object → Object
+    | floor : Object → Object
+    | ceil : Object → Object
+    | min : Object → Object → Object
+    | max : Object → Object → Object
+    | exp : Object → Object
+    | ln : Object → Object
+    | sign : Object → Object
+    | factorial : Object → Object
+    | pow : Object → Object → Object
+    | abs : Object → Object
+    | sin : Object → Object
+    | arcsin : Object → Object
+    | cos : Object → Object
+    | tan : Object → Object
+    | cot : Object → Object
+    | realPart : Object → Object
+    | imaginaryPart : Object → Object
+    | complexAbs : Object → Object
+    | sqrt : Object → Object
+    | log : Object → Object → Object
+    | union : Object → Object → Object
+    | intersect : Object → Object → Object
+    | setMinus : Object → Object → Object
+    | bigUnion : Object → Object
+    | bigIntersect : Object → Object
+    | indexUnion : Object → Object → Object → Object
+    | indexIntersect : Object → Object → Object → Object
+    | powerSet : Object → Object
+    | generalCart : Object → Object → Object → Object
+    | listSet : List Object → Object
+    | setBuilder : Symbol → Object → List Formula → Object
+    | fnSet : List (List (Symbol × Object)) → List Formula → Object → Object
+    | anonymousFn : List (List (Symbol × Object)) → List Formula → Object → Object → Object
+    | cart : List Object → Object
+    | cartDim : Object → Object
+    | proj : Object → Object → Object
+    | tupleDim : Object → Object
+    | tuple : List Object → Object
+    | finiteSetSize : Object → Object
+    | finiteSetMax : Object → Object
+    | finiteSetMin : Object → Object
+    | fnRange : Object → Object
+    | replacement : String → Object → Object
+    | sum : Object → Object → Object → Object
+    | sumOfFiniteSet : Object → Object → Object
+    | product : Object → Object → Object → Object
+    | productOfFiniteSet : Object → Object → Object
+    | reduce : Object → Object → Object → Object → Object → Object
+    | finiteSetReduce : Object → Object → Object → Object → Object
+    | range : Object → Object → Object
+    | closedRange : Object → Object → Object
+    | finiteSeqSet : Object → Object → Object
+    | seqSet : Object → Object
+    | finiteSeqListObj : List Object → Object
+    | objAtIndex : Object → Object → Object
+    | standardSet : String → Object
+    | matrixSet : Object → Object → Object → Object
+    | matrixListObj : List (List Object) → Object
+    | matrixAdd : Object → Object → Object
+    | matrixSub : Object → Object → Object
+    | matrixMul : Object → Object → Object
+    | matrixScalarMul : Object → Object → Object
+    | matrixPow : Object → Object → Object
+    | structObj : String → List Object → Object
+    | fieldAccess : Object → String → Object
+    | instantiatedTemplateObj : String → List Object → Object
+    | oneSideInfinityIntervalObj : IntervalSide → Object → Object
+    | intervalObj : IntervalBoundary → Object → Object → Object
+
+  inductive FnHead where
+    | identifier : Symbol → FnHead
+    | identifierWithMod : QualifiedSymbol → FnHead
+    | bound : Symbol → FnHead
+    | anonymousFnLiteral : List (List (Symbol × Object)) → List Formula → Object → Object → FnHead
+    | finiteSeqListObj : List Object → FnHead
+    | objAtIndex : Object → Object → FnHead
+    | fieldAccess : Object → String → FnHead
+    | instantiatedTemplateObj : String → List Object → FnHead
+    | matrixOperator : Object → FnHead
+
+  inductive Formula where
+    | truth : Formula
+    | falsity : Formula
+    | same : Object → Object → Formula
+    | inSet : Object → Object → Formula
+    | lt : Object → Object → Formula
+    | le : Object → Object → Formula
+    | not : Formula → Formula
+    | and : List Formula → Formula
+    | or : List Formula → Formula
+    | implies : Formula → Formula → Formula
+
+end
 
 namespace Object
 
-/** Litex's function application constructor. */
-def Apply (function argument : Object) : Object :=
-  .apply function argument
+/-! ## Named constructors and carrier symbols -/
 
-/** Left-associated application of a finite argument list. */
-def ApplyMany (function : Object) : List Object → Object
-  | [] => function
-  | argument :: arguments => ApplyMany (Apply function argument) arguments
+def Apply (head : FnHead) (arguments : List Object) : Object :=
+  .fnObj head [arguments]
 
-/** Construct a core builtin application. */
-def Core (operation : CoreBuiltin) (arguments : List Object) : Object :=
-  .builtin (.core operation) arguments
+def N : Object := .atom (.identifier {
+  id := .reserved .N
+  displayName := "N"
+})
 
-/** Construct an extension builtin application. */
-def Extension (identifier : Nat) (arguments : List Object) : Object :=
-  .builtin (.extension identifier) arguments
+def Z : Object := .atom (.identifier {
+  id := .reserved .Z
+  displayName := "Z"
+})
 
-/** Construct a lambda over de Bruijn-indexed variables. */
-def Lambda (domains : List Object) (body : Object) : Object :=
-  .lambda domains body
+def Q : Object := .atom (.identifier {
+  id := .reserved .Q
+  displayName := "Q"
+})
 
-/-! Distinguished carrier symbols.  Their semantics is supplied by the later
-    statement/builtin-rule layers; here they are simply stable object terms. -/
+def R : Object := .atom (.identifier {
+  id := .reserved .R
+  displayName := "R"
+})
 
-def N : Object :=
-  .symbol (SymbolId.ofNat 0)
+def C : Object := .atom (.identifier {
+  id := .reserved .C
+  displayName := "C"
+})
 
-def Z : Object :=
-  .symbol (SymbolId.ofNat 1)
-
-def Q : Object :=
-  .symbol (SymbolId.ofNat 2)
-
-def R : Object :=
-  .symbol (SymbolId.ofNat 3)
-
-def C : Object :=
-  .symbol (SymbolId.ofNat 4)
-
-/-! Common constructors.  The full vocabulary remains available through
-    `Core`; these names make the object representation readable in rules and
-    generated terms. -/
-
-def Union (left right : Object) : Object :=
-  Core .union [left, right]
-
-def Intersect (left right : Object) : Object :=
-  Core .intersect [left, right]
-
-def SetMinus (left right : Object) : Object :=
-  Core .setMinus [left, right]
-
-def BigUnion (family : Object) : Object :=
-  Core .bigUnion [family]
-
-def BigIntersect (family : Object) : Object :=
-  Core .bigIntersect [family]
-
-def IndexUnion (index family : Object) : Object :=
-  Core .indexUnion [index, family]
-
-def IndexIntersect (index family : Object) : Object :=
-  Core .indexIntersect [index, family]
-
-def PowerSet (set : Object) : Object :=
-  Core .powerSet [set]
-
-def ListSet (elements : List Object) : Object :=
-  Core .listSet elements
-
-def SetBuilder (base predicate : Object) : Object :=
-  Core .setBuilder [base, predicate]
-
-def FnSet (domain codomain graph : Object) : Object :=
-  Core .fnSet [domain, codomain, graph]
-
-def AnonymousFn (domains : List Object) (body : Object) : Object :=
-  Core .anonymousFn (domains ++ [body])
-
-def Cart (factors : List Object) : Object :=
-  Core .cart factors
-
-def GeneralCart (families : Object) : Object :=
-  Core .generalCart [families]
-
-def Tuple (elements : List Object) : Object :=
-  Core .tuple elements
-
-def FnRange (function : Object) : Object :=
-  Core .fnRange [function]
-
-def Replacement (domain function : Object) : Object :=
-  Core .replacement [domain, function]
-
-/** A bounded sum is represented as `(start, end, function)`, matching the
-    current Litex object model. */
-def Sum (start finish function : Object) : Object :=
-  Core .sum [start, finish, function]
-
-def SumOfFiniteSet (set function : Object) : Object :=
-  Core .sumOfFiniteSet [set, function]
-
-def Product (start finish function : Object) : Object :=
-  Core .product [start, finish, function]
-
-def ProductOfFiniteSet (set function : Object) : Object :=
-  Core .productOfFiniteSet [set, function]
-
+def Union (left right : Object) : Object := .union left right
+def Intersect (left right : Object) : Object := .intersect left right
+def SetMinus (left right : Object) : Object := .setMinus left right
+def BigUnion (family : Object) : Object := .bigUnion family
+def BigIntersect (family : Object) : Object := .bigIntersect family
+def IndexUnion (indexSet ambient family : Object) : Object :=
+  .indexUnion indexSet ambient family
+def IndexIntersect (indexSet ambient family : Object) : Object :=
+  .indexIntersect indexSet ambient family
+def PowerSet (set : Object) : Object := .powerSet set
+def GeneralCart (indexSet familySet familyFn : Object) : Object :=
+  .generalCart indexSet familySet familyFn
+def ListSet (elements : List Object) : Object := .listSet elements
+def SetBuilder (binding : Symbol) (set : Object) (facts : List Formula) : Object :=
+  .setBuilder binding set facts
+def FnSet (parameters : List (List (Symbol × Object)))
+    (facts : List Formula) (returnSet : Object) : Object :=
+  .fnSet parameters facts returnSet
+def AnonymousFn (parameters : List (List (Symbol × Object)))
+    (facts : List Formula) (returnSet body : Object) : Object :=
+  .anonymousFn parameters facts returnSet body
+def Cart (factors : List Object) : Object := .cart factors
+def Tuple (elements : List Object) : Object := .tuple elements
+def FnRange (function : Object) : Object := .fnRange function
+def Replacement (propertyName : String) (sourceSet : Object) : Object :=
+  .replacement propertyName sourceSet
+def Sum (start finish function : Object) : Object := .sum start finish function
+def SumOfFiniteSet (set function : Object) : Object := .sumOfFiniteSet set function
+def Product (start finish function : Object) : Object := .product start finish function
+def ProductOfFiniteSet (set function : Object) : Object := .productOfFiniteSet set function
 def Reduce (start finish function operation seed : Object) : Object :=
-  Core .reduce [start, finish, function, operation, seed]
-
+  .reduce start finish function operation seed
 def FiniteSetReduce (set function operation seed : Object) : Object :=
-  Core .finiteSetReduce [set, function, operation, seed]
-
-def Range (start finish : Object) : Object :=
-  Core .range [start, finish]
-
-def ClosedRange (start finish : Object) : Object :=
-  Core .closedRange [start, finish]
-
-def ObjAtIndex (sequence index : Object) : Object :=
-  Core .objAtIndex [sequence, index]
-
-def StandardSet (name : Object) : Object :=
-  Core .standardSet [name]
-
-def MatrixSet (rows columns entry : Object) : Object :=
-  Core .matrixSet [rows, columns, entry]
-
-def MatrixList (rows : List Object) : Object :=
-  Core .matrixList rows
-
-def StructObject (fields : List Object) : Object :=
-  Core .structObject fields
-
-def FieldAccess (structure field : Object) : Object :=
-  Core .fieldAccess [structure, field]
-
-def TemplateInstance (template parameters : List Object) : Object :=
-  Core .templateInstance (template :: parameters)
-
-def Interval (left right : Object) : Object :=
-  Core .interval [left, right]
-
-/-! A shallow child view is useful to serializers and proof tooling.  It does
-    not assign semantics to any builtin. -/
-
-def children : Object → List Object
-  | .variable _ => []
-  | .symbol _ => []
-  | .literal _ => []
-  | .apply function argument => [function, argument]
-  | .builtin _ arguments => arguments
-  | .lambda domains body => domains ++ [body]
-
-@[simp] theorem apply_self (function argument : Object) :
-    Apply function argument = Apply function argument :=
-  rfl
+  .finiteSetReduce set function operation seed
+def Range (start finish : Object) : Object := .range start finish
+def ClosedRange (start finish : Object) : Object := .closedRange start finish
+def FiniteSeqSet (set bound : Object) : Object := .finiteSeqSet set bound
+def SeqSet (set : Object) : Object := .seqSet set
+def FiniteSeqList (elements : List Object) : Object := .finiteSeqListObj elements
+def ObjAtIndex (object index : Object) : Object := .objAtIndex object index
+def StandardSet (name : String) : Object := .standardSet name
+def MatrixSet (set rowLength columnLength : Object) : Object :=
+  .matrixSet set rowLength columnLength
+def MatrixList (rows : List (List Object)) : Object := .matrixListObj rows
+def StructObject (name : String) (parameters : List Object) : Object :=
+  .structObj name parameters
+def FieldAccess (record : Object) (fieldName : String) : Object :=
+  .fieldAccess record fieldName
+def TemplateInstance (name : String) (arguments : List Object) : Object :=
+  .instantiatedTemplateObj name arguments
+def OneSideInfinityInterval (side : IntervalSide) (start : Object) : Object :=
+  .oneSideInfinityIntervalObj side start
+def Interval (boundary : IntervalBoundary) (start finish : Object) : Object :=
+  .intervalObj boundary start finish
 
 @[simp] theorem union_shape (left right : Object) :
-    Union left right = .builtin (.core .union) [left, right] :=
+    Union left right = .union left right :=
   rfl
 
 @[simp] theorem sum_shape (start finish function : Object) :
-    Sum start finish function = .builtin (.core .sum) [start, finish, function] :=
+    Sum start finish function = .sum start finish function :=
   rfl
-
-end Object
 
 /-! ## Structural semantic equality
 
-`Same` is intentionally only the identity/congruence skeleton.  It can carry
-an explicit real-to-complex literal embedding, while operation-specific
-equations (for example a Mathlib interpretation of `Union`) belong to
-`builtin_rules.lean` and must be proved there.
--/
+The object layer only records identity/congruence.  A later semantic layer
+decides when an operation has a mathematical interpretation and supplies the
+corresponding proof. -/
 
 inductive Same : Object → Object → Prop where
   | refl (object : Object) : Same object object
   | symm {left right : Object} : Same left right → Same right left
   | trans {left middle right : Object} :
       Same left middle → Same middle right → Same left right
-  | applyCongr {function function' argument argument' : Object} :
-      Same function function' →
-      Same argument argument' →
-      Same (Object.Apply function argument) (Object.Apply function' argument')
-  | builtinCongr {head : BuiltinHead} {arguments arguments' : List Object} :
-      List.Forall₂ Same arguments arguments' →
-      Same (.builtin head arguments) (.builtin head arguments')
-  | lambdaCongr {domains domains' : List Object} {body body' : Object} :
-      List.Forall₂ Same domains domains' →
-      Same body body' →
-      Same (.lambda domains body) (.lambda domains' body')
+  | fnObjCongr {head head' : FnHead} {body body' : List (List Object)} :
+      head = head' → body = body' → Same (.fnObj head body) (.fnObj head' body')
   | realComplex (value : ℝ) :
       Same (.literal (.real value)) (.literal (.complex (value : ℂ)))
 
@@ -366,26 +320,20 @@ namespace Same
 theorem reflNoObservation (object : Object) : Same object object :=
   .refl object
 
-theorem apply (function function' argument argument' : Object)
-    (hf : Same function function') (ha : Same argument argument') :
-    Same (Object.Apply function argument) (Object.Apply function' argument') :=
-  .applyCongr hf ha
+theorem ofEq {left right : Object} (h : left = right) : Same left right := by
+  cases h
+  exact .refl _
 
-theorem builtin (head : BuiltinHead) {arguments arguments' : List Object}
-    (h : List.Forall₂ Same arguments arguments') :
-    Same (.builtin head arguments) (.builtin head arguments') :=
-  .builtinCongr h
-
-theorem lambda (domains domains' : List Object) (body body' : Object)
-    (hd : List.Forall₂ Same domains domains') (hb : Same body body') :
-    Same (.lambda domains body) (.lambda domains' body') :=
-  .lambdaCongr hd hb
+theorem fnObj (head : FnHead) (body : List (List Object)) :
+    Same (.fnObj head body) (.fnObj head body) :=
+  .refl _
 
 theorem realComplexLiteral (value : ℝ) :
-    Same (Object.literal (.real value))
-      (Object.literal (.complex (value : ℂ))) :=
+    Same (.literal (.real value)) (.literal (.complex (value : ℂ))) :=
   .realComplex value
 
 end Same
+
+end Object
 
 end Litex

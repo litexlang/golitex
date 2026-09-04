@@ -368,8 +368,20 @@ impl Runtime {
                 SubstitutionMode::Exact,
             )?;
         for param_membership_fact in param_membership_facts.iter() {
-            let result = self
-                .verify_atomic_fact_restricted_known_builtin(param_membership_fact, verify_state)?;
+            // Callable unfolding is only an optional reduction used by
+            // well-definedness/proof search.  A parameter membership can
+            // mention the very template carrier whose WD is currently being
+            // assembled (for example `A \finite_subsets<Z>` while checking
+            // `integer_linear_span(A)`).  Re-running the full WD path here
+            // would report a false cycle.  Treat that failed side reduction
+            // as unavailable and let the caller continue with the original
+            // application.
+            let result = match self
+                .verify_atomic_fact_restricted_known_builtin(param_membership_fact, verify_state)
+            {
+                Ok(result) => result,
+                Err(_) => return Ok(None),
+            };
             if !result.is_success() {
                 return Ok(None);
             }

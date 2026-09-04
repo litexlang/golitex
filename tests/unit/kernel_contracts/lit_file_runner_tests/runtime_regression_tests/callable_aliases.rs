@@ -77,6 +77,17 @@ fn transparent_definition_reduction_applies_to_non_equality_atomic_facts() {
 }
 
 #[test]
+fn tuple_projection_widens_transparent_real_component_to_complex() {
+    let source = "have neg_one R = (-1)\n(1, neg_one)[2] $in C\n";
+    let mut runtime = Runtime::default();
+    runtime.start_isolated_source("tuple_projection_complex_membership");
+    let (results, error) = execute_source(source, &mut runtime);
+    let (succeeded, output) = render_run_output(&runtime, &results, &error);
+
+    assert!(succeeded, "tuple projection membership failed:\n{output}");
+}
+
+#[test]
 fn transparent_lookup_is_exact_by_symbol_id_and_one_layer_per_pass() {
     let source = "let a = R\nlet b = a\n";
     let mut runtime = Runtime::default();
