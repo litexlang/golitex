@@ -81,6 +81,12 @@ fn double_underscore_internal_prefix_rejected() {
 }
 
 #[test]
+fn hash_comment_marker_rejected() {
+    assert!(is_valid_litex_name("#x").is_err());
+    assert!(is_valid_litex_name("x#y").is_err());
+}
+
+#[test]
 fn symbols_rejected() {
     assert!(is_valid_litex_name("a+b").is_err());
     assert!(is_valid_litex_name("a-b").is_err());

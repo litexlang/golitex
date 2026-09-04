@@ -1423,8 +1423,9 @@ fn cli_dispatch_delegates_execution_and_path_resolution_to_their_owners() {
     assert!(command.contains("VerifyStrictnessPolicy::Strict"));
     assert!(command.contains("VerifyStrictnessPolicy::Ordinary"));
     for command_options in [
+        "LitexExecutionOutputSettings",
         "ReplCommandOptions",
-        "ExecuteCommandOptions",
+        "ExecuteEvalFileRepoCommandOptions",
         "GraphCommandOptions",
         "SessionCommandOptions",
         "ConversionCommandOptions",
