@@ -284,21 +284,7 @@ impl Runtime {
                 for arg in template_obj.args.iter() {
                     args.push(self.inst_obj(arg, param_to_arg_map, param_obj_type)?);
                 }
-                let surface_name = format!(
-                    "{}{}{}{}{}",
-                    TEMPLATE_INSTANCE_PREFIX,
-                    template_obj.template_name,
-                    LESS,
-                    vec_to_string_join_by_comma(&args),
-                    GREATER
-                );
-                let binding = self.intern_template_instance_symbol_binding(&surface_name)?;
-                Ok(InstantiatedTemplateObj::new(
-                    template_obj.template_name.clone(),
-                    args,
-                    binding.as_ref(),
-                )
-                .into())
+                Ok(InstantiatedTemplateObj::new(template_obj.template_name.clone(), args).into())
             }
         }
     }

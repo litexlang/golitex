@@ -293,7 +293,7 @@ impl fmt::Display for StructObj {
 
 impl fmt::Display for InstantiatedTemplateObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        write!(f, "{}", self.symbol.identity_spine(&self.surface_name()))
+        write!(f, "{}", self.surface_name())
     }
 }
 

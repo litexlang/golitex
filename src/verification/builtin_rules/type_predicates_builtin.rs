@@ -1091,12 +1091,7 @@ impl Runtime {
                 );
             }
             _ => {
-                if self
-                    .top_level_env()
-                    .objects
-                    .knowledge(&is_tuple_fact.set.to_string())
-                    .is_some_and(|knowledge| knowledge.tuple_equality.is_some())
-                {
+                if self.get_obj_equal_to_tuple(&is_tuple_fact.set).is_some() {
                     return Ok(
                         (SuccessProveFactResult::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             is_tuple_fact.clone().into(),

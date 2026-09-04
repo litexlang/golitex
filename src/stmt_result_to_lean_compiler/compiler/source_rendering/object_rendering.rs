@@ -82,9 +82,6 @@ pub(in super::super) fn render_obj(
             render_function_application(&application, context)
         }
         Obj::InstantiatedTemplateObj(application) => {
-            if let Some(rendered) = context.symbol_names.get(&application.symbol.id()) {
-                return Ok(rendered.clone());
-            }
             let binding = context
                 .template_set_alias_bindings
                 .get(&application.template_name.to_string())

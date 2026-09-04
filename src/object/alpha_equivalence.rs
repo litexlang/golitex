@@ -16,7 +16,68 @@ pub fn nested_obj_binder_normalized_key<'a>(
         let original = format!("#{}#{}", binding.id().value(), binding.name());
         normalized = normalized.replace(&original, &canonical);
     }
+    normalize_materialized_template_identities(&normalized)
+}
+
+/// Materialized template definitions are symbol bindings, while the public
+/// template application remains a composite object. Their equality key must
+/// therefore erase only the binding spine that prefixes a template-instance
+/// surface, without erasing IDs from ordinary symbol atoms.
+fn normalize_materialized_template_identities(text: &str) -> String {
+    let bytes = text.as_bytes();
+    let mut normalized = String::with_capacity(text.len());
+    let mut index = 0;
+    while index < bytes.len() {
+        if bytes[index] == b'#' {
+            let mut cursor = index + 1;
+            while cursor < bytes.len() && bytes[cursor].is_ascii_digit() {
+                cursor += 1;
+            }
+            if cursor > index + 1
+                && cursor + 1 < bytes.len()
+                && bytes[cursor] == b'#'
+                && bytes[cursor + 1] == b'\\'
+            {
+                let surface_start = cursor + 1;
+                if let Some(surface_end) = template_surface_end(bytes, surface_start) {
+                    normalized.push_str(&normalize_materialized_template_identities(
+                        &text[surface_start..surface_end],
+                    ));
+                    index = surface_end;
+                    continue;
+                }
+            }
+        }
+
+        let ch = text[index..]
+            .chars()
+            .next()
+            .expect("byte index should remain on a character boundary");
+        normalized.push(ch);
+        index += ch.len_utf8();
+    }
     normalized
+}
+
+fn template_surface_end(bytes: &[u8], surface_start: usize) -> Option<usize> {
+    let open = bytes[surface_start..]
+        .iter()
+        .position(|byte| *byte == b'<')?
+        + surface_start;
+    let mut depth = 0usize;
+    for (offset, byte) in bytes[open..].iter().enumerate() {
+        match byte {
+            b'<' => depth += 1,
+            b'>' => {
+                depth = depth.saturating_sub(1);
+                if depth == 0 {
+                    return Some(open + offset + 1);
+                }
+            }
+            _ => {}
+        }
+    }
+    None
 }
 
 pub fn objs_equal_with_nested_binder_alpha_equivalence(left: &Obj, right: &Obj) -> bool {

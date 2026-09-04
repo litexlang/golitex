@@ -30,7 +30,10 @@ refers to.
 The following implementation cleanups are intentionally deferred: replacing
 alpha-canonical IDs with a separate alpha-slot type, moving builtins out of the
 current ID range, replacing `#symbol_id_N` string keys with a typed key, and
-renaming or encapsulating the ToLean `SymbolId -> Lean name` mapping.
+renaming or encapsulating the ordinary ToLean `SymbolId -> Lean name` mapping.
+Template applications are not included in this identity space: they use their
+recursive object structure, while a materialized definition name is the symbol
+that receives a `SymbolId`.
 
 ## Examples and boundaries
 

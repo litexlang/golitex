@@ -319,16 +319,7 @@ impl Runtime {
             }
         }
         tb.skip_token(right_token)?;
-        let surface_name = format!(
-            "{}{}{}{}{}",
-            TEMPLATE_INSTANCE_PREFIX,
-            template_name,
-            LESS,
-            vec_to_string_join_by_comma(&args),
-            GREATER
-        );
-        let binding = self.template_instance_symbol_binding(&surface_name)?;
-        Ok(InstantiatedTemplateObj::new(template_name, args, binding.as_ref()).into())
+        Ok(InstantiatedTemplateObj::new(template_name, args).into())
     }
 
     /// Parse set builder or list set after the first identifier; wraps body in a name block for the bound variable.
