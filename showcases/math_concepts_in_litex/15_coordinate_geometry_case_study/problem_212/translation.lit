@@ -1,0 +1,23 @@
+# Problem 212 / zhongkao_8 — local semantic translation
+# 原题：如图，O为四边形ABCD内一点，E为AB的中点，OA＝OD，OB＝OC，∠AOB+∠COD＝180°。
+# （2）证明：OE=1/2 CD。
+#
+# These predicates are local to this problem and are not added to KB/main.lit.
+
+prop is_inside_quadrilateral(o, a, b, c, d cart(R, R)):
+    exist s, t, u, v R st {0 < s, 0 < t, 0 < u, 0 < v, s + t + u + v = 1, o = (s * a[1] + t * b[1] + u * c[1] + v * d[1], s * a[2] + t * b[2] + u * c[2] + v * d[2])}
+
+# Supplementary undirected angles, exactly and without square roots.
+# For nonzero rays, cos(theta1) = -cos(theta2) iff their dot products have
+# opposite signs and their squared normalized cosines are equal.
+prop are_angles_supplementary(a, o, b, c, o2, d cart(R, R)):
+    a != o
+    b != o
+    c != o2
+    d != o2
+    geo::angle_cos_num(a, o, b) * geo::angle_cos_num(c, o2, d) <= 0
+    geo::angle_cos_num(a, o, b)^2 * geo::angle_cos_den(c, o2, d) = geo::angle_cos_num(c, o2, d)^2 * geo::angle_cos_den(a, o, b)
+
+# Squared-length formulation of OE = 1/2 CD.
+prop segment_is_half_of(m, o, c, d cart(R, R)):
+    4 * geo::distance_sq(o, m) = geo::distance_sq(c, d)

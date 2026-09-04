@@ -1,0 +1,169 @@
+# Problem 214 / zhongkao_10：倍长中线模型
+#
+# 【原题】如图1，在△ABC中，CM是AB边的中线，∠BCN=∠BCM，
+# 交AB延长线于点N，2CM=CN。（1）求证AC=BN。
+#
+# 【对象】A↔pa，B↔pb，C↔pc，M↔pm，N↔pn。
+# 【语义审计】`is_on_extension(pn,pa,pb)` 精确选择 N 在 B 一侧的 AB 延长线；
+# 原文未说清延长的端点，故这一图示方向为显式附加解释。角度使用共享 KB 的
+# `geo::are_angles_congruent`，其普通无向角语义通过点积平方相等及同号条件展开。
+# 其余条件/结论逐项对应原题。
+
+# 纯标量约消：隔离算术正规化，避免在主证明中直接因式化嵌套点积表达式。
+thm cancel_nonzero_factor_214:
+    ? forall x, y, k R:
+        k != 0
+        x * k = y * k
+        =>:
+            x = y
+    x * k - y * k = 0
+    (x - y) * k = x * k - y * k = 0
+    x - y = 0
+    x = y
+
+# 普通无向角的标量选根：平方关系结合点积同号，排除补角对应的负根。
+thm same_sign_double_from_squares_214:
+    ? forall x, y R:
+        x^2 = 4 * y^2
+        x * y >= 0
+        =>:
+            x = 2 * y
+    y = 0 or not y = 0
+    by cases:
+        ? x = 2 * y
+        case y = 0:
+            y^2 = 0
+            4 * y^2 = 0
+            x^2 = 4 * y^2 = 0
+            x = 0
+            x = 2 * y
+        case not y = 0:
+            by contra:
+                ? x = 2 * y
+                x != 2 * y
+                x - 2 * y != 0
+                (x - 2 * y) * (x + 2 * y) = x^2 - (2 * y)^2 = x^2 - 4 * y^2 = 0
+                x + 2 * y = 0
+                (x + 2 * y) * y = 0
+                x * y + 2 * y^2 = 0
+                y^2 > 0
+                2 * y^2 > 0
+                x * y + 2 * y^2 > 0
+                impossible x * y + 2 * y^2 = 0
+
+thm median_double_angle_scalar_finish_214:
+    ? forall bx, b_y, mx, my, nx, ny R:
+        nx^2 + ny^2 = 4 * (mx^2 + my^2)
+        bx * nx + b_y * ny = 2 * (bx * mx + b_y * my)
+        =>:
+            (2 * mx - bx)^2 + (2 * my - b_y)^2 = (nx - bx)^2 + (ny - b_y)^2
+    (2 * mx - bx)^2 + (2 * my - b_y)^2 = 4 * (mx^2 + my^2) + (bx^2 + b_y^2) - 4 * (bx * mx + b_y * my)
+    (nx - bx)^2 + (ny - b_y)^2 = (nx^2 + ny^2) + (bx^2 + b_y^2) - 2 * (bx * nx + b_y * ny)
+    2 * (bx * nx + b_y * ny) = 2 * (2 * (bx * mx + b_y * my)) = 4 * (bx * mx + b_y * my)
+    (nx^2 + ny^2) + (bx^2 + b_y^2) - 2 * (bx * nx + b_y * ny) = 4 * (mx^2 + my^2) + (bx^2 + b_y^2) - 2 * (bx * nx + b_y * ny)
+    4 * (mx^2 + my^2) + (bx^2 + b_y^2) - 2 * (bx * nx + b_y * ny) = 4 * (mx^2 + my^2) + (bx^2 + b_y^2) - 4 * (bx * mx + b_y * my)
+    (nx^2 + ny^2) + (bx^2 + b_y^2) - 2 * (bx * nx + b_y * ny) = (nx^2 + ny^2) + (bx^2 + b_y^2) - 2 * (bx * nx + b_y * ny) = 4 * (mx^2 + my^2) + (bx^2 + b_y^2) - 2 * (bx * nx + b_y * ny) = 4 * (mx^2 + my^2) + (bx^2 + b_y^2) - 4 * (bx * mx + b_y * my)
+    (2 * mx - bx)^2 + (2 * my - b_y)^2 = (nx - bx)^2 + (ny - b_y)^2
+
+thm problem_214_median_double_angle:
+    ? forall pa, pb, pc, pm, pn cart(R, R):
+        # △ABC 非退化。
+        $geo::is_triangle(pa, pb, pc),
+        # CM 是 AB 的中线。
+        $geo::is_midpoint(pm, pa, pb),
+        # N 在 AB 越过 B 的延长线上。
+        $geo::is_on_extension(pn, pa, pb),
+        # ∠BCN = ∠BCM（普通无向度量角）。
+        $geo::are_angles_congruent(pb, pc, pn, pb, pc, pm),
+        # CN = 2CM（平方距离形式，等价于正长度等式）。
+        geo::distance_sq(pc, pn) = 4 * geo::distance_sq(pc, pm)
+        =>:
+            # AC = BN。
+            $geo::are_segments_congruent(pa, pc, pb, pn)
+
+
+    # 中点给出 A = 2M - B。
+    by def $geo::is_midpoint(pm, pa, pb)
+    pa[1] = 2 * pm[1] - pb[1]
+    pa[2] = 2 * pm[2] - pb[2]
+
+    # 展开共享普通无向角谓词：归一化点积平方相等，且两个点积同号。
+    by def $geo::are_angles_congruent(pb, pc, pn, pb, pc, pm)
+    geo::angle_cos_num(pb, pc, pn) = geo::dot(geo::vec(pc, pb), geo::vec(pc, pn))
+    geo::angle_cos_num(pb, pc, pm) = geo::dot(geo::vec(pc, pb), geo::vec(pc, pm))
+    geo::angle_cos_den(pb, pc, pn) = geo::distance_sq(pc, pb) * geo::distance_sq(pc, pn)
+    geo::angle_cos_den(pb, pc, pm) = geo::distance_sq(pc, pb) * geo::distance_sq(pc, pm)
+
+    # N=A+t(B-A), t>1；并取得其两坐标式。
+    by def $geo::is_on_extension(pn, pa, pb)
+    obtain t from exist t0 R st {t0 > 1, pn = (pa[1] + t0 * (pb[1] - pa[1]), pa[2] + t0 * (pb[2] - pa[2]))}
+    pn[1] = pa[1] + t * (pb[1] - pa[1])
+    pn[2] = pa[2] + t * (pb[2] - pa[2])
+
+    # 共享角平方等式的公共分母因子 D(CB)D(CM) 为正，可安全约去。
+    by thm geo::distance_sq_positive_of_ne(pc, pb)
+    by thm geo::distance_sq_positive_of_ne(pc, pm)
+    geo::distance_sq(pc, pb) > 0
+    geo::distance_sq(pc, pm) > 0
+    geo::distance_sq(pc, pb) * geo::distance_sq(pc, pm) > 0
+    geo::distance_sq(pc, pb) * geo::distance_sq(pc, pm) != 0
+    geo::angle_cos_num(pb, pc, pn)^2 * geo::angle_cos_den(pb, pc, pm) = geo::angle_cos_num(pb, pc, pm)^2 * geo::angle_cos_den(pb, pc, pn)
+    geo::distance_sq(pc, pn) = 4 * geo::distance_sq(pc, pm)
+    # 先在角函数层展开两个分母，并由 CN²=4CM² 得到分母四倍关系。
+    geo::angle_cos_den(pb, pc, pn) = geo::distance_sq(pc, pb) * geo::distance_sq(pc, pn)
+    geo::angle_cos_den(pb, pc, pm) = geo::distance_sq(pc, pb) * geo::distance_sq(pc, pm)
+    geo::angle_cos_den(pb, pc, pn) = geo::distance_sq(pc, pb) * geo::distance_sq(pc, pn) = geo::distance_sq(pc, pb) * (4 * geo::distance_sq(pc, pm)) = 4 * (geo::distance_sq(pc, pb) * geo::distance_sq(pc, pm)) = 4 * geo::angle_cos_den(pb, pc, pm)
+    geo::angle_cos_den(pb, pc, pm) = geo::distance_sq(pc, pb) * geo::distance_sq(pc, pm) > 0
+    geo::angle_cos_den(pb, pc, pm) != 0
+    geo::angle_cos_num(pb, pc, pn)^2 * geo::angle_cos_den(pb, pc, pm) = geo::angle_cos_num(pb, pc, pm)^2 * geo::angle_cos_den(pb, pc, pn) = geo::angle_cos_num(pb, pc, pm)^2 * (4 * geo::angle_cos_den(pb, pc, pm)) = (4 * geo::angle_cos_num(pb, pc, pm)^2) * geo::angle_cos_den(pb, pc, pm)
+    by thm cancel_nonzero_factor_214(geo::angle_cos_num(pb, pc, pn)^2, 4 * geo::angle_cos_num(pb, pc, pm)^2, geo::angle_cos_den(pb, pc, pm))
+    geo::angle_cos_num(pb, pc, pn)^2 = 4 * geo::angle_cos_num(pb, pc, pm)^2
+
+    # 同号条件在角分子层选出正根，排除补角对应的负根。
+    geo::angle_cos_num(pb, pc, pn) * geo::angle_cos_num(pb, pc, pm) >= 0
+    by thm same_sign_double_from_squares_214(geo::angle_cos_num(pb, pc, pn), geo::angle_cos_num(pb, pc, pm))
+    geo::angle_cos_num(pb, pc, pn) = 2 * geo::angle_cos_num(pb, pc, pm)
+
+    # 按已验证的显式桥模式展开角分子为点积。
+    geo::angle_cos_num(pb, pc, pn) = geo::dot(geo::vec(pc, pb), geo::vec(pc, pn))
+    geo::angle_cos_num(pb, pc, pm) = geo::dot(geo::vec(pc, pb), geo::vec(pc, pm))
+    geo::dot(geo::vec(pc, pb), geo::vec(pc, pn)) = geo::angle_cos_num(pb, pc, pn) = 2 * geo::angle_cos_num(pb, pc, pm) = 2 * geo::dot(geo::vec(pc, pb), geo::vec(pc, pm))
+
+    # 将 CN^2=4CM^2 展开为坐标范数恒等式。
+    by thm geo::distance_sq_coordinate_formula(pc, pn)
+    by thm geo::distance_sq_coordinate_formula(pc, pm)
+    geo::distance_sq(pc, pn) = 4 * geo::distance_sq(pc, pm)
+    (pn[1] - pc[1])^2 + (pn[2] - pc[2])^2 = geo::distance_sq(pc, pn)
+    4 * geo::distance_sq(pc, pm) = 4 * ((pm[1] - pc[1])^2 + (pm[2] - pc[2])^2)
+    (pn[1] - pc[1])^2 + (pn[2] - pc[2])^2 = geo::distance_sq(pc, pn) = 4 * geo::distance_sq(pc, pm) = 4 * ((pm[1] - pc[1])^2 + (pm[2] - pc[2])^2)
+
+    # 将点积关系展开为坐标交叉项恒等式。
+    by thm geo::dot_coordinate_formula(geo::vec(pc, pb), geo::vec(pc, pn))
+    by thm geo::dot_coordinate_formula(geo::vec(pc, pb), geo::vec(pc, pm))
+    geo::dot(geo::vec(pc, pb), geo::vec(pc, pn)) = (pb[1] - pc[1]) * (pn[1] - pc[1]) + (pb[2] - pc[2]) * (pn[2] - pc[2])
+    geo::dot(geo::vec(pc, pb), geo::vec(pc, pm)) = geo::dot(geo::vec(pc, pm), geo::vec(pc, pb))
+    geo::dot(geo::vec(pc, pm), geo::vec(pc, pb)) = (pm[1] - pc[1]) * (pb[1] - pc[1]) + (pm[2] - pc[2]) * (pb[2] - pc[2])
+    2 * geo::dot(geo::vec(pc, pb), geo::vec(pc, pm)) = 2 * geo::dot(geo::vec(pc, pm), geo::vec(pc, pb)) = 2 * ((pm[1] - pc[1]) * (pb[1] - pc[1]) + (pm[2] - pc[2]) * (pb[2] - pc[2]))
+    (pb[1] - pc[1]) * (pn[1] - pc[1]) + (pb[2] - pc[2]) * (pn[2] - pc[2]) = 2 * geo::dot(geo::vec(pc, pb), geo::vec(pc, pm)) = 2 * geo::dot(geo::vec(pc, pm), geo::vec(pc, pb)) = 2 * ((pm[1] - pc[1]) * (pb[1] - pc[1]) + (pm[2] - pc[2]) * (pb[2] - pc[2]))
+
+    # 六个坐标量代入恒等式，得到 AC^2=BN^2。
+    by thm median_double_angle_scalar_finish_214(pb[1] - pc[1], pb[2] - pc[2], pm[1] - pc[1], pm[2] - pc[2], pn[1] - pc[1], pn[2] - pc[2])
+    (2 * (pm[1] - pc[1]) - (pb[1] - pc[1]))^2 + (2 * (pm[2] - pc[2]) - (pb[2] - pc[2]))^2 = ((pn[1] - pc[1]) - (pb[1] - pc[1]))^2 + ((pn[2] - pc[2]) - (pb[2] - pc[2]))^2
+    pa[1] - pc[1] = 2 * (pm[1] - pc[1]) - (pb[1] - pc[1])
+    pa[2] - pc[2] = 2 * (pm[2] - pc[2]) - (pb[2] - pc[2])
+    pn[1] - pb[1] = (pn[1] - pc[1]) - (pb[1] - pc[1])
+    pn[2] - pb[2] = (pn[2] - pc[2]) - (pb[2] - pc[2])
+    by thm geo::distance_sq_coordinate_formula(pc, pa)
+    by thm geo::distance_sq_coordinate_formula(pb, pn)
+    geo::distance_sq(pc, pa) = (pa[1] - pc[1])^2 + (pa[2] - pc[2])^2
+    (pa[1] - pc[1])^2 = (2 * (pm[1] - pc[1]) - (pb[1] - pc[1]))^2
+    (pa[2] - pc[2])^2 = (2 * (pm[2] - pc[2]) - (pb[2] - pc[2]))^2
+    (pa[1] - pc[1])^2 + (pa[2] - pc[2])^2 = (2 * (pm[1] - pc[1]) - (pb[1] - pc[1]))^2 + (2 * (pm[2] - pc[2]) - (pb[2] - pc[2]))^2
+    ((pn[1] - pc[1]) - (pb[1] - pc[1]))^2 = (pn[1] - pb[1])^2
+    ((pn[2] - pc[2]) - (pb[2] - pc[2]))^2 = (pn[2] - pb[2])^2
+    ((pn[1] - pc[1]) - (pb[1] - pc[1]))^2 + ((pn[2] - pc[2]) - (pb[2] - pc[2]))^2 = (pn[1] - pb[1])^2 + (pn[2] - pb[2])^2
+    geo::distance_sq(pb, pn) = (pn[1] - pb[1])^2 + (pn[2] - pb[2])^2
+    geo::distance_sq(pc, pa) = (pa[1] - pc[1])^2 + (pa[2] - pc[2])^2 = (2 * (pm[1] - pc[1]) - (pb[1] - pc[1]))^2 + (2 * (pm[2] - pc[2]) - (pb[2] - pc[2]))^2 = ((pn[1] - pc[1]) - (pb[1] - pc[1]))^2 + ((pn[2] - pc[2]) - (pb[2] - pc[2]))^2 = (pn[1] - pb[1])^2 + (pn[2] - pb[2])^2 = geo::distance_sq(pb, pn)
+    by thm geo::distance_sq_symmetric(pa, pc)
+    geo::distance_sq(pa, pc) = geo::distance_sq(pc, pa)
+    geo::distance_sq(pa, pc) = geo::distance_sq(pc, pa) = geo::distance_sq(pb, pn)
