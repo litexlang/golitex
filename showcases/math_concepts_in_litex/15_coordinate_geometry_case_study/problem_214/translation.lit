@@ -1,0 +1,4 @@
+# Problem 214 / zhongkao_10 — local semantic translation
+#
+# No problem-local predicates are required. The angle condition uses the shared
+# `geo::are_angles_congruent` predicate for ordinary undirected angle equality.

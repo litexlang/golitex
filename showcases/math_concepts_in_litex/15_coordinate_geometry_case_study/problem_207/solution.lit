@@ -1,0 +1,336 @@
+# Problem 207 / zhongkao_3：正方形中的角平分线与线段比例
+#
+# 【原题自然语言全文】
+# 正方形 ABCD 中，E 为 BC 边上任意点，AF 平分 ∠EAD，交 CD 于 F。
+# (1) F 为 CD 中点时，证明 AE = BE + 2CE。
+# (2) 在 (1) 的条件下，证明 CE / BC = 1/4。
+# (3) 延长 AF、AE，分别与 BC、DC 的延长线交于 G、H；若 CG = DF，证明 HG ⟂ AG。
+#
+# 【本文件的完成范围】
+# 本文件只形式化并证明原题第 (2) 问；第 (1)、(3) 问原文一并保留，是为了让题目上下文
+# 完整可追溯，但它们不是本文件主定理 `problem_207_part2_from_geometry_probe` 的结论。
+# 第 (2) 问“在 (1) 的条件下”按通常语义理解为沿用第 (1) 问的题设，特别是“F 为 CD
+# 中点”；本定理没有把第 (1) 问待证等式 AE = BE + 2CE 当成第 (2) 问的额外前提。
+#
+# 【自然语言对象 ↔ Litex 变量】
+# A ↔ pa，B ↔ pb，C ↔ pc，D ↔ pd，E ↔ pe，F ↔ pf。
+# 第 (3) 问中的 G、H 不出现在本文件第 (2) 问的主定理中。
+#
+# 【原题第 (2) 问 ↔ 主定理 forall 前提：逐项语义对照】
+# 1. “正方形 ABCD”
+#    ↔ $geo::is_square(pa, pb, pc, pd)。该共享谓词保留正方形的平行、等长与直角结构。
+# 2. “E 为 BC 边上任意点”
+#    ↔ $geo::is_on_segment(pe, pb, pc)。没有预先指定 E 在 BC 上的比例位置。
+# 3. “AF 平分 ∠EAD，交 CD 于 F”中的“F 在 CD 上”
+#    ↔ $geo::is_on_segment(pf, pc, pd)。
+# 4. “AF 平分 ∠EAD”
+#    ↔ $translation::is_metric_angle_bisector(pe, pa, pd, pf)。参数顺序表示射线 AF
+#       平分由射线 AE、AD 构成的角；定义用归一化点积表达两侧夹角相等。
+# 5. 第 (1) 问条件“F 为 CD 中点”
+#    ↔ $geo::is_midpoint(pf, pc, pd)。
+#
+# 【原题第 (2) 问结论 ↔ 主定理 => 结论】
+# “CE / BC = 1/4”
+# ↔ $translation::segment_ratio_one_fourth(pc, pe, pb, pc)。参数分别表示线段 CE 与 BC；
+#   该谓词以正长度见证及 4·CE=BC 表达比例，避免直接除法和长度符号歧义。
+#
+# 【语义边界审计】
+# - 主定理没有使用坐标归一化；pa,...,pf 均为任意平面点，坐标仅在证明内部用于消元。
+# - “F 在 CD 上”与“F 是 CD 中点”在逻辑上存在信息冗余，但前者直接保存题干中的
+#   “交 CD 于 F”，后者保存第 (1) 问的附加条件；没有删减原题条件。
+# - 没有把第 (1) 问结论 AE=BE+2CE 加入第 (2) 问前提，也没有用它代替角平分线条件。
+# - 比例结论要求有关线段具有正长度；正方形及其余题设排除目标中的无意义零分母情形。
+# - 文件前部的 `orthogonal_parallel_quadrilateral_coordinates` 等均为证明辅助定理；只有
+#   `problem_207_part2_from_geometry_probe` 是与原题第 (2) 问逐项对齐的主定理。
+#
+# Geometry-to-coordinate closure proof for Problem 207, part (2).
+# No coordinate normalization is assumed: all coordinates remain arbitrary.
+
+# Two nonzero perpendicular directions are linearly independent.  If the
+# opposite sides are parallel to them, the fourth vertex is forced to be the
+# usual parallelogram translate d = a + c - b.
+thm orthogonal_parallel_quadrilateral_coordinates:
+    ? forall a, b, c, d cart(R, R):
+        a != b,
+        a != d,
+        geo::det(geo::vec(a, b), geo::vec(d, c)) = 0,
+        geo::det(geo::vec(a, d), geo::vec(b, c)) = 0,
+        geo::dot(geo::vec(a, d), geo::vec(a, b)) = 0
+        =>:
+            d[1] = a[1] + c[1] - b[1],
+            d[2] = a[2] + c[2] - b[2]
+
+    by thm geo::perpendicular_dot_expand(a, d, a, b)
+    by thm geo::collinear_det_expand(a, b, (a[1] + c[1] - d[1], a[2] + c[2] - d[2]))
+    by thm geo::collinear_det_expand(a, d, (a[1] + c[1] - b[1], a[2] + c[2] - b[2]))
+    by thm geo::collinear_det_expand(d, c, b)
+    by thm geo::collinear_det_expand(b, c, d)
+
+    geo::vec(a, b) = (b[1] - a[1], b[2] - a[2])
+    geo::vec(a, d) = (d[1] - a[1], d[2] - a[2])
+    geo::vec(d, c) = (c[1] - d[1], c[2] - d[2])
+    geo::vec(b, c) = (c[1] - b[1], c[2] - b[2])
+    geo::det(geo::vec(a, b), geo::vec(d, c)) = (b[1] - a[1]) * (c[2] - d[2]) - (b[2] - a[2]) * (c[1] - d[1])
+    geo::det(geo::vec(a, d), geo::vec(b, c)) = (d[1] - a[1]) * (c[2] - b[2]) - (d[2] - a[2]) * (c[1] - b[1])
+    geo::dot(geo::vec(a, d), geo::vec(a, b)) = (d[1] - a[1]) * (b[1] - a[1]) + (d[2] - a[2]) * (b[2] - a[2])
+
+    (b[1] - a[1]) * ((a[2] + c[2] - b[2] - d[2])) - (b[2] - a[2]) * ((a[1] + c[1] - b[1] - d[1])) = 0
+    (d[1] - a[1]) * ((a[2] + c[2] - b[2] - d[2])) - (d[2] - a[2]) * ((a[1] + c[1] - b[1] - d[1])) = 0
+
+    by thm geo::dot_symmetric(geo::vec(a, d), geo::vec(a, b))
+    geo::dot(geo::vec(a, b), geo::vec(a, d)) = 0
+    by thm geo::dot_squared_plus_det_squared(geo::vec(a, b), geo::vec(a, d))
+    by thm geo::distance_sq_positive_of_ne(a, b)
+    by thm geo::distance_sq_positive_of_ne(a, d)
+    by thm geo::vec_dot_self_is_distance(a, b)
+    by thm geo::vec_dot_self_is_distance(a, d)
+    geo::dot(geo::vec(a, b), geo::vec(a, b)) > 0
+    geo::dot(geo::vec(a, d), geo::vec(a, d)) > 0
+    geo::dot(geo::vec(a, b), geo::vec(a, b)) * geo::dot(geo::vec(a, d), geo::vec(a, d)) > 0
+    geo::dot(geo::vec(a, b), geo::vec(a, d))^2 + geo::det(geo::vec(a, b), geo::vec(a, d))^2 = geo::dot(geo::vec(a, b), geo::vec(a, b)) * geo::dot(geo::vec(a, d), geo::vec(a, d))
+    geo::dot(geo::vec(a, b), geo::vec(a, d))^2 = 0
+    geo::dot(geo::vec(a, b), geo::vec(a, d))^2 + geo::det(geo::vec(a, b), geo::vec(a, d))^2 = geo::det(geo::vec(a, b), geo::vec(a, d))^2
+    geo::det(geo::vec(a, b), geo::vec(a, d))^2 = geo::dot(geo::vec(a, b), geo::vec(a, b)) * geo::dot(geo::vec(a, d), geo::vec(a, d))
+    geo::det(geo::vec(a, b), geo::vec(a, d))^2 > 0
+    by contra:
+        ? geo::det(geo::vec(a, b), geo::vec(a, d)) != 0
+        geo::det(geo::vec(a, b), geo::vec(a, d)) = 0
+        geo::det(geo::vec(a, b), geo::vec(a, d))^2 = 0
+        impossible geo::det(geo::vec(a, b), geo::vec(a, d))^2 > 0
+    geo::det(geo::vec(a, b), geo::vec(a, d)) = (b[1] - a[1]) * (d[2] - a[2]) - (b[2] - a[2]) * (d[1] - a[1])
+
+    # Eliminate the second residual coordinate from the two parallel equations.
+    (d[1] - a[1]) * ((b[1] - a[1]) * (a[2] + c[2] - b[2] - d[2]) - (b[2] - a[2]) * (a[1] + c[1] - b[1] - d[1])) = 0
+    (b[1] - a[1]) * ((d[1] - a[1]) * (a[2] + c[2] - b[2] - d[2]) - (d[2] - a[2]) * (a[1] + c[1] - b[1] - d[1])) = 0
+    (d[1] - a[1]) * ((b[1] - a[1]) * (a[2] + c[2] - b[2] - d[2]) - (b[2] - a[2]) * (a[1] + c[1] - b[1] - d[1])) - (b[1] - a[1]) * ((d[1] - a[1]) * (a[2] + c[2] - b[2] - d[2]) - (d[2] - a[2]) * (a[1] + c[1] - b[1] - d[1])) = 0
+    (d[1] - a[1]) * ((b[1] - a[1]) * (a[2] + c[2] - b[2] - d[2]) - (b[2] - a[2]) * (a[1] + c[1] - b[1] - d[1])) - (b[1] - a[1]) * ((d[1] - a[1]) * (a[2] + c[2] - b[2] - d[2]) - (d[2] - a[2]) * (a[1] + c[1] - b[1] - d[1])) = (a[1] + c[1] - b[1] - d[1]) * ((b[1] - a[1]) * (d[2] - a[2]) - (b[2] - a[2]) * (d[1] - a[1]))
+    (a[1] + c[1] - b[1] - d[1]) * ((b[1] - a[1]) * (d[2] - a[2]) - (b[2] - a[2]) * (d[1] - a[1])) = (a[1] + c[1] - b[1] - d[1]) * geo::det(geo::vec(a, b), geo::vec(a, d))
+    (a[1] + c[1] - b[1] - d[1]) * geo::det(geo::vec(a, b), geo::vec(a, d)) = 0
+    a[1] + c[1] - b[1] - d[1] = 0
+    d[1] = a[1] + c[1] - b[1]
+
+    # Eliminate the first residual coordinate from the same equations.
+    (d[2] - a[2]) * ((b[1] - a[1]) * (a[2] + c[2] - b[2] - d[2]) - (b[2] - a[2]) * (a[1] + c[1] - b[1] - d[1])) = 0
+    (b[2] - a[2]) * ((d[1] - a[1]) * (a[2] + c[2] - b[2] - d[2]) - (d[2] - a[2]) * (a[1] + c[1] - b[1] - d[1])) = 0
+    (d[2] - a[2]) * ((b[1] - a[1]) * (a[2] + c[2] - b[2] - d[2]) - (b[2] - a[2]) * (a[1] + c[1] - b[1] - d[1])) - (b[2] - a[2]) * ((d[1] - a[1]) * (a[2] + c[2] - b[2] - d[2]) - (d[2] - a[2]) * (a[1] + c[1] - b[1] - d[1])) = 0
+    (d[2] - a[2]) * ((b[1] - a[1]) * (a[2] + c[2] - b[2] - d[2]) - (b[2] - a[2]) * (a[1] + c[1] - b[1] - d[1])) - (b[2] - a[2]) * ((d[1] - a[1]) * (a[2] + c[2] - b[2] - d[2]) - (d[2] - a[2]) * (a[1] + c[1] - b[1] - d[1])) = (a[2] + c[2] - b[2] - d[2]) * ((b[1] - a[1]) * (d[2] - a[2]) - (b[2] - a[2]) * (d[1] - a[1]))
+    (a[2] + c[2] - b[2] - d[2]) * ((b[1] - a[1]) * (d[2] - a[2]) - (b[2] - a[2]) * (d[1] - a[1])) = (a[2] + c[2] - b[2] - d[2]) * geo::det(geo::vec(a, b), geo::vec(a, d))
+    (a[2] + c[2] - b[2] - d[2]) * geo::det(geo::vec(a, b), geo::vec(a, d)) = 0
+    a[2] + c[2] - b[2] - d[2] = 0
+    d[2] = a[2] + c[2] - b[2]
+
+# Orthogonal equal-length vector data used by the square configuration.
+thm square_bisector_vector_data:
+    ? forall u, v cart(R, R), t R:
+        geo::dot(u, v) = 0,
+        geo::dot(u, u) = geo::dot(v, v)
+        =>:
+            geo::dot((u[1] + t * v[1], u[2] + t * v[2]), (u[1] + t * v[1], u[2] + t * v[2])) = (1 + t^2) * geo::dot(v, v),
+            geo::dot((u[1] + t * v[1], u[2] + t * v[2]), (u[1] / 2 + v[1], u[2] / 2 + v[2])) = (t + 1 / 2) * geo::dot(v, v),
+            geo::dot((u[1] / 2 + v[1], u[2] / 2 + v[2]), v) = geo::dot(v, v)
+
+    by thm geo::dot_coordinate_formula(u, v)
+    by thm geo::dot_coordinate_formula(u, u)
+    by thm geo::dot_coordinate_formula(v, v)
+    by thm geo::dot_coordinate_formula((u[1] + t * v[1], u[2] + t * v[2]), (u[1] + t * v[1], u[2] + t * v[2]))
+    by thm geo::dot_coordinate_formula((u[1] + t * v[1], u[2] + t * v[2]), (u[1] / 2 + v[1], u[2] / 2 + v[2]))
+    by thm geo::dot_coordinate_formula((u[1] / 2 + v[1], u[2] / 2 + v[2]), v)
+
+    u[1] * v[1] + u[2] * v[2] = 0
+    u[1] * u[1] + u[2] * u[2] = v[1] * v[1] + v[2] * v[2]
+
+    (u[1] + t * v[1]) * (u[1] + t * v[1]) + (u[2] + t * v[2]) * (u[2] + t * v[2]) = (u[1] * u[1] + u[2] * u[2]) + 2 * t * (u[1] * v[1] + u[2] * v[2]) + t^2 * (v[1] * v[1] + v[2] * v[2])
+    (u[1] * u[1] + u[2] * u[2]) + 2 * t * (u[1] * v[1] + u[2] * v[2]) + t^2 * (v[1] * v[1] + v[2] * v[2]) = (u[1] * u[1] + u[2] * u[2]) + t^2 * (v[1] * v[1] + v[2] * v[2])
+    (u[1] * u[1] + u[2] * u[2]) + t^2 * (v[1] * v[1] + v[2] * v[2]) = (v[1] * v[1] + v[2] * v[2]) + t^2 * (v[1] * v[1] + v[2] * v[2])
+    (v[1] * v[1] + v[2] * v[2]) + t^2 * (v[1] * v[1] + v[2] * v[2]) = (1 + t^2) * (v[1] * v[1] + v[2] * v[2])
+    (1 + t^2) * geo::dot(v, v) = (1 + t^2) * (v[1] * v[1] + v[2] * v[2]) by thm geo::multiply_both_sides(geo::dot(v, v), v[1] * v[1] + v[2] * v[2], 1 + t^2)
+    geo::dot((u[1] + t * v[1], u[2] + t * v[2]), (u[1] + t * v[1], u[2] + t * v[2])) = (u[1] + t * v[1]) * (u[1] + t * v[1]) + (u[2] + t * v[2]) * (u[2] + t * v[2]) = (u[1] * u[1] + u[2] * u[2]) + 2 * t * (u[1] * v[1] + u[2] * v[2]) + t^2 * (v[1] * v[1] + v[2] * v[2]) = (u[1] * u[1] + u[2] * u[2]) + t^2 * (v[1] * v[1] + v[2] * v[2]) = (v[1] * v[1] + v[2] * v[2]) + t^2 * (v[1] * v[1] + v[2] * v[2]) = (1 + t^2) * (v[1] * v[1] + v[2] * v[2]) = (1 + t^2) * geo::dot(v, v)
+
+    (u[1] + t * v[1]) * (u[1] / 2 + v[1]) + (u[2] + t * v[2]) * (u[2] / 2 + v[2]) = (u[1] * u[1] + u[2] * u[2]) / 2 + (1 + t / 2) * (u[1] * v[1] + u[2] * v[2]) + t * (v[1] * v[1] + v[2] * v[2])
+    (u[1] * u[1] + u[2] * u[2]) / 2 + (1 + t / 2) * (u[1] * v[1] + u[2] * v[2]) + t * (v[1] * v[1] + v[2] * v[2]) = (u[1] * u[1] + u[2] * u[2]) / 2 + t * (v[1] * v[1] + v[2] * v[2])
+    (u[1] * u[1] + u[2] * u[2]) / 2 + t * (v[1] * v[1] + v[2] * v[2]) = (v[1] * v[1] + v[2] * v[2]) / 2 + t * (v[1] * v[1] + v[2] * v[2])
+    (v[1] * v[1] + v[2] * v[2]) / 2 + t * (v[1] * v[1] + v[2] * v[2]) = (t + 1 / 2) * (v[1] * v[1] + v[2] * v[2])
+    (t + 1 / 2) * geo::dot(v, v) = (t + 1 / 2) * (v[1] * v[1] + v[2] * v[2]) by thm geo::multiply_both_sides(geo::dot(v, v), v[1] * v[1] + v[2] * v[2], t + 1 / 2)
+    geo::dot((u[1] + t * v[1], u[2] + t * v[2]), (u[1] / 2 + v[1], u[2] / 2 + v[2])) = (u[1] + t * v[1]) * (u[1] / 2 + v[1]) + (u[2] + t * v[2]) * (u[2] / 2 + v[2]) = (u[1] * u[1] + u[2] * u[2]) / 2 + (1 + t / 2) * (u[1] * v[1] + u[2] * v[2]) + t * (v[1] * v[1] + v[2] * v[2]) = (u[1] * u[1] + u[2] * u[2]) / 2 + t * (v[1] * v[1] + v[2] * v[2]) = (v[1] * v[1] + v[2] * v[2]) / 2 + t * (v[1] * v[1] + v[2] * v[2]) = (t + 1 / 2) * (v[1] * v[1] + v[2] * v[2]) = (t + 1 / 2) * geo::dot(v, v)
+
+    (u[1] / 2 + v[1]) * v[1] + (u[2] / 2 + v[2]) * v[2] = (u[1] * v[1] + u[2] * v[2]) / 2 + (v[1] * v[1] + v[2] * v[2])
+    (u[1] * v[1] + u[2] * v[2]) / 2 + (v[1] * v[1] + v[2] * v[2]) = 0 / 2 + (v[1] * v[1] + v[2] * v[2]) = v[1] * v[1] + v[2] * v[2]
+    geo::dot((u[1] / 2 + v[1], u[2] / 2 + v[2]), v) = (u[1] / 2 + v[1]) * v[1] + (u[2] / 2 + v[2]) * v[2] = (u[1] * v[1] + u[2] * v[2]) / 2 + (v[1] * v[1] + v[2] * v[2]) = 0 / 2 + (v[1] * v[1] + v[2] * v[2]) = v[1] * v[1] + v[2] * v[2] = geo::dot(v, v)
+
+# Convert the square point coordinates into the three dot identities consumed by the scalar bridge.
+thm square_configuration_point_data:
+    ? forall a, b, c, d, pt_e, pt_f cart(R, R), t R:
+        d[1] = a[1] + c[1] - b[1],
+        d[2] = a[2] + c[2] - b[2],
+        pt_e[1] = b[1] + t * (c[1] - b[1]),
+        pt_e[2] = b[2] + t * (c[2] - b[2]),
+        pt_f[1] = (c[1] + d[1]) / 2,
+        pt_f[2] = (c[2] + d[2]) / 2,
+        geo::dot(geo::vec(a, b), geo::vec(a, d)) = 0,
+        geo::dot(geo::vec(a, b), geo::vec(a, b)) = geo::dot(geo::vec(a, d), geo::vec(a, d))
+        =>:
+            geo::dot(geo::vec(a, pt_e), geo::vec(a, pt_e)) = (1 + t^2) * geo::dot(geo::vec(a, d), geo::vec(a, d)),
+            geo::dot(geo::vec(a, pt_e), geo::vec(a, pt_f)) = (t + 1 / 2) * geo::dot(geo::vec(a, d), geo::vec(a, d)),
+            geo::dot(geo::vec(a, pt_f), geo::vec(a, d)) = geo::dot(geo::vec(a, d), geo::vec(a, d))
+
+    by thm geo::vec_coordinate_formula(a, b)
+    by thm geo::vec_coordinate_formula(a, d)
+    by thm geo::vec_coordinate_formula(a, pt_e)
+    by thm geo::vec_coordinate_formula(a, pt_f)
+
+    c[1] - b[1] = d[1] - a[1]
+    c[2] - b[2] = d[2] - a[2]
+    pt_e[1] - a[1] = (b[1] - a[1]) + t * (c[1] - b[1])
+    (b[1] - a[1]) + t * (c[1] - b[1]) = (b[1] - a[1]) + t * (d[1] - a[1])
+    pt_e[1] - a[1] = (b[1] - a[1]) + t * (c[1] - b[1]) = (b[1] - a[1]) + t * (d[1] - a[1])
+    pt_e[2] - a[2] = (b[2] - a[2]) + t * (c[2] - b[2])
+    (b[2] - a[2]) + t * (c[2] - b[2]) = (b[2] - a[2]) + t * (d[2] - a[2])
+    pt_e[2] - a[2] = (b[2] - a[2]) + t * (c[2] - b[2]) = (b[2] - a[2]) + t * (d[2] - a[2])
+    geo::vec(a, pt_e)[1] = pt_e[1] - a[1] = (b[1] - a[1]) + t * (c[1] - b[1]) = (b[1] - a[1]) + t * (d[1] - a[1]) = geo::vec(a, b)[1] + t * (d[1] - a[1]) = geo::vec(a, b)[1] + t * geo::vec(a, d)[1]
+    geo::vec(a, pt_e)[2] = pt_e[2] - a[2] = (b[2] - a[2]) + t * (c[2] - b[2]) = (b[2] - a[2]) + t * (d[2] - a[2]) = geo::vec(a, b)[2] + t * (d[2] - a[2]) = geo::vec(a, b)[2] + t * geo::vec(a, d)[2]
+
+    d[1] = a[1] + c[1] - b[1]
+    d[1] + b[1] = (a[1] + c[1] - b[1]) + b[1] = a[1] + c[1]
+    d[2] = a[2] + c[2] - b[2]
+    d[2] + b[2] = (a[2] + c[2] - b[2]) + b[2] = a[2] + c[2]
+    (d[1] + b[1]) - a[1] = (a[1] + c[1]) - a[1] by thm geo::subtract_equalities(d[1] + b[1], a[1] + c[1], a[1], a[1])
+    (a[1] + c[1]) - a[1] = c[1]
+    (d[1] + b[1]) - a[1] = d[1] + b[1] - a[1]
+    c[1] = (a[1] + c[1]) - a[1] = (d[1] + b[1]) - a[1] = d[1] + b[1] - a[1]
+    d[2] + b[2] = a[2] + c[2]
+    (d[2] + b[2]) - a[2] = (a[2] + c[2]) - a[2] by thm geo::subtract_equalities(d[2] + b[2], a[2] + c[2], a[2], a[2])
+    (a[2] + c[2]) - a[2] = c[2]
+    (d[2] + b[2]) - a[2] = d[2] + b[2] - a[2]
+    c[2] = (a[2] + c[2]) - a[2] = (d[2] + b[2]) - a[2] = d[2] + b[2] - a[2]
+    (c[1] + d[1]) / 2 - a[1] = ((b[1] + d[1] - a[1]) + d[1]) / 2 - a[1]
+    ((b[1] + d[1] - a[1]) + d[1]) / 2 - a[1] = (b[1] - a[1]) / 2 + (d[1] - a[1])
+    (c[1] + d[1]) / 2 - a[1] = ((b[1] + d[1] - a[1]) + d[1]) / 2 - a[1] = (b[1] - a[1]) / 2 + (d[1] - a[1])
+    (c[2] + d[2]) / 2 - a[2] = ((b[2] + d[2] - a[2]) + d[2]) / 2 - a[2]
+    ((b[2] + d[2] - a[2]) + d[2]) / 2 - a[2] = (b[2] - a[2]) / 2 + (d[2] - a[2])
+    (c[2] + d[2]) / 2 - a[2] = ((b[2] + d[2] - a[2]) + d[2]) / 2 - a[2] = (b[2] - a[2]) / 2 + (d[2] - a[2])
+    pt_f[1] - a[1] = (c[1] + d[1]) / 2 - a[1] = ((b[1] + d[1] - a[1]) + d[1]) / 2 - a[1] = (b[1] - a[1]) / 2 + (d[1] - a[1])
+    pt_f[2] - a[2] = (c[2] + d[2]) / 2 - a[2] = ((b[2] + d[2] - a[2]) + d[2]) / 2 - a[2] = (b[2] - a[2]) / 2 + (d[2] - a[2])
+    geo::vec(a, pt_f)[1] = pt_f[1] - a[1] = (c[1] + d[1]) / 2 - a[1] = (b[1] - a[1]) / 2 + (d[1] - a[1]) = geo::vec(a, b)[1] / 2 + (d[1] - a[1]) = geo::vec(a, b)[1] / 2 + geo::vec(a, d)[1]
+    geo::vec(a, pt_f)[2] = pt_f[2] - a[2] = (c[2] + d[2]) / 2 - a[2] = (b[2] - a[2]) / 2 + (d[2] - a[2]) = geo::vec(a, b)[2] / 2 + (d[2] - a[2]) = geo::vec(a, b)[2] / 2 + geo::vec(a, d)[2]
+
+    by thm square_bisector_vector_data(geo::vec(a, b), geo::vec(a, d), t)
+
+    geo::dot(geo::vec(a, pt_e), geo::vec(a, pt_e)) = geo::vec(a, pt_e)[1] * geo::vec(a, pt_e)[1] + geo::vec(a, pt_e)[2] * geo::vec(a, pt_e)[2]
+    geo::vec(a, pt_e)[1] * geo::vec(a, pt_e)[1] + geo::vec(a, pt_e)[2] * geo::vec(a, pt_e)[2] = (geo::vec(a, b)[1] + t * geo::vec(a, d)[1]) * (geo::vec(a, b)[1] + t * geo::vec(a, d)[1]) + (geo::vec(a, b)[2] + t * geo::vec(a, d)[2]) * (geo::vec(a, b)[2] + t * geo::vec(a, d)[2])
+    geo::dot(geo::vec(a, pt_e), geo::vec(a, pt_e)) = geo::dot((geo::vec(a, b)[1] + t * geo::vec(a, d)[1], geo::vec(a, b)[2] + t * geo::vec(a, d)[2]), (geo::vec(a, b)[1] + t * geo::vec(a, d)[1], geo::vec(a, b)[2] + t * geo::vec(a, d)[2])) = (1 + t^2) * geo::dot(geo::vec(a, d), geo::vec(a, d))
+
+    geo::dot(geo::vec(a, pt_e), geo::vec(a, pt_f)) = geo::vec(a, pt_e)[1] * geo::vec(a, pt_f)[1] + geo::vec(a, pt_e)[2] * geo::vec(a, pt_f)[2]
+    geo::vec(a, pt_e)[1] * geo::vec(a, pt_f)[1] + geo::vec(a, pt_e)[2] * geo::vec(a, pt_f)[2] = (geo::vec(a, b)[1] + t * geo::vec(a, d)[1]) * (geo::vec(a, b)[1] / 2 + geo::vec(a, d)[1]) + (geo::vec(a, b)[2] + t * geo::vec(a, d)[2]) * (geo::vec(a, b)[2] / 2 + geo::vec(a, d)[2])
+    geo::dot(geo::vec(a, pt_e), geo::vec(a, pt_f)) = geo::dot((geo::vec(a, b)[1] + t * geo::vec(a, d)[1], geo::vec(a, b)[2] + t * geo::vec(a, d)[2]), (geo::vec(a, b)[1] / 2 + geo::vec(a, d)[1], geo::vec(a, b)[2] / 2 + geo::vec(a, d)[2])) = (t + 1 / 2) * geo::dot(geo::vec(a, d), geo::vec(a, d))
+
+    geo::dot(geo::vec(a, pt_f), geo::vec(a, d)) = geo::vec(a, pt_f)[1] * geo::vec(a, d)[1] + geo::vec(a, pt_f)[2] * geo::vec(a, d)[2]
+    geo::vec(a, pt_f)[1] * geo::vec(a, d)[1] + geo::vec(a, pt_f)[2] * geo::vec(a, d)[2] = (geo::vec(a, b)[1] / 2 + geo::vec(a, d)[1]) * geo::vec(a, d)[1] + (geo::vec(a, b)[2] / 2 + geo::vec(a, d)[2]) * geo::vec(a, d)[2]
+    geo::dot(geo::vec(a, pt_f), geo::vec(a, d)) = geo::dot((geo::vec(a, b)[1] / 2 + geo::vec(a, d)[1], geo::vec(a, b)[2] / 2 + geo::vec(a, d)[2]), geo::vec(a, d)) = geo::dot(geo::vec(a, d), geo::vec(a, d))
+
+# Pure scalar finish for the midpoint angle-bisector configuration.
+# q is the common squared side length, and ae/ad are the positive metric
+# witnesses carried by the angle-bisector predicate.
+thm midpoint_angle_bisector_parameter:
+    ? forall t, q R, ae, ad R+:
+        q > 0,
+        ad^2 = q,
+        ae^2 = (1 + t^2) * q,
+        (t + 1 / 2) * q * ad = q * ae
+        =>:
+            t = 3 / 4
+
+    q != 0
+    ((t + 1 / 2) * ad) * q = (t + 1 / 2) * q * ad = q * ae = ae * q
+    (t + 1 / 2) * ad = (((t + 1 / 2) * ad) * q) / q = (ae * q) / q = ae
+    ((t + 1 / 2) * ad)^2 = ae^2
+    ((t + 1 / 2)^2) * ad^2 = ((t + 1 / 2) * ad)^2 = ae^2 = (1 + t^2) * q
+    (t + 1 / 2)^2 * ad^2 = (t + 1 / 2)^2 * q by thm geo::multiply_both_sides(ad^2, q, (t + 1 / 2)^2)
+    (t + 1 / 2)^2 * q = (t + 1 / 2)^2 * ad^2 = (1 + t^2) * q
+    (t + 1 / 2)^2 = ((t + 1 / 2)^2 * q) / q = ((1 + t^2) * q) / q = 1 + t^2
+    (t + 1 / 2)^2 = t^2 + t + 1 / 4
+    t^2 + t + 1 / 4 = 1 + t^2
+    (t^2 + t + 1 / 4) - t^2 = (1 + t^2) - t^2 by thm geo::subtract_equalities(t^2 + t + 1 / 4, 1 + t^2, t^2, t^2)
+    (t^2 + t + 1 / 4) - t^2 = t + 1 / 4
+    (1 + t^2) - t^2 = 1
+    t + 1 / 4 = (t^2 + t + 1 / 4) - t^2 = (1 + t^2) - t^2 = 1
+    (t + 1 / 4) - 1 / 4 = 1 - 1 / 4 by thm geo::subtract_equalities(t + 1 / 4, 1, 1 / 4, 1 / 4)
+    (t + 1 / 4) - 1 / 4 = t
+    1 - 1 / 4 = 3 / 4
+    t = (t + 1 / 4) - 1 / 4 = 1 - 1 / 4 = 3 / 4
+
+thm problem_207_part2_from_geometry_probe:
+    ? forall pa, pb, pc, pd, pe, pf cart(R, R):
+        # 【原题条件1】正方形 ABCD
+        $geo::is_square(pa, pb, pc, pd),
+        # 【原题条件2】E 为 BC 边上任意点
+        $geo::is_on_segment(pe, pb, pc),
+        # 【原题条件3】F 在 CD 边上（由角平分线和中点共同确定位置）
+        $geo::is_on_segment(pf, pc, pd),
+        # 【原题条件4】AF 平分 ∠EAD
+        $translation::is_metric_angle_bisector(pe, pa, pd, pf),
+        # 【原题条件5 = 第(1)问结论】F 为 CD 中点
+        $geo::is_midpoint(pf, pc, pd)
+        =>:
+            # 【原题结论 = 第(2)问】CE / BC = 1/4
+            $translation::segment_ratio_one_fourth(pc, pe, pb, pc)
+
+    by def $geo::is_square(pa, pb, pc, pd)
+    by def $geo::is_rectangle(pa, pb, pc, pd)
+    by def $geo::is_rhombus(pa, pb, pc, pd)
+    by def $geo::is_parallelogram(pa, pb, pc, pd)
+    by def $geo::is_parallel(pa, pb, pd, pc)
+    by def $geo::is_parallel(pa, pd, pb, pc)
+    by def $geo::is_right_angle(pd, pa, pb)
+    by def $geo::are_segments_congruent(pa, pb, pb, pc)
+    by def $geo::is_on_segment(pe, pb, pc)
+    obtain t from exist t0 R st {0 <= t0, t0 <= 1, pe = (pb[1] + t0 * (pc[1] - pb[1]), pb[2] + t0 * (pc[2] - pb[2]))}
+    pe[1] = pb[1] + t * (pc[1] - pb[1])
+    pe[2] = pb[2] + t * (pc[2] - pb[2])
+
+    by def $geo::is_on_segment(pf, pc, pd)
+    by def $geo::is_midpoint(pf, pc, pd)
+    pf[1] = (pc[1] + pd[1]) / 2
+    pf[2] = (pc[2] + pd[2]) / 2
+
+    by def $translation::is_metric_angle_bisector(pe, pa, pd, pf)
+    obtain ae, ad from exist ae0, ad0 R+ st {ae0^2 = geo::distance_sq(pa, pe), ad0^2 = geo::distance_sq(pa, pd), geo::dot(geo::vec(pa, pe), geo::vec(pa, pf)) * ad0 = geo::dot(geo::vec(pa, pf), geo::vec(pa, pd)) * ae0}
+
+    by thm orthogonal_parallel_quadrilateral_coordinates(pa, pb, pc, pd)
+
+    # Square side data in the orientation expected by the point-level bridge.
+    by thm geo::dot_commutative(pa, pb, pa, pd)
+    geo::dot(geo::vec(pa, pb), geo::vec(pa, pd)) = geo::dot(geo::vec(pa, pd), geo::vec(pa, pb)) = 0
+    by thm geo::parallelogram_sides(pa, pb, pc, pd)
+    by thm geo::vec_dot_self_is_distance(pa, pb)
+    by thm geo::vec_dot_self_is_distance(pa, pd)
+    geo::dot(geo::vec(pa, pb), geo::vec(pa, pb)) = geo::distance_sq(pa, pb) = geo::distance_sq(pb, pc) = geo::distance_sq(pa, pd) = geo::dot(geo::vec(pa, pd), geo::vec(pa, pd))
+
+    by thm square_configuration_point_data(pa, pb, pc, pd, pe, pf, t)
+
+    # Convert the three dot identities and the metric witnesses to the scalar bridge.
+    pa != pd
+    by thm geo::distance_sq_positive_of_ne(pa, pd)
+    by thm geo::vec_dot_self_is_distance(pa, pe)
+    ae^2 = geo::distance_sq(pa, pe) = geo::dot(geo::vec(pa, pe), geo::vec(pa, pe)) = (1 + t^2) * geo::dot(geo::vec(pa, pd), geo::vec(pa, pd)) = (1 + t^2) * geo::distance_sq(pa, pd)
+    ad^2 = geo::distance_sq(pa, pd)
+    geo::dot(geo::vec(pa, pe), geo::vec(pa, pf)) * ad = (t + 1 / 2) * geo::dot(geo::vec(pa, pd), geo::vec(pa, pd)) * ad = (t + 1 / 2) * geo::distance_sq(pa, pd) * ad
+    geo::dot(geo::vec(pa, pf), geo::vec(pa, pd)) * ae = geo::dot(geo::vec(pa, pd), geo::vec(pa, pd)) * ae = geo::distance_sq(pa, pd) * ae
+    (t + 1 / 2) * geo::distance_sq(pa, pd) * ad = geo::dot(geo::vec(pa, pe), geo::vec(pa, pf)) * ad = geo::dot(geo::vec(pa, pf), geo::vec(pa, pd)) * ae = geo::distance_sq(pa, pd) * ae
+    by thm midpoint_angle_bisector_parameter(t, geo::distance_sq(pa, pd), ae, ad)
+
+    # Since t = 3/4 on B -> C, E is the affine point with parameter 1/4 on C -> B.
+    pe[1] = pb[1] + t * (pc[1] - pb[1]) = pb[1] + (3 / 4) * (pc[1] - pb[1]) = (1 - 1 / 4) * pc[1] + (1 / 4) * pb[1]
+    pe[2] = pb[2] + t * (pc[2] - pb[2]) = pb[2] + (3 / 4) * (pc[2] - pb[2]) = (1 - 1 / 4) * pc[2] + (1 / 4) * pb[2]
+    by def $geo::is_affine_combination(pe, pc, pb, 1 / 4)
+    by thm geo::affine_combination_distance_sq(pc, pb, pe, 1 / 4)
+    by thm geo::distance_sq_symmetric(pc, pb)
+    geo::distance_sq(pc, pe) = (1 / 4)^2 * geo::distance_sq(pc, pb) = (1 / 4)^2 * geo::distance_sq(pb, pc) = (1 / 4)^2 * geo::distance_sq(pa, pd) = (1 / 4)^2 * ad^2 = (ad / 4)^2
+    ad^2 = geo::distance_sq(pa, pd) = geo::distance_sq(pb, pc)
+    4 * (ad / 4) = ad
+
+    witness exist ab, cd R+ st {ab^2 = geo::distance_sq(pc, pe), cd^2 = geo::distance_sq(pb, pc), 4 * ab = cd} from ad / 4, ad:
+        (ad / 4)^2 = geo::distance_sq(pc, pe)
+        ad^2 = geo::distance_sq(pb, pc)
+        4 * (ad / 4) = ad
+
+    by def $translation::segment_ratio_one_fourth(pc, pe, pb, pc)
