@@ -5,13 +5,13 @@ use std::path::Path;
 
 pub(super) const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-pub(super) fn run_command(target: &str, options: RunOptions) -> bool {
+pub(super) fn run_command(target: &str, options: InvocationOptions) -> bool {
     let outcome = match options.execution() {
-        ExecutionOption::Eval => run_code(target, options),
-        ExecutionOption::File => run_file(target, options),
-        ExecutionOption::IsolatedFile => run_isolated_file(target, options),
-        ExecutionOption::Repo => run_repository(target, options),
-        ExecutionOption::Repl | ExecutionOption::Session | ExecutionOption::IsolatedSession => {
+        LitexExecution::Inline => run_code(target, options),
+        LitexExecution::File => run_file(target, options),
+        LitexExecution::IsolatedFile => run_isolated_file(target, options),
+        LitexExecution::Repository => run_repository(target, options),
+        LitexExecution::Repl | LitexExecution::Session | LitexExecution::IsolatedSession => {
             unreachable!("run command was resolved to a non-batch target")
         }
     };
@@ -25,15 +25,15 @@ pub(super) fn run_graph_command(
     graph_kind: GraphKind,
     target: &str,
     save_path: Option<&str>,
-    options: RunOptions,
+    options: InvocationOptions,
 ) -> bool {
     let hide_file_paths = !options.output_detail().is_detailed();
     let outcome = match options.execution() {
-        ExecutionOption::Eval => run_code(target, options),
-        ExecutionOption::File => run_file(target, options),
-        ExecutionOption::IsolatedFile => run_isolated_file(target, options),
-        ExecutionOption::Repo => run_repository(target, options),
-        ExecutionOption::Repl | ExecutionOption::Session | ExecutionOption::IsolatedSession => {
+        LitexExecution::Inline => run_code(target, options),
+        LitexExecution::File => run_file(target, options),
+        LitexExecution::IsolatedFile => run_isolated_file(target, options),
+        LitexExecution::Repository => run_repository(target, options),
+        LitexExecution::Repl | LitexExecution::Session | LitexExecution::IsolatedSession => {
             unreachable!("graph command was resolved to a non-batch target")
         }
     };

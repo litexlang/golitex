@@ -1,13 +1,6 @@
 use crate::prelude::*;
 use std::collections::HashMap;
 
-#[derive(Clone, Debug)]
-pub struct UnverifiedImport {
-    pub kind: String,
-    pub name: String,
-    pub line_file: LineFile,
-}
-
 /// Owns every module participating in one top-level Runtime.
 ///
 /// Module runners refer to dependencies by `ModuleId`; they never hold Runtime
@@ -15,14 +8,70 @@ pub struct UnverifiedImport {
 /// inside one per-run registry.
 #[derive(Clone)]
 pub struct ModuleManager {
+    /// All modules participating in this top-level run, keyed by stable ID.
     pub modules: HashMap<ModuleId, ModuleRunner>,
+
+    /// Maps canonical module names to their stable IDs.
     pub module_by_name: HashMap<String, ModuleId>,
+
+    /// Maps canonical real module-root paths to module IDs.
     pub module_by_root: HashMap<RealDirectoryPath, ModuleId>,
+
+    /// Maps canonical exported-file names to their import targets.
+    ///
+    /// Name resolution uses this index to locate the source environment for
+    /// namespaces such as `A::one` and `gf::main`.
     pub exported_files_by_name: HashMap<String, ImportTarget>,
+
+    /// Module IDs currently being loaded, in discovery order.
+    ///
+    /// The stack is used to detect cyclic imports and unwind loading state.
     pub loading_module_stack: Vec<ModuleId>,
+
+    /// Next module ID to allocate.
     pub next_module_id: usize,
-    pub parsed_struct_definitions: HashMap<String, DefStructStmt>,
+
+    /// Records dependencies loaded without verification in ordinary mode.
+    ///
+    /// Run summaries report these imports, and definition graphs preserve
+    /// their trust provenance. This list is usually empty in `-strict` mode
+    /// because dependencies are verified.
     pub unverified_imports: Vec<UnverifiedImport>,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum UnverifiedImportKind {
+    /// A project module loaded from a configuration import.
+    ProjectImport,
+    /// A project export target loaded without verification.
+    ProjectExport,
+    /// A module loaded by a terminal `import` command.
+    TerminalImport,
+    /// A standard-library module loaded by a terminal `import std` command.
+    TerminalStdImport,
+}
+
+impl UnverifiedImportKind {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::ProjectImport => "project_import",
+            Self::ProjectExport => "project_export",
+            Self::TerminalImport => "terminal_import",
+            Self::TerminalStdImport => "terminal_std_import",
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct UnverifiedImport {
+    /// Kind of dependency load, represented by the closed set of load paths.
+    pub kind: UnverifiedImportKind,
+
+    /// Canonical name of the dependency loaded without verification.
+    pub name: String,
+
+    /// Source location that caused the dependency to be loaded.
+    pub line_file: LineFile,
 }
 
 impl ModuleManager {
@@ -34,7 +83,6 @@ impl ModuleManager {
             exported_files_by_name: HashMap::new(),
             loading_module_stack: vec![],
             next_module_id: 0,
-            parsed_struct_definitions: HashMap::new(),
             unverified_imports: vec![],
         }
     }
@@ -410,4 +458,29 @@ fn local_reference_suffix(name: &str, local_root: &str) -> Option<String> {
     name.strip_prefix(local_root)
         .filter(|suffix| suffix.starts_with(MOD_SIGN))
         .map(str::to_string)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::UnverifiedImportKind;
+
+    #[test]
+    fn unverified_import_kinds_keep_stable_labels() {
+        assert_eq!(
+            UnverifiedImportKind::ProjectImport.as_str(),
+            "project_import"
+        );
+        assert_eq!(
+            UnverifiedImportKind::ProjectExport.as_str(),
+            "project_export"
+        );
+        assert_eq!(
+            UnverifiedImportKind::TerminalImport.as_str(),
+            "terminal_import"
+        );
+        assert_eq!(
+            UnverifiedImportKind::TerminalStdImport.as_str(),
+            "terminal_std_import"
+        );
+    }
 }

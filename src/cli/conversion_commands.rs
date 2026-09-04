@@ -13,26 +13,26 @@ use crate::output::render_runtime_error_json;
 use crate::pipeline::file_execution::file_execution_option;
 use crate::prelude::{render_json_value, JsonValue};
 use crate::runtime::{
-    ExecutionOption, OutputDetail, RunOption, RunOptions, Runtime, SummaryOption,
+    InvocationOptions, LitexExecution, OutputDetail, Runtime, SummaryOption, VerifyStrictnessPolicy,
 };
 use crate::syntax::source_formatting::remove_windows_carriage_from_str;
 use std::fs;
 
-pub(super) fn run_latex_command(target: &str, options: RunOptions) -> bool {
+pub(super) fn run_latex_command(target: &str, options: InvocationOptions) -> bool {
     let result = match options.execution() {
-        ExecutionOption::File => match file_execution_option(target) {
-            ExecutionOption::File => compile_file_to_latex(target, options.output_language()),
-            ExecutionOption::IsolatedFile => {
+        LitexExecution::File => match file_execution_option(target) {
+            LitexExecution::File => compile_file_to_latex(target, options.output_language()),
+            LitexExecution::IsolatedFile => {
                 compile_isolated_file_to_latex(target, options.output_language())
             }
             _ => unreachable!("file context resolved to a non-file execution option"),
         },
-        ExecutionOption::IsolatedFile => {
+        LitexExecution::IsolatedFile => {
             compile_isolated_file_to_latex(target, options.output_language())
         }
-        ExecutionOption::Eval => compile_code_to_latex(target, options.output_language()),
-        ExecutionOption::Repo => compile_repo_to_latex(target, options.output_language()),
-        ExecutionOption::Repl | ExecutionOption::Session | ExecutionOption::IsolatedSession => {
+        LitexExecution::Inline => compile_code_to_latex(target, options.output_language()),
+        LitexExecution::Repository => compile_repo_to_latex(target, options.output_language()),
+        LitexExecution::Repl | LitexExecution::Session | LitexExecution::IsolatedSession => {
             unreachable!("LaTeX command was resolved to an unsupported target")
         }
     };
@@ -41,30 +41,30 @@ pub(super) fn run_latex_command(target: &str, options: RunOptions) -> bool {
 
 pub(super) fn run_code_extraction_command(
     source: &str,
-    options: RunOptions,
+    options: InvocationOptions,
     target: ExtractionKind,
 ) -> bool {
     let command_flag = extraction_command_flag(target);
     let result = match options.execution() {
-        ExecutionOption::File => match file_execution_option(source) {
-            ExecutionOption::File => {
+        LitexExecution::File => match file_execution_option(source) {
+            LitexExecution::File => {
                 compile_file_to_extracted_code(source, options.output_language(), target)
             }
-            ExecutionOption::IsolatedFile => {
+            LitexExecution::IsolatedFile => {
                 compile_isolated_file_to_extracted_code(source, options.output_language(), target)
             }
             _ => unreachable!("file context resolved to a non-file execution option"),
         },
-        ExecutionOption::IsolatedFile => {
+        LitexExecution::IsolatedFile => {
             compile_isolated_file_to_extracted_code(source, options.output_language(), target)
         }
-        ExecutionOption::Repo => {
+        LitexExecution::Repository => {
             compile_repository_to_extracted_code(source, options.output_language(), target)
         }
-        ExecutionOption::Eval => {
+        LitexExecution::Inline => {
             compile_code_to_extracted_code(source, options.output_language(), target, command_flag)
         }
-        ExecutionOption::Repl | ExecutionOption::Session | ExecutionOption::IsolatedSession => {
+        LitexExecution::Repl | LitexExecution::Session | LitexExecution::IsolatedSession => {
             unreachable!("extraction command was resolved to an unsupported target")
         }
     };
@@ -191,8 +191,9 @@ fn extraction_command_flag(target: ExtractionKind) -> &'static str {
 }
 
 fn render_conversion_error(output_language: OutputLanguage, error: &RuntimeError) -> String {
-    let runtime = Runtime::new(RunOptions::new(
-        RunOption::Execute(ExecutionOption::Eval),
+    let runtime = Runtime::new(InvocationOptions::new(
+        LitexExecution::Inline,
+        VerifyStrictnessPolicy::Ordinary,
         OutputDetail::Normal,
         output_language,
         SummaryOption::None,
@@ -204,7 +205,7 @@ fn print_conversion_result(
     artifact: &str,
     format: &str,
     input: &str,
-    options: RunOptions,
+    options: InvocationOptions,
     result: Result<String, String>,
 ) -> bool {
     let (target, has_path) = execution_target(options);

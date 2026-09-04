@@ -6,7 +6,7 @@ parser context, and the currently active source. Recursive proof-search state
 is carried explicitly by `VerifyState`, not stored on `Runtime`.
 
 ```text
-Runtime::new(options: RunOptions)
+Runtime::new(options: InvocationOptions)
   module_manager = one shared module world
   current_module_id = None
   current_source_id = None
@@ -24,17 +24,17 @@ run source `1 = 1`
 
 | Owner | State and concrete example |
 | --- | --- |
-| `Runtime` | Stored facts receive `f1`, then `f2`; popped local facts do not cause ID reuse. It owns the one transient `ParseContext` shared across recursive parsing of a compound statement. It also retains execution-derived direct struct carriers by exact `SymbolId`, so a stored theorem can later instantiate field syntax whose original binder scope has ended. Its single `RunOptions` value owns run-wide output style, strictness, language, summary, and isolation configuration for internal and embedding callers; the CLI fixes its output style and summary behavior. |
+| `Runtime` | Stored facts receive `f1`, then `f2`; popped local facts do not cause ID reuse. It owns the one transient `ParseContext` shared across recursive parsing of a compound statement. It also retains execution-derived direct struct carriers by exact `SymbolId`, so a stored theorem can later instantiate field syntax whose original binder scope has ended. Its single `InvocationOptions` value owns the Litex source entry point, verification strictness, output detail, language, summary, and isolation configuration for internal and embedding callers; the CLI fixes its output detail and summary behavior. |
 | `VerifyState` | Owns one explicit proof-search tree: successful atomic/WD memos and recursion guards. A child proof scope can read parent memos, while child entries never become visible in its parent. It also carries the explicit `InferenceState` used by stores reached from that verification tree. A fresh top-level state starts a fresh search. |
 | `current source` | `Runtime.current_module_id` plus `Runtime.current_source_id` identifies one registered `Source`; `Runtime.active_mode` and `Runtime.local_scopes` hold only active invocation state. `SourcePath::RealFilePath` is the only source origin accepted by filesystem/module path logic; `SourcePath::VirtualSource` is used for eval, REPL, session, generated projections, and `VirtualSource::Named` embedding labels. |
 | `SourceActivation` | A short-lived checkpoint used by graph/rendering helpers while they temporarily activate another registered source. It is not a second source registry or a persistent source stack. |
 | `ParseContext` | Runtime-owned free binders and scoped parse bindings needed to construct symbol-aware syntax trees before nested statements execute. It must return to its root scope before the current source changes. Field syntax is stored only as receiver plus field name; the parser does not choose a struct carrier. |
 | `Environment` | Checked definitions, facts, and persistent mathematical caches. A stored `SymbolDefinition` may own the direct struct carrier declared for that exact `SymbolId`; execution and well-definedness resolve field access from it. Tuple carriers are not retained as parser or symbol metadata. Child-environment merge commits this mathematical state; proof-search memos and recursion guards are not environment data. |
-| `ModuleManager` | Repository/module/file lifecycle and every persistent file environment, plus parse-only struct definitions and unverified-import diagnostics shared by files in that module world. `ModuleId::ROOT` is always zero. |
+| `ModuleManager` | Repository/module/file lifecycle and every persistent file environment, plus unverified-import diagnostics shared by files in that module world. `ModuleId::ROOT` is always zero. |
 | Local matcher values | Recursive forall-argument bindings live only for the operation using them; they are not ambient `Runtime` state. |
 
 Start with [`runtime.rs`](runtime.rs) for the `Runtime` fields and run initialization,
-[`run_options.rs`](run_options.rs) for run configuration,
+[`invocation_options.rs`](invocation_options.rs) for invocation configuration,
 [`../module_system/module_records.rs`](../module_system/module_records.rs) for typed source identity. The remaining code is
 grouped by the state or operation it owns:
 

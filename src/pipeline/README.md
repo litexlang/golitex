@@ -39,7 +39,7 @@ or `module_manager` without first expanding the crate-wide prelude.
 | File | Example |
 | --- | --- |
 | [`target.rs`](target.rs) | Models batch, REPL, distinct project-file and isolated-file targets, and their canonical source labels. |
-| [`run.rs`](run.rs) | Owns the explicit code, automatic-file, forced-isolated-file, and repository batch entries, Runtime creation, and their shared outcome rendering. The canonical `RunOptions` lives in [`../runtime/run_options.rs`](../runtime/run_options.rs). |
+| [`run.rs`](run.rs) | Owns the explicit code, automatic-file, forced-isolated-file, and repository batch entries, Runtime creation, and their shared outcome rendering. The canonical `InvocationOptions` lives in [`../runtime/invocation_options.rs`](../runtime/invocation_options.rs). |
 | [`source_execution.rs`](source_execution.rs) | Tokenizes, parses, and executes source inside an already initialized Runtime. |
 | [`file_execution.rs`](file_execution.rs) | Selects file context from the direct-parent `litex.config` and owns distinct project-file and isolated-file execution functions. |
 | [`output_rendering.rs`](output_rendering.rs) | Renders statement results, errors, and JSONL stream envelopes. |

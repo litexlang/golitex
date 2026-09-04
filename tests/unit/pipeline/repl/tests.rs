@@ -4,7 +4,9 @@ use super::{
 };
 use crate::pipeline::execute_isolated_file_in_runtime;
 use crate::prelude::{OutputDetail, OutputLanguage};
-use crate::runtime::{ExecutionOption, RunOption, RunOptions, Runtime, SummaryOption};
+use crate::runtime::{
+    InvocationOptions, LitexExecution, Runtime, SummaryOption, VerifyStrictnessPolicy,
+};
 use crate::test_support::execute_source;
 use std::fs;
 use std::io::{self, BufRead, Cursor, Write};
@@ -17,8 +19,9 @@ fn run_repl_loop_with_readers(
 ) -> io::Result<()> {
     run_repl_loop_with_readers_and_mode(
         version_banner,
-        RunOptions::new(
-            RunOption::Execute(ExecutionOption::Repl),
+        InvocationOptions::new(
+            LitexExecution::Repl,
+            VerifyStrictnessPolicy::Ordinary,
             output_detail,
             OutputLanguage::English,
             SummaryOption::None,

@@ -8,32 +8,32 @@ pub(super) enum ExtractionKind {
 
 #[derive(Debug)]
 pub(super) enum CliCommand {
-    Repl(RunOptions),
+    Repl(InvocationOptions),
     Help,
     Version,
     Execute {
         target: String,
-        options: RunOptions,
+        options: InvocationOptions,
     },
     Graph {
         kind: GraphKind,
         target: String,
         save_path: Option<String>,
-        options: RunOptions,
+        options: InvocationOptions,
     },
     Session {
         file_path: Option<String>,
-        options: RunOptions,
+        options: InvocationOptions,
     },
     LatexRepl,
     Latex {
         target: String,
-        options: RunOptions,
+        options: InvocationOptions,
     },
     Extract {
         kind: ExtractionKind,
         target: String,
-        options: RunOptions,
+        options: InvocationOptions,
     },
     Lean {
         input_path: String,
@@ -86,8 +86,8 @@ pub(super) fn parse_cli_command(args: &[String]) -> Result<CliCommand, String> {
         if modifiers.isolated {
             return unsupported();
         }
-        return Ok(CliCommand::Repl(run_options(
-            ExecutionOption::Repl,
+        return Ok(CliCommand::Repl(invocation_options(
+            LitexExecution::Repl,
             modifiers,
         )));
     }
@@ -112,19 +112,19 @@ pub(super) fn parse_cli_command(args: &[String]) -> Result<CliCommand, String> {
         }
         return Ok(CliCommand::Execute {
             target: command[1].clone(),
-            options: run_options(ExecutionOption::Eval, modifiers),
+            options: invocation_options(LitexExecution::Inline, modifiers),
         });
     }
 
     if command.len() == 2 && command[0] == "-f" && is_value(1) {
         let execution = if modifiers.isolated {
-            ExecutionOption::IsolatedFile
+            LitexExecution::IsolatedFile
         } else {
-            ExecutionOption::File
+            LitexExecution::File
         };
         return Ok(CliCommand::Execute {
             target: command[1].clone(),
-            options: run_options(execution, modifiers),
+            options: invocation_options(execution, modifiers),
         });
     }
 
@@ -134,7 +134,7 @@ pub(super) fn parse_cli_command(args: &[String]) -> Result<CliCommand, String> {
         }
         return Ok(CliCommand::Execute {
             target: command[1].clone(),
-            options: run_options(ExecutionOption::Repo, modifiers),
+            options: invocation_options(LitexExecution::Repository, modifiers),
         });
     }
 
@@ -175,7 +175,7 @@ pub(super) fn parse_cli_command(args: &[String]) -> Result<CliCommand, String> {
             kind,
             target: command[2].clone(),
             save_path: command.get(3).cloned(),
-            options: run_options(execution, modifiers),
+            options: invocation_options(execution, modifiers),
         });
     }
 
@@ -183,13 +183,13 @@ pub(super) fn parse_cli_command(args: &[String]) -> Result<CliCommand, String> {
         || (command.len() == 3 && command[0] == "-session" && command[1] == "-f" && is_value(2))
     {
         let execution = if modifiers.isolated {
-            ExecutionOption::IsolatedSession
+            LitexExecution::IsolatedSession
         } else {
-            ExecutionOption::Session
+            LitexExecution::Session
         };
         return Ok(CliCommand::Session {
             file_path: command.get(2).cloned(),
-            options: run_options(execution, modifiers),
+            options: invocation_options(execution, modifiers),
         });
     }
 
@@ -211,7 +211,7 @@ pub(super) fn parse_cli_command(args: &[String]) -> Result<CliCommand, String> {
         let execution = execution_option(command[1].as_str(), modifiers.isolated);
         return Ok(CliCommand::Latex {
             target: command[2].clone(),
-            options: run_options(execution, modifiers),
+            options: invocation_options(execution, modifiers),
         });
     }
 
@@ -225,7 +225,7 @@ pub(super) fn parse_cli_command(args: &[String]) -> Result<CliCommand, String> {
         return Ok(CliCommand::Extract {
             kind: extraction_kind(command[0].as_str()),
             target: command[1].clone(),
-            options: run_options(ExecutionOption::Eval, modifiers),
+            options: invocation_options(LitexExecution::Inline, modifiers),
         });
     }
 
@@ -241,7 +241,7 @@ pub(super) fn parse_cli_command(args: &[String]) -> Result<CliCommand, String> {
         return Ok(CliCommand::Extract {
             kind: extraction_kind(command[0].as_str()),
             target: command[2].clone(),
-            options: run_options(execution, modifiers),
+            options: invocation_options(execution, modifiers),
         });
     }
 
@@ -255,26 +255,27 @@ struct ParsedModifiers {
     isolated: bool,
 }
 
-fn run_options(execution: ExecutionOption, modifiers: ParsedModifiers) -> RunOptions {
-    let run = if modifiers.strict {
-        RunOption::StrictExecute(execution)
+fn invocation_options(execution: LitexExecution, modifiers: ParsedModifiers) -> InvocationOptions {
+    let verify_strictness = if modifiers.strict {
+        VerifyStrictnessPolicy::Strict
     } else {
-        RunOption::Execute(execution)
+        VerifyStrictnessPolicy::Ordinary
     };
-    RunOptions::new(
-        run,
+    InvocationOptions::new(
+        execution,
+        verify_strictness,
         OutputDetail::Detailed,
         modifiers.output_language.unwrap_or(OutputLanguage::English),
         SummaryOption::None,
     )
 }
 
-fn execution_option(flag: &str, isolated: bool) -> ExecutionOption {
+fn execution_option(flag: &str, isolated: bool) -> LitexExecution {
     match flag {
-        "-e" => ExecutionOption::Eval,
-        "-f" if isolated => ExecutionOption::IsolatedFile,
-        "-f" => ExecutionOption::File,
-        "-r" => ExecutionOption::Repo,
+        "-e" => LitexExecution::Inline,
+        "-f" if isolated => LitexExecution::IsolatedFile,
+        "-f" => LitexExecution::File,
+        "-r" => LitexExecution::Repository,
         _ => unreachable!("command input flag was already validated"),
     }
 }

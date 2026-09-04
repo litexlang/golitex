@@ -1,7 +1,7 @@
 use super::render_runtime_error_json;
 use crate::error::{ParseRuntimeError, RuntimeError, RuntimeErrorStruct};
 use crate::module_system::{discover_terminal_module_import, discover_terminal_std_import};
-use crate::module_system::{ImportTarget, ModuleStatus};
+use crate::module_system::{ImportTarget, ModuleStatus, UnverifiedImportKind};
 use crate::output::json_value::{render_json_value, JsonValue};
 use crate::parsing::Tokenizer;
 use crate::runtime::{ExecutionMode, Runtime};
@@ -30,10 +30,10 @@ impl TerminalImportCommand {
         }
     }
 
-    fn diagnostic_kind(&self) -> &'static str {
+    fn diagnostic_kind(&self) -> UnverifiedImportKind {
         match self {
-            Self::Module { .. } => "terminal_import",
-            Self::Std { .. } => "terminal_std_import",
+            Self::Module { .. } => UnverifiedImportKind::TerminalImport,
+            Self::Std { .. } => UnverifiedImportKind::TerminalStdImport,
         }
     }
 }
@@ -87,7 +87,7 @@ pub(super) fn run_terminal_import(source: &str, runtime: &mut Runtime) -> (bool,
         .module(module_id)
         .expect("terminal import module should be registered")
         .status;
-    let execution_mode = if runtime.run_options.is_strict() {
+    let execution_mode = if runtime.invocation_options.is_strict() {
         ExecutionMode::RequireVerification
     } else {
         let name = runtime

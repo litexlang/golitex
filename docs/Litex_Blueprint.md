@@ -50,8 +50,10 @@ Litex 定位四层检查（写作时逐层核对；面向不同受众可以调�
   - [3. Bottom-Up: Let Verified Facts Continue to Grow](#3-bottom-up-let-verified-facts-continue-to-grow)
   - [4. Lean-Compatible: Independent Rechecking for Covered Paths](#4-lean-compatible-independent-rechecking-for-covered-paths)
     - [One Complete Theorem Now Reaches Lean](#one-complete-theorem-now-reaches-lean)
+    - [Summary: Bottom-Up and Top-Down Reasoning Are Complementary](#summary-bottom-up-and-top-down-reasoning-are-complementary)
   - [5. From Four Design Principles to Mathematical Practice: Definition and Verification](#mathematics-practice)
   - [6. The End-to-End Human–AI–Litex Knowledge-Production Loop](#interaction-loop)
+    - [Summary: Why Fact Orientation and Bottom-Up Flow Help the Loop](#summary-fact-oriented-bottom-up-loop)
   - [7. From Language to Ecosystem: The Role Litex Aims to Play](#ecosystem-role)
   - [8. Conclusion](#conclusions)
     - [Related Links](#related-links)
@@ -848,6 +850,16 @@ Second, how should successful execution become a Lean proof? A search branch mus
 
 Litex therefore supplies a mathematics-facing interface while Lean supplies small-kernel rechecking and ecosystem reuse. Covered paths can combine both into a verifiable, reviewable, reusable workflow.
 
+### Summary: Bottom-Up and Top-Down Reasoning Are Complementary
+
+In mathematical practice, bottom-up accumulation of facts and top-down decomposition of a goal are not alternatives. They coexist and check one another. Litex and Lean are therefore complementary: Litex lets an author start from objects, conditions, and verified facts and grow a readable proof flow; Lean starts from an explicit goal, decomposes it, constructs a proof term, and submits the result to a small kernel for independent checking. They can divide the work in one workflow without making either direction the only correct one.
+
+From the author's observation, AI often handles *fact-oriented* expression and local bottom-up continuation naturally. One possible explanation is its training material: much knowledge on the internet is organized as facts, conclusions, and local derivations, so models learn patterns that resemble this direction. This is a working hypothesis about data distribution and model behavior, not a universal conclusion about every model or task.
+
+AI training also optimizes objectives and, in some stages, preference or reward signals. “Reward” should not be identified with the Transformer architecture itself: a Transformer provides the representation and generation architecture, while losses and sometimes preference/reward optimization shape behavior during training. This gives no basis for claiming that AI has a stable first-principles, bottom-up reasoning ability; in many tasks it may more readily organize a plausible path backward from a desired result or evaluation signal. That is a tendency to test, not an immutable limitation.
+
+Both modes of thought are valuable. Bottom-up reasoning accumulates reusable local facts and exposes their intermediate support; top-down reasoning clarifies the target, chooses a direction, and narrows the search space. The Litex–Lean connection can place both directions in one checkable evidence chain, allowing humans and AI to collaborate from the direction each handles best.
+
 <a id="mathematics-practice"></a>
 
 ## 5. From Four Design Principles to Mathematical Practice: Definition and Verification
@@ -1028,6 +1040,24 @@ The fact then enters accepted context, and the AI can continue with the subgroup
 </details>
 
 The same loop can scale from one fact to a theorem, a reusable interface, a textbook chapter, or a multi-file theory. Contiguous committed blocks can be materialized as `.lit` source containing only accepted mathematics. When explicitly in scope and supported, the route may continue to a proof artifact checked by Lean's kernel.
+
+<a id="summary-fact-oriented-bottom-up-loop"></a>
+
+### Summary: Why Fact Orientation and Bottom-Up Flow Help the Loop
+
+| Design benefit | Mechanism in the human–AI–Litex loop | Meaning | Boundary |
+| --- | --- | --- | --- |
+| Intermediate facts are reusable | Verified facts enter context as material for later proofs | Even if the final target fails, accepted intermediate steps may serve other proofs, definitions, or interfaces | Reuse depends on the fact's scope, formulation, and later need |
+| Each trial costs less | A failed candidate rolls back transactionally, so only the current candidate needs repair | AI need not rewrite the entire proof from scratch and can continue from the previous state | This is a design advantage that lowers per-round repair cost, not a claim that AI is more efficient on every task |
+| Errors do not pollute context | A `RolledBack` candidate does not enter the accepted fact set | A failed attempt cannot become a false premise for later proofs | The proposition itself still needs review against mathematical intent |
+| Success and failure are explainable | Failure returns the phase, goal, and evidence; success preserves the accepted path | A human can tell the AI exactly where it went wrong and why a step is correct | Field names and messages may evolve; these underlying meanings are the stable part |
+| Mathematical intent is easier to align | Humans provide the goal, conditions, and acceptance boundary; AI proposes local facts | Humans review not only whether a proof passes, but whether the problem was expressed correctly | Litex cannot replace human judgment about mathematical intent |
+| Human attention is reallocated | Humans own intent and boundaries, AI explores candidates, and Litex performs local checks | Humans need not guide every syntactic and search detail line by line | Key definitions, conditions, and final judgments still require human participation |
+| Failures can improve the system | Failures are localized as expression, rule, standard-library, kernel, or diagnostic problems | A failed proof can become a language or tooling improvement signal | Classification and verification are still required; not every failure is a kernel defect |
+| The reasoning trajectory can be saved and resumed | Commits, rollback points, and verification evidence form a continuous trajectory | Work can resume from an accepted prefix, and the trajectory can support review, evaluation, or future AI training | “Useful for AI training” is data potential, not a demonstrated performance gain |
+| Important paths can be independently rechecked | Covered paths continue to Lean/Mathlib for independent checking | Litex provides an easy-to-write, easy-to-repair front end while Lean adds kernel assurance | Only currently covered paths that compile successfully receive this extra check |
+
+Therefore, the human–AI–Litex loop produces more than a final proof: it produces a reasoning trajectory with proposition boundaries, commit states, failure locations, verification evidence, and reusable intermediate facts. Litex's fact-oriented, bottom-up design makes that trajectory available for continued use, targeted repair, review, and improvement.
 
 <a id="ecosystem-role"></a>
 

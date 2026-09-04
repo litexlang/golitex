@@ -6,7 +6,7 @@ use super::{
 use crate::error::RuntimeError;
 use crate::module_system::{discover_repository, VirtualSource};
 use crate::result::StmtResult;
-use crate::runtime::{ExecutionOption, RunOption, RunOptions, Runtime};
+use crate::runtime::{InvocationOptions, LitexExecution, Runtime, VerifyStrictnessPolicy};
 use crate::syntax::source_formatting::remove_windows_carriage_from_str;
 
 pub struct RunOutcome {
@@ -19,7 +19,7 @@ pub struct RunOutcome {
     pub target_error: Option<String>,
 }
 
-pub fn run_code(source: &str, options: RunOptions) -> RunOutcome {
+pub fn run_code(source: &str, options: InvocationOptions) -> RunOutcome {
     let mut runtime = Runtime::new(options);
     let target = RunTarget::Eval;
     runtime.start_virtual_source(VirtualSource::Eval);
@@ -37,22 +37,22 @@ pub fn run_code(source: &str, options: RunOptions) -> RunOutcome {
     )
 }
 
-pub fn run_file(path: &str, options: RunOptions) -> RunOutcome {
+pub fn run_file(path: &str, options: InvocationOptions) -> RunOutcome {
     let resolved_path = resolve_source_file_path(path);
     let execution = resolved_path
         .as_ref()
         .map(|path| file_execution_option(path.as_str()))
-        .unwrap_or(ExecutionOption::File);
+        .unwrap_or(LitexExecution::File);
     let options = options_for_execution(options, execution);
     let mut runtime = Runtime::new(options);
     let mut target_error = None;
     let (target_path, stmt_results, runtime_error) = match resolved_path {
         Ok(resolved_path) => {
             let (results, error) = match execution {
-                ExecutionOption::File => {
+                LitexExecution::File => {
                     execute_file_in_runtime(resolved_path.as_str(), &mut runtime)
                 }
-                ExecutionOption::IsolatedFile => {
+                LitexExecution::IsolatedFile => {
                     execute_isolated_file_in_runtime(resolved_path.as_str(), &mut runtime)
                 }
                 _ => unreachable!("file context resolved to a non-file execution option"),
@@ -66,8 +66,8 @@ pub fn run_file(path: &str, options: RunOptions) -> RunOutcome {
     };
 
     let target = match execution {
-        ExecutionOption::File => RunTarget::File { path: target_path },
-        ExecutionOption::IsolatedFile => RunTarget::IsolatedFile { path: target_path },
+        LitexExecution::File => RunTarget::File { path: target_path },
+        LitexExecution::IsolatedFile => RunTarget::IsolatedFile { path: target_path },
         _ => unreachable!("file context resolved to a non-file execution option"),
     };
     finish_run(
@@ -80,8 +80,8 @@ pub fn run_file(path: &str, options: RunOptions) -> RunOutcome {
     )
 }
 
-pub fn run_isolated_file(path: &str, options: RunOptions) -> RunOutcome {
-    let options = options_for_execution(options, ExecutionOption::IsolatedFile);
+pub fn run_isolated_file(path: &str, options: InvocationOptions) -> RunOutcome {
+    let options = options_for_execution(options, LitexExecution::IsolatedFile);
     let mut runtime = Runtime::new(options);
     let mut target_error = None;
     let (target_path, stmt_results, runtime_error) = match resolve_source_file_path(path) {
@@ -106,8 +106,8 @@ pub fn run_isolated_file(path: &str, options: RunOptions) -> RunOutcome {
     )
 }
 
-pub fn run_repository(path: &str, options: RunOptions) -> RunOutcome {
-    let options = options_for_execution(options, ExecutionOption::Repo);
+pub fn run_repository(path: &str, options: InvocationOptions) -> RunOutcome {
+    let options = options_for_execution(options, LitexExecution::Repository);
     let mut runtime = Runtime::new(options);
     let normalized_path = remove_windows_carriage_from_str(path);
     let (stmt_results, runtime_error) =
@@ -128,14 +128,18 @@ pub fn run_repository(path: &str, options: RunOptions) -> RunOutcome {
     )
 }
 
-fn options_for_execution(options: RunOptions, execution: ExecutionOption) -> RunOptions {
-    let run = if options.is_strict() {
-        RunOption::StrictExecute(execution)
+fn options_for_execution(
+    options: InvocationOptions,
+    execution: LitexExecution,
+) -> InvocationOptions {
+    let verify_strictness = if options.is_strict() {
+        VerifyStrictnessPolicy::Strict
     } else {
-        RunOption::Execute(execution)
+        VerifyStrictnessPolicy::Ordinary
     };
-    RunOptions::new(
-        run,
+    InvocationOptions::new(
+        execution,
+        verify_strictness,
         options.output_detail(),
         options.output_language(),
         options.summary(),

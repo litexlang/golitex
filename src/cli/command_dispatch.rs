@@ -39,10 +39,10 @@ pub fn run_cli() {
         }
         CliCommand::Session { file_path, options } => {
             let target = match (options.execution(), file_path) {
-                (ExecutionOption::Session, None) => SessionTarget::CurrentDirectory,
-                (ExecutionOption::IsolatedSession, None) => SessionTarget::Isolated,
-                (ExecutionOption::Session, Some(path)) => SessionTarget::File { path },
-                (ExecutionOption::IsolatedSession, Some(path)) => {
+                (LitexExecution::Session, None) => SessionTarget::CurrentDirectory,
+                (LitexExecution::IsolatedSession, None) => SessionTarget::Isolated,
+                (LitexExecution::Session, Some(path)) => SessionTarget::File { path },
+                (LitexExecution::IsolatedSession, Some(path)) => {
                     SessionTarget::IsolatedFile { path }
                 }
                 _ => unreachable!("session command was resolved to a non-session target"),

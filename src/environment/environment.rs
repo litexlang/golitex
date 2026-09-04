@@ -18,10 +18,21 @@ use crate::prelude::*;
 ///   belong to `VerifyState` and `VerifyFactResult`, never this environment.
 #[derive(Clone)]
 pub struct Environment {
+    /// Definitions and symbol identities for declarations visible to later
+    /// statements.
     pub definitions: EnvironmentDefinitionRegistry,
+
+    /// Stored facts and indexes used to find mathematical evidence.
     pub facts: EnvironmentFactStore,
+
+    /// Known object values and shape facets keyed by canonical object string.
     pub objects: EnvironmentObjectKnowledgeStore,
+
+    /// Algebraic properties registered for predicates, such as transitivity,
+    /// symmetry, reflexivity, and antisymmetry.
     pub predicate_algebraic_properties: EnvironmentPredicateAlgebraicPropertyStore,
+
+    /// Environment-scoped keys that deduplicate persistent infer-rule firings.
     pub inference_cache: EnvironmentInferenceCache,
 }
 

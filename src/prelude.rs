@@ -127,7 +127,7 @@ pub use crate::module_system::{
     ConfigImport, ConfigImportKind, ExportEntry, ImportTarget, ModuleId, ModuleLocation,
     ModuleManager, ModuleRunner, ModuleStatus, ProjectConfig, ProjectExport, ProjectHierarchy,
     ProjectImport, ProjectStdImport, RealDirectoryPath, RealFilePath, RepositoryFileTarget, Source,
-    SourceId, SourceLoadStatus, SourcePath, UnverifiedImport, VirtualSource,
+    SourceId, SourceLoadStatus, SourcePath, UnverifiedImport, UnverifiedImportKind, VirtualSource,
 };
 pub use crate::object::nested_obj_binder_normalized_key;
 pub use crate::object::obj_equality_key;
@@ -484,7 +484,8 @@ pub use crate::runtime::OutputStyle;
 pub use crate::runtime::ParseContext;
 pub use crate::runtime::ScopeFrame;
 pub use crate::runtime::{
-    ExecutionOption, OutputDetail, RunOption, RunOptions, Runtime, SourceActivation, SummaryOption,
+    InvocationOptions, LitexExecution, OutputDetail, Runtime, SourceActivation, SummaryOption,
+    VerifyStrictnessPolicy,
 };
 pub use crate::statement::claim_stmt::ClaimStmt;
 pub use crate::statement::define_algorithm_stmt::AlgoCase;

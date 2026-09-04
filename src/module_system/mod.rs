@@ -12,7 +12,7 @@ pub use project_config::{
     parse_project_config, ProjectConfig, ProjectExport, ProjectHierarchy, ProjectImport,
     ProjectStdImport,
 };
-pub use registry::{ModuleManager, UnverifiedImport};
+pub use registry::{ModuleManager, UnverifiedImport, UnverifiedImportKind};
 pub use repository_discovery::{
     discover_repository, discover_repository_for_file, resolve_std_root, RepositoryFileTarget,
 };

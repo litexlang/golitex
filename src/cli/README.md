@@ -5,7 +5,7 @@
 ```text
 args -> command::parse_cli_command
      -> validate one hardcoded command shape and exact argument count
-     -> produce one resolved CliCommand with owned values and RunOptions
+     -> produce one resolved CliCommand with owned values and InvocationOptions
 match typed command:
   Execute -> command_handlers::run_command
           -> select pipeline::run_code/run_file/run_isolated_file/run_repository once

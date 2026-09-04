@@ -6,45 +6,69 @@ use std::collections::HashMap;
 use std::rc::Rc;
 
 pub struct Runtime {
-    /// The module world for this top-level run.
+    /// Module registry and persistent source environments for this top-level
+    /// run.
     pub module_manager: Box<ModuleManager>,
-    /// Module owning `current_source_id`. Source ids are module-local because
-    /// import targets already carry their owner module id.
+
+    /// Module that owns `current_source_id`.
+    ///
+    /// Source IDs are module-local because import targets carry their owner
+    /// module ID.
     pub current_module_id: Option<ModuleId>,
-    /// The one source currently being parsed or executed.
+
+    /// Source currently being parsed or executed.
     pub current_source_id: Option<SourceId>,
-    /// Mode for the current operation; this is transient runtime state, not
-    /// source metadata.
+
+    /// Verification mode for the current operation.
+    ///
+    /// This is transient runtime state, not source metadata.
     pub execution_mode: ExecutionMode,
+
     /// Temporary environments nested inside the current source.
     pub current_environment_stack: Vec<Box<Environment>>,
+
     /// Transient binder and scope state shared by one nested parser traversal.
+    ///
     /// Changing the current source neither consumes nor resets it.
     pub(crate) parse_context: ParseContext,
-    /// Monotone runtime-wide allocator. Local environments may disappear, but
-    /// a fact ID is never reused during the run.
+
+    /// Monotone runtime-wide allocator for fact IDs.
+    ///
+    /// Local environments may disappear, but a fact ID is never reused during
+    /// the run.
     pub next_fact_id: u64,
+
+    /// Runtime-wide allocator for globally unique symbol IDs.
     pub symbol_id_allocator: Rc<SymbolIdAllocator>,
+
+    /// Interns bindings for template-instance names not yet visible as
+    /// definitions.
     pub template_instance_interner: RefCell<HashMap<String, SymbolBinding>>,
-    /// Direct struct carriers learned only when a typed binding executes.
-    /// This keeps exact transient binder identities usable after their local
-    /// environment has ended, for example when a stored theorem is instantiated.
+
+    /// Direct struct carriers learned when typed bindings execute.
+    ///
+    /// Exact transient binder identities remain usable after their local
+    /// environment ends, for example when a stored theorem is instantiated.
     pub(crate) executed_direct_struct_carriers: HashMap<SymbolId, StructObj>,
-    pub run_options: RunOptions,
+
+    /// Run-wide execution, output, language, summary, and isolation settings.
+    pub invocation_options: InvocationOptions,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct SourceActivation {
     /// Module that owns the checkpointed source id.
     pub module_id: Option<ModuleId>,
+
     /// Source that was active before a projection temporarily switched source.
     pub source_id: Option<SourceId>,
+
     /// Active verification mode restored with the source.
     pub mode: ExecutionMode,
 }
 
 impl Runtime {
-    pub fn new(run_options: RunOptions) -> Self {
+    pub fn new(invocation_options: InvocationOptions) -> Self {
         Runtime {
             module_manager: Box::new(ModuleManager::new()),
             current_module_id: None,
@@ -56,7 +80,7 @@ impl Runtime {
             symbol_id_allocator: Rc::new(SymbolIdAllocator::new()),
             template_instance_interner: RefCell::new(HashMap::new()),
             executed_direct_struct_carriers: HashMap::new(),
-            run_options,
+            invocation_options,
         }
     }
 }
@@ -74,7 +98,7 @@ fn virtual_source_from_legacy_label(label: &str) -> VirtualSource {
 
 impl Default for Runtime {
     fn default() -> Self {
-        Self::new(RunOptions::default())
+        Self::new(InvocationOptions::default())
     }
 }
 
@@ -90,9 +114,10 @@ impl Runtime {
     }
 
     pub fn set_output_detail(&mut self, output_detail: OutputDetail) {
-        let options = self.run_options;
-        self.run_options = RunOptions::new(
-            options.run(),
+        let options = self.invocation_options;
+        self.invocation_options = InvocationOptions::new(
+            options.execution(),
+            options.verify_strictness(),
             output_detail,
             options.output_language(),
             options.summary(),
@@ -100,7 +125,7 @@ impl Runtime {
     }
 
     pub fn effective_output_detail(&self) -> OutputDetail {
-        self.run_options.output_detail()
+        self.invocation_options.output_detail()
     }
 
     #[deprecated(note = "use `set_output_detail`")]
@@ -265,7 +290,7 @@ impl Runtime {
     }
 
     pub fn strict_mode_applies_to_current_module(&self) -> bool {
-        if !self.run_options.is_strict() {
+        if !self.invocation_options.is_strict() {
             return false;
         }
         let Some(module_id) = self.current_module_id else {
@@ -289,7 +314,12 @@ impl Runtime {
         self.current_execution_mode() == ExecutionMode::Trusted
     }
 
-    pub fn record_unverified_import(&mut self, kind: &str, name: String, line_file: LineFile) {
+    pub fn record_unverified_import(
+        &mut self,
+        kind: UnverifiedImportKind,
+        name: String,
+        line_file: LineFile,
+    ) {
         if self
             .module_manager
             .unverified_imports
@@ -301,7 +331,7 @@ impl Runtime {
         self.module_manager
             .unverified_imports
             .push(UnverifiedImport {
-                kind: kind.to_string(),
+                kind,
                 name,
                 line_file,
             });

@@ -18,13 +18,14 @@ fn run_repository_for_test(
     output_language: OutputLanguage,
     summarize: bool,
 ) -> (bool, String) {
-    let run = if strict_mode {
-        RunOption::StrictExecute(ExecutionOption::Repo)
+    let verify_strictness = if strict_mode {
+        VerifyStrictnessPolicy::Strict
     } else {
-        RunOption::Execute(ExecutionOption::Repo)
+        VerifyStrictnessPolicy::Ordinary
     };
-    let options = RunOptions::new(
-        run,
+    let options = InvocationOptions::new(
+        LitexExecution::Repository,
+        verify_strictness,
         if detailed_output {
             OutputDetail::Detailed
         } else {
@@ -70,7 +71,8 @@ pub(super) fn run_runtime_contract_suite_impl() {
 fn runtime_contract_builtin() {
     let source_code = "1 = 1";
 
-    let mut import_runtime = Runtime::new(RunOptions::strict_execute(ExecutionOption::Eval));
+    let mut import_runtime =
+        Runtime::new(InvocationOptions::strict_execute(LitexExecution::Inline));
     import_runtime.start_isolated_source("runtime_contract_import");
     let (import_stmt_results, import_runtime_error) =
         execute_source(source_code, &mut import_runtime);
