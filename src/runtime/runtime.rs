@@ -15,9 +15,9 @@ pub struct Runtime {
     pub current_source_id: Option<SourceId>,
     /// Mode for the current operation; this is transient runtime state, not
     /// source metadata.
-    pub active_mode: ExecutionMode,
+    pub execution_mode: ExecutionMode,
     /// Temporary environments nested inside the current source.
-    pub local_scopes: Vec<Box<Environment>>,
+    pub current_environment_stack: Vec<Box<Environment>>,
     /// Transient binder and scope state shared by one nested parser traversal.
     /// Changing the current source neither consumes nor resets it.
     pub(crate) parse_context: ParseContext,
@@ -49,8 +49,8 @@ impl Runtime {
             module_manager: Box::new(ModuleManager::new()),
             current_module_id: None,
             current_source_id: None,
-            active_mode: ExecutionMode::RequireVerification,
-            local_scopes: vec![],
+            execution_mode: ExecutionMode::RequireVerification,
+            current_environment_stack: vec![],
             parse_context: ParseContext::new(),
             next_fact_id: 1,
             symbol_id_allocator: Rc::new(SymbolIdAllocator::new()),
@@ -139,26 +139,26 @@ impl Runtime {
 
     fn activate_source(&mut self, module_id: ModuleId, source_id: SourceId, mode: ExecutionMode) {
         assert!(
-            self.local_scopes.is_empty(),
+            self.current_environment_stack.is_empty(),
             "a source cannot be selected with an active local environment"
         );
         self.current_module_id = Some(module_id);
         self.current_source_id = Some(source_id);
-        self.active_mode = mode;
+        self.execution_mode = mode;
     }
 
     fn reset_current_source_state(&mut self) {
         self.current_module_id = None;
         self.current_source_id = None;
-        self.active_mode = ExecutionMode::RequireVerification;
-        self.local_scopes.clear();
+        self.execution_mode = ExecutionMode::RequireVerification;
+        self.current_environment_stack.clear();
     }
 
     pub fn source_activation(&self) -> SourceActivation {
         SourceActivation {
             module_id: self.current_module_id,
             source_id: self.current_source_id,
-            mode: self.active_mode,
+            mode: self.execution_mode,
         }
     }
 
@@ -282,7 +282,7 @@ impl Runtime {
     }
 
     pub fn current_execution_mode(&self) -> ExecutionMode {
-        self.active_mode
+        self.execution_mode
     }
 
     pub fn current_execution_is_trusted_source(&self) -> bool {
@@ -315,8 +315,8 @@ impl Runtime {
         &mut self,
         execution_mode: ExecutionMode,
     ) -> ExecutionMode {
-        let previous = self.active_mode;
-        self.active_mode = execution_mode;
+        let previous = self.execution_mode;
+        self.execution_mode = execution_mode;
         previous
     }
 }

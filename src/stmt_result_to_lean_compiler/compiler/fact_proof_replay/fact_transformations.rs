@@ -383,6 +383,8 @@ impl StmtResultToLeanCompiler {
         transformation_step_index: usize,
     ) -> Result<Option<String>, String> {
         let mut substitutions = HashMap::new();
+        let mut reduced_environment = self.environment_stack.clone();
+        let mut requires_rendered_binder_substitution = false;
         let mut definition_names = Vec::with_capacity(evidence.steps.len());
         let mut seen_symbols = HashSet::new();
         for (rewrite_index, rewrite) in evidence.steps.iter().enumerate() {
@@ -423,41 +425,55 @@ impl StmtResultToLeanCompiler {
                     )
                 })?
                 .clone();
+            let rendered_definition = render_obj(&definition.value, &reduced_environment)?;
+            reduced_environment
+                .symbol_names
+                .insert(symbol_id, rendered_definition);
             substitutions.insert(symbol_id.substitution_key(), definition.value.clone());
+            requires_rendered_binder_substitution |= matches!(definition.value, Obj::SetBuilder(_));
             definition_names.push(lean_name);
         }
 
-        let reduced_source = Runtime::default()
-            .inst_fact(
-                source,
-                &substitutions,
-                SubstitutionMode::TransparentDefinition,
-                None,
+        let (reduced_source, reduced_target) = if requires_rendered_binder_substitution {
+            (
+                render_fact(source, &reduced_environment)?,
+                render_fact(target, &reduced_environment)?,
             )
-            .map_err(|error| {
-                format!(
-                    "fact transformation transparent equality rewrite step {transformation_step_index} could not reduce its source: {}",
-                    error.trace_message()
+        } else {
+            let reduced_source = Runtime::default()
+                .inst_fact(
+                    source,
+                    &substitutions,
+                    SubstitutionMode::TransparentDefinition,
+                    None,
                 )
-            })?;
-        let reduced_target = Runtime::default()
-            .inst_fact(
-                target,
-                &substitutions,
-                SubstitutionMode::TransparentDefinition,
-                None,
+                .map_err(|error| {
+                    format!(
+                        "fact transformation transparent equality rewrite step {transformation_step_index} could not reduce its source: {}",
+                        error.trace_message()
+                    )
+                })?;
+            let reduced_target = Runtime::default()
+                .inst_fact(
+                    target,
+                    &substitutions,
+                    SubstitutionMode::TransparentDefinition,
+                    None,
+                )
+                .map_err(|error| {
+                    format!(
+                        "fact transformation transparent equality rewrite step {transformation_step_index} could not reduce its target: {}",
+                        error.trace_message()
+                    )
+                })?;
+            (
+                render_fact(&reduced_source, &self.environment_stack)?,
+                render_fact(&reduced_target, &self.environment_stack)?,
             )
-            .map_err(|error| {
-                format!(
-                    "fact transformation transparent equality rewrite step {transformation_step_index} could not reduce its target: {}",
-                    error.trace_message()
-                )
-            })?;
-        if render_fact(&reduced_source, &self.environment_stack)?
-            != render_fact(&reduced_target, &self.environment_stack)?
-        {
+        };
+        if reduced_source != reduced_target {
             return Err(format!(
-                "fact transformation transparent equality rewrite step {transformation_step_index} does not reduce its source and target to the same proposition"
+                "fact transformation transparent equality rewrite step {transformation_step_index} does not reduce `{source}` and `{target}` to the same proposition: `{reduced_source}` != `{reduced_target}`"
             ));
         }
         render_fact(source, &self.environment_stack)?;

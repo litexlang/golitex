@@ -33,7 +33,7 @@ rules have interchangeable semantics.
 
 ## `dispatcher_or_search_helper`
 
-- Rows: **87**; direct producers: **84**; exact compiler consumers: **1**.
+- Rows: **86**; direct producers: **83**; exact compiler consumers: **1**.
 - Representative: `builtin.verify.verify_builtin_rules.in_fact_builtin.dispatch.verify_in_fact_with_builtin_rules.12` (`UncataloguedBuiltinRule::VerifyInFactWithBuiltinRules12`).
 - Representative producer: `src/verification/builtin_rules/in_fact_builtin/dispatch.rs:1075`.
 - Result migration: Return the selected terminal certificate/child Result; retire a helper identity that proves no proposition.

@@ -20,11 +20,9 @@ impl StmtResultToLeanCompiler {
             result_layer,
             None,
         )?;
-        proof_lines.extend(
-            compiled_steps
-                .iter()
-                .map(CompiledInferenceFactProofStep::render_as_local_have_statement),
-        );
+        proof_lines.extend(compiled_steps.iter().map(|step| {
+            self.render_compiled_inference_fact_proof_step_as_local_have_statement(step)
+        }));
         Ok(())
     }
 
@@ -47,11 +45,9 @@ impl StmtResultToLeanCompiler {
             result_layer,
             Some(force_replay_visible_conclusions),
         )?;
-        proof_lines.extend(
-            compiled_steps
-                .iter()
-                .map(CompiledInferenceFactProofStep::render_as_local_have_statement),
-        );
+        proof_lines.extend(compiled_steps.iter().map(|step| {
+            self.render_compiled_inference_fact_proof_step_as_local_have_statement(step)
+        }));
         Ok(())
     }
 }

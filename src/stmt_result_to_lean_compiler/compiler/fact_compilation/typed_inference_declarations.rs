@@ -34,7 +34,9 @@ impl StmtResultToLeanCompiler {
             proof_lines.extend(
                 preceding_steps
                     .iter()
-                    .map(CompiledInferenceFactProofStep::render_as_local_have_statement)
+                    .map(|step| {
+                        self.render_compiled_inference_fact_proof_step_as_local_have_statement(step)
+                    })
                     .map(|line| indent_lines(&line, 2)),
             );
             proof_lines.push(indent_lines(&format!("exact {}", step.proof_expression), 2));

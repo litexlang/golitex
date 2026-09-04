@@ -13,15 +13,15 @@ impl Runtime {
     }
 
     pub fn environment_count(&self) -> usize {
-        let local_count = self.local_scopes.len();
+        let local_count = self.current_environment_stack.len();
         local_count + 2
     }
 
     pub fn environment_by_top_index(&self, index: usize) -> Option<&Environment> {
-        let local_count = self.local_scopes.len();
+        let local_count = self.current_environment_stack.len();
         if index < local_count {
             return self
-                .local_scopes
+                .current_environment_stack
                 .get(local_count - 1 - index)
                 .map(|environment| environment.as_ref());
         }

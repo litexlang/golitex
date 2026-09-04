@@ -1063,6 +1063,8 @@ Evaluation should focus on outcomes: can people audit intent; can humans and AI 
 
 If this direction works, it can lower authorship and review barriers, turn readable text into checked reusable artifacts, and help humans and AI understand mathematical relationships. Deeper understanding and discovery are possible long-term outcomes, not results already secured by language design.
 
+Mathematics is the unseen skeleton deep within the edifice of science. We believe that any mathematics can be formalized, and that formalized mathematics will ultimately become the future of mathematics. Litex hopes to become one of the building blocks of that future.
+
 ### Related Links
 
 1. To try examples directly and inspect Litex's output and knowledge graphs, visit [litexlang.com](https://litexlang.com).

@@ -577,7 +577,7 @@ impl StmtResultToLeanCompiler {
                 ));
             } else {
                 application_terms.push(format!(
-                    "(by\n  simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using ({proof}))"
+                    "(by\n  simpa [Litex.In.rep, Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using ({proof}))"
                 ));
             }
         }
@@ -732,7 +732,7 @@ impl StmtResultToLeanCompiler {
             };
             return Ok(Some(if transported == application {
                 format!(
-                    "(by\n  simpa [Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using {application})"
+                    "(by\n  simpa [Litex.In.rep, Litex.fnApply, Litex.fnApplyOwn, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using {application})"
                 )
             } else {
                 transported
@@ -763,7 +763,7 @@ impl StmtResultToLeanCompiler {
         {
             return Ok(Some(if uses_exact_object_parameter {
                 format!(
-                    "(by\n  simpa [Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using {application})"
+                    "(by\n  simpa [Litex.In.rep, Litex.abs, Complex.ext_iff, Real.norm_eq_abs] using {application})"
                 )
             } else {
                 application
@@ -774,7 +774,9 @@ impl StmtResultToLeanCompiler {
             target,
         )? {
             render_fact(target, &self.environment_stack)?;
-            return Ok(Some(format!("(by\n  simpa using {application})")));
+            return Ok(Some(format!(
+                "(by\n  simpa [Litex.In.rep] using {application})"
+            )));
         }
         if facts_align_by_nested_rational_normalization_for_result_compiler(
             &instantiated_conclusion,

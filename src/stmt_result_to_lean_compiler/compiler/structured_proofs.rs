@@ -4076,12 +4076,40 @@ impl StmtResultToLeanCompiler {
             return Ok(None);
         };
         if atomic_fact_is_logically_negated(impossible_fact) {
-            let impossible_type = render_fact(&impossible_target, &self.environment_stack)?;
+            // The global `NotEqual` rule ABI is intentionally
+            // no-observation, but a contradiction whose positive child is
+            // `x != y` may be using the `by_contra` assumption of an
+            // observed `x = y` goal.  The retained complementary equality is
+            // the authoritative observer choice for this local application.
+            let impossible_type = if matches!(impossible_fact, AtomicFact::NotEqualFact(_))
+                && matches!(negated.fact(), Fact::AtomicFact(AtomicFact::EqualFact(_)))
+            {
+                format!(
+                    "¬ ({})",
+                    render_fact(&negated.fact(), &self.environment_stack)?
+                )
+            } else {
+                render_fact(&impossible_target, &self.environment_stack)?
+            };
             Ok(Some(format!(
                 "(({impossible_proof} : {impossible_type}) ({negated_proof}))"
             )))
         } else {
-            let negated_type = render_fact(&expected_negated, &self.environment_stack)?;
+            // `NotEqual` is intentionally represented by the generic
+            // no-observation rule ABI, but when a contradiction is proving an
+            // observed equality, `by_contra` has already introduced the
+            // observed negation of that exact target.  Reuse the target's
+            // rendered proposition for this local annotation rather than
+            // changing the global NotEqual representation (which would break
+            // nonzero/refined-set rules).
+            let negated_type = if matches!(impossible_fact, AtomicFact::EqualFact(_)) {
+                format!(
+                    "¬ ({})",
+                    render_fact(&impossible_target, &self.environment_stack)?
+                )
+            } else {
+                render_fact(&expected_negated, &self.environment_stack)?
+            };
             Ok(Some(format!(
                 "(({negated_proof} : {negated_type}) ({impossible_proof}))"
             )))

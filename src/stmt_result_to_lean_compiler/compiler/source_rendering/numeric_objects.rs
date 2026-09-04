@@ -12,6 +12,16 @@ pub(in super::super) fn render_numeric_obj(
     if let Ok(LeanTargetObjectRepresentation::Symbol { symbol_id, .. }) =
         LeanTargetObjectRepresentation::lower(obj)
     {
+        // A source parameter may be heterogeneous (`x : E`) while a visible
+        // subset Result proves `E ⊆ R`. Re-select the target representative
+        // from that retained evidence before falling back to `In.rep x E`.
+        if let Some((real, _same)) = resolve_visible_subset_transport_real_argument(
+            obj,
+            &Obj::StandardSet(StandardSet::R),
+            context,
+        )? {
+            return Ok(format!("(({real}) : ℂ)"));
+        }
         if let Some(representation) = context.numeric_representations.get(&symbol_id) {
             return Ok(representation.clone());
         }

@@ -28,19 +28,23 @@ impl StmtResultToLeanCompiler {
                 )
             }
             SuccessFactProofResult::Transform(transformation) => {
-                let FactTransformationRule::TransparentDefinitionReduction(evidence) =
-                    &transformation.rule
-                else {
-                    return Ok(None);
-                };
                 let source = transformation.source.as_ref();
-                self.construct_lean_transparent_definition_reduction_from_result(
-                    &source.fact(),
-                    &result.fact(),
-                    "True.intro".to_string(),
-                    evidence,
-                    0,
-                )?;
+                if let FactTransformationRule::TransparentDefinitionReduction(evidence) =
+                    &transformation.rule
+                {
+                    self.construct_lean_transparent_definition_reduction_from_result(
+                        &source.fact(),
+                        &result.fact(),
+                        "True.intro".to_string(),
+                        evidence,
+                        0,
+                    )?;
+                } else if !matches!(
+                    transformation.rule,
+                    FactTransformationRule::EqualityRewrite(_)
+                ) {
+                    return Ok(None);
+                }
                 self.construct_lean_exact_set_builder_value_from_fact_result(source)
             }
             SuccessFactProofResult::Reuse(reuse) => {
@@ -100,8 +104,16 @@ impl StmtResultToLeanCompiler {
             };
             compiled_children.push((expected.clone(), proof));
         }
+        // A local transparent definition may name the set-builder in the
+        // retained membership Fact.  Replay the checked children against the
+        // definition's structural set-builder value so the canonical witness
+        // can be constructed, while the surrounding equality remains typed by
+        // the original local alias.
+        let rendering_target =
+            transparent_set_builder_membership_target(target, &self.environment_stack)
+                .unwrap_or_else(|| target.clone());
         render_exact_set_builder_value_from_fact_and_proofs(
-            target,
+            &rendering_target,
             &compiled_children,
             &self.environment_stack,
         )
@@ -212,4 +224,29 @@ impl StmtResultToLeanCompiler {
             "Litex.In.own {rendered_function_set} {rendered_function}"
         )))
     }
+}
+
+fn transparent_set_builder_membership_target(
+    target: &Fact,
+    context: &StmtResultToLeanCompilerEnvironmentStack,
+) -> Option<Fact> {
+    let Fact::AtomicFact(AtomicFact::InFact(membership)) = target else {
+        return None;
+    };
+    let Obj::Atom(atom) = &membership.set else {
+        return None;
+    };
+    let symbol_id = atom.symbol_ref().map(SymbolRef::id)?;
+    let definition = context.transparent_object_definitions.get(&symbol_id)?;
+    let Obj::SetBuilder(_) = definition.value else {
+        return None;
+    };
+    Some(
+        InFact::new(
+            membership.element.clone(),
+            definition.value.clone(),
+            membership.line_file.clone(),
+        )
+        .into(),
+    )
 }

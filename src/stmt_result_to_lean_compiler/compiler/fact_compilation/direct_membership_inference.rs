@@ -182,16 +182,17 @@ impl StmtResultToLeanCompiler {
                 }
             };
             let proposition =
-                if matches!(conclusion.fact, Fact::AtomicFact(AtomicFact::EqualFact(_))) {
-                    // A set-builder predicate projection exposes only the
-                    // observation-free `Same` edge returned by
-                    // `inSetBuilder_iff`; do not strengthen it to a native
-                    // numeric observer merely because the projected endpoint is
-                    // a literal.
-                    render_no_observation_equality_alternatives_fact(
-                        &conclusion.fact,
-                        &self.environment_stack,
-                    )?
+                if let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = &conclusion.fact {
+                    let left = render_obj(&equality.left, &self.environment_stack)?;
+                    let right = render_obj(&equality.right, &self.environment_stack)?;
+                    if left == right {
+                        render_fact(&conclusion.fact, &self.environment_stack)?
+                    } else {
+                        render_no_observation_equality_alternatives_fact(
+                            &conclusion.fact,
+                            &self.environment_stack,
+                        )?
+                    }
                 } else {
                     render_fact(&conclusion.fact, &self.environment_stack)?
                 };

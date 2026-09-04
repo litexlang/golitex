@@ -284,6 +284,30 @@ impl StmtResultToLeanCompiler {
                         &self.environment_stack,
                     )?;
                     format!("Litex.In.own Litex.R {exact_real}")
+                } else if matches!(role, BuiltinTheoremRequirementRole::ArgumentIsMemberOfSet) {
+                    let (numeric_object, target_set) = membership_parts(requirement)?;
+                    let exact_carrier = match LeanTargetObjectRepresentation::lower(numeric_object)?
+                    {
+                        LeanTargetObjectRepresentation::Symbol { symbol_id, .. } => {
+                            self.environment_stack
+                                .opaque_carrier_symbols
+                                .contains(&symbol_id)
+                                || self
+                                    .environment_stack
+                                    .observed_carrier_symbols
+                                    .contains(&symbol_id)
+                        }
+                        _ => false,
+                    };
+                    if exact_carrier {
+                        let source = render_obj(numeric_object, &self.environment_stack)?;
+                        let set = render_obj(target_set, &self.environment_stack)?;
+                        format!(
+                            "((Litex.In.congr (Litex.Same.subtypeNoObservation {source}) {set}).mp ({proof}))"
+                        )
+                    } else {
+                        proof
+                    }
                 } else if let Some(real_arguments) = rational_density_real_arguments.as_ref() {
                     match role {
                         BuiltinTheoremRequirementRole::LeftArgumentBelongsToReals => {
@@ -318,6 +342,25 @@ impl StmtResultToLeanCompiler {
                         }
                         _ => proof,
                     }
+                } else {
+                    proof
+                };
+                let proof = if matches!(
+                    role,
+                    BuiltinTheoremRequirementRole::SuppliedValueBoundsEverySetMember
+                        | BuiltinTheoremRequirementRole::SuppliedValueIsLowerBoundForEverySetMember
+                ) && matches!(requirement, Fact::ForallFact(_))
+                    && !requirement_proofs.is_empty()
+                {
+                    // The real-completeness Core theorem observes each set
+                    // member through `Subset.rep`, whereas a retained
+                    // forall Result over the source set naturally exposes
+                    // `In.rep`.  Re-run that exact Result proof at the
+                    // target representative and use `In.rep_exact`; this is
+                    // a local elaboration adapter, not a new proof search.
+                    let set = render_obj(&verification.arguments[0], &self.environment_stack)?;
+                    let subset_proof = &requirement_proofs[0];
+                    render_bounds_every_member_adapter(&proof, &set, subset_proof)
                 } else {
                     proof
                 };
@@ -368,9 +411,13 @@ impl StmtResultToLeanCompiler {
                         (BuiltinTheoremId::RealMemberLeLeastUpperBound, 2)
                             | (BuiltinTheoremId::RealGreatestLowerBoundLeMember, 2)
                     ) {
+                        let mut theorem_argument_context = self.environment_stack.clone();
+                        theorem_argument_context
+                            .subset_membership_transports
+                            .truncate(inherited_subset_transport_count);
                         render_real_target_object_representation(
                             &LeanTargetObjectRepresentation::lower(argument)?,
-                            &self.environment_stack,
+                            &theorem_argument_context,
                         )
                     } else {
                         render_obj(argument, &self.environment_stack)
@@ -438,10 +485,20 @@ impl StmtResultToLeanCompiler {
                 // their ordered verifier Results.
                 proof = format!("(by convert ({proof}) using 1 <;> norm_num <;> norm_cast)");
             }
-            let proposition = self.render_fact_using_well_definedness_result(
-                conclusion_well_definedness,
-                conclusion,
-            )?;
+            // Requirement-local subset transports are proof-construction
+            // adapters.  They must not rewrite the theorem's own conclusion
+            // proposition; otherwise the rule call and the outer target can
+            // disagree on whether a source member is represented by `member`
+            // or by `In.rep member ...`.
+            let mut conclusion_context = self.environment_stack.clone();
+            conclusion_context
+                .subset_membership_transports
+                .truncate(inherited_subset_transport_count);
+            conclusion_context.well_definedness =
+                Some(self.construct_well_definedness_to_lean_compilation_context(
+                    conclusion_well_definedness,
+                )?);
+            let proposition = render_fact(conclusion, &conclusion_context)?;
 
             let [outer_store] = result.common.infers.store_fact_outputs.as_slice() else {
                 return Err(
@@ -472,6 +529,12 @@ impl StmtResultToLeanCompiler {
         self.environment_stack.well_definedness = previous_well_definedness;
         compilation
     }
+}
+
+fn render_bounds_every_member_adapter(proof: &str, set: &str, subset_proof: &str) -> String {
+    format!(
+        "(by\n  intro __carrier __member __member_in_set\n  let __target_member : ℝ := (Litex.Subset.rep ({subset_proof}) __member __member_in_set : ℝ)\n  have __subset_rep_in_set : Litex.In __target_member {set} := by\n    exact (Litex.In.congr (Litex.Subset.same_rep ({subset_proof}) __member __member_in_set) {set}).mp __member_in_set\n  have __selected := ({proof}) __target_member __subset_rep_in_set\n  convert __selected using 1 <;> norm_num <;> norm_cast)"
+    )
 }
 
 fn same_compiler_object(left: &Obj, right: &Obj) -> bool {

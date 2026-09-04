@@ -2,7 +2,7 @@
 
 use super::super::*;
 
-fn render_real_to_complex_same_across_contexts(
+pub(in super::super) fn render_real_to_complex_same_across_contexts(
     object: &Obj,
     real_context: &StmtResultToLeanCompilerEnvironmentStack,
     complex_context: &StmtResultToLeanCompilerEnvironmentStack,
@@ -844,11 +844,27 @@ pub(in super::super) fn render_fact_proof_across_exact_predicate_arguments_with_
         }
         component_proofs.push(proof);
     }
-    Ok(format!(
+    let rendered = format!(
         "(by\n  have __source := {source_proof}\n  unfold {} at __source ⊢\n  exact ⟨{}⟩)",
         binding.lean_name,
         component_proofs.join(", ")
-    ))
+    );
+    if rendered.contains("__SOURCE_CLAUSE_BRIDGE__") {
+        // A set-builder passes one explicit source `Same` edge for its sole
+        // exact parameter.  Alpha-instantiated predicate binders can carry a
+        // different SymbolId, so the per-SymbolId lookup above may miss that
+        // edge even though the structural transport is still unambiguous.
+        // Resolve only this marked placeholder, and only when the caller
+        // supplied exactly one explicit bridge; never invent a bridge for an
+        // ordinary predicate transport.
+        let [(_, bridge)] = source_bridges else {
+            return Err(
+                "exact predicate transport retained an unresolved source-clause bridge".into(),
+            );
+        };
+        return Ok(rendered.replace("__SOURCE_CLAUSE_BRIDGE__", bridge));
+    }
+    Ok(rendered)
 }
 
 /// Whether `source` and `target` are made entirely from applications of

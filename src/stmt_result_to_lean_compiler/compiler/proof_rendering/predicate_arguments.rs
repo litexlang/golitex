@@ -73,7 +73,7 @@ pub(in super::super) fn render_exact_predicate_function_argument(
     }
 }
 
-fn resolve_visible_exact_membership_proof(
+pub(in super::super) fn resolve_visible_exact_membership_proof(
     object: &Obj,
     set: &Obj,
     context: &StmtResultToLeanCompilerEnvironmentStack,
@@ -118,6 +118,140 @@ fn resolve_visible_exact_membership_proof(
     }
     Err(format!(
         "exact predicate argument `{object}` has no visible checked membership in `{set}`"
+    ))
+}
+
+/// Select a numeric representative through a visible subset Result. A
+/// heterogeneous parameter may be introduced as `x : E`, while the consumer
+/// expects the target carrier `R`; the retained subset membership is the only
+/// valid bridge between those carriers.
+pub(in super::super) fn resolve_visible_subset_transport_real_argument(
+    object: &Obj,
+    target_set: &Obj,
+    context: &StmtResultToLeanCompilerEnvironmentStack,
+) -> Result<Option<(String, String)>, String> {
+    let source = render_obj(object, context)?;
+    let lowered_target_set = LeanTargetObjectRepresentation::lower(target_set)?;
+    for transport in context.subset_membership_transports.iter().rev() {
+        // The target is supplied by the caller (currently the native `R`
+        // consumer). Restrict this bridge to the exact retained target key;
+        // attempting to normalize arbitrary source definitions here would
+        // re-enter the runtime's global environment machinery while rendering
+        // a local compiler frame.
+        if obj_equality_key(&transport.target_set) != obj_equality_key(target_set) {
+            continue;
+        }
+        let Ok(membership) =
+            resolve_visible_subset_source_membership_proof(object, &transport.source_set, context)
+        else {
+            continue;
+        };
+        // A subset whose source is a predicate-defined set already carries a
+        // canonical base representative inside its membership witness.  Use
+        // that witness's `.val` directly instead of selecting a second,
+        // unrelated `In.rep x target` value: arbitrary predicates are not
+        // extensional under a no-observation `Same` edge, so the latter could
+        // not soundly inherit the source predicate proof.
+        let source_is_set_builder = match &transport.source_set {
+            Obj::SetBuilder(_) => true,
+            Obj::Atom(atom) => atom
+                .symbol_ref()
+                .and_then(|symbol| context.transparent_object_definitions.get(&symbol.id()))
+                .is_some_and(|definition| matches!(definition.value, Obj::SetBuilder(_))),
+            _ => false,
+        };
+        if source_is_set_builder {
+            let source_representative = format!("Litex.In.rep {source} ({membership})");
+            let source_base = format!("({source_representative}).val");
+            let Some(real) = exact_set_real_value(&lowered_target_set, &source_base) else {
+                continue;
+            };
+            let same = format!(
+                "Litex.Same.symm (Litex.Same.trans (Litex.In.same_rep {source} ({membership})) (Litex.Same.subtypeNoObservation ({source_representative})))"
+            );
+            return Ok(Some((real, same)));
+        }
+        let target_membership = format!(
+            "(({}) {} ({}))",
+            transport.proof_expression, source, membership
+        );
+        let target_representative = format!("Litex.In.rep {source} ({target_membership})");
+        let Some(real) = exact_set_real_value(&lowered_target_set, &target_representative) else {
+            continue;
+        };
+        let same = format!("Litex.Same.symm (Litex.In.same_rep {source} ({target_membership}))");
+        return Ok(Some((real, same)));
+    }
+    Ok(None)
+}
+
+/// Membership lookup used by subset transport rendering. Keep this lookup
+/// deliberately shallow: the general renderer's lexical fallback may render
+/// arbitrary retained arithmetic facts, which would re-enter numeric
+/// rendering while we are already resolving a numeric representative.
+fn resolve_visible_subset_source_membership_proof(
+    object: &Obj,
+    set: &Obj,
+    context: &StmtResultToLeanCompilerEnvironmentStack,
+) -> Result<String, String> {
+    let mut candidates = context
+        .fact_propositions
+        .iter()
+        .filter_map(|(fact_id, fact)| {
+            let (element, retained_set) = membership_parts(fact).ok()?;
+            (obj_equality_key(element) == obj_equality_key(object)
+                && obj_equality_key(retained_set) == obj_equality_key(set))
+            .then_some((*fact_id, fact))
+        })
+        .collect::<Vec<_>>();
+    candidates.sort_by_key(|(fact_id, _)| *fact_id);
+    for (fact_id, fact) in candidates {
+        if let Ok(proof) = resolve_fact_citation(&fact_id, fact, context) {
+            return Ok(proof);
+        }
+    }
+    let rendered_object = render_obj(object, context)?;
+    let (
+        LeanTargetObjectRepresentation::Symbol { .. },
+        LeanTargetObjectRepresentation::Symbol { .. },
+    ) = (
+        LeanTargetObjectRepresentation::lower(object)?,
+        LeanTargetObjectRepresentation::lower(set)?,
+    )
+    else {
+        return Err(format!(
+            "subset transport source `{object}` has no direct visible membership in `{set}`"
+        ));
+    };
+    let rendered_set = render_obj(set, context)?;
+    let mut lexical = context
+        .fact_propositions
+        .iter()
+        .filter_map(|(fact_id, fact)| {
+            let (element, retained_set) = membership_parts(fact).ok()?;
+            let (
+                LeanTargetObjectRepresentation::Symbol { .. },
+                LeanTargetObjectRepresentation::Symbol { .. },
+            ) = (
+                LeanTargetObjectRepresentation::lower(element).ok()?,
+                LeanTargetObjectRepresentation::lower(retained_set).ok()?,
+            )
+            else {
+                return None;
+            };
+            (render_obj(element, context).ok().as_deref() == Some(rendered_object.as_str())
+                && render_obj(retained_set, context).ok().as_deref() == Some(rendered_set.as_str()))
+            .then_some((*fact_id, fact))
+        })
+        .collect::<Vec<_>>();
+    lexical.sort_by_key(|(fact_id, _)| *fact_id);
+    for (fact_id, fact) in lexical {
+        if let Ok(proof) = resolve_fact_citation(&fact_id, fact, context) {
+            return Ok(proof);
+        }
+    }
+    Err(format!(
+        "subset transport source `{object}` has no visible membership in `{set}`"
     ))
 }
 
@@ -172,6 +306,29 @@ pub(in super::super) fn render_exact_predicate_argument(
         )
     {
         if let Ok(real) = render_real_source_object(object, context) {
+            // A refined-positive argument may be a simple division such as
+            // `epsilon / 2`.  The local exact carrier already carries
+            // `epsilon.property`; ask the kernel for the corresponding
+            // native `div_pos` proof instead of hoping `positivity` unfolds a
+            // dependent subtype projection through the generated term.
+            if let Ok(LeanTargetObjectRepresentation::BuiltinApp {
+                operator: LeanTargetBuiltinObjectOperator::Div,
+                arguments,
+                ..
+            }) = LeanTargetObjectRepresentation::lower(object)
+            {
+                if let [LeanTargetObjectRepresentation::Symbol { symbol_id, .. }, LeanTargetObjectRepresentation::Number { normalized_value }] =
+                    arguments.as_slice()
+                {
+                    if normalized_value == "2" {
+                        if let Some(carrier) = context.exact_positive_real_carriers.get(symbol_id) {
+                            let positivity =
+                                format!("by\n  exact div_pos ({carrier}).property (by norm_num)");
+                            return Ok(format!("(⟨{real}, {positivity}⟩ : (Litex.RPos).Carrier)"));
+                        }
+                    }
+                }
+            }
             let mut positive_carriers = context
                 .exact_positive_real_carriers
                 .values()
@@ -188,12 +345,34 @@ pub(in super::super) fn render_exact_predicate_argument(
                     )
                 })
                 .collect::<Vec<_>>();
-            let positivity = if premises.is_empty() {
+            let positivity = if positive_carriers.len() == 1
+                && real.contains("/ (2 : ℝ)")
+                && real.contains(".val")
+            {
+                // The lowered source may have crossed a function/template
+                // boundary and therefore no longer be structurally visible
+                // as `Obj::Div`.  The exact-positive carrier is still the
+                // only semantic witness in this frame; use it explicitly.
+                format!(
+                    "by\n  exact div_pos ({}).property (by norm_num)",
+                    positive_carriers[0]
+                )
+            } else if premises.is_empty() {
                 "by positivity".to_string()
             } else {
                 format!("by\n  {}\n  positivity", premises.join("\n  "))
             };
             return Ok(format!("(⟨{real}, {positivity}⟩ : (Litex.RPos).Carrier)"));
+        }
+    }
+    if matches!(
+        LeanTargetObjectRepresentation::lower(object),
+        Ok(LeanTargetObjectRepresentation::Symbol { .. })
+    ) {
+        if let Some((real, _same)) =
+            resolve_visible_subset_transport_real_argument(object, set, context)?
+        {
+            return Ok(real);
         }
     }
     if let Ok(LeanTargetObjectRepresentation::Symbol { symbol_id, name }) =
@@ -379,6 +558,18 @@ pub(in super::super) fn render_exact_predicate_argument_same_to_source(
     // bridge must remain the heterogeneous `Same` proof from that membership,
     // never a cast of the proof object itself.
     if matches!(set, Obj::StandardSet(StandardSet::R)) {
+        if matches!(
+            LeanTargetObjectRepresentation::lower(object),
+            Ok(LeanTargetObjectRepresentation::Symbol { .. })
+        ) {
+            if let Some((selected, same)) =
+                resolve_visible_subset_transport_real_argument(object, set, context)?
+            {
+                if exact == selected {
+                    return Ok(same);
+                }
+            }
+        }
         if let Ok(membership) = resolve_visible_exact_membership_proof(object, set, context) {
             let selected = format!("Litex.In.rep {source} ({membership})");
             if exact.contains(&format!("Litex.In.rep {source}")) {

@@ -20,8 +20,8 @@ The 422 uncatalogued builtin identities are intentionally kept in
 | `builtin_typed` | `set.subset_transitivity` | `compiler_gap` | - | 1 | add one positive Result-driven tracer and direct compiler consumer for set.subset_transitivity |
 | `fact` | `Fact::ForallFactWithIff` | `compiler_gap` | - | 41 | add one positive Result-driven tracer and direct compiler consumer for Fact::ForallFactWithIff |
 | `fact` | `Fact::NotForall` | `compiler_gap` | - | 28 | add one positive Result-driven tracer and direct compiler consumer for Fact::NotForall |
-| `fact_proof` | `SuccessFactProofResult::DefinitionReduction` | `compiler_gap` | - | 3 | direct proof replay returns no proof for the legacy definition-reduction Result |
-| `fact_proof` | `SuccessFactProofResult::DiagnosticOnly` | `evidence_gap` | - | 3 | a diagnostic-only successful Result retains no replayable proof evidence |
+| `fact_proof` | `SuccessFactProofResult::DefinitionReduction` | `compiler_gap` | - | 4 | direct proof replay returns no proof for the legacy definition-reduction Result |
+| `fact_proof` | `SuccessFactProofResult::DiagnosticOnly` | `evidence_gap` | - | 4 | a diagnostic-only successful Result retains no replayable proof evidence |
 | `object` | `Obj::CartDim` | `compiler_gap` | `binder`, `definition_value`, `function_domain_or_codomain`, `target_set`, `term`, `well_definedness` | 25 | add one positive Result-driven tracer and direct compiler consumer for Obj::CartDim |
 | `object` | `Obj::FiniteSetMax` | `compiler_gap` | `binder`, `definition_value`, `function_domain_or_codomain`, `target_set`, `term`, `well_definedness` | 38 | add one positive Result-driven tracer and direct compiler consumer for Obj::FiniteSetMax |
 | `object` | `Obj::FiniteSetMin` | `compiler_gap` | `binder`, `definition_value`, `function_domain_or_codomain`, `target_set`, `term`, `well_definedness` | 38 | add one positive Result-driven tracer and direct compiler consumer for Obj::FiniteSetMin |

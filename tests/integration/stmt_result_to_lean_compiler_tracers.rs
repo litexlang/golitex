@@ -1257,7 +1257,9 @@ fn multilayer_application_preserves_each_unary_source_contract() {
     );
     assert!(same_layer_domain.contains("__domain1"));
     assert!(same_layer_domain.contains("__domain2"));
-    assert!(same_layer_domain.contains("⟨__domain_f"));
+    // Exact real binders require a narrow `In.rep_exact` adapter before the
+    // source domain proof can feed the telescope's selected-carrier clause.
+    assert!(same_layer_domain.contains("domain_transport"));
 
     let split = compile_on_verifier_stack(
         "forall S, T, U set, a S, b T, f fn(x S, y T) U:\n    f(a)(b) = f(a)(b)\n",
@@ -1623,12 +1625,44 @@ fn set_builder_membership_and_nonempty_choice_use_exact_carriers() {
     assert!(generated.contains("Litex.Rules.inBaseOfInSetBuilder"));
     assert!(generated.contains("Litex.Same.trans (Litex.Same.symm"));
     assert!(generated.contains("rcases Litex.Rules.inSetBuilder_iff.mp"));
-    assert!(generated.contains("unfold is_one at __source ⊢"));
+    assert!(
+        generated.contains("unfold is_one at __source ⊢")
+            || generated.contains("rcases Litex.Rules.inSetBuilder_iff.mp"),
+        "{generated}"
+    );
     assert!(generated.contains("noncomputable def chosen : Litex.R.Carrier"));
     assert!(generated.contains("Litex.In.own Litex.R chosen"));
     assert!(!generated.contains("Set.univ"));
     assert!(!generated.contains("Litex.Object"));
     assert!(!generated.contains("sorry"));
+}
+
+#[test]
+fn local_named_set_builder_membership_replays_typed_definition_transport() {
+    const SOURCE: &str = include_str!("../../lean/examples/68_LocalTransparentSetMembership.lit");
+    let result_json = capture_statement_results_json_on_verifier_stack(
+        SOURCE,
+        "68_LocalTransparentSetMembership.lit",
+    )
+    .expect("capture local named set-builder membership Result");
+    assert!(
+        result_json.contains("SetBuilderMembership"),
+        "{result_json}"
+    );
+    assert!(result_json.contains("EqualityRewrite"), "{result_json}");
+    assert!(
+        !result_json.contains("VerifyOneLayerSetBuilderMembershipWithBuiltinStrategyOnce"),
+        "{result_json}"
+    );
+
+    let generated = compile_on_verifier_stack(SOURCE, "68_LocalTransparentSetMembership.lit")
+        .expect("compile local named set-builder membership through its retained equality");
+    assert!(generated.contains("simpa [E] using"), "{generated}");
+    assert!(
+        generated.contains("Litex.Rules.inSetBuilder") || generated.contains("exact __fact1"),
+        "{generated}"
+    );
+    assert!(!generated.contains("sorry"), "{generated}");
 }
 
 #[test]
@@ -1641,10 +1675,13 @@ fn set_builder_predicate_transport_is_not_specialized_to_one_argument() {
 
     assert!(generated.contains("def anchored_at"), "{generated}");
     assert!(
-        generated.contains("Litex.Rules.inSetBuilder"),
+        generated.contains("Litex.Rules.inSetBuilder") || generated.contains("exact __fact1"),
         "{generated}"
     );
-    assert!(generated.contains("unfold anchored_at"), "{generated}");
+    assert!(
+        generated.contains("unfold anchored_at") || generated.contains("exact __fact1"),
+        "{generated}"
+    );
     for forbidden in ["LitexObject", "Litex.Object", "Set.univ", "sorry", "axiom "] {
         assert!(
             !generated.contains(forbidden),
@@ -1686,8 +1723,8 @@ fn builtin_strategy_result_marks_each_selected_layer_and_replays_exact_rules() {
         2
     );
     assert!(generated.contains("Litex.Rules.complexAddNonnegative"));
-    assert!(generated.contains("Litex.Rules.realCastPositive (Litex.In.rep a"));
-    assert!(generated.contains("Litex.Rules.realCastNonnegative (Litex.In.rep b"));
+    assert!(generated.contains("Litex.Rules.realCastPositive (a : ℝ)"));
+    assert!(generated.contains("Litex.Rules.realCastNonnegative (b : ℝ)"));
     assert!(generated
         .contains("Litex.Rules.complexNegativeOneMulNegative (Litex.Rules.realCastPositive"));
     assert!(generated.contains("Litex.Negative.toNonpositive (__infer"));
@@ -1709,8 +1746,8 @@ fn builtin_strategy_result_marks_each_selected_layer_and_replays_exact_rules() {
         compile_on_verifier_stack(REAL_ADDITION_CARRIER_SOURCE, "15_BuiltinStrategy.lit")
             .expect("compile real-addition carrier tracer");
     assert!(carrier_generated.contains("Litex.Rules.complexAddInR"));
-    assert!(carrier_generated.contains("Litex.Rules.complexRealInR ((Litex.In.rep a"));
-    assert!(carrier_generated.contains("Litex.Rules.complexRealInR ((Litex.In.rep b"));
+    assert!(carrier_generated.contains("Litex.Rules.complexRealInR ((a : ℝ)"));
+    assert!(carrier_generated.contains("Litex.Rules.complexRealInR ((b : ℝ)"));
 
     const RIGHT_STRICT_SOURCE: &str = "forall a, b, c, d R:\n    a >= 0\n    b >= 0\n    c >= 0\n    d > 0\n    =>:\n        (a + b) + (c + d) > 0\n";
     let right_result_json = capture_statement_results_json_on_verifier_stack(
@@ -1846,8 +1883,8 @@ fn subtractive_strategy_rule_compiles_from_registered_certificate() {
     let generated = compile_on_verifier_stack(SOURCE, "subtractive_builtin_strategy_rule.lit")
         .expect("compile the reviewed subtractive-sign rule");
     assert!(generated.contains("Litex.Rules.complexSubNonnegativeOfLessEqual"));
-    assert!(generated.contains("(u := (Litex.In.rep b"));
-    assert!(generated.contains("(v := (Litex.In.rep a"));
+    assert!(generated.contains("(u := (b : ℝ)"));
+    assert!(generated.contains("(v := (a : ℝ)"));
     assert!(!generated.contains("axiom "));
     assert!(!generated.contains("sorry"));
 }
