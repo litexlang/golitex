@@ -9,20 +9,20 @@ pub(super) enum ExtractionKind {
     C,
 }
 
-/// Options accepted by the interactive Litex REPL command.
+/// Verification and output settings shared by commands that execute Litex.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub(super) struct ReplCommandOptions {
-    /// Policy controlling dependency verification for REPL evaluations.
+pub(super) struct LitexExecutionOutputSettings {
+    /// Policy controlling dependency verification.
     pub(super) verify_strictness: VerifyStrictnessPolicy,
 
-    /// Detail level used for REPL output.
+    /// Detail level used for rendered output.
     pub(super) output_detail: OutputDetail,
 
-    /// Language used for REPL output.
+    /// Language used for rendered output.
     pub(super) output_language: OutputLanguage,
 }
 
-impl ReplCommandOptions {
+impl LitexExecutionOutputSettings {
     pub(super) fn litex_execution_options(self) -> LitexExecutionOptions {
         LitexExecutionOptions::new(
             self.verify_strictness,
@@ -33,30 +33,32 @@ impl ReplCommandOptions {
     }
 }
 
+/// Options accepted by the interactive Litex REPL command.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub(super) struct ReplCommandOptions {
+    /// Verification and output settings for REPL evaluations.
+    pub(super) execution_output: LitexExecutionOutputSettings,
+}
+
+impl ReplCommandOptions {
+    pub(super) fn litex_execution_options(self) -> LitexExecutionOptions {
+        self.execution_output.litex_execution_options()
+    }
+}
+
 /// Options accepted by a batch Litex execution command.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub(super) struct ExecuteCommandOptions {
+pub(super) struct ExecuteEvalFileRepoCommandOptions {
     /// Source entry point selected by `-e`, `-f`, or `-r`.
     pub(super) execution: LitexExecution,
 
-    /// Policy controlling dependency verification.
-    pub(super) verify_strictness: VerifyStrictnessPolicy,
-
-    /// Detail level used for execution output.
-    pub(super) output_detail: OutputDetail,
-
-    /// Language used for execution output.
-    pub(super) output_language: OutputLanguage,
+    /// Verification and output settings for the selected source.
+    pub(super) execution_output: LitexExecutionOutputSettings,
 }
 
-impl ExecuteCommandOptions {
+impl ExecuteEvalFileRepoCommandOptions {
     pub(super) fn litex_execution_options(self) -> LitexExecutionOptions {
-        LitexExecutionOptions::new(
-            self.verify_strictness,
-            self.output_detail,
-            self.output_language,
-            SummaryOption::None,
-        )
+        self.execution_output.litex_execution_options()
     }
 }
 
@@ -66,24 +68,13 @@ pub(super) struct GraphCommandOptions {
     /// Source entry point whose definitions or results are graphed.
     pub(super) execution: LitexExecution,
 
-    /// Policy controlling dependency verification.
-    pub(super) verify_strictness: VerifyStrictnessPolicy,
-
-    /// Detail level used while rendering graph diagnostics.
-    pub(super) output_detail: OutputDetail,
-
-    /// Language used for graph diagnostics.
-    pub(super) output_language: OutputLanguage,
+    /// Verification and output settings for the selected source.
+    pub(super) execution_output: LitexExecutionOutputSettings,
 }
 
 impl GraphCommandOptions {
     pub(super) fn litex_execution_options(self) -> LitexExecutionOptions {
-        LitexExecutionOptions::new(
-            self.verify_strictness,
-            self.output_detail,
-            self.output_language,
-            SummaryOption::None,
-        )
+        self.execution_output.litex_execution_options()
     }
 }
 
@@ -93,24 +84,13 @@ pub(super) struct SessionCommandOptions {
     /// Session source mode, with or without configured project context.
     pub(super) execution: LitexExecution,
 
-    /// Policy controlling dependency verification.
-    pub(super) verify_strictness: VerifyStrictnessPolicy,
-
-    /// Detail level used for session output.
-    pub(super) output_detail: OutputDetail,
-
-    /// Language used for session output.
-    pub(super) output_language: OutputLanguage,
+    /// Verification and output settings for the session.
+    pub(super) execution_output: LitexExecutionOutputSettings,
 }
 
 impl SessionCommandOptions {
     pub(super) fn litex_execution_options(self) -> LitexExecutionOptions {
-        LitexExecutionOptions::new(
-            self.verify_strictness,
-            self.output_detail,
-            self.output_language,
-            SummaryOption::None,
-        )
+        self.execution_output.litex_execution_options()
     }
 }
 
@@ -141,7 +121,7 @@ pub(super) enum CliCommand {
         target: String,
 
         /// Options accepted by the execution command.
-        options: ExecuteCommandOptions,
+        options: ExecuteEvalFileRepoCommandOptions,
     },
 
     /// Execute one target and render its graph artifact.
@@ -428,21 +408,17 @@ fn strictness(modifiers: ParsedModifiers) -> VerifyStrictnessPolicy {
 
 fn repl_command_options(modifiers: ParsedModifiers) -> ReplCommandOptions {
     ReplCommandOptions {
-        verify_strictness: strictness(modifiers),
-        output_detail: OutputDetail::Detailed,
-        output_language: modifiers.output_language.unwrap_or(OutputLanguage::English),
+        execution_output: litex_execution_output_settings(modifiers),
     }
 }
 
 fn execute_command_options(
     execution: LitexExecution,
     modifiers: ParsedModifiers,
-) -> ExecuteCommandOptions {
-    ExecuteCommandOptions {
+) -> ExecuteEvalFileRepoCommandOptions {
+    ExecuteEvalFileRepoCommandOptions {
         execution,
-        verify_strictness: strictness(modifiers),
-        output_detail: OutputDetail::Detailed,
-        output_language: modifiers.output_language.unwrap_or(OutputLanguage::English),
+        execution_output: litex_execution_output_settings(modifiers),
     }
 }
 
@@ -452,9 +428,7 @@ fn graph_command_options(
 ) -> GraphCommandOptions {
     GraphCommandOptions {
         execution,
-        verify_strictness: strictness(modifiers),
-        output_detail: OutputDetail::Detailed,
-        output_language: modifiers.output_language.unwrap_or(OutputLanguage::English),
+        execution_output: litex_execution_output_settings(modifiers),
     }
 }
 
@@ -464,9 +438,7 @@ fn session_command_options(
 ) -> SessionCommandOptions {
     SessionCommandOptions {
         execution,
-        verify_strictness: strictness(modifiers),
-        output_detail: OutputDetail::Detailed,
-        output_language: modifiers.output_language.unwrap_or(OutputLanguage::English),
+        execution_output: litex_execution_output_settings(modifiers),
     }
 }
 
@@ -476,6 +448,14 @@ fn conversion_command_options(
 ) -> ConversionCommandOptions {
     ConversionCommandOptions {
         execution,
+        output_language: modifiers.output_language.unwrap_or(OutputLanguage::English),
+    }
+}
+
+fn litex_execution_output_settings(modifiers: ParsedModifiers) -> LitexExecutionOutputSettings {
+    LitexExecutionOutputSettings {
+        verify_strictness: strictness(modifiers),
+        output_detail: OutputDetail::Detailed,
         output_language: modifiers.output_language.unwrap_or(OutputLanguage::English),
     }
 }

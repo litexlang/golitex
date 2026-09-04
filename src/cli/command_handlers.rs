@@ -1,4 +1,4 @@
-use super::command::{ExecuteCommandOptions, GraphCommandOptions};
+use super::command::{ExecuteEvalFileRepoCommandOptions, GraphCommandOptions};
 use super::json_output::{execution_target, render_artifact, render_run, simple_error};
 use crate::prelude::*;
 use std::fs;
@@ -6,7 +6,10 @@ use std::path::Path;
 
 pub(super) const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-pub(super) fn run_execute_command(target: &str, options: ExecuteCommandOptions) -> bool {
+pub(super) fn run_execute_command(
+    target: &str,
+    options: ExecuteEvalFileRepoCommandOptions,
+) -> bool {
     let execution_options = options.litex_execution_options();
     let outcome = match options.execution {
         LitexExecution::Eval => run_code(target, execution_options),
@@ -29,7 +32,7 @@ pub(super) fn run_graph_command(
     save_path: Option<&str>,
     options: GraphCommandOptions,
 ) -> bool {
-    let hide_file_paths = !options.output_detail.is_detailed();
+    let hide_file_paths = !options.execution_output.output_detail.is_detailed();
     let execution_options = options.litex_execution_options();
     let outcome = match options.execution {
         LitexExecution::Eval => run_code(target, execution_options),

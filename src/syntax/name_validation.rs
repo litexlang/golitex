@@ -13,6 +13,12 @@ pub fn is_valid_litex_name(s: &str) -> Result<(), String> {
             INTERNAL_SYMBOL_PREFIX, s
         ));
     }
+    if s.contains('#') {
+        return Err(format!(
+            "name cannot contain `#` because `#` starts a line comment: {}",
+            s
+        ));
+    }
     if s.len() > MAX_NAME_LEN {
         return Err(format!(
             "name length cannot be greater than {}, current length is {}",

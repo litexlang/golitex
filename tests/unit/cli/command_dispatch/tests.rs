@@ -22,15 +22,23 @@ fn canonical_cli_prefix_maps_to_one_typed_command() {
     };
 
     assert_eq!(options.execution, LitexExecution::Eval);
-    assert_eq!(options.verify_strictness, VerifyStrictnessPolicy::Strict);
-    assert_eq!(options.output_detail, OutputDetail::Detailed);
-    assert_eq!(options.verify_strictness, VerifyStrictnessPolicy::Strict);
+    assert_eq!(
+        options.execution_output.verify_strictness,
+        VerifyStrictnessPolicy::Strict
+    );
+    assert_eq!(
+        options.execution_output.output_detail,
+        OutputDetail::Detailed
+    );
     assert!(!options.litex_execution_options().should_summarize());
     assert!(!matches!(
         options.execution,
         LitexExecution::IsolatedFile | LitexExecution::IsolatedSession
     ));
-    assert_eq!(options.output_language, OutputLanguage::SimplifiedChinese);
+    assert_eq!(
+        options.execution_output.output_language,
+        OutputLanguage::SimplifiedChinese
+    );
     assert_eq!(target, "1 = 1");
 }
 
@@ -63,8 +71,14 @@ fn graph_tracer_resolves_every_argument_before_dispatch() {
     assert_eq!(target, "main.lit");
     assert_eq!(save_path.as_deref(), Some("graph.json"));
     assert_eq!(options.execution, LitexExecution::IsolatedFile);
-    assert_eq!(options.verify_strictness, VerifyStrictnessPolicy::Strict);
-    assert_eq!(options.output_detail, OutputDetail::Detailed);
+    assert_eq!(
+        options.execution_output.verify_strictness,
+        VerifyStrictnessPolicy::Strict
+    );
+    assert_eq!(
+        options.execution_output.output_detail,
+        OutputDetail::Detailed
+    );
     assert!(matches!(
         options.execution,
         LitexExecution::IsolatedFile | LitexExecution::IsolatedSession
