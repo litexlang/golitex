@@ -81,6 +81,7 @@ sketch:
             $rel(y, x)
             =>:
                 x = y
+        $rel(x, y)
         x = y
 
     have a, b, c set
@@ -360,7 +361,7 @@ sketch:
             =>:
                 $mod_eq(y, x, n)
         obtain k from exist k Z st {x - y = n * k}
-        witness $mod_eq(y, x, n) from (-k):
+        witness $mod_eq(y, x, n) from -k:
             y - x = -(x - y) = -(n * k) = n * (-k)
 
     claim:
@@ -603,6 +604,10 @@ sketch:
             f(x) = f(g(f(x)))
             x = g(f(x))
 
+        forall x A:
+            g(f(x)) = x
+        forall y B:
+            y = f(g(y))
         by def $is_inverse_of_fn(A, B, f, g)
         witness exist g1 fn(x B) A st {$is_inverse_of_fn(A, B, f, g1)} from g
 
@@ -639,6 +644,7 @@ sketch:
             =>:
                 $exist_bijection(T, S)
         obtain f from exist f fn(x S) T st {$bijective_fn(S, T, f)}
+        exist g fn(x T) S st {$is_inverse_of_fn(S, T, f, g)}
         obtain g from exist g fn(x T) S st {$is_inverse_of_fn(S, T, f, g)}
 
         claim:

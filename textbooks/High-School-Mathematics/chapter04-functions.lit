@@ -52,7 +52,7 @@ claim:
         $HighSchoolCite::functions::strictly_increasing_fn(f)
         =>:
             $HighSchoolCite::functions::injective_real_fn(f)
-1release thm HighSchoolCite::functions::strictly_increasing_implies_injective(f)
+    release thm HighSchoolCite::functions::strictly_increasing_implies_injective(f)
 
 claim:
     ? forall x, y R:
@@ -61,14 +61,14 @@ claim:
             x = y
     x = identity(x) = identity(y) = y
 
-1release thm HighSchoolCite::functions::strictly_increasing_implies_injective(identity)
+    release thm HighSchoolCite::functions::strictly_increasing_implies_injective(identity)
 
 claim:
     ? forall f fn(x R) R:
         $HighSchoolCite::functions::injective_real_fn(f)
         =>:
             exist g fn(y fn_range(f)) R st {$HighSchoolCite::functions::left_inverse_on_range(f, g)}
-1release thm HighSchoolCite::functions::inverse_on_range_exists(f)
+    release thm HighSchoolCite::functions::inverse_on_range_exists(f)
 
 forall x R:
     identity_on_range(identity(x)) = identity(x) = x
@@ -107,7 +107,7 @@ claim:
         $HighSchoolCite::functions::inverse_functions(f, g)
         =>:
             HighSchoolCite::functions::graph_of(g) = HighSchoolCite::functions::reflected_graph(HighSchoolCite::functions::graph_of(f))
-1release thm HighSchoolCite::functions::inverse_graph_reflection(f, g)
+    release thm HighSchoolCite::functions::inverse_graph_reflection(f, g)
 
 HighSchoolCite::functions::graph_of(identity) = HighSchoolCite::functions::reflected_graph(HighSchoolCite::functions::graph_of(identity))
 
@@ -117,7 +117,7 @@ fn_range(identity) $subset R
 witness exist preimage_witness R st {identity(2) = identity(preimage_witness)} from 2:
     identity(2) = identity(2)
 
-1release thm HighSchoolCite::functions::shifted_zero_continuity_on_closed_interval(shifted_zero, 1, 3)
+release thm HighSchoolCite::functions::shifted_zero_continuity_on_closed_interval(shifted_zero, 1, 3)
 
 claim:
     ? forall f fn(x R) R, a, b R:
@@ -127,11 +127,11 @@ claim:
         0 <= f(b)
         =>:
             exist c R st {a <= c <= b, f(c) = 0}
-1release thm HighSchoolCite::functions::intermediate_value_zero(f, a, b)
+    release thm HighSchoolCite::functions::intermediate_value_zero(f, a, b)
 
 shifted_zero(1) = -1 <= 0
 0 <= 1 = shifted_zero(3)
-1release thm HighSchoolCite::functions::intermediate_value_zero(shifted_zero, 1, 3)
+release thm HighSchoolCite::functions::intermediate_value_zero(shifted_zero, 1, 3)
 
 forall x R:
     floor(x) <= x

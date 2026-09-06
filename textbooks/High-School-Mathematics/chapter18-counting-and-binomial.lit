@@ -22,7 +22,7 @@ claim:
         $is_finite_set(B)
         =>:
             finite_set_size(union(A, B)) = finite_set_size(A) + finite_set_size(B)
-1release thm HighSchoolCite::analysis::finite_union_cardinality(A, B)
+    release thm HighSchoolCite::analysis::finite_union_cardinality(A, B)
 
 claim:
     ? forall n, r N+, value R:
@@ -30,7 +30,7 @@ claim:
         value * factorial(r) = HighSchoolCite::combinatorics_probability::permutation_count(n, r)
         =>:
             $HighSchoolCite::combinatorics_probability::has_combination_count(n, r, value)
-1release thm HighSchoolCite::combinatorics_probability::combination_count_from_permutations(n, r, value)
+    release thm HighSchoolCite::combinatorics_probability::combination_count_from_permutations(n, r, value)
 
 claim:
     ? forall n, r N+:
@@ -38,9 +38,9 @@ claim:
         r > 1
         =>:
             $HighSchoolCite::combinatorics_probability::pascal_identity_for_combination_counts(n, r)
-1release thm HighSchoolCite::combinatorics_probability::pascal_identity(n, r)
+    release thm HighSchoolCite::combinatorics_probability::pascal_identity(n, r)
 
 claim:
     ? forall n N+:
         $HighSchoolCite::combinatorics_probability::sum_of_binomial_coefficients(n)
-1release thm HighSchoolCite::combinatorics_probability::binomial_sum(n)
+    release thm HighSchoolCite::combinatorics_probability::binomial_sum(n)

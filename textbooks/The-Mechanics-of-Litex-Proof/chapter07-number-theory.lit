@@ -30,12 +30,6 @@
 # integer `k <= a` divides `1 * 2 * ... * a`; every positive integer at least
 # `2` has a prime factor; and `a <= 1 * 2 * ... * a`. These checked derivations
 # keep the final Euclid proof focused on its contradiction argument.
-#
-# The induction step names `prefix_product` and `next_product` with their exact
-# positive-integer carriers before taking remainders or supplying witnesses.
-# These are mathematical atoms shared by several later operations, not aliases
-# added after proof search has already failed. A carrier echo that has no later
-# construction consumer should still be removed by a deletion check.
 
 claim:
     ? forall a N+:
@@ -57,7 +51,10 @@ claim:
             have prefix_product N+ = product(1, k, fn(x N+) N+ {x})
             have next_product N+ = product(1, k + 1, fn(x N+) N+ {x})
             k + 1 $in N+
-            next_product = product(1, k + 1, fn(x N+) N+ {x}) = product(1, k, fn(x N+) N+ {x}) * (k + 1) = prefix_product * (k + 1) = (k + 1) * prefix_product = (k + 1) * prefix_product + 0
+            witness exist quotient Z st {next_product = (k + 1) * quotient + 0} from prefix_product:
+                next_product = product(1, k + 1, fn(x N+) N+ {x}) = product(1, k, fn(x N+) N+ {x}) * (k + 1) = prefix_product * (k + 1) = (k + 1) * prefix_product = (k + 1) * prefix_product + 0
+            obtain quotient_value from exist quotient Z st {next_product = (k + 1) * quotient + 0}
+            next_product = (k + 1) * quotient_value + 0
             next_product % (k + 1) = 0
             product(1, k + 1, fn(x N+) N+ {x}) % (k + 1) = next_product % (k + 1) = 0
             prefix_product >= 1
@@ -82,10 +79,12 @@ claim:
             have suffix_product Z = product(k + 1, a, fn(x N+) N+ {x})
             have whole_product N+ = product(1, a, fn(x N+) N+ {x})
             product(1, k, fn(x N+) N+ {x}) % k = 0
-            let r = quot(product(1, k, fn(x N+) N+ {x}), k)
             quot(product(1, k, fn(x N+) N+ {x}), k) $in Z
             release thm citation::quot_euclidean(product(1, k, fn(x N+) N+ {x}), k)
-            prefix_product = product(1, k, fn(x N+) N+ {x}) = k * quot(product(1, k, fn(x N+) N+ {x}), k) + product(1, k, fn(x N+) N+ {x}) % k = k * r + 0 = k * r = r * k
+            witness exist q Z st {product(1, k, fn(x N+) N+ {x}) = k * q + product(1, k, fn(x N+) N+ {x}) % k} from quot(product(1, k, fn(x N+) N+ {x}), k):
+                product(1, k, fn(x N+) N+ {x}) = k * quot(product(1, k, fn(x N+) N+ {x}), k) + product(1, k, fn(x N+) N+ {x}) % k
+            obtain r from exist q Z st {product(1, k, fn(x N+) N+ {x}) = k * q + product(1, k, fn(x N+) N+ {x}) % k}
+            prefix_product = product(1, k, fn(x N+) N+ {x}) = k * r + product(1, k, fn(x N+) N+ {x}) % k = k * r + 0 = k * r = r * k
             release thm citation::mul_swap_tail(r, k, product(k + 1, a, fn(x N+) N+ {x}))
             witness exist t Z st {whole_product = t * k} from r * product(k + 1, a, fn(x N+) N+ {x}):
                 whole_product = product(1, a, fn(x N+) N+ {x}) = product(1, k, fn(x N+) N+ {x}) * product(k + 1, a, fn(x N+) N+ {x}) = (r * k) * product(k + 1, a, fn(x N+) N+ {x}) = (r * product(k + 1, a, fn(x N+) N+ {x})) * k
@@ -455,7 +454,8 @@ sketch:
                     ? $citation::divides(p, a)
                     case $citation::divides(p, a ^ k):
                         $citation::divides(p, a)
-                    case $citation::divides(p, a)
+                    case $citation::divides(p, a):
+                        $citation::divides(p, a)
 
             by def $euclid_lemma_pow_at(k + 1)
 

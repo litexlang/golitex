@@ -1,3 +1,5 @@
+#![allow(deprecated)]
+
 use litex::output::render_statement_result_json;
 use litex::prelude::*;
 use std::rc::Rc;

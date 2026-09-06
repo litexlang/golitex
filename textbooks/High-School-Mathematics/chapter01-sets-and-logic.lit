@@ -27,7 +27,7 @@ claim:
     ? forall A, B set:
         intersect(A, B) = intersect(B, A)
         union(A, B) = union(B, A)
-1release thm HighSchoolCite::sets::set_commutativity(A, B)
+    release thm HighSchoolCite::sets::set_commutativity(A, B)
 
 claim:
     ? forall A, B, D set:
@@ -35,13 +35,13 @@ claim:
         union(union(A, B), D) = union(A, union(B, D))
         intersect(A, union(B, D)) = union(intersect(A, B), intersect(A, D))
         union(A, intersect(B, D)) = intersect(union(A, B), union(A, D))
-1release thm HighSchoolCite::sets::set_lattice_identities(A, B, D)
+    release thm HighSchoolCite::sets::set_lattice_identities(A, B, D)
 
 claim:
     ? forall U, A, B set:
         set_minus(U, union(A, B)) = intersect(set_minus(U, A), set_minus(U, B))
         set_minus(U, intersect(A, B)) = union(set_minus(U, A), set_minus(U, B))
-1release thm HighSchoolCite::sets::set_difference_identities(U, A, B)
+    release thm HighSchoolCite::sets::set_difference_identities(U, A, B)
 
 by extension:
     ? {1, 2} = {2, 1}

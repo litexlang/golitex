@@ -71,4 +71,4 @@ thm equal_base_area_and_height_give_equal_prism_volumes:
 # formula; this example does not consume the deferred Cavalieri result.
 36 * pi = 4 * pi * 3^3 / 3
 3 > 0
-1release thm HighSchoolCite::geometry_probability::sphere_volume(3, 36 * pi)
+release thm HighSchoolCite::geometry_probability::sphere_volume(3, 36 * pi)

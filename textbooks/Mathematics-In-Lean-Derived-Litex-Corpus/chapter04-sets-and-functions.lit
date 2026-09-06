@@ -77,7 +77,7 @@ thm inverse_fiber_nonempty:
             f(x) = y or $is_default_inverse_fiber_member(S, T, default, f, y, x)
             by def:
                 ? $inverse_fiber_member(S, T, default, f, y, x)
-1release thm set_builder_member(x, {z S: $inverse_fiber_member(S, T, default, f, y, z)})
+            release thm set_builder_member(x, {z S: $inverse_fiber_member(S, T, default, f, y, z)})
             x $in {z S: $inverse_fiber_member(S, T, default, f, y, z)}
             \inverse_fiber<S, T, default, f>(y) = {z S: $inverse_fiber_member(S, T, default, f, y, z)}
             x $in \inverse_fiber<S, T, default, f>(y)
@@ -89,7 +89,7 @@ thm inverse_fiber_nonempty:
             f(default) = y or $is_default_inverse_fiber_member(S, T, default, f, y, default)
             by def:
                 ? $inverse_fiber_member(S, T, default, f, y, default)
-1release thm set_builder_member(default, {z S: $inverse_fiber_member(S, T, default, f, y, z)})
+            release thm set_builder_member(default, {z S: $inverse_fiber_member(S, T, default, f, y, z)})
             default $in {z S: $inverse_fiber_member(S, T, default, f, y, z)}
             \inverse_fiber<S, T, default, f>(y) = {z S: $inverse_fiber_member(S, T, default, f, y, z)}
             default $in \inverse_fiber<S, T, default, f>(y)
@@ -107,7 +107,7 @@ thm total_inverse_exists:
         by def:
             ? $is_inverse_fiber(S, T, default, f, A)
         obtain y from $is_inverse_fiber(S, T, default, f, A)
-1release thm inverse_fiber_nonempty(S, T, default, f, y)
+        release thm inverse_fiber_nonempty(S, T, default, f, y)
         $is_nonempty_set(\inverse_fiber<S, T, default, f>(y))
     by axiom_of_choice: set \inverse_fiber_family<S, T, default, f>:
         forall A \inverse_fiber_family<S, T, default, f>:
@@ -120,13 +120,13 @@ thm total_inverse_exists:
         ? forall y T:
             \inverse_fiber<S, T, default, f>(y) $in \inverse_fiber_family<S, T, default, f>
         witness $is_inverse_fiber(S, T, default, f, \inverse_fiber<S, T, default, f>(y)) from y
-1release thm set_builder_member(\inverse_fiber<S, T, default, f>(y), {A power_set(S): $is_inverse_fiber(S, T, default, f, A)})
+        release thm set_builder_member(\inverse_fiber<S, T, default, f>(y), {A power_set(S): $is_inverse_fiber(S, T, default, f, A)})
         \inverse_fiber<S, T, default, f>(y) $in {A power_set(S): $is_inverse_fiber(S, T, default, f, A)}
         \inverse_fiber_family<S, T, default, f> = {A power_set(S): $is_inverse_fiber(S, T, default, f, A)}
     claim:
         ? forall y T:
             chooser(\inverse_fiber<S, T, default, f>(y)) $in \inverse_fiber<S, T, default, f>(y)
-1release thm chooser_mem(\inverse_fiber<S, T, default, f>(y))
+        release thm chooser_mem(\inverse_fiber<S, T, default, f>(y))
     claim:
         ? forall y T:
             chooser(\inverse_fiber<S, T, default, f>(y)) $in S
@@ -198,7 +198,7 @@ prop has_total_inverse(S nonempty_set, T set, default S, f fn(x S) T):
 thm total_inverse_available:
     ? forall S nonempty_set, T set, default S, f fn(x S) T:
         $has_total_inverse(S, T, default, f)
-1release thm total_inverse_exists(S, T, default, f)
+    release thm total_inverse_exists(S, T, default, f)
     by def:
         ? $has_total_inverse(S, T, default, f)
 
@@ -224,20 +224,20 @@ thm inverse_spec:
         $has_preimage(S, T, f, y)
         =>:
             f(\inverse<S, T, default, f>(y)) = y
-1release thm total_inverse_available(S, T, default, f)
+    release thm total_inverse_available(S, T, default, f)
     $has_total_inverse(S, T, default, f)
     $is_total_inverse(S, T, default, f, \inverse<S, T, default, f>)
-1release thm total_inverse_spec(S, T, default, f, \inverse<S, T, default, f>, y)
+    release thm total_inverse_spec(S, T, default, f, \inverse<S, T, default, f>, y)
 
 thm inverse_eq_default_of_no_preimage:
     ? forall S nonempty_set, T set, default S, f fn(x S) T, y T:
         not $has_preimage(S, T, f, y)
         =>:
             \inverse<S, T, default, f>(y) = default
-1release thm total_inverse_available(S, T, default, f)
+    release thm total_inverse_available(S, T, default, f)
     $has_total_inverse(S, T, default, f)
     $is_total_inverse(S, T, default, f, \inverse<S, T, default, f>)
-1release thm total_inverse_default(S, T, default, f, \inverse<S, T, default, f>, y)
+    release thm total_inverse_default(S, T, default, f, \inverse<S, T, default, f>, y)
 
 prop is_left_inverse(S, T set, f fn(x S) T, g fn(y T) S):
     forall x S:
@@ -252,12 +252,12 @@ thm inverse_left_of_injective:
         $injective(S, T, f)
         =>:
             $is_left_inverse(S, T, f, \inverse<S, T, default, f>)
-1release thm total_inverse_available(S, T, default, f)
+    release thm total_inverse_available(S, T, default, f)
     claim:
         ? forall x S:
             \inverse<S, T, default, f>(f(x)) = x
         witness $has_preimage(S, T, f, f(x)) from x
-1release thm inverse_spec(S, T, default, f, f(x))
+        release thm inverse_spec(S, T, default, f, f(x))
         f(\inverse<S, T, default, f>(f(x))) = f(x)
     by def:
         ? $is_left_inverse(S, T, f, \inverse<S, T, default, f>)
@@ -283,13 +283,13 @@ thm inverse_right_of_surjective:
         $surjective(S, T, f)
         =>:
             $is_right_inverse(S, T, f, \inverse<S, T, default, f>)
-1release thm total_inverse_available(S, T, default, f)
+    release thm total_inverse_available(S, T, default, f)
     claim:
         ? forall y T:
             f(\inverse<S, T, default, f>(y)) = y
         obtain x from exist z S st {y = f(z)}
         witness $has_preimage(S, T, f, y) from x
-1release thm inverse_spec(S, T, default, f, y)
+        release thm inverse_spec(S, T, default, f, y)
     by def:
         ? $is_right_inverse(S, T, f, \inverse<S, T, default, f>)
 
@@ -310,14 +310,14 @@ thm injective_iff_inverse_left_forward:
         $injective(S, T, f)
         =>:
             $is_left_inverse(S, T, f, \inverse<S, T, default, f>)
-1release thm inverse_left_of_injective(S, T, default, f)
+    release thm inverse_left_of_injective(S, T, default, f)
 
 thm surjective_iff_inverse_right_forward:
     ? forall S nonempty_set, T set, default S, f fn(x S) T:
         $surjective(S, T, f)
         =>:
             $is_right_inverse(S, T, f, \inverse<S, T, default, f>)
-1release thm inverse_right_of_surjective(S, T, default, f)
+    release thm inverse_right_of_surjective(S, T, default, f)
 
 # Restricted images are used throughout the source and in the
 # Schröder-Bernstein construction. Litex natively expresses this as the range
@@ -363,8 +363,8 @@ thm set_preimage_intersection:
             f(x) $in intersect(U, V)
             f(x) $in U
             f(x) $in V
-1release thm set_builder_member(x, {z S: f(z) $in U})
-1release thm set_builder_member(x, {z S: f(z) $in V})
+            release thm set_builder_member(x, {z S: f(z) $in U})
+            release thm set_builder_member(x, {z S: f(z) $in V})
             \set_preimage<S, T, f>(U) = {z S: f(z) $in U}
             \set_preimage<S, T, f>(V) = {z S: f(z) $in V}
             x $in \set_preimage<S, T, f>(U)
@@ -385,7 +385,7 @@ thm set_preimage_intersection:
             f(x) $in U
             f(x) $in V
             f(x) $in intersect(U, V)
-1release thm set_builder_member(x, {z S: f(z) $in intersect(U, V)})
+            release thm set_builder_member(x, {z S: f(z) $in intersect(U, V)})
             \set_preimage<S, T, f>(intersect(U, V)) = {z S: f(z) $in intersect(U, V)}
         by def:
             ? intersect(\set_preimage<S, T, f>(U), \set_preimage<S, T, f>(V)) $subset \set_preimage<S, T, f>(intersect(U, V))
@@ -475,7 +475,7 @@ thm subset_preimage_image:
         \set_image<S, T, f, A> = fn_range(fn(z A) T {f(z)})
         f(x) $in \set_image<S, T, f, A>
         \set_preimage<S, T, f>(\set_image<S, T, f, A>) = {z S: f(z) $in \set_image<S, T, f, A>}
-1release thm set_builder_member(x, {z S: f(z) $in \set_image<S, T, f, A>})
+        release thm set_builder_member(x, {z S: f(z) $in \set_image<S, T, f, A>})
         x $in \set_preimage<S, T, f>(\set_image<S, T, f, A>)
     by def:
         ? A $subset \set_preimage<S, T, f>(\set_image<S, T, f, A>)
@@ -484,7 +484,50 @@ thm subset_preimage_image:
 thm image_subset_iff_subset_preimage:
     ? forall S, T set, f fn(x S) T, A power_set(S), B power_set(T):
         $image_preimage_adjunction(S, T, f, A, B)
-    trust $image_preimage_adjunction(S, T, f, A, B)
+    claim:
+        ? not \set_image<S, T, f, A> $subset B or A $subset \set_preimage<S, T, f>(B)
+        \set_image<S, T, f, A> $subset B or not \set_image<S, T, f, A> $subset B
+        by cases:
+            ? not \set_image<S, T, f, A> $subset B or A $subset \set_preimage<S, T, f>(B)
+            case not \set_image<S, T, f, A> $subset B:
+                not \set_image<S, T, f, A> $subset B or A $subset \set_preimage<S, T, f>(B)
+            case \set_image<S, T, f, A> $subset B:
+                claim:
+                    ? forall x A:
+                        x $in \set_preimage<S, T, f>(B)
+                    fn(z A) T {f(z)}(x) = f(x)
+                    fn(z A) T {f(z)}(x) $in fn_range(fn(z A) T {f(z)})
+                    \set_image<S, T, f, A> = fn_range(fn(z A) T {f(z)})
+                    f(x) $in \set_image<S, T, f, A>
+                    f(x) $in B
+                    release thm set_builder_member(x, {z S: f(z) $in B})
+                    \set_preimage<S, T, f>(B) = {z S: f(z) $in B}
+                    x $in \set_preimage<S, T, f>(B)
+                A $subset \set_preimage<S, T, f>(B)
+                not \set_image<S, T, f, A> $subset B or A $subset \set_preimage<S, T, f>(B)
+    claim:
+        ? not A $subset \set_preimage<S, T, f>(B) or \set_image<S, T, f, A> $subset B
+        A $subset \set_preimage<S, T, f>(B) or not A $subset \set_preimage<S, T, f>(B)
+        by cases:
+            ? not A $subset \set_preimage<S, T, f>(B) or \set_image<S, T, f, A> $subset B
+            case not A $subset \set_preimage<S, T, f>(B):
+                not A $subset \set_preimage<S, T, f>(B) or \set_image<S, T, f, A> $subset B
+            case A $subset \set_preimage<S, T, f>(B):
+                claim:
+                    ? forall y \set_image<S, T, f, A>:
+                        y $in B
+                    \set_image<S, T, f, A> = fn_range(fn(z A) T {f(z)})
+                    y $in fn_range(fn(z A) T {f(z)})
+                    have by preimage pre from y $in fn_range(fn(z A) T {f(z)})
+                    fn(z A) T {f(z)}(pre) = f(pre)
+                    f(pre) = y
+                    pre $in \set_preimage<S, T, f>(B)
+                    \set_preimage<S, T, f>(B) = {z S: f(z) $in B}
+                    pre $in {z S: f(z) $in B}
+                    f(pre) $in B
+                    y $in B
+                \set_image<S, T, f, A> $subset B
+                not A $subset \set_preimage<S, T, f>(B) or \set_image<S, T, f, A> $subset B
 
 # An injective map recovers a set after image then preimage.
 thm preimage_image_subset_of_injective:
@@ -541,7 +584,7 @@ thm subset_image_preimage_of_surjective:
         y = f(pre)
         f(pre) = y
         f(pre) $in B
-1release thm set_builder_member(pre, {z S: f(z) $in B})
+        release thm set_builder_member(pre, {z S: f(z) $in B})
         \set_preimage<S, T, f>(B) = {z S: f(z) $in B}
         pre $in \set_preimage<S, T, f>(B)
         fn(z \set_preimage<S, T, f>(B)) T {f(z)}(pre) = f(pre) = y
@@ -588,7 +631,7 @@ thm set_preimage_mono:
         x $in {z S: f(z) $in U}
         f(x) $in U
         f(x) $in V
-1release thm set_builder_member(x, {z S: f(z) $in V})
+        release thm set_builder_member(x, {z S: f(z) $in V})
         \set_preimage<S, T, f>(V) = {z S: f(z) $in V}
         x $in \set_preimage<S, T, f>(V)
     by def:
@@ -610,12 +653,12 @@ thm set_preimage_union:
             by cases:
                 ? x $in union(\set_preimage<S, T, f>(U), \set_preimage<S, T, f>(V))
                 case f(x) $in U:
-1release thm set_builder_member(x, {z S: f(z) $in U})
+                    release thm set_builder_member(x, {z S: f(z) $in U})
                     \set_preimage<S, T, f>(U) = {z S: f(z) $in U}
                     x $in \set_preimage<S, T, f>(U)
                     x $in union(\set_preimage<S, T, f>(U), \set_preimage<S, T, f>(V))
                 case f(x) $in V:
-1release thm set_builder_member(x, {z S: f(z) $in V})
+                    release thm set_builder_member(x, {z S: f(z) $in V})
                     \set_preimage<S, T, f>(V) = {z S: f(z) $in V}
                     x $in \set_preimage<S, T, f>(V)
                     x $in union(\set_preimage<S, T, f>(U), \set_preimage<S, T, f>(V))
@@ -634,7 +677,7 @@ thm set_preimage_union:
                     x $in {z S: f(z) $in U}
                     f(x) $in U
                     f(x) $in union(U, V)
-1release thm set_builder_member(x, {z S: f(z) $in union(U, V)})
+                    release thm set_builder_member(x, {z S: f(z) $in union(U, V)})
                     \set_preimage<S, T, f>(union(U, V)) = {z S: f(z) $in union(U, V)}
                     x $in \set_preimage<S, T, f>(union(U, V))
                 case x $in \set_preimage<S, T, f>(V):
@@ -642,7 +685,7 @@ thm set_preimage_union:
                     x $in {z S: f(z) $in V}
                     f(x) $in V
                     f(x) $in union(U, V)
-1release thm set_builder_member(x, {z S: f(z) $in union(U, V)})
+                    release thm set_builder_member(x, {z S: f(z) $in union(U, V)})
                     \set_preimage<S, T, f>(union(U, V)) = {z S: f(z) $in union(U, V)}
                     x $in \set_preimage<S, T, f>(union(U, V))
         by def:
@@ -654,7 +697,29 @@ thm set_preimage_union:
 thm image_intersection_subset:
     ? forall S, T set, f fn(x S) T, A, B power_set(S):
         \set_image<S, T, f, intersect(A, B)> $subset intersect(\set_image<S, T, f, A>, \set_image<S, T, f, B>)
-    trust \set_image<S, T, f, intersect(A, B)> $subset intersect(\set_image<S, T, f, A>, \set_image<S, T, f, B>)
+    claim:
+        ? forall y \set_image<S, T, f, intersect(A, B)>:
+            y $in intersect(\set_image<S, T, f, A>, \set_image<S, T, f, B>)
+        \set_image<S, T, f, intersect(A, B)> = fn_range(fn(z intersect(A, B)) T {f(z)})
+        y $in fn_range(fn(z intersect(A, B)) T {f(z)})
+        have by preimage pre from y $in fn_range(fn(z intersect(A, B)) T {f(z)})
+        fn(z intersect(A, B)) T {f(z)}(pre) = f(pre)
+        f(pre) = y
+        pre $in A
+        pre $in B
+        fn(z A) T {f(z)}(pre) = f(pre) = y
+        fn(z A) T {f(z)}(pre) $in fn_range(fn(z A) T {f(z)})
+        y $in fn_range(fn(z A) T {f(z)})
+        \set_image<S, T, f, A> = fn_range(fn(z A) T {f(z)})
+        y $in \set_image<S, T, f, A>
+        fn(z B) T {f(z)}(pre) = f(pre) = y
+        fn(z B) T {f(z)}(pre) $in fn_range(fn(z B) T {f(z)})
+        y $in fn_range(fn(z B) T {f(z)})
+        \set_image<S, T, f, B> = fn_range(fn(z B) T {f(z)})
+        y $in \set_image<S, T, f, B>
+        y $in intersect(\set_image<S, T, f, A>, \set_image<S, T, f, B>)
+    by def:
+        ? \set_image<S, T, f, intersect(A, B)> $subset intersect(\set_image<S, T, f, A>, \set_image<S, T, f, B>)
 
 # Injectivity gives the reverse intersection inclusion.
 thm intersection_images_subset_image_intersection:
@@ -662,52 +727,300 @@ thm intersection_images_subset_image_intersection:
         $injective(S, T, f)
         =>:
             intersect(\set_image<S, T, f, A>, \set_image<S, T, f, B>) $subset \set_image<S, T, f, intersect(A, B)>
-    trust intersect(\set_image<S, T, f, A>, \set_image<S, T, f, B>) $subset \set_image<S, T, f, intersect(A, B)>
+    claim:
+        ? forall y intersect(\set_image<S, T, f, A>, \set_image<S, T, f, B>):
+            y $in \set_image<S, T, f, intersect(A, B)>
+        y $in \set_image<S, T, f, A>
+        y $in \set_image<S, T, f, B>
+        \set_image<S, T, f, A> = fn_range(fn(z A) T {f(z)})
+        y $in fn_range(fn(z A) T {f(z)})
+        have by preimage preA from y $in fn_range(fn(z A) T {f(z)})
+        fn(z A) T {f(z)}(preA) = f(preA)
+        f(preA) = y
+        \set_image<S, T, f, B> = fn_range(fn(z B) T {f(z)})
+        y $in fn_range(fn(z B) T {f(z)})
+        have by preimage preB from y $in fn_range(fn(z B) T {f(z)})
+        fn(z B) T {f(z)}(preB) = f(preB)
+        f(preB) = y
+        f(preA) = y = f(preB)
+        preA = preB
+        preA $in B
+        preA $in intersect(A, B)
+        fn(z intersect(A, B)) T {f(z)}(preA) = f(preA) = y
+        fn(z intersect(A, B)) T {f(z)}(preA) $in fn_range(fn(z intersect(A, B)) T {f(z)})
+        y $in fn_range(fn(z intersect(A, B)) T {f(z)})
+        \set_image<S, T, f, intersect(A, B)> = fn_range(fn(z intersect(A, B)) T {f(z)})
+        y $in \set_image<S, T, f, intersect(A, B)>
+    by def:
+        ? intersect(\set_image<S, T, f, A>, \set_image<S, T, f, B>) $subset \set_image<S, T, f, intersect(A, B)>
 
 # Removing the image of B can only leave images of points outside B.
 thm image_difference_subset:
     ? forall S, T set, f fn(x S) T, A, B power_set(S):
         set_minus(\set_image<S, T, f, A>, \set_image<S, T, f, B>) $subset \set_image<S, T, f, set_minus(A, B)>
-    trust set_minus(\set_image<S, T, f, A>, \set_image<S, T, f, B>) $subset \set_image<S, T, f, set_minus(A, B)>
+    claim:
+        ? forall y set_minus(\set_image<S, T, f, A>, \set_image<S, T, f, B>):
+            y $in \set_image<S, T, f, set_minus(A, B)>
+        y $in \set_image<S, T, f, A>
+        not y $in \set_image<S, T, f, B>
+        \set_image<S, T, f, A> = fn_range(fn(z A) T {f(z)})
+        y $in fn_range(fn(z A) T {f(z)})
+        have by preimage pre from y $in fn_range(fn(z A) T {f(z)})
+        fn(z A) T {f(z)}(pre) = f(pre)
+        f(pre) = y
+        claim:
+            ? not pre $in B
+            by contra:
+                ? not pre $in B
+                fn(z B) T {f(z)}(pre) = f(pre) = y
+                fn(z B) T {f(z)}(pre) $in fn_range(fn(z B) T {f(z)})
+                y $in fn_range(fn(z B) T {f(z)})
+                \set_image<S, T, f, B> = fn_range(fn(z B) T {f(z)})
+                y $in \set_image<S, T, f, B>
+                impossible not y $in \set_image<S, T, f, B>
+        pre $in set_minus(A, B)
+        fn(z set_minus(A, B)) T {f(z)}(pre) = f(pre) = y
+        fn(z set_minus(A, B)) T {f(z)}(pre) $in fn_range(fn(z set_minus(A, B)) T {f(z)})
+        y $in fn_range(fn(z set_minus(A, B)) T {f(z)})
+        \set_image<S, T, f, set_minus(A, B)> = fn_range(fn(z set_minus(A, B)) T {f(z)})
+        y $in \set_image<S, T, f, set_minus(A, B)>
+    by def:
+        ? set_minus(\set_image<S, T, f, A>, \set_image<S, T, f, B>) $subset \set_image<S, T, f, set_minus(A, B)>
 
 # Preimages preserve set difference.
 thm preimage_difference_subset:
     ? forall S, T set, f fn(x S) T, U, V power_set(T):
         set_minus(\set_preimage<S, T, f>(U), \set_preimage<S, T, f>(V)) $subset \set_preimage<S, T, f>(set_minus(U, V))
-    trust set_minus(\set_preimage<S, T, f>(U), \set_preimage<S, T, f>(V)) $subset \set_preimage<S, T, f>(set_minus(U, V))
+    claim:
+        ? forall x set_minus(\set_preimage<S, T, f>(U), \set_preimage<S, T, f>(V)):
+            x $in \set_preimage<S, T, f>(set_minus(U, V))
+        x $in \set_preimage<S, T, f>(U)
+        not x $in \set_preimage<S, T, f>(V)
+        \set_preimage<S, T, f>(U) = {z S: f(z) $in U}
+        x $in {z S: f(z) $in U}
+        f(x) $in U
+        claim:
+            ? not f(x) $in V
+            by contra:
+                ? not f(x) $in V
+                release thm set_builder_member(x, {z S: f(z) $in V})
+                \set_preimage<S, T, f>(V) = {z S: f(z) $in V}
+                x $in \set_preimage<S, T, f>(V)
+                impossible not x $in \set_preimage<S, T, f>(V)
+        f(x) $in set_minus(U, V)
+        release thm set_builder_member(x, {z S: f(z) $in set_minus(U, V)})
+        \set_preimage<S, T, f>(set_minus(U, V)) = {z S: f(z) $in set_minus(U, V)}
+        x $in \set_preimage<S, T, f>(set_minus(U, V))
+    by def:
+        ? set_minus(\set_preimage<S, T, f>(U), \set_preimage<S, T, f>(V)) $subset \set_preimage<S, T, f>(set_minus(U, V))
 
 # Intersecting an image with a target set can be pulled back to the source.
 thm image_intersection_target:
     ? forall S, T set, f fn(x S) T, A power_set(S), V power_set(T):
         intersect(\set_image<S, T, f, A>, V) = \set_image<S, T, f, intersect(A, \set_preimage<S, T, f>(V))>
-    trust intersect(\set_image<S, T, f, A>, V) = \set_image<S, T, f, intersect(A, \set_preimage<S, T, f>(V))>
+    claim:
+        ? intersect(\set_image<S, T, f, A>, V) $subset \set_image<S, T, f, intersect(A, \set_preimage<S, T, f>(V))>
+        claim:
+            ? forall y intersect(\set_image<S, T, f, A>, V):
+                y $in \set_image<S, T, f, intersect(A, \set_preimage<S, T, f>(V))>
+            y $in \set_image<S, T, f, A>
+            y $in V
+            \set_image<S, T, f, A> = fn_range(fn(z A) T {f(z)})
+            y $in fn_range(fn(z A) T {f(z)})
+            have by preimage pre from y $in fn_range(fn(z A) T {f(z)})
+            fn(z A) T {f(z)}(pre) = f(pre)
+            f(pre) = y
+            f(pre) $in V
+            release thm set_builder_member(pre, {z S: f(z) $in V})
+            \set_preimage<S, T, f>(V) = {z S: f(z) $in V}
+            pre $in \set_preimage<S, T, f>(V)
+            pre $in intersect(A, \set_preimage<S, T, f>(V))
+            fn(z intersect(A, \set_preimage<S, T, f>(V))) T {f(z)}(pre) = f(pre) = y
+            fn(z intersect(A, \set_preimage<S, T, f>(V))) T {f(z)}(pre) $in fn_range(fn(z intersect(A, \set_preimage<S, T, f>(V))) T {f(z)})
+            y $in fn_range(fn(z intersect(A, \set_preimage<S, T, f>(V))) T {f(z)})
+            \set_image<S, T, f, intersect(A, \set_preimage<S, T, f>(V))> = fn_range(fn(z intersect(A, \set_preimage<S, T, f>(V))) T {f(z)})
+            y $in \set_image<S, T, f, intersect(A, \set_preimage<S, T, f>(V))>
+        by def:
+            ? intersect(\set_image<S, T, f, A>, V) $subset \set_image<S, T, f, intersect(A, \set_preimage<S, T, f>(V))>
+    claim:
+        ? \set_image<S, T, f, intersect(A, \set_preimage<S, T, f>(V))> $subset intersect(\set_image<S, T, f, A>, V)
+        claim:
+            ? forall y \set_image<S, T, f, intersect(A, \set_preimage<S, T, f>(V))>:
+                y $in intersect(\set_image<S, T, f, A>, V)
+            \set_image<S, T, f, intersect(A, \set_preimage<S, T, f>(V))> = fn_range(fn(z intersect(A, \set_preimage<S, T, f>(V))) T {f(z)})
+            y $in fn_range(fn(z intersect(A, \set_preimage<S, T, f>(V))) T {f(z)})
+            have by preimage pre from y $in fn_range(fn(z intersect(A, \set_preimage<S, T, f>(V))) T {f(z)})
+            fn(z intersect(A, \set_preimage<S, T, f>(V))) T {f(z)}(pre) = f(pre)
+            f(pre) = y
+            pre $in A
+            pre $in \set_preimage<S, T, f>(V)
+            fn(z A) T {f(z)}(pre) = f(pre) = y
+            fn(z A) T {f(z)}(pre) $in fn_range(fn(z A) T {f(z)})
+            y $in fn_range(fn(z A) T {f(z)})
+            \set_image<S, T, f, A> = fn_range(fn(z A) T {f(z)})
+            y $in \set_image<S, T, f, A>
+            \set_preimage<S, T, f>(V) = {z S: f(z) $in V}
+            pre $in {z S: f(z) $in V}
+            f(pre) $in V
+            y $in V
+            y $in intersect(\set_image<S, T, f, A>, V)
+        by def:
+            ? \set_image<S, T, f, intersect(A, \set_preimage<S, T, f>(V))> $subset intersect(\set_image<S, T, f, A>, V)
+    by extension:
+        ? intersect(\set_image<S, T, f, A>, V) = \set_image<S, T, f, intersect(A, \set_preimage<S, T, f>(V))>
 
 thm image_source_intersection_preimage_subset:
     ? forall S, T set, f fn(x S) T, A power_set(S), U power_set(T):
         \set_image<S, T, f, intersect(A, \set_preimage<S, T, f>(U))> $subset intersect(\set_image<S, T, f, A>, U)
-    trust \set_image<S, T, f, intersect(A, \set_preimage<S, T, f>(U))> $subset intersect(\set_image<S, T, f, A>, U)
+    claim:
+        ? forall y \set_image<S, T, f, intersect(A, \set_preimage<S, T, f>(U))>:
+            y $in intersect(\set_image<S, T, f, A>, U)
+        \set_image<S, T, f, intersect(A, \set_preimage<S, T, f>(U))> = fn_range(fn(z intersect(A, \set_preimage<S, T, f>(U))) T {f(z)})
+        y $in fn_range(fn(z intersect(A, \set_preimage<S, T, f>(U))) T {f(z)})
+        have by preimage pre from y $in fn_range(fn(z intersect(A, \set_preimage<S, T, f>(U))) T {f(z)})
+        fn(z intersect(A, \set_preimage<S, T, f>(U))) T {f(z)}(pre) = f(pre)
+        f(pre) = y
+        pre $in A
+        pre $in \set_preimage<S, T, f>(U)
+        fn(z A) T {f(z)}(pre) = f(pre) = y
+        fn(z A) T {f(z)}(pre) $in fn_range(fn(z A) T {f(z)})
+        y $in fn_range(fn(z A) T {f(z)})
+        \set_image<S, T, f, A> = fn_range(fn(z A) T {f(z)})
+        y $in \set_image<S, T, f, A>
+        \set_preimage<S, T, f>(U) = {z S: f(z) $in U}
+        pre $in {z S: f(z) $in U}
+        f(pre) $in U
+        y $in U
+        y $in intersect(\set_image<S, T, f, A>, U)
+    by def:
+        ? \set_image<S, T, f, intersect(A, \set_preimage<S, T, f>(U))> $subset intersect(\set_image<S, T, f, A>, U)
 
 thm source_intersection_preimage_subset:
     ? forall S, T set, f fn(x S) T, A power_set(S), U power_set(T):
         intersect(A, \set_preimage<S, T, f>(U)) $subset \set_preimage<S, T, f>(intersect(\set_image<S, T, f, A>, U))
-    trust intersect(A, \set_preimage<S, T, f>(U)) $subset \set_preimage<S, T, f>(intersect(\set_image<S, T, f, A>, U))
+    claim:
+        ? forall x intersect(A, \set_preimage<S, T, f>(U)):
+            x $in \set_preimage<S, T, f>(intersect(\set_image<S, T, f, A>, U))
+        x $in A
+        x $in \set_preimage<S, T, f>(U)
+        fn(z A) T {f(z)}(x) = f(x)
+        fn(z A) T {f(z)}(x) $in fn_range(fn(z A) T {f(z)})
+        \set_image<S, T, f, A> = fn_range(fn(z A) T {f(z)})
+        f(x) $in \set_image<S, T, f, A>
+        \set_preimage<S, T, f>(U) = {z S: f(z) $in U}
+        x $in {z S: f(z) $in U}
+        f(x) $in U
+        f(x) $in intersect(\set_image<S, T, f, A>, U)
+        release thm set_builder_member(x, {z S: f(z) $in intersect(\set_image<S, T, f, A>, U)})
+        \set_preimage<S, T, f>(intersect(\set_image<S, T, f, A>, U)) = {z S: f(z) $in intersect(\set_image<S, T, f, A>, U)}
+        x $in \set_preimage<S, T, f>(intersect(\set_image<S, T, f, A>, U))
+    by def:
+        ? intersect(A, \set_preimage<S, T, f>(U)) $subset \set_preimage<S, T, f>(intersect(\set_image<S, T, f, A>, U))
 
 thm source_union_preimage_subset:
     ? forall S, T set, f fn(x S) T, A power_set(S), U power_set(T):
         union(A, \set_preimage<S, T, f>(U)) $subset \set_preimage<S, T, f>(union(\set_image<S, T, f, A>, U))
-    trust union(A, \set_preimage<S, T, f>(U)) $subset \set_preimage<S, T, f>(union(\set_image<S, T, f, A>, U))
+    claim:
+        ? forall x union(A, \set_preimage<S, T, f>(U)):
+            x $in \set_preimage<S, T, f>(union(\set_image<S, T, f, A>, U))
+        x $in A or x $in \set_preimage<S, T, f>(U)
+        by cases:
+            ? x $in \set_preimage<S, T, f>(union(\set_image<S, T, f, A>, U))
+            case x $in A:
+                fn(z A) T {f(z)}(x) = f(x)
+                fn(z A) T {f(z)}(x) $in fn_range(fn(z A) T {f(z)})
+                \set_image<S, T, f, A> = fn_range(fn(z A) T {f(z)})
+                f(x) $in \set_image<S, T, f, A>
+                f(x) $in union(\set_image<S, T, f, A>, U)
+                release thm set_builder_member(x, {z S: f(z) $in union(\set_image<S, T, f, A>, U)})
+                \set_preimage<S, T, f>(union(\set_image<S, T, f, A>, U)) = {z S: f(z) $in union(\set_image<S, T, f, A>, U)}
+                x $in \set_preimage<S, T, f>(union(\set_image<S, T, f, A>, U))
+            case x $in \set_preimage<S, T, f>(U):
+                \set_preimage<S, T, f>(U) = {z S: f(z) $in U}
+                x $in {z S: f(z) $in U}
+                f(x) $in U
+                f(x) $in union(\set_image<S, T, f, A>, U)
+                release thm set_builder_member(x, {z S: f(z) $in union(\set_image<S, T, f, A>, U)})
+                \set_preimage<S, T, f>(union(\set_image<S, T, f, A>, U)) = {z S: f(z) $in union(\set_image<S, T, f, A>, U)}
+                x $in \set_preimage<S, T, f>(union(\set_image<S, T, f, A>, U))
+    by def:
+        ? union(A, \set_preimage<S, T, f>(U)) $subset \set_preimage<S, T, f>(union(\set_image<S, T, f, A>, U))
 
 # Images commute with arbitrary indexed unions.
 thm image_indexed_union:
     ? forall I, S, T set, f fn(x S) T, A fn(index I) power_set(S):
         \set_image<S, T, f, index_union(I, S, A)> = index_union(I, T, \indexed_images<I, S, T, f, A>)
-    trust \set_image<S, T, f, index_union(I, S, A)> = index_union(I, T, \indexed_images<I, S, T, f, A>)
+    claim:
+        ? \set_image<S, T, f, index_union(I, S, A)> $subset index_union(I, T, \indexed_images<I, S, T, f, A>)
+        claim:
+            ? forall y \set_image<S, T, f, index_union(I, S, A)>:
+                y $in index_union(I, T, \indexed_images<I, S, T, f, A>)
+            \set_image<S, T, f, index_union(I, S, A)> = fn_range(fn(z index_union(I, S, A)) T {f(z)})
+            y $in fn_range(fn(z index_union(I, S, A)) T {f(z)})
+            have by preimage pre from y $in fn_range(fn(z index_union(I, S, A)) T {f(z)})
+            fn(z index_union(I, S, A)) T {f(z)}(pre) = f(pre)
+            f(pre) = y
+            obtain index from exist index I st {pre $in A(index)}
+            fn(z A(index)) T {f(z)}(pre) = f(pre) = y
+            fn(z A(index)) T {f(z)}(pre) $in fn_range(fn(z A(index)) T {f(z)})
+            y $in fn_range(fn(z A(index)) T {f(z)})
+            \set_image<S, T, f, A(index)> = fn_range(fn(z A(index)) T {f(z)})
+            y $in \set_image<S, T, f, A(index)>
+            \indexed_images<I, S, T, f, A>(index) = \set_image<S, T, f, A(index)>
+            y $in \indexed_images<I, S, T, f, A>(index)
+            y $in index_union(I, T, \indexed_images<I, S, T, f, A>)
+        by def:
+            ? \set_image<S, T, f, index_union(I, S, A)> $subset index_union(I, T, \indexed_images<I, S, T, f, A>)
+    claim:
+        ? index_union(I, T, \indexed_images<I, S, T, f, A>) $subset \set_image<S, T, f, index_union(I, S, A)>
+        claim:
+            ? forall y index_union(I, T, \indexed_images<I, S, T, f, A>):
+                y $in \set_image<S, T, f, index_union(I, S, A)>
+            obtain index from exist index I st {y $in \indexed_images<I, S, T, f, A>(index)}
+            \indexed_images<I, S, T, f, A>(index) = \set_image<S, T, f, A(index)>
+            y $in \set_image<S, T, f, A(index)>
+            \set_image<S, T, f, A(index)> = fn_range(fn(z A(index)) T {f(z)})
+            y $in fn_range(fn(z A(index)) T {f(z)})
+            have by preimage pre from y $in fn_range(fn(z A(index)) T {f(z)})
+            fn(z A(index)) T {f(z)}(pre) = f(pre)
+            f(pre) = y
+            pre $in index_union(I, S, A)
+            fn(z index_union(I, S, A)) T {f(z)}(pre) = f(pre) = y
+            fn(z index_union(I, S, A)) T {f(z)}(pre) $in fn_range(fn(z index_union(I, S, A)) T {f(z)})
+            y $in fn_range(fn(z index_union(I, S, A)) T {f(z)})
+            \set_image<S, T, f, index_union(I, S, A)> = fn_range(fn(z index_union(I, S, A)) T {f(z)})
+            y $in \set_image<S, T, f, index_union(I, S, A)>
+        by def:
+            ? index_union(I, T, \indexed_images<I, S, T, f, A>) $subset \set_image<S, T, f, index_union(I, S, A)>
+    by extension:
+        ? \set_image<S, T, f, index_union(I, S, A)> = index_union(I, T, \indexed_images<I, S, T, f, A>)
 
 # Images of arbitrary intersections lie in every component image.
 thm image_indexed_intersection_subset:
     ? forall I, S, T set, f fn(x S) T, A fn(index I) power_set(S):
         \set_image<S, T, f, index_intersect(I, S, A)> $subset index_intersect(I, T, \indexed_images<I, S, T, f, A>)
-    trust \set_image<S, T, f, index_intersect(I, S, A)> $subset index_intersect(I, T, \indexed_images<I, S, T, f, A>)
+    claim:
+        ? forall y \set_image<S, T, f, index_intersect(I, S, A)>:
+            y $in index_intersect(I, T, \indexed_images<I, S, T, f, A>)
+        \set_image<S, T, f, index_intersect(I, S, A)> = fn_range(fn(z index_intersect(I, S, A)) T {f(z)})
+        y $in fn_range(fn(z index_intersect(I, S, A)) T {f(z)})
+        have by preimage pre from y $in fn_range(fn(z index_intersect(I, S, A)) T {f(z)})
+        fn(z index_intersect(I, S, A)) T {f(z)}(pre) = f(pre)
+        f(pre) = y
+        claim:
+            ? forall index I:
+                y $in \indexed_images<I, S, T, f, A>(index)
+            pre $in A(index)
+            fn(z A(index)) T {f(z)}(pre) = f(pre) = y
+            fn(z A(index)) T {f(z)}(pre) $in fn_range(fn(z A(index)) T {f(z)})
+            y $in fn_range(fn(z A(index)) T {f(z)})
+            \set_image<S, T, f, A(index)> = fn_range(fn(z A(index)) T {f(z)})
+            y $in \set_image<S, T, f, A(index)>
+            \indexed_images<I, S, T, f, A>(index) = \set_image<S, T, f, A(index)>
+            y $in \indexed_images<I, S, T, f, A>(index)
+        y $in index_intersect(I, T, \indexed_images<I, S, T, f, A>)
+    by def:
+        ? \set_image<S, T, f, index_intersect(I, S, A)> $subset index_intersect(I, T, \indexed_images<I, S, T, f, A>)
 
 # For a nonempty index carrier, injectivity gives the reverse intersection
 # inclusion.
@@ -716,18 +1029,125 @@ thm indexed_intersection_images_subset:
         $injective(S, T, f)
         =>:
             index_intersect(I, T, \indexed_images<I, S, T, f, A>) $subset \set_image<S, T, f, index_intersect(I, S, A)>
-    trust index_intersect(I, T, \indexed_images<I, S, T, f, A>) $subset \set_image<S, T, f, index_intersect(I, S, A)>
+    claim:
+        ? forall y index_intersect(I, T, \indexed_images<I, S, T, f, A>):
+            y $in \set_image<S, T, f, index_intersect(I, S, A)>
+        have base I
+        y $in \indexed_images<I, S, T, f, A>(base)
+        \indexed_images<I, S, T, f, A>(base) = \set_image<S, T, f, A(base)>
+        y $in \set_image<S, T, f, A(base)>
+        \set_image<S, T, f, A(base)> = fn_range(fn(z A(base)) T {f(z)})
+        y $in fn_range(fn(z A(base)) T {f(z)})
+        have by preimage common from y $in fn_range(fn(z A(base)) T {f(z)})
+        fn(z A(base)) T {f(z)}(common) = f(common)
+        f(common) = y
+        common $in S
+        claim:
+            ? forall index I:
+                common $in A(index)
+            y $in \indexed_images<I, S, T, f, A>(index)
+            \indexed_images<I, S, T, f, A>(index) = \set_image<S, T, f, A(index)>
+            y $in \set_image<S, T, f, A(index)>
+            \set_image<S, T, f, A(index)> = fn_range(fn(z A(index)) T {f(z)})
+            y $in fn_range(fn(z A(index)) T {f(z)})
+            have by preimage pre from y $in fn_range(fn(z A(index)) T {f(z)})
+            fn(z A(index)) T {f(z)}(pre) = f(pre)
+            f(pre) = y
+            f(common) = y = f(pre)
+            common = pre
+            common $in A(index)
+        common $in index_intersect(I, S, A)
+        fn(z index_intersect(I, S, A)) T {f(z)}(common) = f(common) = y
+        fn(z index_intersect(I, S, A)) T {f(z)}(common) $in fn_range(fn(z index_intersect(I, S, A)) T {f(z)})
+        y $in fn_range(fn(z index_intersect(I, S, A)) T {f(z)})
+        \set_image<S, T, f, index_intersect(I, S, A)> = fn_range(fn(z index_intersect(I, S, A)) T {f(z)})
+        y $in \set_image<S, T, f, index_intersect(I, S, A)>
+    by def:
+        ? index_intersect(I, T, \indexed_images<I, S, T, f, A>) $subset \set_image<S, T, f, index_intersect(I, S, A)>
 
 # Preimages commute with arbitrary indexed unions and intersections.
 thm preimage_indexed_union:
     ? forall I, S, T set, f fn(x S) T, B fn(index I) power_set(T):
         \set_preimage<S, T, f>(index_union(I, T, B)) = index_union(I, S, fn(index I) power_set(S) {\set_preimage<S, T, f>(B(index))})
-    trust \set_preimage<S, T, f>(index_union(I, T, B)) = index_union(I, S, fn(index I) power_set(S) {\set_preimage<S, T, f>(B(index))})
+    claim:
+        ? \set_preimage<S, T, f>(index_union(I, T, B)) $subset index_union(I, S, fn(index I) power_set(S) {\set_preimage<S, T, f>(B(index))})
+        claim:
+            ? forall x \set_preimage<S, T, f>(index_union(I, T, B)):
+                x $in index_union(I, S, fn(index I) power_set(S) {\set_preimage<S, T, f>(B(index))})
+            \set_preimage<S, T, f>(index_union(I, T, B)) = {z S: f(z) $in index_union(I, T, B)}
+            x $in {z S: f(z) $in index_union(I, T, B)}
+            f(x) $in index_union(I, T, B)
+            obtain idx from exist idx I st {f(x) $in B(idx)}
+            release thm set_builder_member(x, {z S: f(z) $in B(idx)})
+            \set_preimage<S, T, f>(B(idx)) = {z S: f(z) $in B(idx)}
+            x $in \set_preimage<S, T, f>(B(idx))
+            fn(k I) power_set(S) {\set_preimage<S, T, f>(B(k))}(idx) = \set_preimage<S, T, f>(B(idx))
+            x $in fn(k I) power_set(S) {\set_preimage<S, T, f>(B(k))}(idx)
+            x $in index_union(I, S, fn(index I) power_set(S) {\set_preimage<S, T, f>(B(index))})
+        by def:
+            ? \set_preimage<S, T, f>(index_union(I, T, B)) $subset index_union(I, S, fn(index I) power_set(S) {\set_preimage<S, T, f>(B(index))})
+    claim:
+        ? index_union(I, S, fn(index I) power_set(S) {\set_preimage<S, T, f>(B(index))}) $subset \set_preimage<S, T, f>(index_union(I, T, B))
+        claim:
+            ? forall x index_union(I, S, fn(index I) power_set(S) {\set_preimage<S, T, f>(B(index))}):
+                x $in \set_preimage<S, T, f>(index_union(I, T, B))
+            obtain idx from exist idx I st {x $in \set_preimage<S, T, f>(B(idx))}
+            \set_preimage<S, T, f>(B(idx)) = {z S: f(z) $in B(idx)}
+            x $in {z S: f(z) $in B(idx)}
+            f(x) $in B(idx)
+            f(x) $in index_union(I, T, B)
+            release thm set_builder_member(x, {z S: f(z) $in index_union(I, T, B)})
+            \set_preimage<S, T, f>(index_union(I, T, B)) = {z S: f(z) $in index_union(I, T, B)}
+            x $in \set_preimage<S, T, f>(index_union(I, T, B))
+        by def:
+            ? index_union(I, S, fn(index I) power_set(S) {\set_preimage<S, T, f>(B(index))}) $subset \set_preimage<S, T, f>(index_union(I, T, B))
+    by extension:
+        ? \set_preimage<S, T, f>(index_union(I, T, B)) = index_union(I, S, fn(index I) power_set(S) {\set_preimage<S, T, f>(B(index))})
 
 thm preimage_indexed_intersection:
     ? forall I, S, T set, f fn(x S) T, B fn(index I) power_set(T):
         \set_preimage<S, T, f>(index_intersect(I, T, B)) = index_intersect(I, S, fn(index I) power_set(S) {\set_preimage<S, T, f>(B(index))})
-    trust \set_preimage<S, T, f>(index_intersect(I, T, B)) = index_intersect(I, S, fn(index I) power_set(S) {\set_preimage<S, T, f>(B(index))})
+    claim:
+        ? \set_preimage<S, T, f>(index_intersect(I, T, B)) $subset index_intersect(I, S, fn(index I) power_set(S) {\set_preimage<S, T, f>(B(index))})
+        claim:
+            ? forall x \set_preimage<S, T, f>(index_intersect(I, T, B)):
+                x $in index_intersect(I, S, fn(index I) power_set(S) {\set_preimage<S, T, f>(B(index))})
+            \set_preimage<S, T, f>(index_intersect(I, T, B)) = {z S: f(z) $in index_intersect(I, T, B)}
+            x $in {z S: f(z) $in index_intersect(I, T, B)}
+            f(x) $in index_intersect(I, T, B)
+            x $in S
+            claim:
+                ? forall idx I:
+                    x $in \set_preimage<S, T, f>(B(idx))
+                f(x) $in B(idx)
+                release thm set_builder_member(x, {z S: f(z) $in B(idx)})
+                \set_preimage<S, T, f>(B(idx)) = {z S: f(z) $in B(idx)}
+                x $in \set_preimage<S, T, f>(B(idx))
+            x $in index_intersect(I, S, fn(index I) power_set(S) {\set_preimage<S, T, f>(B(index))})
+        by def:
+            ? \set_preimage<S, T, f>(index_intersect(I, T, B)) $subset index_intersect(I, S, fn(index I) power_set(S) {\set_preimage<S, T, f>(B(index))})
+    claim:
+        ? index_intersect(I, S, fn(index I) power_set(S) {\set_preimage<S, T, f>(B(index))}) $subset \set_preimage<S, T, f>(index_intersect(I, T, B))
+        claim:
+            ? forall x index_intersect(I, S, fn(index I) power_set(S) {\set_preimage<S, T, f>(B(index))}):
+                x $in \set_preimage<S, T, f>(index_intersect(I, T, B))
+            x $in S
+            f(x) $in T
+            claim:
+                ? forall idx I:
+                    f(x) $in B(idx)
+                x $in \set_preimage<S, T, f>(B(idx))
+                \set_preimage<S, T, f>(B(idx)) = {z S: f(z) $in B(idx)}
+                x $in {z S: f(z) $in B(idx)}
+                f(x) $in B(idx)
+            f(x) $in index_intersect(I, T, B)
+            release thm set_builder_member(x, {z S: f(z) $in index_intersect(I, T, B)})
+            \set_preimage<S, T, f>(index_intersect(I, T, B)) = {z S: f(z) $in index_intersect(I, T, B)}
+            x $in \set_preimage<S, T, f>(index_intersect(I, T, B))
+        by def:
+            ? index_intersect(I, S, fn(index I) power_set(S) {\set_preimage<S, T, f>(B(index))}) $subset \set_preimage<S, T, f>(index_intersect(I, T, B))
+    by extension:
+        ? \set_preimage<S, T, f>(index_intersect(I, T, B)) = index_intersect(I, S, fn(index I) power_set(S) {\set_preimage<S, T, f>(B(index))})
 
 # The source's `InjOn` display is exactly this definition.
 thm injective_on_characterization:
@@ -739,39 +1159,77 @@ thm injective_on_characterization:
 # The elementary real-function examples use narrow domain carriers rather than
 # repeating positivity/nonnegativity premises at every application.
 have nonnegative_reals power_set(R) = {x R: x >= 0}
-trust have real_log fn(x R+) R
-trust have real_exp fn(x R) R+
-trust have real_sqrt fn(x nonnegative_reals) nonnegative_reals
 
 thm real_log_injective:
     ? forall marker {0}:
-        $injective(R+, R, real_log)
-    trust $injective(R+, R, real_log)
+        $injective(R+, R, fn(x R+) R {ln(x)})
+    claim:
+        ? forall x1, x2 R+:
+            fn(x R+) R {ln(x)}(x1) = fn(x R+) R {ln(x)}(x2)
+            =>:
+                x1 = x2
+        fn(x R+) R {ln(x)}(x1) = ln(x1)
+        fn(x R+) R {ln(x)}(x2) = ln(x2)
+        ln(x1) = ln(x2)
+    by def $injective(R+, R, fn(x R+) R {ln(x)})
 
 thm real_exp_surjective_to_positive_reals:
     ? forall marker {0}:
-        $surjective(R, R+, real_exp)
-    trust $surjective(R, R+, real_exp)
+        $surjective(R, R+, fn(x R) R+ {exp(x)})
+    claim:
+        ? forall y R+:
+            exist x R st {y = fn(t R) R+ {exp(t)}(x)}
+        witness exist x R st {y = fn(t R) R+ {exp(t)}(x)} from ln(y):
+            exp(ln(y)) = y
+    by def $surjective(R, R+, fn(x R) R+ {exp(x)})
 
 thm real_sqrt_injective:
     ? forall marker {0}:
-        $injective(nonnegative_reals, nonnegative_reals, real_sqrt)
-    trust $injective(nonnegative_reals, nonnegative_reals, real_sqrt)
+        $injective(nonnegative_reals, nonnegative_reals, fn(x nonnegative_reals) nonnegative_reals {sqrt(x)})
+    claim:
+        ? forall x1, x2 nonnegative_reals:
+            fn(x nonnegative_reals) nonnegative_reals {sqrt(x)}(x1) = fn(x nonnegative_reals) nonnegative_reals {sqrt(x)}(x2)
+            =>:
+                x1 = x2
+        fn(x nonnegative_reals) nonnegative_reals {sqrt(x)}(x1) = sqrt(x1)
+        fn(x nonnegative_reals) nonnegative_reals {sqrt(x)}(x2) = sqrt(x2)
+        sqrt(x1) = sqrt(x2)
+        x1 = sqrt(x1)^2 = sqrt(x2)^2 = x2
+    by def $injective(nonnegative_reals, nonnegative_reals, fn(x nonnegative_reals) nonnegative_reals {sqrt(x)})
 
 thm square_injective_on_nonnegative_reals:
     ? forall marker {0}:
         $injective(nonnegative_reals, nonnegative_reals, fn(x nonnegative_reals) nonnegative_reals {x^2})
-    trust $injective(nonnegative_reals, nonnegative_reals, fn(x nonnegative_reals) nonnegative_reals {x^2})
+    claim:
+        ? forall x1, x2 nonnegative_reals:
+            fn(x nonnegative_reals) nonnegative_reals {x^2}(x1) = fn(x nonnegative_reals) nonnegative_reals {x^2}(x2)
+            =>:
+                x1 = x2
+        fn(x nonnegative_reals) nonnegative_reals {x^2}(x1) = x1^2
+        fn(x nonnegative_reals) nonnegative_reals {x^2}(x2) = x2^2
+        x1^2 = x2^2
+        x1 = sqrt(x1^2) = sqrt(x2^2) = x2
+    by def $injective(nonnegative_reals, nonnegative_reals, fn(x nonnegative_reals) nonnegative_reals {x^2})
 
 thm real_sqrt_surjective:
     ? forall marker {0}:
-        $surjective(nonnegative_reals, nonnegative_reals, real_sqrt)
-    trust $surjective(nonnegative_reals, nonnegative_reals, real_sqrt)
+        $surjective(nonnegative_reals, nonnegative_reals, fn(x nonnegative_reals) nonnegative_reals {sqrt(x)})
+    claim:
+        ? forall y nonnegative_reals:
+            exist x nonnegative_reals st {y = fn(t nonnegative_reals) nonnegative_reals {sqrt(t)}(x)}
+        witness exist x nonnegative_reals st {y = fn(t nonnegative_reals) nonnegative_reals {sqrt(t)}(x)} from y^2:
+            sqrt(y^2) = y
+    by def $surjective(nonnegative_reals, nonnegative_reals, fn(x nonnegative_reals) nonnegative_reals {sqrt(x)})
 
 thm square_surjective_to_nonnegative_reals:
     ? forall marker {0}:
         $surjective(R, nonnegative_reals, fn(x R) nonnegative_reals {x^2})
-    trust $surjective(R, nonnegative_reals, fn(x R) nonnegative_reals {x^2})
+    claim:
+        ? forall y nonnegative_reals:
+            exist x R st {y = fn(t R) nonnegative_reals {t^2}(x)}
+        witness exist x R st {y = fn(t R) nonnegative_reals {t^2}(x)} from sqrt(y):
+            sqrt(y)^2 = y
+    by def $surjective(R, nonnegative_reals, fn(x R) nonnegative_reals {x^2})
 
 # Source theorem `Cantor`. No function from a set onto its power set can be
 # surjective. The proof forms the diagonal set of inputs which do not belong to
@@ -791,7 +1249,7 @@ thm cantor:
                 ? a $in diagonal_set
                 not a $in diagonal_set
                 not a $in f(a)
-1release thm set_builder_member(a, {x S: not x $in f(x)})
+                release thm set_builder_member(a, {x S: not x $in f(x)})
                 a $in {x S: not x $in f(x)}
                 impossible not a $in diagonal_set
 
@@ -815,10 +1273,22 @@ thm sb_aux_zero:
 thm sb_aux_successor:
     ? forall S set, T nonempty_set, f fn(x S) T, g fn(y T) S, n N:
         \sb_aux<S, T, f, g>(n + 1) = \set_image<T, S, g, \set_image<S, T, f, \sb_aux<S, T, f, g>(n)>>
-    # Proof debt (kernel_problem): the native recursive equation is exposed at
-    # `(n + 1) - 1`, but congruence through the two selected set_image template
-    # applications does not yet replay the arithmetic equality to `n`.
-    trust \sb_aux<S, T, f, g>(n + 1) = \set_image<T, S, g, \set_image<S, T, f, \sb_aux<S, T, f, g>(n)>>
+    \sb_aux<S, T, f, g>(n + 1) = \set_image<T, S, g, \set_image<S, T, f, \sb_aux<S, T, f, g>((n + 1) - 1)>>
+    (n + 1) - 1 = n
+    forall point \sb_aux<S, T, f, g>((n + 1) - 1):
+        point $in \sb_aux<S, T, f, g>(n)
+    by def:
+        ? \sb_aux<S, T, f, g>((n + 1) - 1) $subset \sb_aux<S, T, f, g>(n)
+    forall point \sb_aux<S, T, f, g>(n):
+        point $in \sb_aux<S, T, f, g>((n + 1) - 1)
+    by def:
+        ? \sb_aux<S, T, f, g>(n) $subset \sb_aux<S, T, f, g>((n + 1) - 1)
+    release thm set_image_mono(S, T, f, \sb_aux<S, T, f, g>((n + 1) - 1), \sb_aux<S, T, f, g>(n))
+    release thm set_image_mono(S, T, f, \sb_aux<S, T, f, g>(n), \sb_aux<S, T, f, g>((n + 1) - 1))
+    release thm set_image_mono(T, S, g, \set_image<S, T, f, \sb_aux<S, T, f, g>((n + 1) - 1)>, \set_image<S, T, f, \sb_aux<S, T, f, g>(n)>)
+    release thm set_image_mono(T, S, g, \set_image<S, T, f, \sb_aux<S, T, f, g>(n)>, \set_image<S, T, f, \sb_aux<S, T, f, g>((n + 1) - 1)>)
+    by extension:
+        ? \set_image<T, S, g, \set_image<S, T, f, \sb_aux<S, T, f, g>((n + 1) - 1)>> = \set_image<T, S, g, \set_image<S, T, f, \sb_aux<S, T, f, g>(n)>>
 
 thm sb_next_mem:
     ? forall S set, T nonempty_set, f fn(x S) T, g fn(y T) S, n N, x S:
@@ -833,7 +1303,7 @@ thm sb_next_mem:
     fn(y \set_image<S, T, f, \sb_aux<S, T, f, g>(n)>) S {g(y)}(f(x)) $in fn_range(fn(y \set_image<S, T, f, \sb_aux<S, T, f, g>(n)>) S {g(y)})
     \set_image<T, S, g, \set_image<S, T, f, \sb_aux<S, T, f, g>(n)>> = fn_range(fn(y \set_image<S, T, f, \sb_aux<S, T, f, g>(n)>) S {g(y)})
     g(f(x)) $in \set_image<T, S, g, \set_image<S, T, f, \sb_aux<S, T, f, g>(n)>>
-1release thm sb_aux_successor(S, T, f, g, n)
+    release thm sb_aux_successor(S, T, f, g, n)
 
 # The countable union of the recursive layers is represented extensionally by
 # membership in some natural-number layer.
@@ -866,11 +1336,11 @@ thm sb_right_inv:
         not x $in \sb_set<S, T, f, g>
         =>:
             g(\inverse<T, S, default, g>(x)) = x
-1release thm total_inverse_available(T, S, default, g)
+    release thm total_inverse_available(T, S, default, g)
     by cases:
         ? g(\inverse<T, S, default, g>(x)) = x
         case $has_preimage(T, S, g, x):
-1release thm inverse_spec(T, S, default, g, x)
+            release thm inverse_spec(T, S, default, g, x)
         case not $has_preimage(T, S, g, x):
             claim:
                 ? not x $in \set_image<T, S, g, T>
@@ -883,11 +1353,11 @@ thm sb_right_inv:
                     witness $has_preimage(T, S, g, x) from q
                     impossible not $has_preimage(T, S, g, x)
             x $in set_minus(S, \set_image<T, S, g, T>)
-1release thm sb_aux_zero(S, T, f, g)
+            release thm sb_aux_zero(S, T, f, g)
             \sb_aux<S, T, f, g>(0) = set_minus(S, \set_image<T, S, g, T>)
             x $in \sb_aux<S, T, f, g>(0)
             witness $sb_set_member(S, T, f, g, x) from 0
-1release thm set_builder_member(x, {z S: $sb_set_member(S, T, f, g, z)})
+            release thm set_builder_member(x, {z S: $sb_set_member(S, T, f, g, z)})
             x $in {z S: $sb_set_member(S, T, f, g, z)}
             \sb_set<S, T, f, g> = {z S: $sb_set_member(S, T, f, g, z)}
             x $in \sb_set<S, T, f, g>
@@ -903,9 +1373,9 @@ thm sb_set_closed:
     by def:
         ? $sb_set_member(S, T, f, g, x)
     obtain n from $sb_set_member(S, T, f, g, x)
-1release thm sb_next_mem(S, T, f, g, n, x)
+    release thm sb_next_mem(S, T, f, g, n, x)
     witness $sb_set_member(S, T, f, g, g(f(x))) from n + 1
-1release thm set_builder_member(g(f(x)), {z S: $sb_set_member(S, T, f, g, z)})
+    release thm set_builder_member(g(f(x)), {z S: $sb_set_member(S, T, f, g, z)})
     g(f(x)) $in {z S: $sb_set_member(S, T, f, g, z)}
     \sb_set<S, T, f, g> = {z S: $sb_set_member(S, T, f, g, z)}
 
@@ -914,7 +1384,7 @@ thm sb_injective:
         $injective(S, T, f)
         =>:
             $injective(S, T, \sb_fun<S, T, default, f, g>)
-1release thm total_inverse_available(T, S, default, g)
+    release thm total_inverse_available(T, S, default, g)
     claim:
         ? forall x1, x2 S:
             \sb_fun<S, T, default, f, g>(x1) = \sb_fun<S, T, default, f, g>(x2)
@@ -926,38 +1396,38 @@ thm sb_injective:
                 by cases:
                     ? x1 = x2
                     case x2 $in \sb_set<S, T, f, g>:
-1release thm sb_fun_on_set(S, T, default, f, g, x1)
-1release thm sb_fun_on_set(S, T, default, f, g, x2)
+                        release thm sb_fun_on_set(S, T, default, f, g, x1)
+                        release thm sb_fun_on_set(S, T, default, f, g, x2)
                         f(x1) = f(x2)
                         x1 = x2
                     case not x2 $in \sb_set<S, T, f, g>:
-1release thm sb_fun_on_set(S, T, default, f, g, x1)
-1release thm sb_fun_off_set(S, T, default, f, g, x2)
+                        release thm sb_fun_on_set(S, T, default, f, g, x1)
+                        release thm sb_fun_off_set(S, T, default, f, g, x2)
                         f(x1) = \inverse<T, S, default, g>(x2)
-1release thm sb_right_inv(S, T, default, f, g, x2)
+                        release thm sb_right_inv(S, T, default, f, g, x2)
                         g(f(x1)) = g(\inverse<T, S, default, g>(x2)) = x2
-1release thm sb_set_closed(S, T, f, g, x1)
+                        release thm sb_set_closed(S, T, f, g, x1)
                         x2 $in \sb_set<S, T, f, g>
                         impossible not x2 $in \sb_set<S, T, f, g>
             case not x1 $in \sb_set<S, T, f, g>:
                 by cases:
                     ? x1 = x2
                     case x2 $in \sb_set<S, T, f, g>:
-1release thm sb_fun_off_set(S, T, default, f, g, x1)
-1release thm sb_fun_on_set(S, T, default, f, g, x2)
+                        release thm sb_fun_off_set(S, T, default, f, g, x1)
+                        release thm sb_fun_on_set(S, T, default, f, g, x2)
                         \inverse<T, S, default, g>(x1) = f(x2)
-1release thm sb_right_inv(S, T, default, f, g, x1)
+                        release thm sb_right_inv(S, T, default, f, g, x1)
                         x1 = g(\inverse<T, S, default, g>(x1)) = g(f(x2))
-1release thm sb_set_closed(S, T, f, g, x2)
+                        release thm sb_set_closed(S, T, f, g, x2)
                         x1 $in \sb_set<S, T, f, g>
                         impossible not x1 $in \sb_set<S, T, f, g>
                     case not x2 $in \sb_set<S, T, f, g>:
-1release thm sb_fun_off_set(S, T, default, f, g, x1)
-1release thm sb_fun_off_set(S, T, default, f, g, x2)
+                        release thm sb_fun_off_set(S, T, default, f, g, x1)
+                        release thm sb_fun_off_set(S, T, default, f, g, x2)
                         \inverse<T, S, default, g>(x1) = \inverse<T, S, default, g>(x2)
                         g(\inverse<T, S, default, g>(x1)) = g(\inverse<T, S, default, g>(x2))
-1release thm sb_right_inv(S, T, default, f, g, x1)
-1release thm sb_right_inv(S, T, default, f, g, x2)
+                        release thm sb_right_inv(S, T, default, f, g, x1)
+                        release thm sb_right_inv(S, T, default, f, g, x2)
                         x1 = g(\inverse<T, S, default, g>(x1)) = g(\inverse<T, S, default, g>(x2)) = x2
     by def:
         ? $injective(S, T, \sb_fun<S, T, default, f, g>)
@@ -970,7 +1440,7 @@ thm sb_surjective:
         $injective(T, S, g)
         =>:
             $surjective(S, T, \sb_fun<S, T, default, f, g>)
-1release thm total_inverse_available(T, S, default, g)
+    release thm total_inverse_available(T, S, default, g)
     claim:
         ? forall y T:
             g(y) $in \sb_set<S, T, f, g>
@@ -984,7 +1454,7 @@ thm sb_surjective:
         by cases:
             ? exist x S st {x $in \sb_set<S, T, f, g>, f(x) = y}
             case n = 0:
-1release thm sb_aux_zero(S, T, f, g)
+                release thm sb_aux_zero(S, T, f, g)
                 g(y) $in set_minus(S, \set_image<T, S, g, T>)
                 not g(y) $in \set_image<T, S, g, T>
                 fn(q T) S {g(q)}(y) = g(y)
@@ -996,7 +1466,7 @@ thm sb_surjective:
                 n = (n - 1) + 1
                 n - 1 >= 0
                 n - 1 $in N
-1release thm sb_aux_successor(S, T, f, g, n - 1)
+                release thm sb_aux_successor(S, T, f, g, n - 1)
                 \sb_aux<S, T, f, g>(n) = \set_image<T, S, g, \set_image<S, T, f, \sb_aux<S, T, f, g>(n - 1)>>
                 g(y) $in \set_image<T, S, g, \set_image<S, T, f, \sb_aux<S, T, f, g>(n - 1)>>
                 \set_image<T, S, g, \set_image<S, T, f, \sb_aux<S, T, f, g>(n - 1)>> = fn_range(fn(z \set_image<S, T, f, \sb_aux<S, T, f, g>(n - 1)>) S {g(z)})
@@ -1011,7 +1481,7 @@ thm sb_surjective:
                 fn(z \sb_aux<S, T, f, g>(n - 1)) T {f(z)}(pre) = f(pre)
                 mid = f(pre)
                 witness $sb_set_member(S, T, f, g, pre) from n - 1
-1release thm set_builder_member(pre, {z S: $sb_set_member(S, T, f, g, z)})
+                release thm set_builder_member(pre, {z S: $sb_set_member(S, T, f, g, z)})
                 pre $in {z S: $sb_set_member(S, T, f, g, z)}
                 \sb_set<S, T, f, g> = {z S: $sb_set_member(S, T, f, g, z)}
                 pre $in \sb_set<S, T, f, g>
@@ -1023,12 +1493,12 @@ thm sb_surjective:
             ? exist x S st {y = \sb_fun<S, T, default, f, g>(x)}
             case g(y) $in \sb_set<S, T, f, g>:
                 obtain pre from exist x S st {x $in \sb_set<S, T, f, g>, f(x) = y}
-1release thm sb_fun_on_set(S, T, default, f, g, pre)
+                release thm sb_fun_on_set(S, T, default, f, g, pre)
                 witness exist x S st {y = \sb_fun<S, T, default, f, g>(x)} from pre
             case not g(y) $in \sb_set<S, T, f, g>:
-1release thm inverse_left_of_injective(T, S, default, g)
+                release thm inverse_left_of_injective(T, S, default, g)
                 \inverse<T, S, default, g>(g(y)) = y
-1release thm sb_fun_off_set(S, T, default, f, g, g(y))
+                release thm sb_fun_off_set(S, T, default, f, g, g(y))
                 \sb_fun<S, T, default, f, g>(g(y)) = \inverse<T, S, default, g>(g(y)) = y
                 witness exist x S st {y = \sb_fun<S, T, default, f, g>(x)} from g(y)
     by def:
@@ -1042,8 +1512,8 @@ thm schroeder_bernstein:
         $injective(T, S, g)
         =>:
             exist h fn(x S) T st {$bijective(S, T, h)}
-1release thm sb_injective(S, T, default, f, g)
-1release thm sb_surjective(S, T, default, f, g)
+    release thm sb_injective(S, T, default, f, g)
+    release thm sb_surjective(S, T, default, f, g)
     by def:
         ? $bijective(S, T, \sb_fun<S, T, default, f, g>)
     witness exist h fn(x S) T st {$bijective(S, T, h)} from \sb_fun<S, T, default, f, g>

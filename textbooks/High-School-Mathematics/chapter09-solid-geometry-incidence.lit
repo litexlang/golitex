@@ -77,28 +77,28 @@ claim:
     ? forall p x_axis_line(0):
         p $in horizontal_plane(0)
     p[3] = 0
-1release thm set_builder_member(p, {q cart(R, R, R): q[3] = 0})
+    release thm set_builder_member(p, {q cart(R, R, R): q[3] = 0})
 x_axis_line(0) $subset horizontal_plane(0)
 
 claim:
     ? forall p y_axis_line(0):
         p $in horizontal_plane(0)
     p[3] = 0
-1release thm set_builder_member(p, {q cart(R, R, R): q[3] = 0})
+    release thm set_builder_member(p, {q cart(R, R, R): q[3] = 0})
 y_axis_line(0) $subset horizontal_plane(0)
 
 claim:
     ? forall p y_axis_line(0):
         p $in vertical_plane_x(0)
     p[1] = 0
-1release thm set_builder_member(p, {q cart(R, R, R): q[1] = 0})
+    release thm set_builder_member(p, {q cart(R, R, R): q[1] = 0})
 y_axis_line(0) $subset vertical_plane_x(0)
 
 claim:
     ? forall p z_axis_line(0):
         p $in vertical_plane_x(0)
     p[1] = 0
-1release thm set_builder_member(p, {q cart(R, R, R): q[1] = 0})
+    release thm set_builder_member(p, {q cart(R, R, R): q[1] = 0})
 z_axis_line(0) $subset vertical_plane_x(0)
 
 $line_lies_in_plane(y_axis_line(0), horizontal_plane(0))
@@ -118,15 +118,15 @@ by extension:
         p $in vertical_plane_x(0)
         p[3] = 0
         p[1] = 0
-1release thm set_builder_member(p, {q cart(R, R, R): q[1] = 0 and q[3] = 0})
+        release thm set_builder_member(p, {q cart(R, R, R): q[1] = 0 and q[3] = 0})
 
     claim:
         ? forall p y_axis_line(0):
             p $in intersect(horizontal_plane(0), vertical_plane_x(0))
         p[1] = 0
         p[3] = 0
-1release thm set_builder_member(p, {q cart(R, R, R): q[3] = 0})
-1release thm set_builder_member(p, {q cart(R, R, R): q[1] = 0})
+        release thm set_builder_member(p, {q cart(R, R, R): q[3] = 0})
+        release thm set_builder_member(p, {q cart(R, R, R): q[1] = 0})
 
 # Direction examples. The x- and y-axis directions are perpendicular because
 # their dot product is 0. The vector (2,0,0) is parallel to (1,0,0) because

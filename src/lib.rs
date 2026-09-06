@@ -1,3 +1,5 @@
+#![cfg_attr(test, allow(deprecated))]
+
 pub mod api;
 pub mod cli;
 pub mod compatibility;

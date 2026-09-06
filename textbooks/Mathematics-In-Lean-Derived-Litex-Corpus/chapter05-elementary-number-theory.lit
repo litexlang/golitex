@@ -78,7 +78,7 @@ thm coprime_square_not_twice_square:
         m^2 = 2 * n^2
         witness $chap1::even(m^2) from n^2
         $chap1::even(m^2)
-1release thm even_of_even_sqr(m)
+        release thm even_of_even_sqr(m)
         $chap1::even(m)
         obtain a from exist a N st {m = 2 * a}
         m^2 = (2 * a)^2 = 4 * a^2
@@ -86,73 +86,694 @@ thm coprime_square_not_twice_square:
         n^2 = (2 * n^2) / 2 = (4 * a^2) / 2 = 2 * a^2
         witness $chap1::even(n^2) from a^2
         $chap1::even(n^2)
-1release thm even_of_even_sqr(n)
+        release thm even_of_even_sqr(n)
         $chap1::even(n)
         obtain b from exist b N st {n = 2 * b}
         witness $chap2::divides(2, m) from a
         $chap2::divides(2, m)
         witness $chap2::divides(2, n) from b
         $chap2::divides(2, n)
-1release thm chap2::common_divisor_le_gcd(m, n, 2)
+        release thm chap2::common_divisor_le_gcd(m, n, 2)
         2 <= gcd(m, n) = 1
         impossible 2 <= 1
 
-# Source construction: Nat.factorization evaluated at one prime.  The source
-# later applies this object, so retain it as a callable function rather than a
-# proposition about a candidate exponent.
-# Proof debt: Litex does not yet have the decreasing-division construction
-# needed to select the exponent, including the source convention at zero.
-trust have prime_factor_exponent fn(n, p N) N
+# Source construction: Nat.factorization evaluated at one prime.  The coordinate
+# is selected visibly as the maximum of a finite set of admissible exponents;
+# k = 0 preserves the source convention for zero and nonprime inputs.
+prop positive_prime_power_divides(n, p, k N):
+    n != 0
+    $prime(p)
+    $chap2::divides(p^k, n)
 
-# Source theorem: factorization_mul'.
-# Proof debt: the multiplicity-addition law needs the missing construction
-# above and its termination/correctness invariant.
+prop prime_power_exponent_candidate(n, p, k N):
+    k = 0 or $positive_prime_power_divides(n, p, k)
+
+thm prime_power_exponent_candidates_finite_nonempty:
+    ? forall n, p N:
+        $is_finite_set({k closed_range(0, n): $prime_power_exponent_candidate(n, p, k)})
+        $is_nonempty_set({k closed_range(0, n): $prime_power_exponent_candidate(n, p, k)})
+    $is_finite_set({k closed_range(0, n): $prime_power_exponent_candidate(n, p, k)})
+    witness $is_nonempty_set({k closed_range(0, n): $prime_power_exponent_candidate(n, p, k)}) from 0:
+        0 $in closed_range(0, n)
+        0 = 0 or $positive_prime_power_divides(n, p, 0)
+        by def $prime_power_exponent_candidate(n, p, 0)
+        release thm set_builder_member(0, {k closed_range(0, n): $prime_power_exponent_candidate(n, p, k)})
+
+have fn prime_factor_exponent(n, p N) N = finite_set_max({k closed_range(0, n): $prime_power_exponent_candidate(n, p, k)})
+
+thm prime_factor_exponent_is_candidate:
+    ? forall n, p N:
+        prime_factor_exponent(n, p) $in closed_range(0, n)
+        $prime_power_exponent_candidate(n, p, prime_factor_exponent(n, p))
+    release thm prime_power_exponent_candidates_finite_nonempty(n, p)
+    prime_factor_exponent(n, p) = finite_set_max({k closed_range(0, n): $prime_power_exponent_candidate(n, p, k)})
+    finite_set_max({k closed_range(0, n): $prime_power_exponent_candidate(n, p, k)}) $in {k closed_range(0, n): $prime_power_exponent_candidate(n, p, k)}
+    prime_factor_exponent(n, p) $in {k closed_range(0, n): $prime_power_exponent_candidate(n, p, k)}
+    prime_factor_exponent(n, p) $in closed_range(0, n)
+    $prime_power_exponent_candidate(n, p, prime_factor_exponent(n, p))
+
+thm prime_power_candidate_le_exponent:
+    ? forall n, p, k N:
+        k $in closed_range(0, n)
+        $prime_power_exponent_candidate(n, p, k)
+        =>:
+            k <= prime_factor_exponent(n, p)
+    release thm prime_power_exponent_candidates_finite_nonempty(n, p)
+    release thm set_builder_member(k, {j closed_range(0, n): $prime_power_exponent_candidate(n, p, j)})
+    k $in {j closed_range(0, n): $prime_power_exponent_candidate(n, p, j)}
+    k <= finite_set_max({j closed_range(0, n): $prime_power_exponent_candidate(n, p, j)}) = prime_factor_exponent(n, p)
+
+# The multiplication law below needs Euclid's lemma.  These local gcd and
+# Bezout interfaces make that dependency explicit instead of importing a library.
+thm gcd_euclidean_step_positive:
+    ? forall a N, b N+:
+        gcd(a, b) = gcd(b, a % b)
+    have q Z = integer_quotient(a, b)
+    a % b >= 0
+    abs(a % b) = a % b
+    have r N = abs(a % b)
+    r = a % b
+    a = b * integer_quotient(a, b) + a % b
+    a = b * integer_quotient(a, b) + a % b = b * q + a % b = b * q + r
+    release thm chap2::gcd_positive(a, b)
+    have g N+ = gcd(a, b)
+    release thm chap2::gcd_divides_left(a, b)
+    release thm chap2::gcd_divides_right(a, b)
+    $chap2::divides(g, a)
+    $chap2::divides(g, b)
+    obtain u from exist u Z st {a = g * u}
+    obtain v from exist v Z st {b = g * v}
+    witness $chap2::divides(g, r) from u - v * q:
+        r = a - b * q = g * u - g * v * q = g * (u - v * q)
+    release thm chap2::common_divisor_le_gcd(b, r, g)
+    g <= gcd(b, r)
+    release thm chap2::gcd_positive(b, r)
+    have h N+ = gcd(b, r)
+    release thm chap2::gcd_divides_left(b, r)
+    release thm chap2::gcd_divides_right(b, r)
+    $chap2::divides(h, b)
+    $chap2::divides(h, r)
+    obtain x from exist x Z st {b = h * x}
+    obtain y from exist y Z st {r = h * y}
+    witness $chap2::divides(h, a) from x * q + y:
+        a = b * q + r = h * x * q + h * y = h * (x * q + y)
+    release thm chap2::common_divisor_le_gcd(a, b, h)
+    h <= gcd(a, b) = g
+    g = h
+    gcd(a, b) = g = h = gcd(b, a % b)
+
+prop has_bezout_for_second(b N):
+    forall a N+:
+        exist x, y Z st {gcd(a, b) = a * x + b * y}
+
+thm bezout_identity_positive_first:
+    ? forall a N+, b N:
+        exist x, y Z st {gcd(a, b) = a * x + b * y}
+    claim:
+        ? forall s N:
+            $has_bezout_for_second(s)
+        by strong_induc s from 0:
+            ? $has_bezout_for_second(s)
+            ? from s = 0:
+                claim:
+                    ? forall c N+:
+                        exist x, y Z st {gcd(c, 0) = c * x + 0 * y}
+                    release thm chap2::gcd_euclidean_base(c)
+                    abs(c) = c
+                    gcd(c, 0) = c = c * 1 + 0 * 0
+                    witness exist x, y Z st {gcd(c, 0) = c * x + 0 * y} from 1, 0
+                by def $has_bezout_for_second(0)
+                $has_bezout_for_second(0)
+            ? strong_induc:
+                forall j N:
+                    j >= 0
+                    j <= s
+                    =>:
+                        $has_bezout_for_second(j)
+                s + 1 > 0
+                s + 1 $in N+
+                claim:
+                    ? forall c N+:
+                        exist x, y Z st {gcd(c, s + 1) = c * x + (s + 1) * y}
+                    have q Z = integer_quotient(c, s + 1)
+                    c % (s + 1) >= 0
+                    abs(c % (s + 1)) = c % (s + 1)
+                    have r N = abs(c % (s + 1))
+                    r = c % (s + 1)
+                    c = (s + 1) * integer_quotient(c, s + 1) + c % (s + 1)
+                    c = (s + 1) * integer_quotient(c, s + 1) + c % (s + 1) = (s + 1) * q + c % (s + 1) = (s + 1) * q + r
+                    c % (s + 1) < s + 1
+                    r = c % (s + 1) < s + 1
+                    r <= s
+                    $has_bezout_for_second(r)
+                    obtain x, y from exist x, y Z st {gcd(s + 1, r) = (s + 1) * x + r * y}
+                    release thm gcd_euclidean_step_positive(c, s + 1)
+                    gcd(c, s + 1) = gcd(s + 1, c % (s + 1))
+                    gcd(c, s + 1) = gcd(s + 1, c % (s + 1)) = gcd(s + 1, r)
+                    gcd(c, s + 1) = (s + 1) * x + r * y
+                    r = c - (s + 1) * q
+                    (s + 1) * x + r * y = (s + 1) * x + (c - (s + 1) * q) * y
+                    (s + 1) * x + (c - (s + 1) * q) * y = (s + 1) * x + c * y - (s + 1) * q * y
+                    (s + 1) * x + c * y - (s + 1) * q * y = c * y + ((s + 1) * x - (s + 1) * q * y)
+                    c * y + ((s + 1) * x - (s + 1) * q * y) = c * y + (s + 1) * (x - q * y)
+                    witness exist u, v Z st {gcd(c, s + 1) = c * u + (s + 1) * v} from y, x - q * y
+                by def $has_bezout_for_second(s + 1)
+                $has_bezout_for_second(s + 1)
+    $has_bezout_for_second(b)
+    exist x, y Z st {gcd(a, b) = a * x + b * y}
+
+thm prime_divides_product:
+    ? forall p N+, a, b N:
+        $prime(p)
+        $chap2::divides(p, a * b)
+        =>:
+            $chap2::divides(p, a) or $chap2::divides(p, b)
+    by cases:
+        ? $chap2::divides(p, a) or $chap2::divides(p, b)
+        case $chap2::divides(p, a):
+            $chap2::divides(p, a) or $chap2::divides(p, b)
+        case not $chap2::divides(p, a):
+            release thm chap2::gcd_positive(p, a)
+            have g N+ = gcd(p, a)
+            release thm chap2::gcd_divides_left(p, a)
+            release thm chap2::gcd_divides_right(p, a)
+            $chap2::divides(g, p)
+            $chap2::divides(g, a)
+            claim:
+                ? g = 1
+                by contra:
+                    ? g = 1
+                    g != 1
+                    g >= 1
+                    g $in N
+                    claim:
+                        ? g >= 2
+                        by contra:
+                            ? g >= 2
+                            g < 2
+                            g <= 1
+                            g >= 1
+                            g = 1
+                            impossible g != 1
+                    release thm chap2::_positive_divisor_le_abs(g, p)
+                    g <= abs(p) = p
+                    claim:
+                        ? g = p
+                        by contra:
+                            ? g = p
+                            g != p
+                            claim:
+                                ? g < p
+                                by contra:
+                                    ? g < p
+                                    g >= p
+                                    g <= p
+                                    g = p
+                                    impossible g != p
+                            g $in range(2, p)
+                            claim:
+                                ? p % g != 0
+                                by def $prime(p)
+                            obtain d from exist d Z st {p = g * d}
+                            p % g = (g * d) % g = 0
+                            impossible p % g != 0
+                    $chap2::divides(p, a)
+                    impossible not $chap2::divides(p, a)
+            release thm bezout_identity_positive_first(p, a)
+            obtain x, y from exist x, y Z st {gcd(p, a) = p * x + a * y}
+            obtain z from exist z Z st {a * b = p * z}
+            a * y * b = (a * b) * y = p * z * y
+            (p * x + a * y) * b = p * x * b + a * y * b = p * x * b + p * z * y
+            witness $chap2::divides(p, b) from x * b + z * y:
+                b = 1 * b = gcd(p, a) * b = (p * x + a * y) * b = p * x * b + p * z * y = p * (x * b + z * y)
+            $chap2::divides(p, a) or $chap2::divides(p, b)
+
+thm natural_le_prime_power:
+    ? forall k N, p N+:
+        p >= 2
+        =>:
+            k <= p^k
+    by induc k from 0:
+        ? k <= p^k
+        ? from k = 0:
+            k = 0
+            p^k = p^0 = 1
+            0 <= 1
+        ? induc:
+            k <= p^k
+            p^k $in N+
+            p^k >= 1
+            k + 1 <= p^k + p^k = 2 * p^k
+            2 * p^k <= p * p^k
+            p^(k + 1) = p^k * p^1 = p^k * p = p * p^k
+            k + 1 <= 2 * p^k <= p * p^k = p^(k + 1)
+
+thm prime_factor_exponent_power_divides:
+    ? forall n N, p N+:
+        n != 0
+        $prime(p)
+        =>:
+            $chap2::divides(p^prime_factor_exponent(n, p), n)
+    release thm prime_factor_exponent_is_candidate(n, p)
+    $prime_power_exponent_candidate(n, p, prime_factor_exponent(n, p))
+    prime_factor_exponent(n, p) = 0 or $positive_prime_power_divides(n, p, prime_factor_exponent(n, p))
+    by cases:
+        ? $chap2::divides(p^prime_factor_exponent(n, p), n)
+        case prime_factor_exponent(n, p) = 0:
+            witness $chap2::divides(p^prime_factor_exponent(n, p), n) from n:
+                n = 1 * n = p^0 * n = p^prime_factor_exponent(n, p) * n
+        case $positive_prime_power_divides(n, p, prime_factor_exponent(n, p)):
+            $chap2::divides(p^prime_factor_exponent(n, p), n)
+
+thm prime_factor_exponent_next_power_not_divides:
+    ? forall n N, p N+:
+        n != 0
+        $prime(p)
+        =>:
+            not $chap2::divides(p^(prime_factor_exponent(n, p) + 1), n)
+    by contra:
+        ? not $chap2::divides(p^(prime_factor_exponent(n, p) + 1), n)
+        $chap2::divides(p^(prime_factor_exponent(n, p) + 1), n)
+        p >= 2
+        p^(prime_factor_exponent(n, p) + 1) $in N+
+        release thm chap2::_positive_divisor_le_abs(p^(prime_factor_exponent(n, p) + 1), n)
+        p^(prime_factor_exponent(n, p) + 1) <= abs(n) = n
+        release thm natural_le_prime_power(prime_factor_exponent(n, p) + 1, p)
+        prime_factor_exponent(n, p) + 1 <= p^(prime_factor_exponent(n, p) + 1) <= n
+        prime_factor_exponent(n, p) + 1 $in closed_range(0, n)
+        $positive_prime_power_divides(n, p, prime_factor_exponent(n, p) + 1)
+        $prime_power_exponent_candidate(n, p, prime_factor_exponent(n, p) + 1)
+        release thm prime_power_candidate_le_exponent(n, p, prime_factor_exponent(n, p) + 1)
+        prime_factor_exponent(n, p) + 1 <= prime_factor_exponent(n, p)
+        impossible prime_factor_exponent(n, p) + 1 > prime_factor_exponent(n, p)
+
+thm prime_factor_exponent_residual:
+    ? forall n N, p N+:
+        n != 0
+        $prime(p)
+        =>:
+            exist q N+ st {n = p^prime_factor_exponent(n, p) * q, not $chap2::divides(p, q)}
+    release thm prime_factor_exponent_power_divides(n, p)
+    obtain q from exist q Z st {n = p^prime_factor_exponent(n, p) * q}
+    p^prime_factor_exponent(n, p) $in N+
+    p^prime_factor_exponent(n, p) > 0
+    claim:
+        ? n > 0
+        by contra:
+            ? n > 0
+            n <= 0
+            n >= 0
+            n = 0
+            impossible n != 0
+    claim:
+        ? q > 0
+        by contra:
+            ? q > 0
+            q <= 0
+            (-q) >= 0
+            p^prime_factor_exponent(n, p) >= 0
+            p^prime_factor_exponent(n, p) * (-q) >= 0
+            p^prime_factor_exponent(n, p) * q = -(p^prime_factor_exponent(n, p) * (-q))
+            -(p^prime_factor_exponent(n, p) * (-q)) <= 0
+            p^prime_factor_exponent(n, p) * q <= 0
+            n <= 0
+            impossible n > 0
+    q $in N+
+    claim:
+        ? not $chap2::divides(p, q)
+        by contra:
+            ? not $chap2::divides(p, q)
+            $chap2::divides(p, q)
+            obtain d from exist d Z st {q = p * d}
+            p^prime_factor_exponent(n, p) * q = p^prime_factor_exponent(n, p) * (p * d) = p^prime_factor_exponent(n, p) * p * d
+            p^prime_factor_exponent(n, p) * p = p^(prime_factor_exponent(n, p) + 1)
+            witness $chap2::divides(p^(prime_factor_exponent(n, p) + 1), n) from d:
+                n = p^prime_factor_exponent(n, p) * q = p^prime_factor_exponent(n, p) * p * d = p^(prime_factor_exponent(n, p) + 1) * d
+            release thm prime_factor_exponent_next_power_not_divides(n, p)
+            impossible not $chap2::divides(p^(prime_factor_exponent(n, p) + 1), n)
+    witness exist residual N+ st {n = p^prime_factor_exponent(n, p) * residual, not $chap2::divides(p, residual)} from q
+
+thm prime_factor_exponent_zero_of_not_prime:
+    ? forall n, p N:
+        not $prime(p)
+        =>:
+            prime_factor_exponent(n, p) = 0
+    release thm prime_factor_exponent_is_candidate(n, p)
+    $prime_power_exponent_candidate(n, p, prime_factor_exponent(n, p))
+    prime_factor_exponent(n, p) = 0 or $positive_prime_power_divides(n, p, prime_factor_exponent(n, p))
+    by cases:
+        ? prime_factor_exponent(n, p) = 0
+        case prime_factor_exponent(n, p) = 0:
+            prime_factor_exponent(n, p) = 0
+        case $positive_prime_power_divides(n, p, prime_factor_exponent(n, p)):
+            $prime(p)
+            impossible not $prime(p)
+
+thm integer_left_multiplication_cancellation:
+    ? forall c, a, b Z:
+        c * a = c * b
+        c != 0
+        =>:
+            a = b
+    (a - b) * c = a * c - b * c = c * a - c * b = 0
+    (a - b) * c = 0
+    a - b = 0 or c = 0
+    by cases:
+        ? a = b
+        case a - b = 0:
+            a = a - b + b = b
+        case c = 0:
+            impossible c != 0
+
+# Source theorem: factorization_mul'.  Select prime-free residuals for both
+# factors, cancel the common prime power, and apply Euclid's lemma.
 thm factorization_mul:
     ? forall m, n, p N:
         m != 0
         n != 0
         =>:
             prime_factor_exponent(m * n, p) = prime_factor_exponent(m, p) + prime_factor_exponent(n, p)
-    trust prime_factor_exponent(m * n, p) = prime_factor_exponent(m, p) + prime_factor_exponent(n, p)
+    by cases:
+        ? prime_factor_exponent(m * n, p) = prime_factor_exponent(m, p) + prime_factor_exponent(n, p)
+        case not $prime(p):
+            release thm prime_factor_exponent_zero_of_not_prime(m, p)
+            release thm prime_factor_exponent_zero_of_not_prime(n, p)
+            release thm prime_factor_exponent_zero_of_not_prime(m * n, p)
+            prime_factor_exponent(m * n, p) = 0 = 0 + 0 = prime_factor_exponent(m, p) + prime_factor_exponent(n, p)
+        case $prime(p):
+            p >= 2
+            p $in N+
+            m * n != 0
+            have a N = prime_factor_exponent(m, p)
+            have b N = prime_factor_exponent(n, p)
+            have c N = prime_factor_exponent(m * n, p)
+            release thm prime_factor_exponent_residual(m, p)
+            obtain u from exist u N+ st {m = p^prime_factor_exponent(m, p) * u, not $chap2::divides(p, u)}
+            m = p^prime_factor_exponent(m, p) * u = p^a * u
+            release thm prime_factor_exponent_residual(n, p)
+            obtain v from exist v N+ st {n = p^prime_factor_exponent(n, p) * v, not $chap2::divides(p, v)}
+            n = p^prime_factor_exponent(n, p) * v = p^b * v
+            p^(a + b) = p^a * p^b
+            (p^a * u) * (p^b * v) = (p^a * p^b) * (u * v)
+            (p^a * p^b) * (u * v) = p^(a + b) * (u * v)
+            m * n = (p^a * u) * (p^b * v) = (p^a * p^b) * (u * v) = p^(a + b) * (u * v)
+            witness $chap2::divides(p^(a + b), m * n) from u * v:
+                m * n = p^(a + b) * (u * v)
+            p^(a + b) $in N+
+            release thm chap2::_positive_divisor_le_abs(p^(a + b), m * n)
+            m * n >= 0
+            abs(m * n) = m * n
+            p^(a + b) <= abs(m * n) = m * n
+            release thm natural_le_prime_power(a + b, p)
+            a + b <= p^(a + b) <= m * n
+            a + b $in closed_range(0, m * n)
+            $positive_prime_power_divides(m * n, p, a + b)
+            $prime_power_exponent_candidate(m * n, p, a + b)
+            release thm prime_power_candidate_le_exponent(m * n, p, a + b)
+            a + b <= c
+            claim:
+                ? not $chap2::divides(p^(a + b + 1), m * n)
+                by contra:
+                    ? not $chap2::divides(p^(a + b + 1), m * n)
+                    $chap2::divides(p^(a + b + 1), m * n)
+                    obtain d from exist d Z st {m * n = p^(a + b + 1) * d}
+                    p^(a + b + 1) = p^(a + b) * p
+                    p^(a + b + 1) * d = (p^(a + b) * p) * d = p^(a + b) * (p * d)
+                    p^(a + b) * (u * v) = m * n = p^(a + b + 1) * d = p^(a + b) * (p * d)
+                    p^(a + b) != 0
+                    release thm integer_left_multiplication_cancellation(p^(a + b), u * v, p * d)
+                    u * v = p * d
+                    witness $chap2::divides(p, u * v) from d:
+                        u * v = p * d
+                    release thm prime_divides_product(p, u, v)
+                    $chap2::divides(p, u) or $chap2::divides(p, v)
+                    by cases:
+                        ? 0 = 1
+                        case $chap2::divides(p, u):
+                            impossible not $chap2::divides(p, u)
+                        case $chap2::divides(p, v):
+                            impossible not $chap2::divides(p, v)
+                    impossible 0 != 1
+            release thm prime_factor_exponent_power_divides(m * n, p)
+            $chap2::divides(p^c, m * n)
+            claim:
+                ? c <= a + b
+                by contra:
+                    ? c <= a + b
+                    c > a + b
+                    c >= a + b + 1
+                    c - (a + b + 1) >= 0
+                    c - (a + b + 1) $in N
+                    c = a + b + 1 + (c - (a + b + 1))
+                    obtain w from exist w Z st {m * n = p^c * w}
+                    p^c = p^(a + b + 1 + (c - (a + b + 1)))
+                    p^(a + b + 1 + (c - (a + b + 1))) = p^(a + b + 1) * p^(c - (a + b + 1))
+                    p^c = p^(a + b + 1 + (c - (a + b + 1))) = p^(a + b + 1) * p^(c - (a + b + 1))
+                    witness $chap2::divides(p^(a + b + 1), m * n) from p^(c - (a + b + 1)) * w:
+                        m * n = p^c * w = p^(a + b + 1) * p^(c - (a + b + 1)) * w = p^(a + b + 1) * (p^(c - (a + b + 1)) * w)
+                    impossible not $chap2::divides(p^(a + b + 1), m * n)
+            c = a + b
+            prime_factor_exponent(m * n, p) = c = a + b = prime_factor_exponent(m, p) + prime_factor_exponent(n, p)
 
-# Source theorem: factorization_pow'.
-# Proof debt: induction on powers depends on factorization_mul.
+thm prime_factor_exponent_at_zero:
+    ? forall p N:
+        prime_factor_exponent(0, p) = 0
+    release thm prime_factor_exponent_is_candidate(0, p)
+    prime_factor_exponent(0, p) $in closed_range(0, 0)
+    0 <= prime_factor_exponent(0, p) <= 0
+    prime_factor_exponent(0, p) = 0
+
+thm prime_factor_exponent_at_one:
+    ? forall p N:
+        prime_factor_exponent(1, p) = 0
+    release thm factorization_mul(1, 1, p)
+    prime_factor_exponent(1 * 1, p) = prime_factor_exponent(1, p) + prime_factor_exponent(1, p)
+    1 * 1 = 1
+    prime_factor_exponent(1, p) = prime_factor_exponent(1, p) + prime_factor_exponent(1, p)
+    by cases:
+        ? prime_factor_exponent(1, p) = 0
+        case prime_factor_exponent(1, p) = 0:
+            prime_factor_exponent(1, p) = 0
+        case prime_factor_exponent(1, p) > 0:
+            prime_factor_exponent(1, p) + prime_factor_exponent(1, p) > prime_factor_exponent(1, p)
+            impossible prime_factor_exponent(1, p) = prime_factor_exponent(1, p) + prime_factor_exponent(1, p)
+
+# Source theorem: factorization_pow'.  The zero convention is separated from
+# the nonzero induction step because factorization_mul excludes zero factors.
 thm factorization_pow:
     ? forall n, k, p N:
         prime_factor_exponent(n^k, p) = k * prime_factor_exponent(n, p)
-    trust prime_factor_exponent(n^k, p) = k * prime_factor_exponent(n, p)
+    by cases:
+        ? prime_factor_exponent(n^k, p) = k * prime_factor_exponent(n, p)
+        case n = 0:
+            release thm prime_factor_exponent_at_zero(p)
+            prime_factor_exponent(n, p) = prime_factor_exponent(0, p) = 0
+            by induc k from 0:
+                ? prime_factor_exponent(n^k, p) = k * prime_factor_exponent(n, p)
+                ? from k = 0:
+                    n^0 = 1
+                    release thm prime_factor_exponent_at_one(p)
+                    prime_factor_exponent(n^0, p) = prime_factor_exponent(1, p) = 0 = 0 * prime_factor_exponent(n, p)
+                ? induc:
+                    n^(k + 1) = n^k * n
+                    n^k * n = 0
+                    n^(k + 1) = n^k * n = 0
+                    prime_factor_exponent(n^(k + 1), p) = prime_factor_exponent(0, p) = 0 = (k + 1) * prime_factor_exponent(n, p)
+        case n != 0:
+            by induc k from 0:
+                ? prime_factor_exponent(n^k, p) = k * prime_factor_exponent(n, p)
+                ? from k = 0:
+                    n^0 = 1
+                    release thm prime_factor_exponent_at_one(p)
+                    prime_factor_exponent(n^0, p) = prime_factor_exponent(1, p) = 0 = 0 * prime_factor_exponent(n, p)
+                ? induc:
+                    n^k != 0
+                    n^(k + 1) = n^k * n
+                    release thm factorization_mul(n^k, n, p)
+                    prime_factor_exponent(n^k * n, p) = prime_factor_exponent(n^k, p) + prime_factor_exponent(n, p)
+                    prime_factor_exponent(n^(k + 1), p) = prime_factor_exponent(n^k * n, p) = prime_factor_exponent(n^k, p) + prime_factor_exponent(n, p) = k * prime_factor_exponent(n, p) + prime_factor_exponent(n, p) = (k + 1) * prime_factor_exponent(n, p)
 
 # Source theorem: Nat.Prime.factorization'.
-# Proof debt: the selected exponent's prime-self computation law is not yet
-# available.
 thm prime_factorization_self:
     ? forall p N+:
         $prime(p)
         =>:
             prime_factor_exponent(p, p) = 1
-    trust prime_factor_exponent(p, p) = 1
+    p >= 2
+    1 $in closed_range(0, p)
+    witness $chap2::divides(p^1, p) from 1:
+        p = p^1 * 1
+    $positive_prime_power_divides(p, p, 1)
+    $prime_power_exponent_candidate(p, p, 1)
+    release thm prime_power_candidate_le_exponent(p, p, 1)
+    prime_factor_exponent(p, p) >= 1
+    have v N = prime_factor_exponent(p, p)
+    v >= 1
+    release thm prime_factor_exponent_is_candidate(p, p)
+    $prime_power_exponent_candidate(p, p, v)
+    v = 0 or $positive_prime_power_divides(p, p, v)
+    by cases:
+        ? v = 1
+        case v = 0:
+            0 >= 1
+            impossible 0 >= 1
+        case $positive_prime_power_divides(p, p, v):
+            $chap2::divides(p^v, p)
+            claim:
+                ? v <= 1
+                by contra:
+                    ? v <= 1
+                    v > 1
+                    v >= 2
+                    p^v $in N+
+                    release thm chap2::_positive_divisor_le_abs(p^v, p)
+                    p^v <= abs(p) = p
+                    v - 2 >= 0
+                    v - 2 $in N
+                    v = 2 + (v - 2)
+                    p^(v - 2) $in N+
+                    p^(v - 2) >= 1
+                    p^v = p^(2 + (v - 2)) = p^2 * p^(v - 2)
+                    p^2 * p^(v - 2) >= p^2 * 1 = p^2 = p * p
+                    p^v >= p^2 = p * p
+                    p * p > p * 1 = p
+                    p^v >= p * p > p
+                    p^v > p
+                    impossible p^v <= p
+            v >= 1
+            v = 1
+    prime_factor_exponent(p, p) = v = 1
 
-# Source arbitrary-prime irrational-root obstruction.
-# Proof debt: compare the parity of the two prime-factor exponents after the
-# three factorization laws above are discharged.
+# Source arbitrary-prime irrational-root obstruction, proved by parity of the
+# two prime-factor exponents.
 thm coprime_square_not_prime_multiple_square:
     ? forall m, n N, p N+:
         $coprime(m, n)
         $prime(p)
         =>:
             m^2 != p * n^2
-    trust m^2 != p * n^2
+    by contra:
+        ? m^2 != p * n^2
+        m^2 = p * n^2
+        m != 0 or n != 0
+        claim:
+            ? n != 0
+            by contra:
+                ? n != 0
+                n = 0
+                n^2 = 0
+                p * n^2 = 0
+                m^2 = 0
+                m = 0
+                by cases:
+                    ? 0 = 1
+                    case m != 0:
+                        impossible m = 0
+                    case n != 0:
+                        impossible n = 0
+                impossible 0 != 1
+        by cases:
+            ? n > 0
+            case n = 0:
+                impossible n != 0
+            case n > 0:
+                n > 0
+        n^2 > 0
+        p > 0
+        p * n^2 > 0
+        claim:
+            ? m != 0
+            by contra:
+                ? m != 0
+                m = 0
+                m^2 = 0
+                p * n^2 = 0
+                impossible p * n^2 > 0
+        by cases:
+            ? m > 0
+            case m = 0:
+                impossible m != 0
+            case m > 0:
+                m > 0
+        m^2 > 0
+        m^2 != 0
+        n^2 != 0
+        p != 0
+        release thm factorization_pow(m, 2, p)
+        release thm factorization_pow(n, 2, p)
+        release thm factorization_mul(p, n^2, p)
+        release thm prime_factorization_self(p)
+        prime_factor_exponent(m^2, p) = 2 * prime_factor_exponent(m, p)
+        prime_factor_exponent(n^2, p) = 2 * prime_factor_exponent(n, p)
+        prime_factor_exponent(p * n^2, p) = prime_factor_exponent(p, p) + prime_factor_exponent(n^2, p)
+        prime_factor_exponent(p, p) = 1
+        prime_factor_exponent(m^2, p) = prime_factor_exponent(p * n^2, p)
+        2 * prime_factor_exponent(m, p) = prime_factor_exponent(m^2, p) = prime_factor_exponent(p * n^2, p) = prime_factor_exponent(p, p) + prime_factor_exponent(n^2, p) = 1 + 2 * prime_factor_exponent(n, p)
+        2 % 2 = 0
+        1 % 2 = 1
+        ((2 % 2) * (prime_factor_exponent(m, p) % 2)) % 2 = (0 * (prime_factor_exponent(m, p) % 2)) % 2 = 0 % 2 = 0
+        (2 * prime_factor_exponent(m, p)) % 2 = ((2 % 2) * (prime_factor_exponent(m, p) % 2)) % 2 = 0
+        ((2 % 2) * (prime_factor_exponent(n, p) % 2)) % 2 = (0 * (prime_factor_exponent(n, p) % 2)) % 2 = 0 % 2 = 0
+        (2 * prime_factor_exponent(n, p)) % 2 = ((2 % 2) * (prime_factor_exponent(n, p) % 2)) % 2 = 0
+        ((1 % 2) + ((2 * prime_factor_exponent(n, p)) % 2)) % 2 = (1 + 0) % 2 = 1
+        (1 + 2 * prime_factor_exponent(n, p)) % 2 = ((1 % 2) + ((2 * prime_factor_exponent(n, p)) % 2)) % 2 = 1
+        (2 * prime_factor_exponent(m, p)) % 2 = (1 + 2 * prime_factor_exponent(n, p)) % 2
+        0 = 1
+        impossible 0 != 1
 
-# Source final multiplicity consequence.
-# Proof debt: rewrite both sides with factorization_pow and
-# factorization_mul, then isolate the exponent of r.
+# Source final multiplicity consequence.  The visible witness is the
+# nonnegative difference of the two factorization coordinates.
 thm power_equation_exponent_divisible:
     ? forall m, n, k, r, p N:
         n != 0
         m^k = r * n^k
         =>:
             $chap2::divides(k, prime_factor_exponent(r, p))
-    trust $chap2::divides(k, prime_factor_exponent(r, p))
+    by cases:
+        ? $chap2::divides(k, prime_factor_exponent(r, p))
+        case k = 0:
+            m^0 = 1
+            n^0 = 1
+            1 = m^k = r * n^k = r * 1 = r
+            release thm prime_factor_exponent_at_one(p)
+            prime_factor_exponent(r, p) = prime_factor_exponent(1, p) = 0
+            witness $chap2::divides(k, prime_factor_exponent(r, p)) from 0:
+                prime_factor_exponent(r, p) = 0 = k * 0
+        case k > 0:
+            n^k != 0
+            by cases:
+                ? $chap2::divides(k, prime_factor_exponent(r, p))
+                case r = 0:
+                    release thm prime_factor_exponent_at_zero(p)
+                    prime_factor_exponent(r, p) = prime_factor_exponent(0, p) = 0
+                    witness $chap2::divides(k, prime_factor_exponent(r, p)) from 0:
+                        prime_factor_exponent(r, p) = 0 = k * 0
+                case r != 0:
+                    r * n^k != 0
+                    m^k != 0
+                    release thm factorization_pow(m, k, p)
+                    release thm factorization_pow(n, k, p)
+                    release thm factorization_mul(r, n^k, p)
+                    prime_factor_exponent(m^k, p) = k * prime_factor_exponent(m, p)
+                    prime_factor_exponent(n^k, p) = k * prime_factor_exponent(n, p)
+                    prime_factor_exponent(r * n^k, p) = prime_factor_exponent(r, p) + prime_factor_exponent(n^k, p)
+                    prime_factor_exponent(m^k, p) = prime_factor_exponent(r * n^k, p)
+                    k * prime_factor_exponent(m, p) = prime_factor_exponent(m^k, p) = prime_factor_exponent(r * n^k, p) = prime_factor_exponent(r, p) + prime_factor_exponent(n^k, p) = prime_factor_exponent(r, p) + k * prime_factor_exponent(n, p)
+                    prime_factor_exponent(r, p) >= 0
+                    prime_factor_exponent(r, p) + k * prime_factor_exponent(n, p) >= k * prime_factor_exponent(n, p)
+                    k * prime_factor_exponent(m, p) >= k * prime_factor_exponent(n, p)
+                    claim:
+                        ? prime_factor_exponent(m, p) >= prime_factor_exponent(n, p)
+                        by contra:
+                            ? prime_factor_exponent(m, p) >= prime_factor_exponent(n, p)
+                            prime_factor_exponent(m, p) < prime_factor_exponent(n, p)
+                            k * prime_factor_exponent(m, p) < k * prime_factor_exponent(n, p)
+                            impossible k * prime_factor_exponent(m, p) >= k * prime_factor_exponent(n, p)
+                    prime_factor_exponent(m, p) - prime_factor_exponent(n, p) >= 0
+                    prime_factor_exponent(m, p) - prime_factor_exponent(n, p) $in N
+                    prime_factor_exponent(r, p) = k * prime_factor_exponent(m, p) - k * prime_factor_exponent(n, p) = k * (prime_factor_exponent(m, p) - prime_factor_exponent(n, p))
+                    witness $chap2::divides(k, prime_factor_exponent(r, p)) from prime_factor_exponent(m, p) - prime_factor_exponent(n, p):
+                        prime_factor_exponent(r, p) = k * (prime_factor_exponent(m, p) - prime_factor_exponent(n, p))
 
 # 5.2 Induction and Recursion
 
@@ -283,7 +904,7 @@ thm power_two_le_factorial:
                     natural_predecessor(n + 1) = abs((n + 1) - 1)
                     abs((n + 1) - 1) = abs(n) = n
                     natural_predecessor(n + 1) = abs((n + 1) - 1) = n
-1release thm factorial_positive(n)
+                    release thm factorial_positive(n)
                     factorial(n) >= 0
                     2 <= n + 1
                     2 * 2^natural_predecessor(n) <= 2 * factorial(n)
@@ -330,7 +951,7 @@ thm sum_id:
             sum_to(0) = 0 = 0 * (0 + 1) / 2
         ? induc:
             sum_to(n) = n * (n + 1) / 2
-1release thm sum_to_succ(n)
+            release thm sum_to_succ(n)
             sum_to(n + 1) = (n + 1) + sum_to(n) = (n + 1) + n * (n + 1) / 2 = (n + 1) * (n + 2) / 2 = (n + 1) * ((n + 1) + 1) / 2
 
 # Source theorem: sum_sqr.
@@ -343,82 +964,235 @@ thm sum_sqr:
             square_sum_to(0) = 0 = 0 * (0 + 1) * (2 * 0 + 1) / 6
         ? induc:
             square_sum_to(n) = n * (n + 1) * (2 * n + 1) / 6
-1release thm square_sum_to_succ(n)
+            release thm square_sum_to_succ(n)
             square_sum_to(n + 1) = (n + 1)^2 + square_sum_to(n) = (n + 1)^2 + n * (n + 1) * (2 * n + 1) / 6 = (n + 1) * (n + 2) * (2 * (n + 1) + 1) / 6
 
-# Source construction: an independent Peano-natural carrier.
-# Proof debt: Litex cannot yet declare a fresh inductive carrier, so the
-# carrier, constructors, and structural induction rule are explicit trusted
-# interfaces.  MyNat is deliberately not identified with builtin N.
-trust have MyNat nonempty_set
-trust have mynat_zero MyNat
-trust have mynat_succ fn(n MyNat) MyNat
-trust forall P power_set(MyNat):
-    mynat_zero $in P
-    forall n MyNat:
-        n $in P
+# Source construction: an independent tagged Peano-natural carrier.
+# The carrier is structurally a tagged copy of N, not an alias for builtin N.
+# Native-N induction proves the source-facing structural induction rule.
+struct MyNat:
+    tag {0}
+    value N
+
+have mynat_zero &MyNat = (0, 0)
+have fn mynat_succ(n &MyNat) &MyNat = (0, n.value + 1)
+
+claim:
+    ? forall P power_set(&MyNat):
+        mynat_zero $in P
+        forall n &MyNat:
+            n $in P
+            =>:
+                mynat_succ(n) $in P
         =>:
-            mynat_succ(n) $in P
-    =>:
-        P = MyNat
+            P = &MyNat
+    claim:
+        ? forall k N:
+            (0, k) $in P
+        by induc k from 0:
+            ? (0, k) $in P
+            ? from k = 0:
+                (0, 0) = mynat_zero
+                (0, 0) $in P
+            ? induc:
+                (0, k) $in P
+                (0, k) $in &MyNat
+                have current &MyNat = (0, k)
+                current.value = current[2] = k
+                mynat_succ(current) $in P
+                mynat_succ(current) = (0, current.value + 1) = (0, k + 1)
+                mynat_succ((0, k)) = mynat_succ(current) = (0, k + 1)
+                (0, k + 1) $in P
+    claim:
+        ? &MyNat $subset P
+        claim:
+            ? forall n &MyNat:
+                n $in P
+            (0, n.value) $in P
+            n.tag = 0
+            release thm tuple_equal_from_coordinates(n, (0, n.value))
+            n = (0, n.value)
+            n $in P
+        by def &MyNat $subset P
+    P $subset &MyNat
+    by extension P = &MyNat
 
-# Source recursive functions: MyNat.add and MyNat.mul.
-# Proof debt: selection of recursive functions and their four computation
-# equations requires the missing user-inductive recursor.
-trust have mynat_add fn(m, n MyNat) MyNat
-trust forall m MyNat:
-    mynat_add(m, mynat_zero) = m
-trust forall m, n MyNat:
-    mynat_add(m, mynat_succ(n)) = mynat_succ(mynat_add(m, n))
+# Coordinate reconstruction and extensionality are the reusable boundary
+# between the independent carrier and native arithmetic on its value field.
+thm mynat_as_pair:
+    ? forall n &MyNat:
+        n = (0, n.value)
+    release thm tuple_equal_from_coordinates(n, (0, n.value))
+    n = (0, n.value)
 
-trust have mynat_mul fn(m, n MyNat) MyNat
-trust forall m MyNat:
-    mynat_mul(m, mynat_zero) = mynat_zero
-trust forall m, n MyNat:
-    mynat_mul(m, mynat_succ(n)) = mynat_add(mynat_mul(m, n), m)
+thm mynat_eq_of_value_eq:
+    ? forall x, y &MyNat:
+        x.value = y.value
+        =>:
+            x = y
+    release thm mynat_as_pair(x)
+    release thm mynat_as_pair(y)
+    x = (0, x.value) = (0, y.value) = y
 
-# Source theorem family for recursive MyNat arithmetic.
-# Proof debt: these structural-induction proofs depend on the trusted
-# user-inductive carrier and recursive computation interfaces above.
+# Function-produced structs expose their value coordinate through the same
+# explicit-result projection pattern used by the structures chapter.
+thm mynat_succ_value_from_result:
+    ? forall n, result &MyNat:
+        result = mynat_succ(n)
+        =>:
+            result.value = n.value + 1
+    mynat_succ(n) = (0, n.value + 1)
+    result = mynat_succ(n) = (0, n.value + 1)
+    result.value = result[2] = n.value + 1
+
+thm mynat_succ_value:
+    ? forall n &MyNat:
+        mynat_succ(n).value = n.value + 1
+    release thm mynat_succ_value_from_result(n, mynat_succ(n))
+
+# Source recursive functions: MyNat.add and MyNat.mul, realized visibly by
+# native arithmetic on the value coordinate.
+have fn mynat_add(m, n &MyNat) &MyNat = (0, m.value + n.value)
+
+thm mynat_add_value_from_result:
+    ? forall m, n, result &MyNat:
+        result = mynat_add(m, n)
+        =>:
+            result.value = m.value + n.value
+    mynat_add(m, n) = (0, m.value + n.value)
+    result = mynat_add(m, n) = (0, m.value + n.value)
+    result.value = result[2] = m.value + n.value
+
+thm mynat_add_value:
+    ? forall m, n &MyNat:
+        mynat_add(m, n).value = m.value + n.value
+    release thm mynat_add_value_from_result(m, n, mynat_add(m, n))
+
+claim:
+    ? forall m &MyNat:
+        mynat_add(m, mynat_zero) = m
+    mynat_zero.value = 0
+    release thm mynat_as_pair(m)
+    mynat_add(m, mynat_zero) = (0, m.value + mynat_zero.value)
+    mynat_add(m, mynat_zero) = (0, m.value) = m
+
+claim:
+    ? forall m, n &MyNat:
+        mynat_add(m, mynat_succ(n)) = mynat_succ(mynat_add(m, n))
+    release thm mynat_add_value(m, mynat_succ(n))
+    release thm mynat_succ_value(n)
+    release thm mynat_succ_value(mynat_add(m, n))
+    release thm mynat_add_value(m, n)
+    mynat_add(m, mynat_succ(n)).value = m.value + mynat_succ(n).value = m.value + (n.value + 1) = (m.value + n.value) + 1 = mynat_add(m, n).value + 1 = mynat_succ(mynat_add(m, n)).value
+    release thm mynat_eq_of_value_eq(mynat_add(m, mynat_succ(n)), mynat_succ(mynat_add(m, n)))
+
+have fn mynat_mul(m, n &MyNat) &MyNat = (0, m.value * n.value)
+
+thm mynat_mul_value_from_result:
+    ? forall m, n, result &MyNat:
+        result = mynat_mul(m, n)
+        =>:
+            result.value = m.value * n.value
+    mynat_mul(m, n) = (0, m.value * n.value)
+    result = mynat_mul(m, n) = (0, m.value * n.value)
+    result.value = result[2] = m.value * n.value
+
+thm mynat_mul_value:
+    ? forall m, n &MyNat:
+        mynat_mul(m, n).value = m.value * n.value
+    release thm mynat_mul_value_from_result(m, n, mynat_mul(m, n))
+
+claim:
+    ? forall m &MyNat:
+        mynat_mul(m, mynat_zero) = mynat_zero
+    mynat_zero.value = 0
+    release thm mynat_mul_value(m, mynat_zero)
+    mynat_mul(m, mynat_zero).value = m.value * mynat_zero.value = m.value * 0 = 0 = mynat_zero.value
+    release thm mynat_eq_of_value_eq(mynat_mul(m, mynat_zero), mynat_zero)
+
+claim:
+    ? forall m, n &MyNat:
+        mynat_mul(m, mynat_succ(n)) = mynat_add(mynat_mul(m, n), m)
+    release thm mynat_mul_value(m, mynat_succ(n))
+    release thm mynat_succ_value(n)
+    release thm mynat_add_value(mynat_mul(m, n), m)
+    release thm mynat_mul_value(m, n)
+    mynat_mul(m, mynat_succ(n)).value = m.value * mynat_succ(n).value = m.value * (n.value + 1) = m.value * n.value + m.value = mynat_mul(m, n).value + m.value = mynat_add(mynat_mul(m, n), m).value
+    release thm mynat_eq_of_value_eq(mynat_mul(m, mynat_succ(n)), mynat_add(mynat_mul(m, n), m))
+
+# Source theorem family for MyNat arithmetic.
 thm mynat_zero_add:
-    ? forall n MyNat:
+    ? forall n &MyNat:
         mynat_add(mynat_zero, n) = n
-    trust mynat_add(mynat_zero, n) = n
+    mynat_zero.value = 0
+    release thm mynat_add_value(mynat_zero, n)
+    mynat_add(mynat_zero, n).value = mynat_zero.value + n.value = 0 + n.value = n.value
+    release thm mynat_eq_of_value_eq(mynat_add(mynat_zero, n), n)
 
 thm mynat_succ_add:
-    ? forall m, n MyNat:
+    ? forall m, n &MyNat:
         mynat_add(mynat_succ(m), n) = mynat_succ(mynat_add(m, n))
-    trust mynat_add(mynat_succ(m), n) = mynat_succ(mynat_add(m, n))
+    release thm mynat_add_value(mynat_succ(m), n)
+    release thm mynat_succ_value(m)
+    release thm mynat_succ_value(mynat_add(m, n))
+    release thm mynat_add_value(m, n)
+    mynat_add(mynat_succ(m), n).value = mynat_succ(m).value + n.value = (m.value + 1) + n.value = (m.value + n.value) + 1 = mynat_add(m, n).value + 1 = mynat_succ(mynat_add(m, n)).value
+    release thm mynat_eq_of_value_eq(mynat_add(mynat_succ(m), n), mynat_succ(mynat_add(m, n)))
 
 thm mynat_add_comm:
-    ? forall m, n MyNat:
+    ? forall m, n &MyNat:
         mynat_add(m, n) = mynat_add(n, m)
-    trust mynat_add(m, n) = mynat_add(n, m)
+    release thm mynat_add_value(m, n)
+    release thm mynat_add_value(n, m)
+    mynat_add(m, n).value = m.value + n.value = n.value + m.value = mynat_add(n, m).value
+    release thm mynat_eq_of_value_eq(mynat_add(m, n), mynat_add(n, m))
 
 thm mynat_add_assoc:
-    ? forall m, n, k MyNat:
+    ? forall m, n, k &MyNat:
         mynat_add(mynat_add(m, n), k) = mynat_add(m, mynat_add(n, k))
-    trust mynat_add(mynat_add(m, n), k) = mynat_add(m, mynat_add(n, k))
+    release thm mynat_add_value(mynat_add(m, n), k)
+    release thm mynat_add_value(m, n)
+    release thm mynat_add_value(m, mynat_add(n, k))
+    release thm mynat_add_value(n, k)
+    mynat_add(mynat_add(m, n), k).value = mynat_add(m, n).value + k.value = (m.value + n.value) + k.value = m.value + (n.value + k.value) = m.value + mynat_add(n, k).value = mynat_add(m, mynat_add(n, k)).value
+    release thm mynat_eq_of_value_eq(mynat_add(mynat_add(m, n), k), mynat_add(m, mynat_add(n, k)))
 
 thm mynat_mul_add:
-    ? forall m, n, k MyNat:
+    ? forall m, n, k &MyNat:
         mynat_mul(m, mynat_add(n, k)) = mynat_add(mynat_mul(m, n), mynat_mul(m, k))
-    trust mynat_mul(m, mynat_add(n, k)) = mynat_add(mynat_mul(m, n), mynat_mul(m, k))
+    release thm mynat_mul_value(m, mynat_add(n, k))
+    release thm mynat_add_value(n, k)
+    release thm mynat_add_value(mynat_mul(m, n), mynat_mul(m, k))
+    release thm mynat_mul_value(m, n)
+    release thm mynat_mul_value(m, k)
+    mynat_mul(m, mynat_add(n, k)).value = m.value * mynat_add(n, k).value = m.value * (n.value + k.value) = m.value * n.value + m.value * k.value = mynat_mul(m, n).value + mynat_mul(m, k).value = mynat_add(mynat_mul(m, n), mynat_mul(m, k)).value
+    release thm mynat_eq_of_value_eq(mynat_mul(m, mynat_add(n, k)), mynat_add(mynat_mul(m, n), mynat_mul(m, k)))
 
 thm mynat_zero_mul:
-    ? forall n MyNat:
+    ? forall n &MyNat:
         mynat_mul(mynat_zero, n) = mynat_zero
-    trust mynat_mul(mynat_zero, n) = mynat_zero
+    mynat_zero.value = 0
+    release thm mynat_mul_value(mynat_zero, n)
+    mynat_mul(mynat_zero, n).value = mynat_zero.value * n.value = 0 * n.value = 0 = mynat_zero.value
+    release thm mynat_eq_of_value_eq(mynat_mul(mynat_zero, n), mynat_zero)
 
 thm mynat_succ_mul:
-    ? forall m, n MyNat:
+    ? forall m, n &MyNat:
         mynat_mul(mynat_succ(m), n) = mynat_add(mynat_mul(m, n), n)
-    trust mynat_mul(mynat_succ(m), n) = mynat_add(mynat_mul(m, n), n)
+    release thm mynat_mul_value(mynat_succ(m), n)
+    release thm mynat_succ_value(m)
+    release thm mynat_add_value(mynat_mul(m, n), n)
+    release thm mynat_mul_value(m, n)
+    mynat_mul(mynat_succ(m), n).value = mynat_succ(m).value * n.value = (m.value + 1) * n.value = m.value * n.value + n.value = mynat_mul(m, n).value + n.value = mynat_add(mynat_mul(m, n), n).value
+    release thm mynat_eq_of_value_eq(mynat_mul(mynat_succ(m), n), mynat_add(mynat_mul(m, n), n))
 
 thm mynat_mul_comm:
-    ? forall m, n MyNat:
+    ? forall m, n &MyNat:
         mynat_mul(m, n) = mynat_mul(n, m)
-    trust mynat_mul(m, n) = mynat_mul(n, m)
+    release thm mynat_mul_value(m, n)
+    release thm mynat_mul_value(n, m)
+    mynat_mul(m, n).value = m.value * n.value = n.value * m.value = mynat_mul(n, m).value
+    release thm mynat_eq_of_value_eq(mynat_mul(m, n), mynat_mul(n, m))
 
 # 5.3 Infinitely Many Primes
 
@@ -491,10 +1265,10 @@ thm exists_prime_factor:
 thm primes_infinite:
     ? forall n N:
         exist p N+ st {p > n, $prime(p)}
-1release thm factorial_positive(n)
+    release thm factorial_positive(n)
     factorial(n) >= 1
     factorial(n) + 1 >= 1 + 1 = 2
-1release thm exists_prime_factor(factorial(n) + 1)
+    release thm exists_prime_factor(factorial(n) + 1)
     obtain p from exist p N+ st {$prime(p), $chap2::divides(p, factorial(n) + 1)}
     claim:
         ? p > n
@@ -502,13 +1276,13 @@ thm primes_infinite:
             ? p > n
             p <= n
             p > 0
-1release thm positive_index_divides_factorial(p, n)
+            release thm positive_index_divides_factorial(p, n)
             obtain a from exist a Z st {factorial(n) = p * a}
             obtain b from exist b Z st {factorial(n) + 1 = p * b}
             witness $chap2::divides(p, 1) from b - a:
                 1 = (factorial(n) + 1) - factorial(n) = p * b - p * a = p * (b - a)
             $chap2::divides(p, 1)
-1release thm chap2::_positive_divisor_le_abs(p, 1)
+            release thm chap2::_positive_divisor_le_abs(p, 1)
             p <= abs(1) = 1
             p >= 2
             impossible p <= 1
@@ -599,25 +1373,195 @@ thm two_le_of_mod_4_eq_3:
             n = 1
             n % 4 = 1 % 4 = 1
             impossible n % 4 = 3
-1release thm two_le(n)
+    release thm two_le(n)
 
-# Source theorem: exists_prime_factor_mod_4_eq_3.
-# Proof debt: strong induction must split a nonprime factorization and retain
-# the factor whose residue is 3 modulo 4.
+prop has_mod_4_eq_3_prime_factor(t N):
+    exist p N+ st {$prime(p), $chap2::divides(p, t), p % 4 = 3}
+
+prop mod_4_eq_3_prime_factor_step(t N):
+    t % 4 != 3 or $has_mod_4_eq_3_prime_factor(t)
+
+# Source theorem: exists_prime_factor_mod_4_eq_3. The atomic step proposition
+# lets strong induction retain either the non-3 residue or the desired factor.
 thm exists_prime_factor_mod_4_eq_3:
     ? forall n N:
         n % 4 = 3
         =>:
             exist p N+ st {$prime(p), $chap2::divides(p, n), p % 4 = 3}
-    trust exist p N+ st {$prime(p), $chap2::divides(p, n), p % 4 = 3}
+    claim:
+        ? forall t N:
+            $mod_4_eq_3_prime_factor_step(t)
+        by strong_induc t from 0:
+            ? $mod_4_eq_3_prime_factor_step(t)
+            ? from t = 0:
+                t % 4 = 0 % 4 = 0
+                t % 4 != 3
+                t % 4 != 3 or $has_mod_4_eq_3_prime_factor(t)
+                by def $mod_4_eq_3_prime_factor_step(t)
+            ? strong_induc:
+                forall y N:
+                    y >= 0
+                    y <= t
+                    =>:
+                        $mod_4_eq_3_prime_factor_step(y)
+                by cases:
+                    ? $mod_4_eq_3_prime_factor_step(t + 1)
+                    case (t + 1) % 4 != 3:
+                        (t + 1) % 4 != 3 or $has_mod_4_eq_3_prime_factor(t + 1)
+                        by def $mod_4_eq_3_prime_factor_step(t + 1)
+                    case (t + 1) % 4 = 3:
+                        release thm two_le_of_mod_4_eq_3(t + 1)
+                        claim:
+                            ? t + 1 != 2
+                            by contra:
+                                ? t + 1 != 2
+                                t + 1 = 2
+                                (t + 1) % 4 = 2 % 4 = 2
+                                impossible (t + 1) % 4 = 3
+                        claim:
+                            ? t + 1 >= 3
+                            by contra:
+                                ? t + 1 >= 3
+                                t + 1 < 3
+                                t + 1 <= 2
+                                t + 1 >= 2
+                                t + 1 = 2
+                                impossible t + 1 = 2
+                        claim:
+                            ? exist p N+ st {$prime(p), $chap2::divides(p, t + 1), p % 4 = 3}
+                            by cases:
+                                ? exist p N+ st {$prime(p), $chap2::divides(p, t + 1), p % 4 = 3}
+                                case $prime(t + 1):
+                                    witness $chap2::divides(t + 1, t + 1) from 1:
+                                        t + 1 = (t + 1) * 1
+                                    witness exist p N+ st {$prime(p), $chap2::divides(p, t + 1), p % 4 = 3} from t + 1
+                                case not $prime(t + 1):
+                                    claim:
+                                        ? exist d range(2, t + 1) st {(t + 1) % d = 0}
+                                        by contra:
+                                            ? exist d range(2, t + 1) st {(t + 1) % d = 0}
+                                            forall d range(2, t + 1):
+                                                (t + 1) % d != 0
+                                            by def $prime(t + 1)
+                                            impossible not $prime(t + 1)
+                                    obtain d from exist d range(2, t + 1) st {(t + 1) % d = 0}
+                                    obtain k from exist k Z st {t + 1 = d * k}
+                                    by def $chap2::divides(d, t + 1)
+                                    d >= 2
+                                    d < t + 1
+                                    d <= t
+                                    claim:
+                                        ? k > 0
+                                        by contra:
+                                            ? k > 0
+                                            k <= 0
+                                            d > 0
+                                            (-k) >= 0
+                                            d >= 0
+                                            d * (-k) >= 0
+                                            d * k = -(d * (-k))
+                                            -(d * (-k)) <= 0
+                                            d * k <= 0
+                                            t + 1 = d * k <= 0
+                                            impossible t + 1 >= 3
+                                    k $in N+
+                                    k $in N
+                                    claim:
+                                        ? k != 1
+                                        by contra:
+                                            ? k != 1
+                                            k = 1
+                                            t + 1 = d * k = d
+                                            impossible d < t + 1
+                                    k >= 2
+                                    d - 1 >= 1
+                                    d - 1 > 0
+                                    (d - 1) * k > 0
+                                    d * k - k = (d - 1) * k > 0
+                                    d * k > k
+                                    k < t + 1
+                                    k <= t
+                                    (d * k) % 4 = (t + 1) % 4 = 3
+                                    release thm mod_4_eq_3_factor(d, k)
+                                    d % 4 = 3 or k % 4 = 3
+                                    by cases:
+                                        ? exist p N+ st {$prime(p), $chap2::divides(p, t + 1), p % 4 = 3}
+                                        case d % 4 = 3:
+                                            $mod_4_eq_3_prime_factor_step(d)
+                                            d % 4 != 3 or $has_mod_4_eq_3_prime_factor(d)
+                                            by cases:
+                                                ? exist p N+ st {$prime(p), $chap2::divides(p, t + 1), p % 4 = 3}
+                                                case d % 4 != 3:
+                                                    impossible d % 4 = 3
+                                                case $has_mod_4_eq_3_prime_factor(d):
+                                                    obtain p from exist p N+ st {$prime(p), $chap2::divides(p, d), p % 4 = 3}
+                                                    obtain a from exist a Z st {d = p * a}
+                                                    witness $chap2::divides(p, t + 1) from a * k:
+                                                        t + 1 = d * k = p * a * k = p * (a * k)
+                                                    witness exist q N+ st {$prime(q), $chap2::divides(q, t + 1), q % 4 = 3} from p
+                                        case k % 4 = 3:
+                                            $mod_4_eq_3_prime_factor_step(k)
+                                            k % 4 != 3 or $has_mod_4_eq_3_prime_factor(k)
+                                            by cases:
+                                                ? exist p N+ st {$prime(p), $chap2::divides(p, t + 1), p % 4 = 3}
+                                                case k % 4 != 3:
+                                                    impossible k % 4 = 3
+                                                case $has_mod_4_eq_3_prime_factor(k):
+                                                    obtain p from exist p N+ st {$prime(p), $chap2::divides(p, k), p % 4 = 3}
+                                                    obtain a from exist a Z st {k = p * a}
+                                                    witness $chap2::divides(p, t + 1) from d * a:
+                                                        t + 1 = d * k = d * (p * a) = p * (d * a)
+                                                    witness exist q N+ st {$prime(q), $chap2::divides(q, t + 1), q % 4 = 3} from p
+                        (t + 1) % 4 != 3 or $has_mod_4_eq_3_prime_factor(t + 1)
+                        by def $mod_4_eq_3_prime_factor_step(t + 1)
+    $mod_4_eq_3_prime_factor_step(n)
+    n % 4 != 3 or $has_mod_4_eq_3_prime_factor(n)
+    by cases:
+        ? exist p N+ st {$prime(p), $chap2::divides(p, n), p % 4 = 3}
+        case n % 4 != 3:
+            impossible n % 4 = 3
+        case $has_mod_4_eq_3_prime_factor(n):
+            obtain p from exist p N+ st {$prime(p), $chap2::divides(p, n), p % 4 = 3}
+            witness exist q N+ st {$prime(q), $chap2::divides(q, n), q % 4 = 3} from p
 
 # Source theorem: primes_mod_4_eq_3_infinite.
-# Proof debt: apply the preceding factor theorem to the Euclid-style number
-# formed from the finite product of all currently bounded such primes.
+# Apply the preceding factor theorem to 4*n!-1. Any factor not exceeding n
+# divides n!, hence would divide 1.
 thm primes_mod_4_eq_3_infinite:
     ? forall n N:
         exist p N+ st {p > n, $prime(p), p % 4 = 3}
-    trust exist p N+ st {p > n, $prime(p), p % 4 = 3}
+    release thm factorial_positive(n)
+    factorial(n) >= 1
+    4 * factorial(n) >= 4 * 1 = 4
+    4 * factorial(n) - 1 >= 4 - 1 = 3
+    4 * factorial(n) - 1 $in N
+    have target N = 4 * factorial(n) - 1
+    target = 4 * factorial(n) - 1 = 4 * (factorial(n) - 1) + 3
+    target + 1 = (4 * factorial(n) - 1) + 1 = 4 * factorial(n)
+    target % 4 = (4 * (factorial(n) - 1) + 3) % 4 = (((4 * (factorial(n) - 1)) % 4) + (3 % 4)) % 4
+    (4 * (factorial(n) - 1)) % 4 = ((4 % 4) * ((factorial(n) - 1) % 4)) % 4
+    4 % 4 = 0
+    3 % 4 = 3
+    target % 4 = (((4 * (factorial(n) - 1)) % 4) + (3 % 4)) % 4 = (0 + 3) % 4 = 3
+    release thm exists_prime_factor_mod_4_eq_3(target)
+    obtain p from exist p N+ st {$prime(p), $chap2::divides(p, target), p % 4 = 3}
+    claim:
+        ? p > n
+        by contra:
+            ? p > n
+            p <= n
+            p > 0
+            release thm positive_index_divides_factorial(p, n)
+            obtain a from exist a Z st {factorial(n) = p * a}
+            obtain b from exist b Z st {target = p * b}
+            witness $chap2::divides(p, 1) from 4 * a - b:
+                1 = (target + 1) - target = 4 * factorial(n) - target = 4 * (p * a) - p * b = p * (4 * a - b)
+            $chap2::divides(p, 1)
+            release thm chap2::_positive_divisor_le_abs(p, 1)
+            p <= abs(1) = 1
+            p >= 2
+            impossible p <= 1
+    witness exist q N+ st {q > n, $prime(q), q % 4 = 3} from p
 
 # 5.4 More Induction
 
@@ -684,7 +1628,7 @@ thm fib_eq:
                 $_fibonacci_binet_pair(k)
                 fibonacci(k) = binet(k)
                 fibonacci(k + 1) = binet(k + 1)
-1release thm fib_add_two(k)
+                release thm fib_add_two(k)
                 fibonacci(k + 2) = fibonacci(k) + fibonacci(k + 1) = binet(k) + binet(k + 1) = binet(k + 2)
                 fibonacci((k + 1) + 1) = fibonacci(k + 2) = binet(k + 2) = binet((k + 1) + 1)
                 fibonacci(k + 1) = binet(k + 1)
@@ -702,24 +1646,24 @@ thm _gcd_add_right_for_fibonacci:
     a + b >= a > 0
     a + b != 0
     a != 0 or a + b != 0
-1release thm chap2::gcd_positive(a, b)
-1release thm chap2::gcd_divides_left(a, b)
-1release thm chap2::gcd_divides_right(a, b)
+    release thm chap2::gcd_positive(a, b)
+    release thm chap2::gcd_divides_left(a, b)
+    release thm chap2::gcd_divides_right(a, b)
     obtain q from exist q Z st {a = gcd(a, b) * q}
     obtain r from exist r Z st {b = gcd(a, b) * r}
     witness $chap2::divides(gcd(a, b), a + b) from q + r:
         a + b = gcd(a, b) * q + gcd(a, b) * r = gcd(a, b) * (q + r)
-1release thm chap2::common_divisor_le_gcd(a, a + b, gcd(a, b))
+    release thm chap2::common_divisor_le_gcd(a, a + b, gcd(a, b))
     gcd(a, b) <= gcd(a, a + b)
 
-1release thm chap2::gcd_positive(a, a + b)
-1release thm chap2::gcd_divides_left(a, a + b)
-1release thm chap2::gcd_divides_right(a, a + b)
+    release thm chap2::gcd_positive(a, a + b)
+    release thm chap2::gcd_divides_left(a, a + b)
+    release thm chap2::gcd_divides_right(a, a + b)
     obtain u from exist u Z st {a = gcd(a, a + b) * u}
     obtain v from exist v Z st {a + b = gcd(a, a + b) * v}
     witness $chap2::divides(gcd(a, a + b), b) from v - u:
         b = (a + b) - a = gcd(a, a + b) * v - gcd(a, a + b) * u = gcd(a, a + b) * (v - u)
-1release thm chap2::common_divisor_le_gcd(a, b, gcd(a, a + b))
+    release thm chap2::common_divisor_le_gcd(a, b, gcd(a, a + b))
     gcd(a, a + b) <= gcd(a, b)
 
 thm _fibonacci_successor_positive:
@@ -746,15 +1690,15 @@ thm fib_coprime_fib_succ:
             fibonacci(n + 1) = fibonacci(1) = 1
             fibonacci(n) != 0 or fibonacci(n + 1) != 0
             0 != 0 or 1 != 0
-1release thm chap2::gcd_comm(0, 1)
+            release thm chap2::gcd_comm(0, 1)
             gcd(0, 1) = gcd(1, 0)
-1release thm chap2::gcd_euclidean_base(1)
+            release thm chap2::gcd_euclidean_base(1)
             gcd(1, 0) = abs(1) = 1
             gcd(fibonacci(n), fibonacci(n + 1)) = gcd(0, 1) = 1
             by def $coprime(fibonacci(n), fibonacci(n + 1))
         ? induc:
             $coprime(fibonacci(n), fibonacci(n + 1))
-1release thm _fibonacci_successor_positive(n)
+            release thm _fibonacci_successor_positive(n)
             fibonacci(n + 1) > 0
             fibonacci(n + 1) $in N+
             fibonacci(n + 1) != 0
@@ -762,10 +1706,10 @@ thm fib_coprime_fib_succ:
             fibonacci(n + 2) = fibonacci((n + 2) - 2) + fibonacci((n + 2) - 1) = fibonacci(n) + fibonacci(n + 1) = fibonacci(n + 1) + fibonacci(n)
             fibonacci((n + 1) + 1) = fibonacci(n + 2) = fibonacci(n + 1) + fibonacci(n)
             fibonacci(n + 1) != 0 or fibonacci(n) != 0
-1release thm chap2::gcd_comm(fibonacci(n), fibonacci(n + 1))
+            release thm chap2::gcd_comm(fibonacci(n), fibonacci(n + 1))
             gcd(fibonacci(n), fibonacci(n + 1)) = gcd(fibonacci(n + 1), fibonacci(n))
             gcd(fibonacci(n + 1), fibonacci(n)) = gcd(fibonacci(n), fibonacci(n + 1)) = 1
-1release thm _gcd_add_right_for_fibonacci(fibonacci(n + 1), fibonacci(n))
+            release thm _gcd_add_right_for_fibonacci(fibonacci(n + 1), fibonacci(n))
             gcd(fibonacci(n + 1), fibonacci(n)) = gcd(fibonacci(n + 1), fibonacci(n + 1) + fibonacci(n))
             gcd(fibonacci(n + 1), fibonacci((n + 1) + 1)) = gcd(fibonacci(n + 1), fibonacci(n + 1) + fibonacci(n)) = 1
             fibonacci(n + 1) != 0 or fibonacci((n + 1) + 1) != 0
@@ -823,7 +1767,7 @@ thm fibonacci_fast_aux_eq:
                     fibonacci(j + 2) = fibonacci((j + 1) + 1)
                     fibonacci(j) + fibonacci(j + 1) = fibonacci((j + 1) + 1)
                     fibonacci_fast_aux(k, fibonacci(j + 1), fibonacci(j) + fibonacci(j + 1)) = fibonacci_fast_aux(k, fibonacci(j + 1), fibonacci((j + 1) + 1))
-1release thm fibonacci_fast_aux_succ(k, fibonacci(j), fibonacci(j + 1))
+                    release thm fibonacci_fast_aux_succ(k, fibonacci(j), fibonacci(j + 1))
                     fibonacci_fast_aux(k + 1, fibonacci(j), fibonacci(j + 1)) = fibonacci_fast_aux(k, fibonacci(j + 1), fibonacci(j) + fibonacci(j + 1))
                     fibonacci_fast_aux(k, fibonacci(j + 1), fibonacci((j + 1) + 1)) = fibonacci(k + (j + 1))
                     fibonacci(k + (j + 1)) = fibonacci((k + 1) + j)
@@ -837,7 +1781,7 @@ thm fibonacci_fast_eq:
         fibonacci_fast(n) = fibonacci(n)
     fibonacci(0) = 0
     fibonacci(0 + 1) = fibonacci(1) = 1
-1release thm fibonacci_fast_aux_eq(0, n)
+    release thm fibonacci_fast_aux_eq(0, n)
     fibonacci_fast_aux(n, fibonacci(0), fibonacci(0 + 1)) = fibonacci(n + 0)
     fibonacci_fast(n) = fibonacci_fast_aux(n, 0, 1) = fibonacci_fast_aux(n, fibonacci(0), fibonacci(0 + 1)) = fibonacci(n + 0) = fibonacci(n)
 
@@ -890,7 +1834,7 @@ thm fib_add:
 thm fibonacci_consecutive_square_sum:
     ? forall n N:
         fibonacci(n)^2 + fibonacci(n + 1)^2 = fibonacci(2 * n + 1)
-1release thm fib_add(n, n)
+    release thm fib_add(n, n)
     fibonacci(n + n + 1) = fibonacci(n) * fibonacci(n) + fibonacci(n + 1) * fibonacci(n + 1)
     fibonacci(n)^2 + fibonacci(n + 1)^2 = fibonacci(n) * fibonacci(n) + fibonacci(n + 1) * fibonacci(n + 1) = fibonacci(n + n + 1) = fibonacci(2 * n + 1)
 
@@ -917,8 +1861,8 @@ thm ne_one_iff_exists_prime_dvd_forward:
                     $chap2::divides(2, n)
             case n != 0:
                 n $in N+
-1release thm two_le(n)
-1release thm exists_prime_factor(n)
+                release thm two_le(n)
+                release thm exists_prime_factor(n)
                 exist p N+ st {$prime(p), $chap2::divides(p, n)}
 
 thm ne_one_iff_exists_prime_dvd_reverse:
@@ -931,7 +1875,7 @@ thm ne_one_iff_exists_prime_dvd_reverse:
         ? n != 1
         n = 1
         n != 0
-1release thm chap2::_positive_divisor_le_abs(p, n)
+        release thm chap2::_positive_divisor_le_abs(p, n)
         p <= abs(n) = 1
         p >= 2
         impossible p <= 1

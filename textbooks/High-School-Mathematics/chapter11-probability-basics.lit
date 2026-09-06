@@ -89,7 +89,7 @@ claim:
             by contra:
                 ? x $in intersect({0}, {1})
                 impossible x $in {}
-1release thm HighSchoolCite::geometry_probability::mutually_exclusive_event({0}, {1})
+release thm HighSchoolCite::geometry_probability::mutually_exclusive_event({0}, {1})
 classical_probability(finite_set_size({0}), finite_set_size({0, 1})) = finite_set_size({0}) / finite_set_size({0, 1}) = 1 / 2
 classical_probability(finite_set_size({0}), finite_set_size({0, 1})) + classical_probability(finite_set_size({1}), finite_set_size({0, 1})) = 1
 
@@ -146,4 +146,4 @@ uniform_probability({0, 1, 2, 3}, {0, 1}) * uniform_probability({0, 1, 2, 3}, {0
 by def:
     ? $independent_uniform_events({0, 1, 2, 3}, {0, 1}, {0, 2})
 
-1release thm uniform_probability_multiplication({0, 1, 2, 3}, {0, 1}, {0, 2})
+release thm uniform_probability_multiplication({0, 1, 2, 3}, {0, 1}, {0, 2})

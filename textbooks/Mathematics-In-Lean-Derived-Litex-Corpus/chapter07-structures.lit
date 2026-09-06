@@ -16,15 +16,15 @@ struct Point:
 
 # Source definitions myPoint1--myPoint4 are four constructor spellings for the
 # same object, so one representative is retained.
--1 $in R
-1release thm struct_member((2, -1, 4), &Point)
-have point_example &Point = (2, -1, 4)
+(-1) $in R
+release thm struct_member((2, (-1), 4), &Point)
+have point_example &Point = (2, (-1), 4)
 
 # Source definitions Point.add and Point.add' collapse to one callable map.
 thm point_add_closed:
     ? forall a, b &Point:
         (a.x + b.x, a.y + b.y, a.z + b.z) $in &Point
-1release thm struct_member((a.x + b.x, a.y + b.y, a.z + b.z), &Point)
+    release thm struct_member((a.x + b.x, a.y + b.y, a.z + b.z), &Point)
 
 have fn point_add(a, b &Point) &Point = (a.x + b.x, a.y + b.y, a.z + b.z)
 
@@ -66,7 +66,7 @@ thm simplex_swap_xy_closed:
     a.x >= 0
     a.z >= 0
     a.y + a.x + a.z = a.x + a.y + a.z = 1
-1release thm struct_member((a.y, a.x, a.z), &StandardTwoSimplex)
+    release thm struct_member((a.y, a.x, a.z), &StandardTwoSimplex)
 
 have fn simplex_swap_xy(a &StandardTwoSimplex) &StandardTwoSimplex = (a.y, a.x, a.z)
 
@@ -83,7 +83,7 @@ thm standard_two_simplex_midpoint_closed:
     (a.y + b.y) / 2 >= 0
     (a.z + b.z) / 2 >= 0
     (a.x + b.x) / 2 + (a.y + b.y) / 2 + (a.z + b.z) / 2 = ((a.x + a.y + a.z) + (b.x + b.y + b.z)) / 2 = (1 + 1) / 2 = 1
-1release thm struct_member(((a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2), &StandardTwoSimplex)
+    release thm struct_member(((a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2), &StandardTwoSimplex)
 
 have fn standard_two_simplex_midpoint(a, b &StandardTwoSimplex) &StandardTwoSimplex = ((a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2)
 
@@ -104,13 +104,15 @@ template<n N>:
 thm standard_simplex_midpoint_closed:
     ? forall n N, a, b \standard_simplex<n>:
         $is_standard_simplex_point(n, fn(idx range(0, n)) R {(a(idx) + b(idx)) / 2})
-    forall idx range(0, n):
+    claim:
+        ? forall idx range(0, n):
+            (a(idx) + b(idx)) / 2 >= 0
         a(idx) >= 0
         b(idx) >= 0
         a(idx) + b(idx) >= 0
         2 > 0
         (a(idx) + b(idx)) / 2 >= 0
-1release thm finite_set_sum_substitution(finite_set_sum(range(0, n), fn(idx range(0, n)) R {(a(idx) + b(idx)) / 2}), finite_set_sum(range(0, n), fn(idx range(0, n)) R {(1 / 2) * a(idx) + (1 / 2) * b(idx)}))
+    release thm finite_set_sum_substitution(finite_set_sum(range(0, n), fn(idx range(0, n)) R {(a(idx) + b(idx)) / 2}), finite_set_sum(range(0, n), fn(idx range(0, n)) R {(1 / 2) * a(idx) + (1 / 2) * b(idx)}))
     finite_set_sum(range(0, n), fn(idx range(0, n)) R {(a(idx) + b(idx)) / 2}) = finite_set_sum(range(0, n), fn(idx range(0, n)) R {(1 / 2) * a(idx) + (1 / 2) * b(idx)})
     finite_set_sum(range(0, n), fn(idx range(0, n)) R {(1 / 2) * a(idx) + (1 / 2) * b(idx)}) = finite_set_sum(range(0, n), fn(idx range(0, n)) R {(1 / 2) * a(idx)}) + finite_set_sum(range(0, n), fn(idx range(0, n)) R {(1 / 2) * b(idx)})
     finite_set_sum(range(0, n), fn(idx range(0, n)) R {(1 / 2) * a(idx)}) = (1 / 2) * finite_set_sum(range(0, n), a)
@@ -153,16 +155,16 @@ struct Equiv<s, t set>:
 thm equiv_refl_closed:
     ? forall s set:
         (fn(x s) s {x}, fn(y s) s {y}) $in &Equiv<s, s>
-1release thm fn_set_member(fn(x s) s {x}, fn(x s) s)
-1release thm fn_set_member(fn(y s) s {y}, fn(y s) s)
-1release thm cart_member_from_coordinates((fn(x s) s {x}, fn(y s) s {y}), cart(fn(x s) s, fn(y s) s))
+    release thm fn_set_member(fn(x s) s {x}, fn(x s) s)
+    release thm fn_set_member(fn(y s) s {y}, fn(y s) s)
+    release thm cart_member_from_coordinates((fn(x s) s {x}, fn(y s) s {y}), cart(fn(x s) s, fn(y s) s))
     claim:
         ? forall x s:
             (fn(y s) s {y})((fn(q s) s {q})(x)) = x
     claim:
         ? forall y s:
             (fn(x s) s {x})((fn(q s) s {q})(y)) = y
-1release thm struct_member((fn(x s) s {x}, fn(y s) s {y}), &Equiv<s, s>)
+    release thm struct_member((fn(x s) s {x}, fn(y s) s {y}), &Equiv<s, s>)
 
 template<s set>:
     have equiv_refl &Equiv<s, s> = (fn(x s) s {x}, fn(y s) s {y})
@@ -172,14 +174,14 @@ thm equiv_symm_closed:
         (endpoint.inverse, endpoint.forward) $in &Equiv<t, s>
     endpoint.inverse $in fn(y t) s
     endpoint.forward $in fn(x s) t
-1release thm cart_member_from_coordinates((endpoint.inverse, endpoint.forward), cart(fn(y t) s, fn(x s) t))
+    release thm cart_member_from_coordinates((endpoint.inverse, endpoint.forward), cart(fn(y t) s, fn(x s) t))
     claim:
         ? forall y t:
             endpoint.forward(endpoint.inverse(y)) = y
     claim:
         ? forall x s:
             endpoint.inverse(endpoint.forward(x)) = x
-1release thm struct_member((endpoint.inverse, endpoint.forward), &Equiv<t, s>)
+    release thm struct_member((endpoint.inverse, endpoint.forward), &Equiv<t, s>)
 
 template<s, t set>:
     have fn equiv_symm(endpoint &Equiv<s, t>) &Equiv<t, s> = (endpoint.inverse, endpoint.forward)
@@ -190,9 +192,9 @@ template<s, t set>:
 thm equiv_trans_closed:
     ? forall s, t, u set, e1 &Equiv<s, t>, e2 &Equiv<t, u>:
         (fn(x s) u {e2.forward(e1.forward(x))}, fn(z u) s {e1.inverse(e2.inverse(z))}) $in &Equiv<s, u>
-1release thm fn_set_member(fn(x s) u {e2.forward(e1.forward(x))}, fn(x s) u)
-1release thm fn_set_member(fn(z u) s {e1.inverse(e2.inverse(z))}, fn(z u) s)
-1release thm cart_member_from_coordinates((fn(x s) u {e2.forward(e1.forward(x))}, fn(z u) s {e1.inverse(e2.inverse(z))}), cart(fn(x s) u, fn(z u) s))
+    release thm fn_set_member(fn(x s) u {e2.forward(e1.forward(x))}, fn(x s) u)
+    release thm fn_set_member(fn(z u) s {e1.inverse(e2.inverse(z))}, fn(z u) s)
+    release thm cart_member_from_coordinates((fn(x s) u {e2.forward(e1.forward(x))}, fn(z u) s {e1.inverse(e2.inverse(z))}), cart(fn(x s) u, fn(z u) s))
     thm function_substitution:
         ? forall A, B set, f fn(x A) B, x, y A:
             x = y
@@ -201,14 +203,14 @@ thm equiv_trans_closed:
     claim:
         ? forall x s:
             (fn(z u) s {e1.inverse(e2.inverse(z))})((fn(q s) u {e2.forward(e1.forward(q))})(x)) = x
-1release thm function_substitution(t, s, e1.inverse, e2.inverse(e2.forward(e1.forward(x))), e1.forward(x))
+        release thm function_substitution(t, s, e1.inverse, e2.inverse(e2.forward(e1.forward(x))), e1.forward(x))
         (fn(z u) s {e1.inverse(e2.inverse(z))})((fn(q s) u {e2.forward(e1.forward(q))})(x)) = e1.inverse(e2.inverse(e2.forward(e1.forward(x)))) = e1.inverse(e1.forward(x)) = x
     claim:
         ? forall z u:
             (fn(x s) u {e2.forward(e1.forward(x))})((fn(q u) s {e1.inverse(e2.inverse(q))})(z)) = z
-1release thm function_substitution(t, u, e2.forward, e1.forward(e1.inverse(e2.inverse(z))), e2.inverse(z))
+        release thm function_substitution(t, u, e2.forward, e1.forward(e1.inverse(e2.inverse(z))), e2.inverse(z))
         (fn(x s) u {e2.forward(e1.forward(x))})((fn(q u) s {e1.inverse(e2.inverse(q))})(z)) = e2.forward(e1.forward(e1.inverse(e2.inverse(z)))) = e2.forward(e2.inverse(z)) = z
-1release thm struct_member((fn(x s) u {e2.forward(e1.forward(x))}, fn(z u) s {e1.inverse(e2.inverse(z))}), &Equiv<s, u>)
+    release thm struct_member((fn(x s) u {e2.forward(e1.forward(x))}, fn(z u) s {e1.inverse(e2.inverse(z))}), &Equiv<s, u>)
 
 template<s, t, u set>:
     have fn equiv_trans(e1 &Equiv<s, t>, e2 &Equiv<t, u>) &Equiv<s, u> = (fn(x s) u {e2.forward(e1.forward(x))}, fn(z u) s {e1.inverse(e2.inverse(z))})
@@ -217,7 +219,7 @@ thm equiv_space_nonempty:
     ? forall s set:
         $is_nonempty_set(&Equiv<s, s>)
     witness $is_nonempty_set(&Equiv<s, s>) from (fn(x s) s {x}, fn(x s) s {x}):
-1release thm equiv_refl_closed(s)
+        release thm equiv_refl_closed(s)
         (fn(x s) s {x}, fn(x s) s {x}) $in &Equiv<s, s>
 
 # Source definition permGroup. These three callable fields are the source's
@@ -236,13 +238,168 @@ template<s set>:
 template<s set>:
     have permutation_carrier nonempty_set = &Equiv<s, s>
 
-# Proof debt: the verifier unfolds the group interface but cannot establish
-# equality of the composed function records. The debt is localized to the
-# exact record-membership fact used by the callable source object.
+# Computed Equiv values expose their callable fields through the same
+# result-tuple bridge used by the coordinate records later in this chapter.
+thm equiv_forward_from_result:
+    ? forall s, t set, result &Equiv<s, t>, forward fn(x s) t, inverse fn(y t) s:
+        result = (forward, inverse)
+        =>:
+            result.forward = forward
+    result.forward = result[1] = forward
+
+thm equiv_inverse_from_result:
+    ? forall s, t set, result &Equiv<s, t>, forward fn(x s) t, inverse fn(y t) s:
+        result = (forward, inverse)
+        =>:
+            result.inverse = inverse
+    result.inverse = result[2] = inverse
+
+# Function equality proves equality of the two record coordinates; explicit
+# tuple reconstruction then gives extensional equality of equivalences.
+thm equiv_extensionality:
+    ? forall s, t set, left, right &Equiv<s, t>:
+        left.forward = right.forward
+        left.inverse = right.inverse
+        =>:
+            left = right
+    by struct def left
+    by struct def right
+    left[1] = left.forward = right.forward = right[1]
+    left[2] = left.inverse = right.inverse = right[2]
+    release thm tuple_equal_from_coordinates(left, (left[1], left[2]))
+    release thm tuple_equal_from_coordinates(right, (right[1], right[2]))
+    (left[1], left[2]) = (right[1], right[2])
+    left = (left[1], left[2]) = (right[1], right[2]) = right
+
+thm permutation_mul_forward:
+    ? forall s set, f, g &Equiv<s, s>, x s:
+        \permutation_mul<s>(f, g).forward(x) = f.forward(g.forward(x))
+    \permutation_mul<s>(f, g) = \equiv_trans<s, s, s>(g, f) = (fn(q s) s {f.forward(g.forward(q))}, fn(z s) s {g.inverse(f.inverse(z))})
+    release thm equiv_forward_from_result(s, s, \permutation_mul<s>(f, g), fn(q s) s {f.forward(g.forward(q))}, fn(z s) s {g.inverse(f.inverse(z))})
+    \permutation_mul<s>(f, g).forward(x) = (fn(q s) s {f.forward(g.forward(q))})(x) = f.forward(g.forward(x))
+
+thm permutation_mul_inverse:
+    ? forall s set, f, g &Equiv<s, s>, x s:
+        \permutation_mul<s>(f, g).inverse(x) = g.inverse(f.inverse(x))
+    \permutation_mul<s>(f, g) = \equiv_trans<s, s, s>(g, f) = (fn(q s) s {f.forward(g.forward(q))}, fn(z s) s {g.inverse(f.inverse(z))})
+    release thm equiv_inverse_from_result(s, s, \permutation_mul<s>(f, g), fn(q s) s {f.forward(g.forward(q))}, fn(z s) s {g.inverse(f.inverse(z))})
+    \permutation_mul<s>(f, g).inverse(x) = (fn(z s) s {g.inverse(f.inverse(z))})(x) = g.inverse(f.inverse(x))
+
+thm permutation_one_forward:
+    ? forall s set, x s:
+        \permutation_one<s>.forward(x) = x
+    \permutation_one<s> = \equiv_refl<s> = (fn(q s) s {q}, fn(z s) s {z})
+    release thm equiv_forward_from_result(s, s, \permutation_one<s>, fn(q s) s {q}, fn(z s) s {z})
+    \permutation_one<s>.forward(x) = (fn(q s) s {q})(x) = x
+
+thm permutation_one_inverse:
+    ? forall s set, x s:
+        \permutation_one<s>.inverse(x) = x
+    \permutation_one<s> = \equiv_refl<s> = (fn(q s) s {q}, fn(z s) s {z})
+    release thm equiv_inverse_from_result(s, s, \permutation_one<s>, fn(q s) s {q}, fn(z s) s {z})
+    \permutation_one<s>.inverse(x) = (fn(z s) s {z})(x) = x
+
+thm permutation_inv_forward:
+    ? forall s set, f &Equiv<s, s>, x s:
+        \permutation_inv<s>(f).forward(x) = f.inverse(x)
+    \permutation_inv<s>(f) = \equiv_symm<s, s>(f) = (f.inverse, f.forward)
+    release thm equiv_forward_from_result(s, s, \permutation_inv<s>(f), f.inverse, f.forward)
+    \permutation_inv<s>(f).forward(x) = f.inverse(x)
+
+thm permutation_inv_inverse:
+    ? forall s set, f &Equiv<s, s>, x s:
+        \permutation_inv<s>(f).inverse(x) = f.forward(x)
+    \permutation_inv<s>(f) = \equiv_symm<s, s>(f) = (f.inverse, f.forward)
+    release thm equiv_inverse_from_result(s, s, \permutation_inv<s>(f), f.inverse, f.forward)
+    \permutation_inv<s>(f).inverse(x) = f.forward(x)
+
+# The three source group laws reduce to pointwise equality of forward and
+# inverse functions, followed by Equiv extensionality.
 thm permutation_group_closed:
     ? forall s set:
         (\permutation_mul<s>, \permutation_one<s>, \permutation_inv<s>) $in &chap2::Group<\permutation_carrier<s>>
-    trust (\permutation_mul<s>, \permutation_one<s>, \permutation_inv<s>) $in &chap2::Group<\permutation_carrier<s>>
+    claim:
+        ? forall f, g, h &Equiv<s, s>:
+            \permutation_mul<s>(\permutation_mul<s>(f, g), h) = \permutation_mul<s>(f, \permutation_mul<s>(g, h))
+        have assoc_left_forward fn(x s) s = \permutation_mul<s>(\permutation_mul<s>(f, g), h).forward
+        have assoc_right_forward fn(x s) s = \permutation_mul<s>(f, \permutation_mul<s>(g, h)).forward
+        claim:
+            ? forall x s:
+                assoc_left_forward(x) = assoc_right_forward(x)
+            release thm permutation_mul_forward(s, \permutation_mul<s>(f, g), h, x)
+            release thm permutation_mul_forward(s, f, g, h.forward(x))
+            release thm permutation_mul_forward(s, g, h, x)
+            release thm permutation_mul_forward(s, f, \permutation_mul<s>(g, h), x)
+            assoc_left_forward(x) = \permutation_mul<s>(\permutation_mul<s>(f, g), h).forward(x) = \permutation_mul<s>(f, g).forward(h.forward(x)) = f.forward(g.forward(h.forward(x))) = f.forward(\permutation_mul<s>(g, h).forward(x)) = \permutation_mul<s>(f, \permutation_mul<s>(g, h)).forward(x) = assoc_right_forward(x)
+        by def $fn_eq(assoc_left_forward, assoc_right_forward)
+        \permutation_mul<s>(\permutation_mul<s>(f, g), h).forward = assoc_left_forward = assoc_right_forward = \permutation_mul<s>(f, \permutation_mul<s>(g, h)).forward
+        have assoc_left_inverse fn(x s) s = \permutation_mul<s>(\permutation_mul<s>(f, g), h).inverse
+        have assoc_right_inverse fn(x s) s = \permutation_mul<s>(f, \permutation_mul<s>(g, h)).inverse
+        claim:
+            ? forall x s:
+                assoc_left_inverse(x) = assoc_right_inverse(x)
+            release thm permutation_mul_inverse(s, \permutation_mul<s>(f, g), h, x)
+            release thm permutation_mul_inverse(s, f, g, x)
+            release thm permutation_mul_inverse(s, g, h, f.inverse(x))
+            release thm permutation_mul_inverse(s, f, \permutation_mul<s>(g, h), x)
+            assoc_left_inverse(x) = \permutation_mul<s>(\permutation_mul<s>(f, g), h).inverse(x) = h.inverse(\permutation_mul<s>(f, g).inverse(x)) = h.inverse(g.inverse(f.inverse(x))) = \permutation_mul<s>(g, h).inverse(f.inverse(x)) = \permutation_mul<s>(f, \permutation_mul<s>(g, h)).inverse(x) = assoc_right_inverse(x)
+        by def $fn_eq(assoc_left_inverse, assoc_right_inverse)
+        \permutation_mul<s>(\permutation_mul<s>(f, g), h).inverse = assoc_left_inverse = assoc_right_inverse = \permutation_mul<s>(f, \permutation_mul<s>(g, h)).inverse
+        release thm equiv_extensionality(s, s, \permutation_mul<s>(\permutation_mul<s>(f, g), h), \permutation_mul<s>(f, \permutation_mul<s>(g, h)))
+    claim:
+        ? forall f &Equiv<s, s>:
+            \permutation_mul<s>(\permutation_one<s>, f) = f
+        have identity_left_forward fn(x s) s = \permutation_mul<s>(\permutation_one<s>, f).forward
+        have identity_right_forward fn(x s) s = f.forward
+        claim:
+            ? forall x s:
+                identity_left_forward(x) = identity_right_forward(x)
+            release thm permutation_mul_forward(s, \permutation_one<s>, f, x)
+            release thm permutation_one_forward(s, f.forward(x))
+            identity_left_forward(x) = \permutation_mul<s>(\permutation_one<s>, f).forward(x) = \permutation_one<s>.forward(f.forward(x)) = f.forward(x) = identity_right_forward(x)
+        by def $fn_eq(identity_left_forward, identity_right_forward)
+        \permutation_mul<s>(\permutation_one<s>, f).forward = identity_left_forward = identity_right_forward = f.forward
+        have identity_left_inverse fn(x s) s = \permutation_mul<s>(\permutation_one<s>, f).inverse
+        have identity_right_inverse fn(x s) s = f.inverse
+        claim:
+            ? forall x s:
+                identity_left_inverse(x) = identity_right_inverse(x)
+            release thm permutation_mul_inverse(s, \permutation_one<s>, f, x)
+            release thm permutation_one_inverse(s, x)
+            identity_left_inverse(x) = \permutation_mul<s>(\permutation_one<s>, f).inverse(x) = f.inverse(\permutation_one<s>.inverse(x)) = f.inverse(x) = identity_right_inverse(x)
+        by def $fn_eq(identity_left_inverse, identity_right_inverse)
+        \permutation_mul<s>(\permutation_one<s>, f).inverse = identity_left_inverse = identity_right_inverse = f.inverse
+        release thm equiv_extensionality(s, s, \permutation_mul<s>(\permutation_one<s>, f), f)
+    claim:
+        ? forall f &Equiv<s, s>:
+            \permutation_mul<s>(\permutation_inv<s>(f), f) = \permutation_one<s>
+        have inverse_left_forward fn(x s) s = \permutation_mul<s>(\permutation_inv<s>(f), f).forward
+        have inverse_right_forward fn(x s) s = \permutation_one<s>.forward
+        claim:
+            ? forall x s:
+                inverse_left_forward(x) = inverse_right_forward(x)
+            release thm permutation_mul_forward(s, \permutation_inv<s>(f), f, x)
+            release thm permutation_inv_forward(s, f, f.forward(x))
+            release thm permutation_one_forward(s, x)
+            inverse_left_forward(x) = \permutation_mul<s>(\permutation_inv<s>(f), f).forward(x) = \permutation_inv<s>(f).forward(f.forward(x)) = f.inverse(f.forward(x)) = x = \permutation_one<s>.forward(x) = inverse_right_forward(x)
+        by def $fn_eq(inverse_left_forward, inverse_right_forward)
+        \permutation_mul<s>(\permutation_inv<s>(f), f).forward = inverse_left_forward = inverse_right_forward = \permutation_one<s>.forward
+        have inverse_left_inverse fn(x s) s = \permutation_mul<s>(\permutation_inv<s>(f), f).inverse
+        have inverse_right_inverse fn(x s) s = \permutation_one<s>.inverse
+        claim:
+            ? forall x s:
+                inverse_left_inverse(x) = inverse_right_inverse(x)
+            release thm permutation_mul_inverse(s, \permutation_inv<s>(f), f, x)
+            release thm permutation_inv_inverse(s, f, x)
+            release thm permutation_one_inverse(s, x)
+            inverse_left_inverse(x) = \permutation_mul<s>(\permutation_inv<s>(f), f).inverse(x) = f.inverse(\permutation_inv<s>(f).inverse(x)) = f.inverse(f.forward(x)) = x = \permutation_one<s>.inverse(x) = inverse_right_inverse(x)
+        by def $fn_eq(inverse_left_inverse, inverse_right_inverse)
+        \permutation_mul<s>(\permutation_inv<s>(f), f).inverse = inverse_left_inverse = inverse_right_inverse = \permutation_one<s>.inverse
+        release thm equiv_extensionality(s, s, \permutation_mul<s>(\permutation_inv<s>(f), f), \permutation_one<s>)
+    by def:
+        ? $chap2::group_laws(&Equiv<s, s>, \permutation_mul<s>, \permutation_one<s>, \permutation_inv<s>)
+    release thm cart_member_from_coordinates((\permutation_mul<s>, \permutation_one<s>, \permutation_inv<s>), cart(fn(f, g &Equiv<s, s>) &Equiv<s, s>, &Equiv<s, s>, fn(f &Equiv<s, s>) &Equiv<s, s>))
+    release thm struct_member((\permutation_mul<s>, \permutation_one<s>, \permutation_inv<s>), &chap2::Group<&Equiv<s, s>>)
 
 template<s set>:
     have permutation_group &chap2::Group<\permutation_carrier<s>> = (\permutation_mul<s>, \permutation_one<s>, \permutation_inv<s>)
@@ -261,29 +418,29 @@ struct GaussInt:
     real Z
     im Z
 
-1release thm struct_member((0, 0), &GaussInt)
+release thm struct_member((0, 0), &GaussInt)
 have gauss_zero &GaussInt = (0, 0)
-1release thm struct_member((1, 0), &GaussInt)
+release thm struct_member((1, 0), &GaussInt)
 have gauss_one &GaussInt = (1, 0)
 
 thm gauss_add_closed:
     ? forall x, y &GaussInt:
         (x.real + y.real, x.im + y.im) $in &GaussInt
-1release thm struct_member((x.real + y.real, x.im + y.im), &GaussInt)
+    release thm struct_member((x.real + y.real, x.im + y.im), &GaussInt)
 
 have fn gauss_add(x, y &GaussInt) &GaussInt = (x.real + y.real, x.im + y.im)
 
 thm gauss_neg_closed:
     ? forall x &GaussInt:
-        (-x.real, -x.im) $in &GaussInt
-1release thm struct_member((-x.real, -x.im), &GaussInt)
+        (-x.real, (-x.im)) $in &GaussInt
+    release thm struct_member((-x.real, (-x.im)), &GaussInt)
 
-have fn gauss_neg(x &GaussInt) &GaussInt = (-x.real, -x.im)
+have fn gauss_neg(x &GaussInt) &GaussInt = (-x.real, (-x.im))
 
 thm gauss_mul_closed:
     ? forall x, y &GaussInt:
         (x.real * y.real - x.im * y.im, x.real * y.im + x.im * y.real) $in &GaussInt
-1release thm struct_member((x.real * y.real - x.im * y.im, x.real * y.im + x.im * y.real), &GaussInt)
+    release thm struct_member((x.real * y.real - x.im * y.im, x.real * y.im + x.im * y.real), &GaussInt)
 
 have fn gauss_mul(x, y &GaussInt) &GaussInt = (x.real * y.real - x.im * y.im, x.real * y.im + x.im * y.real)
 
@@ -310,7 +467,7 @@ thm gauss_add_re_from_result:
 thm gauss_add_re:
     ? forall x, y &GaussInt:
         gauss_add(x, y).real = x.real + y.real
-1release thm gauss_add_re_from_result(x, y, gauss_add(x, y))
+    release thm gauss_add_re_from_result(x, y, gauss_add(x, y))
 
 thm gauss_add_im_from_result:
     ? forall x, y, result &GaussInt:
@@ -324,7 +481,7 @@ thm gauss_add_im_from_result:
 thm gauss_add_im:
     ? forall x, y &GaussInt:
         gauss_add(x, y).im = x.im + y.im
-1release thm gauss_add_im_from_result(x, y, gauss_add(x, y))
+    release thm gauss_add_im_from_result(x, y, gauss_add(x, y))
 
 thm gauss_mul_re_from_result:
     ? forall x, y, result &GaussInt:
@@ -338,7 +495,7 @@ thm gauss_mul_re_from_result:
 thm gauss_mul_re:
     ? forall x, y &GaussInt:
         gauss_mul(x, y).real = x.real * y.real - x.im * y.im
-1release thm gauss_mul_re_from_result(x, y, gauss_mul(x, y))
+    release thm gauss_mul_re_from_result(x, y, gauss_mul(x, y))
 
 thm gauss_mul_im_from_result:
     ? forall x, y, result &GaussInt:
@@ -352,9 +509,12 @@ thm gauss_mul_im_from_result:
 thm gauss_mul_im:
     ? forall x, y &GaussInt:
         gauss_mul(x, y).im = x.real * y.im + x.im * y.real
-1release thm gauss_mul_im_from_result(x, y, gauss_mul(x, y))
+    release thm gauss_mul_im_from_result(x, y, gauss_mul(x, y))
 
-prop is_commutative_ring(s nonempty_set, add fn(x, y s) s, zero s, neg fn(x s) s, mul fn(x, y s) s, one s):
+# The distinguished zero already witnesses that the carrier is nonempty.  The
+# reusable law predicate therefore needs only `set`, matching `ring_laws`;
+# concrete structure values below still use a `nonempty_set` carrier.
+prop is_commutative_ring(s set, add fn(x, y s) s, zero s, neg fn(x s) s, mul fn(x, y s) s, one s):
     $chap2::ring_laws(s, add, zero, neg, mul, one)
     forall x, y s:
         mul(x, y) = mul(y, x)
@@ -368,18 +528,200 @@ struct CommutativeRing<s nonempty_set>:
     <=>:
         $is_commutative_ring(s, add, zero, neg, mul, one)
 
+thm commutative_ring_add_zero:
+    ? forall s nonempty_set, ring &CommutativeRing<s>, a s:
+        ring.add(a, ring.zero) = a
+    ring.add(a, ring.zero) = ring.add(ring.zero, a) = a
+
 # Source instance `instCommRing`. The five Gaussian operations form the
-# intended callable commutative-ring object. Its coordinatewise ring-law proof
-# remains explicit proof debt rather than being replaced by a proposition-only
-# placeholder.
-trust $is_commutative_ring(&GaussInt, gauss_add, gauss_zero, gauss_neg, gauss_mul, gauss_one)
+# intended callable commutative-ring object.  Every law is checked through the
+# two integer coordinates, so the instance has no hidden library dependency.
+thm gauss_extensionality:
+    ? forall left, right &GaussInt:
+        left.real = right.real
+        left.im = right.im
+        =>:
+            left = right
+    by struct def left
+    by struct def right
+    left[1] = left.real = right.real = right[1]
+    left[2] = left.im = right.im = right[2]
+    release thm tuple_equal_from_coordinates(left, (left[1], left[2]))
+    release thm tuple_equal_from_coordinates(right, (right[1], right[2]))
+    (left[1], left[2]) = (right[1], right[2])
+    left = (left[1], left[2]) = (right[1], right[2]) = right
+
+thm gauss_neg_re_from_result:
+    ? forall x, result &GaussInt:
+        result = gauss_neg(x)
+        =>:
+            result.real = (-x.real)
+    gauss_neg(x) = (-x.real, (-x.im))
+    result = gauss_neg(x) = (-x.real, (-x.im))
+    result.real = result[1] = (-x.real)
+
+thm gauss_neg_re:
+    ? forall x &GaussInt:
+        gauss_neg(x).real = (-x.real)
+    release thm gauss_neg_re_from_result(x, gauss_neg(x))
+
+thm gauss_neg_im_from_result:
+    ? forall x, result &GaussInt:
+        result = gauss_neg(x)
+        =>:
+            result.im = (-x.im)
+    gauss_neg(x) = (-x.real, (-x.im))
+    result = gauss_neg(x) = (-x.real, (-x.im))
+    result.im = result[2] = (-x.im)
+
+thm gauss_neg_im:
+    ? forall x &GaussInt:
+        gauss_neg(x).im = (-x.im)
+    release thm gauss_neg_im_from_result(x, gauss_neg(x))
+
+thm gaussian_integer_commutative_ring_laws:
+    ? forall gauss_ring_seed &GaussInt:
+        $is_commutative_ring(&GaussInt, gauss_add, gauss_zero, gauss_neg, gauss_mul, gauss_one)
+    by struct def gauss_zero
+    by struct def gauss_one
+    gauss_zero.real = gauss_zero[1] = 0
+    gauss_zero.im = gauss_zero[2] = 0
+    gauss_one.real = gauss_one[1] = 1
+    gauss_one.im = gauss_one[2] = 0
+    claim:
+        ? forall x, y, z &GaussInt:
+            gauss_add(gauss_add(x, y), z) = gauss_add(x, gauss_add(y, z))
+        release thm gauss_add_re(gauss_add(x, y), z)
+        release thm gauss_add_re(x, y)
+        release thm gauss_add_re(x, gauss_add(y, z))
+        release thm gauss_add_re(y, z)
+        gauss_add(gauss_add(x, y), z).real = gauss_add(x, y).real + z.real = (x.real + y.real) + z.real = x.real + (y.real + z.real) = x.real + gauss_add(y, z).real = gauss_add(x, gauss_add(y, z)).real
+        release thm gauss_add_im(gauss_add(x, y), z)
+        release thm gauss_add_im(x, y)
+        release thm gauss_add_im(x, gauss_add(y, z))
+        release thm gauss_add_im(y, z)
+        gauss_add(gauss_add(x, y), z).im = gauss_add(x, y).im + z.im = (x.im + y.im) + z.im = x.im + (y.im + z.im) = x.im + gauss_add(y, z).im = gauss_add(x, gauss_add(y, z)).im
+        release thm gauss_extensionality(gauss_add(gauss_add(x, y), z), gauss_add(x, gauss_add(y, z)))
+    claim:
+        ? forall x &GaussInt:
+            gauss_add(gauss_zero, x) = x
+        release thm gauss_add_re(gauss_zero, x)
+        gauss_add(gauss_zero, x).real = gauss_zero.real + x.real = 0 + x.real = x.real
+        release thm gauss_add_im(gauss_zero, x)
+        gauss_add(gauss_zero, x).im = gauss_zero.im + x.im = 0 + x.im = x.im
+        release thm gauss_extensionality(gauss_add(gauss_zero, x), x)
+    claim:
+        ? forall x &GaussInt:
+            gauss_add(gauss_neg(x), x) = gauss_zero
+        release thm gauss_add_re(gauss_neg(x), x)
+        release thm gauss_neg_re(x)
+        gauss_add(gauss_neg(x), x).real = gauss_neg(x).real + x.real = (-x.real) + x.real = 0 = gauss_zero.real
+        release thm gauss_add_im(gauss_neg(x), x)
+        release thm gauss_neg_im(x)
+        gauss_add(gauss_neg(x), x).im = gauss_neg(x).im + x.im = (-x.im) + x.im = 0 = gauss_zero.im
+        release thm gauss_extensionality(gauss_add(gauss_neg(x), x), gauss_zero)
+    claim:
+        ? forall x, y &GaussInt:
+            gauss_add(x, y) = gauss_add(y, x)
+        release thm gauss_add_re(x, y)
+        release thm gauss_add_re(y, x)
+        gauss_add(x, y).real = x.real + y.real = y.real + x.real = gauss_add(y, x).real
+        release thm gauss_add_im(x, y)
+        release thm gauss_add_im(y, x)
+        gauss_add(x, y).im = x.im + y.im = y.im + x.im = gauss_add(y, x).im
+        release thm gauss_extensionality(gauss_add(x, y), gauss_add(y, x))
+    claim:
+        ? forall x, y, z &GaussInt:
+            gauss_mul(gauss_mul(x, y), z) = gauss_mul(x, gauss_mul(y, z))
+        release thm gauss_mul_re(gauss_mul(x, y), z)
+        release thm gauss_mul_im(gauss_mul(x, y), z)
+        release thm gauss_mul_re(x, y)
+        release thm gauss_mul_im(x, y)
+        release thm gauss_mul_re(x, gauss_mul(y, z))
+        release thm gauss_mul_im(x, gauss_mul(y, z))
+        release thm gauss_mul_re(y, z)
+        release thm gauss_mul_im(y, z)
+        gauss_mul(gauss_mul(x, y), z).real = gauss_mul(x, y).real * z.real - gauss_mul(x, y).im * z.im = (x.real * y.real - x.im * y.im) * z.real - gauss_mul(x, y).im * z.im = (x.real * y.real - x.im * y.im) * z.real - (x.real * y.im + x.im * y.real) * z.im = x.real * (y.real * z.real - y.im * z.im) - x.im * (y.real * z.im + y.im * z.real) = x.real * gauss_mul(y, z).real - x.im * (y.real * z.im + y.im * z.real) = x.real * gauss_mul(y, z).real - x.im * gauss_mul(y, z).im = gauss_mul(x, gauss_mul(y, z)).real
+        gauss_mul(gauss_mul(x, y), z).im = gauss_mul(x, y).real * z.im + gauss_mul(x, y).im * z.real = (x.real * y.real - x.im * y.im) * z.im + gauss_mul(x, y).im * z.real = (x.real * y.real - x.im * y.im) * z.im + (x.real * y.im + x.im * y.real) * z.real = x.real * (y.real * z.im + y.im * z.real) + x.im * (y.real * z.real - y.im * z.im) = x.real * (y.real * z.im + y.im * z.real) + x.im * gauss_mul(y, z).real = x.real * gauss_mul(y, z).im + x.im * gauss_mul(y, z).real = gauss_mul(x, gauss_mul(y, z)).im
+        release thm gauss_extensionality(gauss_mul(gauss_mul(x, y), z), gauss_mul(x, gauss_mul(y, z)))
+    claim:
+        ? forall x, y, z &GaussInt:
+            gauss_mul(x, gauss_add(y, z)) = gauss_add(gauss_mul(x, y), gauss_mul(x, z))
+        release thm gauss_mul_re(x, gauss_add(y, z))
+        release thm gauss_mul_im(x, gauss_add(y, z))
+        release thm gauss_add_re(y, z)
+        release thm gauss_add_im(y, z)
+        release thm gauss_add_re(gauss_mul(x, y), gauss_mul(x, z))
+        release thm gauss_add_im(gauss_mul(x, y), gauss_mul(x, z))
+        release thm gauss_mul_re(x, y)
+        release thm gauss_mul_im(x, y)
+        release thm gauss_mul_re(x, z)
+        release thm gauss_mul_im(x, z)
+        gauss_mul(x, gauss_add(y, z)).real = x.real * gauss_add(y, z).real - x.im * gauss_add(y, z).im = x.real * (y.real + z.real) - x.im * gauss_add(y, z).im = x.real * (y.real + z.real) - x.im * (y.im + z.im) = (x.real * y.real - x.im * y.im) + (x.real * z.real - x.im * z.im) = gauss_mul(x, y).real + (x.real * z.real - x.im * z.im) = gauss_mul(x, y).real + gauss_mul(x, z).real = gauss_add(gauss_mul(x, y), gauss_mul(x, z)).real
+        gauss_mul(x, gauss_add(y, z)).im = x.real * gauss_add(y, z).im + x.im * gauss_add(y, z).real = x.real * (y.im + z.im) + x.im * gauss_add(y, z).real = x.real * (y.im + z.im) + x.im * (y.real + z.real) = (x.real * y.im + x.im * y.real) + (x.real * z.im + x.im * z.real) = gauss_mul(x, y).im + (x.real * z.im + x.im * z.real) = gauss_mul(x, y).im + gauss_mul(x, z).im = gauss_add(gauss_mul(x, y), gauss_mul(x, z)).im
+        release thm gauss_extensionality(gauss_mul(x, gauss_add(y, z)), gauss_add(gauss_mul(x, y), gauss_mul(x, z)))
+    claim:
+        ? forall x, y, z &GaussInt:
+            gauss_mul(gauss_add(x, y), z) = gauss_add(gauss_mul(x, z), gauss_mul(y, z))
+        release thm gauss_mul_re(gauss_add(x, y), z)
+        release thm gauss_mul_im(gauss_add(x, y), z)
+        release thm gauss_add_re(x, y)
+        release thm gauss_add_im(x, y)
+        release thm gauss_add_re(gauss_mul(x, z), gauss_mul(y, z))
+        release thm gauss_add_im(gauss_mul(x, z), gauss_mul(y, z))
+        release thm gauss_mul_re(x, z)
+        release thm gauss_mul_im(x, z)
+        release thm gauss_mul_re(y, z)
+        release thm gauss_mul_im(y, z)
+        gauss_mul(gauss_add(x, y), z).real = gauss_add(x, y).real * z.real - gauss_add(x, y).im * z.im = (x.real + y.real) * z.real - gauss_add(x, y).im * z.im = (x.real + y.real) * z.real - (x.im + y.im) * z.im = (x.real * z.real - x.im * z.im) + (y.real * z.real - y.im * z.im) = gauss_mul(x, z).real + (y.real * z.real - y.im * z.im) = gauss_mul(x, z).real + gauss_mul(y, z).real = gauss_add(gauss_mul(x, z), gauss_mul(y, z)).real
+        gauss_mul(gauss_add(x, y), z).im = gauss_add(x, y).real * z.im + gauss_add(x, y).im * z.real = (x.real + y.real) * z.im + gauss_add(x, y).im * z.real = (x.real + y.real) * z.im + (x.im + y.im) * z.real = (x.real * z.im + x.im * z.real) + (y.real * z.im + y.im * z.real) = gauss_mul(x, z).im + (y.real * z.im + y.im * z.real) = gauss_mul(x, z).im + gauss_mul(y, z).im = gauss_add(gauss_mul(x, z), gauss_mul(y, z)).im
+        release thm gauss_extensionality(gauss_mul(gauss_add(x, y), z), gauss_add(gauss_mul(x, z), gauss_mul(y, z)))
+    claim:
+        ? forall x &GaussInt:
+            gauss_mul(gauss_one, x) = x
+        release thm gauss_mul_re(gauss_one, x)
+        release thm gauss_mul_im(gauss_one, x)
+        gauss_mul(gauss_one, x).real = gauss_one.real * x.real - gauss_one.im * x.im = 1 * x.real - gauss_one.im * x.im = 1 * x.real - 0 * x.im = x.real
+        gauss_mul(gauss_one, x).im = gauss_one.real * x.im + gauss_one.im * x.real = 1 * x.im + gauss_one.im * x.real = 1 * x.im + 0 * x.real = x.im
+        release thm gauss_extensionality(gauss_mul(gauss_one, x), x)
+    claim:
+        ? forall x &GaussInt:
+            gauss_mul(x, gauss_one) = x
+        release thm gauss_mul_re(x, gauss_one)
+        release thm gauss_mul_im(x, gauss_one)
+        gauss_mul(x, gauss_one).real = x.real * gauss_one.real - x.im * gauss_one.im = x.real * 1 - x.im * gauss_one.im = x.real * 1 - x.im * 0 = x.real
+        gauss_mul(x, gauss_one).im = x.real * gauss_one.im + x.im * gauss_one.real = x.real * 0 + x.im * gauss_one.real = x.real * 0 + x.im * 1 = x.im
+        release thm gauss_extensionality(gauss_mul(x, gauss_one), x)
+    claim:
+        ? forall x, y &GaussInt:
+            gauss_mul(x, y) = gauss_mul(y, x)
+        release thm gauss_mul_re(x, y)
+        release thm gauss_mul_re(y, x)
+        gauss_mul(x, y).real = x.real * y.real - x.im * y.im = y.real * x.real - y.im * x.im = gauss_mul(y, x).real
+        release thm gauss_mul_im(x, y)
+        release thm gauss_mul_im(y, x)
+        gauss_mul(x, y).im = x.real * y.im + x.im * y.real = y.real * x.im + y.im * x.real = gauss_mul(y, x).im
+        release thm gauss_extensionality(gauss_mul(x, y), gauss_mul(y, x))
+    by def:
+        ? $chap2::ring_laws(&GaussInt, gauss_add, gauss_zero, gauss_neg, gauss_mul, gauss_one)
+    gauss_add $in fn(x, y &GaussInt) &GaussInt
+    gauss_zero $in &GaussInt
+    gauss_neg $in fn(x &GaussInt) &GaussInt
+    gauss_mul $in fn(x, y &GaussInt) &GaussInt
+    gauss_one $in &GaussInt
+    by def:
+        ? $is_commutative_ring(&GaussInt, gauss_add, gauss_zero, gauss_neg, gauss_mul, gauss_one)
+
+release thm gaussian_integer_commutative_ring_laws(gauss_zero)
+witness $is_nonempty_set(&GaussInt) from gauss_zero:
+    gauss_zero $in &GaussInt
 gauss_add $in fn(x, y &GaussInt) &GaussInt
 gauss_zero $in &GaussInt
 gauss_neg $in fn(x &GaussInt) &GaussInt
 gauss_mul $in fn(x, y &GaussInt) &GaussInt
 gauss_one $in &GaussInt
-1release thm cart_member_from_coordinates((gauss_add, gauss_zero, gauss_neg, gauss_mul, gauss_one), cart(fn(x, y &GaussInt) &GaussInt, &GaussInt, fn(x &GaussInt) &GaussInt, fn(x, y &GaussInt) &GaussInt, &GaussInt))
-1release thm struct_member((gauss_add, gauss_zero, gauss_neg, gauss_mul, gauss_one), &CommutativeRing<&GaussInt>)
+release thm cart_member_from_coordinates((gauss_add, gauss_zero, gauss_neg, gauss_mul, gauss_one), cart(fn(x, y &GaussInt) &GaussInt, &GaussInt, fn(x &GaussInt) &GaussInt, fn(x, y &GaussInt) &GaussInt, &GaussInt))
+release thm struct_member((gauss_add, gauss_zero, gauss_neg, gauss_mul, gauss_one), &CommutativeRing<&GaussInt>)
 have gaussian_integer_commutative_ring &CommutativeRing<&GaussInt> = (gauss_add, gauss_zero, gauss_neg, gauss_mul, gauss_one)
 
 have fn gauss_sub(x, y &GaussInt) &GaussInt = gauss_add(x, gauss_neg(y))
@@ -394,21 +736,16 @@ gauss_zero != gauss_one
 # The positive denominator is total. For nonzero inputs it reduces to the
 # source denominator abs(b); at zero it selects 1, which is only used to make
 # the surrounding case-defined functions well-defined before branch replay.
+template<marker {0}>:
+    have fn positive_abs_denominator_selected(b Z) N+ by cases:
+        case abs(b) > 0: abs(b)
+        case abs(b) = 0: 1
+
+have fn positive_abs_denominator(b Z) N+ = \positive_abs_denominator_selected<0>(b)
+
 thm positive_abs_denominator_closed:
     ? forall b Z:
-        chap6::nat_max(abs(b), 1) $in N+
-    by cases:
-        ? chap6::nat_max(abs(b), 1) $in N+
-        case abs(b) >= 1:
-            chap6::nat_max(abs(b), 1) = abs(b)
-            chap6::nat_max(abs(b), 1) >= 1
-            chap6::nat_max(abs(b), 1) $in N+
-        case abs(b) < 1:
-            chap6::nat_max(abs(b), 1) = 1
-            chap6::nat_max(abs(b), 1) >= 1
-            chap6::nat_max(abs(b), 1) $in N+
-
-have fn positive_abs_denominator(b Z) N+ = chap6::nat_max(abs(b), 1)
+        positive_abs_denominator(b) $in N+
 
 thm positive_abs_denominator_of_ne_zero:
     ? forall b Z:
@@ -416,10 +753,7 @@ thm positive_abs_denominator_of_ne_zero:
         =>:
             positive_abs_denominator(b) = abs(b)
     abs(b) > 0
-    abs(b) $in N+
-    abs(b) >= 1
-    chap6::nat_max(abs(b), 1) = abs(b)
-    positive_abs_denominator(b) = chap6::nat_max(abs(b), 1) = abs(b)
+    positive_abs_denominator(b) = \positive_abs_denominator_selected<0>(b) = abs(b)
 
 thm positive_abs_denominator_nonzero:
     ? forall b Z:
@@ -429,7 +763,7 @@ thm positive_abs_denominator_nonzero:
 
 have fn int_ediv(a, b Z) Z by cases:
     case b > 0: chap5::integer_quotient(a, positive_abs_denominator(b))
-    case b < 0: -chap5::integer_quotient(a, positive_abs_denominator(b))
+    case b < 0: (-chap5::integer_quotient(a, positive_abs_denominator(b)))
     case b = 0: 0
 
 have fn int_emod(a, b Z) Z by cases:
@@ -440,19 +774,105 @@ have fn int_centered_div(a, b Z) Z = int_ediv(a + int_ediv(b, 2), b)
 
 have fn int_centered_mod(a, b Z) Z = int_emod(a + int_ediv(b, 2), b) - int_ediv(b, 2)
 
-# Proof debt: the current integer quotient library does not expose the signed
-# decomposition and centered-bound interfaces used by this construction.
+# The signed wrapper is reduced explicitly to the positive-denominator
+# Euclidean quotient supplied by Chapter 5.
+thm int_ediv_add_emod:
+    ? forall a, b Z:
+        b * int_ediv(a, b) + int_emod(a, b) = a
+    by cases:
+        ? b * int_ediv(a, b) + int_emod(a, b) = a
+        case b > 0:
+            b != 0
+            release thm positive_abs_denominator_of_ne_zero(b)
+            positive_abs_denominator(b) = abs(b) = b
+            int_ediv(a, b) = chap5::integer_quotient(a, positive_abs_denominator(b))
+            int_emod(a, b) = a % positive_abs_denominator(b)
+            a = positive_abs_denominator(b) * chap5::integer_quotient(a, positive_abs_denominator(b)) + a % positive_abs_denominator(b)
+            b * int_ediv(a, b) + int_emod(a, b) = b * chap5::integer_quotient(a, positive_abs_denominator(b)) + a % positive_abs_denominator(b) = positive_abs_denominator(b) * chap5::integer_quotient(a, positive_abs_denominator(b)) + a % positive_abs_denominator(b) = a
+        case b < 0:
+            b != 0
+            release thm positive_abs_denominator_of_ne_zero(b)
+            positive_abs_denominator(b) = abs(b) = (-b)
+            int_ediv(a, b) = (-chap5::integer_quotient(a, positive_abs_denominator(b)))
+            int_emod(a, b) = a % positive_abs_denominator(b)
+            a = positive_abs_denominator(b) * chap5::integer_quotient(a, positive_abs_denominator(b)) + a % positive_abs_denominator(b)
+            b * int_ediv(a, b) + int_emod(a, b) = b * (-chap5::integer_quotient(a, positive_abs_denominator(b))) + a % positive_abs_denominator(b) = (-b) * chap5::integer_quotient(a, positive_abs_denominator(b)) + a % positive_abs_denominator(b) = positive_abs_denominator(b) * chap5::integer_quotient(a, positive_abs_denominator(b)) + a % positive_abs_denominator(b) = a
+        case b = 0:
+            int_ediv(a, b) = 0
+            int_emod(a, b) = a
+            b * int_ediv(a, b) + int_emod(a, b) = 0 * 0 + a = a
+
+thm int_centered_div_add_mod_explicit:
+    ? forall a, b Z:
+        b * int_centered_div(a, b) + int_centered_mod(a, b) = a
+    release thm int_ediv_add_emod(a + int_ediv(b, 2), b)
+    int_centered_div(a, b) = int_ediv(a + int_ediv(b, 2), b)
+    int_centered_mod(a, b) = int_emod(a + int_ediv(b, 2), b) - int_ediv(b, 2)
+    b * int_ediv(a + int_ediv(b, 2), b) + int_emod(a + int_ediv(b, 2), b) = a + int_ediv(b, 2)
+    b * int_centered_div(a, b) + int_centered_mod(a, b) = b * int_ediv(a + int_ediv(b, 2), b) + (int_emod(a + int_ediv(b, 2), b) - int_ediv(b, 2)) = (b * int_ediv(a + int_ediv(b, 2), b) + int_emod(a + int_ediv(b, 2), b)) - int_ediv(b, 2) = (a + int_ediv(b, 2)) - int_ediv(b, 2) = a
+
 thm int_centered_div_add_mod:
     ? forall a, b Z:
         b * int_centered_div(a, b) + int_centered_mod(a, b) = a
-    trust b * int_centered_div(a, b) + int_centered_mod(a, b) = a
+    release thm int_centered_div_add_mod_explicit(a, b)
+
+thm int_centered_mod_abs_le_explicit:
+    ? forall a Z, b Z:
+        b > 0
+        =>:
+            abs(int_centered_mod(a, b)) <= b / 2
+    have q Z = chap5::integer_quotient(b, 2)
+    have shifted Z = a + int_ediv(b, 2)
+    have r Z = shifted % b
+    b != 0
+    b $in N+
+    release thm positive_abs_denominator_of_ne_zero(b)
+    positive_abs_denominator(b) = abs(b) = b
+    release thm positive_abs_denominator_of_ne_zero(2)
+    positive_abs_denominator(2) = abs(2) = 2
+    int_ediv(b, 2) = chap5::integer_quotient(b, positive_abs_denominator(2)) = chap5::integer_quotient(b, 2) = q
+    int_emod(a + int_ediv(b, 2), b) = (a + int_ediv(b, 2)) % positive_abs_denominator(b)
+    shifted = a + int_ediv(b, 2)
+    (a + int_ediv(b, 2)) % positive_abs_denominator(b) = shifted % positive_abs_denominator(b) = shifted % b = r
+    int_centered_mod(a, b) = int_emod(a + int_ediv(b, 2), b) - int_ediv(b, 2) = r - q
+    b = 2 * chap5::integer_quotient(b, 2) + b % 2 = 2 * q + b % 2
+    0 <= b % 2
+    b % 2 < 2
+    0 <= shifted % b
+    shifted % b < b
+    0 <= r
+    r < b
+    2 * q <= 2 * q + b % 2 = b
+    (2 * q) / 2 <= b / 2
+    q = (2 * q) / 2 <= b / 2
+    (-q) = 0 - q <= r - q
+    claim:
+        ? r <= 2 * q
+        b % 2 = 0 or b % 2 = 1
+        by cases:
+            ? r <= 2 * q
+            case b % 2 = 0:
+                b = 2 * q + b % 2 = 2 * q
+                r < b = 2 * q
+                r <= 2 * q
+            case b % 2 = 1:
+                b = 2 * q + b % 2 = 2 * q + 1
+                r < b = 2 * q + 1
+                r <= 2 * q
+    r - q <= 2 * q - q = q
+    by cases:
+        ? abs(int_centered_mod(a, b)) <= b / 2
+        case int_centered_mod(a, b) >= 0:
+            abs(int_centered_mod(a, b)) = int_centered_mod(a, b) = r - q <= q <= b / 2
+        case int_centered_mod(a, b) < 0:
+            abs(int_centered_mod(a, b)) = (-int_centered_mod(a, b)) = -(r - q) <= q <= b / 2
 
 thm int_centered_mod_abs_le:
     ? forall a Z, b Z:
         b > 0
         =>:
             abs(int_centered_mod(a, b)) <= b / 2
-    trust abs(int_centered_mod(a, b)) <= b / 2
+    release thm int_centered_mod_abs_le_explicit(a, b)
 
 have fn gauss_norm(x &GaussInt) Z = x.real^2 + x.im^2
 
@@ -477,7 +897,7 @@ thm gauss_norm_eq_zero_forward:
     x.im^2 = 0
     x.real = 0
     x.im = 0
-1release thm tuple_equal_from_coordinates(x, (x[1], x[2]))
+    release thm tuple_equal_from_coordinates(x, (x[1], x[2]))
     x = (x[1], x[2]) = (x.real, x.im) = (0, 0) = gauss_zero
 
 thm gauss_norm_eq_zero_reverse:
@@ -509,7 +929,7 @@ thm gauss_norm_pos_reverse:
         ? gauss_norm(x) > 0
         gauss_norm(x) <= 0
         gauss_norm(x) = 0
-1release thm gauss_norm_eq_zero_forward(x)
+        release thm gauss_norm_eq_zero_forward(x)
         impossible x != gauss_zero
 
 thm gauss_norm_mul:
@@ -529,38 +949,38 @@ thm gauss_norm_mul:
 
 thm gauss_conj_closed:
     ? forall x &GaussInt:
-        (x.real, -x.im) $in &GaussInt
-1release thm struct_member((x.real, -x.im), &GaussInt)
+        (x.real, (-x.im)) $in &GaussInt
+    release thm struct_member((x.real, (-x.im)), &GaussInt)
 
-have fn gauss_conj(x &GaussInt) &GaussInt = (x.real, -x.im)
+have fn gauss_conj(x &GaussInt) &GaussInt = (x.real, (-x.im))
 
 thm gauss_conj_re_from_result:
     ? forall x, result &GaussInt:
         result = gauss_conj(x)
         =>:
             result.real = x.real
-    gauss_conj(x) = (x.real, -x.im)
-    result = gauss_conj(x) = (x.real, -x.im)
+    gauss_conj(x) = (x.real, (-x.im))
+    result = gauss_conj(x) = (x.real, (-x.im))
     result.real = result[1] = x.real
 
 thm gauss_conj_re:
     ? forall x &GaussInt:
         gauss_conj(x).real = x.real
-1release thm gauss_conj_re_from_result(x, gauss_conj(x))
+    release thm gauss_conj_re_from_result(x, gauss_conj(x))
 
 thm gauss_conj_im_from_result:
     ? forall x, result &GaussInt:
         result = gauss_conj(x)
         =>:
-            result.im = -x.im
-    gauss_conj(x) = (x.real, -x.im)
-    result = gauss_conj(x) = (x.real, -x.im)
-    result.im = result[2] = -x.im
+            result.im = (-x.im)
+    gauss_conj(x) = (x.real, (-x.im))
+    result = gauss_conj(x) = (x.real, (-x.im))
+    result.im = result[2] = (-x.im)
 
 thm gauss_conj_im:
     ? forall x &GaussInt:
-        gauss_conj(x).im = -x.im
-1release thm gauss_conj_im_from_result(x, gauss_conj(x))
+        gauss_conj(x).im = (-x.im)
+    release thm gauss_conj_im_from_result(x, gauss_conj(x))
 
 thm gauss_norm_conj:
     ? forall x &GaussInt:
@@ -568,8 +988,8 @@ thm gauss_norm_conj:
     gauss_conj(x) $in &GaussInt
     gauss_conj(x).real $in Z
     gauss_conj(x).im $in Z
-1release thm gauss_conj_re(x)
-1release thm gauss_conj_im(x)
+    release thm gauss_conj_re(x)
+    release thm gauss_conj_im(x)
     gauss_norm(gauss_conj(x)) = gauss_conj(x).real^2 + gauss_conj(x).im^2
     gauss_conj(x).real^2 + gauss_conj(x).im^2 = x.real^2 + (-x.im)^2
     gauss_norm(gauss_conj(x)) = x.real^2 + (-x.im)^2 = x.real^2 + x.im^2 = gauss_norm(x)
@@ -578,23 +998,33 @@ thm gauss_norm_conj:
 # Naming them avoids hiding the division construction behind an opaque record.
 have fn gauss_mul_conj_re(x, y &GaussInt) Z = x.real * y.real + x.im * y.im
 
-have fn gauss_mul_conj_im(x, y &GaussInt) Z = -x.real * y.im + x.im * y.real
+have fn gauss_mul_conj_im(x, y &GaussInt) Z = (-x.real) * y.im + x.im * y.real
 
 thm gauss_div_closed:
     ? forall x, y &GaussInt:
         (int_centered_div(gauss_mul_conj_re(x, y), gauss_norm(y)), int_centered_div(gauss_mul_conj_im(x, y), gauss_norm(y))) $in &GaussInt
-1release thm struct_member((int_centered_div(gauss_mul_conj_re(x, y), gauss_norm(y)), int_centered_div(gauss_mul_conj_im(x, y), gauss_norm(y))), &GaussInt)
+    release thm struct_member((int_centered_div(gauss_mul_conj_re(x, y), gauss_norm(y)), int_centered_div(gauss_mul_conj_im(x, y), gauss_norm(y))), &GaussInt)
 
 have fn gauss_div(x, y &GaussInt) &GaussInt = (int_centered_div(gauss_mul_conj_re(x, y), gauss_norm(y)), int_centered_div(gauss_mul_conj_im(x, y), gauss_norm(y)))
 
 have fn gauss_mod(x, y &GaussInt) &GaussInt = gauss_sub(x, gauss_mul(y, gauss_div(x, y)))
 
-# Proof debt: expanding gauss_mod reduces this to the additive ring laws already
-# represented by the trusted Gaussian commutative-ring interface above.
+# Expanding gauss_mod reduces the source identity to additive inverse
+# cancellation in the explicit Gaussian commutative-ring interface above.
+thm gauss_div_add_mod_explicit:
+    ? forall x, y &GaussInt:
+        gauss_add(gauss_mul(y, gauss_div(x, y)), gauss_mod(x, y)) = x
+    have quotient_product &GaussInt = gauss_mul(y, gauss_div(x, y))
+    gauss_mod(x, y) = gauss_sub(x, gauss_mul(y, gauss_div(x, y))) = gauss_add(x, gauss_neg(gauss_mul(y, gauss_div(x, y)))) = gauss_add(x, gauss_neg(quotient_product))
+    release thm chap2::add_neg_cancel_from_laws(&GaussInt, gauss_add, gauss_zero, gauss_neg, quotient_product)
+    release thm chap2::add_zero_from_laws(&GaussInt, gauss_add, gauss_zero, gauss_neg, x)
+    gauss_add(quotient_product, gauss_add(x, gauss_neg(quotient_product))) = gauss_add(gauss_add(quotient_product, x), gauss_neg(quotient_product)) = gauss_add(gauss_add(x, quotient_product), gauss_neg(quotient_product)) = gauss_add(x, gauss_add(quotient_product, gauss_neg(quotient_product))) = gauss_add(x, gauss_zero) = x
+    gauss_add(gauss_mul(y, gauss_div(x, y)), gauss_mod(x, y)) = gauss_add(quotient_product, gauss_add(x, gauss_neg(quotient_product))) = x
+
 thm gauss_div_add_mod:
     ? forall x, y &GaussInt:
         gauss_add(gauss_mul(y, gauss_div(x, y)), gauss_mod(x, y)) = x
-    trust gauss_add(gauss_mul(y, gauss_div(x, y)), gauss_mod(x, y)) = x
+    release thm gauss_div_add_mod_explicit(x, y)
 
 thm gauss_norm_is_natural:
     ? forall x &GaussInt:
@@ -603,14 +1033,158 @@ thm gauss_norm_is_natural:
 
 have fn gauss_rank(x &GaussInt) N = gauss_norm(x)
 
-# Proof debt: this is the geometric centered-remainder estimate. It needs the
-# centered integer bound above plus the coordinate norm calculation.
+# The source proof hides these projection facts behind simp.  Keeping them as
+# named interfaces makes the Gaussian remainder calculation inspectable.
+thm gauss_sub_re_explicit:
+    ? forall x, y &GaussInt:
+        gauss_sub(x, y).real = x.real - y.real
+    release thm gauss_add_re(x, gauss_neg(y))
+    release thm gauss_neg_re(y)
+    gauss_sub(x, y) = gauss_add(x, gauss_neg(y))
+    gauss_sub(x, y).real = gauss_add(x, gauss_neg(y)).real = x.real + gauss_neg(y).real = x.real + (-y.real) = x.real - y.real
+
+thm gauss_sub_im_explicit:
+    ? forall x, y &GaussInt:
+        gauss_sub(x, y).im = x.im - y.im
+    release thm gauss_add_im(x, gauss_neg(y))
+    release thm gauss_neg_im(y)
+    gauss_sub(x, y) = gauss_add(x, gauss_neg(y))
+    gauss_sub(x, y).im = gauss_add(x, gauss_neg(y)).im = x.im + gauss_neg(y).im = x.im + (-y.im) = x.im - y.im
+
+thm gauss_div_re_from_result:
+    ? forall x, y, result &GaussInt:
+        result = gauss_div(x, y)
+        =>:
+            result.real = int_centered_div(gauss_mul_conj_re(x, y), gauss_norm(y))
+    gauss_div(x, y) = (int_centered_div(gauss_mul_conj_re(x, y), gauss_norm(y)), int_centered_div(gauss_mul_conj_im(x, y), gauss_norm(y)))
+    result = gauss_div(x, y) = (int_centered_div(gauss_mul_conj_re(x, y), gauss_norm(y)), int_centered_div(gauss_mul_conj_im(x, y), gauss_norm(y)))
+    result.real = result[1] = int_centered_div(gauss_mul_conj_re(x, y), gauss_norm(y))
+
+thm gauss_div_re_explicit:
+    ? forall x, y &GaussInt:
+        gauss_div(x, y).real = int_centered_div(gauss_mul_conj_re(x, y), gauss_norm(y))
+    release thm gauss_div_re_from_result(x, y, gauss_div(x, y))
+
+thm gauss_div_im_from_result:
+    ? forall x, y, result &GaussInt:
+        result = gauss_div(x, y)
+        =>:
+            result.im = int_centered_div(gauss_mul_conj_im(x, y), gauss_norm(y))
+    gauss_div(x, y) = (int_centered_div(gauss_mul_conj_re(x, y), gauss_norm(y)), int_centered_div(gauss_mul_conj_im(x, y), gauss_norm(y)))
+    result = gauss_div(x, y) = (int_centered_div(gauss_mul_conj_re(x, y), gauss_norm(y)), int_centered_div(gauss_mul_conj_im(x, y), gauss_norm(y)))
+    result.im = result[2] = int_centered_div(gauss_mul_conj_im(x, y), gauss_norm(y))
+
+thm gauss_div_im_explicit:
+    ? forall x, y &GaussInt:
+        gauss_div(x, y).im = int_centered_div(gauss_mul_conj_im(x, y), gauss_norm(y))
+    release thm gauss_div_im_from_result(x, y, gauss_div(x, y))
+
+thm gauss_mod_re_explicit:
+    ? forall x, y &GaussInt:
+        gauss_mod(x, y).real = x.real - (y.real * gauss_div(x, y).real - y.im * gauss_div(x, y).im)
+    release thm gauss_sub_re_explicit(x, gauss_mul(y, gauss_div(x, y)))
+    release thm gauss_mul_re(y, gauss_div(x, y))
+    gauss_mod(x, y) = gauss_sub(x, gauss_mul(y, gauss_div(x, y)))
+    gauss_mod(x, y).real = gauss_sub(x, gauss_mul(y, gauss_div(x, y))).real = x.real - gauss_mul(y, gauss_div(x, y)).real = x.real - (y.real * gauss_div(x, y).real - y.im * gauss_div(x, y).im)
+
+thm gauss_mod_im_explicit:
+    ? forall x, y &GaussInt:
+        gauss_mod(x, y).im = x.im - (y.real * gauss_div(x, y).im + y.im * gauss_div(x, y).real)
+    release thm gauss_sub_im_explicit(x, gauss_mul(y, gauss_div(x, y)))
+    release thm gauss_mul_im(y, gauss_div(x, y))
+    gauss_mod(x, y) = gauss_sub(x, gauss_mul(y, gauss_div(x, y)))
+    gauss_mod(x, y).im = gauss_sub(x, gauss_mul(y, gauss_div(x, y))).im = x.im - gauss_mul(y, gauss_div(x, y)).im = x.im - (y.real * gauss_div(x, y).im + y.im * gauss_div(x, y).real)
+
+# Multiplication by the conjugate turns the Gaussian remainder into the two
+# centered integer remainders used to choose the quotient coordinates.
+thm gauss_mod_mul_conj_re_explicit:
+    ? forall x, y &GaussInt:
+        gauss_mul(gauss_mod(x, y), gauss_conj(y)).real = int_centered_mod(gauss_mul_conj_re(x, y), gauss_norm(y))
+    release thm gauss_mul_re(gauss_mod(x, y), gauss_conj(y))
+    release thm gauss_conj_re(y)
+    release thm gauss_conj_im(y)
+    release thm gauss_mod_re_explicit(x, y)
+    release thm gauss_mod_im_explicit(x, y)
+    release thm gauss_div_re_explicit(x, y)
+    gauss_mul(gauss_mod(x, y), gauss_conj(y)).real = gauss_mod(x, y).real * gauss_conj(y).real - gauss_mod(x, y).im * gauss_conj(y).im = gauss_mod(x, y).real * y.real - gauss_mod(x, y).im * gauss_conj(y).im = gauss_mod(x, y).real * y.real - gauss_mod(x, y).im * (-y.im)
+    gauss_mod(x, y).real * y.real - gauss_mod(x, y).im * (-y.im) = (x.real - (y.real * gauss_div(x, y).real - y.im * gauss_div(x, y).im)) * y.real - gauss_mod(x, y).im * (-y.im) = (x.real - (y.real * gauss_div(x, y).real - y.im * gauss_div(x, y).im)) * y.real - (x.im - (y.real * gauss_div(x, y).im + y.im * gauss_div(x, y).real)) * (-y.im)
+    gauss_mul_conj_re(x, y) = x.real * y.real + x.im * y.im
+    gauss_norm(y) = y.real^2 + y.im^2
+    (x.real - (y.real * gauss_div(x, y).real - y.im * gauss_div(x, y).im)) * y.real - (x.im - (y.real * gauss_div(x, y).im + y.im * gauss_div(x, y).real)) * (-y.im) = (x.real * y.real + x.im * y.im) - (y.real^2 + y.im^2) * gauss_div(x, y).real
+    (x.real * y.real + x.im * y.im) - (y.real^2 + y.im^2) * gauss_div(x, y).real = gauss_mul_conj_re(x, y) - gauss_norm(y) * gauss_div(x, y).real = gauss_mul_conj_re(x, y) - gauss_norm(y) * int_centered_div(gauss_mul_conj_re(x, y), gauss_norm(y))
+    release thm int_centered_div_add_mod(gauss_mul_conj_re(x, y), gauss_norm(y))
+    gauss_mul_conj_re(x, y) = gauss_norm(y) * int_centered_div(gauss_mul_conj_re(x, y), gauss_norm(y)) + int_centered_mod(gauss_mul_conj_re(x, y), gauss_norm(y))
+    gauss_mul_conj_re(x, y) - gauss_norm(y) * int_centered_div(gauss_mul_conj_re(x, y), gauss_norm(y)) = (gauss_norm(y) * int_centered_div(gauss_mul_conj_re(x, y), gauss_norm(y)) + int_centered_mod(gauss_mul_conj_re(x, y), gauss_norm(y))) - gauss_norm(y) * int_centered_div(gauss_mul_conj_re(x, y), gauss_norm(y)) = int_centered_mod(gauss_mul_conj_re(x, y), gauss_norm(y))
+
+thm gauss_mod_mul_conj_im_explicit:
+    ? forall x, y &GaussInt:
+        gauss_mul(gauss_mod(x, y), gauss_conj(y)).im = int_centered_mod(gauss_mul_conj_im(x, y), gauss_norm(y))
+    release thm gauss_mul_im(gauss_mod(x, y), gauss_conj(y))
+    release thm gauss_conj_re(y)
+    release thm gauss_conj_im(y)
+    release thm gauss_mod_re_explicit(x, y)
+    release thm gauss_mod_im_explicit(x, y)
+    release thm gauss_div_im_explicit(x, y)
+    gauss_mul(gauss_mod(x, y), gauss_conj(y)).im = gauss_mod(x, y).real * gauss_conj(y).im + gauss_mod(x, y).im * gauss_conj(y).real = gauss_mod(x, y).real * (-y.im) + gauss_mod(x, y).im * gauss_conj(y).real = gauss_mod(x, y).real * (-y.im) + gauss_mod(x, y).im * y.real
+    gauss_mod(x, y).real * (-y.im) + gauss_mod(x, y).im * y.real = (x.real - (y.real * gauss_div(x, y).real - y.im * gauss_div(x, y).im)) * (-y.im) + gauss_mod(x, y).im * y.real = (x.real - (y.real * gauss_div(x, y).real - y.im * gauss_div(x, y).im)) * (-y.im) + (x.im - (y.real * gauss_div(x, y).im + y.im * gauss_div(x, y).real)) * y.real
+    gauss_mul_conj_im(x, y) = (-x.real) * y.im + x.im * y.real
+    gauss_norm(y) = y.real^2 + y.im^2
+    (x.real - (y.real * gauss_div(x, y).real - y.im * gauss_div(x, y).im)) * (-y.im) + (x.im - (y.real * gauss_div(x, y).im + y.im * gauss_div(x, y).real)) * y.real = ((-x.real) * y.im + x.im * y.real) - (y.real^2 + y.im^2) * gauss_div(x, y).im
+    ((-x.real) * y.im + x.im * y.real) - (y.real^2 + y.im^2) * gauss_div(x, y).im = gauss_mul_conj_im(x, y) - gauss_norm(y) * gauss_div(x, y).im = gauss_mul_conj_im(x, y) - gauss_norm(y) * int_centered_div(gauss_mul_conj_im(x, y), gauss_norm(y))
+    release thm int_centered_div_add_mod(gauss_mul_conj_im(x, y), gauss_norm(y))
+    gauss_mul_conj_im(x, y) = gauss_norm(y) * int_centered_div(gauss_mul_conj_im(x, y), gauss_norm(y)) + int_centered_mod(gauss_mul_conj_im(x, y), gauss_norm(y))
+    gauss_mul_conj_im(x, y) - gauss_norm(y) * int_centered_div(gauss_mul_conj_im(x, y), gauss_norm(y)) = (gauss_norm(y) * int_centered_div(gauss_mul_conj_im(x, y), gauss_norm(y)) + int_centered_mod(gauss_mul_conj_im(x, y), gauss_norm(y))) - gauss_norm(y) * int_centered_div(gauss_mul_conj_im(x, y), gauss_norm(y)) = int_centered_mod(gauss_mul_conj_im(x, y), gauss_norm(y))
+
+# Each centered coordinate has size at most half the positive divisor norm.
+# The sum of the two coordinate squares is therefore strictly below the square
+# of that norm; multiplicativity and positive-factor cancellation finish the
+# Euclidean remainder estimate.
+thm gauss_norm_mod_lt_explicit:
+    ? forall x, y &GaussInt:
+        y != gauss_zero
+        =>:
+            gauss_rank(gauss_mod(x, y)) < gauss_rank(y)
+    have norm_y_value Z = gauss_norm(y)
+    have real_remainder_value Z = int_centered_mod(gauss_mul_conj_re(x, y), gauss_norm(y))
+    have imag_remainder_value Z = int_centered_mod(gauss_mul_conj_im(x, y), gauss_norm(y))
+    have scaled_remainder &GaussInt = gauss_mul(gauss_mod(x, y), gauss_conj(y))
+    release thm gauss_norm_pos_reverse(y)
+    gauss_norm(y) > 0
+    norm_y_value = gauss_norm(y) > 0
+    release thm int_centered_mod_abs_le(gauss_mul_conj_re(x, y), gauss_norm(y))
+    release thm int_centered_mod_abs_le(gauss_mul_conj_im(x, y), gauss_norm(y))
+    abs(real_remainder_value) <= norm_y_value / 2
+    abs(imag_remainder_value) <= norm_y_value / 2
+    0 <= abs(real_remainder_value)
+    0 <= abs(imag_remainder_value)
+    0 < norm_y_value / 2
+    abs(real_remainder_value) * abs(real_remainder_value) <= (norm_y_value / 2) * abs(real_remainder_value) <= (norm_y_value / 2) * (norm_y_value / 2)
+    abs(imag_remainder_value) * abs(imag_remainder_value) <= (norm_y_value / 2) * abs(imag_remainder_value) <= (norm_y_value / 2) * (norm_y_value / 2)
+    real_remainder_value^2 = abs(real_remainder_value)^2 <= (norm_y_value / 2)^2
+    imag_remainder_value^2 = abs(imag_remainder_value)^2 <= (norm_y_value / 2)^2
+    release thm gauss_mod_mul_conj_re_explicit(x, y)
+    release thm gauss_mod_mul_conj_im_explicit(x, y)
+    scaled_remainder.real = gauss_mul(gauss_mod(x, y), gauss_conj(y)).real = real_remainder_value
+    scaled_remainder.im = gauss_mul(gauss_mod(x, y), gauss_conj(y)).im = imag_remainder_value
+    gauss_norm(scaled_remainder) = scaled_remainder.real^2 + scaled_remainder.im^2 = real_remainder_value^2 + scaled_remainder.im^2 = real_remainder_value^2 + imag_remainder_value^2 <= (norm_y_value / 2)^2 + (norm_y_value / 2)^2 = norm_y_value^2 / 2
+    norm_y_value^2 > 0
+    1 / 2 < 1
+    norm_y_value^2 / 2 = norm_y_value^2 * (1 / 2) < norm_y_value^2 * 1 = norm_y_value^2
+    release thm gauss_norm_mul(gauss_mod(x, y), gauss_conj(y))
+    release thm gauss_norm_conj(y)
+    gauss_norm(scaled_remainder) = gauss_norm(gauss_mul(gauss_mod(x, y), gauss_conj(y))) = gauss_norm(gauss_mod(x, y)) * gauss_norm(gauss_conj(y)) = gauss_norm(gauss_mod(x, y)) * gauss_norm(y) = gauss_norm(gauss_mod(x, y)) * norm_y_value
+    gauss_norm(scaled_remainder) <= norm_y_value^2 / 2 < norm_y_value^2
+    gauss_norm(gauss_mod(x, y)) * norm_y_value = gauss_norm(scaled_remainder) < norm_y_value^2 = norm_y_value * norm_y_value
+    (gauss_norm(gauss_mod(x, y)) * norm_y_value) / norm_y_value < (norm_y_value * norm_y_value) / norm_y_value
+    gauss_norm(gauss_mod(x, y)) = (gauss_norm(gauss_mod(x, y)) * norm_y_value) / norm_y_value < (norm_y_value * norm_y_value) / norm_y_value = norm_y_value = gauss_norm(y)
+    gauss_rank(gauss_mod(x, y)) = gauss_norm(gauss_mod(x, y)) < gauss_norm(y) = gauss_rank(y)
+
 thm gauss_norm_mod_lt:
     ? forall x, y &GaussInt:
         y != gauss_zero
         =>:
             gauss_rank(gauss_mod(x, y)) < gauss_rank(y)
-    trust gauss_rank(gauss_mod(x, y)) < gauss_rank(y)
+    release thm gauss_norm_mod_lt_explicit(x, y)
 
 thm gauss_mul_left_not_rank_lt:
     ? forall x, y &GaussInt:
@@ -649,9 +1223,28 @@ struct EuclideanDomain<s nonempty_set>:
     <=>:
         $is_euclidean_domain(s, add, zero, neg, mul, one, quotient, remainder, rank)
 
-# The callable source instance is retained. Its exact law package depends only
-# on the explicitly marked proof debts above.
-trust $is_euclidean_domain(&GaussInt, gauss_add, gauss_zero, gauss_neg, gauss_mul, gauss_one, gauss_div, gauss_mod, gauss_rank)
+# The callable source instance is assembled only from the explicit interfaces
+# above, so its complete law package remains visible inside this chapter.
+thm gaussian_integer_euclidean_domain_laws:
+    ? forall gauss_euclidean_seed &GaussInt:
+        $is_euclidean_domain(&GaussInt, gauss_add, gauss_zero, gauss_neg, gauss_mul, gauss_one, gauss_div, gauss_mod, gauss_rank)
+    release thm gaussian_integer_commutative_ring_laws(gauss_euclidean_seed)
+    claim:
+        ? forall x, y &GaussInt:
+            gauss_add(gauss_mul(y, gauss_div(x, y)), gauss_mod(x, y)) = x
+        release thm gauss_div_add_mod(x, y)
+    claim:
+        ? forall x, y &GaussInt:
+            y != gauss_zero
+            =>:
+                gauss_rank(gauss_mod(x, y)) < gauss_rank(y)
+                gauss_rank(gauss_mul(x, y)) >= gauss_rank(x)
+        release thm gauss_norm_mod_lt(x, y)
+        release thm gauss_mul_left_not_rank_lt(x, y)
+    by def:
+        ? $is_euclidean_domain(&GaussInt, gauss_add, gauss_zero, gauss_neg, gauss_mul, gauss_one, gauss_div, gauss_mod, gauss_rank)
+
+release thm gaussian_integer_euclidean_domain_laws(gauss_zero)
 gauss_add $in fn(x, y &GaussInt) &GaussInt
 gauss_zero $in &GaussInt
 gauss_neg $in fn(x &GaussInt) &GaussInt
@@ -660,8 +1253,8 @@ gauss_one $in &GaussInt
 gauss_div $in fn(x, y &GaussInt) &GaussInt
 gauss_mod $in fn(x, y &GaussInt) &GaussInt
 gauss_rank $in fn(x &GaussInt) N
-1release thm cart_member_from_coordinates((gauss_add, gauss_zero, gauss_neg, gauss_mul, gauss_one, gauss_div, gauss_mod, gauss_rank), cart(fn(x, y &GaussInt) &GaussInt, &GaussInt, fn(x &GaussInt) &GaussInt, fn(x, y &GaussInt) &GaussInt, &GaussInt, fn(x, y &GaussInt) &GaussInt, fn(x, y &GaussInt) &GaussInt, fn(x &GaussInt) N))
-1release thm struct_member((gauss_add, gauss_zero, gauss_neg, gauss_mul, gauss_one, gauss_div, gauss_mod, gauss_rank), &EuclideanDomain<&GaussInt>)
+release thm cart_member_from_coordinates((gauss_add, gauss_zero, gauss_neg, gauss_mul, gauss_one, gauss_div, gauss_mod, gauss_rank), cart(fn(x, y &GaussInt) &GaussInt, &GaussInt, fn(x &GaussInt) &GaussInt, fn(x, y &GaussInt) &GaussInt, &GaussInt, fn(x, y &GaussInt) &GaussInt, fn(x, y &GaussInt) &GaussInt, fn(x &GaussInt) N))
+release thm struct_member((gauss_add, gauss_zero, gauss_neg, gauss_mul, gauss_one, gauss_div, gauss_mod, gauss_rank), &EuclideanDomain<&GaussInt>)
 have gaussian_integer_euclidean_domain &EuclideanDomain<&GaussInt> = (gauss_add, gauss_zero, gauss_neg, gauss_mul, gauss_one, gauss_div, gauss_mod, gauss_rank)
 
 # The final irreducible_iff_prime line is an unnamed API demonstration rather

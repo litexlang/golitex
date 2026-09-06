@@ -44,7 +44,9 @@ thm upper_bound_of_fn_add:
         $is_upper_bound_of_fn(g, b)
         =>:
             $is_upper_bound_of_fn(fn(x R) R {f(x) + g(x)}, a + b)
-    forall x R:
+    claim:
+        ? forall x R:
+            f(x) + g(x) <= a + b
         f(x) <= a
         g(x) <= b
         f(x) + g(x) <= a + b
@@ -57,7 +59,9 @@ thm lower_bound_of_fn_add:
         $is_lower_bound_of_fn(g, b)
         =>:
             $is_lower_bound_of_fn(fn(x R) R {f(x) + g(x)}, a + b)
-    forall x R:
+    claim:
+        ? forall x R:
+            a + b <= f(x) + g(x)
         a <= f(x)
         b <= g(x)
         a + b <= f(x) + g(x)
@@ -70,7 +74,9 @@ thm nonnegative_fn_product:
         $is_lower_bound_of_fn(g, 0)
         =>:
             $is_lower_bound_of_fn(fn(x R) R {f(x) * g(x)}, 0)
-    forall x R:
+    claim:
+        ? forall x R:
+            0 <= f(x) * g(x)
         0 <= f(x)
         0 <= g(x)
         0 <= f(x) * g(x)
@@ -160,7 +166,9 @@ thm upper_bound_of_fn_add_by_relation:
         $is_upper_bound_of_fn_by_relation(D, A, le_rel, g, b)
         =>:
             $is_upper_bound_of_fn_by_relation(D, A, le_rel, fn(x D) A {add(f(x), g(x))}, add(a, b))
-    forall x D:
+    claim:
+        ? forall x D:
+            $order_holds(A, le_rel, add(f(x), g(x)), add(a, b))
         $order_holds(A, le_rel, f(x), a)
         $order_holds(A, le_rel, g(x), b)
         $order_holds(A, le_rel, add(f(x), g(x)), add(a, b))
@@ -173,7 +181,7 @@ prop is_even_fn(f fn(x R) R):
 
 prop is_odd_fn(f fn(x R) R):
     forall x R:
-        f(x) = -f(-x)
+        f(x) = (-f(-x))
 
 # The sum of two even functions is even.
 thm even_fn_add:
@@ -182,7 +190,9 @@ thm even_fn_add:
         $is_even_fn(g)
         =>:
             $is_even_fn(fn(x R) R {f(x) + g(x)})
-    forall x R:
+    claim:
+        ? forall x R:
+            fn(z R) R {f(z) + g(z)}(x) = fn(z R) R {f(z) + g(z)}(-x)
         f(x) = f(-x)
         g(x) = g(-x)
         fn(z R) R {f(z) + g(z)}(x) = fn(z R) R {f(z) + g(z)}(-x)
@@ -195,9 +205,11 @@ thm odd_fn_mul_odd_fn:
         $is_odd_fn(g)
         =>:
             $is_even_fn(fn(x R) R {f(x) * g(x)})
-    forall x R:
-        f(x) = -f(-x)
-        g(x) = -g(-x)
+    claim:
+        ? forall x R:
+            fn(z R) R {f(z) * g(z)}(x) = fn(z R) R {f(z) * g(z)}(-x)
+        f(x) = (-f(-x))
+        g(x) = (-g(-x))
         f(x) * g(x) = (-f(-x)) * (-g(-x)) = f(-x) * g(-x)
         fn(z R) R {f(z) * g(z)}(x) = fn(z R) R {f(z) * g(z)}(-x)
     by def $is_even_fn(fn(x R) R {f(x) * g(x)})
@@ -209,9 +221,11 @@ thm even_fn_mul_odd_fn:
         $is_odd_fn(g)
         =>:
             $is_odd_fn(fn(x R) R {f(x) * g(x)})
-    forall x R:
+    claim:
+        ? forall x R:
+            fn(z R) R {f(z) * g(z)}(x) = -(fn(z R) R {f(z) * g(z)}(-x))
         f(x) = f(-x)
-        g(x) = -g(-x)
+        g(x) = (-g(-x))
         fn(z R) R {f(z) * g(z)}(x) = f(x) * g(x)
         fn(z R) R {f(z) * g(z)}(-x) = f(-x) * g(-x)
         fn(z R) R {f(z) * g(z)}(x) = f(x) * g(x) = f(-x) * (-g(-x)) = -(f(-x) * g(-x)) = -(fn(z R) R {f(z) * g(z)}(-x))
@@ -224,10 +238,12 @@ thm even_fn_comp_odd_fn:
         $is_odd_fn(g)
         =>:
             $is_even_fn(fn(x R) R {f(g(x))})
-    forall x R:
+    claim:
+        ? forall x R:
+            fn(z R) R {f(g(z))}(x) = fn(z R) R {f(g(z))}(-x)
         f(g(x)) = f(-g(x))
-        g(x) = -g(-x)
-        -g(x) = -(-g(-x)) = g(-x)
+        g(x) = (-g(-x))
+        (-g(x)) = -(-g(-x)) = g(-x)
         f(-g(x)) = f(g(-x))
         f(g(x)) = f(-g(x)) = f(g(-x))
         fn(z R) R {f(g(z))}(x) = fn(z R) R {f(g(z))}(-x)
@@ -245,7 +261,9 @@ thm subset_trans:
         S $subset T
         =>:
             R0 $subset T
-    forall x R0:
+    claim:
+        ? forall x R0:
+            x $in T
         x $in S
         x $in T
     by def R0 $subset T
@@ -264,7 +282,9 @@ thm upper_bound_of_set_mono:
             $is_upper_bound_of_set(A, le_rel, S, b)
     $is_partial_order_relation(A, le_rel)
     $is_preorder_relation(A, le_rel)
-    forall x S:
+    claim:
+        ? forall x S:
+            $order_holds(A, le_rel, x, b)
         $order_holds(A, le_rel, x, a)
         $order_holds(A, le_rel, a, b)
         $order_holds(A, le_rel, x, b)
@@ -290,7 +310,7 @@ thm has_upper_bound_add:
             $has_upper_bound(fn(x R) R {f(x) + g(x)})
     obtain a from $has_upper_bound(f)
     obtain b from $has_upper_bound(g)
-1release thm upper_bound_of_fn_add(f, g, a, b)
+    release thm upper_bound_of_fn_add(f, g, a, b)
     witness $has_upper_bound(fn(x R) R {f(x) + g(x)}) from a + b
 
 thm has_lower_bound_add:
@@ -301,7 +321,7 @@ thm has_lower_bound_add:
             $has_lower_bound(fn(x R) R {f(x) + g(x)})
     obtain a from $has_lower_bound(f)
     obtain b from $has_lower_bound(g)
-1release thm lower_bound_of_fn_add(f, g, a, b)
+    release thm lower_bound_of_fn_add(f, g, a, b)
     witness $has_lower_bound(fn(x R) R {f(x) + g(x)}) from a + b
 
 # Source definition SumOfSquares. The carrier and its operations are explicit,
@@ -321,7 +341,67 @@ thm sum_of_two_squares_mul:
         $is_sum_of_two_squares(A, add, mul, w)
         =>:
             $is_sum_of_two_squares(A, add, mul, mul(z, w))
-    trust $is_sum_of_two_squares(A, add, mul, mul(z, w))
+    obtain a, b from $is_sum_of_two_squares(A, add, mul, z)
+    obtain c, d from $is_sum_of_two_squares(A, add, mul, w)
+    have ac A = mul(a, c)
+    have bd A = mul(b, d)
+    have ad A = mul(a, d)
+    have bc A = mul(b, c)
+    have p A = add(ac, neg(bd))
+    have q A = add(ad, bc)
+    have cross A = mul(ac, bd)
+    release thm chap2::mul_neg_right_structure(A, add, zero, neg, mul, one, ac, bd)
+    release thm chap2::neg_mul_left_structure(A, add, zero, neg, mul, one, bd, ac)
+    release thm chap2::neg_mul_neg_structure(A, add, zero, neg, mul, one, bd, bd)
+    mul(bd, ac) = mul(ac, bd) = cross
+    mul(neg(bd), ac) = neg(mul(bd, ac)) = neg(mul(ac, bd)) = neg(cross)
+    mul(ac, neg(bd)) = neg(mul(ac, bd)) = neg(cross)
+    mul(neg(bd), neg(bd)) = mul(bd, bd)
+    release thm chap2::commutative_mul_reorder_four_structure(A, mul, a, c, a, c)
+    release thm chap2::commutative_mul_reorder_four_structure(A, mul, a, d, a, d)
+    release thm chap2::commutative_mul_reorder_four_structure(A, mul, b, c, b, c)
+    release thm chap2::commutative_mul_reorder_four_structure(A, mul, b, d, b, d)
+    mul(ac, ac) = mul(mul(a, c), ac) = mul(mul(a, c), mul(a, c)) = mul(mul(a, a), mul(c, c))
+    mul(ad, ad) = mul(mul(a, d), ad) = mul(mul(a, d), mul(a, d)) = mul(mul(a, a), mul(d, d))
+    mul(bc, bc) = mul(mul(b, c), bc) = mul(mul(b, c), mul(b, c)) = mul(mul(b, b), mul(c, c))
+    mul(bd, bd) = mul(mul(b, d), bd) = mul(mul(b, d), mul(b, d)) = mul(mul(b, b), mul(d, d))
+    release thm chap2::commutative_mul_reorder_four_structure(A, mul, a, d, b, c)
+    release thm chap2::commutative_mul_reorder_four_structure(A, mul, a, c, b, d)
+    mul(d, c) = mul(c, d)
+    mul(mul(a, b), mul(d, c)) = mul(mul(a, b), mul(c, d))
+    mul(mul(a, c), mul(b, d)) = mul(ac, mul(b, d)) = mul(ac, bd) = cross
+    mul(ad, bc) = mul(mul(a, d), mul(b, c)) = mul(mul(a, b), mul(d, c)) = mul(mul(a, b), mul(c, d)) = mul(mul(a, c), mul(b, d)) = cross
+    mul(bc, ad) = mul(ad, bc) = cross
+    mul(add(ac, neg(bd)), ac) = add(mul(ac, ac), mul(neg(bd), ac))
+    mul(add(ac, neg(bd)), neg(bd)) = add(mul(ac, neg(bd)), mul(neg(bd), neg(bd)))
+    add(mul(ac, ac), mul(neg(bd), ac)) = add(mul(ac, ac), neg(cross))
+    add(mul(ac, neg(bd)), mul(neg(bd), neg(bd))) = add(neg(cross), mul(bd, bd))
+    add(mul(add(ac, neg(bd)), ac), mul(add(ac, neg(bd)), neg(bd))) = add(add(mul(ac, ac), mul(neg(bd), ac)), mul(add(ac, neg(bd)), neg(bd))) = add(add(mul(ac, ac), mul(neg(bd), ac)), add(mul(ac, neg(bd)), mul(neg(bd), neg(bd)))) = add(add(mul(ac, ac), neg(cross)), add(mul(ac, neg(bd)), mul(neg(bd), neg(bd)))) = add(add(mul(ac, ac), neg(cross)), add(neg(cross), mul(bd, bd)))
+    mul(p, p) = mul(add(ac, neg(bd)), add(ac, neg(bd))) = add(mul(add(ac, neg(bd)), ac), mul(add(ac, neg(bd)), neg(bd))) = add(add(mul(ac, ac), neg(cross)), add(neg(cross), mul(bd, bd)))
+    mul(add(ad, bc), ad) = add(mul(ad, ad), mul(bc, ad))
+    mul(add(ad, bc), bc) = add(mul(ad, bc), mul(bc, bc))
+    add(mul(ad, ad), mul(bc, ad)) = add(mul(ad, ad), cross)
+    add(mul(ad, bc), mul(bc, bc)) = add(cross, mul(bc, bc))
+    add(mul(add(ad, bc), ad), mul(add(ad, bc), bc)) = add(add(mul(ad, ad), mul(bc, ad)), mul(add(ad, bc), bc)) = add(add(mul(ad, ad), mul(bc, ad)), add(mul(ad, bc), mul(bc, bc))) = add(add(mul(ad, ad), cross), add(mul(ad, bc), mul(bc, bc))) = add(add(mul(ad, ad), cross), add(cross, mul(bc, bc)))
+    mul(q, q) = mul(add(ad, bc), add(ad, bc)) = add(mul(add(ad, bc), ad), mul(add(ad, bc), bc)) = add(add(mul(ad, ad), cross), add(cross, mul(bc, bc)))
+    release thm chap2::add_reorder_four_structure(A, add, zero, neg, add(mul(ac, ac), neg(cross)), add(neg(cross), mul(bd, bd)), add(mul(ad, ad), cross), add(cross, mul(bc, bc)))
+    release thm chap2::add_reorder_four_structure(A, add, zero, neg, mul(ac, ac), neg(cross), mul(ad, ad), cross)
+    release thm chap2::add_reorder_four_structure(A, add, zero, neg, neg(cross), mul(bd, bd), cross, mul(bc, bc))
+    add(neg(cross), cross) = zero
+    release thm chap2::add_zero_from_laws(A, add, zero, neg, add(mul(ac, ac), mul(ad, ad)))
+    add(add(mul(ac, ac), neg(cross)), add(mul(ad, ad), cross)) = add(add(mul(ac, ac), mul(ad, ad)), add(neg(cross), cross)) = add(add(mul(ac, ac), mul(ad, ad)), zero) = add(mul(ac, ac), mul(ad, ad))
+    add(add(neg(cross), mul(bd, bd)), add(cross, mul(bc, bc))) = add(add(neg(cross), cross), add(mul(bd, bd), mul(bc, bc))) = add(zero, add(mul(bd, bd), mul(bc, bc))) = add(mul(bd, bd), mul(bc, bc))
+    add(mul(p, p), mul(q, q)) = add(add(add(mul(ac, ac), neg(cross)), add(neg(cross), mul(bd, bd))), add(add(mul(ad, ad), cross), add(cross, mul(bc, bc)))) = add(add(add(mul(ac, ac), neg(cross)), add(mul(ad, ad), cross)), add(add(neg(cross), mul(bd, bd)), add(cross, mul(bc, bc)))) = add(add(mul(ac, ac), mul(ad, ad)), add(mul(bd, bd), mul(bc, bc)))
+    mul(add(mul(a, a), mul(b, b)), mul(c, c)) = add(mul(mul(a, a), mul(c, c)), mul(mul(b, b), mul(c, c)))
+    mul(add(mul(a, a), mul(b, b)), mul(d, d)) = add(mul(mul(a, a), mul(d, d)), mul(mul(b, b), mul(d, d)))
+    add(mul(add(mul(a, a), mul(b, b)), mul(c, c)), mul(add(mul(a, a), mul(b, b)), mul(d, d))) = add(add(mul(mul(a, a), mul(c, c)), mul(mul(b, b), mul(c, c))), mul(add(mul(a, a), mul(b, b)), mul(d, d))) = add(add(mul(mul(a, a), mul(c, c)), mul(mul(b, b), mul(c, c))), add(mul(mul(a, a), mul(d, d)), mul(mul(b, b), mul(d, d))))
+    mul(z, w) = mul(add(mul(a, a), mul(b, b)), add(mul(c, c), mul(d, d))) = add(mul(add(mul(a, a), mul(b, b)), mul(c, c)), mul(add(mul(a, a), mul(b, b)), mul(d, d))) = add(add(mul(mul(a, a), mul(c, c)), mul(mul(b, b), mul(c, c))), add(mul(mul(a, a), mul(d, d)), mul(mul(b, b), mul(d, d))))
+    release thm chap2::add_reorder_four_structure(A, add, zero, neg, mul(mul(a, a), mul(c, c)), mul(mul(b, b), mul(c, c)), mul(mul(a, a), mul(d, d)), mul(mul(b, b), mul(d, d)))
+    mul(z, w) = add(add(mul(mul(a, a), mul(c, c)), mul(mul(a, a), mul(d, d))), add(mul(mul(b, b), mul(c, c)), mul(mul(b, b), mul(d, d)))) = add(add(mul(ac, ac), mul(ad, ad)), add(mul(bc, bc), mul(bd, bd)))
+    add(mul(bc, bc), mul(bd, bd)) = add(mul(bd, bd), mul(bc, bc))
+    add(add(mul(ac, ac), mul(ad, ad)), add(mul(bc, bc), mul(bd, bd))) = add(add(mul(ac, ac), mul(ad, ad)), add(mul(bd, bd), mul(bc, bc)))
+    mul(z, w) = add(add(mul(ac, ac), mul(ad, ad)), add(mul(bc, bc), mul(bd, bd))) = add(add(mul(ac, ac), mul(ad, ad)), add(mul(bd, bd), mul(bc, bc))) = add(mul(p, p), mul(q, q))
+    witness $is_sum_of_two_squares(A, add, mul, mul(z, w)) from p, q
 
 # 3.4 Conjunction and Iff
 
@@ -406,7 +486,7 @@ thm le_abs_self:
 
 thm neg_le_abs_self:
     ? forall x R:
-        -x <= abs(x)
+        (-x) <= abs(x)
 
 thm abs_add_le:
     ? forall x, y R:
@@ -417,91 +497,91 @@ thm lt_abs_forward:
     ? forall x, y R:
         x < abs(y)
         =>:
-            x < y or x < -y
+            x < y or x < (-y)
     claim:
         ? forall:
             x < abs(y)
             =>:
-                x < y or x < -y
+                x < y or x < (-y)
         by cases:
-            ? x < y or x < -y
+            ? x < y or x < (-y)
             case y >= 0:
                 abs(y) = y
                 x < y
-                x < y or x < -y
+                x < y or x < (-y)
             case y < 0:
-                abs(y) = -y
-                x < -y
-                x < y or x < -y
+                abs(y) = (-y)
+                x < (-y)
+                x < y or x < (-y)
     claim:
         ? forall:
-            x < y or x < -y
+            x < y or x < (-y)
             =>:
                 x < abs(y)
         by cases:
             ? x < abs(y)
             case x < y:
-1release thm le_abs_self(y)
+                release thm le_abs_self(y)
                 x < y <= abs(y)
-            case x < -y:
-1release thm neg_le_abs_self(y)
-                x < -y <= abs(y)
+            case x < (-y):
+                release thm neg_le_abs_self(y)
+                x < (-y) <= abs(y)
 
 thm lt_abs_reverse:
     ? forall x, y R:
-        x < y or x < -y
+        x < y or x < (-y)
         =>:
             x < abs(y)
     by cases:
         ? x < abs(y)
         case x < y:
-1release thm le_abs_self(y)
+            release thm le_abs_self(y)
             x < y <= abs(y)
-        case x < -y:
-1release thm neg_le_abs_self(y)
-            x < -y <= abs(y)
+        case x < (-y):
+            release thm neg_le_abs_self(y)
+            x < (-y) <= abs(y)
 
 # Source theorem abs_lt, expressed by two direction facts.
 thm abs_lt_forward:
     ? forall x, y R:
         abs(x) < y
         =>:
-            -y < x and x < y
+            (-y) < x and x < y
     claim:
         ? forall:
             abs(x) < y
             =>:
-                -y < x and x < y
+                (-y) < x and x < y
         x <= abs(x) < y
-        -x <= abs(x) < y
-        -y < x
+        (-x) <= abs(x) < y
+        (-y) < x
     claim:
         ? forall:
-            -y < x and x < y
+            (-y) < x and x < y
             =>:
                 abs(x) < y
-        -y < x
+        (-y) < x
         x < y
         by cases:
             ? abs(x) < y
             case x >= 0:
                 abs(x) = x < y
             case x < 0:
-                abs(x) = -x < y
+                abs(x) = (-x) < y
 
 thm abs_lt_reverse:
     ? forall x, y R:
-        -y < x and x < y
+        (-y) < x and x < y
         =>:
             abs(x) < y
-    -y < x
+    (-y) < x
     x < y
     by cases:
         ? abs(x) < y
         case x >= 0:
             abs(x) = x < y
         case x < 0:
-            abs(x) = -x < y
+            abs(x) = (-x) < y
 
 # 3.6 Sequences and Convergence
 
@@ -533,14 +613,16 @@ thm converges_to_congr:
             exist N0 N st {$_is_eventually_close(t, b, epsilon, N0)}
         obtain N0 from exist K N st {$_is_eventually_close(s, a, epsilon, K)}
         witness exist K N st {$_is_eventually_close(t, b, epsilon, K)} from N0:
-            forall n N:
-                n >= N0
-                =>:
-                    abs(s(n) - a) < epsilon
-                    t(n) = s(n)
-                    b = a
-                    t(n) - b = s(n) - a
-                    abs(t(n) - b) = abs(s(n) - a) < epsilon
+            claim:
+                ? forall n N:
+                    n >= N0
+                    =>:
+                        abs(t(n) - b) < epsilon
+                abs(s(n) - a) < epsilon
+                t(n) = s(n)
+                b = a
+                t(n) - b = s(n) - a
+                abs(t(n) - b) = abs(s(n) - a) < epsilon
             by def $_is_eventually_close(t, b, epsilon, N0)
     by def $converges_to(t, b)
 
@@ -553,11 +635,13 @@ thm converges_to_const:
         ? forall epsilon R+:
             exist N0 N st {$_is_eventually_close(fn(n N) R {a}, a, epsilon, N0)}
         witness exist N0 N st {$_is_eventually_close(fn(n N) R {a}, a, epsilon, N0)} from 0:
-            forall n N:
-                n >= 0
-                =>:
-                    a - a = 0
-                    abs(fn(k N) R {a}(n) - a) = abs(a - a) = 0 < epsilon
+            claim:
+                ? forall n N:
+                    n >= 0
+                    =>:
+                        abs(fn(k N) R {a}(n) - a) < epsilon
+                a - a = 0
+                abs(fn(k N) R {a}(n) - a) = abs(a - a) = 0 < epsilon
             by def $_is_eventually_close(fn(n N) R {a}, a, epsilon, 0)
     by def $converges_to(fn(n N) R {a}, a)
 
@@ -578,16 +662,18 @@ thm converges_to_add:
         finite_set_max(union({Ns}, {Nt})) >= Ns
         finite_set_max(union({Ns}, {Nt})) >= Nt
         witness exist N0 N st {$_is_eventually_close(fn(k N) R {s(k) + t(k)}, a + b, epsilon, N0)} from finite_set_max(union({Ns}, {Nt})):
-            forall n N:
-                n >= finite_set_max(union({Ns}, {Nt}))
-                =>:
-                    n >= finite_set_max(union({Ns}, {Nt})) >= Ns
-                    n >= finite_set_max(union({Ns}, {Nt})) >= Nt
-                    abs(s(n) - a) < epsilon / 2
-                    abs(t(n) - b) < epsilon / 2
-                    abs(fn(k N) R {s(k) + t(k)}(n) - (a + b)) = abs((s(n) + t(n)) - (a + b)) = abs((s(n) - a) + (t(n) - b))
-                    abs((s(n) - a) + (t(n) - b)) <= abs(s(n) - a) + abs(t(n) - b) < epsilon / 2 + epsilon / 2 = epsilon
-                    abs(fn(k N) R {s(k) + t(k)}(n) - (a + b)) < epsilon
+            claim:
+                ? forall n N:
+                    n >= finite_set_max(union({Ns}, {Nt}))
+                    =>:
+                        abs(fn(k N) R {s(k) + t(k)}(n) - (a + b)) < epsilon
+                n >= finite_set_max(union({Ns}, {Nt})) >= Ns
+                n >= finite_set_max(union({Ns}, {Nt})) >= Nt
+                abs(s(n) - a) < epsilon / 2
+                abs(t(n) - b) < epsilon / 2
+                abs(fn(k N) R {s(k) + t(k)}(n) - (a + b)) = abs((s(n) + t(n)) - (a + b)) = abs((s(n) - a) + (t(n) - b))
+                abs((s(n) - a) + (t(n) - b)) <= abs(s(n) - a) + abs(t(n) - b) < epsilon / 2 + epsilon / 2 = epsilon
+                abs(fn(k N) R {s(k) + t(k)}(n) - (a + b)) < epsilon
             by def $_is_eventually_close(fn(k N) R {s(k) + t(k)}, a + b, epsilon, finite_set_max(union({Ns}, {Nt})))
     by def $converges_to(fn(k N) R {s(k) + t(k)}, a + b)
 
@@ -606,15 +692,17 @@ thm converges_to_mul_const:
         epsilon / (abs(c) + 1) $in R+
         obtain N0 from exist K N st {$_is_eventually_close(s, a, epsilon / (abs(c) + 1), K)}
         witness exist K N st {$_is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, K)} from N0:
-            forall n N:
-                n >= N0
-                =>:
-                    abs(s(n) - a) < epsilon / (abs(c) + 1)
-                    abs(c * s(n) - c * a) = abs(c * (s(n) - a)) = abs(c) * abs(s(n) - a)
-                    abs(c) <= abs(c) + 1
-                    abs(s(n) - a) >= 0
-                    abs(c) * abs(s(n) - a) <= (abs(c) + 1) * abs(s(n) - a) < (abs(c) + 1) * (epsilon / (abs(c) + 1)) = epsilon
-                    abs(fn(k N) R {c * s(k)}(n) - c * a) < epsilon
+            claim:
+                ? forall n N:
+                    n >= N0
+                    =>:
+                        abs(fn(k N) R {c * s(k)}(n) - c * a) < epsilon
+                abs(s(n) - a) < epsilon / (abs(c) + 1)
+                abs(c * s(n) - c * a) = abs(c * (s(n) - a)) = abs(c) * abs(s(n) - a)
+                abs(c) <= abs(c) + 1
+                abs(s(n) - a) >= 0
+                abs(c) * abs(s(n) - a) <= (abs(c) + 1) * abs(s(n) - a) < (abs(c) + 1) * (epsilon / (abs(c) + 1)) = epsilon
+                abs(fn(k N) R {c * s(k)}(n) - c * a) < epsilon
             by def $_is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, N0)
     by def $converges_to(fn(n N) R {c * s(n)}, c * a)
 
@@ -628,12 +716,14 @@ thm exists_abs_bound_of_converges_to:
     obtain N0 from exist K N st {$_is_eventually_close(s, a, 1, K)}
     abs(a) + 1 $in R+
     witness exist K N, B R+ st {$_is_eventually_close(s, 0, B, K)} from N0, abs(a) + 1:
-        forall n N:
-            n >= N0
-            =>:
-                abs(s(n) - a) < 1
-                abs(s(n)) = abs((s(n) - a) + a) <= abs(s(n) - a) + abs(a) < 1 + abs(a) = abs(a) + 1
-                abs(s(n) - 0) = abs(s(n)) < abs(a) + 1
+        claim:
+            ? forall n N:
+                n >= N0
+                =>:
+                    abs(s(n) - 0) < abs(a) + 1
+            abs(s(n) - a) < 1
+            abs(s(n)) = abs((s(n) - a) + a) <= abs(s(n) - a) + abs(a) < 1 + abs(a) = abs(a) + 1
+            abs(s(n) - 0) = abs(s(n)) < abs(a) + 1
         by def $_is_eventually_close(s, 0, abs(a) + 1, N0)
 
 # Source theorems aux and convergesTo_mul. The auxiliary product-with-zero
@@ -647,12 +737,14 @@ thm converges_to_mul:
 
     claim:
         ? $converges_to(fn(n N) R {t(n) - b}, 0)
-1release thm converges_to_const(-b)
-1release thm converges_to_add(t, fn(n N) R {-b}, b, -b)
-        forall n N:
+        release thm converges_to_const(-b)
+        release thm converges_to_add(t, fn(n N) R {(-b)}, b, (-b))
+        claim:
+            ? forall n N:
+                t(n) + (-b) = t(n) - b
             t(n) + (-b) = t(n) - b
         b + (-b) = 0
-1release thm converges_to_congr(fn(n N) R {t(n) + (-b)}, fn(n N) R {t(n) - b}, b + (-b), 0)
+        release thm converges_to_congr(fn(n N) R {t(n) + (-b)}, fn(n N) R {t(n) - b}, b + (-b), 0)
 
     claim:
         ? forall u, v fn(n N) R, L R:
@@ -660,7 +752,7 @@ thm converges_to_mul:
             $converges_to(v, 0)
             =>:
                 $converges_to(fn(n N) R {u(n) * v(n)}, 0)
-1release thm exists_abs_bound_of_converges_to(u, L)
+        release thm exists_abs_bound_of_converges_to(u, L)
         obtain Nu, B from exist N0 N, B R+ st {$_is_eventually_close(u, 0, B, N0)}
         claim:
             ? forall epsilon R+:
@@ -670,30 +762,34 @@ thm converges_to_mul:
             finite_set_max(union({Nu}, {Nv})) >= Nu
             finite_set_max(union({Nu}, {Nv})) >= Nv
             witness exist N0 N st {$_is_eventually_close(fn(n N) R {u(n) * v(n)}, 0, epsilon, N0)} from finite_set_max(union({Nu}, {Nv})):
-                forall n N:
-                    n >= finite_set_max(union({Nu}, {Nv}))
-                    =>:
-                        n >= finite_set_max(union({Nu}, {Nv})) >= Nu
-                        n >= finite_set_max(union({Nu}, {Nv})) >= Nv
-                        abs(u(n) - 0) < B
-                        abs(u(n)) = abs(u(n) - 0) < B
-                        abs(v(n) - 0) < epsilon / B
-                        abs(v(n)) = abs(v(n) - 0) < epsilon / B
-                        abs(u(n)) <= B
-                        abs(v(n)) >= 0
-                        abs(u(n) * v(n) - 0) = abs(u(n) * v(n)) = abs(u(n)) * abs(v(n))
-                        abs(u(n)) * abs(v(n)) <= B * abs(v(n)) < B * (epsilon / B) = epsilon
-                        abs(fn(k N) R {u(k) * v(k)}(n) - 0) < epsilon
+                claim:
+                    ? forall n N:
+                        n >= finite_set_max(union({Nu}, {Nv}))
+                        =>:
+                            abs(fn(k N) R {u(k) * v(k)}(n) - 0) < epsilon
+                    n >= finite_set_max(union({Nu}, {Nv})) >= Nu
+                    n >= finite_set_max(union({Nu}, {Nv})) >= Nv
+                    abs(u(n) - 0) < B
+                    abs(u(n)) = abs(u(n) - 0) < B
+                    abs(v(n) - 0) < epsilon / B
+                    abs(v(n)) = abs(v(n) - 0) < epsilon / B
+                    abs(u(n)) <= B
+                    abs(v(n)) >= 0
+                    abs(u(n) * v(n) - 0) = abs(u(n) * v(n)) = abs(u(n)) * abs(v(n))
+                    abs(u(n)) * abs(v(n)) <= B * abs(v(n)) < B * (epsilon / B) = epsilon
+                    abs(fn(k N) R {u(k) * v(k)}(n) - 0) < epsilon
                 by def $_is_eventually_close(fn(n N) R {u(n) * v(n)}, 0, epsilon, finite_set_max(union({Nu}, {Nv})))
         by def $converges_to(fn(n N) R {u(n) * v(n)}, 0)
 
     $converges_to(fn(n N) R {s(n) * (t(n) - b)}, 0)
-1release thm converges_to_mul_const(s, a, b)
-1release thm converges_to_add(fn(n N) R {s(n) * (t(n) - b)}, fn(n N) R {b * s(n)}, 0, b * a)
-    forall n N:
+    release thm converges_to_mul_const(s, a, b)
+    release thm converges_to_add(fn(n N) R {s(n) * (t(n) - b)}, fn(n N) R {b * s(n)}, 0, b * a)
+    claim:
+        ? forall n N:
+            s(n) * (t(n) - b) + b * s(n) = s(n) * t(n)
         s(n) * (t(n) - b) + b * s(n) = s(n) * t(n)
     0 + b * a = a * b
-1release thm converges_to_congr(fn(n N) R {s(n) * (t(n) - b) + b * s(n)}, fn(n N) R {s(n) * t(n)}, 0 + b * a, a * b)
+    release thm converges_to_congr(fn(n N) R {s(n) * (t(n) - b) + b * s(n)}, fn(n N) R {s(n) * t(n)}, 0 + b * a, a * b)
 
 # Source theorem convergesTo_unique. A common cutoff places the same sequence
 # value within half of |a-b| of both proposed limits.
