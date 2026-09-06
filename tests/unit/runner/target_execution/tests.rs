@@ -3,7 +3,7 @@ use super::*;
 const LARGE_TEST_STACK_SIZE: usize = 64 * 1024 * 1024;
 
 fn run_runner_for_test(code: &str, options: LitexExecutionOptions) -> (bool, String) {
-    render_runner(run_code(code, options), true)
+    render_runner(run_eval_command(code, options), true)
 }
 
 fn run_with_large_stack(test_name: &str, f: impl FnOnce() + Send + 'static) {
@@ -47,7 +47,7 @@ fn runner_failure_returns_trace() {
 #[test]
 fn runner_target_error_returns_message() {
     let (ok, output) = render_runner(
-        run_file("does_not_exist.lit", LitexExecutionOptions::default()),
+        run_file_command("does_not_exist.lit", LitexExecutionOptions::default()),
         true,
     );
 
@@ -63,7 +63,7 @@ fn runner_target_error_returns_message() {
 
 #[test]
 fn detailed_runner_exposes_a_real_target_path_without_a_label() {
-    let outcome = run_file("does_not_exist.lit", LitexExecutionOptions::default());
+    let outcome = run_file_command("does_not_exist.lit", LitexExecutionOptions::default());
     let expected_path = outcome
         .target
         .path()

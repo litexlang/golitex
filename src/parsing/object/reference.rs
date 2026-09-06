@@ -93,7 +93,7 @@ impl Runtime {
             let module_name = self.canonical_module_name_for_parse(&parts.join(MOD_SIGN));
             Ok(AtomicName::WithMod(module_name, right))
         } else {
-            Ok(self.qualify_bare_atomic_name_if_needed(left))
+            Ok(self.parse_bare_atomic_name(left))
         }
     }
 
@@ -120,10 +120,7 @@ impl Runtime {
             Ok(AtomicName::WithMod(module_name, right))
         } else {
             validate_litex_name_for_parse(&left, tb.line_file.clone())?;
-            match self.current_parse_module_name() {
-                Some(module_name) => Ok(AtomicName::WithMod(module_name, left)),
-                None => Ok(AtomicName::WithoutMod(left)),
-            }
+            Ok(self.parse_bare_atomic_name(left))
         }
     }
 
@@ -150,13 +147,20 @@ impl Runtime {
         }
     }
 
-    pub(super) fn qualify_bare_atomic_name_if_needed(&self, name: String) -> AtomicName {
+    pub(super) fn parse_bare_atomic_name(&self, name: String) -> AtomicName {
         if is_builtin_predicate(&name) {
             return AtomicName::WithoutMod(name);
         }
-        let Some(module_name) = self.current_parse_module_name() else {
-            return AtomicName::WithoutMod(name);
-        };
-        AtomicName::WithMod(module_name, name)
+        // At a use site, keep the source spelling authoritative: a module
+        // qualifier is accepted only when written explicitly. Definition
+        // bodies are the one canonicalization boundary: their local bare
+        // names are owned by the module that stores the definition, so an
+        // imported theorem can still resolve its own predicates/templates.
+        if self.parsing_definition_depth > 0 {
+            if let Some(module_name) = self.current_parse_module_name() {
+                return AtomicName::WithMod(module_name, name);
+            }
+        }
+        AtomicName::WithoutMod(name)
     }
 }

@@ -7,7 +7,7 @@ fn fact_graph_output(source: &'static str) -> String {
         .spawn(move || {
             render_graph(
                 GraphKind::Fact,
-                run_code(source, LitexExecutionOptions::default()),
+                run_eval_command(source, LitexExecutionOptions::default()),
                 true,
             )
             .1

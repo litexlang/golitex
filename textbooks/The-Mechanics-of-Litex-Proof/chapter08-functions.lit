@@ -224,12 +224,12 @@ by def $injective_fn(R, R, fn(x R) R {x + 1})
 # 8.1.4 Example: `x |-> x^2` On `R` Is Not Injective
 
 # To disprove injectivity, find two different inputs with the same output.
-# For the square function on real numbers, the witnesses are `-1` and `1`:
+# For the square function on real numbers, the witnesses are `(-1)` and `1`:
 
 by contra:
     ? not $injective_fn(R, R, fn(x R) R {x^2})
     fn(x R) R {x^2}(1) = 1 = fn(x R) R {x^2}(-1)
-    impossible 1 = -1
+    impossible 1 = (-1)
 
 # 8.1.5 Surjective Functions
 
@@ -281,7 +281,7 @@ sketch:
 # 8.1.7 Example: `x |-> x^2` On `R` Is Not Surjective
 
 # To disprove surjectivity, find one output value which is not hit. For the square
-# function from `R` to `R`, the value `-1` is not hit.
+# function from `R` to `R`, the value `(-1)` is not hit.
 
 # For every real number `x`, we have
 
@@ -289,7 +289,7 @@ sketch:
 # 0 <= x^2.
 # ```
 
-# So `x^2` can never equal `-1`. Therefore the square function is not surjective
+# So `x^2` can never equal `(-1)`. Therefore the square function is not surjective
 # as a function from `R` to `R`.
 
 sketch:
@@ -299,11 +299,11 @@ sketch:
 
     by contra:
         ? not $surjective_fn(R, R, square)
-        obtain x from exist x R st {-1 = square(x)}
+        obtain x from exist x R st {(-1) = square(x)}
         0 <= x^2
-        -1 = square(x) = x^2
-        0 <= -1
-        impossible 0 <= -1
+        (-1) = square(x) = x^2
+        0 <= (-1)
+        impossible 0 <= (-1)
 
 # 8.1.8 Example: A Finite Function Which Is Not Injective
 
@@ -556,6 +556,10 @@ prop bijective_fn(S, T set, f fn(x S) T):
 # ```
 
 # So `p` is both injective and surjective, hence bijective.
+# The Litex proof records `(y + 5) / 2 $in R` before applying `p_affine` to
+# that compound argument. This is the construction order: make the function
+# application well-defined first, then perform the mathematical calculation.
+# It is not a reason to repeat every carrier fact after the application passes.
 
 sketch:
     have fn p_affine(x R) R = 2 * x - 5
@@ -772,6 +776,11 @@ claim:
 
 # In Litex, we can introduce the composite as another function whose body applies
 # the outside function to the inside function:
+#
+# The checked calculation proceeds from the inside out. First expose `f(x)`,
+# then lift that value through `g`, and finally keep the outer calculation in
+# one continuous equality chain. Asking the last equality to discover every
+# inner definition at once is a different, less local proof-search problem.
 
 sketch:
     have fn f_add3_R(a R) R = a + 3
@@ -849,6 +858,9 @@ prop is_inverse(S, T set, f fn(a S) T, g fn(b T) S):
 
 # This reusable direction lets later examples stop reopening injectivity and
 # surjectivity after they have already checked both inverse equations.
+# Its surjectivity proof uses a bodyless witness: the stored right-inverse
+# equation is live, while repeating that same equation inside the witness body
+# would only echo the fact that the witness command already checks.
 
 thm inverse_implies_bijective:
     ? forall S, T set, f fn(x S) T, g fn(y T) S:
@@ -1017,11 +1029,6 @@ thm bijective_implies_has_inverse:
         f(x) = f(g(f(x)))
         x = g(f(x))
 
-    forall x S:
-        g(f(x)) = x
-    forall y T:
-        y = f(g(y))
-
     g $in fn(y T) S
 
     by def $is_inverse(S, T, f, g)
@@ -1035,15 +1042,14 @@ sketch:
                 $bijective_fn(S, T, f)
 
         obtain g from $has_inverse(S, T, f)
-        $is_inverse(S, T, f, g)
-1release thm inverse_implies_bijective(S, T, f, g)
+        release thm inverse_implies_bijective(S, T, f, g)
 
     claim:
         ? forall S, T set, f fn(x S) T:
             $bijective_fn(S, T, f)
             =>:
                 $has_inverse(S, T, f)
-1release thm bijective_implies_has_inverse(S, T, f)
+        release thm bijective_implies_has_inverse(S, T, f)
 
     forall S, T set, f fn(x S) T:
         =>:
@@ -1096,7 +1102,7 @@ sketch:
 # equal, so `m1 + 1 = m2 + 1`, and hence `m1 = m2`.
 
 # It is not surjective. The tuple `(0, 0)` is not in its image. If
-# `(0, 0) = q(n)`, then `(0, 0) = (n + 1, 2 - n)`, so `n = -1` and `n = 2`,
+# `(0, 0) = q(n)`, then `(0, 0) = (n + 1, 2 - n)`, so `n = (-1)` and `n = 2`,
 # which is impossible.
 
 sketch:
@@ -1132,12 +1138,11 @@ sketch:
                 exist n Z st {y = q_Z_pair(n)}
             exist n Z st {(0, 0) = q_Z_pair(n)}
             obtain n from exist n Z st {(0, 0) = q_Z_pair(n)}
-            (0, 0) = q_Z_pair(n)
             q_Z_pair(n) = (n + 1, 2 - n)
             (0, 0) = (n + 1, 2 - n)
             0 = (0, 0)[1] = (n + 1, 2 - n)[1] = n + 1
             0 = (0, 0)[2] = (n + 1, 2 - n)[2] = 2 - n
-            n = 0 - 1 = -1
+            n = 0 - 1 = (-1)
             n = 2 - 0 = 2
             impossible -1 = 2
 
@@ -1193,7 +1198,7 @@ sketch:
             Finv_Z2(F_Z2(t)) = t
         F_Z2(t) = (t[1] + t[2], t[1] + 2 * t[2])
         Finv_Z2(F_Z2(t)) = (2 * F_Z2(t)[1] - F_Z2(t)[2], F_Z2(t)[2] - F_Z2(t)[1])
-1release thm tuple_equal_from_coordinates(t, (t[1], t[2]))
+        release thm tuple_equal_from_coordinates(t, (t[1], t[2]))
         Finv_Z2(F_Z2(t)) = (2 * F_Z2(t)[1] - F_Z2(t)[2], F_Z2(t)[2] - F_Z2(t)[1]) = (2 * (t[1] + t[2]) - (t[1] + 2 * t[2]), (t[1] + 2 * t[2]) - (t[1] + t[2])) = (t[1], t[2]) = t
 
     claim:
@@ -1201,11 +1206,18 @@ sketch:
             F_Z2(Finv_Z2(s)) = s
         Finv_Z2(s) = (2 * s[1] - s[2], s[2] - s[1])
         F_Z2(Finv_Z2(s)) = (Finv_Z2(s)[1] + Finv_Z2(s)[2], Finv_Z2(s)[1] + 2 * Finv_Z2(s)[2])
-1release thm tuple_equal_from_coordinates(s, (s[1], s[2]))
+        release thm tuple_equal_from_coordinates(s, (s[1], s[2]))
         F_Z2(Finv_Z2(s)) = (Finv_Z2(s)[1] + Finv_Z2(s)[2], Finv_Z2(s)[1] + 2 * Finv_Z2(s)[2]) = (2 * s[1] - s[2] + (s[2] - s[1]), 2 * s[1] - s[2] + 2 * (s[2] - s[1])) = (s[1], s[2]) = s
 
     by def $is_inverse(cart(Z, Z), cart(Z, Z), F_Z2, Finv_Z2)
-1release thm inverse_implies_bijective(cart(Z, Z), cart(Z, Z), F_Z2, Finv_Z2)
+    release thm inverse_implies_bijective(cart(Z, Z), cart(Z, Z), F_Z2, Finv_Z2)
+
+# The two coordinate calculations are the live representation bridges. Once
+# they establish the reusable `$is_inverse` interface, the final proof calls
+# `inverse_implies_bijective` instead of rebuilding injectivity and
+# surjectivity locally. In the same way, data that later code applies should
+# be exposed as `have fn` or an exact callable struct field; a set-shaped
+# classification alone does not supply a callable mathematical object.
 
 # 8.4.3 Example: Same Formula Over `R^2` And `Z^2`
 
@@ -1240,7 +1252,7 @@ sketch:
             Finv_R2(F_R2(t)) = t
         F_R2(t) = (t[1] + t[2], t[1] - t[2])
         Finv_R2(F_R2(t)) = ((F_R2(t)[1] + F_R2(t)[2]) / 2, (F_R2(t)[1] - F_R2(t)[2]) / 2)
-1release thm tuple_equal_from_coordinates(t, (t[1], t[2]))
+        release thm tuple_equal_from_coordinates(t, (t[1], t[2]))
         Finv_R2(F_R2(t)) = ((F_R2(t)[1] + F_R2(t)[2]) / 2, (F_R2(t)[1] - F_R2(t)[2]) / 2) = ((t[1] + t[2] + (t[1] - t[2])) / 2, ((t[1] + t[2]) - (t[1] - t[2])) / 2) = (t[1], t[2]) = t
 
     claim:
@@ -1248,11 +1260,11 @@ sketch:
             F_R2(Finv_R2(s)) = s
         Finv_R2(s) = ((s[1] + s[2]) / 2, (s[1] - s[2]) / 2)
         F_R2(Finv_R2(s)) = (Finv_R2(s)[1] + Finv_R2(s)[2], Finv_R2(s)[1] - Finv_R2(s)[2])
-1release thm tuple_equal_from_coordinates(s, (s[1], s[2]))
+        release thm tuple_equal_from_coordinates(s, (s[1], s[2]))
         F_R2(Finv_R2(s)) = (Finv_R2(s)[1] + Finv_R2(s)[2], Finv_R2(s)[1] - Finv_R2(s)[2]) = ((s[1] + s[2]) / 2 + (s[1] - s[2]) / 2, (s[1] + s[2]) / 2 - (s[1] - s[2]) / 2) = (s[1], s[2]) = s
 
     by def $is_inverse(cart(R, R), cart(R, R), F_R2, Finv_R2)
-1release thm inverse_implies_bijective(cart(R, R), cart(R, R), F_R2, Finv_R2)
+    release thm inverse_implies_bijective(cart(R, R), cart(R, R), F_R2, Finv_R2)
 
 # Over `Z^2`, however, the same formula is not always integer-valued. In fact the
 # map from `Z^2` to `Z^2` is not surjective. The pair `(0, 1)` is not hit. If
@@ -1311,9 +1323,9 @@ sketch:
             u[2] = rho_R3(u)[3] = rho_R3(v)[3] = v[2]
             u[1] + u[2] = rho_R3(u)[1] = rho_R3(v)[1] = v[1] + v[2]
             u[1] = (u[1] + u[2]) - u[2] = (v[1] + v[2]) - v[2] = v[1]
-1release thm tuple_equal_from_coordinates(u, (u[1], u[2]))
+            release thm tuple_equal_from_coordinates(u, (u[1], u[2]))
             (u[1], u[2]) = (v[1], v[2])
-1release thm tuple_equal_from_coordinates(v, (v[1], v[2]))
+            release thm tuple_equal_from_coordinates(v, (v[1], v[2]))
         by def $injective_fn(cart(R, R), cart(R, R, R), rho_R3)
 
 # 8.4.5 Example: Addition From `R^2` To `R`
@@ -1349,7 +1361,7 @@ sketch:
     have fn add_R2(p cart(R, R)) R = p[1] + p[2]
     forall p cart(R, R):
         add_R2(p) = p[1] + p[2]
-    have neg_one R = -1
+    have neg_one R = (-1)
 
     claim:
         ? not $injective_fn(cart(R, R), R, add_R2)
@@ -1390,7 +1402,7 @@ sketch:
 # 5*0 + 8*0 = 5*8 + 8*(-5),
 # ```
 
-# but `(0, 0) != (8, -5)`.
+# but `(0, 0) != (8, (-5))`.
 
 # It is surjective because `5` and `8` are coprime. Explicitly, for any integer
 # `a`,
@@ -1399,7 +1411,7 @@ sketch:
 # 5(-3a) + 8(2a) = a.
 # ```
 
-# So the input `(-3a, 2a)` maps to `a`.
+# So the input `((-3)a, 2a)` maps to `a`.
 
 sketch:
     have fn Z_lin58(u cart(Z, Z)) Z = 5 * u[1] + 8 * u[2]
@@ -1412,12 +1424,12 @@ sketch:
             ? not $injective_fn(cart(Z, Z), Z, Z_lin58)
             $injective_fn(cart(Z, Z), Z, Z_lin58)
             (0, 0) $in cart(Z, Z)
-            (8, -5) $in cart(Z, Z)
+            (8, (-5)) $in cart(Z, Z)
             Z_lin58((0, 0)) = 5 * (0, 0)[1] + 8 * (0, 0)[2] = 5 * 0 + 8 * 0 = 0
-            Z_lin58((8, -5)) = 5 * (8, -5)[1] + 8 * (8, -5)[2] = 5 * 8 + 8 * (-5) = 0
-            Z_lin58((0, 0)) = Z_lin58((8, -5))
-            (0, 0) = (8, -5)
-            0 = (0, 0)[1] = (8, -5)[1] = 8
+            Z_lin58((8, (-5))) = 5 * (8, (-5))[1] + 8 * (8, (-5))[2] = 5 * 8 + 8 * (-5) = 0
+            Z_lin58((0, 0)) = Z_lin58((8, (-5)))
+            (0, 0) = (8, (-5))
+            0 = (0, 0)[1] = (8, (-5))[1] = 8
             impossible 0 = 8
 
     claim:
@@ -1425,8 +1437,8 @@ sketch:
         claim:
             ? forall a Z:
                 exist u cart(Z, Z) st {a = Z_lin58(u)}
-            witness exist u cart(Z, Z) st {a = Z_lin58(u)} from (-3 * a, 2 * a):
-                a = 5 * (-3 * a) + 8 * (2 * a) = Z_lin58((-3 * a, 2 * a))
+            witness exist u cart(Z, Z) st {a = Z_lin58(u)} from ((-3) * a, 2 * a):
+                a = 5 * ((-3) * a) + 8 * (2 * a) = Z_lin58(((-3) * a, 2 * a))
         by def $surjective_fn(cart(Z, Z), Z, Z_lin58)
 
 # 8.4.7 Example: `5m + 10n` From `Z^2` To `Z`
@@ -1448,7 +1460,7 @@ sketch:
 # so every output is divisible by `5`. The integer `1` is not divisible by `5`,
 # so it is not hit.
 
-# It is also not injective: for example, changing `(m, n)` by `(2, -1)` does not
+# It is also not injective: for example, changing `(m, n)` by `(2, (-1))` does not
 # change the value, because
 
 # ```text
@@ -1471,12 +1483,12 @@ sketch:
             ? not $injective_fn(cart(Z, Z), Z, Z_lin510)
             $injective_fn(cart(Z, Z), Z, Z_lin510)
             (0, 0) $in cart(Z, Z)
-            (2, -1) $in cart(Z, Z)
+            (2, (-1)) $in cart(Z, Z)
             Z_lin510((0, 0)) = 5 * (0, 0)[1] + 10 * (0, 0)[2] = 5 * 0 + 10 * 0 = 0
-            Z_lin510((2, -1)) = 5 * (2, -1)[1] + 10 * (2, -1)[2] = 5 * 2 + 10 * (-1) = 0
-            Z_lin510((0, 0)) = Z_lin510((2, -1))
-            (0, 0) = (2, -1)
-            0 = (0, 0)[1] = (2, -1)[1] = 2
+            Z_lin510((2, (-1))) = 5 * (2, (-1))[1] + 10 * (2, (-1))[2] = 5 * 2 + 10 * (-1) = 0
+            Z_lin510((0, 0)) = Z_lin510((2, (-1)))
+            (0, 0) = (2, (-1))
+            0 = (0, 0)[1] = (2, (-1))[1] = 2
             impossible 0 = 2
 
     claim:
@@ -1488,7 +1500,6 @@ sketch:
                 exist u cart(Z, Z) st {y = Z_lin510(u)}
             exist u cart(Z, Z) st {1 = Z_lin510(u)}
             obtain u from exist u cart(Z, Z) st {1 = Z_lin510(u)}
-            1 = Z_lin510(u)
             Z_lin510(u) = 5 * u[1] + 10 * u[2] = 5 * (u[1] + 2 * u[2])
             1 = 5 * (u[1] + 2 * u[2])
             (5 * (u[1] + 2 * u[2])) % 5 = 0
@@ -1523,7 +1534,7 @@ sketch:
         swap_R2(swap_R2(t)) = (swap_R2(t)[2], swap_R2(t)[1])
         swap_swap_R2(t) = swap_R2(swap_R2(t)) = (swap_R2(t)[2], swap_R2(t)[1]) = (t[1], t[2])
         id_R2(t) = t
-1release thm tuple_equal_from_coordinates(t, (t[1], t[2]))
+        release thm tuple_equal_from_coordinates(t, (t[1], t[2]))
         swap_swap_R2(t) = (t[1], t[2]) = t = id_R2(t)
 
 # 8.4.9 Example: A Bijection From `N^2` To `N`
@@ -1574,8 +1585,7 @@ sketch:
                 (n + 1) % 2 = (n % 2 + 1 % 2) % 2 = 0
                 n * (n + 1) % 2 = (n % 2) * ((n + 1) % 2) % 2 = 1 * 0 % 2 = 0 % 2 = 0
         have quotient Z = quot(n * (n + 1), 2)
-1release thm citation::quot_euclidean(n * (n + 1), 2)
-        n * (n + 1) = 2 * quot(n * (n + 1), 2) + n * (n + 1) % 2
+        release thm citation::quot_euclidean(n * (n + 1), 2)
         2 * quot(n * (n + 1), 2) + n * (n + 1) % 2 = 2 * quotient + n * (n + 1) % 2 = 2 * quotient + 0 = 2 * quotient
         n * (n + 1) = 2 * quotient
         quotient = (2 * quotient) / 2 = n * (n + 1) / 2
@@ -1692,8 +1702,8 @@ sketch:
         u[2] = v[2]
         t1[2] = u[2] = v[2] = t2[2]
         t1[1] = (t1[1] + t1[2]) - t1[2] = u[1] - u[2] = v[1] - v[2] = (t2[1] + t2[2]) - t2[2] = t2[1]
-1release thm tuple_equal_from_coordinates(t1, (t1[1], t1[2]))
-1release thm tuple_equal_from_coordinates(t2, (t2[1], t2[2]))
+        release thm tuple_equal_from_coordinates(t1, (t1[1], t1[2]))
+        release thm tuple_equal_from_coordinates(t2, (t2[1], t2[2]))
         t1 = (t1[1], t1[2]) = (t2[1], t2[2]) = t2
 
     claim:
@@ -1748,8 +1758,7 @@ sketch:
         a + b = (s0 - b) + b = s0
         have p cart(N, N) = (a, b)
         cauchy_pair(p) = tri(p[1] + p[2]) + p[2] = tri(a + b) + b = tri(s0) + b = tri(s0) + (n - tri(s0)) = n
-        witness exist t cart(N, N) st {n = cauchy_pair(t)} from p:
-            n = cauchy_pair(p)
+        witness exist t cart(N, N) st {n = cauchy_pair(t)} from p
 
     by def $injective_fn(cart(N, N), N, cauchy_pair)
     by def $surjective_fn(cart(N, N), N, cauchy_pair)

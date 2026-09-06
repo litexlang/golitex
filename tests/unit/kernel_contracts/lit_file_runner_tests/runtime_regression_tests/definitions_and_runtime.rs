@@ -975,6 +975,51 @@ $target_thm_prop(1)
 }
 
 #[test]
+fn legacy_bare_by_thm_alias_uses_release_thm_semantics() {
+    run_with_large_stack(
+        "legacy_bare_by_thm_alias_uses_release_thm_semantics",
+        || {
+            let source_code = r#"
+prop legacy_left(x R):
+    x = 1
+
+prop legacy_right(x R):
+    x + 1 = 2
+
+thm legacy_release:
+    ? forall x R:
+        x = 1
+        =>:
+            $legacy_left(x)
+            $legacy_right(x)
+
+    by def $legacy_left(x)
+    x + 1 = 2
+    by def $legacy_right(x)
+
+by thm legacy_release(1)
+$legacy_left(1)
+$legacy_right(1)
+"#;
+
+            let mut runtime = Runtime::default();
+            runtime.start_isolated_source("legacy_bare_by_thm_alias_uses_release_thm_semantics");
+            let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_output(&runtime, &stmt_results, &runtime_error);
+
+            assert!(
+                run_succeeded,
+                "legacy bare by thm should release every theorem conclusion:\n{run_output}"
+            );
+            assert!(run_output.contains("\"statement\": \"release thm legacy_release(1)\""));
+            assert!(runtime.cache_known_facts_contains("$legacy_left(1)").0);
+            assert!(runtime.cache_known_facts_contains("$legacy_right(1)").0);
+        },
+    );
+}
+
+#[test]
 fn by_thm_selected_fact_uses_temporary_expansion_and_commits_only_the_target() {
     run_with_large_stack(
         "by_thm_selected_fact_uses_temporary_expansion_and_commits_only_the_target",

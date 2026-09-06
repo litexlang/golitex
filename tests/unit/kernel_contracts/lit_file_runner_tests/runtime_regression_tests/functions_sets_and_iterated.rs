@@ -2,6 +2,31 @@ use super::*;
 use crate::test_support::execute_source;
 
 #[test]
+fn checked_have_fn_definition_is_not_overwritten_by_explicit_fn_alias() {
+    let source_code = r#"
+have S finite_set = {1}
+have fn q(x S) Z = 0
+have fn qh(x S) Z = q(x)
+qh = fn(x S) Z {q(x)}
+
+claim:
+    ? forall x S:
+        qh(x) = q(x)
+    qh(x) = q(x)
+"#;
+
+    let mut runtime = Runtime::default();
+    runtime.start_isolated_source("checked_have_fn_definition_is_not_overwritten_by_alias");
+    let (stmt_results, runtime_error) = execute_source(source_code, &mut runtime);
+    let (run_succeeded, run_output) = render_run_output(&runtime, &stmt_results, &runtime_error);
+    assert!(
+        run_succeeded,
+        "an explicit function equality must not replace the checked definition RHS and break binder substitution:\n{}",
+        run_output
+    );
+}
+
+#[test]
 fn checked_definition_reduction_uses_only_terminating_equality_leaves() {
     let source_code = r#"
 have fn left(k N+) R = k

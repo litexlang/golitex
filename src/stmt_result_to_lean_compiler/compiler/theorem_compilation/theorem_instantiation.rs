@@ -246,18 +246,55 @@ impl StmtResultToLeanCompiler {
                         None,
                     )
                 } else if exact_object_parameter {
-                    let exact_argument = render_exact_predicate_argument(
-                        argument,
-                        parameter_set,
-                        &self.environment_stack,
-                    )?;
+                    let exact_complex_parameter =
+                        matches!(parameter_set, Obj::StandardSet(StandardSet::C));
+                    let exact_complex_fallback =
+                        format!("(Litex.In.rep {rendered_argument} ({parameter_proof}))");
+                    let exact_argument = if exact_complex_parameter {
+                        // The parameter membership Result is available here
+                        // even when it has not yet been published in the
+                        // compiler environment.  Always select the exact
+                        // `C.Carrier = ℂ` representative from this proof;
+                        // using the source spelling directly would silently
+                        // assume that a heterogeneous Litex object already
+                        // has the native complex host type.
+                        exact_complex_fallback.clone()
+                    } else {
+                        render_exact_predicate_argument(
+                            argument,
+                            parameter_set,
+                            &self.environment_stack,
+                        )?
+                    };
                     let rendered_set = render_obj(parameter_set, &self.environment_stack)?;
                     let exact_membership = format!("Litex.In.own {rendered_set} {exact_argument}");
-                    let exact_to_source = render_exact_predicate_argument_same_to_source(
-                        argument,
-                        parameter_set,
-                        &self.environment_stack,
-                    )?;
+                    let exact_to_source = if exact_complex_parameter {
+                        // This is the special theorem-call bridge for a
+                        // heterogeneous source object.  `In.same_rep` is
+                        // the exact Result-owned semantic edge; the theorem
+                        // receives its selected complex endpoint.  When the
+                        // source syntax itself is native complex, use its
+                        // `AsComplex` observation to reify the reverse edge
+                        // as Lean equality; arbitrary carriers remain on the
+                        // observation-free Same path.
+                        if object_has_closed_complex_carrier(argument) {
+                            render_complex_same_from_membership(
+                                &rendered_argument,
+                                &exact_argument,
+                                &parameter_proof,
+                            )
+                        } else {
+                            format!(
+                                "Litex.Same.symm (Litex.In.same_rep {rendered_argument} ({parameter_proof}))"
+                            )
+                        }
+                    } else {
+                        render_exact_predicate_argument_same_to_source(
+                            argument,
+                            parameter_set,
+                            &self.environment_stack,
+                        )?
+                    };
                     (
                         exact_argument,
                         Some(exact_membership),
@@ -612,7 +649,7 @@ impl StmtResultToLeanCompiler {
                 verification.direct_conclusions.len(),
             )?;
             let direct_proof = format!(
-                "(by\n  have __projected_conclusion := {projected_proof}\n  try rw [Litex.In.rep_exact] at __projected_conclusion\n  exact __projected_conclusion)"
+                "(by\n  have __projected_conclusion := {projected_proof}\n  have __original_projection := __projected_conclusion\n  try rw [Litex.In.rep_exact] at __projected_conclusion\n  first\n  | simpa only [Litex.In.rep_exact] using __projected_conclusion\n  | exact __original_projection)"
             );
             let source_conclusion = source_forall.then_facts[conclusion_index].clone().to_fact();
             let projected_conclusion = instantiator

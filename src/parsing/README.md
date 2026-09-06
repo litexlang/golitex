@@ -25,7 +25,7 @@ Runtime.parse_statement(block)
 | `claim:`<br>&nbsp;&nbsp;`? 1 = 1`<br>&nbsp;&nbsp;`1 = 1` | A proof-block statement with one goal and one proof step. |
 | Top-level `? 1 = 1` | Rejected; `?` is only a goal inside `claim`, `example`, `thm`, `by`, or `strategy`. |
 | `have` with no body | Rejected with `have: expected object definition, fn, or by preimage`. |
-| An identifier token starting with `__` | Rejected by the tokenizer; the prefix is reserved for generated symbols, including names in Lean output. `_x` remains a valid user name. |
+| An identifier token starting with `__` | Preserved by the tokenizer, then rejected by `is_valid_litex_name` when used as a user-defined name; the prefix remains reserved for generated symbols, including names in Lean output. `_x` remains a valid user name. |
 | A failed parse after opening a binder | Restores the saved `ParseContext`, so a broken `forall x ...` does not leak `x`. |
 
 Object expressions bind, from tighter to looser, as postfix calls/indexing,

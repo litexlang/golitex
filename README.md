@@ -27,7 +27,28 @@ detailed comparisons, examples, and trust boundaries, read the
 ([中文蓝图](docs/Litex中文蓝图.md)).
 </div>
 
-<!-- README spine: write one fact → accepted facts become context → build a mathematical language with Group → human–AI verification loop → formal language → AI for Math → toward safe and efficient reasoning → ToLean and Lean rechecking → ecosystem fit and boundaries → action -->
+## Beyond the Search for One Best Language
+
+The question is not only which formal language is the most powerful, mature, or
+widely adopted. We should also ask what other forms of mathematical thought
+could become possible if the interface were different. As AI produces more
+mathematical reasoning, solving more problems, producing shorter proofs, and
+increasing benchmark scores are useful goals—but they are not the whole
+purpose of mathematics. Different formal paths can preserve the attention
+needed for deep understanding and discovery.
+
+Litex begins from this possibility. It treats formalization as a way of
+shaping mathematical attention, not only as a way of satisfying a kernel. Its
+fact-oriented and bottom-up design is an invitation to explore another relation
+between human intuition, machine verification, and mathematical knowledge.
+
+Litex may not become the only path, and it does not need to. Its contribution
+may be to show that formal mathematics has more than one possible future. A
+second rigorous route can make different structures visible, support new ideas,
+and give different readers a way into the same mathematics. Read the
+[Litex Blueprint](docs/Litex_Blueprint.md) for the fuller argument.
+
+<!-- README spine: plural formalization paths → write one fact → accepted facts become context → build a mathematical language with Group → human–AI verification loop → formal language → AI for Math → toward safe and efficient reasoning → ToLean and Lean rechecking → ecosystem fit and boundaries → action -->
 
 <!--
 Litex positioning layers:

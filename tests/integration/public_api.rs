@@ -1,6 +1,6 @@
 use litex::api::{
-    compile_litex_source_to_lean_compilation_report, compile_litex_source_to_lean_source, run_code,
-    run_file, run_isolated_file, run_repository, LitexExecutionOptions, OutputDetail,
+    compile_litex_source_to_lean_compilation_report, compile_litex_source_to_lean_source, run_eval_command,
+    run_file_command, run_isolated_file_command, run_repository_command, LitexExecutionOptions, OutputDetail,
     OutputLanguage, RunOutcome, RunTarget, RunTargetKind, Runtime, SourceRunOutcome, StmtResult,
     StmtResultToLeanCompilationReport, SummaryOption, VerifyStrictnessPolicy,
 };
@@ -33,14 +33,14 @@ fn curated_api_exposes_one_owned_entry_for_every_batch_input() {
         OutputLanguage::SimplifiedChinese,
         SummaryOption::Summarize,
     );
-    let code = run_code("1 = 1", options);
+    let code = run_eval_command("1 = 1", options);
     assert!(code.ok, "{}", code.output);
     assert_eq!(code.target, RunTarget::Eval);
     assert_eq!(code.target.kind(), RunTargetKind::Code);
     assert!(code.target.path().is_none());
     assert_eq!(code.runtime.execution_options, options);
 
-    let automatic_file = run_file(
+    let automatic_file = run_file_command(
         "missing-project-file.lit",
         LitexExecutionOptions::ordinary(
             OutputDetail::Normal,
@@ -56,7 +56,7 @@ fn curated_api_exposes_one_owned_entry_for_every_batch_input() {
         automatic_file.runtime.execution_options.verify_strictness(),
         VerifyStrictnessPolicy::Ordinary
     );
-    let isolated_file = run_isolated_file(
+    let isolated_file = run_isolated_file_command(
         "missing-isolated-file.lit",
         LitexExecutionOptions::ordinary(
             OutputDetail::Normal,
@@ -72,27 +72,27 @@ fn curated_api_exposes_one_owned_entry_for_every_batch_input() {
         isolated_file.runtime.execution_options.verify_strictness(),
         VerifyStrictnessPolicy::Ordinary
     );
-    let repository = run_repository("missing-project", LitexExecutionOptions::default());
+    let repository = run_repository_command("missing-project", LitexExecutionOptions::default());
     assert!(matches!(repository.target, RunTarget::Repository { .. }));
     assert_eq!(
         repository.runtime.execution_options.verify_strictness(),
         VerifyStrictnessPolicy::Ordinary
     );
 
-    let _: fn(&str, LitexExecutionOptions) -> RunOutcome = run_code;
-    let _: fn(&str, LitexExecutionOptions) -> RunOutcome = run_file;
-    let _: fn(&str, LitexExecutionOptions) -> RunOutcome = run_isolated_file;
-    let _: fn(&str, LitexExecutionOptions) -> RunOutcome = run_repository;
+    let _: fn(&str, LitexExecutionOptions) -> RunOutcome = run_eval_command;
+    let _: fn(&str, LitexExecutionOptions) -> RunOutcome = run_file_command;
+    let _: fn(&str, LitexExecutionOptions) -> RunOutcome = run_isolated_file_command;
+    let _: fn(&str, LitexExecutionOptions) -> RunOutcome = run_repository_command;
 }
 
 #[test]
 fn curated_api_keeps_only_canonical_execution_paths_public() {
     let _: fn(&mut Runtime, &str) = Runtime::start_isolated_source;
     let _: fn(&mut Runtime, &str) -> SourceRunOutcome = Runtime::execute_source;
-    let _: fn(&str, LitexExecutionOptions) -> RunOutcome = litex::pipeline::run_code;
-    let _: fn(&str, LitexExecutionOptions) -> RunOutcome = litex::pipeline::run_file;
-    let _: fn(&str, LitexExecutionOptions) -> RunOutcome = litex::pipeline::run_isolated_file;
-    let _: fn(&str, LitexExecutionOptions) -> RunOutcome = litex::pipeline::run_repository;
+    let _: fn(&str, LitexExecutionOptions) -> RunOutcome = litex::pipeline::run_eval_command;
+    let _: fn(&str, LitexExecutionOptions) -> RunOutcome = litex::pipeline::run_file_command;
+    let _: fn(&str, LitexExecutionOptions) -> RunOutcome = litex::pipeline::run_isolated_file_command;
+    let _: fn(&str, LitexExecutionOptions) -> RunOutcome = litex::pipeline::run_repository_command;
     let _: fn(&str) -> Result<String, String> = litex::pipeline::resolve_source_file_path;
     let _: fn(&str, &str) -> Result<String, String> = compile_litex_source_to_lean_source;
     let _: fn(&str, &str) -> Result<StmtResultToLeanCompilationReport, String> =

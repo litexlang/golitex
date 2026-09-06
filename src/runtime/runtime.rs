@@ -36,6 +36,14 @@ pub struct Runtime {
     /// Changing the current source neither consumes nor resets it.
     pub(crate) parse_context: ParseContext,
 
+    /// Number of nested definition statements currently being parsed.
+    ///
+    /// Bare AtomicName references at a use site remain unqualified.  A
+    /// definition body, however, records its local names with the owning
+    /// module so the same stored theorem/definition can be used after import
+    /// without guessing an imported module at the caller.
+    pub(crate) parsing_definition_depth: usize,
+
     /// Monotone runtime-wide allocator for fact IDs.
     ///
     /// Local environments may disappear, but a fact ID is never reused during
@@ -77,6 +85,7 @@ impl Runtime {
             execution_mode: ExecutionMode::RequireVerification,
             current_environment_stack: vec![],
             parse_context: ParseContext::new(),
+            parsing_definition_depth: 0,
             next_fact_id: 1,
             symbol_id_allocator: Rc::new(SymbolIdAllocator::new()),
             executed_direct_struct_carriers: HashMap::new(),

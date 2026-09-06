@@ -254,7 +254,7 @@ impl Runtime {
                     vec![],
                 )))
             })?;
-            Ok(self.qualify_bare_atomic_name_if_needed(left))
+            Ok(self.parse_bare_atomic_name(left))
         }
     }
 

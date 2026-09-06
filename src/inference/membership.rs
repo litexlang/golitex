@@ -48,7 +48,17 @@ impl Runtime {
             }
         }
         if let Some((equal_to, line_file)) = equal_to {
-            info.equal_to = Some((equal_to, line_file));
+            // A checked `have fn` stores the canonical RHS together with the
+            // signature.  Later equalities such as
+            // `qh = fn(x S) Z {q(h(x))}` are ordinary consequences, not a
+            // redefinition.  Replacing the stored RHS here can detach its
+            // parameter SymbolIds from the stored FnSetBody, so unfolding
+            // `qh(a)` leaves the original binder instead of substituting `a`.
+            // Keep the first checked defining RHS and only fill this slot
+            // when the callable had a signature but no definition yet.
+            if info.equal_to.is_none() {
+                info.equal_to = Some((equal_to, line_file));
+            }
         }
     }
 

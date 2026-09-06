@@ -457,13 +457,18 @@ index in `finite_seq(s, finite_set_size(s))`, bijective from
 `closed_range(1, finite_set_size(s))`. These are bare kernel names, not
 `basics::` definitions, and an arbitrary finite sequence is not thereby
 defined bijective.
+For compatibility with older source files, bare `by thm name(args)` remains a
+parser alias for `release thm name(args)`. It follows the same all-conclusions
+execution path and is rendered canonically as `release thm`.
+
 When only one atomic consequence should escape, use the preview form
 `by thm name(args) => atomic_fact`. Litex applies the ordinary
 theorem in a temporary child context, checks the selected fact there, and then
 discards all other theorem conclusions. Only the selected fact is committed to
 the parent; its normal inferred consequences may still be stored. The selected
-fact must already be well-defined in the parent, and a compound target, missing
-`=>`, or proof body is rejected.
+fact must already be well-defined in the parent, and a compound target or proof
+body is rejected. The arrow remains required for this selected form; only the
+separate bare legacy alias omits it.
 Mathematical definitions similarly use explicit `by def A $subset B` and
 `by def $injective(A, B, f)` statements. New code should use this inline
 spelling; the older `by def:` plus one `? fact` goal remains accepted for

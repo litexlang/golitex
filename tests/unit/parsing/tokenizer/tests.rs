@@ -29,19 +29,14 @@ fn unicode_identifier_is_one_token() {
 }
 
 #[test]
-fn reserved_internal_symbol_prefix_is_rejected() {
+fn reserved_internal_symbol_prefix_is_tokenized_without_name_validation() {
     let tokenizer = Tokenizer::new();
-    for source in ["__x", "___x", "____x", "have __value R = 1"] {
-        let error = tokenizer
-            .tokenize_line(source, (7, Rc::from("reserved_prefix_test.lit")))
-            .expect_err(source);
-        let RuntimeError::ParseError(error) = error else {
-            panic!("expected parse error for {source:?}");
-        };
-        assert_eq!(error.line_file.0, 7);
-        assert_eq!(error.line_file.1.as_ref(), "reserved_prefix_test.lit");
-        assert!(error.msg.contains("reserved internal prefix `__`"));
-    }
+    assert_eq!(
+        tokenizer
+            .tokenize_line("have __value R = 1", (7, Rc::from("tokenizer.lit")))
+            .unwrap(),
+        vec!["have", "__value", "R", "=", "1"]
+    );
 }
 
 #[test]
@@ -62,19 +57,29 @@ fn single_underscore_prefix_and_non_symbol_text_remain_allowed() {
 }
 
 #[test]
-fn reserved_prefix_error_from_block_tokenization_keeps_source_line() {
+fn reserved_prefix_is_rejected_by_name_validation_after_tokenization() {
     let tokenizer = Tokenizer::new();
-    let error = tokenizer
+    let mut blocks = tokenizer
         .parse_blocks(
-            "have x R = 1\nhave __x R = 2",
-            Rc::from("reserved_prefix_blocks.lit"),
+            "have __x R = 2",
+            Rc::from("reserved_prefix_name_validation.lit"),
         )
-        .expect_err("reserved prefix should fail block tokenization");
-    let RuntimeError::ParseError(error) = error else {
+        .expect("tokenizer should not validate user names");
+    let mut runtime = Runtime::default();
+    let runtime_error = runtime
+        .parse_statement(&mut blocks[0])
+        .expect_err("name validation should reject the reserved prefix");
+    let RuntimeError::ParseError(error) = &runtime_error else {
         panic!("expected parse error");
     };
-    assert_eq!(error.line_file.0, 2);
-    assert_eq!(error.line_file.1.as_ref(), "reserved_prefix_blocks.lit");
+    assert_eq!(error.line_file.0, 1);
+    assert_eq!(
+        error.line_file.1.as_ref(),
+        "reserved_prefix_name_validation.lit"
+    );
+    assert!(runtime_error
+        .trace_message()
+        .contains("user-defined names cannot start with `__`"));
 }
 
 #[test]

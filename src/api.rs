@@ -30,7 +30,7 @@ pub use crate::runtime::{
 
 // Source, file, and repository execution entry points.
 pub use crate::pipeline::{
-    run_code, run_file, run_isolated_file, run_repository, RunOutcome, RunSummary, RunTarget,
+    run_eval_command, run_file_command, run_isolated_file_command, run_repository_command, RunOutcome, RunSummary, RunTarget,
     RunTargetKind, SourceRunOutcome,
 };
 

@@ -12,7 +12,7 @@ fn parse_one(source: &str) -> Result<Stmt, RuntimeError> {
 }
 
 #[test]
-fn by_thm_requires_and_parses_one_selected_atomic_fact() {
+fn by_thm_parses_selection_and_legacy_bare_alias() {
     let selected =
         parse_one("by thm T(a) => not $P(a)").expect("parse by thm with selected atomic fact");
     let Stmt::By(ByStmt::ByThmStmt(selected)) = selected else {
@@ -21,11 +21,11 @@ fn by_thm_requires_and_parses_one_selected_atomic_fact() {
     assert!(!selected.selected_fact.has_positive_polarity());
     assert_eq!(selected.to_string(), "by thm T(a) => not $P(a)");
 
-    let error = parse_one("by thm T(a)").expect_err("bare by thm should fail");
-    let RuntimeError::ParseError(error) = error else {
-        panic!("expected parse error")
+    let legacy = parse_one("by thm T(a)").expect("bare by thm should remain a legacy alias");
+    let Stmt::ReleaseThmStmt(legacy) = legacy else {
+        panic!("bare by thm should lower to release thm")
     };
-    assert!(error.msg.contains("use `release thm name(args)`"));
+    assert_eq!(legacy.to_string(), "release thm T(a)");
 }
 
 #[test]
@@ -89,6 +89,13 @@ fn theorem_calls_preserve_bare_and_parenthesized_syntax() {
     };
     assert!(selected.call.is_bare());
     assert_eq!(selected.to_string(), "by thm direct_fact => 1 = 1");
+
+    let legacy = parse_one("by thm direct_fact").expect("parse legacy bare theorem call");
+    let Stmt::ReleaseThmStmt(legacy) = legacy else {
+        panic!("expected legacy by thm alias to lower to release thm")
+    };
+    assert!(legacy.call.is_bare());
+    assert_eq!(legacy.to_string(), "release thm direct_fact");
 }
 
 #[test]
@@ -146,11 +153,11 @@ fn by_thm_selected_fact_rejects_missing_compound_and_indented_targets() {
         ),
         (
             "by thm T(a):\n    1 = 1",
-            "by thm requires `=>` followed by one selected atomic fact",
+            "by thm accepts either a bare legacy theorem call",
         ),
         (
             "by thm T(a):\n    ? $P(a)\n    1 = 1",
-            "by thm requires `=>` followed by one selected atomic fact",
+            "by thm accepts either a bare legacy theorem call",
         ),
     ];
     for (source, expected) in cases {

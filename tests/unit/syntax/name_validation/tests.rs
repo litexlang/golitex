@@ -72,7 +72,7 @@ fn underscore_and_letters_allowed() {
 }
 
 #[test]
-fn double_underscore_internal_prefix_rejected() {
+fn double_underscore_internal_prefix_is_a_name_validation_rule() {
     assert!(is_valid_litex_name("__").is_err());
     assert!(is_valid_litex_name("__x").is_err());
     assert!(is_valid_litex_name("___x").is_err());

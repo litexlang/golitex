@@ -344,6 +344,13 @@ impl StmtResultToLeanCompiler {
                     parameter_index + 1
                 );
                 match parameter_set {
+                    set if forall_parameter_uses_complex_host_carrier(set) => {
+                        // Adapter-facing `R`/`C` parameters retain one complex
+                        // host value plus their semantic membership proof.
+                        // Native real consumers select `In.rep` locally rather
+                        // than changing the theorem's public binder type.
+                        binder_declarations.push(format!("({parameter_name} : ℂ)"));
+                    }
                     set if forall_parameter_uses_exact_object_carrier(set) => {
                         binder_declarations.push(format!(
                             "({parameter_name} : ({rendered_parameter_set}).Carrier)"

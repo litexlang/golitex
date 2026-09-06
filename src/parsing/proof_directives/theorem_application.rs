@@ -21,9 +21,14 @@ impl Runtime {
         tb.skip_token(THM)?;
         let call = self.parse_theorem_call(tb)?;
         if !tb.current_token_is_equal_to(RIGHT_ARROW) {
+            if tb.exceed_end_of_head() && tb.body.is_empty() {
+                // Keep the pre-`release thm` spelling source-compatible while
+                // routing it through the canonical theorem-release statement.
+                return Ok(ReleaseThmStmt::new_with_call(call, tb.line_file.clone()).into());
+            }
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "by thm requires `=>` followed by one selected atomic fact; use `release thm name(args)` to release every conclusion"
+                    "by thm accepts either a bare legacy theorem call or `=>` followed by one selected atomic fact; use `release thm name(args)` for the canonical bare spelling"
                         .to_string(),
                     tb.line_file.clone(),
                 ),

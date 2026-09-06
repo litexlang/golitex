@@ -55,7 +55,8 @@ Litex 定位四层检查（写作时逐层核对；面向不同受众可以调�
   - [6. The End-to-End Human–AI–Litex Knowledge-Production Loop](#interaction-loop)
     - [Summary: Why Fact Orientation and Bottom-Up Flow Help the Loop](#summary-fact-oriented-bottom-up-loop)
   - [7. From Language to Ecosystem: The Role Litex Aims to Play](#ecosystem-role)
-  - [8. Conclusion](#conclusions)
+  - [8. Beyond the Search for One Best Language](#conclusions)
+    - [Special Thanks](#special-thanks)
     - [Related Links](#related-links)
 
 <a id="overview"></a>
@@ -866,23 +867,27 @@ Code and dataset volume are intermediate measures. What matters is whether peopl
 
 <a id="conclusions"></a>
 
-## 8. Conclusion
+## 8. Beyond the Search for One Best Language
 
-Litex uses syntax and an interaction contract closer to ordinary mathematics to lower authorship and review barriers, make mathematical text executable, and support deeper understanding and discovery.
+The question is not only which formal language is the most powerful, mature, or
+widely adopted. We should also ask what other forms of mathematical thought
+could become possible if the interface were different.
 
-Four choices serve one division of labor: set theory keeps objects readable, fact orientation preserves *what holds*, bottom-up flow accumulates verified facts, and Lean compatibility rechecks covered routes. Litex does not replace Lean; it tests whether a smaller, mathematics-facing front end can let more people produce, review, and repair checked mathematics at lower cost.
+Litex begins from this possibility. It treats formalization as a way of
+shaping mathematical attention, not only as a way of satisfying a kernel. Its
+fact-oriented and bottom-up design is an invitation to explore another relation
+between human intuition, machine verification, and mathematical knowledge.
 
-If formal languages become as routine as LaTeX over the next decade, their entry cost should approach LaTeX's. This is a long-term onboarding standard. It does not imply that deep mathematics, complete formalization, or mastering a proof assistant will become effortless.
+Litex may not become the only path, and it does not need to. Its contribution
+may be to show that formal mathematics has more than one possible future.
 
-**Litex's success will not be measured by how much Litex code is written, but by whether it can turn readable reasoning into useful results that interoperate with existing formal-language systems and genuinely serve mathematics, AI, engineering, and other fields.**
+<a id="special-thanks"></a>
 
-Evaluation should focus on outcomes: can people audit intent; can humans and AI continue from verification feedback; can facts be reused across projects; can supported routes enter Lean/Mathlib; and do real tasks adopt the artifacts? Code, theorem, and dataset counts track progress but cannot establish success alone.
+### Special Thanks
 
-If this direction works, it can lower authorship and review barriers, turn readable text into checked reusable artifacts, and help humans and AI understand mathematical relationships. Deeper understanding and discovery are possible long-term outcomes, not results already secured by language design.
-
-Mathematics is the unseen skeleton deep within the edifice of science. We believe that any mathematics can be formalized, and that formalized mathematics will ultimately become the future of mathematics. Litex hopes to become one of the building blocks of that future.
-
-Natural language is easy to understand but often ambiguous; existing formalization tools such as Lean are rigorous and reliable, but typically have a high technical barrier. Litex starts from the premise that mathematical expression can be both understandable and rigorous. Between comprehensibility and verifiability, we do not have to choose.
+Litex is created and maintained by Jiachen Shen and the Litex Team. Special
+thanks to Wei Lin, Siqi Sun, Peng Sun, Yi Wang, Chenxuan Huang, Yan Lu, Sheng
+Xu, Keyao Zhu, Xingjian Ma, and Zhaoxuan Hong for their support and advice.
 
 ### Related Links
 

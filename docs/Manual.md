@@ -2327,8 +2327,9 @@ parentheses.
 `release thm` checks argument types and theorem premises, instantiates every
 conclusion, and stores all of them with the existing theorem-instantiation
 provenance. It accepts only the bare call: no `=>` selection and no indented
-goal or proof body. Omitting `=> fact` is rejected: `by thm ... => fact` is
-reserved for selecting one atomic consequence.
+goal or proof body. For source compatibility, the older bare spelling
+`by thm name(args)` is accepted as a parser alias and is lowered to the same
+`release thm` statement; its canonical output uses `release thm`.
 
 The preview selection form keeps the ordinary theorem application explicit but
 commits only one requested atomic consequence. It requires the inline arrow:
@@ -2354,12 +2355,14 @@ parent seed and ordinary inference runs from that seed; on failure, the parent
 environment is unchanged. The target may be a positive or negative atomic fact
 and need not be a direct theorem conclusion, but compound, quantified,
 existential, disjunctive, conjunctive, and chain targets are not accepted. A
-missing `=>`, indented goal, or proof body is rejected.
+selected call still requires `=> fact`; only the separate bare legacy alias
+omits the arrow.
 
 For a root `forall`, `release thm name(args)` stores all instantiated
 conclusions. For an ordinary theorem fact, `release thm name` cites the
-already-stored theorem FactId. A selected `by thm ... => fact` call stores only
-the requested atomic fact and its ordinary inferred consequences.
+already-stored theorem FactId. A bare legacy `by thm name(args)` call has the
+same all-conclusions behavior, while a selected `by thm ... => fact` call
+stores only the requested atomic fact and its ordinary inferred consequences.
 
 There is no separate `lemma` keyword:
 
