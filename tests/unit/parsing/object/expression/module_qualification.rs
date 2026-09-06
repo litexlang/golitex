@@ -191,7 +191,7 @@ fn replacement_rejects_non_name_first_argument() {
 }
 
 #[test]
-fn module_qualification_qualifies_bare_predicate_but_not_bound_arg() {
+fn module_qualification_keeps_bare_predicate_but_not_bound_arg() {
     let mut rt = Runtime::default();
     set_test_module_name(&mut rt, "Nat");
 
@@ -206,10 +206,9 @@ fn module_qualification_qualifies_bare_predicate_but_not_bound_arg() {
     else {
         panic!("expected normal atomic fact");
     };
-    let AtomicName::WithMod(mod_name, name) = &atomic_fact.predicate else {
-        panic!("expected module-qualified predicate");
+    let AtomicName::WithoutMod(name) = &atomic_fact.predicate else {
+        panic!("expected bare predicate");
     };
-    assert_eq!(mod_name, "Nat");
     assert_eq!(name, "some_prop");
     let Obj::Atom(AtomObj::Bound(arg)) = &atomic_fact.body[0] else {
         panic!("expected forall-bound argument");
@@ -289,7 +288,7 @@ fn module_qualification_keeps_finite_set_size_builtin_bare() {
 }
 
 #[test]
-fn module_qualification_qualifies_bare_thm_strategy_template_and_struct_refs() {
+fn module_qualification_keeps_bare_thm_strategy_template_and_struct_refs() {
     let mut rt = Runtime::default();
     set_test_module_name(&mut rt, "Nat");
 
@@ -297,7 +296,7 @@ fn module_qualification_qualifies_bare_thm_strategy_template_and_struct_refs() {
     let Stmt::ReleaseThmStmt(thm_stmt) = thm_stmt else {
         panic!("expected release thm stmt");
     };
-    assert_with_mod(thm_stmt.name(), "Nat", "T");
+    assert_without_mod(thm_stmt.name(), "T");
 
     let def_stmt = parse_one_stmt_line_with_runtime(&mut rt, "by def $P(a)");
     let Stmt::By(ByStmt::ByDefStmt(def_stmt)) = def_stmt else {
@@ -306,19 +305,42 @@ fn module_qualification_qualifies_bare_thm_strategy_template_and_struct_refs() {
     let AtomicFact::NormalAtomicFact(fact) = &def_stmt.fact else {
         panic!("expected normal atomic fact");
     };
-    assert_with_mod(&fact.predicate, "Nat", "P");
+    assert_without_mod(&fact.predicate, "P");
 
     let template_obj = parse_one_obj_line_with_runtime(&mut rt, "\\Template<2>");
     let Obj::InstantiatedTemplateObj(template_obj) = template_obj else {
         panic!("expected instantiated template object");
     };
-    assert_with_mod(&template_obj.template_name, "Nat", "Template");
+    assert_without_mod(&template_obj.template_name, "Template");
 
     let struct_obj = parse_one_obj_line_with_runtime(&mut rt, "&Struct");
     let Obj::StructObj(struct_obj) = struct_obj else {
         panic!("expected struct object");
     };
-    assert_with_mod(&struct_obj.name, "Nat", "Struct");
+    assert_without_mod(&struct_obj.name, "Struct");
+}
+
+#[test]
+fn module_qualification_owns_bare_atomic_names_only_inside_definition_bodies() {
+    let mut rt = Runtime::default();
+    set_test_module_name(&mut rt, "Nat");
+
+    let stmt = parse_one_stmt_line_with_runtime(
+        &mut rt,
+        "thm T:\n    ? forall x Z:\n        $some_prop(x)",
+    );
+    let Stmt::Definition(DefinitionStmt::DefThmStmt(stmt)) = stmt else {
+        panic!("expected theorem definition");
+    };
+    let Fact::ForallFact(forall_fact) = stmt.fact else {
+        panic!("expected forall theorem fact");
+    };
+    let ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::NormalAtomicFact(fact)) =
+        &forall_fact.then_facts[0]
+    else {
+        panic!("expected theorem predicate fact");
+    };
+    assert_with_mod(&fact.predicate, "Nat", "some_prop");
 }
 
 #[test]

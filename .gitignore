@@ -3,6 +3,11 @@
 /lean/.lake/
 /showcases/litex_to_lean_mathlib_pipeline/showcase1/.lake/
 
+# Generated binaries, coverage inventories, and macOS metadata
+**/__debug_bin*
+/lean/coverage/inventory.json
+.DS_Store
+
 # From former litex/.gitignore (paths now at root)
 binary/
 scripts/*

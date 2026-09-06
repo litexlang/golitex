@@ -12,7 +12,18 @@ impl Runtime {
     pub fn parse_statement(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         self.ensure_current_source_for_parse();
         let saved_parse_context = self.current_parse_context().clone();
+        let parsing_definition = matches!(
+            tb.current()?,
+            PROP | ABSTRACT_PROP | LET | HAVE | THM | AXIOM | STRATEGY | STRUCT | TEMPLATE
+                | SETTING | TRUST
+        );
+        if parsing_definition {
+            self.parsing_definition_depth += 1;
+        }
         let result = self.parse_statement_from_leading_token(tb);
+        if parsing_definition {
+            self.parsing_definition_depth -= 1;
+        }
         if result.is_err() {
             *self.current_parse_context_mut() = saved_parse_context;
         }

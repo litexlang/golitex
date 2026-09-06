@@ -117,6 +117,73 @@ fn render_object_same_across_exact_parameter_contexts(
         }
     }
 
+    // A theorem conclusion can contain a selected exact parameter beneath a
+    // composite expression (`x + 0`, `x * y`, ...).  The bridge list is keyed
+    // by the parameter SymbolId, so the whole expression is not itself a
+    // symbol and the branch above cannot see it.  For a native-complex
+    // expression, turn each retained `Same` edge into a native equality and
+    // let Lean rewrite the composite term in one step.  The `ℂ` guard keeps
+    // this local shortcut out of the real/refined-carrier transport below,
+    // whose observers are intentionally not interchangeable with
+    // `complexNativeEq`.
+    if source.contains("ℂ") && target.contains("ℂ") {
+        let mut bridge_equalities = Vec::new();
+        for (index, (symbol_id, bridge)) in source_bridges.iter().enumerate() {
+            // Only the closed-complex helper carries the native observer
+            // evidence required by `complexNativeEq`.  An arbitrary C
+            // source uses `In.same_rep` (and a real/refined source has a
+            // different observer), so those bridges must remain on the
+            // ordinary fail-closed path below.
+            if !bridge.contains("AsComplex") {
+                continue;
+            }
+            let Some(source_value) = source_context.symbol_names.get(symbol_id) else {
+                continue;
+            };
+            let Some(target_value) = target_context.symbol_names.get(symbol_id) else {
+                continue;
+            };
+            if source_value == target_value
+                || !(source_value.contains("ℂ")
+                    || target_value.contains("ℂ")
+                    || source_value.contains("Litex.In.rep"))
+            {
+                continue;
+            }
+            bridge_equalities.push(format!(
+                "have __complex_same{index} : Litex.Same ({source_value}) ({target_value}) := {bridge}\n  have __complex_bridge{index} : ({target_value}) = ({source_value}) := (__complex_same{index}.complexNativeEq).symm"
+            ));
+        }
+        if !bridge_equalities.is_empty() {
+            let names = source_bridges
+                .iter()
+                .enumerate()
+                .filter_map(|(index, (symbol_id, _))| {
+                    let (_, bridge) = source_bridges.get(index)?;
+                    if !bridge.contains("AsComplex") {
+                        return None;
+                    }
+                    let source_value = source_context.symbol_names.get(symbol_id)?;
+                    let target_value = target_context.symbol_names.get(symbol_id)?;
+                    (source_value != target_value
+                        && (source_value.contains("ℂ")
+                            || target_value.contains("ℂ")
+                            || source_value.contains("Litex.In.rep")))
+                    .then_some(format!("__complex_bridge{index}"))
+                })
+                .collect::<Vec<_>>();
+            return Ok(format!(
+                "(show Litex.Same ({source}) ({target}) from Litex.Same.ofEq (by\n  {}\n  simpa only [{}]))",
+                bridge_equalities.join("\n  "),
+                names
+                    .iter()
+                    .map(|name| format!("← {name}"))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            ));
+        }
+    }
+
     let source_real = render_real_source_object(object, source_context).map_err(|_| {
         format!(
             "exact-parameter object `{object}` changed from `{source}` to `{target}` without a retained Same bridge"

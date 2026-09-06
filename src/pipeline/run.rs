@@ -19,7 +19,7 @@ pub struct RunOutcome {
     pub target_error: Option<String>,
 }
 
-pub fn run_code(source: &str, options: LitexExecutionOptions) -> RunOutcome {
+pub fn run_eval_command(source: &str, options: LitexExecutionOptions) -> RunOutcome {
     let mut runtime = Runtime::new(options);
     let target = RunTarget::Eval;
     runtime.start_virtual_source(VirtualSource::Eval);
@@ -37,7 +37,7 @@ pub fn run_code(source: &str, options: LitexExecutionOptions) -> RunOutcome {
     )
 }
 
-pub fn run_file(path: &str, options: LitexExecutionOptions) -> RunOutcome {
+pub fn run_file_command(path: &str, options: LitexExecutionOptions) -> RunOutcome {
     let resolved_path = resolve_source_file_path(path);
     let execution = resolved_path
         .as_ref()
@@ -79,7 +79,7 @@ pub fn run_file(path: &str, options: LitexExecutionOptions) -> RunOutcome {
     )
 }
 
-pub fn run_isolated_file(path: &str, options: LitexExecutionOptions) -> RunOutcome {
+pub fn run_isolated_file_command(path: &str, options: LitexExecutionOptions) -> RunOutcome {
     let mut runtime = Runtime::new(options);
     let mut target_error = None;
     let (target_path, stmt_results, runtime_error) = match resolve_source_file_path(path) {
@@ -104,7 +104,7 @@ pub fn run_isolated_file(path: &str, options: LitexExecutionOptions) -> RunOutco
     )
 }
 
-pub fn run_repository(path: &str, options: LitexExecutionOptions) -> RunOutcome {
+pub fn run_repository_command(path: &str, options: LitexExecutionOptions) -> RunOutcome {
     let mut runtime = Runtime::new(options);
     let normalized_path = remove_windows_carriage_from_str(path);
     let (stmt_results, runtime_error) =

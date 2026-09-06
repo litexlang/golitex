@@ -6,18 +6,21 @@ pub(in super::super) fn forall_parameter_uses_exact_refined_numeric_carrier(set:
     matches!(set, Obj::StandardSet(StandardSet::RPos))
 }
 
-/// Universal parameters over native reals and exact real refinements keep the
-/// exact Lean carrier.  A theorem application may still start from a
-/// heterogeneous Litex value; its checked membership Result selects the real
-/// argument before the theorem is called.  Keeping the binder exact prevents
-/// independent `In.rep` choices from becoming the observable meaning of one
-/// real variable.
-pub(in super::super) fn forall_parameter_uses_exact_real_carrier(set: &Obj) -> bool {
-    matches!(set, Obj::StandardSet(StandardSet::R | StandardSet::RPos))
+/// Adapter-facing real and complex parameters use one native complex host
+/// carrier.  Their `Litex.In` premise remains the semantic fact that records
+/// membership in `R` or `C`; it does not retype the expression as `ℝ`.
+pub(in super::super) fn forall_parameter_uses_complex_host_carrier(set: &Obj) -> bool {
+    matches!(set, Obj::StandardSet(StandardSet::R | StandardSet::C))
 }
 
-pub(in super::super) fn forall_parameter_uses_exact_complex_carrier(set: &Obj) -> bool {
-    matches!(set, Obj::StandardSet(StandardSet::C))
+/// Positive-real values remain exact subtypes because positivity is part of
+/// the native carrier contract used by the current positive-real rules.
+pub(in super::super) fn forall_parameter_uses_exact_real_carrier(set: &Obj) -> bool {
+    matches!(set, Obj::StandardSet(StandardSet::RPos))
+}
+
+pub(in super::super) fn forall_parameter_uses_exact_complex_carrier(_set: &Obj) -> bool {
+    false
 }
 
 pub(in super::super) fn forall_parameter_uses_exact_structured_set_carrier(set: &Obj) -> bool {
@@ -44,6 +47,7 @@ pub(in super::super) fn forall_parameter_uses_implicit_host_carrier(
         param_type,
         ParamType::Obj(set)
             if !matches!(set, Obj::StandardSet(StandardSet::Z))
+                && !forall_parameter_uses_complex_host_carrier(set)
                 && !forall_parameter_uses_exact_object_carrier(set)
     )
 }
@@ -248,6 +252,43 @@ fn render_forall_fact_type_with_conclusion_renderer(
                 &mut context,
             )?;
             install_structured_induction_native_integer_symbol(binding.id(), &name, &mut context);
+            continue;
+        }
+        if forall_parameter_uses_complex_host_carrier(set)
+            && !forall_parameter_has_direct_membership_domain(binding.id(), &forall.dom_facts)
+        {
+            let rendered_set = render_obj(set, &context)?;
+            binders.push(format!("({name} : ℂ)"));
+            binders.push(format!("({type_name} : Litex.In {name} {rendered_set})"));
+            let expected = format!("Litex.In {name} {rendered_set}");
+            install_rendered_parameter_aliases(
+                binding.id(),
+                &expected,
+                &type_name,
+                None,
+                &mut context,
+            )?;
+            install_result_owned_forall_parameter_fact_alias(
+                binding.id(),
+                &expected,
+                &type_name,
+                &mut context,
+            )?;
+            // Keep a real representative available only for consumers whose
+            // native theorem genuinely requires `ℝ` (for example the
+            // completeness bridge).  `numeric_representations` is deliberately
+            // left empty so ordinary Litex arithmetic continues to render the
+            // complex-host binder directly.
+            if matches!(set, Obj::StandardSet(StandardSet::R)) {
+                let lowered_set = LeanTargetObjectRepresentation::lower(set)?;
+                if let Some(real) = membership_real_value(&lowered_set, &name, &type_name) {
+                    context.numeric_real_values.insert(binding.id(), real);
+                }
+            }
+            // Keep the public Litex expression on the complex host carrier.
+            // Real-native consumers select a local `ℝ` representative at
+            // their own adapter boundary instead of rewriting every ordinary
+            // arithmetic occurrence to `Litex.In.rep`.
             continue;
         }
         if forall_parameter_uses_exact_object_carrier(set)
@@ -531,17 +572,32 @@ pub(in super::super) fn install_parameter_fact_aliases(
         );
     }
     install_rendered_parameter_aliases(symbol_id, &expected, proof_name, function, context)?;
+    let source_name = context
+        .symbol_names
+        .get(&symbol_id)
+        .cloned()
+        .ok_or_else(|| "parameter alias has no visible compiler symbol".to_string())?;
+
+    // `R`/`C` forall binders use the complex host ABI.  Their membership proof
+    // remains visible evidence, but ordinary Litex expressions must keep the
+    // binder itself rather than replacing it with an independent `In.rep`
+    // choice.  Native real/rational/integer consumers opt into a local
+    // representative at their own boundary.
+    if forall_parameter_uses_complex_host_carrier(set) {
+        if matches!(set, Obj::StandardSet(StandardSet::R)) {
+            let lowered_set = LeanTargetObjectRepresentation::lower(set)?;
+            if let Some(real) = membership_real_value(&lowered_set, &source_name, proof_name) {
+                context.numeric_real_values.insert(symbol_id, real);
+            }
+        }
+        return Ok(());
+    }
 
     // Integer-only target operators cannot be applied to the ordinary
     // Complex view used by Litex arithmetic. Retain the exact representative
     // selected by this parameter's membership proof in the current compiler
     // frame; child lexical frames inherit it and pop discards it.
     let lowered_set = LeanTargetObjectRepresentation::lower(set)?;
-    let source_name = context
-        .symbol_names
-        .get(&symbol_id)
-        .cloned()
-        .ok_or_else(|| "parameter alias has no visible compiler symbol".to_string())?;
     let exact_carrier_value = format!("(Litex.In.rep {source_name} {proof_name})");
     context.exact_carrier_source_equalities.insert(
         symbol_id,

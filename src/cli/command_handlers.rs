@@ -12,10 +12,10 @@ pub(super) fn run_execute_command(
 ) -> bool {
     let execution_options = options.litex_execution_options();
     let outcome = match options.execution {
-        LitexExecution::Eval => run_code(target, execution_options),
-        LitexExecution::File => run_file(target, execution_options),
-        LitexExecution::IsolatedFile => run_isolated_file(target, execution_options),
-        LitexExecution::Repository => run_repository(target, execution_options),
+        LitexExecution::Eval => run_eval_command(target, execution_options),
+        LitexExecution::File => run_file_command(target, execution_options),
+        LitexExecution::IsolatedFile => run_isolated_file_command(target, execution_options),
+        LitexExecution::Repository => run_repository_command(target, execution_options),
         LitexExecution::Repl | LitexExecution::Session | LitexExecution::IsolatedSession => {
             unreachable!("run command was resolved to a non-batch target")
         }
@@ -35,10 +35,10 @@ pub(super) fn run_graph_command(
     let hide_file_paths = !options.execution_output.output_detail.is_detailed();
     let execution_options = options.litex_execution_options();
     let outcome = match options.execution {
-        LitexExecution::Eval => run_code(target, execution_options),
-        LitexExecution::File => run_file(target, execution_options),
-        LitexExecution::IsolatedFile => run_isolated_file(target, execution_options),
-        LitexExecution::Repository => run_repository(target, execution_options),
+        LitexExecution::Eval => run_eval_command(target, execution_options),
+        LitexExecution::File => run_file_command(target, execution_options),
+        LitexExecution::IsolatedFile => run_isolated_file_command(target, execution_options),
+        LitexExecution::Repository => run_repository_command(target, execution_options),
         LitexExecution::Repl | LitexExecution::Session | LitexExecution::IsolatedSession => {
             unreachable!("graph command was resolved to a non-batch target")
         }

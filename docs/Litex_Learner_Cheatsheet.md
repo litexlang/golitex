@@ -268,7 +268,7 @@ explicit construction or control structure.
 | Direct arithmetic, equality, membership, or known consequence | State the fact | Let the verifier match the current context |
 | Concrete positive definition | <code>by def $P(args)</code> | Fold a named definition |
 | A named ordinary theorem fact | <code>release thm name</code> | Cite its stored fact |
-| A universal theorem | <code>release thm name(args)</code> | Instantiate its parameters |
+| A universal theorem | <code>release thm name(args)</code> (legacy alias: <code>by thm name(args)</code>) | Instantiate its parameters |
 | One theorem consequence | <code>by thm name(args) =&gt; fact</code> | Select only the needed result |
 | Existential target | <code>witness ... from ...</code> | Supply the witness and prove its body |
 | Known existential | <code>obtain ... from ...</code> | Open its witness in a local context |

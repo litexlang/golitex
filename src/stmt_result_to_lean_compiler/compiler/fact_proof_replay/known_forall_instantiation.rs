@@ -132,7 +132,16 @@ impl StmtResultToLeanCompiler {
                 source_parameters[parameter_index].0.id(),
                 rendered_application_argument.clone(),
             );
-            if !exact_object_parameter {
+            let complex_host_parameter = matches!(
+                parameter_type,
+                ParamType::Obj(set)
+                    if forall_parameter_uses_complex_host_carrier(set)
+                        && !forall_parameter_has_direct_membership_domain(
+                            binding.id(),
+                            &source_forall.dom_facts,
+                        )
+            );
+            if !exact_object_parameter && !complex_host_parameter {
                 application_terms.push(rendered_application_argument.clone());
             }
             let requirement_needs_proof = match parameter_type {
@@ -411,13 +420,33 @@ impl StmtResultToLeanCompiler {
                         unreachable!("exact structured parameter is an object")
                     };
                     let rendered_set = render_obj(set, &self.environment_stack)?;
-                    let exact_argument =
+                    let exact_complex_fallback =
                         format!("(Litex.In.rep {rendered_application_argument} ({proof}))");
-                    let exact_to_source = render_exact_predicate_argument_same_to_source(
-                        argument,
-                        set,
-                        &self.environment_stack,
-                    )?;
+                    let exact_argument = exact_complex_fallback.clone();
+                    let exact_to_source = if exact_complex_parameter {
+                        // `In.rep` is the exact `C.Carrier` selected by the
+                        // checked parameter proof.  For a closed complex
+                        // source, retain explicit `AsComplex` evidence in
+                        // the reverse bridge; arbitrary source carriers stay
+                        // on the observation-free Same edge.
+                        if object_has_closed_complex_carrier(argument) {
+                            render_complex_same_from_membership(
+                                &rendered_application_argument,
+                                &exact_argument,
+                                &proof,
+                            )
+                        } else {
+                            format!(
+                                "Litex.Same.symm (Litex.In.same_rep {rendered_application_argument} ({proof}))"
+                            )
+                        }
+                    } else {
+                        render_exact_predicate_argument_same_to_source(
+                            argument,
+                            set,
+                            &self.environment_stack,
+                        )?
+                    };
                     let source_to_exact = format!("Litex.Same.symm ({exact_to_source})");
                     if let LeanTargetObjectRepresentation::Symbol { symbol_id, .. } =
                         LeanTargetObjectRepresentation::lower(argument)?
@@ -448,49 +477,101 @@ impl StmtResultToLeanCompiler {
                         &mut source_application_context,
                     )?;
                 } else {
-                    application_terms.push(format!("({proof})"));
                     if let ParamType::Obj(set) = parameter_type {
                         let lowered_set = LeanTargetObjectRepresentation::lower(set)?;
-                        let selected = if native_integer_parameter
+                        let selected = if complex_host_parameter {
+                            match set {
+                                Obj::StandardSet(StandardSet::R) => format!(
+                                    "((Litex.In.rep {rendered_application_argument} ({proof}) : ℝ) : ℂ)"
+                                ),
+                                Obj::StandardSet(StandardSet::C) => format!(
+                                    "(Litex.In.rep {rendered_application_argument} ({proof}))"
+                                ),
+                                _ => rendered_application_argument.clone(),
+                            }
+                        } else if native_integer_parameter
                             || matches!(
                                 lowered_set,
                                 LeanTargetObjectRepresentation::StandardSet(
                                     LeanTargetStandardSet::Complex
                                 )
-                            ) {
+                            )
+                        {
                             rendered_application_argument.clone()
                         } else {
                             format!("(Litex.In.rep {rendered_application_argument} ({proof}))")
                         };
-                        install_exact_predicate_carrier_value(
-                            source_parameters[parameter_index].0.id(),
-                            set,
-                            &selected,
-                            &mut source_application_context,
-                        )?;
-                        install_numeric_representations_from_membership(
-                            source_parameters[parameter_index].0.id(),
-                            &lowered_set,
-                            &rendered_application_argument,
-                            &format!("({proof})"),
-                            &mut source_application_context,
-                        );
-                        if let (Some(numeric), Some(selected_to_numeric)) = (
-                            exact_set_numeric_value(&lowered_set, &selected),
-                            exact_set_numeric_equality(&lowered_set, &selected),
-                        ) {
-                            source_application_context
-                                .numeric_representations
-                                .insert(source_parameters[parameter_index].0.id(), numeric);
-                            source_application_context
-                                .numeric_representation_equalities
-                                .insert(
-                                    source_parameters[parameter_index].0.id(),
-                                    format!(
-                                        "Litex.Same.trans (Litex.In.same_rep {rendered_application_argument} ({proof})) ({selected_to_numeric})"
-                                    ),
-                                );
+                        let source_to_selected = if complex_host_parameter {
+                            Some(match set {
+                                Obj::StandardSet(StandardSet::R) => format!(
+                                    "Litex.Same.trans (Litex.In.same_rep {rendered_application_argument} ({proof})) (Litex.Same.realComplex ((Litex.In.rep {rendered_application_argument} ({proof}) : ℝ)))"
+                                ),
+                                Obj::StandardSet(StandardSet::C) => format!(
+                                    "Litex.In.same_rep {rendered_application_argument} ({proof})"
+                                ),
+                                _ => unreachable!("complex-host helper accepted a non-R/C set"),
+                            })
+                        } else {
+                            None
+                        };
+                        let selected_membership = if let Some(source_to_selected) =
+                            source_to_selected.as_ref()
+                        {
+                            let rendered_set = render_obj(set, &self.environment_stack)?;
+                            format!(
+                                "((Litex.In.congr ({source_to_selected}) {rendered_set}).mp ({proof}))"
+                            )
+                        } else {
+                            format!("({proof})")
+                        };
+                        if complex_host_parameter {
+                            application_terms.push(selected.clone());
                         }
+                        application_terms.push(selected_membership);
+                        if let Some(source_to_selected) = source_to_selected {
+                            source_application_context.symbol_names.insert(
+                                source_parameters[parameter_index].0.id(),
+                                selected.clone(),
+                            );
+                            exact_parameter_application_bridges.push((
+                                source_parameters[parameter_index].0.id(),
+                                source_to_selected,
+                            ));
+                        }
+                        if !complex_host_parameter {
+                            install_exact_predicate_carrier_value(
+                                source_parameters[parameter_index].0.id(),
+                                set,
+                                &selected,
+                                &mut source_application_context,
+                            )?;
+                            install_numeric_representations_from_membership(
+                                source_parameters[parameter_index].0.id(),
+                                &lowered_set,
+                                &rendered_application_argument,
+                                &format!("({proof})"),
+                                &mut source_application_context,
+                            );
+                            if let (Some(numeric), Some(selected_to_numeric)) = (
+                                exact_set_numeric_value(&lowered_set, &selected),
+                                exact_set_numeric_equality(&lowered_set, &selected),
+                            ) {
+                                source_application_context
+                                    .numeric_representations
+                                    .insert(source_parameters[parameter_index].0.id(), numeric);
+                                source_application_context
+                                    .numeric_representation_equalities
+                                    .insert(
+                                        source_parameters[parameter_index].0.id(),
+                                        format!(
+                                            "Litex.Same.trans (Litex.In.same_rep {rendered_application_argument} ({proof})) ({selected_to_numeric})"
+                                        ),
+                                    );
+                            }
+                        }
+                    } else {
+                        application_terms.push(rendered_application_argument.clone());
+                        application_terms.push(format!("({proof})"));
                     }
                 }
             } else if let ParamType::Obj(set) = parameter_type {

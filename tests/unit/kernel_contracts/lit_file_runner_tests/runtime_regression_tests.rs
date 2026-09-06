@@ -37,7 +37,7 @@ fn run_repository_for_test(
             SummaryOption::None
         },
     );
-    let outcome = run_repository(repository_path, options);
+    let outcome = run_repository_command(repository_path, options);
     (outcome.ok, outcome.output)
 }
 

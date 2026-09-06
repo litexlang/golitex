@@ -292,14 +292,14 @@ claim:
 # Let x and y be integers, and suppose that x + 3 <= 2 and y + 2x >= 3. Show that y > 3.
 
 # This is the same problem as Example 1.4.1, but now we make the intermediate
-# step explicit: from `x + 3 <= 2`, first derive `x <= -1`; then use that bound
+# step explicit: from `x + 3 <= 2`, first derive `x <= (-1)`; then use that bound
 # to estimate `y`.
 
 forall x, y Z:
     x + 3 <= 2
     y + 2 * x >= 3
     =>:
-        x = (x + 3) - 3 <= 2 - 3 = -1
+        x = (x + 3) - 3 <= 2 - 3 = (-1)
         y = (y + 2 * x) - 2 * x >= 3 - 2 * x >= 3 - 2 * (-1) = 5
         y >= 5 > 3
 
@@ -308,7 +308,7 @@ forall x, y Z:
 # Let a and b be real numbers and suppose that -b <= a <= b. Show that a^2 <= b^2.
 
 forall a, b R:
-    -b <= a <= b
+    (-b) <= a <= b
     =>:
         a - b <= 0
         a + b = a - (-b) >= 0
@@ -439,15 +439,15 @@ claim:
 
 claim:
     ? forall x, y R:
-        x = 1 or y = -1
+        x = 1 or y = (-1)
         =>:
             x * y + x = y + 1
     by cases:
         ? x*y+x=y+1
         case x=1:
             x*y+x=1*y+1=y+1
-        case y=-1:
-            x*y+x=x*(-1)+x=-1+1=y+1
+        case y=(-1):
+            x*y+x=x*(-1)+x=(-1)+1=y+1
 
 # 2.3.2 A Case Split From An Order Dichotomy
 
@@ -471,10 +471,8 @@ claim:
             by for:
                 ? forall k 0...1:
                     k^2 != 2
-            n^2 != 2
         case n >= 1 + 1:
             n^2 >= 2^2 = 4 > 2
-            n^2 != 2
 
 # 2.3.3 Proving One Side Of An Or Goal
 
@@ -518,8 +516,8 @@ claim:
 
 # Nested `by cases` blocks are useful when a first split leaves a branch that
 # still needs more structure. Here the first split separates `n <= 1` from
-# `n >= 2`; the left branch is split again into the finite interval `-1 <= n <= 1`
-# and the negative tail `n <= -2`. Both outer and inner splits use the shorthand
+# `n >= 2`; the left branch is split again into the finite interval `(-1) <= n <= 1`
+# and the negative tail `n <= (-2)`. Both outer and inner splits use the shorthand
 # form `by cases n^2 != 2:`.
 
 claim:
@@ -529,19 +527,17 @@ claim:
     by cases:
         ? n^2 != 2
         case n <= 1:
-            n <= -2 or n >= -2 + 1
+            n <= (-2) or n >= (-2) + 1
             by cases:
                 ? n^2 != 2
-                case n <= -2:
-                    -n = -1 * n >= -1 * (-2) = 2
+                case n <= (-2):
+                    (-n) = (-1) * n >= (-1) * (-2) = 2
                     n^2 = (-n)^2 >= 2^2 = 4 > 2
-                    n^2 != 2
-                case n >= -2 + 1:
+                case n >= (-2) + 1:
                     n $in -1...1
                     by for:
                         ? forall k -1...1:
                             k^2 != 2
-                    n^2 != 2
         case n >= 1 + 1:
             n^2 >= 2^2 = 4 > 2
             n^2 != 2
@@ -580,11 +576,11 @@ claim:
     ? forall p R:
         p^2 <= 8
         =>:
-            p >= -5
+            p >= (-5)
     by contra:
-        ? p >= -5
-        p < -5
-        -p > 5
+        ? p >= (-5)
+        p < (-5)
+        (-p) > 5
         p^2 = (-p)^2 >= 5^2 = 25
         25 > 8
         impossible p^2 <= 8
@@ -600,7 +596,7 @@ forall a, b R:
     a - 5 * b = 4
     b + 2 = 3
     =>:
-        a=a-5*b+5*b=4+5*b=-6+5*(b+2)=-6+5*3=9
+        a=a-5*b+5*b=4+5*b=(-6)+5*(b+2)=(-6)+5*3=9
         b=b+2-2=3-2=1
 
 # 2.4.4
@@ -675,7 +671,6 @@ claim:
         =>:
             t != 0
     obtain a from exist a R st {a*t < 0}
-    a * t < 0
     by contra:
         ? t != 0
         t = 0

@@ -6,6 +6,60 @@ pub(in super::super) fn object_is_symbol(object: &Obj, symbol_id: SymbolId) -> b
     matches!(object, Obj::Atom(atom) if atom.symbol_ref().is_some_and(|symbol| symbol.id() == symbol_id))
 }
 
+/// Whether the source syntax itself fixes an expression's host carrier to
+/// `ℂ`.  A bare Litex atom is intentionally excluded: even when its spelling
+/// has a numeric-looking rendering, its checked source carrier may still be
+/// heterogeneous.  The theorem-call path must use `In.rep` for that case.
+pub(in super::super) fn object_has_closed_complex_carrier(object: &Obj) -> bool {
+    match object {
+        Obj::Number(_) | Obj::ImaginaryUnit(_) | Obj::EulerNumber(_) | Obj::Pi(_) => true,
+        Obj::Add(operation) => {
+            object_has_closed_complex_carrier(operation.left.as_ref())
+                && object_has_closed_complex_carrier(operation.right.as_ref())
+        }
+        Obj::Sub(operation) => {
+            object_has_closed_complex_carrier(operation.left.as_ref())
+                && object_has_closed_complex_carrier(operation.right.as_ref())
+        }
+        Obj::Mul(operation) => {
+            object_has_closed_complex_carrier(operation.left.as_ref())
+                && object_has_closed_complex_carrier(operation.right.as_ref())
+        }
+        Obj::Div(operation) => {
+            object_has_closed_complex_carrier(operation.left.as_ref())
+                && object_has_closed_complex_carrier(operation.right.as_ref())
+        }
+        Obj::Abs(operation) => object_has_closed_complex_carrier(operation.arg.as_ref()),
+        Obj::Mod(operation) => {
+            object_has_closed_complex_carrier(operation.left.as_ref())
+                && object_has_closed_complex_carrier(operation.right.as_ref())
+        }
+        Obj::Pow(operation) => {
+            object_has_closed_complex_carrier(operation.base.as_ref())
+                && matches!(operation.exponent.as_ref(), Obj::Number(_))
+        }
+        _ => false,
+    }
+}
+
+/// Build the reverse local `Same` edge from the exact `C.Carrier = ℂ`
+/// representative selected by one membership proof back to a closed native
+/// complex source expression.  The ordinary `In.same_rep` edge can carry
+/// Core's default observer when `C.Carrier` is hidden behind a set definition.
+/// First reify the carrier selection as native equality with `In.rep_exact`,
+/// then use the native observer and `AsComplex` evidence explicitly.
+/// Heterogeneous source objects do not use this helper; they stay on the
+/// observation-free edge.
+pub(in super::super) fn render_complex_same_from_membership(
+    source: &str,
+    selected: &str,
+    membership: &str,
+) -> String {
+    format!(
+        "(by\n  have __selected_eq : {source} = (show ℂ from ({selected})) := by\n    simpa only [Litex.In.rep_exact] using (Eq.symm (Litex.In.rep_exact ({source}) ({membership})))\n  have __source_same : @Litex.Same ℂ ℂ Litex.complexComplexObserver Litex.complexComplexObserver {source} (show ℂ from ({selected})) := Litex.Same.ofEq __selected_eq\n  have __source_as_complex : @Litex.AsComplex ℂ Litex.complexComplexObserver {source} {source} := Litex.AsComplex.complex {source}\n  have __selected_as_complex : @Litex.AsComplex ℂ Litex.complexComplexObserver (show ℂ from ({selected})) (show ℂ from ({selected})) := Litex.AsComplex.complex (show ℂ from ({selected}))\n  have __observed_equal := (__source_same).complexEq __source_as_complex __selected_as_complex\n  exact (show Litex.Same (show ℂ from ({selected})) ({source}) from Litex.Same.ofEq (Eq.symm __observed_equal)))"
+    )
+}
+
 pub(in super::super) fn cached_exact_membership_selection_proof<'a>(
     exact: &'a str,
     source: &str,
@@ -514,7 +568,21 @@ pub(in super::super) fn render_exact_predicate_argument(
         Obj::StandardSet(StandardSet::R) => {
             render_real_source_object(object, context).or_else(|_| representative())
         }
-        Obj::StandardSet(StandardSet::C) => render_numeric_obj(object, context),
+        Obj::StandardSet(StandardSet::C) => {
+            // A theorem parameter over `C` must receive an actual `ℂ` value.
+            // Many source objects already have a compositional numeric
+            // rendering, but an arbitrary heterogeneous object (for example
+            // a function application whose only evidence is `x $in C`) does
+            // not.  In that case the checked membership proof is the only
+            // sound bridge: `In.rep` selects the exact `C.Carrier = ℂ`
+            // representative for this call.  Do not invent a cast from the
+            // source syntax, and do not search a different ambient fact.
+            if object_has_closed_complex_carrier(object) {
+                render_numeric_obj(object, context).or_else(|_| representative())
+            } else {
+                representative()
+            }
+        }
         Obj::StandardSet(StandardSet::Z) => {
             render_integer_obj(object, context).or_else(|_| representative())
         }
@@ -590,6 +658,40 @@ pub(in super::super) fn render_exact_predicate_argument_same_to_source(
                 .unwrap_or(exact_without_outer)
                 .trim();
             if exact_without_type == selected_without_outer {
+                return Ok(format!(
+                    "Litex.Same.symm (Litex.In.same_rep {source} ({membership}))"
+                ));
+            }
+        }
+    }
+    if matches!(set, Obj::StandardSet(StandardSet::C)) {
+        if let Ok(membership) = resolve_visible_exact_membership_proof(object, set, context) {
+            let selected = format!("Litex.In.rep {source} ({membership})");
+            let exact_without_outer = exact
+                .strip_prefix('(')
+                .and_then(|value| value.strip_suffix(')'))
+                .unwrap_or(&exact);
+            let selected_without_outer = selected
+                .strip_prefix('(')
+                .and_then(|value| value.strip_suffix(')'))
+                .unwrap_or(&selected);
+            if exact_without_outer == selected_without_outer {
+                // A `C` theorem parameter is homogeneous at its exact
+                // carrier (`C.Carrier = ℂ`).  When the source can also be
+                // rendered as a complex term, use the old Core observer
+                // contract to make this bridge explicit: `AsComplex` gives
+                // the two observations, and `Same.complexEq` supplies the
+                // native equality used to reify the reverse edge.  This is
+                // local theorem-call evidence; it is not a new environment
+                // fact or a second representative lookup.
+                let source_has_known_complex_carrier = object_has_closed_complex_carrier(object);
+                if source_has_known_complex_carrier {
+                    return Ok(render_complex_same_from_membership(
+                        &source,
+                        &selected,
+                        &membership,
+                    ));
+                }
                 return Ok(format!(
                     "Litex.Same.symm (Litex.In.same_rep {source} ({membership}))"
                 ));

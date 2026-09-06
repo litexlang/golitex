@@ -8,9 +8,9 @@ namespace __Compiler_2_OrderSystem
 namespace __Sketch01
 
 theorem __fact0 :
-    ∀ (__p1 : (Litex.R).Carrier) (__type1 : Litex.In (α := (Litex.R).Carrier) __p1 Litex.R) (__p2 : (Litex.R).Carrier) (__type2 : Litex.In (α := (Litex.R).Carrier) __p2 Litex.R) (__domain1 : Litex.Lt (((__p1 : ℝ)) : ℂ) (((__p2 : ℝ)) : ℂ)), Litex.Le (((__p1 : ℝ)) : ℂ) (((__p2 : ℝ)) : ℂ) := by
+    ∀ (__p1 : ℂ) (__type1 : Litex.In __p1 Litex.R) (__p2 : ℂ) (__type2 : Litex.In __p2 Litex.R) (__domain1 : Litex.Lt __p1 __p2), Litex.Le __p1 __p2 := by
   intro a __h5 b __h6 __domain_f7
-  have __prior0_0 : Litex.Le (((a : ℝ)) : ℂ) (((b : ℝ)) : ℂ) := Litex.Lt.toLe (__domain_f7)
+  have __prior0_0 : Litex.Le a b := Litex.Lt.toLe (__domain_f7)
   exact __prior0_0
 
 end __Sketch01

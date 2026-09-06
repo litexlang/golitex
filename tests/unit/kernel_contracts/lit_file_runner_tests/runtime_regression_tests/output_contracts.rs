@@ -304,7 +304,7 @@ trust:
 
     let (fact_graph_ok, fact_graph_output) = render_graph(
         GraphKind::Fact,
-        run_code(unchecked_trust, LitexExecutionOptions::default()),
+        run_eval_command(unchecked_trust, LitexExecutionOptions::default()),
         true,
     );
     assert!(fact_graph_ok);
@@ -318,7 +318,7 @@ trust have audit_probe R:
 "#;
     let (definition_graph_ok, definition_graph_output) = render_graph(
         GraphKind::Definition,
-        run_code(unchecked_trust_have, LitexExecutionOptions::default()),
+        run_eval_command(unchecked_trust_have, LitexExecutionOptions::default()),
         true,
     );
     assert!(definition_graph_ok);

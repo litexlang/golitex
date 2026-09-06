@@ -81,7 +81,6 @@ sketch:
             $rel(y, x)
             =>:
                 x = y
-        $rel(x, y)
         x = y
 
     have a, b, c set
@@ -361,7 +360,7 @@ sketch:
             =>:
                 $mod_eq(y, x, n)
         obtain k from exist k Z st {x - y = n * k}
-        witness $mod_eq(y, x, n) from -k:
+        witness $mod_eq(y, x, n) from (-k):
             y - x = -(x - y) = -(n * k) = n * (-k)
 
     claim:
@@ -477,7 +476,7 @@ claim:
             x1 $in X
             $rel(a1, x1)
             $rel(a2, x1)
-1release thm set_builder_member(x1, {b X: $rel(a2, b)})
+            release thm set_builder_member(x1, {b X: $rel(a2, b)})
 
         claim:
             ? forall x1 {b X: $rel(a2, b)}:
@@ -485,7 +484,7 @@ claim:
             x1 $in X
             $rel(a2, x1)
             $rel(a1, x1)
-1release thm set_builder_member(x1, {b X: $rel(a1, b)})
+            release thm set_builder_member(x1, {b X: $rel(a1, b)})
 
 # 10.2.4 Example
 
@@ -604,10 +603,6 @@ sketch:
             f(x) = f(g(f(x)))
             x = g(f(x))
 
-        forall x A:
-            g(f(x)) = x
-        forall y B:
-            y = f(g(y))
         by def $is_inverse_of_fn(A, B, f, g)
         witness exist g1 fn(x B) A st {$is_inverse_of_fn(A, B, f, g1)} from g
 
@@ -644,7 +639,6 @@ sketch:
             =>:
                 $exist_bijection(T, S)
         obtain f from exist f fn(x S) T st {$bijective_fn(S, T, f)}
-        exist g fn(x T) S st {$is_inverse_of_fn(S, T, f, g)}
         obtain g from exist g fn(x T) S st {$is_inverse_of_fn(S, T, f, g)}
 
         claim:

@@ -1,6 +1,6 @@
 use super::SourceRunOutcome;
 use crate::module_system::{ModuleId, SourceId, VirtualSource};
-use crate::pipeline::run_code;
+use crate::pipeline::run_eval_command;
 use crate::result::{
     StmtResult, SuccessProofBlockStmtResult, SuccessStmtResult, TryStmtExecutionResult,
 };
@@ -108,7 +108,7 @@ fn source_import_is_rejected_even_in_an_isolated_source_context() {
 
 #[test]
 fn code_run_uses_the_explicit_e_source_label() {
-    let outcome = run_code("1 = 1", LitexExecutionOptions::default());
+    let outcome = run_eval_command("1 = 1", LitexExecutionOptions::default());
 
     assert_eq!(outcome.runtime.current_module_id, Some(ModuleId::ROOT));
     assert_eq!(outcome.runtime.current_source_id, Some(SourceId(0)));
